@@ -44,7 +44,7 @@ PRMJ_NowInit() {}
 #endif
 
 /* Release the resources associated with PRMJ_Now; don't call PRMJ_Now again */
-#if defined(JS_THREADSAFE) && defined(XP_WIN)
+#ifdef XP_WIN
 extern void
 PRMJ_NowShutdown();
 #else

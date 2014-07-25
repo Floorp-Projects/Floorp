@@ -55,6 +55,21 @@ GrallocTextureClientOGL::~GrallocTextureClientOGL()
   }
 }
 
+TemporaryRef<TextureClient>
+GrallocTextureClientOGL::CreateSimilar(TextureFlags aFlags,
+                                       TextureAllocationFlags aAllocFlags) const
+{
+  RefPtr<TextureClient> tex = new GrallocTextureClientOGL(
+    mAllocator, mFormat, mBackend, mFlags | aFlags
+  );
+
+  if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
+    return nullptr;
+  }
+
+  return tex;
+}
+
 void
 GrallocTextureClientOGL::InitWith(MaybeMagicGrallocBufferHandle aHandle, gfx::IntSize aSize)
 {

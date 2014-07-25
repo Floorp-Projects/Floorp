@@ -230,16 +230,17 @@ class CommandAction(argparse.Action):
         if handler.parser:
             c_parser = handler.parser
             c_parser.formatter_class = NoUsageFormatter
-            try:
-                # By default argparse adds two groups called "positional arguments"
-                # and "optional arguments". We want to rename these to reflect standard
-                # mach terminology.
-                c_parser._action_groups[0].title = 'Command Parameters'
-                c_parser._action_groups[1].title = 'Command Arguments'
-            except:
-                # If argparse changes the internal data structures here continue;
-                # this will just make the output more ugly
-                pass
+            # Accessing _action_groups is a bit shady. We are highly dependent
+            # on the argparse implementation not changing. We fail fast to
+            # detect upstream changes so we can intelligently react to them.
+            group = c_parser._action_groups[1]
+
+            # By default argparse adds two groups called "positional arguments"
+            # and "optional arguments". We want to rename these to reflect standard
+            # mach terminology.
+            c_parser._action_groups[0].title = 'Command Parameters'
+            c_parser._action_groups[1].title = 'Command Arguments'
+
             if not handler.description:
                 handler.description = c_parser.description
                 c_parser.description = None

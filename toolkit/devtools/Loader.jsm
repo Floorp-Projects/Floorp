@@ -71,7 +71,7 @@ try {
   // On xpcshell, we can't instantiate indexedDB without crashing
 }
 
-let sharedGlobalBlacklist = ["sdk/indexed-db", "devtools/toolkit/qrcode/decoder/index"];
+let sharedGlobalBlacklist = ["sdk/indexed-db"];
 
 // Used when the tools should be loaded from the Firefox package itself (the default)
 function BuiltinProvider() {}

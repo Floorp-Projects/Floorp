@@ -47,7 +47,7 @@ public:
                                 const nsFrameList::Slice& aNewChildren) {}
   virtual void ChildrenRemoved(nsIFrame* aBox, nsBoxLayoutState& aState, nsIFrame* aChildList) {}
   virtual void ChildrenSet(nsIFrame* aBox, nsBoxLayoutState& aState, nsIFrame* aChildList) {}
-  virtual void IntrinsicWidthsDirty(nsIFrame* aBox, nsBoxLayoutState& aState) {}
+  virtual void IntrinsicISizesDirty(nsIFrame* aBox, nsBoxLayoutState& aState) {}
 
   virtual void AddBorderAndPadding(nsIFrame* aBox, nsSize& aSize);
   virtual void AddMargin(nsIFrame* aChild, nsSize& aSize);

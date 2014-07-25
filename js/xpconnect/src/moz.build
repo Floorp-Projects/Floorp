@@ -69,8 +69,6 @@ GENERATED_FILES = [
     'dom_quickstubs.h',
 ]
 
-DEFINES['JS_THREADSAFE'] = True
-
 LOCAL_INCLUDES += [
     '../loader',
     '../wrappers',

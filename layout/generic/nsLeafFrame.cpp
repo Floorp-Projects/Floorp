@@ -8,6 +8,8 @@
 #include "nsLeafFrame.h"
 #include "nsPresContext.h"
 
+using namespace mozilla;
+
 nsLeafFrame::~nsLeafFrame()
 {
 }
@@ -15,21 +17,21 @@ nsLeafFrame::~nsLeafFrame()
 NS_IMPL_FRAMEARENA_HELPERS(nsLeafFrame)
 
 /* virtual */ nscoord
-nsLeafFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsLeafFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
 
-  result = GetIntrinsicWidth();
+  result = GetIntrinsicISize();
   return result;
 }
 
 /* virtual */ nscoord
-nsLeafFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsLeafFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
-  result = GetIntrinsicWidth();
+  result = GetIntrinsicISize();
   return result;
 }
 
@@ -39,7 +41,7 @@ nsLeafFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                              nsSize aMargin, nsSize aBorder,
                              nsSize aPadding, bool aShrinkWrap)
 {
-  return nsSize(GetIntrinsicWidth(), GetIntrinsicHeight());
+  return nsSize(GetIntrinsicISize(), GetIntrinsicBSize());
 }
 
 void
@@ -71,24 +73,28 @@ nsLeafFrame::DoReflow(nsPresContext* aPresContext,
                "Thanks to the rules of reflow");
   NS_ASSERTION(NS_INTRINSICSIZE != aReflowState.ComputedHeight(),
                "Shouldn't have unconstrained stuff here "
-               "thanks to ComputeAutoSize");  
+               "thanks to ComputeAutoSize");
 
-  aMetrics.Width() = aReflowState.ComputedWidth();
-  aMetrics.Height() = aReflowState.ComputedHeight();
-  
-  AddBordersAndPadding(aReflowState, aMetrics);
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalSize finalSize(wm,
+                        aReflowState.ComputedISize(),
+                        aReflowState.ComputedBSize());
+
+  AddBordersAndPadding(aReflowState, finalSize);
+  aMetrics.SetSize(wm, finalSize);
+
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsLeafFrame::DoReflow: size=%d,%d",
-                  aMetrics.Width(), aMetrics.Height()));
+                  aMetrics.ISize(wm), aMetrics.BSize(wm)));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
 
   aMetrics.SetOverflowAreasToDesiredBounds();
 }
 
 nscoord
-nsLeafFrame::GetIntrinsicHeight()
+nsLeafFrame::GetIntrinsicBSize()
 {
   NS_NOTREACHED("Someone didn't override Reflow or ComputeAutoSize");
   return 0;
@@ -98,18 +104,21 @@ nsLeafFrame::GetIntrinsicHeight()
 // => descent = borderPadding.bottom for example
 void
 nsLeafFrame::AddBordersAndPadding(const nsHTMLReflowState& aReflowState,
-                                  nsHTMLReflowMetrics& aMetrics)
+                                  LogicalSize& aSize)
 {
-  aMetrics.Width() += aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aMetrics.Height() += aReflowState.ComputedPhysicalBorderPadding().TopBottom();
+  WritingMode wm = aReflowState.GetWritingMode();
+  aSize.ISize(wm) += aReflowState.ComputedLogicalBorderPadding().IStartEnd(wm);
+  aSize.BSize(wm) += aReflowState.ComputedLogicalBorderPadding().BStartEnd(wm);
 }
 
 void
 nsLeafFrame::SizeToAvailSize(const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
-  aDesiredSize.Width() = aReflowState.AvailableWidth(); // FRAME
-  aDesiredSize.Height() = aReflowState.AvailableHeight();
+  WritingMode wm = aReflowState.GetWritingMode();
+  LogicalSize size(wm, aReflowState.AvailableISize(), // FRAME
+                   aReflowState.AvailableBSize());
+  aDesiredSize.SetSize(wm, size);
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);  
 }

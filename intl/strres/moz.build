@@ -4,6 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
 TEST_TOOL_DIRS += ['tests']
 
+XPIDL_SOURCES += [
+    'nsIStringBundle.idl',
+    'nsIStringBundleOverride.idl',
+]
+
+XPIDL_MODULE = 'intl'
+
+UNIFIED_SOURCES += [
+    'nsStringBundle.cpp',
+    'nsStringBundleTextOverride.cpp',
+]
+
+MSVC_ENABLE_PGO = True
+
+FINAL_LIBRARY = 'xul'

@@ -607,7 +607,7 @@ nsCocoaUtils::InitPluginEvent(WidgetPluginEvent &aPluginEvent,
                               NPCocoaEvent &aCocoaEvent)
 {
   aPluginEvent.time = PR_IntervalNow();
-  aPluginEvent.pluginEvent = (void*)&aCocoaEvent;
+  aPluginEvent.mPluginEvent.Copy(aCocoaEvent);
   aPluginEvent.retargetToFocusedDocument = false;
 }
 

@@ -774,7 +774,6 @@ AsmJSMachExceptionHandler::AsmJSMachExceptionHandler()
 void
 AsmJSMachExceptionHandler::uninstall()
 {
-#ifdef JS_THREADSAFE
     if (installed_) {
         thread_port_t thread = mach_thread_self();
         kern_return_t kret = thread_set_exception_ports(thread,
@@ -812,15 +811,11 @@ AsmJSMachExceptionHandler::uninstall()
         JS_ASSERT(kret == KERN_SUCCESS);
         port_ = MACH_PORT_NULL;
     }
-#else
-    JS_ASSERT(!installed_);
-#endif
 }
 
 bool
 AsmJSMachExceptionHandler::install(JSRuntime *rt)
 {
-#ifdef JS_THREADSAFE
     JS_ASSERT(!installed());
     kern_return_t kret;
     mach_port_t thread;
@@ -860,9 +855,6 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
   error:
     uninstall();
     return false;
-#else
-    return false;
-#endif
 }
 
 #else  // If not Windows or Mac, assume Unix

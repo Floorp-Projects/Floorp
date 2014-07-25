@@ -29,6 +29,7 @@ EXPORTS += [
     'gmp-api/gmp-video-frame.h',
     'gmp-api/gmp-video-host.h',
     'gmp-api/gmp-video-plane.h',
+    'GMPCallbackBase.h',
     'GMPChild.h',
     'GMPMessageUtils.h',
     'GMPParent.h',

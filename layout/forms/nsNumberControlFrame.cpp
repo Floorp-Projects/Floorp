@@ -63,7 +63,7 @@ nsNumberControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 nscoord
-nsNumberControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
+nsNumberControlFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -72,7 +72,7 @@ nsNumberControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
   if (kid) { // display:none?
     result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                   kid,
-                                                  nsLayoutUtils::MIN_WIDTH);
+                                                  nsLayoutUtils::MIN_ISIZE);
   } else {
     result = 0;
   }
@@ -81,7 +81,7 @@ nsNumberControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 }
 
 nscoord
-nsNumberControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
+nsNumberControlFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -90,7 +90,7 @@ nsNumberControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
   if (kid) { // display:none?
     result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                   kid,
-                                                  nsLayoutUtils::PREF_WIDTH);
+                                                  nsLayoutUtils::PREF_ISIZE);
   } else {
     result = 0;
   }
@@ -137,10 +137,12 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
 
     nsHTMLReflowMetrics wrappersDesiredSize(aReflowState);
 
+    WritingMode wm = outerWrapperFrame->GetWritingMode();
+    LogicalSize availSize = aReflowState.ComputedSize(wm);
+    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+
     nsHTMLReflowState wrapperReflowState(aPresContext, aReflowState,
-                                         outerWrapperFrame,
-                                         nsSize(contentBoxWidth,
-                                                NS_UNCONSTRAINEDSIZE));
+                                         outerWrapperFrame, availSize);
 
     // offsets of wrapper frame
     nscoord xoffset = aReflowState.ComputedPhysicalBorderPadding().left +

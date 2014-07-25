@@ -289,7 +289,7 @@ nsGridRowLeafLayout::DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState)
   if (aBox) {
     // mark us dirty
     // XXXldb We probably don't want to walk up the ancestor chain
-    // calling MarkIntrinsicWidthsDirty for every row.
+    // calling MarkIntrinsicISizesDirty for every row.
     aState.PresShell()->FrameNeedsReflow(aBox, nsIPresShell::eTreeChange,
                                          NS_FRAME_IS_DIRTY);
   }

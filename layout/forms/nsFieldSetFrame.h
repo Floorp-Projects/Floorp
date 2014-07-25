@@ -17,10 +17,10 @@ public:
   nsFieldSetFrame(nsStyleContext* aContext);
 
   nscoord
-    GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
-                      nsLayoutUtils::IntrinsicWidthType);
-  virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+    GetIntrinsicISize(nsRenderingContext* aRenderingContext,
+                      nsLayoutUtils::IntrinsicISizeType);
+  virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,

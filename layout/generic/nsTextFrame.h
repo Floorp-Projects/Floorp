@@ -200,13 +200,13 @@ public:
   }
   void SetFontSizeInflation(float aInflation);
 
-  virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
-                                 InlineMinWidthData *aData) MOZ_OVERRIDE;
-  virtual void AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
-                                  InlinePrefWidthData *aData) MOZ_OVERRIDE;
+  virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
+                                 InlineMinISizeData *aData) MOZ_OVERRIDE;
+  virtual void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
+                                  InlinePrefISizeData *aData) MOZ_OVERRIDE;
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
@@ -254,11 +254,11 @@ public:
     eNotInflated
   };
 
-  void AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
-                                nsIFrame::InlineMinWidthData *aData,
+  void AddInlineMinISizeForFlow(nsRenderingContext *aRenderingContext,
+                                nsIFrame::InlineMinISizeData *aData,
                                 TextRunType aTextRunType);
-  void AddInlinePrefWidthForFlow(nsRenderingContext *aRenderingContext,
-                                 InlinePrefWidthData *aData,
+  void AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
+                                 InlinePrefISizeData *aData,
                                  TextRunType aTextRunType);
 
   /**

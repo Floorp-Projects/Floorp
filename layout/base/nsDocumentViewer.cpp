@@ -3336,7 +3336,7 @@ nsDocumentViewer::GetContentSize(int32_t* aWidth, int32_t* aHeight)
   {
     nsRefPtr<nsRenderingContext> rcx =
       presShell->CreateReferenceRenderingContext();
-    prefWidth = root->GetPrefWidth(rcx);
+    prefWidth = root->GetPrefISize(rcx);
   }
 
   nsresult rv = presShell->ResizeReflow(prefWidth, NS_UNCONSTRAINEDSIZE);

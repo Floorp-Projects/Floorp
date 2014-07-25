@@ -198,6 +198,10 @@ public:
   nscoord ContentBEnd() const {
     return mContentArea.BEnd(mReflowState.GetWritingMode());
   }
+  mozilla::LogicalSize ContentSize(mozilla::WritingMode aWM) const {
+    mozilla::WritingMode wm = mReflowState.GetWritingMode();
+    return mContentArea.Size(wm).ConvertTo(aWM, wm);
+  }
   nscoord mContainerWidth;
 
   // Continuation out-of-flow float frames that need to move to our

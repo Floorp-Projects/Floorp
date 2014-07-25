@@ -174,16 +174,18 @@ MaybeFoldConditionBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     // e.g. 'if (a ? b : 0)', then the block associated with that constant
     // can be eliminated.
 
-    // Look for a diamond pattern:
-    //
-    //       initialBlock
-    //         /     \
-    // trueBranch  falseBranch
-    //         \     /
-    //        testBlock
-    //
-    // Where testBlock contains only a test on a phi combining two values
-    // pushed onto the stack by trueBranch and falseBranch.
+    /*
+     * Look for a diamond pattern:
+     *
+     *        initialBlock
+     *          /     \
+     *  trueBranch  falseBranch
+     *          \     /
+     *         testBlock
+     *
+     * Where testBlock contains only a test on a phi combining two values
+     * pushed onto the stack by trueBranch and falseBranch.
+     */
 
     MInstruction *ins = initialBlock->lastIns();
     if (!ins->isTest())
