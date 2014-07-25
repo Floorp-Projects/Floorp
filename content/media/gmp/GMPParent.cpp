@@ -31,11 +31,14 @@ namespace gmp {
 GMPParent::GMPParent()
   : mState(GMPStateNotLoaded)
   , mProcess(nullptr)
+  , mDeleteProcessOnUnload(false)
 {
 }
 
 GMPParent::~GMPParent()
 {
+  // Can't Close or Destroy the process here, since destruction is MainThread only
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 nsresult
@@ -70,18 +73,20 @@ GMPParent::LoadProcess()
     return NS_ERROR_FAILURE;
   }
 
-  mProcess = new GMPProcessParent(path.get());
-  if (!mProcess->Launch(30 * 1000)) {
-    mProcess->Delete();
-    mProcess = nullptr;
-    return NS_ERROR_FAILURE;
-  }
+  if (!mProcess) {
+    mProcess = new GMPProcessParent(path.get());
+    if (!mProcess->Launch(30 * 1000)) {
+      mProcess->Delete();
+      mProcess = nullptr;
+      return NS_ERROR_FAILURE;
+    }
 
-  bool opened = Open(mProcess->GetChannel(), mProcess->GetChildProcessHandle());
-  if (!opened) {
-    mProcess->Delete();
-    mProcess = nullptr;
-    return NS_ERROR_FAILURE;
+    bool opened = Open(mProcess->GetChannel(), mProcess->GetChildProcessHandle());
+    if (!opened) {
+      mProcess->Delete();
+      mProcess = nullptr;
+      return NS_ERROR_FAILURE;
+    }
   }
 
   mState = GMPStateLoaded;
@@ -94,7 +99,8 @@ GMPParent::CloseIfUnused()
 {
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
-  if ((mState == GMPStateLoaded ||
+  if ((mDeleteProcessOnUnload ||
+       mState == GMPStateLoaded ||
        mState == GMPStateUnloading) &&
       mVideoDecoders.IsEmpty() &&
       mVideoEncoders.IsEmpty()) {
@@ -103,8 +109,11 @@ GMPParent::CloseIfUnused()
 }
 
 void
-GMPParent::CloseActive()
+GMPParent::CloseActive(bool aDieWhenUnloaded)
 {
+  if (aDieWhenUnloaded) {
+    mDeleteProcessOnUnload = true; // don't allow this to go back...
+  }
   if (mState == GMPStateLoaded) {
     mState = GMPStateUnloading;
   }
@@ -135,16 +144,21 @@ GMPParent::Shutdown()
     return;
   }
 
-  mState = GMPStateClosing;
-  Close();
-  DeleteProcess();
+  // XXX Get rid of mDeleteProcessOnUnload and do this on all Shutdowns once
+  // Bug 1043671 is fixed (backout this patch)
+  if (mDeleteProcessOnUnload) {
+    mState = GMPStateClosing;
+    DeleteProcess();
+  } else {
+    mState = GMPStateNotLoaded;
+  }
   MOZ_ASSERT(mState == GMPStateNotLoaded);
 }
 
 void
 GMPParent::DeleteProcess()
 {
-  MOZ_ASSERT(mState == GMPStateClosing);
+  Close();
   mProcess->Delete();
   mProcess = nullptr;
   mState = GMPStateNotLoaded;
@@ -362,7 +376,7 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 #endif
   // warn us off trying to close again
   mState = GMPStateClosing;
-  CloseActive();
+  CloseActive(false);
 
   // Normal Shutdown() will delete the process on unwind.
   if (AbnormalShutdown == aWhy) {
