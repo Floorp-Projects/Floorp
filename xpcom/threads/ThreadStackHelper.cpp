@@ -38,6 +38,12 @@
 #include <vector>
 
 #ifdef XP_LINUX
+#ifdef ANDROID
+// Android NDK doesn't contain ucontext.h; use Breakpad's copy.
+# include "common/android/include/sys/ucontext.h"
+#else
+# include <ucontext.h>
+#endif
 #include <unistd.h>
 #include <sys/syscall.h>
 #endif
@@ -152,7 +158,38 @@ void ThreadStackHelper::GetThreadStackBase()
 {
   mThreadStackBase = 0;
 
-  // TODO get stack base for each platform
+#if defined(XP_LINUX)
+  void* stackAddr;
+  size_t stackSize;
+  ::pthread_t pthr = ::pthread_self();
+  ::pthread_attr_t pthr_attr;
+  NS_ENSURE_TRUE_VOID(!::pthread_getattr_np(pthr, &pthr_attr));
+  if (!::pthread_attr_getstack(&pthr_attr, &stackAddr, &stackSize)) {
+#ifdef MOZ_THREADSTACKHELPER_STACK_GROWS_DOWN
+    mThreadStackBase = intptr_t(stackAddr) + stackSize;
+#else
+    mThreadStackBase = intptr_t(stackAddr);
+#endif
+  }
+  MOZ_ALWAYS_TRUE(!::pthread_attr_destroy(&pthr_attr));
+
+#elif defined(XP_WIN)
+  ::MEMORY_BASIC_INFORMATION meminfo = {};
+  NS_ENSURE_TRUE_VOID(::VirtualQuery(
+    &meminfo, &meminfo, sizeof(meminfo)));
+#ifdef MOZ_THREADSTACKHELPER_STACK_GROWS_DOWN
+  mThreadStackBase = intptr_t(meminfo.BaseAddress) + meminfo.RegionSize;
+#else
+  mThreadStackBase = intptr_t(meminfo.AllocationBase);
+#endif
+
+#elif defined(XP_MACOSX)
+  ::pthread_t pthr = ::pthread_self();
+  mThreadStackBase = intptr_t(::pthread_get_stackaddr_np(pthr));
+
+#else
+  #error "Unsupported platform"
+#endif // platform
 }
 #endif // MOZ_THREADSTACKHELPER_NATIVE
 
@@ -583,8 +620,147 @@ ThreadStackHelper::FillThreadContext(void* aContext)
     return;
   }
 
-  // TODO fill context for each platform
+#if defined(XP_LINUX)
+  const ucontext_t& context = *reinterpret_cast<ucontext_t*>(aContext);
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_X86_FULL;
+  mContextToFill->mContext.edi = context.uc_mcontext.gregs[REG_EDI];
+  mContextToFill->mContext.esi = context.uc_mcontext.gregs[REG_ESI];
+  mContextToFill->mContext.ebx = context.uc_mcontext.gregs[REG_EBX];
+  mContextToFill->mContext.edx = context.uc_mcontext.gregs[REG_EDX];
+  mContextToFill->mContext.ecx = context.uc_mcontext.gregs[REG_ECX];
+  mContextToFill->mContext.eax = context.uc_mcontext.gregs[REG_EAX];
+  mContextToFill->mContext.ebp = context.uc_mcontext.gregs[REG_EBP];
+  mContextToFill->mContext.eip = context.uc_mcontext.gregs[REG_EIP];
+  mContextToFill->mContext.eflags = context.uc_mcontext.gregs[REG_EFL];
+  mContextToFill->mContext.esp = context.uc_mcontext.gregs[REG_ESP];
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_AMD64_FULL;
+  mContextToFill->mContext.eflags = uint32_t(context.uc_mcontext.gregs[REG_EFL]);
+  mContextToFill->mContext.rax = context.uc_mcontext.gregs[REG_RAX];
+  mContextToFill->mContext.rcx = context.uc_mcontext.gregs[REG_RCX];
+  mContextToFill->mContext.rdx = context.uc_mcontext.gregs[REG_RDX];
+  mContextToFill->mContext.rbx = context.uc_mcontext.gregs[REG_RBX];
+  mContextToFill->mContext.rsp = context.uc_mcontext.gregs[REG_RSP];
+  mContextToFill->mContext.rbp = context.uc_mcontext.gregs[REG_RBP];
+  mContextToFill->mContext.rsi = context.uc_mcontext.gregs[REG_RSI];
+  mContextToFill->mContext.rdi = context.uc_mcontext.gregs[REG_RDI];
+  memcpy(&mContextToFill->mContext.r8,
+         &context.uc_mcontext.gregs[REG_R8], 8 * sizeof(int64_t));
+  mContextToFill->mContext.rip = context.uc_mcontext.gregs[REG_RIP];
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_ARM_FULL;
+  memcpy(&mContextToFill->mContext.iregs[0],
+         &context.uc_mcontext.arm_r0, 17 * sizeof(int32_t));
+#else
+  #error "Unsupported architecture"
+#endif // architecture
 
+#elif defined(XP_WIN)
+  // Breakpad context struct is based off of the Windows CONTEXT struct,
+  // so we assume they are the same; do some sanity checks to make sure.
+  static_assert(sizeof(ThreadContext::Context) == sizeof(::CONTEXT),
+                "Context struct mismatch");
+  static_assert(offsetof(ThreadContext::Context, context_flags) ==
+                offsetof(::CONTEXT, ContextFlags),
+                "Context struct mismatch");
+  mContextToFill->mContext.context_flags = CONTEXT_FULL;
+  NS_ENSURE_TRUE_VOID(::GetThreadContext(mThreadID,
+      reinterpret_cast<::CONTEXT*>(&mContextToFill->mContext)));
+
+#elif defined(XP_MACOSX)
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  const thread_state_flavor_t flavor = x86_THREAD_STATE32;
+  x86_thread_state32_t state = {};
+  mach_msg_type_number_t count = x86_THREAD_STATE32_COUNT;
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  const thread_state_flavor_t flavor = x86_THREAD_STATE64;
+  x86_thread_state64_t state = {};
+  mach_msg_type_number_t count = x86_THREAD_STATE64_COUNT;
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  const thread_state_flavor_t flavor = ARM_THREAD_STATE;
+  arm_thread_state_t state = {};
+  mach_msg_type_number_t count = ARM_THREAD_STATE_COUNT;
+#endif
+  NS_ENSURE_TRUE_VOID(KERN_SUCCESS == ::thread_get_state(
+    mThreadID, flavor, reinterpret_cast<thread_state_t>(&state), &count));
+#if __DARWIN_UNIX03
+#define GET_REGISTER(s, r) ((s).__##r)
+#else
+#define GET_REGISTER(s, r) ((s).r)
+#endif
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_X86_FULL;
+  mContextToFill->mContext.edi = GET_REGISTER(state, edi);
+  mContextToFill->mContext.esi = GET_REGISTER(state, esi);
+  mContextToFill->mContext.ebx = GET_REGISTER(state, ebx);
+  mContextToFill->mContext.edx = GET_REGISTER(state, edx);
+  mContextToFill->mContext.ecx = GET_REGISTER(state, ecx);
+  mContextToFill->mContext.eax = GET_REGISTER(state, eax);
+  mContextToFill->mContext.ebp = GET_REGISTER(state, ebp);
+  mContextToFill->mContext.eip = GET_REGISTER(state, eip);
+  mContextToFill->mContext.eflags = GET_REGISTER(state, eflags);
+  mContextToFill->mContext.esp = GET_REGISTER(state, esp);
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_AMD64_FULL;
+  mContextToFill->mContext.eflags = uint32_t(GET_REGISTER(state, rflags));
+  mContextToFill->mContext.rax = GET_REGISTER(state, rax);
+  mContextToFill->mContext.rcx = GET_REGISTER(state, rcx);
+  mContextToFill->mContext.rdx = GET_REGISTER(state, rdx);
+  mContextToFill->mContext.rbx = GET_REGISTER(state, rbx);
+  mContextToFill->mContext.rsp = GET_REGISTER(state, rsp);
+  mContextToFill->mContext.rbp = GET_REGISTER(state, rbp);
+  mContextToFill->mContext.rsi = GET_REGISTER(state, rsi);
+  mContextToFill->mContext.rdi = GET_REGISTER(state, rdi);
+  memcpy(&mContextToFill->mContext.r8,
+         &GET_REGISTER(state, r8), 8 * sizeof(int64_t));
+  mContextToFill->mContext.rip = GET_REGISTER(state, rip);
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_ARM_FULL;
+  memcpy(mContextToFill->mContext.iregs,
+         GET_REGISTER(state, r), 17 * sizeof(int32_t));
+#else
+  #error "Unsupported architecture"
+#endif // architecture
+#undef GET_REGISTER
+
+#else
+  #error "Unsupported platform"
+#endif // platform
+
+  intptr_t sp = 0;
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  sp = mContextToFill->mContext.esp;
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  sp = mContextToFill->mContext.rsp;
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  sp = mContextToFill->mContext.iregs[13];
+#else
+  #error "Unsupported architecture"
+#endif // architecture
+  NS_ENSURE_TRUE_VOID(sp);
+  NS_ENSURE_TRUE_VOID(mThreadStackBase);
+
+  size_t stackSize = std::min(intptr_t(ThreadContext::kMaxStackSize),
+                              std::abs(sp - mThreadStackBase));
+
+  if (mContextToFill->mStackEnd) {
+    // Limit the start of stack to a certain location if specified.
+    stackSize = std::min(intptr_t(stackSize),
+      std::abs(sp - intptr_t(mContextToFill->mStackEnd)));
+  }
+
+#ifndef MOZ_THREADSTACKHELPER_STACK_GROWS_DOWN
+  // If if the stack grows upwards, and we need to recalculate our
+  // stack copy's base address. Subtract sizeof(void*) so that the
+  // location pointed to by sp is included.
+  sp -= stackSize - sizeof(void*);
+#endif
+
+  memcpy(mContextToFill->mStack, reinterpret_cast<void*>(sp), stackSize);
+  mContextToFill->mStackBase = uintptr_t(sp);
+  mContextToFill->mStackSize = stackSize;
+  mContextToFill->mValid = true;
 #endif // MOZ_THREADSTACKHELPER_NATIVE
 }
 
