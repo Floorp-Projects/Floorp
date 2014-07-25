@@ -196,121 +196,6 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, unsigned lineno)
     return js_LineNumberToPC(script, lineno);
 }
 
-JS_PUBLIC_API(jsbytecode *)
-JS_EndPC(JSContext *cx, JSScript *script)
-{
-    return script->codeEnd();
-}
-
-JS_PUBLIC_API(bool)
-JS_GetLinePCs(JSContext *cx, JSScript *script,
-              unsigned startLine, unsigned maxLines,
-              unsigned* count, unsigned** retLines, jsbytecode*** retPCs)
-{
-    size_t len = (script->length() > maxLines ? maxLines : script->length());
-    unsigned *lines = cx->pod_malloc<unsigned>(len);
-    if (!lines)
-        return false;
-
-    jsbytecode **pcs = cx->pod_malloc<jsbytecode*>(len);
-    if (!pcs) {
-        js_free(lines);
-        return false;
-    }
-
-    unsigned lineno = script->lineno();
-    unsigned offset = 0;
-    unsigned i = 0;
-    for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-        offset += SN_DELTA(sn);
-        SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
-        if (type == SRC_SETLINE || type == SRC_NEWLINE) {
-            if (type == SRC_SETLINE)
-                lineno = (unsigned) js_GetSrcNoteOffset(sn, 0);
-            else
-                lineno++;
-
-            if (lineno >= startLine) {
-                lines[i] = lineno;
-                pcs[i] = script->offsetToPC(offset);
-                if (++i >= maxLines)
-                    break;
-            }
-        }
-    }
-
-    *count = i;
-    if (retLines)
-        *retLines = lines;
-    else
-        js_free(lines);
-
-    if (retPCs)
-        *retPCs = pcs;
-    else
-        js_free(pcs);
-
-    return true;
-}
-
-JS_PUBLIC_API(unsigned)
-JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
-{
-    return fun->nargs();
-}
-
-JS_PUBLIC_API(bool)
-JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
-{
-    return fun->nonLazyScript()->bindings.count() > 0;
-}
-
-extern JS_PUBLIC_API(uintptr_t *)
-JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **memp)
-{
-    RootedScript script(cx, fun->nonLazyScript());
-    BindingVector bindings(cx);
-    if (!FillBindingVector(script, &bindings))
-        return nullptr;
-
-    LifoAlloc &lifo = cx->tempLifoAlloc();
-
-    // Store the LifoAlloc::Mark right before the allocation.
-    LifoAlloc::Mark mark = lifo.mark();
-    void *mem = lifo.alloc(sizeof(LifoAlloc::Mark) + bindings.length() * sizeof(uintptr_t));
-    if (!mem) {
-        js_ReportOutOfMemory(cx);
-        return nullptr;
-    }
-    *memp = mem;
-    *reinterpret_cast<LifoAlloc::Mark*>(mem) = mark;
-
-    // Munge data into the API this method implements.  Avert your eyes!
-    uintptr_t *names = reinterpret_cast<uintptr_t*>((char*)mem + sizeof(LifoAlloc::Mark));
-    for (size_t i = 0; i < bindings.length(); i++)
-        names[i] = reinterpret_cast<uintptr_t>(bindings[i].name());
-
-    return names;
-}
-
-extern JS_PUBLIC_API(JSAtom *)
-JS_LocalNameToAtom(uintptr_t w)
-{
-    return reinterpret_cast<JSAtom *>(w);
-}
-
-extern JS_PUBLIC_API(JSString *)
-JS_AtomKey(JSAtom *atom)
-{
-    return atom;
-}
-
-extern JS_PUBLIC_API(void)
-JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mem)
-{
-    cx->tempLifoAlloc().release(*reinterpret_cast<LifoAlloc::Mark*>(mem));
-}
-
 JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, HandleFunction fun)
 {
@@ -324,35 +209,6 @@ JS_GetFunctionScript(JSContext *cx, HandleFunction fun)
         return script;
     }
     return fun->nonLazyScript();
-}
-
-JS_PUBLIC_API(JSNative)
-JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
-{
-    return fun->maybeNative();
-}
-
-/************************************************************************/
-
-JS_PUBLIC_API(JSFunction *)
-JS_GetScriptFunction(JSContext *cx, JSScript *script)
-{
-    script->ensureNonLazyCanonicalFunction(cx);
-    return script->functionNonDelazifying();
-}
-
-JS_PUBLIC_API(JSObject *)
-JS_GetParentOrScopeChain(JSContext *cx, JSObject *obj)
-{
-    return obj->enclosingScope();
-}
-
-JS_PUBLIC_API(const char *)
-JS_GetDebugClassName(JSObject *obj)
-{
-    if (obj->is<DebugScopeObject>())
-        return obj->as<DebugScopeObject>().scope().getClass()->name;
-    return obj->getClass()->name;
 }
 
 /************************************************************************/
@@ -375,24 +231,6 @@ JS_PUBLIC_API(unsigned)
 JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script)
 {
     return script->lineno();
-}
-
-JS_PUBLIC_API(unsigned)
-JS_GetScriptLineExtent(JSContext *cx, JSScript *script)
-{
-    return js_GetScriptLineExtent(script);
-}
-
-JS_PUBLIC_API(JSVersion)
-JS_GetScriptVersion(JSContext *cx, JSScript *script)
-{
-    return VersionNumber(script->getVersion());
-}
-
-JS_PUBLIC_API(bool)
-JS_GetScriptIsSelfHosted(JSScript *script)
-{
-    return script->selfHosted();
 }
 
 /***************************************************************************/
