@@ -2071,7 +2071,6 @@ CodeGeneratorX86Shared::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
 JitCode *
 JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
 {
-#ifdef JS_THREADSAFE
     MacroAssembler masm(cx);
 
     // We need two fixed temps. We need to fix eax for cmpxchg, and edx for
@@ -2220,9 +2219,6 @@ JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
 #endif
 
     return code;
-#else
-    return nullptr;
-#endif // JS_THREADSAFE
 }
 
 } // namespace jit

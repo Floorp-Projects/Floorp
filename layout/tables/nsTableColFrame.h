@@ -286,7 +286,7 @@ protected:
   float mSpanPrefPercent; // XXX...
   // ...XXX the four members marked above could be allocated as part of
   // a separate array allocated only during
-  // BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths (and only
+  // BasicTableLayoutStrategy::ComputeColumnIntrinsicISizes (and only
   // when colspans were present).
   nscoord mFinalWidth;
 

@@ -58,24 +58,17 @@
   outline: 1px dotted;
 }
 
-/* TOGGLE */
-#newtab-toggle {
-  width: 16px;
-  height: 16px;
-  padding: 0;
+/* CUSTOMIZE */
+#newtab-customize-button {
+  background-color: transparent;
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 32, 32, 0);
   border: none;
-  background: -216px 0 transparent url(chrome://browser/skin/newtab/controls.png);
+  height: 32px;
+  width: 32px;
 }
 
-#newtab-toggle[page-disabled] {
-  background-position: -232px 0;
-}
-
-@media (min-resolution: 2dppx) {
-  #newtab-toggle {
-    background-image: url(chrome://browser/skin/newtab/controls@2x.png);
-    background-size: 296px;
-  }
+#newtab-customize-button:-moz-any(:hover, :active, [active]) {
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 64, 32, 32);
 }
 
 /* CELLS */
@@ -159,8 +152,7 @@
 }
 
 .newtab-site[pinned] .newtab-title {
-  color: #d0021b;
-  font-style: italic;
+  color: #2c72c4;
   font-weight: bold;
 }
 
@@ -170,54 +162,51 @@
 
 /* CONTROLS */
 .newtab-control {
-  width: 24px;
-  height: 24px;
-  padding: 1px 2px 3px;
+  background-color: transparent;
   border: none;
-  background: transparent url(chrome://browser/skin/newtab/controls.png);
+  height: 32px;
+  width: 32px;
 }
 
-@media (min-resolution: 2dppx) {
-  .newtab-control {
-    background-image: url(chrome://browser/skin/newtab/controls@2x.png);
-    background-size: 296px;
-  }
+.newtab-control-pin,
+.newtab-site[pinned] .newtab-control-pin:hover:active {
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 96, 32, 64);
 }
 
-.newtab-control-pin:hover {
-  background-position: -24px 0;
-}
-
-.newtab-control-pin:active {
-  background-position: -48px 0;
-}
-
-.newtab-site[pinned] .newtab-control-pin {
-  background-position: -72px 0;
-}
-
+.newtab-control-pin:hover,
 .newtab-site[pinned] .newtab-control-pin:hover {
-  background-position: -96px 0;
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 128, 32, 96);
 }
 
-.newtab-site[pinned] .newtab-control-pin:active {
-  background-position: -120px 0;
+.newtab-control-pin:hover:active,
+.newtab-site[pinned] .newtab-control-pin {
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 160, 32, 128);
 }
 
 .newtab-control-block {
-  background-position: -144px 0;
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 192, 32, 160);
 }
 
 .newtab-control-block:hover {
-  background-position: -168px 0;
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 224, 32, 192);
 }
 
-.newtab-control-block:active {
-  background-position: -192px 0;
+.newtab-control-block:hover:active {
+  background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 256, 32, 224);
 }
 
 .newtab-control-sponsored {
+  width: 24px;
+  height: 24px;
+  background-image: url(chrome://browser/skin/newtab/controls.png);
   background-position: -249px -1px;
+}
+
+@media (min-resolution: 2dppx) {
+  .newtab-control-sponsored {
+    background-image: url(chrome://browser/skin/newtab/controls@2x.png);
+    background-size: 296px;
+  }
 }
 
 .newtab-control-sponsored:hover {

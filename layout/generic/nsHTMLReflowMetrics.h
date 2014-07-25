@@ -249,6 +249,12 @@ public:
     mISize = convertedSize.ISize(mWritingMode);
   }
 
+  // Set both inline and block size to zero -- no need for a writing mode!
+  void ClearSize()
+  {
+    mISize = mBSize = 0;
+  }
+
   // Width and Height are physical dimensions, independent of writing mode.
   // Accessing these is slightly more expensive than accessing the logical
   // dimensions (once vertical writing mode support is enabled); as far as

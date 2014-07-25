@@ -79,8 +79,8 @@ protected:
 
   virtual ~nsFormControlFrame();
 
-  virtual nscoord GetIntrinsicWidth() MOZ_OVERRIDE;
-  virtual nscoord GetIntrinsicHeight() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicISize() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicBSize() MOZ_OVERRIDE;
 
 //
 //-------------------------------------------------------------------------------------

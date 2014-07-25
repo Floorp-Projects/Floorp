@@ -9,10 +9,6 @@
 
 #ifdef JS_POSIX_NSPR
 
-#ifndef JS_THREADSAFE
-#error "This file must not be included in non-threadsafe mode"
-#endif
-
 #include <pthread.h>
 #include <stdint.h>
 

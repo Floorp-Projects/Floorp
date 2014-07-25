@@ -175,6 +175,10 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     aStream << nsPrintfCString(" (opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
   }
 
+  if (aItem->ShouldFixToViewport(aBuilder)) {
+    aStream << " fixed";
+  }
+
   if (aItem->Frame()->StyleDisplay()->mWillChange.Length() > 0) {
     aStream << " (will-change=";
     for (size_t i = 0; i < aItem->Frame()->StyleDisplay()->mWillChange.Length(); i++) {

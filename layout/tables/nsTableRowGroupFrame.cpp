@@ -377,12 +377,14 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
       // incremental reflow codepath.
       nsHTMLReflowMetrics desiredSize(aReflowState.reflowState,
                                       aDesiredSize.mFlags);
-      desiredSize.Width() = desiredSize.Height() = 0;
-  
+      desiredSize.ClearSize();
+
       // Reflow the child into the available space, giving it as much height as
       // it wants. We'll deal with splitting later after we've computed the row
       // heights, taking into account cells with row spans...
-      nsSize kidAvailSize(aReflowState.availSize.width, NS_UNCONSTRAINEDSIZE);
+      WritingMode wm = kidFrame->GetWritingMode();
+      LogicalSize kidAvailSize(wm, aReflowState.availSize);
+      kidAvailSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
                                        kidFrame, kidAvailSize,
                                        -1, -1,
@@ -643,7 +645,8 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*           aPresContext,
             nscoord heightOfAreaSpanned = heightOfRowsSpanned + cellSpacingTotal;
             // get the height of the cell 
             nsSize cellFrameSize = cellFrame->GetSize();
-            nsSize cellDesSize = cellFrame->GetDesiredSize();
+            nsSize cellDesSize =
+              cellFrame->GetDesiredSize().GetPhysicalSize(cellFrame->GetWritingMode());
             rowFrame->CalculateCellActualHeight(cellFrame, cellDesSize.height);
             cellFrameSize.height = cellDesSize.height;
             if (cellFrame->HasVerticalAlignBaseline()) {
@@ -945,8 +948,9 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
         // don't let the available height exceed what
         // CalculateRowHeights set for it
         rowAvailSize.height = std::min(rowAvailSize.height, rowRect.height);
-        nsHTMLReflowState rowReflowState(&aPresContext, aReflowState,
-                                         row, rowAvailSize,
+        nsHTMLReflowState rowReflowState(&aPresContext, aReflowState, row,
+                                         LogicalSize(row->GetWritingMode(),
+                                                     rowAvailSize),
                                          -1, -1,
                                          nsHTMLReflowState::CALLER_WILL_INIT);
         InitChildReflowState(aPresContext, borderCollapse, rowReflowState);
@@ -1080,8 +1084,9 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
         // don't let the available height exceed what CalculateRowHeights set for it
         availSize.height = std::min(availSize.height, rowRect.height);
 
-        nsHTMLReflowState rowReflowState(aPresContext, aReflowState,
-                                         rowFrame, availSize,
+        nsHTMLReflowState rowReflowState(aPresContext, aReflowState, rowFrame,
+                                         LogicalSize(rowFrame->GetWritingMode(),
+                                                     availSize),
                                          -1, -1,
                                          nsHTMLReflowState::CALLER_WILL_INIT);
                                          

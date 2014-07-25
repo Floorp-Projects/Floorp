@@ -76,9 +76,7 @@ HttpBaseChannel::HttpBaseChannel()
 
   // Subfields of unions cannot be targeted in an initializer list
   mSelfAddr.raw.family = PR_AF_UNSPEC;
-  memset(&mSelfAddr, 0, sizeof(mSelfAddr.raw.data));
   mPeerAddr.raw.family = PR_AF_UNSPEC;
-  memset(&mPeerAddr, 0, sizeof(mPeerAddr.raw.data));
 }
 
 HttpBaseChannel::~HttpBaseChannel()
@@ -1119,18 +1117,12 @@ HttpBaseChannel::SetRequestHeader(const nsACString& aHeader,
   LOG(("HttpBaseChannel::SetRequestHeader [this=%p header=\"%s\" value=\"%s\" merge=%u]\n",
       this, flatHeader.get(), flatValue.get(), aMerge));
 
-  // Header names are restricted to valid HTTP tokens.
-  if (!nsHttp::IsValidToken(flatHeader))
+  // Verify header names are valid HTTP tokens and header values are reasonably
+  // close to whats allowed in RFC 2616.
+  if (!nsHttp::IsValidToken(flatHeader) ||
+      !nsHttp::IsReasonableHeaderValue(flatValue)) {
     return NS_ERROR_INVALID_ARG;
-
-  // Header values MUST NOT contain line-breaks.  RFC 2616 technically
-  // permits CTL characters, including CR and LF, in header values provided
-  // they are quoted.  However, this can lead to problems if servers do not
-  // interpret quoted strings properly.  Disallowing CR and LF here seems
-  // reasonable and keeps things simple.  We also disallow a null byte.
-  if (flatValue.FindCharInSet("\r\n") != kNotFound ||
-      flatValue.Length() != strlen(flatValue.get()))
-    return NS_ERROR_INVALID_ARG;
+  }
 
   nsHttpAtom atom = nsHttp::ResolveAtom(flatHeader.get());
   if (!atom) {

@@ -10,7 +10,7 @@
 #include "Zip.h"
 #include "SeekableZStream.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 #include "zlib.h"
 
 /**
@@ -123,24 +123,21 @@ public:
 
   virtual Kind GetKind() const { return MAPPABLE_EXTRACT_FILE; };
 private:
-  MappableExtractFile(int fd, char *path)
-  : MappableFile(fd), path(path), pid(getpid()) { }
-
   /**
-   * AutoUnlinkFile keeps track or a file name and removes (unlinks) the file
+   * AutoUnlinkFile keeps track of a file name and removes (unlinks) the file
    * when the instance is destroyed.
    */
-  struct AutoUnlinkFileTraits: public mozilla::ScopedDeleteArrayTraits<char>
+  struct UnlinkFile
   {
-    static void release(char *value)
-    {
-      if (!value)
-        return;
+    void operator()(char *value) {
       unlink(value);
-      mozilla::ScopedDeleteArrayTraits<char>::release(value);
+      delete [] value;
     }
   };
-  typedef mozilla::Scoped<AutoUnlinkFileTraits> AutoUnlinkFile;
+  typedef mozilla::UniquePtr<char[], UnlinkFile> AutoUnlinkFile;
+
+  MappableExtractFile(int fd, AutoUnlinkFile path)
+  : MappableFile(fd), path(Move(path)), pid(getpid()) { }
 
   /* Extracted file */
   AutoUnlinkFile path;
@@ -180,7 +177,7 @@ private:
   mozilla::RefPtr<Zip> zip;
 
   /* Decompression buffer */
-  mozilla::ScopedDeletePtr<_MappableBuffer> buffer;
+  mozilla::UniquePtr<_MappableBuffer> buffer;
 
   /* Zlib data */
   z_stream zStream;
@@ -220,7 +217,7 @@ private:
   mozilla::RefPtr<Zip> zip;
 
   /* Decompression buffer */
-  mozilla::ScopedDeletePtr<_MappableBuffer> buffer;
+  mozilla::UniquePtr<_MappableBuffer> buffer;
 
   /* Seekable ZStream */
   SeekableZStream zStream;
@@ -263,7 +260,7 @@ private:
 
   /* Array keeping track of which chunks have already been decompressed.
    * Each value is the number of pages decompressed for the given chunk. */
-  mozilla::ScopedDeleteArray<unsigned char> chunkAvail;
+  mozilla::UniquePtr<unsigned char[]> chunkAvail;
 
   /* Number of chunks that have already been decompressed. */
   mozilla::Atomic<size_t> chunkAvailNum;

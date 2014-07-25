@@ -2029,7 +2029,7 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
   if ([mView isPluginView]) {
     if ([mView pluginEventModel] == NPEventModelCocoa) {
       ConvertCocoaKeyEventToNPCocoaEvent(aNativeEvent, cocoaEvent);
-      keyEvent.pluginEvent = &cocoaEvent;
+      keyEvent.mPluginEvent.Copy(cocoaEvent);
     }
   }
 
@@ -3890,7 +3890,7 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
       uint32_t charCode(charCodes.ElementAt(i));
 
       keydownEvent.time = PR_IntervalNow();
-      keydownEvent.pluginEvent = &eventRec;
+      keydownEvent.mPluginEvent.Copy(eventRec);
       if (IsSpecialGeckoKey(macKeyCode)) {
         keydownEvent.keyCode = keyCode;
       } else {
@@ -4080,7 +4080,7 @@ PluginTextInputHandler::HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent)
     InitKeyEvent(aNativeKeyEvent, keyupEvent);
     NPCocoaEvent pluginEvent;
     ConvertCocoaKeyEventToNPCocoaEvent(aNativeKeyEvent, pluginEvent);
-    keyupEvent.pluginEvent = &pluginEvent;
+    keyupEvent.mPluginEvent.Copy(pluginEvent);
     DispatchEvent(keyupEvent);
     return;
   }

@@ -1055,10 +1055,8 @@ GetPCCountScriptSummary(JSContext *cx, size_t script);
 JS_FRIEND_API(JSString *)
 GetPCCountScriptContents(JSContext *cx, size_t script);
 
-#ifdef JS_THREADSAFE
 JS_FRIEND_API(bool)
 ContextHasOutstandingRequests(const JSContext *cx);
-#endif
 
 typedef void
 (* ActivityCallback)(void *arg, bool active);

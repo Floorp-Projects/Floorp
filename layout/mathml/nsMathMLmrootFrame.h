@@ -47,7 +47,7 @@ public:
                      nscoord* aSqrOffset);
 
   virtual void
-  GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext,
+  GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
                            nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

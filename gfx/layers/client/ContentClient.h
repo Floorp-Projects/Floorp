@@ -279,9 +279,6 @@ protected:
   // and notify the compositor that we have created the buffer(s).
   virtual void DestroyFrontBuffer() {}
 
-  bool CreateAndAllocateTextureClient(RefPtr<TextureClient>& aClient,
-                                      TextureFlags aFlags = TextureFlags::NO_FLAGS);
-
   virtual void AbortTextureClientCreation()
   {
     mTextureClient = nullptr;

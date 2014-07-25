@@ -4,10 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# STDCXX_COMPAT is not needed here, and will actually fail because
-# libstdc++-compat is not built yet.
-MOZ_LIBSTDCXX_HOST_VERSION =
-
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
 ifdef NSBUILDROOT
@@ -29,7 +25,7 @@ nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
 
 NSINSTALL_EXECUTABLES := nsinstall$(HOST_BIN_SUFFIX)
 NSINSTALL_DEST := $(DIST)/bin
-NSINSTALL_TARGET := export
+NSINSTALL_TARGET := host
 INSTALL_TARGETS += NSINSTALL
 endif
 endif

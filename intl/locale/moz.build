@@ -4,6 +4,59 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'idl', 'src']
 TEST_DIRS += ['tests']
 
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
+
+if toolkit == 'windows':
+    DIRS += ['windows']
+elif toolkit == 'cocoa':
+    DIRS += ['mac']
+else:
+    DIRS += ['unix']
+
+XPIDL_SOURCES += [
+    'nsICollation.idl',
+    'nsILocale.idl',
+    'nsILocaleService.idl',
+    'nsIScriptableDateFormat.idl',
+]
+
+XPIDL_MODULE = 'locale'
+
+EXPORTS += [
+    'nsCollation.h',
+    'nsCollationCID.h',
+    'nsDateTimeFormatCID.h',
+    'nsIDateTimeFormat.h',
+    'nsILanguageAtomService.h',
+    'nsIPlatformCharset.h',
+    'nsPosixLocale.h',
+    'nsWin32Locale.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsCollation.cpp',
+    'nsLanguageAtomService.cpp',
+    'nsLocale.cpp',
+    'nsLocaleService.cpp',
+    'nsScriptableDateFormat.cpp',
+    'nsUConvPropertySearch.cpp',
+]
+
+EXTRA_JS_MODULES += [
+    'PluralForm.jsm',
+]
+
+MSVC_ENABLE_PGO = True
+
+FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/intl/uconv',
+]
+
+RESOURCE_FILES += [
+    'langGroups.properties',
+    'language.properties',
+]

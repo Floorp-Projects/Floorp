@@ -83,9 +83,6 @@ typedef uint8_t nsHttpVersion;
 // weaker security profiles based on past history
 #define NS_HTTP_ALLOW_RSA_FALSESTART (1<<9)
 
-// Allows a transaction to use a connection to a private, RFC1918-like address.
-#define NS_HTTP_ALLOW_PRIVATE_IP_ADDRESSES (1<<10)
-
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------
@@ -132,10 +129,14 @@ struct nsHttp
     // section 2.2
     static bool IsValidToken(const char *start, const char *end);
 
-    static inline bool IsValidToken(const nsCString &s) {
-        const char *start = s.get();
-        return IsValidToken(start, start + s.Length());
+    static inline bool IsValidToken(const nsACString &s) {
+        return IsValidToken(s.BeginReading(), s.EndReading());
     }
+
+    // Returns true if the specified value is reasonable given the defintion
+    // in RFC 2616 section 4.2.  Full strict validation is not performed
+    // currently as it would require full parsing of the value.
+    static bool IsReasonableHeaderValue(const nsACString &s);
 
     // find the first instance (case-insensitive comparison) of the given
     // |token| in the |input| string.  the |token| is bounded by elements of
