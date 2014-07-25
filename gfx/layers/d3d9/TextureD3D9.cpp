@@ -566,6 +566,18 @@ CairoTextureClientD3D9::~CairoTextureClientD3D9()
   MOZ_COUNT_DTOR(CairoTextureClientD3D9);
 }
 
+TemporaryRef<TextureClient>
+CairoTextureClientD3D9::CreateSimilar(TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const
+{
+  RefPtr<TextureClient> tex = new CairoTextureClientD3D9(mFormat, mFlags | aFlags);
+
+  if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
+    return nullptr;
+  }
+
+  return tex;
+}
+
 bool
 CairoTextureClientD3D9::Lock(OpenMode aMode)
 {
