@@ -24,8 +24,18 @@ public:
 namespace mozilla {
 namespace gmp {
 
+// States:
+// Initial: mIsOpen == false
+//    on InitDecode success -> Open
+//    on Shutdown -> Dead
+// Open: mIsOpen == true
+//    on Close -> Dead
+//    on ActorDestroy -> Dead
+//    on Shutdown -> Dead
+// Dead: mIsOpen == false
+
 GMPVideoDecoderParent::GMPVideoDecoderParent(GMPParent* aPlugin)
-  : mCanSendMessages(true)
+  : mIsOpen(false)
   , mPlugin(aPlugin)
   , mCallback(nullptr)
   , mVideoHost(MOZ_THIS_IN_INITIALIZER_LIST())
@@ -43,14 +53,30 @@ GMPVideoDecoderParent::Host()
   return mVideoHost;
 }
 
+// Note: may be called via Terminated()
+void
+GMPVideoDecoderParent::Close()
+{
+  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  // Consumer is done with us; we can shut down.  No more callbacks should
+  // be made to mCallback.  Note: do this before Shutdown()!
+  mCallback = nullptr;
+  // Let Shutdown mark us as dead so it knows if we had been alive
+
+  // In case this is the last reference
+  nsRefPtr<GMPVideoDecoderParent> kungfudeathgrip(this);
+  NS_RELEASE(kungfudeathgrip);
+  Shutdown();
+}
+
 nsresult
 GMPVideoDecoderParent::InitDecode(const GMPVideoCodec& aCodecSettings,
                                   const nsTArray<uint8_t>& aCodecSpecific,
-                                  GMPVideoDecoderCallback* aCallback,
+                                  GMPVideoDecoderCallbackProxy* aCallback,
                                   int32_t aCoreCount)
 {
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video decoder!");
+  if (mIsOpen) {
+    NS_WARNING("Trying to re-init an in-use GMP video decoder!");
     return NS_ERROR_FAILURE;
   }
 
@@ -64,6 +90,7 @@ GMPVideoDecoderParent::InitDecode(const GMPVideoCodec& aCodecSettings,
   if (!SendInitDecode(aCodecSettings, aCodecSpecific, aCoreCount)) {
     return NS_ERROR_FAILURE;
   }
+  mIsOpen = true;
 
   // Async IPC, we don't have access to a return value.
   return NS_OK;
@@ -77,17 +104,14 @@ GMPVideoDecoderParent::Decode(GMPVideoEncodedFrame* aInputFrame,
 {
   nsAutoRef<GMPVideoEncodedFrame> autoDestroy(aInputFrame);
 
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video decoder!");
+  if (!mIsOpen) {
+    NS_WARNING("Trying to use an dead GMP video decoder");
     return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   auto inputFrameImpl = static_cast<GMPVideoEncodedFrameImpl*>(aInputFrame);
-
-  GMPVideoEncodedFrameData frameData;
-  inputFrameImpl->RelinquishFrameData(frameData);
 
   // Very rough kill-switch if the plugin stops processing.  If it's merely
   // hung and continues, we'll come back to life eventually.
@@ -96,6 +120,9 @@ GMPVideoDecoderParent::Decode(GMPVideoEncodedFrame* aInputFrame,
       NumInUse(kGMPEncodedData) > GMPSharedMemManager::kGMPBufLimit) {
     return NS_ERROR_FAILURE;
   }
+
+  GMPVideoEncodedFrameData frameData;
+  inputFrameImpl->RelinquishFrameData(frameData);
 
   if (!SendDecode(frameData,
                   aMissingFrames,
@@ -111,8 +138,8 @@ GMPVideoDecoderParent::Decode(GMPVideoEncodedFrame* aInputFrame,
 nsresult
 GMPVideoDecoderParent::Reset()
 {
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video decoder!");
+  if (!mIsOpen) {
+    NS_WARNING("Trying to use an dead GMP video decoder");
     return NS_ERROR_FAILURE;
   }
 
@@ -129,8 +156,8 @@ GMPVideoDecoderParent::Reset()
 nsresult
 GMPVideoDecoderParent::Drain()
 {
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video decoder!");
+  if (!mIsOpen) {
+    NS_WARNING("Trying to use an dead GMP video decoder");
     return NS_ERROR_FAILURE;
   }
 
@@ -146,37 +173,41 @@ GMPVideoDecoderParent::Drain()
 
 // Note: Consider keeping ActorDestroy sync'd up when making changes here.
 nsresult
-GMPVideoDecoderParent::DecodingComplete()
+GMPVideoDecoderParent::Shutdown()
 {
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video decoder!");
-    return NS_ERROR_FAILURE;
-  }
-
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
-  mCanSendMessages = false;
-
-  mCallback = nullptr;
-
+  // Notify client we're gone!  Won't occur after Close()
+  if (mCallback) {
+    mCallback->Terminated();
+    mCallback = nullptr;
+  }
   mVideoHost.DoneWithAPI();
 
-  unused << SendDecodingComplete();
+  if (mIsOpen) {
+    // Don't send DecodingComplete if we died
+    mIsOpen = false;
+    unused << SendDecodingComplete();
+  }
 
   return NS_OK;
 }
 
-// Note: Keep this sync'd up with DecodingComplete
+// Note: Keep this sync'd up with Shutdown
 void
 GMPVideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  mIsOpen = false;
+  if (mCallback) {
+    // May call Close() (and Shutdown()) immediately or with a delay
+    mCallback->Terminated();
+    mCallback = nullptr;
+  }
   if (mPlugin) {
     // Ignore any return code. It is OK for this to fail without killing the process.
     mPlugin->VideoDecoderDestroyed(this);
     mPlugin = nullptr;
   }
-  mCanSendMessages = false;
-  mCallback = nullptr;
   mVideoHost.ActorDestroyed();
 }
 
