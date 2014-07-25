@@ -6689,8 +6689,7 @@ FlushThrottledStyles(nsIDocument *aDocument, void *aData)
   if (shell && shell->IsVisible()) {
     nsPresContext* presContext = shell->GetPresContext();
     if (presContext) {
-      presContext->TransitionManager()->UpdateAllThrottledStyles();
-      presContext->AnimationManager()->UpdateAllThrottledStyles();
+      presContext->RestyleManager()->UpdateOnlyAnimationStyles();
     }
   }
 
