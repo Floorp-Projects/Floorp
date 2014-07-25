@@ -34,6 +34,19 @@
     </xul:hbox>
   </xul:panel>
 
+  <xul:panel id="newtab-customize-panel" orient="vertical" type="arrow"
+             noautohide="true">
+    <xul:hbox id="newtab-customize-enhanced" class="newtab-customize-panel-item">
+      <xul:label>&newtab.customize.enhanced;</xul:label>
+    </xul:hbox>
+    <xul:hbox id="newtab-customize-classic" class="newtab-customize-panel-item">
+      <xul:label>&newtab.customize.classic;</xul:label>
+    </xul:hbox>
+    <xul:hbox id="newtab-customize-blank" class="newtab-customize-panel-item">
+      <xul:label>&newtab.customize.blank;</xul:label>
+    </xul:hbox>
+  </xul:panel>
+
   <div id="newtab-scrollbox">
 
     <div id="newtab-vertical-margin">
@@ -78,7 +91,8 @@
       <div id="newtab-margin-bottom"/>
 
     </div>
-    <input id="newtab-toggle" type="button"/>
+
+    <input id="newtab-customize-button" type="button" title="&newtab.customize.title;"/>
   </div>
 
   <xul:script type="text/javascript;version=1.8"

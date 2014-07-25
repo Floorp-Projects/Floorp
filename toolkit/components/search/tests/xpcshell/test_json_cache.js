@@ -7,9 +7,6 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 // Metadata to write to search-metadata.json for the test.
 let gMetadata = {"[profile]/test-search-engine.xml":{"used":true}};
 

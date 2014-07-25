@@ -2254,10 +2254,10 @@ Decoder.decode=function(bits)
 
 // mozilla: Get access to a window
 const Services = require("Services");
-const window = Services.appShell.hiddenDOMWindow;
+const { DebuggerServer } = require("devtools/server/main");
+const window = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
 const { document, Image } = window;
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-document.createElement = e => document.createElementNS(HTML_NS, e);
 
 qrcode = {};
 qrcode.imagedata = null;
@@ -2291,7 +2291,8 @@ qrcode.decode = function(src){
         var image = new Image();
         image.onload=function(){
             //var canvas_qr = document.getElementById("qr-canvas");
-            var canvas_qr = document.createElement('canvas');
+            // mozilla: Use HTML namespace explicitly
+            var canvas_qr = document.createElementNS(HTML_NS, 'canvas');
             var context = canvas_qr.getContext('2d');
             var nheight = image.height;
             var nwidth = image.width;
@@ -2564,12 +2565,6 @@ function URShift( number,  bits)
         return (number >> bits) + (2 << ~bits);
 }
 
-
-Array.prototype.remove = function(from, to) {
-  var rest = this.slice((to || from) + 1 || this.length);
-  this.length = from < 0 ? this.length + from : from;
-  return this.push.apply(this, rest);
-};
 
 // mozilla: Add module support
 module.exports = {
@@ -3025,7 +3020,9 @@ function FinderPatternFinder()
 					//if (Math.abs(pattern.EstimatedModuleSize - average) > 0.2 * average)
                     if (Math.abs(pattern.EstimatedModuleSize - average) > limit)
 					{
-						this.possibleCenters.remove(i);
+                                                // mozilla: use splice instead
+                                                // of custom remove on Array
+						this.possibleCenters.splice(i, 1);
 						i--;
 					}
 				}

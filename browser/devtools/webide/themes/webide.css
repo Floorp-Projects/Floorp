@@ -206,7 +206,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 #runtime-disconnect,
 #runtime-panel-nousbdevice,
 #runtime-panel-noadbhelper,
-#runtime-panel-nosimulator,
+#runtime-panel-installsimulator,
 .runtime-panel-item-usb,
 .runtime-panel-item-wifi,
 .runtime-panel-item-custom,
@@ -220,7 +220,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 #runtime-disconnect             { -moz-image-region: rect(52px,338px,78px,312px) }
 #runtime-panel-nousbdevice      { -moz-image-region: rect(156px,338px,182px,312px) }
 #runtime-panel-noadbhelper      { -moz-image-region: rect(234px,338px,260px,312px) }
-#runtime-panel-nosimulator      { -moz-image-region: rect(0px,338px,26px,312px) }
+#runtime-panel-installsimulator { -moz-image-region: rect(0px,338px,26px,312px) }
 .runtime-panel-item-usb         { -moz-image-region: rect(52px,338px,78px,312px) }
 .runtime-panel-item-wifi        { -moz-image-region: rect(208px,338px,234px,312px) }
 .runtime-panel-item-custom      { -moz-image-region: rect(26px,338px,52px,312px) }

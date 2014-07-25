@@ -775,10 +775,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(18px, 576px, 36px, 558px);
   }
 
-  #webrtc-status-button@toolbarButtonPressed@ {
-    -moz-image-region: rect(18px, 594px, 36px, 576px);
-  }
-
   #nav-bar-overflow-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 612px, 36px, 594px);
   }
@@ -1085,14 +1081,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 
   #zoom-controls[cui-areatype="toolbar"] > #zoom-in-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 1152px, 72px, 1116px);
-  }
-
-  #webrtc-status-button {
-    -moz-image-region: rect(0, 1188px, 36px, 1152px);
-  }
-
-  #webrtc-status-button:hover:active:not([disabled="true"]) {
-    -moz-image-region: rect(36px, 1188px, 72px, 1152px);
   }
 
   #nav-bar-overflow-button {

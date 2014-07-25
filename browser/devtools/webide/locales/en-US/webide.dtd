@@ -64,7 +64,7 @@
 <!ENTITY runtimePanel_WiFiDevices "WiFi Devices">
 <!ENTITY runtimePanel_simulators "Simulators">
 <!ENTITY runtimePanel_custom "Custom">
-<!ENTITY runtimePanel_nosimulator "Install Simulator">
+<!ENTITY runtimePanel_installsimulator "Install Simulator">
 <!ENTITY runtimePanel_noadbhelper "Install ADB Helper">
 <!ENTITY runtimePanel_nousbdevice "Can't see your device?">
 
