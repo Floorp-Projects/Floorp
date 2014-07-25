@@ -21,7 +21,6 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jstypes.h"
-#include "jswatchpoint.h"
 
 #include "frontend/SourceNotes.h"
 #include "jit/AsmJSModule.h"
@@ -182,65 +181,6 @@ JS_SetSingleStepMode(JSContext *cx, HandleScript script, bool singleStep)
     return script->setStepModeFlag(cx, singleStep);
 }
 
-/************************************************************************/
-
-JS_PUBLIC_API(bool)
-JS_SetWatchPoint(JSContext *cx, HandleObject origobj, HandleId id,
-                 JSWatchPointHandler handler, HandleObject closure)
-{
-    assertSameCompartment(cx, origobj);
-
-    RootedObject obj(cx, GetInnerObject(origobj));
-    if (!obj)
-        return false;
-
-    if (!obj->isNative() || obj->is<TypedArrayObject>()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
-                             obj->getClass()->name);
-        return false;
-    }
-
-    /*
-     * Use sparse indexes for watched objects, as dense elements can be written
-     * to without checking the watchpoint map.
-     */
-    if (!JSObject::sparsifyDenseElements(cx, obj))
-        return false;
-
-    types::MarkTypePropertyNonData(cx, obj, id);
-
-    WatchpointMap *wpmap = cx->compartment()->watchpointMap;
-    if (!wpmap) {
-        wpmap = cx->runtime()->new_<WatchpointMap>();
-        if (!wpmap || !wpmap->init()) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-        cx->compartment()->watchpointMap = wpmap;
-    }
-    return wpmap->watch(cx, obj, id, handler, closure);
-}
-
-JS_PUBLIC_API(bool)
-JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
-                   JSWatchPointHandler *handlerp, JSObject **closurep)
-{
-    assertSameCompartment(cx, obj, id);
-
-    if (WatchpointMap *wpmap = cx->compartment()->watchpointMap)
-        wpmap->unwatch(obj, id, handlerp, closurep);
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
-{
-    assertSameCompartment(cx, obj);
-
-    if (WatchpointMap *wpmap = cx->compartment()->watchpointMap)
-        wpmap->unwatchObject(obj);
-    return true;
-}
 
 /************************************************************************/
 
