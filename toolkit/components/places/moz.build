@@ -59,7 +59,7 @@ if CONFIG['MOZ_PLACES']:
         '../build',
     ]
 
-    EXTRA_JS_MODULES = [
+    EXTRA_JS_MODULES += [
         'BookmarkHTMLUtils.jsm',
         'BookmarkJSONUtils.jsm',
         'ClusterLib.js',

@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
-    EXTRA_JS_MODULES = [
+    EXTRA_JS_MODULES += [
         'gonk/CpPduHelper.jsm',
         'gonk/SiPduHelper.jsm',
         'gonk/SlPduHelper.jsm',
