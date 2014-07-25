@@ -57,6 +57,12 @@
         "app_capturer.cc",
       ],
       'conditions': [
+        ['OS!="android"', {
+          'sources': [
+            '../../video_engine/desktop_capture_impl.cc',
+            '../../video_engine/desktop_capture_impl.h',
+          ],
+        }],
         ['multi_monitor_screenshare != 0', {
           'defines': [
             'MULTI_MONITOR_SCREENSHARE'
