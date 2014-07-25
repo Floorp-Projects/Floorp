@@ -29,6 +29,10 @@ struct WatchKey {
     }
 };
 
+typedef bool
+(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsid id, JS::Value old,
+                        JS::Value *newp, void *closure);
+
 struct Watchpoint {
     JSWatchPointHandler handler;
     PreBarrieredObject closure;  /* This is always marked in minor GCs and so doesn't require a postbarrier. */

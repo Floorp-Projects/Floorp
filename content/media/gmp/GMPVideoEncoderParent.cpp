@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPVideoEncoderParent.h"
+#include "prlog.h"
 #include "GMPVideoi420FrameImpl.h"
 #include "GMPVideoEncodedFrameImpl.h"
-#include <stdio.h>
 #include "mozilla/unused.h"
 #include "GMPMessageUtils.h"
 #include "nsAutoRef.h"
@@ -22,10 +22,40 @@ public:
 };
 
 namespace mozilla {
+
+#ifdef LOG
+#undef LOG
+#endif
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetGMPLog();
+
+#define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
+#else
+#define LOGD(msg)
+#define LOG(level, msg)
+#endif
+
+#ifdef __CLASS__
+#undef __CLASS__
+#endif
+#define __CLASS__ "GMPVideoEncoderParent"
+
 namespace gmp {
 
+// States:
+// Initial: mIsOpen == false
+//    on InitDecode success -> Open
+//    on Shutdown -> Dead
+// Open: mIsOpen == true
+//    on Close -> Dead
+//    on ActorDestroy -> Dead
+//    on Shutdown -> Dead
+// Dead: mIsOpen == false
+
 GMPVideoEncoderParent::GMPVideoEncoderParent(GMPParent *aPlugin)
-: mCanSendMessages(true),
+: mIsOpen(false),
   mPlugin(aPlugin),
   mCallback(nullptr),
   mVideoHost(MOZ_THIS_IN_INITIALIZER_LIST())
@@ -43,6 +73,23 @@ GMPVideoEncoderParent::Host()
   return mVideoHost;
 }
 
+// Note: may be called via Terminated()
+void
+GMPVideoEncoderParent::Close()
+{
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
+  // Consumer is done with us; we can shut down.  No more callbacks should
+  // be made to mCallback.  Note: do this before Shutdown()!
+  mCallback = nullptr;
+  // Let Shutdown mark us as dead so it knows if we had been alive
+
+  // In case this is the last reference
+  nsRefPtr<GMPVideoEncoderParent> kungfudeathgrip(this);
+  NS_RELEASE(kungfudeathgrip);
+  Shutdown();
+}
+
 GMPErr
 GMPVideoEncoderParent::InitEncode(const GMPVideoCodec& aCodecSettings,
                                   const nsTArray<uint8_t>& aCodecSpecific,
@@ -50,9 +97,10 @@ GMPVideoEncoderParent::InitEncode(const GMPVideoCodec& aCodecSettings,
                                   int32_t aNumberOfCores,
                                   uint32_t aMaxPayloadSize)
 {
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video encoder!");
-    return GMPGenericErr;
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+  if (mIsOpen) {
+    NS_WARNING("Trying to re-init an in-use GMP video encoder!");
+    return GMPGenericErr;;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
@@ -65,6 +113,7 @@ GMPVideoEncoderParent::InitEncode(const GMPVideoCodec& aCodecSettings,
   if (!SendInitEncode(aCodecSettings, aCodecSpecific, aNumberOfCores, aMaxPayloadSize)) {
     return GMPGenericErr;
   }
+  mIsOpen = true;
 
   // Async IPC, we don't have access to a return value.
   return GMPNoErr;
@@ -77,17 +126,14 @@ GMPVideoEncoderParent::Encode(GMPVideoi420Frame* aInputFrame,
 {
   nsAutoRef<GMPVideoi420Frame> frameRef(aInputFrame);
 
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video encoder!");
+  if (!mIsOpen) {
+    NS_WARNING("Trying to use an dead GMP video encoder");
     return GMPGenericErr;
   }
 
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   auto inputFrameImpl = static_cast<GMPVideoi420FrameImpl*>(aInputFrame);
-
-  GMPVideoi420FrameData frameData;
-  inputFrameImpl->InitFrameData(frameData);
 
   // Very rough kill-switch if the plugin stops processing.  If it's merely
   // hung and continues, we'll come back to life eventually.
@@ -96,6 +142,9 @@ GMPVideoEncoderParent::Encode(GMPVideoi420Frame* aInputFrame,
       NumInUse(kGMPEncodedData) > GMPSharedMemManager::kGMPBufLimit) {
     return GMPGenericErr;
   }
+
+  GMPVideoi420FrameData frameData;
+  inputFrameImpl->InitFrameData(frameData);
 
   if (!SendEncode(frameData,
                   aCodecSpecificInfo,
@@ -110,7 +159,7 @@ GMPVideoEncoderParent::Encode(GMPVideoi420Frame* aInputFrame,
 GMPErr
 GMPVideoEncoderParent::SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT)
 {
-  if (!mCanSendMessages) {
+  if (!mIsOpen) {
     NS_WARNING("Trying to use an invalid GMP video encoder!");
     return GMPGenericErr;
   }
@@ -128,8 +177,8 @@ GMPVideoEncoderParent::SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT)
 GMPErr
 GMPVideoEncoderParent::SetRates(uint32_t aNewBitRate, uint32_t aFrameRate)
 {
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video encoder!");
+  if (!mIsOpen) {
+    NS_WARNING("Trying to use an dead GMP video decoder");
     return GMPGenericErr;
   }
 
@@ -146,7 +195,7 @@ GMPVideoEncoderParent::SetRates(uint32_t aNewBitRate, uint32_t aFrameRate)
 GMPErr
 GMPVideoEncoderParent::SetPeriodicKeyFrames(bool aEnable)
 {
-  if (!mCanSendMessages) {
+  if (!mIsOpen) {
     NS_WARNING("Trying to use an invalid GMP video encoder!");
     return GMPGenericErr;
   }
@@ -163,35 +212,40 @@ GMPVideoEncoderParent::SetPeriodicKeyFrames(bool aEnable)
 
 // Note: Consider keeping ActorDestroy sync'd up when making changes here.
 void
-GMPVideoEncoderParent::EncodingComplete()
+GMPVideoEncoderParent::Shutdown()
 {
-  if (!mCanSendMessages) {
-    NS_WARNING("Trying to use an invalid GMP video encoder!");
-    return;
-  }
-
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
-  mCanSendMessages = false;
-
-  mCallback = nullptr;
-
+  // Notify client we're gone!  Won't occur after Close()
+  if (mCallback) {
+    mCallback->Terminated();
+    mCallback = nullptr;
+  }
   mVideoHost.DoneWithAPI();
-
-  unused << SendEncodingComplete();
+  if (mIsOpen) {
+    // Don't send EncodingComplete if we died
+    mIsOpen = false;
+    unused << SendEncodingComplete();
+  }
 }
 
-// Note: Keep this sync'd up with DecodingComplete
+// Note: Keep this sync'd up with Shutdown
 void
 GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  LOGD(("%s::%s: %p (%d)", __CLASS__, __FUNCTION__, this, (int) aWhy));
+  mIsOpen = false;
+  if (mCallback) {
+    // May call Close() (and Shutdown()) immediately or with a delay
+    mCallback->Terminated();
+    mCallback = nullptr;
+  }
   if (mPlugin) {
     // Ignore any return code. It is OK for this to fail without killing the process.
     mPlugin->VideoEncoderDestroyed(this);
     mPlugin = nullptr;
   }
-  mCanSendMessages = false;
-  mCallback = nullptr;
   mVideoHost.ActorDestroyed();
 }
 
@@ -252,6 +306,8 @@ GMPVideoEncoderParent::AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
                                                 aEncodedBufferSize,
                                                 ipc::SharedMemory::TYPE_BASIC, &mem))
   {
+    LOG(PR_LOG_ERROR, ("%s::%s: Failed to get a shared mem buffer for Child! size %u",
+                       __CLASS__, __FUNCTION__, aEncodedBufferSize));
     return false;
   }
   *aMem = mem;

@@ -14,9 +14,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include "jsatom.h"
-#ifdef JS_THREADSAFE
 #include "jslock.h"
-#endif
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jstypes.h"
@@ -1580,9 +1578,6 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     void destroyBreakpointSite(js::FreeOp *fop, jsbytecode *pc);
 
     void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JSObject *handler);
-    void clearTraps(js::FreeOp *fop);
-
-    void markTrapClosures(JSTracer *trc);
 
     /*
      * Set or clear the single-step flag. If the flag is set or the count

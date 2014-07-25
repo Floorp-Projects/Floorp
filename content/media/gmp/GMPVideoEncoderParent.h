@@ -29,8 +29,10 @@ public:
   GMPVideoEncoderParent(GMPParent *aPlugin);
 
   GMPVideoHostImpl& Host();
+  void Shutdown();
 
   // GMPVideoEncoderProxy
+  virtual void Close() MOZ_OVERRIDE;
   virtual GMPErr InitEncode(const GMPVideoCodec& aCodecSettings,
                             const nsTArray<uint8_t>& aCodecSpecific,
                             GMPVideoEncoderCallbackProxy* aCallback,
@@ -42,7 +44,6 @@ public:
   virtual GMPErr SetChannelParameters(uint32_t aPacketLoss, uint32_t aRTT) MOZ_OVERRIDE;
   virtual GMPErr SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) MOZ_OVERRIDE;
   virtual GMPErr SetPeriodicKeyFrames(bool aEnable) MOZ_OVERRIDE;
-  virtual void EncodingComplete() MOZ_OVERRIDE;
   virtual const uint64_t ParentID() MOZ_OVERRIDE { return reinterpret_cast<uint64_t>(mPlugin.get()); }
 
   // GMPSharedMemManager
@@ -73,7 +74,7 @@ private:
                                Shmem* aMem) MOZ_OVERRIDE;
   virtual bool Recv__delete__() MOZ_OVERRIDE;
 
-  bool mCanSendMessages;
+  bool mIsOpen;
   nsRefPtr<GMPParent> mPlugin;
   GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;

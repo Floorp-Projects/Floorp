@@ -1,0 +1,51 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 94048 - test install event.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  // Make sure to use good, unique messages, since the actual expression will not show up in test results.
+  function my_ok(result, msg) {
+    window.opener.postMessage({status: "ok", result: result, message: msg}, "*");
+  }
+
+  function finish() {
+    window.opener.postMessage({status: "done"}, "*");
+  }
+
+  if (navigator.serviceWorker.controller) {
+    my_ok(navigator.serviceWorker.controller.scope.match(/serviceworkers\/control\*$/),
+          "This page should be controlled by upper level registration");
+    my_ok(navigator.serviceWorker.installing == undefined,
+          "Upper level registration should not have a installing worker.");
+    // We are controlled.
+    // Register a new worker for this sub-scope. After that, controller should still be for upper level, but active should change to be this scope's.
+    navigator.serviceWorker.register("../worker2.js", { scope: "./*" }).then(function(e) {
+      my_ok(navigator.serviceWorker.installing &&
+            navigator.serviceWorker.installing.scope.match(/controller\/\*$/),
+            "Installing is serviceworker/controller/*");
+      my_ok(navigator.serviceWorker.controller.scope.match(/serviceworkers\/control\*$/),
+            "Controller is still serviceworker/*");
+      finish();
+    });
+  } else {
+    my_ok(false, "Should've been controlled!");
+    finish();
+  }
+</script>
+</pre>
+</body>
+</html>
+
+

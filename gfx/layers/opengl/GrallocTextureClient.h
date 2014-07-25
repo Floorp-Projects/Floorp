@@ -114,6 +114,10 @@ public:
     return mMediaBuffer;
   }
 
+  virtual TemporaryRef<TextureClient>
+  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const MOZ_OVERRIDE;
+
 protected:
   /**
    * Unfortunately, until bug 879681 is fixed we need to use a GrallocBufferActor.

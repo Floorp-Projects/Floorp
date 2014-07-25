@@ -36,7 +36,6 @@ BEGIN_TEST(testScriptInfo)
     jsbytecode *start = JS_LineNumberToPC(cx, script, startLine);
     CHECK_EQUAL(JS_GetScriptBaseLineNumber(cx, script), startLine);
     CHECK_EQUAL(JS_PCToLineNumber(cx, script, start), startLine);
-    CHECK_EQUAL(JS_GetScriptLineExtent(cx, script), 11u);
     CHECK(strcmp(JS_GetScriptFilename(script), __FILE__) == 0);
     const jschar *sourceMap = JS_GetScriptSourceMap(cx, script);
     CHECK(sourceMap);

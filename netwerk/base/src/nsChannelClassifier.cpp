@@ -11,6 +11,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "prlog.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozIThirdPartyUtil.h"
 
 #if defined(PR_LOGGING)
 //
@@ -30,6 +31,24 @@ nsChannelClassifier::nsChannelClassifier()
     if (!gChannelClassifierLog)
         gChannelClassifierLog = PR_NewLogModule("nsChannelClassifier");
 #endif
+}
+
+bool
+nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel* aChannel)
+{
+    nsresult rv;
+
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    // Third party checks don't work for chrome:// URIs in mochitests, so just
+    // default to isThirdParty = true
+    bool isThirdParty = true;
+    (void)thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdParty);
+    return isThirdParty;
 }
 
 nsresult
@@ -97,7 +116,9 @@ nsChannelClassifier::Start(nsIChannel *aChannel)
     NS_ENSURE_SUCCESS(rv, rv);
 
     bool expectCallback;
-    rv = uriClassifier->Classify(principal, this, &expectCallback);
+    bool trackingProtectionEnabled = ShouldEnableTrackingProtection(aChannel);
+    rv = uriClassifier->Classify(principal, trackingProtectionEnabled, this,
+                                 &expectCallback);
     if (NS_FAILED(rv)) return rv;
 
     if (expectCallback) {

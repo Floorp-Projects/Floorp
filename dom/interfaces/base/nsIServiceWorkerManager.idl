@@ -8,7 +8,7 @@
 interface nsIDocument;
 interface nsIURI;
 
-[uuid(6e1382f4-3cbc-435f-8ce0-70175f6eb400)]
+[uuid(cc539f1e-1ce6-4af5-bf94-195b30bde010)]
 interface nsIServiceWorkerManager : nsISupports
 {
   // Returns a Promise
@@ -35,6 +35,12 @@ interface nsIServiceWorkerManager : nsISupports
    * idempotent.
    */
   [notxpcom,nostdcall] void MaybeStopControlling(in nsIDocument aDoc);
+
+  // Returns a ServiceWorker
+  [noscript] nsISupports GetInstalling(in nsIDOMWindow aWindow);
+  [noscript] nsISupports GetWaiting(in nsIDOMWindow aWindow);
+  [noscript] nsISupports GetActive(in nsIDOMWindow aWindow);
+  [noscript] nsISupports GetDocumentController(in nsIDOMWindow aWindow);
 
   // Testing
   DOMString getScopeForUrl(in DOMString path);
