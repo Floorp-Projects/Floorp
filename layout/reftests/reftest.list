@@ -47,8 +47,9 @@ include box-shadow/reftest.list
 # bugs/
 include bugs/reftest.list
 
-# canvas 2D
+# canvas
 include canvas/reftest.list
+skip-if(xulFennec) include ../../dom/canvas/test/reftest/reftest.list
 
 # css animations
 include css-animations/reftest.list

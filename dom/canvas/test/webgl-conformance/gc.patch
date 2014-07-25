@@ -1,9 +1,9 @@
 # HG changeset patch
 # Parent f9585cefcf568dbc2a6ce81f16a2048365af7ed2
 
-diff --git a/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html b/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
---- a/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
-+++ b/content/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
+diff --git a/dom/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html b/dom/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
+--- a/dom/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
++++ b/dom/canvas/test/webgl/conformance/extensions/oes-standard-derivatives.html
 @@ -337,42 +337,21 @@ function runOutputTests() {
      setupBuffers(1.0, 0.5, 0.5, 0.0);
      wtu.drawQuad(gl);
@@ -48,9 +48,9 @@ diff --git a/content/canvas/test/webgl/conformance/extensions/oes-standard-deriv
      // create some reference cycles. The goal is to see if they cause leaks. The point is that
      // some browser test runners have instrumentation to detect leaked refcounted objects.
  
-diff --git a/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html b/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
---- a/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
-+++ b/content/canvas/test/webgl/conformance/extensions/oes-texture-float.html
+diff --git a/dom/canvas/test/webgl/conformance/extensions/oes-texture-float.html b/dom/canvas/test/webgl/conformance/extensions/oes-texture-float.html
+--- a/dom/canvas/test/webgl/conformance/extensions/oes-texture-float.html
++++ b/dom/canvas/test/webgl/conformance/extensions/oes-texture-float.html
 @@ -178,42 +178,21 @@ function runRenderTargetTest(testProgram
      gl.bindTexture(gl.TEXTURE_2D, texture);
      gl.useProgram(testProgram);
@@ -95,9 +95,9 @@ diff --git a/content/canvas/test/webgl/conformance/extensions/oes-texture-float.
      // create some reference cycles. The goal is to see if they cause leaks. The point is that
      // some browser test runners have instrumentation to detect leaked refcounted objects.
  
-diff --git a/content/canvas/test/webgl/resources/js-test-pre.js b/content/canvas/test/webgl/resources/js-test-pre.js
---- a/content/canvas/test/webgl/resources/js-test-pre.js
-+++ b/content/canvas/test/webgl/resources/js-test-pre.js
+diff --git a/dom/canvas/test/webgl/resources/js-test-pre.js b/dom/canvas/test/webgl/resources/js-test-pre.js
+--- a/dom/canvas/test/webgl/resources/js-test-pre.js
++++ b/dom/canvas/test/webgl/resources/js-test-pre.js
 @@ -435,29 +435,42 @@ function assertMsg(assertion, msg) {
      if (assertion) {
          testPassed(msg);

@@ -43,6 +43,7 @@ PARALLEL_DIRS += [
     'bindings',
     'battery',
     'browser-element',
+    'canvas',
     'contacts',
     'crypto',
     'phonenumberutils',
