@@ -1661,10 +1661,12 @@ InitIds(JSContext* cx, const Prefable<Spec>* prefableSpecs, jsid* ids)
     // because this is only done once per application runtime.
     Spec* spec = prefableSpecs->specs;
     do {
-      if (!InternJSString(cx, *ids, spec->name)) {
-        return false;
+      if (!JS::FunctionSpecNameIsSymbol(spec->name)) {
+        if (!InternJSString(cx, *ids++, spec->name)) {
+          return false;
+        }
       }
-    } while (++ids, (++spec)->name);
+    } while ((++spec)->name);
 
     // We ran out of ids for that pref.  Put a JSID_VOID in on the id
     // corresponding to the list terminator for the pref.
