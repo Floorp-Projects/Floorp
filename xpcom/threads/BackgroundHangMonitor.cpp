@@ -147,7 +147,7 @@ public:
                        uint32_t aMaxTimeoutMs);
 
   // Report a hang; aManager->mLock IS locked
-  Telemetry::HangHistogram& ReportHang(PRIntervalTime aHangTime);
+  void ReportHang(PRIntervalTime aHangTime);
   // Report a permanent hang; aManager->mLock IS locked
   void ReportPermaHang();
   // Called by BackgroundHangMonitor::NotifyActivity
@@ -354,7 +354,7 @@ BackgroundHangThread::~BackgroundHangThread()
   Telemetry::RecordThreadHangStats(mStats);
 }
 
-Telemetry::HangHistogram&
+void
 BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
 {
   // Recovered from a hang; called on the monitor thread
@@ -366,13 +366,12 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     if (newHistogram == *oldHistogram) {
       // New histogram matches old one
       oldHistogram->Add(aHangTime);
-      return *oldHistogram;
+      return;
     }
   }
   // Add new histogram
   newHistogram.Add(aHangTime);
   mStats.mHangs.append(Move(newHistogram));
-  return mStats.mHangs.back();
 }
 
 void
@@ -381,11 +380,8 @@ BackgroundHangThread::ReportPermaHang()
   // Permanently hanged; called on the monitor thread
   // mManager->mLock IS locked
 
-  Telemetry::HangHistogram& hang = ReportHang(mMaxTimeout);
-  Telemetry::HangStack& stack = hang.GetNativeStack();
-  if (stack.empty()) {
-    mStackHelper.GetNativeStack(stack);
-  }
+  // TODO: Add more detailed analysis for perma-hangs
+  ReportHang(mMaxTimeout);
 }
 
 MOZ_ALWAYS_INLINE void
