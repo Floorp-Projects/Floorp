@@ -608,23 +608,6 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
     pda->length = 0;
 }
 
-/************************************************************************/
-
-JS_PUBLIC_API(bool)
-JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler handler, void *closure)
-{
-    rt->debugHooks.debuggerHandler = handler;
-    rt->debugHooks.debuggerHandlerData = closure;
-    return true;
-}
-
-/************************************************************************/
-
-JS_PUBLIC_API(const JSDebugHooks *)
-JS_GetGlobalDebugHooks(JSRuntime *rt)
-{
-    return &rt->debugHooks;
-}
 
 /************************************************************************/
 
@@ -682,53 +665,6 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
         }
     }
 #endif
-}
-
-JS_FRIEND_API(bool)
-js::CanCallContextDebugHandler(JSContext *cx)
-{
-    return !!cx->runtime()->debugHooks.debuggerHandler;
-}
-
-static JSTrapStatus
-CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
-{
-    if (!cx->runtime()->debugHooks.debuggerHandler)
-        return JSTRAP_RETURN;
-
-    return cx->runtime()->debugHooks.debuggerHandler(cx, script, bc, rval,
-                                                     cx->runtime()->debugHooks.debuggerHandlerData);
-}
-
-JS_FRIEND_API(bool)
-js_CallContextDebugHandler(JSContext *cx)
-{
-    NonBuiltinFrameIter iter(cx);
-
-    // If there is no script to debug, then abort execution even if the user
-    // clicks 'Debug' in the slow-script dialog.
-    if (!iter.hasScript())
-        return false;
-
-    // Even if script was running during the operation callback, it's possible
-    // it was a builtin which 'iter' will have skipped over.
-    if (iter.done())
-        return false;
-
-    RootedValue rval(cx);
-    RootedScript script(cx, iter.script());
-    switch (CallContextDebugHandler(cx, script, iter.pc(), rval.address())) {
-      case JSTRAP_ERROR:
-        JS_ClearPendingException(cx);
-        return false;
-      case JSTRAP_THROW:
-        JS_SetPendingException(cx, rval);
-        return false;
-      case JSTRAP_RETURN:
-      case JSTRAP_CONTINUE:
-      default:
-        return true;
-    }
 }
 
 namespace {

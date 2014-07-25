@@ -3272,12 +3272,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     RegisterJSMainRuntimeCompartmentsUserDistinguishedAmount(JSMainRuntimeCompartmentsUserDistinguishedAmount);
     mozilla::RegisterJSSizeOfTab(JSSizeOfTab);
 
-    // Install a JavaScript 'debugger' keyword handler in debug builds only
-#ifdef DEBUG
-    if (!JS_GetGlobalDebugHooks(runtime)->debuggerHandler)
-        xpc_InstallJSDebuggerKeywordHandler(runtime);
-#endif
-
     // Watch for the JS boolean options.
     ReloadPrefsCallback(nullptr, this);
     Preferences::RegisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
