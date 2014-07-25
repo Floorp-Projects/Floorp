@@ -1,9 +1,0 @@
-# Any copyright is dedicated to the Public Domain.
-# http://creativecommons.org/publicdomain/zero/1.0/
-
-TEST_FILES = \
-	empty.txt \
-	source.txt \
-	$(NULL)
-TEST_DEST = $(DEPTH)/_tests/xpcshell/$(relativesrcdir)
-INSTALL_TARGETS += TEST

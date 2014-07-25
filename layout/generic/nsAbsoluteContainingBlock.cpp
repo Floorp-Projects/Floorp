@@ -34,6 +34,8 @@ static void PrettyUC(nscoord aSize, char* aBuf)
 }
 #endif
 
+using namespace mozilla;
+
 void
 nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                                ChildListID     aListID,
@@ -367,17 +369,20 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
 #endif // DEBUG
 
-  nscoord availWidth = aContainingBlock.width;
-  if (availWidth == -1) {
-    NS_ASSERTION(aReflowState.ComputedWidth() != NS_UNCONSTRAINEDSIZE,
-                 "Must have a useful width _somewhere_");
-    availWidth =
-      aReflowState.ComputedWidth() + aReflowState.ComputedPhysicalPadding().LeftRight();
+  WritingMode wm = aKidFrame->GetWritingMode();
+  nscoord availISize = LogicalSize(wm, aContainingBlock.Size()).ISize(wm);
+  if (availISize == -1) {
+    NS_ASSERTION(aReflowState.ComputedSize(wm).ISize(wm) !=
+                   NS_UNCONSTRAINEDSIZE,
+                 "Must have a useful inline-size _somewhere_");
+    availISize =
+      aReflowState.ComputedSizeWithPadding(wm).ISize(wm);
   }
 
   nsHTMLReflowMetrics kidDesiredSize(aReflowState);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aKidFrame,
-                                   nsSize(availWidth, NS_UNCONSTRAINEDSIZE),
+                                   LogicalSize(wm, availISize,
+                                               NS_UNCONSTRAINEDSIZE),
                                    aContainingBlock.width,
                                    aContainingBlock.height);
 

@@ -38,7 +38,11 @@ void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, uint32_t aTimestampMs) {
   AsyncPanZoomController::AssertOnControllerThread();
 
   if (aTimestampMs == mPosTimeMs) {
-    // Duplicate event?
+    // This could be a duplicate event, or it could be a legitimate event
+    // on some platforms that generate events really fast. As a compromise
+    // update mPos so we don't run into problems like bug 1042734, even though
+    // that means the velocity will be stale. Better than doing a divide-by-zero.
+    mPos = aPos;
     return;
   }
 

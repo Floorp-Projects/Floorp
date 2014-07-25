@@ -203,10 +203,8 @@ public:
   // Log APZ test data for a repaint request. The sequence number must be
   // passed in from outside, and APZTestData::StartNewRepaintRequest() needs
   // to be called from the outside as well when a new repaint request is started.
-  void StartNewRepaintRequest(SequenceNumber aSequenceNumber)
-  {
-    mApzTestData.StartNewRepaintRequest(aSequenceNumber);
-  }
+  void StartNewRepaintRequest(SequenceNumber aSequenceNumber);
+
   // TODO(botond): When we start using this and write a wrapper similar to
   // nsLayoutUtils::LogTestDataForPaint(), make sure that wrapper checks
   // gfxPrefs::APZTestLoggingEnabled().

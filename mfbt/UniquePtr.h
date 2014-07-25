@@ -93,6 +93,10 @@ namespace mozilla {
  *   UniquePtr<int> b2(b1); // BAD: can't copy a UniquePtr
  *   UniquePtr<int> b3 = b1; // BAD: can't copy-assign a UniquePtr
  *
+ * (Note that changing a UniquePtr to store a direct |new| expression is
+ * permitted, but usually you should use MakeUnique, defined at the end of this
+ * header.)
+ *
  * A few miscellaneous notes:
  *
  * UniquePtr, when not instantiated for an array type, can be move-constructed
@@ -593,9 +597,64 @@ struct UniqueSelector<T[N]>
 
 } // namespace detail
 
+/**
+ * MakeUnique is a helper function for allocating new'd objects and arrays,
+ * returning a UniquePtr containing the resulting pointer.  The semantics of
+ * MakeUnique<Type>(...) are as follows.
+ *
+ *   If Type is an array T[n]:
+ *     Disallowed, deleted, no overload for you!
+ *   If Type is an array T[]:
+ *     MakeUnique<T[]>(size_t) is the only valid overload.  The pointer returned
+ *     is as if by |new T[n]()|, which value-initializes each element.  (If T
+ *     isn't a class type, this will zero each element.  If T is a class type,
+ *     then roughly speaking, each element will be constructed using its default
+ *     constructor.  See C++11 [dcl.init]p7 for the full gory details.)
+ *   If Type is non-array T:
+ *     The arguments passed to MakeUnique<T>(...) are forwarded into a
+ *     |new T(...)| call, initializing the T as would happen if executing
+ *     |T(...)|.  (Note: literal nullptr must not be provided as an argument to
+ *     MakeUnique, because nullptr may be emulated.  See Move.h for details.)
+ *
+ * There are various benefits to using MakeUnique instead of |new| expressions.
+ *
+ * First, MakeUnique eliminates use of |new| from code entirely.  If objects are
+ * only created through UniquePtr, then (assuming all explicit release() calls
+ * are safe, including transitively, and no type-safety casting funniness)
+ * correctly maintained ownership of the UniquePtr guarantees no leaks are
+ * possible.  (This pays off best if a class is only ever created through a
+ * factory method on the class, using a private constructor.)
+ *
+ * Second, initializing a UniquePtr using a |new| expression requires renaming
+ * the new'd type, whereas MakeUnique in concert with the |auto| keyword names
+ * it only once:
+ *
+ *   UniquePtr<char> ptr1(new char()); // repetitive
+ *   auto ptr2 = MakeUnique<char>();   // shorter
+ *
+ * Of course this assumes the reader understands the operation MakeUnique
+ * performs.  In the long run this is probably a reasonable assumption.  In the
+ * short run you'll have to use your judgment about what readers can be expected
+ * to know, or to quickly look up.
+ *
+ * Third, a call to MakeUnique can be assigned directly to a UniquePtr.  In
+ * contrast you can't assign a pointer into a UniquePtr without using the
+ * cumbersome reset().
+ *
+ *   UniquePtr<char> p;
+ *   p = new char;           // ERROR
+ *   p.reset(new char);      // works, but fugly
+ *   p = MakeUnique<char>(); // preferred
+ *
+ * (And third, although not relevant to Mozilla: MakeUnique is exception-safe.
+ * An exception thrown after |new T| succeeds will leak that memory, unless the
+ * pointer is assigned to an object that will manage its ownership.  UniquePtr
+ * ably serves this function.)
+ */
+
 // We don't have variadic template support everywhere, so just hard-code arities
-// 0-4 for now.  If you need more arguments, feel free to add the extra
-// overloads.
+// 0-5 for now.  If you need more arguments, feel free to add the extra
+// overloads (and deletions for the T = E[N] case).
 //
 // Beware!  Due to lack of true nullptr support in gcc 4.4 and 4.5, passing
 // literal nullptr to MakeUnique will not work on some platforms.  See Move.h
@@ -671,6 +730,10 @@ MakeUnique(A1&& a1, A2&& a2, A3&& a3) MOZ_DELETE;
 template<typename T, typename A1, typename A2, typename A3, typename A4>
 typename detail::UniqueSelector<T>::KnownBound
 MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4) MOZ_DELETE;
+
+template<typename T, typename A1, typename A2, typename A3, typename A4, typename A5>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5) MOZ_DELETE;
 
 } // namespace mozilla
 

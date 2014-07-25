@@ -67,9 +67,9 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   virtual void Reflow(nsPresContext*           aCX,
                       nsHTMLReflowMetrics&     aDesiredSize,
@@ -216,9 +216,9 @@ protected:
   };
   DropDownPositionState AbsolutelyPositionDropDown();
 
-  // Helper for GetMinWidth/GetPrefWidth
-  nscoord GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
-                            nsLayoutUtils::IntrinsicWidthType aType);
+  // Helper for GetMinISize/GetPrefISize
+  nscoord GetIntrinsicISize(nsRenderingContext* aRenderingContext,
+                            nsLayoutUtils::IntrinsicISizeType aType);
 
   class RedisplayTextEvent : public nsRunnable {
   public:
