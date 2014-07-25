@@ -117,13 +117,15 @@ public class GeckoApplication extends Application
 
     @Override
     public void onCreate() {
-        HardwareUtils.init(getApplicationContext());
-        Clipboard.init(getApplicationContext());
-        FilePicker.init(getApplicationContext());
-        GeckoLoader.loadMozGlue();
-        HomePanelsManager.getInstance().init(getApplicationContext());
-        // This getInstance call will force initializatino of the NotificationHelper, but does nothing with the result
-        NotificationHelper.getInstance(getApplicationContext()).init();
+        final Context context = getApplicationContext();
+        HardwareUtils.init(context);
+        Clipboard.init(context);
+        FilePicker.init(context);
+        GeckoLoader.loadMozGlue(context);
+        HomePanelsManager.getInstance().init(context);
+
+        // This getInstance call will force initialization of the NotificationHelper, but does nothing with the result
+        NotificationHelper.getInstance(context).init();
         super.onCreate();
     }
 
