@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPService.h"
+#include "prlog.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"
 #include "nsIObserverService.h"
@@ -19,6 +20,28 @@
 #include "runnable_utils.h"
 
 namespace mozilla {
+
+#ifdef LOG
+#undef LOG
+#endif
+
+#ifdef PR_LOGGING
+PRLogModuleInfo*
+GetGMPLog()
+{
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("GMP");
+  return sLog;
+}
+
+#define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
+#else
+#define LOGD(msg)
+#define LOG(leve1, msg)
+#endif
+
 namespace gmp {
 
 static StaticRefPtr<GeckoMediaPluginService> sSingletonService;
@@ -229,9 +252,14 @@ GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
   nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
                                                NS_LITERAL_CSTRING("decode-video"),
                                                *aTags);
+#ifdef PR_LOGGING
+  nsCString api = (*aTags)[0];
+  LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
+#endif
   if (!gmp) {
     return NS_ERROR_FAILURE;
   }
+
 
   GMPVideoDecoderParent* gmpVDP;
   nsresult rv = gmp->GetGMPVideoDecoder(&gmpVDP);
@@ -263,6 +291,10 @@ GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
   nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
                                                NS_LITERAL_CSTRING("encode-video"),
                                                *aTags);
+#ifdef PR_LOGGING
+  nsCString api = (*aTags)[0];
+  LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)this, (void *)gmp, api.get()));
+#endif
   if (!gmp) {
     return NS_ERROR_FAILURE;
   }
