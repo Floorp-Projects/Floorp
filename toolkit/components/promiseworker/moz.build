@@ -8,6 +8,6 @@ DIRS += [
     'worker'
 ]
 
-EXTRA_JS_MODULES = [
+EXTRA_JS_MODULES += [
     'PromiseWorker.jsm',
 ]
