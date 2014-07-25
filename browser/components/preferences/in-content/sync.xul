@@ -218,20 +218,14 @@
       <deck id="fxaLoginStatus">
 
         <!-- logged in and verified and all is good -->
-        <hbox>
+        <hbox align="center">
           <label id="fxaEmailAddress1"/>
-          <vbox>
-            <label class="text-link"
-                   onclick="gSyncPane.manageFirefoxAccount();">
-              &manage.label;
-            </label>
-          </vbox>
           <spacer flex="1"/>
-          <vbox>
-            <button id="fxaUnlinkButton"
-                    oncommand="gSyncPane.unlinkFirefoxAccount(true);"
-                    label="&disconnect.label;"/>
-          </vbox>
+          <button oncommand="gSyncPane.manageFirefoxAccount();"
+                  label="&manage.label;"/>
+          <button id="fxaUnlinkButton"
+                  oncommand="gSyncPane.unlinkFirefoxAccount(true);"
+                  label="&disconnect.label;"/>
         </hbox>
 
         <!-- logged in to an unverified account -->
