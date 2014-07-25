@@ -48,29 +48,34 @@ add_task(function* test_navigate_full_domain() {
   gBrowser.removeTab(tab);
 });
 
-add_task(function* test_navigate_single_host() {
-  Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", false);
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  yield* runURLBarSearchTest("localhost", true, true);
+function get_test_function_for_localhost_with_hostname(hostName) {
+  return function* test_navigate_single_host() {
+    const pref = "browser.fixup.domainwhitelist.localhost";
+    Services.prefs.setBoolPref(pref, false);
+    let tab = gBrowser.selectedTab = gBrowser.addTab();
+    yield* runURLBarSearchTest(hostName, true, true);
 
-  let notificationBox = gBrowser.getNotificationBox(tab.linkedBrowser);
-  let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
-  let docLoadPromise = waitForDocLoadAndStopIt("http://localhost/");
-  notification.querySelector(".notification-button-default").click();
+    let notificationBox = gBrowser.getNotificationBox(tab.linkedBrowser);
+    let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
+    let docLoadPromise = waitForDocLoadAndStopIt("http://" + hostName + "/");
+    notification.querySelector(".notification-button-default").click();
 
-  // check pref value
-  let pref = "browser.fixup.domainwhitelist.localhost";
-  let prefValue = Services.prefs.getBoolPref(pref);
-  ok(prefValue, "Pref should have been toggled");
+    // check pref value
+    let prefValue = Services.prefs.getBoolPref(pref);
+    ok(prefValue, "Pref should have been toggled");
 
-  yield docLoadPromise;
-  gBrowser.removeTab(tab);
+    yield docLoadPromise;
+    gBrowser.removeTab(tab);
 
-  // Now try again with the pref set.
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  yield* runURLBarSearchTest("localhost", false, false);
-  gBrowser.removeTab(tab);
-});
+    // Now try again with the pref set.
+    let tab = gBrowser.selectedTab = gBrowser.addTab();
+    yield* runURLBarSearchTest(hostName, false, false);
+    gBrowser.removeTab(tab);
+  }
+}
+
+add_task(get_test_function_for_localhost_with_hostname("localhost"));
+add_task(get_test_function_for_localhost_with_hostname("localhost."));
 
 add_task(function* test_navigate_invalid_url() {
   let tab = gBrowser.selectedTab = gBrowser.addTab();

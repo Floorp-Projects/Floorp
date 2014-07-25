@@ -795,6 +795,13 @@ function gKeywordURIFixup(fixupInfo, topic, data) {
   let hostName = alternativeURI.host;
   // and the ascii-only host for the pref:
   let asciiHost = alternativeURI.asciiHost;
+  // Normalize out a single trailing dot - NB: not using endsWith/lastIndexOf
+  // because we need to be sure this last dot is the *only* dot, too.
+  // More generally, this is used for the pref and should stay in sync with
+  // the code in nsDefaultURIFixup::KeywordURIFixup .
+  if (asciiHost.indexOf('.') == asciiHost.length - 1) {
+    asciiHost = asciiHost.slice(0, -1);
+  }
 
   let onLookupComplete = (request, record, status) => {
     let browser = weakBrowser.get();

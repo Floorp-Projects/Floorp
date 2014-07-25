@@ -12,7 +12,7 @@ interface nsIInputStream;
 /**
  * Interface indicating what we found/corrected when fixing up a URI
  */
-[scriptable, uuid(c9b6cc32-c24e-4283-adaa-9290577fd609)]
+[scriptable, uuid(62aac1e0-3da8-4920-bd1b-a54fc2e2eb24)]
 interface nsIURIFixupInfo : nsISupports
 {
   /**
@@ -41,17 +41,17 @@ interface nsIURIFixupInfo : nsISupports
   readonly attribute boolean fixupUsedKeyword;
 
   /**
-   * Whether we think there was a protocol specified in some way,
-   * even if we corrected it (e.g. "ttp://foo.com/bar")
+   * Whether we changed the protocol instead of using one from the input as-is.
    */
-  readonly attribute boolean inputHasProtocol;
+  readonly attribute boolean fixupChangedProtocol;
 
   /**
-   * Whether the input included a dot in the hostname, e.g. "mozilla.org"
-   * rather than just "mozilla". This makes a difference in terms of when we
-   * decide to do a keyword search or not.
+   * Whether we created an alternative URI. We might have added a prefix and/or
+   * suffix, the contents of which are controlled by the
+   * browser.fixup.alternate.prefix and .suffix prefs, with the defaults being
+   * "www." and ".com", respectively.
    */
-  readonly attribute boolean inputHostHasDot;
+  readonly attribute boolean fixupCreatedAlternateURI;
 
   /**
    * The original input
