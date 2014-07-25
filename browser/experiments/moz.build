@@ -7,9 +7,7 @@ EXTRA_COMPONENTS += [
     'ExperimentsService.js',
 ]
 
-JS_MODULES_PATH = 'modules/experiments'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.experiments += [
   'Experiments.jsm',
 ]
 

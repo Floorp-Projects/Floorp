@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-JS_MODULES_PATH = 'modules/devtools/discovery'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.devtools.discovery += [
     'discovery.js',
 ]

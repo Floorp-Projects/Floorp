@@ -5,9 +5,7 @@
 
 TEST_DIRS += ['tests']
 
-JS_MODULES_PATH = 'modules/devtools'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.devtools += [
     'app-actor-front.js',
     'Devices.jsm',
     'Simulator.jsm'

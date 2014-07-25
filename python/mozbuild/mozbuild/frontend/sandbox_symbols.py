@@ -186,7 +186,7 @@ VARIABLES = {
        ``$(FINAL_TARGET)/components/``.
         """, 'libs'),
 
-    'EXTRA_JS_MODULES': (StrictOrderingOnAppendList, list,
+    'EXTRA_JS_MODULES': (HierarchicalStringList, list,
         """Additional JavaScript files to distribute.
 
         This variable contains a list of files to copy into
@@ -194,7 +194,7 @@ VARIABLES = {
         to ``modules`` if left undefined.
         """, 'libs'),
 
-    'EXTRA_PP_JS_MODULES': (StrictOrderingOnAppendList, list,
+    'EXTRA_PP_JS_MODULES': (HierarchicalStringList, list,
         """Additional JavaScript files to distribute.
 
         This variable contains a list of files to copy into
