@@ -43,14 +43,19 @@ function testBlackBoxMessageShown() {
 }
 
 function clickStopBlackBoxingButton() {
-  let finished = waitForThreadEvents(gPanel, "blackboxchange");
-  getEditorBlackboxMessageButton().click();
-  return finished;
+  // Give the test a chance to finish before triggering the click event.
+  executeSoon(() => getEditorBlackboxMessageButton().click());
+  return waitForThreadEvents(gPanel, "blackboxchange");
 }
 
 function testSourceEditorShownAgain() {
-  is(gDeck.selectedIndex, "0",
-    "The first item in the deck should be selected again (the source editor).");
+  // Wait a tick for the final check to make sure the frontend's click handlers
+  // have finished.
+  return new Promise(resolve => {
+    is(gDeck.selectedIndex, "0",
+      "The first item in the deck should be selected again (the source editor).");
+    resolve();
+  });
 }
 
 function getEditorBlackboxMessageButton() {

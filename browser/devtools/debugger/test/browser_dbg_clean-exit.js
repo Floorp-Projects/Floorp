@@ -25,8 +25,8 @@ function testCleanExit() {
     is(gDebugger.gThreadClient.paused, true,
       "Should be paused after the debugger statement.");
 
-    closeDebuggerAndFinish(gPanel, { whilePaused: true });
-  });
+    return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_REFILLED);
+  }).then(() => closeDebuggerAndFinish(gPanel, { whilePaused: true }));
 
   gDebuggee.runDebuggerStatement();
 }
