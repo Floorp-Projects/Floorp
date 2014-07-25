@@ -7,11 +7,13 @@
 EXPORTS.mozilla.dom += [
     'Headers.h',
     'Request.h',
+    'Response.h',
 ]
 
 UNIFIED_SOURCES += [
     'Headers.cpp',
     'Request.cpp',
+    'Response.cpp',
 ]
 
 LOCAL_INCLUDES += [
