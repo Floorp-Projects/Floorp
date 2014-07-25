@@ -2058,46 +2058,31 @@ CreateJSTimeHistogram(JSContext* cx, const Telemetry::TimeHistogram& time)
 }
 
 static JSObject*
-CreateJSHangStack(JSContext* cx, const Telemetry::HangStack& stack)
+CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
 {
-  JS::RootedObject ret(cx, JS_NewArrayObject(cx, stack.length()));
+  JS::RootedObject ret(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
   if (!ret) {
     return nullptr;
   }
-  for (size_t i = 0; i < stack.length(); i++) {
-    JS::RootedString string(cx, JS_NewStringCopyZ(cx, stack[i]));
-    if (!JS_SetElement(cx, ret, i, string)) {
+
+  const Telemetry::HangStack& hangStack = hang.GetStack();
+  JS::RootedObject stack(cx,
+    JS_NewArrayObject(cx, hangStack.length()));
+  if (!ret) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < hangStack.length(); i++) {
+    JS::RootedString string(cx, JS_NewStringCopyZ(cx, hangStack[i]));
+    if (!JS_SetElement(cx, stack, i, string)) {
       return nullptr;
     }
   }
-  return ret;
-}
 
-static JSObject*
-CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
-{
-  JS::RootedObject ret(cx,
-    JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
-  if (!ret) {
-    return nullptr;
-  }
-
-  JS::RootedObject stack(cx, CreateJSHangStack(cx, hang.GetStack()));
   JS::RootedObject time(cx, CreateJSTimeHistogram(cx, hang));
-
-  if (!stack ||
-      !time ||
+  if (!time ||
       !JS_DefineProperty(cx, ret, "stack", stack, JSPROP_ENUMERATE) ||
       !JS_DefineProperty(cx, ret, "histogram", time, JSPROP_ENUMERATE)) {
     return nullptr;
-  }
-
-  if (!hang.GetNativeStack().empty()) {
-    JS::RootedObject native(cx, CreateJSHangStack(cx, hang.GetNativeStack()));
-    if (!native ||
-        !JS_DefineProperty(cx, ret, "nativeStack", native, JSPROP_ENUMERATE)) {
-      return nullptr;
-    }
   }
   return ret;
 }
