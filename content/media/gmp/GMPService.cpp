@@ -265,7 +265,7 @@ GeckoMediaPluginService::UnloadPlugins()
   // Note: CloseActive is async; it will actually finish
   // shutting down when all the plugins have unloaded.
   for (uint32_t i = 0; i < mPlugins.Length(); i++) {
-    mPlugins[i]->CloseActive();
+    mPlugins[i]->CloseActive(true);
   }
   mPlugins.Clear();
 }
@@ -446,7 +446,7 @@ GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory)
     nsCOMPtr<nsIFile> pluginpath = mPlugins[i]->GetDirectory();
     bool equals;
     if (NS_SUCCEEDED(directory->Equals(pluginpath, &equals)) && equals) {
-      mPlugins[i]->CloseActive();
+      mPlugins[i]->CloseActive(true);
       mPlugins.RemoveElementAt(i);
       return;
     }
