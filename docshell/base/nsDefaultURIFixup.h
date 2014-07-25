@@ -27,7 +27,9 @@ private:
     /* additional members */
     nsresult FileURIFixup(const nsACString &aStringURI, nsIURI** aURI);
     nsresult ConvertFileToStringURI(const nsACString& aIn, nsCString& aOut);
-    nsresult FixupURIProtocol(const nsACString& aIn, nsIURI** aURI);
+    nsresult FixupURIProtocol(const nsACString& aIn,
+                              nsDefaultURIFixupInfo* aFixupInfo,
+                              nsIURI** aURI);
     void KeywordURIFixup(const nsACString &aStringURI,
                          nsDefaultURIFixupInfo* aFixupInfo,
                          nsIInputStream** aPostData);
@@ -55,8 +57,8 @@ private:
     nsCOMPtr<nsIURI> mPreferredURI;
     nsCOMPtr<nsIURI> mFixedURI;
     bool mFixupUsedKeyword;
-    bool mInputHasProtocol;
-    bool mInputHostHasDot;
+    bool mFixupChangedProtocol;
+    bool mFixupCreatedAlternateURI;
     nsAutoCString mOriginalInput;
 };
 #endif
