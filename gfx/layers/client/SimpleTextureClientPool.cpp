@@ -49,9 +49,13 @@ SimpleTextureClientPool::WaitForCompositorRecycleCallback(TextureClient* aClient
 }
 
 SimpleTextureClientPool::SimpleTextureClientPool(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
+                                                 uint32_t aMaxTextureClients,
+                                                 uint32_t aShrinkTimeoutMsec,
                                                  ISurfaceAllocator *aAllocator)
   : mFormat(aFormat)
   , mSize(aSize)
+  , mMaxTextureClients(aMaxTextureClients)
+  , mShrinkTimeoutMsec(aShrinkTimeoutMsec)
   , mSurfaceAllocator(aAllocator)
 {
   mTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -100,7 +104,7 @@ SimpleTextureClientPool::ReturnTextureClient(TextureClient *aClient)
   }
 
   // If we haven't hit our max cached client limit, add this one
-  if (mAvailableTextureClients.size() < sMaxTextureClients) {
+  if (mAvailableTextureClients.size() < mMaxTextureClients) {
     mAvailableTextureClients.push(aClient);
     RECYCLE_LOG("%s recycled %p (have %d)\n", (mFormat == SurfaceFormat::B8G8R8A8?"poolA":"poolX"), aClient, mAvailableTextureClients.size());
   } else {
@@ -110,7 +114,7 @@ SimpleTextureClientPool::ReturnTextureClient(TextureClient *aClient)
   // Kick off the pool shrinking timer if there are still more unused texture
   // clients than our desired minimum cache size.
   if (mAvailableTextureClients.size() > sMinCacheSize) {
-    mTimer->InitWithFuncCallback(SimpleTextureClientPool::ShrinkCallback, this, sShrinkTimeout,
+    mTimer->InitWithFuncCallback(SimpleTextureClientPool::ShrinkCallback, this, mShrinkTimeoutMsec,
                                  nsITimer::TYPE_ONE_SHOT);
   }
 
