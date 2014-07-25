@@ -240,7 +240,9 @@ public:
     virtual bool RecvRegisterChrome(const InfallibleTArray<ChromePackage>& packages,
                                     const InfallibleTArray<ResourceMapping>& resources,
                                     const InfallibleTArray<OverrideMapping>& overrides,
-                                    const nsCString& locale) MOZ_OVERRIDE;
+                                    const nsCString& locale,
+                                    const bool& reset) MOZ_OVERRIDE;
+    virtual bool RecvRegisterChromeItem(const ChromeRegistryItem& item) MOZ_OVERRIDE;
 
     virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() MOZ_OVERRIDE;
     virtual bool DeallocPJavaScriptChild(mozilla::jsipc::PJavaScriptChild*) MOZ_OVERRIDE;
