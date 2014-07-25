@@ -6,13 +6,13 @@ package org.mozilla.gecko.tests;
 
 import java.util.Map;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.FennecInstrumentationTestRunner;
 import org.mozilla.gecko.FennecMochitestAssert;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
-
-import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.RobocopUtils;
 
 import android.app.Activity;
 import android.test.ActivityInstrumentationTestCase2;
@@ -106,5 +106,17 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         }
         mAsserter.setLogFile(mLogFile);
         mAsserter.setTestName(this.getClass().getName());
+
+        // If the screen is dimmed, the first touch event may not be fired depending on the device.
+        // As a workaround, force the screen to stay on throughout the test. Note that the
+        // WatcherService already does this on production machines, so this fix is aimed toward
+        // locally running tests.
+        final Activity activity = getActivity();
+        RobocopUtils.runOnUiThreadSync(activity, new Runnable() {
+            @Override
+            public void run() {
+                activity.getWindow().getDecorView().setKeepScreenOn(true);
+            }
+        });
     }
 }
