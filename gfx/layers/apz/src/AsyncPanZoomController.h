@@ -21,6 +21,7 @@
 #include "Axis.h"
 #include "TaskThrottler.h"
 #include "gfx3DMatrix.h"
+#include "nsRegion.h"
 
 #include "base/message_loop.h"
 
@@ -941,9 +942,9 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetLayerHitTestData(const ParentLayerRect& aRect, const gfx3DMatrix& aTransformToLayer,
+  void SetLayerHitTestData(const nsIntRegion& aRegion, const gfx3DMatrix& aTransformToLayer,
                            const gfx3DMatrix& aTransformForLayer) {
-    mVisibleRect = aRect;
+    mVisibleRegion = aRegion;
     mAncestorTransform = aTransformToLayer;
     mCSSTransform = aTransformForLayer;
     UpdateTransformScale();
@@ -958,7 +959,8 @@ public:
   }
 
   bool VisibleRegionContains(const ParentLayerPoint& aPoint) const {
-    return mVisibleRect.Contains(aPoint);
+    ParentLayerIntPoint point = RoundedToInt(aPoint);
+    return mVisibleRegion.Contains(point.x, point.y);
   }
 
   bool IsOverscrolled() const {
@@ -969,7 +971,7 @@ private:
   /* This is the visible region of the layer that this APZC corresponds to, in
    * that layer's screen pixels (the same coordinate system in which this APZC
    * receives events in ReceiveInputEvent()). */
-  ParentLayerRect mVisibleRect;
+  nsIntRegion mVisibleRegion;
   /* This is the cumulative CSS transform for all the layers between the parent
    * APZC and this one (not inclusive) */
   gfx3DMatrix mAncestorTransform;

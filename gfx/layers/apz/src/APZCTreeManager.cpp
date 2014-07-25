@@ -141,7 +141,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                 aCompositor ? aCompositor->RootLayerTreeId() : 0,
                                 gfx3DMatrix(), nullptr, nullptr,
                                 aIsFirstPaint, aOriginatingLayersId,
-                                paintLogger, &apzcsToDestroy);
+                                paintLogger, &apzcsToDestroy, nsIntRegion());
     mApzcTreeLog << "[end]\n";
   }
 
@@ -160,9 +160,12 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                              bool aIsFirstPaint,
                                              uint64_t aOriginatingLayersId,
                                              const APZPaintLogHelper& aPaintLogger,
-                                             nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy)
+                                             nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy,
+                                             const nsIntRegion& aObscured)
 {
   mTreeLock.AssertCurrentThreadOwns();
+
+  gfx3DMatrix transform = gfx::To3DMatrix(aLayer->GetTransform());
 
   ContainerLayer* container = aLayer->AsContainerLayer();
   AsyncPanZoomController* apzc = nullptr;
@@ -244,9 +247,17 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                       * metrics.mDevPixelsPerCSSPixel
                                       * metrics.GetParentResolution());
         }
-        gfx3DMatrix transform = gfx::To3DMatrix(aLayer->GetTransform());
 
-        apzc->SetLayerHitTestData(visible, aTransform, transform);
+        // Not sure what rounding option is the most correct here, but if we ever
+        // figure it out we can change this. For now I'm rounding in to minimize
+        // the chances of getting a complex region.
+        ParentLayerIntRect roundedVisible = RoundedIn(visible);
+        nsIntRegion unobscured;
+        unobscured.Sub(nsIntRect(roundedVisible.x, roundedVisible.y,
+                                 roundedVisible.width, roundedVisible.height),
+                       aObscured);
+
+        apzc->SetLayerHitTestData(unobscured, aTransform, transform);
         APZCTM_LOG("Setting rect(%f %f %f %f) as visible region for APZC %p\n", visible.x, visible.y,
                                                                               visible.width, visible.height,
                                                                               apzc);
@@ -311,10 +322,28 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
     aTransform = gfx3DMatrix();
   } else {
     // Multiply child layer transforms on the left so they get applied first
-    aTransform = gfx::To3DMatrix(aLayer->GetTransform()) * aTransform;
+    aTransform = transform * aTransform;
   }
 
   uint64_t childLayersId = (aLayer->AsRefLayer() ? aLayer->AsRefLayer()->GetReferentId() : aLayersId);
+
+  nsIntRegion obscured;
+  if (aLayersId == childLayersId) {
+    // If the child layer is in the same process, transform
+    // aObscured from aLayer's ParentLayerPixels to aLayer's LayerPixels,
+    // which are the children layers' ParentLayerPixels.
+    // If we cross a process boundary, we assume that we can start with
+    // an empty obscured region because nothing in the parent process will
+    // obscure the child process. This may be false. However, not doing this
+    // definitely runs into a problematic case where the B2G notification
+    // bar and the keyboard get merged into a single layer that obscures
+    // all child processes, even though visually they do not. We'd probably
+    // have to check for mask layers and so on in order to properly handle
+    // that case.
+    obscured = aObscured;
+    obscured.Transform(transform.Inverse());
+  }
+
   // If there's no APZC at this level, any APZCs for our child layers will
   // have our siblings as siblings.
   AsyncPanZoomController* next = apzc ? nullptr : aNextSibling;
@@ -322,7 +351,17 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
     gfx::TreeAutoIndent indent(mApzcTreeLog);
     next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aTransform, aParent, next,
                                        aIsFirstPaint, aOriginatingLayersId,
-                                       aPaintLogger, aApzcsToDestroy);
+                                       aPaintLogger, aApzcsToDestroy, obscured);
+
+    // Each layer obscures its previous siblings, so we augment the obscured
+    // region as we loop backwards through the children.
+    nsIntRegion childRegion = child->GetVisibleRegion();
+    childRegion.Transform(gfx::To3DMatrix(child->GetTransform()));
+    if (child->GetClipRect()) {
+      childRegion.AndWith(*child->GetClipRect());
+    }
+
+    obscured.OrWith(childRegion);
   }
 
   // Return the APZC that should be the sibling of other APZCs as we continue
