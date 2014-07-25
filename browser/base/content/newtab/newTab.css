@@ -38,15 +38,15 @@ input[type=button] {
   pointer-events: none;
 }
 
-/* TOGGLE */
-#newtab-toggle {
+/* CUSTOMIZE */
+#newtab-customize-button {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 6px;
+  right: 6px;
 }
 
-#newtab-toggle:-moz-locale-dir(rtl) {
-  left: 12px;
+#newtab-customize-button:-moz-locale-dir(rtl) {
+  left: 6px;
   right: auto;
 }
 
@@ -351,6 +351,7 @@ input[type=button] {
   transition-duration: 0ms;
 }
 
+#newtab-customize-panel .panel-arrowcontent,
 #newtab-search-panel .panel-arrowcontent {
   -moz-padding-start: 0;
   -moz-padding-end: 0;
@@ -359,6 +360,7 @@ input[type=button] {
   background: rgb(248, 250, 251);
 }
 
+.newtab-customize-panel-item,
 .newtab-search-panel-engine {
   -moz-box-align: center;
   padding-top: 4px;
@@ -367,6 +369,7 @@ input[type=button] {
   -moz-padding-end: 24px;
 }
 
+.newtab-customize-panel-item:not(:last-child),
 .newtab-search-panel-engine:not(:last-child) {
   border-bottom: 1px solid #ccc;
 }
@@ -378,12 +381,14 @@ input[type=button] {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
+.newtab-customize-panel-item > label,
 .newtab-search-panel-engine > label {
   -moz-padding-start: 0;
   -moz-margin-start: 0;
   color: rgb(130, 132, 133);
 }
 
+.newtab-customize-panel-item[selected],
 .newtab-search-panel-engine[selected] {
   background: url("chrome://global/skin/menu/shared-menu-check.png") center left 4px no-repeat transparent;
 }
