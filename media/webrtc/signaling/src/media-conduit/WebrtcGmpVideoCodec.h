@@ -40,7 +40,7 @@ class WebrtcGmpVideoEncoder : public WebrtcVideoEncoder,
 {
 public:
   WebrtcGmpVideoEncoder();
-  virtual ~WebrtcGmpVideoEncoder() {}
+  virtual ~WebrtcGmpVideoEncoder();
 
   // Implement VideoEncoder interface.
   virtual const uint64_t PluginID() MOZ_OVERRIDE
@@ -48,18 +48,20 @@ public:
     return mGMP ? mGMP->ParentID() : 0;
   }
 
+  virtual void Terminated() MOZ_OVERRIDE;
+
   virtual int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores,
-                             uint32_t aMaxPayloadSize);
+                             uint32_t aMaxPayloadSize) MOZ_OVERRIDE;
 
   virtual int32_t Encode(const webrtc::I420VideoFrame& aInputImage,
                          const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                         const std::vector<webrtc::VideoFrameType>* aFrameTypes);
+                         const std::vector<webrtc::VideoFrameType>* aFrameTypes) MOZ_OVERRIDE;
 
   virtual int32_t RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* aCallback) MOZ_OVERRIDE;
 
-  virtual int32_t Release();
+  virtual int32_t Release() MOZ_OVERRIDE;
 
   virtual int32_t SetChannelParameters(uint32_t aPacketLoss,
                                        int aRTT) MOZ_OVERRIDE;
@@ -95,17 +97,19 @@ private:
 
 
 class WebrtcGmpVideoDecoder : public WebrtcVideoDecoder,
-                              public GMPVideoDecoderCallback
+                              public GMPVideoDecoderCallbackProxy
 {
 public:
   WebrtcGmpVideoDecoder();
-  virtual ~WebrtcGmpVideoDecoder() {}
+  virtual ~WebrtcGmpVideoDecoder();
 
   // Implement VideoDecoder interface.
   virtual const uint64_t PluginID() MOZ_OVERRIDE
   {
     return mGMP ? mGMP->ParentID() : 0;
   }
+
+  virtual void Terminated();
 
   virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores);
@@ -157,7 +161,7 @@ private:
 
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
   nsCOMPtr<nsIThread> mGMPThread;
-  GMPVideoDecoderProxy*  mGMP;
+  GMPVideoDecoderProxy* mGMP; // Addref is held for us
   GMPVideoHost* mHost;
   webrtc::DecodedImageCallback* mCallback;
 };
