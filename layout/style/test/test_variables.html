@@ -18,6 +18,11 @@
 
 <div id="t4"></div>
 
+<style id="test5">
+</style>
+
+<div id="t5"></div>
+
 <script>
 var tests = [
   function() {
@@ -57,6 +62,22 @@ var tests = [
     var imageURL = "http://mochi.test:8888" + currentDir + "/image.png";
 
     is(window.getComputedStyle(element).getPropertyValue("background-image"), "url(\"" + imageURL +"\")");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1043713
+    var test5 = document.getElementById("test5");
+    test5.textContent = "#t5 { --SomeVariableName: a; }";
+
+    var declaration = test5.sheet.cssRules[0].style;
+    is(declaration.item(0), "--SomeVariableName", "custom property name returned by item() on style declaration");
+    is(declaration[0], "--SomeVariableName", "custom property name returned by indexed getter on style declaration");
+
+    var element = document.getElementById("t5");
+    var cs = window.getComputedStyle(element);
+
+    is(cs.item(cs.length - 1), "--SomeVariableName", "custom property name returned by item() on computed style");
+    is(cs[cs.length - 1], "--SomeVariableName", "custom property name returned by indexed getter on style declaration");
   },
 ];
 
