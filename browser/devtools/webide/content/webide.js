@@ -735,6 +735,14 @@ let Cmds = {
         return;
       }
 
+      // Clean location string and add "http://" if missing
+      location = location.trim();
+      try { // Will fail if no scheme
+        Services.io.extractScheme(location);
+      } catch(e) {
+        location = "http://" + location;
+      }
+
       // Add project
       let project = yield AppProjects.addHosted(location)
 
