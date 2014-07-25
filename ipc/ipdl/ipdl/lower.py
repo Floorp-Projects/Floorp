@@ -3983,7 +3983,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def makeShmemIface(self):
         p = self.protocol
-        idvar = ExprVar('aId')
+        idvar = ExprVar('id')
         sizevar = ExprVar('aSize')
         typevar = ExprVar('aType')
         memvar = ExprVar('aMem')
@@ -3991,18 +3991,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         rawvar = ExprVar('rawmem')
 
         def allocShmemMethod(name, unsafe):
-            # bool Alloc*Shmem(size_t size, Type type, Shmem* outmem):
+            # bool Alloc*Shmem(size_t aSize, Type aType, Shmem* aOutMem):
             #   id_t id;
-            #   nsAutoPtr<SharedMemory> mem(CreateSharedMemory(&id));
-            #   if (!mem)
+            #   SharedMemory* rawmem(CreateSharedMemory(aSize, aType, false, &id));
+            #   if (!rawmem)
             #     return false;
-            #   *outmem = Shmem(mem, id)
+            #   *aOutMem = Shmem(rawmem, id)
             #   return true;
             method = MethodDefn(MethodDecl(
                 name,
                 params=[ Decl(Type.SIZE, sizevar.name),
                          Decl(_shmemTypeType(), typevar.name),
-                         Decl(_shmemType(ptr=1), memvar.name) ],
+                         Decl(_shmemType(ptr=1), outmemvar.name) ],
                 ret=Type.BOOL))
 
             ifallocfails = StmtIf(ExprNot(rawvar))
@@ -4014,7 +4014,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 unsafe = ExprLiteral.FALSE
             method.addstmts([
                 StmtDecl(Decl(_shmemIdType(), idvar.name)),
-                StmtDecl(Decl(_autoptr(_rawShmemType()), rawvar.name),
+                StmtDecl(Decl(_rawShmemType(ptr=1), rawvar.name),
                          initargs=[ ExprCall(p.createSharedMemory(),
                                          args=[ sizevar,
                                                 typevar,
@@ -4023,7 +4023,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ifallocfails,
                 Whitespace.NL,
                 StmtExpr(ExprAssn(
-                    ExprDeref(memvar), _shmemCtor(_autoptrForget(rawvar), idvar))),
+                    ExprDeref(outmemvar), _shmemCtor(rawvar, idvar))),
                 StmtReturn.TRUE
             ])
             return method
@@ -4034,16 +4034,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # bool AllocUnsafeShmem(size_t size, Type type, Shmem* outmem):
         allocUnsafeShmem = allocShmemMethod('AllocUnsafeShmem', True)
 
-        # bool AdoptShmem(const Shmem& mem, Shmem* outmem):
-        #   SharedMemory* raw = mem.mSegment;
-        #   if (!raw || IsTrackingSharedMemory(raw)) {
+        # bool AdoptShmem(Shmem& aMem, Shmem* aOutmem):
+        #   SharedMemory* rawmem = aMem.Segment();
+        #   if (!rawmem || IsTrackingSharedMemory(rawmem)) {
         #     NS_WARNING("bad Shmem"); // or NS_RUNTIMEABORT on child side
         #     return false;
         #   }
         #   id_t id
-        #   if (!AdoptSharedMemory(raw, &id))
+        #   if (!AdoptSharedMemory(rawmem, &id))
         #     return false
-        #   *outmem = Shmem(raw, id);
+        #   *aOutmem = Shmem(rawmem, id);
         #   return true;
         adoptShmem = MethodDefn(MethodDecl(
             'AdoptShmem',
