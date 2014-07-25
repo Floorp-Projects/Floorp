@@ -27,6 +27,27 @@ loop.conversation = (function(OT, mozL10n) {
       model: React.PropTypes.func.isRequired
     },
 
+    getInitialState: function() {
+      return {showDeclineMenu: false};
+    },
+
+    componentDidMount: function() {
+      window.addEventListener('click', this.clickHandler);
+      window.addEventListener('blur', this._hideDeclineMenu);
+    },
+
+    componentWillUnmount: function() {
+      window.removeEventListener('click', this.clickHandler);
+      window.removeEventListener('blur', this._hideDeclineMenu);
+    },
+
+    clickHandler: function(e) {
+      var target = e.target;
+      if (!target.classList.contains('btn-chevron')) {
+        this._hideDeclineMenu();
+      }
+    },
+
     /**
      * Used for adding different styles to the panel
      * @returns {String} Corresponds to the client platform
@@ -55,19 +76,56 @@ loop.conversation = (function(OT, mozL10n) {
       this.props.model.trigger("decline");
     },
 
+    _handleDeclineBlock: function(e) {
+      this.props.model.trigger("declineAndBlock");
+      /* Prevent event propagation
+       * stop the click from reaching parent element */
+      return false;
+    },
+
+    _toggleDeclineMenu: function() {
+      var currentState = this.state.showDeclineMenu;
+      this.setState({showDeclineMenu: !currentState});
+    },
+
+    _hideDeclineMenu: function() {
+      this.setState({showDeclineMenu: false});
+    },
+
     render: function() {
       /* jshint ignore:start */
-      var btnClassAccept = "btn btn-error btn-decline";
-      var btnClassDecline = "btn btn-success btn-accept";
+      var btnClassAccept = "btn btn-success btn-accept";
+      var btnClassBlock = "btn btn-error btn-block";
+      var btnClassDecline = "btn btn-error btn-decline";
       var conversationPanelClass = "incoming-call " + this._getTargetPlatform();
+      var cx = React.addons.classSet;
+      var declineDropdownMenuClasses = cx({
+        "native-dropdown-menu": true,
+        "decline-block-menu": true,
+        "visually-hidden": !this.state.showDeclineMenu
+      });
       return (
         <div className={conversationPanelClass}>
           <h2>{__("incoming_call")}</h2>
-          <div className="button-group">
-            <button className={btnClassAccept} onClick={this._handleDecline}>
-              {__("incoming_call_decline_button")}
-            </button>
-            <button className={btnClassDecline} onClick={this._handleAccept}>
+          <div className="button-group incoming-call-action-group">
+            <div className="button-chevron-menu-group">
+              <div className="button-group-chevron">
+                <div className="button-group">
+                  <button className={btnClassDecline} onClick={this._handleDecline}>
+                    {__("incoming_call_decline_button")}
+                  </button>
+                  <div className="btn-chevron"
+                    onClick={this._toggleDeclineMenu}>
+                  </div>
+                </div>
+                <ul className={declineDropdownMenuClasses}>
+                  <li className="btn-block" onClick={this._handleDeclineBlock}>
+                    {__("incoming_call_decline_and_block_button")}
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <button className={btnClassAccept} onClick={this._handleAccept}>
               {__("incoming_call_answer_button")}
             </button>
           </div>
@@ -116,7 +174,8 @@ loop.conversation = (function(OT, mozL10n) {
       "call/accept": "accept",
       "call/decline": "decline",
       "call/ongoing": "conversation",
-      "call/ended": "ended"
+      "call/ended": "ended",
+      "call/declineAndBlock": "declineAndBlock"
     },
 
     /**
@@ -148,6 +207,9 @@ loop.conversation = (function(OT, mozL10n) {
       this._conversation.once("decline", function() {
         this.navigate("call/decline", {trigger: true});
       }.bind(this));
+      this._conversation.once("declineAndBlock", function() {
+        this.navigate("call/declineAndBlock", {trigger: true});
+      }.bind(this));
       this.loadReactComponent(loop.conversation.IncomingCallView({
         model: this._conversation
       }));
@@ -170,6 +232,24 @@ loop.conversation = (function(OT, mozL10n) {
     decline: function() {
       window.navigator.mozLoop.stopAlerting();
       // XXX For now, we just close the window
+      window.close();
+    },
+
+    /**
+     * Decline and block an incoming call
+     * @note:
+     * - loopToken is the callUrl identifier. It gets set in the panel
+     *   after a callUrl is received
+     */
+    declineAndBlock: function() {
+      window.navigator.mozLoop.stopAlerting();
+      var token = navigator.mozLoop.getLoopCharPref('loopToken');
+      var client = new loop.Client();
+      client.deleteCallUrl(token, function(error) {
+        // XXX The conversation window will be closed when this cb is triggered
+        // figure out if there is a better way to report the error to the user
+        console.log(error);
+      });
       window.close();
     },
 
