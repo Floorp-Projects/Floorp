@@ -60,10 +60,6 @@ typedef enum JSTrapStatus {
 } JSTrapStatus;
 
 typedef JSTrapStatus
-(* JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, JS::Value *rval,
-                  JS::Value closure);
-
-typedef JSTrapStatus
 (* JSDebuggerHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, JS::Value *rval,
                       void *closure);
 
@@ -124,21 +120,6 @@ JS_SetDebugMode(JSContext *cx, bool debug);
 /* Turn on single step mode. */
 extern JS_PUBLIC_API(bool)
 JS_SetSingleStepMode(JSContext *cx, JS::HandleScript script, bool singleStep);
-
-/* The closure argument will be marked. */
-extern JS_PUBLIC_API(bool)
-JS_SetTrap(JSContext *cx, JS::HandleScript script, jsbytecode *pc,
-           JSTrapHandler handler, JS::HandleValue closure);
-
-extern JS_PUBLIC_API(void)
-JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-             JSTrapHandler *handlerp, JS::Value *closurep);
-
-extern JS_PUBLIC_API(void)
-JS_ClearScriptTraps(JSRuntime *rt, JSScript *script);
-
-extern JS_PUBLIC_API(void)
-JS_ClearAllTrapsForCompartment(JSContext *cx);
 
 /************************************************************************/
 

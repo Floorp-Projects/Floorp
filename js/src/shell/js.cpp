@@ -1814,43 +1814,6 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
     return JSTRAP_CONTINUE;
 }
 
-static bool
-Trap(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedScript script(cx);
-    int32_t i;
-
-    if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_TRAP_USAGE);
-        return false;
-    }
-    argc = args.length() - 1;
-    RootedString str(cx, JS::ToString(cx, args[argc]));
-    if (!str)
-        return false;
-    args[argc].setString(str);
-    if (!GetScriptAndPCArgs(cx, argc, args.array(), &script, &i))
-        return false;
-    args.rval().setUndefined();
-    RootedValue strValue(cx, StringValue(str));
-    return JS_SetTrap(cx, script, script->offsetToPC(i), TrapHandler, strValue);
-}
-
-static bool
-Untrap(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedScript script(cx);
-    int32_t i;
-
-    if (!GetScriptAndPCArgs(cx, args.length(), args.array(), &script, &i))
-        return false;
-    JS_ClearTrap(cx, script, script->offsetToPC(i), nullptr, nullptr);
-    args.rval().setUndefined();
-    return true;
-}
-
 static JSTrapStatus
 DebuggerAndThrowHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
                         void *closure)
@@ -4848,17 +4811,9 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "  arguments[0] (of the call to nestedShell) will be argv[1], arguments[1] will\n"
 "  be argv[2], etc."),
 
-    JS_FN_HELP("trap", Trap, 3, 0,
-"trap([fun, [pc,]] exp)",
-"  Trap bytecode execution."),
-
     JS_FN_HELP("assertFloat32", testingFunc_assertFloat32, 2, 0,
 "assertFloat32(value, isFloat32)",
 "  In IonMonkey only, asserts that value has (resp. hasn't) the MIRType_Float32 if isFloat32 is true (resp. false)."),
-
-    JS_FN_HELP("untrap", Untrap, 2, 0,
-"untrap(fun[, pc])",
-"  Remove a trap."),
 
     JS_FN_HELP("withSourceHook", WithSourceHook, 1, 0,
 "withSourceHook(hook, fun)",
