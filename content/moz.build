@@ -10,7 +10,6 @@ PARALLEL_DIRS += [
     'mathml/content/src',
     'media',
     'svg',
-    'xml',
     'xul',
 ]
 
