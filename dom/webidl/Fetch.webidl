@@ -27,3 +27,10 @@ interface Body {
   [Throws]
   Promise<ScalarValueString> text();
 };
+
+[NoInterfaceObject, Exposed=(Window,Worker)]
+interface GlobalFetch {
+  [Throws, Func="mozilla::dom::Headers::PrefEnabled"]
+  Promise<Response> fetch(RequestInfo input, optional RequestInit init);
+};
+
