@@ -371,7 +371,6 @@ JSRuntime::~JSRuntime()
 
         /* Clear debugging state to remove GC roots. */
         for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next()) {
-            comp->clearTraps(defaultFreeOp());
             if (WatchpointMap *wpmap = comp->watchpointMap)
                 wpmap->clear();
         }
