@@ -8,39 +8,21 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
+function run_test() {
+  removeMetadata();
+  updateAppInfo();
+  useHttpServer();
 
-Components.utils.import("resource://testing-common/httpd.js");
+  run_next_test();
+}
 
-let waitForEngines = {
-  "Test search engine": 1,
-  "A second test engine": 1
-};
-
-function search_observer(aSubject, aTopic, aData) {
-  let engine = aSubject.QueryInterface(Ci.nsISearchEngine);
-  do_print("Observer: " + aData + " for " + engine.name);
-
-  if (aData != "engine-added") {
-    return;
-  }
-
-  // If the engine is defined in `waitForEngines`, remove it from the list
-  if (waitForEngines[engine.name]) {
-    delete waitForEngines[engine.name];
-  } else {
-    // This engine is not one we're waiting for, so bail out early.
-    return;
-  }
-
-  // Only continue when both engines have been loaded.
-  if (Object.keys(waitForEngines).length)
-    return;
+add_task(function* test_defaultEngine() {
+  let [engine1, engine2] = yield addTestEngines([
+    { name: "Test search engine", xmlFileName: "engine.xml" },
+    { name: "A second test engine", xmlFileName: "engine2.xml" },
+  ]);
 
   let search = Services.search;
-
-  let engine1 = search.getEngineByName("Test search engine");
-  let engine2 = search.getEngineByName("A second test engine");
 
   search.defaultEngine = engine1;
   do_check_eq(search.defaultEngine, engine1);
@@ -68,32 +50,4 @@ function search_observer(aSubject, aTopic, aData) {
   do_check_eq(search.defaultEngine, engine1);
   engine2.hidden = false;
   do_check_eq(search.defaultEngine, engine2);
-
-  do_test_finished();
-}
-
-function run_test() {
-  removeMetadata();
-  updateAppInfo();
-
-  let httpServer = new HttpServer();
-  httpServer.start(-1);
-  httpServer.registerDirectory("/", do_get_cwd());
-  let baseUrl = "http://localhost:" + httpServer.identity.primaryPort;
-
-  do_register_cleanup(function cleanup() {
-    httpServer.stop(function() {});
-    Services.obs.removeObserver(search_observer, "browser-search-engine-modified");
-  });
-
-  do_test_pending();
-
-  Services.obs.addObserver(search_observer, "browser-search-engine-modified", false);
-
-  Services.search.addEngine(baseUrl + "/data/engine.xml",
-                            Ci.nsISearchEngine.DATA_XML,
-                            null, false);
-  Services.search.addEngine(baseUrl + "/data/engine2.xml",
-                            Ci.nsISearchEngine.DATA_XML,
-                            null, false);
-}
+});
