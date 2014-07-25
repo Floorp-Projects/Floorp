@@ -8,8 +8,6 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 DIRS += ["source/modules/system"]
 
-JS_MODULES_PATH = 'modules/sdk'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.sdk += [
     'source/app-extension/bootstrap.js',
 ]
