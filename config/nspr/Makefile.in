@@ -29,10 +29,11 @@ else
 export:: EXTRA_MAKE_FLAGS := SHARED_LIBRARY= IMPORT_LIBRARY= SHARED_LIB_PDB=
 endif
 
-libs export clean distclean::
+clean distclean export::
 	$(MAKE) -C $(DEPTH)/nsprpub $@ $(EXTRA_MAKE_FLAGS)
 
-libs::
+target::
+	$(MAKE) -C $(DEPTH)/nsprpub libs $(EXTRA_MAKE_FLAGS)
 	$(MAKE) -C $(DEPTH)/nsprpub install prefix=$(ABS_DIST)/sdk exec_prefix=$(ABS_DIST)/sdk bindir=$(ABS_DIST)/sdk/dummy includedir=$(ABS_DIST)/include/nspr libdir=$(ABS_DIST)/sdk/lib datadir=$(ABS_DIST)/sdk/dummy DESTDIR= $(EXTRA_MAKE_FLAGS)
 	$(INSTALL) $(DEPTH)/nsprpub/config/nspr-config $(DIST)/sdk/bin
 	$(RM) -rf $(DIST)/sdk/dummy

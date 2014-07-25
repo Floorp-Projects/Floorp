@@ -81,10 +81,12 @@ public:
 
   static bool    gDragInProgress;
 
-  void GetSizeOfChild(nsIFrame* aChild, nsSize& aSize);
+  void GetSizeOfChild(nsIFrame* aChild, mozilla::WritingMode aWM,
+                      mozilla::LogicalSize& aSize);
 
-  void GetSizeOfChildAt(int32_t  aIndexInParent, 
-                        nsSize&  aSize, 
+  void GetSizeOfChildAt(int32_t  aIndexInParent,
+                        mozilla::WritingMode aWM,
+                        mozilla::LogicalSize&  aSize,
                         nsIntPoint& aCellIndex);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext, 

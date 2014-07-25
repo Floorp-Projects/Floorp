@@ -29,11 +29,13 @@ public:
   GMPVideoDecoderParent(GMPParent *aPlugin);
 
   GMPVideoHostImpl& Host();
+  nsresult Shutdown();
 
   // GMPVideoDecoder
+  virtual void Close() MOZ_OVERRIDE;
   virtual nsresult InitDecode(const GMPVideoCodec& aCodecSettings,
                               const nsTArray<uint8_t>& aCodecSpecific,
-                              GMPVideoDecoderCallback* aCallback,
+                              GMPVideoDecoderCallbackProxy* aCallback,
                               int32_t aCoreCount) MOZ_OVERRIDE;
   virtual nsresult Decode(GMPVideoEncodedFrame* aInputFrame,
                           bool aMissingFrames,
@@ -41,7 +43,6 @@ public:
                           int64_t aRenderTimeMs = -1) MOZ_OVERRIDE;
   virtual nsresult Reset() MOZ_OVERRIDE;
   virtual nsresult Drain() MOZ_OVERRIDE;
-  virtual nsresult DecodingComplete() MOZ_OVERRIDE;
   virtual const uint64_t ParentID() MOZ_OVERRIDE { return reinterpret_cast<uint64_t>(mPlugin.get()); }
 
   // GMPSharedMemManager
@@ -76,9 +77,9 @@ private:
                                Shmem* aMem) MOZ_OVERRIDE;
   virtual bool Recv__delete__() MOZ_OVERRIDE;
 
-  bool mCanSendMessages;
+  bool mIsOpen;
   nsRefPtr<GMPParent> mPlugin;
-  GMPVideoDecoderCallback* mCallback;
+  GMPVideoDecoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
 };
 

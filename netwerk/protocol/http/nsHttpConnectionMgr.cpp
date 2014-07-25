@@ -2938,19 +2938,9 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
         tmpFlags |= nsISocketTransport::DISABLE_IPV6;
     }
 
-    // Allow speculative connections for loopback so we can run tests.
-    if (IsSpeculative() && gHttpHandler->AllowSpeculativeConnectOnLoopback()) {
+    if (IsSpeculative()) {
         tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
-        LOG(("nsHalfOpenSocket::SetupStreams %p Disable private IPs for "
-             "speculative connections", this));
-    } else if (IsSpeculative() ||
-               !(mCaps & NS_HTTP_ALLOW_PRIVATE_IP_ADDRESSES)) {
-        tmpFlags |= nsISocketTransport::DISABLE_LOOPBACK |
-                    nsISocketTransport::DISABLE_RFC1918;
-        LOG(("nsHalfOpenSocket::SetupStreams %p Disable loopback and private "
-             "IPs", this));
     }
-
 
     socketTransport->SetConnectionFlags(tmpFlags);
 

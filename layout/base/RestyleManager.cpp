@@ -52,6 +52,8 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mInStyleRefresh(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
+  , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
+                                        MostRecentRefresh())
   , mAnimationGeneration(0)
   , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
@@ -408,7 +410,9 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
   // Construct a bogus parent reflow state so that there's a usable
   // containing block reflow state.
   nsIFrame* parentFrame = aFrame->GetParent();
-  nsSize parentSize = parentFrame->GetSize();
+  WritingMode parentWM = parentFrame->GetWritingMode();
+  WritingMode frameWM = aFrame->GetWritingMode();
+  LogicalSize parentSize = parentFrame->GetLogicalSize();
 
   nsFrameState savedState = parentFrame->GetStateBits();
   nsHTMLReflowState parentReflowState(aFrame->PresContext(), parentFrame,
@@ -416,17 +420,18 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
   parentFrame->RemoveStateBits(~nsFrameState(0));
   parentFrame->AddStateBits(savedState);
 
-  NS_WARN_IF_FALSE(parentSize.width != NS_INTRINSICSIZE &&
-                   parentSize.height != NS_INTRINSICSIZE,
+  NS_WARN_IF_FALSE(parentSize.ISize(parentWM) != NS_INTRINSICSIZE &&
+                   parentSize.BSize(parentWM) != NS_INTRINSICSIZE,
                    "parentSize should be valid");
-  parentReflowState.SetComputedWidth(std::max(parentSize.width, 0));
-  parentReflowState.SetComputedHeight(std::max(parentSize.height, 0));
+  parentReflowState.SetComputedISize(std::max(parentSize.ISize(parentWM), 0));
+  parentReflowState.SetComputedBSize(std::max(parentSize.BSize(parentWM), 0));
   parentReflowState.ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
 
   parentReflowState.ComputedPhysicalPadding() = parentFrame->GetUsedPadding();
   parentReflowState.ComputedPhysicalBorderPadding() =
     parentFrame->GetUsedBorderAndPadding();
-  nsSize availSize(parentSize.width, NS_INTRINSICSIZE);
+  LogicalSize availSize = parentSize.ConvertTo(frameWM, parentWM);
+  availSize.BSize(frameWM) = NS_INTRINSICSIZE;
 
   ViewportFrame* viewport = do_QueryFrame(parentFrame);
   nsSize cbSize = viewport ?
@@ -436,8 +441,8 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
     parentReflowState.mStyleBorder->GetComputedBorder();
   cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
   nsHTMLReflowState reflowState(aFrame->PresContext(), parentReflowState,
-                                aFrame, availSize, cbSize.width,
-                                cbSize.height);
+                                aFrame, availSize,
+                                cbSize.width, cbSize.height);
   nsSize computedSize(reflowState.ComputedWidth(), reflowState.ComputedHeight());
   computedSize.width += reflowState.ComputedPhysicalBorderPadding().LeftRight();
   if (computedSize.height != NS_INTRINSICSIZE) {
@@ -1465,7 +1470,7 @@ RestyleManager::ProcessPendingRestyles()
   if (nsLayoutUtils::AreAsyncAnimationsEnabled() &&
       mPendingRestyles.Count() > 0) {
     ++mAnimationGeneration;
-    mPresContext->TransitionManager()->UpdateAllThrottledStyles();
+    UpdateOnlyAnimationStyles();
   }
 
   mPendingRestyles.ProcessRestyles();
@@ -1523,6 +1528,19 @@ RestyleManager::EndProcessingRestyles()
 #ifdef DEBUG
   mPresContext->PresShell()->VerifyStyleTree();
 #endif
+}
+
+void
+RestyleManager::UpdateOnlyAnimationStyles()
+{
+  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+  if (mLastUpdateForThrottledAnimations == now) {
+    return;
+  }
+  mLastUpdateForThrottledAnimations = now;
+
+  mPresContext->TransitionManager()->UpdateAllThrottledStyles();
+  mPresContext->AnimationManager()->UpdateAllThrottledStyles();
 }
 
 void

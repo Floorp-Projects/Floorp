@@ -1,0 +1,11 @@
+<html>
+  <head></head>
+  <body>
+      <script type="text/javascript">
+          navigator.serviceWorker.onupdatefound = function(e) {
+            window.parent.postMessage("updatefound", "*");
+          }
+          window.parent.postMessage("ready", "*");
+      </script>
+  </body>
+</html>
