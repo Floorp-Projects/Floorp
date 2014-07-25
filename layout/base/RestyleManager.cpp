@@ -52,6 +52,8 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mInStyleRefresh(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
+  , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
+                                        MostRecentRefresh())
   , mAnimationGeneration(0)
   , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
@@ -1531,6 +1533,12 @@ RestyleManager::EndProcessingRestyles()
 void
 RestyleManager::UpdateOnlyAnimationStyles()
 {
+  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+  if (mLastUpdateForThrottledAnimations == now) {
+    return;
+  }
+  mLastUpdateForThrottledAnimations = now;
+
   mPresContext->TransitionManager()->UpdateAllThrottledStyles();
   mPresContext->AnimationManager()->UpdateAllThrottledStyles();
 }
