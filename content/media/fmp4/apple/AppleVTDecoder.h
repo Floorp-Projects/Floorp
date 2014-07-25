@@ -11,6 +11,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIThread.h"
+#include "ReorderQueue.h"
+
 #include "VideoToolbox/VideoToolbox.h"
 
 namespace mozilla {
@@ -44,11 +46,13 @@ private:
   layers::ImageContainer* mImageContainer;
   CMVideoFormatDescriptionRef mFormat;
   VTDecompressionSessionRef mSession;
+  ReorderQueue mReorderQueue;
 
   // Method to pass a frame to VideoToolbox for decoding.
   nsresult SubmitFrame(mp4_demuxer::MP4Sample* aSample);
   // Method to set up the decompression session.
   nsresult InitializeSession();
+  nsresult DrainReorderedFrames();
 };
 
 } // namespace mozilla
