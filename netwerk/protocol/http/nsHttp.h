@@ -83,9 +83,6 @@ typedef uint8_t nsHttpVersion;
 // weaker security profiles based on past history
 #define NS_HTTP_ALLOW_RSA_FALSESTART (1<<9)
 
-// Allows a transaction to use a connection to a private, RFC1918-like address.
-#define NS_HTTP_ALLOW_PRIVATE_IP_ADDRESSES (1<<10)
-
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------
