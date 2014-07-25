@@ -160,6 +160,12 @@ public:
   void BeginProcessingRestyles();
   void EndProcessingRestyles();
 
+  // Update styles for animations that are running on the compositor and
+  // whose updating is suppressed on the main thread (to save
+  // unnecessary work), while leaving all other aspects of style
+  // out-of-date.
+  void UpdateOnlyAnimationStyles();
+
   // Rebuilds all style data by throwing out the old rule tree and
   // building a new one, and additionally applying aExtraHint (which
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
