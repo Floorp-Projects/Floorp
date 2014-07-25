@@ -132,6 +132,35 @@ GetAlgorithmName(JSContext* aCx, const OOS& aAlgorithm, nsString& aName)
     aName.Assign(alg.mName.Value());
   }
 
+  // Normalize algorithm names.
+  if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_AES_CBC)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_AES_CBC);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_AES_CTR)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_AES_CTR);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_AES_GCM)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_AES_GCM);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_AES_KW)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_AES_KW);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_SHA1)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_SHA1);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_SHA256)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_SHA256);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_SHA384)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_SHA384);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_SHA512)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_SHA512);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_HMAC)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_HMAC);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_PBKDF2)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_PBKDF2);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_RSAES_PKCS1)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_RSAES_PKCS1);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_RSA_OAEP)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_RSA_OAEP);
+  }
+
   return NS_OK;
 }
 
@@ -1799,16 +1828,10 @@ public:
       }
 
       nsString hashName;
-      if (params.mHash.Value().IsString()) {
-        hashName.Assign(params.mHash.Value().GetAsString());
-      } else {
-        Algorithm hashAlg;
-        mEarlyRv = Coerce(aCx, hashAlg, params.mHash.Value());
-        if (NS_FAILED(mEarlyRv) || !hashAlg.mName.WasPassed()) {
-          mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
-          return;
-        }
-        hashName.Assign(hashAlg.mName.Value());
+      mEarlyRv = GetAlgorithmName(aCx, params.mHash.Value(), hashName);
+      if (NS_FAILED(mEarlyRv)) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
       }
 
       if (params.mLength.WasPassed()) {
