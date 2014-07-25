@@ -297,7 +297,8 @@
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
   <string name="pref_titlebar_mode_url">&pref_titlebar_mode_url;</string>
 
-  <string name="pref_scroll_title_bar">&pref_scroll_title_bar;</string>
+  <string name="pref_scroll_title_bar2">&pref_scroll_title_bar2;</string>
+  <string name="pref_scroll_title_bar_summary">&pref_scroll_title_bar_summary;</string>
 
   <string name="page_removed">&page_removed;</string>
 

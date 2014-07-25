@@ -22,7 +22,8 @@
                     android:persistent="false" />
 
     <CheckBoxPreference android:key="browser.chrome.dynamictoolbar"
-                        android:title="@string/pref_scroll_title_bar" />
+                        android:title="@string/pref_scroll_title_bar2"
+                        android:summary="@string/pref_scroll_title_bar_summary" />
 
     <PreferenceCategory android:title="@string/pref_category_advanced">
 
