@@ -957,16 +957,9 @@ CacheStorageService::RemoveEntry(CacheEntry* aEntry, bool aOnlyUnreferenced)
     return false;
   }
 
-  if (aOnlyUnreferenced) {
-    if (aEntry->IsReferenced()) {
-      LOG(("  still referenced, not removing"));
-      return false;
-    }
-
-    if (!aEntry->IsUsingDisk() && IsForcedValidEntry(entryKey)) {
-      LOG(("  forced valid, not removing"));
-      return false;
-    }
+  if (aOnlyUnreferenced && aEntry->IsReferenced()) {
+    LOG(("  still referenced, not removing"));
+    return false;
   }
 
   CacheEntryTable* entries;
@@ -1032,75 +1025,6 @@ CacheStorageService::RecordMemoryOnlyEntry(CacheEntry* aEntry,
   else {
     RemoveExactEntry(entries, entryKey, aEntry, aOverwrite);
   }
-}
-
-// Checks if a cache entry is forced valid (will be loaded directly from cache
-// without further validation) - see nsICacheEntry.idl for further details
-bool CacheStorageService::IsForcedValidEntry(nsACString &aCacheEntryKey)
-{
-  TimeStamp validUntil;
-
-  mozilla::MutexAutoLock lock(mLock);
-
-  if (!mForcedValidEntries.Get(aCacheEntryKey, &validUntil)) {
-    return false;
-  }
-
-  if (validUntil.IsNull()) {
-    return false;
-  }
-
-  // Entry timeout not reached yet
-  if (TimeStamp::NowLoRes() <= validUntil) {
-    return true;
-  }
-
-  // Entry timeout has been reached
-  mForcedValidEntries.Remove(aCacheEntryKey);
-  return false;
-}
-
-// Allows a cache entry to be loaded directly from cache without further
-// validation - see nsICacheEntry.idl for further details
-void CacheStorageService::ForceEntryValidFor(nsACString &aCacheEntryKey,
-                                             uint32_t aSecondsToTheFuture)
-{
-  mozilla::MutexAutoLock lock(mLock);
-
-  TimeStamp now = TimeStamp::NowLoRes();
-  ForcedValidEntriesPrune(now);
-
-  // This will be the timeout
-  TimeStamp validUntil = now + TimeDuration::FromSeconds(aSecondsToTheFuture);
-
-  mForcedValidEntries.Put(aCacheEntryKey, validUntil);
-}
-
-namespace { // anon
-
-PLDHashOperator PruneForcedValidEntries(
-  const nsACString& aKey, TimeStamp& aTimeStamp, void* aClosure)
-{
-  TimeStamp* now = static_cast<TimeStamp*>(aClosure);
-  if (aTimeStamp < *now) {
-    return PL_DHASH_REMOVE;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-} // anon
-
-// Cleans out the old entries in mForcedValidEntries
-void CacheStorageService::ForcedValidEntriesPrune(TimeStamp &now)
-{
-  static TimeDuration const oneMinute = TimeDuration::FromSeconds(60);
-  static TimeStamp dontPruneUntil = now + oneMinute;
-  if (now < dontPruneUntil)
-    return;
-
-  mForcedValidEntries.Enumerate(PruneForcedValidEntries, &now);
-  dontPruneUntil = now + oneMinute;
 }
 
 void
