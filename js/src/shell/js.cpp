@@ -3225,6 +3225,28 @@ SetInterruptCallback(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+StackDump(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool showArgs = ToBoolean(args.get(0));
+    bool showLocals = ToBoolean(args.get(1));
+    bool showThisProps = ToBoolean(args.get(2));
+
+    char *buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    if (!buf) {
+        fputs("Failed to format JavaScript stack for dump\n", gOutFile);
+    } else {
+        fputs(buf, gOutFile);
+        JS_smprintf_free(buf);
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
+
+static bool
 Elapsed(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4464,6 +4486,11 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("notes", Notes, 1, 0,
 "notes([fun])",
 "  Show source notes for functions."),
+
+    JS_FN_HELP("stackDump", StackDump, 3, 0,
+"stackDump(showArgs, showLocals, showThisProps)",
+"  Tries to print a lot of information about the current stack. \n"
+"  Similar to the DumpJSStack() function in the browser."),
 
     JS_FN_HELP("findReferences", FindReferences, 1, 0,
 "findReferences(target)",
