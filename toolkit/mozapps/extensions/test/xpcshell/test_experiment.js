@@ -24,6 +24,10 @@ add_test(function test_experiment() {
                      "Background updates are disabled.");
         Assert.equal(addon.permissions, AddonManager.PERM_CAN_UNINSTALL,
                      "Permissions are minimal.");
+        Assert.ok(!(addon.pendingOperations & AddonManager.PENDING_ENABLE),
+                  "Should not be pending enable");
+        Assert.ok(!(addon.pendingOperations & AddonManager.PENDING_DISABLE),
+                  "Should not be pending disable");
 
         // Setting applyBackgroundUpdates should not work.
         addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
@@ -72,6 +76,10 @@ add_test(function test_userDisabledNotPersisted() {
           Assert.ok(addon, "Add-on retrieved.");
           Assert.equal(addon.userDisabled, false, "Add-on is still enabled after API retrieve.");
           Assert.ok(addon.isActive, "Add-on is still active.");
+          Assert.ok(!(addon.pendingOperations & AddonManager.PENDING_ENABLE),
+                    "Should not be pending enable");
+          Assert.ok(!(addon.pendingOperations & AddonManager.PENDING_DISABLE),
+                    "Should not be pending disable");
 
           // Now when we restart the manager the add-on should revert state.
           restartManager();
