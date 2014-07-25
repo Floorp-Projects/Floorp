@@ -64,7 +64,7 @@ public:
 
   // Notify all active de/encoders that we are closing, either because of
   // normal shutdown or unexpected shutdown/crash.
-  void CloseActive();
+  void CloseActive(bool aDieWhenUnloaded);
 
   // Called by the GMPService to forcibly close active de/encoders at shutdown
   void Shutdown();
@@ -132,6 +132,7 @@ private:
   nsCString mVersion;
   nsTArray<nsAutoPtr<GMPCapability>> mCapabilities;
   GMPProcessParent* mProcess;
+  bool mDeleteProcessOnUnload;
 
   nsTArray<nsRefPtr<GMPVideoDecoderParent>> mVideoDecoders;
   nsTArray<nsRefPtr<GMPVideoEncoderParent>> mVideoEncoders;
