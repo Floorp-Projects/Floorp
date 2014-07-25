@@ -44,7 +44,6 @@ SOURCES += ['libui/' + src for src in [
 ]]
 
 SOURCES += [
-    'Framebuffer.cpp',
     'GfxInfo.cpp',
     'GonkMemoryPressureMonitoring.cpp',
     'GonkPermission.cpp',

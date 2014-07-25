@@ -427,8 +427,6 @@ pref("network.gonk.ms-release-mms-connection", 30000);
 
 // WebContacts
 pref("dom.mozContacts.enabled", true);
-pref("dom.navigator-property.disable.mozContacts", false);
-pref("dom.global-constructor.disable.mozContact", false);
 
 // Shortnumber matching needed for e.g. Brazil:
 // 03187654321 can be found with 87654321
@@ -493,7 +491,6 @@ pref("dom.mozApps.single_variant_sourcedir", "/persist/svoperapps");
 
 // WebSettings
 pref("dom.mozSettings.enabled", true);
-pref("dom.navigator-property.disable.mozSettings", false);
 pref("dom.mozPermissionSettings.enabled", true);
 
 // controls if we want camera support

@@ -159,7 +159,7 @@ public final class GeckoLoader {
 
         /* We really want to use this code, but it requires bumping up the SDK to 17 so for now
            we will use reflection. See https://bugzilla.mozilla.org/show_bug.cgi?id=811763#c11
-        
+
         if (Build.VERSION.SDK_INT >= 17) {
             android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);
             if (um != null) {
@@ -234,7 +234,7 @@ public final class GeckoLoader {
     }
 
     @RobocopTarget
-    public static void loadSQLiteLibs(Context context, String apkName) {
+    public static void loadSQLiteLibs(final Context context, final String apkName) {
         synchronized (sLibLoadingLock) {
             if (sSQLiteLibsLoaded) {
                 return;
@@ -242,13 +242,12 @@ public final class GeckoLoader {
             sSQLiteLibsLoaded = true;
         }
 
-        loadMozGlue();
-        // the extract libs parameter is being removed in bug 732069
+        loadMozGlue(context);
         loadLibsSetup(context);
         loadSQLiteLibsNative(apkName, false);
     }
 
-    public static void loadNSSLibs(Context context, String apkName) {
+    public static void loadNSSLibs(final Context context, final String apkName) {
         synchronized (sLibLoadingLock) {
             if (sNSSLibsLoaded) {
                 return;
@@ -256,31 +255,130 @@ public final class GeckoLoader {
             sNSSLibsLoaded = true;
         }
 
-        loadMozGlue();
+        loadMozGlue(context);
         loadLibsSetup(context);
         loadNSSLibsNative(apkName, false);
     }
 
-    public static void doLoadLibrary(final String lib) {
+    private static String getLoadDiagnostics(final Context context, final String lib) {
+        final StringBuilder message = new StringBuilder("LOAD ");
+        message.append(lib);
+
+        message.append(": Data: " + context.getApplicationInfo().dataDir);
         try {
-            System.loadLibrary(lib);
-        } catch (UnsatisfiedLinkError e) {
-            Log.wtf(LOGTAG, "Couldn't load " + lib + ". Trying /data/app-lib path.");
-            try {
-                System.load("/data/app-lib/" + ANDROID_PACKAGE_NAME + "/lib" + lib + ".so");
-            } catch (Throwable ee) {
-                try {
-                    Log.wtf(LOGTAG, "Couldn't load " + lib + ": " + ee + ". Trying /data/data path.");
-                    System.load("/data/data/" + ANDROID_PACKAGE_NAME + "/lib/lib" + lib + ".so");
-                } catch (Throwable eee) {
-                    Log.wtf(LOGTAG, "Failed every attempt to load " + lib + ". Giving up.");
-                    throw new RuntimeException("Unable to load " + lib, eee);
-                }
+            final boolean appLibExists = new File("/data/app-lib/" + ANDROID_PACKAGE_NAME + "/lib" + lib + ".so").exists();
+            final boolean dataDataExists = new File("/data/data/" + ANDROID_PACKAGE_NAME + "/lib/lib" + lib + ".so").exists();
+            message.append(", ax=" + appLibExists);
+            message.append(", ddx=" + dataDataExists);
+        } catch (Throwable e) {
+            message.append(": ax/ddx fail, ");
+        }
+
+        try {
+            final String dashOne = "/data/data/" + ANDROID_PACKAGE_NAME + "-1";
+            final String dashTwo = "/data/data/" + ANDROID_PACKAGE_NAME + "-2";
+            final boolean dashOneExists = new File(dashOne).exists();
+            final boolean dashTwoExists = new File(dashTwo).exists();
+            message.append(", -1x=" + dashOneExists);
+            message.append(", -2x=" + dashTwoExists);
+        } catch (Throwable e) {
+            message.append(", dash fail, ");
+        }
+
+        try {
+            if (Build.VERSION.SDK_INT >= 9) {
+                final String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
+                final boolean nativeLibDirExists = new File(nativeLibPath).exists();
+                final boolean nativeLibLibExists = new File(nativeLibPath + "/lib" + lib + ".so").exists();
+
+                message.append(", nativeLib: " + nativeLibPath);
+                message.append(", dirx=" + nativeLibDirExists);
+                message.append(", libx=" + nativeLibLibExists);
+            } else {
+                message.append(", <pre-9>");
             }
+        } catch (Throwable e) {
+            message.append(", nativeLib fail.");
+        }
+
+        return message.toString();
+    }
+
+    private static final boolean attemptLoad(final String path) {
+        try {
+            System.load(path);
+            return true;
+        } catch (Throwable e) {
+            Log.wtf(LOGTAG, "Couldn't load " + path + ": " + e);
+        }
+
+        return false;
+    }
+
+    /**
+     * The first two attempts at loading a library: directly, and
+     * then using the app library path.
+     *
+     * Returns null or the cause exception.
+     */
+    private static final Throwable doLoadLibraryExpected(final Context context, final String lib) {
+        try {
+            // Attempt 1: the way that should work.
+            System.loadLibrary(lib);
+            return null;
+        } catch (Throwable e) {
+            Log.wtf(LOGTAG, "Couldn't load " + lib + ". Trying native library dir.");
+
+            if (Build.VERSION.SDK_INT < 9) {
+                // We can't use nativeLibraryDir.
+                return e;
+            }
+
+            // Attempt 2: use nativeLibraryDir, which should also work.
+            final String libDir = context.getApplicationInfo().nativeLibraryDir;
+            if (attemptLoad(libDir + "/lib" + lib + ".so")) {
+                // Success!
+                return null;
+            }
+
+            // We failed. Return the original cause.
+            return e;
         }
     }
 
-    public static void loadMozGlue() {
+    public static void doLoadLibrary(final Context context, final String lib) {
+        final Throwable e = doLoadLibraryExpected(context, lib);
+        if (e == null) {
+            // Success.
+            return;
+        }
+
+        // Attempt 3: try finding the path the pseudo-supported way using .dataDir.
+        final String dataLibPath = context.getApplicationInfo().dataDir + "/lib/lib" + lib + ".so";
+        if (attemptLoad(dataLibPath)) {
+            return;
+        }
+
+        // Attempt 4: use /data/app-lib directly. This is a last-ditch effort.
+        if (attemptLoad("/data/app-lib/" + ANDROID_PACKAGE_NAME + "/lib" + lib + ".so")) {
+            return;
+        }
+
+        // Attempt 5: even more optimistic.
+        if (attemptLoad("/data/data/" + ANDROID_PACKAGE_NAME + "/lib/lib" + lib + ".so")) {
+            return;
+        }
+
+        // Give up loudly, leaking information to debug the failure.
+        final String message = getLoadDiagnostics(context, lib);
+        Log.e(LOGTAG, "Load diagnostics: " + message);
+
+        // Throw the descriptive message, using the original library load
+        // failure as the cause.
+        throw new RuntimeException(message, e);
+    }
+
+    public static void loadMozGlue(final Context context) {
         synchronized (sLibLoadingLock) {
             if (sMozGlueLoaded) {
                 return;
@@ -288,10 +386,10 @@ public final class GeckoLoader {
             sMozGlueLoaded = true;
         }
 
-        doLoadLibrary("mozglue");
+        doLoadLibrary(context, "mozglue");
     }
 
-    public static void loadGeckoLibs(Context context, String apkName) {
+    public static void loadGeckoLibs(final Context context, final String apkName) {
         loadLibsSetup(context);
         loadGeckoLibsNative(apkName);
     }
