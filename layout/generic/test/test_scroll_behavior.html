@@ -1,0 +1,300 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests for CSSOM-View Smooth-Scroll DOM API Methods and MSD Animation</title>
+  <style>
+    #scroll_behavior_test_body {
+      width: 100000px;
+      height: 100000px;
+    }
+    .scroll_to_target {
+      position: absolute;
+      left: 20000px;
+      top: 10000px;
+      width: 200px;
+      height: 200px;
+      background-color: rgb(0, 0, 255);
+    }
+  </style>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  function clamp(val, minVal, maxVal) {
+    return Math.max(minVal, Math.min(maxVal, val));
+  }
+
+  window.addEventListener("load", function(event) {
+    if (event.target == document) {
+      SpecialPowers.pushPrefEnv(
+        { 'set': [['layout.css.scroll-behavior.enabled', true]] },
+        function () {
+          testScrollBehaviorInterruption(function() {
+            testScrollBehaviorFramerate(function() {
+              window.scrollTo(0,0);
+              SimpleTest.finish(); 
+            });
+          });
+        }
+      );
+    }
+  }, false);
+
+
+  function testScrollBehaviorInterruption(nextTest) {
+    // Take control of refresh driver
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+    waitForAllPaintsFlushed(function() {
+
+      window.scrollTo(10, 9);
+      ok(window.scrollX == 10 && window.scrollY == 9,
+        "instant scroll-behavior must be synchronous when setting initial position");
+
+      window.scrollTo(15, 16);
+      ok(window.scrollX == 15 && window.scrollY == 16,
+        "instant scroll-behavior must be synchronous when setting new position");
+
+      window.scrollTo(100, 200, {behavior: 'smooth'});
+      ok(window.scrollX == 15 && window.scrollY == 16,
+        "smooth scroll-behavior must be asynchronous");
+
+      SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(100);
+      waitForAllPaintsFlushed(function() {
+        ok(window.scrollX != 15 && window.scrollY != 16
+           && window.scrollX != 100 && window.scrollY != 200,
+          "smooth scroll-behavior must be triggered by window.scrollTo");
+
+        window.scrollTo(50, 52);
+        ok(window.scrollX == 50 && window.scrollY == 52,
+          "instant scroll-behavior must interrupt smooth scroll-behavior animation");
+
+        SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(100);
+        waitForAllPaintsFlushed(function() {
+          ok(window.scrollX == 50 && window.scrollY == 52,
+            "smooth scroll-behavior animation must stop after being interrupted");
+
+          // Release control of refresh driver
+          SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+          waitForAllPaintsFlushed(nextTest);
+        });
+      });
+    });
+  }
+
+  function testScrollBehaviorFramerate(nextTest) {
+    /**
+     *  CSSOM-View scroll-behavior smooth scroll animations must produce the
+     *  same results indendently of frame-rate:
+     *
+     *   - Reference samples of scroll position for each frame are captured from
+     *     a smooth scroll at 120fps for variations in X-Distance, Y-Distance.
+     *   - Test samples are captured from an animation with the same parameters
+     *     at varying framerates.
+     *   - Variance in position at each sampled interval is compared to the
+     *     120fps reference.  To pass the test, the position of each test
+     *     sample must match the reference position with a tolerance of one test
+     *     sample frame's range of motion.  This range of motion is calculated
+     *     by the position delta of the reference samples one test frame duration
+     *     before and after.
+     *   - The duration of the reference sample animation and the test sample
+     *     animation must match within 1 frame to pass the test.
+     *   - The simulation driving the animation must converge and stop on the
+     *     destination position for the test to pass.
+     */
+
+    // Use 120hz for reference samples
+    var referenceFrameRate = 120;
+
+    var frameRates = [ 13, 60 ];
+    var deltas = [ {x: 0, y: 0},
+                   {x: 1, y: 100},
+                   {x: -100, y: 50000} ];
+
+    var deltaIndex = 0;
+
+    function testDeltas() {
+      if(deltaIndex >= deltas.length) {
+        nextTest();
+        return;
+      }
+      var deltaX = deltas[deltaIndex].x;
+      var deltaY = deltas[deltaIndex].y;
+      deltaIndex++;
+
+      // startX and startY must be at least as big as the greatest negative
+      // number in the deltas array in order to prevent the animation from
+      // being interrupted by scroll range boundaries.
+      var startX = 1000;
+      var startY = 1000;
+      var endX = startX + deltaX;
+      var endY = startY + deltaY;
+      var referenceTimeStep = Math.floor(1000 / referenceFrameRate);
+
+      sampleAnimation(startX, startY, endX, endY,
+                      referenceTimeStep, function(refSamples) {
+
+        var referenceDuration = refSamples.length * referenceTimeStep; // ms
+
+        var frameRateIndex=0;
+
+        function testFrameRate() {
+          if(frameRateIndex < frameRates.length) {
+            var frameRate = frameRates[frameRateIndex++];
+            var testTimeStep = Math.floor(1000 / frameRate);
+
+            sampleAnimation(startX, startY, endX, endY,
+                            testTimeStep, function(testSamples) {
+              var testDuration = testSamples.length * testTimeStep; // ms
+
+              // Variance in duration of animation must be accurate to within one
+              // frame interval
+              var durationVariance = Math.max(0, Math.abs(testDuration - referenceDuration) - testTimeStep);
+              is(durationVariance, 0, 'Smooth scroll animation duration must not '
+                 + 'be framerate dependent at deltaX: ' + deltaX + ', deltaY: '
+                 + deltaY + ', frameRate: ' + frameRate + 'fps');
+
+              var maxVariance = 0;
+              testSamples.forEach(function(sample, sampleIndex) {
+
+                var testToRef = refSamples.length / testSamples.length;
+                var refIndexThisFrame = clamp(Math.floor(sampleIndex * testToRef),
+                                              0, refSamples.length - 1);
+                var refIndexPrevFrame = clamp(Math.floor((sampleIndex - 1) * testToRef),
+                                              0, refSamples.length - 1);
+                var refIndexNextFrame = clamp(Math.floor((sampleIndex + 1) * testToRef),
+                                              0, refSamples.length - 1);
+
+                var refSampleThisFrame = refSamples[refIndexThisFrame];
+                var refSamplePrevFrame = refSamples[refIndexPrevFrame];
+                var refSampleNextFrame = refSamples[refIndexNextFrame];
+
+                var refXMin = Math.min(refSamplePrevFrame[0],
+                                      refSampleThisFrame[0],
+                                      refSampleNextFrame[0]);
+
+                var refYMin = Math.min(refSamplePrevFrame[1],
+                                      refSampleThisFrame[1],
+                                      refSampleNextFrame[1]);
+
+                var refXMax = Math.max(refSamplePrevFrame[0],
+                                      refSampleThisFrame[0],
+                                      refSampleNextFrame[0]);
+
+                var refYMax = Math.max(refSamplePrevFrame[1],
+                                      refSampleThisFrame[1],
+                                      refSampleNextFrame[1]);
+
+                // Varience is expected to be at most 1 pixel beyond the range,
+                // due to integer rounding of pixel position.
+                var positionTolerance = 1; // 1 pixel
+
+                maxVariance = Math.max(maxVariance,
+                                       refXMin - sample[0] - positionTolerance,
+                                       sample[0] - refXMax - positionTolerance,
+                                       refYMin - sample[1] - positionTolerance,
+                                       sample[1] - refYMax - positionTolerance);
+              });
+
+              is(maxVariance, 0, 'Smooth scroll animated position must not be '
+                 + 'framerate dependent at deltaX: ' + deltaX + ', deltaY: '
+                 + deltaY + ', frameRate: ' + frameRate + 'fps');
+              testFrameRate();
+            });
+          } else {
+            waitForAllPaintsFlushed(testDeltas);
+          }
+        }
+
+        testFrameRate();
+
+      });
+    }
+
+    testDeltas();
+
+  }
+
+  function sampleAnimation(startX, startY, endX, endY, timeStep, callback) {
+    // The animation must be stopped at the destination position for
+    // minStoppedFrames consecutive frames to detect that the animation has
+    // completed.
+    var minStoppedFrames = 15; // 15 frames
+
+    // In case the simulation fails to converge, the test will time out after
+    // processing maxTime milliseconds of animation.
+    var maxTime = 10000; // 10 seconds
+
+    var positionSamples = [];
+
+    var frameCountAtDestination = 0;
+
+    // Take control of refresh driver so we can synthesize
+    // various frame rates
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+    waitForAllPaintsFlushed(function() {
+
+      window.scrollTo(startX, startY);
+      window.scrollTo(endX, endY, {behavior: 'smooth'});
+
+      var currentTime = 0; // ms
+
+      function advanceTime() {
+        if(currentTime < maxTime && frameCountAtDestination < 15) {
+
+          positionSamples.push([window.scrollX, window.scrollY]);
+
+          currentTime += timeStep;
+          SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(timeStep);
+          waitForAllPaintsFlushed(function() {
+            if (window.scrollX == endX && window.scrollY == endY) {
+              frameCountAtDestination++;
+            } else {
+              frameCountAtDestination = 0;
+            }
+
+            advanceTime();
+          });
+
+        } else {
+          isnot(frameCountAtDestination, 0,
+                'Smooth scrolls must always end at their destination '
+                + 'unless they are interrupted, at deltaX: '
+                + (endX - startX) + ', deltaY: ' + (endY - startY));
+
+          window.scrollTo(0, 0);
+
+          // Release control of refresh driver
+          SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+
+          waitForAllPaintsFlushed(function() {
+
+            // We must not include the duplicated frames at the animation
+            // destination as the tests are dependant on the total duration of
+            // the animation to be accurate.
+            positionSamples.splice(1 - minStoppedFrames,
+                                   minStoppedFrames - 1);
+
+            callback(positionSamples);
+          });
+        }
+      }
+
+      advanceTime();
+
+    });
+  }
+
+  </script>
+</head>
+<body>
+<pre id="test">
+</pre>
+
+<div id="scroll_behavior_test_body">
+      <div id="scroll_to_target" class="scroll_to_target"></div>
+</body>
+</html>
