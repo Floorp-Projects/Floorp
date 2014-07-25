@@ -3218,11 +3218,12 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayerData* aLayerData,
           printf_stderr("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), layer);
         }
 #endif
+        invalid.ScaleRoundOut(thebesData->mXScale, thebesData->mYScale);
+
         if (hasClip) {
           invalid.And(invalid, intClip);
         }
 
-        invalid.ScaleRoundOut(thebesData->mXScale, thebesData->mYScale);
         InvalidatePostTransformRegion(layer, invalid,
                                       GetTranslationForThebesLayer(layer));
       }
