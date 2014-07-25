@@ -1832,3 +1832,38 @@ TestArray.addTest(
       .then(error(that), complete(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that we properly normalize algorithm names",
+  function() {
+    var that = this;
+    var alg = { name: "hmac", hash: {name: "sHa-256"} };
+
+    function doGenerateAesKey() {
+      var alg = { name: "AES-gcm", length: 192 };
+      return crypto.subtle.generateKey(alg, false, ["encrypt"]);
+    }
+
+    function doGenerateRsaOaepKey() {
+      var alg = {
+        name: "rsa-OAEP",
+        hash: "sha-1",
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      };
+      return crypto.subtle.generateKey(alg, false, ["encrypt"]);
+    }
+
+    function doGenerateRsaSsaPkcs1Key() {
+      var alg = { name: "RSASSA-pkcs1-V1_5", hash: "SHA-1" };
+      return crypto.subtle.importKey("pkcs8", tv.pkcs8, alg, true, ["sign"]);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["sign"])
+      .then(doGenerateAesKey)
+      .then(doGenerateRsaOaepKey)
+      .then(doGenerateRsaSsaPkcs1Key)
+      .then(complete(that), error(that));
+  }
+);
