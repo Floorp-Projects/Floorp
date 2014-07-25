@@ -1819,3 +1819,16 @@ TestArray.addTest(
       }), error(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Ensure that importing an invalid key doesn't crash",
+  function () {
+    var that = this;
+    // TODO Change the algorithm to "DH" once we support it.
+    var alg = {name: "RSA-OAEP", hash: "SHA-1"};
+
+    crypto.subtle.importKey("pkcs8", tv.broken_pkcs8.dh, alg, false, ["decrypt"])
+      .then(error(that), complete(that));
+  }
+);
