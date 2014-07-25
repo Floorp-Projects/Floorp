@@ -363,8 +363,7 @@ private:
                                                       bool aIsFirstPaint,
                                                       uint64_t aOriginatingLayersId,
                                                       const APZPaintLogHelper& aPaintLogger,
-                                                      nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy,
-                                                      const nsIntRegion& aObscured);
+                                                      nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy);
 
 private:
   /* Whenever walking or mutating the tree rooted at mRootApzc, mTreeLock must be held.

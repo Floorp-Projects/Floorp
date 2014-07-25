@@ -1545,18 +1545,15 @@ TEST_F(APZCTreeManagerTester, HitTesting1) {
   SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 1);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, paintSequenceNumber++);
   EXPECT_NE(root->AsContainerLayer()->GetAsyncPanZoomController(), layers[3]->AsContainerLayer()->GetAsyncPanZoomController());
-  hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
-  EXPECT_EQ(layers[3]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
-  // expect hit point at LayerIntPoint(25, 25)
-  EXPECT_EQ(gfxPoint(25, 25), transformToApzc.Transform(gfxPoint(25, 25)));
-  EXPECT_EQ(gfxPoint(25, 25), transformToGecko.Transform(gfxPoint(25, 25)));
-
-  // At this point, layers[4] obscures layers[3] at the point (15, 15) so
-  // hitting there should hit the root APZC
   hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
-  EXPECT_EQ(root->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
+  EXPECT_EQ(layers[3]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
+  // expect hit point at LayerIntPoint(15, 15)
+  EXPECT_EQ(gfxPoint(15, 15), transformToApzc.Transform(gfxPoint(15, 15)));
+  EXPECT_EQ(gfxPoint(15, 15), transformToGecko.Transform(gfxPoint(15, 15)));
 
   // Now test hit testing when we have two scrollable layers
+  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
+  EXPECT_EQ(layers[3]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
   SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 2);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, paintSequenceNumber++);
   hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
