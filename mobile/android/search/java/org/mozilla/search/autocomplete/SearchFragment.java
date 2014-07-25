@@ -221,7 +221,7 @@ public class SearchFragment extends Fragment implements AcceptsJumpTaps {
             // Highlight mixed-case matches.
             final int start = value.toLowerCase().indexOf(searchTerm.toLowerCase());
             if (start >= 0) {
-                display.setSpan(COLOR_SPAN, start, searchTerm.length(), 0);
+                display.setSpan(COLOR_SPAN, start, start + searchTerm.length(), 0);
             }
         }
     }
