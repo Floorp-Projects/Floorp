@@ -11,6 +11,7 @@
 #include "jsobjinlines.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
@@ -3210,90 +3211,178 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
                                                           newCount * sizeof(HeapSlot)));
 }
 
+// Round up |count| to one of our standard slot counts.  Up to 1 mebislot (i.e.
+// 1,048,576 slots) the slot count is always a power-of-two:
+//
+//   8, 16, 32, 64, ..., 256 Ki, 512 Ki, 1 Mi
+//
+// Beyond that, we use this formula:
+//
+//   count(n+1) = Math.ceil(count(n) * 1.125)
+//
+// where |count(n)| is the size of the nth bucket measured in MiSlots.
+//
+// These counts lets us add N elements to an array in amortized O(N) time.
+// Having the second class means that for bigger arrays the constant factor is
+// higher, but we waste less space.
+//
+/* static */ uint32_t
+JSObject::goodAllocated(uint32_t reqAllocated, uint32_t length = 0)
+{
+    static const uint32_t Mebi = 1024 * 1024;
+
+    // This table was generated with this JavaScript code and a small amount
+    // subsequent reformatting:
+    //
+    //   for (let n = 1, i = 0; i < 57; i++) {
+    //     print((n * 1024 * 1024) + ', ');
+    //     n = Math.ceil(n * 1.125);
+    //   }
+    //   print('0');
+    //
+    // The final element is a sentinel value.
+    static const uint32_t BigBuckets[] = {
+        1048576, 2097152, 3145728, 4194304, 5242880, 6291456, 7340032, 8388608,
+        9437184, 11534336, 13631488, 15728640, 17825792, 20971520, 24117248,
+        27262976, 31457280, 35651584, 40894464, 46137344, 52428800, 59768832,
+        68157440, 77594624, 88080384, 99614720, 112197632, 126877696,
+        143654912, 162529280, 183500800, 206569472, 232783872, 262144000,
+        295698432, 333447168, 375390208, 422576128, 476053504, 535822336,
+        602931200, 678428672, 763363328, 858783744, 966787072, 1088421888,
+        1224736768, 1377828864, 1550843904, 1744830464, 1962934272, 2208301056,
+        2485125120, 2796552192, 3146776576, 3541041152, 3984588800, 0
+    };
+
+    // This code relies very much on |goodAllocated| being a uint32_t.
+    uint32_t goodAllocated = reqAllocated;
+    if (goodAllocated < Mebi) {
+        goodAllocated = RoundUpPow2(goodAllocated);
+        if (goodAllocated < JSObject::SLOT_CAPACITY_MIN)
+            goodAllocated = JSObject::SLOT_CAPACITY_MIN;
+    } else {
+        uint32_t i = 0;
+        while (true) {
+            uint32_t b = BigBuckets[i++];
+            if (b >= goodAllocated) {
+                // Found the first bucket greater than or equal to
+                // |goodAllocated|.
+                goodAllocated = b;
+                break;
+            } else if (b == 0) {
+                // Hit the end; return the maximum possible goodAllocated.
+                goodAllocated = 0xffffffff;
+                break;
+            }
+        }
+    }
+
+    // |goodAllocated| is typically a power-of-two, e.g. 8192, which gives us a
+    // capacity of 8190. This leads to bad behaviour if the user code uses
+    // array lengths that are powers of two.  For example, code very much like
+    // this appears in the Kraken benchmark suite:
+    //
+    //   var a = new Array(8192);
+    //   for (var i = 0; i < 8192; i++) { a[i] = i; }
+    //
+    // The array will be repeatedly resized up to a capacity of 8190, which
+    // isn't quite enough, so it'll be resized one more time to 16382.
+    //
+    // So if the capacity that |goodAllocated| would have given us is slightly
+    // smaller than |length|, we nudge |goodAllocated| up so that the capacity
+    // equals the length. This results in some slop, but the amount wasted is
+    // equal to or (more commonly) smaller than the size increase we'd get from
+    // re-doubling, and we don't have to pay the cost of re-doubling.
+    //
+    uint32_t capacity = goodAllocated - ObjectElements::VALUES_PER_HEADER;
+    if (length > capacity && (length - capacity) < 16) {
+        goodAllocated = length + ObjectElements::VALUES_PER_HEADER;
+    }
+
+    return goodAllocated;
+}
+
 bool
-JSObject::growElements(ThreadSafeContext *cx, uint32_t newcap)
+JSObject::growElements(ThreadSafeContext *cx, uint32_t reqCapacity)
 {
     JS_ASSERT(nonProxyIsExtensible());
     JS_ASSERT(canHaveNonEmptyElements());
 
-    /*
-     * When an object with CAPACITY_DOUBLING_MAX or fewer elements needs to
-     * grow, double its capacity, to add N elements in amortized O(N) time.
-     *
-     * Above this limit, grow by 12.5% each time. Speed is still amortized
-     * O(N), with a higher constant factor, and we waste less space.
-     */
-    static const size_t CAPACITY_DOUBLING_MAX = 1024 * 1024;
-    static const size_t CAPACITY_CHUNK = CAPACITY_DOUBLING_MAX / sizeof(Value);
+    uint32_t oldCapacity = getDenseCapacity();
+    JS_ASSERT(oldCapacity < reqCapacity);
 
-    uint32_t oldcap = getDenseCapacity();
-    JS_ASSERT(oldcap <= newcap);
+    using mozilla::CheckedInt;
 
-    uint32_t nextsize = (oldcap <= CAPACITY_DOUBLING_MAX)
-                      ? oldcap * 2
-                      : oldcap + (oldcap >> 3);
+    CheckedInt<uint32_t> checkedOldAllocated =
+        CheckedInt<uint32_t>(oldCapacity) + ObjectElements::VALUES_PER_HEADER;
+    CheckedInt<uint32_t> checkedReqAllocated =
+        CheckedInt<uint32_t>(reqCapacity) + ObjectElements::VALUES_PER_HEADER;
+    if (!checkedOldAllocated.isValid() || !checkedReqAllocated.isValid())
+        return false;
 
-    uint32_t actualCapacity;
+    uint32_t reqAllocated = checkedReqAllocated.value();
+    uint32_t oldAllocated = checkedOldAllocated.value();
+
+    uint32_t newAllocated;
     if (is<ArrayObject>() && !as<ArrayObject>().lengthIsWritable()) {
-        JS_ASSERT(newcap <= as<ArrayObject>().length());
+        JS_ASSERT(reqCapacity <= as<ArrayObject>().length());
         // Preserve the |capacity <= length| invariant for arrays with
         // non-writable length.  See also js::ArraySetLength which initially
         // enforces this requirement.
-        actualCapacity = newcap;
+        newAllocated = reqAllocated;
     } else {
-        actualCapacity = Max(newcap, nextsize);
-        if (actualCapacity >= CAPACITY_CHUNK)
-            actualCapacity = JS_ROUNDUP(actualCapacity, CAPACITY_CHUNK);
-        else if (actualCapacity < SLOT_CAPACITY_MIN)
-            actualCapacity = SLOT_CAPACITY_MIN;
-
-        /* Don't let nelements get close to wrapping around uint32_t. */
-        if (actualCapacity >= NELEMENTS_LIMIT || actualCapacity < oldcap || actualCapacity < newcap)
-            return false;
+        newAllocated = goodAllocated(reqAllocated, getElementsHeader()->length);
     }
 
+    uint32_t newCapacity = newAllocated - ObjectElements::VALUES_PER_HEADER;
+    JS_ASSERT(newCapacity > oldCapacity && newCapacity >= reqCapacity);
+
+    // Don't let nelements get close to wrapping around uint32_t.
+    if (newCapacity >= NELEMENTS_LIMIT)
+        return false;
+
     uint32_t initlen = getDenseInitializedLength();
-    uint32_t oldAllocated = oldcap + ObjectElements::VALUES_PER_HEADER;
-    uint32_t newAllocated = actualCapacity + ObjectElements::VALUES_PER_HEADER;
 
     ObjectElements *newheader;
     if (hasDynamicElements()) {
         newheader = ReallocateElements(cx, this, getElementsHeader(), oldAllocated, newAllocated);
         if (!newheader)
-            return false; /* Leave elements as its old size. */
+            return false;   // Leave elements at its old size.
     } else {
         newheader = AllocateElements(cx, this, newAllocated);
         if (!newheader)
-            return false; /* Leave elements as its old size. */
+            return false;   // Leave elements at its old size.
         js_memcpy(newheader, getElementsHeader(),
                   (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
     }
 
-    newheader->capacity = actualCapacity;
+    newheader->capacity = newCapacity;
     elements = newheader->elements();
 
-    Debug_SetSlotRangeToCrashOnTouch(elements + initlen, actualCapacity - initlen);
+    Debug_SetSlotRangeToCrashOnTouch(elements + initlen, newCapacity - initlen);
 
     return true;
 }
 
 void
-JSObject::shrinkElements(ThreadSafeContext *cx, uint32_t newcap)
+JSObject::shrinkElements(ThreadSafeContext *cx, uint32_t reqCapacity)
 {
     JS_ASSERT(cx->isThreadLocal(this));
     JS_ASSERT(canHaveNonEmptyElements());
 
-    uint32_t oldcap = getDenseCapacity();
-    JS_ASSERT(newcap <= oldcap);
-
-    // Don't shrink elements below the minimum capacity.
-    if (oldcap <= SLOT_CAPACITY_MIN || !hasDynamicElements())
+    if (!hasDynamicElements())
         return;
 
-    newcap = Max(newcap, SLOT_CAPACITY_MIN);
+    uint32_t oldCapacity = getDenseCapacity();
+    JS_ASSERT(reqCapacity < oldCapacity);
 
-    uint32_t oldAllocated = oldcap + ObjectElements::VALUES_PER_HEADER;
-    uint32_t newAllocated = newcap + ObjectElements::VALUES_PER_HEADER;
+    uint32_t oldAllocated = oldCapacity + ObjectElements::VALUES_PER_HEADER;
+    uint32_t reqAllocated = reqCapacity + ObjectElements::VALUES_PER_HEADER;
+    uint32_t newAllocated = goodAllocated(reqAllocated);
+    if (newAllocated == oldAllocated)
+        return;  // Leave elements at its old size.
+
+    MOZ_ASSERT(newAllocated > ObjectElements::VALUES_PER_HEADER);
+    uint32_t newCapacity = newAllocated - ObjectElements::VALUES_PER_HEADER;
 
     ObjectElements *newheader = ReallocateElements(cx, this, getElementsHeader(),
                                                    oldAllocated, newAllocated);
@@ -3302,7 +3391,7 @@ JSObject::shrinkElements(ThreadSafeContext *cx, uint32_t newcap)
         return;  // Leave elements at its old size.
     }
 
-    newheader->capacity = newcap;
+    newheader->capacity = newCapacity;
     elements = newheader->elements();
 }
 

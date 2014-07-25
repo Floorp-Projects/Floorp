@@ -327,6 +327,77 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   nscoord& ComputedMaxBSize()
     { return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight; }
 
+  mozilla::LogicalSize AvailableSize() const {
+    return mozilla::LogicalSize(mWritingMode,
+                                AvailableISize(), AvailableBSize());
+  }
+  mozilla::LogicalSize ComputedSize() const {
+    return mozilla::LogicalSize(mWritingMode,
+                                ComputedISize(), ComputedBSize());
+  }
+  mozilla::LogicalSize ComputedMinSize() const {
+    return mozilla::LogicalSize(mWritingMode,
+                                ComputedMinISize(), ComputedMinBSize());
+  }
+  mozilla::LogicalSize ComputedMaxSize() const {
+    return mozilla::LogicalSize(mWritingMode,
+                                ComputedMaxISize(), ComputedMaxBSize());
+  }
+
+  mozilla::LogicalSize AvailableSize(mozilla::WritingMode aWM) const
+  { return AvailableSize().ConvertTo(aWM, mWritingMode); }
+  mozilla::LogicalSize ComputedSize(mozilla::WritingMode aWM) const
+    { return ComputedSize().ConvertTo(aWM, mWritingMode); }
+  mozilla::LogicalSize ComputedMinSize(mozilla::WritingMode aWM) const
+    { return ComputedMinSize().ConvertTo(aWM, mWritingMode); }
+  mozilla::LogicalSize ComputedMaxSize(mozilla::WritingMode aWM) const
+    { return ComputedMaxSize().ConvertTo(aWM, mWritingMode); }
+
+  mozilla::LogicalSize ComputedSizeWithPadding() const {
+    mozilla::WritingMode wm = GetWritingMode();
+    return mozilla::LogicalSize(wm,
+                                ComputedISize() +
+                                ComputedLogicalPadding().IStartEnd(wm),
+                                ComputedBSize() +
+                                ComputedLogicalPadding().BStartEnd(wm));
+  }
+
+  mozilla::LogicalSize ComputedSizeWithPadding(mozilla::WritingMode aWM) const {
+    return ComputedSizeWithPadding().ConvertTo(aWM, GetWritingMode());
+  }
+
+  mozilla::LogicalSize ComputedSizeWithBorderPadding() const {
+    mozilla::WritingMode wm = GetWritingMode();
+    return mozilla::LogicalSize(wm,
+                                ComputedISize() +
+                                ComputedLogicalBorderPadding().IStartEnd(wm),
+                                ComputedBSize() +
+                                ComputedLogicalBorderPadding().BStartEnd(wm));
+  }
+
+  mozilla::LogicalSize
+  ComputedSizeWithBorderPadding(mozilla::WritingMode aWM) const {
+    return ComputedSizeWithBorderPadding().ConvertTo(aWM, GetWritingMode());
+  }
+
+  mozilla::LogicalSize
+  ComputedSizeWithMarginBorderPadding() const {
+    mozilla::WritingMode wm = GetWritingMode();
+    return mozilla::LogicalSize(wm,
+                                ComputedISize() +
+                                ComputedLogicalMargin().IStartEnd(wm) +
+                                ComputedLogicalBorderPadding().IStartEnd(wm),
+                                ComputedBSize() +
+                                ComputedLogicalMargin().BStartEnd(wm) +
+                                ComputedLogicalBorderPadding().BStartEnd(wm));
+  }
+
+  mozilla::LogicalSize
+  ComputedSizeWithMarginBorderPadding(mozilla::WritingMode aWM) const {
+    return ComputedSizeWithMarginBorderPadding().ConvertTo(aWM,
+                                                           GetWritingMode());
+  }
+
   // XXX this will need to change when we make mComputedOffsets logical;
   // we won't be able to return a reference for the physical offsets
   const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
@@ -473,11 +544,11 @@ public:
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
-  nsHTMLReflowState(nsPresContext*           aPresContext,
-                    nsIFrame*                aFrame,
-                    nsRenderingContext*      aRenderingContext,
-                    const nsSize&            aAvailableSpace,
-                    uint32_t                 aFlags = 0);
+  nsHTMLReflowState(nsPresContext*              aPresContext,
+                    nsIFrame*                   aFrame,
+                    nsRenderingContext*         aRenderingContext,
+                    const mozilla::LogicalSize& aAvailableSpace,
+                    uint32_t                    aFlags = 0);
 
   /**
    * Initialize a reflow state for a child frame's reflow. Some parts of the
@@ -498,13 +569,13 @@ public:
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */
-  nsHTMLReflowState(nsPresContext*           aPresContext,
-                    const nsHTMLReflowState& aParentReflowState,
-                    nsIFrame*                aFrame,
-                    const nsSize&            aAvailableSpace,
-                    nscoord                  aContainingBlockWidth = -1,
-                    nscoord                  aContainingBlockHeight = -1,
-                    uint32_t                 aFlags = 0);
+  nsHTMLReflowState(nsPresContext*              aPresContext,
+                    const nsHTMLReflowState&    aParentReflowState,
+                    nsIFrame*                   aFrame,
+                    const mozilla::LogicalSize& aAvailableSpace,
+                    nscoord                     aContainingBlockWidth = -1,
+                    nscoord                     aContainingBlockHeight = -1,
+                    uint32_t                    aFlags = 0);
 
   // Values for |aFlags| passed to constructor
   enum {
@@ -520,8 +591,8 @@ public:
   // This method initializes various data members. It is automatically
   // called by the various constructors
   void Init(nsPresContext* aPresContext,
-            nscoord         aContainingBlockWidth = -1,
-            nscoord         aContainingBlockHeight = -1,
+            nscoord         aContainingBlockISize = -1,
+            nscoord         aContainingBlockBSize = -1,
             const nsMargin* aBorder = nullptr,
             const nsMargin* aPadding = nullptr);
   /**
@@ -611,6 +682,22 @@ public:
 
   // This method doesn't apply min/max computed heights to the value passed in.
   void SetComputedHeight(nscoord aComputedHeight);
+
+  void SetComputedISize(nscoord aComputedISize) {
+    if (mWritingMode.IsVertical()) {
+      SetComputedHeight(aComputedISize);
+    } else {
+      SetComputedWidth(aComputedISize);
+    }
+  }
+
+  void SetComputedBSize(nscoord aComputedBSize) {
+    if (mWritingMode.IsVertical()) {
+      SetComputedWidth(aComputedBSize);
+    } else {
+      SetComputedHeight(aComputedBSize);
+    }
+  }
 
   void SetComputedHeightWithoutResettingResizeFlags(nscoord aComputedHeight) {
     // Viewport frames reset the computed height on a copy of their reflow

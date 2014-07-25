@@ -271,8 +271,8 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
       // Reflow the poster frame.
       nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
       nsHTMLReflowMetrics kidDesiredSize(aReflowState);
-      nsSize availableSize = nsSize(aReflowState.AvailableWidth(),
-                                    aReflowState.AvailableHeight());
+      WritingMode wm = imageFrame->GetWritingMode();
+      LogicalSize availableSize = aReflowState.AvailableSize(wm);
       nsHTMLReflowState kidReflowState(aPresContext,
                                        aReflowState,
                                        imageFrame,
@@ -326,8 +326,8 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
     } else if (child->GetContent() == mCaptionDiv) {
       // Reflow to caption div
       nsHTMLReflowMetrics kidDesiredSize(aReflowState);
-      nsSize availableSize = nsSize(aReflowState.AvailableWidth(),
-                                    aReflowState.AvailableHeight());
+      WritingMode wm = child->GetWritingMode();
+      LogicalSize availableSize = aReflowState.AvailableSize(wm);
       nsHTMLReflowState kidReflowState(aPresContext,
                                        aReflowState,
                                        child,
@@ -501,14 +501,14 @@ nsSize nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                                            aPadding);
 }
 
-nscoord nsVideoFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nscoord nsVideoFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = GetVideoIntrinsicSize(aRenderingContext).width;
   DISPLAY_MIN_WIDTH(this, result);
   return result;
 }
 
-nscoord nsVideoFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nscoord nsVideoFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = GetVideoIntrinsicSize(aRenderingContext).width;
   DISPLAY_PREF_WIDTH(this, result);

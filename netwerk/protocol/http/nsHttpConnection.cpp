@@ -976,12 +976,15 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         MOZ_ASSERT(!mUsingSpdyVersion,
                    "SPDY NPN Complete while using proxy connect stream");
         mProxyConnectStream = nullptr;
+        bool isHttps =
+            mTransaction ? mTransaction->ConnectionInfo()->EndToEndSSL() :
+            mConnInfo->EndToEndSSL();
+
         if (responseStatus == 200) {
-            LOG(("proxy CONNECT succeeded! endtoendssl=%s\n",
-                 mConnInfo->EndToEndSSL() ? "true" :"false"));
+            LOG(("proxy CONNECT succeeded! endtoendssl=%d\n", isHttps));
             *reset = true;
             nsresult rv;
-            if (mConnInfo->EndToEndSSL()) {
+            if (isHttps) {
                 if (mConnInfo->UsingHttpsProxy()) {
                     LOG(("%p new TLSFilterTransaction %s %d\n",
                          this, mConnInfo->Host(), mConnInfo->Port()));
@@ -998,8 +1001,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             MOZ_ASSERT(NS_SUCCEEDED(rv), "mSocketOut->AsyncWait failed");
         }
         else {
-            LOG(("proxy CONNECT failed! endtoendssl=%s\n",
-                 mConnInfo->EndToEndSSL() ? "true" :"false"));
+            LOG(("proxy CONNECT failed! endtoendssl=%d\n", isHttps));
             mTransaction->SetProxyConnectFailed();
         }
     }
@@ -1082,15 +1084,25 @@ nsHttpConnection::TakeTransport(nsISocketTransport  **aTransport,
         }
     }
 
-    NS_IF_ADDREF(*aTransport = mSocketTransport);
-    NS_IF_ADDREF(*aInputStream = mSocketIn);
-    NS_IF_ADDREF(*aOutputStream = mSocketOut);
-
     mSocketTransport->SetSecurityCallbacks(nullptr);
     mSocketTransport->SetEventSink(nullptr, nullptr);
-    mSocketTransport = nullptr;
-    mSocketIn = nullptr;
-    mSocketOut = nullptr;
+
+    // The nsHttpConnection will go away soon, so if there is a TLS Filter
+    // being used (e.g. for wss CONNECT tunnel from a proxy connected to
+    // via https) that filter needs to take direct control of the
+    // streams
+    if (mTLSFilter) {
+        nsCOMPtr<nsISupports> ref1(mSocketIn);
+        nsCOMPtr<nsISupports> ref2(mSocketOut);
+        mTLSFilter->newIODriver(mSocketIn, mSocketOut,
+                                getter_AddRefs(mSocketIn),
+                                getter_AddRefs(mSocketOut));
+        mTLSFilter = nullptr;
+    }
+
+    mSocketTransport.forget(aTransport);
+    mSocketIn.forget(aInputStream);
+    mSocketOut.forget(aOutputStream);
 
     return NS_OK;
 }
@@ -1710,23 +1722,6 @@ nsHttpConnection::OnSocketReadable()
     } while (again);
 
     return rv;
-}
-
-bool
-nsHttpConnection::PeerHasPrivateIP()
-{
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-    if (!mSocketTransport) {
-        return false;
-    }
-
-    NetAddr peerAddr;
-    nsresult rv = mSocketTransport->GetPeerAddr(&peerAddr);
-    if (NS_FAILED(rv)) {
-        return false;
-    }
-
-    return IsIPAddrPrivate(&peerAddr);
 }
 
 void

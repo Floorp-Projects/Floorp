@@ -31,8 +31,6 @@ namespace jit {
   class IonBuilder;
 }
 
-#ifdef JS_THREADSAFE
-
 // Per-process state for off thread work items.
 class GlobalHelperThreadState
 {
@@ -103,9 +101,9 @@ class GlobalHelperThreadState
     void lock();
     void unlock();
 
-# ifdef DEBUG
+#ifdef DEBUG
     bool isLocked();
-# endif
+#endif
 
     enum CondVar {
         // For notifying threads waiting for work that they may be able to make progress.
@@ -221,9 +219,9 @@ class GlobalHelperThreadState
      * used by all condition variables.
      */
     PRLock *helperLock;
-# ifdef DEBUG
+#ifdef DEBUG
     PRThread *lockOwner;
-# endif
+#endif
 
     /* Condvars for threads waiting/notifying each other. */
     PRCondVar *consumerWakeup;
@@ -309,8 +307,6 @@ struct HelperThread
     void threadLoop();
 };
 
-#endif /* JS_THREADSAFE */
-
 /* Methods for interacting with helper threads. */
 
 // Initialize helper threads unless already initialized.
@@ -376,7 +372,6 @@ class AutoLockHelperThreadState
 {
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-#ifdef JS_THREADSAFE
   public:
     explicit AutoLockHelperThreadState(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
     {
@@ -387,13 +382,6 @@ class AutoLockHelperThreadState
     ~AutoLockHelperThreadState() {
         HelperThreadState().unlock();
     }
-#else
-  public:
-    AutoLockHelperThreadState(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-#endif
 };
 
 class AutoUnlockHelperThreadState
@@ -405,16 +393,12 @@ class AutoUnlockHelperThreadState
     explicit AutoUnlockHelperThreadState(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-#ifdef JS_THREADSAFE
         HelperThreadState().unlock();
-#endif
     }
 
     ~AutoUnlockHelperThreadState()
     {
-#ifdef JS_THREADSAFE
         HelperThreadState().lock();
-#endif
     }
 };
 
@@ -489,12 +473,10 @@ struct ParseTask
     ~ParseTask();
 };
 
-#ifdef JS_THREADSAFE
 // Return whether, if a new parse task was started, it would need to wait for
 // an in-progress GC to complete before starting.
 extern bool
 OffThreadParsingMustWaitForGC(JSRuntime *rt);
-#endif
 
 // Compression tasks are allocated on the stack by their triggering thread,
 // which will block on the compression completing as the task goes out of scope
@@ -504,10 +486,8 @@ struct SourceCompressionTask
     friend class ScriptSource;
     friend struct HelperThread;
 
-#ifdef JS_THREADSAFE
     // Thread performing the compression.
     HelperThread *helperThread;
-#endif
 
   private:
     // Context from the triggering thread. Don't use this off thread!
@@ -531,13 +511,9 @@ struct SourceCompressionTask
 
   public:
     explicit SourceCompressionTask(ExclusiveContext *cx)
-      : cx(cx), ss(nullptr), abort_(false),
+      : helperThread(nullptr), cx(cx), ss(nullptr), abort_(false),
         result(OOM), compressed(nullptr), compressedBytes(0), compressedHash(0)
-    {
-#ifdef JS_THREADSAFE
-        helperThread = nullptr;
-#endif
-    }
+    {}
 
     ~SourceCompressionTask()
     {

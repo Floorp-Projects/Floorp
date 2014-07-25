@@ -32,6 +32,19 @@ TextureClientX11::~TextureClientX11()
   MOZ_COUNT_DTOR(TextureClientX11);
 }
 
+TemporaryRef<TextureClient>
+TextureClientX11::CreateSimilar(TextureFlags aFlags,
+                                TextureAllocationFlags aAllocFlags) const
+{
+  RefPtr<TextureClient> tex = new TextureClientX11(mAllocator, mFormat, mFlags);
+
+  if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
+    return nullptr;
+  }
+
+  return tex;
+}
+
 bool
 TextureClientX11::IsAllocated() const
 {

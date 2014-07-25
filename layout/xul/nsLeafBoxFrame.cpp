@@ -122,7 +122,7 @@ nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 /* virtual */ nscoord
-nsLeafBoxFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsLeafBoxFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -142,7 +142,7 @@ nsLeafBoxFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsLeafBoxFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsLeafBoxFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -162,7 +162,7 @@ nsLeafBoxFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsLeafBoxFrame::GetIntrinsicWidth()
+nsLeafBoxFrame::GetIntrinsicISize()
 {
   // No intrinsic width
   return 0;
@@ -330,7 +330,7 @@ nsLeafBoxFrame::GetType() const
 nsresult
 nsLeafBoxFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
-  MarkIntrinsicWidthsDirty();
+  MarkIntrinsicISizesDirty();
   return nsLeafFrame::CharacterDataChanged(aInfo);
 }
 
@@ -365,7 +365,7 @@ nsLeafBoxFrame::GetBoxAscent(nsBoxLayoutState& aState)
 }
 
 /* virtual */ void
-nsLeafBoxFrame::MarkIntrinsicWidthsDirty()
+nsLeafBoxFrame::MarkIntrinsicISizesDirty()
 {
   // Don't call base class method, since everything it does is within an
   // IsBoxWrapped check.

@@ -43,7 +43,7 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual void
-  GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext,
+  GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
                            nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
   virtual nsresult

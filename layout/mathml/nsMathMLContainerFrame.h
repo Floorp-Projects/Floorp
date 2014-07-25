@@ -93,17 +93,17 @@ public:
               nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   /**
-   * Both GetMinWidth and GetPrefWidth use the intrinsic width metrics
+   * Both GetMinISize and GetPrefISize use the intrinsic width metrics
    * returned by GetIntrinsicMetrics, including ink overflow.
    */
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   /**
    * Return the intrinsic horizontal metrics of the frame's content area.
    */
   virtual void
-  GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext,
+  GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
                            nsHTMLReflowMetrics& aDesiredSize);
 
   virtual void
@@ -204,10 +204,10 @@ protected:
 
   // MeasureForWidth:
   //
-  // A method used by nsMathMLContainerFrame::GetIntrinsicWidth to get the
+  // A method used by nsMathMLContainerFrame::GetIntrinsicISize to get the
   // width that a particular Place method desires.  For most frames, this will
   // just call the object's Place method.  However <msqrt> and <menclose> use
-  // nsMathMLContainerFrame::GetIntrinsicWidth to measure the child frames as
+  // nsMathMLContainerFrame::GetIntrinsicISize to measure the child frames as
   // if in an <mrow>, and so their frames implement MeasureForWidth to use
   // nsMathMLContainerFrame::Place.
   virtual nsresult
@@ -312,7 +312,7 @@ protected:
   // spacing.
   // IMPORTANT: This function is only meant to be called in Place() methods as
   // the information is available only when set up with the above method
-  // during Reflow/Stretch() and GetPrefWidth().
+  // during Reflow/Stretch() and GetPrefISize().
   static void
   GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
                                  nsHTMLReflowMetrics& aReflowMetrics,

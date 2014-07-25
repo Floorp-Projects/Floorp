@@ -30,7 +30,7 @@ interface nsIURIClassifierCallback : nsISupports
  * The URI classifier service checks a URI against lists of phishing
  * and malware sites.
  */
-[scriptable, uuid(617f1002-ec55-42c4-a7b0-ebb221ba9fa2)]
+[scriptable, uuid(de4f03cd-1a28-4f51-906b-c54b47a533c5)]
 interface nsIURIClassifier : nsISupports
 {
   /**
@@ -38,6 +38,10 @@ interface nsIURIClassifier : nsISupports
    *
    * @param aPrincipal
    *        The principal that should be checked by the URI classifier.
+   * @param aTrackingProtectionEnabled
+   *        Whether or not to classify the given URI against tracking
+   *        protection lists
+   *
    * @param aCallback
    *        The URI classifier will call this callback when the URI has been
    *        classified.
@@ -48,5 +52,6 @@ interface nsIURIClassifier : nsISupports
    *         callback will be called.
    */
   boolean classify(in nsIPrincipal aPrincipal,
+                   in boolean aTrackingProtectionEnabled,
                    in nsIURIClassifierCallback aCallback);
 };

@@ -196,7 +196,6 @@ nsHttpHandler::nsHttpHandler()
     , mConnectTimeout(90000)
     , mBypassCacheLockThreshold(250.0)
     , mParallelSpeculativeConnectLimit(6)
-    , mAllowSpeculativeConnectOnLoopback(false)
     , mRequestTokenBucketEnabled(true)
     , mRequestTokenBucketMinParallelism(6)
     , mRequestTokenBucketHz(100)
@@ -519,6 +518,28 @@ nsHttpHandler::GetIOService(nsIIOService** result)
 {
     NS_ADDREF(*result = mIOService);
     return NS_OK;
+}
+
+uint32_t
+nsHttpHandler::Get32BitsOfPseudoRandom()
+{
+    // only confirm rand seeding on socket thread
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+    // rand() provides different amounts of PRNG on different platforms.
+    // 15 or 31 bits are common amounts.
+
+    PR_STATIC_ASSERT(RAND_MAX >= 0xfff);
+
+#if RAND_MAX < 0xffffU
+    return ((uint16_t) rand() << 20) |
+            (((uint16_t) rand() & 0xfff) << 8) |
+            ((uint16_t) rand() & 0xff);
+#elif RAND_MAX < 0xffffffffU
+    return ((uint16_t) rand() << 16) | ((uint16_t) rand() & 0xffff);
+#else
+    return (uint32_t) rand();
+#endif
 }
 
 void
@@ -1233,13 +1254,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("speculative-parallel-limit"), &val);
         if (NS_SUCCEEDED(rv))
             mParallelSpeculativeConnectLimit = (uint32_t) clamped(val, 0, 1024);
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("speculative.allowLoopback"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("speculative.allowLoopback"), &cVar);
-        if (NS_SUCCEEDED(rv)) {
-            mAllowSpeculativeConnectOnLoopback = cVar;
-        }
     }
 
     // Whether or not to block requests for non head js/css items (e.g. media)

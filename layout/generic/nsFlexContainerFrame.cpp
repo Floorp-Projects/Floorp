@@ -959,9 +959,9 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   // Create temporary reflow state just for sizing -- to get hypothetical
   // main-size and the computed values of min / max main-size property.
   // (This reflow state will _not_ be used for reflow.)
-  nsHTMLReflowState childRS(aPresContext, aParentReflowState, aChildFrame,
-                            nsSize(aParentReflowState.ComputedWidth(),
-                                   aParentReflowState.ComputedHeight()));
+  nsHTMLReflowState
+    childRS(aPresContext, aParentReflowState, aChildFrame,
+            aParentReflowState.ComputedSize(aChildFrame->GetWritingMode()));
 
   // FLEX GROW & SHRINK WEIGHTS
   // --------------------------
@@ -1332,7 +1332,7 @@ nsFlexContainerFrame::
       nsRefPtr<nsRenderingContext> rctx =
         aPresContext->PresShell()->CreateReferenceRenderingContext();
       if (minSizeNeedsToMeasureContent) {
-        resolvedMinSize = std::min(resolvedMinSize, aFlexItem.Frame()->GetMinWidth(rctx));
+        resolvedMinSize = std::min(resolvedMinSize, aFlexItem.Frame()->GetMinISize(rctx));
       }
       NS_ASSERTION(!flexBasisNeedsToMeasureContent,
                    "flex-basis:auto should have been resolved in the "
@@ -1380,11 +1380,12 @@ nsFlexContainerFrame::
                                const nsHTMLReflowState& aParentReflowState)
 {
   // Set up a reflow state for measuring the flex item's auto-height:
+  WritingMode wm = aFlexItem.Frame()->GetWritingMode();
+  LogicalSize availSize = aParentReflowState.ComputedSize(wm);
+  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState
     childRSForMeasuringHeight(aPresContext, aParentReflowState,
-                              aFlexItem.Frame(),
-                              nsSize(aParentReflowState.ComputedWidth(),
-                                     NS_UNCONSTRAINEDSIZE),
+                              aFlexItem.Frame(), availSize,
                               -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
   childRSForMeasuringHeight.Init(aPresContext);
@@ -3498,10 +3499,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // (If the item's already been stretched, or it's a strut, then it
       // already knows its cross size.  Don't bother trying to recalculate it.)
       if (!item->IsStretched() && !item->IsStrut()) {
+        WritingMode wm = item->Frame()->GetWritingMode();
+        LogicalSize availSize = aReflowState.ComputedSize(wm);
+        availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
         nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                           item->Frame(),
-                                           nsSize(aReflowState.ComputedWidth(),
-                                                  NS_UNCONSTRAINEDSIZE));
+                                           item->Frame(), availSize);
         // Override computed main-size
         if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
           childReflowState.SetComputedWidth(item->GetMainSize());
@@ -3618,10 +3620,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // (i.e. its frame rect), instead of the container's content-box:
       physicalPosn += containerContentBoxOrigin;
 
+      WritingMode wm = item->Frame()->GetWritingMode();
+      LogicalSize availSize = aReflowState.ComputedSize(wm);
+      availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                         item->Frame(),
-                                         nsSize(aReflowState.ComputedWidth(),
-                                                NS_UNCONSTRAINEDSIZE));
+                                         item->Frame(), availSize);
 
       // Keep track of whether we've overriden the child's computed height
       // and/or width, so we can set its resize flags accordingly.
@@ -3778,7 +3781,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 }
 
 /* virtual */ nscoord
-nsFlexContainerFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
+nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
 {
   nscoord minWidth = 0;
   DISPLAY_MIN_WIDTH(this, minWidth);
@@ -3788,7 +3791,7 @@ nsFlexContainerFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nscoord childMinWidth =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, e.get(),
-                                           nsLayoutUtils::MIN_WIDTH);
+                                           nsLayoutUtils::MIN_ISIZE);
     // For a horizontal single-line flex container, the intrinsic min width is
     // the sum of its items' min widths.
     // For a vertical flex container, or for a multi-line horizontal flex
@@ -3804,7 +3807,7 @@ nsFlexContainerFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsFlexContainerFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
+nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
 {
   nscoord prefWidth = 0;
   DISPLAY_PREF_WIDTH(this, prefWidth);
@@ -3812,14 +3815,14 @@ nsFlexContainerFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
   // XXXdholbert Optimization: We could cache our intrinsic widths like
   // nsBlockFrame does (and return it early from this function if it's set).
   // Whenever anything happens that might change it, set it to
-  // NS_INTRINSIC_WIDTH_UNKNOWN (like nsBlockFrame::MarkIntrinsicWidthsDirty
+  // NS_INTRINSIC_WIDTH_UNKNOWN (like nsBlockFrame::MarkIntrinsicISizesDirty
   // does)
   FlexboxAxisTracker axisTracker(this);
 
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nscoord childPrefWidth =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, e.get(),
-                                           nsLayoutUtils::PREF_WIDTH);
+                                           nsLayoutUtils::PREF_ISIZE);
     if (IsAxisHorizontal(axisTracker.GetMainAxis())) {
       prefWidth += childPrefWidth;
     } else {

@@ -25,6 +25,7 @@ class DebianBootstrapper(BaseBootstrapper):
         'libxt-dev',
         'mercurial',
         'mesa-common-dev',
+        'python-dbus',
         'python-dev',
         'python-setuptools',
         'unzip',

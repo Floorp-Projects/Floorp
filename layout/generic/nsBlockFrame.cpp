@@ -627,7 +627,7 @@ RemoveFirstLine(nsLineList& aFromLines, nsFrameList& aFromFrames,
 // Reflow methods
 
 /* virtual */ void
-nsBlockFrame::MarkIntrinsicWidthsDirty()
+nsBlockFrame::MarkIntrinsicISizesDirty()
 {
   nsBlockFrame* dirtyBlock = static_cast<nsBlockFrame*>(FirstContinuation());
   dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
@@ -639,7 +639,7 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
     }
   }
 
-  nsBlockFrameSuper::MarkIntrinsicWidthsDirty();
+  nsBlockFrameSuper::MarkIntrinsicISizesDirty();
 }
 
 void
@@ -664,11 +664,11 @@ nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState()
 }
 
 /* virtual */ nscoord
-nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+nsBlockFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this)
-    return firstInFlow->GetMinWidth(aRenderingContext);
+    return firstInFlow->GetMinISize(aRenderingContext);
 
   DISPLAY_MIN_WIDTH(this, mMinWidth);
 
@@ -681,7 +681,7 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
   if (gNoisyIntrinsic) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": GetMinWidth\n");
+    printf(": GetMinISize\n");
   }
   AutoNoisyIndenter indenter(gNoisyIntrinsic);
 #endif
@@ -693,7 +693,7 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     ResolveBidi();
-  InlineMinWidthData data;
+  InlineMinISizeData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
@@ -711,7 +711,7 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
       if (line->IsBlock()) {
         data.ForceBreak(aRenderingContext);
         data.currentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                        line->mFirstChild, nsLayoutUtils::MIN_WIDTH);
+                        line->mFirstChild, nsLayoutUtils::MIN_ISIZE);
         data.ForceBreak(aRenderingContext);
       } else {
         if (!curFrame->GetPrevContinuation() &&
@@ -730,7 +730,7 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
         nsIFrame *kid = line->mFirstChild;
         for (int32_t i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
-          kid->AddInlineMinWidth(aRenderingContext, &data);
+          kid->AddInlineMinISize(aRenderingContext, &data);
         }
       }
 #ifdef DEBUG
@@ -749,11 +749,11 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nsIFrame* firstInFlow = FirstContinuation();
   if (firstInFlow != this)
-    return firstInFlow->GetPrefWidth(aRenderingContext);
+    return firstInFlow->GetPrefISize(aRenderingContext);
 
   DISPLAY_PREF_WIDTH(this, mPrefWidth);
 
@@ -766,7 +766,7 @@ nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   if (gNoisyIntrinsic) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": GetPrefWidth\n");
+    printf(": GetPrefISize\n");
   }
   AutoNoisyIndenter indenter(gNoisyIntrinsic);
 #endif
@@ -778,7 +778,7 @@ nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 
   if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     ResolveBidi();
-  InlinePrefWidthData data;
+  InlinePrefISizeData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
@@ -796,7 +796,7 @@ nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
       if (line->IsBlock()) {
         data.ForceBreak(aRenderingContext);
         data.currentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                        line->mFirstChild, nsLayoutUtils::PREF_WIDTH);
+                        line->mFirstChild, nsLayoutUtils::PREF_ISIZE);
         data.ForceBreak(aRenderingContext);
       } else {
         if (!curFrame->GetPrevContinuation() &&
@@ -815,7 +815,7 @@ nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
         nsIFrame *kid = line->mFirstChild;
         for (int32_t i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
-          kid->AddInlinePrefWidth(aRenderingContext, &data);
+          kid->AddInlinePrefISize(aRenderingContext, &data);
         }
       }
 #ifdef DEBUG
@@ -857,7 +857,7 @@ nsBlockFrame::GetPrefWidthTightBounds(nsRenderingContext* aRenderingContext,
   *aXMost = 0;
 
   nsresult rv;
-  InlinePrefWidthData data;
+  InlinePrefISizeData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
@@ -894,7 +894,7 @@ nsBlockFrame::GetPrefWidthTightBounds(nsRenderingContext* aRenderingContext,
           NS_ENSURE_SUCCESS(rv, rv);
           *aX = std::min(*aX, data.currentLine + childX);
           *aXMost = std::max(*aXMost, data.currentLine + childXMost);
-          kid->AddInlinePrefWidth(aRenderingContext, &data);
+          kid->AddInlinePrefISize(aRenderingContext, &data);
         }
       }
     }
@@ -1251,6 +1251,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // resetting the size. Because of this, we must not reflow our abs-pos children
   // in that situation --- what we think is our "new size"
   // will not be our real new size. This also happens to be more efficient.
+  WritingMode parentWM = aMetrics.GetWritingMode();
   if (HasAbsolutelyPositionedChildren()) {
     nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
     bool haveInterrupt = aPresContext->HasPendingInterrupt();
@@ -1268,7 +1269,6 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
         absoluteContainer->MarkSizeDependentFramesDirty();
       }
     } else {
-      WritingMode parentWM = aMetrics.GetWritingMode();
       LogicalSize containingBlockSize =
         CalculateContainingBlockSizeForAbsolutes(parentWM, *reflowState,
                                                  aMetrics.Size(parentWM));
@@ -1325,7 +1325,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     ListTag(stdout);
     printf(": status=%x (%scomplete) metrics=%d,%d carriedMargin=%d",
            aStatus, NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not ",
-           aMetrics.Width(), aMetrics.Height(),
+           aMetrics.ISize(parentWM), aMetrics.BSize(parentWM),
            aMetrics.mCarriedOutBottomMargin.get());
     if (HasOverflowAreas()) {
       printf(" overflow-vis={%d,%d,%d,%d}",
@@ -3034,10 +3034,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // on the childs available space.
       // XXX building a complete nsHTMLReflowState just to get the margin-top
       // seems like a waste. And we do this for almost every block!
-      nsSize availSpace =
-        LogicalSize(aState.mReflowState.GetWritingMode(),
-                    aState.ContentISize(), NS_UNCONSTRAINEDSIZE).
-          GetPhysicalSize(aState.mReflowState.GetWritingMode());
+      WritingMode wm = frame->GetWritingMode();
+      LogicalSize availSpace = aState.ContentSize(wm);
+      availSpace.BSize(wm) = NS_UNCONSTRAINEDSIZE;
       nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
                                     frame, availSpace);
 
@@ -3179,8 +3178,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     // Reflow the block into the available space
     // construct the html reflow state for the block. ReflowBlock
     // will initialize it
-    nsHTMLReflowState blockHtmlRS(aState.mPresContext, aState.mReflowState, frame,
-                                  availSpace.Size());
+    nsHTMLReflowState
+      blockHtmlRS(aState.mPresContext, aState.mReflowState, frame,
+                  LogicalSize(frame->GetWritingMode(), availSpace.Size()));
     blockHtmlRS.mFlags.mHasClearance = aLine->HasClearance();
 
     nsFloatManager::SavedState floatManagerState;
@@ -3219,7 +3219,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 #if defined(REFLOW_STATUS_COVERAGE)
     RecordReflowStatus(true, frameReflowStatus);
 #endif
-    
+
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
       // None of the child block fits.
       *aKeepReflowGoing = false;
@@ -3232,7 +3232,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
     else {
       // Note: line-break-after a block is a nop
-      
+
       // Try to place the child block.
       // Don't force the block to fit if we have positive clearance, because
       // pushing it to the next page would give it more room.
@@ -5769,8 +5769,10 @@ nsBlockFrame::ComputeFloatWidth(nsBlockReflowState& aState,
   nsRect availSpace = AdjustFloatAvailableSpace(aState, aFloatAvailableSpace,
                                                 aFloat);
 
-  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat, 
-                            availSpace.Size());
+  WritingMode wm = aFloat->GetWritingMode();
+  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat,
+                            LogicalSize(wm, availSpace.Size()));
+
   return floatRS.ComputedWidth() + floatRS.ComputedPhysicalBorderPadding().LeftRight() +
     floatRS.ComputedPhysicalMargin().LeftRight();
 }
@@ -5797,9 +5799,10 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   );
 #endif
 
-  nsHTMLReflowState floatRS(aState.mPresContext, aState.mReflowState, aFloat,
-                            nsSize(aAdjustedAvailableSpace.width,
-                                   aAdjustedAvailableSpace.height));
+  nsHTMLReflowState
+    floatRS(aState.mPresContext, aState.mReflowState, aFloat,
+            LogicalSize(aFloat->GetWritingMode(),
+                        aAdjustedAvailableSpace.Size()));
 
   // Normally the mIsTopOfPage state is copied from the parent reflow
   // state.  However, when reflowing a float, if we've placed other
@@ -5879,7 +5882,8 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   // we be doing this in nsBlockReflowState::FlowAndPlaceFloat after
   // we've positioned the float, and shouldn't we be doing the equivalent
   // of |PlaceFrameView| here?
-  aFloat->SetSize(nsSize(metrics.Width(), metrics.Height()));
+  WritingMode wm = metrics.GetWritingMode();
+  aFloat->SetSize(wm, metrics.Size(wm));
   if (aFloat->HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, aFloat,
                                                aFloat->GetView(),
@@ -6797,10 +6801,11 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   const nsHTMLReflowState &rs = aState.mReflowState;
 
   // Reflow the bullet now
-  nsSize availSize;
-  // Make up a width since it doesn't really matter (XXX).
-  availSize.width = aState.ContentISize();
-  availSize.height = NS_UNCONSTRAINEDSIZE;
+  WritingMode bulletWM = aBulletFrame->GetWritingMode();
+  LogicalSize availSize(bulletWM);
+  // Make up an inline-size since it doesn't really matter (XXX).
+  availSize.ISize(bulletWM) = aState.ContentISize();
+  availSize.BSize(bulletWM) = NS_UNCONSTRAINEDSIZE;
 
   // Get the reason right.
   // XXXwaterson Should this look just like the logic in
@@ -6840,7 +6845,6 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   LogicalRect logicalFAS(wm, floatAvailSpace, containerWidth);
   // Get the bullet's margin, converted to our writing mode so that we can
   // combine it with other logical values here.
-  WritingMode bulletWM = reflowState.GetWritingMode();
   LogicalMargin bulletMargin =
     reflowState.ComputedLogicalMargin().ConvertTo(wm, bulletWM);
   nscoord iStart = logicalFAS.IStart(wm) -
@@ -7029,7 +7033,8 @@ nsBlockFrame::WidthToClearPastFloats(nsBlockReflowState& aState,
   // All we really need here is the result of ComputeSize, and we
   // could *almost* get that from an nsCSSOffsetState, except for the
   // last argument.
-  nsSize availSpace(availWidth, NS_UNCONSTRAINEDSIZE);
+  LogicalSize availSpace(aFrame->GetWritingMode(),
+                         nsSize(availWidth, NS_UNCONSTRAINEDSIZE));
   nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
                                 aFrame, availSpace);
   result.borderBoxWidth = reflowState.ComputedWidth() +

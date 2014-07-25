@@ -88,6 +88,12 @@ const tests = [
       prop: "background-image", pseudo: ""
   },
   {
+      name: "url-token 4",	/*Bug 751939*/
+      ref: "#r { background-image: url( )}",
+      tst: "#t { background-image: url(" ,
+      prop: "background-image", pseudo: ""
+  },
+  {
       name: "counter",
       ref: "#r::before { content: counter(tr, upper-alpha) }",
       tst: "#t::before { content: counter(tr, upper-alpha",

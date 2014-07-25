@@ -999,8 +999,12 @@ nsSocketTransport::ResolveHost()
 #endif
             // When not resolving mHost locally, we still want to ensure that
             // it only contains valid characters.  See bug 304904 for details.
-            if (!net_IsValidHostName(mHost))
+            // Sometimes the end host is not yet known and mHost is *
+            if (!net_IsValidHostName(mHost) &&
+                !mHost.Equals(NS_LITERAL_CSTRING("*"))) {
+                SOCKET_LOG(("  invalid hostname %s\n", mHost.get()));
                 return NS_ERROR_UNKNOWN_HOST;
+            }
         }
         if (mProxyTransparentResolvesHost) {
             // Name resolution is done on the server side.  Just pretend
@@ -1030,10 +1034,6 @@ nsSocketTransport::ResolveHost()
         dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV6;
     if (mConnectionFlags & nsSocketTransport::DISABLE_IPV4)
         dnsFlags |= nsIDNSService::RESOLVE_DISABLE_IPV4;
-    if (mConnectionFlags & nsSocketTransport::DISABLE_RFC1918)
-        dnsFlags |= nsIDNSService::RESOLVE_DISABLE_RFC1918;
-    if (mConnectionFlags & nsSocketTransport::DISABLE_LOOPBACK)
-        dnsFlags |= nsIDNSService::RESOLVE_DISABLE_LOOPBACK;
 
     NS_ASSERTION(!(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
                  !(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
@@ -1203,12 +1203,10 @@ nsSocketTransport::InitiateSocket()
         }
     }
 
-    // Ensure that we're not using a private IP if such addresses are disabled.
-    bool disableRFC1918 = mConnectionFlags & nsISocketTransport::DISABLE_RFC1918;
-    bool disableLoopback = mConnectionFlags & nsISocketTransport::DISABLE_LOOPBACK;
-
-    if ((disableRFC1918 && IsIPAddrLocal(&mNetAddr)) ||
-        (disableLoopback && IsLoopBackAddress(&mNetAddr))) {
+    // Hosts/Proxy Hosts that are Local IP Literals should not be speculatively
+    // connected - Bug 853423.
+    if (mConnectionFlags & nsISocketTransport::DISABLE_RFC1918 &&
+        IsIPAddrLocal(&mNetAddr)) {
 #ifdef PR_LOGGING
         if (SOCKET_LOG_ENABLED()) {
             nsAutoCString netAddrCString;
@@ -1217,16 +1215,13 @@ nsSocketTransport::InitiateSocket()
                                  netAddrCString.BeginWriting(),
                                  kIPv6CStrBufSize))
                 netAddrCString = NS_LITERAL_CSTRING("<IP-to-string failed>");
-            SOCKET_LOG(("nsSocketTransport::InitiateSocket refusing to "
-                        "connect to %s host [%s:%d] proxy [%s:%d] with IP "
-                        "address [%s]",
-                        IsIPAddrLocal(&mNetAddr) ? "private" : "loopback",
+            SOCKET_LOG(("nsSocketTransport::InitiateSocket skipping "
+                        "speculative connection for host [%s:%d] proxy "
+                        "[%s:%d] with Local IP address [%s]",
                         mHost.get(), mPort, mProxyHost.get(), mProxyPort,
                         netAddrCString.get()));
         }
 #endif
-        MOZ_ASSERT(false,
-                   "Local or Loopback IP addresses disabled for this socket!");
         return NS_ERROR_CONNECTION_REFUSED;
     }
 
@@ -1708,15 +1703,8 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
         SOCKET_LOG(("  MSG_DNS_LOOKUP_COMPLETE\n"));
         mDNSRequest = 0;
         if (param) {
-            MOZ_ASSERT(NS_SUCCEEDED(status),
-                       "Shouldn't have DNS record if request failed.");
             mDNSRecord = static_cast<nsIDNSRecord *>(param);
-            nsresult rv = mDNSRecord->GetNextAddr(SocketPort(), &mNetAddr);
-            if (NS_FAILED(rv)) {
-                NS_WARNING("Unable to get address after name resolution "
-                           "succeeded.");
-                status = rv;
-            }
+            mDNSRecord->GetNextAddr(SocketPort(), &mNetAddr);
         }
         // status contains DNS lookup status
         if (NS_FAILED(status)) {
