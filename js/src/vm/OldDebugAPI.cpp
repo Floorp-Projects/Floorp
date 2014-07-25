@@ -457,160 +457,6 @@ JS_GetScriptIsSelfHosted(JSScript *script)
 
 /***************************************************************************/
 
-/* This all should be reworked to avoid requiring JSScopeProperty types. */
-
-static bool
-GetPropertyDesc(JSContext *cx, JSObject *obj_, HandleShape shape, JSPropertyDesc *pd)
-{
-    assertSameCompartment(cx, obj_);
-    pd->id = IdToValue(shape->propid());
-
-    RootedObject obj(cx, obj_);
-
-    bool wasThrowing = cx->isExceptionPending();
-    RootedValue lastException(cx, UndefinedValue());
-    if (wasThrowing) {
-        if (!cx->getPendingException(&lastException))
-            return false;
-    }
-    cx->clearPendingException();
-
-    Rooted<jsid> id(cx, shape->propid());
-    RootedValue value(cx);
-    if (!baseops::GetProperty(cx, obj, id, &value)) {
-        if (!cx->isExceptionPending()) {
-            pd->flags = JSPD_ERROR;
-            pd->value = JSVAL_VOID;
-        } else {
-            pd->flags = JSPD_EXCEPTION;
-            if (!cx->getPendingException(&value))
-                return false;
-            pd->value = value;
-        }
-    } else {
-        pd->flags = 0;
-        pd->value = value;
-    }
-
-    if (wasThrowing)
-        cx->setPendingException(lastException);
-
-    pd->flags |= (shape->enumerable() ? JSPD_ENUMERATE : 0)
-              |  (!shape->writable()  ? JSPD_READONLY  : 0)
-              |  (!shape->configurable() ? JSPD_PERMANENT : 0);
-    pd->spare = 0;
-    pd->alias = JSVAL_VOID;
-
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_GetPropertyDescArray(JSContext *cx, JS::HandleObject obj, JSPropertyDescArray *pda)
-{
-    assertSameCompartment(cx, obj);
-    uint32_t i = 0;
-    JSPropertyDesc *pd = nullptr;
-
-    if (obj->is<DebugScopeObject>()) {
-        AutoIdVector props(cx);
-        if (!Proxy::enumerate(cx, obj, props))
-            return false;
-
-        pd = cx->pod_calloc<JSPropertyDesc>(props.length());
-        if (!pd)
-            return false;
-
-        for (i = 0; i < props.length(); ++i) {
-            pd[i].id = JSVAL_NULL;
-            pd[i].value = JSVAL_NULL;
-            if (!AddValueRoot(cx, &pd[i].id, nullptr))
-                goto bad;
-            pd[i].id = IdToValue(props[i]);
-            if (!AddValueRoot(cx, &pd[i].value, nullptr))
-                goto bad;
-            if (!Proxy::get(cx, obj, obj, props[i], MutableHandleValue::fromMarkedLocation(&pd[i].value)))
-                goto bad;
-        }
-
-        pda->length = props.length();
-        pda->array = pd;
-        return true;
-    }
-
-    const Class *clasp;
-    clasp = obj->getClass();
-    if (!obj->isNative() || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                             JSMSG_CANT_DESCRIBE_PROPS, clasp->name);
-        return false;
-    }
-    if (!clasp->enumerate(cx, obj))
-        return false;
-
-    /* Return an empty pda early if obj has no own properties. */
-    if (obj->nativeEmpty()) {
-        pda->length = 0;
-        pda->array = nullptr;
-        return true;
-    }
-
-    pd = cx->pod_malloc<JSPropertyDesc>(obj->propertyCount());
-    if (!pd)
-        return false;
-
-    {
-        Shape::Range<CanGC> r(cx, obj->lastProperty());
-        RootedShape shape(cx);
-        for (; !r.empty(); r.popFront()) {
-            pd[i].id = JSVAL_NULL;
-            pd[i].value = JSVAL_NULL;
-            pd[i].alias = JSVAL_NULL;
-            if (!AddValueRoot(cx, &pd[i].id, nullptr))
-                goto bad;
-            if (!AddValueRoot(cx, &pd[i].value, nullptr))
-                goto bad;
-            shape = const_cast<Shape *>(&r.front());
-            if (!GetPropertyDesc(cx, obj, shape, &pd[i]))
-                goto bad;
-            if ((pd[i].flags & JSPD_ALIAS) && !AddValueRoot(cx, &pd[i].alias, nullptr))
-                goto bad;
-            if (++i == obj->propertyCount())
-                break;
-        }
-    }
-
-    pda->length = i;
-    pda->array = pd;
-    return true;
-
-bad:
-    pda->length = i + 1;
-    pda->array = pd;
-    JS_PutPropertyDescArray(cx, pda);
-    return false;
-}
-
-JS_PUBLIC_API(void)
-JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
-{
-    JSPropertyDesc *pd;
-    uint32_t i;
-
-    pd = pda->array;
-    for (i = 0; i < pda->length; i++) {
-        RemoveRoot(cx->runtime(), &pd[i].id);
-        RemoveRoot(cx->runtime(), &pd[i].value);
-        if (pd[i].flags & JSPD_ALIAS)
-            RemoveRoot(cx->runtime(), &pd[i].alias);
-    }
-    js_free(pd);
-    pda->array = nullptr;
-    pda->length = 0;
-}
-
-
-/************************************************************************/
-
 extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, HandleScript script)
 {
@@ -667,38 +513,6 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
 #endif
 }
 
-namespace {
-
-class AutoPropertyDescArray
-{
-    JSContext *cx_;
-    JSPropertyDescArray descArray_;
-
-  public:
-    explicit AutoPropertyDescArray(JSContext *cx)
-      : cx_(cx)
-    {
-        PodZero(&descArray_);
-    }
-    ~AutoPropertyDescArray()
-    {
-        if (descArray_.array)
-            JS_PutPropertyDescArray(cx_, &descArray_);
-    }
-
-    void fetch(JS::HandleObject obj) {
-        JS_ASSERT(!descArray_.array);
-        if (!JS_GetPropertyDescArray(cx_, obj, &descArray_))
-            descArray_.array = nullptr;
-    }
-
-    JSPropertyDescArray * operator ->() {
-        return &descArray_;
-    }
-};
-
-} /* anonymous namespace */
-
 static const char *
 FormatValue(JSContext *cx, const Value &vArg, JSAutoByteString &bytes)
 {
@@ -747,13 +561,8 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
         funname = fun->atom();
 
     RootedValue thisVal(cx);
-    AutoPropertyDescArray thisProps(cx);
     if (iter.hasUsableAbstractFramePtr() && iter.computeThis(cx)) {
         thisVal = iter.computedThisValue();
-        if (showThisProps && thisVal.isObject()) {
-            RootedObject thisObj(cx, &thisVal.toObject());
-            thisProps.fetch(thisObj);
-        }
     }
 
     // print the frame number and function name
@@ -857,27 +666,42 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
         }
     }
 
-    // print the properties of 'this', if it is an object
-    if (showThisProps && thisProps->array) {
-        for (uint32_t i = 0; i < thisProps->length; i++) {
-            JSPropertyDesc* desc = &thisProps->array[i];
-            if (desc->flags & JSPD_ENUMERATE) {
-                JSAutoByteString nameBytes;
-                JSAutoByteString valueBytes;
-                const char *name = FormatValue(cx, desc->id, nameBytes);
-                const char *value = FormatValue(cx, desc->value, valueBytes);
-                if (name && value) {
-                    buf = JS_sprintf_append(buf, "    this.%s = %s%s%s\n",
-                                            name,
-                                            desc->value.isString() ? "\"" : "",
-                                            value,
-                                            desc->value.isString() ? "\"" : "");
-                    if (!buf)
-                        return buf;
-                } else {
-                    buf = JS_sprintf_append(buf, "    <Failed to format values while inspecting stack frame>\n");
-                    cx->clearPendingException();
-                }
+    if (showThisProps && thisVal.isObject()) {
+        RootedObject obj(cx, &thisVal.toObject());
+
+        AutoIdVector keys(cx);
+        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &keys)) {
+            cx->clearPendingException();
+            return buf;
+        }
+
+        RootedId id(cx);
+        for (size_t i = 0; i < keys.length(); i++) {
+            RootedId id(cx, keys[i]);
+            RootedValue key(cx, IdToValue(id));
+            RootedValue v(cx);
+
+            if (!JSObject::getGeneric(cx, obj, obj, id, &v)) {
+                buf = JS_sprintf_append(buf, "    <Failed to fetch property while inspecting stack frame>\n");
+                cx->clearPendingException();
+                continue;
+            }
+
+            JSAutoByteString nameBytes;
+            JSAutoByteString valueBytes;
+            const char *name = FormatValue(cx, key, nameBytes);
+            const char *value = FormatValue(cx, v, valueBytes);
+            if (name && value) {
+                buf = JS_sprintf_append(buf, "    this.%s = %s%s%s\n",
+                                        name,
+                                        v.isString() ? "\"" : "",
+                                        value,
+                                        v.isString() ? "\"" : "");
+                if (!buf)
+                    return buf;
+            } else {
+                buf = JS_sprintf_append(buf, "    <Failed to format values while inspecting stack frame>\n");
+                cx->clearPendingException();
             }
         }
     }
