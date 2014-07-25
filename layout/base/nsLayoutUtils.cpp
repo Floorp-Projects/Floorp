@@ -6819,6 +6819,17 @@ nsLayoutUtils::WantSubAPZC()
   return wantSubAPZC;
 }
 
+/* static */ bool
+nsLayoutUtils::UsesAsyncScrolling()
+{
+#ifdef MOZ_WIDGET_ANDROID
+  // We always have async scrolling for android
+  return true;
+#endif
+
+  return gfxPrefs::AsyncPanZoomEnabled();
+}
+
 /* static */ void
 nsLayoutUtils::DoLogTestDataForPaint(LayerManager* aManager,
                                      ViewID aScrollId,
