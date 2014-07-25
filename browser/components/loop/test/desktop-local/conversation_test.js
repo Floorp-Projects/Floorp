@@ -37,7 +37,8 @@ describe("loop.conversation", function() {
       setLoopCharPref: sandbox.stub(),
       getLoopCharPref: sandbox.stub(),
       startAlerting: function() {},
-      stopAlerting: function() {}
+      stopAlerting: function() {},
+      ensureRegistered: function() {}
     };
 
     // XXX These stubs should be hoisted in a common file
@@ -252,6 +253,44 @@ describe("loop.conversation", function() {
         // close connections nicely
         it("should close the window");
       });
+
+      describe("#blocked", function() {
+        it("should call mozLoop.stopAlerting", function() {
+          sandbox.stub(window.navigator.mozLoop, "stopAlerting");
+          router.declineAndBlock();
+
+          sinon.assert.calledOnce(window.navigator.mozLoop.stopAlerting);
+        });
+
+        it("should call delete call", function() {
+          var deleteCallUrl = sandbox.stub(loop.Client.prototype, "deleteCallUrl");
+          router.declineAndBlock();
+
+          sinon.assert.calledOnce(deleteCallUrl);
+        });
+
+        it("should trigger error handling in case of error", function() {
+          // XXX just logging to console for now
+          var log = sandbox.stub(console, "log");
+          var fakeError = {
+            error: true
+          };
+          sandbox.stub(loop.Client.prototype, "deleteCallUrl", function(_, cb) {
+            cb(fakeError);
+          });
+          router.declineAndBlock();
+
+          sinon.assert.calledOnce(log);
+          sinon.assert.calledWithExactly(log, fakeError);
+        });
+
+        it("should close the window", function() {
+          sandbox.stub(window, "close");
+          router.declineAndBlock();
+
+          sinon.assert.calledOnce(window.close);
+        });
+      });
     });
 
     describe("Events", function() {
@@ -350,6 +389,17 @@ describe("loop.conversation", function() {
         sinon.assert.calledOnce(model.trigger);
         sinon.assert.calledWith(model.trigger, "decline");
         });
+    });
+
+    describe("click event on .btn-block", function() {
+      it("should trigger a 'block' conversation model event", function() {
+        var buttonBlock = view.getDOMNode().querySelector(".btn-block");
+
+        TestUtils.Simulate.click(buttonBlock);
+
+        sinon.assert.calledOnce(model.trigger);
+        sinon.assert.calledWith(model.trigger, "declineAndBlock");
+      });
     });
   });
 });
