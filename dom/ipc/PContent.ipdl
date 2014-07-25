@@ -57,6 +57,12 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
 using gfxIntSize from "nsSize.h";
 
+union ChromeRegistryItem
+{
+    ChromePackage;
+    OverrideMapping;
+};
+
 namespace mozilla {
 namespace dom {
 
@@ -381,7 +387,8 @@ child:
     PTestShell();
 
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
-                   OverrideMapping[] overrides, nsCString locale);
+                   OverrideMapping[] overrides, nsCString locale, bool reset);
+    RegisterChromeItem(ChromeRegistryItem item);
 
     async SetOffline(bool offline);
 
