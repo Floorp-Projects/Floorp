@@ -82,7 +82,15 @@ loop.Client = (function($) {
      * @param {Function} cb Callback(err)
      */
     _ensureRegistered: function(cb) {
-      this.mozLoop.ensureRegistered(cb);
+      this.mozLoop.ensureRegistered(function(error) {
+        if (error) {
+          console.log("Error registering with Loop server, code: " + error);
+          cb(error);
+          return;
+        } else {
+          cb(null);
+        }
+      });
     },
 
     /**
@@ -126,6 +134,45 @@ loop.Client = (function($) {
     },
 
     /**
+     * Block call URL based on the token identifier
+     *
+     * @param {string} token Conversation identifier used to block the URL
+     * @param {function} cb Callback function used for handling an error
+     *                      response. XXX The incoming call panel does not
+     *                      exist after the block button is clicked therefore
+     *                      it does not make sense to display an error.
+     **/
+    deleteCallUrl: function(token, cb) {
+      this._ensureRegistered(function(err) {
+        if (err) {
+          cb(err);
+          return;
+        }
+
+        this._deleteCallUrlInternal(token, cb);
+      }.bind(this));
+    },
+
+    _deleteCallUrlInternal: function(token, cb) {
+      this.mozLoop.hawkRequest("/call-url/" + token, "DELETE", null,
+                               (error, responseText) => {
+        if (error) {
+          this._failureHandler(cb, error);
+          return;
+        }
+
+        try {
+          cb(null);
+
+          this.mozLoop.noteCallUrlExpiry((new Date()).getTime() / 1000);
+        } catch (err) {
+          console.log("Error deleting call info", err);
+          cb(err);
+        }
+      });
+    },
+
+    /**
      * Requests a call URL from the Loop server. It will note the
      * expiry time for the url with the mozLoop api.
      *
@@ -142,7 +189,6 @@ loop.Client = (function($) {
     requestCallUrl: function(nickname, cb) {
       this._ensureRegistered(function(err) {
         if (err) {
-          console.log("Error registering with Loop server, code: " + err);
           cb(err);
           return;
         }

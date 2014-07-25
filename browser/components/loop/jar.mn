@@ -35,6 +35,8 @@ browser.jar:
   content/browser/loop/shared/img/mute-inverse-14x14@2x.png     (content/shared/img/mute-inverse-14x14@2x.png)
   content/browser/loop/shared/img/video-inverse-14x14.png       (content/shared/img/video-inverse-14x14.png)
   content/browser/loop/shared/img/video-inverse-14x14@2x.png    (content/shared/img/video-inverse-14x14@2x.png)
+  content/browser/loop/shared/img/dropdown-inverse.png       (content/shared/img/dropdown-inverse.png)
+  content/browser/loop/shared/img/dropdown-inverse@2x.png    (content/shared/img/dropdown-inverse@2x.png)
 
   # Shared scripts
   content/browser/loop/shared/js/models.js  (content/shared/js/models.js)

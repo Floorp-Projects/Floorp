@@ -177,8 +177,46 @@
   min-height: 264px;
 }
 
+.incoming-call-action-group {
+  padding: 2.5em 1em;
+}
+
+.incoming-call-action-group .button-chevron-menu-group {
+  margin-right: .5em;
+}
+
+.incoming-call-action-group > .btn {
+  margin-left: .5em;
+}
+
 .incoming-call h2 {
   font-size: 1.5em;
   font-weight: normal;
 }
 
+/* Block incoming call */
+
+.native-dropdown-menu {
+  /* Should match a native select menu */
+  padding: 0;
+  position: absolute; /* element can be wider than the parent */
+  background: #fff;
+  margin: 0;
+  box-shadow: 0 4px 5px rgba(30, 30, 30, .3);
+  border-style: solid;
+  border-width: 1px 1px 1px 2px;
+  border-color: #aaa #111 #111 #aaa;
+}
+
+.decline-block-menu li {
+  padding: 0 10px 0 5px;
+  list-style: none;
+  font-size: .9em;
+  color: #000;
+  cursor: pointer;
+}
+
+  .decline-block-menu li:hover {
+    color: #FFF;
+    background: #111;
+  }
