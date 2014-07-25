@@ -255,10 +255,10 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/content/src',
-    '/content/xml/content/src',
     '/dom',
     '/dom/smil',
     '/dom/xbl',
+    '/dom/xml',
     '/layout/generic',
     '/layout/style',
     '/layout/svg',

@@ -83,6 +83,7 @@ PARALLEL_DIRS += [
     'inputmethod',
     'webidl',
     'xbl',
+    'xml',
     'xslt',
     'resourcestats',
 ]
