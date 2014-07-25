@@ -1391,10 +1391,6 @@ var BrowserApp = {
   },
 
   sanitize: function (aItems, callback) {
-    if (!aItems) {
-      return;
-    }
-
     let success = true;
 
     for (let key in aItems) {
@@ -1620,8 +1616,7 @@ var BrowserApp = {
         break;
 
       case "Browser:Quit":
-        Services.console.logStringMessage(aData);
-        this.quit(JSON.parse(aData));
+        this.quit(aData ? JSON.parse(aData) : null);
         break;
 
       case "SaveAs:PDF":
