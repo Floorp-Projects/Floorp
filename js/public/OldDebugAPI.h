@@ -206,37 +206,6 @@ JS_GetScriptVersion(JSContext *cx, JSScript *script);
 extern JS_PUBLIC_API(bool)
 JS_GetScriptIsSelfHosted(JSScript *script);
 
-/************************************************************************/
-
-typedef struct JSPropertyDesc {
-    JS::Value       id;         /* primary id, atomized string, or int */
-    JS::Value       value;      /* property value */
-    uint8_t         flags;      /* flags, see below */
-    uint8_t         spare;      /* unused */
-    JS::Value       alias;      /* alias id if JSPD_ALIAS flag */
-} JSPropertyDesc;
-
-#define JSPD_ENUMERATE  0x01    /* visible to for/in loop */
-#define JSPD_READONLY   0x02    /* assignment is error */
-#define JSPD_PERMANENT  0x04    /* property cannot be deleted */
-#define JSPD_ALIAS      0x08    /* property has an alias id */
-#define JSPD_EXCEPTION  0x40    /* exception occurred fetching the property, */
-                                /* value is exception */
-#define JSPD_ERROR      0x80    /* native getter returned false without */
-                                /* throwing an exception */
-
-typedef struct JSPropertyDescArray {
-    uint32_t        length;     /* number of elements in array */
-    JSPropertyDesc  *array;     /* alloc'd by Get, freed by Put */
-} JSPropertyDescArray;
-
-typedef struct JSScopeProperty JSScopeProperty;
-
-extern JS_PUBLIC_API(bool)
-JS_GetPropertyDescArray(JSContext *cx, JS::HandleObject obj, JSPropertyDescArray *pda);
-
-extern JS_PUBLIC_API(void)
-JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda);
 
 /************************************************************************/
 
