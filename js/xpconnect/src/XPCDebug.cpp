@@ -112,23 +112,3 @@ xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
     exceptionState.restore();
     return true;
 }
-
-/***************************************************************************/
-
-JSTrapStatus
-xpc_DebuggerKeywordHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
-                           jsval *rval, void *closure)
-{
-    static const char line[] =
-    "------------------------------------------------------------------------\n";
-    DebugDump("%s", line);
-    DebugDump("%s", "Hit JavaScript \"debugger\" keyword. JS call stack...\n");
-    xpc_DumpJSStack(cx, true, true, false);
-    DebugDump("%s", line);
-    return JSTRAP_CONTINUE;
-}
-
-bool xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt)
-{
-    return JS_SetDebuggerHandler(rt, xpc_DebuggerKeywordHandler, nullptr);
-}

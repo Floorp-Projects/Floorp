@@ -59,10 +59,6 @@ typedef enum JSTrapStatus {
     JSTRAP_LIMIT
 } JSTrapStatus;
 
-typedef JSTrapStatus
-(* JSDebuggerHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, JS::Value *rval,
-                      void *closure);
-
 typedef bool
 (* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsid id, JS::Value old,
                         JS::Value *newp, void *closure);
@@ -319,24 +315,8 @@ class JS_PUBLIC_API(JSBrokenFrameIterator)
     bool isConstructing() const;
 };
 
-typedef bool
-(* JSDebugErrorHook)(JSContext *cx, const char *message, JSErrorReport *report,
-                     void *closure);
-
-typedef struct JSDebugHooks {
-    JSDebuggerHandler   debuggerHandler;
-    void                *debuggerHandlerData;
-} JSDebugHooks;
 
 /************************************************************************/
-
-extern JS_PUBLIC_API(bool)
-JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler hook, void *closure);
-
-/************************************************************************/
-
-extern JS_PUBLIC_API(const JSDebugHooks *)
-JS_GetGlobalDebugHooks(JSRuntime *rt);
 
 /**
  * Add various profiling-related functions as properties of the given object.
@@ -353,14 +333,5 @@ JS_DumpPCCounts(JSContext *cx, JS::HandleScript script);
 
 extern JS_PUBLIC_API(void)
 JS_DumpCompartmentPCCounts(JSContext *cx);
-
-namespace js {
-extern JS_FRIEND_API(bool)
-CanCallContextDebugHandler(JSContext *cx);
-}
-
-/* Call the context debug handler on the topmost scripted frame. */
-extern JS_FRIEND_API(bool)
-js_CallContextDebugHandler(JSContext *cx);
 
 #endif /* js_OldDebugAPI_h */

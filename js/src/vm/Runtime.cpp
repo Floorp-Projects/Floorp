@@ -232,7 +232,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&onNewGlobalObjectWatchers);
 
-    PodZero(&debugHooks);
     PodArrayZero(nativeStackQuota);
     PodZero(&asmJSCacheOps);
 }
