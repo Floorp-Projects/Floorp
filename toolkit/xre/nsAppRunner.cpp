@@ -4080,6 +4080,12 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   rv = mScopedXPCom->Initialize();
   NS_ENSURE_SUCCESS(rv, 1);
 
+#ifdef MOZ_CRASHREPORTER
+  if (CrashReporter::GetEnabled()) {
+    CrashReporter::OOPInit();
+  }
+#endif
+
   // run!
   rv = XRE_mainRun();
 
