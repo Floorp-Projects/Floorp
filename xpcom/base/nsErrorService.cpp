@@ -38,6 +38,9 @@ NS_IMETHODIMP
 nsErrorService::GetErrorStringBundle(int16_t aErrorModule, char** aResult)
 {
   nsCString* bundleURL = mErrorStringBundleURLMap.Get(aErrorModule);
+  if (!bundleURL) {
+    return NS_ERROR_FAILURE;
+  }
   *aResult = ToNewCString(*bundleURL);
   return NS_OK;
 }
