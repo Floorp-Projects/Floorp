@@ -298,11 +298,11 @@ CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
   // Allow everything, we enforce usage ourselves
   unsigned int usage = KU_ALL;
 
-  nsresult rv = MapSECStatus(PK11_ImportDERPrivateKeyInfoAndReturnKey(
-                slot.get(), pkcs8Item.get(), nullptr, nullptr, false, false,
-                usage, &privKey, nullptr));
+  SECStatus rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
+                 slot.get(), pkcs8Item.get(), nullptr, nullptr, false, false,
+                 usage, &privKey, nullptr);
 
-  if (NS_FAILED(rv)) {
+  if (rv == SECFailure) {
     return nullptr;
   }
   return privKey;
