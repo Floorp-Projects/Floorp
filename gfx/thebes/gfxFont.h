@@ -1529,7 +1529,8 @@ protected:
 
 
 class GlyphBufferAzure;
-struct DrawGlyphParams;
+struct TextRunDrawParams;
+struct FontDrawParams;
 
 class gfxFont {
 
@@ -1767,31 +1768,30 @@ public:
      * be honoured.
      * @param aStart the first character to draw
      * @param aEnd draw characters up to here
-     * @param aBaselineOrigin the baseline origin; the left end of the baseline
-     * for LTR textruns, the right end of the baseline for RTL textruns. On return,
-     * this should be updated to the other end of the baseline. In application
-     * units, really!
-     * @param aSpacing spacing to insert before and after characters (for RTL
-     * glyphs, before-spacing is inserted to the right of characters). There
-     * are aEnd - aStart elements in this array, unless it's null to indicate
-     * that there is no spacing.
-     * @param aDrawMode specifies whether the fill or stroke of the glyph should be
-     * drawn, or if it should be drawn into the current path
-     * @param aContextPaint information about how to construct the fill and
-     * stroke pattern. Can be nullptr if we are not stroking the text, which
-     * indicates that the current source from aContext should be used for filling
-     * 
+     * @param aPt the baseline origin; the left end of the baseline
+     * for LTR textruns, the right end for RTL textruns.
+     * On return, this will be updated to the other end of the baseline.
+     * In application units, really!
+     * @param aParams record with drawing parameters, see TextRunDrawParams.
+     * Particular fields of interest include
+     * .spacing  spacing to insert before and after characters (for RTL
+     *   glyphs, before-spacing is inserted to the right of characters). There
+     *   are aEnd - aStart elements in this array, unless it's null to indicate
+     *   that there is no spacing.
+     * .drawMode  specifies whether the fill or stroke of the glyph should be
+     *   drawn, or if it should be drawn into the current path
+     * .contextPaint  information about how to construct the fill and
+     *   stroke pattern. Can be nullptr if we are not stroking the text, which
+     *   indicates that the current source from context should be used for fill
+     * .context  the Thebes graphics context to which we're drawing
+     * .dt  Moz2D DrawTarget to which we're drawing
+     *
      * Callers guarantee:
      * -- aStart and aEnd are aligned to cluster and ligature boundaries
      * -- all glyphs use this font
-     * 
-     * The default implementation builds a cairo glyph array and
-     * calls cairo_show_glyphs or cairo_glyph_path.
      */
-    virtual void Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
-                      gfxContext *aContext, DrawMode aDrawMode, gfxPoint *aBaselineOrigin,
-                      Spacing *aSpacing, gfxTextContextPaint *aContextPaint,
-                      gfxTextRunDrawCallbacks *aCallbacks);
+    void Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
+              gfxPoint *aPt, TextRunDrawParams& aParams);
 
     /**
      * Measure a run of characters. See gfxTextRun::Metrics.
@@ -2034,12 +2034,13 @@ protected:
 
     // Output a run of glyphs at *aPt, which is updated to follow the last glyph
     // in the run. This method also takes account of any letter-spacing provided
-    // in aParams.
-    bool DrawGlyphs(gfxShapedText          *aShapedText,
-                    uint32_t                aOffset, // offset in the textrun
-                    uint32_t                aCount, // length of run to draw
-                    gfxPoint               *aPt,
-                    const DrawGlyphParams&  aParams);
+    // in aRunParams.
+    bool DrawGlyphs(gfxShapedText            *aShapedText,
+                    uint32_t                  aOffset, // offset in the textrun
+                    uint32_t                  aCount, // length of run to draw
+                    gfxPoint                 *aPt,
+                    const TextRunDrawParams&  aRunParams,
+                    const FontDrawParams&     aFontParams);
 
     // set the font size and offset used for
     // synthetic subscript/superscript glyphs
@@ -3558,10 +3559,9 @@ private:
                                      PropertyProvider *aProvider);
     gfxFloat ComputePartialLigatureWidth(uint32_t aPartStart, uint32_t aPartEnd,
                                          PropertyProvider *aProvider);
-    void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx,
-                             uint32_t aStart, uint32_t aEnd, gfxPoint *aPt,
-                             PropertyProvider *aProvider,
-                             gfxTextRunDrawCallbacks *aCallbacks);
+    void DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
+                             gfxPoint *aPt, PropertyProvider *aProvider,
+                             TextRunDrawParams& aParams);
     // Advance aStart to the start of the nearest ligature; back up aEnd
     // to the nearest ligature end; may result in *aStart == *aEnd
     void ShrinkToLigatureBoundaries(uint32_t *aStart, uint32_t *aEnd);
@@ -3583,12 +3583,10 @@ private:
                                  Metrics *aMetrics);
 
     // **** drawing helper ****
-    void DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
-                    DrawMode aDrawMode, gfxPoint *aPt,
-                    gfxTextContextPaint *aContextPaint, uint32_t aStart,
-                    uint32_t aEnd, PropertyProvider *aProvider,
+    void DrawGlyphs(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
+                    gfxPoint *aPt, PropertyProvider *aProvider,
                     uint32_t aSpacingStart, uint32_t aSpacingEnd,
-                    gfxTextRunDrawCallbacks *aCallbacks);
+                    TextRunDrawParams& aParams);
 
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case
