@@ -102,6 +102,7 @@ Marionette Objects
 Session Management
 ``````````````````
 .. automethod:: Marionette.start_session
+.. automethod:: Marionette.delete_session
 .. autoattribute:: Marionette.session_capabilities
 .. automethod:: Marionette.get_cookie
 .. automethod:: Marionette.get_cookies
@@ -202,4 +203,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

@@ -807,11 +807,7 @@ class Marionette(object):
         :params desired_capabilities: An optional dict of desired
             capabilities.  This is currently ignored.
 
-        :returns: A dict of the capabilities offered.
-
-        """
-
-        # We are ignoring desired_capabilities, at least for now.
+        :returns: A dict of the capabilities offered."""
         self.session = self._send_message('newSession', 'value')
         self.b2g = 'b2g' in self.session
         return self.session
@@ -826,9 +822,7 @@ class Marionette(object):
             self._test_name = test_name
 
     def delete_session(self):
-        """
-        Close the current session and disconnect from the server.
-        """
+        """Close the current session and disconnect from the server."""
         response = self._send_message('deleteSession', 'ok')
         self.session = None
         self.window = None
