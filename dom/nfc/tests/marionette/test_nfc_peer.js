@@ -10,6 +10,8 @@ let INCORRECT_MANIFEST_URL = "app://xyz.gaiamobile.org/manifest.webapp";
 function peerReadyCb(evt) {
   log("peerReadyCb called");
   let peer = nfc.getNFCPeer(evt.detail);
+  let peer1 = nfc.getNFCPeer(evt.detail);
+  ok(peer == peer1, "Should get the same NFCPeer object.");
   ok(peer instanceof MozNFCPeer, "Should get a NFCPeer object.");
 
   NCI.deactivate();

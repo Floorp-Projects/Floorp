@@ -142,6 +142,8 @@ function mozNfc() {
 mozNfc.prototype = {
   _nfcContentHelper: null,
   _window: null,
+  nfcObject: null,
+
   _wrap: function _wrap(obj) {
     return Cu.cloneInto(obj, this._window);
   },
@@ -194,13 +196,19 @@ mozNfc.prototype = {
   },
 
   getNFCPeer: function getNFCPeer(sessionToken) {
-    let obj = new MozNFCPeer();
-    obj.initialize(this._window, sessionToken);
-    if (this._nfcContentHelper.setSessionToken(sessionToken)) {
-      return this._window.MozNFCPeer._create(this._window, obj);
+    if (!sessionToken || !this._nfcContentHelper.setSessionToken(sessionToken)) {
+      throw new Error("Unable to create NFCPeer object, Reason:  Bad SessionToken " +
+                      sessionToken);
     }
-    throw new Error("Unable to create NFCPeer object, Reason:  Bad SessionToken " +
-                     sessionToken);
+
+    if (!this.nfcObject) {
+      let obj = new MozNFCPeer();
+      obj.initialize(this._window, sessionToken);
+      this.nfcObject = obj;
+      this.nfcObject.contentObject = this._window.MozNFCPeer._create(this._window, obj);
+    }
+
+    return this.nfcObject.contentObject;
   },
 
   // get/set onpeerready
@@ -266,6 +274,10 @@ mozNfc.prototype = {
     if (sessionToken != this.session) {
       dump("Unpaired session for notifyPeerLost." + sessionToken);
       return;
+    }
+
+    if (this.nfcObject && (this.nfcObject.session == sessionToken)) {
+      this.nfcObject = null;
     }
 
     this.session = null;
