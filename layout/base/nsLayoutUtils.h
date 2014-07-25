@@ -2198,6 +2198,12 @@ public:
   static bool WantSubAPZC();
 
   /**
+   * Returns true if we're using asynchronous scrolling (either through
+   * APZ or the android frontend).
+   */
+  static bool UsesAsyncScrolling();
+
+  /**
    * Log a key/value pair for APZ testing during a paint.
    * @param aManager   The data will be written to the APZTestData associated 
    *                   with this layer manager.
