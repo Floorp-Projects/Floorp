@@ -59,12 +59,6 @@ typedef enum JSTrapStatus {
     JSTRAP_LIMIT
 } JSTrapStatus;
 
-typedef bool
-(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsid id, JS::Value old,
-                        JS::Value *newp, void *closure);
-
-
-
 extern JS_PUBLIC_API(JSCompartment *)
 JS_EnterCompartmentOfScript(JSContext *cx, JSScript *target);
 
@@ -117,18 +111,6 @@ JS_SetDebugMode(JSContext *cx, bool debug);
 extern JS_PUBLIC_API(bool)
 JS_SetSingleStepMode(JSContext *cx, JS::HandleScript script, bool singleStep);
 
-/************************************************************************/
-
-extern JS_PUBLIC_API(bool)
-JS_SetWatchPoint(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                 JSWatchPointHandler handler, JS::HandleObject closure);
-
-extern JS_PUBLIC_API(bool)
-JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
-                   JSWatchPointHandler *handlerp, JSObject **closurep);
-
-extern JS_PUBLIC_API(bool)
-JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj);
 
 /************************************************************************/
 
