@@ -154,8 +154,8 @@
         <label class="panel-header" id="runtime-header-wifi-devices">&runtimePanel_WiFiDevices;</label>
         <vbox id="runtime-panel-wifi-devices"></vbox>
         <label class="panel-header">&runtimePanel_simulators;</label>
-        <toolbarbutton class="panel-item" label="&runtimePanel_nosimulator;" id="runtime-panel-nosimulator" command="cmd_showAddons"/>
         <vbox id="runtime-panel-simulators"></vbox>
+        <toolbarbutton class="panel-item" label="&runtimePanel_installsimulator;" id="runtime-panel-installsimulator" command="cmd_showAddons"/>
         <label class="panel-header">&runtimePanel_custom;</label>
         <vbox id="runtime-panel-custom"></vbox>
         <vbox flex="1" id="runtime-actions">
