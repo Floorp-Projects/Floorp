@@ -31,6 +31,10 @@ namespace mozilla {
 #endif
 
 #ifdef PR_LOGGING
+#ifdef MOZILLA_INTERNAL_API
+extern PRLogModuleInfo* GetGMPLog();
+#else
+// For CPP unit tests
 PRLogModuleInfo*
 GetGMPLog()
 {
@@ -39,6 +43,7 @@ GetGMPLog()
     sLog = PR_NewLogModule("GMP");
   return sLog;
 }
+#endif
 #define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
 #define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
 #else
@@ -301,6 +306,7 @@ WebrtcGmpVideoEncoder::RegisterEncodeCompleteCallback(webrtc::EncodedImageCallba
 int32_t
 WebrtcGmpVideoEncoder::Release()
 {
+  LOGD(("GMP Released:"));
   // Note: we only use SyncRunnables to access mGMP
   // Callbacks may occur at any time until we call Close (or receive
   // Terminated()), so call Close here synchronously.
@@ -355,6 +361,7 @@ WebrtcGmpVideoEncoder::SetRates_g(uint32_t aNewBitRate, uint32_t aFrameRate)
 void
 WebrtcGmpVideoEncoder::Terminated()
 {
+  LOGD(("GMP Encoder Terminated: %p", (void *)this));
   // We need to drop our reference to this
   mGMP->Close();
   mGMP = nullptr;
@@ -637,6 +644,7 @@ WebrtcGmpVideoDecoder::Reset()
 void
 WebrtcGmpVideoDecoder::Terminated()
 {
+  LOGD(("GMP Decoder Terminated: %p", (void *)this));
   mGMP->Close();
   mGMP = nullptr;
   // Could now notify that it's dead

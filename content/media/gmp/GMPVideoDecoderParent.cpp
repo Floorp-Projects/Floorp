@@ -4,14 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPVideoDecoderParent.h"
+#include "prlog.h"
+#include "mozilla/unused.h"
+#include "nsAutoRef.h"
+#include "nsThreadUtils.h"
 #include "GMPVideoEncodedFrameImpl.h"
 #include "GMPVideoi420FrameImpl.h"
 #include "GMPParent.h"
-#include <stdio.h>
-#include "mozilla/unused.h"
 #include "GMPMessageUtils.h"
-#include "nsAutoRef.h"
-#include "nsThreadUtils.h"
 #include "mozilla/gmp/GMPTypes.h"
 
 template <>
@@ -22,6 +22,21 @@ public:
 };
 
 namespace mozilla {
+
+#ifdef LOG
+#undef LOG
+#endif
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetGMPLog();
+
+#define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
+#else
+#define LOGD(msg)
+#define LOG(level, msg)
+#endif
+
 namespace gmp {
 
 // States:
@@ -57,6 +72,7 @@ GMPVideoDecoderParent::Host()
 void
 GMPVideoDecoderParent::Close()
 {
+  LOGD(("%s: %p", __FUNCTION__, this));
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
   // Consumer is done with us; we can shut down.  No more callbacks should
   // be made to mCallback.  Note: do this before Shutdown()!
@@ -175,6 +191,7 @@ GMPVideoDecoderParent::Drain()
 nsresult
 GMPVideoDecoderParent::Shutdown()
 {
+  LOGD(("%s: %p", __FUNCTION__, this));
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   // Notify client we're gone!  Won't occur after Close()
@@ -330,6 +347,8 @@ GMPVideoDecoderParent::AnswerNeedShmem(const uint32_t& aFrameBufferSize,
                                                 aFrameBufferSize,
                                                 ipc::SharedMemory::TYPE_BASIC, &mem))
   {
+    LOG(PR_LOG_ERROR, ("%s: Failed to get a shared mem buffer for Child! size %u",
+                       __FUNCTION__, aFrameBufferSize));
     return false;
   }
   *aMem = mem;

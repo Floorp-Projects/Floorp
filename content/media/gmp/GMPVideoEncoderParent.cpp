@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPVideoEncoderParent.h"
+#include "prlog.h"
 #include "GMPVideoi420FrameImpl.h"
 #include "GMPVideoEncodedFrameImpl.h"
-#include <stdio.h>
 #include "mozilla/unused.h"
 #include "GMPMessageUtils.h"
 #include "nsAutoRef.h"
@@ -22,6 +22,26 @@ public:
 };
 
 namespace mozilla {
+
+#ifdef LOG
+#undef LOG
+#endif
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* GetGMPLog();
+
+#define LOGD(msg) PR_LOG(GetGMPLog(), PR_LOG_DEBUG, msg)
+#define LOG(level, msg) PR_LOG(GetGMPLog(), (level), msg)
+#else
+#define LOGD(msg)
+#define LOG(level, msg)
+#endif
+
+#ifdef __CLASS__
+#undef __CLASS__
+#endif
+#define __CLASS__ "GMPVideoEncoderParent"
+
 namespace gmp {
 
 // States:
@@ -57,6 +77,7 @@ GMPVideoEncoderParent::Host()
 void
 GMPVideoEncoderParent::Close()
 {
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
   // Consumer is done with us; we can shut down.  No more callbacks should
   // be made to mCallback.  Note: do this before Shutdown()!
@@ -76,6 +97,7 @@ GMPVideoEncoderParent::InitEncode(const GMPVideoCodec& aCodecSettings,
                                   int32_t aNumberOfCores,
                                   uint32_t aMaxPayloadSize)
 {
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
   if (mIsOpen) {
     NS_WARNING("Trying to re-init an in-use GMP video encoder!");
     return GMPGenericErr;;
@@ -192,6 +214,7 @@ GMPVideoEncoderParent::SetPeriodicKeyFrames(bool aEnable)
 void
 GMPVideoEncoderParent::Shutdown()
 {
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
   MOZ_ASSERT(mPlugin->GMPThread() == NS_GetCurrentThread());
 
   // Notify client we're gone!  Won't occur after Close()
@@ -211,6 +234,7 @@ GMPVideoEncoderParent::Shutdown()
 void
 GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  LOGD(("%s::%s: %p (%d)", __CLASS__, __FUNCTION__, this, (int) aWhy));
   mIsOpen = false;
   if (mCallback) {
     // May call Close() (and Shutdown()) immediately or with a delay
@@ -282,6 +306,8 @@ GMPVideoEncoderParent::AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
                                                 aEncodedBufferSize,
                                                 ipc::SharedMemory::TYPE_BASIC, &mem))
   {
+    LOG(PR_LOG_ERROR, ("%s::%s: Failed to get a shared mem buffer for Child! size %u",
+                       __CLASS__, __FUNCTION__, aEncodedBufferSize));
     return false;
   }
   *aMem = mem;
