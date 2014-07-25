@@ -551,10 +551,6 @@ class MochiRemote(Mochitest):
         self._dm.pushFile(fHandle.name, os.path.join(deviceRoot, "robotium.config"))
         os.unlink(fHandle.name)
 
-    def getGMPPluginPath(self, options):
-        # TODO: bug 1043403
-        return None
-
     def buildBrowserEnv(self, options, debugger=False):
         browserEnv = Mochitest.buildBrowserEnv(self, options, debugger=debugger)
         self.buildRobotiumConfig(options, browserEnv)
