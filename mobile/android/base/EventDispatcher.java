@@ -140,35 +140,32 @@ public final class EventDispatcher {
     }
 
     public void dispatchEvent(final NativeJSContainer message) {
-        EventCallback callback = null;
-        try {
-            // First try native listeners.
-            final String type = message.getString("type");
+        // First try native listeners.
+        final String type = message.getString("type");
 
-            final List<NativeEventListener> listeners;
-            synchronized (mGeckoThreadNativeListeners) {
-                listeners = mGeckoThreadNativeListeners.get(type);
-            }
-
-            final String guid = message.optString(GUID, null);
-            if (guid != null) {
-                callback = new GeckoEventCallback(guid, type);
-            }
-
-            if (listeners != null) {
-                if (listeners.size() == 0) {
-                    Log.w(LOGTAG, "No listeners for " + type);
-                }
-                for (final NativeEventListener listener : listeners) {
-                    listener.handleMessage(type, message, callback);
-                }
-                // If we found native listeners, we assume we don't have any JSON listeners
-                // and return early. This assumption is checked when registering listeners.
-                return;
-            }
-        } catch (final IllegalArgumentException e) {
-            // Message doesn't have a "type" property, fallback to JSON
+        final List<NativeEventListener> listeners;
+        synchronized (mGeckoThreadNativeListeners) {
+            listeners = mGeckoThreadNativeListeners.get(type);
         }
+
+        final String guid = message.optString(GUID, null);
+        EventCallback callback = null;
+        if (guid != null) {
+            callback = new GeckoEventCallback(guid, type);
+        }
+
+        if (listeners != null) {
+            if (listeners.size() == 0) {
+                Log.w(LOGTAG, "No listeners for " + type);
+            }
+            for (final NativeEventListener listener : listeners) {
+                listener.handleMessage(type, message, callback);
+            }
+            // If we found native listeners, we assume we don't have any JSON listeners
+            // and return early. This assumption is checked when registering listeners.
+            return;
+        }
+
         try {
             // If we didn't find native listeners, try JSON listeners.
             dispatchEvent(new JSONObject(message.toString()), callback);
