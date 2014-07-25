@@ -23,6 +23,13 @@
 #include <mach/mach.h>
 #endif
 
+// Support pseudostack on these platforms.
+#if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
+#  ifdef MOZ_ENABLE_PROFILER_SPS
+#    define MOZ_THREADSTACKHELPER_PSEUDO
+#  endif
+#endif
+
 namespace mozilla {
 
 /**
@@ -41,16 +48,16 @@ public:
   typedef Telemetry::HangStack Stack;
 
 private:
-#ifdef MOZ_ENABLE_PROFILER_SPS
+  Stack* mStackToFill;
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
   const PseudoStack* const mPseudoStack;
 #endif
-  Stack* mStackToFill;
   size_t mMaxStackSize;
   size_t mMaxBufferSize;
 
   bool PrepareStackBuffer(Stack& aStack);
   void FillStackBuffer();
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
   const char* AppendJSEntry(const volatile StackEntry* aEntry,
                             intptr_t& aAvailableBufferSize,
                             const char* aPrevLabel);
