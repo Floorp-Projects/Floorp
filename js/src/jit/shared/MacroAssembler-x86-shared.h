@@ -532,6 +532,19 @@ class MacroAssemblerX86Shared : public Assembler
     void packedSubInt32(const Operand &src, FloatRegister dest) {
         psubd(src, dest);
     }
+    void packedReciprocalFloat32x4(const Operand &src, FloatRegister dest) {
+        // This function is an approximation of the result, this might need
+        // fix up if the spec requires a given precision for this operation.
+        // TODO See also bug 1068028.
+        rcpps(src, dest);
+    }
+    void packedReciprocalSqrtFloat32x4(const Operand &src, FloatRegister dest) {
+        // TODO See comment above. See also bug 1068028.
+        rsqrtps(src, dest);
+    }
+    void packedSqrtFloat32x4(const Operand &src, FloatRegister dest) {
+        sqrtps(src, dest);
+    }
 
     void packedLeftShiftByScalar(FloatRegister src, FloatRegister dest) {
         pslld(src, dest);

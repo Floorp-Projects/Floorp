@@ -20,6 +20,7 @@ namespace jit {
     _(SimdExtractElement)                                                   \
     _(SimdInsertElement)                                                    \
     _(SimdSignMask)                                                         \
+    _(SimdUnaryArith)                                                       \
     _(SimdBinaryComp)                                                       \
     _(SimdBinaryArith)                                                      \
     _(SimdBinaryBitwise)                                                    \
