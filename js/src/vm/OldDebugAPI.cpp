@@ -182,48 +182,6 @@ JS_SetSingleStepMode(JSContext *cx, HandleScript script, bool singleStep)
     return script->setStepModeFlag(cx, singleStep);
 }
 
-JS_PUBLIC_API(bool)
-JS_SetTrap(JSContext *cx, HandleScript script, jsbytecode *pc, JSTrapHandler handler,
-           HandleValue closure)
-{
-    assertSameCompartment(cx, script, closure);
-
-    if (!CheckDebugMode(cx))
-        return false;
-
-    BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc);
-    if (!site)
-        return false;
-    site->setTrap(cx->runtime()->defaultFreeOp(), handler, closure);
-    return true;
-}
-
-JS_PUBLIC_API(void)
-JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-             JSTrapHandler *handlerp, jsval *closurep)
-{
-    if (BreakpointSite *site = script->getBreakpointSite(pc)) {
-        site->clearTrap(cx->runtime()->defaultFreeOp(), handlerp, closurep);
-    } else {
-        if (handlerp)
-            *handlerp = nullptr;
-        if (closurep)
-            *closurep = JSVAL_VOID;
-    }
-}
-
-JS_PUBLIC_API(void)
-JS_ClearScriptTraps(JSRuntime *rt, JSScript *script)
-{
-    script->clearTraps(rt->defaultFreeOp());
-}
-
-JS_PUBLIC_API(void)
-JS_ClearAllTrapsForCompartment(JSContext *cx)
-{
-    cx->compartment()->clearTraps(cx->runtime()->defaultFreeOp());
-}
-
 /************************************************************************/
 
 JS_PUBLIC_API(bool)
