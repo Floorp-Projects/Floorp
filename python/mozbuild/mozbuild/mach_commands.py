@@ -412,7 +412,7 @@ class Build(MachCommandBase):
                         method = notify.get_dbus_method('Notify',
                                                         'org.freedesktop.Notifications')
                         method('Mozilla Build System', 0, '', 'Build complete', '', [], [], -1)
-                    except (dbus.exceptions.DBusException, ImportError):
+                    except (ImportError, dbus.exceptions.DBusException):
                         pass
 
             except (which.WhichError, ImportError):
