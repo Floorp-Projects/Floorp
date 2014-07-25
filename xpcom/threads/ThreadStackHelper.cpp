@@ -76,10 +76,11 @@ ThreadStackHelper::Shutdown()
 }
 
 ThreadStackHelper::ThreadStackHelper()
-  : mStackToFill(nullptr)
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
-  , mPseudoStack(mozilla_get_pseudo_stack())
+  :
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    mPseudoStack(mozilla_get_pseudo_stack()),
 #endif
+    mStackToFill(nullptr)
   , mMaxStackSize(Stack::sMaxInlineStorage)
   , mMaxBufferSize(0)
 {
@@ -195,7 +196,7 @@ ThreadStackHelper::PrepareStackBuffer(Stack& aStack)
 {
   // Return false to skip getting the stack and return an empty stack
   aStack.clear();
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+#ifdef MOZ_ENABLE_PROFILER_SPS
   /* Normally, provided the profiler is enabled, it would be an error if we
      don't have a pseudostack here (the thread probably forgot to call
      profiler_register_thread). However, on B2G, profiling secondary threads
@@ -218,7 +219,7 @@ ThreadStackHelper::PrepareStackBuffer(Stack& aStack)
 #endif
 }
 
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+#ifdef MOZ_ENABLE_PROFILER_SPS
 
 namespace {
 
@@ -286,14 +287,14 @@ ThreadStackHelper::AppendJSEntry(const volatile StackEntry* aEntry,
   return label;
 }
 
-#endif // MOZ_THREADSTACKHELPER_PSEUDO
+#endif // MOZ_ENABLE_PROFILER_SPS
 
 void
 ThreadStackHelper::FillStackBuffer()
 {
   MOZ_ASSERT(mStackToFill->empty());
 
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+#ifdef MOZ_ENABLE_PROFILER_SPS
   size_t reservedSize = mStackToFill->capacity();
   size_t reservedBufferSize = mStackToFill->AvailableBufferSize();
   intptr_t availableBufferSize = intptr_t(reservedBufferSize);
