@@ -6,6 +6,7 @@
     <!-- The height of the search bar is also used to offset the PreSearchFragment
          and PostSearchFragment contents -->
     <dimen name="search_bar_height">65dp</dimen>
+    <dimen name="progress_bar_height">3dp</dimen>
 
     <!-- We use background padding to create space around the cards -->
     <dimen name="card_background_padding_x">15dp</dimen>
