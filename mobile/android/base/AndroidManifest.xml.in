@@ -9,10 +9,7 @@
       android:sharedUserId="@MOZ_ANDROID_SHARED_ID@"
 #endif
       >
-    <uses-sdk android:minSdkVersion="@MOZ_ANDROID_MIN_SDK_VERSION@"
-#ifdef MOZ_ANDROID_MAX_SDK_VERSION
-              android:maxSdkVersion="@MOZ_ANDROID_MAX_SDK_VERSION@"
-#endif
+    <uses-sdk android:minSdkVersion="9"
               android:targetSdkVersion="@ANDROID_TARGET_SDK@"/>
 
 #include ../services/manifests/AnnouncementsAndroidManifest_permissions.xml.in
