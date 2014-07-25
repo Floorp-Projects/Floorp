@@ -320,13 +320,16 @@ def _runtimeAbort(msg):
         ExprCall(ExprVar('NS_RUNTIMEABORT'), args=[ msg ]))
 
 def _refptr(T):
-    return Type('nsAutoPtr', T=T)
+    return Type('nsRefPtr', T=T)
 
 def _refptrGet(expr):
     return ExprCall(ExprSelect(expr, '.', 'get'))
 
 def _refptrForget(expr):
     return ExprCall(ExprSelect(expr, '.', 'forget'))
+
+def _refptrTake(expr):
+    return ExprCall(ExprSelect(expr, '.', 'take'))
 
 def _cxxArrayType(basetype, const=0, ref=0):
     return Type('InfallibleTArray', T=basetype, const=const, ref=ref)
@@ -3606,7 +3609,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if p.decl.type.isToplevel():
             tmpvar = ExprVar('tmp')
-            
+
             register.addstmts([
                 StmtDecl(Decl(_actorIdType(), tmpvar.name),
                          p.nextActorIdExpr(self.side)),
@@ -3628,17 +3631,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprCall(ExprSelect(p.actorMapVar(), '.', 'Remove'),
                          [ idvar ])))
 
-            # SharedMemory* CreateSharedMemory(size, type, bool, id_t*):
-            #   nsAutoPtr<SharedMemory> seg(Shmem::Alloc(size, type, unsafe));
-            #   if (!shmem)
-            #     return null;
-            #   Shmem s(seg, [nextshmemid]);
-            #   Message descriptor;
-            #   if (!s->ShareTo(subprocess, mId, descriptor) ||
-            #       !Send(descriptor))
-            #     return null;
-            #   mShmemMap.Add(seg, id);
-            #   return shmem.forget();
+            # SharedMemory* CreateSharedMemory(size_t aSize, Type aType, bool aUnsafe, id_t* aId):
+            #   nsRefPtr<SharedMemory> segment(Shmem::Alloc(aSize, aType, aUnsafe));
+            #   if (!segment)
+            #     return nullptr;
+            #   Shmem shmem(segment.get(), [nextshmemid]);
+            #   Message descriptor = shmem.ShareTo(subprocess, mId, descriptor);
+            #   if (!descriptor)
+            #     return nullptr;
+            #   mChannel.Send(descriptor);
+            #   *aId = shmem.Id();
+            #   SharedMemory* rawSegment = segment.get();
+            #   mShmemMap.Add(segment.forget().take(), *aId);
+            #   return rawSegment;
             createshmem.addstmt(StmtDecl(
                 Decl(_refptr(_rawShmemType()), rawvar.name),
                 initargs=[ _shmemAlloc(sizevar, typevar, unsafevar) ]))
@@ -3667,12 +3672,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 args=[ descriptorvar ])))
             createshmem.addstmt(failif)
 
+            rawsegmentvar = ExprVar('rawSegment')
             createshmem.addstmts([
                 StmtExpr(ExprAssn(ExprDeref(idvar), _shmemId(shmemvar))),
+                StmtDecl(Decl(_rawShmemType(ptr=1), rawsegmentvar.name),
+                         init=_refptrGet(rawvar)),
                 StmtExpr(ExprCall(
                     ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
-                    args=[ rawvar, ExprDeref(idvar) ])),
-                StmtReturn(_refptrForget(rawvar))
+                    args=[ _refptrTake(_refptrForget(rawvar)), ExprDeref(idvar) ])),
+                StmtReturn(rawsegmentvar)
             ])
 
             # SharedMemory* AdoptSharedMemory(SharedMemory*, id_t*):
@@ -4123,8 +4131,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def genShmemCreatedHandler(self):
         p = self.protocol
         assert p.decl.type.isToplevel()
-        
-        case = StmtBlock()                                          
+
+        case = StmtBlock()
 
         rawvar = ExprVar('rawmem')
         idvar = ExprVar('id')
@@ -4141,7 +4149,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             failif,
             StmtExpr(ExprCall(
                 ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
-                args=[ _refptrForget(rawvar), idvar ])),
+                args=[ _refptrTake(_refptrForget(rawvar)), idvar ])),
             Whitespace.NL,
             StmtReturn(_Result.Processed)
         ])
@@ -4151,8 +4159,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def genShmemDestroyedHandler(self):
         p = self.protocol
         assert p.decl.type.isToplevel()
-        
-        case = StmtBlock()                                          
+
+        case = StmtBlock()
 
         rawvar = ExprVar('rawmem')
         idvar = ExprVar('id')
