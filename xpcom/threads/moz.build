@@ -55,6 +55,8 @@ MSVC_ENABLE_PGO = True
 LOCAL_INCLUDES += [
     '../build',
     '/caps',
+    '/toolkit/crashreporter/google-breakpad/src',
+    '/tools/profiler',
 ]
 
 FAIL_ON_WARNINGS = True
