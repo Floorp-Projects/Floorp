@@ -858,32 +858,45 @@ class RecursiveMakeBackend(CommonBackend):
         for tier in set(self._may_skip.keys()) - affected_tiers:
             self._may_skip[tier].add(backend_file.relobjdir)
 
+    def _process_hierarchy_elements(self, obj, element, namespace, action):
+        """Walks the ``HierarchicalStringList`` ``element`` and performs
+        ``action`` on each HierarchicalStringList in the hierarchy.
+
+        ``action`` is a callback to be invoked with the following arguments:
+        - ``element``     - The HierarchicalStringList along the current namespace
+        - ``namespace``   - The namespace of the element
+        """
+        if namespace:
+            namespace += '/'
+
+        action(element, namespace)
+
+        children = element.get_children()
+        for subdir in sorted(children):
+            self._process_hierarchy_elements(obj, children[subdir],
+                                             namespace + subdir,
+                                             action)
+
     def _process_hierarchy(self, obj, element, namespace, action):
         """Walks the ``HierarchicalStringList`` ``element`` and performs
-        ``action`` on each string in the heirarcy.
+        ``action`` on each string in the hierarchy.
 
         ``action`` is a callback to be invoked with the following arguments:
         - ``source`` - The path to the source file named by the current string
         - ``dest``   - The relative path, including the namespace, of the
                        destination file.
         """
-        strings = element.get_strings()
-        if namespace:
-            namespace += '/'
+        def process_element(element, namespace):
+            strings = element.get_strings()
+            for s in strings:
+                source = mozpath.normpath(mozpath.join(obj.srcdir, s))
+                dest = '%s%s' % (namespace, mozpath.basename(s))
+                flags = None
+                if '__getitem__' in dir(element):
+                    flags = element[s]
+                action(source, dest, flags)
 
-        for s in strings:
-            source = mozpath.normpath(mozpath.join(obj.srcdir, s))
-            dest = '%s%s' % (namespace, mozpath.basename(s))
-            flags = None
-            if '__getitem__' in dir(element):
-                flags = element[s]
-            action(source, dest, flags)
-
-        children = element.get_children()
-        for subdir in sorted(children):
-            self._process_hierarchy(obj, children[subdir],
-                namespace=namespace + subdir,
-                action=action)
+        self._process_hierarchy_elements(obj, element, namespace, process_element)
 
     def _process_exports(self, obj, exports, backend_file):
         # This may not be needed, but is present for backwards compatibility
