@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Apparently something in bug 984711 & friends breaks CSS2Properties.webidl in non-clobber builds.
+Bug 1016529 - Updating Android SDK to include Google Play Services
