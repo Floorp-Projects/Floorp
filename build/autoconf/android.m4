@@ -431,10 +431,6 @@ if test -n "$MOZ_ANDROID_MIN_SDK_VERSION"; then
 fi
 
 if test -n "$MOZ_ANDROID_MAX_SDK_VERSION"; then
-    if test $MOZ_ANDROID_MAX_SDK_VERSION -lt $1 ; then
-        AC_MSG_ERROR([--with-android-max-sdk must be at least $1.])
-    fi
-
     AC_DEFINE_UNQUOTED(MOZ_ANDROID_MAX_SDK_VERSION, $MOZ_ANDROID_MAX_SDK_VERSION)
 fi
 
