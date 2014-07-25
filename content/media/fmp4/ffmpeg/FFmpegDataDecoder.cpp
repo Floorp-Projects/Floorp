@@ -21,7 +21,10 @@ bool FFmpegDataDecoder<LIBAV_VER>::sFFmpegInitDone = false;
 
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(MediaTaskQueue* aTaskQueue,
                                                 AVCodecID aCodecID)
-  : mTaskQueue(aTaskQueue), mCodecContext(nullptr), mCodecID(aCodecID)
+  : mTaskQueue(aTaskQueue)
+  , mCodecContext(nullptr)
+  , mFrame(NULL)
+  , mCodecID(aCodecID)
 {
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
 }
@@ -94,8 +97,7 @@ FFmpegDataDecoder<LIBAV_VER>::Init()
   }
   mCodecContext->extradata = mExtraData.begin();
 
-  AVDictionary* opts = nullptr;
-  if (avcodec_open2(mCodecContext, codec, &opts) < 0) {
+  if (avcodec_open2(mCodecContext, codec, nullptr) < 0) {
     NS_WARNING("Couldn't initialise ffmpeg decoder");
     return NS_ERROR_FAILURE;
   }
@@ -125,8 +127,39 @@ FFmpegDataDecoder<LIBAV_VER>::Shutdown()
   if (sFFmpegInitDone) {
     avcodec_close(mCodecContext);
     av_freep(&mCodecContext);
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+    av_frame_free(&mFrame);
+#elif LIBAVCODEC_VERSION_MAJOR == 54
+    avcodec_free_frame(&mFrame);
+#else
+    delete mFrame;
+    mFrame = nullptr;
+#endif
   }
   return NS_OK;
+}
+
+AVFrame*
+FFmpegDataDecoder<LIBAV_VER>::PrepareFrame()
+{
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+  if (mFrame) {
+    av_frame_unref(mFrame);
+  } else {
+    mFrame = av_frame_alloc();
+  }
+#elif LIBAVCODEC_VERSION_MAJOR == 54
+  if (mFrame) {
+    avcodec_get_frame_defaults(mFrame);
+  } else {
+    mFrame = avcodec_alloc_frame();
+  }
+#else
+  delete mFrame;
+  mFrame = new AVFrame;
+  avcodec_get_frame_defaults(mFrame);
+#endif
+  return mFrame;
 }
 
 } // namespace mozilla
