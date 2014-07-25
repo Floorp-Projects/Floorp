@@ -650,6 +650,19 @@ BufferTextureClient::BufferTextureClient(ISurfaceAllocator* aAllocator,
 BufferTextureClient::~BufferTextureClient()
 {}
 
+TemporaryRef<TextureClient>
+BufferTextureClient::CreateSimilar(TextureFlags aFlags,
+                                   TextureAllocationFlags aAllocFlags) const
+{
+  // This may return null
+  RefPtr<BufferTextureClient> newBufferTex = TextureClient::CreateForRawBufferAccess(
+    mAllocator, mFormat, mSize, mBackend, mFlags | aFlags, aAllocFlags
+  );
+
+  RefPtr<TextureClient> newTex = newBufferTex.get();
+  return newTex;
+}
+
 ISurfaceAllocator*
 BufferTextureClient::GetAllocator() const
 {
