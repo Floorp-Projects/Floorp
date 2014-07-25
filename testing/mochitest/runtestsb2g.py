@@ -212,6 +212,10 @@ class B2GMochitest(MochitestUtilsMixin):
             self.cleanup(manifest, options)
         return status
 
+    def getGMPPluginPath(self, options):
+        # TODO: bug 1043403
+        return None
+
 
 class B2GDeviceMochitest(B2GMochitest, Mochitest):
     remote_log = None
