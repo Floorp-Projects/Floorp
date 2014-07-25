@@ -1527,7 +1527,10 @@ protected:
     gfxFont * mFont;
 };
 
-/* a SPECIFIC single font family */
+
+class GlyphBufferAzure;
+struct DrawGlyphParams;
+
 class gfxFont {
 
     friend class gfxHarfBuzzShaper;
@@ -1629,7 +1632,7 @@ public:
         return nullptr;
     }
 
-    virtual gfxFloat GetAdjustedSize() {
+    virtual gfxFloat GetAdjustedSize() const {
         return mAdjustedSize > 0.0 ? mAdjustedSize : mStyle.size;
     }
 
@@ -1855,7 +1858,7 @@ public:
                                   (size / threshold);
     }
 
-    gfxFontEntry *GetFontEntry() { return mFontEntry.get(); }
+    gfxFontEntry *GetFontEntry() const { return mFontEntry.get(); }
     bool HasCharacter(uint32_t ch) {
         if (!mIsValid)
             return false;
@@ -2019,6 +2022,24 @@ public:
     GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
 
 protected:
+    // Output a single glyph at *aPt, which is updated by the glyph's advance.
+    // Normal glyphs are simply accumulated in aBuffer until it is full and
+    // gets flushed, but SVG or color-font glyphs will instead be rendered
+    // directly to the destination (found from the buffer's parameters).
+    void DrawOneGlyph(uint32_t           aGlyphID,
+                      double             aAdvance,
+                      gfxPoint          *aPt,
+                      GlyphBufferAzure&  aBuffer,
+                      bool              *aEmittedGlyphs) const;
+
+    // Output a run of glyphs at *aPt, which is updated to follow the last glyph
+    // in the run. This method also takes account of any letter-spacing provided
+    // in aParams.
+    bool DrawGlyphs(gfxShapedText          *aShapedText,
+                    uint32_t                aOffset, // offset in the textrun
+                    uint32_t                aCount, // length of run to draw
+                    gfxPoint               *aPt,
+                    const DrawGlyphParams&  aParams);
 
     // set the font size and offset used for
     // synthetic subscript/superscript glyphs
@@ -2256,19 +2277,18 @@ protected:
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont);
 
     bool RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
-                        uint32_t aGlyphId, gfxTextContextPaint *aContextPaint);
+                        uint32_t aGlyphId, gfxTextContextPaint *aContextPaint) const;
     bool RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
                         uint32_t aGlyphId, gfxTextContextPaint *aContextPaint,
                         gfxTextRunDrawCallbacks *aCallbacks,
-                        bool& aEmittedGlyphs);
+                        bool& aEmittedGlyphs) const;
 
-    bool RenderColorGlyph(gfxContext* aContext, gfxPoint& point, uint32_t aGlyphId);
     bool RenderColorGlyph(gfxContext* aContext,
                           mozilla::gfx::ScaledFont* scaledFont,
                           mozilla::gfx::GlyphRenderingOptions* renderingOptions,
                           mozilla::gfx::DrawOptions drawOptions,
                           const mozilla::gfx::Point& aPoint,
-                          uint32_t aGlyphId);
+                          uint32_t aGlyphId) const;
 
     // Bug 674909. When synthetic bolding text by drawing twice, need to
     // render using a pixel offset in device pixels, otherwise text
