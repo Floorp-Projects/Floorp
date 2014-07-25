@@ -7,16 +7,18 @@
 
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+function run_test() {
+  removeMetadata();
+  updateAppInfo();
+  useHttpServer();
 
-Cu.import("resource://testing-common/httpd.js");
+  run_next_test();
+}
 
-  function test_multiIcon() {
-  let engine = Services.search.getEngineByName("IconsTest");
-  do_check_neq(engine, null);
-
-  do_print("Running tests on IconsTest engine");
+add_task(function* test_multipleIcons() {
+  let [engine] = yield addTestEngines([
+    { name: "IconsTest", xmlFileName: "engineImages.xml" },
+  ]);
 
   do_print("The default should be the 16x16 icon");
   do_check_true(engine.iconURI.spec.contains("ico16"));
@@ -44,35 +46,4 @@ Cu.import("resource://testing-common/httpd.js");
   }));
 
   do_test_finished();
-}
-
-function run_test() {
-  removeMetadata();
-  updateAppInfo();
-
-  let httpServer = new HttpServer();
-  httpServer.start(4444);
-  httpServer.registerDirectory("/", do_get_cwd());
-
-  do_register_cleanup(function cleanup() {
-    httpServer.stop(function() {});
-  });
-
-  do_test_pending();
-
-  let observer = function(aSubject, aTopic, aData) {
-    if (aData == "engine-loaded") {
-      test_multiIcon();
-    }
-  };
-
-  Services.obs.addObserver(observer, "browser-search-engine-modified", false);
-
-  do_print("Adding engine with multiple images");
-  Services.search.addEngine("http://localhost:4444/data/engineImages.xml",
-    Ci.nsISearchEngine.DATA_XML, null, false);
-
-  do_timeout(12000, function() {
-    do_throw("Timeout");
-  });
-}
+});
