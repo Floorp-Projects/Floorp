@@ -9,8 +9,6 @@ include ../../content/base/crashtests/crashtests.list
 include ../../content/html/document/crashtests/crashtests.list
 include ../../content/html/content/crashtests/crashtests.list
 include ../../content/svg/content/src/crashtests/crashtests.list
-include ../../content/xml/content/crashtest/crashtests.list
-include ../../content/xml/document/crashtests/crashtests.list
 include ../../content/xul/content/crashtests/crashtests.list
 include ../../content/xul/document/crashtests/crashtests.list
 include ../../content/xul/templates/src/crashtests/crashtests.list
@@ -28,6 +26,7 @@ include ../../dom/events/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list
 include ../../dom/smil/crashtests/crashtests.list
 include ../../dom/xbl/crashtests/crashtests.list
+include ../../dom/xml/crashtests/crashtests.list
 include ../../dom/xslt/crashtests/crashtests.list
 
 # Bug 811873 - mozRTCPeerConnection doesn't support remote browser yet
