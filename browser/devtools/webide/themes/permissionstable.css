@@ -6,15 +6,18 @@ html, body {
   background: white;
 }
 
-#devicePrivileges {
-  font-family: monospace;
-  padding-left: 6px;
+.permissionstable td {
+  text-align: center;
 }
 
-.action {
-  display: inline;
+.permallow {
+  color: rgb(152,207,57);
 }
 
-.action[hidden] {
-  display: none;
+.permprompt {
+  color: rgb(0,158,237);
+}
+
+.permdeny {
+  color: rgb(204,73,8);
 }
