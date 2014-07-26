@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1041646
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1041646</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1041646 **/
+  // We need to reject the promise with a DOMException, so make sure we have
+  // something that produces one.
+  function throwException() {
+    document.createTextNode("").appendChild(document);
+  }
+  try {
+    throwException();
+  } catch (e) {
+    ok(e instanceof DOMException, "This test won't test what it should be testing");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  // We want a new DOMException each time here.
+  for (var i = 0; i < 100; ++i) {
+    new Promise(throwException);
+  }
+
+  // Now make sure we wait for all those promises above to reject themselves
+  Promise.resolve(1).then(function() {
+    SpecialPowers.gc(); // This should not assert or crash
+    SimpleTest.finish();
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1041646">Mozilla Bug 1041646</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -71,7 +71,8 @@ public:
 
   void GetName(nsString& retval);
 
-  // The XPCOM GetFilename does the right thing.
+  // The XPCOM GetFilename does the right thing.  It might throw, but we want to
+  // return an empty filename in that case anyway, instead of throwing.
 
   uint32_t LineNumber() const;
 
