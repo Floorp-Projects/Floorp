@@ -4,18 +4,38 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
-
-XPCSHELL_TESTS_MANIFESTS += [
-    'test/unit/xpcshell.ini',
-]
-
-MOCHITEST_CHROME_MANIFESTS += [
-    'test/chrome/chrome.ini',
-]
-
-MOCHITEST_MANIFESTS += [
-    'test/mochitest.ini'
-]
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 JAR_MANIFESTS += ['jar.mn']
+
+XPIDL_SOURCES += [
+    'nsIFeedResultService.idl',
+    'nsIWebContentConverterRegistrar.idl',
+]
+
+XPIDL_MODULE = 'browser-feeds'
+
+SOURCES += [
+    'nsFeedSniffer.cpp',
+]
+
+EXTRA_COMPONENTS += [
+    'BrowserFeeds.manifest',
+    'FeedConverter.js',
+    'WebContentConverter.js',
+]
+
+EXTRA_PP_COMPONENTS += [
+    'FeedWriter.js',
+]
+
+FINAL_LIBRARY = 'browsercomps'
+
+for var in ('MOZ_APP_NAME', 'MOZ_MACBUNDLE_NAME'):
+    DEFINES[var] = CONFIG[var]
+
+LOCAL_INCLUDES += [
+    '../build',
+]
