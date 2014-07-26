@@ -30,6 +30,14 @@ this.EXPORTED_SYMBOLS = ["GMPInstallManager", "GMPExtractor", "GMPDownloader",
                          "GMPAddon", "GMPPrefs"];
 
 var gLocale = null;
+const PARENT_LOGGER_ID = "GMPInstallManager";
+
+// Setup the parent logger with dump logging. It'll only be used if logging is
+// enabled though.
+let parentLogger = Log.repository.getLogger(PARENT_LOGGER_ID);
+parentLogger.level = Log.Level.Debug;
+let appender = new Log.DumpAppender();
+parentLogger.addAppender(appender);
 
 // Shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
@@ -48,13 +56,8 @@ XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function() {
 
 
 function getScopedLogger(prefix) {
-  let logger = Log.repository.getLogger(prefix);
-  if (gLogEnabled) {
-    logger.level = Log.Level.Debug;
-    let appender = new Log.DumpAppender();
-    logger.addAppender(appender);
-  }
-  return logger;
+  var parentScope = gLogEnabled ? PARENT_LOGGER_ID + "." : "";
+  return Log.repository.getLogger(parentScope + prefix);
 }
 
 
