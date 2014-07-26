@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['mochitest']
-
 EXTRA_COMPONENTS += [
     'InputMethod.manifest',
     'MozKeyboard.js',
@@ -16,3 +14,5 @@ EXTRA_JS_MODULES += [
 ]
 
 JAR_MANIFESTS += ['jar.mn']
+
+MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
