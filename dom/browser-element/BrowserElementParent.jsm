@@ -126,6 +126,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
   defineNoReturnMethod('goForward', this._goForward);
   defineNoReturnMethod('reload', this._reload);
   defineNoReturnMethod('stop', this._stop);
+  defineNoReturnMethod('zoom', this._zoom);
   defineMethod('download', this._download);
   defineDOMRequestMethod('purgeHistory', 'purge-history');
   defineMethod('getScreenshot', this._getScreenshot);
@@ -589,6 +590,16 @@ BrowserElementParent.prototype = {
 
   _stop: function() {
     this._sendAsyncMsg('stop');
+  },
+
+  /*
+   * The valid range of zoom scale is defined in preference "zoom.maxPercent" and "zoom.minPercent".
+   */
+  _zoom: function(zoom) {
+    zoom *= 100;
+    zoom = Math.min(getIntPref("zoom.maxPercent", 300), zoom);
+    zoom = Math.max(getIntPref("zoom.minPercent", 50), zoom);
+    this._sendAsyncMsg('zoom', {zoom: zoom / 100.0});
   },
 
   _download: function(_url, _options) {
