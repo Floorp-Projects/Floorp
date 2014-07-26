@@ -24,7 +24,7 @@ import org.mozilla.gecko.mozglue.WebRTCJNITarget;
 
 @WebRTCJNITarget
 class WebRtcAudioRecord {
-    private AudioRecord _audioRecord = null;
+    private AudioRecord _audioRecord;
 
     private Context _context;
 
@@ -34,9 +34,9 @@ class WebRtcAudioRecord {
     private final ReentrantLock _recLock = new ReentrantLock();
 
     private boolean _doRecInit = true;
-    private boolean _isRecording = false;
+    private boolean _isRecording;
 
-    private int _bufferedRecSamples = 0;
+    private int _bufferedRecSamples;
 
     WebRtcAudioRecord() {
         try {

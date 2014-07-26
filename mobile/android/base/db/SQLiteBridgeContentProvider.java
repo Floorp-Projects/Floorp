@@ -38,7 +38,7 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
     private static final String ERROR_MESSAGE_DATABASE_IS_LOCKED = "Can't step statement: (5) database is locked";
 
     private HashMap<String, SQLiteBridge> mDatabasePerProfile;
-    protected Context mContext = null;
+    protected Context mContext;
     private final String mLogTag;
 
     protected SQLiteBridgeContentProvider(String logTag) {

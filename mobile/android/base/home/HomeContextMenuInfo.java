@@ -20,7 +20,7 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
 
     public String url;
     public String title;
-    public boolean isFolder = false;
+    public boolean isFolder;
     public int historyId = -1;
     public int bookmarkId = -1;
     public int readingListItemId = -1;

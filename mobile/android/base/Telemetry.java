@@ -47,7 +47,7 @@ public class Telemetry {
         private final long mStartTime;
         private final String mName;
 
-        private volatile boolean mHasFinished = false;
+        private volatile boolean mHasFinished;
         private volatile long mElapsed = -1;
 
         protected abstract long now();
