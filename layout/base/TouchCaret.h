@@ -19,16 +19,13 @@
 namespace mozilla {
 
 /**
- * The TouchCaret places a touch caret according to caret postion when the
+ * The TouchCaret places a touch caret according to caret position when the
  * caret is shown.
  * TouchCaret is also responsible for touch caret visibility. Touch caret
  * won't be shown when timer expires or while key event causes selection change.
  */
 class TouchCaret MOZ_FINAL : public nsISelectionListener
 {
-private:
-  ~TouchCaret();
-
 public:
   explicit TouchCaret(nsIPresShell* aPresShell);
 
@@ -72,6 +69,8 @@ public:
 private:
   // Hide default constructor.
   TouchCaret() MOZ_DELETE;
+
+  ~TouchCaret();
 
   /**
    * Find the nsCanvasFrame which holds the touch caret.
@@ -226,7 +225,6 @@ private:
     return sTouchCaretExpirationTime;
   }
 
-protected:
   nsWeakPtr mPresShell;
 
   // Touch caret visibility
