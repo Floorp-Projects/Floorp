@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsXULAppAPI.h"
+#include "application.ini.h"
 #include "nsXPCOMGlue.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
@@ -29,10 +30,16 @@
 // Functions being loaded by XPCOMGlue
 XRE_ProcLoaderServiceRunType XRE_ProcLoaderServiceRun;
 XRE_ProcLoaderClientInitType XRE_ProcLoaderClientInit;
+XRE_ProcLoaderPreloadType XRE_ProcLoaderPreload;
+extern XRE_CreateAppDataType XRE_CreateAppData;
+extern XRE_GetFileFromPathType XRE_GetFileFromPath;
 
 static const nsDynamicFunctionLoad kXULFuncs[] = {
   { "XRE_ProcLoaderServiceRun", (NSFuncPtr*) &XRE_ProcLoaderServiceRun },
   { "XRE_ProcLoaderClientInit", (NSFuncPtr*) &XRE_ProcLoaderClientInit },
+  { "XRE_ProcLoaderPreload", (NSFuncPtr*) &XRE_ProcLoaderPreload },
+  { "XRE_CreateAppData", (NSFuncPtr*) &XRE_CreateAppData },
+  { "XRE_GetFileFromPath", (NSFuncPtr*) &XRE_GetFileFromPath },
   { nullptr, nullptr }
 };
 
@@ -83,15 +90,89 @@ LoadLibxul(const char *aXPCOMPath)
   return true;
 }
 
+/**
+ * Return true if |arg| matches the given argument name.
+ */
 static bool
-LoadStaticData(const char *aProgram)
+IsArg(const char* arg, const char* s)
+{
+  if (*arg == '-') {
+    if (*++arg == '-') {
+      ++arg;
+    }
+    return !strcasecmp(arg, s);
+  }
+
+#if defined(XP_WIN)
+  if (*arg == '/') {
+    return !strcasecmp(++arg, s);
+  }
+#endif
+
+  return false;
+}
+
+static already_AddRefed<nsIFile>
+GetAppIni(int argc, const char *argv[])
+{
+  nsCOMPtr<nsIFile> appini;
+  nsresult rv;
+
+  // Allow firefox.exe to launch XULRunner apps via -app <application.ini>
+  // Note that -app must be the *first* argument.
+  const char *appDataFile = getenv("XUL_APP_FILE");
+  if (appDataFile && *appDataFile) {
+    rv = XRE_GetFileFromPath(appDataFile, getter_AddRefs(appini));
+    NS_ENSURE_SUCCESS(rv, nullptr);
+  } else if (argc > 1 && IsArg(argv[1], "app")) {
+    if (argc == 2) {
+      return nullptr;
+    }
+
+    rv = XRE_GetFileFromPath(argv[2], getter_AddRefs(appini));
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
+    char appEnv[MAXPATHLEN];
+    snprintf(appEnv, MAXPATHLEN, "XUL_APP_FILE=%s", argv[2]);
+    if (putenv(appEnv)) {
+      return nullptr;
+    }
+  }
+
+  return appini.forget();
+}
+
+static bool
+LoadStaticData(int argc, const char *argv[])
 {
   char xpcomPath[MAXPATHLEN];
-  bool ok = GetXPCOMPath(aProgram, xpcomPath, MAXPATHLEN);
+  bool ok = GetXPCOMPath(argv[0], xpcomPath, MAXPATHLEN);
   NS_ENSURE_TRUE(ok, false);
 
   ok = LoadLibxul(xpcomPath);
-  return ok;
+  NS_ENSURE_TRUE(ok, false);
+
+  char progDir[MAXPATHLEN];
+  ok = GetDirnameSlash(xpcomPath, progDir, MAXPATHLEN);
+  NS_ENSURE_TRUE(ok, false);
+
+  nsCOMPtr<nsIFile> appini = GetAppIni(argc, argv);
+  const nsXREAppData *appData;
+  if (appini) {
+    nsresult rv =
+      XRE_CreateAppData(appini, const_cast<nsXREAppData**>(&appData));
+    NS_ENSURE_SUCCESS(rv, false);
+  } else {
+    appData = &sAppData;
+  }
+
+  XRE_ProcLoaderPreload(progDir, appData);
+
+  if (appini) {
+    XRE_FreeAppData(const_cast<nsXREAppData*>(appData));
+  }
+
+  return true;
 }
 
 /**
@@ -158,7 +239,7 @@ main(int argc, const char* argv[])
    * Before fork(), libxul and static data of Gecko are loaded for
    * sharing.
    */
-  bool ok = LoadStaticData(program);
+  bool ok = LoadStaticData(argc, argv);
   if (!ok) {
     return 255;
   }
