@@ -20,7 +20,7 @@ LOCAL_INCLUDES += [
     '../about',
     '../dirprovider',
     '../feeds',
-    '../migration/src',
+    '../migration',
     '../shell/src',
 ]
 
