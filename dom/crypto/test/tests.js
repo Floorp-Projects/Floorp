@@ -1867,3 +1867,31 @@ TestArray.addTest(
       .then(complete(that), error(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Generate an ECDH key for named curve P-256",
+  function() {
+    var that = this;
+    var alg = { name: "ECDH", namedCurve: "P-256" };
+    crypto.subtle.generateKey(alg, false, ["deriveKey", "deriveBits"]).then(
+      complete(that, function(x) {
+        return exists(x.publicKey) &&
+               (x.publicKey.algorithm.name == alg.name) &&
+               (x.publicKey.algorithm.namedCurve == alg.namedCurve) &&
+               (x.publicKey.type == "public") &&
+               x.publicKey.extractable &&
+               (x.publicKey.usages.length == 0) &&
+               exists(x.privateKey) &&
+               (x.privateKey.algorithm.name == alg.name) &&
+               (x.privateKey.algorithm.namedCurve == alg.namedCurve) &&
+               (x.privateKey.type == "private") &&
+               !x.privateKey.extractable &&
+               (x.privateKey.usages.length == 2) &&
+               (x.privateKey.usages[0] == "deriveKey") &&
+               (x.privateKey.usages[1] == "deriveBits");
+      }),
+      error(that)
+    );
+  }
+);
