@@ -2000,6 +2000,24 @@ public:
         mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
         return;
       }
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
+      RootedDictionary<EcKeyGenParams> params(aCx);
+      mEarlyRv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(mEarlyRv) || !params.mNamedCurve.WasPassed()) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
+      }
+
+      if (!NormalizeNamedCurveValue(params.mNamedCurve.Value(), mNamedCurve)) {
+        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        return;
+      }
+
+      // Create algorithm.
+      algorithm = new EcKeyAlgorithm(global, algName, mNamedCurve);
+      mKeyPair->PublicKey()->SetAlgorithm(algorithm);
+      mKeyPair->PrivateKey()->SetAlgorithm(algorithm);
+      mMechanism = CKM_EC_KEY_PAIR_GEN;
     } else {
       mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       return;
@@ -2013,6 +2031,9 @@ public:
                algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
       privateAllowedUsages = CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY;
       publicAllowedUsages = CryptoKey::ENCRYPT | CryptoKey::WRAPKEY;
+    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
+      privateAllowedUsages = CryptoKey::DERIVEKEY | CryptoKey::DERIVEBITS;
+      publicAllowedUsages = 0;
     }
 
     mKeyPair->PrivateKey()->SetExtractable(aExtractable);
@@ -2044,6 +2065,7 @@ private:
   PK11RSAGenParams mRsaParams;
   ScopedSECKEYPublicKey mPublicKey;
   ScopedSECKEYPrivateKey mPrivateKey;
+  nsString mNamedCurve;
 
   virtual void ReleaseNSSResources() MOZ_OVERRIDE
   {
@@ -2057,9 +2079,26 @@ private:
     MOZ_ASSERT(slot.get());
 
     void* param;
+    ScopedPLArenaPool arena;
+
     switch (mMechanism) {
-      case CKM_RSA_PKCS_KEY_PAIR_GEN: param = &mRsaParams; break;
-      default: return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      case CKM_RSA_PKCS_KEY_PAIR_GEN:
+        param = &mRsaParams;
+        break;
+      case CKM_EC_KEY_PAIR_GEN: {
+        arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+        if (!arena) {
+          return NS_ERROR_DOM_UNKNOWN_ERR;
+        }
+
+        param = CreateECParamsForCurve(mNamedCurve, arena.get());
+        if (!param) {
+          return NS_ERROR_DOM_UNKNOWN_ERR;
+        }
+        break;
+      }
+      default:
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
     SECKEYPublicKey* pubKey = nullptr;
@@ -2477,7 +2516,8 @@ WebCryptoTask::CreateGenerateKeyTask(JSContext* aCx,
     return new GenerateSymmetricKeyTask(aCx, aAlgorithm, aExtractable, aKeyUsages);
   } else if (algName.EqualsASCII(WEBCRYPTO_ALG_RSAES_PKCS1) ||
              algName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
-             algName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP)) {
+             algName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP) ||
+             algName.EqualsASCII(WEBCRYPTO_ALG_ECDH)) {
     return new GenerateAsymmetricKeyTask(aCx, aAlgorithm, aExtractable, aKeyUsages);
   } else {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
