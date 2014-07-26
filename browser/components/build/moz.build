@@ -21,7 +21,7 @@ LOCAL_INCLUDES += [
     '../dirprovider',
     '../feeds',
     '../migration',
-    '../shell/src',
+    '../shell',
 ]
 
 USE_LIBS += [
