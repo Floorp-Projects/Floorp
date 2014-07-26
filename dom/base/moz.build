@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
-
 XPIDL_SOURCES += [
     'nsIConsoleAPIStorage.idl',
     'nsIDOMDOMCursor.idl',
@@ -189,3 +187,6 @@ for var in ('MOZ_B2G_RIL', 'MOZ_B2G_FM'):
 
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
     DEFINES['HAVE_SIDEBAR'] = True
+
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
