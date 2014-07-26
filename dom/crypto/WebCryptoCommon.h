@@ -49,6 +49,11 @@
 #define WEBCRYPTO_KEY_USAGE_WRAPKEY     "wrapKey"
 #define WEBCRYPTO_KEY_USAGE_UNWRAPKEY   "unwrapKey"
 
+// WebCrypto named curves
+#define WEBCRYPTO_NAMED_CURVE_P256  "P-256"
+#define WEBCRYPTO_NAMED_CURVE_P384  "P-384"
+#define WEBCRYPTO_NAMED_CURVE_P521  "P-521"
+
 // JWK key types
 #define JWK_TYPE_SYMMETRIC          "oct"
 #define JWK_TYPE_RSA                "RSA"
@@ -182,6 +187,88 @@ MapAlgorithmNameToMechanism(const nsString& aName)
   }
 
   return mechanism;
+}
+
+inline bool
+NormalizeNamedCurveValue(const nsString& aNamedCurve, nsString& aDest)
+{
+  if (aNamedCurve.EqualsIgnoreCase(WEBCRYPTO_NAMED_CURVE_P256)) {
+    aDest.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P256);
+  } else if (aNamedCurve.EqualsIgnoreCase(WEBCRYPTO_NAMED_CURVE_P384)) {
+    aDest.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P384);
+  } else if (aNamedCurve.EqualsIgnoreCase(WEBCRYPTO_NAMED_CURVE_P521)) {
+    aDest.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P521);
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+inline bool
+CheckEncodedECParameters(const SECItem* aEcParams)
+{
+  // Need at least two bytes for a valid ASN.1 encoding.
+  if (aEcParams->len < 2) {
+    return false;
+  }
+
+  // Check the ASN.1 tag.
+  if (aEcParams->data[0] != SEC_ASN1_OBJECT_ID) {
+    return false;
+  }
+
+  // OID tags are short, we never need more than one length byte.
+  if (aEcParams->data[1] >= 128) {
+    return false;
+  }
+
+  // Check that the SECItem's length is correct.
+  if (aEcParams->len != (unsigned)aEcParams->data[1] + 2) {
+    return false;
+  }
+
+  return true;
+}
+
+inline SECItem*
+CreateECParamsForCurve(const nsString& aNamedCurve, PLArenaPool* aArena)
+{
+  SECOidTag curveOIDTag;
+
+  if (aNamedCurve.EqualsLiteral(WEBCRYPTO_NAMED_CURVE_P256)) {
+    curveOIDTag = SEC_OID_SECG_EC_SECP256R1;
+  } else if (aNamedCurve.EqualsLiteral(WEBCRYPTO_NAMED_CURVE_P384)) {
+    curveOIDTag = SEC_OID_SECG_EC_SECP384R1;
+  } else if (aNamedCurve.EqualsLiteral(WEBCRYPTO_NAMED_CURVE_P521)) {
+    curveOIDTag = SEC_OID_SECG_EC_SECP521R1;
+  } else {
+    return nullptr;
+  }
+
+  // Retrieve curve data by OID tag.
+  SECOidData* oidData = SECOID_FindOIDByTag(curveOIDTag);
+  if (!oidData) {
+    return nullptr;
+  }
+
+  // Create parameters.
+  SECItem* params = ::SECITEM_AllocItem(aArena, nullptr, 2 + oidData->oid.len);
+  if (!params) {
+    return nullptr;
+  }
+
+  // Set parameters.
+  params->data[0] = SEC_ASN1_OBJECT_ID;
+  params->data[1] = oidData->oid.len;
+  memcpy(params->data + 2, oidData->oid.data, oidData->oid.len);
+
+  // Sanity check the params we just created.
+  if (!CheckEncodedECParameters(params)) {
+    return nullptr;
+  }
+
+  return params;
 }
 
 } // namespace dom
