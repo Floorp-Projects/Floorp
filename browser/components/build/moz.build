@@ -19,7 +19,7 @@ IS_COMPONENT = True
 LOCAL_INCLUDES += [
     '../about',
     '../dirprovider',
-    '../feeds/src',
+    '../feeds',
     '../migration/src',
     '../shell/src',
 ]
