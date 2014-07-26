@@ -159,7 +159,7 @@ public class BrowserApp extends GeckoApp
     private ViewGroup mHomePagerContainer;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
     private ActionModeCompat mActionMode;
-    private boolean mShowActionModeEndAnimation = false;
+    private boolean mShowActionModeEndAnimation;
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
@@ -167,12 +167,12 @@ public class BrowserApp extends GeckoApp
         public int id;
         public String label;
         public String icon;
-        public boolean checkable = false;
-        public boolean checked = false;
+        public boolean checkable;
+        public boolean checked;
         public boolean enabled = true;
         public boolean visible = true;
         public int parent;
-        public boolean added = false;    // So we can re-add after a locale change.
+        public boolean added;   // So we can re-add after a locale change.
     }
 
     // The types of guest mdoe dialogs we show
@@ -199,11 +199,11 @@ public class BrowserApp extends GeckoApp
     private static final int FEEDBACK_LAUNCH_COUNT = 15;
 
     // Stored value of the toolbar height, so we know when it's changed.
-    private int mToolbarHeight = 0;
+    private int mToolbarHeight;
 
     // Stored value of whether the last metrics change allowed for toolbar
     // scrolling.
-    private boolean mDynamicToolbarCanScroll = false;
+    private boolean mDynamicToolbarCanScroll;
 
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
@@ -212,13 +212,13 @@ public class BrowserApp extends GeckoApp
     private BrowserHealthReporter mBrowserHealthReporter;
 
     // The tab to be selected on editing mode exit.
-    private Integer mTargetTabForEditingMode = null;
+    private Integer mTargetTabForEditingMode;
 
     // The animator used to toggle HomePager visibility has a race where if the HomePager is shown
     // (starting the animation), the HomePager is hidden, and the HomePager animation completes,
     // both the web content and the HomePager will be hidden. This flag is used to prevent the
     // race by determining if the web content should be hidden at the animation's end.
-    private boolean mHideWebContentOnAnimationEnd = false;
+    private boolean mHideWebContentOnAnimationEnd;
 
     private DynamicToolbar mDynamicToolbar = new DynamicToolbar();
 
@@ -2100,7 +2100,7 @@ public class BrowserApp extends GeckoApp
      * user touches the main layout.
      */
     private class HideOnTouchListener implements TouchEventInterceptor {
-        private boolean mIsHidingTabs = false;
+        private boolean mIsHidingTabs;
         private final Rect mTempRect = new Rect();
 
         @Override

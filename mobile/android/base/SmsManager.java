@@ -7,7 +7,7 @@ package org.mozilla.gecko;
 
 class SmsManager
 {
-    static private ISmsManager sInstance = null;
+    static private ISmsManager sInstance;
 
     static public ISmsManager getInstance() {
         if (AppConstants.MOZ_WEBSMS_BACKEND) {
