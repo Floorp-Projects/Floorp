@@ -4365,21 +4365,6 @@ nsGlobalWindow::IsChromeWindow(JSContext* aCx, JSObject* aObj)
   return xpc::WindowOrNull(aObj)->IsChromeWindow();
 }
 
-/* static */ bool
-nsGlobalWindow::IsShowModalDialogEnabled(JSContext*, JSObject*)
-{
-  static bool sAddedPrefCache = false;
-  static bool sIsDisabled;
-  static const char sShowModalDialogPref[] = "dom.disable_window_showModalDialog";
-
-  if (!sAddedPrefCache) {
-    Preferences::AddBoolVarCache(&sIsDisabled, sShowModalDialogPref, false);
-    sAddedPrefCache = true;
-  }
-
-  return !sIsDisabled;
-}
-
 nsIDOMOfflineResourceList*
 nsGlobalWindow::GetApplicationCache(ErrorResult& aError)
 {
@@ -9136,7 +9121,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aUrl, nsIVariant* aArgument,
                             (aUrl, aArgument, aOptions, aError), aError,
                             nullptr);
 
-  if (!IsShowModalDialogEnabled()) {
+  if (Preferences::GetBool("dom.disable_window_showModalDialog", false)) {
     aError.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }

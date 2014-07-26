@@ -512,9 +512,6 @@ public:
 
   static bool IsChromeWindow(JSContext* /* unused */, JSObject* aObj);
 
-  static bool IsShowModalDialogEnabled(JSContext* /* unused */ = nullptr,
-                                       JSObject* /* unused */ = nullptr);
-
   bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                     JS::Handle<jsid> aId,
                     JS::MutableHandle<JSPropertyDescriptor> aDesc);
