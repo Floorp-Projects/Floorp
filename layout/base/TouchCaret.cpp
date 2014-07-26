@@ -125,7 +125,7 @@ TouchCaret::SetVisibility(bool aVisible)
   // Set touch caret expiration time.
   mVisible ? LaunchExpirationTimer() : CancelExpirationTimer();
 
-  // We must call SetHasTouchCaret() in order to get APZC to wait until the
+  // We must call SetMayHaveTouchCaret() in order to get APZC to wait until the
   // event has been round-tripped and check whether it has been handled,
   // otherwise B2G will end up panning the document when the user tries to drag
   // touch caret.
@@ -329,7 +329,7 @@ TouchCaret::IsOnTouchCaret(const nsPoint& aPoint)
 
 nsresult
 TouchCaret::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel,
-                                     int16_t aReason)
+                                   int16_t aReason)
 {
   // Hide touch caret while no caret exists.
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
