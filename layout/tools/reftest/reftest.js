@@ -752,6 +752,12 @@ function BuildConditionSandbox(aURL) {
     // crash the content process
     sandbox.browserIsRemote = gBrowserIsRemote;
 
+    try {
+        sandbox.asyncPanZoom = prefs.getBoolPref("layers.async-pan-zoom.enabled");
+    } catch (e) {
+        sandbox.asyncPanZoom = false;
+    }
+
     // Distinguish the Fennecs:
     sandbox.xulFennec    = sandbox.Android &&  sandbox.browserIsRemote;
     sandbox.nativeFennec = sandbox.Android && !sandbox.browserIsRemote;
