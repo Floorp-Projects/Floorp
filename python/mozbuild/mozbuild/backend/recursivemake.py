@@ -1385,7 +1385,8 @@ class RecursiveMakeBackend(CommonBackend):
             bindings_dir,
             unified_prefix='UnifiedBindings',
             unified_files_makefile_variable='unified_binding_cpp_files',
-            poison_windows_h=True)
+            poison_windows_h=True,
+            files_per_unified_file=32)
 
         webidls_mk = mozpath.join(bindings_dir, 'webidlsrcs.mk')
         with self._write_file(webidls_mk) as fh:
