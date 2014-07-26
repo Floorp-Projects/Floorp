@@ -38,6 +38,7 @@ function callbackTestCanvas(canvas)
     result.parentNode.removeChild(result);
     reference.parentNode.removeChild(reference);
   }
+
   canvases = [];
   SimpleTest.waitForFocus(nextTest);
 }
@@ -104,11 +105,16 @@ function endTest() {
 var tests = [
     [ 'bug106855-1.html' , 'bug106855-1-ref.html' ] ,
     [ 'bug106855-2.html' , 'bug106855-1-ref.html' ] ,
+    [ 'bug389321-2.html' , 'bug389321-2-ref.html' ] ,
+    [ 'bug389321-3.html' , 'bug389321-3-ref.html' ] ,
+    [ 'bug613807-1.html' , 'bug613807-1-ref.html' ] ,
+    // The following test cases are all involving with one sending
+    // synthesizeKey(), the other without. They ought to be failed
+    // when touch caret preference on. Test them with preference off.
+    function() {SpecialPowers.setBoolPref("touchcaret.enabled", false);} ,
     [ 'bug240933-1.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug240933-2.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug389321-1.html' , 'bug389321-1-ref.html' ] ,
-    [ 'bug389321-2.html' , 'bug389321-2-ref.html' ] ,
-    [ 'bug389321-3.html' , 'bug389321-3-ref.html' ] ,
     [ 'bug482484.html'   , 'bug482484-ref.html'   ] ,
     [ 'bug585922.html'   , 'bug585922-ref.html'   ] ,
     [ 'bug597519-1.html' , 'bug597519-1-ref.html' ] ,
@@ -122,7 +128,6 @@ var tests = [
     [ 'bug613433-1.html' , 'bug613433-ref.html' ]   ,
     [ 'bug613433-2.html' , 'bug613433-ref.html' ]   ,
     [ 'bug613433-3.html' , 'bug613433-ref.html' ]   ,
-    [ 'bug613807-1.html' , 'bug613807-1-ref.html' ] ,
     [ 'bug632215-1.html' , 'bug632215-ref.html'   ] ,
     [ 'bug632215-2.html' , 'bug632215-ref.html'   ] ,
     [ 'bug633044-1.html' , 'bug633044-1-ref.html' ] ,
@@ -138,6 +143,7 @@ var tests = [
     [ 'bug746993-1.html' , 'bug746993-1-ref.html' ] ,
     [ 'bug1007065-1.html' , 'bug1007065-1-ref.html' ] ,
     [ 'bug1007067-1.html' , 'bug1007067-1-ref.html' ] ,
+    function() {SpecialPowers.clearUserPref("touchcaret.enabled");} ,
 ];
 
 if (navigator.appVersion.indexOf("Android") == -1 &&
