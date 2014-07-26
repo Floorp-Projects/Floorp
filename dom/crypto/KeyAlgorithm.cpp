@@ -7,6 +7,7 @@
 #include "mozilla/dom/KeyAlgorithm.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/AesKeyAlgorithm.h"
+#include "mozilla/dom/EcKeyAlgorithm.h"
 #include "mozilla/dom/HmacKeyAlgorithm.h"
 #include "mozilla/dom/RsaKeyAlgorithm.h"
 #include "mozilla/dom/RsaHashedKeyAlgorithm.h"
@@ -87,6 +88,10 @@ KeyAlgorithm::Create(nsIGlobalObject* aGlobal, JSStructuredCloneReader* aReader)
     }
     case SCTAG_AESKEYALG: {
       algorithm = AesKeyAlgorithm::Create(aGlobal, aReader);
+      break;
+    }
+    case SCTAG_ECKEYALG: {
+      algorithm = EcKeyAlgorithm::Create(aGlobal, aReader);
       break;
     }
     case SCTAG_HMACKEYALG: {
