@@ -686,7 +686,7 @@ function BuildConditionSandbox(aURL) {
     // and set a sandox prop accordingly
     var navigator = gContainingWindow.navigator;
     var testPlugin = navigator.plugins["Test Plug-in"];
-    sandbox.haveTestPlugin = !!testPlugin;
+    sandbox.haveTestPlugin = !!testPlugin && !gBrowserIsRemote;
 
     // Set a flag on sandbox if the windows default theme is active
     var box = gContainingWindow.document.createElement("box");
