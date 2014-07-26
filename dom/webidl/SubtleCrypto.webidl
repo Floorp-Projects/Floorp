@@ -41,6 +41,11 @@ interface RsaHashedKeyAlgorithm : RsaKeyAlgorithm {
   readonly attribute KeyAlgorithm hash;
 };
 
+[NoInterfaceObject]
+interface EcKeyAlgorithm : KeyAlgorithm {
+  readonly attribute NamedCurve namedCurve;
+};
+
 
 /***** Algorithm dictionaries *****/
 
