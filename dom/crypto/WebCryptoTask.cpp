@@ -15,6 +15,7 @@
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/CryptoKeyPair.h"
+#include "mozilla/dom/EcKeyAlgorithm.h"
 #include "mozilla/dom/HmacKeyAlgorithm.h"
 #include "mozilla/dom/KeyAlgorithm.h"
 #include "mozilla/dom/RsaHashedKeyAlgorithm.h"
@@ -159,6 +160,8 @@ GetAlgorithmName(JSContext* aCx, const OOS& aAlgorithm, nsString& aName)
     aName.AssignLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1);
   } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_RSA_OAEP)) {
     aName.AssignLiteral(WEBCRYPTO_ALG_RSA_OAEP);
+  } else if (aName.EqualsIgnoreCase(WEBCRYPTO_ALG_ECDH)) {
+    aName.AssignLiteral(WEBCRYPTO_ALG_ECDH);
   }
 
   return NS_OK;
