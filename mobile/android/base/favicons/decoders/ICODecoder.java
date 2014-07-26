@@ -351,7 +351,7 @@ public class ICODecoder implements Iterable<Bitmap> {
      * Inner class to iterate over the elements in the ICO represented by the enclosing instance.
      */
     private class ICOIterator implements Iterator<Bitmap> {
-        private int mIndex = 0;
+        private int mIndex;
 
         @Override
         public boolean hasNext() {

@@ -122,8 +122,8 @@ public class GeckoAppShell
     // We have static members only.
     private GeckoAppShell() { }
 
-    private static boolean restartScheduled = false;
-    private static GeckoEditableListener editableListener = null;
+    private static boolean restartScheduled;
+    private static GeckoEditableListener editableListener;
 
     private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
     private static final Map<String, String> ALERT_COOKIES = new ConcurrentHashMap<String, String>();
@@ -136,29 +136,29 @@ public class GeckoAppShell
     // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
     private static final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
 
-    static private int sDensityDpi = 0;
-    static private int sScreenDepth = 0;
+    static private int sDensityDpi;
+    static private int sScreenDepth;
 
     /* Default colors. */
     private static final float[] DEFAULT_LAUNCHER_ICON_HSV = { 32.0f, 1.0f, 1.0f };
 
     /* Is the value in sVibrationEndTime valid? */
-    private static boolean sVibrationMaybePlaying = false;
+    private static boolean sVibrationMaybePlaying;
 
     /* Time (in System.nanoTime() units) when the currently-playing vibration
      * is scheduled to end.  This value is valid only when
      * sVibrationMaybePlaying is true. */
-    private static long sVibrationEndTime = 0;
+    private static long sVibrationEndTime;
 
     /* Default value of how fast we should hint the Android sensors. */
     private static int sDefaultSensorHint = 100;
 
-    private static Sensor gAccelerometerSensor = null;
-    private static Sensor gLinearAccelerometerSensor = null;
-    private static Sensor gGyroscopeSensor = null;
-    private static Sensor gOrientationSensor = null;
-    private static Sensor gProximitySensor = null;
-    private static Sensor gLightSensor = null;
+    private static Sensor gAccelerometerSensor;
+    private static Sensor gLinearAccelerometerSensor;
+    private static Sensor gGyroscopeSensor;
+    private static Sensor gOrientationSensor;
+    private static Sensor gProximitySensor;
+    private static Sensor gLightSensor;
 
     /*
      * Keep in sync with constants found here:

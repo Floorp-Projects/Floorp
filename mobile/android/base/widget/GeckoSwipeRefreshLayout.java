@@ -67,13 +67,13 @@ public class GeckoSwipeRefreshLayout extends ViewGroup {
     private OnRefreshListener mListener;
     private MotionEvent mDownEvent;
     private int mFrom;
-    private boolean mRefreshing = false;
+    private boolean mRefreshing;
     private int mTouchSlop;
     private float mDistanceToTriggerSync = -1;
     private float mPrevY;
     private int mMediumAnimationDuration;
-    private float mFromPercentage = 0;
-    private float mCurrPercentage = 0;
+    private float mFromPercentage;
+    private float mCurrPercentage;
     private int mProgressBarHeight;
     private int mCurrentTargetOffsetTop;
     // Target is returning to its start offset because it was cancelled or a

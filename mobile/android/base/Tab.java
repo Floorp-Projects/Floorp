@@ -70,7 +70,7 @@ public class Tab {
     private ErrorType mErrorType = ErrorType.NONE;
     private static final int MAX_HISTORY_LIST_SIZE = 50;
     private volatile int mLoadProgress;
-    private volatile int mRecordingCount = 0;
+    private volatile int mRecordingCount;
     private String mMostRecentHomePanel;
 
     public static final int STATE_DELAYED = 0;
