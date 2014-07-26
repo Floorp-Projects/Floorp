@@ -1,58 +1,28 @@
-<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=644768
--->
-<head>
-  <title>Test for Bug 644768</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-</head>
-<body onload="test()">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=644768">Mozilla Bug 644768</a>
-<p id="display"></p>
-<div id="content">
-<!-- test text is 
-== زادروزها ==
-* [[۱۳۰۷]]
--->
- <textarea id="testInput" dir="rtl" cols="80" rows="25">
-
-== &#x0632;&#x0627;&#x062F;&#x0631;&#x0648;&#x0632;&#x0647;&#x0627; ==
-* [[&#x06F1;&#x06F3;&#x06F0;&#x06F7;]]</textarea>
-</div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
-/** Test for Bug 644768 **/
-
-SimpleTest.waitForExplicitFinish();
-
-function test() {
-  var textInput = $("testInput");
-  var s1, s2, equal, str1, str2;
-
-  textInput.focus();
-  s1 = snapshotWindow(window);
-
-  synthesizeKey("VK_UP", { });
-  synthesizeKey("VK_UP", { });
-  synthesizeKey("VK_UP", { });
-  synthesizeKey("VK_DELETE", { });
-  synthesizeKey("VK_RETURN", { });
-  s2 = snapshotWindow(window);
-
-  [equal, str1, str2] = compareSnapshots(s1, s2, true);
-  ok(equal, "newline before bidi text shouldn't change direction: expected " +
-     str1 + " but got " + str2);
-
-  SimpleTest.finish();
-}
-
-</script>
-</pre>
-</body>
+  <head>
+    <title>Bug 644768 test</title>
+    <style>
+      iframe {
+        width: 600px;
+        height: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+  </body>
+  <script>
+  // Touch caret's pref is checked only when PresShell is initialized. To turn
+  // off the pref, we test bug 644768 in an iframe.
+  SpecialPowers.pushPrefEnv({"set": [['touchcaret.enabled', false]]}, function() {
+    var iframe = document.createElement("iframe");
+    iframe.src = "bug644768.html";
+    document.getElementById('container').appendChild(iframe);
+  });
+  </script>
 </html>
-
