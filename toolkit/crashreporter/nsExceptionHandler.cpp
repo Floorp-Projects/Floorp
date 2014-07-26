@@ -2547,6 +2547,21 @@ static bool ChildFilter(void *context) {
 void
 OOPInit()
 {
+  class ProxyToMainThread : public nsRunnable
+  {
+  public:
+    NS_IMETHOD Run() {
+      OOPInit();
+      return NS_OK;
+    }
+  };
+  if (!NS_IsMainThread()) {
+    // This logic needs to run on the main thread
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    mozilla::SyncRunnable::DispatchToThread(mainThread, new ProxyToMainThread());
+    return;
+  }
+
   if (OOPInitialized())
     return;
 
