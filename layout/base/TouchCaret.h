@@ -45,18 +45,9 @@ public:
    */
   nsEventStatus HandleEvent(WidgetEvent* aEvent);
 
-  /**
-   * By calling this function, touch caret recalculate touch frame position and
-   * update accordingly.
-   */
-  void UpdateTouchCaret(bool aVisible);
+  void SyncVisibilityWithCaret();
 
-  /**
-   * SetVisibility will set the visibility of the touch caret.
-   * SetVisibility performs an attribute-changed notification which could, in
-   * theory, destroy frames.
-   */
-  void SetVisibility(bool aVisible);
+  void UpdatePositionIfNeeded();
 
   /**
    * GetVisibility will get the visibility of the touch caret.
@@ -71,6 +62,17 @@ private:
   TouchCaret() MOZ_DELETE;
 
   ~TouchCaret();
+
+  bool IsDisplayable();
+
+  void UpdatePosition();
+
+  /**
+   * SetVisibility will set the visibility of the touch caret.
+   * SetVisibility performs an attribute-changed notification which could, in
+   * theory, destroy frames.
+   */
+  void SetVisibility(bool aVisible);
 
   /**
    * Find the nsCanvasFrame which holds the touch caret.
