@@ -91,15 +91,7 @@ public:
   }
 };
 
-class nsWhitespaceTokenizer
-  : public nsWhitespaceTokenizerTemplate<>
-{
-public:
-  nsWhitespaceTokenizer(const nsSubstring& aSource)
-    : nsWhitespaceTokenizerTemplate<>(aSource)
-  {
-  }
-};
+typedef nsWhitespaceTokenizerTemplate<> nsWhitespaceTokenizer;
 
 template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
 class nsCWhitespaceTokenizerTemplate
@@ -112,14 +104,6 @@ public:
   }
 };
 
-class nsCWhitespaceTokenizer
-  : public nsCWhitespaceTokenizerTemplate<>
-{
-public:
-  nsCWhitespaceTokenizer(const nsCSubstring& aSource)
-    : nsCWhitespaceTokenizerTemplate<>(aSource)
-  {
-  }
-};
+typedef nsCWhitespaceTokenizerTemplate<> nsCWhitespaceTokenizer;
 
 #endif /* __nsWhitespaceTokenizer_h */
