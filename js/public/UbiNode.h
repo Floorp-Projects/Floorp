@@ -171,7 +171,7 @@ class Base {
     // properly typed 'get' member function to access this.
     void *ptr;
 
-    Base(void *ptr) : ptr(ptr) { }
+    explicit Base(void *ptr) : ptr(ptr) { }
 
   public:
     bool operator==(const Base &rhs) const {
@@ -282,7 +282,7 @@ class Node {
     }
 
     // Constructors accepting SpiderMonkey's other generic-pointer-ish types.
-    Node(JS::Value value);
+    explicit Node(JS::Value value);
     Node(JSGCTraceKind kind, void *ptr);
 
     // copy construction and copy assignment just use memcpy, since we know
@@ -433,7 +433,7 @@ class TracerConcrete : public Base {
     JSCompartment *compartment() const MOZ_OVERRIDE { return nullptr; }
 
   protected:
-    TracerConcrete(Referent *ptr) : Base(ptr) { }
+    explicit TracerConcrete(Referent *ptr) : Base(ptr) { }
     Referent &get() const { return *static_cast<Referent *>(ptr); }
 
   public:
@@ -476,7 +476,7 @@ class Concrete<void> : public Base {
     JS::Zone *zone() const MOZ_OVERRIDE;
     JSCompartment *compartment() const MOZ_OVERRIDE;
 
-    Concrete(void *ptr) : Base(ptr) { }
+    explicit Concrete(void *ptr) : Base(ptr) { }
 
   public:
     static void construct(void *storage, void *ptr) { new (storage) Concrete(ptr); }
