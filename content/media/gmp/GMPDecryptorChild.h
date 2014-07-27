@@ -114,11 +114,13 @@ private:
 
   virtual bool RecvDecryptingComplete() MOZ_OVERRIDE;
 
-  GMPChild* mPlugin;
-
   // GMP's GMPDecryptor implementation.
   // Only call into this on the (GMP process) main thread.
   GMPDecryptor* mSession;
+
+#ifdef DEBUG
+  GMPChild* mPlugin;
+#endif           
 };
 
 } // namespace gmp
