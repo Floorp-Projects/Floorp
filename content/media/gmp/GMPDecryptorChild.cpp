@@ -13,8 +13,10 @@ namespace mozilla {
 namespace gmp {
 
 GMPDecryptorChild::GMPDecryptorChild(GMPChild* aPlugin)
-  : mPlugin(aPlugin)
-  , mSession(nullptr)
+  : mSession(nullptr)
+#ifdef DEBUG
+  , mPlugin(aPlugin)
+#endif
 {
   MOZ_ASSERT(mPlugin);
 }
