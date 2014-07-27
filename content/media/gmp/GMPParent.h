@@ -7,6 +7,7 @@
 #define GMPParent_h_
 
 #include "GMPProcessParent.h"
+#include "GMPDecryptorParent.h"
 #include "GMPVideoDecoderParent.h"
 #include "GMPVideoEncoderParent.h"
 #include "mozilla/gmp/PGMPParent.h"
@@ -73,10 +74,16 @@ public:
   void DeleteProcess();
 
   bool SupportsAPI(const nsCString& aAPI, const nsCString& aTag);
+
   nsresult GetGMPVideoDecoder(GMPVideoDecoderParent** aGMPVD);
   void VideoDecoderDestroyed(GMPVideoDecoderParent* aDecoder);
+
   nsresult GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE);
   void VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder);
+
+  nsresult GetGMPDecryptor(GMPDecryptorParent** aGMPKS);
+  void DecryptorDestroyed(GMPDecryptorParent* aSession);
+
   GMPState State() const;
 #ifdef DEBUG
   nsIThread* GMPThread();
@@ -119,10 +126,15 @@ private:
 
   virtual PCrashReporterParent* AllocPCrashReporterParent(const NativeThreadId& aThread) MOZ_OVERRIDE;
   virtual bool DeallocPCrashReporterParent(PCrashReporterParent* aCrashReporter) MOZ_OVERRIDE;
+
   virtual PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent() MOZ_OVERRIDE;
   virtual bool DeallocPGMPVideoDecoderParent(PGMPVideoDecoderParent* aActor) MOZ_OVERRIDE;
+  
   virtual PGMPVideoEncoderParent* AllocPGMPVideoEncoderParent() MOZ_OVERRIDE;
   virtual bool DeallocPGMPVideoEncoderParent(PGMPVideoEncoderParent* aActor) MOZ_OVERRIDE;
+
+  virtual PGMPDecryptorParent* AllocPGMPDecryptorParent() MOZ_OVERRIDE;
+  virtual bool DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor) MOZ_OVERRIDE;
 
   GMPState mState;
   nsCOMPtr<nsIFile> mDirectory; // plugin directory on disk
@@ -136,6 +148,7 @@ private:
 
   nsTArray<nsRefPtr<GMPVideoDecoderParent>> mVideoDecoders;
   nsTArray<nsRefPtr<GMPVideoEncoderParent>> mVideoEncoders;
+  nsTArray<nsRefPtr<GMPDecryptorParent>> mDecryptors;
 #ifdef DEBUG
   nsCOMPtr<nsIThread> mGMPThread;
 #endif
