@@ -9,6 +9,9 @@ else
   ifeq ($(OS_TARGET), OpenBSD)
     OS_LIBS += -lsndio
   else
+    ifeq ($(OS_TARGET),WINNT)
+      OS_LIBS += $(call EXPAND_LIBNAME,ole32)
+    endif
     OS_LIBS += $(MOZ_ALSA_LIBS) \
             $(MOZ_PULSEAUDIO_LIBS)
   endif
