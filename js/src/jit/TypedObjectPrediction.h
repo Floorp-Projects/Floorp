@@ -150,11 +150,11 @@ class TypedObjectPrediction {
         kind_ = Empty;
     }
 
-    TypedObjectPrediction(const TypedProto &proto) {
+    explicit TypedObjectPrediction(const TypedProto &proto) {
         setProto(proto);
     }
 
-    TypedObjectPrediction(const TypeDescr &descr) {
+    explicit TypedObjectPrediction(const TypeDescr &descr) {
         setDescr(descr);
     }
 
