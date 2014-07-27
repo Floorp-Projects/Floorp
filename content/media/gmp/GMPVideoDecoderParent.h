@@ -20,8 +20,8 @@ namespace gmp {
 class GMPParent;
 
 class GMPVideoDecoderParent MOZ_FINAL : public PGMPVideoDecoderParent
-                                      , public GMPSharedMemManager
                                       , public GMPVideoDecoderProxy
+                                      , public GMPSharedMemManager
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPVideoDecoderParent)
@@ -46,8 +46,7 @@ public:
   virtual const uint64_t ParentID() MOZ_OVERRIDE { return reinterpret_cast<uint64_t>(mPlugin.get()); }
 
   // GMPSharedMemManager
-  virtual void CheckThread();
-  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem)
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) MOZ_OVERRIDE
   {
 #ifdef GMP_SAFE_SHMEM
     return AllocShmem(aSize, aType, aMem);
@@ -55,7 +54,7 @@ public:
     return AllocUnsafeShmem(aSize, aType, aMem);
 #endif
   }
-  virtual void Dealloc(Shmem& aMem)
+  virtual void Dealloc(Shmem& aMem) MOZ_OVERRIDE
   {
     DeallocShmem(aMem);
   }
