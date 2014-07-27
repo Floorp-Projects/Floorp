@@ -7,6 +7,8 @@
 #ifndef __FFmpegRuntimeLinker_h__
 #define __FFmpegRuntimeLinker_h__
 
+#include <stdint.h>
+
 namespace mozilla
 {
 
