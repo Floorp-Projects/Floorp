@@ -36,17 +36,64 @@ void protobuf_ShutdownFile_LayerScopePacket_2eproto();
 class FramePacket;
 class ColorPacket;
 class TexturePacket;
+class LayersPacket;
+class LayersPacket_Layer;
+class LayersPacket_Layer_Size;
+class LayersPacket_Layer_Rect;
+class LayersPacket_Layer_Region;
+class LayersPacket_Layer_Matrix;
+class LayersPacket_Layer_Shadow;
 class Packet;
+
+enum LayersPacket_Layer_LayerType {
+  LayersPacket_Layer_LayerType_UnknownLayer = 0,
+  LayersPacket_Layer_LayerType_LayerManager = 1,
+  LayersPacket_Layer_LayerType_ContainerLayer = 2,
+  LayersPacket_Layer_LayerType_ThebesLayer = 3,
+  LayersPacket_Layer_LayerType_CanvasLayer = 4,
+  LayersPacket_Layer_LayerType_ImageLayer = 5,
+  LayersPacket_Layer_LayerType_ColorLayer = 6,
+  LayersPacket_Layer_LayerType_RefLayer = 7,
+  LayersPacket_Layer_LayerType_ReadbackLayer = 8
+};
+bool LayersPacket_Layer_LayerType_IsValid(int value);
+const LayersPacket_Layer_LayerType LayersPacket_Layer_LayerType_LayerType_MIN = LayersPacket_Layer_LayerType_UnknownLayer;
+const LayersPacket_Layer_LayerType LayersPacket_Layer_LayerType_LayerType_MAX = LayersPacket_Layer_LayerType_ReadbackLayer;
+const int LayersPacket_Layer_LayerType_LayerType_ARRAYSIZE = LayersPacket_Layer_LayerType_LayerType_MAX + 1;
+
+enum LayersPacket_Layer_ScrollingDirect {
+  LayersPacket_Layer_ScrollingDirect_VERTICAL = 1,
+  LayersPacket_Layer_ScrollingDirect_HORIZONTAL = 2
+};
+bool LayersPacket_Layer_ScrollingDirect_IsValid(int value);
+const LayersPacket_Layer_ScrollingDirect LayersPacket_Layer_ScrollingDirect_ScrollingDirect_MIN = LayersPacket_Layer_ScrollingDirect_VERTICAL;
+const LayersPacket_Layer_ScrollingDirect LayersPacket_Layer_ScrollingDirect_ScrollingDirect_MAX = LayersPacket_Layer_ScrollingDirect_HORIZONTAL;
+const int LayersPacket_Layer_ScrollingDirect_ScrollingDirect_ARRAYSIZE = LayersPacket_Layer_ScrollingDirect_ScrollingDirect_MAX + 1;
+
+enum LayersPacket_Layer_Filter {
+  LayersPacket_Layer_Filter_FILTER_FAST = 0,
+  LayersPacket_Layer_Filter_FILTER_GOOD = 1,
+  LayersPacket_Layer_Filter_FILTER_BEST = 2,
+  LayersPacket_Layer_Filter_FILTER_NEAREST = 3,
+  LayersPacket_Layer_Filter_FILTER_BILINEAR = 4,
+  LayersPacket_Layer_Filter_FILTER_GAUSSIAN = 5,
+  LayersPacket_Layer_Filter_FILTER_SENTINEL = 6
+};
+bool LayersPacket_Layer_Filter_IsValid(int value);
+const LayersPacket_Layer_Filter LayersPacket_Layer_Filter_Filter_MIN = LayersPacket_Layer_Filter_FILTER_FAST;
+const LayersPacket_Layer_Filter LayersPacket_Layer_Filter_Filter_MAX = LayersPacket_Layer_Filter_FILTER_SENTINEL;
+const int LayersPacket_Layer_Filter_Filter_ARRAYSIZE = LayersPacket_Layer_Filter_Filter_MAX + 1;
 
 enum Packet_DataType {
   Packet_DataType_FRAMESTART = 1,
   Packet_DataType_FRAMEEND = 2,
   Packet_DataType_COLOR = 3,
-  Packet_DataType_TEXTURE = 4
+  Packet_DataType_TEXTURE = 4,
+  Packet_DataType_LAYERS = 5
 };
 bool Packet_DataType_IsValid(int value);
 const Packet_DataType Packet_DataType_DataType_MIN = Packet_DataType_FRAMESTART;
-const Packet_DataType Packet_DataType_DataType_MAX = Packet_DataType_TEXTURE;
+const Packet_DataType Packet_DataType_DataType_MAX = Packet_DataType_LAYERS;
 const int Packet_DataType_DataType_ARRAYSIZE = Packet_DataType_DataType_MAX + 1;
 
 // ===================================================================
@@ -372,6 +419,816 @@ class TexturePacket : public ::google::protobuf::MessageLite {
 };
 // -------------------------------------------------------------------
 
+class LayersPacket_Layer_Size : public ::google::protobuf::MessageLite {
+ public:
+  LayersPacket_Layer_Size();
+  virtual ~LayersPacket_Layer_Size();
+  
+  LayersPacket_Layer_Size(const LayersPacket_Layer_Size& from);
+  
+  inline LayersPacket_Layer_Size& operator=(const LayersPacket_Layer_Size& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const LayersPacket_Layer_Size& default_instance();
+  
+  void Swap(LayersPacket_Layer_Size* other);
+  
+  // implements Message ----------------------------------------------
+  
+  LayersPacket_Layer_Size* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const LayersPacket_Layer_Size& from);
+  void MergeFrom(const LayersPacket_Layer_Size& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // optional int32 w = 1;
+  inline bool has_w() const;
+  inline void clear_w();
+  static const int kWFieldNumber = 1;
+  inline ::google::protobuf::int32 w() const;
+  inline void set_w(::google::protobuf::int32 value);
+  
+  // optional int32 h = 2;
+  inline bool has_h() const;
+  inline void clear_h();
+  static const int kHFieldNumber = 2;
+  inline ::google::protobuf::int32 h() const;
+  inline void set_h(::google::protobuf::int32 value);
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.LayersPacket.Layer.Size)
+ private:
+  inline void set_has_w();
+  inline void clear_has_w();
+  inline void set_has_h();
+  inline void clear_has_h();
+  
+  ::google::protobuf::int32 w_;
+  ::google::protobuf::int32 h_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static LayersPacket_Layer_Size* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LayersPacket_Layer_Rect : public ::google::protobuf::MessageLite {
+ public:
+  LayersPacket_Layer_Rect();
+  virtual ~LayersPacket_Layer_Rect();
+  
+  LayersPacket_Layer_Rect(const LayersPacket_Layer_Rect& from);
+  
+  inline LayersPacket_Layer_Rect& operator=(const LayersPacket_Layer_Rect& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const LayersPacket_Layer_Rect& default_instance();
+  
+  void Swap(LayersPacket_Layer_Rect* other);
+  
+  // implements Message ----------------------------------------------
+  
+  LayersPacket_Layer_Rect* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const LayersPacket_Layer_Rect& from);
+  void MergeFrom(const LayersPacket_Layer_Rect& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // optional int32 x = 1;
+  inline bool has_x() const;
+  inline void clear_x();
+  static const int kXFieldNumber = 1;
+  inline ::google::protobuf::int32 x() const;
+  inline void set_x(::google::protobuf::int32 value);
+  
+  // optional int32 y = 2;
+  inline bool has_y() const;
+  inline void clear_y();
+  static const int kYFieldNumber = 2;
+  inline ::google::protobuf::int32 y() const;
+  inline void set_y(::google::protobuf::int32 value);
+  
+  // optional int32 w = 3;
+  inline bool has_w() const;
+  inline void clear_w();
+  static const int kWFieldNumber = 3;
+  inline ::google::protobuf::int32 w() const;
+  inline void set_w(::google::protobuf::int32 value);
+  
+  // optional int32 h = 4;
+  inline bool has_h() const;
+  inline void clear_h();
+  static const int kHFieldNumber = 4;
+  inline ::google::protobuf::int32 h() const;
+  inline void set_h(::google::protobuf::int32 value);
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.LayersPacket.Layer.Rect)
+ private:
+  inline void set_has_x();
+  inline void clear_has_x();
+  inline void set_has_y();
+  inline void clear_has_y();
+  inline void set_has_w();
+  inline void clear_has_w();
+  inline void set_has_h();
+  inline void clear_has_h();
+  
+  ::google::protobuf::int32 x_;
+  ::google::protobuf::int32 y_;
+  ::google::protobuf::int32 w_;
+  ::google::protobuf::int32 h_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static LayersPacket_Layer_Rect* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LayersPacket_Layer_Region : public ::google::protobuf::MessageLite {
+ public:
+  LayersPacket_Layer_Region();
+  virtual ~LayersPacket_Layer_Region();
+  
+  LayersPacket_Layer_Region(const LayersPacket_Layer_Region& from);
+  
+  inline LayersPacket_Layer_Region& operator=(const LayersPacket_Layer_Region& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const LayersPacket_Layer_Region& default_instance();
+  
+  void Swap(LayersPacket_Layer_Region* other);
+  
+  // implements Message ----------------------------------------------
+  
+  LayersPacket_Layer_Region* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const LayersPacket_Layer_Region& from);
+  void MergeFrom(const LayersPacket_Layer_Region& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // repeated .mozilla.layers.layerscope.LayersPacket.Layer.Rect r = 1;
+  inline int r_size() const;
+  inline void clear_r();
+  static const int kRFieldNumber = 1;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Rect& r(int index) const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* mutable_r(int index);
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* add_r();
+  inline const ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer_Rect >&
+      r() const;
+  inline ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer_Rect >*
+      mutable_r();
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.LayersPacket.Layer.Region)
+ private:
+  
+  ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer_Rect > r_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static LayersPacket_Layer_Region* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LayersPacket_Layer_Matrix : public ::google::protobuf::MessageLite {
+ public:
+  LayersPacket_Layer_Matrix();
+  virtual ~LayersPacket_Layer_Matrix();
+  
+  LayersPacket_Layer_Matrix(const LayersPacket_Layer_Matrix& from);
+  
+  inline LayersPacket_Layer_Matrix& operator=(const LayersPacket_Layer_Matrix& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const LayersPacket_Layer_Matrix& default_instance();
+  
+  void Swap(LayersPacket_Layer_Matrix* other);
+  
+  // implements Message ----------------------------------------------
+  
+  LayersPacket_Layer_Matrix* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const LayersPacket_Layer_Matrix& from);
+  void MergeFrom(const LayersPacket_Layer_Matrix& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // optional bool is2D = 1;
+  inline bool has_is2d() const;
+  inline void clear_is2d();
+  static const int kIs2DFieldNumber = 1;
+  inline bool is2d() const;
+  inline void set_is2d(bool value);
+  
+  // optional bool isId = 2;
+  inline bool has_isid() const;
+  inline void clear_isid();
+  static const int kIsIdFieldNumber = 2;
+  inline bool isid() const;
+  inline void set_isid(bool value);
+  
+  // repeated float m = 3;
+  inline int m_size() const;
+  inline void clear_m();
+  static const int kMFieldNumber = 3;
+  inline float m(int index) const;
+  inline void set_m(int index, float value);
+  inline void add_m(float value);
+  inline const ::google::protobuf::RepeatedField< float >&
+      m() const;
+  inline ::google::protobuf::RepeatedField< float >*
+      mutable_m();
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.LayersPacket.Layer.Matrix)
+ private:
+  inline void set_has_is2d();
+  inline void clear_has_is2d();
+  inline void set_has_isid();
+  inline void clear_has_isid();
+  
+  ::google::protobuf::RepeatedField< float > m_;
+  bool is2d_;
+  bool isid_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static LayersPacket_Layer_Matrix* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LayersPacket_Layer_Shadow : public ::google::protobuf::MessageLite {
+ public:
+  LayersPacket_Layer_Shadow();
+  virtual ~LayersPacket_Layer_Shadow();
+  
+  LayersPacket_Layer_Shadow(const LayersPacket_Layer_Shadow& from);
+  
+  inline LayersPacket_Layer_Shadow& operator=(const LayersPacket_Layer_Shadow& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const LayersPacket_Layer_Shadow& default_instance();
+  
+  void Swap(LayersPacket_Layer_Shadow* other);
+  
+  // implements Message ----------------------------------------------
+  
+  LayersPacket_Layer_Shadow* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const LayersPacket_Layer_Shadow& from);
+  void MergeFrom(const LayersPacket_Layer_Shadow& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  // accessors -------------------------------------------------------
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Rect clip = 1;
+  inline bool has_clip() const;
+  inline void clear_clip();
+  static const int kClipFieldNumber = 1;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Rect& clip() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* mutable_clip();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* release_clip();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Matrix transform = 2;
+  inline bool has_transform() const;
+  inline void clear_transform();
+  static const int kTransformFieldNumber = 2;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix& transform() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* mutable_transform();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* release_transform();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vRegion = 3;
+  inline bool has_vregion() const;
+  inline void clear_vregion();
+  static const int kVRegionFieldNumber = 3;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& vregion() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* mutable_vregion();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* release_vregion();
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.LayersPacket.Layer.Shadow)
+ private:
+  inline void set_has_clip();
+  inline void clear_has_clip();
+  inline void set_has_transform();
+  inline void clear_has_transform();
+  inline void set_has_vregion();
+  inline void clear_has_vregion();
+  
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* clip_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* transform_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* vregion_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static LayersPacket_Layer_Shadow* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LayersPacket_Layer : public ::google::protobuf::MessageLite {
+ public:
+  LayersPacket_Layer();
+  virtual ~LayersPacket_Layer();
+  
+  LayersPacket_Layer(const LayersPacket_Layer& from);
+  
+  inline LayersPacket_Layer& operator=(const LayersPacket_Layer& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const LayersPacket_Layer& default_instance();
+  
+  void Swap(LayersPacket_Layer* other);
+  
+  // implements Message ----------------------------------------------
+  
+  LayersPacket_Layer* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const LayersPacket_Layer& from);
+  void MergeFrom(const LayersPacket_Layer& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  typedef LayersPacket_Layer_Size Size;
+  typedef LayersPacket_Layer_Rect Rect;
+  typedef LayersPacket_Layer_Region Region;
+  typedef LayersPacket_Layer_Matrix Matrix;
+  typedef LayersPacket_Layer_Shadow Shadow;
+  
+  typedef LayersPacket_Layer_LayerType LayerType;
+  static const LayerType UnknownLayer = LayersPacket_Layer_LayerType_UnknownLayer;
+  static const LayerType LayerManager = LayersPacket_Layer_LayerType_LayerManager;
+  static const LayerType ContainerLayer = LayersPacket_Layer_LayerType_ContainerLayer;
+  static const LayerType ThebesLayer = LayersPacket_Layer_LayerType_ThebesLayer;
+  static const LayerType CanvasLayer = LayersPacket_Layer_LayerType_CanvasLayer;
+  static const LayerType ImageLayer = LayersPacket_Layer_LayerType_ImageLayer;
+  static const LayerType ColorLayer = LayersPacket_Layer_LayerType_ColorLayer;
+  static const LayerType RefLayer = LayersPacket_Layer_LayerType_RefLayer;
+  static const LayerType ReadbackLayer = LayersPacket_Layer_LayerType_ReadbackLayer;
+  static inline bool LayerType_IsValid(int value) {
+    return LayersPacket_Layer_LayerType_IsValid(value);
+  }
+  static const LayerType LayerType_MIN =
+    LayersPacket_Layer_LayerType_LayerType_MIN;
+  static const LayerType LayerType_MAX =
+    LayersPacket_Layer_LayerType_LayerType_MAX;
+  static const int LayerType_ARRAYSIZE =
+    LayersPacket_Layer_LayerType_LayerType_ARRAYSIZE;
+  
+  typedef LayersPacket_Layer_ScrollingDirect ScrollingDirect;
+  static const ScrollingDirect VERTICAL = LayersPacket_Layer_ScrollingDirect_VERTICAL;
+  static const ScrollingDirect HORIZONTAL = LayersPacket_Layer_ScrollingDirect_HORIZONTAL;
+  static inline bool ScrollingDirect_IsValid(int value) {
+    return LayersPacket_Layer_ScrollingDirect_IsValid(value);
+  }
+  static const ScrollingDirect ScrollingDirect_MIN =
+    LayersPacket_Layer_ScrollingDirect_ScrollingDirect_MIN;
+  static const ScrollingDirect ScrollingDirect_MAX =
+    LayersPacket_Layer_ScrollingDirect_ScrollingDirect_MAX;
+  static const int ScrollingDirect_ARRAYSIZE =
+    LayersPacket_Layer_ScrollingDirect_ScrollingDirect_ARRAYSIZE;
+  
+  typedef LayersPacket_Layer_Filter Filter;
+  static const Filter FILTER_FAST = LayersPacket_Layer_Filter_FILTER_FAST;
+  static const Filter FILTER_GOOD = LayersPacket_Layer_Filter_FILTER_GOOD;
+  static const Filter FILTER_BEST = LayersPacket_Layer_Filter_FILTER_BEST;
+  static const Filter FILTER_NEAREST = LayersPacket_Layer_Filter_FILTER_NEAREST;
+  static const Filter FILTER_BILINEAR = LayersPacket_Layer_Filter_FILTER_BILINEAR;
+  static const Filter FILTER_GAUSSIAN = LayersPacket_Layer_Filter_FILTER_GAUSSIAN;
+  static const Filter FILTER_SENTINEL = LayersPacket_Layer_Filter_FILTER_SENTINEL;
+  static inline bool Filter_IsValid(int value) {
+    return LayersPacket_Layer_Filter_IsValid(value);
+  }
+  static const Filter Filter_MIN =
+    LayersPacket_Layer_Filter_Filter_MIN;
+  static const Filter Filter_MAX =
+    LayersPacket_Layer_Filter_Filter_MAX;
+  static const int Filter_ARRAYSIZE =
+    LayersPacket_Layer_Filter_Filter_ARRAYSIZE;
+  
+  // accessors -------------------------------------------------------
+  
+  // required .mozilla.layers.layerscope.LayersPacket.Layer.LayerType type = 1;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 1;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_LayerType type() const;
+  inline void set_type(::mozilla::layers::layerscope::LayersPacket_Layer_LayerType value);
+  
+  // required uint64 ptr = 2;
+  inline bool has_ptr() const;
+  inline void clear_ptr();
+  static const int kPtrFieldNumber = 2;
+  inline ::google::protobuf::uint64 ptr() const;
+  inline void set_ptr(::google::protobuf::uint64 value);
+  
+  // required uint64 parentPtr = 3;
+  inline bool has_parentptr() const;
+  inline void clear_parentptr();
+  static const int kParentPtrFieldNumber = 3;
+  inline ::google::protobuf::uint64 parentptr() const;
+  inline void set_parentptr(::google::protobuf::uint64 value);
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Rect clip = 10;
+  inline bool has_clip() const;
+  inline void clear_clip();
+  static const int kClipFieldNumber = 10;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Rect& clip() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* mutable_clip();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* release_clip();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Matrix transform = 11;
+  inline bool has_transform() const;
+  inline void clear_transform();
+  static const int kTransformFieldNumber = 11;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix& transform() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* mutable_transform();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* release_transform();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vRegion = 12;
+  inline bool has_vregion() const;
+  inline void clear_vregion();
+  static const int kVRegionFieldNumber = 12;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& vregion() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* mutable_vregion();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* release_vregion();
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Shadow shadow = 13;
+  inline bool has_shadow() const;
+  inline void clear_shadow();
+  static const int kShadowFieldNumber = 13;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow& shadow() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow* mutable_shadow();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow* release_shadow();
+  
+  // optional float opacity = 14;
+  inline bool has_opacity() const;
+  inline void clear_opacity();
+  static const int kOpacityFieldNumber = 14;
+  inline float opacity() const;
+  inline void set_opacity(float value);
+  
+  // optional bool cOpaque = 15;
+  inline bool has_copaque() const;
+  inline void clear_copaque();
+  static const int kCOpaqueFieldNumber = 15;
+  inline bool copaque() const;
+  inline void set_copaque(bool value);
+  
+  // optional bool cAlpha = 16;
+  inline bool has_calpha() const;
+  inline void clear_calpha();
+  static const int kCAlphaFieldNumber = 16;
+  inline bool calpha() const;
+  inline void set_calpha(bool value);
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.ScrollingDirect direct = 17;
+  inline bool has_direct() const;
+  inline void clear_direct();
+  static const int kDirectFieldNumber = 17;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_ScrollingDirect direct() const;
+  inline void set_direct(::mozilla::layers::layerscope::LayersPacket_Layer_ScrollingDirect value);
+  
+  // optional uint64 barID = 18;
+  inline bool has_barid() const;
+  inline void clear_barid();
+  static const int kBarIDFieldNumber = 18;
+  inline ::google::protobuf::uint64 barid() const;
+  inline void set_barid(::google::protobuf::uint64 value);
+  
+  // optional uint64 mask = 19;
+  inline bool has_mask() const;
+  inline void clear_mask();
+  static const int kMaskFieldNumber = 19;
+  inline ::google::protobuf::uint64 mask() const;
+  inline void set_mask(::google::protobuf::uint64 value);
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Region valid = 100;
+  inline bool has_valid() const;
+  inline void clear_valid();
+  static const int kValidFieldNumber = 100;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& valid() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* mutable_valid();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* release_valid();
+  
+  // optional uint32 color = 101;
+  inline bool has_color() const;
+  inline void clear_color();
+  static const int kColorFieldNumber = 101;
+  inline ::google::protobuf::uint32 color() const;
+  inline void set_color(::google::protobuf::uint32 value);
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Filter filter = 102;
+  inline bool has_filter() const;
+  inline void clear_filter();
+  static const int kFilterFieldNumber = 102;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Filter filter() const;
+  inline void set_filter(::mozilla::layers::layerscope::LayersPacket_Layer_Filter value);
+  
+  // optional uint64 refID = 103;
+  inline bool has_refid() const;
+  inline void clear_refid();
+  static const int kRefIDFieldNumber = 103;
+  inline ::google::protobuf::uint64 refid() const;
+  inline void set_refid(::google::protobuf::uint64 value);
+  
+  // optional .mozilla.layers.layerscope.LayersPacket.Layer.Size size = 104;
+  inline bool has_size() const;
+  inline void clear_size();
+  static const int kSizeFieldNumber = 104;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Size& size() const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Size* mutable_size();
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer_Size* release_size();
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.LayersPacket.Layer)
+ private:
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_ptr();
+  inline void clear_has_ptr();
+  inline void set_has_parentptr();
+  inline void clear_has_parentptr();
+  inline void set_has_clip();
+  inline void clear_has_clip();
+  inline void set_has_transform();
+  inline void clear_has_transform();
+  inline void set_has_vregion();
+  inline void clear_has_vregion();
+  inline void set_has_shadow();
+  inline void clear_has_shadow();
+  inline void set_has_opacity();
+  inline void clear_has_opacity();
+  inline void set_has_copaque();
+  inline void clear_has_copaque();
+  inline void set_has_calpha();
+  inline void clear_has_calpha();
+  inline void set_has_direct();
+  inline void clear_has_direct();
+  inline void set_has_barid();
+  inline void clear_has_barid();
+  inline void set_has_mask();
+  inline void clear_has_mask();
+  inline void set_has_valid();
+  inline void clear_has_valid();
+  inline void set_has_color();
+  inline void clear_has_color();
+  inline void set_has_filter();
+  inline void clear_has_filter();
+  inline void set_has_refid();
+  inline void clear_has_refid();
+  inline void set_has_size();
+  inline void clear_has_size();
+  
+  ::google::protobuf::uint64 ptr_;
+  ::google::protobuf::uint64 parentptr_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* clip_;
+  int type_;
+  float opacity_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* transform_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* vregion_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow* shadow_;
+  bool copaque_;
+  bool calpha_;
+  int direct_;
+  ::google::protobuf::uint64 barid_;
+  ::google::protobuf::uint64 mask_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* valid_;
+  ::google::protobuf::uint32 color_;
+  int filter_;
+  ::google::protobuf::uint64 refid_;
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Size* size_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(18 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static LayersPacket_Layer* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class LayersPacket : public ::google::protobuf::MessageLite {
+ public:
+  LayersPacket();
+  virtual ~LayersPacket();
+  
+  LayersPacket(const LayersPacket& from);
+  
+  inline LayersPacket& operator=(const LayersPacket& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  
+  static const LayersPacket& default_instance();
+  
+  void Swap(LayersPacket* other);
+  
+  // implements Message ----------------------------------------------
+  
+  LayersPacket* New() const;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from);
+  void CopyFrom(const LayersPacket& from);
+  void MergeFrom(const LayersPacket& from);
+  void Clear();
+  bool IsInitialized() const;
+  
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  
+  ::std::string GetTypeName() const;
+  
+  // nested types ----------------------------------------------------
+  
+  typedef LayersPacket_Layer Layer;
+  
+  // accessors -------------------------------------------------------
+  
+  // repeated .mozilla.layers.layerscope.LayersPacket.Layer layer = 1;
+  inline int layer_size() const;
+  inline void clear_layer();
+  static const int kLayerFieldNumber = 1;
+  inline const ::mozilla::layers::layerscope::LayersPacket_Layer& layer(int index) const;
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer* mutable_layer(int index);
+  inline ::mozilla::layers::layerscope::LayersPacket_Layer* add_layer();
+  inline const ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer >&
+      layer() const;
+  inline ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer >*
+      mutable_layer();
+  
+  // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.LayersPacket)
+ private:
+  
+  ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer > layer_;
+  
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  
+  friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
+  friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
+  friend void protobuf_ShutdownFile_LayerScopePacket_2eproto();
+  
+  void InitAsDefaultInstance();
+  static LayersPacket* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class Packet : public ::google::protobuf::MessageLite {
  public:
   Packet();
@@ -418,6 +1275,7 @@ class Packet : public ::google::protobuf::MessageLite {
   static const DataType FRAMEEND = Packet_DataType_FRAMEEND;
   static const DataType COLOR = Packet_DataType_COLOR;
   static const DataType TEXTURE = Packet_DataType_TEXTURE;
+  static const DataType LAYERS = Packet_DataType_LAYERS;
   static inline bool DataType_IsValid(int value) {
     return Packet_DataType_IsValid(value);
   }
@@ -461,6 +1319,14 @@ class Packet : public ::google::protobuf::MessageLite {
   inline ::mozilla::layers::layerscope::TexturePacket* mutable_texture();
   inline ::mozilla::layers::layerscope::TexturePacket* release_texture();
   
+  // optional .mozilla.layers.layerscope.LayersPacket layers = 5;
+  inline bool has_layers() const;
+  inline void clear_layers();
+  static const int kLayersFieldNumber = 5;
+  inline const ::mozilla::layers::layerscope::LayersPacket& layers() const;
+  inline ::mozilla::layers::layerscope::LayersPacket* mutable_layers();
+  inline ::mozilla::layers::layerscope::LayersPacket* release_layers();
+  
   // @@protoc_insertion_point(class_scope:mozilla.layers.layerscope.Packet)
  private:
   inline void set_has_type();
@@ -471,14 +1337,17 @@ class Packet : public ::google::protobuf::MessageLite {
   inline void clear_has_color();
   inline void set_has_texture();
   inline void clear_has_texture();
+  inline void set_has_layers();
+  inline void clear_has_layers();
   
   ::mozilla::layers::layerscope::FramePacket* frame_;
   ::mozilla::layers::layerscope::ColorPacket* color_;
   ::mozilla::layers::layerscope::TexturePacket* texture_;
+  ::mozilla::layers::layerscope::LayersPacket* layers_;
   int type_;
   
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
   
   friend void  protobuf_AddDesc_LayerScopePacket_2eproto();
   friend void protobuf_AssignDesc_LayerScopePacket_2eproto();
@@ -848,6 +1717,813 @@ inline ::std::string* TexturePacket::release_data() {
 
 // -------------------------------------------------------------------
 
+// LayersPacket_Layer_Size
+
+// optional int32 w = 1;
+inline bool LayersPacket_Layer_Size::has_w() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LayersPacket_Layer_Size::set_has_w() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LayersPacket_Layer_Size::clear_has_w() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LayersPacket_Layer_Size::clear_w() {
+  w_ = 0;
+  clear_has_w();
+}
+inline ::google::protobuf::int32 LayersPacket_Layer_Size::w() const {
+  return w_;
+}
+inline void LayersPacket_Layer_Size::set_w(::google::protobuf::int32 value) {
+  set_has_w();
+  w_ = value;
+}
+
+// optional int32 h = 2;
+inline bool LayersPacket_Layer_Size::has_h() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LayersPacket_Layer_Size::set_has_h() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LayersPacket_Layer_Size::clear_has_h() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LayersPacket_Layer_Size::clear_h() {
+  h_ = 0;
+  clear_has_h();
+}
+inline ::google::protobuf::int32 LayersPacket_Layer_Size::h() const {
+  return h_;
+}
+inline void LayersPacket_Layer_Size::set_h(::google::protobuf::int32 value) {
+  set_has_h();
+  h_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// LayersPacket_Layer_Rect
+
+// optional int32 x = 1;
+inline bool LayersPacket_Layer_Rect::has_x() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LayersPacket_Layer_Rect::set_has_x() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LayersPacket_Layer_Rect::clear_has_x() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LayersPacket_Layer_Rect::clear_x() {
+  x_ = 0;
+  clear_has_x();
+}
+inline ::google::protobuf::int32 LayersPacket_Layer_Rect::x() const {
+  return x_;
+}
+inline void LayersPacket_Layer_Rect::set_x(::google::protobuf::int32 value) {
+  set_has_x();
+  x_ = value;
+}
+
+// optional int32 y = 2;
+inline bool LayersPacket_Layer_Rect::has_y() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LayersPacket_Layer_Rect::set_has_y() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LayersPacket_Layer_Rect::clear_has_y() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LayersPacket_Layer_Rect::clear_y() {
+  y_ = 0;
+  clear_has_y();
+}
+inline ::google::protobuf::int32 LayersPacket_Layer_Rect::y() const {
+  return y_;
+}
+inline void LayersPacket_Layer_Rect::set_y(::google::protobuf::int32 value) {
+  set_has_y();
+  y_ = value;
+}
+
+// optional int32 w = 3;
+inline bool LayersPacket_Layer_Rect::has_w() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LayersPacket_Layer_Rect::set_has_w() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LayersPacket_Layer_Rect::clear_has_w() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LayersPacket_Layer_Rect::clear_w() {
+  w_ = 0;
+  clear_has_w();
+}
+inline ::google::protobuf::int32 LayersPacket_Layer_Rect::w() const {
+  return w_;
+}
+inline void LayersPacket_Layer_Rect::set_w(::google::protobuf::int32 value) {
+  set_has_w();
+  w_ = value;
+}
+
+// optional int32 h = 4;
+inline bool LayersPacket_Layer_Rect::has_h() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void LayersPacket_Layer_Rect::set_has_h() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void LayersPacket_Layer_Rect::clear_has_h() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void LayersPacket_Layer_Rect::clear_h() {
+  h_ = 0;
+  clear_has_h();
+}
+inline ::google::protobuf::int32 LayersPacket_Layer_Rect::h() const {
+  return h_;
+}
+inline void LayersPacket_Layer_Rect::set_h(::google::protobuf::int32 value) {
+  set_has_h();
+  h_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// LayersPacket_Layer_Region
+
+// repeated .mozilla.layers.layerscope.LayersPacket.Layer.Rect r = 1;
+inline int LayersPacket_Layer_Region::r_size() const {
+  return r_.size();
+}
+inline void LayersPacket_Layer_Region::clear_r() {
+  r_.Clear();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Rect& LayersPacket_Layer_Region::r(int index) const {
+  return r_.Get(index);
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* LayersPacket_Layer_Region::mutable_r(int index) {
+  return r_.Mutable(index);
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* LayersPacket_Layer_Region::add_r() {
+  return r_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer_Rect >&
+LayersPacket_Layer_Region::r() const {
+  return r_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer_Rect >*
+LayersPacket_Layer_Region::mutable_r() {
+  return &r_;
+}
+
+// -------------------------------------------------------------------
+
+// LayersPacket_Layer_Matrix
+
+// optional bool is2D = 1;
+inline bool LayersPacket_Layer_Matrix::has_is2d() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LayersPacket_Layer_Matrix::set_has_is2d() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LayersPacket_Layer_Matrix::clear_has_is2d() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LayersPacket_Layer_Matrix::clear_is2d() {
+  is2d_ = false;
+  clear_has_is2d();
+}
+inline bool LayersPacket_Layer_Matrix::is2d() const {
+  return is2d_;
+}
+inline void LayersPacket_Layer_Matrix::set_is2d(bool value) {
+  set_has_is2d();
+  is2d_ = value;
+}
+
+// optional bool isId = 2;
+inline bool LayersPacket_Layer_Matrix::has_isid() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LayersPacket_Layer_Matrix::set_has_isid() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LayersPacket_Layer_Matrix::clear_has_isid() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LayersPacket_Layer_Matrix::clear_isid() {
+  isid_ = false;
+  clear_has_isid();
+}
+inline bool LayersPacket_Layer_Matrix::isid() const {
+  return isid_;
+}
+inline void LayersPacket_Layer_Matrix::set_isid(bool value) {
+  set_has_isid();
+  isid_ = value;
+}
+
+// repeated float m = 3;
+inline int LayersPacket_Layer_Matrix::m_size() const {
+  return m_.size();
+}
+inline void LayersPacket_Layer_Matrix::clear_m() {
+  m_.Clear();
+}
+inline float LayersPacket_Layer_Matrix::m(int index) const {
+  return m_.Get(index);
+}
+inline void LayersPacket_Layer_Matrix::set_m(int index, float value) {
+  m_.Set(index, value);
+}
+inline void LayersPacket_Layer_Matrix::add_m(float value) {
+  m_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< float >&
+LayersPacket_Layer_Matrix::m() const {
+  return m_;
+}
+inline ::google::protobuf::RepeatedField< float >*
+LayersPacket_Layer_Matrix::mutable_m() {
+  return &m_;
+}
+
+// -------------------------------------------------------------------
+
+// LayersPacket_Layer_Shadow
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Rect clip = 1;
+inline bool LayersPacket_Layer_Shadow::has_clip() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LayersPacket_Layer_Shadow::set_has_clip() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LayersPacket_Layer_Shadow::clear_has_clip() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LayersPacket_Layer_Shadow::clear_clip() {
+  if (clip_ != NULL) clip_->::mozilla::layers::layerscope::LayersPacket_Layer_Rect::Clear();
+  clear_has_clip();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Rect& LayersPacket_Layer_Shadow::clip() const {
+  return clip_ != NULL ? *clip_ : *default_instance_->clip_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* LayersPacket_Layer_Shadow::mutable_clip() {
+  set_has_clip();
+  if (clip_ == NULL) clip_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Rect;
+  return clip_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* LayersPacket_Layer_Shadow::release_clip() {
+  clear_has_clip();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* temp = clip_;
+  clip_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Matrix transform = 2;
+inline bool LayersPacket_Layer_Shadow::has_transform() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LayersPacket_Layer_Shadow::set_has_transform() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LayersPacket_Layer_Shadow::clear_has_transform() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LayersPacket_Layer_Shadow::clear_transform() {
+  if (transform_ != NULL) transform_->::mozilla::layers::layerscope::LayersPacket_Layer_Matrix::Clear();
+  clear_has_transform();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix& LayersPacket_Layer_Shadow::transform() const {
+  return transform_ != NULL ? *transform_ : *default_instance_->transform_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* LayersPacket_Layer_Shadow::mutable_transform() {
+  set_has_transform();
+  if (transform_ == NULL) transform_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix;
+  return transform_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* LayersPacket_Layer_Shadow::release_transform() {
+  clear_has_transform();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* temp = transform_;
+  transform_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vRegion = 3;
+inline bool LayersPacket_Layer_Shadow::has_vregion() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LayersPacket_Layer_Shadow::set_has_vregion() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LayersPacket_Layer_Shadow::clear_has_vregion() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LayersPacket_Layer_Shadow::clear_vregion() {
+  if (vregion_ != NULL) vregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+  clear_has_vregion();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& LayersPacket_Layer_Shadow::vregion() const {
+  return vregion_ != NULL ? *vregion_ : *default_instance_->vregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer_Shadow::mutable_vregion() {
+  set_has_vregion();
+  if (vregion_ == NULL) vregion_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Region;
+  return vregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer_Shadow::release_vregion() {
+  clear_has_vregion();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* temp = vregion_;
+  vregion_ = NULL;
+  return temp;
+}
+
+// -------------------------------------------------------------------
+
+// LayersPacket_Layer
+
+// required .mozilla.layers.layerscope.LayersPacket.Layer.LayerType type = 1;
+inline bool LayersPacket_Layer::has_type() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void LayersPacket_Layer::set_has_type() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void LayersPacket_Layer::clear_has_type() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void LayersPacket_Layer::clear_type() {
+  type_ = 0;
+  clear_has_type();
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_LayerType LayersPacket_Layer::type() const {
+  return static_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_LayerType >(type_);
+}
+inline void LayersPacket_Layer::set_type(::mozilla::layers::layerscope::LayersPacket_Layer_LayerType value) {
+  GOOGLE_DCHECK(::mozilla::layers::layerscope::LayersPacket_Layer_LayerType_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// required uint64 ptr = 2;
+inline bool LayersPacket_Layer::has_ptr() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void LayersPacket_Layer::set_has_ptr() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void LayersPacket_Layer::clear_has_ptr() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void LayersPacket_Layer::clear_ptr() {
+  ptr_ = GOOGLE_ULONGLONG(0);
+  clear_has_ptr();
+}
+inline ::google::protobuf::uint64 LayersPacket_Layer::ptr() const {
+  return ptr_;
+}
+inline void LayersPacket_Layer::set_ptr(::google::protobuf::uint64 value) {
+  set_has_ptr();
+  ptr_ = value;
+}
+
+// required uint64 parentPtr = 3;
+inline bool LayersPacket_Layer::has_parentptr() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void LayersPacket_Layer::set_has_parentptr() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void LayersPacket_Layer::clear_has_parentptr() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void LayersPacket_Layer::clear_parentptr() {
+  parentptr_ = GOOGLE_ULONGLONG(0);
+  clear_has_parentptr();
+}
+inline ::google::protobuf::uint64 LayersPacket_Layer::parentptr() const {
+  return parentptr_;
+}
+inline void LayersPacket_Layer::set_parentptr(::google::protobuf::uint64 value) {
+  set_has_parentptr();
+  parentptr_ = value;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Rect clip = 10;
+inline bool LayersPacket_Layer::has_clip() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void LayersPacket_Layer::set_has_clip() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void LayersPacket_Layer::clear_has_clip() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void LayersPacket_Layer::clear_clip() {
+  if (clip_ != NULL) clip_->::mozilla::layers::layerscope::LayersPacket_Layer_Rect::Clear();
+  clear_has_clip();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Rect& LayersPacket_Layer::clip() const {
+  return clip_ != NULL ? *clip_ : *default_instance_->clip_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* LayersPacket_Layer::mutable_clip() {
+  set_has_clip();
+  if (clip_ == NULL) clip_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Rect;
+  return clip_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* LayersPacket_Layer::release_clip() {
+  clear_has_clip();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Rect* temp = clip_;
+  clip_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Matrix transform = 11;
+inline bool LayersPacket_Layer::has_transform() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void LayersPacket_Layer::set_has_transform() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void LayersPacket_Layer::clear_has_transform() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void LayersPacket_Layer::clear_transform() {
+  if (transform_ != NULL) transform_->::mozilla::layers::layerscope::LayersPacket_Layer_Matrix::Clear();
+  clear_has_transform();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix& LayersPacket_Layer::transform() const {
+  return transform_ != NULL ? *transform_ : *default_instance_->transform_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* LayersPacket_Layer::mutable_transform() {
+  set_has_transform();
+  if (transform_ == NULL) transform_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix;
+  return transform_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* LayersPacket_Layer::release_transform() {
+  clear_has_transform();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Matrix* temp = transform_;
+  transform_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region vRegion = 12;
+inline bool LayersPacket_Layer::has_vregion() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void LayersPacket_Layer::set_has_vregion() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void LayersPacket_Layer::clear_has_vregion() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void LayersPacket_Layer::clear_vregion() {
+  if (vregion_ != NULL) vregion_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+  clear_has_vregion();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& LayersPacket_Layer::vregion() const {
+  return vregion_ != NULL ? *vregion_ : *default_instance_->vregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::mutable_vregion() {
+  set_has_vregion();
+  if (vregion_ == NULL) vregion_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Region;
+  return vregion_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::release_vregion() {
+  clear_has_vregion();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* temp = vregion_;
+  vregion_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Shadow shadow = 13;
+inline bool LayersPacket_Layer::has_shadow() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void LayersPacket_Layer::set_has_shadow() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void LayersPacket_Layer::clear_has_shadow() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void LayersPacket_Layer::clear_shadow() {
+  if (shadow_ != NULL) shadow_->::mozilla::layers::layerscope::LayersPacket_Layer_Shadow::Clear();
+  clear_has_shadow();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow& LayersPacket_Layer::shadow() const {
+  return shadow_ != NULL ? *shadow_ : *default_instance_->shadow_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow* LayersPacket_Layer::mutable_shadow() {
+  set_has_shadow();
+  if (shadow_ == NULL) shadow_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow;
+  return shadow_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow* LayersPacket_Layer::release_shadow() {
+  clear_has_shadow();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Shadow* temp = shadow_;
+  shadow_ = NULL;
+  return temp;
+}
+
+// optional float opacity = 14;
+inline bool LayersPacket_Layer::has_opacity() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void LayersPacket_Layer::set_has_opacity() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void LayersPacket_Layer::clear_has_opacity() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void LayersPacket_Layer::clear_opacity() {
+  opacity_ = 0;
+  clear_has_opacity();
+}
+inline float LayersPacket_Layer::opacity() const {
+  return opacity_;
+}
+inline void LayersPacket_Layer::set_opacity(float value) {
+  set_has_opacity();
+  opacity_ = value;
+}
+
+// optional bool cOpaque = 15;
+inline bool LayersPacket_Layer::has_copaque() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void LayersPacket_Layer::set_has_copaque() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void LayersPacket_Layer::clear_has_copaque() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void LayersPacket_Layer::clear_copaque() {
+  copaque_ = false;
+  clear_has_copaque();
+}
+inline bool LayersPacket_Layer::copaque() const {
+  return copaque_;
+}
+inline void LayersPacket_Layer::set_copaque(bool value) {
+  set_has_copaque();
+  copaque_ = value;
+}
+
+// optional bool cAlpha = 16;
+inline bool LayersPacket_Layer::has_calpha() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void LayersPacket_Layer::set_has_calpha() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void LayersPacket_Layer::clear_has_calpha() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void LayersPacket_Layer::clear_calpha() {
+  calpha_ = false;
+  clear_has_calpha();
+}
+inline bool LayersPacket_Layer::calpha() const {
+  return calpha_;
+}
+inline void LayersPacket_Layer::set_calpha(bool value) {
+  set_has_calpha();
+  calpha_ = value;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.ScrollingDirect direct = 17;
+inline bool LayersPacket_Layer::has_direct() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void LayersPacket_Layer::set_has_direct() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void LayersPacket_Layer::clear_has_direct() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void LayersPacket_Layer::clear_direct() {
+  direct_ = 1;
+  clear_has_direct();
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_ScrollingDirect LayersPacket_Layer::direct() const {
+  return static_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_ScrollingDirect >(direct_);
+}
+inline void LayersPacket_Layer::set_direct(::mozilla::layers::layerscope::LayersPacket_Layer_ScrollingDirect value) {
+  GOOGLE_DCHECK(::mozilla::layers::layerscope::LayersPacket_Layer_ScrollingDirect_IsValid(value));
+  set_has_direct();
+  direct_ = value;
+}
+
+// optional uint64 barID = 18;
+inline bool LayersPacket_Layer::has_barid() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void LayersPacket_Layer::set_has_barid() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void LayersPacket_Layer::clear_has_barid() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void LayersPacket_Layer::clear_barid() {
+  barid_ = GOOGLE_ULONGLONG(0);
+  clear_has_barid();
+}
+inline ::google::protobuf::uint64 LayersPacket_Layer::barid() const {
+  return barid_;
+}
+inline void LayersPacket_Layer::set_barid(::google::protobuf::uint64 value) {
+  set_has_barid();
+  barid_ = value;
+}
+
+// optional uint64 mask = 19;
+inline bool LayersPacket_Layer::has_mask() const {
+  return (_has_bits_[0] & 0x00001000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_mask() {
+  _has_bits_[0] |= 0x00001000u;
+}
+inline void LayersPacket_Layer::clear_has_mask() {
+  _has_bits_[0] &= ~0x00001000u;
+}
+inline void LayersPacket_Layer::clear_mask() {
+  mask_ = GOOGLE_ULONGLONG(0);
+  clear_has_mask();
+}
+inline ::google::protobuf::uint64 LayersPacket_Layer::mask() const {
+  return mask_;
+}
+inline void LayersPacket_Layer::set_mask(::google::protobuf::uint64 value) {
+  set_has_mask();
+  mask_ = value;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Region valid = 100;
+inline bool LayersPacket_Layer::has_valid() const {
+  return (_has_bits_[0] & 0x00002000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_valid() {
+  _has_bits_[0] |= 0x00002000u;
+}
+inline void LayersPacket_Layer::clear_has_valid() {
+  _has_bits_[0] &= ~0x00002000u;
+}
+inline void LayersPacket_Layer::clear_valid() {
+  if (valid_ != NULL) valid_->::mozilla::layers::layerscope::LayersPacket_Layer_Region::Clear();
+  clear_has_valid();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Region& LayersPacket_Layer::valid() const {
+  return valid_ != NULL ? *valid_ : *default_instance_->valid_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::mutable_valid() {
+  set_has_valid();
+  if (valid_ == NULL) valid_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Region;
+  return valid_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Region* LayersPacket_Layer::release_valid() {
+  clear_has_valid();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Region* temp = valid_;
+  valid_ = NULL;
+  return temp;
+}
+
+// optional uint32 color = 101;
+inline bool LayersPacket_Layer::has_color() const {
+  return (_has_bits_[0] & 0x00004000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_color() {
+  _has_bits_[0] |= 0x00004000u;
+}
+inline void LayersPacket_Layer::clear_has_color() {
+  _has_bits_[0] &= ~0x00004000u;
+}
+inline void LayersPacket_Layer::clear_color() {
+  color_ = 0u;
+  clear_has_color();
+}
+inline ::google::protobuf::uint32 LayersPacket_Layer::color() const {
+  return color_;
+}
+inline void LayersPacket_Layer::set_color(::google::protobuf::uint32 value) {
+  set_has_color();
+  color_ = value;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Filter filter = 102;
+inline bool LayersPacket_Layer::has_filter() const {
+  return (_has_bits_[0] & 0x00008000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_filter() {
+  _has_bits_[0] |= 0x00008000u;
+}
+inline void LayersPacket_Layer::clear_has_filter() {
+  _has_bits_[0] &= ~0x00008000u;
+}
+inline void LayersPacket_Layer::clear_filter() {
+  filter_ = 0;
+  clear_has_filter();
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Filter LayersPacket_Layer::filter() const {
+  return static_cast< ::mozilla::layers::layerscope::LayersPacket_Layer_Filter >(filter_);
+}
+inline void LayersPacket_Layer::set_filter(::mozilla::layers::layerscope::LayersPacket_Layer_Filter value) {
+  GOOGLE_DCHECK(::mozilla::layers::layerscope::LayersPacket_Layer_Filter_IsValid(value));
+  set_has_filter();
+  filter_ = value;
+}
+
+// optional uint64 refID = 103;
+inline bool LayersPacket_Layer::has_refid() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_refid() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void LayersPacket_Layer::clear_has_refid() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void LayersPacket_Layer::clear_refid() {
+  refid_ = GOOGLE_ULONGLONG(0);
+  clear_has_refid();
+}
+inline ::google::protobuf::uint64 LayersPacket_Layer::refid() const {
+  return refid_;
+}
+inline void LayersPacket_Layer::set_refid(::google::protobuf::uint64 value) {
+  set_has_refid();
+  refid_ = value;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket.Layer.Size size = 104;
+inline bool LayersPacket_Layer::has_size() const {
+  return (_has_bits_[0] & 0x00020000u) != 0;
+}
+inline void LayersPacket_Layer::set_has_size() {
+  _has_bits_[0] |= 0x00020000u;
+}
+inline void LayersPacket_Layer::clear_has_size() {
+  _has_bits_[0] &= ~0x00020000u;
+}
+inline void LayersPacket_Layer::clear_size() {
+  if (size_ != NULL) size_->::mozilla::layers::layerscope::LayersPacket_Layer_Size::Clear();
+  clear_has_size();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer_Size& LayersPacket_Layer::size() const {
+  return size_ != NULL ? *size_ : *default_instance_->size_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Size* LayersPacket_Layer::mutable_size() {
+  set_has_size();
+  if (size_ == NULL) size_ = new ::mozilla::layers::layerscope::LayersPacket_Layer_Size;
+  return size_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer_Size* LayersPacket_Layer::release_size() {
+  clear_has_size();
+  ::mozilla::layers::layerscope::LayersPacket_Layer_Size* temp = size_;
+  size_ = NULL;
+  return temp;
+}
+
+// -------------------------------------------------------------------
+
+// LayersPacket
+
+// repeated .mozilla.layers.layerscope.LayersPacket.Layer layer = 1;
+inline int LayersPacket::layer_size() const {
+  return layer_.size();
+}
+inline void LayersPacket::clear_layer() {
+  layer_.Clear();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket_Layer& LayersPacket::layer(int index) const {
+  return layer_.Get(index);
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer* LayersPacket::mutable_layer(int index) {
+  return layer_.Mutable(index);
+}
+inline ::mozilla::layers::layerscope::LayersPacket_Layer* LayersPacket::add_layer() {
+  return layer_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer >&
+LayersPacket::layer() const {
+  return layer_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::mozilla::layers::layerscope::LayersPacket_Layer >*
+LayersPacket::mutable_layer() {
+  return &layer_;
+}
+
+// -------------------------------------------------------------------
+
 // Packet
 
 // required .mozilla.layers.layerscope.Packet.DataType type = 1;
@@ -957,6 +2633,35 @@ inline ::mozilla::layers::layerscope::TexturePacket* Packet::release_texture() {
   clear_has_texture();
   ::mozilla::layers::layerscope::TexturePacket* temp = texture_;
   texture_ = NULL;
+  return temp;
+}
+
+// optional .mozilla.layers.layerscope.LayersPacket layers = 5;
+inline bool Packet::has_layers() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void Packet::set_has_layers() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void Packet::clear_has_layers() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void Packet::clear_layers() {
+  if (layers_ != NULL) layers_->::mozilla::layers::layerscope::LayersPacket::Clear();
+  clear_has_layers();
+}
+inline const ::mozilla::layers::layerscope::LayersPacket& Packet::layers() const {
+  return layers_ != NULL ? *layers_ : *default_instance_->layers_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket* Packet::mutable_layers() {
+  set_has_layers();
+  if (layers_ == NULL) layers_ = new ::mozilla::layers::layerscope::LayersPacket;
+  return layers_;
+}
+inline ::mozilla::layers::layerscope::LayersPacket* Packet::release_layers() {
+  clear_has_layers();
+  ::mozilla::layers::layerscope::LayersPacket* temp = layers_;
+  layers_ = NULL;
   return temp;
 }
 
