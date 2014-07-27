@@ -17,6 +17,7 @@
 #include "ImageLayerComposite.h"        // for ImageLayerComposite
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "LayerScope.h"                 // for LayerScope Tool
+#include "protobuf/LayerScopePacket.pb.h" // for protobuf (LayerScope)
 #include "ThebesLayerComposite.h"       // for ThebesLayerComposite
 #include "TiledLayerBuffer.h"           // for TiledLayerComposer
 #include "Units.h"                      // for ScreenIntRect
@@ -421,15 +422,26 @@ LayerManagerComposite::Render()
     return;
   }
 
-  if (gfxPrefs::LayersDump()) {
-    this->Dump();
-  }
-
   /** Our more efficient but less powerful alter ego, if one is available. */
   nsRefPtr<Composer2D> composer2D = mCompositor->GetWidget()->GetComposer2D();
 
   // Set LayerScope begin/end frame
   LayerScopeAutoFrame frame(PR_Now());
+
+  // Dump to console
+  if (gfxPrefs::LayersDump()) {
+    this->Dump();
+  }
+
+  // Dump to LayerScope Viewer
+  if (LayerScope::CheckSendable()) {
+    // Create a LayersPacket, dump Layers into it and transfer the
+    // packet('s ownership) to LayerScope.
+    auto packet = MakeUnique<layerscope::Packet>();
+    layerscope::LayersPacket* layersPacket = packet->mutable_layers();
+    this->Dump(layersPacket);
+    LayerScope::SendLayerDump(Move(packet));
+  }
 
   if (!mTarget && composer2D && composer2D->TryRender(mRoot, mWorldMatrix, mGeometryChanged)) {
     if (mFPS) {
