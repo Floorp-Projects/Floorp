@@ -1141,6 +1141,8 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
     void *sdp_p = ((cc_sdp_t*)cc_sdp_p)->src_sdp;
     int max_fs = 0;
     int max_fr = 0;
+    int max_br = 0;
+    int max_mbps = 0;
 
     switch (media_type) {
         case RTP_H263:
@@ -1211,11 +1213,14 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
         switch (media_type) {
         case RTP_H264_P0:
         case RTP_H264_P1:
+            max_br = config_get_video_max_br((rtp_ptype) media_type); // H264 only
+            max_mbps = config_get_video_max_mbps((rtp_ptype) media_type); // H264 only
+            // fall through
         case RTP_VP8:
             max_fs = config_get_video_max_fs((rtp_ptype) media_type);
             max_fr = config_get_video_max_fr((rtp_ptype) media_type);
 
-            if (max_fs || max_fr) {
+            if (max_fs || max_fr || max_br || max_mbps) {
                 if (!added_fmtp) {
                     if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst)
                         != SDP_SUCCESS) {
@@ -1232,10 +1237,17 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
                     (void) sdp_attr_set_fmtp_max_fs(sdp_p, level, 0, a_inst,
                                                     max_fs);
                 }
-
                 if (max_fr) {
                     (void) sdp_attr_set_fmtp_max_fr(sdp_p, level, 0, a_inst,
                                                     max_fr);
+                }
+                if (max_br) {
+                    (void) sdp_attr_set_fmtp_max_br(sdp_p, level, 0, a_inst,
+                                                    max_br);
+                }
+                if (max_mbps) {
+                    (void) sdp_attr_set_fmtp_max_mbps(sdp_p, level, 0, a_inst,
+                                                      max_mbps);
                 }
             }
             break;
