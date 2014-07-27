@@ -190,6 +190,7 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
   size_t height = CVPixelBufferGetHeight(aImage);
   LOG("  got decoded frame data... %ux%u %s", width, height,
       CVPixelBufferIsPlanar(aImage) ? "planar" : "chunked");
+#ifdef DEBUG
   size_t planes = CVPixelBufferGetPlaneCount(aImage);
   for (size_t i = 0; i < planes; ++i) {
     size_t stride = CVPixelBufferGetBytesPerRowOfPlane(aImage, i);
@@ -199,13 +200,18 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
         CVPixelBufferGetHeightOfPlane(aImage, i),
         (unsigned)stride);
   }
-
   MOZ_ASSERT(planes == 2);
+#endif // DEBUG
+
   VideoData::YCbCrBuffer buffer;
 
   // Lock the returned image data.
   CVReturn rv = CVPixelBufferLockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
-  MOZ_ASSERT(rv == kCVReturnSuccess, "error locking pixel data");
+  if (rv != kCVReturnSuccess) {
+    NS_ERROR("error locking pixel data");
+    mCallback->Error();
+    return NS_ERROR_FAILURE;
+  }
   // Y plane.
   buffer.mPlanes[0].mData =
     static_cast<uint8_t*>(CVPixelBufferGetBaseAddressOfPlane(aImage, 0));
