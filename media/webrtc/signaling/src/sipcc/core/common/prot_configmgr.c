@@ -593,6 +593,28 @@ config_get_video_max_fr(const rtp_ptype codec)
   return 0;
 }
 
+uint32_t
+config_get_video_max_mbps(const rtp_ptype codec)
+{
+  uint32_t max_mbps;
+
+  if(vcmGetVideoMaxMbps(codec, (int32_t *) &max_mbps) == 0) {
+    return max_mbps;
+  }
+  return 0;
+}
+
+uint32_t
+config_get_video_max_br(const rtp_ptype codec)
+{
+  uint32_t max_br;
+
+  if(vcmGetVideoMaxBr(codec, (int32_t *) &max_br) == 0) {
+    return max_br;
+  }
+  return 0;
+}
+
 uint16_t
 sip_config_video_add_codecs (rtp_ptype aSupportedCodecs[],
                              uint16_t supportedCodecsLen,
