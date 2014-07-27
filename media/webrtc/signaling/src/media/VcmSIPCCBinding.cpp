@@ -2873,7 +2873,14 @@ uint32_t vcmGetVideoH264ProfileLevelID()
 {
   // constrained baseline level 1.2
   // XXX make variable based on openh264 and OMX support
+#ifdef MOZ_WEBRTC_OMX
+  // Max resolution CIF; we should include max-mbps
   return 0x42E00C;
+#else
+  // XXX See bug 1043515 - we may want to support a higher profile than
+  // 1.3, depending on hardware(?)
+  return 0x42E00D;
+#endif
 }
 
 /**
@@ -3368,11 +3375,11 @@ int vcmDisableRtcpComponent(const char *peerconnection, int level) {
   return ret;
 }
 
-static short vcmGetVideoMaxFs_m(uint16_t codec,
-                                int32_t *max_fs) {
+static short vcmGetVideoPref_m(uint16_t codec,
+                               const char *pref,
+                               int32_t *ret) {
   nsCOMPtr<nsIPrefBranch> branch = VcmSIPCCBinding::getPrefBranch();
-  if (branch && NS_SUCCEEDED(branch->GetIntPref("media.navigator.video.max_fs",
-                                                max_fs))) {
+  if (branch && NS_SUCCEEDED(branch->GetIntPref(pref, ret))) {
     return 0;
   }
   return VCM_ERROR;
@@ -3383,21 +3390,12 @@ short vcmGetVideoMaxFs(uint16_t codec,
   short ret;
 
   mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
-      WrapRunnableNMRet(&vcmGetVideoMaxFs_m,
+      WrapRunnableNMRet(&vcmGetVideoPref_m,
                         codec,
+                        "media.navigator.video.max_fs",
                         max_fs,
                         &ret));
   return ret;
-}
-
-static short vcmGetVideoMaxFr_m(uint16_t codec,
-                                int32_t *max_fr) {
-  nsCOMPtr<nsIPrefBranch> branch = VcmSIPCCBinding::getPrefBranch();
-  if (branch && NS_SUCCEEDED(branch->GetIntPref("media.navigator.video.max_fr",
-                                                max_fr))) {
-    return 0;
-  }
-  return VCM_ERROR;
 }
 
 short vcmGetVideoMaxFr(uint16_t codec,
@@ -3405,9 +3403,43 @@ short vcmGetVideoMaxFr(uint16_t codec,
   short ret;
 
   mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
-      WrapRunnableNMRet(&vcmGetVideoMaxFr_m,
+      WrapRunnableNMRet(&vcmGetVideoPref_m,
                         codec,
+                        "media.navigator.video.max_fr",
                         max_fr,
                         &ret));
+  return ret;
+}
+
+short vcmGetVideoMaxBr(uint16_t codec,
+                       int32_t *max_br) {
+  short ret;
+
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
+      WrapRunnableNMRet(&vcmGetVideoPref_m,
+                        codec,
+                        "media.navigator.video.h264.max_br",
+                        max_br,
+                        &ret));
+  return ret;
+}
+
+short vcmGetVideoMaxMbps(uint16_t codec,
+                       int32_t *max_mbps) {
+  short ret;
+
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
+      WrapRunnableNMRet(&vcmGetVideoPref_m,
+                        codec,
+                        "media.navigator.video.h264.max_mbps",
+                        max_mbps,
+                        &ret));
+  if (ret == VCM_ERROR) {
+#ifdef MOZ_WEBRTC_OMX
+    // Level 1.2; but let's allow CIF@30 or QVGA@30+ by default
+    *max_mbps = 11880;
+    ret = 0;
+#endif
+  }
   return ret;
 }
