@@ -50,6 +50,12 @@ GMPParent::CloneFrom(const GMPParent* aOther)
   return Init(aOther->mService, aOther->mDirectory);
 }
 
+void
+GMPParent::CheckThread()
+{
+  MOZ_ASSERT(mGMPThread == NS_GetCurrentThread());
+}
+
 nsresult
 GMPParent::Init(GeckoMediaPluginService *aService, nsIFile* aPluginDir)
 {

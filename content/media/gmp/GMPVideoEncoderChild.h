@@ -34,8 +34,7 @@ public:
                        uint32_t aCodecSpecificInfoLength) MOZ_OVERRIDE;
 
   // GMPSharedMemManager
-  virtual void CheckThread();
-  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem)
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) MOZ_OVERRIDE
   {
 #ifndef SHMEM_ALLOC_IN_CHILD
     return CallNeedShmem(aSize, aMem);
@@ -47,7 +46,7 @@ public:
 #endif
 #endif
   }
-  virtual void Dealloc(Shmem& aMem)
+  virtual void Dealloc(Shmem& aMem) MOZ_OVERRIDE
   {
 #ifndef SHMEM_ALLOC_IN_CHILD
     SendParentShmemForPool(aMem);
