@@ -7,8 +7,8 @@ body {
   font-size: 15px;
   font-weight: normal;
   margin: 0;
-  color: #737980;
-  background-image: linear-gradient(#fff, #ededed 100px);
+  color: #424e5a;
+  background-color: #f1f1f1;
 }
 
 h1 {
@@ -24,7 +24,7 @@ button {
   height: 30px;
   max-height: 30px;
   padding: 3px;
-  color: #737980;
+  color: #333333;
   border: 1px solid rgba(23,50,77,.4);
   border-radius: 5px;
   background-color: #f1f1f1;
