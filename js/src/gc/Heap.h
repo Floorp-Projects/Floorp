@@ -915,7 +915,7 @@ class HeapUsage
     mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes_;
 
   public:
-    HeapUsage(HeapUsage *parent)
+    explicit HeapUsage(HeapUsage *parent)
       : parent_(parent),
         gcBytes_(0)
     {}
