@@ -177,17 +177,7 @@ public:
   }
 };
 
-class nsCharSeparatedTokenizer
-  : public nsCharSeparatedTokenizerTemplate<>
-{
-public:
-  nsCharSeparatedTokenizer(const nsSubstring& aSource,
-                           char16_t aSeparatorChar,
-                           uint32_t aFlags = 0)
-    : nsCharSeparatedTokenizerTemplate<>(aSource, aSeparatorChar, aFlags)
-  {
-  }
-};
+typedef nsCharSeparatedTokenizerTemplate<> nsCharSeparatedTokenizer;
 
 template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
 class nsCCharSeparatedTokenizerTemplate
@@ -203,16 +193,6 @@ public:
   }
 };
 
-class nsCCharSeparatedTokenizer
-  : public nsCCharSeparatedTokenizerTemplate<>
-{
-public:
-  nsCCharSeparatedTokenizer(const nsCSubstring& aSource,
-                            char aSeparatorChar,
-                            uint32_t aFlags = 0)
-    : nsCCharSeparatedTokenizerTemplate<>(aSource, aSeparatorChar, aFlags)
-  {
-  }
-};
+typedef nsCCharSeparatedTokenizerTemplate<> nsCCharSeparatedTokenizer;
 
 #endif /* __nsCharSeparatedTokenizer_h */
