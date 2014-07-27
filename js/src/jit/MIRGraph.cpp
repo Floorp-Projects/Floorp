@@ -722,6 +722,18 @@ MBasicBlock::discard(MInstruction *ins)
     instructions_.remove(ins);
 }
 
+void
+MBasicBlock::discardIgnoreOperands(MInstruction *ins)
+{
+    AssertSafelyDiscardable(ins);
+#ifdef DEBUG
+    for (size_t i = 0, e = ins->numOperands(); i < e; i++)
+        JS_ASSERT(ins->operandDiscarded(i));
+#endif
+
+    instructions_.remove(ins);
+}
+
 MInstructionIterator
 MBasicBlock::discardAt(MInstructionIterator &iter)
 {
