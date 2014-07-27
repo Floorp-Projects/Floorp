@@ -108,7 +108,7 @@ void
 GMPVideoEncodedFrameImpl::DestroyBuffer()
 {
   if (mHost && mBuffer.IsWritable()) {
-    mHost->SharedMemMgr()->MgrDeallocShmem(GMPSharedMemManager::kGMPEncodedData, mBuffer);
+    mHost->SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPEncodedData, mBuffer);
   }
   mBuffer = ipc::Shmem();
 }
@@ -120,7 +120,7 @@ GMPVideoEncodedFrameImpl::CreateEmptyFrame(uint32_t aSize)
     DestroyBuffer();
   } else if (aSize > AllocatedSize()) {
     DestroyBuffer();
-    if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPEncodedData, aSize,
+    if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMem::kGMPEncodedData, aSize,
                                               ipc::SharedMemory::TYPE_BASIC, &mBuffer) ||
         !Buffer()) {
       return GMPAllocErr;
@@ -228,7 +228,7 @@ GMPVideoEncodedFrameImpl::SetAllocatedSize(uint32_t aNewSize)
   }
 
   ipc::Shmem new_mem;
-  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMemManager::kGMPEncodedData, aNewSize,
+  if (!mHost->SharedMemMgr()->MgrAllocShmem(GMPSharedMem::kGMPEncodedData, aNewSize,
                                             ipc::SharedMemory::TYPE_BASIC, &new_mem) ||
       !new_mem.get<uint8_t>()) {
     return;

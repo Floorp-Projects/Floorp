@@ -50,7 +50,8 @@ enum GMPState {
   GMPStateClosing
 };
 
-class GMPParent MOZ_FINAL : public PGMPParent
+class GMPParent MOZ_FINAL : public PGMPParent,
+                            public GMPSharedMem
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(GMPParent)
@@ -109,6 +110,9 @@ public:
   already_AddRefed<nsIFile> GetDirectory() {
     return nsCOMPtr<nsIFile>(mDirectory).forget();
   }
+
+  // GMPSharedMem
+  virtual void CheckThread() MOZ_OVERRIDE;
 
 private:
   ~GMPParent();
