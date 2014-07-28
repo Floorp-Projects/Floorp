@@ -37,7 +37,7 @@ namespace xpc {
 
 class Scriptability {
 public:
-    Scriptability(JSCompartment *c);
+    explicit Scriptability(JSCompartment *c);
     bool Allowed();
     bool IsImmuneToScriptPolicy();
 
