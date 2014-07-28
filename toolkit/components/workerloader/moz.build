@@ -5,3 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
+
+JS_MODULES_PATH = 'modules/workers'
+
+EXTRA_JS_MODULES += [
+    'require.js'
+]

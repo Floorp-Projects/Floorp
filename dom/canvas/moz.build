@@ -1,0 +1,125 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_DIRS += ['test']
+TEST_TOOL_DIRS += ['compiledtest']
+
+EXPORTS += [
+    'nsICanvasRenderingContextInternal.h',
+]
+
+EXPORTS.mozilla.ipc += [
+    'DocumentRendererChild.h',
+    'DocumentRendererParent.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'CanvasGradient.h',
+    'CanvasPattern.h',
+    'CanvasRenderingContext2D.h',
+    'CanvasUtils.h',
+    'ImageData.h',
+    'TextMetrics.h',
+]
+
+UNIFIED_SOURCES += [
+    'CanvasImageCache.cpp',
+    'CanvasRenderingContext2D.cpp',
+    'CanvasUtils.cpp',
+    'DocumentRendererChild.cpp',
+    'DocumentRendererParent.cpp',
+    'ImageData.cpp',
+    'ImageEncoder.cpp',
+]
+
+if CONFIG['MOZ_WEBGL']:
+    UNIFIED_SOURCES += [
+        'MurmurHash3.cpp',
+        'WebGL1Context.cpp',
+        'WebGL2Context.cpp',
+        'WebGLActiveInfo.cpp',
+        'WebGLBuffer.cpp',
+        'WebGLContext.cpp',
+        'WebGLContextAsyncQueries.cpp',
+        'WebGLContextBuffers.cpp',
+        'WebGLContextDraw.cpp',
+        'WebGLContextExtensions.cpp',
+        'WebGLContextFramebufferOperations.cpp',
+        'WebGLContextGL.cpp',
+        'WebGLContextLossTimer.cpp',
+        'WebGLContextReporter.cpp',
+        'WebGLContextState.cpp',
+        'WebGLContextUtils.cpp',
+        'WebGLContextValidate.cpp',
+        'WebGLContextVertexArray.cpp',
+        'WebGLContextVertices.cpp',
+        'WebGLElementArrayCache.cpp',
+        'WebGLExtensionBase.cpp',
+        'WebGLExtensionBlendMinMax.cpp',
+        'WebGLExtensionColorBufferFloat.cpp',
+        'WebGLExtensionColorBufferHalfFloat.cpp',
+        'WebGLExtensionCompressedTextureATC.cpp',
+        'WebGLExtensionCompressedTextureETC1.cpp',
+        'WebGLExtensionCompressedTexturePVRTC.cpp',
+        'WebGLExtensionCompressedTextureS3TC.cpp',
+        'WebGLExtensionDebugRendererInfo.cpp',
+        'WebGLExtensionDebugShaders.cpp',
+        'WebGLExtensionDepthTexture.cpp',
+        'WebGLExtensionDrawBuffers.cpp',
+        'WebGLExtensionElementIndexUint.cpp',
+        'WebGLExtensionFragDepth.cpp',
+        'WebGLExtensionInstancedArrays.cpp',
+        'WebGLExtensionLoseContext.cpp',
+        'WebGLExtensionSRGB.cpp',
+        'WebGLExtensionStandardDerivatives.cpp',
+        'WebGLExtensionTextureFilterAnisotropic.cpp',
+        'WebGLExtensionTextureFloat.cpp',
+        'WebGLExtensionTextureFloatLinear.cpp',
+        'WebGLExtensionTextureHalfFloat.cpp',
+        'WebGLExtensionTextureHalfFloatLinear.cpp',
+        'WebGLExtensionVertexArray.cpp',
+        'WebGLFramebuffer.cpp',
+        'WebGLFramebufferAttachable.cpp',
+        'WebGLObjectModel.cpp',
+        'WebGLProgram.cpp',
+        'WebGLQuery.cpp',
+        'WebGLRenderbuffer.cpp',
+        'WebGLShader.cpp',
+        'WebGLShaderPrecisionFormat.cpp',
+        'WebGLTexelConversions.cpp',
+        'WebGLTexture.cpp',
+        'WebGLUniformLocation.cpp',
+        'WebGLVertexArray.cpp',
+        'WebGLVertexArrayFake.cpp',
+        'WebGLVertexArrayGL.cpp',
+    ]
+    LOCAL_INCLUDES += [
+        '/js/xpconnect/wrappers',
+    ]
+else:
+    UNIFIED_SOURCES += [
+        'WebGLContextNotSupported.cpp',
+    ]
+
+FAIL_ON_WARNINGS = True
+
+MSVC_ENABLE_PGO = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/html/content/src',
+    '/content/svg/content/src',
+    '/content/xul/content/src',
+    '/dom/base',
+    '/image/src',
+    '/js/xpconnect/src',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/xul',
+]

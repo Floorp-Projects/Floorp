@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
-
 EXTRA_COMPONENTS += [
     'PermissionPromptService.js',
     'PermissionPromptService.manifest',
@@ -16,3 +14,22 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'PermissionSettings.jsm',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+
+if CONFIG['MOZ_B2G_RIL']:
+    MOCHITEST_MANIFESTS += ['tests/mochitest-ril.ini']
+
+if CONFIG['MOZ_B2G_FM']:
+    MOCHITEST_MANIFESTS += ['tests/mochitest-fm.ini']
+
+if CONFIG['MOZ_B2G_BT']:
+    MOCHITEST_MANIFESTS += ['tests/mochitest-bt.ini']
+
+if CONFIG['MOZ_WEBSMS_BACKEND']:
+    MOCHITEST_MANIFESTS += ['tests/mochitest-websms.ini']
+
+if CONFIG['MOZ_TIME_MANAGER']:
+    MOCHITEST_MANIFESTS += ['tests/mochitest-time.ini']

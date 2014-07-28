@@ -50,7 +50,6 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
-#include "nsLocation.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"
 
@@ -260,11 +259,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Window, nsWindowSH,
                            DEFAULT_SCRIPTABLE_FLAGS |
                            WINDOW_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
-                           ((DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                             nsIXPCScriptable::WANT_ADDPROPERTY) &
-                            ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE))
 
   NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
@@ -821,10 +815,6 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_WEBSPEECH
     DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(Location, nsIDOMLocation)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocation)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMPrototype, nsIDOMDOMConstructor)
@@ -3274,62 +3264,6 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   }
 
   *_retval = winObj;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocationSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                        JSObject *globalObj, JSObject **parentObj)
-{
-  // window.location can be held onto by both evil pages that want to track the
-  // user's progress on the web and bookmarklets that want to use the location
-  // object. Parent it to the outer window so that access checks do the Right
-  // Thing.
-  *parentObj = globalObj;
-
-  nsCOMPtr<nsIDOMLocation> safeLoc(do_QueryInterface(nativeObj));
-  if (!safeLoc) {
-    // Oops, this wasn't really a location object. This can happen if someone
-    // tries to use our scriptable helper as a real object and tries to wrap
-    // it, see bug 319296
-    return NS_OK;
-  }
-
-  nsLocation *loc = (nsLocation *)safeLoc.get();
-  nsIDocShell *ds = loc->GetDocShell();
-  if (!ds) {
-    NS_WARNING("Refusing to create a location in the wrong scope");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(ds);
-  if (!sgo) {
-    NS_WARNING("Refusing to create a location in the wrong scope because the "
-               "docshell is being destroyed");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  *parentObj = sgo->GetGlobalJSObject();
-  return *parentObj ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsLocationSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, jsid aId, jsval *vp, bool *_retval)
-{
-  JS::Rooted<JSObject*> rootedObj(cx, obj);
-
-  // Shadowing protection. This will go away when nsLocation moves to the new
-  // bindings.
-  JS::Rooted<jsid> id(cx, aId);
-  if (wrapper->HasNativeMember(id)) {
-    JS_ReportError(cx, "Permission denied to shadow native property");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsLocation* location = static_cast<nsLocation*>(GetNative(wrapper, rootedObj));
-  location->PreserveWrapper(location);
-
   return NS_OK;
 }
 

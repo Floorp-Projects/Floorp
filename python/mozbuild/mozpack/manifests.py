@@ -115,7 +115,7 @@ class InstallManifest(object):
     def _load_from_fileobj(self, fileobj):
         version = fileobj.readline().rstrip()
         if version not in ('1', '2', '3', '4'):
-            raise UnreadableInstallManifest('Unknown manifest version: ' %
+            raise UnreadableInstallManifest('Unknown manifest version: %s' %
                 version)
 
         for line in fileobj:

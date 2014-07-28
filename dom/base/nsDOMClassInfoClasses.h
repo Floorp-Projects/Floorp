@@ -5,7 +5,6 @@
 // IWYU pragma: private, include "nsDOMClassInfoID.h"
 
 DOMCI_CLASS(Window)
-DOMCI_CLASS(Location)
 DOMCI_CLASS(DOMPrototype)
 DOMCI_CLASS(DOMConstructor)
 

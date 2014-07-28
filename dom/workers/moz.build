@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
-
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'ServiceWorkerContainer.h',
@@ -76,3 +74,17 @@ LOCAL_INCLUDES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+TEST_DIRS += [
+    'test/extensions/bootstrap',
+    'test/extensions/traditional',
+]
+
+MOCHITEST_MANIFESTS += [
+    'test/mochitest.ini',
+    'test/serviceworkers/mochitest.ini',
+]
+
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']

@@ -1,0 +1,193 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=682299
+-->
+<head>
+  <title>Test for Bug 682299</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/content/media/test/manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=682299">Mozilla Bug 682299</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 682299 **/
+
+function createCanvas(width, height) {
+  var c = document.createElement("canvas");
+  c.width = width;
+  c.height = height;
+  return c;
+}
+
+function testCanvasDrawImage(v) {
+  var c = createCanvas(v.width, v.height);
+  var ctx = c.getContext("2d");
+  ctx.drawImage(v, 0, 0);
+
+  try {
+    var data = ctx.getImageData(0, 0, 1, 1);
+    ok(true, "drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' worked");
+  } catch(error) {
+    ok(!v.crossOrigin && error.name === "SecurityError", "drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
+    v.tainted = true;
+  }
+}
+
+function testCanvasCreatePattern(v) {
+  var c = createCanvas(v.width, v.height);
+  var ctx = c.getContext("2d");
+  ctx.fillStyle = ctx.createPattern(v, "");
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  try {
+    var data = ctx.getImageData(0, 0, 1, 1);
+    ok(true, "createPattern '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' worked");
+  } catch(error) {
+    ok(!v.crossOrigin && error.name === "SecurityError", "createPattern '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
+    v.tainted = true;
+  }
+}
+
+function testWebGL(v) {
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+
+  try {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, v);
+    ok(true, "createTexture from '" + v.src + "' with crossOrigin='" + v.crossOrigin + "' worked");
+  } catch (error) {
+    ok(!v.crossOrigin && error.name === "SecurityError", "createTexture from '" + v.src + "' with crossOrigin='" + v.crossOrigin + "' failed");
+    v.tainted = true;
+  }
+}
+
+function testTaintedCanvas(v) {
+  var c = createCanvas(v.width, v.height);
+  var ctx = c.getContext("2d");
+  ctx.drawImage(v, 0, 0);
+
+  try {
+    var data = ctx.getImageData(0, 0, 1, 1);
+    ok(false, "changing the CORS mode should not allow reading data from remote videos");
+  } catch (error) {
+    ok(error.name === "SecurityError", "changing the CORS mode, drawImage '" + v.src + "' then getImageData with crossOrigin='" + v.crossOrigin + "' failed");
+  }
+}
+
+function vidDataSuccess(e) {
+  ok(!e.target.error, "Load '" + e.target.src + "' with crossOrigin='" + e.target.crossOrigin + "'");
+
+  testCanvasDrawImage(e.target);
+  testCanvasCreatePattern(e.target);
+  if (gl) {
+    testWebGL(e.target);
+  }
+  // If we change the CORS mode after loading the file without CORS it should still throw a security error
+  if (e.target.tainted) {
+    e.target.crossOrigin = "anonymous";
+    testTaintedCanvas(e.target);
+  }
+
+  doneTest(e);
+}
+
+function vidLoadFailure(e) {
+  ok(false, "Load '" + e.target.src + "' with crossOrigin='" + e.target.crossOrigin + "'");
+  doneTest(e);
+}
+
+function vidErrorSuccess(e) {
+  ok(e.target.error.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED, 
+    "Load '" + e.target.src + "' with crossOrigin='" + e.target.crossOrigin + "'");
+  doneTest(e);
+}
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  if (test.cors === "just-crossOrigin-without-value") {
+    var div = document.createElement('div');
+    div.innerHTML="<video crossOrigin>";
+    v = div.children[0];
+  } else if (test.cors !== "missing-value-default") {
+    v.crossOrigin = test.cors;
+  }
+  v.token = token;
+  manager.started(token);
+  v.autoplay = true;
+  v.preload = "auto";
+  v.style.display = "none";
+  if (test.nameIntent === test.corsIntent || test.corsIntent === "none" ||
+      (test.nameIntent === "use-credentials" && test.corsIntent === "anonymous")) {
+    v.addEventListener("loadeddata", vidDataSuccess, false);
+    v.addEventListener("error", vidLoadFailure, false);
+  } else {
+    v.addEventListener("loadeddata", vidLoadFailure, false);
+    v.addEventListener("error", vidErrorSuccess, false);
+  }
+  v.src = test.name;
+  document.body.appendChild(v);
+}
+
+function doneTest(e) {
+  var v = e.target;
+  v.parentNode.removeChild(v);
+  manager.finished(v.token);
+}
+
+var videoFile = getPlayableVideo(gSmallTests);
+if (!videoFile) {
+  SimpleTest.finish();
+}
+videoFile = "?name=tests/content/media/test/" + videoFile.name + "&type=" + videoFile.type;
+
+var gl;
+try {
+  gl = createCanvas(16, 16).getContext("experimental-webgl");
+} catch (ex) {
+  // Mac OS X 10.5 doesn't support WebGL, so we won't run the WebGL tests
+}
+
+var manager = new MediaTestManager;
+var corsTests = [];
+
+const host = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs";
+const serverAttrValues = [
+  [ "&cors=none", "none" ],
+  [ "&cors=anonymous", "anonymous" ],
+  [ "&cors=use-credentials", "use-credentials" ]
+];
+const clientAttrValues = [
+  [ "missing-value-default", "none" ],
+  [ "", "anonymous" ],
+  [ "just-crossOrigin-without-value", "anonymous" ],
+  [ "anonymous", "anonymous" ],
+  [ "use-credentials", "use-credentials" ],
+  [ "foobar", "anonymous" ]
+];
+
+// Build the video file test array
+for (var i = 0; i < serverAttrValues.length; i++) {
+	for (var n = 0; n < clientAttrValues.length; n++) {
+		corsTests.push({
+      name: host + videoFile + serverAttrValues[i][0],
+      nameIntent: serverAttrValues[i][1],
+      cors: clientAttrValues[n][0],
+      corsIntent: clientAttrValues[n][1]
+    });
+	}
+}
+
+manager.runTests(corsTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>
