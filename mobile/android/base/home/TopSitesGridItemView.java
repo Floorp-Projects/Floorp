@@ -62,7 +62,7 @@ public class TopSitesGridItemView extends RelativeLayout {
     private int mType = -1;
 
     // Dirty state.
-    private boolean mIsDirty = false;
+    private boolean mIsDirty;
 
     // Empty state.
     private int mLoadId = Favicons.NOT_LOADING;

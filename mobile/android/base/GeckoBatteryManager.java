@@ -24,8 +24,8 @@ public class GeckoBatteryManager extends BroadcastReceiver {
     private final static double  kDefaultRemainingTime = 0.0;
     private final static double  kUnknownRemainingTime = -1.0;
 
-    private static long    sLastLevelChange            = 0;
-    private static boolean sNotificationsEnabled       = false;
+    private static long    sLastLevelChange;
+    private static boolean sNotificationsEnabled;
     private static double  sLevel                      = kDefaultLevel;
     private static boolean sCharging                   = kDefaultCharging;
     private static double  sRemainingTime              = kDefaultRemainingTime;

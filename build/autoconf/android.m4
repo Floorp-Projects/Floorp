@@ -408,4 +408,30 @@ case "$target" in
     ;;
 esac
 
+MOZ_ARG_WITH_STRING(android-min-sdk,
+[  --with-android-min-sdk=[VER]     Impose a minimum Firefox for Android SDK version],
+[ MOZ_ANDROID_MIN_SDK_VERSION=$withval ])
+
+MOZ_ARG_WITH_STRING(android-max-sdk,
+[  --with-android-max-sdk=[VER]     Impose a maximum Firefox for Android SDK version],
+[ MOZ_ANDROID_MAX_SDK_VERSION=$withval ])
+
+if test -n "$MOZ_ANDROID_MIN_SDK_VERSION"; then
+    if test -n "$MOZ_ANDROID_MAX_SDK_VERSION"; then
+        if test $MOZ_ANDROID_MAX_SDK_VERSION -lt $MOZ_ANDROID_MIN_SDK_VERSION ; then
+            AC_MSG_ERROR([--with-android-max-sdk must be at least the value of --with-android-min-sdk.])
+        fi
+    fi
+
+    if test $MOZ_ANDROID_MIN_SDK_VERSION -gt $ANDROID_TARGET_SDK ; then
+        AC_MSG_ERROR([--with-android-min-sdk is expected to be less than $ANDROID_TARGET_SDK])
+    fi
+
+    AC_DEFINE_UNQUOTED(MOZ_ANDROID_MIN_SDK_VERSION, $MOZ_ANDROID_MIN_SDK_VERSION)
+fi
+
+if test -n "$MOZ_ANDROID_MAX_SDK_VERSION"; then
+    AC_DEFINE_UNQUOTED(MOZ_ANDROID_MAX_SDK_VERSION, $MOZ_ANDROID_MAX_SDK_VERSION)
+fi
+
 ])

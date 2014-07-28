@@ -134,11 +134,11 @@ public class AndroidGamepadManager {
         }
     }
 
-    private static boolean sStarted = false;
+    private static boolean sStarted;
     private static HashMap<Integer, Gamepad> sGamepads = null;
     private static HashMap<Integer, List<KeyEvent>> sPendingGamepads = null;
     private static InputManager.InputDeviceListener sListener = null;
-    private static Timer sPollTimer = null;
+    private static Timer sPollTimer;
 
     private AndroidGamepadManager() {
     }

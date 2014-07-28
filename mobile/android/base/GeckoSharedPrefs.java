@@ -64,7 +64,7 @@ public final class GeckoSharedPrefs {
     };
 
     // For optimizing the migration check in subsequent get() calls
-    private static volatile boolean migrationDone = false;
+    private static volatile boolean migrationDone;
 
     public enum Flags {
         DISABLE_MIGRATIONS
