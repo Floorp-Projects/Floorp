@@ -3380,8 +3380,11 @@ nsresult
 ThrowAndFail(nsresult errNum, JSContext *cx, bool *retval);
 
 struct GlobalProperties {
-    GlobalProperties(bool aPromise) {
+    GlobalProperties() {
       mozilla::PodZero(this);
+
+      // Promise is supposed to be part of ES, and therefore should appear on
+      // every global.
       Promise = true;
     }
     bool Parse(JSContext *cx, JS::HandleObject obj);
@@ -3442,7 +3445,6 @@ public:
         , sameZoneAs(cx)
         , invisibleToDebugger(false)
         , discardSource(false)
-        , globalProperties(true)
         , metadata(cx)
     { }
 
