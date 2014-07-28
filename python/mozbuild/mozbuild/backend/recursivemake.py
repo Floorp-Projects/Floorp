@@ -327,7 +327,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._may_skip = {
             'export': set(),
-            'binaries': set(),
             'libs': set(),
         }
         self._no_skip = {
@@ -538,10 +537,8 @@ class RecursiveMakeBackend(CommonBackend):
             return current, [], subdirs.parallel + \
                 subdirs.dirs + subdirs.tests
 
-        # compile, binaries and tools tiers use the same traversal as export
         filters = [
             ('export', parallel_filter),
-            ('binaries', parallel_filter),
             ('libs', libs_filter),
             ('tools', tools_filter),
         ]
@@ -704,8 +701,6 @@ class RecursiveMakeBackend(CommonBackend):
                     self.summary.makefile_in_count += 1
 
                     for tier, skiplist in self._may_skip.items():
-                        if tier in ('compile', 'binaries'):
-                            continue
                         if bf.relobjdir in skiplist:
                             skiplist.remove(bf.relobjdir)
                 else:
