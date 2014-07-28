@@ -800,7 +800,7 @@ class BuildReader(object):
             self._sandbox_post_eval_cb(sandbox)
 
         # We first collect directories populated in variables.
-        dir_vars = ['DIRS', 'PARALLEL_DIRS']
+        dir_vars = ['DIRS']
 
         if sandbox.config.substs.get('ENABLE_TESTS', False) == '1':
             dir_vars.append('TEST_DIRS')
@@ -839,12 +839,6 @@ class BuildReader(object):
                 gyp_sandbox.update(gyp_dir.sandbox_vars)
                 gyp_sandboxes.append(gyp_sandbox)
 
-        # Add the gyp subdirectories to DIRS. We don't care about trying to
-        # place some of them in PARALLEL_DIRS because they're only going to be
-        # relevant for the compile and libs tiers. The compile tier is already
-        # parallelized, and the libs tier is always serialized, and will remain
-        # so until the library linking operations are moved out of it, at which
-        # point PARALLEL_DIRS will be irrelevant anyways.
         for gyp_sandbox in gyp_sandboxes:
             if self._sandbox_post_eval_cb:
                 self._sandbox_post_eval_cb(gyp_sandbox)

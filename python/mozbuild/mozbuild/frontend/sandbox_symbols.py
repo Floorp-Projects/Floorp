@@ -280,15 +280,6 @@ VARIABLES = {
         Implies FORCE_SHARED_LIB.
         """, None),
 
-    'PARALLEL_DIRS': (list, list,
-        """A parallel version of ``DIRS``.
-
-        Ideally this variable does not exist. It is provided so a transition
-        from recursive makefiles can be made. Once the build system has been
-        converted to not use Makefile's for the build frontend, this will
-        likely go away.
-        """, None),
-
     'PYTHON_UNIT_TESTS': (StrictOrderingOnAppendList, list,
         """A list of python unit tests.
         """, None),
@@ -930,9 +921,9 @@ FUNCTIONS = {
         """Make the specified variable available to all child directories.
 
         The variable specified by the argument string is added to the
-        environment of all directories specified in the DIRS, PARALLEL_DIRS,
-        and TEST_DIRS variables. If those directories themselves have child
-        directories, the variable will be exported to all of them.
+        environment of all directories specified in the DIRS and TEST_DIRS
+        variables. If those directories themselves have child directories,
+        the variable will be exported to all of them.
 
         The value used for the variable is the final value at the end of the
         moz.build file, so it is possible (but not recommended style) to place
@@ -1034,4 +1025,5 @@ SPECIAL_VARIABLES = {
 DEPRECATION_HINTS = {
     'TOOL_DIRS': 'Please use the DIRS variable instead.',
     'TEST_TOOL_DIRS': 'Please use the TEST_DIRS variable instead.',
+    'PARALLEL_DIRS': 'Please use the DIRS variable instead.',
 }

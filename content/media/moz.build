@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += [
+DIRS += [
   'encoder',
   'gmp',
   'mediasource',
@@ -16,42 +16,42 @@ PARALLEL_DIRS += [
 TEST_DIRS += ['compiledtest']
 
 if CONFIG['MOZ_RAW']:
-    PARALLEL_DIRS += ['raw']
+    DIRS += ['raw']
 
 if CONFIG['MOZ_WAVE']:
-    PARALLEL_DIRS += ['wave']
+    DIRS += ['wave']
 
 if CONFIG['MOZ_WEBM']:
-    PARALLEL_DIRS += ['webm']
+    DIRS += ['webm']
 
 if CONFIG['MOZ_GSTREAMER']:
-    PARALLEL_DIRS += ['gstreamer']
+    DIRS += ['gstreamer']
 
 if CONFIG['MOZ_DIRECTSHOW']:
-    PARALLEL_DIRS += ['directshow']
+    DIRS += ['directshow']
 
 if CONFIG['MOZ_ANDROID_OMX']:
-    PARALLEL_DIRS += ['android']
+    DIRS += ['android']
 
 if CONFIG['MOZ_WMF']:
-    PARALLEL_DIRS += ['wmf']
+    DIRS += ['wmf']
 
 if CONFIG['MOZ_FMP4']:
-    PARALLEL_DIRS += ['fmp4']
+    DIRS += ['fmp4']
 
 if CONFIG['MOZ_APPLEMEDIA']:
-    PARALLEL_DIRS += ['apple']
+    DIRS += ['apple']
 
-PARALLEL_DIRS += ['webrtc']
+DIRS += ['webrtc']
 
 if CONFIG['MOZ_OMX_DECODER']:
-    PARALLEL_DIRS += ['omx']
-    PARALLEL_DIRS += ['omx/mediaresourcemanager']
+    DIRS += ['omx']
+    DIRS += ['omx/mediaresourcemanager']
 
-PARALLEL_DIRS += ['webspeech']
+DIRS += ['webspeech']
 
 if CONFIG['MOZ_EME']:
-    PARALLEL_DIRS += ['eme']
+    DIRS += ['eme']
 
 TEST_DIRS += [
     'test',

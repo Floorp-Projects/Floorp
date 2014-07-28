@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += [
+DIRS += [
     'base',
     'cookie',
     'dns',
@@ -19,15 +19,15 @@ PARALLEL_DIRS += [
 ]
 
 if CONFIG['MOZ_SRTP']:
-    PARALLEL_DIRS += ['srtp/src']
+    DIRS += ['srtp/src']
 
 if CONFIG['MOZ_SCTP']:
-    PARALLEL_DIRS += ['sctp/src', 'sctp/datachannel']
+    DIRS += ['sctp/src', 'sctp/datachannel']
 
 if CONFIG['NECKO_WIFI']:
-    PARALLEL_DIRS += ['wifi']
+    DIRS += ['wifi']
 
-PARALLEL_DIRS += ['locales']
+DIRS += ['locales']
 
 DIRS += ['build']
 TEST_DIRS += ['test']
