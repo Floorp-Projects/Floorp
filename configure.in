@@ -5094,6 +5094,9 @@ if test -n "$MOZ_APPLEMEDIA"; then
   # hack in frameworks for fmp4 - see bug 1029974
   # We load VideoToolbox and CoreMedia dynamically, so they don't appear here.
   LDFLAGS="$LDFLAGS -framework AudioToolbox"
+  dnl Verify CoreMedia is available.
+  AC_CHECK_HEADER([CoreMedia/CoreMedia.h], [],
+    [AC_MSG_ERROR([MacOS X 10.7 SDK or later is required])])
 fi
 
 dnl ========================================================
