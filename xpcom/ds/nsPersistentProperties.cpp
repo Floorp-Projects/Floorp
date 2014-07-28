@@ -82,7 +82,7 @@ enum EParserSpecial
 class nsPropertiesParser
 {
 public:
-  nsPropertiesParser(nsIPersistentProperties* aProps)
+  explicit nsPropertiesParser(nsIPersistentProperties* aProps)
     : mHaveMultiLine(false)
     , mState(eParserState_AwaitingKey)
     , mProps(aProps)

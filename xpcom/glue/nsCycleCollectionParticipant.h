@@ -110,7 +110,7 @@ class NS_NO_VTABLE nsCycleCollectionParticipant
 {
 public:
   MOZ_CONSTEXPR nsCycleCollectionParticipant() : mMightSkip(false) {}
-  MOZ_CONSTEXPR nsCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {}
+  MOZ_CONSTEXPR explicit nsCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {}
 
   NS_IMETHOD Traverse(void* aPtr, nsCycleCollectionTraversalCallback& aCb) = 0;
 
@@ -176,7 +176,7 @@ public:
     : nsCycleCollectionParticipant(false)
   {
   }
-  MOZ_CONSTEXPR nsScriptObjectTracer(bool aSkip)
+  MOZ_CONSTEXPR explicit nsScriptObjectTracer(bool aSkip)
     : nsCycleCollectionParticipant(aSkip)
   {
   }
@@ -195,7 +195,7 @@ public:
     : nsScriptObjectTracer(false)
   {
   }
-  MOZ_CONSTEXPR nsXPCOMCycleCollectionParticipant(bool aSkip)
+  MOZ_CONSTEXPR explicit nsXPCOMCycleCollectionParticipant(bool aSkip)
     : nsScriptObjectTracer(aSkip)
   {
   }
