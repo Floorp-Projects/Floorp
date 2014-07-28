@@ -2473,7 +2473,7 @@ LIRGenerator::visitSetInitializedLength(MSetInitializedLength *ins)
 bool
 LIRGenerator::visitNot(MNot *ins)
 {
-    MDefinition *op = ins->operand();
+    MDefinition *op = ins->input();
 
     // String is converted to length of string in the type analysis phase (see
     // TestPolicy).

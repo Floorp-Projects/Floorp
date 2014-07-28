@@ -6339,10 +6339,6 @@ class MNot
         return operandIsNeverNaN_;
     }
 
-    MDefinition *operand() const {
-        return getOperand(0);
-    }
-
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
     }
