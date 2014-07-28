@@ -6558,3 +6558,9 @@ JS::CaptureCurrentStack(JSContext *cx, JS::MutableHandleObject stackp, unsigned 
     stackp.set(frame.get());
     return true;
 }
+
+JS_PUBLIC_API(Zone *)
+JS::GetObjectZone(JSObject *obj)
+{
+    return obj->zone();
+}
