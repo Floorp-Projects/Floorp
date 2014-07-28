@@ -3443,3 +3443,15 @@ short vcmGetVideoMaxMbps(uint16_t codec,
   }
   return ret;
 }
+
+short vcmGetVideoPreferredCodec(int32_t *preferred_codec) {
+  short ret;
+
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
+      WrapRunnableNMRet(&vcmGetVideoPref_m,
+                        (uint16_t)0,
+                        "media.navigator.video.preferred_codec",
+                        preferred_codec,
+                        &ret));
+  return ret;
+}
