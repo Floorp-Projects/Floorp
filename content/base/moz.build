@@ -5,4 +5,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PARALLEL_DIRS += ['public', 'src']
-TEST_TOOL_DIRS += ['test']
+TEST_DIRS += ['test']

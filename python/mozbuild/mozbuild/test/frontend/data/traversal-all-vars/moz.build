@@ -5,5 +5,3 @@
 DIRS += ['regular']
 PARALLEL_DIRS = ['parallel']
 TEST_DIRS = ['test']
-TEST_TOOL_DIRS = ['test_tool']
-TOOL_DIRS = ['tool']

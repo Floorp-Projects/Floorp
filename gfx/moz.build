@@ -28,5 +28,5 @@ if CONFIG['MOZ_ENABLE_SKIA']:
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
 
-TEST_TOOL_DIRS += ['tests']
+TEST_DIRS += ['tests']
 

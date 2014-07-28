@@ -101,6 +101,7 @@ endif
 # Dummy rules for possibly inexisting dependencies for the above tier targets
 $(addsuffix /Makefile,$(CURRENT_DIRS)) $(addsuffix /backend.mk,$(CURRENT_DIRS)):
 
+ifeq ($(CURRENT_TIER),export)
 # At least build/export requires config/export for buildid, but who knows what
 # else, so keep this global dependency to make config/export first for now.
 $(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CURRENT_TIER)
@@ -110,7 +111,6 @@ $(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CUR
 # is done with the config/host target. Note the config/host target only exists if
 # nsinstall is actually built, which it is not on Windows, because we use
 # nsinstall.py there.
-ifeq ($(CURRENT_TIER),export)
 ifneq (,$(filter config/host, $(compile_targets)))
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): config/host
 
@@ -200,9 +200,6 @@ endef
 
 $(foreach subtier,export binaries libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
 
-tools export:: $(SUBMAKEFILES)
-	$(LOOP_OVER_TOOL_DIRS)
-
 endif # ifdef TIERS
 
 endif # ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
@@ -237,4 +234,3 @@ recurse:
 	@$(RECURSED_COMMAND)
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)

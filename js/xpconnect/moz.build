@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['public', 'idl', 'wrappers', 'loader', 'src']
-TOOL_DIRS += ['shell']
-TEST_TOOL_DIRS += ['tests']
+DIRS += ['shell']
+TEST_DIRS += ['tests']
 
 if CONFIG['MOZ_XPCTOOLS']:
-    TOOL_DIRS += ['tools']
+    DIRS += ['tools']
 

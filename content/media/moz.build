@@ -13,7 +13,7 @@ PARALLEL_DIRS += [
   'webvtt'
 ]
 
-TEST_TOOL_DIRS += ['compiledtest']
+TEST_DIRS += ['compiledtest']
 
 if CONFIG['MOZ_RAW']:
     PARALLEL_DIRS += ['raw']
