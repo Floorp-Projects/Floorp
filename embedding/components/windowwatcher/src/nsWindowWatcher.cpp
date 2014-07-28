@@ -32,7 +32,6 @@
 #include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
 #include "nsIObserverService.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsXPCOM.h"
 #include "nsIURI.h"
@@ -54,7 +53,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsSandboxFlags.h"
@@ -451,7 +449,6 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
   nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
   nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
-  nsCxPusher                      callerContextGuard;
 
   MOZ_ASSERT_IF(openedFromRemoteTab, XRE_GetProcessType() == GeckoProcessType_Default);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -559,12 +556,12 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
 
   bool isCallerChrome = nsContentUtils::IsCallerChrome() && !openedFromRemoteTab;
 
-  JSContext *cx = GetJSContextFromWindow(aParent);
+  dom::AutoJSAPI jsapiChromeGuard;
 
   bool windowTypeIsChrome = chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-  if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome && cx) {
-    // open() is called from chrome on a non-chrome window, push the context of the
-    // callee onto the context stack to prevent the caller's priveleges from leaking
+  if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome) {
+    // open() is called from chrome on a non-chrome window, initialize an
+    // AutoJSAPI with the callee to prevent the caller's privileges from leaking
     // into code that runs while opening the new window.
     //
     // The reasoning for this is in bug 289204. Basically, chrome sometimes does
@@ -577,7 +574,10 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     // we decide whether to load with the principal of the caller or of the parent
     // based on whether the docshell type is chrome or content.
 
-    callerContextGuard.Push(cx);
+    nsCOMPtr<nsIGlobalObject> parentGlobalObject = do_QueryInterface(aParent);
+    if (NS_WARN_IF(!jsapiChromeGuard.Init(parentGlobalObject))) {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   uint32_t activeDocsSandboxFlags = 0;
@@ -2176,25 +2176,4 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(nsIDOMWindow *aParent,
   }
 
   return containerPref;
-}
-
-JSContext *
-nsWindowWatcher::GetJSContextFromWindow(nsIDOMWindow *aWindow)
-{
-  JSContext *cx = 0;
-
-  if (aWindow) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
-    if (sgo) {
-      nsIScriptContext *scx = sgo->GetContext();
-      if (scx)
-        cx = scx->GetNativeContext();
-    }
-    /* (off-topic note:) the nsIScriptContext can be retrieved by
-    nsCOMPtr<nsIScriptContext> scx;
-    nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(scx));
-    */
-  }
-
-  return cx;
 }
