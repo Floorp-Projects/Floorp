@@ -9,6 +9,7 @@ PARALLEL_DIRS += [
   'gmp',
   'mediasource',
   'ogg',
+  'systemservices',
   'webaudio',
   'webvtt'
 ]
