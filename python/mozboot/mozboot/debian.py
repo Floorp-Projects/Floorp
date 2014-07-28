@@ -50,6 +50,5 @@ class DebianBootstrapper(BaseBootstrapper):
         self.apt_install(*self.packages)
 
     def _update_package_manager(self):
-        #self.run_as_root(['apt-get', 'update'])
-        print 'lala'
+        self.run_as_root(['apt-get', 'update'])
 
