@@ -3085,7 +3085,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(HandleValue vobj, JSContext *cx)
         if (!js::IsWrapper(propobj) || !JS_ObjectIsCallable(cx, propobj))
             continue;
 
-        if (!NewNonCloningFunctionForwarder(cx, id, propobj, &v) ||
+        if (!NewFunctionForwarder(cx, id, propobj, &v) ||
             !JS_SetPropertyById(cx, obj, id, v))
             return NS_ERROR_FAILURE;
     }
