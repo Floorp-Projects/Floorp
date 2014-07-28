@@ -476,26 +476,27 @@ status_t MPEG4Extractor::readMetaData() {
     }
 
     off64_t offset = 0;
-    status_t err;
+    status_t err = OK;
     while (true) {
-        err = parseChunk(&offset, 0);
-        if (err == OK) {
-            continue;
-        }
-
         uint32_t hdr[2];
         if (mDataSource->readAt(offset, hdr, 8) < 8) {
             break;
         }
         uint32_t chunk_type = ntohl(hdr[1]);
-        if (chunk_type == FOURCC('s', 'i', 'd', 'x')) {
-            // parse the sidx box too
-            continue;
-        } else if (chunk_type == FOURCC('m', 'o', 'o', 'f')) {
+        if (chunk_type == FOURCC('m', 'd', 'a', 't')) {
+            break;
+        }
+        if (chunk_type == FOURCC('m', 'o', 'o', 'f')) {
             // store the offset of the first segment
             mMoofOffset = offset;
+            break;
         }
-        break;
+        err = parseChunk(&offset, 0);
+        if (err != OK &&
+                chunk_type != FOURCC('s', 'i', 'd', 'x') &&
+                chunk_type != FOURCC('m', 'o', 'o', 'v')) {
+            break;
+        }
     }
 
     if (mInitCheck == OK) {
