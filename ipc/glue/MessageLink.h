@@ -107,7 +107,7 @@ class MessageLink
   public:
     typedef IPC::Message Message;
 
-    MessageLink(MessageChannel *aChan);
+    explicit MessageLink(MessageChannel *aChan);
     virtual ~MessageLink();
 
     // n.b.: These methods all require that the channel monitor is
@@ -139,7 +139,7 @@ class ProcessLink
     }
 
   public:
-    ProcessLink(MessageChannel *chan);
+    explicit ProcessLink(MessageChannel *chan);
     virtual ~ProcessLink();
     void Open(Transport* aTransport, MessageLoop *aIOLoop, Side aSide);
     

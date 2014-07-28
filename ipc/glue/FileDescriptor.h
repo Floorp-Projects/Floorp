@@ -60,7 +60,7 @@ public:
     Assign(aOther);
   }
 
-  FileDescriptor(PlatformHandleType aHandle);
+  explicit FileDescriptor(PlatformHandleType aHandle);
 
   FileDescriptor(const IPDLPrivate&, const PickleType& aPickle)
 #ifdef XP_WIN
