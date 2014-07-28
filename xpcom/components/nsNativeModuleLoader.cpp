@@ -64,14 +64,6 @@ GetNativeModuleLoaderLog()
 
 #define LOG(level, args) PR_LOG(GetNativeModuleLoaderLog(), level, args)
 
-NS_IMPL_QUERY_INTERFACE(nsNativeModuleLoader,
-                        mozilla::ModuleLoader)
-
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsNativeModuleLoader,
-                                nsComponentManagerImpl::gComponentManager)
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsNativeModuleLoader,
-                                 nsComponentManagerImpl::gComponentManager)
-
 nsresult
 nsNativeModuleLoader::Init()
 {
@@ -83,10 +75,11 @@ nsNativeModuleLoader::Init()
 class LoadModuleMainThreadRunnable : public nsRunnable
 {
 public:
-    LoadModuleMainThreadRunnable(nsNativeModuleLoader* loader,
-                                 FileLocation &file)
-        : mLoader(loader)
-        , mFile(file)
+    LoadModuleMainThreadRunnable(nsNativeModuleLoader* aLoader,
+                                 FileLocation &aFile)
+        : mManager(nsComponentManagerImpl::gComponentManager)
+        , mLoader(aLoader)
+        , mFile(aFile)
         , mResult(nullptr)
     { }
 
@@ -96,7 +89,8 @@ public:
         return NS_OK;
     }
 
-    nsRefPtr<nsNativeModuleLoader> mLoader;
+    nsRefPtr<nsComponentManagerImpl> mManager;
+    nsNativeModuleLoader* mLoader;
     FileLocation mFile;
     const mozilla::Module* mResult;
 };
