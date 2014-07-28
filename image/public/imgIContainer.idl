@@ -42,6 +42,7 @@ struct Orientation;
 [ptr] native gfxContext(gfxContext);
 [ref] native gfxMatrix(gfxMatrix);
 [ref] native gfxRect(gfxRect);
+[ref] native gfxSize(gfxSize);
 native gfxGraphicsFilter(GraphicsFilter);
 [ref] native nsIntRect(nsIntRect);
 native nsIntRectByVal(nsIntRect);
@@ -55,6 +56,7 @@ native Orientation(mozilla::image::Orientation);
 [ptr] native SVGImageContext(mozilla::SVGImageContext);
 native TempRefSourceSurface(mozilla::TemporaryRef<mozilla::gfx::SourceSurface>);
 native TempRefImgIContainer(already_AddRefed<imgIContainer>);
+native nsIntSizeByVal(nsIntSize);
 
 
 /**
@@ -64,7 +66,7 @@ native TempRefImgIContainer(already_AddRefed<imgIContainer>);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(c9bd1257-45fb-4ea6-a669-6da212479191)]
+[scriptable, builtinclass, uuid(9c0f1884-dad9-4d63-a0e5-dda7b3b3416b)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -91,6 +93,27 @@ interface imgIContainer : nsISupports
    * an exception will be thrown.
    */
   [noscript] readonly attribute nsSize intrinsicRatio;
+
+  /**
+   * Given a size at which this image will be displayed, and the drawing
+   * parameters affecting how it will be drawn, returns the image size which
+   * should be used to draw to produce the highest quality result. This is the
+   * appropriate size, for example, to use as an input to the pixel snapping
+   * algorithm.
+   *
+   * For best results the size returned by this method should not be cached. It
+   * can change over time due to changes in the internal state of the image.
+   *
+   * @param aDest The size of the destination rect into which this image will be
+   *              drawn, in device pixels.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFilter The filter to be used if we're scaling the image.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [notxpcom, nostdcall] nsIntSizeByVal optimalImageSizeForDest([const] in gfxSize aDest,
+                                                               in uint32_t aWhichFrame,
+                                                               in gfxGraphicsFilter aFilter,
+                                                               in uint32_t aFlags);
 
   /**
     * Enumerated values for the 'type' attribute (below).
