@@ -52,6 +52,7 @@ PARALLEL_DIRS += [
     'devicestorage',
     'encoding',
     'events',
+    'fetch',
     'filehandle',
     'filesystem',
     'fmradio',

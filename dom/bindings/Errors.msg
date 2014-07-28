@@ -54,3 +54,7 @@ MSG_DEF(MSG_DEFINEPROPERTY_ON_GSP, 0, "Not allowed to define a property on the n
 MSG_DEF(MSG_INVALID_URL, 1, "{0} is not a valid URL.")
 MSG_DEF(MSG_METADATA_NOT_CONFIGURED, 0, "Either size or lastModified should be true.")
 MSG_DEF(MSG_INVALID_READ_SIZE, 0, "0 (Zero) is not a valid read size.")
+MSG_DEF(MSG_HEADERS_IMMUTABLE, 0, "Headers are immutable and cannot be modified.")
+MSG_DEF(MSG_INVALID_HEADER_NAME, 1, "{0} is an invalid header name.")
+MSG_DEF(MSG_INVALID_HEADER_VALUE, 1, "{0} is an invalid header value.")
+MSG_DEF(MSG_INVALID_HEADER_SEQUENCE, 0, "Headers require name/value tuples when being initialized by a sequence.")
