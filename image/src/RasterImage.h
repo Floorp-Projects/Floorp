@@ -329,6 +329,9 @@ public:
   // Decode strategy
 
 private:
+  // Initiates an HQ scale for the given frame, if possible.
+  void RequestScale(imgFrame* aFrame, gfxSize aScale);
+
   already_AddRefed<imgStatusTracker> CurrentStatusTracker()
   {
     mDecodingMonitor.AssertCurrentThreadIn();
