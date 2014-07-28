@@ -349,12 +349,6 @@ LOOP_OVER_DIRS = \
   $(foreach dir,$(DIRS),$(call SUBMAKE,$@,$(dir)))
 endif
 
-# we only use this for the makefiles target and other stuff that doesn't matter
-ifneq (,$(strip $(PARALLEL_DIRS)))
-LOOP_OVER_PARALLEL_DIRS = \
-  $(foreach dir,$(PARALLEL_DIRS),$(call SUBMAKE,$@,$(dir)))
-endif
-
 #
 # Now we can differentiate between objects used to build a library, and
 # objects used to build an executable in the same directory.
@@ -664,7 +658,7 @@ clean clobber realclean clobber_all distclean::
 		-$(call SUBMAKE,$@,$(dir)))
 else
 clean clobber realclean clobber_all distclean::
-	$(foreach dir,$(PARALLEL_DIRS) $(DIRS),-$(call SUBMAKE,$@,$(dir)))
+	$(foreach dir,$(DIRS),-$(call SUBMAKE,$@,$(dir)))
 endif
 
 distclean::
@@ -1280,7 +1274,6 @@ endif # SDK_BINARY
 
 chrome::
 	$(MAKE) realchrome
-	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 
 $(FINAL_TARGET)/chrome: $(call mkdir_deps,$(FINAL_TARGET)/chrome)
@@ -1621,7 +1614,6 @@ tags: TAGS
 
 TAGS: $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
-	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 
 ifndef INCLUDED_DEBUGMAKE_MK #{
@@ -1637,7 +1629,6 @@ documentation:
 
 ifdef ENABLE_TESTS
 check::
-	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 endif
 

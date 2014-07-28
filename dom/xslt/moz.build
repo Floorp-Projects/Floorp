@@ -20,7 +20,7 @@ EXPORTS += [
     'nsIDocumentTransformer.h',
 ]
 
-PARALLEL_DIRS += [
+DIRS += [
     'base',
     'xml',
     'xpath',

@@ -3,5 +3,4 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 DIRS += ['regular']
-PARALLEL_DIRS = ['parallel']
 TEST_DIRS = ['test']

@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS = ['synth']
+DIRS = ['synth']
 
 if CONFIG['MOZ_WEBSPEECH']:
-    PARALLEL_DIRS += ['recognition']
+    DIRS += ['recognition']

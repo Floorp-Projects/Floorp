@@ -934,7 +934,6 @@ class TreeMetadataEmitter(LoggingMixin):
     def _emit_directory_traversal_from_sandbox(self, sandbox):
         o = DirectoryTraversal(sandbox)
         o.dirs = sandbox.get('DIRS', [])
-        o.parallel_dirs = sandbox.get('PARALLEL_DIRS', [])
         o.test_dirs = sandbox.get('TEST_DIRS', [])
         o.affected_tiers = sandbox.get_affected_tiers()
 
