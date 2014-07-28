@@ -454,8 +454,7 @@ private:
     // shutdown notification and stop Read Thread.
     nsContentUtils::RegisterShutdownObserver(this);
 
-    nsRefPtr<Session> thisSession(this);
-    nsRefPtr<nsIRunnable> event = new ExtractRunnable(thisSession.forget());
+    nsRefPtr<nsIRunnable> event = new ExtractRunnable(this);
     if (NS_FAILED(mReadThread->Dispatch(event, NS_DISPATCH_NORMAL))) {
       NS_WARNING("Failed to dispatch ExtractRunnable at beginning");
     }
@@ -473,8 +472,7 @@ private:
       MOZ_ASSERT(false, "NS_DispatchToMainThread PushBlobRunnable failed");
     }
     // Destroy this session object in main thread.
-    nsRefPtr<Session> thisSession(this);
-    if (NS_FAILED(NS_DispatchToMainThread(new DestroyRunnable(thisSession.forget())))) {
+    if (NS_FAILED(NS_DispatchToMainThread(new DestroyRunnable(this)))) {
       MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
     }
   }

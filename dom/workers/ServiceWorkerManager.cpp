@@ -1213,12 +1213,12 @@ ServiceWorkerManager::GetServiceWorkerRegistration(nsIURI* aURI)
     return nullptr;
   }
 
-  nsRefPtr<ServiceWorkerRegistration> registration;
-  domainInfo->mServiceWorkerRegistrations.Get(scope, getter_AddRefs(registration));
+  ServiceWorkerRegistration* registration;
+  domainInfo->mServiceWorkerRegistrations.Get(scope, &registration);
   // ordered scopes and registrations better be in sync.
   MOZ_ASSERT(registration);
 
-  return registration.forget();
+  return registration;
 }
 
 namespace {
