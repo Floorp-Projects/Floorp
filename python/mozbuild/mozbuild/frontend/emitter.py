@@ -385,6 +385,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'MSVC_ENABLE_PGO',
             'NO_DIST_INSTALL',
             'OS_LIBS',
+            'PYTHON_UNIT_TESTS',
             'RCFILE',
             'RESFILE',
             'RCINCLUDE',
