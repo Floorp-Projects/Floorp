@@ -69,8 +69,12 @@ nsNullPrincipal::~nsNullPrincipal()
 #define NS_NULLPRINCIPAL_PREFIX NS_NULLPRINCIPAL_SCHEME ":"
 
 nsresult
-nsNullPrincipal::Init()
+nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
 {
+  MOZ_ASSERT(aAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
+  mAppId = aAppId;
+  mInMozBrowser = aInMozBrowser;
+
   // FIXME: bug 327161 -- make sure the uuid generator is reseeding-resistant.
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -256,21 +260,21 @@ nsNullPrincipal::GetJarPrefix(nsACString& aJarPrefix)
 NS_IMETHODIMP
 nsNullPrincipal::GetAppStatus(uint16_t* aAppStatus)
 {
-  *aAppStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  *aAppStatus = nsScriptSecurityManager::AppStatusForPrincipal(this);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNullPrincipal::GetAppId(uint32_t* aAppId)
 {
-  *aAppId = nsIScriptSecurityManager::NO_APP_ID;
+  *aAppId = mAppId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNullPrincipal::GetIsInBrowserElement(bool* aIsInBrowserElement)
 {
-  *aIsInBrowserElement = false;
+  *aIsInBrowserElement = mInMozBrowser;
   return NS_OK;
 }
 
@@ -301,16 +305,24 @@ nsNullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 NS_IMETHODIMP
 nsNullPrincipal::Read(nsIObjectInputStream* aStream)
 {
-  // no-op: CID is sufficient to create a useful nsNullPrincipal, since the URI
-  // is not really relevant.
+  // Note - nsNullPrincipal use NS_GENERIC_FACTORY_CONSTRUCTOR_INIT, which means
+  // that the Init() method has already been invoked by the time we deserialize.
+  // This is in contrast to nsPrincipal, which uses NS_GENERIC_FACTORY_CONSTRUCTOR,
+  // in which case ::Read needs to invoke Init().
+  nsresult rv = aStream->Read32(&mAppId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->ReadBoolean(&mInMozBrowser);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNullPrincipal::Write(nsIObjectOutputStream* aStream)
 {
-  // no-op: CID is sufficient to create a useful nsNullPrincipal, since the URI
-  // is not really relevant.
+  aStream->Write32(mAppId);
+  aStream->WriteBoolean(mInMozBrowser);
   return NS_OK;
 }
 
