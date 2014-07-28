@@ -392,7 +392,8 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
   SkPaint paint;
 
   SkImageFilter* filter = SkDropShadowImageFilter::Create(aOffset.x, aOffset.y,
-                                                          aSigma, ColorToSkColor(aColor, 1.0));
+                                                          aSigma, aSigma,
+                                                          ColorToSkColor(aColor, 1.0));
 
   paint.setImageFilter(filter);
   paint.setXfermodeMode(GfxOpToSkiaOp(aOperator));
