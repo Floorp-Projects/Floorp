@@ -92,7 +92,7 @@ class BaseMachFormatter(base.BaseFormatter):
             self.status_buffer[test]["unexpected"].append((data["subtest"],
                                                            data["status"],
                                                            data["expected"],
-                                                           data.get("message")))
+                                                           data.get("message", "")))
         if data["status"] == "PASS":
             self.status_buffer[test]["pass"] += 1
 
