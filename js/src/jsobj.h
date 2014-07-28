@@ -700,7 +700,7 @@ class JSObject : public js::ObjectImpl
         */
         JS::Zone *zone = this->zone();
         JS::shadow::Zone *shadowZone = JS::shadow::Zone::asShadowZone(zone);
-        if (shadowZone->needsBarrier()) {
+        if (shadowZone->needsIncrementalBarrier()) {
             if (dstStart < srcStart) {
                 js::HeapSlot *dst = elements + dstStart;
                 js::HeapSlot *src = elements + srcStart;
@@ -719,7 +719,7 @@ class JSObject : public js::ObjectImpl
     }
 
     void moveDenseElementsNoPreBarrier(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
-        JS_ASSERT(!shadowZone()->needsBarrier());
+        JS_ASSERT(!shadowZone()->needsIncrementalBarrier());
 
         JS_ASSERT(dstStart + count <= getDenseCapacity());
         JS_ASSERT(srcStart + count <= getDenseCapacity());
