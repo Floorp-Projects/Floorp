@@ -14,7 +14,13 @@ static SLresult cubeb_get_sles_engine(
 }
 
 static void cubeb_destroy_sles_engine(SLObjectItf *self) {
- mozilla_destroy_sles_engine(self);
+  mozilla_destroy_sles_engine(self);
+}
+
+/* Only synchronous operation is supported, as if the second
+   parameter was FALSE. */
+static SLresult cubeb_realize_sles_engine(SLObjectItf self) {
+  return mozilla_realize_sles_engine(self);
 }
 
 #endif
