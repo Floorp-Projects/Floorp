@@ -794,6 +794,29 @@ BluetoothA2dpManager::HandleShutdown()
 }
 
 void
+BluetoothA2dpManager::OnConnectError()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mController->NotifyCompletion(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
+
+  mController = nullptr;
+  mDeviceAddress.Truncate();
+}
+
+class ConnectResultHandler MOZ_FINAL : public BluetoothA2dpResultHandler
+{
+public:
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_LOGR("BluetoothA2dpInterface::Connect failed: %d", (int)aStatus);
+
+    NS_ENSURE_TRUE_VOID(sBluetoothA2dpManager);
+    sBluetoothA2dpManager->OnConnectError();
+  }
+};
+
+void
 BluetoothA2dpManager::Connect(const nsAString& aDeviceAddress,
                               BluetoothProfileController* aController)
 {
@@ -824,13 +847,28 @@ BluetoothA2dpManager::Connect(const nsAString& aDeviceAddress,
   bt_bdaddr_t remoteAddress;
   StringToBdAddressType(aDeviceAddress, &remoteAddress);
 
-  bt_status_t result = sBtA2dpInterface->Connect(&remoteAddress);
-  if (BT_STATUS_SUCCESS != result) {
-    BT_LOGR("Failed to connect: %x", result);
-    aController->NotifyCompletion(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
-    return;
-  }
+  sBtA2dpInterface->Connect(&remoteAddress, new ConnectResultHandler());
 }
+
+void
+BluetoothA2dpManager::OnDisconnectError()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mController->NotifyCompletion(NS_LITERAL_STRING(ERR_DISCONNECTION_FAILED));
+}
+
+class DisconnectResultHandler MOZ_FINAL : public BluetoothA2dpResultHandler
+{
+public:
+  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  {
+    BT_LOGR("BluetoothA2dpInterface::Disconnect failed: %d", (int)aStatus);
+
+    NS_ENSURE_TRUE_VOID(sBluetoothA2dpManager);
+    sBluetoothA2dpManager->OnDisconnectError();
+  }
+};
 
 void
 BluetoothA2dpManager::Disconnect(BluetoothProfileController* aController)
@@ -866,12 +904,7 @@ BluetoothA2dpManager::Disconnect(BluetoothProfileController* aController)
   bt_bdaddr_t remoteAddress;
   StringToBdAddressType(mDeviceAddress, &remoteAddress);
 
-  bt_status_t result = sBtA2dpInterface->Disconnect(&remoteAddress);
-  if (BT_STATUS_SUCCESS != result) {
-    BT_LOGR("Failed to disconnect: %x", result);
-    aController->NotifyCompletion(NS_LITERAL_STRING(ERR_DISCONNECTION_FAILED));
-    return;
-  }
+  sBtA2dpInterface->Disconnect(&remoteAddress, new DisconnectResultHandler());
 }
 
 void
