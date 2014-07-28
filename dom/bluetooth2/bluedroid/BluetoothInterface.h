@@ -181,6 +181,24 @@ private:
 // Bluetooth Advanced Audio Interface
 //
 
+class BluetoothA2dpResultHandler
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothA2dpResultHandler)
+
+  virtual ~BluetoothA2dpResultHandler() { }
+
+  virtual void OnError(bt_status_t aStatus)
+  {
+    BT_WARNING("received error code %d", (int)aStatus);
+  }
+
+  virtual void Init() { }
+  virtual void Cleanup() { }
+  virtual void Connect() { }
+  virtual void Disconnect() { }
+};
+
 class BluetoothA2dpInterface
 {
 public:
@@ -203,6 +221,39 @@ private:
 //
 // Bluetooth AVRCP Interface
 //
+
+class BluetoothAvrcpResultHandler
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothAvrcpResultHandler)
+
+  virtual ~BluetoothAvrcpResultHandler() { }
+
+  virtual void OnError(bt_status_t aStatus)
+  {
+    BT_WARNING("received error code %d", (int)aStatus);
+  }
+
+  virtual void Init() { }
+  virtual void Cleanup() { }
+
+  virtual void GetPlayStatusRsp() { }
+
+  virtual void ListPlayerAppAttrRsp() { }
+  virtual void ListPlayerAppValueRsp() { }
+
+  virtual void GetPlayerAppValueRsp() { }
+  virtual void GetPlayerAppAttrTextRsp() { }
+  virtual void GetPlayerAppValueTextRsp() { }
+
+  virtual void GetElementAttrRsp() { }
+
+  virtual void SetPlayerAppValueRsp() { }
+
+  virtual void RegisterNotificationRsp() { }
+
+  virtual void SetVolume() { }
+};
 
 class BluetoothAvrcpInterface
 {
