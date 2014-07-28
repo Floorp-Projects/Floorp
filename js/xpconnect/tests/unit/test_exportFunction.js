@@ -85,13 +85,26 @@ function run_test() {
     checkIfCalled();
   }.toSource() + ")()", epsb);
 
-  // Exporting should throw if princpal of the source sandbox does
+  // Exporting should throw if principal of the source sandbox does
   // not subsume the principal of the target.
   Cu.evalInSandbox("(" + function() {
     try{
       exportFunction(function() {}, this.xorigsb, { defineAs: "denied" });
       do_check_true(false);
     } catch (e) {
+      do_check_true(e.toString().indexOf('Permission denied') > -1);
+    }
+  }.toSource() + ")()", epsb);
+
+  // Exporting should throw if the principal of the source sandbox does
+  // not subsume the principal of the function.
+  epsb.xo_function = new xorigsb.Function();
+  Cu.evalInSandbox("(" + function() {
+    try{
+      exportFunction(xo_function, this.subsb, { defineAs: "denied" });
+      do_check_true(false);
+    } catch (e) {
+      dump('Exception: ' + e);
       do_check_true(e.toString().indexOf('Permission denied') > -1);
     }
   }.toSource() + ")()", epsb);
