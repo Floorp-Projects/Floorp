@@ -484,29 +484,29 @@ template<typename T, typename V>
 struct Maximum {
     static inline T apply(T l, T r) { return V::toType(l > r ? l : r); }
 };
-template<typename T, typename V>
+template<typename T>
 struct LessThan {
-    static inline T apply(T l, T r) { return V::toType(l < r ? 0xFFFFFFFF : 0x0); }
+    static inline int32_t apply(T l, T r) { return l < r ? 0xFFFFFFFF : 0x0; }
 };
-template<typename T, typename V>
+template<typename T>
 struct LessThanOrEqual {
-    static inline T apply(T l, T r) { return V::toType(l <= r ? 0xFFFFFFFF : 0x0); }
+    static inline int32_t apply(T l, T r) { return l <= r ? 0xFFFFFFFF : 0x0; }
 };
-template<typename T, typename V>
+template<typename T>
 struct GreaterThan {
-    static inline T apply(T l, T r) { return V::toType(l > r ? 0xFFFFFFFF : 0x0); }
+    static inline int32_t apply(T l, T r) { return l > r ? 0xFFFFFFFF : 0x0; }
 };
-template<typename T, typename V>
+template<typename T>
 struct GreaterThanOrEqual {
-    static inline T apply(T l, T r) { return V::toType(l >= r ? 0xFFFFFFFF : 0x0); }
+    static inline int32_t apply(T l, T r) { return l >= r ? 0xFFFFFFFF : 0x0; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Equal {
-    static inline T apply(T l, T r) { return V::toType(l == r ? 0xFFFFFFFF : 0x0); }
+    static inline int32_t apply(T l, T r) { return l == r ? 0xFFFFFFFF : 0x0; }
 };
-template<typename T, typename V>
+template<typename T>
 struct NotEqual {
-    static inline T apply(T l, T r) { return V::toType(l != r ? 0xFFFFFFFF : 0x0); }
+    static inline int32_t apply(T l, T r) { return l != r ? 0xFFFFFFFF : 0x0; }
 };
 template<typename T, typename V>
 struct Xor {
