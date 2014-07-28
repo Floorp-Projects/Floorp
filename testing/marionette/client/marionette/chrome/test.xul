@@ -19,5 +19,6 @@
          
       <iframe id="iframe" name="iframename" src="chrome://marionette/content/test2.xul"/>
       <iframe id="iframe" name="iframename" src="chrome://marionette/content/test_nested_iframe.xul"/>
+      <hbox id="testXulBox"/>
     </dialog>
 </window>
