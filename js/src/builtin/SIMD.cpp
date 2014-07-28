@@ -26,6 +26,7 @@ using namespace js;
 using mozilla::ArrayLength;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
+using mozilla::FloorLog2;
 
 namespace js {
 extern const JSFunctionSpec Float32x4Methods[];
@@ -556,10 +557,6 @@ template<typename T>
 struct WithFlagW {
     static inline T apply(T l, T f, T x) { return l == 3 ? (f ? 0xFFFFFFFF : 0x0) : x; }
 };
-template<typename T, typename V>
-struct Shuffle {
-    static inline int32_t apply(int32_t l, int32_t mask) { return V::toType((mask >> l) & 0x3); }
-};
 struct ShiftLeft {
     static inline int32_t apply(int32_t v, int32_t bits) { return v << bits; }
 };
@@ -665,48 +662,57 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-template<typename V, typename OpShuffle, typename Vret>
+template<typename V>
 static bool
 FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
 {
     typedef typename V::Elem Elem;
-    typedef typename Vret::Elem RetElem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 2 && args.length() != 3)
         return ErrorBadArgs(cx);
 
-    RetElem result[Vret::lanes];
+    // Let L be V::Lanes. Each lane can contain L lanes, so the log2(L) first
+    // bits select the first lane, the next log2(L) the second, and so on.
+    const uint32_t SELECT_SHIFT = FloorLog2(V::lanes);
+    const uint32_t SELECT_MASK  = V::lanes - 1;
+    const uint32_t MAX_MASK_VALUE = uint32_t(pow(double(V::lanes), double(V::lanes))) - 1;
+
+    Elem result[V::lanes];
     if (args.length() == 2) {
-        if (!IsVectorObject<V>(args[0]) || !args[1].isNumber())
+        if (!IsVectorObject<V>(args[0]) || !args[1].isInt32())
             return ErrorBadArgs(cx);
 
         Elem *val = TypedObjectMemory<Elem *>(args[0]);;
-        Elem arg1;
-        if (!Vret::toType(cx, args[1], &arg1))
+        int32_t maskArg;
+        if (!ToInt32(cx, args[1], &maskArg))
             return false;
+        if (maskArg < 0 || maskArg > MAX_MASK_VALUE)
+            return ErrorBadArgs(cx);
 
-        for (unsigned i = 0; i < Vret::lanes; i++)
-            result[i] = val[OpShuffle::apply(i * 2, arg1)];
+        for (unsigned i = 0; i < V::lanes; i++)
+            result[i] = val[(maskArg >> (i * SELECT_SHIFT)) & SELECT_MASK];
     } else {
         JS_ASSERT(args.length() == 3);
-        if (!IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]) || !args[2].isNumber())
+        if (!IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]) || !args[2].isInt32())
             return ErrorBadArgs(cx);
 
         Elem *val1 = TypedObjectMemory<Elem *>(args[0]);
         Elem *val2 = TypedObjectMemory<Elem *>(args[1]);
-        Elem arg2;
-        if (!Vret::toType(cx, args[2], &arg2))
+        int32_t maskArg;
+        if (!ToInt32(cx, args[2], &maskArg))
             return false;
+        if (maskArg < 0 || maskArg > MAX_MASK_VALUE)
+            return ErrorBadArgs(cx);
 
         unsigned i = 0;
-        for (; i < Vret::lanes / 2; i++)
-            result[i] = val1[OpShuffle::apply(i * 2, arg2)];
-        for (; i < Vret::lanes; i++)
-            result[i] = val2[OpShuffle::apply(i * 2, arg2)];
+        for (; i < V::lanes / 2; i++)
+            result[i] = val1[(maskArg >> (i * SELECT_SHIFT)) & SELECT_MASK];
+        for (; i < V::lanes; i++)
+            result[i] = val2[(maskArg >> (i * SELECT_SHIFT)) & SELECT_MASK];
     }
 
-    RootedObject obj(cx, Create<Vret>(cx, result));
+    RootedObject obj(cx, Create<V>(cx, result));
     if (!obj)
         return false;
 

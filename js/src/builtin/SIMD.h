@@ -45,7 +45,7 @@
   V(min, (Func<Float32x4, Minimum<float>, Float32x4>), 2, 0, Min)                                        \
   V(mul, (Func<Float32x4, Mul<float>, Float32x4>), 2, 0, Mul)                                            \
   V(notEqual, (Func<Float32x4, NotEqual<float>, Int32x4>), 2, 0, NotEqual)                               \
-  V(shuffle, (FuncShuffle<Float32x4, Shuffle<float, Float32x4>, Float32x4>), 2, 0, Shuffle)              \
+  V(shuffle, FuncShuffle<Float32x4>, 2, 0, Shuffle)                                                      \
   V(or, (CoercedFunc<Float32x4, Int32x4, Or<int32_t>, Float32x4>), 2, 0, Or)                             \
   V(scale, (FuncWith<Float32x4, Scale<float>, Float32x4>), 2, 0, Scale)                                  \
   V(sub, (Func<Float32x4, Sub<float>, Float32x4>), 2, 0, Sub)                                            \
@@ -57,7 +57,7 @@
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                                               \
   V(clamp, Float32x4Clamp, 3, 0, Clamp)                                                                  \
-  V(shuffleMix, (FuncShuffle<Float32x4, Shuffle<float, Float32x4>, Float32x4>), 3, 0, ShuffleMix)
+  V(shuffleMix, FuncShuffle<Float32x4>, 3, 0, ShuffleMix)
 
 #define FLOAT32X4_FUNCTION_LIST(V)                                                                       \
   FLOAT32X4_NULLARY_FUNCTION_LIST(V)                                                                     \
@@ -87,7 +87,7 @@
   V(shiftLeft, (Int32x4BinaryScalar<ShiftLeft>), 2, 0, ShiftLeft)                                        \
   V(shiftRight, (Int32x4BinaryScalar<ShiftRight>), 2, 0, ShiftRight)                                     \
   V(shiftRightLogical, (Int32x4BinaryScalar<ShiftRightLogical>), 2, 0, ShiftRightLogical)                \
-  V(shuffle, (FuncShuffle<Int32x4, Shuffle<int32_t, Int32x4>, Int32x4>), 2, 0, Shuffle)                  \
+  V(shuffle, FuncShuffle<Int32x4>, 2, 0, Shuffle)                                                        \
   V(withFlagX, (FuncWith<Int32x4, WithFlagX<int32_t>, Int32x4>), 2, 0, WithFlagX)                        \
   V(withFlagY, (FuncWith<Int32x4, WithFlagY<int32_t>, Int32x4>), 2, 0, WithFlagY)                        \
   V(withFlagZ, (FuncWith<Int32x4, WithFlagZ<int32_t>, Int32x4>), 2, 0, WithFlagZ)                        \
@@ -100,7 +100,7 @@
 
 #define INT32X4_TERNARY_FUNCTION_LIST(V)                                                                 \
   V(select, Int32x4Select, 3, 0, Select)                                                                 \
-  V(shuffleMix, (FuncShuffle<Int32x4, Shuffle<int32_t, Int32x4>, Int32x4>), 3, 0, ShuffleMix)
+  V(shuffleMix, FuncShuffle<Int32x4>, 3, 0, ShuffleMix)
 
 #define INT32X4_QUARTERNARY_FUNCTION_LIST(V)                                                             \
   V(bool, Int32x4Bool, 4, 0, Bool)
