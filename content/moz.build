@@ -12,5 +12,5 @@ PARALLEL_DIRS += [
     'xul',
 ]
 
-TEST_TOOL_DIRS += ['test']
+TEST_DIRS += ['test']
 
