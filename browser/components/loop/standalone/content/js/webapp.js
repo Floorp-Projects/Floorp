@@ -33,14 +33,50 @@ loop.webapp = (function($, _, OT, webL10n) {
   });
 
   /**
+   * Firefox promotion interstitial. Will display only to non-Firefox users.
+   */
+  var PromoteFirefoxView = React.createClass({displayName: 'PromoteFirefoxView',
+    propTypes: {
+      helper: React.PropTypes.object.isRequired
+    },
+
+    render: function() {
+      if (this.props.helper.isFirefox(navigator.userAgent)) {
+        return React.DOM.div(null );
+      }
+      return (
+        React.DOM.div( {className:"promote-firefox"}, 
+          React.DOM.h3(null, __("promote_firefox_hello_heading")),
+          React.DOM.p(null, 
+            React.DOM.a( {className:"btn btn-large btn-success",
+               href:"https://www.mozilla.org/firefox/"}, 
+              __("get_firefox_button")
+            )
+          )
+        )
+      );
+    }
+  });
+
+  /**
    * Expired call URL view.
    */
   var CallUrlExpiredView = React.createClass({displayName: 'CallUrlExpiredView',
+    propTypes: {
+      helper: React.PropTypes.object.isRequired
+    },
+
     render: function() {
       /* jshint ignore:start */
       return (
-        // XXX proper UX/design should be implemented here (see bug 1000131)
-        React.DOM.div(null, __("call_url_unavailable_notification"))
+        React.DOM.div( {className:"expired-url-info"}, 
+          React.DOM.div( {className:"info-panel"}, 
+            React.DOM.div( {className:"firefox-logo"} ),
+            React.DOM.h1(null, __("call_url_unavailable_notification_heading")),
+            React.DOM.h4(null, __("call_url_unavailable_notification_message"))
+          ),
+          PromoteFirefoxView( {helper:this.props.helper} )
+        )
       );
       /* jshint ignore:end */
     }
@@ -135,7 +171,12 @@ loop.webapp = (function($, _, OT, webL10n) {
       "call/:token":         "initiate"
     },
 
-    initialize: function() {
+    initialize: function(options) {
+      this.helper = options.helper;
+      if (!this.helper) {
+        throw new Error("WebappRouter requires an helper object");
+      }
+
       // Load default view
       this.loadView(new HomeView());
 
@@ -193,7 +234,7 @@ loop.webapp = (function($, _, OT, webL10n) {
     },
 
     expired: function() {
-      this.loadReactComponent(CallUrlExpiredView());
+      this.loadReactComponent(CallUrlExpiredView({helper: this.helper}));
     },
 
     /**
@@ -238,8 +279,14 @@ loop.webapp = (function($, _, OT, webL10n) {
     this._iOSRegex = /^(iPad|iPhone|iPod)/;
   }
 
-  WebappHelper.prototype.isIOS = function isIOS(platform) {
-    return this._iOSRegex.test(platform);
+  WebappHelper.prototype = {
+    isFirefox: function(platform) {
+      return platform.indexOf("Firefox") !== -1;
+    },
+
+    isIOS: function(platform) {
+      return this._iOSRegex.test(platform);
+    }
   };
 
   /**
@@ -248,6 +295,7 @@ loop.webapp = (function($, _, OT, webL10n) {
   function init() {
     var helper = new WebappHelper();
     router = new WebappRouter({
+      helper: helper,
       notifier: new sharedViews.NotificationListView({el: "#messages"}),
       conversation: new sharedModels.ConversationModel({}, {
         sdk: OT,
@@ -267,8 +315,9 @@ loop.webapp = (function($, _, OT, webL10n) {
     CallUrlExpiredView: CallUrlExpiredView,
     ConversationFormView: ConversationFormView,
     HomeView: HomeView,
-    WebappHelper: WebappHelper,
     init: init,
+    PromoteFirefoxView: PromoteFirefoxView,
+    WebappHelper: WebappHelper,
     WebappRouter: WebappRouter
   };
 })(jQuery, _, window.OT, document.webL10n);
