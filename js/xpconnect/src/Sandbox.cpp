@@ -33,6 +33,7 @@
 #include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/PromiseBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/URLBinding.h"
@@ -1411,54 +1412,6 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     return NS_OK;
 }
 
-class ContextHolder : public nsIScriptObjectPrincipal
-{
-public:
-    ContextHolder(JSContext *aOuterCx, HandleObject aSandbox, nsIPrincipal *aPrincipal);
-
-    JSContext * GetJSContext()
-    {
-        return mJSContext;
-    }
-
-    nsIPrincipal * GetPrincipal() { return mPrincipal; }
-
-    NS_DECL_ISUPPORTS
-
-private:
-    virtual ~ContextHolder();
-
-    JSContext* mJSContext;
-    nsCOMPtr<nsIPrincipal> mPrincipal;
-};
-
-NS_IMPL_ISUPPORTS(ContextHolder, nsIScriptObjectPrincipal)
-
-ContextHolder::ContextHolder(JSContext *aOuterCx,
-                             HandleObject aSandbox,
-                             nsIPrincipal *aPrincipal)
-    : mJSContext(JS_NewContext(JS_GetRuntime(aOuterCx), 1024)),
-      mPrincipal(aPrincipal)
-{
-    if (mJSContext) {
-        bool isChrome;
-        DebugOnly<nsresult> rv = nsXPConnect::SecurityManager()->
-                                   IsSystemPrincipal(mPrincipal, &isChrome);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-        JS::ContextOptionsRef(mJSContext).setDontReportUncaught(true)
-                                         .setPrivateIsNSISupports(true);
-        js::SetDefaultObjectForContext(mJSContext, aSandbox);
-        JS_SetContextPrivate(mJSContext, this);
-    }
-}
-
-ContextHolder::~ContextHolder()
-{
-    if (mJSContext)
-        JS_DestroyContextNoGC(mJSContext);
-}
-
 nsresult
 xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& source,
                    const nsACString& filename, int32_t lineNo,
@@ -1474,8 +1427,9 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
     }
 
     nsIScriptObjectPrincipal *sop =
-        (nsIScriptObjectPrincipal*)xpc_GetJSPrivate(sandbox);
+        static_cast<nsIScriptObjectPrincipal*>(xpc_GetJSPrivate(sandbox));
     MOZ_ASSERT(sop, "Invalid sandbox passed");
+    SandboxPrivate *priv = static_cast<SandboxPrivate*>(sop);
     nsCOMPtr<nsIPrincipal> prin = sop->GetPrincipal();
     NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
 
@@ -1493,17 +1447,12 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
     RootedValue exn(cx, UndefinedValue());
     bool ok = true;
     {
-        // Make a special cx for the sandbox and push it.
-        // NB: As soon as the RefPtr goes away, the cx goes away. So declare
-        // it first so that it disappears last.
-        nsRefPtr<ContextHolder> sandcxHolder = new ContextHolder(cx, sandbox, prin);
-        JSContext *sandcx = sandcxHolder->GetJSContext();
-        if (!sandcx) {
-            JS_ReportError(cx, "Can't prepare context for evalInSandbox");
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        nsCxPusher pusher;
-        pusher.Push(sandcx);
+        // We're about to evaluate script, so make an AutoEntryScript.
+        // This is clearly Gecko-specific and not in any spec.
+        mozilla::dom::AutoEntryScript aes(priv);
+        JSContext *sandcx = aes.cx();
+        AutoSaveContextOptions savedOptions(sandcx);
+        JS::ContextOptionsRef(sandcx).setDontReportUncaught(true);
         JSAutoCompartment ac(sandcx, sandbox);
 
         JS::CompileOptions options(sandcx);
