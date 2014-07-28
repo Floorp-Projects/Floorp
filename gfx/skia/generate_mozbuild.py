@@ -24,6 +24,8 @@ header = """
 
 footer = """
 
+# can we find a better way of dealing with asm sources?
+
 # left out of UNIFIED_SOURCES for now; that's not C++ anyway, nothing else to unify it with
 if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
     SOURCES += [
@@ -33,6 +35,16 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
         SOURCES += [
             'trunk/src/opts/memset16_neon.S',
             'trunk/src/opts/memset32_neon.S',
+        ]
+
+if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['GNU_CC'] or CONFIG['CLANG_CL']):
+    if CONFIG['CPU_ARCH'] == 'x86_64':
+        SOURCES += [
+            'trunk/src/opts/SkBlitRow_opts_SSE4_x64_asm.S',
+        ]
+    else:
+        SOURCES += [
+            'trunk/src/opts/SkBlitRow_opts_SSE4_asm.S',
         ]
 
 MSVC_ENABLE_PGO = True
@@ -87,9 +99,24 @@ if (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android') or \
    CONFIG['MOZ_WIDGET_GTK']:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
+# We should autogenerate these SSE related flags.
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['SKIA_DLL'] = 1
     DEFINES['GR_DLL'] = 1
+
+    # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
+    # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
+    SOURCES['trunk/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
+    SOURCES['trunk/src/opts/SkBlitRect_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBlurImage_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=41']
+    SOURCES['trunk/src/opts/SkMorphology_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkUtils_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkXfermode_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
 
 if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['trunk/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -98,8 +125,10 @@ if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['trunk/src/opts/SkBlitRect_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['trunk/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['trunk/src/opts/SkBlurImage_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['trunk/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-msse4.1']
     SOURCES['trunk/src/opts/SkMorphology_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['trunk/src/opts/SkUtils_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['trunk/src/opts/SkXfermode_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON']:
     DEFINES['__ARM_HAVE_OPTIONAL_NEON_SUPPORT'] = 1
     DEFINES['USE_ANDROID_NDK_CPU_FEATURES'] = 0
@@ -130,9 +159,11 @@ import json
 platforms = ['linux', 'mac', 'android', 'win']
 
 custom_includes = {
-  'trunk/src/ports/SkAtomics_android.h': True,
   'trunk/src/ports/SkAtomics_sync.h': True,
   'trunk/src/ports/SkAtomics_win.h': True,
+  'trunk/src/ports/SkBarriers_x86.h': True,
+  'trunk/src/ports/SkBarriers_arm.h': True,
+  'trunk/src/ports/SkBarriers_tsan.h': True,
   'trunk/src/ports/SkMutex_pthread.h': True,
   'trunk/src/ports/SkMutex_win.h': True
 }
@@ -182,12 +213,14 @@ def generate_separated_sources(platform_sources):
     'SkCity',
     'GrGLCreateNativeInterface',
     'fontconfig',
+    'SkCondVar',
     'SkThreadUtils_pthread_',
     'SkImage_Codec',
     'SkBitmapChecksummer',
     'SkNativeGLContext',
     'SkFontConfig',
     'SkFontHost_win_dw',
+    'SkFontMgr_android',
     'SkForceLinking',
     'SkMovie',
     'SkImageDecoder',
@@ -196,7 +229,9 @@ def generate_separated_sources(platform_sources):
     'SkWGL',
     'SkImages',
     'SkDiscardableMemory_ashmem',
-    'SkMemory_malloc'
+    'SkMemory_malloc',
+    'opts_check_x86',
+    'third_party',
   ]
 
   def isblacklisted(value):
@@ -237,7 +272,9 @@ def generate_separated_sources(platform_sources):
       'trunk/src/ports/SkFontHost_cairo.cpp',
     },
     'intel': {
-      'trunk/src/opts/SkXfermode_opts_none.cpp',
+      # There is currently no x86-specific opt for SkTextureCompression
+      'trunk/src/opts/opts_check_x86.cpp',
+      'trunk/src/opts/SkTextureCompression_opts_none.cpp',
     },
     'arm': {
       'trunk/src/opts/SkUtils_opts_arm.cpp',
@@ -259,7 +296,7 @@ def generate_separated_sources(platform_sources):
       if isblacklisted(value):
         continue
 
-      if value.find('_SSE') > 0 or value.find('_SSSE') > 0: #lol
+      if value.find('_SSE') > 0 or value.find('_SSSE') > 0 or value.find('_SSE4') > 0 : #lol
         separated['intel'].add(value)
         continue
 
@@ -320,6 +357,7 @@ def write_sources(f, values, indent):
     '_SSSE',
     '_neon',
     'FontHost',
+    'SkAdvancedTypefaceMetrics',
     'SkBitmapProcState_matrixProcs.cpp',
     'SkBlitter_A8.cpp',
     'SkBlitter_ARGB32.cpp',
@@ -332,6 +370,9 @@ def write_sources(f, values, indent):
     'GrDistanceFieldTextContext.cpp',
     'SkSHA1.cpp',
     'SkMD5.cpp',
+    'SkPictureData.cpp',
+    'SkScaledImageCache.cpp',
+    'opts_check_x86.cpp',
   ]
 
   def isblacklisted(value):
@@ -396,7 +437,9 @@ def write_mozbuild(includes, sources):
   write_sources(f, sources['linux'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':\n")
-  write_sources(f, sources['win'], 4)
+  # Windows-specific files don't get unification because of nasty headers.
+  # Luckily there are not many files in this.
+  write_list(f, "SOURCES", sources['win'], 4)
 
   f.write("if CONFIG['INTEL_ARCHITECTURE']:\n")
   write_sources(f, sources['intel'], 4)
