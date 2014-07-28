@@ -17,6 +17,8 @@
 # include "jit/arm/BaselineHelpers-arm.h"
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/BaselineHelpers-mips.h"
+#elif defined(JS_CODEGEN_NONE)
+# include "jit/none/BaselineHelpers-none.h"
 #else
 # error "Unknown architecture!"
 #endif

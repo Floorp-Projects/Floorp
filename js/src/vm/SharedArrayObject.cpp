@@ -77,7 +77,7 @@ SharedArrayRawBuffer::New(uint32_t length)
     // Enforced by SharedArrayBufferObject constructor.
     JS_ASSERT(IsValidAsmJSHeapLength(length));
 
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
     // Get the entire reserved region (with all pages inaccessible)
     void *p = MapMemory(AsmJSMappedSize, false);
     if (!p)
@@ -124,7 +124,7 @@ SharedArrayRawBuffer::dropReference()
     if (refcount == 0) {
         uint8_t *p = this->dataPointer() - AsmJSPageSize;
         JS_ASSERT(uintptr_t(p) % AsmJSPageSize == 0);
-#ifdef JS_CPU_X64
+#ifdef JS_CODEGEN_X64
         UnmapMemory(p, AsmJSMappedSize);
 #       if defined(MOZ_VALGRIND) \
            && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
