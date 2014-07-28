@@ -98,9 +98,9 @@ OnSharedPreferenceChangeListener
     public static final String INTENT_EXTRA_RESOURCES = "resource";
     public static String PREFS_HEALTHREPORT_UPLOAD_ENABLED = NON_PREF_PREFIX + "healthreport.uploadEnabled";
 
-    private static boolean sIsCharEncodingEnabled = false;
-    private boolean mInitialized = false;
-    private int mPrefsRequestId = 0;
+    private static boolean sIsCharEncodingEnabled;
+    private boolean mInitialized;
+    private int mPrefsRequestId;
     private PanelsPreferenceCategory mPanelsPreferenceCategory;
 
     // These match keys in resources/xml*/preferences*.xml
@@ -1083,9 +1083,9 @@ OnSharedPreferenceChangeListener
     }
 
     private class PasswordTextWatcher implements TextWatcher {
-        EditText input1 = null;
-        EditText input2 = null;
-        AlertDialog dialog = null;
+        EditText input1;
+        EditText input2;
+        AlertDialog dialog;
 
         PasswordTextWatcher(EditText aInput1, EditText aInput2, AlertDialog aDialog) {
             input1 = aInput1;
@@ -1111,8 +1111,8 @@ OnSharedPreferenceChangeListener
     }
 
     private class EmptyTextWatcher implements TextWatcher {
-        EditText input = null;
-        AlertDialog dialog = null;
+        EditText input;
+        AlertDialog dialog;
 
         EmptyTextWatcher(EditText aInput, AlertDialog aDialog) {
             input = aInput;
@@ -1140,7 +1140,7 @@ OnSharedPreferenceChangeListener
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.VERTICAL);
-        AlertDialog dialog = null;
+        AlertDialog dialog;
         switch(id) {
             case DIALOG_CREATE_MASTER_PASSWORD:
                 final EditText input1 = getTextBox(R.string.masterpassword_password);

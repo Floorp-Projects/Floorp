@@ -39,7 +39,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
     private static int mColumnWidth = -1;  // The maximum width of columns
     private static int mMaxColumns = -1;  // The maximum number of columns to show
     private static int mIconSize = -1;    // Size of icons in the grid
-    private int mSelected = 0;           // Current selection
+    private int mSelected;                // Current selection
     private JSONArray mArray;
 
     public IconGridInput(JSONObject obj) {

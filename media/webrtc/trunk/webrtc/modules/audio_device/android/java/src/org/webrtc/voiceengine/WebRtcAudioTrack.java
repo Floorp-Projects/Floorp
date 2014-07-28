@@ -24,7 +24,7 @@ import org.mozilla.gecko.mozglue.WebRTCJNITarget;
 
 @WebRTCJNITarget
 class WebRtcAudioTrack {
-    private AudioTrack _audioTrack = null;
+    private AudioTrack _audioTrack;
 
     private Context _context;
     private AudioManager _audioManager;
@@ -36,11 +36,11 @@ class WebRtcAudioTrack {
 
     private boolean _doPlayInit = true;
     private boolean _doRecInit = true;
-    private boolean _isRecording = false;
-    private boolean _isPlaying = false;
+    private boolean _isRecording;
+    private boolean _isPlaying;
 
-    private int _bufferedPlaySamples = 0;
-    private int _playPosition = 0;
+    private int _bufferedPlaySamples;
+    private int _playPosition;
 
     WebRtcAudioTrack() {
         try {
