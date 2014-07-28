@@ -5,3 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+EXTRA_JS_MODULES.devtools += [
+    'gDevTools.jsm',
+    'ToolboxProcess.jsm',
+]
+
+EXTRA_JS_MODULES.devtools.framework += [
+    'selection.js',
+    'sidebar.js',
+    'target.js',
+    'toolbox-highlighter-utils.js',
+    'toolbox-hosts.js',
+    'toolbox-options.js',
+    'toolbox-process-window.js',
+    'toolbox.js',
+]
