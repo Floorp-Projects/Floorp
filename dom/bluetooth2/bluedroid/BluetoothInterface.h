@@ -204,8 +204,9 @@ class BluetoothA2dpInterface
 public:
   friend class BluetoothInterface;
 
-  bt_status_t Init(btav_callbacks_t *aCallbacks);
-  void        Cleanup();
+  void Init(btav_callbacks_t *aCallbacks,
+            BluetoothA2dpResultHandler* aRes);
+  void Cleanup(BluetoothA2dpResultHandler* aRes);
 
   bt_status_t Connect(bt_bdaddr_t *aBdAddr);
   bt_status_t Disconnect(bt_bdaddr_t *aBdAddr);
@@ -261,8 +262,9 @@ class BluetoothAvrcpInterface
 public:
   friend class BluetoothInterface;
 
-  bt_status_t Init(btrc_callbacks_t* aCallbacks);
-  void        Cleanup();
+  void Init(btrc_callbacks_t* aCallbacks,
+            BluetoothAvrcpResultHandler* aRes);
+  void Cleanup(BluetoothAvrcpResultHandler* aRes);
 
   bt_status_t GetPlayStatusRsp(btrc_play_status_t aPlayStatus,
                                uint32_t aSongLen, uint32_t aSongPos);
