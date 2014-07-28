@@ -6,6 +6,7 @@
 
 #include "xpcprivate.h"
 #include "WrapperFactory.h"
+#include "AccessCheck.h"
 #include "jsfriendapi.h"
 #include "jsproxy.h"
 #include "jswrapper.h"
@@ -198,6 +199,36 @@ StackScopedClone(JSContext *cx, StackScopedCloneOptions &options,
     return buffer.read(cx, val, &gStackScopedCloneCallbacks, &data);
 }
 
+// Note - This function mirrors the logic of CheckPassToChrome in
+// ChromeObjectWrapper.cpp.
+static bool
+CheckSameOriginArg(JSContext *cx, HandleValue v)
+{
+    // Primitives are fine.
+    if (!v.isObject())
+        return true;
+    RootedObject obj(cx, &v.toObject());
+    MOZ_ASSERT(js::GetObjectCompartment(obj) != js::GetContextCompartment(cx),
+               "This should be invoked after entering the compartment but before "
+               "wrapping the values");
+
+    // Non-wrappers are fine.
+    if (!js::IsWrapper(obj))
+        return true;
+
+    // Wrappers leading back to the scope of the exported function are fine.
+    if (js::GetObjectCompartment(js::UncheckedUnwrap(obj)) == js::GetContextCompartment(cx))
+        return true;
+
+    // Same-origin wrappers are fine.
+    if (AccessCheck::wrapperSubsumes(obj))
+        return true;
+
+    // Badness.
+    JS_ReportError(cx, "Permission denied to pass object to exported function");
+    return false;
+}
+
 /*
  * Forwards the call to the exported function. Clones all the non reflectors, ignores
  * the |this| argument.
@@ -253,13 +284,35 @@ NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
-    MOZ_ASSERT(v.isObject(), "weird function");
+    RootedObject unwrappedFun(cx, js::UncheckedUnwrap(&v.toObject()));
 
-    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
-    if (!obj) {
+    RootedObject thisObj(cx, JS_THIS_OBJECT(cx, vp));
+    if (!thisObj) {
         return false;
     }
-    return JS_CallFunctionValue(cx, obj, v, args, args.rval());
+
+    {
+        // We manually implement the contents of CrossCompartmentWrapper::call
+        // here, because certain function wrappers (notably content->nsEP) are
+        // not callable.
+        JSAutoCompartment ac(cx, unwrappedFun);
+
+        RootedValue thisVal(cx, ObjectValue(*thisObj));
+        if (!CheckSameOriginArg(cx, thisVal) || !JS_WrapObject(cx, &thisObj))
+            return false;
+
+        for (size_t n = 0;  n < args.length(); ++n) {
+            if (!CheckSameOriginArg(cx, args[n]) || !JS_WrapValue(cx, args[n]))
+                return false;
+        }
+
+        RootedValue fval(cx, ObjectValue(*unwrappedFun));
+        if (!JS_CallFunctionValue(cx, thisObj, fval, args, args.rval()))
+            return false;
+    }
+
+    // Rewrap the return value into our compartment.
+    return JS_WrapValue(cx, args.rval());
 }
 bool
 NewFunctionForwarder(JSContext *cx, HandleId idArg, HandleObject callable,
