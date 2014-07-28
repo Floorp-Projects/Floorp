@@ -66,6 +66,15 @@ nsNullPrincipal::~nsNullPrincipal()
 {
 }
 
+/* static */ already_AddRefed<nsNullPrincipal>
+nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
+{
+  nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
+  nsresult rv = nullPrin->Init(aInheritFrom->GetAppId(),
+                               aInheritFrom->GetIsInBrowserElement());
+  return NS_SUCCEEDED(rv) ? nullPrin.forget() : nullptr;
+}
+
 #define NS_NULLPRINCIPAL_PREFIX NS_NULLPRINCIPAL_SCHEME ":"
 
 nsresult
