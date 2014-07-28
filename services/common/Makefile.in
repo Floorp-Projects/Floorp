@@ -2,31 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-modules := \
-  hawkclient.js \
-  hawkrequest.js \
-  storageservice.js \
-  stringbundle.js \
-  tokenserverclient.js \
-  utils.js \
-  $(NULL)
-
-pp_modules := \
-  async.js \
-  bagheeraclient.js \
-  observers.js \
-  rest.js \
-  $(NULL)
-
 PREF_JS_EXPORTS := $(srcdir)/services-common.js
-
-MODULES_FILES := $(modules)
-MODULES_DEST = $(FINAL_TARGET)/modules/services-common
-INSTALL_TARGETS += MODULES
-
-PP_JS_MODULES := $(pp_modules)
-PP_JS_MODULES_PATH = $(FINAL_TARGET)/modules/services-common
-PP_TARGETS += PP_JS_MODULES
 
 include $(topsrcdir)/config/rules.mk
 
