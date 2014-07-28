@@ -21,7 +21,6 @@
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 #include "cubeb_resampler.h"
-#include "cubeb-sles.h"
 
 static struct cubeb_ops const opensl_ops;
 
@@ -264,8 +263,7 @@ opensl_init(cubeb ** context, char const * context_name)
   const SLEngineOption opt[] = {{SL_ENGINEOPTION_THREADSAFE, SL_BOOLEAN_TRUE}};
 
   SLresult res;
-  res = cubeb_get_sles_engine(&ctx->engObj, 1, opt, 0, NULL, NULL);
-
+  res = f_slCreateEngine(&ctx->engObj, 1, opt, 0, NULL, NULL);
   if (res != SL_RESULT_SUCCESS) {
     opensl_destroy(ctx);
     return CUBEB_ERROR;
@@ -444,7 +442,7 @@ opensl_destroy(cubeb * ctx)
   if (ctx->outmixObj)
     (*ctx->outmixObj)->Destroy(ctx->outmixObj);
   if (ctx->engObj)
-    cubeb_destroy_sles_engine(&ctx->engObj);
+    (*ctx->engObj)->Destroy(ctx->engObj);
   dlclose(ctx->lib);
   dlclose(ctx->libmedia);
   free(ctx);
