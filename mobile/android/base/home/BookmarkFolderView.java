@@ -14,7 +14,7 @@ import android.widget.TextView;
 public class BookmarkFolderView extends TextView {
     private static final int[] STATE_OPEN = { R.attr.state_open };
 
-    private boolean mIsOpen = false;
+    private boolean mIsOpen;
 
     public BookmarkFolderView(Context context) {
         super(context);

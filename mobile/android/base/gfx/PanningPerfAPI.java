@@ -21,11 +21,11 @@ public class PanningPerfAPI {
     // to measure.
     private static final int EXPECTED_FRAME_COUNT = 2048;
 
-    private static boolean mRecordingFrames = false;
+    private static boolean mRecordingFrames;
     private static List<Long> mFrameTimes;
     private static long mFrameStartTime;
 
-    private static boolean mRecordingCheckerboard = false;
+    private static boolean mRecordingCheckerboard;
     private static List<Float> mCheckerboardAmounts;
     private static long mCheckerboardStartTime;
 

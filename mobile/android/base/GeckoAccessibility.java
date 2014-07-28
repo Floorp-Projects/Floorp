@@ -39,14 +39,14 @@ public class GeckoAccessibility {
     private static final int VIRTUAL_CURSOR_POSITION = 2;
     private static final int VIRTUAL_CURSOR_NEXT = 3;
 
-    private static boolean sEnabled = false;
+    private static boolean sEnabled;
     // Used to store the JSON message and populate the event later in the code path.
-    private static JSONObject sEventMessage = null;
-    private static AccessibilityNodeInfo sVirtualCursorNode = null;
+    private static JSONObject sEventMessage;
+    private static AccessibilityNodeInfo sVirtualCursorNode;
 
     // This is the number Brailleback uses to start indexing routing keys.
     private static final int BRAILLE_CLICK_BASE_INDEX = -275000000;
-    private static SelfBrailleClient sSelfBrailleClient = null;
+    private static SelfBrailleClient sSelfBrailleClient;
 
     private static final HashSet<String> sServiceWhitelist =
         new HashSet<String>(Arrays.asList(new String[] {

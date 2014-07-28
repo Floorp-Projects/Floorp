@@ -65,9 +65,9 @@ public class DoorHanger extends LinearLayout {
     private List<PromptInput> mInputs;
     private CheckBox mCheckBox;
 
-    private int mPersistence = 0;
-    private boolean mPersistWhileVisible = false;
-    private long mTimeout = 0;
+    private int mPersistence;
+    private boolean mPersistWhileVisible;
+    private long mTimeout;
 
     // Color used for dividers above and between buttons.
     private int mDividerColor;
