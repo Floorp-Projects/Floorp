@@ -87,7 +87,7 @@ LIBS += $(NSPR_LIBS)
 ifndef MOZ_PROFILE_GENERATE
 CPP_UNIT_TESTS_FILES = $(CPP_UNIT_TESTS)
 CPP_UNIT_TESTS_DEST = $(DIST)/cppunittests
-CPP_UNIT_TESTS_TARGET = libs target
+CPP_UNIT_TESTS_TARGET = target
 INSTALL_TARGETS += CPP_UNIT_TESTS
 endif
 
@@ -1252,11 +1252,13 @@ ifneq (,$(SDK_LIBRARY))
 ifndef NO_DIST_INSTALL
 SDK_LIBRARY_FILES := $(SDK_LIBRARY)
 SDK_LIBRARY_DEST := $(SDK_LIB_DIR)
-SDK_LIBRARY_TARGET := libs target
+SDK_LIBRARY_TARGET := target
 INSTALL_TARGETS += SDK_LIBRARY
 endif
 endif # SDK_LIBRARY
 
+# SDK_BINARY is still used in various makefiles for non-products of the
+# compilation, so we need to keep that running on the libs tier.
 ifneq (,$(strip $(SDK_BINARY)))
 ifndef NO_DIST_INSTALL
 SDK_BINARY_FILES := $(SDK_BINARY)

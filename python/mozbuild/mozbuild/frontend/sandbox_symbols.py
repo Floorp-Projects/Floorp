@@ -50,11 +50,8 @@ class FinalTargetValue(SandboxDerivedValue, unicode):
 # Tier says for which specific tier the variable has an effect.
 # Valid tiers are:
 # - 'export'
-# - 'binaries': everything in relation with linking objects, producing
-#      programs and libraries.
-# - 'libs': everything that is not binaries and that has
+# - 'libs': everything that is not built from C/C++/ObjC source and that has
 #      traditionally been in the libs tier.
-# - 'tools'
 # A value of None means the variable has no direct effect on any tier.
 
 VARIABLES = {
@@ -161,7 +158,7 @@ VARIABLES = {
 
         This variable contains a list of DLL files which the module being linked
         should load lazily.  This only has an effect when building with MSVC.
-        """, 'binaries'),
+        """, None),
 
     'DIRS': (list, list,
         """Child directories to descend into looking for build frontend files.
@@ -180,7 +177,7 @@ VARIABLES = {
     'DISABLE_STL_WRAPPING': (bool, bool,
         """Disable the wrappers for STL which allow it to work with C++ exceptions
         disabled.
-        """, 'binaries'),
+        """, None),
 
     'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list,
         """Additional component files to distribute.
@@ -230,7 +227,7 @@ VARIABLES = {
         This variable contains the name of a library, defined elsewhere with
         ``LIBRARY_NAME``, in which the objects of the current directory will be
         linked.
-        """, 'binaries'),
+        """, None),
 
     'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list,
         """Compile a list of C++ unit test names.
@@ -241,7 +238,7 @@ VARIABLES = {
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
         automatically appended to each name. If a name already ends with
         ``BIN_SUFFIX``, the name will remain unchanged.
-        """, 'binaries'),
+        """, None),
 
     'FAIL_ON_WARNINGS': (bool, bool,
         """Whether to treat warnings as errors.
@@ -286,14 +283,14 @@ VARIABLES = {
 
     'HOST_LIBRARY_NAME': (unicode, unicode,
         """Name of target library generated when cross compiling.
-        """, 'binaries'),
+        """, None),
 
     'JAVA_JAR_TARGETS': (dict, dict,
         """Defines Java JAR targets to be built.
 
         This variable should not be populated directly. Instead, it should
         populated by calling add_java_jar().
-        """, 'binaries'),
+        """, 'libs'),
 
     'JS_MODULES_PATH': (unicode, unicode,
         """Sub-directory of ``$(FINAL_TARGET)`` to install
@@ -315,7 +312,7 @@ VARIABLES = {
 
         would generate ``example/components/libxpcomsample.so`` on Linux, or
         ``example/components/xpcomsample.lib`` on Windows.
-        """, 'binaries'),
+        """, None),
 
     'SHARED_LIBRARY_NAME': (unicode, unicode,
         """The name of the static library generated for a directory, if it needs to
@@ -434,7 +431,7 @@ VARIABLES = {
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
         automatically appended to each name. If a name already ends with
         ``BIN_SUFFIX``, the name will remain unchanged.
-        """, 'binaries'),
+        """, None),
 
     'SONAME': (unicode, unicode,
         """The soname of the shared object currently being linked
@@ -442,7 +439,7 @@ VARIABLES = {
         soname is the "logical name" of a shared object, often used to provide
         version backwards compatibility. This variable makes sense only for
         shared objects, and is supported only on some unix platforms.
-        """, 'binaries'),
+        """, None),
 
     'HOST_SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list,
         """Compile a list of host executable names.
@@ -453,7 +450,7 @@ VARIABLES = {
         If the configuration token ``HOST_BIN_SUFFIX`` is set, its value will
         be automatically appended to each name. If a name already ends with
         ``HOST_BIN_SUFFIX``, the name will remain unchanged.
-        """, 'binaries'),
+        """, None),
 
     'TEST_DIRS': (list, list,
         """Like DIRS but only for directories that contain test-only code.
@@ -521,7 +518,7 @@ VARIABLES = {
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
         automatically appended to ``PROGRAM``. If ``PROGRAM`` already ends with
         ``BIN_SUFFIX``, ``PROGRAM`` will remain unchanged.
-        """, 'binaries'),
+        """, None),
 
     'HOST_PROGRAM' : (unicode, unicode,
         """Compiled host executable name.
@@ -529,7 +526,7 @@ VARIABLES = {
         If the configuration token ``HOST_BIN_SUFFIX`` is set, its value will be
         automatically appended to ``HOST_PROGRAM``. If ``HOST_PROGRAM`` already
         ends with ``HOST_BIN_SUFFIX``, ``HOST_PROGRAM`` will remain unchanged.
-        """, 'binaries'),
+        """, None),
 
     'NO_DIST_INSTALL': (bool, bool,
         """Disable installing certain files into the distribution directory.
@@ -739,7 +736,7 @@ VARIABLES = {
            Note that the ordering of flags matters here, these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, 'binaries'),
+        """, None),
 
     'CXXFLAGS': (list, list,
         """Flags passed to the C++ compiler for all of the C++ source files
@@ -748,7 +745,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, 'binaries'),
+        """, None),
 
     'CMFLAGS': (list, list,
         """Flags passed to the Objective-C compiler for all of the Objective-C
@@ -757,7 +754,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, 'binaries'),
+        """, None),
 
     'CMMFLAGS': (list, list,
         """Flags passed to the Objective-C++ compiler for all of the
@@ -766,7 +763,7 @@ VARIABLES = {
            Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
-        """, 'binaries'),
+        """, None),
 
     'LDFLAGS': (list, list,
         """Flags passed to the linker when linking all of the libraries and
