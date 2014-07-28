@@ -1142,7 +1142,7 @@ ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
 
     if (JSObject *parent = base->getObjectParent()) {
         MaybePushMarkStackBetweenSlices(gcmarker, parent);
-    } else if (GlobalObject *global = base->compartment()->maybeGlobal()) {
+    } else if (GlobalObject *global = base->compartment()->unsafeUnbarrieredMaybeGlobal()) {
         PushMarkStack(gcmarker, global);
     }
 
@@ -1961,9 +1961,12 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 JS_FRIEND_API(bool)
 JS::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
 {
-    JS_ASSERT(kind != JSTRACE_SHAPE);
-
     JSRuntime *rt = static_cast<Cell *>(thing)->runtimeFromMainThread();
+
+    // When the ReadBarriered type is used in a HashTable, it is difficult or
+    // impossible to suppress the implicit cast operator while iterating for GC.
+    if (rt->isHeapBusy())
+        return false;
 
     bool unmarkedArg = false;
     if (!IsInsideNursery(static_cast<Cell *>(thing))) {
