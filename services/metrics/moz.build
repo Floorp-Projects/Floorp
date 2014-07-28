@@ -6,6 +6,12 @@
 
 TEST_DIRS += ['tests']
 
+# We install Metrics.jsm into the "main" JSM repository and the rest in
+# services. External consumers should only go through Metrics.jsm.
+EXTRA_PP_JS_MODULES += [
+    'Metrics.jsm',
+]
+
 EXTRA_PP_JS_MODULES.services.metrics += [
     'dataprovider.jsm',
     'providermanager.jsm',
