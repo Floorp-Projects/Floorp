@@ -436,53 +436,53 @@ template JSObject *js::Create<Float32x4>(JSContext *cx, Float32x4::Elem *data);
 template JSObject *js::Create<Int32x4>(JSContext *cx, Int32x4::Elem *data);
 
 namespace js {
-template<typename T, typename V>
+template<typename T>
 struct Abs {
-    static inline T apply(T x, T zero) { return V::toType(x < 0 ? -1 * x : x); }
+    static inline T apply(T x, T zero) { return x < 0 ? -1 * x : x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Neg {
-    static inline T apply(T x, T zero) { return V::toType(-1 * x); }
+    static inline T apply(T x, T zero) { return -1 * x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Not {
-    static inline T apply(T x, T zero) { return V::toType(~x); }
+    static inline T apply(T x, T zero) { return ~x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Rec {
-    static inline T apply(T x, T zero) { return V::toType(1 / x); }
+    static inline T apply(T x, T zero) { return 1 / x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct RecSqrt {
-    static inline T apply(T x, T zero) { return V::toType(1 / sqrt(x)); }
+    static inline T apply(T x, T zero) { return 1 / sqrt(x); }
 };
-template<typename T, typename V>
+template<typename T>
 struct Sqrt {
-    static inline T apply(T x, T zero) { return V::toType(sqrt(x)); }
+    static inline T apply(T x, T zero) { return sqrt(x); }
 };
-template<typename T, typename V>
+template<typename T>
 struct Add {
-    static inline T apply(T l, T r) { return V::toType(l + r); }
+    static inline T apply(T l, T r) { return l + r; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Sub {
-    static inline T apply(T l, T r) { return V::toType(l - r); }
+    static inline T apply(T l, T r) { return l - r; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Div {
-    static inline T apply(T l, T r) { return V::toType(l / r); }
+    static inline T apply(T l, T r) { return l / r; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Mul {
-    static inline T apply(T l, T r) { return V::toType(l * r); }
+    static inline T apply(T l, T r) { return l * r; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Minimum {
-    static inline T apply(T l, T r) { return V::toType(l < r ? l : r); }
+    static inline T apply(T l, T r) { return l < r ? l : r; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Maximum {
-    static inline T apply(T l, T r) { return V::toType(l > r ? l : r); }
+    static inline T apply(T l, T r) { return l > r ? l : r; }
 };
 template<typename T>
 struct LessThan {
@@ -508,53 +508,53 @@ template<typename T>
 struct NotEqual {
     static inline int32_t apply(T l, T r) { return l != r ? 0xFFFFFFFF : 0x0; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Xor {
-    static inline T apply(T l, T r) { return V::toType(l ^ r); }
+    static inline T apply(T l, T r) { return l ^ r; }
 };
-template<typename T, typename V>
+template<typename T>
 struct And {
-    static inline T apply(T l, T r) { return V::toType(l & r); }
+    static inline T apply(T l, T r) { return l & r; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Or {
-    static inline T apply(T l, T r) { return V::toType(l | r); }
+    static inline T apply(T l, T r) { return l | r; }
 };
-template<typename T, typename V>
+template<typename T>
 struct Scale {
-    static inline T apply(int32_t lane, T scalar, T x) { return V::toType(scalar * x); }
+    static inline T apply(int32_t lane, T scalar, T x) { return scalar * x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct WithX {
-    static inline T apply(int32_t lane, T scalar, T x) { return V::toType(lane == 0 ? scalar : x); }
+    static inline T apply(int32_t lane, T scalar, T x) { return lane == 0 ? scalar : x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct WithY {
-    static inline T apply(int32_t lane, T scalar, T x) { return V::toType(lane == 1 ? scalar : x); }
+    static inline T apply(int32_t lane, T scalar, T x) { return lane == 1 ? scalar : x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct WithZ {
-    static inline T apply(int32_t lane, T scalar, T x) { return V::toType(lane == 2 ? scalar : x); }
+    static inline T apply(int32_t lane, T scalar, T x) { return lane == 2 ? scalar : x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct WithW {
-    static inline T apply(int32_t lane, T scalar, T x) { return V::toType(lane == 3 ? scalar : x); }
+    static inline T apply(int32_t lane, T scalar, T x) { return lane == 3 ? scalar : x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct WithFlagX {
-    static inline T apply(T l, T f, T x) { return V::toType(l == 0 ? (f ? 0xFFFFFFFF : 0x0) : x); }
+    static inline T apply(T l, T f, T x) { return l == 0 ? (f ? 0xFFFFFFFF : 0x0) : x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct WithFlagY {
-    static inline T apply(T l, T f, T x) { return V::toType(l == 1 ? (f ? 0xFFFFFFFF : 0x0) : x); }
+    static inline T apply(T l, T f, T x) { return l == 1 ? (f ? 0xFFFFFFFF : 0x0) : x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct WithFlagZ {
-    static inline T apply(T l, T f, T x) { return V::toType(l == 2 ? (f ? 0xFFFFFFFF : 0x0) : x); }
+    static inline T apply(T l, T f, T x) { return l == 2 ? (f ? 0xFFFFFFFF : 0x0) : x; }
 };
-template<typename T, typename V>
+template<typename T>
 struct WithFlagW {
-    static inline T apply(T l, T f, T x) { return V::toType(l == 3 ? (f ? 0xFFFFFFFF : 0x0) : x); }
+    static inline T apply(T l, T f, T x) { return l == 3 ? (f ? 0xFFFFFFFF : 0x0) : x; }
 };
 template<typename T, typename V>
 struct Shuffle {
@@ -900,15 +900,15 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
 
     int32_t tr[Int32x4::lanes];
     for (unsigned i = 0; i < Int32x4::lanes; i++)
-        tr[i] = And<int32_t, Int32x4>::apply(val[i], tv[i]);
+        tr[i] = And<int32_t>::apply(val[i], tv[i]);
 
     int32_t fr[Int32x4::lanes];
     for (unsigned i = 0; i < Int32x4::lanes; i++)
-        fr[i] = And<int32_t, Int32x4>::apply(Not<int32_t, Int32x4>::apply(val[i], 0), fv[i]);
+        fr[i] = And<int32_t>::apply(Not<int32_t>::apply(val[i], 0), fv[i]);
 
     int32_t orInt[Int32x4::lanes];
     for (unsigned i = 0; i < Int32x4::lanes; i++)
-        orInt[i] = Or<int32_t, Int32x4>::apply(tr[i], fr[i]);
+        orInt[i] = Or<int32_t>::apply(tr[i], fr[i]);
 
     float *result = reinterpret_cast<float *>(orInt);
     RootedObject obj(cx, Create<Float32x4>(cx, result));
