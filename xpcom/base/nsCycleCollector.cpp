@@ -433,7 +433,7 @@ public:
     Iterator() : mPointer(nullptr)
   {
   }
-    Iterator(PtrInfoOrBlock* aPointer) : mPointer(aPointer)
+    explicit Iterator(PtrInfoOrBlock* aPointer) : mPointer(aPointer)
   {
   }
     Iterator(const Iterator& aOther) : mPointer(aOther.mPointer)
@@ -483,7 +483,7 @@ public:
   class Builder
   {
   public:
-    Builder(EdgePool& aPool)
+    explicit Builder(EdgePool& aPool)
       : mCurrent(&aPool.mSentinelAndBlocks[0])
       , mBlockEnd(&aPool.mSentinelAndBlocks[0])
       , mNextBlockPtr(&aPool.Blocks())
@@ -697,7 +697,7 @@ public:
   class Builder
   {
   public:
-    Builder(NodePool& aPool)
+    explicit Builder(NodePool& aPool)
       : mNextBlock(&aPool.mBlocks)
       , mNext(aPool.mLast)
       , mBlockEnd(nullptr)
@@ -727,7 +727,7 @@ public:
   class Enumerator
   {
   public:
-    Enumerator(NodePool& aPool)
+    explicit Enumerator(NodePool& aPool)
       : mFirstBlock(aPool.mBlocks)
       , mCurBlock(nullptr)
       , mNext(nullptr)
@@ -1184,7 +1184,7 @@ AddPurpleRoot(CCGraphBuilder& aBuilder, void* aRoot,
 
 struct SelectPointersVisitor
 {
-  SelectPointersVisitor(CCGraphBuilder& aBuilder)
+  explicit SelectPointersVisitor(CCGraphBuilder& aBuilder)
     : mBuilder(aBuilder)
   {
   }
@@ -1378,7 +1378,7 @@ public:
   void WalkFromRoots(CCGraph& aGraph);
   // copy-constructing the visitor should be cheap, and less
   // indirection than using a reference
-  GraphWalker(const Visitor aVisitor) : mVisitor(aVisitor)
+  explicit GraphWalker(const Visitor aVisitor) : mVisitor(aVisitor)
   {
   }
 };
@@ -1595,7 +1595,7 @@ private:
     nsCOMPtr<nsIFile> mFile;
     FILE* mStream;
 
-    FileInfo(const char* aPrefix) : mPrefix(aPrefix), mStream(nullptr) { }
+    explicit FileInfo(const char* aPrefix) : mPrefix(aPrefix), mStream(nullptr) { }
   };
 
   /**
@@ -2525,7 +2525,7 @@ class JSPurpleBuffer
   }
 
 public:
-  JSPurpleBuffer(JSPurpleBuffer*& aReferenceToThis)
+  explicit JSPurpleBuffer(JSPurpleBuffer*& aReferenceToThis)
     : mReferenceToThis(aReferenceToThis)
   {
     mReferenceToThis = this;

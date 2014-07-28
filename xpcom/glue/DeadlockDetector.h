@@ -54,7 +54,7 @@ public:
    * unexpected performance issues.
    */
   NS_DEADLOCK_DETECTOR_CONSTEXPR
-  CallStack(const callstack_id aCallStack = NS_GET_BACKTRACE())
+  explicit CallStack(const callstack_id aCallStack = NS_GET_BACKTRACE())
     : mCallStack(aCallStack)
   {
   }
@@ -156,8 +156,8 @@ public:
     const T* mResource;
     CallStack mCallContext;
 
-    ResourceAcquisition(const T* aResource,
-                        const CallStack aCallContext = CallStack::kNone)
+    explicit ResourceAcquisition(const T* aResource,
+                                 const CallStack aCallContext = CallStack::kNone)
       : mResource(aResource)
       , mCallContext(aCallContext)
     {
@@ -310,7 +310,7 @@ private:
   // Throwaway RAII lock to make the following code safer.
   struct PRAutoLock
   {
-    PRAutoLock(PRLock* aLock) : mLock(aLock) { PR_Lock(mLock); }
+    explicit PRAutoLock(PRLock* aLock) : mLock(aLock) { PR_Lock(mLock); }
     ~PRAutoLock() { PR_Unlock(mLock); }
     PRLock* mLock;
   };
@@ -325,7 +325,7 @@ public:
    * @param aNumResourcesGuess Guess at approximate number of resources
    *        that will be checked.
    */
-  DeadlockDetector(uint32_t aNumResourcesGuess = kDefaultNumBuckets)
+  explicit DeadlockDetector(uint32_t aNumResourcesGuess = kDefaultNumBuckets)
   {
     mOrdering = PL_NewHashTable(aNumResourcesGuess,
                                 HashKey,

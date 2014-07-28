@@ -49,7 +49,7 @@ public:
   // Allow construction using '0' as the initial value, for readability,
   // but no other numbers (so we don't have any implicit unit conversions).
   struct _SomethingVeryRandomHere;
-  TimeDuration(_SomethingVeryRandomHere* aZero) : mValue(0)
+  MOZ_IMPLICIT TimeDuration(_SomethingVeryRandomHere* aZero) : mValue(0)
   {
     MOZ_ASSERT(!aZero, "Who's playing funny games here?");
   }
@@ -391,7 +391,7 @@ private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
   friend void StartupTimelineRecordExternal(int, uint64_t);
 
-  TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
+  MOZ_IMPLICIT TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
   static TimeStamp Now(bool aHighResolution);
 
