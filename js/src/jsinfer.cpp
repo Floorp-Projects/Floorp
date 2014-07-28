@@ -2322,7 +2322,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
     }
 
     for (gc::ZoneCellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        RootedScript script(cx, i.get<JSScript>());
+        JSScript *script = i.get<JSScript>();
         if (script->types) {
             unsigned count = TypeScript::NumTypeSets(script);
             StackTypeSet *typeArray = script->types->typeArray();
@@ -4122,7 +4122,7 @@ TypeCompartment::sweep(FreeOp *fop)
             bool remove = false;
             TypeObject *typeObject = nullptr;
             if (!key.type.isUnknown() && key.type.isTypeObject()) {
-                typeObject = key.type.typeObject();
+                typeObject = key.type.typeObjectNoBarrier();
                 if (IsTypeObjectAboutToBeFinalized(&typeObject))
                     remove = true;
             }
@@ -4131,7 +4131,7 @@ TypeCompartment::sweep(FreeOp *fop)
 
             if (remove) {
                 e.removeFront();
-            } else if (typeObject && typeObject != key.type.typeObject()) {
+            } else if (typeObject && typeObject != key.type.typeObjectNoBarrier()) {
                 ArrayTableKey newKey;
                 newKey.type = Type::ObjectType(typeObject);
                 newKey.proto = key.proto;
@@ -4160,10 +4160,10 @@ TypeCompartment::sweep(FreeOp *fop)
                 JS_ASSERT(!entry.types[i].isSingleObject());
                 TypeObject *typeObject = nullptr;
                 if (entry.types[i].isTypeObject()) {
-                    typeObject = entry.types[i].typeObject();
+                    typeObject = entry.types[i].typeObjectNoBarrier();
                     if (IsTypeObjectAboutToBeFinalized(&typeObject))
                         remove = true;
-                    else if (typeObject != entry.types[i].typeObject())
+                    else if (typeObject != entry.types[i].typeObjectNoBarrier())
                         entry.types[i] = Type::ObjectType(typeObject);
                 }
             }
@@ -4203,7 +4203,7 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
                 e.removeFront();
             } else if (entry.newFunction && IsObjectAboutToBeFinalized(&entry.newFunction)) {
                 e.removeFront();
-            } else if (entry.object != e.front().object) {
+            } else if (entry.object.unbarrieredGet() != e.front().object.unbarrieredGet()) {
                 TypeObjectWithNewScriptSet::Lookup lookup(entry.object->clasp(),
                                                           entry.object->proto(),
                                                           entry.newFunction);
