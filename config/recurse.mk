@@ -36,17 +36,21 @@ ifndef TIERS
 BUILDSTATUS =
 endif
 
-# Main rules (export, compile, binaries, libs and tools) call recurse_* rules.
+# Main rules (export, compile, libs and tools) call recurse_* rules.
 # This wrapping is only really useful for build status.
-compile binaries libs export tools::
+compile libs export tools::
 	$(call BUILDSTATUS,TIER_START $@)
 	+$(MAKE) recurse_$@
 	$(call BUILDSTATUS,TIER_FINISH $@)
 
+# Special rule that does install-manifests (cf. Makefile.in) + compile
+binaries::
+	+$(MAKE) recurse_compile
+
 # Carefully avoid $(eval) type of rule generation, which makes pymake slower
 # than necessary.
 # Get current tier and corresponding subtiers from the data in root.mk.
-CURRENT_TIER := $(filter $(foreach tier,compile binaries libs export tools,recurse_$(tier) $(tier)-deps),$(MAKECMDGOALS))
+CURRENT_TIER := $(filter $(foreach tier,compile libs export tools,recurse_$(tier) $(tier)-deps),$(MAKECMDGOALS))
 ifneq (,$(filter-out 0 1,$(words $(CURRENT_TIER))))
 $(error $(CURRENT_TIER) not supported on the same make command line)
 endif
@@ -71,11 +75,6 @@ endif
 # TIERS (like for js/src).
 CURRENT_DIRS := $($(CURRENT_TIER)_dirs)
 
-ifneq (,$(filter binaries libs,$(CURRENT_TIER)))
-WANT_STAMPS = 1
-STAMP_TOUCH = $(TOUCH) $(@D)/binaries
-endif
-
 # The compile tier has different rules from other tiers.
 ifeq ($(CURRENT_TIER),compile)
 
@@ -91,12 +90,8 @@ else
 # current tier.
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
 	$(call SUBMAKE,$(CURRENT_TIER),$*)
-# Ensure existing stamps are up-to-date, but don't create one if submake didn't create one.
-	$(if $(wildcard $@),@$(STAMP_TOUCH))
 
-ifndef STAMP_TOUCH
 .PHONY: $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS))
-endif
 
 # Dummy rules for possibly inexisting dependencies for the above tier targets
 $(addsuffix /Makefile,$(CURRENT_DIRS)) $(addsuffix /backend.mk,$(CURRENT_DIRS)):
@@ -123,46 +118,12 @@ endif
 
 endif # ifeq ($(CURRENT_TIER),compile)
 
-ifdef COMPILE_ENVIRONMENT
-# Disable dependency aggregation on PGO builds because of bug 934166.
-ifeq (,$(MOZ_PGO)$(MOZ_PROFILE_USE)$(MOZ_PROFILE_GENERATE))
-ifneq (,$(filter libs binaries,$(CURRENT_TIER)))
-# When doing a "libs" build, target_libs.mk ensures the interesting dependency data
-# is available in the "binaries" stamp. Once recursion is done, aggregate all that
-# dependency info so that stamps depend on relevant files and relevant other stamps.
-# When doing a "binaries" build, the aggregate dependency file and those stamps are
-# used and allow to skip recursing directories where changes are not going to require
-# rebuild. A few directories, however, are still traversed all the time, mostly, the
-# gyp managed ones and js/src.
-# A few things that are not traversed by a "binaries" build, but should, in an ideal
-# world, are nspr, nss, icu and ffi.
-recurse_$(CURRENT_TIER):
-	@$(MAKE) binaries-deps
-
-# Creating binaries-deps.mk directly would make us build it twice: once when beginning
-# the build because of the include, and once at the end because of the stamps.
-binaries-deps:
-	@$(call py_action,link_deps,-o $@.mk --group-by-depfile --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) --guard $(addprefix ',$(addsuffix ', $(wildcard $(addsuffix /binaries,$(CURRENT_DIRS))))))
-	@$(TOUCH) $@
-
-ifeq (recurse_binaries,$(MAKECMDGOALS))
-$(call include_deps,binaries-deps.mk)
-endif
-
-endif
-
-DIST_GARBAGE += binaries-deps.mk binaries-deps
-
-endif
-
-endif
-
 else
 
 # Don't recurse if MAKELEVEL is NO_RECURSE_MAKELEVEL as defined above
 ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
 
-compile binaries libs export tools::
+compile libs export tools::
 
 else
 #########################
@@ -188,37 +149,13 @@ $(1):: $$(SUBMAKEFILES)
 
 endef
 
-$(foreach subtier,export binaries libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
+$(foreach subtier,export libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
 
 endif # ifdef TIERS
 
 endif # ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
 
 endif # ifeq (.,$(DEPTH))
-
-ifdef COMPILE_ENVIRONMENT
-
-# Aggregate all dependency files relevant to a binaries build except in
-# the mozilla top-level directory.
-ifneq (.,$(DEPTH))
-ALL_DEP_FILES := \
-  $(BINARIES_PP) \
-  $(addsuffix .pp,$(addprefix $(MDDEPDIR)/,$(sort \
-    $(TARGETS) \
-    $(filter-out $(SOBJS) $(ASOBJS) $(EXCLUDED_OBJS),$(OBJ_TARGETS)) \
-  ))) \
-  $(NULL)
-endif
-
-binaries libs:: $(TARGETS) $(BINARIES_PP)
-# Disable dependency aggregation on PGO builds because of bug 934166.
-ifeq (,$(MOZ_PGO)$(MOZ_PROFILE_USE)$(MOZ_PROFILE_GENERATE))
-ifneq (.,$(DEPTH))
-	@$(if $^,$(call py_action,link_deps,-o binaries --group-all --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(ALL_DEP_FILES)))
-endif
-endif
-
-endif
 
 recurse:
 	@$(RECURSED_COMMAND)
