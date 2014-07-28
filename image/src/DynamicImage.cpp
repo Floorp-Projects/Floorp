@@ -338,6 +338,13 @@ NS_IMETHODIMP_(void)
 DynamicImage::SetAnimationStartTime(const mozilla::TimeStamp& aTime)
 { }
 
+nsIntSize
+DynamicImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame, GraphicsFilter aFilter, uint32_t aFlags)
+{
+  gfxIntSize size(mDrawable->Size());
+  return nsIntSize(size.width, size.height);
+}
+
 NS_IMETHODIMP_(nsIntRect)
 DynamicImage::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
 {
