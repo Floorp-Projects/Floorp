@@ -108,22 +108,12 @@ GlobalPCList.prototype = {
       }
     };
 
-    let hasPluginId = function(list, winID, pluginID, name, crashReport) {
+    let broadcastPluginCrash = function(list, winID, pluginID, name, crashReportID) {
       if (list.hasOwnProperty(winID)) {
         list[winID].forEach(function(pcref) {
           let pc = pcref.get();
           if (pc) {
-            if (pc._pc.pluginCrash(pluginID)) {
-              // Notify DOM window of the crash
-              let event = new CustomEvent("PluginCrashed",
-                { bubbles: false, cancelable: false,
-                  detail: {
-                    pluginName: name, 
-                    pluginDumpId: crashReport,
-                    submittedCrashReport: false }
-                });
-              pc._win.dispatchEvent(event);
-            }
+            pc._pc.pluginCrash(pluginID, name, crashReportID);
           }
         });
       }
@@ -167,8 +157,8 @@ GlobalPCList.prototype = {
       let name = rest.slice(0, sep);
       let crashId = rest.slice(sep+1);
       for (let winId in this._list) {
-        hasPluginId(this._list, winId, pluginId, name, crashId);
-      }      
+        broadcastPluginCrash(this._list, winId, pluginId, name, crashId);
+      }
     }
   },
 
