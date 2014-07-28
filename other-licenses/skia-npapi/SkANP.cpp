@@ -56,20 +56,21 @@ ANPRectF* SkANP::SetRect(ANPRectF* dst, const SkRect& src) {
 }
 
 SkBitmap* SkANP::SetBitmap(SkBitmap* dst, const ANPBitmap& src) {
-    SkBitmap::Config config = SkBitmap::kNo_Config;
+    SkColorType colorType = kUnknown_SkColorType;
     
     switch (src.format) {
         case kRGBA_8888_ANPBitmapFormat:
-            config = SkBitmap::kARGB_8888_Config;
+            colorType = kRGBA_8888_SkColorType;
             break;
         case kRGB_565_ANPBitmapFormat:
-            config = SkBitmap::kRGB_565_Config;
+            colorType = kRGB_565_SkColorType;
             break;
         default:
             break;
     }
     
-    dst->setConfig(config, src.width, src.height, src.rowBytes);
+    SkImageInfo info = SkImageInfo::Make(src.width, src.height, colorType, kPremul_SkAlphaType);
+    dst->setInfo(info, src.rowBytes);
     dst->setPixels(src.baseAddr);
     return dst;
 }
