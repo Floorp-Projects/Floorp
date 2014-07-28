@@ -41,12 +41,12 @@ class nsNativeModuleLoader : public mozilla::ModuleLoader
     struct NativeLoadData
     {
         NativeLoadData()
-            : module(nullptr)
-            , library(nullptr)
+            : mModule(nullptr)
+            , mLibrary(nullptr)
         { }
 
-        const mozilla::Module* module;
-        PRLibrary* library;
+        const mozilla::Module* mModule;
+        PRLibrary* mLibrary;
     };
 
     static PLDHashOperator
