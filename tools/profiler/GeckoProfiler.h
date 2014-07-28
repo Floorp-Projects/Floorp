@@ -200,7 +200,7 @@ static inline bool profiler_in_privacy_mode() { return false; }
 
 class GeckoProfilerInitRAII {
 public:
-  GeckoProfilerInitRAII(void* stackTop) {
+  explicit GeckoProfilerInitRAII(void* stackTop) {
     profiler_init(stackTop);
   }
   ~GeckoProfilerInitRAII() {
