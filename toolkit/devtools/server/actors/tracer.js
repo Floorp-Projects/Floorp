@@ -67,15 +67,20 @@ const TRACE_TYPES = new Set([
 ]);
 
 /**
- * Creates a TraceActor. TraceActor provides a stream of function
+ * Creates a TracerActor. TracerActor provides a stream of function
  * call/return packets to a remote client gathering a full trace.
  */
-function TraceActor(aConn, aParentActor)
+function TracerActor(aConn, aParent)
 {
+  this._dbg = null;
+  this._parent = aParent;
   this._attached = false;
   this._activeTraces = new MapStack();
   this._totalTraces = 0;
   this._startTime = 0;
+  this._sequence = 0;
+  this._bufferSendTimer = null;
+  this._buffer = [];
 
   // Keep track of how many different trace requests have requested what kind of
   // tracing info. This way we can minimize the amount of data we are collecting
@@ -85,26 +90,24 @@ function TraceActor(aConn, aParentActor)
     this._requestsForTraceType[type] = 0;
   }
 
-  this._sequence = 0;
-  this._bufferSendTimer = null;
-  this._buffer = [];
+  this.onEnterFrame = this.onEnterFrame.bind(this);
   this.onExitFrame = this.onExitFrame.bind(this);
-
-  // aParentActor.window might be an Xray for a window, but it might also be a
-  // double-wrapper for a Sandbox.  We want to unwrap the latter but not the
-  // former.
-  this.global = aParentActor.window;
-  if (!Cu.isXrayWrapper(this.global)) {
-      this.global = this.global.wrappedJSObject;
-  }
 }
 
-TraceActor.prototype = {
+TracerActor.prototype = {
   actorPrefix: "trace",
 
   get attached() { return this._attached; },
   get idle()     { return this._attached && this._activeTraces.size === 0; },
   get tracing()  { return this._attached && this._activeTraces.size > 0; },
+
+  get dbg() {
+    if (!this._dbg) {
+      this._dbg = this._parent.makeDebugger();
+      this._dbg.onEnterFrame = this.onEnterFrame;
+    }
+    return this._dbg;
+  },
 
   /**
    * Buffer traces and only send them every BUFFER_SEND_DELAY milliseconds.
@@ -124,74 +127,6 @@ TraceActor.prototype = {
   },
 
   /**
-   * Initializes a Debugger instance and adds listeners to it.
-   */
-  _initDebugger: function() {
-    this.dbg = new Debugger();
-    this.dbg.onEnterFrame = this.onEnterFrame.bind(this);
-    this.dbg.onNewGlobalObject = this.globalManager.onNewGlobal.bind(this);
-    this.dbg.enabled = false;
-  },
-
-  /**
-   * Add a debuggee global to the Debugger object.
-   */
-  _addDebuggee: function(aGlobal) {
-    try {
-      this.dbg.addDebuggee(aGlobal);
-    } catch (e) {
-      // Ignore attempts to add the debugger's compartment as a debuggee.
-      DevToolsUtils.reportException("TraceActor",
-                      new Error("Ignoring request to add the debugger's "
-                                + "compartment as a debuggee"));
-    }
-  },
-
-  /**
-   * Add the provided window and all windows in its frame tree as debuggees.
-   */
-  _addDebuggees: function(aWindow) {
-    this._addDebuggee(aWindow);
-    let frames = aWindow.frames;
-    if (frames) {
-      for (let i = 0; i < frames.length; i++) {
-        this._addDebuggees(frames[i]);
-      }
-    }
-  },
-
-  /**
-   * An object used by TraceActors to tailor their behavior depending
-   * on the debugging context required (chrome or content).
-   */
-  globalManager: {
-    /**
-     * Adds all globals in the global object as debuggees.
-     */
-    findGlobals: function() {
-      this._addDebuggees(this.global);
-    },
-
-    /**
-     * A function that the engine calls when a new global object has been
-     * created. Adds the global object as a debuggee if it is in the content
-     * window.
-     *
-     * @param aGlobal Debugger.Object
-     *        The new global object that was created.
-     */
-    onNewGlobal: function(aGlobal) {
-      // Content debugging only cares about new globals in the content
-      // window, like iframe children.
-      if (aGlobal.hostAnnotations &&
-          aGlobal.hostAnnotations.type == "document" &&
-          aGlobal.hostAnnotations.element === this.global) {
-        this._addDebuggee(aGlobal);
-      }
-    },
-  },
-
-  /**
    * Handle a protocol request to attach to the trace actor.
    *
    * @param aRequest object
@@ -205,11 +140,7 @@ TraceActor.prototype = {
       };
     }
 
-    if (!this.dbg) {
-      this._initDebugger();
-      this.globalManager.findGlobals.call(this);
-    }
-
+    this.dbg.addDebuggees();
     this._attached = true;
 
     return {
@@ -230,10 +161,12 @@ TraceActor.prototype = {
       this.onStopTrace();
     }
 
-    this.dbg = null;
-
+    this._dbg = null;
     this._attached = false;
-    return { type: "detached" };
+
+    return {
+      type: "detached"
+    };
   },
 
   /**
@@ -307,7 +240,11 @@ TraceActor.prototype = {
       this.dbg.enabled = false;
     }
 
-    return { type: "stoppedTrace", why: "requested", name: name };
+    return {
+      type: "stoppedTrace",
+      why: "requested",
+      name
+    };
   },
 
   // JS Debugger API hooks.
@@ -443,19 +380,19 @@ TraceActor.prototype = {
 /**
  * The request types this actor can handle.
  */
-TraceActor.prototype.requestTypes = {
-  "attach": TraceActor.prototype.onAttach,
-  "detach": TraceActor.prototype.onDetach,
-  "startTrace": TraceActor.prototype.onStartTrace,
-  "stopTrace": TraceActor.prototype.onStopTrace
+TracerActor.prototype.requestTypes = {
+  "attach": TracerActor.prototype.onAttach,
+  "detach": TracerActor.prototype.onDetach,
+  "startTrace": TracerActor.prototype.onStartTrace,
+  "stopTrace": TracerActor.prototype.onStopTrace
 };
 
 exports.register = function(handle) {
-  handle.addTabActor(TraceActor, "traceActor");
+  handle.addTabActor(TracerActor, "traceActor");
 };
 
 exports.unregister = function(handle) {
-  handle.removeTabActor(TraceActor, "traceActor");
+  handle.removeTabActor(TracerActor, "traceActor");
 };
 
 
@@ -610,7 +547,7 @@ function createValueSnapshot(aValue, aDetailed=false) {
         ? detailedObjectSnapshot(aValue)
         : objectSnapshot(aValue);
     default:
-      DevToolsUtils.reportException("TraceActor",
+      DevToolsUtils.reportException("TracerActor",
                       new Error("Failed to provide a grip for: " + aValue));
       return null;
   }
