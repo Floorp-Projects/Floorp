@@ -1162,7 +1162,13 @@ var gPluginHandler = {
     let submitReports   = true; // XXX followup for .getPropertyAsBool("submitReports");
     let pluginName      = propBag.getPropertyAsAString("pluginName");
     let pluginDumpID    = propBag.getPropertyAsAString("pluginDumpID");
-    let browserDumpID   = propBag.getPropertyAsAString("browserDumpID");
+    let browserDumpID = null;
+
+    try {
+      browserDumpID = propBag.getPropertyAsAString("browserDumpID");
+    } catch (e) {
+      // For GMP crashes we don't get a browser dump.
+    }
 
     // Remap the plugin name to a more user-presentable form.
     pluginName = this.makeNicePluginName(pluginName);
