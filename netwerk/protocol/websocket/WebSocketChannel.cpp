@@ -3267,6 +3267,7 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream *aStream)
       } else {
         mHdrOut += amtSent;
         mHdrOutToSend -= amtSent;
+        mSocketOut->AsyncWait(this, 0, 0, mSocketThread);
       }
     } else {
       if (amtSent == toSend) {
@@ -3279,6 +3280,7 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream *aStream)
         PrimeNewOutgoingMessage();
       } else {
         mCurrentOutSent += amtSent;
+        mSocketOut->AsyncWait(this, 0, 0, mSocketThread);
       }
     }
   }

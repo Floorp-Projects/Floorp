@@ -133,8 +133,8 @@ load 830098.html
 load 831287.html
 load 832644.html
 load 836890.html
-load 838489-1.html
-load 838489-2.html
+skip-if(browserIsRemote) load 838489-1.html # <keygen> broken in e10s (bug 582297)
+skip-if(browserIsRemote) load 838489-2.html # <keygen> broken in e10s (bug 582297)
 load 841205.html
 load 844404.html
 load 847127.html

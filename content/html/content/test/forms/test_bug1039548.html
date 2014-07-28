@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1039548
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1039548</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1039548 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  SimpleTest.waitForFocus(test);
+
+  var didTryToSubmit;
+  function test() {
+    var r = document.getElementById("radio");
+    r.focus();
+    didTryToSubmit = false;
+    sendKey("return");
+    ok(!didTryToSubmit, "Shouldn't have tried to submit!");
+
+    var t = document.getElementById("text");
+    t.focus();
+    didTryToSubmit = false;
+    sendKey("return");
+    ok(didTryToSubmit, "Should have tried to submit!");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1039548">Mozilla Bug 1039548</a>
+<p id="display"></p>
+<div id="content">
+
+  <form onsubmit="didTryToSubmit = true; event.preventDefault();">
+    <input type="radio" id="radio">
+  </form>
+
+  <form onsubmit="didTryToSubmit = true; event.preventDefault();">
+    <input type="text" id="text">
+  </form>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

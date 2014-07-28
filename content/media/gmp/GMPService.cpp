@@ -16,6 +16,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsIConsoleService.h"
 #include "mozilla/unused.h"
+#include "GMPDecryptorParent.h"
 
 namespace mozilla {
 
@@ -281,6 +282,37 @@ GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
 
   *aGMPVE = gmpVEP;
   *aOutVideoHost = &gmpVEP->Host();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
+                                         const nsAString& aOrigin,
+                                         GMPDecryptorProxy** aDecryptor)
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
+  NS_ENSURE_ARG(aDecryptor);
+
+  if (mShuttingDownOnGMPThread) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
+                                               NS_LITERAL_CSTRING("eme-decrypt"),
+                                               *aTags);
+  if (!gmp) {
+    return NS_ERROR_FAILURE;
+  }
+
+  GMPDecryptorParent* ksp;
+  nsresult rv = gmp->GetGMPDecryptor(&ksp);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  *aDecryptor = static_cast<GMPDecryptorProxy*>(ksp);
 
   return NS_OK;
 }

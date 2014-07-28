@@ -65,9 +65,6 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumSamples)
 void
 FFmpegAACDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
 {
-  nsAutoPtr<AVFrame> frame(avcodec_alloc_frame());
-  avcodec_get_frame_defaults(frame);
-
   AVPacket packet;
   av_init_packet(&packet);
 
@@ -76,9 +73,15 @@ FFmpegAACDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
   packet.size = aSample->size;
   packet.pos = aSample->byte_offset;
 
+  if (!PrepareFrame()) {
+    NS_WARNING("FFmpeg audio decoder failed to allocate frame.");
+    mCallback->Error();
+    return;
+  }
+
   int decoded;
   int bytesConsumed =
-    avcodec_decode_audio4(&mCodecContext, frame.get(), &decoded, &packet);
+    avcodec_decode_audio4(mCodecContext, mFrame, &decoded, &packet);
 
   if (bytesConsumed < 0 || !decoded) {
     NS_WARNING("FFmpeg audio decoder error.");
@@ -89,14 +92,14 @@ FFmpegAACDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
   NS_ASSERTION(bytesConsumed == (int)aSample->size,
                "Only one audio packet should be received at a time.");
 
-  uint32_t numChannels = mCodecContext.channels;
+  uint32_t numChannels = mCodecContext->channels;
 
   nsAutoArrayPtr<AudioDataValue> audio(
-    CopyAndPackAudio(frame.get(), numChannels, frame->nb_samples));
+    CopyAndPackAudio(mFrame, numChannels, mFrame->nb_samples));
 
   nsAutoPtr<AudioData> data(
     new AudioData(packet.pos, aSample->composition_timestamp, aSample->duration,
-                  frame->nb_samples, audio.forget(), numChannels));
+                  mFrame->nb_samples, audio.forget(), numChannels));
 
   mCallback->Output(data.forget());
 

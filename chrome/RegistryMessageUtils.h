@@ -13,6 +13,12 @@ struct SerializedURI
 {
   nsCString spec;
   nsCString charset;
+
+  bool operator ==(const SerializedURI& rhs) const
+  {
+      return spec.Equals(rhs.spec) &&
+             charset.Equals(rhs.charset);
+  }
 };
 
 struct ChromePackage
@@ -22,6 +28,15 @@ struct ChromePackage
   SerializedURI localeBaseURI;
   SerializedURI skinBaseURI;
   uint32_t flags;
+
+  bool operator ==(const ChromePackage& rhs) const
+  {
+    return package.Equals(rhs.package) &&
+           contentBaseURI == rhs.contentBaseURI &&
+           localeBaseURI == rhs.localeBaseURI &&
+           skinBaseURI == rhs.skinBaseURI &&
+           flags == rhs.flags;
+  }
 };
 
 struct ResourceMapping
@@ -34,6 +49,12 @@ struct OverrideMapping
 {
   SerializedURI originalURI;
   SerializedURI overrideURI;
+
+  bool operator==(const OverrideMapping& rhs) const
+  {
+      return originalURI == rhs.originalURI &&
+             overrideURI == rhs.overrideURI;
+  }
 };
 
 namespace IPC {

@@ -5,3 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+JS_MODULES_PATH = 'modules/devtools/profiler'
+
+EXTRA_JS_MODULES += [
+    'cleopatra.js',
+    'commands.js',
+    'consts.js',
+    'controller.js',
+    'panel.js',
+    'sidebar.js',
+]
