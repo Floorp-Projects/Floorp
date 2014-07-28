@@ -29,7 +29,6 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport",
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
 
 let promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js").Promise;
 const { defer, resolve, reject } = promise;
@@ -455,7 +454,7 @@ DebuggerClient.prototype = {
         javascriptEnabled: cachedTab.javascriptEnabled,
         traits: cachedTab.traits,
       };
-      setTimeout(() => aOnResponse(cachedResponse, cachedTab), 0);
+      DevToolsUtils.executeSoon(() => aOnResponse(cachedResponse, cachedTab));
       return;
     }
 
@@ -545,7 +544,7 @@ DebuggerClient.prototype = {
    */
   attachThread: function (aThreadActor, aOnResponse = noop, aOptions={}) {
     if (this._clients.has(aThreadActor)) {
-      setTimeout(() => aOnResponse({}, this._clients.get(aThreadActor)), 0);
+      DevToolsUtils.executeSoon(() => aOnResponse({}, this._clients.get(aThreadActor)));
       return;
     }
 
@@ -574,7 +573,7 @@ DebuggerClient.prototype = {
    */
   attachTracer: function (aTraceActor, aOnResponse = noop) {
     if (this._clients.has(aTraceActor)) {
-      setTimeout(() => aOnResponse({}, this._clients.get(aTraceActor)), 0);
+      DevToolsUtils.executeSoon(() => aOnResponse({}, this._clients.get(aTraceActor)));
       return;
     }
 
@@ -1284,7 +1283,7 @@ TabClient.prototype = {
    */
   attachThread: function(aOptions={}, aOnResponse = noop) {
     if (this.thread) {
-      setTimeout(() => aOnResponse({}, this.thread), 0);
+      DevToolsUtils.executeSoon(() => aOnResponse({}, this.thread));
       return;
     }
 
@@ -1672,7 +1671,7 @@ ThreadClient.prototype = {
     // the next resumption. Otherwise we have to force a pause in order to send
     // the array.
     if (this.paused) {
-      setTimeout(() => onResponse({}), 0);
+      DevToolsUtils.executeSoon(() => onResponse({}));
       return;
     }
     this.interrupt(response => {
