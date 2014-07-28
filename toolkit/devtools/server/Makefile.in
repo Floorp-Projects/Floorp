@@ -8,3 +8,4 @@ libs::
 	$(INSTALL) $(IFLAGS1) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/devtools
 	$(INSTALL) $(IFLAGS1) $(srcdir)/*.js $(FINAL_TARGET)/modules/devtools/server
 	$(INSTALL) $(IFLAGS1) $(srcdir)/actors/*.js $(FINAL_TARGET)/modules/devtools/server/actors
+	$(INSTALL) $(IFLAGS1) $(srcdir)/actors/utils/*.js $(FINAL_TARGET)/modules/devtools/server/actors/utils
