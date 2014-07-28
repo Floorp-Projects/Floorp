@@ -37,7 +37,6 @@ class SharedMemory
 protected:
   virtual ~SharedMemory()
   {
-    MOZ_COUNT_DTOR(SharedMemory);
     Unmapped();
     Destroyed();
   }
