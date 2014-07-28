@@ -122,7 +122,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(1a6c4db7-4b90-4919-9cd8-161ac14a7189)]
+[scriptable, uuid(10bcc595-ccca-4ead-aae3-d12b47cd9fff)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -380,16 +380,6 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     boolean isProxy(in jsval vobject);
-
-    /*
-     * Similar to evalInSandbox except this one is used to eval a script in the
-     * scope of a window. Also note, that the return value and the possible exceptions
-     * in the script are structured cloned, unless they are natives (then they are just
-     * wrapped).
-     * Principal of the caller must subsume the target's.
-     */
-    [implicit_jscontext]
-    jsval evalInWindow(in AString source, in jsval window);
 
     /*
      * To be called from JS only.

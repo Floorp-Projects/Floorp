@@ -3008,20 +3008,6 @@ nsXPCComponents_Utils::IsProxy(HandleValue vobj, JSContext *cx, bool *rval)
     return NS_OK;
 }
 
-/* jsval evalInWindow(in string source, in jsval window); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::EvalInWindow(const nsAString &source, HandleValue window,
-                                    JSContext *cx, MutableHandleValue rval)
-{
-    if (!window.isObject())
-        return NS_ERROR_INVALID_ARG;
-
-    RootedObject rwindow(cx, &window.toObject());
-    if (!xpc::EvalInWindow(cx, source, rwindow, rval))
-        return NS_ERROR_FAILURE;
-    return NS_OK;
-}
-
 /* jsval exportFunction(in jsval vfunction, in jsval vscope, in jsval voptions); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::ExportFunction(HandleValue vfunction, HandleValue vscope,
