@@ -1506,6 +1506,14 @@ CssSelector.prototype = {
    */
   get specificity()
   {
+    if (this.elementStyle) {
+      // We can't ask specificity from DOMUtils as element styles don't provide
+      // CSSStyleRule interface DOMUtils expect. However, specificity of element
+      // style is constant, 1,0,0,0 or 0x01000000, just return the constant
+      // directly. @see http://www.w3.org/TR/CSS2/cascade.html#specificity
+      return 0x01000000;
+    }
+
     if (this._specificity) {
       return this._specificity;
     }
