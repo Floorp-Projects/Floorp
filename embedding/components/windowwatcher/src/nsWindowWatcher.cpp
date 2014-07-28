@@ -60,6 +60,7 @@
 #include "nsSandboxFlags.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DOMStorage.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
@@ -875,26 +876,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   }
 
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  if (uriToLoad && aNavigate) { // get the script principal and pass it to docshell
-
-    // The historical ordering of attempts here is:
-    // (1) Stack-top cx.
-    // (2) cx associated with aParent.
-    // (3) Safe JSContext.
-    //
-    // We could just use an AutoJSContext here if it weren't for (2), which
-    // is probably nonsensical anyway. But we preserve the old semantics for
-    // now, because this is part of a large patch where we don't want to risk
-    // subtle behavioral modifications.
-    cx = nsContentUtils::GetCurrentJSContext();
-    nsCxPusher pusher;
-    if (!cx) {
-      cx = GetJSContextFromWindow(aParent);
-      if (!cx)
-        cx = nsContentUtils::GetSafeJSContext();
-      pusher.Push(cx);
-    }
-
+  if (uriToLoad && aNavigate) {
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
@@ -902,26 +884,22 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
       loadInfo->SetOwner(subjectPrincipal);
     }
 
-    // Set the new window's referrer from the calling context's document:
-
-    // get its document, if any
-    JSContext* ccx = nsContentUtils::GetCurrentJSContext();
-    if (ccx) {
-      nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(ccx);
-
-      nsCOMPtr<nsPIDOMWindow> w(do_QueryInterface(sgo));
-      if (w) {
-        /* use the URL from the *extant* document, if any. The usual accessor
-           GetDocument will synchronously create an about:blank document if
-           it has no better answer, and we only care about a real document.
-           Also using GetDocument to force document creation seems to
-           screw up focus in the hidden window; see bug 36016.
-        */
-        nsCOMPtr<nsIDocument> doc = w->GetExtantDoc();
-        if (doc) {
-          // Set the referrer
-          loadInfo->SetReferrer(doc->GetDocumentURI());
-        }
+    nsCOMPtr<nsPIDOMWindow> referrerWindow =
+      do_QueryInterface(dom::BrokenGetEntryGlobal());
+    if (!referrerWindow) {
+      referrerWindow = do_QueryInterface(aParent);
+    }
+    if (referrerWindow) {
+      /* use the URL from the *extant* document, if any. The usual accessor
+         GetDocument will synchronously create an about:blank document if
+         it has no better answer, and we only care about a real document.
+         Also using GetDocument to force document creation seems to
+         screw up focus in the hidden window; see bug 36016.
+      */
+      nsCOMPtr<nsIDocument> doc = referrerWindow->GetExtantDoc();
+      if (doc) {
+        // Set the referrer
+        loadInfo->SetReferrer(doc->GetDocumentURI());
       }
     }
   }
