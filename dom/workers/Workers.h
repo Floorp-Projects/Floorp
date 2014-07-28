@@ -213,7 +213,7 @@ class WorkerCrossThreadDispatcher
 
 private:
   // Only created by WorkerPrivate.
-  WorkerCrossThreadDispatcher(WorkerPrivate* aWorkerPrivate);
+  explicit WorkerCrossThreadDispatcher(WorkerPrivate* aWorkerPrivate);
 
   // Only called by WorkerPrivate.
   void
