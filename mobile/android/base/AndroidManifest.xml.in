@@ -15,7 +15,6 @@
 #endif
               android:targetSdkVersion="@ANDROID_TARGET_SDK@"/>
 
-#include ../services/manifests/AnnouncementsAndroidManifest_permissions.xml.in
 #include ../services/manifests/FxAccountAndroidManifest_permissions.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_permissions.xml.in
 #include ../services/manifests/SyncAndroidManifest_permissions.xml.in
@@ -330,7 +329,6 @@
           </intent-filter>
         </activity>
 
-#include ../services/manifests/AnnouncementsAndroidManifest_activities.xml.in
 #include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_activities.xml.in
 #include ../services/manifests/SyncAndroidManifest_activities.xml.in
@@ -428,7 +426,6 @@
         </service>
 
 
-#include ../services/manifests/AnnouncementsAndroidManifest_services.xml.in
 #include ../services/manifests/FxAccountAndroidManifest_services.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_services.xml.in
 #include ../services/manifests/SyncAndroidManifest_services.xml.in
