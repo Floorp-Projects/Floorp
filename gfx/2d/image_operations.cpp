@@ -408,9 +408,13 @@ SkBitmap ImageOperations::ResizeSubpixel(const SkBitmap& source,
 
   // Render into subpixels.
   SkBitmap result;
-  result.setConfig(SkBitmap::kARGB_8888_Config, dest_subset.width(),
-                   dest_subset.height());
-  result.allocPixels();
+  SkImageInfo info = SkImageInfo::Make(dest_subset.width(),
+                                       dest_subset.height(),
+                                       kBGRA_8888_SkColorType,
+                                       kPremul_SkAlphaType);
+
+
+  result.allocPixels(info);
   if (!result.readyToDraw())
     return img;
 
@@ -515,13 +519,15 @@ SkBitmap ImageOperations::ResizeBasic(const SkBitmap& source,
 
   // Convolve into the result.
   SkBitmap result;
-  result.setConfig(SkBitmap::kARGB_8888_Config,
-                   dest_subset.width(), dest_subset.height());
+  SkImageInfo info = SkImageInfo::Make(dest_subset.width(),
+                                       dest_subset.height(),
+                                       kBGRA_8888_SkColorType,
+                                       kPremul_SkAlphaType);
 
   if (dest_pixels) {
-    result.setPixels(dest_pixels);
+    result.installPixels(info, dest_pixels, info.minRowBytes());
   } else {
-    result.allocPixels();
+    result.allocPixels(info);
   }
 
   if (!result.readyToDraw())
