@@ -53,6 +53,10 @@ public:
   NS_IMETHOD RequestDiscard() MOZ_OVERRIDE;
   NS_IMETHOD_(Orientation) GetOrientation() MOZ_OVERRIDE;
   NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect) MOZ_OVERRIDE;
+  nsIntSize OptimalImageSizeForDest(const gfxSize& aDest,
+                                    uint32_t aWhichFrame,
+                                    GraphicsFilter aFilter,
+                                    uint32_t aFlags) MOZ_OVERRIDE;
 
 protected:
   ClippedImage(Image* aImage, nsIntRect aClip);
