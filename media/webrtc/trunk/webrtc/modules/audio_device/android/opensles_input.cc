@@ -124,9 +124,13 @@ int32_t OpenSlesInput::Init() {
 #else
   OPENSL_RETURN_ON_FAILURE(mozilla_get_sles_engine(&sles_engine_, 1, kOption), -1);
 #endif
+#ifndef MOZILLA_INTERNAL_API
   OPENSL_RETURN_ON_FAILURE((*sles_engine_)->Realize(sles_engine_,
                                                     SL_BOOLEAN_FALSE),
                            -1);
+#else
+  OPENSL_RETURN_ON_FAILURE(mozilla_realize_sles_engine(sles_engine_), -1);
+#endif
   OPENSL_RETURN_ON_FAILURE((*sles_engine_)->GetInterface(sles_engine_,
                                                          SL_IID_ENGINE_,
                                                          &sles_engine_itf_),
