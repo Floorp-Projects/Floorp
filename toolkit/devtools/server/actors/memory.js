@@ -63,7 +63,7 @@ let MemoryActor = protocol.ActorClass({
     } catch (e) {
       console.error(e);
       let url = this.tabActor.url;
-      console.error("Error getting size of "+url);
+      console.error("Error getting size of " + url);
     }
 
     return result;

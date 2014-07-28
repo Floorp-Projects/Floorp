@@ -14,6 +14,8 @@ let { AddonThreadActor, ThreadActor } = require("devtools/server/actors/script")
 let { DebuggerServer } = require("devtools/server/main");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dbg_assert } = DevToolsUtils;
+let makeDebugger = require("./utils/make-debugger");
+let mapURIToAddonID = require("./utils/map-uri-to-addon-id");
 
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -70,6 +72,29 @@ function sendShutdownEvent() {
 }
 
 exports.sendShutdownEvent = sendShutdownEvent;
+
+/**
+ * Unwrap a global that is wrapped in a |Debugger.Object|, or if the global has
+ * become a dead object, return |undefined|.
+ *
+ * @param Debugger.Object wrappedGlobal
+ *        The |Debugger.Object| which wraps a global.
+ *
+ * @returns {Object|undefined}
+ *          Returns the unwrapped global object or |undefined| if unwrapping
+ *          failed.
+ */
+const unwrapDebuggerObjectGlobal = wrappedGlobal => {
+  let global;
+  try {
+    global = wrappedGlobal.unsafeDereference();
+  }
+  catch (e) {
+    // Because of bug 991399 we sometimes get bad objects here. If we
+    // can't dereference them then they won't be useful to us.
+  }
+  return global;
+};
 
 /**
  * Construct a root actor appropriate for use in a server running in a
@@ -520,6 +545,13 @@ function TabActor(aConnection)
   this._extraActors = {};
   this._exited = false;
 
+  this._shouldAddNewGlobalAsDebuggee = this._shouldAddNewGlobalAsDebuggee.bind(this);
+
+  this.makeDebugger = makeDebugger.bind(null, {
+    findDebuggees: () => this.windows,
+    shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee
+  });
+
   this.traits = { reconfigure: true };
 }
 
@@ -713,6 +745,37 @@ TabActor.prototype = {
     }
 
     this._exited = true;
+  },
+
+  /**
+   * Return true if the given global is associated with this tab and should be
+   * added as a debuggee, false otherwise.
+   */
+  _shouldAddNewGlobalAsDebuggee: function (wrappedGlobal) {
+    if (wrappedGlobal.hostAnnotations &&
+        wrappedGlobal.hostAnnotations.type == "document" &&
+        wrappedGlobal.hostAnnotations.element === this.window) {
+      return true;
+    }
+
+    let global = unwrapDebuggerObjectGlobal(wrappedGlobal);
+    if (!global) {
+      return false;
+    }
+
+    // Check if the global is a sdk page-mod sandbox.
+    let metadata = {};
+    let id = "";
+    try {
+      id = getInnerId(this.window);
+      metadata = Cu.getSandboxMetadata(global);
+    }
+    catch (e) {}
+    if (metadata["inner-window-id"] && metadata["inner-window-id"] == id) {
+      return true;
+    }
+
+    return false;
   },
 
   /* Support for DebuggerServer.addTabActor. */
@@ -999,7 +1062,7 @@ TabActor.prototype = {
     // Refresh the debuggee list when a new window object appears (top window or
     // iframe).
     if (threadActor.attached) {
-      threadActor.findGlobals();
+      threadActor.dbg.addDebuggees();
     }
   },
 
@@ -1287,6 +1350,14 @@ function BrowserAddonActor(aConnection, aAddon) {
   this.conn.addActorPool(this._contextPool);
   this._threadActor = null;
   this._global = null;
+
+  this._shouldAddNewGlobalAsDebuggee = this._shouldAddNewGlobalAsDebuggee.bind(this);
+
+  this.makeDebugger = makeDebugger.bind(null, {
+    findDebuggees: this._findDebuggees.bind(this),
+    shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee
+  });
+
   AddonManager.addAddonListener(this);
 }
 
@@ -1373,8 +1444,7 @@ BrowserAddonActor.prototype = {
     }
 
     if (!this.attached) {
-      this._threadActor = new AddonThreadActor(this.conn, this,
-                                               this._addon.id);
+      this._threadActor = new AddonThreadActor(this.conn, this);
       this._contextPool.addActor(this._threadActor);
     }
 
@@ -1413,6 +1483,61 @@ BrowserAddonActor.prototype = {
       windowUtils.resumeTimeouts();
       windowUtils.suppressEventHandling(false);
     }
+  },
+
+  /**
+   * Return true if the given global is associated with this addon and should be
+   * added as a debuggee, false otherwise.
+   */
+  _shouldAddNewGlobalAsDebuggee: function (aGlobal) {
+    const global = unwrapDebuggerObjectGlobal(aGlobal);
+    try {
+      // This will fail for non-Sandbox objects, hence the try-catch block.
+      let metadata = Cu.getSandboxMetadata(global);
+      if (metadata) {
+        return metadata.addonID === this.id;
+      }
+    } catch (e) {}
+
+    if (global instanceof Ci.nsIDOMWindow) {
+      let id = {};
+      if (mapURIToAddonID(global.document.documentURIObject, id)) {
+        return id.value === this.id;
+      }
+      return false;
+    }
+
+    // Check the global for a __URI__ property and then try to map that to an
+    // add-on
+    let uridescriptor = aGlobal.getOwnPropertyDescriptor("__URI__");
+    if (uridescriptor && "value" in uridescriptor && uridescriptor.value) {
+      let uri;
+      try {
+        uri = Services.io.newURI(uridescriptor.value, null, null);
+      }
+      catch (e) {
+        DevToolsUtils.reportException(
+          "BrowserAddonActor.prototype._shouldAddNewGlobalAsDebuggee",
+          new Error("Invalid URI: " + uridescriptor.value)
+        );
+        return false;
+      }
+
+      let id = {};
+      if (mapURIToAddonID(uri, id)) {
+        return id.value === this.id;
+      }
+    }
+
+    return false;
+  },
+
+  /**
+   * Yield the current set of globals associated with this addon that should be
+   * added as debuggees.
+   */
+  _findDebuggees: function (dbg) {
+    return dbg.findAllGlobals().filter(this._shouldAddNewGlobalAsDebuggee);
   }
 };
 

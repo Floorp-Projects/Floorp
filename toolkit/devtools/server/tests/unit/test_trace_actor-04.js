@@ -75,7 +75,9 @@ function test_enter_exit_frame()
       do_check_eq(traceNames[4], "foo",
                   'Should have entered "foo" frame in fifth packet');
       finishClient(gClient);
-    });
+    })
+    .then(null, e => DevToolsUtils.reportException("test_trace_actor-04.js",
+                                                   e));
 }
 
 function start_trace()
