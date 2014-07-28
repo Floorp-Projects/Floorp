@@ -48,7 +48,8 @@ public:
                 int32_t timeScale,
                 const sp<SampleTable> &sampleTable,
                 Vector<SidxEntry> &sidx,
-                off64_t firstMoofOffset);
+                off64_t firstMoofOffset,
+                MPEG4Extractor::TrackExtends &trackExtends);
 
     virtual status_t start(MetaData *params = NULL);
     virtual status_t stop();
@@ -142,6 +143,7 @@ private:
         Vector<uint32_t> encryptedsizes;
     };
     Vector<Sample> mCurrentSamples;
+    MPEG4Extractor::TrackExtends mTrackExtends;
 
     MPEG4Source(const MPEG4Source &);
     MPEG4Source &operator=(const MPEG4Source &);
@@ -476,26 +478,27 @@ status_t MPEG4Extractor::readMetaData() {
     }
 
     off64_t offset = 0;
-    status_t err;
+    status_t err = OK;
     while (true) {
-        err = parseChunk(&offset, 0);
-        if (err == OK) {
-            continue;
-        }
-
         uint32_t hdr[2];
         if (mDataSource->readAt(offset, hdr, 8) < 8) {
             break;
         }
         uint32_t chunk_type = ntohl(hdr[1]);
-        if (chunk_type == FOURCC('s', 'i', 'd', 'x')) {
-            // parse the sidx box too
-            continue;
-        } else if (chunk_type == FOURCC('m', 'o', 'o', 'f')) {
+        if (chunk_type == FOURCC('m', 'd', 'a', 't')) {
+            break;
+        }
+        if (chunk_type == FOURCC('m', 'o', 'o', 'f')) {
             // store the offset of the first segment
             mMoofOffset = offset;
+            break;
         }
-        break;
+        err = parseChunk(&offset, 0);
+        if (err != OK &&
+                chunk_type != FOURCC('s', 'i', 'd', 'x') &&
+                chunk_type != FOURCC('m', 'o', 'o', 'v')) {
+            break;
+        }
     }
 
     if (mInitCheck == OK) {
@@ -1041,6 +1044,17 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             mLastTrack->meta->setInt32(kKeyCryptoMode, defaultAlgorithmId);
             mLastTrack->meta->setInt32(kKeyCryptoDefaultIVSize, defaultIVSize);
             mLastTrack->meta->setData(kKeyCryptoKey, 'tenc', defaultKeyId, 16);
+            *offset += chunk_size;
+            break;
+        }
+
+        case FOURCC('t', 'r', 'e', 'x'):
+        {
+            status_t err;
+            if ((err = parseTrackExtends(data_offset, chunk_data_size)) != OK) {
+                return err;
+            }
+
             *offset += chunk_size;
             break;
         }
@@ -1907,7 +1921,26 @@ status_t MPEG4Extractor::parseSegmentIndex(off64_t offset, size_t size) {
     return OK;
 }
 
-
+status_t MPEG4Extractor::parseTrackExtends(
+    off64_t data_offset, off64_t data_size) {
+    if (data_size != 24) {
+        return ERROR_MALFORMED;
+    }
+    uint8_t buffer[24];
+    if (mDataSource->readAt(data_offset, buffer, 24) < 24) {
+        return ERROR_IO;
+    }
+    mTrackExtends.mVersion = buffer[0];
+    mTrackExtends.mFlags[0] = buffer[1];
+    mTrackExtends.mFlags[1] = buffer[2];
+    mTrackExtends.mFlags[2] = buffer[3];
+    mTrackExtends.mTrackId = U32_AT(&buffer[4]);
+    mTrackExtends.mDefaultSampleDescriptionIndex = U32_AT(&buffer[8]);
+    mTrackExtends.mDefaultSampleDuration = U32_AT(&buffer[12]);
+    mTrackExtends.mDefaultSampleSize = U32_AT(&buffer[16]);
+    mTrackExtends.mDefaultSampleFlags = U32_AT(&buffer[20]);
+    return OK;
+}
 
 status_t MPEG4Extractor::parseTrackHeader(
         off64_t data_offset, off64_t data_size) {
@@ -2209,7 +2242,7 @@ sp<MediaSource> MPEG4Extractor::getTrack(size_t index) {
 
     return new MPEG4Source(
             track->meta, mDataSource, track->timescale, track->sampleTable,
-            mSidxEntries, mMoofOffset);
+            mSidxEntries, mMoofOffset, mTrackExtends);
 }
 
 // static
@@ -2371,7 +2404,8 @@ MPEG4Source::MPEG4Source(
         int32_t timeScale,
         const sp<SampleTable> &sampleTable,
         Vector<SidxEntry> &sidx,
-        off64_t firstMoofOffset)
+        off64_t firstMoofOffset,
+        MPEG4Extractor::TrackExtends &trackExtends)
     : mFormat(format),
       mDataSource(dataSource),
       mTimescale(timeScale),
@@ -2391,7 +2425,8 @@ MPEG4Source::MPEG4Source(
       mStarted(false),
       mBuffer(NULL),
       mWantsNALFragments(false),
-      mSrcBuffer(NULL) {
+      mSrcBuffer(NULL),
+      mTrackExtends(trackExtends) {
 
     mFormat->findInt32(kKeyCryptoMode, &mCryptoMode);
     mDefaultIVSize = 0;
@@ -2936,7 +2971,7 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
             & TrackFragmentHeaderInfo::kDefaultSampleDurationPresent) {
         sampleDuration = mTrackFragmentHeaderInfo.mDefaultSampleDuration;
     } else {
-        sampleDuration = mTrackFragmentHeaderInfo.mDefaultSampleDuration;
+        sampleDuration = mTrackExtends.mDefaultSampleDuration;
     }
 
     if (flags & kSampleSizePresent) {
@@ -2945,7 +2980,7 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
             & TrackFragmentHeaderInfo::kDefaultSampleSizePresent) {
         sampleSize = mTrackFragmentHeaderInfo.mDefaultSampleSize;
     } else {
-        sampleSize = mTrackFragmentHeaderInfo.mDefaultSampleSize;
+        sampleSize = mTrackExtends.mDefaultSampleSize;
     }
 
     if (flags & kSampleFlagsPresent) {
@@ -2954,7 +2989,7 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
             & TrackFragmentHeaderInfo::kDefaultSampleFlagsPresent) {
         sampleFlags = mTrackFragmentHeaderInfo.mDefaultSampleFlags;
     } else {
-        sampleFlags = mTrackFragmentHeaderInfo.mDefaultSampleFlags;
+        sampleFlags = mTrackExtends.mDefaultSampleFlags;
     }
 
     if (flags & kSampleCompositionTimeOffsetPresent) {

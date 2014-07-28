@@ -686,7 +686,7 @@ function BuildConditionSandbox(aURL) {
     // and set a sandox prop accordingly
     var navigator = gContainingWindow.navigator;
     var testPlugin = navigator.plugins["Test Plug-in"];
-    sandbox.haveTestPlugin = !!testPlugin;
+    sandbox.haveTestPlugin = !!testPlugin && !gBrowserIsRemote;
 
     // Set a flag on sandbox if the windows default theme is active
     var box = gContainingWindow.document.createElement("box");
@@ -751,6 +751,12 @@ function BuildConditionSandbox(aURL) {
     // Tests shouldn't care about this except for when they need to
     // crash the content process
     sandbox.browserIsRemote = gBrowserIsRemote;
+
+    try {
+        sandbox.asyncPanZoom = prefs.getBoolPref("layers.async-pan-zoom.enabled");
+    } catch (e) {
+        sandbox.asyncPanZoom = false;
+    }
 
     // Distinguish the Fennecs:
     sandbox.xulFennec    = sandbox.Android &&  sandbox.browserIsRemote;

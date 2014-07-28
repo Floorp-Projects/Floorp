@@ -8,6 +8,13 @@ using GMPBufferType from "gmp-video-codec.h";
 namespace mozilla {
 namespace gmp {
 
+struct GMPDecryptionData {
+  uint8_t[] mKeyId;
+  uint8_t[] mIV;
+  uint16_t[] mClearBytes;
+  uint32_t[] mCipherBytes;
+};
+
 struct GMPVideoEncodedFrameData
 {
   uint32_t mEncodedWidth;
@@ -19,6 +26,7 @@ struct GMPVideoEncodedFrameData
   GMPBufferType mBufferType;
   Shmem mBuffer;
   bool mCompleteFrame;
+  GMPDecryptionData mDecryptionData;
 };
 
 struct GMPPlaneData

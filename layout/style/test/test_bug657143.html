@@ -21,53 +21,80 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=657143
 /** Test for Bug 657143 **/
 
 // Checks ordering of CSS properties in nsComputedDOMStyle.cpp
-// by splitting the getComputedStyle() into the three sublists
-// then cloning and sort()ing the lists and comparing with originals 
+// by splitting the getComputedStyle() into four sublists
+// then cloning and sort()ing the lists and comparing with originals.
+
+function isPrefixed(aProp) {
+  return aProp.startsWith("-moz");
+}
+
+function isNotPrefixed(aProp) {
+  return !isPrefixed(aProp);
+}
+
+function isCustom(aProp) {
+  return aProp.startsWith("--");
+}
+
+function isNotCustom(aProp) {
+  return !isCustom(aProp);
+}
 
 var styleList = window.getComputedStyle(document.documentElement);
-    cssA = [], mozA = [], svgA = [], mozList = false,
-    svgList = false, noMozInSVG = true;
-// Need to split into sublists to compare
+    cssA = [], mozA = [], svgA = [], customA = [];
+
+// Partition the list of property names into four lists:
+//
+//   cssA: regular, non-SVG properties
+//   mozA: '-moz-' prefixed properties
+//   svgA: SVG properties
+//   customA: '--' prefixed custom properties
+
+var list = cssA;
 for (var i = 0, j = styleList.length; i < j; i++) {
   var prop = styleList.item(i);
-  // Check for start of -moz- list
-  if (!mozList && /^-moz-/.test(prop)) {
-    // Make sure no -moz- in the SVG list
-    if (!svgList) {
-      mozList = true;
-    } else {
-      noMozInSVG = false;
-      // Don't add to svgA so can still test SVG order
-      continue;
-    }
+
+  switch (list) {
+    case cssA:
+      if (isPrefixed(prop)) {
+        list = mozA;
+      }
+      // fall through
+    case mozA:
+      if (prop == "clip-path") {
+        // Assumes that the first SVG property is 'clip-path'.
+        list = svgA;
+      }
+      // fall through
+    case svgA:
+      if (isCustom(prop)) {
+        list = customA;
+      }
+      // fall through
   }
-  // Add properties to the three lists
-  if (mozList) {
-    // Check for start of SVG list
-    // Will break if any SVG props added before, unlikely though?
-    if (prop == 'clip-path') {
-      svgList = true;
-      mozList = false;
-      svgA.push(prop);
-    } else {
-      mozA.push(prop);
-    }
-  } else if (svgList) {
-    svgA.push(prop);
-  } else {
-    cssA.push(prop);
-  }
+
+  list.push(prop);
 }
-var cssB = cssA.slice(0),
-mozB = mozA.slice(0),
-svgB = svgA.slice(0);
-cssB.sort();
-mozB.sort();
-svgB.sort();
+
+var cssB = cssA.slice(0).sort(),
+    mozB = mozA.slice(0).sort(),
+    svgB = svgA.slice(0).sort();
+
 is(cssA.toString(), cssB.toString(), 'CSS property list should be alphabetical');
-is(mozA.toString(), mozB.toString(), 'Experimental -moz- CSS property list should be alphabetical and not contain mature properties');
+is(mozA.toString(), mozB.toString(), 'Experimental -moz- CSS property list should be alphabetical');
 is(svgA.toString(), svgB.toString(), 'SVG property list should be alphabetical');
-ok(noMozInSVG, 'Experimental -moz- CSS properties should not be in the SVG property list');
+
+// We don't test that the custom property is sorted, as the CSSOM
+// specification does not yet require it, and we don't return them
+// in sorted order.
+
+ok(!cssA.find(isPrefixed), 'Experimental -moz- CSS properties should not be in the mature CSS property list');
+ok(!cssA.find(isCustom), 'Custom CSS properties should not be in the mature CSS property list');
+ok(!mozA.find(isNotPrefixed), 'Experimental -moz- CSS property list should not contain mature CSS properties');
+ok(!mozA.find(isCustom), 'Custom CSS properties should not be in the experimental -moz- CSS property list');
+ok(!svgA.find(isPrefixed), 'Experimental -moz- CSS properties should not be in the SVG property list'); 
+ok(!svgA.find(isCustom), 'Custom CSS properties should not be in the SVG property list');
+ok(!customA.find(isNotCustom), 'Non-custom CSS properties should not be in the custom property list');
 
 </script>
 </pre>

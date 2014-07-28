@@ -104,6 +104,7 @@ HTMLSelectElement::HTMLSelectElement(already_AddRefed<mozilla::dom::NodeInfo>& a
                                      FromParser aFromParser)
   : nsGenericHTMLFormElementWithState(aNodeInfo),
     mOptions(new HTMLOptionsCollection(MOZ_THIS_IN_INITIALIZER_LIST())),
+    mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown),
     mIsDoneAddingChildren(!aFromParser),
     mDisabledChanged(false),
     mMutating(false),
@@ -175,6 +176,16 @@ HTMLSelectElement::SetCustomValidity(const nsAString& aError)
   UpdateState(true);
 
   return NS_OK;
+}
+
+void
+HTMLSelectElement::GetAutocomplete(DOMString& aValue)
+{
+  const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
+
+  mAutocompleteAttrState =
+    nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aValue,
+                                                   mAutocompleteAttrState);
 }
 
 NS_IMETHODIMP
@@ -1333,6 +1344,9 @@ HTMLSelectElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       UpdateBarredFromConstraintValidation();
     } else if (aName == nsGkAtoms::required) {
       UpdateValueMissingValidityState();
+    } else if (aName == nsGkAtoms::autocomplete) {
+      // Clear the cached @autocomplete attribute state
+      mAutocompleteAttrState = nsContentUtils::eAutocompleteAttrState_Unknown;
     }
 
     UpdateState(aNotify);
@@ -1420,8 +1434,13 @@ HTMLSelectElement::ParseAttribute(int32_t aNamespaceID,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
-  if (aAttribute == nsGkAtoms::size && kNameSpaceID_None == aNamespaceID) {
-    return aResult.ParsePositiveIntValue(aValue);
+  if (kNameSpaceID_None == aNamespaceID) {
+    if (aAttribute == nsGkAtoms::size) {
+      return aResult.ParsePositiveIntValue(aValue);
+    } else if (aAttribute == nsGkAtoms::autocomplete) {
+      aResult.ParseAtomArray(aValue);
+      return true;
+    }
   }
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aResult);

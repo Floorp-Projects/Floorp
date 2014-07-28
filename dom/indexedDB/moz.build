@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['ipc']
-TEST_DIRS += ['test']
+TEST_DIRS += ['test/extensions']
 
 EXPORTS.mozilla.dom.indexedDB += [
     'Client.h',
@@ -80,3 +80,10 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
 ]
 
+MOCHITEST_MANIFESTS += [
+    'test/mochitest.ini',
+    'test/unit/mochitest.ini',
+]
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

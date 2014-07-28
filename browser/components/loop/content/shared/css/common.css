@@ -53,6 +53,10 @@ img {
   display: none;
 }
 
+.visually-hidden {
+  visibility: hidden;
+}
+
 .tc {
   text-align: center;
 }
@@ -73,56 +77,110 @@ img {
   padding: 0 0.5em;
   border-radius: 2px;
   cursor: pointer;
+  font-size: .9em;
+  text-align: center;
 }
 
 .btn-info {
-  background: #0096dd;
+  background-color: #0096dd;
   border: 1px solid #0095dd;
 }
 
   .btn-info:hover {
-    background: #008acb;
+    background-color: #008acb;
     border: 1px solid #008acb;
   }
 
   .btn-info:active {
-    background: #006b9d;
+    background-color: #006b9d;
     border: 1px solid #006b9d;
   }
 
 .btn-success {
-  background: #74bf43;
+  background-color: #74bf43;
   border: 1px solid #74bf43;
 }
 
   .btn-success:hover {
-    background: #6cb23e;
+    background-color: #6cb23e;
     border: 1px solid #6cb23e;
   }
 
   .btn-success:active {
-    background: #64a43a;
+    background-color: #64a43a;
     border: 1px solid #64a43a;
   }
 
 .btn-warning {
-  background: #f0ad4e;
+  background-color: #f0ad4e;
 }
 
-.btn-error {
-  background: #d74345;
+.btn-error,
+.btn-error + .btn-chevron {
+  background-color: #d74345;
   border: 1px solid #d74345;
 }
 
-  .btn-error:hover {
-    background: #c53436;
+  .btn-error:hover,
+  .btn-error + .btn-chevron:hover {
+    background-color: #c53436;
     border: 1px solid #c53436;
   }
 
-  .btn-error:active {
-    background: #ae2325;
+  .btn-error:active,
+  .btn-error + .btn-chevron:active {
+    background-color: #ae2325;
     border: 1px solid #ae2325;
   }
+
+.btn-chevron {
+  width: 26px;
+  height: 26px;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+/* Groups together a button and a chevron */
+.button-group-chevron {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Groups together a button-group-chevron
+ * and the dropdown menu */
+.button-chevron-menu-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.button-group-chevron .btn {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  flex: 2;
+}
+
+  .btn + .btn-chevron,
+  .btn + .btn-chevron:hover,
+  .btn + .btn-chevron:active {
+    border-left: 1px solid rgba(255,255,255,.4);
+    background-image: url("../img/dropdown-inverse.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 10px;
+  }
+
+@media (min-resolution: 2dppx) {
+  .btn-chevron {
+    background-image: url(../img/dropdown-inverse@2x.png);
+    background-position: center;
+    background-size: 10px;
+    background-repeat: no-repeat;
+  }
+}
 
 .disabled, button[disabled] {
   cursor: not-allowed;
@@ -133,12 +191,10 @@ img {
 .button-group {
   display: flex;
   width: 100%;
-  padding: 1em;
 }
 
 .button-group .btn {
   flex: 1;
-  margin: 0 .3em;
 }
 
 /* Alerts */

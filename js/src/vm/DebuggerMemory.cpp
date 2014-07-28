@@ -13,7 +13,8 @@
 
 #include "vm/Debugger-inl.h"
 
-namespace js {
+using namespace js;
+using namespace JS;
 
 /* static */ DebuggerMemory *
 DebuggerMemory::create(JSContext *cx, Debugger *dbg)
@@ -171,5 +172,3 @@ DebuggerMemory::getTrackingAllocationSites(JSContext *cx, unsigned argc, Value *
 /* static */ const JSFunctionSpec DebuggerMemory::methods[] = {
     JS_FS_END
 };
-
-} /* namespace js */

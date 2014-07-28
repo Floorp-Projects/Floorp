@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
-
 EXPORTS += [
     'nsICachedFileDescriptorListener.h',
     'PCOMContentPermissionRequestChild.h',
@@ -147,3 +145,5 @@ if CONFIG['ENABLE_TESTS']:
 
 JAR_MANIFESTS += ['jar.mn']
 
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

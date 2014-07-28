@@ -493,7 +493,12 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
 
   // Only request a response if we didn't have a cached indication of failure
   // (don't keep requesting responses from a failing server).
-  const SECItem* response = nullptr;
+  const SECItem* response;
+  bool attemptedRequest;
+  // Initialize error here to a value we check that it isn't later, because
+  // the compiler on windows isn't smart enough to figure out that it's
+  // always initialized before it gets used.
+  PRErrorCode error = 0;
   if (cachedResponseErrorCode == 0 ||
       cachedResponseErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT ||
       cachedResponseErrorCode == SEC_ERROR_OCSP_OLD_RESPONSE) {
@@ -506,16 +511,28 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
     response = DoOCSPRequest(arena.get(), url, request,
                              OCSPFetchingTypeToTimeoutTime(mOCSPFetching),
                              mOCSPGetConfig == CertVerifier::ocsp_get_enabled);
+    if (!response) {
+      error = PR_GetError();
+    }
+    attemptedRequest = true;
+  } else {
+    error = cachedResponseErrorCode;
+    response = nullptr;
+    attemptedRequest = false;
   }
 
+  // If we don't have a response, either something went wrong when fetching it
+  // or we didn't attempt to fetch a response because of a failing responder.
   if (!response) {
-    PRErrorCode error = PR_GetError();
-    if (error == 0) {
-      error = cachedResponseErrorCode;
-    }
-    PRTime timeout = time + ServerFailureDelay;
-    if (mOCSPCache.Put(certID, error, time, timeout) != SECSuccess) {
-      return SECFailure;
+    MOZ_ASSERT(error != 0);
+    // If we haven't actually attempted to fetch a response, we have nothing
+    // new to tell the cache. Otherwise, we do.
+    if (attemptedRequest) {
+      PRTime timeout = time + ServerFailureDelay;
+      SECStatus rv = mOCSPCache.Put(certID, error, time, timeout);
+      if (rv != SECSuccess) {
+        return SECFailure;
+      }
     }
     PR_SetError(error, 0);
     if (mOCSPFetching != FetchOCSPForDVSoftFail) {
@@ -560,7 +577,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
     return rv;
   }
 
-  PRErrorCode error = PR_GetError();
+  error = PR_GetError();
   if (error == SEC_ERROR_OCSP_UNKNOWN_CERT ||
       error == SEC_ERROR_REVOKED_CERTIFICATE) {
     return rv;

@@ -15,6 +15,7 @@
 
 #include "nscore.h"
 #include "nsDebug.h"
+#include "nsAutoPtr.h"
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
@@ -201,7 +202,7 @@ public:
     mId = 0;
   }
 
-  static SharedMemory*
+  static already_AddRefed<Shmem::SharedMemory>
   Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
         size_t aNBytes,
         SharedMemoryType aType,
@@ -230,7 +231,7 @@ public:
   // descriptor shared to us by the process that created the
   // underlying OS shmem resource.  The contents of the descriptor
   // depend on the type of SharedMemory that was passed to us.
-  static SharedMemory*
+  static already_AddRefed<SharedMemory>
   OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
                const IPC::Message& aDescriptor,
                id_t* aId,
