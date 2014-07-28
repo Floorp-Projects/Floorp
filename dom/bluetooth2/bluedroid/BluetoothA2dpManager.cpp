@@ -169,7 +169,7 @@ public:
     }
 
     NS_ENSURE_TRUE(sBtAvrcpInterface, NS_OK);
-    sBtAvrcpInterface->GetElementAttrRsp(mNumAttr, attrs);
+    sBtAvrcpInterface->GetElementAttrRsp(mNumAttr, attrs, nullptr);
 
     return NS_OK;
   }
@@ -1136,7 +1136,7 @@ BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
     mTrackChangedNotifyType = BTRC_NOTIFICATION_TYPE_CHANGED;
     sBtAvrcpInterface->RegisterNotificationRsp(BTRC_EVT_TRACK_CHANGE,
                                                BTRC_NOTIFICATION_TYPE_CHANGED,
-                                               &param);
+                                               &param, nullptr);
     if (mPlayPosChangedNotifyType == BTRC_NOTIFICATION_TYPE_INTERIM) {
       param.song_pos = mPosition;
       // EVENT_PLAYBACK_POS_CHANGED shall be notified if changed current track
@@ -1144,7 +1144,7 @@ BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
       sBtAvrcpInterface->RegisterNotificationRsp(
         BTRC_EVT_PLAY_POS_CHANGED,
         BTRC_NOTIFICATION_TYPE_CHANGED,
-        &param);
+        &param, nullptr);
     }
   }
 
@@ -1172,7 +1172,7 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
   NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
   // always update playstatus first
   sBtAvrcpInterface->GetPlayStatusRsp((btrc_play_status_t)aPlayStatus,
-                                      aDuration, aPosition);
+                                      aDuration, aPosition, nullptr);
   // when play status changed, send both play status and position
   if (mPlayStatus != aPlayStatus &&
       mPlayStatusChangedNotifyType == BTRC_NOTIFICATION_TYPE_INTERIM) {
@@ -1181,7 +1181,7 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
     mPlayStatusChangedNotifyType = BTRC_NOTIFICATION_TYPE_CHANGED;
     sBtAvrcpInterface->RegisterNotificationRsp(BTRC_EVT_PLAY_STATUS_CHANGED,
                                                BTRC_NOTIFICATION_TYPE_CHANGED,
-                                               &param);
+                                               &param, nullptr);
   }
 
   if (mPosition != aPosition &&
@@ -1191,7 +1191,7 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
     mPlayPosChangedNotifyType = BTRC_NOTIFICATION_TYPE_CHANGED;
     sBtAvrcpInterface->RegisterNotificationRsp(BTRC_EVT_PLAY_POS_CHANGED,
                                                BTRC_NOTIFICATION_TYPE_CHANGED,
-                                               &param);
+                                               &param, nullptr);
   }
 
   mDuration = aDuration;
@@ -1259,7 +1259,7 @@ BluetoothA2dpManager::UpdateRegisterNotification(int aEventId, int aParam)
 
   sBtAvrcpInterface->RegisterNotificationRsp((btrc_event_id_t)aEventId,
                                               BTRC_NOTIFICATION_TYPE_INTERIM,
-                                              &param);
+                                              &param, nullptr);
 #endif
 }
 
