@@ -17,6 +17,7 @@
 #include "nsIConsoleService.h"
 #include "mozilla/unused.h"
 #include "GMPDecryptorParent.h"
+#include "runnable_utils.h"
 
 namespace mozilla {
 
@@ -40,6 +41,11 @@ GetGMPLog()
 #define LOGD(msg)
 #define LOG(leve1, msg)
 #endif
+
+#ifdef __CLASS__
+#undef __CLASS__
+#endif
+#define __CLASS__ "GMPService"
 
 namespace gmp {
 
@@ -466,10 +472,39 @@ private:
   nsRefPtr<GMPParent> mParent;
 };
 
+GMPParent*
+GeckoMediaPluginService::ClonePlugin(const GMPParent* aOriginal)
+{
+  MOZ_ASSERT(aOriginal);
+
+  // The GMPParent inherits from IToplevelProtocol, which must be created
+  // on the main thread to be threadsafe. See Bug 1035653.
+  nsRefPtr<CreateGMPParentTask> task(new CreateGMPParentTask());
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    MOZ_ASSERT(mainThread);
+    mozilla::SyncRunnable::DispatchToThread(mainThread, task);
+  }
+
+  nsRefPtr<GMPParent> gmp = task->GetParent();
+  nsresult rv = gmp->CloneFrom(aOriginal);
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Can't Create GMPParent");
+    return nullptr;
+  }
+
+  MutexAutoLock lock(mMutex);
+  mPlugins.AppendElement(gmp);
+
+  return gmp.get();
+}
+
 void
 GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, NS_LossyConvertUTF16toASCII(aDirectory).get()));
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = NS_NewLocalFile(aDirectory, false, getter_AddRefs(directory));
@@ -484,7 +519,7 @@ GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
   MOZ_ASSERT(mainThread);
   mozilla::SyncRunnable::DispatchToThread(mainThread, task);
   nsRefPtr<GMPParent> gmp = task->GetParent();
-  rv = gmp->Init(directory);
+  rv = gmp->Init(this, directory);
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't Create GMPParent");
     return;
@@ -498,6 +533,7 @@ void
 GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, NS_LossyConvertUTF16toASCII(aDirectory).get()));
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = NS_NewLocalFile(aDirectory, false, getter_AddRefs(directory));
@@ -518,6 +554,31 @@ GeckoMediaPluginService::RemoveOnGMPThread(const nsAString& aDirectory)
   NS_WARNING("Removing GMP which was never added.");
   nsCOMPtr<nsIConsoleService> cs = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   cs->LogStringMessage(MOZ_UTF16("Removing GMP which was never added."));
+}
+
+// May remove when Bug 1043671 is fixed
+static void Dummy(nsRefPtr<GMPParent>& aOnDeathsDoor)
+{
+  // exists solely to do nothing and let the Runnable kill the GMPParent
+  // when done.
+}
+
+void
+GeckoMediaPluginService::ReAddOnGMPThread(nsRefPtr<GMPParent>& aOld)
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, (void*) aOld));
+
+  nsRefPtr<GMPParent> gmp = ClonePlugin(aOld);
+  // Note: both are now in the list
+  // Until we give up the GMPThread, we're safe even if we unlock temporarily
+  // since off-main-thread users just test for existance; they don't modify the list.
+  MutexAutoLock lock(mMutex);
+  mPlugins.RemoveElement(aOld);
+
+  // Schedule aOld to be destroyed.  We can't destroy it from here since we
+  // may be inside ActorDestroyed() for it.
+  NS_DispatchToCurrentThread(WrapRunnableNM(&Dummy, aOld));
 }
 
 } // namespace gmp
