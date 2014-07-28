@@ -1746,6 +1746,21 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 }
             } /* if (temp) */
             done = TRUE;
+        } else {
+          // XXX Note that DTMF fmtp will fall into here:
+          // a=fmtp:101 0-15 (or 0-15,NN,NN etc)
+
+          // unknown parameter - eat chars until ';'
+          CSFLogDebug(logTag, "%s Unknown fmtp type (%s) - ignoring", __FUNCTION__,
+                      tmp);
+          fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t",
+                                       &result1);
+          if (result1 != SDP_SUCCESS) {
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
+            if (result1 != SDP_SUCCESS) {
+              // hmmm, no ; or spaces or tabs; continue on
+            }
+          }
         }
         fmtp_ptr++;
       } else {

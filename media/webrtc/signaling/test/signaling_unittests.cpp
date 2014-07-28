@@ -3936,24 +3936,30 @@ TEST_F(SignalingTest, ValidateMultipleVideoCodecsInOffer)
   a1_->CreateOffer(options, OFFER_AV, SHOULD_SENDRECV_AV);
   std::string offer = a1_->offer();
 
+#ifdef H264_P0_SUPPORTED
   ASSERT_NE(offer.find("RTP/SAVPF 120 126 97"), std::string::npos);
+#else
+  ASSERT_NE(offer.find("RTP/SAVPF 120 126"), std::string::npos);
+#endif
   ASSERT_NE(offer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
   ASSERT_NE(offer.find("a=rtpmap:126 H264/90000"), std::string::npos);
-  ASSERT_NE(offer.find("a=rtpmap:97 H264/90000"), std::string::npos);
   ASSERT_NE(offer.find("a=fmtp:126 profile-level-id="), std::string::npos);
-  ASSERT_NE(offer.find("a=fmtp:97 profile-level-id="), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:120 nack"), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:120 nack pli"), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:120 ccm fir"), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:126 nack"), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:126 nack pli"), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:126 ccm fir"), std::string::npos);
+#ifdef H264_P0_SUPPORTED
+  ASSERT_NE(offer.find("a=rtpmap:97 H264/90000"), std::string::npos);
+  ASSERT_NE(offer.find("a=fmtp:97 profile-level-id="), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:97 nack"), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:97 nack pli"), std::string::npos);
   ASSERT_NE(offer.find("a=rtcp-fb:97 ccm fir"), std::string::npos);
+#endif
 }
 
-// Remove VP8 from offer and check that answer negotiates H264 P1 correctly
+// Remove VP8 from offer and check that answer negotiates H264 P1 correctly and ignores unknown params
 TEST_F(SignalingTest, RemoveVP8FromOfferWithP1First)
 {
   EnsureInit();
@@ -3966,7 +3972,9 @@ TEST_F(SignalingTest, RemoveVP8FromOfferWithP1First)
   // Remove VP8 from offer
   std::string offer = a1_->offer();
   offer.replace(match = offer.find("RTP/SAVPF 120"),
-    strlen("RTP/SAVPF 126"), "RTP/SAVPF");
+    strlen("RTP/SAVPF 120"), "RTP/SAVPF");
+  offer.replace(match = offer.find("profile-level-id"),
+    strlen("profile-level-id"), "max-foo=1234;profile-level-id");
   ParsedSDP sdpWrapper(offer);
   sdpWrapper.DeleteAllLines("a=rtcp-fb:120");
   sdpWrapper.DeleteLine("a=rtpmap:120");
@@ -4009,33 +4017,28 @@ TEST_F(SignalingTest, OfferWithH264BeforeVP8)
 
   // Swap VP8 and P1 in offer
   std::string offer = a1_->offer();
+#ifdef H264_P0_SUPPORTED
   offer.replace(match = offer.find("RTP/SAVPF 120 126 97"),
     strlen("RTP/SAVPF 126 120 97"), "RTP/SAVPF 126 120 97");
+#else
+  offer.replace(match = offer.find("RTP/SAVPF 120 126"),
+    strlen("RTP/SAVPF 126 120"), "RTP/SAVPF 126 120");
+#endif
 
   offer.replace(match = offer.find("a=rtpmap:126 H264/90000"),
     strlen("a=rtpmap:120 VP8/90000"), "a=rtpmap:120 VP8/90000");
   offer.replace(match = offer.find("a=rtpmap:120 VP8/90000"),
     strlen("a=rtpmap:126 H264/90000"), "a=rtpmap:126 H264/90000");
 
-  offer.replace(match = offer.find("a=rtcp-fb:126 nack"),
-    strlen("a=rtcp-fb:120 nack"), "a=rtcp-fb:120 nack");
-  offer.replace(match = offer.find("a=rtcp-fb:126 nack pli"),
-    strlen("a=rtcp-fb:120 nack pli"), "a=rtcp-fb:120 nack pli");
-  offer.replace(match = offer.find("a=rtcp-fb:126 ccm fir"),
-    strlen("a=rtcp-fb:120 ccm fir"), "a=rtcp-fb:120 ccm fir");
-
-  offer.replace(match = offer.find("a=rtcp-fb:120 nack"),
-    strlen("a=rtcp-fb:126 nack"), "a=rtcp-fb:126 nack");
-  offer.replace(match = offer.find("a=rtcp-fb:120 nack pli"),
-    strlen("a=rtcp-fb:126 nack pli"), "a=rtcp-fb:126 nack pli");
-  offer.replace(match = offer.find("a=rtcp-fb:120 ccm fir"),
-    strlen("a=rtcp-fb:126 ccm fir"), "a=rtcp-fb:126 ccm fir");
-
   std::cout << "Modified SDP " << std::endl
             << indent(offer) << std::endl;
 
   // P1 should be offered first
+#ifdef H264_P0_SUPPORTED
   ASSERT_NE(offer.find("RTP/SAVPF 126 120 97"), std::string::npos);
+#else
+  ASSERT_NE(offer.find("RTP/SAVPF 126 120"), std::string::npos);
+#endif
 
   a1_->SetLocal(TestObserver::OFFER, offer);
   a2_->SetRemote(TestObserver::OFFER, offer, false);
@@ -4056,6 +4059,7 @@ TEST_F(SignalingTest, OfferWithH264BeforeVP8)
   ASSERT_EQ(answer.find("a=rtcp-fb:97"), std::string::npos);
 }
 
+#ifdef H264_P0_SUPPORTED
 // Remove H.264 P1 and VP8 from offer, check answer negotiates H.264 P0
 TEST_F(SignalingTest, OfferWithOnlyH264P0)
 {
@@ -4106,6 +4110,7 @@ TEST_F(SignalingTest, OfferWithOnlyH264P0)
   ASSERT_EQ(answer.find("a=rtcp-fb:120"), std::string::npos);
   ASSERT_EQ(answer.find("a=rtcp-fb:126"), std::string::npos);
 }
+#endif
 
 // Test negotiating an answer which has only H.264 P1
 // Which means replace VP8 with H.264 P1 in answer
