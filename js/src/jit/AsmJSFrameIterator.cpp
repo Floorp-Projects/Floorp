@@ -109,6 +109,12 @@ static const unsigned StoredFP = 12;
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedFP = 16;
 static const unsigned StoredFP = 20;
+#elif defined(JS_CODEGEN_NONE)
+static const unsigned PushedRetAddr = 0;
+static const unsigned PushedFP = 1;
+static const unsigned StoredFP = 1;
+#else
+# error "Unknown architecture!"
 #endif
 
 static void
