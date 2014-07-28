@@ -19,7 +19,7 @@
 #define FORCE_PR_LOG
 #endif
 
-#include "nsNativeComponentLoader.h"
+#include "nsNativeModuleLoader.h"
 
 #include "prlog.h"
 #include "prinit.h"
