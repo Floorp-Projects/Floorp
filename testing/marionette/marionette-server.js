@@ -1338,6 +1338,17 @@ MarionetteServerConnection.prototype = {
       if (aRequest.parameters.element != undefined) {
         if (this.curBrowser.elementManager.seenItems[aRequest.parameters.element]) {
           let wantedFrame = this.curBrowser.elementManager.getKnownElement(aRequest.parameters.element, curWindow); //HTMLIFrameElement
+          // Deal with an embedded xul:browser case
+          if (wantedFrame.tagName == "xul:browser") {
+            curWindow = wantedFrame.contentWindow;
+            this.curFrame = curWindow;
+            if (aRequest.parameters.focus) {
+              this.curFrame.focus();
+            }
+            checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
+            return;
+          }
+          // else, assume iframe
           let frames = curWindow.document.getElementsByTagName("iframe");
           let numFrames = frames.length;
           for (let i = 0; i < numFrames; i++) {
