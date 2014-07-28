@@ -464,14 +464,6 @@ VARIABLES = {
         ``HOST_BIN_SUFFIX``, the name will remain unchanged.
         """, 'binaries'),
 
-    'TOOL_DIRS': (list, list,
-        """Like DIRS but for tools.
-
-        Tools are for pieces of the build system that aren't required to
-        produce a working binary (in theory). They provide things like test
-        code and utilities.
-        """, None),
-
     'TEST_DIRS': (list, list,
         """Like DIRS but only for directories that contain test-only code.
 
@@ -480,11 +472,6 @@ VARIABLES = {
         This variable may go away once the transition away from Makefiles is
         complete.
         """, None),
-
-    'TEST_TOOL_DIRS': (list, list,
-        """TOOL_DIRS that is only executed if tests are enabled.
-        """, None),
-
 
     'TIERS': (OrderedDict, dict,
         """Defines directories constituting the tier traversal mechanism.
@@ -944,9 +931,8 @@ FUNCTIONS = {
 
         The variable specified by the argument string is added to the
         environment of all directories specified in the DIRS, PARALLEL_DIRS,
-        TOOL_DIRS, TEST_DIRS, and TEST_TOOL_DIRS variables. If those directories
-        themselves have child directories, the variable will be exported to all
-        of them.
+        and TEST_DIRS variables. If those directories themselves have child
+        directories, the variable will be exported to all of them.
 
         The value used for the variable is the final value at the end of the
         moz.build file, so it is possible (but not recommended style) to place
@@ -1042,4 +1028,10 @@ SPECIAL_VARIABLES = {
         - False
         - None
         """),
+}
+
+# Deprecation hints.
+DEPRECATION_HINTS = {
+    'TOOL_DIRS': 'Please use the DIRS variable instead.',
+    'TEST_TOOL_DIRS': 'Please use the TEST_DIRS variable instead.',
 }

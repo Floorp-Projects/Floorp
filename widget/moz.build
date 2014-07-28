@@ -42,7 +42,7 @@ elif toolkit == 'cocoa':
         'nsIPrintDialogService.h',
     ]
 
-TEST_TOOL_DIRS += ['tests']
+TEST_DIRS += ['tests']
 
 # Don't build the DSO under the 'build' directory as windows does.
 #

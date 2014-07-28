@@ -21,7 +21,7 @@ PARALLEL_DIRS += [
 if CONFIG['NS_PRINTING']:
     PARALLEL_DIRS += ['printing']
 
-TEST_TOOL_DIRS += [
+TEST_DIRS += [
     'tools/reftest',
 ]
 

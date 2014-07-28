@@ -6,7 +6,7 @@
 
 PARALLEL_DIRS += ['blink', 'test']
 
-TEST_TOOL_DIRS += ['compiledtest']
+TEST_DIRS += ['compiledtest']
 
 EXPORTS += [
     'AudioContext.h',

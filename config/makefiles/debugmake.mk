@@ -63,7 +63,6 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 endif
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
 
 showbuild:
 	$(call print_vars,\

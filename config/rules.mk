@@ -63,9 +63,8 @@ testxpcobjdir = $(DEPTH)/_tests/xpcshell
 ifdef ENABLE_TESTS
 
 # Add test directories to the regular directories list. TEST_DIRS should
-# arguably have the same status as TOOL_DIRS and other *_DIRS variables. It is
-# coded this way until Makefiles stop using the "ifdef ENABLE_TESTS; DIRS +="
-# convention.
+# arguably have the same status as other *_DIRS variables. It is coded this way
+# until Makefiles stop using the "ifdef ENABLE_TESTS; DIRS +=" convention.
 #
 # The current developer workflow expects tests to be updated when processing
 # the default target. If we ever change this implementation, the behavior
@@ -356,11 +355,6 @@ LOOP_OVER_PARALLEL_DIRS = \
   $(foreach dir,$(PARALLEL_DIRS),$(call SUBMAKE,$@,$(dir)))
 endif
 
-ifneq (,$(strip $(TOOL_DIRS)))
-LOOP_OVER_TOOL_DIRS = \
-  $(foreach dir,$(TOOL_DIRS),$(call SUBMAKE,$@,$(dir)))
-endif
-
 #
 # Now we can differentiate between objects used to build a library, and
 # objects used to build an executable in the same directory.
@@ -600,13 +594,6 @@ target:: $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
 include $(topsrcdir)/config/makefiles/target_binaries.mk
 endif
 
-ifdef IS_TOOL_DIR
-# One would think "tools:: libs" would work, but it turns out that combined with
-# bug 907365, this makes make forget to run some rules sometimes.
-tools::
-	@$(MAKE) libs
-endif
-
 ##############################################
 ifneq (1,$(NO_PROFILE_GUIDED_OPTIMIZE))
 ifdef MOZ_PROFILE_USE
@@ -677,7 +664,7 @@ clean clobber realclean clobber_all distclean::
 		-$(call SUBMAKE,$@,$(dir)))
 else
 clean clobber realclean clobber_all distclean::
-	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
+	$(foreach dir,$(PARALLEL_DIRS) $(DIRS),-$(call SUBMAKE,$@,$(dir)))
 endif
 
 distclean::
@@ -1295,7 +1282,6 @@ chrome::
 	$(MAKE) realchrome
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
 
 $(FINAL_TARGET)/chrome: $(call mkdir_deps,$(FINAL_TARGET)/chrome)
 
@@ -1341,6 +1327,8 @@ DIST_FILES_FLAGS := $(XULAPP_DEFINES)
 PP_TARGETS += DIST_FILES
 endif
 
+# When you move this out of the tools tier, please remove the corresponding
+# hacks in recursivemake.py that check if Makefile.in sets the variable.
 ifneq ($(XPI_PKGNAME),)
 tools realchrome::
 ifdef STRIP_XPI
@@ -1376,6 +1364,7 @@ endif
 	cd $(FINAL_TARGET) && $(ZIP) -qr ../$(XPI_PKGNAME).xpi *
 endif
 
+# See comment above about moving this out of the tools tier.
 ifdef INSTALL_EXTENSION_ID
 ifndef XPI_NAME
 $(error XPI_NAME must be set for INSTALL_EXTENSION_ID)
@@ -1620,7 +1609,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_apprunner tools $(DIRS) $(TOOL_DIRS) FORCE
+.PHONY: all alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_apprunner tools $(DIRS) FORCE
 
 # Used as a dependency to force targets to rebuild
 FORCE:
@@ -1650,7 +1639,6 @@ ifdef ENABLE_TESTS
 check::
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
 endif
 
 
