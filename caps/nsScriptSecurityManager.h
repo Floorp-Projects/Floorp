@@ -68,8 +68,6 @@ public:
     static bool SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI);
     static uint32_t SecurityHashURI(nsIURI* aURI);
 
-    static uint16_t AppStatusForPrincipal(nsIPrincipal *aPrin);
-
     static nsresult 
     ReportError(JSContext* cx, const nsAString& messageTag,
                 nsIURI* aSource, nsIURI* aTarget);
