@@ -218,14 +218,14 @@ void SkJSDisplayable::Destructor(JSContext *cx, JSObject *obj) {
 JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
                                  jsval *vp)
 {
-    if (id.isInt32() == 0)
+    if (JSVAL_IS_INT(id) == 0)
         return JS_TRUE;
     SkJSDisplayable *p = (SkJSDisplayable *) JS_GetPrivate(cx, obj);
     SkDisplayable* displayable = p->fDisplayable;
     SkDisplayTypes displayableType = displayable->getType();
     int members;
     const SkMemberInfo* info = SkDisplayType::GetMembers(NULL /* fMaker */, displayableType, &members);
-    int idIndex = id.toInt32();
+    int idIndex = JSVAL_TO_INT(id);
     SkASSERT(idIndex >= 0 && idIndex < members);
     info = &info[idIndex];
     SkDisplayTypes infoType = (SkDisplayTypes) info->fType;
@@ -290,14 +290,14 @@ JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
 }
 
 JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp) {
-    if (id.isInt32() == 0)
+    if (JSVAL_IS_INT(id) == 0)
         return JS_TRUE;
     SkJSDisplayable *p = (SkJSDisplayable *) JS_GetPrivate(cx, obj);
     SkDisplayable* displayable = p->fDisplayable;
     SkDisplayTypes displayableType = displayable->getType();
     int members;
     const SkMemberInfo* info = SkDisplayType::GetMembers(NULL /* fMaker */, displayableType, &members);
-    int idIndex = id.toInt32();
+    int idIndex = JSVAL_TO_INT(id);
     SkASSERT(idIndex >= 0 && idIndex < members);
     info = &info[idIndex];
     SkDisplayTypes infoType = info->getType();
@@ -308,18 +308,18 @@ JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsva
     jsval value = *vp;
     switch (infoType) {
         case SkType_Boolean:
-            s32 = value.toBoolean();
+            s32 = JSVAL_TO_BOOLEAN(value);
             break;
         case SkType_Color:
         case SkType_S32:
-            s32 = value.toInt32();
+            s32 = JSVAL_TO_INT(value);
             break;
         case SkType_Scalar:
-            if (value.isInt32())
-                scalar = SkIntToScalar(value.toInt32());
+            if (JSVAL_IS_INT(value))
+                scalar = SkIntToScalar(JSVAL_TO_INT(value));
             else {
-                SkASSERT(value.isDouble());
-                scalar = (float) *(double*) value.toDouble();
+                SkASSERT(JSVAL_IS_DOUBLE(value));
+                scalar = (float) *(double*) JSVAL_TO_DOUBLE(value);
             }
             break;
         case SkType_String:

@@ -165,7 +165,7 @@ bool GrClipMaskManager::installClipEffects(const ElementList& elements,
             } else {
                 edgeType = invert ? kInverseFillBW_GrEffectEdgeType : kFillBW_GrEffectEdgeType;
             }
-            SkAutoTUnref<GrEffectRef> effect;
+            SkAutoTUnref<GrEffect> effect;
             switch (iter.get()->getType()) {
                 case SkClipStack::Element::kPath_Type:
                     effect.reset(GrConvexPolyEffect::Create(edgeType, iter.get()->getPath(),
@@ -220,7 +220,6 @@ bool GrClipMaskManager::setupClipping(const GrClipData* clipDataIn,
     InitialState initialState;
     SkIRect clipSpaceIBounds;
     bool requiresAA;
-    bool isRect = false;
 
     GrDrawState* drawState = fGpu->drawState();
 
@@ -243,7 +242,6 @@ bool GrClipMaskManager::setupClipping(const GrClipData* clipDataIn,
         if (elements.isEmpty()) {
             if (kAllIn_InitialState == initialState) {
                 ignoreClip = clipSpaceIBounds == clipSpaceRTIBounds;
-                isRect = true;
             } else {
                 return false;
             }
@@ -268,7 +266,7 @@ bool GrClipMaskManager::setupClipping(const GrClipData* clipDataIn,
         SkVector clipToRTOffset = { SkIntToScalar(-clipDataIn->fOrigin.fX),
                                     SkIntToScalar(-clipDataIn->fOrigin.fY) };
         if (elements.isEmpty() ||
-            this->installClipEffects(elements, are, clipToRTOffset, devBounds)) {
+            (requiresAA && this->installClipEffects(elements, are, clipToRTOffset, devBounds))) {
             SkIRect scissorSpaceIBounds(clipSpaceIBounds);
             scissorSpaceIBounds.offset(-clipDataIn->fOrigin);
             if (NULL == devBounds ||
@@ -322,16 +320,6 @@ bool GrClipMaskManager::setupClipping(const GrClipData* clipDataIn,
     // clears, InOrderDrawBuffer playbacks) that hit the stencil buffer path. These may be
     // "incorrectly" clearing the AA cache.
     fAACache.reset();
-
-    // If the clip is a rectangle then just set the scissor. Otherwise, create
-    // a stencil mask.
-    if (isRect) {
-        SkIRect clipRect = clipSpaceIBounds;
-        clipRect.offset(-clipDataIn->fOrigin);
-        fGpu->enableScissor(clipRect);
-        this->setGpuStencil();
-        return true;
-    }
 
     // use the stencil clip if we can't represent the clip as a rectangle.
     SkIPoint clipSpaceToStencilSpaceOffset = -clipDataIn->fOrigin;
@@ -514,36 +502,39 @@ void GrClipMaskManager::getTemp(int width, int height, GrAutoScratchTexture* tem
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Handles caching & allocation (if needed) of a clip alpha-mask texture for both the sw-upload
-// or gpu-rendered cases. Returns true if there is no more work to be done (i.e., we got a cache
-// hit)
-bool GrClipMaskManager::getMaskTexture(int32_t elementsGenID,
-                                       const SkIRect& clipSpaceIBounds,
-                                       GrTexture** result,
-                                       bool willUpload) {
+// Return the texture currently in the cache if it exists. Otherwise, return NULL
+GrTexture* GrClipMaskManager::getCachedMaskTexture(int32_t elementsGenID,
+                                                   const SkIRect& clipSpaceIBounds) {
     bool cached = fAACache.canReuse(elementsGenID, clipSpaceIBounds);
     if (!cached) {
-
-        // There isn't a suitable entry in the cache so we create a new texture to store the mask.
-        // Since we are setting up the cache we know the last lookup was a miss. Free up the
-        // currently cached mask so it can be reused.
-        fAACache.reset();
-
-        GrTextureDesc desc;
-        desc.fFlags = willUpload ? kNone_GrTextureFlags : kRenderTarget_GrTextureFlagBit;
-        desc.fWidth = clipSpaceIBounds.width();
-        desc.fHeight = clipSpaceIBounds.height();
-        desc.fConfig = kRGBA_8888_GrPixelConfig;
-        if (willUpload || this->getContext()->isConfigRenderable(kAlpha_8_GrPixelConfig, false)) {
-            // We would always like A8 but it isn't supported on all platforms
-            desc.fConfig = kAlpha_8_GrPixelConfig;
-        }
-
-        fAACache.acquireMask(elementsGenID, desc, clipSpaceIBounds);
+        return NULL;
     }
 
-    *result = fAACache.getLastMask();
-    return cached;
+    return fAACache.getLastMask();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Allocate a texture in the texture cache. This function returns the texture
+// allocated (or NULL on error).
+GrTexture* GrClipMaskManager::allocMaskTexture(int32_t elementsGenID,
+                                               const SkIRect& clipSpaceIBounds,
+                                               bool willUpload) {
+    // Since we are setting up the cache we should free up the
+    // currently cached mask so it can be reused.
+    fAACache.reset();
+
+    GrTextureDesc desc;
+    desc.fFlags = willUpload ? kNone_GrTextureFlags : kRenderTarget_GrTextureFlagBit;
+    desc.fWidth = clipSpaceIBounds.width();
+    desc.fHeight = clipSpaceIBounds.height();
+    desc.fConfig = kRGBA_8888_GrPixelConfig;
+    if (willUpload || this->getContext()->isConfigRenderable(kAlpha_8_GrPixelConfig, false)) {
+        // We would always like A8 but it isn't supported on all platforms
+        desc.fConfig = kAlpha_8_GrPixelConfig;
+    }
+
+    fAACache.acquireMask(elementsGenID, desc, clipSpaceIBounds);
+    return fAACache.getLastMask();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -554,12 +545,15 @@ GrTexture* GrClipMaskManager::createAlphaClipMask(int32_t elementsGenID,
                                                   const SkIRect& clipSpaceIBounds) {
     SkASSERT(kNone_ClipMaskType == fCurrClipMaskType);
 
-    GrTexture* result;
-    if (this->getMaskTexture(elementsGenID, clipSpaceIBounds, &result, false)) {
+    // First, check for cached texture
+    GrTexture* result = this->getCachedMaskTexture(elementsGenID, clipSpaceIBounds);
+    if (NULL != result) {
         fCurrClipMaskType = kAlpha_ClipMaskType;
         return result;
     }
 
+    // There's no texture in the cache. Let's try to allocate it then.
+    result = this->allocMaskTexture(elementsGenID, clipSpaceIBounds, false);
     if (NULL == result) {
         fAACache.reset();
         return NULL;
@@ -1012,7 +1006,7 @@ void GrClipMaskManager::adjustStencilParams(GrStencilSettings* settings,
                         funcRef = clipBit;
                         break;
                     default:
-                        GrCrash("Unknown stencil func");
+                        SkFAIL("Unknown stencil func");
                 }
             } else {
                 funcMask &= userBits;
@@ -1051,14 +1045,9 @@ GrTexture* GrClipMaskManager::createSoftwareClipMask(int32_t elementsGenID,
                                                      const SkIRect& clipSpaceIBounds) {
     SkASSERT(kNone_ClipMaskType == fCurrClipMaskType);
 
-    GrTexture* result;
-    if (this->getMaskTexture(elementsGenID, clipSpaceIBounds, &result, true)) {
+    GrTexture* result = this->getCachedMaskTexture(elementsGenID, clipSpaceIBounds);
+    if (NULL != result) {
         return result;
-    }
-
-    if (NULL == result) {
-        fAACache.reset();
-        return NULL;
     }
 
     // The mask texture may be larger than necessary. We round out the clip space bounds and pin
@@ -1111,6 +1100,12 @@ GrTexture* GrClipMaskManager::createSoftwareClipMask(int32_t elementsGenID,
         }
     }
 
+    // Allocate clip mask texture
+    result = this->allocMaskTexture(elementsGenID, clipSpaceIBounds, true);
+    if (NULL == result) {
+        fAACache.reset();
+        return NULL;
+    }
     helper.toTexture(result);
 
     fCurrClipMaskType = kAlpha_ClipMaskType;

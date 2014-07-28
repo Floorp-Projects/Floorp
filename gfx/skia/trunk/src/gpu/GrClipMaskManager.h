@@ -36,7 +36,7 @@ class SkPath;
  * mask can be represented as a rectangle then scissoring is used. In all
  * cases scissoring is used to bound the range of the clip mask.
  */
-class GrClipMaskManager : public SkNoncopyable {
+class GrClipMaskManager : SkNoncopyable {
 public:
     GrClipMaskManager()
         : fGpu(NULL)
@@ -130,13 +130,16 @@ private:
                                       const GrReducedClip::ElementList& elements,
                                       const SkIRect& clipSpaceIBounds);
 
-    // Gets a texture to use for the clip mask. If true is returned then a cached mask was found
-    // that already contains the rasterization of the clip stack, otherwise an uninitialized texture
-    // is returned. 'willUpload' is set when the alpha mask needs to be uploaded from the CPU.
-    bool getMaskTexture(int32_t elementsGenID,
-                        const SkIRect& clipSpaceIBounds,
-                        GrTexture** result,
-                        bool willUpload);
+    // Returns the cached mask texture if it matches the elementsGenID and the clipSpaceIBounds.
+    // Returns NULL if not found.
+    GrTexture* getCachedMaskTexture(int32_t elementsGenID, const SkIRect& clipSpaceIBounds);
+
+
+    // Handles allocation (if needed) of a clip alpha-mask texture for both the sw-upload
+    // or gpu-rendered cases.
+    GrTexture* allocMaskTexture(int32_t elementsGenID,
+                                const SkIRect& clipSpaceIBounds,
+                                bool willUpload);
 
     bool useSWOnlyPath(const GrReducedClip::ElementList& elements);
 

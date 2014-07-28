@@ -38,6 +38,14 @@ public:
     static SkSurface* NewRasterDirect(const SkImageInfo&, void* pixels, size_t rowBytes);
 
     /**
+     *  The same as NewRasterDirect, but also accepts a call-back routine, which is invoked
+     *  when the surface is deleted, and is passed the pixel memory and the specified context.
+     */
+    static SkSurface* NewRasterDirectReleaseProc(const SkImageInfo&, void* pixels, size_t rowBytes,
+                                                 void (*releaseProc)(void* pixels, void* context),
+                                                 void* context);
+
+    /**
      *  Return a new surface, with the memory for the pixels automatically
      *  allocated.
      *
@@ -56,22 +64,58 @@ public:
     }
 
     /**
-     *  Return a new surface whose contents will be recorded into a picture.
-     *  When this surface is drawn into another canvas, its contents will be
-     *  "replayed" into that canvas.
+     *  Text rendering modes that can be passed to NewRenderTarget*
      */
-    static SkSurface* NewPicture(int width, int height);
+    enum TextRenderMode {
+        /**
+         *  This will use the standard text rendering method
+         */
+        kStandard_TextRenderMode,
+        /**
+         *  This will use signed distance fields for text rendering when possible
+         */
+        kDistanceField_TextRenderMode,
+    };
+
+    enum RenderTargetFlags {
+        kNone_RenderTargetFlag      = 0x0,
+        /*
+         * By default a RenderTarget-based surface will be cleared on creation.
+         * Pass in this flag to prevent the clear from happening.
+         */
+        kDontClear_RenderTargetFlag = 0x01,
+    };
 
     /**
      *  Return a new surface using the specified render target.
      */
-    static SkSurface* NewRenderTargetDirect(GrRenderTarget*);
+    static SkSurface* NewRenderTargetDirect(GrRenderTarget*,
+                                            TextRenderMode trm = kStandard_TextRenderMode,
+                                            RenderTargetFlags flags = kNone_RenderTargetFlag);
 
     /**
      *  Return a new surface whose contents will be drawn to an offscreen
      *  render target, allocated by the surface.
      */
-    static SkSurface* NewRenderTarget(GrContext*, const SkImageInfo&, int sampleCount = 0);
+    static SkSurface* NewRenderTarget(GrContext*, const SkImageInfo&, int sampleCount = 0,
+                                      TextRenderMode trm = kStandard_TextRenderMode,
+                                      RenderTargetFlags flags = kNone_RenderTargetFlag);
+
+    /**
+     *  Return a new surface whose contents will be drawn to an offscreen
+     *  render target, allocated by the surface from the scratch texture pool
+     *  managed by the GrContext. The scratch texture pool serves the purpose
+     *  of retaining textures after they are no longer in use in order to
+     *  re-use them later without having to re-allocate.  Scratch textures
+     *  should be used in cases where high turnover is expected. This allows,
+     *  for example, the copy on write to recycle a texture from a recently
+     *  released SkImage snapshot of the surface.
+     *  Note: Scratch textures count against the GrContext's cached resource
+     *  budget.
+     */
+    static SkSurface* NewScratchRenderTarget(GrContext*, const SkImageInfo&, int sampleCount = 0,
+                                             TextRenderMode trm = kStandard_TextRenderMode,
+                                             RenderTargetFlags flags = kNone_RenderTargetFlag);
 
     int width() const { return fWidth; }
     int height() const { return fHeight; }

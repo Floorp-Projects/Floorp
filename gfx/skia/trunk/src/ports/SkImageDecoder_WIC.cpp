@@ -186,7 +186,7 @@ bool SkImageDecoder_WIC::decodeStream(SkStream* stream, SkBitmap* bm, WICModes w
 
     //Exit early if we're only looking for the bitmap bounds.
     if (SUCCEEDED(hr)) {
-        bm->setConfig(SkImageInfo::MakeN32Premul(width, height));
+        bm->setInfo(SkImageInfo::MakeN32Premul(width, height));
         if (kDecodeBounds_WICMode == wicMode) {
             return true;
         }
@@ -306,10 +306,10 @@ bool SkImageEncoder_WIC::onEncode(SkWStream* stream
     //Convert to 8888 if needed.
     const SkBitmap* bitmap;
     SkBitmap bitmapCopy;
-    if (kPMColor_SkColorType == bitmapOrig.colorType() && bitmapOrig.isOpaque()) {
+    if (kN32_SkColorType == bitmapOrig.colorType() && bitmapOrig.isOpaque()) {
         bitmap = &bitmapOrig;
     } else {
-        if (!bitmapOrig.copyTo(&bitmapCopy, kPMColor_SkColorType)) {
+        if (!bitmapOrig.copyTo(&bitmapCopy, kN32_SkColorType)) {
             return false;
         }
         bitmap = &bitmapCopy;

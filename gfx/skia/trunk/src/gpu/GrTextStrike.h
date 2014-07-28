@@ -13,8 +13,7 @@
 
 #include "GrAllocPool.h"
 #include "GrFontScaler.h"
-#include "GrTHashTable.h"
-#include "GrPoint.h"
+#include "SkTDynamicHash.h"
 #include "GrGlyph.h"
 #include "GrDrawTarget.h"
 #include "GrAtlas.h"
@@ -29,26 +28,29 @@ class GrFontPurgeListener;
  */
 class GrTextStrike {
 public:
-    GrTextStrike(GrFontCache*, const GrKey* fontScalerKey, GrMaskFormat, GrAtlasMgr*);
+    GrTextStrike(GrFontCache*, const GrFontDescKey* fontScalerKey, GrMaskFormat, GrAtlas*);
     ~GrTextStrike();
 
-    const GrKey* getFontScalerKey() const { return fFontScalerKey; }
+    const GrFontDescKey* getFontScalerKey() const { return fFontScalerKey; }
     GrFontCache* getFontCache() const { return fFontCache; }
     GrMaskFormat getMaskFormat() const { return fMaskFormat; }
+    GrTexture*   getTexture() const { return fAtlas->getTexture(); }
 
     inline GrGlyph* getGlyph(GrGlyph::PackedID, GrFontScaler*);
     bool addGlyphToAtlas(GrGlyph*, GrFontScaler*);
 
-    SkISize getAtlasSize() const { return fAtlas.getSize(); }
-
     // testing
-    int countGlyphs() const { return fCache.getArray().count(); }
-    const GrGlyph* glyphAt(int index) const {
-        return fCache.getArray()[index];
-    }
+    int countGlyphs() const { return fCache.count(); }
 
     // remove any references to this plot
     void removePlot(const GrPlot* plot);
+
+    static const GrFontDescKey& GetKey(const GrTextStrike& ts) {
+        return *(ts.fFontScalerKey);
+    }
+    static uint32_t Hash(const GrFontDescKey& key) {
+        return key.getHash();
+    }
 
 public:
     // for easy removal from list
@@ -56,17 +58,16 @@ public:
     GrTextStrike*   fNext;
 
 private:
-    class Key;
-    GrTHashTable<GrGlyph, Key, 7> fCache;
-    const GrKey* fFontScalerKey;
+    SkTDynamicHash<GrGlyph, GrGlyph::PackedID> fCache;
+    const GrFontDescKey* fFontScalerKey;
     GrTAllocPool<GrGlyph> fPool;
 
     GrFontCache*    fFontCache;
-    GrAtlasMgr*     fAtlasMgr;
+    GrAtlas*        fAtlas;
     GrMaskFormat    fMaskFormat;
     bool            fUseDistanceField;
 
-    GrAtlas         fAtlas;
+    GrAtlas::ClientPlotUsage fPlotUsage;
 
     GrGlyph* generateGlyph(GrGlyph::PackedID packed, GrFontScaler* scaler);
 
@@ -86,11 +87,16 @@ public:
     bool freeUnusedPlot(GrTextStrike* preserveStrike);
 
     // testing
-    int countStrikes() const { return fCache.getArray().count(); }
-    const GrTextStrike* strikeAt(int index) const {
-        return fCache.getArray()[index];
-    }
+    int countStrikes() const { return fCache.count(); }
     GrTextStrike* getHeadStrike() const { return fHead; }
+
+    void updateTextures() {
+        for (int i = 0; i < kAtlasCount; ++i) {
+            if (fAtlases[i]) {
+                fAtlases[i]->uploadPlotsToTexture();
+            }
+        }
+    }
 
 #ifdef SK_DEBUG
     void validate() const;
@@ -98,9 +104,7 @@ public:
     void validate() const {}
 #endif
 
-#ifdef SK_DEVELOPER
     void dump() const;
-#endif
 
     enum AtlasType {
         kA8_AtlasType,   //!< 1-byte per pixel
@@ -114,16 +118,15 @@ public:
 private:
     friend class GrFontPurgeListener;
 
-    class Key;
-    GrTHashTable<GrTextStrike, Key, 8> fCache;
+    SkTDynamicHash<GrTextStrike, GrFontDescKey> fCache;
     // for LRU
     GrTextStrike* fHead;
     GrTextStrike* fTail;
 
     GrGpu*      fGpu;
-    GrAtlasMgr* fAtlasMgr[kAtlasCount];
+    GrAtlas*    fAtlases[kAtlasCount];
 
-    GrTextStrike* generateStrike(GrFontScaler*, const Key&);
+    GrTextStrike* generateStrike(GrFontScaler*);
     inline void detachStrikeFromList(GrTextStrike*);
     void purgeStrike(GrTextStrike* strike);
 };

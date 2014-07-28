@@ -19,7 +19,9 @@ public:
     static SkMergeImageFilter* Create(SkImageFilter* first, SkImageFilter* second,
                                       SkXfermode::Mode mode = SkXfermode::kSrcOver_Mode,
                                       const CropRect* cropRect = NULL) {
-        return SkNEW_ARGS(SkMergeImageFilter, (first, second, mode, cropRect));
+        SkImageFilter* inputs[2] = { first, second };
+        SkXfermode::Mode modes[2] = { mode, mode };
+        return SkNEW_ARGS(SkMergeImageFilter, (inputs, 2, modes, cropRect));
     }
     static SkMergeImageFilter* Create(SkImageFilter* filters[], int count,
                                       const SkXfermode::Mode modes[] = NULL,
@@ -30,21 +32,15 @@ public:
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkMergeImageFilter)
 
 protected:
-    SkMergeImageFilter(SkReadBuffer& buffer);
+    SkMergeImageFilter(SkImageFilter* filters[], int count,
+                       const SkXfermode::Mode modes[],
+                       const CropRect* cropRect);
+    explicit SkMergeImageFilter(SkReadBuffer& buffer);
     virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
 
     virtual bool onFilterImage(Proxy*, const SkBitmap& src, const Context&,
                                SkBitmap* result, SkIPoint* loc) const SK_OVERRIDE;
 
-#ifdef SK_SUPPORT_LEGACY_PUBLICEFFECTCONSTRUCTORS
-public:
-#endif
-    SkMergeImageFilter(SkImageFilter* first, SkImageFilter* second,
-                       SkXfermode::Mode = SkXfermode::kSrcOver_Mode,
-                       const CropRect* cropRect = NULL);
-    SkMergeImageFilter(SkImageFilter* filters[], int count,
-                       const SkXfermode::Mode modes[] = NULL,
-                       const CropRect* cropRect = NULL);
 private:
     uint8_t*            fModes; // SkXfermode::Mode
 

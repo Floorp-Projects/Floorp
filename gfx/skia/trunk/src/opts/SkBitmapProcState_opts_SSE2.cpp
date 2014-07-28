@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2009 The Android Open Source Project
  *
@@ -6,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-
 #include <emmintrin.h>
 #include "SkBitmapProcState_opts_SSE2.h"
+#include "SkColorPriv.h"
 #include "SkPaint.h"
 #include "SkUtils.h"
 
@@ -17,7 +16,7 @@ void S32_opaque_D32_filter_DX_SSE2(const SkBitmapProcState& s,
                                    int count, uint32_t* colors) {
     SkASSERT(count > 0 && colors != NULL);
     SkASSERT(s.fFilterLevel != SkPaint::kNone_FilterLevel);
-    SkASSERT(s.fBitmap->config() == SkBitmap::kARGB_8888_Config);
+    SkASSERT(kN32_SkColorType == s.fBitmap->colorType());
     SkASSERT(s.fAlphaScale == 256);
 
     const char* srcAddr = static_cast<const char*>(s.fBitmap->getPixels());
@@ -123,7 +122,7 @@ void S32_alpha_D32_filter_DX_SSE2(const SkBitmapProcState& s,
                                   int count, uint32_t* colors) {
     SkASSERT(count > 0 && colors != NULL);
     SkASSERT(s.fFilterLevel != SkPaint::kNone_FilterLevel);
-    SkASSERT(s.fBitmap->config() == SkBitmap::kARGB_8888_Config);
+    SkASSERT(kN32_SkColorType == s.fBitmap->colorType());
     SkASSERT(s.fAlphaScale < 256);
 
     const char* srcAddr = static_cast<const char*>(s.fBitmap->getPixels());
@@ -639,11 +638,11 @@ void ClampX_ClampY_nofilter_affine_SSE2(const SkBitmapProcState& s,
  *  It combines S32_opaque_D32_filter_DX_SSE2 and SkPixel32ToPixel16
  */
 void S32_D16_filter_DX_SSE2(const SkBitmapProcState& s,
-                                   const uint32_t* xy,
-                                   int count, uint16_t* colors) {
+                            const uint32_t* xy,
+                            int count, uint16_t* colors) {
     SkASSERT(count > 0 && colors != NULL);
     SkASSERT(s.fFilterLevel != SkPaint::kNone_FilterLevel);
-    SkASSERT(s.fBitmap->config() == SkBitmap::kARGB_8888_Config);
+    SkASSERT(kN32_SkColorType == s.fBitmap->colorType());
     SkASSERT(s.fBitmap->isOpaque());
 
     SkPMColor dstColor;
@@ -744,23 +743,6 @@ void S32_D16_filter_DX_SSE2(const SkBitmapProcState& s,
         // Extract low int and store.
         dstColor = _mm_cvtsi128_si32(sum);
 
-        //*colors++ = SkPixel32ToPixel16(dstColor);
-        // below is much faster than the above. It's tested for Android benchmark--Softweg
-        __m128i _m_temp1 = _mm_set1_epi32(dstColor);
-        __m128i _m_temp2 = _mm_srli_epi32(_m_temp1, 3);
-
-        unsigned int r32 = _mm_cvtsi128_si32(_m_temp2);
-        unsigned r = (r32 & ((1<<5) -1)) << 11;
-
-        _m_temp2 = _mm_srli_epi32(_m_temp2, 7);
-        unsigned int g32 = _mm_cvtsi128_si32(_m_temp2);
-        unsigned g = (g32 & ((1<<6) -1)) << 5;
-
-        _m_temp2 = _mm_srli_epi32(_m_temp2, 9);
-        unsigned int b32 = _mm_cvtsi128_si32(_m_temp2);
-        unsigned b = (b32 & ((1<<5) -1));
-
-        *colors++ = r | g | b;
-
+        *colors++ = SkPixel32ToPixel16(dstColor);
     } while (--count > 0);
 }

@@ -25,7 +25,7 @@ public:
     /**
      * Initializes the context and makes it current.
      */
-    bool init(const int width, const int height);
+    bool init(GrGLStandard forcedGpuAPI, const int width, const int height);
 
     int getFBOID() const { return fFBO; }
 
@@ -57,7 +57,7 @@ protected:
      * format and size of backbuffers does not matter since an FBO will be
      * created.
      */
-    virtual const GrGLInterface* createGLContext() = 0;
+    virtual const GrGLInterface* createGLContext(GrGLStandard forcedGpuAPI) = 0;
 
     /**
      * Subclass should destroy the underlying GL context.
@@ -78,9 +78,9 @@ private:
  * SK_GL(glCtx, GenTextures(1, &texID));
  */
 #define SK_GL(ctx, X) (ctx).gl()->fFunctions.f ## X;    \
-                      SkASSERT(GR_GL_NO_ERROR == (ctx).gl()->fFunctions.fGetError())
+                      SkASSERT(0 == (ctx).gl()->fFunctions.fGetError())
 #define SK_GL_RET(ctx, RET, X) (RET) = (ctx).gl()->fFunctions.f ## X;    \
-                  SkASSERT(GR_GL_NO_ERROR == (ctx).gl()->fFunctions.fGetError())
+                  SkASSERT(0 == (ctx).gl()->fFunctions.fGetError())
 #define SK_GL_NOERRCHECK(ctx, X) (ctx).gl()->fFunctions.f ## X
 #define SK_GL_RET_NOERRCHECK(ctx, RET, X) (RET) = (ctx).gl()->fFunctions.f ## X
 

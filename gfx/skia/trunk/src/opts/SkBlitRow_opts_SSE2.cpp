@@ -5,15 +5,13 @@
  * found in the LICENSE file.
  */
 
-
-#include "SkBlitRow_opts_SSE2.h"
+#include <emmintrin.h>
 #include "SkBitmapProcState_opts_SSE2.h"
+#include "SkBlitRow_opts_SSE2.h"
 #include "SkColorPriv.h"
 #include "SkColor_opts_SSE2.h"
 #include "SkDither.h"
 #include "SkUtils.h"
-
-#include <emmintrin.h>
 
 /* SSE2 version of S32_Blend_BlitRow32()
  * portable version is in core/SkBlitRow_D32.cpp
@@ -179,7 +177,7 @@ void S32A_Opaque_BlitRow32_SSE2(SkPMColor* SK_RESTRICT dst,
             d++;
             count -= 4;
         }
-    #else
+#else
         __m128i rb_mask = _mm_set1_epi32(0x00FF00FF);
         __m128i c_256 = _mm_set1_epi16(0x0100);  // 8 copies of 256 (16-bit)
         while (count >= 4) {
@@ -342,7 +340,6 @@ void S32A_Blend_BlitRow32_SSE2(SkPMColor* SK_RESTRICT dst,
  */
 void Color32_SSE2(SkPMColor dst[], const SkPMColor src[], int count,
                   SkPMColor color) {
-
     if (count <= 0) {
         return;
     }
@@ -406,7 +403,7 @@ void Color32_SSE2(SkPMColor dst[], const SkPMColor src[], int count,
             }
             src = reinterpret_cast<const SkPMColor*>(s);
             dst = reinterpret_cast<SkPMColor*>(d);
-         }
+        }
 
         while (count > 0) {
             *dst = color + SkAlphaMulQ(*src, scale);
@@ -504,7 +501,7 @@ void SkARGB32_A8_BlitMask_SSE2(void* device, size_t dstRB, const void* maskPtr,
             }
             dst = reinterpret_cast<SkPMColor *>(d);
         }
-        while(count > 0) {
+        while (count > 0) {
             *dst= SkBlendARGB32(color, *dst, *mask);
             dst += 1;
             mask++;
@@ -914,7 +911,7 @@ void S32_D565_Opaque_SSE2(uint16_t* SK_RESTRICT dst,
             __m128i b = _mm_packs_epi32(b1, b2);
 
             // Store 8 16-bit colors in dst.
-            __m128i d_pixel = SkPackRGB16_SSE(r, g, b);
+            __m128i d_pixel = SkPackRGB16_SSE2(r, g, b);
             _mm_store_si128(d++, d_pixel);
             count -= 8;
         }
@@ -983,54 +980,54 @@ void S32A_D565_Opaque_SSE2(uint16_t* SK_RESTRICT dst,
             __m128i dst_pixel = _mm_load_si128(d);
 
             // Extract A from src.
-            __m128i sa1 = _mm_slli_epi32(src_pixel1,(24 - SK_A32_SHIFT));
+            __m128i sa1 = _mm_slli_epi32(src_pixel1, (24 - SK_A32_SHIFT));
             sa1 = _mm_srli_epi32(sa1, 24);
-            __m128i sa2 = _mm_slli_epi32(src_pixel2,(24 - SK_A32_SHIFT));
+            __m128i sa2 = _mm_slli_epi32(src_pixel2, (24 - SK_A32_SHIFT));
             sa2 = _mm_srli_epi32(sa2, 24);
             __m128i sa = _mm_packs_epi32(sa1, sa2);
 
             // Extract R from src.
-            __m128i sr1 = _mm_slli_epi32(src_pixel1,(24 - SK_R32_SHIFT));
+            __m128i sr1 = _mm_slli_epi32(src_pixel1, (24 - SK_R32_SHIFT));
             sr1 = _mm_srli_epi32(sr1, 24);
-            __m128i sr2 = _mm_slli_epi32(src_pixel2,(24 - SK_R32_SHIFT));
+            __m128i sr2 = _mm_slli_epi32(src_pixel2, (24 - SK_R32_SHIFT));
             sr2 = _mm_srli_epi32(sr2, 24);
             __m128i sr = _mm_packs_epi32(sr1, sr2);
 
             // Extract G from src.
-            __m128i sg1 = _mm_slli_epi32(src_pixel1,(24 - SK_G32_SHIFT));
+            __m128i sg1 = _mm_slli_epi32(src_pixel1, (24 - SK_G32_SHIFT));
             sg1 = _mm_srli_epi32(sg1, 24);
-            __m128i sg2 = _mm_slli_epi32(src_pixel2,(24 - SK_G32_SHIFT));
+            __m128i sg2 = _mm_slli_epi32(src_pixel2, (24 - SK_G32_SHIFT));
             sg2 = _mm_srli_epi32(sg2, 24);
             __m128i sg = _mm_packs_epi32(sg1, sg2);
 
             // Extract B from src.
-            __m128i sb1 = _mm_slli_epi32(src_pixel1,(24 - SK_B32_SHIFT));
+            __m128i sb1 = _mm_slli_epi32(src_pixel1, (24 - SK_B32_SHIFT));
             sb1 = _mm_srli_epi32(sb1, 24);
-            __m128i sb2 = _mm_slli_epi32(src_pixel2,(24 - SK_B32_SHIFT));
+            __m128i sb2 = _mm_slli_epi32(src_pixel2, (24 - SK_B32_SHIFT));
             sb2 = _mm_srli_epi32(sb2, 24);
             __m128i sb = _mm_packs_epi32(sb1, sb2);
 
             // Extract R G B from dst.
-            __m128i dr = _mm_srli_epi16(dst_pixel,SK_R16_SHIFT);
+            __m128i dr = _mm_srli_epi16(dst_pixel, SK_R16_SHIFT);
             dr = _mm_and_si128(dr, r16_mask);
-            __m128i dg = _mm_srli_epi16(dst_pixel,SK_G16_SHIFT);
+            __m128i dg = _mm_srli_epi16(dst_pixel, SK_G16_SHIFT);
             dg = _mm_and_si128(dg, g16_mask);
-            __m128i db = _mm_srli_epi16(dst_pixel,SK_B16_SHIFT);
+            __m128i db = _mm_srli_epi16(dst_pixel, SK_B16_SHIFT);
             db = _mm_and_si128(db, b16_mask);
 
             __m128i isa = _mm_sub_epi16(var255, sa); // 255 -sa
 
             // Calculate R G B of result.
             // Original algorithm is in SkSrcOver32To16().
-            dr = _mm_add_epi16(sr, SkMul16ShiftRound_SSE(dr, isa, SK_R16_BITS));
+            dr = _mm_add_epi16(sr, SkMul16ShiftRound_SSE2(dr, isa, SK_R16_BITS));
             dr = _mm_srli_epi16(dr, 8 - SK_R16_BITS);
-            dg = _mm_add_epi16(sg, SkMul16ShiftRound_SSE(dg, isa, SK_G16_BITS));
+            dg = _mm_add_epi16(sg, SkMul16ShiftRound_SSE2(dg, isa, SK_G16_BITS));
             dg = _mm_srli_epi16(dg, 8 - SK_G16_BITS);
-            db = _mm_add_epi16(sb, SkMul16ShiftRound_SSE(db, isa, SK_B16_BITS));
+            db = _mm_add_epi16(sb, SkMul16ShiftRound_SSE2(db, isa, SK_B16_BITS));
             db = _mm_srli_epi16(db, 8 - SK_B16_BITS);
 
             // Pack R G B into 16-bit color.
-            __m128i d_pixel = SkPackRGB16_SSE(dr, dg, db);
+            __m128i d_pixel = SkPackRGB16_SSE2(dr, dg, db);
 
             // Store 8 16-bit colors in dst.
             _mm_store_si128(d++, d_pixel);
@@ -1143,7 +1140,7 @@ void S32_D565_Opaque_Dither_SSE2(uint16_t* SK_RESTRICT dst,
             sb = _mm_srli_epi16(sb, SK_B32_BITS - SK_B16_BITS);
 
             // Pack and store 16-bit dst pixel.
-            __m128i d_pixel = SkPackRGB16_SSE(sr, sg, sb);
+            __m128i d_pixel = SkPackRGB16_SSE2(sr, sg, sb);
             _mm_store_si128(d++, d_pixel);
 
             count -= 8;
@@ -1242,9 +1239,9 @@ void S32A_D565_Opaque_Dither_SSE2(uint16_t* SK_RESTRICT dst,
             __m128i dst_pixel = _mm_load_si128(d);
 
             // Extract A from src.
-            __m128i sa1 = _mm_slli_epi32(src_pixel1,(24 - SK_A32_SHIFT));
+            __m128i sa1 = _mm_slli_epi32(src_pixel1, (24 - SK_A32_SHIFT));
             sa1 = _mm_srli_epi32(sa1, 24);
-            __m128i sa2 = _mm_slli_epi32(src_pixel2,(24 - SK_A32_SHIFT));
+            __m128i sa2 = _mm_slli_epi32(src_pixel2, (24 - SK_A32_SHIFT));
             sa2 = _mm_srli_epi32(sa2, 24);
             __m128i sa = _mm_packs_epi32(sa1, sa2);
 
@@ -1323,7 +1320,7 @@ void S32A_D565_Opaque_Dither_SSE2(uint16_t* SK_RESTRICT dst,
             db = _mm_srli_epi16(db, 5);
 
             // Package and store dst pixel.
-            __m128i d_pixel = SkPackRGB16_SSE(dr, dg, db);
+            __m128i d_pixel = SkPackRGB16_SSE2(dr, dg, db);
             _mm_store_si128(d++, d_pixel);
 
             count -= 8;

@@ -1,37 +1,35 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
 #include "SkPixelRef.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
 #include "SkThread.h"
 
 #ifdef SK_USE_POSIX_THREADS
 
     static SkBaseMutex gPixelRefMutexRing[] = {
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
 
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
 
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
 
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
-        { PTHREAD_MUTEX_INITIALIZER }, { PTHREAD_MUTEX_INITIALIZER },
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
+        SK_BASE_MUTEX_INIT, SK_BASE_MUTEX_INIT,
     };
 
     // must be a power-of-2. undef to just use 1 mutex
@@ -84,6 +82,9 @@ void SkPixelRef::setMutex(SkBaseMutex* mutex) {
 #define SKPIXELREF_PRELOCKED_LOCKCOUNT     123456789
 
 SkPixelRef::SkPixelRef(const SkImageInfo& info) : fInfo(info) {
+    SkAssertResult(SkColorTypeValidateAlphaType(fInfo.colorType(), fInfo.alphaType(),
+                                                const_cast<SkAlphaType*>(&fInfo.fAlphaType)));
+
     this->setMutex(NULL);
     fRec.zero();
     fLockCount = 0;
@@ -94,30 +95,14 @@ SkPixelRef::SkPixelRef(const SkImageInfo& info) : fInfo(info) {
 
 
 SkPixelRef::SkPixelRef(const SkImageInfo& info, SkBaseMutex* mutex) : fInfo(info) {
+    SkAssertResult(SkColorTypeValidateAlphaType(fInfo.colorType(), fInfo.alphaType(),
+                                                const_cast<SkAlphaType*>(&fInfo.fAlphaType)));
+
     this->setMutex(mutex);
     fRec.zero();
     fLockCount = 0;
     this->needsNewGenID();
     fIsImmutable = false;
-    fPreLocked = false;
-}
-
-static SkImageInfo read_info(SkReadBuffer& buffer) {
-    SkImageInfo info;
-    info.unflatten(buffer);
-    return info;
-}
-
-SkPixelRef::SkPixelRef(SkReadBuffer& buffer, SkBaseMutex* mutex)
-        : INHERITED(buffer)
-        , fInfo(read_info(buffer))
-{
-    this->setMutex(mutex);
-    fRec.zero();
-    fLockCount = 0;
-    fIsImmutable = buffer.readBool();
-    fGenerationID = buffer.readUInt();
-    fUniqueGenerationID = false;  // Conservatively assuming the original still exists.
     fPreLocked = false;
 }
 
@@ -147,23 +132,6 @@ void SkPixelRef::setPreLocked(void* pixels, size_t rowBytes, SkColorTable* ctabl
     fLockCount = SKPIXELREF_PRELOCKED_LOCKCOUNT;
     fPreLocked = true;
 #endif
-}
-
-void SkPixelRef::flatten(SkWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
-    fInfo.flatten(buffer);
-    buffer.writeBool(fIsImmutable);
-    // We write the gen ID into the picture for within-process recording. This
-    // is safe since the same genID will never refer to two different sets of
-    // pixels (barring overflow). However, each process has its own "namespace"
-    // of genIDs. So for cross-process recording we write a zero which will
-    // trigger assignment of a new genID in playback.
-    if (buffer.isCrossProcess()) {
-        buffer.writeUInt(0);
-    } else {
-        buffer.writeUInt(fGenerationID);
-        fUniqueGenerationID = false;  // Conservative, a copy is probably about to exist.
-    }
 }
 
 bool SkPixelRef::lockPixels(LockRec* rec) {
@@ -283,6 +251,10 @@ bool SkPixelRef::onReadPixels(SkBitmap* dst, const SkIRect* subset) {
 
 SkData* SkPixelRef::onRefEncodedData() {
     return NULL;
+}
+
+bool SkPixelRef::onGetYUV8Planes(SkISize sizes[3], void* planes[3], size_t rowBytes[3]) {
+    return false;
 }
 
 size_t SkPixelRef::getAllocatedSizeInBytes() const {

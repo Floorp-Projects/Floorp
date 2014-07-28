@@ -64,9 +64,6 @@ public:
      *  The SkData will be ref()ed and on destruction of the PielRef,
      *  the SkData will be unref()ed.
      *
-     *  @param offset (in bytes) into the provided SkData that the
-     *         first pixel is located at.
-     *
      *  This pixelref will ref() the specified colortable (if not NULL).
      *
      *  Returns NULL on failure.
@@ -74,29 +71,25 @@ public:
     static SkMallocPixelRef* NewWithData(const SkImageInfo& info,
                                          size_t rowBytes,
                                          SkColorTable* ctable,
-                                         SkData* data,
-                                         size_t offset = 0);
+                                         SkData* data);
 
     void* getAddr() const { return fStorage; }
 
     class PRFactory : public SkPixelRefFactory {
     public:
         virtual SkPixelRef* create(const SkImageInfo&,
+                                   size_t rowBytes,
                                    SkColorTable*) SK_OVERRIDE;
     };
-
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkMallocPixelRef)
 
 protected:
     // The ownPixels version of this constructor is deprecated.
     SkMallocPixelRef(const SkImageInfo&, void* addr, size_t rb, SkColorTable*,
                      bool ownPixels);
-    SkMallocPixelRef(SkReadBuffer& buffer);
     virtual ~SkMallocPixelRef();
 
     virtual bool onNewLockPixels(LockRec*) SK_OVERRIDE;
     virtual void onUnlockPixels() SK_OVERRIDE;
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
     virtual size_t getAllocatedSizeInBytes() const SK_OVERRIDE;
 
 private:

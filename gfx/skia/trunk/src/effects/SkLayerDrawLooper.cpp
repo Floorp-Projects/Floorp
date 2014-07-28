@@ -36,46 +36,8 @@ SkLayerDrawLooper::~SkLayerDrawLooper() {
     }
 }
 
-SkPaint* SkLayerDrawLooper::addLayer(const LayerInfo& info) {
-    fCount += 1;
-
-    Rec* rec = SkNEW(Rec);
-    rec->fNext = fRecs;
-    rec->fInfo = info;
-    fRecs = rec;
-    if (NULL == fTopRec) {
-        fTopRec = rec;
-    }
-
-    return &rec->fPaint;
-}
-
-void SkLayerDrawLooper::addLayer(SkScalar dx, SkScalar dy) {
-    LayerInfo info;
-
-    info.fOffset.set(dx, dy);
-    (void)this->addLayer(info);
-}
-
-SkPaint* SkLayerDrawLooper::addLayerOnTop(const LayerInfo& info) {
-    fCount += 1;
-
-    Rec* rec = SkNEW(Rec);
-    rec->fNext = NULL;
-    rec->fInfo = info;
-    if (NULL == fRecs) {
-        fRecs = rec;
-    } else {
-        SkASSERT(NULL != fTopRec);
-        fTopRec->fNext = rec;
-    }
-    fTopRec = rec;
-
-    return &rec->fPaint;
-}
-
 SkLayerDrawLooper::Context* SkLayerDrawLooper::createContext(SkCanvas* canvas, void* storage) const {
-    canvas->save(SkCanvas::kMatrix_SaveFlag);
+    canvas->save();
     return SkNEW_PLACEMENT_ARGS(storage, LayerDrawLooperContext, (this));
 }
 
@@ -178,7 +140,7 @@ bool SkLayerDrawLooper::LayerDrawLooperContext::next(SkCanvas* canvas,
 
     ApplyInfo(paint, fCurrRec->fPaint, fCurrRec->fInfo);
 
-    canvas->save(SkCanvas::kMatrix_SaveFlag);
+    canvas->save();
     if (fCurrRec->fInfo.fPostTranslate) {
         postTranslate(canvas, fCurrRec->fInfo.fOffset.fX,
                       fCurrRec->fInfo.fOffset.fY);
@@ -188,6 +150,50 @@ bool SkLayerDrawLooper::LayerDrawLooperContext::next(SkCanvas* canvas,
     }
     fCurrRec = fCurrRec->fNext;
 
+    return true;
+}
+
+bool SkLayerDrawLooper::asABlurShadow(BlurShadowRec* bsRec) const {
+    if (fCount != 2) {
+        return false;
+    }
+    const Rec* rec = fRecs;
+
+    // bottom layer needs to be just blur(maskfilter)
+    if ((rec->fInfo.fPaintBits & ~kMaskFilter_Bit)) {
+        return false;
+    }
+    if (SkXfermode::kSrc_Mode != rec->fInfo.fColorMode) {
+        return false;
+    }
+    const SkMaskFilter* mf = rec->fPaint.getMaskFilter();
+    if (NULL == mf) {
+        return false;
+    }
+    SkMaskFilter::BlurRec maskBlur;
+    if (!mf->asABlur(&maskBlur)) {
+        return false;
+    }
+
+    rec = rec->fNext;
+    // top layer needs to be "plain"
+    if (rec->fInfo.fPaintBits) {
+        return false;
+    }
+    if (SkXfermode::kDst_Mode != rec->fInfo.fColorMode) {
+        return false;
+    }
+    if (!rec->fInfo.fOffset.equals(0, 0)) {
+        return false;
+    }
+
+    if (bsRec) {
+        bsRec->fSigma = maskBlur.fSigma;
+        bsRec->fOffset = fRecs->fInfo.fOffset;
+        bsRec->fColor = fRecs->fPaint.getColor();
+        bsRec->fStyle = maskBlur.fStyle;
+        bsRec->fQuality = maskBlur.fQuality;
+    }
     return true;
 }
 

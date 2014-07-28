@@ -12,6 +12,7 @@
 
 #include "SkCanvas.h"
 #include "SkDrawCommand.h"
+#include "SkPathOps.h"
 #include "SkPicture.h"
 #include "SkTArray.h"
 #include "SkString.h"
@@ -26,11 +27,20 @@ public:
     void toggleFilter(bool toggle) { fFilter = toggle; }
 
     void setMegaVizMode(bool megaVizMode) { fMegaVizMode = megaVizMode; }
+    bool getMegaVizMode() const { return fMegaVizMode; }
 
     /**
      * Enable or disable overdraw visualization
      */
     void setOverdrawViz(bool overdrawViz) { fOverdrawViz = overdrawViz; }
+    bool getOverdrawViz() const { return fOverdrawViz; }
+
+    void setOutstandingSaveCount(int saveCount) { fOutstandingSaveCount = saveCount; }
+    int getOutstandingSaveCount() const { return fOutstandingSaveCount; }
+
+    bool getAllowSimplifyClip() const { return fAllowSimplifyClip; }
+
+    void setPicture(SkPicture* picture) { fPicture = picture; }
 
     /**
      * Enable or disable texure filtering override
@@ -118,6 +128,11 @@ public:
     SkTArray<SkString>* getDrawCommandsAsStrings() const;
 
     /**
+     * Returns an array containing an offset (in the SkPicture) for each command
+     */
+    SkTDArray<size_t>* getDrawCommandOffsets() const;
+
+    /**
         Returns length of draw command vector.
      */
     int getSize() const {
@@ -138,6 +153,8 @@ public:
     void setUserMatrix(SkMatrix matrix) {
         fUserMatrix = matrix;
     }
+
+    SkString clipStackData() const { return fClipStackData; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Inherited from SkCanvas
@@ -172,17 +189,8 @@ public:
 
     virtual void drawPath(const SkPath& path, const SkPaint&) SK_OVERRIDE;
 
-    virtual void drawPicture(SkPicture& picture) SK_OVERRIDE;
-
     virtual void drawPoints(PointMode, size_t count, const SkPoint pts[],
                             const SkPaint&) SK_OVERRIDE;
-
-    virtual void drawPosText(const void* text, size_t byteLength,
-                             const SkPoint pos[], const SkPaint&) SK_OVERRIDE;
-
-    virtual void drawPosTextH(const void* text, size_t byteLength,
-                              const SkScalar xpos[], SkScalar constY,
-                              const SkPaint&) SK_OVERRIDE;
 
     virtual void drawRect(const SkRect& rect, const SkPaint&) SK_OVERRIDE;
 
@@ -190,13 +198,6 @@ public:
 
     virtual void drawSprite(const SkBitmap&, int left, int top,
                             const SkPaint*) SK_OVERRIDE;
-
-    virtual void drawText(const void* text, size_t byteLength, SkScalar x,
-                          SkScalar y, const SkPaint&) SK_OVERRIDE;
-
-    virtual void drawTextOnPath(const void* text, size_t byteLength,
-                                const SkPath& path, const SkMatrix* matrix,
-                                const SkPaint&) SK_OVERRIDE;
 
     virtual void drawVertices(VertexMode, int vertexCount,
                               const SkPoint vertices[], const SkPoint texs[],
@@ -230,18 +231,22 @@ public:
     }
 
 protected:
-    virtual void willSave(SaveFlags) SK_OVERRIDE;
+    virtual void willSave() SK_OVERRIDE;
     virtual SaveLayerStrategy willSaveLayer(const SkRect*, const SkPaint*, SaveFlags) SK_OVERRIDE;
     virtual void willRestore() SK_OVERRIDE;
 
-    virtual void didTranslate(SkScalar, SkScalar) SK_OVERRIDE;
-    virtual void didScale(SkScalar, SkScalar) SK_OVERRIDE;
-    virtual void didRotate(SkScalar) SK_OVERRIDE;
-    virtual void didSkew(SkScalar, SkScalar) SK_OVERRIDE;
     virtual void didConcat(const SkMatrix&) SK_OVERRIDE;
     virtual void didSetMatrix(const SkMatrix&) SK_OVERRIDE;
 
     virtual void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) SK_OVERRIDE;
+    virtual void onDrawText(const void* text, size_t byteLength, SkScalar x, SkScalar y,
+                            const SkPaint&) SK_OVERRIDE;
+    virtual void onDrawPosText(const void* text, size_t byteLength, const SkPoint pos[],
+                               const SkPaint&) SK_OVERRIDE;
+    virtual void onDrawPosTextH(const void* text, size_t byteLength, const SkScalar xpos[],
+                                SkScalar constY, const SkPaint&) SK_OVERRIDE;
+    virtual void onDrawTextOnPath(const void* text, size_t byteLength, const SkPath& path,
+                                  const SkMatrix* matrix, const SkPaint&) SK_OVERRIDE;
     virtual void onPushCull(const SkRect& cullRect) SK_OVERRIDE;
     virtual void onPopCull() SK_OVERRIDE;
 
@@ -250,10 +255,13 @@ protected:
     virtual void onClipPath(const SkPath&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
     virtual void onClipRegion(const SkRegion& region, SkRegion::Op) SK_OVERRIDE;
 
+    virtual void onDrawPicture(const SkPicture* picture) SK_OVERRIDE;
+
     void markActiveCommands(int index);
 
 private:
     SkTDArray<SkDrawCommand*> fCommandVector;
+    SkPicture* fPicture;
     int fWidth;
     int fHeight;
     bool fFilter;
@@ -262,6 +270,10 @@ private:
     SkMatrix fUserMatrix;
     SkMatrix fMatrix;
     SkIRect fClip;
+
+    SkString fClipStackData;
+    bool fCalledAddStackData;
+    SkPath fSaveDevPath;
 
     bool fOverdrawViz;
     SkDrawFilter* fOverdrawFilter;
@@ -300,6 +312,25 @@ private:
         drawing anything else into the canvas.
      */
     void applyUserTransform(SkCanvas* canvas);
+
+    size_t getOpID() const {
+#if 0
+        if (NULL != fPicture) {
+            return fPicture->EXPERIMENTAL_curOpID();
+        }
+#endif
+        return 0;
+    }
+
+    void resetClipStackData() { fClipStackData.reset(); fCalledAddStackData = false; }
+
+    void addClipStackData(const SkPath& devPath, const SkPath& operand, SkRegion::Op elementOp);
+    void addPathData(const SkPath& path, const char* pathName);
+    bool lastClipStackData(const SkPath& devPath);
+    void outputConicPoints(const SkPoint* pts, SkScalar weight);
+    void outputPoints(const SkPoint* pts, int count);
+    void outputPointsCommon(const SkPoint* pts, int count);
+    void outputScalar(SkScalar num);
 
     typedef SkCanvas INHERITED;
 };

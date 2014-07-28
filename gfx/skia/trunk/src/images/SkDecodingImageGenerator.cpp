@@ -14,12 +14,42 @@
 #include "SkStream.h"
 #include "SkUtils.h"
 
-static bool equal_modulo_alpha(const SkImageInfo& a, const SkImageInfo& b) {
+namespace {
+bool equal_modulo_alpha(const SkImageInfo& a, const SkImageInfo& b) {
     return a.width() == b.width() && a.height() == b.height() &&
            a.colorType() == b.colorType();
 }
 
-namespace {
+class DecodingImageGenerator : public SkImageGenerator {
+public:
+    virtual ~DecodingImageGenerator();
+
+    SkData*                fData;
+    SkStreamRewindable*    fStream;
+    const SkImageInfo      fInfo;
+    const int              fSampleSize;
+    const bool             fDitherImage;
+
+    DecodingImageGenerator(SkData* data,
+                           SkStreamRewindable* stream,
+                           const SkImageInfo& info,
+                           int sampleSize,
+                           bool ditherImage);
+
+protected:
+    virtual SkData* onRefEncodedData() SK_OVERRIDE;
+    virtual bool onGetInfo(SkImageInfo* info) SK_OVERRIDE {
+        *info = fInfo;
+        return true;
+    }
+    virtual bool onGetPixels(const SkImageInfo& info,
+                             void* pixels, size_t rowBytes,
+                             SkPMColor ctable[], int* ctableCount) SK_OVERRIDE;
+
+private:
+    typedef SkImageGenerator INHERITED;
+};
+
 /**
  *  Special allocator used by getPixels(). Uses preallocated memory
  *  provided if possible, else fall-back on the default allocator
@@ -45,7 +75,7 @@ public:
         // TODO(halcanary): verify that all callers of this function
         // will respect new RowBytes.  Will be moot once rowbytes belongs
         // to PixelRef.
-        bm->installPixels(fInfo, fTarget, fRowBytes, NULL, NULL);
+        bm->installPixels(fInfo, fTarget, fRowBytes, ct, NULL, NULL);
 
         fTarget = NULL;  // never alloc same pixels twice!
         return true;
@@ -76,10 +106,9 @@ inline bool check_alpha(SkAlphaType reported, SkAlphaType actual) {
 }
 #endif  // SK_DEBUG
 
-}  // namespace
 ////////////////////////////////////////////////////////////////////////////////
 
-SkDecodingImageGenerator::SkDecodingImageGenerator(
+DecodingImageGenerator::DecodingImageGenerator(
         SkData* data,
         SkStreamRewindable* stream,
         const SkImageInfo& info,
@@ -95,19 +124,12 @@ SkDecodingImageGenerator::SkDecodingImageGenerator(
     SkSafeRef(fData);  // may be NULL.
 }
 
-SkDecodingImageGenerator::~SkDecodingImageGenerator() {
+DecodingImageGenerator::~DecodingImageGenerator() {
     SkSafeUnref(fData);
     fStream->unref();
 }
 
-bool SkDecodingImageGenerator::getInfo(SkImageInfo* info) {
-    if (info != NULL) {
-        *info = fInfo;
-    }
-    return true;
-}
-
-SkData* SkDecodingImageGenerator::refEncodedData() {
+SkData* DecodingImageGenerator::onRefEncodedData() {
     // This functionality is used in `gm --serialize`
     // Does not encode options.
     if (fData != NULL) {
@@ -128,20 +150,13 @@ SkData* SkDecodingImageGenerator::refEncodedData() {
     return SkSafeRef(fData);
 }
 
-bool SkDecodingImageGenerator::getPixels(const SkImageInfo& info,
-                                         void* pixels,
-                                         size_t rowBytes) {
-    if (NULL == pixels) {
-        return false;
-    }
+bool DecodingImageGenerator::onGetPixels(const SkImageInfo& info,
+                                         void* pixels, size_t rowBytes,
+                                         SkPMColor ctableEntries[], int* ctableCount) {
     if (fInfo != info) {
         // The caller has specified a different info.  This is an
         // error for this kind of SkImageGenerator.  Use the Options
         // to change the settings.
-        return false;
-    }
-    if (info.minRowBytes() > rowBytes) {
-        // The caller has specified a bad rowBytes.
         return false;
     }
 
@@ -152,13 +167,13 @@ bool SkDecodingImageGenerator::getPixels(const SkImageInfo& info,
     }
     decoder->setDitherImage(fDitherImage);
     decoder->setSampleSize(fSampleSize);
+    decoder->setRequireUnpremultipliedColors(
+            info.fAlphaType == kUnpremul_SkAlphaType);
 
     SkBitmap bitmap;
     TargetAllocator allocator(fInfo, pixels, rowBytes);
     decoder->setAllocator(&allocator);
-    // TODO: need to be able to pass colortype directly to decoder
-    SkBitmap::Config legacyConfig = SkColorTypeToBitmapConfig(info.colorType());
-    bool success = decoder->decode(fStream, &bitmap, legacyConfig,
+    bool success = decoder->decode(fStream, &bitmap, info.colorType(),
                                    SkImageDecoder::kDecodePixels_Mode);
     decoder->setAllocator(NULL);
     if (!success) {
@@ -177,8 +192,73 @@ bool SkDecodingImageGenerator::getPixels(const SkImageInfo& info,
     } else {
         SkASSERT(check_alpha(info.alphaType(), bitmap.alphaType()));
     }
+
+    if (kIndex_8_SkColorType == info.colorType()) {
+        if (kIndex_8_SkColorType != bitmap.colorType()) {
+            return false;   // they asked for Index8, but we didn't receive that from decoder
+        }
+        SkColorTable* ctable = bitmap.getColorTable();
+        if (NULL == ctable) {
+            return false;
+        }
+        const int count = ctable->count();
+        memcpy(ctableEntries, ctable->lockColors(), count * sizeof(SkPMColor));
+        ctable->unlockColors();
+        *ctableCount = count;
+    }
     return true;
 }
+
+// A contructor-type function that returns NULL on failure.  This
+// prevents the returned SkImageGenerator from ever being in a bad
+// state.  Called by both Create() functions
+SkImageGenerator* CreateDecodingImageGenerator(
+        SkData* data,
+        SkStreamRewindable* stream,
+        const SkDecodingImageGenerator::Options& opts) {
+    SkASSERT(stream);
+    SkAutoTUnref<SkStreamRewindable> autoStream(stream);  // always unref this.
+    SkAssertResult(autoStream->rewind());
+    SkAutoTDelete<SkImageDecoder> decoder(SkImageDecoder::Factory(autoStream));
+    if (NULL == decoder.get()) {
+        return NULL;
+    }
+    SkBitmap bitmap;
+    decoder->setSampleSize(opts.fSampleSize);
+    decoder->setRequireUnpremultipliedColors(opts.fRequireUnpremul);
+    if (!decoder->decode(stream, &bitmap, SkImageDecoder::kDecodeBounds_Mode)) {
+        return NULL;
+    }
+    if (kUnknown_SkColorType == bitmap.colorType()) {
+        return NULL;
+    }
+
+    SkImageInfo info = bitmap.info();
+
+    if (opts.fUseRequestedColorType && (opts.fRequestedColorType != info.colorType())) {
+        if (!bitmap.canCopyTo(opts.fRequestedColorType)) {
+            SkASSERT(bitmap.colorType() != opts.fRequestedColorType);
+            return NULL;  // Can not translate to needed config.
+        }
+        info.fColorType = opts.fRequestedColorType;
+    }
+
+    if (opts.fRequireUnpremul && info.fAlphaType != kOpaque_SkAlphaType) {
+        info.fAlphaType = kUnpremul_SkAlphaType;
+    }
+
+    if (!SkColorTypeValidateAlphaType(info.fColorType, info.fAlphaType, &info.fAlphaType)) {
+        return NULL;
+    }
+
+    return SkNEW_ARGS(DecodingImageGenerator,
+                      (data, autoStream.detach(), info,
+                       opts.fSampleSize, opts.fDitherImage));
+}
+
+}  // namespace
+
+////////////////////////////////////////////////////////////////////////////////
 
 SkImageGenerator* SkDecodingImageGenerator::Create(
         SkData* data,
@@ -190,7 +270,7 @@ SkImageGenerator* SkDecodingImageGenerator::Create(
     SkStreamRewindable* stream = SkNEW_ARGS(SkMemoryStream, (data));
     SkASSERT(stream != NULL);
     SkASSERT(stream->unique());
-    return SkDecodingImageGenerator::Create(data, stream, opts);
+    return CreateDecodingImageGenerator(data, stream, opts);
 }
 
 SkImageGenerator* SkDecodingImageGenerator::Create(
@@ -202,55 +282,5 @@ SkImageGenerator* SkDecodingImageGenerator::Create(
         SkSafeUnref(stream);
         return NULL;
     }
-    return SkDecodingImageGenerator::Create(NULL, stream, opts);
-}
-
-// A contructor-type function that returns NULL on failure.  This
-// prevents the returned SkImageGenerator from ever being in a bad
-// state.  Called by both Create() functions
-SkImageGenerator* SkDecodingImageGenerator::Create(
-        SkData* data,
-        SkStreamRewindable* stream,
-        const SkDecodingImageGenerator::Options& opts) {
-    SkASSERT(stream);
-    SkAutoTUnref<SkStreamRewindable> autoStream(stream);  // always unref this.
-    if (opts.fUseRequestedColorType &&
-        (kIndex_8_SkColorType == opts.fRequestedColorType)) {
-        // We do not support indexed color with SkImageGenerators,
-        return NULL;
-    }
-    SkAssertResult(autoStream->rewind());
-    SkAutoTDelete<SkImageDecoder> decoder(SkImageDecoder::Factory(autoStream));
-    if (NULL == decoder.get()) {
-        return NULL;
-    }
-    SkBitmap bitmap;
-    decoder->setSampleSize(opts.fSampleSize);
-    if (!decoder->decode(stream, &bitmap,
-                         SkImageDecoder::kDecodeBounds_Mode)) {
-        return NULL;
-    }
-    if (bitmap.config() == SkBitmap::kNo_Config) {
-        return NULL;
-    }
-
-    SkImageInfo info = bitmap.info();
-
-    if (!opts.fUseRequestedColorType) {
-        // Use default
-        if (kIndex_8_SkColorType == bitmap.colorType()) {
-            // We don't support kIndex8 because we don't support
-            // colortables in this workflow.
-            info.fColorType = kPMColor_SkColorType;
-        }
-    } else {
-        if (!bitmap.canCopyTo(opts.fRequestedColorType)) {
-            SkASSERT(bitmap.colorType() != opts.fRequestedColorType);
-            return NULL;  // Can not translate to needed config.
-        }
-        info.fColorType = opts.fRequestedColorType;
-    }
-    return SkNEW_ARGS(SkDecodingImageGenerator,
-                      (data, autoStream.detach(), info,
-                       opts.fSampleSize, opts.fDitherImage));
+    return CreateDecodingImageGenerator(NULL, stream, opts);
 }

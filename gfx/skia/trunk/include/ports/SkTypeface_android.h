@@ -17,19 +17,6 @@ class SkPaintOptionsAndroid;
 
 /**
  *  Get the family name of the font in the fallback font list containing
- *  the specified character using the system's default language. This function
- *  also assumes the only families with the elegant or default variants will be
- *  returned.
- *
- *  @param uni  The unicode character to use for the lookup.
- *  @param name The family name of the font file containing the unicode character
- *              in the default language
- *  @return     true if a font is found and false otherwise
- */
-SK_API bool SkGetFallbackFamilyNameForChar(SkUnichar uni, SkString* name);
-
-/**
- *  Get the family name of the font in the fallback font list containing
  *  the specified character taking into account the provided language. This
  *  function also assumes the only families with the elegant or default variants
  *  will be returned.
@@ -87,22 +74,4 @@ SkTypeface* SkGetTypefaceForGlyphID(uint16_t glyphID, const SkTypeface* origType
                                     int* lowerBounds = NULL, int* upperBounds = NULL);
 
 #endif // #ifdef SK_BUILD_FOR_ANDROID
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-
-#include "SkPaintOptionsAndroid.h"
-#include "../harfbuzz_ng/src/hb.h"
-
-/**
- *  Return a new typeface for a fallback script. If the script is
- *  not valid, or can not map to a font, returns null.
- *  @param  script   The harfbuzz script id.
- *  @param  style    The font style, for example bold
- *  @param  elegant  true if we want the web friendly elegant version of the font
- *  @return          reference to the matching typeface. Caller must call
- *                   unref() when they are done.
- */
-SK_API SkTypeface* SkCreateTypefaceForScript(hb_script_t script, SkTypeface::Style style,
-        SkPaintOptionsAndroid::FontVariant fontVariant = SkPaintOptionsAndroid::kDefault_Variant);
-
-#endif // #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
 #endif // #ifndef SkTypeface_android_DEFINED

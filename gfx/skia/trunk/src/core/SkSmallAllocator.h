@@ -29,7 +29,7 @@ template<typename T> void destroyT(void* ptr) {
  *  object it allocated and freeing its memory.
  */
 template<uint32_t kMaxObjects, size_t kTotalBytes>
-class SkSmallAllocator : public SkNoncopyable {
+class SkSmallAllocator : SkNoncopyable {
 public:
     SkSmallAllocator()
     : fStorageUsed(0)
@@ -96,6 +96,16 @@ public:
         return static_cast<T*>(buf);
     }
 
+    template<typename T, typename A1, typename A2, typename A3, typename A4>
+    T* createT(const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+        void* buf = this->reserveT<T>();
+        if (NULL == buf) {
+            return NULL;
+        }
+        SkNEW_PLACEMENT_ARGS(buf, T, (a1, a2, a3, a4));
+        return static_cast<T*>(buf);
+    }
+
     /*
      *  Reserve a specified amount of space (must be enough space for one T).
      *  The space will be in fStorage if there is room, or on the heap otherwise.
@@ -117,10 +127,12 @@ public:
             // but we're not sure we can catch all callers, so handle it but
             // assert false in debug mode.
             SkASSERT(false);
+            rec->fStorageSize = 0;
             rec->fHeapStorage = sk_malloc_throw(storageRequired);
             rec->fObj = static_cast<void*>(rec->fHeapStorage);
         } else {
             // There is space in fStorage.
+            rec->fStorageSize = storageRequired;
             rec->fHeapStorage = NULL;
             SkASSERT(SkIsAlign4(fStorageUsed));
             rec->fObj = static_cast<void*>(fStorage + (fStorageUsed / 4));
@@ -131,11 +143,26 @@ public:
         return rec->fObj;
     }
 
+    /*
+     *  Free the memory reserved last without calling the destructor.
+     *  Can be used in a nested way, i.e. after reserving A and B, calling
+     *  freeLast once will free B and calling it again will free A.
+     */
+    void freeLast() {
+        SkASSERT(fNumObjects > 0);
+        Rec* rec = &fRecs[fNumObjects - 1];
+        sk_free(rec->fHeapStorage);
+        fStorageUsed -= rec->fStorageSize;
+
+        fNumObjects--;
+    }
+
 private:
     struct Rec {
-        void* fObj;
-        void* fHeapStorage;
-        void  (*fKillProc)(void*);
+        size_t fStorageSize;  // 0 if allocated on heap
+        void*  fObj;
+        void*  fHeapStorage;
+        void   (*fKillProc)(void*);
     };
 
     // Number of bytes used so far.

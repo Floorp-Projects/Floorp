@@ -14,19 +14,34 @@
 #include "SkTArray.h"
 #include "SkTDArray.h"
 
+#if defined(SK_DEBUG) || !FORCE_RELEASE
+#include "SkThread.h"
+#endif
+
+struct SkCoincidence;
 class SkPathWriter;
 
 class SkOpSegment {
 public:
     SkOpSegment() {
-#ifdef SK_DEBUG
-        fID = ++SkPathOpsDebug::gSegmentID;
+#if defined(SK_DEBUG) || !FORCE_RELEASE
+        fID = sk_atomic_inc(&SkPathOpsDebug::gSegmentID);
 #endif
     }
 
     bool operator<(const SkOpSegment& rh) const {
         return fBounds.fTop < rh.fBounds.fTop;
     }
+
+    struct AlignedSpan  {
+        double fOldT;
+        double fT;
+        SkPoint fOldPt;
+        SkPoint fPt;
+        const SkOpSegment* fSegment;
+        const SkOpSegment* fOther1;
+        const SkOpSegment* fOther2;
+    };
 
     const SkPathOpsBounds& bounds() const {
         return fBounds;
@@ -59,7 +74,6 @@ public:
         return done(SkMin32(angle->start(), angle->end()));
     }
 
-    // used only by partial coincidence detection
     SkDPoint dPtAtT(double mid) const {
         return (*CurveDPointAtT[SkPathOpsVerbToPoints(fVerb)])(fPts, mid);
     }
@@ -70,6 +84,18 @@ public:
 
     SkScalar dy(int index) const {
         return dxdy(index).fY;
+    }
+
+    bool hasMultiples() const {
+        return fMultiples;
+    }
+
+    bool hasSmall() const {
+        return fSmall;
+    }
+
+    bool hasTiny() const {
+        return fTiny;
     }
 
     bool intersected() const {
@@ -131,11 +157,12 @@ public:
         return fTs[lesser].fOppValue;
     }
 
-    const SkOpSegment* other(int index) const {
-        return fTs[index].fOther;
+#if DEBUG_VALIDATE
+    bool oppXor() const {
+        return fOppXor;
     }
+#endif
 
-    // was used only by right angle winding finding
     SkPoint ptAtT(double mid) const {
         return (*CurvePointAtT[SkPathOpsVerbToPoints(fVerb)])(fPts, mid);
     }
@@ -160,14 +187,20 @@ public:
         *sumWinding -= deltaSum;
     }
 
-    // OPTIMIZATION: mark as debugging only if used solely by tests
     const SkOpSpan& span(int tIndex) const {
         return fTs[tIndex];
     }
 
-    // OPTIMIZATION: mark as debugging only if used solely by tests
-    const SkTDArray<SkOpSpan>& spans() const {
-        return fTs;
+    const SkOpAngle* spanToAngle(int tStart, int tEnd) const {
+        SkASSERT(tStart != tEnd);
+        const SkOpSpan& span = fTs[tStart];
+        return tStart < tEnd ? span.fToAngle : span.fFromAngle;
+    }
+
+    // FIXME: create some sort of macro or template that avoids casting
+    SkOpAngle* spanToAngle(int tStart, int tEnd) {
+        const SkOpAngle* cAngle = (const_cast<const SkOpSegment*>(this))->spanToAngle(tStart, tEnd);
+        return const_cast<SkOpAngle*>(cAngle);
     }
 
     int spanSign(const SkOpAngle* angle) const {
@@ -189,10 +222,6 @@ public:
 
     double tAtMid(int start, int end, double mid) const {
         return fTs[start].fT * (1 - mid) + fTs[end].fT * mid;
-    }
-
-    bool unsortable(int index) const {
-        return fTs[index].fUnsortableStart || fTs[index].fUnsortableEnd;
     }
 
     void updatePts(const SkPoint pts[]) {
@@ -217,6 +246,12 @@ public:
     }
 #endif
 
+#if DEBUG_VALIDATE
+    bool _xor() const {  // FIXME: used only by SkOpAngle::debugValidateLoop()
+        return fXor;
+    }
+#endif
+
     const SkPoint& xyAtT(const SkOpSpan* span) const {
         return span->fPt;
     }
@@ -231,46 +266,68 @@ public:
     }
 #endif
 
-    bool activeAngle(int index, int* done, SkTArray<SkOpAngle, true>* angles);
-    SkPoint activeLeftTop(bool onlySortable, int* firstT) const;
+    const SkOpAngle* activeAngle(int index, int* start, int* end, bool* done,
+                                 bool* sortable) const;
+    SkPoint activeLeftTop(int* firstT) const;
     bool activeOp(int index, int endIndex, int xorMiMask, int xorSuMask, SkPathOp op);
     bool activeWinding(int index, int endIndex);
     void addCubic(const SkPoint pts[4], bool operand, bool evenOdd);
     void addCurveTo(int start, int end, SkPathWriter* path, bool active) const;
+    void addEndSpan(int endIndex);
     void addLine(const SkPoint pts[2], bool operand, bool evenOdd);
     void addOtherT(int index, double otherT, int otherIndex);
     void addQuad(const SkPoint pts[3], bool operand, bool evenOdd);
-    int addSelfT(SkOpSegment* other, const SkPoint& pt, double newT);
+    void addSimpleAngle(int endIndex);
+    int addSelfT(const SkPoint& pt, double newT);
+    void addStartSpan(int endIndex);
     int addT(SkOpSegment* other, const SkPoint& pt, double newT);
     void addTCancel(const SkPoint& startPt, const SkPoint& endPt, SkOpSegment* other);
     void addTCoincident(const SkPoint& startPt, const SkPoint& endPt, double endT,
-            SkOpSegment* other);
-    void addTPair(double t, SkOpSegment* other, double otherT, bool borrowWind, const SkPoint& pt);
+                        SkOpSegment* other);
+    const SkOpSpan* addTPair(double t, SkOpSegment* other, double otherT, bool borrowWind,
+                             const SkPoint& pt);
+    const SkOpSpan* addTPair(double t, SkOpSegment* other, double otherT, bool borrowWind,
+                             const SkPoint& pt, const SkPoint& oPt);
+    void alignMultiples(SkTDArray<AlignedSpan>* aligned);
+    bool alignSpan(int index, double thisT, const SkPoint& thisPt);
+    void alignSpanState(int start, int end);
     bool betweenTs(int lesser, double testT, int greater) const;
+    void blindCancel(const SkCoincidence& coincidence, SkOpSegment* other);
+    void blindCoincident(const SkCoincidence& coincidence, SkOpSegment* other);
+    bool calcAngles();
+    double calcMissingTEnd(const SkOpSegment* ref, double loEnd, double min, double max,
+                           double hiEnd, const SkOpSegment* other, int thisEnd);
+    double calcMissingTStart(const SkOpSegment* ref, double loEnd, double min, double max,
+                             double hiEnd, const SkOpSegment* other, int thisEnd);
+    void checkDuplicates();
     void checkEnds();
+    void checkMultiples();
+    void checkSmall();
     bool checkSmall(int index) const;
     void checkTiny();
-    int computeSum(int startIndex, int endIndex, SkOpAngle::IncludeType includeType,
-                    SkTArray<SkOpAngle, true>* angles, SkTArray<SkOpAngle*, true>* sorted);
+    int computeSum(int startIndex, int endIndex, SkOpAngle::IncludeType includeType);
+    bool containsPt(const SkPoint& , int index, int endIndex) const;
     int crossedSpanY(const SkPoint& basePt, SkScalar* bestY, double* hitT, bool* hitSomething,
                      double mid, bool opp, bool current) const;
     bool findCoincidentMatch(const SkOpSpan* span, const SkOpSegment* other, int oStart, int oEnd,
                              int step, SkPoint* startPt, SkPoint* endPt, double* endT) const;
     SkOpSegment* findNextOp(SkTDArray<SkOpSpan*>* chase, int* nextStart, int* nextEnd,
-                            bool* unsortable, SkPathOp op, const int xorMiMask,
-                            const int xorSuMask);
+                            bool* unsortable, SkPathOp op, int xorMiMask, int xorSuMask);
     SkOpSegment* findNextWinding(SkTDArray<SkOpSpan*>* chase, int* nextStart, int* nextEnd,
                                  bool* unsortable);
     SkOpSegment* findNextXor(int* nextStart, int* nextEnd, bool* unsortable);
-    int findT(double t, const SkOpSegment* ) const;
-    SkOpSegment* findTop(int* tIndex, int* endIndex, bool* unsortable, bool onlySortable);
+    int findExactT(double t, const SkOpSegment* ) const;
+    int findOtherT(double t, const SkOpSegment* ) const;
+    int findT(double t, const SkPoint& , const SkOpSegment* ) const;
+    SkOpSegment* findTop(int* tIndex, int* endIndex, bool* unsortable, bool firstPass);
     void fixOtherTIndex();
-    void initWinding(int start, int end);
+    void initWinding(int start, int end, SkOpAngle::IncludeType angleIncludeType);
     void initWinding(int start, int end, double tHit, int winding, SkScalar hitDx, int oppWind,
                      SkScalar hitOppDx);
     bool isMissing(double startT, const SkPoint& pt) const;
     bool isTiny(const SkOpAngle* angle) const;
-    bool joinCoincidence(SkOpSegment* other, double otherT, int step, bool cancel);
+    bool joinCoincidence(SkOpSegment* other, double otherT, const SkPoint& otherPt, int step,
+                         bool cancel);
     SkOpSpan* markAndChaseDoneBinary(int index, int endIndex);
     SkOpSpan* markAndChaseDoneUnary(int index, int endIndex);
     SkOpSpan* markAndChaseWinding(const SkOpAngle* angle, int winding, int oppWinding);
@@ -281,39 +338,31 @@ public:
     void markDoneUnary(int index);
     bool nextCandidate(int* start, int* end) const;
     int nextSpan(int from, int step) const;
+    void pinT(const SkPoint& pt, double* t);
     void setUpWindings(int index, int endIndex, int* sumMiWinding, int* sumSuWinding,
             int* maxWinding, int* sumWinding, int* oppMaxWinding, int* oppSumWinding);
-    enum SortAngleKind {
-        kMustBeOrdered_SortAngleKind, // required for winding calc
-        kMayBeUnordered_SortAngleKind // ok for find top
-    };
-    static bool SortAngles(const SkTArray<SkOpAngle, true>& angles,  // FIXME: replace with
-                           SkTArray<SkOpAngle*, true>* angleList,    //  Sort Angles 2
-                           SortAngleKind );
-    static bool SortAngles2(const SkTArray<SkOpAngle, true>& angles,
-                            SkTArray<SkOpAngle*, true>* angleList);
+    void sortAngles();
     bool subDivide(int start, int end, SkPoint edge[4]) const;
     bool subDivide(int start, int end, SkDCubic* result) const;
     void undoneSpan(int* start, int* end);
     int updateOppWindingReverse(const SkOpAngle* angle) const;
     int updateWindingReverse(const SkOpAngle* angle) const;
     static bool UseInnerWinding(int outerWinding, int innerWinding);
+    static bool UseInnerWindingReverse(int outerWinding, int innerWinding);
     int windingAtT(double tHit, int tIndex, bool crossOpp, SkScalar* dx) const;
     int windSum(const SkOpAngle* angle) const;
-
-#ifdef SK_DEBUG
+// available for testing only
+#if defined(SK_DEBUG) || !FORCE_RELEASE
     int debugID() const {
         return fID;
+    }
+#else
+    int debugID() const {
+        return -1;
     }
 #endif
 #if DEBUG_ACTIVE_SPANS || DEBUG_ACTIVE_SPANS_FIRST_ONLY
     void debugShowActiveSpans() const;
-#endif
-#if DEBUG_SORT || DEBUG_SWAP_TOP
-    void debugShowSort(const char* fun, const SkTArray<SkOpAngle*, true>& angles, int first,
-            const int contourWinding, const int oppContourWinding, bool sortable) const;
-    void debugShowSort(const char* fun, const SkTArray<SkOpAngle*, true>& angles, int first,
-            bool sortable);
 #endif
 #if DEBUG_CONCIDENT
     void debugShowTs(const char* prefix) const;
@@ -321,6 +370,14 @@ public:
 #if DEBUG_SHOW_WINDING
     int debugShowWindingValues(int slotCount, int ofInterest) const;
 #endif
+    const SkTDArray<SkOpSpan>& debugSpans() const;
+    void debugValidate() const;
+    // available to testing only
+    const SkOpAngle* debugLastAngle() const;
+    void dumpAngles() const;
+    void dumpContour(int firstID, int lastID) const;
+    void dumpPts() const;
+    void dumpSpans() const;
 
 private:
     struct MissingSpan  {
@@ -332,40 +389,66 @@ private:
         SkPoint fPt;
     };
 
-    bool activeAngleOther(int index, int* done, SkTArray<SkOpAngle, true>* angles);
-    bool activeAngleInner(int index, int* done, SkTArray<SkOpAngle, true>* angles);
+    const SkOpAngle* activeAngleInner(int index, int* start, int* end, bool* done,
+                                      bool* sortable) const;
+    const SkOpAngle* activeAngleOther(int index, int* start, int* end, bool* done,
+                                      bool* sortable) const;
     bool activeOp(int xorMiMask, int xorSuMask, int index, int endIndex, SkPathOp op,
-                  int* sumMiWinding, int* sumSuWinding, int* maxWinding, int* sumWinding,
-                  int* oppMaxWinding, int* oppSumWinding);
-    bool activeWinding(int index, int endIndex, int* maxWinding, int* sumWinding);
-    void addAngle(SkTArray<SkOpAngle, true>* angles, int start, int end) const;
+                  int* sumMiWinding, int* sumSuWinding);
+    bool activeWinding(int index, int endIndex, int* sumWinding);
     void addCancelOutsides(const SkPoint& startPt, const SkPoint& endPt, SkOpSegment* other);
     void addCoinOutsides(const SkPoint& startPt, const SkPoint& endPt, SkOpSegment* other);
-    void addTPair(double t, SkOpSegment* other, double otherT, bool borrowWind, const SkPoint& pt,
-                  const SkPoint& oPt);
-    void addTwoAngles(int start, int end, SkTArray<SkOpAngle, true>* angles) const;
+    SkOpAngle* addSingletonAngleDown(SkOpSegment** otherPtr, SkOpAngle** );
+    SkOpAngle* addSingletonAngleUp(SkOpSegment** otherPtr, SkOpAngle** );
+    SkOpAngle* addSingletonAngles(int step);
+    void alignSpan(const SkPoint& newPt, double newT, const SkOpSegment* other, double otherT,
+                   const SkOpSegment* other2, SkOpSpan* oSpan, SkTDArray<AlignedSpan>* );
     bool betweenPoints(double midT, const SkPoint& pt1, const SkPoint& pt2) const;
-    bool buildAngles(int index, SkTArray<SkOpAngle, true>* angles, bool includeOpp) const;
-    void buildAnglesInner(int index, SkTArray<SkOpAngle, true>* angles) const;
+    void bumpCoincidentBlind(bool binary, int index, int last);
     void bumpCoincidentThis(const SkOpSpan& oTest, bool binary, int* index,
                            SkTArray<SkPoint, true>* outsideTs);
+    void bumpCoincidentOBlind(int index, int last);
     void bumpCoincidentOther(const SkOpSpan& oTest, int* index,
                            SkTArray<SkPoint, true>* outsideTs);
     bool bumpSpan(SkOpSpan* span, int windDelta, int oppDelta);
-    bool clockwise(int tStart, int tEnd) const;
+    bool calcLoopSpanCount(const SkOpSpan& thisSpan, int* smallCounts);
+    bool checkForSmall(const SkOpSpan* span, const SkPoint& pt, double newT,
+                       int* less, int* more) const;
+    void checkLinks(const SkOpSpan* ,
+                    SkTArray<MissingSpan, true>* missingSpans) const;
+    static void CheckOneLink(const SkOpSpan* test, const SkOpSpan* oSpan,
+                             const SkOpSpan* oFirst, const SkOpSpan* oLast,
+                             const SkOpSpan** missingPtr,
+                             SkTArray<MissingSpan, true>* missingSpans);
+    int checkSetAngle(int tIndex) const;
+    void checkSmallCoincidence(const SkOpSpan& span, SkTArray<MissingSpan, true>* );
+    bool coincidentSmall(const SkPoint& pt, double t, const SkOpSegment* other) const;
+    bool clockwise(int tStart, int tEnd, bool* swap) const;
     static void ComputeOneSum(const SkOpAngle* baseAngle, SkOpAngle* nextAngle,
                               SkOpAngle::IncludeType );
     static void ComputeOneSumReverse(const SkOpAngle* baseAngle, SkOpAngle* nextAngle,
                                      SkOpAngle::IncludeType );
+    bool containsT(double t, const SkOpSegment* other, double otherT) const;
     bool decrementSpan(SkOpSpan* span);
-    int findStartingEdge(const SkTArray<SkOpAngle*, true>& sorted, int start, int end);
+    int findEndSpan(int endIndex) const;
+    int findStartSpan(int startIndex) const;
+    int firstActive(int tIndex) const;
+    const SkOpSpan& firstSpan(const SkOpSpan& thisSpan) const;
     void init(const SkPoint pts[], SkPath::Verb verb, bool operand, bool evenOdd);
+    bool inCoincidentSpan(double t, const SkOpSegment* other) const;
+    bool inLoop(const SkOpAngle* baseAngle, int spanCount, int* indexPtr) const;
+#if OLD_CHASE
     bool isSimple(int end) const;
+#else
+    SkOpSegment* isSimple(int* end, int* step);
+#endif
     bool isTiny(int index) const;
+    const SkOpSpan& lastSpan(const SkOpSpan& thisSpan) const;
     void matchWindingValue(int tIndex, double t, bool borrowWind);
     SkOpSpan* markAndChaseDone(int index, int endIndex, int winding);
     SkOpSpan* markAndChaseDoneBinary(const SkOpAngle* angle, int winding, int oppWinding);
-    SkOpSpan* markAndChaseWinding(const SkOpAngle* angle, const int winding);
+    SkOpSpan* markAndChaseWinding(const SkOpAngle* angle, int winding);
+    SkOpSpan* markAndChaseWinding(int index, int endIndex, int winding);
     SkOpSpan* markAndChaseWinding(int index, int endIndex, int winding, int oppWinding);
     SkOpSpan* markAngle(int maxWinding, int sumWinding, const SkOpAngle* angle);
     void markDoneBinary(int index, int winding, int oppWinding);
@@ -378,12 +461,17 @@ private:
     SkOpSpan* markOneWinding(const char* funName, int tIndex, int winding, int oppWinding);
     void markWinding(int index, int winding);
     void markWinding(int index, int winding, int oppWinding);
-    void markUnsortable(int start, int end);
     bool monotonicInY(int tStart, int tEnd) const;
-    bool multipleSpans(int end) const;
-    SkOpSegment* nextChase(int* index, const int step, int* min, SkOpSpan** last);
+
+    bool multipleEnds() const { return fTs[count() - 2].fT == 1; }
+    bool multipleStarts() const { return fTs[1].fT == 0; }
+
+    SkOpSegment* nextChase(int* index, int* step, int* min, SkOpSpan** last);
     int nextExactSpan(int from, int step) const;
     bool serpentine(int tStart, int tEnd) const;
+    void setCoincidentRange(const SkPoint& startPt, const SkPoint& endPt,  SkOpSegment* other);
+    void setFromAngle(int endIndex, SkOpAngle* );
+    void setToAngle(int endIndex, SkOpAngle* );
     void setUpWindings(int index, int endIndex, int* sumMiWinding,
             int* maxWinding, int* sumWinding);
     void subDivideBounds(int start, int end, SkPathOpsBounds* bounds) const;
@@ -395,7 +483,6 @@ private:
     int updateWinding(int index, int endIndex) const;
     int updateWinding(const SkOpAngle* angle) const;
     int updateWindingReverse(int index, int endIndex) const;
-    static bool UseInnerWindingReverse(int outerWinding, int innerWinding);
     SkOpSpan* verifyOneWinding(const char* funName, int tIndex);
     SkOpSpan* verifyOneWindingU(const char* funName, int tIndex);
 
@@ -412,8 +499,15 @@ private:
 #if DEBUG_SWAP_TOP
     bool controlsContainedByEnds(int tStart, int tEnd) const;
 #endif
+    void debugAddAngle(int start, int end);
 #if DEBUG_CONCIDENT
-     void debugAddTPair(double t, const SkOpSegment& other, double otherT) const;
+    void debugAddTPair(double t, const SkOpSegment& other, double otherT) const;
+#endif
+#if DEBUG_ANGLE
+    void debugCheckPointsEqualish(int tStart, int tEnd) const;
+#endif
+#if DEBUG_SWAP_TOP
+    int debugInflections(int index, int endIndex) const;
 #endif
 #if DEBUG_MARK_DONE || DEBUG_UNSORTABLE
     void debugShowNewWinding(const char* fun, const SkOpSpan& span, int winding);
@@ -424,27 +518,36 @@ private:
         return value < 0 ? '?' : value <= 9 ? '0' + value : '+';
     }
 #endif
-    void debugValidate() const;
-#ifdef SK_DEBUG
-    void dumpPts() const;
+    // available to testing only
+    void debugConstruct();
+    void debugConstructCubic(SkPoint shortQuad[4]);
+    void debugConstructLine(SkPoint shortQuad[2]);
+    void debugConstructQuad(SkPoint shortQuad[3]);
+    void debugReset();
     void dumpDPts() const;
-    void dumpSpans() const;
-#endif
+    void dumpSpan(int index) const;
 
     const SkPoint* fPts;
     SkPathOpsBounds fBounds;
     // FIXME: can't convert to SkTArray because it uses insert
-    SkTDArray<SkOpSpan> fTs;  // two or more (always includes t=0 t=1)
+    SkTDArray<SkOpSpan> fTs;  // 2+ (always includes t=0 t=1) -- at least (number of spans) + 1
+    SkOpAngleSet fAngles;  // empty or 2+ -- (number of non-zero spans) * 2
     // OPTIMIZATION: could pack donespans, verb, operand, xor into 1 int-sized value
     int fDoneSpans;  // quick check that segment is finished
     // OPTIMIZATION: force the following to be byte-sized
     SkPath::Verb fVerb;
+    bool fLoop;   // set if cubic intersects itself
+    bool fMultiples;  // set if curve intersects multiple other curves at one interior point
     bool fOperand;
     bool fXor;  // set if original contour had even-odd fill
     bool fOppXor;  // set if opposite operand had even-odd fill
-#ifdef SK_DEBUG
+    bool fSmall;  // set if some span is small
+    bool fTiny;  // set if some span is tiny
+#if defined(SK_DEBUG) || !FORCE_RELEASE
     int fID;
 #endif
+
+    friend class PathOpsSegmentTester;
 };
 
 #endif

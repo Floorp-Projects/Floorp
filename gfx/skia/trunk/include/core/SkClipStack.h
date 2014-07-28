@@ -16,6 +16,7 @@
 #include "SkTDArray.h"
 #include "SkTLazy.h"
 
+class SkCanvasClipVisitor;
 
 // Because a single save/restore state can have multiple clips, this class
 // stores the stack depth (fSaveCount) and clips (fDeque) separately.
@@ -47,7 +48,10 @@ public:
             kRRect_Type,
             //!< This element combines a path with the current clip using a set operation
             kPath_Type,
+
+            kLastType = kPath_Type
         };
+        static const int kTypeCnt = kLastType + 1;
 
         Element() {
             this->initCommon(0, SkRegion::kReplace_Op, false);
@@ -73,6 +77,9 @@ public:
 
         //!< Call to get the type of the clip element.
         Type getType() const { return fType; }
+
+        //!< Call to get the save count associated with this clip element.
+        int getSaveCount() const { return fSaveCount; }
 
         //!< Call if getType() is kPath to get the path.
         const SkPath& getPath() const { SkASSERT(kPath_Type == fType); return *fPath.get(); }
@@ -155,6 +162,19 @@ public:
         bool isInverseFilled() const {
             return kPath_Type == fType && fPath.get()->isInverseFillType();
         }
+
+        /**
+        * Replay this clip into the visitor.
+        */
+        void replay(SkCanvasClipVisitor*) const;
+
+#ifdef SK_DEVELOPER
+        /**
+         * Dumps the element to SkDebugf. This is intended for Skia development debugging
+         * Don't rely on the existence of this function or the formatting of its output.
+         */
+        void dump() const;
+#endif
 
     private:
         friend class SkClipStack;
@@ -331,6 +351,14 @@ public:
     static const int32_t kWideOpenGenID = 2;    // all pixels writeable
 
     int32_t getTopmostGenID() const;
+
+#ifdef SK_DEVELOPER
+    /**
+     * Dumps the contents of the clip stack to SkDebugf. This is intended for Skia development
+     * debugging. Don't rely on the existence of this function or the formatting of its output.
+     */
+    void dump() const;
+#endif
 
 public:
     class Iter {

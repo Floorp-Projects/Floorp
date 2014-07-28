@@ -78,6 +78,12 @@ GrTexture* SkImage::getTexture() {
     return as_IB(this)->onGetTexture();
 }
 
+SkShader* SkImage::newShader(SkShader::TileMode tileX,
+                             SkShader::TileMode tileY,
+                             const SkMatrix* localMatrix) const {
+    return as_IB(this)->onNewShader(tileX, tileY, localMatrix);
+}
+
 SkData* SkImage::encode(SkImageEncoder::Type type, int quality) const {
     SkBitmap bm;
     if (as_IB(this)->getROPixels(&bm)) {
@@ -90,7 +96,7 @@ SkData* SkImage::encode(SkImageEncoder::Type type, int quality) const {
 
 static bool raster_canvas_supports(const SkImageInfo& info) {
     switch (info.fColorType) {
-        case kPMColor_SkColorType:
+        case kN32_SkColorType:
             return kUnpremul_SkAlphaType != info.fAlphaType;
         case kRGB_565_SkColorType:
             return true;
@@ -103,18 +109,16 @@ static bool raster_canvas_supports(const SkImageInfo& info) {
 }
 
 bool SkImage_Base::onReadPixels(SkBitmap* bitmap, const SkIRect& subset) const {
-    SkImageInfo info;
-
     if (bitmap->pixelRef()) {
-        if (!bitmap->asImageInfo(&info)) {
+        const SkImageInfo info = bitmap->info();
+        if (kUnknown_SkColorType == info.colorType()) {
             return false;
         }
         if (!raster_canvas_supports(info)) {
             return false;
         }
     } else {
-        SkImageInfo info = SkImageInfo::MakeN32Premul(subset.width(),
-                                                      subset.height());
+        const SkImageInfo info = SkImageInfo::MakeN32Premul(subset.width(), subset.height());
         SkBitmap tmp;
         if (!tmp.allocPixels(info)) {
             return false;
