@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['src']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+JAR_MANIFESTS += ['jar.mn']
 
 XPIDL_SOURCES += [
     'nsISessionStartup.idl',
@@ -13,12 +16,38 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'sessionstore'
 
-XPCSHELL_TESTS_MANIFESTS += [
-    'test/unit/xpcshell.ini',
+EXTRA_COMPONENTS += [
+    'nsSessionStartup.js',
+    'nsSessionStore.js',
+    'nsSessionStore.manifest',
 ]
 
-BROWSER_CHROME_MANIFESTS += [
-    'test/browser.ini',
+JS_MODULES_PATH = 'modules/sessionstore'
+
+EXTRA_JS_MODULES = [
+    'ContentRestore.jsm',
+    'DocShellCapabilities.jsm',
+    'FrameTree.jsm',
+    'GlobalState.jsm',
+    'PageStyle.jsm',
+    'PrivacyFilter.jsm',
+    'PrivacyLevel.jsm',
+    'RecentlyClosedTabsAndWindowsMenuUtils.jsm',
+    'SessionCookies.jsm',
+    'SessionFile.jsm',
+    'SessionHistory.jsm',
+    'SessionMigration.jsm',
+    'SessionStorage.jsm',
+    'SessionWorker.js',
+    'SessionWorker.jsm',
+    'TabAttributes.jsm',
+    'TabState.jsm',
+    'TabStateCache.jsm',
+    'Utils.jsm',
 ]
 
-JAR_MANIFESTS += ['jar.mn']
+EXTRA_PP_JS_MODULES += [
+    'SessionSaver.jsm',
+    'SessionStore.jsm',
+]
+

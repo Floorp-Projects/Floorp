@@ -77,22 +77,22 @@ loop.panel = (function(_, mozL10n) {
                               __("display_name_available_status");
 
       return (
-        React.DOM.div( {className:"footer component-spacer"}, 
-          React.DOM.div( {className:"do-not-disturb"}, 
-            React.DOM.p( {className:"dnd-status", onClick:this.showDropdownMenu}, 
-              React.DOM.span(null, availabilityText),
-              React.DOM.i( {className:availabilityStatus})
-            ),
-            React.DOM.ul( {className:availabilityDropdown,
-                onMouseLeave:this.hideDropdownMenu}, 
-              React.DOM.li( {onClick:this.changeAvailability("available"),
-                  className:"dnd-menu-item dnd-make-available"}, 
-                React.DOM.i( {className:"status status-available"}),
+        React.DOM.div({className: "footer component-spacer"}, 
+          React.DOM.div({className: "do-not-disturb"}, 
+            React.DOM.p({className: "dnd-status", onClick: this.showDropdownMenu}, 
+              React.DOM.span(null, availabilityText), 
+              React.DOM.i({className: availabilityStatus})
+            ), 
+            React.DOM.ul({className: availabilityDropdown, 
+                onMouseLeave: this.hideDropdownMenu}, 
+              React.DOM.li({onClick: this.changeAvailability("available"), 
+                  className: "dnd-menu-item dnd-make-available"}, 
+                React.DOM.i({className: "status status-available"}), 
                 React.DOM.span(null, __("display_name_available_status"))
-              ),
-              React.DOM.li( {onClick:this.changeAvailability("do-not-disturb"),
-                  className:"dnd-menu-item dnd-make-unavailable"}, 
-                React.DOM.i( {className:"status status-dnd"}),
+              ), 
+              React.DOM.li({onClick: this.changeAvailability("do-not-disturb"), 
+                  className: "dnd-menu-item dnd-make-unavailable"}, 
+                React.DOM.i({className: "status status-dnd"}), 
                 React.DOM.span(null, __("display_name_dnd_status"))
               )
             )
@@ -115,10 +115,10 @@ loop.panel = (function(_, mozL10n) {
 
       if (this.state.seenToS == "unseen") {
         navigator.mozLoop.setLoopCharPref('seenToS', 'seen');
-        return React.DOM.p( {className:"terms-service",
-                  dangerouslySetInnerHTML:{__html: tosHTML}});
+        return React.DOM.p({className: "terms-service", 
+                  dangerouslySetInnerHTML: {__html: tosHTML}});
       } else {
-        return React.DOM.div(null );
+        return React.DOM.div(null);
       }
     }
   });
@@ -130,11 +130,11 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       return (
-        React.DOM.div( {className:"component-spacer share generate-url"}, 
-          React.DOM.div( {className:"description"}, 
-            React.DOM.p( {className:"description-content"}, this.props.summary)
-          ),
-          React.DOM.div( {className:"action"}, 
+        React.DOM.div({className: "component-spacer share generate-url"}, 
+          React.DOM.div({className: "description"}, 
+            React.DOM.p({className: "description-content"}, this.props.summary)
+          ), 
+          React.DOM.div({className: "action"}, 
             this.props.children
           )
         )
@@ -155,6 +155,10 @@ loop.panel = (function(_, mozL10n) {
     * Returns a random 5 character string used to identify
     * the conversation.
     * XXX this will go away once the backend changes
+    * @note:
+    * - When we get back a callUrl we use setLoopCharPref to store the token
+    *   (the last fragment of the URL) so that it can be used to ignore&block
+    *   the call. The preference is used by the conversation router.
     */
     conversationIdentifier: function() {
       return Math.random().toString(36).substring(5);
@@ -167,22 +171,28 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _onCallUrlReceived: function(err, callUrlData) {
-      // XXX this initializer is a bug, as it will cause
-      // setState to set the callUrl to false if one is not returned.
-      // Should decide on an implement correct behavior and state
-      // (eg set widget as disabled, state.callUrl == '')
-      //
-      var callUrl = false;
-
       this.props.notifier.clear();
 
       if (err) {
         this.props.notifier.errorL10n("unable_retrieve_url");
+        this.setState({pending: false});
       } else {
-        callUrl = callUrlData.callUrl || callUrlData.call_url;
-      }
+        try {
+          var callUrl = new window.URL(callUrlData.callUrl ||
+                                       callUrlData.call_url);
+          // XXX the current server vers does not implement the callToken field
+          // but it exists in the API. This workaround should be removed in the future
+          var token = callUrlData.callToken ||
+                      callUrl.pathname.split('/').pop();
 
-      this.setState({pending: false, callUrl: callUrl});
+          navigator.mozLoop.setLoopCharPref('loopToken', token);
+          this.setState({pending: false, callUrl: callUrl.href});
+        } catch(e) {
+          console.log(e);
+          this.props.notifier.errorL10n("unable_retrieve_url");
+          this.setState({pending: false});
+        }
+      }
     },
 
     render: function() {
@@ -192,10 +202,10 @@ loop.panel = (function(_, mozL10n) {
       // from the react lib.
       var cx = React.addons.classSet;
       return (
-        PanelLayout( {summary:__("share_link_header_text")}, 
-          React.DOM.div( {className:"invite"}, 
-            React.DOM.input( {type:"url", value:this.state.callUrl, readOnly:"true",
-                   className:cx({'pending': this.state.pending})} )
+        PanelLayout({summary: __("share_link_header_text")}, 
+          React.DOM.div({className: "invite"}, 
+            React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
+                   className: cx({'pending': this.state.pending})})
           )
         )
       );
@@ -214,10 +224,10 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       return (
         React.DOM.div(null, 
-          CallUrlResult( {client:this.props.client,
-                       notifier:this.props.notifier} ),
-          ToSView(null ),
-          AvailabilityDropdown(null )
+          CallUrlResult({client: this.props.client, 
+                       notifier: this.props.notifier}), 
+          ToSView(null), 
+          AvailabilityDropdown(null)
         )
       );
     }
@@ -284,8 +294,8 @@ loop.panel = (function(_, mozL10n) {
       var client = new loop.Client({
         baseServerUrl: navigator.mozLoop.serverUrl
       });
-      this.loadReactComponent(PanelView( {client:client,
-                                         notifier:this._notifier} ));
+      this.loadReactComponent(PanelView({client: client, 
+                                         notifier: this._notifier}));
     }
   });
 

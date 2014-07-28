@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "nsContentUtils.h"
 
 class nsContentList;
 class nsIDOMHTMLOptionElement;
@@ -157,6 +158,11 @@ public:
   void SetAutofocus(bool aVal, ErrorResult& aRv)
   {
     SetHTMLBoolAttr(nsGkAtoms::autofocus, aVal, aRv);
+  }
+  void GetAutocomplete(DOMString& aValue);
+  void SetAutocomplete(const nsAString& aValue, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
   }
   bool Disabled() const
   {
@@ -606,6 +612,7 @@ protected:
 
   /** The options[] array */
   nsRefPtr<HTMLOptionsCollection> mOptions;
+  nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
   /** false if the parser is in the middle of adding children. */
   bool            mIsDoneAddingChildren;
   /** true if our disabled state has changed from the default **/

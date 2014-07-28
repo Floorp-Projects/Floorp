@@ -6,8 +6,6 @@
 
 PARALLEL_DIRS += ['interfaces']
 
-TEST_DIRS += ['tests']
-
 EXTRA_JS_MODULES += [
     'Payment.jsm',
 ]
@@ -18,3 +16,4 @@ EXTRA_COMPONENTS += [
     'PaymentFlowInfo.js',
 ]
 
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
