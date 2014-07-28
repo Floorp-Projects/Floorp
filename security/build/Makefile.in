@@ -303,7 +303,7 @@ endif # MOZ_FOLD_LIBS
 # Filter-out $(LIBRARY_NAME) because it's already handled in config/rules.mk.
 NSS_DIST_DLL_FILES := $(addprefix $(DIST)/lib/$(DLL_PREFIX),$(addsuffix $(DLL_SUFFIX),$(filter-out $(LIBRARY_NAME),$(NSS_DLLS)) $(NSS_EXTRA_DLLS)))
 NSS_DIST_DLL_DEST := $(DIST)/bin
-NSS_DIST_DLL_TARGET := libs target
+NSS_DIST_DLL_TARGET := target
 INSTALL_TARGETS += NSS_DIST_DLL
 
 ifeq ($(OS_ARCH)_$(1), SunOS_softokn3)
@@ -316,7 +316,7 @@ NSS_SDK_LIB_FILES := \
   $(addprefix $(DIST)/bin/$(DLL_PREFIX),$(addsuffix $(DLL_SUFFIX),$(NSS_DLLS))) \
   $(NULL)
 NSS_SDK_LIB_DEST := $(DIST)/sdk/lib
-NSS_SDK_LIB_TARGET := libs target
+NSS_SDK_LIB_TARGET := target
 INSTALL_TARGETS += NSS_SDK_LIB
 
 ifdef MOZ_FOLD_LIBS
