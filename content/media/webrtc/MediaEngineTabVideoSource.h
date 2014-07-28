@@ -30,6 +30,10 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     virtual nsresult Stop(mozilla::SourceMediaStream*, mozilla::TrackID);
     virtual nsresult Config(bool, uint32_t, bool, uint32_t, bool, uint32_t, int32_t);
     virtual bool IsFake();
+    virtual const MediaSourceType GetMediaSource() {
+      return MediaSourceType::Browser;
+    }
+
     void Draw();
 
     class StartRunnable : public nsRunnable {

@@ -41,7 +41,7 @@ public class BrowserDB {
         EXCLUDE_PINNED_SITES
     }
 
-    private static BrowserDBIface sDb = null;
+    private static BrowserDBIface sDb;
     private static SuggestedSites sSuggestedSites;
 
     public interface BrowserDBIface {

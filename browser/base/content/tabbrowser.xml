@@ -361,6 +361,17 @@
         <parameter name="aWindow"/>
         <body>
         <![CDATA[
+          // When not using remote browsers, we can take a fast path by getting
+          // directly from the content window to the browser without looping
+          // over all browsers.
+          if (!gMultiProcessBrowser) {
+            let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebNavigation)
+                                 .QueryInterface(Ci.nsIDocShell)
+                                 .chromeEventHandler;
+            return this._getTabForBrowser(browser);
+          }
+
           for (let i = 0; i < this.browsers.length; i++) {
             if (this.browsers[i].contentWindow == aWindow)
               return this.tabs[i];

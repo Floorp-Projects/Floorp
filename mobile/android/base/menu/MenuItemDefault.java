@@ -23,10 +23,10 @@ public class MenuItemDefault extends TextView
     private Drawable mState;
     private static Rect sIconBounds;
 
-    private boolean mCheckable = false;
-    private boolean mChecked = false;
-    private boolean mHasSubMenu = false;
-    private boolean mShowIcon = false;
+    private boolean mCheckable;
+    private boolean mChecked;
+    private boolean mHasSubMenu;
+    private boolean mShowIcon;
 
     public MenuItemDefault(Context context) {
         this(context, null);

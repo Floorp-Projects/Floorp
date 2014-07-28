@@ -414,6 +414,7 @@ private:
 
   // protected with mMutex:
   webrtc::VideoEngine* mScreenEngine;
+  webrtc::VideoEngine* mBrowserEngine;
   webrtc::VideoEngine* mWinEngine;
   webrtc::VideoEngine* mAppEngine;
   webrtc::VideoEngine* mVideoEngine;
@@ -423,11 +424,13 @@ private:
   webrtc::Config mAppEngineConfig;
   webrtc::Config mWinEngineConfig;
   webrtc::Config mScreenEngineConfig;
+  webrtc::Config mBrowserEngineConfig;
 
   // Need this to avoid unneccesary WebRTC calls while enumerating.
   bool mVideoEngineInit;
   bool mAudioEngineInit;
   bool mScreenEngineInit;
+  bool mBrowserEngineInit;
   bool mWinEngineInit;
   bool mAppEngineInit;
   bool mHasTabVideoSource;
