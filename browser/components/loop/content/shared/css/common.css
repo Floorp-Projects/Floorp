@@ -15,17 +15,25 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans;
-  font-size: 14px;
+  font-family: "Lucida Grande", sans-serif;
+  font-size: 12px;
   background: #fbfbfb;
 }
 
 button {
-  font-size: .9em; /* for some reason, text is larger within <button> */
+  /* Resetting default <button> font properties; eg. strangely enough, FF mac
+     wants to use Helvetica/12px whatever we define for parent elements */
+  font-family: "Lucida Grande", sans-serif;
+  font-size: 1em;
 }
 
 img {
   border: none;
+}
+
+h1, h2, h3 {
+  font-family: "Open Sans", sans-serif;
+  color: #666;
 }
 
 /* Helpers */
@@ -73,12 +81,22 @@ img {
   border: none;
   color: #fff;
   text-decoration: none;
-  height: 26px;
-  padding: 0 0.5em;
+  padding: .3em .6em;
+  border: 1px solid transparent;
   border-radius: 2px;
   cursor: pointer;
   font-size: .9em;
   text-align: center;
+}
+
+  button.btn {
+       /* for some reason, buttons respond differently to setting padding than
+          regular links */
+       padding: .3em .3em .3em .5em;
+  }
+
+.btn-large {
+  padding: .4em 1.6em;
 }
 
 .btn-info {
@@ -310,3 +328,39 @@ img {
   .linux h1 {
     font-family: 'Ubuntu Bold';
   }
+
+/* Web panel */
+
+.info-panel {
+  border-radius: 4px;
+  background: #fff;
+  padding: 20px 0;
+  border: 1px solid #e7e7e7;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .03);
+  margin-bottom: 25px;
+}
+
+.info-panel h1 {
+  font-size: 1.2em;
+  font-weight: 700;
+  padding: 20px 0;
+  text-align: center;
+  margin: 0;
+}
+
+.info-panel h4 {
+  color: #aaa;
+  text-align: center;
+  font-weight: 300;
+  margin: 0;
+}
+
+/* Logos */
+
+.firefox-logo {
+  background: transparent url(../img/firefox-logo.png) no-repeat center center;
+  background-size: contain;
+  width: 100px;
+  height: 100px;
+  margin: 0px auto; /* horizontal block centering */
+}
