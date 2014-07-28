@@ -17,11 +17,6 @@
     <org.mozilla.gecko.preferences.LinkPreference android:title="@string/pref_vendor_feedback"
                                                   url="about:feedback" />
 
-    <CheckBoxPreference android:key="android.not_a_preference.privacy.announcements.enabled"
-                        android:title="@string/pref_show_product_announcements"
-                        android:defaultValue="true"
-                        android:persistent="true" />
-
     <PreferenceCategory android:key="android.not_a_preference.datareporting.preferences"
                         android:title="@string/pref_category_datareporting">
 
