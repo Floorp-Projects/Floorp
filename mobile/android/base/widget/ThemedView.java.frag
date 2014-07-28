@@ -25,9 +25,9 @@ public class Themed@VIEW_NAME_SUFFIX@ extends @BASE_TYPE@
     protected static final int[] PRIVATE_FOCUSED_STATE_SET = { R.attr.state_private, android.R.attr.state_focused };
     protected static final int[] PRIVATE_STATE_SET = { R.attr.state_private };
 
-    private boolean mIsPrivate = false;
-    private boolean mIsLight = false;
-    private boolean mIsDark = false;
+    private boolean mIsPrivate;
+    private boolean mIsLight;
+    private boolean mIsDark;
     private boolean mAutoUpdateTheme = true;
 
     public Themed@VIEW_NAME_SUFFIX@(Context context, AttributeSet attrs) {

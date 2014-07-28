@@ -2,10 +2,19 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Provides shared infrastructure for the automated tests.
+ * Initialization of Form Autofill tests shared between all frameworks.
+ *
+ * A copy of this file is installed in each of the framework subfolders, this
+ * means it becomes a sibling of the test files in the final layout.  This is
+ * determined by how manifest "support-files" installation works.
  */
 
 "use strict";
+
+// The requestAutocomplete framework is available at this point, you can add
+// mochitest-chrome specific test initialization here.  If you need shared
+// functions or initialization that are not specific to mochitest-chrome,
+// consider adding them to "head_common.js" in the parent folder instead.
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
@@ -15,34 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormAutofill",
                                   "resource://gre/modules/FormAutofill.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
-
-let gTerminationTasks = [];
-let add_termination_task = taskFn => gTerminationTasks.push(taskFn);
-
-/**
- * None of the testing frameworks support asynchronous termination functions, so
- * this task must be registered later, after the other "add_task" calls.
- *
- * Even xpcshell doesn't support calling "add_task" in the "tail.js" file,
- * because it registers the task but does not wait for its termination,
- * potentially leading to intermittent failures in subsequent tests.
- */
-let terminationTaskFn = function* test_common_terminate() {
-  for (let taskFn of gTerminationTasks) {
-    try {
-      yield Task.spawn(taskFn);
-    } catch (ex) {
-      Output.print(ex);
-      Assert.ok(false);
-    }
-  }
-};
 
 /* --- Global helpers --- */
 
@@ -227,13 +210,7 @@ let TestData = {
 
 /* --- Initialization and termination functions common to all tests --- */
 
-add_task(function* test_common_initialize() {
-  // We must manually enable the feature while testing.
-  Services.prefs.setBoolPref("dom.forms.requestAutocomplete", true);
-  add_termination_task(function* () {
-    Services.prefs.clearUserPref("dom.forms.requestAutocomplete");
-  });
-
+add_task_in_parent_process(function* () {
   // If required, we return a mock response instead of displaying the UI.
   let mockIntegrationFn = base => ({
     createRequestAutocompleteUI: Task.async(function* () {
@@ -256,5 +233,13 @@ add_task(function* test_common_initialize() {
   FormAutofill.registerIntegration(mockIntegrationFn);
   add_termination_task(function* () {
     FormAutofill.unregisterIntegration(mockIntegrationFn);
+  });
+});
+
+add_task_in_both_processes(function* () {
+  // We must manually enable the feature while testing.
+  Services.prefs.setBoolPref("dom.forms.requestAutocomplete", true);
+  add_termination_task(function* () {
+    Services.prefs.clearUserPref("dom.forms.requestAutocomplete");
   });
 });
