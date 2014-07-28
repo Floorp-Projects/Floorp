@@ -210,6 +210,8 @@ if CONFIG['GNU_CC']:
         '-Wno-int-to-pointer-cast',
         '-Wno-sign-compare',
         '-Wno-type-limits',
+        '-Wno-missing-field-initializers',
+        '-Wno-conversion',
     ]
     if CONFIG['CLANG_CXX']:
         CFLAGS += [
