@@ -571,6 +571,7 @@ if CONFIG['MOZ_B2G_BT']:
             'BluetoothDevice2.webidl',
             'BluetoothDiscoveryHandle.webidl',
             'BluetoothManager2.webidl',
+            'BluetoothPairingHandle.webidl',
         ]
     else:
         WEBIDL_FILES += [
@@ -695,6 +696,7 @@ if CONFIG['MOZ_B2G_BT']:
         GENERATED_EVENTS_WEBIDL_FILES += [
             'BluetoothAdapterEvent.webidl',
             'BluetoothAttributeEvent.webidl',
+            'BluetoothPairingEvent.webidl',
         ]
     else:
         GENERATED_EVENTS_WEBIDL_FILES += [
