@@ -21,12 +21,14 @@ namespace gmp {
 // pool.
 static StaticAutoPtr<nsTArray<ipc::Shmem>> sGmpFreelist[GMPSharedMemManager::kGMPNumTypes];
 static uint32_t sGMPShmemManagerCount = 0;
+static uint32_t sGmpAllocated[GMPSharedMemManager::kGMPNumTypes]; // 0's
 
 GMPSharedMemManager::GMPSharedMemManager()
 {
   if (!sGMPShmemManagerCount) {
     for (uint32_t i = 0; i < GMPSharedMemManager::kGMPNumTypes; i++) {
       sGmpFreelist[i] = new nsTArray<ipc::Shmem>();
+      sGmpAllocated[i] = 0;
     }
   }
   sGMPShmemManagerCount++;
@@ -48,8 +50,6 @@ GetGmpFreelist(GMPSharedMemManager::GMPMemoryClasses aTypes)
 {
   return *(sGmpFreelist[aTypes]);
 }
-
-static uint32_t sGmpAllocated[GMPSharedMemManager::kGMPNumTypes]; // 0's
 
 bool
 GMPSharedMemManager::MgrAllocShmem(GMPMemoryClasses aClass, size_t aSize,

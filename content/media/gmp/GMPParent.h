@@ -7,6 +7,7 @@
 #define GMPParent_h_
 
 #include "GMPProcessParent.h"
+#include "GMPService.h"
 #include "GMPVideoDecoderParent.h"
 #include "GMPVideoEncoderParent.h"
 #include "mozilla/gmp/PGMPParent.h"
@@ -56,7 +57,9 @@ public:
 
   GMPParent();
 
-  nsresult Init(nsIFile* aPluginDir);
+  nsresult Init(GeckoMediaPluginService *aService, nsIFile* aPluginDir);
+  nsresult CloneFrom(const GMPParent* aOther);
+
   nsresult LoadProcess();
 
   // Called internally to close this if we don't need it
@@ -109,6 +112,7 @@ public:
 
 private:
   ~GMPParent();
+  nsRefPtr<GeckoMediaPluginService> mService;
   bool EnsureProcessLoaded();
   nsresult ReadGMPMetaData();
 #ifdef MOZ_CRASHREPORTER
@@ -132,7 +136,8 @@ private:
   nsCString mVersion;
   nsTArray<nsAutoPtr<GMPCapability>> mCapabilities;
   GMPProcessParent* mProcess;
-  bool mDeleteProcessOnUnload;
+  bool mDeleteProcessOnlyOnUnload;
+  bool mAbnormalShutdownInProgress;
 
   nsTArray<nsRefPtr<GMPVideoDecoderParent>> mVideoDecoders;
   nsTArray<nsRefPtr<GMPVideoEncoderParent>> mVideoEncoders;
