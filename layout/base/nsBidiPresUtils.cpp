@@ -1396,9 +1396,9 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
   // This method is called from nsBlockFrame::PlaceLine via the call to
   // bidiUtils->ReorderFrames, so this is guaranteed to be after the inlines
   // have been reflowed, which is required for GetUsedMargin/Border/Padding
-  LogicalMargin margin(frameWM, aFrame->GetUsedMargin());
+  LogicalMargin margin(aLineWM, aFrame->GetUsedMargin());
   if (isFirst) {
-    aStart += margin.IStart(frameWM);
+    aStart += margin.IStart(aLineWM);
   }
 
   nscoord start = aStart;
@@ -1457,7 +1457,7 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
   aFrame->SetRect(aLineWM, logicalRect, aLineWidth);
 
   if (isLast) {
-    aStart += margin.IEnd(frameWM);
+    aStart += margin.IEnd(aLineWM);
   }
 }
 
@@ -1492,11 +1492,10 @@ nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
   // This method is called from nsBlockFrame::PlaceLine via the call to
   // bidiUtils->ReorderFrames, so this is guaranteed to be after the inlines
   // have been reflowed, which is required for GetUsedMargin/Border/Padding
-  WritingMode frameWM = aFirstChild->GetWritingMode();
-  LogicalMargin margin(frameWM, aFirstChild->GetUsedMargin());
+  LogicalMargin margin(aLineWM, aFirstChild->GetUsedMargin());
   if (!aFirstChild->GetPrevContinuation() &&
       !aFirstChild->FrameIsNonFirstInIBSplit())
-    startSpace = margin.IStart(frameWM);
+    startSpace = margin.IStart(aLineWM);
 
   nscoord start = LogicalRect(aLineWM, aFirstChild->GetRect(),
                               aLineWidth).IStart(aLineWM) - startSpace;
