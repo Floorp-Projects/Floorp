@@ -66,7 +66,7 @@ class TestBuildReader(unittest.TestCase):
         reader = self.reader('traversal-all-vars', enable_tests=True)
 
         sandboxes = list(reader.read_topsrcdir())
-        self.assertEqual(len(sandboxes), 4)
+        self.assertEqual(len(sandboxes), 3)
 
     def test_tiers_traversal(self):
         reader = self.reader('traversal-tier-simple')

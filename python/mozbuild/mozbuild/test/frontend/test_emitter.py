@@ -87,7 +87,6 @@ class TestEmitterBasic(unittest.TestCase):
 
         for o in objs:
             self.assertIsInstance(o, DirectoryTraversal)
-            self.assertEqual(o.parallel_dirs, [])
             self.assertEqual(o.test_dirs, [])
             self.assertEqual(len(o.tier_dirs), 0)
             self.assertEqual(len(o.tier_static_dirs), 0)
@@ -103,20 +102,19 @@ class TestEmitterBasic(unittest.TestCase):
     def test_traversal_all_vars(self):
         reader = self.reader('traversal-all-vars')
         objs = self.read_topsrcdir(reader, filter_common=False)
-        self.assertEqual(len(objs), 4)
+        self.assertEqual(len(objs), 3)
 
         for o in objs:
             self.assertIsInstance(o, DirectoryTraversal)
 
         reldirs = set([o.relativedir for o in objs])
-        self.assertEqual(reldirs, set(['', 'parallel', 'regular', 'test']))
+        self.assertEqual(reldirs, set(['', 'regular', 'test']))
 
         for o in objs:
             reldir = o.relativedir
 
             if reldir == '':
                 self.assertEqual(o.dirs, ['regular'])
-                self.assertEqual(o.parallel_dirs, ['parallel'])
                 self.assertEqual(o.test_dirs, ['test'])
 
     def test_tier_simple(self):

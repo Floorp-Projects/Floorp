@@ -32,9 +32,9 @@ interfaces = [
     'gamepad',
 ]
 
-PARALLEL_DIRS += ['interfaces/' + i for i in interfaces]
+DIRS += ['interfaces/' + i for i in interfaces]
 
-PARALLEL_DIRS += [
+DIRS += [
     'animation',
     'apps',
     'base',
@@ -91,16 +91,16 @@ PARALLEL_DIRS += [
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    PARALLEL_DIRS += ['plugins/ipc/hangui']
+    DIRS += ['plugins/ipc/hangui']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    PARALLEL_DIRS += [
+    DIRS += [
         'speakermanager',
         'wifi',
     ]
 
 if CONFIG['MOZ_B2G_RIL']:
-    PARALLEL_DIRS += [
+    DIRS += [
         'icc',
         'cellbroadcast',
         'mobileconnection',
@@ -109,24 +109,24 @@ if CONFIG['MOZ_B2G_RIL']:
     ]
 
 if CONFIG['MOZ_PAY']:
-    PARALLEL_DIRS += ['payment']
+    DIRS += ['payment']
 
 if CONFIG['MOZ_GAMEPAD']:
-    PARALLEL_DIRS += ['gamepad']
+    DIRS += ['gamepad']
 
 if CONFIG['MOZ_NFC']:
-    PARALLEL_DIRS += ['nfc']
+    DIRS += ['nfc']
 
 if CONFIG['MOZ_B2G']:
-    PARALLEL_DIRS += [
+    DIRS += [
         'downloads',
         'mobileid'
     ]
 
 if CONFIG['MOZ_B2G_BT_API_V2']:
-    PARALLEL_DIRS += ['bluetooth2']
+    DIRS += ['bluetooth2']
 else:
-    PARALLEL_DIRS += ['bluetooth']
+    DIRS += ['bluetooth']
 
 TEST_DIRS += [
     'tests',

@@ -530,7 +530,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         # Because of bug 925236 and possible other unknown race conditions,
         # don't parallelize the tools tier. There aren't many directories for
-        # this tier anyways, and none of them are under a PARALLEL_DIRS.
+        # this tier anyways.
         def tools_filter(current, subdirs):
             if current not in self._no_skip['tools'] \
                     or current.startswith('subtiers/'):
@@ -847,11 +847,6 @@ class RecursiveMakeBackend(CommonBackend):
         if obj.dirs:
             fh.write('DIRS := %s\n' % ' '.join(obj.dirs))
             self._traversal.add(backend_file.relobjdir, dirs=relativize(obj.dirs))
-
-        if obj.parallel_dirs:
-            fh.write('PARALLEL_DIRS := %s\n' % ' '.join(obj.parallel_dirs))
-            self._traversal.add(backend_file.relobjdir,
-                                parallel=relativize(obj.parallel_dirs))
 
         if obj.test_dirs:
             fh.write('TEST_DIRS := %s\n' % ' '.join(obj.test_dirs))

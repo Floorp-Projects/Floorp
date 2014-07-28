@@ -181,19 +181,9 @@ libs export tools::
 else
 
 define CREATE_SUBTIER_TRAVERSAL_RULE
-PARALLEL_DIRS_$(1) = $$(addsuffix _$(1),$$(PARALLEL_DIRS))
-
-.PHONY: $(1) $$(PARALLEL_DIRS_$(1))
-
-ifdef PARALLEL_DIRS
-$$(PARALLEL_DIRS_$(1)): %_$(1): %/Makefile
-	+@$$(call SUBMAKE,$(1),$$*)
-endif
+.PHONY: $(1)
 
 $(1):: $$(SUBMAKEFILES)
-ifdef PARALLEL_DIRS
-	+@$(MAKE) $$(PARALLEL_DIRS_$(1))
-endif
 	$$(LOOP_OVER_DIRS)
 
 endef
@@ -232,5 +222,4 @@ endif
 
 recurse:
 	@$(RECURSED_COMMAND)
-	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)

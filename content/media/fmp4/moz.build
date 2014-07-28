@@ -21,7 +21,7 @@ SOURCES += [
 ]
 
 if CONFIG['MOZ_WMF']:
-  PARALLEL_DIRS += [ 'wmf' ];
+  DIRS += [ 'wmf' ];
 
 if CONFIG['MOZ_FFMPEG']:
   EXPORTS += [
@@ -31,7 +31,7 @@ if CONFIG['MOZ_FFMPEG']:
       'ffmpeg/FFmpegLog.cpp',
       'ffmpeg/FFmpegRuntimeLinker.cpp',
   ]
-  PARALLEL_DIRS += [
+  DIRS += [
       'ffmpeg/libav53',
       'ffmpeg/libav54',
       'ffmpeg/libav55',

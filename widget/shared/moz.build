@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_X11']:
-    PARALLEL_DIRS += ['x11']
+    DIRS += ['x11']
 
 UNIFIED_SOURCES += [
     'nsShmImage.cpp',
