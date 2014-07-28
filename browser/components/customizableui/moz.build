@@ -6,7 +6,26 @@
 
 PARALLEL_DIRS += [
     'content',
-    'src',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+EXTRA_JS_MODULES += [
+    'DragPositionManager.jsm',
+    'ScrollbarSampler.jsm',
+]
+
+DEFINES['E10S_TESTING_ONLY'] = CONFIG['E10S_TESTING_ONLY']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
+    DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3'):
+    DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
+
+EXTRA_PP_JS_MODULES += [
+    'CustomizableUI.jsm',
+    'CustomizableWidgets.jsm',
+    'CustomizeMode.jsm',
+    'PanelWideWidgetTracker.jsm',
+]

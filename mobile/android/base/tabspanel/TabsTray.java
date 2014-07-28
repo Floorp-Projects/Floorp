@@ -50,8 +50,8 @@ class TabsTray extends TwoWayView
     private TabsAdapter mTabsAdapter;
 
     private List<View> mPendingClosedTabs;
-    private int mCloseAnimationCount = 0;
-    private int mCloseAllAnimationCount = 0;
+    private int mCloseAnimationCount;
+    private int mCloseAllAnimationCount;
 
     private TabSwipeGestureListener mSwipeListener;
 
@@ -61,7 +61,7 @@ class TabsTray extends TwoWayView
     // Time between starting successive tab animations in closeAllTabs.
     private static final int ANIMATION_CASCADE_DELAY = 75;
 
-    private int mOriginalSize = 0;
+    private int mOriginalSize;
 
     public TabsTray(Context context, AttributeSet attrs) {
         super(context, attrs);

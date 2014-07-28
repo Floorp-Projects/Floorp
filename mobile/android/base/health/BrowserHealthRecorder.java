@@ -98,7 +98,7 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
     // We track previousSession to avoid order-of-initialization confusion. We
     // accept it in the constructor, and process it after init.
     private final SessionInformation previousSession;
-    private volatile SessionInformation session = null;
+    private volatile SessionInformation session;
 
     public void setCurrentSession(SessionInformation session) {
         this.session = session;

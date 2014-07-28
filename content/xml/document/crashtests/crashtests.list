@@ -1,8 +1,0 @@
-load 136896-1.xml
-load 185285-1.xml
-load 382636-1.xml
-load 382636-2.svg
-load 382636-3.xhtml
-load 382636-4.xul # Throws (bug 455856)
-load 431703-1.xhtml
-load 994740-1.xhtml

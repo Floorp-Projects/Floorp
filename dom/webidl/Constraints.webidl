@@ -18,7 +18,8 @@ enum MediaSourceEnum {
     "camera",
     "screen",
     "application",
-    "window"
+    "window",
+    "browser"
 };
 
 dictionary ConstrainLongRange {

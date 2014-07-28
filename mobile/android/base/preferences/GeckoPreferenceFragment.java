@@ -48,7 +48,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
     }
 
     private static final String LOGTAG = "GeckoPreferenceFragment";
-    private int mPrefsRequestId = 0;
+    private int mPrefsRequestId;
     private Locale lastLocale = Locale.getDefault();
 
     @Override

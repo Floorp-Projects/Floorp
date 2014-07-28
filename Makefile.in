@@ -200,6 +200,7 @@ MAKE_SYM_STORE_ARGS := -c --vcs-info
 DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
+MAKE_SYM_STORE_ARGS += --install-manifest=$(DEPTH)/_build_manifests/install/dist_include,$(DIST)/include
 
 SYM_STORE_SOURCE_DIRS := $(topsrcdir)
 

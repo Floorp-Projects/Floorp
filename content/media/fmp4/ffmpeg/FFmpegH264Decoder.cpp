@@ -41,8 +41,8 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
   nsresult rv = FFmpegDataDecoder::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCodecContext.get_buffer = AllocateBufferCb;
-  mCodecContext.release_buffer = ReleaseBufferCb;
+  mCodecContext->get_buffer = AllocateBufferCb;
+  mCodecContext->release_buffer = ReleaseBufferCb;
 
   return NS_OK;
 }
@@ -60,12 +60,15 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
   packet.flags = aSample->is_sync_point ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->byte_offset;
 
-  nsAutoPtr<AVFrame> frame(avcodec_alloc_frame());
-  avcodec_get_frame_defaults(frame);
+  if (!PrepareFrame()) {
+    NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
+    mCallback->Error();
+    return;
+  }
 
   int decoded;
   int bytesConsumed =
-    avcodec_decode_video2(&mCodecContext, frame, &decoded, &packet);
+    avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet);
 
   if (bytesConsumed < 0) {
     NS_WARNING("FFmpeg video decoder error.");
@@ -78,15 +81,15 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
     nsAutoPtr<VideoData> data;
 
     VideoInfo info;
-    info.mDisplay = nsIntSize(mCodecContext.width, mCodecContext.height);
+    info.mDisplay = nsIntSize(mCodecContext->width, mCodecContext->height);
     info.mStereoMode = StereoMode::MONO;
     info.mHasVideo = true;
 
     data = VideoData::CreateFromImage(
-      info, mImageContainer, aSample->byte_offset, frame->pkt_pts,
-      aSample->duration, reinterpret_cast<Image*>(frame->opaque),
+      info, mImageContainer, aSample->byte_offset, mFrame->pkt_pts,
+      aSample->duration, static_cast<Image*>(mFrame->opaque),
       aSample->is_sync_point, -1,
-      gfx::IntRect(0, 0, mCodecContext.width, mCodecContext.height));
+      gfx::IntRect(0, 0, mCodecContext->width, mCodecContext->height));
 
     mCallback->Output(data.forget());
   }
@@ -124,7 +127,7 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateBufferCb(AVCodecContext* aCodecContext,
   MOZ_ASSERT(aCodecContext->codec_type == AVMEDIA_TYPE_VIDEO);
 
   FFmpegH264Decoder* self =
-    reinterpret_cast<FFmpegH264Decoder*>(aCodecContext->opaque);
+    static_cast<FFmpegH264Decoder*>(aCodecContext->opaque);
 
   switch (aCodecContext->pix_fmt) {
   case PIX_FMT_YUV420P:
@@ -138,10 +141,17 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateBufferCb(AVCodecContext* aCodecContext,
 FFmpegH264Decoder<LIBAV_VER>::ReleaseBufferCb(AVCodecContext* aCodecContext,
                                               AVFrame* aFrame)
 {
-  Image* image = reinterpret_cast<Image*>(aFrame->opaque);
-  avcodec_default_release_buffer(aCodecContext, aFrame);
-  if (image) {
-    image->Release();
+  switch (aCodecContext->pix_fmt) {
+    case PIX_FMT_YUV420P: {
+      Image* image = static_cast<Image*>(aFrame->opaque);
+      if (image) {
+        image->Release();
+      }
+      break;
+    }
+    default:
+      avcodec_default_release_buffer(aCodecContext, aFrame);
+      break;
   }
 }
 
@@ -174,8 +184,10 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
 
   nsRefPtr<Image> image =
     mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
-  PlanarYCbCrImage* ycbcr = reinterpret_cast<PlanarYCbCrImage*>(image.get());
-  uint8_t* buffer = ycbcr->AllocateAndGetNewBuffer(allocSize);
+  PlanarYCbCrImage* ycbcr = static_cast<PlanarYCbCrImage*>(image.get());
+  uint8_t* buffer = ycbcr->AllocateAndGetNewBuffer(allocSize + 64);
+  // FFmpeg requires a 16/32 bytes-aligned buffer, align it on 64 to be safe
+  buffer = reinterpret_cast<uint8_t*>((reinterpret_cast<uintptr_t>(buffer) + 63) & ~63);
 
   if (!buffer) {
     NS_WARNING("Failed to allocate buffer for FFmpeg video decoding");
@@ -207,7 +219,7 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
   PlanarYCbCrDataFromAVFrame(data, aFrame);
   ycbcr->SetDataNoCopy(data);
 
-  aFrame->opaque = reinterpret_cast<void*>(image.forget().take());
+  aFrame->opaque = static_cast<void*>(image.forget().take());
 
   return 0;
 }
@@ -234,7 +246,7 @@ FFmpegH264Decoder<LIBAV_VER>::Drain()
 {
   // The maximum number of frames that can be waiting to be decoded is
   // max_b_frames + 1: One P frame and max_b_frames B frames.
-  for (int32_t i = 0; i <= mCodecContext.max_b_frames; i++) {
+  for (int32_t i = 0; i <= mCodecContext->max_b_frames; i++) {
     // An empty frame tells FFmpeg to decode the next delayed frame it has in
     // its queue, if it has any.
     nsAutoPtr<MP4Sample> empty(new MP4Sample());
