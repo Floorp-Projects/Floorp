@@ -77,6 +77,18 @@ DEBUGGER_INFO = {
     "requiresEscapedArgs": True
   },
 
+  # Visual Studio Debugger Support
+  "devenv.exe": {
+    "interactive": True,
+    "args": "-debugexe"
+  },
+
+  # Visual C++ Express Debugger Support
+  "wdexpress.exe": {
+    "interactive": True,
+    "args": "-debugexe"
+  },
+
   # valgrind doesn't explain much about leaks unless you set the
   # '--leak-check=full' flag. But there are a lot of objects that are
   # semi-deliberately leaked, so we set '--show-possibly-lost=no' to avoid
