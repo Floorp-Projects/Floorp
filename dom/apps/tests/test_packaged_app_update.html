@@ -79,15 +79,15 @@ function updateApp(aExpectedReady, aPreviousVersion, aNextVersion) {
     checkLastAppState.bind(PackagedTestHelper, miniManifestURL, false, false,
                            aNextVersion, PackagedTestHelper.next);
 
-  var ondownloadsuccesshandler =
-    checkLastAppState.bind(undefined, miniManifestURL,
-                           aExpectedReady, false, aPreviousVersion,
-                           function() {
-      navigator.mozApps.mgmt.applyDownload(lApp);
-  });
+    var ondownloadsuccesshandler =
+      checkLastAppState.bind(undefined, miniManifestURL,
+                             aExpectedReady, false, aPreviousVersion,
+                             function() {
+        navigator.mozApps.mgmt.applyDownload(lApp);
+    });
 
-  checkForUpdate(true, ondownloadsuccesshandler, ondownloadappliedhandler,
-                 null, true);
+    checkForUpdate(true, ondownloadsuccesshandler, ondownloadappliedhandler, null,
+                   true);
 
 }
 
@@ -254,7 +254,7 @@ var steps = [
                       "&appName=arandomname" +
                       "&appToFail1";
     PackagedTestHelper.checkAppDownloadError(miniManifestURL,
-                                            "MANIFEST_MISMATCH", 1, false, true,
+                                            "MANIFEST_MISMATCH", 2, false, true,
                                              "arandomname",
                                              function () {
       checkForUpdate(false, null, null, null, false,
