@@ -50,6 +50,11 @@ private:
 
   void AddOnGMPThread(const nsAString& aSearchDir);
   void RemoveOnGMPThread(const nsAString& aSearchDir);
+protected:
+  friend class GMPParent;
+  void ReAddOnGMPThread(nsRefPtr<GMPParent>& aOld);
+private:
+  GMPParent* ClonePlugin(const GMPParent* aOriginal);
 
   class PathRunnable : public nsRunnable
   {
