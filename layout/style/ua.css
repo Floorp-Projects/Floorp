@@ -333,5 +333,8 @@ div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right.tilt {
 div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret.hidden,
 div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left.hidden,
 div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right.hidden {
+  width: 0px;
+  height: 0px;
+  margin: 0px;
   visibility: hidden;
 }
