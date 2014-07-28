@@ -109,6 +109,18 @@ ThreadStackHelper::~ThreadStackHelper()
 #endif
 }
 
+namespace {
+template <typename T>
+class ScopedSetPtr
+{
+private:
+  T*& mPtr;
+public:
+  ScopedSetPtr(T*& p, T* val) : mPtr(p) { mPtr = val; }
+  ~ScopedSetPtr() { mPtr = nullptr; }
+};
+}
+
 void
 ThreadStackHelper::GetStack(Stack& aStack)
 {
@@ -117,6 +129,8 @@ ThreadStackHelper::GetStack(Stack& aStack)
     // Skip and return empty aStack
     return;
   }
+
+  ScopedSetPtr<Stack> stackPtr(mStackToFill, &aStack);
 
 #if defined(XP_LINUX)
   if (!sInitialized) {
@@ -199,7 +213,6 @@ ThreadStackHelper::PrepareStackBuffer(Stack& aStack)
       !aStack.EnsureBufferCapacity(mMaxBufferSize)) {
     return false;
   }
-  mStackToFill = &aStack;
   return true;
 #else
   return false;
