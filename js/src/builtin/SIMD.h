@@ -47,12 +47,12 @@
   V(notEqual, (Func<Float32x4, NotEqual, Int32x4>), 2, 0, NotEqual)                               \
   V(shuffle, FuncShuffle<Float32x4>, 2, 0, Shuffle)                                               \
   V(or, (CoercedFunc<Float32x4, Int32x4, Or, Float32x4>), 2, 0, Or)                               \
-  V(scale, (FuncWith<Float32x4, Scale, Float32x4>), 2, 0, Scale)                                  \
+  V(scale, (FuncWith<Float32x4, Scale>), 2, 0, Scale)                                             \
   V(sub, (Func<Float32x4, Sub, Float32x4>), 2, 0, Sub)                                            \
-  V(withX, (FuncWith<Float32x4, WithX, Float32x4>), 2, 0, WithX)                                  \
-  V(withY, (FuncWith<Float32x4, WithY, Float32x4>), 2, 0, WithY)                                  \
-  V(withZ, (FuncWith<Float32x4, WithZ, Float32x4>), 2, 0, WithZ)                                  \
-  V(withW, (FuncWith<Float32x4, WithW, Float32x4>), 2, 0, WithW)                                  \
+  V(withX, (FuncWith<Float32x4, WithX>), 2, 0, WithX)                                             \
+  V(withY, (FuncWith<Float32x4, WithY>), 2, 0, WithY)                                             \
+  V(withZ, (FuncWith<Float32x4, WithZ>), 2, 0, WithZ)                                             \
+  V(withW, (FuncWith<Float32x4, WithW>), 2, 0, WithW)                                             \
   V(xor, (CoercedFunc<Float32x4, Int32x4, Xor, Float32x4>), 2, 0, Xor)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                                        \
@@ -88,14 +88,14 @@
   V(shiftRight, (Int32x4BinaryScalar<ShiftRight>), 2, 0, ShiftRight)                              \
   V(shiftRightLogical, (Int32x4BinaryScalar<ShiftRightLogical>), 2, 0, ShiftRightLogical)         \
   V(shuffle, FuncShuffle<Int32x4>, 2, 0, Shuffle)                                                 \
-  V(withFlagX, (FuncWith<Int32x4, WithFlagX, Int32x4>), 2, 0, WithFlagX)                          \
-  V(withFlagY, (FuncWith<Int32x4, WithFlagY, Int32x4>), 2, 0, WithFlagY)                          \
-  V(withFlagZ, (FuncWith<Int32x4, WithFlagZ, Int32x4>), 2, 0, WithFlagZ)                          \
-  V(withFlagW, (FuncWith<Int32x4, WithFlagW, Int32x4>), 2, 0, WithFlagW)                          \
-  V(withX, (FuncWith<Int32x4, WithX, Int32x4>), 2, 0, WithX)                                      \
-  V(withY, (FuncWith<Int32x4, WithY, Int32x4>), 2, 0, WithY)                                      \
-  V(withZ, (FuncWith<Int32x4, WithZ, Int32x4>), 2, 0, WithZ)                                      \
-  V(withW, (FuncWith<Int32x4, WithW, Int32x4>), 2, 0, WithW)                                      \
+  V(withFlagX, (FuncWith<Int32x4, WithFlagX>), 2, 0, WithFlagX)                                   \
+  V(withFlagY, (FuncWith<Int32x4, WithFlagY>), 2, 0, WithFlagY)                                   \
+  V(withFlagZ, (FuncWith<Int32x4, WithFlagZ>), 2, 0, WithFlagZ)                                   \
+  V(withFlagW, (FuncWith<Int32x4, WithFlagW>), 2, 0, WithFlagW)                                   \
+  V(withX, (FuncWith<Int32x4, WithX>), 2, 0, WithX)                                               \
+  V(withY, (FuncWith<Int32x4, WithY>), 2, 0, WithY)                                               \
+  V(withZ, (FuncWith<Int32x4, WithZ>), 2, 0, WithZ)                                               \
+  V(withW, (FuncWith<Int32x4, WithW>), 2, 0, WithW)                                               \
   V(xor, (Func<Int32x4, Xor, Int32x4>), 2, 0, Xor)
 
 #define INT32X4_TERNARY_FUNCTION_LIST(V)                                                          \
