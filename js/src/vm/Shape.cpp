@@ -1528,7 +1528,7 @@ JSCompartment::sweepBaseShapeTable()
 
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
-            UnownedBaseShape *base = e.front();
+            UnownedBaseShape *base = e.front().unbarrieredGet();
             if (IsBaseShapeAboutToBeFinalized(&base))
                 e.removeFront();
         }
@@ -1816,7 +1816,7 @@ JSCompartment::sweepInitialShapeTable()
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
             const InitialShapeEntry &entry = e.front();
-            Shape *shape = entry.shape;
+            Shape *shape = entry.shape.unbarrieredGet();
             JSObject *proto = entry.proto.raw();
             if (IsShapeAboutToBeFinalized(&shape) || (entry.proto.isObject() && IsObjectAboutToBeFinalized(&proto))) {
                 e.removeFront();
@@ -1826,7 +1826,7 @@ JSCompartment::sweepInitialShapeTable()
                 JS_ASSERT(!parent || !IsObjectAboutToBeFinalized(&parent));
                 JS_ASSERT(parent == shape->getObjectParent());
 #endif
-                if (shape != entry.shape || proto != entry.proto.raw()) {
+                if (shape != entry.shape.unbarrieredGet() || proto != entry.proto.raw()) {
                     ReadBarrieredShape readBarrieredShape(shape);
                     InitialShapeEntry newKey(readBarrieredShape, TaggedProto(proto));
                     e.rekeyFront(newKey.getLookup(), newKey);

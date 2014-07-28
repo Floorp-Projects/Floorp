@@ -145,10 +145,10 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, StackShape &unroo
     if (kidp->isShape()) {
         Shape *kid = kidp->toShape();
         if (kid->matches(unrootedChild))
-        existingShape = kid;
+            existingShape = kid;
     } else if (kidp->isHash()) {
         if (KidsHash::Ptr p = kidp->toHash()->lookup(unrootedChild))
-        existingShape = *p;
+            existingShape = *p;
     } else {
         /* If kidp->isNull(), we always insert. */
     }
@@ -174,6 +174,8 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parentArg, StackShape &unroo
             JS_ASSERT(parent->isMarked());
             parent->removeChild(existingShape);
             existingShape = nullptr;
+        } else if (existingShape->isMarked(gc::GRAY)) {
+            JS::UnmarkGrayGCThingRecursively(existingShape, JSTRACE_SHAPE);
         }
     }
 #endif
