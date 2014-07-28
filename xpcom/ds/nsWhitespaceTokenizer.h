@@ -10,12 +10,11 @@
 #include "nsDependentSubstring.h"
 #include "nsCRT.h"
 
-template<typename SubstringType,
-         typename DependentSubstringType,
-         bool IsWhitespace(char16_t)>
+template<typename DependentSubstringType, bool IsWhitespace(char16_t)>
 class nsTWhitespaceTokenizer
 {
-  typedef typename SubstringType::char_type CharType;
+  typedef typename DependentSubstringType::char_type CharType;
+  typedef typename DependentSubstringType::substring_type SubstringType;
 
 public:
     nsTWhitespaceTokenizer(const SubstringType& aSource)
@@ -83,48 +82,28 @@ private:
 
 template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
 class nsWhitespaceTokenizerTemplate
-  : public nsTWhitespaceTokenizer<nsSubstring, nsDependentSubstring,
-                                  IsWhitespace>
+  : public nsTWhitespaceTokenizer<nsDependentSubstring, IsWhitespace>
 {
 public:
   nsWhitespaceTokenizerTemplate(const nsSubstring& aSource)
-    : nsTWhitespaceTokenizer<nsSubstring, nsDependentSubstring,
-                             IsWhitespace>(aSource)
+    : nsTWhitespaceTokenizer<nsDependentSubstring, IsWhitespace>(aSource)
   {
   }
 };
 
-class nsWhitespaceTokenizer
-  : public nsWhitespaceTokenizerTemplate<>
-{
-public:
-  nsWhitespaceTokenizer(const nsSubstring& aSource)
-    : nsWhitespaceTokenizerTemplate<>(aSource)
-  {
-  }
-};
+typedef nsWhitespaceTokenizerTemplate<> nsWhitespaceTokenizer;
 
 template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
 class nsCWhitespaceTokenizerTemplate
-  : public nsTWhitespaceTokenizer<nsCSubstring, nsDependentCSubstring,
-                                  IsWhitespace>
+  : public nsTWhitespaceTokenizer<nsDependentCSubstring, IsWhitespace>
 {
 public:
   nsCWhitespaceTokenizerTemplate(const nsCSubstring& aSource)
-    : nsTWhitespaceTokenizer<nsCSubstring, nsDependentCSubstring,
-                             IsWhitespace>(aSource)
+    : nsTWhitespaceTokenizer<nsDependentCSubstring, IsWhitespace>(aSource)
   {
   }
 };
 
-class nsCWhitespaceTokenizer
-  : public nsCWhitespaceTokenizerTemplate<>
-{
-public:
-  nsCWhitespaceTokenizer(const nsCSubstring& aSource)
-    : nsCWhitespaceTokenizerTemplate<>(aSource)
-  {
-  }
-};
+typedef nsCWhitespaceTokenizerTemplate<> nsCWhitespaceTokenizer;
 
 #endif /* __nsWhitespaceTokenizer_h */

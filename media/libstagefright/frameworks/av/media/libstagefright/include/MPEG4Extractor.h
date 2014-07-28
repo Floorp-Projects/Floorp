@@ -54,6 +54,24 @@ public:
     // for DRM
     virtual char* getDrmTrackInfo(size_t trackID, int *len);
 
+    struct TrackExtends {
+        TrackExtends(): mVersion(0), mTrackId(0),
+                mDefaultSampleDescriptionIndex(0), mDefaultSampleDuration(0),
+                mDefaultSampleSize(0), mDefaultSampleFlags(0)
+        {
+            mFlags[0] = 0;
+            mFlags[1] = 0;
+            mFlags[2] = 0;
+        }
+        uint8_t mVersion;
+        uint8_t mFlags[3];
+        uint32_t mTrackId;
+        uint32_t mDefaultSampleDescriptionIndex;
+        uint32_t mDefaultSampleDuration;
+        uint32_t mDefaultSampleSize;
+        uint32_t mDefaultSampleFlags;
+    };
+
 protected:
     virtual ~MPEG4Extractor();
 
@@ -113,7 +131,11 @@ private:
     SINF *mFirstSINF;
 
     bool mIsDrm;
+    TrackExtends mTrackExtends;
+
     status_t parseDrmSINF(off64_t *offset, off64_t data_offset);
+
+    status_t parseTrackExtends(off64_t data_offset, off64_t data_size);
 
     status_t parseTrackHeader(off64_t data_offset, off64_t data_size);
 

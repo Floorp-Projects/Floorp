@@ -8,20 +8,6 @@ modules := \
   providers.jsm \
   $(NULL)
 
-healthreport_depends = \
-  HealthReport.jsm \
-  ../common/async.js \
-  ../common/bagheeraclient.js \
-  ../metrics/Metrics.jsm \
-  ../metrics/providermanager.jsm \
-  ../metrics/dataprovider.jsm \
-  ../metrics/storage.jsm \
-  healthreporter.jsm \
-  profile.jsm \
-  providers.jsm \
-  $(NULL)
-
-
 MAIN_JS_MODULE := HealthReport.jsm
 MAIN_JS_MODULE_PATH = $(FINAL_TARGET)/modules
 MAIN_JS_MODULE_FLAGS := $(extra_pp_flags)
@@ -31,8 +17,3 @@ MODULES := $(modules)
 MODULES_PATH = $(FINAL_TARGET)/modules/services/healthreport
 MODULES_FLAGS := $(extra_pp_flags)
 PP_TARGETS += MODULES
-
-include $(topsrcdir)/config/rules.mk
-
-# Add extra prerequisites until bug 837792 is addressed.
-$(FINAL_TARGET)/modules/HealthReport.jsm: $(healthreport_depends)

@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
-
 EXTRA_COMPONENTS += [
     'Identity.manifest',
     'nsDOMIdentity.js',
@@ -16,3 +14,4 @@ EXTRA_PP_JS_MODULES += [
     'DOMIdentity.jsm',
 ]
 
+MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']

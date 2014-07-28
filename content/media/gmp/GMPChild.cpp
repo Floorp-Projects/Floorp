@@ -6,6 +6,7 @@
 #include "GMPChild.h"
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
+#include "GMPDecryptorChild.h"
 #include "GMPVideoHost.h"
 #include "nsIFile.h"
 #include "nsXULAppAPI.h"
@@ -189,6 +190,19 @@ GMPChild::DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor)
   return true;
 }
 
+PGMPDecryptorChild*
+GMPChild::AllocPGMPDecryptorChild()
+{
+  return new GMPDecryptorChild(this);
+}
+
+bool
+GMPChild::DeallocPGMPDecryptorChild(PGMPDecryptorChild* aActor)
+{
+  delete aActor;
+  return true;
+}
+
 PGMPVideoEncoderChild*
 GMPChild::AllocPGMPVideoEncoderChild()
 {
@@ -230,6 +244,23 @@ GMPChild::RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor)
   }
 
   vec->Init(static_cast<GMPVideoEncoder*>(ve));
+
+  return true;
+}
+
+bool
+GMPChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
+{
+  GMPDecryptorChild* child = static_cast<GMPDecryptorChild*>(aActor);
+  GMPDecryptorHost* host = static_cast<GMPDecryptorHost*>(child);
+
+  void* session = nullptr;
+  GMPErr err = mGetAPIFunc("eme-decrypt", host, &session);
+  if (err != GMPNoErr || !session) {
+    return false;
+  }
+
+  child->Init(static_cast<GMPDecryptor*>(session));
 
   return true;
 }
