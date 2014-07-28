@@ -71,7 +71,6 @@ public class testSettingsMenuItems extends PixelTest {
         { "About " + BRAND_NAME },
         { StringHelper.FAQS_LABEL },
         { StringHelper.FEEDBACK_LABEL },
-        { StringHelper.PRODUCT_ANNOUNCEMENTS_LABEL },
         { "Data choices" },
         { BRAND_NAME + " Health Report", "Shares data with Mozilla about your browser health and helps you understand your browser performance" },
         { StringHelper.MY_HEALTH_REPORT_LABEL },
