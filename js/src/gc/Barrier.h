@@ -207,7 +207,7 @@ class BarrieredCell : public gc::Cell
 #ifdef JSGC_INCREMENTAL
         JS_ASSERT(!CurrentThreadIsIonCompiling());
         JS::shadow::Zone *shadowZone = thing->shadowZoneFromAnyThread();
-        if (shadowZone->needsBarrier()) {
+        if (shadowZone->needsIncrementalBarrier()) {
             MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
             T *tmp = thing;
             js::gc::MarkUnbarriered<T>(shadowZone->barrierTracer(), &tmp, "read barrier");
@@ -218,7 +218,7 @@ class BarrieredCell : public gc::Cell
 
     static MOZ_ALWAYS_INLINE bool needWriteBarrierPre(JS::Zone *zone) {
 #ifdef JSGC_INCREMENTAL
-        return JS::shadow::Zone::asShadowZone(zone)->needsBarrier();
+        return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
 #else
         return false;
 #endif
@@ -229,11 +229,11 @@ class BarrieredCell : public gc::Cell
     static MOZ_ALWAYS_INLINE void writeBarrierPre(T *thing) {
 #ifdef JSGC_INCREMENTAL
         JS_ASSERT(!CurrentThreadIsIonCompiling());
-        if (isNullLike(thing) || !thing->shadowRuntimeFromAnyThread()->needsBarrier())
+        if (isNullLike(thing) || !thing->shadowRuntimeFromAnyThread()->needsIncrementalBarrier())
             return;
 
         JS::shadow::Zone *shadowZone = thing->shadowZoneFromAnyThread();
-        if (shadowZone->needsBarrier()) {
+        if (shadowZone->needsIncrementalBarrier()) {
             MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
             T *tmp = thing;
             js::gc::MarkUnbarriered<T>(shadowZone->barrierTracer(), &tmp, "write barrier");
@@ -334,7 +334,7 @@ struct InternalGCMethods<Value>
     static void preBarrier(Value v) {
 #ifdef JSGC_INCREMENTAL
         JS_ASSERT(!CurrentThreadIsIonCompiling());
-        if (v.isMarkable() && shadowRuntimeFromAnyThread(v)->needsBarrier())
+        if (v.isMarkable() && shadowRuntimeFromAnyThread(v)->needsIncrementalBarrier())
             preBarrier(ZoneOfValueFromAnyThread(v), v);
 #endif
     }
@@ -345,8 +345,8 @@ struct InternalGCMethods<Value>
         if (v.isString() && StringIsPermanentAtom(v.toString()))
             return;
         JS::shadow::Zone *shadowZone = JS::shadow::Zone::asShadowZone(zone);
-        if (shadowZone->needsBarrier()) {
-            JS_ASSERT_IF(v.isMarkable(), shadowRuntimeFromMainThread(v)->needsBarrier());
+        if (shadowZone->needsIncrementalBarrier()) {
+            JS_ASSERT_IF(v.isMarkable(), shadowRuntimeFromMainThread(v)->needsIncrementalBarrier());
             Value tmp(v);
             js::gc::MarkValueUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
             JS_ASSERT(tmp == v);
@@ -400,14 +400,14 @@ struct InternalGCMethods<jsid>
         if (JSID_IS_STRING(id)) {
             JSString *str = JSID_TO_STRING(id);
             JS::shadow::Zone *shadowZone = ShadowZoneOfStringFromAnyThread(str);
-            if (shadowZone->needsBarrier()) {
+            if (shadowZone->needsIncrementalBarrier()) {
                 js::gc::MarkStringUnbarriered(shadowZone->barrierTracer(), &str, "write barrier");
                 JS_ASSERT(str == JSID_TO_STRING(id));
             }
         } else if (JSID_IS_SYMBOL(id)) {
             JS::Symbol *sym = JSID_TO_SYMBOL(id);
             JS::shadow::Zone *shadowZone = ShadowZoneOfSymbolFromAnyThread(sym);
-            if (shadowZone->needsBarrier()) {
+            if (shadowZone->needsIncrementalBarrier()) {
                 js::gc::MarkSymbolUnbarriered(shadowZone->barrierTracer(), &sym, "write barrier");
                 JS_ASSERT(sym == JSID_TO_SYMBOL(id));
             }
