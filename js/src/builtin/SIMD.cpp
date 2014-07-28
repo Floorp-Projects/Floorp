@@ -577,7 +577,7 @@ ErrorBadArgs(JSContext *cx)
 
 // Coerces the inputs of type In to the type Coercion, apply the operator Op
 // and converts the result to the type Out.
-template<typename In, typename Coercion, typename Op, typename Out>
+template<typename In, typename Coercion, template<typename C> class Op, typename Out>
 static bool
 CoercedFunc(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -595,7 +595,7 @@ CoercedFunc(JSContext *cx, unsigned argc, Value *vp)
 
         CoercionElem *val = TypedObjectMemory<CoercionElem *>(args[0]);
         for (unsigned i = 0; i < Coercion::lanes; i++)
-            result[i] = Op::apply(val[i], 0);
+            result[i] = Op<CoercionElem>::apply(val[i], 0);
     } else {
         JS_ASSERT(args.length() == 2);
         if (!IsVectorObject<In>(args[0]) || !IsVectorObject<In>(args[1]))
@@ -604,7 +604,7 @@ CoercedFunc(JSContext *cx, unsigned argc, Value *vp)
         CoercionElem *left = TypedObjectMemory<CoercionElem *>(args[0]);
         CoercionElem *right = TypedObjectMemory<CoercionElem *>(args[1]);
         for (unsigned i = 0; i < Coercion::lanes; i++)
-            result[i] = Op::apply(left[i], right[i]);
+            result[i] = Op<CoercionElem>::apply(left[i], right[i]);
     }
 
     RetElem *coercedResult = reinterpret_cast<RetElem *>(result);
@@ -617,14 +617,14 @@ CoercedFunc(JSContext *cx, unsigned argc, Value *vp)
 }
 
 // Same as above, with Coercion == Out
-template<typename In, typename Op, typename Out>
+template<typename In, template<typename C> class Op, typename Out>
 static bool
 Func(JSContext *cx, unsigned argc, Value *vp)
 {
     return CoercedFunc<In, Out, Op, Out>(cx, argc, vp);
 }
 
-template<typename V, typename OpWith, typename Vret>
+template<typename V, template<typename T> class OpWith, typename Vret>
 static bool
 FuncWith(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -646,12 +646,12 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
         if (!Vret::toType(cx, args[1], &withAsNumber))
             return false;
         for (unsigned i = 0; i < Vret::lanes; i++)
-            result[i] = OpWith::apply(i, withAsNumber, val[i]);
+            result[i] = OpWith<RetElem>::apply(i, withAsNumber, val[i]);
     } else {
         JS_ASSERT(args[1].isBoolean());
         bool withAsBool = args[1].toBoolean();
         for (unsigned i = 0; i < Vret::lanes; i++)
-            result[i] = OpWith::apply(i, withAsBool, val[i]);
+            result[i] = OpWith<RetElem>::apply(i, withAsBool, val[i]);
     }
 
     RootedObject obj(cx, Create<Vret>(cx, result));
