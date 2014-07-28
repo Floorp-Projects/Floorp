@@ -235,7 +235,7 @@ TraceWeakMapping(js::WeakMapTracer* aTrc, JSObject* aMap,
 // This is based on the logic in TraceWeakMapping.
 struct FixWeakMappingGrayBitsTracer : public js::WeakMapTracer
 {
-  FixWeakMappingGrayBitsTracer(JSRuntime* aRt)
+  explicit FixWeakMappingGrayBitsTracer(JSRuntime* aRt)
     : js::WeakMapTracer(aRt, FixWeakMappingGrayBits)
   {
   }
@@ -295,7 +295,7 @@ private:
 
 struct Closure
 {
-  Closure(nsCycleCollectionNoteRootCallback* aCb)
+  explicit Closure(nsCycleCollectionNoteRootCallback* aCb)
     : mCycleCollectionEnabled(true), mCb(aCb)
   {
   }
