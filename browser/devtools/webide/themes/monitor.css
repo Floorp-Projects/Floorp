@@ -1,0 +1,86 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Graph */
+.graph {
+  height: 500px;
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+  background-color: white;
+}
+.graph > svg, .sidebar {
+  display: inline-block;
+  vertical-align: top;
+}
+.disabled {
+  opacity: 0.5;
+}
+.graph.disabled {
+  height: 30px;
+}
+.graph.disabled > svg {
+  visibility: hidden;
+}
+.curve path, .event-slot line {
+  fill: none;
+  stroke-width: 1.5px;
+}
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+.axis path {
+  fill: none;
+  stroke: black;
+  stroke-width: 1px;
+  shape-rendering: crispEdges;
+}
+.tick text, .x.ruler text, .y.ruler text {
+  font-size: 0.9em;
+}
+.x.ruler text {
+  text-anchor: middle;
+}
+.y.ruler text {
+  text-anchor: end;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 150px;
+  overflow-x: hidden;
+}
+.sidebar label {
+  cursor: pointer;
+  display: block;
+}
+.sidebar span:not(.color) {
+  vertical-align: 13%;
+}
+.sidebar input {
+  visibility: hidden;
+}
+.sidebar input:hover {
+  visibility: visible;
+}
+.graph-title {
+  margin-top: 5px;
+  font-size: 1.2em;
+}
+.legend-color {
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  margin-left: 1px;
+  margin-right: 3px;
+}
+.legend-id {
+  font-size: .9em;
+}
+.graph.disabled > .sidebar > .legend {
+  display: none;
+}
