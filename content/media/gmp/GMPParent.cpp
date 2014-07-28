@@ -63,6 +63,12 @@ GMPParent::~GMPParent()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
+void
+GMPParent::CheckThread()
+{
+  MOZ_ASSERT(mGMPThread == NS_GetCurrentThread());
+}
+
 nsresult
 GMPParent::CloneFrom(const GMPParent* aOther)
 {

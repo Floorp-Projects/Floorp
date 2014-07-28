@@ -19,44 +19,12 @@ namespace gmp {
 // Compressed (encoded) data goes from the Decoder parent to the child;
 // pool there, and then return with Encoded() frames and goes into the parent
 // pool.
-static StaticAutoPtr<nsTArray<ipc::Shmem>> sGmpFreelist[GMPSharedMemManager::kGMPNumTypes];
-static uint32_t sGMPShmemManagerCount = 0;
-
-GMPSharedMemManager::GMPSharedMemManager()
-{
-  if (!sGMPShmemManagerCount) {
-    for (uint32_t i = 0; i < GMPSharedMemManager::kGMPNumTypes; i++) {
-      sGmpFreelist[i] = new nsTArray<ipc::Shmem>();
-    }
-  }
-  sGMPShmemManagerCount++;
-}
-
-GMPSharedMemManager::~GMPSharedMemManager()
-{
-  MOZ_ASSERT(sGMPShmemManagerCount > 0);
-  sGMPShmemManagerCount--;
-  if (!sGMPShmemManagerCount) {
-    for (uint32_t i = 0; i < GMPSharedMemManager::kGMPNumTypes; i++) {
-      sGmpFreelist[i] = nullptr;
-    }
-  }
-}
-
-static nsTArray<ipc::Shmem>&
-GetGmpFreelist(GMPSharedMemManager::GMPMemoryClasses aTypes)
-{
-  return *(sGmpFreelist[aTypes]);
-}
-
-static uint32_t sGmpAllocated[GMPSharedMemManager::kGMPNumTypes]; // 0's
-
 bool
-GMPSharedMemManager::MgrAllocShmem(GMPMemoryClasses aClass, size_t aSize,
+GMPSharedMemManager::MgrAllocShmem(GMPSharedMem::GMPMemoryClasses aClass, size_t aSize,
                                    ipc::Shmem::SharedMemory::SharedMemoryType aType,
                                    ipc::Shmem* aMem)
 {
-  CheckThread();
+  mData->CheckThread();
 
   // first look to see if we have a free buffer large enough
   for (uint32_t i = 0; i < GetGmpFreelist(aClass).Length(); i++) {
@@ -73,15 +41,15 @@ GMPSharedMemManager::MgrAllocShmem(GMPMemoryClasses aClass, size_t aSize,
   aSize = (aSize + (pagesize-1)) & ~(pagesize-1); // round up to page size
   bool retval = Alloc(aSize, aType, aMem);
   if (retval) {
-    sGmpAllocated[aClass]++;
+    mData->mGmpAllocated[aClass]++;
   }
   return retval;
 }
 
 bool
-GMPSharedMemManager::MgrDeallocShmem(GMPMemoryClasses aClass, ipc::Shmem& aMem)
+GMPSharedMemManager::MgrDeallocShmem(GMPSharedMem::GMPMemoryClasses aClass, ipc::Shmem& aMem)
 {
-  CheckThread();
+  mData->CheckThread();
 
   size_t size = aMem.Size<uint8_t>();
   size_t total = 0;
@@ -91,7 +59,7 @@ GMPSharedMemManager::MgrDeallocShmem(GMPMemoryClasses aClass, ipc::Shmem& aMem)
     Dealloc(GetGmpFreelist(aClass)[0]);
     GetGmpFreelist(aClass).RemoveElementAt(0);
     // The allocation numbers will be fubar on the Child!
-    sGmpAllocated[aClass]--;
+    mData->mGmpAllocated[aClass]--;
   }
   for (uint32_t i = 0; i < GetGmpFreelist(aClass).Length(); i++) {
     MOZ_ASSERT(GetGmpFreelist(aClass)[i].IsWritable());
@@ -107,9 +75,9 @@ GMPSharedMemManager::MgrDeallocShmem(GMPMemoryClasses aClass, ipc::Shmem& aMem)
 }
 
 uint32_t
-GMPSharedMemManager::NumInUse(GMPMemoryClasses aClass)
+GMPSharedMemManager::NumInUse(GMPSharedMem::GMPMemoryClasses aClass)
 {
-  return sGmpAllocated[aClass] - GetGmpFreelist(aClass).Length();
+  return mData->mGmpAllocated[aClass] - GetGmpFreelist(aClass).Length();
 }
 
 }
