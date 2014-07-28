@@ -13,11 +13,14 @@
 extern "C" {
 #endif
 extern MOZ_EXPORT
-int mozilla_get_sles_engine(SLObjectItf * aObjectm,
-                            SLuint32 aOptionCount,
-                            const SLEngineOption *aOptions);
+SLresult mozilla_get_sles_engine(SLObjectItf * aObjectm,
+                                 SLuint32 aOptionCount,
+                                 const SLEngineOption *aOptions);
 extern MOZ_EXPORT
 void mozilla_destroy_sles_engine(SLObjectItf * aObjectm);
+/* Realize is always in synchronous mode. */
+extern MOZ_EXPORT
+SLresult mozilla_realize_sles_engine(SLObjectItf aObjectm);
 #ifdef __cplusplus
 }
 #endif
@@ -31,28 +34,31 @@ namespace mozilla {
 
 class OpenSLESProvider {
 public:
-    static int Get(SLObjectItf * aObjectm,
+    static SLresult Get(SLObjectItf * aObjectm,
                    SLuint32 aOptionCount,
                    const SLEngineOption *aOptions);
     static void Destroy(SLObjectItf * aObjectm);
+    static SLresult Realize(SLObjectItf aObjectm);
 private:
     OpenSLESProvider();
     ~OpenSLESProvider();
     OpenSLESProvider(OpenSLESProvider const&); // NO IMPLEMENTATION
     void operator=(OpenSLESProvider const&);   // NO IMPLEMENTATION
     static OpenSLESProvider& getInstance();
-    int GetEngine(SLObjectItf * aObjectm,
-                  SLuint32 aOptionCount,
-                  const SLEngineOption *aOptions);
-    int ConstructEngine(SLObjectItf * aObjectm,
-                        SLuint32 aOptionCount,
-                        const SLEngineOption *aOptions);
+    SLresult GetEngine(SLObjectItf * aObjectm,
+                       SLuint32 aOptionCount,
+                       const SLEngineOption *aOptions);
+    SLresult ConstructEngine(SLObjectItf * aObjectm,
+                             SLuint32 aOptionCount,
+                             const SLEngineOption *aOptions);
+    SLresult RealizeEngine(SLObjectItf aObjectm);
     void DestroyEngine(SLObjectItf * aObjectm);
 
     // Protect all our internal variables
     mozilla::Mutex mLock;
     SLObjectItf mSLEngine;
     int mSLEngineUsers;
+    bool mIsRealized;
     void *mOpenSLESLib;
 };
 
