@@ -1129,14 +1129,20 @@ BluetoothAvrcpInterface::RegisterNotificationRsp(
   }
 }
 
-bt_status_t
-BluetoothAvrcpInterface::SetVolume(uint8_t aVolume)
+void
+BluetoothAvrcpInterface::SetVolume(uint8_t aVolume,
+                                   BluetoothAvrcpResultHandler* aRes)
 {
 #if ANDROID_VERSION >= 19
-  return mInterface->set_volume(aVolume);
+  bt_status_t status = mInterface->set_volume(aVolume);
 #else
-  return BT_STATUS_UNSUPPORTED;
+  bt_status_t status = BT_STATUS_UNSUPPORTED;
 #endif
+
+  if (aRes) {
+    DispatchBluetoothAvrcpResult(
+      aRes, &BluetoothAvrcpResultHandler::SetVolume, status);
+  }
 }
 #endif // ANDROID_VERSION >= 18
 
