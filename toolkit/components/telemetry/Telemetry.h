@@ -94,7 +94,7 @@ struct AccumulateDelta_impl<Microsecond>
 template<ID id, TimerResolution res = Millisecond>
 class AutoTimer {
 public:
-  AutoTimer(TimeStamp aStart = TimeStamp::Now() MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoTimer(TimeStamp aStart = TimeStamp::Now() MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
      : start(aStart)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -112,7 +112,7 @@ private:
 template<ID id>
 class AutoCounter {
 public:
-  AutoCounter(uint32_t counterStart = 0 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoCounter(uint32_t counterStart = 0 MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : counter(counterStart)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
