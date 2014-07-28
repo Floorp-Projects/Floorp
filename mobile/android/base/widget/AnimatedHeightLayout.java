@@ -15,7 +15,7 @@ import android.widget.RelativeLayout;
 public class AnimatedHeightLayout extends RelativeLayout {
     private static final String LOGTAG = "GeckoAnimatedHeightLayout";
     private static final int ANIMATION_DURATION = 100;
-    private boolean mAnimating = false;
+    private boolean mAnimating;
 
     public AnimatedHeightLayout(Context context) {
         super(context, null);

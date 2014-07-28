@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
-
 EXPORTS.mozilla.dom += [
     'AesKeyAlgorithm.h',
     'BasicSymmetricKeyAlgorithm.h',
@@ -42,3 +40,4 @@ LOCAL_INCLUDES += [
     '/security/manager/ssl/src',
 ]
 
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']

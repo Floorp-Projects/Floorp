@@ -46,7 +46,7 @@ enum MediaSourceType {
   Screen = (int) dom::MediaSourceEnum::Screen,
   Application = (int) dom::MediaSourceEnum::Application,
   Window, // = (int) dom::MediaSourceEnum::Window, // XXX bug 1038926
-  //Browser = (int) dom::MediaSourceEnum::Browser, // proposed in WG, unclear if it's useful
+  Browser = (int) dom::MediaSourceEnum::Browser, // proposed in WG, unclear if it's useful
   Microphone
 };
 

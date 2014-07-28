@@ -8,6 +8,8 @@ import mock
 from mock import patch
 import symbolstore
 
+from mozpack.manifests import InstallManifest
+
 # Some simple functions to mock out files that the platform-specific dumpers will accept.
 # dump_syms itself will not be run (we mock that call out), but we can't override
 # the ShouldProcessFile method since we actually want to test that.
@@ -42,8 +44,8 @@ class HelperMixin(object):
     """
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
-        if not self.test_dir.endswith("/"):
-            self.test_dir += "/"
+        if not self.test_dir.endswith(os.sep):
+            self.test_dir += os.sep
         symbolstore.srcdirRepoInfo = {}
         symbolstore.vcsFileInfoCache = {}
 
@@ -293,6 +295,126 @@ if platform.system() in ("Windows", "Microsoft"):
             hgserver = [x.rstrip() for x in srcsrv_stream.splitlines() if x.startswith("HGSERVER=")]
             self.assertEqual(len(hgserver), 1)
             self.assertEqual(hgserver[0].split("=")[1], "http://example.com/repo")
+
+class TestInstallManifest(HelperMixin, unittest.TestCase):
+    def setUp(self):
+        HelperMixin.setUp(self)
+        self.srcdir = os.path.join(self.test_dir, 'src')
+        os.mkdir(self.srcdir)
+        self.objdir = os.path.join(self.test_dir, 'obj')
+        os.mkdir(self.objdir)
+        self.manifest = InstallManifest()
+        self.canonical_mapping = {}
+        for s in ['src1', 'src2']:
+            srcfile = os.path.join(self.srcdir, s)
+            objfile = os.path.join(self.objdir, s)
+            self.canonical_mapping[objfile] = srcfile
+            self.manifest.add_copy(srcfile, s)
+        self.manifest_file = os.path.join(self.test_dir, 'install-manifest')
+        self.manifest.write(self.manifest_file)
+
+    def testMakeFileMapping(self):
+        '''
+        Test that valid arguments are validated.
+        '''
+        arg = '%s,%s' % (self.manifest_file, self.objdir)
+        ret = symbolstore.validate_install_manifests([arg])
+        self.assertEqual(len(ret), 1)
+        manifest, dest = ret[0]
+        self.assertTrue(isinstance(manifest, InstallManifest))
+        self.assertEqual(dest, self.objdir)
+
+        file_mapping = symbolstore.make_file_mapping(ret)
+        for obj, src in self.canonical_mapping.iteritems():
+            self.assertTrue(obj in file_mapping)
+            self.assertEqual(file_mapping[obj], src)
+
+    def testMissingFiles(self):
+        '''
+        Test that missing manifest files or install directories give errors.
+        '''
+        missing_manifest = os.path.join(self.test_dir, 'missing-manifest')
+        arg = '%s,%s' % (missing_manifest, self.objdir)
+        with self.assertRaises(IOError) as e:
+            symbolstore.validate_install_manifests([arg])
+            self.assertEqual(e.filename, missing_manifest)
+
+        missing_install_dir = os.path.join(self.test_dir, 'missing-dir')
+        arg = '%s,%s' % (self.manifest_file, missing_install_dir)
+        with self.assertRaises(IOError) as e:
+            symbolstore.validate_install_manifests([arg])
+            self.assertEqual(e.filename, missing_install_dir)
+
+    def testBadManifest(self):
+        '''
+        Test that a bad manifest file give errors.
+        '''
+        bad_manifest = os.path.join(self.test_dir, 'bad-manifest')
+        with open(bad_manifest, 'wb') as f:
+            f.write('junk\n')
+        arg = '%s,%s' % (bad_manifest, self.objdir)
+        with self.assertRaises(IOError) as e:
+            symbolstore.validate_install_manifests([arg])
+            self.assertEqual(e.filename, bad_manifest)
+
+    def testBadArgument(self):
+        '''
+        Test that a bad manifest argument gives an error.
+        '''
+        with self.assertRaises(ValueError) as e:
+            symbolstore.validate_install_manifests(['foo'])
+
+class TestFileMapping(HelperMixin, unittest.TestCase):
+    def setUp(self):
+        HelperMixin.setUp(self)
+        self.srcdir = os.path.join(self.test_dir, 'src')
+        os.mkdir(self.srcdir)
+        self.objdir = os.path.join(self.test_dir, 'obj')
+        os.mkdir(self.objdir)
+        self.symboldir = os.path.join(self.test_dir, 'symbols')
+        os.mkdir(self.symboldir)
+
+    @patch("subprocess.Popen")
+    def testFileMapping(self, mock_Popen):
+        files = [('a/b', 'mozilla/b'),
+                 ('c/d', 'foo/d')]
+        if os.sep != '/':
+            files = [[f.replace('/', os.sep) for f in x] for x in files]
+        file_mapping = {}
+        dumped_files = []
+        expected_files = []
+        for s, o in files:
+            srcfile = os.path.join(self.srcdir, s)
+            expected_files.append(srcfile)
+            file_mapping[os.path.join(self.objdir, o)] = srcfile
+            dumped_files.append(os.path.join(self.objdir, 'x', 'y',
+                                             '..', '..', o))
+        # mock the dump_syms output
+        file_id = ("X" * 33, 'somefile')
+        def mk_output(files):
+            return iter(
+                [
+                    'MODULE os x86 %s %s\n' % file_id
+                ] +
+                [
+                    'FILE %d %s\n' % (i,s) for i, s in enumerate(files)
+                ] +
+                [
+                    'PUBLIC xyz 123\n'
+                ]
+            )
+        mock_Popen.return_value.stdout = mk_output(dumped_files)
+
+        d = symbolstore.Dumper('dump_syms', self.symboldir,
+                               file_mapping=file_mapping)
+        f = os.path.join(self.objdir, 'somefile')
+        open(f, 'wb').write('blah')
+        d.Process(f)
+        d.Finish(stop_pool=False)
+        expected_output = ''.join(mk_output(expected_files))
+        symbol_file = os.path.join(self.symboldir,
+                                   file_id[1], file_id[0], file_id[1] + '.sym')
+        self.assertEqual(open(symbol_file, 'r').read(), expected_output)
 
 if __name__ == '__main__':
     # use the multiprocessing.dummy module to use threading wrappers so

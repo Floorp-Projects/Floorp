@@ -51,11 +51,11 @@ public class DateTimePicker extends FrameLayout {
     private static final int SCREEN_SIZE_THRESHOLD = 5;
     private boolean mYearEnabled = true;
     private boolean mMonthEnabled = true;
-    private boolean mWeekEnabled = false;
+    private boolean mWeekEnabled;
     private boolean mDayEnabled = true;
     private boolean mHourEnabled = true;
     private boolean mMinuteEnabled = true;
-    private boolean mCalendarEnabled = false;
+    private boolean mCalendarEnabled;
     private boolean mIs12HourMode;
     // Size of the screen in inches;
     private int mScreenWidth;

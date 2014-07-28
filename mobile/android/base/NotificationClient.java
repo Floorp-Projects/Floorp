@@ -20,7 +20,7 @@ public abstract class NotificationClient {
     private static final String LOGTAG = "GeckoNotificationClient";
 
     private volatile NotificationHandler mHandler;
-    private boolean mReady = false;
+    private boolean mReady;
     private final LinkedList<Runnable> mTaskQueue = new LinkedList<Runnable>();
     private final ConcurrentHashMap<Integer, UpdateRunnable> mUpdatesMap =
             new ConcurrentHashMap<Integer, UpdateRunnable>();

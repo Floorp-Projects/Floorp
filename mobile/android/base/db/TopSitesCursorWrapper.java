@@ -79,7 +79,7 @@ public class TopSitesCursorWrapper implements Cursor {
     private int currentPosition = -1;
 
     // Number of pinned sites before the current position
-    private int pinnedBefore = 0;
+    private int pinnedBefore;
 
     // The size of the cursor wrapper
     private int count;

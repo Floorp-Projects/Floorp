@@ -1,0 +1,174 @@
+# HG changeset patch
+# Parent 9294c812b3ebf3a2684b081886a65fa0cd0420b3
+diff --git a/dom/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html b/dom/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
+--- a/dom/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
++++ b/dom/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
+@@ -118,17 +118,18 @@ function init()
+     var bufFunction = new Uint8Array(width * height * 4);
+     var bufMacro = new Uint8Array(width * height * 4);
+ 
+     if (drawAndRead("canvasFunction", "vshaderFunction", bufFunction) == false ||
+         drawAndRead("canvasMacro", "vshaderMacro", bufMacro) == false) {
+         testFailed("Setup failed");
+     } else {
+         if (compareRendering(bufFunction, bufMacro, 4) == false)
+-            testFailed("Rendering results are different");
++            testFailedRender("Rendering results are different", bufMacro,
++                             bufFunction, width, height);
+         else
+             testPassed("Rendering results are the same");
+     }
+ }
+ 
+ init();
+ successfullyParsed = true;
+ </script>
+diff --git a/dom/canvas/test/webgl/conformance/misc/uninitialized-test.html b/dom/canvas/test/webgl/conformance/misc/uninitialized-test.html
+--- a/dom/canvas/test/webgl/conformance/misc/uninitialized-test.html
++++ b/dom/canvas/test/webgl/conformance/misc/uninitialized-test.html
+@@ -57,17 +57,19 @@ function checkNonZeroPixels(texture, tex
+     gl.readPixels(0, 0, texWidth, texHeight, gl.RGBA, gl.UNSIGNED_BYTE, data);
+ 
+     var k = 0;
+     for (var y = 0; y < texHeight; ++y) {
+         for (var x = 0; x < texWidth; ++x) {
+             var index = (y * texWidth + x) * 4;
+             if (x >= skipX && x < skipX + skipWidth && y >= skipY && y < skipY + skipHeight) {
+                 if (data[index] != skipR || data[index + 1] != skipG || data[index + 2] != skipB || data[index + 3] != skipA) {
+-                    testFailed("non-zero pixel values are wrong");
++                    testFailed("non-zero pixel values are wrong at (" + x + ", " + y + "), data was (" +
++                               data[index] + "," + data[index + 1] + "," + data[index + 2] + "," + data[index + 3] +
++                               ") should have been (" + skipR + "," + skipG + "," + skipB + "," + skipA + ")");
+                     return;
+                 }
+             } else {
+                 for (var i = 0; i < 4; ++i) {
+                     if (data[index + i] != 0)
+                         k++;
+                 }
+             }
+diff --git a/dom/canvas/test/webgl/conformance/resources/webgl-test-utils.js b/dom/canvas/test/webgl/conformance/resources/webgl-test-utils.js
+--- a/dom/canvas/test/webgl/conformance/resources/webgl-test-utils.js
++++ b/dom/canvas/test/webgl/conformance/resources/webgl-test-utils.js
+@@ -445,21 +445,29 @@ var drawQuad = function(gl, opt_color) {
+ var checkCanvasRect = function(gl, x, y, width, height, color, msg, errorRange) {
+   errorRange = errorRange || 0;
+   var buf = new Uint8Array(width * height * 4);
+   gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+   for (var i = 0; i < width * height; ++i) {
+     var offset = i * 4;
+     for (var j = 0; j < color.length; ++j) {
+       if (Math.abs(buf[offset + j] - color[j]) > errorRange) {
+-        testFailed(msg);
+         var was = buf[offset + 0].toString();
+         for (j = 1; j < color.length; ++j) {
+           was += "," + buf[offset + j];
+         }
++
++        var cv = document.createElement('canvas');
++        cv.height = height;
++        cv.width = width;
++        var ctx = cv.getContext('2d');
++        ctx.fillStyle="rgba(" + color[0] + ", " + color[1] + ", " + color[2] + ", 255)";
++        ctx.fillRect(0, 0, width, height);
++        testFailedRender(msg, ctx, buf, width, height);
++
+         debug('at (' + (i % width) + ', ' + Math.floor(i / width) +
+               ') expected: ' + color + ' was ' + was);
+         return;
+       }
+     }
+   }
+   testPassed(msg);
+ };
+diff --git a/dom/canvas/test/webgl/resources/js-test-pre.js b/dom/canvas/test/webgl/resources/js-test-pre.js
+--- a/dom/canvas/test/webgl/resources/js-test-pre.js
++++ b/dom/canvas/test/webgl/resources/js-test-pre.js
+@@ -81,16 +81,87 @@ function testPassed(msg)
+     reportTestResultsToHarness(true, msg);
+     debug('<span><span class="pass">PASS</span> ' + escapeHTML(msg) + '</span>');
+ }
+ 
+ function testFailed(msg)
+ {
+     reportTestResultsToHarness(false, msg);
+     debug('<span><span class="fail">FAIL</span> ' + escapeHTML(msg) + '</span>');
++    dump('FAIL: ' + msg + '\n');
++
++    var stack = (new Error).stack.split('\n');
++    if (!stack.length) {
++        return;
++    }
++
++    dump('STACK TRACE: \n');
++
++    stack.pop();
++    var index = 0, frame, messages = new Array();
++    // Match all .html files and print out the line in them.
++    while (stack.length && index != -1) {
++        frame = stack.pop();
++        index = frame.indexOf(".html:");
++        if (index != -1) {
++            messages.unshift(frame);
++        }
++    }
++
++    // Print out the first stack frame in JS and then stop.
++    if (stack.length) {
++        messages.unshift(stack.pop());
++    }
++
++    for (message in messages) {
++        dump(messages[message] + '\n');
++    }
++}
++
++function testFailedRender(msg, ref, test, width, height) 
++{
++    var refData;
++    if (typeof ref.getImageData == 'function') {
++        refData = ref.canvas.toDataURL();
++    } else {
++        refData = arrayToURLData(ref, width, height);
++    }
++
++    var testData;
++    if (typeof test.getImageData == 'function') {
++        testData = test.canvas.toDataURL();
++    } else {
++        testData = arrayToURLData(test, width, height);
++    }
++    
++    testFailed(msg);
++
++    var data = 'REFTEST TEST-DEBUG-INFO | ' + msg + ' | image comparison (==)\n' +
++               'REFTEST   IMAGE 1 (TEST): ' + testData + '\n' +
++               'REFTEST   IMAGE 2 (REFERENCE): ' + refData;
++    dump('FAIL: ' + data + '\n');
++    dump('To view the differences between these image renderings, go to the following link: https://hg.mozilla.org/mozilla-central/raw-file/tip/layout/tools/reftest/reftest-analyzer.xhtml#log=' +
++    encodeURIComponent(encodeURIComponent(data)) + '\n');
++}
++
++function arrayToURLData(buf, width, height)
++{
++    var cv = document.createElement('canvas');
++    cv.height = height;
++    cv.width = width;
++    var ctx = cv.getContext('2d');
++    var imgd = ctx.getImageData(0, 0, width, height);
++    for (i = 0; i < height * width; ++i) {
++        offset = i * 4;
++        for (j = 0; j < 4; j++) {
++            imgd.data[offset + j] = buf[offset + j];
++        }
++    }
++    ctx.putImageData(imgd, 0, 0);
++    return cv.toDataURL();
+ }
+ 
+ function areArraysEqual(_a, _b)
+ {
+     try {
+         if (_a.length !== _b.length)
+             return false;
+         for (var i = 0; i < _a.length; i++)

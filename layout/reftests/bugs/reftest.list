@@ -1564,7 +1564,7 @@ random-if(!winWidget) fails-if(winWidget&&!d2d) random-if(winWidget&&d2d) != 574
 == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
-skip-if(B2G) fails-if(Android) == 579808-1.html 579808-1-ref.html
+skip-if(!haveTestPlugin) skip-if(B2G) fails-if(Android) == 579808-1.html 579808-1-ref.html
 skip-if(B2G) fails-if(Android) random-if(layersGPUAccelerated) == 579985-1.html 579985-1-ref.html # bug 623452 for WinXP; this bug was only for a regression in BasicLayers anyway
 skip-if(B2G) skip-if(Android) == 580160-1.html 580160-1-ref.html # bug 920927 for Android; issues without the test-plugin
 HTTP(..) == 580863-1.html 580863-1-ref.html
@@ -1644,7 +1644,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,300) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
-skip-if(B2G) fails-if(Android) fuzzy-if(winWidget&&!layersGPUAccelerated,102,535)  == 632423-1.html 632423-1-ref.html
+skip-if(!haveTestPlugin) skip-if(B2G) fails-if(Android) fuzzy-if(winWidget&&!layersGPUAccelerated,102,535)  == 632423-1.html 632423-1-ref.html
 skip-if(Android||B2G) random-if(winWidget) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 == 633344-1.html 633344-1-ref.html

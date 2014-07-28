@@ -2,28 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * This file makes the common testing infrastructure available to the xpcshell
- * tests located in this folder.  This is only used as an infrastructure file,
- * and new common functions should be added to the "head_common.js" file.
+ * Initialization specific to Form Autofill xpcshell tests.
+ *
+ * This file is loaded by "loader.js".
  */
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm", this);
-
-/* --- Adapters for the xpcshell infrastructure --- */
-
-let Output = {
-  print: do_print,
-};
-
-let executeSoon = do_execute_soon;
-let setTimeout = (fn, delay) => do_timeout(delay, fn);
-
-function run_test() {
-  do_get_profile();
-  run_next_test();
-}
+// The testing framework is fully initialized at this point, you can add
+// xpcshell specific test initialization here.  If you need shared functions or
+// initialization that are not specific to xpcshell, consider adding them to
+// "head_common.js" in the parent folder instead.

@@ -6,3 +6,15 @@
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
+JS_MODULES_PATH = 'modules/devtools/app-manager'
+
+EXTRA_JS_MODULES += [
+    'app-projects.js',
+    'app-validator.js',
+    'builtin-adb-store.js',
+    'connection-store.js',
+    'device-store.js',
+    'simulators-store.js',
+    'webapps-store.js',
+]

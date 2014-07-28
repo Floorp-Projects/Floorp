@@ -41,8 +41,8 @@ public class GeckoMenuItem implements MenuItem {
     private int mActionEnum;
     private CharSequence mTitle;
     private CharSequence mTitleCondensed;
-    private boolean mCheckable = false;
-    private boolean mChecked = false;
+    private boolean mCheckable;
+    private boolean mChecked;
     private boolean mVisible = true;
     private boolean mEnabled = true;
     private Drawable mIcon;

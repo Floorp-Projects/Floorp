@@ -14,6 +14,9 @@ EXTRA_JS_MODULES += [
     'ResourceStatsService.jsm',
 ]
 
-TEST_DIRS += ['tests']
-
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['MOZ_B2G_RIL']:
+    XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+
+MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']

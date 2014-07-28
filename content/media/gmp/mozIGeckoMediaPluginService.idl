@@ -10,6 +10,7 @@
 %{C++
 #include "nsTArray.h"
 #include "nsStringGlue.h"
+class GMPDecryptorProxy;
 class GMPVideoDecoderProxy;
 class GMPVideoEncoderProxy;
 class GMPVideoHost;
@@ -20,8 +21,9 @@ class GMPVideoHost;
 [ptr] native GMPVideoHost(GMPVideoHost);
 [ptr] native MessageLoop(MessageLoop);
 [ptr] native TagArray(nsTArray<nsCString>);
+[ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
 
-[scriptable, uuid(a9b826da-725a-4b81-814f-b715445188f2)]
+[scriptable, uuid(b301ea8b-8a1e-4839-a13c-9dd32b2d684b)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
   /**
@@ -59,6 +61,12 @@ interface mozIGeckoMediaPluginService : nsISupports
   GMPVideoEncoderProxy getGMPVideoEncoder(in TagArray tags,
 		                                      [optional] in AString origin,
 		                                      out GMPVideoHost outVideoHost);
+
+  // Returns a decryption session manager that supports the specified tags.
+  // The array of tags should at least contain a key system tag, and optionally
+  // other tags.
+  // Callable only on GMP thread.
+  GMPDecryptorProxy getGMPDecryptor(in TagArray tags, in AString origin);
 
   /**
    * Add a directory to scan for gecko media plugins.
