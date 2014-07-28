@@ -149,6 +149,15 @@ extern bool gBluetoothDebugFlag;
 #define SCO_STATUS_CHANGED_ID                "scostatuschanged"
 
 /**
+ * Types of pairing requests for constructing BluetoothPairingEvent and
+ * BluetoothPairingHandle.
+ */
+#define PAIRING_REQ_TYPE_DISPLAYPASSKEY       "displaypasskeyreq"
+#define PAIRING_REQ_TYPE_ENTERPINCODE         "enterpincodereq"
+#define PAIRING_REQ_TYPE_CONFIRMATION         "pairingconfirmationreq"
+#define PAIRING_REQ_TYPE_CONSENT              "pairingconsentreq"
+
+/**
  * When the pair status of a Bluetooth device is changed, we'll dispatch an
  * event.
  */
