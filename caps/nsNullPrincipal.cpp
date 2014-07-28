@@ -18,6 +18,8 @@
 #include "nsID.h"
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsNetCID.h"
 #include "nsError.h"
 #include "nsIScriptSecurityManager.h"
