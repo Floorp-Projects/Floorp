@@ -343,9 +343,13 @@ NewFunctionForwarder(JSContext *cx, HandleId idArg, HandleObject callable,
 }
 
 bool
-NewNonCloningFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable,
+NewNonCloningFunctionForwarder(JSContext *cx, HandleId idArg, HandleObject callable,
                                MutableHandleValue vp)
 {
+    RootedId id(cx, idArg);
+    if (id == JSID_VOIDHANDLE)
+        id = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EMPTYSTRING);
+
     JSFunction *fun = js::NewFunctionByIdWithReserved(cx, NonCloningFunctionForwarder,
                                                       0,0, JS::CurrentGlobalOrNull(cx), id);
     if (!fun)
