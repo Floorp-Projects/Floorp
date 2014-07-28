@@ -1,0 +1,29 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+div {
+	    height: 10px;
+}
+
+#b {
+	background: rgb(0,255,0,.5);
+}
+#c {
+    background: -moz-element(#b);
+    background-blend-mode: difference;
+}
+
+</style>
+</head>
+<body>
+<div id="b"></div>
+<div id="c"></div>
+</body>
+</html>
+
