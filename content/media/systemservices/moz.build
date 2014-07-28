@@ -4,19 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_WEBRTC']:
-    EXPORTS += ['LoadManager.h',
-                'LoadManagerFactory.h',
-                'LoadMonitor.h',
-    ]
-    UNIFIED_SOURCES += ['LoadManager.cpp',
-                        'LoadManagerFactory.cpp',
-                        'LoadMonitor.cpp',
-    ]
-    LOCAL_INCLUDES += [
-        '/media/webrtc/trunk',
-    ]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     EXPORTS += [
         'OpenSLESProvider.h'
