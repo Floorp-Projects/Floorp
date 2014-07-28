@@ -238,7 +238,7 @@ public:
         JS::Zone *zone = js::GetContextZone(cx);
         ZoneStringCache *cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
         if (cache && buf == cache->mBuffer) {
-            MOZ_ASSERT(JS::GetGCThingZone(cache->mString) == zone);
+            MOZ_ASSERT(JS::GetTenuredGCThingZone(cache->mString) == zone);
             JS::MarkStringAsLive(zone, cache->mString);
             rval.setString(cache->mString);
             *sharedBuffer = false;
