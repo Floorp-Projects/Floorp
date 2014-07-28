@@ -210,6 +210,82 @@
 #define GR_GL_NUM_COMPRESSED_TEXTURE_FORMATS 0x86A2
 #define GR_GL_COMPRESSED_TEXTURE_FORMATS     0x86A3
 
+/* Compressed Texture Formats */
+#define GR_GL_COMPRESSED_RGB_S3TC_DXT1_EXT         0x83F0
+#define GR_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT        0x83F1
+#define GR_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT        0x83F2
+#define GR_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT        0x83F3
+
+#define GR_GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG      0x8C00
+#define GR_GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG      0x8C01
+#define GR_GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG     0x8C02
+#define GR_GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG     0x8C03
+
+#define GR_GL_COMPRESSED_RGBA_PVRTC_2BPPV2_IMG     0x9137
+#define GR_GL_COMPRESSED_RGBA_PVRTC_4BPPV2_IMG     0x9138
+
+#define GR_GL_COMPRESSED_RGB8_ETC1                 0x8D64
+
+#define GR_GL_COMPRESSED_R11                       0x9270
+#define GR_GL_COMPRESSED_SIGNED_R11                0x9271
+#define GR_GL_COMPRESSED_RG11                      0x9272
+#define GR_GL_COMPRESSED_SIGNED_RG11               0x9273
+
+#define GR_GL_COMPRESSED_RGB8_ETC2                 0x9274
+#define GR_GL_COMPRESSED_SRGB8                     0x9275
+#define GR_GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1  0x9276
+#define GR_GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1 0x9277
+#define GR_GL_COMPRESSED_RGBA8_ETC2                0x9278
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ETC2         0x9279
+
+#define GR_GL_COMPRESSED_LUMINANCE_LATC1           0x8C70
+#define GR_GL_COMPRESSED_SIGNED_LUMINANCE_LATC1    0x8C71
+#define GR_GL_COMPRESSED_LUMINANCE_ALPHA_LATC2     0x8C72
+#define GR_GL_COMPRESSED_SIGNED_LUMINANCE_ALPHA_LATC2 0x8C73
+
+#define GR_GL_COMPRESSED_RED_RGTC1                 0x8DBB
+#define GR_GL_COMPRESSED_SIGNED_RED_RGTC1          0x8DBC
+#define GR_GL_COMPRESSED_RED_GREEN_RGTC2           0x8DBD
+#define GR_GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2    0x8DBE
+
+#define GR_GL_COMPRESSED_3DC_X                     0x87F9
+#define GR_GL_COMPRESSED_3DC_XY                    0x87FA
+
+#define GR_GL_COMPRESSED_RGBA_BPTC_UNORM           0x8E8C
+#define GR_GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM     0x8E8D
+#define GR_GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT     0x8E8E
+#define GR_GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT   0x8E8F
+
+#define GR_GL_COMPRESSED_RGBA_ASTC_4x4             0x93B0
+#define GR_GL_COMPRESSED_RGBA_ASTC_5x4             0x93B1
+#define GR_GL_COMPRESSED_RGBA_ASTC_5x5             0x93B2
+#define GR_GL_COMPRESSED_RGBA_ASTC_6x5             0x93B3
+#define GR_GL_COMPRESSED_RGBA_ASTC_6x6             0x93B4
+#define GR_GL_COMPRESSED_RGBA_ASTC_8x5             0x93B5
+#define GR_GL_COMPRESSED_RGBA_ASTC_8x6             0x93B6
+#define GR_GL_COMPRESSED_RGBA_ASTC_8x8             0x93B7
+#define GR_GL_COMPRESSED_RGBA_ASTC_10x5            0x93B8
+#define GR_GL_COMPRESSED_RGBA_ASTC_10x6            0x93B9
+#define GR_GL_COMPRESSED_RGBA_ASTC_10x8            0x93BA
+#define GR_GL_COMPRESSED_RGBA_ASTC_10x10           0x93BB
+#define GR_GL_COMPRESSED_RGBA_ASTC_12x10           0x93BC
+#define GR_GL_COMPRESSED_RGBA_ASTC_12x12           0x93BD
+
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4     0x93D0
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4     0x93D1
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5     0x93D2
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5     0x93D3
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6     0x93D4
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5     0x93D5
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6     0x93D6
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8     0x93D7
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5    0x93D8
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6    0x93D9
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8    0x93DA
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10   0x93DB
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10   0x93DC
+#define GR_GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12   0x93DD
+
 /* HintMode */
 #define GR_GL_DONT_CARE                      0x1100
 #define GR_GL_FASTEST                        0x1101
@@ -601,6 +677,14 @@
 /* Vertex Buffer Object */
 #define GR_GL_WRITE_ONLY                         0x88B9
 #define GR_GL_BUFFER_MAPPED                      0x88BC
+
+#define GR_GL_MAP_READ_BIT                       0x0001
+#define GR_GL_MAP_WRITE_BIT                      0x0002
+#define GR_GL_MAP_INVALIDATE_RANGE_BIT           0x0004
+#define GR_GL_MAP_INVALIDATE_BUFFER_BIT          0x0008
+#define GR_GL_MAP_FLUSH_EXPLICIT_BIT             0x0010
+#define GR_GL_MAP_UNSYNCHRONIZED_BIT             0x0020
+
 /* Read Format */
 #define GR_GL_IMPLEMENTATION_COLOR_READ_TYPE   0x8B9A
 #define GR_GL_IMPLEMENTATION_COLOR_READ_FORMAT 0x8B9B
@@ -647,6 +731,7 @@
 #define GR_GL_RGB5_A1                        0x8057
 #define GR_GL_RGB565                         0x8D62
 #define GR_GL_RGBA8                          0x8058
+#define GR_GL_RGBA32F                        0x8814
 #define GR_GL_RGB8                           0x8051
 #define GR_GL_BGRA8                          0x93A1
 #define GR_GL_SRGB                           0x8C40
@@ -690,6 +775,11 @@
 #define GR_GL_COLOR_ATTACHMENT0              0x8CE0
 #define GR_GL_DEPTH_ATTACHMENT               0x8D00
 #define GR_GL_STENCIL_ATTACHMENT             0x8D20
+
+// GL_EXT_discard_framebuffer
+#define GR_GL_COLOR                          0x1800
+#define GR_GL_DEPTH                          0x1801
+#define GR_GL_STENCIL                        0x1802
 
 #define GR_GL_NONE                           0
 
@@ -738,19 +828,6 @@
 #define GR_GL_ARC_TO                                        0xFE
 #define GR_GL_RELATIVE_ARC_TO                               0xFF
 
-// path string formats
-#define GR_GL_PATH_FORMAT_SVG                               0x9070
-#define GR_GL_PATH_FORMAT_PS                                0x9071
-
-// font targets
-#define GR_GL_STANDARD_FONT_NAME                            0x9072
-#define GR_GL_SYSTEM_FONT_NAME                              0x9073
-#define GR_GL_FILE_NAME                                     0x9074
-
-// handle missing glyphs
-#define GR_GL_SKIP_MISSING_GLYPH                            0x90A9
-#define GR_GL_USE_MISSING_GLYPH                             0x90AA
-
 // path parameters
 #define GR_GL_PATH_STROKE_WIDTH                             0x9075
 #define GR_GL_PATH_INITIAL_END_CAP                          0x9077
@@ -781,10 +858,6 @@
 #define GR_GL_COUNT_DOWN                                    0x9089
 /*      GL_PATH_FILL_MODE_NV */
 
-// path color gen
-/*      GL_PRIMARY_COLOR */
-#define GR_GL_SECONDARY_COLOR                               0x852D
-
 // gen mode
 /*      GL_NONE */
 /*      GL_EYE_LINEAR */
@@ -808,11 +881,6 @@
 #define GR_GL_TRANSPOSE_AFFINE_2D                           0x9096
 #define GR_GL_TRANSPOSE_AFFINE_3D                           0x9098
 
-// path string types
-#define GR_GL_UTF8                                          0x909A
-#define GR_GL_UTF16                                         0x909B
-
-#define GR_GL_PATH_COMPUTED_LENGTH                          0x90A0
 
 // cap/dash values
 /*      GL_FLAT */
@@ -827,60 +895,9 @@
 #define GR_GL_MITER_REVERT                                  0x90A7
 #define GR_GL_MITER_TRUNCATE                                0x90A8
 
-// path dash reset values
-#define GR_GL_MOVE_TO_RESETS                                0x90B5
-#define GR_GL_MOVE_TO_CONTINUES                             0x90B6
-
-// font styles
-/*      GL_NONE */
-#define GR_GL_BOLD_BIT                                      0x01
-#define GR_GL_ITALIC_BIT                                    0x02
-
-// pnames for glGet
-#define GR_GL_PATH_ERROR_POSITION                           0x90AB
-#define GR_GL_PATH_FOG_GEN_MODE                             0x90AC
-#define GR_GL_PATH_STENCIL_FUNC                             0x90B7
-#define GR_GL_PATH_STENCIL_REF                              0x90B8
-#define GR_GL_PATH_STENCIL_VALUE_MASK                       0x90B9
-#define GR_GL_PATH_STENCIL_DEPTH_OFFSET_FACTOR              0x90BD
-#define GR_GL_PATH_STENCIL_DEPTH_OFFSET_UNITS               0x90BE
-#define GR_GL_PATH_COVER_DEPTH_FUNC                         0x90BF
-
-// per-glyph metrics bits in metric mask query
-#define GR_GL_GLYPH_WIDTH_BIT                               0x01
-#define GR_GL_GLYPH_HEIGHT_BIT                              0x02
-#define GR_GL_GLYPH_HORIZONTAL_BEARING_X_BIT                0x04
-#define GR_GL_GLYPH_HORIZONTAL_BEARING_Y_BIT                0x08
-#define GR_GL_GLYPH_HORIZONTAL_BEARING_ADVANCE_BIT          0x10
-#define GR_GL_GLYPH_VERTICAL_BEARING_X_BIT                  0x20
-#define GR_GL_GLYPH_VERTICAL_BEARING_Y_BIT                  0x40
-#define GR_GL_GLYPH_VERTICAL_BEARING_ADVANCE_BIT            0x80
-#define GR_GL_GLYPH_HAS_KERNING                             0x100
-
-// per-font face metrics in metric mask query
-#define GR_GL_FONT_X_MIN_BOUNDS                             0x00010000
-#define GR_GL_FONT_Y_MIN_BOUNDS                             0x00020000
-#define GR_GL_FONT_X_MAX_BOUNDS                             0x00040000
-#define GR_GL_FONT_Y_MAX_BOUNDS                             0x00080000
-#define GR_GL_FONT_UNITS_PER_EM                             0x00100000
-#define GR_GL_FONT_ASCENDER                                 0x00200000
-#define GR_GL_FONT_DESCENDER                                0x00400000
-#define GR_GL_FONT_HEIGHT                                   0x00800000
-#define GR_GL_FONT_MAX_ADVANCE_WIDTH                        0x01000000
-#define GR_GL_FONT_MAX_ADVANCE_HEIGHT                       0x02000000
-#define GR_GL_FONT_UNDERLINE_POSITION                       0x04000000
-#define GR_GL_FONT_UNDERLINE_THICKNESS                      0x08000000
-#define GR_GL_FONT_HAS_KERNING                              0x10000000
-
-// path list modes (glGetPathSpacing)
-#define GR_GL_ACCUM_ADJACENT_PAIRS                          0x90AD
-#define GR_GL_ADJACENT_PAIRS                                0x90AE
-#define GR_GL_FIRST_TO_REST                                 0x90AF
-
-//path gen modes
-#define GR_GL_PATH_GEN_MODE                                 0x90B0
-#define GR_GL_PATH_GEN_COEFF                                0x90B1
-#define GR_GL_PATH_GEN_COLOR_FORMAT                         0x90B2
-#define GR_GL_PATH_GEN_COMPONENTS                           0x90B3
+// NV_path_rendering extension to ARB_program_interface_query:
+// .. corresponds to the set of active input variables used by the fragment
+// shader stage of <program> (if a fragment stage exists).
+#define GR_GL_FRAGMENT_INPUT                                0x936D
 
 #endif

@@ -23,9 +23,9 @@
     http://www.w3.org/TR/SVG/filters.html#feTurbulenceElement
 */
 class SK_API SkPerlinNoiseShader : public SkShader {
-    struct PaintingData;
 public:
     struct StitchData;
+    struct PaintingData;
 
     /**
      *  About the noise types : the difference between the 2 is just minor tweaks to the algorithm,
@@ -58,16 +58,46 @@ public:
     static SkShader* CreateFractalNoise(SkScalar baseFrequencyX, SkScalar baseFrequencyY,
                                         int numOctaves, SkScalar seed,
                                         const SkISize* tileSize = NULL);
-    static SkShader* CreateTubulence(SkScalar baseFrequencyX, SkScalar baseFrequencyY,
+    static SkShader* CreateTurbulence(SkScalar baseFrequencyX, SkScalar baseFrequencyY,
                                      int numOctaves, SkScalar seed,
                                      const SkISize* tileSize = NULL);
+    /**
+     * Create alias for CreateTurbulunce until all Skia users changed
+     * its code to use the new naming
+     */
+    static SkShader* CreateTubulence(SkScalar baseFrequencyX, SkScalar baseFrequencyY,
+                                     int numOctaves, SkScalar seed,
+                                     const SkISize* tileSize = NULL) {
+    return CreateTurbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed, tileSize);
+    }
 
-    virtual bool setContext(const SkBitmap& device, const SkPaint& paint,
-                            const SkMatrix& matrix);
-    virtual void shadeSpan(int x, int y, SkPMColor[], int count) SK_OVERRIDE;
-    virtual void shadeSpan16(int x, int y, uint16_t[], int count) SK_OVERRIDE;
 
-    virtual GrEffectRef* asNewEffect(GrContext* context, const SkPaint&) const SK_OVERRIDE;
+    virtual size_t contextSize() const SK_OVERRIDE;
+
+    class PerlinNoiseShaderContext : public SkShader::Context {
+    public:
+        PerlinNoiseShaderContext(const SkPerlinNoiseShader& shader, const ContextRec&);
+        virtual ~PerlinNoiseShaderContext();
+
+        virtual void shadeSpan(int x, int y, SkPMColor[], int count) SK_OVERRIDE;
+        virtual void shadeSpan16(int x, int y, uint16_t[], int count) SK_OVERRIDE;
+
+    private:
+        SkPMColor shade(const SkPoint& point, StitchData& stitchData) const;
+        SkScalar calculateTurbulenceValueForPoint(
+            int channel,
+            StitchData& stitchData, const SkPoint& point) const;
+        SkScalar noise2D(int channel,
+                         const StitchData& stitchData, const SkPoint& noiseVector) const;
+
+        SkMatrix fMatrix;
+        PaintingData* fPaintingData;
+
+        typedef SkShader::Context INHERITED;
+    };
+
+    virtual bool asNewEffect(GrContext* context, const SkPaint&, const SkMatrix*, GrColor*,
+                             GrEffect**) const SK_OVERRIDE;
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkPerlinNoiseShader)
@@ -75,20 +105,13 @@ public:
 protected:
     SkPerlinNoiseShader(SkReadBuffer&);
     virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
+    virtual Context* onCreateContext(const ContextRec&, void* storage) const SK_OVERRIDE;
 
 private:
     SkPerlinNoiseShader(SkPerlinNoiseShader::Type type, SkScalar baseFrequencyX,
                         SkScalar baseFrequencyY, int numOctaves, SkScalar seed,
                         const SkISize* tileSize);
     virtual ~SkPerlinNoiseShader();
-
-    SkScalar noise2D(int channel, const PaintingData& paintingData,
-                     const StitchData& stitchData, const SkPoint& noiseVector) const;
-
-    SkScalar calculateTurbulenceValueForPoint(int channel, const PaintingData& paintingData,
-                                              StitchData& stitchData, const SkPoint& point) const;
-
-    SkPMColor shade(const SkPoint& point, StitchData& stitchData) const;
 
     // TODO (scroggo): Once all SkShaders are created from a factory, and we have removed the
     // constructor that creates SkPerlinNoiseShader from an SkReadBuffer, several fields can
@@ -100,10 +123,6 @@ private:
     /*const*/ SkScalar                  fSeed;
     /*const*/ SkISize                   fTileSize;
     /*const*/ bool                      fStitchTiles;
-    // TODO (scroggo): Once setContext creates a new object, place this on that object.
-    SkMatrix fMatrix;
-
-    PaintingData* fPaintingData;
 
     typedef SkShader INHERITED;
 };

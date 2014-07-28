@@ -188,19 +188,18 @@
  */
 //#define SK_ATOMICS_PLATFORM_H "SkAtomics_xxx.h"
 //#define SK_MUTEX_PLATFORM_H "SkMutex_xxx.h"
-#  if defined(_MSC_VER)
-#    define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_win.h"
-#  elif defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-#    define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_android.h"
-#  else
-#    define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_sync.h"
-#  endif
+#if defined(_MSC_VER)
+#  define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_win.h"
+#  define SK_MUTEX_PLATFORM_H   "skia/SkMutex_win.h"
+#else
+#  define SK_ATOMICS_PLATFORM_H "skia/SkAtomics_sync.h"
+#  define SK_MUTEX_PLATFORM_H   "skia/SkMutex_pthread.h"
+#endif
 
-#  if defined(SK_BUILD_FOR_WIN32)
-#    define SK_MUTEX_PLATFORM_H "skia/SkMutex_win.h"
-#  else
-#    define SK_MUTEX_PLATFORM_H "skia/SkMutex_pthread.h"
-#  endif
+#if defined(SK_CPU_ARM32) || defined(SK_CPU_ARM64)
+#  define SK_BARRIERS_PLATFORM_H "skia/SkBarriers_arm.h"
+#else
+#  define SK_BARRIERS_PLATFORM_H "skia/SkBarriers_x86.h"
 #endif
 
 #define SK_ALLOW_STATIC_GLOBAL_INITIALIZERS 0
@@ -209,3 +208,5 @@
 #define SK_SUPPORT_LEGACY_GETTOPDEVICE
 #define SK_SUPPORT_LEGACY_BITMAP_CONFIG
 #define SK_IGNORE_ETC1_SUPPORT
+
+#endif

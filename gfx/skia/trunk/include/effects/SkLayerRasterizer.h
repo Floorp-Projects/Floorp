@@ -39,30 +39,35 @@ public:
 
         /**
           *  Pass queue of layers on to newly created layer rasterizer and return it. The builder
-          *  cannot be used any more after calling this function.
+          *  *cannot* be used any more after calling this function. If no layers have been added,
+          *  returns NULL.
+          *
+          *  The caller is responsible for calling unref() on the returned object, if non NULL.
           */
         SkLayerRasterizer* detachRasterizer();
+
+        /**
+          *  Create and return a new immutable SkLayerRasterizer that contains a shapshot of the
+          *  layers that were added to the Builder, without modifying the Builder. The Builder
+          *  *may* be used after calling this function. It will continue to hold any layers
+          *  previously added, so consecutive calls to this function will return identical objects,
+          *  and objects returned by future calls to this function contain all the layers in
+          *  previously returned objects. If no layers have been added, returns NULL.
+          *
+          *  Future calls to addLayer will not affect rasterizers previously returned by this call.
+          *
+          *  The caller is responsible for calling unref() on the returned object, if non NULL.
+          */
+        SkLayerRasterizer* snapshotRasterizer() const;
 
     private:
         SkDeque* fLayers;
     };
 
-#ifdef SK_SUPPORT_LEGACY_LAYERRASTERIZER_API
-    void addLayer(const SkPaint& paint) {
-        this->addLayer(paint, 0, 0);
-    }
-
-    /**    Add a new layer (above any previous layers) to the rasterizer.
-        The layer will extract those fields that affect the mask from
-        the specified paint, but will not retain a reference to the paint
-        object itself, so it may be reused without danger of side-effects.
-    */
-    void addLayer(const SkPaint& paint, SkScalar dx, SkScalar dy);
-#endif
-
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkLayerRasterizer)
 
 protected:
+    SkLayerRasterizer();
     SkLayerRasterizer(SkDeque* layers);
     SkLayerRasterizer(SkReadBuffer&);
     virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
@@ -72,19 +77,12 @@ protected:
                              const SkIRect* clipBounds,
                              SkMask* mask, SkMask::CreateMode mode) const;
 
-#ifdef SK_SUPPORT_LEGACY_LAYERRASTERIZER_API
-public:
-#endif
-    SkLayerRasterizer();
-
 private:
-#ifdef SK_SUPPORT_LEGACY_LAYERRASTERIZER_API
-    SkDeque* fLayers;
-#else
     const SkDeque* const fLayers;
-#endif
 
     static SkDeque* ReadLayers(SkReadBuffer& buffer);
+
+    friend class LayerRasterizerTester;
 
     typedef SkRasterizer INHERITED;
 };

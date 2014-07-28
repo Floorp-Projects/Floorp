@@ -51,12 +51,10 @@ public:
     // override from SkPixelRef
     virtual GrTexture* getTexture() SK_OVERRIDE;
 
-    SK_DECLARE_UNFLATTENABLE_OBJECT()
-
 protected:
     // overrides from SkPixelRef
     virtual bool onReadPixels(SkBitmap* dst, const SkIRect* subset) SK_OVERRIDE;
-    virtual SkPixelRef* deepCopy(SkBitmap::Config dstConfig, const SkIRect* subset) SK_OVERRIDE;
+    virtual SkPixelRef* deepCopy(SkColorType, const SkIRect* subset) SK_OVERRIDE;
 
 private:
     GrSurface*  fSurface;

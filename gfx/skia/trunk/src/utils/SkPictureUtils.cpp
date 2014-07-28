@@ -54,15 +54,12 @@ public:
 
     GatherPixelRefDevice(int width, int height, PixelRefSet* prset) {
         fSize.set(width, height);
-        fEmptyBitmap.setConfig(SkImageInfo::MakeUnknown(width, height));
+        fEmptyBitmap.setInfo(SkImageInfo::MakeUnknown(width, height));
         fPRSet = prset;
     }
 
-    virtual int width() const SK_OVERRIDE { return fSize.width(); }
-    virtual int height() const SK_OVERRIDE { return fSize.height(); }
-    virtual bool isOpaque() const SK_OVERRIDE { return false; }
-    virtual SkBitmap::Config config() const SK_OVERRIDE {
-        return SkBitmap::kNo_Config;
+    virtual SkImageInfo imageInfo() const SK_OVERRIDE {
+        return SkImageInfo::MakeUnknown(fSize.width(), fSize.height());
     }
     virtual GrRenderTarget* accessRenderTarget() SK_OVERRIDE { return NULL; }
     virtual bool filterTextFlags(const SkPaint& paint, TextFlags*) SK_OVERRIDE {
@@ -84,13 +81,6 @@ public:
     virtual void clear(SkColor color) SK_OVERRIDE {
         nothing_to_do();
     }
-
-#ifdef SK_SUPPORT_LEGACY_WRITEPIXELSCONFIG
-    virtual void writePixels(const SkBitmap& bitmap, int x, int y,
-                             SkCanvas::Config8888 config8888) SK_OVERRIDE {
-        not_supported();
-    }
-#endif
 
     virtual void drawPaint(const SkDraw&, const SkPaint& paint) SK_OVERRIDE {
         this->addBitmapFromPaint(paint);
@@ -119,7 +109,7 @@ public:
     virtual void drawBitmap(const SkDraw&, const SkBitmap& bitmap,
                             const SkMatrix&, const SkPaint& paint) SK_OVERRIDE {
         this->addBitmap(bitmap);
-        if (SkBitmap::kA8_Config == bitmap.config()) {
+        if (kAlpha_8_SkColorType == bitmap.colorType()) {
             this->addBitmapFromPaint(paint);
         }
     }
@@ -128,7 +118,7 @@ public:
                                 const SkPaint& paint,
                                 SkCanvas::DrawBitmapRectFlags flags) SK_OVERRIDE {
         this->addBitmap(bitmap);
-        if (SkBitmap::kA8_Config == bitmap.config()) {
+        if (kAlpha_8_SkColorType == bitmap.colorType()) {
             this->addBitmapFromPaint(paint);
         }
     }
@@ -164,13 +154,6 @@ public:
     }
 
 protected:
-    virtual bool onReadPixels(const SkBitmap& bitmap,
-                              int x, int y,
-                              SkCanvas::Config8888 config8888) SK_OVERRIDE {
-        not_supported();
-        return false;
-    }
-
     virtual void replaceBitmapBackendForRasterSurface(const SkBitmap&) SK_OVERRIDE {
         not_supported();
     }
@@ -207,7 +190,7 @@ private:
     typedef SkBaseDevice INHERITED;
 };
 
-SkData* SkPictureUtils::GatherPixelRefs(SkPicture* pict, const SkRect& area) {
+SkData* SkPictureUtils::GatherPixelRefs(const SkPicture* pict, const SkRect& area) {
     if (NULL == pict) {
         return NULL;
     }
@@ -226,7 +209,7 @@ SkData* SkPictureUtils::GatherPixelRefs(SkPicture* pict, const SkRect& area) {
     SkNoSaveLayerCanvas canvas(&device);
 
     canvas.clipRect(area, SkRegion::kIntersect_Op, false);
-    canvas.drawPicture(*pict);
+    canvas.drawPicture(pict);
 
     SkData* data = NULL;
     int count = array.count();

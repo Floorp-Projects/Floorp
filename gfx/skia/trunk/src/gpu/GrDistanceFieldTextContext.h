@@ -17,7 +17,7 @@ class GrTextStrike;
  */
 class GrDistanceFieldTextContext : public GrTextContext {
 public:
-    GrDistanceFieldTextContext(GrContext*, const SkDeviceProperties&);
+    GrDistanceFieldTextContext(GrContext*, const SkDeviceProperties&, bool enable);
     virtual ~GrDistanceFieldTextContext();
 
     virtual void drawText(const GrPaint&, const SkPaint&, const char text[], size_t byteLength,
@@ -32,9 +32,12 @@ public:
 private:
     GrTextStrike*           fStrike;
     SkScalar                fTextRatio;
+    bool                    fUseLCDText;
+    bool                    fEnableDFRendering;
+    GrTexture*              fGammaTexture;
 
     void init(const GrPaint&, const SkPaint&);
-    void drawPackedGlyph(GrGlyph::PackedID, GrFixed left, GrFixed top, GrFontScaler*);
+    void drawPackedGlyph(GrGlyph::PackedID, SkFixed left, SkFixed top, GrFontScaler*);
     void flushGlyphs();                 // automatically called by destructor
     void finish();
 
@@ -45,9 +48,7 @@ private:
         kDefaultRequestedVerts   = kDefaultRequestedGlyphs * 4,
     };
 
-    SkPoint*                fVertices;
-    int32_t                 fMaxVertices;
-    GrTexture*              fCurrTexture;
+    void*                   fVertices;
     int                     fCurrVertex;
 };
 

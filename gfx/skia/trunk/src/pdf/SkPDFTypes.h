@@ -369,7 +369,7 @@ public:
 
     /** The size of the dictionary.
      */
-    int size() { return fValue.count(); }
+    int size() const;
 
     /** Add the value to the dictionary with the given key.  Refs value.
      *  @param key   The key for this dictionary entry.
@@ -391,6 +391,14 @@ public:
      *  @param value The int value for this dictionary entry.
      */
     void insertInt(const char key[], int32_t value);
+
+    /**
+     *  Calls insertInt() but asserts in debug builds that the value can be represented
+     *  by an int32_t.
+     */
+    void insertInt(const char key[], size_t value) {
+        this->insertInt(key, SkToS32(value));
+    }
 
     /** Add the scalar to the dictionary with the given key.
      *  @param key   The text of the key for this dictionary entry.
@@ -416,27 +424,29 @@ public:
      */
     void clear();
 
+protected:
+    /** Use to remove a single key from the dictionary.
+     */
+    void remove(const char key[]);
+
+    /** Insert references to all of the key-value pairs from the other
+     *  dictionary into this one.
+     */
+    void mergeFrom(const SkPDFDict& other);
+
 private:
     struct Rec {
-      SkPDFName* key;
-      SkPDFObject* value;
+        SkPDFName* key;
+        SkPDFObject* value;
+        Rec(SkPDFName* k, SkPDFObject* v) : key(k), value(v) {}
     };
 
-public:
-    class Iter {
-    public:
-        explicit Iter(const SkPDFDict& dict);
-        SkPDFName* next(SkPDFObject** value);
-
-    private:
-        const Rec* fIter;
-        const Rec* fStop;
-    };
-
-private:
     static const int kMaxLen = 4095;
 
+    mutable SkMutex fMutex;  // protects modifications to fValue
     SkTDArray<struct Rec> fValue;
+
+    SkPDFObject* append(SkPDFName* key, SkPDFObject* value);
 
     typedef SkPDFObject INHERITED;
 };

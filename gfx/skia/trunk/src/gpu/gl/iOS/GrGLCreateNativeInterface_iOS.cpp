@@ -6,7 +6,6 @@
  * found in the LICENSE file.
  */
 
-
 #include "gl/GrGLInterface.h"
 
 #import <OpenGLES/ES2/gl.h>
@@ -32,6 +31,7 @@ const GrGLInterface* GrGLCreateNativeInterface() {
     functions->fColorMask = glColorMask;
     functions->fCompileShader = glCompileShader;
     functions->fCompressedTexImage2D = glCompressedTexImage2D;
+    functions->fCompressedTexSubImage2D = glCompressedTexSubImage2D;
     functions->fCopyTexSubImage2D = glCopyTexSubImage2D;
     functions->fCreateProgram = glCreateProgram;
     functions->fCreateShader = glCreateShader;
@@ -70,7 +70,7 @@ const GrGLInterface* GrGLCreateNativeInterface() {
     functions->fReadBuffer = NULL;
     functions->fReadPixels = glReadPixels;
     functions->fScissor = glScissor;
-    functions->fShaderSource = glShaderSource;
+    functions->fShaderSource = (GrGLShaderSourceProc) glShaderSource;
     functions->fStencilFunc = glStencilFunc;
     functions->fStencilFuncSeparate = glStencilFuncSeparate;
     functions->fStencilMask = glStencilMask;
@@ -133,8 +133,13 @@ const GrGLInterface* GrGLCreateNativeInterface() {
     functions->fUnmapBuffer = glUnmapBufferOES;
 #endif
 
+#if GL_EXT_map_buffer_range || GL_ES_VERSION_3_0
+    functions->fMapBufferRange = glMapBufferRangeEXT;
+    functions->fFlushMappedBufferRange = glFlushMappedBufferRangeEXT;
+#endif
+
 #if GL_APPLE_framebuffer_multisample
-    functions->fRenderbufferStorageMultisample = glRenderbufferStorageMultisampleAPPLE;
+    functions->fRenderbufferStorageMultisampleES2APPLE = glRenderbufferStorageMultisampleAPPLE;
     functions->fResolveMultisampleFramebuffer = glResolveMultisampleFramebufferAPPLE;
 #endif
 
@@ -148,6 +153,18 @@ const GrGLInterface* GrGLCreateNativeInterface() {
     functions->fInsertEventMarker = glInsertEventMarkerEXT;
     functions->fPushGroupMarker = glPushGroupMarkerEXT;
     functions->fPopGroupMarker = glPopGroupMarkerEXT;
+#endif
+
+#if GL_ES_VERSION_3_0 || GL_ARB_invalidate_subdata
+    functions->fInvalidateFramebuffer = glInvalidateFramebuffer;
+    functions->fInvalidateSubFramebuffer = glInvalidateSubFramebuffer;
+#endif
+
+#if GL_ARB_invalidate_subdata
+    functions->fInvalidateBufferData = glInvalidateBufferData;
+    functions->fInvalidateBufferSubData = glInvalidateBufferSubData;
+    functions->fInvalidateTexImage = glInvalidateTexImage;
+    functions->fInvalidateTexSubImage = glInvalidateTexSubImage;
 #endif
 
     interface->fStandard = kGLES_GrGLStandard;

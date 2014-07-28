@@ -178,15 +178,6 @@ typedef unsigned __int64 uint64_t;
 #define GrAlwaysAssert(COND) GR_ALWAYSASSERT(COND)
 
 /**
- * Crash from unrecoverable condition, optionally with a message. The debug variants only
- * crash in a debug build. The message versions print the message regardless of release vs debug.
- */
-inline void GrCrash() { GrAlwaysAssert(false); }
-inline void GrCrash(const char* msg) { GrPrintf(msg); GrAlwaysAssert(false); }
-inline void GrDebugCrash() { SkASSERT(false); }
-inline void GrDebugCrash(const char* msg) { GrPrintf(msg); SkASSERT(false); }
-
-/**
  *  GR_STATIC_ASSERT is a compile time assertion. Depending on the platform
  *  it may print the message in the compiler log. Obviously, the condition must
  *  be evaluatable at compile time.
@@ -206,13 +197,13 @@ inline void GrDebugCrash(const char* msg) { GrPrintf(msg); SkASSERT(false); }
 #endif
 
 /**
- * GR_GEOM_BUFFER_LOCK_THRESHOLD gives a threshold (in bytes) for when Gr should
- * lock a GrGeometryBuffer to update its contents. It will use lock() if the
+ * GR_GEOM_BUFFER_MAP_THRESHOLD gives a threshold (in bytes) for when Gr should
+ * map a GrGeometryBuffer to update its contents. It will use map() if the
  * size of the updated region is greater than the threshold. Otherwise it will
  * use updateData().
  */
-#if !defined(GR_GEOM_BUFFER_LOCK_THRESHOLD)
-    #define GR_GEOM_BUFFER_LOCK_THRESHOLD (1 << 15)
+#if !defined(GR_GEOM_BUFFER_MAP_THRESHOLD)
+    #define GR_GEOM_BUFFER_MAP_THRESHOLD (1 << 15)
 #endif
 
 /**

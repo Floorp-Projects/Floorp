@@ -27,7 +27,7 @@ class GrTexture;
 /** \class SkBitmap
 
     The SkBitmap class specifies a raster bitmap. A bitmap has an integer width
-    and height, and a format (config), and a pointer to the actual pixels.
+    and height, and a format (colortype), and a pointer to the actual pixels.
     Bitmaps can be drawn into a SkCanvas, but they are also used to specify the
     target of a SkCanvas' drawing operations.
     A const SkBitmap exposes getAddr(), which lets a caller write its pixels;
@@ -38,6 +38,7 @@ class SK_API SkBitmap {
 public:
     class SK_API Allocator;
 
+#ifdef SK_SUPPORT_LEGACY_BITMAP_CONFIG
     enum Config {
         kNo_Config,         //!< bitmap has not been configured
         kA8_Config,         //!< 8-bits per pixel, with only alpha specified (0 is transparent, 0xFF is opaque)
@@ -53,9 +54,16 @@ public:
         kConfigCount = kARGB_8888_Config + 1
     };
 
+    /** Return the config for the bitmap. */
+    Config  config() const;
+    
+    SK_ATTR_DEPRECATED("use config()")
+    Config  getConfig() const { return this->config(); }
+#endif
+
     /**
      *  Default construct creates a bitmap with zero width and height, and no pixels.
-     *  Its config is set to kNo_Config.
+     *  Its colortype is set to kUnknown_SkColorType.
      */
     SkBitmap();
 
@@ -88,24 +96,23 @@ public:
     SkColorType colorType() const { return fInfo.fColorType; }
     SkAlphaType alphaType() const { return fInfo.fAlphaType; }
 
-    /** Return the number of bytes per pixel based on the config. If the config
-     does not have at least 1 byte per (e.g. kA1_Config) then 0 is returned.
+    /**
+     *  Return the number of bytes per pixel based on the colortype. If the colortype is
+     *  kUnknown_SkColorType, then 0 is returned.
      */
     int bytesPerPixel() const { return fInfo.bytesPerPixel(); }
 
-    /** Return the rowbytes expressed as a number of pixels (like width and
-     height). Note, for 1-byte per pixel configs like kA8_Config, this will
-     return the same as rowBytes(). Is undefined for configs that are less
-     than 1-byte per pixel (e.g. kA1_Config)
+    /**
+     *  Return the rowbytes expressed as a number of pixels (like width and height).
+     *  If the colortype is kUnknown_SkColorType, then 0 is returned.
      */
     int rowBytesAsPixels() const {
         return fRowBytes >> this->shiftPerPixel();
     }
 
-    /** Return the shift amount per pixel (i.e. 0 for 1-byte per pixel, 1 for
-     2-bytes per pixel configs, 2 for 4-bytes per pixel configs). Return 0
-     for configs that are not at least 1-byte per pixel (e.g. kA1_Config
-     or kNo_Config)
+    /**
+     *  Return the shift amount per pixel (i.e. 0 for 1-byte per pixel, 1 for 2-bytes per pixel
+     *  colortypes, 2 for 4-bytes per pixel colortypes). Return 0 for kUnknown_SkColorType.
      */
     int shiftPerPixel() const { return this->bytesPerPixel() >> 1; }
 
@@ -126,19 +133,13 @@ public:
      */
     bool drawsNothing() const { return this->empty() || this->isNull(); }
 
-    /** Return the config for the bitmap. */
-    Config  config() const;
-
-    SK_ATTR_DEPRECATED("use config()")
-    Config  getConfig() const { return this->config(); }
-
     /** Return the number of bytes between subsequent rows of the bitmap. */
     size_t rowBytes() const { return fRowBytes; }
 
     /**
      *  Set the bitmap's alphaType, returning true on success. If false is
      *  returned, then the specified new alphaType is incompatible with the
-     *  Config, and the current alphaType is unchanged.
+     *  colortype, and the current alphaType is unchanged.
      *
      *  Note: this changes the alphatype for the underlying pixels, which means
      *  that all bitmaps that might be sharing (subsets of) the pixels will
@@ -215,26 +216,6 @@ public:
     */
     void reset();
 
-    /** Given a config and a width, this computes the optimal rowBytes value. This is called automatically
-        if you pass 0 for rowBytes to setConfig().
-    */
-    static size_t ComputeRowBytes(Config c, int width);
-
-    /** Return the bytes-per-pixel for the specified config. If the config is
-        not at least 1-byte per pixel, return 0, including for kNo_Config.
-    */
-    static int ComputeBytesPerPixel(Config c);
-
-    /** Return the shift-per-pixel for the specified config. If the config is
-     not at least 1-byte per pixel, return 0, including for kNo_Config.
-     */
-    static int ComputeShiftPerPixel(Config c) {
-        return ComputeBytesPerPixel(c) >> 1;
-    }
-
-    static int64_t ComputeSize64(Config, int width, int height);
-    static size_t ComputeSize(Config, int width, int height);
-
     /**
      *  This will brute-force return true if all of the pixels in the bitmap
      *  are opaque. If it fails to read the pixels, or encounters an error,
@@ -252,26 +233,25 @@ public:
     void getBounds(SkRect* bounds) const;
     void getBounds(SkIRect* bounds) const;
 
-    /** Set the bitmap's config and dimensions. If rowBytes is 0, then
-        ComputeRowBytes() is called to compute the optimal value. This resets
-        any pixel/colortable ownership, just like reset().
-    */
-    bool setConfig(Config, int width, int height, size_t rowBytes, SkAlphaType);
-
-    bool setConfig(Config config, int width, int height, size_t rowBytes = 0) {
-        return this->setConfig(config, width, height, rowBytes,
-                               kPremul_SkAlphaType);
-    }
-
-    bool setConfig(const SkImageInfo& info, size_t rowBytes = 0);
+    bool setInfo(const SkImageInfo&, size_t rowBytes = 0);
 
     /**
-     *  Allocate a pixelref to match the specified image info. If the Factory
+     *  Allocate the bitmap's pixels to match the requested image info. If the Factory
      *  is non-null, call it to allcoate the pixelref. If the ImageInfo requires
      *  a colortable, then ColorTable must be non-null, and will be ref'd.
      *  On failure, the bitmap will be set to empty and return false.
      */
     bool allocPixels(const SkImageInfo&, SkPixelRefFactory*, SkColorTable*);
+
+    /**
+     *  Allocate the bitmap's pixels to match the requested image info and
+     *  rowBytes. If the request cannot be met (e.g. the info is invalid or
+     *  the requested rowBytes are not compatible with the info
+     *  (e.g. rowBytes < info.minRowBytes() or rowBytes is not aligned with
+     *  the pixel size specified by info.colorType()) then false is returned
+     *  and the bitmap is set to empty.
+     */
+    bool allocPixels(const SkImageInfo& info, size_t rowBytes);
 
     /**
      *  Allocate a pixelref to match the specified image info, using the default
@@ -280,14 +260,8 @@ public:
      *  On failure, the bitmap will be set to empty and return false.
      */
     bool allocPixels(const SkImageInfo& info) {
-        return this->allocPixels(info, NULL, NULL);
+        return this->allocPixels(info, info.minRowBytes());
     }
-
-    /**
-     *  Legacy helper function, which creates an SkImageInfo from the specified
-     *  config and then calls allocPixels(info).
-     */
-    bool allocConfigPixels(Config, int width, int height, bool isOpaque = false);
 
     bool allocN32Pixels(int width, int height, bool isOpaque = false) {
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
@@ -300,13 +274,12 @@ public:
     /**
      *  Install a pixelref that wraps the specified pixels and rowBytes, and
      *  optional ReleaseProc and context. When the pixels are no longer
-     *  referenced, if ReleaseProc is not null, it will be called with the
+     *  referenced, if releaseProc is not null, it will be called with the
      *  pixels and context as parameters.
      *  On failure, the bitmap will be set to empty and return false.
      */
-    bool installPixels(const SkImageInfo&, void* pixels, size_t rowBytes,
-                       void (*ReleaseProc)(void* addr, void* context),
-                       void* context);
+    bool installPixels(const SkImageInfo&, void* pixels, size_t rowBytes, SkColorTable*,
+                       void (*releaseProc)(void* addr, void* context), void* context);
 
     /**
      *  Call installPixels with no ReleaseProc specified. This means that the
@@ -314,7 +287,7 @@ public:
      *  of the created bitmap (and its pixelRef).
      */
     bool installPixels(const SkImageInfo& info, void* pixels, size_t rowBytes) {
-        return this->installPixels(info, pixels, rowBytes, NULL, NULL);
+        return this->installPixels(info, pixels, rowBytes, NULL, NULL, NULL);
     }
 
     /**
@@ -323,20 +296,6 @@ public:
      *  of the created bitmap (and its pixelRef).
      */
     bool installMaskPixels(const SkMask&);
-
-    /**
-     *  DEPRECATED: call info().
-     */
-    bool asImageInfo(SkImageInfo* info) const {
-        // compatibility: return false for kUnknown
-        if (kUnknown_SkColorType == this->colorType()) {
-            return false;
-        }
-        if (info) {
-            *info = this->info();
-        }
-        return true;
-    }
 
     /** Use this to assign a new pixel address for an existing bitmap. This
         will automatically release any pixelref previously installed. Only call
@@ -372,7 +331,7 @@ public:
                       bool preserveDstPad = false) const;
 
     /** Use the standard HeapAllocator to create the pixelref that manages the
-        pixel memory. It will be sized based on the current width/height/config.
+        pixel memory. It will be sized based on the current ImageInfo.
         If this is called multiple times, a new pixelref object will be created
         each time.
 
@@ -380,7 +339,7 @@ public:
         not null) it will take care of incrementing the reference count.
 
         @param ctable   ColorTable (or null) to use with the pixels that will
-                        be allocated. Only used if config == Index8_Config
+                        be allocated. Only used if colortype == kIndex_8_SkColorType
         @return true if the allocation succeeds. If not the pixelref field of
                      the bitmap will be unchanged.
     */
@@ -389,7 +348,7 @@ public:
     }
 
     /** Use the specified Allocator to create the pixelref that manages the
-        pixel memory. It will be sized based on the current width/height/config.
+        pixel memory. It will be sized based on the current ImageInfo.
         If this is called multiple times, a new pixelref object will be created
         each time.
 
@@ -397,12 +356,11 @@ public:
         not null) it will take care of incrementing the reference count.
 
         @param allocator The Allocator to use to create a pixelref that can
-                         manage the pixel memory for the current
-                         width/height/config. If allocator is NULL, the standard
-                         HeapAllocator will be used.
+                         manage the pixel memory for the current ImageInfo.
+                         If allocator is NULL, the standard HeapAllocator will be used.
         @param ctable   ColorTable (or null) to use with the pixels that will
-                        be allocated. Only used if config == Index8_Config.
-                        If it is non-null and the config is not Index8, it will
+                        be allocated. Only used if colortype == kIndex_8_SkColorType.
+                        If it is non-null and the colortype is not indexed, it will
                         be ignored.
         @return true if the allocation succeeds. If not the pixelref field of
                      the bitmap will be unchanged.
@@ -466,7 +424,7 @@ public:
     bool lockPixelsAreWritable() const;
 
     /** Call this to be sure that the bitmap is valid enough to be drawn (i.e.
-        it has non-null pixels, and if required by its config, it has a
+        it has non-null pixels, and if required by its colortype, it has a
         non-null colortable. Returns true if all of the above are met.
     */
     bool readyToDraw() const {
@@ -488,7 +446,7 @@ public:
     /** Returns a non-zero, unique value corresponding to the pixels in our
         pixelref. Each time the pixels are changed (and notifyPixelsChanged
         is called), a different generation ID will be returned. Finally, if
-        their is no pixelRef then zero is returned.
+        there is no pixelRef then zero is returned.
     */
     uint32_t getGenerationID() const;
 
@@ -500,8 +458,8 @@ public:
 
     /**
      *  Fill the entire bitmap with the specified color.
-     *  If the bitmap's config does not support alpha (e.g. 565) then the alpha
-     *  of the color is ignored (treated as opaque). If the config only supports
+     *  If the bitmap's colortype does not support alpha (e.g. 565) then the alpha
+     *  of the color is ignored (treated as opaque). If the colortype only supports
      *  alpha (e.g. A1 or A8) then the color's r,g,b components are ignored.
      */
     void eraseColor(SkColor c) const {
@@ -511,8 +469,8 @@ public:
 
     /**
      *  Fill the entire bitmap with the specified color.
-     *  If the bitmap's config does not support alpha (e.g. 565) then the alpha
-     *  of the color is ignored (treated as opaque). If the config only supports
+     *  If the bitmap's colortype does not support alpha (e.g. 565) then the alpha
+     *  of the color is ignored (treated as opaque). If the colortype only supports
      *  alpha (e.g. A1 or A8) then the color's r,g,b components are ignored.
      */
     void eraseARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) const;
@@ -524,8 +482,8 @@ public:
 
     /**
      *  Fill the specified area of this bitmap with the specified color.
-     *  If the bitmap's config does not support alpha (e.g. 565) then the alpha
-     *  of the color is ignored (treated as opaque). If the config only supports
+     *  If the bitmap's colortype does not support alpha (e.g. 565) then the alpha
+     *  of the color is ignored (treated as opaque). If the colortype only supports
      *  alpha (e.g. A1 or A8) then the color's r,g,b components are ignored.
      */
     void eraseArea(const SkIRect& area, SkColor c) const;
@@ -544,9 +502,8 @@ public:
                      was scrolled away. E.g. if dx = dy = 0, then inval would
                      be set to empty. If dx >= width or dy >= height, then
                      inval would be set to the entire bounds of the bitmap.
-        @return true if the scroll was doable. Will return false if the bitmap
-                     uses an unsupported config for scrolling (only kA8,
-                     kIndex8, kRGB_565, kARGB_4444, kARGB_8888 are supported).
+        @return true if the scroll was doable. Will return false if the colortype is kUnkown or
+                     if the bitmap is immutable.
                      If no pixels are present (i.e. getPixels() returns false)
                      inval will still be updated, and true will be returned.
     */
@@ -555,9 +512,9 @@ public:
 
     /**
      *  Return the SkColor of the specified pixel.  In most cases this will
-     *  require un-premultiplying the color.  Alpha only configs (A1 and A8)
+     *  require un-premultiplying the color.  Alpha only colortypes (e.g. kAlpha_8_SkColorType)
      *  return black with the appropriate alpha set.  The value is undefined
-     *  for kNone_Config or if x or y are out of bounds, or if the bitmap
+     *  for kUnknown_SkColorType or if x or y are out of bounds, or if the bitmap
      *  does not have any pixels (or has not be locked with lockPixels()).
      */
     SkColor getColor(int x, int y) const;
@@ -575,21 +532,21 @@ public:
 
     /** Returns the address of the pixel specified by x,y for 32bit pixels.
      *  In debug build, this asserts that the pixels are allocated and locked,
-     *  and that the config is 32-bit, however none of these checks are performed
+     *  and that the colortype is 32-bit, however none of these checks are performed
      *  in the release build.
      */
     inline uint32_t* getAddr32(int x, int y) const;
 
     /** Returns the address of the pixel specified by x,y for 16bit pixels.
      *  In debug build, this asserts that the pixels are allocated and locked,
-     *  and that the config is 16-bit, however none of these checks are performed
+     *  and that the colortype is 16-bit, however none of these checks are performed
      *  in the release build.
      */
     inline uint16_t* getAddr16(int x, int y) const;
 
     /** Returns the address of the pixel specified by x,y for 8bit pixels.
      *  In debug build, this asserts that the pixels are allocated and locked,
-     *  and that the config is 8-bit, however none of these checks are performed
+     *  and that the colortype is 8-bit, however none of these checks are performed
      *  in the release build.
      */
     inline uint8_t* getAddr8(int x, int y) const;
@@ -597,16 +554,16 @@ public:
     /** Returns the color corresponding to the pixel specified by x,y for
      *  colortable based bitmaps.
      *  In debug build, this asserts that the pixels are allocated and locked,
-     *  that the config is kIndex8, and that the colortable is allocated,
+     *  that the colortype is indexed, and that the colortable is allocated,
      *  however none of these checks are performed in the release build.
      */
     inline SkPMColor getIndex8Color(int x, int y) const;
 
     /** Set dst to be a setset of this bitmap. If possible, it will share the
-        pixel memory, and just point into a subset of it. However, if the config
+        pixel memory, and just point into a subset of it. However, if the colortype
         does not support this, a local copy will be made and associated with
         the dst bitmap. If the subset rectangle, intersected with the bitmap's
-        dimensions is empty, or if there is an unsupported config, false will be
+        dimensions is empty, or if there is an unsupported colortype, false will be
         returned and dst will be untouched.
         @param dst  The bitmap that will be set to a subset of this bitmap
         @param subset The rectangle of pixels in this bitmap that dst will
@@ -619,7 +576,7 @@ public:
      *  and allocating the dst pixels on the cpu.
      *  Returns false if either there is an error (i.e. the src does not have
      *  pixels) or the request cannot be satisfied (e.g. the src has per-pixel
-     *  alpha, and the requested config does not support alpha).
+     *  alpha, and the requested colortype does not support alpha).
      *  @param dst The bitmap to be sized and allocated
      *  @param ct The desired colorType for dst
      *  @param allocator Allocator used to allocate the pixelref for the dst
@@ -634,6 +591,28 @@ public:
     }
 
     /**
+     *  Copy the bitmap's pixels into the specified buffer (pixels + rowBytes),
+     *  converting them into the requested format (SkImageInfo). The src pixels are read
+     *  starting at the specified (srcX,srcY) offset, relative to the top-left corner.
+     *
+     *  The specified ImageInfo and (srcX,srcY) offset specifies a source rectangle
+     *
+     *      srcR.setXYWH(srcX, srcY, dstInfo.width(), dstInfo.height());
+     *
+     *  srcR is intersected with the bounds of the bitmap. If this intersection is not empty,
+     *  then we have two sets of pixels (of equal size). Replace the dst pixels with the
+     *  corresponding src pixels, performing any colortype/alphatype transformations needed
+     *  (in the case where the src and dst have different colortypes or alphatypes).
+     *
+     *  This call can fail, returning false, for several reasons:
+     *  - If srcR does not intersect the bitmap bounds.
+     *  - If the requested colortype/alphatype cannot be converted from the src's types.
+     *  - If the src pixels are not available.
+     */
+    bool readPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
+                    int srcX, int srcY) const;
+
+    /**
      *  Returns true if this bitmap's pixels can be converted into the requested
      *  colorType, such that copyTo() could succeed.
      */
@@ -646,9 +625,6 @@ public:
      *  If the request cannot be fulfilled, returns false and dst is unmodified.
      */
     bool deepCopyTo(SkBitmap* dst) const;
-
-    SK_ATTR_DEPRECATED("use setFilterLevel on SkPaint")
-    void buildMipMap(bool forceRebuild = false);
 
 #ifdef SK_BUILD_FOR_ANDROID
     bool hasHardwareMipMap() const {
@@ -689,16 +665,6 @@ public:
     bool extractAlpha(SkBitmap* dst, const SkPaint* paint, Allocator* allocator,
                       SkIPoint* offset) const;
 
-    /** The following two functions provide the means to both flatten and
-        unflatten the bitmap AND its pixels into the provided buffer.
-        It is recommended that you do not call these functions directly,
-        but instead call the write/readBitmap functions on the respective
-        buffers as they can optimize the recording process and avoid recording
-        duplicate bitmaps and pixelRefs.
-     */
-    void flatten(SkWriteBuffer&) const;
-    void unflatten(SkReadBuffer&);
-
     SkDEBUGCODE(void validate() const;)
 
     class Allocator : public SkRefCnt {
@@ -706,9 +672,9 @@ public:
         SK_DECLARE_INST_COUNT(Allocator)
 
         /** Allocate the pixel memory for the bitmap, given its dimensions and
-            config. Return true on success, where success means either setPixels
+            colortype. Return true on success, where success means either setPixels
             or setPixelRef was called. The pixels need not be locked when this
-            returns. If the config requires a colortable, it also must be
+            returns. If the colortype requires a colortable, it also must be
             installed via setColorTable. If false is returned, the bitmap and
             colortable should be left unchanged.
         */
@@ -750,9 +716,6 @@ public:
     SK_TO_STRING_NONVIRT()
 
 private:
-    struct MipMap;
-    mutable MipMap* fMipMap;
-
     mutable SkPixelRef* fPixelRef;
     mutable int         fPixelLockCount;
     // These are just caches from the locked pixelref
@@ -762,9 +725,7 @@ private:
     SkIPoint    fPixelRefOrigin;
 
     enum Flags {
-        kImageIsOpaque_Flag     = 0x01,
         kImageIsVolatile_Flag   = 0x02,
-        kImageIsImmutable_Flag  = 0x04,
 #ifdef SK_BUILD_FOR_ANDROID
         /* A hint for the renderer responsible for drawing this bitmap
          * indicating that it should attempt to use mipmaps when this bitmap
@@ -782,36 +743,23 @@ private:
 
     void internalErase(const SkIRect&, U8CPU a, U8CPU r, U8CPU g, U8CPU b)const;
 
-    /* Internal computations for safe size.
-    */
-    static int64_t ComputeSafeSize64(Config   config,
-                                     uint32_t width,
-                                     uint32_t height,
-                                     size_t   rowBytes);
-    static size_t ComputeSafeSize(Config   config,
-                                  uint32_t width,
-                                  uint32_t height,
-                                  size_t   rowBytes);
-
     /*  Unreference any pixelrefs or colortables
     */
     void freePixels();
     void updatePixelsFromRef() const;
 
-    static SkFixed ComputeMipLevel(SkFixed sx, SkFixed dy);
+    void legacyUnflatten(SkReadBuffer&);
 
-    /** Given scale factors sx, sy, determine the miplevel available in the
-     bitmap, and return it (this is the amount to shift matrix iterators
-     by). If dst is not null, it is set to the correct level.
-     */
-    int extractMipLevel(SkBitmap* dst, SkFixed sx, SkFixed sy);
-    bool hasMipMap() const;
-    void freeMipMap();
+    static void WriteRawPixels(SkWriteBuffer*, const SkBitmap&);
+    static bool ReadRawPixels(SkReadBuffer*, SkBitmap*);
 
+    friend class SkBitmapSource;    // unflatten
+    friend class SkReadBuffer;      // unflatten, rawpixels
+    friend class SkWriteBuffer;     // rawpixels
     friend struct SkBitmapProcState;
 };
 
-class SkAutoLockPixels : public SkNoncopyable {
+class SkAutoLockPixels : SkNoncopyable {
 public:
     SkAutoLockPixels(const SkBitmap& bm, bool doLock = true) : fBitmap(bm) {
         fDidLock = doLock;
@@ -835,7 +783,7 @@ private:
 /** Helper class that performs the lock/unlockColors calls on a colortable.
     The destructor will call unlockColors(false) if it has a bitmap's colortable
 */
-class SkAutoLockColors : public SkNoncopyable {
+class SkAutoLockColors : SkNoncopyable {
 public:
     /** Initialize with no bitmap. Call lockColors(bitmap) to lock bitmap's
         colortable
@@ -917,11 +865,13 @@ inline SkPMColor SkBitmap::getIndex8Color(int x, int y) const {
     return (*fColorTable)[*((const uint8_t*)fPixels + y * fRowBytes + x)];
 }
 
+#ifdef SK_SUPPORT_LEGACY_BITMAP_CONFIG
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Helpers until we can fully deprecate SkBitmap::Config
 //
-extern SkBitmap::Config SkColorTypeToBitmapConfig(SkColorType);
-extern SkColorType SkBitmapConfigToColorType(SkBitmap::Config);
+SK_API SkBitmap::Config SkColorTypeToBitmapConfig(SkColorType);
+SK_API SkColorType SkBitmapConfigToColorType(SkBitmap::Config);
+#endif
 
 #endif

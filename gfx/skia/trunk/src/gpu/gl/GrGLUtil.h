@@ -18,6 +18,14 @@ class SkMatrix;
 typedef uint32_t GrGLVersion;
 typedef uint32_t GrGLSLVersion;
 
+#define GR_GL_VER(major, minor) ((static_cast<int>(major) << 16) | \
+                                 static_cast<int>(minor))
+#define GR_GLSL_VER(major, minor) ((static_cast<int>(major) << 16) | \
+                                   static_cast<int>(minor))
+
+#define GR_GL_INVALID_VER GR_GL_VER(0, 0)
+#define GR_GLSL_INVALID_VER GR_GL_VER(0, 0)
+
 /**
  * The Vendor and Renderer enum values are lazily updated as required.
  */
@@ -26,6 +34,7 @@ enum GrGLVendor {
     kImagination_GrGLVendor,
     kIntel_GrGLVendor,
     kQualcomm_GrGLVendor,
+    kNVIDIA_GrGLVendor,
 
     kOther_GrGLVendor
 };
@@ -36,11 +45,6 @@ enum GrGLRenderer {
 
     kOther_GrGLRenderer
 };
-
-#define GR_GL_VER(major, minor) ((static_cast<int>(major) << 16) | \
-                                 static_cast<int>(minor))
-#define GR_GLSL_VER(major, minor) ((static_cast<int>(major) << 16) | \
-                                   static_cast<int>(minor))
 
 ////////////////////////////////////////////////////////////////////////////////
 

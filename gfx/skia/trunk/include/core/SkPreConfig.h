@@ -92,15 +92,25 @@
 //////////////////////////////////////////////////////////////////////
 
 #if !defined(SK_CPU_BENDIAN) && !defined(SK_CPU_LENDIAN)
-    #if defined (__ppc__) || defined(__PPC__) || defined(__ppc64__) \
-        || defined(__PPC64__)
-        #define SK_CPU_BENDIAN
+    #if defined(__sparc) || defined(__sparc__) || \
+      defined(_POWER) || defined(__powerpc__) || \
+      defined(__ppc__) || defined(__hppa) || \
+      defined(__PPC__) || defined(__PPC64__) || \
+      defined(_MIPSEB) || defined(__ARMEB__) || \
+      defined(__s390__) || \
+      (defined(__sh__) && defined(__BIG_ENDIAN__)) || \
+      (defined(__ia64) && defined(__BIG_ENDIAN__))
+         #define SK_CPU_BENDIAN
     #else
         #define SK_CPU_LENDIAN
     #endif
 #endif
 
 //////////////////////////////////////////////////////////////////////
+
+#if defined(__i386) || defined(_M_IX86) ||  defined(__x86_64__) || defined(_M_X64)
+  #define SK_CPU_X86 1
+#endif
 
 /**
  *  SK_CPU_SSE_LEVEL
@@ -113,12 +123,18 @@
 #define SK_CPU_SSE_LEVEL_SSE2     20
 #define SK_CPU_SSE_LEVEL_SSE3     30
 #define SK_CPU_SSE_LEVEL_SSSE3    31
+#define SK_CPU_SSE_LEVEL_SSE41    41
+#define SK_CPU_SSE_LEVEL_SSE42    42
 
 // Are we in GCC?
 #ifndef SK_CPU_SSE_LEVEL
     // These checks must be done in descending order to ensure we set the highest
     // available SSE level.
-    #if defined(__SSSE3__)
+    #if defined(__SSE4_2__)
+        #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSE42
+    #elif defined(__SSE4_1__)
+        #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSE41
+    #elif defined(__SSSE3__)
         #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSSE3
     #elif defined(__SSE3__)
         #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSE3
@@ -130,8 +146,10 @@
 // Are we in VisualStudio?
 #ifndef SK_CPU_SSE_LEVEL
     // These checks must be done in descending order to ensure we set the highest
-    // available SSE level.
-    #if defined (_M_IX86_FP)
+    // available SSE level. 64-bit intel guarantees at least SSE2 support.
+    #if defined(_M_X64) || defined(_M_AMD64)
+        #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSE2
+    #elif defined (_M_IX86_FP)
         #if _M_IX86_FP >= 2
             #define SK_CPU_SSE_LEVEL    SK_CPU_SSE_LEVEL_SSE2
         #elif _M_IX86_FP == 1
@@ -144,7 +162,7 @@
 // ARM defines
 
 #if defined(__arm__) && (!defined(__APPLE__) || !TARGET_IPHONE_SIMULATOR)
-    #define SK_CPU_ARM
+    #define SK_CPU_ARM32
 
     #if defined(__GNUC__)
         #if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) \
@@ -172,6 +190,11 @@
             #define SK_ARM_HAS_EDSP
         #endif
     #endif
+#endif
+
+// Disable ARM64 optimizations for iOS due to complications regarding gyp and iOS.
+#if defined(__aarch64__) && !defined(SK_BUILD_FOR_IOS)
+    #define SK_CPU_ARM64
 #endif
 
 //////////////////////////////////////////////////////////////////////

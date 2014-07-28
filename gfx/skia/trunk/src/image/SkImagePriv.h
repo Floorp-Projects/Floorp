@@ -11,10 +11,6 @@
 #include "SkBitmap.h"
 #include "SkImage.h"
 
-class SkPicture;
-
-extern SkBitmap::Config SkImageInfoToBitmapConfig(const SkImageInfo&);
-
 // Call this if you explicitly want to use/share this pixelRef in the image
 extern SkImage* SkNewImageFromPixelRef(const SkImageInfo&, SkPixelRef*,
                                        size_t rowBytes);
@@ -25,23 +21,11 @@ extern SkImage* SkNewImageFromPixelRef(const SkImageInfo&, SkPixelRef*,
  *  be shared if either the bitmap is marked as immutable, or canSharePixelRef
  *  is true.
  *
- *  If the bitmap's config cannot be converted into a corresponding
+ *  If the bitmap's colortype cannot be converted into a corresponding
  *  SkImageInfo, or the bitmap's pixels cannot be accessed, this will return
  *  NULL.
  */
 extern SkImage* SkNewImageFromBitmap(const SkBitmap&, bool canSharePixelRef);
-
-extern void SkImagePrivDrawPicture(SkCanvas*, SkPicture*,
-                                   SkScalar x, SkScalar y, const SkPaint*);
-
-extern void SkImagePrivDrawPicture(SkCanvas*, SkPicture*,
-                                   const SkRect*, const SkRect&, const SkPaint*);
-
-/**
- *  Return an SkImage whose contents are those of the specified picture. Note:
- *  The picture itself is unmodified, and may continue to be used for recording
- */
-extern SkImage* SkNewImageFromPicture(const SkPicture*);
 
 static inline size_t SkImageMinRowBytes(const SkImageInfo& info) {
     return SkAlign4(info.minRowBytes());
@@ -51,9 +35,6 @@ static inline size_t SkImageMinRowBytes(const SkImageInfo& info) {
 // may be called to see if the surface and the image share the same pixelref,
 // in which case the surface may need to perform a copy-on-write.
 extern SkPixelRef* SkBitmapImageGetPixelRef(SkImage* rasterImage);
-
-// Given an image created with NewPicture, return its SkPicture.
-extern SkPicture* SkPictureImageGetPicture(SkImage* pictureImage);
 
 // Given an image created with NewTexture, return its GrTexture. This
 // may be called to see if the surface and the image share the same GrTexture,

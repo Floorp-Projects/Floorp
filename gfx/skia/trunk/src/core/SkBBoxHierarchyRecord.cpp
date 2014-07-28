@@ -26,41 +26,42 @@ void SkBBoxHierarchyRecord::handleBBox(const SkRect& bounds) {
     fBoundingHierarchy->insert(draw, r, true);
 }
 
-void SkBBoxHierarchyRecord::willSave(SaveFlags flags) {
+void SkBBoxHierarchyRecord::willSave() {
     fStateTree->appendSave();
-    this->INHERITED::willSave(flags);
+    this->INHERITED::willSave();
 }
 
 SkCanvas::SaveLayerStrategy SkBBoxHierarchyRecord::willSaveLayer(const SkRect* bounds,
                                                                  const SkPaint* paint,
                                                                  SaveFlags flags) {
+    // For now, assume all filters affect transparent black.
+    // FIXME: This could be made less conservative as an optimization.
+    bool paintAffectsTransparentBlack = NULL != paint &&
+        ((NULL != paint->getImageFilter()) ||
+         (NULL != paint->getColorFilter()));
+    SkRect drawBounds;
+    if (paintAffectsTransparentBlack) {
+        if (bounds) {
+            drawBounds = *bounds;
+            this->getTotalMatrix().mapRect(&drawBounds);
+        } else {
+            SkIRect deviceBounds;
+            this->getClipDeviceBounds(&deviceBounds);
+            drawBounds.set(deviceBounds);
+        }
+    }
     fStateTree->appendSaveLayer(this->writeStream().bytesWritten());
-    return this->INHERITED::willSaveLayer(bounds, paint, flags);
+    SkCanvas::SaveLayerStrategy strategy = this->INHERITED::willSaveLayer(bounds, paint, flags);
+    if (paintAffectsTransparentBlack) {
+        this->handleBBox(drawBounds);
+        this->addNoOp();
+    }
+    return strategy;
 }
 
 void SkBBoxHierarchyRecord::willRestore() {
     fStateTree->appendRestore();
     this->INHERITED::willRestore();
-}
-
-void SkBBoxHierarchyRecord::didTranslate(SkScalar dx, SkScalar dy) {
-    fStateTree->appendTransform(getTotalMatrix());
-    INHERITED::didTranslate(dx, dy);
-}
-
-void SkBBoxHierarchyRecord::didScale(SkScalar sx, SkScalar sy) {
-    fStateTree->appendTransform(getTotalMatrix());
-    INHERITED::didScale(sx, sy);
-}
-
-void SkBBoxHierarchyRecord::didRotate(SkScalar degrees) {
-    fStateTree->appendTransform(getTotalMatrix());
-    INHERITED::didRotate(degrees);
-}
-
-void SkBBoxHierarchyRecord::didSkew(SkScalar sx, SkScalar sy) {
-    fStateTree->appendTransform(getTotalMatrix());
-    INHERITED::didSkew(sx, sy);
 }
 
 void SkBBoxHierarchyRecord::didConcat(const SkMatrix& matrix) {

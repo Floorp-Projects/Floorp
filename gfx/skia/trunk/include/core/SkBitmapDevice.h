@@ -30,93 +30,12 @@ public:
     */
     SkBitmapDevice(const SkBitmap& bitmap, const SkDeviceProperties& deviceProperties);
 
-#ifdef SK_SUPPORT_LEGACY_COMPATIBLEDEVICE_CONFIG
-    /**
-     *  Create a new raster device and have the pixels be automatically
-     *  allocated. The rowBytes of the device will be computed automatically
-     *  based on the config and the width.
-     *
-     *  @param config   The desired config for the pixels. If the request cannot
-     *                  be met, the closest matching support config will be used.
-     *  @param width    width (in pixels) of the device
-     *  @param height   height (in pixels) of the device
-     *  @param isOpaque Set to true if it is known that all of the pixels will
-     *                  be drawn to opaquely. Used as an accelerator when drawing
-     *                  these pixels to another device.
-     */
-    SkBitmapDevice(SkBitmap::Config config, int width, int height, bool isOpaque = false);
-
-    /**
-     *  Create a new raster device and have the pixels be automatically
-     *  allocated. The rowBytes of the device will be computed automatically
-     *  based on the config and the width.
-     *
-     *  @param config   The desired config for the pixels. If the request cannot
-     *                  be met, the closest matching support config will be used.
-     *  @param width    width (in pixels) of the device
-     *  @param height   height (in pixels) of the device
-     *  @param isOpaque Set to true if it is known that all of the pixels will
-     *                  be drawn to opaquely. Used as an accelerator when drawing
-     *                  these pixels to another device.
-     *  @param deviceProperties Properties which affect compositing.
-     */
-    SkBitmapDevice(SkBitmap::Config config, int width, int height, bool isOpaque,
-                   const SkDeviceProperties& deviceProperties);
-#endif
     static SkBitmapDevice* Create(const SkImageInfo&,
                                   const SkDeviceProperties* = NULL);
 
-    /** Return the width of the device (in pixels).
-    */
-    virtual int width() const SK_OVERRIDE { return fBitmap.width(); }
-    /** Return the height of the device (in pixels).
-    */
-    virtual int height() const SK_OVERRIDE { return fBitmap.height(); }
-
-    /** Returns true if the device's bitmap's config treats every pixels as
-        implicitly opaque.
-    */
-    virtual bool isOpaque() const SK_OVERRIDE { return fBitmap.isOpaque(); }
-
-    /** Return the bitmap config of the device's pixels
-    */
-    virtual SkBitmap::Config config() const SK_OVERRIDE { return fBitmap.config(); }
-
     virtual SkImageInfo imageInfo() const SK_OVERRIDE;
 
-#ifdef SK_SUPPORT_LEGACY_WRITEPIXELSCONFIG
-    /**
-     *  DEPRECATED: This will be made protected once WebKit stops using it.
-     *              Instead use Canvas' writePixels method.
-     *
-     *  Similar to draw sprite, this method will copy the pixels in bitmap onto
-     *  the device, with the top/left corner specified by (x, y). The pixel
-     *  values in the device are completely replaced: there is no blending.
-     *
-     *  Currently if bitmap is backed by a texture this is a no-op. This may be
-     *  relaxed in the future.
-     *
-     *  If the bitmap has config kARGB_8888_Config then the config8888 param
-     *  will determines how the pixel valuess are intepreted. If the bitmap is
-     *  not kARGB_8888_Config then this parameter is ignored.
-     */
-    virtual void writePixels(const SkBitmap& bitmap, int x, int y,
-                             SkCanvas::Config8888 config8888) SK_OVERRIDE;
-#endif
-    /**
-     * Return the device's associated gpu render target, or NULL.
-     */
-    virtual GrRenderTarget* accessRenderTarget() SK_OVERRIDE { return NULL; }
-
 protected:
-    /**
-     *  Device may filter the text flags for drawing text here. If it wants to
-     *  make a change to the specified values, it should write them into the
-     *  textflags parameter (output) and return true. If the paint is fine as
-     *  is, then ignore the textflags parameter and return false.
-     *
-     *  The baseclass SkDevice filters based on its depth and blitters.
-     */
     virtual bool filterTextFlags(const SkPaint& paint, TextFlags*) SK_OVERRIDE;
 
     /** Clears the entire device to the specified color (including alpha).
@@ -207,14 +126,7 @@ protected:
         return pr;
     }
 
-    /**
-     * Implements readPixels API. The caller will ensure that:
-     *  1. bitmap has pixel config kARGB_8888_Config.
-     *  2. bitmap has pixels.
-     *  3. The rectangle (x, y, x + bitmap->width(), y + bitmap->height()) is
-     *     contained in the device bounds.
-     */
-    virtual bool onReadPixels(const SkBitmap&, int x, int y, SkCanvas::Config8888) SK_OVERRIDE;
+    virtual bool onReadPixels(const SkImageInfo&, void*, size_t, int x, int y) SK_OVERRIDE;
     virtual bool onWritePixels(const SkImageInfo&, const void*, size_t, int, int) SK_OVERRIDE;
     virtual void* onAccessPixels(SkImageInfo* info, size_t* rowBytes) SK_OVERRIDE;
 
@@ -223,33 +135,6 @@ protected:
     */
     virtual void lockPixels() SK_OVERRIDE;
     virtual void unlockPixels() SK_OVERRIDE;
-
-    /**
-     *  Returns true if the device allows processing of this imagefilter. If
-     *  false is returned, then the filter is ignored. This may happen for
-     *  some subclasses that do not support pixel manipulations after drawing
-     *  has occurred (e.g. printing). The default implementation returns true.
-     */
-    virtual bool allowImageFilter(const SkImageFilter*) SK_OVERRIDE;
-
-    /**
-     *  Override and return true for filters that the device can handle
-     *  intrinsically. Doing so means that SkCanvas will pass-through this
-     *  filter to drawSprite and drawDevice (and potentially filterImage).
-     *  Returning false means the SkCanvas will have apply the filter itself,
-     *  and just pass the resulting image to the device.
-     */
-    virtual bool canHandleImageFilter(const SkImageFilter*) SK_OVERRIDE;
-
-    /**
-     *  Related (but not required) to canHandleImageFilter, this method returns
-     *  true if the device could apply the filter to the src bitmap and return
-     *  the result (and updates offset as needed).
-     *  If the device does not recognize or support this filter,
-     *  it just returns false and leaves result and offset unchanged.
-     */
-    virtual bool filterImage(const SkImageFilter*, const SkBitmap&, const SkImageFilter::Context&,
-                             SkBitmap* result, SkIPoint* offset) SK_OVERRIDE;
 
 private:
     friend class SkCanvas;
@@ -266,16 +151,7 @@ private:
     // any clip information.
     virtual void replaceBitmapBackendForRasterSurface(const SkBitmap&) SK_OVERRIDE;
 
-#ifdef SK_SUPPORT_LEGACY_COMPATIBLEDEVICE_CONFIG
-    // in support of legacy constructors
-    void init(SkBitmap::Config config, int width, int height, bool isOpaque);
-#endif
-
     virtual SkBaseDevice* onCreateDevice(const SkImageInfo&, Usage) SK_OVERRIDE;
-
-    /** Causes any deferred drawing to the device to be completed.
-     */
-    virtual void flush() SK_OVERRIDE {}
 
     virtual SkSurface* newSurface(const SkImageInfo&) SK_OVERRIDE;
     virtual const void* peekPixels(SkImageInfo*, size_t* rowBytes) SK_OVERRIDE;

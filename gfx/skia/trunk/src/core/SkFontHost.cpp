@@ -6,7 +6,7 @@
  */
 
 #include "SkFontLCDConfig.h"
-#include "SkOnce.h"
+#include "SkLazyPtr.h"
 
 static SkFontLCDConfig::LCDOrientation gLCDOrientation = SkFontLCDConfig::kHorizontal_LCDOrientation;
 static SkFontLCDConfig::LCDOrder gLCDOrder = SkFontLCDConfig::kRGB_LCDOrder;
@@ -110,6 +110,12 @@ protected:
                                            const SkFontStyle&) const SK_OVERRIDE {
         return NULL;
     }
+    virtual SkTypeface* onMatchFamilyStyleCharacter(const char familyName[],
+                                                    const SkFontStyle& style,
+                                                    const char bpc47[],
+                                                    uint32_t character) const SK_OVERRIDE {
+        return NULL;
+    }
     virtual SkTypeface* onMatchFaceStyle(const SkTypeface*,
                                          const SkFontStyle&) const SK_OVERRIDE {
         return NULL;
@@ -156,6 +162,11 @@ SkTypeface* SkFontMgr::matchFamilyStyle(const char familyName[],
     return this->onMatchFamilyStyle(familyName, fs);
 }
 
+SkTypeface* SkFontMgr::matchFamilyStyleCharacter(const char familyName[], const SkFontStyle& style,
+                                                 const char bpc47[], uint32_t character) const {
+    return this->onMatchFamilyStyleCharacter(familyName, style, bpc47, character);
+}
+
 SkTypeface* SkFontMgr::matchFaceStyle(const SkTypeface* face,
                                       const SkFontStyle& fs) const {
     return this->onMatchFaceStyle(face, fs);
@@ -187,19 +198,14 @@ SkTypeface* SkFontMgr::legacyCreateTypeface(const char familyName[],
     return this->onLegacyCreateTypeface(familyName, styleBits);
 }
 
-void set_up_default(SkFontMgr** singleton) {
-  *singleton = SkFontMgr::Factory();
-  // we never want to return NULL
-  if (NULL == *singleton) {
-      *singleton = SkNEW(SkEmptyFontMgr);
-  }
+SkFontMgr* SkFontMgr::CreateDefault() {
+    SkFontMgr* fm = SkFontMgr::Factory();
+    return fm ? fm : SkNEW(SkEmptyFontMgr);
 }
 
 SkFontMgr* SkFontMgr::RefDefault() {
-    static SkFontMgr* gFM = NULL;
-    SK_DECLARE_STATIC_ONCE(once);
-    SkOnce(&once, set_up_default, &gFM);
-    return SkRef(gFM);
+    SK_DECLARE_STATIC_LAZY_PTR(SkFontMgr, singleton, CreateDefault);
+    return SkRef(singleton.get());
 }
 
 //////////////////////////////////////////////////////////////////////////
