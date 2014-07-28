@@ -12,7 +12,6 @@ bassh.net: did not receive HSTS header
 bccx.com: could not connect to host
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
-blacklane.com: did not receive HSTS header
 braintreegateway.com: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
@@ -61,7 +60,7 @@ history.google.com: did not receive HSTS header (error ignored - included regard
 hostedtalkgadget.google.com: did not receive HSTS header (error ignored - included regardless)
 in.xero.com: max-age too low: 3600
 intercom.io: did not receive HSTS header
-iop.intuit.com: max-age too low: 86400
+iop.intuit.com: did not receive HSTS header
 irccloud.com: did not receive HSTS header
 jitsi.org: did not receive HSTS header
 jottit.com: could not connect to host
@@ -125,7 +124,7 @@ wallet.google.com: did not receive HSTS header (error ignored - included regardl
 webmail.mayfirst.org: did not receive HSTS header
 whonix.org: did not receive HSTS header
 www.calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 124"  data: no]
-www.cueup.com: did not receive HSTS header
+www.cueup.com: could not connect to host
 www.developer.mydigipass.com: could not connect to host
 www.dropbox.com: max-age too low: 2592000
 www.elanex.biz: did not receive HSTS header
@@ -139,7 +138,7 @@ www.ledgerscope.net: did not receive HSTS header
 www.logentries.com: did not receive HSTS header
 www.moneybookers.com: did not receive HSTS header
 www.neonisi.com: could not connect to host
-www.paycheckrecords.com: max-age too low: 86400
+www.paycheckrecords.com: did not receive HSTS header
 www.paypal.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-periodicupdate-00000/getHSTSPreloadList.js :: processStsHeader :: line 124"  data: no]
 www.roddis.net: did not receive HSTS header
 www.sandbox.mydigipass.com: could not connect to host

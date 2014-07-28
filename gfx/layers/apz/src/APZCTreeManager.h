@@ -22,6 +22,7 @@
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 
 class gfx3DMatrix;
+class nsIntRegion;
 
 namespace mozilla {
 class InputData;
@@ -363,7 +364,8 @@ private:
                                                       bool aIsFirstPaint,
                                                       uint64_t aOriginatingLayersId,
                                                       const APZPaintLogHelper& aPaintLogger,
-                                                      nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy);
+                                                      nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy,
+                                                      const nsIntRegion& aObscured);
 
 private:
   /* Whenever walking or mutating the tree rooted at mRootApzc, mTreeLock must be held.

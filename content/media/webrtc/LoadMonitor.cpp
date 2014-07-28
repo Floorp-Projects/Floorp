@@ -301,10 +301,14 @@ public:
 // member of LoadInfoCollectRunner, which can't be in the anonymous namespace,
 // so it also can't be in an anonymous namespace: gcc warns about that setup
 // and this directory is fail-on-warnings.
-class RTCLoadInfo : public mozilla::RefCounted<RTCLoadInfo>
+class RTCLoadInfo MOZ_FINAL
 {
+private:
+  ~RTCLoadInfo() {}
+
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(RTCLoadInfo)
+  NS_INLINE_DECL_REFCOUNTING(RTCLoadInfo)
+
   RTCLoadInfo(): mLoadUpdateInterval(0) {};
   nsresult Init(int aLoadUpdateInterval);
   double GetSystemLoad() { return mSystemLoad.GetLoad(); };

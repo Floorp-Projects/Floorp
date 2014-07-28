@@ -469,7 +469,7 @@ load 737313-2.html
 load 737313-3.html
 load 747688.html
 load 750066.html
-test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332
+test-pref(font.size.inflation.emPerLine,15) asserts-if(!browserIsRemote,1-100) load font-inflation-762332.html # bug 762332
 load 762902.html
 load 762764-1.html
 load 765409.html

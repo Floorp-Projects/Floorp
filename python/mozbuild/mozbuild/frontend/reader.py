@@ -566,7 +566,8 @@ class BuildReaderError(Exception):
             s.write('on line %d:\n' % inner.lineno)
             s.write('\n')
             s.write('    %s\n' % inner.text)
-            s.write((' ' * (inner.offset + 4)) + '^\n')
+            if inner.offset:
+                s.write((' ' * (inner.offset + 4)) + '^\n')
             s.write('\n')
             s.write('Fix the syntax error and try again.\n')
             return

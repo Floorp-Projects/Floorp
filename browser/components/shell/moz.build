@@ -4,14 +4,46 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
-
-XPCSHELL_TESTS_MANIFESTS += [
-    'test/unit/xpcshell.ini'
-]
-
-BROWSER_CHROME_MANIFESTS += [
-    'test/browser.ini',
-]
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 JAR_MANIFESTS += ['jar.mn']
+
+XPIDL_SOURCES += [
+    'nsIShellService.idl',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    XPIDL_SOURCES += [
+        'nsIWindowsShellService.idl',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    XPIDL_SOURCES += [
+        'nsIMacShellService.idl',
+    ]
+
+XPIDL_MODULE = 'shellservice'
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    SOURCES += [
+        'nsWindowsShellService.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    SOURCES += [
+        'nsMacShellService.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_GTK']:
+    SOURCES += [
+        'nsGNOMEShellService.cpp',
+    ]
+
+if SOURCES:
+    FINAL_LIBRARY = 'browsercomps'
+
+EXTRA_COMPONENTS += [
+    'nsSetDefaultBrowser.js',
+    'nsSetDefaultBrowser.manifest',
+]
+
+for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION'):
+    DEFINES[var] = '"%s"' % CONFIG[var]

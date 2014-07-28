@@ -1,0 +1,51 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PARALLEL_DIRS += ['resources']
+
+TEST_DIRS += ['test']
+
+EXPORTS += [
+    'nsIXMLContentSink.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'CDATASection.h',
+    'nsXMLElement.h',
+    'ProcessingInstruction.h',
+    'XMLDocument.h',
+    'XMLStylesheetProcessingInstruction.h',
+]
+
+UNIFIED_SOURCES += [
+    'CDATASection.cpp',
+    'nsXMLContentSink.cpp',
+    'nsXMLElement.cpp',
+    'nsXMLFragmentContentSink.cpp',
+    'nsXMLPrettyPrinter.cpp',
+    'ProcessingInstruction.cpp',
+    'XMLDocument.cpp',
+    'XMLStylesheetProcessingInstruction.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+MSVC_ENABLE_PGO = True
+
+FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/caps',
+    '/content/base/src',
+    '/content/html/document/src',
+    '/content/xul/content/src',
+    '/dom/base',
+    '/layout/style',
+]
+
+RESOURCE_FILES.dtd += [
+    'htmlmathml-f.ent',
+]

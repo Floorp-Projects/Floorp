@@ -17,8 +17,6 @@ if CONFIG['MOZ_NFC']:
       'nsNfc.manifest',
     ]
 
-TEST_DIRS += ['tests']
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'

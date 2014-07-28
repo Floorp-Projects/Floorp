@@ -18,6 +18,7 @@ class PContentParent;
 }
 
 class nsIPrefBranch;
+struct ChromePackage;
 
 class nsChromeRegistryChrome : public nsChromeRegistry
 {
@@ -44,10 +45,18 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   NS_IMETHOD GetStyleOverlays(nsIURI *aURI,
                               nsISimpleEnumerator **_retval) MOZ_OVERRIDE;
 #endif
-  
+
+  // If aChild is non-null then it is a new child to notify. If aChild is
+  // null, then we have installed new chrome and we are resetting all of our
+  // children's registered chrome.
   void SendRegisteredChrome(mozilla::dom::PContentParent* aChild);
 
  private:
+  struct PackageEntry;
+  static void ChromePackageFromPackageEntry(PackageEntry* aPackage,
+                                            ChromePackage* aChromePackage,
+                                            const nsCString& aSelectedLocale,
+                                            const nsCString& aSelectedSkin);
   static PLDHashOperator CollectPackages(PLDHashTable *table,
                                          PLDHashEntryHdr *entry,
                                          uint32_t number, void *arg);
@@ -155,7 +164,8 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   OverlayListHash mStyleHash;
 
   bool mProfileLoaded;
-  
+  bool mDynamicRegistration;
+
   nsCString mSelectedLocale;
   nsCString mSelectedSkin;
 

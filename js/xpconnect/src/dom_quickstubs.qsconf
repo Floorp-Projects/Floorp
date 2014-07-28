@@ -27,10 +27,6 @@ members = [
     #
     # (And nsIDOMModalContentWindow.returnValue is an attribute of type
     # nsIVariant, which qsgen.py can't handle.)
-    #
-    # nsLocationSH has ~ALLOW_PROP_MODS_TO_PROTOTYPE, so don't try.
-    #'nsIDOMLocation.hostname',
-    #'nsIDOMLocation.href',
 
     # dom/interfaces/xpath
     'nsIDOMXPathNSResolver.lookupNamespaceURI',
