@@ -42,6 +42,8 @@ public:
   NS_DECL_NSIPRINCIPAL
   NS_DECL_NSISERIALIZABLE
 
+  static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIPrincipal *aInheritFrom);
+
   nsresult Init(uint32_t aAppId = nsIScriptSecurityManager::NO_APP_ID,
                 bool aInMozBrowser = false);
 
