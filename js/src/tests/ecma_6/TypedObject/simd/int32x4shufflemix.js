@@ -18,6 +18,35 @@ function test() {
   assertEq(c.z, 20);
   assertEq(c.w, 10);
 
+  var d = SIMD.int32x4.shuffleMix(a, b, 0xFF);
+  assertEq(d.x, 4);
+  assertEq(d.y, 4);
+  assertEq(d.z, 40);
+  assertEq(d.w, 40);
+
+  var d = SIMD.int32x4.shuffleMix(a, b, 0x0);
+  assertEq(d.x, 1);
+  assertEq(d.y, 1);
+  assertEq(d.z, 10);
+  assertEq(d.w, 10);
+
+  var caught = false;
+  try {
+      var _ = SIMD.int32x4.shuffleMix(a, b, 0xFF + 1);
+  } catch (e) {
+      caught = true;
+  }
+  assertEq(caught, true, "Mask can't be more than 0xFF");
+
+  var caught = false;
+  try {
+      var _ = SIMD.int32x4.shuffleMix(a, b, -1);
+  } catch (e) {
+      caught = true;
+  }
+  assertEq(caught, true, "Mask can't be less than 0");
+
+
   if (typeof reportCompare === "function")
     reportCompare(true, true);
 }
