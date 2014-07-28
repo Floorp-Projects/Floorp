@@ -106,7 +106,7 @@ protected:
 
   nsresult EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info,
                                           bool withNewLocation, bool withNewSink);
-  void UpdateSubrequestMembers(nsISupports *securityInfo);
+  void UpdateSubrequestMembers(nsISupports* securityInfo, nsIRequest* request);
 
   void ObtainEventSink(nsIChannel *channel, 
                        nsCOMPtr<nsISecurityEventSink> &sink);
