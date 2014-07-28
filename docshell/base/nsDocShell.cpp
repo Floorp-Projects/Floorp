@@ -7415,8 +7415,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
   if (docFactory) {
     nsCOMPtr<nsIPrincipal> principal;
     if (mSandboxFlags & SANDBOXED_ORIGIN) {
-      principal = nsNullPrincipal::CreateWithInheritedAttributes(aPrincipal);
-      NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+      principal = do_CreateInstance("@mozilla.org/nullprincipal;1");
     } else {
       principal = aPrincipal;
     }
@@ -11147,8 +11146,10 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
             if (loadInfo) {
                 // For now keep storing just the principal in the SHEntry.
                 if (loadInfo->GetLoadingSandboxed()) {
-                    owner = nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
-                    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+                    owner = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID, &rv);
+                    if (NS_WARN_IF(NS_FAILED(rv))) {
+                        return rv;
+                    }
                 } else if (loadInfo->GetForceInheritPrincipal()) {
                     owner = loadInfo->LoadingPrincipal();
                 }
