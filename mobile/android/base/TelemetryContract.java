@@ -62,7 +62,6 @@ public interface TelemetryContract {
         SANITIZE("sanitize.1"),
 
         // Saving a resource (reader, bookmark, etc) for viewing later.
-        // Note: Only used in JavaScript for now, but here for completeness.
         SAVE("save.1"),
 
         // Sharing content.
@@ -76,7 +75,6 @@ public interface TelemetryContract {
         UNPIN("unpin.1"),
 
         // Stop holding a resource (reader, bookmark, etc) for viewing later.
-        // Note: Only used in JavaScript for now, but here for completeness.
         UNSAVE("unsave.1"),
 
         // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
