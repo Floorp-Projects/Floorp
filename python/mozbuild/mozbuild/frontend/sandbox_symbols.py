@@ -289,6 +289,10 @@ VARIABLES = {
         likely go away.
         """, None),
 
+    'PYTHON_UNIT_TESTS': (StrictOrderingOnAppendList, list,
+        """A list of python unit tests.
+        """, None),
+
     'HOST_LIBRARY_NAME': (unicode, unicode,
         """Name of target library generated when cross compiling.
         """, 'binaries'),

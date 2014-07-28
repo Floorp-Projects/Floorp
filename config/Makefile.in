@@ -39,8 +39,6 @@ HEADERS_TARGET := export
 INSTALL_TARGETS += HEADERS
 endif
 
-PYTHON_UNIT_TESTS := $(wildcard $(srcdir)/tests/unit-*.py)
-
 include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
