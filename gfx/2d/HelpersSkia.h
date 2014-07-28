@@ -38,6 +38,22 @@ GfxFormatToSkiaConfig(SurfaceFormat format)
   }
 }
 
+static inline SurfaceFormat
+SkiaConfigToGfxFormat(SkBitmap::Config config)
+{
+  switch (config)
+  {
+    case SkBitmap::kARGB_8888_Config:
+      return SurfaceFormat::B8G8R8A8;
+    case SkBitmap::kRGB_565_Config:
+      return SurfaceFormat::R5G6B5;
+    case SkBitmap::kA8_Config:
+      return SurfaceFormat::A8;
+    default:
+      return SurfaceFormat::B8G8R8A8;
+  }
+}
+
 static inline SkColorType
 GfxFormatToSkiaColorType(SurfaceFormat format)
 {
@@ -58,15 +74,15 @@ GfxFormatToSkiaColorType(SurfaceFormat format)
 }
 
 static inline SurfaceFormat
-SkiaConfigToGfxFormat(SkBitmap::Config config)
+SkiaColorTypeToGfxFormat(SkColorType type)
 {
-  switch (config)
+  switch (type)
   {
-    case SkBitmap::kARGB_8888_Config:
+    case kBGRA_8888_SkColorType:
       return SurfaceFormat::B8G8R8A8;
-    case SkBitmap::kRGB_565_Config:
+    case kRGB_565_SkColorType:
       return SurfaceFormat::R5G6B5;
-    case SkBitmap::kA8_Config:
+    case kAlpha_8_SkColorType:
       return SurfaceFormat::A8;
     default:
       return SurfaceFormat::B8G8R8A8;
