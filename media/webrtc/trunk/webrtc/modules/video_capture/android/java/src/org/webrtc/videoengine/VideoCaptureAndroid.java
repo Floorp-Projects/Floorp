@@ -52,15 +52,15 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
   // potentially stalling the capturer if it runs out of buffers to write to).
   private final int numCaptureBuffers = 3;
   // Needed to start/stop/rotate camera.
-  private AppStateListener mAppStateListener = null;
-  private int mCaptureRotation = 0;
-  private int mCaptureWidth = 0;
-  private int mCaptureHeight = 0;
+  private AppStateListener mAppStateListener;
+  private int mCaptureRotation;
+  private int mCaptureWidth;
+  private int mCaptureHeight;
   private int mCaptureMinFPS = 0;
   private int mCaptureMaxFPS = 0;
   // Are we being told to start/stop the camera, or just suspending/resuming
   // due to the application being backgrounded.
-  private boolean mResumeCapture = false;
+  private boolean mResumeCapture;
 
   @WebRTCJNITarget
   public VideoCaptureAndroid(int id, long native_capturer) {

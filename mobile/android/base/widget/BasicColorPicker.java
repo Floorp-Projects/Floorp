@@ -41,8 +41,8 @@ public class BasicColorPicker extends ListView {
                                                                       Color.rgb(212,221,228),
                                                                       Color.BLACK);
 
-    private static Drawable mCheckDrawable = null;
-    private int mSelected = 0;
+    private static Drawable mCheckDrawable;
+    private int mSelected;
     final private ColorPickerListAdapter mAdapter;
 
     public BasicColorPicker(Context context) {

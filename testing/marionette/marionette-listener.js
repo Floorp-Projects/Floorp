@@ -172,7 +172,7 @@ function startListeners() {
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
   addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElement);
-  addMessageListenerId("Marionette:getElementLocation", getElementLocation);
+  addMessageListenerId("Marionette:getElementLocation", getElementLocation); //deprecated
   addMessageListenerId("Marionette:clearElement", clearElement);
   addMessageListenerId("Marionette:switchToFrame", switchToFrame);
   addMessageListenerId("Marionette:deleteSession", deleteSession);
@@ -268,7 +268,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
   removeMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
   removeMessageListenerId("Marionette:submitElement", submitElement);
-  removeMessageListenerId("Marionette:getElementSize", getElementSize);
+  removeMessageListenerId("Marionette:getElementSize", getElementSize);  //deprecated
   removeMessageListenerId("Marionette:getElementRect", getElementRect);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);

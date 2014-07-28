@@ -230,7 +230,7 @@ class Bisect(object):
                 numberOfTests = len(self.contents['testsToRun'])
                 if numberOfTests < 3:
                     # This means that only 2 tests are run. Since the last test is the failing test itself therefore the bleedthrough test is the first test
-                    self.summary.append("TEST-BLEEDTHROUGH - found failure, %s" % self.contents['testsToRun'][0])
+                    self.summary.append("TEST-UNEXPECTED-FAIL | %s | Bleedthrough detected, this test is the root cause for many of the above failures" % self.contents['testsToRun'][0])
                     status = -1
             else:
                 self.summary.append("\t\t%s failed with different error." % self.contents['testsToRun'][-1])

@@ -58,10 +58,10 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     }
     private PopupType mPopupType;
 
-    private static int sAutoCompleteMinWidth = 0;
-    private static int sAutoCompleteRowHeight = 0;
-    private static int sValidationMessageHeight = 0;
-    private static int sValidationTextMarginTop = 0;
+    private static int sAutoCompleteMinWidth;
+    private static int sAutoCompleteRowHeight;
+    private static int sValidationMessageHeight;
+    private static int sValidationTextMarginTop;
     private static RelativeLayout.LayoutParams sValidationTextLayoutNormal;
     private static RelativeLayout.LayoutParams sValidationTextLayoutInverted;
 

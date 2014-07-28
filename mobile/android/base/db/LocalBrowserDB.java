@@ -118,7 +118,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
      */
     private static class NameCounter {
         private final HashMap<String, Integer> names = new HashMap<String, Integer>();
-        private int counter = 0;
+        private int counter;
         private final int increment;
 
         public NameCounter(int start, int increment) {
@@ -1451,7 +1451,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         private int mDesktopBookmarksIndex = -1;
 
-        private boolean mAtDesktopBookmarksPosition = false;
+        private boolean mAtDesktopBookmarksPosition;
 
         public SpecialFoldersCursorWrapper(Cursor c, boolean showDesktopBookmarks) {
             super(c);

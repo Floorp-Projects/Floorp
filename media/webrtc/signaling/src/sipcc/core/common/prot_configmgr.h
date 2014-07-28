@@ -294,5 +294,7 @@ int sip_config_get_keepalive_expires();
 rtp_ptype sip_config_preferred_codec(void);
 uint32_t config_get_video_max_fs(const rtp_ptype codec);
 uint32_t config_get_video_max_fr(const rtp_ptype codec);
+uint32_t config_get_video_max_mbps(const rtp_ptype codec);
+uint32_t config_get_video_max_br(const rtp_ptype codec);
 
 #endif /* PROT_CONFIGMGR_H_ */

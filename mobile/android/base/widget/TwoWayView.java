@@ -6067,7 +6067,7 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     }
 
     private class AdapterDataSetObserver extends DataSetObserver {
-        private Parcelable mInstanceState = null;
+        private Parcelable mInstanceState;
 
         @Override
         public void onChanged() {

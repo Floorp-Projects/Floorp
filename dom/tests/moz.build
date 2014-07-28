@@ -4,7 +4,62 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['mochitest']
+MOCHITEST_MANIFESTS += [
+    'mochitest/ajax/jquery/mochitest.ini',
+    'mochitest/ajax/lib/mochitest.ini',
+    'mochitest/ajax/mochikit/mochitest.ini',
+    'mochitest/ajax/mochikit/tests/mochitest.ini',
+    'mochitest/ajax/offline/mochitest.ini',
+    'mochitest/ajax/prototype/mochitest.ini',
+    'mochitest/ajax/scriptaculous/mochitest.ini',
+    'mochitest/beacon/mochitest.ini',
+    'mochitest/bugs/mochitest.ini',
+    'mochitest/crypto/mochitest.ini',
+    'mochitest/dom-level0/mochitest.ini',
+    'mochitest/dom-level1-core/mochitest.ini',
+    'mochitest/dom-level2-core/mochitest.ini',
+    'mochitest/dom-level2-html/mochitest.ini',
+    'mochitest/general/mochitest.ini',
+    'mochitest/geolocation/mochitest.ini',
+    'mochitest/localstorage/mochitest.ini',
+    'mochitest/notification/mochitest.ini',
+    'mochitest/orientation/mochitest.ini',
+    'mochitest/sessionstorage/mochitest.ini',
+    'mochitest/storageevent/mochitest.ini',
+    'mochitest/webapps/mochitest.ini',
+    'mochitest/webcomponents/mochitest.ini',
+    'mochitest/whatwg/mochitest.ini',
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'mochitest/beacon/chrome.ini',
+    'mochitest/chrome/chrome.ini',
+    'mochitest/general/chrome.ini',
+    'mochitest/localstorage/chrome.ini',
+    'mochitest/sessionstorage/chrome.ini',
+    'mochitest/webapps/chrome.ini',
+    'mochitest/whatwg/chrome.ini',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gtk2':
+    # Bug 788164.
+    MOCHITEST_MANIFESTS += [
+        'mochitest/pointerlock/mochitest.ini',
+    ]
+
+if CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
+    MOCHITEST_MANIFESTS += [
+        'mochitest/crypto/mochitest-no-legacy.ini',
+    ]
+else:
+    MOCHITEST_MANIFESTS += [
+        'mochitest/crypto/mochitest-legacy.ini',
+    ]
+
+if CONFIG['MOZ_GAMEPAD']:
+    MOCHITEST_MANIFESTS += [
+        'mochitest/gamepad/mochitest.ini',
+    ]
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']

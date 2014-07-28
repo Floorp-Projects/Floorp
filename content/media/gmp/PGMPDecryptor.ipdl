@@ -1,0 +1,85 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PGMP;
+include GMPTypes;
+
+using GMPSessionType from  "gmp-decryption.h";
+using GMPDOMException from "gmp-decryption.h";
+using GMPErr from "gmp-errors.h";
+
+namespace mozilla {
+namespace gmp {
+
+async protocol PGMPDecryptor
+{
+  manager PGMP;
+child:
+
+  Init();
+
+  CreateSession(uint32_t aPromiseId,
+                nsCString aInitDataType,
+                uint8_t[] aInitData,
+                GMPSessionType aSessionType);
+
+  LoadSession(uint32_t aPromiseId,
+              nsCString aSessionId);
+
+  UpdateSession(uint32_t aPromiseId,
+                nsCString aSessionId,
+                uint8_t[] aResponse);
+
+  CloseSession(uint32_t aPromiseId,
+               nsCString aSessionId);
+
+  RemoveSession(uint32_t aPromiseId,
+                nsCString aSessionId);
+
+  SetServerCertificate(uint32_t aPromiseId,
+                       uint8_t[] aServerCert);
+
+  Decrypt(uint32_t aId,
+          uint8_t[] aBuffer,
+          GMPDecryptionData aMetadata);
+
+  DecryptingComplete();
+
+parent:
+  __delete__();
+
+  ResolveNewSessionPromise(uint32_t aPromiseId,
+                           nsCString aSessionId);
+
+  ResolvePromise(uint32_t aPromiseId);
+
+  RejectPromise(uint32_t aPromiseId,
+                GMPDOMException aDOMExceptionCode,
+                nsCString aMessage);
+
+  SessionMessage(nsCString aSessionId,
+                 uint8_t[] aMessage,
+                 nsCString aDestinationURL);
+
+  ExpirationChange(nsCString aSessionId, double aExpiryTime);
+
+  SessionClosed(nsCString aSessionId);
+
+  SessionError(nsCString aSessionId,
+               GMPDOMException aDOMExceptionCode,
+               uint32_t aSystemCode,
+               nsCString aMessage);
+
+  KeyIdUsable(nsCString aSessionId, uint8_t[] aKey);
+
+  SetCaps(uint64_t aCaps);
+
+  KeyIdNotUsable(nsCString aSessionId,uint8_t[] aKey);
+
+  Decrypted(uint32_t aId, GMPErr aResult, uint8_t[] aBuffer);
+};
+
+} // namespace gmp
+} // namespace mozilla

@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
-
 EXPORTS.mozilla.dom += [
     'EncodingUtils.h',
     'FallbackEncoding.h',
@@ -34,3 +32,10 @@ GENERATED_FILES += [
     'localesfallbacks.properties.h',
     'nonparticipatingdomains.properties.h',
 ]
+
+MOCHITEST_MANIFESTS += [
+    'test/mochitest.ini',
+    'test/unit/mochitest.ini',
+]
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

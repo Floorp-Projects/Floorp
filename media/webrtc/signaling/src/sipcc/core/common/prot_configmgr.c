@@ -461,6 +461,13 @@ sip_config_get_display_name (line_t line, char *buffer, int buffer_len)
 rtp_ptype
 sip_config_preferred_codec (void)
 {
+#if 1
+  uint32_t codec;
+
+  if(vcmGetVideoPreferredCodec((int32_t *) &codec) == 0) {
+    return (rtp_ptype) codec;
+  }
+#else
     key_table_entry_t cfg_preferred_codec;
 
     config_get_value(CFGID_PREFERRED_CODEC, &cfg_preferred_codec,
@@ -470,6 +477,7 @@ sip_config_preferred_codec (void)
         /* The configuration has preferred codec configured */
         return (cfg_preferred_codec.value);
     }
+#endif
     /* No preferred codec configured */
     return (RTP_NONE);
 }
@@ -593,6 +601,28 @@ config_get_video_max_fr(const rtp_ptype codec)
   return 0;
 }
 
+uint32_t
+config_get_video_max_mbps(const rtp_ptype codec)
+{
+  uint32_t max_mbps;
+
+  if(vcmGetVideoMaxMbps(codec, (int32_t *) &max_mbps) == 0) {
+    return max_mbps;
+  }
+  return 0;
+}
+
+uint32_t
+config_get_video_max_br(const rtp_ptype codec)
+{
+  uint32_t max_br;
+
+  if(vcmGetVideoMaxBr(codec, (int32_t *) &max_br) == 0) {
+    return max_br;
+  }
+  return 0;
+}
+
 uint16_t
 sip_config_video_add_codecs (rtp_ptype aSupportedCodecs[],
                              uint16_t supportedCodecsLen,
@@ -634,6 +664,7 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
                           uint16_t supportedCodecsLen, boolean isOffer)
 {
     uint16_t count = 0;
+    rtp_ptype pref_codec;
     int codec_mask;
     int hw_codec_mask = vcmGetVideoCodecList(VCM_DSP_FULLDUPLEX_HW);
     int gmp_codec_mask = vcmGetVideoCodecList(VCM_DSP_FULLDUPLEX_GMP);
@@ -658,6 +689,22 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
     count += sip_config_video_add_codecs(&aSupportedCodecs[count],
                                          supportedCodecsLen, gmp_codec_mask);
 
+    // Now promote the preferred codec if any
+    pref_codec = sip_config_preferred_codec();
+    if (pref_codec != RTP_NONE) {
+      int i,j;
+      for (i = 1; i < count; i++) {
+        if (aSupportedCodecs[i] == pref_codec) {
+          // bump it to the front; bump all the rest down
+          for (j = i; j > 0; j--) {
+            aSupportedCodecs[j] = aSupportedCodecs[j-1];
+          }
+          aSupportedCodecs[0] = pref_codec;
+          return count;
+        }
+      }
+      // preferred not found, oh well
+    }
     return count;
 }
 

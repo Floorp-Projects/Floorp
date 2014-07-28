@@ -44,7 +44,7 @@ public class MatrixBlobCursor extends AbstractCursor {
 
     private final String[] columnNames;
     private Object[] data;
-    private int rowCount = 0;
+    private int rowCount;
     private final int columnCount;
     private static final String LOGTAG = "MatrixBlobCursor";
 

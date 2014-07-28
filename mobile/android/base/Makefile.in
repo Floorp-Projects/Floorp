@@ -82,6 +82,7 @@ ALL_JARS = \
   gecko-browser.jar \
   gecko-mozglue.jar \
   gecko-util.jar \
+  nineoldandroids.jar \
   squareup-picasso.jar \
   sync-thirdparty.jar \
   websockets.jar \
