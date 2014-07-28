@@ -478,6 +478,7 @@ gbjar.extra_jars = [
     'gecko-R.jar',
     'gecko-mozglue.jar',
     'gecko-util.jar',
+    'nineoldandroids.jar',
     'squareup-picasso.jar',
     'sync-thirdparty.jar',
     'websockets.jar',
@@ -491,6 +492,39 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
     gbjar.sources += ['MediaPlayerManager.java']
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough']
+
+noajar = add_java_jar('nineoldandroids')
+noajar.sources += [ thirdparty_source_dir + f for f in [
+    'com/nineoldandroids/animation/Animator.java',
+    'com/nineoldandroids/animation/AnimatorInflater.java',
+    'com/nineoldandroids/animation/AnimatorListenerAdapter.java',
+    'com/nineoldandroids/animation/AnimatorSet.java',
+    'com/nineoldandroids/animation/ArgbEvaluator.java',
+    'com/nineoldandroids/animation/FloatEvaluator.java',
+    'com/nineoldandroids/animation/FloatKeyframeSet.java',
+    'com/nineoldandroids/animation/IntEvaluator.java',
+    'com/nineoldandroids/animation/IntKeyframeSet.java',
+    'com/nineoldandroids/animation/Keyframe.java',
+    'com/nineoldandroids/animation/KeyframeSet.java',
+    'com/nineoldandroids/animation/ObjectAnimator.java',
+    'com/nineoldandroids/animation/PreHoneycombCompat.java',
+    'com/nineoldandroids/animation/PropertyValuesHolder.java',
+    'com/nineoldandroids/animation/TimeAnimator.java',
+    'com/nineoldandroids/animation/TypeEvaluator.java',
+    'com/nineoldandroids/animation/ValueAnimator.java',
+    'com/nineoldandroids/util/FloatProperty.java',
+    'com/nineoldandroids/util/IntProperty.java',
+    'com/nineoldandroids/util/NoSuchPropertyException.java',
+    'com/nineoldandroids/util/Property.java',
+    'com/nineoldandroids/util/ReflectiveProperty.java',
+    'com/nineoldandroids/view/animation/AnimatorProxy.java',
+    'com/nineoldandroids/view/ViewHelper.java',
+    'com/nineoldandroids/view/ViewPropertyAnimator.java',
+    'com/nineoldandroids/view/ViewPropertyAnimatorHC.java',
+    'com/nineoldandroids/view/ViewPropertyAnimatorICS.java',
+    'com/nineoldandroids/view/ViewPropertyAnimatorPreHC.java'
+] ]
+#noajar.javac_flags += ['-Xlint:all']
 
 spjar = add_java_jar('squareup-picasso')
 spjar.sources += [ thirdparty_source_dir + f for f in [
@@ -583,6 +617,7 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
         'gecko-browser.jar',
         'gecko-mozglue.jar',
         'gecko-util.jar',
+        'nineoldandroids.jar'
     ]
 
 generated_recursive_make_targets = ['.aapt.deps', '.locales.deps'] # Captures dependencies on Android manifest and all resources.

@@ -52,7 +52,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private String mGuid;
     private PromptListAdapter mAdapter;
 
-    private static boolean mInitialized = false;
+    private static boolean mInitialized;
     private static int mInputPaddingSize;
 
     public Prompt(Context context, PromptCallback callback) {

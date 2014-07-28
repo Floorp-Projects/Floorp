@@ -52,7 +52,7 @@ public class GeckoScreenOrientation {
     }
 
     // Singleton instance.
-    private static GeckoScreenOrientation sInstance = null;
+    private static GeckoScreenOrientation sInstance;
     // Default screen orientation, used for initialization and unlocking.
     private static final ScreenOrientation DEFAULT_SCREEN_ORIENTATION = ScreenOrientation.DEFAULT;
     // Default rotation, used when device rotation is unknown.

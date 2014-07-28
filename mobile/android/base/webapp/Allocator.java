@@ -31,7 +31,7 @@ public class Allocator {
     // The number of Webapp# and WEBAPP# activities/apps/intents
     private final static int MAX_WEB_APPS = 100;
 
-    protected static Allocator sInstance = null;
+    protected static Allocator sInstance;
     public static Allocator getInstance() {
         return getInstance(GeckoAppShell.getContext());
     }

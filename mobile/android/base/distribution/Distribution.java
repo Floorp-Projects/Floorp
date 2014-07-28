@@ -122,7 +122,7 @@ public class Distribution {
     private final String prefsBranch;
 
     private volatile int state = STATE_UNKNOWN;
-    private File distributionDir = null;
+    private File distributionDir;
 
     private final Queue<Runnable> onDistributionReady = new ConcurrentLinkedQueue<Runnable>();
 

@@ -23,6 +23,7 @@
 #include "webrtc/video_engine/vie_capturer.h"
 #include "webrtc/video_engine/vie_defines.h"
 #include "webrtc/video_engine/desktop_capture_impl.h"
+#include "webrtc/video_engine/browser_capture_impl.h"
 
 namespace webrtc {
 
@@ -426,6 +427,9 @@ VideoCaptureModule::DeviceInfo* ViEInputManager::GetDeviceInfo() {
         capture_device_info_ = DesktopCaptureImpl::CreateDeviceInfo(ViEModuleId(engine_id_),
                                                                     type);
 #endif
+        break;
+      case CaptureDeviceType::Browser:
+        capture_device_info_ = BrowserDeviceInfoImpl::CreateDeviceInfo();
         break;
       case CaptureDeviceType::Camera:
         capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(ViEModuleId(engine_id_));
