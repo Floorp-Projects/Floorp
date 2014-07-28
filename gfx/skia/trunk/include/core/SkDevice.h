@@ -1,11 +1,9 @@
-
 /*
  * Copyright 2010 The Android Open Source Project
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 
 #ifndef SkDevice_DEFINED
 #define SkDevice_DEFINED
@@ -16,13 +14,6 @@
 #include "SkColor.h"
 #include "SkDeviceProperties.h"
 #include "SkImageFilter.h"
-
-// getDeviceCapabilities() is not called by skia, but this flag keeps it around
-// for clients that have "override" annotations on their subclass. These overrides
-// should be deleted.
-//#define SK_SUPPORT_LEGACY_GETDEVICECAPABILITIES
-
-//#define SK_SUPPORT_LEGACY_COMPATIBLEDEVICE_CONFIG
 
 class SkClipStack;
 class SkDraw;
@@ -49,39 +40,9 @@ public:
 
     virtual ~SkBaseDevice();
 
-#ifdef SK_SUPPORT_LEGACY_COMPATIBLEDEVICE_CONFIG
-    /**
-     *  Creates a device that is of the same type as this device (e.g. SW-raster,
-     *  GPU, or PDF). The backing store for this device is created automatically
-     *  (e.g. offscreen pixels or FBO or whatever is appropriate).
-     *
-     *  @param width    width of the device to create
-     *  @param height   height of the device to create
-     *  @param isOpaque performance hint, set to true if you know that you will
-     *                  draw into this device such that all of the pixels will
-     *                  be opaque.
-     */
-    SkBaseDevice* createCompatibleDevice(SkBitmap::Config config,
-                                         int width, int height,
-                                         bool isOpaque);
-#endif
     SkBaseDevice* createCompatibleDevice(const SkImageInfo&);
 
     SkMetaData& getMetaData();
-
-#ifdef SK_SUPPORT_LEGACY_GETDEVICECAPABILITIES
-    enum Capabilities {
-        kVector_Capability = 0x1,
-    };
-    virtual uint32_t getDeviceCapabilities() { return 0; }
-#endif
-
-    /** Return the width of the device (in pixels).
-    */
-    virtual int width() const = 0;
-    /** Return the height of the device (in pixels).
-    */
-    virtual int height() const = 0;
 
     /** Return the image properties of the device. */
     virtual const SkDeviceProperties& getDeviceProperties() const {
@@ -106,15 +67,17 @@ public:
         bounds->setXYWH(origin.x(), origin.y(), this->width(), this->height());
     }
 
+    int width() const {
+        return this->imageInfo().width();
+    }
 
-    /** Returns true if the device's bitmap's config treats every pixel as
-        implicitly opaque.
-    */
-    virtual bool isOpaque() const = 0;
+    int height() const {
+        return this->imageInfo().height();
+    }
 
-    /** Return the bitmap config of the device's pixels
-     */
-    virtual SkBitmap::Config config() const = 0;
+    bool isOpaque() const {
+        return this->imageInfo().isOpaque();
+    }
 
     /** Return the bitmap associated with this device. Call this each time you need
         to access the bitmap, as it notifies the subclass to perform any flushing
@@ -124,34 +87,14 @@ public:
     */
     const SkBitmap& accessBitmap(bool changePixels);
 
-#ifdef SK_SUPPORT_LEGACY_WRITEPIXELSCONFIG
-    /**
-     *  DEPRECATED: This will be made protected once WebKit stops using it.
-     *              Instead use Canvas' writePixels method.
-     *
-     *  Similar to draw sprite, this method will copy the pixels in bitmap onto
-     *  the device, with the top/left corner specified by (x, y). The pixel
-     *  values in the device are completely replaced: there is no blending.
-     *
-     *  Currently if bitmap is backed by a texture this is a no-op. This may be
-     *  relaxed in the future.
-     *
-     *  If the bitmap has config kARGB_8888_Config then the config8888 param
-     *  will determines how the pixel valuess are intepreted. If the bitmap is
-     *  not kARGB_8888_Config then this parameter is ignored.
-     */
-    virtual void writePixels(const SkBitmap& bitmap, int x, int y,
-                             SkCanvas::Config8888 config8888 = SkCanvas::kNative_Premul_Config8888);
-#endif
-
-    bool writePixelsDirect(const SkImageInfo&, const void*, size_t rowBytes, int x, int y);
+    bool writePixels(const SkImageInfo&, const void*, size_t rowBytes, int x, int y);
 
     void* accessPixels(SkImageInfo* info, size_t* rowBytes);
 
     /**
      * Return the device's associated gpu render target, or NULL.
      */
-    virtual GrRenderTarget* accessRenderTarget() = 0;
+    virtual GrRenderTarget* accessRenderTarget() { return NULL; }
 
 
     /**
@@ -204,10 +147,8 @@ protected:
      *  make a change to the specified values, it should write them into the
      *  textflags parameter (output) and return true. If the paint is fine as
      *  is, then ignore the textflags parameter and return false.
-     *
-     *  The baseclass SkBaseDevice filters based on its depth and blitters.
      */
-    virtual bool filterTextFlags(const SkPaint& paint, TextFlags*) = 0;
+    virtual bool filterTextFlags(const SkPaint& paint, TextFlags*) { return false; }
 
     /**
      *
@@ -307,36 +248,7 @@ protected:
     virtual void drawDevice(const SkDraw&, SkBaseDevice*, int x, int y,
                             const SkPaint&) = 0;
 
-    /**
-     *  On success (returns true), copy the device pixels into the bitmap.
-     *  On failure, the bitmap parameter is left unchanged and false is
-     *  returned.
-     *
-     *  The device's pixels are converted to the bitmap's config. The only
-     *  supported config is kARGB_8888_Config, though this is likely to be
-     *  relaxed in  the future. The meaning of config kARGB_8888_Config is
-     *  modified by the enum param config8888. The default value interprets
-     *  kARGB_8888_Config as SkPMColor
-     *
-     *  If the bitmap has pixels already allocated, the device pixels will be
-     *  written there. If not, bitmap->allocPixels() will be called
-     *  automatically. If the bitmap is backed by a texture readPixels will
-     *  fail.
-     *
-     *  The actual pixels written is the intersection of the device's bounds,
-     *  and the rectangle formed by the bitmap's width,height and the specified
-     *  x,y. If bitmap pixels extend outside of that intersection, they will not
-     *  be modified.
-     *
-     *  Other failure conditions:
-     *    * If the device is not a raster device (e.g. PDF) then readPixels will
-     *      fail.
-     *    * If bitmap is texture-backed then readPixels will fail. (This may be
-     *      relaxed in the future.)
-     */
-    bool readPixels(SkBitmap* bitmap,
-                    int x, int y,
-                    SkCanvas::Config8888 config8888);
+    bool readPixels(const SkImageInfo&, void* dst, size_t rowBytes, int x, int y);
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -349,8 +261,8 @@ protected:
     /** Called when this device is installed into a Canvas. Balanced by a call
         to unlockPixels() when the device is removed from a Canvas.
     */
-    virtual void lockPixels() = 0;
-    virtual void unlockPixels() = 0;
+    virtual void lockPixels() {}
+    virtual void unlockPixels() {}
 
     /**
      *  Returns true if the device allows processing of this imagefilter. If
@@ -358,7 +270,7 @@ protected:
      *  some subclasses that do not support pixel manipulations after drawing
      *  has occurred (e.g. printing). The default implementation returns true.
      */
-    virtual bool allowImageFilter(const SkImageFilter*) = 0;
+    virtual bool allowImageFilter(const SkImageFilter*) { return true; }
 
     /**
      *  Override and return true for filters that the device can handle
@@ -367,7 +279,7 @@ protected:
      *  Returning false means the SkCanvas will have apply the filter itself,
      *  and just pass the resulting image to the device.
      */
-    virtual bool canHandleImageFilter(const SkImageFilter*) = 0;
+    virtual bool canHandleImageFilter(const SkImageFilter*) { return false; }
 
     /**
      *  Related (but not required) to canHandleImageFilter, this method returns
@@ -378,11 +290,9 @@ protected:
      */
     virtual bool filterImage(const SkImageFilter*, const SkBitmap&,
                              const SkImageFilter::Context& ctx,
-                             SkBitmap* result, SkIPoint* offset) = 0;
-
-    // This is equal kBGRA_Premul_Config8888 or kRGBA_Premul_Config8888 if
-    // either is identical to kNative_Premul_Config8888. Otherwise, -1.
-    static const SkCanvas::Config8888 kPMColorAlias;
+                             SkBitmap* result, SkIPoint* offset) {
+        return false;
+    }
 
 protected:
     // default impl returns NULL
@@ -392,15 +302,12 @@ protected:
     virtual const void* peekPixels(SkImageInfo*, size_t* rowBytes);
 
     /**
-     * Implements readPixels API. The caller will ensure that:
-     *  1. bitmap has pixel config kARGB_8888_Config.
-     *  2. bitmap has pixels.
-     *  3. The rectangle (x, y, x + bitmap->width(), y + bitmap->height()) is
-     *     contained in the device bounds.
+     *  The caller is responsible for "pre-clipping" the dst. The impl can assume that the dst
+     *  image at the specified x,y offset will fit within the device's bounds.
+     *
+     *  This is explicitly asserted in readPixels(), the public way to call this.
      */
-    virtual bool onReadPixels(const SkBitmap& bitmap,
-                              int x, int y,
-                              SkCanvas::Config8888 config8888);
+    virtual bool onReadPixels(const SkImageInfo&, void*, size_t, int x, int y);
 
     /**
      *  The caller is responsible for "pre-clipping" the src. The impl can assume that the src
@@ -427,7 +334,7 @@ protected:
      *  PRIVATE / EXPERIMENTAL -- do not call
      *  Construct an acceleration object and attach it to 'picture'
      */
-    virtual void EXPERIMENTAL_optimize(SkPicture* picture);
+    virtual void EXPERIMENTAL_optimize(const SkPicture* picture);
 
     /**
      *  PRIVATE / EXPERIMENTAL -- do not call
@@ -439,7 +346,7 @@ protected:
      *  to perform some device-specific warm up tasks and then let SkCanvas
      *  perform the main rendering loop (by return false from here).
      */
-    virtual bool EXPERIMENTAL_drawPicture(const SkPicture& picture);
+    virtual bool EXPERIMENTAL_drawPicture(SkCanvas* canvas, const SkPicture* picture);
 
 private:
     friend class SkCanvas;
@@ -456,32 +363,20 @@ private:
     // but cannot change the width/height, so there should be no change to
     // any clip information.
     // TODO: move to SkBitmapDevice
-    virtual void replaceBitmapBackendForRasterSurface(const SkBitmap&) = 0;
+    virtual void replaceBitmapBackendForRasterSurface(const SkBitmap&) {}
 
     // just called by SkCanvas when built as a layer
     void setOrigin(int x, int y) { fOrigin.set(x, y); }
     // just called by SkCanvas for saveLayer
     SkBaseDevice* createCompatibleDeviceForSaveLayer(const SkImageInfo&);
 
-#ifdef SK_SUPPORT_LEGACY_COMPATIBLEDEVICE_CONFIG
-    /**
-     * Justs exists during the period where clients still "override" this
-     *  signature. They are supported by our base-impl calling this old
-     *  signature from the new one (using ImageInfo).
-     */
-    virtual SkBaseDevice* onCreateCompatibleDevice(SkBitmap::Config config,
-                                                   int width, int height,
-                                                   bool isOpaque, Usage) {
-        return NULL;
-    }
-#endif
     virtual SkBaseDevice* onCreateDevice(const SkImageInfo&, Usage) {
         return NULL;
     }
 
     /** Causes any deferred drawing to the device to be completed.
      */
-    virtual void flush() = 0;
+    virtual void flush() {}
 
     SkIPoint    fOrigin;
     SkMetaData* fMetaData;

@@ -93,7 +93,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLBufferData(GrGLenum target,
             buffer = GrDebugGL::getInstance()->getElementArrayBuffer();
             break;
         default:
-            GrCrash("Unexpected target to glBufferData");
+            SkFAIL("Unexpected target to glBufferData");
             break;
     }
 
@@ -586,7 +586,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLBindBuffer(GrGLenum target, GrGLuint bufferI
             GrDebugGL::getInstance()->setElementArrayBuffer(buffer);
             break;
         default:
-            GrCrash("Unexpected target to glBindBuffer");
+            SkFAIL("Unexpected target to glBindBuffer");
             break;
     }
 }
@@ -622,11 +622,40 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLDeleteBuffers(GrGLsizei n, const GrGLuint* i
 }
 
 // map a buffer to the caller's address space
-GrGLvoid* GR_GL_FUNCTION_TYPE debugGLMapBuffer(GrGLenum target, GrGLenum access) {
-
+GrGLvoid* GR_GL_FUNCTION_TYPE debugGLMapBufferRange(GrGLenum target, GrGLintptr offset,
+                                                    GrGLsizeiptr length, GrGLbitfield access) {
     GrAlwaysAssert(GR_GL_ARRAY_BUFFER == target ||
                    GR_GL_ELEMENT_ARRAY_BUFFER == target);
-    // GR_GL_READ_ONLY == access ||  || GR_GL_READ_WRIT == access);
+
+    // We only expect read access and we expect that the buffer or range is always invalidated.
+    GrAlwaysAssert(!SkToBool(GR_GL_MAP_READ_BIT & access));
+    GrAlwaysAssert((GR_GL_MAP_INVALIDATE_BUFFER_BIT | GR_GL_MAP_INVALIDATE_RANGE_BIT) & access);
+
+    GrBufferObj *buffer = NULL;
+    switch (target) {
+        case GR_GL_ARRAY_BUFFER:
+            buffer = GrDebugGL::getInstance()->getArrayBuffer();
+            break;
+        case GR_GL_ELEMENT_ARRAY_BUFFER:
+            buffer = GrDebugGL::getInstance()->getElementArrayBuffer();
+            break;
+        default:
+            SkFAIL("Unexpected target to glMapBufferRange");
+            break;
+    }
+
+    if (NULL != buffer) {
+        GrAlwaysAssert(offset >= 0 && offset + length <= buffer->getSize());
+        GrAlwaysAssert(!buffer->getMapped());
+        buffer->setMapped(offset, length);
+        return buffer->getDataPtr() + offset;
+    }
+
+    GrAlwaysAssert(false);
+    return NULL;        // no buffer bound to the target
+}
+
+GrGLvoid* GR_GL_FUNCTION_TYPE debugGLMapBuffer(GrGLenum target, GrGLenum access) {
     GrAlwaysAssert(GR_GL_WRITE_ONLY == access);
 
     GrBufferObj *buffer = NULL;
@@ -638,18 +667,12 @@ GrGLvoid* GR_GL_FUNCTION_TYPE debugGLMapBuffer(GrGLenum target, GrGLenum access)
             buffer = GrDebugGL::getInstance()->getElementArrayBuffer();
             break;
         default:
-            GrCrash("Unexpected target to glMapBuffer");
+            SkFAIL("Unexpected target to glMapBuffer");
             break;
     }
 
-    if (buffer) {
-        GrAlwaysAssert(!buffer->getMapped());
-        buffer->setMapped();
-        return buffer->getDataPtr();
-    }
-
-    GrAlwaysAssert(false);
-    return NULL;        // no buffer bound to the target
+    return debugGLMapBufferRange(target, 0, buffer->getSize(),
+                                 GR_GL_MAP_WRITE_BIT | GR_GL_MAP_INVALIDATE_BUFFER_BIT);
 }
 
 // remove a buffer from the caller's address space
@@ -668,11 +691,11 @@ GrGLboolean GR_GL_FUNCTION_TYPE debugGLUnmapBuffer(GrGLenum target) {
             buffer = GrDebugGL::getInstance()->getElementArrayBuffer();
             break;
         default:
-            GrCrash("Unexpected target to glUnmapBuffer");
+            SkFAIL("Unexpected target to glUnmapBuffer");
             break;
     }
 
-    if (buffer) {
+    if (NULL != buffer) {
         GrAlwaysAssert(buffer->getMapped());
         buffer->resetMapped();
         return GR_GL_TRUE;
@@ -681,6 +704,34 @@ GrGLboolean GR_GL_FUNCTION_TYPE debugGLUnmapBuffer(GrGLenum target) {
     GrAlwaysAssert(false);
     return GR_GL_FALSE; // GR_GL_INVALID_OPERATION;
 }
+
+GrGLvoid GR_GL_FUNCTION_TYPE debugGLFlushMappedBufferRange(GrGLenum target,
+                                                           GrGLintptr offset,
+                                                           GrGLsizeiptr length) {
+    GrAlwaysAssert(GR_GL_ARRAY_BUFFER == target ||
+                   GR_GL_ELEMENT_ARRAY_BUFFER == target);
+
+    GrBufferObj *buffer = NULL;
+    switch (target) {
+        case GR_GL_ARRAY_BUFFER:
+            buffer = GrDebugGL::getInstance()->getArrayBuffer();
+            break;
+        case GR_GL_ELEMENT_ARRAY_BUFFER:
+            buffer = GrDebugGL::getInstance()->getElementArrayBuffer();
+            break;
+        default:
+            SkFAIL("Unexpected target to glUnmapBuffer");
+            break;
+    }
+
+    if (NULL != buffer) {
+        GrAlwaysAssert(buffer->getMapped());
+        GrAlwaysAssert(offset >= 0 && (offset + length) <= buffer->getMappedLength());
+    } else {
+        GrAlwaysAssert(false);
+    }
+}
+
 
 GrGLvoid GR_GL_FUNCTION_TYPE debugGLGetBufferParameteriv(GrGLenum target,
                                                          GrGLenum value,
@@ -706,21 +757,21 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLGetBufferParameteriv(GrGLenum target,
     switch (value) {
         case GR_GL_BUFFER_MAPPED:
             *params = GR_GL_FALSE;
-            if (buffer)
+            if (NULL != buffer)
                 *params = buffer->getMapped() ? GR_GL_TRUE : GR_GL_FALSE;
             break;
         case GR_GL_BUFFER_SIZE:
             *params = 0;
-            if (buffer)
-                *params = buffer->getSize();
+            if (NULL != buffer)
+                *params = SkToInt(buffer->getSize());
             break;
         case GR_GL_BUFFER_USAGE:
             *params = GR_GL_STATIC_DRAW;
-            if (buffer)
+            if (NULL != buffer)
                 *params = buffer->getUsage();
             break;
         default:
-            GrCrash("Unexpected value to glGetBufferParamateriv");
+            SkFAIL("Unexpected value to glGetBufferParamateriv");
             break;
     }
 };
@@ -804,6 +855,7 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fColorMask = noOpGLColorMask;
     functions->fCompileShader = noOpGLCompileShader;
     functions->fCompressedTexImage2D = noOpGLCompressedTexImage2D;
+    functions->fCompressedTexSubImage2D = noOpGLCompressedTexSubImage2D;
     functions->fCopyTexSubImage2D = noOpGLCopyTexSubImage2D;
     functions->fCreateProgram = debugGLCreateProgram;
     functions->fCreateShader = debugGLCreateShader;
@@ -826,6 +878,7 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fEndQuery = noOpGLEndQuery;
     functions->fFinish = noOpGLFinish;
     functions->fFlush = noOpGLFlush;
+    functions->fFlushMappedBufferRange = debugGLFlushMappedBufferRange;
     functions->fFrontFace = noOpGLFrontFace;
     functions->fGenerateMipmap = debugGLGenerateMipmap;
     functions->fGenBuffers = debugGLGenBuffers;
@@ -848,11 +901,10 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fGetTexLevelParameteriv = noOpGLGetTexLevelParameteriv;
     functions->fGetUniformLocation = noOpGLGetUniformLocation;
     functions->fGenVertexArrays = debugGLGenVertexArrays;
-    functions->fLoadIdentity = noOpGLLoadIdentity;
-    functions->fLoadMatrixf = noOpGLLoadMatrixf;
     functions->fLineWidth = noOpGLLineWidth;
     functions->fLinkProgram = noOpGLLinkProgram;
-    functions->fMatrixMode = noOpGLMatrixMode;
+    functions->fMapBuffer = debugGLMapBuffer;
+    functions->fMapBufferRange = debugGLMapBufferRange;
     functions->fPixelStorei = debugGLPixelStorei;
     functions->fQueryCounter = noOpGLQueryCounter;
     functions->fReadBuffer = noOpGLReadBuffer;
@@ -865,8 +917,6 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fStencilMaskSeparate = noOpGLStencilMaskSeparate;
     functions->fStencilOp = noOpGLStencilOp;
     functions->fStencilOpSeparate = noOpGLStencilOpSeparate;
-    functions->fTexGenfv = noOpGLTexGenfv;
-    functions->fTexGeni = noOpGLTexGeni;
     functions->fTexImage2D = noOpGLTexImage2D;
     functions->fTexParameteri = noOpGLTexParameteri;
     functions->fTexParameteriv = noOpGLTexParameteriv;
@@ -892,6 +942,7 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fUniformMatrix2fv = noOpGLUniformMatrix2fv;
     functions->fUniformMatrix3fv = noOpGLUniformMatrix3fv;
     functions->fUniformMatrix4fv = noOpGLUniformMatrix4fv;
+    functions->fUnmapBuffer = debugGLUnmapBuffer;
     functions->fUseProgram = debugGLUseProgram;
     functions->fVertexAttrib4fv = noOpGLVertexAttrib4fv;
     functions->fVertexAttribPointer = noOpGLVertexAttribPointer;
@@ -914,8 +965,9 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fBlitFramebuffer = noOpGLBlitFramebuffer;
     functions->fResolveMultisampleFramebuffer =
                                     noOpGLResolveMultisampleFramebuffer;
-    functions->fMapBuffer = debugGLMapBuffer;
-    functions->fUnmapBuffer = debugGLUnmapBuffer;
+    functions->fMatrixLoadf = noOpGLMatrixLoadf;
+    functions->fMatrixLoadIdentity = noOpGLMatrixLoadIdentity;
+
     functions->fBindFragDataLocationIndexed =
                                     noOpGLBindFragDataLocationIndexed;
 

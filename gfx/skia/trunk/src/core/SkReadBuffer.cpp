@@ -14,9 +14,7 @@
 
 static uint32_t default_flags() {
     uint32_t flags = 0;
-#ifdef SK_SCALAR_IS_FLOAT
     flags |= SkReadBuffer::kScalarIsFloat_Flag;
-#endif
     if (8 == sizeof(void*)) {
         flags |= SkReadBuffer::kPtrIs64Bit_Flag;
     }
@@ -25,6 +23,7 @@ static uint32_t default_flags() {
 
 SkReadBuffer::SkReadBuffer() {
     fFlags = default_flags();
+    fVersion = 0;
     fMemoryPtr = NULL;
 
     fBitmapStorage = NULL;
@@ -42,6 +41,7 @@ SkReadBuffer::SkReadBuffer() {
 
 SkReadBuffer::SkReadBuffer(const void* data, size_t size) {
     fFlags = default_flags();
+    fVersion = 0;
     fReader.setMemory(data, size);
     fMemoryPtr = NULL;
 
@@ -60,6 +60,7 @@ SkReadBuffer::SkReadBuffer(const void* data, size_t size) {
 
 SkReadBuffer::SkReadBuffer(SkStream* stream) {
     fFlags = default_flags();
+    fVersion = 0;
     const size_t length = stream->getLength();
     fMemoryPtr = sk_malloc_throw(length);
     stream->read(fMemoryPtr, length);
@@ -188,7 +189,7 @@ uint32_t SkReadBuffer::getArrayCount() {
     return *(uint32_t*)fReader.peek();
 }
 
-void SkReadBuffer::readBitmap(SkBitmap* bitmap) {
+bool SkReadBuffer::readBitmap(SkBitmap* bitmap) {
     const int width = this->readInt();
     const int height = this->readInt();
     // The writer stored a boolean value to determine whether an SkBitmapHeap was used during
@@ -196,12 +197,12 @@ void SkReadBuffer::readBitmap(SkBitmap* bitmap) {
     if (this->readBool()) {
         // An SkBitmapHeap was used for writing. Read the index from the stream and find the
         // corresponding SkBitmap in fBitmapStorage.
-        const uint32_t index = fReader.readU32();
-        fReader.readU32(); // bitmap generation ID (see SkWriteBuffer::writeBitmap)
+        const uint32_t index = this->readUInt();
+        this->readUInt(); // bitmap generation ID (see SkWriteBuffer::writeBitmap)
         if (fBitmapStorage) {
             *bitmap = *fBitmapStorage->getBitmap(index);
             fBitmapStorage->releaseRef(index);
-            return;
+            return true;
         } else {
             // The bitmap was stored in a heap, but there is no way to access it. Set an error and
             // fall through to use a place holder bitmap.
@@ -220,8 +221,8 @@ void SkReadBuffer::readBitmap(SkBitmap* bitmap) {
             // A non-zero size means the SkBitmap was encoded. Read the data and pixel
             // offset.
             const void* data = this->skip(length);
-            const int32_t xOffset = fReader.readS32();
-            const int32_t yOffset = fReader.readS32();
+            const int32_t xOffset = this->readInt();
+            const int32_t yOffset = this->readInt();
             if (fBitmapDecoder != NULL && fBitmapDecoder(data, length, bitmap)) {
                 if (bitmap->width() == width && bitmap->height() == height) {
 #ifdef DEBUG_NON_DETERMINISTIC_ASSERT
@@ -236,7 +237,7 @@ void SkReadBuffer::readBitmap(SkBitmap* bitmap) {
 #endif // DEBUG_NON_DETERMINISTIC_ASSERT
                     // If the width and height match, there should be no offset.
                     SkASSERT(0 == xOffset && 0 == yOffset);
-                    return;
+                    return true;
                 }
 
                 // This case can only be reached if extractSubset was called, so
@@ -252,7 +253,7 @@ void SkReadBuffer::readBitmap(SkBitmap* bitmap) {
                 SkIRect subset = SkIRect::MakeXYWH(xOffset, yOffset, width, height);
                 if (bitmap->extractSubset(&subsetBm, subset)) {
                     bitmap->swap(subsetBm);
-                    return;
+                    return true;
                 }
             }
             // This bitmap was encoded when written, but we are unable to decode, possibly due to
@@ -261,13 +262,20 @@ void SkReadBuffer::readBitmap(SkBitmap* bitmap) {
                                        "Could not decode bitmap. Resulting bitmap will be red.");
         } else {
             // A size of zero means the SkBitmap was simply flattened.
-            bitmap->unflatten(*this);
-            return;
+            if (this->isVersionLT(kNoMoreBitmapFlatten_Version)) {
+                SkBitmap tmp;
+                tmp.legacyUnflatten(*this);
+                // just throw this guy away
+            } else {
+                if (SkBitmap::ReadRawPixels(this, bitmap)) {
+                    return true;
+                }
+            }
         }
     }
     // Could not read the SkBitmap. Use a placeholder bitmap.
-    bitmap->allocPixels(SkImageInfo::MakeN32Premul(width, height));
-    bitmap->eraseColor(SK_ColorRED);
+    bitmap->setInfo(SkImageInfo::MakeUnknown(width, height));
+    return false;
 }
 
 SkTypeface* SkReadBuffer::readTypeface() {
@@ -318,10 +326,10 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
     SkFlattenable* obj = NULL;
     uint32_t sizeRecorded = fReader.readU32();
     if (factory) {
-        uint32_t offset = fReader.offset();
+        size_t offset = fReader.offset();
         obj = (*factory)(*this);
         // check that we read the amount we expected
-        uint32_t sizeRead = fReader.offset() - offset;
+        size_t sizeRead = fReader.offset() - offset;
         if (sizeRecorded != sizeRead) {
             // we could try to fix up the offset...
             sk_throw();
@@ -331,4 +339,26 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
         fReader.skip(sizeRecorded);
     }
     return obj;
+}
+
+/**
+ *  Needs to follow the same pattern as readFlattenable(), but explicitly skip whatever data
+ *  has been written.
+ */
+void SkReadBuffer::skipFlattenable() {
+    if (fFactoryCount > 0) {
+        if (0 == fReader.readU32()) {
+            return;
+        }
+    } else if (fFactoryTDArray) {
+        if (0 == fReader.readU32()) {
+            return;
+        }
+    } else {
+        if (NULL == this->readFunctionPtr()) {
+            return;
+        }
+    }
+    uint32_t sizeRecorded = fReader.readU32();
+    fReader.skip(sizeRecorded);
 }

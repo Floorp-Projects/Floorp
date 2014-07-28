@@ -11,13 +11,13 @@
 #include "SkFlattenable.h"
 #include "SkMatrix.h"
 #include "SkRect.h"
+#include "SkTemplates.h"
 
 class SkBitmap;
 class SkColorFilter;
 class SkBaseDevice;
 struct SkIPoint;
-class SkShader;
-class GrEffectRef;
+class GrEffect;
 class GrTexture;
 
 /**
@@ -49,16 +49,30 @@ public:
         uint32_t fFlags;
     };
 
+    class SK_API Cache : public SkRefCnt {
+    public:
+        // By default, we cache only image filters with 2 or more children.
+        // Values less than 2 mean always cache; values greater than 2 are not supported.
+        static Cache* Create(int minChildren = 2);
+        virtual ~Cache() {}
+        virtual bool get(const SkImageFilter* key, SkBitmap* result, SkIPoint* offset) = 0;
+        virtual void set(const SkImageFilter* key,
+                         const SkBitmap& result, const SkIPoint& offset) = 0;
+        virtual void remove(const SkImageFilter* key) = 0;
+    };
+
     class Context {
     public:
-        Context(const SkMatrix& ctm, const SkIRect& clipBounds) :
-            fCTM(ctm), fClipBounds(clipBounds) {
+        Context(const SkMatrix& ctm, const SkIRect& clipBounds, Cache* cache) :
+            fCTM(ctm), fClipBounds(clipBounds), fCache(cache) {
         }
         const SkMatrix& ctm() const { return fCTM; }
         const SkIRect& clipBounds() const { return fClipBounds; }
+        Cache* cache() const { return fCache; }
     private:
         SkMatrix fCTM;
         SkIRect  fClipBounds;
+        Cache*   fCache;
     };
 
     class Proxy {
@@ -172,16 +186,46 @@ public:
                            SkBitmap* result, SkIPoint* offset) const;
 #endif
 
+    /**
+     *  Set an external cache to be used for all image filter processing. This
+     *  will replace the default intra-frame cache.
+     */
+    static void SetExternalCache(Cache* cache);
+
+    /**
+     *  Returns the currently-set external cache, or NULL if none is set.
+     */
+    static Cache* GetExternalCache();
+
     SK_DEFINE_FLATTENABLE_TYPE(SkImageFilter)
 
 protected:
+    class Common {
+    public:
+        Common() {}
+        ~Common();
+
+        bool unflatten(SkReadBuffer&, int expectedInputs = -1);
+
+        CropRect        cropRect() const { return fCropRect; }
+        int             inputCount() const { return fInputs.count(); }
+        SkImageFilter** inputs() const { return fInputs.get(); }
+
+        // If the caller wants a copy of the inputs, call this and it will transfer ownership
+        // of the unflattened input filters to the caller. This is just a short-cut for copying
+        // the inputs, calling ref() on each, and then waiting for Common's destructor to call
+        // unref() on each.
+        void detachInputs(SkImageFilter** inputs);
+
+    private:
+        CropRect fCropRect;
+        // most filters accept at most 2 input-filters
+        SkAutoSTArray<2, SkImageFilter*> fInputs;
+
+        void allocInputs(int count);
+    };
+
     SkImageFilter(int inputCount, SkImageFilter** inputs, const CropRect* cropRect = NULL);
-
-    // Convenience constructor for 1-input filters.
-    explicit SkImageFilter(SkImageFilter* input, const CropRect* cropRect = NULL);
-
-    // Convenience constructor for 2-input filters.
-    SkImageFilter(SkImageFilter* input1, SkImageFilter* input2, const CropRect* cropRect = NULL);
 
     virtual ~SkImageFilter();
 
@@ -258,11 +302,10 @@ protected:
      *  will be called with (NULL, NULL, SkMatrix::I()) to query for support,
      *  so returning "true" indicates support for all possible matrices.
      */
-    virtual bool asNewEffect(GrEffectRef** effect,
+    virtual bool asNewEffect(GrEffect** effect,
                              GrTexture*,
                              const SkMatrix& matrix,
                              const SkIRect& bounds) const;
-
 
 private:
     typedef SkFlattenable INHERITED;

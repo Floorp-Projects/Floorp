@@ -20,9 +20,8 @@ class GrGLCustomCoordsTextureEffect;
  */
 class GrCustomCoordsTextureEffect : public GrVertexEffect {
 public:
-    static GrEffectRef* Create(GrTexture* tex, const GrTextureParams& p) {
-        AutoEffectUnref effect(SkNEW_ARGS(GrCustomCoordsTextureEffect, (tex, p)));
-        return CreateEffectRef(effect);
+    static GrEffect* Create(GrTexture* tex, const GrTextureParams& p) {
+        return SkNEW_ARGS(GrCustomCoordsTextureEffect, (tex, p));
     }
 
     virtual ~GrCustomCoordsTextureEffect() {}

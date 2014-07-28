@@ -31,36 +31,49 @@
 #endif
 
 // On Windows, SkBaseMutex and SkMutex are the same thing,
-// we can't easily get rid of static initializers.
-class SkMutex {
+// we can't easily get rid of static initializers. However,
+// we preserve the same inheritance pattern as other platforms
+// so that we can forward-declare cleanly.
+struct SkBaseMutex {
 public:
-    SkMutex() {
+    SkBaseMutex() {
         InitializeCriticalSection(&fStorage);
+        SkDEBUGCODE(fOwner = 0;)
     }
 
-    ~SkMutex() {
+    ~SkBaseMutex() {
+        SkASSERT(0 == fOwner);
         DeleteCriticalSection(&fStorage);
     }
 
     void acquire() {
         EnterCriticalSection(&fStorage);
+        SkDEBUGCODE(fOwner = GetCurrentThreadId();)
     }
 
     void release() {
+        this->assertHeld();
+        SkDEBUGCODE(fOwner = 0;)
         LeaveCriticalSection(&fStorage);
     }
 
-private:
-    SkMutex(const SkMutex&);
-    SkMutex& operator=(const SkMutex&);
+    void assertHeld() {
+        SkASSERT(GetCurrentThreadId() == fOwner);
+    }
 
+protected:
     CRITICAL_SECTION fStorage;
+    SkDEBUGCODE(DWORD fOwner;)
+
+private:
+    SkBaseMutex(const SkBaseMutex&);
+    SkBaseMutex& operator=(const SkBaseMutex&);
 };
 
-typedef SkMutex SkBaseMutex;
+class SkMutex : public SkBaseMutex { };
 
 // Windows currently provides no documented means of POD initializing a CRITICAL_SECTION.
-#define SK_DECLARE_STATIC_MUTEX(name) static SkBaseMutex name
-#define SK_DECLARE_GLOBAL_MUTEX(name) SkBaseMutex name
+// As a result, it is illegal to SK_DECLARE_STATIC_MUTEX in a function.
+#define SK_DECLARE_STATIC_MUTEX(name) namespace{} static SkBaseMutex name
 
 #endif

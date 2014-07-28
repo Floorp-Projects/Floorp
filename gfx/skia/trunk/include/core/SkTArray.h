@@ -17,6 +17,10 @@ template <typename T, bool MEM_COPY = false> class SkTArray;
 namespace SkTArrayExt {
 
 template<typename T>
+inline void copy(SkTArray<T, true>* self, int dst, int src) {
+    memcpy(&self->fItemArray[dst], &self->fItemArray[src], sizeof(T));
+}
+template<typename T>
 inline void copy(SkTArray<T, true>* self, const T* array) {
     memcpy(self->fMemArray, array, self->fCount * sizeof(T));
 }
@@ -25,6 +29,10 @@ inline void copyAndDelete(SkTArray<T, true>* self, char* newMemArray) {
     memcpy(newMemArray, self->fMemArray, self->fCount * sizeof(T));
 }
 
+template<typename T>
+inline void copy(SkTArray<T, false>* self, int dst, int src) {
+    SkNEW_PLACEMENT_ARGS(&self->fItemArray[dst], T, (self->fItemArray[src]));
+}
 template<typename T>
 inline void copy(SkTArray<T, false>* self, const T* array) {
     for (int i = 0; i < self->fCount; ++i) {
@@ -45,7 +53,7 @@ template <typename T, bool MEM_COPY> void* operator new(size_t, SkTArray<T, MEM_
 
 /** When MEM_COPY is true T will be bit copied when moved.
     When MEM_COPY is false, T will be copy constructed / destructed.
-    In all cases T's constructor will be called on allocation,
+    In all cases T will be default-initialized on allocation,
     and its destructor will be called from this object's destructor.
 */
 template <typename T, bool MEM_COPY> class SkTArray {
@@ -140,8 +148,17 @@ public:
         int delta = count - fCount;
         this->checkRealloc(delta);
         fCount = count;
-        for (int i = 0; i < count; ++i) {
-            SkTArrayExt::copy(this, array);
+        SkTArrayExt::copy(this, array);
+    }
+
+    void removeShuffle(int n) {
+        SkASSERT(n < fCount);
+        int newCount = fCount - 1;
+        fCount = newCount;
+        fItemArray[n].~T();
+        if (n != newCount) {
+            SkTArrayExt::copy(this, n, newCount);
+            fItemArray[newCount].~T();
         }
     }
 
@@ -156,7 +173,7 @@ public:
     bool empty() const { return !fCount; }
 
     /**
-     * Adds 1 new default-constructed T value and returns in by reference. Note
+     * Adds 1 new default-initialized T value and returns it by reference. Note
      * the reference only remains valid until the next call that adds or removes
      * elements.
      */
@@ -176,9 +193,9 @@ public:
     }
 
     /**
-     * Allocates n more default T values, and returns the address of the start
-     * of that new range. Note: this address is only valid until the next API
-     * call made on the array that might add or remove elements.
+     * Allocates n more default-initialized T values, and returns the address of
+     * the start of that new range. Note: this address is only valid until the
+     * next API call made on the array that might add or remove elements.
      */
     T* push_back_n(int n) {
         SkASSERT(n >= 0);
@@ -427,9 +444,11 @@ private:
 
     friend void* operator new<T>(size_t, SkTArray*, int);
 
+    template<typename X> friend void SkTArrayExt::copy(SkTArray<X, true>* that, int dst, int src);
     template<typename X> friend void SkTArrayExt::copy(SkTArray<X, true>* that, const X*);
     template<typename X> friend void SkTArrayExt::copyAndDelete(SkTArray<X, true>* that, char*);
 
+    template<typename X> friend void SkTArrayExt::copy(SkTArray<X, false>* that, int dst, int src);
     template<typename X> friend void SkTArrayExt::copy(SkTArray<X, false>* that, const X*);
     template<typename X> friend void SkTArrayExt::copyAndDelete(SkTArray<X, false>* that, char*);
 

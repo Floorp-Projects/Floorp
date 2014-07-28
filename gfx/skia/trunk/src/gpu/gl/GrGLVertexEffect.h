@@ -26,7 +26,7 @@ public:
      */
     virtual void emitCode(GrGLFullShaderBuilder* builder,
                           const GrDrawEffect& drawEffect,
-                          EffectKey key,
+                          const GrEffectKey& key,
                           const char* outputColor,
                           const char* inputColor,
                           const TransformedCoordsArray& coords,
@@ -37,12 +37,12 @@ public:
      */
     virtual void emitCode(GrGLShaderBuilder* builder,
                           const GrDrawEffect& drawEffect,
-                          EffectKey key,
+                          const GrEffectKey& key,
                           const char* outputColor,
                           const char* inputColor,
                           const TransformedCoordsArray& coords,
                           const TextureSamplerArray& samplers) SK_OVERRIDE {
-        GrCrash("GrGLVertexEffect requires GrGLFullShaderBuilder* overload for emitCode().");
+        SkFAIL("GrGLVertexEffect requires GrGLFullShaderBuilder* overload for emitCode().");
     }
 
 private:

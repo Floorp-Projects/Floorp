@@ -14,7 +14,8 @@ class SkSurface_Gpu : public SkSurface_Base {
 public:
     SK_DECLARE_INST_COUNT(SkSurface_Gpu)
 
-    SkSurface_Gpu(GrRenderTarget*);
+    SkSurface_Gpu(GrRenderTarget*, bool cached, TextRenderMode trm, 
+                  SkSurface::RenderTargetFlags flags);
     virtual ~SkSurface_Gpu();
 
     virtual SkCanvas* onNewCanvas() SK_OVERRIDE;
@@ -23,6 +24,7 @@ public:
     virtual void onDraw(SkCanvas*, SkScalar x, SkScalar y,
                         const SkPaint*) SK_OVERRIDE;
     virtual void onCopyOnWrite(ContentChangeMode) SK_OVERRIDE;
+    virtual void onDiscard() SK_OVERRIDE;
 
 private:
     SkGpuDevice* fDevice;
@@ -32,11 +34,16 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkSurface_Gpu::SkSurface_Gpu(GrRenderTarget* renderTarget)
+SkSurface_Gpu::SkSurface_Gpu(GrRenderTarget* renderTarget, bool cached, TextRenderMode trm,
+                             SkSurface::RenderTargetFlags flags)
         : INHERITED(renderTarget->width(), renderTarget->height()) {
-    fDevice = SkNEW_ARGS(SkGpuDevice, (renderTarget->getContext(), renderTarget));
+    int deviceFlags = 0;
+    deviceFlags |= cached ? SkGpuDevice::kCached_Flag : 0;
+    deviceFlags |= (kDistanceField_TextRenderMode == trm) ? SkGpuDevice::kDFFonts_Flag : 0;
+    fDevice = SkGpuDevice::Create(renderTarget, deviceFlags);
 
-    if (kRGB_565_GrPixelConfig != renderTarget->config()) {
+    if (kRGB_565_GrPixelConfig != renderTarget->config() && 
+        !(flags & kDontClear_RenderTargetFlag)) {
         fDevice->clear(0x0);
     }
 }
@@ -86,30 +93,36 @@ void SkSurface_Gpu::onCopyOnWrite(ContentChangeMode mode) {
 
         this->getCachedCanvas()->setRootDevice(newDevice);
         SkRefCnt_SafeAssign(fDevice, newDevice);
+    } else if (kDiscard_ContentChangeMode == mode) {
+        this->SkSurface_Gpu::onDiscard();
     }
+}
+
+void SkSurface_Gpu::onDiscard() {
+    fDevice->accessRenderTarget()->discard();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkSurface* SkSurface::NewRenderTargetDirect(GrRenderTarget* target) {
+SkSurface* SkSurface::NewRenderTargetDirect(GrRenderTarget* target, TextRenderMode trm,
+                                            RenderTargetFlags flags) {
     if (NULL == target) {
         return NULL;
     }
-    return SkNEW_ARGS(SkSurface_Gpu, (target));
+    return SkNEW_ARGS(SkSurface_Gpu, (target, false, trm, flags));
 }
 
-SkSurface* SkSurface::NewRenderTarget(GrContext* ctx, const SkImageInfo& info, int sampleCount) {
+SkSurface* SkSurface::NewRenderTarget(GrContext* ctx, const SkImageInfo& info, int sampleCount,
+                                      TextRenderMode trm, RenderTargetFlags flags) {
     if (NULL == ctx) {
         return NULL;
     }
 
-    SkBitmap::Config config = SkImageInfoToBitmapConfig(info);
-
     GrTextureDesc desc;
     desc.fFlags = kRenderTarget_GrTextureFlagBit | kCheckAllocation_GrTextureFlagBit;
-    desc.fWidth = info.fWidth;
-    desc.fHeight = info.fHeight;
-    desc.fConfig = SkBitmapConfig2GrPixelConfig(config);
+    desc.fWidth = info.width();
+    desc.fHeight = info.height();
+    desc.fConfig = SkImageInfo2GrPixelConfig(info);
     desc.fSampleCnt = sampleCount;
 
     SkAutoTUnref<GrTexture> tex(ctx->createUncachedTexture(desc, NULL, 0));
@@ -117,5 +130,28 @@ SkSurface* SkSurface::NewRenderTarget(GrContext* ctx, const SkImageInfo& info, i
         return NULL;
     }
 
-    return SkNEW_ARGS(SkSurface_Gpu, (tex->asRenderTarget()));
+    return SkNEW_ARGS(SkSurface_Gpu, (tex->asRenderTarget(), false, trm, flags));
+}
+
+SkSurface* SkSurface::NewScratchRenderTarget(GrContext* ctx, const SkImageInfo& info,
+                                             int sampleCount, TextRenderMode trm,
+                                             RenderTargetFlags flags) {
+    if (NULL == ctx) {
+        return NULL;
+    }
+
+    GrTextureDesc desc;
+    desc.fFlags = kRenderTarget_GrTextureFlagBit | kCheckAllocation_GrTextureFlagBit;
+    desc.fWidth = info.width();
+    desc.fHeight = info.height();
+    desc.fConfig = SkImageInfo2GrPixelConfig(info);
+    desc.fSampleCnt = sampleCount;
+
+    SkAutoTUnref<GrTexture> tex(ctx->lockAndRefScratchTexture(desc, GrContext::kExact_ScratchTexMatch));
+
+    if (NULL == tex) {
+        return NULL;
+    }
+
+    return SkNEW_ARGS(SkSurface_Gpu, (tex->asRenderTarget(), true, trm, flags));
 }

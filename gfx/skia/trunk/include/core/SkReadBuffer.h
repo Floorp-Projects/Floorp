@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
@@ -18,13 +17,11 @@
 #include "SkPath.h"
 #include "SkPathEffect.h"
 #include "SkPicture.h"
-#include "SkPixelRef.h"
 #include "SkRasterizer.h"
 #include "SkReadBuffer.h"
 #include "SkReader32.h"
 #include "SkRefCnt.h"
 #include "SkShader.h"
-#include "SkUnitMapper.h"
 #include "SkWriteBuffer.h"
 #include "SkXfermode.h"
 
@@ -40,6 +37,30 @@ public:
     SkReadBuffer(const void* data, size_t size);
     SkReadBuffer(SkStream* stream);
     virtual ~SkReadBuffer();
+
+    enum Version {
+        kFilterLevelIsEnum_Version         = 23,
+        kGradientFlippedFlag_Version       = 24,
+        kDashWritesPhaseIntervals_Version  = 25,
+        kColorShaderNoBool_Version         = 26,
+        kNoUnitMappers_Version             = 27,
+        kNoMoreBitmapFlatten_Version       = 28,
+        kSimplifyLocalMatrix_Version       = 30,
+    };
+
+    /**
+     *  Returns true IFF the version is older than the specified version.
+     */
+    bool isVersionLT(Version targetVersion) const {
+        SkASSERT(targetVersion > 0);
+        return fVersion > 0 && fVersion < targetVersion;
+    }
+
+    /** This may be called at most once; most clients of SkReadBuffer should not mess with it. */
+    void setVersion(int version) {
+        SkASSERT(0 == fVersion || version == fVersion);
+        fVersion = version;
+    }
 
     enum Flags {
         kCrossProcess_Flag  = 1 << 0,
@@ -60,10 +81,11 @@ public:
 
     SkReader32* getReader32() { return &fReader; }
 
-    uint32_t size() { return fReader.size(); }
-    uint32_t offset() { return fReader.offset(); }
+    size_t size() { return fReader.size(); }
+    size_t offset() { return fReader.offset(); }
     bool eof() { return fReader.eof(); }
-    const void* skip(size_t size) { return fReader.skip(size); }
+    virtual const void* skip(size_t size) { return fReader.skip(size); }
+    void* readFunctionPtr() { return fReader.readPtr(); }
 
     // primitives
     virtual bool readBool();
@@ -73,12 +95,6 @@ public:
     virtual SkScalar readScalar();
     virtual uint32_t readUInt();
     virtual int32_t read32();
-
-    void* readFunctionPtr() {
-        void* ptr;
-        this->readByteArray(&ptr, sizeof(ptr));
-        return ptr;
-    }
 
     // strings -- the caller is responsible for freeing the string contents
     virtual void readString(SkString* string);
@@ -103,12 +119,15 @@ public:
     SkImageFilter* readImageFilter() { return this->readFlattenable<SkImageFilter>(); }
     SkMaskFilter*  readMaskFilter()  { return this->readFlattenable<SkMaskFilter>(); }
     SkPathEffect*  readPathEffect()  { return this->readFlattenable<SkPathEffect>(); }
-    SkPixelRef*    readPixelRef()    { return this->readFlattenable<SkPixelRef>(); }
     SkRasterizer*  readRasterizer()  { return this->readFlattenable<SkRasterizer>(); }
     SkShader*      readShader()      { return this->readFlattenable<SkShader>(); }
-    SkUnitMapper*  readUnitMapper()  { return this->readFlattenable<SkUnitMapper>(); }
     SkXfermode*    readXfermode()    { return this->readFlattenable<SkXfermode>(); }
 
+    /**
+     *  Like readFlattenable() but explicitly just skips the data that was written for the
+     *  flattenable (or the sentinel that there wasn't one).
+     */
+    virtual void skipFlattenable();
 
     // binary data and arrays
     virtual bool readByteArray(void* value, size_t size);
@@ -130,7 +149,12 @@ public:
     // helpers to get info about arrays and binary data
     virtual uint32_t getArrayCount();
 
-    virtual void readBitmap(SkBitmap* bitmap);
+    /**
+     *  Returns false if the bitmap could not be completely read. In that case, it will be set
+     *  to have width/height, but no pixels.
+     */
+    bool readBitmap(SkBitmap* bitmap);
+
     virtual SkTypeface* readTypeface();
 
     void setBitmapStorage(SkBitmapHeapReader* bitmapStorage) {
@@ -184,6 +208,7 @@ private:
     bool readArray(void* value, size_t size, size_t elementSize);
 
     uint32_t fFlags;
+    int fVersion;
 
     void* fMemoryPtr;
 

@@ -9,7 +9,9 @@
 
 #include "SkGlyphCache.h"
 #include "SkGlyphCache_Globals.h"
+#include "SkDistanceFieldGen.h"
 #include "SkGraphics.h"
+#include "SkLazyPtr.h"
 #include "SkPaint.h"
 #include "SkPath.h"
 #include "SkTemplates.h"
@@ -19,14 +21,18 @@
 //#define SPEW_PURGE_STATUS
 //#define RECORD_HASH_EFFICIENCY
 
-bool gSkSuppressFontCachePurgeSpew;
+namespace {
+
+SkGlyphCache_Globals* create_globals() {
+    return SkNEW_ARGS(SkGlyphCache_Globals, (SkGlyphCache_Globals::kYes_UseMutex));
+}
+
+}  // namespace
 
 // Returns the shared globals
 static SkGlyphCache_Globals& getSharedGlobals() {
-    // we leak this, so we don't incur any shutdown cost of the destructor
-    static SkGlyphCache_Globals* gGlobals = SkNEW_ARGS(SkGlyphCache_Globals,
-                                                       (SkGlyphCache_Globals::kYes_UseMutex));
-    return *gGlobals;
+    SK_DECLARE_STATIC_LAZY_PTR(SkGlyphCache_Globals, globals, create_globals);
+    return *globals.get();
 }
 
 // Returns the TLS globals (if set), or the shared globals
@@ -328,12 +334,12 @@ SkGlyph* SkGlyphCache::lookupMetrics(uint32_t id, MetricsType mtype) {
 
 const void* SkGlyphCache::findImage(const SkGlyph& glyph) {
     if (glyph.fWidth > 0 && glyph.fWidth < kMaxGlyphWidth) {
-        if (glyph.fImage == NULL) {
+        if (NULL == glyph.fImage) {
             size_t  size = glyph.computeImageSize();
             const_cast<SkGlyph&>(glyph).fImage = fGlyphAlloc.alloc(size,
                                         SkChunkAlloc::kReturnNil_AllocFailType);
             // check that alloc() actually succeeded
-            if (glyph.fImage) {
+            if (NULL != glyph.fImage) {
                 fScalerContext->getImage(glyph);
                 // TODO: the scaler may have changed the maskformat during
                 // getImage (e.g. from AA or LCD to BW) which means we may have
@@ -356,6 +362,45 @@ const SkPath* SkGlyphCache::findPath(const SkGlyph& glyph) {
         }
     }
     return glyph.fPath;
+}
+
+const void* SkGlyphCache::findDistanceField(const SkGlyph& glyph) {
+    if (glyph.fWidth > 0 && glyph.fWidth < kMaxGlyphWidth) {
+        if (NULL == glyph.fDistanceField) {
+            size_t  size = SkComputeDistanceFieldSize(glyph.fWidth, glyph.fHeight);
+            if (size == 0) {
+                return NULL;
+            }
+            const void* image = this->findImage(glyph);
+            // now generate the distance field
+            if (NULL != image) {
+                const_cast<SkGlyph&>(glyph).fDistanceField = fGlyphAlloc.alloc(size,
+                                            SkChunkAlloc::kReturnNil_AllocFailType);
+                if (NULL != glyph.fDistanceField) {
+                    SkMask::Format maskFormat = static_cast<SkMask::Format>(glyph.fMaskFormat);
+                    if (SkMask::kA8_Format == maskFormat) {
+                        // make the distance field from the image
+                        SkGenerateDistanceFieldFromA8Image((unsigned char*)glyph.fDistanceField,
+                                                           (unsigned char*)glyph.fImage,
+                                                           glyph.fWidth, glyph.fHeight,
+                                                           glyph.rowBytes());
+                        fMemoryUsed += size;
+                    } else if (SkMask::kBW_Format == maskFormat) {
+                        // make the distance field from the image
+                        SkGenerateDistanceFieldFromBWImage((unsigned char*)glyph.fDistanceField,
+                                                           (unsigned char*)glyph.fImage,
+                                                           glyph.fWidth, glyph.fHeight,
+                                                           glyph.rowBytes());
+                        fMemoryUsed += size;
+                    } else {
+                        fGlyphAlloc.unalloc(glyph.fDistanceField);
+                        const_cast<SkGlyph&>(glyph).fDistanceField = NULL;
+                    }
+                }
+            }
+        }
+    }
+    return glyph.fDistanceField;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -598,7 +643,7 @@ size_t SkGlyphCache_Globals::internalPurge(size_t minBytesNeeded) {
     this->validate();
 
 #ifdef SPEW_PURGE_STATUS
-    if (countFreed && !gSkSuppressFontCachePurgeSpew) {
+    if (countFreed) {
         SkDebugf("purging %dK from font cache [%d entries]\n",
                  (int)(bytesFreed >> 10), countFreed);
     }
@@ -648,6 +693,9 @@ void SkGlyphCache::validate() const {
         SkASSERT(fGlyphAlloc.contains(glyph));
         if (glyph->fImage) {
             SkASSERT(fGlyphAlloc.contains(glyph->fImage));
+        }
+        if (glyph->fDistanceField) {
+            SkASSERT(fGlyphAlloc.contains(glyph->fDistanceField));
         }
     }
 #endif

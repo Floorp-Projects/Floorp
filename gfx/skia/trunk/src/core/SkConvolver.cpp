@@ -158,6 +158,31 @@ template<bool hasAlpha>
         }
     }
 
+    // There's a bug somewhere here with GCC autovectorization (-ftree-vectorize) on 32 bit builds.
+    // Dropping to -O2 disables -ftree-vectorize.  GCC 4.6 needs noinline.  http://skbug.com/2575
+    #if defined(__i386) && SK_HAS_ATTRIBUTE(optimize) && defined(SK_RELEASE)
+        #define SK_MAYBE_DISABLE_VECTORIZATION __attribute__((optimize("O2"), noinline))
+    #else
+        #define SK_MAYBE_DISABLE_VECTORIZATION
+    #endif
+
+    SK_MAYBE_DISABLE_VECTORIZATION
+    static void ConvolveHorizontallyAlpha(const unsigned char* srcData,
+                                          const SkConvolutionFilter1D& filter,
+                                          unsigned char* outRow) {
+        return ConvolveHorizontally<true>(srcData, filter, outRow);
+    }
+
+    SK_MAYBE_DISABLE_VECTORIZATION
+    static void ConvolveHorizontallyNoAlpha(const unsigned char* srcData,
+                                            const SkConvolutionFilter1D& filter,
+                                            unsigned char* outRow) {
+        return ConvolveHorizontally<false>(srcData, filter, outRow);
+    }
+
+    #undef SK_MAYBE_DISABLE_VECTORIZATION
+
+
 // Does vertical convolution to produce one output row. The filter values and
 // length are given in the first two parameters. These are applied to each
 // of the rows pointed to in the |sourceDataRows| array, with each row
@@ -405,7 +430,7 @@ void BGRAConvolve2D(const unsigned char* sourceData,
                 const unsigned char* src[4];
                 unsigned char* outRow[4];
                 for (int i = 0; i < 4; ++i) {
-                    src[i] = &sourceData[(nextXRow + i) * sourceByteRowStride];
+                    src[i] = &sourceData[(uint64_t)(nextXRow + i) * sourceByteRowStride];
                     outRow[i] = rowBuffer.advanceRow();
                 }
                 convolveProcs.fConvolve4RowsHorizontally(src, filterX, outRow);
@@ -416,16 +441,16 @@ void BGRAConvolve2D(const unsigned char* sourceData,
                     nextXRow < lastFilterOffset + lastFilterLength -
                     avoidSimdRows) {
                     convolveProcs.fConvolveHorizontally(
-                        &sourceData[nextXRow * sourceByteRowStride],
+                        &sourceData[(uint64_t)nextXRow * sourceByteRowStride],
                         filterX, rowBuffer.advanceRow(), sourceHasAlpha);
                 } else {
                     if (sourceHasAlpha) {
-                        ConvolveHorizontally<true>(
-                            &sourceData[nextXRow * sourceByteRowStride],
+                        ConvolveHorizontallyAlpha(
+                            &sourceData[(uint64_t)nextXRow * sourceByteRowStride],
                             filterX, rowBuffer.advanceRow());
                     } else {
-                        ConvolveHorizontally<false>(
-                            &sourceData[nextXRow * sourceByteRowStride],
+                        ConvolveHorizontallyNoAlpha(
+                            &sourceData[(uint64_t)nextXRow * sourceByteRowStride],
                             filterX, rowBuffer.advanceRow());
                     }
                 }
@@ -434,7 +459,7 @@ void BGRAConvolve2D(const unsigned char* sourceData,
         }
 
         // Compute where in the output image this row of final data will go.
-        unsigned char* curOutputRow = &output[outY * outputByteRowStride];
+        unsigned char* curOutputRow = &output[(uint64_t)outY * outputByteRowStride];
 
         // Get the list of rows that the circular buffer has, in order.
         int firstRowInCircularBuffer;

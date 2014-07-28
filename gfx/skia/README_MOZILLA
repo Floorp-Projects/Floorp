@@ -2,7 +2,7 @@ The source from this directory was copied from the skia subversion trunk
 using the update.sh script. The changes made were those applied by update.sh,
 the addition/update of Makefile.in files for the Mozilla build system.
 
-The subversion revision used was r13827.
+This is an import of Skia from 2014-07-28 (b1ab5fdd11bb358d738c1bfa63737dc65174a281)
 
 To update to a new version of Skia:
 

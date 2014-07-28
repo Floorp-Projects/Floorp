@@ -192,9 +192,9 @@ void SkDumpCanvas::dump(Verb verb, const SkPaint* paint,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkDumpCanvas::willSave(SaveFlags flags) {
-    this->dump(kSave_Verb, NULL, "save(0x%X)", flags);
-    this->INHERITED::willSave(flags);
+void SkDumpCanvas::willSave() {
+    this->dump(kSave_Verb, NULL, "save()");
+    this->INHERITED::willSave();
 }
 
 SkCanvas::SaveLayerStrategy SkDumpCanvas::willSaveLayer(const SkRect* bounds, const SkPaint* paint,
@@ -222,33 +222,26 @@ void SkDumpCanvas::willRestore() {
     this->INHERITED::willRestore();
 }
 
-void SkDumpCanvas::didTranslate(SkScalar dx, SkScalar dy) {
-    this->dump(kMatrix_Verb, NULL, "translate(%g %g)",
-               SkScalarToFloat(dx), SkScalarToFloat(dy));
-    this->INHERITED::didTranslate(dx, dy);
-}
-
-void SkDumpCanvas::didScale(SkScalar sx, SkScalar sy) {
-    this->dump(kMatrix_Verb, NULL, "scale(%g %g)",
-               SkScalarToFloat(sx), SkScalarToFloat(sy));
-    this->INHERITED::didScale(sx, sy);
-}
-
-void SkDumpCanvas::didRotate(SkScalar degrees) {
-    this->dump(kMatrix_Verb, NULL, "rotate(%g)", SkScalarToFloat(degrees));
-    this->INHERITED::didRotate(degrees);
-}
-
-void SkDumpCanvas::didSkew(SkScalar sx, SkScalar sy) {
-    this->dump(kMatrix_Verb, NULL, "skew(%g %g)",
-               SkScalarToFloat(sx), SkScalarToFloat(sy));
-    this->INHERITED::didSkew(sx, sy);
-}
-
 void SkDumpCanvas::didConcat(const SkMatrix& matrix) {
     SkString str;
-    matrix.toString(&str);
-    this->dump(kMatrix_Verb, NULL, "concat(%s)", str.c_str());
+
+    switch (matrix.getType()) {
+        case SkMatrix::kTranslate_Mask:
+            this->dump(kMatrix_Verb, NULL, "translate(%g %g)",
+                       SkScalarToFloat(matrix.getTranslateX()),
+                       SkScalarToFloat(matrix.getTranslateY()));
+            break;
+        case SkMatrix::kScale_Mask:
+            this->dump(kMatrix_Verb, NULL, "scale(%g %g)",
+                       SkScalarToFloat(matrix.getScaleX()),
+                       SkScalarToFloat(matrix.getScaleY()));
+            break;
+        default:
+            matrix.toString(&str);
+            this->dump(kMatrix_Verb, NULL, "concat(%s)", str.c_str());
+            break;
+    }
+
     this->INHERITED::didConcat(matrix);
 }
 
@@ -395,16 +388,16 @@ void SkDumpCanvas::drawSprite(const SkBitmap& bitmap, int x, int y,
                x, y);
 }
 
-void SkDumpCanvas::drawText(const void* text, size_t byteLength, SkScalar x,
-                             SkScalar y, const SkPaint& paint) {
+void SkDumpCanvas::onDrawText(const void* text, size_t byteLength, SkScalar x, SkScalar y,
+                              const SkPaint& paint) {
     SkString str;
     toString(text, byteLength, paint.getTextEncoding(), &str);
     this->dump(kDrawText_Verb, &paint, "drawText(%s [%d] %g %g)", str.c_str(),
                byteLength, SkScalarToFloat(x), SkScalarToFloat(y));
 }
 
-void SkDumpCanvas::drawPosText(const void* text, size_t byteLength,
-                                const SkPoint pos[], const SkPaint& paint) {
+void SkDumpCanvas::onDrawPosText(const void* text, size_t byteLength, const SkPoint pos[],
+                                 const SkPaint& paint) {
     SkString str;
     toString(text, byteLength, paint.getTextEncoding(), &str);
     this->dump(kDrawText_Verb, &paint, "drawPosText(%s [%d] %g %g ...)",
@@ -412,9 +405,8 @@ void SkDumpCanvas::drawPosText(const void* text, size_t byteLength,
                SkScalarToFloat(pos[0].fY));
 }
 
-void SkDumpCanvas::drawPosTextH(const void* text, size_t byteLength,
-                                 const SkScalar xpos[], SkScalar constY,
-                                 const SkPaint& paint) {
+void SkDumpCanvas::onDrawPosTextH(const void* text, size_t byteLength, const SkScalar xpos[],
+                                  SkScalar constY, const SkPaint& paint) {
     SkString str;
     toString(text, byteLength, paint.getTextEncoding(), &str);
     this->dump(kDrawText_Verb, &paint, "drawPosTextH(%s [%d] %g %g ...)",
@@ -422,23 +414,22 @@ void SkDumpCanvas::drawPosTextH(const void* text, size_t byteLength,
                SkScalarToFloat(constY));
 }
 
-void SkDumpCanvas::drawTextOnPath(const void* text, size_t byteLength,
-                                   const SkPath& path, const SkMatrix* matrix,
-                                   const SkPaint& paint) {
+void SkDumpCanvas::onDrawTextOnPath(const void* text, size_t byteLength, const SkPath& path,
+                                    const SkMatrix* matrix, const SkPaint& paint) {
     SkString str;
     toString(text, byteLength, paint.getTextEncoding(), &str);
     this->dump(kDrawText_Verb, &paint, "drawTextOnPath(%s [%d])",
                str.c_str(), byteLength);
 }
 
-void SkDumpCanvas::drawPicture(SkPicture& picture) {
-    this->dump(kDrawPicture_Verb, NULL, "drawPicture(%p) %d:%d", &picture,
-               picture.width(), picture.height());
+void SkDumpCanvas::onDrawPicture(const SkPicture* picture) {
+    this->dump(kDrawPicture_Verb, NULL, "drawPicture(%p) %d:%d", picture,
+               picture->width(), picture->height());
     fNestLevel += 1;
-    this->INHERITED::drawPicture(picture);
+    this->INHERITED::onDrawPicture(picture);
     fNestLevel -= 1;
     this->dump(kDrawPicture_Verb, NULL, "endPicture(%p) %d:%d", &picture,
-               picture.width(), picture.height());
+               picture->width(), picture->height());
 }
 
 void SkDumpCanvas::drawVertices(VertexMode vmode, int vertexCount,

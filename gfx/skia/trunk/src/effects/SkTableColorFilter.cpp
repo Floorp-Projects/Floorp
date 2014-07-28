@@ -43,7 +43,7 @@ public:
     virtual bool asComponentTable(SkBitmap* table) const SK_OVERRIDE;
 
 #if SK_SUPPORT_GPU
-    virtual GrEffectRef* asNewEffect(GrContext* context) const SK_OVERRIDE;
+    virtual GrEffect* asNewEffect(GrContext* context) const SK_OVERRIDE;
 #endif
 
     virtual void filterSpan(const SkPMColor src[], int count,
@@ -230,15 +230,15 @@ bool SkTable_ColorFilter::asComponentTable(SkBitmap* table) const {
 #include "GrEffect.h"
 #include "GrTBackendEffectFactory.h"
 #include "gl/GrGLEffect.h"
+#include "gl/GrGLShaderBuilder.h"
 #include "SkGr.h"
 
 class GLColorTableEffect;
 
 class ColorTableEffect : public GrEffect {
 public:
-    static GrEffectRef* Create(GrTexture* texture, unsigned flags) {
-        AutoEffectUnref effect(SkNEW_ARGS(ColorTableEffect, (texture, flags)));
-        return CreateEffectRef(effect);
+    static GrEffect* Create(GrTexture* texture, unsigned flags) {
+        return SkNEW_ARGS(ColorTableEffect, (texture, flags));
     }
 
     virtual ~ColorTableEffect();
@@ -270,7 +270,7 @@ public:
 
     virtual void emitCode(GrGLShaderBuilder*,
                           const GrDrawEffect&,
-                          EffectKey,
+                          const GrEffectKey&,
                           const char* outputColor,
                           const char* inputColor,
                           const TransformedCoordsArray&,
@@ -278,7 +278,7 @@ public:
 
     virtual void setData(const GrGLUniformManager&, const GrDrawEffect&) SK_OVERRIDE {}
 
-    static EffectKey GenKey(const GrDrawEffect&, const GrGLCaps&);
+    static void GenKey(const GrDrawEffect&, const GrGLCaps&, GrEffectKeyBuilder* b) {}
 
 private:
 
@@ -291,7 +291,7 @@ GLColorTableEffect::GLColorTableEffect(const GrBackendEffectFactory& factory, co
 
 void GLColorTableEffect::emitCode(GrGLShaderBuilder* builder,
                                   const GrDrawEffect&,
-                                  EffectKey,
+                                  const GrEffectKey&,
                                   const char* outputColor,
                                   const char* inputColor,
                                   const TransformedCoordsArray&,
@@ -331,10 +331,6 @@ void GLColorTableEffect::emitCode(GrGLShaderBuilder* builder,
     builder->fsCodeAppend(";\n");
 
     builder->fsCodeAppendf("\t\t%s.rgb *= %s.a;\n", outputColor, outputColor);
-}
-
-GrGLEffect::EffectKey GLColorTableEffect::GenKey(const GrDrawEffect&, const GrGLCaps&) {
-    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -378,18 +374,18 @@ void ColorTableEffect::getConstantColorComponents(GrColor* color, uint32_t* vali
 
 GR_DEFINE_EFFECT_TEST(ColorTableEffect);
 
-GrEffectRef* ColorTableEffect::TestCreate(SkRandom* random,
-                                          GrContext* context,
-                                          const GrDrawTargetCaps&,
-                                          GrTexture* textures[]) {
+GrEffect* ColorTableEffect::TestCreate(SkRandom* random,
+                                       GrContext* context,
+                                       const GrDrawTargetCaps&,
+                                       GrTexture* textures[]) {
     static unsigned kAllFlags = SkTable_ColorFilter::kR_Flag | SkTable_ColorFilter::kG_Flag |
                                 SkTable_ColorFilter::kB_Flag | SkTable_ColorFilter::kA_Flag;
     return ColorTableEffect::Create(textures[GrEffectUnitTest::kAlphaTextureIdx], kAllFlags);
 }
 
-GrEffectRef* SkTable_ColorFilter::asNewEffect(GrContext* context) const {
+GrEffect* SkTable_ColorFilter::asNewEffect(GrContext* context) const {
     SkBitmap bitmap;
-    GrEffectRef* effect = NULL;
+    GrEffect* effect = NULL;
     this->asComponentTable(&bitmap);
     // passing NULL because this effect does no tiling or filtering.
     GrTexture* texture = GrLockAndRefCachedBitmapTexture(context, bitmap, NULL);

@@ -15,10 +15,6 @@
 #include "SkTypeface.h"
 #include "SkTypefaceCache.h"
 
-// Defined in SkFontHost_FreeType.cpp
-bool find_name_and_attributes(SkStream* stream, SkString* name,
-                              SkTypeface::Style* style, bool* isFixedWidth);
-
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +46,7 @@ static SkFontConfigInterface* RefFCI() {
         if (fci) {
             return fci;
         }
-        fci = SkFontConfigInterface::GetSingletonDirectInterface();
+        fci = SkFontConfigInterface::GetSingletonDirectInterface(&gFontConfigInterfaceMutex);
         SkFontConfigInterface::SetGlobal(fci);
     }
 }
@@ -118,7 +114,7 @@ SkTypeface* FontConfigTypeface::LegacyCreateTypeface(
         return face;
     }
 
-    face = SkNEW_ARGS(FontConfigTypeface, (outStyle, indentity, outFamilyName));
+    face = FontConfigTypeface::Create(outStyle, indentity, outFamilyName);
     SkTypefaceCache::Add(face, style);
 //    SkDebugf("add face <%s> <%s> %p [%d]\n", familyName, outFamilyName.c_str(), face, face->getRefCnt());
     return face;
@@ -148,7 +144,7 @@ SkTypeface* SkFontHost::CreateTypefaceFromStream(SkStream* stream) {
     // ask freetype for reported style and if it is a fixed width font
     SkTypeface::Style style = SkTypeface::kNormal;
     bool isFixedWidth = false;
-    if (!find_name_and_attributes(stream, NULL, &style, &isFixedWidth)) {
+    if (!SkTypeface_FreeType::ScanFont(stream, 0, NULL, &style, &isFixedWidth)) {
         return NULL;
     }
 
