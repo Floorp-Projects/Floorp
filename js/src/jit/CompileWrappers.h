@@ -91,7 +91,7 @@ class CompileZone
   public:
     static CompileZone *get(Zone *zone);
 
-    const void *addressOfNeedsBarrier();
+    const void *addressOfNeedsIncrementalBarrier();
 
     // allocator.arenas.getFreeList(allocKind)
     const void *addressOfFreeListFirst(gc::AllocKind allocKind);

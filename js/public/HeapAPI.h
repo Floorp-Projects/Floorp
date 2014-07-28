@@ -169,20 +169,20 @@ struct Zone
     JSTracer *const barrierTracer_;     // A pointer to the JSRuntime's |gcMarker|.
 
   public:
-    bool needsBarrier_;
+    bool needsIncrementalBarrier_;
 
     Zone(JSRuntime *runtime, JSTracer *barrierTracerArg)
       : runtime_(runtime),
         barrierTracer_(barrierTracerArg),
-        needsBarrier_(false)
+        needsIncrementalBarrier_(false)
     {}
 
-    bool needsBarrier() const {
-        return needsBarrier_;
+    bool needsIncrementalBarrier() const {
+        return needsIncrementalBarrier_;
     }
 
     JSTracer *barrierTracer() {
-        MOZ_ASSERT(needsBarrier_);
+        MOZ_ASSERT(needsIncrementalBarrier_);
         MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
         return barrierTracer_;
     }
@@ -311,10 +311,10 @@ IsIncrementalBarrierNeededOnTenuredGCThing(shadow::Runtime *rt, void *thing, JSG
 #ifdef JSGC_GENERATIONAL
     MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
 #endif
-    if (!rt->needsBarrier_)
+    if (!rt->needsIncrementalBarrier())
         return false;
     JS::Zone *zone = GetTenuredGCThingZone(thing);
-    return reinterpret_cast<shadow::Zone *>(zone)->needsBarrier_;
+    return reinterpret_cast<shadow::Zone *>(zone)->needsIncrementalBarrier();
 }
 
 } /* namespace JS */
