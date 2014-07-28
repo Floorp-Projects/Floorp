@@ -854,10 +854,6 @@ class RecursiveMakeBackend(CommonBackend):
         self._traversal.add(backend_file.relobjdir)
 
         affected_tiers = set(obj.affected_tiers)
-        # Until all SOURCES are really in moz.build, consider all directories
-        # building binaries to require a pass at compile, too.
-        if 'binaries' in affected_tiers:
-            affected_tiers.add('libs')
 
         for tier in set(self._may_skip.keys()) - affected_tiers:
             self._may_skip[tier].add(backend_file.relobjdir)
