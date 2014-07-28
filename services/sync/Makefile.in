@@ -55,9 +55,7 @@ sync_stage_modules := \
   enginesync.js \
   $(NULL)
 
-JS_EXPORTS_FILES := $(srcdir)/services-sync.js
-JS_EXPORTS_DEST = $(FINAL_TARGET)/$(PREF_DIR)
-INSTALL_TARGETS += JS_EXPORTS
+PREF_JS_EXPORTS := $(srcdir)/services-sync.js
 
 # Install JS module files.
 SYNC_MAIN_FILES := $(addprefix modules/,$(sync_modules))
