@@ -320,10 +320,13 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
     if (hasOptions && !options.Parse())
         return false;
 
-    // We can only export functions to scopes those are transparent for us,
-    // so if there is a security wrapper around targetScope we must throw.
+    // Restrictions:
+    // * We must subsume the scope we are exporting to.
+    // * We must subsume the function being exported, because the function
+    //   forwarder manually circumvents security wrapper CALL restrictions.
     targetScope = CheckedUnwrap(targetScope);
-    if (!targetScope) {
+    funObj = CheckedUnwrap(funObj);
+    if (!targetScope || !funObj) {
         JS_ReportError(cx, "Permission denied to export function into scope");
         return false;
     }
