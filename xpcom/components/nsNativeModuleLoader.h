@@ -6,32 +6,18 @@
 #ifndef nsNativeModuleLoader_h__
 #define nsNativeModuleLoader_h__
 
-#include "nsISupports.h"
-#include "mozilla/ModuleLoader.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
-#include "mozilla/Module.h"
 #include "prlink.h"
 
-class nsNativeModuleLoader;
-
 namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsNativeModuleLoader>
-{
-  static const bool value = true;
-};
+class FileLocation;
 }
 
-class nsNativeModuleLoader : public mozilla::ModuleLoader
+class nsNativeModuleLoader MOZ_FINAL
 {
  public:
-    NS_DECL_ISUPPORTS_INHERITED
-
-    nsNativeModuleLoader() {}
-    ~nsNativeModuleLoader() {}
-
-    virtual const mozilla::Module* LoadModule(mozilla::FileLocation &aFile) MOZ_OVERRIDE;
+    const mozilla::Module* LoadModule(mozilla::FileLocation &aFile);
 
     nsresult Init();
 
