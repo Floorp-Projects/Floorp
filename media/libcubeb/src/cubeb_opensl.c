@@ -271,7 +271,7 @@ opensl_init(cubeb ** context, char const * context_name)
     return CUBEB_ERROR;
   }
 
-  res = (*ctx->engObj)->Realize(ctx->engObj, SL_BOOLEAN_FALSE);
+  res = cubeb_realize_sles_engine(ctx->engObj);
   if (res != SL_RESULT_SUCCESS) {
     opensl_destroy(ctx);
     return CUBEB_ERROR;
