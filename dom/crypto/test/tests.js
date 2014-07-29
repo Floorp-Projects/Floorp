@@ -1998,3 +1998,148 @@ TestArray.addTest(
       .then(error(that), complete(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import an ECDH public and private key and derive bits (P-256)",
+  function () {
+    var that = this;
+    var alg = { name: "ECDH" };
+
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x; }
+    function setPriv(x) { privKey = x; }
+
+    function doDerive() {
+      var alg = { name: "ECDH", public: pubKey };
+      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p256.secret.byteLength * 8);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_priv, alg, false, ["deriveBits"])
+        .then(setPriv, error(that)),
+      crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_pub, alg, false, ["deriveBits"])
+        .then(setPub, error(that))
+    ]).then(doDerive, error(that))
+      .then(memcmp_complete(that, tv.ecdh_p256.secret), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import an ECDH public and private key and derive bits (P-384)",
+  function () {
+    var that = this;
+    var alg = { name: "ECDH" };
+
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x; }
+    function setPriv(x) { privKey = x; }
+
+    function doDerive() {
+      var alg = { name: "ECDH", public: pubKey };
+      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p384.secret.byteLength * 8);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.ecdh_p384.jwk_priv, alg, false, ["deriveBits"])
+        .then(setPriv, error(that)),
+      crypto.subtle.importKey("jwk", tv.ecdh_p384.jwk_pub, alg, false, ["deriveBits"])
+        .then(setPub, error(that))
+    ]).then(doDerive, error(that))
+      .then(memcmp_complete(that, tv.ecdh_p384.secret), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import an ECDH public and private key and derive bits (P-521)",
+  function () {
+    var that = this;
+    var alg = { name: "ECDH" };
+
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x; }
+    function setPriv(x) { privKey = x; }
+
+    function doDerive() {
+      var alg = { name: "ECDH", public: pubKey };
+      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p521.secret.byteLength * 8);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.ecdh_p521.jwk_priv, alg, false, ["deriveBits"])
+        .then(setPriv, error(that)),
+      crypto.subtle.importKey("jwk", tv.ecdh_p521.jwk_pub, alg, false, ["deriveBits"])
+        .then(setPub, error(that))
+    ]).then(doDerive, error(that))
+      .then(memcmp_complete(that, tv.ecdh_p521.secret), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "JWK import/export roundtrip with ECDH (P-256)",
+  function () {
+    var that = this;
+    var alg = { name: "ECDH" };
+
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x; }
+    function setPriv(x) { privKey = x; }
+
+    function doExportPub() {
+      return crypto.subtle.exportKey("jwk", pubKey);
+    }
+    function doExportPriv() {
+      return crypto.subtle.exportKey("jwk", privKey);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_priv, alg, true, ["deriveBits"])
+        .then(setPriv, error(that)),
+      crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_pub, alg, true, ["deriveBits"])
+        .then(setPub, error(that))
+    ]).then(doExportPub, error(that))
+      .then(function (x) {
+        var tp = tv.ecdh_p256.jwk_pub;
+        if ((tp.kty != x.kty) &&
+            (tp.crv != x.crv) &&
+            (tp.x != x.x) &&
+            (tp.y != x.y)) {
+          throw "exported public key doesn't match";
+        }
+      }, error(that))
+      .then(doExportPriv, error(that))
+      .then(complete(that, function (x) {
+        var tp = tv.ecdh_p256.jwk_priv;
+        return (tp.kty == x.kty) &&
+               (tp.crv == x.crv) &&
+               (tp.d == x.d) &&
+               (tp.x == x.x) &&
+               (tp.y == x.y);
+      }), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that importing bad JWKs fails",
+  function () {
+    var that = this;
+    var alg = { name: "ECDH" };
+    var tvs = tv.ecdh_p256_negative;
+
+    function doTryImport(jwk) {
+      return function () {
+        return crypto.subtle.importKey("jwk", jwk, alg, false, ["deriveBits"]);
+      }
+    }
+
+    doTryImport(tvs.jwk_bad_crv)()
+      .then(error(that), doTryImport(tvs.jwk_missing_crv))
+      .then(error(that), doTryImport(tvs.jwk_missing_x))
+      .then(error(that), doTryImport(tvs.jwk_missing_y))
+      .then(error(that), complete(that));
+  }
+);
