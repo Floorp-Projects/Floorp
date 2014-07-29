@@ -506,5 +506,6 @@ static struct cubeb_ops const audiotrack_ops = {
   .stream_set_volume = audiotrack_stream_set_volume,
   .stream_set_panning = audiotrack_stream_set_panning,
   .stream_get_current_output_device = NULL,
-  .stream_output_device_destroy = NULL
+  .stream_output_device_destroy = NULL,
+  .stream_register_device_changed_callback = NULL
 };
