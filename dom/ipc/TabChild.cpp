@@ -731,6 +731,7 @@ TabChild::TabChild(nsIContentChild* aManager, const TabContext& aContext, uint32
   , mUpdateHitRegion(false)
   , mPendingTouchPreventedResponse(false)
   , mTouchEndCancelled(false)
+  , mEndTouchIsClick(false)
   , mIgnoreKeyPressEvent(false)
   , mActiveElementManager(new ActiveElementManager())
   , mHasValidInnerSize(false)
@@ -1913,7 +1914,7 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
   }
   case APZStateChange::EndTouch:
   {
-    mActiveElementManager->HandleTouchEnd(aArg);
+    mEndTouchIsClick = aArg;
     break;
   }
   default:
@@ -2151,9 +2152,12 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   case NS_TOUCH_END:
     if (isTouchPrevented) {
       mTouchEndCancelled = true;
+      mEndTouchIsClick = false;
     }
     // fall through
   case NS_TOUCH_CANCEL:
+    mActiveElementManager->HandleTouchEnd(mEndTouchIsClick);
+    // fall through
   case NS_TOUCH_MOVE: {
     SendPendingTouchPreventedResponse(isTouchPrevented, aGuid);
     break;
