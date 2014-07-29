@@ -4326,7 +4326,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   MOZ_COUNT_CTOR(nsDisplayTransform);
   NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   NS_ABORT_IF_FALSE(!aFrame->IsTransformed(), "Can't specify a transform getter for a transformed frame!");
-  mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
+  Init(aBuilder);
 }
 
 void
@@ -4336,6 +4336,13 @@ nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
     aBuilder->FindReferenceFrameFor(GetTransformRootFrame(mFrame));
   mToReferenceFrame = mFrame->GetOffsetToCrossDoc(mReferenceFrame);
   mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
+}
+
+void
+nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder)
+{
+  mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
+  mPrerender = ShouldPrerenderTransformedContent(aBuilder, mFrame);
 }
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
@@ -4351,7 +4358,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   MOZ_COUNT_CTOR(nsDisplayTransform);
   NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
-  mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
+  Init(aBuilder);
 }
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
@@ -4367,7 +4374,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   MOZ_COUNT_CTOR(nsDisplayTransform);
   NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
-  mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
+  Init(aBuilder);
 }
 
 /* Returns the delta specified by the -moz-transform-origin property.
@@ -4690,9 +4697,12 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 bool
 nsDisplayTransform::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 {
-  return ShouldPrerenderTransformedContent(aBuilder,
-                                           Frame(),
-                                           nsLayoutUtils::IsAnimationLoggingEnabled());
+  if (mPrerender) {
+    return true;
+  }
+  DebugOnly<bool> prerender = ShouldPrerenderTransformedContent(aBuilder, mFrame, true);
+  NS_ASSERTION(!prerender, "Something changed under us!");
+  return false;
 }
 
 /* static */ bool
@@ -4789,7 +4799,7 @@ nsDisplayTransform::GetTransform()
 bool
 nsDisplayTransform::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder)
 {
-  return ShouldPrerenderTransformedContent(aBuilder, mFrame, false);
+  return ShouldPrerender();
 }
 
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
@@ -4803,8 +4813,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     return nullptr;
   }
 
-  bool prerender = ShouldPrerenderTransformedContent(aBuilder, mFrame, false);
-  uint32_t flags = prerender ?
+  uint32_t flags = ShouldPrerender() ?
     FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mStoredList.GetChildren(),
@@ -4825,7 +4834,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                                            this, mFrame,
                                                            eCSSProperty_transform);
-  if (prerender) {
+  if (ShouldPrerender()) {
     container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
                            /*the value is irrelevant*/nullptr);
     container->SetContentFlags(container->GetContentFlags() | Layer::CONTENT_MAY_CHANGE_TRANSFORM);
@@ -4878,7 +4887,7 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
    * think that it's painting in its original rectangular coordinate space.
    * If we can't untransform, take the entire overflow rect */
   nsRect untransformedVisibleRect;
-  if (ShouldPrerenderTransformedContent(aBuilder, mFrame) ||
+  if (ShouldPrerender() ||
       !UntransformVisibleRect(aBuilder, &untransformedVisibleRect))
   {
     untransformedVisibleRect = mFrame->GetVisualOverflowRectRelativeToSelf();
@@ -5005,8 +5014,7 @@ nsDisplayTransform::GetHitDepthAtPoint(nsDisplayListBuilder* aBuilder, const nsP
  */
 nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder, bool* aSnap)
 {
-  nsRect untransformedBounds =
-    ShouldPrerenderTransformedContent(aBuilder, mFrame) ?
+  nsRect untransformedBounds = ShouldPrerender() ?
     mFrame->GetVisualOverflowRectRelativeToSelf() :
     mStoredList.GetBounds(aBuilder, aSnap);
   *aSnap = false;
@@ -5044,7 +5052,7 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   // covers the entire window, but it allows our transform to be
   // updated extremely cheaply, without invalidating any other
   // content.
-  if (ShouldPrerenderTransformedContent(aBuilder, mFrame) ||
+  if (ShouldPrerender() ||
       !UntransformVisibleRect(aBuilder, &untransformedVisible)) {
       return nsRegion();
   }
