@@ -6,69 +6,49 @@
  * to plain value properties.
  */
 
-const TAB_URL = EXAMPLE_URL + "doc_frame-parameters.html";
-
-let gTab, gDebuggee, gPanel, gDebugger;
-let gL10N, gEditor, gVars, gWatch;
-
 function test() {
+  const TAB_URL = EXAMPLE_URL + "doc_frame-parameters.html";
+
   // Debug test slaves are a bit slow at this test.
   requestLongerTimeout(2);
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
-    gTab = aTab;
-    gDebuggee = aDebuggee;
-    gPanel = aPanel;
-    gDebugger = gPanel.panelWin;
-    gL10N = gDebugger.L10N;
-    gEditor = gDebugger.DebuggerView.editor;
-    gVars = gDebugger.DebuggerView.Variables;
-    gWatch = gDebugger.DebuggerView.WatchExpressions;
+  Task.spawn(function* () {
+    let [, debuggee, panel] = yield initDebugger(TAB_URL);
+    let win = panel.panelWin;
+    let L10N = win.L10N;
+    let editor = win.DebuggerView.editor;
+    let vars = win.DebuggerView.Variables;
+    let watch = win.DebuggerView.WatchExpressions;
 
-    gVars.switch = function() {};
-    gVars.delete = function() {};
+    vars.switch = function() {};
+    vars.delete = function() {};
 
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 24)
-      .then(() => addWatchExpression())
-      .then(() => testEdit("\"xlerb\"", "xlerb"))
-      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-
-    EventUtils.sendMouseEvent({ type: "click" },
-      gDebuggee.document.querySelector("button"),
-      gDebuggee);
-  });
-}
-
-function addWatchExpression() {
-  let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS);
-
-  gWatch.addExpression("myVar.prop");
-  gEditor.focus();
-
-  return finished;
-}
-
-function testEdit(aString, aExpected) {
-  let localScope = gVars.getScopeAtIndex(1);
-  let myVar = localScope.get("myVar");
-
-  let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_PROPERTIES).then(() => {
-    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS).then(() => {
-      let exprScope = gVars.getScopeAtIndex(0);
-
-      ok(exprScope,
-        "There should be a wach expressions scope in the variables view.");
-      is(exprScope.name, gL10N.getStr("watchExpressionsScopeLabel"),
-        "The scope's name should be marked as 'Watch Expressions'.");
-      is(exprScope._store.size, 1,
-        "There should be one evaluation available.");
-
-      is(exprScope.get("myVar.prop").value, aExpected,
-        "The expression value is correct after the edit.");
+    let paused = waitForSourceAndCaretAndScopes(panel, ".html", 24);
+    // Spin the event loop before causing the debuggee to pause, to allow
+    // this function to return first.
+    executeSoon(() => {
+      EventUtils.sendMouseEvent({ type: "click" },
+        debuggee.document.querySelector("button"),
+        debuggee);
     });
+    yield paused;
+
+    // Add a watch expression for direct observation of the value change.
+    let addedWatch = waitForDebuggerEvents(panel, win.EVENTS.FETCHED_WATCH_EXPRESSIONS);
+    watch.addExpression("myVar.prop");
+    editor.focus();
+    yield addedWatch;
+
+    // Scroll myVar into view.
+    vars.focusLastVisibleItem();
+
+    let localScope = vars.getScopeAtIndex(1);
+    let myVar = localScope.get("myVar");
+
+    myVar.expand();
+    vars.clearHierarchy();
+
+    yield waitForDebuggerEvents(panel, win.EVENTS.FETCHED_PROPERTIES);
 
     let editTarget = myVar.get("prop").target;
 
@@ -76,30 +56,29 @@ function testEdit(aString, aExpected) {
     // its value would scroll the new textbox node into view.
     executeSoon(() => {
       let varEdit = editTarget.querySelector(".title > .variables-view-edit");
-      EventUtils.sendMouseEvent({ type: "mousedown" }, varEdit, gDebugger);
+      EventUtils.sendMouseEvent({ type: "mousedown" }, varEdit, win);
 
       let varInput = editTarget.querySelector(".title > .element-value-input");
-      setText(varInput, aString);
-      EventUtils.sendKey("RETURN", gDebugger);
+      setText(varInput, "\"xlerb\"");
+      EventUtils.sendKey("RETURN", win);
     });
 
-    return finished;
+    yield waitForDebuggerEvents(panel, win.EVENTS.FETCHED_WATCH_EXPRESSIONS);
+
+    let exprScope = vars.getScopeAtIndex(0);
+
+    ok(exprScope,
+      "There should be a wach expressions scope in the variables view.");
+    is(exprScope.name, L10N.getStr("watchExpressionsScopeLabel"),
+      "The scope's name should be marked as 'Watch Expressions'.");
+    is(exprScope._store.size, 1,
+      "There should be one evaluation available.");
+
+    is(exprScope.get("myVar.prop").value, "xlerb",
+      "The expression value is correct after the edit.");
+
+    yield resumeDebuggerThenCloseAndFinish(panel);
+  }).then(null, aError => {
+      ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
   });
-
-  myVar.expand();
-  gVars.clearHierarchy();
-
-  return finished;
 }
-
-registerCleanupFunction(function() {
-  gTab = null;
-  gDebuggee = null;
-  gPanel = null;
-  gDebugger = null;
-  gL10N = null;
-  gEditor = null;
-  gVars = null;
-  gWatch = null;
-});
-
