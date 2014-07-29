@@ -107,6 +107,8 @@ class BackgroundHangThread;
  *    }
  *  }
  *
+ * Prohibit() and Allow() make the background hang monitor work safely
+ * before Startup().
  */
 class BackgroundHangMonitor
 {
@@ -204,6 +206,27 @@ public:
    * NotifyActivity when subsequently exiting the wait state.
    */
   void NotifyWait();
+
+  /**
+   * Prohibit the hang monitor from activating.
+   *
+   * Startup() should not be called between Prohibit() and Allow().
+   * This function makes the background hang monitor stop monitoring
+   * threads.
+   *
+   * Prohibit() and Allow() can be called before XPCOM is ready.  If
+   * we don't stop monitoring threads it could case errors.
+   */
+  static void Prohibit();
+
+  /**
+   * Allow the hang monitor to run.
+   *
+   * Allow() and Prohibit() should be called in pair.
+   *
+   * \see Prohibit()
+   */
+  static void Allow();
 };
 
 } // namespace mozilla
