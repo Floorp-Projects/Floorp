@@ -29,9 +29,7 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
-#if defined(JS_ION)
-# include "assembler/assembler/MacroAssembler.h"
-#endif
+#include "assembler/assembler/MacroAssembler.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/AsmJSSignalHandlers.h"
 #include "jit/JitCompartment.h"
@@ -132,9 +130,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     mainThread(this),
     parentRuntime(parentRuntime),
     interrupt(false),
-#ifdef JS_ION
     interruptPar(false),
-#endif
     handlingSignal(false),
     interruptCallback(nullptr),
     interruptLock(nullptr),
@@ -239,19 +235,15 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
 static bool
 JitSupportsFloatingPoint()
 {
-#if defined(JS_ION)
     if (!JSC::MacroAssembler::supportsFloatingPoint())
         return false;
 
-#if defined(JS_ION) && WTF_ARM_ARCH_VERSION == 6
+#if WTF_ARM_ARCH_VERSION == 6
     if (!js::jit::HasVFP())
         return false;
 #endif
 
     return true;
-#else
-    return false;
-#endif
 }
 
 static bool
@@ -339,10 +331,8 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 
     jitSupportsFloatingPoint = JitSupportsFloatingPoint();
 
-#ifdef JS_ION
     signalHandlersInstalled_ = EnsureAsmJSSignalHandlersInstalled(this);
     canUseSignalHandlers_ = signalHandlersInstalled_ && !SignalBasedTriggersDisabled();
-#endif
 
     if (!spsProfiler.init())
         return false;
@@ -439,9 +429,7 @@ JSRuntime::~JSRuntime()
 
     js_free(defaultLocale);
     js_delete(mathCache_);
-#ifdef JS_ION
     js_delete(jitRuntime_);
-#endif
     js_delete(execAlloc_);  /* Delete after jitRuntime_. */
 
     js_delete(ionPcScriptCache);
@@ -526,7 +514,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     if (execAlloc_)
         execAlloc_->addSizeOfCode(&rtSizes->code);
-#ifdef JS_ION
     {
         AutoLockForInterrupt lock(this);
         if (jitRuntime()) {
@@ -534,7 +521,6 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
                 ionAlloc->addSizeOfCode(&rtSizes->code);
         }
     }
-#endif
 
     rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
 #ifdef JSGC_GENERATIONAL
@@ -560,7 +546,6 @@ JSRuntime::requestInterrupt(InterruptMode mode)
 
     interrupt = true;
 
-#ifdef JS_ION
     RequestInterruptForForkJoin(this, mode);
 
     /*
@@ -571,7 +556,6 @@ JSRuntime::requestInterrupt(InterruptMode mode)
         RequestInterruptForAsmJSCode(this, mode);
         jit::RequestInterruptForIonCode(this, mode);
     }
-#endif
 }
 
 JSC::ExecutableAllocator *
