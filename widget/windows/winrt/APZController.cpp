@@ -230,6 +230,7 @@ APZController::HandleLongTap(const CSSPoint& aPoint,
                              int32_t aModifiers,
                              const ScrollableLayerGuid& aGuid)
 {
+  ContentReceivedTouch(aGuid, false);
 }
 
 void
