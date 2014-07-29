@@ -2545,10 +2545,12 @@ public class BrowserApp extends GeckoApp
             tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
                 if (item.isChecked()) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.removeBookmark();
                     Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
                     item.setIcon(R.drawable.ic_menu_bookmark_add);
                 } else {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.addBookmark();
                     getButtonToast().show(false,
                         getResources().getString(R.string.bookmark_added),
