@@ -5,6 +5,8 @@
  * found in the LICENSE file.
  */
 
+#include <SkPreConfig.h>
+
 #if defined(__clang__) || (defined(__GNUC__) && !defined(SK_BUILD_FOR_MAC))
 
 #define EXTRACT_ALPHA(var1, var2) \
