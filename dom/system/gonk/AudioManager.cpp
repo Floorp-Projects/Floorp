@@ -78,6 +78,7 @@ static int sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
 static int sHeadsetState;
 static const int kBtSampleRate = 8000;
 static bool sSwitchDone = true;
+static bool sA2dpSwitchDone = true;
 
 namespace mozilla {
 namespace dom {
@@ -196,6 +197,19 @@ static void ProcessDelayedAudioRoute(SwitchState aState)
   sSwitchDone = true;
 }
 
+static void ProcessDelayedA2dpRoute(audio_policy_dev_state_t aState, const char *aAddress)
+{
+  if (sA2dpSwitchDone)
+    return;
+  AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_A2DP,
+                                        aState, aAddress);
+  String8 cmd("bluetooth_enabled=false");
+  AudioSystem::setParameters(0, cmd);
+  cmd.setTo("A2dpSuspended=true");
+  AudioSystem::setParameters(0, cmd);
+  sA2dpSwitchDone = true;
+}
+
 NS_IMPL_ISUPPORTS(AudioManager, nsIAudioManager, nsIObserver)
 
 static void
@@ -262,18 +276,18 @@ AudioManager::HandleBluetoothStatusChanged(nsISupports* aSubject,
         SetForceForUse(nsIAudioManager::USE_COMMUNICATION, nsIAudioManager::FORCE_NONE);
     }
   } else if (!strcmp(aTopic, BLUETOOTH_A2DP_STATUS_CHANGED_ID)) {
-    AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_A2DP,
-                                          audioState, aAddress.get());
-    if (audioState == AUDIO_POLICY_DEVICE_STATE_AVAILABLE) {
+    if (audioState == AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE && sA2dpSwitchDone) {
+      MessageLoop::current()->PostDelayedTask(
+        FROM_HERE, NewRunnableFunction(&ProcessDelayedA2dpRoute, audioState, aAddress.get()), 1000);
+      sA2dpSwitchDone = false;
+    } else {
+      AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_A2DP,
+                                            audioState, aAddress.get());
       String8 cmd("bluetooth_enabled=true");
       AudioSystem::setParameters(0, cmd);
       cmd.setTo("A2dpSuspended=false");
       AudioSystem::setParameters(0, cmd);
-    } else {
-      String8 cmd("bluetooth_enabled=false");
-      AudioSystem::setParameters(0, cmd);
-      cmd.setTo("A2dpSuspended=true");
-      AudioSystem::setParameters(0, cmd);
+      sA2dpSwitchDone = true;
     }
   } else if (!strcmp(aTopic, BLUETOOTH_HFP_STATUS_CHANGED_ID)) {
     AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET,

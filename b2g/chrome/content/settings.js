@@ -155,17 +155,25 @@ Components.utils.import('resource://gre/modules/ctypes.jsm');
     product_model = libcutils.property_get('ro.product.model');
 #endif
 
-  let software = os_name + ' ' + os_version;
-  let setting = {
-    'deviceinfo.os': os_version,
-    'deviceinfo.software': software,
-    'deviceinfo.platform_version': appInfo.platformVersion,
-    'deviceinfo.platform_build_id': appInfo.platformBuildID,
-    'deviceinfo.hardware': hardware_info,
-    'deviceinfo.firmware_revision': firmware_revision,
-    'deviceinfo.product_model': product_model
+  // Populate deviceinfo settings,
+  // copying any existing deviceinfo.os into deviceinfo.previous_os
+  let lock = window.navigator.mozSettings.createLock();
+  let req = lock.get('deviceinfo.os');
+  req.onsuccess = req.onerror = () => {
+    let previous_os = req.result && req.result['deviceinfo.os'] || '';
+    let software = os_name + ' ' + os_version;
+    let setting = {
+      'deviceinfo.os': os_version,
+      'deviceinfo.previous_os': previous_os,
+      'deviceinfo.software': software,
+      'deviceinfo.platform_version': appInfo.platformVersion,
+      'deviceinfo.platform_build_id': appInfo.platformBuildID,
+      'deviceinfo.hardware': hardware_info,
+      'deviceinfo.firmware_revision': firmware_revision,
+      'deviceinfo.product_model': product_model
+    }
+    lock.set(setting);
   }
-  window.navigator.mozSettings.createLock().set(setting);
 })();
 
 // =================== DevTools ====================
