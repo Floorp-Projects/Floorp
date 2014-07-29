@@ -3,6 +3,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY search_jump_arrow '&#8598;'>
+<!ENTITY search_settings_icon '&#8942;'>
+
 <!ENTITY search_app_name 'Firefox Search'>
-<!ENTITY search_header_image_content_description 'Firefox Search Header Image'>
 <!ENTITY search_for_something 'Search for something'>
+
+<!ENTITY search_pref_title 'Settings'>
+<!ENTITY search_pref_clear_history_confirmation 'History cleared'>
+<!ENTITY search_pref_clear_history_dialog_message 'Delete all search history from this device?'>
+<!ENTITY search_pref_clear_history_title 'Clear search history'>

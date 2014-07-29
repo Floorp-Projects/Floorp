@@ -2,57 +2,58 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Ci,Cu} = require("chrome");
+const {Ci,Cu,Cc} = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const Services = require("Services");
-let {setTimeout} = require("sdk/timers");
+let {setTimeout,clearTimeout} = require("sdk/timers");
 
 function MonitorActor(aConnection) {
   this.conn = aConnection;
+  this._updates = [];
+  this._started = false;
 }
 
 MonitorActor.prototype = {
   actorPrefix: "monitor",
 
-  // Updates
+  // Updates.
 
-  _toSend: [],
-  _timeout: null,
-  _started: false,
-  _scheduleUpdate: function() {
-    if (this._started && !this._timeout) {
-      this._timeout = setTimeout(() => {
-        if (this._toSend.length > 0) {
-          this.conn.sendActorEvent(this.actorID, "update", this._toSend);
-          this._toSend = [];
-        }
-        this._timeout = null;
-      }, 200);
+  _sendUpdate: function() {
+    if (this._started) {
+      this.conn.sendActorEvent(this.actorID, "update", { data: this._updates });
+      this._updates = [];
     }
   },
 
-
-  // Methods available from the front
+  // Methods available from the front.
 
   start: function() {
     if (!this._started) {
       this._started = true;
       Services.obs.addObserver(this, "devtools-monitor-update", false);
+      Services.obs.notifyObservers(null, "devtools-monitor-start", "");
+      this._agents.forEach(agent => this._startAgent(agent));
     }
     return {};
   },
 
   stop: function() {
     if (this._started) {
+      this._agents.forEach(agent => agent.stop());
+      Services.obs.notifyObservers(null, "devtools-monitor-stop", "");
       Services.obs.removeObserver(this, "devtools-monitor-update");
       this._started = false;
     }
     return {};
   },
 
-  // nsIObserver
+  disconnect: function() {
+    this.stop();
+  },
+
+  // nsIObserver.
 
   observe: function (subject, topic, data) {
     if (topic == "devtools-monitor-update") {
@@ -64,16 +65,42 @@ MonitorActor.prototype = {
         return;
       }
       if (!Array.isArray(data)) {
-        this._toSend.push(data);
+        this._updates.push(data);
       } else {
-        this._toSend = this._toSend.concat(data);
+        this._updates = this._updates.concat(data);
       }
-      this._scheduleUpdate();
+      this._sendUpdate();
     }
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-}
+
+  // Update agents (see USSAgent for an example).
+
+  _agents: [],
+
+  _startAgent: function(agent) {
+    try {
+      agent.start();
+    } catch (e) {
+      this._removeAgent(agent);
+    }
+  },
+
+  _addAgent: function(agent) {
+    this._agents.push(agent);
+    if (this._started) {
+      this._startAgent(agent);
+    }
+  },
+
+  _removeAgent: function(agent) {
+    let index = this._agents.indexOf(agent);
+    if (index > -1) {
+      this._agents.splice(index, 1);
+    }
+  },
+};
 
 MonitorActor.prototype.requestTypes = {
   "start": MonitorActor.prototype.start,
@@ -91,3 +118,40 @@ exports.unregister = function(handle) {
   handle.removeGlobalActor(MonitorActor, "monitorActor");
   handle.removeTabActor(MonitorActor, "monitorActor");
 };
+
+
+let USSAgent = {
+  _mgr: null,
+  _timeout: null,
+  _packet: {
+    graph: "USS",
+    time: null,
+    value: null
+  },
+
+  start: function() {
+    USSAgent._mgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
+    if (!USSAgent._mgr.residentUnique) {
+      throw "Couldn't get USS.";
+    }
+    USSAgent.update();
+  },
+
+  update: function() {
+    if (!USSAgent._mgr) {
+      USSAgent.stop();
+      return;
+    }
+    USSAgent._packet.time = Date.now();
+    USSAgent._packet.value = USSAgent._mgr.residentUnique;
+    Services.obs.notifyObservers(null, "devtools-monitor-update", JSON.stringify(USSAgent._packet));
+    USSAgent._timeout = setTimeout(USSAgent.update, 300);
+  },
+
+  stop: function() {
+    clearTimeout(USSAgent._timeout);
+    USSAgent._mgr = null;
+  }
+};
+
+MonitorActor.prototype._addAgent(USSAgent);

@@ -5,6 +5,7 @@
 package org.mozilla.search;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -76,7 +77,10 @@ public class PreSearchFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedState) {
-        listView = (ListView) inflater.inflate(R.layout.search_fragment_pre_search, container, false);
+        final View mainView = inflater.inflate(R.layout.search_fragment_pre_search, container, false);
+
+        // Initialize listview.
+        listView = (ListView) mainView.findViewById(R.id.list_view);
         listView.setAdapter(cursorAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -91,7 +95,15 @@ public class PreSearchFragment extends Fragment {
                 }
             }
         });
-        return listView;
+
+        // Apply click handler to settings button.
+        mainView.findViewById(R.id.settings_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getActivity(), SearchPreferenceActivity.class));
+            }
+        });
+        return mainView;
     }
 
     @Override
