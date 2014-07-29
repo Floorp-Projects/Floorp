@@ -2143,3 +2143,51 @@ TestArray.addTest(
       .then(error(that), complete(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive an HMAC key from two ECDH keys and test sign/verify",
+  function() {
+    var that = this;
+    var alg = { name: "ECDH" };
+    var algDerived = { name: "HMAC", hash: {name: "SHA-1"} };
+
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x; }
+    function setPriv(x) { privKey = x; }
+
+    function doDerive() {
+      var alg = { name: "ECDH", public: pubKey };
+      return crypto.subtle.deriveKey(alg, privKey, algDerived, false, ["sign", "verify"])
+        .then(function (x) {
+          if (!hasKeyFields(x)) {
+            throw "Invalid key; missing field(s)";
+          }
+
+          // 512 bit is the default for HMAC-SHA1.
+          if (x.algorithm.length != 512) {
+            throw "Invalid key; incorrect length";
+          }
+
+          return x;
+        });
+    }
+
+    function doSignAndVerify(x) {
+      var data = crypto.getRandomValues(new Uint8Array(1024));
+      return crypto.subtle.sign("HMAC", x, data)
+        .then(function (sig) {
+          return crypto.subtle.verify("HMAC", x, sig, data);
+        });
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("jwk", tv.ecdh_p521.jwk_priv, alg, false, ["deriveBits"])
+        .then(setPriv, error(that)),
+      crypto.subtle.importKey("jwk", tv.ecdh_p521.jwk_pub, alg, false, ["deriveBits"])
+        .then(setPub, error(that))
+    ]).then(doDerive, error(that))
+      .then(doSignAndVerify, error(that))
+      .then(complete(that), error(that));
+  }
+);
