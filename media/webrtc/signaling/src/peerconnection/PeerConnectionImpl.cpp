@@ -1713,6 +1713,10 @@ PeerConnectionImpl::PluginCrash(uint64_t aPluginID,
   propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginName"),
                                 aPluginName);
 
+  // add a "pluginName" property to this event
+  propBag->SetPropertyAsBool(NS_LITERAL_STRING("gmpPlugin"),
+                             true);
+
   // add a "submittedCrashReport" property to this event
   propBag->SetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"),
                              false);
