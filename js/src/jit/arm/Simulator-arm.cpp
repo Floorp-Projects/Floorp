@@ -1441,6 +1441,8 @@ ReturnType Simulator::getFromVFPRegister(int reg_index)
 // requires these to be instantiated.
 template double Simulator::getFromVFPRegister<double, 2>(int reg_index);
 template float Simulator::getFromVFPRegister<float, 1>(int reg_index);
+template void Simulator::setVFPRegister<double, 2>(int reg_index, const double& value);
+template void Simulator::setVFPRegister<float, 1>(int reg_index, const float& value);
 
 void
 Simulator::getFpArgs(double *x, double *y, int32_t *z)
