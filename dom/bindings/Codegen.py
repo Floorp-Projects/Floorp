@@ -5483,7 +5483,8 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
         # NB: _setValue(..., type-that-is-any) calls JS_WrapValue(), so is fallible
-        return (_setValue(result, wrapAsType=type), False)
+        head = "JS::ExposeValueToActiveJS(%s);\n" % result
+        return (head + _setValue(result, wrapAsType=type), False)
 
     if (type.isObject() or (type.isSpiderMonkeyInterface() and
                             not typedArraysAreStructs)):
@@ -5492,11 +5493,16 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         if type.nullable():
             toValue = "%s"
             setter = setObjectOrNull
+            head = """if (%s) {
+              JS::ExposeObjectToActiveJS(%s);
+            }
+            """ % (result, result)
         else:
             toValue = "*%s"
             setter = setObject
+            head = "JS::ExposeObjectToActiveJS(%s);\n" % result
         # NB: setObject{,OrNull}(..., some-object-type) calls JS_WrapValue(), so is fallible
-        return (setter(toValue % result, wrapAsType=type), False)
+        return (head + setter(toValue % result, wrapAsType=type), False)
 
     if not (type.isUnion() or type.isPrimitive() or type.isDictionary() or
             type.isDate() or

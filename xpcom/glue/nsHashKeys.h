@@ -77,7 +77,7 @@ public:
   typedef const nsAString& KeyType;
   typedef const nsAString* KeyTypePointer;
 
-  nsStringHashKey(KeyTypePointer aStr) : mStr(*aStr) {}
+  explicit nsStringHashKey(KeyTypePointer aStr) : mStr(*aStr) {}
   nsStringHashKey(const nsStringHashKey& aToCopy) : mStr(aToCopy.mStr) {}
   ~nsStringHashKey() {}
 
@@ -114,7 +114,7 @@ public:
   typedef const nsAString& KeyType;
   typedef const nsAString* KeyTypePointer;
 
-  nsStringCaseInsensitiveHashKey(KeyTypePointer aStr)
+  explicit nsStringCaseInsensitiveHashKey(KeyTypePointer aStr)
     : mStr(*aStr)
   {
     // take it easy just deal HashKey
@@ -157,7 +157,7 @@ public:
   typedef const nsACString& KeyType;
   typedef const nsACString* KeyTypePointer;
 
-  nsCStringHashKey(const nsACString* aStr) : mStr(*aStr) {}
+  explicit nsCStringHashKey(const nsACString* aStr) : mStr(*aStr) {}
   nsCStringHashKey(const nsCStringHashKey& aToCopy) : mStr(aToCopy.mStr) {}
   ~nsCStringHashKey() {}
 
@@ -186,7 +186,7 @@ public:
   typedef const uint32_t& KeyType;
   typedef const uint32_t* KeyTypePointer;
 
-  nsUint32HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  explicit nsUint32HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
   nsUint32HashKey(const nsUint32HashKey& aToCopy) : mValue(aToCopy.mValue) {}
   ~nsUint32HashKey() {}
 
@@ -212,7 +212,7 @@ public:
   typedef const uint64_t& KeyType;
   typedef const uint64_t* KeyTypePointer;
 
-  nsUint64HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  explicit nsUint64HashKey(KeyTypePointer aKey) : mValue(*aKey) {}
   nsUint64HashKey(const nsUint64HashKey& aToCopy) : mValue(aToCopy.mValue) {}
   ~nsUint64HashKey() {}
 
@@ -241,7 +241,7 @@ public:
   typedef const float& KeyType;
   typedef const float* KeyTypePointer;
 
-  nsFloatHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  explicit nsFloatHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
   nsFloatHashKey(const nsFloatHashKey& aToCopy) : mValue(aToCopy.mValue) {}
   ~nsFloatHashKey() {}
 
@@ -270,7 +270,7 @@ public:
   typedef nsISupports* KeyType;
   typedef const nsISupports* KeyTypePointer;
 
-  nsISupportsHashKey(const nsISupports* aKey)
+  explicit nsISupportsHashKey(const nsISupports* aKey)
     : mSupports(const_cast<nsISupports*>(aKey))
   {
   }
@@ -306,7 +306,7 @@ public:
   typedef T* KeyType;
   typedef const T* KeyTypePointer;
 
-  nsRefPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
+  explicit nsRefPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
   nsRefPtrHashKey(const nsRefPtrHashKey& aToCopy) : mKey(aToCopy.mKey) {}
   ~nsRefPtrHashKey() {}
 
@@ -346,7 +346,7 @@ public:
   typedef T* KeyType;
   typedef const T* KeyTypePointer;
 
-  nsPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
+  explicit nsPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
   nsPtrHashKey(const nsPtrHashKey<T>& aToCopy) : mKey(aToCopy.mKey) {}
   ~nsPtrHashKey() {}
 
@@ -376,7 +376,7 @@ template<class T>
 class nsClearingPtrHashKey : public nsPtrHashKey<T>
 {
 public:
-  nsClearingPtrHashKey(const T* aKey) : nsPtrHashKey<T>(aKey) {}
+  explicit nsClearingPtrHashKey(const T* aKey) : nsPtrHashKey<T>(aKey) {}
   nsClearingPtrHashKey(const nsClearingPtrHashKey<T>& aToCopy)
     : nsPtrHashKey<T>(aToCopy)
   {
@@ -399,7 +399,7 @@ public:
   typedef T& KeyType;
   typedef const T* KeyTypePointer;
 
-  nsFuncPtrHashKey(const T* aKey) : mKey(*const_cast<T*>(aKey)) {}
+  explicit nsFuncPtrHashKey(const T* aKey) : mKey(*const_cast<T*>(aKey)) {}
   nsFuncPtrHashKey(const nsFuncPtrHashKey<T>& aToCopy) : mKey(aToCopy.mKey) {}
   ~nsFuncPtrHashKey() {}
 
@@ -428,7 +428,7 @@ public:
   typedef const nsID& KeyType;
   typedef const nsID* KeyTypePointer;
 
-  nsIDHashKey(const nsID* aInID) : mID(*aInID) {}
+  explicit nsIDHashKey(const nsID* aInID) : mID(*aInID) {}
   nsIDHashKey(const nsIDHashKey& aToCopy) : mID(aToCopy.mID) {}
   ~nsIDHashKey() {}
 
@@ -464,7 +464,7 @@ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
-  nsDepCharHashKey(const char* aKey) : mKey(aKey) {}
+  explicit nsDepCharHashKey(const char* aKey) : mKey(aKey) {}
   nsDepCharHashKey(const nsDepCharHashKey& aToCopy) : mKey(aToCopy.mKey) {}
   ~nsDepCharHashKey() {}
 
@@ -493,7 +493,7 @@ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
-  nsCharPtrHashKey(const char* aKey) : mKey(strdup(aKey)) {}
+  explicit nsCharPtrHashKey(const char* aKey) : mKey(strdup(aKey)) {}
   nsCharPtrHashKey(const nsCharPtrHashKey& aToCopy)
     : mKey(strdup(aToCopy.mKey))
   {
@@ -538,7 +538,7 @@ public:
   typedef const char16_t* KeyType;
   typedef const char16_t* KeyTypePointer;
 
-  nsUnicharPtrHashKey(const char16_t* aKey) : mKey(NS_strdup(aKey)) {}
+  explicit nsUnicharPtrHashKey(const char16_t* aKey) : mKey(NS_strdup(aKey)) {}
   nsUnicharPtrHashKey(const nsUnicharPtrHashKey& aToCopy)
     : mKey(NS_strdup(aToCopy.mKey))
   {
@@ -581,7 +581,7 @@ public:
   typedef nsIHashable* KeyType;
   typedef const nsIHashable* KeyTypePointer;
 
-  nsHashableHashKey(const nsIHashable* aKey)
+  explicit nsHashableHashKey(const nsIHashable* aKey)
     : mKey(const_cast<nsIHashable*>(aKey))
   {
   }
@@ -628,7 +628,7 @@ public:
   typedef const T& KeyType;
   typedef const T* KeyTypePointer;
 
-  nsGenericHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
+  explicit nsGenericHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
   nsGenericHashKey(const nsGenericHashKey<T>& aOther) : mKey(aOther.mKey) {}
 
   KeyType GetKey() const { return mKey; }

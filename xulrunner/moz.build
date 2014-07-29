@@ -6,7 +6,7 @@
 
 CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
-PARALLEL_DIRS += [
+DIRS += [
     'app',
     'stub',
     'examples',
@@ -16,4 +16,4 @@ if CONFIG['MAKENSISU']:
     DIRS += ['installer/windows']
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    PARALLEL_DIRS += ['tools/redit']
+    DIRS += ['tools/redit']

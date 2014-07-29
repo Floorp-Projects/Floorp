@@ -3745,7 +3745,7 @@ ContentParent::RecvOpenAnonymousTemporaryFile(FileDescriptor *aFD)
     if (NS_WARN_IF(NS_FAILED(rv))) {
         return false;
     }
-    *aFD = FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfd));
+    *aFD = FileDescriptor(FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(prfd)));
     // The FileDescriptor object owns a duplicate of the file handle; we
     // must close the original (and clean up the NSPR descriptor).
     PR_Close(prfd);

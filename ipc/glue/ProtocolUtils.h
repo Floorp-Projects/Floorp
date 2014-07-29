@@ -184,7 +184,7 @@ public:
 class IToplevelProtocol : public LinkedListElement<IToplevelProtocol>
 {
 protected:
-    IToplevelProtocol(ProtocolId aProtoId)
+    explicit IToplevelProtocol(ProtocolId aProtoId)
         : mProtocolId(aProtoId)
         , mTrans(nullptr)
     {

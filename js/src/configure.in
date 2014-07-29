@@ -2024,9 +2024,7 @@ AC_SUBST(ENABLE_METHODJIT_SPEW)
 
 AC_SUBST(ENABLE_ION)
 
-if test "$ENABLE_ION"; then
-    AC_DEFINE(JS_ION)
-fi
+AC_DEFINE(JS_ION)
 
 if test -n "$COMPILE_ENVIRONMENT"; then
     MOZ_COMPILER_OPTS
@@ -3167,7 +3165,11 @@ MOZ_ARG_ENABLE_BOOL(arm-simulator,
 [  --enable-arm-simulator Enable ARM simulator for JIT code],
     JS_ARM_SIMULATOR=1,
     JS_ARM_SIMULATOR= )
-if test -n "$JS_ARM_SIMULATOR"; then
+
+if test -z "$ENABLE_ION"; then
+    AC_DEFINE(JS_CODEGEN_NONE)
+    JS_CODEGEN_NONE=1
+elif test -n "$JS_ARM_SIMULATOR"; then
     if test "$CPU_ARCH" != "x86"; then
         AC_MSG_ERROR([The ARM simulator only works on x86.])
     fi
@@ -3189,6 +3191,7 @@ AC_SUBST(JS_ARM_SIMULATOR)
 AC_SUBST(JS_CODEGEN_ARM)
 AC_SUBST(JS_CODEGEN_X86)
 AC_SUBST(JS_CODEGEN_X64)
+AC_SUBST(JS_CODEGEN_NONE)
 
 dnl ========================================================
 dnl jprof

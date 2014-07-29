@@ -112,7 +112,7 @@ public:
   // off-main-thread. But some consumers need to use the same pointer for
   // multiple classes, some of which are main-thread-only and some of which
   // aren't. So we allow them to explicitly disable this strict checking.
-  nsMainThreadPtrHolder(T* aPtr, bool aStrict = true)
+  explicit nsMainThreadPtrHolder(T* aPtr, bool aStrict = true)
     : mRawPtr(nullptr)
     , mStrict(aStrict)
   {

@@ -18,7 +18,6 @@
 #include "nsITabParent.h"
 #include "nsPIWindowWatcher.h"
 #include "nsTArray.h"
-#include "js/TypeDecls.h"
 
 class  nsIURI;
 class  nsIDocShellTreeItem;
@@ -89,7 +88,6 @@ protected:
                               nsIArray *argv,
                               nsIDOMWindow **_retval);
 
-  static JSContext *GetJSContextFromWindow(nsIDOMWindow *aWindow);
   static nsresult   URIfromURL(const char *aURL,
                                nsIDOMWindow *aParent,
                                nsIURI **aURI);

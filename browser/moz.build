@@ -6,7 +6,7 @@
 
 CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
-PARALLEL_DIRS += [
+DIRS += [
     'base',
     'components',
     'experiments',

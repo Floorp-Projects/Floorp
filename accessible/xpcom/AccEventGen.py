@@ -68,26 +68,18 @@ def print_header_file(fd, conf):
             initializers = []
             for a in attributes:
                 initializers.append("m%s(a%s)" % (firstCap(a.name), firstCap(a.name)))
-            fd.write("  %s\n  {}\n" % ", ".join(initializers))
-            fd.write("  ~%s() {}\n\n" % classname)
+            fd.write("  %s\n  {}\n\n" % ", ".join(initializers))
             fd.write("  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n")
             fd.write("  NS_DECL_CYCLE_COLLECTION_CLASS(%s)\n" % (classname))
 
             for iface in filter(lambda i: i.name != "nsISupports", baseinterfaces):
                 fd.write("  NS_DECL_%s\n" % iface.name.upper())
 
-            fd.write("private:\n")
+            fd.write("\nprivate:\n")
+            fd.write("  ~%s() {}\n\n" % classname)
             for a in attributes:
                 fd.write("  %s\n" % attributeVariableTypeAndName(a))
             fd.write("};\n\n")
-
-            fd.write("namespace mozilla {\n"
-                     "template<>\n"
-                     "struct HasDangerousPublicDestructor<%s>\n"
-                     "{\n"
-                     "  static const bool value = true;\n"
-                     "};\n"
-                     "}\n" % classname)
 
     fd.write("#endif\n")
 

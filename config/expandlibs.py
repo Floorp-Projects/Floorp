@@ -133,13 +133,5 @@ class ExpandArgs(list):
             return objs
         return [arg]
 
-class ExpandLibsDeps(ExpandArgs):
-    '''Same as ExpandArgs, but also adds the library descriptor to the list'''
-    def _expand_desc(self, arg):
-        objs = super(ExpandLibsDeps, self)._expand_desc(arg)
-        if os.path.exists(arg + conf.LIBS_DESC_SUFFIX):
-            objs += [relativize(arg + conf.LIBS_DESC_SUFFIX)]
-        return objs
-
 if __name__ == '__main__':
     print " ".join(ExpandArgs(sys.argv[1:]))
