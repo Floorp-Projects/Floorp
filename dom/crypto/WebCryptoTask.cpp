@@ -2283,6 +2283,116 @@ private:
   }
 };
 
+class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask
+{
+public:
+  DeriveEcdhBitsTask(JSContext* aCx,
+      const ObjectOrString& aAlgorithm, CryptoKey& aKey, uint32_t aLength)
+    : mLength(aLength),
+      mPrivKey(aKey.GetPrivateKey())
+  {
+    Init(aCx, aAlgorithm, aKey);
+  }
+
+  DeriveEcdhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
+                     CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
+    : mPrivKey(aKey.GetPrivateKey())
+  {
+    mEarlyRv = GetKeySizeForAlgorithm(aCx, aTargetAlgorithm, mLength);
+    if (NS_SUCCEEDED(mEarlyRv)) {
+      Init(aCx, aAlgorithm, aKey);
+    }
+  }
+
+  void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey)
+  {
+    // Check that we have a private key.
+    if (!mPrivKey) {
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      return;
+    }
+
+    // Length must be a multiple of 8 bigger than zero.
+    if (mLength == 0 || mLength % 8) {
+      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      return;
+    }
+
+    mLength = mLength >> 3; // bits to bytes
+
+    // Retrieve the peer's public key.
+    RootedDictionary<EcdhKeyDeriveParams> params(aCx);
+    mEarlyRv = Coerce(aCx, params, aAlgorithm);
+    if (NS_FAILED(mEarlyRv) || !params.mPublic.WasPassed()) {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+      return;
+    }
+
+    CryptoKey* publicKey = params.mPublic.Value();
+    mPubKey = publicKey->GetPublicKey();
+    if (!mPubKey) {
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      return;
+    }
+
+    nsRefPtr<KeyAlgorithm> publicAlgorithm = publicKey->Algorithm();
+
+    // Given public key must be an ECDH key.
+    nsString algName;
+    publicAlgorithm->GetName(algName);
+    if (!algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      return;
+    }
+
+    // Both keys must use the same named curve.
+    nsString curve1, curve2;
+    static_cast<EcKeyAlgorithm*>(aKey.Algorithm())->GetNamedCurve(curve1);
+    static_cast<EcKeyAlgorithm*>(publicAlgorithm.get())->GetNamedCurve(curve2);
+
+    if (!curve1.Equals(curve2)) {
+      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+      return;
+    }
+  }
+
+private:
+  size_t mLength;
+  ScopedSECKEYPrivateKey mPrivKey;
+  ScopedSECKEYPublicKey mPubKey;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    ScopedPK11SymKey symKey(PK11_PubDeriveWithKDF(
+      mPrivKey, mPubKey, PR_FALSE, nullptr, nullptr, CKM_ECDH1_DERIVE,
+      CKM_CONCATENATE_DATA_AND_BASE, CKA_DERIVE, 0, CKD_NULL, nullptr, nullptr));
+
+    if (!symKey.get()) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    nsresult rv = MapSECStatus(PK11_ExtractKeyValue(symKey));
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
+    // This doesn't leak, because the SECItem* returned by PK11_GetKeyData
+    // just refers to a buffer managed by symKey. The assignment copies the
+    // data, so mResult manages one copy, while symKey manages another.
+    ATTEMPT_BUFFER_ASSIGN(mResult, PK11_GetKeyData(symKey));
+
+    if (mLength > mResult.Length()) {
+      return NS_ERROR_DOM_DATA_ERR;
+    }
+
+    if (!mResult.SetLength(mLength)) {
+      return NS_ERROR_DOM_UNKNOWN_ERR;
+    }
+
+    return NS_OK;
+  }
+};
+
 template<class KeyEncryptTask>
 class WrapKeyTask : public ExportKeyTask
 {
@@ -2564,6 +2674,10 @@ WebCryptoTask::CreateDeriveBitsTask(JSContext* aCx,
 
   if (algName.EqualsASCII(WEBCRYPTO_ALG_PBKDF2)) {
     return new DerivePbkdfBitsTask(aCx, aAlgorithm, aKey, aLength);
+  }
+
+  if (algName.EqualsASCII(WEBCRYPTO_ALG_ECDH)) {
+    return new DeriveEcdhBitsTask(aCx, aAlgorithm, aKey, aLength);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
