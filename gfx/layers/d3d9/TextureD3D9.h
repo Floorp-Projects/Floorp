@@ -353,6 +353,9 @@ public:
   }
 
 protected:
+  void OpenSharedHandle();
+  IDirect3DDevice9* GetDevice();
+
   RefPtr<DataTextureSourceD3D9> mTextureSource;
   RefPtr<CompositorD3D9> mCompositor;
   WindowsHandle mHandle;
