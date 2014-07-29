@@ -787,7 +787,17 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
           }
 #endif
         } else {
-          metrics.mCompositionBounds = viewBounds;
+          LayoutDeviceIntRect contentBounds;
+          if (nsLayoutUtils::GetContentViewerBounds(presContext, contentBounds)) {
+            LayoutDeviceToParentLayerScale scale(1.0f);
+            if (presContext->GetParentPresContext()) {
+              gfxSize res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
+              scale = LayoutDeviceToParentLayerScale(res.width, res.height);
+            }
+            metrics.mCompositionBounds = LayoutDeviceRect(contentBounds) * scale;
+          } else {
+            metrics.mCompositionBounds = viewBounds;
+          }
         }
       }
     }
