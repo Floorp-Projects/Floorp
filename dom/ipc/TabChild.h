@@ -595,6 +595,7 @@ private:
     void FireSingleTapEvent(LayoutDevicePoint aPoint);
 
     bool mTouchEndCancelled;
+    bool mEndTouchIsClick;
 
     bool mIgnoreKeyPressEvent;
     nsRefPtr<ActiveElementManager> mActiveElementManager;
