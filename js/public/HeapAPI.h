@@ -111,7 +111,7 @@ static MOZ_ALWAYS_INLINE js::gc::Cell *
 AsCell(JSObject *obj)
 {
     js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(obj);
-    AssertGCThingHasType(cell, JSTRACE_OBJECT);
+    js::gc::AssertGCThingHasType(cell, JSTRACE_OBJECT);
     return cell;
 }
 
@@ -119,7 +119,7 @@ static MOZ_ALWAYS_INLINE js::gc::Cell *
 AsCell(JSFunction *fun)
 {
     js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(fun);
-    AssertGCThingHasType(cell, JSTRACE_OBJECT);
+    js::gc::AssertGCThingHasType(cell, JSTRACE_OBJECT);
     return cell;
 }
 
@@ -127,7 +127,7 @@ static MOZ_ALWAYS_INLINE js::gc::Cell *
 AsCell(JSString *str)
 {
     js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(str);
-    AssertGCThingHasType(cell, JSTRACE_STRING);
+    js::gc::AssertGCThingHasType(cell, JSTRACE_STRING);
     return cell;
 }
 
@@ -135,7 +135,7 @@ static MOZ_ALWAYS_INLINE js::gc::Cell *
 AsCell(JSFlatString *flat)
 {
     js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(flat);
-    AssertGCThingHasType(cell, JSTRACE_STRING);
+    js::gc::AssertGCThingHasType(cell, JSTRACE_STRING);
     return cell;
 }
 
@@ -143,7 +143,7 @@ static MOZ_ALWAYS_INLINE js::gc::Cell *
 AsCell(JS::Symbol *sym)
 {
     js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(sym);
-    AssertGCThingHasType(cell, JSTRACE_SYMBOL);
+    js::gc::AssertGCThingHasType(cell, JSTRACE_SYMBOL);
     return cell;
 }
 
@@ -151,7 +151,7 @@ static MOZ_ALWAYS_INLINE js::gc::Cell *
 AsCell(JSScript *script)
 {
     js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(script);
-    AssertGCThingHasType(cell, JSTRACE_SCRIPT);
+    js::gc::AssertGCThingHasType(cell, JSTRACE_SCRIPT);
     return cell;
 }
 
@@ -289,6 +289,7 @@ GetObjectZone(JSObject *obj);
 static MOZ_ALWAYS_INLINE bool
 GCThingIsMarkedGray(void *thing)
 {
+    MOZ_ASSERT(thing);
 #ifdef JSGC_GENERATIONAL
     /*
      * GC things residing in the nursery cannot be gray: they have no mark bits.
@@ -306,6 +307,10 @@ GCThingIsMarkedGray(void *thing)
 static MOZ_ALWAYS_INLINE bool
 IsIncrementalBarrierNeededOnTenuredGCThing(shadow::Runtime *rt, void *thing, JSGCTraceKind kind)
 {
+    MOZ_ASSERT(thing);
+#ifdef JSGC_GENERATIONAL
+    MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
+#endif
     if (!rt->needsBarrier_)
         return false;
     JS::Zone *zone = GetTenuredGCThingZone(thing);
