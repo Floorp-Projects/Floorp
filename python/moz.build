@@ -45,7 +45,6 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/mozbuild/test/test_expression.py',
     'mozbuild/mozbuild/test/test_jarmaker.py',
     'mozbuild/mozbuild/test/test_line_endings.py',
-    'mozbuild/mozbuild/test/test_link_deps.py',
     'mozbuild/mozbuild/test/test_makeutil.py',
     'mozbuild/mozbuild/test/test_mozconfig.py',
     'mozbuild/mozbuild/test/test_mozinfo.py',
