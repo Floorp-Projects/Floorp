@@ -452,5 +452,114 @@ tv = {
       "c026b58a21e1e5ec412ff241b436043e29173f1dc6cb943c09742de989547288" +
       "0416021442c6ee70beb7465928a1efe692d2281b8f7b53d6"
     )
-  }
+  },
+
+  // KASValidityTest_ECCEphemeralUnified_NOKC_ZZOnly_init.fax [EC]
+  // <http://csrc.nist.gov/groups/STM/cavp/documents/keymgmt/kastestvectors.zip>
+  ecdh_p256: {
+    jwk_pub: {
+      kty: "EC",
+      crv: "P-256",
+      x: "XOe4bjsyZgQD5jcS7wmY3q4QJ_rsPBvp92-TTf61jpg",
+      y: "9M8HWzlAXdHxresJAQftz7K0ljc52HZ54wVssFV9Ct8"
+    },
+
+    jwk_priv: {
+      kty: "EC",
+      crv: "P-256",
+      d: "qq_LEzeJpR00KM5DQvL2MNtJcbi0KcGVcoPIHNnwm2A",
+      x: "FNwJHA-FwnSx5tKXFV_iLN408gbKUHRV06WnQlzTdN4",
+      y: "is9pWAaneK4RdxmdLfsq5IwizDmUS2w8OGS99sKm3ek"
+    },
+
+    secret: util.hex2abv(
+      "35669cd5c244ba6c1ea89b8802c3d1db815cd769979072e6556eb98548c65f7d"
+    )
+  },
+
+  // KASValidityTest_ECCEphemeralUnified_NOKC_ZZOnly_init.fax [ED]
+  // <http://csrc.nist.gov/groups/STM/cavp/documents/keymgmt/kastestvectors.zip>
+  ecdh_p384: {
+    jwk_pub: {
+      kty: "EC",
+      crv: "P-384",
+      x: "YoV6fhCph4kyt7sUkqiZOtbRs0rF6etPqlnrn1nzSB95NElaw4uTK7Pn2nlFFqqH",
+      y: "bf3tRz6icq3-W6hhmoqDTBKjdOQUJ5xHr5kX4X-h5MZk_P_nCrG3IUVl1SAbhWDw"
+    },
+
+    jwk_priv: {
+      kty: "EC",
+      crv: "P-384",
+      d: "RT8f0pRw4CL1Tgk4rwuNnNbFoQBNTTBkr7WVLLm4fDA3boYZpNB_t-rbMVLx0CRp",
+      x: "_XwhXRnOzEfCsWIRCz3QLClaDkigQFvXmqYNdh/7vJdADykPbfGi1VgAu3XJdXoD",
+      y: "S1P_FBCXYGE-5VPvTCRnFT7bPIPmUPV9qKTM24TQFYEUgIDfzCLsyGCWK-rhP6jU"
+    },
+
+    secret: util.hex2abv(
+      "a3d28aa18f905a48a5f166b4ddbf5f6b499e43858ccdd80b869946aba2c5d461" +
+      "db6a1e5b1137687801878ff0f8d9a7b3"
+    )
+  },
+
+  // KASValidityTest_ECCEphemeralUnified_NOKC_ZZOnly_init.fax [EE]
+  // <http://csrc.nist.gov/groups/STM/cavp/documents/keymgmt/kastestvectors.zip>
+  ecdh_p521: {
+    jwk_pub: {
+      kty: "EC",
+      crv: "P-521",
+      x: "AeCLgRZ-BPqfhq4jt409-E26VHW5l29q74cHbIbQiS_-Gcqdo-087jHdPXUksGpr" +
+         "Nyp_RcTZd94t3peXzQziQIqo",
+      y: "AZIAp8QVnU9hBOkLScv0dy540uGtBWHkWj4DGh-Exh4iWZ0E-YBS8-HVx2eB-nfG" +
+         "AGEy4-BzfpFFlfidOS1Tg77J"
+    },
+
+    jwk_priv: {
+      kty: "EC",
+      crv: "P-521",
+      d: "ABtsfkDGFarQU4kb7e2gPszGCTT8GLDaaJbFQenFZce3qp_dh0qZarXHKBZ-BVic" +
+         "NeIW5Sk661UoNfwykSvmh77S",
+      x: "AcD_6Eb4A-8QdUM70c6F0WthN1kvV4fohS8QHbod6B4y1ZDU54mQuCR-3IBjcV1c" +
+         "oh18uxbyUn5szMuCgjZUiD0y",
+      y: "AU3WKJffztkhAQetBXaLvUSIHa87HMn8vZFB04lWipH-SrsrAu_4N-6iam0OD4EJ" +
+         "0kOMH8iEh7yuivaKsFRzm2-m"
+    },
+
+    secret: util.hex2abv(
+      "00561eb17d856552c21b8cbe7d3d60d1ea0db738b77d4050fa2dbd0773edc395" +
+      "09854d9e30e843964ed3fd303339e338f31289120a38f94e9dc9ff7d4b3ea8f2" +
+      "5e01"
+    )
+  },
+
+  // Some test vectors that we should fail to import.
+  ecdh_p256_negative: {
+    // The given curve doesn't exist / isn't supported.
+    jwk_bad_crv: {
+      kty: "EC",
+      crv: "P-123",
+      x: "XOe4bjsyZgQD5jcS7wmY3q4QJ_rsPBvp92-TTf61jpg",
+      y: "9M8HWzlAXdHxresJAQftz7K0ljc52HZ54wVssFV9Ct8"
+    },
+
+    // The crv parameter is missing.
+    jwk_missing_crv: {
+      kty: "EC",
+      x: "XOe4bjsyZgQD5jcS7wmY3q4QJ_rsPBvp92-TTf61jpg",
+      y: "9M8HWzlAXdHxresJAQftz7K0ljc52HZ54wVssFV9Ct8"
+    },
+
+    // The X coordinate is missing.
+    jwk_missing_x: {
+      kty: "EC",
+      crv: "P-256",
+      y: "9M8HWzlAXdHxresJAQftz7K0ljc52HZ54wVssFV9Ct8"
+    },
+
+    // The Y coordinate is missing.
+    jwk_missing_y: {
+      kty: "EC",
+      crv: "P-256",
+      x: "XOe4bjsyZgQD5jcS7wmY3q4QJ_rsPBvp92-TTf61jpg",
+    }
+  },
 }
