@@ -417,7 +417,7 @@
   <string name="set_image_chooser_title">&set_image_chooser_title;</string>
 
   <!-- Contacts API -->
-  <string name="contacts_account_chooser_dialog_title">Share contacts from...</string>
+  <string name="contacts_account_chooser_dialog_title2">Share contacts from…</string>
 
 
   <!-- Guest mode -->
