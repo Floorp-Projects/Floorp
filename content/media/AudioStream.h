@@ -361,9 +361,6 @@ private:
   // frames.
   CircularByteBuffer mBuffer;
 
-  // Software volume level.  Applied during the servicing of DataCallback().
-  double mVolume;
-
   // Owning reference to a cubeb_stream.  cubeb_stream_destroy is called by
   // nsAutoRef's destructor.
   nsAutoRef<cubeb_stream> mCubebStream;

@@ -14,6 +14,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
+#include "cubeb_panner.h"
 
 #if !defined(kCFCoreFoundationVersionNumber10_7)
 /* From CoreFoundation CFBase.h */
@@ -46,6 +47,7 @@ struct cubeb_stream {
   int draining;
   uint64_t current_latency_frames;
   uint64_t hw_latency_frames;
+  float panning;
 };
 
 static int64_t
@@ -70,6 +72,7 @@ audiounit_output_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
   unsigned char * buf;
   long got;
   OSStatus r;
+  float panning;
 
   assert(bufs->mNumberBuffers == 1);
   buf = bufs->mBuffers[0].mData;
@@ -79,6 +82,7 @@ audiounit_output_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
   pthread_mutex_lock(&stm->mutex);
 
   stm->current_latency_frames = audiotimestamp_to_latency(tstamp, stm);
+  panning = stm->panning;
 
   if (stm->draining || stm->shutdown) {
     pthread_mutex_unlock(&stm->mutex);
@@ -112,6 +116,10 @@ audiounit_output_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
   stm->frames_played = stm->frames_queued;
   stm->frames_queued += got;
   pthread_mutex_unlock(&stm->mutex);
+
+  if (stm->sample_spec.mChannelsPerFrame == 2) {
+    cubeb_pan_stereo_buffer_float((float*)buf, got, panning);
+  }
 
   return noErr;
 }
@@ -617,6 +625,35 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   return CUBEB_OK;
 }
 
+int audiounit_stream_set_volume(cubeb_stream * stm, float volume)
+{
+  AudioDeviceID id;
+  OSStatus r;
+
+  r = AudioUnitSetParameter(stm->unit,
+                            kHALOutputParam_Volume,
+                            kAudioUnitScope_Global,
+                            0, volume, 0);
+
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+  return CUBEB_OK;
+}
+
+int audiounit_stream_set_panning(cubeb_stream * stm, float panning)
+{
+  if (stm->sample_spec.mChannelsPerFrame > 2) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  pthread_mutex_lock(&stm->mutex);
+  stm->panning = panning;
+  pthread_mutex_unlock(&stm->mutex);
+
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const audiounit_ops = {
   .init = audiounit_init,
   .get_backend_id = audiounit_get_backend_id,
@@ -629,5 +666,7 @@ static struct cubeb_ops const audiounit_ops = {
   .stream_start = audiounit_stream_start,
   .stream_stop = audiounit_stream_stop,
   .stream_get_position = audiounit_stream_get_position,
-  .stream_get_latency = audiounit_stream_get_latency
+  .stream_get_latency = audiounit_stream_get_latency,
+  .stream_set_volume = audiounit_stream_set_volume,
+  .stream_set_panning = audiounit_stream_set_panning
 };
