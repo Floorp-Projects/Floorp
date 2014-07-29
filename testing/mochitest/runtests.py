@@ -47,6 +47,18 @@ from mozlog.structured.structuredlog import StructuredLogger
 # not yet present in the mozharness environment
 from mozrunner.utils import findInPath as which
 
+
+# Necessary to set up the global logger in automationutils.py
+import logging
+log = logging.getLogger()
+def resetGlobalLog():
+   while log.handlers:
+       log.removeHandler(log.handlers[0])
+   handler = logging.StreamHandler(sys.stdout)
+   log.setLevel(logging.INFO)
+   log.addHandler(handler)
+resetGlobalLog()
+
 ###########################
 # Option for NSPR logging #
 ###########################
