@@ -187,7 +187,8 @@ var SimpleServiceDiscovery = {
           friendlyName: display.friendlyName,
           uuid: display.uuid,
           manufacturer: display.manufacturer,
-          modelName: display.modelName
+          modelName: display.modelName,
+          mirror: display.mirror
         };
 
         this._addService(service);
