@@ -244,10 +244,8 @@ BreakpointSite::BreakpointSite(JSScript *script, jsbytecode *pc)
 void
 BreakpointSite::recompile(FreeOp *fop)
 {
-#ifdef JS_ION
     if (script->hasBaselineScript())
         script->baselineScript()->toggleDebugTraps(script, pc);
-#endif
 }
 
 void
@@ -4166,7 +4164,7 @@ static void
 UpdateFrameIterPc(FrameIter &iter)
 {
     if (iter.abstractFramePtr().isRematerializedFrame()) {
-#if defined(DEBUG) && defined(JS_ION)
+#ifdef DEBUG
         // Rematerialized frames don't need their pc updated. The reason we
         // need to update pc is because we might get the same Debugger.Frame
         // object for multiple re-entries into debugger code from debuggee

@@ -1418,9 +1418,7 @@ gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
 static void
 gc::MarkChildren(JSTracer *trc, jit::JitCode *code)
 {
-#ifdef JS_ION
     code->trace(trc);
-#endif
 }
 
 template<typename T>

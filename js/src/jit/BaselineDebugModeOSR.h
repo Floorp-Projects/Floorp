@@ -7,8 +7,6 @@
 #ifndef jit_BaselineDebugModeOSR_h
 #define jit_BaselineDebugModeOSR_h
 
-#ifdef JS_ION
-
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
@@ -100,7 +98,5 @@ RecompileOnStackBaselineScriptsForDebugMode(JSContext *cx, JSCompartment *comp);
 
 } // namespace jit
 } // namespace js
-
-#endif // JS_ION
 
 #endif // jit_BaselineDebugModeOSR_h

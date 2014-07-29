@@ -86,14 +86,12 @@ SPSProfiler::enable(bool enabled)
 
     enabled_ = enabled;
 
-#ifdef JS_ION
     /* Toggle SPS-related jumps on baseline jitcode.
      * The call to |ReleaseAllJITCode| above will release most baseline jitcode, but not
      * jitcode for scripts with active frames on the stack.  These scripts need to have
      * their profiler state toggled so they behave properly.
      */
     jit::ToggleBaselineSPS(rt, enabled);
-#endif
 }
 
 /* Lookup the string for the function/script, creating one if necessary */
