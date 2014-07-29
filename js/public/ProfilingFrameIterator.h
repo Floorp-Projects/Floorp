@@ -27,7 +27,7 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
 {
     js::AsmJSActivation *activation_;
 
-    static const unsigned StorageSpace = 5 * sizeof(void*);
+    static const unsigned StorageSpace = 6 * sizeof(void*);
     mozilla::AlignedStorage<StorageSpace> storage_;
     js::AsmJSProfilingFrameIterator &iter() {
         JS_ASSERT(!done());
@@ -54,6 +54,13 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     ~ProfilingFrameIterator();
     void operator++();
     bool done() const { return !activation_; }
+
+    // Assuming the stack grows down (we do), the return value:
+    //  - always points into the stack
+    //  - is weakly monotonically increasing (may be equal for successive frames)
+    //  - will compare greater than newer native and psuedo-stack frame addresses
+    //    and less than older native and psuedo-stack frame addresses
+    void *stackAddress() const;
 
     enum Kind {
         Function,

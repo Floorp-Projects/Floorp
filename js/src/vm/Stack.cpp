@@ -1832,6 +1832,16 @@ JS::ProfilingFrameIterator::settle()
 #endif
 }
 
+void *
+JS::ProfilingFrameIterator::stackAddress() const
+{
+#ifdef JS_ION
+    return iter().stackAddress();
+#else
+    MOZ_CRASH("Shouldn't have any frames");
+#endif
+}
+
 JS::ProfilingFrameIterator::Kind
 JS::ProfilingFrameIterator::kind() const
 {
