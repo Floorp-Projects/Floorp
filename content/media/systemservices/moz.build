@@ -25,6 +25,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
         'OpenSLESProvider.cpp',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    CXXFLAGS += [
+        '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+            'frameworks/wilhelm/include',
+            'system/media/wilhelm/include',
+        ]
+    ]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
