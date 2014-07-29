@@ -7,6 +7,7 @@
 #ifndef MOZ_UNITS_H_
 #define MOZ_UNITS_H_
 
+#include "mozilla/gfx/Coord.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/ScaleFactor.h"
@@ -30,6 +31,8 @@ template<> struct IsPixel<LayoutDevicePixel> : TrueType {};
 template<> struct IsPixel<LayerPixel>        : TrueType {};
 template<> struct IsPixel<ScreenPixel>       : TrueType {};
 
+typedef gfx::CoordTyped<CSSPixel> CSSCoord;
+typedef gfx::IntCoordTyped<CSSPixel> CSSIntCoord;
 typedef gfx::PointTyped<CSSPixel> CSSPoint;
 typedef gfx::IntPointTyped<CSSPixel> CSSIntPoint;
 typedef gfx::SizeTyped<CSSPixel> CSSSize;
@@ -39,6 +42,8 @@ typedef gfx::IntRectTyped<CSSPixel> CSSIntRect;
 typedef gfx::MarginTyped<CSSPixel> CSSMargin;
 typedef gfx::IntMarginTyped<CSSPixel> CSSIntMargin;
 
+typedef gfx::CoordTyped<LayoutDevicePixel> LayoutDeviceCoord;
+typedef gfx::IntCoordTyped<LayoutDevicePixel> LayoutDeviceIntCoord;
 typedef gfx::PointTyped<LayoutDevicePixel> LayoutDevicePoint;
 typedef gfx::IntPointTyped<LayoutDevicePixel> LayoutDeviceIntPoint;
 typedef gfx::SizeTyped<LayoutDevicePixel> LayoutDeviceSize;
@@ -48,6 +53,8 @@ typedef gfx::IntRectTyped<LayoutDevicePixel> LayoutDeviceIntRect;
 typedef gfx::MarginTyped<LayoutDevicePixel> LayoutDeviceMargin;
 typedef gfx::IntMarginTyped<LayoutDevicePixel> LayoutDeviceIntMargin;
 
+typedef gfx::CoordTyped<LayerPixel> LayerCoord;
+typedef gfx::IntCoordTyped<LayerPixel> LayerIntCoord;
 typedef gfx::PointTyped<LayerPixel> LayerPoint;
 typedef gfx::IntPointTyped<LayerPixel> LayerIntPoint;
 typedef gfx::SizeTyped<LayerPixel> LayerSize;
@@ -57,6 +64,8 @@ typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
 typedef gfx::MarginTyped<LayerPixel> LayerMargin;
 typedef gfx::IntMarginTyped<LayerPixel> LayerIntMargin;
 
+typedef gfx::CoordTyped<ScreenPixel> ScreenCoord;
+typedef gfx::IntCoordTyped<ScreenPixel> ScreenIntCoord;
 typedef gfx::PointTyped<ScreenPixel> ScreenPoint;
 typedef gfx::IntPointTyped<ScreenPixel> ScreenIntPoint;
 typedef gfx::SizeTyped<ScreenPixel> ScreenSize;

@@ -222,8 +222,8 @@ static void DrawVelGraph(const nsIntRect& aClipRect,
   for (int32_t i = (int32_t)velocityData->mData.size() - 2; i >= 0; i--) {
     const gfx::Point& p1 = velocityData->mData[i+1].mPoint;
     const gfx::Point& p2 = velocityData->mData[i].mPoint;
-    int vel = sqrt((p1.x - p2.x) * (p1.x - p2.x) +
-                   (p1.y - p2.y) * (p1.y - p2.y));
+    int vel = sqrt((p1.x - p2.x).value * (p1.x - p2.x).value +
+                   (p1.y - p2.y).value * (p1.y - p2.y).value);
     Point next = Point(graphRect.width / circularBufferSize * i,
                        graphRect.height - vel/yScaleFactor);
     if (first) {
@@ -266,11 +266,9 @@ static void PrintUniformityInfo(Layer* aLayer)
   }
 
   FrameMetrics frameMetrics = aLayer->AsContainerLayer()->GetFrameMetrics();
-  LayerIntPoint scrollOffset = RoundedToInt(frameMetrics.GetScrollOffsetInLayerPixels());
+  const LayerPoint scrollOffset = frameMetrics.GetScrollOffsetInLayerPixels();
   const gfx::Point layerTransform = GetScrollData(aLayer);
-  gfx::Point layerScroll;
-  layerScroll.x = scrollOffset.x - layerTransform.x;
-  layerScroll.y = scrollOffset.y - layerTransform.y;
+  const gfx::Point layerScroll = scrollOffset.ToUnknownPoint() - layerTransform;
 
   printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
     TimeStamp::Now(), aLayer, layerScroll.x, layerScroll.y);

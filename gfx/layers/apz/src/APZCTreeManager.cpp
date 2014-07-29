@@ -384,16 +384,14 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 ApplyTransform(gfx::PointTyped<T>* aPoint, const Matrix4x4& aMatrix)
 {
   Point result = aMatrix * aPoint->ToUnknownPoint();
-  aPoint->x = result.x;
-  aPoint->y = result.y;
+  *aPoint = ViewAs<T>(result);
 }
 
 /*static*/ template<class T> void
 ApplyTransform(gfx::IntPointTyped<T>* aPoint, const Matrix4x4& aMatrix)
 {
   Point result = aMatrix * aPoint->ToUnknownPoint();
-  aPoint->x = result.x;
-  aPoint->y = result.y;
+  *aPoint = TruncatedToInt(ViewAs<T>(result));
 }
 
 /*static*/ void
@@ -651,9 +649,7 @@ APZCTreeManager::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
     Matrix4x4 transformToGecko;
     GetInputTransforms(apzc, transformToApzc, transformToGecko);
     Matrix4x4 outTransform = transformToApzc * transformToGecko;
-    aOutTransformedPoint->x = aPoint.x;
-    aOutTransformedPoint->y = aPoint.y;
-    ApplyTransform(aOutTransformedPoint, outTransform);
+    *aOutTransformedPoint = TransformTo<LayoutDevicePixel>(outTransform, aPoint);
   }
 }
 

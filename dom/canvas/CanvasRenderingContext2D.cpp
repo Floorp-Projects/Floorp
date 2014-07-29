@@ -1987,7 +1987,7 @@ CanvasRenderingContext2D::ArcTo(double x1, double y1, double x2,
   }
 
   // Check for colinearity
-  dir = (p2.x - p1.x) * (p0.y - p1.y) + (p2.y - p1.y) * (p1.x - p0.x);
+  dir = (p2.x - p1.x).value * (p0.y - p1.y).value + (p2.y - p1.y).value * (p1.x - p0.x).value;
   if (dir == 0) {
     LineTo(p1.x, p1.y);
     return;
@@ -4505,7 +4505,7 @@ CanvasPath::ArcTo(double x1, double y1, double x2, double y2, double radius,
   }
 
   // Check for colinearity
-  dir = (p2.x - p1.x) * (p0.y - p1.y) + (p2.y - p1.y) * (p1.x - p0.x);
+  dir = (p2.x - p1.x).value * (p0.y - p1.y).value + (p2.y - p1.y).value * (p1.x - p0.x).value;
   if (dir == 0) {
     LineTo(p1.x, p1.y);
     return;

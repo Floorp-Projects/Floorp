@@ -507,6 +507,38 @@ struct ParamTraits<nsIntSize>
   }
 };
 
+template<class T>
+struct ParamTraits< mozilla::gfx::CoordTyped<T> >
+{
+  typedef mozilla::gfx::CoordTyped<T> paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.value);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->value));
+  }
+};
+
+template<class T>
+struct ParamTraits< mozilla::gfx::IntCoordTyped<T> >
+{
+  typedef mozilla::gfx::IntCoordTyped<T> paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.value);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->value));
+  }
+};
+
 template<class T, class U>
 struct ParamTraits< mozilla::gfx::ScaleFactor<T, U> >
 {
