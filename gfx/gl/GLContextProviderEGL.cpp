@@ -116,10 +116,6 @@ public:
 
 using namespace mozilla::gfx;
 
-#ifdef MOZ_WIDGET_GONK
-extern nsIntRect gScreenBounds;
-#endif
-
 namespace mozilla {
 namespace gl {
 
@@ -205,12 +201,6 @@ CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
     #else
         MOZ_ASSERT(widget != nullptr);
         newSurface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(widget), 0);
-        #ifdef MOZ_WIDGET_GONK
-            gScreenBounds.x = 0;
-            gScreenBounds.y = 0;
-            sEGLLibrary.fQuerySurface(EGL_DISPLAY(), newSurface, LOCAL_EGL_WIDTH, &gScreenBounds.width);
-            sEGLLibrary.fQuerySurface(EGL_DISPLAY(), newSurface, LOCAL_EGL_HEIGHT, &gScreenBounds.height);
-        #endif
     #endif
     return newSurface;
 }
