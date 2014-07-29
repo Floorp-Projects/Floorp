@@ -231,6 +231,7 @@ BrowserElementChild.prototype = {
       "go-forward": this._recvGoForward,
       "reload": this._recvReload,
       "stop": this._recvStop,
+      "zoom": this._recvZoom,
       "unblock-modal-prompt": this._recvStopWaiting,
       "fire-ctx-callback": this._recvFireCtxCallback,
       "owner-visibility-change": this._recvOwnerVisibilityChange,
@@ -1029,6 +1030,10 @@ BrowserElementChild.prototype = {
   _recvStop: function(data) {
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     webNav.stop(webNav.STOP_NETWORK);
+  },
+
+  _recvZoom: function(data) {
+    docShell.contentViewer.fullZoom = data.json.zoom;
   },
 
   _recvSetInputMethodActive: function(data) {

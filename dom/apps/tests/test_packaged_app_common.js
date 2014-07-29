@@ -102,6 +102,7 @@ var PackagedTestHelper = (function PackagedTestHelper() {
       var aApp = evt.application;
       aApp.ondownloaderror = function(evt) {
         var error = aApp.downloadError.name;
+        ok(true, "Got downloaderror " + error);
         if (error == aExpectedError) {
           ok(true, "Got expected " + aExpectedError);
           var expected = {
