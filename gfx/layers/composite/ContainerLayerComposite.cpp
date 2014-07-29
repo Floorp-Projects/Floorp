@@ -293,6 +293,7 @@ struct PreparedData
 {
   RefPtr<CompositingRenderTarget> mTmpTarget;
   nsAutoTArray<PreparedLayer, 12> mLayers;
+  bool mNeedsSurfaceCopy;
 };
 
 // ContainerPrepare is shared between RefLayer and ContainerLayer
@@ -302,6 +303,7 @@ ContainerPrepare(ContainerT* aContainer,
                  const nsIntRect& aClipRect)
 {
   aContainer->mPrepared = MakeUnique<PreparedData>();
+  aContainer->mPrepared->mNeedsSurfaceCopy = false;
 
   /**
    * Determine which layers to draw.
@@ -362,6 +364,8 @@ ContainerPrepare(ContainerT* aContainer,
       RefPtr<CompositingRenderTarget> surface = CreateTemporaryTarget(aContainer, aManager);
       RenderIntermediate(aContainer, aManager, aClipRect, surface);
       aContainer->mPrepared->mTmpTarget = surface;
+    } else {
+      aContainer->mPrepared->mNeedsSurfaceCopy = true;
     }
   }
 }
@@ -507,12 +511,17 @@ ContainerRender(ContainerT* aContainer,
   if (aContainer->UseIntermediateSurface()) {
     RefPtr<CompositingRenderTarget> surface;
 
-    if (!aContainer->mPrepared->mTmpTarget) {
+    if (aContainer->mPrepared->mNeedsSurfaceCopy) {
       // we needed to copy the background so we waited until now to render the intermediate
       surface = CreateTemporaryTargetAndCopyFromBackground(aContainer, aManager);
       RenderIntermediate(aContainer, aManager, aClipRect, surface);
     } else {
       surface = aContainer->mPrepared->mTmpTarget;
+    }
+
+    if (!surface) {
+      aContainer->mPrepared = nullptr;
+      return;
     }
 
     float opacity = aContainer->GetEffectiveOpacity();
