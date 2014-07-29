@@ -99,18 +99,6 @@ public:
     Unpair(const nsAString& aDeviceAddress, ErrorResult& aRv);
   already_AddRefed<DOMRequest>
     GetPairedDevices(ErrorResult& aRv);
-  already_AddRefed<DOMRequest>
-    SetPinCode(const nsAString& aDeviceAddress, const nsAString& aPinCode,
-               ErrorResult& aRv);
-  already_AddRefed<DOMRequest>
-    SetPasskey(const nsAString& aDeviceAddress, uint32_t aPasskey,
-               ErrorResult& aRv);
-  already_AddRefed<DOMRequest>
-    SetPairingConfirmation(const nsAString& aDeviceAddress, bool aConfirmation,
-                           ErrorResult& aRv);
-  already_AddRefed<DOMRequest>
-    SetAuthorization(const nsAString& aDeviceAddress, bool aAllow,
-                     ErrorResult& aRv);
 
   already_AddRefed<Promise> EnableDisable(bool aEnable, ErrorResult& aRv);
   already_AddRefed<Promise> Enable(ErrorResult& aRv);
