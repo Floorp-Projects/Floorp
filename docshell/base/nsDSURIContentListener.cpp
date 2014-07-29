@@ -20,6 +20,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsIMultiPartChannel.h"
 
 using namespace mozilla;
 
@@ -28,8 +29,9 @@ using namespace mozilla;
 //*****************************************************************************
 
 nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
-    : mDocShell(aDocShell), 
-      mParentContentListener(nullptr)
+    : mDocShell(aDocShell)
+    , mExistingJPEGRequest(nullptr)
+    , mParentContentListener(nullptr)
 {
 }
 
@@ -118,8 +120,33 @@ nsDSURIContentListener::DoContent(const char* aContentType,
 
         mDocShell->SetLoadType(aIsContentPreferred ? LOAD_LINK : LOAD_NORMAL);
     }
+  
+    // In case of multipart jpeg request (mjpeg) we don't really want to
+    // create new viewer since the one we already have is capable of
+    // rendering multipart jpeg correctly (see bug 625012)
+    nsCOMPtr<nsIChannel> baseChannel;
+    if (nsCOMPtr<nsIMultiPartChannel> mpchan = do_QueryInterface(request)) {
+        mpchan->GetBaseChannel(getter_AddRefs(baseChannel));
+    }
 
-    rv = mDocShell->CreateContentViewer(aContentType, request, aContentHandler);
+    bool reuseCV = baseChannel
+        && baseChannel == mExistingJPEGRequest
+        && nsDependentCString(aContentType).EqualsLiteral("image/jpeg");
+
+    if (mExistingJPEGStreamListener && reuseCV) {
+        nsRefPtr<nsIStreamListener> copy(mExistingJPEGStreamListener);
+        copy.forget(aContentHandler);
+        rv = NS_OK;
+    } else {
+        rv = mDocShell->CreateContentViewer(aContentType, request, aContentHandler);
+        if (NS_SUCCEEDED(rv) && reuseCV) {
+           mExistingJPEGStreamListener = *aContentHandler;
+        } else {
+           mExistingJPEGStreamListener = nullptr;
+        }
+        mExistingJPEGRequest = baseChannel;
+    }
+
 
     if (rv == NS_ERROR_REMOTE_XUL) {
       request->Cancel(rv);
