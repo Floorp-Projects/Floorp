@@ -8,7 +8,9 @@ const { classes: Cc, interfaces: Ci, manager: Cm, utils: Cu, results: Cr } = Com
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Prompt.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
+                                  "resource://gre/modules/Prompt.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "sendMessageToJava",
                                   "resource://gre/modules/Messaging.jsm");
