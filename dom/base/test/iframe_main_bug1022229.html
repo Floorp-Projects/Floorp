@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  // Uncomment this definition of SimpleTest (and comment out the one below) to
+  // debug in mozBrowser mode.
+  /*
+  var SimpleTest = { ok: function(c, m) { dump(m + ": " + c + "\n"); },
+                     info: function(m) { dump(m + "\n"); },
+                     finish: function() { dump("Test done\n");} };
+  */
+  var SimpleTest = parent.SimpleTest;
+
+  var ok = SimpleTest.ok;
+  var info = SimpleTest.info;
+  var finish = SimpleTest.finish.bind(SimpleTest);
+
+  var gotTargetedMessage = false;
+  window.onmessage = function(evt) {
+    var message = evt.data;
+    info("Received message: " + message);
+    switch (message) {
+      case 'targeted':
+        gotTargetedMessage = true;
+        break;
+      case 'broadcast':
+        ok(gotTargetedMessage, "Should have received targeted message");
+        finish();
+        break;
+      default:
+        ok(false, "Unexpected message: " + message);
+        break;
+    }
+  }
+</script>
+</head>
+<body>
+<iframe src="iframe_sandbox_bug1022229.html" sandbox="allow-scripts"></iframe>
+</body>
+</html>
