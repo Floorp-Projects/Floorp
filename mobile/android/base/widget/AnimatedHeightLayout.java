@@ -68,7 +68,7 @@ public class AnimatedHeightLayout extends RelativeLayout {
         finishAnimation();
     }
 
-    private void finishAnimation() {
+    /* inner-access */ void finishAnimation() {
         if (mAnimating) {
             getLayoutParams().height = LayoutParams.WRAP_CONTENT;
             mAnimating = false;
