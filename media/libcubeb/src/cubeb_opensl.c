@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <SLES/OpenSLES.h>
+#include <math.h>
 #if defined(__ANDROID__)
 #include <sys/system_properties.h>
 #include "android/sles_definitions.h"
@@ -35,6 +36,7 @@ struct cubeb {
 #if defined(__ANDROID__)
   SLInterfaceID SL_IID_ANDROIDCONFIGURATION;
 #endif
+  SLInterfaceID SL_IID_VOLUME;
   SLObjectItf engObj;
   SLEngineItf eng;
   SLObjectItf outmixObj;
@@ -50,6 +52,7 @@ struct cubeb_stream {
   SLObjectItf playerObj;
   SLPlayItf play;
   SLBufferQueueItf bufq;
+  SLVolumeItf volume;
   uint8_t *queuebuf[NBUFS];
   int queuebuf_idx;
   long queuebuf_len;
@@ -244,6 +247,7 @@ opensl_init(cubeb ** context, char const * context_name)
     (slCreateEngine_t)dlsym(ctx->lib, "slCreateEngine");
   SLInterfaceID SL_IID_ENGINE = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_ENGINE");
   SLInterfaceID SL_IID_OUTPUTMIX = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_OUTPUTMIX");
+  ctx->SL_IID_VOLUME = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_VOLUME");
   ctx->SL_IID_BUFFERQUEUE = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_BUFFERQUEUE");
 #if defined(__ANDROID__)
   ctx->SL_IID_ANDROIDCONFIGURATION = *(SLInterfaceID *)dlsym(ctx->lib, "SL_IID_ANDROIDCONFIGURATION");
@@ -523,11 +527,13 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   sink.pFormat = NULL;
 
 #if defined(__ANDROID__)
-  const SLInterfaceID ids[] = {ctx->SL_IID_BUFFERQUEUE, ctx->SL_IID_ANDROIDCONFIGURATION};
-  const SLboolean req[] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+  const SLInterfaceID ids[] = {ctx->SL_IID_BUFFERQUEUE,
+                               ctx->SL_IID_VOLUME,
+                               ctx->SL_IID_ANDROIDCONFIGURATION};
+  const SLboolean req[] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
 #else
-  const SLInterfaceID ids[] = {ctx->SL_IID_BUFFERQUEUE};
-  const SLboolean req[] = {SL_BOOLEAN_TRUE};
+  const SLInterfaceID ids[] = {ctx->SL_IID_BUFFERQUEUE, ctx->SL_IID_VOLUME};
+  const SLboolean req[] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
 #endif
   assert(NELEMS(ids) == NELEMS(req));
   SLresult res = (*ctx->eng)->CreateAudioPlayer(ctx->eng, &stm->playerObj,
@@ -606,6 +612,14 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
 
   res = (*stm->playerObj)->GetInterface(stm->playerObj, ctx->SL_IID_BUFFERQUEUE,
                                     &stm->bufq);
+  if (res != SL_RESULT_SUCCESS) {
+    opensl_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+
+  res = (*stm->playerObj)->GetInterface(stm->playerObj, ctx->SL_IID_VOLUME,
+                                        &stm->volume);
+
   if (res != SL_RESULT_SUCCESS) {
     opensl_stream_destroy(stm);
     return CUBEB_ERROR;
@@ -726,6 +740,41 @@ opensl_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   return CUBEB_OK;
 }
 
+int
+opensl_stream_set_volume(cubeb_stream * stm, float volume)
+{
+  SLresult res;
+  SLmillibel max_level, millibels;
+
+  res = (*stm->volume)->GetMaxVolumeLevel(stm->volume, &max_level);
+
+  if (res != SL_RESULT_SUCCESS) {
+    return CUBEB_ERROR;
+  }
+
+  /* convert to millibels */
+  millibels = lroundf(2000.f * log10f(volume));
+  /* clamp to supported range */
+  if (millibels > max_level) {
+   millibels = max_level;
+  }
+
+  res = (*stm->volume)->SetVolumeLevel(stm->volume, millibels);
+
+  if (res != SL_RESULT_SUCCESS) {
+    return CUBEB_ERROR;
+  }
+  return CUBEB_OK;
+}
+
+int
+opensl_stream_set_panning(cubeb_stream * stream, float panning)
+{
+  assert(0 && "not implemented.");
+
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const opensl_ops = {
   .init = opensl_init,
   .get_backend_id = opensl_get_backend_id,
@@ -738,5 +787,7 @@ static struct cubeb_ops const opensl_ops = {
   .stream_start = opensl_stream_start,
   .stream_stop = opensl_stream_stop,
   .stream_get_position = opensl_stream_get_position,
-  .stream_get_latency = opensl_stream_get_latency
+  .stream_get_latency = opensl_stream_get_latency,
+  .stream_set_volume = opensl_stream_set_volume,
+  .stream_set_panning = opensl_stream_set_panning
 };
