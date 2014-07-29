@@ -160,5 +160,3 @@ if CONFIG['MOZ_ENABLE_XREMOTE']:
         '/widget/xremoteclient',
     ]
 
-if CONFIG['MOZ_B2G_LOADER']:
-    DEFINES['OMNIJAR_NAME'] = CONFIG['OMNIJAR_NAME']
