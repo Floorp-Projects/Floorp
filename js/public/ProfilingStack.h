@@ -61,20 +61,23 @@ class ProfileEntry
         // sample of the pseudostack.
         FRAME_LABEL_COPY = 0x02,
 
+        // This ProfileEntry was pushed immediately before calling into asm.js.
+        ASMJS = 0x04,
+
         // Mask for removing all flags except the category information.
-        CATEGORY_MASK = ~IS_CPP_ENTRY & ~FRAME_LABEL_COPY
+        CATEGORY_MASK = ~IS_CPP_ENTRY & ~FRAME_LABEL_COPY & ~ASMJS
     };
 
     MOZ_BEGIN_NESTED_ENUM_CLASS(Category, uint32_t)
-        OTHER    = 0x04,
-        CSS      = 0x08,
-        JS       = 0x10,
-        GC       = 0x20,
-        CC       = 0x40,
-        NETWORK  = 0x80,
-        GRAPHICS = 0x100,
-        STORAGE  = 0x200,
-        EVENTS   = 0x400,
+        OTHER    = 0x08,
+        CSS      = 0x10,
+        JS       = 0x20,
+        GC       = 0x40,
+        CC       = 0x80,
+        NETWORK  = 0x100,
+        GRAPHICS = 0x200,
+        STORAGE  = 0x400,
+        EVENTS   = 0x800,
 
         FIRST    = OTHER,
         LAST     = EVENTS

@@ -201,7 +201,7 @@ SPSProfiler::exit(JSScript *script, JSFunction *maybeFun)
 }
 
 void
-SPSProfiler::enterNative(const char *string, void *sp)
+SPSProfiler::enterAsmJS(const char *string, void *sp)
 {
     /* these operations cannot be re-ordered, so volatile-ize operations */
     volatile ProfileEntry *stack = stack_;
@@ -212,7 +212,7 @@ SPSProfiler::enterNative(const char *string, void *sp)
     if (current < max_) {
         stack[current].setLabel(string);
         stack[current].setCppFrame(sp, 0);
-        JS_ASSERT(stack[current].flags() == js::ProfileEntry::IS_CPP_ENTRY);
+        stack[current].setFlag(ProfileEntry::ASMJS);
     }
     *size = current + 1;
 }
