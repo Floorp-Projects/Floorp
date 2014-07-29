@@ -173,7 +173,7 @@ public class ActivityChooserModel extends DataSetObservable {
     /**
      * Tag used for logging.
      */
-    private static final String LOG_TAG = ActivityChooserModel.class.getSimpleName();
+    /* inner-access */ static final String LOG_TAG = ActivityChooserModel.class.getSimpleName();
 
     /**
      * The root tag in the history file.
@@ -268,12 +268,12 @@ public class ActivityChooserModel extends DataSetObservable {
     /**
      * Context for accessing resources.
      */
-    private final Context mContext;
+    /* inner-access */ final Context mContext;
 
     /**
      * The name of the history file that backs this model.
      */
-    private final String mHistoryFileName;
+    /* inner-access */ final String mHistoryFileName;
 
     /**
      * The intent for which a activity is being chosen.
@@ -298,7 +298,7 @@ public class ActivityChooserModel extends DataSetObservable {
      * only after a call to {@link #persistHistoricalDataIfNeeded()} followed by change
      * of the share records.
      */
-    private boolean mCanReadHistoricalData = true;
+    /* inner-access */ boolean mCanReadHistoricalData = true;
 
     /**
      * Flag whether the choice history was read. This is used to enforce that
@@ -322,7 +322,7 @@ public class ActivityChooserModel extends DataSetObservable {
     /**
      * Flag whether to reload the activities for the current intent.
      */
-    private boolean mReloadActivities;
+    /* inner-access */ boolean mReloadActivities;
 
     /**
      * Policy for controlling how the model handles chosen activities.
@@ -799,7 +799,7 @@ public class ActivityChooserModel extends DataSetObservable {
      * @param historicalRecord The pkg to delete records for.
      * @return True if the record was added.
      */
-    private boolean removeHistoricalRecordsForPackage(final String pkg) {
+    /* inner-access */ boolean removeHistoricalRecordsForPackage(final String pkg) {
         boolean removed = false;
 
         for (Iterator<HistoricalRecord> i = mHistoricalRecords.iterator(); i.hasNext();) {
@@ -1088,7 +1088,7 @@ public class ActivityChooserModel extends DataSetObservable {
         }
     }
 
-    private void readHistoricalDataFromStream(FileInputStream fis) {
+    /* inner-access */ void readHistoricalDataFromStream(FileInputStream fis) {
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setInput(fis, null);
@@ -1228,7 +1228,7 @@ public class ActivityChooserModel extends DataSetObservable {
      */
     private static final String LOGTAG = "GeckoActivityChooserModel";
     private final class DataModelPackageMonitor extends BroadcastReceiver {
-        private Context mContext;
+        /* inner-access */ Context mContext;
 
         public DataModelPackageMonitor() { }
 

@@ -16,13 +16,10 @@
 
 package org.mozilla.gecko.widget;
 
-import java.util.LinkedList;
-
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
@@ -35,11 +32,11 @@ public class ButtonToast {
     public static int LENGTH_SHORT = 3000;
     public static int LENGTH_LONG = 5000;
 
-    private final View mView;
     private final TextView mMessageView;
     private final Button mButton;
     private final Handler mHideHandler = new Handler();
-    private Toast mCurrentToast;
+    /* inner-access */ final View mView;
+    /* inner-access */ Toast mCurrentToast;
 
     public enum ReasonHidden {
         CLICKED,
