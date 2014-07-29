@@ -602,6 +602,9 @@ var DebuggerServer = {
           childTransport.close();
           childTransport = null;
           aConnection.cancelForwarding(prefix);
+
+          // ... and notify the child process to clean the tab actors.
+          mm.sendAsyncMessage("debug:disconnect");
         } else {
           // Otherwise, the app has been closed before the actor
           // had a chance to be created, so we are not able to create
@@ -640,7 +643,6 @@ var DebuggerServer = {
         // ... and notify the child process to clean the tab actors.
         mm.sendAsyncMessage("debug:disconnect");
       }
-      Services.obs.removeObserver(onMessageManagerDisconnect, "message-manager-disconnect");
     });
 
     mm.sendAsyncMessage("debug:connect", { prefix: prefix });
