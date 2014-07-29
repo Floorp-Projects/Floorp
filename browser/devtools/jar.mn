@@ -72,7 +72,7 @@ browser.jar:
     content/browser/devtools/canvasdebugger.xul                        (canvasdebugger/canvasdebugger.xul)
     content/browser/devtools/canvasdebugger.js                         (canvasdebugger/canvasdebugger.js)
     content/browser/devtools/webaudioeditor.xul                        (webaudioeditor/webaudioeditor.xul)
-    content/browser/devtools/d3.js                                     (webaudioeditor/lib/d3.js)
+    content/browser/devtools/d3.js                                     (shared/d3.js)
     content/browser/devtools/dagre-d3.js                               (webaudioeditor/lib/dagre-d3.js)
     content/browser/devtools/webaudioeditor-controller.js              (webaudioeditor/webaudioeditor-controller.js)
     content/browser/devtools/webaudioeditor-view.js                    (webaudioeditor/webaudioeditor-view.js)
