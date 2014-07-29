@@ -155,11 +155,6 @@ GenerateAsmJSStackOverflowExit(jit::MacroAssembler &masm, jit::Label *overflowEx
                                jit::Label *throwLabel);
 
 void
-GenerateAsmJSEntryPrologue(jit::MacroAssembler &masm, jit::Label *begin);
-void
-GenerateAsmJSEntryEpilogue(jit::MacroAssembler &masm);
-
-void
 GenerateAsmJSExitPrologue(jit::MacroAssembler &masm, unsigned framePushed, AsmJSExit::Reason reason,
                           jit::Label *begin);
 void
