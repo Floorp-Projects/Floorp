@@ -100,7 +100,7 @@ GetProcSelfSmapsPrivate(int64_t* aN)
     char* ptr = buffer;
     end[carryOver] = '\0';
     // We are looking for lines like "Private_{Clean,Dirty}: 4 kB".
-    while (ptr = strstr(ptr, "Private")) {
+    while ((ptr = strstr(ptr, "Private"))) {
       if (ptr >= end) {
         break;
       }
