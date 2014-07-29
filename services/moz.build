@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += [
+DIRS += [
     'common',
     'crypto',
     'fxaccounts',
@@ -14,18 +14,18 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     # MOZ_SERVICES_HEALTHREPORT and therefore MOZ_DATA_REPORTING are
     # defined on Android, but these features are implemented using Java.
     if CONFIG['MOZ_SERVICES_HEALTHREPORT']:
-        PARALLEL_DIRS += ['healthreport']
+        DIRS += ['healthreport']
 
     if CONFIG['MOZ_DATA_REPORTING']:
-        PARALLEL_DIRS += ['datareporting']
+        DIRS += ['datareporting']
 
 if CONFIG['MOZ_SERVICES_METRICS']:
-    PARALLEL_DIRS += ['metrics']
+    DIRS += ['metrics']
 
 if CONFIG['MOZ_SERVICES_SYNC']:
-    PARALLEL_DIRS += ['sync']
+    DIRS += ['sync']
 
 if CONFIG['MOZ_B2G']:
-    PARALLEL_DIRS += ['mobileid']
+    DIRS += ['mobileid']
 
 SPHINX_TREES['services'] = 'docs'

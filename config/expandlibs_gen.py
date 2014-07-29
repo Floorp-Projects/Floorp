@@ -9,7 +9,7 @@ from __future__ import with_statement
 import sys
 import os
 import expandlibs_config as conf
-from expandlibs import LibDescriptor, isObject, ensureParentDir, ExpandLibsDeps
+from expandlibs import LibDescriptor, isObject, ensureParentDir
 from optparse import OptionParser
 
 def generate(args):
@@ -29,8 +29,6 @@ def generate(args):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option("--depend", dest="depend", metavar="FILE",
-        help="generate dependencies for the given execution and store it in the given file")
     parser.add_option("-o", dest="output", metavar="FILE",
         help="send output to the given file")
 
@@ -41,10 +39,3 @@ if __name__ == '__main__':
     ensureParentDir(options.output)
     with open(options.output, 'w') as outfile:
         print >>outfile, generate(args)
-    if options.depend:
-        ensureParentDir(options.depend)
-        with open(options.depend, 'w') as depfile:
-            deps = ExpandLibsDeps(args)
-            depfile.write("%s : %s\n" % (options.output, ' '.join(deps)))
-            for dep in deps:
-                depfile.write("%s :\n" % dep)

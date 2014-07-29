@@ -515,6 +515,8 @@ ContextToPC(x86_thread_state_t &state)
 # if defined(JS_CODEGEN_X64)
     JS_STATIC_ASSERT(sizeof(state.uts.ts64.__rip) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&state.uts.ts64.__rip);
+# elif defined(JS_CODEGEN_NONE)
+    MOZ_CRASH();
 # else
     JS_STATIC_ASSERT(sizeof(state.uts.ts32.__eip) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&state.uts.ts32.__eip);
@@ -973,6 +975,11 @@ static bool sHandlersInstalled = false;
 bool
 js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
 {
+#ifdef JS_CODEGEN_NONE
+    // Don't install signal handlers in builds with the JIT disabled.
+    return false;
+#endif
+
     if (IsSignalHandlingBroken())
         return false;
 

@@ -28,8 +28,6 @@ from expandlibs import (
     relativize,
     isDynamicLib,
     isObject,
-    ensureParentDir,
-    ExpandLibsDeps,
 )
 import expandlibs_config as conf
 from optparse import OptionParser
@@ -315,10 +313,6 @@ def print_command(out, args):
 
 def main():
     parser = OptionParser()
-    parser.add_option("--depend", dest="depend", metavar="FILE",
-        help="generate dependencies for the given execution and store it in the given file")
-    parser.add_option("--target", dest="target", metavar="FILE",
-        help="designate the target for dependencies")
     parser.add_option("--extract", action="store_true", dest="extract",
         help="when a library has no descriptor file, extract it first, when possible")
     parser.add_option("--uselist", action="store_true", dest="uselist",
@@ -330,15 +324,6 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    if not options.target:
-        options.depend = False
-    if options.depend:
-        deps = ExpandLibsDeps(args)
-        # Filter out common command wrappers
-        while os.path.basename(deps[0]) in ['ccache', 'distcc']:
-            deps.pop(0)
-        # Remove command
-        deps.pop(0)
     with ExpandArgsMore(args) as args:
         if options.extract:
             args.extract()
@@ -361,19 +346,6 @@ def main():
         sys.stderr.flush()
         if proc.returncode:
             exit(proc.returncode)
-    if not options.depend:
-        return
-    ensureParentDir(options.depend)
-    mk = Makefile()
-    deps = [dep for dep in deps if os.path.isfile(dep) and dep != options.target
-            and os.path.abspath(dep) != os.path.abspath(options.depend)]
-    no_dynamic_lib = [dep for dep in deps if not isDynamicLib(dep)]
-    mk.create_rule([options.target]).add_dependencies(no_dynamic_lib)
-    if len(deps) != len(no_dynamic_lib):
-        mk.create_rule(['%s_order_only' % options.target]).add_dependencies(dep for dep in deps if isDynamicLib(dep))
-
-    with open(options.depend, 'w') as depfile:
-        mk.dump(depfile, removal_guard=True)
 
 if __name__ == '__main__':
     main()

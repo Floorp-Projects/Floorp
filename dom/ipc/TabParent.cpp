@@ -149,7 +149,7 @@ private:
         FileDescriptor::PlatformHandleType handle =
             FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFD));
 
-        mozilla::unused << tabParent->SendCacheFileDescriptor(mPath, handle);
+        mozilla::unused << tabParent->SendCacheFileDescriptor(mPath, FileDescriptor(handle));
 
         nsCOMPtr<nsIEventTarget> eventTarget;
         mEventTarget.swap(eventTarget);

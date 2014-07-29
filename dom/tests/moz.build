@@ -19,6 +19,7 @@ MOCHITEST_MANIFESTS += [
     'mochitest/dom-level1-core/mochitest.ini',
     'mochitest/dom-level2-core/mochitest.ini',
     'mochitest/dom-level2-html/mochitest.ini',
+    'mochitest/fetch/mochitest.ini',
     'mochitest/general/mochitest.ini',
     'mochitest/geolocation/mochitest.ini',
     'mochitest/localstorage/mochitest.ini',

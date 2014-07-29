@@ -58,6 +58,7 @@ from .sandbox import (
 from .sandbox_symbols import (
     FUNCTIONS,
     VARIABLES,
+    DEPRECATION_HINTS,
 )
 
 if sys.version_info.major == 2:
@@ -190,10 +191,6 @@ class MozbuildSandbox(Sandbox):
 
             d['CONFIG'] = ReadOnlyDefaultDict(lambda: None,
                 self.config.substs_unicode)
-
-            var = metadata.get('var', None)
-            if var and var in ['TOOL_DIRS', 'TEST_TOOL_DIRS']:
-                d['IS_TOOL_DIR'] = True
 
             # Register functions.
             for name, func in FUNCTIONS.items():
@@ -600,6 +597,11 @@ class BuildReaderError(Exception):
             s.write('\n')
             s.write('    %s\n' % inner.args[2])
             s.write('\n')
+
+            if inner.args[2] in DEPRECATION_HINTS:
+                s.write('%s\n' % DEPRECATION_HINTS[inner.args[2]])
+                return
+
             s.write('Please change the file to not use this variable.\n')
             s.write('\n')
             s.write('For reference, the set of valid variables is:\n')
@@ -797,25 +799,11 @@ class BuildReader(object):
         if self._sandbox_post_eval_cb:
             self._sandbox_post_eval_cb(sandbox)
 
-        var = metadata.get('var', None)
-        forbidden = {
-            'TOOL_DIRS': ['DIRS', 'PARALLEL_DIRS', 'TEST_DIRS'],
-            'TEST_TOOL_DIRS': ['DIRS', 'PARALLEL_DIRS', 'TEST_DIRS', 'TOOL_DIRS'],
-        }
-        if var in forbidden:
-            matches = [v for v in forbidden[var] if sandbox[v]]
-            if matches:
-                raise SandboxValidationError('%s is registered as %s.\n'
-                    'The %s variable%s not allowed in such directories.'
-                    % (var, metadata['parent'],
-                       ' and '.join(', '.join(matches).rsplit(', ', 1)),
-                       's are' if len(matches) > 1 else ' is'), sandbox)
-
         # We first collect directories populated in variables.
-        dir_vars = ['DIRS', 'PARALLEL_DIRS', 'TOOL_DIRS']
+        dir_vars = ['DIRS']
 
         if sandbox.config.substs.get('ENABLE_TESTS', False) == '1':
-            dir_vars.extend(['TEST_DIRS', 'TEST_TOOL_DIRS'])
+            dir_vars.append('TEST_DIRS')
 
         dirs = [(v, sandbox[v]) for v in dir_vars if v in sandbox]
 
@@ -851,12 +839,6 @@ class BuildReader(object):
                 gyp_sandbox.update(gyp_dir.sandbox_vars)
                 gyp_sandboxes.append(gyp_sandbox)
 
-        # Add the gyp subdirectories to DIRS. We don't care about trying to
-        # place some of them in PARALLEL_DIRS because they're only going to be
-        # relevant for the compile and libs tiers. The compile tier is already
-        # parallelized, and the libs tier is always serialized, and will remain
-        # so until the library linking operations are moved out of it, at which
-        # point PARALLEL_DIRS will be irrelevant anyways.
         for gyp_sandbox in gyp_sandboxes:
             if self._sandbox_post_eval_cb:
                 self._sandbox_post_eval_cb(gyp_sandbox)

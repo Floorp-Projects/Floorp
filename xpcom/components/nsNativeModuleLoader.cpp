@@ -19,7 +19,7 @@
 #define FORCE_PR_LOG
 #endif
 
-#include "nsNativeComponentLoader.h"
+#include "nsNativeModuleLoader.h"
 
 #include "prlog.h"
 #include "prinit.h"
@@ -64,14 +64,6 @@ GetNativeModuleLoaderLog()
 
 #define LOG(level, args) PR_LOG(GetNativeModuleLoaderLog(), level, args)
 
-NS_IMPL_QUERY_INTERFACE(nsNativeModuleLoader,
-                        mozilla::ModuleLoader)
-
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsNativeModuleLoader,
-                                nsComponentManagerImpl::gComponentManager)
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsNativeModuleLoader,
-                                 nsComponentManagerImpl::gComponentManager)
-
 nsresult
 nsNativeModuleLoader::Init()
 {
@@ -83,10 +75,11 @@ nsNativeModuleLoader::Init()
 class LoadModuleMainThreadRunnable : public nsRunnable
 {
 public:
-    LoadModuleMainThreadRunnable(nsNativeModuleLoader* loader,
-                                 FileLocation &file)
-        : mLoader(loader)
-        , mFile(file)
+    LoadModuleMainThreadRunnable(nsNativeModuleLoader* aLoader,
+                                 FileLocation &aFile)
+        : mManager(nsComponentManagerImpl::gComponentManager)
+        , mLoader(aLoader)
+        , mFile(aFile)
         , mResult(nullptr)
     { }
 
@@ -96,7 +89,8 @@ public:
         return NS_OK;
     }
 
-    nsRefPtr<nsNativeModuleLoader> mLoader;
+    nsRefPtr<nsComponentManagerImpl> mManager;
+    nsNativeModuleLoader* mLoader;
     FileLocation mFile;
     const mozilla::Module* mResult;
 };
@@ -131,11 +125,11 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
     NativeLoadData data;
 
     if (mLibraries.Get(hashedFile, &data)) {
-        NS_ASSERTION(data.module, "Corrupt mLibraries hash");
+        NS_ASSERTION(data.mModule, "Corrupt mLibraries hash");
         LOG(PR_LOG_DEBUG,
             ("nsNativeModuleLoader::LoadModule(\"%s\") - found in cache",
              filePath.get()));
-        return data.module;
+        return data.mModule;
     }
 
     // We haven't loaded this module before
@@ -143,7 +137,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
 #ifdef HAS_DLL_BLOCKLIST
       AutoSetXPCOMLoadOnMainThread guard;
 #endif
-      rv = file->Load(&data.library);
+      rv = file->Load(&data.mLibrary);
     }
 
     if (NS_FAILED(rv)) {
@@ -176,32 +170,32 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
     }
 #endif
 
-    void *module = PR_FindSymbol(data.library, "NSModule");
+    void *module = PR_FindSymbol(data.mLibrary, "NSModule");
     if (!module) {
         LogMessage("Native module at path '%s' doesn't export symbol `NSModule`.",
                    filePath.get());
-        PR_UnloadLibrary(data.library);
+        PR_UnloadLibrary(data.mLibrary);
         return nullptr;
     }
 
-    data.module = *(mozilla::Module const *const *) module;
-    if (mozilla::Module::kVersion != data.module->mVersion) {
+    data.mModule = *(mozilla::Module const *const *) module;
+    if (mozilla::Module::kVersion != data.mModule->mVersion) {
         LogMessage("Native module at path '%s' is incompatible with this version of Firefox, has version %i, expected %i.",
-                   filePath.get(), data.module->mVersion,
+                   filePath.get(), data.mModule->mVersion,
                    mozilla::Module::kVersion);
-        PR_UnloadLibrary(data.library);
+        PR_UnloadLibrary(data.mLibrary);
         return nullptr;
     }
-        
+
     mLibraries.Put(hashedFile, data); // infallible
-    return data.module;
+    return data.mModule;
 }
 
 PLDHashOperator
 nsNativeModuleLoader::ReleaserFunc(nsIHashable* aHashedFile,
                                    NativeLoadData& aLoadData, void*)
 {
-    aLoadData.module = nullptr;
+    aLoadData.mModule = nullptr;
     return PL_DHASH_NEXT;
 }
 
@@ -226,7 +220,7 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
 #if 0
     // XXXbsmedberg: do this as soon as the static-destructor crash(es)
     // are fixed
-    PRStatus ret = PR_UnloadLibrary(aLoadData.library);
+    PRStatus ret = PR_UnloadLibrary(aLoadData.mLibrary);
     NS_ASSERTION(ret == PR_SUCCESS, "Failed to unload library");
 #endif
 

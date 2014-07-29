@@ -28,3 +28,10 @@ if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
 
 if CONFIG['MOZ_SHARED_ICU']:
     DEFINES['MOZ_SHARED_ICU'] = True
+
+PYTHON_UNIT_TESTS += [
+    'tests/unit-expandlibs.py',
+    'tests/unit-mozunit.py',
+    'tests/unit-nsinstall.py',
+    'tests/unit-printprereleasesuffix.py',
+]

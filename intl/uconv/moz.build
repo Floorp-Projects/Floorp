@@ -13,7 +13,7 @@ DIRS += [
     'ucvibm',
 ]
 
-TEST_TOOL_DIRS += ['tests']
+TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
     'nsICurrentCharsetListener.idl',

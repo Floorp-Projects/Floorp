@@ -1196,17 +1196,17 @@ LIRGenerator::visitUrsh(MUrsh *ins)
 bool
 LIRGenerator::visitFloor(MFloor *ins)
 {
-    MIRType type = ins->num()->type();
+    MIRType type = ins->input()->type();
     JS_ASSERT(IsFloatingPointType(type));
 
     if (type == MIRType_Double) {
-        LFloor *lir = new(alloc()) LFloor(useRegister(ins->num()));
+        LFloor *lir = new(alloc()) LFloor(useRegister(ins->input()));
         if (!assignSnapshot(lir, Bailout_Round))
             return false;
         return define(lir, ins);
     }
 
-    LFloorF *lir = new(alloc()) LFloorF(useRegister(ins->num()));
+    LFloorF *lir = new(alloc()) LFloorF(useRegister(ins->input()));
     if (!assignSnapshot(lir, Bailout_Round))
         return false;
     return define(lir, ins);
@@ -1215,17 +1215,17 @@ LIRGenerator::visitFloor(MFloor *ins)
 bool
 LIRGenerator::visitCeil(MCeil *ins)
 {
-    MIRType type = ins->num()->type();
+    MIRType type = ins->input()->type();
     JS_ASSERT(IsFloatingPointType(type));
 
     if (type == MIRType_Double) {
-        LCeil *lir = new(alloc()) LCeil(useRegister(ins->num()));
+        LCeil *lir = new(alloc()) LCeil(useRegister(ins->input()));
         if (!assignSnapshot(lir, Bailout_Round))
             return false;
         return define(lir, ins);
     }
 
-    LCeilF *lir = new(alloc()) LCeilF(useRegister(ins->num()));
+    LCeilF *lir = new(alloc()) LCeilF(useRegister(ins->input()));
     if (!assignSnapshot(lir, Bailout_Round))
         return false;
     return define(lir, ins);
@@ -1234,17 +1234,17 @@ LIRGenerator::visitCeil(MCeil *ins)
 bool
 LIRGenerator::visitRound(MRound *ins)
 {
-    MIRType type = ins->num()->type();
+    MIRType type = ins->input()->type();
     JS_ASSERT(IsFloatingPointType(type));
 
     if (type == MIRType_Double) {
-        LRound *lir = new (alloc()) LRound(useRegister(ins->num()), tempDouble());
+        LRound *lir = new (alloc()) LRound(useRegister(ins->input()), tempDouble());
         if (!assignSnapshot(lir, Bailout_Round))
             return false;
         return define(lir, ins);
     }
 
-    LRoundF *lir = new (alloc()) LRoundF(useRegister(ins->num()), tempFloat32());
+    LRoundF *lir = new (alloc()) LRoundF(useRegister(ins->input()), tempFloat32());
     if (!assignSnapshot(lir, Bailout_Round))
         return false;
     return define(lir, ins);
@@ -1270,7 +1270,7 @@ LIRGenerator::visitMinMax(MMinMax *ins)
 bool
 LIRGenerator::visitAbs(MAbs *ins)
 {
-    MDefinition *num = ins->num();
+    MDefinition *num = ins->input();
     JS_ASSERT(IsNumberType(num->type()));
 
     if (num->type() == MIRType_Int32) {
@@ -1292,7 +1292,7 @@ LIRGenerator::visitAbs(MAbs *ins)
 bool
 LIRGenerator::visitSqrt(MSqrt *ins)
 {
-    MDefinition *num = ins->num();
+    MDefinition *num = ins->input();
     JS_ASSERT(IsFloatingPointType(num->type()));
     if (num->type() == MIRType_Double) {
         LSqrtD *lir = new(alloc()) LSqrtD(useRegisterAtStart(num));
@@ -2473,7 +2473,7 @@ LIRGenerator::visitSetInitializedLength(MSetInitializedLength *ins)
 bool
 LIRGenerator::visitNot(MNot *ins)
 {
-    MDefinition *op = ins->operand();
+    MDefinition *op = ins->input();
 
     // String is converted to length of string in the type analysis phase (see
     // TestPolicy).

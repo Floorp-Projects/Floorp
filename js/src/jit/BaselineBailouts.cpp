@@ -371,6 +371,8 @@ struct BaselineStackBuilder
         size_t extraOffset = IonRectifierFrameLayout::Size() + priorFrame->prevFrameLocalSize() +
                              IonBaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
         return virtualPointerAtStackOffset(priorOffset + extraOffset);
+#elif defined(JS_CODEGEN_NONE)
+        MOZ_CRASH();
 #else
 #  error "Bad architecture!"
 #endif

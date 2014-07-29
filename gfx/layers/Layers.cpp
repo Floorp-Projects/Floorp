@@ -15,6 +15,7 @@
 #include "LayersLogging.h"              // for AppendToString
 #include "ReadbackLayer.h"              // for ReadbackLayer
 #include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPrefs.h"
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "gfx2DGlue.h"
 #include "mozilla/DebugOnly.h"          // for DebugOnly
@@ -31,7 +32,7 @@
 #include "nsCSSValue.h"                 // for nsCSSValue::Array, etc
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsStyleStruct.h"              // for nsTimingFunction, etc
-#include "gfxPrefs.h"
+#include "protobuf/LayerScopePacket.pb.h"
 
 uint8_t gLayerManagerLayerBuilder;
 
@@ -1332,6 +1333,20 @@ Layer::DumpSelf(std::stringstream& aStream, const char* aPrefix)
 }
 
 void
+Layer::Dump(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  DumpPacket(aPacket, aParent);
+
+  if (Layer* kid = GetFirstChild()) {
+    kid->Dump(aPacket, this);
+  }
+
+  if (Layer* next = GetNextSibling()) {
+    next->Dump(aPacket, aParent);
+  }
+}
+
+void
 Layer::Log(const char* aPrefix)
 {
   if (!IsLogEnabled())
@@ -1426,12 +1441,124 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
 }
 
+// The static helper function sets the transform matrix into the packet
+static void
+DumpTransform(layerscope::LayersPacket::Layer::Matrix* aLayerMatrix, const Matrix4x4& aMatrix)
+{
+  aLayerMatrix->set_is2d(aMatrix.Is2D());
+  if (aMatrix.Is2D()) {
+    Matrix m = aMatrix.As2D();
+    aLayerMatrix->set_isid(m.IsIdentity());
+    if (!m.IsIdentity()) {
+      aLayerMatrix->add_m(m._11), aLayerMatrix->add_m(m._12);
+      aLayerMatrix->add_m(m._21), aLayerMatrix->add_m(m._22);
+      aLayerMatrix->add_m(m._31), aLayerMatrix->add_m(m._32);
+    }
+  } else {
+    aLayerMatrix->add_m(aMatrix._11), aLayerMatrix->add_m(aMatrix._12);
+    aLayerMatrix->add_m(aMatrix._13), aLayerMatrix->add_m(aMatrix._14);
+    aLayerMatrix->add_m(aMatrix._21), aLayerMatrix->add_m(aMatrix._22);
+    aLayerMatrix->add_m(aMatrix._23), aLayerMatrix->add_m(aMatrix._24);
+    aLayerMatrix->add_m(aMatrix._31), aLayerMatrix->add_m(aMatrix._32);
+    aLayerMatrix->add_m(aMatrix._33), aLayerMatrix->add_m(aMatrix._34);
+    aLayerMatrix->add_m(aMatrix._41), aLayerMatrix->add_m(aMatrix._42);
+    aLayerMatrix->add_m(aMatrix._43), aLayerMatrix->add_m(aMatrix._44);
+  }
+}
+
+// The static helper function sets the nsIntRect into the packet
+static void
+DumpRect(layerscope::LayersPacket::Layer::Rect* aLayerRect, const nsIntRect& aRect)
+{
+  aLayerRect->set_x(aRect.x);
+  aLayerRect->set_y(aRect.y);
+  aLayerRect->set_w(aRect.width);
+  aLayerRect->set_h(aRect.height);
+}
+
+// The static helper function sets the nsIntRegion into the packet
+static void
+DumpRegion(layerscope::LayersPacket::Layer::Region* aLayerRegion, const nsIntRegion& aRegion)
+{
+  nsIntRegionRectIterator it(aRegion);
+  while (const nsIntRect* sr = it.Next()) {
+    DumpRect(aLayerRegion->add_r(), *sr);
+  }
+}
+
+void
+Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  // Add a new layer (UnknownLayer)
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->add_layer();
+  // Basic information
+  layer->set_type(LayersPacket::Layer::UnknownLayer);
+  layer->set_ptr(reinterpret_cast<uint64_t>(this));
+  layer->set_parentptr(reinterpret_cast<uint64_t>(aParent));
+  // Shadow
+  if (LayerComposite* lc = AsLayerComposite()) {
+    LayersPacket::Layer::Shadow* s = layer->mutable_shadow();
+    if (const nsIntRect* clipRect = lc->GetShadowClipRect()) {
+      DumpRect(s->mutable_clip(), *clipRect);
+    }
+    if (!lc->GetShadowTransform().IsIdentity()) {
+      DumpTransform(s->mutable_transform(), lc->GetShadowTransform());
+    }
+    if (!lc->GetShadowVisibleRegion().IsEmpty()) {
+      DumpRegion(s->mutable_vregion(), lc->GetShadowVisibleRegion());
+    }
+  }
+  // Clip
+  if (mUseClipRect) {
+    DumpRect(layer->mutable_clip(), mClipRect);
+  }
+  // Transform
+  if (!mTransform.IsIdentity()) {
+    DumpTransform(layer->mutable_transform(), mTransform);
+  }
+  // Visible region
+  if (!mVisibleRegion.IsEmpty()) {
+    DumpRegion(layer->mutable_vregion(), mVisibleRegion);
+  }
+  // Opacity
+  layer->set_opacity(mOpacity);
+  // Content opaque
+  layer->set_copaque(static_cast<bool>(GetContentFlags() & CONTENT_OPAQUE));
+  // Component alpha
+  layer->set_calpha(static_cast<bool>(GetContentFlags() & CONTENT_COMPONENT_ALPHA));
+  // Vertical or horizontal bar
+  if (GetScrollbarDirection() != NONE) {
+    layer->set_direct(GetScrollbarDirection() == VERTICAL ?
+                      LayersPacket::Layer::VERTICAL :
+                      LayersPacket::Layer::HORIZONTAL);
+    layer->set_barid(GetScrollbarTargetContainerId());
+  }
+  // Mask layer
+  if (mMaskLayer) {
+    layer->set_mask(reinterpret_cast<uint64_t>(mMaskLayer.get()));
+  }
+}
+
 void
 ThebesLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
   if (!mValidRegion.IsEmpty()) {
     AppendToString(aStream, mValidRegion, " [valid=", "]");
+  }
+}
+
+void
+ThebesLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::ThebesLayer);
+  if (!mValidRegion.IsEmpty()) {
+    DumpRegion(layer->mutable_valid(), mValidRegion);
   }
 }
 
@@ -1454,10 +1581,31 @@ ContainerLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 }
 
 void
+ContainerLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // Get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::ContainerLayer);
+}
+
+void
 ColorLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
   AppendToString(aStream, mColor, " [color=", "]");
+}
+
+void
+ColorLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // Get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::ColorLayer);
+  layer->set_color(mColor.Packed());
 }
 
 void
@@ -1467,6 +1615,48 @@ CanvasLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (mFilter != GraphicsFilter::FILTER_GOOD) {
     AppendToString(aStream, mFilter, " [filter=", "]");
   }
+}
+
+// This help function is used to assign the correct enum value
+// to the packet
+static void
+DumpFilter(layerscope::LayersPacket::Layer* aLayer, const GraphicsFilter& aFilter)
+{
+  using namespace layerscope;
+  switch (aFilter) {
+    case GraphicsFilter::FILTER_FAST:
+      aLayer->set_filter(LayersPacket::Layer::FILTER_FAST);
+      break;
+    case GraphicsFilter::FILTER_GOOD:
+      aLayer->set_filter(LayersPacket::Layer::FILTER_GOOD);
+      break;
+    case GraphicsFilter::FILTER_BEST:
+      aLayer->set_filter(LayersPacket::Layer::FILTER_BEST);
+      break;
+    case GraphicsFilter::FILTER_NEAREST:
+      aLayer->set_filter(LayersPacket::Layer::FILTER_NEAREST);
+      break;
+    case GraphicsFilter::FILTER_BILINEAR:
+      aLayer->set_filter(LayersPacket::Layer::FILTER_BILINEAR);
+      break;
+    case GraphicsFilter::FILTER_GAUSSIAN:
+      aLayer->set_filter(LayersPacket::Layer::FILTER_GAUSSIAN);
+      break;
+    default:
+      // ignore it
+      break;
+  }
+}
+
+void
+CanvasLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // Get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::CanvasLayer);
+  DumpFilter(layer, mFilter);
 }
 
 void
@@ -1479,12 +1669,34 @@ ImageLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 }
 
 void
+ImageLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // Get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::ImageLayer);
+  DumpFilter(layer, mFilter);
+}
+
+void
 RefLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   ContainerLayer::PrintInfo(aStream, aPrefix);
   if (0 != mId) {
     AppendToString(aStream, mId, " [id=", "]");
   }
+}
+
+void
+RefLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // Get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::RefLayer);
+  layer->set_refid(mId);
 }
 
 void
@@ -1500,6 +1712,19 @@ ReadbackLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   } else {
     aStream << " [nobackground]";
   }
+}
+
+void
+ReadbackLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // Get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::ReadbackLayer);
+  LayersPacket::Layer::Size* size = layer->mutable_size();
+  size->set_w(mSize.width);
+  size->set_h(mSize.height);
 }
 
 //--------------------------------------------------
@@ -1550,6 +1775,16 @@ LayerManager::DumpSelf(std::stringstream& aStream, const char* aPrefix)
 }
 
 void
+LayerManager::Dump(layerscope::LayersPacket* aPacket)
+{
+  DumpPacket(aPacket);
+
+  if (GetRoot()) {
+    GetRoot()->Dump(aPacket, this);
+  }
+}
+
+void
 LayerManager::Log(const char* aPrefix)
 {
   if (!IsLogEnabled())
@@ -1580,6 +1815,18 @@ void
 LayerManager::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   aStream << aPrefix << nsPrintfCString("%sLayerManager (0x%p)", Name(), this).get();
+}
+
+void
+LayerManager::DumpPacket(layerscope::LayersPacket* aPacket)
+{
+  using namespace layerscope;
+  // Add a new layer data (LayerManager)
+  LayersPacket::Layer* layer = aPacket->add_layer();
+  layer->set_type(LayersPacket::Layer::LayerManager);
+  layer->set_ptr(reinterpret_cast<uint64_t>(this));
+  // Layer Tree Root
+  layer->set_parentptr(0);
 }
 
 /*static*/ void

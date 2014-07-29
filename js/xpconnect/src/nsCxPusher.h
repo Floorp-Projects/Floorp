@@ -28,7 +28,7 @@ namespace mozilla {
 class MOZ_STACK_CLASS AutoCxPusher
 {
 public:
-  AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
+  explicit AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
   // XPCShell uses an nsCxPusher, which contains an AutoCxPusher.
   ~AutoCxPusher();
 
@@ -97,11 +97,11 @@ namespace mozilla {
  */
 class MOZ_STACK_CLASS AutoJSContext {
 public:
-  AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*() const;
 
 protected:
-  AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  explicit AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
   // We need this Init() method because we can't use delegating constructor for
   // the moment. It is a C++11 feature and we do not require C++11 to be
@@ -119,7 +119,7 @@ protected:
  */
 class MOZ_STACK_CLASS ThreadsafeAutoJSContext {
 public:
-  ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*() const;
 
 private:
@@ -135,7 +135,7 @@ private:
  */
 class MOZ_STACK_CLASS AutoSafeJSContext : public AutoJSContext {
 public:
-  AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
 private:
   JSAutoCompartment mAc;
 };
@@ -145,7 +145,7 @@ private:
  */
 class MOZ_STACK_CLASS ThreadsafeAutoSafeJSContext {
 public:
-  ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  explicit ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
   operator JSContext*() const;
 
 private:
@@ -174,7 +174,7 @@ class MOZ_STACK_CLASS AutoPushJSContext {
   JSContext* mCx;
 
 public:
-  AutoPushJSContext(JSContext* aCx);
+  explicit AutoPushJSContext(JSContext* aCx);
   operator JSContext*() { return mCx; }
 };
 

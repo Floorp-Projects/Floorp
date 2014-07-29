@@ -7,7 +7,7 @@
 if CONFIG['MOZ_ZIPWRITER']:
     DIRS += ['zipwriter']
 
-TEST_TOOL_DIRS += ['test']
+TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'nsIJARChannel.idl',
