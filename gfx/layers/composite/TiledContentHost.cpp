@@ -59,10 +59,15 @@ TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocat
   const InfallibleTArray<TileDescriptor>& tiles = aDescriptor.tiles();
   for(size_t i = 0; i < tiles.Length(); i++) {
     RefPtr<TextureHost> texture;
+    RefPtr<TextureHost> textureOnWhite;
     const TileDescriptor& tileDesc = tiles[i];
     switch (tileDesc.type()) {
       case TileDescriptor::TTexturedTileDescriptor : {
         texture = TextureHost::AsTextureHost(tileDesc.get_TexturedTileDescriptor().textureParent());
+        MaybeTexture onWhite = tileDesc.get_TexturedTileDescriptor().textureOnWhite();
+        if (onWhite.type() == MaybeTexture::TPTextureParent) {
+          textureOnWhite = TextureHost::AsTextureHost(onWhite.get_PTextureParent());
+        }
         const TileLock& ipcLock = tileDesc.get_TexturedTileDescriptor().sharedLock();
         nsRefPtr<gfxSharedReadLock> sharedLock;
         if (ipcLock.type() == TileLock::TShmemSection) {
@@ -75,7 +80,7 @@ TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocat
           }
         }
 
-        mRetainedTiles.AppendElement(TileHost(sharedLock, texture));
+        mRetainedTiles.AppendElement(TileHost(sharedLock, texture, textureOnWhite));
         break;
       }
       default:
@@ -110,6 +115,7 @@ TiledLayerBufferComposite::ReleaseTextureHosts()
   }
   for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
     mRetainedTiles[i].mTextureHost = nullptr;
+    mRetainedTiles[i].mTextureHostOnWhite = nullptr;
   }
 }
 
@@ -146,6 +152,9 @@ TiledLayerBufferComposite::ValidateTile(TileHost aTile,
   // we may want to reevaluate this in the future.
   // For !HasInternalBuffer() textures, this is likely a no-op.
   aTile.mTextureHost->Updated(nullptr);
+  if (aTile.mTextureHostOnWhite) {
+    aTile.mTextureHostOnWhite->Updated(nullptr);
+  }
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   if (PR_IntervalNow() - start > 1) {
@@ -164,6 +173,9 @@ TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
   for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
     if (mRetainedTiles[i].IsPlaceholderTile()) continue;
     mRetainedTiles[i].mTextureHost->SetCompositor(aCompositor);
+    if (mRetainedTiles[i].mTextureHostOnWhite) {
+      mRetainedTiles[i].mTextureHostOnWhite->SetCompositor(aCompositor);
+    }
   }
 }
 
@@ -421,19 +433,20 @@ TiledContentHost::RenderTile(const TileHost& aTile,
   }
 
   AutoLockTextureHost autoLock(aTile.mTextureHost);
-  if (autoLock.Failed()) {
+  AutoLockTextureHost autoLockOnWhite(aTile.mTextureHostOnWhite);
+  if (autoLock.Failed() ||
+      autoLockOnWhite.Failed()) {
     NS_WARNING("Failed to lock tile");
     return;
   }
   RefPtr<NewTextureSource> source = aTile.mTextureHost->GetTextureSources();
-  if (!source) {
+  RefPtr<NewTextureSource> sourceOnWhite =
+    aTile.mTextureHostOnWhite ? aTile.mTextureHostOnWhite->GetTextureSources() : nullptr;
+  if (!source || (aTile.mTextureHostOnWhite && !sourceOnWhite)) {
     return;
   }
 
-  RefPtr<TexturedEffect> effect = CreateTexturedEffect(aTile.mTextureHost->GetFormat(),
-                                                       source,
-                                                       aFilter,
-                                                       true);
+  RefPtr<TexturedEffect> effect = CreateTexturedEffect(source, sourceOnWhite, aFilter, true);
   if (!effect) {
     return;
   }
@@ -575,6 +588,7 @@ TiledContentHost::Dump(std::stringstream& aStream,
       aStream << "empty tile";
     } else {
       DumpTextureHost(aStream, it->mTextureHost);
+      DumpTextureHost(aStream, it->mTextureHostOnWhite);
     }
     aStream << (aDumpHtml ? " >Tile</a></li>" : " ");
   }
