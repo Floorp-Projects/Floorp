@@ -10,9 +10,15 @@ const Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const kEntities = { "geolocation": "geolocation",
-                    "desktop-notification": "desktopNotification",
-                    "contacts": "contacts" };
+const kEntities = {
+  "contacts": "contacts",
+  "desktop-notification": "desktopNotification",
+  "device-storage:music": "deviceStorageMusic",
+  "device-storage:pictures": "deviceStoragePictures",
+  "device-storage:sdcard": "deviceStorageSdcard",
+  "device-storage:videos": "deviceStorageVideos",
+  "geolocation": "geolocation",
+};
 
 // For these types, prompt for permission if action is unknown.
 const PROMPT_FOR_UNKNOWN = [
