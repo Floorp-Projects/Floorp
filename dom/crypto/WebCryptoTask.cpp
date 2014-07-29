@@ -1654,6 +1654,89 @@ private:
   }
 };
 
+class ImportEcKeyTask : public ImportKeyTask
+{
+public:
+  ImportEcKeyTask(JSContext* aCx, const nsAString& aFormat,
+                  const ObjectOrString& aAlgorithm, bool aExtractable,
+                  const Sequence<nsString>& aKeyUsages)
+  {
+    ImportKeyTask::Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+  }
+
+  ImportEcKeyTask(JSContext* aCx, const nsAString& aFormat,
+                  JS::Handle<JSObject*> aKeyData,
+                  const ObjectOrString& aAlgorithm, bool aExtractable,
+                  const Sequence<nsString>& aKeyUsages)
+  {
+    ImportKeyTask::Init(aCx, aFormat, aAlgorithm, aExtractable, aKeyUsages);
+    if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    SetKeyData(aCx, aKeyData);
+  }
+
+private:
+  nsString mNamedCurve;
+
+  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  {
+    if (!mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+
+    // Import the key data itself
+    ScopedSECKEYPublicKey pubKey;
+    ScopedSECKEYPrivateKey privKey;
+
+    nsNSSShutDownPreventionLock locker;
+    if (mJwk.mD.WasPassed()) {
+      // Private key import
+      privKey = CryptoKey::PrivateKeyFromJwk(mJwk, locker);
+      if (!privKey) {
+        return NS_ERROR_DOM_DATA_ERR;
+      }
+
+      mKey->SetPrivateKey(privKey.get());
+      mKey->SetType(CryptoKey::PRIVATE);
+    } else {
+      // Public key import
+      pubKey = CryptoKey::PublicKeyFromJwk(mJwk, locker);
+      if (!pubKey) {
+        return NS_ERROR_DOM_DATA_ERR;
+      }
+
+      mKey->SetPublicKey(pubKey.get());
+      mKey->SetType(CryptoKey::PUBLIC);
+    }
+
+    if (!NormalizeNamedCurveValue(mJwk.mCrv.Value(), mNamedCurve)) {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+
+    return NS_OK;
+  }
+
+  virtual nsresult AfterCrypto() MOZ_OVERRIDE
+  {
+    // Check permissions for the requested operation
+    if (mKey->GetKeyType() == CryptoKey::PRIVATE &&
+        mKey->HasUsageOtherThan(CryptoKey::DERIVEBITS | CryptoKey::DERIVEKEY)) {
+      return NS_ERROR_DOM_DATA_ERR;
+    }
+
+    nsIGlobalObject* global = mKey->GetParentObject();
+    mKey->SetAlgorithm(new EcKeyAlgorithm(global, mAlgName, mNamedCurve));
+
+    if (mDataIsJwk && !JwkCompatible(mJwk, mKey)) {
+      return NS_ERROR_DOM_DATA_ERR;
+    }
+
+    return NS_OK;
+  }
+};
+
 class ExportKeyTask : public WebCryptoTask
 {
 public:
@@ -2589,6 +2672,9 @@ WebCryptoTask::CreateImportKeyTask(JSContext* aCx,
              algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
     return new ImportRsaKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                 aExtractable, aKeyUsages);
+  } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
+    return new ImportEcKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
+                               aExtractable, aKeyUsages);
   } else {
     return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   }
