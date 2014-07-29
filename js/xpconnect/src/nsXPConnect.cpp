@@ -308,7 +308,7 @@ xpc::TraceXPCGlobal(JSTracer *trc, JSObject *obj)
     // so we need to null-check those.
     xpc::CompartmentPrivate* compartmentPrivate = xpc::CompartmentPrivate::Get(obj);
     if (compartmentPrivate && compartmentPrivate->scope)
-        compartmentPrivate->scope->TraceSelf(trc);
+        compartmentPrivate->scope->TraceInside(trc);
 }
 
 namespace xpc {
