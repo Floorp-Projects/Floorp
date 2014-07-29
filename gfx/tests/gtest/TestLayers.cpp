@@ -162,7 +162,7 @@ already_AddRefed<Layer> CreateLayer(char aLayerType, LayerManager* aManager) {
 already_AddRefed<Layer> CreateLayerTree(
     const char* aLayerTreeDescription,
     nsIntRegion* aVisibleRegions,
-    const gfx3DMatrix* aTransforms,
+    const Matrix4x4* aTransforms,
     nsRefPtr<LayerManager>& manager,
     nsTArray<nsRefPtr<Layer> >& aLayersOut) {
 
@@ -194,7 +194,7 @@ already_AddRefed<Layer> CreateLayerTree(
         layer->SetVisibleRegion(aVisibleRegions[layerNumber]);
       }
       if (aTransforms) {
-        layer->SetBaseTransform(ToMatrix4x4(aTransforms[layerNumber]));
+        layer->SetBaseTransform(aTransforms[layerNumber]);
       }
       aLayersOut.AppendElement(layer);
       layerNumber++;
@@ -225,11 +225,11 @@ TEST(Layers, LayerTree) {
     nsIntRegion(nsIntRect(0,0,100,100)),
     nsIntRegion(nsIntRect(10,10,20,20)),
   };
-  gfx3DMatrix transforms[] = {
-    gfx3DMatrix(),
-    gfx3DMatrix(),
-    gfx3DMatrix(),
-    gfx3DMatrix(),
+  Matrix4x4 transforms[] = {
+    Matrix4x4(),
+    Matrix4x4(),
+    Matrix4x4(),
+    Matrix4x4(),
   };
   nsTArray<nsRefPtr<Layer> > layers;
 
