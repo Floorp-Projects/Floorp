@@ -21,8 +21,8 @@ interface nsINetworkInterface : nsISupports
   /**
    * Current network state, one of the NETWORK_STATE_* constants.
    *
-   * When this changes, network interface implementations notify the
-   * 'network-interface-state-changed' observer notification.
+   * When this changes, network interface implementations notify with
+   * updateNetworkInterface() API.
    */
   readonly attribute long state;
 
@@ -97,7 +97,7 @@ interface nsINetworkInterface : nsISupports
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(3ea50550-4b3c-11e3-8f96-0800200c9a66)]
+[scriptable, uuid(f3193805-c070-4d23-bd5c-a439eb8610c3)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -112,6 +112,20 @@ interface nsINetworkManager : nsISupports
    *        Network interface to register.
    */
   void registerNetworkInterface(in nsINetworkInterface network);
+
+  /**
+   * Update the routes and DNSes according the state of the given network.
+   *
+   * Consumers will be notified with the 'network-connection-state-changed'
+   * observer notification.
+   *
+   * Throws an exception if the specified network interface object isn't
+   * registered.
+   *
+   * @param network
+   *        Network interface to update.
+   */
+  void updateNetworkInterface(in nsINetworkInterface network);
 
   /**
    * Unregister the given network interface from the network manager.
