@@ -1987,9 +1987,6 @@ private:
 
 void *xpc_GetJSPrivate(JSObject *obj);
 
-void
-TraceXPCGlobal(JSTracer *trc, JSObject *obj);
-
 /***************************************************************************/
 // XPCWrappedNative the wrapper around one instance of a native xpcom object
 // to be used from JavaScript.
@@ -2180,7 +2177,7 @@ public:
             GetScope()->TraceSelf(trc);
         if (mFlatJSObject && JS_IsGlobalObject(mFlatJSObject))
         {
-            TraceXPCGlobal(trc, mFlatJSObject);
+            xpc::TraceXPCGlobal(trc, mFlatJSObject);
         }
     }
 
