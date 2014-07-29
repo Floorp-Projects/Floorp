@@ -111,11 +111,52 @@ function testPeerLostShouldNotBeCalled() {
   runNextTest();
 }
 
+function testPeerShouldThrow() {
+  let peer;
+  let tnf = NDEF.TNF_WELL_KNOWN;
+  let type = new Uint8Array(NfcUtils.fromUTF8("U"));
+  let id = new Uint8Array(NfcUtils.fromUTF8(""));
+  let payload = new Uint8Array(NfcUtils.fromUTF8(url));
+  let ndef = [new MozNDEFRecord(tnf, type, id, payload)];
+
+  nfc.onpeerready = function (evt) {
+    peer = nfc.getNFCPeer(evt.detail);
+  };
+
+  let request = nfc.checkP2PRegistration(MANIFEST_URL);
+  request.onsuccess = function (evt) {
+    is(request.result, true, "check for P2P registration result");
+    nfc.notifyUserAcceptedP2P(MANIFEST_URL);
+  }
+
+  toggleNFC(true)
+    .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
+    .then(NCI.deactivate);
+
+  try {
+    peer.sendNDEF(ndef);
+    ok(false, "sendNDEF should throw error");
+  } catch (e) {
+    ok(true, "Exception expected");
+  }
+
+  try {
+    peer.sendFile(new Blob());
+    ok(false, "sendfile should throw error");
+  } catch (e) {
+    ok(true, "Exception expected");
+  }
+
+  nfc.onpeerready = null;
+  toggleNFC(false).then(runNextTest);
+}
+
 let tests = [
   testPeerReady,
   testCheckP2PRegFailure,
   testCheckNfcPeerObjForInvalidToken,
-  testPeerLostShouldNotBeCalled
+  testPeerLostShouldNotBeCalled,
+  testPeerShouldThrow
 ];
 
 SpecialPowers.pushPermissions(
