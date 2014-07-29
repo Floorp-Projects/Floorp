@@ -133,15 +133,7 @@ class AsmJSProfilingFrameIterator
     bool done() const { return !codeRange_; }
 
     void *stackAddress() const { JS_ASSERT(!done()); return stackAddress_; }
-
-    typedef JS::ProfilingFrameIterator::Kind Kind;
-    Kind kind() const;
-
-    JSAtom *functionDisplayAtom() const;
-    const char *functionFilename() const;
-    unsigned functionLine() const;
-
-    const char *nonFunctionDescription() const;
+    const char *label() const;
 };
 
 /******************************************************************************/

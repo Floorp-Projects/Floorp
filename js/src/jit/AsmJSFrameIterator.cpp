@@ -599,90 +599,50 @@ AsmJSProfilingFrameIterator::operator++()
     JS_ASSERT(!done());
 }
 
-AsmJSProfilingFrameIterator::Kind
-AsmJSProfilingFrameIterator::kind() const
-{
-    JS_ASSERT(!done());
-
-    switch (AsmJSExit::ExtractReasonKind(exitReason_)) {
-      case AsmJSExit::Reason_None:
-        break;
-      case AsmJSExit::Reason_Interrupt:
-      case AsmJSExit::Reason_FFI:
-        return JS::ProfilingFrameIterator::AsmJSTrampoline;
-      case AsmJSExit::Reason_Builtin:
-        return JS::ProfilingFrameIterator::CppFunction;
-    }
-
-    auto codeRange = reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_);
-    switch (codeRange->kind()) {
-      case AsmJSModule::CodeRange::Function:
-        return JS::ProfilingFrameIterator::Function;
-      case AsmJSModule::CodeRange::Entry:
-      case AsmJSModule::CodeRange::FFI:
-      case AsmJSModule::CodeRange::Interrupt:
-      case AsmJSModule::CodeRange::Inline:
-        return JS::ProfilingFrameIterator::AsmJSTrampoline;
-      case AsmJSModule::CodeRange::Thunk:
-        return JS::ProfilingFrameIterator::CppFunction;
-    }
-
-    MOZ_ASSUME_UNREACHABLE("Bad kind");
-}
-
-JSAtom *
-AsmJSProfilingFrameIterator::functionDisplayAtom() const
-{
-    JS_ASSERT(kind() == JS::ProfilingFrameIterator::Function);
-    return reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_)->functionName(*module_);
-}
-
-const char *
-AsmJSProfilingFrameIterator::functionFilename() const
-{
-    JS_ASSERT(kind() == JS::ProfilingFrameIterator::Function);
-    return module_->scriptSource()->filename();
-}
-
 static const char *
 BuiltinToName(AsmJSExit::BuiltinKind builtin)
 {
+    // Note: this label is regexp-matched by
+    // browser/devtools/profiler/cleopatra/js/parserWorker.js.
+
     switch (builtin) {
-      case AsmJSExit::Builtin_ToInt32:   return "ToInt32";
+      case AsmJSExit::Builtin_ToInt32:   return "ToInt32 (in asm.js)";
 #if defined(JS_CODEGEN_ARM)
-      case AsmJSExit::Builtin_IDivMod:   return "software idivmod";
-      case AsmJSExit::Builtin_UDivMod:   return "software uidivmod";
+      case AsmJSExit::Builtin_IDivMod:   return "software idivmod (in asm.js)";
+      case AsmJSExit::Builtin_UDivMod:   return "software uidivmod (in asm.js)";
 #endif
-      case AsmJSExit::Builtin_ModD:      return "fmod";
-      case AsmJSExit::Builtin_SinD:      return "Math.sin";
-      case AsmJSExit::Builtin_CosD:      return "Math.cos";
-      case AsmJSExit::Builtin_TanD:      return "Math.tan";
-      case AsmJSExit::Builtin_ASinD:     return "Math.asin";
-      case AsmJSExit::Builtin_ACosD:     return "Math.acos";
-      case AsmJSExit::Builtin_ATanD:     return "Math.atan";
+      case AsmJSExit::Builtin_ModD:      return "fmod (in asm.js)";
+      case AsmJSExit::Builtin_SinD:      return "Math.sin (in asm.js)";
+      case AsmJSExit::Builtin_CosD:      return "Math.cos (in asm.js)";
+      case AsmJSExit::Builtin_TanD:      return "Math.tan (in asm.js)";
+      case AsmJSExit::Builtin_ASinD:     return "Math.asin (in asm.js)";
+      case AsmJSExit::Builtin_ACosD:     return "Math.acos (in asm.js)";
+      case AsmJSExit::Builtin_ATanD:     return "Math.atan (in asm.js)";
       case AsmJSExit::Builtin_CeilD:
-      case AsmJSExit::Builtin_CeilF:     return "Math.ceil";
+      case AsmJSExit::Builtin_CeilF:     return "Math.ceil (in asm.js)";
       case AsmJSExit::Builtin_FloorD:
-      case AsmJSExit::Builtin_FloorF:    return "Math.floor";
-      case AsmJSExit::Builtin_ExpD:      return "Math.exp";
-      case AsmJSExit::Builtin_LogD:      return "Math.log";
-      case AsmJSExit::Builtin_PowD:      return "Math.pow";
-      case AsmJSExit::Builtin_ATan2D:    return "Math.atan2";
+      case AsmJSExit::Builtin_FloorF:    return "Math.floor (in asm.js)";
+      case AsmJSExit::Builtin_ExpD:      return "Math.exp (in asm.js)";
+      case AsmJSExit::Builtin_LogD:      return "Math.log (in asm.js)";
+      case AsmJSExit::Builtin_PowD:      return "Math.pow (in asm.js)";
+      case AsmJSExit::Builtin_ATan2D:    return "Math.atan2 (in asm.js)";
       case AsmJSExit::Builtin_Limit:     break;
     }
     MOZ_ASSUME_UNREACHABLE("Bad builtin kind");
 }
 
 const char *
-AsmJSProfilingFrameIterator::nonFunctionDescription() const
+AsmJSProfilingFrameIterator::label() const
 {
     JS_ASSERT(!done());
-    JS_ASSERT(kind() != JS::ProfilingFrameIterator::Function);
+
+    // Note: this label is regexp-matched by
+    // browser/devtools/profiler/cleopatra/js/parserWorker.js.
 
     // Use the same string for both time inside and under so that the two
     // entries will be coalesced by the profiler.
-    const char *ffiDescription = "asm.js FFI trampoline";
-    const char *interruptDescription = "asm.js slow script interrupt";
+    const char *ffiDescription = "FFI trampoline (in asm.js)";
+    const char *interruptDescription = "slow script interrupt trampoline (in asm.js)";
 
     switch (AsmJSExit::ExtractReasonKind(exitReason_)) {
       case AsmJSExit::Reason_None:
@@ -697,11 +657,11 @@ AsmJSProfilingFrameIterator::nonFunctionDescription() const
 
     auto codeRange = reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_);
     switch (codeRange->kind()) {
-      case AsmJSModule::CodeRange::Function:  MOZ_ASSUME_UNREACHABLE("non-functions only");
-      case AsmJSModule::CodeRange::Entry:     return "asm.js entry trampoline";
+      case AsmJSModule::CodeRange::Function:  return codeRange->functionProfilingLabel(*module_);
+      case AsmJSModule::CodeRange::Entry:     return "entry trampoline (in asm.js)";
       case AsmJSModule::CodeRange::FFI:       return ffiDescription;
       case AsmJSModule::CodeRange::Interrupt: return interruptDescription;
-      case AsmJSModule::CodeRange::Inline:    return "asm.js inline stub";
+      case AsmJSModule::CodeRange::Inline:    return "inline stub (in asm.js)";
       case AsmJSModule::CodeRange::Thunk:     return BuiltinToName(codeRange->thunkTarget());
     }
 

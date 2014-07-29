@@ -1018,6 +1018,10 @@ class MOZ_STACK_CLASS ModuleCompiler
   private:
     struct SlowFunction
     {
+        SlowFunction(PropertyName *name, unsigned ms, unsigned line, unsigned column)
+         : name(name), ms(ms), line(line), column(column)
+        {}
+
         PropertyName *name;
         unsigned ms;
         unsigned line;
@@ -1423,7 +1427,10 @@ class MOZ_STACK_CLASS ModuleCompiler
     bool finishGeneratingFunction(Func &func, CodeGenerator &codegen,
                                   const AsmJSFunctionLabels &labels)
     {
-        if (!module_->addFunctionCodeRange(func.name(), labels))
+        uint32_t line, column;
+        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &line, &column);
+
+        if (!module_->addFunctionCodeRange(func.name(), line, labels))
             return false;
 
         jit::IonScriptCounts *counts = codegen.extractScriptCounts();
@@ -1433,17 +1440,12 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
 
         if (func.compileTime() >= 250) {
-            SlowFunction sf;
-            sf.name = func.name();
-            sf.ms = func.compileTime();
-            tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &sf.line, &sf.column);
+            SlowFunction sf(func.name(), func.compileTime(), line, column);
             if (!slowFunctions_.append(sf))
                 return false;
         }
 
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-        uint32_t line, column;
-        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &line, &column);
         unsigned begin = labels.begin.offset();
         unsigned end = labels.end.offset();
         if (!module_->addProfiledFunction(func.name(), begin, end, line, column))
