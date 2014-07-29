@@ -16,6 +16,7 @@ namespace js {
 class AutoNameVector;
 class LazyScript;
 class LifoAlloc;
+class ScriptSourceObject;
 struct SourceCompressionTask;
 
 namespace frontend {

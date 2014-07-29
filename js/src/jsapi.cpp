@@ -1036,7 +1036,7 @@ JS_WrapObject(JSContext *cx, MutableHandleObject objp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     if (objp)
-        JS::ExposeGCThingToActiveJS(objp, JSTRACE_OBJECT);
+        JS::ExposeObjectToActiveJS(objp);
     return cx->compartment()->wrap(cx, objp);
 }
 
