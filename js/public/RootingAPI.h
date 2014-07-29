@@ -103,8 +103,6 @@
 
 namespace js {
 
-class ScriptSourceObject;
-
 template <typename T>
 struct GCMethods {};
 
