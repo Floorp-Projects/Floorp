@@ -19,7 +19,7 @@ struct gfxSize : public mozilla::gfx::BaseSize<gfxFloat, gfxSize> {
 
     gfxSize() : Super() {}
     gfxSize(gfxFloat aWidth, gfxFloat aHeight) : Super(aWidth, aHeight) {}
-    gfxSize(const nsIntSize& aSize) : Super(aSize.width, aSize.height) {}
+    MOZ_IMPLICIT gfxSize(const nsIntSize& aSize) : Super(aSize.width, aSize.height) {}
 };
 
 struct gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> {
@@ -27,7 +27,7 @@ struct gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> {
 
     gfxPoint() : Super() {}
     gfxPoint(gfxFloat aX, gfxFloat aY) : Super(aX, aY) {}
-    gfxPoint(const nsIntPoint& aPoint) : Super(aPoint.x, aPoint.y) {}
+    MOZ_IMPLICIT gfxPoint(const nsIntPoint& aPoint) : Super(aPoint.x, aPoint.y) {}
 
     bool WithinEpsilonOf(const gfxPoint& aPoint, gfxFloat aEpsilon) {
         return fabs(aPoint.x - x) < aEpsilon && fabs(aPoint.y - y) < aEpsilon;
