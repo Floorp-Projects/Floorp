@@ -4267,8 +4267,12 @@ SingleStepCallback(void *arg, jit::Simulator *sim, void *pc)
     state.sp = (void*)sim->get_register(jit::Simulator::sp);
     state.lr = (void*)sim->get_register(jit::Simulator::lr);
 
+    DebugOnly<void*> lastStackAddress = nullptr;
     StackChars stack;
     for (JS::ProfilingFrameIterator i(rt, state); !i.done(); ++i) {
+        JS_ASSERT(i.stackAddress() != nullptr);
+        JS_ASSERT(lastStackAddress <= i.stackAddress());
+        lastStackAddress = i.stackAddress();
         switch (i.kind()) {
           case JS::ProfilingFrameIterator::Function: {
             JS::AutoCheckCannotGC nogc;

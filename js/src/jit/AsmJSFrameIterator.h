@@ -115,6 +115,7 @@ class AsmJSProfilingFrameIterator
     const AsmJSModule *module_;
     uint8_t *callerFP_;
     void *callerPC_;
+    void *stackAddress_;
     AsmJSExit::Reason exitReason_;
 
     // Really, a const AsmJSModule::CodeRange*, but no forward declarations of
@@ -130,6 +131,8 @@ class AsmJSProfilingFrameIterator
                                 const JS::ProfilingFrameIterator::RegisterState &state);
     void operator++();
     bool done() const { return !codeRange_; }
+
+    void *stackAddress() const { JS_ASSERT(!done()); return stackAddress_; }
 
     typedef JS::ProfilingFrameIterator::Kind Kind;
     Kind kind() const;
