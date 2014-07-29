@@ -44,6 +44,10 @@ public class StructuredLogger {
         this(name, component, new StandardLoggerCallback());
     }
 
+    public StructuredLogger(String name,  LoggerCallback callback) {
+        this(name, null, callback);
+    }
+
     public StructuredLogger(String name) {
         this(name, null, new StandardLoggerCallback());
     }

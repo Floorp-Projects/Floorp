@@ -206,7 +206,6 @@ class B2GMochitest(MochitestUtilsMixin):
         self.stopServers()
 
         log.info("runtestsb2g.py | Running tests: end.")
-        self.message_logger.finish()
 
         if manifest is not None:
             self.cleanup(manifest, options)
@@ -366,6 +365,8 @@ def run_remote_mochitests(parser, options):
             pass
         retVal = 1
 
+    mochitest.message_logger.finish()
+
     sys.exit(retVal)
 
 def run_desktop_mochitests(parser, options):
@@ -391,7 +392,10 @@ def run_desktop_mochitests(parser, options):
 
     options.browserArgs += ['-marionette']
 
-    sys.exit(mochitest.runTests(options, onLaunch=mochitest.startTests))
+    retVal = mochitest.runTests(options, onLaunch=mochitest.startTests)
+    mochitest.message_logger.finish()
+
+    sys.exit(retVal)
 
 def main():
     parser = B2GOptions()
