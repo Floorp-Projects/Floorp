@@ -1030,9 +1030,6 @@ void
 MetroWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
 {
   mWidgetListener = aWidgetListener;
-  if (mController) {
-    mController->SetWidgetListener(aWidgetListener);
-  }
 }
 
 CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
@@ -1043,7 +1040,6 @@ CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfa
     mRootLayerTreeId = compositor->RootLayerTreeId();
 
     mController = new APZController();
-    mController->SetWidgetListener(mWidgetListener);
 
     CompositorParent::SetControllerForLayerTree(mRootLayerTreeId, mController);
 
