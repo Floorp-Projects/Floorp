@@ -1696,7 +1696,7 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
         // (For now use a single static string to avoid further slowing down
         // calls into asm.js.)
         profiler_ = &cx->runtime()->spsProfiler;
-        profiler_->enterNative("asm.js code :0", this);
+        profiler_->enterAsmJS("asm.js code :0", this);
     }
 
     prevAsmJSForModule_ = module.activation();
@@ -1713,7 +1713,7 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
 AsmJSActivation::~AsmJSActivation()
 {
     if (profiler_)
-        profiler_->exitNative();
+        profiler_->exitAsmJS();
 
     JS_ASSERT(fp_ == nullptr);
 
