@@ -38,12 +38,20 @@ function test()
   function onConsoleMessage()
   {
     let currentPosition = hud.outputNode.parentNode.scrollTop;
+    let bottom = currentPosition;
+
     EventUtils.synthesizeKey("VK_PAGE_UP", {});
     isnot(hud.outputNode.parentNode.scrollTop, currentPosition, "scroll position changed after page up");
 
     currentPosition = hud.outputNode.parentNode.scrollTop;
     EventUtils.synthesizeKey("VK_PAGE_DOWN", {});
     ok(hud.outputNode.parentNode.scrollTop > currentPosition, "scroll position now at bottom");
+
+    EventUtils.synthesizeKey("VK_HOME", {});
+    is(hud.outputNode.parentNode.scrollTop, 0, "scroll position now at top");
+
+    EventUtils.synthesizeKey("VK_END", {});
+    is(hud.outputNode.parentNode.scrollTop, bottom, "scroll position now at bottom");
 
     hud.jsterm.once("messages-cleared", onClear);
     info("try ctrl-l to clear output");

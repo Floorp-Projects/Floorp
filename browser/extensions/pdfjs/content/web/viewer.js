@@ -28,7 +28,7 @@ var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
 var DEFAULT_SCALE = 'auto';
 var DEFAULT_SCALE_DELTA = 1.1;
 var UNKNOWN_SCALE = 0;
-var CACHE_SIZE = 10;
+var DEFAULT_CACHE_SIZE = 10;
 var CSS_UNITS = 96.0 / 72.0;
 var SCROLLBAR_PADDING = 40;
 var VERTICAL_PADDING = 5;
@@ -298,6 +298,12 @@ var Cache = function cacheCache(size) {
     }
     data.push(view);
     if (data.length > size) {
+      data.shift().destroy();
+    }
+  };
+  this.resize = function (newSize) {
+    size = newSize;
+    while (data.length > size) {
       data.shift().destroy();
     }
   };
@@ -585,7 +591,7 @@ Preferences._readFromStorage = function (prefObj) {
 
 
 
-var cache = new Cache(CACHE_SIZE);
+var cache = new Cache(DEFAULT_CACHE_SIZE);
 var currentPageNumber = 1;
 
 
@@ -844,51 +850,51 @@ var PDFFindBar = {
 
 var PDFFindController = {
   startedTextExtraction: false,
-
   extractTextPromises: [],
-
   pendingFindMatches: {},
-
-  // If active, find results will be highlighted.
-  active: false,
-
-  // Stores the text for each page.
-  pageContents: [],
-
+  active: false, // If active, find results will be highlighted.
+  pageContents: [], // Stores the text for each page.
   pageMatches: [],
-
-  // Currently selected match.
-  selected: {
+  selected: { // Currently selected match.
     pageIdx: -1,
     matchIdx: -1
   },
-
-  // Where find algorithm currently is in the document.
-  offset: {
+  offset: { // Where the find algorithm currently is in the document.
     pageIdx: null,
     matchIdx: null
   },
-
   resumePageIdx: null,
-
   state: null,
-
   dirtyMatch: false,
-
   findTimeout: null,
-
   pdfPageSource: null,
-
   integratedFind: false,
+  charactersToNormalize: {
+    '\u2018': '\'', // Left single quotation mark
+    '\u2019': '\'', // Right single quotation mark
+    '\u201A': '\'', // Single low-9 quotation mark
+    '\u201B': '\'', // Single high-reversed-9 quotation mark
+    '\u201C': '"', // Left double quotation mark
+    '\u201D': '"', // Right double quotation mark
+    '\u201E': '"', // Double low-9 quotation mark
+    '\u201F': '"', // Double high-reversed-9 quotation mark
+    '\u00BC': '1/4', // Vulgar fraction one quarter
+    '\u00BD': '1/2', // Vulgar fraction one half
+    '\u00BE': '3/4' // Vulgar fraction three quarters
+  },
 
   initialize: function(options) {
-    if(typeof PDFFindBar === 'undefined' || PDFFindBar === null) {
+    if (typeof PDFFindBar === 'undefined' || PDFFindBar === null) {
       throw 'PDFFindController cannot be initialized ' +
             'without a PDFFindBar instance';
     }
 
     this.pdfPageSource = options.pdfPageSource;
     this.integratedFind = options.integratedFind;
+
+    // Compile the regular expression for text normalization once
+    var replace = Object.keys(this.charactersToNormalize).join('');
+    this.normalizationRegex = new RegExp('[' + replace + ']', 'g');
 
     var events = [
       'find',
@@ -902,7 +908,7 @@ var PDFFindController = {
     }.bind(this));
     this.handleEvent = this.handleEvent.bind(this);
 
-    for (var i = 0; i < events.length; i++) {
+    for (var i = 0, len = events.length; i < len; i++) {
       window.addEventListener(events[i], this.handleEvent);
     }
   },
@@ -913,14 +919,20 @@ var PDFFindController = {
     this.active = false;
   },
 
+  normalize: function pdfFindControllerNormalize(text) {
+    return text.replace(this.normalizationRegex, function (ch) {
+      return PDFFindController.charactersToNormalize[ch];
+    });
+  },
+
   calcFindMatch: function(pageIndex) {
-    var pageContent = this.pageContents[pageIndex];
-    var query = this.state.query;
+    var pageContent = this.normalize(this.pageContents[pageIndex]);
+    var query = this.normalize(this.state.query);
     var caseSensitive = this.state.caseSensitive;
     var queryLen = query.length;
 
     if (queryLen === 0) {
-      // Do nothing the matches should be wiped out already.
+      // Do nothing: the matches should be wiped out already.
       return;
     }
 
@@ -930,14 +942,12 @@ var PDFFindController = {
     }
 
     var matches = [];
-
     var matchIdx = -queryLen;
     while (true) {
       matchIdx = pageContent.indexOf(query, matchIdx + queryLen);
       if (matchIdx === -1) {
         break;
       }
-
       matches.push(matchIdx);
     }
     this.pageMatches[pageIndex] = matches;
@@ -956,7 +966,8 @@ var PDFFindController = {
 
     this.pageContents = [];
     var extractTextPromisesResolves = [];
-    for (var i = 0, ii = this.pdfPageSource.pdfDocument.numPages; i < ii; i++) {
+    var numPages = this.pdfPageSource.pdfDocument.numPages;
+    for (var i = 0; i < numPages; i++) {
       this.extractTextPromises.push(new Promise(function (resolve) {
         extractTextPromisesResolves.push(resolve);
       }));
@@ -967,14 +978,14 @@ var PDFFindController = {
       self.pdfPageSource.pages[pageIndex].getTextContent().then(
         function textContentResolved(textContent) {
           var textItems = textContent.items;
-          var str = '';
+          var str = [];
 
-          for (var i = 0; i < textItems.length; i++) {
-            str += textItems[i].str;
+          for (var i = 0, len = textItems.length; i < len; i++) {
+            str.push(textItems[i].str);
           }
 
           // Store the pageContent as a string.
-          self.pageContents.push(str);
+          self.pageContents.push(str.join(''));
 
           extractTextPromisesResolves[pageIndex](pageIndex);
           if ((pageIndex + 1) < self.pdfPageSource.pages.length) {
@@ -1072,15 +1083,16 @@ var PDFFindController = {
       var numPageMatches = this.pageMatches[offset.pageIdx].length;
       if ((!previous && offset.matchIdx + 1 < numPageMatches) ||
           (previous && offset.matchIdx > 0)) {
-        // The simple case, we just have advance the matchIdx to select the next
-        // match on the page.
+        // The simple case; we just have advance the matchIdx to select
+        // the next match on the page.
         this.hadMatch = true;
-        offset.matchIdx = previous ? offset.matchIdx - 1 : offset.matchIdx + 1;
+        offset.matchIdx = (previous ? offset.matchIdx - 1 :
+                                      offset.matchIdx + 1);
         this.updateMatch(true);
         return;
       }
-      // We went beyond the current page's matches, so we advance to the next
-      // page.
+      // We went beyond the current page's matches, so we advance to
+      // the next page.
       this.advanceOffsetPage(previous);
     }
     // Start searching through the page.
@@ -1094,24 +1106,23 @@ var PDFFindController = {
     if (numMatches) {
       // There were matches for the page, so initialize the matchIdx.
       this.hadMatch = true;
-      offset.matchIdx = previous ? numMatches - 1 : 0;
+      offset.matchIdx = (previous ? numMatches - 1 : 0);
       this.updateMatch(true);
-      // matches were found
       return true;
     } else {
-      // No matches attempt to search the next page.
+      // No matches, so attempt to search the next page.
       this.advanceOffsetPage(previous);
       if (offset.wrapped) {
         offset.matchIdx = null;
         if (!this.hadMatch) {
-          // No point in wrapping there were no matches.
+          // No point in wrapping, there were no matches.
           this.updateMatch(false);
           // while matches were not found, searching for a page 
           // with matches should nevertheless halt.
           return true;
         }
       }
-      // matches were not found (and searching is not done)
+      // Matches were not found (and searching is not done).
       return false;
     }
   },
@@ -1135,10 +1146,10 @@ var PDFFindController = {
   advanceOffsetPage: function(previous) {
     var offset = this.offset;
     var numPages = this.extractTextPromises.length;
-    offset.pageIdx = previous ? offset.pageIdx - 1 : offset.pageIdx + 1;
+    offset.pageIdx = (previous ? offset.pageIdx - 1 : offset.pageIdx + 1);
     offset.matchIdx = null;
     if (offset.pageIdx >= numPages || offset.pageIdx < 0) {
-      offset.pageIdx = previous ? numPages - 1 : 0;
+      offset.pageIdx = (previous ? numPages - 1 : 0);
       offset.wrapped = true;
       return;
     }
@@ -1152,7 +1163,7 @@ var PDFFindController = {
       var previousPage = this.selected.pageIdx;
       this.selected.pageIdx = this.offset.pageIdx;
       this.selected.matchIdx = this.offset.matchIdx;
-      state = wrapped ? FindStates.FIND_WRAPPED : FindStates.FIND_FOUND;
+      state = (wrapped ? FindStates.FIND_WRAPPED : FindStates.FIND_FOUND);
       // Update the currently selected page to wipe out any selected matches.
       if (previousPage !== -1 && previousPage !== this.selected.pageIdx) {
         this.updatePage(previousPage);
@@ -1167,7 +1178,7 @@ var PDFFindController = {
   updateUIState: function(state, previous) {
     if (this.integratedFind) {
       FirefoxCom.request('updateFindControlState',
-                         {result: state, findPrevious: previous});
+                         { result: state, findPrevious: previous });
       return;
     }
     PDFFindBar.updateUIState(state, previous);
@@ -2532,6 +2543,7 @@ var PDFView = {
   fellback: false,
   pdfDocument: null,
   sidebarOpen: false,
+  printing: false,
   pageViewScroll: null,
   thumbnailViewScroll: null,
   pageRotation: 0,
@@ -3599,6 +3611,11 @@ var PDFView = {
       }
     }
 
+    if (this.printing) {
+      // If printing is currently ongoing do not reschedule cleanup.
+      return;
+    }
+
     PDFView.idleTimeout = setTimeout(function () {
       PDFView.cleanup();
     }, CLEANUP_TIMEOUT);
@@ -3908,11 +3925,18 @@ var PDFView = {
       return;
     }
 
+    this.printing = true;
+    this.renderHighestPriority();
+
     var body = document.querySelector('body');
     body.setAttribute('data-mozPrintCallback', true);
     for (i = 0, ii = this.pages.length; i < ii; ++i) {
       this.pages[i].beforePrint();
     }
+
+      FirefoxCom.request('reportTelemetry', JSON.stringify({
+        type: 'print'
+      }));
   },
 
   afterPrint: function pdfViewSetupAfterPrint() {
@@ -3920,6 +3944,9 @@ var PDFView = {
     while (div.hasChildNodes()) {
       div.removeChild(div.lastChild);
     }
+
+    this.printing = false;
+    this.renderHighestPriority();
   },
 
   rotatePages: function pdfViewRotatePages(delta) {
@@ -4317,16 +4344,15 @@ var PageView = function pageView(container, id, scale,
       } else {
         for (i = 0, ii = annotationsData.length; i < ii; i++) {
           data = annotationsData[i];
-          var annotation = PDFJS.Annotation.fromData(data);
-          if (!annotation || !annotation.hasHtml()) {
+          if (!data || !data.hasHtml) {
             continue;
           }
 
-          element = annotation.getHtmlElement(pdfPage.commonObjs);
+          element = PDFJS.AnnotationUtils.getHtmlElement(data,
+                                                         pdfPage.commonObjs);
           element.setAttribute('data-annotation-id', data.id);
           mozL10n.translate(element);
 
-          data = annotation.getData();
           var rect = data.rect;
           var view = pdfPage.view;
           rect = PDFJS.Util.normalizeRect([
@@ -4622,7 +4648,13 @@ var PageView = function pageView(container, id, scale,
       FirefoxCom.request('reportTelemetry', JSON.stringify({
         type: 'pageInfo'
       }));
-      // TODO add stream types report here
+      // It is a good time to report stream and font types
+      PDFView.pdfDocument.getStats().then(function (stats) {
+        FirefoxCom.request('reportTelemetry', JSON.stringify({
+          type: 'documentStats',
+          stats: stats
+        }));
+      });
       callback();
     }
 
@@ -4955,335 +4987,311 @@ ThumbnailView.tempImageCache = null;
 
 var FIND_SCROLL_OFFSET_TOP = -50;
 var FIND_SCROLL_OFFSET_LEFT = -400;
+var MAX_TEXT_DIVS_TO_RENDER = 100000;
+var RENDER_DELAY = 200; // ms
 
 /**
- * TextLayerBuilder provides text-selection
- * functionality for the PDF. It does this
- * by creating overlay divs over the PDF
- * text. This divs contain text that matches
- * the PDF text they are overlaying. This
- * object also provides for a way to highlight
- * text that is being searched for.
+ * TextLayerBuilder provides text-selection functionality for the PDF.
+ * It does this by creating overlay divs over the PDF text. These divs
+ * contain text that matches the PDF text they are overlaying. This object
+ * also provides a way to highlight text that is being searched for.
  */
-var TextLayerBuilder = function textLayerBuilder(options) {
-  var textLayerFrag = document.createDocumentFragment();
-
-  this.textLayerDiv = options.textLayerDiv;
-  this.layoutDone = false;
-  this.divContentDone = false;
-  this.pageIdx = options.pageIndex;
-  this.matches = [];
-  this.lastScrollSource = options.lastScrollSource;
-  this.viewport = options.viewport;
-  this.isViewerInPresentationMode = options.isViewerInPresentationMode;
-  this.textDivs = [];
-
-  if (typeof PDFFindController === 'undefined') {
-    window.PDFFindController = null;
+var TextLayerBuilder = (function TextLayerBuilderClosure() {
+  function TextLayerBuilder(options) {
+    this.textLayerDiv = options.textLayerDiv;
+    this.layoutDone = false;
+    this.divContentDone = false;
+    this.pageIdx = options.pageIndex;
+    this.matches = [];
+    this.lastScrollSource = options.lastScrollSource || null;
+    this.viewport = options.viewport;
+    this.isViewerInPresentationMode = options.isViewerInPresentationMode;
+    this.textDivs = [];
+    this.findController = window.PDFFindController || null;
   }
 
-  if (typeof this.lastScrollSource === 'undefined') {
-    this.lastScrollSource = null;
-  }
+  TextLayerBuilder.prototype = {
+    renderLayer: function TextLayerBuilder_renderLayer() {
+      var textLayerFrag = document.createDocumentFragment();
+      var textDivs = this.textDivs;
+      var textDivsLength = textDivs.length;
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d');
 
-  this.renderLayer = function textLayerBuilderRenderLayer() {
-    var textDivs = this.textDivs;
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-
-    // No point in rendering so many divs as it'd make the browser unusable
-    // even after the divs are rendered
-    var MAX_TEXT_DIVS_TO_RENDER = 100000;
-    if (textDivs.length > MAX_TEXT_DIVS_TO_RENDER) {
-      return;
-    }
-
-    for (var i = 0, ii = textDivs.length; i < ii; i++) {
-      var textDiv = textDivs[i];
-      if ('isWhitespace' in textDiv.dataset) {
-        continue;
-      }
-
-      ctx.font = textDiv.style.fontSize + ' ' + textDiv.style.fontFamily;
-      var width = ctx.measureText(textDiv.textContent).width;
-
-      if (width > 0) {
-        textLayerFrag.appendChild(textDiv);
-        var textScale = textDiv.dataset.canvasWidth / width;
-        var rotation = textDiv.dataset.angle;
-        var transform = 'scale(' + textScale + ', 1)';
-        transform = 'rotate(' + rotation + 'deg) ' + transform;
-        CustomStyle.setProp('transform' , textDiv, transform);
-        CustomStyle.setProp('transformOrigin' , textDiv, '0% 0%');
-      }
-    }
-
-    this.textLayerDiv.appendChild(textLayerFrag);
-    this.renderingDone = true;
-    this.updateMatches();
-  };
-
-  this.setupRenderLayoutTimer = function textLayerSetupRenderLayoutTimer() {
-    // Schedule renderLayout() if user has been scrolling, otherwise
-    // run it right away
-    var RENDER_DELAY = 200; // in ms
-    var self = this;
-    var lastScroll = (this.lastScrollSource === null ?
-                      0 : this.lastScrollSource.lastScroll);
-
-    if (Date.now() - lastScroll > RENDER_DELAY) {
-      // Render right away
-      this.renderLayer();
-    } else {
-      // Schedule
-      if (this.renderTimer) {
-        clearTimeout(this.renderTimer);
-      }
-      this.renderTimer = setTimeout(function() {
-        self.setupRenderLayoutTimer();
-      }, RENDER_DELAY);
-    }
-  };
-
-  this.appendText = function textLayerBuilderAppendText(geom, styles) {
-    var style = styles[geom.fontName];
-    var textDiv = document.createElement('div');
-    this.textDivs.push(textDiv);
-    if (!/\S/.test(geom.str)) {
-      textDiv.dataset.isWhitespace = true;
-      return;
-    }
-    var tx = PDFJS.Util.transform(this.viewport.transform, geom.transform);
-    var angle = Math.atan2(tx[1], tx[0]);
-    if (style.vertical) {
-      angle += Math.PI / 2;
-    }
-    var fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
-    var fontAscent = (style.ascent ? style.ascent * fontHeight :
-      (style.descent ? (1 + style.descent) * fontHeight : fontHeight));
-
-    textDiv.style.position = 'absolute';
-    textDiv.style.left = (tx[4] + (fontAscent * Math.sin(angle))) + 'px';
-    textDiv.style.top = (tx[5] - (fontAscent * Math.cos(angle))) + 'px';
-    textDiv.style.fontSize = fontHeight + 'px';
-    textDiv.style.fontFamily = style.fontFamily;
-
-    textDiv.textContent = geom.str;
-    textDiv.dataset.fontName = geom.fontName;
-    textDiv.dataset.angle = angle * (180 / Math.PI);
-    if (style.vertical) {
-      textDiv.dataset.canvasWidth = geom.height * this.viewport.scale;
-    } else {
-      textDiv.dataset.canvasWidth = geom.width * this.viewport.scale;
-    }
-
-  };
-
-  this.setTextContent = function textLayerBuilderSetTextContent(textContent) {
-    this.textContent = textContent;
-
-    var textItems = textContent.items;
-    for (var i = 0; i < textItems.length; i++) {
-      this.appendText(textItems[i], textContent.styles);
-    }
-    this.divContentDone = true;
-
-    this.setupRenderLayoutTimer();
-  };
-
-  this.convertMatches = function textLayerBuilderConvertMatches(matches) {
-    var i = 0;
-    var iIndex = 0;
-    var bidiTexts = this.textContent.items;
-    var end = bidiTexts.length - 1;
-    var queryLen = (PDFFindController === null ?
-                    0 : PDFFindController.state.query.length);
-
-    var ret = [];
-
-    // Loop over all the matches.
-    for (var m = 0; m < matches.length; m++) {
-      var matchIdx = matches[m];
-      // # Calculate the begin position.
-
-      // Loop over the divIdxs.
-      while (i !== end && matchIdx >= (iIndex + bidiTexts[i].str.length)) {
-        iIndex += bidiTexts[i].str.length;
-        i++;
-      }
-
-      // TODO: Do proper handling here if something goes wrong.
-      if (i == bidiTexts.length) {
-        console.error('Could not find matching mapping');
-      }
-
-      var match = {
-        begin: {
-          divIdx: i,
-          offset: matchIdx - iIndex
-        }
-      };
-
-      // # Calculate the end position.
-      matchIdx += queryLen;
-
-      // Somewhat same array as above, but use a > instead of >= to get the end
-      // position right.
-      while (i !== end && matchIdx > (iIndex + bidiTexts[i].str.length)) {
-        iIndex += bidiTexts[i].str.length;
-        i++;
-      }
-
-      match.end = {
-        divIdx: i,
-        offset: matchIdx - iIndex
-      };
-      ret.push(match);
-    }
-
-    return ret;
-  };
-
-  this.renderMatches = function textLayerBuilder_renderMatches(matches) {
-    // Early exit if there is nothing to render.
-    if (matches.length === 0) {
-      return;
-    }
-
-    var bidiTexts = this.textContent.items;
-    var textDivs = this.textDivs;
-    var prevEnd = null;
-    var isSelectedPage = (PDFFindController === null ?
-      false : (this.pageIdx === PDFFindController.selected.pageIdx));
-
-    var selectedMatchIdx = (PDFFindController === null ?
-                            -1 : PDFFindController.selected.matchIdx);
-
-    var highlightAll = (PDFFindController === null ?
-                        false : PDFFindController.state.highlightAll);
-
-    var infty = {
-      divIdx: -1,
-      offset: undefined
-    };
-
-    function beginText(begin, className) {
-      var divIdx = begin.divIdx;
-      var div = textDivs[divIdx];
-      div.textContent = '';
-      appendTextToDiv(divIdx, 0, begin.offset, className);
-    }
-
-    function appendText(from, to, className) {
-      appendTextToDiv(from.divIdx, from.offset, to.offset, className);
-    }
-
-    function appendTextToDiv(divIdx, fromOffset, toOffset, className) {
-      var div = textDivs[divIdx];
-
-      var content = bidiTexts[divIdx].str.substring(fromOffset, toOffset);
-      var node = document.createTextNode(content);
-      if (className) {
-        var span = document.createElement('span');
-        span.className = className;
-        span.appendChild(node);
-        div.appendChild(span);
+      // No point in rendering many divs as it would make the browser
+      // unusable even after the divs are rendered.
+      if (textDivsLength > MAX_TEXT_DIVS_TO_RENDER) {
         return;
       }
-      div.appendChild(node);
-    }
 
-    function highlightDiv(divIdx, className) {
-      textDivs[divIdx].className = className;
-    }
-
-    var i0 = selectedMatchIdx, i1 = i0 + 1, i;
-
-    if (highlightAll) {
-      i0 = 0;
-      i1 = matches.length;
-    } else if (!isSelectedPage) {
-      // Not highlighting all and this isn't the selected page, so do nothing.
-      return;
-    }
-
-    for (i = i0; i < i1; i++) {
-      var match = matches[i];
-      var begin = match.begin;
-      var end = match.end;
-
-      var isSelected = isSelectedPage && i === selectedMatchIdx;
-      var highlightSuffix = (isSelected ? ' selected' : '');
-      if (isSelected && !this.isViewerInPresentationMode) {
-        scrollIntoView(textDivs[begin.divIdx], { top: FIND_SCROLL_OFFSET_TOP,
-                                               left: FIND_SCROLL_OFFSET_LEFT });
-      }
-
-      // Match inside new div.
-      if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
-        // If there was a previous div, then add the text at the end
-        if (prevEnd !== null) {
-          appendText(prevEnd, infty);
+      for (var i = 0; i < textDivsLength; i++) {
+        var textDiv = textDivs[i];
+        if (textDiv.dataset.isWhitespace !== undefined) {
+          continue;
         }
-        // clears the divs and set the content until the begin point.
-        beginText(begin);
-      } else {
-        appendText(prevEnd, begin);
-      }
 
-      if (begin.divIdx === end.divIdx) {
-        appendText(begin, end, 'highlight' + highlightSuffix);
-      } else {
-        appendText(begin, infty, 'highlight begin' + highlightSuffix);
-        for (var n = begin.divIdx + 1; n < end.divIdx; n++) {
-          highlightDiv(n, 'highlight middle' + highlightSuffix);
+        ctx.font = textDiv.style.fontSize + ' ' + textDiv.style.fontFamily;
+        var width = ctx.measureText(textDiv.textContent).width;
+        if (width > 0) {
+          textLayerFrag.appendChild(textDiv);
+          var textScale = textDiv.dataset.canvasWidth / width;
+          var rotation = textDiv.dataset.angle;
+          var transform = 'scale(' + textScale + ', 1)';
+          transform = 'rotate(' + rotation + 'deg) ' + transform;
+          CustomStyle.setProp('transform' , textDiv, transform);
+          CustomStyle.setProp('transformOrigin' , textDiv, '0% 0%');
         }
-        beginText(end, 'highlight end' + highlightSuffix);
       }
-      prevEnd = end;
-    }
 
-    if (prevEnd) {
-      appendText(prevEnd, infty);
+      this.textLayerDiv.appendChild(textLayerFrag);
+      this.renderingDone = true;
+      this.updateMatches();
+    },
+
+    setupRenderLayoutTimer:
+        function TextLayerBuilder_setupRenderLayoutTimer() {
+      // Schedule renderLayout() if the user has been scrolling,
+      // otherwise run it right away.
+      var self = this;
+      var lastScroll = (this.lastScrollSource === null ?
+                        0 : this.lastScrollSource.lastScroll);
+
+      if (Date.now() - lastScroll > RENDER_DELAY) { // Render right away
+        this.renderLayer();
+      } else { // Schedule
+        if (this.renderTimer) {
+          clearTimeout(this.renderTimer);
+        }
+        this.renderTimer = setTimeout(function() {
+          self.setupRenderLayoutTimer();
+        }, RENDER_DELAY);
+      }
+    },
+
+    appendText: function TextLayerBuilder_appendText(geom, styles) {
+      var style = styles[geom.fontName];
+      var textDiv = document.createElement('div');
+      this.textDivs.push(textDiv);
+      if (!/\S/.test(geom.str)) {
+        textDiv.dataset.isWhitespace = true;
+        return;
+      }
+      var tx = PDFJS.Util.transform(this.viewport.transform, geom.transform);
+      var angle = Math.atan2(tx[1], tx[0]);
+      if (style.vertical) {
+        angle += Math.PI / 2;
+      }
+      var fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
+      var fontAscent = (style.ascent ? style.ascent * fontHeight :
+        (style.descent ? (1 + style.descent) * fontHeight : fontHeight));
+
+      textDiv.style.position = 'absolute';
+      textDiv.style.left = (tx[4] + (fontAscent * Math.sin(angle))) + 'px';
+      textDiv.style.top = (tx[5] - (fontAscent * Math.cos(angle))) + 'px';
+      textDiv.style.fontSize = fontHeight + 'px';
+      textDiv.style.fontFamily = style.fontFamily;
+
+      textDiv.textContent = geom.str;
+      textDiv.dataset.fontName = geom.fontName;
+      textDiv.dataset.angle = angle * (180 / Math.PI);
+      if (style.vertical) {
+        textDiv.dataset.canvasWidth = geom.height * this.viewport.scale;
+      } else {
+        textDiv.dataset.canvasWidth = geom.width * this.viewport.scale;
+      }
+    },
+
+    setTextContent: function TextLayerBuilder_setTextContent(textContent) {
+      this.textContent = textContent;
+
+      var textItems = textContent.items;
+      for (var i = 0, len = textItems.length; i < len; i++) {
+        this.appendText(textItems[i], textContent.styles);
+      }
+      this.divContentDone = true;
+      this.setupRenderLayoutTimer();
+    },
+
+    convertMatches: function TextLayerBuilder_convertMatches(matches) {
+      var i = 0;
+      var iIndex = 0;
+      var bidiTexts = this.textContent.items;
+      var end = bidiTexts.length - 1;
+      var queryLen = (this.findController === null ?
+                      0 : this.findController.state.query.length);
+      var ret = [];
+
+      for (var m = 0, len = matches.length; m < len; m++) {
+        // Calculate the start position.
+        var matchIdx = matches[m];
+
+        // Loop over the divIdxs.
+        while (i !== end && matchIdx >= (iIndex + bidiTexts[i].str.length)) {
+          iIndex += bidiTexts[i].str.length;
+          i++;
+        }
+
+        if (i === bidiTexts.length) {
+          console.error('Could not find a matching mapping');
+        }
+
+        var match = {
+          begin: {
+            divIdx: i,
+            offset: matchIdx - iIndex
+          }
+        };
+
+        // Calculate the end position.
+        matchIdx += queryLen;
+
+        // Somewhat the same array as above, but use > instead of >= to get
+        // the end position right.
+        while (i !== end && matchIdx > (iIndex + bidiTexts[i].str.length)) {
+          iIndex += bidiTexts[i].str.length;
+          i++;
+        }
+
+        match.end = {
+          divIdx: i,
+          offset: matchIdx - iIndex
+        };
+        ret.push(match);
+      }
+
+      return ret;
+    },
+
+    renderMatches: function TextLayerBuilder_renderMatches(matches) {
+      // Early exit if there is nothing to render.
+      if (matches.length === 0) {
+        return;
+      }
+
+      var bidiTexts = this.textContent.items;
+      var textDivs = this.textDivs;
+      var prevEnd = null;
+      var isSelectedPage = (this.findController === null ?
+        false : (this.pageIdx === this.findController.selected.pageIdx));
+      var selectedMatchIdx = (this.findController === null ?
+                              -1 : this.findController.selected.matchIdx);
+      var highlightAll = (this.findController === null ?
+                          false : this.findController.state.highlightAll);
+      var infinity = {
+        divIdx: -1,
+        offset: undefined
+      };
+
+      function beginText(begin, className) {
+        var divIdx = begin.divIdx;
+        textDivs[divIdx].textContent = '';
+        appendTextToDiv(divIdx, 0, begin.offset, className);
+      }
+
+      function appendTextToDiv(divIdx, fromOffset, toOffset, className) {
+        var div = textDivs[divIdx];
+        var content = bidiTexts[divIdx].str.substring(fromOffset, toOffset);
+        var node = document.createTextNode(content);
+        if (className) {
+          var span = document.createElement('span');
+          span.className = className;
+          span.appendChild(node);
+          div.appendChild(span);
+          return;
+        }
+        div.appendChild(node);
+      }
+
+      var i0 = selectedMatchIdx, i1 = i0 + 1;
+      if (highlightAll) {
+        i0 = 0;
+        i1 = matches.length;
+      } else if (!isSelectedPage) {
+        // Not highlighting all and this isn't the selected page, so do nothing.
+        return;
+      }
+
+      for (var i = i0; i < i1; i++) {
+        var match = matches[i];
+        var begin = match.begin;
+        var end = match.end;
+        var isSelected = (isSelectedPage && i === selectedMatchIdx);
+        var highlightSuffix = (isSelected ? ' selected' : '');
+         
+        if (isSelected && !this.isViewerInPresentationMode) {
+          scrollIntoView(textDivs[begin.divIdx],
+                         { top: FIND_SCROLL_OFFSET_TOP,
+                           left: FIND_SCROLL_OFFSET_LEFT });
+        }
+
+        // Match inside new div.
+        if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
+          // If there was a previous div, then add the text at the end.
+          if (prevEnd !== null) {
+            appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
+          }
+          // Clear the divs and set the content until the starting point.
+          beginText(begin);
+        } else {
+          appendTextToDiv(prevEnd.divIdx, prevEnd.offset, begin.offset);
+        }
+
+        if (begin.divIdx === end.divIdx) {
+          appendTextToDiv(begin.divIdx, begin.offset, end.offset,
+                          'highlight' + highlightSuffix);
+        } else {
+          appendTextToDiv(begin.divIdx, begin.offset, infinity.offset,
+                          'highlight begin' + highlightSuffix);
+          for (var n0 = begin.divIdx + 1, n1 = end.divIdx; n0 < n1; n0++) {
+            textDivs[n0].className = 'highlight middle' + highlightSuffix;
+          }
+          beginText(end, 'highlight end' + highlightSuffix);
+        }
+        prevEnd = end;
+      }
+
+      if (prevEnd) {
+        appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
+      }
+    },
+
+    updateMatches: function TextLayerBuilder_updateMatches() {
+      // Only show matches when all rendering is done.
+      if (!this.renderingDone) {
+        return;
+      }
+
+      // Clear all matches.
+      var matches = this.matches;
+      var textDivs = this.textDivs;
+      var bidiTexts = this.textContent.items;
+      var clearedUntilDivIdx = -1;
+
+      // Clear all current matches.
+      for (var i = 0, len = matches.length; i < len; i++) {
+        var match = matches[i];
+        var begin = Math.max(clearedUntilDivIdx, match.begin.divIdx);
+        for (var n = begin, end = match.end.divIdx; n <= end; n++) {
+          var div = textDivs[n];
+          div.textContent = bidiTexts[n].str;
+          div.className = '';
+        }
+        clearedUntilDivIdx = match.end.divIdx + 1;
+      }
+
+      if (this.findController === null || !this.findController.active) {
+        return;
+      }
+
+      // Convert the matches on the page controller into the match format
+      // used for the textLayer.
+      this.matches = this.convertMatches(this.findController === null ?
+        [] : (this.findController.pageMatches[this.pageIdx] || []));
+      this.renderMatches(this.matches);
     }
   };
-
-  this.updateMatches = function textLayerUpdateMatches() {
-    // Only show matches, once all rendering is done.
-    if (!this.renderingDone) {
-      return;
-    }
-
-    // Clear out all matches.
-    var matches = this.matches;
-    var textDivs = this.textDivs;
-    var bidiTexts = this.textContent.items;
-    var clearedUntilDivIdx = -1;
-
-    // Clear out all current matches.
-    for (var i = 0; i < matches.length; i++) {
-      var match = matches[i];
-      var begin = Math.max(clearedUntilDivIdx, match.begin.divIdx);
-      for (var n = begin; n <= match.end.divIdx; n++) {
-        var div = textDivs[n];
-        div.textContent = bidiTexts[n].str;
-        div.className = '';
-      }
-      clearedUntilDivIdx = match.end.divIdx + 1;
-    }
-
-    if (PDFFindController === null || !PDFFindController.active) {
-      return;
-    }
-
-    // Convert the matches on the page controller into the match format used
-    // for the textLayer.
-    this.matches = matches = (this.convertMatches(PDFFindController === null ?
-      [] : (PDFFindController.pageMatches[this.pageIdx] || [])));
-
-    this.renderMatches(this.matches);
-  };
-};
+  return TextLayerBuilder;
+})();
 
 
 
@@ -5583,6 +5591,10 @@ function updateViewarea() {
   if (visiblePages.length === 0) {
     return;
   }
+
+  var suggestedCacheSize = Math.max(DEFAULT_CACHE_SIZE,
+      2 * visiblePages.length + 1);
+  cache.resize(suggestedCacheSize);
 
   PDFView.renderHighestPriority(visible);
 

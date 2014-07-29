@@ -33,6 +33,7 @@ function* runTests() {
   let result = toolbox.once("webconsole-ready", () => {
     ok(toolbox.splitConsole, "Split console is shown.");
     is(dbgWin.gThreadClient.state, "paused", "Execution is still paused.");
+    Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
   });
   EventUtils.synthesizeKey("VK_ESCAPE", {}, dbgWin);
   yield result;

@@ -488,6 +488,11 @@ let UI = {
     this.resetFocus();
     let deck = document.querySelector("#deck");
     let panel = deck.querySelector("#deck-panel-" + id);
+    let lazysrc = panel.getAttribute("lazysrc");
+    if (lazysrc) {
+      panel.removeAttribute("lazysrc");
+      panel.setAttribute("src", lazysrc);
+    }
     deck.selectedPanel = panel;
     this.updateProjectEditorMenusVisibility();
   },
@@ -879,6 +884,10 @@ let Cmds = {
 
   showRuntimeDetails: function() {
     UI.selectDeckPanel("runtimedetails");
+  },
+
+  showMonitor: function() {
+    UI.selectDeckPanel("monitor");
   },
 
   play: function() {

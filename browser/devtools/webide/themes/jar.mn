@@ -14,3 +14,4 @@ webide.jar:
   skin/prefs.css               (prefs.css)
   skin/runtimedetails.css      (runtimedetails.css)
   skin/permissionstable.css    (permissionstable.css)
+  skin/monitor.css             (monitor.css)
