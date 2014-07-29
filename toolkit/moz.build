@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += [
+DIRS += [
     'components',
     'content',
     'devtools',
@@ -31,24 +31,24 @@ if CONFIG['MOZ_MAINTENANCE_SERVICE']:
 DIRS += ['xre']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'qt'):
-    PARALLEL_DIRS += ['system/unixproxy']
+    DIRS += ['system/unixproxy']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    PARALLEL_DIRS += ['system/osxproxy']
+    DIRS += ['system/osxproxy']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    PARALLEL_DIRS += ['system/windowsproxy']
+    DIRS += ['system/windowsproxy']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    PARALLEL_DIRS += ['system/androidproxy']
+    DIRS += ['system/androidproxy']
 
 if CONFIG['MOZ_CRASHREPORTER']:
-    PARALLEL_DIRS += ['crashreporter']
+    DIRS += ['crashreporter']
 elif CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     # Profiler requires some crashreporter code,
     # so build it even if crashreporter is disabled.
-    PARALLEL_DIRS += [
+    DIRS += [
     'crashreporter/google-breakpad/src/common',
     'crashreporter/google-breakpad/src/processor',
     ]
     if CONFIG['OS_ARCH'] == 'Darwin':
-        PARALLEL_DIRS += ['crashreporter/google-breakpad/src/common/mac']
+        DIRS += ['crashreporter/google-breakpad/src/common/mac']
     elif CONFIG['OS_ARCH'] == 'Linux':
-        PARALLEL_DIRS += ['crashreporter/google-breakpad/src/common/linux']
+        DIRS += ['crashreporter/google-breakpad/src/common/linux']

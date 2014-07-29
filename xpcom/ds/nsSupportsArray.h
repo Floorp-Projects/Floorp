@@ -141,7 +141,7 @@ protected:
 
 private:
   // Copy constructors are not allowed
-  nsSupportsArray(const nsISupportsArray& aOther);
+  explicit nsSupportsArray(const nsISupportsArray& aOther);
 };
 
 #endif // nsSupportsArray_h__

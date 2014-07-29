@@ -70,7 +70,7 @@ nsConsoleService::~nsConsoleService()
 class AddConsolePrefWatchers : public nsRunnable
 {
 public:
-  AddConsolePrefWatchers(nsConsoleService* aConsole) : mConsole(aConsole)
+  explicit AddConsolePrefWatchers(nsConsoleService* aConsole) : mConsole(aConsole)
   {
   }
 

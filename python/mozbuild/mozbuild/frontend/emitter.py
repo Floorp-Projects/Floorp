@@ -385,6 +385,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'MSVC_ENABLE_PGO',
             'NO_DIST_INSTALL',
             'OS_LIBS',
+            'PYTHON_UNIT_TESTS',
             'RCFILE',
             'RESFILE',
             'RCINCLUDE',
@@ -933,11 +934,7 @@ class TreeMetadataEmitter(LoggingMixin):
     def _emit_directory_traversal_from_sandbox(self, sandbox):
         o = DirectoryTraversal(sandbox)
         o.dirs = sandbox.get('DIRS', [])
-        o.parallel_dirs = sandbox.get('PARALLEL_DIRS', [])
-        o.tool_dirs = sandbox.get('TOOL_DIRS', [])
         o.test_dirs = sandbox.get('TEST_DIRS', [])
-        o.test_tool_dirs = sandbox.get('TEST_TOOL_DIRS', [])
-        o.is_tool_dir = sandbox.get('IS_TOOL_DIR', False)
         o.affected_tiers = sandbox.get_affected_tiers()
 
         if 'TIERS' in sandbox:

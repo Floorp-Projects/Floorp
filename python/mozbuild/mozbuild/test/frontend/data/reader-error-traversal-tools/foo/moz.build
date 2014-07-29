@@ -1,2 +1,0 @@
-# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
-DIRS = ['biz']

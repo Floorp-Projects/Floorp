@@ -73,12 +73,15 @@ void
 MediaStreamAudioSourceNode::PrincipalChanged(DOMMediaStream* ms)
 {
   bool subsumes = false;
-  nsIDocument* doc = Context()->GetParentObject()->GetExtantDoc();
-  if (doc) {
-    nsIPrincipal* docPrincipal = doc->NodePrincipal();
-    nsIPrincipal* streamPrincipal = mInputStream->GetPrincipal();
-    if (NS_FAILED(docPrincipal->Subsumes(streamPrincipal, &subsumes))) {
-      subsumes = false;
+  nsPIDOMWindow* parent = Context()->GetParentObject();
+  if (parent) {
+    nsIDocument* doc = parent->GetExtantDoc();
+    if (doc) {
+      nsIPrincipal* docPrincipal = doc->NodePrincipal();
+      nsIPrincipal* streamPrincipal = mInputStream->GetPrincipal();
+      if (NS_FAILED(docPrincipal->Subsumes(streamPrincipal, &subsumes))) {
+        subsumes = false;
+      }
     }
   }
   auto stream = static_cast<AudioNodeExternalInputStream*>(mStream.get());

@@ -17,7 +17,10 @@
       width: 600px;
       margin: 1em auto;
       background: #fff;
-      font-family: Helvetica, Arial, sans;
+      font-size: 12px;
+    }
+    h2 {
+      margin-top: 3em;
     }
   </style>
 </head>
@@ -102,8 +105,8 @@
   <div class="conversation">
     <ul class="controls">
       <li><button class="btn btn-hangup" title="Hangup"></button></li>
-      <li><button class="btn media-control btn-mute-video streaming" title="Mute video"></button></li>
-      <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+      <li><button class="btn media-control local-media btn-mute-video" title="Mute video"></button></li>
+      <li><button class="btn media-control local-media btn-mute-audio" title="Mute audio"></button></li>
     </ul>
     <div class="media nested">
       <div class="remote_wrapper">
@@ -119,8 +122,8 @@
     <div class="conversation">
       <ul class="controls">
         <li><button class="btn btn-hangup" title="Hangup"></button></li>
-        <li><button class="btn media-control btn-mute-video streaming" title="Mute video"></button></li>
-        <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+        <li><button class="btn media-control local-media btn-mute-video" title="Mute video"></button></li>
+        <li><button class="btn media-control local-media btn-mute-audio" title="Mute audio"></button></li>
       </ul>
       <div class="media nested">
         <div class="remote_wrapper">
@@ -150,8 +153,8 @@
     <div class="conversation">
       <ul class="controls">
         <li><button class="btn btn-hangup" title="Hangup"></button></li>
-        <li><button class="btn media-control btn-mute-video" title="Mute video"></button></li>
-        <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+        <li><button class="btn media-control local-media btn-mute-video" title="Mute video"></button></li>
+        <li><button class="btn media-control local-media btn-mute-audio" title="Mute audio"></button></li>
       </ul>
     </div>
   </div>
@@ -162,8 +165,8 @@
     <div class="conversation">
       <ul class="controls">
         <li><button class="btn btn-hangup" title="Hangup"></button></li>
-        <li><button class="btn media-control btn-mute-video" title="Mute video"></button></li>
-        <li><button class="btn media-control btn-mute-audio muted" title="Mute audio"></button></li>
+        <li><button class="btn media-control local-media btn-mute-video" title="Mute video"></button></li>
+        <li><button class="btn media-control local-media btn-mute-audio muted" title="Mute audio"></button></li>
       </ul>
     </div>
   </div>
@@ -174,33 +177,25 @@
     <div class="conversation">
       <ul class="controls">
         <li><button class="btn btn-hangup" title="Hangup"></button></li>
-        <li><button class="btn media-control btn-mute-video muted" title="Mute video"></button></li>
-        <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
+        <li><button class="btn media-control local-media btn-mute-video muted" title="Mute video"></button></li>
+        <li><button class="btn media-control local-media btn-mute-audio" title="Mute audio"></button></li>
       </ul>
     </div>
   </div>
 
-  <h3>Local audio streaming</h3>
+  <h2>Expired call url view</h2>
 
-  <div style="width: 204px; min-height: 26px">
-    <div class="conversation">
-      <ul class="controls">
-        <li><button class="btn btn-hangup" title="Hangup"></button></li>
-        <li><button class="btn media-control btn-mute-video" title="Mute video"></button></li>
-        <li><button class="btn media-control btn-mute-audio streaming" title="Mute audio"></button></li>
-      </ul>
+  <div class="expired-url-info">
+    <div class="info-panel">
+      <div class="firefox-logo"></div>
+      <h1 >Oops!</h1>
+      <h4 >This URL is unavailable.</h4>
     </div>
-  </div>
-
-  <h3>Local video streaming</h3>
-
-  <div style="width: 204px; min-height: 26px">
-    <div class="conversation">
-      <ul class="controls">
-        <li><button class="btn btn-hangup" title="Hangup"></button></li>
-        <li><button class="btn media-control btn-mute-video streaming" title="Mute video"></button></li>
-        <li><button class="btn media-control btn-mute-audio" title="Mute audio"></button></li>
-      </ul>
+    <div class="promote-firefox">
+      <h3>Download Firefox to make free audio and video calls!</h3>
+      <p>
+        <a class="btn btn-large btn-success" href="https://www.mozilla.org/firefox/" data-reactid=".0.1.1.0">Get Firefox</a>
+      </p>
     </div>
   </div>
 
@@ -230,6 +225,16 @@
     <button class="btn btn-error">error</button>
   </p>
 
+  <h3>Large buttons</h3>
+
+  <p>
+    <a class="btn btn-large">default</a>
+    <a class="btn btn-large btn-info">info</a>
+    <a class="btn btn-large btn-success">success</a>
+    <a class="btn btn-large btn-warning">warning</a>
+    <a class="btn btn-large btn-error">error</a>
+  </p>
+
   <h2>Alerts</h2>
 
   <div class="alert alert-error">
@@ -241,6 +246,12 @@
     <button class="close"></button>
     <p class="message">Oops! This is a warning.</p>
   </div>
+
+  <h2>Logos</h2>
+
+  <h3>Centered Firefox logo</h3>
+
+  <div class="firefox-logo"></div>
 
   <h2>Incoming call</h2>
 

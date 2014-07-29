@@ -194,6 +194,24 @@
   font-weight: normal;
 }
 
+/* Expired call url page */
+
+.expired-url-info {
+  width: 400px;
+  margin: 0 auto;
+}
+
+.promote-firefox {
+  text-align: center;
+  font-size: 18px;
+  line-height: 24px;
+  margin: 2em 0;
+}
+
+.promote-firefox h3 {
+  font-weight: 300;
+}
+
 /* Block incoming call */
 
 .native-dropdown-menu {

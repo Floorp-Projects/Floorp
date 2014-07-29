@@ -10,17 +10,46 @@
 #include "nsScriptSecurityManager.h"
 #include "jsfriendapi.h"
 #include "prprf.h"
+#include "shared-libraries.h"
 
 #include "js/OldDebugAPI.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
+#include "mozilla/Scoped.h"
+
+#include "google_breakpad/processor/call_stack.h"
+#include "google_breakpad/processor/basic_source_line_resolver.h"
+#include "google_breakpad/processor/stack_frame_cpu.h"
+#include "processor/basic_code_module.h"
+#include "processor/basic_code_modules.h"
+
+#if defined(MOZ_THREADSTACKHELPER_X86)
+#include "processor/stackwalker_x86.h"
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+#include "processor/stackwalker_amd64.h"
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+#include "processor/stackwalker_arm.h"
+#endif
 
 #include <string.h>
+#include <vector>
 
 #ifdef XP_LINUX
+#ifdef ANDROID
+// Android NDK doesn't contain ucontext.h; use Breakpad's copy.
+# include "common/android/include/sys/ucontext.h"
+#else
+# include <ucontext.h>
+#endif
 #include <unistd.h>
 #include <sys/syscall.h>
+#endif
+
+#if defined(XP_LINUX) || defined(XP_MACOSX)
+#include <pthread.h>
 #endif
 
 #ifdef ANDROID
@@ -34,6 +63,15 @@
 #ifndef SYS_rt_tgsigqueueinfo
 #define SYS_rt_tgsigqueueinfo __NR_rt_tgsigqueueinfo
 #endif
+#endif
+
+#if defined(MOZ_THREADSTACKHELPER_X86) || \
+    defined(MOZ_THREADSTACKHELPER_X64) || \
+    defined(MOZ_THREADSTACKHELPER_ARM)
+// On these architectures, the stack grows downwards (toward lower addresses).
+#define MOZ_THREADSTACKHELPER_STACK_GROWS_DOWN
+#else
+#error "Unsupported architecture"
 #endif
 
 namespace mozilla {
@@ -76,11 +114,13 @@ ThreadStackHelper::Shutdown()
 }
 
 ThreadStackHelper::ThreadStackHelper()
-  :
-#ifdef MOZ_ENABLE_PROFILER_SPS
-    mPseudoStack(mozilla_get_pseudo_stack()),
+  : mStackToFill(nullptr)
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+  , mPseudoStack(mozilla_get_pseudo_stack())
 #endif
-    mStackToFill(nullptr)
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+  , mContextToFill(nullptr)
+#endif
   , mMaxStackSize(Stack::sMaxInlineStorage)
   , mMaxBufferSize(0)
 {
@@ -96,6 +136,10 @@ ThreadStackHelper::ThreadStackHelper()
 #elif defined(XP_MACOSX)
   mThreadID = mach_thread_self();
 #endif
+
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+  GetThreadStackBase();
+#endif
 }
 
 ThreadStackHelper::~ThreadStackHelper()
@@ -109,6 +153,58 @@ ThreadStackHelper::~ThreadStackHelper()
 #endif
 }
 
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+void ThreadStackHelper::GetThreadStackBase()
+{
+  mThreadStackBase = 0;
+
+#if defined(XP_LINUX)
+  void* stackAddr;
+  size_t stackSize;
+  ::pthread_t pthr = ::pthread_self();
+  ::pthread_attr_t pthr_attr;
+  NS_ENSURE_TRUE_VOID(!::pthread_getattr_np(pthr, &pthr_attr));
+  if (!::pthread_attr_getstack(&pthr_attr, &stackAddr, &stackSize)) {
+#ifdef MOZ_THREADSTACKHELPER_STACK_GROWS_DOWN
+    mThreadStackBase = intptr_t(stackAddr) + stackSize;
+#else
+    mThreadStackBase = intptr_t(stackAddr);
+#endif
+  }
+  MOZ_ALWAYS_TRUE(!::pthread_attr_destroy(&pthr_attr));
+
+#elif defined(XP_WIN)
+  ::MEMORY_BASIC_INFORMATION meminfo = {};
+  NS_ENSURE_TRUE_VOID(::VirtualQuery(
+    &meminfo, &meminfo, sizeof(meminfo)));
+#ifdef MOZ_THREADSTACKHELPER_STACK_GROWS_DOWN
+  mThreadStackBase = intptr_t(meminfo.BaseAddress) + meminfo.RegionSize;
+#else
+  mThreadStackBase = intptr_t(meminfo.AllocationBase);
+#endif
+
+#elif defined(XP_MACOSX)
+  ::pthread_t pthr = ::pthread_self();
+  mThreadStackBase = intptr_t(::pthread_get_stackaddr_np(pthr));
+
+#else
+  #error "Unsupported platform"
+#endif // platform
+}
+#endif // MOZ_THREADSTACKHELPER_NATIVE
+
+namespace {
+template <typename T>
+class ScopedSetPtr
+{
+private:
+  T*& mPtr;
+public:
+  ScopedSetPtr(T*& p, T* val) : mPtr(p) { mPtr = val; }
+  ~ScopedSetPtr() { mPtr = nullptr; }
+};
+}
+
 void
 ThreadStackHelper::GetStack(Stack& aStack)
 {
@@ -117,6 +213,8 @@ ThreadStackHelper::GetStack(Stack& aStack)
     // Skip and return empty aStack
     return;
   }
+
+  ScopedSetPtr<Stack> stackPtr(mStackToFill, &aStack);
 
 #if defined(XP_LINUX)
   if (!sInitialized) {
@@ -146,7 +244,10 @@ ThreadStackHelper::GetStack(Stack& aStack)
     MOZ_ASSERT(false);
     return;
   }
+
   FillStackBuffer();
+  FillThreadContext();
+
   MOZ_ALWAYS_TRUE(::ResumeThread(mThreadID) != DWORD(-1));
 
 #elif defined(XP_MACOSX)
@@ -154,10 +255,195 @@ ThreadStackHelper::GetStack(Stack& aStack)
     MOZ_ASSERT(false);
     return;
   }
+
   FillStackBuffer();
+  FillThreadContext();
+
   MOZ_ALWAYS_TRUE(::thread_resume(mThreadID) == KERN_SUCCESS);
 
 #endif
+}
+
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+class ThreadStackHelper::CodeModulesProvider
+  : public google_breakpad::CodeModules {
+private:
+  typedef google_breakpad::CodeModule CodeModule;
+  typedef google_breakpad::BasicCodeModule BasicCodeModule;
+
+  const SharedLibraryInfo mLibs;
+  mutable ScopedDeletePtr<BasicCodeModule> mModule;
+
+public:
+  CodeModulesProvider() : mLibs(SharedLibraryInfo::GetInfoForSelf()) {}
+  virtual ~CodeModulesProvider() {}
+
+  virtual unsigned int module_count() const {
+    return mLibs.GetSize();
+  }
+
+  virtual const CodeModule* GetModuleForAddress(uint64_t address) const {
+    MOZ_CRASH("Not implemented");
+  }
+
+  virtual const CodeModule* GetMainModule() const {
+    return nullptr;
+  }
+
+  virtual const CodeModule* GetModuleAtSequence(unsigned int sequence) const {
+    MOZ_CRASH("Not implemented");
+  }
+
+  virtual const CodeModule* GetModuleAtIndex(unsigned int index) const {
+    const SharedLibrary& lib = mLibs.GetEntry(index);
+    mModule = new BasicCodeModule(lib.GetStart(), lib.GetEnd() - lib.GetStart(),
+                                  lib.GetName(), lib.GetBreakpadId(),
+                                  lib.GetName(), lib.GetBreakpadId(), "");
+    // Keep mModule valid until the next GetModuleAtIndex call.
+    return mModule;
+  }
+
+  virtual const CodeModules* Copy() const {
+    MOZ_CRASH("Not implemented");
+  }
+};
+
+class ThreadStackHelper::ThreadContext
+  : public google_breakpad::MemoryRegion {
+public:
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  typedef MDRawContextX86 Context;
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  typedef MDRawContextAMD64 Context;
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  typedef MDRawContextARM Context;
+#endif
+  // Limit copied stack to 4kB
+  static const size_t kMaxStackSize = 0x1000;
+  // Limit unwound stack to 32 frames
+  static const unsigned int kMaxStackFrames = 32;
+  // Whether this structure contains valid data
+  bool mValid;
+  // Processor context
+  Context mContext;
+  // Stack area
+  ScopedDeleteArray<uint8_t> mStack;
+  // Start of stack area
+  uintptr_t mStackBase;
+  // Size of stack area
+  size_t mStackSize;
+  // End of stack area
+  const void* mStackEnd;
+
+  ThreadContext() : mValid(false)
+                  , mStackBase(0)
+                  , mStackSize(0)
+                  , mStackEnd(nullptr) {}
+  virtual ~ThreadContext() {}
+
+  virtual uint64_t GetBase() const {
+    return uint64_t(mStackBase);
+  }
+  virtual uint32_t GetSize() const {
+    return mStackSize;
+  }
+  virtual bool GetMemoryAtAddress(uint64_t address, uint8_t*  value) const {
+    return GetMemoryAtAddressInternal(address, value);
+  }
+  virtual bool GetMemoryAtAddress(uint64_t address, uint16_t*  value) const {
+    return GetMemoryAtAddressInternal(address, value);
+  }
+  virtual bool GetMemoryAtAddress(uint64_t address, uint32_t*  value) const {
+    return GetMemoryAtAddressInternal(address, value);
+  }
+  virtual bool GetMemoryAtAddress(uint64_t address, uint64_t*  value) const {
+    return GetMemoryAtAddressInternal(address, value);
+  }
+
+private:
+  template <typename T>
+  bool GetMemoryAtAddressInternal(uint64_t address, T* value) const {
+    const intptr_t offset = intptr_t(address) - intptr_t(GetBase());
+    if (offset < 0 || uintptr_t(offset) > (GetSize() - sizeof(T))) {
+      return false;
+    }
+    *value = *reinterpret_cast<const T*>(&mStack[offset]);
+    return true;
+  }
+};
+#endif // MOZ_THREADSTACKHELPER_NATIVE
+
+void
+ThreadStackHelper::GetNativeStack(Stack& aStack)
+{
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+  ThreadContext context;
+  context.mStack = new uint8_t[ThreadContext::kMaxStackSize];
+
+  ScopedSetPtr<ThreadContext> contextPtr(mContextToFill, &context);
+
+  // Get pseudostack first and fill the thread context.
+  GetStack(aStack);
+  NS_ENSURE_TRUE_VOID(context.mValid);
+
+  CodeModulesProvider modulesProvider;
+  google_breakpad::BasicCodeModules modules(&modulesProvider);
+  google_breakpad::BasicSourceLineResolver resolver;
+  google_breakpad::StackFrameSymbolizer symbolizer(nullptr, &resolver);
+
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  google_breakpad::StackwalkerX86 stackWalker(
+    nullptr, &context.mContext, &context, &modules, &symbolizer);
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  google_breakpad::StackwalkerAMD64 stackWalker(
+    nullptr, &context.mContext, &context, &modules, &symbolizer);
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  google_breakpad::StackwalkerARM stackWalker(
+    nullptr, &context.mContext, -1, &context, &modules, &symbolizer);
+#else
+  #error "Unsupported architecture"
+#endif
+
+  google_breakpad::CallStack callStack;
+  std::vector<const google_breakpad::CodeModule*> modules_without_symbols;
+
+  google_breakpad::Stackwalker::set_max_frames(ThreadContext::kMaxStackFrames);
+  google_breakpad::Stackwalker::
+    set_max_frames_scanned(ThreadContext::kMaxStackFrames);
+
+  NS_ENSURE_TRUE_VOID(stackWalker.Walk(&callStack, &modules_without_symbols));
+
+  const std::vector<google_breakpad::StackFrame*>& frames(*callStack.frames());
+  for (intptr_t i = frames.size() - 1; i >= 0; i--) {
+    const google_breakpad::StackFrame& frame = *frames[i];
+    if (!frame.module) {
+      continue;
+    }
+    const string& module = frame.module->code_file();
+#if defined(XP_LINUX) || defined(XP_MACOSX)
+    const char PATH_SEP = '/';
+#elif defined(XP_WIN)
+    const char PATH_SEP = '\\';
+#endif
+    const char* const module_basename = strrchr(module.c_str(), PATH_SEP);
+    const char* const module_name = module_basename ?
+                                    module_basename + 1 : module.c_str();
+
+    char buffer[0x100];
+    size_t len = 0;
+    if (!frame.function_name.empty()) {
+      len = PR_snprintf(buffer, sizeof(buffer), "%s:%s",
+                        module_name, frame.function_name.c_str());
+    } else {
+      len = PR_snprintf(buffer, sizeof(buffer), "%s:0x%p",
+                        module_name, (intptr_t)
+                        (frame.instruction - frame.module->base_address()));
+    }
+    if (len) {
+      aStack.AppendViaBuffer(buffer, len);
+    }
+  }
+#endif // MOZ_THREADSTACKHELPER_NATIVE
 }
 
 #ifdef XP_LINUX
@@ -172,6 +458,7 @@ ThreadStackHelper::FillStackHandler(int aSignal, siginfo_t* aInfo,
   ThreadStackHelper* const helper =
     reinterpret_cast<ThreadStackHelper*>(aInfo->si_value.sival_ptr);
   helper->FillStackBuffer();
+  helper->FillThreadContext(aContext);
   ::sem_post(&helper->mSem);
 }
 
@@ -182,7 +469,7 @@ ThreadStackHelper::PrepareStackBuffer(Stack& aStack)
 {
   // Return false to skip getting the stack and return an empty stack
   aStack.clear();
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
   /* Normally, provided the profiler is enabled, it would be an error if we
      don't have a pseudostack here (the thread probably forgot to call
      profiler_register_thread). However, on B2G, profiling secondary threads
@@ -199,14 +486,13 @@ ThreadStackHelper::PrepareStackBuffer(Stack& aStack)
       !aStack.EnsureBufferCapacity(mMaxBufferSize)) {
     return false;
   }
-  mStackToFill = &aStack;
   return true;
 #else
   return false;
 #endif
 }
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
 
 namespace {
 
@@ -274,14 +560,14 @@ ThreadStackHelper::AppendJSEntry(const volatile StackEntry* aEntry,
   return label;
 }
 
-#endif // MOZ_ENABLE_PROFILER_SPS
+#endif // MOZ_THREADSTACKHELPER_PSEUDO
 
 void
 ThreadStackHelper::FillStackBuffer()
 {
   MOZ_ASSERT(mStackToFill->empty());
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_THREADSTACKHELPER_PSEUDO
   size_t reservedSize = mStackToFill->capacity();
   size_t reservedBufferSize = mStackToFill->AvailableBufferSize();
   intptr_t availableBufferSize = intptr_t(reservedBufferSize);
@@ -301,6 +587,11 @@ ThreadStackHelper::FillStackBuffer()
       prevLabel = AppendJSEntry(entry, availableBufferSize, prevLabel);
       continue;
     }
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+    if (mContextToFill) {
+      mContextToFill->mStackEnd = entry->stackAddress();
+    }
+#endif
     const char* const label = entry->label();
     if (mStackToFill->IsSameAsEntry(prevLabel, label)) {
       continue;
@@ -319,6 +610,169 @@ ThreadStackHelper::FillStackBuffer()
     mMaxBufferSize = reservedBufferSize - availableBufferSize;
   }
 #endif
+}
+
+MOZ_ASAN_BLACKLIST void
+ThreadStackHelper::FillThreadContext(void* aContext)
+{
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+  if (!mContextToFill) {
+    return;
+  }
+
+#if defined(XP_LINUX)
+  const ucontext_t& context = *reinterpret_cast<ucontext_t*>(aContext);
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_X86_FULL;
+  mContextToFill->mContext.edi = context.uc_mcontext.gregs[REG_EDI];
+  mContextToFill->mContext.esi = context.uc_mcontext.gregs[REG_ESI];
+  mContextToFill->mContext.ebx = context.uc_mcontext.gregs[REG_EBX];
+  mContextToFill->mContext.edx = context.uc_mcontext.gregs[REG_EDX];
+  mContextToFill->mContext.ecx = context.uc_mcontext.gregs[REG_ECX];
+  mContextToFill->mContext.eax = context.uc_mcontext.gregs[REG_EAX];
+  mContextToFill->mContext.ebp = context.uc_mcontext.gregs[REG_EBP];
+  mContextToFill->mContext.eip = context.uc_mcontext.gregs[REG_EIP];
+  mContextToFill->mContext.eflags = context.uc_mcontext.gregs[REG_EFL];
+  mContextToFill->mContext.esp = context.uc_mcontext.gregs[REG_ESP];
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_AMD64_FULL;
+  mContextToFill->mContext.eflags = uint32_t(context.uc_mcontext.gregs[REG_EFL]);
+  mContextToFill->mContext.rax = context.uc_mcontext.gregs[REG_RAX];
+  mContextToFill->mContext.rcx = context.uc_mcontext.gregs[REG_RCX];
+  mContextToFill->mContext.rdx = context.uc_mcontext.gregs[REG_RDX];
+  mContextToFill->mContext.rbx = context.uc_mcontext.gregs[REG_RBX];
+  mContextToFill->mContext.rsp = context.uc_mcontext.gregs[REG_RSP];
+  mContextToFill->mContext.rbp = context.uc_mcontext.gregs[REG_RBP];
+  mContextToFill->mContext.rsi = context.uc_mcontext.gregs[REG_RSI];
+  mContextToFill->mContext.rdi = context.uc_mcontext.gregs[REG_RDI];
+  memcpy(&mContextToFill->mContext.r8,
+         &context.uc_mcontext.gregs[REG_R8], 8 * sizeof(int64_t));
+  mContextToFill->mContext.rip = context.uc_mcontext.gregs[REG_RIP];
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_ARM_FULL;
+  memcpy(&mContextToFill->mContext.iregs[0],
+         &context.uc_mcontext.arm_r0, 17 * sizeof(int32_t));
+#else
+  #error "Unsupported architecture"
+#endif // architecture
+
+#elif defined(XP_WIN)
+  // Breakpad context struct is based off of the Windows CONTEXT struct,
+  // so we assume they are the same; do some sanity checks to make sure.
+  static_assert(sizeof(ThreadContext::Context) == sizeof(::CONTEXT),
+                "Context struct mismatch");
+  static_assert(offsetof(ThreadContext::Context, context_flags) ==
+                offsetof(::CONTEXT, ContextFlags),
+                "Context struct mismatch");
+  mContextToFill->mContext.context_flags = CONTEXT_FULL;
+  NS_ENSURE_TRUE_VOID(::GetThreadContext(mThreadID,
+      reinterpret_cast<::CONTEXT*>(&mContextToFill->mContext)));
+
+#elif defined(XP_MACOSX)
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  const thread_state_flavor_t flavor = x86_THREAD_STATE32;
+  x86_thread_state32_t state = {};
+  mach_msg_type_number_t count = x86_THREAD_STATE32_COUNT;
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  const thread_state_flavor_t flavor = x86_THREAD_STATE64;
+  x86_thread_state64_t state = {};
+  mach_msg_type_number_t count = x86_THREAD_STATE64_COUNT;
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  const thread_state_flavor_t flavor = ARM_THREAD_STATE;
+  arm_thread_state_t state = {};
+  mach_msg_type_number_t count = ARM_THREAD_STATE_COUNT;
+#endif
+  NS_ENSURE_TRUE_VOID(KERN_SUCCESS == ::thread_get_state(
+    mThreadID, flavor, reinterpret_cast<thread_state_t>(&state), &count));
+#if __DARWIN_UNIX03
+#define GET_REGISTER(s, r) ((s).__##r)
+#else
+#define GET_REGISTER(s, r) ((s).r)
+#endif
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_X86_FULL;
+  mContextToFill->mContext.edi = GET_REGISTER(state, edi);
+  mContextToFill->mContext.esi = GET_REGISTER(state, esi);
+  mContextToFill->mContext.ebx = GET_REGISTER(state, ebx);
+  mContextToFill->mContext.edx = GET_REGISTER(state, edx);
+  mContextToFill->mContext.ecx = GET_REGISTER(state, ecx);
+  mContextToFill->mContext.eax = GET_REGISTER(state, eax);
+  mContextToFill->mContext.ebp = GET_REGISTER(state, ebp);
+  mContextToFill->mContext.eip = GET_REGISTER(state, eip);
+  mContextToFill->mContext.eflags = GET_REGISTER(state, eflags);
+  mContextToFill->mContext.esp = GET_REGISTER(state, esp);
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_AMD64_FULL;
+  mContextToFill->mContext.eflags = uint32_t(GET_REGISTER(state, rflags));
+  mContextToFill->mContext.rax = GET_REGISTER(state, rax);
+  mContextToFill->mContext.rcx = GET_REGISTER(state, rcx);
+  mContextToFill->mContext.rdx = GET_REGISTER(state, rdx);
+  mContextToFill->mContext.rbx = GET_REGISTER(state, rbx);
+  mContextToFill->mContext.rsp = GET_REGISTER(state, rsp);
+  mContextToFill->mContext.rbp = GET_REGISTER(state, rbp);
+  mContextToFill->mContext.rsi = GET_REGISTER(state, rsi);
+  mContextToFill->mContext.rdi = GET_REGISTER(state, rdi);
+  memcpy(&mContextToFill->mContext.r8,
+         &GET_REGISTER(state, r8), 8 * sizeof(int64_t));
+  mContextToFill->mContext.rip = GET_REGISTER(state, rip);
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  mContextToFill->mContext.context_flags = MD_CONTEXT_ARM_FULL;
+  memcpy(mContextToFill->mContext.iregs,
+         GET_REGISTER(state, r), 17 * sizeof(int32_t));
+#else
+  #error "Unsupported architecture"
+#endif // architecture
+#undef GET_REGISTER
+
+#else
+  #error "Unsupported platform"
+#endif // platform
+
+  intptr_t sp = 0;
+#if defined(MOZ_THREADSTACKHELPER_X86)
+  sp = mContextToFill->mContext.esp;
+#elif defined(MOZ_THREADSTACKHELPER_X64)
+  sp = mContextToFill->mContext.rsp;
+#elif defined(MOZ_THREADSTACKHELPER_ARM)
+  sp = mContextToFill->mContext.iregs[13];
+#else
+  #error "Unsupported architecture"
+#endif // architecture
+  NS_ENSURE_TRUE_VOID(sp);
+  NS_ENSURE_TRUE_VOID(mThreadStackBase);
+
+  size_t stackSize = std::min(intptr_t(ThreadContext::kMaxStackSize),
+                              std::abs(sp - mThreadStackBase));
+
+  if (mContextToFill->mStackEnd) {
+    // Limit the start of stack to a certain location if specified.
+    stackSize = std::min(intptr_t(stackSize),
+      std::abs(sp - intptr_t(mContextToFill->mStackEnd)));
+  }
+
+#ifndef MOZ_THREADSTACKHELPER_STACK_GROWS_DOWN
+  // If if the stack grows upwards, and we need to recalculate our
+  // stack copy's base address. Subtract sizeof(void*) so that the
+  // location pointed to by sp is included.
+  sp -= stackSize - sizeof(void*);
+#endif
+
+#ifndef MOZ_ASAN
+  memcpy(mContextToFill->mStack, reinterpret_cast<void*>(sp), stackSize);
+#else
+  // ASan will flag memcpy for access outside of stack frames,
+  // so roll our own memcpy here.
+  intptr_t* dst = reinterpret_cast<intptr_t*>(&mContextToFill->mStack[0]);
+  const intptr_t* src = reinterpret_cast<intptr_t*>(sp);
+  for (intptr_t len = stackSize; len > 0; len -= sizeof(*src)) {
+    *(dst++) = *(src++);
+  }
+#endif
+
+  mContextToFill->mStackBase = uintptr_t(sp);
+  mContextToFill->mStackSize = stackSize;
+  mContextToFill->mValid = true;
+#endif // MOZ_THREADSTACKHELPER_NATIVE
 }
 
 } // namespace mozilla

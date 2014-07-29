@@ -46,4 +46,4 @@ external_dirs += [
     'media/libsoundtouch',
 ]
 
-PARALLEL_DIRS += ['../../' + i for i in external_dirs]
+DIRS += ['../../' + i for i in external_dirs]
