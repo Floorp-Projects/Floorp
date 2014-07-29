@@ -82,6 +82,7 @@ PKG_STAGE = $(DIST)/test-stage
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/reftest && $(NSINSTALL) -D $(PKG_STAGE)/reftest/tests
 	(cd $(DEPTH)/_tests/reftest/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/reftest && tar -xf -)
+	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/reftest
 	$(PYTHON) $(topsrcdir)/layout/tools/reftest/print-manifest-dirs.py \
           $(topsrcdir) \
           $(topsrcdir)/layout/reftests/reftest.list \
