@@ -6,6 +6,7 @@
 #pragma once
 
 // Moz headers (alphabetical)
+#include "APZController.h"
 #include "keyboardlayout.h"   // mModifierKeyState
 #include "nsBaseHashtable.h"  // mTouches
 #include "nsHashKeys.h"       // type of key for mTouches
@@ -68,7 +69,8 @@ namespace mozilla {
 namespace widget {
 namespace winrt {
 
-class MetroInput : public Microsoft::WRL::RuntimeClass<IInspectable>
+class MetroInput : public Microsoft::WRL::RuntimeClass<IInspectable>,
+                   public APZPendingResponseFlusher
 {
   InspectableClass(L"MetroInput", BaseTrust);
 
@@ -147,6 +149,9 @@ public:
 
   void HandleTap(const Point& aPoint, unsigned int aTapCount);
   void HandleLongTap(const Point& aPoint);
+
+  // The APZPendingResponseFlusher implementation
+  void FlushPendingContentResponse();
 
   static bool IsInputModeImprecise();
 

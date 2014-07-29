@@ -272,6 +272,8 @@ MetroInput::MetroInput(MetroWidget* aWidget,
   NS_ASSERTION(aWidget, "Attempted to create MetroInput for null widget!");
   NS_ASSERTION(aWindow, "Attempted to create MetroInput for null window!");
 
+  mWidget->SetApzPendingResponseFlusher(this);
+
   Preferences::AddBoolVarCache(&gTouchActionPropertyEnabled, "layout.css.touch_action.enabled", gTouchActionPropertyEnabled);
   mTokenPointerPressed.value = 0;
   mTokenPointerReleased.value = 0;
@@ -1321,6 +1323,12 @@ MetroInput::SendPendingResponseToApz()
     }
     mCancelable = false;
   }
+}
+
+void
+MetroInput::FlushPendingContentResponse()
+{
+  SendPendingResponseToApz();
 }
 
 void

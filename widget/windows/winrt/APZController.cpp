@@ -144,6 +144,12 @@ protected:
 };
 
 void
+APZController::SetPendingResponseFlusher(APZPendingResponseFlusher* aFlusher)
+{
+  mFlusher = aFlusher;
+}
+
+void
 APZController::ContentReceivedTouch(const ScrollableLayerGuid& aGuid, bool aPreventDefault)
 {
   if (!sAPZC) {
@@ -230,6 +236,9 @@ APZController::HandleLongTap(const CSSPoint& aPoint,
                              int32_t aModifiers,
                              const ScrollableLayerGuid& aGuid)
 {
+  if (mFlusher) {
+    mFlusher->FlushPendingContentResponse();
+  }
   ContentReceivedTouch(aGuid, false);
 }
 
