@@ -98,6 +98,7 @@ function MozNFCPeer() {
 MozNFCPeer.prototype = {
   _nfcContentHelper: null,
   _window: null,
+  _isLost: false,
 
   initialize: function(aWindow, aSessionToken) {
     this._window = aWindow;
@@ -106,17 +107,29 @@ MozNFCPeer.prototype = {
 
   // NFCPeer interface:
   sendNDEF: function sendNDEF(records) {
+    if (this._isLost) {
+      throw new this._window.DOMError("InvalidStateError", "NFCPeer object is invalid");
+    }
+
     // Just forward sendNDEF to writeNDEF
     return this._nfcContentHelper.writeNDEF(this._window, records, this.session);
   },
 
   sendFile: function sendFile(blob) {
+    if (this._isLost) {
+      throw new this._window.DOMError("InvalidStateError", "NFCPeer object is invalid");
+    }
+
     let data = {
       "blob": blob
     };
     return this._nfcContentHelper.sendFile(this._window,
                                            Cu.cloneInto(data, this._window),
                                            this.session);
+  },
+
+  invalidate: function invalidate() {
+    this._isLost = true;
   },
 
   classID: Components.ID("{c1b2bcf0-35eb-11e3-aa6e-0800200c9a66}"),
@@ -277,6 +290,7 @@ mozNfc.prototype = {
     }
 
     if (this.nfcObject && (this.nfcObject.session == sessionToken)) {
+      this.nfcObject.invalidate();
       this.nfcObject = null;
     }
 
