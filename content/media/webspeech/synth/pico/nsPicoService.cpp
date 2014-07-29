@@ -305,7 +305,7 @@ PicoCallbackRunnable::Run()
     } else {
       // If we already fed all the text to the engine, send a zero length buffer
       // and quit.
-      DispatchSynthDataRunnable(already_AddRefed<SharedBuffer>(nullptr), 0);
+      DispatchSynthDataRunnable(already_AddRefed<SharedBuffer>(), 0);
       break;
     }
 
