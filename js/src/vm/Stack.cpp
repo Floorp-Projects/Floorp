@@ -1842,44 +1842,11 @@ JS::ProfilingFrameIterator::stackAddress() const
 #endif
 }
 
-JS::ProfilingFrameIterator::Kind
-JS::ProfilingFrameIterator::kind() const
-{
-#ifdef JS_ION
-    return iter().kind();
-#else
-    MOZ_CRASH("Shouldn't have any frames");
-#endif
-}
-
-JSAtom *
-JS::ProfilingFrameIterator::functionDisplayAtom() const
-{
-#ifdef JS_ION
-    JS_ASSERT(kind() == Function);
-    return iter().functionDisplayAtom();
-#else
-    MOZ_CRASH("Shouldn't have any frames");
-#endif
-}
-
 const char *
-JS::ProfilingFrameIterator::functionFilename() const
+JS::ProfilingFrameIterator::label() const
 {
 #ifdef JS_ION
-    JS_ASSERT(kind() == Function);
-    return iter().functionFilename();
-#else
-    MOZ_CRASH("Shouldn't have any frames");
-#endif
-}
-
-const char *
-JS::ProfilingFrameIterator::nonFunctionDescription() const
-{
-#ifdef JS_ION
-    JS_ASSERT(kind() != Function);
-    return iter().nonFunctionDescription();
+    return iter().label();
 #else
     MOZ_CRASH("Shouldn't have any frames");
 #endif

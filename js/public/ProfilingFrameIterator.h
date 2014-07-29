@@ -43,11 +43,10 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
   public:
     struct RegisterState
     {
+        RegisterState() : pc(nullptr), sp(nullptr), lr(nullptr) {}
         void *pc;
         void *sp;
-#if defined(JS_CODEGEN_ARM)
         void *lr;
-#endif
     };
 
     ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state);
@@ -62,19 +61,9 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     //    and less than older native and psuedo-stack frame addresses
     void *stackAddress() const;
 
-    enum Kind {
-        Function,
-        AsmJSTrampoline,
-        CppFunction
-    };
-    Kind kind() const;
-
-    // Methods available if kind() == Function:
-    JSAtom *functionDisplayAtom() const;
-    const char *functionFilename() const;
-
-    // Methods available if kind() != Function
-    const char *nonFunctionDescription() const;
+    // Return a label suitable for regexp-matching as performed by
+    // browser/devtools/profiler/cleopatra/js/parserWorker.js
+    const char *label() const;
 };
 
 } // namespace JS
