@@ -6,7 +6,6 @@
 #include "gfxDrawable.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxColor.h"
 #ifdef MOZ_X11
@@ -16,24 +15,6 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-
-gfxSurfaceDrawable::gfxSurfaceDrawable(gfxASurface* aSurface,
-                                       const gfxIntSize aSize,
-                                       const gfxMatrix aTransform)
- : gfxDrawable(aSize)
- , mSurface(aSurface)
- , mTransform(aTransform)
-{
-}
-
-gfxSurfaceDrawable::gfxSurfaceDrawable(DrawTarget* aDrawTarget,
-                                       const gfxIntSize aSize,
-                                       const gfxMatrix aTransform)
- : gfxDrawable(aSize)
- , mDrawTarget(aDrawTarget)
- , mTransform(aTransform)
-{
-}
 
 gfxSurfaceDrawable::gfxSurfaceDrawable(SourceSurface* aSurface,
                                        const gfxIntSize aSize,
@@ -131,15 +112,8 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
                          const GraphicsFilter& aFilter,
                          const gfxMatrix& aTransform)
 {
-    nsRefPtr<gfxPattern> pattern;
-    if (mDrawTarget) {
-      RefPtr<SourceSurface> source = mDrawTarget->Snapshot();
-      pattern = new gfxPattern(source, Matrix());
-    } else if (mSourceSurface) {
-      pattern = new gfxPattern(mSourceSurface, Matrix());
-    } else {
-      pattern = new gfxPattern(mSurface);
-    }
+    nsRefPtr<gfxPattern> pattern = new gfxPattern(mSourceSurface, Matrix());
+
     if (aRepeat) {
         pattern->SetExtend(gfxPattern::EXTEND_REPEAT);
         pattern->SetFilter(aFilter);
@@ -168,19 +142,6 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
     // drawable is destroyed
     aContext->SetDeviceColor(gfxRGBA(0.0, 0.0, 0.0, 0.0));
     return true;
-}
-
-already_AddRefed<gfxImageSurface>
-gfxSurfaceDrawable::GetAsImageSurface()
-{
-    if (mDrawTarget || mSourceSurface) {
-      // TODO: Find a way to implement this. The caller really wants a 'sub-image' of
-      // the original, without having to do a copy. GetDataSurface() might just copy,
-      // which isn't useful.
-      return nullptr;
-
-    }
-    return mSurface->GetAsImageSurface();
 }
 
 gfxCallbackDrawable::gfxCallbackDrawable(gfxDrawingCallback* aCallback,
