@@ -489,6 +489,8 @@
 #endif
 #ifdef MOZ_SERVICES_HEALTHREPORT
 @BINPATH@/components/HealthReportComponents.manifest
+@BINPATH@/browser/components/SelfSupportService.manifest
+@BINPATH@/browser/components/SelfSupportService.js
 #endif
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
