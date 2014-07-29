@@ -491,13 +491,16 @@ BrowserElementChild.prototype = {
     }
   },
 
+  _maybeCopyAttribute: function(src, target, attribute) {
+    if (src.getAttribute(attribute)) {
+      target[attribute] = src.getAttribute(attribute);
+    }
+  },
+
   _iconChangedHandler: function(e) {
     debug('Got iconchanged: (' + e.target.href + ')');
     let icon = { href: e.target.href };
-    if (e.target.getAttribute('sizes')) {
-      icon.sizes = e.target.getAttribute('sizes');
-    }
-
+    this._maybeCopyAttribute(e.target, icon, 'sizes');
     sendAsyncMsg('iconchange', icon);
   },
 
@@ -531,7 +534,8 @@ BrowserElementChild.prototype = {
     }
 
     let handlers = {
-      'icon': this._iconChangedHandler,
+      'icon': this._iconChangedHandler.bind(this),
+      'apple-touch-icon': this._iconChangedHandler.bind(this),
       'search': this._openSearchHandler,
       'manifest': this._manifestChangedHandler
     };
@@ -973,14 +977,8 @@ BrowserElementChild.prototype = {
   },
 
   _buildMenuObj: function(menu, idPrefix) {
-    function maybeCopyAttribute(src, target, attribute) {
-      if (src.getAttribute(attribute)) {
-        target[attribute] = src.getAttribute(attribute);
-      }
-    }
-
     var menuObj = {type: 'menu', items: []};
-    maybeCopyAttribute(menu, menuObj, 'label');
+    this._maybeCopyAttribute(menu, menuObj, 'label');
 
     for (var i = 0, child; child = menu.children[i++];) {
       if (child.nodeName === 'MENU') {
@@ -988,8 +986,8 @@ BrowserElementChild.prototype = {
       } else if (child.nodeName === 'MENUITEM') {
         var id = this._ctxCounter + '_' + idPrefix + i;
         var menuitem = {id: id, type: 'menuitem'};
-        maybeCopyAttribute(child, menuitem, 'label');
-        maybeCopyAttribute(child, menuitem, 'icon');
+        this._maybeCopyAttribute(child, menuitem, 'label');
+        this._maybeCopyAttribute(child, menuitem, 'icon');
         this._ctxHandlers[id] = child;
         menuObj.items.push(menuitem);
       }
