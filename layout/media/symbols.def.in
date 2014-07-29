@@ -137,6 +137,8 @@ cubeb_stream_stop
 cubeb_stream_get_latency
 cubeb_stream_set_volume
 cubeb_stream_set_panning
+cubeb_stream_get_current_output_device
+cubeb_stream_output_device_destroy
 th_comment_clear
 th_comment_init
 th_decode_alloc
