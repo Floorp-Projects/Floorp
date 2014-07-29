@@ -625,7 +625,7 @@ public:
 
   void NudgeToIntegersFixedEpsilon()
   {
-    static const float error = 1e-5;
+    static const float error = 1e-5f;
     NudgeToInteger(&_11, error);
     NudgeToInteger(&_12, error);
     NudgeToInteger(&_13, error);
