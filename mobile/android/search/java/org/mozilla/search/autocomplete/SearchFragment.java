@@ -6,6 +6,7 @@ package org.mozilla.search.autocomplete;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -19,6 +20,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import org.mozilla.search.AcceptsSearchQuery;
+import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 import org.mozilla.search.R;
 
 import java.util.ArrayList;
@@ -147,8 +150,20 @@ public class SearchFragment extends Fragment implements AcceptsJumpTaps {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final Suggestion suggestion = (Suggestion) suggestionDropdown.getItemAtPosition(position);
 
-                transitionToWaiting();
-                searchListener.onSearch(suggestion.value);
+                final Rect startBounds = new Rect();
+                view.getGlobalVisibleRect(startBounds);
+
+                searchListener.onSearch(suggestion.value, new SuggestionAnimation() {
+                    @Override
+                    public Rect getStartBounds() {
+                        return startBounds;
+                    }
+
+                    @Override
+                    public void onAnimationEnd() {
+                        transitionToWaiting();
+                    }
+                });
             }
         });
 

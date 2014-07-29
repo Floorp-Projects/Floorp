@@ -8,6 +8,12 @@
     <dimen name="search_bar_height">65dp</dimen>
     <dimen name="progress_bar_height">3dp</dimen>
 
+    <!-- Vertical translation of suggestion animation text to align with search bar text -->
+    <dimen name="animation_text_translation_y">21dp</dimen>
+
+    <!-- Size of the text for query input and suggestions -->
+    <dimen name="query_text_size">16sp</dimen>
+
     <!-- We use background padding to create space around the cards -->
     <dimen name="card_background_padding_x">15dp</dimen>
     <dimen name="card_background_padding_y">3dp</dimen>
