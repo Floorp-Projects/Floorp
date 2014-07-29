@@ -569,8 +569,18 @@ MediaStreamGraphImpl::UpdateStreamOrder()
 
   if (!mMixer && shouldMix) {
     mMixer = new AudioMixer(AudioMixerCallback);
+    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+      for (uint32_t i = 0; i < mStreams[i]->mAudioOutputStreams.Length(); ++i) {
+        mStreams[i]->mAudioOutputStreams[i].mStream->SetMicrophoneActive(true);
+      }
+    }
   } else if (mMixer && !shouldMix) {
     mMixer = nullptr;
+    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+      for (uint32_t i = 0; i < mStreams[i]->mAudioOutputStreams.Length(); ++i) {
+        mStreams[i]->mAudioOutputStreams[i].mStream->SetMicrophoneActive(false);
+      }
+    }
   }
 
   // The algorithm for finding cycles is based on Tim Leslie's iterative

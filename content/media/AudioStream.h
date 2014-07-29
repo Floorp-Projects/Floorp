@@ -169,8 +169,8 @@ class AudioInitTask;
 
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
-// GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels}
-// is thread-safe without external synchronization.
+// GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels},
+// SetMicrophoneActive is thread-safe without external synchronization.
 class AudioStream MOZ_FINAL
 {
   virtual ~AudioStream();
@@ -225,6 +225,11 @@ public:
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).  Thread-safe.
   void SetVolume(double aVolume);
+
+  // Informs the AudioStream that a microphone is being used by someone in the
+  // application.
+  void SetMicrophoneActive(bool aActive);
+  void PanOutputIfNeeded(bool aMicrophoneActive);
 
   // Block until buffered audio data has been consumed.
   void Drain();
@@ -304,8 +309,14 @@ private:
     static_cast<AudioStream*>(aThis)->StateCallback(aState);
   }
 
+
+  static void DeviceChangedCallback_s(void * aThis) {
+    static_cast<AudioStream*>(aThis)->DeviceChangedCallback();
+  }
+
   long DataCallback(void* aBuffer, long aFrames);
   void StateCallback(cubeb_state aState);
+  void DeviceChangedCallback();
 
   nsresult EnsureTimeStretcherInitializedUnlocked();
 
@@ -394,6 +405,8 @@ private:
   StreamState mState;
   bool mNeedsStart; // needed in case Start() is called before cubeb is open
   bool mIsFirst;
+  // True if a microphone is active.
+  bool mMicrophoneActive;
 
   // This mutex protects the static members below.
   static StaticMutex sMutex;
