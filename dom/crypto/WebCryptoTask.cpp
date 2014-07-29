@@ -2327,17 +2327,18 @@ private:
   }
 };
 
-class DerivePbkdfKeyTask : public DerivePbkdfBitsTask
+template<class DeriveBitsTask>
+class DeriveKeyTask : public DeriveBitsTask
 {
 public:
-  DerivePbkdfKeyTask(JSContext* aCx,
-                     const ObjectOrString& aAlgorithm, CryptoKey& aBaseKey,
-                     const ObjectOrString& aDerivedKeyType, bool aExtractable,
-                     const Sequence<nsString>& aKeyUsages)
-    : DerivePbkdfBitsTask(aCx, aAlgorithm, aBaseKey, aDerivedKeyType)
+  DeriveKeyTask(JSContext* aCx,
+                const ObjectOrString& aAlgorithm, CryptoKey& aBaseKey,
+                const ObjectOrString& aDerivedKeyType, bool aExtractable,
+                const Sequence<nsString>& aKeyUsages)
+    : DeriveBitsTask(aCx, aAlgorithm, aBaseKey, aDerivedKeyType)
     , mResolved(false)
   {
-    if (NS_FAILED(mEarlyRv)) {
+    if (NS_FAILED(this->mEarlyRv)) {
       return;
     }
 
@@ -2352,8 +2353,8 @@ protected:
 
 private:
   virtual void Resolve() MOZ_OVERRIDE {
-    mTask->SetKeyData(mResult);
-    mTask->DispatchWithPromise(mResultPromise);
+    mTask->SetKeyData(this->mResult);
+    mTask->DispatchWithPromise(this->mResultPromise);
     mResolved = true;
   }
 
@@ -2737,8 +2738,15 @@ WebCryptoTask::CreateDeriveKeyTask(JSContext* aCx,
   }
 
   if (algName.EqualsASCII(WEBCRYPTO_ALG_PBKDF2)) {
-    return new DerivePbkdfKeyTask(aCx, aAlgorithm, aBaseKey, aDerivedKeyType,
-                                  aExtractable, aKeyUsages);
+    return new DeriveKeyTask<DerivePbkdfBitsTask>(aCx, aAlgorithm, aBaseKey,
+                                                  aDerivedKeyType, aExtractable,
+                                                  aKeyUsages);
+  }
+
+  if (algName.EqualsASCII(WEBCRYPTO_ALG_ECDH)) {
+    return new DeriveKeyTask<DeriveEcdhBitsTask>(aCx, aAlgorithm, aBaseKey,
+                                                 aDerivedKeyType, aExtractable,
+                                                 aKeyUsages);
   }
 
   return new FailureTask(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
