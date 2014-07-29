@@ -4343,6 +4343,10 @@ nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder)
 {
   mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
   mPrerender = ShouldPrerenderTransformedContent(aBuilder, mFrame);
+  if (mPrerender) {
+    bool snap;
+    mVisibleRect = GetBounds(aBuilder, &snap);
+  }
 }
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
