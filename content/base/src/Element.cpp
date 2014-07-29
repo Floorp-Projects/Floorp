@@ -1746,7 +1746,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
 nsIFrame*
 Element::GetPrimaryFrame(mozFlushType aType)
 {
-  nsIDocument* doc = GetCurrentDoc();
+  nsIDocument* doc = GetComposedDoc();
   if (!doc) {
     return nullptr;
   }
