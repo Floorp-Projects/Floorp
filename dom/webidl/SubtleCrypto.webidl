@@ -114,6 +114,10 @@ dictionary EcKeyGenParams : Algorithm {
   NamedCurve namedCurve;
 };
 
+dictionary EcdhKeyDeriveParams : Algorithm {
+  CryptoKey public;
+};
+
 
 /***** JWK *****/
 
