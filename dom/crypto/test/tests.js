@@ -1895,3 +1895,106 @@ TestArray.addTest(
     );
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Generate an ECDH key and derive some bits",
+  function() {
+    var that = this;
+    var alg = { name: "ECDH", namedCurve: "P-256" };
+
+    var pair;
+    function setKeyPair(x) { pair = x; }
+
+    function doDerive(n) {
+      return function (x) {
+        var alg = { name: "ECDH", public: pair.publicKey };
+        return crypto.subtle.deriveBits(alg, pair.privateKey, n * 8);
+      }
+    }
+
+    crypto.subtle.generateKey(alg, false, ["deriveBits"])
+      .then(setKeyPair, error(that))
+      .then(doDerive(2), error(that))
+      .then(function (x) {
+        // Deriving less bytes works.
+        if (x.byteLength != 2) {
+          throw "should have derived two bytes";
+        }
+      })
+      // Deriving more than the curve yields doesn't.
+      .then(doDerive(33), error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that ECDH deriveBits() fails when the public key is not an ECDH key",
+  function() {
+    var that = this;
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x.publicKey; }
+    function setPriv(x) { privKey = x.privateKey; }
+
+    function doGenerateP256() {
+      var alg = { name: "ECDH", namedCurve: "P-256" };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doGenerateRSA() {
+      var alg = {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      };
+      return crypto.subtle.generateKey(alg, false, ["encrypt"])
+    }
+
+    function doDerive() {
+      var alg = { name: "ECDH", public: pubKey };
+      return crypto.subtle.deriveBits(alg, privKey, 16);
+    }
+
+    doGenerateP256()
+      .then(setPriv, error(that))
+      .then(doGenerateRSA, error(that))
+      .then(setPub, error(that))
+      .then(doDerive, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that ECDH deriveBits() fails when the given keys' curves don't match",
+  function() {
+    var that = this;
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x.publicKey; }
+    function setPriv(x) { privKey = x.privateKey; }
+
+    function doGenerateP256() {
+      var alg = { name: "ECDH", namedCurve: "P-256" };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doGenerateP384() {
+      var alg = { name: "ECDH", namedCurve: "P-384" };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doDerive() {
+      var alg = { name: "ECDH", public: pubKey };
+      return crypto.subtle.deriveBits(alg, privKey, 16);
+    }
+
+    doGenerateP256()
+      .then(setPriv, error(that))
+      .then(doGenerateP384, error(that))
+      .then(setPub, error(that))
+      .then(doDerive, error(that))
+      .then(error(that), complete(that));
+  }
+);
