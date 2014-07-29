@@ -2504,15 +2504,7 @@ ConvertExceptionToPromise(JSContext* cx,
 void
 CreateGlobalOptions<nsGlobalWindow>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
 {
-  mozilla::dom::TraceProtoAndIfaceCache(aTrc, aObj);
-
-  // We might be called from a GC during the creation of a global, before we've
-  // been able to set up the compartment private or the XPCWrappedNativeScope,
-  // so we need to null-check those.
-  xpc::CompartmentPrivate* compartmentPrivate = xpc::CompartmentPrivate::Get(aObj);
-  if (compartmentPrivate && compartmentPrivate->scope) {
-    compartmentPrivate->scope->TraceSelf(aTrc);
-  }
+  xpc::TraceXPCGlobal(aTrc, aObj);
 }
 
 /* static */
