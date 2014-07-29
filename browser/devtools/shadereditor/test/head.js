@@ -21,7 +21,9 @@ let { WebGLFront } = devtools.require("devtools/server/actors/webgl");
 let TiltGL = devtools.require("devtools/tilt/tilt-gl");
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
+let mm = null;
 
+const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js"
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/shadereditor/test/";
 const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SHADER_ORDER_URL = EXAMPLE_URL + "doc_shader-order.html";
@@ -44,6 +46,20 @@ registerCleanupFunction(() => {
   info("Forcing GC after shadereditor test.");
   Cu.forceGC();
 });
+
+/**
+ * Call manually in tests that use frame script utils after initializing
+ * the shader editor. Must be called after initializing so we can detect
+ * whether or not `content` is a CPOW or not. Call after init but before navigating
+ * to different pages, as bfcache and thus shader caching gets really strange if
+ * frame script attached in the middle of the test.
+ */
+function loadFrameScripts () {
+  if (Cu.isCrossProcessWrapper(content)) {
+    mm = gBrowser.selectedBrowser.messageManager;
+    mm.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
+  }
+}
 
 function addTab(aUrl, aWindow) {
   info("Adding tab: " + aUrl);
@@ -162,12 +178,6 @@ function observe(aNotificationName, aOwnsWeak = false) {
   return deferred.promise;
 }
 
-function waitForFrame(aDebuggee) {
-  let deferred = promise.defer();
-  aDebuggee.requestAnimationFrame(deferred.resolve);
-  return deferred.promise;
-}
-
 function isApprox(aFirst, aSecond, aMargin = 1) {
   return Math.abs(aFirst - aSecond) <= aMargin;
 }
@@ -179,51 +189,34 @@ function isApproxColor(aFirst, aSecond, aMargin) {
     isApprox(aFirst.a, aSecond.a, aMargin);
 }
 
-function getPixels(aDebuggee, aSelector = "canvas") {
-  let canvas = aDebuggee.document.querySelector(aSelector);
-  let gl = canvas.getContext("webgl");
+function ensurePixelIs (aFront, aPosition, aColor, aWaitFlag = false, aSelector = "canvas") {
+  return Task.spawn(function*() {
+    let pixel = yield aFront.getPixel({ selector: aSelector, position: aPosition });
+    if (isApproxColor(pixel, aColor)) {
+      ok(true, "Expected pixel is shown at: " + aPosition.toSource());
+      return;
+    }
 
-  let { width, height } = canvas;
-  let buffer = new aDebuggee.Uint8Array(width * height * 4);
-  gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
+    if (aWaitFlag) {
+      yield aFront.waitForFrame();
+      return ensurePixelIs(aFront, aPosition, aColor, aWaitFlag, aSelector);
+    }
 
-  info("Retrieved pixels: " + width + "x" + height);
-  return [buffer, width, height];
-}
-
-function getPixel(aDebuggee, aPosition, aSelector = "canvas") {
-  let canvas = aDebuggee.document.querySelector(aSelector);
-  let gl = canvas.getContext("webgl");
-
-  let { width, height } = canvas;
-  let { x, y } = aPosition;
-  let buffer = new aDebuggee.Uint8Array(4);
-  gl.readPixels(x, height - y - 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
-
-  let pixel = { r: buffer[0], g: buffer[1], b: buffer[2], a: buffer[3] };
-
-  info("Retrieved pixel: " + pixel.toSource() + " at " + aPosition.toSource());
-  return pixel;
-}
-
-function ensurePixelIs(aDebuggee, aPosition, aColor, aWaitFlag = false, aSelector = "canvas") {
-  let pixel = getPixel(aDebuggee, aPosition, aSelector);
-  if (isApproxColor(pixel, aColor)) {
-    ok(true, "Expected pixel is shown at: " + aPosition.toSource());
-    return promise.resolve(null);
-  }
-  if (aWaitFlag) {
-    return Task.spawn(function() {
-      yield waitForFrame(aDebuggee);
-      yield ensurePixelIs(aDebuggee, aPosition, aColor, aWaitFlag, aSelector);
-    });
-  }
-  ok(false, "Expected pixel was not already shown at: " + aPosition.toSource());
-  return promise.reject(null);
+    ok(false, "Expected pixel was not already shown at: " + aPosition.toSource());
+    throw new Error("Expected pixel was not already shown at: " + aPosition.toSource());
+  });
 }
 
 function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate") {
-  executeSoon(() => content.history[aDirection]());
+  if (Cu.isCrossProcessWrapper(content)) {
+    if (!mm) {
+      throw new Error("`loadFrameScripts()` must be called before attempting to navigate in e10s.");
+    }
+    mm.sendAsyncMessage("devtools:test:history", { direction: aDirection });
+  }
+  else {
+    executeSoon(() => content.history[aDirection]());
+  }
   return once(aTarget, aWaitForTargetEvent);
 }
 

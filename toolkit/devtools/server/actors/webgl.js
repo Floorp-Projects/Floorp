@@ -5,9 +5,9 @@
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
 const events = require("sdk/event/core");
+const promise = require("promise");
 const protocol = require("devtools/server/protocol");
 const { ContentObserver } = require("devtools/content-observer");
-
 const { on, once, off, emit } = events;
 const { method, Arg, Option, RetVal } = protocol;
 
@@ -302,6 +302,51 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
   }),
 
   /**
+   * Waits for one frame via `requestAnimationFrame` on the tab actor's window.
+   * Used in tests.
+   */
+  waitForFrame: method(function () {
+    let deferred = promise.defer();
+    this.tabActor.window.requestAnimationFrame(deferred.resolve);
+    return deferred.promise;
+  }, {
+    response: { success: RetVal("nullable:json") }
+  }),
+
+  /**
+   * Gets a pixel's RGBA value from a context specified by selector
+   * and the coordinates of the pixel in question.
+   * Currently only used in tests.
+   *
+   * @param string selector
+   *        A string selector to select the canvas in question from the DOM.
+   * @param Object position
+   *        An object with an `x` and `y` property indicating coordinates of the pixel being inspected.
+   * @return Object
+   *        An object containing `r`, `g`, `b`, and `a` properties of the pixel.
+   */
+  getPixel: method(function ({ selector, position }) {
+    let { x, y } = position;
+    let canvas = this.tabActor.window.document.querySelector(selector);
+    let context = XPCNativeWrapper.unwrap(canvas.getContext("webgl"));
+    let { proxy } = this._webglObserver.for(context);
+    let height = canvas.height;
+
+    let buffer = new this.tabActor.window.Uint8Array(4);
+    buffer = XPCNativeWrapper.unwrap(buffer);
+
+    proxy.readPixels(x, height - y - 1, 1, 1, context.RGBA, context.UNSIGNED_BYTE, buffer);
+
+    return { r: buffer[0], g: buffer[1], b: buffer[2], a: buffer[3] };
+  }, {
+    request: {
+      selector: Option(0, "string"),
+      position: Option(0, "json")
+    },
+    response: { pixels: RetVal("json") }
+  }),
+
+  /**
    * Events emitted by this actor. The "program-linked" event is fired
    * every time a WebGL program was linked with its respective two shaders.
    */
@@ -309,14 +354,35 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
     "program-linked": {
       type: "programLinked",
       program: Arg(0, "gl-program")
+    },
+    "global-destroyed": {
+      type: "globalDestroyed",
+      program: Arg(0, "number")
+    },
+    "global-created": {
+      type: "globalCreated",
+      program: Arg(0, "number")
     }
   },
+
+  /**
+   * Gets an array of all cached program actors belonging to all windows.
+   * This should only be used for tests.
+   */
+  _getAllPrograms: method(function() {
+    return this._programActorsCache;
+  }, {
+    response: { programs: RetVal("array:gl-program") }
+  }),
+
 
   /**
    * Invoked whenever the current tab actor's document global is created.
    */
   _onGlobalCreated: function(window) {
+    let id = ContentObserver.GetInnerWindowID(window);
     WebGLInstrumenter.handle(window, this._webglObserver);
+    events.emit(this, "global-created", id);
   },
 
   /**
@@ -325,6 +391,7 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
   _onGlobalDestroyed: function(id) {
     removeFromArray(this._programActorsCache, e => e.ownerWindow == id);
     this._webglObserver.unregisterContextsForWindow(id);
+    events.emit(this, "global-destroyed", id);
   },
 
   /**
@@ -1068,7 +1135,8 @@ function WebGLProxy(id, context, cache, observer) {
     "getShaderOfType",
     "compileShader",
     "enableHighlighting",
-    "disableHighlighting"
+    "disableHighlighting",
+    "readPixels"
   ];
   exports.forEach(e => this[e] = (...args) => this._call(e, args));
 }
@@ -1272,6 +1340,13 @@ WebGLProxy.prototype = {
   },
 
   /**
+   * Returns the pixel values at the position specified on the canvas.
+   */
+  _readPixels: function(x, y, w, h, format, type, buffer) {
+    this._gl.readPixels(x, y, w, h, format, type, buffer);
+  },
+
+  /**
    * The color tint used for highlighting geometry.
    * @see _enableHighlighting and _disableHighlighting.
    */
@@ -1312,9 +1387,11 @@ function removeFromMap(map, predicate) {
 };
 
 function removeFromArray(array, predicate) {
-  for (let value of array) {
-    if (predicate(value)) {
-      array.splice(array.indexOf(value), 1);
+  for (let i = 0; i < array.length;) {
+    if (predicate(array[i])) {
+      array.splice(i, 1);
+    } else {
+      i++;
     }
   }
 }
