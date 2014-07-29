@@ -220,6 +220,11 @@ private:
   void ComputeNeededBoxes();
 
   /**
+   * Returns the output bounds of the final FilterPrimitiveDescription.
+   */
+  nsIntRect OutputFilterSpaceBounds() const;
+
+  /**
    * Compute the scale factors between user space and filter space.
    */
   nsresult ComputeUserSpaceToFilterSpaceScale();
@@ -277,12 +282,6 @@ private:
    */
   gfxMatrix               mFilterSpaceToFrameSpaceInCSSPxTransform;
   gfxMatrix               mFrameSpaceInCSSPxToFilterSpaceTransform;
-
-  /**
-   * The "filter region", in the filtered element's user space.
-   */
-  gfxRect                 mUserSpaceBounds;
-  nsIntRect               mFilterSpaceBounds;
 
   /**
    * The scale factors between user space and filter space.
