@@ -71,7 +71,9 @@ ContentPermissionPrompt.prototype = {
     let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
 
     // Returns true if the request was handled
-    if (this.handleExistingPermission(request, perm.type, isApp))
+    let access = (perm.access && perm.access !== "unused") ?
+                 (perm.type + "-" + perm.access) : perm.type;
+    if (this.handleExistingPermission(request, access, isApp))
        return;
 
     let chromeWin = this.getChromeForRequest(request);
