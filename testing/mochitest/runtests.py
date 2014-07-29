@@ -1779,8 +1779,6 @@ class Mochitest(MochitestUtilsMixin):
 
     log.info("runtests.py | Running tests: end.")
 
-    self.message_logger.finish()
-
     if self.manifest is not None:
       self.cleanup(options)
 
@@ -2082,7 +2080,10 @@ def main():
   if options.symbolsPath and not isURL(options.symbolsPath):
     options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
 
-  sys.exit(mochitest.runTests(options))
+  return_code = mochitest.runTests(options)
+  mochitest.message_logger.finish()
+
+  sys.exit(return_code)
 
 if __name__ == "__main__":
   main()
