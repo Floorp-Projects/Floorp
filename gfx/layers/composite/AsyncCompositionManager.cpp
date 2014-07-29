@@ -676,7 +676,7 @@ ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer
   }
 
   gfx3DMatrix asyncTransform = To3DMatrix(apzc->GetCurrentAsyncTransform());
-  gfx3DMatrix nontransientTransform = apzc->GetNontransientAsyncTransform();
+  gfx3DMatrix nontransientTransform = To3DMatrix(apzc->GetNontransientAsyncTransform());
   gfx3DMatrix transientTransform = asyncTransform * nontransientTransform.Inverse();
 
   // |transientTransform| represents the amount by which we have scrolled and
