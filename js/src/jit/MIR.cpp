@@ -1501,6 +1501,10 @@ MBinaryArithInstruction::foldsTo(TempAllocator &alloc)
 void
 MBinaryArithInstruction::trySpecializeFloat32(TempAllocator &alloc)
 {
+    // Do not use Float32 if we can use int32.
+    if (specialization_ == MIRType_Int32)
+        return;
+
     MDefinition *left = lhs();
     MDefinition *right = rhs();
 
@@ -1527,6 +1531,10 @@ MAbs::fallible() const
 void
 MAbs::trySpecializeFloat32(TempAllocator &alloc)
 {
+    // Do not use Float32 if we can use int32.
+    if (input()->type() == MIRType_Int32)
+        return;
+
     if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
         if (input()->type() == MIRType_Float32)
             ConvertDefinitionToDouble<0>(alloc, input(), this);
