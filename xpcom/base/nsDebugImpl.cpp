@@ -101,13 +101,6 @@ Break(const char* aMsg);
 #include <stdlib.h>
 #endif
 
-#ifdef MOZ_B2G_LOADER
-/* Avoid calling Android logger/logd temporarily while running
- * B2GLoader to start the child process.
- */
-bool gDisableAndroidLog = false;
-#endif
-
 using namespace mozilla;
 
 static const char* sMultiprocessDescription = nullptr;
@@ -399,9 +392,6 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
 #endif
 
 #ifdef ANDROID
-#ifdef MOZ_B2G_LOADER
-  if (!gDisableAndroidLog)
-#endif
   __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", buf.buffer);
 #endif
 
