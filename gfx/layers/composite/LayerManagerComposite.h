@@ -252,7 +252,7 @@ private:
   static void ComputeRenderIntegrityInternal(Layer* aLayer,
                                              nsIntRegion& aScreenRegion,
                                              nsIntRegion& aLowPrecisionScreenRegion,
-                                             const gfx3DMatrix& aTransform);
+                                             const gfx::Matrix4x4& aTransform);
 
   /**
    * Render the current layer tree to the active target.
