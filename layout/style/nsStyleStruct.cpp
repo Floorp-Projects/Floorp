@@ -1708,7 +1708,7 @@ nsStyleImage::SetNull()
 }
 
 void
-nsStyleImage::SetImageData(imgIRequest* aImage)
+nsStyleImage::SetImageData(imgRequestProxy* aImage)
 {
   NS_ABORT_IF_FALSE(!mImageTracked,
                     "Setting a new image without untracking the old one!");
