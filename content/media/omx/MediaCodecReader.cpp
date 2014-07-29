@@ -17,6 +17,7 @@
 #include <stagefright/foundation/AMessage.h>
 #include <stagefright/MediaBuffer.h>
 #include <stagefright/MediaCodec.h>
+#include <stagefright/MediaDefs.h>
 #include <stagefright/MediaExtractor.h>
 #include <stagefright/MediaSource.h>
 #include <stagefright/MetaData.h>
@@ -105,6 +106,20 @@ MediaCodecReader::VideoResourceListener::codecCanceled()
   }
 }
 
+bool MediaCodecReader::TrackInputCopier::Copy(MediaBuffer* aSourceBuffer, sp<ABuffer> aCodecBuffer)
+{
+  if (aSourceBuffer == nullptr ||
+      aCodecBuffer == nullptr ||
+      aSourceBuffer->range_length() > aCodecBuffer->capacity()) {
+    return false;
+  }
+
+  aCodecBuffer->setRange(0, aSourceBuffer->range_length());
+  memcpy(aCodecBuffer->data(), aSourceBuffer->data() + aSourceBuffer->range_offset(), aSourceBuffer->range_length());
+
+  return true;
+}
+
 MediaCodecReader::Track::Track()
   : mDurationUs(INT64_C(0))
   , mInputIndex(sInvalidInputIndex)
@@ -112,6 +127,29 @@ MediaCodecReader::Track::Track()
   , mSeekTimeUs(sInvalidTimestampUs)
   , mFlushed(false)
 {
+}
+
+// Append the value of |kKeyValidSamples| to the end of each vorbis buffer.
+// https://github.com/mozilla-b2g/platform_frameworks_av/blob/master/media/libstagefright/OMXCodec.cpp#L3128
+// https://github.com/mozilla-b2g/platform_frameworks_av/blob/master/media/libstagefright/NuMediaExtractor.cpp#L472
+bool MediaCodecReader::VorbisInputCopier::Copy(MediaBuffer* aSourceBuffer, sp<ABuffer> aCodecBuffer)
+{
+  if (aSourceBuffer == nullptr ||
+      aCodecBuffer == nullptr ||
+      aSourceBuffer->range_length() + sizeof(int32_t) > aCodecBuffer->capacity()) {
+    return false;
+  }
+
+  int32_t numPageSamples = 0;
+  if (!aSourceBuffer->meta_data()->findInt32(kKeyValidSamples, &numPageSamples)) {
+    numPageSamples = -1;
+  }
+
+  aCodecBuffer->setRange(0, aSourceBuffer->range_length() + sizeof(int32_t));
+  memcpy(aCodecBuffer->data(), aSourceBuffer->data() + aSourceBuffer->range_offset(), aSourceBuffer->range_length());
+  memcpy(aCodecBuffer->data() + aSourceBuffer->range_length(), &numPageSamples, sizeof(numPageSamples));
+
+  return true;
 }
 
 MediaCodecReader::AudioTrack::AudioTrack()
@@ -678,6 +716,12 @@ MediaCodecReader::CreateMediaCodec(sp<ALooper> &aLooper,
       return false;
     }
 
+    if (!strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_VORBIS)) {
+      aTrack.mInputCopier = new VorbisInputCopier;
+    } else {
+      aTrack.mInputCopier = new TrackInputCopier;
+    }
+
     if (!aAsync) {
       // Pending configure() and start() to codecReserved() if the creation
       // should be asynchronous.
@@ -999,12 +1043,9 @@ MediaCodecReader::FillCodecInputData(Track &aTrack)
     if (aTrack.mInputIndex.value() < aTrack.mInputBuffers.size()) {
       input_buffer = aTrack.mInputBuffers[aTrack.mInputIndex.value()];
     }
-    if (input_buffer != nullptr && input_buffer->capacity() >= source_buffer->range_length()) {
-      input_buffer->setRange(0, source_buffer->range_length());
-      memcpy((uint8_t *)input_buffer->data() + input_buffer->offset(),
-          (uint8_t *)source_buffer->data() + source_buffer->range_offset(),
-          source_buffer->range_length());
-
+    if (input_buffer != nullptr &&
+        aTrack.mInputCopier != nullptr &&
+        aTrack.mInputCopier->Copy(source_buffer, input_buffer)) {
       int64_t timestamp = sInvalidTimestampUs;
       sp<MetaData> codec_format = source_buffer->meta_data();
       if (codec_format != nullptr) {

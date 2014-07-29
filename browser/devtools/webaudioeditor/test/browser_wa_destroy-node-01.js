@@ -40,7 +40,7 @@ function spawnTest() {
   yield Promise.all([destroyed, waitForGraphRendered(panelWin, 3, 2)]);
 
   // Test internal storage
-  ok(panelWin.AudioNodes.length, 3, "All nodes should be GC'd except one gain, osc and dest node.");
+  is(panelWin.AudioNodes.length, 3, "All nodes should be GC'd except one gain, osc and dest node.");
 
   // Test graph rendering
   ok(findGraphNode(panelWin, actorIDs[0]), "dest should be in graph");

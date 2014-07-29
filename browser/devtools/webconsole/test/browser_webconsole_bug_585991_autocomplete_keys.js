@@ -103,6 +103,12 @@ function consoleOpened(aHud) {
 
     ok(popup.selectedIndex < currentSelectionIndex, "Index is less after Page UP");
 
+    EventUtils.synthesizeKey("VK_END", {});
+    is(popup.selectedIndex, 17, "index is last after End");
+
+    EventUtils.synthesizeKey("VK_HOME", {});
+    is(popup.selectedIndex, 0, "index is first after Home");
+
     info("press Tab and wait for popup to hide");
     popup._panel.addEventListener("popuphidden", popupHideAfterTab, false);
     EventUtils.synthesizeKey("VK_TAB", {});

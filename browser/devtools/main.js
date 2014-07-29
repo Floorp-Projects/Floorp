@@ -70,6 +70,8 @@ Tools.options = {
   icon: "chrome://browser/skin/devtools/tool-options.svg",
   invertIconForLightTheme: true,
   bgTheme: "theme-body",
+  label: l10n("options.label", toolboxStrings),
+  iconOnly: true,
   panelLabel: l10n("options.panelLabel", toolboxStrings),
   tooltip: l10n("optionsButton.tooltip", toolboxStrings),
   inMenu: false,

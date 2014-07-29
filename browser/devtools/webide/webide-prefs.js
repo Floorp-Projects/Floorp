@@ -14,3 +14,4 @@ pref("devtools.webide.simulatorAddonsURL", "https://ftp.mozilla.org/pub/mozilla.
 pref("devtools.webide.simulatorAddonID", "fxos_#SLASHED_VERSION#_simulator@mozilla.org");
 pref("devtools.webide.adbAddonURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/fxos-simulator/adb-helper/#OS#/adbhelper-#OS#-latest.xpi");
 pref("devtools.webide.adbAddonID", "adbhelper@mozilla.org");
+pref("devtools.webide.monitorWebSocketURL", "ws://localhost:9000");

@@ -17,7 +17,7 @@
   <script type="application/javascript;version=1.8"
           src="chrome://browser/content/devtools/theme-switching.js"/>
 
-  <script type="application/javascript" src="d3.js"/>
+  <script type="application/javascript" src="chrome://browser/content/devtools/d3.js"/>
   <script type="application/javascript" src="dagre-d3.js"/>
   <script type="application/javascript" src="webaudioeditor-controller.js"/>
   <script type="application/javascript" src="webaudioeditor-view.js"/>

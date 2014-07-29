@@ -3,10 +3,6 @@
             android:label="@string/search_app_name"
             android:theme="@style/AppTheme"
             android:screenOrientation="portrait">
-
-            <!-- Add this to activity declaration to hide keyboard on launch -->
-            <!-- android:windowSoftInputMode="stateHidden" -->
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -17,4 +13,14 @@
 
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name="org.mozilla.search.SearchPreferenceActivity"
+            android:label="@string/search_pref_title"
+            android:parentActivityName="org.mozilla.search.MainActivity"
+            android:theme="@style/SettingsTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.mozilla.search.MainActivity"/>
         </activity>
