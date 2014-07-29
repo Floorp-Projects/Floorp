@@ -963,6 +963,9 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
                                          AudioStream::LowLatency);
         audioOutputStream->mTrackID = tracks->GetID();
 
+        // If there is a mixer, there is a micrphone active.
+        audioOutputStream->mStream->SetMicrophoneActive(mMixer);
+
         LogLatency(AsyncLatencyLogger::AudioStreamCreate,
                    reinterpret_cast<uint64_t>(aStream),
                    reinterpret_cast<int64_t>(audioOutputStream->mStream.get()));
