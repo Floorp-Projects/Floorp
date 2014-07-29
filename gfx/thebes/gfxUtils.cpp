@@ -398,28 +398,22 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     if (needed.IsEmpty())
         return nullptr;
 
-    nsRefPtr<gfxDrawable> drawable;
     gfxIntSize size(int32_t(needed.Width()), int32_t(needed.Height()));
 
-    nsRefPtr<gfxImageSurface> image = aDrawable->GetAsImageSurface();
-    if (image && gfxRect(0, 0, image->GetSize().width, image->GetSize().height).Contains(needed)) {
-      nsRefPtr<gfxASurface> temp = image->GetSubimage(needed);
-      drawable = new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
-    } else {
-      RefPtr<DrawTarget> target =
-        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(ToIntSize(size),
-                                                                     aFormat);
-      if (!target) {
-        return nullptr;
-      }
-
-      nsRefPtr<gfxContext> tmpCtx = new gfxContext(target);
-      tmpCtx->SetOperator(OptimalFillOperator());
-      aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
-                      GraphicsFilter::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
-      drawable = new gfxSurfaceDrawable(target, size, gfxMatrix().Translate(-needed.TopLeft()));
+    RefPtr<DrawTarget> target =
+      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(ToIntSize(size),
+                                                                   aFormat);
+    if (!target) {
+      return nullptr;
     }
 
+    nsRefPtr<gfxContext> tmpCtx = new gfxContext(target);
+    tmpCtx->SetOperator(OptimalFillOperator());
+    aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
+                    GraphicsFilter::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
+    RefPtr<SourceSurface> surface = target->Snapshot();
+
+    nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, size, gfxMatrix().Translate(-needed.TopLeft()));
     return drawable.forget();
 }
 #endif // !MOZ_GFX_OPTIMIZE_MOBILE
