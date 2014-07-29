@@ -1056,6 +1056,7 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
   {
     WriteParam(aMsg, aParam.Type());
     WriteParam(aMsg, aParam.PrimitiveSubregion());
+    WriteParam(aMsg, aParam.FilterSpaceBounds());
     WriteParam(aMsg, aParam.IsTainted());
     WriteParam(aMsg, aParam.OutputColorSpace());
     WriteParam(aMsg, aParam.NumberOfInputs());
@@ -1070,11 +1071,13 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
   {
     mozilla::gfx::PrimitiveType type;
     mozilla::gfx::IntRect primitiveSubregion;
+    mozilla::gfx::IntRect filterSpaceBounds;
     bool isTainted = false;
     mozilla::gfx::ColorSpace outputColorSpace;
     size_t numberOfInputs = 0;
     if (!ReadParam(aMsg, aIter, &type) ||
         !ReadParam(aMsg, aIter, &primitiveSubregion) ||
+        !ReadParam(aMsg, aIter, &filterSpaceBounds) ||
         !ReadParam(aMsg, aIter, &isTainted) ||
         !ReadParam(aMsg, aIter, &outputColorSpace) ||
         !ReadParam(aMsg, aIter, &numberOfInputs)) {
@@ -1083,6 +1086,7 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
 
     aResult->SetType(type);
     aResult->SetPrimitiveSubregion(primitiveSubregion);
+    aResult->SetFilterSpaceBounds(filterSpaceBounds);
     aResult->SetIsTainted(isTainted);
     aResult->SetOutputColorSpace(outputColorSpace);
 
@@ -1108,14 +1112,12 @@ struct ParamTraits<mozilla::gfx::FilterDescription>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, aParam.mFilterSpaceBounds);
     WriteParam(aMsg, aParam.mPrimitives);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return (ReadParam(aMsg, aIter, &aResult->mFilterSpaceBounds) &&
-            ReadParam(aMsg, aIter, &aResult->mPrimitives));
+    return (ReadParam(aMsg, aIter, &aResult->mPrimitives));
   }
 };
 
