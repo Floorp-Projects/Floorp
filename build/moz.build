@@ -44,3 +44,7 @@ for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR',
     if CONFIG[var]:
         DEFINES[var] = True
 
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    PYTHON_UNIT_TESTS += [
+        'compare-mozconfig/compare-mozconfigs-wrapper.py',
+    ]

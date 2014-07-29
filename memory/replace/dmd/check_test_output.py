@@ -62,7 +62,7 @@ def main():
 
     # Filter output
 
-    # In stack trace records we filter out most stack frames.  The only thing
+    # In heap block records we filter out most stack frames.  The only thing
     # we leave behind is a "DMD.cpp" entry if we see one or more frames that
     # have DMD.cpp in them.  There is simply too much variation to do anything
     # better than that.
@@ -75,22 +75,22 @@ def main():
         test_frame_re = re.compile(r".*(DMD.cpp)")
 
         for line in fin:
-            if re.match(r" (Allocated at|Reported( again)? at)", line):
-                # It's a stack trace record.
+            if re.match(r"  (Allocated at {|Reported( again)? at {)", line):
+                # It's a heap block record.
                 print(line, end='', file=fout)
 
                 # Filter the stack trace -- print a single line if we see one
                 # or more frames involving DMD.cpp.
                 seen_DMD_frame = False
                 for frame in fin:
-                    if re.match(r"   ", frame):
+                    if re.match(r"    ", frame):
                         m = test_frame_re.match(frame)
                         if m:
                             seen_DMD_frame = True
                     else:
                         # We're past the stack trace.
                         if seen_DMD_frame:
-                            print("   ... DMD.cpp", file=fout)
+                            print("    ... DMD.cpp", file=fout)
                         print(frame, end='', file=fout)
                         break
 

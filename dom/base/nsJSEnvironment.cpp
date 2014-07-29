@@ -1440,8 +1440,27 @@ namespace dmd {
 // See https://wiki.mozilla.org/Performance/MemShrink/DMD for instructions on
 // how to use DMD.
 
+static FILE *
+OpenDMDOutputFile(JSContext *cx, JS::CallArgs &args)
+{
+  JSString *str = JS::ToString(cx, args.get(0));
+  if (!str)
+    return nullptr;
+  JSAutoByteString pathname(cx, str);
+  if (!pathname)
+    return nullptr;
+
+  FILE* fp = fopen(pathname.ptr(), "w");
+  if (!fp) {
+    JS_ReportError(cx, "DMD can't open %s: %s",
+                   pathname.ptr(), strerror(errno));
+    return nullptr;
+  }
+  return fp;
+}
+
 static bool
-ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
+AnalyzeReports(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   if (!dmd::IsRunning()) {
     JS_ReportError(cx, "DMD is not running");
@@ -1449,24 +1468,48 @@ ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JSString *str = JS::ToString(cx, args.get(0));
-  if (!str)
-    return false;
-  JSAutoByteString pathname(cx, str);
-  if (!pathname)
-    return false;
-
-  FILE* fp = fopen(pathname.ptr(), "w");
+  FILE *fp = OpenDMDOutputFile(cx, args);
   if (!fp) {
-    JS_ReportError(cx, "DMD can't open %s: %s",
-                   pathname.ptr(), strerror(errno));
     return false;
   }
 
   dmd::ClearReports();
   dmd::RunReportersForThisProcess();
   dmd::Writer writer(FpWrite, fp);
-  dmd::Dump(writer);
+  dmd::AnalyzeReports(writer);
+
+  fclose(fp);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+// This will be removed eventually.
+static bool
+ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+  JS_ReportWarning(cx, "DMDReportAndDump() is deprecated; "
+                   "please use DMDAnalyzeReports() instead");
+
+  return AnalyzeReports(cx, argc, vp);
+}
+
+static bool
+AnalyzeHeap(JSContext *cx, unsigned argc, JS::Value *vp)
+{
+  if (!dmd::IsRunning()) {
+    JS_ReportError(cx, "DMD is not running");
+    return false;
+  }
+
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  FILE *fp = OpenDMDOutputFile(cx, args);
+  if (!fp) {
+    return false;
+  }
+
+  dmd::Writer writer(FpWrite, fp);
+  dmd::AnalyzeHeap(writer);
 
   fclose(fp);
 
@@ -1478,7 +1521,9 @@ ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
 } // namespace mozilla
 
 static const JSFunctionSpec DMDFunctions[] = {
-    JS_FS("DMDReportAndDump", dmd::ReportAndDump, 1, 0),
+    JS_FS("DMDReportAndDump",  dmd::ReportAndDump,  1, 0),
+    JS_FS("DMDAnalyzeReports", dmd::AnalyzeReports, 1, 0),
+    JS_FS("DMDAnalyzeHeap",    dmd::AnalyzeHeap,    1, 0),
     JS_FS_END
 };
 

@@ -1081,8 +1081,8 @@ DeviceStorageFile::CreateFileDescriptor(FileDescriptor& aFileDescriptor)
   // NOTE: The FileDescriptor::PlatformHandleType constructor returns a dup of
   //       the file descriptor, so we don't need the original fd after this.
   //       Our scoped file descriptor will automatically close fd.
-  aFileDescriptor =
-    FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(fd));
+  aFileDescriptor = FileDescriptor(
+    FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(fd)));
   return NS_OK;
 }
 

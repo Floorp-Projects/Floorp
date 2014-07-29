@@ -31,7 +31,7 @@ class AliasAnalysis
     bool analyze();
 };
 
-} // namespace js
 } // namespace jit
+} // namespace js
 
 #endif /* jit_AliasAnalysis_h */

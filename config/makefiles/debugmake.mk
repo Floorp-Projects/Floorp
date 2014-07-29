@@ -51,19 +51,17 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 		SIMPLE_PROGRAMS \
 		LIBRARY \
 		SHARED_LIBRARY \
-		SHARED_LIBRARY_LIBS \
 		LIBS \
 		DEF_FILE \
 		IMPORT_LIBRARY \
 		STATIC_LIBS \
+		SHARED_LIBS \
 		EXTRA_DSO_LDOPTS \
 		DEPENDENT_LIBS \
 	)
 	@echo --------------------------------------------------------------------------------
 endif
-	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
 
 showbuild:
 	$(call print_vars,\

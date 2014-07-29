@@ -25,16 +25,103 @@ message TexturePacket {
   optional bytes data = 9;
 }
 
+message LayersPacket {
+  message Layer {
+    enum LayerType {
+      UnknownLayer = 0;
+      LayerManager = 1;
+      ContainerLayer = 2;
+      ThebesLayer = 3;
+      CanvasLayer = 4;
+      ImageLayer = 5;
+      ColorLayer = 6;
+      RefLayer = 7;
+      ReadbackLayer = 8;
+    }
+    enum ScrollingDirect {
+      VERTICAL = 1;
+      HORIZONTAL = 2;
+    }
+    enum Filter {
+      FILTER_FAST = 0;
+      FILTER_GOOD = 1;
+      FILTER_BEST = 2;
+      FILTER_NEAREST = 3;
+      FILTER_BILINEAR = 4;
+      FILTER_GAUSSIAN = 5;
+      FILTER_SENTINEL = 6;
+    }
+    message Size {
+      optional int32 w = 1;
+      optional int32 h = 2;
+    }
+    message Rect {
+      optional int32 x = 1;
+      optional int32 y = 2;
+      optional int32 w = 3;
+      optional int32 h = 4;
+    }
+    message Region {
+      repeated Rect r = 1;
+    }
+    message Matrix {
+      optional bool is2D = 1;
+      optional bool isId = 2;
+      repeated float m = 3;
+    }
+    message Shadow {
+      optional Rect clip = 1;
+      optional Matrix transform = 2;
+      optional Region vRegion = 3;
+    }
+
+    // Basic info
+    // Note: Parent's pointer is used to recontruct the layer tree
+    required LayerType type = 1;
+    required uint64 ptr = 2;
+    required uint64 parentPtr = 3;
+
+    // Common info (10 to 99)
+    optional Rect clip = 10;
+    optional Matrix transform = 11;
+    optional Region vRegion = 12; // visible region
+    optional Shadow shadow = 13;  // shadow info
+    optional float opacity = 14;
+    optional bool cOpaque = 15;   // content opaque
+    optional bool cAlpha = 16;    // component alpha
+    optional ScrollingDirect direct = 17;
+    optional uint64 barID = 18;
+    optional uint64 mask = 19;    // mask layer
+
+    // Specific info (100 to max)
+    // Thebes Layer
+    optional Region valid = 100;
+    // Color Layer
+    optional uint32 color = 101;
+    // Canvas & Image Layer
+    optional Filter filter = 102;
+    // Ref Layer
+    optional uint64 refID = 103;
+    // Readback Layer
+    optional Size size = 104;
+  }
+  repeated Layer layer = 1;
+}
+
+// We only need to use this Packet.
+// Other packet definitions are just type defines
 message Packet {
   enum DataType {
     FRAMESTART = 1;
     FRAMEEND = 2;
     COLOR = 3;
     TEXTURE = 4;
+    LAYERS = 5;
   }
   required DataType type = 1;
 
   optional FramePacket frame = 2;
   optional ColorPacket color = 3;
   optional TexturePacket texture = 4;
+  optional LayersPacket layers = 5;
 }

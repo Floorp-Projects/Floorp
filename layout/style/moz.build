@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['xbl-marquee']
-TEST_TOOL_DIRS += ['test']
+TEST_DIRS += ['test']
 
 EXPORTS += [
     'AnimationCommon.h',

@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['test']
-TEST_TOOL_DIRS += ['compiledtest']
+TEST_DIRS += ['compiledtest']
 
 EXPORTS += [
     'nsICanvasRenderingContextInternal.h',
@@ -73,6 +73,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLExtensionFragDepth.cpp',
         'WebGLExtensionInstancedArrays.cpp',
         'WebGLExtensionLoseContext.cpp',
+        'WebGLExtensionShaderTextureLod.cpp',
         'WebGLExtensionSRGB.cpp',
         'WebGLExtensionStandardDerivatives.cpp',
         'WebGLExtensionTextureFilterAnisotropic.cpp',
