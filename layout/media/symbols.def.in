@@ -135,6 +135,8 @@ cubeb_stream_init
 cubeb_stream_start
 cubeb_stream_stop
 cubeb_stream_get_latency
+cubeb_stream_set_volume
+cubeb_stream_set_panning
 th_comment_clear
 th_comment_init
 th_decode_alloc

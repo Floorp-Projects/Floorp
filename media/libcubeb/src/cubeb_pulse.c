@@ -12,23 +12,28 @@
 #include <string.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
+#include <stdio.h>
 
 #ifdef DISABLE_LIBPULSE_DLOPEN
 #define WRAP(x) x
 #else
 #define WRAP(x) cubeb_##x
 #define MAKE_TYPEDEF(x) static typeof(x) * cubeb_##x
+MAKE_TYPEDEF(pa_channel_map_can_balance);
 MAKE_TYPEDEF(pa_channel_map_init_auto);
 MAKE_TYPEDEF(pa_context_connect);
 MAKE_TYPEDEF(pa_context_disconnect);
 MAKE_TYPEDEF(pa_context_drain);
+MAKE_TYPEDEF(pa_context_get_server_info);
+MAKE_TYPEDEF(pa_context_get_sink_info_by_name);
 MAKE_TYPEDEF(pa_context_get_state);
 MAKE_TYPEDEF(pa_context_new);
 MAKE_TYPEDEF(pa_context_rttime_new);
+MAKE_TYPEDEF(pa_context_set_sink_input_volume);
 MAKE_TYPEDEF(pa_context_set_state_callback);
 MAKE_TYPEDEF(pa_context_unref);
-MAKE_TYPEDEF(pa_context_get_sink_info_by_name);
-MAKE_TYPEDEF(pa_context_get_server_info);
+MAKE_TYPEDEF(pa_cvolume_set);
+MAKE_TYPEDEF(pa_cvolume_set_balance);
 MAKE_TYPEDEF(pa_frame_size);
 MAKE_TYPEDEF(pa_operation_get_state);
 MAKE_TYPEDEF(pa_operation_unref);
@@ -38,7 +43,10 @@ MAKE_TYPEDEF(pa_stream_cancel_write);
 MAKE_TYPEDEF(pa_stream_connect_playback);
 MAKE_TYPEDEF(pa_stream_cork);
 MAKE_TYPEDEF(pa_stream_disconnect);
+MAKE_TYPEDEF(pa_stream_get_channel_map);
+MAKE_TYPEDEF(pa_stream_get_index);
 MAKE_TYPEDEF(pa_stream_get_latency);
+MAKE_TYPEDEF(pa_stream_get_sample_spec);
 MAKE_TYPEDEF(pa_stream_get_state);
 MAKE_TYPEDEF(pa_stream_get_time);
 MAKE_TYPEDEF(pa_stream_new);
@@ -47,10 +55,11 @@ MAKE_TYPEDEF(pa_stream_set_write_callback);
 MAKE_TYPEDEF(pa_stream_unref);
 MAKE_TYPEDEF(pa_stream_update_timing_info);
 MAKE_TYPEDEF(pa_stream_write);
+MAKE_TYPEDEF(pa_sw_volume_from_linear);
 MAKE_TYPEDEF(pa_threaded_mainloop_free);
 MAKE_TYPEDEF(pa_threaded_mainloop_get_api);
-MAKE_TYPEDEF(pa_threaded_mainloop_lock);
 MAKE_TYPEDEF(pa_threaded_mainloop_in_thread);
+MAKE_TYPEDEF(pa_threaded_mainloop_lock);
 MAKE_TYPEDEF(pa_threaded_mainloop_new);
 MAKE_TYPEDEF(pa_threaded_mainloop_signal);
 MAKE_TYPEDEF(pa_threaded_mainloop_start);
@@ -244,10 +253,12 @@ operation_wait(cubeb * ctx, pa_stream * stream, pa_operation * o)
 {
   while (WRAP(pa_operation_get_state)(o) == PA_OPERATION_RUNNING) {
     WRAP(pa_threaded_mainloop_wait)(ctx->mainloop);
-    if (!PA_CONTEXT_IS_GOOD(WRAP(pa_context_get_state)(ctx->context)))
+    if (!PA_CONTEXT_IS_GOOD(WRAP(pa_context_get_state)(ctx->context))) {
       return -1;
-    if (stream && !PA_STREAM_IS_GOOD(WRAP(pa_stream_get_state)(stream)))
+    }
+    if (stream && !PA_STREAM_IS_GOOD(WRAP(pa_stream_get_state)(stream))) {
       return -1;
+    }
   }
   return 0;
 }
@@ -324,17 +335,21 @@ pulse_init(cubeb ** context, char const * context_name)
       return CUBEB_ERROR; \
     } \
   } while(0)
+  LOAD(pa_channel_map_can_balance);
   LOAD(pa_channel_map_init_auto);
   LOAD(pa_context_connect);
   LOAD(pa_context_disconnect);
   LOAD(pa_context_drain);
+  LOAD(pa_context_get_server_info);
+  LOAD(pa_context_get_sink_info_by_name);
   LOAD(pa_context_get_state);
   LOAD(pa_context_new);
   LOAD(pa_context_rttime_new);
+  LOAD(pa_context_set_sink_input_volume);
   LOAD(pa_context_set_state_callback);
-  LOAD(pa_context_get_sink_info_by_name);
-  LOAD(pa_context_get_server_info);
   LOAD(pa_context_unref);
+  LOAD(pa_cvolume_set);
+  LOAD(pa_cvolume_set_balance);
   LOAD(pa_frame_size);
   LOAD(pa_operation_get_state);
   LOAD(pa_operation_unref);
@@ -344,7 +359,10 @@ pulse_init(cubeb ** context, char const * context_name)
   LOAD(pa_stream_connect_playback);
   LOAD(pa_stream_cork);
   LOAD(pa_stream_disconnect);
+  LOAD(pa_stream_get_channel_map);
+  LOAD(pa_stream_get_index);
   LOAD(pa_stream_get_latency);
+  LOAD(pa_stream_get_sample_spec);
   LOAD(pa_stream_get_state);
   LOAD(pa_stream_get_time);
   LOAD(pa_stream_new);
@@ -353,10 +371,11 @@ pulse_init(cubeb ** context, char const * context_name)
   LOAD(pa_stream_unref);
   LOAD(pa_stream_update_timing_info);
   LOAD(pa_stream_write);
+  LOAD(pa_sw_volume_from_linear);
   LOAD(pa_threaded_mainloop_free);
   LOAD(pa_threaded_mainloop_get_api);
-  LOAD(pa_threaded_mainloop_lock);
   LOAD(pa_threaded_mainloop_in_thread);
+  LOAD(pa_threaded_mainloop_lock);
   LOAD(pa_threaded_mainloop_new);
   LOAD(pa_threaded_mainloop_signal);
   LOAD(pa_threaded_mainloop_start);
@@ -661,6 +680,60 @@ pulse_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   return CUBEB_OK;
 }
 
+void volume_success(pa_context *c, int success, void *userdata)
+{
+  cubeb_stream * stream = userdata;
+  assert(success);
+  WRAP(pa_threaded_mainloop_signal)(stream->context->mainloop, 0);
+}
+
+int
+pulse_stream_set_volume(cubeb_stream * stm, float volume)
+{
+  uint32_t index;
+  pa_operation * op;
+  pa_volume_t vol;
+  pa_cvolume cvol;
+  const pa_sample_spec * ss;
+
+  WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
+
+  ss = WRAP(pa_stream_get_sample_spec)(stm->stream);
+
+  vol = WRAP(pa_sw_volume_from_linear)(volume);
+  WRAP(pa_cvolume_set)(&cvol, ss->channels, vol);
+
+  index = WRAP(pa_stream_get_index)(stm->stream);
+
+  op = WRAP(pa_context_set_sink_input_volume)(stm->context->context,
+                                              index, &cvol, volume_success,
+                                              stm);
+  if (op) {
+    operation_wait(stm->context, stm->stream, op);
+    WRAP(pa_operation_unref)(op);
+  }
+  WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
+
+  return CUBEB_OK;
+}
+
+int
+pulse_stream_set_panning(cubeb_stream * stream, float panning)
+{
+  const pa_channel_map * map;
+  pa_cvolume vol;
+
+  map = WRAP(pa_stream_get_channel_map)(stream->stream);
+
+  if (!WRAP(pa_channel_map_can_balance)(map)) {
+    return CUBEB_ERROR;
+  }
+
+  WRAP(pa_cvolume_set_balance)(&vol, map, panning);
+
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const pulse_ops = {
   .init = pulse_init,
   .get_backend_id = pulse_get_backend_id,
@@ -673,5 +746,7 @@ static struct cubeb_ops const pulse_ops = {
   .stream_start = pulse_stream_start,
   .stream_stop = pulse_stream_stop,
   .stream_get_position = pulse_stream_get_position,
-  .stream_get_latency = pulse_stream_get_latency
+  .stream_get_latency = pulse_stream_get_latency,
+  .stream_set_volume = pulse_stream_set_volume,
+  .stream_set_panning = pulse_stream_set_panning
 };

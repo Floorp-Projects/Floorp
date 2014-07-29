@@ -258,3 +258,22 @@ cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency)
 
   return stream->context->ops->stream_get_latency(stream, latency);
 }
+
+int
+cubeb_stream_set_volume(cubeb_stream * stream, float volume)
+{
+  if (!stream || volume > 1.0 || volume < 0.0) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  return stream->context->ops->stream_set_volume(stream, volume);
+}
+
+int cubeb_stream_set_panning(cubeb_stream * stream, float panning)
+{
+  if (!stream || panning < -1.0 || panning > 1.0) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  return stream->context->ops->stream_set_panning(stream, panning);
+}
