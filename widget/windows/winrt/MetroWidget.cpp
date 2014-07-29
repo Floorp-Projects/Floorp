@@ -1134,6 +1134,12 @@ MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent,
   return mController->ReceiveInputEvent(aEvent, aOutTargetGuid);
 }
 
+void
+MetroWidget::SetApzPendingResponseFlusher(APZPendingResponseFlusher* aFlusher)
+{
+  mController->SetPendingResponseFlusher(aFlusher);
+}
+
 LayerManager*
 MetroWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                              LayersBackend aBackendHint,

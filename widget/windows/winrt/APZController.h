@@ -16,6 +16,12 @@ namespace mozilla {
 namespace widget {
 namespace winrt {
 
+class APZPendingResponseFlusher
+{
+public:
+  virtual void FlushPendingContentResponse() = 0;
+};
+
 class APZController :
   public mozilla::layers::GeckoContentController
 {
@@ -24,7 +30,8 @@ class APZController :
   typedef mozilla::layers::ZoomConstraints ZoomConstraints;
 
 public:
-  APZController()
+  APZController() :
+    mFlusher(nullptr)
   {
   }
 
@@ -49,6 +56,8 @@ public:
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                     APZStateChange aChange,
                                     int aArg);
+
+  void SetPendingResponseFlusher(APZPendingResponseFlusher* aFlusher);
   
   bool HitTestAPZC(mozilla::ScreenIntPoint& aPoint);
   void TransformCoordinateToGecko(const mozilla::ScreenIntPoint& aPoint,
@@ -60,6 +69,9 @@ public:
 public:
   // todo: make this a member variable as prep for multiple views
   static nsRefPtr<mozilla::layers::APZCTreeManager> sAPZC;
+
+private:
+  APZPendingResponseFlusher* mFlusher;
 };
 
 } } }
