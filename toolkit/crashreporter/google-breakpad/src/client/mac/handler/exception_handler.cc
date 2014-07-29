@@ -626,25 +626,24 @@ bool ExceptionHandler::InstallHandler() {
   if (gProtectedData.handler != NULL) {
     return false;
   }
-  if (!IsOutOfProcess()) {
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sigemptyset(&sa.sa_mask);
-    sigaddset(&sa.sa_mask, SIGABRT);
-    sa.sa_sigaction = ExceptionHandler::SignalHandler;
-    sa.sa_flags = SA_SIGINFO;
 
-    scoped_ptr<struct sigaction> old(new struct sigaction);
-    if (sigaction(SIGABRT, &sa, old.get()) == -1) {
-      return false;
-    }
-    old_handler_.swap(old);
-    gProtectedData.handler = this;
-#if USE_PROTECTED_ALLOCATIONS
-    assert(((size_t)(gProtectedData.protected_buffer) & PAGE_MASK) == 0);
-    mprotect(gProtectedData.protected_buffer, PAGE_SIZE, PROT_READ);
-#endif
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sigemptyset(&sa.sa_mask);
+  sigaddset(&sa.sa_mask, SIGABRT);
+  sa.sa_sigaction = ExceptionHandler::SignalHandler;
+  sa.sa_flags = SA_SIGINFO;
+
+  scoped_ptr<struct sigaction> old(new struct sigaction);
+  if (sigaction(SIGABRT, &sa, old.get()) == -1) {
+    return false;
   }
+  old_handler_.swap(old);
+  gProtectedData.handler = this;
+#if USE_PROTECTED_ALLOCATIONS
+  assert(((size_t)(gProtectedData.protected_buffer) & PAGE_MASK) == 0);
+  mprotect(gProtectedData.protected_buffer, PAGE_SIZE, PROT_READ);
+#endif
 
   try {
 #if USE_PROTECTED_ALLOCATIONS
