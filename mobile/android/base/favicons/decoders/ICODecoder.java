@@ -84,7 +84,7 @@ public class ICODecoder implements Iterable<Bitmap> {
     private int offset;
     private int len;
 
-    private IconDirectoryEntry[] iconDirectory;
+    /* inner-access */ IconDirectoryEntry[] iconDirectory;
     private boolean isValid;
     private boolean hasDecoded;
 

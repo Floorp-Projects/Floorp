@@ -17,7 +17,7 @@ import android.os.Looper;
  */
 public abstract class UiAsyncTask<Params, Progress, Result> {
     private volatile boolean mCancelled;
-    private final Handler mBackgroundThreadHandler;
+    /* inner-access */ final Handler mBackgroundThreadHandler;
     private static Handler sHandler;
 
     /**

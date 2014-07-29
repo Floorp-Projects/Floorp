@@ -144,9 +144,9 @@ public class SuggestedSites {
         }
     }
 
-    private final Context context;
-    private final Distribution distribution;
-    private final File file;
+    /* inner-access */ final Context context;
+    /* inner-access */ final Distribution distribution;
+    /* inner-access */ final File file;
     private Map<String, Site> cachedSites;
     private Set<String> cachedBlacklist;
 
@@ -235,7 +235,7 @@ public class SuggestedSites {
      * Saves suggested sites file to disk. Access to this method should
      * be synchronized on 'file'.
      */
-    private static void saveSites(File f, Map<String, Site> sites) {
+    /* inner-access */ static void saveSites(File f, Map<String, Site> sites) {
         ThreadUtils.assertNotOnUiThread();
 
         if (sites == null || sites.isEmpty()) {
@@ -313,7 +313,7 @@ public class SuggestedSites {
      * It's assumed that the given distribution instance is ready to be
      * used and exists.
      */
-    private static Map<String, Site> loadFromDistribution(Distribution dist) {
+    /* inner-access */ static Map<String, Site> loadFromDistribution(Distribution dist) {
         for (Locale locale : getAcceptableLocales()) {
             try {
                 final String languageTag = BrowserLocaleManager.getLanguageTag(locale);
@@ -350,7 +350,7 @@ public class SuggestedSites {
         return null;
     }
 
-    private Map<String, Site> loadFromResource() {
+    /* inner-access */ Map<String, Site> loadFromResource() {
         try {
             return loadSites(RawResource.getAsString(context, R.raw.suggestedsites));
         } catch (IOException e) {
