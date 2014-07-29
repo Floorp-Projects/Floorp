@@ -170,9 +170,11 @@ class ABIArgGenerator
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
 
     // Note: these registers are all guaranteed to be different
-    static const Register NonArgReturnVolatileReg0;
-    static const Register NonArgReturnVolatileReg1;
+    static const Register NonArgReturnReg0;
+    static const Register NonArgReturnReg1;
     static const Register NonVolatileReg;
+    static const Register NonArg_VolatileReg;
+    static const Register NonReturn_VolatileReg0;
 };
 
 static MOZ_CONSTEXPR_VAR Register OsrFrameReg = IntArgReg3;

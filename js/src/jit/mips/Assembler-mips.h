@@ -94,8 +94,11 @@ class ABIArgGenerator
         return usedArgSlots_ * sizeof(intptr_t);
     }
 
-    static const Register NonArgReturnVolatileReg0;
-    static const Register NonArgReturnVolatileReg1;
+    static const Register NonArgReturnReg0;
+    static const Register NonArgReturnReg1;
+    static const Register NonArg_VolatileReg;
+    static const Register NonReturn_VolatileReg0;
+    static const Register NonReturn_VolatileReg1;
 };
 
 static MOZ_CONSTEXPR_VAR Register PreBarrierReg = a1;

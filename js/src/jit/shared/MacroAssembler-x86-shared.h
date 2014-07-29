@@ -383,6 +383,10 @@ class MacroAssemblerX86Shared : public Assembler
     void store32(const S &src, const T &dest) {
         movl(src, Operand(dest));
     }
+    template <typename S, typename T>
+    void store32_NoSecondScratch(const S &src, const T &dest) {
+        store32(src, dest);
+    }
     void loadDouble(const Address &src, FloatRegister dest) {
         movsd(src, dest);
     }
