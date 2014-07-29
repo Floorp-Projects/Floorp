@@ -7,4 +7,4 @@
 if CONFIG["MOZ_B2G"]:
     MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
-PARALLEL_DIRS += ['src']
+DIRS += ['src']

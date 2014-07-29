@@ -191,7 +191,7 @@ public:
     Optional_base<JS::Handle<T>, JS::Rooted<T> >()
   {}
 
-  Optional(JSContext* cx) :
+  explicit Optional(JSContext* cx) :
     Optional_base<JS::Handle<T>, JS::Rooted<T> >()
   {
     this->Construct(cx);

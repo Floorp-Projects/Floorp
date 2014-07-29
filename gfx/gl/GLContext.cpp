@@ -142,6 +142,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_frag_depth",
     "GL_OES_compressed_ETC1_RGB8_texture",
     "GL_EXT_draw_range_elements",
+    "GL_EXT_shader_texture_lod",
     nullptr
 };
 

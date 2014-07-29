@@ -24,8 +24,6 @@ CPPSRCS += $(globalgen_sources) $(unified_binding_cpp_files)
 # Bug 932092 tracks.
 LOCAL_INCLUDES += -I$(DIST)/include/mozilla/dom
 
-PYTHON_UNIT_TESTS += $(srcdir)/mozwebidlcodegen/test/test_mozwebidlcodegen.py
-
 include $(topsrcdir)/config/rules.mk
 
 # TODO This list should be emitted to a .pp file via

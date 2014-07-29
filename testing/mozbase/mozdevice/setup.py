@@ -8,7 +8,7 @@ PACKAGE_NAME = 'mozdevice'
 PACKAGE_VERSION = '0.38'
 
 deps = ['mozfile >= 1.0',
-        'mozlog',
+        'mozlog >= 2.1',
         'moznetwork >= 0.24',
         'mozprocess >= 0.19',
        ]

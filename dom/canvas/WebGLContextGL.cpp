@@ -3041,6 +3041,9 @@ WebGLContext::CompileShader(WebGLShader *shader)
     if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
         resources.EXT_draw_buffers = 1;
 
+    if (IsExtensionEnabled(WebGLExtensionID::EXT_shader_texture_lod))
+        resources.EXT_shader_texture_lod = 1;
+
     // Tell ANGLE to allow highp in frag shaders. (unless disabled)
     // If underlying GLES doesn't have highp in frag shaders, it should complain anyways.
     resources.FragmentPrecisionHigh = mDisableFragHighP ? 0 : 1;

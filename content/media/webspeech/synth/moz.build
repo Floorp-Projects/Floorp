@@ -35,7 +35,7 @@ if CONFIG['MOZ_WEBSPEECH']:
     ]
 
     if CONFIG['MOZ_SYNTH_PICO']:
-        PARALLEL_DIRS = ['pico']
+        DIRS = ['pico']
 
 IPDL_SOURCES += [
     'ipc/PSpeechSynthesis.ipdl',

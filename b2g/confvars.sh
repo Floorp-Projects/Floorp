@@ -59,7 +59,6 @@ MOZ_B2G=1
 
 if test "$OS_TARGET" = "Android"; then
 MOZ_NUWA_PROCESS=1
-MOZ_B2G_LOADER=1
 fi
 MOZ_FOLD_LIBS=1
 

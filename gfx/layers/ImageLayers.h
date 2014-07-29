@@ -19,6 +19,10 @@ namespace layers {
 
 class ImageContainer;
 
+namespace layerscope {
+class LayersPacket;
+}
+
 /**
  * A Layer which renders an Image.
  */
@@ -83,7 +87,7 @@ protected:
   ImageLayer(LayerManager* aManager, void* aImplData);
   ~ImageLayer();
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
-
+  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent);
 
   nsRefPtr<ImageContainer> mContainer;
   GraphicsFilter mFilter;

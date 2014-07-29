@@ -18,6 +18,8 @@
 # include "jit/arm/Architecture-arm.h"
 #elif defined(JS_CODEGEN_MIPS)
 # include "jit/mips/Architecture-mips.h"
+#elif defined(JS_CODEGEN_NONE)
+# include "jit/none/Architecture-none.h"
 #else
 # error "Unknown architecture!"
 #endif

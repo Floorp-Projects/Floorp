@@ -394,6 +394,9 @@ DXGITextureHostD3D11::Unlock()
 NewTextureSource*
 DXGITextureHostD3D11::GetTextureSources()
 {
+  MOZ_ASSERT(mIsLocked);
+  // If Lock was successful we must have a valid TextureSource.
+  MOZ_ASSERT(mTextureSource);
   return mTextureSource.get();
 }
 

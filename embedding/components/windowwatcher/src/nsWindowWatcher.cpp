@@ -32,7 +32,6 @@
 #include "nsIScreenManager.h"
 #include "nsIScriptContext.h"
 #include "nsIObserverService.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsXPCOM.h"
 #include "nsIURI.h"
@@ -54,12 +53,12 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsSandboxFlags.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/DOMStorage.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
@@ -450,7 +449,6 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
   nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
   nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
-  nsCxPusher                      callerContextGuard;
 
   MOZ_ASSERT_IF(openedFromRemoteTab, XRE_GetProcessType() == GeckoProcessType_Default);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -558,12 +556,12 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
 
   bool isCallerChrome = nsContentUtils::IsCallerChrome() && !openedFromRemoteTab;
 
-  JSContext *cx = GetJSContextFromWindow(aParent);
+  dom::AutoJSAPI jsapiChromeGuard;
 
   bool windowTypeIsChrome = chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-  if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome && cx) {
-    // open() is called from chrome on a non-chrome window, push the context of the
-    // callee onto the context stack to prevent the caller's priveleges from leaking
+  if (isCallerChrome && !hasChromeParent && !windowTypeIsChrome) {
+    // open() is called from chrome on a non-chrome window, initialize an
+    // AutoJSAPI with the callee to prevent the caller's privileges from leaking
     // into code that runs while opening the new window.
     //
     // The reasoning for this is in bug 289204. Basically, chrome sometimes does
@@ -576,7 +574,10 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     // we decide whether to load with the principal of the caller or of the parent
     // based on whether the docshell type is chrome or content.
 
-    callerContextGuard.Push(cx);
+    nsCOMPtr<nsIGlobalObject> parentGlobalObject = do_QueryInterface(aParent);
+    if (NS_WARN_IF(!jsapiChromeGuard.Init(parentGlobalObject))) {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   uint32_t activeDocsSandboxFlags = 0;
@@ -875,26 +876,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   }
 
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-  if (uriToLoad && aNavigate) { // get the script principal and pass it to docshell
-
-    // The historical ordering of attempts here is:
-    // (1) Stack-top cx.
-    // (2) cx associated with aParent.
-    // (3) Safe JSContext.
-    //
-    // We could just use an AutoJSContext here if it weren't for (2), which
-    // is probably nonsensical anyway. But we preserve the old semantics for
-    // now, because this is part of a large patch where we don't want to risk
-    // subtle behavioral modifications.
-    cx = nsContentUtils::GetCurrentJSContext();
-    nsCxPusher pusher;
-    if (!cx) {
-      cx = GetJSContextFromWindow(aParent);
-      if (!cx)
-        cx = nsContentUtils::GetSafeJSContext();
-      pusher.Push(cx);
-    }
-
+  if (uriToLoad && aNavigate) {
     newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
     NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
@@ -902,26 +884,22 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
       loadInfo->SetOwner(subjectPrincipal);
     }
 
-    // Set the new window's referrer from the calling context's document:
-
-    // get its document, if any
-    JSContext* ccx = nsContentUtils::GetCurrentJSContext();
-    if (ccx) {
-      nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(ccx);
-
-      nsCOMPtr<nsPIDOMWindow> w(do_QueryInterface(sgo));
-      if (w) {
-        /* use the URL from the *extant* document, if any. The usual accessor
-           GetDocument will synchronously create an about:blank document if
-           it has no better answer, and we only care about a real document.
-           Also using GetDocument to force document creation seems to
-           screw up focus in the hidden window; see bug 36016.
-        */
-        nsCOMPtr<nsIDocument> doc = w->GetExtantDoc();
-        if (doc) {
-          // Set the referrer
-          loadInfo->SetReferrer(doc->GetDocumentURI());
-        }
+    nsCOMPtr<nsPIDOMWindow> referrerWindow =
+      do_QueryInterface(dom::BrokenGetEntryGlobal());
+    if (!referrerWindow) {
+      referrerWindow = do_QueryInterface(aParent);
+    }
+    if (referrerWindow) {
+      /* use the URL from the *extant* document, if any. The usual accessor
+         GetDocument will synchronously create an about:blank document if
+         it has no better answer, and we only care about a real document.
+         Also using GetDocument to force document creation seems to
+         screw up focus in the hidden window; see bug 36016.
+      */
+      nsCOMPtr<nsIDocument> doc = referrerWindow->GetExtantDoc();
+      if (doc) {
+        // Set the referrer
+        loadInfo->SetReferrer(doc->GetDocumentURI());
       }
     }
   }
@@ -2198,25 +2176,4 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(nsIDOMWindow *aParent,
   }
 
   return containerPref;
-}
-
-JSContext *
-nsWindowWatcher::GetJSContextFromWindow(nsIDOMWindow *aWindow)
-{
-  JSContext *cx = 0;
-
-  if (aWindow) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
-    if (sgo) {
-      nsIScriptContext *scx = sgo->GetContext();
-      if (scx)
-        cx = scx->GetNativeContext();
-    }
-    /* (off-topic note:) the nsIScriptContext can be retrieved by
-    nsCOMPtr<nsIScriptContext> scx;
-    nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(scx));
-    */
-  }
-
-  return cx;
 }
