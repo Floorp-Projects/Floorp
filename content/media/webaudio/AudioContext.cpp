@@ -96,9 +96,10 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   // bound to the window.
   mDestination = new AudioDestinationNode(this, aIsOffline, aChannel,
                                           aNumberOfChannels, aLength, aSampleRate);
-  // We skip calling SetIsOnlyNodeForContext during mDestination's constructor,
-  // because we can only call SetIsOnlyNodeForContext after mDestination has
-  // been set up.
+  // We skip calling SetIsOnlyNodeForContext and the creation of the
+  // audioChannelAgent during mDestination's constructor, because we can only
+  // call them after mDestination has been set up.
+  mDestination->CreateAudioChannelAgent();
   mDestination->SetIsOnlyNodeForContext(true);
 }
 
