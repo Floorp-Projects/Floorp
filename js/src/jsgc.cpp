@@ -704,14 +704,15 @@ GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
      * without emptying the list, the older chunks will stay at the tail
      * and are more likely to reach the max age.
      */
+    JS_ASSERT(maxEmptyChunkCount >= minEmptyChunkCount);
     Chunk *freeList = nullptr;
     unsigned freeChunkCount = 0;
     for (ChunkPool::Enum e(chunkPool); !e.empty(); ) {
         Chunk *chunk = e.front();
         JS_ASSERT(chunk->unused());
         JS_ASSERT(!chunkSet.has(chunk));
-        if (releaseAll || freeChunkCount >= tunables.maxEmptyChunkCount() ||
-            (freeChunkCount >= tunables.minEmptyChunkCount() &&
+        if (releaseAll || freeChunkCount >= maxEmptyChunkCount ||
+            (freeChunkCount >= minEmptyChunkCount &&
              (shrinkBuffers || chunk->info.age == MAX_EMPTY_CHUNK_AGE)))
         {
             e.removeAndPopFront();
@@ -725,8 +726,8 @@ GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
             e.popFront();
         }
     }
-    JS_ASSERT(chunkPool.getEmptyCount() <= tunables.maxEmptyChunkCount());
-    JS_ASSERT_IF(shrinkBuffers, chunkPool.getEmptyCount() <= tunables.minEmptyChunkCount());
+    JS_ASSERT(chunkPool.getEmptyCount() <= maxEmptyChunkCount);
+    JS_ASSERT_IF(shrinkBuffers, chunkPool.getEmptyCount() <= minEmptyChunkCount);
     JS_ASSERT_IF(releaseAll, chunkPool.getEmptyCount() == 0);
     return freeList;
 }
@@ -928,7 +929,7 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
     JS_ASSERT(hasAvailableArenas());
 
     JSRuntime *rt = zone->runtimeFromAnyThread();
-    if (!rt->isHeapMinorCollecting() && rt->gc.usage.gcBytes() >= rt->gc.tunables.gcMaxBytes()) {
+    if (!rt->isHeapMinorCollecting() && rt->gc.usage.gcBytes() >= rt->gc.maxBytesAllocated()) {
 #ifdef JSGC_FJGENERATIONAL
         // This is an approximation to the best test, which would check that
         // this thread is currently promoting into the tenured area.  I doubt
@@ -949,7 +950,7 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
 
     zone->usage.addGCArena();
 
-    if (zone->usage.gcBytes() >= zone->threshold.gcTriggerBytes()) {
+    if (zone->usage.gcBytes() >= zone->gcTriggerBytes) {
         AutoUnlockGC unlock(rt);
         TriggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
     }
@@ -994,7 +995,7 @@ Chunk::releaseArena(ArenaHeader *aheader)
         maybeLock.lock(rt);
 
     if (rt->gc.isBackgroundSweeping())
-        zone->threshold.updateForRemovedArena(rt->gc.tunables);
+        zone->reduceGCTriggerBytes(zone->gcHeapGrowthFactor * ArenaSize);
     zone->usage.removeGCArena();
 
     aheader->setAsNotAllocated();
@@ -1032,7 +1033,7 @@ GCRuntime::wantBackgroundAllocation() const
      * of them.
      */
     return helperState.canBackgroundAllocate() &&
-           chunkPool.getEmptyCount() < tunables.minEmptyChunkCount() &&
+           chunkPool.getEmptyCount() < minEmptyChunkCount &&
            chunkSet.count() >= 4;
 }
 
@@ -1117,6 +1118,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     usage(nullptr),
     systemAvailableChunkListHead(nullptr),
     userAvailableChunkListHead(nullptr),
+    maxBytes(0),
     maxMallocBytes(0),
     numArenasFreeCommitted(0),
     verifyPreData(nullptr),
@@ -1125,6 +1127,19 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     nextFullGCTime(0),
     lastGCTime(0),
     jitReleaseTime(0),
+    allocThreshold(30 * 1024 * 1024),
+    highFrequencyGC(false),
+    highFrequencyTimeThreshold(1000),
+    highFrequencyLowLimitBytes(100 * 1024 * 1024),
+    highFrequencyHighLimitBytes(500 * 1024 * 1024),
+    highFrequencyHeapGrowthMax(3.0),
+    highFrequencyHeapGrowthMin(1.5),
+    lowFrequencyHeapGrowth(1.5),
+    dynamicHeapGrowth(false),
+    dynamicMarkSlice(false),
+    decommitThreshold(32 * 1024 * 1024),
+    minEmptyChunkCount(1),
+    maxEmptyChunkCount(30),
     cleanUpEverything(false),
     grayBitsValid(false),
     isNeeded(0),
@@ -1283,7 +1298,7 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
      * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
      * for default backward API compatibility.
      */
-    tunables.setParameter(JSGC_MAX_BYTES, maxbytes);
+    maxBytes = maxbytes;
     setMaxMallocBytes(maxbytes);
 
 #ifndef JS_MORE_DETERMINISTIC
@@ -1391,6 +1406,11 @@ void
 GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
 {
     switch (key) {
+      case JSGC_MAX_BYTES: {
+        JS_ASSERT(value >= usage.gcBytes());
+        maxBytes = value;
+        break;
+      }
       case JSGC_MAX_MALLOC_BYTES:
         setMaxMallocBytes(value);
         break;
@@ -1400,78 +1420,56 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
       case JSGC_MARK_STACK_LIMIT:
         setMarkStackLimit(value);
         break;
+      case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
+        highFrequencyTimeThreshold = value;
+        break;
+      case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
+        highFrequencyLowLimitBytes = value * 1024 * 1024;
+        break;
+      case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
+        highFrequencyHighLimitBytes = value * 1024 * 1024;
+        break;
+      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
+        highFrequencyHeapGrowthMax = value / 100.0;
+        MOZ_ASSERT(highFrequencyHeapGrowthMax / 0.85 > 1.0);
+        break;
+      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
+        highFrequencyHeapGrowthMin = value / 100.0;
+        MOZ_ASSERT(highFrequencyHeapGrowthMin / 0.85 > 1.0);
+        break;
+      case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
+        lowFrequencyHeapGrowth = value / 100.0;
+        MOZ_ASSERT(lowFrequencyHeapGrowth / 0.9 > 1.0);
+        break;
+      case JSGC_DYNAMIC_HEAP_GROWTH:
+        dynamicHeapGrowth = value;
+        break;
+      case JSGC_DYNAMIC_MARK_SLICE:
+        dynamicMarkSlice = value;
+        break;
+      case JSGC_ALLOCATION_THRESHOLD:
+        allocThreshold = value * 1024 * 1024;
+        break;
       case JSGC_DECOMMIT_THRESHOLD:
         decommitThreshold = value * 1024 * 1024;
         break;
-      case JSGC_MODE:
+      case JSGC_MIN_EMPTY_CHUNK_COUNT:
+        minEmptyChunkCount = value;
+        if (minEmptyChunkCount > maxEmptyChunkCount)
+            maxEmptyChunkCount = minEmptyChunkCount;
+        break;
+      case JSGC_MAX_EMPTY_CHUNK_COUNT:
+        maxEmptyChunkCount = value;
+        if (minEmptyChunkCount > maxEmptyChunkCount)
+            minEmptyChunkCount = maxEmptyChunkCount;
+        break;
+      default:
+        JS_ASSERT(key == JSGC_MODE);
         mode = JSGCMode(value);
         JS_ASSERT(mode == JSGC_MODE_GLOBAL ||
                   mode == JSGC_MODE_COMPARTMENT ||
                   mode == JSGC_MODE_INCREMENTAL);
-        break;
-      default:
-        tunables.setParameter(key, value);
-    }
-}
-
-void
-GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value)
-{
-    switch(key) {
-      case JSGC_MAX_BYTES:
-        gcMaxBytes_ = value;
-        break;
-      case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        highFrequencyThresholdUsec_ = value * PRMJ_USEC_PER_MSEC;
-        break;
-      case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-        highFrequencyLowLimitBytes_ = value * 1024 * 1024;
-        if (highFrequencyLowLimitBytes_ >= highFrequencyHighLimitBytes_)
-            highFrequencyHighLimitBytes_ = highFrequencyLowLimitBytes_ + 1;
-        JS_ASSERT(highFrequencyHighLimitBytes_ > highFrequencyLowLimitBytes_);
-        break;
-      case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-        MOZ_ASSERT(value > 0);
-        highFrequencyHighLimitBytes_ = value * 1024 * 1024;
-        if (highFrequencyHighLimitBytes_ <= highFrequencyLowLimitBytes_)
-            highFrequencyLowLimitBytes_ = highFrequencyHighLimitBytes_ - 1;
-        JS_ASSERT(highFrequencyHighLimitBytes_ > highFrequencyLowLimitBytes_);
-        break;
-      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        highFrequencyHeapGrowthMax_ = value / 100.0;
-        MOZ_ASSERT(highFrequencyHeapGrowthMax_ / 0.85 > 1.0);
-        break;
-      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        highFrequencyHeapGrowthMin_ = value / 100.0;
-        MOZ_ASSERT(highFrequencyHeapGrowthMin_ / 0.85 > 1.0);
-        break;
-      case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        lowFrequencyHeapGrowth_ = value / 100.0;
-        MOZ_ASSERT(lowFrequencyHeapGrowth_ / 0.9 > 1.0);
-        break;
-      case JSGC_DYNAMIC_HEAP_GROWTH:
-        dynamicHeapGrowthEnabled_ = value;
-        break;
-      case JSGC_DYNAMIC_MARK_SLICE:
-        dynamicMarkSliceEnabled_ = value;
-        break;
-      case JSGC_ALLOCATION_THRESHOLD:
-        gcZoneAllocThresholdBase_ = value * 1024 * 1024;
-        break;
-      case JSGC_MIN_EMPTY_CHUNK_COUNT:
-        minEmptyChunkCount_ = value;
-        if (minEmptyChunkCount_ > maxEmptyChunkCount_)
-            maxEmptyChunkCount_ = minEmptyChunkCount_;
-        JS_ASSERT(maxEmptyChunkCount_ >= minEmptyChunkCount_);
-        break;
-      case JSGC_MAX_EMPTY_CHUNK_COUNT:
-        maxEmptyChunkCount_ = value;
-        if (minEmptyChunkCount_ > maxEmptyChunkCount_)
-            minEmptyChunkCount_ = maxEmptyChunkCount_;
-        JS_ASSERT(maxEmptyChunkCount_ >= minEmptyChunkCount_);
-        break;
-      default:
-        MOZ_CRASH("Unknown GC parameter.");
+        return;
     }
 }
 
@@ -1480,7 +1478,7 @@ GCRuntime::getParameter(JSGCParamKey key)
 {
     switch (key) {
       case JSGC_MAX_BYTES:
-        return uint32_t(tunables.gcMaxBytes());
+        return uint32_t(maxBytes);
       case JSGC_MAX_MALLOC_BYTES:
         return maxMallocBytes;
       case JSGC_BYTES:
@@ -1496,27 +1494,27 @@ GCRuntime::getParameter(JSGCParamKey key)
       case JSGC_MARK_STACK_LIMIT:
         return marker.maxCapacity();
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        return tunables.highFrequencyThresholdUsec();
+        return highFrequencyTimeThreshold;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-        return tunables.highFrequencyLowLimitBytes() / 1024 / 1024;
+        return highFrequencyLowLimitBytes / 1024 / 1024;
       case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-        return tunables.highFrequencyHighLimitBytes() / 1024 / 1024;
+        return highFrequencyHighLimitBytes / 1024 / 1024;
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        return uint32_t(tunables.highFrequencyHeapGrowthMax() * 100);
+        return uint32_t(highFrequencyHeapGrowthMax * 100);
       case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        return uint32_t(tunables.highFrequencyHeapGrowthMin() * 100);
+        return uint32_t(highFrequencyHeapGrowthMin * 100);
       case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        return uint32_t(tunables.lowFrequencyHeapGrowth() * 100);
+        return uint32_t(lowFrequencyHeapGrowth * 100);
       case JSGC_DYNAMIC_HEAP_GROWTH:
-        return tunables.isDynamicHeapGrowthEnabled();
+        return dynamicHeapGrowth;
       case JSGC_DYNAMIC_MARK_SLICE:
-        return tunables.isDynamicMarkSliceEnabled();
+        return dynamicMarkSlice;
       case JSGC_ALLOCATION_THRESHOLD:
-        return tunables.gcZoneAllocThresholdBase() / 1024 / 1024;
+        return allocThreshold / 1024 / 1024;
       case JSGC_MIN_EMPTY_CHUNK_COUNT:
-        return tunables.minEmptyChunkCount();
+        return minEmptyChunkCount;
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
-        return tunables.maxEmptyChunkCount();
+        return maxEmptyChunkCount;
       default:
         JS_ASSERT(key == JSGC_NUMBER);
         return uint32_t(number);
@@ -1723,84 +1721,71 @@ GCRuntime::onTooMuchMalloc()
         mallocGCTriggered = triggerGC(JS::gcreason::TOO_MUCH_MALLOC);
 }
 
-/* static */ double
-ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,
-                                                          const GCSchedulingTunables &tunables,
-                                                          const GCSchedulingState &state)
+size_t
+GCRuntime::computeTriggerBytes(double growthFactor, size_t lastBytes, JSGCInvocationKind gckind)
 {
-    if (!tunables.isDynamicHeapGrowthEnabled())
-        return 3.0;
+    size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, allocThreshold);
+    double trigger = double(base) * growthFactor;
+    return size_t(Min(double(maxBytes), trigger));
+}
 
-    // For small zones, our collection heuristics do not matter much: favor
-    // something simple in this case.
-    if (lastBytes < 1 * 1024 * 1024)
-        return tunables.lowFrequencyHeapGrowth();
+double
+GCRuntime::computeHeapGrowthFactor(size_t lastBytes)
+{
+    /*
+     * The heap growth factor depends on the heap size after a GC and the GC frequency.
+     * For low frequency GCs (more than 1sec between GCs) we let the heap grow to 150%.
+     * For high frequency GCs we let the heap grow depending on the heap size:
+     *   lastBytes < highFrequencyLowLimit: 300%
+     *   lastBytes > highFrequencyHighLimit: 150%
+     *   otherwise: linear interpolation between 150% and 300% based on lastBytes
+     */
 
-    // If GC's are not triggering in rapid succession, use a lower threshold so
-    // that we will collect garbage sooner.
-    if (!state.inHighFrequencyGCMode())
-        return tunables.lowFrequencyHeapGrowth();
+    double factor;
+    if (!dynamicHeapGrowth) {
+        factor = 3.0;
+    } else if (lastBytes < 1 * 1024 * 1024) {
+        factor = lowFrequencyHeapGrowth;
+    } else {
+        JS_ASSERT(highFrequencyHighLimitBytes > highFrequencyLowLimitBytes);
+        if (highFrequencyGC) {
+            if (lastBytes <= highFrequencyLowLimitBytes) {
+                factor = highFrequencyHeapGrowthMax;
+            } else if (lastBytes >= highFrequencyHighLimitBytes) {
+                factor = highFrequencyHeapGrowthMin;
+            } else {
+                double k = (highFrequencyHeapGrowthMin - highFrequencyHeapGrowthMax)
+                           / (double)(highFrequencyHighLimitBytes - highFrequencyLowLimitBytes);
+                factor = (k * (lastBytes - highFrequencyLowLimitBytes)
+                                     + highFrequencyHeapGrowthMax);
+                JS_ASSERT(factor <= highFrequencyHeapGrowthMax
+                          && factor >= highFrequencyHeapGrowthMin);
+            }
+        } else {
+            factor = lowFrequencyHeapGrowth;
+        }
+    }
 
-    // The heap growth factor depends on the heap size after a GC and the GC
-    // frequency. For low frequency GCs (more than 1sec between GCs) we let
-    // the heap grow to 150%. For high frequency GCs we let the heap grow
-    // depending on the heap size:
-    //   lastBytes < highFrequencyLowLimit: 300%
-    //   lastBytes > highFrequencyHighLimit: 150%
-    //   otherwise: linear interpolation between 300% and 150% based on lastBytes
-
-    // Use shorter names to make the operation comprehensible.
-    double minRatio = tunables.highFrequencyHeapGrowthMin();
-    double maxRatio = tunables.highFrequencyHeapGrowthMax();
-    double lowLimit = tunables.highFrequencyLowLimitBytes();
-    double highLimit = tunables.highFrequencyHighLimitBytes();
-
-    if (lastBytes <= lowLimit)
-        return maxRatio;
-
-    if (lastBytes >= highLimit)
-        return minRatio;
-
-    double factor = maxRatio - ((maxRatio - minRatio) * ((lastBytes - lowLimit) /
-                                                         (highLimit - lowLimit)));
-    JS_ASSERT(factor >= minRatio);
-    JS_ASSERT(factor <= maxRatio);
     return factor;
 }
 
-/* static */ size_t
-ZoneHeapThreshold::computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
-                                           JSGCInvocationKind gckind,
-                                           const GCSchedulingTunables &tunables)
+void
+Zone::setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind)
 {
-    size_t base = gckind == GC_SHRINK
-                ? lastBytes
-                : Max(lastBytes, tunables.gcZoneAllocThresholdBase());
-    double trigger = double(base) * growthFactor;
-    return size_t(Min(double(tunables.gcMaxBytes()), trigger));
+    GCRuntime &gc = runtimeFromMainThread()->gc;
+    gcHeapGrowthFactor = gc.computeHeapGrowthFactor(lastBytes);
+    gcTriggerBytes = gc.computeTriggerBytes(gcHeapGrowthFactor, lastBytes, gckind);
 }
 
 void
-ZoneHeapThreshold::updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
-                                 const GCSchedulingTunables &tunables,
-                                 const GCSchedulingState &state)
+Zone::reduceGCTriggerBytes(size_t amount)
 {
-    gcHeapGrowthFactor_ = computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
-    gcTriggerBytes_ = computeZoneTriggerBytes(gcHeapGrowthFactor_, lastBytes, gckind, tunables);
-}
-
-void
-ZoneHeapThreshold::updateForRemovedArena(const GCSchedulingTunables &tunables)
-{
-    double amount = ArenaSize * gcHeapGrowthFactor_;
-
     JS_ASSERT(amount > 0);
-    JS_ASSERT(gcTriggerBytes_ >= amount);
-
-    if (gcTriggerBytes_ - amount < tunables.gcZoneAllocThresholdBase() * gcHeapGrowthFactor_)
+    JS_ASSERT(gcTriggerBytes >= amount);
+    GCRuntime &gc = runtimeFromAnyThread()->gc;
+    if (gcTriggerBytes - amount < gc.allocationThreshold() * gcHeapGrowthFactor)
         return;
-
-    gcTriggerBytes_ -= amount;
+    gcTriggerBytes -= amount;
 }
 
 Allocator::Allocator(Zone *zone)
@@ -2202,7 +2187,7 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
 
     bool runGC = cx->allowGC() && allowGC &&
                  cx->asJSContext()->runtime()->gc.incrementalState != NO_INCREMENTAL &&
-                 zone->usage.gcBytes() > zone->threshold.gcTriggerBytes();
+                 zone->usage.gcBytes() > zone->gcTriggerBytes;
 
     JS_ASSERT_IF(cx->isJSContext() && allowGC,
                  !cx->asJSContext()->runtime()->currentThreadHasExclusiveAccess());
@@ -2449,9 +2434,9 @@ GCRuntime::maybeGC(Zone *zone)
         return;
     }
 
-    double factor = schedulingState.inHighFrequencyGCMode() ? 0.85 : 0.9;
+    double factor = highFrequencyGC ? 0.85 : 0.9;
     if (zone->usage.gcBytes() > 1024 * 1024 &&
-        zone->usage.gcBytes() >= factor * zone->threshold.gcTriggerBytes() &&
+        zone->usage.gcBytes() >= factor * zone->gcTriggerBytes &&
         incrementalState == NO_INCREMENTAL &&
         !isBackgroundSweeping())
     {
@@ -4528,10 +4513,11 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
     }
 
     uint64_t currentTime = PRMJ_Now();
-    schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
+    highFrequencyGC = dynamicHeapGrowth && lastGCTime &&
+        lastGCTime + highFrequencyTimeThreshold * PRMJ_USEC_PER_MSEC > currentTime;
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->threshold.updateAfterGC(zone->usage.gcBytes(), gckind, tunables, schedulingState);
+        zone->setGCLastBytes(zone->usage.gcBytes(), gckind);
         if (zone->isCollecting()) {
             JS_ASSERT(zone->isGCFinished());
             zone->setGCState(Zone::NoGC);
@@ -4947,7 +4933,7 @@ GCRuntime::budgetIncrementalGC(int64_t *budget)
 
     bool reset = false;
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        if (zone->usage.gcBytes() >= zone->threshold.gcTriggerBytes()) {
+        if (zone->usage.gcBytes() >= zone->gcTriggerBytes) {
             *budget = SliceBudget::Unlimited;
             stats.nonincremental("allocation trigger");
         }
@@ -5228,7 +5214,7 @@ GCRuntime::gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64
     int64_t budget;
     if (millis)
         budget = SliceBudget::TimeBudget(millis);
-    else if (schedulingState.inHighFrequencyGCMode() && tunables.isDynamicMarkSliceEnabled())
+    else if (highFrequencyGC && dynamicMarkSlice)
         budget = sliceBudget * IGC_MARK_SLICE_MULTIPLIER;
     else
         budget = sliceBudget;
@@ -5446,10 +5432,13 @@ js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals,
 
         zoneHolder.reset(zone);
 
-        const JSPrincipals *trusted = rt->trustedPrincipals();
-        bool isSystem = principals && principals == trusted;
-        if (!zone->init(isSystem))
+        if (!zone->init())
             return nullptr;
+
+        zone->setGCLastBytes(8192, GC_NORMAL);
+
+        const JSPrincipals *trusted = rt->trustedPrincipals();
+        zone->isSystem = principals && principals == trusted;
     }
 
     ScopedJSDeletePtr<JSCompartment> compartment(cx->new_<JSCompartment>(zone, options));
