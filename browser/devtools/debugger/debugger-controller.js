@@ -661,7 +661,6 @@ StackFrames.prototype = {
     }
 
     DebuggerView.StackFrames.selectedDepth = Math.max(this.currentFrameDepth, 0);
-    DebuggerView.StackFrames.dirty = this.activeThread.moreFrames;
 
     window.emit(EVENTS.AFTER_FRAMES_REFILLED);
   },

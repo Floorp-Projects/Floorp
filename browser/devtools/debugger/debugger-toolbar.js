@@ -472,11 +472,6 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Specifies if the active thread has more frames that need to be loaded.
-   */
-  dirty: false,
-
-  /**
    * Customization function for creating an item's UI.
    *
    * @param string aTitle
@@ -561,7 +556,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onScroll: function() {
     // Update the stackframes container only if we have to.
-    if (!this.dirty) {
+    if (!DebuggerController.activeThread.moreFrames) {
       return;
     }
     // Allow requests to settle down first.
@@ -572,14 +567,20 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
    * Requests the addition of more frames from the controller.
    */
   _afterScroll: function() {
+    // Check again if we have to update the stackframes container, because in
+    // some cases (e.g. browser_dbg_variables-view-edit-getset-02.js) the value
+    // might have changed from the time the setNamedTimeout call was made.
+    if (!DebuggerController.activeThread.moreFrames) {
+      return;
+    }
     let scrollPosition = this.widget.getAttribute("scrollPosition");
     let scrollWidth = this.widget.getAttribute("scrollWidth");
 
     // If the stackframes container scrolled almost to the end, with only
     // 1/10 of a breadcrumb remaining, load more content.
     if (scrollPosition - scrollWidth / 10 < 1) {
-      this.ensureIndexIsVisible(CALL_STACK_PAGE_SIZE - 1);
-      this.dirty = false;
+      let index = Math.min(CALL_STACK_PAGE_SIZE - 1, this.items.length - 1);
+      this.ensureIndexIsVisible(index);
 
       // Loads more stack frames from the debugger server cache.
       DebuggerController.StackFrames.addMoreFrames();
