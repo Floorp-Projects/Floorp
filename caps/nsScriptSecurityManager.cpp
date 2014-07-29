@@ -324,7 +324,11 @@ nsScriptSecurityManager::GetChannelPrincipal(nsIChannel* aChannel,
     aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
     if (loadInfo) {
         if (loadInfo->GetLoadingSandboxed()) {
-            return CallCreateInstance(NS_NULLPRINCIPAL_CONTRACTID, aPrincipal);
+            nsRefPtr<nsNullPrincipal> prin =
+              nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
+            NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
+            prin.forget(aPrincipal);
+            return NS_OK;
         }
 
         if (loadInfo->GetForceInheritPrincipal()) {
