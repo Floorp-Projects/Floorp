@@ -14,6 +14,11 @@
 namespace mozilla {
 namespace gfx {
 
+static bool FuzzyEqual(Float aV1, Float aV2) {
+  // XXX - Check if fabs does the smart thing and just negates the sign bit.
+  return fabs(aV2 - aV1) < 1e-6;
+}
+
 class Matrix
 {
 public:
@@ -278,12 +283,6 @@ public:
   bool HasNonIntegerScale() const {
       return !FuzzyEqual(_11, floor(_11 + 0.5)) ||
              !FuzzyEqual(_22, floor(_22 + 0.5));
-  }
-
-private:
-  static bool FuzzyEqual(Float aV1, Float aV2) {
-    // XXX - Check if fabs does the smart thing and just negates the sign bit.
-    return fabs(aV2 - aV1) < 1e-6;
   }
 };
 
@@ -572,6 +571,36 @@ public:
     _23 *= aZ;
     _33 *= aZ;
     _43 *= aZ;
+  }
+
+  void TranslatePost(Float aX, Float aY, Float aZ)
+  {
+      _11 += _14 * aX;
+      _21 += _24 * aX;
+      _31 += _34 * aX;
+      _41 += _44 * aX;
+
+      _12 += _14 * aY;
+      _22 += _24 * aY;
+      _32 += _34 * aY;
+      _42 += _44 * aY;
+
+      _13 += _14 * aZ;
+      _23 += _24 * aZ;
+      _33 += _34 * aZ;
+      _43 += _44 * aZ;
+  }
+
+  bool FuzzyEqual(const Matrix4x4& o) const
+  {
+    return gfx::FuzzyEqual(_11, o._11) && gfx::FuzzyEqual(_12, o._12) &&
+           gfx::FuzzyEqual(_13, o._13) && gfx::FuzzyEqual(_14, o._14) &&
+           gfx::FuzzyEqual(_21, o._21) && gfx::FuzzyEqual(_22, o._22) &&
+           gfx::FuzzyEqual(_23, o._23) && gfx::FuzzyEqual(_24, o._24) &&
+           gfx::FuzzyEqual(_31, o._31) && gfx::FuzzyEqual(_32, o._32) &&
+           gfx::FuzzyEqual(_33, o._33) && gfx::FuzzyEqual(_34, o._34) &&
+           gfx::FuzzyEqual(_41, o._41) && gfx::FuzzyEqual(_42, o._42) &&
+           gfx::FuzzyEqual(_43, o._43) && gfx::FuzzyEqual(_44, o._44);
   }
 
 
