@@ -10,7 +10,9 @@
 
 [JSImplementation="@mozilla.org/nfc/NFCPeer;1"]
 interface MozNFCPeer {
+  [Throws]
   DOMRequest sendNDEF(sequence<MozNDEFRecord> records);
+  [Throws]
   DOMRequest sendFile(Blob blob);
 };
 
