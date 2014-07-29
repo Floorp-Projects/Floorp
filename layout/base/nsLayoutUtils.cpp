@@ -80,6 +80,7 @@
 #include "TiledLayerBuffer.h" // For TILEDLAYERBUFFER_TILE_SIZE
 #include "ClientLayerManager.h"
 #include "nsRefreshDriver.h"
+#include "nsIContentViewer.h"
 
 #include "mozilla/Preferences.h"
 
@@ -6615,6 +6616,27 @@ nsLayoutUtils::UpdateImageVisibilityForFrame(nsIFrame* aImageFrame)
   }
 }
 
+/* static */ bool
+nsLayoutUtils::GetContentViewerBounds(nsPresContext* aPresContext,
+                                      LayoutDeviceIntRect& aOutRect)
+{
+  nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
+  if (!docShell) {
+    return false;
+  }
+
+  nsCOMPtr<nsIContentViewer> cv;
+  docShell->GetContentViewer(getter_AddRefs(cv));
+  if (!cv) {
+    return false;
+  }
+
+  nsIntRect bounds;
+  cv->GetBounds(bounds);
+  aOutRect = LayoutDeviceIntRect::FromUntyped(bounds);
+  return true;
+}
+
 /* static */ nsSize
 nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
 {
@@ -6638,10 +6660,10 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
 #else
             view->GetWidget();
 #endif
+        int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
         if (widget) {
           nsIntRect widgetBounds;
           widget->GetBounds(widgetBounds);
-          int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
           size = nsSize(widgetBounds.width * auPerDevPixel,
                         widgetBounds.height * auPerDevPixel);
 #ifdef MOZ_WIDGET_ANDROID
@@ -6650,7 +6672,12 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
           }
 #endif
         } else {
-          size = viewSize;
+          LayoutDeviceIntRect contentBounds;
+          if (nsLayoutUtils::GetContentViewerBounds(presContext, contentBounds)) {
+            size = LayoutDevicePixel::ToAppUnits(contentBounds.Size(), auPerDevPixel);
+          } else {
+            size = viewSize;
+          }
         }
       }
     }
@@ -6666,6 +6693,7 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
 
   return size;
 }
+
 /* static */ CSSSize
 nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
                                             bool aIsRootContentDocRootScrollFrame,
@@ -6716,7 +6744,17 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
           }
 #endif
         } else {
-          rootCompositionSize = viewSize;
+          LayoutDeviceIntRect contentBounds;
+          if (nsLayoutUtils::GetContentViewerBounds(rootPresContext, contentBounds)) {
+            LayoutDeviceToLayerScale scale(1.0f);
+            if (rootPresContext->GetParentPresContext()) {
+              gfxSize res = rootPresContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
+              scale = LayoutDeviceToLayerScale(res.width, res.height);
+            }
+            rootCompositionSize = contentBounds.Size() * scale;
+          } else {
+            rootCompositionSize = viewSize;
+          }
         }
       }
     }

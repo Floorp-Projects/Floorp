@@ -187,6 +187,11 @@ struct LayoutDevicePixel {
   static LayoutDeviceIntRect FromAppUnitsToNearest(const nsRect& aRect, nscoord aAppUnitsPerDevPixel) {
     return FromUntyped(aRect.ToNearestPixels(aAppUnitsPerDevPixel));
   }
+
+  static nsSize ToAppUnits(const LayoutDeviceIntSize& aSize, nscoord aAppUnitsPerDevPixel) {
+    return nsSize(aSize.width * aAppUnitsPerDevPixel,
+                  aSize.height * aAppUnitsPerDevPixel);
+  }
 };
 
 /*
