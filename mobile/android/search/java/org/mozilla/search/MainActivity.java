@@ -61,7 +61,7 @@ public class MainActivity extends FragmentActivity implements AcceptsSearchQuery
         storeQuery(query);
 
         ((PostSearchFragment) getSupportFragmentManager().findFragmentById(R.id.postsearch))
-                .setUrl("https://search.yahoo.com/search?p=" + Uri.encode(query));
+                .startSearch(query);
 
         ((SearchFragment) getSupportFragmentManager().findFragmentById(R.id.search_fragment))
                 .setSearchTerm(query);
