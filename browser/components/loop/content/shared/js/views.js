@@ -180,7 +180,7 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        React.DOM.ul({className: "controls"}, 
+        React.DOM.ul({className: "conversation-toolbar"}, 
           React.DOM.li(null, React.DOM.button({className: "btn btn-hangup", 
                       onClick: this.handleClickHangup, 
                       title: __("hangup_button_title")})), 
