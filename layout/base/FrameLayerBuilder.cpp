@@ -2729,12 +2729,16 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     nsDisplayItem::Type itemType = item->GetType();
+    bool prerenderedTransform = itemType == nsDisplayItem::TYPE_TRANSFORM &&
+        static_cast<nsDisplayTransform*>(item)->ShouldPrerender();
     nsIntRect clipRect;
     const DisplayItemClip& itemClip = item->GetClip();
     if (itemClip.HasClip()) {
       itemContent.IntersectRect(itemContent, itemClip.GetClipRect());
       clipRect = ScaleToNearestPixels(itemClip.GetClipRect());
-      itemDrawRect.IntersectRect(itemDrawRect, clipRect);
+      if (!prerenderedTransform) {
+        itemDrawRect.IntersectRect(itemDrawRect, clipRect);
+      }
       clipRect.MoveBy(mParameters.mOffset);
     }
 #ifdef DEBUG
@@ -2860,8 +2864,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
         // (async animations or an empty transaction), so we need to put items
         // that the transform item can potentially move under into a layer
         // above this item.
-        if (itemType == nsDisplayItem::TYPE_TRANSFORM &&
-            static_cast<nsDisplayTransform*>(item)->ShouldPrerender()) {
+        if (prerenderedTransform) {
           if (!itemClip.HasClip()) {
             // The transform item can move anywhere, treat all other content
             // as being above this item.
