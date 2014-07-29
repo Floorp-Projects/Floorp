@@ -15,6 +15,7 @@
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 #include "cubeb_panner.h"
+#include "cubeb_osx_run_loop.h"
 
 #if !defined(kCFCoreFoundationVersionNumber10_7)
 /* From CoreFoundation CFBase.h */
@@ -144,6 +145,8 @@ audiounit_init(cubeb ** context, char const * context_name)
   ctx->active_streams = 0;
 
   ctx->limit_streams = kCFCoreFoundationVersionNumber < kCFCoreFoundationVersionNumber10_7;
+
+  cubeb_set_coreaudio_notification_runloop();
 
   *context = ctx;
 
@@ -633,20 +636,6 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   }
 
   *stream = stm;
-
-  /* This is needed so that AudioUnit listeners get called on this thread, and
-   * not the main thread. If we don't do that, they are not called, or a crash
-   * occur, depending on the OSX version. */
-  AudioObjectPropertyAddress runloop_address = {
-    kAudioHardwarePropertyRunLoop,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
-
-  CFRunLoopRef run_loop = NULL;
-  r = AudioObjectSetPropertyData(kAudioObjectSystemObject,
-                                 &runloop_address,
-                                 0, NULL, sizeof(CFRunLoopRef), &run_loop);
 
   /* we dont' check the return value here, because we want to be able to play
    * even if we can't detect device changes. */
