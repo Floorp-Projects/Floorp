@@ -17,6 +17,7 @@
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/FileReaderSyncBinding.h"
+#include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ImageDataBinding.h"
 #include "mozilla/dom/MessageEventBinding.h"
@@ -77,6 +78,12 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
       !WorkerLocationBinding_workers::GetConstructorObject(aCx, aGlobal) ||
       !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, aGlobal)) {
     return false;
+  }
+
+  if (DOMFetchEnabled()) {
+    if (!HeadersBinding::GetConstructorObject(aCx, aGlobal)) {
+      return false;
+    }
   }
 
   if (!JS_DefineProfilingFunctions(aCx, aGlobal)) {

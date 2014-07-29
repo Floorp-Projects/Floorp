@@ -96,3 +96,7 @@ SPHINX_PYTHON_PACKAGE_DIRS += ['mozwebidlcodegen']
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
     # This is needed for Window.webidl
     DEFINES['HAVE_SIDEBAR'] = True
+
+PYTHON_UNIT_TESTS += [
+    'mozwebidlcodegen/test/test_mozwebidlcodegen.py',
+]

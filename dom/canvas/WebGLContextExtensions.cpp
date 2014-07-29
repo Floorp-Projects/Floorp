@@ -35,6 +35,7 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
         WEBGL_EXTENSION_IDENTIFIER(EXT_color_buffer_half_float)
         WEBGL_EXTENSION_IDENTIFIER(EXT_frag_depth)
         WEBGL_EXTENSION_IDENTIFIER(EXT_sRGB)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_shader_texture_lod)
         WEBGL_EXTENSION_IDENTIFIER(EXT_texture_filter_anisotropic)
         WEBGL_EXTENSION_IDENTIFIER(OES_element_index_uint)
         WEBGL_EXTENSION_IDENTIFIER(OES_standard_derivatives)
@@ -155,6 +156,8 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
             return WebGLExtensionDrawBuffers::IsSupported(this);
         case WebGLExtensionID::EXT_frag_depth:
             return WebGLExtensionFragDepth::IsSupported(this);
+        case WebGLExtensionID::EXT_shader_texture_lod:
+            return gl->IsExtensionSupported(GLContext::EXT_shader_texture_lod);
         default:
             // For warnings-as-errors.
             break;
@@ -333,6 +336,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
             break;
         case WebGLExtensionID::EXT_blend_minmax:
             obj = new WebGLExtensionBlendMinMax(this);
+            break;
+        case WebGLExtensionID::EXT_shader_texture_lod:
+            obj = new WebGLExtensionShaderTextureLod(this);
             break;
         default:
             MOZ_ASSERT(false, "should not get there.");

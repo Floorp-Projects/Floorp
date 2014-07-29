@@ -34,7 +34,7 @@ private:
   T mValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 public:
-  AutoRestore(T& aValue MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  explicit AutoRestore(T& aValue MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mLocation(aValue)
     , mValue(aValue)
   {

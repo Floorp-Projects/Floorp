@@ -1,0 +1,141 @@
+// Main thread specific tests because they need SpecialPowers.  Expects
+// test_headers_common.js to already be loaded.
+
+function TestRequestHeaders() {
+  is(typeof Headers, "function", "Headers global constructor exists.");
+  var headers = new Headers();
+  ok(headers, "Constructed empty Headers object");
+  SpecialPowers.wrap(headers).guard = "request";
+  TestCoreBehavior(headers, "foo");
+  var forbidden = [
+    "Accept-Charset",
+    "Accept-Encoding",
+    "Access-Control-Request-Headers",
+    "Access-Control-Request-Method",
+    "Connection",
+    "Content-Length",
+    "Cookie",
+    "Cookie2",
+    "Date",
+    "DNT",
+    "Expect",
+    "Host",
+    "Keep-Alive",
+    "Origin",
+    "Referer",
+    "TE",
+    "Trailer",
+    "Transfer-Encoding",
+    "Upgrade",
+    "User-Agent",
+    "Via",
+    "Proxy-Authorization",
+    "Proxy-blarg",
+    "Proxy-",
+    "Sec-foo",
+    "Sec-"
+  ];
+
+  for (var i = 0, n = forbidden.length; i < n; ++i) {
+    var name = forbidden[i];
+    headers.append(name, "hmm");
+    checkNotHas(headers, name, "Should not be able to append " + name + " to request headers");
+    headers.set(name, "hmm");
+    checkNotHas(headers, name, "Should not be able to set " + name + " on request headers");
+  }
+}
+
+function TestRequestNoCorsHeaders() {
+  is(typeof Headers, "function", "Headers global constructor exists.");
+  var headers = new Headers();
+  ok(headers, "Constructed empty Headers object");
+  SpecialPowers.wrap(headers).guard = "request-no-cors";
+
+  headers.append("foo", "bar");
+  checkNotHas(headers, "foo", "Should not be able to append arbitrary headers to request-no-cors headers.");
+  headers.set("foo", "bar");
+  checkNotHas(headers, "foo", "Should not be able to set arbitrary headers on request-no-cors headers.");
+
+  var simpleNames = [
+    "Accept",
+    "Accept-Language",
+    "Content-Language"
+  ];
+
+  var simpleContentTypes = [
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "text/plain",
+    "application/x-www-form-urlencoded; charset=utf-8",
+    "multipart/form-data; charset=utf-8",
+    "text/plain; charset=utf-8"
+  ];
+
+  for (var i = 0, n = simpleNames.length; i < n; ++i) {
+    var name = simpleNames[i];
+    headers.append(name, "hmm");
+    checkHas(headers, name, "Should be able to append " + name + " to request-no-cors headers");
+    headers.set(name, "hmm");
+    checkHas(headers, name, "Should be able to set " + name + " on request-no-cors headers");
+  }
+
+  for (var i = 0, n = simpleContentTypes.length; i < n; ++i) {
+    var value = simpleContentTypes[i];
+    headers.append("Content-Type", value);
+    checkHas(headers, "Content-Type", "Should be able to append " + value + " Content-Type to request-no-cors headers");
+    headers.delete("Content-Type");
+    headers.set("Content-Type", value);
+    checkHas(headers, "Content-Type", "Should be able to set " + value + " Content-Type on request-no-cors headers");
+  }
+}
+
+function TestResponseHeaders() {
+  is(typeof Headers, "function", "Headers global constructor exists.");
+  var headers = new Headers();
+  ok(headers, "Constructed empty Headers object");
+  SpecialPowers.wrap(headers).guard = "response";
+  TestCoreBehavior(headers, "foo");
+  var forbidden = [
+    "Set-Cookie",
+    "Set-Cookie2"
+  ];
+
+  for (var i = 0, n = forbidden.length; i < n; ++i) {
+    var name = forbidden[i];
+    headers.append(name, "hmm");
+    checkNotHas(headers, name, "Should not be able to append " + name + " to response headers");
+    headers.set(name, "hmm");
+    checkNotHas(headers, name, "Should not be able to set " + name + " on response headers");
+  }
+}
+
+function TestImmutableHeaders() {
+  is(typeof Headers, "function", "Headers global constructor exists.");
+  var headers = new Headers();
+  ok(headers, "Constructed empty Headers object");
+  TestCoreBehavior(headers, "foo");
+  headers.append("foo", "atleastone");
+
+  SpecialPowers.wrap(headers).guard = "immutable";
+
+  shouldThrow(function() {
+    headers.append("foo", "wat");
+  }, TypeError, "Should not be able to append to immutable headers");
+
+  shouldThrow(function() {
+    headers.set("foo", "wat");
+  }, TypeError, "Should not be able to set immutable headers");
+
+  shouldThrow(function() {
+    headers.delete("foo");
+  }, TypeError, "Should not be able to delete immutable headers");
+
+  checkHas(headers, "foo", "Should be able to check immutable headers");
+  ok(headers.get("foo"), "Should be able to get immutable headers");
+  ok(headers.getAll("foo").length, "Should be able to get all immutable headers");
+}
+
+TestRequestHeaders();
+TestRequestNoCorsHeaders();
+TestResponseHeaders();
+TestImmutableHeaders();

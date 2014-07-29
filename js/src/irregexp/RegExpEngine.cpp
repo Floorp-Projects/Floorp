@@ -1566,6 +1566,16 @@ SampleChars(FrequencyCollator *collator, const CharT *chars, size_t length)
     }
 }
 
+static bool
+IsNativeRegExpEnabled(JSContext *cx)
+{
+#ifdef JS_CODEGEN_NONE
+    return false;
+#else
+    return cx->runtime()->options().nativeRegExp();
+#endif
+}
+
 RegExpCode
 irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData *data,
                          HandleLinearString sample, bool is_global, bool ignore_case,
@@ -1647,7 +1657,7 @@ irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData 
     Maybe<InterpretedRegExpMacroAssembler> interpreted_assembler;
 
     RegExpMacroAssembler *assembler;
-    if (cx->runtime()->options().nativeRegExp()) {
+    if (IsNativeRegExpEnabled(cx)) {
         NativeRegExpMacroAssembler::Mode mode =
             is_ascii ? NativeRegExpMacroAssembler::ASCII
                      : NativeRegExpMacroAssembler::JSCHAR;

@@ -467,16 +467,6 @@ XRE_API(WindowsEnvironmentType,
         XRE_GetWindowsEnvironment, ())
 #endif // XP_WIN
 
-#ifdef MOZ_B2G_LOADER
-XRE_API(int,
-        XRE_ProcLoaderServiceRun, (pid_t, int, int argc, const char *argv[]));
-XRE_API(void,
-        XRE_ProcLoaderClientInit, (pid_t, int));
-XRE_API(void,
-        XRE_ProcLoaderPreload, (const char* aProgramDir,
-                                const nsXREAppData* aAppData));
-#endif // MOZ_B2G_LOADER
-
 XRE_API(int,
         XRE_XPCShellMain, (int argc, char** argv, char** envp))
 

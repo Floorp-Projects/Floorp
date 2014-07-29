@@ -234,6 +234,8 @@ class CxxCodeGen(CodePrinter, Visitor):
     def visitConstructorDecl(self, cd):
         if cd.explicit:
             self.write('explicit ')
+        else:
+            self.write('MOZ_IMPLICIT ')
         self.visitMethodDecl(cd)
 
     def visitConstructorDefn(self, cd):

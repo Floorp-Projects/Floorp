@@ -274,17 +274,17 @@ IsInsideNursery(const js::gc::Cell *cell)
 namespace JS {
 
 static MOZ_ALWAYS_INLINE Zone *
-GetGCThingZone(void *thing)
+GetTenuredGCThingZone(void *thing)
 {
     MOZ_ASSERT(thing);
+#ifdef JSGC_GENERATIONAL
+    JS_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
+#endif
     return js::gc::GetGCThingArena(thing)->zone;
 }
 
-static MOZ_ALWAYS_INLINE Zone *
-GetObjectZone(JSObject *obj)
-{
-    return GetGCThingZone(obj);
-}
+extern JS_PUBLIC_API(Zone *)
+GetObjectZone(JSObject *obj);
 
 static MOZ_ALWAYS_INLINE bool
 GCThingIsMarkedGray(void *thing)
@@ -304,11 +304,11 @@ GCThingIsMarkedGray(void *thing)
 }
 
 static MOZ_ALWAYS_INLINE bool
-IsIncrementalBarrierNeededOnGCThing(shadow::Runtime *rt, void *thing, JSGCTraceKind kind)
+IsIncrementalBarrierNeededOnTenuredGCThing(shadow::Runtime *rt, void *thing, JSGCTraceKind kind)
 {
     if (!rt->needsBarrier_)
         return false;
-    JS::Zone *zone = GetGCThingZone(thing);
+    JS::Zone *zone = GetTenuredGCThingZone(thing);
     return reinterpret_cast<shadow::Zone *>(zone)->needsBarrier_;
 }
 

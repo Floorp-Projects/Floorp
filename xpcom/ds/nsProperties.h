@@ -31,7 +31,7 @@ public:
   NS_DECL_AGGREGATED
   NS_DECL_NSIPROPERTIES
 
-  nsProperties(nsISupports *aOuter) { NS_INIT_AGGREGATED(aOuter); }
+  explicit nsProperties(nsISupports *aOuter) { NS_INIT_AGGREGATED(aOuter); }
   ~nsProperties() {}
 };
 

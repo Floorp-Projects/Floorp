@@ -209,7 +209,7 @@ ImportLoader::Open()
   nsIPrincipal* principal = Principal();
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
+  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SUBDOCUMENT,
                                           mURI,
                                           principal,
                                           mImportParent,

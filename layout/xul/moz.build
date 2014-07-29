@@ -75,12 +75,12 @@ if CONFIG['MOZ_XUL']:
     ]
 
 if CONFIG['ENABLE_TESTS']:
-    PARALLEL_DIRS += [
+    DIRS += [
         'test',
     ]
 
 if CONFIG['MOZ_XUL']:
-    PARALLEL_DIRS += ['tree', 'grid']
+    DIRS += ['tree', 'grid']
 
 FAIL_ON_WARNINGS = True
 

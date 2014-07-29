@@ -49,7 +49,7 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['ENABLE_TESTS']:
-    PARALLEL_DIRS += [
+    DIRS += [
         'tests',
         'tests/chrome',
     ]

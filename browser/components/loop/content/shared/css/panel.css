@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Panel styles */
-body {
-  font-size: 12px;
-}
-
 .panel {
   /* XXX the Social API panel behaves weirdly on inner element size changes,
      adding unwanted scrollbars; quickfix is to hide these for now. */

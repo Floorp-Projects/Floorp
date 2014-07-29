@@ -57,7 +57,7 @@ if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
         'LoadLibraryRemote.cpp',
     ]
 
-TEST_TOOL_DIRS += ['test']
+TEST_DIRS += ['test']
 
 EXPORTS += [
     'nsExceptionHandler.h',

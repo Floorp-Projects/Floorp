@@ -4035,9 +4035,6 @@ class MAbs
             ins->implicitTruncate_ = true;
         return ins;
     }
-    MDefinition *num() const {
-        return getOperand(0);
-    }
     TypePolicy *typePolicy() {
         return this;
     }
@@ -4080,9 +4077,6 @@ class MSqrt
     static MSqrt *NewAsmJS(TempAllocator &alloc, MDefinition *num, MIRType type) {
         JS_ASSERT(IsFloatingPointType(type));
         return new(alloc) MSqrt(num, type);
-    }
-    MDefinition *num() const {
-        return getOperand(0);
     }
     TypePolicy *typePolicy() {
         return this;
@@ -4989,9 +4983,6 @@ class MComputeThis
         return new(alloc) MComputeThis(def);
     }
 
-    MDefinition *input() const {
-        return getOperand(0);
-    }
     TypePolicy *typePolicy() {
         return this;
     }
@@ -6337,10 +6328,6 @@ class MNot
     }
     bool operandIsNeverNaN() const {
         return operandIsNeverNaN_;
-    }
-
-    MDefinition *operand() const {
-        return getOperand(0);
     }
 
     virtual AliasSet getAliasSet() const {
@@ -9070,9 +9057,6 @@ class MFloor
         return new(alloc) MFloor(num);
     }
 
-    MDefinition *num() const {
-        return getOperand(0);
-    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
@@ -9118,9 +9102,6 @@ class MCeil
         return new(alloc) MCeil(num);
     }
 
-    MDefinition *num() const {
-        return getOperand(0);
-    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
@@ -9162,9 +9143,6 @@ class MRound
         return new(alloc) MRound(num);
     }
 
-    MDefinition *num() const {
-        return getOperand(0);
-    }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }

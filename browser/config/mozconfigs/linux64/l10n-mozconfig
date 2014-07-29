@@ -9,4 +9,6 @@ ac_add_options --enable-update-packaging
 
 export MOZILLA_OFFICIAL=1
 
+ac_add_options --disable-stdcxx-compat
+
 . "$topsrcdir/build/mozconfig.common.override"

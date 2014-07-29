@@ -6,9 +6,9 @@
 
 # These component dirs are built for all apps (including suite)
 if CONFIG['MOZ_ENABLE_XREMOTE']:
-    PARALLEL_DIRS += ['remote']
+    DIRS += ['remote']
 
-PARALLEL_DIRS += [
+DIRS += [
     'aboutcache',
     'aboutmemory',
     'addoncompat',
@@ -52,34 +52,34 @@ PARALLEL_DIRS += [
 ]
 
 if CONFIG['MOZ_CRASHREPORTER']:
-    PARALLEL_DIRS += ['crashes']
+    DIRS += ['crashes']
 
 if CONFIG['MOZ_SOCIAL']:
-    PARALLEL_DIRS += ['social']
+    DIRS += ['social']
 
 if CONFIG['BUILD_CTYPES']:
-    PARALLEL_DIRS += ['ctypes']
+    DIRS += ['ctypes']
 
 if CONFIG['MOZ_FEEDS']:
-    PARALLEL_DIRS += ['feeds']
+    DIRS += ['feeds']
 
 if CONFIG['MOZ_HELP_VIEWER']:
-    PARALLEL_DIRS += ['help']
+    DIRS += ['help']
 
 if CONFIG['NS_PRINTING']:
-    PARALLEL_DIRS += ['printing']
+    DIRS += ['printing']
 
 if CONFIG['MOZ_XUL']:
-    PARALLEL_DIRS += ['autocomplete', 'satchel']
+    DIRS += ['autocomplete', 'satchel']
 
 if CONFIG['MOZ_TOOLKIT_SEARCH']:
-    PARALLEL_DIRS += ['search']
+    DIRS += ['search']
 
 if CONFIG['MOZ_URL_CLASSIFIER']:
-    PARALLEL_DIRS += ['url-classifier']
+    DIRS += ['url-classifier']
 
 if CONFIG['MOZ_CAPTIVEDETECT']:
-    PARALLEL_DIRS += ['captivedetect']
+    DIRS += ['captivedetect']
 
 DIRS += ['build']
 

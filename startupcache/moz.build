@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if not CONFIG['MOZ_B2G']:
-    TEST_TOOL_DIRS += ['test']
+    TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'nsIStartupCache.idl',

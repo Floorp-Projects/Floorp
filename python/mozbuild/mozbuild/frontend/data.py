@@ -102,10 +102,7 @@ class DirectoryTraversal(SandboxDerived):
     """
     __slots__ = (
         'dirs',
-        'parallel_dirs',
-        'tool_dirs',
         'test_dirs',
-        'test_tool_dirs',
         'tier_dirs',
         'tier_static_dirs',
     )
@@ -114,10 +111,7 @@ class DirectoryTraversal(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
 
         self.dirs = []
-        self.parallel_dirs = []
-        self.tool_dirs = []
         self.test_dirs = []
-        self.test_tool_dirs = []
         self.tier_dirs = OrderedDict()
         self.tier_static_dirs = OrderedDict()
 
