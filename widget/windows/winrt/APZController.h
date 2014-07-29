@@ -12,8 +12,6 @@
 #include "FrameMetrics.h"
 #include "Units.h"
 
-class nsIWidgetListener;
-
 namespace mozilla {
 namespace widget {
 namespace winrt {
@@ -26,8 +24,7 @@ class APZController :
   typedef mozilla::layers::ZoomConstraints ZoomConstraints;
 
 public:
-  APZController() :
-    mWidgetListener(nullptr)
+  APZController()
   {
   }
 
@@ -53,8 +50,6 @@ public:
                                     APZStateChange aChange,
                                     int aArg);
   
-  void SetWidgetListener(nsIWidgetListener* aWidgetListener);
-
   bool HitTestAPZC(mozilla::ScreenIntPoint& aPoint);
   void TransformCoordinateToGecko(const mozilla::ScreenIntPoint& aPoint,
                                   LayoutDeviceIntPoint* aRefPointOut);
@@ -65,9 +60,6 @@ public:
 public:
   // todo: make this a member variable as prep for multiple views
   static nsRefPtr<mozilla::layers::APZCTreeManager> sAPZC;
-
-private:
-  nsIWidgetListener* mWidgetListener;
 };
 
 } } }
