@@ -21,7 +21,7 @@
 #include "cubeb_resampler.h"
 #include <stdio.h>
 
-#if 0
+#if 1
 #  define LOG(...) do {         \
   fprintf(stderr, __VA_ARGS__); \
   fprintf(stderr, "\n");        \
@@ -941,7 +941,8 @@ cubeb_ops const wasapi_ops = {
   /*.stream_set_volume =*/ wasapi_stream_set_volume,
   /*.stream_set_panning =*/ wasapi_stream_set_panning,
   /*.stream_get_current_output_device =*/ NULL,
-  /*.stream_output_device_destroy =*/ NULL
+  /*.stream_output_device_destroy =*/ NULL,
+  /*.stream_register_device_changed_callback =*/ NULL
  };
 } // namespace anonymous
 

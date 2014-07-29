@@ -171,6 +171,11 @@ typedef void (* cubeb_state_callback)(cubeb_stream * stream,
                                       void * user_ptr,
                                       cubeb_state state);
 
+/**
+ * User supplied callback called when the underlying device changed.
+ * @param user */
+typedef void (* cubeb_device_changed_callback)(void * user_ptr);
+
 /** Initialize an application context.  This will perform any library or
     application scoped initialization.
     @param context
@@ -310,6 +315,18 @@ int cubeb_stream_get_current_output_device(cubeb_stream * stm,
  */
 int cubeb_stream_output_device_destroy(cubeb_stream * stream,
                                        cubeb_output_device * devices);
+
+/**
+ * Set a callback to be notified when the output device changes.
+ * @param stream the stream for which to set the callback.
+ * @param device_changed_callback a function called whenever the device has
+ *        changed. Passing NULL allow to unregister a function
+ * @return CUBEB_ERROR_INVALID_PARAMETER if either stream or
+ *         device_changed_callback are invalid pointers.
+ * @return CUBEB_OK
+ */
+int cubeb_stream_register_device_changed_callback(cubeb_stream * stream,
+                                                  cubeb_device_changed_callback  device_changed_callback);
 
 #if defined(__cplusplus)
 }
