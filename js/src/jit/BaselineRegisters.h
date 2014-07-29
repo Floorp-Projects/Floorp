@@ -7,8 +7,6 @@
 #ifndef jit_BaselineRegisters_h
 #define jit_BaselineRegisters_h
 
-#ifdef JS_ION
-
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/BaselineRegisters-x86.h"
 #elif defined(JS_CODEGEN_X64)
@@ -28,7 +26,5 @@ namespace jit {
 
 } // namespace jit
 } // namespace js
-
-#endif // JS_ION
 
 #endif /* jit_BaselineRegisters_h */

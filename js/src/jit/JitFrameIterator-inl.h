@@ -7,8 +7,6 @@
 #ifndef jit_JitFrameIterator_inl_h
 #define jit_JitFrameIterator_inl_h
 
-#ifdef JS_ION
-
 #include "jit/JitFrameIterator.h"
 
 #include "jit/Bailouts.h"
@@ -36,7 +34,5 @@ JitFrameIterator::isExitFrameLayout() const
 
 } // namespace jit
 } // namespace js
-
-#endif // JS_ION
 
 #endif /* jit_JitFrameIterator_inl_h */

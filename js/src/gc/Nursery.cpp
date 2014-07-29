@@ -9,6 +9,8 @@
 
 #include "gc/Nursery-inl.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsinfer.h"
@@ -17,10 +19,7 @@
 
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
-#ifdef JS_ION
 #include "jit/IonFrames.h"
-#endif
-#include "mozilla/IntegerPrintfMacros.h"
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #if defined(DEBUG)
@@ -851,9 +850,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 
     // Update any slot or element pointers whose destination has been tenured.
     TIME_START(updateJitActivations);
-#ifdef JS_ION
     js::jit::UpdateJitActivationsForMinorGC<Nursery>(&rt->mainThread, &trc);
-#endif
     TIME_END(updateJitActivations);
 
     // Resize the nursery.

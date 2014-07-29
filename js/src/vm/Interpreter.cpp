@@ -383,7 +383,6 @@ js::RunScript(JSContext *cx, RunState &state)
 
     state.script()->ensureNonLazyCanonicalFunction(cx);
 
-#ifdef JS_ION
     if (jit::IsIonEnabled(cx)) {
         jit::MethodStatus status = jit::CanEnter(cx, state);
         if (status == jit::Method_Error)
@@ -403,7 +402,6 @@ js::RunScript(JSContext *cx, RunState &state)
             return !IsErrorStatus(status);
         }
     }
-#endif
 
     if (state.isInvoke()) {
         InvokeState &invoke = *state.asInvoke();
@@ -1288,7 +1286,6 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
 {
     types::TypeScript::MonitorAssign(cx, obj, id);
 
-#ifdef JS_ION
     if (obj->isNative() && JSID_IS_INT(id)) {
         uint32_t length = obj->getDenseInitializedLength();
         int32_t i = JSID_TO_INT(id);
@@ -1298,7 +1295,6 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
                 script->baselineScript()->noteArrayWriteHole(script->pcToOffset(pc));
         }
     }
-#endif
 
     if (obj->isNative() && !JSID_IS_INT(id) && !obj->setHadElementsAccess(cx))
         return false;
@@ -1681,8 +1677,6 @@ CASE(JSOP_LABEL)
 END_CASE(JSOP_LABEL)
 
 CASE(JSOP_LOOPENTRY)
-
-#ifdef JS_ION
     // Attempt on-stack replacement with Baseline code.
     if (jit::IsBaselineEnabled(cx)) {
         jit::MethodStatus status = jit::CanEnterBaselineAtBranch(cx, REGS.fp(), false);
@@ -1708,8 +1702,6 @@ CASE(JSOP_LOOPENTRY)
             goto leave_on_safe_point;
         }
     }
-#endif /* JS_ION */
-
 END_CASE(JSOP_LOOPENTRY)
 
 CASE(JSOP_LINENO)
@@ -1791,16 +1783,12 @@ CASE(JSOP_RETRVAL)
             probes::ExitScript(cx, script, script->functionNonDelazifying(),
                                REGS.fp()->hasPushedSPSFrame());
 
-#if defined(JS_ION)
   jit_return_pop_frame:
-#endif
 
         activation.popInlineFrame(REGS.fp());
         SET_SCRIPT(REGS.fp()->script());
 
-#if defined(JS_ION)
   jit_return:
-#endif
 
         JS_ASSERT(js_CodeSpec[*REGS.pc].format & JOF_INVOKE);
 
@@ -2569,7 +2557,6 @@ CASE(JSOP_FUNCALL)
 
     TypeMonitorCall(cx, args, construct);
 
-#ifdef JS_ION
     {
         InvokeState state(cx, args, initial);
         if (newType)
@@ -2601,7 +2588,6 @@ CASE(JSOP_FUNCALL)
             }
         }
     }
-#endif
 
     funScript = fun->nonLazyScript();
     if (!activation.pushInlineFrame(args, funScript, initial))
@@ -3420,13 +3406,11 @@ DEFAULT()
     TraceLogStopEvent(logger);
     TraceLogStopEvent(logger, scriptLogId);
 
-#ifdef JS_ION
     /*
      * This path is used when it's guaranteed the method can be finished
      * inside the JIT.
      */
   leave_on_safe_point:
-#endif
 
     if (interpReturnOK)
         state.setReturnValue(activation.entryFrame()->returnValue());
