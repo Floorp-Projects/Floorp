@@ -3626,11 +3626,10 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     aBuilder, &childVisibleRegion, boundedRect,
     usingDisplayPort ? mFrame : nullptr);
 
-#ifndef MOZ_WIDGET_ANDROID
   // If APZ is enabled then don't allow this computation to influence
   // aVisibleRegion, on the assumption that the layer can be asynchronously
   // scrolled so we'll definitely need all the content under it.
-  if (!gfxPrefs::AsyncPanZoomEnabled()) {
+  if (!nsLayoutUtils::UsesAsyncScrolling()) {
     bool snap;
     nsRect bounds = GetBounds(aBuilder, &snap);
     nsRegion removed;
@@ -3638,7 +3637,6 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
     aBuilder->SubtractFromVisibleRegion(aVisibleRegion, removed);
   }
-#endif
 
   return visible;
 }
@@ -3938,18 +3936,16 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     aBuilder, &childVisibleRegion, boundedRect,
     usingDisplayPort ? mScrollFrame : nullptr);
 
-#ifndef MOZ_WIDGET_ANDROID
   // If APZ is enabled then don't allow this computation to influence
   // aVisibleRegion, on the assumption that the layer can be asynchronously
   // scrolled so we'll definitely need all the content under it.
-  if (!gfxPrefs::AsyncPanZoomEnabled()) {
+  if (!nsLayoutUtils::UsesAsyncScrolling()) {
     bool snap;
     nsRect bounds = GetBounds(aBuilder, &snap);
     nsRegion removed;
     removed.Sub(bounds, childVisibleRegion);
     aBuilder->SubtractFromVisibleRegion(aVisibleRegion, removed);
   }
-#endif
 
   return visible;
 }

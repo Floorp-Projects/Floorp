@@ -359,7 +359,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                        new DisplayPortPropertyData(displayport, aPriority),
                        nsINode::DeleteProperty<DisplayPortPropertyData>);
 
-  if (gfxPrefs::AsyncPanZoomEnabled()) {
+  if (nsLayoutUtils::UsesAsyncScrolling()) {
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
     if (rootScrollFrame && content == rootScrollFrame->GetContent()) {
       // We are setting a root displayport for a document.
