@@ -370,6 +370,12 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
 {
   mSourceGraphicIndex = GetLastResultIndex(aPrimitiveDescrs);
 
+  // Clip previous filter's output to this filter's filter region.
+  if (mSourceGraphicIndex >= 0) {
+    FilterPrimitiveDescription& sourceDescr = aPrimitiveDescrs[mSourceGraphicIndex];
+    sourceDescr.SetPrimitiveSubregion(sourceDescr.PrimitiveSubregion().Intersect(ToIntRect(mFilterSpaceBounds)));
+  }
+
   // Get the filter primitive elements.
   nsTArray<nsRefPtr<nsSVGFE> > primitives;
   for (nsIContent* child = mFilterElement->nsINode::GetFirstChild();
@@ -410,6 +416,7 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
 
     descr.SetIsTainted(filter->OutputIsTainted(sourcesAreTainted, principal));
     descr.SetPrimitiveSubregion(primitiveSubregion);
+    descr.SetFilterSpaceBounds(ToIntRect(mFilterSpaceBounds));
 
     for (uint32_t i = 0; i < sourceIndices.Length(); i++) {
       int32_t inputIndex = sourceIndices[i];
