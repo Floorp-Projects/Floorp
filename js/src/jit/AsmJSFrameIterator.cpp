@@ -369,6 +369,7 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
   : module_(&activation.module()),
     callerFP_(nullptr),
     callerPC_(nullptr),
+    stackAddress_(nullptr),
     exitReason_(AsmJSExit::None),
     codeRange_(nullptr)
 {
@@ -427,6 +428,7 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
     const AsmJSModule::CodeRange *codeRange = module_->lookupCodeRange(pc);
     JS_ASSERT(codeRange);
     codeRange_ = codeRange;
+    stackAddress_ = fp;
 
     switch (codeRange->kind()) {
       case AsmJSModule::CodeRange::Entry:
@@ -550,6 +552,7 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
     }
 
     codeRange_ = codeRange;
+    stackAddress_ = state.sp;
     JS_ASSERT(!done());
 }
 
@@ -577,14 +580,16 @@ AsmJSProfilingFrameIterator::operator++()
 
     switch (codeRange->kind()) {
       case AsmJSModule::CodeRange::Entry:
+        JS_ASSERT(callerFP_ == nullptr);
+        JS_ASSERT(callerPC_ != nullptr);
         callerPC_ = nullptr;
-        callerFP_ = nullptr;
         break;
       case AsmJSModule::CodeRange::Function:
       case AsmJSModule::CodeRange::FFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
       case AsmJSModule::CodeRange::Thunk:
+        stackAddress_ = callerFP_;
         callerPC_ = ReturnAddressFromFP(callerFP_);
         AssertMatchesCallSite(*module_, codeRange, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
         callerFP_ = CallerFPFromFP(callerFP_);
