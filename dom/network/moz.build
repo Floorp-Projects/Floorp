@@ -11,7 +11,7 @@ XPCSHELL_TESTS_MANIFESTS += [
     'tests/unit_ipc/xpcshell.ini',
 ]
 
-if CONFIG['tests/MOZ_B2G_RIL']:
+if CONFIG['MOZ_B2G_RIL']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/unit_stats/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
