@@ -22,7 +22,15 @@
     <div id="main"></div>
 
     <!-- libs -->
-    <script src="https://static.opentok.com/webrtc/v2.2/js/opentok.min.js"></script>
+    <script>
+      window.OTProperties = {
+        cdnURL: 'shared/libs/',
+      };
+      window.OTProperties.assetURL = window.OTProperties.cdnURL + 'sdk-content/';
+      window.OTProperties.configURL = window.OTProperties.assetURL + 'js/dynamic_config.min.js';
+      window.OTProperties.cssURL = window.OTProperties.assetURL + 'css/ot.css';
+    </script>
+    <script type="text/javascript" src="shared/libs/sdk.js"></script>
     <script type="text/javascript" src="libs/webl10n-20130617.js"></script>
     <script type="text/javascript" src="shared/libs/react-0.10.0.js"></script>
     <script type="text/javascript" src="shared/libs/jquery-2.1.0.js"></script>
