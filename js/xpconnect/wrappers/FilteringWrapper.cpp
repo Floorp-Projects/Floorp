@@ -189,6 +189,13 @@ CrossOriginXrayWrapper::getPropertyDescriptor(JSContext *cx,
     if (desc.object()) {
         // All properties on cross-origin DOM objects are |own|.
         desc.object().set(wrapper);
+
+        // All properties on cross-origin DOM objects are non-enumerable and
+        // "configurable". Any value attributes are read-only.
+        desc.attributesRef() &= ~JSPROP_ENUMERATE;
+        desc.attributesRef() &= ~JSPROP_PERMANENT;
+        if (!desc.getter() && !desc.setter())
+            desc.attributesRef() |= JSPROP_READONLY;
     }
     return true;
 }
