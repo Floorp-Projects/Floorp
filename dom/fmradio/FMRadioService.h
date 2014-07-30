@@ -141,8 +141,7 @@ class FMRadioService MOZ_FINAL : public IFMRadioService
                                , public nsIObserver
 {
   friend class ReadAirplaneModeSettingTask;
-  friend class EnableRunnable;
-  friend class DisableRunnable;
+  friend class SetFrequencyRunnable;
 
 public:
   static FMRadioService* Singleton();
@@ -203,7 +202,6 @@ private:
   uint32_t mChannelWidthInKHz;
   uint32_t mPreemphasis;
 
-  nsCOMPtr<nsIThread> mTuneThread;
   nsRefPtr<FMRadioReplyRunnable> mPendingRequest;
 
   FMRadioEventObserverList mObserverList;
