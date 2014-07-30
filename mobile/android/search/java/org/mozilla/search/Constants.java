@@ -25,4 +25,6 @@ public class Constants {
 
     public static final String INTENT_START_SEARCH = "org.mozilla.search.intent.START_SEARCH";
     public static final String INTENT_START_SEARCH_QUERY_EXTRA = "org.mozilla.search.intent.START_SEARCH_QUERY_EXTRA";
+
+    public static final int SUGGESTION_MAX = 5;
 }
