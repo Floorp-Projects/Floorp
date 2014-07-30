@@ -898,6 +898,28 @@ const CustomizableWidgets = [{
       let win = aEvent.view;
       win.MailIntegration.sendLinkForWindow(win.content);
     }
+  }, {
+    id: "loop-call-button",
+    type: "custom",
+    // XXX Bug 1013989 will provide a label for the button
+    label: "loop-call-button.label",
+    tooltiptext: "loop-call-button.tooltiptext",
+    defaultArea: CustomizableUI.AREA_NAVBAR,
+    introducedInVersion: 1,
+    onBuild: function(aDocument) {
+      let node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+      node.setAttribute("id", this.id);
+      node.classList.add("toolbarbutton-1");
+      node.classList.add("chromeclass-toolbar-additional");
+      node.setAttribute("type", "badged");
+      node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
+      node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
+      node.setAttribute("removable", "true");
+      node.addEventListener("command", function(event) {
+        aDocument.defaultView.LoopUI.openCallPanel(event);
+      });
+      return node;
+    }
   }];
 
 #ifdef XP_WIN
