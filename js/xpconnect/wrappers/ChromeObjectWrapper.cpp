@@ -9,6 +9,7 @@
 #include "AccessCheck.h"
 #include "xpcprivate.h"
 #include "jsapi.h"
+#include "jswrapper.h"
 
 using namespace JS;
 
@@ -49,9 +50,10 @@ PropIsFromStandardPrototype(JSContext *cx, JS::MutableHandle<JSPropertyDescripto
 }
 
 // Note that we're past the policy enforcement stage, here, so we can query
-// ChromeObjectWrapperBase and get an unfiltered view of the underlying object.
-// This lets us determine whether the property we would have found (given a
-// transparent wrapper) would have come off a standard prototype.
+// CrossCompartmentSecurityWrapper (our grand-parent wrapper) and get an
+// unfiltered view of the underlying object. This lets us determine whether
+// the property we would have found (given a transparent wrapper) would
+// have come off a standard prototype.
 static bool
 PropIsFromStandardPrototype(JSContext *cx, HandleObject wrapper,
                             HandleId id)
@@ -60,8 +62,8 @@ PropIsFromStandardPrototype(JSContext *cx, HandleObject wrapper,
                &ChromeObjectWrapper::singleton);
     Rooted<JSPropertyDescriptor> desc(cx);
     const ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
-    if (!handler->ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id,
-                                                                 &desc) ||
+    if (!handler->js::CrossCompartmentSecurityWrapper::getPropertyDescriptor(cx, wrapper, id,
+                                                                             &desc) ||
         !desc.object())
     {
         return false;
