@@ -68,6 +68,9 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                           JS::Handle<jsid> id,
                                           JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+
+    virtual bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                                JS::MutableHandleObject protop) const MOZ_OVERRIDE;
 };
 
 }
