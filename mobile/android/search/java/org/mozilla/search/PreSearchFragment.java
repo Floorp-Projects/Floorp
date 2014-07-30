@@ -7,6 +7,7 @@ package org.mozilla.search;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -21,8 +22,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
-import org.mozilla.search.autocomplete.AcceptsSearchQuery;
-
+import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 
 /**
  * This fragment is responsible for managing the card stream.
@@ -91,7 +91,19 @@ public class PreSearchFragment extends Fragment {
                 }
                 final String query = c.getString(c.getColumnIndexOrThrow(SearchHistory.QUERY));
                 if (!TextUtils.isEmpty(query)) {
-                    searchListener.onSearch(query);
+                    final Rect startBounds = new Rect();
+                    view.getGlobalVisibleRect(startBounds);
+
+                    searchListener.onSearch(query, new SuggestionAnimation() {
+                        @Override
+                        public Rect getStartBounds() {
+                            return startBounds;
+                        }
+
+                        @Override
+                        public void onAnimationEnd() {
+                        }
+                    });
                 }
             }
         });

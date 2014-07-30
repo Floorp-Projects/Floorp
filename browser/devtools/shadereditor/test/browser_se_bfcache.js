@@ -4,10 +4,13 @@
 /**
  * Tests if the shader editor works with bfcache.
  */
-
 function ifWebGLSupported() {
   let [target, debuggee, panel] = yield initShaderEditor(SIMPLE_CANVAS_URL);
   let { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
+
+  // Attach frame scripts if in e10s to perform
+  // history navigation via the content
+  loadFrameScripts();
 
   let reloaded = reload(target);
   let firstProgram = yield once(gFront, "program-linked");
