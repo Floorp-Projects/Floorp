@@ -71,6 +71,13 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
 
     virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                      JS::AutoIdVector &props) const MOZ_OVERRIDE;
+
+    virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                JS::Handle<jsid> id,
+                                JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                         JS::Handle<jsid> id, bool *bp) const MOZ_OVERRIDE;
+
     virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
                            JS::AutoIdVector &props) const MOZ_OVERRIDE;
 
