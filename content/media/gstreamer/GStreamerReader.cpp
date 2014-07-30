@@ -630,9 +630,11 @@ bool GStreamerReader::DecodeAudioData()
   }
 
   int64_t timestamp = GST_BUFFER_TIMESTAMP(buffer);
-  timestamp = gst_segment_to_stream_time(&mAudioSegment,
-      GST_FORMAT_TIME, timestamp);
-
+  {
+    ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
+    timestamp = gst_segment_to_stream_time(&mAudioSegment,
+                                           GST_FORMAT_TIME, timestamp);
+  }
   timestamp = GST_TIME_AS_USECONDS(timestamp);
 
   int64_t offset = GST_BUFFER_OFFSET(buffer);
