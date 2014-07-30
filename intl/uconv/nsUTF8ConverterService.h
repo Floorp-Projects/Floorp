@@ -9,22 +9,14 @@
 
 //==============================================================
 
-class nsUTF8ConverterService;
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsUTF8ConverterService>
-{
-  static const bool value = true;
-};
-}
-
 class nsUTF8ConverterService: public nsIUTF8ConverterService {
+public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUTF8CONVERTERSERVICE
 
-public:
   nsUTF8ConverterService() {}
+
+private:
   virtual ~nsUTF8ConverterService() {}
 };
 
