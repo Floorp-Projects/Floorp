@@ -66,7 +66,7 @@ class VPMContentAnalysis {
 #endif
 
   const uint8_t* orig_frame_;
-  uint8_t* prev_frame_;
+  scoped_ptr<uint8_t> prev_frame_;
   int width_;
   int height_;
   int skip_num_;
@@ -80,7 +80,7 @@ class VPMContentAnalysis {
   bool first_frame_;
   bool ca_Init_;
 
-  VideoContentMetrics*   content_metrics_;
+  scoped_ptr<VideoContentMetrics> content_metrics_;
 };
 
 }  // namespace webrtc
