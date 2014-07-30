@@ -402,20 +402,18 @@ FMRadioSeek(const hal::FMRadioSeekDirection& aDirection)
   if (sMsmFMMode && rc >= 0)
     return;
 
-  hal::FMRadioOperationInformation info;
-  info.operation() = hal::FM_RADIO_OPERATION_SEEK;
-  info.status() = rc < 0 ? hal::FM_RADIO_OPERATION_STATUS_FAIL :
-                           hal::FM_RADIO_OPERATION_STATUS_SUCCESS;
-  hal::NotifyFMRadioStatus(info);
+  NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_SEEK,
+                                          rc < 0 ?
+                                          hal::FM_RADIO_OPERATION_STATUS_FAIL :
+                                          hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
 
   if (rc < 0) {
     HAL_LOG(("Could not initiate hardware seek"));
     return;
   }
 
-  info.operation() = hal::FM_RADIO_OPERATION_TUNE;
-  info.status() = hal::FM_RADIO_OPERATION_STATUS_SUCCESS;
-  hal::NotifyFMRadioStatus(info);
+  NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_TUNE,
+                                          hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
 }
 
 void
@@ -450,11 +448,10 @@ SetFMRadioFrequency(const uint32_t frequency)
   if (sMsmFMMode && rc >= 0)
     return;
 
-  hal::FMRadioOperationInformation info;
-  info.operation() = hal::FM_RADIO_OPERATION_TUNE;
-  info.status() = rc < 0 ? hal::FM_RADIO_OPERATION_STATUS_FAIL :
-                           hal::FM_RADIO_OPERATION_STATUS_SUCCESS;
-  hal::NotifyFMRadioStatus(info);
+  NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_TUNE,
+                                          rc < 0 ?
+                                          hal::FM_RADIO_OPERATION_STATUS_FAIL :
+                                          hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
 }
 
 uint32_t
