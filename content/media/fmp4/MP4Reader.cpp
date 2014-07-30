@@ -105,6 +105,8 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mVideo("MP4 video decoder data", Preferences::GetUint("media.mp4-video-decode-ahead", 2))
   , mLastReportedNumDecodedFrames(0)
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
+  , mDemuxerInitialized(false)
+  , mIsEncrypted(false)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(MP4Reader);
@@ -168,6 +170,8 @@ MP4Reader::InitLayersBackendType()
   mLayersBackendType = layerManager->GetCompositorBackendType();
 }
 
+static bool sIsEMEEnabled = false;
+
 nsresult
 MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 {
@@ -185,34 +189,148 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
     SharedThreadPool::Get(NS_LITERAL_CSTRING("MP4 Video Decode")));
   NS_ENSURE_TRUE(mVideo.mTaskQueue, NS_ERROR_FAILURE);
 
+  static bool sSetupPrefCache = false;
+  if (!sSetupPrefCache) {
+    sSetupPrefCache = true;
+    Preferences::AddBoolVarCache(&sIsEMEEnabled, "media.eme.enabled", false);
+  }
+
   return NS_OK;
+}
+
+class DispatchKeyNeededEvent : public nsRunnable {
+public:
+  DispatchKeyNeededEvent(AbstractMediaDecoder* aDecoder,
+                         nsTArray<uint8_t>& aInitData,
+                         const nsString& aInitDataType)
+    : mDecoder(aDecoder)
+    , mInitData(aInitData)
+    , mInitDataType(aInitDataType)
+  {
+  }
+  NS_IMETHOD Run() {
+    // Note: Null check the owner, as the decoder could have been shutdown
+    // since this event was dispatched.
+    MediaDecoderOwner* owner = mDecoder->GetOwner();
+    if (owner) {
+      owner->DispatchNeedKey(mInitData, mInitDataType);
+    }
+    mDecoder = nullptr;
+    return NS_OK;
+  }
+private:
+  nsRefPtr<AbstractMediaDecoder> mDecoder;
+  nsTArray<uint8_t> mInitData;
+  nsString mInitDataType;
+};
+
+bool MP4Reader::IsWaitingMediaResources()
+{
+  nsRefPtr<CDMProxy> proxy;
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    if (!mIsEncrypted) {
+      // Not encrypted, no need to wait for CDMProxy.
+      return false;
+    }
+    proxy = mDecoder->GetCDMProxy();
+    if (!proxy) {
+      // We're encrypted, we need a CDMProxy to decrypt file.
+      return true;
+    }
+  }
+  // We'll keep waiting if the CDM hasn't informed Gecko of its capabilities.
+  {
+    CDMCaps::AutoLock caps(proxy->Capabilites());
+    LOG("MP4Reader::IsWaitingMediaResources() capsKnown=%d", caps.AreCapsKnown());
+    return !caps.AreCapsKnown();
+  }
+}
+
+void
+MP4Reader::ExtractCryptoInitData(nsTArray<uint8_t>& aInitData)
+{
+  MOZ_ASSERT(mDemuxer->Crypto().valid);
+  const nsTArray<mp4_demuxer::PsshInfo>& psshs = mDemuxer->Crypto().pssh;
+  for (uint32_t i = 0; i < psshs.Length(); i++) {
+    aInitData.AppendElements(psshs[i].data);
+  }
 }
 
 nsresult
 MP4Reader::ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags)
 {
-  bool ok = mDemuxer->Init();
-  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+  if (!mDemuxerInitialized) {
+    bool ok = mDemuxer->Init();
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasValidAudio();
-  const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
-  // If we have audio, we *only* allow AAC to be decoded.
-  if (mInfo.mAudio.mHasAudio && strcmp(audio.mime_type, "audio/mp4a-latm")) {
-    return NS_ERROR_FAILURE;
+    mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasValidAudio();
+    const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
+    // If we have audio, we *only* allow AAC to be decoded.
+    if (mInfo.mAudio.mHasAudio && strcmp(audio.mime_type, "audio/mp4a-latm")) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo();
+    const VideoDecoderConfig& video = mDemuxer->VideoConfig();
+    // If we have video, we *only* allow H.264 to be decoded.
+    if (mInfo.mVideo.mHasVideo && strcmp(video.mime_type, "video/avc")) {
+      return NS_ERROR_FAILURE;
+    }
+
+    {
+      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+      mIsEncrypted = mDemuxer->Crypto().valid;
+    }
+
+    // Remember that we've initialized the demuxer, so that if we're decoding
+    // an encrypted stream and we need to wait for a CDM to be set, we don't
+    // need to reinit the demuxer.
+    mDemuxerInitialized = true;
   }
+  if (mDemuxer->Crypto().valid) {
+    if (!sIsEMEEnabled) {
+      // TODO: Need to signal DRM/EME required somehow...
+      return NS_ERROR_FAILURE;
+    }
 
-  mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo();
-  const VideoDecoderConfig& video = mDemuxer->VideoConfig();
-  // If we have video, we *only* allow H.264 to be decoded.
-  if (mInfo.mVideo.mHasVideo && strcmp(video.mime_type, "video/avc")) {
-    return NS_ERROR_FAILURE;
+    // We have encrypted audio or video. We'll need a CDM to decrypt and
+    // possibly decode this. Wait until we've received a CDM from the
+    // JavaScript player app.
+    nsRefPtr<CDMProxy> proxy;
+    nsTArray<uint8_t> initData;
+    ExtractCryptoInitData(initData);
+    if (initData.Length() == 0) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!mInitDataEncountered.Contains(initData)) {
+      mInitDataEncountered.AppendElement(initData);
+      NS_DispatchToMainThread(new DispatchKeyNeededEvent(mDecoder, initData, NS_LITERAL_STRING("cenc")));
+    }
+    if (IsWaitingMediaResources()) {
+      return NS_OK;
+    }
+    MOZ_ASSERT(!IsWaitingMediaResources());
+
+    {
+      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+      proxy = mDecoder->GetCDMProxy();
+    }
+    MOZ_ASSERT(proxy);
+
+    mPlatform = PlatformDecoderModule::CreateCDMWrapper(proxy,
+                                                        HasAudio(),
+                                                        HasVideo(),
+                                                        GetTaskQueue());
+    NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
+  } else {
+    mPlatform = PlatformDecoderModule::Create();
+    NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
   }
-
-  mPlatform = PlatformDecoderModule::Create();
-  NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
 
   if (HasAudio()) {
+    const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
     mInfo.mAudio.mRate = audio.samples_per_second;
     mInfo.mAudio.mChannels = audio.channel_count;
     mAudio.mCallback = new DecoderCallback(this, kAudio);
@@ -225,6 +343,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   }
 
   if (HasVideo()) {
+    const VideoDecoderConfig& video = mDemuxer->VideoConfig();
     mInfo.mVideo.mDisplay =
       nsIntSize(video.display_width, video.display_height);
     mVideo.mCallback = new  DecoderCallback(this, kVideo);
@@ -292,9 +411,9 @@ MP4Reader::PopSample(TrackType aTrack)
       return mDemuxer->DemuxAudioSample();
 
     case kVideo:
-      if (mQueuedVideoSample)
+      if (mQueuedVideoSample) {
         return mQueuedVideoSample.forget();
-
+      }
       return mDemuxer->DemuxVideoSample();
 
     default:

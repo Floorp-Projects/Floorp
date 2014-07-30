@@ -290,12 +290,7 @@ namespace JSC {
             __attribute__ ((format (printf, 2, 3)))
 #endif
         {
-            if (printer
-#ifdef JS_ION
-                || js::jit::IonSpewEnabled(js::jit::IonSpew_Codegen)
-#endif
-                )
-            {
+            if (printer || js::jit::IonSpewEnabled(js::jit::IonSpew_Codegen)) {
                 // Buffer to hold the formatted string. Note that this may contain
                 // '%' characters, so do not pass it directly to printf functions.
                 char buf[200];
@@ -308,10 +303,7 @@ namespace JSC {
                 if (i > -1) {
                     if (printer)
                         printer->printf("%s\n", buf);
-
-#ifdef JS_ION
                     js::jit::IonSpew(js::jit::IonSpew_Codegen, "%s", buf);
-#endif
                 }
             }
         }
@@ -321,7 +313,6 @@ namespace JSC {
             __attribute__ ((format (printf, 1, 2)))
 #endif
         {
-#ifdef JS_ION
             if (js::jit::IonSpewEnabled(js::jit::IonSpew_Codegen)) {
                 char buf[200];
 
@@ -333,7 +324,6 @@ namespace JSC {
                 if (i > -1)
                     js::jit::IonSpew(js::jit::IonSpew_Codegen, "%s", buf);
             }
-#endif
         }
     };
 

@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #include "mozilla/Atomics.h"
 #include "mozilla/NullPtr.h"
@@ -36,10 +37,8 @@
 #include <android/log.h>
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
 #include "linux_seccomp.h"
 #include "SandboxFilter.h"
-#endif
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG 1
@@ -58,6 +57,14 @@ static PRLogModuleInfo* gSeccompSandboxLog;
 #define LOG_ERROR(args...) PR_LOG(mozilla::gSeccompSandboxLog, PR_LOG_ERROR, (args))
 #else
 #define LOG_ERROR(args...)
+#endif
+
+#ifdef MOZ_GMP_SANDBOX
+// For media plugins, we can start the sandbox before we dlopen the
+// module, so we have to pre-open the file and simulate the sandboxed
+// open().
+static int gMediaPluginFileDesc = -1;
+static nsCString gMediaPluginFilePath;
 #endif
 
 /**
@@ -136,6 +143,27 @@ Reporter(int nr, siginfo_t *info, void *void_context)
   args[3] = SECCOMP_PARM4(ctx);
   args[4] = SECCOMP_PARM5(ctx);
   args[5] = SECCOMP_PARM6(ctx);
+
+#ifdef MOZ_GMP_SANDBOX
+  if (syscall_nr == __NR_open && !gMediaPluginFilePath.IsEmpty()) {
+    const char *path = reinterpret_cast<const char*>(args[0]);
+    int flags = int(args[1]);
+
+    if ((flags & O_ACCMODE) != O_RDONLY) {
+      LOG_ERROR("non-read-only open of file %s attempted (flags=0%o)",
+                path, flags);
+    } else if (strcmp(path, gMediaPluginFilePath.get()) != 0) {
+      LOG_ERROR("attempt to open file %s which is not the media plugin %s",
+                path, gMediaPluginFilePath.get());
+    } else if (gMediaPluginFileDesc == -1) {
+      LOG_ERROR("multiple opens of media plugin file unimplemented");
+    } else {
+      SECCOMP_RESULT(ctx) = gMediaPluginFileDesc;
+      gMediaPluginFileDesc = -1;
+      return;
+    }
+  }
+#endif
 
   LOG_ERROR("seccomp sandbox violation: pid %d, syscall %lu, args %lu %lu %lu"
             " %lu %lu %lu.  Killing process.", pid, syscall_nr,
@@ -254,8 +282,7 @@ SetThreadSandbox()
 {
   bool didAnything = false;
 
-  if (PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX") == nullptr &&
-      prctl(PR_GET_SECCOMP, 0, 0, 0, 0) == 0) {
+  if (prctl(PR_GET_SECCOMP, 0, 0, 0, 0) == 0) {
     if (InstallSyscallFilter(sSetSandboxFilter) == 0) {
       didAnything = true;
     }
@@ -285,19 +312,19 @@ SetThreadSandboxHandler(int signum)
 }
 
 static void
-BroadcastSetThreadSandbox()
+BroadcastSetThreadSandbox(SandboxType aType)
 {
   int signum;
-  pid_t pid, tid;
+  pid_t pid, tid, myTid;
   DIR *taskdp;
   struct dirent *de;
-  SandboxFilter filter(&sSetSandboxFilter,
-                       PR_GetEnv("MOZ_CONTENT_SANDBOX_VERBOSE"));
+  SandboxFilter filter(&sSetSandboxFilter, aType,
+                       PR_GetEnv("MOZ_SANDBOX_VERBOSE"));
 
   static_assert(sizeof(mozilla::Atomic<int>) == sizeof(int),
                 "mozilla::Atomic<int> isn't represented by an int");
-  MOZ_ASSERT(NS_IsMainThread());
   pid = getpid();
+  myTid = syscall(__NR_gettid);
   taskdp = opendir("/proc/self/task");
   if (taskdp == nullptr) {
     LOG_ERROR("opendir /proc/self/task: %s\n", strerror(errno));
@@ -330,9 +357,9 @@ BroadcastSetThreadSandbox()
         // Not a task ID.
         continue;
       }
-      if (tid == pid) {
-        // Drop the main thread's privileges last, below, so
-        // we can continue to signal other threads.
+      if (tid == myTid) {
+        // Drop this thread's privileges last, below, so we can
+        // continue to signal other threads.
         continue;
       }
       // Reset the futex cell and signal.
@@ -425,14 +452,9 @@ IsSandboxingSupported(void)
   return prctl(PR_GET_SECCOMP) != -1;
 }
 
-/**
- * Starts the seccomp sandbox for this process and sets user/group-based privileges.
- * Should be called only once, and before any potentially harmful content is loaded.
- *
- * Should normally make the process exit on failure.
-*/
-void
-SetCurrentProcessSandbox()
+// Common code for sandbox startup.
+static void
+SetCurrentProcessSandbox(SandboxType aType)
 {
 #if !defined(ANDROID) && defined(PR_LOGGING)
   if (!gSeccompSandboxLog) {
@@ -446,9 +468,59 @@ SetCurrentProcessSandbox()
   }
 
   if (IsSandboxingSupported()) {
-    BroadcastSetThreadSandbox();
+    BroadcastSetThreadSandbox(aType);
   }
 }
+
+#ifdef MOZ_CONTENT_SANDBOX
+/**
+ * Starts the seccomp sandbox for a content process.  Should be called
+ * only once, and before any potentially harmful content is loaded.
+ *
+ * Will normally make the process exit on failure.
+*/
+void
+SetContentProcessSandbox()
+{
+  if (PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX")) {
+    return;
+  }
+
+  SetCurrentProcessSandbox(kSandboxContentProcess);
+}
+#endif // MOZ_CONTENT_SANDBOX
+
+#ifdef MOZ_GMP_SANDBOX
+/**
+ * Starts the seccomp sandbox for a media plugin process.  Should be
+ * called only once, and before any potentially harmful content is
+ * loaded -- including the plugin itself, if it's considered untrusted.
+ *
+ * The file indicated by aFilePath, if non-null, can be open()ed once
+ * read-only after the sandbox starts; it should be the .so file
+ * implementing the not-yet-loaded plugin.
+ *
+ * Will normally make the process exit on failure.
+*/
+void
+SetMediaPluginSandbox(const char *aFilePath)
+{
+  if (PR_GetEnv("MOZ_DISABLE_GMP_SANDBOX")) {
+    return;
+  }
+
+  if (aFilePath) {
+    gMediaPluginFilePath.Assign(aFilePath);
+    gMediaPluginFileDesc = open(aFilePath, O_RDONLY | O_CLOEXEC);
+    if (gMediaPluginFileDesc == -1) {
+      LOG_ERROR("failed to open plugin file %s: %s", aFilePath, strerror(errno));
+      MOZ_CRASH();
+    }
+  }
+  // Finally, start the sandbox.
+  SetCurrentProcessSandbox(kSandboxMediaPlugin);
+}
+#endif // MOZ_GMP_SANDBOX
 
 } // namespace mozilla
 

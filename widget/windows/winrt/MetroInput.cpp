@@ -272,6 +272,8 @@ MetroInput::MetroInput(MetroWidget* aWidget,
   NS_ASSERTION(aWidget, "Attempted to create MetroInput for null widget!");
   NS_ASSERTION(aWindow, "Attempted to create MetroInput for null window!");
 
+  mWidget->SetApzPendingResponseFlusher(this);
+
   Preferences::AddBoolVarCache(&gTouchActionPropertyEnabled, "layout.css.touch_action.enabled", gTouchActionPropertyEnabled);
   mTokenPointerPressed.value = 0;
   mTokenPointerReleased.value = 0;
@@ -521,17 +523,6 @@ MetroInput::GetAllowedTouchBehavior(WidgetTouchEvent* aTransformedEvent, nsTArra
   }
 }
 
-bool
-MetroInput::IsTouchBehaviorForbidden(const nsTArray<TouchBehaviorFlags>& aTouchBehaviors)
-{
-  for (size_t i = 0; i < aTouchBehaviors.Length(); i++) {
-    if (aTouchBehaviors[i] == AllowedTouchBehavior::NONE)
-      return true;
-  }
-
-  return false;
-}
-
 // This event is raised when the user pushes the left mouse button, presses a
 // pen to the surface, or presses a touch screen.
 HRESULT
@@ -574,13 +565,7 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
   if (mTouches.Count() == 1) {
     // If this is the first touchstart of a touch session reset some
     // tracking flags.
-    mContentConsumingTouch = false;
-    mApzConsumingTouch = false;
     mRecognizerWantsEvents = true;
-    mCancelable = true;
-    mCanceledIds.Clear();
-  } else {
-    mCancelable = false;
   }
 
   InitTouchEventTouchList(touchEvent);
@@ -1226,18 +1211,26 @@ static void DumpTouchBehavior(nsTArray<uint32_t>& aBehavior)
 #define DUMP_ALLOWED_TOUCH_BEHAVIOR(...)
 
 void
-MetroInput::HandleFirstTouchStartEvent(WidgetTouchEvent* aEvent)
+MetroInput::HandleTouchStartEvent(WidgetTouchEvent* aEvent)
 {
-  nsEventStatus contentStatus = nsEventStatus_eIgnore;
+  // This is the start of a new touch block. See what the APZ wants to do with it.
 
   WidgetTouchEvent transformedEvent(*aEvent);
   DUMP_TOUCH_IDS("APZC(1)", aEvent);
   nsEventStatus result = mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid);
   if (result == nsEventStatus_eConsumeNoDefault) {
+    // The APZ said: throw this event away entirely.
+    CancelGesture();
     return;
   }
+  MOZ_ASSERT(mApzConsumingTouch);
+  if (result == nsEventStatus_eIgnore) {
+    // This didn't hit an APZC, so we can just skip the APZ processing for this block.
+    mApzConsumingTouch = false;
+  }
 
-  if (gTouchActionPropertyEnabled) {
+  // If the APZ is using this block, send it touch-action behavior.
+  if (gTouchActionPropertyEnabled && mApzConsumingTouch) {
     nsTArray<TouchBehaviorFlags> touchBehaviors;
     // Retrieving touch behaviors from apzctm and from the content (if needed)
     // then setting it back to the apzc. The apzc we retrieved touch behaviors
@@ -1250,49 +1243,41 @@ MetroInput::HandleFirstTouchStartEvent(WidgetTouchEvent* aEvent)
     // that were touched but touch behaviors would be taken from childs.
     DUMP_ALLOWED_TOUCH_BEHAVIOR(touchBehaviors);
     mWidget->ApzcSetAllowedTouchBehavior(mTargetAPZCGuid, touchBehaviors);
-    if (IsTouchBehaviorForbidden(touchBehaviors)) {
-      mContentConsumingTouch = true;
-    }
   }
 
+  // Pass the event on to content
   DUMP_TOUCH_IDS("DOM(2)", aEvent);
+  nsEventStatus contentStatus = nsEventStatus_eIgnore;
   mWidget->DispatchEvent(&transformedEvent, contentStatus);
   if (nsEventStatus_eConsumeNoDefault == contentStatus) {
-    mContentConsumingTouch = true;
-  }
-
-  if (mContentConsumingTouch) {
+    // Content consumed the event, so we need to notify the APZ
+    // to not do anything with this touch block.
+    if (mApzConsumingTouch) {
+      mWidget->ApzContentConsumingTouch(mTargetAPZCGuid);
+    }
     mCancelable = false;
-    mWidget->ApzContentConsumingTouch(mTargetAPZCGuid);
-    DispatchTouchCancel(aEvent);
-  }
 
-  // Disable gesture based events (taps, swipes, rotation) if
-  // preventDefault is called on touchstart.
-  mRecognizerWantsEvents = !(nsEventStatus_eConsumeNoDefault == contentStatus);
-
-  // If content is consuming touch don't generate any gesture based
-  // input - clear the recognizer state without sending any events.
-  if (!ShouldDeliverInputToRecognizer()) {
-    mGestureRecognizer->CompleteGesture();
+    // Also cancel the gesture detection.
+    CancelGesture();
   }
 }
 
 void
 MetroInput::HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent)
 {
-  mCancelable = false;
-
-  nsEventStatus contentStatus = nsEventStatus_eIgnore;
-  nsEventStatus apzcStatus = nsEventStatus_eIgnore;
-
+  // If the APZ is using this block, pass the event to it.
   WidgetTouchEvent transformedEvent(*aEvent);
   DUMP_TOUCH_IDS("APZC(2)", aEvent);
-  apzcStatus = mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid);
-  if (apzcStatus == nsEventStatus_eConsumeNoDefault) {
-    return;
+  if (mApzConsumingTouch) {
+    nsEventStatus apzcStatus = mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid);
+    if (apzcStatus == nsEventStatus_eConsumeNoDefault) {
+      // The APZ said: throw this event away entirely.
+      CancelGesture();
+      return;
+    }
   }
 
+  // ==== RANDOM INTERLUDE ABOut POINTER EVENTS ====
   // We need to dispatch here only touch event, not pointer one.
   // That's because according to the spec pointer events doesn't imply pointermove event
   // between pointerdown and pointercancel (If default touch behavior is triggered).
@@ -1305,31 +1290,53 @@ MetroInput::HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent)
   // both touch and pointer event or only touch one.
   // Anyway it's worth to add this stuff only after patches from bug 822898 (Pointer events) are
   // fully commited.
+  // ==== END RANDOM INTERLUDE ABOut POINTER EVENTS ====
+
+  // And pass the untransformed event to content.
   DUMP_TOUCH_IDS("DOM(3)", aEvent);
+  nsEventStatus contentStatus = nsEventStatus_eIgnore;
   mWidget->DispatchEvent(&transformedEvent, contentStatus);
 
-  // Checking content result first since content can override apzc wish and disallow apzc touch
-  // behavior (via preventDefault).
+  // Let the apz know if content wants to consume touch events.
+  if (mCancelable) {
+    if (nsEventStatus_eConsumeNoDefault == contentStatus) {
+      mWidget->ApzContentConsumingTouch(mTargetAPZCGuid);
+    } else {
+      mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid);
+    }
+    mCancelable = false;
+  }
+  // Cancel the gesture detection as well if content is taking this block.
   if (nsEventStatus_eConsumeNoDefault == contentStatus) {
-    // Touchmove handler consumed touch.
-    mContentConsumingTouch = true;
-  } else if (nsEventStatus_eConsumeDoDefault == apzcStatus) {
-    // Apzc triggered default behavior.
-    mApzConsumingTouch = true;
+    CancelGesture();
   }
+}
 
-  // Let the apz know if content wants to consume touch events, or cancel
-  // the touch block for content.
-  if (mContentConsumingTouch) {
-    mWidget->ApzContentConsumingTouch(mTargetAPZCGuid);
-    DispatchTouchCancel(aEvent);
-  } else {
-    mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid);
+void
+MetroInput::SendPendingResponseToApz()
+{
+  // If this is called, content has missed its chance to consume this event block
+  // so we should notify the APZ that content is ignoring this touch block.
+  if (mCancelable) {
+    if (mApzConsumingTouch) {
+      mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid);
+    }
+    mCancelable = false;
   }
+}
 
-  if (mApzConsumingTouch) {
-    // Dispatching cancel to the content.
-    DispatchTouchCancel(&transformedEvent);
+void
+MetroInput::FlushPendingContentResponse()
+{
+  SendPendingResponseToApz();
+}
+
+void
+MetroInput::CancelGesture()
+{
+  if (mRecognizerWantsEvents) {
+    mRecognizerWantsEvents = false;
+    mGestureRecognizer->CompleteGesture();
   }
 }
 
@@ -1337,29 +1344,10 @@ void
 MetroInput::DeliverNextQueuedTouchEvent()
 {
   /*
-   * We go through states here and make different decisions in each:
-   *
-   * 1) Hit test for apz on first touchstart
-   *  If non-apzc content/chrome is the target simplify event delivery from
-   *  that point on by directing all input to chrome, bypassing the apz.
-   * 2) Process first touchstart and touchmove events
-   *  If touch behavior value associated with the TouchStart's touches doesn't
-   *  allow zooming or panning we explicitly set mContentConsumingTouch to true.
-   *  Otherwise check the result and set mContentConsumingTouch appropriately.
-   *  Deliver touch events to the apz (ignoring return result) and to content.
-   * 3) If mContentConsumingTouch is true: deliver touch to content after
-   *  transforming through the apz. Also let the apz know content is
-   *  consuming touch and deliver cancel event to apz.
-   * 4) If mContentConsumingTouch is false: check the result from the apz and
-   *  set mApzConsumingTouch appropriately.
-   * 5) If mApzConsumingTouch is true: send a touchcancel to content
-   *  and deliver all events to the apz. If the apz is doing something with
-   *  the events we can save ourselves the overhead of delivering dom events.
-   *
-   * Notes:
-   * - never rely on the contents of mTouches here, since this is a delayed
-   *   callback. mTouches will likely have been modified.
+   * Note: never rely on the contents of mTouches here, since this is a delayed
+   *       callback. mTouches will likely have been modified.
    */
+
   nsEventStatus status = nsEventStatus_eIgnore;
 
   WidgetTouchEvent* event =
@@ -1368,10 +1356,21 @@ MetroInput::DeliverNextQueuedTouchEvent()
 
   AutoDeleteEvent wrap(event);
 
+  // This is the start of a new touch block. If we haven't
+  // responded to the APZ about the last touch block, do that
+  // now, and reset variables for the new touch block.
+  if (event->message == NS_TOUCH_START) {
+    SendPendingResponseToApz();
+
+    mCancelable = true;
+    mApzConsumingTouch = true;
+    mTargetAPZCGuid = ScrollableLayerGuid();
+  }
+
   // Test for non-apz vs. apz target. To do this we only use the first touch
   // point since that will be the input batch target. Cache this for touch events
   // since HitTestChrome has to send a dom event.
-  if (mCancelable && event->message == NS_TOUCH_START) {
+  if (event->message == NS_TOUCH_START && event->touches.Length() == 1) {
     nsRefPtr<Touch> touch = event->touches[0];
     LayoutDeviceIntPoint pt = LayoutDeviceIntPoint::FromUntyped(touch->mRefPoint);
     // This is currently a general contained rect hit test, it may produce a false
@@ -1382,7 +1381,8 @@ MetroInput::DeliverNextQueuedTouchEvent()
   }
 
   // If this event is destined for dom, deliver it directly there bypassing
-  // the apz.
+  // the apz. Continue doing this until the number of active touch points drops
+  // to zero. After that we recompute mNonApzTargetForTouch in the block above.
   if (mNonApzTargetForTouch) {
     DUMP_TOUCH_IDS("DOM(1)", event);
     mWidget->DispatchEvent(event, status);
@@ -1390,8 +1390,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
       // Disable gesture based events (taps, swipes, rotation) if
       // preventDefault is called on touchstart.
       if (nsEventStatus_eConsumeNoDefault == status) {
-        mRecognizerWantsEvents = false;
-        mGestureRecognizer->CompleteGesture();
+        CancelGesture();
       }
       if (event->message == NS_TOUCH_MOVE) {
         mCancelable = false;
@@ -1400,88 +1399,30 @@ MetroInput::DeliverNextQueuedTouchEvent()
     return;
   }
 
-  if (mCancelable && event->message == NS_TOUCH_START) {
-    HandleFirstTouchStartEvent(event);
+  // Special handling for the start and first move events
+  if (event->message == NS_TOUCH_START) {
+    HandleTouchStartEvent(event);
     return;
   } else if (mCancelable && event->message == NS_TOUCH_MOVE) {
     HandleFirstTouchMoveEvent(event);
     return;
   }
-  // Let TouchEnd events go through even if mCancelable is true since we
-  // don't need to check whether it is prevented by content or consumed
-  // by apzc.
 
-  // If content is consuming touch, we may need to transform event coords
-  // through the apzc before sending to the dom. Otherwise send the event
-  // to apzc.
-  if (mContentConsumingTouch) {
-    // Only translate if we're dealing with web content that's transformed
-    // by the apzc.
-    TransformTouchEvent(event);
-    DUMP_TOUCH_IDS("DOM(4)", event);
-    mWidget->DispatchEvent(event, status);
-    return;
-  }
+  // If we get here, content has already had its chance to consume this event
+  // block. If it didn't do so we can inform the APZ that content is ignoring
+  // this event block.
+  SendPendingResponseToApz();
 
+  // Normal processing of events. Send it to the APZ first for handling and
+  // untransformation. then pass the untransformed event to content.
   DUMP_TOUCH_IDS("APZC(3)", event);
   status = mWidget->ApzReceiveInputEvent(event, nullptr);
   if (status == nsEventStatus_eConsumeNoDefault) {
+    CancelGesture();
     return;
   }
-
-  // If we're getting a new touch (touch start) after some touch start/move
-  // events we need to reset touch behavior for touches.
-  if (gTouchActionPropertyEnabled && event->message == NS_TOUCH_START) {
-    nsTArray<TouchBehaviorFlags> touchBehaviors;
-    GetAllowedTouchBehavior(event, touchBehaviors);
-    DUMP_ALLOWED_TOUCH_BEHAVIOR(touchBehaviors);
-    mWidget->ApzcSetAllowedTouchBehavior(mTargetAPZCGuid, touchBehaviors);
-  }
-
-  // Send the event to content unless APZC is consuming it.
-  if (!mApzConsumingTouch) {
-    if (status == nsEventStatus_eConsumeDoDefault) {
-      mApzConsumingTouch = true;
-      DispatchTouchCancel(event);
-      return;
-    }
-    TransformTouchEvent(event);
-    DUMP_TOUCH_IDS("DOM(5)", event);
-    mWidget->DispatchEvent(event, status);
-  }
-}
-
-void
-MetroInput::DispatchTouchCancel(WidgetTouchEvent* aEvent)
-{
-  MOZ_ASSERT(aEvent);
-  // Send a touchcancel for each pointer id we have a corresponding start
-  // for. Note we can't rely on mTouches here since touchends remove points
-  // from it.
-  WidgetTouchEvent touchEvent(true, NS_TOUCH_CANCEL, mWidget.Get());
-  WidgetTouchEvent::TouchArray& touches = aEvent->touches;
-  for (uint32_t i = 0; i < touches.Length(); ++i) {
-    dom::Touch* touch = touches[i];
-    if (!touch) {
-      continue;
-    }
-    int32_t id = touch->Identifier();
-    if (mCanceledIds.Contains(id)) {
-      continue;
-    }
-    mCanceledIds.AppendElement(id);
-    touchEvent.touches.AppendElement(touch);
-  }
-  if (!touchEvent.touches.Length()) {
-    return;
-  }
-  if (mContentConsumingTouch) {
-    DUMP_TOUCH_IDS("APZC(4)", &touchEvent);
-    mWidget->ApzReceiveInputEvent(&touchEvent, nullptr);
-  } else {
-    DUMP_TOUCH_IDS("DOM(6)", &touchEvent);
-    mWidget->DispatchEvent(&touchEvent, sThrowawayStatus);
-  }
+  DUMP_TOUCH_IDS("DOM(4)", event);
+  mWidget->DispatchEvent(event, status);
 }
 
 void

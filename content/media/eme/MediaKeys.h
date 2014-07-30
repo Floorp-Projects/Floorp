@@ -83,7 +83,7 @@ public:
   // Called once a Create() operation succeeds.
   void OnCDMCreated(PromiseId aId);
   // Called once a CreateSession or LoadSession succeeds.
-  void OnSessionActivated(PromiseId aId, const nsAString& aSessionId);
+  void OnSessionCreated(PromiseId aId, const nsAString& aSessionId);
   // Called once a session has closed.
   void OnSessionClosed(MediaKeySession* aSession);
 
@@ -101,6 +101,8 @@ public:
   // Resolves promise with "undefined".
   void ResolvePromise(PromiseId aId);
 
+  nsresult GetOrigin(nsString& aOutOrigin);
+
 private:
 
   // Removes promise from mPromises, and returns it.
@@ -115,6 +117,7 @@ private:
   KeySessionHashMap mKeySessions;
   PromiseHashMap mPromises;
   PendingKeySessionsHashMap mPendingSessions;
+  PromiseId mCreatePromiseId;
 };
 
 } // namespace dom

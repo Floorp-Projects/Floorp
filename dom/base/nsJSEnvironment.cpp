@@ -710,10 +710,6 @@ DumpString(const nsAString &str)
 #define JS_OPTIONS_DOT_STR "javascript.options."
 
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
-static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
-#ifdef DEBUG
-static const char js_strict_debug_option_str[] = JS_OPTIONS_DOT_STR "strict.debug";
-#endif
 #ifdef JS_GC_ZEAL
 static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
@@ -724,34 +720,11 @@ static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
 void
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
-  nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
-  JSContext *cx = context->mContext;
-
   sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
   sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
 
-  JS::ContextOptionsRef(cx).setExtraWarnings(Preferences::GetBool(js_strict_option_str));
-
-  // The vanilla GetGlobalObject returns null if a global isn't set up on
-  // the context yet. We can sometimes be call midway through context init,
-  // So ask for the member directly instead.
-  nsIScriptGlobalObject *global = context->GetGlobalObjectRef();
-
-  // XXX should we check for sysprin instead of a chrome window, to make
-  // XXX components be covered by the chrome pref instead of the content one?
-  nsCOMPtr<nsIDOMWindow> contentWindow(do_QueryInterface(global));
-  nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
-
-#ifdef DEBUG
-  // In debug builds, warnings are enabled in chrome context if
-  // javascript.options.strict.debug is true
-  if (Preferences::GetBool(js_strict_debug_option_str) &&
-      (chromeWindow || !contentWindow)) {
-    JS::ContextOptionsRef(cx).setExtraWarnings(true);
-  }
-#endif
-
 #ifdef JS_GC_ZEAL
+  nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
   int32_t zeal = Preferences::GetInt(js_zeal_option_str, -1);
   int32_t frequency = Preferences::GetInt(js_zeal_frequency_str, JS_DEFAULT_ZEAL_FREQ);
   if (zeal >= 0)

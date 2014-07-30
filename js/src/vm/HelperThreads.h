@@ -322,8 +322,6 @@ SetFakeCPUCount(size_t count);
 void
 PauseCurrentHelperThread();
 
-#ifdef JS_ION
-
 /* Perform MIR optimization and LIR generation on a single function. */
 bool
 StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData);
@@ -334,8 +332,6 @@ StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData);
  */
 bool
 StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder);
-
-#endif // JS_ION
 
 /*
  * Cancel a scheduled or in progress Ion compilation for script. If script is
@@ -402,7 +398,6 @@ class AutoUnlockHelperThreadState
     }
 };
 
-#ifdef JS_ION
 struct AsmJSParallelTask
 {
     JSRuntime *runtime;     // Associated runtime.
@@ -423,7 +418,6 @@ struct AsmJSParallelTask
         this->lir = nullptr;
     }
 };
-#endif
 
 struct ParseTask
 {

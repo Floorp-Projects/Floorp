@@ -39,9 +39,7 @@
 #include "jswatchpoint.h"
 
 #include "gc/Marking.h"
-#ifdef JS_ION
 #include "jit/Ion.h"
-#endif
 #include "js/CharacterEncoding.h"
 #include "js/OldDebugAPI.h"
 #include "vm/Debugger.h"
@@ -462,13 +460,13 @@ checkReportFlags(JSContext *cx, unsigned *flags)
         JSScript *script = cx->currentScript();
         if (script && script->strict())
             *flags &= ~JSREPORT_WARNING;
-        else if (cx->options().extraWarnings())
+        else if (cx->compartment()->options().extraWarnings(cx))
             *flags |= JSREPORT_WARNING;
         else
             return true;
     } else if (JSREPORT_IS_STRICT(*flags)) {
         /* Warning/error only when JSOPTION_STRICT is set. */
-        if (!cx->options().extraWarnings())
+        if (!cx->compartment()->options().extraWarnings(cx))
             return true;
     }
 
@@ -990,13 +988,11 @@ js::InvokeInterruptCallback(JSContext *cx)
 
     js::gc::GCIfNeeded(cx);
 
-#ifdef JS_ION
     rt->interruptPar = false;
 
     // A worker thread may have requested an interrupt after finishing an Ion
     // compilation.
     jit::AttachFinishedCompilations(cx);
-#endif
 
     // Important: Additional callbacks can occur inside the callback handler
     // if it re-enters the JS engine. The embedding must ensure that the

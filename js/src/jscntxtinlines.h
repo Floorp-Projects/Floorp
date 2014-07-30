@@ -465,7 +465,6 @@ JSContext::currentScript(jsbytecode **ppc,
 
     JS_ASSERT(act->cx() == this);
 
-#ifdef JS_ION
     if (act->isJit()) {
         JSScript *script = nullptr;
         js::jit::GetPcScript(const_cast<JSContext *>(this), &script, ppc);
@@ -476,7 +475,6 @@ JSContext::currentScript(jsbytecode **ppc,
 
     if (act->isAsmJS())
         return nullptr;
-#endif
 
     JS_ASSERT(act->isInterpreter());
 

@@ -8,9 +8,7 @@
 
 #include "jsinfer.h"
 
-#ifdef JS_ION
 #include "jit/IonFrames.h"
-#endif
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
 
@@ -47,7 +45,6 @@ ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
     }
 }
 
-#if defined(JS_ION)
 /* static */ void
 ArgumentsObject::MaybeForwardToCallObject(jit::IonJSFrameLayout *frame, HandleObject callObj,
                                           JSObject *obj, ArgumentsData *data)
@@ -61,7 +58,6 @@ ArgumentsObject::MaybeForwardToCallObject(jit::IonJSFrameLayout *frame, HandleOb
             data->args[fi.frameIndex()] = JS::MagicValueUint32(fi.scopeSlot());
     }
 }
-#endif
 
 struct CopyFrameArgs
 {
@@ -84,7 +80,6 @@ struct CopyFrameArgs
     }
 };
 
-#if defined(JS_ION)
 struct CopyIonJSFrameArgs
 {
     jit::IonJSFrameLayout *frame_;
@@ -123,7 +118,6 @@ struct CopyIonJSFrameArgs
         ArgumentsObject::MaybeForwardToCallObject(frame_, callObj_, obj, data);
     }
 };
-#endif
 
 struct CopyScriptFrameIterArgs
 {
@@ -260,7 +254,6 @@ ArgumentsObject::createUnexpected(JSContext *cx, AbstractFramePtr frame)
     return create(cx, script, callee, frame.numActualArgs(), copy);
 }
 
-#if defined(JS_ION)
 ArgumentsObject *
 ArgumentsObject::createForIon(JSContext *cx, jit::IonJSFrameLayout *frame, HandleObject scopeChain)
 {
@@ -272,7 +265,6 @@ ArgumentsObject::createForIon(JSContext *cx, jit::IonJSFrameLayout *frame, Handl
     CopyIonJSFrameArgs copy(frame, callObj);
     return create(cx, script, callee, frame->numActualArgs(), copy);
 }
-#endif
 
 static bool
 args_delProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)

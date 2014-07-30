@@ -112,10 +112,8 @@ class RegExpShared
     bool               canStringMatch;
     bool               marked_;
 
-#ifdef JS_ION
     HeapPtrJitCode     jitCodeLatin1;
     HeapPtrJitCode     jitCodeTwoByte;
-#endif
     uint8_t            *byteCodeLatin1;
     uint8_t            *byteCodeTwoByte;
 
@@ -159,18 +157,10 @@ class RegExpShared
     bool sticky() const                 { return flags & StickyFlag; }
 
     bool hasJitCodeLatin1() const {
-#ifdef JS_ION
         return jitCodeLatin1 != nullptr;
-#else
-        return false;
-#endif
     }
     bool hasJitCodeTwoByte() const {
-#ifdef JS_ION
         return jitCodeTwoByte != nullptr;
-#else
-        return false;
-#endif
     }
     bool hasByteCodeLatin1() const {
         return byteCodeLatin1 != nullptr;

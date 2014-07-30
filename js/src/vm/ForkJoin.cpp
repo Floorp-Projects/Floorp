@@ -20,18 +20,15 @@
 
 #include "builtin/TypedObject.h"
 #include "jit/BaselineJIT.h"
+#include "jit/JitCommon.h"
+#include "jit/RematerializedFrame.h"
+#ifdef FORKJOIN_SPEW
+# include "jit/Ion.h"
+# include "jit/JitCompartment.h"
+# include "jit/MIR.h"
+# include "jit/MIRGraph.h"
+#endif
 #include "vm/Monitor.h"
-
-#ifdef JS_ION
-# include "jit/JitCommon.h"
-# include "jit/RematerializedFrame.h"
-# ifdef FORKJOIN_SPEW
-#  include "jit/Ion.h"
-#  include "jit/JitCompartment.h"
-#  include "jit/MIR.h"
-#  include "jit/MIRGraph.h"
-# endif
-#endif // JS_ION
 
 #include "gc/ForkJoinNursery-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -45,7 +42,7 @@ using mozilla::ThreadLocal;
 ///////////////////////////////////////////////////////////////////////////
 // Degenerate configurations
 //
-// When JS_ION is not defined, we simply run the |func| callback
+// When IonMonkey is disabled, we simply run the |func| callback
 // sequentially.  We also forego the feedback altogether.
 
 static bool
@@ -63,116 +60,6 @@ ForkJoinSequentially(JSContext *cx, CallArgs &args)
     MOZ_ASSERT(sliceStart == sliceEnd);
     return true;
 }
-
-#if !defined(JS_ION)
-bool
-js::ForkJoin(JSContext *cx, CallArgs &args)
-{
-    return ForkJoinSequentially(cx, args);
-}
-
-JSContext *
-ForkJoinContext::acquireJSContext()
-{
-    return nullptr;
-}
-
-void
-ForkJoinContext::releaseJSContext()
-{
-}
-
-bool
-ForkJoinContext::isMainThread() const
-{
-    return true;
-}
-
-JSRuntime *
-ForkJoinContext::runtime()
-{
-    MOZ_CRASH("Not THREADSAFE build");
-}
-
-bool
-ForkJoinContext::check()
-{
-    MOZ_CRASH("Not THREADSAFE build");
-}
-
-void
-ForkJoinContext::requestGC(JS::gcreason::Reason reason)
-{
-    MOZ_CRASH("Not THREADSAFE build");
-}
-
-void
-ForkJoinContext::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
-{
-    MOZ_CRASH("Not THREADSAFE build");
-}
-
-bool
-ForkJoinContext::setPendingAbortFatal(ParallelBailoutCause cause)
-{
-    MOZ_CRASH("Not THREADSAFE build");
-}
-
-void
-ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, JitFrameIterator &frameIter)
-{
-    MOZ_CRASH("Not THREADSAFE build");
-}
-
-void
-ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, IonBailoutIterator &frameIter)
-{
-    MOZ_CRASH("Not THREADSAFE build");
-}
-
-bool
-js::InExclusiveParallelSection()
-{
-    return false;
-}
-
-bool
-js::ParallelTestsShouldPass(JSContext *cx)
-{
-    return false;
-}
-
-bool
-js::intrinsic_SetForkJoinTargetRegion(JSContext *cx, unsigned argc, Value *vp)
-{
-    return true;
-}
-
-static bool
-intrinsic_SetForkJoinTargetRegionPar(ForkJoinContext *cx, unsigned argc, Value *vp)
-{
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_SetForkJoinTargetRegionInfo,
-                           intrinsic_SetForkJoinTargetRegionPar);
-
-bool
-js::intrinsic_ClearThreadLocalArenas(JSContext *cx, unsigned argc, Value *vp)
-{
-    return true;
-}
-
-static bool
-intrinsic_ClearThreadLocalArenasPar(ForkJoinContext *cx, unsigned argc, Value *vp)
-{
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_ClearThreadLocalArenasInfo,
-                           intrinsic_ClearThreadLocalArenasPar);
-
-#endif // !JS_ION
 
 ///////////////////////////////////////////////////////////////////////////
 // All configurations
@@ -213,10 +100,7 @@ ForkJoinContext::initializeTls()
 ///////////////////////////////////////////////////////////////////////////
 // Parallel configurations
 //
-// The remainder of this file is specific to cases where
-// JS_ION is enabled.
-
-#ifdef JS_ION
+// The remainder of this file is specific to cases where IonMonkey is enabled.
 
 ///////////////////////////////////////////////////////////////////////////
 // Class Declarations and Function Prototypes
@@ -2467,5 +2351,3 @@ intrinsic_ClearThreadLocalArenasPar(ForkJoinContext *cx, unsigned argc, Value *v
 
 JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_ClearThreadLocalArenasInfo,
                            intrinsic_ClearThreadLocalArenasPar);
-
-#endif // JS_ION

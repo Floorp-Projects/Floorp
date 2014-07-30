@@ -10,7 +10,6 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "mozilla/PodOperations.h"
-#include "speex/speex_resampler.h"
 
 namespace mozilla {
 namespace dom {

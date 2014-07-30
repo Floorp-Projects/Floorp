@@ -7,6 +7,7 @@ const { Trait } = require("../deprecated/traits");
 const { EventEmitter } = require("../deprecated/events");
 const { defer } = require("../lang/functional");
 const { has } = require("../util/array");
+const { each } = require("../util/object");
 const { EVENTS } = require("./events");
 const { getThumbnailURIForWindow } = require("../content/thumbnail");
 const { getFaviconURIForLocation } = require("../io/data");
@@ -48,7 +49,7 @@ const TabTrait = Trait.compose(EventEmitter, {
     let window = this.window = options.window || require('../windows').BrowserWindow({ window: getOwnerWindow(this._tab) });
 
     // Setting event listener if was passed.
-    for each (let type in EVENTS) {
+    each(EVENTS, (type) => {
       let listener = options[type.listener];
       if (listener) {
         this.on(type.name, options[type.listener]);
@@ -56,7 +57,7 @@ const TabTrait = Trait.compose(EventEmitter, {
       // window spreads this event.
       if (!has(['ready', 'load', 'pageshow'], (type.name)))
         window.tabs.on(type.name, this._onEvent.bind(this, type.name));
-    }
+    });
 
     this.on(EVENTS.close.name, this.destroy.bind(this));
 
@@ -281,7 +282,7 @@ const getTabView = tab => viewNS(tab).tab;
 
 function Tab(options, existingOnly) {
   let chromeTab = options.tab;
-  for each (let tab in TABS) {
+  for (let tab of TABS) {
     if (chromeTab == tab._tab)
       return tab._public;
   }

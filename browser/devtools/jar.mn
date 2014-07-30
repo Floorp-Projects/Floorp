@@ -23,6 +23,7 @@ browser.jar:
     content/browser/devtools/scratchpad-commands.js                    (scratchpad/scratchpad-commands.js)
     content/browser/devtools/splitview.css                             (shared/splitview.css)
     content/browser/devtools/theme-switching.js                        (shared/theme-switching.js)
+    content/browser/devtools/frame-script-utils.js                     (shared/frame-script-utils.js)
     content/browser/devtools/styleeditor.xul                           (styleeditor/styleeditor.xul)
     content/browser/devtools/styleeditor.css                           (styleeditor/styleeditor.css)
     content/browser/devtools/computedview.xhtml                        (styleinspector/computedview.xhtml)
