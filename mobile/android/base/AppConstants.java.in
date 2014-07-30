@@ -22,6 +22,8 @@ import android.os.Build;
 @RobocopTarget
 public class AppConstants {
     public static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
+    // Maintain a separate search package name so that we can speciailize it in the standalone search project
+    public static final String SEARCH_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
     public static final String MANGLED_ANDROID_PACKAGE_NAME = "@MANGLED_ANDROID_PACKAGE_NAME@";
 
     /**
@@ -70,6 +72,7 @@ public class AppConstants {
      * The name of the Java class that launches the browser.
      */
     public static final String BROWSER_INTENT_CLASS_NAME = "org.mozilla.gecko.BrowserApp";
+    public static final String SEARCH_INTENT_CLASS_NAME = "org.mozilla.search.MainActivity";
 
     public static final String GRE_MILESTONE = "@GRE_MILESTONE@";
 
