@@ -42,7 +42,6 @@ public:
 
   nsNSSCertificate(CERTCertificate* cert, SECOidTag* evOidPolicy = nullptr);
   nsNSSCertificate();
-  virtual ~nsNSSCertificate();
   nsresult FormatUIStrings(const nsAutoString& nickname,
                            nsAutoString& nickWithSerial,
                            nsAutoString& details);
@@ -51,6 +50,8 @@ public:
   static nsNSSCertificate* ConstructFromDER(char* certDER, int derLen);
 
 private:
+  virtual ~nsNSSCertificate();
+
   mozilla::ScopedCERTCertificate mCert;
   bool             mPermDelete;
   uint32_t         mCertType;
@@ -73,12 +74,6 @@ private:
 };
 
 namespace mozilla {
-
-template<>
-struct HasDangerousPublicDestructor<nsNSSCertificate>
-{
-  static const bool value = true;
-};
 
 SECStatus ConstructCERTCertListFromReversedDERArray(
             const mozilla::pkix::DERArray& certArray,
