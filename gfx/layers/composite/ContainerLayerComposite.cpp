@@ -117,7 +117,7 @@ static gfx::Point GetScrollData(Layer* aLayer) {
   return origin;
 }
 
-static void DrawLayerInfo(const nsIntRect& aClipRect,
+static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
                           LayerManagerComposite* aManager,
                           Layer* aLayer)
 {
@@ -154,7 +154,7 @@ static LayerVelocityUserData* GetVelocityData(Layer* aLayer) {
   return static_cast<LayerVelocityUserData*>(aLayer->GetUserData(key));
 }
 
-static void DrawVelGraph(const nsIntRect& aClipRect,
+static void DrawVelGraph(const RenderTargetIntRect& aClipRect,
                          LayerManagerComposite* aManager,
                          Layer* aLayer) {
   Compositor* compositor = aManager->GetCompositor();
@@ -281,10 +281,10 @@ static void PrintUniformityInfo(Layer* aLayer)
 /* all of the per-layer prepared data we need to maintain */
 struct PreparedLayer
 {
-  PreparedLayer(LayerComposite *aLayer, nsIntRect aClipRect, bool aRestoreVisibleRegion, nsIntRegion &aVisibleRegion) :
+  PreparedLayer(LayerComposite *aLayer, RenderTargetIntRect aClipRect, bool aRestoreVisibleRegion, nsIntRegion &aVisibleRegion) :
     mLayer(aLayer), mClipRect(aClipRect), mRestoreVisibleRegion(aRestoreVisibleRegion), mSavedVisibleRegion(aVisibleRegion) {}
   LayerComposite* mLayer;
-  nsIntRect mClipRect;
+  RenderTargetIntRect mClipRect;
   bool mRestoreVisibleRegion;
   nsIntRegion mSavedVisibleRegion;
 };
@@ -300,7 +300,7 @@ struct PreparedData
 template<class ContainerT> void
 ContainerPrepare(ContainerT* aContainer,
                  LayerManagerComposite* aManager,
-                 const nsIntRect& aClipRect)
+                 const RenderTargetIntRect& aClipRect)
 {
   aContainer->mPrepared = MakeUnique<PreparedData>();
 
@@ -318,7 +318,7 @@ ContainerPrepare(ContainerT* aContainer,
       continue;
     }
 
-    nsIntRect clipRect = layerToRender->GetLayer()->
+    RenderTargetIntRect clipRect = layerToRender->GetLayer()->
         CalculateScissorRect(aClipRect, &aManager->GetWorldTransform());
     if (clipRect.IsEmpty()) {
       continue;
@@ -375,7 +375,7 @@ ContainerPrepare(ContainerT* aContainer,
       // If we don't need a copy we can render to the intermediate now to avoid
       // unecessary render target switching. This brings a big perf boost on mobile gpus.
       RefPtr<CompositingRenderTarget> surface = CreateTemporaryTarget(aContainer, aManager);
-      RenderIntermediate(aContainer, aManager, aClipRect, surface);
+      RenderIntermediate(aContainer, aManager, RenderTargetPixel::ToUntyped(aClipRect), surface);
       aContainer->mPrepared->mTmpTarget = surface;
     }
   }
@@ -384,7 +384,7 @@ ContainerPrepare(ContainerT* aContainer,
 template<class ContainerT> void
 RenderLayers(ContainerT* aContainer,
 	     LayerManagerComposite* aManager,
-	     const nsIntRect& aClipRect)
+	     const RenderTargetIntRect& aClipRect)
 {
   Compositor* compositor = aManager->GetCompositor();
 
@@ -407,9 +407,10 @@ RenderLayers(ContainerT* aContainer,
         EffectChain effectChain(aContainer);
         effectChain.mPrimaryEffect = new EffectSolidColor(ToColor(color));
         gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-        Compositor* compositor = aManager->GetCompositor();
-        compositor->DrawQuad(compositor->ClipRectInLayersCoordinates(clipRect),
-            clipRect, effectChain, opacity, Matrix4x4());
+        compositor->DrawQuad(
+          RenderTargetPixel::ToUnknown(
+            compositor->ClipRectInLayersCoordinates(aClipRect)),
+          clipRect, effectChain, opacity, Matrix4x4());
       }
     }
   }
@@ -417,7 +418,8 @@ RenderLayers(ContainerT* aContainer,
   for (size_t i = 0u; i < aContainer->mPrepared->mLayers.Length(); i++) {
     PreparedLayer& preparedData = aContainer->mPrepared->mLayers[i];
     LayerComposite* layerToRender = preparedData.mLayer;
-    nsIntRect clipRect = preparedData.mClipRect;
+    const RenderTargetIntRect& clipRect = preparedData.mClipRect;
+
     if (layerToRender->HasLayerBeenComposited()) {
       // Composer2D will compose this layer so skip GPU composition
       // this time & reset composition flag for next composition phase
@@ -430,7 +432,7 @@ RenderLayers(ContainerT* aContainer,
         layerToRender->SetClearRect(nsIntRect(0, 0, 0, 0));
       }
     } else {
-      layerToRender->RenderLayer(clipRect);
+      layerToRender->RenderLayer(RenderTargetPixel::ToUntyped(clipRect));
     }
 
     if (preparedData.mRestoreVisibleRegion) {
@@ -508,7 +510,7 @@ RenderIntermediate(ContainerT* aContainer,
 
   compositor->SetRenderTarget(surface);
   // pre-render all of the layers into our temporary
-  RenderLayers(aContainer, aManager, aClipRect);
+  RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
   // Unbind the current surface and rebind the previous one.
   compositor->SetRenderTarget(previousTarget);
 }
@@ -525,7 +527,8 @@ ContainerRender(ContainerT* aContainer,
     if (!aContainer->mPrepared->mTmpTarget) {
       // we needed to copy the background so we waited until now to render the intermediate
       surface = CreateTemporaryTargetAndCopyFromBackground(aContainer, aManager);
-      RenderIntermediate(aContainer, aManager, aClipRect, surface);
+      RenderIntermediate(aContainer, aManager,
+                         aClipRect, surface);
     } else {
       surface = aContainer->mPrepared->mTmpTarget;
     }
@@ -559,7 +562,7 @@ ContainerRender(ContainerT* aContainer,
     aManager->GetCompositor()->DrawQuad(rect, clipRect, effectChain, opacity,
                                         aContainer->GetEffectiveTransform());
   } else {
-    RenderLayers(aContainer, aManager, aClipRect);
+    RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
   }
   aContainer->mPrepared = nullptr;
 
@@ -628,7 +631,7 @@ ContainerLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 }
 
 void
-ContainerLayerComposite::Prepare(const nsIntRect& aClipRect)
+ContainerLayerComposite::Prepare(const RenderTargetIntRect& aClipRect)
 {
   ContainerPrepare(this, mCompositeManager, aClipRect);
 }
@@ -677,7 +680,7 @@ RefLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 }
 
 void
-RefLayerComposite::Prepare(const nsIntRect& aClipRect)
+RefLayerComposite::Prepare(const RenderTargetIntRect& aClipRect)
 {
   ContainerPrepare(this, mCompositeManager, aClipRect);
 }
