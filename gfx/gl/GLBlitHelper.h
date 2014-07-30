@@ -153,27 +153,34 @@ public:
     // the first BlitFramebufferToFramebuffer.
     void BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
                                       const gfx::IntSize& srcSize,
-                                      const gfx::IntSize& destSize);
+                                      const gfx::IntSize& destSize,
+                                      bool internalFBs = false);
     void BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
                                       const gfx::IntSize& srcSize,
                                       const gfx::IntSize& destSize,
-                                      const GLFormats& srcFormats);
+                                      const GLFormats& srcFormats,
+                                      bool internalFBs = false);
     void BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
                                   const gfx::IntSize& srcSize,
                                   const gfx::IntSize& destSize,
-                                  GLenum srcTarget = LOCAL_GL_TEXTURE_2D);
+                                  GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
+                                  bool internalFBs = false);
     void BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
                                   const gfx::IntSize& srcSize,
                                   const gfx::IntSize& destSize,
-                                  GLenum destTarget = LOCAL_GL_TEXTURE_2D);
+                                  GLenum destTarget = LOCAL_GL_TEXTURE_2D,
+                                  bool internalFBs = false);
     void BlitTextureToTexture(GLuint srcTex, GLuint destTex,
                               const gfx::IntSize& srcSize,
                               const gfx::IntSize& destSize,
                               GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
                               GLenum destTarget = LOCAL_GL_TEXTURE_2D);
-    bool BlitImageToTexture(layers::Image* srcImage, const gfx::IntSize& destSize,
-                            GLuint destTex, GLenum destTarget, bool yFlip = false, GLuint xoffset = 0,
-                            GLuint yoffset = 0, GLuint width = 0, GLuint height = 0);
+    bool BlitImageToTexture(layers::Image* srcImage,
+                            const gfx::IntSize& destSize,
+                            GLuint destTex, GLenum destTarget,
+                            bool yFlip = false,
+                            GLuint xoffset = 0, GLuint yoffset = 0,
+                            GLuint width = 0, GLuint height = 0);
 };
 
 }
