@@ -78,6 +78,14 @@ GMPParent::Init(GeckoMediaPluginService *aService, nsIFile* aPluginDir)
   return ReadGMPMetaData();
 }
 
+void
+GMPParent::Crash()
+{
+  if (mState != GMPStateNotLoaded) {
+    unused << SendCrashPluginNow();
+  }
+}
+
 nsresult
 GMPParent::LoadProcess()
 {

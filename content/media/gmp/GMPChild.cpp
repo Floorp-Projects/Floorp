@@ -240,5 +240,12 @@ GMPChild::RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor)
   return true;
 }
 
+bool
+GMPChild::RecvCrashPluginNow()
+{
+  abort();
+  return true;
+}
+
 } // namespace gmp
 } // namespace mozilla

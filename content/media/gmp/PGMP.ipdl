@@ -24,6 +24,8 @@ parent:
 child:
   async PGMPVideoDecoder();
   async PGMPVideoEncoder();
+
+  async CrashPluginNow();
 };
 
 } // namespace gmp
