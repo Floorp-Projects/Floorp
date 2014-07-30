@@ -703,19 +703,36 @@ ToLowerCase(JSContext *cx, JSLinearString *str)
 {
     // Unlike toUpperCase, toLowerCase has the nice invariant that if the input
     // is a Latin1 string, the output is also a Latin1 string.
+    UniquePtr<CharT[], JS::FreePolicy> newChars;
     size_t length = str->length();
-    ScopedJSFreePtr<CharT> newChars(cx->pod_malloc<CharT>(length + 1));
-    if (!newChars)
-        return nullptr;
-
     {
         AutoCheckCannotGC nogc;
         const CharT *chars = str->chars<CharT>(nogc);
-        for (size_t i = 0; i < length; i++) {
+
+        // Look for the first upper case character.
+        size_t i = 0;
+        for (; i < length; i++) {
+            jschar c = chars[i];
+            if (unicode::ToLowerCase(c) != c)
+                break;
+        }
+
+        // If all characters are lower case, return the input string.
+        if (i == length)
+            return str;
+
+        newChars = cx->make_pod_array<CharT>(length + 1);
+        if (!newChars)
+            return nullptr;
+
+        PodCopy(newChars.get(), chars, i);
+
+        for (; i < length; i++) {
             jschar c = unicode::ToLowerCase(chars[i]);
-            MOZ_ASSERT_IF((IsSame<CharT, Latin1Char>::value), c <= 0xff);
+            MOZ_ASSERT_IF((IsSame<CharT, Latin1Char>::value), c <= JSString::MAX_LATIN1_CHAR);
             newChars[i] = c;
         }
+
         newChars[length] = 0;
     }
 
@@ -723,7 +740,7 @@ ToLowerCase(JSContext *cx, JSLinearString *str)
     if (!res)
         return nullptr;
 
-    newChars.forget();
+    newChars.release();
     return res;
 }
 
@@ -780,30 +797,101 @@ str_toLocaleLowerCase(JSContext *cx, unsigned argc, Value *vp)
     return ToLowerCaseHelper(cx, args);
 }
 
+template <typename DestChar, typename SrcChar>
+static void
+ToUpperCaseImpl(DestChar *destChars, const SrcChar *srcChars, size_t firstLowerCase, size_t length)
+{
+    MOZ_ASSERT(firstLowerCase < length);
+
+    for (size_t i = 0; i < firstLowerCase; i++)
+        destChars[i] = srcChars[i];
+
+    for (size_t i = firstLowerCase; i < length; i++) {
+        jschar c = unicode::ToUpperCase(srcChars[i]);
+        MOZ_ASSERT_IF((IsSame<DestChar, Latin1Char>::value), c <= JSString::MAX_LATIN1_CHAR);
+        destChars[i] = c;
+    }
+
+    destChars[length] = '\0';
+}
+
 template <typename CharT>
 static JSString *
 ToUpperCase(JSContext *cx, JSLinearString *str)
 {
-    // toUpperCase on a Latin1 string can yield a non-Latin1 string. For now,
-    // we use a TwoByte string for the result.
-    size_t length = str->length();
-    ScopedJSFreePtr<jschar> newChars(cx->pod_malloc<jschar>(length + 1));
-    if (!newChars)
-        return nullptr;
+    typedef UniquePtr<Latin1Char[], JS::FreePolicy> Latin1CharPtr;
+    typedef UniquePtr<jschar[], JS::FreePolicy> TwoByteCharPtr;
 
+    mozilla::MaybeOneOf<Latin1CharPtr, TwoByteCharPtr> newChars;
+    size_t length = str->length();
     {
         AutoCheckCannotGC nogc;
         const CharT *chars = str->chars<CharT>(nogc);
-        for (size_t i = 0; i < length; i++)
-            newChars[i] = unicode::ToUpperCase(chars[i]);
-        newChars[length] = 0;
+
+        // Look for the first lower case character.
+        size_t i = 0;
+        for (; i < length; i++) {
+            jschar c = chars[i];
+            if (unicode::ToUpperCase(c) != c)
+                break;
+        }
+
+        // If all characters are upper case, return the input string.
+        if (i == length)
+            return str;
+
+        // If the string is Latin1, check if it contains the MICRO SIGN (0xb5)
+        // or SMALL LETTER Y WITH DIAERESIS (0xff) character. The corresponding
+        // upper case characters are not in the Latin1 range.
+        bool resultIsLatin1;
+        if (IsSame<CharT, Latin1Char>::value) {
+            resultIsLatin1 = true;
+            for (size_t j = i; j < length; j++) {
+                Latin1Char c = chars[j];
+                if (c == 0xb5 || c == 0xff) {
+                    MOZ_ASSERT(unicode::ToUpperCase(c) > JSString::MAX_LATIN1_CHAR);
+                    resultIsLatin1 = false;
+                    break;
+                } else {
+                    MOZ_ASSERT(unicode::ToUpperCase(c) <= JSString::MAX_LATIN1_CHAR);
+                }
+            }
+        } else {
+            resultIsLatin1 = false;
+        }
+
+        if (resultIsLatin1) {
+            Latin1CharPtr buf = cx->make_pod_array<Latin1Char>(length + 1);
+            if (!buf)
+                return nullptr;
+
+            ToUpperCaseImpl(buf.get(), chars, i, length);
+            newChars.construct<Latin1CharPtr>(buf);
+        } else {
+            TwoByteCharPtr buf = cx->make_pod_array<jschar>(length + 1);
+            if (!buf)
+                return nullptr;
+
+            ToUpperCaseImpl(buf.get(), chars, i, length);
+            newChars.construct<TwoByteCharPtr>(buf);
+        }
     }
 
-    JSString *res = NewString<CanGC>(cx, newChars.get(), length);
-    if (!res)
-        return nullptr;
+    JSString *res;
+    if (newChars.constructed<Latin1CharPtr>()) {
+        res = NewStringDontDeflate<CanGC>(cx, newChars.ref<Latin1CharPtr>().get(), length);
+        if (!res)
+            return nullptr;
 
-    newChars.forget();
+        newChars.ref<Latin1CharPtr>().release();
+    } else {
+        res = NewStringDontDeflate<CanGC>(cx, newChars.ref<TwoByteCharPtr>().get(), length);
+        if (!res)
+            return nullptr;
+
+        newChars.ref<TwoByteCharPtr>().release();
+    }
+
     return res;
 }
 
