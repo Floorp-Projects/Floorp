@@ -230,6 +230,28 @@ CrossOriginXrayWrapper::getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*>
 }
 
 bool
+CrossOriginXrayWrapper::defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                       JS::Handle<jsid> id,
+                                       JS::MutableHandle<JSPropertyDescriptor> desc) const
+{
+    // Until XPCWN Xrays go away, we'll have native resolves looping back
+    // through here.
+    if (XrayUtils::IsXrayResolving(cx, wrapper, id))
+        return SecurityXrayDOM::defineProperty(cx, wrapper, id, desc);
+
+    JS_ReportError(cx, "Permission denied to define property on cross-origin object");
+    return false;
+}
+
+bool
+CrossOriginXrayWrapper::delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                JS::Handle<jsid> id, bool *bp) const
+{
+    JS_ReportError(cx, "Permission denied to delete property on cross-origin object");
+    return false;
+}
+
+bool
 CrossOriginXrayWrapper::enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                   JS::AutoIdVector &props) const
 {
