@@ -2358,6 +2358,18 @@ class AutoCompartmentRooter : private JS::CustomAutoRooter
 
 } /* anonymous namespace */
 
+bool
+JS::CompartmentOptions::extraWarnings(JSRuntime *rt) const
+{
+    return extraWarningsOverride_.get(rt->options().extraWarnings());
+}
+
+bool
+JS::CompartmentOptions::extraWarnings(JSContext *cx) const
+{
+    return extraWarnings(cx->runtime());
+}
+
 JS::CompartmentOptions &
 JS::CompartmentOptions::setZone(ZoneSpecifier spec)
 {
@@ -4421,7 +4433,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
     compileAndGo = false;
     noScriptRval = cx->options().noScriptRval();
     strictOption = cx->runtime()->options().strictMode();
-    extraWarningsOption = cx->options().extraWarnings();
+    extraWarningsOption = cx->compartment()->options().extraWarnings(cx);
     werrorOption = cx->runtime()->options().werror();
     asmJSOption = cx->runtime()->options().asmJS();
 }
