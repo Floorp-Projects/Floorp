@@ -169,6 +169,12 @@ public:
     return remove(*min);
   }
 
+  // For testing purposes only.
+  void checkCoherency()
+  {
+    checkCoherency(mRoot, nullptr);
+  }
+
 private:
   /**
    * Returns the node in this comparing equal to |aValue|, or a node just
