@@ -186,20 +186,18 @@ VARIABLES = {
        ``$(FINAL_TARGET)/components/``.
         """, 'libs'),
 
-    'EXTRA_JS_MODULES': (StrictOrderingOnAppendList, list,
+    'EXTRA_JS_MODULES': (HierarchicalStringList, list,
         """Additional JavaScript files to distribute.
 
         This variable contains a list of files to copy into
-        ``$(FINAL_TARGET)/$(JS_MODULES_PATH)``. ``JS_MODULES_PATH`` defaults
-        to ``modules`` if left undefined.
+        ``$(FINAL_TARGET)/modules.
         """, 'libs'),
 
-    'EXTRA_PP_JS_MODULES': (StrictOrderingOnAppendList, list,
+    'EXTRA_PP_JS_MODULES': (HierarchicalStringList, list,
         """Additional JavaScript files to distribute.
 
         This variable contains a list of files to copy into
-        ``$(FINAL_TARGET)/$(JS_MODULES_PATH)``, after preprocessing.
-        ``JS_MODULES_PATH`` defaults to ``modules`` if left undefined.
+        ``$(FINAL_TARGET)/modules``, after preprocessing.
         """, 'libs'),
 
     'TESTING_JS_MODULES': (HierarchicalStringList, list,
@@ -291,16 +289,6 @@ VARIABLES = {
         This variable should not be populated directly. Instead, it should
         populated by calling add_java_jar().
         """, 'libs'),
-
-    'JS_MODULES_PATH': (unicode, unicode,
-        """Sub-directory of ``$(FINAL_TARGET)`` to install
-        ``EXTRA_JS_MODULES``.
-
-        ``EXTRA_JS_MODULES`` files are copied to
-        ``$(FINAL_TARGET)/$(JS_MODULES_PATH)``. This variable does not
-        need to be defined if the desired destination directory is
-        ``$(FINAL_TARGET)/modules``.
-        """, None),
 
     'LIBRARY_NAME': (unicode, unicode,
         """The code name of the library generated for a directory.

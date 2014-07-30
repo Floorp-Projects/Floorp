@@ -141,10 +141,16 @@ class XPCShellRunner(MozbuildObject):
         # We want output from the test to be written immediately if we are only
         # running a single test.
         verbose_output = test_path is not None or (manifest and len(manifest.test_paths())==1)
+        
+        # We need to attach the '.exe' extension on Windows for the debugger to
+        # work properly.
+        xpcsExecutable = 'xpcshell'
+        if os.name == 'nt':
+          xpcsExecutable += '.exe'
 
         args = {
             'manifest': manifest,
-            'xpcshell': os.path.join(self.bindir, 'xpcshell'),
+            'xpcshell': os.path.join(self.bindir, xpcsExecutable),
             'mozInfo': os.path.join(self.topobjdir, 'mozinfo.json'),
             'symbolsPath': os.path.join(self.distdir, 'crashreporter-symbols'),
             'interactive': interactive,

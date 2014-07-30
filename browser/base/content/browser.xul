@@ -917,22 +917,6 @@
                        cui-areatype="toolbar"
                        aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
 
-        <!-- XXX Bug 1013989 will provide a label for the button -->
-        <!-- This uses badged to be compatible with the social api code it shares.
-             We may also want it to be badged in the future, for notification
-             purposes. -->
-        <toolbarbutton id="loop-call-button"
-                       class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       persist="class"
-                       type="badged"
-                       removable="true"
-                       tooltiptext="&loopCallButton.tooltip;"
-                       oncommand="LoopUI.openCallPanel(event);"
-                       cui-areatype="toolbar"
-                       >
-        </toolbarbutton>
-
-
         <toolbarbutton id="social-share-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        label="&sharePageCmd.label;"

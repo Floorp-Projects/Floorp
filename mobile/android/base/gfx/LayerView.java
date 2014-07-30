@@ -9,6 +9,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 
 import org.mozilla.gecko.AndroidGamepadManager;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
@@ -30,7 +31,6 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -110,7 +110,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         mFullScreenState = FullScreenState.NONE;
 
         mTouchInterceptors = new ArrayList<TouchEventInterceptor>();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+        if (Versions.feature14Plus) {
             mOverscroll = new OverscrollEdgeEffect(this);
         } else {
             mOverscroll = null;

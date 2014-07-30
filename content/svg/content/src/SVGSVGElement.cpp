@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/BasicEvents.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Likely.h"
 
@@ -518,11 +518,14 @@ SVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
   if (doc) {
     nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
     if (presShell && IsRoot()) {
-      bool scaling = (mPreviousScale != mCurrentScale);
       nsEventStatus status = nsEventStatus_eIgnore;
-      WidgetGUIEvent event(true, scaling ? NS_SVG_ZOOM : NS_SVG_SCROLL, 0);
-      event.eventStructType = scaling ? NS_SVGZOOM_EVENT : NS_EVENT;
-      presShell->HandleDOMEventWithTarget(this, &event, &status);
+      if (mPreviousScale != mCurrentScale) {
+        InternalSVGZoomEvent svgZoomEvent(true, NS_SVG_ZOOM);
+        presShell->HandleDOMEventWithTarget(this, &svgZoomEvent, &status);
+      } else {
+        WidgetEvent svgScrollEvent(true, NS_SVG_SCROLL);
+        presShell->HandleDOMEventWithTarget(this, &svgScrollEvent, &status);
+      }
       InvalidateTransformNotifyFrame();
     }
   }
