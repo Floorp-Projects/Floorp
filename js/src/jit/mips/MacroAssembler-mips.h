@@ -1092,6 +1092,12 @@ public:
     void store32(Imm32 src, const Address &address);
     void store32(Imm32 src, const BaseIndex &address);
 
+    // NOTE: This will use second scratch on MIPS. Only ARM needs the
+    // implementation without second scratch.
+    void store32_NoSecondScratch(Imm32 src, const Address &address) {
+        store32(src, address);
+    }
+
     void storePtr(ImmWord imm, const Address &address);
     void storePtr(ImmPtr imm, const Address &address);
     void storePtr(ImmGCPtr imm, const Address &address);

@@ -109,6 +109,10 @@ static const unsigned StoredFP = 11;
 static const unsigned PushedRetAddr = 4;
 static const unsigned PushedFP = 16;
 static const unsigned StoredFP = 20;
+#elif defined(JS_CODEGEN_MIPS)
+static const unsigned PushedRetAddr = 8;
+static const unsigned PushedFP = 24;
+static const unsigned StoredFP = 28;
 #elif defined(JS_CODEGEN_NONE)
 static const unsigned PushedRetAddr = 0;
 static const unsigned PushedFP = 1;
@@ -294,7 +298,12 @@ js::GenerateAsmJSFunctionEpilogue(MacroAssembler &masm, unsigned framePushed,
         masm.bind(&labels->profilingJump);
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         masm.twoByteNop();
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_ARM)
+        masm.nop();
+#elif defined(JS_CODEGEN_MIPS)
+        masm.nop();
+        masm.nop();
+        masm.nop();
         masm.nop();
 #endif
     }
