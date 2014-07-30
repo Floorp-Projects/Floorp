@@ -397,18 +397,21 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
     }
 
     // This is a security wrapper. Use the security versions and filter.
-    if (xrayType == XrayForDOMObject)
-        return &FilteringWrapper<CrossOriginXrayWrapper,
+    if (xrayType == XrayForWrappedNative)
+        return &FilteringWrapper<SecurityXrayXPCWN,
                                  CrossOriginAccessiblePropertiesOnly>::singleton;
-
-    // There's never any reason to expose other objects to non-subsuming actors.
-    // Just use an opaque wrapper in these cases.
+    else if (xrayType == XrayForDOMObject)
+        return &FilteringWrapper<SecurityXrayDOM,
+                                 CrossOriginAccessiblePropertiesOnly>::singleton;
+    // There's never any reason to expose pure JS objects to non-subsuming actors.
+    // Just use an opaque wrapper in this case.
     //
     // In general, we don't want opaque function wrappers to be callable.
     // But in the case of XBL, we rely on content being able to invoke
     // functions exposed from the XBL scope. We could remove this exception,
     // if needed, by using ExportFunction to generate the content-side
     // representations of XBL methods.
+    MOZ_ASSERT(xrayType == XrayForJSObject || xrayType == XrayForOpaqueObject);
     if (originIsXBLScope)
         return &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
     return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
