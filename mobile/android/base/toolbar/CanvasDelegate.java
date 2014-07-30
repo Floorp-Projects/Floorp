@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.toolbar;
 
+import org.mozilla.gecko.AppConstants.Versions;
+
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -11,7 +13,6 @@ import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader;
-import android.os.Build;
 
 class CanvasDelegate {
     Paint mPaint;
@@ -50,7 +51,7 @@ class CanvasDelegate {
         if (path != null && !path.isEmpty()) {
             // ICS added double-buffering, which made it easier for drawing the Path directly over the DST.
             // In pre-ICS, drawPath() doesn't seem to use ARGB_8888 mode for performance, hence transparency is not preserved.
-            if (Build.VERSION.SDK_INT >= 14) {
+            if (Versions.feature14Plus) {
                 mPaint.setXfermode(mMode);
                 canvas.drawPath(path, mPaint);
             } else {

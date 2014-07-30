@@ -602,6 +602,7 @@ if CONFIG['MOZ_NFC']:
          'MozNFC.webidl',
          'MozNFCPeer.webidl',
          'MozNFCTag.webidl',
+         'NfcOptions.webidl',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':

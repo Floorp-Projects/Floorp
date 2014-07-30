@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(976d2074-cb40-41f7-a195-8feee42eaace)]
+interface nsINfcEventListener : nsISupports
+{
+  void onEvent(in jsval event);
+};
+
+[scriptable, uuid(0329e687-87ff-4cf5-8aa5-e876d9d4a375)]
+interface nsINfcService : nsISupports
+{
+  void start(in nsINfcEventListener listener);
+  void shutdown();
+
+  [implicit_jscontext]
+  void sendCommand(in jsval param);
+};

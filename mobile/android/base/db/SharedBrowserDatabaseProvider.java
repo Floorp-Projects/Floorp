@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.db;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
@@ -12,7 +13,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.os.Build;
 import android.util.Log;
 
 /**
@@ -50,7 +50,7 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
                 @Override
                 public BrowserDatabaseHelper makeDatabaseHelper(Context context, String databasePath) {
                     final BrowserDatabaseHelper helper = new BrowserDatabaseHelper(context, databasePath);
-                    if (Build.VERSION.SDK_INT >= 16) {
+                    if (Versions.feature16Plus) {
                         helper.setWriteAheadLoggingEnabled(true);
                     }
                     return helper;

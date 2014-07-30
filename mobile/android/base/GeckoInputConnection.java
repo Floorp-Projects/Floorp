@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.SynchronousQueue;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
@@ -18,7 +19,6 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.R;
 import android.content.Context;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -953,10 +953,10 @@ class GeckoInputConnection
         if (typeHint != null &&
             (typeHint.equalsIgnoreCase("date") ||
              typeHint.equalsIgnoreCase("time") ||
-             (Build.VERSION.SDK_INT >= 11 && (typeHint.equalsIgnoreCase("datetime") ||
-                                              typeHint.equalsIgnoreCase("month") ||
-                                              typeHint.equalsIgnoreCase("week") ||
-                                              typeHint.equalsIgnoreCase("datetime-local"))))) {
+             (Versions.feature11Plus && (typeHint.equalsIgnoreCase("datetime") ||
+                                         typeHint.equalsIgnoreCase("month") ||
+                                         typeHint.equalsIgnoreCase("week") ||
+                                         typeHint.equalsIgnoreCase("datetime-local"))))) {
             state = IME_STATE_DISABLED;
         }
 

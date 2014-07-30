@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
@@ -15,7 +16,6 @@ import android.content.ComponentCallbacks2;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.util.Log;
 
 /**
@@ -89,8 +89,8 @@ class MemoryMonitor extends BroadcastReceiver {
 
     public void onTrimMemory(int level) {
         Log.d(LOGTAG, "onTrimMemory() notification received with level " + level);
-        if (Build.VERSION.SDK_INT < 14) {
-            // this won't even get called pre-ICS
+        if (Versions.preICS) {
+            // This won't even get called pre-ICS.
             return;
         }
 

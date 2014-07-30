@@ -33,6 +33,8 @@ import android.net.Uri;
 import android.os.RemoteException;
 
 public class FennecTabsRepository extends Repository {
+  private static final String LOG_TAG = "FennecTabsRepository";
+
   protected final ClientsDataDelegate clientsDataDelegate;
 
   public FennecTabsRepository(ClientsDataDelegate clientsDataDelegate) {
@@ -350,5 +352,36 @@ public class FennecTabsRepository extends Repository {
     }
 
     return record;
+  }
+
+  /**
+   * Deletes all non-local clients and remote tabs.
+   *
+   * This function doesn't delete non-local clients due to bug in TabsProvider. Refer Bug 1025128.
+   *
+   * Upon remote tabs deletion, the clients without tabs are not shown in UI.
+   */
+  public static void deleteNonLocalClientsAndTabs(Context context) {
+    final String nonLocalTabsSelection = BrowserContract.Tabs.CLIENT_GUID + " IS NOT NULL";
+
+    ContentProviderClient tabsProvider = context.getContentResolver()
+            .acquireContentProviderClient(BrowserContractHelpers.TABS_CONTENT_URI);
+    if (tabsProvider == null) {
+        Logger.warn(LOG_TAG, "Unable to create tabsProvider!");
+        return;
+    }
+
+    try {
+      Logger.info(LOG_TAG, "Clearing all non-local tabs for default profile.");
+      tabsProvider.delete(BrowserContractHelpers.TABS_CONTENT_URI, nonLocalTabsSelection, null);
+    } catch (RemoteException e) {
+      Logger.warn(LOG_TAG, "Error while deleting", e);
+    } finally {
+      try {
+        tabsProvider.release();
+      } catch (Exception e) {
+        Logger.warn(LOG_TAG, "Got exception releasing tabsProvider!", e);
+      }
+    }
   }
 }

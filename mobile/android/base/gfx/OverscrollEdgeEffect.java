@@ -5,11 +5,12 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.AppConstants.Versions;
+
 import android.content.Context;
 import android.graphics.Canvas;
-import android.os.Build;
-import android.widget.EdgeEffect;
 import android.view.View;
+import android.widget.EdgeEffect;
 
 
 public class OverscrollEdgeEffect implements Overscroll {
@@ -57,7 +58,7 @@ public class OverscrollEdgeEffect implements Overscroll {
     }
 
     private void invalidate() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+        if (Versions.feature16Plus) {
             mView.postInvalidateOnAnimation();
         } else {
             mView.postInvalidateDelayed(10);
@@ -118,7 +119,7 @@ public class OverscrollEdgeEffect implements Overscroll {
         }
     }
 
-    public boolean draw(final EdgeEffect edge, final Canvas canvas, final float translateX, final float translateY, final float rotation) {
+    private static boolean draw(final EdgeEffect edge, final Canvas canvas, final float translateX, final float translateY, final float rotation) {
         final int state = canvas.save();
         canvas.translate(translateX, translateY);
         canvas.rotate(rotation);
