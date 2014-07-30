@@ -210,6 +210,15 @@ CrossOriginXrayWrapper::getOwnPropertyDescriptor(JSContext *cx,
     return getPropertyDescriptor(cx, wrapper, id, desc);
 }
 
+bool
+CrossOriginXrayWrapper::getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                                       JS::MutableHandleObject protop) const
+{
+    // Cross-origin objects have null prototypes.
+    protop.set(nullptr);
+    return true;
+}
+
 #define XOW FilteringWrapper<CrossOriginXrayWrapper, CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define NNXOWC FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>
