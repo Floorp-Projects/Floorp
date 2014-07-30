@@ -45,7 +45,7 @@ Filter(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
 
 template <typename Policy>
 static bool
-FilterPropertyDescriptor(JSContext *cx, JSObject *wrapper, HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
+FilterPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     bool getAllowed = Policy::check(cx, wrapper, id, Wrapper::GET);
