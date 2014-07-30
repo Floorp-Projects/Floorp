@@ -165,31 +165,23 @@ operator==(const FontFamilyName& a, const FontFamilyName& b) {
     return a.mType == b.mType && a.mName == b.mName;
 }
 
-class FontFamilyList;
-
-template<>
-struct HasDangerousPublicDestructor<FontFamilyList>
-{
-  static const bool value = true;
-};
-
 /**
  * font family list, array of font families and a default font type.
  * font family names are either named strings or generics. the default
  * font type is used to preserve the variable font fallback behavior
  */ 
 
-class FontFamilyList MOZ_FINAL {
+class FontFamilyList {
 public:
-    FontFamilyList() : mDefaultFontType(eFamily_none) {
-        MOZ_COUNT_CTOR(FontFamilyList);
+    FontFamilyList()
+        : mDefaultFontType(eFamily_none)
+    {
     }
 
     FontFamilyList(FontFamilyType aGenericType)
         : mDefaultFontType(eFamily_none)
     {
         Append(FontFamilyName(aGenericType));
-        MOZ_COUNT_CTOR(FontFamilyList);
     }
 
     FontFamilyList(const nsAString& aFamilyName,
@@ -197,17 +189,12 @@ public:
         : mDefaultFontType(eFamily_none)
     {
         Append(FontFamilyName(aFamilyName, aQuoted));
-        MOZ_COUNT_CTOR(FontFamilyList);
     }
 
     FontFamilyList(const FontFamilyList& aOther)
-        : mFontlist(aOther.mFontlist), mDefaultFontType(aOther.mDefaultFontType)
+        : mFontlist(aOther.mFontlist)
+        , mDefaultFontType(aOther.mDefaultFontType)
     {
-        MOZ_COUNT_CTOR(FontFamilyList);
-    }
-
-    ~FontFamilyList() {
-        MOZ_COUNT_DTOR(FontFamilyList);
     }
 
     void Append(const FontFamilyName& aFamilyName) {
@@ -309,8 +296,6 @@ public:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
         return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
     }
-
-    NS_INLINE_DECL_REFCOUNTING(FontFamilyList)
 
 private:
     nsTArray<FontFamilyName>   mFontlist;
