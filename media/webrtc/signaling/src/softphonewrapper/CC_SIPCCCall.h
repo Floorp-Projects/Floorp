@@ -17,8 +17,6 @@ typedef struct Timecard Timecard;
 
 #include "common/Wrapper.h"
 #include "common/csf_common.h"
-#include "mozilla/Mutex.h"
-#include "base/lock.h"
 
 namespace CSF
 {
@@ -38,21 +36,18 @@ namespace CSF
         NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_SIPCCCallMediaData)
 		CC_SIPCCCallMediaData():
           remoteWindow(nullptr),
-          streamMapMutex("CC_SIPCCCallMediaData"),
           audioMuteState(false),
           videoMuteState(false),
           volume(-1){}
 		CC_SIPCCCallMediaData(VideoWindowHandle remoteWindow,
             bool audioMuteState, bool videoMuteState, int volume):
           remoteWindow(remoteWindow),
-          streamMapMutex("CC_SIPCCCallMediaData"),
           audioMuteState(audioMuteState),
           videoMuteState(videoMuteState),
           volume(volume) {}
         VideoWindowHandle remoteWindow;
 		ExternalRendererHandle extRenderer;
 		VideoFormat videoFormat;
-        mozilla::Mutex streamMapMutex;
         StreamMapType streamMap;
         bool audioMuteState;
         bool videoMuteState;
@@ -135,8 +130,6 @@ namespace CSF
     private:
         virtual bool setAudioMute(bool mute);
         virtual bool setVideoMute(bool mute);
-
-        mozilla::Mutex m_lock;
     };
 
 }

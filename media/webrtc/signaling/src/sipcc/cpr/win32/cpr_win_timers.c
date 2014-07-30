@@ -49,9 +49,6 @@ static uint32_t removed_count;  /* Number of timers removed. */
 static uint32_t inserted_count; /* Number of timers inserted. */
 static uint32_t cpr_timer_init; /* Bool indicating the timer system is initialized */
 
-cprMsgQueue_t tmr_msgq;
-cprThread_t tmr_thread;
-
 
 /*
  * Internal CPR function to fill in data in the sysheader.
@@ -533,73 +530,6 @@ cpr_timer_expired (void)
 void
 cpr_timer_event_process (void)
 {
-    unsigned int now;           /* Current time */
-    cprTimerBlk *timer;         /* User to traverse timer list */
-    cprCallBackTimerMsg_t *timerMsg;
-    void *syshdr;
-
-    cprDisableSwap();
-
-    now = current_time();
-
-    timer = cprTimerPendingList;
-
-    while (timer != NULL) {
-        if (timer->expiration_time <= now) {
-
-            /* Timer has expired. */
-
-            timer_remove(timer);    /* Remove from active list */
-            timer->flags &= ~TIMER_ACTIVE;
-
-            expired_count++;    /* Debug counter */
-
-            cprEnableSwap();
-
-            /* Send msg to queue to indicate this timer has expired */
-            timerMsg = (cprCallBackTimerMsg_t *)
-                    cpr_malloc(sizeof (cprCallBackTimerMsg_t));
-            if (timerMsg) {
-                timerMsg->expiredTimerName = timer->name;
-                timerMsg->expiredTimerId = timer->applicationTimerId;
-                timerMsg->usrData = timer->data;
-                syshdr = cprGetSysHeader(timerMsg);
-                if (syshdr) {
-                    fillInSysHeader(syshdr, timer->applicationMsgId,
-                                    sizeof(cprCallBackTimerMsg_t), timerMsg);
-                    if (cprSendMessage(timer->callBackMsgQueue,
-                            timerMsg, (void **) &syshdr) == CPR_FAILURE) {
-                        cprReleaseSysHeader(syshdr);
-                        cpr_free(timerMsg);
-                        CPR_ERROR("Call to cprSendMessage failed.\n");
-                        CPR_ERROR("Unable to send timer %s expiration msg.\n",
-                                  timer->name);
-                    }
-                } else {
-                    cpr_free(timerMsg);
-                    CPR_ERROR("Call to cprGetSysHeader failed.\n");
-                    CPR_ERROR("Unable to send timer %s expiration msg.\n",
-                              timer->name);
-                }
-            } else {
-                CPR_ERROR("Call to cpr_malloc failed.\n");
-                CPR_ERROR("Unable to send timer %s expiration msg.\n",
-                          timer->name);
-            }
-
-            cprDisableSwap();
-
-            /* Timer expiration function may have manipulated the
-             * timer list.  Need to start over at front of timer list looking
-             * for expired timers.
-             */
-            timer = cprTimerPendingList;    /* Start at front of list */
-        } else {
-            /* No more expired timers. Bail */
-            break;
-        }
-    }
-    cprEnableSwap();
 }
 
 
@@ -621,18 +551,6 @@ cpr_timer_event_process (void)
 void
 cpr_timer_tick (void)
 {
-
-    /* windows is driving this at a 20ms rate */
-    ticker += 20;
-    if (cpr_timer_init) {
-        /* Only kick the timer task if there is a timer which
-         * has expired and ready to be processed.
-         */
-        if (cpr_timer_expired()) {
-            /* Timer task is initialized and we have an expired timer...Kick it. */
-            cprSendMessage(tmr_msgq, tmr_msg, NULL);
-        }
-    }
 }
 
 
@@ -657,42 +575,6 @@ current_time (void)
 
 
 /*------------------------------------------------------------------------------
- *  NAME:        CPRTMRTask()
- *
- *  PARAMETERS:
- *   None.
- *
- *  RETURNS:
- *   SUCCESS
- *
- *  DESCRIPTION:
- *   This is the windows version of the CPR timer task
- *
- *----------------------------------------------------------------------------*/
-int32_t
-CPRTMRTask (void *data)
-{
-    void *msg;
-
-    while (cpr_timer_init) {
-        /* Wait for tick */
-        msg = cprGetMessage(tmr_msgq, TRUE, NULL);
-        if (msg) {
-            /*
-             * No need to free the msg here as the only msg
-             * sent to the timer task is a static string to
-             * wake it up.
-             */
-            cpr_timer_event_process();
-        }
-    }
-    return (CPR_SUCCESS);
-}
-
-
-
-
-/*------------------------------------------------------------------------------
  *  NAME:        cprTimerSystemInit()
  *
  *  PARAMETERS:
@@ -712,21 +594,12 @@ cprTimerSystemInit (void)
     /* Create timer lists and free buffer pool */
     cprTimerPendingList = NULL;
 
-    tmr_msgq = cprCreateMessageQueue("TMRQ", 0);
-
     expired_count = 0;
     removed_count = 0;
     inserted_count = 0;
 
     ticker = 0;
     cpr_timer_init = 1;
-
-    tmr_thread = cprCreateThread("CprTmrTsk", (cprThreadStartRoutine)CPRTMRTask,
-                                 CPRTMR_STK, CPRTMR_PRIO, NULL);
-    if (!tmr_thread) {
-        CPR_ERROR("Failed to create CPR Timer Task");
-    }
-    cprSetMessageQueueThread(tmr_msgq, tmr_thread);
 
     //    bind_show_keyword("timers", display_active_timers);
 }
@@ -736,7 +609,4 @@ void
 cpr_timer_stop (void)
 {
     cpr_timer_init = 0;
-    /* Kick timer to wake it up */
-    cprSendMessage(tmr_msgq, tmr_msg, NULL);
-    cprDestroyThread(tmr_thread);
 }

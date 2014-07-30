@@ -1785,8 +1785,6 @@ PeerConnectionImpl::Close()
 
   nsresult res = CloseInt();
 
-  SetSignalingState_m(PCImplSignalingState::SignalingClosed);
-
   return res;
 }
 
@@ -1868,18 +1866,23 @@ PeerConnectionImpl::CloseInt()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
+  if (IsClosed()) {
+    return NS_OK;
+  }
+
+  SetSignalingState_m(PCImplSignalingState::SignalingClosed);
+
   // We do this at the end of the call because we want to make sure we've waited
   // for all trickle ICE candidates to come in; this can happen well after we've
   // transitioned to connected. As a bonus, this allows us to detect race
   // conditions where a stats dispatch happens right as the PC closes.
-  if (!IsClosed()) {
-    RecordLongtermICEStatistics();
-  }
+  RecordLongtermICEStatistics();
 
   if (mInternal->mCall) {
     CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
                "ending call", __FUNCTION__, mHandle.c_str());
     mInternal->mCall->endCall();
+    mInternal->mCall = nullptr;
   }
 #ifdef MOZILLA_INTERNAL_API
   if (mDataConnection) {
@@ -2179,7 +2182,7 @@ SendEndOfCandidatesImpl(nsWeakPtr weakPCObserver) {
 void
 PeerConnectionImpl::SendEndOfCandidates() {
   // We dispatch this because real candidates do a dispatch in
-  // PeerConnection::onCallEvent, and we don't want this to jump ahead.
+  // PeerConnectionImpl::onCallEvent, and we don't want this to jump ahead.
   NS_DispatchToMainThread(
       WrapRunnableNM(&SendEndOfCandidatesImpl, mPCObserver),
       NS_DISPATCH_NORMAL);
