@@ -154,14 +154,12 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
     if (act == Wrapper::CALL)
         return false;
 
+    if (act == Wrapper::ENUMERATE)
+        return true;
+
     RootedId id(cx, idArg);
     RootedObject wrapper(cx, wrapperArg);
     RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
-
-    // For XOWs, we generally want to deny enumerate-like operations, but fail
-    // silently (see CrossOriginAccessiblePropertiesOnly::deny).
-    if (act == Wrapper::ENUMERATE)
-        return false;
 
     const char *name;
     const js::Class *clasp = js::GetObjectClass(obj);
