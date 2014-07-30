@@ -1812,7 +1812,7 @@ nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
     return;
   }
 
-  mozilla::Version version = javaVersion.get();
+  mozilla::Version version(javaVersion.get());
 
   if (version >= "1.7.0.4") {
     return;
