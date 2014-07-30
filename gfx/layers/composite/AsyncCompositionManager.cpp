@@ -509,9 +509,9 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 }
 
 Matrix4x4
-AdjustAndCombineWithCSSTransform(const Matrix4x4& asyncTransform, Layer* aLayer)
+AdjustAndCombineWithCSSTransform(const gfx3DMatrix& asyncTransform, Layer* aLayer)
 {
-  Matrix4x4 result = asyncTransform;
+  Matrix4x4 result = ToMatrix4x4(asyncTransform);
 
   // Container layers start at the origin, but they are clipped to where they
   // actually have content on the screen. The tree transform is meant to apply
@@ -675,11 +675,9 @@ ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer
     apzc->SampleContentTransformForFrame(aCurrentFrame, &asyncTransform, scrollOffset);
   }
 
-  Matrix4x4 asyncTransform = apzc->GetCurrentAsyncTransform();
-  Matrix4x4 nontransientTransform = apzc->GetNontransientAsyncTransform();
-  Matrix4x4 nontransientUntransform = nontransientTransform;
-  nontransientUntransform.Invert();
-  Matrix4x4 transientTransform = asyncTransform * nontransientUntransform;
+  gfx3DMatrix asyncTransform = gfx3DMatrix(apzc->GetCurrentAsyncTransform());
+  gfx3DMatrix nontransientTransform = apzc->GetNontransientAsyncTransform();
+  gfx3DMatrix transientTransform = asyncTransform * nontransientTransform.Inverse();
 
   // |transientTransform| represents the amount by which we have scrolled and
   // zoomed since the last paint. Because the scrollbar was sized and positioned based
@@ -697,12 +695,12 @@ ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer
   Matrix4x4 scrollbarTransform;
   if (aScrollbar->GetScrollbarDirection() == Layer::VERTICAL) {
     float scale = metrics.CalculateCompositedSizeInCssPixels().height / metrics.mScrollableRect.height;
-    scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f, 1.f / transientTransform._22, 1.f);
+    scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f, 1.f / transientTransform.GetYScale(), 1.f);
     scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(0, -transientTransform._42 * scale, 0);
   }
   if (aScrollbar->GetScrollbarDirection() == Layer::HORIZONTAL) {
     float scale = metrics.CalculateCompositedSizeInCssPixels().width / metrics.mScrollableRect.width;
-    scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f / transientTransform._11, 1.f, 1.f);
+    scrollbarTransform = scrollbarTransform * Matrix4x4().Scale(1.f / transientTransform.GetXScale(), 1.f, 1.f);
     scrollbarTransform = scrollbarTransform * Matrix4x4().Translate(-transientTransform._41 * scale, 0, 0);
   }
 
@@ -714,8 +712,7 @@ ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer
     // the content. This is needed because otherwise that transient async transform is
     // part of the effective transform of this scrollbar, and the scrollbar will jitter
     // as the content scrolls.
-    transientTransform.Invert();
-    transform = transform * transientTransform;
+    transform = transform * ToMatrix4x4(transientTransform.Inverse());
   }
 
   // GetTransform already takes the pre- and post-scale into account.  Since we
@@ -783,7 +780,10 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   const FrameMetrics& metrics = container->GetFrameMetrics();
   // We must apply the resolution scale before a pan/zoom transform, so we call
   // GetTransform here.
+  gfx3DMatrix currentTransform = To3DMatrix(aLayer->GetTransform());
   Matrix4x4 oldTransform = aLayer->GetTransform();
+
+  gfx3DMatrix treeTransform;
 
   CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel();
 
@@ -842,22 +842,22 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   }
 
   LayerPoint translation = (userScroll / zoomAdjust) - geckoScroll;
-  Matrix4x4 treeTransform = ViewTransform(-translation,
+  treeTransform = gfx3DMatrix(ViewTransform(-translation,
                                             userZoom
                                           / metrics.mDevPixelsPerCSSPixel
-                                          / metrics.GetParentResolution());
+                                          / metrics.GetParentResolution()));
 
   // The transform already takes the resolution scale into account.  Since we
   // will apply the resolution scale again when computing the effective
   // transform, we must apply the inverse resolution scale here.
-  Matrix4x4 computedTransform = treeTransform * oldTransform;
+  gfx3DMatrix computedTransform = treeTransform * currentTransform;
   computedTransform.Scale(1.0f/container->GetPreXScale(),
                           1.0f/container->GetPreYScale(),
                           1);
   computedTransform.ScalePost(1.0f/container->GetPostXScale(),
                               1.0f/container->GetPostYScale(),
                               1);
-  layerComposite->SetShadowTransform(computedTransform);
+  layerComposite->SetShadowTransform(ToMatrix4x4(computedTransform));
   NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
                "overwriting animated transform!");
 

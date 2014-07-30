@@ -24,14 +24,14 @@ static gfx::Matrix4x4 GetRootTransform(Layer *aLayer) {
   return layerTrans;
 }
 
-void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx::Matrix4x4 aRootTransform, bool aReset) {
+void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx3DMatrix aRootTransform, bool aReset) {
   if (!aLayer)
     return;
 
-  gfx::Matrix4x4 trans = aRootTransform * aLayer->GetTransform();
+  gfx3DMatrix trans = aRootTransform * aLayer->GetTransform();
   trans.ProjectTo2D();
   nsIntRect clipRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
-  Rect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+  gfxRect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
   trans.TransformBounds(rect);
 
   if (strcmp(aLayer->Name(), "ContainerLayer") != 0 &&

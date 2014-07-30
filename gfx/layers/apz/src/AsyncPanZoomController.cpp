@@ -129,8 +129,6 @@ namespace layers {
 
 typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
 typedef GeckoContentController::APZStateChange APZStateChange;
-typedef mozilla::gfx::Point Point;
-typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 
 /*
  * The following prefs are used to control the behaviour of the APZC.
@@ -1294,10 +1292,10 @@ AsyncPanZoomController::ConvertToGecko(const ScreenPoint& aPoint, CSSPoint* aOut
 {
   APZCTreeManager* treeManagerLocal = mTreeManager;
   if (treeManagerLocal) {
-    Matrix4x4 transformToApzc;
-    Matrix4x4 transformToGecko;
+    gfx3DMatrix transformToApzc;
+    gfx3DMatrix transformToGecko;
     treeManagerLocal->GetInputTransforms(this, transformToApzc, transformToGecko);
-    Point result = transformToGecko * Point(aPoint.x, aPoint.y);
+    gfxPoint result = transformToGecko.Transform(gfxPoint(aPoint.x, aPoint.y));
     // NOTE: This isn't *quite* LayoutDevicePoint, we just don't have a name
     // for this coordinate space and it maps the closest to LayoutDevicePoint.
     LayoutDevicePoint layoutPoint = LayoutDevicePoint(result.x, result.y);
@@ -2301,20 +2299,20 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
                      / mFrameMetrics.GetParentResolution());
 }
 
-Matrix4x4 AsyncPanZoomController::GetNontransientAsyncTransform() {
+gfx3DMatrix AsyncPanZoomController::GetNontransientAsyncTransform() {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  return Matrix4x4().Scale(mLastContentPaintMetrics.mResolution.scale,
-                           mLastContentPaintMetrics.mResolution.scale,
-                           1.0f);
+  return gfx3DMatrix::ScalingMatrix(mLastContentPaintMetrics.mResolution.scale,
+                                    mLastContentPaintMetrics.mResolution.scale,
+                                    1.0f);
 }
 
-Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() {
+gfx3DMatrix AsyncPanZoomController::GetTransformToLastDispatchedPaint() {
   ReentrantMonitorAutoEnter lock(mMonitor);
   LayerPoint scrollChange = (mLastContentPaintMetrics.GetScrollOffset() - mLastDispatchedPaintMetrics.GetScrollOffset())
                           * mLastContentPaintMetrics.LayersPixelsPerCSSPixel();
   float zoomChange = mLastContentPaintMetrics.GetZoom().scale / mLastDispatchedPaintMetrics.GetZoom().scale;
-  return Matrix4x4().Translate(scrollChange.x, scrollChange.y, 0) *
-         Matrix4x4().Scale(zoomChange, zoomChange, 1);
+  return gfx3DMatrix::Translation(scrollChange.x, scrollChange.y, 0) *
+         gfx3DMatrix::ScalingMatrix(zoomChange, zoomChange, 1);
 }
 
 void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {
@@ -2856,16 +2854,16 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
 ParentLayerPoint AsyncPanZoomController::ToParentLayerCoords(const ScreenPoint& aPoint)
 {
-  return TransformTo<ParentLayerPixel>(To3DMatrix(GetNontransientAsyncTransform() * GetCSSTransform()), aPoint);
+  return TransformTo<ParentLayerPixel>(GetNontransientAsyncTransform() * GetCSSTransform(), aPoint);
 }
 
 void AsyncPanZoomController::UpdateTransformScale()
 {
-  Matrix4x4 nontransientTransforms = GetNontransientAsyncTransform() * GetCSSTransform();
-  if (!FuzzyEqualsMultiplicative(nontransientTransforms._11, nontransientTransforms._22)) {
+  gfx3DMatrix nontransientTransforms = GetNontransientAsyncTransform() * GetCSSTransform();
+  if (!FuzzyEqualsMultiplicative(nontransientTransforms.GetXScale(), nontransientTransforms.GetYScale())) {
     NS_WARNING("The x- and y-scales of the nontransient transforms should be equal");
   }
-  mFrameMetrics.mTransformScale.scale = nontransientTransforms._11;
+  mFrameMetrics.mTransformScale.scale = nontransientTransforms.GetXScale();
 }
 
 }
