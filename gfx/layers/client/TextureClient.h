@@ -90,6 +90,27 @@ public:
 };
 
 /**
+ * This class may be used to asynchronously receive an update when the content
+ * drawn to this texture client is available for reading in CPU memory. This
+ * can only be used on texture clients that support draw target creation.
+ */
+class TextureReadbackSink
+{
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureReadbackSink)
+public:
+  /**
+   * Callback function to implement in order to receive a DataSourceSurface
+   * containing the data read back from the texture client. This will always
+   * be called on the main thread, and this may not hold on to the
+   * DataSourceSurface beyond the execution of this function.
+   */
+  virtual void ProcessReadback(gfx::DataSourceSurface *aSourceSurface) = 0;
+
+protected:
+  virtual ~TextureReadbackSink() {}
+};
+
+/**
  * TextureClient is a thin abstraction over texture data that need to be shared
  * between the content process and the compositor process. It is the
  * content-side half of a TextureClient/TextureHost pair. A corresponding
@@ -373,6 +394,15 @@ public:
      mWasteTracker.Update(aWasteArea, BytesPerPixel(GetFormat()));
    }
 
+   /**
+    * This sets the readback sink that this texture is to use. This will
+    * receive the data for this texture as soon as it becomes available after
+    * texture unlock.
+    */
+   virtual void SetReadbackSink(TextureReadbackSink* aReadbackSink) {
+     mReadbackSink = aReadbackSink;
+   }
+
 private:
   /**
    * Called once, just before the destructor.
@@ -420,6 +450,8 @@ protected:
   gl::GfxTextureWasteTracker mWasteTracker;
   bool mShared;
   bool mValid;
+
+  RefPtr<TextureReadbackSink> mReadbackSink;
 
   friend class TextureChild;
   friend class RemoveTextureFromCompositableTracker;
