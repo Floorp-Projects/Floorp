@@ -26,6 +26,7 @@
         android:background="@color/global_background_color"
         android:divider="@null"
         android:dividerHeight="0dp"
+        android:listSelector="@android:color/transparent"
         android:visibility="gone"/>
 
 </LinearLayout>
