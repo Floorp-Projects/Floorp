@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 autoindent cindent expandtab: */
 // Copyright (c) 2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -18,6 +20,13 @@
 #include "base/logging.h"
 #include "base/string_tokenizer.h"
 #include "base/string_util.h"
+#include "nsLiteralString.h"
+
+#ifdef MOZ_B2G_LOADER
+#include "ProcessUtils.h"
+
+using namespace mozilla::ipc;
+#endif	// MOZ_B2G_LOADER
 
 #ifdef MOZ_WIDGET_GONK
 /*
@@ -188,12 +197,71 @@ bool LaunchApp(const std::vector<std::string>& argv,
                    wait, process_handle);
 }
 
+#ifdef MOZ_B2G_LOADER
+/**
+ * Launch an app using B2g Loader.
+ */
+static bool
+LaunchAppProcLoader(const std::vector<std::string>& argv,
+                    const file_handle_mapping_vector& fds_to_remap,
+                    const environment_map& env_vars_to_set,
+                    ChildPrivileges privs,
+                    ProcessHandle* process_handle) {
+  size_t i;
+  scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
+  for (i = 0; i < argv.size(); i++) {
+    argv_cstr[i] = const_cast<char*>(argv[i].c_str());
+  }
+  argv_cstr[argv.size()] = nullptr;
+
+  scoped_array<char*> env_cstr(new char*[env_vars_to_set.size() + 1]);
+  i = 0;
+  for (environment_map::const_iterator it = env_vars_to_set.begin();
+       it != env_vars_to_set.end(); ++it) {
+    env_cstr[i++] = strdup((it->first + "=" + it->second).c_str());
+  }
+  env_cstr[env_vars_to_set.size()] = nullptr;
+
+  bool ok = ProcLoaderLoad((const char **)argv_cstr.get(),
+                           (const char **)env_cstr.get(),
+                           fds_to_remap, privs,
+                           process_handle);
+  MOZ_ASSERT(ok, "ProcLoaderLoad() failed");
+
+  for (size_t i = 0; i < env_vars_to_set.size(); i++) {
+    free(env_cstr[i]);
+  }
+
+  return ok;
+}
+
+static bool
+IsLaunchingNuwa(const std::vector<std::string>& argv) {
+  std::vector<std::string>::const_iterator it;
+  for (it = argv.begin(); it != argv.end(); ++it) {
+    if (*it == std::string("-nuwa")) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif // MOZ_B2G_LOADER
+
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                const environment_map& env_vars_to_set,
                ChildPrivileges privs,
                bool wait, ProcessHandle* process_handle,
                ProcessArchitecture arch) {
+#ifdef MOZ_B2G_LOADER
+  static bool beforeFirstNuwaLaunch = true;
+  if (!wait && beforeFirstNuwaLaunch && IsLaunchingNuwa(argv)) {
+    beforeFirstNuwaLaunch = false;
+    return LaunchAppProcLoader(argv, fds_to_remap, env_vars_to_set,
+                               privs, process_handle);
+  }
+#endif // MOZ_B2G_LOADER
+
   scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
   // Illegal to allocate memory after fork and before execvp
   InjectiveMultimap fd_shuffle1, fd_shuffle2;
