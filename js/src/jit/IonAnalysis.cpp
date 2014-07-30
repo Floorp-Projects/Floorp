@@ -204,6 +204,13 @@ MaybeFoldConditionBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     if (testBlock->numPredecessors() != 2)
         return;
 
+    if (initialBlock->isLoopBackedge() || trueBranch->isLoopBackedge() || falseBranch->isLoopBackedge())
+        return;
+
+    // Make sure the test block does not have any outgoing loop backedges.
+    if (!SplitCriticalEdgesForBlock(graph, testBlock))
+        CrashAtUnhandlableOOM("MaybeFoldConditionBlock");
+
     MPhi *phi;
     MTest *finalTest;
     if (!BlockIsSingleTest(testBlock, &phi, &finalTest))
@@ -273,14 +280,6 @@ MaybeFoldConditionBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     finalTest->ifTrue()->removePredecessor(testBlock);
     finalTest->ifFalse()->removePredecessor(testBlock);
     graph.removeBlock(testBlock);
-
-    // Split any new critical edges which were introduced.
-    if (!SplitCriticalEdgesForBlock(graph, initialBlock) ||
-        (trueTarget == trueBranch && !SplitCriticalEdgesForBlock(graph, trueBranch)) ||
-        (falseTarget == falseBranch && !SplitCriticalEdgesForBlock(graph, falseBranch)))
-    {
-        CrashAtUnhandlableOOM("MaybeFoldConditionBlock");
-    }
 }
 
 static void
@@ -322,6 +321,13 @@ MaybeFoldAndOrBlock(MIRGraph &graph, MBasicBlock *initialBlock)
         return;
     if (branchBlock->numPredecessors() != 1 || testBlock->numPredecessors() != 2)
         return;
+
+    if (initialBlock->isLoopBackedge() || branchBlock->isLoopBackedge())
+        return;
+
+    // Make sure the test block does not have any outgoing loop backedges.
+    if (!SplitCriticalEdgesForBlock(graph, testBlock))
+        CrashAtUnhandlableOOM("MaybeFoldAndOrBlock");
 
     MPhi *phi;
     MTest *finalTest;
@@ -366,13 +372,6 @@ MaybeFoldAndOrBlock(MIRGraph &graph, MBasicBlock *initialBlock)
     finalTest->ifTrue()->removePredecessor(testBlock);
     finalTest->ifFalse()->removePredecessor(testBlock);
     graph.removeBlock(testBlock);
-
-    // Split any new critical edges which were introduced.
-    if (!SplitCriticalEdgesForBlock(graph, initialBlock) ||
-        !SplitCriticalEdgesForBlock(graph, branchBlock))
-    {
-        CrashAtUnhandlableOOM("MaybeFoldConditionBlock");
-    }
 }
 
 void

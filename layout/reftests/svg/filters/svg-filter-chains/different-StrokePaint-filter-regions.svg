@@ -1,0 +1,43 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg id="svg-root"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+
+  <g id="testmeta">
+    <title>SVG Filter Chains: Use Same StrokePaint Input with Different Filter Regions</title>
+    <link rel="copyright"
+          href="http://www.w3.org/Graphics/SVG/Test/Copyright"/>
+    <link rel="license"
+          href="http://www.w3.org/Consortium/Legal/2008/03-bsd-license.html"/>
+    <link rel="author"
+          title="Max Vujovic"
+          href="mailto:mvujovic@adobe.com"/>
+    <link rel="help"
+          href="http://dev.w3.org/fxtf/filters/#FilterPrimitiveSubRegion"/>
+    <link rel="match"
+          href="different-StrokePaint-filter-regions-ref.svg" />
+    <metadata class="flags">namespace svg</metadata>
+    <desc class="assert">
+      In an SVG filter chain, this test verifies that a StrokePaint input is large
+      enough to cover the largest filter region in the chain. If the test
+      passes, you should see a green square.
+    </desc>
+  </g>
+
+  <g id="test-body-content">
+    <!-- Use a small filter region. -->
+    <filter id="f1" x="0" y="0" width="100" height="100" filterUnits="userSpaceOnUse">
+      <!-- Turn the red square into a blue square. -->
+      <feColorMatrix in="StrokePaint" type="hueRotate" values="180"/>
+    </filter>
+    <!-- Use a large filter region. -->
+    <filter id="f2" x="0" y="0" width="200" height="200" filterUnits="userSpaceOnUse">
+      <!-- Turn the red square into a green square. -->
+      <feColorMatrix in="StrokePaint" type="hueRotate" values="90"/>
+    </filter>
+    <rect x="0" y="0" width="100" height="100" filter="url(#f1) url(#f2)" stroke="red"/>
+  </g>
+</svg>
