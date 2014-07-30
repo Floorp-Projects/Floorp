@@ -13,10 +13,15 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla += [
+    'CDMCallbackProxy.h',
+    'CDMCaps.h',
     'CDMProxy.h',
+    'EMELog.h'
 ]
 
 UNIFIED_SOURCES += [
+    'CDMCallbackProxy.cpp',
+    'CDMCaps.cpp',
     'CDMProxy.cpp',
     'EMELog.cpp',
     'MediaKeyError.cpp',
