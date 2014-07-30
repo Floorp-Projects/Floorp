@@ -4,15 +4,16 @@
 
 package org.mozilla.gecko.menu;
 
-import org.mozilla.gecko.R;
+import java.io.IOException;
 
+import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.R;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.content.res.XmlResourceParser;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Xml;
 import android.view.InflateException;
@@ -21,18 +22,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.SubMenu;
 
-import java.io.IOException;
-
-public class GeckoMenuInflater extends MenuInflater { 
-    private static final String LOGTAG = "GeckoMenuInflater";
-
+public class GeckoMenuInflater extends MenuInflater {
     private static final String TAG_MENU = "menu";
     private static final String TAG_ITEM = "item";
     private static final int NO_ID = 0;
 
-    private Context mContext;
+    private final Context mContext;
 
-    // Private class to hold the parsed menu item. 
+    // Private class to hold the parsed menu item.
     private class ParsedItem {
         public int id;
         public int order;
@@ -73,16 +70,16 @@ public class GeckoMenuInflater extends MenuInflater {
         }
     }
 
-    private void parseMenu(XmlResourceParser parser, AttributeSet attrs, Menu menu) 
+    private void parseMenu(XmlResourceParser parser, AttributeSet attrs, Menu menu)
                            throws XmlPullParserException, IOException {
         ParsedItem item = null;
-   
+
         String tag;
         int eventType = parser.getEventType();
 
         do {
             tag = parser.getName();
-    
+
             switch (eventType) {
                 case XmlPullParser.START_TAG:
                     if (tag.equals(TAG_ITEM)) {
@@ -136,12 +133,13 @@ public class GeckoMenuInflater extends MenuInflater {
         item.enabled = a.getBoolean(R.styleable.MenuItem_android_enabled, true);
         item.hasSubMenu = false;
 
-        if (Build.VERSION.SDK_INT >= 11)
+        if (Versions.feature11Plus) {
             item.showAsAction = a.getInt(R.styleable.MenuItem_android_showAsAction, 0);
+        }
 
         a.recycle();
     }
-        
+
     public void setValues(ParsedItem item, MenuItem menuItem) {
         menuItem.setChecked(item.checked)
                 .setVisible(item.visible)
@@ -149,7 +147,8 @@ public class GeckoMenuInflater extends MenuInflater {
                 .setCheckable(item.checkable)
                 .setIcon(item.iconRes);
 
-        if (Build.VERSION.SDK_INT >= 11)
+        if (Versions.feature11Plus) {
             menuItem.setShowAsAction(item.showAsAction);
+        }
     }
 }

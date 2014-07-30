@@ -7,6 +7,7 @@ package org.mozilla.gecko.preferences;
 
 import java.util.Locale;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.LocaleManager;
@@ -18,7 +19,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
@@ -108,7 +108,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
         }
 
         final PreferenceActivity activity = (PreferenceActivity) getActivity();
-        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) && activity.isMultiPane()) {
+        if (Versions.feature11Plus && activity.isMultiPane()) {
             // In a multi-pane activity, the title is "Settings", and the action
             // bar is along the top of the screen. We don't want to change those.
             activity.showBreadCrumbs(newTitle, newTitle);
@@ -118,7 +118,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
         Log.v(LOGTAG, "Setting activity title to " + newTitle);
         activity.setTitle(newTitle);
 
-        if (Build.VERSION.SDK_INT >= 14) {
+        if (Versions.feature14Plus) {
             final ActionBar actionBar = activity.getActionBar();
             if (actionBar != null) {
                 actionBar.setTitle(newTitle);
@@ -175,7 +175,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             // The resource was invalid. Use the default resource.
             Log.e(LOGTAG, "Failed to find resource: " + resourceName + ". Displaying default settings.");
 
-            boolean isMultiPane = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) &&
+            boolean isMultiPane = Versions.feature11Plus &&
                                   ((PreferenceActivity) activity).isMultiPane();
             resid = isMultiPane ? R.xml.preferences_customize_tablet : R.xml.preferences;
         }

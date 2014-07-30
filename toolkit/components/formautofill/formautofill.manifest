@@ -1,2 +1,7 @@
 component {ed9c2c3c-3f86-4ae5-8e31-10f71b0f19e6} FormAutofillContentService.js
 contract @mozilla.org/formautofill/content-service;1 {ed9c2c3c-3f86-4ae5-8e31-10f71b0f19e6}
+component {51c95b3d-7431-467b-8d50-383f158ce9e5} FormAutofillStartup.js
+contract @mozilla.org/formautofill/startup;1 {51c95b3d-7431-467b-8d50-383f158ce9e5}
+#ifdef NIGHTLY_BUILD
+category profile-after-change FormAutofillStartup @mozilla.org/formautofill/startup;1
+#endif
