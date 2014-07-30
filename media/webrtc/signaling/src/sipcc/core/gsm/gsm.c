@@ -27,7 +27,6 @@
 #include "kpmlmap.h"
 #include "subapi.h"
 #include "platform_api.h"
-#include "thread_monitor.h"
 
 static void sub_process_feature_msg(uint32_t cmd, void *msg);
 static void sub_process_feature_notify(ccsip_sub_not_data_t *msg, callid_t call_id,
@@ -45,7 +44,6 @@ extern void dcsm_shutdown(void);
 /* Flag to see whether we can start processing events */
 
 static boolean gsm_initialized = FALSE;
-extern cprThread_t gsm_thread;
 static media_timer_callback_fp* media_timer_callback = NULL;
 
 /**
@@ -72,26 +70,6 @@ cprBuffer_t
 gsm_get_buffer (uint16_t size)
 {
     return cpr_malloc(size);
-}
-
-
-cpr_status_e
-gsm_send_msg (uint32_t cmd, cprBuffer_t buf, uint16_t len)
-{
-    phn_syshdr_t *syshdr;
-
-    syshdr = (phn_syshdr_t *) cprGetSysHeader(buf);
-    if (!syshdr) {
-        return CPR_FAILURE;
-    }
-    syshdr->Cmd = cmd;
-    syshdr->Len = len;
-
-    if (cprSendMessage(gsm_msgq, buf, (void **) &syshdr) == CPR_FAILURE) {
-        cprReleaseSysHeader(syshdr);
-        return CPR_FAILURE;
-    }
-    return CPR_SUCCESS;
 }
 
 
@@ -258,28 +236,8 @@ gsm_reset (void)
 }
 
 void
-GSMTask (void *arg)
+GSM_prepare_task()
 {
-    static const char fname[] = "GSMTask";
-    void           *msg;
-    phn_syshdr_t   *syshdr;
-    boolean        release_msg = TRUE;
-
-    MOZ_ASSERT (gsm_msgq == (cprMsgQueue_t) arg);
-
-    if (!gsm_msgq) {
-        GSM_ERR_MSG(GSM_F_PREFIX"invalid input, exiting", fname);
-        return;
-    }
-
-    if (platThreadInit("GSMTask") != 0) {
-        return;
-    }
-    /*
-     * Adjust relative priority of GSM thread.
-     */
-    (void) cprAdjustRelativeThreadPriority(GSM_THREAD_RELATIVE_PRIORITY);
-
     /*
      * Initialize all the GSM modules
      */
@@ -304,74 +262,72 @@ GSMTask (void *arg)
      * Cache random numbers for SRTP keys
      */
     gsmsdp_cache_crypto_keys();
-
-    while (1) {
-
-        release_msg = TRUE;
-
-        msg = cprGetMessage(gsm_msgq, TRUE, (void **) &syshdr);
-        if (msg) {
-            switch (syshdr->Cmd) {
-            case TIMER_EXPIRATION:
-                gsm_process_timer_expiration(msg);
-                break;
-
-            case GSM_SIP:
-            case GSM_GSM:
-                release_msg = gsm_process_msg(syshdr->Cmd, msg);
-                break;
-
-            case DP_MSG_INIT_DIALING:
-            case DP_MSG_DIGIT_STR:
-            case DP_MSG_STORE_DIGIT:
-            case DP_MSG_DIGIT:
-            case DP_MSG_DIAL_IMMEDIATE:
-            case DP_MSG_REDIAL:
-            case DP_MSG_ONHOOK:
-            case DP_MSG_OFFHOOK:
-            case DP_MSG_UPDATE:
-            case DP_MSG_DIGIT_TIMER:
-            case DP_MSG_CANCEL_OFFHOOK_TIMER:
-                dp_process_msg(syshdr->Cmd, msg);
-                break;
-
-            case SUB_MSG_B2BCNF_SUBSCRIBE_RESP:
-            case SUB_MSG_B2BCNF_NOTIFY:
-            case SUB_MSG_B2BCNF_TERMINATE:
-                sub_process_b2bcnf_msg(syshdr->Cmd, msg);
-                break;
-
-            case SUB_MSG_FEATURE_SUBSCRIBE_RESP:
-            case SUB_MSG_FEATURE_NOTIFY:
-            case SUB_MSG_FEATURE_TERMINATE:
-                sub_process_feature_msg(syshdr->Cmd, msg);
-                break;
-
-            case REG_MGR_STATE_CHANGE:
-                gsm_reset();
-                break;
-            case THREAD_UNLOAD:
-                thread_ended(THREADMON_GSM);
-                destroy_gsm_thread();
-                break;
-
-            default:
-                GSM_ERR_MSG(GSM_F_PREFIX"Unknown message", fname);
-                break;
-            }
-
-            cprReleaseSysHeader(syshdr);
-            if (release_msg == TRUE) {
-                cpr_free(msg);
-            }
-
-            /* Check if there are pending messages for dcsm
-             * if it in the right state perform its operation
-             */
-            dcsm_process_jobs();
-        }
-    }
 }
+
+cpr_status_e
+gsm_send_msg (uint32_t cmd, cprBuffer_t msg, uint16_t len)
+{
+    boolean release_msg = TRUE;
+
+    switch (cmd) {
+    case TIMER_EXPIRATION:
+        gsm_process_timer_expiration(msg);
+        break;
+
+    case GSM_SIP:
+    case GSM_GSM:
+        release_msg = gsm_process_msg(cmd, msg);
+        break;
+
+    case DP_MSG_INIT_DIALING:
+    case DP_MSG_DIGIT_STR:
+    case DP_MSG_STORE_DIGIT:
+    case DP_MSG_DIGIT:
+    case DP_MSG_DIAL_IMMEDIATE:
+    case DP_MSG_REDIAL:
+    case DP_MSG_ONHOOK:
+    case DP_MSG_OFFHOOK:
+    case DP_MSG_UPDATE:
+    case DP_MSG_DIGIT_TIMER:
+    case DP_MSG_CANCEL_OFFHOOK_TIMER:
+        dp_process_msg(cmd, msg);
+        break;
+
+    case SUB_MSG_B2BCNF_SUBSCRIBE_RESP:
+    case SUB_MSG_B2BCNF_NOTIFY:
+    case SUB_MSG_B2BCNF_TERMINATE:
+        sub_process_b2bcnf_msg(cmd, msg);
+        break;
+
+    case SUB_MSG_FEATURE_SUBSCRIBE_RESP:
+    case SUB_MSG_FEATURE_NOTIFY:
+    case SUB_MSG_FEATURE_TERMINATE:
+        sub_process_feature_msg(cmd, msg);
+        break;
+
+    case REG_MGR_STATE_CHANGE:
+        gsm_reset();
+        break;
+    case THREAD_UNLOAD:
+        destroy_gsm_thread();
+        break;
+
+    default:
+        GSM_ERR_MSG(GSM_F_PREFIX"Unknown message", __FUNCTION__);
+        break;
+    }
+
+    if (release_msg == TRUE) {
+        cpr_free(msg);
+    }
+
+    /* Check if there are pending messages for dcsm
+     * if it in the right state perform its operation
+     */
+    dcsm_process_jobs();
+    return CPR_SUCCESS;
+}
+
 
 /**
  * This function will process SUBSCRIBED feature NOTIFY messages.
@@ -593,5 +549,4 @@ void destroy_gsm_thread()
         DEB_F_PREFIX_ARGS(SIP_CC_INIT, fname));
     gsm_shutdown();
     dp_shutdown();
-    (void) cprDestroyThread(gsm_thread);
 }

@@ -8,10 +8,6 @@
 #include "cpr_types.h"
 #include "cpr_threads.h"
 
-#ifndef SIP_OS_WINDOWS
-#include <pthread.h>
-#endif /* !SIP_OS_WINDOWS */
-
 __BEGIN_DECLS
 
 /**
@@ -32,76 +28,7 @@ typedef void* cprMsgQueue_t;
 /* Maximum message size allowed by CNU */
 #define CPR_MAX_MSG_SIZE  8192
 
-/* Our CNU msgtype */
-#ifdef SIP_OS_WINDOWS
-#define PHONE_IPC_MSG 0xF005
-
-/* Msg buffer layout */
-struct msgbuffer {
-    int32_t mtype; /* Message type */
-    void *msgPtr;  /* Ptr to msg */
-    void *usrPtr;  /* Ptr to user data */
-};
-
-#else
-#define PHONE_IPC_MSG 1
-
-/*
- * Mutex for updating the message queue list
- */
-extern pthread_mutex_t msgQueueListMutex;
-
-#endif /* SIP_OS_WINDOWS */
-
 /* Function prototypes */
-/**
- * Creates a message queue
- *
- * @brief The cprCreateMessageQueue function is called to allow the OS to
- * perform whatever work is needed to create a message queue.
-
- * If the name is present, CPR should assign this name to the message queue to assist in
- * debugging. The message queue depth is the second input parameter and is for
- * setting the desired queue depth. This parameter may not be supported by all OS.
- * Its primary intention is to set queue depth beyond the default queue depth
- * limitation.
- * On any OS where there is no limit on the message queue depth or
- * its queue depth is sufficiently large then this parameter is ignored on that
- * OS.
- *
- * @param[in] name  - name of the message queue (optional)
- * @param[in] depth - the message queue depth, optional field which should
- *                default if set to zero(0)
- *
- * @return Msg queue handle or NULL if init failed, errno should be provided
- *
- * @note the actual message queue depth will be bounded by the
- *       standard system message queue depth and CPR_MAX_MSG_Q_DEPTH.
- *       If 'depth' is outside of the bounds, the value will be
- *       reset automatically.
- */
-cprMsgQueue_t
-cprCreateMessageQueue(const char *name, uint16_t depth);
-
-
-#ifdef CPR_USE_SET_MESSAGE_QUEUE_THREAD
-/**
-  * cprSetMessageQueueThread
- * @brief Associate a thread with the message queue
- *
- * This method is used by pSIPCC to associate a thread and a message queue.
- * @param[in] msgQueue  - msg queue to set
- * @param[in] thread    - CPR thread to associate with queue
- *
- * @return CPR_SUCCESS or CPR_FAILURE
- *
- * @note Nothing is done to prevent overwriting the thread ID
- *       when the value has already been set.
- */
-cprRC_t
-cprSetMessageQueueThread(cprMsgQueue_t msgQueue, cprThread_t thread);
-#endif
-
 
 /**
   * cprGetMessage
@@ -127,44 +54,6 @@ void *
 cprGetMessage(cprMsgQueue_t msgQueue,
               boolean waitForever,
               void** usrPtr);
-
-/**
-  * cprSendMessage
- * @brief Place a message on a particular queue.  Note that caller may
- * block (see comments below)
- *
- * @param[in] msgQueue   - msg queue on which to place the message
- * @param[in] msg        - pointer to the msg to place on the queue
- * @param[in] ppUserData - pointer to a pointer to user defined data
- *
- * @return CPR_SUCCESS or CPR_FAILURE, errno should be provided
- *
- * @note 1. Messages queues are set to be non-blocking, those cases
- *       where the system call fails with a would-block error code
- *       (EAGAIN) the function will attempt other mechanisms described
- *       below.
- * @note 2. If enabled with an extended message queue, either via a
- *       call to cprCreateMessageQueue with depth value or a call to
- *       cprSetExtendMessageQueueDepth() (when unit testing), the message
- *       will be added to the extended message queue and the call will
- *       return successfully.  When room becomes available on the
- *       system's message queue, those messages will be added.
- * @note 3. If the message queue becomes full and no space is availabe
- *       on the extended message queue, then the function will attempt
- *       to resend the message up to CPR_ATTEMPTS_TO_SEND and the
- *       calling thread will *BLOCK* CPR_SND_TIMEOUT_WAIT_INTERVAL
- *       milliseconds after each failed attempt.  If unsuccessful
- *       after all attempts then EGAIN error code is returned.
- * @note 4. This applies to all CPR threads, including the timer thread.
- *       So it is possible that the timer thread would be forced to
- *       sleep which would have the effect of delaying all active
- *       timers.  The work to fix this rare situation is not considered
- *       worth the effort to fix....so just leaving as is.
- */
-cprRC_t
-cprSendMessage(cprMsgQueue_t msgQueue,
-               void* msg,
-               void** usrPtr);
 
 /**
  * cprGetDepth
