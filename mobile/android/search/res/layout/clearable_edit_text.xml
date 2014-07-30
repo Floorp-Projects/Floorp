@@ -13,7 +13,7 @@
         android:inputType="textNoSuggestions|textVisiblePassword"
         android:drawableLeft="@drawable/search_icon_inactive"
         android:drawablePadding="5dp"
-        android:textSize="16sp"
+        android:textSize="@dimen/query_text_size"
         android:background="@drawable/edit_text_background"
         android:focusable="false"
         android:focusableInTouchMode="false"

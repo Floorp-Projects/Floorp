@@ -28,4 +28,9 @@ exports.testTabIsRemote = function(assert, done) {
   mm.loadFrameScript('data:,sendAsyncMessage("7")', true);
 }
 
+// e10s tests should not ride the train to aurora, beta
+if (getPref('app.update.channel') !== 'nightly') {
+  module.exports = {};
+}
+
 require('sdk/test/runner').runTestsFromModule(module);

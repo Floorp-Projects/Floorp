@@ -373,7 +373,7 @@ const WorkerSandbox = EventEmitter.compose({
    */
   _importScripts: function _importScripts(url) {
     let urls = Array.slice(arguments, 0);
-    for each (let contentScriptFile in urls) {
+    for (let contentScriptFile of urls) {
       try {
         let uri = URL(contentScriptFile);
         if (uri.scheme === 'resource')

@@ -304,7 +304,7 @@ function currentFlavors() {
   // confirmation for specific flavors any other way. This is supposed to be
   // an inexpensive call, so performance shouldn't be impacted (much).
   var currentFlavors = [];
-  for each (var flavor in kAllowableFlavors) {
+  for (var flavor of kAllowableFlavors) {
     var matches = clipboardService.hasDataMatchingFlavors(
       [flavor],
       1,
@@ -321,7 +321,7 @@ Object.defineProperty(exports, "currentFlavors", { get : currentFlavors });
 // SUPPORT FUNCTIONS ////////////////////////////////////////////////////////
 
 function toJetpackFlavor(aFlavor) {
-  for each (let flavorMap in kFlavorMap)
+  for (let flavorMap of kFlavorMap)
     if (flavorMap.long == aFlavor)
       return flavorMap.short;
   // Return null in the case where we don't match
@@ -330,7 +330,7 @@ function toJetpackFlavor(aFlavor) {
 
 function fromJetpackFlavor(aJetpackFlavor) {
   // TODO: Handle proper flavors better
-  for each (let flavorMap in kFlavorMap)
+  for (let flavorMap of kFlavorMap)
     if (flavorMap.short == aJetpackFlavor || flavorMap.long == aJetpackFlavor)
       return flavorMap.long;
   // Return null in the case where we don't match.

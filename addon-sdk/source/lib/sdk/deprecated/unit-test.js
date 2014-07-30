@@ -7,9 +7,9 @@ module.metadata = {
   "stability": "deprecated"
 };
 
-const memory = require('./memory');
+const memory = require("./memory");
 const timer = require("../timers");
-var cfxArgs = require("@test/options");
+const cfxArgs = require("../test/options");
 const { getTabs, getURI } = require("../tabs/utils");
 const { windows, isBrowser } = require("../window/utils");
 const { defer, all } = require("../core/promise");
@@ -48,7 +48,7 @@ const TestRunner = function TestRunner(options) {
 TestRunner.prototype = {
   toString: function toString() "[object TestRunner]",
 
-  DEFAULT_PAUSE_TIMEOUT: 5*60000,
+  DEFAULT_PAUSE_TIMEOUT: cfxArgs.parseable ? 5*60000 : 15000,
   PAUSE_DELAY: 500,
 
   _logTestFailed: function _logTestFailed(why) {
