@@ -103,7 +103,7 @@ public:
 
   // call before and after painting into this content client
   virtual void BeginPaint() {}
-  virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
+  virtual void EndPaint();
 };
 
 /**
@@ -231,7 +231,7 @@ public:
    * are affected by mapping/unmapping.
    */
   virtual void BeginPaint() MOZ_OVERRIDE;
-  virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) MOZ_OVERRIDE;
+  virtual void EndPaint() MOZ_OVERRIDE;
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion,
