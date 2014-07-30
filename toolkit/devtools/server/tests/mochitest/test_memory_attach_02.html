@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Bug 923275 - Add a memory monitor widget to the developer toolbar
+Bug 960671 - Test attaching and detaching while in the wrong state.
 -->
 <head>
   <meta charset="utf-8">
@@ -18,16 +18,28 @@ window.onload = function() {
 
   Task.spawn(function* () {
     var { memory, client } = yield startServerAndGetSelectedTabMemory();
-    var measurement = yield memory.measure();
-    ok(measurement.total > 0, "total memory is valid");
-    ok(measurement.domSize > 0, "domSize is valid");
-    ok(measurement.styleSize > 0, "styleSize is valid");
-    ok(measurement.jsObjectsSize > 0, "jsObjectsSize is valid");
-    ok(measurement.jsStringsSize > 0, "jsStringsSize is valid");
-    ok(measurement.jsOtherSize > 0, "jsOtherSize is valid");
-    ok(measurement.otherSize > 0, "otherSize is valid");
-    ok(measurement.jsMilliseconds, "jsMilliseconds is valid");
-    ok(measurement.nonJSMilliseconds, "nonJSMilliseconds is valid");
+
+    var e = null;
+    try {
+      yield memory.detach();
+    }
+    catch (ee) {
+      e = ee;
+    }
+    ok(e, "Should have hit the wrongState error");
+
+    yield memory.attach();
+
+    e = null;
+    try {
+      yield memory.attach();
+    }
+    catch (ee) {
+      e = ee;
+    }
+    ok(e, "Should have hit the wrongState error");
+
+    yield memory.detach();
     destroyServerAndFinish(client);
   });
 };
