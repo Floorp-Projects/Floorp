@@ -170,18 +170,15 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
     return true;
 }
 
-#define XOW FilteringWrapper<SecurityXrayXPCWN, CrossOriginAccessiblePropertiesOnly>
-#define DXOW   FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>
+#define XOW FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define NNXOWC FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>
 
 template<> const XOW XOW::singleton(0);
-template<> const DXOW DXOW::singleton(0);
 template<> const NNXOW NNXOW::singleton(0);
 template<> const NNXOWC NNXOWC::singleton(0);
 
 template class XOW;
-template class DXOW;
 template class NNXOW;
 template class NNXOWC;
 template class ChromeObjectWrapperBase;
