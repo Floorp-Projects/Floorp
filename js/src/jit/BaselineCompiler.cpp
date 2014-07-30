@@ -1263,6 +1263,23 @@ BaselineCompiler::emit_JSOP_OBJECT()
     return true;
 }
 
+bool
+BaselineCompiler::emit_JSOP_CALLSITEOBJ()
+{
+    RootedObject cso(cx, script->getObject(pc));
+    RootedObject raw(cx, script->getObject(GET_UINT32_INDEX(pc) + 1));
+    if (!cso || !raw)
+        return false;
+    RootedValue rawValue(cx);
+    rawValue.setObject(*raw);
+
+    if (!ProcessCallSiteObjOperation(cx, cso, raw, rawValue))
+        return false;
+
+    frame.push(ObjectValue(*cso));
+    return true;
+}
+
 typedef JSObject *(*CloneRegExpObjectFn)(JSContext *, JSObject *);
 static const VMFunction CloneRegExpObjectInfo =
     FunctionInfo<CloneRegExpObjectFn>(CloneRegExpObject);
