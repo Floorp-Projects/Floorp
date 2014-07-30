@@ -218,7 +218,6 @@ PCCounts::countName(JSOp op, size_t which)
     MOZ_CRASH("bad op");
 }
 
-#ifdef JS_ION
 void
 js::DumpIonScriptCounts(Sprinter *sp, jit::IonScriptCounts *ionCounts)
 {
@@ -234,7 +233,6 @@ js::DumpIonScriptCounts(Sprinter *sp, jit::IonScriptCounts *ionCounts)
         Sprint(sp, "%s\n", block.code());
     }
 }
-#endif
 
 void
 js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
@@ -270,14 +268,12 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
     }
 #endif
 
-#ifdef JS_ION
     jit::IonScriptCounts *ionCounts = script->getIonCounts();
 
     while (ionCounts) {
         DumpIonScriptCounts(sp, ionCounts);
         ionCounts = ionCounts->previous();
     }
-#endif
 }
 
 /////////////////////////////////////////////////////////////////////

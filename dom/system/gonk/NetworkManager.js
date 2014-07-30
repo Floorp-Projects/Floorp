@@ -33,7 +33,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkService",
                                    "@mozilla.org/network/service;1",
                                    "nsINetworkService");
 
-const TOPIC_INTERFACE_STATE_CHANGED  = "network-interface-state-changed";
 const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
 const TOPIC_ACTIVE_CHANGED           = "network-active-changed";
@@ -136,7 +135,6 @@ function defineLazyRegExp(obj, name, pattern) {
  */
 function NetworkManager() {
   this.networkInterfaces = {};
-  Services.obs.addObserver(this, TOPIC_INTERFACE_STATE_CHANGED, true);
   Services.obs.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
   Services.obs.addObserver(this, TOPIC_MOZSETTINGS_CHANGED, false);
 
@@ -216,92 +214,6 @@ NetworkManager.prototype = {
 
   observe: function(subject, topic, data) {
     switch (topic) {
-      case TOPIC_INTERFACE_STATE_CHANGED:
-        let network = subject.QueryInterface(Ci.nsINetworkInterface);
-        debug("Network " + network.type + "/" + network.name +
-              " changed state to " + network.state);
-        switch (network.state) {
-          case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
-#ifdef MOZ_B2G_RIL
-            // Add host route for data calls
-            if (this.isNetworkTypeMobile(network.type)) {
-              gNetworkService.removeHostRoutes(network.name);
-              gNetworkService.addHostRoute(network);
-            }
-            // Dun type is a special case where we add the default route to a
-            // secondary table.
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
-              this.setSecondaryDefaultRoute(network);
-            }
-#endif
-            // Remove pre-created default route and let setAndConfigureActive()
-            // to set default route only on preferred network
-            gNetworkService.removeDefaultRoute(network);
-            this.setAndConfigureActive();
-#ifdef MOZ_B2G_RIL
-            // Resolve and add extra host route. For example, mms proxy or mmsc.
-            // IMPORTANT: The offline state of DNSService will be set implicitly in
-            //            setAndConfigureActive() by modifying Services.io.offline.
-            //            Always setExtraHostRoute() after setAndConfigureActive().
-            this.setExtraHostRoute(network);
-
-            // Update data connection when Wifi connected/disconnected
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              for (let i = 0; i < this.mRil.numRadioInterfaces; i++) {
-                this.mRil.getRadioInterface(i).updateRILNetworkInterface();
-              }
-            }
-#endif
-
-            this.onConnectionChanged(network);
-
-            // Probing the public network accessibility after routing table is ready
-            CaptivePortalDetectionHelper
-              .notify(CaptivePortalDetectionHelper.EVENT_CONNECT, this.active);
-            break;
-          case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
-#ifdef MOZ_B2G_RIL
-            // Remove host route for data calls
-            if (this.isNetworkTypeMobile(network.type)) {
-              gNetworkService.removeHostRoute(network);
-            }
-            // Remove extra host route. For example, mms proxy or mmsc.
-            this.removeExtraHostRoute(network);
-            // Remove secondary default route for dun.
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
-              this.removeSecondaryDefaultRoute(network);
-            }
-#endif
-            // Remove routing table in /proc/net/route
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              gNetworkService.resetRoutingTable(network);
-#ifdef MOZ_B2G_RIL
-            } else if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
-              gNetworkService.removeDefaultRoute(network);
-#endif
-            }
-
-            // Abort ongoing captive portal detection on the wifi interface
-            CaptivePortalDetectionHelper
-              .notify(CaptivePortalDetectionHelper.EVENT_DISCONNECT, network);
-            this.setAndConfigureActive();
-#ifdef MOZ_B2G_RIL
-            // Update data connection when Wifi connected/disconnected
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              for (let i = 0; i < this.mRil.numRadioInterfaces; i++) {
-                this.mRil.getRadioInterface(i).updateRILNetworkInterface();
-              }
-            }
-#endif
-            break;
-        }
-#ifdef MOZ_B2G_RIL
-        // Notify outer modules like MmsService to start the transaction after
-        // the configuration of the network interface is done.
-        Services.obs.notifyObservers(network, TOPIC_CONNECTION_STATE_CHANGED,
-                                     this.convertConnectionType(network));
-#endif
-        break;
       case TOPIC_MOZSETTINGS_CHANGED:
         let setting = JSON.parse(data);
         this.handle(setting.key, setting.value);
@@ -314,7 +226,6 @@ NetworkManager.prototype = {
       case TOPIC_XPCOM_SHUTDOWN:
         Services.obs.removeObserver(this, TOPIC_XPCOM_SHUTDOWN);
         Services.obs.removeObserver(this, TOPIC_MOZSETTINGS_CHANGED);
-        Services.obs.removeObserver(this, TOPIC_INTERFACE_STATE_CHANGED);
 #ifdef MOZ_B2G_RIL
         this.dunConnectTimer.cancel();
         this.dunRetryTimer.cancel();
@@ -395,6 +306,101 @@ NetworkManager.prototype = {
 
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_REGISTERED, null);
     debug("Network '" + networkId + "' registered.");
+  },
+
+  updateNetworkInterface: function(network) {
+    if (!(network instanceof Ci.nsINetworkInterface)) {
+      throw Components.Exception("Argument must be nsINetworkInterface.",
+                                 Cr.NS_ERROR_INVALID_ARG);
+    }
+    let networkId = this.getNetworkId(network);
+    if (!(networkId in this.networkInterfaces)) {
+      throw Components.Exception("No network with that type registered.",
+                                 Cr.NS_ERROR_INVALID_ARG);
+    }
+    debug("Network " + network.type + "/" + network.name +
+          " changed state to " + network.state);
+    switch (network.state) {
+      case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
+#ifdef MOZ_B2G_RIL
+        // Add host route for data calls
+        if (this.isNetworkTypeMobile(network.type)) {
+          gNetworkService.removeHostRoutes(network.name);
+          gNetworkService.addHostRoute(network);
+        }
+        // Dun type is a special case where we add the default route to a
+        // secondary table.
+        if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
+          this.setSecondaryDefaultRoute(network);
+        }
+#endif
+        // Remove pre-created default route and let setAndConfigureActive()
+        // to set default route only on preferred network
+        gNetworkService.removeDefaultRoute(network);
+        this.setAndConfigureActive();
+#ifdef MOZ_B2G_RIL
+        // Resolve and add extra host route. For example, mms proxy or mmsc.
+        // IMPORTANT: The offline state of DNSService will be set implicitly in
+        //            setAndConfigureActive() by modifying Services.io.offline.
+        //            Always setExtraHostRoute() after setAndConfigureActive().
+        this.setExtraHostRoute(network);
+
+        // Update data connection when Wifi connected/disconnected
+        if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+          for (let i = 0; i < this.mRil.numRadioInterfaces; i++) {
+            this.mRil.getRadioInterface(i).updateRILNetworkInterface();
+          }
+        }
+#endif
+
+        this.onConnectionChanged(network);
+
+        // Probing the public network accessibility after routing table is ready
+        CaptivePortalDetectionHelper
+          .notify(CaptivePortalDetectionHelper.EVENT_CONNECT, this.active);
+        break;
+      case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
+#ifdef MOZ_B2G_RIL
+        // Remove host route for data calls
+        if (this.isNetworkTypeMobile(network.type)) {
+          gNetworkService.removeHostRoute(network);
+        }
+        // Remove extra host route. For example, mms proxy or mmsc.
+        this.removeExtraHostRoute(network);
+        // Remove secondary default route for dun.
+        if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
+          this.removeSecondaryDefaultRoute(network);
+        }
+#endif
+        // Remove routing table in /proc/net/route
+        if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+          gNetworkService.resetRoutingTable(network);
+#ifdef MOZ_B2G_RIL
+        } else if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+          gNetworkService.removeDefaultRoute(network);
+#endif
+        }
+
+        // Abort ongoing captive portal detection on the wifi interface
+        CaptivePortalDetectionHelper
+          .notify(CaptivePortalDetectionHelper.EVENT_DISCONNECT, network);
+        this.setAndConfigureActive();
+#ifdef MOZ_B2G_RIL
+        // Update data connection when Wifi connected/disconnected
+        if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+          for (let i = 0; i < this.mRil.numRadioInterfaces; i++) {
+            this.mRil.getRadioInterface(i).updateRILNetworkInterface();
+          }
+        }
+#endif
+        break;
+    }
+#ifdef MOZ_B2G_RIL
+    // Notify outer modules like MmsService to start the transaction after
+    // the configuration of the network interface is done.
+    Services.obs.notifyObservers(network, TOPIC_CONNECTION_STATE_CHANGED,
+                                 this.convertConnectionType(network));
+#endif
   },
 
   unregisterNetworkInterface: function(network) {

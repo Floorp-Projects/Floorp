@@ -7,8 +7,6 @@
 #ifndef jit_ExecutionMode_inl_h
 #define jit_ExecutionMode_inl_h
 
-#ifdef JS_ION
-
 #include "jit/CompileInfo.h"
 
 #include "jsscriptinlines.h"
@@ -98,7 +96,5 @@ CompilingOffThread(HandleScript script, ExecutionMode cmode)
 
 } // namespace jit
 } // namespace js
-
-#endif  // JS_ION
 
 #endif /* jit_ExecutionMode_inl_h */

@@ -21,8 +21,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
 
-const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
-
 this.EXPORTED_SYMBOLS = ["WifiP2pManager"];
 
 const EVENT_IGNORED                      = -1;
@@ -1476,9 +1474,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
   }
 
   function handleP2pNetworkInterfaceStateChanged() {
-    Services.obs.notifyObservers(_p2pNetworkInterface,
-                                 kNetworkInterfaceStateChangedTopic,
-                                 null);
+    gNetworkManager.updateNetworkInterface(_p2pNetworkInterface);
   }
 
   // Handle 'P2P_GROUP_STARTED' event.

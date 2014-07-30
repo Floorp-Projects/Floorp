@@ -73,24 +73,10 @@ static const size_t AsmJSBufferProtectedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
 static const size_t AsmJSMappedSize = AsmJSPageSize + AsmJSBufferProtectedSize;
 #endif // JS_CODEGEN_X64
 
-#ifdef JS_ION
-
-// Return whether asm.js optimization is inhibitted by the platform or
+// Return whether asm.js optimization is inhibited by the platform or
 // dynamically disabled:
 extern bool
 IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
-
-#else // JS_ION
-
-inline bool
-IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(false));
-    return true;
-}
-
-#endif // JS_ION
 
 // To succesfully link an asm.js module to an ArrayBuffer heap, the
 // ArrayBuffer's byteLength must be:

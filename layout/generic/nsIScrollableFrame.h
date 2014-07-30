@@ -154,14 +154,33 @@ public:
   virtual nsSize GetPageScrollAmount() const = 0;
 
   /**
-   * When a scroll operation is requested, we ask for instant, smooth or normal
-   * scrolling. SMOOTH will only be smooth if smooth scrolling is actually
-   * enabled. INSTANT is always synchronous, NORMAL can be asynchronous.
-   * If an INSTANT request happens while a smooth or async scroll is already in
-   * progress, the async scroll is interrupted and we instantly scroll to the
-   * destination.
+   * When a scroll operation is requested, we ask for instant, smooth,
+   * smooth msd, or normal scrolling.
+   *
+   * SMOOTH scrolls have a symmetrical acceleration and deceleration curve
+   * modeled with a set of splines that guarantee that the destination will be 
+   * reached over a fixed time interval.  SMOOTH will only be smooth if smooth
+   * scrolling is actually enabled.  This behavior is utilized by keyboard and
+   * mouse wheel scrolling events.
+   *
+   * SMOOTH_MSD implements a physically based model that approximates the
+   * behavior of a mass-spring-damper system.  SMOOTH_MSD scrolls have a
+   * non-symmetrical acceleration and deceleration curve, can potentially
+   * overshoot the destination on intermediate frames, and complete over a
+   * variable time interval.  SMOOTH_MSD will only be smooth if cssom-view
+   * smooth-scrolling is enabled.
+   *
+   * INSTANT is always synchronous, NORMAL can be asynchronous.
+   *
+   * If an INSTANT scroll request happens while a SMOOTH or async scroll is
+   * already in progress, the async scroll is interrupted and we instantly
+   * scroll to the destination.
+   *
+   * If an INSTANT or SMOOTH scroll request happens while a SMOOTH_MSD scroll
+   * is already in progress, the SMOOTH_MSD scroll is interrupted without
+   * first scrolling to the destination.
    */
-  enum ScrollMode { INSTANT, SMOOTH, NORMAL };
+  enum ScrollMode { INSTANT, SMOOTH, SMOOTH_MSD, NORMAL };
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Clamps aScrollPosition to GetScrollRange and sets the scroll position
@@ -180,11 +199,19 @@ public:
    * position, rounded to CSS pixels, matches aScrollPosition. If
    * aScrollPosition.x/y is different from the current CSS pixel position,
    * makes sure we only move in the direction given by the difference.
-   * Ensures that GetScrollPositionCSSPixels (the scroll position after
-   * rounding to CSS pixels) will be exactly aScrollPosition.
-   * The scroll mode is INSTANT.
+   *
+   * When aMode is SMOOTH, INSTANT, or NORMAL, GetScrollPositionCSSPixels (the
+   * scroll position after rounding to CSS pixels) will be exactly
+   * aScrollPosition at the end of the scroll animation.
+   *
+   * When aMode is SMOOTH_MSD, intermediate animation frames may be outside the
+   * range and / or moving in any direction; GetScrollPositionCSSPixels will be
+   * exactly aScrollPosition at the end of the scroll animation unless the
+   * SMOOTH_MSD animation is interrupted.
    */
-  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition) = 0;
+  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                                 nsIScrollableFrame::ScrollMode aMode
+                                   = nsIScrollableFrame::INSTANT) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in float CSS pixels.
@@ -192,7 +219,6 @@ public:
    * aScrollPosition afterward. It tries to scroll as close to
    * aScrollPosition as possible while scrolling by an integer
    * number of layer pixels (so the operation is fast and looks clean).
-   * The scroll mode is INSTANT.
    */
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition,
                                             nsIAtom *aOrigin = nullptr) = 0;
@@ -217,7 +243,9 @@ public:
    * values are in device pixels.
    */
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-                        nsIntPoint* aOverflow = nullptr, nsIAtom *aOrigin = nullptr) = 0;
+                        nsIntPoint* aOverflow = nullptr,
+                        nsIAtom* aOrigin = nullptr,
+                        bool aIsMomentum = false) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * This tells the scroll frame to try scrolling to the scroll

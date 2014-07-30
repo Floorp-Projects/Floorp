@@ -7,6 +7,7 @@
 #define GMPDecryptorProxy_h_
 
 #include "GMPCallbackBase.h"
+#include "gmp-decryption.h"
 
 namespace mp4_demuxer {
 class CryptoSample;

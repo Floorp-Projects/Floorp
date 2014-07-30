@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<script>
+var ctx = new AudioContext();
+var source = ctx.createOscillator();
+source.start(0);
+
+function appendMerger(src) {
+  const inputCount = 18;
+
+  var merger = ctx.createChannelMerger(32);
+
+  for (var i = 0; i < inputCount; ++i) {
+    src.connect(merger, 0, i);
+  }
+
+  return merger;
+}
+
+for (var i = 0; i < 6; ++i) {
+  source = appendMerger(source);
+}
+</script>

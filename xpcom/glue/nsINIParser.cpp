@@ -46,7 +46,7 @@ TS_tfopen(const char* aPath, const char* aMode)
 class AutoFILE
 {
 public:
-  AutoFILE(FILE* aFp = nullptr) : fp_(aFp) {}
+  explicit AutoFILE(FILE* aFp = nullptr) : fp_(aFp) {}
   ~AutoFILE()
   {
     if (fp_) {
@@ -95,7 +95,7 @@ nsresult
 nsINIParser::Init(const char* aPath)
 {
   /* open the file */
-  AutoFILE fd = TS_tfopen(aPath, READ_BINARYMODE);
+  AutoFILE fd(TS_tfopen(aPath, READ_BINARYMODE));
   if (!fd) {
     return NS_ERROR_FAILURE;
   }

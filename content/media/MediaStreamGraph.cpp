@@ -28,7 +28,6 @@
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
 #include "mozilla/unused.h"
-#include "speex/speex_resampler.h"
 #ifdef MOZ_WEBRTC
 #include "AudioOutputObserver.h"
 #endif
