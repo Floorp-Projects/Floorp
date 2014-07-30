@@ -60,6 +60,8 @@ http://127.0.0.1:80               privileged
 http://127.0.0.1:8888             privileged
 http://test:80                    privileged
 http://mochi.test:8888            privileged
+http://test1.mochi.test:8888
+http://test2.mochi.test:8888
 http://example.org:80                privileged
 http://test1.example.org:80          privileged
 http://test2.example.org:80          privileged
