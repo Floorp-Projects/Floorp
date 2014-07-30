@@ -17,6 +17,7 @@
 #include "AH263Assembler.h"
 
 #include "ARTPSource.h"
+#include "RtspPrlog.h"
 
 #include <media/stagefright/foundation/ABuffer.h>
 #include <media/stagefright/foundation/ADebug.h>
@@ -99,18 +100,70 @@ ARTPAssembler::AssemblyStatus AH263Assembler::addPacket(
         return MALFORMED_PACKET;
     }
 
+    // RFC 4629, Sec. 5.1 General H.263+ Payload Header.
+    // The H.263+ payload header is structured as follows:
+    //  0                   1
+    //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+    // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    // |   RR    |P|V|   PLEN    |PEBIT|
+    // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //
+    // RR: 5 bits
+    //     Reserved bits. It SHALL be zero and MUST be ignored by receivers.
+    // P: 1 bit
+    //     Indicates the picture start or a picture segment (GOB/Slice) start or
+    //     a video sequence end (EOS or EOSBS). Two bytes of zero bits then have
+    //     to be prefixed to the payload of such a packet to compose a complete
+    //     picture/GOB/slice/EOS/EOSBS start code. This bit allows the omission
+    //     of the two first bytes of the start code, thus improving the
+    //     compression ratio.
+    // V: 1 bit
+    //     Indicates the presence of an 8-bit field containing information for
+    //     Video Redundancy Coding (VRC), which follows immediately after the
+    //     initial 16 bits of the payload header.
+    // PLEN: 6 bits
+    //     Length, in bytes, of the extra picture header. If no extra picture
+    //     header is attached, PLEN is 0. If PLEN>0, the extra picture header is
+    //     attached immediately following the rest of the payload header. Note
+    //     that the length reflects the omission of the first two bytes of the
+    //     picture start code (PSC).
+    // PEBIT: 3 bits
+    //     Indicates the number of bits that shall be ignored in the last byte
+    //     of the picture header. If PLEN is not zero, the ignored bits shall be
+    //     the least significant bits of the byte. If PLEN is zero, then PEBIT
+    //     shall also be zero.
+
     unsigned payloadHeader = U16_AT(buffer->data());
-    CHECK_EQ(payloadHeader >> 11, 0u);  // RR=0
     unsigned P = (payloadHeader >> 10) & 1;
-    CHECK_EQ((payloadHeader >> 9) & 1, 0u);  // V=0
-    CHECK_EQ((payloadHeader >> 3) & 0x3f, 0u);  // PLEN=0
-    CHECK_EQ(payloadHeader & 7, 0u);  // PEBIT=0
+    unsigned V = (payloadHeader >> 9) & 1;
+    unsigned PLEN = (payloadHeader >> 3) & 0x3f;
+    unsigned PEBIT = payloadHeader & 7;
+
+    // V = 0
+    // We do not support VRC header extension for now, so just discard it if
+    // present.
+    if (V != 0u) {
+        queue->erase(queue->begin());
+        ++mNextExpectedSeqNo;
+        LOGW("Packet discarded due to VRC (V != 0)");
+        return MALFORMED_PACKET;
+    }
+
+    // If PLEN is zero, then PEBIT shall also be zero.
+    if (PLEN == 0u && PEBIT != 0u) {
+        queue->erase(queue->begin());
+        ++mNextExpectedSeqNo;
+        LOGW("Packet discarded (PEBIT != 0)");
+        return MALFORMED_PACKET;
+    }
+
+    size_t skip = PLEN + (P ? 0: 2);
+
+    buffer->setRange(buffer->offset() + skip, buffer->size() - skip);
 
     if (P) {
         buffer->data()[0] = 0x00;
         buffer->data()[1] = 0x00;
-    } else {
-        buffer->setRange(buffer->offset() + 2, buffer->size() - 2);
     }
 
     mPackets.push_back(buffer);
