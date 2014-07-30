@@ -586,11 +586,21 @@ nsUDPSocket::InitWithAddress(const NetAddr *aAddr)
     return NS_ERROR_FAILURE;
   }
 
+  uint16_t port;
+  if (NS_FAILED(net::GetPort(aAddr, &port))) {
+    NS_WARNING("invalid bind address");
+    goto fail;
+  }
+
   PRSocketOptionData opt;
 
-  opt.option = PR_SockOpt_Reuseaddr;
-  opt.value.reuse_addr = true;
-  PR_SetSocketOption(mFD, &opt);
+  // Linux kernel will sometimes hand out a used port if we bind
+  // to port 0 with SO_REUSEADDR
+  if (port) {
+    opt.option = PR_SockOpt_Reuseaddr;
+    opt.value.reuse_addr = true;
+    PR_SetSocketOption(mFD, &opt);
+  }
 
   opt.option = PR_SockOpt_Nonblocking;
   opt.value.non_blocking = true;
@@ -652,16 +662,10 @@ NS_IMETHODIMP
 nsUDPSocket::GetPort(int32_t *aResult)
 {
   // no need to enter the lock here
-  uint16_t port;
-  if (mAddr.raw.family == PR_AF_INET)
-    port = mAddr.inet.port;
-  else if (mAddr.raw.family == PR_AF_INET6)
-    port = mAddr.inet6.port;
-  else
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aResult = static_cast<int32_t>(NetworkEndian::readUint16(&port));
-  return NS_OK;
+  uint16_t result;
+  nsresult rv = net::GetPort(&mAddr, &result);
+  *aResult = static_cast<int32_t>(result);
+  return rv;
 }
 
 NS_IMETHODIMP
