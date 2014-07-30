@@ -13,6 +13,7 @@
 #include "ScopedGLHelpers.h"
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Move.h"
 
 namespace mozilla {
 namespace gl {
@@ -209,30 +210,34 @@ GetActualReadFormats(GLContext* gl,
 static void
 SwapRAndBComponents(DataSourceSurface* surf)
 {
-    uint8_t* row = surf->GetData();
+    DataSourceSurface::MappedSurface map;
+    MOZ_ALWAYS_TRUE( surf->Map(DataSourceSurface::MapType::READ_WRITE, &map) );
+    MOZ_ASSERT(map.mStride >= 0);
+
+    const size_t rowBytes = surf->GetSize().width*4;
+    const size_t rowHole = map.mStride - rowBytes;
+
+    uint8_t* row = map.mData;
     if (!row) {
-        MOZ_ASSERT(false, "SwapRAndBComponents: Failed to get data from DataSourceSurface.");
+        MOZ_ASSERT(false, "SwapRAndBComponents: Failed to get data from"
+                          " DataSourceSurface.");
+        surf->Unmap();
         return;
     }
 
-    size_t rowBytes = surf->GetSize().width*4;
-    size_t rowHole = surf->Stride() - rowBytes;
-
-    size_t rows = surf->GetSize().height;
-
-    while (rows) {
+    const size_t rows = surf->GetSize().height;
+    for (size_t i = 0; i < rows; i++) {
         const uint8_t* rowEnd = row + rowBytes;
 
         while (row != rowEnd) {
-            row[0] ^= row[2];
-            row[2] ^= row[0];
-            row[0] ^= row[2];
+            Swap(row[0], row[2]);
             row += 4;
         }
 
         row += rowHole;
-        --rows;
     }
+
+    surf->Unmap();
 }
 
 static uint16_t
@@ -249,49 +254,77 @@ static void
 CopyDataSourceSurface(DataSourceSurface* aSource,
                       DataSourceSurface* aDest)
 {
+    // Don't worry too much about speed.
     MOZ_ASSERT(aSource->GetSize() == aDest->GetSize());
-    MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+    MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::R8G8B8A8 ||
+               aSource->GetFormat() == SurfaceFormat::R8G8B8X8 ||
+               aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                aSource->GetFormat() == SurfaceFormat::B8G8R8X8);
+    MOZ_ASSERT(aDest->GetFormat() == SurfaceFormat::R8G8B8A8 ||
+               aDest->GetFormat() == SurfaceFormat::R8G8B8X8 ||
+               aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+               aDest->GetFormat() == SurfaceFormat::B8G8R8X8 ||
+               aDest->GetFormat() == SurfaceFormat::R5G6B5);
 
-    uint8_t* srcRow = aSource->GetData();
-    size_t srcRowBytes = aSource->GetSize().width * BytesPerPixel(aSource->GetFormat());
-    size_t srcRowHole = aSource->Stride() - srcRowBytes;
+    const bool isSrcBGR = aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+                          aSource->GetFormat() == SurfaceFormat::B8G8R8X8;
+    const bool isDestBGR = aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+                           aDest->GetFormat() == SurfaceFormat::B8G8R8X8;
+    const bool needsSwap02 = isSrcBGR != isDestBGR;
 
-    uint8_t* destRow = aDest->GetData();
-    size_t destRowBytes = aDest->GetSize().width * BytesPerPixel(aDest->GetFormat());
-    size_t destRowHole = aDest->Stride() - destRowBytes;
+    const bool srcHasAlpha = aSource->GetFormat() == SurfaceFormat::R8G8B8A8 ||
+                             aSource->GetFormat() == SurfaceFormat::B8G8R8A8;
+    const bool destHasAlpha = aDest->GetFormat() == SurfaceFormat::R8G8B8A8 ||
+                              aDest->GetFormat() == SurfaceFormat::B8G8R8A8;
+    const bool needsAlphaMask = !srcHasAlpha && destHasAlpha;
 
-    bool needsRBSwap = aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-                       aDest->GetFormat() == SurfaceFormat::B8G8R8X8;
+    const bool needsConvertTo16Bits = aDest->GetFormat() == SurfaceFormat::R5G6B5;
 
-    bool needsConvertTo16Bits = aDest->GetFormat() == SurfaceFormat::R5G6B5;
+    DataSourceSurface::MappedSurface srcMap;
+    DataSourceSurface::MappedSurface destMap;
+    MOZ_ALWAYS_TRUE( aSource->Map(DataSourceSurface::MapType::READ, &srcMap) );
+    MOZ_ALWAYS_TRUE( aDest->Map(DataSourceSurface::MapType::WRITE, &destMap) );
+    MOZ_ASSERT(srcMap.mStride >= 0);
+    MOZ_ASSERT(destMap.mStride >= 0);
 
-    size_t rows = aSource->GetSize().height;
-    while (rows) {
+    const size_t srcBPP = BytesPerPixel(aSource->GetFormat());
+    const size_t srcRowBytes = aSource->GetSize().width * srcBPP;
+    const size_t srcRowHole = srcMap.mStride - srcRowBytes;
+
+    const size_t destBPP = BytesPerPixel(aDest->GetFormat());
+    const size_t destRowBytes = aDest->GetSize().width * destBPP;
+    const size_t destRowHole = destMap.mStride - destRowBytes;
+
+    uint8_t* srcRow = srcMap.mData;
+    uint8_t* destRow = destMap.mData;
+    const size_t rows = aSource->GetSize().height;
+    for (size_t i = 0; i < rows; i++) {
         const uint8_t* srcRowEnd = srcRow + srcRowBytes;
 
         while (srcRow != srcRowEnd) {
-            uint8_t r = needsRBSwap ? srcRow[2] : srcRow[0];
-            uint8_t g = srcRow[1];
-            uint8_t b = needsRBSwap ? srcRow[0] : srcRow[2];
-            uint8_t a = srcRow[3];
+            uint8_t d0 = needsSwap02 ? srcRow[2] : srcRow[0];
+            uint8_t d1 = srcRow[1];
+            uint8_t d2 = needsSwap02 ? srcRow[0] : srcRow[2];
+            uint8_t d3 = needsAlphaMask ? 0xff : srcRow[3];
 
             if (needsConvertTo16Bits) {
-                *(uint16_t*)destRow = PackRGB565(r, g, b);
+                *(uint16_t*)destRow = PackRGB565(d0, d1, d2);
             } else {
-                destRow[0] = r;
-                destRow[1] = g;
-                destRow[2] = b;
-                destRow[3] = a;
+                destRow[0] = d0;
+                destRow[1] = d1;
+                destRow[2] = d2;
+                destRow[3] = d3;
             }
-            srcRow += BytesPerPixel(aSource->GetFormat());
-            destRow += BytesPerPixel(aDest->GetFormat());
+            srcRow += srcBPP;
+            destRow += destBPP;
         }
 
         srcRow += srcRowHole;
         destRow += destRowHole;
-        --rows;
     }
+
+    aSource->Unmap();
+    aDest->Unmap();
 }
 
 static int
@@ -379,7 +412,11 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         SurfaceFormat readFormatGFX;
 
         switch (readFormat) {
-            case LOCAL_GL_RGBA:
+            case LOCAL_GL_RGBA: {
+                readFormatGFX = hasAlpha ? SurfaceFormat::R8G8B8A8
+                                         : SurfaceFormat::R8G8B8X8;
+                break;
+            }
             case LOCAL_GL_BGRA: {
                 readFormatGFX = hasAlpha ? SurfaceFormat::B8G8R8A8
                                          : SurfaceFormat::B8G8R8X8;
@@ -454,8 +491,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 #ifdef XP_MACOSX
     if (gl->WorkAroundDriverBugs() &&
         gl->Vendor() == gl::GLVendor::NVIDIA &&
-        (dest->GetFormat() == SurfaceFormat::R8G8B8A8 ||
-         dest->GetFormat() == SurfaceFormat::B8G8R8A8) &&
+        hasAlpha &&
         width && height)
     {
         GLint alphaBits = 0;
@@ -541,17 +577,19 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
     if (currentPackAlignment != 4) {
         gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
     }
+
     gl->fGetTexImage(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, surf->GetData());
+
     if (currentPackAlignment != 4) {
         gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
     }
 
     if (aFormat == SurfaceFormat::R8G8B8A8 || aFormat == SurfaceFormat::R8G8B8X8) {
-      SwapRAndBComponents(surf);
+        SwapRAndBComponents(surf);
     }
 
     if (aYInvert) {
-      surf = YInvertImageSurface(surf);
+        surf = YInvertImageSurface(surf);
     }
 
     return surf.forget();
