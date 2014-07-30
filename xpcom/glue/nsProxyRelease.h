@@ -177,7 +177,7 @@ class nsMainThreadPtrHandle
 
 public:
   nsMainThreadPtrHandle() : mPtr(nullptr) {}
-  nsMainThreadPtrHandle(nsMainThreadPtrHolder<T>* aHolder) : mPtr(aHolder) {}
+  explicit nsMainThreadPtrHandle(nsMainThreadPtrHolder<T>* aHolder) : mPtr(aHolder) {}
   nsMainThreadPtrHandle(const nsMainThreadPtrHandle& aOther)
     : mPtr(aOther.mPtr)
   {
@@ -185,6 +185,11 @@ public:
   nsMainThreadPtrHandle& operator=(const nsMainThreadPtrHandle& aOther)
   {
     mPtr = aOther.mPtr;
+    return *this;
+  }
+  nsMainThreadPtrHandle& operator=(nsMainThreadPtrHolder<T>* aHolder)
+  {
+    mPtr = aHolder;
     return *this;
   }
 

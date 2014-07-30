@@ -20,11 +20,11 @@
                        -- scc
 */
 
-#include "mozilla/Attributes.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/NullPtr.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
+#include "mozilla/NullPtr.h"
+#include "mozilla/TypeTraits.h"
 
 #include "nsDebug.h" // for |NS_ABORT_IF_FALSE|, |NS_ASSERTION|
 #include "nsISupportsUtils.h" // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
@@ -133,25 +133,39 @@ struct already_AddRefed
 */
 {
   /*
-   * Prohibit all one-argument overloads but already_AddRefed(T*) and
-   * already_AddRefed(decltype(nullptr)), and funnel the nullptr case through
-   * the T* constructor.
+   * We want to allow returning nullptr from functions returning
+   * already_AddRefed<T>, for simplicity.  But we also don't want to allow
+   * returning raw T*, instead preferring creation of already_AddRefed<T> from
+   * an nsRefPtr, nsCOMPtr, or the like.
+   *
+   * We address the latter requirement by making the (T*) constructor explicit.
+   * But |return nullptr| won't consider an explicit constructor, so we need
+   * another constructor to handle it.  Plain old (decltype(nullptr)) doesn't
+   * cut it, because if nullptr is emulated as __null (with type int or long),
+   * passing nullptr to an int/long parameter triggers compiler warnings.  We
+   * need a type that no one can pass accidentally; a pointer-to-member-function
+   * (where no such function exists) does the trick nicely.
+   *
+   * That handles the return-value case.  What about for locals, argument types,
+   * and so on?  |already_AddRefed<T>(nullptr)| considers both overloads (and
+   * the (already_AddRefed<T>&&) overload as well!), so there's an ambiguity.
+   * We can target true nullptr using decltype(nullptr), but we can't target
+   * emulated nullptr the same way, because passing __null to an int/long
+   * parameter triggers compiler warnings.  So just give up on this, and provide
+   * this behavior through the default constructor.
+   *
+   * We can revert to simply explicit (T*) and implicit (decltype(nullptr)) when
+   * nullptr no longer needs to be emulated to support the ancient b2g compiler.
+   * (The () overload could also be removed, if desired, if we changed callers.)
    */
-  template<typename N>
-  already_AddRefed(N,
-                   typename mozilla::EnableIf<mozilla::IsNullPointer<N>::value,
-                                              int>::Type aDummy = 0)
-    : mRawPtr(nullptr)
-  {
-  }
+  already_AddRefed() : mRawPtr(nullptr) {}
 
-#ifdef MOZ_HAVE_CXX11_NULLPTR
-  // We have to keep this constructor implicit if we don't have nullptr support
-  // so that returning nullptr from a function which returns an already_AddRefed
-  // type works on the older b2g toolchains.
-  explicit
-#endif
-  already_AddRefed(T* aRawPtr) : mRawPtr(aRawPtr) {}
+  // The return and argument types here are arbitrarily selected so no
+  // corresponding member function exists.
+  typedef void (already_AddRefed::* MatchNullptr)(double, float);
+  MOZ_IMPLICIT already_AddRefed(MatchNullptr aRawPtr) : mRawPtr(nullptr) {}
+
+  explicit already_AddRefed(T* aRawPtr) : mRawPtr(aRawPtr) {}
 
   // Disallowed.  Use move semantics instead.
   already_AddRefed(const already_AddRefed<T>& aOther) MOZ_DELETE;

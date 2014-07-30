@@ -264,7 +264,16 @@ mozNfc.prototype = {
     return eventType;
   },
 
+  hasDeadWrapper: function hasDeadWrapper() {
+    return Cu.isDeadWrapper(this._window) || Cu.isDeadWrapper(this.__DOM_IMPL__);
+  },
+
   firePeerEvent: function firePeerEvent(evt, sessionToken) {
+    if (this.hasDeadWrapper()) {
+      dump("this._window or this.__DOM_IMPL__ is a dead wrapper.");
+      return;
+    }
+
     let peerEvent = (NFC_PEER_EVENT_READY === evt) ? "peerready" : "peerlost";
     let detail = {
       "detail":sessionToken

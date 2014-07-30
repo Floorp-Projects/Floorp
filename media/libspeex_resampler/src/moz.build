@@ -24,8 +24,12 @@ FINAL_LIBRARY = 'gkmedias'
 
 # We don't compile the full speex codec, only the resampler.
 DEFINES['OUTSIDE_SPEEX'] = True
-# We don't use -fvisibility=hidden
+
+# Visibility is handled through VISIBILITY_FLAGS and
+# layout/media/symbols.def.in.
 DEFINES['EXPORT'] = ''
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+    NO_VISIBILITY_FLAGS = True
 
 if CONFIG['OS_TARGET'] == 'Android':
     DEFINES['FIXED_POINT'] = True

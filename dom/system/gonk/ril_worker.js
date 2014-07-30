@@ -6958,8 +6958,7 @@ RilObject.prototype[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = function UNSOLICIT
       this.context.GsmPDUHelper.readCbMessage(this.context.Buf.readInt32());
   } catch (e) {
     if (DEBUG) {
-      this.context.debug("Failed to parse Cell Broadcast message: " +
-                         JSON.stringify(e));
+      this.context.debug("Failed to parse Cell Broadcast message: " + e);
     }
     return;
   }
@@ -8407,7 +8406,16 @@ GsmPDUHelperObject.prototype = {
   readCbMessageIdentifier: function(msg) {
     let Buf = this.context.Buf;
     msg.messageId = Buf.readUint8() << 8 | Buf.readUint8();
+  },
 
+  /**
+   * Read ETWS information from message identifier and serial Number
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.4.1.2.1 & 9.4.1.2.2
+   */
+  readCbEtwsInfo: function(msg) {
     if ((msg.format != CB_FORMAT_ETWS)
         && (msg.messageId >= CB_GSM_MESSAGEID_ETWS_BEGIN)
         && (msg.messageId <= CB_GSM_MESSAGEID_ETWS_END)) {
@@ -8544,14 +8552,12 @@ GsmPDUHelperObject.prototype = {
   },
 
   /**
-   * Read CBS-Message-Information-Page
+   * Read GSM CB Data
    *
-   * @param msg
-   *        message object for output.
-   * @param length
-   *        length of cell broadcast data to read in octets.
+   * This parameter is a copy of the 'CBS-Message-Information-Page' as sent
+   * from the CBC to the BSC.
    *
-   * @see 3GPP TS 23.041 section 9.3.19
+   * @see  3GPP TS 23.041 section 9.4.1.2.5
    */
   readGsmCbData: function(msg, length) {
     let Buf = this.context.Buf;
@@ -8591,6 +8597,10 @@ GsmPDUHelperObject.prototype = {
         break;
     }
 
+    if (msg.data || !msg.body) {
+      return;
+    }
+
     // According to 9.3.19 CBS-Message-Information-Page in TS 23.041:
     // "
     //  This parameter is of a fixed length of 82 octets and carries up to and
@@ -8599,12 +8609,132 @@ GsmPDUHelperObject.prototype = {
     // "
     // According to 6.2.1.1 GSM 7 bit Default Alphabet and 6.2.3 UCS2 in
     // TS 23.038, the padding character is <CR>.
-    if (!msg.body) {
-      return;
-    }
     for (let i = msg.body.length - 1; i >= 0; i--) {
       if (msg.body.charAt(i) !== '\r') {
         msg.body = msg.body.substring(0, i + 1);
+        break;
+      }
+    }
+  },
+
+  /**
+   * Read UMTS CB Data
+   *
+   * Octet Number(s)  Parameter
+   *               1  Number-of-Pages
+   *          2 - 83  CBS-Message-Information-Page 1
+   *              84  CBS-Message-Information-Length 1
+   *             ...
+   *                  CBS-Message-Information-Page n
+   *                  CBS-Message-Information-Length n
+   *
+   * @see 3GPP TS 23.041 section 9.4.2.2.5
+   */
+  readUmtsCbData: function(msg) {
+    let Buf = this.context.Buf;
+    let numOfPages = Buf.readUint8();
+    if (numOfPages < 0 || numOfPages > 15) {
+      throw new Error("Invalid numOfPages: " + numOfPages);
+    }
+
+    let bufAdapter = {
+      context: this.context,
+      readHexOctet: function() {
+        return Buf.readUint8();
+      }
+    };
+
+    let removePaddingCharactors = function (text) {
+      for (let i = text.length - 1; i >= 0; i--) {
+        if (text.charAt(i) !== '\r') {
+          return text.substring(0, i + 1);
+        }
+      }
+      return text;
+    }
+
+    let totalLength = 0, length, pageLengths = [];
+    for (let i = 0; i < numOfPages; i++) {
+      Buf.seekIncoming(CB_MSG_PAGE_INFO_SIZE);
+      length = Buf.readUint8();
+      totalLength += length;
+      pageLengths.push(length);
+    }
+
+    // Seek back to beginning of CB Data.
+    Buf.seekIncoming(-numOfPages * (CB_MSG_PAGE_INFO_SIZE + 1));
+
+    switch (msg.encoding) {
+      case PDU_DCS_MSG_CODING_7BITS_ALPHABET: {
+        let body;
+        msg.body = "";
+        for (let i = 0; i < numOfPages; i++) {
+          body = this.readSeptetsToString.call(bufAdapter,
+                                               (pageLengths[i] * 8 / 7),
+                                               0,
+                                               PDU_NL_IDENTIFIER_DEFAULT,
+                                               PDU_NL_IDENTIFIER_DEFAULT);
+          if (msg.hasLanguageIndicator) {
+            if (!msg.language) {
+              msg.language = body.substring(0, 2);
+            }
+            body = body.substring(3);
+          }
+
+          msg.body += removePaddingCharactors(body);
+
+          // Skip padding octets
+          Buf.seekIncoming(CB_MSG_PAGE_INFO_SIZE - pageLengths[i]);
+          // Read the octet of CBS-Message-Information-Length
+          Buf.readUint8();
+        }
+
+        break;
+      }
+
+      case PDU_DCS_MSG_CODING_8BITS_ALPHABET: {
+        msg.data = new Uint8Array(totalLength);
+        for (let i = 0, j = 0; i < numOfPages; i++) {
+          for (let pageLength = pageLengths[i]; pageLength > 0; pageLength--) {
+              msg.data[j++] = Buf.readUint8();
+          }
+
+          // Skip padding octets
+          Buf.seekIncoming(CB_MSG_PAGE_INFO_SIZE - pageLengths[i]);
+          // Read the octet of CBS-Message-Information-Length
+          Buf.readUint8();
+        }
+
+        break;
+      }
+
+      case PDU_DCS_MSG_CODING_16BITS_ALPHABET: {
+        msg.body = "";
+        for (let i = 0; i < numOfPages; i++) {
+          let pageLength = pageLengths[i];
+          if (msg.hasLanguageIndicator) {
+            if (!msg.language) {
+              msg.language = this.readSeptetsToString.call(bufAdapter,
+                                                           2,
+                                                           0,
+                                                           PDU_NL_IDENTIFIER_DEFAULT,
+                                                           PDU_NL_IDENTIFIER_DEFAULT);
+            } else {
+              Buf.readUint16();
+            }
+
+            pageLength -= 2;
+          }
+
+          msg.body += removePaddingCharactors(
+                        this.readUCS2String.call(bufAdapter, pageLength));
+
+          // Skip padding octets
+          Buf.seekIncoming(CB_MSG_PAGE_INFO_SIZE - pageLengths[i]);
+          // Read the octet of CBS-Message-Information-Length
+          Buf.readUint8();
+        }
+
         break;
       }
     }
@@ -8657,7 +8787,38 @@ GsmPDUHelperObject.prototype = {
       return this.readGsmCbMessage(msg, pduLength);
     }
 
-    return null;
+    if (pduLength >= CB_MESSAGE_SIZE_UMTS_MIN &&
+        pduLength <= CB_MESSAGE_SIZE_UMTS_MAX) {
+      msg.format = CB_FORMAT_UMTS;
+      return this.readUmtsCbMessage(msg);
+    }
+
+    throw new Error("Invalid PDU Length: " + pduLength);
+  },
+
+  /**
+   * Read UMTS CBS Message.
+   *
+   * @param msg
+   *        message object for output.
+   *
+   * @see 3GPP TS 23.041 section 9.4.2
+   * @see 3GPP TS 25.324 section 10.2
+   */
+  readUmtsCbMessage: function(msg) {
+    let Buf = this.context.Buf;
+    let type = Buf.readUint8();
+    if (type != CB_UMTS_MESSAGE_TYPE_CBS) {
+      throw new Error("Unsupported UMTS Cell Broadcast message type: " + type);
+    }
+
+    this.readCbMessageIdentifier(msg);
+    this.readCbSerialNumber(msg);
+    this.readCbEtwsInfo(msg);
+    this.readCbDataCodingScheme(msg);
+    this.readUmtsCbData(msg);
+
+    return msg;
   },
 
   /**
@@ -8673,6 +8834,7 @@ GsmPDUHelperObject.prototype = {
   readGsmCbMessage: function(msg, pduLength) {
     this.readCbSerialNumber(msg);
     this.readCbMessageIdentifier(msg);
+    this.readCbEtwsInfo(msg);
     this.readCbDataCodingScheme(msg);
     this.readCbPageParameter(msg);
 

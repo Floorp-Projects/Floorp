@@ -8,6 +8,8 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/Preferences.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
@@ -27,6 +29,32 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Headers)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+// static
+bool
+Headers::PrefEnabled(JSContext* aCx, JSObject* aObj)
+{
+  using mozilla::dom::workers::WorkerPrivate;
+  using mozilla::dom::workers::GetWorkerPrivateFromContext;
+
+  if (NS_IsMainThread()) {
+    static bool sPrefCacheInit = false;
+    static bool sPrefEnabled = false;
+    if (sPrefCacheInit) {
+      return sPrefEnabled;
+    }
+    Preferences::AddBoolVarCache(&sPrefEnabled, "dom.fetch.enabled");
+    sPrefCacheInit = true;
+    return sPrefEnabled;
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  return workerPrivate->DOMFetchEnabled();
+}
 
 // static
 already_AddRefed<Headers>

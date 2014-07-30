@@ -54,6 +54,8 @@ public:
     SetIsDOMBinding();
   }
 
+  static bool PrefEnabled(JSContext* cx, JSObject* obj);
+
   static already_AddRefed<Headers>
   Constructor(const GlobalObject& aGlobal,
               const Optional<HeadersOrByteStringSequenceSequenceOrByteStringMozMap>& aInit,

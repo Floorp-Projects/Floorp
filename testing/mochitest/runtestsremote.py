@@ -577,76 +577,6 @@ class MochiRemote(Mochitest):
 
         return self._automation.runApp(*args, **kwargs)
 
-class RobocopMochiRemote(MochiRemote):
-    """This class maintains compatibility with the robocop logging system
-    that is still unstructured."""
-
-    def addLogData(self):
-        with open(self.localLog) as currentLog:
-            data = currentLog.readlines()
-
-        restart = re.compile('SimpleTest START.*')
-        reend = re.compile('TEST-START . Shutdown.*')
-        refail = re.compile('TEST-UNEXPECTED-FAIL.*')
-        start_found = False
-        end_found = False
-        fail_found = False
-        for line in data:
-            if reend.match(line):
-                end_found = True
-                start_found = False
-                break
-
-            if start_found and not end_found:
-                self.logMessages.append(line)
-
-            if restart.match(line):
-                start_found = True
-            if refail.match(line):
-                fail_found = True
-        result = 0
-        if fail_found:
-            result = 1
-        if not end_found:
-            log.error("Automation Error: Missing end of test marker (process crashed?)")
-            result = 1
-        return result
-
-    def printLog(self):
-        passed = 0
-        failed = 0
-        todo = 0
-        incr = 1
-        logFile = []
-        logFile.append("0 INFO SimpleTest START")
-        for line in self.logMessages:
-            if line.startswith("TEST-PASS"):
-                passed += 1
-            elif line.startswith("TEST-UNEXPECTED"):
-                failed += 1
-            elif line.startswith("TEST-KNOWN"):
-                todo += 1
-            incr += 1
-
-        logFile.append("%s INFO TEST-START | Shutdown" % incr)
-        incr += 1
-        logFile.append("%s INFO Passed: %s" % (incr, passed))
-        incr += 1
-        logFile.append("%s INFO Failed: %s" % (incr, failed))
-        incr += 1
-        logFile.append("%s INFO Todo: %s" % (incr, todo))
-        incr += 1
-        logFile.append("%s INFO SimpleTest FINISHED" % incr)
-
-        # TODO: Consider not printing to stdout because we might be duplicating output
-        print '\n'.join(logFile)
-        with open(self.localLog, 'w') as localLog:
-            localLog.write('\n'.join(logFile))
-
-        if failed > 0:
-            return 1
-        return 0
-
 def main():
     message_logger = MessageLogger(logger=log)
     process_args = {'messageLogger': message_logger}
@@ -674,8 +604,7 @@ def main():
         auto.setProduct(options.remoteProductName)
     auto.setAppName(options.remoteappname)
 
-    mochitest_cls = RobocopMochiRemote if options.robocopIni != "" else MochiRemote
-    mochitest = mochitest_cls(auto, dm, options, message_logger)
+    mochitest = MochiRemote(auto, dm, options, message_logger)
 
     options = parser.verifyOptions(options, mochitest)
     if (options == None):
@@ -720,6 +649,8 @@ def main():
             tests.append(test['name'])
         # suite_start message when running robocop tests
         log.suite_start(tests)
+        # turning buffering off as it's not used in robocop
+        message_logger.buffering = False
 
         if options.totalChunks:
             tests_per_chunk = math.ceil(len(tests) / (options.totalChunks * 1.0))
@@ -851,6 +782,7 @@ def main():
                 pass
             retVal = 1
 
+    message_logger.finish()
     mochitest.printDeviceInfo(printLogcat=True)
 
     sys.exit(retVal)

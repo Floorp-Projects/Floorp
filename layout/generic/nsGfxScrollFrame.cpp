@@ -53,6 +53,8 @@
 #include "StickyScrollContainer.h"
 #include "nsIFrameInlines.h"
 #include "gfxPrefs.h"
+#include <mozilla/layers/AxisPhysicsModel.h>
+#include <mozilla/layers/AxisPhysicsMSDModel.h>
 #include <algorithm>
 #include <cstdlib> // for std::abs(int/long)
 #include <cmath> // for std::abs(float/double)
@@ -1244,6 +1246,136 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 const double kCurrentVelocityWeighting = 0.25;
 const double kStopDecelerationWeighting = 0.4;
 
+// AsyncSmoothMSDScroll has ref counting.
+class ScrollFrameHelper::AsyncSmoothMSDScroll MOZ_FINAL : public nsARefreshObserver {
+public:
+  AsyncSmoothMSDScroll(const nsPoint &aInitialPosition,
+                       const nsPoint &aInitialDestination,
+                       const nsSize &aInitialVelocity,
+                       const nsRect &aRange,
+                       const mozilla::TimeStamp &aStartTime)
+    : mXAxisModel(aInitialPosition.x, aInitialDestination.x,
+                  aInitialVelocity.width,
+                  gfxPrefs::ScrollBehaviorSpringConstant(),
+                  gfxPrefs::ScrollBehaviorDampingRatio())
+    , mYAxisModel(aInitialPosition.y, aInitialDestination.y,
+                  aInitialVelocity.height,
+                  gfxPrefs::ScrollBehaviorSpringConstant(),
+                  gfxPrefs::ScrollBehaviorDampingRatio())
+    , mRange(aRange)
+    , mLastRefreshTime(aStartTime)
+    , mCallee(nullptr)
+  {
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(AsyncSmoothMSDScroll)
+
+  nsSize GetVelocity() {
+    // In nscoords per second
+    return nsSize(mXAxisModel.GetVelocity(), mYAxisModel.GetVelocity());
+  }
+
+  nsPoint GetPosition() {
+    // In nscoords
+    return nsPoint(NSToCoordRound(mXAxisModel.GetPosition()), NSToCoordRound(mYAxisModel.GetPosition()));
+  }
+
+  void SetDestination(const nsPoint &aDestination) {
+    mXAxisModel.SetDestination(static_cast<int32_t>(aDestination.x));
+    mYAxisModel.SetDestination(static_cast<int32_t>(aDestination.y));
+  }
+
+  void SetRange(const nsRect &aRange)
+  {
+    mRange = aRange;
+  }
+
+  nsRect GetRange()
+  {
+    return mRange;
+  }
+
+  void Simulate(const TimeDuration& aDeltaTime)
+  {
+    mXAxisModel.Simulate(aDeltaTime);
+    mYAxisModel.Simulate(aDeltaTime);
+
+    nsPoint desired = GetPosition();
+    nsPoint clamped = mRange.ClampPoint(desired);
+    if(desired.x != clamped.x) {
+      // The scroll has hit the "wall" at the left or right edge of the allowed
+      // scroll range.
+      // Absorb the impact to avoid bounceback effect.
+      mXAxisModel.SetVelocity(0.0);
+      mXAxisModel.SetPosition(clamped.x);
+    }
+
+    if(desired.y != clamped.y) {
+      // The scroll has hit the "wall" at the left or right edge of the allowed
+      // scroll range.
+      // Absorb the impact to avoid bounceback effect.
+      mYAxisModel.SetVelocity(0.0);
+      mYAxisModel.SetPosition(clamped.y);
+    }
+  }
+
+  bool IsFinished()
+  {
+    return mXAxisModel.IsFinished() && mYAxisModel.IsFinished();
+  }
+
+  virtual void WillRefresh(mozilla::TimeStamp aTime) MOZ_OVERRIDE {
+    mozilla::TimeDuration deltaTime = aTime - mLastRefreshTime;
+    mLastRefreshTime = aTime;
+
+    // The callback may release "this".
+    // We don't access members after returning, so no need for KungFuDeathGrip.
+    ScrollFrameHelper::AsyncSmoothMSDScrollCallback(mCallee, deltaTime);
+  }
+
+  /*
+   * Set a refresh observer for smooth scroll iterations (and start observing).
+   * Should be used at most once during the lifetime of this object.
+   * Return value: true on success, false otherwise.
+   */
+  bool SetRefreshObserver(ScrollFrameHelper *aCallee) {
+    NS_ASSERTION(aCallee && !mCallee, "AsyncSmoothMSDScroll::SetRefreshObserver - Invalid usage.");
+
+    if (!RefreshDriver(aCallee)->AddRefreshObserver(this, Flush_Style)) {
+      return false;
+    }
+
+    mCallee = aCallee;
+    return true;
+  }
+
+private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~AsyncSmoothMSDScroll() {
+    RemoveObserver();
+  }
+
+  nsRefreshDriver* RefreshDriver(ScrollFrameHelper* aCallee) {
+    return aCallee->mOuter->PresContext()->RefreshDriver();
+  }
+
+  /*
+   * The refresh driver doesn't hold a reference to its observers,
+   *   so releasing this object can (and is) used to remove the observer on DTOR.
+   * Currently, this object is released once the scrolling ends.
+   */
+  void RemoveObserver() {
+    if (mCallee) {
+      RefreshDriver(mCallee)->RemoveRefreshObserver(this, Flush_Style);
+    }
+  }
+
+  mozilla::layers::AxisPhysicsMSDModel mXAxisModel, mYAxisModel;
+  nsRect mRange;
+  mozilla::TimeStamp mLastRefreshTime;
+  ScrollFrameHelper *mCallee;
+};
+
 // AsyncScroll has ref counting.
 class ScrollFrameHelper::AsyncScroll MOZ_FINAL : public nsARefreshObserver {
 public:
@@ -1267,7 +1399,8 @@ public:
   nsSize VelocityAt(TimeStamp aTime); // In nscoords per second
 
   void InitSmoothScroll(TimeStamp aTime, nsPoint aDestination,
-                        nsIAtom *aOrigin, const nsRect& aRange);
+                        nsIAtom *aOrigin, const nsRect& aRange,
+                        const nsSize& aCurrentVelocity);
   void Init(const nsRect& aRange) {
     mRange = aRange;
   }
@@ -1466,10 +1599,11 @@ void
 ScrollFrameHelper::AsyncScroll::InitSmoothScroll(TimeStamp aTime,
                                                      nsPoint aDestination,
                                                      nsIAtom *aOrigin,
-                                                     const nsRect& aRange) {
+                                                     const nsRect& aRange,
+                                                     const nsSize& aCurrentVelocity) {
   mRange = aRange;
   TimeDuration duration = CalcDurationForEventTime(aTime, aOrigin);
-  nsSize currentVelocity(0, 0);
+  nsSize currentVelocity = aCurrentVelocity;
   if (!mIsFirstIteration) {
     // If an additional event has not changed the destination, then do not let
     // another minimum duration reset slow things down.  If it would then
@@ -1569,6 +1703,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mResizerBox(nullptr)
   , mOuter(aOuter)
   , mAsyncScroll(nullptr)
+  , mAsyncSmoothMSDScroll(nullptr)
   , mOriginOfLastScroll(nsGkAtoms::other)
   , mScrollGeneration(++sScrollGenerationCounter)
   , mDestination(0, 0)
@@ -1642,44 +1777,83 @@ ScrollFrameHelper::~ScrollFrameHelper()
 }
 
 /*
+ * Callback function from AsyncSmoothMSDScroll, used in ScrollFrameHelper::ScrollTo
+ */
+void
+ScrollFrameHelper::AsyncSmoothMSDScrollCallback(ScrollFrameHelper* aInstance,
+                                                mozilla::TimeDuration aDeltaTime)
+{
+  NS_ASSERTION(aInstance != nullptr, "aInstance must not be null");
+  NS_ASSERTION(aInstance->mAsyncSmoothMSDScroll,
+    "Did not expect AsyncSmoothMSDScrollCallback without an active MSD scroll.");
+
+  nsRect range = aInstance->mAsyncSmoothMSDScroll->GetRange();
+  aInstance->mAsyncSmoothMSDScroll->Simulate(aDeltaTime);
+
+  if (!aInstance->mAsyncSmoothMSDScroll->IsFinished()) {
+    nsPoint destination = aInstance->mAsyncSmoothMSDScroll->GetPosition();
+    // Allow this scroll operation to land on any pixel boundary within the
+    // allowed scroll range for this frame.
+    // If the MSD is under-dampened or the destination is changed rapidly,
+    // it is expected (and desired) that the scrolling may overshoot.
+    nsRect intermediateRange =
+      nsRect(destination, nsSize()).UnionEdges(range);
+    aInstance->ScrollToImpl(destination, intermediateRange);
+    // 'aInstance' might be destroyed here
+    return;
+  }
+
+  aInstance->CompleteAsyncScroll(range);
+}
+
+/*
  * Callback function from AsyncScroll, used in ScrollFrameHelper::ScrollTo
  */
 void
-ScrollFrameHelper::AsyncScrollCallback(void* anInstance, mozilla::TimeStamp aTime)
+ScrollFrameHelper::AsyncScrollCallback(ScrollFrameHelper* aInstance,
+                                       mozilla::TimeStamp aTime)
 {
-  ScrollFrameHelper* self = static_cast<ScrollFrameHelper*>(anInstance);
-  if (!self || !self->mAsyncScroll)
-    return;
+  NS_ASSERTION(aInstance != nullptr, "aInstance must not be null");
+  NS_ASSERTION(aInstance->mAsyncScroll,
+    "Did not expect AsyncScrollCallback without an active async scroll.");
 
-  nsRect range = self->mAsyncScroll->mRange;
-  if (self->mAsyncScroll->mIsSmoothScroll) {
-    if (!self->mAsyncScroll->IsFinished(aTime)) {
-      nsPoint destination = self->mAsyncScroll->PositionAt(aTime);
+  nsRect range = aInstance->mAsyncScroll->mRange;
+  if (aInstance->mAsyncScroll->mIsSmoothScroll) {
+    if (!aInstance->mAsyncScroll->IsFinished(aTime)) {
+      nsPoint destination = aInstance->mAsyncScroll->PositionAt(aTime);
       // Allow this scroll operation to land on any pixel boundary between the
       // current position and the final allowed range.  (We don't want
       // intermediate steps to be more constrained than the final step!)
       nsRect intermediateRange =
-        nsRect(self->GetScrollPosition(), nsSize()).UnionEdges(range);
-      self->ScrollToImpl(destination, intermediateRange);
-      // 'self' might be destroyed here
+        nsRect(aInstance->GetScrollPosition(), nsSize()).UnionEdges(range);
+      aInstance->ScrollToImpl(destination, intermediateRange);
+      // 'aInstance' might be destroyed here
       return;
     }
   }
 
+  aInstance->CompleteAsyncScroll(range);
+}
+
+void
+ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin)
+{
   // Apply desired destination range since this is the last step of scrolling.
-  self->mAsyncScroll = nullptr;
-  nsWeakFrame weakFrame(self->mOuter);
-  self->ScrollToImpl(self->mDestination, range);
+  mAsyncSmoothMSDScroll = nullptr;
+  mAsyncScroll = nullptr;
+  nsWeakFrame weakFrame(mOuter);
+  ScrollToImpl(mDestination, aRange, aOrigin);
   if (!weakFrame.IsAlive()) {
     return;
   }
   // We are done scrolling, set our destination to wherever we actually ended
   // up scrolling to.
-  self->mDestination = self->GetScrollPosition();
+  mDestination = GetScrollPosition();
 }
 
 void
-ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition)
+ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                                     nsIScrollableFrame::ScrollMode aMode)
 {
   nsPoint current = GetScrollPosition();
   CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
@@ -1699,7 +1873,7 @@ ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition)
     range.y = pt.y;
     range.height = 0;
   }
-  ScrollTo(pt, nsIScrollableFrame::INSTANT, &range);
+  ScrollTo(pt, aMode, &range);
   // 'this' might be destroyed here
 }
 
@@ -1738,15 +1912,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   if (aMode == nsIScrollableFrame::INSTANT) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll.
-    mAsyncScroll = nullptr;
-    nsWeakFrame weakFrame(mOuter);
-    ScrollToImpl(mDestination, range, aOrigin);
-    if (!weakFrame.IsAlive()) {
-      return;
-    }
-    // We are done scrolling, set our destination to wherever we actually ended
-    // up scrolling to.
-    mDestination = GetScrollPosition();
+    CompleteAsyncScroll(range, aOrigin);
     return;
   }
 
@@ -1754,19 +1920,48 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   bool isSmoothScroll = (aMode == nsIScrollableFrame::SMOOTH) &&
                           IsSmoothScrollingEnabled();
 
+  nsSize currentVelocity(0, 0);
+
+  if (gfxPrefs::ScrollBehaviorEnabled()) {
+    if (aMode == nsIScrollableFrame::SMOOTH_MSD) {
+      if (!mAsyncSmoothMSDScroll) {
+        if (mAsyncScroll) {
+          if (mAsyncScroll->mIsSmoothScroll) {
+            currentVelocity = mAsyncScroll->VelocityAt(now);
+          }
+          mAsyncScroll = nullptr;
+        }
+
+        mAsyncSmoothMSDScroll =
+          new AsyncSmoothMSDScroll(GetScrollPosition(), mDestination,
+                                   currentVelocity, GetScrollRangeForClamping(),
+                                   now);
+
+        if (!mAsyncSmoothMSDScroll->SetRefreshObserver(this)) {
+          // Observer setup failed. Scroll the normal way.
+          CompleteAsyncScroll(range, aOrigin);
+          return;
+        }
+      } else {
+        // A previous smooth MSD scroll is still in progress, so we just need to
+        // update its destination.
+        mAsyncSmoothMSDScroll->SetDestination(mDestination);
+      }
+
+      return;
+    } else {
+      if (mAsyncSmoothMSDScroll) {
+        currentVelocity = mAsyncSmoothMSDScroll->GetVelocity();
+        mAsyncSmoothMSDScroll = nullptr;
+      }
+    }
+  }
+
   if (!mAsyncScroll) {
     mAsyncScroll = new AsyncScroll(GetScrollPosition());
     if (!mAsyncScroll->SetRefreshObserver(this)) {
-      mAsyncScroll = nullptr;
       // Observer setup failed. Scroll the normal way.
-      nsWeakFrame weakFrame(mOuter);
-      ScrollToImpl(mDestination, range, aOrigin);
-      if (!weakFrame.IsAlive()) {
-        return;
-      }
-      // We are done scrolling, set our destination to wherever we actually
-      // ended up scrolling to.
-      mDestination = GetScrollPosition();
+      CompleteAsyncScroll(range, aOrigin);
       return;
     }
   }
@@ -1774,7 +1969,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   mAsyncScroll->mIsSmoothScroll = isSmoothScroll;
 
   if (isSmoothScroll) {
-    mAsyncScroll->InitSmoothScroll(now, mDestination, aOrigin, range);
+    mAsyncScroll->InitSmoothScroll(now, mDestination, aOrigin, range, currentVelocity);
   } else {
     mAsyncScroll->Init(range);
   }
@@ -2824,8 +3019,24 @@ ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
                                 nsIScrollableFrame::ScrollUnit aUnit,
                                 nsIScrollableFrame::ScrollMode aMode,
                                 nsIntPoint* aOverflow,
-                                nsIAtom *aOrigin)
+                                nsIAtom *aOrigin,
+                                bool aIsMomentum)
 {
+  // When a smooth scroll is being processed on a frame, mouse wheel and trackpad
+  // momentum scroll event updates must notcancel the SMOOTH or SMOOTH_MSD
+  // scroll animations, enabling Javascript that depends on them to be responsive
+  // without forcing the user to wait for the fling animations to completely stop.
+  if (aIsMomentum && IsProcessingAsyncScroll()) {
+    return;
+  }
+
+  if (mAsyncSmoothMSDScroll != nullptr) {
+    // When CSSOM-View scroll-behavior smooth scrolling is interrupted,
+    // the scroll is not completed to avoid non-smooth snapping to the
+    // prior smooth scroll's destination.
+    mDestination = GetScrollPosition();
+  }
+
   nsSize deltaMultiplier;
   float negativeTolerance;
   float positiveTolerance;
@@ -3966,7 +4177,7 @@ ScrollFrameHelper::ReflowFinished()
   // do anything.
   nsPoint currentScrollPos = GetScrollPosition();
   ScrollToImpl(currentScrollPos, nsRect(currentScrollPos, nsSize(0, 0)));
-  if (!mAsyncScroll) {
+  if (!mAsyncScroll && !mAsyncSmoothMSDScroll) {
     // We need to have mDestination track the current scroll position,
     // in case it falls outside the new reflow area. mDestination is used
     // by ScrollBy as its starting position.

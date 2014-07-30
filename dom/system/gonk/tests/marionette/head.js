@@ -7,7 +7,6 @@ const SETTINGS_KEY_DATA_ENABLED = "ril.data.enabled";
 const SETTINGS_KEY_DATA_APN_SETTINGS  = "ril.data.apnSettings";
 
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
-const TOPIC_INTERFACE_STATE_CHANGED = "network-interface-state-changed";
 const TOPIC_NETWORK_ACTIVE_CHANGED = "network-active-changed";
 
 let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
