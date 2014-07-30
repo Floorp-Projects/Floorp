@@ -545,8 +545,8 @@ GLBlitHelper::DeleteTexBlitProgram()
 
 void
 GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                        const gfx::IntSize& srcSize,
-                                        const gfx::IntSize& destSize)
+                                           const gfx::IntSize& srcSize,
+                                           const gfx::IntSize& destSize)
 {
     MOZ_ASSERT(!srcFB || mGL->fIsFramebuffer(srcFB));
     MOZ_ASSERT(!destFB || mGL->fIsFramebuffer(destFB));
@@ -567,9 +567,9 @@ GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
 
 void
 GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                        const gfx::IntSize& srcSize,
-                                        const gfx::IntSize& destSize,
-                                        const GLFormats& srcFormats)
+                                           const gfx::IntSize& srcSize,
+                                           const gfx::IntSize& destSize,
+                                           const GLFormats& srcFormats)
 {
     MOZ_ASSERT(!srcFB || mGL->fIsFramebuffer(srcFB));
     MOZ_ASSERT(!destFB || mGL->fIsFramebuffer(destFB));
@@ -590,7 +590,11 @@ GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
 }
 
 void
-GLBlitHelper::BindAndUploadYUVTexture(Channel which, uint32_t width, uint32_t height, void* data, bool needsAllocation)
+GLBlitHelper::BindAndUploadYUVTexture(Channel which,
+                                      uint32_t width,
+                                      uint32_t height,
+                                      void* data,
+                                      bool needsAllocation)
 {
     MOZ_ASSERT(which < Channel_Max, "Invalid channel!");
     GLuint* srcTexArr[3] = {&mSrcTexY, &mSrcTexCb, &mSrcTexCr};
@@ -628,7 +632,8 @@ GLBlitHelper::BindAndUploadYUVTexture(Channel which, uint32_t width, uint32_t he
 
 #ifdef MOZ_WIDGET_GONK
 void
-GLBlitHelper::BindAndUploadExternalTexture(EGLImage image) {
+GLBlitHelper::BindAndUploadExternalTexture(EGLImage image)
+{
     MOZ_ASSERT(image != EGL_NO_IMAGE, "Bad EGLImage");
 
     if (!mSrcTexEGL) {
@@ -645,7 +650,8 @@ GLBlitHelper::BindAndUploadExternalTexture(EGLImage image) {
 }
 
 bool
-GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage, bool yFlip) {
+GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage, bool yFlip)
+{
     ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
     mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
 
@@ -713,23 +719,30 @@ GLBlitHelper::BlitPlanarYCbCrImage(layers::PlanarYCbCrImage* yuvImage, bool yFli
 }
 
 bool
-GLBlitHelper::BlitImageToTexture(layers::Image* srcImage, const gfx::IntSize& destSize, GLuint destTex, GLenum destTarget, bool yFlip, GLuint xoffset, GLuint yoffset, GLuint cropWidth, GLuint cropHeight)
+GLBlitHelper::BlitImageToTexture(layers::Image* srcImage,
+                                 const gfx::IntSize& destSize,
+                                 GLuint destTex,
+                                 GLenum destTarget,
+                                 bool yFlip,
+                                 GLuint xoffset,
+                                 GLuint yoffset,
+                                 GLuint cropWidth,
+                                 GLuint cropHeight)
 {
     ScopedGLDrawState autoStates(mGL);
 
     BlitType type;
-    switch (srcImage->GetFormat())
-    {
-        case ImageFormat::PLANAR_YCBCR:
-            type = ConvertPlanarYCbCr;
-            break;
-        case ImageFormat::GRALLOC_PLANAR_YCBCR:
+    switch (srcImage->GetFormat()) {
+    case ImageFormat::PLANAR_YCBCR:
+        type = ConvertPlanarYCbCr;
+        break;
+    case ImageFormat::GRALLOC_PLANAR_YCBCR:
 #ifdef MOZ_WIDGET_GONK
-            type = ConvertGralloc;
-            break;
+        type = ConvertGralloc;
+        break;
 #endif
-        default:
-            return false;
+    default:
+        return false;
     }
 
     bool init = InitTexQuadProgram(type);
@@ -767,9 +780,9 @@ GLBlitHelper::BlitImageToTexture(layers::Image* srcImage, const gfx::IntSize& de
 
 void
 GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
-                                    const gfx::IntSize& srcSize,
-                                    const gfx::IntSize& destSize,
-                                    GLenum srcTarget)
+                                       const gfx::IntSize& srcSize,
+                                       const gfx::IntSize& destSize,
+                                       GLenum srcTarget)
 {
     MOZ_ASSERT(mGL->fIsTexture(srcTex));
     MOZ_ASSERT(!destFB || mGL->fIsFramebuffer(destFB));
@@ -813,9 +826,9 @@ GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
 
 void
 GLBlitHelper::BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
-                                    const gfx::IntSize& srcSize,
-                                    const gfx::IntSize& destSize,
-                                    GLenum destTarget)
+                                       const gfx::IntSize& srcSize,
+                                       const gfx::IntSize& destSize,
+                                       GLenum destTarget)
 {
     MOZ_ASSERT(!srcFB || mGL->fIsFramebuffer(srcFB));
     MOZ_ASSERT(mGL->fIsTexture(destTex));
@@ -840,9 +853,9 @@ GLBlitHelper::BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
 
 void
 GLBlitHelper::BlitTextureToTexture(GLuint srcTex, GLuint destTex,
-                                const gfx::IntSize& srcSize,
-                                const gfx::IntSize& destSize,
-                                GLenum srcTarget, GLenum destTarget)
+                                   const gfx::IntSize& srcSize,
+                                   const gfx::IntSize& destSize,
+                                   GLenum srcTarget, GLenum destTarget)
 {
     MOZ_ASSERT(mGL->fIsTexture(srcTex));
     MOZ_ASSERT(mGL->fIsTexture(destTex));

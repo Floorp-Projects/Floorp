@@ -5,12 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLReadTexImageHelper.h"
+
+#include "gfx2DGlue.h"
+#include "gfxTypes.h"
 #include "GLContext.h"
 #include "OGLShaderProgram.h"
-#include "gfxTypes.h"
 #include "ScopedGLHelpers.h"
+
 #include "mozilla/gfx/2D.h"
-#include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace gl {
@@ -81,18 +83,17 @@ readTextureImageFS_TEXTURE_RECTANGLE[] =
     "void main() { gl_FragColor = texture2DRect(uTexture, vTexCoord).bgra; }";
 
 GLuint
-GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget, int aConfig) {
+GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget,
+                                             int aConfig)
+{
     int variant = 0;
     const GLchar* readTextureImageFS = nullptr;
-    if (aTextureTarget == LOCAL_GL_TEXTURE_2D)
-    {
-        if (aConfig & mozilla::layers::ENABLE_TEXTURE_RB_SWAP)
-        {   // Need to swizzle R/B.
+    if (aTextureTarget == LOCAL_GL_TEXTURE_2D) {
+        if (aConfig & mozilla::layers::ENABLE_TEXTURE_RB_SWAP) {
+            // Need to swizzle R/B.
             readTextureImageFS = readTextureImageFS_TEXTURE_2D_BGRA;
             variant = 1;
-        }
-        else
-        {
+        } else {
             readTextureImageFS = readTextureImageFS_TEXTURE_2D;
             variant = 0;
         }
@@ -205,36 +206,37 @@ GetActualReadFormats(GLContext* gl,
     }
 }
 
-static void SwapRAndBComponents(DataSourceSurface* surf)
+static void
+SwapRAndBComponents(DataSourceSurface* surf)
 {
-  uint8_t *row = surf->GetData();
-  if (!row) {
-      MOZ_ASSERT(false, "SwapRAndBComponents: Failed to get data from DataSourceSurface.");
-      return;
-  }
-
-  size_t rowBytes = surf->GetSize().width*4;
-  size_t rowHole = surf->Stride() - rowBytes;
-
-  size_t rows = surf->GetSize().height;
-
-  while (rows) {
-
-    const uint8_t *rowEnd = row + rowBytes;
-
-    while (row != rowEnd) {
-      row[0] ^= row[2];
-      row[2] ^= row[0];
-      row[0] ^= row[2];
-      row += 4;
+    uint8_t* row = surf->GetData();
+    if (!row) {
+        MOZ_ASSERT(false, "SwapRAndBComponents: Failed to get data from DataSourceSurface.");
+        return;
     }
 
-    row += rowHole;
-    --rows;
-  }
+    size_t rowBytes = surf->GetSize().width*4;
+    size_t rowHole = surf->Stride() - rowBytes;
+
+    size_t rows = surf->GetSize().height;
+
+    while (rows) {
+        const uint8_t* rowEnd = row + rowBytes;
+
+        while (row != rowEnd) {
+            row[0] ^= row[2];
+            row[2] ^= row[0];
+            row[0] ^= row[2];
+            row += 4;
+        }
+
+        row += rowHole;
+        --rows;
+    }
 }
 
-static uint16_t PackRGB565(uint8_t r, uint8_t g, uint8_t b)
+static uint16_t
+PackRGB565(uint8_t r, uint8_t g, uint8_t b)
 {
     uint16_t pixel = ((r << 11) & 0xf800) |
                      ((g <<  5) & 0x07e0) |
@@ -243,59 +245,53 @@ static uint16_t PackRGB565(uint8_t r, uint8_t g, uint8_t b)
     return pixel;
 }
 
-static void CopyDataSourceSurface(DataSourceSurface* aSource,
-                                  DataSourceSurface* aDest)
+static void
+CopyDataSourceSurface(DataSourceSurface* aSource,
+                      DataSourceSurface* aDest)
 {
-  MOZ_ASSERT(aSource->GetSize() == aDest->GetSize());
-  MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-             aSource->GetFormat() == SurfaceFormat::B8G8R8X8);
+    MOZ_ASSERT(aSource->GetSize() == aDest->GetSize());
+    MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+               aSource->GetFormat() == SurfaceFormat::B8G8R8X8);
 
-  uint8_t *srcRow = aSource->GetData();
-  size_t srcRowBytes = aSource->GetSize().width * BytesPerPixel(aSource->GetFormat());
-  size_t srcRowHole = aSource->Stride() - srcRowBytes;
+    uint8_t* srcRow = aSource->GetData();
+    size_t srcRowBytes = aSource->GetSize().width * BytesPerPixel(aSource->GetFormat());
+    size_t srcRowHole = aSource->Stride() - srcRowBytes;
 
-  uint8_t *destRow = aDest->GetData();
-  size_t destRowBytes = aDest->GetSize().width * BytesPerPixel(aDest->GetFormat());
-  size_t destRowHole = aDest->Stride() - destRowBytes;
+    uint8_t* destRow = aDest->GetData();
+    size_t destRowBytes = aDest->GetSize().width * BytesPerPixel(aDest->GetFormat());
+    size_t destRowHole = aDest->Stride() - destRowBytes;
 
-  bool needsRBSwap = false;
-  if (aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-      aDest->GetFormat() == SurfaceFormat::B8G8R8X8) {
-      needsRBSwap = true;
-  }
+    bool needsRBSwap = aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+                       aDest->GetFormat() == SurfaceFormat::B8G8R8X8;
 
-  bool needsConvertTo16Bits = false;
-  if (aDest->GetFormat() == SurfaceFormat::R5G6B5) {
-      needsConvertTo16Bits = true;
-  }
+    bool needsConvertTo16Bits = aDest->GetFormat() == SurfaceFormat::R5G6B5;
 
-  size_t rows = aSource->GetSize().height;
+    size_t rows = aSource->GetSize().height;
+    while (rows) {
+        const uint8_t* srcRowEnd = srcRow + srcRowBytes;
 
-  while (rows) {
-    const uint8_t *srcRowEnd = srcRow + srcRowBytes;
+        while (srcRow != srcRowEnd) {
+            uint8_t r = needsRBSwap ? srcRow[2] : srcRow[0];
+            uint8_t g = srcRow[1];
+            uint8_t b = needsRBSwap ? srcRow[0] : srcRow[2];
+            uint8_t a = srcRow[3];
 
-    while (srcRow != srcRowEnd) {
-      uint8_t r = needsRBSwap ? srcRow[2] : srcRow[0];
-      uint8_t g = srcRow[1];
-      uint8_t b = needsRBSwap ? srcRow[0] : srcRow[2];
-      uint8_t a = srcRow[3];
+            if (needsConvertTo16Bits) {
+                *(uint16_t*)destRow = PackRGB565(r, g, b);
+            } else {
+                destRow[0] = r;
+                destRow[1] = g;
+                destRow[2] = b;
+                destRow[3] = a;
+            }
+            srcRow += BytesPerPixel(aSource->GetFormat());
+            destRow += BytesPerPixel(aDest->GetFormat());
+        }
 
-      if (needsConvertTo16Bits) {
-        *(uint16_t*)destRow = PackRGB565(r, g, b);
-      } else {
-        destRow[0] = r;
-        destRow[1] = g;
-        destRow[2] = b;
-        destRow[3] = a;
-      }
-      srcRow += BytesPerPixel(aSource->GetFormat());
-      destRow += BytesPerPixel(aDest->GetFormat());
+        srcRow += srcRowHole;
+        destRow += destRowHole;
+        --rows;
     }
-
-    srcRow += srcRowHole;
-    destRow += destRowHole;
-    --rows;
-  }
 }
 
 static int
@@ -326,7 +322,8 @@ GuessAlignment(int width, int pixelSize, int rowStride)
 }
 
 void
-ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
+ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
+{
     gl->MakeCurrent();
     MOZ_ASSERT(dest->GetSize().width != 0);
     MOZ_ASSERT(dest->GetSize().height != 0);
@@ -339,24 +336,24 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
     GLenum destType;
 
     switch (dest->GetFormat()) {
-        case SurfaceFormat::B8G8R8A8:
-        case SurfaceFormat::B8G8R8X8:
-            // Needs host (little) endian ARGB.
-            destFormat = LOCAL_GL_BGRA;
-            destType = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
-            break;
-        case SurfaceFormat::R8G8B8A8:
-        case SurfaceFormat::R8G8B8X8:
-            // Needs host (little) endian ABGR.
-            destFormat = LOCAL_GL_RGBA;
-            destType = LOCAL_GL_UNSIGNED_BYTE;
-            break;
-        case SurfaceFormat::R5G6B5:
-            destFormat = LOCAL_GL_RGB;
-            destType = LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV;
-            break;
-        default:
-            MOZ_CRASH("Bad format.");
+    case SurfaceFormat::B8G8R8A8:
+    case SurfaceFormat::B8G8R8X8:
+        // Needs host (little) endian ARGB.
+        destFormat = LOCAL_GL_BGRA;
+        destType = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
+        break;
+    case SurfaceFormat::R8G8B8A8:
+    case SurfaceFormat::R8G8B8X8:
+        // Needs host (little) endian ABGR.
+        destFormat = LOCAL_GL_RGBA;
+        destType = LOCAL_GL_UNSIGNED_BYTE;
+        break;
+    case SurfaceFormat::R5G6B5:
+        destFormat = LOCAL_GL_RGB;
+        destType = LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV;
+        break;
+    default:
+        MOZ_CRASH("Bad format.");
     }
     destPixelSize = BytesPerPixel(dest->GetFormat());
     MOZ_ASSERT(dest->GetSize().width * destPixelSize <= dest->Stride());
@@ -483,36 +480,40 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
 #endif
 }
 
-static TemporaryRef<DataSourceSurface> YInvertImageSurface(DataSourceSurface* aSurf)
+static TemporaryRef<DataSourceSurface>
+YInvertImageSurface(DataSourceSurface* aSurf)
 {
-  RefPtr<DataSourceSurface> temp =
-    Factory::CreateDataSourceSurfaceWithStride(aSurf->GetSize(),
-                                               aSurf->GetFormat(),
-                                               aSurf->Stride());
-  if (!temp) {
-    return nullptr;
-  }
-  DataSourceSurface::MappedSurface map;
-  if (!temp->Map(DataSourceSurface::MapType::WRITE, &map)) {
-    return nullptr;
-  }
-  RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                     map.mData,
-                                     temp->GetSize(),
-                                     map.mStride,
-                                     temp->GetFormat());
-  if (!dt) {
+    RefPtr<DataSourceSurface> temp =
+      Factory::CreateDataSourceSurfaceWithStride(aSurf->GetSize(),
+                                                 aSurf->GetFormat(),
+                                                 aSurf->Stride());
+    if (!temp) {
+        return nullptr;
+    }
+
+    DataSourceSurface::MappedSurface map;
+    if (!temp->Map(DataSourceSurface::MapType::WRITE, &map)) {
+        return nullptr;
+    }
+
+    RefPtr<DrawTarget> dt =
+      Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                       map.mData,
+                                       temp->GetSize(),
+                                       map.mStride,
+                                       temp->GetFormat());
+    if (!dt) {
+        temp->Unmap();
+        return nullptr;
+    }
+
+    dt->SetTransform(Matrix::Translation(0.0, aSurf->GetSize().height) *
+                     Matrix::Scaling(1.0, -1.0));
+    Rect rect(0, 0, aSurf->GetSize().width, aSurf->GetSize().height);
+    dt->DrawSurface(aSurf, rect, rect, DrawSurfaceOptions(),
+                    DrawOptions(1.0, CompositionOp::OP_SOURCE, AntialiasMode::NONE));
     temp->Unmap();
-    return nullptr;
-  }
-  dt->SetTransform(Matrix::Translation(0.0, aSurf->GetSize().height) *
-                   Matrix::Scaling(1.0, -1.0));
-  Rect rect(0, 0, aSurf->GetSize().width, aSurf->GetSize().height);
-  dt->DrawSurface(aSurf, rect, rect, DrawSurfaceOptions(),
-                  DrawOptions(1.0, CompositionOp::OP_SOURCE, AntialiasMode::NONE));
-  temp->Unmap();
-  return temp.forget();
+    return temp.forget();
 }
 
 TemporaryRef<DataSourceSurface>
@@ -701,7 +702,6 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
 }
 
 #undef CLEANUP_IF_GLERROR_OCCURRED
-
 
 }
 }
