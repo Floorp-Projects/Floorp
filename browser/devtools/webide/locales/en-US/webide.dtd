@@ -117,6 +117,8 @@
 <!ENTITY prefs_options_autocomplete_tooltip "Enable code autocompletion">
 <!ENTITY prefs_options_autoclosebrackets "Autoclose brackets">
 <!ENTITY prefs_options_autoclosebrackets_tooltip "Automatically insert closing brackets">
+<!ENTITY prefs_options_keybindings "Keybindings">
+<!ENTITY prefs_options_keybindings_default "Default">
 
 <!-- Permissions Table -->
 <!ENTITY permissionstable_title "Permissions Table">

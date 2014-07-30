@@ -5,9 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'decoder',
     'encoder'
 ]
+
+# Save file size on Fennec until there are active plans to use the decoder there
+if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
+    DIRS += [
+        'decoder'
+    ]
 
 EXTRA_JS_MODULES.devtools.qrcode += [
     'index.js',

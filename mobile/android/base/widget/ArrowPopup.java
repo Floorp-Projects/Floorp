@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.HardwareUtils;
 
@@ -12,7 +13,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -127,9 +127,9 @@ public abstract class ArrowPopup extends PopupWindow {
         if (mAnchor == null || anchorLocation[1] < 0) {
             final View decorView = ((Activity) mContext).getWindow().getDecorView();
 
-            // Bug in android code causes the window layout parameters to be ignored
+            // Bug in Android code causes the window layout parameters to be ignored
             // when using showAtLocation() in Gingerbread phones.
-            if (Build.VERSION.SDK_INT < 11) {
+            if (Versions.preHC) {
                 setWidth(decorView.getWidth());
                 setHeight(decorView.getHeight());
             }

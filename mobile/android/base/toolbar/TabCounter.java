@@ -5,19 +5,18 @@
 
 package org.mozilla.gecko.toolbar;
 
-import org.mozilla.gecko.animation.Rotate3DAnimation;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.animation.Rotate3DAnimation;
 import org.mozilla.gecko.widget.ThemedTextSwitcher;
 
 import android.content.Context;
-import android.os.Build;
-import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.animation.Animation;
-import android.view.animation.AnimationSet;
-import android.view.animation.AlphaAnimation;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.util.AttributeSet;
+import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.AnimationSet;
 import android.widget.ViewSwitcher;
 
 public class TabCounter extends ThemedTextSwitcher
@@ -53,7 +52,7 @@ public class TabCounter extends ThemedTextSwitcher
         removeAllViews();
         setFactory(this);
 
-        if (Build.VERSION.SDK_INT >= 16) {
+        if (Versions.feature16Plus) {
             // This adds the TextSwitcher to the a11y node tree, where we in turn
             // could make it return an empty info node. If we don't do this the
             // TextSwitcher's child TextViews get picked up, and we don't want

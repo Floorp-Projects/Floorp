@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -29,7 +30,6 @@ import android.content.DialogInterface;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.RemoteException;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.BaseTypes;
@@ -1628,7 +1628,8 @@ public class ContactService implements GeckoEventListener {
     private static boolean isAutoAddGroup(Cursor cursor) {
         // For Honeycomb and up, the default group is the first one which has the AUTO_ADD flag set.
         // For everything below Honeycomb, use the default "System Group: My Contacts" group
-        return (Build.VERSION.SDK_INT >= 11 && !cursor.isNull(GROUP_AUTO_ADD) &&
+        return (Versions.feature11Plus &&
+                !cursor.isNull(GROUP_AUTO_ADD) &&
                 cursor.getInt(GROUP_AUTO_ADD) != 0);
     }
 
@@ -1681,7 +1682,7 @@ public class ContactService implements GeckoEventListener {
             Groups.ACCOUNT_TYPE,
             Groups._ID,
             Groups.TITLE,
-            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB ? Groups.AUTO_ADD : Groups._ID)
+            (Versions.feature11Plus ? Groups.AUTO_ADD : Groups._ID)
         };
 
         if (selectArg != null) {

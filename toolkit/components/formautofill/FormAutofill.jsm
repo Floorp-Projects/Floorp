@@ -112,4 +112,18 @@ this.FormAutofill = {
 
     this.integration = combined;
   },
+
+  /**
+   * Processes a requestAutocomplete message asynchronously.
+   *
+   * @param aData
+   *        Provided to FormAutofillIntegration.createRequestAutocompleteUI.
+   *
+   * @return {Promise}
+   * @resolves Structured data received from the requestAutocomplete UI.
+   */
+  processRequestAutocomplete: Task.async(function* (aData) {
+    let ui = yield FormAutofill.integration.createRequestAutocompleteUI(aData);
+    return yield ui.show();
+  }),
 };
