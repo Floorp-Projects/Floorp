@@ -154,8 +154,6 @@ class TestEmitterBasic(unittest.TestCase):
             DISABLE_STL_WRAPPING=True,
             EXTRA_COMPONENTS=['fans.js', 'tans.js'],
             EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],
-            EXTRA_JS_MODULES=['bar.jsm', 'foo.jsm'],
-            EXTRA_PP_JS_MODULES=['bar.pp.jsm', 'foo.pp.jsm'],
             FAIL_ON_WARNINGS=True,
             HOST_CPPSRCS=['fans.cpp', 'tans.cpp'],
             HOST_CSRCS=['fans.c', 'tans.c'],

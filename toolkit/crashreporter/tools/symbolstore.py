@@ -315,7 +315,8 @@ def make_file_mapping(install_manifests):
         manifest.populate_registry(reg)
         for dst, src in reg:
             if hasattr(src, 'path'):
-                file_mapping[os.path.join(destination, dst)] = src.path
+                abs_dest = os.path.normpath(os.path.join(destination, dst))
+                file_mapping[abs_dest] = src.path
     return file_mapping
 
 def GetPlatformSpecificDumper(**kwargs):

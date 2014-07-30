@@ -270,6 +270,7 @@ pref("media.gstreamer.enabled", true);
 #endif
 #ifdef MOZ_APPLEMEDIA
 pref("media.apple.mp3.enabled", true);
+pref("media.apple.mp4.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);

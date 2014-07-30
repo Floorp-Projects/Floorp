@@ -22,10 +22,12 @@ import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.cast.MediaStatus;
 import com.google.android.gms.cast.RemoteMediaPlayer;
 import com.google.android.gms.cast.RemoteMediaPlayer.MediaChannelResult;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -137,6 +139,11 @@ class ChromeCast implements GeckoMediaPlayer {
     }
 
     public ChromeCast(Context context, RouteInfo route) {
+        int status =  GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
+        if (status != ConnectionResult.SUCCESS) {
+            throw new IllegalStateException("Play services are required for Chromecast support (go status code " + status + ")");
+        }
+
         this.context = context;
         this.route = route;
         this.canMirror = route.supportsControlCategory(CastMediaControlIntent.categoryForCast(MIRROR_RECIEVER_APP_ID));

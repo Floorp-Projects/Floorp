@@ -6,9 +6,7 @@
 
 TEST_DIRS += ['tests']
 
-JS_MODULES_PATH = 'modules/devtools/transport'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.devtools.transport += [
     'packets.js',
     'stream-utils.js',
     'transport.js'
