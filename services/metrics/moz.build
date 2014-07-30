@@ -6,13 +6,11 @@
 
 TEST_DIRS += ['tests']
 
-EXTRA_PP_JS_MODULES += [
+EXTRA_PP_JS_MODULES.services.metrics += [
     'dataprovider.jsm',
     'providermanager.jsm',
     'storage.jsm',
 ]
-
-JS_MODULES_PATH = 'modules/services/metrics'
 
 TESTING_JS_MODULES.services.metrics += [
     'modules-testing/mocks.jsm',

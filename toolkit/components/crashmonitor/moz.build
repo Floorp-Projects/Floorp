@@ -6,7 +6,7 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
-EXTRA_JS_MODULES = [
+EXTRA_JS_MODULES += [
     'CrashMonitor.jsm',
 ]
 

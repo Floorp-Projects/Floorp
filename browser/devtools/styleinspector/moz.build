@@ -7,9 +7,7 @@
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
-JS_MODULES_PATH = 'modules/devtools/styleinspector'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.devtools.styleinspector += [
     'computed-view.js',
     'css-parsing-utils.js',
     'rule-view.js',

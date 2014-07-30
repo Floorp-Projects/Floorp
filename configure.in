@@ -3844,7 +3844,6 @@ MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
-MOZ_GMP_SANDBOX=
 JSGC_USE_EXACT_ROOTING=1
 JSGC_GENERATIONAL=
 
@@ -5084,6 +5083,20 @@ if test -n "$MOZ_WEBM"; then
 fi;
 
 dnl ========================================================
+dnl = Apple platform decoder support
+dnl ========================================================
+if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+  MOZ_APPLEMEDIA=1
+fi
+
+if test -n "$MOZ_APPLEMEDIA"; then
+  AC_DEFINE(MOZ_APPLEMEDIA)
+  # hack in frameworks for fmp4 - see bug 1029974
+  # We load VideoToolbox and CoreMedia dynamically, so they don't appear here.
+  LDFLAGS="$LDFLAGS -framework AudioToolbox"
+fi
+
+dnl ========================================================
 dnl = DirectShow support
 dnl ========================================================
 if test "$OS_ARCH" = "WINNT"; then
@@ -5143,10 +5156,8 @@ fi;
 dnl ========================================================
 dnl = Built-in fragmented MP4 support.
 dnl ========================================================
-if test -n "$MOZ_WMF" -o -n "$MOZ_FFMPEG"; then
-    dnl Enable fragmented MP4 parser on Windows by default.
-    dnl We will also need to enable it on other platforms as we implement
-    dnl platform decoder support there too.
+if test -n "$MOZ_WMF" -o -n "$MOZ_FFMPEG" -o -n "$MOZ_APPLEMEDIA"; then
+    dnl Enable fragmented MP4 parser on platforms with decoder support.
     MOZ_FMP4=1
 fi
 
@@ -5187,22 +5198,6 @@ MOZ_ARG_ENABLE_BOOL(android-omx,
 
 if test -n "$MOZ_ANDROID_OMX"; then
   AC_DEFINE(MOZ_ANDROID_OMX)
-fi
-
-dnl ========================================================
-dnl = Disable platform MP3 decoder on OSX
-dnl ========================================================
-if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
-  MOZ_APPLEMEDIA=1
-fi
-
-MOZ_ARG_DISABLE_BOOL(apple-media,
-[  --disable-apple-media  Disable support for Apple AudioToolbox/VideoToolbox],
-    MOZ_APPLEMEDIA=,
-    MOZ_APPLEMEDIA=1)
-
-if test -n "$MOZ_APPLEMEDIA"; then
-  AC_DEFINE(MOZ_APPLEMEDIA)
 fi
 
 dnl ========================================================
@@ -6405,28 +6400,6 @@ if test -n "$MOZ_CONTENT_SANDBOX"; then
 fi
 
 AC_SUBST(MOZ_CONTENT_SANDBOX)
-
-dnl ========================================================
-dnl = Gecko Media Plugin sandboxing
-dnl ========================================================
-case $OS_TARGET in
-WINNT)
-    MOZ_GMP_SANDBOX=1
-    ;;
-Linux)
-    case $CPU_ARCH in
-    x86_64|x86)
-        MOZ_GMP_SANDBOX=1
-        ;;
-    esac
-    ;;
-esac
-
-if test -n "$MOZ_GMP_SANDBOX"; then
-    AC_DEFINE(MOZ_GMP_SANDBOX)
-fi
-
-AC_SUBST(MOZ_GMP_SANDBOX)
 
 dnl ========================================================
 dnl =

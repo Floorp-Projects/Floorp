@@ -49,6 +49,8 @@ NS_EVENT_CLASS(Internal, ClipboardEvent)
 NS_EVENT_CLASS(Internal, FocusEvent)
 NS_EVENT_CLASS(Internal, TransitionEvent)
 NS_EVENT_CLASS(Internal, AnimationEvent)
+NS_EVENT_CLASS(Internal, SVGZoomEvent)
+NS_EVENT_CLASS(Internal, SMILTimeEvent)
 
 // MiscEvents.h
 NS_EVENT_CLASS(Widget, CommandEvent)

@@ -14,9 +14,7 @@ if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
         'decoder'
     ]
 
-JS_MODULES_PATH = 'modules/devtools/qrcode'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.devtools.qrcode += [
     'index.js',
 ]
 

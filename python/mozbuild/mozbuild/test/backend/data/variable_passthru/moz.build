@@ -7,9 +7,6 @@ SOURCES += ['bar.s', 'foo.asm']
 EXTRA_COMPONENTS = ['bar.js', 'foo.js']
 EXTRA_PP_COMPONENTS = ['bar.pp.js', 'foo.pp.js']
 
-EXTRA_JS_MODULES = ['bar.jsm', 'foo.jsm']
-EXTRA_PP_JS_MODULES = ['bar.pp.jsm', 'foo.pp.jsm']
-
 HOST_SOURCES += ['bar.cpp', 'foo.cpp']
 HOST_SOURCES += ['bar.c', 'foo.c']
 
