@@ -4334,7 +4334,7 @@ void
 nsIDocument::SetContainer(nsDocShell* aContainer)
 {
   if (aContainer) {
-    mDocumentContainer = aContainer->asWeakPtr();
+    mDocumentContainer = aContainer;
   } else {
     mDocumentContainer = WeakPtr<nsDocShell>();
   }

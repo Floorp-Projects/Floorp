@@ -38,12 +38,12 @@
  *
  *   C* ptr = new C();
  *
- *   // Get weak pointers to ptr. The first time asWeakPtr is called
- *   // a reference counted WeakReference object is created that
+ *   // Get weak pointers to ptr. The first time a weak pointer
+ *   // is obtained, a reference counted WeakReference object is created that
  *   // can live beyond the lifetime of 'ptr'. The WeakReference
  *   // object will be notified of 'ptr's destruction.
- *   WeakPtr<C> weak = ptr->asWeakPtr();
- *   WeakPtr<C> other = ptr->asWeakPtr();
+ *   WeakPtr<C> weak = ptr;
+ *   WeakPtr<C> other = ptr;
  *
  *   // Test a weak pointer for validity before using it.
  *   if (weak) {
@@ -130,18 +130,6 @@ private:
 template <typename T>
 class SupportsWeakPtr
 {
-public:
-
-  const T* asWeakPtr() const
-  {
-     return static_cast<const T*>(this);
-  }
-
-  T* asWeakPtr()
-  {
-     return static_cast<T*>(this);
-  }
-
 protected:
   ~SupportsWeakPtr()
   {
