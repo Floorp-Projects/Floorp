@@ -724,6 +724,11 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     JS::CompartmentOptionsRef(global).setDiscardSource(discard);
   }
 
+  // Similar to the above.
+  if (xpc::ExtraWarningsForSystemJS() && aWorkerPrivate->UsesSystemPrincipal()) {
+      JS::CompartmentOptionsRef(global).extraWarningsOverride().set(true);
+  }
+
   for (uint32_t index = mFirstIndex; index <= mLastIndex; index++) {
     ScriptLoadInfo& loadInfo = loadInfos.ElementAt(index);
 
