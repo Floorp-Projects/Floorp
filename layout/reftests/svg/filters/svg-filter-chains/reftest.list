@@ -4,11 +4,15 @@
 default-preferences pref(layout.css.filters.enabled,true)
 
 == clip-input.svg clip-input-ref.svg
-== clip-output.svg clip-output.svg
+== clip-original-SourceGraphic.svg clip-original-SourceGraphic-ref.svg
+== clip-output.svg clip-output-ref.svg
 == default-subregion.svg default-subregion-ref.svg
+== different-FillPaint-filter-regions.svg different-FillPaint-filter-regions-ref.svg
+== different-StrokePaint-filter-regions.svg different-StrokePaint-filter-regions-ref.svg
+== dont-clip-previous-primitives.svg dont-clip-previous-primitives-ref.svg
 == intersecting-filter-regions.svg intersecting-filter-regions-ref.svg
 == long-chain.svg simple-chain-ref.svg
 == multiple-primitives-per-filter.svg simple-chain-ref.svg
-== second-filter-uses-SourceAlpha.svg second-filter-uses-SourceAlpha.svg
+== second-filter-uses-SourceAlpha.svg second-filter-uses-SourceAlpha-ref.svg
 == second-filter-uses-SourceGraphic.svg simple-chain-ref.svg
 == simple-chain.svg simple-chain-ref.svg

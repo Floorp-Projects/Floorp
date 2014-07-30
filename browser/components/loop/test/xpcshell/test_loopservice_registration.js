@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://services-common/utils.js");
+
 /**
  * This file is to test general registration. Note that once successful
  * registration has taken place, we can no longer test the server side
@@ -49,7 +51,14 @@ add_test(function test_register_websocket_success_loop_server_fail() {
  * registration are complete.
  */
 add_test(function test_register_success() {
+  mockPushHandler.registrationPushURL = kEndPointUrl;
+
   loopServer.registerPathHandler("/registration", (request, response) => {
+    let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
+    let data = JSON.parse(body);
+    Assert.equal(data.simplePushURL, kEndPointUrl,
+                 "Should send correct push url");
+
     response.setStatusLine(null, 200, "OK");
     response.processAsync();
     response.finish();

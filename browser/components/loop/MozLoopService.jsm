@@ -241,7 +241,7 @@ let MozLoopServiceInternal = {
    * @param {Boolean} noRetry Optional, don't retry if authentication fails.
    */
   registerWithLoopServer: function(pushUrl, noRetry) {
-    this.hawkRequest("/registration", "POST", { simple_push_url: pushUrl})
+    this.hawkRequest("/registration", "POST", { simplePushURL: pushUrl})
       .then((response) => {
         // If this failed we got an invalid token. storeSessionToken rejects
         // the gRegisteredDeferred promise for us, so here we just need to

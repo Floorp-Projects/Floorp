@@ -116,7 +116,6 @@ LOCAL_INCLUDES += [
     '../../content/base/src',
     '../../content/html/content/src',
     '../../content/svg/content/src',
-    '../../view/src',
     '../forms',
     '../generic',
     '../mathml',
@@ -129,6 +128,7 @@ LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
     '/dom/xbl',
+    '/view',
 ]
 
 FINAL_LIBRARY = 'xul'

@@ -20,4 +20,4 @@ DIRS += ['base', 'generic', 'html', 'interfaces', 'jsat', 'xpcom']
 if CONFIG['MOZ_XUL']:
     DIRS += ['xul']
 
-TEST_DIRS += ['tests']
+TEST_DIRS += ['tests/mochitest']

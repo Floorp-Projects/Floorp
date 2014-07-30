@@ -55,7 +55,7 @@ def exponential_buckets(dmin, dmax, n_buckets):
         ret_array[bucket_index] = current
     return ret_array
 
-always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version']
+always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version', "alert_emails"]
 
 class Histogram:
     """A class for representing a histogram definition."""

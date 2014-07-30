@@ -14,14 +14,15 @@
 
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsCOMPtr.h"
 #include "nsIContentSecurityPolicy.h"
 
 class nsIURI;
 
 #define NS_NULLPRINCIPAL_CID \
-{ 0xdd156d62, 0xd26f, 0x4441, \
- { 0x9c, 0xdb, 0xe8, 0xf0, 0x91, 0x07, 0xc2, 0x73 } }
+{ 0xa0bd8b42, 0xf6bf, 0x4fb9, \
+  { 0x93, 0x42, 0x90, 0xbf, 0xc9, 0xb7, 0xa1, 0xab } }
 #define NS_NULLPRINCIPAL_CONTRACTID "@mozilla.org/nullprincipal;1"
 
 #define NS_NULLPRINCIPAL_SCHEME "moz-nullprincipal"
@@ -41,7 +42,10 @@ public:
   NS_DECL_NSIPRINCIPAL
   NS_DECL_NSISERIALIZABLE
 
-  nsresult Init();
+  static already_AddRefed<nsNullPrincipal> CreateWithInheritedAttributes(nsIPrincipal *aInheritFrom);
+
+  nsresult Init(uint32_t aAppId = nsIScriptSecurityManager::NO_APP_ID,
+                bool aInMozBrowser = false);
 
   virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
 
@@ -54,6 +58,8 @@ public:
 
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
+  uint32_t mAppId;
+  bool mInMozBrowser;
 };
 
 #endif // nsNullPrincipal_h__

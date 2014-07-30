@@ -113,12 +113,6 @@ interface BluetoothAdapter : EventTarget {
   DOMRequest getPairedDevices();
   [NewObject, Throws]
   DOMRequest getConnectedDevices(unsigned short serviceUuid);
-  [NewObject, Throws]
-  DOMRequest setPinCode(DOMString deviceAddress, DOMString pinCode);
-  [NewObject, Throws]
-  DOMRequest setPasskey(DOMString deviceAddress, unsigned long passkey);
-  [NewObject, Throws]
-  DOMRequest setPairingConfirmation(DOMString deviceAddress, boolean confirmation);
 
   /**
    * Connect/Disconnect to a specific service of a target remote device.

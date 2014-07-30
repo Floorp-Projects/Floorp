@@ -247,18 +247,6 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
       return NS_ERROR_FAILURE;
     }
 
-    // For now, we use the last SVG filter region as the overall filter region
-    // for the filter chain. Eventually, we will compute the overall filter
-    // using all of the generated FilterPrimitiveDescriptions.
-    mUserSpaceBounds = svgFilterInstance.GetFilterRegion();
-    mFilterSpaceBounds = svgFilterInstance.GetFilterSpaceBounds();
-
-    // If this overflows, we can at least paint the maximum surface size.
-    bool overflow;
-    gfxIntSize surfaceSize =
-      nsSVGUtils::ConvertToSurfaceSize(mFilterSpaceBounds.Size(), &overflow);
-    mFilterSpaceBounds.SizeTo(surfaceSize);
-
     return svgFilterInstance.BuildPrimitives(mPrimitiveDescriptions, mInputImages);
   }
 
@@ -276,7 +264,7 @@ nsFilterInstance::ComputeNeededBoxes()
   nsIntRegion fillPaintNeededRegion;
   nsIntRegion strokePaintNeededRegion;
 
-  FilterDescription filter(mPrimitiveDescriptions, ToIntRect(mFilterSpaceBounds));
+  FilterDescription filter(mPrimitiveDescriptions);
   FilterSupport::ComputeSourceNeededRegions(
     filter, mPostFilterDirtyRegion,
     sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
@@ -329,7 +317,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
                             mTransformRoot);
   if (!matrix.IsSingular()) {
     gfx->Multiply(matrix);
-    gfx->Rectangle(mUserSpaceBounds);
+    gfx->Rectangle(FilterSpaceToUserSpace(neededRect));
     if ((aSource == &mFillPaint && 
          nsSVGUtils::SetupCairoFillPaint(mTargetFrame, gfx)) ||
         (aSource == &mStrokePaint &&
@@ -417,7 +405,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
 nsresult
 nsFilterInstance::Render(gfxContext* aContext)
 {
-  nsIntRect filterRect = mPostFilterDirtyRegion.GetBounds().Intersect(mFilterSpaceBounds);
+  nsIntRect filterRect = mPostFilterDirtyRegion.GetBounds().Intersect(OutputFilterSpaceBounds());
   gfxMatrix ctm = GetFilterSpaceToDeviceSpaceTransform();
 
   if (filterRect.IsEmpty() || ctm.IsSingular()) {
@@ -440,9 +428,7 @@ nsFilterInstance::Render(gfxContext* aContext)
   if (NS_FAILED(rv))
     return rv;
 
-  IntRect filterSpaceBounds = ToIntRect(mFilterSpaceBounds);
-  FilterDescription filter(mPrimitiveDescriptions, filterSpaceBounds);
-
+  FilterDescription filter(mPrimitiveDescriptions);
   FilterSupport::RenderFilterDescription(
     dt, filter, ToRect(filterRect),
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
@@ -463,8 +449,7 @@ nsFilterInstance::ComputePostFilterDirtyRegion(nsRegion* aPostFilterDirtyRegion)
     return NS_OK;
   }
 
-  IntRect filterSpaceBounds = ToIntRect(mFilterSpaceBounds);
-  FilterDescription filter(mPrimitiveDescriptions, filterSpaceBounds);
+  FilterDescription filter(mPrimitiveDescriptions);
   nsIntRegion resultChangeRegion =
     FilterSupport::ComputeResultChangeRegion(filter,
       mPreFilterDirtyRegion, nsIntRegion(), nsIntRegion());
@@ -486,8 +471,7 @@ nsFilterInstance::ComputePostFilterExtents(nsRect* aPostFilterExtents)
     return NS_ERROR_FAILURE;
   sourceBoundsInt.UnionRect(sourceBoundsInt, mTargetBounds);
 
-  IntRect filterSpaceBounds = ToIntRect(mFilterSpaceBounds);
-  FilterDescription filter(mPrimitiveDescriptions, filterSpaceBounds);
+  FilterDescription filter(mPrimitiveDescriptions);
   nsIntRegion postFilterExtents =
     FilterSupport::ComputePostFilterExtents(filter, sourceBoundsInt);
   *aPostFilterExtents = FilterSpaceToFrameSpace(postFilterExtents.GetBounds());
@@ -504,9 +488,25 @@ nsFilterInstance::ComputeSourceNeededRect(nsRect* aDirty)
 }
 
 nsIntRect
+nsFilterInstance::OutputFilterSpaceBounds() const
+{
+  uint32_t numPrimitives = mPrimitiveDescriptions.Length();
+  if (numPrimitives <= 0)
+    return nsIntRect();
+
+  nsIntRect bounds =
+    ThebesIntRect(mPrimitiveDescriptions[numPrimitives - 1].PrimitiveSubregion());
+  bool overflow;
+  gfxIntSize surfaceSize =
+    nsSVGUtils::ConvertToSurfaceSize(bounds.Size(), &overflow);
+  bounds.SizeTo(surfaceSize);
+  return bounds;
+}
+
+nsIntRect
 nsFilterInstance::FrameSpaceToFilterSpace(const nsRect* aRect) const
 {
-  nsIntRect rect = mFilterSpaceBounds;
+  nsIntRect rect = OutputFilterSpaceBounds();
   if (aRect) {
     if (aRect->IsEmpty()) {
       return nsIntRect();
@@ -540,7 +540,7 @@ nsIntRegion
 nsFilterInstance::FrameSpaceToFilterSpace(const nsRegion* aRegion) const
 {
   if (!aRegion) {
-    return mFilterSpaceBounds;
+    return OutputFilterSpaceBounds();
   }
   nsIntRegion result;
   nsRegionRectIterator it(*aRegion);
