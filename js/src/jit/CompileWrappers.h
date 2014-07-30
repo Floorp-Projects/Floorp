@@ -7,8 +7,6 @@
 #ifndef jit_CompileWrappers_h
 #define jit_CompileWrappers_h
 
-#ifdef JS_ION
-
 #include "jscntxt.h"
 
 namespace js {
@@ -141,10 +139,7 @@ class JitCompileOptions
     bool spsSlowAssertionsEnabled_;
 };
 
-
 } // namespace jit
 } // namespace js
-
-#endif // JS_ION
 
 #endif // jit_CompileWrappers_h

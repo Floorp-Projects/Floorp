@@ -2006,6 +2006,25 @@ pref("layout.css.box-decoration-break.enabled", true);
 // Is layout of CSS outline-style:auto enabled?
 pref("layout.css.outline-style-auto.enabled", false);
 
+// Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
+pref("layout.css.scroll-behavior.enabled", false);
+
+// Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
+// Spring-constant controls the strength of the simulated MSD
+// (Mass-Spring-Damper)
+pref("layout.css.scroll-behavior.spring-constant", "250.0");
+
+// Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
+// Damping-ratio controls the dampening force of the simulated MSD
+// (Mass-Spring-Damper).
+// When below 1.0, the system is under-damped; it may overshoot the target and
+// oscillate.
+// When greater than 1.0, the system is over-damped; it will reach the target at
+// reduced speed without overshooting.
+// When equal to 1.0, the system is critically-damped; it will reach the target
+// at the greatest speed without overshooting.
+pref("layout.css.scroll-behavior.damping-ratio", "1.0");
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction

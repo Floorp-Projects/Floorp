@@ -185,7 +185,7 @@ let AboutProtocolParent = {
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                .getService(Ci.nsIMessageBroadcaster);
     ppmm.addMessageListener("Addons:AboutProtocol:GetURIFlags", this);
-    ppmm.addMessageListener("Addons:AboutProtocol:NewChannel", this);
+    ppmm.addMessageListener("Addons:AboutProtocol:OpenChannel", this);
     this._protocols = [];
   },
 
@@ -208,8 +208,8 @@ let AboutProtocolParent = {
     switch (msg.name) {
       case "Addons:AboutProtocol:GetURIFlags":
         return this.getURIFlags(msg);
-      case "Addons:AboutProtocol:NewChannel":
-        return this.newChannel(msg);
+      case "Addons:AboutProtocol:OpenChannel":
+        return this.openChannel(msg);
         break;
     }
   },
@@ -225,25 +225,20 @@ let AboutProtocolParent = {
     }
   },
 
-  // We take some shortcuts here. Ideally, we would return a CPOW that
-  // wraps the add-on's nsIChannel. However, many of the methods
-  // related to nsIChannel are marked [noscript], so they're not
-  // available to CPOWs. Consequently, we immediately read all the
-  // data out of the channel here and pass it to the child. The child
-  // then returns a shim channel that wraps an nsIStringInputStream
-  // for the string we read.
-  newChannel: function(msg) {
+  // We immediately read all the data out of the channel here and
+  // return it to the child.
+  openChannel: function(msg) {
     let uri = BrowserUtils.makeURI(msg.data.uri);
     let contractID = msg.data.contractID;
     let module = Cc[contractID].getService(Ci.nsIAboutModule);
     try {
       let channel = module.newChannel(uri);
+      channel.notificationCallbacks = msg.objects.notificationCallbacks;
+      channel.loadGroup = {notificationCallbacks: msg.objects.loadGroupNotificationCallbacks};
       let stream = channel.open();
       let data = NetUtil.readInputStreamToString(stream, stream.available(), {});
       return {
         data: data,
-        uri: channel.URI.spec,
-        originalURI: channel.originalURI.spec,
         contentType: channel.contentType
       };
     } catch (e) {
