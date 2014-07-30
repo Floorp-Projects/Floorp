@@ -748,16 +748,6 @@ private:
 } // dom namespace
 } // file namespace
 
-class MOZ_STACK_CLASS nsDOMFileInternalUrlHolder {
-public:
-  nsDOMFileInternalUrlHolder(nsIDOMBlob* aFile, nsIPrincipal* aPrincipal
-                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-  ~nsDOMFileInternalUrlHolder();
-  nsAutoString mUrl;
-private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 class nsDOMFileList MOZ_FINAL : public nsIDOMFileList,
                                 public nsWrapperCache
 {

@@ -306,12 +306,12 @@ nsresult
 NS_NewDOMSVGZoomEvent(nsIDOMEvent** aResult,
                       mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
-                      mozilla::WidgetGUIEvent* aEvent);
+                      mozilla::InternalSVGZoomEvent* aEvent);
 nsresult
 NS_NewDOMTimeEvent(nsIDOMEvent** aResult,
                    mozilla::dom::EventTarget* aOwner,
                    nsPresContext* aPresContext,
-                   mozilla::WidgetEvent* aEvent);
+                   mozilla::InternalSMILTimeEvent* aEvent);
 nsresult
 NS_NewDOMXULCommandEvent(nsIDOMEvent** aResult,
                          mozilla::dom::EventTarget* aOwner,

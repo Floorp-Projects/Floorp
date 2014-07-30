@@ -803,16 +803,6 @@ JS_NumberValue(double d)
 JS_PUBLIC_API(bool)
 JS_StringHasBeenInterned(JSContext *cx, JSString *str);
 
-/*
- * Only JSStrings that have been interned via the JSAPI can be turned into
- * jsids by API clients.
- *
- * N.B. if a jsid is backed by a string which has not been interned, that
- * string must be appropriately rooted to avoid being collected by the GC.
- */
-JS_PUBLIC_API(jsid)
-INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str);
-
 namespace JS {
 
 // Container class for passing in script source buffers to the JS engine.  This

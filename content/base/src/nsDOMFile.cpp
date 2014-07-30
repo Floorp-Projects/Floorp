@@ -1064,21 +1064,3 @@ nsDOMFileList::Item(uint32_t aIndex, nsIDOMFile **aFile)
 
   return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////
-// nsDOMFileInternalUrlHolder implementation
-
-nsDOMFileInternalUrlHolder::nsDOMFileInternalUrlHolder(nsIDOMBlob* aFile,
-                                                       nsIPrincipal* aPrincipal
-                                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL) {
-  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  aFile->GetInternalUrl(aPrincipal, mUrl);
-}
- 
-nsDOMFileInternalUrlHolder::~nsDOMFileInternalUrlHolder() {
-  if (!mUrl.IsEmpty()) {
-    nsAutoCString narrowUrl;
-    CopyUTF16toUTF8(mUrl, narrowUrl);
-    nsBlobProtocolHandler::RemoveDataEntry(narrowUrl);
-  }
-}

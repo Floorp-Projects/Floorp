@@ -274,7 +274,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(9ec7367c-0dde-4b7a-963c-5a590ee3ee42)]
+[noscript, uuid(89b8525d-5c22-48bd-8a79-66aac9cd705e)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -434,8 +434,6 @@ interface nsIXPConnect : nsISupports
     void debugDumpJSStack(in boolean showArgs,
                           in boolean showLocals,
                           in boolean showThisProps);
-    void debugDumpEvalInJSStackFrame(in uint32_t aFrameNumber,
-                                     in string aSourceText);
 
     /**
     * wrapJSAggregatedToNative is just like wrapJS except it is used in cases
