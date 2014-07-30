@@ -135,13 +135,6 @@ public:
 
     EnableFMRadio(info);
 
-    FMRadioService* fmRadioService = FMRadioService::Singleton();
-    if (!fmRadioService->mTuneThread) {
-      // SeekRunnable and SetFrequencyRunnable run on this thread.
-      // These call ioctls that can stall the main thread, so we run them here.
-      NS_NewNamedThread("FM Tuning", getter_AddRefs(fmRadioService->mTuneThread));
-    }
-
     return NS_OK;
   }
 
@@ -221,15 +214,10 @@ public:
 
   NS_IMETHOD Run()
   {
-    FMRadioService* fmRadioService = FMRadioService::Singleton();
-    if (fmRadioService->mTuneThread) {
-      fmRadioService->mTuneThread->Shutdown();
-      fmRadioService->mTuneThread = nullptr;
-    }
     // Fix Bug 796733. DisableFMRadio should be called before
     // SetFmRadioAudioEnabled to prevent the annoying beep sound.
     DisableFMRadio();
-    fmRadioService->EnableAudio(false);
+    IFMRadioService::Singleton()->EnableAudio(false);
 
     return NS_OK;
   }
@@ -310,7 +298,7 @@ FMRadioService::RemoveObserver(FMRadioEventObserver* aObserver)
   {
     // Turning off the FM radio HW because observer list is empty.
     if (IsFMRadioOn()) {
-      DoDisable();
+      NS_DispatchToMainThread(new DisableRunnable());
     }
   }
 }
@@ -607,8 +595,7 @@ FMRadioService::SetFrequency(double aFrequencyInMHz,
     return;
   }
 
-  mTuneThread->Dispatch(new SetFrequencyRunnable(roundedFrequency),
-                        nsIThread::DISPATCH_NORMAL);
+  NS_DispatchToMainThread(new SetFrequencyRunnable(roundedFrequency));
 
   aReplyRunnable->SetReply(SuccessResponse());
   NS_DispatchToMainThread(aReplyRunnable);
@@ -649,7 +636,7 @@ FMRadioService::Seek(FMRadioSeekDirection aDirection,
   SetState(Seeking);
   mPendingRequest = aReplyRunnable;
 
-  mTuneThread->Dispatch(new SeekRunnable(aDirection), nsIThread::DISPATCH_NORMAL);
+  NS_DispatchToMainThread(new SeekRunnable(aDirection));
 }
 
 void
