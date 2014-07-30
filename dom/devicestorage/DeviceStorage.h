@@ -23,7 +23,6 @@
 #define DEVICESTORAGE_SDCARD     "sdcard"
 #define DEVICESTORAGE_CRASHES    "crashes"
 
-class DeviceStorageFile;
 class nsIInputStream;
 class nsIOutputStream;
 
@@ -39,13 +38,6 @@ class DeviceStorageFileSystem;
 namespace ipc {
 class FileDescriptor;
 }
-
-template<>
-struct HasDangerousPublicDestructor<DeviceStorageFile>
-{
-  static const bool value = true;
-};
-
 } // namespace mozilla
 
 class DeviceStorageFile MOZ_FINAL
@@ -126,6 +118,7 @@ public:
   nsresult CreateFileDescriptor(mozilla::ipc::FileDescriptor& aFileDescriptor);
 
 private:
+  ~DeviceStorageFile() {}
   void Init();
   void NormalizeFilePath();
   void AppendRelativePath(const nsAString& aPath);
