@@ -22,9 +22,6 @@ const Cu = Components.utils;
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
-// Preloading the CSP jsm in this process early on.
-Cu.import("resource://gre/modules/CSPUtils.jsm");
-
 function debug(msg) {
   log(msg);
 }
