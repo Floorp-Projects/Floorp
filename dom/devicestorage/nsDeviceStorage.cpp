@@ -142,10 +142,10 @@ GetFreeBytes(const nsAString& aStorageName)
   // This function makes the assumption that the various types
   // are all stored on the same filesystem. So we use pictures.
 
-  DeviceStorageFile dsf(NS_LITERAL_STRING(DEVICESTORAGE_PICTURES),
-                        aStorageName);
+  nsRefPtr<DeviceStorageFile> dsf(new DeviceStorageFile(NS_LITERAL_STRING(DEVICESTORAGE_PICTURES),
+                                                        aStorageName));
   int64_t freeBytes = 0;
-  dsf.GetDiskFreeSpace(&freeBytes);
+  dsf->GetDiskFreeSpace(&freeBytes);
   return freeBytes;
 }
 
@@ -3574,8 +3574,8 @@ nsDOMDeviceStorage::GetDefaultStorageName(const nsAString& aStorageType,
 bool
 nsDOMDeviceStorage::IsAvailable()
 {
-  DeviceStorageFile dsf(mStorageType, mStorageName);
-  return dsf.IsAvailable();
+  nsRefPtr<DeviceStorageFile> dsf(new DeviceStorageFile(mStorageType, mStorageName));
+  return dsf->IsAvailable();
 }
 
 NS_IMETHODIMP
