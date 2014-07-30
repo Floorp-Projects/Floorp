@@ -1,2 +1,5 @@
+.module-cache
 node_modules
 *.pyc
+content/config.js
+content/VERSION.txt
