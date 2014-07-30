@@ -9,6 +9,7 @@
 #include "AccessCheck.h"
 #include "xpcprivate.h"
 #include "jsapi.h"
+#include "jswrapper.h"
 
 using namespace JS;
 
@@ -61,8 +62,8 @@ PropIsFromStandardPrototype(JSContext *cx, HandleObject wrapper,
                &ChromeObjectWrapper::singleton);
     Rooted<JSPropertyDescriptor> desc(cx);
     const ChromeObjectWrapper *handler = &ChromeObjectWrapper::singleton;
-    if (!handler->CrossCompartmentSecurityWrapper::getPropertyDescriptor(cx, wrapper, id,
-                                                                         &desc) ||
+    if (!handler->js::CrossCompartmentSecurityWrapper::getPropertyDescriptor(cx, wrapper, id,
+                                                                             &desc) ||
         !desc.object())
     {
         return false;

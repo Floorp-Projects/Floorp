@@ -7,6 +7,7 @@
 #ifndef __FilteringWrapper_h__
 #define __FilteringWrapper_h__
 
+#include "XrayWrapper.h"
 #include "mozilla/Attributes.h"
 #include "jswrapper.h"
 #include "js/CallNonGenericMethod.h"
