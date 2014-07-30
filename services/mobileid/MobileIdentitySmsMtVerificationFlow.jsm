@@ -13,25 +13,14 @@ Cu.import("resource://gre/modules/MobileIdentitySmsVerificationFlow.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-this.MobileIdentitySmsMtVerificationFlow = function(aOrigin,
-                                                    aMsisdn,
-                                                    aIccId,
-                                                    aExternal,
-                                                    aMtSender,
+this.MobileIdentitySmsMtVerificationFlow = function(aVerificationOptions,
                                                     aUI,
                                                     aClient) {
 
-  log.debug("MobileIdentitySmsVerificationFlow " + aMsisdn + ", external: " +
-            aExternal);
+  log.debug("MobileIdentitySmsVerificationFlow ${}", aVerificationOptions);
 
   MobileIdentitySmsVerificationFlow.call(this,
-                                         aOrigin,
-                                         aMsisdn,
-                                         aIccId,
-                                         null, // service ID
-                                         aExternal,
-                                         aMtSender,
-                                         null, // moVerifier
+                                         aVerificationOptions,
                                          aUI,
                                          aClient,
                                          this.smsVerifyStrategy);
@@ -44,6 +33,8 @@ this.MobileIdentitySmsMtVerificationFlow.prototype = {
   smsVerifyStrategy: function() {
     return this.client.smsMtVerify(this.sessionToken,
                                    this.verificationOptions.msisdn,
+                                   this.verificationOptions.mcc,
+                                   this.verificationOptions.mnc,
                                    this.verificationOptions.external);
   }
 };

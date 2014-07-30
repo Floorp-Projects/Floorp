@@ -151,6 +151,7 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.textForeground",
   "ui.textSelectBackground",
   "ui.textSelectForeground",
+  "ui.textSelectForegroundCustom",
   "ui.textSelectBackgroundDisabled",
   "ui.textSelectBackgroundAttention",
   "ui.textHighlightBackground",
