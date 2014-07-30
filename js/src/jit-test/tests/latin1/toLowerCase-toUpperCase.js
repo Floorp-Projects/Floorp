@@ -32,9 +32,11 @@ function testToUpperCase() {
 
     // Latin1
     var s2 = s1.toUpperCase();
+    assertEq(isLatin1(s2), true);
     assertEq(s2, "ABCDEFGABCDEFGH 12345");
 
     s2 = s1.toLocaleUpperCase();
+    assertEq(isLatin1(s2), true);
     assertEq(s2, "ABCDEFGABCDEFGH 12345");
 
     // TwoByte
