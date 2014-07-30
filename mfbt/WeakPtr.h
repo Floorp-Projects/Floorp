@@ -140,6 +140,12 @@ public:
     return WeakPtr<T>(weakRef);
   }
 
+  WeakPtr<const T> asWeakPtr() const
+  {
+     WeakPtr<T> p = const_cast<SupportsWeakPtr*>(this)->asWeakPtr();
+     return *reinterpret_cast<WeakPtr<const T>*>(&p);
+  }
+
 protected:
   ~SupportsWeakPtr()
   {
@@ -160,7 +166,7 @@ template <typename T>
 class WeakPtr
 {
 public:
-  WeakPtr(const WeakPtr<T>& aOther)
+  WeakPtr(const WeakPtr& aOther)
     : mRef(aOther.mRef)
   {}
 
