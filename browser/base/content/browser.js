@@ -2561,7 +2561,7 @@ let BrowserOnClick = {
    */
   onE10sAboutNewTab: function(event, ownerDoc) {
     let isTopFrame = (ownerDoc.defaultView.parent === ownerDoc.defaultView);
-    if (!isTopFrame || event.button != 0) {
+    if (!isTopFrame) {
       return;
     }
 
@@ -2570,7 +2570,8 @@ let BrowserOnClick = {
     if (anchorTarget instanceof HTMLAnchorElement &&
         anchorTarget.classList.contains("newtab-link")) {
       event.preventDefault();
-      openUILinkIn(anchorTarget.href, "current");
+      let where = whereToOpenLink(event, false, false);
+      openUILinkIn(anchorTarget.href, where);
     }
   },
 
