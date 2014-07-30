@@ -45,6 +45,16 @@
 #include "dtlsidentity.h"
 
 #ifdef MOZILLA_INTERNAL_API
+#ifdef XP_WIN
+// We need to undef the MS macro for nsIDocument::CreateEvent
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
+#endif // XP_WIN
+
+#ifdef MOZILLA_INTERNAL_API
+#include "nsIDocument.h"
+#endif
 #include "nsPerformance.h"
 #include "nsGlobalWindow.h"
 #include "nsDOMDataChannel.h"
@@ -55,7 +65,6 @@
 #include "nsXULAppAPI.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
-#include "nsIDocument.h"
 #include "nsIScriptError.h"
 #include "nsPrintfCString.h"
 #include "nsURLHelper.h"
@@ -77,7 +86,18 @@
 #include "DOMMediaStream.h"
 #include "rlogringbuffer.h"
 #include "WebrtcGlobalInformation.h"
+#include "mozilla/dom/Event.h"
+#include "nsIDOMCustomEvent.h"
+#include "mozilla/EventDispatcher.h"
 #endif
+
+#ifdef XP_WIN
+// We need to undef the MS macro again in case the windows include file
+// got imported after we included nsIDocument.h
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
+#endif // XP_WIN
 
 #ifndef USE_FAKE_MEDIA_STREAMS
 #include "MediaSegment.h"
@@ -1637,14 +1657,76 @@ PeerConnectionImpl::Close()
 }
 
 bool
-PeerConnectionImpl::PluginCrash(uint64_t aPluginID)
+PeerConnectionImpl::PluginCrash(uint64_t aPluginID,
+                                const nsAString& aPluginName,
+                                const nsAString& aPluginDumpID)
 {
   // fire an event to the DOM window if this is "ours"
   bool result = mMedia ? mMedia->AnyCodecHasPluginID(aPluginID) : false;
-  if (result) {
-    CSFLogError(logTag, "%s: Our plugin %llu crashed", __FUNCTION__, static_cast<unsigned long long>(aPluginID));
+  if (!result) {
+    return false;
   }
-  return result;
+
+  CSFLogError(logTag, "%s: Our plugin %llu crashed", __FUNCTION__, static_cast<unsigned long long>(aPluginID));
+
+#ifdef MOZILLA_INTERNAL_API
+  nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  if (!doc) {
+    NS_WARNING("Couldn't get document for PluginCrashed event!");
+    return true;
+  }
+
+  ErrorResult rv;
+  nsRefPtr<Event> event =
+    doc->CreateEvent(NS_LITERAL_STRING("customevent"), rv);
+  nsCOMPtr<nsIDOMCustomEvent> customEvent(do_QueryObject(event));
+  if (!customEvent) {
+    NS_WARNING("Couldn't QI event for PluginCrashed event!");
+    return true;
+  }
+
+  nsCOMPtr<nsIWritableVariant> variant;
+  variant = do_CreateInstance("@mozilla.org/variant;1");
+  if (!variant) {
+    NS_WARNING("Couldn't create detail variant for PluginCrashed event!");
+    return true;
+  }
+
+  customEvent->InitCustomEvent(NS_LITERAL_STRING("PluginCrashed"),
+                               true, true, variant);
+  event->SetTrusted(true);
+  event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+
+  nsCOMPtr<nsIWritablePropertyBag2> propBag;
+  propBag = do_CreateInstance("@mozilla.org/hash-property-bag;1");
+  if (!propBag) {
+    NS_WARNING("Couldn't create a property bag for PluginCrashed event!");
+    return true;
+  }
+
+  // add a "pluginDumpID" property to this event
+  propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginDumpID"),
+                                aPluginDumpID);
+
+
+  // add a "pluginName" property to this event
+  propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginName"),
+                                aPluginName);
+
+  // add a "pluginName" property to this event
+  propBag->SetPropertyAsBool(NS_LITERAL_STRING("gmpPlugin"),
+                             true);
+
+  // add a "submittedCrashReport" property to this event
+  propBag->SetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"),
+                             false);
+
+  variant->SetAsISupports(propBag);
+
+  EventDispatcher::DispatchDOMEvent(mWindow, nullptr, event, nullptr, nullptr);
+#endif
+
+  return true;
 }
 
 nsresult

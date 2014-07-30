@@ -82,6 +82,7 @@ function start() {
   var GLDRIVER_MESA   = 'mesa';
   var GLDRIVER_NVIDIA = 'nvidia';
   var GLDRIVER_X86EMULATOR = 'android x86 emulator';
+  var GLDRIVER_MSBASICRENDER = 'Microsoft Basic Render Driver';
 
   var kOS = null;
   var kOSVersion = null;
@@ -117,8 +118,10 @@ function start() {
     kGLDriver = GLDRIVER_MESA;
   } else if (glVendor.contains('NVIDIA')) {
     kGLDriver = GLDRIVER_NVIDIA;
+  } else if (glRenderer.contains(GLDRIVER_MSBASICRENDER)) {
+    kGLDriver = GLDRIVER_MSBASICRENDER;
   }
-  
+
   if (kOS) {
     info('OS detected as: ' + kOS);
     info('  Version: ' + kOSVersion);
@@ -489,8 +492,12 @@ function start() {
   var skippedTestsFilename = null;
   switch (kOS) {
     case OS_WINDOWS: {
-      failingTestsFilename = 'failing_tests_windows.txt';
-      
+      if (kGLDriver == GLDRIVER_MSBASICRENDER) {
+        failingTestsFilename = 'failing_tests_windows_msbasicrender.txt';
+      } else {
+        failingTestsFilename = 'failing_tests_windows.txt';
+      }
+
       if (kOSVersion >= 6.0) // 6.0 is Vista
         skippedTestsFilename = 'skipped_tests_win_vista.txt'
       else // XP

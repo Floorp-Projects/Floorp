@@ -47,12 +47,13 @@ let mockPushHandler = {
   // This sets the registration result to be returned when initialize
   // is called. By default, it is equivalent to success.
   registrationResult: null,
+  registrationPushURL: undefined,
 
   /**
    * MozLoopPushHandler API
    */
   initialize: function(registerCallback, notificationCallback) {
-    registerCallback(this.registrationResult);
+    registerCallback(this.registrationResult, this.registrationPushURL);
     this._notificationCallback = notificationCallback;
   },
 

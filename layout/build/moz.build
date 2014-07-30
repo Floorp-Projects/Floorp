@@ -75,7 +75,7 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/src',
     '/netwerk/base/src',
     '/netwerk/cookie',
-    '/view/src',
+    '/view',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3'):

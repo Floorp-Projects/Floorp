@@ -64,8 +64,11 @@ ABIArgGenerator::next(MIRType type)
     return current_;
 
 }
-const Register ABIArgGenerator::NonArgReturnVolatileReg0 = t0;
-const Register ABIArgGenerator::NonArgReturnVolatileReg1 = t1;
+const Register ABIArgGenerator::NonArgReturnReg0 = t0;
+const Register ABIArgGenerator::NonArgReturnReg1 = t1;
+const Register ABIArgGenerator::NonArg_VolatileReg = v0;
+const Register ABIArgGenerator::NonReturn_VolatileReg0 = a0;
+const Register ABIArgGenerator::NonReturn_VolatileReg1 = a1;
 
 // Encode a standard register when it is being used as rd, the rs, and
 // an extra register(rt). These should never be called with an InvalidReg.

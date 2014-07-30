@@ -67,7 +67,7 @@ struct PointTyped :
 
   MOZ_CONSTEXPR PointTyped() : Super() {}
   MOZ_CONSTEXPR PointTyped(Float aX, Float aY) : Super(aX, aY) {}
-  MOZ_CONSTEXPR PointTyped(const IntPointTyped<units>& point) : Super(float(point.x), float(point.y)) {}
+  MOZ_CONSTEXPR MOZ_IMPLICIT PointTyped(const IntPointTyped<units>& point) : Super(float(point.x), float(point.y)) {}
 
   // XXX When all of the code is ported, the following functions to convert to and from
   // unknown types should be removed.

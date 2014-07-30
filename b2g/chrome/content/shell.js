@@ -346,6 +346,7 @@ var shell = {
     window.addEventListener('sizemodechange', this);
     window.addEventListener('unload', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
+    this.contentBrowser.addEventListener('mozbrowserselectionchange', this, true);
 
     CustomEventManager.init();
     WebappsHelper.init();
@@ -372,6 +373,7 @@ var shell = {
     window.removeEventListener('mozfullscreenchange', this);
     window.removeEventListener('sizemodechange', this);
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
+    this.contentBrowser.removeEventListener('mozbrowserselectionchange', this, true);
     ppmm.removeMessageListener("content-handler", this);
 
     UserAgentOverrides.uninit();
@@ -513,6 +515,30 @@ var shell = {
 
         this.notifyContentStart();
        break;
+
+      case 'mozbrowserselectionchange':
+        // The mozbrowserselectionchange event, may have crossed the chrome-content boundary.
+        // This event always dispatch to shell.js. But the offset we got from this event is
+        // based on tab's coordinate. So get the actual offsets between shell and evt.target.
+        let elt = evt.target;
+        let win = elt.ownerDocument.defaultView;
+        let offsetX = win.mozInnerScreenX;
+        let offsetY = win.mozInnerScreenY;
+
+        let rect = elt.getBoundingClientRect();
+        offsetX += rect.left;
+        offsetY += rect.top;
+
+        let data = evt.detail;
+        data.offsetX = offsetX;
+        data.offsetY = offsetY;
+
+        DoCommandHelper.setEvent(evt);
+        shell.sendChromeEvent({
+          type: 'selectionchange',
+          detail: data,
+        });
+        break;
 
       case 'MozApplicationManifest':
         try {
@@ -713,6 +739,23 @@ var CustomEventManager = {
       case 'inputmethod-update-layouts':
         KeyboardHelper.handleEvent(detail);
         break;
+      case 'do-command':
+        DoCommandHelper.handleEvent(detail.cmd);
+        break;
+    }
+  }
+}
+
+let DoCommandHelper = {
+  _event: null,
+  setEvent: function docommand_setEvent(evt) {
+    this._event = evt;
+  },
+
+  handleEvent: function docommand_handleEvent(cmd) {
+    if (this._event) {
+      shell.sendEvent(this._event.target, 'mozdocommand', { cmd: cmd });
+      this._event = null;
     }
   }
 }
