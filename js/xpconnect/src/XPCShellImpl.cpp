@@ -470,7 +470,6 @@ static bool
 Options(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = CallArgsFromVp(argc, vp);
-    ContextOptions oldContextOptions = ContextOptionsRef(cx);
     RuntimeOptions oldRuntimeOptions = RuntimeOptionsRef(cx);
 
     for (unsigned i = 0; i < args.length(); ++i) {
@@ -483,7 +482,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
             return false;
 
         if (strcmp(opt.ptr(), "strict") == 0)
-            ContextOptionsRef(cx).toggleExtraWarnings();
+            RuntimeOptionsRef(cx).toggleExtraWarnings();
         else if (strcmp(opt.ptr(), "werror") == 0)
             RuntimeOptionsRef(cx).toggleWerror();
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
@@ -496,7 +495,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     char *names = nullptr;
-    if (oldContextOptions.extraWarnings()) {
+    if (oldRuntimeOptions.extraWarnings()) {
         names = JS_sprintf_append(names, "%s", "strict");
         if (!names) {
             JS_ReportOutOfMemory(cx);
@@ -1026,7 +1025,7 @@ ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
         case 'S':
             RuntimeOptionsRef(cx).toggleWerror();
         case 's':
-            ContextOptionsRef(cx).toggleExtraWarnings();
+            RuntimeOptionsRef(cx).toggleExtraWarnings();
             break;
         case 'I':
             RuntimeOptionsRef(cx).toggleIon()
