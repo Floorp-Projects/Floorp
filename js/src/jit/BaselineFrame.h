@@ -7,8 +7,6 @@
 #ifndef jit_BaselineFrame_h
 #define jit_BaselineFrame_h
 
-#ifdef JS_ION
-
 #include "jit/IonFrames.h"
 #include "vm/Stack.h"
 
@@ -424,7 +422,5 @@ JS_STATIC_ASSERT(((sizeof(BaselineFrame) + BaselineFrame::FramePointerOffset) % 
 
 } // namespace jit
 } // namespace js
-
-#endif // JS_ION
 
 #endif /* jit_BaselineFrame_h */

@@ -51,7 +51,7 @@ int32_t NS_COM_GLUE CompareVersions(const char16_t* aStrA, const char16_t* aStrB
 
 struct NS_COM_GLUE Version
 {
-  Version(const char* aVersionString)
+  explicit Version(const char* aVersionString)
   {
     versionContent = strdup(aVersionString);
   }
@@ -89,6 +89,30 @@ struct NS_COM_GLUE Version
   bool operator!=(const Version& aRhs) const
   {
     return CompareVersions(versionContent, aRhs.ReadContent()) != 0;
+  }
+  bool operator<(const char* aRhs) const
+  {
+    return CompareVersions(versionContent, aRhs) == -1;
+  }
+  bool operator<=(const char* aRhs) const
+  {
+    return CompareVersions(versionContent, aRhs) < 1;
+  }
+  bool operator>(const char* aRhs) const
+  {
+    return CompareVersions(versionContent, aRhs) == 1;
+  }
+  bool operator>=(const char* aRhs) const
+  {
+    return CompareVersions(versionContent, aRhs) > -1;
+  }
+  bool operator==(const char* aRhs) const
+  {
+    return CompareVersions(versionContent, aRhs) == 0;
+  }
+  bool operator!=(const char* aRhs) const
+  {
+    return CompareVersions(versionContent, aRhs) != 0;
   }
 
 private:

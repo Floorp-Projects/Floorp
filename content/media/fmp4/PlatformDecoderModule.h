@@ -31,6 +31,7 @@ class MediaDataDecoder;
 class MediaDataDecoderCallback;
 class MediaInputQueue;
 class MediaTaskQueue;
+class CDMProxy;
 typedef int64_t Microseconds;
 
 // The PlatformDecoderModule interface is used by the MP4Reader to abstract
@@ -64,6 +65,15 @@ public:
   // PlatformDecoderModule created per MP4Reader.
   // This is called on the decode thread.
   static PlatformDecoderModule* Create();
+
+  // Creates a PlatformDecoderModule that uses a CDMProxy to decrypt or
+  // decrypt-and-decode EME encrypted content. If the CDM only decrypts and
+  // does not decode, we create a PDM and use that to create MediaDataDecoders
+  // that we use on on aTaskQueue to decode the decrypted stream.
+  static PlatformDecoderModule* CreateCDMWrapper(CDMProxy* aProxy,
+                                                 bool aHasAudio,
+                                                 bool aHasVideo,
+                                                 MediaTaskQueue* aTaskQueue);
 
   // Called to shutdown the decoder module and cleanup state. This should
   // block until shutdown is complete. This is called after Shutdown() has

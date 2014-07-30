@@ -44,6 +44,7 @@ public:
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
 
   class AsyncScroll;
+  class AsyncSmoothMSDScroll;
 
   ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot);
   ~ScrollFrameHelper();
@@ -172,7 +173,10 @@ protected:
   nsRect GetScrollRangeForClamping() const;
 
 public:
-  static void AsyncScrollCallback(void* anInstance, mozilla::TimeStamp aTime);
+  static void AsyncScrollCallback(ScrollFrameHelper* aInstance,
+                                  mozilla::TimeStamp aTime);
+  static void AsyncSmoothMSDScrollCallback(ScrollFrameHelper* aInstance,
+                                           mozilla::TimeDuration aDeltaTime);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * aRange is the range of allowable scroll positions around the desired
@@ -186,7 +190,9 @@ public:
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition);
+  void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                         nsIScrollableFrame::ScrollMode aMode
+                           = nsIScrollableFrame::INSTANT);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -203,7 +209,8 @@ public:
    * @note This method might destroy the frame, pres shell and other objects.
    */
   void ScrollBy(nsIntPoint aDelta, nsIScrollableFrame::ScrollUnit aUnit,
-                nsIScrollableFrame::ScrollMode aMode, nsIntPoint* aOverflow, nsIAtom *aOrigin = nullptr);
+                nsIScrollableFrame::ScrollMode aMode, nsIntPoint* aOverflow,
+                nsIAtom* aOrigin = nullptr, bool aIsMomentum = false);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -269,7 +276,9 @@ public:
   bool IsLTR() const;
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive() const { return mScrollingActive || mShouldBuildScrollableLayer; }
-  bool IsProcessingAsyncScroll() const { return mAsyncScroll != nullptr; }
+  bool IsProcessingAsyncScroll() const {
+    return mAsyncScroll != nullptr || mAsyncSmoothMSDScroll != nullptr;
+  }
   void ResetScrollPositionForLayerPixelAlignment()
   {
     mScrollPosForLayerPixelAlignment = GetScrollPosition();
@@ -332,6 +341,7 @@ public:
   nsIFrame* mResizerBox;
   nsContainerFrame* mOuter;
   nsRefPtr<AsyncScroll> mAsyncScroll;
+  nsRefPtr<AsyncSmoothMSDScroll> mAsyncSmoothMSDScroll;
   nsRefPtr<ScrollbarActivity> mScrollbarActivity;
   nsTArray<nsIScrollPositionListener*> mListeners;
   nsIAtom* mOriginOfLastScroll;
@@ -421,6 +431,8 @@ protected:
                           nsIScrollableFrame::ScrollMode aMode,
                           nsIAtom *aOrigin, // nullptr indicates "other" origin
                           const nsRect* aRange);
+
+  void CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin = nullptr);
 
   static void EnsureImageVisPrefsCached();
   static bool sImageVisPrefsCached;
@@ -609,8 +621,10 @@ public:
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition) MOZ_OVERRIDE {
-    mHelper.ScrollToCSSPixels(aScrollPosition);
+  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                                 nsIScrollableFrame::ScrollMode aMode
+                                   = nsIScrollableFrame::INSTANT) MOZ_OVERRIDE {
+    mHelper.ScrollToCSSPixels(aScrollPosition, aMode);
   }
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition,
                                             nsIAtom* aOrigin = nullptr) MOZ_OVERRIDE {
@@ -626,8 +640,9 @@ public:
    * @note This method might destroy the frame, pres shell and other objects.
    */
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-                        nsIntPoint* aOverflow, nsIAtom *aOrigin = nullptr) MOZ_OVERRIDE {
-    mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin);
+                        nsIntPoint* aOverflow, nsIAtom* aOrigin = nullptr,
+                        bool aIsMomentum = false) MOZ_OVERRIDE {
+    mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aIsMomentum);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -931,8 +946,10 @@ public:
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition) MOZ_OVERRIDE {
-    mHelper.ScrollToCSSPixels(aScrollPosition);
+  virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                                 nsIScrollableFrame::ScrollMode aMode
+                                   = nsIScrollableFrame::INSTANT) MOZ_OVERRIDE {
+    mHelper.ScrollToCSSPixels(aScrollPosition, aMode);
   }
   virtual void ScrollToCSSPixelsApproximate(const mozilla::CSSPoint& aScrollPosition,
                                             nsIAtom* aOrigin = nullptr) MOZ_OVERRIDE {
@@ -945,8 +962,9 @@ public:
    * @note This method might destroy the frame, pres shell and other objects.
    */
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
-                        nsIntPoint* aOverflow, nsIAtom* aOrigin = nullptr) MOZ_OVERRIDE {
-    mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin);
+                        nsIntPoint* aOverflow, nsIAtom* aOrigin = nullptr,
+                        bool aIsMomentum = false) MOZ_OVERRIDE {
+    mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aIsMomentum);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.

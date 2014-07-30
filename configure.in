@@ -3844,6 +3844,7 @@ MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
+MOZ_GMP_SANDBOX=
 JSGC_USE_EXACT_ROOTING=1
 JSGC_GENERATIONAL=
 
@@ -6404,6 +6405,28 @@ if test -n "$MOZ_CONTENT_SANDBOX"; then
 fi
 
 AC_SUBST(MOZ_CONTENT_SANDBOX)
+
+dnl ========================================================
+dnl = Gecko Media Plugin sandboxing
+dnl ========================================================
+case $OS_TARGET in
+WINNT)
+    MOZ_GMP_SANDBOX=1
+    ;;
+Linux)
+    case $CPU_ARCH in
+    x86_64|x86)
+        MOZ_GMP_SANDBOX=1
+        ;;
+    esac
+    ;;
+esac
+
+if test -n "$MOZ_GMP_SANDBOX"; then
+    AC_DEFINE(MOZ_GMP_SANDBOX)
+fi
+
+AC_SUBST(MOZ_GMP_SANDBOX)
 
 dnl ========================================================
 dnl =

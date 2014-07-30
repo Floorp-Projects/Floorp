@@ -6,6 +6,7 @@
 #pragma once
 
 // Moz headers (alphabetical)
+#include "APZController.h"
 #include "keyboardlayout.h"   // mModifierKeyState
 #include "nsBaseHashtable.h"  // mTouches
 #include "nsHashKeys.h"       // type of key for mTouches
@@ -68,7 +69,8 @@ namespace mozilla {
 namespace widget {
 namespace winrt {
 
-class MetroInput : public Microsoft::WRL::RuntimeClass<IInspectable>
+class MetroInput : public Microsoft::WRL::RuntimeClass<IInspectable>,
+                   public APZPendingResponseFlusher
 {
   InspectableClass(L"MetroInput", BaseTrust);
 
@@ -148,6 +150,9 @@ public:
   void HandleTap(const Point& aPoint, unsigned int aTapCount);
   void HandleLongTap(const Point& aPoint);
 
+  // The APZPendingResponseFlusher implementation
+  void FlushPendingContentResponse();
+
   static bool IsInputModeImprecise();
 
 private:
@@ -192,38 +197,25 @@ private:
   // Note: event argument should be transformed via apzc before supplying to this method.
   void GetAllowedTouchBehavior(WidgetTouchEvent* aTransformedEvent, nsTArray<TouchBehaviorFlags>& aOutBehaviors);
 
-  // Checks whether any touch behavior is allowed.
-  bool IsTouchBehaviorForbidden(const nsTArray<TouchBehaviorFlags>& aTouchBehaviors);
-
-  // The W3C spec states that "whether preventDefault has been called" should
-  // be tracked on a per-touchpoint basis, but it also states that touchstart
-  // and touchmove events can contain multiple changed points.  At the time of
-  // this writing, W3C touch events are in the process of being abandoned in
-  // favor of W3C pointer events, so it is unlikely that this ambiguity will
-  // be resolved.  Additionally, nsPresShell tracks "whether preventDefault
-  // has been called" on a per-touch-session basis.  We will follow a similar
-  // approach here.
-  //
-  // Specifically:
-  //   If preventDefault is called on the FIRST touchstart event of a touch
-  //   session, then no default actions associated with any touchstart,
-  //   touchmove, or touchend events will be taken.  This means that no
-  //   mousedowns, mousemoves, mouseups, clicks, swipes, rotations,
-  //   magnifications, etc will be dispatched during this touch session;
-  //   only touchstart, touchmove, and touchend.
-  //
-  //   If preventDefault is called on the FIRST touchmove event of a touch
-  //   session, then no default actions associated with the _touchmove_ events
-  //   will be dispatched.  However, it is still possible that additional
-  //   events will be generated based on the touchstart and touchend events.
-  //   For example, a set of mousemove, mousedown, and mouseup events might
-  //   be sent if a tap is detected.
-  bool mContentConsumingTouch;
+  // First, read the comment in gfx/layers/apz/src/TouchBlockState.h.
+  // The following booleans track the following pieces of state:
+  // mApzConsumingTouch - if events from the current touch block should be
+  //    sent to the APZ. This is true unless the touchstart hit no APZ
+  //    instances, in which case we don't need to send the rest of the touch
+  //    block to the APZ code.
+  // mCancelable - if we have not yet notified the APZ code about the prevent-
+  //    default status of the current touch block. This is flipped from true
+  //    to false when this notification happens (or would have happened, in
+  //    the case that mApzConsumingTouch is false).
+  // mRecognizerWantsEvents - If the gesture recognizer should be receiving
+  //    events. This is normally true, but will be set to false if the APZ
+  //    decides the touch block should be thrown away entirely, or if content
+  //    consumes the touch block.
+  //    XXX There is a hazard with mRecognizerWantsEvents because it is accessed
+  //    both in the sync and async portions of the code.
   bool mApzConsumingTouch;
   bool mCancelable;
   bool mRecognizerWantsEvents;
-
-  nsTArray<uint32_t> mCanceledIds;
 
   // In the old Win32 way of doing things, we would receive a WM_TOUCH event
   // that told us the state of every touchpoint on the touch surface.  If
@@ -289,12 +281,13 @@ private:
   void DeliverNextQueuedEventIgnoreStatus();
   void DeliverNextQueuedTouchEvent();
 
-  void HandleFirstTouchStartEvent(WidgetTouchEvent* aEvent);
+  void HandleTouchStartEvent(WidgetTouchEvent* aEvent);
   void HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent);
+  void SendPendingResponseToApz();
+  void CancelGesture();
 
   // Sync event dispatching
   void DispatchEventIgnoreStatus(WidgetGUIEvent* aEvent);
-  void DispatchTouchCancel(WidgetTouchEvent* aEvent);
 
   nsDeque mInputEventQueue;
   mozilla::layers::ScrollableLayerGuid mTargetAPZCGuid;

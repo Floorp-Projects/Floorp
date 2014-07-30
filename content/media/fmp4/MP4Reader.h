@@ -12,6 +12,7 @@
 #include "PlatformDecoderModule.h"
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "MediaTaskQueue.h"
+#include "mozilla/CDMProxy.h"
 
 #include <deque>
 #include "mozilla/Monitor.h"
@@ -55,7 +56,11 @@ public:
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
                                int64_t aStartTime) MOZ_OVERRIDE;
 
+  virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
+
 private:
+
+  void ExtractCryptoInitData(nsTArray<uint8_t>& aInitData);
 
   // Destroys all decoder resources.
   void Shutdown();
@@ -141,7 +146,7 @@ private:
   };
   DecoderData mAudio;
   DecoderData mVideo;
-  // Queued frame extracted by the demuxer, but not yet sent to the platform
+  // Queued samples extracted by the demuxer, but not yet sent to the platform
   // decoder.
   nsAutoPtr<mp4_demuxer::MP4Sample> mQueuedVideoSample;
 
@@ -152,11 +157,17 @@ private:
   uint64_t mLastReportedNumDecodedFrames;
 
   DecoderData& GetDecoderData(mp4_demuxer::TrackType aTrack);
-  MP4SampleQueue& SampleQueue(mp4_demuxer::TrackType aTrack);
   MediaDataDecoder* Decoder(mp4_demuxer::TrackType aTrack);
 
   layers::LayersBackend mLayersBackendType;
 
+  nsTArray<nsTArray<uint8_t>> mInitDataEncountered;
+
+  // True if we've read the streams' metadata.
+  bool mDemuxerInitialized;
+
+  // Synchronized by decoder monitor.
+  bool mIsEncrypted;
 };
 
 } // namespace mozilla

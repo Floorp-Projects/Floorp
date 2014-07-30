@@ -132,6 +132,12 @@ public:
                           uint32_t aBackgroundLRU = 0);
 
   /**
+   * This function implements ProcessPriorityManager::ResetProcessPriority.
+   */
+  void ResetProcessPriority(ContentParent* aContentParent,
+                            bool aHandleSystemMessage);
+
+  /**
    * If a magic testing-only pref is set, notify the observer service on the
    * given topic with the given data.  This is used for testing
    */
@@ -287,6 +293,8 @@ public:
 
   void ShutDown();
 
+  void SetHandlesSystemMessage(bool aHandlesSystemMessage);
+
 private:
   void FireTestOnlyObserverNotification(
     const char* aTopic,
@@ -302,6 +310,7 @@ private:
   ProcessCPUPriority mCPUPriority;
   bool mHoldsCPUWakeLock;
   bool mHoldsHighPriorityWakeLock;
+  bool mHandlesSystemMessage;
 
   /**
    * Used to implement NameWithComma().
@@ -497,6 +506,17 @@ ProcessPriorityManagerImpl::SetProcessPriority(ContentParent* aContentParent,
 }
 
 void
+ProcessPriorityManagerImpl::ResetProcessPriority(ContentParent* aContentParent,
+                                                 bool aHandleSystemMessage)
+{
+  MOZ_ASSERT(aContentParent);
+  nsRefPtr<ParticularProcessPriorityManager> pppm =
+    GetParticularProcessPriorityManager(aContentParent);
+  pppm->SetHandlesSystemMessage(aHandleSystemMessage);
+  pppm->ResetPriorityNow();
+}
+
+void
 ProcessPriorityManagerImpl::ObserveContentParentCreated(
   nsISupports* aContentParent)
 {
@@ -647,6 +667,7 @@ ParticularProcessPriorityManager::ParticularProcessPriorityManager(
   , mCPUPriority(PROCESS_CPU_PRIORITY_NORMAL)
   , mHoldsCPUWakeLock(false)
   , mHoldsHighPriorityWakeLock(false)
+  , mHandlesSystemMessage(false)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   LOGP("Creating ParticularProcessPriorityManager.");
@@ -969,7 +990,7 @@ ParticularProcessPriorityManager::CurrentPriority()
 ProcessPriority
 ParticularProcessPriorityManager::ComputePriority()
 {
-  if ((mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
+  if ((mHandlesSystemMessage || mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
       HasAppType("critical")) {
     return PROCESS_PRIORITY_FOREGROUND_HIGH;
   }
@@ -990,7 +1011,7 @@ ParticularProcessPriorityManager::ComputePriority()
       PROCESS_PRIORITY_FOREGROUND;
   }
 
-  if ((mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
+  if ((mHandlesSystemMessage || mHoldsCPUWakeLock || mHoldsHighPriorityWakeLock) &&
       IsExpectingSystemMessage()) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
@@ -1135,6 +1156,12 @@ ParticularProcessPriorityManager::ShutDown()
   }
 
   mContentParent = nullptr;
+}
+
+void
+ParticularProcessPriorityManager::SetHandlesSystemMessage(bool aHandlesSystemMessage)
+{
+  mHandlesSystemMessage = aHandlesSystemMessage;
 }
 
 void
@@ -1470,6 +1497,19 @@ ProcessPriorityManager::SetProcessPriority(ContentParent* aContentParent,
     ProcessPriorityManagerImpl::GetSingleton();
   if (singleton) {
     singleton->SetProcessPriority(aContentParent, aPriority);
+  }
+}
+
+/* static */ void
+ProcessPriorityManager::ResetProcessPriority(ContentParent* aContentParent,
+                                             bool aHandleSystemMessage)
+{
+  MOZ_ASSERT(aContentParent);
+
+  ProcessPriorityManagerImpl* singleton =
+    ProcessPriorityManagerImpl::GetSingleton();
+  if (singleton) {
+    singleton->ResetProcessPriority(aContentParent, aHandleSystemMessage);
   }
 }
 

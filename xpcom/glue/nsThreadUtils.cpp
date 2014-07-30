@@ -274,7 +274,7 @@ class nsNameThreadRunnable MOZ_FINAL : public nsIRunnable
   ~nsNameThreadRunnable() {}
 
 public:
-  nsNameThreadRunnable(const nsACString& aName) : mName(aName) {}
+  explicit nsNameThreadRunnable(const nsACString& aName) : mName(aName) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
