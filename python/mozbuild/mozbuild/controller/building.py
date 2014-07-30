@@ -8,8 +8,10 @@ import getpass
 import json
 import logging
 import os
+import subprocess
 import sys
 import time
+import which
 
 from collections import (
     namedtuple,
@@ -431,6 +433,192 @@ class BuildMonitor(MozbuildObject):
             'Read time: {io_read_time}; Write time: {io_write_time}'
 
         self.log(logging.WARNING, m_type, params, message)
+
+    def ccache_stats(self):
+        ccache_stats = None
+
+        try:
+            ccache = which.which('ccache')
+            output = subprocess.check_output([ccache, '-s'])
+            ccache_stats = CCacheStats(output)
+        except which.WhichError:
+            pass
+        except ValueError as e:
+            self.log(logging.WARNING, 'ccache', {'msg': str(e)}, '{msg}')
+
+        return ccache_stats
+
+
+class CCacheStats(object):
+    """Holds statistics from ccache.
+
+    Instances can be subtracted from each other to obtain differences.
+    print() or str() the object to show a ``ccache -s`` like output
+    of the captured stats.
+
+    """
+    STATS_KEYS = [
+        # (key, description)
+        # Refer to stats.c in ccache project for all the descriptions.
+        ('cache_hit_direct', 'cache hit (direct)'),
+        ('cache_hit_preprocessed', 'cache hit (preprocessed)'),
+        ('cache_miss', 'cache miss'),
+        ('link', 'called for link'),
+        ('preprocessing', 'called for preprocessing'),
+        ('multiple', 'multiple source files'),
+        ('stdout', 'compiler produced stdout'),
+        ('no_output', 'compiler produced no output'),
+        ('empty_output', 'compiler produced empty output'),
+        ('failed', 'compile failed'),
+        ('error', 'ccache internal error'),
+        ('preprocessor_error', 'preprocessor error'),
+        ('cant_use_pch', "can't use precompiled header"),
+        ('compiler_missing', "couldn't find the compiler"),
+        ('cache_file_missing', 'cache file missing'),
+        ('bad_args', 'bad compiler arguments'),
+        ('unsupported_lang', 'unsupported source language'),
+        ('compiler_check_failed', 'compiler check failed'),
+        ('autoconf', 'autoconf compile/link'),
+        ('unsupported_compiler_option', 'unsupported compiler option'),
+        ('out_stdout', 'output to stdout'),
+        ('out_device', 'output to a non-regular file'),
+        ('no_input', 'no input file'),
+        ('bad_extra_file', 'error hashing extra file'),
+        ('cache_files', 'files in cache'),
+        ('cache_size', 'cache size'),
+        ('cache_max_size', 'max cache size'),
+    ]
+
+    DIRECTORY_DESCRIPTION = "cache directory"
+    ABSOLUTE_KEYS = {'cache_max_size'}
+    FORMAT_KEYS = {'cache_size', 'cache_max_size'}
+
+    GiB = 1024 ** 3
+    MiB = 1024 ** 2
+    KiB = 1024
+
+    def __init__(self, output=None):
+        """Construct an instance from the output of ccache -s."""
+        self._values = {}
+        self.cache_dir = ""
+
+        if not output:
+            return
+
+        for line in output.splitlines():
+            line = line.strip()
+            if line:
+                self._parse_line(line)
+
+    def _parse_line(self, line):
+        if line.startswith(self.DIRECTORY_DESCRIPTION):
+            self.cache_dir = self._strip_prefix(line, self.DIRECTORY_DESCRIPTION)
+            return
+
+        for stat_key, stat_description in self.STATS_KEYS:
+            if line.startswith(stat_description):
+                raw_value = self._strip_prefix(line, stat_description)
+                self._values[stat_key] = self._parse_value(raw_value)
+                break
+        else:
+            raise ValueError('Failed to parse ccache stats output: %s' % line)
+
+    @staticmethod
+    def _strip_prefix(line, prefix):
+        return line[len(prefix):].strip() if line.startswith(prefix) else line
+
+    @staticmethod
+    def _parse_value(raw_value):
+        value = raw_value.split()
+        unit = ''
+        if len(value) == 1:
+            numeric = value[0]
+        elif len(value) == 2:
+            numeric, unit = value
+        else:
+            raise ValueError('Failed to parse ccache stats value: %s' % raw_value)
+
+        if '.' in numeric:
+            numeric = float(numeric)
+        else:
+            numeric = int(numeric)
+
+        if unit in ('GB', 'Gbytes'):
+            unit = CCacheStats.GiB
+        elif unit in ('MB', 'Mbytes'):
+            unit = CCacheStats.MiB
+        elif unit in ('KB', 'Kbytes'):
+            unit = CCacheStats.KiB
+        else:
+            unit = 1
+
+        return int(numeric * unit)
+
+    def hit_rate_message(self):
+        return 'ccache (direct) hit rate: {:.1%}; (preprocessed) hit rate: {:.1%}; miss rate: {:.1%}'.format(*self.hit_rates())
+
+    def hit_rates(self):
+        direct = self._values['cache_hit_direct']
+        preprocessed = self._values['cache_hit_preprocessed']
+        miss = self._values['cache_miss']
+        total = float(direct + preprocessed + miss)
+
+        if total > 0:
+            direct /= total
+            preprocessed /= total
+            miss /= total
+
+        return (direct, preprocessed, miss)
+
+    def __sub__(self, other):
+        result = CCacheStats()
+        result.cache_dir = self.cache_dir
+
+        for k, prefix in self.STATS_KEYS:
+            if k not in self._values and k not in other._values:
+                continue
+
+            our_value = self._values.get(k, 0)
+            other_value = other._values.get(k, 0)
+
+            if k in self.ABSOLUTE_KEYS:
+                result._values[k] = our_value
+            else:
+                result._values[k] = our_value - other_value
+
+        return result
+
+    def __str__(self):
+        LEFT_ALIGN = 34
+        lines = []
+
+        if self.cache_dir:
+            lines.append('%s%s' % (self.DIRECTORY_DESCRIPTION.ljust(LEFT_ALIGN),
+                                   self.cache_dir))
+
+        for stat_key, stat_description in self.STATS_KEYS:
+            if stat_key not in self._values:
+                continue
+
+            value = self._values[stat_key]
+
+            if stat_key in self.FORMAT_KEYS:
+                value = '%15s' % self._format_value(value)
+            else:
+                value = '%8u' % value
+
+            lines.append('%s%s' % (stat_description.ljust(LEFT_ALIGN), value))
+
+        return '\n'.join(lines)
+
+    @staticmethod
+    def _format_value(v):
+        if v > CCacheStats.GiB:
+            return '%.1f Gbytes' % (float(v) / CCacheStats.GiB)
+        elif v > CCacheStats.MiB:
+            return '%.1f Mbytes' % (float(v) / CCacheStats.MiB)
+        else:
+            return '%.1f Kbytes' % (float(v) / CCacheStats.KiB)
 
 
 class BuildDriver(MozbuildObject):

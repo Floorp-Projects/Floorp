@@ -285,6 +285,7 @@ class Build(MachCommandBase):
         warnings_path = self._get_state_filename('warnings.json')
         monitor = self._spawn(BuildMonitor)
         monitor.init(warnings_path)
+        ccache_start = monitor.ccache_stats()
 
         with BuildOutputManager(self.log_manager, monitor) as output:
             monitor.start()
@@ -391,6 +392,13 @@ class Build(MachCommandBase):
         high_finder, finder_percent = monitor.have_high_finder_usage()
         if high_finder:
             print(FINDER_SLOW_MESSAGE % finder_percent)
+
+        ccache_end = monitor.ccache_stats()
+
+        if ccache_start and ccache_end:
+            ccache_diff = ccache_end - ccache_start
+            self.log(logging.INFO, 'ccache',
+                     {'msg': ccache_diff.hit_rate_message()}, "{msg}")
 
         if monitor.elapsed > 300:
             # Display a notification when the build completes.
