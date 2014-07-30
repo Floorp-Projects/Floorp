@@ -2364,7 +2364,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
                                                  JS::MutableHandle<JSPropertyDescriptor> desc)
                                                  const
 {
-    assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET);
+    assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
+                                         BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
     RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
     if (Traits::isResolving(cx, holder, id)) {
         desc.object().set(nullptr);
@@ -2496,7 +2497,8 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject 
                                                     JS::MutableHandle<JSPropertyDescriptor> desc)
                                                     const
 {
-    assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET);
+    assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
+                                         BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
     RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
     if (Traits::isResolving(cx, holder, id)) {
         desc.object().set(nullptr);
