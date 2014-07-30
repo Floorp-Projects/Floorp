@@ -75,7 +75,7 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
   dump("Created test " + id + " : " + policy + "\n\n");
 
   // make the reports seem authentic by "binding" them to a channel.
-  csp.setRequestContext(selfuri, null, null, selfchan);
+  csp.setRequestContext(selfuri, null, selfchan);
 
   // Load up the policy
   // set as report-only if that's the case
