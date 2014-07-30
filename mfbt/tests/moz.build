@@ -21,6 +21,7 @@ CPP_UNIT_TESTS += [
     'TestMacroArgs',
     'TestMacroForEach',
     'TestPair',
+    'TestRefPtr',
     'TestRollingMean',
     'TestSHA1',
     'TestTypedEnum',
