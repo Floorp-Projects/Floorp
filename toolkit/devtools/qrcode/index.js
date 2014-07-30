@@ -19,7 +19,14 @@ Object.defineProperty(this, "QRErrorCorrectLevel", {
   get: () => require("./encoder/index").QRErrorCorrectLevel
 });
 Object.defineProperty(this, "decoder", {
-  get: () => require("./decoder/index")
+  get: () => {
+    // Some applications don't ship the decoder, see moz.build
+    try {
+      return require("./decoder/index");
+    } catch(e) {
+      return null;
+    }
+  }
 });
 
 /**
@@ -86,6 +93,9 @@ exports.encodeToDataURI = function(message, quality, version) {
  *         the QR code.
  */
 exports.decodeFromURI = function(URI) {
+  if (!decoder) {
+    return promise.reject();
+  }
   let deferred = promise.defer();
   decoder.decodeFromURI(URI, deferred.resolve, deferred.reject);
   return deferred.promise;
@@ -99,5 +109,8 @@ exports.decodeFromURI = function(URI) {
  *         The data inside the QR code
  */
 exports.decodeFromCanvas = function(canvas) {
+  if (!decoder) {
+    throw new Error("Decoder not available");
+  }
   return decoder.decodeFromCanvas(canvas);
 };
