@@ -1912,16 +1912,18 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, 
             return false;
     }
 
-    // Go through the properties we got and enumerate all native ones.
+    // Go through the properties we found on the underlying object and see if
+    // they appear on the XrayWrapper. If it throws (which may happen if the
+    // wrapper is a SecurityWrapper), just clear the exception and move on.
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
     if (!props.reserve(wnProps.length()))
         return false;
     for (size_t n = 0; n < wnProps.length(); ++n) {
         RootedId id(cx, wnProps[n]);
         bool hasProp;
-        if (!JS_HasPropertyById(cx, wrapper, id, &hasProp))
-            return false;
-        if (hasProp)
+        if (JS_HasPropertyById(cx, wrapper, id, &hasProp) && hasProp)
             props.infallibleAppend(id);
+        JS_ClearPendingException(cx);
     }
     return true;
 }
@@ -2669,10 +2671,6 @@ XrayWrapper<Base, Traits>::enumerate(JSContext *cx, HandleObject wrapper, unsign
                                      AutoIdVector &props) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-    if (!AccessCheck::wrapperSubsumes(wrapper)) {
-        JS_ReportError(cx, "Not allowed to enumerate cross origin objects");
-        return false;
-    }
 
     // Enumerate expando properties first. Note that the expando object lives
     // in the target compartment.
