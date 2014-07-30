@@ -39,6 +39,16 @@ try {
   kMaxPendingMessages = 5;
 }
 
+//Limit the duration to hold the CPU wake lock.
+let kCpuWakeLockTimeoutSec;
+try {
+  kCpuWakeLockTimeoutSec =
+    Services.prefs.getIntPref("dom.ipc.systemMessageCPULockTimeoutSec");
+} catch (e) {
+  // getIntPref throws when the pref is not set.
+  kCpuWakeLockTimeoutSec = 30;
+}
+
 const kMessages =["SystemMessageManager:GetPendingMessages",
                   "SystemMessageManager:HasPendingMessages",
                   "SystemMessageManager:Register",
@@ -149,7 +159,7 @@ SystemMessageInternal.prototype = {
       debug("Releasing the CPU wake lock because the system messages " +
             "were not handled by its registered page before time out.");
       this._cancelCpuWakeLock(aPageKey);
-    }.bind(this), 30000, Ci.nsITimer.TYPE_ONE_SHOT);
+    }.bind(this), kCpuWakeLockTimeoutSec * 1000, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   _releaseCpuWakeLock: function _releaseCpuWakeLock(aPageKey, aHandledCount) {

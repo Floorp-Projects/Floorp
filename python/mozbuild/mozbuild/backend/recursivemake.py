@@ -720,7 +720,7 @@ class RecursiveMakeBackend(CommonBackend):
                         if trigger.encode('ascii') in content:
                             for target in targets:
                                 t = '%s/target' % mozpath.relpath(objdir,
-                                    bf.environment.topobjdir)
+                                    self.environment.topobjdir)
                                 self._compile_graph[t].add(target)
                     # Skip every directory but those with a Makefile
                     # containing a tools target, or XPI_PKGNAME or
@@ -1150,9 +1150,9 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
 
-    @staticmethod
-    def _build_target_for_obj(obj):
-        return '%s/%s' % (obj.relobjdir, obj.KIND)
+    def _build_target_for_obj(self, obj):
+        return '%s/%s' % (mozpath.relpath(obj.objdir,
+            self.environment.topobjdir), obj.KIND)
 
     def _process_linked_libraries(self, obj, backend_file):
         def recursive_get_shared_libs(lib):

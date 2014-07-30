@@ -9,22 +9,30 @@
 
 #include "nsString.h"
 #include "nsAutoPtr.h"
-#include "nsProxyRelease.h"
 #include "mozilla/dom/MediaKeys.h"
 #include "mozilla/dom/TypedArray.h"
-
-class nsIThread;
+#include "mozilla/Monitor.h"
+#include "nsIThread.h"
+#include "GMPDecryptorProxy.h"
+#include "mozilla/CDMCaps.h"
+#include "mp4_demuxer/DecoderData.h"
 
 namespace mozilla {
+
+class CDMCallbackProxy;
 
 namespace dom {
 class MediaKeySession;
 }
 
-// A placeholder proxy to the CDM.
-// TODO: The functions here need to do IPC to talk to the CDM via the
-// Gecko Media Plugin API, which we'll need to extend for H.264 and EME
-// content.
+class DecryptionClient {
+public:
+  virtual ~DecryptionClient() {}
+  virtual void Decrypted(nsresult aResult,
+                         mp4_demuxer::MP4Sample* aSample) = 0;
+};
+
+// Proxies calls GMP/CDM, and proxies calls back.
 // Note: Promises are passed in via a PromiseId, so that the ID can be
 // passed via IPC to the CDM, which can then signal when to reject or
 // resolve the promise using its PromiseId.
@@ -95,7 +103,123 @@ public:
   // Main thread only.
   void Shutdown();
 
+  // Threadsafe.
+  const nsAString& GetOrigin() const;
+
+  // Main thread only.
+  void OnResolveNewSessionPromise(uint32_t aPromiseId,
+                                  const nsAString& aSessionId);
+
+  // Main thread only.
+  void OnSessionMessage(const nsAString& aSessionId,
+                        nsTArray<uint8_t>& aMessage,
+                        const nsAString& aDestinationURL);
+
+  // Main thread only.
+  void OnExpirationChange(const nsAString& aSessionId,
+                          GMPTimestamp aExpiryTime);
+
+  // Main thread only.
+  void OnSessionClosed(const nsAString& aSessionId);
+
+  // Main thread only.
+  void OnSessionError(const nsAString& aSessionId,
+                      nsresult aException,
+                      uint32_t aSystemCode,
+                      const nsAString& aMsg);
+
+  // Main thread only.
+  void OnRejectPromise(uint32_t aPromiseId,
+                       nsresult aDOMException,
+                       const nsAString& aMsg);
+
+  // Threadsafe.
+  void Decrypt(mp4_demuxer::MP4Sample* aSample,
+               DecryptionClient* aSink);
+
+  // Reject promise with DOMException corresponding to aExceptionCode.
+  // Can be called from any thread.
+  void RejectPromise(PromiseId aId, nsresult aExceptionCode);
+
+  // Resolves promise with "undefined".
+  // Can be called from any thread.
+  void ResolvePromise(PromiseId aId);
+
+  // Threadsafe.
+  const nsString& KeySystem() const;
+
+  // GMP thread only.
+  void gmp_Decrypted(uint32_t aId,
+                     GMPErr aResult,
+                     const nsTArray<uint8_t>& aDecryptedData);
+
+  // GMP thread only.
+  void gmp_Terminated();
+
+  CDMCaps& Capabilites();
+
+#ifdef DEBUG
+  bool IsOnGMPThread();
+#endif
+
 private:
+
+  // GMP thread only.
+  void gmp_Init(uint32_t aPromiseId);
+
+  // Main thread only.
+  void OnCDMCreated(uint32_t aPromiseId);
+
+  struct CreateSessionData {
+    dom::SessionType mSessionType;
+    PromiseId mPromiseId;
+    nsAutoCString mInitDataType;
+    nsTArray<uint8_t> mInitData;
+  };
+  // GMP thread only.
+  void gmp_CreateSession(nsAutoPtr<CreateSessionData> aData);
+
+  struct SessionOpData {
+    PromiseId mPromiseId;
+    nsAutoCString mSessionId;
+  };
+  // GMP thread only.
+  void gmp_LoadSession(nsAutoPtr<SessionOpData> aData);
+
+  struct SetServerCertificateData {
+    PromiseId mPromiseId;
+    nsTArray<uint8_t> mCert;
+  };
+  // GMP thread only.
+  void gmp_SetServerCertificate(nsAutoPtr<SetServerCertificateData> aData);
+
+  struct UpdateSessionData {
+    PromiseId mPromiseId;
+    nsAutoCString mSessionId;
+    nsTArray<uint8_t> mResponse;
+  };
+  // GMP thread only.
+  void gmp_UpdateSession(nsAutoPtr<UpdateSessionData> aData);
+
+  // GMP thread only.
+  void gmp_CloseSession(nsAutoPtr<SessionOpData> aData);
+
+  // GMP thread only.
+  void gmp_RemoveSession(nsAutoPtr<SessionOpData> aData);
+
+  struct DecryptJob {
+    DecryptJob(mp4_demuxer::MP4Sample* aSample,
+               DecryptionClient* aClient)
+      : mId(0)
+      , mSample(aSample)
+      , mClient(aClient)
+    {}
+    uint32_t mId;
+    nsAutoPtr<mp4_demuxer::MP4Sample> mSample;
+    nsAutoPtr<DecryptionClient> mClient;
+  };
+  // GMP thread only.
+  void gmp_Decrypt(nsAutoPtr<DecryptJob> aJob);
 
   class RejectPromiseTask : public nsRunnable {
   public:
@@ -116,13 +240,6 @@ private:
     PromiseId mId;
     nsresult mCode;
   };
-
-  // Reject promise with DOMException corresponding to aExceptionCode.
-  // Can be called from any thread.
-  void RejectPromise(PromiseId aId, nsresult aExceptionCode);
-  // Resolves promise with "undefined".
-  // Can be called from any thread.
-  void ResolvePromise(PromiseId aId);
 
   ~CDMProxy();
 
@@ -164,7 +281,25 @@ private:
   // Gecko Media Plugin thread. All interactions with the out-of-process
   // EME plugin must come from this thread.
   nsRefPtr<nsIThread> mGMPThread;
+
+  nsAutoString mOrigin;
+
+  GMPDecryptorProxy* mCDM;
+  CDMCaps mCapabilites;
+  nsAutoPtr<CDMCallbackProxy> mCallback;
+
+  // Decryption jobs sent to CDM, awaiting result.
+  // GMP thread only.
+  nsTArray<nsAutoPtr<DecryptJob>> mDecryptionJobs;
+
+  // Number of buffers we've decrypted. Used to uniquely identify
+  // decryption jobs sent to CDM. Note we can't just use the length of
+  // mDecryptionJobs as that shrinks as jobs are completed and removed
+  // from it.
+  // GMP thread only.
+  uint32_t mDecryptionJobCount;
 };
+
 
 } // namespace mozilla
 

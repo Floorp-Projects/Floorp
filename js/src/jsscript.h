@@ -273,7 +273,7 @@ template <>
 struct GCMethods<Bindings> {
     static Bindings initial();
     static bool poisoned(const Bindings &bindings) {
-        return IsPoisonedPtr(static_cast<Shape *>(bindings.callObjShape()));
+        return IsPoisonedPtr(bindings.callObjShape());
     }
 };
 

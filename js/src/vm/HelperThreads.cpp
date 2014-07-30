@@ -62,8 +62,6 @@ js::SetFakeCPUCount(size_t count)
     HelperThreadState().threadCount = ThreadCountForCPUCount(count);
 }
 
-#ifdef JS_ION
-
 bool
 js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
 {
@@ -109,8 +107,6 @@ FinishOffThreadIonCompile(jit::IonBuilder *builder)
     HelperThreadState().ionFinishedList().append(builder);
 }
 
-#endif // JS_ION
-
 static inline bool
 CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *target)
 {
@@ -122,7 +118,6 @@ CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *ta
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
-#ifdef JS_ION
     jit::JitCompartment *jitComp = compartment->jitCompartment();
     if (!jitComp)
         return;
@@ -166,7 +161,6 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
             HelperThreadState().remove(finished, &i);
         }
     }
-#endif // JS_ION
 }
 
 static const JSClass parseTaskGlobalClass = {
@@ -554,7 +548,6 @@ GlobalHelperThreadState::canStartAsmJSCompile()
 static bool
 IonBuilderHasHigherPriority(jit::IonBuilder *first, jit::IonBuilder *second)
 {
-#ifdef JS_ION
     // This method can return whatever it wants, though it really ought to be a
     // total order. The ordering is allowed to race (change on the fly), however.
 
@@ -568,9 +561,6 @@ IonBuilderHasHigherPriority(jit::IonBuilder *first, jit::IonBuilder *second)
 
     // A higher useCount indicates a higher priority.
     return first->script()->getUseCount() > second->script()->getUseCount();
-#else
-    MOZ_CRASH("Cannot infer priority without Ion");
-#endif
 }
 
 bool
@@ -843,7 +833,6 @@ HelperThread::ThreadMain(void *arg)
 void
 HelperThread::handleAsmJSWorkload()
 {
-#ifdef JS_ION
     JS_ASSERT(HelperThreadState().isLocked());
     JS_ASSERT(HelperThreadState().canStartAsmJSCompile());
     JS_ASSERT(idle());
@@ -888,15 +877,11 @@ HelperThread::handleAsmJSWorkload()
 
     // Notify the main thread in case it's blocked waiting for a LifoAlloc.
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
-#else
-    MOZ_CRASH();
-#endif // JS_ION
 }
 
 void
 HelperThread::handleIonWorkload()
 {
-#ifdef JS_ION
     JS_ASSERT(HelperThreadState().isLocked());
     JS_ASSERT(HelperThreadState().canStartIonCompile());
     JS_ASSERT(idle());
@@ -969,10 +954,6 @@ HelperThread::handleIonWorkload()
             HelperThreadState().notifyAll(GlobalHelperThreadState::PAUSE);
         }
     }
-
-#else
-    MOZ_CRASH();
-#endif // JS_ION
 }
 
 static HelperThread *

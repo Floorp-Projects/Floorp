@@ -451,12 +451,11 @@ RegExpShared::trace(JSTracer *trc)
     if (source)
         MarkString(trc, &source, "RegExpShared source");
 
-#ifdef JS_ION
     if (jitCodeLatin1)
         MarkJitCode(trc, &jitCodeLatin1, "RegExpShared code Latin1");
+
     if (jitCodeTwoByte)
         MarkJitCode(trc, &jitCodeTwoByte, "RegExpShared code TwoByte");
-#endif
 }
 
 bool
@@ -521,13 +520,11 @@ RegExpShared::compile(JSContext *cx, HandleAtom pattern, HandleLinearString inpu
     if (code.empty())
         return false;
 
-#ifdef JS_ION
     JS_ASSERT(!code.jitCode || !code.byteCode);
     if (input->hasLatin1Chars())
         jitCodeLatin1 = code.jitCode;
     else
         jitCodeTwoByte = code.jitCode;
-#endif
 
     if (input->hasLatin1Chars())
         byteCodeLatin1 = code.byteCode;
@@ -616,7 +613,6 @@ RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t *lastIndex
         return result;
     }
 
-#ifdef JS_ION
     while (true) {
         RegExpRunStatus result;
         {
@@ -657,9 +653,6 @@ RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t *lastIndex
         JS_ASSERT(result == RegExpRunStatus_Success);
         break;
     }
-#else // JS_ION
-    MOZ_CRASH();
-#endif // JS_ION
 
     matches.displace(displacement);
     matches.checkAgainst(origLength);
@@ -765,12 +758,10 @@ RegExpCompartment::sweep(JSRuntime *rt)
         // the RegExpShared if it was accidentally marked earlier but wasn't
         // marked by the current trace.
         bool keep = shared->marked() && !IsStringAboutToBeFinalized(shared->source.unsafeGet());
-#ifdef JS_ION
         if (keep && shared->jitCodeLatin1)
             keep = !IsJitCodeAboutToBeFinalized(shared->jitCodeLatin1.unsafeGet());
         if (keep && shared->jitCodeTwoByte)
             keep = !IsJitCodeAboutToBeFinalized(shared->jitCodeTwoByte.unsafeGet());
-#endif
         if (keep) {
             shared->clearMarked();
         } else {

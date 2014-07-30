@@ -266,7 +266,7 @@ class RemoteAutomation(Automation):
             messages = []
             for line in lines:
                 # This passes the line to the logger (to be logged or buffered)
-                # and returns a list of structured messages (dict) or None, depending on the log
+                # and returns a list of structured messages (dict)
                 parsed_messages = self.messageLogger.write(line)
                 for message in parsed_messages:
                     if message['action'] == 'test_start':
