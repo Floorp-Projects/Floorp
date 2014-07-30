@@ -2536,7 +2536,7 @@ let BrowserOnClick = {
           try {
             let reportURL = formatURL("browser.safebrowsing.malware.reportURL", true);
             reportURL += location;
-            content.location = reportURL;
+            gBrowser.loadURI(reportURL);
           } catch (e) {
             Components.utils.reportError("Couldn't get malware report URL: " + e);
           }
@@ -2602,11 +2602,11 @@ let BrowserOnClick = {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
-    gBrowser.loadURIWithFlags(content.location.href,
+    gBrowser.loadURIWithFlags(gBrowser.currentURI.spec,
                               nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
                               null, null, null);
 
-    Services.perms.add(makeURI(content.location.href), "safe-browsing",
+    Services.perms.add(gBrowser.currentURI, "safe-browsing",
                        Ci.nsIPermissionManager.ALLOW_ACTION,
                        Ci.nsIPermissionManager.EXPIRE_SESSION);
 
@@ -2678,7 +2678,7 @@ function getMeOutOfHere() {
   } catch(e) {
     Components.utils.reportError("Couldn't get homepage pref: " + e);
   }
-  content.location = url;
+  gBrowser.loadURI(url);
 }
 
 function BrowserFullScreen()
