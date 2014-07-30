@@ -120,7 +120,7 @@ unpackFromFloat16(uint16_t v)
         return f32Value;
     }
 
-    f32Bits |= uint32_t(exp + (-15 + 127)) << 10;
+    f32Bits |= uint32_t(exp + (-15 + 127)) << 23;
     f32Bits |= uint32_t(v & 0x03FF) << 13;
 
     return f32Value;

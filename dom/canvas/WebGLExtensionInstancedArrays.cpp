@@ -26,7 +26,7 @@ WebGLExtensionInstancedArrays::DrawArraysInstancedANGLE(GLenum mode, GLint first
                                                         GLsizei count, GLsizei primcount)
 {
     if (mIsLost)
-        return mContext->ErrorInvalidOperation("drawArraysInstancedANGLE: Extension is lost.");
+        return mContext->GenerateWarning("drawArraysInstancedANGLE: Extension is lost.");
 
     mContext->DrawArraysInstanced(mode, first, count, primcount);
 }
@@ -37,7 +37,7 @@ WebGLExtensionInstancedArrays::DrawElementsInstancedANGLE(GLenum mode, GLsizei c
                                                           GLsizei primcount)
 {
     if (mIsLost)
-        return mContext->ErrorInvalidOperation("drawElementsInstancedANGLE: Extension is lost.");
+        return mContext->GenerateWarning("drawElementsInstancedANGLE: Extension is lost.");
 
     mContext->DrawElementsInstanced(mode, count, type, offset, primcount);
 }
@@ -46,7 +46,7 @@ void
 WebGLExtensionInstancedArrays::VertexAttribDivisorANGLE(GLuint index, GLuint divisor)
 {
     if (mIsLost)
-        return mContext->ErrorInvalidOperation("vertexAttribDivisorANGLE: Extension is lost.");
+        return mContext->GenerateWarning("vertexAttribDivisorANGLE: Extension is lost.");
 
     mContext->VertexAttribDivisor(index, divisor);
 }

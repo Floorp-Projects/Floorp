@@ -12,4 +12,4 @@
     android:paddingBottom="@dimen/card_padding_y"
     android:paddingLeft="@dimen/card_padding_x"
     android:paddingRight="@dimen/card_padding_x"
-    android:textSize="16sp"/>
+    android:textSize="@dimen/query_text_size"/>

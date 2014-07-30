@@ -8,8 +8,6 @@
 #ifndef jit_ScalarReplacement_h
 #define jit_ScalarReplacement_h
 
-#ifdef JS_ION
-
 namespace js {
 namespace jit {
 
@@ -21,7 +19,5 @@ ScalarReplacement(MIRGenerator *mir, MIRGraph &graph);
 
 } // namespace jit
 } // namespace js
-
-#endif // JS_ION
 
 #endif /* jit_ScalarReplacement_h */

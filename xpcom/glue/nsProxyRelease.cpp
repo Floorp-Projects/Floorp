@@ -11,7 +11,7 @@
 class nsProxyReleaseEvent : public nsRunnable
 {
 public:
-  nsProxyReleaseEvent(nsISupports* aDoomed) : mDoomed(aDoomed) {}
+  explicit nsProxyReleaseEvent(nsISupports* aDoomed) : mDoomed(aDoomed) {}
 
   NS_IMETHOD Run()
   {

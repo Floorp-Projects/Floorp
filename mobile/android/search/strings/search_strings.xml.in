@@ -1,5 +1,4 @@
     <string name="search_jump_arrow">&search_jump_arrow;</string>
-    <string name="search_settings_icon">&search_settings_icon;</string>
 
     <string name="search_app_name">&search_app_name;</string>
     <string name="search_for_something">&search_for_something;</string>
@@ -8,3 +7,4 @@
     <string name="search_pref_clear_history_confirmation">&search_pref_clear_history_confirmation;</string>
     <string name="search_pref_clear_history_dialog_message">&search_pref_clear_history_dialog_message;</string>
     <string name="search_pref_clear_history_title">&search_pref_clear_history_title;</string>
+    <string name="search_pref_button_content_description">&search_pref_button_content_description;</string>

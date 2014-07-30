@@ -104,6 +104,126 @@ struct ConservativeGCData
     }
 };
 
+/*
+ * Encapsulates all of the GC tunables. These are effectively constant and
+ * should only be modified by setParameter.
+ */
+class GCSchedulingTunables
+{
+    /*
+     * Soft limit on the number of bytes we are allowed to allocate in the GC
+     * heap. Attempts to allocate gcthings over this limit will return null and
+     * subsequently invoke the standard OOM machinery, independent of available
+     * physical memory.
+     */
+    size_t gcMaxBytes_;
+
+    /*
+     * The base value used to compute zone->trigger.gcBytes(). When
+     * usage.gcBytes() surpasses threshold.gcBytes() for a zone, the zone may
+     * be scheduled for a GC, depending on the exact circumstances.
+     */
+    size_t gcZoneAllocThresholdBase_;
+
+    /*
+     * Totally disables |highFrequencyGC|, the HeapGrowthFactor, and other
+     * tunables that make GC non-deterministic.
+     */
+    bool dynamicHeapGrowthEnabled_;
+
+    /*
+     * We enter high-frequency mode if we GC a twice within this many
+     * microseconds. This value is stored directly in microseconds.
+     */
+    uint64_t highFrequencyThresholdUsec_;
+
+    /*
+     * When in the |highFrequencyGC| mode, these parameterize the per-zone
+     * "HeapGrowthFactor" computation.
+     */
+    uint64_t highFrequencyLowLimitBytes_;
+    uint64_t highFrequencyHighLimitBytes_;
+    double highFrequencyHeapGrowthMax_;
+    double highFrequencyHeapGrowthMin_;
+
+    /*
+     * When not in |highFrequencyGC| mode, this is the global (stored per-zone)
+     * "HeapGrowthFactor".
+     */
+    double lowFrequencyHeapGrowth_;
+
+    /*
+     * Doubles the length of IGC slices when in the |highFrequencyGC| mode.
+     */
+    bool dynamicMarkSliceEnabled_;
+
+    /*
+     * Controls the number of empty chunks reserved for future allocation.
+     */
+    unsigned minEmptyChunkCount_;
+    unsigned maxEmptyChunkCount_;
+
+  public:
+    GCSchedulingTunables()
+      : gcMaxBytes_(0),
+        gcZoneAllocThresholdBase_(30 * 1024 * 1024),
+        dynamicHeapGrowthEnabled_(false),
+        highFrequencyThresholdUsec_(1000 * 1000),
+        highFrequencyLowLimitBytes_(100 * 1024 * 1024),
+        highFrequencyHighLimitBytes_(500 * 1024 * 1024),
+        highFrequencyHeapGrowthMax_(3.0),
+        highFrequencyHeapGrowthMin_(1.5),
+        lowFrequencyHeapGrowth_(1.5),
+        dynamicMarkSliceEnabled_(false),
+        minEmptyChunkCount_(1),
+        maxEmptyChunkCount_(30)
+    {}
+
+    size_t gcMaxBytes() const { return gcMaxBytes_; }
+    size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
+    bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
+    uint64_t highFrequencyThresholdUsec() const { return highFrequencyThresholdUsec_; }
+    uint64_t highFrequencyLowLimitBytes() const { return highFrequencyLowLimitBytes_; }
+    uint64_t highFrequencyHighLimitBytes() const { return highFrequencyHighLimitBytes_; }
+    double highFrequencyHeapGrowthMax() const { return highFrequencyHeapGrowthMax_; }
+    double highFrequencyHeapGrowthMin() const { return highFrequencyHeapGrowthMin_; }
+    double lowFrequencyHeapGrowth() const { return lowFrequencyHeapGrowth_; }
+    bool isDynamicMarkSliceEnabled() const { return dynamicMarkSliceEnabled_; }
+    unsigned minEmptyChunkCount() const { return minEmptyChunkCount_; }
+    unsigned maxEmptyChunkCount() const { return maxEmptyChunkCount_; }
+
+    void setParameter(JSGCParamKey key, uint32_t value);
+};
+
+/*
+ * Internal values that effect GC scheduling that are not directly exposed
+ * in the GC API.
+ */
+class GCSchedulingState
+{
+    /*
+     * Influences how we schedule and run GC's in several subtle ways. The most
+     * important factor is in how it controls the "HeapGrowthFactor". The
+     * growth factor is a measure of how large (as a percentage of the last GC)
+     * the heap is allowed to grow before we try to schedule another GC.
+     */
+    bool inHighFrequencyGCMode_;
+
+  public:
+    GCSchedulingState()
+      : inHighFrequencyGCMode_(false)
+    {}
+
+    bool inHighFrequencyGCMode() const { return inHighFrequencyGCMode_; }
+
+    void updateHighFrequencyMode(uint64_t lastGCTime, uint64_t currentTime,
+                                 const GCSchedulingTunables &tunables) {
+        inHighFrequencyGCMode_ =
+            tunables.isDynamicHeapGrowthEnabled() && lastGCTime &&
+            lastGCTime + tunables.highFrequencyThresholdUsec() > currentTime;
+    }
+};
+
 template<typename F>
 struct Callback {
     F op;
@@ -182,7 +302,6 @@ class GCRuntime
     void setDeterministic(bool enable);
 #endif
 
-    size_t maxBytesAllocated() { return maxBytes; }
     size_t maxMallocBytesAllocated() { return maxMallocBytes; }
 
   public:
@@ -303,7 +422,6 @@ class GCRuntime
 
     double computeHeapGrowthFactor(size_t lastBytes);
     size_t computeTriggerBytes(double growthFactor, size_t lastBytes, JSGCInvocationKind gckind);
-    size_t allocationThreshold() { return allocThreshold; }
 
     JSGCMode gcMode() const { return mode; }
     void setGCMode(JSGCMode m) {
@@ -414,6 +532,10 @@ class GCRuntime
     /* Track heap usage for this runtime. */
     HeapUsage usage;
 
+    /* GC scheduling state and parameters. */
+    GCSchedulingTunables  tunables;
+    GCSchedulingState     schedulingState;
+
   private:
     /*
      * Set of all GC chunks with at least one allocated thing. The
@@ -435,7 +557,6 @@ class GCRuntime
 
     js::RootedValueMap    rootsHash;
 
-    size_t                maxBytes;
     size_t                maxMallocBytes;
 
     /*
@@ -451,19 +572,7 @@ class GCRuntime
 
     JSGCMode              mode;
 
-    size_t                allocThreshold;
-    bool                  highFrequencyGC;
-    uint64_t              highFrequencyTimeThreshold;
-    uint64_t              highFrequencyLowLimitBytes;
-    uint64_t              highFrequencyHighLimitBytes;
-    double                highFrequencyHeapGrowthMax;
-    double                highFrequencyHeapGrowthMin;
-    double                lowFrequencyHeapGrowth;
-    bool                  dynamicHeapGrowth;
-    bool                  dynamicMarkSlice;
     uint64_t              decommitThreshold;
-    unsigned              minEmptyChunkCount;
-    unsigned              maxEmptyChunkCount;
 
     /* During shutdown, the GC needs to clean up every possible object. */
     bool                  cleanUpEverything;
@@ -598,13 +707,13 @@ class GCRuntime
 
     /*
      * These options control the zealousness of the GC. The fundamental values
-     * are   nextScheduled and gcDebugCompartmentGC. At every allocation,
-     *   nextScheduled is decremented. When it reaches zero, we do either a
-     * full or a compartmental GC, based on   debugCompartmentGC.
+     * are nextScheduled and gcDebugCompartmentGC. At every allocation,
+     * nextScheduled is decremented. When it reaches zero, we do either a full
+     * or a compartmental GC, based on debugCompartmentGC.
      *
-     * At this point, if   zeal_ is one of the types that trigger periodic
-     * collection, then   nextScheduled is reset to the value of
-     *   zealFrequency. Otherwise, no additional GCs take place.
+     * At this point, if zeal_ is one of the types that trigger periodic
+     * collection, then nextScheduled is reset to the value of zealFrequency.
+     * Otherwise, no additional GCs take place.
      *
      * You can control these values in several ways:
      *   - Pass the -Z flag to the shell (see the usage info for details)
@@ -614,10 +723,10 @@ class GCRuntime
      * If gzZeal_ == 1 then we perform GCs in select places (during MaybeGC and
      * whenever a GC poke happens). This option is mainly useful to embedders.
      *
-     * We use   zeal_ == 4 to enable write barrier verification. See the comment
+     * We use zeal_ == 4 to enable write barrier verification. See the comment
      * in jsgc.cpp for more information about this.
      *
-     *   zeal_ values from 8 to 10 periodically run different types of
+     * zeal_ values from 8 to 10 periodically run different types of
      * incremental GC.
      */
 #ifdef JS_GC_ZEAL

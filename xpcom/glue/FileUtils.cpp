@@ -271,7 +271,7 @@ static const uint32_t CPU_TYPE = CPU_TYPE_POWERPC64;
 class ScopedMMap
 {
 public:
-  ScopedMMap(const char* aFilePath)
+  explicit ScopedMMap(const char* aFilePath)
     : buf(nullptr)
   {
     fd = open(aFilePath, O_RDONLY);

@@ -1,0 +1,45 @@
+<html class="reftest-wait">
+<head>
+<script>
+function boom() {
+  var Context0= new window.AudioContext();
+  var BufferSource0=Context0.createBufferSource();
+  BufferSource0.start(0);
+  BufferSource0.playbackRate.value = 1.0/128.0;
+
+  setTimeout(
+    function(){
+      BufferSource0.buffer=
+        function(){
+          var length=1;
+          var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+          var bufferData= Buffer.getChannelData(0);
+          for (var i = 0; i < length; ++i) {
+            bufferData[i] = Math.sin(i*(626))
+          };return Buffer;
+        }();
+      setTimeout(
+        function(){
+          document.documentElement.removeAttribute("class");
+        }, 0)
+    },4)
+
+  BufferSource0.buffer=
+    function(){
+      const resample_filter_length = 64;
+      // Small enough so that resampler tail latency is triggered immediately,
+      // but large enough that skip_zeros does not consume resampler tail
+      // latency.
+      var length=resample_filter_length/2 + 1;
+      var Buffer=Context0.createBuffer(1,length,Context0.sampleRate);
+      var bufferData= Buffer.getChannelData(0);
+      for (var i = 0; i < length; ++i) {
+        bufferData[i] = Math.sin(i*(311980))
+      };
+      return Buffer;
+    }();
+}
+</script>
+</head>
+<body onload="boom();">
+</body>

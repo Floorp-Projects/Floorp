@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'eme/EMEDecoderModule.h',
     'MP4Decoder.h',
     'MP4Reader.h',
     'PlatformDecoderModule.h',
@@ -12,6 +13,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'BlankDecoderModule.cpp',
+    'eme/EMEDecoderModule.cpp',
     'PlatformDecoderModule.cpp',
 ]
 
@@ -21,24 +23,24 @@ SOURCES += [
 ]
 
 if CONFIG['MOZ_WMF']:
-  DIRS += [ 'wmf' ];
+    DIRS += [ 'wmf' ];
 
 if CONFIG['MOZ_FFMPEG']:
-  EXPORTS += [
-      'ffmpeg/FFmpegRuntimeLinker.h',
-  ]
-  UNIFIED_SOURCES += [
-      'ffmpeg/FFmpegLog.cpp',
-      'ffmpeg/FFmpegRuntimeLinker.cpp',
-  ]
-  DIRS += [
-      'ffmpeg/libav53',
-      'ffmpeg/libav54',
-      'ffmpeg/libav55',
-  ]
-  LOCAL_INCLUDES += [
-      'ffmpeg',
-  ]
+    EXPORTS += [
+        'ffmpeg/FFmpegRuntimeLinker.h',
+    ]
+    UNIFIED_SOURCES += [
+        'ffmpeg/FFmpegLog.cpp',
+        'ffmpeg/FFmpegRuntimeLinker.cpp',
+    ]
+    DIRS += [
+        'ffmpeg/libav53',
+        'ffmpeg/libav54',
+        'ffmpeg/libav55',
+    ]
+    LOCAL_INCLUDES += [
+        'ffmpeg',
+    ]
 
 FINAL_LIBRARY = 'xul'
 

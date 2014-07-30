@@ -299,7 +299,7 @@ function onLoad()
                             "collection log.\n" +
                             "WARNING: These logs may be large (>1GB).";
 
-  const AnalyzeReportsDesc = "Analyze memory reports coverage and save the "
+  const AnalyzeReportsDesc = "Analyze memory reports coverage and save the " +
                              "output to '" + gAnalyzeReportsFile + "'.\n";
   const AnalyzeHeapDesc = "Analyze heap usage and save the output to '" +
                           gAnalyzeHeapFile + "'.\n";

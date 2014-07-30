@@ -33,6 +33,8 @@ public:
 
   nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable);
 
+  nsresult SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
+
   // Removes all pending tasks from the task queue, and blocks until
   // the currently running task (if any) finishes.
   void Flush();

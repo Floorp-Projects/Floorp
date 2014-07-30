@@ -413,15 +413,15 @@ IsNullOrUndefined(MIRType type)
 }
 
 #ifdef DEBUG
+
 // Track the pipeline of opcodes which has produced a snapshot.
 #define TRACK_SNAPSHOTS 1
 
 // Make sure registers are not modified between an instruction and
 // its OsiPoint.
-#  if defined(JS_ION)
-#    define CHECK_OSIPOINT_REGISTERS 1
-#  endif
-#endif
+#define CHECK_OSIPOINT_REGISTERS 1
+
+#endif // DEBUG
 
 enum {
     ArgType_General = 0x1,

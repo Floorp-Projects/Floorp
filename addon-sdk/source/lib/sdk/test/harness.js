@@ -164,8 +164,8 @@ function reportMemoryUsage() {
     mgr.getReportsForThisProcess(logReporter, null, /* anonymize = */ false);
 
     var weakrefs = [info.weakref.get()
-                    for each (info in memory.getObjects())];
-    weakrefs = [weakref for each (weakref in weakrefs) if (weakref)];
+                    for (info of memory.getObjects())];
+    weakrefs = [weakref for (weakref of weakrefs) if (weakref)];
     print("Tracked memory objects in testing sandbox: " + weakrefs.length + "\n");
   }));
 }
@@ -227,7 +227,7 @@ function cleanup() {
 
     if (profileMemory) {
       gWeakrefInfo = [{ weakref: info.weakref, bin: info.bin }
-                      for each (info in memory.getObjects())];
+                      for (info of memory.getObjects())];
     }
 
     loader.unload();
@@ -261,7 +261,7 @@ function cleanup() {
     console.exception(e);
   };
 
-  setTimeout(require('@test/options').checkMemory ? checkMemory : showResults, 1);
+  setTimeout(require("./options").checkMemory ? checkMemory : showResults, 1);
 
   // dump the coverobject
   if (Object.keys(coverObject).length){
@@ -392,7 +392,7 @@ function nextIteration(tests) {
 
     reportMemoryUsage().then(_ => {
       let testRun = [];
-      for each (let test in tests.testRunSummary) {
+      for (let test of tests.testRunSummary) {
         let testCopy = {};
         for (let info in test) {
           testCopy[info] = test[info];
@@ -446,7 +446,7 @@ var consoleListener = {
       return;
     this.errorsLogged++;
     var message = object.QueryInterface(Ci.nsIConsoleMessage).message;
-    var pointless = [err for each (err in POINTLESS_ERRORS)
+    var pointless = [err for (err of POINTLESS_ERRORS)
                          if (message.indexOf(err) >= 0)];
     if (pointless.length == 0 && message)
       testConsole.log(message);

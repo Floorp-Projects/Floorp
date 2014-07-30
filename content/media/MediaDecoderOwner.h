@@ -137,6 +137,12 @@ public:
   // Called by the media decoder object, on the main thread,
   // when the connection between Rtsp server and client gets lost.
   virtual void ResetConnectionState() = 0;
+
+  // Dispatches a "needkey" event to the HTMLMediaElement, with the
+  // provided init data.
+  // Main thread only.
+  virtual void DispatchNeedKey(const nsTArray<uint8_t>& aInitData,
+                               const nsAString& aInitDataType) = 0;
 };
 
 }
