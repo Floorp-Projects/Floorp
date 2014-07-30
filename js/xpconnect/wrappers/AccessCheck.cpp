@@ -192,6 +192,19 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
             if (!XrayUtils::HasNativeProperty(cx, wrapper, id, &wouldShadow) ||
                 wouldShadow)
             {
+                // If the named subframe matches the name of a DOM constructor,
+                // the global resolve triggered by the HasNativeProperty call
+                // above will try to perform a CheckedUnwrap on |wrapper|, and
+                // throw a security error if it fails. That exception isn't
+                // really useful for our callers, so we silence it and just
+                // deny access to the property (since it matched a builtin).
+                //
+                // Note that this would be a problem if the resolve code ever
+                // tried to CheckedUnwrap the wrapper _before_ concluding that
+                // the name corresponds to a builtin global property, since it
+                // would mean that we'd never permit cross-origin named subframe
+                // access (something we regrettably need to support).
+                JS_ClearPendingException(cx);
                 return false;
             }
         }
