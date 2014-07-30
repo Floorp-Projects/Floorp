@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- Drawable used for buttons in the launch widget -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:constantSize="true">
+
+    <item android:state_pressed="true"
+          android:drawable="@drawable/widget_active_bg"/>
+
+    <item android:drawable="@drawable/widget_bg"/>
+
+</selector>
