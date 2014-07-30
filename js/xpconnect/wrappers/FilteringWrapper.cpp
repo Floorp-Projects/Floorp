@@ -178,6 +178,31 @@ CrossOriginXrayWrapper::~CrossOriginXrayWrapper()
 {
 }
 
+bool
+CrossOriginXrayWrapper::getPropertyDescriptor(JSContext *cx,
+                                              JS::Handle<JSObject*> wrapper,
+                                              JS::Handle<jsid> id,
+                                              JS::MutableHandle<JSPropertyDescriptor> desc) const
+{
+    if (!SecurityXrayDOM::getPropertyDescriptor(cx, wrapper, id, desc))
+        return false;
+    if (desc.object()) {
+        // All properties on cross-origin DOM objects are |own|.
+        desc.object().set(wrapper);
+    }
+    return true;
+}
+
+bool
+CrossOriginXrayWrapper::getOwnPropertyDescriptor(JSContext *cx,
+                                                 JS::Handle<JSObject*> wrapper,
+                                                 JS::Handle<jsid> id,
+                                                 JS::MutableHandle<JSPropertyDescriptor> desc) const
+{
+    // All properties on cross-origin DOM objects are |own|.
+    return getPropertyDescriptor(cx, wrapper, id, desc);
+}
+
 #define XOW FilteringWrapper<CrossOriginXrayWrapper, CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define NNXOWC FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>
