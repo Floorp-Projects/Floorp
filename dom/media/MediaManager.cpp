@@ -108,7 +108,7 @@ HostHasPermission(nsIURI &docURI)
   nsAdoptingCString hostName;
   docURI.GetAsciiHost(hostName); //normalize UTF8 to ASCII equivalent
   nsAdoptingCString domainWhiteList =
-    Preferences::GetCString("media.getusermedia.screensharing.allow_domains");
+    Preferences::GetCString("media.getusermedia.screensharing.allowed_domains");
   domainWhiteList.StripWhitespace();
 
   if (domainWhiteList.IsEmpty() || hostName.IsEmpty()) {
