@@ -1546,7 +1546,7 @@ public class ContactService implements GeckoEventListener {
         }
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(mActivity.getResources().getString(R.string.contacts_account_chooser_dialog_title))
+        builder.setTitle(mActivity.getResources().getString(R.string.contacts_account_chooser_dialog_title2))
             .setSingleChoiceItems(accountNames, 0, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int position) {

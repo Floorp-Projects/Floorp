@@ -94,17 +94,17 @@ public:
   UpdateSdpRecords(const nsAString& aDeviceAddress,
                    BluetoothProfileManagerBase* aManager) MOZ_OVERRIDE;
 
-  virtual bool
+  virtual void
   SetPinCodeInternal(const nsAString& aDeviceAddress,
                      const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual bool
+  virtual void
   SetPasskeyInternal(const nsAString& aDeviceAddress,
                      uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual bool
+  virtual void
   SetPairingConfirmationInternal(const nsAString& aDeviceAddress,
                                  bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable)

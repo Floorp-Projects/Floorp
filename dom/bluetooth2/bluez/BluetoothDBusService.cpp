@@ -3195,7 +3195,7 @@ private:
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
-bool
+void
 BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress,
                                          const nsAString& aPinCode,
                                          BluetoothReplyRunnable* aRunnable)
@@ -3204,8 +3204,6 @@ BluetoothDBusService::SetPinCodeInternal(const nsAString& aDeviceAddress,
                                   NS_ConvertUTF16toUTF8(aPinCode),
                                   aRunnable);
   DispatchToDBusThread(task);
-
-  return true;
 }
 
 class SetPasskeyTask : public Task
@@ -3271,7 +3269,7 @@ private:
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
-bool
+void
 BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress,
                                          uint32_t aPasskey,
                                          BluetoothReplyRunnable* aRunnable)
@@ -3280,12 +3278,10 @@ BluetoothDBusService::SetPasskeyInternal(const nsAString& aDeviceAddress,
                                   aPasskey,
                                   aRunnable);
   DispatchToDBusThread(task);
-
-  return true;
 }
 
 
-bool
+void
 BluetoothDBusService::SetPairingConfirmationInternal(
                                               const nsAString& aDeviceAddress,
                                               bool aConfirm,
@@ -3297,8 +3293,6 @@ BluetoothDBusService::SetPairingConfirmationInternal(
                                               aConfirm,
                                               aRunnable);
   DispatchToDBusThread(task);
-
-  return true;
 }
 
 static void

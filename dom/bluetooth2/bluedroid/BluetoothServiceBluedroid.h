@@ -66,15 +66,15 @@ public:
   RemoveDeviceInternal(const nsAString& aDeviceObjectPath,
                        BluetoothReplyRunnable* aRunnable);
 
-  virtual bool
+  virtual void
   SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable);
 
-  virtual bool
+  virtual void
   SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable);
 
-  virtual bool
+  virtual void
   SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable);
 
