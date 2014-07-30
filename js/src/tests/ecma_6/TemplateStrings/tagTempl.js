@@ -284,6 +284,12 @@ assertEq(func`hey``there``amine`, "was not mine");
 assertEq(func`hey``tshere``amine`, "was not there");
 assertEq(func`heys``there``mine`, "was not hey");
 
+// String.raw
+assertEq(String.raw`h\r\ney${4}there\n`, "h\\r\\ney4there\\n");
+assertEq(String.raw`hey`, "hey");
+assertEq(String.raw``, "");
+
+
 */
 /*End func*/}
 
