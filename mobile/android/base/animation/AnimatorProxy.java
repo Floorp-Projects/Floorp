@@ -5,17 +5,18 @@
 
 package org.mozilla.gecko.animation;
 
+import java.lang.ref.WeakReference;
+import java.util.WeakHashMap;
+
+import org.mozilla.gecko.AppConstants.Versions;
+
 import android.graphics.Matrix;
 import android.graphics.RectF;
-import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
-
-import java.lang.ref.WeakReference;
-import java.util.WeakHashMap;
 
 class AnimatorProxy {
     private static final WeakHashMap<View, AnimatorProxy> PROXIES =
@@ -42,7 +43,7 @@ class AnimatorProxy {
 
     public static AnimatorProxy create(View view) {
         AnimatorProxy proxy = PROXIES.get(view);
-        boolean needsAnimationProxy = (Build.VERSION.SDK_INT < 11);
+        final boolean needsAnimationProxy = Versions.preHC;
 
         // If the view's animation proxy has been overridden from somewhere else, we need to
         // create a new AnimatorProxy for the view.

@@ -42,6 +42,9 @@ interface Telephony : EventTarget {
   readonly attribute CallsList calls;
   readonly attribute TelephonyCallGroup conferenceGroup;
 
+  // The 'ready' event will be fired when the telephony object is ready.
+  attribute EventHandler onready;
+
   attribute EventHandler onincoming;
   attribute EventHandler oncallschanged;
   attribute EventHandler onremoteheld;

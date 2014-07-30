@@ -181,10 +181,9 @@
       <iframe id="deck-panel-runtimedetails" flex="1" src="runtimedetails.xhtml"/>
       <iframe id="deck-panel-monitor" flex="1" lazysrc="monitor.xhtml"/>
     </deck>
+    <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
+    <!-- toolbox iframe will be inserted here -->
   </notificationbox>
 
-  <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
-
-  <!-- toolbox iframe will be inserted here -->
 
 </window>

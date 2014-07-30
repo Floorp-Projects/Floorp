@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 
@@ -41,7 +42,7 @@ interface GeckoMediaPlayer {
  * from Gecko to the correct caster based on the id of the display
  */
 class MediaPlayerManager implements NativeEventListener,
-                                      GeckoAppShell.AppStateListener {
+                                    GeckoAppShell.AppStateListener {
     private static final String LOGTAG = "GeckoMediaPlayerManager";
 
     private static final boolean SHOW_DEBUG = false;
@@ -63,9 +64,11 @@ class MediaPlayerManager implements NativeEventListener,
     private final HashMap<String, GeckoMediaPlayer> displays = new HashMap<String, GeckoMediaPlayer>();
     private static MediaPlayerManager instance;
 
+    @JNITarget
     public static void init(Context context) {
         if (instance != null) {
             debug("MediaPlayerManager initialized twice");
+            return;
         }
 
         instance = new MediaPlayerManager(context);
@@ -92,6 +95,7 @@ class MediaPlayerManager implements NativeEventListener,
                                                                   "MediaPlayer:Message");
     }
 
+    @JNITarget
     public static void onDestroy() {
         if (instance == null) {
             return;

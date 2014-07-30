@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
 import android.app.Notification;
@@ -15,7 +16,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -87,7 +87,7 @@ public class DataReportingNotification {
             // Create and send notification.
             String notificationTitle = resources.getString(R.string.datareporting_notification_title);
             String notificationSummary;
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+            if (Versions.preJB) {
                 notificationSummary = resources.getString(R.string.datareporting_notification_action);
             } else {
                 // Display partial version of Big Style notification for supporting devices.

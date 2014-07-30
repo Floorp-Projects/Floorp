@@ -5,16 +5,16 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.prompts.PromptService;
 
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.RectF;
 import android.hardware.SensorEventListener;
 import android.location.LocationListener;
-import android.os.Build;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -79,7 +79,7 @@ public class BaseGeckoInterface implements GeckoAppShell.GeckoInterface {
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN : 0,
                                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-                if (Build.VERSION.SDK_INT >= 11) {
+                if (Versions.feature11Plus) {
                     window.getDecorView().setSystemUiVisibility(fullscreen ? 1 : 0);
                 }
             }
