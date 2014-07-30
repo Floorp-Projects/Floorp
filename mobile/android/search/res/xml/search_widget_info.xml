@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="300dp"
+    android:minHeight="40dp"
+    android:label="@string/search_widget_name"
+    android:widgetCategory="home_screen"
+    android:previewImage="@drawable/launcher_widget"
+    android:initialLayout="@layout/search_widget"/>

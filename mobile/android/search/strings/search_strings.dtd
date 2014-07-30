@@ -4,7 +4,7 @@
 
 <!ENTITY search_jump_arrow '&#8598;'>
 
-<!ENTITY search_app_name 'Firefox Search'>
+<!ENTITY search_app_name '&brandShortName; Search'>
 <!ENTITY search_for_something 'Search for something'>
 
 <!ENTITY search_pref_title 'Settings'>
@@ -12,3 +12,6 @@
 <!ENTITY search_pref_clear_history_dialog_message 'Delete all search history from this device?'>
 <!ENTITY search_pref_clear_history_title 'Clear search history'>
 <!ENTITY search_pref_button_content_description 'Settings'>
+
+<!ENTITY search_widget_button_label 'Search'>
+
