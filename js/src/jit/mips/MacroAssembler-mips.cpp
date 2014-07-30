@@ -939,6 +939,18 @@ MacroAssemblerMIPS::branchWithCode(InstImm code, Label *label, JumpKind jumpKind
     if (label->bound()) {
         int32_t offset = label->offset() - m_buffer.nextOffset().getOffset();
 
+        // Generate the long jump for calls because return address has to be
+        // the address after the reserved block.
+        if (code.encode() == inst_bgezal.encode()) {
+            MOZ_ASSERT(jumpKind != ShortJump);
+            // Handle long call
+            addLongJump(nextOffset());
+            ma_liPatchable(ScratchRegister, Imm32(label->offset()));
+            as_jalr(ScratchRegister);
+            as_nop();
+            return;
+        }
+
         if (BOffImm16::IsInRange(offset))
             jumpKind = ShortJump;
 
@@ -950,15 +962,6 @@ MacroAssemblerMIPS::branchWithCode(InstImm code, Label *label, JumpKind jumpKind
             return;
         }
 
-        // Generate long jump because target is out of range of short jump.
-        if (code.encode() == inst_bgezal.encode()) {
-            // Handle long call
-            addLongJump(nextOffset());
-            ma_liPatchable(ScratchRegister, Imm32(label->offset()));
-            as_jalr(ScratchRegister);
-            as_nop();
-            return;
-        }
         if (code.encode() == inst_beq.encode()) {
             // Handle long jump
             addLongJump(nextOffset());
