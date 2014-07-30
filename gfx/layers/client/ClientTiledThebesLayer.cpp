@@ -7,6 +7,7 @@
 #include "Units.h"                      // for ScreenIntRect, CSSPoint, etc
 #include "UnitTransforms.h"             // for TransformTo
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "gfxRect.h"                    // for gfxRect
@@ -57,12 +58,12 @@ ClientTiledThebesLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 }
 
 static LayerRect
-ApplyParentLayerToLayerTransform(const gfx::Matrix4x4& aTransform, const ParentLayerRect& aParentLayerRect)
+ApplyParentLayerToLayerTransform(const gfx3DMatrix& aTransform, const ParentLayerRect& aParentLayerRect)
 {
-  return TransformTo<LayerPixel>(gfx::To3DMatrix(aTransform), aParentLayerRect);
+  return TransformTo<LayerPixel>(aTransform, aParentLayerRect);
 }
 
-static gfx::Matrix4x4
+static gfx3DMatrix
 GetTransformToAncestorsParentLayer(Layer* aStart, Layer* aAncestor)
 {
   gfx::Matrix4x4 transform;
@@ -76,7 +77,7 @@ GetTransformToAncestorsParentLayer(Layer* aStart, Layer* aAncestor)
     }
     transform = transform * iter->GetTransform();
   }
-  return transform;
+  return gfx::To3DMatrix(transform);
 }
 
 void
@@ -144,9 +145,8 @@ ClientTiledThebesLayer::BeginPaint()
 
   // Calculate the transform required to convert ParentLayer space of our
   // display port ancestor to the Layer space of this layer.
-  gfx::Matrix4x4 transformDisplayPortToLayer =
-    GetTransformToAncestorsParentLayer(this, displayPortAncestor);
-  transformDisplayPortToLayer.Invert();
+  gfx3DMatrix transformDisplayPortToLayer =
+    GetTransformToAncestorsParentLayer(this, displayPortAncestor).Inverse();
 
   // Note that below we use GetZoomToParent() in a number of places. Because this
   // code runs on the client side, the mTransformScale field of the FrameMetrics
@@ -171,10 +171,8 @@ ClientTiledThebesLayer::BeginPaint()
   // Store the applicable composition bounds in this layer's Layer units.
   mPaintData.mTransformToCompBounds =
     GetTransformToAncestorsParentLayer(this, scrollAncestor);
-  gfx::Matrix4x4 transformToBounds = mPaintData.mTransformToCompBounds;
-  transformToBounds.Invert();
   mPaintData.mCompositionBounds = ApplyParentLayerToLayerTransform(
-    transformToBounds, scrollMetrics.mCompositionBounds);
+    mPaintData.mTransformToCompBounds.Inverse(), scrollMetrics.mCompositionBounds);
   TILING_LOG("TILING %p: Composition bounds %s\n", this, Stringify(mPaintData.mCompositionBounds).c_str());
 
   // Calculate the scroll offset since the last transaction

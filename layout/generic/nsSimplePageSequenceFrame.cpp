@@ -766,11 +766,11 @@ nsSimplePageSequenceFrame::DoPageEnd()
   return rv;
 }
 
-static gfx::Matrix4x4
+static gfx3DMatrix
 ComputePageSequenceTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
 {
   float scale = aFrame->PresContext()->GetPrintPreviewScale();
-  return gfx::Matrix4x4().Scale(scale, scale, 1);
+  return gfx3DMatrix::ScalingMatrix(scale, scale, 1);
 }
 
 void
