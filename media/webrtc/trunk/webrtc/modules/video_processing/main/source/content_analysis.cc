@@ -12,11 +12,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 
