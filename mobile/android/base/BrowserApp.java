@@ -554,19 +554,6 @@ public class BrowserApp extends GeckoApp
         final SuggestedSites suggestedSites = new SuggestedSites(appContext, distribution);
         BrowserDB.setSuggestedSites(suggestedSites);
 
-        // Shipping Native casting is optional and dependent on whether you've downloaded the support
-        // and google play libraries
-        if (AppConstants.MOZ_MEDIA_PLAYER) {
-            try {
-                Class<?> mediaManagerClass = Class.forName("org.mozilla.gecko.MediaPlayerManager");
-                Method init = mediaManagerClass.getMethod("init", Context.class);
-                init.invoke(null, this);
-            } catch(Exception ex) {
-                // Ignore failures
-                Log.i(LOGTAG, "No native casting support", ex);
-            }
-        }
-
         JavaAddonManager.getInstance().init(appContext);
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
