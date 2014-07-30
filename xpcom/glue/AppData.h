@@ -25,7 +25,7 @@ public:
     this->size = sizeof(*this);
   }
 
-  ScopedAppData(const nsXREAppData* aAppData);
+  explicit ScopedAppData(const nsXREAppData* aAppData);
 
   void Zero() { memset(this, 0, sizeof(*this)); }
 

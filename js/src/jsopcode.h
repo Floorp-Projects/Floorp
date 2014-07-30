@@ -835,12 +835,10 @@ js_Disassemble1(JSContext *cx, JS::Handle<JSScript*> script, jsbytecode *pc, uns
 void
 js_DumpPCCounts(JSContext *cx, JS::Handle<JSScript*> script, js::Sprinter *sp);
 
-#ifdef JS_ION
 namespace js {
 namespace jit { struct IonScriptCounts; }
 void
 DumpIonScriptCounts(js::Sprinter *sp, jit::IonScriptCounts *ionCounts);
 }
-#endif
 
 #endif /* jsopcode_h */

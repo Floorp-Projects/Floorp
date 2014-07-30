@@ -7,8 +7,6 @@
 #ifndef jit_BaselineJIT_h
 #define jit_BaselineJIT_h
 
-#ifdef JS_ION
-
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
@@ -428,7 +426,5 @@ BaselineCompile(JSContext *cx, JSScript *script);
 
 } // namespace jit
 } // namespace js
-
-#endif // JS_ION
 
 #endif /* jit_BaselineJIT_h */

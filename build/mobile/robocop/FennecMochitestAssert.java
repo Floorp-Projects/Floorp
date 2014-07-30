@@ -25,17 +25,28 @@ public class FennecMochitestAssert implements Assert {
     // Measure the time it takes to run test case
     private long mStartTime = 0;
 
-    public FennecMochitestAssert() {
-    }
+    // Structured logger
+    private StructuredLogger mLogger;
 
     /** Write information to a logfile and logcat */
     public void dumpLog(String message) {
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.INFO, message);
+        mLogger.info(message);
+    }
+
+    public void dumpLog(String message, Throwable t) {
+        mLogger.error(message + " - " + t.toString());
     }
 
     /** Write information to a logfile and logcat */
-    public void dumpLog(String message, Throwable t) {
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.INFO, message, t);
+    static class DumpLogCallback implements StructuredLogger.LoggerCallback {
+        public void call(String output) {
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.INFO, output);
+        }
+    }
+
+
+    public FennecMochitestAssert() {
+        mLogger = new StructuredLogger("robocop", new DumpLogCallback());
     }
 
     /** Set the filename used for dumpLog. */
@@ -44,15 +55,13 @@ public class FennecMochitestAssert implements Assert {
 
         String message;
         if (!mLogStarted) {
-            dumpLog("SimpleTest START");
+            mLogger.info("SimpleTest START");
             mLogStarted = true;
         }
 
         if (mLogTestName != "") {
             long diff = SystemClock.uptimeMillis() - mStartTime;
-            message = "TEST-END | " + mLogTestName;
-            message += " | finished in " + diff + "ms";
-            dumpLog(message);
+            mLogger.testEnd(mLogTestName, "OK", "finished in " + diff + "ms");
             mLogTestName = "";
         }
     }
@@ -62,7 +71,7 @@ public class FennecMochitestAssert implements Assert {
         mLogTestName = nameParts[nameParts.length - 1];
         mStartTime = SystemClock.uptimeMillis();
 
-        dumpLog("TEST-START | " + mLogTestName);
+        mLogger.testStart(mLogTestName);
     }
 
     class testInfo {
@@ -81,21 +90,22 @@ public class FennecMochitestAssert implements Assert {
 
     }
 
-    private void _logMochitestResult(testInfo test, String passString, String failString) {
+    /** Used to log a subtest's result.
+     * test represents the subtest (an assertion).
+     * passStatus and passExpected are the actual status and the expected status if the assertion is true.
+     * failStatus and failExpected are the actual status and the expected status otherwise.
+     */
+    private void _logMochitestResult(testInfo test, String passStatus, String passExpected, String failStatus, String failExpected) {
         boolean isError = true;
-        String resultString = failString;
         if (test.mResult || test.mTodo) {
             isError = false;
         }
         if (test.mResult)
         {
-            resultString = passString;
+            mLogger.testStatus(mLogTestName, test.mName, passStatus, passExpected, test.mDiag);
+        } else {
+            mLogger.testStatus(mLogTestName, test.mName, failStatus, failExpected, test.mDiag);
         }
-        String diag = test.mName;
-        if (test.mDiag != null) diag += " - " + test.mDiag;
-
-        String message = resultString + " | " + mLogTestName + " | " + diag;
-        dumpLog(message);
 
         if (test.mInfo) {
             // do not count TEST-INFO messages
@@ -107,6 +117,8 @@ public class FennecMochitestAssert implements Assert {
             mPassed++;
         }
         if (isError) {
+            String message = "TEST-UNEXPECTED-" + failStatus + " | " + mLogTestName + " | "
+                    + test.mName + " - " + test.mDiag;
             junit.framework.Assert.fail(message);
         }
     }
@@ -116,27 +128,20 @@ public class FennecMochitestAssert implements Assert {
 
         if (mLogTestName != "") {
             long diff = SystemClock.uptimeMillis() - mStartTime;
-            message = "TEST-END | " + mLogTestName;
-            message += " | finished in " + diff + "ms";
-            dumpLog(message);
+            mLogger.testEnd(mLogTestName, "OK", "finished in " + diff + "ms");
             mLogTestName = "";
         }
 
-        message = "TEST-START | Shutdown";
-        dumpLog(message);
-        message = "Passed: " + Integer.toString(mPassed);
-        dumpLog(message);
-        message = "Failed: " + Integer.toString(mFailed);
-        dumpLog(message);
-        message = "Todo: " + Integer.toString(mTodo);
-        dumpLog(message);
-        message = "SimpleTest FINISHED";
-        dumpLog(message);
+        mLogger.info("TEST-START | Shutdown");
+        mLogger.info("Passed: " + Integer.toString(mPassed));
+        mLogger.info("Failed: " + Integer.toString(mFailed));
+        mLogger.info("Todo: " + Integer.toString(mTodo));
+        mLogger.info("SimpleTest FINISHED");
     }
 
     public void ok(boolean condition, String name, String diag) {
         testInfo test = new testInfo(condition, name, diag, false, false);
-        _logMochitestResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
+        _logMochitestResult(test, "PASS", "PASS", "FAIL", "PASS");
         mTestList.add(test);
     }
 
@@ -193,7 +198,7 @@ public class FennecMochitestAssert implements Assert {
 
     public void todo(boolean condition, String name, String diag) {
         testInfo test = new testInfo(condition, name, diag, true, false);
-        _logMochitestResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
+        _logMochitestResult(test, "PASS", "FAIL", "FAIL", "FAIL");
         mTestList.add(test);
     }
 
@@ -245,7 +250,6 @@ public class FennecMochitestAssert implements Assert {
     }
 
     public void info(String name, String message) {
-        testInfo test = new testInfo(true, name, message, false, true);
-        _logMochitestResult(test, "TEST-INFO", "INFO FAILED?");
+        mLogger.info(name + " | " + message);
     }
 }

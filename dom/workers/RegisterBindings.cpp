@@ -64,6 +64,8 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
       !DOMExceptionBinding::GetConstructorObject(aCx, aGlobal) ||
       !EventBinding::GetConstructorObject(aCx, aGlobal) ||
       !FileReaderSyncBinding_workers::GetConstructorObject(aCx, aGlobal) ||
+      (HeadersBinding::ConstructorEnabled(aCx, aGlobal) &&
+       !HeadersBinding::GetConstructorObject(aCx, aGlobal)) ||
       !ImageDataBinding::GetConstructorObject(aCx, aGlobal) ||
       !MessageEventBinding::GetConstructorObject(aCx, aGlobal) ||
       !MessagePortBinding::GetConstructorObject(aCx, aGlobal) ||
@@ -78,12 +80,6 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
       !WorkerLocationBinding_workers::GetConstructorObject(aCx, aGlobal) ||
       !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, aGlobal)) {
     return false;
-  }
-
-  if (DOMFetchEnabled()) {
-    if (!HeadersBinding::GetConstructorObject(aCx, aGlobal)) {
-      return false;
-    }
   }
 
   if (!JS_DefineProfilingFunctions(aCx, aGlobal)) {

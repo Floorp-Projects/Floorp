@@ -165,10 +165,8 @@ JSScript::setIsCallsiteClone(JSObject *fun)
 inline void
 JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript)
 {
-#ifdef JS_ION
     if (hasBaselineScript())
         js::jit::BaselineScript::writeBarrierPre(tenuredZone(), baseline);
-#endif
     MOZ_ASSERT(!hasIonScript());
     baseline = baselineScript;
     updateBaselineOrIonRaw();
@@ -179,11 +177,7 @@ JSScript::ensureHasAnalyzedArgsUsage(JSContext *cx)
 {
     if (analyzedArgsUsage())
         return true;
-#ifdef JS_ION
     return js::jit::AnalyzeArgumentsUsage(cx, this);
-#else
-    MOZ_CRASH();
-#endif
 }
 
 #endif /* jsscriptinlines_h */

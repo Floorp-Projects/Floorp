@@ -2544,7 +2544,6 @@ Parser<FullParseHandler>::asmJS(Node list)
 
     pc->sc->asFunctionBox()->useAsm = true;
 
-#ifdef JS_ION
     // Attempt to validate and compile this asm.js module. On success, the
     // tokenStream has been advanced to the closing }. On failure, the
     // tokenStream is in an indeterminate state and we must reparse the
@@ -2557,7 +2556,6 @@ Parser<FullParseHandler>::asmJS(Node list)
         pc->newDirectives->setAsmJS();
         return false;
     }
-#endif
 
     return true;
 }
