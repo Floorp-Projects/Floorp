@@ -122,7 +122,7 @@ GetDataStoresStructuredCloneCallbacksRead(JSContext* aCx,
   {
     nsRefPtr<WorkerDataStore> workerStore =
       new WorkerDataStore(workerPrivate->GlobalScope());
-    nsMainThreadPtrHandle<DataStore> backingStore = dataStoreholder;
+    nsMainThreadPtrHandle<DataStore> backingStore(dataStoreholder);
 
     // When we're on the worker thread, prepare a DataStoreChangeEventProxy.
     nsRefPtr<DataStoreChangeEventProxy> eventProxy =

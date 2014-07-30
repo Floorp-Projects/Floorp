@@ -261,8 +261,8 @@ public:
       return;
     }
 
-    nsMainThreadPtrHandle<ServiceWorkerUpdateInstance> handle =
-      new nsMainThreadPtrHolder<ServiceWorkerUpdateInstance>(this);
+    nsMainThreadPtrHandle<ServiceWorkerUpdateInstance> handle(
+      new nsMainThreadPtrHolder<ServiceWorkerUpdateInstance>(this));
     // FIXME(nsm): Deal with error case (worker failed to download, redirect,
     // parse) in error handler patch.
     nsRefPtr<FinishSuccessfulFetchWorkerRunnable> r =
@@ -1009,8 +1009,8 @@ ServiceWorkerManager::Install(ServiceWorkerRegistration* aRegistration,
   InvalidateServiceWorkerContainerWorker(aRegistration,
                                          WhichServiceWorker::INSTALLING_WORKER);
 
-  nsMainThreadPtrHandle<ServiceWorkerRegistration> handle =
-    new nsMainThreadPtrHolder<ServiceWorkerRegistration>(aRegistration);
+  nsMainThreadPtrHandle<ServiceWorkerRegistration> handle(
+    new nsMainThreadPtrHolder<ServiceWorkerRegistration>(aRegistration));
 
   nsRefPtr<ServiceWorker> serviceWorker;
   nsresult rv =
@@ -1085,8 +1085,8 @@ public:
       return rv;
     }
 
-    nsMainThreadPtrHandle<ServiceWorkerRegistration> handle =
-      new nsMainThreadPtrHolder<ServiceWorkerRegistration>(mRegistration);
+    nsMainThreadPtrHandle<ServiceWorkerRegistration> handle(
+      new nsMainThreadPtrHolder<ServiceWorkerRegistration>(mRegistration));
 
     nsRefPtr<ActivateEventRunnable> r =
       new ActivateEventRunnable(serviceWorker->GetWorkerPrivate(), handle);

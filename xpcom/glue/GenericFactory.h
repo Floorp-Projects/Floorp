@@ -28,7 +28,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIFACTORY
 
-  GenericFactory(ConstructorProcPtr aCtor)
+  explicit GenericFactory(ConstructorProcPtr aCtor)
     : mCtor(aCtor)
   {
     NS_ASSERTION(mCtor, "GenericFactory with no constructor");
