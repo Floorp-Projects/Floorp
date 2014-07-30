@@ -10,7 +10,8 @@
 #include "HyperTextAccessible.h"
 #include "nsAccUtils.h"
 
-using namespace mozilla::a11y;
+namespace mozilla {
+namespace a11y {
 
 ////////////////////////////////////////////////////////////////////////////////
 // TextPoint
@@ -294,3 +295,6 @@ TextRange::MoveInternal(ETextUnit aUnit, int32_t aCount,
 {
 
 }
+
+} // namespace a11y
+} // namespace mozilla

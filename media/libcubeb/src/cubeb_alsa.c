@@ -106,6 +106,7 @@ struct cubeb_stream {
      PulseAudio where streams would stop requesting new data despite still
      being logically active and playing. */
   struct timeval last_activity;
+  float volume;
 };
 
 static int
@@ -313,7 +314,20 @@ alsa_refill_stream(cubeb_stream * stm)
     return ERROR;
   }
   if (got > 0) {
-    snd_pcm_sframes_t wrote = snd_pcm_writei(stm->pcm, p, got);
+    snd_pcm_sframes_t wrote;
+
+    if (stm->params.format == CUBEB_SAMPLE_FLOAT32NE) {
+      float * b = (float *) p;
+      for (uint32_t i = 0; i < got * stm->params.channels; i++) {
+        b[i] *= stm->volume;
+      }
+    } else {
+      short * b = (short *) p;
+      for (uint32_t i = 0; i < got * stm->params.channels; i++) {
+        b[i] *= stm->volume;
+      }
+    }
+    wrote = snd_pcm_writei(stm->pcm, p, got);
     if (wrote == -EPIPE) {
       snd_pcm_recover(stm->pcm, wrote, 1);
       wrote = snd_pcm_writei(stm->pcm, p, got);
@@ -813,6 +827,7 @@ alsa_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
   stm->user_ptr = user_ptr;
   stm->params = stream_params;
   stm->state = INACTIVE;
+  stm->volume = 1.0;
 
   r = pthread_mutex_init(&stm->mutex, NULL);
   assert(r == 0);
@@ -1083,6 +1098,24 @@ alsa_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   return CUBEB_OK;
 }
 
+int
+alsa_stream_set_volume(cubeb_stream * stm, float volume)
+{
+  /* setting the volume using an API call does not seem very stable/supported */
+  pthread_mutex_lock(&stm->mutex);
+  stm->volume = volume;
+  pthread_mutex_unlock(&stm->mutex);
+
+  return CUBEB_OK;
+}
+
+int
+alsa_stream_set_panning(cubeb_stream * stream, float panning)
+{
+  assert(0 && "not implemented");
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const alsa_ops = {
   .init = alsa_init,
   .get_backend_id = alsa_get_backend_id,
@@ -1095,5 +1128,10 @@ static struct cubeb_ops const alsa_ops = {
   .stream_start = alsa_stream_start,
   .stream_stop = alsa_stream_stop,
   .stream_get_position = alsa_stream_get_position,
-  .stream_get_latency = alsa_stream_get_latency
+  .stream_get_latency = alsa_stream_get_latency,
+  .stream_set_volume = alsa_stream_set_volume,
+  .stream_set_panning = alsa_stream_set_panning,
+  .stream_get_current_device = NULL,
+  .stream_device_destroy = NULL,
+  .stream_register_device_changed_callback = NULL
 };

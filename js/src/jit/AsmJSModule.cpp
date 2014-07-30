@@ -1173,8 +1173,10 @@ AsmJSModule::ExportedFunction::clone(ExclusiveContext *cx, ExportedFunction *out
     return true;
 }
 
-AsmJSModule::CodeRange::CodeRange(uint32_t nameIndex, const AsmJSFunctionLabels &l)
+AsmJSModule::CodeRange::CodeRange(uint32_t nameIndex, uint32_t lineNumber,
+                                  const AsmJSFunctionLabels &l)
   : nameIndex_(nameIndex),
+    lineNumber_(lineNumber),
     begin_(l.begin.offset()),
     profilingReturn_(l.profilingReturn.offset()),
     end_(l.end.offset())
@@ -1534,6 +1536,29 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
 
     if (profilingEnabled_ == enabled)
         return;
+
+    // When enabled, generate profiling labels for every name in names_ that is
+    // the name of some Function CodeRange. This involves malloc() so do it now
+    // since, once we start sampling, we'll be in a signal-handing context where
+    // we cannot malloc.
+    if (enabled) {
+        profilingLabels_.resize(names_.length());
+        const char *filename = scriptSource_->filename();
+        JS::AutoCheckCannotGC nogc;
+        for (size_t i = 0; i < codeRanges_.length(); i++) {
+            CodeRange &cr = codeRanges_[i];
+            if (!cr.isFunction())
+                continue;
+            unsigned lineno = cr.functionLineNumber();
+            PropertyName *name = names_[cr.functionNameIndex()].name();
+            profilingLabels_[cr.functionNameIndex()].reset(
+                name->hasLatin1Chars()
+                ? JS_smprintf("%s (%s:%u)", name->latin1Chars(nogc), filename, lineno)
+                : JS_smprintf("%hs (%s:%u)", name->twoByteChars(nogc), filename, lineno));
+        }
+    } else {
+        profilingLabels_.clear();
+    }
 
     // Conservatively flush the icache for the entire module.
     AutoFlushICache afc("AsmJSModule::setProfilingEnabled");

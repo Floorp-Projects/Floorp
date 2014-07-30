@@ -46,7 +46,7 @@ public:
   PluginScriptableObjectChild(ScriptableObjectType aType);
   virtual ~PluginScriptableObjectChild();
 
-  void
+  bool
   InitializeProxy();
 
   void

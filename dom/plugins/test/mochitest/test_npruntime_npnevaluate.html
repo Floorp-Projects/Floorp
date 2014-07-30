@@ -48,6 +48,7 @@
           "Hello world!"],
       ["function test2() { var x = {a: '1', b: '2'}; return x; } test2();", 
           {a: '1', b: '2'}],
+      ["(function() { var ret; try { win = window.open(); win.document.writeln('wibble'); ret = 'no error' } catch(e) { ret = e.name; } win.close(); return ret; })()", "no error"],
     ];
 
     var plugin = document.getElementById("plugin1");

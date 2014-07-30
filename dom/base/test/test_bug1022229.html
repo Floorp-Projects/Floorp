@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1022229
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1022229</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for postMessage between sandboxed iframe and non-sandboxed window.
+      This test is particularly interesting on b2g where we're in a mozBrowser.
+
+      We set the test up with an extra iframe so that we can easily run it in
+      an artificial mozbrowser for desktop builds.
+   **/
+  SimpleTest.waitForExplicitFinish();
+  function go() {
+    var ifr = document.createElement('iframe');
+
+    /* Uncomment this chunk to run in a mozBrowser. Make sure to uncomment the
+       chunk in iframe_main as well. */
+    /*
+    SpecialPowers.Services.prefs.setBoolPref("dom.mozBrowserFramesEnabled", true);
+    SpecialPowers.Services.prefs.setBoolPref("dom.ipc.browser_frames.oop_by_default", false);
+    SpecialPowers.addPermission("browser", true, document);
+    SpecialPowers.wrap(ifr).mozbrowser = true;
+    */
+
+    ifr.setAttribute('src', 'iframe_main_bug1022229.html');
+    document.body.appendChild(ifr);
+  }
+
+  </script>
+</head>
+<body onload="go()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1022229">Mozilla Bug 1022229</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

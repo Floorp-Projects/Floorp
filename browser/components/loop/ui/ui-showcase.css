@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.showcase {
+  width: 730px;
+  margin: 0 auto;
+}
+
+.showcase > header {
+  position: fixed;
+  top: 0;
+  background-color: #fbfbfb;
+  z-index: 1000;
+  width: 100%;
+  padding-bottom: 1em;
+}
+
+.showcase .menu > a {
+  margin-right: .5em;
+}
+
+.showcase > section {
+  position: relative;
+  padding-top: 10em;
+  clear: both;
+}
+
+.showcase > section > h1 {
+  border-bottom: 1px solid #aaa;
+}
+
+.showcase > section .comp {
+  margin: 0 auto; /* width is usually set programmatically */
+}
+
+.showcase > section .comp.dashed {
+  border: 1px dashed #ccc;
+}
+
+.showcase > section > .example {
+  margin-bottom: 6em;
+}
+
+.showcase > section .example > h3 {
+  border-bottom: 1px dashed #aaa;
+}

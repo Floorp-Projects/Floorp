@@ -1162,10 +1162,25 @@ var gPluginHandler = {
     let submitReports   = true; // XXX followup for .getPropertyAsBool("submitReports");
     let pluginName      = propBag.getPropertyAsAString("pluginName");
     let pluginDumpID    = propBag.getPropertyAsAString("pluginDumpID");
-    let browserDumpID   = propBag.getPropertyAsAString("browserDumpID");
+    let browserDumpID   = null;
+    let gmpPlugin       = false;
 
-    // Remap the plugin name to a more user-presentable form.
-    pluginName = this.makeNicePluginName(pluginName);
+    try {
+      browserDumpID = propBag.getPropertyAsAString("browserDumpID");
+    } catch (e) {
+      // For GMP crashes we don't get a browser dump.
+    }
+
+    try {
+      gmpPlugin = propBag.getPropertyAsBool("gmpPlugin");
+    } catch (e) {
+      // This property is only set for GMP plugins.
+    }
+
+    // For non-GMP plugins, remap the plugin name to a more user-presentable form.
+    if (!gmpPlugin) {
+      pluginName = this.makeNicePluginName(pluginName);
+    }
 
     let messageString = gNavigatorBundle.getFormattedString("crashedpluginsMessage.title", [pluginName]);
 
