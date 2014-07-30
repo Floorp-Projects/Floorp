@@ -5,27 +5,21 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.hardware.input.InputManager;
-import android.os.Build;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-
-import java.lang.Math;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 
 public class AndroidGamepadManager {
@@ -334,7 +328,7 @@ public class AndroidGamepadManager {
     }
 
     private static void addDeviceListener() {
-        if (Build.VERSION.SDK_INT < 16) {
+        if (Versions.preJB) {
             // Poll known gamepads to see if they've disappeared.
             sPollTimer = new Timer();
             sPollTimer.scheduleAtFixedRate(new TimerTask() {
@@ -378,7 +372,7 @@ public class AndroidGamepadManager {
     }
 
     private static void removeDeviceListener() {
-        if (Build.VERSION.SDK_INT < 16) {
+        if (Versions.preJB) {
             if (sPollTimer != null) {
                 sPollTimer.cancel();
                 sPollTimer = null;
