@@ -11,6 +11,9 @@ function ifWebGLSupported() {
 
   yield getPrograms(front, 2);
 
+  // Wait a frame to ensure rendering
+  yield front.waitForFrame();
+
   let pixel = yield front.getPixel({ selector: "#canvas1", position: { x: 0, y: 0 }});
   is(pixel.r, 255, "correct `r` value for first canvas.")
   is(pixel.g, 255, "correct `g` value for first canvas.")
