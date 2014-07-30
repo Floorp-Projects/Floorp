@@ -23,10 +23,10 @@ class nsXPTType : public XPTTypeDescriptorPrefix
 public:
     nsXPTType()
         {}    // random contents
-    nsXPTType(const XPTTypeDescriptorPrefix& prefix)
+    MOZ_IMPLICIT nsXPTType(const XPTTypeDescriptorPrefix& prefix)
         {*(XPTTypeDescriptorPrefix*)this = prefix;}
 
-    nsXPTType(const uint8_t& prefix)
+    MOZ_IMPLICIT nsXPTType(const uint8_t& prefix)
         {*(uint8_t*)this = prefix;}
 
     nsXPTType& operator=(uint8_t val)
@@ -124,7 +124,7 @@ class nsXPTParamInfo : public XPTParamDescriptor
 {
 // NO DATA - this a flyweight wrapper
 public:
-    nsXPTParamInfo(const XPTParamDescriptor& desc)
+    MOZ_IMPLICIT nsXPTParamInfo(const XPTParamDescriptor& desc)
         {*(XPTParamDescriptor*)this = desc;}
 
 
@@ -183,7 +183,7 @@ class nsXPTMethodInfo : public XPTMethodDescriptor
 {
 // NO DATA - this a flyweight wrapper
 public:
-    nsXPTMethodInfo(const XPTMethodDescriptor& desc)
+    MOZ_IMPLICIT nsXPTMethodInfo(const XPTMethodDescriptor& desc)
         {*(XPTMethodDescriptor*)this = desc;}
 
     bool IsGetter()      const {return 0 != (XPT_MD_IS_GETTER(flags) );}
@@ -216,7 +216,7 @@ class nsXPTConstant : public XPTConstDescriptor
 {
 // NO DATA - this a flyweight wrapper
 public:
-    nsXPTConstant(const XPTConstDescriptor& desc)
+    MOZ_IMPLICIT nsXPTConstant(const XPTConstDescriptor& desc)
         {*(XPTConstDescriptor*)this = desc;}
 
     const char* GetName() const

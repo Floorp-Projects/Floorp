@@ -32,8 +32,8 @@ class NotifyObserverRunnable : public nsRunnable
 public:
   NotifyObserverRunnable(nsIObserver * observer,
                          const char * topicStringLiteral)
-    : mObserver(), mTopic(topicStringLiteral) {
-    mObserver = new nsMainThreadPtrHolder<nsIObserver>(observer);
+    : mObserver(new nsMainThreadPtrHolder<nsIObserver>(observer)),
+      mTopic(topicStringLiteral) {
   }
   NS_DECL_NSIRUNNABLE
 private:

@@ -41,7 +41,7 @@ public:
    * ReentrantMonitor
    * @param aName A name which can reference this monitor
    */
-  ReentrantMonitor(const char* aName)
+  explicit ReentrantMonitor(const char* aName)
     : BlockingResourceBase(aName, eReentrantMonitor)
 #ifdef DEBUG
     , mEntryCount(0)
@@ -173,7 +173,7 @@ public:
    *
    * @param aReentrantMonitor A valid mozilla::ReentrantMonitor*.
    **/
-  ReentrantMonitorAutoEnter(mozilla::ReentrantMonitor& aReentrantMonitor)
+  explicit ReentrantMonitorAutoEnter(mozilla::ReentrantMonitor& aReentrantMonitor)
     : mReentrantMonitor(&aReentrantMonitor)
   {
     NS_ASSERTION(mReentrantMonitor, "null monitor");
@@ -222,7 +222,7 @@ public:
    * @param aReentrantMonitor A valid mozilla::ReentrantMonitor*. It
    *                 must be already locked.
    **/
-  ReentrantMonitorAutoExit(ReentrantMonitor& aReentrantMonitor)
+  explicit ReentrantMonitorAutoExit(ReentrantMonitor& aReentrantMonitor)
     : mReentrantMonitor(&aReentrantMonitor)
   {
     NS_ASSERTION(mReentrantMonitor, "null monitor");
