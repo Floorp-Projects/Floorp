@@ -51,7 +51,7 @@ exports.windowIterator = windowIterator;
  *    interface.
  */
 function browserWindowIterator() {
-  for each (let window in windowIterator()) {
+  for (let window of windowIterator()) {
     if (isBrowser(window))
       yield window;
   }
@@ -66,7 +66,7 @@ function WindowTracker(delegate) {
   this._delegate = delegate;
   this._loadingWindows = [];
 
-  for each (let window in getWindows())
+  for (let window of getWindows())
     this._regWindow(window);
   windowWatcher.registerNotification(this);
   this._onToplevelWindowReady = this._onToplevelWindowReady.bind(this);
@@ -120,7 +120,7 @@ WindowTracker.prototype = {
   unload: function unload() {
     windowWatcher.unregisterNotification(this);
     events.off('toplevel-window-ready', this._onToplevelWindowReady);
-    for each (let window in getWindows())
+    for (let window of getWindows())
       this._unregWindow(window);
   },
 

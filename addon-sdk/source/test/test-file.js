@@ -66,7 +66,7 @@ exports.testBasename = function(assert) {
 
 exports.testList = function(assert) {
   let list = file.list(profilePath);
-  let found = [ true for each (name in list)
+  let found = [ true for (name of list)
                     if (name === fileNameInProfile) ];
 
   if (found.length > 1)

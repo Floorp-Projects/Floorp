@@ -8,7 +8,7 @@ module.metadata = {
 };
 
 var { exit, stdout } = require("../system");
-var cfxArgs = require("@test/options");
+var cfxArgs = require("../test/options");
 
 function runTests(findAndRunTests) {
   var harness = require("./harness");
@@ -53,13 +53,13 @@ function printFailedTests(tests, print) {
 
   print("\nThe following tests failed:\n");
 
-  for each (let testRun in tests.testRuns) {
+  for (let testRun of tests.testRuns) {
     iterationNumber++;
 
     if (!singleIteration)
       print("  Iteration " + iterationNumber + ":\n");
 
-    for each (let test in testRun) {
+    for (let test of testRun) {
       if (test.failed > 0) {
         print(padding + "  " + test.name + ": " + test.errors +"\n");
       }
@@ -102,7 +102,7 @@ exports.runTestsFromModule = function runTestsFromModule(module) {
 
     // Reproduce what is done in sdk/deprecated/unit-test-finder.findTests()
     let tests = [];
-    for each (let name in Object.keys(exports).sort()) {
+    for (let name of Object.keys(exports).sort()) {
       tests.push({
         setup: exports.setup,
         teardown: exports.teardown,
