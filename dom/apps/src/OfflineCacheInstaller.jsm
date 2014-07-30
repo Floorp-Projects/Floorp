@@ -23,7 +23,9 @@ let makeFile = CC('@mozilla.org/file/local;1',
                 'initWithPath');
 let MutableArray = CC('@mozilla.org/array;1', 'nsIMutableArray');
 
-const nsICache = Ci.nsICache;
+let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
+
+const nsICacheStorage = Ci.nsICacheStorage;
 const nsIApplicationCache = Ci.nsIApplicationCache;
 const applicationCacheService =
   Cc['@mozilla.org/network/application-cache-service;1']
@@ -47,32 +49,34 @@ function enableOfflineCacheForApp(origin, appId) {
 
 
 function storeCache(applicationCache, url, file, itemType) {
-  let session = Services.cache.createSession(applicationCache.clientID,
-                                             nsICache.STORE_OFFLINE, true);
-  session.asyncOpenCacheEntry(url, nsICache.ACCESS_WRITE, {
-    onCacheEntryAvailable: function (cacheEntry, accessGranted, status) {
-      cacheEntry.setMetaDataElement('request-method', 'GET');
-      cacheEntry.setMetaDataElement('response-head', 'HTTP/1.1 200 OK\r\n');
+  let storage =
+    Services.cache2.appCacheStorage(LoadContextInfo.default, applicationCache);
+  let uri = Services.io.newURI(url, null, null);
+  storage.asyncOpenURI(uri, "", nsICacheStorage.OPEN_TRUNCATE, {
+    onCacheEntryAvailable:
+      function (cacheEntry, isNew, appCache, result) {
+        cacheEntry.setMetaDataElement('request-method', 'GET');
+        cacheEntry.setMetaDataElement('response-head', 'HTTP/1.1 200 OK\r\n');
 
-      let outputStream = cacheEntry.openOutputStream(0);
+        let outputStream = cacheEntry.openOutputStream(0);
 
-      // Input-Output stream machinery in order to push nsIFile content into cache
-      let inputStream = Cc['@mozilla.org/network/file-input-stream;1']
-                          .createInstance(Ci.nsIFileInputStream);
-      inputStream.init(file, 1, -1, null);
-      let bufferedOutputStream = Cc['@mozilla.org/network/buffered-output-stream;1']
-                                   .createInstance(Ci.nsIBufferedOutputStream);
-      bufferedOutputStream.init(outputStream, 1024);
-      bufferedOutputStream.writeFrom(inputStream, inputStream.available());
-      bufferedOutputStream.flush();
-      bufferedOutputStream.close();
-      inputStream.close();
+        // Input-Output stream machinery in order to push nsIFile content into cache
+        let inputStream = Cc['@mozilla.org/network/file-input-stream;1']
+                            .createInstance(Ci.nsIFileInputStream);
+        inputStream.init(file, 1, -1, null);
+        let bufferedOutputStream = Cc['@mozilla.org/network/buffered-output-stream;1']
+                                     .createInstance(Ci.nsIBufferedOutputStream);
+        bufferedOutputStream.init(outputStream, 1024);
+        bufferedOutputStream.writeFrom(inputStream, inputStream.available());
+        bufferedOutputStream.flush();
+        bufferedOutputStream.close();
+        inputStream.close();
 
-      cacheEntry.markValid();
-      debug (file.path + ' -> ' + url + ' (' + itemType + ')');
-      applicationCache.markEntry(url, itemType);
-      cacheEntry.close();
-    }
+        cacheEntry.markValid();
+        debug (file.path + ' -> ' + url + ' (' + itemType + ')');
+        applicationCache.markEntry(url, itemType);
+        cacheEntry.close();
+      }
   });
 }
 
