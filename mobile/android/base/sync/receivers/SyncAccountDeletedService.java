@@ -14,6 +14,7 @@ import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.config.AccountPickler;
 import org.mozilla.gecko.sync.config.ClientRecordTerminator;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
+import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
 
@@ -77,6 +78,10 @@ public class SyncAccountDeletedService extends IntentService {
     Logger.info(LOG_TAG, "Account named " + accountName + " being removed; " +
         "deleting client record from server.");
     deleteClientRecord(context, accountName, params.password, params.serverURL);
+
+    // Delete client database and non-local tabs.
+    Logger.info(LOG_TAG, "Deleting the entire clients database and non-local tabs");
+    FennecTabsRepository.deleteNonLocalClientsAndTabs(context);
   }
 
   public static void deletePickle(final Context context) {

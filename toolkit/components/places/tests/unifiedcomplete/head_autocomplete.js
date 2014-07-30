@@ -134,17 +134,20 @@ function* check_autocomplete(test) {
 
   // Check to see the expected uris and titles match up (in any order)
   if (test.matches) {
+    // Do not modify the test original matches.
+    let matches = test.matches.slice();
+
     for (let i = 0; i < controller.matchCount; i++) {
       let value = controller.getValueAt(i);
       let comment = controller.getCommentAt(i);
       do_log_info("Looking for '" + value + "', '" + comment + "' in expected results...");
       let j;
-      for (j = 0; j < test.matches.length; j++) {
+      for (j = 0; j < matches.length; j++) {
         // Skip processed expected results
-        if (test.matches[j] == undefined)
+        if (matches[j] == undefined)
           continue;
 
-        let { uri, title, tags } = test.matches[j];
+        let { uri, title, tags } = matches[j];
         if (tags)
           title += " \u2013 " + tags.sort().join(", ");
 
@@ -153,7 +156,7 @@ function* check_autocomplete(test) {
         if (stripPrefix(uri.spec) == stripPrefix(value) && title == comment) {
           do_log_info("Got a match at index " + j + "!");
           // Make it undefined so we don't process it again
-          test.matches[j] = undefined;
+          matches[j] = undefined;
           if (uri.spec.startsWith("moz-action:")) {
             let style = controller.getStyleAt(i);
             Assert.ok(style.contains("action"));
@@ -163,15 +166,15 @@ function* check_autocomplete(test) {
       }
 
       // We didn't hit the break, so we must have not found it
-      if (j == test.matches.length)
+      if (j == matches.length)
         do_throw("Didn't find the current result ('" + value + "', '" + comment + "') in matches");
     }
 
-    Assert.equal(controller.matchCount, test.matches.length,
+    Assert.equal(controller.matchCount, matches.length,
                  "Got as many results as expected");
 
     // If we expect results, make sure we got matches.
-    do_check_eq(controller.searchStatus, test.matches.length ?
+    do_check_eq(controller.searchStatus, matches.length ?
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
   }
