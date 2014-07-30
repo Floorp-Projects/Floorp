@@ -155,9 +155,9 @@ class JS_FRIEND_API(BaseProxyHandler)
      * may still decide to squelch the error).
      *
      * We make these OR-able so that assertEnteredPolicy can pass a union of them.
-     * For example, get{,Own}PropertyDescriptor is invoked by both calls to ::get()
-     * and ::set() (since we need to look up the accessor), so its
-     * assertEnteredPolicy would pass GET | SET.
+     * For example, get{,Own}PropertyDescriptor is invoked by calls to ::get()
+     * ::set(), in addition to being invoked on its own, so there are several
+     * valid Actions that could have been entered.
      */
     typedef uint32_t Action;
     enum {
@@ -165,7 +165,8 @@ class JS_FRIEND_API(BaseProxyHandler)
         GET       = 0x01,
         SET       = 0x02,
         CALL      = 0x04,
-        ENUMERATE = 0x08
+        ENUMERATE = 0x08,
+        GET_PROPERTY_DESCRIPTOR = 0x10
     };
 
     virtual bool enter(JSContext *cx, HandleObject wrapper, HandleId id, Action act,

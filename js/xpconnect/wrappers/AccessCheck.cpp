@@ -157,6 +157,13 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
     if (act == Wrapper::ENUMERATE)
         return true;
 
+    // For the case of getting a property descriptor, we allow if either GET or SET
+    // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
+    if (act == Wrapper::GET_PROPERTY_DESCRIPTOR) {
+        return isCrossOriginAccessPermitted(cx, wrapperArg, idArg, Wrapper::GET) ||
+               isCrossOriginAccessPermitted(cx, wrapperArg, idArg, Wrapper::SET);
+    }
+
     RootedId id(cx, idArg);
     RootedObject wrapper(cx, wrapperArg);
     RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
@@ -211,6 +218,14 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wr
 
     if (act == Wrapper::CALL)
         return true;
+
+
+    // For the case of getting a property descriptor, we allow if either GET or SET
+    // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
+    if (act == Wrapper::GET_PROPERTY_DESCRIPTOR) {
+        return check(cx, wrapperArg, idArg, Wrapper::GET) ||
+               check(cx, wrapperArg, idArg, Wrapper::SET);
+    }
 
     RootedId exposedPropsId(cx, GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS));
 
