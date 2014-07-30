@@ -32,7 +32,7 @@ const defineProperties = Object.defineProperties,
 function _create(proto, trait) {
   let properties = {},
       keys = Object.getOwnPropertyNames(trait);
-  for each(let key in keys) {
+  for (let key of keys) {
     let descriptor = trait[key];
     if (descriptor.required &&
         !Object.prototype.hasOwnProperty.call(proto, key))
@@ -73,7 +73,7 @@ function TraitDescriptor(object)
 function Public(instance, trait) {
   let result = {},
       keys = Object.getOwnPropertyNames(trait);
-  for each (let key in keys) {
+  for (let key of keys) {
     if ('_' === key.charAt(0) && '__iterator__' !== key )
       continue;
     let property = trait[key],

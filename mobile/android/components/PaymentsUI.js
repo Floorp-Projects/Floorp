@@ -61,8 +61,10 @@ function PaymentUI() {
 
 PaymentUI.prototype = {
   get bundle() {
-    delete this.bundle;
-    return this.bundle = Services.strings.createBundle("chrome://browser/locale/payments.properties");
+    if (!this._bundle) {
+      this._bundle = Services.strings.createBundle("chrome://browser/locale/payments.properties");
+    }
+    return this._bundle;
   },
 
   confirmPaymentRequest: function confirmPaymentRequest(aRequestId,

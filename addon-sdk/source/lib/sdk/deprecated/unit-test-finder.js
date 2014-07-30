@@ -157,7 +157,7 @@ TestFinder.prototype = {
         }
 
         if (this.testInProcess) {
-          for each (let name in Object.keys(suiteModule).sort()) {
+          for (let name of Object.keys(suiteModule).sort()) {
             if (NOT_TESTS.indexOf(name) === -1 && filter(suite, name)) {
               tests.push({
                 setup: suiteModule.setup,

@@ -44,7 +44,7 @@ const listOptions = {
   __iterator__: function __iterator__(onKeys, onKeyValue) {
     let array = listNS(this).keyValueMap.slice(0),
                 i = -1;
-    for each(let element in array)
+    for (let element of array)
       yield onKeyValue ? [++i, element] : onKeys ? ++i : element;
   },
 };

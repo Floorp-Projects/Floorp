@@ -28,9 +28,9 @@ function ifWebGLSupported() {
   is($("#fs-editor-label").hasAttribute("selected"), false,
     "The vertex shader editor shouldn't be initially selected.");
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 128, y: 128 }, { r: 191, g: 64, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(gFront, { x: 128, y: 128 }, { r: 191, g: 64, b: 0, a: 255 }, true);
+  yield ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
   vsEditor.focus();
 
@@ -44,9 +44,9 @@ function ifWebGLSupported() {
 
   ok(true, "Vertex shader was changed.");
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(gFront, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
 
   ok(true, "The vertex shader was recompiled successfully.");
 
@@ -62,9 +62,9 @@ function ifWebGLSupported() {
 
   ok(true, "Fragment shader was changed.");
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 127 }, true);
-  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(gFront, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 127 }, true);
+  yield ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
 
   ok(true, "The fragment shader was recompiled successfully.");
 

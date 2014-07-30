@@ -21,7 +21,7 @@
         android:background="@android:color/transparent"
         android:padding="15dp"
         android:src="@drawable/ic_action_overflow"
-        android:text="@string/search_settings_icon"
-        android:layout_gravity="bottom|right"/>
+        android:layout_gravity="bottom|right"
+        android:contentDescription="@string/search_pref_button_content_description"/>
 
 </FrameLayout>

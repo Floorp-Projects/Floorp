@@ -41,14 +41,14 @@ function ifWebGLSupported() {
 
   ok(true, "Vertex and fragment shaders were changed.");
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 32, y: 32 }, { r: 255, g: 255, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 64, y: 64 }, { r: 255, g: 255, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  yield ensurePixelIs(debuggee, { x: 32, y: 32 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  yield ensurePixelIs(debuggee, { x: 64, y: 64 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 32, y: 32 }, { r: 255, g: 255, b: 0, a: 0 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 255, g: 255, b: 0, a: 0 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 32, y: 32 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 64, y: 64 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(gFront, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
 
   ok(true, "The vertex and fragment shaders were recompiled successfully.");
 
