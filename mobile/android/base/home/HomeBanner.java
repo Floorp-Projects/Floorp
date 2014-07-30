@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko.home;
 
-import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -21,19 +21,15 @@ import org.mozilla.gecko.widget.EllipsisTextView;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.text.Html;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 public class HomeBanner extends LinearLayout
                         implements GeckoEventListener {
@@ -133,7 +129,7 @@ public class HomeBanner extends LinearLayout
     public void setVisibility(int visibility) {
         // On pre-Honeycomb devices, setting the visibility to GONE won't actually
         // hide the view unless we clear animations first.
-        if (Build.VERSION.SDK_INT < 11 && visibility == View.GONE) {
+        if (Versions.preHC && visibility == View.GONE) {
             clearAnimation();
         }
 

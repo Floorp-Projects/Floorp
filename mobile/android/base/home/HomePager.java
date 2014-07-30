@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -20,7 +21,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
@@ -197,7 +197,7 @@ public class HomePager extends ViewPager {
         }
 
         // Only animate on post-HC devices, when a non-null animator is given
-        final boolean shouldAnimate = (animator != null && Build.VERSION.SDK_INT >= 11);
+        final boolean shouldAnimate = Versions.feature11Plus && animator != null;
 
         final HomeAdapter adapter = new HomeAdapter(mContext, fm);
         adapter.setOnAddPanelListener(mAddPanelListener);

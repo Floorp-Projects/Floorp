@@ -10,13 +10,13 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.widget.AllCapsTextView;
 import org.mozilla.gecko.widget.DateTimePicker;
 import org.mozilla.gecko.widget.FloatingHintEditText;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.text.Html;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -229,7 +229,7 @@ public class PromptInput {
 
         @Override
         public Object getValue() {
-            if (Build.VERSION.SDK_INT < 11 && mType.equals("date")) {
+            if (Versions.preHC && mType.equals("date")) {
                 // We can't use the custom DateTimePicker with a sdk older than 11.
                 // Fallback on the native DatePicker.
                 DatePicker dp = (DatePicker)mView;
@@ -278,7 +278,7 @@ public class PromptInput {
         }
 
         public View getView(final Context context) throws UnsupportedOperationException {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            if (Versions.preHC) {
                 spinner = new Spinner(context);
             } else {
                 spinner = new Spinner(context, Spinner.MODE_DIALOG);
@@ -291,7 +291,8 @@ public class PromptInput {
                     spinner.setAdapter(adapter);
                     spinner.setSelection(mSelected);
                 }
-            } catch(Exception ex) { }
+            } catch (Exception ex) {
+            }
 
             if (!TextUtils.isEmpty(mLabel)) {
                 LinearLayout container = new LinearLayout(context);

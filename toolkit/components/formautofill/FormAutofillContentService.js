@@ -95,8 +95,37 @@ FormHandler.prototype = {
       return "disabled";
     }
 
-    let ui = yield FormAutofill.integration.createRequestAutocompleteUI(data);
-    let result = yield ui.show();
+    // Access the frame message manager of the window starting the request.
+    let rootDocShell = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDocShell)
+                                  .sameTypeRootTreeItem
+                                  .QueryInterface(Ci.nsIDocShell);
+    let frameMM = rootDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIContentFrameMessageManager);
+
+    // We need to set up a temporary message listener for our result before we
+    // send the request to the parent process.  At present, there is no check
+    // for reentrancy (bug 1020459), thus it is possible that we'll receive a
+    // message for a different request, but this will not be normally allowed.
+    let promiseRequestAutocompleteResult = new Promise((resolve, reject) => {
+      frameMM.addMessageListener("FormAutofill:RequestAutocompleteResult",
+        function onResult(aMessage) {
+          frameMM.removeMessageListener(
+                        "FormAutofill:RequestAutocompleteResult", onResult);
+          // Exceptions in the parent process are serialized and propagated in
+          // the response message that we received.
+          if ("exception" in aMessage.data) {
+            reject(aMessage.data.exception);
+          } else {
+            resolve(aMessage.data);
+          }
+        });
+    });
+
+    // Send the message to the parent process, and wait for the result.  This
+    // will throw an exception if one occurred in the parent process.
+    frameMM.sendAsyncMessage("FormAutofill:RequestAutocomplete", data);
+    let result = yield promiseRequestAutocompleteResult;
     if (result.canceled) {
       return "cancel";
     }

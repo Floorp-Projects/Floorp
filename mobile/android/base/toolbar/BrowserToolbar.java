@@ -11,6 +11,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
@@ -39,16 +40,12 @@ import org.mozilla.gecko.widget.ThemedRelativeLayout;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
-import android.os.Build;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MotionEvent;
@@ -219,7 +216,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         tabsButton = (ShapedButton) findViewById(R.id.tabs);
         tabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
-        if (Build.VERSION.SDK_INT >= 11) {
+        if (Versions.feature11Plus) {
             tabsCounter.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         }
 
@@ -1004,7 +1001,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
                 urlBarEntry.setLayoutParams(urlBarEntryShrunkenLayoutParams);
             }
 
-            if (Build.VERSION.SDK_INT < 11) {
+            if (Versions.preHC) {
                 showEditingOnPreHoneycomb(entryTranslation, curveTranslation);
             } else {
                 showEditingWithPhoneAnimation(animator, entryTranslation, curveTranslation);
@@ -1133,7 +1130,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         // not selected so clear the selection by clearing focus.
         urlEditLayout.clearFocus();
 
-        if (Build.VERSION.SDK_INT < 11) {
+        if (Versions.preHC) {
             stopEditingOnPreHoneycomb();
         } else if (HardwareUtils.isTablet()) {
             stopEditingOnTablet();
