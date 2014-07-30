@@ -170,7 +170,15 @@ FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
     return true;
 }
 
-#define XOW FilteringWrapper<SecurityXrayDOM, CrossOriginAccessiblePropertiesOnly>
+CrossOriginXrayWrapper::CrossOriginXrayWrapper(unsigned flags) : SecurityXrayDOM(flags)
+{
+}
+
+CrossOriginXrayWrapper::~CrossOriginXrayWrapper()
+{
+}
+
+#define XOW FilteringWrapper<CrossOriginXrayWrapper, CrossOriginAccessiblePropertiesOnly>
 #define NNXOW FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>
 #define NNXOWC FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>
 

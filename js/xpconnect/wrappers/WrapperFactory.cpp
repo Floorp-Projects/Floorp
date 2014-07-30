@@ -398,7 +398,7 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
 
     // This is a security wrapper. Use the security versions and filter.
     if (xrayType == XrayForDOMObject)
-        return &FilteringWrapper<SecurityXrayDOM,
+        return &FilteringWrapper<CrossOriginXrayWrapper,
                                  CrossOriginAccessiblePropertiesOnly>::singleton;
 
     // There's never any reason to expose other objects to non-subsuming actors.
