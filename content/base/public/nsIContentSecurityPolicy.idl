@@ -17,7 +17,7 @@ interface nsIPrincipal;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(3e923bf6-a974-4f3b-91c4-b4fd48b37732)]
+[scriptable, uuid(6d5d07e5-4ff1-48cc-aeaa-a7ffc979e854)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
 
@@ -188,7 +188,6 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   void setRequestContext(in nsIURI selfURI,
                          in nsIURI referrer,
-                         in nsIPrincipal documentPrincipal,
                          in nsIChannel aChannel);
 
   /**
