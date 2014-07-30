@@ -204,6 +204,22 @@ bool IsIPAddrLocal(const NetAddr *addr)
   return false;
 }
 
+nsresult
+GetPort(const NetAddr *aAddr, uint16_t *aResult)
+{
+  uint16_t port;
+  if (aAddr->raw.family == PR_AF_INET) {
+    port = aAddr->inet.port;
+  } else if (aAddr->raw.family == PR_AF_INET6) {
+    port = aAddr->inet6.port;
+  } else {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  *aResult = ntohs(port);
+  return NS_OK;
+}
+
 bool
 NetAddr::operator == (const NetAddr& other) const
 {
