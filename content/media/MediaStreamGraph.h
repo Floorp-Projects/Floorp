@@ -654,7 +654,7 @@ protected:
   bool mMainThreadFinished;
   bool mMainThreadDestroyed;
 
-  // Our media stream graph
+  // Our media stream graph.  null if destroyed on the graph thread.
   MediaStreamGraphImpl* mGraph;
 
   dom::AudioChannel mAudioChannelType;
@@ -674,7 +674,7 @@ public:
     mMutex("mozilla::media::SourceMediaStream"),
     mUpdateKnownTracksTime(0),
     mPullEnabled(false),
-    mUpdateFinished(false), mDestroyed(false)
+    mUpdateFinished(false)
   {}
 
   virtual SourceMediaStream* AsSourceStream() { return this; }
@@ -704,8 +704,6 @@ public:
   void AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
                 MediaSegment* aSegment);
 
-  struct TrackData;
-  void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
   /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
    * but aSegment is emptied.
@@ -772,10 +770,13 @@ public:
    */
   TrackTicks GetBufferedTicks(TrackID aID);
 
+  void RegisterForAudioMixing();
+
   // XXX need a Reset API
 
   friend class MediaStreamGraphImpl;
 
+protected:
   struct ThreadAndRunnable {
     void Init(nsIEventTarget* aTarget, nsIRunnable* aRunnable)
     {
@@ -817,10 +818,10 @@ public:
     bool mHaveEnough;
   };
 
-  void RegisterForAudioMixing();
   bool NeedsMixing();
 
-protected:
+  void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
+
   TrackData* FindDataForTrack(TrackID aID)
   {
     for (uint32_t i = 0; i < mUpdateTracks.Length(); ++i) {
@@ -852,7 +853,6 @@ protected:
   nsTArray<nsRefPtr<MediaStreamDirectListener> > mDirectListeners;
   bool mPullEnabled;
   bool mUpdateFinished;
-  bool mDestroyed;
   bool mNeedsMixing;
 };
 
