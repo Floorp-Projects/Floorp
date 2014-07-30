@@ -29,10 +29,6 @@ class BasicLayerManager;
 class ThebesLayer;
 }
 
-namespace gfx {
-class Matrix4x4;
-}
-
 class FrameLayerBuilder;
 class LayerManagerData;
 class ThebesLayerData;
@@ -233,7 +229,7 @@ public:
                          nsDisplayItem* aContainerItem,
                          nsDisplayList* aChildren,
                          const ContainerLayerParameters& aContainerParameters,
-                         const gfx::Matrix4x4* aTransform,
+                         const gfx3DMatrix* aTransform,
                          uint32_t aFlags = 0);
 
   /**

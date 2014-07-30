@@ -2416,7 +2416,7 @@ nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
     new (&builder) nsDisplayTransform(&builder, aFrame, &list, nsRect());
 
   *aTransform =
-    To3DMatrix(item->GetTransform());
+    item->GetTransform();
   item->~nsDisplayTransform();
 
   return true;

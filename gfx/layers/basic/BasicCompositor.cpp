@@ -154,7 +154,7 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
 }
 
 static pixman_transform
-Matrix4x4ToPixman(const Matrix4x4& aMatrix)
+Matrix3DToPixman(const gfx3DMatrix& aMatrix)
 {
   pixman_f_transform transform;
 
@@ -177,7 +177,7 @@ Matrix4x4ToPixman(const Matrix4x4& aMatrix)
 static void
 PixmanTransform(DataSourceSurface* aDest,
                 DataSourceSurface* aSource,
-                const Matrix4x4& aTransform,
+                const gfx3DMatrix& aTransform,
                 const Point& aDestOffset)
 {
   IntSize destSize = aDest->GetSize();
@@ -196,7 +196,7 @@ PixmanTransform(DataSourceSurface* aDest,
 
   NS_ABORT_IF_FALSE(src && dest, "Failed to create pixman images?");
 
-  pixman_transform pixTransform = Matrix4x4ToPixman(aTransform);
+  pixman_transform pixTransform = Matrix3DToPixman(aTransform);
   pixman_transform pixTransformInverted;
 
   // If the transform is singular then nothing would be drawn anyway, return here
@@ -249,7 +249,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 
   Matrix newTransform;
   Rect transformBounds;
-  Matrix4x4 new3DTransform;
+  gfx3DMatrix new3DTransform;
   IntPoint offset = mRenderTarget->GetOrigin();
 
   if (aTransform.Is2D()) {
@@ -266,10 +266,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     dest->SetTransform(destTransform);
 
     // Get the bounds post-transform.
-    new3DTransform = aTransform;
-    Rect transformBounds = new3DTransform.TransformBounds(aRect);
-    transformBounds.IntersectRect(transformBounds, Rect(offset.x, offset.y, buffer->GetSize().width, buffer->GetSize().height));
+    new3DTransform = To3DMatrix(aTransform);
+    gfxRect bounds = new3DTransform.TransformBounds(ThebesRect(aRect));
+    bounds.IntersectRect(bounds, gfxRect(offset.x, offset.y, buffer->GetSize().width, buffer->GetSize().height));
 
+    transformBounds = ToRect(bounds);
     transformBounds.RoundOut();
 
     // Propagate the coordinate offset to our 2D draw target.
@@ -277,7 +278,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 
     // When we apply the 3D transformation, we do it against a temporary
     // surface, so undo the coordinate offset.
-    new3DTransform = Matrix4x4().Translate(aRect.x, aRect.y, 0) * new3DTransform;
+    new3DTransform = gfx3DMatrix::Translation(aRect.x, aRect.y, 0) * new3DTransform;
   }
 
   newTransform.PostTranslate(-offset.x, -offset.y);
