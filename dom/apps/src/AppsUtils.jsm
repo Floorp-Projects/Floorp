@@ -24,7 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 
 // Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
-this.EXPORTED_SYMBOLS = ["AppsUtils", "ManifestHelper", "isAbsoluteURI", "mozIApplication"];
+this.EXPORTED_SYMBOLS =
+  ["AppsUtils", "ManifestHelper", "isAbsoluteURI", "mozIApplication"];
 
 function debug(s) {
   //dump("-*- AppsUtils.jsm: " + s + "\n");
@@ -373,7 +374,8 @@ this.AppsUtils = {
 
     // Nor through localized names
     if ('locales' in aNewManifest) {
-      let defaultName = new ManifestHelper(aOldManifest, aApp.origin).name;
+      let defaultName =
+        new ManifestHelper(aOldManifest, aApp.origin, aApp.manifestURL).name;
       for (let locale in aNewManifest.locales) {
         let entry = aNewManifest.locales[locale];
         if (!entry.name) {
@@ -593,11 +595,25 @@ this.AppsUtils = {
 /**
  * Helper object to access manifest information with locale support
  */
-this.ManifestHelper = function(aManifest, aOrigin) {
-  this._origin = Services.io.newURI(aOrigin, null, null);
+this.ManifestHelper = function(aManifest, aOrigin, aManifestURL) {
+  // If the app is packaged, we resolve uris against the origin.
+  // If it's not, against the manifest url.
+
+  if (!aOrigin || !aManifestURL) {
+    throw Error("ManifestHelper needs both origin and manifestURL");
+  }
+
+  this._baseURI = Services.io.newURI(
+    aOrigin.startsWith("app://") ? aOrigin : aManifestURL, null, null);
+
+  // We keep the manifest url in all cases since we need it to
+  // resolve the package path for packaged apps.
+  this._manifestURL = Services.io.newURI(aManifestURL, null, null);
+
   this._manifest = aManifest;
-  let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry)
-                                                          .QueryInterface(Ci.nsIToolkitChromeRegistry);
+  let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                 .getService(Ci.nsIXULChromeRegistry)
+                 .QueryInterface(Ci.nsIToolkitChromeRegistry);
   let locale = chrome.getSelectedLocale("global").toLowerCase();
   this._localeRoot = this._manifest;
 
@@ -686,7 +702,7 @@ ManifestHelper.prototype = {
     iconSizes.sort((a, b) => a - b);
     let biggestIconSize = iconSizes.pop();
     let biggestIcon = icons[biggestIconSize];
-    let biggestIconURL = this._origin.resolve(biggestIcon);
+    let biggestIconURL = this._baseURI.resolve(biggestIcon);
 
     return biggestIconURL;
   },
@@ -700,7 +716,7 @@ ManifestHelper.prototype = {
     for (let size in icons) {
       let iSize = parseInt(size);
       if (Math.abs(iSize - aSize) < dist) {
-        icon = this._origin.resolve(icons[size]);
+        icon = this._baseURI.resolve(icons[size]);
         dist = Math.abs(iSize - aSize);
       }
     }
@@ -711,7 +727,7 @@ ManifestHelper.prototype = {
     // If no start point is specified, we use the root launch path.
     // In all error cases, we just return null.
     if ((aStartPoint || "") === "") {
-      return this._origin.resolve(this._localeProp("launch_path") || "");
+      return this._baseURI.resolve(this._localeProp("launch_path") || "/");
     }
 
     // Search for the l10n entry_points property.
@@ -721,28 +737,28 @@ ManifestHelper.prototype = {
     }
 
     if (entryPoints[aStartPoint]) {
-      return this._origin.resolve(entryPoints[aStartPoint].launch_path || "");
+      return this._baseURI.resolve(entryPoints[aStartPoint].launch_path || "/");
     }
 
     return null;
   },
 
-  resolveFromOrigin: function(aURI) {
+  resolveURL: function(aURI) {
     // This should be enforced higher up, but check it here just in case.
     if (isAbsoluteURI(aURI)) {
-      throw new Error("Webapps.jsm: non-relative URI passed to resolveFromOrigin");
+      throw new Error("Webapps.jsm: non-relative URI passed to resolve");
     }
-    return this._origin.resolve(aURI);
+    return this._baseURI.resolve(aURI);
   },
 
   fullAppcachePath: function() {
     let appcachePath = this._localeProp("appcache_path");
-    return this._origin.resolve(appcachePath ? appcachePath : "");
+    return this._baseURI.resolve(appcachePath ? appcachePath : "/");
   },
 
   fullPackagePath: function() {
     let packagePath = this._localeProp("package_path");
-    return this._origin.resolve(packagePath ? packagePath : "");
+    return this._manifestURL.resolve(packagePath ? packagePath : "/");
   },
 
   get role() {
