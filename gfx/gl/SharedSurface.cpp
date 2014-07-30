@@ -59,16 +59,13 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             GLuint destTex = dest->ProdTexture();
             GLenum destTarget = dest->ProdTextureTarget();
 
-            gl->BlitHelper()->BlitFramebufferToTexture(0, destTex,
-                                                       src->mSize, dest->mSize,
-                                                       destTarget, true);
+            gl->BlitHelper()->BlitFramebufferToTexture(0, destTex, src->mSize, dest->mSize, destTarget);
         } else if (dest->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint destRB = dest->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer destWrapper(gl, destRB);
 
             gl->BlitHelper()->BlitFramebufferToFramebuffer(0, destWrapper.FB(),
-                                                           src->mSize, dest->mSize,
-                                                           true);
+                                                           src->mSize, dest->mSize);
         } else {
             MOZ_CRASH("Unhandled dest->mAttachType.");
         }
@@ -100,16 +97,13 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             GLuint srcTex = src->ProdTexture();
             GLenum srcTarget = src->ProdTextureTarget();
 
-            gl->BlitHelper()->BlitTextureToFramebuffer(srcTex, 0,
-                                                       src->mSize, dest->mSize,
-                                                       srcTarget, true);
+            gl->BlitHelper()->BlitTextureToFramebuffer(srcTex, 0, src->mSize, dest->mSize, srcTarget);
         } else if (src->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint srcRB = src->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer srcWrapper(gl, srcRB);
 
             gl->BlitHelper()->BlitFramebufferToFramebuffer(srcWrapper.FB(), 0,
-                                                           src->mSize, dest->mSize,
-                                                           true);
+                                                           src->mSize, dest->mSize);
         } else {
             MOZ_CRASH("Unhandled src->mAttachType.");
         }
