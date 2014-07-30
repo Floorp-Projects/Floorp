@@ -23,9 +23,9 @@ exports.testTabCounts = function(assert, done) {
     onReady: function(tab) {
       let count1 = 0,
           count2 = 0;
-      for each(let window in browserWindows) {
+      for (let window of browserWindows) {
         count1 += window.tabs.length;
-        for each(let tab in window.tabs) {
+        for (let tab of window.tabs) {
           count2 += 1;
         }
       }

@@ -124,7 +124,7 @@ const BrowserWindowTrait = Trait.compose(
  * registered, `null` otherwise.
  */
 function getRegisteredWindow(chromeWindow) {
-  for each (let window in windows) {
+  for (let window of windows) {
     if (chromeWindow === window._window)
       return window;
   }

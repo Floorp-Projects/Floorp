@@ -617,6 +617,7 @@ let StyleSheetActor = protocol.ActorClass({
 
     let options = {
       window: this.window,
+      loadFromCache: true,
       charset: this._getCSSCharset()
     };
 
