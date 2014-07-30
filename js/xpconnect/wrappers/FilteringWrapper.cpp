@@ -34,7 +34,7 @@ Filter(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
     RootedId id(cx);
     for (size_t n = 0; n < props.length(); ++n) {
         id = props[n];
-        if (Policy::check(cx, wrapper, id, Wrapper::GET))
+        if (Policy::check(cx, wrapper, id, Wrapper::GET) || Policy::check(cx, wrapper, id, Wrapper::SET))
             props[w++].set(id);
         else if (JS_IsExceptionPending(cx))
             return false;
