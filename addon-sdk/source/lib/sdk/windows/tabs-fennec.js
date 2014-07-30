@@ -158,7 +158,7 @@ function onTabSelect(event) {
   emit(tab, 'activate', tab);
   emit(gTabs, 'activate', tab);
 
-  for each (let t in gTabs) {
+  for (let of in gTabs) {
     if (t === tab) continue;
     emit(t, 'deactivate', t);
     emit(gTabs, 'deactivate', t);

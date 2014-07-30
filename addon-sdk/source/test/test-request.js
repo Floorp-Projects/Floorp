@@ -8,7 +8,7 @@ const file = require("sdk/io/file");
 const { URL } = require("sdk/url");
 const { extend } = require("sdk/util/object");
 const { Loader } = require("sdk/test/loader");
-const options = require("@test/options");
+const options = require("sdk/test/options");
 
 const loader = Loader(module);
 const httpd = loader.require("sdk/test/httpd");
