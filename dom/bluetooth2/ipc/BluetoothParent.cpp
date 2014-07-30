@@ -466,12 +466,9 @@ BluetoothRequestParent::DoRequest(const SetPinCodeRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TSetPinCodeRequest);
 
-  bool result =
-    mService->SetPinCodeInternal(aRequest.path(),
-                                 aRequest.pincode(),
-                                 mReplyRunnable.get());
-
-  NS_ENSURE_TRUE(result, false);
+  mService->SetPinCodeInternal(aRequest.path(),
+                               aRequest.pincode(),
+                               mReplyRunnable.get());
 
   return true;
 }
@@ -482,12 +479,9 @@ BluetoothRequestParent::DoRequest(const SetPasskeyRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TSetPasskeyRequest);
 
-  bool result =
-    mService->SetPasskeyInternal(aRequest.path(),
-                                 aRequest.passkey(),
-                                 mReplyRunnable.get());
-
-  NS_ENSURE_TRUE(result, false);
+  mService->SetPasskeyInternal(aRequest.path(),
+                               aRequest.passkey(),
+                               mReplyRunnable.get());
 
   return true;
 }
@@ -499,12 +493,9 @@ BluetoothRequestParent::DoRequest(const ConfirmPairingConfirmationRequest&
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TConfirmPairingConfirmationRequest);
 
-  bool result =
-    mService->SetPairingConfirmationInternal(aRequest.path(),
-                                             true,
-                                             mReplyRunnable.get());
-
-  NS_ENSURE_TRUE(result, false);
+  mService->SetPairingConfirmationInternal(aRequest.path(),
+                                           true,
+                                           mReplyRunnable.get());
 
   return true;
 }
@@ -516,12 +507,9 @@ BluetoothRequestParent::DoRequest(const DenyPairingConfirmationRequest&
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TDenyPairingConfirmationRequest);
 
-  bool result =
-    mService->SetPairingConfirmationInternal(aRequest.path(),
-                                             false,
-                                             mReplyRunnable.get());
-
-  NS_ENSURE_TRUE(result, false);
+  mService->SetPairingConfirmationInternal(aRequest.path(),
+                                           false,
+                                           mReplyRunnable.get());
 
   return true;
 }

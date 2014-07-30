@@ -39,24 +39,14 @@ SilentSmsRequest.prototype = {
   }
 };
 
-this.MobileIdentitySmsMoMtVerificationFlow = function(aOrigin,
-                                                      aServiceId,
-                                                      aIccId,
-                                                      aMtSender,
-                                                      aMoVerifier,
+this.MobileIdentitySmsMoMtVerificationFlow = function(aVerificationOptions,
                                                       aUI,
                                                       aClient) {
 
-  log.debug("MobileIdentitySmsMoMtVerificationFlow");
+  log.debug("MobileIdentitySmsMoMtVerificationFlow ${}", aVerificationOptions);
 
   MobileIdentitySmsVerificationFlow.call(this,
-                                         aOrigin,
-                                         null, //msisdn
-                                         aIccId,
-                                         aServiceId,
-                                         false, // external
-                                         aMtSender,
-                                         aMoVerifier,
+                                         aVerificationOptions,
                                          aUI,
                                          aClient,
                                          this.smsVerifyStrategy);

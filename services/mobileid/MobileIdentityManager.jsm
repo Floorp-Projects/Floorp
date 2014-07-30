@@ -450,30 +450,31 @@ this.MobileIdentityManager = {
         aToVerify.msisdn &&
         aToVerify.verificationDetails &&
         aToVerify.verificationDetails.mtSender) {
-      this.activeVerificationFlow = new MobileIdentitySmsMtVerificationFlow(
-        aOrigin,
-        aToVerify.msisdn,
-        aToVerify.iccId,
-        aToVerify.serviceId === undefined, // external: the phone number does
-                                           // not seem to belong to any of the
-                                           // device SIM cards.
-        aToVerify.verificationDetails.mtSender,
+      this.activeVerificationFlow = new MobileIdentitySmsMtVerificationFlow({
+          origin: aOrigin,
+          msisdn: aToVerify.msisdn,
+          mcc: aToVerify.mcc,
+          mnc: aToVerify.mnc,
+          iccId: aToVerify.iccId,
+          external: aToVerify.serviceId === undefined,
+          mtSender: aToVerify.verificationDetails.mtSender
+        },
         this.ui,
         this.client
       );
 #ifdef MOZ_B2G_RIL
     } else if (aToVerify.verificationMethod.indexOf(SMS_MO_MT) != -1 &&
-        aToVerify.serviceId &&
-        aToVerify.verificationDetails &&
-        aToVerify.verificationDetails.moVerifier &&
-        aToVerify.verificationDetails.mtSender) {
-
-      this.activeVerificationFlow = new MobileIdentitySmsMoMtVerificationFlow(
-        aOrigin,
-        aToVerify.serviceId,
-        aToVerify.iccId,
-        aToVerify.verificationDetails.mtSender,
-        aToVerify.verificationDetails.moVerifier,
+               aToVerify.serviceId &&
+               aToVerify.verificationDetails &&
+               aToVerify.verificationDetails.moVerifier &&
+               aToVerify.verificationDetails.mtSender) {
+      this.activeVerificationFlow = new MobileIdentitySmsMoMtVerificationFlow({
+          origin: aOrigin,
+          serviceId: aToVerify.serviceId,
+          iccId: aToVerify.iccId,
+          mtSender: aToVerify.verificationDetails.mtSender,
+          moVerifier: aToVerify.verificationDetails.moVerifier
+        },
         this.ui,
         this.client
       );
@@ -517,6 +518,8 @@ this.MobileIdentityManager = {
       toVerify.serviceId = serviceId;
       toVerify.iccId = this.iccInfo[serviceId].iccId;
       toVerify.msisdn = this.iccInfo[serviceId].msisdn;
+      toVerify.mcc = this.iccInfo[serviceId].mcc;
+      toVerify.mnc = this.iccInfo[serviceId].mnc;
       toVerify.verificationMethod =
         this.iccInfo[serviceId].verificationMethods[0];
       toVerify.verificationDetails =
@@ -524,6 +527,7 @@ this.MobileIdentityManager = {
       return this._verificationFlow(toVerify, aOrigin);
     } else {
       toVerify.msisdn = aUserSelection.msisdn;
+      toVerify.mcc = aUserSelection.mcc;
       return this.client.discover(aUserSelection.msisdn,
                                   aUserSelection.mcc)
       .then(
