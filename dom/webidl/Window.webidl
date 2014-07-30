@@ -303,7 +303,9 @@ partial interface Window {
   [Throws, ChromeOnly] void             home();
 
   // XXX Should this be in nsIDOMChromeWindow?
-  void                      updateCommands(DOMString action);
+  void                      updateCommands(DOMString action,
+                                           optional Selection? sel = null,
+                                           optional short reason = 0);
 
   /* Find in page.
    * @param str: the search pattern

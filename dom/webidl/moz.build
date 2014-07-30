@@ -571,6 +571,7 @@ if CONFIG['MOZ_B2G_BT']:
             'BluetoothDevice2.webidl',
             'BluetoothDiscoveryHandle.webidl',
             'BluetoothManager2.webidl',
+            'BluetoothPairingHandle.webidl',
         ]
     else:
         WEBIDL_FILES += [
@@ -668,6 +669,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'RTCPeerConnectionIceEvent.webidl',
     'RTCPeerConnectionIdentityErrorEvent.webidl',
     'RTCPeerConnectionIdentityEvent.webidl',
+    'SelectionChangeEvent.webidl',
     'SmartCardEvent.webidl',
     'StyleRuleChangeEvent.webidl',
     'StyleSheetApplicableStateChangeEvent.webidl',
@@ -695,6 +697,7 @@ if CONFIG['MOZ_B2G_BT']:
         GENERATED_EVENTS_WEBIDL_FILES += [
             'BluetoothAdapterEvent.webidl',
             'BluetoothAttributeEvent.webidl',
+            'BluetoothPairingEvent.webidl',
         ]
     else:
         GENERATED_EVENTS_WEBIDL_FILES += [

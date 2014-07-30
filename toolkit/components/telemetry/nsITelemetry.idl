@@ -109,7 +109,7 @@ interface nsITelemetry : nsISupports
    * <time> represents a histogram of time intervals in milliseconds,
    *   with the same format as histogramSnapshots
    * <hang> represents a particular hang,
-   *   {"stack": <stack>, "histogram": <time>}
+   *   {"stack": <stack>, "nativeStack": <stack>, "histogram": <time>}
    * <stack> represents the hang's stack,
    *   ["<frame_0>", "<frame_1>", ...]
    */
