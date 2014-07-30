@@ -8,6 +8,7 @@ package org.mozilla.gecko.menu;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 
 import android.annotation.TargetApi;
@@ -18,17 +19,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.os.Build;
 
 public class MenuItemActionView extends LinearLayout
                                 implements GeckoMenuItem.Layout,
                                            View.OnClickListener {
-    private static final String LOGTAG = "GeckoMenuItemActionView";
-
-    private MenuItemDefault mMenuItem;
-    private MenuItemActionBar mMenuButton;
-    private List<ImageButton> mActionButtons;
-    private List<View.OnClickListener> mActionButtonListeners = new ArrayList<View.OnClickListener>();
+    private final MenuItemDefault mMenuItem;
+    private final MenuItemActionBar mMenuButton;
+    private final List<ImageButton> mActionButtons;
+    private final List<View.OnClickListener> mActionButtonListeners = new ArrayList<View.OnClickListener>();
 
     public MenuItemActionView(Context context) {
         this(context, null);
@@ -43,12 +41,12 @@ public class MenuItemActionView extends LinearLayout
         super(context, attrs);
 
         // Set these explicitly, since setting a style isn't supported for LinearLayouts until V11.
-        if (Build.VERSION.SDK_INT >= 11) {
+        if (Versions.feature11Plus) {
             setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
             setDividerDrawable(getResources().getDrawable(R.drawable.divider_vertical));
         }
 
-        if (Build.VERSION.SDK_INT >= 14) {
+        if (Versions.feature14Plus) {
             setDividerPadding(0);
         }
 
@@ -78,8 +76,9 @@ public class MenuItemActionView extends LinearLayout
 
     @Override
     public void initialize(GeckoMenuItem item) {
-        if (item == null)
+        if (item == null) {
             return;
+        }
 
         mMenuItem.initialize(item);
         mMenuButton.initialize(item);

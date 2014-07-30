@@ -5,14 +5,17 @@
 
 package org.mozilla.gecko;
 
+import java.nio.ByteBuffer;
+import java.util.concurrent.ArrayBlockingQueue;
+
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.DisplayPortMetrics;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.mozglue.JNITarget;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.mozglue.generatorannotations.GeneratorOptions;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 
-import android.content.res.Resources;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -21,16 +24,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.location.Address;
 import android.location.Location;
-import android.os.Build;
 import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-
-import java.nio.ByteBuffer;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /* We're not allowed to hold on to most events given to us
  * so we save the parts of the events we want to use in GeckoEvent.
@@ -331,7 +329,7 @@ public class GeckoEvent {
             case KeyEvent.KEYCODE_DPAD_UP:
                 return true;
             default:
-                if (Build.VERSION.SDK_INT >= 12) {
+                if (Versions.feature12Plus) {
                     return KeyEvent.isGamepadButton(keyCode);
                 }
                 return GeckoEvent.isGamepadButton(keyCode);
@@ -340,7 +338,7 @@ public class GeckoEvent {
 
     /**
      * This method is a replacement for the the KeyEvent.isGamepadButton method to be
-     * compatible with Build.VERSION.SDK_INT < 12. This is an implementantion of the
+     * compatible with Build.VERSION.SDK_INT < 12. This is an implementation of the
      * same method isGamepadButton available after SDK 12.
      * @param keyCode int with the key code (Android key constant from KeyEvent).
      * @return True if the keycode is a gamepad button, such as {@link #KEYCODE_BUTTON_A}.
