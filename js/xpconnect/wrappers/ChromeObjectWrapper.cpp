@@ -77,7 +77,7 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
                                            HandleId id,
                                            JS::MutableHandle<JSPropertyDescriptor> desc) const
 {
-    assertEnteredPolicy(cx, wrapper, id, GET | SET);
+    assertEnteredPolicy(cx, wrapper, id, GET | SET | GET_PROPERTY_DESCRIPTOR);
     // First, try a lookup on the base wrapper if permitted.
     desc.object().set(nullptr);
     if (AllowedByBase(cx, wrapper, id, Wrapper::GET) &&
@@ -274,7 +274,8 @@ ChromeObjectWrapper::enter(JSContext *cx, HandleObject wrapper,
         return true;
     // COWs fail silently for GETs, and that also happens to be the only case
     // where we might want to redirect the lookup to the home prototype chain.
-    *bp = act == Wrapper::GET || act == Wrapper::ENUMERATE;
+    *bp = act == Wrapper::GET || act == Wrapper::ENUMERATE ||
+          act == Wrapper::GET_PROPERTY_DESCRIPTOR;
     if (!*bp || id == JSID_VOID)
         return false;
 

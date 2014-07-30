@@ -80,7 +80,8 @@ FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, HandleObjec
                                                       HandleId id,
                                                       JS::MutableHandle<JSPropertyDescriptor> desc) const
 {
-    assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET);
+    assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
+                                         BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
     if (!Base::getPropertyDescriptor(cx, wrapper, id, desc))
         return false;
     return FilterPropertyDescriptor<Policy>(cx, wrapper, id, desc);
@@ -92,7 +93,8 @@ FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, HandleOb
                                                          HandleId id,
                                                          JS::MutableHandle<JSPropertyDescriptor> desc) const
 {
-    assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET);
+    assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET |
+                                         BaseProxyHandler::GET_PROPERTY_DESCRIPTOR);
     if (!Base::getOwnPropertyDescriptor(cx, wrapper, id, desc))
         return false;
     return FilterPropertyDescriptor<Policy>(cx, wrapper, id, desc);
