@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <CoreFoundation/CFString.h>
-#include "VideoToolbox/Videotoolbox.h"
 
 #include "AppleUtils.h"
 #include "mozilla/SHA1.h"
@@ -376,12 +375,11 @@ AppleVTDecoder::InitializeSession()
                               &kCFTypeDictionaryKeyCallBacks,
                               &kCFTypeDictionaryValueCallBacks);
   // This key is supported (or ignored) but not declared prior to OSX 10.9.
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
   AutoCFRelease<CFStringRef>
         kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder =
         CFStringCreateWithCString(NULL, "EnableHardwareAcceleratedVideoDecoder",
             kCFStringEncodingUTF8);
-#endif
+
   CFDictionarySetValue(spec,
       kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder,
       kCFBooleanTrue);
