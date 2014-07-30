@@ -1913,6 +1913,7 @@
         <body>
           <![CDATA[
             if (aTab.closing ||
+                aTab._pendingPermitUnload ||
                 this._windowIsClosing)
               return false;
 
@@ -1920,10 +1921,17 @@
 
             if (!aTabWillBeMoved) {
               let ds = browser.docShell;
-              if (ds &&
-                  ds.contentViewer &&
-                  !ds.contentViewer.permitUnload()) {
-                return false;
+              if (ds && ds.contentViewer) {
+                // We need to block while calling permitUnload() because it
+                // processes the event queue and may lead to another removeTab()
+                // call before permitUnload() even returned.
+                aTab._pendingPermitUnload = true;
+                let permitUnload = ds.contentViewer.permitUnload();
+                delete aTab._pendingPermitUnload;
+
+                if (!permitUnload) {
+                  return false;
+                }
               }
             }
 
