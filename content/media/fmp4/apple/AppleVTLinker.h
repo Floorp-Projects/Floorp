@@ -13,6 +13,8 @@ extern "C" {
 #pragma GCC visibility pop
 }
 
+#include "nscore.h"
+
 namespace mozilla {
 
 class AppleVTLinker

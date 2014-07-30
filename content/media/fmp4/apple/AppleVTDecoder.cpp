@@ -13,6 +13,7 @@
 #include "MP4Decoder.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "AppleCMLinker.h"
 #include "AppleVTDecoder.h"
 #include "AppleVTLinker.h"
 #include "prlog.h"

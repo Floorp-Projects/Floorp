@@ -7,6 +7,7 @@
 #include <dlfcn.h>
 
 #include "AppleCMLinker.h"
+#include "MainThreadUtils.h"
 #include "nsDebug.h"
 
 #ifdef PR_LOGGING
