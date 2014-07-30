@@ -1660,6 +1660,25 @@ bool MediaDecoder::CanPlayThrough()
          stats.mDownloadPosition > stats.mPlaybackPosition + readAheadMargin;
 }
 
+nsresult
+MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  MOZ_ASSERT(NS_IsMainThread());
+  mProxy = aProxy;
+  // Awaken any readers waiting for the proxy.
+  NotifyWaitingForResourcesStatusChanged();
+  return NS_OK;
+}
+
+CDMProxy*
+MediaDecoder::GetCDMProxy()
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  MOZ_ASSERT(OnDecodeThread() || NS_IsMainThread());
+  return mProxy;
+}
+
 #ifdef MOZ_RAW
 bool
 MediaDecoder::IsRawEnabled()

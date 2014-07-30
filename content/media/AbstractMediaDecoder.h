@@ -25,6 +25,7 @@ class ReentrantMonitor;
 class VideoFrameContainer;
 class TimedMetadata;
 class MediaDecoderOwner;
+class CDMProxy;
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
@@ -137,6 +138,9 @@ public:
     uint32_t& mParsed;
     uint32_t& mDecoded;
   };
+
+  virtual nsresult SetCDMProxy(CDMProxy* aProxy) { return NS_ERROR_NOT_IMPLEMENTED; }
+  virtual CDMProxy* GetCDMProxy() { return nullptr; }
 };
 
 class MetadataEventRunner : public nsRunnable

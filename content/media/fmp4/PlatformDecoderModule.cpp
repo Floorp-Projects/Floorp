@@ -12,6 +12,10 @@
 #include "FFmpegRuntimeLinker.h"
 #endif
 #include "mozilla/Preferences.h"
+#include "EMEDecoderModule.h"
+#include "mozilla/CDMProxy.h"
+#include "SharedThreadPool.h"
+#include "MediaTaskQueue.h"
 
 namespace mozilla {
 
@@ -35,10 +39,64 @@ PlatformDecoderModule::Init()
                                "media.fragmented-mp4.use-blank-decoder");
   Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
                                "media.fragmented-mp4.ffmpeg.enabled", false);
-
 #ifdef XP_WIN
   WMFDecoderModule::Init();
 #endif
+}
+
+class CreateTaskQueueTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() {
+    MOZ_ASSERT(NS_IsMainThread());
+    mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
+    return NS_OK;
+  }
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
+};
+
+static already_AddRefed<MediaTaskQueue>
+CreateTaskQueue()
+{
+  // We must create the MediaTaskQueue/SharedThreadPool on the main thread.
+  nsRefPtr<CreateTaskQueueTask> t(new CreateTaskQueueTask());
+  nsresult rv = NS_DispatchToMainThread(t, NS_DISPATCH_SYNC);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return t->mTaskQueue.forget();
+}
+
+/* static */
+PlatformDecoderModule*
+PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
+                                        bool aHasAudio,
+                                        bool aHasVideo,
+                                        MediaTaskQueue* aTaskQueue)
+{
+  bool cdmDecodesAudio;
+  bool cdmDecodesVideo;
+  {
+    CDMCaps::AutoLock caps(aProxy->Capabilites());
+    cdmDecodesAudio = caps.CanDecryptAndDecodeAudio();
+    cdmDecodesVideo = caps.CanDecryptAndDecodeVideo();
+  }
+
+  nsAutoPtr<PlatformDecoderModule> pdm;
+  if ((!cdmDecodesAudio && aHasAudio) || (!cdmDecodesVideo && aHasVideo)) {
+    // The CDM itself can't decode. We need to wrap a PDM to decode the
+    // decrypted output of the CDM.
+    pdm = Create();
+    if (!pdm) {
+      return nullptr;
+    }
+  } else {
+    NS_WARNING("CDM that decodes not yet supported!");
+    return nullptr;
+  }
+
+  return new EMEDecoderModule(aProxy,
+                              pdm.forget(),
+                              cdmDecodesAudio,
+                              cdmDecodesVideo,
+                              CreateTaskQueue());
 }
 
 /* static */
