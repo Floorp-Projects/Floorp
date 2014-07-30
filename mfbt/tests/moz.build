@@ -24,6 +24,7 @@ CPP_UNIT_TESTS += [
     'TestRefPtr',
     'TestRollingMean',
     'TestSHA1',
+    'TestSplayTree',
     'TestTypedEnum',
     'TestTypeTraits',
     'TestUniquePtr',
