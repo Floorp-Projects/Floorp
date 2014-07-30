@@ -813,7 +813,7 @@ class imgDecodeRequestor : public nsRunnable
 {
   public:
     imgDecodeRequestor(RasterImage &aContainer) {
-      mContainer = aContainer.asWeakPtr();
+      mContainer = &aContainer;
     }
     NS_IMETHOD Run() {
       if (mContainer)

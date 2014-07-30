@@ -193,7 +193,7 @@ public:
     MOZ_ASSERT(!aSrcFrame->GetIsPaletted());
     MOZ_ASSERT(aScale.width > 0 && aScale.height > 0);
 
-    weakImage = aImage->asWeakPtr();
+    weakImage = aImage;
     srcRect = aSrcFrame->GetRect();
 
     nsIntRect dstRect = srcRect;
@@ -1041,7 +1041,7 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
   // We only need to be careful about holding on to the image when it is
   // discardable by the OS.
   if (CanForciblyDiscardAndRedecode()) {
-    mImageContainerCache = mImageContainer->asWeakPtr();
+    mImageContainerCache = mImageContainer;
     mImageContainer = nullptr;
   }
 

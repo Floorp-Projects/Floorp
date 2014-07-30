@@ -189,7 +189,7 @@ private:
 };
 
 MessageChannel::MessageChannel(MessageListener *aListener)
-  : mListener(aListener->asWeakPtr()),
+  : mListener(aListener),
     mChannelState(ChannelClosed),
     mSide(UnknownSide),
     mLink(nullptr),
