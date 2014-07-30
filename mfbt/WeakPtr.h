@@ -77,8 +77,8 @@
 
 namespace mozilla {
 
-template <typename T, class WeakReference> class WeakPtrBase;
-template <typename T, class WeakReference> class SupportsWeakPtrBase;
+template <typename T> class WeakPtrBase;
+template <typename T> class SupportsWeakPtrBase;
 
 namespace detail {
 
@@ -118,8 +118,8 @@ public:
 #endif
 
 private:
-  friend class WeakPtrBase<T, WeakReference<T> >;
-  friend class SupportsWeakPtrBase<T, WeakReference<T> >;
+  friend class WeakPtrBase<T>;
+  friend class SupportsWeakPtrBase<T>;
 
   void detach() { mPtr = nullptr; }
 
@@ -128,49 +128,49 @@ private:
 
 } // namespace detail
 
-template <typename T, class WeakReference>
+template <typename T>
 class SupportsWeakPtrBase
 {
 public:
-  WeakPtrBase<T, WeakReference> asWeakPtr()
+  WeakPtrBase<T> asWeakPtr()
   {
     if (!weakRef) {
-      weakRef = new WeakReference(static_cast<T*>(this));
+      weakRef = new detail::WeakReference<T>(static_cast<T*>(this));
     }
-    return WeakPtrBase<T, WeakReference>(weakRef);
+    return WeakPtrBase<T>(weakRef);
   }
 
 protected:
   ~SupportsWeakPtrBase()
   {
-    static_assert(IsBaseOf<SupportsWeakPtrBase<T, WeakReference>, T>::value,
-                  "T must derive from SupportsWeakPtrBase<T, WeakReference>");
+    static_assert(IsBaseOf<SupportsWeakPtrBase<T>, T>::value,
+                  "T must derive from SupportsWeakPtrBase<T>");
     if (weakRef) {
       weakRef->detach();
     }
   }
 
 private:
-  friend class WeakPtrBase<T, WeakReference>;
+  friend class WeakPtrBase<T>;
 
-  RefPtr<WeakReference> weakRef;
+  RefPtr<detail::WeakReference<T>> weakRef;
 };
 
 template <typename T>
-class SupportsWeakPtr : public SupportsWeakPtrBase<T, detail::WeakReference<T> >
+class SupportsWeakPtr : public SupportsWeakPtrBase<T>
 {
 };
 
-template <typename T, class WeakReference>
+template <typename T>
 class WeakPtrBase
 {
 public:
-  WeakPtrBase(const WeakPtrBase<T, WeakReference>& aOther)
+  WeakPtrBase(const WeakPtrBase<T>& aOther)
     : mRef(aOther.mRef)
   {}
 
   // Ensure that mRef is dereferenceable in the uninitialized state.
-  WeakPtrBase() : mRef(new WeakReference(nullptr)) {}
+  WeakPtrBase() : mRef(new detail::WeakReference<T>(nullptr)) {}
 
   operator T*() const { return mRef->get(); }
   T& operator*() const { return *mRef->get(); }
@@ -180,17 +180,17 @@ public:
   T* get() const { return mRef->get(); }
 
 private:
-  friend class SupportsWeakPtrBase<T, WeakReference>;
+  friend class SupportsWeakPtrBase<T>;
 
-  explicit WeakPtrBase(const RefPtr<WeakReference>& aOther) : mRef(aOther) {}
+  explicit WeakPtrBase(const RefPtr<detail::WeakReference<T>>& aOther) : mRef(aOther) {}
 
-  RefPtr<WeakReference> mRef;
+  RefPtr<detail::WeakReference<T>> mRef;
 };
 
 template <typename T>
-class WeakPtr : public WeakPtrBase<T, detail::WeakReference<T> >
+class WeakPtr : public WeakPtrBase<T>
 {
-  typedef WeakPtrBase<T, detail::WeakReference<T> > Base;
+  typedef WeakPtrBase<T> Base;
 public:
   WeakPtr(const WeakPtr<T>& aOther) : Base(aOther) {}
   MOZ_IMPLICIT WeakPtr(const Base& aOther) : Base(aOther) {}
