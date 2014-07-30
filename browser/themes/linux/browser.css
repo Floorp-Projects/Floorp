@@ -2277,10 +2277,6 @@ chatbox {
 
 %include ../shared/contextmenu.inc.css
 
-#context-navigation {
-  padding-top: 4px;
-}
-
 #context-navigation > .menuitem-iconic > .menu-iconic-left {
   visibility: visible;
   /* override toolkit/themes/linux/global/menu.css */

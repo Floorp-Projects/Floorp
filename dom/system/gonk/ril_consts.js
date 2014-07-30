@@ -1309,8 +1309,15 @@ this.CB_MAX_CONTENT_8BIT = 82;
 // User Data max length in chars
 this.CB_MAX_CONTENT_UCS2 = 41;
 
+// See 3GPP TS 23.041 v11.6.0 senction 9.3.19
+this.CB_MSG_PAGE_INFO_SIZE = 82;
+
 this.CB_MESSAGE_SIZE_ETWS = 56;
 this.CB_MESSAGE_SIZE_GSM  = 88;
+this.CB_MESSAGE_SIZE_UMTS_MIN = 90;
+this.CB_MESSAGE_SIZE_UMTS_MAX = 1252;
+
+
 
 // GSM Cell Broadcast Geographical Scope
 // See 3GPP TS 23.041 clause 9.4.1.2.1
@@ -1342,6 +1349,12 @@ this.CB_ETWS_WARNING_TYPE_NAMES = [
   "test",
   "other"
 ];
+
+// UMTS Message Type
+// see 3GPP TS 25.324 section 11.1
+this.CB_UMTS_MESSAGE_TYPE_CBS      = 1;
+this.CB_UMTS_MESSAGE_TYPE_SCHEDULE = 2;
+this.CB_UMTS_MESSAGE_TYPE_CBS41    = 3;
 
 /**
  * GSM PDU constants

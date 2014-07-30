@@ -13,9 +13,9 @@ function ifWebGLSupported() {
   let vertexShader = yield programActor.getVertexShader();
   let fragmentShader = yield programActor.getFragmentShader();
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 128, y: 128 }, { r: 191, g: 64, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 128, y: 128 }, { r: 191, g: 64, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
   let vertSource = yield vertexShader.getText();
   let fragSource = yield fragmentShader.getText();
@@ -29,9 +29,9 @@ function ifWebGLSupported() {
   ok(!status,
     "The new vertex shader source was compiled without errors.");
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
 
   let vertSource = yield vertexShader.getText();
   let fragSource = yield fragmentShader.getText();
@@ -45,9 +45,9 @@ function ifWebGLSupported() {
   ok(!status,
     "The new fragment shader source was compiled without errors.");
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 127 }, true);
-  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(front, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 127 }, true);
+  yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
 
   let vertSource = yield vertexShader.getText();
   let fragSource = yield fragmentShader.getText();

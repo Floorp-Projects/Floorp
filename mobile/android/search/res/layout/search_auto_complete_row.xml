@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/card_padding_y"
         android:paddingBottom="@dimen/card_padding_y"
-        android:textSize="16sp"/>
+        android:textSize="@dimen/query_text_size"/>
 
     <Button
         android:id="@+id/auto_complete_row_jump_button"

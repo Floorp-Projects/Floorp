@@ -16,7 +16,7 @@ exports.testList = function(assert) {
   }
 
   let count = 0;
-  for each (let ele in list) {
+  for (let ele of list) {
     assert.equal(ele, 1, 'ele is correct');
     assert.equal(++count, 1, 'count is correct');
   }
@@ -41,7 +41,7 @@ exports.testImplementsList = function(assert) {
   let list2 = List2();
   let count = 0;
 
-  for each (let ele in list2) {
+  for (let ele of list2) {
     assert.equal(ele, count++, 'ele is correct');
   }
 
