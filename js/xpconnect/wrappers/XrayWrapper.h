@@ -138,6 +138,7 @@ class XrayWrapper : public Base {
                                                           protop);
     }
 
+  protected:
     bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
                    JS::AutoIdVector &props) const;
 };
