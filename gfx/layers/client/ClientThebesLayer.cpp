@@ -24,7 +24,6 @@
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "gfx2DGlue.h"
-#include "ReadbackProcessor.h"
 
 namespace mozilla {
 namespace layers {
@@ -105,7 +104,7 @@ ClientThebesLayer::PaintThebes()
 }
 
 void
-ClientThebesLayer::RenderLayer(ReadbackProcessor *aReadback)
+ClientThebesLayer::RenderLayer()
 {
   if (GetMaskLayer()) {
     ToClientLayer(GetMaskLayer())->RenderLayer();
@@ -121,16 +120,9 @@ ClientThebesLayer::RenderLayer(ReadbackProcessor *aReadback)
     MOZ_ASSERT(mContentClient->GetForwarder());
   }
 
-  nsTArray<ReadbackProcessor::Update> readbackUpdates;
-  nsIntRegion readbackRegion;
-  if (aReadback && UsedForReadback()) {
-    aReadback->GetThebesLayerUpdates(this, &readbackUpdates);
-  }
-
-  IntPoint origin(mVisibleRegion.GetBounds().x, mVisibleRegion.GetBounds().y);
   mContentClient->BeginPaint();
   PaintThebes();
-  mContentClient->EndPaint(&readbackUpdates);
+  mContentClient->EndPaint();
 }
 
 bool

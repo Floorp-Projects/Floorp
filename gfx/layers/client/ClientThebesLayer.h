@@ -69,9 +69,7 @@ public:
     mValidRegion.Sub(mValidRegion, mInvalidRegion);
   }
 
-  virtual void RenderLayer() { RenderLayer(nullptr); }
-
-  virtual void RenderLayer(ReadbackProcessor *aReadback);
+  virtual void RenderLayer();
 
   virtual void ClearCachedResources()
   {
