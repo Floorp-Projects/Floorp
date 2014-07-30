@@ -16,6 +16,7 @@ MediaKeyError::MediaKeyError(EventTarget* aOwner, uint32_t aSystemCode)
   , mSystemCode(aSystemCode)
 {
   SetIsDOMBinding();
+  InitEvent(NS_LITERAL_STRING("error"), false, false);
 }
 
 MediaKeyError::~MediaKeyError()

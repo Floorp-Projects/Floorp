@@ -67,7 +67,13 @@ MediaKeySession::GetKeySystem(nsString& aKeySystem) const
 void
 MediaKeySession::GetSessionId(nsString& aSessionId) const
 {
-  aSessionId = mSessionId;
+  aSessionId = GetSessionId();
+}
+
+const nsString&
+MediaKeySession::GetSessionId() const
+{
+  return mSessionId;
 }
 
 JSObject*
@@ -166,7 +172,7 @@ MediaKeySession::Remove(ErrorResult& aRv)
 
 void
 MediaKeySession::DispatchKeyMessage(const nsTArray<uint8_t>& aMessage,
-                                    const nsString& aURL)
+                                    const nsAString& aURL)
 {
   nsRefPtr<MediaKeyMessageEvent> event(
     MediaKeyMessageEvent::Constructor(this, aURL, aMessage));
