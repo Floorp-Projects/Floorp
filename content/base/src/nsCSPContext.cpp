@@ -25,7 +25,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIPrincipal.h"
 #include "nsIPropertyBag2.h"
 #include "nsIStringStream.h"
 #include "nsIUploadChannel.h"
@@ -547,7 +546,6 @@ getInnerWindowID(nsIRequest* aRequest) {
 NS_IMETHODIMP
 nsCSPContext::SetRequestContext(nsIURI* aSelfURI,
                                 nsIURI* aReferrer,
-                                nsIPrincipal* aDocumentPrincipal,
                                 nsIChannel* aChannel)
 {
   NS_PRECONDITION(aSelfURI || aChannel, "Need aSelfURI or aChannel to set the context properly");

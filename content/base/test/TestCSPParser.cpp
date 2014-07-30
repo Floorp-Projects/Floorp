@@ -108,7 +108,6 @@ nsresult runTest(uint32_t aExpectedPolicyCount, // this should be 0 for policies
   // arguments can be nullptrs.
   csp->SetRequestContext(selfURI,
                          nullptr,  // nsIURI* aReferrer
-                         nullptr,  // nsIPrincipal* aDocumentPrincipal
                          dummyChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
