@@ -526,6 +526,8 @@ void DisableFMRadio();
 /**
  * Seek to an available FM radio station.
  *
+ * This can be called off main thread, but all calls must be completed
+ * before calling DisableFMRadio.
  */
 void FMRadioSeek(const hal::FMRadioSeekDirection& aDirection);
 
@@ -536,6 +538,9 @@ void GetFMRadioSettings(hal::FMRadioSettings* aInfo);
 
 /**
  * Set the FM radio's frequency.
+ *
+ * This can be called off main thread, but all calls must be completed
+ * before calling DisableFMRadio.
  */
 void SetFMRadioFrequency(const uint32_t frequency);
 
