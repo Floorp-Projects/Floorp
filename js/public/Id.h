@@ -60,6 +60,16 @@ JSID_TO_STRING(jsid id)
     return (JSString *)JSID_BITS(id);
 }
 
+/*
+ * Only JSStrings that have been interned via the JSAPI can be turned into
+ * jsids by API clients.
+ *
+ * N.B. if a jsid is backed by a string which has not been interned, that
+ * string must be appropriately rooted to avoid being collected by the GC.
+ */
+JS_PUBLIC_API(jsid)
+INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str);
+
 static MOZ_ALWAYS_INLINE bool
 JSID_IS_ZERO(jsid id)
 {
