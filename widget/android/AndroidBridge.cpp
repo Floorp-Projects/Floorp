@@ -1001,7 +1001,7 @@ AndroidBridge::InitCamera(const nsCString& contentType, uint32_t camera, uint32_
 
     AutoLocalJNIFrame jniFrame(env, 1);
     jintArray arr = mozilla::widget::android::GeckoAppShell::InitCameraWrapper
-      (NS_ConvertUTF8toUTF16(contentType), (int32_t) camera, (int32_t) width, (int32_t) height);
+      (NS_ConvertUTF8toUTF16(contentType), (int32_t) camera, (int32_t) *width, (int32_t) *height);
 
     if (!arr)
         return false;
