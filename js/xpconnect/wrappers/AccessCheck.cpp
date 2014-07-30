@@ -148,7 +148,7 @@ IsWindow(const char *name)
 }
 
 bool
-AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, jsid idArg,
+AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, HandleObject wrapper, HandleId id,
                                           Wrapper::Action act)
 {
     if (act == Wrapper::CALL)
@@ -160,12 +160,10 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
     // For the case of getting a property descriptor, we allow if either GET or SET
     // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
     if (act == Wrapper::GET_PROPERTY_DESCRIPTOR) {
-        return isCrossOriginAccessPermitted(cx, wrapperArg, idArg, Wrapper::GET) ||
-               isCrossOriginAccessPermitted(cx, wrapperArg, idArg, Wrapper::SET);
+        return isCrossOriginAccessPermitted(cx, wrapper, id, Wrapper::GET) ||
+               isCrossOriginAccessPermitted(cx, wrapper, id, Wrapper::SET);
     }
 
-    RootedId id(cx, idArg);
-    RootedObject wrapper(cx, wrapperArg);
     RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
 
     const char *name;
@@ -223,10 +221,8 @@ EnterAndThrow(JSContext *cx, JSObject *wrapper, const char *msg)
 }
 
 bool
-ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wrapper::Action act)
+ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, Wrapper::Action act)
 {
-    RootedObject wrapper(cx, wrapperArg);
-    RootedId id(cx, idArg);
     RootedObject wrappedObject(cx, Wrapper::wrappedObject(wrapper));
 
     if (act == Wrapper::CALL)
@@ -236,8 +232,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wr
     // For the case of getting a property descriptor, we allow if either GET or SET
     // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
     if (act == Wrapper::GET_PROPERTY_DESCRIPTOR) {
-        return check(cx, wrapperArg, idArg, Wrapper::GET) ||
-               check(cx, wrapperArg, idArg, Wrapper::SET);
+        return check(cx, wrapper, id, Wrapper::GET) ||
+               check(cx, wrapper, id, Wrapper::SET);
     }
 
     RootedId exposedPropsId(cx, GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS));
