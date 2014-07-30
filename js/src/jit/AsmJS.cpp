@@ -6373,6 +6373,14 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         masm.storePtr(reg2, Address(reg0, offsetOfJitJSContext));
     }
 
+    JS_ASSERT(masm.framePushed() == framePushed);
+#if defined(JS_CODEGEN_X64)
+    masm.loadPtr(Address(StackPointer, savedHeapOffset), HeapReg);
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+    masm.loadPtr(Address(StackPointer, savedHeapOffset), HeapReg);
+    masm.loadPtr(Address(StackPointer, savedGlobalOffset), GlobalReg);
+#endif
+
     masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
 
     Label oolConvert;
@@ -6393,14 +6401,6 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     Label done;
     masm.bind(&done);
-
-    JS_ASSERT(masm.framePushed() == framePushed);
-#if defined(JS_CODEGEN_X64)
-    masm.loadPtr(Address(StackPointer, savedHeapOffset), HeapReg);
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-    masm.loadPtr(Address(StackPointer, savedHeapOffset), HeapReg);
-    masm.loadPtr(Address(StackPointer, savedGlobalOffset), GlobalReg);
-#endif
 
     Label profilingReturn;
     GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::FFI, &profilingReturn);
