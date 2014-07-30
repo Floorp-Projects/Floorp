@@ -943,7 +943,7 @@ nsProtocolProxyService::ProcessPACString(const nsCString &pacString,
     nsProxyInfo *pi = nullptr, *first = nullptr, *last = nullptr;
     while (*proxies) {
         proxies = ExtractProxyInfo(proxies, aResolveFlags, &pi);
-        if (pi && !mProxyOverTLS) {
+        if (pi && (pi->mType == kProxyType_HTTPS) && !mProxyOverTLS) {
             delete pi;
             pi = nullptr;
         }
