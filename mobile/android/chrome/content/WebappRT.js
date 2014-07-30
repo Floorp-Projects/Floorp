@@ -83,7 +83,7 @@ let WebappRT = {
       let apps = request.result;
       for (let i = 0; i < apps.length; i++) {
         let app = apps[i];
-        let manifest = new ManifestHelper(app.manifest, app.origin);
+        let manifest = new ManifestHelper(app.manifest, app.origin, app.manifestURL);
 
         // if this is a path to the manifest, or the launch path, then we have a hit.
         if (app.manifestURL == aUrl || manifest.fullLaunchPath() == aUrl) {

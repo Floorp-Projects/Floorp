@@ -179,12 +179,13 @@ this.WebappManager = {
 
     DOMApplicationRegistry.registryReady.then(() => {
       DOMApplicationRegistry.confirmInstall(aData, file, (function(aApp, aManifest) {
-        this._postInstall(aData.profilePath, aManifest, aData.app.origin, aData.app.apkPackageName);
+        this._postInstall(aData.profilePath, aManifest, aData.app.origin,
+                          aData.app.apkPackageName, aData.app.manifestURL);
       }).bind(this));
     });
   },
 
-  _postInstall: function(aProfilePath, aNewManifest, aOrigin, aApkPackageName) {
+  _postInstall: function(aProfilePath, aNewManifest, aOrigin, aApkPackageName, aManifestURL) {
     // aOrigin may now point to the app: url that hosts this app.
     sendMessageToJava({
       type: "Webapps:Postinstall",
@@ -194,7 +195,7 @@ this.WebappManager = {
 
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     file.initWithPath(aProfilePath);
-    let localeManifest = new ManifestHelper(aNewManifest, aOrigin);
+    let localeManifest = new ManifestHelper(aNewManifest, aOrigin, aManifestUrl);
     this.writeDefaultPrefs(file, localeManifest);
   },
 
@@ -333,7 +334,7 @@ this.WebappManager = {
       yield this._autoUpdatePackagedApp(aData, aOldApp);
     }
 
-    this._postInstall(aData.profilePath, aData.manifest, aOldApp.origin, aOldApp.apkPackageName);
+    this._postInstall(aData.profilePath, aData.manifest, aOldApp.origin, aOldApp.apkPackageName, aOldApp.manifestURL);
   }).bind(this)); },
 
   _autoUpdatePackagedApp: Task.async(function*(aData, aOldApp) {
