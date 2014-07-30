@@ -40,6 +40,21 @@ WebGLFramebuffer::WebGLFramebuffer(WebGLContext* context)
     mColorAttachments[0].mAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0;
 }
 
+WebGLFramebuffer::Attachment::Attachment(GLenum aAttachmentPoint)
+    : mAttachmentPoint(aAttachmentPoint)
+    , mNeedsFinalize(false)
+{}
+
+WebGLFramebuffer::Attachment::~Attachment()
+{}
+
+void
+WebGLFramebuffer::Attachment::Reset()
+{
+    mTexturePtr = nullptr;
+    mRenderbufferPtr = nullptr;
+}
+
 bool
 WebGLFramebuffer::Attachment::IsDeleteRequested() const
 {

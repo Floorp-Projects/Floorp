@@ -43,6 +43,9 @@ WebGLFramebufferAttachable::DetachFrom(WebGLFramebuffer* fb, GLenum attachment)
 void
 WebGLFramebufferAttachable::NotifyFBsStatusChanged()
 {
-    for (size_t i = 0; i < mAttachmentPoints.Length(); ++i)
+    for (size_t i = 0; i < mAttachmentPoints.Length(); ++i) {
+        MOZ_ASSERT(mAttachmentPoints[i].mFB,
+                   "Unexpected null pointer; seems that a WebGLFramebuffer forgot to call DetachFrom before dying");
         mAttachmentPoints[i].mFB->NotifyAttachableChanged();
+    }
 }
