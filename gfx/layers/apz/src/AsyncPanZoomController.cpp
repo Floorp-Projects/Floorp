@@ -67,6 +67,7 @@
 // #define ENABLE_APZC_LOGGING 1
 
 #if ENABLE_APZC_LOGGING
+#  include "LayersLogging.h"
 #  define APZC_LOG(...) printf_stderr("APZC: " __VA_ARGS__)
 #  define APZC_LOG_FM(fm, prefix, ...) \
     { std::stringstream ss; \
