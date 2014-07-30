@@ -253,7 +253,7 @@ bool HasVFP()
 
 bool Has32DP()
 {
-    return !(GetARMFlags() & HWCAP_VFPv3D16 && !(GetARMFlags() & HWCAP_NEON));
+    return (GetARMFlags() & HWCAP_VFPv3) && !(GetARMFlags() & HWCAP_VFPv3D16);
 }
 bool UseConvReg()
 {
