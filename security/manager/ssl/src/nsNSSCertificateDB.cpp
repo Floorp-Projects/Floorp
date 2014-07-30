@@ -1240,11 +1240,11 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
        !CERT_LIST_END(node, certList);
        node = CERT_LIST_NEXT(node)) {
     if (getCertType(node->cert) == type) {
-      nsNSSCertificate pipCert(node->cert);
+      RefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(node->cert));
       char *dbkey = nullptr;
       char *namestr = nullptr;
       nsAutoString certstr;
-      pipCert.GetDbKey(&dbkey);
+      pipCert->GetDbKey(&dbkey);
       nsAutoString keystr = NS_ConvertASCIItoUTF16(dbkey);
       PR_FREEIF(dbkey);
       if (type == nsIX509Cert::EMAIL_CERT) {
