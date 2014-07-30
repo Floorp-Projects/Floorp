@@ -48,6 +48,46 @@ MediaTaskQueue::Dispatch(TemporaryRef<nsIRunnable> aRunnable)
   return NS_OK;
 }
 
+class MediaTaskQueueSyncRunnable : public nsRunnable {
+public:
+  MediaTaskQueueSyncRunnable(TemporaryRef<nsIRunnable> aRunnable)
+    : mRunnable(aRunnable)
+    , mMonitor("MediaTaskQueueSyncRunnable")
+    , mDone(false)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    nsresult rv = mRunnable->Run();
+    {
+      MonitorAutoLock mon(mMonitor);
+      mDone = true;
+      mon.NotifyAll();
+    }
+    return rv;
+  }
+
+  nsresult WaitUntilDone() {
+    MonitorAutoLock mon(mMonitor);
+    while (!mDone) {
+      mon.Wait();
+    }
+    return NS_OK;
+  }
+private:
+  RefPtr<nsIRunnable> mRunnable;
+  Monitor mMonitor;
+  bool mDone;
+};
+
+nsresult
+MediaTaskQueue::SyncDispatch(TemporaryRef<nsIRunnable> aRunnable) {
+  RefPtr<MediaTaskQueueSyncRunnable> task(new MediaTaskQueueSyncRunnable(aRunnable));
+  nsresult rv = Dispatch(task);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return task->WaitUntilDone();
+}
+
 void
 MediaTaskQueue::AwaitIdle()
 {
