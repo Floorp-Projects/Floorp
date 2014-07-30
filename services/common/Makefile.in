@@ -3,20 +3,3 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PREF_JS_EXPORTS := $(srcdir)/services-common.js
-
-include $(topsrcdir)/config/rules.mk
-
-# What follows is a helper to launch a standalone storage server instance.
-# Most of the code lives in a Python script in the tests directory. If we
-# ever consolidate our Python code, and/or have a supplemental driver for the
-# build system, this can go away.
-
-server_port := 8080
-
-storage-server:
-	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
-	  $(MOZ_BUILD_ROOT) run_storage_server.js --port $(server_port)
-
-bagheera-server:
-	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
-		$(MOZ_BUILD_ROOT) run_bagheera_server.js --port $(server_port)
