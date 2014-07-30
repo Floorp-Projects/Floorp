@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <string>
 #include <stdio.h>
 #include <fstream>
@@ -42,6 +43,7 @@
 
 // JS
 #include "js/OldDebugAPI.h"
+#include "js/ProfilingFrameIterator.h"
 
 #if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
  #define USE_NS_STACKWALK
@@ -338,9 +340,14 @@ void addDynamicTag(ThreadProfile &aProfile, char aTagName, const char *aStr)
 }
 
 static
-void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
-                     PseudoStack *stack, void *lastpc)
+void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
+                    PseudoStack *stack, void *lastpc)
 {
+  // Pseudo-frames with the ASMJS flag are just annotations and should not be
+  // recorded in the profile.
+  if (entry.hasFlag(StackEntry::ASMJS))
+    return;
+
   int lineno = -1;
 
   // First entry has tagName 's' (start)
@@ -392,64 +399,156 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
   }
 }
 
-#if defined(USE_NS_STACKWALK) || defined(USE_EHABI_STACKWALK)
-typedef struct {
-  void** array;
+struct NativeStack
+{
+  void** pc_array;
   void** sp_array;
   size_t size;
   size_t count;
-} PCArray;
+};
 
-static void mergeNativeBacktrace(ThreadProfile &aProfile, const PCArray &array) {
+struct JSFrame
+{
+    void* stackAddress;
+    const char* label;
+};
+
+static
+void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, NativeStack& aNativeStack)
+{
+  PseudoStack* pseudoStack = aProfile.GetPseudoStack();
+  volatile StackEntry *pseudoFrames = pseudoStack->mStack;
+  uint32_t pseudoCount = pseudoStack->stackSize();
+
+  // Make a copy of the JS stack into a JSFrame array. This is necessary since,
+  // like the native stack, the JS stack is iterated youngest-to-oldest and we
+  // need to iterate oldest-to-youngest when adding entries to aProfile.
+
+  JSFrame jsFrames[1000];
+  uint32_t jsCount = 0;
+  if (aSample && pseudoStack->mRuntime) {
+    JS::ProfilingFrameIterator::RegisterState registerState;
+    registerState.pc = aSample->pc;
+    registerState.sp = aSample->sp;
+#ifdef ENABLE_ARM_LR_SAVING
+    registerState.lr = aSample->lr;
+#endif
+
+    JS::ProfilingFrameIterator jsIter(pseudoStack->mRuntime, registerState);
+    for (; jsCount < mozilla::ArrayLength(jsFrames) && !jsIter.done(); ++jsCount, ++jsIter) {
+      jsFrames[jsCount].stackAddress = jsIter.stackAddress();
+      jsFrames[jsCount].label = jsIter.label();
+    }
+  }
+
+  // Start the sample with a root entry.
   aProfile.addTag(ProfileEntry('s', "(root)"));
 
-  PseudoStack* stack = aProfile.GetPseudoStack();
-  uint32_t pseudoStackPos = 0;
+  // While the pseudo-stack array is ordered oldest-to-youngest, the JS and
+  // native arrays are ordered youngest-to-oldest. We must add frames to
+  // aProfile oldest-to-youngest. Thus, iterate over the pseudo-stack forwards
+  // and JS and native arrays backwards. Note: this means the terminating
+  // condition jsIndex and nativeIndex is being < 0.
+  uint32_t pseudoIndex = 0;
+  int32_t jsIndex = jsCount - 1;
+  int32_t nativeIndex = aNativeStack.count - 1;
 
-  /* We have two stacks, the native C stack we extracted from unwinding,
-   * and the pseudostack we managed during execution. We want to consolidate
-   * the two in order. We do so by merging using the approximate stack address
-   * when each entry was push. When pushing JS entry we may not now the stack
-   * address in which case we have a nullptr stack address in which case we assume
-   * that it follows immediatly the previous element.
-   *
-   *  C Stack | Address    --  Pseudo Stack | Address
-   *  main()  | 0x100          run_js()     | 0x40
-   *  start() | 0x80           jsCanvas()   | nullptr
-   *  timer() | 0x50           drawLine()   | nullptr
-   *  azure() | 0x10
-   *
-   * Merged: main(), start(), timer(), run_js(), jsCanvas(), drawLine(), azure()
-   */
-  // i is the index in C stack starting at main and decreasing
-  // pseudoStackPos is the position in the Pseudo stack starting
-  // at the first frame (run_js in the example) and increasing.
-  for (size_t i = array.count; i > 0; --i) {
-    while (pseudoStackPos < stack->stackSize()) {
-      volatile StackEntry& entry = stack->mStack[pseudoStackPos];
+  // Iterate as long as there is at least one frame remaining.
+  while (pseudoIndex != pseudoCount || jsIndex >= 0 || nativeIndex >= 0) {
+    // There are 1 to 3 frames available. Find and add the oldest. Handle pseudo
+    // frames first, since there are two special cases that must be considered
+    // before everything else.
+    if (pseudoIndex != pseudoCount) {
+      volatile StackEntry &pseudoFrame = pseudoFrames[pseudoIndex];
 
-      if (entry.isCpp() && entry.stackAddress() && entry.stackAddress() < array.sp_array[i-1])
-        break;
+      // isJs pseudo-stack frames assume the stackAddress of the preceding isCpp
+      // pseudo-stack frame. If we arrive at an isJs pseudo frame, we've already
+      // encountered the preceding isCpp stack frame and it was oldest, we can
+      // assume the isJs frame is oldest without checking other frames.
+      if (pseudoFrame.isJs()) {
+          addPseudoEntry(pseudoFrame, aProfile, pseudoStack, nullptr);
+          pseudoIndex++;
+          continue;
+      }
 
-      addProfileEntry(entry, aProfile, stack, array.array[0]);
-      pseudoStackPos++;
+      // Currently, only asm.js frames use the JS stack and Ion/Baseline/Interp
+      // frames use the pseudo stack. In the optimized asm.js->Ion call path, no
+      // isCpp frame is pushed, leading to the callstack:
+      //   old | pseudo isCpp | asm.js | pseudo isJs | new
+      // Since there is no interleaving isCpp pseudo frame between the asm.js
+      // and isJs pseudo frame, the above isJs logic will render the callstack:
+      //   old | pseudo isCpp | pseudo isJs | asm.js | new
+      // which is wrong. To deal with this, a pseudo isCpp frame pushed right
+      // before entering asm.js flagged with StackEntry::ASMJS. When we see this
+      // flag, we first push all the asm.js frames (up to the next frame with a
+      // stackAddress) before pushing the isJs frames. There is no Ion->asm.js
+      // fast path, so we don't have to worry about asm.js->Ion->asm.js.
+      //
+      // (This and the above isJs special cases can be removed once all JS
+      // execution modes switch from the pseudo stack to the JS stack.)
+      if (pseudoFrame.hasFlag(StackEntry::ASMJS)) {
+        void *stopStackAddress = nullptr;
+        for (uint32_t i = pseudoIndex + 1; i != pseudoCount; i++) {
+          if (pseudoFrames[i].isCpp()) {
+            stopStackAddress = pseudoFrames[i].stackAddress();
+            break;
+          }
+        }
+
+        if (nativeIndex >= 0) {
+          stopStackAddress = std::max(stopStackAddress, aNativeStack.sp_array[nativeIndex]);
+        }
+
+        while (jsIndex >= 0 && jsFrames[jsIndex].stackAddress > stopStackAddress) {
+          addDynamicTag(aProfile, 'c', jsFrames[jsIndex].label);
+          jsIndex--;
+        }
+
+        pseudoIndex++;
+        continue;
+      }
+
+      // Finally, consider the normal case of a plain C++ pseudo-frame.
+      if ((jsIndex < 0 || pseudoFrame.stackAddress() > jsFrames[jsIndex].stackAddress) &&
+          (nativeIndex < 0 || pseudoFrame.stackAddress() > aNativeStack.sp_array[nativeIndex]))
+      {
+        // The (C++) pseudo-frame is the oldest.
+        addPseudoEntry(pseudoFrame, aProfile, pseudoStack, nullptr);
+        pseudoIndex++;
+        continue;
+      }
     }
 
-    aProfile.addTag(ProfileEntry('l', (void*)array.array[i-1]));
+    if (jsIndex >= 0) {
+      // Test whether the JS frame is the oldest.
+      JSFrame &jsFrame = jsFrames[jsIndex];
+      if ((pseudoIndex == pseudoCount || jsFrame.stackAddress > pseudoFrames[pseudoIndex].stackAddress()) &&
+          (nativeIndex < 0 || jsFrame.stackAddress > aNativeStack.sp_array[nativeIndex]))
+      {
+        // The JS frame is the oldest.
+        addDynamicTag(aProfile, 'c', jsFrame.label);
+        jsIndex--;
+        continue;
+      }
+    }
+
+    // If execution reaches this point, there must be a native frame and it must
+    // be the oldest.
+    MOZ_ASSERT(nativeIndex >= 0);
+    aProfile.addTag(ProfileEntry('l', (void*)aNativeStack.pc_array[nativeIndex]));
+    nativeIndex--;
   }
 }
-
-#endif
 
 #ifdef USE_NS_STACKWALK
 static
 void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 {
-  PCArray* array = static_cast<PCArray*>(aClosure);
-  MOZ_ASSERT(array->count < array->size);
-  array->sp_array[array->count] = aSP;
-  array->array[array->count] = aPC;
-  array->count++;
+  NativeStack* nativeStack = static_cast<NativeStack*>(aClosure);
+  MOZ_ASSERT(nativeStack->count < nativeStack->size);
+  nativeStack->sp_array[nativeStack->count] = aSP;
+  nativeStack->pc_array[nativeStack->count] = aPC;
+  nativeStack->count++;
 }
 
 void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
@@ -460,7 +559,7 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
 #endif
   void* pc_array[1000];
   void* sp_array[1000];
-  PCArray array = {
+  NativeStack nativeStack = {
     pc_array,
     sp_array,
     mozilla::ArrayLength(pc_array),
@@ -468,9 +567,9 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
   };
 
   // Start with the current function.
-  StackWalkCallback(aSample->pc, aSample->sp, &array);
+  StackWalkCallback(aSample->pc, aSample->sp, &nativeStack);
 
-  uint32_t maxFrames = uint32_t(array.size - array.count);
+  uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
 #ifdef XP_MACOSX
   pthread_t pt = GetProfiledThread(aSample->threadProfile->GetPlatformData());
   void *stackEnd = reinterpret_cast<void*>(-1);
@@ -479,7 +578,7 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
   nsresult rv = NS_OK;
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd)
     rv = FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0,
-                               maxFrames, &array,
+                               maxFrames, &nativeStack,
                                reinterpret_cast<void**>(aSample->fp), stackEnd);
 #else
   void *platformData = nullptr;
@@ -493,10 +592,10 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
 #endif // XP_WIN
 
   nsresult rv = NS_StackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
-                             &array, thread, platformData);
+                             &nativeStack, thread, platformData);
 #endif
   if (NS_SUCCEEDED(rv))
-    mergeNativeBacktrace(aProfile, array);
+    mergeStacksIntoProfile(aProfile, aSample, nativeStack);
 }
 #endif
 
@@ -505,7 +604,7 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
 {
   void *pc_array[1000];
   void *sp_array[1000];
-  PCArray array = {
+  NativeStack nativeStack = {
     pc_array,
     sp_array,
     mozilla::ArrayLength(pc_array),
@@ -516,7 +615,7 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
   mcontext_t savedContext;
   PseudoStack *pseudoStack = aProfile.GetPseudoStack();
 
-  array.count = 0;
+  nativeStack.count = 0;
   // The pseudostack contains an "EnterJIT" frame whenever we enter
   // JIT code with profiling enabled; the stack pointer value points
   // the saved registers.  We use this to unwind resume unwinding
@@ -532,11 +631,11 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
       // the saved state.
       uint32_t *vSP = reinterpret_cast<uint32_t*>(entry.stackAddress());
 
-      array.count += EHABIStackWalk(*mcontext,
-                                    /* stackBase = */ vSP,
-                                    sp_array + array.count,
-                                    pc_array + array.count,
-                                    array.size - array.count);
+      nativeStack.count += EHABIStackWalk(*mcontext,
+                                          /* stackBase = */ vSP,
+                                          sp_array + nativeStack.count,
+                                          pc_array + nativeStack.count,
+                                          nativeStack.size - nativeStack.count);
 
       memset(&savedContext, 0, sizeof(savedContext));
       // See also: struct EnterJITStack in js/src/jit/arm/Trampoline-arm.cpp
@@ -557,32 +656,28 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
 
   // Now unwind whatever's left (starting from either the last EnterJIT
   // frame or, if no EnterJIT was found, the original registers).
-  array.count += EHABIStackWalk(*mcontext,
-                                aProfile.GetStackTop(),
-                                sp_array + array.count,
-                                pc_array + array.count,
-                                array.size - array.count);
+  nativeStack.count += EHABIStackWalk(*mcontext,
+                                      aProfile.GetStackTop(),
+                                      sp_array + nativeStack.count,
+                                      pc_array + nativeStack.count,
+                                      nativeStack.size - nativeStack.count);
 
-  mergeNativeBacktrace(aProfile, array);
+  mergeStacksIntoProfile(aProfile, aSample, nativeStack);
 }
 
 #endif
 
 static
-void doSampleStackTrace(PseudoStack *aStack, ThreadProfile &aProfile, TickSample *sample)
+void doSampleStackTrace(ThreadProfile &aProfile, TickSample *aSample, bool aAddLeafAddresses)
 {
-  // Sample
-  // 's' tag denotes the start of a sample block
-  // followed by 0 or more 'c' tags.
-  aProfile.addTag(ProfileEntry('s', "(root)"));
-  for (uint32_t i = 0; i < aStack->stackSize(); i++) {
-    addProfileEntry(aStack->mStack[i], aProfile, aStack, nullptr);
-  }
+  NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
+  mergeStacksIntoProfile(aProfile, aSample, nativeStack);
+
 #ifdef ENABLE_SPS_LEAF_DATA
-  if (sample) {
-    aProfile.addTag(ProfileEntry('l', (void*)sample->pc));
+  if (aSample && aAddLeafAddresses) {
+    aProfile.addTag(ProfileEntry('l', (void*)aSample->pc));
 #ifdef ENABLE_ARM_LR_SAVING
-    aProfile.addTag(ProfileEntry('L', (void*)sample->lr));
+    aProfile.addTag(ProfileEntry('L', (void*)aSample->lr));
 #endif
   }
 #endif
@@ -652,10 +747,10 @@ void TableTicker::InplaceTick(TickSample* sample)
   if (mUseStackWalk) {
     doNativeBacktrace(currThreadProfile, sample);
   } else {
-    doSampleStackTrace(stack, currThreadProfile, mAddLeafAddresses ? sample : nullptr);
+    doSampleStackTrace(currThreadProfile, sample, mAddLeafAddresses);
   }
 #else
-  doSampleStackTrace(stack, currThreadProfile, mAddLeafAddresses ? sample : nullptr);
+  doSampleStackTrace(currThreadProfile, sample, mAddLeafAddresses);
 #endif
 
   if (recordSample)
@@ -763,7 +858,7 @@ void mozilla_sampler_print_location1()
   }
 
   syncProfile->BeginUnwind();
-  doSampleStackTrace(syncProfile->GetPseudoStack(), *syncProfile, nullptr);
+  doSampleStackTrace(*syncProfile, nullptr, false);
   syncProfile->EndUnwind();
 
   printf_stderr("Backtrace:\n");

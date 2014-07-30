@@ -139,6 +139,9 @@ IsXrayWrapper(JSObject *obj);
 JSObject *
 XrayAwareCalleeGlobal(JSObject *fun);
 
+void
+TraceXPCGlobal(JSTracer *trc, JSObject *obj);
+
 } /* namespace xpc */
 
 namespace JS {

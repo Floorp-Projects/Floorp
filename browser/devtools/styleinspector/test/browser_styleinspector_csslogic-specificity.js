@@ -50,11 +50,17 @@ let test = asyncTest(function*() {
     is(specificity, expected,
       'Selector "' + selectorText + '" has a specificity of ' + expected);
   }
+
+  info("Testing specificity of element.style");
+  let colorProp = cssLogic.getPropertyInfo("background");
+  is(colorProp.matchedSelectors[0].specificity, 0x01000000,
+     "Element styles have specificity of 0x01000000 (16777216).");
 });
 
 function createDocument() {
   let doc = content.document;
   doc.body.innerHTML = getStylesheetText();
+  doc.body.style.background = "blue";
   doc.title = "Computed view specificity test";
 }
 

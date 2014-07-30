@@ -84,9 +84,6 @@ MOZ_BEGIN_ENUM_CLASS(TextureFlags, uint32_t)
   // buffered pair, and so we can guarantee that the producer/consumer
   // won't be racing to access its contents.
   DOUBLE_BUFFERED    = 1 << 16,
-  // We've previously tried a texture and it didn't work for some reason. If there
-  // is a fallback available, try that.
-  ALLOC_FALLBACK     = 1 << 17,
   // Data in this texture has not been alpha-premultiplied.
   NON_PREMULTIPLIED  = 1 << 18,
 

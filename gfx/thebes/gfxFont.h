@@ -1772,7 +1772,7 @@ public:
      * for LTR textruns, the right end for RTL textruns.
      * On return, this will be updated to the other end of the baseline.
      * In application units, really!
-     * @param aParams record with drawing parameters, see TextRunDrawParams.
+     * @param aRunParams record with drawing parameters, see TextRunDrawParams.
      * Particular fields of interest include
      * .spacing  spacing to insert before and after characters (for RTL
      *   glyphs, before-spacing is inserted to the right of characters). There
@@ -1791,7 +1791,7 @@ public:
      * -- all glyphs use this font
      */
     void Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
-              gfxPoint *aPt, TextRunDrawParams& aParams);
+              gfxPoint *aPt, const TextRunDrawParams& aRunParams);
 
     /**
      * Measure a run of characters. See gfxTextRun::Metrics.

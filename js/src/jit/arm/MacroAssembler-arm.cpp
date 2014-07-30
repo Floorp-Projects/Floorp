@@ -2458,6 +2458,13 @@ MacroAssemblerARMCompat::store32(Register src, const BaseIndex &dest)
 }
 
 void
+MacroAssemblerARMCompat::store32_NoSecondScratch(Imm32 src, const Address &address)
+{
+    move32(src, ScratchRegister);
+    storePtr(ScratchRegister, address);
+}
+
+void
 MacroAssemblerARMCompat::storePtr(ImmWord imm, const Address &address)
 {
     movePtr(imm, ScratchRegister);

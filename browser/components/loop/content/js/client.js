@@ -117,12 +117,6 @@ loop.Client = (function($) {
         try {
           var urlData = JSON.parse(responseText);
 
-          // XXX Support an alternate call_url property for
-          // backwards compatibility whilst we switch over servers.
-          // Bug 1033988 will want to remove these two lines.
-          if (urlData.call_url)
-            urlData.callUrl = urlData.call_url;
-
           cb(null, this._validate(urlData, expectedCallUrlProperties));
 
           this.mozLoop.noteCallUrlExpiry(urlData.expiresAt);

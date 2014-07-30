@@ -4267,28 +4267,14 @@ SingleStepCallback(void *arg, jit::Simulator *sim, void *pc)
     state.sp = (void*)sim->get_register(jit::Simulator::sp);
     state.lr = (void*)sim->get_register(jit::Simulator::lr);
 
+    DebugOnly<void*> lastStackAddress = nullptr;
     StackChars stack;
     for (JS::ProfilingFrameIterator i(rt, state); !i.done(); ++i) {
-        switch (i.kind()) {
-          case JS::ProfilingFrameIterator::Function: {
-            JS::AutoCheckCannotGC nogc;
-            JSAtom *atom = i.functionDisplayAtom();
-            if (atom->hasLatin1Chars())
-                stack.append(atom->latin1Chars(nogc), atom->length());
-            else
-                stack.append(atom->twoByteChars(nogc), atom->length());
-            break;
-          }
-          case JS::ProfilingFrameIterator::AsmJSTrampoline: {
-            stack.append('*');
-            break;
-          }
-          case JS::ProfilingFrameIterator::CppFunction: {
-            const char *desc = i.nonFunctionDescription();
-            stack.append(desc, strlen(desc));
-            break;
-          }
-        }
+        JS_ASSERT(i.stackAddress() != nullptr);
+        JS_ASSERT(lastStackAddress <= i.stackAddress());
+        lastStackAddress = i.stackAddress();
+        const char *label = i.label();
+        stack.append(label, strlen(label));
     }
 
     // Only append the stack if it differs from the last stack.

@@ -500,7 +500,7 @@ int is_windows_7()
    osvi.dwMinorVersion = 1;
 
    VER_SET_CONDITION(condition_mask, VER_MAJORVERSION, VER_EQUAL);
-   VER_SET_CONDITION(condition_mask, VER_MINORVERSION, VER_EQUAL);
+   VER_SET_CONDITION(condition_mask, VER_MINORVERSION, VER_GREATER_EQUAL);
 
    return VerifyVersionInfo(&osvi, VER_MAJORVERSION | VER_MINORVERSION, condition_mask);
 #else

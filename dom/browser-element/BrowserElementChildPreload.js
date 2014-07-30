@@ -108,6 +108,13 @@ const OBSERVED_EVENTS = [
   'activity-done'
 ];
 
+const COMMAND_MAP = {
+  'cut': 'cmd_cut',
+  'copy': 'cmd_copy',
+  'paste': 'cmd_paste',
+  'selectall': 'cmd_selectAll'
+};
+
 /**
  * The BrowserElementChild implements one half of <iframe mozbrowser>.
  * (The other half is, unsurprisingly, BrowserElementParent.)
@@ -200,6 +207,10 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
+    addEventListener('mozselectionchange',
+                     this._selectionChangeHandler.bind(this),
+                     /* useCapture = */ false,
+                     /* wantsUntrusted = */ false);
 
     // This listens to unload events from our message manager, but /not/ from
     // the |content| window.  That's because the window's unload event doesn't
@@ -238,7 +249,8 @@ BrowserElementChild.prototype = {
       "exit-fullscreen": this._recvExitFullscreen.bind(this),
       "activate-next-paint-listener": this._activateNextPaintListener.bind(this),
       "set-input-method-active": this._recvSetInputMethodActive.bind(this),
-      "deactivate-next-paint-listener": this._deactivateNextPaintListener.bind(this)
+      "deactivate-next-paint-listener": this._deactivateNextPaintListener.bind(this),
+      "do-command": this._recvDoCommand
     }
 
     addMessageListener("browser-element-api:call", function(aMessage) {
@@ -350,6 +362,15 @@ BrowserElementChild.prototype = {
         args.promptType == 'custom-prompt') {
       return returnValue;
     }
+  },
+
+  _isCommandEnabled: function(cmd) {
+    let command = COMMAND_MAP[cmd];
+    if (!command) {
+      return false;
+    }
+
+    return docShell.isCommandEnabled(command);
   },
 
   /**
@@ -471,13 +492,16 @@ BrowserElementChild.prototype = {
     }
   },
 
+  _maybeCopyAttribute: function(src, target, attribute) {
+    if (src.getAttribute(attribute)) {
+      target[attribute] = src.getAttribute(attribute);
+    }
+  },
+
   _iconChangedHandler: function(e) {
     debug('Got iconchanged: (' + e.target.href + ')');
     let icon = { href: e.target.href };
-    if (e.target.getAttribute('sizes')) {
-      icon.sizes = e.target.getAttribute('sizes');
-    }
-
+    this._maybeCopyAttribute(e.target, icon, 'sizes');
     sendAsyncMsg('iconchange', icon);
   },
 
@@ -511,7 +535,8 @@ BrowserElementChild.prototype = {
     }
 
     let handlers = {
-      'icon': this._iconChangedHandler,
+      'icon': this._iconChangedHandler.bind(this),
+      'apple-touch-icon': this._iconChangedHandler.bind(this),
       'search': this._openSearchHandler,
       'manifest': this._manifestChangedHandler
     };
@@ -588,6 +613,53 @@ BrowserElementChild.prototype = {
     }
 
     sendAsyncMsg('metachange', meta);
+  },
+
+  _selectionChangeHandler: function(e) {
+    let isMouseUp = e.reason & Ci.nsISelectionListener.MOUSEUP_REASON;
+    let isSelectAll = e.reason & Ci.nsISelectionListener.SELECTALL_REASON;
+    // When selectall happened, gecko will first collapse the range then
+    // select all. So we will receive two selection change events with
+    // SELECTALL_REASON. We filter first event by check the length of
+    // selectedText.
+    if (!(isMouseUp || (isSelectAll && e.selectedText.length > 0))) {
+      return;
+    }
+
+    e.stopPropagation();
+    let boundingClientRect = e.boundingClientRect;
+    let zoomFactor = content.screen.width / content.innerWidth;
+
+    let detail = {
+      rect: {
+        width: boundingClientRect.width,
+        height: boundingClientRect.height,
+        top: boundingClientRect.top,
+        bottom: boundingClientRect.bottom,
+        left: boundingClientRect.left,
+        right: boundingClientRect.right,
+      },
+      commands: {
+        canSelectAll: this._isCommandEnabled("selectall"),
+        canCut: this._isCommandEnabled("cut"),
+        canCopy: this._isCommandEnabled("copy"),
+        canPaste: this._isCommandEnabled("paste"),
+      },
+      zoomFactor: zoomFactor,
+    };
+
+    // Get correct geometry information if we have nested <iframe mozbrowser>
+    let currentWindow = e.target.defaultView;
+    while (currentWindow.realFrameElement) {
+      let currentRect = currentWindow.realFrameElement.getBoundingClientRect();
+      detail.rect.top += currentRect.top;
+      detail.rect.bottom += currentRect.top;
+      detail.rect.left += currentRect.left;
+      detail.rect.right += currentRect.left;
+      currentWindow = currentWindow.realFrameElement.ownerDocument.defaultView;
+    }
+
+    sendAsyncMsg("selectionchange", detail);
   },
 
   _themeColorChangedHandler: function(eventType, target) {
@@ -906,14 +978,8 @@ BrowserElementChild.prototype = {
   },
 
   _buildMenuObj: function(menu, idPrefix) {
-    function maybeCopyAttribute(src, target, attribute) {
-      if (src.getAttribute(attribute)) {
-        target[attribute] = src.getAttribute(attribute);
-      }
-    }
-
     var menuObj = {type: 'menu', items: []};
-    maybeCopyAttribute(menu, menuObj, 'label');
+    this._maybeCopyAttribute(menu, menuObj, 'label');
 
     for (var i = 0, child; child = menu.children[i++];) {
       if (child.nodeName === 'MENU') {
@@ -921,8 +987,8 @@ BrowserElementChild.prototype = {
       } else if (child.nodeName === 'MENUITEM') {
         var id = this._ctxCounter + '_' + idPrefix + i;
         var menuitem = {id: id, type: 'menuitem'};
-        maybeCopyAttribute(child, menuitem, 'label');
-        maybeCopyAttribute(child, menuitem, 'icon');
+        this._maybeCopyAttribute(child, menuitem, 'label');
+        this._maybeCopyAttribute(child, menuitem, 'icon');
         this._ctxHandlers[id] = child;
         menuObj.items.push(menuitem);
       }
@@ -1034,6 +1100,12 @@ BrowserElementChild.prototype = {
 
   _recvZoom: function(data) {
     docShell.contentViewer.fullZoom = data.json.zoom;
+  },
+
+  _recvDoCommand: function(data) {
+    if (this._isCommandEnabled(data.json.command)) {
+      docShell.doCommand(COMMAND_MAP[data.json.command]);
+    }
   },
 
   _recvSetInputMethodActive: function(data) {

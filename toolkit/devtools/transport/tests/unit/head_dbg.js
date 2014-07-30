@@ -16,10 +16,12 @@ const { Promise: promise } =
 const Services = devtools.require("Services");
 const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 
-// Always log packets when running tests. runxpcshelltests.py will throw
-// the output away anyway, unless you give it the --verbose flag.
-Services.prefs.setBoolPref("devtools.debugger.log", true);
-Services.prefs.setBoolPref("devtools.debugger.log.verbose", true);
+// We do not want to log packets by default, because in some tests,
+// we can be sending large amounts of data. The test harness has
+// trouble dealing with logging all the data, and we end up with
+// intermittent time outs (e.g. bug 775924).
+// Services.prefs.setBoolPref("devtools.debugger.log", true);
+// Services.prefs.setBoolPref("devtools.debugger.log.verbose", true);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 

@@ -1018,6 +1018,10 @@ class MOZ_STACK_CLASS ModuleCompiler
   private:
     struct SlowFunction
     {
+        SlowFunction(PropertyName *name, unsigned ms, unsigned line, unsigned column)
+         : name(name), ms(ms), line(line), column(column)
+        {}
+
         PropertyName *name;
         unsigned ms;
         unsigned line;
@@ -1423,7 +1427,10 @@ class MOZ_STACK_CLASS ModuleCompiler
     bool finishGeneratingFunction(Func &func, CodeGenerator &codegen,
                                   const AsmJSFunctionLabels &labels)
     {
-        if (!module_->addFunctionCodeRange(func.name(), labels))
+        uint32_t line, column;
+        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &line, &column);
+
+        if (!module_->addFunctionCodeRange(func.name(), line, labels))
             return false;
 
         jit::IonScriptCounts *counts = codegen.extractScriptCounts();
@@ -1433,17 +1440,12 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
 
         if (func.compileTime() >= 250) {
-            SlowFunction sf;
-            sf.name = func.name();
-            sf.ms = func.compileTime();
-            tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &sf.line, &sf.column);
+            SlowFunction sf(func.name(), func.compileTime(), line, column);
             if (!slowFunctions_.append(sf))
                 return false;
         }
 
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-        uint32_t line, column;
-        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcBegin(), &line, &column);
         unsigned begin = labels.begin.offset();
         unsigned end = labels.end.offset();
         if (!module_->addProfiledFunction(func.name(), begin, end, line, column))
@@ -5947,13 +5949,19 @@ static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * siz
 static bool
 GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
 {
-    PropertyName *funcName = m.module().exportedFunction(exportIndex).name();
-    const ModuleCompiler::Func &func = *m.lookupFunction(funcName);
-
     MacroAssembler &masm = m.masm();
 
     Label begin;
-    GenerateAsmJSEntryPrologue(masm, &begin);
+    masm.align(CodeAlignment);
+    masm.bind(&begin);
+
+#if defined(JS_CODEGEN_ARM)
+    masm.push(lr);
+#elif defined(JS_CODEGEN_MIPS)
+    masm.push(ra);
+#endif
+    masm.subPtr(Imm32(AsmJSFrameBytesAfterReturnAddress), StackPointer);
+    masm.setFramePushed(0);
 
     // In constrast to the system ABI, the Ion convention is that all registers
     // are clobbered by calls. Thus, we must save the caller's non-volatile
@@ -5979,13 +5987,13 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
     // used by error exit paths to set the stack pointer back to what it was
     // right after the (C++) caller's non-volatile registers were saved so that
     // they can be restored.
-    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    Register activation = ABIArgGenerator::NonArgReturnReg0;
     masm.loadAsmJSActivation(activation);
     masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfErrorRejoinSP()));
 
     // Get 'argv' into a non-arg register and save it on the stack.
-    Register argv = ABIArgGenerator::NonArgReturnVolatileReg0;
-    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg1;
+    Register argv = ABIArgGenerator::NonArgReturnReg0;
+    Register scratch = ABIArgGenerator::NonArgReturnReg1;
 #if defined(JS_CODEGEN_X86)
     masm.loadPtr(Address(StackPointer, sizeof(AsmJSFrame) + masm.framePushed()), argv);
 #else
@@ -5994,6 +6002,8 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
     masm.Push(argv);
 
     // Bump the stack for the call.
+    PropertyName *funcName = m.module().exportedFunction(exportIndex).name();
+    const ModuleCompiler::Func &func = *m.lookupFunction(funcName);
     unsigned stackDec = StackDecrementForCall(masm, func.sig().args());
     masm.reserveStack(stackDec);
 
@@ -6052,8 +6062,9 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
     JS_ASSERT(masm.framePushed() == 0);
 
     masm.move32(Imm32(true), ReturnReg);
+    masm.addPtr(Imm32(AsmJSFrameBytesAfterReturnAddress), StackPointer);
+    masm.ret();
 
-    GenerateAsmJSEntryEpilogue(masm);
     return m.finishGeneratingEntry(exportIndex, &begin) && !masm.oom();
 }
 
@@ -6122,7 +6133,7 @@ GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &e
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
-    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
+    Register scratch = ABIArgGenerator::NonArgReturnReg0;
     FillArgumentArray(m, exit.sig().args(), offsetToArgv, offsetToCallerStackArgs, scratch);
 
     // Prepare the arguments for the call to InvokeFromAsmJS_*.
@@ -6241,8 +6252,8 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     argOffset += sizeof(size_t);
 
     // 2. Callee
-    Register callee = ABIArgGenerator::NonArgReturnVolatileReg0;   // live until call
-    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg1;  // clobbered
+    Register callee = ABIArgGenerator::NonArgReturnReg0;   // live until call
+    Register scratch = ABIArgGenerator::NonArgReturnReg1;  // repeatedly clobbered
 
     // 2.1. Get ExitDatum
     unsigned globalDataOffset = m.module().exitIndexToGlobalDataOffset(exitIndex);
@@ -6461,6 +6472,10 @@ GenerateFFIExits(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit, 
 // pushes an AsmJSFrame on the stack, that means we must rebuild the stack
 // frame. Fortunately, these are low arity functions and everything is passed in
 // regs on everything but x86 anyhow.
+//
+// NB: Since this thunk is being injected at system ABI callsites, it must
+//     preserve the argument registers (going in) and the return register
+//     (coming out) and preserve non-volatile registers.
 static bool
 GenerateBuiltinThunk(ModuleCompiler &m, AsmJSExit::BuiltinKind builtin)
 {
@@ -6510,20 +6525,24 @@ GenerateBuiltinThunk(ModuleCompiler &m, AsmJSExit::BuiltinKind builtin)
     Label begin;
     GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::Builtin(builtin), &begin);
 
-    unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
     for (ABIArgMIRTypeIter i(argTypes); !i.done(); i++) {
         if (i->kind() != ABIArg::Stack)
             continue;
+#if !defined(JS_CODEGEN_ARM)
+        unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
         Address srcAddr(StackPointer, offsetToCallerStackArgs + i->offsetFromArgBase());
         Address dstAddr(StackPointer, i->offsetFromArgBase());
         if (i.mirType() == MIRType_Int32 || i.mirType() == MIRType_Float32) {
-            masm.load32(srcAddr, ABIArgGenerator::NonArgReturnVolatileReg0);
-            masm.store32(ABIArgGenerator::NonArgReturnVolatileReg0, dstAddr);
+            masm.load32(srcAddr, ABIArgGenerator::NonArg_VolatileReg);
+            masm.store32(ABIArgGenerator::NonArg_VolatileReg, dstAddr);
         } else {
             JS_ASSERT(i.mirType() == MIRType_Double);
             masm.loadDouble(srcAddr, ScratchDoubleReg);
             masm.storeDouble(ScratchDoubleReg, dstAddr);
         }
+#else
+        MOZ_CRASH("Architecture should have enough registers for all builtin calls");
+#endif
     }
 
     AssertStackAlignment(masm);
@@ -6571,7 +6590,7 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
     masm.PushRegsInMask(AllRegsExceptSP); // save all GP/FP registers (except SP)
 
-    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
+    Register scratch = ABIArgGenerator::NonArgReturnReg0;
 
     // Store resumePC into the reserved space.
     masm.loadAsmJSActivation(scratch);
@@ -6726,7 +6745,7 @@ GenerateThrowStub(ModuleCompiler &m, Label *throwLabel)
     // We are about to pop all frames in this AsmJSActivation. Set fp to null to
     // maintain the invariant that fp is either null or pointing to a valid
     // frame.
-    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    Register activation = ABIArgGenerator::NonArgReturnReg0;
     masm.loadAsmJSActivation(activation);
     masm.storePtr(ImmWord(0), Address(activation, AsmJSActivation::offsetOfFP()));
 

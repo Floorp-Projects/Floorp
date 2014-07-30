@@ -71,6 +71,7 @@
     "description": "Maximum number of concurrent threads reached during a given download session"
   },
   "BLOCKLIST_SYNC_FILE_LOAD": {
+    "alert_emails": ["rvitillo@mozilla.com"],
     "expires_in_version": "35",
     "kind": "boolean",
     "description": "blocklist.xml has been loaded synchronously"
@@ -4183,6 +4184,7 @@
     "description": "Number of histograms with total count low errors"
   },
   "TELEMETRY_FILES_EVICTED": {
+    "alert_emails": ["rvitillo@mozilla.com"],
     "expires_in_version": "36",
     "kind": "enumerated",
     "n_values": 30,
@@ -4506,6 +4508,7 @@
     "description": "Time (ms) it takes to initialize the search service"
   },
   "SEARCH_SERVICE_INIT_SYNC": {
+    "alert_emails": ["rvitillo@mozilla.com"],
     "expires_in_version": "35",
     "kind": "boolean",
     "description": "search service has been initialized synchronously"

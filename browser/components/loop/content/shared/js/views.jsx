@@ -180,7 +180,7 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        <ul className="controls">
+        <ul className="conversation-toolbar">
           <li><button className="btn btn-hangup"
                       onClick={this.handleClickHangup}
                       title={__("hangup_button_title")}></button></li>
