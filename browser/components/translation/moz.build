@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-JS_MODULES_PATH = 'modules/translation'
-
-EXTRA_JS_MODULES = [
+EXTRA_JS_MODULES.translation = [
     'BingTranslator.jsm',
     'cld2/cld-worker.js',
     'cld2/cld-worker.js.mem',

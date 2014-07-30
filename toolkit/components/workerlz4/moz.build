@@ -6,9 +6,7 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
-JS_MODULES_PATH = 'modules/workers'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.workers += [
     'lz4.js',
     'lz4_internal.js',
 ]

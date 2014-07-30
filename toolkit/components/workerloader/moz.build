@@ -6,8 +6,6 @@
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
-JS_MODULES_PATH = 'modules/workers'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.workers += [
     'require.js'
 ]
