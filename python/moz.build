@@ -33,6 +33,7 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/mozbuild/test/compilation/__init__.py',
     'mozbuild/mozbuild/test/compilation/test_warnings.py',
     'mozbuild/mozbuild/test/controller/__init__.py',
+    'mozbuild/mozbuild/test/controller/test_ccachestats.py',
     'mozbuild/mozbuild/test/controller/test_clobber.py',
     'mozbuild/mozbuild/test/frontend/__init__.py',
     'mozbuild/mozbuild/test/frontend/test_emitter.py',
