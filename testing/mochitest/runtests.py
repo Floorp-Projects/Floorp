@@ -208,11 +208,6 @@ class MessageLogger(object):
         self.buffering = False
         self.logger.suite_end()
 
-# Global logger
-log = StructuredLogger('mochitest')
-stream_handler = StreamHandler(stream=sys.stdout, formatter=MochitestFormatter())
-log.add_handler(stream_handler)
-
 ####################
 # PROCESS HANDLING #
 ####################
@@ -994,8 +989,13 @@ class Mochitest(MochitestUtilsMixin):
   def __init__(self):
     super(Mochitest, self).__init__()
 
+    # Structured logger
+    structured_log = StructuredLogger('mochitest')
+    stream_handler = StreamHandler(stream=sys.stdout, formatter=MochitestFormatter())
+    structured_log.add_handler(stream_handler)
+
     # Structured logs parser
-    self.message_logger = MessageLogger(logger=log)
+    self.message_logger = MessageLogger(logger=structured_log)
 
     # environment function for browserEnv
     self.environment = environment
