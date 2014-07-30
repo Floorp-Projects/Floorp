@@ -486,14 +486,14 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     // Restrict the DrawTargets and frontBuffer to a scope to make
     // sure there is no more external references to the DrawTargets
     // when we Unlock the TextureClients.
-    RefPtr<SourceSurface> surf = mFrontClient->BorrowDrawTarget()->Snapshot();
-    RefPtr<SourceSurface> surfOnWhite = mFrontClientOnWhite
-      ? mFrontClientOnWhite->BorrowDrawTarget()->Snapshot()
+    RefPtr<DrawTarget> dt = mFrontClient->BorrowDrawTarget();
+    RefPtr<DrawTarget> dtOnWhite = mFrontClientOnWhite
+      ? mFrontClientOnWhite->BorrowDrawTarget()
       : nullptr;
-    SourceRotatedBuffer frontBuffer(surf,
-                                    surfOnWhite,
-                                    mFrontBufferRect,
-                                    mFrontBufferRotation);
+    RotatedBuffer frontBuffer(dt,
+                              dtOnWhite,
+                              mFrontBufferRect,
+                              mFrontBufferRotation);
     UpdateDestinationFrom(frontBuffer, updateRegion);
   }
 
