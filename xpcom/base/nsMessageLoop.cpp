@@ -121,7 +121,7 @@ MessageLoopIdleTask::Run()
 }
 
 MessageLoopTimerCallback::MessageLoopTimerCallback(MessageLoopIdleTask* aTask)
-  : mTask(aTask->asWeakPtr())
+  : mTask(aTask)
 {
 }
 
