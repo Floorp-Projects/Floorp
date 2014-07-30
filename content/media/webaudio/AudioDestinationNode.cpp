@@ -329,7 +329,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                             static_cast<AudioNodeEngine*>(new DestinationNodeEngine(this));
 
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
-  mStream->SetAudioChannelType(aChannel);
   mStream->AddMainThreadListener(this);
   mStream->AddAudioOutput(&gWebAudioOutputKey);
 
@@ -538,6 +537,10 @@ AudioDestinationNode::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& a
   if (aValue != mAudioChannel &&
       CheckAudioChannelPermissions(aValue)) {
     mAudioChannel = aValue;
+
+    if (mStream) {
+      mStream->SetAudioChannelType(mAudioChannel);
+    }
 
     if (mAudioChannelAgent) {
       CreateAudioChannelAgent();
