@@ -37,10 +37,6 @@
 #endif
 #include "gfx2DGlue.h"
 
-#include <vector>
-
-using namespace std;
-
 namespace mozilla {
 
 using namespace gfx;
@@ -105,7 +101,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 }
 
 void
-ContentClient::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
+ContentClient::EndPaint()
 {
   // It is very important that this is called after any overridden EndPaint behaviour,
   // because destroying textures is a three stage process:
@@ -161,64 +157,6 @@ ContentClientRemoteBuffer::DestroyBuffers()
   DestroyFrontBuffer();
 }
 
-class RemoteBufferReadbackProcessor : public TextureReadbackSink
-{
-public:
-  RemoteBufferReadbackProcessor(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates,
-                                const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
-    : mReadbackUpdates(*aReadbackUpdates)
-    , mBufferRect(aBufferRect)
-    , mBufferRotation(aBufferRotation)
-  {
-    for (uint32_t i = 0; i < mReadbackUpdates.Length(); ++i) {
-      mLayerRefs.push_back(mReadbackUpdates[i].mLayer);
-    }
-  }
-
-  virtual void ProcessReadback(gfx::DataSourceSurface *aSourceSurface)
-  {
-    SourceRotatedBuffer rotBuffer(aSourceSurface, nullptr, mBufferRect, mBufferRotation);
-
-    for (uint32_t i = 0; i < mReadbackUpdates.Length(); ++i) {
-      ReadbackProcessor::Update& update = mReadbackUpdates[i];
-      nsIntPoint offset = update.mLayer->GetBackgroundLayerOffset();
-
-      ReadbackSink* sink = update.mLayer->GetSink();
-
-      if (!sink) {
-        continue;
-      }
-
-      if (!aSourceSurface) {
-        sink->SetUnknown(update.mSequenceCounter);
-        continue;
-      }
-
-      nsRefPtr<gfxContext> ctx =
-        sink->BeginUpdate(update.mUpdateRect + offset, update.mSequenceCounter);
-
-      if (!ctx) {
-        continue;
-      }
-
-      DrawTarget* dt = ctx->GetDrawTarget();
-      dt->SetTransform(Matrix::Translation(offset.x, offset.y));
-
-      rotBuffer.DrawBufferWithRotation(dt, RotatedBuffer::BUFFER_BLACK);
-
-      update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
-    }
-  }
-
-private:
-  nsTArray<ReadbackProcessor::Update> mReadbackUpdates;
-  // This array is used to keep the layers alive until the callback.
-  vector<RefPtr<Layer>> mLayerRefs;
-
-  nsIntRect mBufferRect;
-  nsIntPoint mBufferRotation;
-};
-
 void
 ContentClientRemoteBuffer::BeginPaint()
 {
@@ -235,10 +173,8 @@ ContentClientRemoteBuffer::BeginPaint()
 }
 
 void
-ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
+ContentClientRemoteBuffer::EndPaint()
 {
-  MOZ_ASSERT(!mTextureClientOnWhite || !aReadbackUpdates || aReadbackUpdates->Length() == 0);
-
   // XXX: We might still not have a texture client if PaintThebes
   // decided we didn't need one yet because the region to draw was empty.
   SetBufferProvider(nullptr);
@@ -251,18 +187,12 @@ ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadba
   mOldTextures.Clear();
 
   if (mTextureClient && mTextureClient->IsLocked()) {
-    if (aReadbackUpdates->Length() > 0) {
-      RefPtr<TextureReadbackSink> readbackSink = new RemoteBufferReadbackProcessor(aReadbackUpdates, mBufferRect, mBufferRotation);
-
-      mTextureClient->SetReadbackSink(readbackSink);
-    }
-
     mTextureClient->Unlock();
   }
   if (mTextureClientOnWhite && mTextureClientOnWhite->IsLocked()) {
     mTextureClientOnWhite->Unlock();
   }
-  ContentClientRemote::EndPaint(aReadbackUpdates);
+  ContentClientRemote::EndPaint();
 }
 
 void

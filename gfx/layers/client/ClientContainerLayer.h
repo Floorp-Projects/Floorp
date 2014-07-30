@@ -15,8 +15,6 @@
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsAutoTArray
-#include "ReadbackProcessor.h"
-#include "ClientThebesLayer.h"
 
 namespace mozilla {
 namespace layers {
@@ -57,20 +55,13 @@ public:
     nsAutoTArray<Layer*, 12> children;
     SortChildrenBy3DZOrder(children);
 
-    ReadbackProcessor readback;
-    readback.BuildUpdates(this);
-
     for (uint32_t i = 0; i < children.Length(); i++) {
       Layer* child = children.ElementAt(i);
       if (child->GetEffectiveVisibleRegion().IsEmpty()) {
         continue;
       }
 
-      if (child->GetType() != TYPE_THEBES) {
-        ToClientLayer(child)->RenderLayer();
-      } else {
-        static_cast<ClientThebesLayer*>(child)->RenderLayer(&readback);
-      }
+      ToClientLayer(child)->RenderLayer();
 
       if (!ClientManager()->GetRepeatTransaction() &&
           !child->GetInvalidRegion().IsEmpty()) {
