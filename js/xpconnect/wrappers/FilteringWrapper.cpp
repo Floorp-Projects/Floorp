@@ -45,14 +45,32 @@ Filter(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
 
 template <typename Policy>
 static bool
-FilterSetter(JSContext *cx, JSObject *wrapper, jsid id, JS::MutableHandle<JSPropertyDescriptor> desc)
+FilterPropertyDescriptor(JSContext *cx, JSObject *wrapper, HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+    bool getAllowed = Policy::check(cx, wrapper, id, Wrapper::GET);
+    if (JS_IsExceptionPending(cx))
+        return false;
     bool setAllowed = Policy::check(cx, wrapper, id, Wrapper::SET);
-    if (!setAllowed) {
-        if (JS_IsExceptionPending(cx))
-            return false;
-        desc.setSetter(nullptr);
+    if (JS_IsExceptionPending(cx))
+        return false;
+
+    MOZ_ASSERT(getAllowed || setAllowed,
+               "Filtering policy should not allow GET_PROPERTY_DESCRIPTOR in this case");
+
+    if (!desc.hasGetterOrSetter()) {
+        // Handle value properties.
+        if (!getAllowed)
+            desc.value().setUndefined();
+    } else {
+        // Handle accessor properties.
+        MOZ_ASSERT(desc.value().isUndefined());
+        if (!getAllowed)
+            desc.setGetter(nullptr);
+        if (!setAllowed)
+            desc.setSetter(nullptr);
     }
+
     return true;
 }
 
@@ -65,7 +83,7 @@ FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, HandleObjec
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET);
     if (!Base::getPropertyDescriptor(cx, wrapper, id, desc))
         return false;
-    return FilterSetter<Policy>(cx, wrapper, id, desc);
+    return FilterPropertyDescriptor<Policy>(cx, wrapper, id, desc);
 }
 
 template <typename Base, typename Policy>
@@ -77,7 +95,7 @@ FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, HandleOb
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::GET | BaseProxyHandler::SET);
     if (!Base::getOwnPropertyDescriptor(cx, wrapper, id, desc))
         return false;
-    return FilterSetter<Policy>(cx, wrapper, id, desc);
+    return FilterPropertyDescriptor<Policy>(cx, wrapper, id, desc);
 }
 
 template <typename Base, typename Policy>
