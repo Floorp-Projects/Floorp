@@ -126,11 +126,6 @@
 #include "plat_debug.h"
 
 /**
-  * Mutex to manage message queue list.
-  */
-extern pthread_mutex_t msgQueueListMutex;
-
-/**
   * Boolean to check that cprPreInit been called
   */
 static boolean pre_init_called = FALSE;
@@ -171,21 +166,8 @@ cprPreInit (void)
         return CPR_SUCCESS;
     }
     pre_init_called = TRUE;
-    /*
-     * Create message queue list mutex
-     */
-    returnCode = pthread_mutex_init(&msgQueueListMutex, NULL);
-    if (returnCode != 0) {
-        CPR_ERROR("%s: MsgQueue Mutex init failure %d\n", fname, returnCode);
-        return CPR_FAILURE;
-    }
-#if CPR_TIMERS_ENABLED
-    returnCode = cpr_timer_pre_init();
-    if (returnCode != 0) {
-        CPR_ERROR("%s: timer pre init failed %d\n", fname, returnCode);
-        return CPR_FAILURE;
-    }
-#endif
+    (void)fname;
+    (void)returnCode;
     return CPR_SUCCESS;
 }
 

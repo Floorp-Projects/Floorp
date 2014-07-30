@@ -5,7 +5,6 @@
 #include "cpr.h"
 #include "cpr_stdlib.h"
 #include "cpr_stdio.h"
-#include "thread_monitor.h"
 #include "prtypes.h"
 #include "mozilla/Assertions.h"
 #include <pthread.h>
