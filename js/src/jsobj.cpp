@@ -2210,6 +2210,22 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
             FixObjectType(cx, obj);
     }
 
+    {
+        uint32_t frozen;
+        bool extensible;
+        if (mode == XDR_ENCODE) {
+            if (!JSObject::isExtensible(cx, obj, &extensible))
+                return false;
+            frozen = extensible ? 0 : 1;
+        }
+        if (!xdr->codeUint32(&frozen))
+            return false;
+        if (mode == XDR_DECODE && frozen == 1) {
+            if (!JSObject::freeze(cx, obj))
+                return false;
+        }
+    }
+
     return true;
 }
 

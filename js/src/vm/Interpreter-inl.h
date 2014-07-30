@@ -521,6 +521,28 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
     return true;
 }
 
+static MOZ_ALWAYS_INLINE bool
+ProcessCallSiteObjOperation(JSContext *cx, RootedObject &cso, RootedObject &raw,
+                            RootedValue &rawValue)
+{
+    bool extensible;
+    if (!JSObject::isExtensible(cx, cso, &extensible))
+        return false;
+    if (extensible) {
+        JSAtom *name = cx->names().raw;
+        if (!JSObject::defineProperty(cx, cso, name->asPropertyName(), rawValue,
+                                      nullptr, nullptr, 0))
+        {
+            return false;
+        }
+        if (!JSObject::freeze(cx, raw))
+            return false;
+        if (!JSObject::freeze(cx, cso))
+            return false;
+    }
+    return true;
+}
+
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
         /* Optimize for two int-tagged operands (typical loop control). */    \

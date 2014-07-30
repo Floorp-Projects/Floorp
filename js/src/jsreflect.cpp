@@ -629,7 +629,14 @@ class NodeBuilder
 
     bool arrayExpression(NodeVector &elts, TokenPos *pos, MutableHandleValue dst);
 
+#ifdef JS_HAS_TEMPLATE_STRINGS
     bool templateLiteral(NodeVector &elts, TokenPos *pos, MutableHandleValue dst);
+
+    bool taggedTemplate(HandleValue callee, NodeVector &args, TokenPos *pos,
+                        MutableHandleValue dst);
+
+    bool callSiteObj(NodeVector &raw, NodeVector &cooked, TokenPos *pos, MutableHandleValue dst);
+#endif
 
     bool spreadExpression(HandleValue expr, TokenPos *pos, MutableHandleValue dst);
 
@@ -1212,6 +1219,37 @@ NodeBuilder::arrayExpression(NodeVector &elts, TokenPos *pos, MutableHandleValue
 }
 
 #ifdef JS_HAS_TEMPLATE_STRINGS
+bool
+NodeBuilder::callSiteObj(NodeVector &raw, NodeVector &cooked, TokenPos *pos, MutableHandleValue dst)
+{
+    RootedValue rawVal(cx);
+    if (!newArray(raw, &rawVal))
+        return false;
+
+    RootedValue cookedVal(cx);
+    if (!newArray(cooked, &cookedVal))
+        return false;
+
+    return newNode(AST_CALL_SITE_OBJ, pos,
+                   "raw", rawVal,
+                   "cooked", cookedVal,
+                    dst);
+}
+
+bool
+NodeBuilder::taggedTemplate(HandleValue callee, NodeVector &args, TokenPos *pos,
+                            MutableHandleValue dst)
+{
+    RootedValue array(cx);
+    if (!newArray(args, &array))
+        return false;
+
+    return newNode(AST_TAGGED_TEMPLATE, pos,
+                   "callee", callee,
+                   "arguments", array,
+                   dst);
+}
+
 bool
 NodeBuilder::templateLiteral(NodeVector &elts, TokenPos *pos, MutableHandleValue dst)
 {
@@ -2728,6 +2766,9 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
 #endif
 
       case PNK_NEW:
+#ifdef JS_HAS_TEMPLATE_STRINGS
+      case PNK_TAGGED_TEMPLATE:
+#endif
       case PNK_CALL:
       {
         ParseNode *next = pn->pn_head;
@@ -2750,6 +2791,10 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
             args.infallibleAppend(arg);
         }
 
+#ifdef JS_HAS_TEMPLATE_STRINGS
+        if (pn->getKind() == PNK_TAGGED_TEMPLATE)
+            return builder.taggedTemplate(callee, args, &pn->pn_pos, dst);
+#endif
         return pn->isKind(PNK_NEW)
                ? builder.newExpression(callee, args, &pn->pn_pos, dst)
 
@@ -2777,7 +2822,36 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
                expression(pn->pn_right, &right) &&
                builder.memberExpression(true, left, right, &pn->pn_pos, dst);
       }
+#ifdef JS_HAS_TEMPLATE_STRINGS
+      case PNK_CALLSITEOBJ:
+      {
+        NodeVector raw(cx);
+        if (!raw.reserve(pn->pn_head->pn_count))
+            return false;
+        for (ParseNode *next = pn->pn_head->pn_head; next; next = next->pn_next) {
+            JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
+            RootedValue expr(cx);
+            expr.setString(next->pn_atom);
+            raw.infallibleAppend(expr);
+        }
+
+        NodeVector cooked(cx);
+        if (!cooked.reserve(pn->pn_count - 1))
+            return false;
+
+        for (ParseNode *next = pn->pn_head->pn_next; next; next = next->pn_next) {
+            JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
+
+            RootedValue expr(cx);
+            expr.setString(next->pn_atom);
+            cooked.infallibleAppend(expr);
+        }
+
+        return builder.callSiteObj(raw, cooked, &pn->pn_pos, dst);
+      }
+
+#endif
       case PNK_ARRAY:
       {
         NodeVector elts(cx);
