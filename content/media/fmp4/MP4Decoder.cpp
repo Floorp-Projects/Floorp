@@ -8,6 +8,8 @@
 #include "MP4Reader.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/CDMProxy.h"
+#include "prlog.h"
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
@@ -21,6 +23,23 @@ namespace mozilla {
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
 {
   return new MediaDecoderStateMachine(this, new MP4Reader(this));
+}
+
+nsresult
+MP4Decoder::SetCDMProxy(CDMProxy* aProxy)
+{
+  nsresult rv = MediaDecoder::SetCDMProxy(aProxy);
+  NS_ENSURE_SUCCESS(rv, rv);
+  {
+    // The MP4Reader can't decrypt EME content until it has a CDMProxy,
+    // and the CDMProxy knows the capabilities of the CDM. The MP4Reader
+    // remains in "waiting for resources" state until then.
+    CDMCaps::AutoLock caps(aProxy->Capabilites());
+    nsRefPtr<nsIRunnable> task(
+      NS_NewRunnableMethod(this, &MediaDecoder::NotifyWaitingForResourcesStatusChanged));
+    caps.CallOnMainThreadWhenCapsAvailable(task);
+  }
+  return NS_OK;
 }
 
 bool
