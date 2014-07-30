@@ -1477,13 +1477,9 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
     if (!gl)
         return nullptr;
 
-    bool hasAlpha = mOptions.alpha;
-    SurfaceFormat surfFormat = hasAlpha ? SurfaceFormat::B8G8R8A8
-                                        : SurfaceFormat::B8G8R8X8;
-    RefPtr<DataSourceSurface> surf;
-    surf = Factory::CreateDataSourceSurfaceWithStride(IntSize(mWidth, mHeight),
-                                                      surfFormat,
-                                                      mWidth * 4);
+    RefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurfaceWithStride(IntSize(mWidth, mHeight),
+                                                                                SurfaceFormat::B8G8R8A8,
+                                                                                mWidth * 4);
     if (!surf) {
         return nullptr;
     }
