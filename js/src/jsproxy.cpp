@@ -158,37 +158,56 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 {
     assertEnteredPolicy(cx, proxy, id, SET);
 
+    // Find an own or inherited property. The code here is strange for maximum
+    // backward compatibility with earlier code written before ES6 and before
+    // SetPropertyIgnoringNamedGetter.
     Rooted<PropertyDescriptor> desc(cx);
     if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
         return false;
-    /* The control-flow here differs from ::get() because of the fall-through case below. */
-    if (desc.object()) {
-        // Check for read-only properties.
-        if (desc.isReadonly())
-            return strict ? Throw(cx, id, JSMSG_CANT_REDEFINE_PROP) : true;
-        if (!desc.setter()) {
-            // Be wary of the odd explicit undefined setter case possible through
-            // Object.defineProperty.
-            if (!desc.hasSetterObject())
-                desc.setSetter(JS_StrictPropertyStub);
-        } else if (desc.hasSetterObject() || desc.setter() != JS_StrictPropertyStub) {
-            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp))
-                return false;
-            if (!proxy->is<ProxyObject>() || proxy->as<ProxyObject>().handler() != this)
-                return true;
-            if (desc.isShared())
-                return true;
-        }
-        if (!desc.getter()) {
-            // Same as above for the null setter case.
-            if (!desc.hasGetterObject())
-                desc.setGetter(JS_PropertyStub);
-        }
-        desc.value().set(vp.get());
-        return defineProperty(cx, receiver, id, &desc);
+    bool descIsOwn = desc.object() != nullptr;
+    if (!descIsOwn) {
+        if (!getPropertyDescriptor(cx, proxy, id, &desc))
+            return false;
     }
-    if (!getPropertyDescriptor(cx, proxy, id, &desc))
-        return false;
+
+    return SetPropertyIgnoringNamedGetter(cx, this, proxy, receiver, id, &desc, descIsOwn, strict,
+                                          vp);
+}
+
+bool
+js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handler,
+                                   HandleObject proxy, HandleObject receiver,
+                                   HandleId id, MutableHandle<PropertyDescriptor> desc,
+                                   bool descIsOwn, bool strict, MutableHandleValue vp)
+{
+    /* The control-flow here differs from ::get() because of the fall-through case below. */
+    if (descIsOwn) {
+        JS_ASSERT(desc.object());
+
+        // Check for read-only properties.
+        if (desc.isReadonly())
+            return strict ? Throw(cx, id, JSMSG_CANT_REDEFINE_PROP) : true;
+        if (!desc.setter()) {
+            // Be wary of the odd explicit undefined setter case possible through
+            // Object.defineProperty.
+            if (!desc.hasSetterObject())
+                desc.setSetter(JS_StrictPropertyStub);
+        } else if (desc.hasSetterObject() || desc.setter() != JS_StrictPropertyStub) {
+            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp))
+                return false;
+            if (!proxy->is<ProxyObject>() || proxy->as<ProxyObject>().handler() != handler)
+                return true;
+            if (desc.isShared())
+                return true;
+        }
+        if (!desc.getter()) {
+            // Same as above for the null setter case.
+            if (!desc.hasGetterObject())
+                desc.setGetter(JS_PropertyStub);
+        }
+        desc.value().set(vp.get());
+        return handler->defineProperty(cx, receiver, id, desc);
+    }
     if (desc.object()) {
         // Check for read-only properties.
         if (desc.isReadonly())
@@ -201,7 +220,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         } else if (desc.hasSetterObject() || desc.setter() != JS_StrictPropertyStub) {
             if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp))
                 return false;
-            if (!proxy->is<ProxyObject>() || proxy->as<ProxyObject>().handler() != this)
+            if (!proxy->is<ProxyObject>() || proxy->as<ProxyObject>().handler() != handler)
                 return true;
             if (desc.isShared())
                 return true;
@@ -212,7 +231,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
                 desc.setGetter(JS_PropertyStub);
         }
         desc.value().set(vp.get());
-        return defineProperty(cx, receiver, id, &desc);
+        return handler->defineProperty(cx, receiver, id, desc);
     }
 
     desc.object().set(receiver);
@@ -220,7 +239,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
     desc.setAttributes(JSPROP_ENUMERATE);
     desc.setGetter(nullptr);
     desc.setSetter(nullptr); // Pick up the class getter/setter.
-    return defineProperty(cx, receiver, id, &desc);
+    return handler->defineProperty(cx, receiver, id, desc);
 }
 
 bool
