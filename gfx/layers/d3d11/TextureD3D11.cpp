@@ -11,6 +11,7 @@
 #include "gfxWindowsPlatform.h"
 #include "gfxD2DSurface.h"
 #include "gfx2DGlue.h"
+#include "ReadbackManagerD3D11.h"
 
 namespace mozilla {
 
@@ -247,6 +248,28 @@ TextureClientD3D11::Unlock()
     // reference remains by the time Unlock() is called.
     MOZ_ASSERT(mDrawTarget->refCount() == 1);
     mDrawTarget->Flush();
+  }
+
+  if (mReadbackSink) {
+    ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+
+    D3D10_TEXTURE2D_DESC desc;
+    mTexture->GetDesc(&desc);
+    desc.BindFlags = 0;
+    desc.Usage = D3D10_USAGE_STAGING;
+    desc.CPUAccessFlags = D3D10_CPU_ACCESS_READ;
+    desc.MiscFlags = 0;
+
+    RefPtr<ID3D10Texture2D> tex;
+    HRESULT hr = device->CreateTexture2D(&desc, nullptr, byRef(tex));
+
+    if (SUCCEEDED(hr)) {
+      device->CopyResource(tex, mTexture);
+
+      gfxWindowsPlatform::GetPlatform()->GetReadbackManager()->PostTask(tex, mReadbackSink);
+    } else {
+      mReadbackSink->ProcessReadback(nullptr);
+    }
   }
 
   // The DrawTarget is created only once, and is only usable between calls
