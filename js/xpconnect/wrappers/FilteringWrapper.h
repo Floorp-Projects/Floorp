@@ -7,6 +7,7 @@
 #ifndef __FilteringWrapper_h__
 #define __FilteringWrapper_h__
 
+#include "XrayWrapper.h"
 #include "mozilla/Attributes.h"
 #include "jswrapper.h"
 #include "js/CallNonGenericMethod.h"
@@ -49,6 +50,17 @@ class FilteringWrapper : public Base {
                        js::Wrapper::Action act, bool *bp) const MOZ_OVERRIDE;
 
     static const FilteringWrapper singleton;
+};
+
+/*
+ * The HTML5 spec mandates very particular object behavior for cross-origin DOM
+ * objects (Window and Location), some of which runs contrary to the way that
+ * other XrayWrappers behave. We use this class to implement those semantics.
+ */
+class CrossOriginXrayWrapper : public SecurityXrayDOM {
+  public:
+    CrossOriginXrayWrapper(unsigned flags);
+    virtual ~CrossOriginXrayWrapper();
 };
 
 }
