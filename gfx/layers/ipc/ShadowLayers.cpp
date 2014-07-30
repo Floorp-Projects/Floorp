@@ -253,22 +253,13 @@ ShadowLayerForwarder::InsertAfter(ShadowableLayer* aContainer,
                                   ShadowableLayer* aChild,
                                   ShadowableLayer* aAfter)
 {
-  if (!aChild->HasShadow()) {
-    return;
-  }
-
-  while (aAfter && !aAfter->HasShadow()) {
-    aAfter = aAfter->AsLayer()->GetPrevSibling() ? aAfter->AsLayer()->GetPrevSibling()->AsShadowableLayer() : nullptr;
-  }
-
-  if (aAfter) {
+  if (aAfter)
     mTxn->AddEdit(OpInsertAfter(nullptr, Shadow(aContainer),
                                 nullptr, Shadow(aChild),
                                 nullptr, Shadow(aAfter)));
-  } else {
+  else
     mTxn->AddEdit(OpPrependChild(nullptr, Shadow(aContainer),
                                  nullptr, Shadow(aChild)));
-  }
 }
 void
 ShadowLayerForwarder::RemoveChild(ShadowableLayer* aContainer,
@@ -276,10 +267,6 @@ ShadowLayerForwarder::RemoveChild(ShadowableLayer* aContainer,
 {
   MOZ_LAYERS_LOG(("[LayersForwarder] OpRemoveChild container=%p child=%p\n",
                   aContainer->AsLayer(), aChild->AsLayer()));
-
-  if (!aChild->HasShadow()) {
-    return;
-  }
 
   mTxn->AddEdit(OpRemoveChild(nullptr, Shadow(aContainer),
                               nullptr, Shadow(aChild)));
@@ -289,14 +276,6 @@ ShadowLayerForwarder::RepositionChild(ShadowableLayer* aContainer,
                                       ShadowableLayer* aChild,
                                       ShadowableLayer* aAfter)
 {
-  if (!aChild->HasShadow()) {
-    return;
-  }
-
-  while (aAfter && !aAfter->HasShadow()) {
-    aAfter = aAfter->AsLayer()->GetPrevSibling() ? aAfter->AsLayer()->GetPrevSibling()->AsShadowableLayer() : nullptr;
-  }
-
   if (aAfter) {
     MOZ_LAYERS_LOG(("[LayersForwarder] OpRepositionChild container=%p child=%p after=%p",
                    aContainer->AsLayer(), aChild->AsLayer(), aAfter->AsLayer()));
@@ -525,10 +504,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   for (ShadowableLayerSet::const_iterator it = mTxn->mMutants.begin();
        it != mTxn->mMutants.end(); ++it) {
     ShadowableLayer* shadow = *it;
-
-    if (!shadow->HasShadow()) {
-      continue;
-    }
     Layer* mutant = shadow->AsLayer();
     NS_ABORT_IF_FALSE(!!mutant, "unshadowable layer?");
 
