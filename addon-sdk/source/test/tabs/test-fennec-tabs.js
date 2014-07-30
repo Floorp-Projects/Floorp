@@ -135,7 +135,7 @@ exports.testTabProperties = function(assert, done) {
 exports.testTabsIteratorAndLength = function(assert, done) {
   let newTabs = [];
   let startCount = 0;
-  for each (let t in tabs) startCount++;
+  for (let t of tabs) startCount++;
 
   assert.equal(startCount, tabs.length, "length property is correct");
 
@@ -146,7 +146,7 @@ exports.testTabsIteratorAndLength = function(assert, done) {
     url: url,
     onOpen: function(tab) {
       let count = 0;
-      for each (let t in tabs) count++;
+      for (let t of tabs) count++;
       assert.equal(count, startCount + 3, "iterated tab count matches");
       assert.equal(startCount + 3, tabs.length, "iterated tab count matches length property");
 
