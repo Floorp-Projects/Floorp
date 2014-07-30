@@ -66,6 +66,7 @@ UNIFIED_SOURCES += [
     'testScriptInfo.cpp',
     'testScriptObject.cpp',
     'testSetProperty.cpp',
+    'testSetPropertyIgnoringNamedGetter.cpp',
     'testSourcePolicy.cpp',
     'testStringBuffer.cpp',
     'testStructuredClone.cpp',
