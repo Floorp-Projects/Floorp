@@ -1340,18 +1340,6 @@ class Value
 };
 
 inline bool
-IsPoisonedValue(const Value &v)
-{
-    if (v.isString())
-        return IsPoisonedPtr(v.toString());
-    if (v.isSymbol())
-        return IsPoisonedPtr(v.toSymbol());
-    if (v.isObject())
-        return IsPoisonedPtr(&v.toObject());
-    return false;
-}
-
-inline bool
 IsOptimizedPlaceholderMagicValue(const Value &v)
 {
     if (v.isMagic()) {
@@ -1638,13 +1626,17 @@ namespace js {
 template <> struct GCMethods<const JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
-    static bool poisoned(const JS::Value &v) { return JS::IsPoisonedValue(v); }
+    static bool poisoned(const JS::Value &v) {
+        return v.isMarkable() && JS::IsPoisonedPtr(v.toGCThing());
+    }
 };
 
 template <> struct GCMethods<JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
-    static bool poisoned(const JS::Value &v) { return JS::IsPoisonedValue(v); }
+    static bool poisoned(const JS::Value &v) {
+        return v.isMarkable() && JS::IsPoisonedPtr(v.toGCThing());
+    }
     static bool needsPostBarrier(const JS::Value &v) {
         return v.isObject() && gc::IsInsideNursery(reinterpret_cast<gc::Cell*>(&v.toObject()));
     }
@@ -1863,6 +1855,12 @@ IMPL_TO_JSVAL(jsval_layout l)
 }
 
 namespace JS {
+
+inline bool
+IsPoisonedValue(const Value &v)
+{
+    return js::GCMethods<Value>::poisoned(v);
+}
 
 #ifndef __GNUC__
 /*

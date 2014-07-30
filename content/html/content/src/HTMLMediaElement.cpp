@@ -2647,12 +2647,15 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // Tell the decoder about its MediaResource now so things like principals are
   // available immediately.
   mDecoder->SetResource(aStream);
-  aDecoder->SetAudioChannel(mAudioChannel);
+  mDecoder->SetAudioChannel(mAudioChannel);
   mDecoder->SetAudioCaptured(mAudioCaptured);
   mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
   mDecoder->SetPreservesPitch(mPreservesPitch);
   mDecoder->SetPlaybackRate(mPlaybackRate);
 
+  if (mMediaKeys) {
+    mDecoder->SetCDMProxy(mMediaKeys->GetCDMProxy());
+  }
   if (mPreloadAction == HTMLMediaElement::PRELOAD_METADATA) {
     mDecoder->SetMinimizePrerollUntilPlaybackStarts();
   }
@@ -3973,6 +3976,9 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
   }
   if (mMediaKeys != aMediaKeys) {
     mMediaKeys = aMediaKeys;
+  }
+  if (mDecoder) {
+    mDecoder->SetCDMProxy(mMediaKeys->GetCDMProxy());
   }
   promise->MaybeResolve(JS::UndefinedHandleValue);
   return promise.forget();

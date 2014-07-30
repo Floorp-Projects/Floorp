@@ -741,8 +741,9 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   nsIFrame* frameForCompositionBoundsCalculation = aScrollFrame ? aScrollFrame : aForFrame;
   nsRect compositionBounds(frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aReferenceFrame),
                            frameForCompositionBoundsCalculation->GetSize());
-  metrics.mCompositionBounds = LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
-                                * layoutToParentLayerScale;
+  ParentLayerRect frameBounds = LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
+                                 * layoutToParentLayerScale;
+  metrics.mCompositionBounds = frameBounds;
 
   // For the root scroll frame of the root content document, the above calculation
   // will yield the size of the viewport frame as the composition bounds, which
@@ -757,37 +758,39 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                       && presContext->IsRootContentDocument();
   if (isRootContentDocRootScrollFrame) {
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
-      if (nsView* view = rootFrame->GetView()) {
-        nsRect viewBoundsAppUnits = view->GetBounds() + rootFrame->GetOffsetToCrossDoc(aReferenceFrame);
-        ParentLayerRect viewBounds = LayoutDeviceRect::FromAppUnits(viewBoundsAppUnits, auPerDevPixel)
-                                     * layoutToParentLayerScale;
-
-        // On Android, we need to do things a bit differently to get things
-        // right (see bug 983208, bug 988882). We use the bounds of the nearest
-        // widget, but clamp the height to the view bounds height. This clamping
-        // is done to get correct results for a page where the page is sized to
-        // the screen and thus the dynamic toolbar never disappears. In such a
-        // case, we want the composition bounds to exclude the toolbar height,
-        // but the widget bounds includes it. We don't currently have a good way
-        // of knowing about the toolbar height, but clamping to the view bounds
-        // height gives the correct answer in the cases we care about.
-        nsIWidget* widget =
+      // On Android, we need to do things a bit differently to get things
+      // right (see bug 983208, bug 988882). We use the bounds of the nearest
+      // widget, but clamp the height to the frame bounds height. This clamping
+      // is done to get correct results for a page where the page is sized to
+      // the screen and thus the dynamic toolbar never disappears. In such a
+      // case, we want the composition bounds to exclude the toolbar height,
+      // but the widget bounds includes it. We don't currently have a good way
+      // of knowing about the toolbar height, but clamping to the frame bounds
+      // height gives the correct answer in the cases we care about.
 #ifdef MOZ_WIDGET_ANDROID
-            rootFrame->GetNearestWidget();
+      nsIWidget* widget = rootFrame->GetNearestWidget();
 #else
-            view->GetWidget();
+      nsView* view = rootFrame->GetView();
+      nsIWidget* widget = view ? view->GetWidget() : nullptr;
 #endif
-        if (widget) {
-          nsIntRect widgetBounds;
-          widget->GetBounds(widgetBounds);
-          metrics.mCompositionBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(widgetBounds));
+      if (widget) {
+        nsIntRect widgetBounds;
+        widget->GetBounds(widgetBounds);
+        metrics.mCompositionBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(widgetBounds));
 #ifdef MOZ_WIDGET_ANDROID
-          if (viewBounds.height < metrics.mCompositionBounds.height) {
-            metrics.mCompositionBounds.height = viewBounds.height;
-          }
+        if (frameBounds.height < metrics.mCompositionBounds.height) {
+          metrics.mCompositionBounds.height = frameBounds.height;
+        }
 #endif
-        } else {
-          metrics.mCompositionBounds = viewBounds;
+      } else {
+        LayoutDeviceIntRect contentBounds;
+        if (nsLayoutUtils::GetContentViewerBounds(presContext, contentBounds)) {
+          LayoutDeviceToParentLayerScale scale(1.0f);
+          if (presContext->GetParentPresContext()) {
+            gfxSize res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
+            scale = LayoutDeviceToParentLayerScale(res.width, res.height);
+          }
+          metrics.mCompositionBounds = LayoutDeviceRect(contentBounds) * scale;
         }
       }
     }

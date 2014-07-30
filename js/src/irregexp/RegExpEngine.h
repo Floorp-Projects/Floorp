@@ -69,7 +69,6 @@ struct RegExpCompileData
 
 struct RegExpCode
 {
-#ifdef JS_ION
     jit::JitCode *jitCode;
     uint8_t *byteCode;
 
@@ -84,21 +83,6 @@ struct RegExpCode
     void destroy() {
         js_free(byteCode);
     }
-#else
-    uint8_t *byteCode;
-
-    RegExpCode()
-      : byteCode(nullptr)
-    {}
-
-    bool empty() {
-        return !byteCode;
-    }
-
-    void destroy() {
-        js_free(byteCode);
-    }
-#endif
 };
 
 RegExpCode

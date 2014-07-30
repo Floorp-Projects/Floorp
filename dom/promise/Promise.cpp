@@ -1388,8 +1388,8 @@ PromiseWorkerProxy::StoreISupports(nsISupports* aSupports)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsMainThreadPtrHandle<nsISupports> supports =
-    new nsMainThreadPtrHolder<nsISupports>(aSupports);
+  nsMainThreadPtrHandle<nsISupports> supports(
+    new nsMainThreadPtrHolder<nsISupports>(aSupports));
   mSupportsArray.AppendElement(supports);
 }
 

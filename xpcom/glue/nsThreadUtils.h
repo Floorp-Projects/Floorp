@@ -426,7 +426,7 @@ struct dependent_type
 //   NS_NewRunnableMethodWithArg<Type>(myObject, &MyClass::HandleEvent, myArg);
 template<typename Arg, typename Method, typename PtrType>
 typename nsRunnableMethodTraits<Method, true>::base_type*
-NS_NewRunnableMethodWithArg(PtrType aPtr, Method aMethod,
+NS_NewRunnableMethodWithArg(PtrType&& aPtr, Method aMethod,
                             typename dependent_type<Arg>::type aArg)
 {
   return new nsRunnableMethodImpl<Method, Arg, true>(aPtr, aMethod, aArg);
@@ -434,7 +434,7 @@ NS_NewRunnableMethodWithArg(PtrType aPtr, Method aMethod,
 
 template<typename PtrType, typename Method>
 typename nsRunnableMethodTraits<Method, false>::base_type*
-NS_NewNonOwningRunnableMethod(PtrType aPtr, Method aMethod)
+NS_NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
   return new nsRunnableMethodImpl<Method, void, false>(aPtr, aMethod);
 }
