@@ -61,6 +61,13 @@ class CrossOriginXrayWrapper : public SecurityXrayDOM {
   public:
     CrossOriginXrayWrapper(unsigned flags);
     virtual ~CrossOriginXrayWrapper();
+
+    virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                       JS::Handle<jsid> id,
+                                       JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                          JS::Handle<jsid> id,
+                                          JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
 };
 
 }
