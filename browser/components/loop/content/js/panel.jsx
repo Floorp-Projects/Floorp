@@ -178,8 +178,7 @@ loop.panel = (function(_, mozL10n) {
         this.setState({pending: false});
       } else {
         try {
-          var callUrl = new window.URL(callUrlData.callUrl ||
-                                       callUrlData.call_url);
+          var callUrl = new window.URL(callUrlData.callUrl);
           // XXX the current server vers does not implement the callToken field
           // but it exists in the API. This workaround should be removed in the future
           var token = callUrlData.callToken ||

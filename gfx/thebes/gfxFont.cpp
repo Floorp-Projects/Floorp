@@ -3066,7 +3066,7 @@ struct TextRunDrawParams {
     gfxContext                    *context;
     gfxFont::Spacing              *spacing;
     gfxTextRunDrawCallbacks       *callbacks;
-    gfxTextContextPaint           *contextPaint;
+    gfxTextContextPaint           *runContextPaint;
     gfxFloat                       direction;
     double                         devPerApp;
     DrawMode                       drawMode;
@@ -3077,6 +3077,7 @@ struct TextRunDrawParams {
 struct FontDrawParams {
     RefPtr<ScaledFont>             scaledFont;
     RefPtr<GlyphRenderingOptions>  renderingOptions;
+    gfxTextContextPaint           *contextPaint;
     Matrix                        *passedInvMatrix;
     Matrix                         matInv;
     double                         synBoldOnePixelOffset;
@@ -3150,12 +3151,12 @@ private:
             FlushStroke(buf, state);
         }
         if (int(mRunParams.drawMode) & int(DrawMode::GLYPH_FILL)) {
-            if (state.pattern || mRunParams.contextPaint) {
+            if (state.pattern || mFontParams.contextPaint) {
                 Pattern *pat;
 
                 nsRefPtr<gfxPattern> fillPattern;
-                if (!mRunParams.contextPaint ||
-                    !(fillPattern = mRunParams.contextPaint->GetFillPattern(
+                if (!mFontParams.contextPaint ||
+                    !(fillPattern = mFontParams.contextPaint->GetFillPattern(
                                         mRunParams.context->CurrentMatrix()))) {
                     if (state.pattern) {
                         pat = state.pattern->GetPattern(mRunParams.dt,
@@ -3235,9 +3236,9 @@ private:
     {
         RefPtr<Path> path =
             mFontParams.scaledFont->GetPathForGlyphs(aBuf, mRunParams.dt);
-        if (mRunParams.contextPaint) {
+        if (mFontParams.contextPaint) {
             nsRefPtr<gfxPattern> strokePattern =
-                mRunParams.contextPaint->GetStrokePattern(
+                mFontParams.contextPaint->GetStrokePattern(
                     mRunParams.context->CurrentMatrix());
             if (strokePattern) {
                 mRunParams.dt->Stroke(path,
@@ -3315,7 +3316,7 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
         }
         DrawMode mode = ForcePaintingDrawMode(runParams.drawMode);
         if (RenderSVGGlyph(runParams.context, devPt, mode,
-                           aGlyphID, runParams.contextPaint,
+                           aGlyphID, fontParams.contextPaint,
                            runParams.callbacks, *aEmittedGlyphs)) {
             return;
         }
@@ -3419,7 +3420,7 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
 
 void
 gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
-              gfxPoint *aPt, TextRunDrawParams& aRunParams)
+              gfxPoint *aPt, const TextRunDrawParams& aRunParams)
 {
     NS_ASSERTION(aRunParams.drawMode == DrawMode::GLYPH_PATH ||
                  !(int(aRunParams.drawMode) & int(DrawMode::GLYPH_PATH)),
@@ -3438,9 +3439,10 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
     fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
     fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
+    fontParams.contextPaint = aRunParams.runContextPaint;
 
     nsAutoPtr<gfxTextContextPaint> contextPaint;
-    if (fontParams.haveSVGGlyphs && !aRunParams.contextPaint) {
+    if (fontParams.haveSVGGlyphs && !fontParams.contextPaint) {
         // If no pattern is specified for fill, use the current pattern
         NS_ASSERTION((int(aRunParams.drawMode) & int(DrawMode::GLYPH_STROKE)) == 0,
                      "no pattern supplied for stroking text");
@@ -3448,7 +3450,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         contextPaint =
             new SimpleTextContextPaint(fillPattern, nullptr,
                                        aRunParams.context->CurrentMatrix());
-        aRunParams.contextPaint = contextPaint;
+        fontParams.contextPaint = contextPaint;
     }
 
     // Synthetic-bold strikes are each offset one device pixel in run direction.
@@ -7104,7 +7106,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     params.direction = direction;
     params.drawMode = aDrawMode;
     params.callbacks = aCallbacks;
-    params.contextPaint = aContextPaint;
+    params.runContextPaint = aContextPaint;
     params.paintSVGGlyphs = !aCallbacks || aCallbacks->mShouldPaintSVGGlyphs;
     params.dt = aContext->GetDrawTarget();
 

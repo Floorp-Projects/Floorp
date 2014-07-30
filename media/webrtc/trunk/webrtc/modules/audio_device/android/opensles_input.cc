@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <dlfcn.h>
 
+#include "OpenSLESProvider.h"
 #include "webrtc/modules/audio_device/android/audio_common.h"
 #include "webrtc/modules/audio_device/android/opensles_common.h"
 #include "webrtc/modules/audio_device/android/single_rw_fifo.h"
@@ -116,12 +117,20 @@ int32_t OpenSlesInput::Init() {
   }
 
   // Set up OpenSL engine.
+#ifndef MOZILLA_INTERNAL_API
   OPENSL_RETURN_ON_FAILURE(f_slCreateEngine(&sles_engine_, 1, kOption, 0,
                                             NULL, NULL),
                            -1);
+#else
+  OPENSL_RETURN_ON_FAILURE(mozilla_get_sles_engine(&sles_engine_, 1, kOption), -1);
+#endif
+#ifndef MOZILLA_INTERNAL_API
   OPENSL_RETURN_ON_FAILURE((*sles_engine_)->Realize(sles_engine_,
                                                     SL_BOOLEAN_FALSE),
                            -1);
+#else
+  OPENSL_RETURN_ON_FAILURE(mozilla_realize_sles_engine(sles_engine_), -1);
+#endif
   OPENSL_RETURN_ON_FAILURE((*sles_engine_)->GetInterface(sles_engine_,
                                                          SL_IID_ENGINE_,
                                                          &sles_engine_itf_),
@@ -138,7 +147,11 @@ int32_t OpenSlesInput::Init() {
 int32_t OpenSlesInput::Terminate() {
   // It is assumed that the caller has stopped recording before terminating.
   assert(!recording_);
+#ifndef MOZILLA_INTERNAL_API
   (*sles_engine_)->Destroy(sles_engine_);
+#else
+  mozilla_destroy_sles_engine(&sles_engine_);
+#endif
   initialized_ = false;
   mic_initialized_ = false;
   rec_initialized_ = false;

@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 let log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "MediaPlayerApp");
 
-// Helper function for sending commands to Java. 
+// Helper function for sending commands to Java.
 function send(type, data, callback) {
   let msg = {
     type: type
@@ -52,6 +52,12 @@ MediaPlayerApp.prototype = {
       callback(new RemoteMedia(this.id, listener));
     }
   },
+
+  mirror: function mirror(callback) {
+    send("MediaPlayer:Mirror", { id: this.id }, (result) => {
+      if (callback) callback(true);
+    });
+  }
 }
 
 /* RemoteMedia provides a proxy to a native media player session.

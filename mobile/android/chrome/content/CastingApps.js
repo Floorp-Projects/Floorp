@@ -65,11 +65,30 @@ var CastingApps = {
     Services.obs.addObserver(this, "Casting:Play", false);
     Services.obs.addObserver(this, "Casting:Pause", false);
     Services.obs.addObserver(this, "Casting:Stop", false);
+    Services.obs.addObserver(this, "Casting:Mirror", false);
 
     BrowserApp.deck.addEventListener("TabSelect", this, true);
     BrowserApp.deck.addEventListener("pageshow", this, true);
     BrowserApp.deck.addEventListener("playing", this, true);
     BrowserApp.deck.addEventListener("ended", this, true);
+
+    NativeWindow.menu.add(
+      Strings.browser.GetStringFromName("casting.mirrorTab"),
+      "drawable://casting",
+      function() {
+        function callbackFunc(aService) {
+          let app = SimpleServiceDiscovery.findAppForService(aService);
+          if (app)
+            app.mirror(function() {
+            });
+        }
+
+        function filterFunc(aService) {
+          Cu.reportError("testing: " + aService);
+          return aService.mirror == true;
+        }
+        this.prompt(callbackFunc, filterFunc);
+      }.bind(this));
   },
 
   uninit: function ca_uninit() {
@@ -81,6 +100,7 @@ var CastingApps = {
     Services.obs.removeObserver(this, "Casting:Play");
     Services.obs.removeObserver(this, "Casting:Pause");
     Services.obs.removeObserver(this, "Casting:Stop");
+    Services.obs.removeObserver(this, "Casting:Mirror");
 
     NativeWindow.contextmenus.remove(this._castMenuId);
   },
@@ -104,6 +124,12 @@ var CastingApps = {
       case "Casting:Stop":
         if (this.session) {
           this.closeExternal();
+        }
+        break;
+      case "Casting:Mirror":
+        {
+          Cu.import("resource://gre/modules/TabMirror.jsm");
+          this.tabMirror = new TabMirror(aData, window);
         }
         break;
     }

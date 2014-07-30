@@ -18,6 +18,7 @@
 #include <mmsystem.h>
 #include <process.h>
 #include <stdlib.h>
+#include <math.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 
@@ -28,6 +29,9 @@
 
 #define CUBEB_STREAM_MAX 32
 #define NBUFS 4
+/* When cubeb_stream.soft_volume is set to this value, the device supports
+ * setting the volume. Otherwise, a gain will be applied manually. */
+#define SETTING_VOLUME_SUPPORTED -1.0
 
 const GUID KSDATAFORMAT_SUBTYPE_PCM =
 { 0x00000001, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
@@ -68,6 +72,7 @@ struct cubeb_stream {
   HWAVEOUT waveout;
   CRITICAL_SECTION lock;
   uint64_t written;
+  float soft_volume;
 };
 
 static size_t
@@ -154,6 +159,22 @@ winmm_refill_stream(cubeb_stream * stm)
 
   hdr->dwBufferLength = got * bytes_per_frame(stm->params);
   assert(hdr->dwBufferLength <= stm->buffer_size);
+
+  if (stm->soft_volume != SETTING_VOLUME_SUPPORTED) {
+    if (stm->params.format == CUBEB_SAMPLE_FLOAT32NE) {
+      short * b = (short *) hdr->lpData;
+      uint32_t i;
+      for (i = 0; i < got * stm->params.channels; i++) {
+        b[i] *= stm->soft_volume;
+      }
+    } else {
+      short * b = (short *) hdr->lpData;
+      uint32_t i;
+      for (i = 0; i < got * stm->params.channels; i++) {
+        b[i] *= stm->soft_volume;
+      }
+    }
+  }
 
   r = waveOutWrite(stm->waveout, hdr, sizeof(*hdr));
   if (r != MMSYSERR_NOERROR) {
@@ -330,6 +351,7 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 {
   MMRESULT r;
   WAVEFORMATEXTENSIBLE wfx;
+  WAVEOUTCAPS waveoutcaps;
   cubeb_stream * stm;
   int i;
   size_t bufsz;
@@ -416,6 +438,20 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
     return CUBEB_ERROR;
   }
 
+  r = waveOutGetDevCaps(WAVE_MAPPER, &waveoutcaps, sizeof(WAVEOUTCAPS)); 
+  if(r != MMSYSERR_NOERROR) {
+    winmm_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+
+  stm->soft_volume = SETTING_VOLUME_SUPPORTED;
+
+  /* if this device does not support setting the volume, do it manually. */
+  if(!(waveoutcaps.dwSupport & WAVECAPS_VOLUME)) {
+    stm->soft_volume = 1.0;
+  }
+
+
   /* winmm_buffer_callback will be called during waveOutOpen, so all
      other initialization must be complete before calling it. */
   r = waveOutOpen(&stm->waveout, WAVE_MAPPER, &wfx.Format,
@@ -431,6 +467,7 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
     winmm_stream_destroy(stm);
     return CUBEB_ERROR;
   }
+
 
   for (i = 0; i < NBUFS; ++i) {
     WAVEHDR * hdr = &stm->buffers[i];
@@ -628,6 +665,41 @@ winmm_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   return CUBEB_OK;
 }
 
+static int
+winmm_stream_set_volume(cubeb_stream * stm, float volume)
+{
+  MMRESULT r;
+  DWORD vol;
+
+  if (stm->soft_volume != SETTING_VOLUME_SUPPORTED) {
+    stm->soft_volume = volume;
+    return CUBEB_OK;
+  }
+
+  // lower order word is the left channel, higher order
+  // word is the right channel. Full volume on a channel is 0xffff.
+  vol = volume * 0xffff;
+  vol |= vol << 16;
+
+  EnterCriticalSection(&stm->lock);
+  r = waveOutSetVolume(stm->waveout, vol);
+  if (r != MMSYSERR_NOERROR) {
+    stm->soft_volume = volume;
+    LeaveCriticalSection(&stm->lock);
+    return CUBEB_ERROR;
+  }
+  LeaveCriticalSection(&stm->lock);
+
+  return CUBEB_OK;
+}
+
+static int
+winmm_stream_set_panning(cubeb_stream * stream, float panning)
+{
+  assert(0 && "not implemented");
+  return CUBEB_OK;
+}
+
 static struct cubeb_ops const winmm_ops = {
   /*.init =*/ winmm_init,
   /*.get_backend_id =*/ winmm_get_backend_id,
@@ -640,5 +712,10 @@ static struct cubeb_ops const winmm_ops = {
   /*.stream_start =*/ winmm_stream_start,
   /*.stream_stop =*/ winmm_stream_stop,
   /*.stream_get_position =*/ winmm_stream_get_position,
-  /*.stream_get_latency = */ winmm_stream_get_latency
+  /*.stream_get_latency = */ winmm_stream_get_latency,
+  /*.stream_set_volume =*/ winmm_stream_set_volume,
+  /*.stream_set_panning =*/ winmm_stream_set_panning,
+  /*.stream_get_current_device =*/ NULL,
+  /*.stream_device_destroy =*/ NULL,
+  /*.stream_register_device_changed_callback=*/ NULL
 };

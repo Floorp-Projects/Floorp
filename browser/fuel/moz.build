@@ -5,4 +5,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['public', 'src']
-TEST_DIRS += ['test']
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

@@ -108,15 +108,15 @@
 <!ENTITY prefs_options_templatesurl_tooltip "Index of available templates">
 <!ENTITY prefs_options_showeditor "Show editor">
 <!ENTITY prefs_options_showeditor_tooltip "Show internal editor">
-<!ENTITY prefs_options_detectindentation "Detect indentation">
+<!ENTITY prefs_options_tabsize "Tab size">
+<!ENTITY prefs_options_expandtab "Soft tabs">
+<!ENTITY prefs_options_expandtab_tooltip "Use spaces instead of the tab character">
+<!ENTITY prefs_options_detectindentation "Autoindent">
 <!ENTITY prefs_options_detectindentation_tooltip "Guess indentation based on source content">
+<!ENTITY prefs_options_autocomplete "Autocomplete">
+<!ENTITY prefs_options_autocomplete_tooltip "Enable code autocompletion">
 <!ENTITY prefs_options_autoclosebrackets "Autoclose brackets">
 <!ENTITY prefs_options_autoclosebrackets_tooltip "Automatically insert closing brackets">
-<!ENTITY prefs_options_expandtab "Indent using spaces">
-<!ENTITY prefs_options_expandtab_tooltip "Use spaces instead of the tab character">
-<!ENTITY prefs_options_autocomplete "Autocompletion">
-<!ENTITY prefs_options_autocomplete_tooltip "Enable code autocompletion">
-<!ENTITY prefs_options_tabsize "Tab size">
 
 <!-- Permissions Table -->
 <!ENTITY permissionstable_title "Permissions Table">

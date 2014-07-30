@@ -97,6 +97,10 @@ FFmpegDataDecoder<LIBAV_VER>::Init()
   }
   mCodecContext->extradata = mExtraData.begin();
 
+  if (codec->capabilities & CODEC_CAP_DR1) {
+    mCodecContext->flags |= CODEC_FLAG_EMU_EDGE;
+  }
+
   if (avcodec_open2(mCodecContext, codec, nullptr) < 0) {
     NS_WARNING("Couldn't initialise ffmpeg decoder");
     return NS_ERROR_FAILURE;

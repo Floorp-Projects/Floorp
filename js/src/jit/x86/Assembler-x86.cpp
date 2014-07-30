@@ -35,9 +35,11 @@ ABIArgGenerator::next(MIRType type)
     return current_;
 }
 
-const Register ABIArgGenerator::NonArgReturnVolatileReg0 = ecx;
-const Register ABIArgGenerator::NonArgReturnVolatileReg1 = edx;
+const Register ABIArgGenerator::NonArgReturnReg0 = ecx;
+const Register ABIArgGenerator::NonArgReturnReg1 = edx;
 const Register ABIArgGenerator::NonVolatileReg = ebx;
+const Register ABIArgGenerator::NonArg_VolatileReg = eax;
+const Register ABIArgGenerator::NonReturn_VolatileReg0 = ecx;
 
 void
 Assembler::executableCopy(uint8_t *buffer)

@@ -300,6 +300,7 @@ public:
   AttributeMap& Attributes() { return mAttributes; }
 
   IntRect PrimitiveSubregion() const { return mFilterPrimitiveSubregion; }
+  IntRect FilterSpaceBounds() const { return mFilterSpaceBounds; }
   bool IsTainted() const { return mIsTainted; }
 
   size_t NumberOfInputs() const { return mInputPrimitives.Length(); }
@@ -320,6 +321,11 @@ public:
   void SetPrimitiveSubregion(const IntRect& aRect)
   {
     mFilterPrimitiveSubregion = aRect;
+  }
+
+  void SetFilterSpaceBounds(const IntRect& aRect)
+  {
+    mFilterSpaceBounds = aRect;
   }
 
   void SetIsTainted(bool aIsTainted)
@@ -355,6 +361,7 @@ private:
   AttributeMap mAttributes;
   nsTArray<int32_t> mInputPrimitives;
   IntRect mFilterPrimitiveSubregion;
+  IntRect mFilterSpaceBounds;
   nsTArray<ColorSpace> mInputColorSpaces;
   ColorSpace mOutputColorSpace;
   bool mIsTainted;
@@ -367,10 +374,8 @@ private:
  */
 struct FilterDescription MOZ_FINAL {
   FilterDescription() {}
-  FilterDescription(const nsTArray<FilterPrimitiveDescription>& aPrimitives,
-                    const IntRect& aFilterSpaceBounds)
+  FilterDescription(const nsTArray<FilterPrimitiveDescription>& aPrimitives)
    : mPrimitives(aPrimitives)
-   , mFilterSpaceBounds(aFilterSpaceBounds)
   {}
 
   bool operator==(const FilterDescription& aOther) const;
@@ -380,7 +385,6 @@ struct FilterDescription MOZ_FINAL {
   }
 
   nsTArray<FilterPrimitiveDescription> mPrimitives;
-  IntRect mFilterSpaceBounds;
 };
 
 /**

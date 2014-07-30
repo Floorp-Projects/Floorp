@@ -119,15 +119,6 @@ loader.lazyGetter(this, "DOMParser", function() {
   return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
 
-loader.lazyGetter(this, "Debugger", function() {
-  let JsDebugger = require("resource://gre/modules/jsdebugger.jsm");
-
-  let global = Cu.getGlobalForObject({});
-  JsDebugger.addDebuggerToGlobal(global);
-
-  return global.Debugger;
-});
-
 loader.lazyGetter(this, "eventListenerService", function() {
   return Cc["@mozilla.org/eventlistenerservice;1"]
            .getService(Ci.nsIEventListenerService);
@@ -358,7 +349,8 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    *           }
    */
   getEventListeners: function(node) {
-    let dbg = new Debugger();
+    let dbg = this.parent().tabActor.makeDebugger();
+
     let handlers = eventListenerService.getListenerInfoFor(node);
     let events = [];
 
@@ -371,7 +363,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       }
 
       let global = Cu.getGlobalForObject(listener);
-      let globalDO = dbg.addDebuggee(global);
+      let globalDO = dbg.makeGlobalObjectReference(global);
       let listenerDO = globalDO.makeDebuggeeValue(listener);
 
       // If the listener is an object with a 'handleEvent' method, use that.
@@ -452,8 +444,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
         origin: origin,
         searchString: searchString
       });
-
-      dbg.removeDebuggee(globalDO);
     }
     return events;
   },

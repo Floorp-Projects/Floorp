@@ -179,9 +179,9 @@ class SPSProfiler
         }
     }
 
-    /* Enter a C++ function. */
-    void enterNative(const char *string, void *sp);
-    void exitNative() { pop(); }
+    /* Enter asm.js code */
+    void enterAsmJS(const char *string, void *sp);
+    void exitAsmJS() { pop(); }
 
     jsbytecode *ipToPC(JSScript *script, size_t ip) { return nullptr; }
 

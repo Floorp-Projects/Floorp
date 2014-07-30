@@ -23,6 +23,9 @@
 #include <mach/mach.h>          // mach_task_self()
 #include <sys/sysctl.h>         // sysctlbyname()
 
+#ifdef MOZILLA_INTERNAL_API
+#include <OSXRunLoopSingleton.h>
+#endif
 
 
 namespace webrtc
@@ -384,10 +387,14 @@ int32_t AudioDeviceMac::Init()
             kAudioHardwarePropertyRunLoop,
             kAudioObjectPropertyScopeGlobal,
             kAudioObjectPropertyElementMaster };
+#ifdef MOZILLA_INTERNAL_API
+    mozilla_set_coreaudio_notification_runloop_if_needed();
+#else
     CFRunLoopRef runLoop = NULL;
     UInt32 size = sizeof(CFRunLoopRef);
     WEBRTC_CA_RETURN_ON_ERR(AudioObjectSetPropertyData(kAudioObjectSystemObject,
             &propertyAddress, 0, NULL, size, &runLoop));
+#endif
 
     // Listen for any device changes.
     propertyAddress.mSelector = kAudioHardwarePropertyDevices;

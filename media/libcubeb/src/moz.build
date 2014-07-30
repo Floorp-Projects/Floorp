@@ -8,6 +8,7 @@ LIBRARY_NAME = 'cubeb'
 
 SOURCES += [
     'cubeb.c',
+    'cubeb_panner.cpp'
 ]
 
 if CONFIG['MOZ_ALSA']:
@@ -33,6 +34,7 @@ if CONFIG['OS_ARCH'] == 'OpenBSD':
 if CONFIG['OS_TARGET'] == 'Darwin':
     SOURCES += [
         'cubeb_audiounit.c',
+        'cubeb_osx_run_loop.c'
     ]
     DEFINES['USE_AUDIOUNIT'] = True
 

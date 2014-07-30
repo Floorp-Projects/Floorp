@@ -24,7 +24,7 @@ loop.conversation = (function(OT, mozL10n) {
   var IncomingCallView = React.createClass({
 
     propTypes: {
-      model: React.PropTypes.func.isRequired
+      model: React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {

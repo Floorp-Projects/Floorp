@@ -23,7 +23,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(c3ff0328-6c47-4e64-a22f-ac221959e258)]
+[scriptable, uuid(ed7cc4e4-cf5b-42af-9c2e-8df074a01470)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -426,7 +426,9 @@ interface nsIDOMWindow : nsISupports
                                        in nsISupports aExtraArgument);
 
   // XXX Should this be in nsIDOMChromeWindow?
-  void                      updateCommands(in DOMString action);
+  void                      updateCommands(in DOMString action,
+                                           [optional] in nsISelection sel,
+                                           [optional] in short reason);
 
   /* Find in page.
    * @param str: the search pattern
