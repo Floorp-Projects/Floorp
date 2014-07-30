@@ -17,16 +17,9 @@ interface nsIPrincipal;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(6d5d07e5-4ff1-48cc-aeaa-a7ffc979e854)]
+[scriptable, uuid(cc32d9f1-3d2a-466b-a691-ae8357af4445)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
-
-  /**
-   * Set to true when the CSP has been read in and parsed and is ready to
-   * enforce.  This is a barrier for the nsDocument so it doesn't load any
-   * sub-content until either it knows that a CSP is ready or will not be used.
-   */
-  readonly attribute boolean isInitialized;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
