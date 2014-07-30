@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EMEDecoderModule.h"
-#include "mtransport/runnable_utils.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
