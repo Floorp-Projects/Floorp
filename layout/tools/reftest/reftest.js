@@ -758,10 +758,6 @@ function BuildConditionSandbox(aURL) {
         sandbox.asyncPanZoom = false;
     }
 
-    // Distinguish the Fennecs:
-    sandbox.xulFennec    = sandbox.Android &&  sandbox.browserIsRemote;
-    sandbox.nativeFennec = sandbox.Android && !sandbox.browserIsRemote;
-
     if (!gDumpedConditionSandbox) {
         dump("REFTEST INFO | Dumping JSON representation of sandbox \n");
         dump("REFTEST INFO | " + JSON.stringify(sandbox) + " \n");

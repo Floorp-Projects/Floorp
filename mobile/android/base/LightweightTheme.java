@@ -5,11 +5,15 @@
 
 package org.mozilla.gecko;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
-import org.json.JSONObject;
 
 import android.app.Application;
 import android.graphics.Bitmap;
@@ -19,7 +23,6 @@ import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.DisplayMetrics;
@@ -27,9 +30,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewParent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class LightweightTheme implements GeckoEventListener {
     private static final String LOGTAG = "GeckoLightweightTheme";
@@ -253,7 +253,7 @@ public class LightweightTheme implements GeckoEventListener {
         ViewParent parent;
         View curView = view;
         do {
-            if (Build.VERSION.SDK_INT >= 11) {
+            if (Versions.feature11Plus) {
                 offsetX += (int) curView.getTranslationX() - curView.getScrollX();
                 offsetY += (int) curView.getTranslationY() - curView.getScrollY();
             } else {

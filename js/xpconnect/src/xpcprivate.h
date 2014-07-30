@@ -2967,10 +2967,6 @@ extern char*
 xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
                  bool showThisProps);
 
-extern bool
-xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text);
-
-
 /***************************************************************************/
 
 // Definition of nsScriptError, defined here because we lack a place to put

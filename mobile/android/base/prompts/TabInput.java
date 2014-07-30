@@ -5,29 +5,23 @@
 
 package org.mozilla.gecko.prompts;
 
+import java.util.LinkedHashMap;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONException;
-
 import android.content.Context;
-import android.os.Build;
 import android.util.Log;
-import android.view.View;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
 import android.widget.TabHost;
-import android.widget.TabWidget;
 import android.widget.TextView;
-
-import java.util.LinkedHashMap;
 
 public class TabInput extends PromptInput implements AdapterView.OnItemClickListener {
     public static final String INPUT_TYPE = "tabs";
@@ -76,7 +70,7 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
             });
 
             // On older android versions, we use a custom style for the tabs.
-            if (Build.VERSION.SDK_INT < 11) {
+            if (Versions.preHC) {
                 TextView textview = (TextView) inflater.inflate(R.layout.tab_prompt_tab, null);
                 textview.setText(title);
                 spec.setIndicator(textview);

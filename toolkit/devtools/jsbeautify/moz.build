@@ -6,9 +6,7 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-JS_MODULES_PATH = 'modules/devtools/jsbeautify'
-
-EXTRA_JS_MODULES += [
+EXTRA_JS_MODULES.devtools.jsbeautify += [
     'beautify.js',
     'lib/sanitytest.js',
     'lib/urlencode_unpacker.js',

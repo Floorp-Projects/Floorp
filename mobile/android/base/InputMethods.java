@@ -5,16 +5,14 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.mozglue.RobocopTarget;
+import java.util.Collection;
+
+import org.mozilla.gecko.AppConstants.Versions;
 
 import android.content.Context;
-import android.os.Build;
 import android.provider.Settings.Secure;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
-
-import java.util.Collection;
-import java.util.Locale;
 
 final public class InputMethods {
     public static final String METHOD_ANDROID_LATINIME = "com.android.inputmethod.latin/.LatinIME";
@@ -55,8 +53,9 @@ final public class InputMethods {
 
     public static boolean needsSoftResetWorkaround(String inputMethod) {
         // Stock latin IME on Android 4.2 and above
-        return Build.VERSION.SDK_INT >= 17 && (METHOD_ANDROID_LATINIME.equals(inputMethod) ||
-                                               METHOD_GOOGLE_LATINIME.equals(inputMethod));
+        return Versions.feature17Plus &&
+               (METHOD_ANDROID_LATINIME.equals(inputMethod) ||
+                METHOD_GOOGLE_LATINIME.equals(inputMethod));
     }
 
     public static boolean shouldCommitCharAsKey(String inputMethod) {
@@ -67,8 +66,9 @@ final public class InputMethods {
         // SwiftKey is a gesture keyboard, but it doesn't seem to need any special-casing
         // to do AwesomeBar auto-spacing.
         String inputMethod = getCurrentInputMethod(context);
-        return (Build.VERSION.SDK_INT >= 17 && (METHOD_ANDROID_LATINIME.equals(inputMethod) ||
-                                                METHOD_GOOGLE_LATINIME.equals(inputMethod))) ||
+        return (Versions.feature17Plus &&
+                (METHOD_ANDROID_LATINIME.equals(inputMethod) ||
+                 METHOD_GOOGLE_LATINIME.equals(inputMethod))) ||
                METHOD_SWYPE.equals(inputMethod) ||
                METHOD_SWYPE_BETA.equals(inputMethod) ||
                METHOD_TOUCHPAL_KEYBOARD.equals(inputMethod);
