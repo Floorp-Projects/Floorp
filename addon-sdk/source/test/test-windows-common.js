@@ -15,7 +15,7 @@ exports.testBrowserWindowsIterator = function(assert) {
   let activeWindowCount = 0;
   let windows = [];
   let i = 0;
-  for each (let window in browserWindows) {
+  for (let window of browserWindows) {
     if (window === browserWindows.activeWindow)
       activeWindowCount++;
 

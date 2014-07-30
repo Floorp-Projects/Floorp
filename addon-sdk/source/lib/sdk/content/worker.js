@@ -138,13 +138,13 @@ attach.define(Worker, function (worker, window) {
   model.windowID = getInnerId(model.window);
   events.on("inner-window-destroyed", model.documentUnload);
 
+  // will set model.contentWorker pointing to the private API:
+  model.contentWorker = WorkerSandbox(worker, model.window);
+
   // Listen to pagehide event in order to freeze the content script
   // while the document is frozen in bfcache:
   model.window.addEventListener("pageshow", model.pageShow, true);
   model.window.addEventListener("pagehide", model.pageHide, true);
-
-  // will set model.contentWorker pointing to the private API:
-  model.contentWorker = WorkerSandbox(worker, model.window);
 
   // Mainly enable worker.port.emit to send event to the content worker
   model.inited = true;

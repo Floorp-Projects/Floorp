@@ -41,7 +41,7 @@ Object.freeze({
         return [];
       let args = Array.slice(arguments, 1);
       let results = [];
-      for each (let callback in listeners[name]) {
+      for (let callback of listeners[name]) {
         results.push(callback.apply(null, args));
       }
       return results;
