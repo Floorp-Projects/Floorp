@@ -1358,6 +1358,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void store32(Imm32 src, const Address &address);
     void store32(Imm32 src, const BaseIndex &address);
 
+    void store32_NoSecondScratch(Imm32 src, const Address &address);
+
     void storePtr(ImmWord imm, const Address &address);
     void storePtr(ImmPtr imm, const Address &address);
     void storePtr(ImmGCPtr imm, const Address &address);

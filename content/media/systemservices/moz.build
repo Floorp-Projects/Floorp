@@ -1,0 +1,42 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['MOZ_WEBRTC']:
+    EXPORTS += ['LoadManager.h',
+                'LoadManagerFactory.h',
+                'LoadMonitor.h',
+    ]
+    UNIFIED_SOURCES += ['LoadManager.cpp',
+                        'LoadManagerFactory.cpp',
+                        'LoadMonitor.cpp',
+    ]
+    LOCAL_INCLUDES += [
+        '/media/webrtc/trunk',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+    EXPORTS += [
+        'OpenSLESProvider.h'
+    ]
+    UNIFIED_SOURCES += [
+        'OpenSLESProvider.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+  UNIFIED_SOURCES += ['OSXRunLoopSingleton.cpp']
+  EXPORTS += ['OSXRunLoopSingleton.h']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    CXXFLAGS += [
+        '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+            'frameworks/wilhelm/include',
+            'system/media/wilhelm/include',
+        ]
+    ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'

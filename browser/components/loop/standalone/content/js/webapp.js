@@ -42,14 +42,14 @@ loop.webapp = (function($, _, OT, webL10n) {
 
     render: function() {
       if (this.props.helper.isFirefox(navigator.userAgent)) {
-        return React.DOM.div(null );
+        return React.DOM.div(null);
       }
       return (
-        React.DOM.div( {className:"promote-firefox"}, 
-          React.DOM.h3(null, __("promote_firefox_hello_heading")),
+        React.DOM.div({className: "promote-firefox"}, 
+          React.DOM.h3(null, __("promote_firefox_hello_heading")), 
           React.DOM.p(null, 
-            React.DOM.a( {className:"btn btn-large btn-success",
-               href:"https://www.mozilla.org/firefox/"}, 
+            React.DOM.a({className: "btn btn-large btn-success", 
+               href: "https://www.mozilla.org/firefox/"}, 
               __("get_firefox_button")
             )
           )
@@ -69,13 +69,13 @@ loop.webapp = (function($, _, OT, webL10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        React.DOM.div( {className:"expired-url-info"}, 
-          React.DOM.div( {className:"info-panel"}, 
-            React.DOM.div( {className:"firefox-logo"} ),
-            React.DOM.h1(null, __("call_url_unavailable_notification_heading")),
+        React.DOM.div({className: "expired-url-info"}, 
+          React.DOM.div({className: "info-panel"}, 
+            React.DOM.div({className: "firefox-logo"}), 
+            React.DOM.h1(null, __("call_url_unavailable_notification_heading")), 
             React.DOM.h4(null, __("call_url_unavailable_notification_message"))
-          ),
-          PromoteFirefoxView( {helper:this.props.helper} )
+          ), 
+          PromoteFirefoxView({helper: this.props.helper})
         )
       );
       /* jshint ignore:end */

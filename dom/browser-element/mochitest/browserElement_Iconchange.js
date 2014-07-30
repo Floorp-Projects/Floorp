@@ -12,9 +12,13 @@ function createHtml(link) {
   return 'data:text/html,<html><head>' + link + '<body></body></html>';
 }
 
-function createLink(name, sizes) {
+function createLink(name, sizes, rel) {
   var s = sizes ? 'sizes="' + sizes + '"' : '';
-  return '<link rel="icon" type="image/png" ' + s + ' href="http://example.com/' + name + '.png">';
+  if (!rel) {
+    rel = 'icon';
+  }
+  return '<link rel="' + rel + '" type="image/png" ' + s +
+    ' href="http://example.com/' + name + '.png">';
 }
 
 function runTest() {
@@ -88,11 +92,15 @@ function runTest() {
     }
     else if (numIconChanges == 6) {
       is(e.detail.href, 'http://example.com/ucaseicon.png');
-      iframe1.src = createHtml(createLink('testsize', '50x50'));
+      iframe1.src = createHtml(createLink('testsize', '50x50', 'icon'));
     }
     else if (numIconChanges == 7) {
       is(e.detail.href, 'http://example.com/testsize.png');
       is(e.detail.sizes, '50x50');
+      iframe1.src = createHtml(createLink('testapple1', '100x100', 'apple-touch-icon'));
+    } else if (numIconChanges == 8) {
+      is(e.detail.href, 'http://example.com/testapple1.png');
+      is(e.detail.sizes, '100x100');
       SimpleTest.finish();
     } else {
       ok(false, 'Too many iconchange events.');
