@@ -367,6 +367,7 @@ pref("media.navigator.enabled", true);
 // do not enable screensharing before source constraints are finalized: Bug 1033885
 // do not enable screensharing before UX is ready: Bug 1035577
 pref("media.getusermedia.screensharing.enabled", false);
+pref("media.getusermedia.screensharing.allowed_domains", "");
 
 // TextTrack support
 pref("media.webvtt.enabled", true);
