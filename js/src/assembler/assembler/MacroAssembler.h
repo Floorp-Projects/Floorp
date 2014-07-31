@@ -34,7 +34,12 @@
 
 #if ENABLE_ASSEMBLER
 
-#if WTF_CPU_ARM_THUMB2
+#if JS_CODEGEN_NONE
+
+#include "jit/none/BaseMacroAssembler-none.h"
+namespace JSC { typedef MacroAssemblerNone MacroAssembler; }
+
+#elif WTF_CPU_ARM_THUMB2
 #include "assembler/assembler/MacroAssemblerARMv7.h"
 namespace JSC { typedef MacroAssemblerARMv7 MacroAssembler; }
 
