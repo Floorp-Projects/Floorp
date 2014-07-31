@@ -17,7 +17,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="6548f8a89654727eb3a65200ef14298e106eb099"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="04ea7e1a4034a50d4a7a4f5b95a04a2ed8313908"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="d61daef8fca7d6f335f659a8967bad423770e634"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="dc5ca96695cab87b4c2fcd7c9f046ae3415a70a5"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="71f5a35e3bc1801847413cff1f14fc3b5cd991ca"/>
@@ -131,7 +131,7 @@
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="683623c76338dccd65e698bfb5c4cfee8808d799"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="9f28c4faea3b2f01db227b2467b08aeba96d9bec"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="1adbb04024c6181f1089f3a12ee46f26663ea1db"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="b6f025acd8ead1c3531e1ad62e70849161ed9340"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="8b1365af38c9a653df97349ee53a3f5d64fd590a"/>
   <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>
 </manifest>
