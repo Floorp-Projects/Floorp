@@ -9,8 +9,6 @@
 // get the string version, obtain the actual lines to run, and then use eval to
 // do the actual evaluation.
 
-function testCaseFn() {
-/*
 function syntaxError (script) {
     try {
         Function(script);
@@ -115,14 +113,6 @@ assertEq(`${Object.doesNotHaveThisProperty}`, "undefined");
 // toString behavior
 assertEq("<toString>", `${{valueOf: () => "<valueOf>", toString: () => "<toString>"}}`);
 assertEq("Hi 42", Function("try {`${{toString: () => { throw 42;}}}`} catch(e) {return \"Hi \" + e;}")());
-*/
-/*End func*/}
 
-var str = testCaseFn.toString().replace("/*","").replace("*/","");
-str = str.replace("function testCaseFn() {\n", "").replace("/*End func*/}","");
-var hasTemplateStrings = false;
-try { eval("``"); hasTemplateStrings = true; } catch (exc) { }
-if (hasTemplateStrings)
-    eval(str);
 
 reportCompare(0, 0, "ok");
