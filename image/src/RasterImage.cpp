@@ -3212,7 +3212,7 @@ RasterImage::DecodePool::GetEventTarget()
 
 #ifdef MOZ_NUWA_PROCESS
 
-class RIDThreadPoolListener : public nsIThreadPoolListener
+class RIDThreadPoolListener MOZ_FINAL : public nsIThreadPoolListener
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
