@@ -85,6 +85,12 @@ public:
                                            nsRange* aRange,
                                            uint32_t* aOffset,
                                            LineBreakType aLineBreakType);
+  // Computes the native text length between aStartOffset and aEndOffset of
+  // aContent.  Currently, this method supports only text node or br element
+  // for aContent.
+  static uint32_t GetNativeTextLength(nsIContent* aContent,
+                                      uint32_t aStartOffset,
+                                      uint32_t aEndOffset);
   // Get the native text length of a content node excluding any children
   static uint32_t GetNativeTextLength(nsIContent* aContent,
                                       uint32_t aMaxLength = UINT32_MAX);
