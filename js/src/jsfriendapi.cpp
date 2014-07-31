@@ -63,14 +63,6 @@ js::ForgetSourceHook(JSRuntime *rt)
     return Move(rt->sourceHook);
 }
 
-#ifdef NIGHTLY_BUILD
-JS_FRIEND_API(void)
-js::SetAssertOnScriptEntryHook(JSRuntime *rt, AssertOnScriptEntryHook hook)
-{
-    rt->assertOnScriptEntryHook_ = hook;
-}
-#endif
-
 JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {

@@ -19,7 +19,7 @@ function syntaxError (script) {
             return;
         }
     }
-    throw "Expected syntax error: " + script;
+    throw new Error('Expected syntax error: ' + script);
 }
 
 // TEST BEGIN

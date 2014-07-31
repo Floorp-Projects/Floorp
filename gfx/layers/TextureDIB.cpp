@@ -54,6 +54,12 @@ DIBTextureClient::Unlock()
 {
   MOZ_ASSERT(mIsLocked, "Unlocked called while the texture is not locked!");
   if (mDrawTarget) {
+    if (mReadbackSink) {
+      RefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
+      RefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
+      mReadbackSink->ProcessReadback(dataSurf);
+    }
+
     mDrawTarget->Flush();
     mDrawTarget = nullptr;
   }

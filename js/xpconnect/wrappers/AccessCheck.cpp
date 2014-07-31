@@ -148,20 +148,23 @@ IsWindow(const char *name)
 }
 
 bool
-AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, jsid idArg,
+AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, HandleObject wrapper, HandleId id,
                                           Wrapper::Action act)
 {
     if (act == Wrapper::CALL)
         return false;
 
-    RootedId id(cx, idArg);
-    RootedObject wrapper(cx, wrapperArg);
-    RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
-
-    // For XOWs, we generally want to deny enumerate-like operations, but fail
-    // silently (see CrossOriginAccessiblePropertiesOnly::deny).
     if (act == Wrapper::ENUMERATE)
-        return false;
+        return true;
+
+    // For the case of getting a property descriptor, we allow if either GET or SET
+    // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
+    if (act == Wrapper::GET_PROPERTY_DESCRIPTOR) {
+        return isCrossOriginAccessPermitted(cx, wrapper, id, Wrapper::GET) ||
+               isCrossOriginAccessPermitted(cx, wrapper, id, Wrapper::SET);
+    }
+
+    RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
 
     const char *name;
     const js::Class *clasp = js::GetObjectClass(obj);
@@ -187,6 +190,19 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
             if (!XrayUtils::HasNativeProperty(cx, wrapper, id, &wouldShadow) ||
                 wouldShadow)
             {
+                // If the named subframe matches the name of a DOM constructor,
+                // the global resolve triggered by the HasNativeProperty call
+                // above will try to perform a CheckedUnwrap on |wrapper|, and
+                // throw a security error if it fails. That exception isn't
+                // really useful for our callers, so we silence it and just
+                // deny access to the property (since it matched a builtin).
+                //
+                // Note that this would be a problem if the resolve code ever
+                // tried to CheckedUnwrap the wrapper _before_ concluding that
+                // the name corresponds to a builtin global property, since it
+                // would mean that we'd never permit cross-origin named subframe
+                // access (something we regrettably need to support).
+                JS_ClearPendingException(cx);
                 return false;
             }
         }
@@ -205,14 +221,20 @@ EnterAndThrow(JSContext *cx, JSObject *wrapper, const char *msg)
 }
 
 bool
-ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wrapper::Action act)
+ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, Wrapper::Action act)
 {
-    RootedObject wrapper(cx, wrapperArg);
-    RootedId id(cx, idArg);
     RootedObject wrappedObject(cx, Wrapper::wrappedObject(wrapper));
 
     if (act == Wrapper::CALL)
         return true;
+
+
+    // For the case of getting a property descriptor, we allow if either GET or SET
+    // is allowed, and rely on FilteringWrapper to filter out any disallowed accessors.
+    if (act == Wrapper::GET_PROPERTY_DESCRIPTOR) {
+        return check(cx, wrapper, id, Wrapper::GET) ||
+               check(cx, wrapper, id, Wrapper::SET);
+    }
 
     RootedId exposedPropsId(cx, GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS));
 

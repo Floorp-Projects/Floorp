@@ -452,8 +452,6 @@
 @BINPATH@/components/formautofill.manifest
 @BINPATH@/components/FormAutofillContentService.js
 @BINPATH@/components/FormAutofillStartup.js
-@BINPATH@/components/contentSecurityPolicy.manifest
-@BINPATH@/components/contentSecurityPolicy.js
 @BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/browser/components/BrowserProfileMigrators.manifest
@@ -489,6 +487,8 @@
 #endif
 #ifdef MOZ_SERVICES_HEALTHREPORT
 @BINPATH@/components/HealthReportComponents.manifest
+@BINPATH@/browser/components/SelfSupportService.manifest
+@BINPATH@/browser/components/SelfSupportService.js
 #endif
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest

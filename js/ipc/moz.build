@@ -30,6 +30,5 @@ LOCAL_INCLUDES += [
     '/js/ipc',
     '/js/public',
     '/js/xpconnect/src',
-    '/js/xpconnect/wrappers',
 ]
 

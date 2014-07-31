@@ -7,11 +7,11 @@
 #define WEBGLFRAMEBUFFERATTACHABLE_H_
 
 #include "GLDefs.h"
-#include "mozilla/Vector.h"
+#include "nsTArray.h"
+#include "mozilla/WeakPtr.h"
+#include "WebGLFramebuffer.h"
 
 namespace mozilla {
-
-class WebGLFramebuffer;
 
 class WebGLFramebufferAttachable
 {
@@ -22,13 +22,15 @@ class WebGLFramebufferAttachable
             , mAttachment(attachment)
         {}
 
-        const WebGLFramebuffer* mFB;
+        WeakPtr<const WebGLFramebuffer> mFB;
         GLenum mAttachment;
+
+        bool operator==(const AttachmentPoint& o) const {
+          return mFB == o.mFB && mAttachment == o.mAttachment;
+        }
     };
 
-    Vector<AttachmentPoint> mAttachmentPoints;
-
-    AttachmentPoint* Contains(const WebGLFramebuffer* fb, GLenum attachment);
+    nsTArray<AttachmentPoint> mAttachmentPoints;
 
 public:
 
