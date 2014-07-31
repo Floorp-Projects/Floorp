@@ -9,7 +9,7 @@
 Editor Observer interface to outside world
 */
 
-[scriptable, uuid(e52a09fd-d33a-4f85-be0a-fbd348f0fa27)]
+[scriptable, uuid(f3ee57a6-890c-4ce0-a584-8a84bba0292e)]
 
 /**
  * A generic editor observer interface. 
@@ -23,4 +23,14 @@ interface nsIEditorObserver : nsISupports {
    * Called after the editor completes a user action.
    */
   void EditAction();
+  /**
+   * Called when editor starts to handle a user action.  I.e., This must be
+   * called before the first DOM change.
+   */
+  void BeforeEditAction();
+  /**
+   * Called after BeforeEditAction() is called but EditorAction() won't be
+   * called.
+   */
+  void CancelEditAction();
 };
