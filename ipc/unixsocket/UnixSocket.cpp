@@ -227,6 +227,34 @@ public:
   }
 };
 
+class ShutdownSocketTask : public SocketIOTask<UnixSocketImpl>
+{
+public:
+  ShutdownSocketTask(UnixSocketImpl* aImpl)
+  : SocketIOTask<UnixSocketImpl>(aImpl)
+  { }
+
+  void Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!IsCanceled());
+
+    UnixSocketImpl* impl = GetIO();
+
+    // At this point, there should be no new events on the IO thread after this
+    // one with the possible exception of a SocketListenTask that
+    // ShutdownOnIOThread will cancel for us. We are now fully shut down, so we
+    // can send a message to the main thread that will delete impl safely knowing
+    // that no more tasks reference it.
+    impl->ShutdownOnIOThread();
+
+    nsRefPtr<nsIRunnable> r =
+      new SocketIODeleteInstanceRunnable<UnixSocketImpl>(impl);
+    nsresult rv = NS_DispatchToMainThread(r);
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
+};
+
 void
 UnixSocketImpl::FireSocketError()
 {
@@ -523,8 +551,8 @@ UnixSocketConsumer::CloseSocket()
   // will create a new implementation.
   mImpl->ShutdownOnMainThread();
 
-  XRE_GetIOMessageLoop()->PostTask(
-    FROM_HERE, new SocketIOShutdownTask<UnixSocketImpl>(mImpl));
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                   new ShutdownSocketTask(mImpl));
 
   mImpl = nullptr;
 
