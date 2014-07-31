@@ -18,40 +18,6 @@
 
   var steps = [
     [
-      "CHECK_FOR_SANE_SDP",
-      function (test) {
-        // TODO: We might want to move those checks into the default chain
-        ok(test.pcLocal.localDescription,
-           "test.pcLocal.localDescription is not null");
-        is(test.pcLocal.localDescription.type, "offer",
-           "test.pcLocal.localDescription type is offer");
-        ok(test.pcLocal.localDescription.sdp.length > 10,
-           "test.pcLocal.localDescription body length is plausible");
-
-        ok(test.pcLocal.remoteDescription,
-           "test.pcLocal.remoteDescription is not null");
-        is(test.pcLocal.remoteDescription.type, "answer",
-            "test.pcLocal.remoteDescription type is answer");
-        ok(test.pcLocal.remoteDescription.sdp.length > 10,
-           "test.pcLocal.remoteDescription body length is plausible");
-
-        ok(test.pcRemote.localDescription,
-           "test.pcRemote.localDescription is not null");
-        is(test.pcRemote.localDescription.type, "answer",
-           "test.pcRemote.localDescription type is answer");
-        ok(test.pcRemote.localDescription.sdp.length > 10,
-           "test.pcRemote.localDescription body length is plausible");
-
-        ok(test.pcRemote.remoteDescription,
-           "test.pcRemote.remoteDescription is not null");
-        is(test.pcRemote.remoteDescription.type, "offer",
-           "test.pcRemote.remoteDescription type is offer");
-        ok(test.pcRemote.remoteDescription.sdp.length > 10,
-           "test.pcRemote.remoteDescription body length is plausible");
-
-        test.next();
-      }
-    ], [
       "CHECK_SDP_ON_CLOSED_PC",
       function (test) {
         var description;
