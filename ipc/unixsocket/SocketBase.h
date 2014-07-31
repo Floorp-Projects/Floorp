@@ -246,7 +246,35 @@ private:
   nsAutoPtr<UnixSocketRawData> mData;
 };
 
+template <typename T>
+class SocketIORequestClosingRunnable MOZ_FINAL : public SocketIORunnable<T>
+{
+public:
+  SocketIORequestClosingRunnable(T* aImpl)
+  : SocketIORunnable<T>(aImpl)
+  { }
 
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    T* io = SocketIORunnable<T>::GetIO();
+
+    if (io->IsShutdownOnMainThread()) {
+      NS_WARNING("CloseSocket has already been called!");
+      // Since we've already explicitly closed and the close happened before
+      // this, this isn't really an error. Since we've warned, return OK.
+      return NS_OK;
+    }
+
+    SocketConsumerBase* consumer = io->GetConsumer();
+    MOZ_ASSERT(consumer);
+
+    consumer->CloseSocket();
+
+    return NS_OK;
+  }
+};
 
 }
 }
