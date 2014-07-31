@@ -326,6 +326,9 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
 toolkit/library/target: widget/gtk/mozgtk/gtk3/target
 endif
+ifdef MOZ_LDAP_XPCOM
+toolkit/library/target: ../ldap/target
+endif
 ifndef MOZ_FOLD_LIBS
 ifndef MOZ_NATIVE_SQLITE
 security/build/target: db/sqlite3/src/target
