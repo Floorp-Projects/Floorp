@@ -48,7 +48,6 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeJSContainer;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.webapp.Allocator;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -1142,24 +1141,36 @@ public class GeckoAppShell
 
         final String scheme = uri.getScheme();
 
-        final Intent intent;
-
         // Compute our most likely intent, then check to see if there are any
         // custom handlers that would apply.
         // Start with the original URI. If we end up modifying it, we'll
         // overwrite it.
-        final Intent likelyIntent = getIntentForActionString(action);
-        likelyIntent.setData(uri);
+        final Intent intent = getIntentForActionString(action);
+        intent.setData(uri);
 
-        if ("vnd.youtube".equals(scheme) && !hasHandlersForIntent(likelyIntent)) {
-            // Special-case YouTube to use our own player if no system handler
-            // exists.
-            intent = new Intent(VideoPlayer.VIDEO_ACTION);
-            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                "org.mozilla.gecko.VideoPlayer");
-            intent.setData(uri);
-        } else {
-            intent = likelyIntent;
+        if ("vnd.youtube".equals(scheme) &&
+            !hasHandlersForIntent(intent) &&
+            !TextUtils.isEmpty(uri.getSchemeSpecificPart())) {
+
+            // Return an intent with a URI that will open the YouTube page in the
+            // current Fennec instance.
+            final Class<?> c;
+            final String browserClassName = AppConstants.BROWSER_INTENT_CLASS_NAME;
+            try {
+                c = Class.forName(browserClassName);
+            } catch (ClassNotFoundException e) {
+                // This should never occur.
+                Log.wtf(LOGTAG, "Class " + browserClassName + " not found!");
+                return null;
+            }
+
+            final Uri youtubeURI = getYouTubeHTML5URI(uri);
+            if (youtubeURI != null) {
+                // Load it as a new URL in the current tab. Hitting 'back' will return
+                // the user to the YouTube overview page.
+                final Intent view = new Intent(GeckoApp.ACTION_LOAD, youtubeURI, context, c);
+                return view;
+            }
         }
 
         // Have a special handling for SMS, as the message body
@@ -1200,6 +1211,30 @@ public class GeckoAppShell
         intent.setData(pruned);
 
         return intent;
+    }
+
+    /**
+     * Input: vnd:youtube:3MWr19Dp2OU?foo=bar
+     * Output: https://www.youtube.com/embed/3MWr19Dp2OU?foo=bar
+     *
+     * Ideally this should include ?html5=1. However, YouTube seems to do a
+     * fine job of taking care of this on its own, and the Kindle Fire ships
+     * Flash, so...
+     *
+     * @param uri a vnd:youtube URI.
+     * @return an HTTPS URI for web player.
+     */
+    private static Uri getYouTubeHTML5URI(final Uri uri) {
+        if (uri == null) {
+            return null;
+        }
+
+        final String ssp = uri.getSchemeSpecificPart();
+        if (TextUtils.isEmpty(ssp)) {
+            return null;
+        }
+
+        return Uri.parse("https://www.youtube.com/embed/" + ssp);
     }
 
     /**
@@ -1642,7 +1677,7 @@ public class GeckoAppShell
 
         try {
             String filter = GeckoProfile.get(getContext()).getDir().toString();
-            Log.i(LOGTAG, "[OPENFILE] Filter: " + filter);
+            Log.d(LOGTAG, "[OPENFILE] Filter: " + filter);
 
             // run lsof and parse its output
             java.lang.Process lsof = Runtime.getRuntime().exec("lsof");
@@ -1675,7 +1710,7 @@ public class GeckoAppShell
                 }
                 String file = split[nameColumn];
                 if (!TextUtils.isEmpty(name) && !TextUtils.isEmpty(file) && file.startsWith(filter))
-                    Log.i(LOGTAG, "[OPENFILE] " + name + "(" + split[pidColumn] + ") : " + file);
+                    Log.d(LOGTAG, "[OPENFILE] " + name + "(" + split[pidColumn] + ") : " + file);
             }
             in.close();
         } catch (Exception e) { }
