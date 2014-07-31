@@ -104,6 +104,11 @@ WebConsoleClient.prototype = {
    *
    *        - url: the url to evaluate the script as. Defaults to
    *        "debugger eval code".
+   *
+   *        - selectedNodeActor: the NodeActor ID of the current selection in the
+   *        Inspector, if such a selection exists. This is used by helper functions
+   *        that can reference the currently selected node in the Inspector, like
+   *        $0.
    */
   evaluateJS: function WCC_evaluateJS(aString, aOnResponse, aOptions = {})
   {
@@ -114,6 +119,7 @@ WebConsoleClient.prototype = {
       bindObjectActor: aOptions.bindObjectActor,
       frameActor: aOptions.frameActor,
       url: aOptions.url,
+      selectedNodeActor: aOptions.selectedNodeActor,
     };
     this._client.request(packet, aOnResponse);
   },

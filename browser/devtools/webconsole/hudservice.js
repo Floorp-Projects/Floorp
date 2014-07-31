@@ -581,6 +581,30 @@ WebConsole.prototype = {
   },
 
   /**
+   * Retrieves the current selection from the Inspector, if such a selection
+   * exists. This is used to pass the ID of the selected actor to the Web
+   * Console server for the $0 helper.
+   *
+   * @return object|null
+   *         A Selection referring to the currently selected node in the
+   *         Inspector.
+   *         If the inspector was never opened, or no node was ever selected,
+   *         then |null| is returned.
+   */
+  getInspectorSelection: function WC_getInspectorSelection()
+  {
+    let toolbox = gDevTools.getToolbox(this.target);
+    if (!toolbox) {
+      return null;
+    }
+    let panel = toolbox.getPanel("inspector");
+    if (!panel || !panel.selection) {
+      return null;
+    }
+    return panel.selection;
+  },
+
+  /**
    * Destroy the object. Call this method to avoid memory leaks when the Web
    * Console is closed.
    *

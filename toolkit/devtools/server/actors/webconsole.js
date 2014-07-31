@@ -725,7 +725,9 @@ WebConsoleActor.prototype =
       bindObjectActor: aRequest.bindObjectActor,
       frameActor: aRequest.frameActor,
       url: aRequest.url,
+      selectedNodeActor: aRequest.selectedNodeActor,
     };
+
     let evalInfo = this.evalWithDebugger(input, evalOptions);
     let evalResult = evalInfo.result;
     let helperResult = evalInfo.helperResult;
@@ -967,6 +969,10 @@ WebConsoleActor.prototype =
    *          ObjectActor.
    *        - frameActor: the FrameActor ID to use for evaluation. The given
    *        debugger frame is used for evaluation, instead of the global window.
+   *        - selectedNodeActor: the NodeActor ID of the currently selected node
+   *        in the Inspector (or null, if there is no selection). This is used
+   *        for helper functions that make reference to the currently selected
+   *        node, like $0.
    * @return object
    *         An object that holds the following properties:
    *         - dbg: the debugger where the string was evaluated.
@@ -1031,6 +1037,13 @@ WebConsoleActor.prototype =
       bindings._self = bindSelf;
     }
 
+    if (aOptions.selectedNodeActor) {
+      let actor = this.conn.getActor(aOptions.selectedNodeActor);
+      if (actor) {
+        helpers.selectedNode = actor.rawNode;
+      }
+    }
+
     // Check if the Debugger.Frame or Debugger.Object for the global include
     // $ or $$. We will not overwrite these functions with the jsterm helpers.
     let found$ = false, found$$ = false;
@@ -1075,6 +1088,7 @@ WebConsoleActor.prototype =
     let helperResult = helpers.helperResult;
     delete helpers.evalInput;
     delete helpers.helperResult;
+    delete helpers.selectedNode;
 
     if ($) {
       bindings.$ = $;
