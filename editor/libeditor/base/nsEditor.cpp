@@ -896,6 +896,7 @@ nsEditor::BeginPlaceHolderTransaction(nsIAtom *aName)
   NS_PRECONDITION(mPlaceHolderBatch >= 0, "negative placeholder batch count!");
   if (!mPlaceHolderBatch)
   {
+    NotifyEditorObservers(eNotifyEditorObserversOfBefore);
     // time to turn on the batch
     BeginUpdateViewBatch();
     mPlaceHolderTxn = nullptr;
@@ -978,8 +979,10 @@ nsEditor::EndPlaceHolderTransaction()
       // notify editor observers of action but if composing, it's done by
       // text event handler.
       if (!mComposition) {
-        NotifyEditorObservers();
+        NotifyEditorObservers(eNotifyEditorObserversOfEnd);
       }
+    } else {
+      NotifyEditorObservers(eNotifyEditorObserversOfCancel);
     }
   }
   mPlaceHolderBatch--;
@@ -1854,17 +1857,35 @@ private:
   bool mIsComposing;
 };
 
-void nsEditor::NotifyEditorObservers(void)
+void
+nsEditor::NotifyEditorObservers(NotificationForEditorObservers aNotification)
 {
-  for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
-    mEditorObservers[i]->EditAction();
-  }
+  switch (aNotification) {
+    case eNotifyEditorObserversOfEnd:
+      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
+        mEditorObservers[i]->EditAction();
+      }
 
-  if (!mDispatchInputEvent) {
-    return;
-  }
+      if (!mDispatchInputEvent) {
+        return;
+      }
 
-  FireInputEvent();
+      FireInputEvent();
+      break;
+    case eNotifyEditorObserversOfBefore:
+      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
+        mEditorObservers[i]->BeforeEditAction();
+      }
+      break;
+    case eNotifyEditorObserversOfCancel:
+      for (int32_t i = 0; i < mEditorObservers.Count(); i++) {
+        mEditorObservers[i]->CancelEditAction();
+      }
+      break;
+    default:
+      MOZ_CRASH("Handle all notifications here");
+      break;
+  }
 }
 
 void
@@ -2076,7 +2097,7 @@ nsEditor::EndIMEComposition()
   mComposition = nullptr;
 
   // notify editor observers of action
-  NotifyEditorObservers();
+  NotifyEditorObservers(eNotifyEditorObserversOfEnd);
 }
 
 
