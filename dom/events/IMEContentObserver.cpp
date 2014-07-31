@@ -25,6 +25,7 @@
 #include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
 #include "nsISupports.h"
+#include "nsITextControlElement.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
 #include "nsThreadUtils.h"
@@ -34,9 +35,32 @@ namespace mozilla {
 
 using namespace widget;
 
-NS_IMPL_CYCLE_COLLECTION(IMEContentObserver,
-                         mWidget, mSelection,
-                         mRootContent, mEditableNode, mDocShell)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IMEContentObserver)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
+  nsAutoScriptBlocker scriptBlocker;
+
+  tmp->UnregisterObservers(true);
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWidget)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelection)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootContent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditableNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditor)
+
+  tmp->mUpdatePreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
+  tmp->mESM = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWidget)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditableNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditor)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver)
  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
@@ -44,6 +68,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver)
  NS_INTERFACE_MAP_ENTRY(nsIReflowObserver)
  NS_INTERFACE_MAP_ENTRY(nsIScrollObserver)
  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+ NS_INTERFACE_MAP_ENTRY(nsIEditorObserver)
  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISelectionListener)
 NS_INTERFACE_MAP_END
 
@@ -52,6 +77,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 
 IMEContentObserver::IMEContentObserver()
   : mESM(nullptr)
+  , mIsEditorInTransaction(false)
 {
 #ifdef DEBUG
   TestMergingTextChangeData();
@@ -70,6 +96,28 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   mEditableNode = IMEStateManager::GetRootEditableNode(aPresContext, aContent);
   if (!mEditableNode) {
     return;
+  }
+
+  nsCOMPtr<nsITextControlElement> textControlElement =
+    do_QueryInterface(mEditableNode);
+  if (textControlElement) {
+    // This may fail. For example, <input type="button" contenteditable>
+    mEditor = textControlElement->GetTextEditor();
+    if (!mEditor && mEditableNode->IsContent()) {
+      // The element must be an editing host.
+      nsIContent* editingHost = mEditableNode->AsContent()->GetEditingHost();
+      MOZ_ASSERT(editingHost == mEditableNode,
+                 "found editing host should be mEditableNode");
+      if (editingHost == mEditableNode) {
+        mEditor = nsContentUtils::GetHTMLEditor(aPresContext);
+      }
+    }
+  } else {
+    mEditor = nsContentUtils::GetHTMLEditor(aPresContext);
+  }
+  MOZ_ASSERT(mEditor, "Failed to get editor");
+  if (mEditor) {
+    mEditor->AddEditorObserver(this);
   }
 
   nsIPresShell* presShell = aPresContext->PresShell();
@@ -159,34 +207,62 @@ IMEContentObserver::ObserveEditableNode()
 }
 
 void
-IMEContentObserver::Destroy()
+IMEContentObserver::UnregisterObservers(bool aPostEvent)
 {
-  // If CreateTextStateManager failed, mRootContent will be null,
-  // and we should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
-  if (mRootContent) {
+  if (mEditor) {
+    mEditor->RemoveEditorObserver(this);
+  }
+
+  // If CreateTextStateManager failed, mRootContent will be null, then, we
+  // should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
+  if (mRootContent && mWidget) {
     if (IMEStateManager::IsTestingIME() && mEditableNode) {
       nsIDocument* doc = mEditableNode->OwnerDoc();
-      (new AsyncEventDispatcher(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
-                                false, false))->RunDOMEventWhenSafe();
+      if (doc) {
+        nsRefPtr<AsyncEventDispatcher> dispatcher =
+          new AsyncEventDispatcher(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
+                                   false, false);
+        if (aPostEvent) {
+          dispatcher->PostDOMEvent();
+        } else {
+          dispatcher->RunDOMEventWhenSafe();
+        }
+      }
     }
-    mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+    // A test event handler might destroy the widget.
+    if (mWidget) {
+      mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
+    }
   }
-  // Even if there are some pending notification, it'll never notify the widget.
-  mWidget = nullptr;
+
   if (mUpdatePreference.WantSelectionChange() && mSelection) {
     nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSelection));
     if (selPrivate) {
       selPrivate->RemoveSelectionListener(this);
     }
   }
-  mSelection = nullptr;
+
   if (mUpdatePreference.WantTextChange() && mRootContent) {
     mRootContent->RemoveMutationObserver(this);
   }
+
   if (mUpdatePreference.WantPositionChanged() && mDocShell) {
     mDocShell->RemoveWeakScrollObserver(this);
     mDocShell->RemoveWeakReflowObserver(this);
   }
+}
+
+void
+IMEContentObserver::Destroy()
+{
+  // WARNING: When you change this method, you have to check Unlink() too.
+
+  UnregisterObservers(false);
+
+  mEditor = nullptr;
+  // Even if there are some pending notification, it'll never notify the widget.
+  mWidget = nullptr;
+  mSelection = nullptr;
   mRootContent = nullptr;
   mEditableNode = nullptr;
   mDocShell = nullptr;
@@ -378,7 +454,7 @@ private:
   IMEContentObserver::TextChangeData mData;
 };
 
-bool
+void
 IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
 {
   MOZ_ASSERT(aTextChangeData.mStartOffset <= aTextChangeData.mRemovedEndOffset,
@@ -389,7 +465,7 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
   if (!mTextChangeData.mStored) {
     mTextChangeData = aTextChangeData;
     MOZ_ASSERT(mTextChangeData.mStored, "Why mStored is false?");
-    return true;
+    return;
   }
 
   // |mTextChangeData| should represent all modified text ranges and all
@@ -446,7 +522,7 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
       std::max(newRemovedEndOffsetInOldText, oldData.mRemovedEndOffset);
     // The new end offset of added text is always the larger offset.
     mTextChangeData.mAddedEndOffset = newData.mAddedEndOffset;
-    return false;
+    return;
   }
 
   if (newData.mStartOffset >= oldData.mStartOffset) {
@@ -473,7 +549,7 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
       // always same or larger.  Therefore, the merged end offset of added
       // text should be the new end offset of added text.
       mTextChangeData.mAddedEndOffset = newData.mAddedEndOffset;
-      return false;
+      return;
     }
 
     // Case 3:
@@ -491,7 +567,7 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
       oldData.mAddedEndOffset + newData.Difference();
     mTextChangeData.mAddedEndOffset =
       std::max(newData.mAddedEndOffset, oldAddedEndOffsetInNewText);
-    return false;
+    return;
   }
 
   if (newData.mRemovedEndOffset >= oldData.mStartOffset) {
@@ -522,7 +598,7 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
       // it.  Therefore, merged end offset of added text is always the new end
       // offset of added text.
       mTextChangeData.mAddedEndOffset = newData.mAddedEndOffset;
-      return false;
+      return;
     }
 
     // Case 5:
@@ -542,7 +618,7 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
       oldData.mAddedEndOffset + newData.Difference();
     mTextChangeData.mAddedEndOffset =
       std::max(newData.mAddedEndOffset, oldAddedEndOffsetInNewText);
-    return false;
+    return;
   }
 
   // Case 6:
@@ -561,8 +637,6 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
     oldData.mAddedEndOffset + newData.Difference();
   mTextChangeData.mAddedEndOffset =
     std::max(newData.mAddedEndOffset, oldAddedEndOffsetInNewText);
-
-  return false;
 }
 
 void
@@ -592,9 +666,8 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   uint32_t newEnd = offset + aInfo->mReplaceLength;
 
   TextChangeData data(offset, oldEnd, newEnd, causedByComposition);
-  if (StoreTextChangeData(data)) {
-    nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
-  }
+  StoreTextChangeData(data);
+  FlushMergeableNotifications();
 }
 
 void
@@ -629,9 +702,8 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
 
   TextChangeData data(offset, offset, offset + addingLength,
                       causedByComposition);
-  if (StoreTextChangeData(data)) {
-    nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
-  }
+  StoreTextChangeData(data);
+  FlushMergeableNotifications();
 }
 
 void
@@ -693,9 +765,8 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   }
 
   TextChangeData data(offset, offset + textLength, offset, causedByComposition);
-  if (StoreTextChangeData(data)) {
-    nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
-  }
+  StoreTextChangeData(data);
+  FlushMergeableNotifications();
 }
 
 static nsIContent*
@@ -752,8 +823,43 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
 
   TextChangeData data(start, start + mPreAttrChangeLength,
                       start + postAttrChangeLength, causedByComposition);
-  if (StoreTextChangeData(data)) {
+  StoreTextChangeData(data);
+  FlushMergeableNotifications();
+}
+
+NS_IMETHODIMP
+IMEContentObserver::EditAction()
+{
+  mIsEditorInTransaction = false;
+  FlushMergeableNotifications();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IMEContentObserver::BeforeEditAction()
+{
+  mIsEditorInTransaction = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IMEContentObserver::CancelEditAction()
+{
+  mIsEditorInTransaction = false;
+  FlushMergeableNotifications();
+  return NS_OK;
+}
+
+void
+IMEContentObserver::FlushMergeableNotifications()
+{
+  if (mIsEditorInTransaction) {
+    return;
+  }
+
+  if (mTextChangeData.mStored) {
     nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
+    mTextChangeData.mStored = false;
   }
 }
 

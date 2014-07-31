@@ -178,7 +178,13 @@ public:
   already_AddRefed<nsIDocument> GetDocument();
   already_AddRefed<nsIPresShell> GetPresShell();
   already_AddRefed<nsIWidget> GetWidget();
-  void NotifyEditorObservers();
+  enum NotificationForEditorObservers
+  {
+    eNotifyEditorObserversOfEnd,
+    eNotifyEditorObserversOfBefore,
+    eNotifyEditorObserversOfCancel
+  };
+  void NotifyEditorObservers(NotificationForEditorObservers aNotification);
 
   /* ------------ nsIEditor methods -------------- */
   NS_DECL_NSIEDITOR

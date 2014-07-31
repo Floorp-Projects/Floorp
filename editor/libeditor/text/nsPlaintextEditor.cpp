@@ -865,6 +865,8 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   nsresult rv = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  NotifyEditorObservers(eNotifyEditorObserversOfBefore);
+
   nsRefPtr<nsCaret> caretP = ps->GetCaret();
 
   {
@@ -885,7 +887,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   // notified at followed compositionend event.
   // NOTE: We must notify after the auto batch will be gone.
   if (IsIMEComposing()) {
-    NotifyEditorObservers();
+    NotifyEditorObservers(eNotifyEditorObserversOfEnd);
   }
 
   return rv;
@@ -1100,6 +1102,8 @@ nsPlaintextEditor::Undo(uint32_t aCount)
 
   ForceCompositionEnd();
 
+  NotifyEditorObservers(eNotifyEditorObserversOfBefore);
+
   nsAutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(EditAction::undo);
@@ -1112,8 +1116,8 @@ nsPlaintextEditor::Undo(uint32_t aCount)
     result = nsEditor::Undo(aCount);
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   } 
-   
-  NotifyEditorObservers();
+
+  NotifyEditorObservers(eNotifyEditorObserversOfEnd);
   return result;
 }
 
@@ -1127,6 +1131,8 @@ nsPlaintextEditor::Redo(uint32_t aCount)
 
   ForceCompositionEnd();
 
+  NotifyEditorObservers(eNotifyEditorObserversOfBefore);
+
   nsAutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(EditAction::redo);
@@ -1139,8 +1145,8 @@ nsPlaintextEditor::Redo(uint32_t aCount)
     result = nsEditor::Redo(aCount);
     result = mRules->DidDoAction(selection, &ruleInfo, result);
   } 
-   
-  NotifyEditorObservers();
+
+  NotifyEditorObservers(eNotifyEditorObserversOfEnd);
   return result;
 }
 

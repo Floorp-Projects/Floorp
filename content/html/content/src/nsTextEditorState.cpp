@@ -930,6 +930,18 @@ nsTextInputListener::EditAction()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTextInputListener::BeforeEditAction()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextInputListener::CancelEditAction()
+{
+  return NS_OK;
+}
+
 // END nsIEditorObserver
 
 
