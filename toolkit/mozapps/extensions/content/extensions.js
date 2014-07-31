@@ -1482,8 +1482,8 @@ function sortElements(aElements, aSortBy, aAscending) {
   //    * Incompatible
   //    * Blocklisted
 
-  const UISTATE_ORDER = ["enabled", "pendingDisable", "pendingUninstall",
-                         "disabled"];
+  const UISTATE_ORDER = ["enabled", "askToActivate", "pendingDisable",
+                         "pendingUninstall", "disabled"];
 
   function dateCompare(a, b) {
     var aTime = a.getTime();
@@ -1520,6 +1520,8 @@ function sortElements(aElements, aSortBy, aAscending) {
       return aObj.getAttribute(aKey);
 
     var addon = aObj.mAddon || aObj.mInstall;
+    var addonType = aObj.mAddon && AddonManager.addonTypes[aObj.mAddon.type];
+
     if (!addon)
       return null;
 
@@ -1532,6 +1534,9 @@ function sortElements(aElements, aSortBy, aAscending) {
           (addon.pendingOperations != AddonManager.PENDING_ENABLE &&
            addon.pendingOperations != AddonManager.PENDING_INSTALL))
         return "disabled";
+      if (addonType && (addonType.flags & AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE) &&
+          addon.userDisabled == AddonManager.STATE_ASK_TO_ACTIVATE)
+        return "askToActivate";
       else
         return "enabled";
     }
