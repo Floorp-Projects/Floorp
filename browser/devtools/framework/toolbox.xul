@@ -80,7 +80,11 @@
       </hbox>
     </toolbar>
     <vbox flex="1">
-      <deck id="toolbox-deck" flex="1" minheight="75" />
+      <!-- Set large flex to allow the toolbox-panel-webconsole to have a
+           height set to a small value without flexing to fill up extra
+           space. There must be a flex on both to ensure that the console
+           panel itself is sized properly -->
+      <deck id="toolbox-deck" flex="1000" minheight="75" />
       <splitter id="toolbox-console-splitter" class="devtools-horizontal-splitter" hidden="true" />
       <box minheight="75" flex="1" id="toolbox-panel-webconsole" collapsed="true" />
     </vbox>

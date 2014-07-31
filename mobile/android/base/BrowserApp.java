@@ -2545,6 +2545,7 @@ public class BrowserApp extends GeckoApp
                     tab.addBookmark();
                     getButtonToast().show(false,
                         getResources().getString(R.string.bookmark_added),
+                        ButtonToast.LENGTH_SHORT,
                         getResources().getString(R.string.bookmark_options),
                         null,
                         new ButtonToast.ToastListener() {
