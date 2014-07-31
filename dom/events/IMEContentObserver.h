@@ -152,6 +152,56 @@ private:
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIEditor> mEditor;
 
+  /**
+   * FlatTextCache stores flat text length from start of the content to
+   * mNodeOffset of mContainerNode.
+   */
+  struct FlatTextCache
+  {
+    // mContainerNode and mNodeOffset represent a point in DOM tree.  E.g.,
+    // if mContainerNode is a div element, mNodeOffset is index of its child.
+    nsCOMPtr<nsINode> mContainerNode;
+    int32_t mNodeOffset;
+    // Length of flat text generated from contents between the start of content
+    // and a child node whose index is mNodeOffset of mContainerNode.
+    uint32_t mFlatTextLength;
+
+    FlatTextCache()
+      : mNodeOffset(0)
+      , mFlatTextLength(0)
+    {
+    }
+
+    void Clear()
+    {
+      mContainerNode = nullptr;
+      mNodeOffset = 0;
+      mFlatTextLength = 0;
+    }
+
+    void Cache(nsINode* aContainer, int32_t aNodeOffset,
+               uint32_t aFlatTextLength)
+    {
+      MOZ_ASSERT(aContainer, "aContainer must not be null");
+      MOZ_ASSERT(
+        aNodeOffset <= static_cast<int32_t>(aContainer->GetChildCount()),
+        "aNodeOffset must be same as or less than the count of children");
+      mContainerNode = aContainer;
+      mNodeOffset = aNodeOffset;
+      mFlatTextLength = aFlatTextLength;
+    }
+
+    bool Match(nsINode* aContainer, int32_t aNodeOffset) const
+    {
+      return aContainer == mContainerNode && aNodeOffset == mNodeOffset;
+    }
+  };
+  // mEndOfAddedTextCache caches text length from the start of content to
+  // the end of the last added content only while an edit action is being
+  // handled by the editor and no other mutation (e.g., removing node)
+  // occur.
+  FlatTextCache mEndOfAddedTextCache;
+
   TextChangeData mTextChangeData;
 
   EventStateManager* mESM;
