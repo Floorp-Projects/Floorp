@@ -731,6 +731,12 @@ BufferTextureClient::Unlock()
   // reference remains by the time Unlock() is called.
   MOZ_ASSERT(mDrawTarget->refCount() == 1);
 
+  if (mReadbackSink) {
+    RefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
+    RefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
+    mReadbackSink->ProcessReadback(dataSurf);
+  }
+
   mDrawTarget->Flush();
   mDrawTarget = nullptr;
 }

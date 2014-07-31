@@ -37,6 +37,7 @@ Node::Node(JSGCTraceKind kind, void *ptr)
     switch (kind) {
       case JSTRACE_OBJECT:      construct(static_cast<JSObject *>(ptr));              break;
       case JSTRACE_STRING:      construct(static_cast<JSString *>(ptr));              break;
+      case JSTRACE_SYMBOL:      construct(static_cast<JS::Symbol *>(ptr));            break;
       case JSTRACE_SCRIPT:      construct(static_cast<JSScript *>(ptr));              break;
       case JSTRACE_LAZY_SCRIPT: construct(static_cast<js::LazyScript *>(ptr));        break;
       case JSTRACE_JITCODE:     construct(static_cast<js::jit::JitCode *>(ptr));      break;
@@ -55,6 +56,8 @@ Node::Node(Value value)
         construct(&value.toObject());
     else if (value.isString())
         construct(value.toString());
+    else if (value.isSymbol())
+        construct(value.toSymbol());
     else
         construct<void>(nullptr);
 }
@@ -75,6 +78,8 @@ Node::exposeToJS() const
         }
     } else if (is<JSString>()) {
         v.setString(as<JSString>());
+    } else if (is<JS::Symbol>()) {
+        v.setSymbol(as<JS::Symbol>());
     } else {
         v.setUndefined();
     }
@@ -210,6 +215,8 @@ template<> const jschar TracerConcrete<JSObject>::concreteTypeName[] =
     MOZ_UTF16("JSObject");
 template<> const jschar TracerConcrete<JSString>::concreteTypeName[] =
     MOZ_UTF16("JSString");
+template<> const jschar TracerConcrete<JS::Symbol>::concreteTypeName[] =
+    MOZ_UTF16("JS::Symbol");
 template<> const jschar TracerConcrete<JSScript>::concreteTypeName[] =
     MOZ_UTF16("JSScript");
 template<> const jschar TracerConcrete<js::LazyScript>::concreteTypeName[] =

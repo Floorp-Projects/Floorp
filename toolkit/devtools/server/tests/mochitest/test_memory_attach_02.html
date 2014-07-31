@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 960671 - Test attaching and detaching while in the wrong state.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript;version=1.8"></script>
+<script>
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  Task.spawn(function* () {
+    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+
+    var e = null;
+    try {
+      yield memory.detach();
+    }
+    catch (ee) {
+      e = ee;
+    }
+    ok(e, "Should have hit the wrongState error");
+
+    yield memory.attach();
+
+    e = null;
+    try {
+      yield memory.attach();
+    }
+    catch (ee) {
+      e = ee;
+    }
+    ok(e, "Should have hit the wrongState error");
+
+    yield memory.detach();
+    destroyServerAndFinish(client);
+  });
+};
+</script>
+</pre>
+</body>
+</html>

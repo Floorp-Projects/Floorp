@@ -151,7 +151,7 @@ interface nsIContentPolicy : nsISupports
   const nsContentPolicyType TYPE_BEACON = 19;
 
   /* When adding new content types, please update nsContentBlocker,
-   * NS_CP_ContentTypeName, contentSecurityPolicy.js, all nsIContentPolicy
+   * NS_CP_ContentTypeName, nsCSPContext, all nsIContentPolicy
    * implementations, and other things that are not listed here that are
    * related to nsIContentPolicy. */
 

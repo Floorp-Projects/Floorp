@@ -11,59 +11,26 @@ Bug 923275 - Add a memory monitor widget to the developer toolbar
 </head>
 <body>
 <pre id="test">
+<script src="memory-helpers.js" type="application/javascript;version=1.8"></script>
 <script>
-
 window.onload = function() {
-  var Cu = Components.utils;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
-
-  Cu.import("resource://gre/modules/Services.jsm");
-
-  // Always log packets when running tests.
-  Services.prefs.setBoolPref("devtools.debugger.log", true);
-  SimpleTest.registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("devtools.debugger.log");
-  });
-
-  Cu.import("resource://gre/modules/devtools/Loader.jsm");
-  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-
   SimpleTest.waitForExplicitFinish();
 
-  var {MemoryFront} = devtools.require("devtools/server/actors/memory");
-
-  DebuggerServer.init(function () { return true; });
-  DebuggerServer.addBrowserActors();
-
-  var client = new DebuggerClient(DebuggerServer.connectPipe());
-  client.connect(function onConnect() {
-    client.listTabs(function onListTabs(aResponse) {
-      var form = aResponse.tabs[aResponse.selected];
-      var front = MemoryFront(client, form);
-
-      front.measure().then(measurement => {
-        ok(measurement.total > 0, "total memory is valid");
-        ok(measurement.domSize > 0, "domSize is valid");
-        ok(measurement.styleSize > 0, "styleSize is valid");
-        ok(measurement.jsObjectsSize > 0, "jsObjectsSize is valid");
-        ok(measurement.jsStringsSize > 0, "jsStringsSize is valid");
-        ok(measurement.jsOtherSize > 0, "jsOtherSize is valid");
-        ok(measurement.otherSize > 0, "otherSize is valid");
-        ok(measurement.jsMilliseconds, "jsMilliseconds is valid");
-        ok(measurement.nonJSMilliseconds, "nonJSMilliseconds is valid");
-
-        client.close(() => {
-          DebuggerServer.destroy();
-          SimpleTest.finish()
-        });
-      });
-
-    });
+  Task.spawn(function* () {
+    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    var measurement = yield memory.measure();
+    ok(measurement.total > 0, "total memory is valid");
+    ok(measurement.domSize > 0, "domSize is valid");
+    ok(measurement.styleSize > 0, "styleSize is valid");
+    ok(measurement.jsObjectsSize > 0, "jsObjectsSize is valid");
+    ok(measurement.jsStringsSize > 0, "jsStringsSize is valid");
+    ok(measurement.jsOtherSize > 0, "jsOtherSize is valid");
+    ok(measurement.otherSize > 0, "otherSize is valid");
+    ok(measurement.jsMilliseconds, "jsMilliseconds is valid");
+    ok(measurement.nonJSMilliseconds, "nonJSMilliseconds is valid");
+    destroyServerAndFinish(client);
   });
-
-}
+};
 </script>
 </pre>
 </body>

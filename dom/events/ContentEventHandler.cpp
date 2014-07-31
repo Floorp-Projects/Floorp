@@ -298,6 +298,20 @@ static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
 
 /* static */ uint32_t
 ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
+                                         uint32_t aStartOffset,
+                                         uint32_t aEndOffset)
+{
+  MOZ_ASSERT(aEndOffset >= aStartOffset,
+             "aEndOffset must be equals or larger than aStartOffset");
+  if (aStartOffset == aEndOffset) {
+    return 0;
+  }
+  return GetTextLength(aContent, LINE_BREAK_TYPE_NATIVE, aEndOffset) -
+           GetTextLength(aContent, LINE_BREAK_TYPE_NATIVE, aStartOffset);
+}
+
+/* static */ uint32_t
+ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
                                          uint32_t aMaxLength)
 {
   return GetTextLength(aContent, LINE_BREAK_TYPE_NATIVE, aMaxLength);

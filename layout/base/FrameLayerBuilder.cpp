@@ -2635,10 +2635,11 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
         opaqueClipped.Contains(mContainerBounds)) {
       aList->SetIsOpaque();
     }
-    // Add opaque areas to the "exclude glass" region. Only do this for
-    // ThebesLayers which are direct children of the root layer; this means
-    // they can't have transforms or opacity wrapping them.
-    if (!mContainerLayer->GetParent()) {
+    // Add opaque areas to the "exclude glass" region. Only do this when our
+    // container layer is going to be the rootmost layer, otherwise transforms
+    // etc will mess us up (and opaque contributions from other containers are
+    // not needed).
+    if (!nsLayoutUtils::GetCrossDocParentFrame(mContainerFrame)) {
       mBuilder->AddWindowOpaqueRegion(opaqueClipped);
     }
     opaquePixels = ScaleRegionToInsidePixels(opaqueClipped, snapOpaque);
@@ -2728,12 +2729,16 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
     nsDisplayItem::Type itemType = item->GetType();
+    bool prerenderedTransform = itemType == nsDisplayItem::TYPE_TRANSFORM &&
+        static_cast<nsDisplayTransform*>(item)->ShouldPrerender();
     nsIntRect clipRect;
     const DisplayItemClip& itemClip = item->GetClip();
     if (itemClip.HasClip()) {
       itemContent.IntersectRect(itemContent, itemClip.GetClipRect());
       clipRect = ScaleToNearestPixels(itemClip.GetClipRect());
-      itemDrawRect.IntersectRect(itemDrawRect, clipRect);
+      if (!prerenderedTransform) {
+        itemDrawRect.IntersectRect(itemDrawRect, clipRect);
+      }
       clipRect.MoveBy(mParameters.mOffset);
     }
 #ifdef DEBUG
@@ -2859,10 +2864,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
         // (async animations or an empty transaction), so we need to put items
         // that the transform item can potentially move under into a layer
         // above this item.
-        if (itemType == nsDisplayItem::TYPE_TRANSFORM &&
-            nsDisplayTransform::ShouldPrerenderTransformedContent(mBuilder,
-                                                                  item->Frame(),
-                                                                  false)) {
+        if (prerenderedTransform) {
           if (!itemClip.HasClip()) {
             // The transform item can move anywhere, treat all other content
             // as being above this item.
@@ -3218,11 +3220,12 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayerData* aLayerData,
           printf_stderr("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), layer);
         }
 #endif
+        invalid.ScaleRoundOut(thebesData->mXScale, thebesData->mYScale);
+
         if (hasClip) {
           invalid.And(invalid, intClip);
         }
 
-        invalid.ScaleRoundOut(thebesData->mXScale, thebesData->mYScale);
         InvalidatePostTransformRegion(layer, invalid,
                                       GetTranslationForThebesLayer(layer));
       }

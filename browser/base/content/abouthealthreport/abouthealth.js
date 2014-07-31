@@ -9,33 +9,17 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const reporter = Cc["@mozilla.org/datareporting/service;1"]
-                   .getService(Ci.nsISupports)
-                   .wrappedJSObject
-                   .healthReporter;
-
-const policy = Cc["@mozilla.org/datareporting/service;1"]
-                 .getService(Ci.nsISupports)
-                 .wrappedJSObject
-                 .policy;
-
 const prefs = new Preferences("datareporting.healthreport.");
-
 
 let healthReportWrapper = {
   init: function () {
-    if (!reporter) {
-      healthReportWrapper.handleInitFailure();
-      return;
-    }
-
-    reporter.onInit().then(healthReportWrapper.refreshPayload,
-                           healthReportWrapper.handleInitFailure);
-
     let iframe = document.getElementById("remote-report");
     iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
-    let report = this._getReportURI();
-    iframe.src = report.spec;
+    iframe.src = this._getReportURI().spec;
+    iframe.onload = () => {
+      MozSelfSupport.getHealthReportPayload().then(this.updatePayload,
+                                                   this.handleInitFailure);
+    };
     prefs.observe("uploadEnabled", this.updatePrefState, healthReportWrapper);
   },
 
@@ -48,36 +32,30 @@ let healthReportWrapper = {
     return Services.io.newURI(url, null, null);
   },
 
-  onOptIn: function () {
-    policy.recordHealthReportUploadEnabled(true,
-                                           "Health report page sent opt-in command.");
-    this.updatePrefState();
-  },
-
-  onOptOut: function () {
-    policy.recordHealthReportUploadEnabled(false,
-                                           "Health report page sent opt-out command.");
+  setDataSubmission: function (enabled) {
+    MozSelfSupport.healthReportDataSubmissionEnabled = enabled;
     this.updatePrefState();
   },
 
   updatePrefState: function () {
     try {
       let prefs = {
-        enabled: policy.healthReportUploadEnabled,
-      }
-      this.injectData("prefs", prefs);
-    } catch (e) {
-      this.reportFailure(this.ERROR_PREFS_FAILED);
+        enabled: MozSelfSupport.healthReportDataSubmissionEnabled,
+      };
+      healthReportWrapper.injectData("prefs", prefs);
+    }
+    catch (ex) {
+      healthReportWrapper.reportFailure(healthReportWrapper.ERROR_PREFS_FAILED);
     }
   },
 
   refreshPayload: function () {
-    reporter.collectAndObtainJSONPayload().then(healthReportWrapper.updatePayload, 
-                                                healthReportWrapper.handlePayloadFailure);
+    MozSelfSupport.getHealthReportPayload().then(this.updatePayload,
+                                                 this.handlePayloadFailure);
   },
 
-  updatePayload: function (data) {
-    healthReportWrapper.injectData("payload", data);
+  updatePayload: function (payload) {
+    healthReportWrapper.injectData("payload", JSON.stringify(payload));
   },
 
   injectData: function (type, content) {
@@ -99,10 +77,10 @@ let healthReportWrapper = {
   handleRemoteCommand: function (evt) {
     switch (evt.detail.command) {
       case "DisableDataSubmission":
-        this.onOptOut();
+        this.setDataSubmission(false);
         break;
       case "EnableDataSubmission":
-        this.onOptIn();
+        this.setDataSubmission(true);
         break;
       case "RequestCurrentPrefs":
         this.updatePrefState();

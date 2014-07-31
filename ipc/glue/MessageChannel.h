@@ -641,9 +641,6 @@ class MessageChannel : HasResultCodes
     bool mAbortOnError;
 };
 
-bool
-ProcessingUrgentMessages();
-
 } // namespace ipc
 } // namespace mozilla
 
