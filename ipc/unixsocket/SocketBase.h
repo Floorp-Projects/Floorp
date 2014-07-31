@@ -160,55 +160,6 @@ private:
   T* mIO;
 };
 
-/* |SocketIOEventRunnable| reports the connection state on the
- * I/O thrad back to the main thread.
- */
-template <typename T>
-class SocketIOEventRunnable MOZ_FINAL : public SocketIORunnable<T>
-{
-public:
-  enum SocketEvent {
-    CONNECT_SUCCESS,
-    CONNECT_ERROR,
-    DISCONNECT
-  };
-
-  SocketIOEventRunnable(T* aIO, SocketEvent e)
-  : SocketIORunnable<T>(aIO)
-  , mEvent(e)
-  { }
-
-  NS_IMETHOD Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    T* io = SocketIORunnable<T>::GetIO();
-
-    if (io->IsShutdownOnMainThread()) {
-      NS_WARNING("I/O consumer has already been closed!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-
-    SocketConsumerBase* consumer = io->GetConsumer();
-    MOZ_ASSERT(consumer);
-
-    if (mEvent == CONNECT_SUCCESS) {
-      consumer->NotifySuccess();
-    } else if (mEvent == CONNECT_ERROR) {
-      consumer->NotifyError();
-    } else if (mEvent == DISCONNECT) {
-      consumer->NotifyDisconnect();
-    }
-
-    return NS_OK;
-  }
-
-private:
-  SocketEvent mEvent;
-};
-
 }
 }
 
