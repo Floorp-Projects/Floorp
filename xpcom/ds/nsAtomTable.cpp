@@ -571,11 +571,6 @@ class CheckStaticAtomSizes
 nsresult
 RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 {
-  // this does three things:
-  // 1) wraps each static atom in a wrapper, if necessary
-  // 2) initializes the address pointed to by each mBits slot
-  // 3) puts the atom into the static atom table as well
-
   if (!gStaticAtomTable && !gStaticAtomTableSealed) {
     gStaticAtomTable = new nsDataHashtable<nsStringHashKey, nsIAtom*>();
   }
@@ -592,27 +587,21 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
       GetAtomHashEntry((char16_t*)aAtoms[i].mStringBuffer->Data(),
                        stringLen, &hash);
 
-    if (he->mAtom) {
-      // there already is an atom with this name in the table.. but we
-      // still have to update mBits
-      if (!he->mAtom->IsPermanent()) {
-        // since we wanted to create a static atom but there is
-        // already one there, we convert it to a non-refcounting
-        // permanent atom
-        PromoteToPermanent(he->mAtom);
+    AtomImpl* atom = he->mAtom;
+    if (atom) {
+      if (!atom->IsPermanent()) {
+        // We wanted to create a static atom but there is already a non-static
+        // atom there. So convert it to a non-refcounting permanent atom.
+        PromoteToPermanent(atom);
       }
-
-      *aAtoms[i].mAtom = he->mAtom;
     } else {
-      AtomImpl* atom = new PermanentAtomImpl(aAtoms[i].mStringBuffer,
-                                             stringLen,
-                                             hash);
+      atom = new PermanentAtomImpl(aAtoms[i].mStringBuffer, stringLen, hash);
       he->mAtom = atom;
-      *aAtoms[i].mAtom = atom;
+    }
+    *aAtoms[i].mAtom = atom;
 
-      if (!gStaticAtomTableSealed) {
-        gStaticAtomTable->Put(nsAtomString(atom), atom);
-      }
+    if (!gStaticAtomTableSealed) {
+      gStaticAtomTable->Put(nsAtomString(atom), atom);
     }
   }
   return NS_OK;
