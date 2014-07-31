@@ -7,6 +7,7 @@
 const MAX_ORDINAL = 99;
 const ZOOM_PREF = "devtools.toolbox.zoomValue";
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
+const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 
@@ -74,6 +75,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._highlighterReady = this._highlighterReady.bind(this);
   this._highlighterHidden = this._highlighterHidden.bind(this);
   this._prefChanged = this._prefChanged.bind(this);
+  this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -240,8 +242,8 @@ Toolbox.prototype = {
       let domReady = () => {
         this.isReady = true;
 
-        let closeButton = this.doc.getElementById("toolbox-close");
-        closeButton.addEventListener("command", this.destroy, true);
+        this.closeButton = this.doc.getElementById("toolbox-close");
+        this.closeButton.addEventListener("command", this.destroy, true);
 
         gDevTools.on("pref-changed", this._prefChanged);
 
@@ -255,10 +257,17 @@ Toolbox.prototype = {
         this._addZoomKeys();
         this._loadInitialZoom();
 
+        this.webconsolePanel = this.doc.querySelector("#toolbox-panel-webconsole");
+        this.webconsolePanel.height =
+          Services.prefs.getIntPref(SPLITCONSOLE_HEIGHT_PREF);
+        this.webconsolePanel.addEventListener("resize",
+          this._saveSplitConsoleHeight);
+
         let splitConsolePromise = promise.resolve();
         if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
           splitConsolePromise = this.openSplitConsole();
         }
+
         let buttonsPromise = this._buildButtons();
 
         this._telemetry.toolOpened("toolbox");
@@ -347,6 +356,11 @@ Toolbox.prototype = {
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
   },
 
+  _saveSplitConsoleHeight: function() {
+    Services.prefs.setIntPref(SPLITCONSOLE_HEIGHT_PREF,
+      this.webconsolePanel.height);
+  },
+
   /**
    * Make sure that the console is showing up properly based on all the
    * possible conditions.
@@ -361,7 +375,7 @@ Toolbox.prototype = {
    */
   _refreshConsoleDisplay: function() {
     let deck = this.doc.getElementById("toolbox-deck");
-    let webconsolePanel = this.doc.getElementById("toolbox-panel-webconsole");
+    let webconsolePanel = this.webconsolePanel;
     let splitter = this.doc.getElementById("toolbox-console-splitter");
     let openedConsolePanel = this.currentToolId === "webconsole";
 
@@ -524,11 +538,10 @@ Toolbox.prototype = {
       return;
     }
 
-    let closeButton = this.doc.getElementById("toolbox-close");
     if (this.hostType == Toolbox.HostType.WINDOW) {
-      closeButton.setAttribute("hidden", "true");
+      this.closeButton.setAttribute("hidden", "true");
     } else {
-      closeButton.removeAttribute("hidden");
+      this.closeButton.removeAttribute("hidden");
     }
 
     let sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
@@ -1320,6 +1333,11 @@ Toolbox.prototype = {
     gDevTools.off("tool-unregistered", this._toolUnregistered);
 
     gDevTools.off("pref-changed", this._prefChanged);
+
+    this._saveSplitConsoleHeight();
+    this.webconsolePanel.removeEventListener("resize",
+      this._saveSplitConsoleHeight);
+    this.closeButton.removeEventListener("command", this.destroy, true);
 
     let outstanding = [];
     for (let [id, panel] of this._toolPanels) {
