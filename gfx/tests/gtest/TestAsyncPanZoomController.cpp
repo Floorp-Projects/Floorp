@@ -12,6 +12,7 @@
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/UniquePtr.h"
 #include "base/task.h"
 #include "Layers.h"
 #include "TestLayers.h"
@@ -1727,4 +1728,140 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   EXPECT_EQ(gfxPoint(25, 75), transformToGecko.Transform(gfxPoint(25, 25)));
 
   manager->ClearTree();
+}
+
+class TaskRunMetrics {
+public:
+  TaskRunMetrics()
+    : mRunCount(0)
+    , mCancelCount(0)
+  {}
+
+  void IncrementRunCount() {
+    mRunCount++;
+  }
+
+  void IncrementCancelCount() {
+    mCancelCount++;
+  }
+
+  int GetAndClearRunCount() {
+    int runCount = mRunCount;
+    mRunCount = 0;
+    return runCount;
+  }
+
+  int GetAndClearCancelCount() {
+    int cancelCount = mCancelCount;
+    mCancelCount = 0;
+    return cancelCount;
+  }
+
+private:
+  int mRunCount;
+  int mCancelCount;
+};
+
+class MockTask : public CancelableTask {
+public:
+  MockTask(const TaskRunMetrics& aMetrics)
+    : mMetrics(aMetrics)
+  {}
+
+  virtual void Run() {
+    mMetrics.IncrementRunCount();
+  }
+
+  virtual void Cancel() {
+    mMetrics.IncrementCancelCount();
+  }
+
+private:
+  TaskRunMetrics mMetrics;
+};
+
+class APZTaskThrottlerTester : public ::testing::Test {
+public:
+  APZTaskThrottlerTester()
+  {
+    now = TimeStamp::Now();
+    throttler = MakeUnique<TaskThrottler>(now, TimeDuration::FromMilliseconds(100));
+  }
+
+protected:
+  TimeStamp Advance(int aMillis = 5)
+  {
+    now = now + TimeDuration::FromMilliseconds(aMillis);
+    return now;
+  }
+
+  UniquePtr<CancelableTask> NewTask()
+  {
+    return MakeUnique<MockTask>(&metrics);
+  }
+
+  TimeStamp now;
+  UniquePtr<TaskThrottler> throttler;
+  TaskRunMetrics metrics;
+};
+
+TEST_F(APZTaskThrottlerTester, BasicTest) {
+  // Check that posting the first task runs right away
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 1
+  EXPECT_EQ(1, metrics.GetAndClearRunCount());
+
+  // Check that posting the second task doesn't run until the first one is done
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 2
+  EXPECT_EQ(0, metrics.GetAndClearRunCount());
+  throttler->TaskComplete(Advance());                           // for task 1
+  EXPECT_EQ(1, metrics.GetAndClearRunCount());
+  EXPECT_EQ(0, metrics.GetAndClearCancelCount());
+
+  // Check that tasks are coalesced: dispatch 5 tasks
+  // while there is still one outstanding, and ensure
+  // that only one of the 5 runs
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 3
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 4
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 5
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 6
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 7
+  EXPECT_EQ(0, metrics.GetAndClearRunCount());
+  EXPECT_EQ(4, metrics.GetAndClearCancelCount());
+
+  throttler->TaskComplete(Advance());                           // for task 2
+  EXPECT_EQ(1, metrics.GetAndClearRunCount());
+  throttler->TaskComplete(Advance());                           // for task 7 (tasks 3..6 were cancelled)
+  EXPECT_EQ(0, metrics.GetAndClearRunCount());
+  EXPECT_EQ(0, metrics.GetAndClearCancelCount());
+}
+
+TEST_F(APZTaskThrottlerTester, TimeoutTest) {
+  // Check that posting the first task runs right away
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 1
+  EXPECT_EQ(1, metrics.GetAndClearRunCount());
+
+  // Because we let 100ms pass, the second task should
+  // run immediately even though the first one isn't
+  // done yet
+  throttler->PostTask(FROM_HERE, NewTask(), Advance(100));      // task 2; task 1 is assumed lost
+  EXPECT_EQ(1, metrics.GetAndClearRunCount());
+  throttler->TaskComplete(Advance());                           // for task 1, but TaskThrottler thinks it's for task 2
+  throttler->TaskComplete(Advance());                           // for task 2, TaskThrottler ignores it
+  EXPECT_EQ(0, metrics.GetAndClearRunCount());
+  EXPECT_EQ(0, metrics.GetAndClearCancelCount());
+
+  // This time queue up a few tasks before the timeout expires
+  // and ensure cancellation still works as expected
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 3
+  EXPECT_EQ(1, metrics.GetAndClearRunCount());
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 4
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 5
+  throttler->PostTask(FROM_HERE, NewTask(), Advance());         // task 6
+  EXPECT_EQ(0, metrics.GetAndClearRunCount());
+  throttler->PostTask(FROM_HERE, NewTask(), Advance(100));      // task 7; task 3 is assumed lost
+  EXPECT_EQ(1, metrics.GetAndClearRunCount());
+  EXPECT_EQ(3, metrics.GetAndClearCancelCount());               // tasks 4..6 should have been cancelled
+  throttler->TaskComplete(Advance());                           // for task 7
+  EXPECT_EQ(0, metrics.GetAndClearRunCount());
+  EXPECT_EQ(0, metrics.GetAndClearCancelCount());
 }
