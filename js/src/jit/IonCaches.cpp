@@ -3745,10 +3745,11 @@ GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
     BaseIndex target(elements, index, ScaleFromElemWidth(width));
 
     if (arrayType == Scalar::Float32) {
-        JS_ASSERT(tempFloat32 != InvalidFloatReg);
-        if (!masm.convertConstantOrRegisterToFloat(cx, value, tempFloat32, &failures))
+        JS_ASSERT_IF(hasUnaliasedDouble(), tempFloat32 != InvalidFloatReg);
+        FloatRegister tempFloat = hasUnaliasedDouble() ? tempFloat32 : tempDouble;
+        if (!masm.convertConstantOrRegisterToFloat(cx, value, tempFloat, &failures))
             return false;
-        masm.storeToTypedFloatArray(arrayType, tempFloat32, target);
+        masm.storeToTypedFloatArray(arrayType, tempFloat, target);
     } else if (arrayType == Scalar::Float64) {
         if (!masm.convertConstantOrRegisterToDouble(cx, value, tempDouble, &failures))
             return false;
