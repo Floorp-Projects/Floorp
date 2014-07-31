@@ -46,6 +46,7 @@ public:
                                            nsISelectionListener)
   NS_DECL_NSIEDITOROBSERVER
   NS_DECL_NSISELECTIONLISTENER
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
@@ -212,6 +213,7 @@ private:
 
   nsIMEUpdatePreference mUpdatePreference;
   uint32_t mPreAttrChangeLength;
+  int64_t mPreCharacterDataChangeLength;
 
   bool mIsEditorInTransaction;
   bool mIsSelectionChangeEventPending;
