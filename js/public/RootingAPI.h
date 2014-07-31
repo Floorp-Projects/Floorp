@@ -8,6 +8,7 @@
 #define js_RootingAPI_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NullPtr.h"
@@ -166,6 +167,23 @@ struct JS_PUBLIC_API(NullPtr)
     static void * const constNullValue;
 };
 
+#ifdef JSGC_GENERATIONAL
+JS_FRIEND_API(void) HeapCellPostBarrier(js::gc::Cell **cellp);
+JS_FRIEND_API(void) HeapCellRelocate(js::gc::Cell **cellp);
+#endif
+
+#ifdef JS_DEBUG
+/*
+ * For generational GC, assert that an object is in the tenured generation as
+ * opposed to being in the nursery.
+ */
+extern JS_FRIEND_API(void)
+AssertGCThingMustBeTenured(JSObject* obj);
+#else
+inline void
+AssertGCThingMustBeTenured(JSObject *obj) {}
+#endif
+
 /*
  * The Heap<T> class is a heap-stored reference to a JS GC thing. All members of
  * heap classes that refer to GC things should use Heap<T> (or possibly
@@ -284,18 +302,6 @@ class Heap : public js::HeapBase<T>
 
     T ptr;
 };
-
-#ifdef JS_DEBUG
-/*
- * For generational GC, assert that an object is in the tenured generation as
- * opposed to being in the nursery.
- */
-extern JS_FRIEND_API(void)
-AssertGCThingMustBeTenured(JSObject* obj);
-#else
-inline void
-AssertGCThingMustBeTenured(JSObject *obj) {}
-#endif
 
 /*
  * The TenuredHeap<T> class is similar to the Heap<T> class above in that it
@@ -560,11 +566,6 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
     void operator=(MutableHandle other) MOZ_DELETE;
 };
 
-#ifdef JSGC_GENERATIONAL
-JS_FRIEND_API(void) HeapCellPostBarrier(js::gc::Cell **cellp);
-JS_FRIEND_API(void) HeapCellRelocate(js::gc::Cell **cellp);
-#endif
-
 } /* namespace JS */
 
 namespace js {
@@ -666,6 +667,12 @@ struct GCMethods<JSObject *>
 {
     static JSObject *initial() { return nullptr; }
     static bool poisoned(JSObject *v) { return JS::IsPoisonedPtr(v); }
+    static gc::Cell *asGCThingOrNull(JSObject *v) {
+        if (!v)
+            return nullptr;
+        JS_ASSERT(uintptr_t(v) > 32);
+        return reinterpret_cast<gc::Cell *>(v);
+    }
     static bool needsPostBarrier(JSObject *v) {
         return v != nullptr && gc::IsInsideNursery(reinterpret_cast<gc::Cell *>(v));
     }
@@ -1246,6 +1253,24 @@ class CompilerRootNode
     js::gc::Cell *ptr_;
 };
 
-}  /* namespace js */
+namespace gc {
+
+template <typename T, typename TraceCallbacks>
+void
+CallTraceCallbackOnNonHeap(T *v, const TraceCallbacks &aCallbacks, const char *aName, void *aClosure)
+{
+    static_assert(sizeof(T) == sizeof(JS::Heap<T>), "T and Heap<T> must be compatible.");
+    MOZ_ASSERT(v);
+    mozilla::DebugOnly<Cell *> cell = GCMethods<T>::asGCThingOrNull(*v);
+    MOZ_ASSERT(cell);
+    MOZ_ASSERT(!IsInsideNursery(cell));
+    JS::Heap<T> *asHeapT = reinterpret_cast<JS::Heap<T>*>(v);
+    aCallbacks.Trace(asHeapT, aName, aClosure);
+    MOZ_ASSERT(GCMethods<T>::asGCThingOrNull(*v) == cell);
+}
+
+} /* namespace gc */
+
+} /* namespace js */
 
 #endif  /* js_RootingAPI_h */
