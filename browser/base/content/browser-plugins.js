@@ -106,8 +106,8 @@ var gPluginHandler = {
     let pluginRect = plugin.getBoundingClientRect();
     // XXX bug 446693. The text-shadow on the submitted-report text at
     //     the bottom causes scrollHeight to be larger than it should be.
-    let overflows = (overlay.scrollWidth > pluginRect.width) ||
-                    (overlay.scrollHeight - 5 > pluginRect.height);
+    let overflows = (overlay.scrollWidth > Math.ceil(pluginRect.width)) ||
+                    (overlay.scrollHeight - 5 > Math.ceil(pluginRect.height));
     if (overflows) {
       return false;
     }
