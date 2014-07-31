@@ -276,6 +276,27 @@ public:
   }
 };
 
+/* |SocketIODeleteInstanceRunnable| deletes an object on the main thread.
+ */
+template<class T>
+class SocketIODeleteInstanceRunnable MOZ_FINAL : public nsRunnable
+{
+public:
+  SocketIODeleteInstanceRunnable(T* aInstance)
+  : mInstance(aInstance)
+  { }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    mInstance = nullptr; // delete instance
+
+    return NS_OK;
+  }
+
+private:
+  nsAutoPtr<T> mInstance;
+};
+
 }
 }
 
