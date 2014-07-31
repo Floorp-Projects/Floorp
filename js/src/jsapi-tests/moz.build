@@ -72,7 +72,6 @@ UNIFIED_SOURCES += [
     'testSymbol.cpp',
     'testToIntWidth.cpp',
     'testTypedArrays.cpp',
-    'testUbiNode.cpp',
     'testUncaughtError.cpp',
     'testUTF8.cpp',
     'testWeakMap.cpp',
