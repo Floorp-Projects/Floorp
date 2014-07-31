@@ -13,7 +13,27 @@
 
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
+
         </activity>
+
+        <!-- Basic launcher widget. -->
+        <receiver android:name="org.mozilla.search.SearchWidget"
+                  android:label="@string/search_widget_name">
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="org.mozilla.widget.LAUNCH_BROWSER"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="org.mozilla.widget.LAUNCH_SEARCH"/>
+            </intent-filter>
+
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/search_widget_info" />
+        </receiver>
 
         <activity
             android:name="org.mozilla.search.SearchPreferenceActivity"

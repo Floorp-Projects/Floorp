@@ -16,4 +16,5 @@ search_activity_sources = [
     'java/org/mozilla/search/PostSearchFragment.java',
     'java/org/mozilla/search/PreSearchFragment.java',
     'java/org/mozilla/search/SearchPreferenceActivity.java',
+    'java/org/mozilla/search/SearchWidget.java',
 ]
