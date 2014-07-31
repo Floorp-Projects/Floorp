@@ -1,9 +1,0 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-# The midl generated code include Windows headers which defines min and max
-# macros which conflicts with std::min/max.  Suppress the macros:
-OS_CXXFLAGS += -DNOMINMAX
-
-include $(topsrcdir)/config/rules.mk
