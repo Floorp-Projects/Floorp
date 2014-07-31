@@ -6,18 +6,6 @@
 
 #include "CC_Common.h"
 
-namespace CSF {
-class AudioControl;
-}
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<CSF::AudioControl>
-{
-  static const bool value = true;
-};
-}
-
 namespace CSF
 {
         DECLARE_NS_PTR(AudioControl)
@@ -42,6 +30,7 @@ namespace CSF
         virtual bool setRingerVolume( int ) = 0;
         virtual int getRingerVolume() = 0;
 
-        virtual ~AudioControl(){};
+        protected:
+                virtual ~AudioControl(){};
 	};
 };
