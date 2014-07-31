@@ -9,8 +9,15 @@
 #ifndef mozilla_ipc_SocketBase_h
 #define mozilla_ipc_SocketBase_h
 
+#include "base/message_loop.h"
 #include "nsAutoPtr.h"
+#include "nsTArray.h"
 #include "nsThreadUtils.h"
+
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+using namespace mozilla::tasktracer;
+#endif
 
 namespace mozilla {
 namespace ipc {
@@ -295,6 +302,119 @@ public:
 
 private:
   nsAutoPtr<T> mInstance;
+};
+
+//
+// SocketIOBase
+//
+
+/* |SocketIOBase| is a base class for Socket I/O classes that
+ * perform operations on the I/O thread. It provides methds
+ * for the most common read and write scenarios.
+ */
+class SocketIOBase
+{
+public:
+  virtual ~SocketIOBase();
+
+  void EnqueueData(UnixSocketRawData* aData);
+  bool HasPendingData() const;
+
+  template <typename T>
+  nsresult ReceiveData(int aFd, T* aIO)
+  {
+    MOZ_ASSERT(aFd >= 0);
+    MOZ_ASSERT(aIO);
+
+    do {
+      nsAutoPtr<UnixSocketRawData> incoming(
+        new UnixSocketRawData(mMaxReadSize));
+
+      ssize_t res =
+        TEMP_FAILURE_RETRY(read(aFd, incoming->mData, incoming->mSize));
+
+      if (res < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          return NS_OK; /* no more data available */
+        }
+        /* an error occored */
+        nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
+        NS_DispatchToMainThread(r);
+        return NS_ERROR_FAILURE;
+      } else if (!res) {
+        /* EOF or peer shut down sending */
+        nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
+        NS_DispatchToMainThread(r);
+        return NS_OK;
+      }
+
+#ifdef MOZ_TASK_TRACER
+      // Make unix socket creation events to be the source events of TaskTracer,
+      // and originate the rest correlation tasks from here.
+      AutoSourceEvent taskTracerEvent(SourceEventType::UNIXSOCKET);
+#endif
+
+      incoming->mSize = res;
+      nsRefPtr<nsRunnable> r =
+        new SocketIOReceiveRunnable<T>(aIO, incoming.forget());
+      NS_DispatchToMainThread(r);
+    } while (true);
+
+    return NS_OK;
+  }
+
+  template <typename T>
+  nsresult SendPendingData(int aFd, T* aIO)
+  {
+    MOZ_ASSERT(aFd >= 0);
+    MOZ_ASSERT(aIO);
+
+    do {
+      if (!HasPendingData()) {
+        return NS_OK;
+      }
+
+      UnixSocketRawData* outgoing = mOutgoingQ.ElementAt(0);
+      MOZ_ASSERT(outgoing->mSize);
+
+      const uint8_t* data = outgoing->mData + outgoing->mCurrentWriteOffset;
+      size_t size = outgoing->mSize - outgoing->mCurrentWriteOffset;
+
+      ssize_t res = TEMP_FAILURE_RETRY(write(aFd, data, size));
+
+      if (res < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+          return NS_OK; /* no more data available */
+        }
+        /* an error occored */
+        nsRefPtr<nsRunnable> r = new SocketIORequestClosingRunnable<T>(aIO);
+        NS_DispatchToMainThread(r);
+        return NS_ERROR_FAILURE;
+      } else if (!res) {
+        return NS_OK; /* nothing written */
+      }
+
+      outgoing->mCurrentWriteOffset += res;
+
+      if (outgoing->mCurrentWriteOffset == outgoing->mSize) {
+        mOutgoingQ.RemoveElementAt(0);
+        delete data;
+      }
+    } while (true);
+
+    return NS_OK;
+  }
+
+protected:
+  SocketIOBase(size_t aMaxReadSize);
+
+private:
+  const size_t mMaxReadSize;
+
+  /**
+   * Raw data queue. Must be pushed/popped from I/O thread only.
+   */
+  nsTArray<UnixSocketRawData*> mOutgoingQ;
 };
 
 }
