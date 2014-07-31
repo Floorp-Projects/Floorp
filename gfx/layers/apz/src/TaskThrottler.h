@@ -26,9 +26,15 @@ namespace layers {
  * you're sending an async message and waiting for a reply. You need to call
  * PostTask to queue a task and TaskComplete when you get a response.
  *
- * The call to TaskComplete will run the recent task posted since the last
+ * The call to TaskComplete will run the most recent task posted since the last
  * request was sent, if any. This means that at any time there can be at most 1
  * outstanding request being processed and at most 1 queued behind it.
+ *
+ * However, to guard against task runs that error out and fail to call TaskComplete,
+ * the TaskThrottler also has a max-wait timeout. If the caller requests a new
+ * task be posted, and it has been greater than the max-wait timeout since the
+ * last one was sent, then we send the new one regardless of whether or not the
+ * last one was marked as completed.
  *
  * This is used in the context of repainting a scrollable region. While another
  * process is painting you might get several updates from the UI thread but when
@@ -37,9 +43,11 @@ namespace layers {
 
 class TaskThrottler {
 public:
-  TaskThrottler(const TimeStamp& aTimeStamp);
+  TaskThrottler(const TimeStamp& aTimeStamp, const TimeDuration& aMaxWait);
 
-  /** Post a task to be run as soon as there are no outstanding tasks.
+  /** Post a task to be run as soon as there are no outstanding tasks, or
+   * post it immediately if it has been more than the max-wait time since
+   * the last task was posted.
    *
    * @param aLocation Use the macro FROM_HERE
    * @param aTask     Ownership of this object is transferred to TaskThrottler
@@ -92,6 +100,7 @@ private:
   bool mOutstanding;
   UniquePtr<CancelableTask> mQueuedTask;
   TimeStamp mStartTime;
+  TimeDuration mMaxWait;
   RollingMean<TimeDuration, TimeDuration> mMean;
 };
 
