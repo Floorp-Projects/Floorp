@@ -125,10 +125,10 @@ private:
     }
 
     // The platform decoder.
-    RefPtr<MediaDataDecoder> mDecoder;
+    nsRefPtr<MediaDataDecoder> mDecoder;
     // TaskQueue on which decoder can choose to decode.
     // Only non-null up until the decoder is created.
-    RefPtr<MediaTaskQueue> mTaskQueue;
+    nsRefPtr<MediaTaskQueue> mTaskQueue;
     // Callback that receives output and error notifications from the decoder.
     nsAutoPtr<DecoderCallback> mCallback;
     // Monitor that protects all non-threadsafe state; the primitives
