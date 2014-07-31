@@ -4,11 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += [
-    'csp',
-    'websocket_hybi',
-]
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
@@ -26,7 +21,9 @@ SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
 MOCHITEST_MANIFESTS += [
     'chrome/mochitest.ini',
+    'csp/mochitest.ini',
     'mochitest.ini',
+    'websocket_hybi/mochitest.ini',
 ]
 # OOP tests don't work on Windows (bug 763081) or native-fennec
 # (see Bug 774939). App permission checks are also disabled on
@@ -39,6 +36,7 @@ if CONFIG['MOZ_CHILD_PERMISSIONS']:
 MOCHITEST_CHROME_MANIFESTS += [
     'chrome.ini',
     'chrome/chrome.ini',
+    'csp/chrome.ini',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
