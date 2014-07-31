@@ -201,6 +201,10 @@ private:
   // handled by the editor and no other mutation (e.g., removing node)
   // occur.
   FlatTextCache mEndOfAddedTextCache;
+  // mStartOfRemovingTextRangeCache caches text length from the start of content
+  // to the start of the last removed content only while an edit action is being
+  // handled by the editor and no other mutation (e.g., adding node) occur.
+  FlatTextCache mStartOfRemovingTextRangeCache;
 
   TextChangeData mTextChangeData;
 
