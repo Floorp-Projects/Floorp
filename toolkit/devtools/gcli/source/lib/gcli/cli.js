@@ -2072,7 +2072,7 @@ Requisition.prototype.exec = function(options) {
 
     data = (data != null && data.isTypedData) ? data : {
       isTypedData: true,
-      data: data,
+      data: data.replace(/^Protocol error: /, ''), // Temp for bug 1035296
       type: 'error'
     };
     output.complete(data, true);
