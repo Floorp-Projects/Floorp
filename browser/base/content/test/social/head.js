@@ -81,7 +81,7 @@ function runSocialTestWithProvider(manifest, callback, finishcallback) {
     SessionStore.setWindowValue(window, "socialSidebar", "");
     for (let i = 0; i < manifests.length; i++) {
       let m = manifests[i];
-      for (let what of ['sidebarURL', 'workerURL', 'iconURL']) {
+      for (let what of ['sidebarURL', 'workerURL', 'iconURL', 'shareURL', 'markURL']) {
         if (m[what]) {
           yield promiseSocialUrlNotRemembered(m[what]);
         }
