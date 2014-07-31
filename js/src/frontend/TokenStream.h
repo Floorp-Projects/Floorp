@@ -470,6 +470,36 @@ class MOZ_STACK_CLASS TokenStream
     // asm.js reporter
     void reportAsmJSError(uint32_t offset, unsigned errorNumber, ...);
 
+#ifdef JS_HAS_TEMPLATE_STRINGS
+    JSAtom *getRawTemplateStringAtom() {
+        JS_ASSERT(currentToken().type == TOK_TEMPLATE_HEAD ||
+                  currentToken().type == TOK_NO_SUBS_TEMPLATE);
+        const jschar *cur = userbuf.base() + currentToken().pos.begin + 1;
+        const jschar *end;
+        if (currentToken().type == TOK_TEMPLATE_HEAD) {
+            // Of the form    |`...${|   or   |}...${|
+            end = userbuf.base() + currentToken().pos.end - 2;
+        } else {
+            // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
+            end = userbuf.base() + currentToken().pos.end - 1;
+        }
+
+        CharBuffer charbuf(cx);
+        while (cur < end) {
+            int32_t ch = *cur;
+            if (ch == '\r') {
+                ch = '\n';
+                if ((cur + 1 < end) && (*(cur + 1) == '\n'))
+                    cur++;
+            }
+            if (!charbuf.append(ch))
+                return nullptr;
+            cur++;
+        }
+        return AtomizeChars(cx, charbuf.begin(), charbuf.length());
+    }
+#endif
+
   private:
     // These are private because they should only be called by the tokenizer
     // while tokenizing not by, for example, BytecodeEmitter.

@@ -381,8 +381,6 @@
 @BINPATH@/components/formautofill.manifest
 @BINPATH@/components/FormAutofillContentService.js
 @BINPATH@/components/FormAutofillStartup.js
-@BINPATH@/components/contentSecurityPolicy.manifest
-@BINPATH@/components/contentSecurityPolicy.js
 @BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
 @BINPATH@/components/messageWakeupService.js

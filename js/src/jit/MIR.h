@@ -225,6 +225,12 @@ class MNode : public TempObject
         getUseFor(index)->discardProducer();
     }
 
+#if DEBUG
+    bool operandDiscarded(size_t index) const {
+        return !getUseFor(index)->hasProducer();
+    }
+#endif
+
     inline MDefinition *toDefinition();
     inline MResumePoint *toResumePoint();
 

@@ -38,12 +38,12 @@
  *
  *   C* ptr = new C();
  *
- *   // Get weak pointers to ptr. The first time asWeakPtr is called
- *   // a reference counted WeakReference object is created that
+ *   // Get weak pointers to ptr. The first time a weak pointer
+ *   // is obtained, a reference counted WeakReference object is created that
  *   // can live beyond the lifetime of 'ptr'. The WeakReference
  *   // object will be notified of 'ptr's destruction.
- *   WeakPtr<C> weak = ptr->asWeakPtr();
- *   WeakPtr<C> other = ptr->asWeakPtr();
+ *   WeakPtr<C> weak = ptr;
+ *   WeakPtr<C> other = ptr;
  *
  *   // Test a weak pointer for validity before using it.
  *   if (weak) {
@@ -77,13 +77,13 @@
 
 namespace mozilla {
 
-template <typename T, class WeakReference> class WeakPtrBase;
-template <typename T, class WeakReference> class SupportsWeakPtrBase;
+template <typename T> class WeakPtr;
+template <typename T> class SupportsWeakPtr;
 
 namespace detail {
 
 // This can live beyond the lifetime of the class derived from
-// SupportsWeakPtrBase.
+// SupportsWeakPtr.
 template<class T>
 class WeakReference : public ::mozilla::RefCounted<WeakReference<T> >
 {
@@ -118,8 +118,7 @@ public:
 #endif
 
 private:
-  friend class WeakPtrBase<T, WeakReference<T> >;
-  friend class SupportsWeakPtrBase<T, WeakReference<T> >;
+  friend class mozilla::SupportsWeakPtr<T>;
 
   void detach() { mPtr = nullptr; }
 
@@ -128,49 +127,69 @@ private:
 
 } // namespace detail
 
-template <typename T, class WeakReference>
-class SupportsWeakPtrBase
+template <typename T>
+class SupportsWeakPtr
 {
-public:
-  WeakPtrBase<T, WeakReference> asWeakPtr()
-  {
-    if (!weakRef) {
-      weakRef = new WeakReference(static_cast<T*>(this));
-    }
-    return WeakPtrBase<T, WeakReference>(weakRef);
-  }
-
 protected:
-  ~SupportsWeakPtrBase()
+  ~SupportsWeakPtr()
   {
-    static_assert(IsBaseOf<SupportsWeakPtrBase<T, WeakReference>, T>::value,
-                  "T must derive from SupportsWeakPtrBase<T, WeakReference>");
-    if (weakRef) {
-      weakRef->detach();
+    static_assert(IsBaseOf<SupportsWeakPtr<T>, T>::value,
+                  "T must derive from SupportsWeakPtr<T>");
+    if (mSelfReferencingWeakPtr) {
+      mSelfReferencingWeakPtr.mRef->detach();
     }
   }
 
 private:
-  friend class WeakPtrBase<T, WeakReference>;
+  const WeakPtr<T>& SelfReferencingWeakPtr()
+  {
+    if (!mSelfReferencingWeakPtr) {
+      mSelfReferencingWeakPtr.mRef = new detail::WeakReference<T>(static_cast<T*>(this));
+    }
+    return mSelfReferencingWeakPtr;
+  }
 
-  RefPtr<WeakReference> weakRef;
+  const WeakPtr<const T>& SelfReferencingWeakPtr() const
+  {
+    const WeakPtr<T>& p = const_cast<SupportsWeakPtr*>(this)->SelfReferencingWeakPtr();
+    return reinterpret_cast<const WeakPtr<const T>&>(p);
+  }
+
+  friend class WeakPtr<T>;
+  friend class WeakPtr<const T>;
+
+  WeakPtr<T> mSelfReferencingWeakPtr;
 };
 
 template <typename T>
-class SupportsWeakPtr : public SupportsWeakPtrBase<T, detail::WeakReference<T> >
+class WeakPtr
 {
-};
+  typedef detail::WeakReference<T> WeakReference;
 
-template <typename T, class WeakReference>
-class WeakPtrBase
-{
 public:
-  WeakPtrBase(const WeakPtrBase<T, WeakReference>& aOther)
-    : mRef(aOther.mRef)
-  {}
+  WeakPtr& operator=(const WeakPtr& aOther)
+  {
+    mRef = aOther.mRef;
+    return *this;
+  }
+
+  WeakPtr(const WeakPtr& aOther)
+  {
+    *this = aOther;
+  }
+
+  WeakPtr& operator=(T* aOther)
+  {
+    return *this = aOther->SelfReferencingWeakPtr();
+  }
+
+  WeakPtr(T* aOther)
+  {
+    *this = aOther;
+  }
 
   // Ensure that mRef is dereferenceable in the uninitialized state.
-  WeakPtrBase() : mRef(new WeakReference(nullptr)) {}
+  WeakPtr() : mRef(new WeakReference(nullptr)) {}
 
   operator T*() const { return mRef->get(); }
   T& operator*() const { return *mRef->get(); }
@@ -180,21 +199,11 @@ public:
   T* get() const { return mRef->get(); }
 
 private:
-  friend class SupportsWeakPtrBase<T, WeakReference>;
+  friend class SupportsWeakPtr<T>;
 
-  explicit WeakPtrBase(const RefPtr<WeakReference>& aOther) : mRef(aOther) {}
+  explicit WeakPtr(const RefPtr<WeakReference>& aOther) : mRef(aOther) {}
 
   RefPtr<WeakReference> mRef;
-};
-
-template <typename T>
-class WeakPtr : public WeakPtrBase<T, detail::WeakReference<T> >
-{
-  typedef WeakPtrBase<T, detail::WeakReference<T> > Base;
-public:
-  WeakPtr(const WeakPtr<T>& aOther) : Base(aOther) {}
-  MOZ_IMPLICIT WeakPtr(const Base& aOther) : Base(aOther) {}
-  WeakPtr() {}
 };
 
 } // namespace mozilla

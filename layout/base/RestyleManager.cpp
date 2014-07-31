@@ -280,7 +280,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
                            nsIFrame* aFrame,
                            nsChangeHint aChange)
 {
-  // We check StyleDisplay()->HasTransform() in addition to checking
+  // We check StyleDisplay()->HasTransformStyle() in addition to checking
   // IsTransformed() since we can get here for some frames that don't support
   // CSS transforms.
   NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
@@ -297,22 +297,29 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
     }
   }
 
-  // If the frame's background is propagated to an ancestor, walk up to
-  // that ancestor.
-  nsStyleContext *bgSC;
-  while (!nsCSSRendering::FindBackground(aFrame, &bgSC)) {
-    aFrame = aFrame->GetParent();
-    NS_ASSERTION(aFrame, "root frame must paint");
-  }
-
   // Trigger rendering updates by damaging this frame and any
   // continuations of this frame.
-
-  // XXX this needs to detect the need for a view due to an opacity change and deal with it...
-
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = true;
 #endif
+  if (aChange & nsChangeHint_RepaintFrame) {
+    // If the frame's background is propagated to an ancestor, walk up to
+    // that ancestor and apply the RepaintFrame change hint to it.
+    nsStyleContext *bgSC;
+    nsIFrame* propagatedFrame = aFrame;
+    while (!nsCSSRendering::FindBackground(propagatedFrame, &bgSC)) {
+      propagatedFrame = propagatedFrame->GetParent();
+      NS_ASSERTION(aFrame, "root frame must paint");
+    }
+
+    if (propagatedFrame != aFrame) {
+      DoApplyRenderingChangeToTree(propagatedFrame, nsChangeHint_RepaintFrame);
+      aChange = NS_SubtractHint(aChange, nsChangeHint_RepaintFrame);
+      if (!aChange) {
+        return;
+      }
+    }
+  }
   DoApplyRenderingChangeToTree(aFrame, aChange);
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = false;

@@ -33,7 +33,7 @@ public:
   virtual nsresult Shutdown() MOZ_OVERRIDE;
 
   // Decode thread.
-  virtual MediaDataDecoder*
+  virtual already_AddRefed<MediaDataDecoder>
   CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                     layers::LayersBackend aLayersBackend,
                     layers::ImageContainer* aImageContainer,
@@ -41,10 +41,10 @@ public:
                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateAACDecoder(
-    const mp4_demuxer::AudioDecoderConfig& aConfig,
-    MediaTaskQueue* aAudioTaskQueue,
-    MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+  virtual already_AddRefed<MediaDataDecoder>
+  CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                   MediaTaskQueue* aAudioTaskQueue,
+                   MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
 private:
   nsRefPtr<CDMProxy> mProxy;

@@ -294,7 +294,10 @@ let Activities = {
           let results = [];
           aManifests.forEach((aManifest, i) => {
             let manifestURL = aResults.options[i].manifest;
-            let helper = new ManifestHelper(aManifest.manifest, manifestURL);
+            // Not passing the origin is fine here since we only need
+            // helper.name which doesn't rely on url resolution.
+            let helper =
+              new ManifestHelper(aManifest.manifest, manifestURL, manifestURL);
             results.push({
               manifestURL: manifestURL,
               iconURL: aResults.options[i].icon,
