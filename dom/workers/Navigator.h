@@ -110,6 +110,7 @@ public:
 
   already_AddRefed<Promise> GetDataStores(JSContext* aCx,
                                           const nsAString& aName,
+                                          const nsAString& aOwner,
                                           ErrorResult& aRv);
 };
 

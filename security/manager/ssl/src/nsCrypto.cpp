@@ -184,21 +184,14 @@ protected:
 class nsCryptoRunnable : public nsIRunnable {
 public:
   nsCryptoRunnable(nsCryptoRunArgs *args);
-  virtual ~nsCryptoRunnable();
 
   NS_IMETHOD Run ();
   NS_DECL_ISUPPORTS
 private:
+  virtual ~nsCryptoRunnable();
+
   nsCryptoRunArgs *m_args;
 };
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsCryptoRunnable>
-{
-  static const bool value = true;
-};
-}
 
 //We're going to inherit the memory passed
 //into us.
@@ -2051,12 +2044,11 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
     args->m_jsCallback = aJsCallback;
   }
 
-  nsCryptoRunnable *cryptoRunnable = new nsCryptoRunnable(args);
+  nsRefPtr<nsCryptoRunnable> cryptoRunnable(new nsCryptoRunnable(args));
 
   nsresult rv = NS_DispatchToMainThread(cryptoRunnable);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
-    delete cryptoRunnable;
   }
 
   return newObject;

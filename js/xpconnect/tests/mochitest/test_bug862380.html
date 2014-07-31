@@ -20,7 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=862380
 
   function checkNotEnumerable(obj) {
     try {
-      is(Object.getOwnPropertyNames(obj).length, 0, "Object.getOwnPropertyNames gives empty array");
       is(Object.keys(obj).length, 0, "Object.keys gives empty array");
       for (var i in obj)
         ok(false, "Enumerated something: " + i);

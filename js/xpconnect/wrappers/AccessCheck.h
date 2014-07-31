@@ -23,8 +23,8 @@ class AccessCheck {
     static bool isChrome(JSCompartment *compartment);
     static bool isChrome(JSObject *obj);
     static nsIPrincipal *getPrincipal(JSCompartment *compartment);
-    static bool isCrossOriginAccessPermitted(JSContext *cx, JSObject *obj, jsid id,
-                                             js::Wrapper::Action act);
+    static bool isCrossOriginAccessPermitted(JSContext *cx, JS::HandleObject obj,
+                                             JS::HandleId id, js::Wrapper::Action act);
 };
 
 struct Policy {
@@ -59,7 +59,7 @@ struct OpaqueWithCall : public Policy {
 // This policy only permits access to properties that are safe to be used
 // across origins.
 struct CrossOriginAccessiblePropertiesOnly : public Policy {
-    static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act) {
+    static bool check(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id, js::Wrapper::Action act) {
         return AccessCheck::isCrossOriginAccessPermitted(cx, wrapper, id, act);
     }
     static bool deny(js::Wrapper::Action act, JS::HandleId id) {
@@ -76,11 +76,12 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
 // This policy only permits access to properties if they appear in the
 // objects exposed properties list.
 struct ExposedPropertiesOnly : public Policy {
-    static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act);
+    static bool check(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id, js::Wrapper::Action act);
 
     static bool deny(js::Wrapper::Action act, JS::HandleId id) {
-        // Fail silently for GETs and ENUMERATEs.
-        return act == js::Wrapper::GET || act == js::Wrapper::ENUMERATE;
+        // Fail silently for GET ENUMERATE, and GET_PROPERTY_DESCRIPTOR.
+        return act == js::Wrapper::GET || act == js::Wrapper::ENUMERATE ||
+               act == js::Wrapper::GET_PROPERTY_DESCRIPTOR;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl) {
         return false;
