@@ -4,9 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['blink', 'test']
+DIRS += ['blink']
 
 TEST_DIRS += ['compiledtest']
+
+MOCHITEST_MANIFESTS += [
+    'test/blink/mochitest.ini',
+    'test/mochitest.ini',
+]
+
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 EXPORTS += [
     'AudioContext.h',
