@@ -19,6 +19,8 @@ import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorSet;
 import com.nineoldandroids.animation.ObjectAnimator;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.search.autocomplete.SearchFragment;
 
@@ -78,6 +80,18 @@ public class MainActivity extends FragmentActivity implements AcceptsSearchQuery
 
         animationText = null;
         animationCard = null;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Telemetry.startUISession(TelemetryContract.Session.SEARCH_ACTIVITY);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Telemetry.stopUISession(TelemetryContract.Session.SEARCH_ACTIVITY);
     }
 
     @Override
