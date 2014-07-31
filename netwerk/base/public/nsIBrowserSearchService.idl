@@ -184,6 +184,23 @@ interface nsISearchEngine : nsISupports
   AString getResultDomain([optional] in AString responseType);
 };
 
+[scriptable, uuid(856a31ff-b451-4101-b12e-ff399485ac8a)]
+interface nsISearchParseSubmissionResult : nsISupports
+{
+  /**
+   * The search engine associated with the URL passed in to
+   * nsISearchEngine::parseSubmissionURL, or null if the URL does not represent
+   * a search submission.
+   */
+  readonly attribute nsISearchEngine engine;
+
+  /**
+   * String containing the sought terms.  This can be an empty string in case no
+   * terms were specified or the URL does not represent a search submission.
+   */
+  readonly attribute AString terms;
+};
+
 [scriptable, uuid(9fc39136-f08b-46d3-b232-96f4b7b0e235)]
 interface nsISearchInstallCallback : nsISupports
 {
@@ -409,6 +426,22 @@ interface nsIBrowserSearchService : nsISupports
    * search engines.
    */
   attribute nsISearchEngine currentEngine;
+
+  /**
+   * Determines if the provided URL represents results from a search engine, and
+   * provides details about the match.
+   *
+   * The lookup mechanism checks whether the domain name and path of the
+   * provided HTTP or HTTPS URL matches one of the known values for the visible
+   * search engines.  The match does not depend on which of the schemes is used.
+   * The expected URI parameter for the search terms must exist in the query
+   * string, but other parameters are ignored.
+   *
+   * @param url
+   *        String containing the URL to parse, for example
+   *        "https://www.google.com/search?q=terms".
+   */
+  nsISearchParseSubmissionResult parseSubmissionURL(in AString url);
 };
 
 %{ C++
