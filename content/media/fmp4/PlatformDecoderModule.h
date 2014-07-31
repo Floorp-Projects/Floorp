@@ -93,11 +93,12 @@ public:
   // Returns nullptr if the decoder can't be created.
   // It is safe to store a reference to aConfig.
   // Called on decode thread.
-  virtual MediaDataDecoder* CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                                              layers::LayersBackend aLayersBackend,
-                                              layers::ImageContainer* aImageContainer,
-                                              MediaTaskQueue* aVideoTaskQueue,
-                                              MediaDataDecoderCallback* aCallback) = 0;
+  virtual MediaDataDecoder*
+  CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                    layers::LayersBackend aLayersBackend,
+                    layers::ImageContainer* aImageContainer,
+                    MediaTaskQueue* aVideoTaskQueue,
+                    MediaDataDecoderCallback* aCallback) = 0;
 
   // Creates an AAC decoder with the specified properties.
   // Asynchronous decoding of audio should be done in runnables dispatched to
@@ -109,9 +110,10 @@ public:
   // COINIT_MULTITHREADED.
   // It is safe to store a reference to aConfig.
   // Called on decode thread.
-  virtual MediaDataDecoder* CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                                             MediaTaskQueue* aAudioTaskQueue,
-                                             MediaDataDecoderCallback* aCallback) = 0;
+  virtual MediaDataDecoder*
+  CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                   MediaTaskQueue* aAudioTaskQueue,
+                   MediaDataDecoderCallback* aCallback) = 0;
 
   virtual ~PlatformDecoderModule() {}
 
