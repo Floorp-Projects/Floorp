@@ -93,7 +93,7 @@ public:
   // Returns nullptr if the decoder can't be created.
   // It is safe to store a reference to aConfig.
   // Called on decode thread.
-  virtual MediaDataDecoder*
+  virtual already_AddRefed<MediaDataDecoder>
   CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                     layers::LayersBackend aLayersBackend,
                     layers::ImageContainer* aImageContainer,
@@ -110,7 +110,7 @@ public:
   // COINIT_MULTITHREADED.
   // It is safe to store a reference to aConfig.
   // Called on decode thread.
-  virtual MediaDataDecoder*
+  virtual already_AddRefed<MediaDataDecoder>
   CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                    MediaTaskQueue* aAudioTaskQueue,
                    MediaDataDecoderCallback* aCallback) = 0;

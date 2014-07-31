@@ -192,7 +192,7 @@ EMEDecoderModule::Shutdown()
   return NS_OK;
 }
 
-MediaDataDecoder*
+already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
                                     layers::LayersBackend aLayersBackend,
                                     layers::ImageContainer* aImageContainer,
@@ -213,13 +213,14 @@ EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
     return nullptr;
   }
 
-  return new EMEDecryptor(decoder,
-                          aCallback,
-                          mTaskQueue,
-                          mProxy);
+  nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
+                                                         aCallback,
+                                                         mTaskQueue,
+                                                         mProxy));
+  return emeDecoder.forget();
 }
 
-MediaDataDecoder*
+already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateAACDecoder(const AudioDecoderConfig& aConfig,
                                    MediaTaskQueue* aAudioTaskQueue,
                                    MediaDataDecoderCallback* aCallback)
@@ -236,10 +237,11 @@ EMEDecoderModule::CreateAACDecoder(const AudioDecoderConfig& aConfig,
     return nullptr;
   }
 
-  return new EMEDecryptor(decoder,
-                          aCallback,
-                          mTaskQueue,
-                          mProxy);
+  nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
+                                                         aCallback,
+                                                         mTaskQueue,
+                                                         mProxy));
+  return emeDecoder.forget();
 }
 
 } // namespace mozilla
