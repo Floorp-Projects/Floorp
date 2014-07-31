@@ -18,7 +18,7 @@
 namespace mozilla {
 namespace ipc {
 
-class UnixSocketImpl;
+class UnixSocketConsumerIO;
 
 /**
  * UnixSocketConnector defines the socket creation and connection/listening
@@ -160,7 +160,7 @@ public:
   void GetSocketAddr(nsAString& aAddrStr);
 
 private:
-  UnixSocketImpl* mImpl;
+  UnixSocketConsumerIO* mIO;
 };
 
 } // namespace ipc
