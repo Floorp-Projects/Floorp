@@ -1107,6 +1107,11 @@ let Front = Class({
 
     let deferred = this._requests.shift();
     if (packet.error) {
+      // "Protocol error" is here to avoid TBPL heuristics. See also
+      // https://mxr.mozilla.org/webtools-central/source/tbpl/php/inc/GeneralErrorFilter.php
+      let message = (packet.error == "unknownError" && packet.message) ?
+                    "Protocol error: " + packet.message :
+                    packet.error;
       deferred.reject(packet.error);
     } else {
       deferred.resolve(packet);
