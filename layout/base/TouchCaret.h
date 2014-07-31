@@ -19,13 +19,16 @@
 namespace mozilla {
 
 /**
- * The TouchCaret places a touch caret according to caret position when the
+ * The TouchCaret places a touch caret according to caret postion when the
  * caret is shown.
  * TouchCaret is also responsible for touch caret visibility. Touch caret
  * won't be shown when timer expires or while key event causes selection change.
  */
 class TouchCaret MOZ_FINAL : public nsISelectionListener
 {
+private:
+  ~TouchCaret();
+
 public:
   explicit TouchCaret(nsIPresShell* aPresShell);
 
@@ -45,9 +48,18 @@ public:
    */
   nsEventStatus HandleEvent(WidgetEvent* aEvent);
 
-  void SyncVisibilityWithCaret();
+  /**
+   * By calling this function, touch caret recalculate touch frame position and
+   * update accordingly.
+   */
+  void UpdateTouchCaret(bool aVisible);
 
-  void UpdatePositionIfNeeded();
+  /**
+   * SetVisibility will set the visibility of the touch caret.
+   * SetVisibility performs an attribute-changed notification which could, in
+   * theory, destroy frames.
+   */
+  void SetVisibility(bool aVisible);
 
   /**
    * GetVisibility will get the visibility of the touch caret.
@@ -60,19 +72,6 @@ public:
 private:
   // Hide default constructor.
   TouchCaret() MOZ_DELETE;
-
-  ~TouchCaret();
-
-  bool IsDisplayable();
-
-  void UpdatePosition();
-
-  /**
-   * SetVisibility will set the visibility of the touch caret.
-   * SetVisibility performs an attribute-changed notification which could, in
-   * theory, destroy frames.
-   */
-  void SetVisibility(bool aVisible);
 
   /**
    * Find the nsCanvasFrame which holds the touch caret.
@@ -227,6 +226,7 @@ private:
     return sTouchCaretExpirationTime;
   }
 
+protected:
   nsWeakPtr mPresShell;
 
   // Touch caret visibility

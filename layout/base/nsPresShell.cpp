@@ -2245,7 +2245,7 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(bool aInEnable)
       mCaret->SetCaretVisible(mCaretEnabled);
     }
     if (mTouchCaret) {
-      mTouchCaret->SyncVisibilityWithCaret();
+      mTouchCaret->UpdateTouchCaret(mCaretEnabled);
     }
   }
 
@@ -3931,9 +3931,6 @@ PresShell::UnsuppressAndInvalidate()
 
     if (mCaretEnabled && mCaret) {
       mCaret->CheckCaretDrawingState();
-    }
-    if (mTouchCaret) {
-      mTouchCaret->UpdatePositionIfNeeded();
     }
   }
 
@@ -5808,7 +5805,7 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect)
     if (usingDisplayport) {
       rect = displayPort;
     } else {
-      rect = rect.Intersect(scrollFrame->GetScrollPortRect());
+      rect = rect.Intersect(scrollFrame->GetScrollPortRect());      
     }
     rect = scrollFrame->ExpandRectToNearlyVisible(rect);
   }
@@ -8653,16 +8650,11 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
   if (sSynthMouseMove) {
     SynthesizeMouseMove(false);
   }
-
   if (mCaret) {
     // Update the caret's position now to account for any changes created by
     // the reflow.
     mCaret->InvalidateOutsideCaret();
     mCaret->UpdateCaretPosition();
-  }
-
-  if (mTouchCaret) {
-    mTouchCaret->UpdatePositionIfNeeded();
   }
 
   if (!aWasInterrupted) {
