@@ -68,8 +68,8 @@ AppleDecoderModule::Shutdown()
 
 MediaDataDecoder*
 AppleDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                                      mozilla::layers::LayersBackend aLayersBackend,
-                                      mozilla::layers::ImageContainer* aImageContainer,
+                                      layers::LayersBackend aLayersBackend,
+                                      layers::ImageContainer* aImageContainer,
                                       MediaTaskQueue* aVideoTaskQueue,
                                       MediaDataDecoderCallback* aCallback)
 {
