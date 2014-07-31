@@ -71,5 +71,7 @@ ASTDEF(AST_ARRAY_PATT,            "ArrayPattern",                   "arrayPatter
 ASTDEF(AST_OBJECT_PATT,           "ObjectPattern",                  "objectPattern")
 ASTDEF(AST_PROP_PATT,             "Property",                       "propertyPattern")
 ASTDEF(AST_TEMPLATE_LITERAL,      "TemplateLiteral",                "templateLiteral")
+ASTDEF(AST_TAGGED_TEMPLATE,       "TaggedTemplate",                 "taggedTemplate")
+ASTDEF(AST_CALL_SITE_OBJ,         "CallSiteObject",                 "callSiteObject")
 
 /* AST_LIMIT = last + 1 */

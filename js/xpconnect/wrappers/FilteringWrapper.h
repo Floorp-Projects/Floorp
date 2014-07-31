@@ -7,6 +7,7 @@
 #ifndef __FilteringWrapper_h__
 #define __FilteringWrapper_h__
 
+#include "XrayWrapper.h"
 #include "mozilla/Attributes.h"
 #include "jswrapper.h"
 #include "js/CallNonGenericMethod.h"
@@ -49,6 +50,39 @@ class FilteringWrapper : public Base {
                        js::Wrapper::Action act, bool *bp) const MOZ_OVERRIDE;
 
     static const FilteringWrapper singleton;
+};
+
+/*
+ * The HTML5 spec mandates very particular object behavior for cross-origin DOM
+ * objects (Window and Location), some of which runs contrary to the way that
+ * other XrayWrappers behave. We use this class to implement those semantics.
+ */
+class CrossOriginXrayWrapper : public SecurityXrayDOM {
+  public:
+    CrossOriginXrayWrapper(unsigned flags);
+    virtual ~CrossOriginXrayWrapper();
+
+    virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                       JS::Handle<jsid> id,
+                                       JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                          JS::Handle<jsid> id,
+                                          JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+
+    virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                     JS::AutoIdVector &props) const MOZ_OVERRIDE;
+
+    virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                JS::Handle<jsid> id,
+                                JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                         JS::Handle<jsid> id, bool *bp) const MOZ_OVERRIDE;
+
+    virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                           JS::AutoIdVector &props) const MOZ_OVERRIDE;
+
+    virtual bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                                JS::MutableHandleObject protop) const MOZ_OVERRIDE;
 };
 
 }

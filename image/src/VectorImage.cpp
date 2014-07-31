@@ -1220,6 +1220,17 @@ VectorImage::InvalidateObserversOnNextRefreshDriverTick()
   }
 }
 
+nsIntSize
+VectorImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame, GraphicsFilter aFilter, uint32_t aFlags)
+{
+  MOZ_ASSERT(aDest.width >= 0 || ceil(aDest.width) <= INT32_MAX ||
+             aDest.height >= 0 || ceil(aDest.height) <= INT32_MAX,
+             "Unexpected destination size");
+
+  // We can rescale SVGs freely, so just return the provided destination size.
+  return nsIntSize(ceil(aDest.width), ceil(aDest.height));
+}
+
 already_AddRefed<imgIContainer>
 VectorImage::Unwrap()
 {

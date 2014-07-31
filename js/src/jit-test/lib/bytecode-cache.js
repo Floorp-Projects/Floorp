@@ -44,4 +44,10 @@ function evalWithCache(code, ctx) {
     assertEq(res0, res2);
     assertEq(res0, res3);
   }
+
+  if (ctx.checkFrozen) {
+    assertEq(Object.isFrozen(res0), Object.isFrozen(res1));
+    assertEq(Object.isFrozen(res0), Object.isFrozen(res2));
+    assertEq(Object.isFrozen(res0), Object.isFrozen(res3));
+  }
 }

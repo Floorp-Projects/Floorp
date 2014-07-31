@@ -52,12 +52,9 @@ class RotatedBuffer {
 public:
   typedef gfxContentType ContentType;
 
-  RotatedBuffer(gfx::DrawTarget* aDTBuffer, gfx::DrawTarget* aDTBufferOnWhite,
-                const nsIntRect& aBufferRect,
+  RotatedBuffer(const nsIntRect& aBufferRect,
                 const nsIntPoint& aBufferRotation)
-    : mDTBuffer(aDTBuffer)
-    , mDTBufferOnWhite(aDTBufferOnWhite)
-    , mBufferRect(aBufferRect)
+    : mBufferRect(aBufferRect)
     , mBufferRotation(aBufferRotation)
     , mDidSelfCopy(false)
   { }
@@ -89,8 +86,10 @@ public:
   const nsIntRect& BufferRect() const { return mBufferRect; }
   const nsIntPoint& BufferRotation() const { return mBufferRotation; }
 
-  virtual bool HaveBuffer() const { return mDTBuffer; }
-  virtual bool HaveBufferOnWhite() const { return mDTBufferOnWhite; }
+  virtual bool HaveBuffer() const = 0;
+  virtual bool HaveBufferOnWhite() const = 0;
+
+  virtual TemporaryRef<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const = 0;
 
 protected:
 
@@ -116,8 +115,6 @@ protected:
                           gfx::SourceSurface* aMask,
                           const gfx::Matrix* aMaskTransform) const;
 
-  RefPtr<gfx::DrawTarget> mDTBuffer;
-  RefPtr<gfx::DrawTarget> mDTBufferOnWhite;
   /** The area of the ThebesLayer that is covered by the buffer as a whole */
   nsIntRect             mBufferRect;
   /**
@@ -134,6 +131,27 @@ protected:
   // When this is true it means that all pixels have moved inside the buffer.
   // It's not possible to sync with another buffer without a full copy.
   bool                  mDidSelfCopy;
+};
+
+class SourceRotatedBuffer : public RotatedBuffer
+{
+public:
+  SourceRotatedBuffer(gfx::SourceSurface* aSource, gfx::SourceSurface* aSourceOnWhite,
+                      const nsIntRect& aBufferRect,
+                      const nsIntPoint& aBufferRotation)
+    : RotatedBuffer(aBufferRect, aBufferRotation)
+    , mSource(aSource)
+    , mSourceOnWhite(aSourceOnWhite)
+  { }
+
+  virtual TemporaryRef<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const;
+
+  virtual bool HaveBuffer() const { return !!mSource; }
+  virtual bool HaveBufferOnWhite() const { return !!mSourceOnWhite; }
+
+private:
+  RefPtr<gfx::SourceSurface> mSource;
+  RefPtr<gfx::SourceSurface> mSourceOnWhite;
 };
 
 // Mixin class for classes which need logic for loaning out a draw target.
@@ -308,6 +326,8 @@ public:
   gfx::DrawTarget* GetDTBuffer() { return mDTBuffer; }
   gfx::DrawTarget* GetDTBufferOnWhite() { return mDTBufferOnWhite; }
 
+  virtual TemporaryRef<gfx::SourceSurface> GetSourceSurface(ContextSource aSource) const;
+
   /**
    * Complete the drawing operation. The region to draw must have been
    * drawn before this is called. The contents of the buffer are drawn
@@ -397,6 +417,9 @@ protected:
    * drawing the next frame.
    */
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) {}
+
+  RefPtr<gfx::DrawTarget> mDTBuffer;
+  RefPtr<gfx::DrawTarget> mDTBufferOnWhite;
 
   /**
    * These members are only set transiently.  They're used to map mDTBuffer

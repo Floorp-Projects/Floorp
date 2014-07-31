@@ -80,6 +80,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['ENABLE_ION']:
     UNIFIED_SOURCES += [
+        'testJitDCEinGVN.cpp',
         'testJitFoldsTo.cpp',
         'testJitMoveEmitterCycles.cpp',
         'testJitRValueAlloc.cpp',

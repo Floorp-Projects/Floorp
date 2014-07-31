@@ -1780,6 +1780,7 @@ function WifiWorker() {
   }).bind(this));
 
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
+  Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   this.wantScanResults = [];
 
@@ -2433,6 +2434,7 @@ WifiWorker.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
                                          Ci.nsIWifi,
+                                         Ci.nsIObserver,
                                          Ci.nsISettingsServiceCallback]),
 
   disconnectedByWifi: false,
@@ -3504,22 +3506,28 @@ WifiWorker.prototype = {
 
   // nsIObserver implementation
   observe: function observe(subject, topic, data) {
-    // Note that this function gets called for any and all settings changes,
-    // so we need to carefully check if we have the one we're interested in.
-    // The string we're interested in will be a JSON string that looks like:
-    // {"key":"wifi.enabled","value":"true"}.
-    if (topic !== kMozSettingsChangedObserverTopic) {
-      return;
-    }
+    switch (topic) {
+    case kMozSettingsChangedObserverTopic:
+      // The string we're interested in will be a JSON string that looks like:
+      // {"key":"wifi.enabled","value":"true"}.
 
-    let setting = JSON.parse(data);
-    // To avoid WifiWorker setting the wifi again, don't need to deal with
-    // the "mozsettings-changed" event fired from internal setting.
-    if (setting.message && setting.message === "fromInternalSetting") {
-      return;
-    }
+      let setting = JSON.parse(data);
+      // To avoid WifiWorker setting the wifi again, don't need to deal with
+      // the "mozsettings-changed" event fired from internal setting.
+      if (setting.message && setting.message === "fromInternalSetting") {
+        return;
+      }
 
-    this.handle(setting.key, setting.value);
+      this.handle(setting.key, setting.value);
+      break;
+
+    case "xpcom-shutdown":
+      let wifiService = Cc["@mozilla.org/wifi/service;1"].getService(Ci.nsIWifiProxyService);
+      wifiService.shutdown();
+      let wifiCertService = Cc["@mozilla.org/wifi/certservice;1"].getService(Ci.nsIWifiCertService);
+      wifiCertService.shutdown();
+      break;
+    }
   },
 
   handle: function handle(aName, aResult) {
