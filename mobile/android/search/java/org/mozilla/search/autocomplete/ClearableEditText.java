@@ -19,6 +19,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.search.R;
 
 public class ClearableEditText extends FrameLayout {
@@ -63,7 +65,10 @@ public class ClearableEditText extends FrameLayout {
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
                 if (listener != null && actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    // The user searched without using search engine suggestions.
+                    Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.ACTIONBAR, "text");
                     listener.onSubmit(v.getText().toString());
                     return true;
                 }
