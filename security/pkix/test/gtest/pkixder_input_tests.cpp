@@ -86,31 +86,31 @@ const uint8_t DER_INT16[] = {
   0x12, 0x34                  // 0x1234
 };
 
-TEST_F(pkixder_input_tests, InputBufferInit)
+TEST_F(pkixder_input_tests, InputInit)
 {
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success,
             buf.Init(DER_SEQUENCE_OF_INT8, sizeof DER_SEQUENCE_OF_INT8));
 }
 
-TEST_F(pkixder_input_tests, InputBufferInitWithNullPointerOrZeroLength)
+TEST_F(pkixder_input_tests, InputInitWithNullPointerOrZeroLength)
 {
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Result::ERROR_BAD_DER, buf.Init(nullptr, 0));
 
   ASSERT_EQ(Result::ERROR_BAD_DER, buf.Init(nullptr, 100));
 
   // Though it seems odd to initialize with zero-length and non-null ptr, this
-  // is working as intended. The Input class was intended to protect against
+  // is working as intended. The Reader class was intended to protect against
   // buffer overflows, and there's no risk with the current behavior. See bug
   // 1000354.
   ASSERT_EQ(Success, buf.Init((const uint8_t*) "hello", 0));
   ASSERT_TRUE(buf.GetLength() == 0);
 }
 
-TEST_F(pkixder_input_tests, InputBufferInitWithLargeData)
+TEST_F(pkixder_input_tests, InputInitWithLargeData)
 {
-  InputBuffer buf;
+  Input buf;
   // Data argument length does not matter, it is not touched, just
   // needs to be non-null
   ASSERT_EQ(Result::ERROR_BAD_DER, buf.Init((const uint8_t*) "", 0xffff+1));
@@ -118,9 +118,9 @@ TEST_F(pkixder_input_tests, InputBufferInitWithLargeData)
   ASSERT_EQ(Success, buf.Init((const uint8_t*) "", 0xffff));
 }
 
-TEST_F(pkixder_input_tests, InputBufferInitMultipleTimes)
+TEST_F(pkixder_input_tests, InputInitMultipleTimes)
 {
-  InputBuffer buf;
+  Input buf;
 
   ASSERT_EQ(Success,
             buf.Init(DER_SEQUENCE_OF_INT8, sizeof DER_SEQUENCE_OF_INT8));
@@ -132,8 +132,8 @@ TEST_F(pkixder_input_tests, InputBufferInitMultipleTimes)
 TEST_F(pkixder_input_tests, PeekWithinBounds)
 {
   const uint8_t der[] = { 0x11, 0x11 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
   ASSERT_TRUE(input.Peek(0x11));
   ASSERT_FALSE(input.Peek(0x22));
 }
@@ -141,9 +141,9 @@ TEST_F(pkixder_input_tests, PeekWithinBounds)
 TEST_F(pkixder_input_tests, PeekPastBounds)
 {
   const uint8_t der[] = { 0x11, 0x22 };
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success, buf.Init(der, 1));
-  Input input(buf);
+  Reader input(buf);
 
   uint8_t readByte;
   ASSERT_EQ(Success, input.Read(readByte));
@@ -154,8 +154,8 @@ TEST_F(pkixder_input_tests, PeekPastBounds)
 TEST_F(pkixder_input_tests, ReadByte)
 {
   const uint8_t der[] = { 0x11, 0x22 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
   uint8_t readByte1;
   ASSERT_EQ(Success, input.Read(readByte1));
@@ -169,9 +169,9 @@ TEST_F(pkixder_input_tests, ReadByte)
 TEST_F(pkixder_input_tests, ReadBytePastEnd)
 {
   const uint8_t der[] = { 0x11, 0x22 };
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success, buf.Init(der, 1));
-  Input input(buf);
+  Reader input(buf);
 
   uint8_t readByte1 = 0;
   ASSERT_EQ(Success, input.Read(readByte1));
@@ -192,9 +192,9 @@ TEST_F(pkixder_input_tests, ReadByteWrapAroundPointer)
   // them.
   const uint8_t* der = nullptr;
   --der;
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success, buf.Init(der, 0));
-  Input input(buf);
+  Reader input(buf);
 
   uint8_t b;
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Read(b));
@@ -203,8 +203,8 @@ TEST_F(pkixder_input_tests, ReadByteWrapAroundPointer)
 TEST_F(pkixder_input_tests, ReadWord)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
   uint16_t readWord1 = 0;
   ASSERT_EQ(Success, input.Read(readWord1));
@@ -218,9 +218,9 @@ TEST_F(pkixder_input_tests, ReadWord)
 TEST_F(pkixder_input_tests, ReadWordPastEnd)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success, buf.Init(der, 2)); // Initialize with too-short length
-  Input input(buf);
+  Reader input(buf);
 
   uint16_t readWord1 = 0;
   ASSERT_EQ(Success, input.Read(readWord1));
@@ -234,9 +234,9 @@ TEST_F(pkixder_input_tests, ReadWordPastEnd)
 TEST_F(pkixder_input_tests, ReadWordWithInsufficentData)
 {
   const uint8_t der[] = { 0x11, 0x22 };
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success, buf.Init(der, 1));
-  Input input(buf);
+  Reader input(buf);
 
   uint16_t readWord1 = 0;
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Read(readWord1));
@@ -253,9 +253,9 @@ TEST_F(pkixder_input_tests, ReadWordWrapAroundPointer)
   // them.
   const uint8_t* der = nullptr;
   --der;
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success, buf.Init(der, 0));
-  Input input(buf);
+  Reader input(buf);
   uint16_t b;
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Read(b));
 }
@@ -263,8 +263,8 @@ TEST_F(pkixder_input_tests, ReadWordWrapAroundPointer)
 TEST_F(pkixder_input_tests, InputSkip)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
   ASSERT_EQ(Success, input.Skip(1));
 
@@ -282,8 +282,8 @@ TEST_F(pkixder_input_tests, InputSkip)
 TEST_F(pkixder_input_tests, InputSkipToEnd)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
   ASSERT_EQ(Success, input.Skip(sizeof der));
   ASSERT_TRUE(input.AtEnd());
 }
@@ -291,8 +291,8 @@ TEST_F(pkixder_input_tests, InputSkipToEnd)
 TEST_F(pkixder_input_tests, InputSkipPastEnd)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Skip(sizeof der + 1));
 }
@@ -300,10 +300,10 @@ TEST_F(pkixder_input_tests, InputSkipPastEnd)
 TEST_F(pkixder_input_tests, InputSkipToNewInput)
 {
   const uint8_t der[] = { 0x01, 0x02, 0x03, 0x04 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
-  Input skippedInput;
+  Reader skippedInput;
   ASSERT_EQ(Success, input.Skip(3, skippedInput));
 
   uint8_t readByte1 = 0;
@@ -312,7 +312,7 @@ TEST_F(pkixder_input_tests, InputSkipToNewInput)
 
   ASSERT_TRUE(input.AtEnd());
 
-  // Input has no Remaining() or Length() so we simply read the bytes
+  // Reader has no Remaining() or Length() so we simply read the bytes
   // and then expect to be at the end.
 
   for (uint8_t i = 1; i <= 3; ++i) {
@@ -327,26 +327,26 @@ TEST_F(pkixder_input_tests, InputSkipToNewInput)
 TEST_F(pkixder_input_tests, InputSkipToNewInputPastEnd)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
-  Input skippedInput;
+  Reader skippedInput;
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Skip(sizeof der * 2, skippedInput));
 }
 
-TEST_F(pkixder_input_tests, InputSkipToInputBuffer)
+TEST_F(pkixder_input_tests, InputSkipToInput)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
   const uint8_t expectedItemData[] = { 0x11, 0x22, 0x33 };
 
-  InputBuffer item;
+  Input item;
   ASSERT_EQ(Success, input.Skip(sizeof expectedItemData, item));
 
-  InputBuffer expected(expectedItemData);
-  ASSERT_TRUE(InputBuffersAreEqual(expected, item));
+  Input expected(expectedItemData);
+  ASSERT_TRUE(InputsAreEqual(expected, item));
 }
 
 TEST_F(pkixder_input_tests, SkipWrapAroundPointer)
@@ -359,26 +359,26 @@ TEST_F(pkixder_input_tests, SkipWrapAroundPointer)
   // them.
   const uint8_t* der = nullptr;
   --der;
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success, buf.Init(der, 0));
-  Input input(buf);
+  Reader input(buf);
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Skip(1));
 }
 
-TEST_F(pkixder_input_tests, SkipToInputBufferPastEnd)
+TEST_F(pkixder_input_tests, SkipToInputPastEnd)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
-  InputBuffer skipped;
+  Input skipped;
   ASSERT_EQ(Result::ERROR_BAD_DER, input.Skip(sizeof der + 1, skipped));
 }
 
 TEST_F(pkixder_input_tests, ExpectTagAndSkipValue)
 {
-  InputBuffer buf(DER_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_SEQUENCE_OF_INT8);
+  Reader input(buf);
 
   ASSERT_EQ(Success, ExpectTagAndSkipValue(input, SEQUENCE));
   ASSERT_EQ(Success, End(input));
@@ -386,84 +386,83 @@ TEST_F(pkixder_input_tests, ExpectTagAndSkipValue)
 
 TEST_F(pkixder_input_tests, ExpectTagAndSkipValueWithTruncatedData)
 {
-  InputBuffer buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
+  Reader input(buf);
 
   ASSERT_EQ(Result::ERROR_BAD_DER, ExpectTagAndSkipValue(input, SEQUENCE));
 }
 
 TEST_F(pkixder_input_tests, ExpectTagAndSkipValueWithOverrunData)
 {
-  InputBuffer buf(DER_OVERRUN_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_OVERRUN_SEQUENCE_OF_INT8);
+  Reader input(buf);
   ASSERT_EQ(Success, ExpectTagAndSkipValue(input, SEQUENCE));
   ASSERT_EQ(Result::ERROR_BAD_DER, End(input));
 }
 
 TEST_F(pkixder_input_tests, AtEndOnUnInitializedInput)
 {
-  Input input;
+  Reader input;
   ASSERT_TRUE(input.AtEnd());
 }
 
 TEST_F(pkixder_input_tests, AtEndAtBeginning)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
   ASSERT_FALSE(input.AtEnd());
 }
 
 TEST_F(pkixder_input_tests, AtEndAtEnd)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
   ASSERT_EQ(Success, input.Skip(sizeof der));
   ASSERT_TRUE(input.AtEnd());
 }
 
-TEST_F(pkixder_input_tests, MarkAndGetInputBuffer)
+TEST_F(pkixder_input_tests, MarkAndGetInput)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
-  Input::Mark mark = input.GetMark();
+  Reader::Mark mark = input.GetMark();
 
   const uint8_t expectedItemData[] = { 0x11, 0x22, 0x33 };
 
   ASSERT_EQ(Success, input.Skip(sizeof expectedItemData));
 
-  InputBuffer item;
-  ASSERT_EQ(Success, input.GetInputBuffer(mark, item));
-  InputBuffer expected(expectedItemData);
-  ASSERT_TRUE(InputBuffersAreEqual(expected, item));
+  Input item;
+  ASSERT_EQ(Success, input.GetInput(mark, item));
+  Input expected(expectedItemData);
+  ASSERT_TRUE(InputsAreEqual(expected, item));
 }
 
 // Cannot run this test on debug builds because of the PR_NOT_REACHED
 #ifndef DEBUG
-TEST_F(pkixder_input_tests, MarkAndGetInputBufferDifferentInput)
+TEST_F(pkixder_input_tests, MarkAndGetInputDifferentInput)
 {
   const uint8_t der[] = { 0x11, 0x22, 0x33, 0x44 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
 
-  Input another;
-  Input::Mark mark = another.GetMark();
+  Reader another;
+  Reader::Mark mark = another.GetMark();
 
   ASSERT_EQ(Success, input.Skip(3));
 
-  InputBuffer item;
-  ASSERT_EQ(Result::FATAL_ERROR_INVALID_ARGS,
-            input.GetInputBuffer(mark, item));
+  Input item;
+  ASSERT_EQ(Result::FATAL_ERROR_INVALID_ARGS, input.GetInput(mark, item));
 }
 #endif
 
 TEST_F(pkixder_input_tests, ExpectTagAndLength)
 {
-  InputBuffer buf(DER_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_SEQUENCE_OF_INT8);
+  Reader input(buf);
 
   ASSERT_EQ(Success, ExpectTagAndLength(input, SEQUENCE,
                                         sizeof DER_SEQUENCE_OF_INT8 - 2));
@@ -471,8 +470,8 @@ TEST_F(pkixder_input_tests, ExpectTagAndLength)
 
 TEST_F(pkixder_input_tests, ExpectTagAndLengthWithWrongLength)
 {
-  InputBuffer buf(DER_INT16);
-  Input input(buf);
+  Input buf(DER_INT16);
+  Reader input(buf);
 
   // Wrong length
   ASSERT_EQ(Result::ERROR_BAD_DER, ExpectTagAndLength(input, INTEGER, 4));
@@ -480,8 +479,8 @@ TEST_F(pkixder_input_tests, ExpectTagAndLengthWithWrongLength)
 
 TEST_F(pkixder_input_tests, ExpectTagAndLengthWithWrongTag)
 {
-  InputBuffer buf(DER_INT16);
-  Input input(buf);
+  Input buf(DER_INT16);
+  Reader input(buf);
 
   // Wrong type
   ASSERT_EQ(Result::ERROR_BAD_DER, ExpectTagAndLength(input, OCTET_STRING, 2));
@@ -489,8 +488,8 @@ TEST_F(pkixder_input_tests, ExpectTagAndLengthWithWrongTag)
 
 TEST_F(pkixder_input_tests, ExpectTagAndGetLength)
 {
-  InputBuffer buf(DER_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_SEQUENCE_OF_INT8);
+  Reader input(buf);
 
   uint16_t length = 0;
   ASSERT_EQ(Success,
@@ -502,8 +501,8 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLength)
 
 TEST_F(pkixder_input_tests, ExpectTagAndGetLengthWithWrongTag)
 {
-  InputBuffer buf(DER_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_SEQUENCE_OF_INT8);
+  Reader input(buf);
 
   uint16_t length = 0;
   ASSERT_EQ(Result::ERROR_BAD_DER,
@@ -512,39 +511,88 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetLengthWithWrongTag)
 
 TEST_F(pkixder_input_tests, ExpectTagAndGetLengthWithWrongLength)
 {
-  InputBuffer buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
+  Reader input(buf);
 
   uint16_t length = 0;
   ASSERT_EQ(Result::ERROR_BAD_DER,
             der::internal::ExpectTagAndGetLength(input, SEQUENCE, length));
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_ValidEmpty)
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Reader_ValidEmpty)
 {
-  InputBuffer buf(DER_SEQUENCE_EMPTY);
-  Input input(buf);
-  Input value;
+  Input buf(DER_SEQUENCE_EMPTY);
+  Reader input(buf);
+  Reader value;
   ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
   ASSERT_TRUE(value.AtEnd());
   ASSERT_TRUE(input.AtEnd());
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_ValidNotEmpty)
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Reader_ValidNotEmpty)
 {
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY);
-  Input input(buf);
-  Input value;
+  Input buf(DER_SEQUENCE_NOT_EMPTY);
+  Reader input(buf);
+  Reader value;
   ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
   ASSERT_TRUE(value.MatchRest(DER_SEQUENCE_NOT_EMPTY_VALUE));
   ASSERT_TRUE(input.AtEnd());
 }
 
 TEST_F(pkixder_input_tests,
+       ExpectTagAndGetValue_Reader_InvalidNotEmptyValueTruncated)
+{
+  Input buf(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED);
+  Reader input(buf);
+  Reader value;
+  ASSERT_EQ(Result::ERROR_BAD_DER,
+            ExpectTagAndGetValue(input, SEQUENCE, value));
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Reader_InvalidWrongLength)
+{
+  Input buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
+  Reader input(buf);
+  Reader value;
+  ASSERT_EQ(Result::ERROR_BAD_DER,
+            ExpectTagAndGetValue(input, SEQUENCE, value));
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetLength_Reader_InvalidWrongTag)
+{
+  Input buf(DER_SEQUENCE_NOT_EMPTY);
+  Reader input(buf);
+  Reader value;
+  ASSERT_EQ(Result::ERROR_BAD_DER,
+            ExpectTagAndGetValue(input, INTEGER, value));
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_ValidEmpty)
+{
+  Input buf(DER_SEQUENCE_EMPTY);
+  Reader input(buf);
+  Input value;
+  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
+  ASSERT_EQ(0u, value.GetLength());
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_ValidNotEmpty)
+{
+  Input buf(DER_SEQUENCE_NOT_EMPTY);
+  Reader input(buf);
+  Input value;
+  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
+  Input expected(DER_SEQUENCE_NOT_EMPTY_VALUE);
+  ASSERT_TRUE(InputsAreEqual(expected, value));
+  ASSERT_TRUE(input.AtEnd());
+}
+
+TEST_F(pkixder_input_tests,
        ExpectTagAndGetValue_Input_InvalidNotEmptyValueTruncated)
 {
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED);
-  Input input(buf);
+  Input buf(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED);
+  Reader input(buf);
   Input value;
   ASSERT_EQ(Result::ERROR_BAD_DER,
             ExpectTagAndGetValue(input, SEQUENCE, value));
@@ -552,8 +600,8 @@ TEST_F(pkixder_input_tests,
 
 TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_InvalidWrongLength)
 {
-  InputBuffer buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
+  Reader input(buf);
   Input value;
   ASSERT_EQ(Result::ERROR_BAD_DER,
             ExpectTagAndGetValue(input, SEQUENCE, value));
@@ -561,135 +609,86 @@ TEST_F(pkixder_input_tests, ExpectTagAndGetValue_Input_InvalidWrongLength)
 
 TEST_F(pkixder_input_tests, ExpectTagAndGetLength_Input_InvalidWrongTag)
 {
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY);
-  Input input(buf);
+  Input buf(DER_SEQUENCE_NOT_EMPTY);
+  Reader input(buf);
   Input value;
   ASSERT_EQ(Result::ERROR_BAD_DER,
             ExpectTagAndGetValue(input, INTEGER, value));
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndGetValue_InputBuffer_ValidEmpty)
+TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_Input_ValidEmpty)
 {
-  InputBuffer buf(DER_SEQUENCE_EMPTY);
-  Input input(buf);
-  InputBuffer value;
-  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
-  ASSERT_EQ(0u, value.GetLength());
+  Input buf(DER_SEQUENCE_EMPTY);
+  Reader input(buf);
+  Input tlv;
+  ASSERT_EQ(Success, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
+  Input expected(DER_SEQUENCE_EMPTY);
+  ASSERT_TRUE(InputsAreEqual(expected, tlv));
   ASSERT_TRUE(input.AtEnd());
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndGetValue_InputBuffer_ValidNotEmpty)
+TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_Input_ValidNotEmpty)
 {
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY);
-  Input input(buf);
-  InputBuffer value;
-  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, value));
-  InputBuffer expected(DER_SEQUENCE_NOT_EMPTY_VALUE);
-  ASSERT_TRUE(InputBuffersAreEqual(expected, value));
+  Input buf(DER_SEQUENCE_NOT_EMPTY);
+  Reader input(buf);
+  Input tlv;
+  ASSERT_EQ(Success, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
+  Input expected(DER_SEQUENCE_NOT_EMPTY);
+  ASSERT_TRUE(InputsAreEqual(expected, tlv));
   ASSERT_TRUE(input.AtEnd());
 }
 
 TEST_F(pkixder_input_tests,
-       ExpectTagAndGetValue_InputBuffer_InvalidNotEmptyValueTruncated)
+       ExpectTagAndGetTLV_Input_InvalidNotEmptyValueTruncated)
 {
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED);
-  Input input(buf);
-  InputBuffer value;
-  ASSERT_EQ(Result::ERROR_BAD_DER,
-            ExpectTagAndGetValue(input, SEQUENCE, value));
-}
-
-TEST_F(pkixder_input_tests, ExpectTagAndGetValue_InputBuffer_InvalidWrongLength)
-{
-  InputBuffer buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
-  Input input(buf);
-  InputBuffer value;
-  ASSERT_EQ(Result::ERROR_BAD_DER,
-            ExpectTagAndGetValue(input, SEQUENCE, value));
-}
-
-TEST_F(pkixder_input_tests, ExpectTagAndGetLength_InputBuffer_InvalidWrongTag)
-{
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY);
-  Input input(buf);
-  InputBuffer value;
-  ASSERT_EQ(Result::ERROR_BAD_DER,
-            ExpectTagAndGetValue(input, INTEGER, value));
-}
-
-TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_InputBuffer_ValidEmpty)
-{
-  InputBuffer buf(DER_SEQUENCE_EMPTY);
-  Input input(buf);
-  InputBuffer tlv;
-  ASSERT_EQ(Success, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
-  InputBuffer expected(DER_SEQUENCE_EMPTY);
-  ASSERT_TRUE(InputBuffersAreEqual(expected, tlv));
-  ASSERT_TRUE(input.AtEnd());
-}
-
-TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_InputBuffer_ValidNotEmpty)
-{
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY);
-  Input input(buf);
-  InputBuffer tlv;
-  ASSERT_EQ(Success, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
-  InputBuffer expected(DER_SEQUENCE_NOT_EMPTY);
-  ASSERT_TRUE(InputBuffersAreEqual(expected, tlv));
-  ASSERT_TRUE(input.AtEnd());
-}
-
-TEST_F(pkixder_input_tests,
-       ExpectTagAndGetTLV_InputBuffer_InvalidNotEmptyValueTruncated)
-{
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED);
-  Input input(buf);
-  InputBuffer tlv;
+  Input buf(DER_SEQUENCE_NOT_EMPTY_VALUE_TRUNCATED);
+  Reader input(buf);
+  Input tlv;
   ASSERT_EQ(Result::ERROR_BAD_DER, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_InputBuffer_InvalidWrongLength)
+TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_Input_InvalidWrongLength)
 {
-  InputBuffer buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
-  Input input(buf);
-  InputBuffer tlv;
+  Input buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
+  Reader input(buf);
+  Input tlv;
   ASSERT_EQ(Result::ERROR_BAD_DER, ExpectTagAndGetTLV(input, SEQUENCE, tlv));
 }
 
-TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_InputBuffer_InvalidWrongTag)
+TEST_F(pkixder_input_tests, ExpectTagAndGetTLV_Input_InvalidWrongTag)
 {
-  InputBuffer buf(DER_SEQUENCE_NOT_EMPTY);
-  Input input(buf);
-  InputBuffer tlv;
+  Input buf(DER_SEQUENCE_NOT_EMPTY);
+  Reader input(buf);
+  Input tlv;
   ASSERT_EQ(Result::ERROR_BAD_DER, ExpectTagAndGetTLV(input, INTEGER, tlv));
 }
 
 TEST_F(pkixder_input_tests, EndAtEnd)
 {
-  InputBuffer buf(DER_INT16);
-  Input input(buf);
+  Input buf(DER_INT16);
+  Reader input(buf);
   ASSERT_EQ(Success, input.Skip(4));
   ASSERT_EQ(Success, End(input));
 }
 
 TEST_F(pkixder_input_tests, EndBeforeEnd)
 {
-  InputBuffer buf(DER_INT16);
-  Input input(buf);
+  Input buf(DER_INT16);
+  Reader input(buf);
   ASSERT_EQ(Success, input.Skip(2));
   ASSERT_EQ(Result::ERROR_BAD_DER, End(input));
 }
 
 TEST_F(pkixder_input_tests, EndAtBeginning)
 {
-  InputBuffer buf(DER_INT16);
-  Input input(buf);
+  Input buf(DER_INT16);
+  Reader input(buf);
   ASSERT_EQ(Result::ERROR_BAD_DER, End(input));
 }
 
 // TODO: Need tests for Nested too?
 
-Result NestedOfHelper(Input& input, std::vector<uint8_t>& readValues)
+Result NestedOfHelper(Reader& input, std::vector<uint8_t>& readValues)
 {
   uint8_t value = 0;
   Result rv = input.Read(value);
@@ -703,8 +702,8 @@ Result NestedOfHelper(Input& input, std::vector<uint8_t>& readValues)
 
 TEST_F(pkixder_input_tests, NestedOf)
 {
-  InputBuffer buf(DER_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_SEQUENCE_OF_INT8);
+  Reader input(buf);
 
   std::vector<uint8_t> readValues;
   ASSERT_EQ(Success,
@@ -720,8 +719,8 @@ TEST_F(pkixder_input_tests, NestedOf)
 
 TEST_F(pkixder_input_tests, NestedOfWithTruncatedData)
 {
-  InputBuffer buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
-  Input input(buf);
+  Input buf(DER_TRUNCATED_SEQUENCE_OF_INT8);
+  Reader input(buf);
 
   std::vector<uint8_t> readValues;
   ASSERT_EQ(Result::ERROR_BAD_DER,
@@ -734,9 +733,9 @@ TEST_F(pkixder_input_tests, NestedOfWithTruncatedData)
 TEST_F(pkixder_input_tests, MatchRestAtEnd)
 {
   static const uint8_t der[1] = { };
-  InputBuffer buf;
+  Input buf;
   ASSERT_EQ(Success, buf.Init(der, 0));
-  Input input(buf);
+  Reader input(buf);
   ASSERT_TRUE(input.AtEnd());
   static const uint8_t toMatch[] = { 1 };
   ASSERT_FALSE(input.MatchRest(toMatch));
@@ -745,8 +744,8 @@ TEST_F(pkixder_input_tests, MatchRestAtEnd)
 TEST_F(pkixder_input_tests, MatchRest1Match)
 {
   static const uint8_t der[] = { 1 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
   ASSERT_FALSE(input.AtEnd());
   ASSERT_TRUE(input.MatchRest(der));
 }
@@ -754,8 +753,8 @@ TEST_F(pkixder_input_tests, MatchRest1Match)
 TEST_F(pkixder_input_tests, MatchRest1Mismatch)
 {
   static const uint8_t der[] = { 1 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
   static const uint8_t toMatch[] = { 2 };
   ASSERT_FALSE(input.MatchRest(toMatch));
   ASSERT_FALSE(input.AtEnd());
@@ -764,8 +763,8 @@ TEST_F(pkixder_input_tests, MatchRest1Mismatch)
 TEST_F(pkixder_input_tests, MatchRest2WithTrailingByte)
 {
   static const uint8_t der[] = { 1, 2, 3 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
   static const uint8_t toMatch[] = { 1, 2 };
   ASSERT_FALSE(input.MatchRest(toMatch));
 }
@@ -773,8 +772,8 @@ TEST_F(pkixder_input_tests, MatchRest2WithTrailingByte)
 TEST_F(pkixder_input_tests, MatchRest2Mismatch)
 {
   static const uint8_t der[] = { 1, 2, 3 };
-  InputBuffer buf(der);
-  Input input(buf);
+  Input buf(der);
+  Reader input(buf);
   static const uint8_t toMatchMismatch[] = { 1, 3 };
   ASSERT_FALSE(input.MatchRest(toMatchMismatch));
   ASSERT_TRUE(input.MatchRest(der));

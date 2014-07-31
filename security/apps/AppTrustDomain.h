@@ -25,24 +25,24 @@ public:
 
   virtual Result GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                               const mozilla::pkix::CertPolicyId& policy,
-                              mozilla::pkix::InputBuffer candidateCertDER,
+                              mozilla::pkix::Input candidateCertDER,
                               /*out*/ mozilla::pkix::TrustLevel& trustLevel)
                               MOZ_OVERRIDE;
-  virtual Result FindIssuer(mozilla::pkix::InputBuffer encodedIssuerName,
+  virtual Result FindIssuer(mozilla::pkix::Input encodedIssuerName,
                             IssuerChecker& checker,
                             PRTime time) MOZ_OVERRIDE;
   virtual Result CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                                  const mozilla::pkix::CertID& certID, PRTime time,
-                    /*optional*/ const mozilla::pkix::InputBuffer* stapledOCSPresponse,
-                    /*optional*/ const mozilla::pkix::InputBuffer* aiaExtension);
+                    /*optional*/ const mozilla::pkix::Input* stapledOCSPresponse,
+                    /*optional*/ const mozilla::pkix::Input* aiaExtension);
   virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain)
                               MOZ_OVERRIDE;
-  virtual Result CheckPublicKey(mozilla::pkix::InputBuffer subjectPublicKeyInfo)
+  virtual Result CheckPublicKey(mozilla::pkix::Input subjectPublicKeyInfo)
                                 MOZ_OVERRIDE;
   virtual Result VerifySignedData(
            const mozilla::pkix::SignedDataWithSignature& signedData,
-           mozilla::pkix::InputBuffer subjectPublicKeyInfo) MOZ_OVERRIDE;
-  virtual Result DigestBuf(mozilla::pkix::InputBuffer item,
+           mozilla::pkix::Input subjectPublicKeyInfo) MOZ_OVERRIDE;
+  virtual Result DigestBuf(mozilla::pkix::Input item,
                            /*out*/ uint8_t* digestBuf,
                            size_t digestBufLen) MOZ_OVERRIDE;
 

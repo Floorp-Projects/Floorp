@@ -50,15 +50,15 @@ PutAndGet(OCSPCache& cache, const CertID& certID, Result result,
   ASSERT_EQ(time, timeOut);
 }
 
-TestInputBuffer fakeIssuer1("CN=issuer1");
-TestInputBuffer fakeKey000("key000");
-TestInputBuffer fakeKey001("key001");
-TestInputBuffer fakeSerial0000("0000");
+TestInput fakeIssuer1("CN=issuer1");
+TestInput fakeKey000("key000");
+TestInput fakeKey001("key001");
+TestInput fakeSerial0000("0000");
 
 TEST_F(OCSPCacheTest, TestPutAndGet)
 {
-  TestInputBuffer fakeSerial000("000");
-  TestInputBuffer fakeSerial001("001");
+  TestInput fakeSerial000("000");
+  TestInput fakeSerial001("001");
 
   SCOPED_TRACE("");
   PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial001),
@@ -76,7 +76,7 @@ TEST_F(OCSPCacheTest, TestVariousGets)
   for (int i = 0; i < MaxCacheEntries; i++) {
     uint8_t serialBuf[8];
     PR_snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
-    InputBuffer fakeSerial;
+    Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial),
               Success, timeIn + i);
@@ -96,7 +96,7 @@ TEST_F(OCSPCacheTest, TestVariousGets)
   ASSERT_EQ(timeIn, timeOut);
 
   // This will be in the middle
-  static const TestInputBuffer fakeSerial0512("0512");
+  static const TestInput fakeSerial0512("0512");
   CertID cert0512(fakeIssuer1, fakeKey000, fakeSerial0512);
   ASSERT_TRUE(cache.Get(cert0512, resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
@@ -106,7 +106,7 @@ TEST_F(OCSPCacheTest, TestVariousGets)
   ASSERT_EQ(timeIn + 512, timeOut);
 
   // We've never seen this certificate
-  static const TestInputBuffer fakeSerial1111("1111");
+  static const TestInput fakeSerial1111("1111");
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey000, fakeSerial1111),
                          resultOut, timeOut));
 }
@@ -121,7 +121,7 @@ TEST_F(OCSPCacheTest, TestEviction)
   for (int i = 0; i < MaxCacheEntries + 1; i++) {
     uint8_t serialBuf[8];
     PR_snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
-    InputBuffer fakeSerial;
+    Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial),
               Success, timeIn + i);
@@ -144,7 +144,7 @@ TEST_F(OCSPCacheTest, TestNoEvictionForRevokedResponses)
   for (int i = 1; i < MaxCacheEntries + 1; i++) {
     uint8_t serialBuf[8];
     PR_snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
-    InputBuffer fakeSerial;
+    Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial),
               Success, timeIn + i);
@@ -155,7 +155,7 @@ TEST_F(OCSPCacheTest, TestNoEvictionForRevokedResponses)
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE, resultOut);
   ASSERT_EQ(timeIn, timeOut);
 
-  TestInputBuffer fakeSerial0001("0001");
+  TestInput fakeSerial0001("0001");
   CertID evicted(fakeIssuer1, fakeKey000, fakeSerial0001);
   ASSERT_FALSE(cache.Get(evicted, resultOut, timeOut));
 }
@@ -168,12 +168,12 @@ TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
   for (int i = 0; i < MaxCacheEntries; i++) {
     uint8_t serialBuf[8];
     PR_snprintf(reinterpret_cast<char*>(serialBuf), sizeof(serialBuf), "%04d", i);
-    InputBuffer fakeSerial;
+    Input fakeSerial;
     ASSERT_EQ(Success, fakeSerial.Init(serialBuf, 4));
     PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial),
               Result::ERROR_REVOKED_CERTIFICATE, timeIn + i);
   }
-  static const TestInputBuffer fakeSerial1025("1025");
+  static const TestInput fakeSerial1025("1025");
   CertID good(fakeIssuer1, fakeKey000, fakeSerial1025);
   // This will "succeed", allowing verification to continue. However,
   // nothing was actually put in the cache.
@@ -183,7 +183,7 @@ TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
   PRTime timeOut;
   ASSERT_FALSE(cache.Get(good, resultOut, timeOut));
 
-  static const TestInputBuffer fakeSerial1026("1026");
+  static const TestInput fakeSerial1026("1026");
   CertID revoked(fakeIssuer1, fakeKey000, fakeSerial1026);
   // This will fail, causing verification to fail.
   result = cache.Put(revoked, Result::ERROR_REVOKED_CERTIFICATE,
@@ -194,8 +194,8 @@ TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
 TEST_F(OCSPCacheTest, VariousIssuers)
 {
   SCOPED_TRACE("");
-  static const TestInputBuffer fakeIssuer2("CN=issuer2");
-  static const TestInputBuffer fakeSerial001("001");
+  static const TestInput fakeIssuer2("CN=issuer2");
+  static const TestInput fakeSerial001("001");
   PRTime timeIn = PR_Now();
   CertID subject(fakeIssuer1, fakeKey000, fakeSerial001);
   PutAndGet(cache, subject, Success, timeIn);

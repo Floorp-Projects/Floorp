@@ -56,25 +56,25 @@ public:
           /*optional*/ CERTChainVerifyCallback* checkChainCallback = nullptr,
           /*optional*/ ScopedCERTCertList* builtChain = nullptr);
 
-  virtual Result FindIssuer(mozilla::pkix::InputBuffer encodedIssuerName,
+  virtual Result FindIssuer(mozilla::pkix::Input encodedIssuerName,
                             IssuerChecker& checker,
                             PRTime time) MOZ_OVERRIDE;
 
   virtual Result GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                               const mozilla::pkix::CertPolicyId& policy,
-                              mozilla::pkix::InputBuffer candidateCertDER,
+                              mozilla::pkix::Input candidateCertDER,
                               /*out*/ mozilla::pkix::TrustLevel& trustLevel)
                               MOZ_OVERRIDE;
 
-  virtual Result CheckPublicKey(mozilla::pkix::InputBuffer subjectPublicKeyInfo)
+  virtual Result CheckPublicKey(mozilla::pkix::Input subjectPublicKeyInfo)
                                 MOZ_OVERRIDE;
 
   virtual Result VerifySignedData(
                    const mozilla::pkix::SignedDataWithSignature& signedData,
-                   mozilla::pkix::InputBuffer subjectPublicKeyInfo)
+                   mozilla::pkix::Input subjectPublicKeyInfo)
                    MOZ_OVERRIDE;
 
-  virtual Result DigestBuf(mozilla::pkix::InputBuffer item,
+  virtual Result DigestBuf(mozilla::pkix::Input item,
                            /*out*/ uint8_t* digestBuf,
                            size_t digestBufLen) MOZ_OVERRIDE;
 
@@ -82,8 +82,8 @@ public:
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
                    const mozilla::pkix::CertID& certID,
                    PRTime time,
-      /*optional*/ const mozilla::pkix::InputBuffer* stapledOCSPResponse,
-      /*optional*/ const mozilla::pkix::InputBuffer* aiaExtension)
+      /*optional*/ const mozilla::pkix::Input* stapledOCSPResponse,
+      /*optional*/ const mozilla::pkix::Input* aiaExtension)
                    MOZ_OVERRIDE;
 
   virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain)
@@ -97,7 +97,7 @@ private:
   static const PRTime ServerFailureDelay = 5 * 60 * PR_USEC_PER_SEC;
   Result VerifyAndMaybeCacheEncodedOCSPResponse(
     const mozilla::pkix::CertID& certID, PRTime time,
-    uint16_t maxLifetimeInDays, mozilla::pkix::InputBuffer encodedResponse,
+    uint16_t maxLifetimeInDays, mozilla::pkix::Input encodedResponse,
     EncodedResponseSource responseSource, /*out*/ bool& expired);
 
   const SECTrustType mCertDBTrustType;

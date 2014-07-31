@@ -149,13 +149,12 @@ TamperOnce(SECItem& item,
 }
 
 Result
-InitInputBufferFromSECItem(const SECItem* secItem,
-                           /*out*/ InputBuffer& inputBuffer)
+InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input)
 {
   if (!secItem) {
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-  return inputBuffer.Init(secItem->data, secItem->len);
+  return input.Init(secItem->data, secItem->len);
 }
 
 class Output
@@ -1337,7 +1336,7 @@ CertID(OCSPResponseContext& context)
   if (!hashAlgorithm) {
     return nullptr;
   }
-  SECItem issuerSECItem = UnsafeMapInputBufferToSECItem(context.certID.issuer);
+  SECItem issuerSECItem = UnsafeMapInputToSECItem(context.certID.issuer);
   SECItem* issuerNameHash = HashedOctetString(context.arena, issuerSECItem,
                                               context.certIDHashAlg);
   if (!issuerNameHash) {
@@ -1345,7 +1344,7 @@ CertID(OCSPResponseContext& context)
   }
 
   SECItem issuerSubjectPublicKeyInfoSECItem =
-    UnsafeMapInputBufferToSECItem(context.certID.issuerSubjectPublicKeyInfo);
+    UnsafeMapInputToSECItem(context.certID.issuerSubjectPublicKeyInfo);
   ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
     spki(SECKEY_DecodeDERSubjectPublicKeyInfo(
            &issuerSubjectPublicKeyInfoSECItem));
@@ -1362,7 +1361,7 @@ CertID(OCSPResponseContext& context)
     { 0 }
   };
   SECItem serialNumberSECItem =
-    UnsafeMapInputBufferToSECItem(context.certID.serialNumber);
+    UnsafeMapInputToSECItem(context.certID.serialNumber);
   SECItem* serialNumber = SEC_ASN1EncodeItem(context.arena, nullptr,
                                              &serialNumberSECItem,
                                              serialTemplate);

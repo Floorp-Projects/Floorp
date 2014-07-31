@@ -62,20 +62,20 @@ CertIDHash(SHA384Buffer& buf, const CertID& certID)
   if (rv != SECSuccess) {
     return rv;
   }
-  SECItem certIDIssuer = UnsafeMapInputBufferToSECItem(certID.issuer);
+  SECItem certIDIssuer = UnsafeMapInputToSECItem(certID.issuer);
   rv = PK11_DigestOp(context.get(), certIDIssuer.data, certIDIssuer.len);
   if (rv != SECSuccess) {
     return rv;
   }
   SECItem certIDIssuerSubjectPublicKeyInfo =
-    UnsafeMapInputBufferToSECItem(certID.issuerSubjectPublicKeyInfo);
+    UnsafeMapInputToSECItem(certID.issuerSubjectPublicKeyInfo);
   rv = PK11_DigestOp(context.get(), certIDIssuerSubjectPublicKeyInfo.data,
                      certIDIssuerSubjectPublicKeyInfo.len);
   if (rv != SECSuccess) {
     return rv;
   }
   SECItem certIDSerialNumber =
-    UnsafeMapInputBufferToSECItem(certID.serialNumber);
+    UnsafeMapInputToSECItem(certID.serialNumber);
   rv = PK11_DigestOp(context.get(), certIDSerialNumber.data,
                      certIDSerialNumber.len);
   if (rv != SECSuccess) {

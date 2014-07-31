@@ -35,9 +35,9 @@
 namespace mozilla { namespace pkix {
 
 Result
-CheckValidity(InputBuffer encodedValidity, PRTime time)
+CheckValidity(Input encodedValidity, PRTime time)
 {
-  Input validity(encodedValidity);
+  Reader validity(encodedValidity);
   PRTime notBefore;
   if (der::TimeChoice(validity, notBefore) != Success) {
     return Result::ERROR_EXPIRED_CERTIFICATE;
@@ -68,7 +68,7 @@ inline uint8_t KeyUsageToBitMask(KeyUsage keyUsage)
 }
 
 Result
-CheckKeyUsage(EndEntityOrCA endEntityOrCA, const InputBuffer* encodedKeyUsage,
+CheckKeyUsage(EndEntityOrCA endEntityOrCA, const Input* encodedKeyUsage,
               KeyUsage requiredKeyUsageIfPresent)
 {
   if (!encodedKeyUsage) {
@@ -86,8 +86,8 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const InputBuffer* encodedKeyUsage,
     return Success;
   }
 
-  Input input(*encodedKeyUsage);
-  Input value;
+  Reader input(*encodedKeyUsage);
+  Reader value;
   if (der::ExpectTagAndGetValue(input, der::BIT_STRING, value) != Success) {
     return Result::ERROR_INADEQUATE_KEY_USAGE;
   }
@@ -199,7 +199,7 @@ bool CertPolicyId::IsAnyPolicy() const
 //         policyQualifiers   SEQUENCE SIZE (1..MAX) OF
 //                                 PolicyQualifierInfo OPTIONAL }
 inline Result
-CheckPolicyInformation(Input& input, EndEntityOrCA endEntityOrCA,
+CheckPolicyInformation(Reader& input, EndEntityOrCA endEntityOrCA,
                        const CertPolicyId& requiredPolicy,
                        /*in/out*/ bool& found)
 {
@@ -228,8 +228,8 @@ CheckPolicyInformation(Input& input, EndEntityOrCA endEntityOrCA,
 // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
 Result
 CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
-                         const InputBuffer* encodedCertificatePolicies,
-                         const InputBuffer* encodedInhibitAnyPolicy,
+                         const Input* encodedCertificatePolicies,
+                         const Input* encodedInhibitAnyPolicy,
                          TrustLevel trustLevel,
                          const CertPolicyId& requiredPolicy)
 {
@@ -267,7 +267,7 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
 
   bool found = false;
 
-  Input input(*encodedCertificatePolicies);
+  Reader input(*encodedCertificatePolicies);
   if (der::NestedOf(input, der::SEQUENCE, der::SEQUENCE, der::EmptyAllowed::No,
                     bind(CheckPolicyInformation, _1, endEntityOrCA,
                          requiredPolicy, ref(found))) != Success) {
@@ -289,7 +289,7 @@ static const long UNLIMITED_PATH_LEN = -1; // must be less than zero
 //          cA                      BOOLEAN DEFAULT FALSE,
 //          pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
 static Result
-DecodeBasicConstraints(Input& input, /*out*/ bool& isCA,
+DecodeBasicConstraints(Reader& input, /*out*/ bool& isCA,
                        /*out*/ long& pathLenConstraint)
 {
   // TODO(bug 989518): cA is by default false. According to DER, default
@@ -316,7 +316,7 @@ DecodeBasicConstraints(Input& input, /*out*/ bool& isCA,
 // RFC5280 4.2.1.9. Basic Constraints (id-ce-basicConstraints)
 Result
 CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
-                      const InputBuffer* encodedBasicConstraints,
+                      const Input* encodedBasicConstraints,
                       const der::Version version, TrustLevel trustLevel,
                       unsigned int subCACount)
 {
@@ -324,7 +324,7 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
   long pathLenConstraint = UNLIMITED_PATH_LEN;
 
   if (encodedBasicConstraints) {
-    Input input(*encodedBasicConstraints);
+    Reader input(*encodedBasicConstraints);
     if (der::Nested(input, der::SEQUENCE,
                     bind(DecodeBasicConstraints, _1, ref(isCA),
                          ref(pathLenConstraint))) != Success) {
@@ -397,7 +397,7 @@ PORT_FreeArena_false(PLArenaPool* arena) {
 // #include "ScopedPtr.h", etc. when this is rewritten to be independent of
 // NSS.
 Result
-CheckNameConstraints(InputBuffer encodedNameConstraints,
+CheckNameConstraints(Input encodedNameConstraints,
                      const BackCert& firstChild,
                      KeyPurposeId requiredEKUIfPresent)
 {
@@ -408,7 +408,7 @@ CheckNameConstraints(InputBuffer encodedNameConstraints,
   }
 
   SECItem encodedNameConstraintsSECItem =
-    UnsafeMapInputBufferToSECItem(encodedNameConstraints);
+    UnsafeMapInputToSECItem(encodedNameConstraints);
 
   // Owned by arena
   const CERTNameConstraints* constraints =
@@ -419,7 +419,7 @@ CheckNameConstraints(InputBuffer encodedNameConstraints,
   }
 
   for (const BackCert* child = &firstChild; child; child = child->childCert) {
-    SECItem childCertDER = UnsafeMapInputBufferToSECItem(child->GetDER());
+    SECItem childCertDER = UnsafeMapInputToSECItem(child->GetDER());
     ScopedPtr<CERTCertificate, CERT_DestroyCertificate>
       nssCert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &childCertDER,
                                       nullptr, false, true));
@@ -456,7 +456,7 @@ CheckNameConstraints(InputBuffer encodedNameConstraints,
 // 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
 
 static Result
-MatchEKU(Input& value, KeyPurposeId requiredEKU,
+MatchEKU(Reader& value, KeyPurposeId requiredEKU,
          EndEntityOrCA endEntityOrCA, /*in/out*/ bool& found,
          /*in/out*/ bool& foundOCSPSigning)
 {
@@ -540,7 +540,7 @@ MatchEKU(Input& value, KeyPurposeId requiredEKU,
 
 Result
 CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
-                      const InputBuffer* encodedExtendedKeyUsage,
+                      const Input* encodedExtendedKeyUsage,
                       KeyPurposeId requiredEKU)
 {
   // XXX: We're using Result::ERROR_INADEQUATE_CERT_TYPE here so that callers
@@ -553,7 +553,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
   if (encodedExtendedKeyUsage) {
     bool found = requiredEKU == KeyPurposeId::anyExtendedKeyUsage;
 
-    Input input(*encodedExtendedKeyUsage);
+    Reader input(*encodedExtendedKeyUsage);
     if (der::NestedOf(input, der::SEQUENCE, der::OIDTag, der::EmptyAllowed::No,
                       bind(MatchEKU, _1, requiredEKU, endEntityOrCA,
                            ref(found), ref(foundOCSPSigning)))

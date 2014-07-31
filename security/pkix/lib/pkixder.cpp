@@ -32,7 +32,7 @@ namespace internal {
 
 // Too complicated to be inline
 Result
-ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
+ExpectTagAndGetLength(Reader& input, uint8_t expectedTag, uint16_t& length)
 {
   PR_ASSERT((expectedTag & 0x1F) != 0x1F); // high tag number form not allowed
 
@@ -90,7 +90,7 @@ ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
 } // namespace internal
 
 static Result
-OptionalNull(Input& input)
+OptionalNull(Reader& input)
 {
   if (input.Peek(NULLTag)) {
     return Null(input);
@@ -101,7 +101,8 @@ OptionalNull(Input& input)
 namespace {
 
 Result
-DigestAlgorithmOIDValue(Input& algorithmID, /*out*/ DigestAlgorithm& algorithm)
+DigestAlgorithmOIDValue(Reader& algorithmID,
+                        /*out*/ DigestAlgorithm& algorithm)
 {
   // RFC 4055 Section 2.1
   // python DottedOIDToCode.py id-sha1 1.3.14.3.2.26
@@ -139,7 +140,7 @@ DigestAlgorithmOIDValue(Input& algorithmID, /*out*/ DigestAlgorithm& algorithm)
 }
 
 Result
-SignatureAlgorithmOIDValue(Input& algorithmID,
+SignatureAlgorithmOIDValue(Reader& algorithmID,
                            /*out*/ SignatureAlgorithm& algorithm)
 {
   // RFC 5758 Section 3.1 (id-dsa-with-sha224 is intentionally excluded)
@@ -235,16 +236,16 @@ SignatureAlgorithmOIDValue(Input& algorithmID,
 
 template <typename OidValueParser, typename Algorithm>
 Result
-AlgorithmIdentifier(OidValueParser oidValueParser, Input& input,
+AlgorithmIdentifier(OidValueParser oidValueParser, Reader& input,
                     /*out*/ Algorithm& algorithm)
 {
-  Input value;
+  Reader value;
   Result rv = ExpectTagAndGetValue(input, SEQUENCE, value);
   if (rv != Success) {
     return rv;
   }
 
-  Input algorithmID;
+  Reader algorithmID;
   rv = ExpectTagAndGetValue(value, der::OIDTag, algorithmID);
   if (rv != Success) {
     return rv;
@@ -265,23 +266,23 @@ AlgorithmIdentifier(OidValueParser oidValueParser, Input& input,
 } // unnamed namespace
 
 Result
-SignatureAlgorithmIdentifier(Input& input,
+SignatureAlgorithmIdentifier(Reader& input,
                              /*out*/ SignatureAlgorithm& algorithm)
 {
   return AlgorithmIdentifier(SignatureAlgorithmOIDValue, input, algorithm);
 }
 
 Result
-DigestAlgorithmIdentifier(Input& input, /*out*/ DigestAlgorithm& algorithm)
+DigestAlgorithmIdentifier(Reader& input, /*out*/ DigestAlgorithm& algorithm)
 {
   return AlgorithmIdentifier(DigestAlgorithmOIDValue, input, algorithm);
 }
 
 Result
-SignedData(Input& input, /*out*/ Input& tbs,
+SignedData(Reader& input, /*out*/ Reader& tbs,
            /*out*/ SignedDataWithSignature& signedData)
 {
-  Input::Mark mark(input.GetMark());
+  Reader::Mark mark(input.GetMark());
 
   Result rv;
   rv = ExpectTagAndGetValue(input, SEQUENCE, tbs);
@@ -289,7 +290,7 @@ SignedData(Input& input, /*out*/ Input& tbs,
     return rv;
   }
 
-  rv = input.GetInputBuffer(mark, signedData.data);
+  rv = input.GetInput(mark, signedData.data);
   if (rv != Success) {
     return rv;
   }
@@ -307,9 +308,9 @@ SignedData(Input& input, /*out*/ Input& tbs,
 }
 
 Result
-BitStringWithNoUnusedBits(Input& input, /*out*/ InputBuffer& value)
+BitStringWithNoUnusedBits(Reader& input, /*out*/ Input& value)
 {
-  Input valueWithUnusedBits;
+  Reader valueWithUnusedBits;
   Result rv = ExpectTagAndGetValue(input, BIT_STRING, valueWithUnusedBits);
   if (rv != Success) {
     return rv;
@@ -328,13 +329,13 @@ BitStringWithNoUnusedBits(Input& input, /*out*/ InputBuffer& value)
   if (unusedBitsAtEnd != 0) {
     return Result::ERROR_BAD_DER;
   }
-  Input::Mark mark(valueWithUnusedBits.GetMark());
+  Reader::Mark mark(valueWithUnusedBits.GetMark());
   valueWithUnusedBits.SkipToEnd();
-  return valueWithUnusedBits.GetInputBuffer(mark, value);
+  return valueWithUnusedBits.GetInput(mark, value);
 }
 
 static inline Result
-ReadDigit(Input& input, /*out*/ int& value)
+ReadDigit(Reader& input, /*out*/ int& value)
 {
   uint8_t b;
   if (input.Read(b) != Success) {
@@ -348,7 +349,7 @@ ReadDigit(Input& input, /*out*/ int& value)
 }
 
 static inline Result
-ReadTwoDigits(Input& input, int minValue, int maxValue, /*out*/ int& value)
+ReadTwoDigits(Reader& input, int minValue, int maxValue, /*out*/ int& value)
 {
   int hi;
   Result rv = ReadDigit(input, hi);
@@ -384,11 +385,11 @@ namespace internal {
 // must always be in the format YYMMDDHHMMSSZ. Timezone formats of the form
 // +HH:MM or -HH:MM or NOT accepted.
 Result
-TimeChoice(Input& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
+TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
 {
   int days;
 
-  Input input;
+  Reader input;
   Result rv = ExpectTagAndGetValue(tagged, expectedTag, input);
   if (rv != Success) {
     return rv;
