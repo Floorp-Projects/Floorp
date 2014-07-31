@@ -74,6 +74,13 @@ function test() {
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
   is(url, "https://www.google.com/complete/search?client=firefox&q=foo", "Check search suggestion URL for 'foo'");
 
+  // Check result parsing and alternate domains.
+  let alternateBase = base.replace("www.google.com", "www.google.fr");
+  is(Services.search.parseSubmissionURL(base).terms, "foo",
+     "Check result parsing");
+  is(Services.search.parseSubmissionURL(alternateBase).terms, "foo",
+     "Check alternate domain");
+
   // Check all other engine properties.
   const EXPECTED_ENGINE = {
     name: "Google",
