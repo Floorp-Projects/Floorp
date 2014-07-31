@@ -76,11 +76,10 @@ ArithPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 
         MInstruction *replace;
 
-        // If the input is a string, symbol, or object, the conversion is not
+        // If the input is a string or object, the conversion is not
         // possible--at least, we can't specialize. So box the input.
         if (in->type() == MIRType_Object ||
             in->type() == MIRType_String ||
-            in->type() == MIRType_Symbol ||
             (in->type() == MIRType_Undefined && specialization_ == MIRType_Int32))
         {
             in = boxAt(alloc, ins, in);
@@ -195,7 +194,7 @@ ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
 
         MInstruction *replace;
 
-        // See BinaryArithPolicy::adjustInputs for an explanation of the following
+        // See ArithPolicy::adjustInputs for an explanation of the following.
         if (in->type() == MIRType_Object || in->type() == MIRType_String ||
             in->type() == MIRType_Undefined)
         {
@@ -363,9 +362,13 @@ BitwisePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
         if (in->type() == MIRType_Int32)
             continue;
 
-        // See BinaryArithPolicy::adjustInputs for an explanation of the following
-        if (in->type() == MIRType_Object || in->type() == MIRType_String)
+        // See ArithPolicy::adjustInputs for an explanation of the following.
+        // MTruncateToInt32 in particular does not support MIRType_Symbol input.
+        if (in->type() == MIRType_Object || in->type() == MIRType_String ||
+            in->type() == MIRType_Symbol)
+        {
             in = boxAt(alloc, ins, in);
+        }
 
         MInstruction *replace = MTruncateToInt32::New(alloc, in);
         ins->block()->insertBefore(ins, replace);
