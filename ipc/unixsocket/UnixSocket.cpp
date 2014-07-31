@@ -201,6 +201,32 @@ private:
   T* mInstance;
 };
 
+class RequestClosingSocketRunnable : public SocketIORunnable<UnixSocketImpl>
+{
+public:
+  RequestClosingSocketRunnable(UnixSocketImpl* aImpl)
+  : SocketIORunnable<UnixSocketImpl>(aImpl)
+  { }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    UnixSocketImpl* impl = GetIO();
+    if (impl->IsShutdownOnMainThread()) {
+      NS_WARNING("CloseSocket has already been called!");
+      // Since we've already explicitly closed and the close happened before
+      // this, this isn't really an error. Since we've warned, return OK.
+      return NS_OK;
+    }
+
+    // Start from here, same handling flow as calling CloseSocket() from
+    // upper layer
+    impl->mConsumer->CloseSocket();
+    return NS_OK;
+  }
+};
+
 class UnixSocketImplTask : public CancelableTask
 {
 public:
@@ -568,8 +594,8 @@ UnixSocketImpl::OnSocketCanReceiveWithoutBlocking()
       // We're done with our descriptors. Ensure that spurious events don't
       // cause us to end up back here.
       RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
-      nsRefPtr<nsRunnable> r =
-        new SocketIORequestClosingRunnable<UnixSocketImpl>(this);
+      nsRefPtr<RequestClosingSocketRunnable> r =
+        new RequestClosingSocketRunnable(this);
       NS_DispatchToMainThread(r);
       return;
     }
