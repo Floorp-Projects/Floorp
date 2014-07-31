@@ -42,6 +42,7 @@ var mediaPlayerTarget = {
 
 var CastingApps = {
   _castMenuId: -1,
+  menuItem: -1,
 
   init: function ca_init() {
     if (!this.isEnabled()) {
@@ -66,29 +67,13 @@ var CastingApps = {
     Services.obs.addObserver(this, "Casting:Pause", false);
     Services.obs.addObserver(this, "Casting:Stop", false);
     Services.obs.addObserver(this, "Casting:Mirror", false);
+    Services.obs.addObserver(this, "ssdp-service-found", false);
+    Services.obs.addObserver(this, "ssdp-service-lost", false);
 
     BrowserApp.deck.addEventListener("TabSelect", this, true);
     BrowserApp.deck.addEventListener("pageshow", this, true);
     BrowserApp.deck.addEventListener("playing", this, true);
     BrowserApp.deck.addEventListener("ended", this, true);
-
-    NativeWindow.menu.add(
-      Strings.browser.GetStringFromName("casting.mirrorTab"),
-      "drawable://casting",
-      function() {
-        function callbackFunc(aService) {
-          let app = SimpleServiceDiscovery.findAppForService(aService);
-          if (app)
-            app.mirror(function() {
-            });
-        }
-
-        function filterFunc(aService) {
-          Cu.reportError("testing: " + aService);
-          return aService.mirror == true;
-        }
-        this.prompt(callbackFunc, filterFunc);
-      }.bind(this));
   },
 
   uninit: function ca_uninit() {
@@ -101,8 +86,47 @@ var CastingApps = {
     Services.obs.removeObserver(this, "Casting:Pause");
     Services.obs.removeObserver(this, "Casting:Stop");
     Services.obs.removeObserver(this, "Casting:Mirror");
+    Services.obs.removeObserver(this, "ssdp-service-found");
+    Services.obs.removeObserver(this, "ssdp-service-lost");
 
     NativeWindow.contextmenus.remove(this._castMenuId);
+  },
+
+  serviceAdded: function(aService) {
+    if (aService.mirror && this.menuItem == -1) {
+      this.menuItem = NativeWindow.menu.add({
+        name: Strings.browser.GetStringFromName("casting.mirrorTab"),
+        callback: function() {
+          function callbackFunc(aService) {
+            let app = SimpleServiceDiscovery.findAppForService(aService);
+            if (app)
+              app.mirror(function() {
+              });
+          }
+
+          function filterFunc(aService) {
+            return aService.mirror == true;
+          }
+          this.prompt(callbackFunc, filterFunc);
+        }.bind(this),
+        parent: NativeWindow.menu.toolsMenuID
+      });
+    }
+  },
+
+  serviceLost: function(aService) {
+    if (aService.mirror && this.menuItem != -1) {
+      let haveMirror = false;
+      SimpleServiceDiscovery.services.forEach(function(service) {
+        if (service.mirror) {
+          haveMirror = true;
+        }
+      });
+      if (!haveMirror) {
+        NativeWindow.menu.remove(this.menuItem);
+        this.menuItem = -1;
+      }
+    }
   },
 
   isEnabled: function isEnabled() {
@@ -132,6 +156,16 @@ var CastingApps = {
           this.tabMirror = new TabMirror(aData, window);
         }
         break;
+      case "ssdp-service-found":
+        {
+          this.serviceAdded(SimpleServiceDiscovery.findServiceForID(aData));
+          break;
+        }
+      case "ssdp-service-lost":
+        {
+          this.serviceLost(SimpleServiceDiscovery.findServiceForID(aData));
+          break;
+        }
     }
   },
 
