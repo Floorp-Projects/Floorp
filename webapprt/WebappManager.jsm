@@ -47,7 +47,8 @@ this.WebappManager = {
 
   doInstall: function(data, window) {
     let jsonManifest = data.isPackage ? data.app.updateManifest : data.app.manifest;
-    let manifest = new ManifestHelper(jsonManifest, data.app.origin);
+    let manifest =
+      new ManifestHelper(jsonManifest, data.app.origin, data.app.manifestURL);
     let name = manifest.name;
     let bundle = Services.strings.createBundle("chrome://webapprt/locale/webapp.properties");
 

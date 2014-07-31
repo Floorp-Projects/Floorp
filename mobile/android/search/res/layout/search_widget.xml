@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- A homescreen widget for launching Fennec or the search activity. We can't use styles in here
+     so make sure any changes you make are also made to launch_widget.xml which doesn't have
+     the search widget button. -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/widget_header_height">
+
+    <!-- Wrap in a linear layout to center the text in a flexible space. We use a negative margin
+         to extend this into the firefox logo so that the button background appears to come from behind the logo, but
+         highlights correctly when tapped. -->
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:layout_toLeftOf="@+id/logo_button"
+                  android:layout_marginRight="@dimen/widget_button_offset"
+                  android:paddingRight="@dimen/widget_button_padding"
+                  android:gravity="center"
+                  android:background="@drawable/search_widget_button"
+                  android:orientation="horizontal"
+                  android:id="@+id/search_button">
+
+        <TextView android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:drawableLeft="@drawable/ic_url_bar_search"
+                  android:drawablePadding="@dimen/widget_drawable_padding"
+                  android:text="@string/search_widget_button_label"
+                  android:contentDescription="@string/search_widget_button_label"
+                  android:gravity="center"
+                  android:textSize="@dimen/widget_text_size"
+                  android:textColor="@color/text_color_primary"
+                  android:id="@+id/search_button_label"/>
+
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_toRightOf="@+id/logo_button"
+                  android:layout_height="match_parent"
+                  android:layout_marginLeft="@dimen/widget_button_offset"
+                  android:paddingLeft="@dimen/widget_button_padding"
+                  android:layout_centerVertical="true"
+                  android:gravity="center"
+                  android:background="@drawable/search_widget_button"
+                  android:orientation="horizontal"
+                  android:id="@+id/new_tab_button">
+
+        <TextView android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:drawableLeft="@drawable/ic_widget_new_tab"
+                  android:drawablePadding="@dimen/widget_drawable_padding"
+                  android:gravity="center"
+                  android:text="@string/new_tab"
+                  android:contentDescription="@string/new_tab"
+                  android:textSize="@dimen/widget_text_size"
+                  android:textColor="@color/text_color_primary"
+                  android:id="@+id/new_tab_button_label"/>
+
+    </LinearLayout>
+
+    <!-- The logo. adjustViewBounds is required for the buttons above to stretch underneath the logo. -->
+    <ImageView android:id="@+id/logo_button"
+               android:layout_centerInParent="true"
+               android:adjustViewBounds="true"
+               android:layout_width="@dimen/widget_header_height"
+               android:layout_height="match_parent"
+               android:src="@drawable/icon"/>
+
+</RelativeLayout>

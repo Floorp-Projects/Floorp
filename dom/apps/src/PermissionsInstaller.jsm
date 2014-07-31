@@ -59,7 +59,8 @@ this.PermissionsInstaller = {
   installPermissions: function installPermissions(aApp, aIsReinstall, aOnError,
                                                   aIsSystemUpdate) {
     try {
-      let newManifest = new ManifestHelper(aApp.manifest, aApp.origin);
+      let newManifest =
+        new ManifestHelper(aApp.manifest, aApp.origin, aApp.manifestURL);
       if (!newManifest.permissions && !aIsReinstall) {
         return;
       }
