@@ -18,6 +18,7 @@
 #include "nspr.h"
 #include "nss.h"
 #include "ssl.h"
+#include "sslproto.h"
 
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
@@ -361,6 +362,14 @@ class TransportTestPeer : public sigslot::has_slots<> {
     }
   }
 
+  void SetupSrtp() {
+    // this mimics the setup we do elsewhere
+    std::vector<uint16_t> srtp_ciphers;
+    srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
+    srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_32);
+
+    ASSERT_TRUE(NS_SUCCEEDED(dtls_->SetSrtpCiphers(srtp_ciphers)));
+  }
 
   void ConnectSocket_s(TransportTestPeer *peer) {
     nsresult res;
@@ -536,6 +545,31 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   size_t received() { return received_; }
 
+  uint16_t cipherSuite() const {
+    nsresult rv;
+    uint16_t cipher;
+    RUN_ON_THREAD(test_utils->sts_target(),
+                  WrapRunnableRet(dtls_, &TransportLayerDtls::GetCipherSuite,
+                                  &cipher, &rv));
+
+    if (NS_FAILED(rv)) {
+      return TLS_NULL_WITH_NULL_NULL; // i.e., not good
+    }
+    return cipher;
+  }
+
+  uint16_t srtpCipher() const {
+    nsresult rv;
+    uint16_t cipher;
+    RUN_ON_THREAD(test_utils->sts_target(),
+                  WrapRunnableRet(dtls_, &TransportLayerDtls::GetSrtpCipher,
+                                  &cipher, &rv));
+    if (NS_FAILED(rv)) {
+      return 0; // the SRTP equivalent of TLS_NULL_WITH_NULL_NULL
+    }
+    return cipher;
+  }
+
  private:
   std::string name_;
   nsCOMPtr<nsIEventTarget> target_;
@@ -585,6 +619,11 @@ class TransportTest : public ::testing::Test {
 
     p1_ = new TransportTestPeer(target_, "P1");
     p2_ = new TransportTestPeer(target_, "P2");
+  }
+
+  void SetupSrtp() {
+    p1_->SetupSrtp();
+    p2_->SetupSrtp();
   }
 
   void SetDtlsPeer(int digests = 1, unsigned int damage = 0) {
@@ -662,7 +701,29 @@ TEST_F(TransportTest, TestNoDtlsVerificationSettings) {
 TEST_F(TransportTest, TestConnect) {
   SetDtlsPeer();
   ConnectSocket();
+
+  // check that everything was negotiated properly
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p2_->cipherSuite());
+
+  // no SRTP on this one
+  ASSERT_EQ(0, p1_->srtpCipher());
+  ASSERT_EQ(0, p2_->srtpCipher());
 }
+
+TEST_F(TransportTest, TestConnectSrtp) {
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocket();
+
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p2_->cipherSuite());
+
+  // SRTP is on
+  ASSERT_EQ(SRTP_AES128_CM_HMAC_SHA1_80, p1_->srtpCipher());
+  ASSERT_EQ(SRTP_AES128_CM_HMAC_SHA1_80, p2_->srtpCipher());
+}
+
 
 TEST_F(TransportTest, TestConnectDestroyFlowsMainThread) {
   SetDtlsPeer();
