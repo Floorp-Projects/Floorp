@@ -45,7 +45,6 @@ public class GlobalConstants {
   // Eventually Fennec might listen to startup notifications and
   // do this automatically, but this will do for now. See Bug 800244.
   public static String GECKO_PREFERENCES_CLASS = "org.mozilla.gecko.preferences.GeckoPreferences";
-  public static String GECKO_BROADCAST_ANNOUNCEMENTS_PREF_METHOD  = "broadcastAnnouncementsPref";
   public static String GECKO_BROADCAST_HEALTHREPORT_UPLOAD_PREF_METHOD  = "broadcastHealthReportUploadPref";
   public static String GECKO_BROADCAST_HEALTHREPORT_PRUNE_METHOD = "broadcastHealthReportPrune";
 
