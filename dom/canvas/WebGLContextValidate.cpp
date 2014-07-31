@@ -527,22 +527,36 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
         return true;
     }
 
+    /* WEBGL_depth_texture added formats */
+    if (format == LOCAL_GL_DEPTH_COMPONENT ||
+        format == LOCAL_GL_DEPTH_STENCIL)
+    {
+        if (!IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture)) {
+            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_depth_texture enabled",
+                             InfoFrom(func), EnumName(format));
+            return false;
+        }
+
+        // If WEBGL_depth_texture is enabled, then it is not allowed to be used with the
+        // texSubImage, copyTexImage, or copyTexSubImage methods
+        if (func == WebGLTexImageFunc::TexSubImage ||
+            func == WebGLTexImageFunc::CopyTexImage ||
+            func == WebGLTexImageFunc::CopyTexSubImage)
+        {
+            ErrorInvalidOperation("%s: format %s is not supported", InfoFrom(func), EnumName(format));
+            return false;
+        }
+
+        return true;
+    }
+
+    // Needs to be below the depth_texture check because an invalid operation
+    // error needs to be generated instead of invalid enum.
     /* Only core formats are valid for CopyTex(Sub)?Image */
     // TODO: Revisit this once color_buffer_(half_)?float lands
     if (IsCopyFunc(func)) {
         ErrorInvalidEnumWithName(this, "invalid format", format, func);
         return false;
-    }
-
-    /* WEBGL_depth_texture added formats */
-    if (format == LOCAL_GL_DEPTH_COMPONENT ||
-        format == LOCAL_GL_DEPTH_STENCIL)
-    {
-        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_depth_texture);
-        if (!validFormat)
-            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_depth_texture enabled",
-                             InfoFrom(func), WebGLContext::EnumName(format));
-        return validFormat;
     }
 
     /* EXT_sRGB added formats */
