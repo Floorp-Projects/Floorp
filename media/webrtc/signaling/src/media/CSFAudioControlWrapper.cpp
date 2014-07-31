@@ -145,6 +145,5 @@ namespace CSF {
 
     AudioControlWrapper::~AudioControlWrapper()
     {
-        delete _realAudioControl;
     }
 }

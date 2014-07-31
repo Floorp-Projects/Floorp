@@ -43,7 +43,7 @@ AC_DEFUN([PKG_CHECK_MODULES],
             ifelse([$4], ,echo $$1_PKG_ERRORS,)
         fi
 
-        AC_SUBST($1_CFLAGS)
+        AC_SUBST_LIST($1_CFLAGS)
         AC_SUBST($1_LIBS)
      else
         echo "*** Your version of pkg-config is too old. You need version $PKG_CONFIG_MIN_VERSION or newer."

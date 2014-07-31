@@ -9,6 +9,7 @@ if CONFIG['MOZ_WIDGET_GTK'] and CONFIG['MOZ_X11']:
     SOURCES += [
         'gdk-screenshot.cpp',
     ]
+    CXXFLAGS += CONFIG['TK_CFLAGS']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     PROGRAM = 'screenshot'
     SOURCES += [

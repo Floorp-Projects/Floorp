@@ -44,6 +44,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'nsWifiScannerWin.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'SunOS':
+    CXXFLAGS += CONFIG['GLIB_CFLAGS']
     UNIFIED_SOURCES += [
         'nsWifiScannerSolaris.cpp',
     ]
@@ -52,5 +53,8 @@ if CONFIG['NECKO_WIFI_DBUS']:
     UNIFIED_SOURCES += [
         'nsWifiScannerDBus.cpp',
     ]
+
+if CONFIG['NECKO_WIFI_DBUS']:
+    CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
 FINAL_LIBRARY = 'xul'

@@ -5,6 +5,3 @@
 include $(topsrcdir)/config/rules.mk
 
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))
-
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
-CFLAGS   += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)

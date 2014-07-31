@@ -6,6 +6,7 @@
 #include "nsCookie.h"
 #include "nsUTF8ConverterService.h"
 #include <stdlib.h>
+#include "nsAutoPtr.h"
 
 /******************************************************************************
  * nsCookie:
@@ -80,9 +81,9 @@ nsCookie::Create(const nsACString &aName,
 {
   // Ensure mValue contains a valid UTF-8 sequence. Otherwise XPConnect will
   // truncate the string after the first invalid octet.
-  nsUTF8ConverterService converter;
+  nsRefPtr<nsUTF8ConverterService> converter = new nsUTF8ConverterService();
   nsAutoCString aUTF8Value;
-  converter.ConvertStringToUTF8(aValue, "UTF-8", false, true, 1, aUTF8Value);
+  converter->ConvertStringToUTF8(aValue, "UTF-8", false, true, 1, aUTF8Value);
 
   // find the required string buffer size, adding 4 for the terminating nulls
   const uint32_t stringLength = aName.Length() + aUTF8Value.Length() +

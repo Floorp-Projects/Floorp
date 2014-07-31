@@ -18,3 +18,5 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
+
+CXXFLAGS += CONFIG['TK_CFLAGS']

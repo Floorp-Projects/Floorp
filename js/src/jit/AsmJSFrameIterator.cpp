@@ -211,7 +211,7 @@ GenerateProfilingEpilogue(MacroAssembler &masm, unsigned framePushed, AsmJSExit:
         masm.pop(scratch2);
         masm.storePtr(scratch2, Address(scratch, AsmJSActivation::offsetOfFP()));
 #else
-        masm.pop(Operand(scratch, AsmJSActivation::offsetOfFP()));
+        masm.pop(Address(scratch, AsmJSActivation::offsetOfFP()));
 #endif
         masm.bind(profilingReturn);
         masm.ret();
