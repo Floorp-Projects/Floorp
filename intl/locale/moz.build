@@ -60,3 +60,6 @@ RESOURCE_FILES += [
     'langGroups.properties',
     'language.properties',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']

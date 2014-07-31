@@ -90,3 +90,6 @@ else:
     ]
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['MOZ_ENABLE_GTK']:
+    CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']

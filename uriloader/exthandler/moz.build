@@ -136,3 +136,10 @@ LOCAL_INCLUDES += [
     '/netwerk/protocol/http',
 ]
 
+if CONFIG['MOZ_ENABLE_DBUS']:
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+    CXXFLAGS += CONFIG['MOZ_DBUS_CFLAGS']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3'):
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+    CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

@@ -609,7 +609,8 @@ inDOMUtils::GetSubpropertiesForCSSProperty(const nsAString& aProperty,
   nsCSSProperty propertyID =
     nsCSSProps::LookupProperty(aProperty, nsCSSProps::eEnabledForAllContent);
 
-  if (propertyID == eCSSProperty_UNKNOWN) {
+  if (propertyID == eCSSProperty_UNKNOWN ||
+      propertyID == eCSSPropertyExtra_variable) {
     return NS_ERROR_FAILURE;
   }
 

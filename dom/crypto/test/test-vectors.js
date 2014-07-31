@@ -435,4 +435,22 @@ tv = {
       "c635518c7dac47e9"
     )
   },
+
+  broken_pkcs8: {
+    // A DH key with parameters p and g, and a private value.
+    // This currently fails the key import due to the missing public value.
+    // <https://stackoverflow.com/questions/6032675/diffie-hellman-test-vectors>
+    dh: util.hex2abv(
+      "308201340201003082011506072a8648ce3e02013082010802818100da3a8085" +
+      "d372437805de95b88b675122f575df976610c6a844de99f1df82a06848bf7a42" +
+      "f18895c97402e81118e01a00d0855d51922f434c022350861d58ddf60d65bc69" +
+      "41fc6064b147071a4c30426d82fc90d888f94990267c64beef8c304a4b2b26fb" +
+      "93724d6a9472fa16bc50c5b9b8b59afb62cfe9ea3ba042c73a6ade3502818100" +
+      "a51883e9ac0539859df3d25c716437008bb4bd8ec4786eb4bc643299daef5e3e" +
+      "5af5863a6ac40a597b83a27583f6a658d408825105b16d31b6ed088fc623f648" +
+      "fd6d95e9cefcb0745763cddf564c87bcf4ba7928e74fd6a3080481f588d535e4" +
+      "c026b58a21e1e5ec412ff241b436043e29173f1dc6cb943c09742de989547288" +
+      "0416021442c6ee70beb7465928a1efe692d2281b8f7b53d6"
+    )
+  }
 }

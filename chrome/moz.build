@@ -39,3 +39,6 @@ LOCAL_INCLUDES += [
     '/netwerk/protocol/res',
     '/xpcom/components'
 ]
+
+if CONFIG['MOZ_ENABLE_GTK']:
+    CXXFLAGS += CONFIG['TK_CFLAGS']

@@ -194,7 +194,7 @@ struct nsStyleImage {
   nsStyleImage& operator=(const nsStyleImage& aOther);
 
   void SetNull();
-  void SetImageData(imgIRequest* aImage);
+  void SetImageData(imgRequestProxy* aImage);
   void TrackImage(nsPresContext* aContext);
   void UntrackImage(nsPresContext* aContext);
   void SetGradientData(nsStyleGradient* aGradient);
@@ -204,7 +204,7 @@ struct nsStyleImage {
   nsStyleImageType GetType() const {
     return mType;
   }
-  imgIRequest* GetImageData() const {
+  imgRequestProxy* GetImageData() const {
     NS_ABORT_IF_FALSE(mType == eStyleImageType_Image, "Data is not an image!");
     NS_ABORT_IF_FALSE(mImageTracked,
                       "Should be tracking any image we're going to use!");
@@ -297,7 +297,7 @@ private:
 
   nsStyleImageType mType;
   union {
-    imgIRequest* mImage;
+    imgRequestProxy* mImage;
     nsStyleGradient* mGradient;
     char16_t* mElementId;
   };

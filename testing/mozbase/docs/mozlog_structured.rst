@@ -263,7 +263,7 @@ invoked as part of a command line for post-processing raw log files.
 .. autoclass:: MachFormatter
   :members:
 
-.. autoclass:: MachTerminalFormatter
+.. autoclass:: TbplFormatter
   :members:
 
 Processing Log Files
@@ -411,7 +411,6 @@ options::
   usage: structured_example.py [-h] [--log-unittest LOG_UNITTEST]
                                [--log-raw LOG_RAW] [--log-html LOG_HTML]
                                [--log-xunit LOG_XUNIT]
-                               [--log-mach_terminal LOG_MACH_TERMINAL]
                                [--log-mach LOG_MACH]
 
   optional arguments:
@@ -428,9 +427,7 @@ options::
     --log-html LOG_HTML   HTML report
     --log-xunit LOG_XUNIT
                           xUnit compatible XML
-    --log-mach_terminal LOG_MACH_TERMINAL
-                          Colored mach-like output for use in a tty
-    --log-mach LOG_MACH   Uncolored mach-like output
+    --log-mach LOG_MACH   Human-readable output
 
 In order to get human-readable output on stdout and the structured log
 data to go to the file ``structured.log``, we would run::

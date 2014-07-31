@@ -22,3 +22,5 @@ USE_LIBS += [
     'xpcomglue_s',
     'xul',
 ]
+
+CXXFLAGS += CONFIG['MOZ_GNOMEVFS_CFLAGS']

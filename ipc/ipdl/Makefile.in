@@ -21,7 +21,3 @@ export:: $(ALL_IPDLSRCS)
 	  --outcpp-dir=. \
 	  $(IPDLDIRS:%=-I%) \
 	  $^
-
-# We #include some things in the dom/plugins/ directory that rely on
-# toolkit libraries.
-CXXFLAGS    += $(TK_CFLAGS)

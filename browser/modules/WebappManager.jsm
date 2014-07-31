@@ -66,9 +66,7 @@ this.WebappManager = {
       }
     } else if (aMessage.name == "Webapps:Install:Return:OK" &&
                !data.isPackage) {
-      let manifest = new ManifestHelper(data.app.manifest,
-                                        data.app.origin,
-                                        data.app.manifestURL);
+      let manifest = new ManifestHelper(data.app.manifest, data.app.origin);
       if (!manifest.appcache_path) {
         this.installations[manifestURL].resolve();
       }
@@ -174,8 +172,7 @@ this.WebappManager = {
     };
 
     let requestingURI = chromeWin.makeURI(aData.from);
-    let app = aData.app;
-    let manifest = new ManifestHelper(jsonManifest, app.origin, app.manifestURL);
+    let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
 
     let host;
     try {

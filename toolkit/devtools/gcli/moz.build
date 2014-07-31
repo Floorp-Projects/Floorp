@@ -1,5 +1,132 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
 # vim: set filetype=python:
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXTRA_JS_MODULES.devtools.gcli.commands += [
+    'commands/addon.js',
+    'commands/appcache.js',
+    'commands/calllog.js',
+    'commands/cmd.js',
+    'commands/cookie.js',
+    'commands/csscoverage.js',
+    'commands/folder.js',
+    'commands/highlight.js',
+    'commands/inject.js',
+    'commands/jsb.js',
+    'commands/listen.js',
+    'commands/media.js',
+    'commands/pagemod.js',
+    'commands/paintflashing.js',
+    'commands/restart.js',
+    'commands/screenshot.js',
+    'commands/tools.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.commands += [
+    'source/lib/gcli/commands/clear.js',
+    'source/lib/gcli/commands/commands.js',
+    'source/lib/gcli/commands/connect.js',
+    'source/lib/gcli/commands/context.js',
+    'source/lib/gcli/commands/exec.js',
+    'source/lib/gcli/commands/global.js',
+    'source/lib/gcli/commands/help.js',
+    'source/lib/gcli/commands/intro.js',
+    'source/lib/gcli/commands/lang.js',
+    'source/lib/gcli/commands/mocks.js',
+    'source/lib/gcli/commands/pref.js',
+    'source/lib/gcli/commands/preflist.js',
+    'source/lib/gcli/commands/test.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.connectors += [
+    'source/lib/gcli/connectors/connectors.js',
+    'source/lib/gcli/connectors/index.js',
+    'source/lib/gcli/connectors/protocol.js',
+    'source/lib/gcli/connectors/rdp.js',
+    'source/lib/gcli/connectors/remoted.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.converters += [
+    'source/lib/gcli/converters/basic.js',
+    'source/lib/gcli/converters/converters.js',
+    'source/lib/gcli/converters/html.js',
+    'source/lib/gcli/converters/terminal.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.fields += [
+    'source/lib/gcli/fields/delegate.js',
+    'source/lib/gcli/fields/fields.js',
+    'source/lib/gcli/fields/selection.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.languages += [
+    'source/lib/gcli/languages/command.html',
+    'source/lib/gcli/languages/command.js',
+    'source/lib/gcli/languages/javascript.js',
+    'source/lib/gcli/languages/languages.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.mozui += [
+    'source/lib/gcli/mozui/completer.js',
+    'source/lib/gcli/mozui/ffdisplay.js',
+    'source/lib/gcli/mozui/inputter.js',
+    'source/lib/gcli/mozui/tooltip.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.types += [
+    'source/lib/gcli/types/array.js',
+    'source/lib/gcli/types/boolean.js',
+    'source/lib/gcli/types/command.js',
+    'source/lib/gcli/types/date.js',
+    'source/lib/gcli/types/delegate.js',
+    'source/lib/gcli/types/file.js',
+    'source/lib/gcli/types/fileparser.js',
+    'source/lib/gcli/types/javascript.js',
+    'source/lib/gcli/types/node.js',
+    'source/lib/gcli/types/number.js',
+    'source/lib/gcli/types/resource.js',
+    'source/lib/gcli/types/selection.js',
+    'source/lib/gcli/types/setting.js',
+    'source/lib/gcli/types/string.js',
+    'source/lib/gcli/types/types.js',
+    'source/lib/gcli/types/union.js',
+    'source/lib/gcli/types/url.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.ui += [
+    'source/lib/gcli/ui/focus.js',
+    'source/lib/gcli/ui/history.js',
+    'source/lib/gcli/ui/intro.js',
+    'source/lib/gcli/ui/menu.css',
+    'source/lib/gcli/ui/menu.html',
+    'source/lib/gcli/ui/menu.js',
+    'source/lib/gcli/ui/view.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli.util += [
+    'source/lib/gcli/util/domtemplate.js',
+    'source/lib/gcli/util/fileparser.js',
+    'source/lib/gcli/util/filesystem.js',
+    'source/lib/gcli/util/host.js',
+    'source/lib/gcli/util/l10n.js',
+    'source/lib/gcli/util/legacy.js',
+    'source/lib/gcli/util/prism.js',
+    'source/lib/gcli/util/promise.js',
+    'source/lib/gcli/util/spell.js',
+    'source/lib/gcli/util/util.js',
+]
+
+EXTRA_JS_MODULES.devtools.gcli += [
+    'source/lib/gcli/api.js',
+    'source/lib/gcli/cli.js',
+    'source/lib/gcli/index.js',
+    'source/lib/gcli/l10n.js',
+    'source/lib/gcli/settings.js',
+]
+
+EXTRA_JS_MODULES.devtools += [
+    'gcli.jsm',
+    'Templater.jsm',
+]

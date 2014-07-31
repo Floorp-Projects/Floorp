@@ -989,8 +989,8 @@ pref("browser.autofocus", false);
 // Enable wakelock
 pref("dom.wakelock.enabled", true);
 
-// Enable touch caret by default
-pref("touchcaret.enabled", true);
+// Disable touch caret by default
+pref("touchcaret.enabled", false);
 
 // Disable selection caret by default
 pref("selectioncaret.enabled", false);

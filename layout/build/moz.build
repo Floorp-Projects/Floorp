@@ -131,4 +131,7 @@ if CONFIG['MOZ_FFMPEG']:
         '/content/media/fmp4/ffmpeg/include',
     ]
 
+if CONFIG['MOZ_GSTREAMER']:
+    CXXFLAGS += CONFIG['GSTREAMER_CFLAGS']
+
 FINAL_LIBRARY = 'xul'

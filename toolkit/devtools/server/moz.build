@@ -19,3 +19,53 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+EXTRA_JS_MODULES.devtools += [
+    'dbg-server.jsm',
+]
+
+EXTRA_JS_MODULES.devtools.server += [
+    'child.js',
+    'content-globals.js',
+    'main.js',
+    'protocol.js',
+]
+
+EXTRA_JS_MODULES.devtools.server.actors += [
+    'actors/call-watcher.js',
+    'actors/canvas.js',
+    'actors/childtab.js',
+    'actors/common.js',
+    'actors/csscoverage.js',
+    'actors/device.js',
+    'actors/eventlooplag.js',
+    'actors/framerate.js',
+    'actors/gcli.js',
+    'actors/highlighter.js',
+    'actors/inspector.js',
+    'actors/layout.js',
+    'actors/memory.js',
+    'actors/monitor.js',
+    'actors/preference.js',
+    'actors/pretty-print-worker.js',
+    'actors/profiler.js',
+    'actors/root.js',
+    'actors/script.js',
+    'actors/storage.js',
+    'actors/string.js',
+    'actors/styleeditor.js',
+    'actors/styles.js',
+    'actors/stylesheets.js',
+    'actors/tracer.js',
+    'actors/webapps.js',
+    'actors/webaudio.js',
+    'actors/webbrowser.js',
+    'actors/webconsole.js',
+    'actors/webgl.js',
+]
+
+EXTRA_JS_MODULES.devtools.server.actors.utils += [
+    'actors/utils/make-debugger.js',
+    'actors/utils/map-uri-to-addon-id.js'
+]
+

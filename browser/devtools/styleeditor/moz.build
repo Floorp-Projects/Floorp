@@ -5,3 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+EXTRA_JS_MODULES.devtools += [
+    'StyleEditorUI.jsm',
+    'StyleEditorUtil.jsm',
+    'StyleSheetEditor.jsm',
+]
+
+EXTRA_JS_MODULES.devtools.styleeditor += [
+    'styleeditor-commands.js',
+    'styleeditor-panel.js',
+    'utils.js',
+]

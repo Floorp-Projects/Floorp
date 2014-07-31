@@ -6,3 +6,43 @@
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+
+EXTRA_JS_MODULES.devtools += [
+    'AppCacheUtils.jsm',
+    'Curl.jsm',
+    'DeveloperToolbar.jsm',
+    'DOMHelpers.jsm',
+    'FloatingScrollbars.jsm',
+    'Jsbeautify.jsm',
+    'Parser.jsm',
+    'SplitView.jsm',
+]
+
+EXTRA_JS_MODULES.devtools += [
+    'widgets/BreadcrumbsWidget.jsm',
+    'widgets/Chart.jsm',
+    'widgets/Graphs.jsm',
+    'widgets/SideMenuWidget.jsm',
+    'widgets/SimpleListWidget.jsm',
+    'widgets/VariablesView.jsm',
+    'widgets/VariablesViewController.jsm',
+    'widgets/ViewHelpers.jsm',
+]
+
+EXTRA_JS_MODULES.devtools.shared += [
+    'autocomplete-popup.js',
+    'inplace-editor.js',
+    'observable-object.js',
+    'telemetry.js',
+    'theme-switching.js',
+    'undo.js',
+]
+
+EXTRA_JS_MODULES.devtools.shared.widgets += [
+    'widgets/CubicBezierWidget.js',
+    'widgets/FastListWidget.js',
+    'widgets/Spectrum.js',
+    'widgets/TableWidget.js',
+    'widgets/Tooltip.js',
+    'widgets/TreeWidget.js',
+]

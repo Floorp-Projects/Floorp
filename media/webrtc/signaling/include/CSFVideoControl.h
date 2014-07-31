@@ -10,18 +10,6 @@
 #include <string>
 #include <vector>
 
-namespace CSF {
-class VideoControl;
-}
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<CSF::VideoControl>
-{
-  static const bool value = true;
-};
-}
-
 namespace CSF
 {
 	DECLARE_NS_PTR(VideoControl)
@@ -29,7 +17,6 @@ namespace CSF
 	{
 	public:
                 NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoControl)
-		virtual ~VideoControl() {};
 
 		virtual void setVideoMode( bool enable ) = 0;
 
@@ -42,6 +29,8 @@ namespace CSF
 
 		virtual std::string getCaptureDevice() = 0;
 		virtual bool setCaptureDevice( const std::string& name ) = 0;
+	protected:
+		virtual ~VideoControl() {};
 	};
 
 }; // namespace
