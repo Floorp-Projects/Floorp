@@ -42,7 +42,8 @@ var mediaPlayerTarget = {
 
 var CastingApps = {
   _castMenuId: -1,
-  menuItem: -1,
+  mirrorStartMenuId: -1,
+  mirrorStopMenuId: -1,
 
   init: function ca_init() {
     if (!this.isEnabled()) {
@@ -93,8 +94,8 @@ var CastingApps = {
   },
 
   serviceAdded: function(aService) {
-    if (aService.mirror && this.menuItem == -1) {
-      this.menuItem = NativeWindow.menu.add({
+    if (aService.mirror && this.mirrorStartMenuId == -1) {
+      this.mirrorStartMenuId = NativeWindow.menu.add({
         name: Strings.browser.GetStringFromName("casting.mirrorTab"),
         callback: function() {
           function callbackFunc(aService) {
@@ -111,11 +112,25 @@ var CastingApps = {
         }.bind(this),
         parent: NativeWindow.menu.toolsMenuID
       });
+
+      this.mirrorStopMenuId = NativeWindow.menu.add({
+        name: Strings.browser.GetStringFromName("casting.mirrorTabStop"),
+        callback: function() {
+          if (this.tabMirror) {
+            this.tabMirror.stop();
+            this.tabMirror = null;
+          }
+          NativeWindow.menu.update(this.mirrorStartMenuId, { visible: true });
+          NativeWindow.menu.update(this.mirrorStopMenuId, { visible: false });
+        }.bind(this),
+        parent: NativeWindow.menu.toolsMenuID
+      });
     }
+    NativeWindow.menu.update(this.mirrorStopMenuId, { visible: false });
   },
 
   serviceLost: function(aService) {
-    if (aService.mirror && this.menuItem != -1) {
+    if (aService.mirror && this.mirrorStartMenuId != -1) {
       let haveMirror = false;
       SimpleServiceDiscovery.services.forEach(function(service) {
         if (service.mirror) {
@@ -123,8 +138,8 @@ var CastingApps = {
         }
       });
       if (!haveMirror) {
-        NativeWindow.menu.remove(this.menuItem);
-        this.menuItem = -1;
+        NativeWindow.menu.remove(this.mirrorStartMenuId);
+        this.mirrorStartMenuId = -1;
       }
     }
   },
@@ -154,6 +169,8 @@ var CastingApps = {
         {
           Cu.import("resource://gre/modules/TabMirror.jsm");
           this.tabMirror = new TabMirror(aData, window);
+          NativeWindow.menu.update(this.mirrorStartMenuId, { visible: false });
+          NativeWindow.menu.update(this.mirrorStopMenuId, { visible: true });
         }
         break;
       case "ssdp-service-found":
