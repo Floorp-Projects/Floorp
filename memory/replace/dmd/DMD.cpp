@@ -568,9 +568,14 @@ public:
 // while |free| is used to free strings created by |copy|.
 //
 // Writer must implement a printf-style varargs method Write.
+//
+// |DescribeCodeAddressLock| is needed when the callers may be holding a lock
+// used by NS_DescribeCodeAddress.  DescribeCodeAddressLock must implement
+// static methods IsLocked(), Unlock() and Lock().
 template <class StringTable,
           class StringAlloc,
-          class Writer>
+          class Writer,
+          class DescribeCodeAddressLock>
 class LocationService
 {
   // WriteLocation() is the key function in this class.  It's basically a
@@ -669,7 +674,7 @@ public:
 
   void WriteLocation(const Writer& aWriter, const void* aPc)
   {
-    MOZ_ASSERT(gStateLock->IsLocked());
+    MOZ_ASSERT(DescribeCodeAddressLock::IsLocked());
 
     uint32_t index = HashGeneric(aPc) & kMask;
     MOZ_ASSERT(index < kNumEntries);
@@ -681,12 +686,13 @@ public:
       // NS_DescribeCodeAddress can (on Linux) acquire a lock inside
       // the shared library loader.  Another thread might call malloc
       // while holding that lock (when loading a shared library).  So
-      // we have to exit gStateLock around this call.  For details, see
+      // we have to exit the lock around this call.  For details, see
       // https://bugzilla.mozilla.org/show_bug.cgi?id=363334#c3
       nsCodeAddressDetails details;
       {
-        AutoUnlockState unlock;
+        DescribeCodeAddressLock::Unlock();
         (void)NS_DescribeCodeAddress(const_cast<void*>(aPc), &details);
+        DescribeCodeAddressLock::Lock();
       }
 
       const char* library = mLibraryStrings.Intern(details.library);
@@ -819,7 +825,14 @@ public:
   }
 };
 
-typedef LocationService<StringTable, StringAlloc, Writer> DMDLocationService;
+struct DescribeCodeAddressLock
+{
+  static void Unlock() { gStateLock->Unlock(); }
+  static void Lock() { gStateLock->Lock(); }
+  static bool IsLocked() { return gStateLock->IsLocked(); }
+};
+
+typedef LocationService<StringTable, StringAlloc, Writer, DescribeCodeAddressLock> DMDLocationService;
 
 //---------------------------------------------------------------------------
 // Stack traces
