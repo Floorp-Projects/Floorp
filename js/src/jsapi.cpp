@@ -2739,9 +2739,8 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool 
         return true;
     }
 
-    // Check for an existing native property on the objct. Be careful not to
+    // Check for an existing native property on the object. Be careful not to
     // call any lookup or resolve hooks.
-
     if (JSID_IS_INT(id)) {
         uint32_t index = JSID_TO_INT(id);
 
@@ -2820,26 +2819,24 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
 {
     PropertyOp getter = get.op;
     StrictPropertyOp setter = set.op;
-    /*
-     * JSPROP_READONLY has no meaning when accessors are involved. Ideally we'd
-     * throw if this happens, but we've accepted it for long enough that it's
-     * not worth trying to make callers change their ways. Just flip it off on
-     * its way through the API layer so that we can enforce this internally.
-     */
+
+    // JSPROP_READONLY has no meaning when accessors are involved. Ideally we'd
+    // throw if this happens, but we've accepted it for long enough that it's
+    // not worth trying to make callers change their ways. Just flip it off on
+    // its way through the API layer so that we can enforce this internally.
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
         attrs &= ~JSPROP_READONLY;
 
-    /*
-     * When we use DefineProperty, we need full scriptable Function objects rather
-     * than JSNatives. However, we might be pulling this property descriptor off
-     * of something with JSNative property descriptors. If we are, wrap them in
-     * JS Function objects.
-     */
+    // When we use DefineProperty, we need full scriptable Function objects rather
+    // than JSNatives. However, we might be pulling this property descriptor off
+    // of something with JSNative property descriptors. If we are, wrap them in
+    // JS Function objects.
     if (attrs & JSPROP_NATIVE_ACCESSORS) {
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
         JSFunction::Flags zeroFlags = JSAPIToJSFunctionFlags(0);
-        // We can't just use JS_NewFunctionById here because it
-        // assumes a string id.
+
+        // We can't just use JS_NewFunctionById here because it assumes a
+        // string id.
         RootedAtom atom(cx, JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : nullptr);
         attrs &= ~JSPROP_NATIVE_ACCESSORS;
         if (getter) {
