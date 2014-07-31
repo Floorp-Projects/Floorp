@@ -802,8 +802,7 @@ var WebappsHelper = {
           if (!aManifest)
             return;
 
-          let manifest = new ManifestHelper(aManifest, json.origin,
-                                            json.manifestURL);
+          let manifest = new ManifestHelper(aManifest, json.origin);
           let payload = {
             timestamp: json.timestamp,
             url: manifest.fullLaunchPath(json.startPoint),
