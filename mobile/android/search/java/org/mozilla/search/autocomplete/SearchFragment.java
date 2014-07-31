@@ -20,6 +20,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.search.AcceptsSearchQuery;
 import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 import org.mozilla.search.Constants;
@@ -150,6 +152,9 @@ public class SearchFragment extends Fragment implements AcceptsJumpTaps {
 
                 final Rect startBounds = new Rect();
                 view.getGlobalVisibleRect(startBounds);
+
+                // The user tapped on a suggestion from the search engine.
+                Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.SUGGESTION, "suggest");
 
                 searchListener.onSearch(suggestion.value, new SuggestionAnimation() {
                     @Override
