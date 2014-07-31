@@ -486,6 +486,36 @@ private:
   UnixSocketRawData* mData;
 };
 
+/* |SocketIOShutdownTask| signals shutdown to the Socket I/O object on
+ * the I/O thread and sends it to the main thread for destruction.
+ */
+template <typename T>
+class SocketIOShutdownTask MOZ_FINAL : public SocketIOTask<T>
+{
+public:
+  SocketIOShutdownTask(T* aIO)
+  : SocketIOTask<T>(aIO)
+  { }
+
+  void Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    T* io = SocketIOTask<T>::GetIO();
+
+    // At this point, there should be no new events on the I/O thread
+    // after this one with the possible exception of an accept task,
+    // which ShutdownOnIOThread will cancel for us. We are now fully
+    // shut down, so we can send a message to the main thread to delete
+    // |io| safely knowing that it's not reference any longer.
+    io->ShutdownOnIOThread();
+
+    nsRefPtr<nsRunnable> r = new SocketIODeleteInstanceRunnable<T>(io);
+    nsresult rv = NS_DispatchToMainThread(r);
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
+};
+
 }
 }
 
