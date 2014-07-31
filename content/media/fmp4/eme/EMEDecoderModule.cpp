@@ -202,21 +202,21 @@ EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
   if (mCDMDecodesVideo) {
     NS_WARNING("Support for CDM that decodes video not yet supported");
     return nullptr;
-  } else {
-    nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateH264Decoder(aConfig,
-                                                               aLayersBackend,
-                                                               aImageContainer,
-                                                               aVideoTaskQueue,
-                                                               aCallback));
-    if (!decoder) {
-      return nullptr;
-    }
-
-    return new EMEDecryptor(decoder,
-                            aCallback,
-                            mTaskQueue,
-                            mProxy);
   }
+
+  nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateH264Decoder(aConfig,
+                                                             aLayersBackend,
+                                                             aImageContainer,
+                                                             aVideoTaskQueue,
+                                                             aCallback));
+  if (!decoder) {
+    return nullptr;
+  }
+
+  return new EMEDecryptor(decoder,
+                          aCallback,
+                          mTaskQueue,
+                          mProxy);
 }
 
 MediaDataDecoder*
@@ -227,19 +227,19 @@ EMEDecoderModule::CreateAACDecoder(const AudioDecoderConfig& aConfig,
   if (mCDMDecodesAudio) {
     NS_WARNING("Support for CDM that decodes audio not yet supported");
     return nullptr;
-  } else {
-    nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAACDecoder(aConfig,
-                                                              aAudioTaskQueue,
-                                                              aCallback));
-    if (!decoder) {
-      return nullptr;
-    }
-
-    return new EMEDecryptor(decoder,
-                            aCallback,
-                            mTaskQueue,
-                            mProxy);
   }
+
+  nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAACDecoder(aConfig,
+                                                            aAudioTaskQueue,
+                                                            aCallback));
+  if (!decoder) {
+    return nullptr;
+  }
+
+  return new EMEDecryptor(decoder,
+                          aCallback,
+                          mTaskQueue,
+                          mProxy);
 }
 
 } // namespace mozilla
