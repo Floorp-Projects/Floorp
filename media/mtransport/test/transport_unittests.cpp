@@ -739,32 +739,32 @@ TEST_F(TransportTest, TestTransferIce) {
 }
 
 TEST(PushTests, LayerFail) {
-  TransportFlow flow;
+  mozilla::RefPtr<TransportFlow> flow = new TransportFlow();
   nsresult rv;
   bool destroyed1, destroyed2;
 
-  rv = flow.PushLayer(new TransportLayerDummy(true, &destroyed1));
+  rv = flow->PushLayer(new TransportLayerDummy(true, &destroyed1));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
-  rv = flow.PushLayer(new TransportLayerDummy(false, &destroyed2));
+  rv = flow->PushLayer(new TransportLayerDummy(false, &destroyed2));
   ASSERT_TRUE(NS_FAILED(rv));
 
-  ASSERT_EQ(TransportLayer::TS_ERROR, flow.state());
+  ASSERT_EQ(TransportLayer::TS_ERROR, flow->state());
   ASSERT_EQ(true, destroyed1);
   ASSERT_EQ(true, destroyed2);
 
-  rv = flow.PushLayer(new TransportLayerDummy(true, &destroyed1));
+  rv = flow->PushLayer(new TransportLayerDummy(true, &destroyed1));
   ASSERT_TRUE(NS_FAILED(rv));
   ASSERT_EQ(true, destroyed1);
 }
 
 
 TEST(PushTests, LayersFail) {
-  TransportFlow flow;
+  mozilla::RefPtr<TransportFlow> flow = new TransportFlow();
   nsresult rv;
   bool destroyed1, destroyed2, destroyed3;
 
-  rv = flow.PushLayer(new TransportLayerDummy(true, &destroyed1));
+  rv = flow->PushLayer(new TransportLayerDummy(true, &destroyed1));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   nsAutoPtr<std::queue<TransportLayer *> > layers(
@@ -773,10 +773,10 @@ TEST(PushTests, LayersFail) {
   layers->push(new TransportLayerDummy(true, &destroyed2));
   layers->push(new TransportLayerDummy(false, &destroyed3));
 
-  rv = flow.PushLayers(layers);
+  rv = flow->PushLayers(layers);
   ASSERT_TRUE(NS_FAILED(rv));
 
-  ASSERT_EQ(TransportLayer::TS_ERROR, flow.state());
+  ASSERT_EQ(TransportLayer::TS_ERROR, flow->state());
   ASSERT_EQ(true, destroyed1);
   ASSERT_EQ(true, destroyed2);
   ASSERT_EQ(true, destroyed3);
@@ -784,7 +784,7 @@ TEST(PushTests, LayersFail) {
   layers = new std::queue<TransportLayer *>();
   layers->push(new TransportLayerDummy(true, &destroyed2));
   layers->push(new TransportLayerDummy(true, &destroyed3));
-  rv = flow.PushLayers(layers);
+  rv = flow->PushLayers(layers);
 
   ASSERT_TRUE(NS_FAILED(rv));
   ASSERT_EQ(true, destroyed2);
