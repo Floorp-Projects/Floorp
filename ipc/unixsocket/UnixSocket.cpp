@@ -201,6 +201,37 @@ private:
   T* mInstance;
 };
 
+class SocketReceiveRunnable : public SocketIORunnable<UnixSocketImpl>
+{
+public:
+  SocketReceiveRunnable(UnixSocketImpl* aImpl, UnixSocketRawData* aData)
+  : SocketIORunnable<UnixSocketImpl>(aImpl)
+  , mRawData(aData)
+  {
+    MOZ_ASSERT(aData);
+  }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    UnixSocketImpl* impl = GetIO();
+
+    if (impl->IsShutdownOnMainThread()) {
+      NS_WARNING("mConsumer is null, aborting receive!");
+      // Since we've already explicitly closed and the close happened before
+      // this, this isn't really an error. Since we've warned, return OK.
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(impl->mConsumer);
+    impl->mConsumer->ReceiveSocketData(mRawData);
+    return NS_OK;
+  }
+private:
+  nsAutoPtr<UnixSocketRawData> mRawData;
+};
+
 class RequestClosingSocketRunnable : public SocketIORunnable<UnixSocketImpl>
 {
 public:
@@ -607,8 +638,8 @@ UnixSocketImpl::OnSocketCanReceiveWithoutBlocking()
 #endif
 
     incoming->mSize = ret;
-    nsRefPtr<nsRunnable> r =
-      new SocketIOReceiveRunnable<UnixSocketImpl>(this, incoming.forget());
+    nsRefPtr<SocketReceiveRunnable> r =
+      new SocketReceiveRunnable(this, incoming.forget());
     NS_DispatchToMainThread(r);
 
     // If ret is less than MAX_READ_SIZE, there's no
