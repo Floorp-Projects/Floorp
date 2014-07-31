@@ -1900,6 +1900,12 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
   return AssignJSString(cx, result, s);
 }
 
+void
+NormalizeScalarValueString(JSContext* aCx, nsAString& aString);
+
+void
+NormalizeScalarValueString(JSContext* aCx, binding_detail::FakeString& aString);
+
 bool
 ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
                            bool nullable, nsACString& result);
