@@ -464,11 +464,12 @@ SocialShare = {
       return;
     this.panel.hidden = false;
     // create and initialize the panel for this window
-    let iframe = document.createElement("iframe");
+    let iframe = document.createElement("browser");
     iframe.setAttribute("type", "content");
     iframe.setAttribute("class", "social-share-frame");
     iframe.setAttribute("context", "contentAreaContextMenu");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
+    iframe.setAttribute("disableglobalhistory", "true");
     iframe.setAttribute("flex", "1");
     panel.appendChild(iframe);
     this.populateProviderMenu();
@@ -591,7 +592,15 @@ SocialShare = {
     this.anchor.removeAttribute("open");
     this.iframe.removeEventListener("click", this._onclick, true);
     this.iframe.setAttribute("src", "data:text/plain;charset=utf8,");
+    // make sure that the frame is unloaded after it is hidden
+    this.iframe.docShell.createAboutBlankContentViewer(null);
     this.currentShare = null;
+    // share panel use is over, purge any history
+    if (this.iframe.sessionHistory) {
+      let purge = this.iframe.sessionHistory.count;
+      if (purge > 0)
+        this.iframe.sessionHistory.PurgeHistory(purge);
+    }
   },
 
   setErrorMessage: function() {
@@ -702,6 +711,14 @@ SocialShare = {
         iframe.contentDocument.documentElement.dispatchEvent(evt);
       }, true);
     }
+    // if the user switched between share providers we do not want that history
+    // available.
+    if (iframe.sessionHistory) {
+      let purge = iframe.sessionHistory.count;
+      if (purge > 0)
+        iframe.sessionHistory.PurgeHistory(purge);
+    }
+
     // always ensure that origin belongs to the endpoint
     let uri = Services.io.newURI(shareEndpoint, null, null);
     iframe.setAttribute("origin", provider.origin);
