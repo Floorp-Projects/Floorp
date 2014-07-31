@@ -300,6 +300,10 @@ int32_t RTPReceiverVideo::ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
           rtp_header->header.timestamp = timestamp - 10;
           rtp_header->frameType = kVideoFrameKey;
           break;
+        case RtpFormatH264::kh264NALU_PREFIX:
+          rtp_header->header.timestamp = timestamp - 5;
+          rtp_header->frameType = kVideoFrameKey;
+          break;
         case RtpFormatH264::kH264NALU_IDR:
           rtp_header->frameType = kVideoFrameKey;
           break;
@@ -341,6 +345,9 @@ int32_t RTPReceiverVideo::ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
         // fall through
       case RtpFormatH264::kH264NALU_PPS:
         rtp_header->header.timestamp -= 10;
+        // fall through
+      case RtpFormatH264::kh264NALU_PREFIX:
+        rtp_header->header.timestamp -= 5;
         // fall through
       case RtpFormatH264::kH264NALU_IDR:
         rtp_header->frameType = kVideoFrameKey;

@@ -40,6 +40,7 @@ class RtpFormatH264 {
     kH264NALU_SEI               = 6,
     kH264NALU_SPS               = 7,
     kH264NALU_PPS               = 8,
+    kh264NALU_PREFIX            = 14,
     kH264NALU_STAPA             = 24,
     kH264NALU_FUA               = 28
   };

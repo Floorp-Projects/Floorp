@@ -91,7 +91,7 @@ int RtpFormatH264::NextPacket(uint8_t* buffer,
     // the encoder is the last NAL of the frame.  We need that to be passed
     // through to this point, instead of trying to generate it from the packets
     if (type == kH264NALU_SPS || type == kH264NALU_PPS ||
-        type == kH264NALU_SEI) {
+        type == kH264NALU_SEI||type == kh264NALU_PREFIX) {
       *last_packet   = false;
     } else {
       *last_packet   = true;
