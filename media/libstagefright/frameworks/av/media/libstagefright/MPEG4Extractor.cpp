@@ -485,7 +485,7 @@ status_t MPEG4Extractor::readMetaData() {
             break;
         }
         uint32_t chunk_type = ntohl(hdr[1]);
-        if (chunk_type == FOURCC('m', 'd', 'a', 't')) {
+        if (chunk_type == FOURCC('m', 'd', 'a', 't') && mFirstTrack) {
             break;
         }
         if (chunk_type == FOURCC('m', 'o', 'o', 'f')) {
