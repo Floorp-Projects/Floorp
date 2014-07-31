@@ -559,6 +559,9 @@ public:
 //---------------------------------------------------------------------------
 
 // This class is used to print details about code locations.
+//
+// Writer must implement a printf-style varargs method Write.
+template <class Writer>
 class LocationService
 {
   // WriteLocation() is the key function in this class.  It's basically a
@@ -698,7 +701,7 @@ public:
 
       // Intern the library name.
       const char* library = nullptr;
-      StringTable::AddPtr p = mLibraryStrings.lookupForAdd(details.library);
+      typename StringTable::AddPtr p = mLibraryStrings.lookupForAdd(details.library);
       if (!p) {
         library = InfallibleAllocPolicy::strdup_(details.library);
         (void)mLibraryStrings.add(p, library);
@@ -744,7 +747,7 @@ public:
     }
 
     n += mLibraryStrings.sizeOfExcludingThis(aMallocSizeOf);
-    for (StringTable::Range r = mLibraryStrings.all();
+    for (typename StringTable::Range r = mLibraryStrings.all();
          !r.empty();
          r.popFront()) {
       n += aMallocSizeOf(r.front());
@@ -769,6 +772,8 @@ public:
   size_t NumCacheHits()   const { return mNumCacheHits; }
   size_t NumCacheMisses() const { return mNumCacheMisses; }
 };
+
+typedef LocationService<Writer> DMDLocationService;
 
 //---------------------------------------------------------------------------
 // Stack traces
@@ -802,7 +807,7 @@ public:
     qsort(mPcs, mLength, sizeof(mPcs[0]), StackTrace::Cmp);
   }
 
-  void Print(const Writer& aWriter, LocationService* aLocService) const;
+  void Print(const Writer& aWriter, DMDLocationService* aLocService) const;
 
   // Hash policy.
 
@@ -847,7 +852,7 @@ static StackTraceTable* gStackTraceTable = nullptr;
 static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
 
 void
-StackTrace::Print(const Writer& aWriter, LocationService* aLocService) const
+StackTrace::Print(const Writer& aWriter, DMDLocationService* aLocService) const
 {
   if (mLength == 0) {
     W("    (empty)\n");  // StackTrace::Get() must have failed
@@ -1467,7 +1472,7 @@ public:
     mRecordSize.Add(aB);
   }
 
-  void Print(const Writer& aWriter, LocationService* aLocService,
+  void Print(const Writer& aWriter, DMDLocationService* aLocService,
              uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
              size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
              size_t aTotalUsableSize, bool aShowCategoryPercentage,
@@ -1485,7 +1490,7 @@ public:
 typedef js::HashSet<Record, Record, InfallibleAllocPolicy> RecordTable;
 
 void
-Record::Print(const Writer& aWriter, LocationService* aLocService,
+Record::Print(const Writer& aWriter, DMDLocationService* aLocService,
               uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
               size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
               size_t aTotalUsableSize, bool aShowCategoryPercentage,
@@ -1819,7 +1824,7 @@ ReportOnAlloc(const void* aPtr)
 //---------------------------------------------------------------------------
 
 static void
-PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
+PrintSortedRecords(const Writer& aWriter, DMDLocationService* aLocService,
                    int (*aCmp)(const void*, const void*),
                    const char* aStr, const char* astr,
                    const RecordTable& aRecordTable,
@@ -1958,7 +1963,7 @@ public:
   virtual RecordTable* ProcessBlock(const Block& aBlock) = 0;
 
   virtual void PrintRecords(const Writer& aWriter,
-                            LocationService* aLocService) const = 0;
+                            DMDLocationService* aLocService) const = 0;
   virtual void PrintSummary(const Writer& aWriter, bool aShowTilde) const = 0;
   virtual void PrintStats(const Writer& aWriter) const = 0;
 
@@ -2025,7 +2030,7 @@ public:
   }
 
   virtual void PrintRecords(const Writer& aWriter,
-                            LocationService* aLocService) const
+                            DMDLocationService* aLocService) const
   {
     PrintSortedRecords(aWriter, aLocService, Record::CmpByUsable,
                        "Twice-reported", "twice-reported",
@@ -2118,7 +2123,7 @@ public:
   }
 
   virtual void PrintRecords(const Writer& aWriter,
-                            LocationService* aLocService) const
+                            DMDLocationService* aLocService) const
   {
     size_t totalUsableSize = mLive.mUsableSize;
     PrintSortedRecords(aWriter, aLocService, Record::CmpByUsable,
@@ -2185,7 +2190,7 @@ AnalyzeImpl(Analyzer *aAnalyzer, const Writer& aWriter)
   W("}\n\n");
 
   // Allocate this on the heap instead of the stack because it's fairly large.
-  LocationService* locService = InfallibleAllocPolicy::new_<LocationService>();
+  DMDLocationService* locService = InfallibleAllocPolicy::new_<DMDLocationService>();
 
   aAnalyzer->PrintRecords(aWriter, locService);
 
