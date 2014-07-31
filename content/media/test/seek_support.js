@@ -1,28 +1,3 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Media test: seek tests</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <script type="text/javascript" src="manifest.js"></script>
-  <script type="text/javascript" src="seek1.js"></script>
-  <script type="text/javascript" src="seek2.js"></script>
-  <script type="text/javascript" src="seek3.js"></script>
-  <script type="text/javascript" src="seek4.js"></script>
-  <script type="text/javascript" src="seek5.js"></script>
-  <script type="text/javascript" src="seek6.js"></script>
-  <script type="text/javascript" src="seek7.js"></script>
-  <script type="text/javascript" src="seek8.js"></script>
-  <script type="text/javascript" src="seek9.js"></script>
-  <script type="text/javascript" src="seek10.js"></script>
-  <script type="text/javascript" src="seek11.js"></script>
-  <script type="text/javascript" src="seek12.js"></script>
-  <script type="text/javascript" src="seek13.js"></script>
-</head>
-<body>
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
 SimpleTest.requestLongerTimeout(3);
 var manager = new MediaTestManager;
 
@@ -35,8 +10,6 @@ if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(0, 5);
 }
 
-const NUM_SEEK_TESTS = 13;
-
 function createTestArray() {
   var tests = [];
   var tmpVid = document.createElement("video");
@@ -47,14 +20,12 @@ function createTestArray() {
       continue;
     }
 
-    for (var i = 1; i <= NUM_SEEK_TESTS; ++i) {
-      var t = new Object;
-      t.name = test.name;
-      t.type = test.type;
-      t.duration = test.duration;
-      t.number = i;
-      tests.push(t);
-    }
+    var t = new Object;
+    t.name = test.name;
+    t.type = test.type;
+    t.duration = test.duration;
+    t.number = SEEK_TEST_NUMBER;
+    tests.push(t);
   }
   return tests;
 }
@@ -82,10 +53,3 @@ function startTest(test, token) {
   dump("SEEK-TEST: Started " + name + "\n");
   window['test_seek' + test.number](v, test.duration/2, localIs, localOk, localFinish);
 }
-
-manager.runTests(createTestArray(), startTest);
-
-</script>
-</pre>
-</body>
-</html>
