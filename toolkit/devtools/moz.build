@@ -23,3 +23,23 @@ DIRS += [
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+EXTRA_JS_MODULES.devtools += [
+    'async-utils.js',
+    'content-observer.js',
+    'css-color.js',
+    'deprecated-sync-thenables.js',
+    'DevToolsUtils.js',
+    'event-emitter.js',
+    'output-parser.js',
+    'touch-events.js',
+    'worker-loader.js',
+]
+
+EXTRA_JS_MODULES.devtools += [
+    'Console.jsm',
+    'DevToolsUtils.jsm',
+    'LayoutHelpers.jsm',
+    'Loader.jsm',
+    'Require.jsm',
+]

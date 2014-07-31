@@ -61,8 +61,6 @@ class TransportFlow : public nsISupports,
       state_(TransportLayer::TS_NONE),
       layers_(new std::deque<TransportLayer *>) {}
 
-  ~TransportFlow();
-
   const std::string& id() const { return id_; }
 
   // Layer management. Note PushLayer() is not thread protected, so
@@ -102,6 +100,8 @@ class TransportFlow : public nsISupports,
   NS_DECL_THREADSAFE_ISUPPORTS
 
  private:
+  ~TransportFlow();
+
   DISALLOW_COPY_ASSIGN(TransportFlow);
 
   // Check if we are on the right thread
@@ -137,14 +137,6 @@ class TransportFlow : public nsISupports,
   TransportLayer::State state_;
   ScopedDeletePtr<std::deque<TransportLayer *> > layers_;
   nsCOMPtr<nsIEventTarget> target_;
-};
-
-// Temporary whitelist for dangerous public destructors of reference-counted
-// classes. See Bug 1029478 for this occurrence.
-template<>
-struct HasDangerousPublicDestructor<TransportFlow>
-{
-  static const bool value = true;
 };
 
 }  // close namespace

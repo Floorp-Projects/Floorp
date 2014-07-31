@@ -1231,6 +1231,9 @@ class AssemblerX86Shared : public AssemblerShared
     void pop(Register src) {
         masm.pop_r(src.code());
     }
+    void pop(const Address &src) {
+        masm.pop_m(src.offset, src.base.code());
+    }
 
     void pushFlags() {
         masm.push_flags();

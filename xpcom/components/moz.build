@@ -53,3 +53,6 @@ LOCAL_INCLUDES += [
     '/chrome',
     '/modules/libjar',
 ]
+
+if CONFIG['MOZ_WIDGET_GTK']:
+    CXXFLAGS += CONFIG['TK_CFLAGS']

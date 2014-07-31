@@ -13,19 +13,3 @@ OS_LIBS += \
 		$(MOZ_GIO_LIBS) \
 		$(MOZ_DBUS_GLIB_LIBS) \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS += \
-	$(MOZ_GCONF_CFLAGS) \
-	$(MOZ_GNOMEVFS_CFLAGS) \
-	$(MOZ_GIO_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(MOZ_DBUS_GLIB_CFLAGS) \
-	$(NULL)
-
-ifdef MOZ_ENABLE_GTK
-CXXFLAGS += \
-	$(TK_CFLAGS) \
-	$(NULL)
-endif

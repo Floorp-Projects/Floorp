@@ -58,7 +58,7 @@ TouchCaret::TouchCaret(nsIPresShell* aPresShell)
     mCaretCenterToDownPointOffsetY(0),
     mVisible(false)
 {
-  TOUCHCARET_LOG("Constructor, PresShell=%p", aPresShell);
+  TOUCHCARET_LOG("Constructor");
   MOZ_ASSERT(NS_IsMainThread());
 
   static bool addedTouchCaretPref = false;
@@ -100,34 +100,32 @@ void
 TouchCaret::SetVisibility(bool aVisible)
 {
   if (mVisible == aVisible) {
-    TOUCHCARET_LOG("Set visibility %s, same as the old one",
-                   (aVisible ? "shown" : "hidden"));
+    TOUCHCARET_LOG("Visibility not changed");
     return;
   }
+
+  mVisible = aVisible;
 
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell) {
     return;
   }
-
   mozilla::dom::Element* touchCaretElement = presShell->GetTouchCaretElement();
   if (!touchCaretElement) {
     return;
   }
-
-  mVisible = aVisible;
 
   // Set touch caret visibility.
   ErrorResult err;
   touchCaretElement->ClassList()->Toggle(NS_LITERAL_STRING("hidden"),
                                          dom::Optional<bool>(!mVisible),
                                          err);
-  TOUCHCARET_LOG("Set visibility %s", (mVisible ? "shown" : "hidden"));
+  TOUCHCARET_LOG("Visibility %s", (mVisible ? "shown" : "hidden"));
 
   // Set touch caret expiration time.
   mVisible ? LaunchExpirationTimer() : CancelExpirationTimer();
 
-  // We must call SetMayHaveTouchCaret() in order to get APZC to wait until the
+  // We must call SetHasTouchCaret() in order to get APZC to wait until the
   // event has been round-tripped and check whether it has been handled,
   // otherwise B2G will end up panning the document when the user tries to drag
   // touch caret.
@@ -331,10 +329,8 @@ TouchCaret::IsOnTouchCaret(const nsPoint& aPoint)
 
 nsresult
 TouchCaret::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel,
-                                   int16_t aReason)
+                                     int16_t aReason)
 {
-  TOUCHCARET_LOG("Reason=%d", aReason);
-
   // Hide touch caret while no caret exists.
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell) {
@@ -353,110 +349,52 @@ TouchCaret::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel,
   // If this notification is for a selection that is not the one the
   // the caret is currently interested in , then there is nothing to do!
   if (aSel != caret->GetCaretDOMSelection()) {
-    TOUCHCARET_LOG("Return for selection mismatch!");
     return NS_OK;
   }
 
   // Update touch caret position and visibility.
   // Hide touch caret while key event causes selection change.
-  if (aReason & nsISelectionListener::KEYPRESS_REASON) {
-    TOUCHCARET_LOG("KEYPRESS_REASON");
-    SetVisibility(false);
+  if ((aReason == nsISelectionListener::NO_REASON) ||
+      (aReason & nsISelectionListener::KEYPRESS_REASON)) {
+    UpdateTouchCaret(false);
   } else {
-    SyncVisibilityWithCaret();
+    UpdateTouchCaret(true);
   }
 
   return NS_OK;
 }
 
 void
-TouchCaret::SyncVisibilityWithCaret()
+TouchCaret::UpdateTouchCaret(bool aVisible)
 {
-  TOUCHCARET_LOG("SyncVisibilityWithCaret");
-  if (IsDisplayable()) {
-    SetVisibility(true);
-    UpdatePosition();
-  } else {
-    SetVisibility(false);
-  }
-}
-
-void
-TouchCaret::UpdatePositionIfNeeded()
-{
-  TOUCHCARET_LOG("UpdatePositionIfNeeded");
-  if (IsDisplayable()) {
-    if (mVisible) {
-      UpdatePosition();
-    }
-  } else {
-    SetVisibility(false);
-  }
-}
-
-bool
-TouchCaret::IsDisplayable()
-{
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (!presShell) {
-    TOUCHCARET_LOG("PresShell is nullptr!");
-    return false;
-  }
-
-  nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  if (!caret) {
-    TOUCHCARET_LOG("Caret is nullptr!");
-    return false;
-  }
-
-  nsIFrame* canvasFrame = GetCanvasFrame();
-  if (!canvasFrame) {
-    TOUCHCARET_LOG("No canvas frame!");
-    return false;
-  }
-
-  dom::Element* touchCaretElement = presShell->GetTouchCaretElement();
-  if (!touchCaretElement) {
-    TOUCHCARET_LOG("No touch caret frame element!");
-    return false;
-  }
-
-  bool caretVisible = false;
-  caret->GetCaretVisible(&caretVisible);
-  if (!caretVisible) {
-    TOUCHCARET_LOG("Caret is not visible!");
-    return false;
-  }
-
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
-  nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
-  if (!focusFrame) {
-    TOUCHCARET_LOG("Focus frame is not valid!");
-    return false;
-  }
-  if (focusRect.IsEmpty()) {
-    TOUCHCARET_LOG("Focus rect is empty!");
-    return false;
-  }
-
-  return true;
-}
-
-void
-TouchCaret::UpdatePosition()
-{
-  MOZ_ASSERT(mVisible);
-
+  // Hide touch caret while no caret exists.
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell) {
     return;
   }
+
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
+  if (!caret) {
+    SetVisibility(false);
+    return;
+  }
+
+  // Hide touch caret while caret is not visible.
+  bool caretVisible = false;
+  caret->GetCaretVisible(&caretVisible);
+  if (!caretVisible) {
+    TOUCHCARET_LOG("Caret is not visible");
+    SetVisibility(false);
+    return;
+  }
+
+  // Caret is visible and shown, update touch caret.
   nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
   nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
   if (!focusFrame || focusRect.IsEmpty()) {
+    TOUCHCARET_LOG("Focus frame not valid");
+    SetVisibility(false);
     return;
   }
 
@@ -477,7 +415,6 @@ TouchCaret::UpdatePosition()
   while (closestScrollFrame) {
     nsIScrollableFrame* sf = do_QueryFrame(closestScrollFrame);
     nsRect visualRect = sf->GetScrollPortRect();
-
     // Clamp the touch caret in the scroll port.
     nsLayoutUtils::TransformRect(closestScrollFrame, canvasFrame, visualRect);
     pos = visualRect.ClampPoint(pos);
@@ -489,6 +426,7 @@ TouchCaret::UpdatePosition()
   }
 
   SetTouchFramePos(pos);
+  SetVisibility(aVisible);
 }
 
 /* static */void

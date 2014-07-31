@@ -62,3 +62,6 @@ LOCAL_INCLUDES += [
     # For URI-related functionality
     '/netwerk/base/src',
 ]
+
+# Because imgFrame.cpp includes "cairo.h"
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']

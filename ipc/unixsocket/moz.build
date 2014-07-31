@@ -5,11 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.ipc += [
-    'UnixSocket.h',
+    'SocketBase.h',
+    'UnixSocket.h'
 ]
 
 SOURCES += [
-    'UnixSocket.cpp',
+    'SocketBase.cpp',
+    'UnixSocket.cpp'
 ]
 
 FAIL_ON_WARNINGS = True

@@ -6,7 +6,3 @@
 EXTRA_LIBS	+= \
 		$(NSPR_LIBS) \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS += $(TK_CFLAGS)

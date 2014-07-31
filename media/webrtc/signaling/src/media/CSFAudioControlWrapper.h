@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "mozilla/RefPtr.h"
 #include "CC_Common.h"
 #include "CSFAudioControl.h"
 
@@ -33,9 +34,9 @@ namespace CSF
 
 		virtual void setAudioControl(AudioControl * audioControl){_realAudioControl = audioControl;};
 
-        virtual ~AudioControlWrapper();
-
 	private:
-		AudioControl * _realAudioControl;
+		virtual ~AudioControlWrapper();
+
+		mozilla::RefPtr<AudioControl> _realAudioControl;
 	};
 };
