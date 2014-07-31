@@ -11,6 +11,7 @@
 
 void NS_PurgeAtomTable();
 
-size_t NS_SizeOfAtomTablesIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+void NS_SizeOfAtomTablesIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                      size_t* aMain, size_t* aStatic);
 
 #endif // nsAtomTable_h__
