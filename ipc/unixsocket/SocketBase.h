@@ -10,6 +10,7 @@
 #define mozilla_ipc_SocketBase_h
 
 #include "nsAutoPtr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace ipc {
@@ -127,6 +128,36 @@ private:
   SocketConnectionStatus mConnectionStatus;
   PRIntervalTime mConnectTimestamp;
   uint32_t mConnectDelayMs;
+};
+
+//
+// Socket I/O runnables
+//
+
+/* |SocketIORunnable| is a runnable for sending a message from
+ * the I/O thread to the main thread.
+ */
+template <typename T>
+class SocketIORunnable : public nsRunnable
+{
+public:
+  virtual ~SocketIORunnable()
+  { }
+
+  T* GetIO() const
+  {
+    return mIO;
+  }
+
+protected:
+  SocketIORunnable(T* aIO)
+  : mIO(aIO)
+  {
+    MOZ_ASSERT(aIO);
+  }
+
+private:
+  T* mIO;
 };
 
 }
