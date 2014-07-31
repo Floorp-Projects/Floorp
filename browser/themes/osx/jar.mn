@@ -134,6 +134,10 @@ browser.jar:
   skin/classic/browser/webRTC-camera-black-16.png
   skin/classic/browser/webRTC-microphone-black-16.png
   skin/classic/browser/webRTC-screen-black-16.png
+  skin/classic/browser/loop/toolbar.png               (loop/toolbar.png)
+  skin/classic/browser/loop/toolbar@2x.png            (loop/toolbar@2x.png)
+  skin/classic/browser/loop/toolbar-inverted.png      (loop/toolbar-inverted.png)
+  skin/classic/browser/loop/toolbar-inverted@2x.png   (loop/toolbar-inverted@2x.png)
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
   skin/classic/browser/customizableui/customize-titleBar-toggle@2x.png  (customizableui/customize-titleBar-toggle@2x.png)

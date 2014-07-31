@@ -53,6 +53,5 @@ toolkit.jar:
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)
 +  skin/classic/global/icons/webapps-16.png                    (icons/webapps-16.png)
 +  skin/classic/global/icons/webapps-64.png                    (icons/webapps-64.png)
-   skin/classic/global/loop/loop-call.png                      (loop/loop-call.png)
    skin/classic/global/menu/shared-menu-check.png              (../../shared/menu-check.png)
 +  skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)
