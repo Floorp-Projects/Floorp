@@ -222,7 +222,7 @@ function check_order(aExpectedOrder) {
   var node = list.firstChild;
   while (node) {
     var id = node.getAttribute("value");
-    if (id && id.substring(id.length - 18) == "@tests.mozilla.org")
+    if (id && id.endsWith("@tests.mozilla.org"))
       order.push(node.getAttribute("value"));
     node = node.nextSibling;
   }
