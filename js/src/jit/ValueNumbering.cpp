@@ -144,15 +144,6 @@ IsDead(const MDefinition *def)
     return !def->hasUses() && DeadIfUnused(def);
 }
 
-// Test whether the given definition will no longer be needed after its user
-// is deleted. TODO: This misses cases where the definition is used multiple
-// times by the same user (bug 1031396).
-static bool
-WillBecomeDead(const MDefinition *def)
-{
-    return def->hasOneUse() && DeadIfUnused(def);
-}
-
 // Call MDefinition::replaceAllUsesWith, and add some GVN-specific asserts.
 static void
 ReplaceAllUsesWith(MDefinition *from, MDefinition *to)
@@ -228,17 +219,16 @@ ValueNumberer::deleteDefsRecursively(MDefinition *def)
     return deleteDef(def) && processDeadDefs();
 }
 
-// Assuming phi is dead, push each dead operand of phi not dominated by the phi
-// to the delete worklist.
+// Assuming phi is dead, discard its operands. If an operand which is not
+// dominated by the phi becomes dead, push it to the delete worklist.
 bool
-ValueNumberer::pushDeadPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
+ValueNumberer::discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
 {
-    for (size_t o = 0, e = phi->numOperands(); o != e; ++o) {
+    // MPhi saves operands in a vector so we iterate in reverse.
+    for (int o = phi->numOperands() - 1; o >= 0; --o) {
         MDefinition *op = phi->getOperand(o);
-        if (WillBecomeDead(op) && !op->isInWorklist() &&
-            !phiBlock->dominates(phiBlock->getPredecessor(o)))
-        {
-            op->setInWorklist();
+        phi->removeOperand(o);
+        if (IsDead(op) && !phiBlock->dominates(op->block())) {
             if (!deadDefs_.append(op))
                 return false;
         } else {
@@ -248,14 +238,15 @@ ValueNumberer::pushDeadPhiOperands(MPhi *phi, const MBasicBlock *phiBlock)
     return true;
 }
 
-// Assuming ins is dead, push each dead operand of ins to the delete worklist.
+// Assuming ins is dead, discard its operands. If an operand becomes dead, push
+// it to the delete worklist.
 bool
-ValueNumberer::pushDeadInsOperands(MInstruction *ins)
+ValueNumberer::discardInsOperands(MInstruction *ins)
 {
     for (size_t o = 0, e = ins->numOperands(); o != e; ++o) {
         MDefinition *op = ins->getOperand(o);
-        if (WillBecomeDead(op) && !op->isInWorklist()) {
-            op->setInWorklist();
+        ins->discardOperand(o);
+        if (IsDead(op)) {
             if (!deadDefs_.append(op))
                 return false;
         } else {
@@ -275,15 +266,15 @@ ValueNumberer::deleteDef(MDefinition *def)
     if (def->isPhi()) {
         MPhi *phi = def->toPhi();
         MBasicBlock *phiBlock = phi->block();
-        if (!pushDeadPhiOperands(phi, phiBlock))
+        if (!discardPhiOperands(phi, phiBlock))
              return false;
         MPhiIterator at(phiBlock->phisBegin(phi));
         phiBlock->discardPhiAt(at);
     } else {
         MInstruction *ins = def->toInstruction();
-        if (!pushDeadInsOperands(ins))
+        if (!discardInsOperands(ins))
              return false;
-        ins->block()->discard(ins);
+        ins->block()->discardIgnoreOperands(ins);
     }
     return true;
 }
@@ -294,7 +285,6 @@ ValueNumberer::processDeadDefs()
 {
     while (!deadDefs_.empty()) {
         MDefinition *def = deadDefs_.popCopy();
-        MOZ_ASSERT(def->isInWorklist(), "Deleting value not on the worklist");
 
         values_.forget(def);
         if (!deleteDef(def))
@@ -414,7 +404,6 @@ ValueNumberer::leader(MDefinition *def)
             MDefinition *rep = *p;
             if (rep->block()->dominates(def->block())) {
                 // We found a dominating congruent value.
-                MOZ_ASSERT(!rep->isInWorklist(), "Dead value in set");
                 return rep;
             }
 
@@ -564,9 +553,9 @@ ValueNumberer::visitControlInstruction(MBasicBlock *block, const MBasicBlock *do
         }
     }
 
-    if (!pushDeadInsOperands(control))
+    if (!discardInsOperands(control))
         return false;
-    block->discardLastIns();
+    block->discardIgnoreOperands(control);
     block->end(newControl);
     return processDeadDefs();
 }

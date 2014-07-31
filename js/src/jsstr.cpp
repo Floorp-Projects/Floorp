@@ -4297,6 +4297,7 @@ js::str_fromCharCode_one_arg(JSContext *cx, HandleValue code, MutableHandleValue
 static const JSFunctionSpec string_static_methods[] = {
     JS_FN("fromCharCode", js::str_fromCharCode, 1, 0),
     JS_SELF_HOSTED_FN("fromCodePoint", "String_static_fromCodePoint", 0,0),
+    JS_SELF_HOSTED_FN("raw", "String_static_raw", 2, 0),
 
     // This must be at the end because of bug 853075: functions listed after
     // self-hosted methods aren't available in self-hosted code.

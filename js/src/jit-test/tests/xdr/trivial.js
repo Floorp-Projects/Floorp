@@ -36,3 +36,10 @@ evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });
 // code a function which has an object literal.
 test = "function f() { return { x: 2 }; }; f();";
 evalWithCache(test, { assertEqBytecode: true });
+
+// code call site object
+var hasTemplateStrings = false;  try { eval("``"); hasTemplateStrings = true; } catch (exc) { }
+if (hasTemplateStrings == true) {
+    test = "function f(a) { return a; }; f`a${4}b`;";
+    evalWithCache(test, { assertEqBytecode: true, checkFrozen: true});
+}

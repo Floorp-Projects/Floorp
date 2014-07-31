@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EMEDecoderModule.h"
-#include "mtransport/runnable_utils.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -193,7 +192,7 @@ EMEDecoderModule::Shutdown()
   return NS_OK;
 }
 
-MediaDataDecoder*
+already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
                                     layers::LayersBackend aLayersBackend,
                                     layers::ImageContainer* aImageContainer,
@@ -203,24 +202,25 @@ EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
   if (mCDMDecodesVideo) {
     NS_WARNING("Support for CDM that decodes video not yet supported");
     return nullptr;
-  } else {
-    nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateH264Decoder(aConfig,
-                                                               aLayersBackend,
-                                                               aImageContainer,
-                                                               aVideoTaskQueue,
-                                                               aCallback));
-    if (!decoder) {
-      return nullptr;
-    }
-
-    return new EMEDecryptor(decoder,
-                            aCallback,
-                            mTaskQueue,
-                            mProxy);
   }
+
+  nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateH264Decoder(aConfig,
+                                                             aLayersBackend,
+                                                             aImageContainer,
+                                                             aVideoTaskQueue,
+                                                             aCallback));
+  if (!decoder) {
+    return nullptr;
+  }
+
+  nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
+                                                         aCallback,
+                                                         mTaskQueue,
+                                                         mProxy));
+  return emeDecoder.forget();
 }
 
-MediaDataDecoder*
+already_AddRefed<MediaDataDecoder>
 EMEDecoderModule::CreateAACDecoder(const AudioDecoderConfig& aConfig,
                                    MediaTaskQueue* aAudioTaskQueue,
                                    MediaDataDecoderCallback* aCallback)
@@ -228,19 +228,20 @@ EMEDecoderModule::CreateAACDecoder(const AudioDecoderConfig& aConfig,
   if (mCDMDecodesAudio) {
     NS_WARNING("Support for CDM that decodes audio not yet supported");
     return nullptr;
-  } else {
-    nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAACDecoder(aConfig,
-                                                              aAudioTaskQueue,
-                                                              aCallback));
-    if (!decoder) {
-      return nullptr;
-    }
-
-    return new EMEDecryptor(decoder,
-                            aCallback,
-                            mTaskQueue,
-                            mProxy);
   }
+
+  nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAACDecoder(aConfig,
+                                                            aAudioTaskQueue,
+                                                            aCallback));
+  if (!decoder) {
+    return nullptr;
+  }
+
+  nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
+                                                         aCallback,
+                                                         mTaskQueue,
+                                                         mProxy));
+  return emeDecoder.forget();
 }
 
 } // namespace mozilla

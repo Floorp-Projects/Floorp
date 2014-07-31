@@ -1807,3 +1807,15 @@ TestArray.addTest(
   }
 );
 
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that we return ArrayBuffers not ArrayBufferViews",
+  function() {
+    var that = this;
+
+    crypto.subtle.digest("SHA-256", tv.sha256.data)
+      .then(complete(that, function (x) {
+        return x instanceof ArrayBuffer;
+      }), error(that));
+  }
+);

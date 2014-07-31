@@ -203,6 +203,7 @@
     macro(y, y, "y") \
     macro(yield, yield, "yield") \
     macro(z, z, "z") \
+    macro(raw, raw, "raw") \
     /* Type names must be contiguous and ordered; see js::TypeName. */ \
     macro(undefined, undefined, "undefined") \
     macro(object, object, "object") \

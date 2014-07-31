@@ -105,7 +105,7 @@ function updateList() {
 
 function addApplication(aApp) {
   let list = document.getElementById("appgrid");
-  let manifest = new ManifestHelper(aApp.manifest, aApp.origin);
+  let manifest = new ManifestHelper(aApp.manifest, aApp.origin, aApp.manifestURL);
 
   let container = document.createElement("div");
   container.className = "app list-item";
