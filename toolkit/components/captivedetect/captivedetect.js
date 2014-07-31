@@ -121,7 +121,7 @@ function LoginObserver(captivePortalDetector) {
 
   // Public interface of LoginObserver
   let observer = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIHttpActivityOberver,
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIHttpActivityObserver,
                                            Ci.nsITimerCallback]),
 
     attach: function attach() {
