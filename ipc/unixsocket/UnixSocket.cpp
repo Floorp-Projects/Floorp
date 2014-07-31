@@ -182,25 +182,6 @@ private:
   CancelableTask* mDelayedConnectTask;
 };
 
-template<class T>
-class DeleteInstanceRunnable : public nsRunnable
-{
-public:
-  DeleteInstanceRunnable(T* aInstance)
-  : mInstance(aInstance)
-  { }
-
-  NS_IMETHOD Run()
-  {
-    delete mInstance;
-
-    return NS_OK;
-  }
-
-private:
-  T* mInstance;
-};
-
 class UnixSocketImplTask : public CancelableTask
 {
 public:
@@ -328,7 +309,8 @@ public:
     // that no more tasks reference it.
     impl->ShutdownOnIOThread();
 
-    nsRefPtr<nsIRunnable> r(new DeleteInstanceRunnable<UnixSocketImpl>(impl));
+    nsRefPtr<nsIRunnable> r =
+      new SocketIODeleteInstanceRunnable<UnixSocketImpl>(impl);
     nsresult rv = NS_DispatchToMainThread(r);
     NS_ENSURE_SUCCESS_VOID(rv);
   }
