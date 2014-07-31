@@ -157,10 +157,6 @@ mozNfc.prototype = {
   _window: null,
   nfcObject: null,
 
-  _wrap: function _wrap(obj) {
-    return Cu.cloneInto(obj, this._window);
-  },
-
   init: function init(aWindow) {
     debug("mozNfc init called");
     this._window = aWindow;
@@ -269,10 +265,10 @@ mozNfc.prototype = {
     this.session = sessionToken;
 
     debug("fire onpeerready sessionToken : " + sessionToken);
-    let detail = {
-      "detail":sessionToken
+    let eventData = {
+      "peer":this.getNFCPeer(sessionToken)
     };
-    let event = new this._window.CustomEvent("peerready", this._wrap(detail));
+    let event = new this._window.MozNFCPeerEvent("peerready", eventData);
     this.__DOM_IMPL__.dispatchEvent(event);
   },
 
