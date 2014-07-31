@@ -417,46 +417,6 @@ private:
   nsTArray<UnixSocketRawData*> mOutgoingQ;
 };
 
-//
-// Socket I/O tasks
-//
-
-/* |SocketIOTask| holds a reference to a Socket I/O object. It's
- * supposed to run on the I/O thread.
- */
-template <typename T>
-class SocketIOTask : public CancelableTask
-{
-public:
-  virtual ~SocketIOTask()
-  { }
-
-  T* GetIO() const
-  {
-    return mIO;
-  }
-
-  void Cancel() MOZ_OVERRIDE
-  {
-    mIO = nullptr;
-  }
-
-  bool IsCanceled() const
-  {
-    return !mIO;
-  }
-
-protected:
-  SocketIOTask(T* aIO)
-  : mIO(aIO)
-  {
-    MOZ_ASSERT(mIO);
-  }
-
-private:
-  T* mIO;
-};
-
 }
 }
 
