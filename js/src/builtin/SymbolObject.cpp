@@ -122,12 +122,12 @@ SymbolObject::construct(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-// Stand-in for Symbol.prototype[@@toPrimitive], ES6 rev 25 (2014 May 22) 19.4.3.4
+// Stand-in for Symbol.prototype[@@toPrimitive], ES6 rev 26 (2014 Jul 18) 19.4.3.4
 bool
-SymbolObject::convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
+SymbolObject::convert(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SYMBOL_TO_PRIMITIVE);
-    return false;
+    vp.setSymbol(obj->as<SymbolObject>().unbox());
+    return true;
 }
 
 // ES6 rev 24 (2014 Apr 27) 19.4.2.2

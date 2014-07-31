@@ -3409,7 +3409,8 @@ class MToDouble
         setMovable();
 
         // An object might have "valueOf", which means it is effectful.
-        if (def->mightBeType(MIRType_Object))
+        // ToNumber(symbol) throws.
+        if (def->mightBeType(MIRType_Object) || def->mightBeType(MIRType_Symbol))
             setGuard();
     }
 
@@ -3484,7 +3485,8 @@ class MToFloat32
         setMovable();
 
         // An object might have "valueOf", which means it is effectful.
-        if (def->mightBeType(MIRType_Object))
+        // ToNumber(symbol) throws.
+        if (def->mightBeType(MIRType_Object) || def->mightBeType(MIRType_Symbol))
             setGuard();
     }
 
@@ -3598,7 +3600,8 @@ class MToInt32
         setMovable();
 
         // An object might have "valueOf", which means it is effectful.
-        if (def->mightBeType(MIRType_Object))
+        // ToNumber(symbol) throws.
+        if (def->mightBeType(MIRType_Object) || def->mightBeType(MIRType_Symbol))
             setGuard();
     }
 
@@ -3659,7 +3662,10 @@ class MTruncateToInt32 : public MUnaryInstruction
         setMovable();
 
         // An object might have "valueOf", which means it is effectful.
-        if (def->mightBeType(MIRType_Object))
+        // ToInt32(symbol) throws.
+        MOZ_ASSERT(def->type() != MIRType_Object);
+        MOZ_ASSERT(def->type() != MIRType_Symbol);
+        if (def->mightBeType(MIRType_Object) || def->mightBeType(MIRType_Symbol))
             setGuard();
     }
 
