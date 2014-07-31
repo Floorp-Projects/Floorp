@@ -173,13 +173,38 @@ private:
   CancelableTask* mDelayedConnectTask;
 };
 
-class SocketSendTask : public SocketIOTask<UnixSocketImpl>
+class UnixSocketImplTask : public CancelableTask
+{
+public:
+  UnixSocketImpl* GetImpl() const
+  {
+    return mImpl;
+  }
+  void Cancel() MOZ_OVERRIDE
+  {
+    mImpl = nullptr;
+  }
+  bool IsCanceled() const
+  {
+    return !mImpl;
+  }
+protected:
+  UnixSocketImplTask(UnixSocketImpl* aImpl)
+  : mImpl(aImpl)
+  {
+    MOZ_ASSERT(mImpl);
+  }
+private:
+  UnixSocketImpl* mImpl;
+};
+
+class SocketSendTask : public UnixSocketImplTask
 {
 public:
   SocketSendTask(UnixSocketImpl* aImpl,
                  UnixSocketConsumer* aConsumer,
                  UnixSocketRawData* aData)
-  : SocketIOTask<UnixSocketImpl>(aImpl)
+  : UnixSocketImplTask(aImpl)
   , mConsumer(aConsumer)
   , mData(aData)
   {
@@ -191,7 +216,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
 
-    UnixSocketImpl* impl = GetIO();
+    UnixSocketImpl* impl = GetImpl();
     MOZ_ASSERT(!impl->IsShutdownOnIOThread());
 
     impl->Send(mData);
@@ -201,42 +226,42 @@ private:
   UnixSocketRawData* mData;
 };
 
-class SocketListenTask : public SocketIOTask<UnixSocketImpl>
+class SocketListenTask : public UnixSocketImplTask
 {
 public:
   SocketListenTask(UnixSocketImpl* aImpl)
-  : SocketIOTask<UnixSocketImpl>(aImpl)
+  : UnixSocketImplTask(aImpl)
   { }
 
   void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
     if (!IsCanceled()) {
-      GetIO()->Listen();
+      GetImpl()->Listen();
     }
   }
 };
 
-class SocketConnectTask : public SocketIOTask<UnixSocketImpl>
+class SocketConnectTask : public UnixSocketImplTask
 {
 public:
   SocketConnectTask(UnixSocketImpl* aImpl)
-  : SocketIOTask<UnixSocketImpl>(aImpl)
+  : UnixSocketImplTask(aImpl)
   { }
 
   void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
-    GetIO()->Connect();
+    GetImpl()->Connect();
   }
 };
 
-class SocketDelayedConnectTask : public SocketIOTask<UnixSocketImpl>
+class SocketDelayedConnectTask : public UnixSocketImplTask
 {
 public:
   SocketDelayedConnectTask(UnixSocketImpl* aImpl)
-  : SocketIOTask<UnixSocketImpl>(aImpl)
+  : UnixSocketImplTask(aImpl)
   { }
 
   void Run() MOZ_OVERRIDE
@@ -245,7 +270,7 @@ public:
     if (IsCanceled()) {
       return;
     }
-    UnixSocketImpl* impl = GetIO();
+    UnixSocketImpl* impl = GetImpl();
     if (impl->IsShutdownOnMainThread()) {
       return;
     }
@@ -254,11 +279,11 @@ public:
   }
 };
 
-class ShutdownSocketTask : public SocketIOTask<UnixSocketImpl>
+class ShutdownSocketTask : public UnixSocketImplTask
 {
 public:
   ShutdownSocketTask(UnixSocketImpl* aImpl)
-  : SocketIOTask<UnixSocketImpl>(aImpl)
+  : UnixSocketImplTask(aImpl)
   { }
 
   void Run() MOZ_OVERRIDE
@@ -266,7 +291,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
 
-    UnixSocketImpl* impl = GetIO();
+    UnixSocketImpl* impl = GetImpl();
 
     // At this point, there should be no new events on the IO thread after this
     // one with the possible exception of a SocketListenTask that
