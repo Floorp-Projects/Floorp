@@ -639,7 +639,7 @@ struct DescribeCodeAddressLock
   static bool IsLocked() { return gStateLock->IsLocked(); }
 };
 
-typedef CodeAddressService<StringTable, StringAlloc, Writer, DescribeCodeAddressLock> DMDLocationService;
+typedef CodeAddressService<StringTable, StringAlloc, Writer, DescribeCodeAddressLock> CodeAddressService;
 
 //---------------------------------------------------------------------------
 // Stack traces
@@ -673,7 +673,7 @@ public:
     qsort(mPcs, mLength, sizeof(mPcs[0]), StackTrace::Cmp);
   }
 
-  void Print(const Writer& aWriter, DMDLocationService* aLocService) const;
+  void Print(const Writer& aWriter, CodeAddressService* aLocService) const;
 
   // Hash policy.
 
@@ -718,7 +718,7 @@ static StackTraceTable* gStackTraceTable = nullptr;
 static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
 
 void
-StackTrace::Print(const Writer& aWriter, DMDLocationService* aLocService) const
+StackTrace::Print(const Writer& aWriter, CodeAddressService* aLocService) const
 {
   if (mLength == 0) {
     W("    (empty)\n");  // StackTrace::Get() must have failed
@@ -1338,7 +1338,7 @@ public:
     mRecordSize.Add(aB);
   }
 
-  void Print(const Writer& aWriter, DMDLocationService* aLocService,
+  void Print(const Writer& aWriter, CodeAddressService* aLocService,
              uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
              size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
              size_t aTotalUsableSize, bool aShowCategoryPercentage,
@@ -1356,7 +1356,7 @@ public:
 typedef js::HashSet<Record, Record, InfallibleAllocPolicy> RecordTable;
 
 void
-Record::Print(const Writer& aWriter, DMDLocationService* aLocService,
+Record::Print(const Writer& aWriter, CodeAddressService* aLocService,
               uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
               size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
               size_t aTotalUsableSize, bool aShowCategoryPercentage,
@@ -1690,7 +1690,7 @@ ReportOnAlloc(const void* aPtr)
 //---------------------------------------------------------------------------
 
 static void
-PrintSortedRecords(const Writer& aWriter, DMDLocationService* aLocService,
+PrintSortedRecords(const Writer& aWriter, CodeAddressService* aLocService,
                    int (*aCmp)(const void*, const void*),
                    const char* aStr, const char* astr,
                    const RecordTable& aRecordTable,
@@ -1829,7 +1829,7 @@ public:
   virtual RecordTable* ProcessBlock(const Block& aBlock) = 0;
 
   virtual void PrintRecords(const Writer& aWriter,
-                            DMDLocationService* aLocService) const = 0;
+                            CodeAddressService* aLocService) const = 0;
   virtual void PrintSummary(const Writer& aWriter, bool aShowTilde) const = 0;
   virtual void PrintStats(const Writer& aWriter) const = 0;
 
@@ -1896,7 +1896,7 @@ public:
   }
 
   virtual void PrintRecords(const Writer& aWriter,
-                            DMDLocationService* aLocService) const
+                            CodeAddressService* aLocService) const
   {
     PrintSortedRecords(aWriter, aLocService, Record::CmpByUsable,
                        "Twice-reported", "twice-reported",
@@ -1989,7 +1989,7 @@ public:
   }
 
   virtual void PrintRecords(const Writer& aWriter,
-                            DMDLocationService* aLocService) const
+                            CodeAddressService* aLocService) const
   {
     size_t totalUsableSize = mLive.mUsableSize;
     PrintSortedRecords(aWriter, aLocService, Record::CmpByUsable,
@@ -2056,7 +2056,7 @@ AnalyzeImpl(Analyzer *aAnalyzer, const Writer& aWriter)
   W("}\n\n");
 
   // Allocate this on the heap instead of the stack because it's fairly large.
-  DMDLocationService* locService = InfallibleAllocPolicy::new_<DMDLocationService>();
+  CodeAddressService* locService = InfallibleAllocPolicy::new_<CodeAddressService>();
 
   aAnalyzer->PrintRecords(aWriter, locService);
 
