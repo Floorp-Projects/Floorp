@@ -48,6 +48,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditableNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditor)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndOfAddedTextCache.mContainerNode)
 
   tmp->mUpdatePreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
   tmp->mESM = nullptr;
@@ -60,6 +61,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IMEContentObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditableNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEndOfAddedTextCache.mContainerNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IMEContentObserver)
@@ -643,6 +645,8 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "character data changed for non-text node");
 
+  mEndOfAddedTextCache.Clear();
+
   bool causedByComposition = IsEditorHandlingEventForComposition();
   if (!mTextChangeData.mStored && causedByComposition &&
       !mUpdatePreference.WantChangesCausedByComposition()) {
@@ -677,11 +681,18 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   }
 
   uint32_t offset = 0;
-  nsresult rv =
-    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContainer,
-                                                  aStartIndex, &offset,
-                                                  LINE_BREAK_TYPE_NATIVE);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  nsresult rv = NS_OK;
+  if (!mEndOfAddedTextCache.Match(aContainer, aStartIndex)) {
+    mEndOfAddedTextCache.Clear();
+    rv = ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContainer,
+                                                       aStartIndex, &offset,
+                                                       LINE_BREAK_TYPE_NATIVE);
+    if (NS_WARN_IF(NS_FAILED((rv)))) {
+      return;
+    }
+  } else {
+    offset = mEndOfAddedTextCache.mFlatTextLength;
+  }
 
   // get offset at the end of the last added node
   nsIContent* childAtStart = aContainer->GetChildAt(aStartIndex);
@@ -689,7 +700,16 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   rv = ContentEventHandler::GetFlatTextOffsetOfRange(childAtStart, aContainer,
                                                      aEndIndex, &addingLength,
                                                      LINE_BREAK_TYPE_NATIVE);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  if (NS_WARN_IF(NS_FAILED((rv)))) {
+    mEndOfAddedTextCache.Clear();
+    return;
+  }
+
+  // If multiple lines are being inserted in an HTML editor, next call of
+  // NotifyContentAdded() is for adding next node.  Therefore, caching the text
+  // length can skip to compute the text length before the adding node and
+  // before of it.
+  mEndOfAddedTextCache.Cache(aContainer, aEndIndex, offset + addingLength);
 
   if (!addingLength) {
     return;
@@ -727,6 +747,8 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
                                    int32_t aIndexInContainer,
                                    nsIContent* aPreviousSibling)
 {
+  mEndOfAddedTextCache.Clear();
+
   bool causedByComposition = IsEditorHandlingEventForComposition();
   if (!mTextChangeData.mStored && causedByComposition &&
       !mUpdatePreference.WantChangesCausedByComposition()) {
@@ -791,6 +813,8 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
                                      nsIAtom* aAttribute,
                                      int32_t aModType)
 {
+  mEndOfAddedTextCache.Clear();
+
   bool causedByComposition = IsEditorHandlingEventForComposition();
   if (!mTextChangeData.mStored && causedByComposition &&
       !mUpdatePreference.WantChangesCausedByComposition()) {
@@ -823,6 +847,7 @@ NS_IMETHODIMP
 IMEContentObserver::EditAction()
 {
   mIsEditorInTransaction = false;
+  mEndOfAddedTextCache.Clear();
   FlushMergeableNotifications();
   return NS_OK;
 }
@@ -831,6 +856,7 @@ NS_IMETHODIMP
 IMEContentObserver::BeforeEditAction()
 {
   mIsEditorInTransaction = true;
+  mEndOfAddedTextCache.Clear();
   return NS_OK;
 }
 
@@ -838,6 +864,7 @@ NS_IMETHODIMP
 IMEContentObserver::CancelEditAction()
 {
   mIsEditorInTransaction = false;
+  mEndOfAddedTextCache.Clear();
   FlushMergeableNotifications();
   return NS_OK;
 }
