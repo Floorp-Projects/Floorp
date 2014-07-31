@@ -605,14 +605,14 @@ public abstract class GeckoApp
 
         } else if ("Toast:Show".equals(event)) {
             final String msg = message.getString("message");
+            final String duration = message.getString("duration");
             final NativeJSObject button = message.optObject("button", null);
             if (button != null) {
                 final String label = button.optString("label", "");
                 final String icon = button.optString("icon", "");
                 final String id = button.optString("id", "");
-                showButtonToast(msg, label, icon, id);
+                showButtonToast(msg, duration, label, icon, id);
             } else {
-                final String duration = message.getString("duration");
                 showNormalToast(msg, duration);
             }
 
@@ -788,12 +788,14 @@ public abstract class GeckoApp
         return mToast;
     }
 
-    void showButtonToast(final String message, final String buttonText,
-                         final String buttonIcon, final String buttonId) {
+    void showButtonToast(final String message, final String duration,
+                         final String buttonText, final String buttonIcon,
+                         final String buttonId) {
         BitmapUtils.getDrawable(GeckoApp.this, buttonIcon, new BitmapUtils.BitmapLoader() {
             @Override
             public void onBitmapFound(final Drawable d) {
-                getButtonToast().show(false, message, buttonText, d, new ButtonToast.ToastListener() {
+                final int toastDuration = duration.equals("long") ? ButtonToast.LENGTH_LONG : ButtonToast.LENGTH_SHORT;
+                getButtonToast().show(false, message, toastDuration ,buttonText, d, new ButtonToast.ToastListener() {
                     @Override
                     public void onButtonClicked() {
                         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Click", buttonId));
