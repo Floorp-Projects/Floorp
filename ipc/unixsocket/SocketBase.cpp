@@ -122,5 +122,34 @@ SocketConsumerBase::SetConnectionStatus(
   mConnectionStatus = aConnectionStatus;
 }
 
+//
+// SocketIOBase
+//
+
+SocketIOBase::~SocketIOBase()
+{ }
+
+void
+SocketIOBase::EnqueueData(UnixSocketRawData* aData)
+{
+  if (!aData->mSize) {
+    delete aData; // delete empty data immediately
+    return;
+  }
+  mOutgoingQ.AppendElement(aData);
+}
+
+bool
+SocketIOBase::HasPendingData() const
+{
+  return !mOutgoingQ.IsEmpty();
+}
+
+SocketIOBase::SocketIOBase(size_t aMaxReadSize)
+  : mMaxReadSize(aMaxReadSize)
+{
+  MOZ_ASSERT(mMaxReadSize);
+}
+
 }
 }
