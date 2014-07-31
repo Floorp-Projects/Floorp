@@ -4,6 +4,11 @@
 
 import time
 
+try:
+    import blessings
+except ImportError:
+    blessings = None
+
 import base
 
 def format_seconds(total):
@@ -12,8 +17,15 @@ def format_seconds(total):
     return '%2d:%05.2f' % (minutes, seconds)
 
 
-class BaseMachFormatter(base.BaseFormatter):
-    def __init__(self, start_time=None, write_interval=False, write_times=True):
+class MachFormatter(base.BaseFormatter):
+    def __init__(self, start_time=None, write_interval=False, write_times=True,
+                 terminal=None, disable_colors=False):
+
+        if disable_colors:
+            terminal = None
+        elif terminal is None and blessings is not None:
+            terminal = blessings.Terminal()
+
         if start_time is None:
             start_time = time.time()
         start_time = int(start_time * 1000)
@@ -23,20 +35,42 @@ class BaseMachFormatter(base.BaseFormatter):
         self.status_buffer = {}
         self.has_unexpected = {}
         self.last_time = None
+        self.terminal = terminal
 
     def __call__(self, data):
         s = base.BaseFormatter.__call__(self, data)
-        if s is not None:
-            return "%s %s\n" % (self.generic_formatter(data), s)
+        if s is None:
+            return
+
+        time = format_seconds(self._time(data))
+        action = data["action"].upper()
+        thread = data["thread"]
+
+        if self.terminal is not None:
+            test = self._get_test_id(data)
+
+            time = self.terminal.blue(time)
+
+            color = None
+
+            if data["action"] == "test_end":
+                if "expected" not in data and not self.has_unexpected[test]:
+                    color = self.terminal.green
+                else:
+                    color = self.terminal.red
+            elif data["action"] in ("suite_start", "suite_end", "test_start"):
+                color = self.terminal.yellow
+
+            if color is not None:
+                action = color(action)
+
+        return "%s %s: %s %s\n" % (time, action, thread, s)
 
     def _get_test_id(self, data):
         test_id = data.get("test")
         if isinstance(test_id, list):
             test_id = tuple(test_id)
         return test_id
-
-    def generic_formatter(self, data):
-        return "%s: %s" % (data["action"].upper(), data["thread"])
 
     def suite_start(self, data):
         return "%i" % len(data["tests"])
@@ -102,10 +136,20 @@ class BaseMachFormatter(base.BaseFormatter):
                                              data["command"])
 
     def log(self, data):
-        if data.get('component'):
-            return " ".join([data["component"], data["level"], data["message"]])
+        level = data.get("level").upper()
 
-        return "%s %s" % (data["level"], data["message"])
+        if self.terminal is not None:
+            if level in ("CRITICAL", "ERROR"):
+                level = self.terminal.red(level)
+            elif level == "WARNING":
+                level = self.terminal.yellow(level)
+            elif level == "INFO":
+                level = self.terminal.blue(level)
+
+        if data.get('component'):
+            return " ".join([data["component"], level, data["message"]])
+
+        return "%s %s" % (level, data["message"])
 
     def _get_subtest_data(self, data):
         test = self._get_test_id(data)
@@ -121,71 +165,3 @@ class BaseMachFormatter(base.BaseFormatter):
 
         return t / 1000.
 
-
-class MachFormatter(BaseMachFormatter):
-    """Formatter designed for producing human-redable output
-    when tests are running. This is principally intended for integration with
-    the ``mach`` command dispatch framework.
-
-    :param start_time: time.time() at which the testrun started
-    :param write_interval: bool indicating whether to include the interval since the
-                           last message
-    :param write_times: bool indicating whether to include the time since the testrun
-                        started.
-    """
-    def __call__(self, data):
-        s = BaseMachFormatter.__call__(self, data)
-        if s is not None:
-            return "%s %s" % (format_seconds(self._time(data)), s)
-
-
-class MachTerminalFormatter(BaseMachFormatter):
-    """Formatter designed to produce coloured output in a terminal when tests are
-    running. This is principally intended for integration with
-    the ``mach`` command dispatch framework.
-
-    :param start_time: time.time() at which the testrun started
-    :param write_interval: bool indicating whether to include the interval since the
-                           last message
-    :param write_times: bool indicating whether to include the time since the testrun
-                        started.
-    :param terminal: Terminal object from mach.
-    """
-    def __init__(self, start_time=None, write_interval=False, write_times=True,
-                 terminal=None):
-        self.terminal = terminal
-        BaseMachFormatter.__init__(self,
-                                   start_time=start_time,
-                                   write_interval=write_interval,
-                                   write_times=write_times)
-
-    def __call__(self, data):
-        s = BaseMachFormatter.__call__(self, data)
-        if s is not None:
-            t = self.terminal.blue(format_seconds(self._time(data)))
-
-            return '%s %s' % (t, self._colorize(data, s))
-
-    def _colorize(self, data, s):
-        if self.terminal is None:
-            return s
-
-        test = self._get_test_id(data)
-
-        color = None
-        len_action = len(data["action"])
-
-        if data["action"] == "test_end":
-            if "expected" not in data and not self.has_unexpected[test]:
-                color = self.terminal.green
-            else:
-                color = self.terminal.red
-        elif data["action"] in ("suite_start", "suite_end", "test_start"):
-            color = self.terminal.yellow
-
-        if color is not None:
-            result = color(s[:len_action]) + s[len_action:]
-        else:
-            result = s
-
-        return result

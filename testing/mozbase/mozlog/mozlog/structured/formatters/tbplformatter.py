@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from machformatter import BaseMachFormatter
+from .base import BaseFormatter
 
-class TbplFormatter(BaseMachFormatter):
+class TbplFormatter(BaseFormatter):
     """Formatter that formats logs in the legacy formatting format used by TBPL
     This is intended to be used to preserve backward compatibility with existing tools
     hand-parsing this format.
