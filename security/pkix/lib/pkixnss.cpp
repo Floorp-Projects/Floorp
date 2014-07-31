@@ -39,11 +39,11 @@ namespace mozilla { namespace pkix {
 typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey> ScopedSECKeyPublicKey;
 
 Result
-CheckPublicKeySize(InputBuffer subjectPublicKeyInfo,
+CheckPublicKeySize(Input subjectPublicKeyInfo,
                    /*out*/ ScopedSECKeyPublicKey& publicKey)
 {
   SECItem subjectPublicKeyInfoSECItem =
-    UnsafeMapInputBufferToSECItem(subjectPublicKeyInfo);
+    UnsafeMapInputToSECItem(subjectPublicKeyInfo);
   ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
     spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfoSECItem));
   if (!spki) {
@@ -82,7 +82,7 @@ CheckPublicKeySize(InputBuffer subjectPublicKeyInfo,
 }
 
 Result
-CheckPublicKey(InputBuffer subjectPublicKeyInfo)
+CheckPublicKey(Input subjectPublicKeyInfo)
 {
   ScopedSECKeyPublicKey unused;
   return CheckPublicKeySize(subjectPublicKeyInfo, unused);
@@ -90,7 +90,7 @@ CheckPublicKey(InputBuffer subjectPublicKeyInfo)
 
 Result
 VerifySignedData(const SignedDataWithSignature& sd,
-                 InputBuffer subjectPublicKeyInfo, void* pkcs11PinArg)
+                 Input subjectPublicKeyInfo, void* pkcs11PinArg)
 {
   // See bug 921585.
   if (sd.data.GetLength() >
@@ -155,8 +155,8 @@ VerifySignedData(const SignedDataWithSignature& sd,
 
   // The static_cast is safe according to the check above that references
   // bug 921585.
-  SECItem dataSECItem(UnsafeMapInputBufferToSECItem(sd.data));
-  SECItem signatureSECItem(UnsafeMapInputBufferToSECItem(sd.signature));
+  SECItem dataSECItem(UnsafeMapInputToSECItem(sd.data));
+  SECItem signatureSECItem(UnsafeMapInputToSECItem(sd.signature));
   SECStatus srv = VFY_VerifyDataDirect(dataSECItem.data,
                                        static_cast<int>(dataSECItem.len),
                                        pubKey.get(), &signatureSECItem,
@@ -170,7 +170,7 @@ VerifySignedData(const SignedDataWithSignature& sd,
 }
 
 Result
-DigestBuf(InputBuffer item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
+DigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
 {
   static_assert(TrustDomain::DIGEST_LENGTH == SHA1_LENGTH,
                 "TrustDomain::DIGEST_LENGTH must be 20 (SHA-1 digest length)");
@@ -178,7 +178,7 @@ DigestBuf(InputBuffer item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
     PR_NOT_REACHED("invalid hash length");
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
-  SECItem itemSECItem = UnsafeMapInputBufferToSECItem(item);
+  SECItem itemSECItem = UnsafeMapInputToSECItem(item);
   if (itemSECItem.len >
         static_cast<decltype(itemSECItem.len)>(
           std::numeric_limits<int32_t>::max())) {

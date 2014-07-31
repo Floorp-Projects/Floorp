@@ -34,53 +34,53 @@
 
 namespace mozilla { namespace pkix {
 
-class Input;
+class Reader;
 
-// An InputBuffer is a safety-oriented immutable weak reference to a array of
-// bytes of a known size. The data can only be legally accessed by constructing
-// an Input object, which guarantees all accesses to the data are memory safe.
-// Neither InputBuffer not Input provide any facilities for modifying the data
+// An Input is a safety-oriented immutable weak reference to a array of bytes
+// of a known size. The data can only be legally accessed by constructing a
+// Reader object, which guarantees all accesses to the data are memory safe.
+// Neither Input not Reader provide any facilities for modifying the data
 // they reference.
 //
-// InputBuffers are small and should usually be passed by value, not by
-// reference, though for inline functions the distinction doesn't matter.
+// Inputs are small and should usually be passed by value, not by reference,
+// though for inline functions the distinction doesn't matter:
 //
-//    Result GoodExample(InputBuffer input);
-//    Result BadExample(const InputBuffer& input);
+//    Result GoodExample(Input input);
+//    Result BadExample(const Input& input);
 //    Result WorseExample(const uint8_t* input, size_t len);
 //
 // Note that in the example, GoodExample has the same performance
 // characteristics as WorseExample, but with much better safety guarantees.
-class InputBuffer
+class Input
 {
 public:
-  // This constructor is useful for input buffers that are statically known to
-  // be of a fixed size, e.g.:
+  // This constructor is useful for inputs that are statically known to be of a
+  // fixed size, e.g.:
   //
   //   static const uint8_t EXPECTED_BYTES[] = { 0x00, 0x01, 0x02 };
-  //   const InputBuffer expected(EXPECTED_BYTES);
+  //   const Input expected(EXPECTED_BYTES);
   //
   // This is equivalent to (and preferred over):
   //
   //   static const uint8_t EXPECTED_BYTES[] = { 0x00, 0x01, 0x02 };
-  //   InputBuffer expected;
+  //   Input expected;
   //   Result rv = expected.Init(EXPECTED_BYTES, sizeof EXPECTED_BYTES);
   template <uint16_t N>
-  explicit InputBuffer(const uint8_t (&data)[N])
+  explicit Input(const uint8_t (&data)[N])
     : data(data)
     , len(N)
   {
   }
 
-  // Construct a valid, empty, Init-able InputBuffer.
-  InputBuffer()
+  // Construct a valid, empty, Init-able Input.
+  Input()
     : data(nullptr)
     , len(0u)
   {
   }
 
-  // Initialize the input buffer. data must be non-null and len must be less
-  // than 65536. Init may not be called more than once.
+  // Initialize the input. data must be non-null and len must be less than
+  // 65536. Init may not be called more than once.
   Result Init(const uint8_t* data, size_t len)
   {
     if (this->data) {
@@ -98,18 +98,18 @@ public:
     return Success;
   }
 
-  // Initialize the input buffer to be equivalent to the given input buffer.
-  // Init may not be called more than once.
+  // Initialize the input to be equivalent to the given input. Init may not be
+  // called more than once.
   //
   // This is basically operator=, but it wasn't given that name because
   // normally callers do not check the result of operator=, and normally
   // operator= can be used multiple times.
-  Result Init(InputBuffer other)
+  Result Init(Input other)
   {
     return Init(other.data, other.len);
   }
 
-  // Returns the length of the buffer.
+  // Returns the length of the input.
   //
   // Having the return type be uint16_t instead of size_t avoids the need for
   // callers to ensure that the result is small enough.
@@ -123,36 +123,36 @@ private:
   const uint8_t* data;
   size_t len;
 
-  void operator=(const InputBuffer&) /* = delete */; // Use Init instead.
+  void operator=(const Input&) /* = delete */; // Use Init instead.
 };
 
 inline bool
-InputBuffersAreEqual(const InputBuffer& a, const InputBuffer& b)
+InputsAreEqual(const Input& a, const Input& b)
 {
   return a.GetLength() == b.GetLength() &&
          !std::memcmp(a.UnsafeGetData(), b.UnsafeGetData(), a.GetLength());
 }
 
-// An Input is a cursor/iterator through the contents of an InputBuffer,
-// designed to maximize safety during parsing while minimizing the performance
-// cost of that safety. In particular, all methods do strict bounds checking to
-// ensure buffer overflows are impossible, and they are all inline so that the
+// An Reader is a cursor/iterator through the contents of an Input, designed to
+// maximize safety during parsing while minimizing the performance cost of that
+// safety. In particular, all methods do strict bounds checking to ensure
+// buffer overflows are impossible, and they are all inline so that the
 // compiler can coalesce as many of those checks together as possible.
 //
-// In general, Input allows for one byte of lookahead and no backtracking.
+// In general, Reader allows for one byte of lookahead and no backtracking.
 // However, the Match* functions internally may have more lookahead.
-class Input
+class Reader
 {
 public:
-  Input()
+  Reader()
     : input(nullptr)
     , end(nullptr)
   {
   }
 
-  explicit Input(InputBuffer buffer)
-    : input(buffer.UnsafeGetData())
-    , end(buffer.UnsafeGetData() + buffer.GetLength())
+  explicit Reader(Input input)
+    : input(input.UnsafeGetData())
+    , end(input.UnsafeGetData() + input.GetLength())
   {
   }
 
@@ -234,13 +234,13 @@ public:
     return Success;
   }
 
-  Result Skip(uint16_t len, Input& skippedInput)
+  Result Skip(uint16_t len, Reader& skipped)
   {
     Result rv = EnsureLength(len);
     if (rv != Success) {
       return rv;
     }
-    rv = skippedInput.Init(input, len);
+    rv = skipped.Init(input, len);
     if (rv != Success) {
       return rv;
     }
@@ -248,13 +248,13 @@ public:
     return Success;
   }
 
-  Result Skip(uint16_t len, InputBuffer& skippedItem)
+  Result Skip(uint16_t len, Input& skipped)
   {
     Result rv = EnsureLength(len);
     if (rv != Success) {
       return rv;
     }
-    rv = skippedItem.Init(input, len);
+    rv = skipped.Init(input, len);
     if (rv != Success) {
       return rv;
     }
@@ -280,16 +280,16 @@ public:
   class Mark
   {
   private:
-    friend class Input;
-    Mark(const Input& input, const uint8_t* mark) : input(input), mark(mark) { }
-    const Input& input;
+    friend class Reader;
+    Mark(const Reader& input, const uint8_t* mark) : input(input), mark(mark) { }
+    const Reader& input;
     const uint8_t* const mark;
     void operator=(const Mark&) /* = delete */;
   };
 
   Mark GetMark() const { return Mark(*this, input); }
 
-  Result GetInputBuffer(const Mark& mark, /*out*/ InputBuffer& item)
+  Result GetInput(const Mark& mark, /*out*/ Input& item)
   {
     if (&mark.input != this || mark.mark > input) {
       PR_NOT_REACHED("invalid mark");
@@ -313,8 +313,8 @@ private:
   const uint8_t* input;
   const uint8_t* end;
 
-  Input(const Input&) /* = delete */;
-  void operator=(const Input&) /* = delete */;
+  Reader(const Reader&) /* = delete */;
+  void operator=(const Reader&) /* = delete */;
 };
 
 } } // namespace mozilla::pkix

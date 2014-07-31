@@ -34,7 +34,7 @@ using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 
 // The result is owned by the arena
-static InputBuffer
+static Input
 CreateCert(PLArenaPool* arena, const char* issuerStr,
            const char* subjectStr, EndEntityOrCA endEntityOrCA,
            /*optional*/ SECKEYPrivateKey* issuerKey,
@@ -71,7 +71,7 @@ CreateCert(PLArenaPool* arena, const char* issuerStr,
                                            nullptr, false, true);
     EXPECT_TRUE(*subjectCert);
   }
-  InputBuffer result;
+  Input result;
   EXPECT_EQ(Success, result.Init(certDER->data, certDER->len));
   return result;
 }
@@ -110,14 +110,14 @@ public:
 
 private:
   virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
-                              InputBuffer candidateCert,
+                              Input candidateCert,
                               /*out*/ TrustLevel& trustLevel)
   {
-    InputBuffer rootDER;
+    Input rootDER;
     Result rv = rootDER.Init(certChainTail[0]->derCert.data,
                              certChainTail[0]->derCert.len);
     EXPECT_EQ(Success, rv);
-    if (InputBuffersAreEqual(candidateCert, rootDER)) {
+    if (InputsAreEqual(candidateCert, rootDER)) {
       trustLevel = TrustLevel::TrustAnchor;
     } else {
       trustLevel = TrustLevel::InheritsTrust;
@@ -125,11 +125,11 @@ private:
     return Success;
   }
 
-  virtual Result FindIssuer(InputBuffer encodedIssuerName,
+  virtual Result FindIssuer(Input encodedIssuerName,
                             IssuerChecker& checker, PRTime time)
   {
     SECItem encodedIssuerNameSECItem =
-      UnsafeMapInputBufferToSECItem(encodedIssuerName);
+      UnsafeMapInputToSECItem(encodedIssuerName);
     ScopedCERTCertList
       candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
                                             &encodedIssuerNameSECItem, time,
@@ -138,7 +138,7 @@ private:
       for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
            !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
         bool keepGoing;
-        InputBuffer derCert;
+        Input derCert;
         Result rv = derCert.Init(n->cert->derCert.data, n->cert->derCert.len);
         EXPECT_EQ(Success, rv);
         if (rv != Success) {
@@ -159,8 +159,8 @@ private:
   }
 
   virtual Result CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
-                                 /*optional*/ const InputBuffer*,
-                                 /*optional*/ const InputBuffer*)
+                                 /*optional*/ const Input*,
+                                 /*optional*/ const Input*)
   {
     return Success;
   }
@@ -171,20 +171,20 @@ private:
   }
 
   virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
-                                  InputBuffer subjectPublicKeyInfo)
+                                  Input subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
                                              nullptr);
   }
 
-  virtual Result DigestBuf(InputBuffer item, /*out*/ uint8_t* digestBuf,
+  virtual Result DigestBuf(Input item, /*out*/ uint8_t *digestBuf,
                            size_t digestBufLen)
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual Result CheckPublicKey(InputBuffer subjectPublicKeyInfo)
+  virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
   }
@@ -223,7 +223,7 @@ protected:
 TEST_F(pkixbuild, MaxAcceptableCertChainLength)
 {
   {
-    InputBuffer certDER;
+    Input certDER;
     ASSERT_EQ(Success, certDER.Init(trustDomain.GetLeafCACert()->derCert.data,
                                     trustDomain.GetLeafCACert()->derCert.len));
     ASSERT_EQ(Success,
@@ -238,11 +238,11 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
   {
     ScopedSECKEYPrivateKey privateKey;
     ScopedCERTCertificate cert;
-    InputBuffer certDER(CreateCert(arena.get(),
-                                   trustDomain.GetLeafCACert()->subjectName,
-                                   "CN=Direct End-Entity",
-                                   EndEntityOrCA::MustBeEndEntity,
-                                   trustDomain.leafCAKey.get(), privateKey));
+    Input certDER(CreateCert(arena.get(),
+                             trustDomain.GetLeafCACert()->subjectName,
+                             "CN=Direct End-Entity",
+                             EndEntityOrCA::MustBeEndEntity,
+                             trustDomain.leafCAKey.get(), privateKey));
     ASSERT_EQ(Success,
               BuildCertChain(trustDomain, certDER, now,
                              EndEntityOrCA::MustBeEndEntity,
@@ -263,11 +263,11 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
   ScopedCERTCertificate caCert;
 
   {
-    InputBuffer cert(CreateCert(arena.get(),
-                                trustDomain.GetLeafCACert()->subjectName,
-                                caCertName, EndEntityOrCA::MustBeCA,
-                                trustDomain.leafCAKey.get(), caPrivateKey,
-                                &caCert));
+    Input cert(CreateCert(arena.get(),
+                          trustDomain.GetLeafCACert()->subjectName,
+                          caCertName, EndEntityOrCA::MustBeCA,
+                          trustDomain.leafCAKey.get(), caPrivateKey,
+                          &caCert));
     ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
               BuildCertChain(trustDomain, cert, now,
                              EndEntityOrCA::MustBeCA,
@@ -279,10 +279,10 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
 
   {
     ScopedSECKEYPrivateKey privateKey;
-    InputBuffer cert(CreateCert(arena.get(), caCertName,
-                                "CN=End-Entity Too Far",
-                                EndEntityOrCA::MustBeEndEntity,
-                                caPrivateKey.get(), privateKey));
+    Input cert(CreateCert(arena.get(), caCertName,
+                          "CN=End-Entity Too Far",
+                          EndEntityOrCA::MustBeEndEntity,
+                          caPrivateKey.get(), privateKey));
     ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
               BuildCertChain(trustDomain, cert, now,
                              EndEntityOrCA::MustBeEndEntity,

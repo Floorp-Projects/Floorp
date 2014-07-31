@@ -37,7 +37,7 @@ static Result BuildForward(TrustDomain& trustDomain,
                            KeyUsage requiredKeyUsageIfPresent,
                            KeyPurposeId requiredEKUIfPresent,
                            const CertPolicyId& requiredPolicy,
-                           /*optional*/ const InputBuffer* stapledOCSPResponse,
+                           /*optional*/ const Input* stapledOCSPResponse,
                            unsigned int subCACount);
 
 TrustDomain::IssuerChecker::IssuerChecker() { }
@@ -51,7 +51,7 @@ public:
   PathBuildingStep(TrustDomain& trustDomain, const BackCert& subject,
                    PRTime time, KeyPurposeId requiredEKUIfPresent,
                    const CertPolicyId& requiredPolicy,
-                   /*optional*/ const InputBuffer* stapledOCSPResponse,
+                   /*optional*/ const Input* stapledOCSPResponse,
                    unsigned int subCACount)
     : trustDomain(trustDomain)
     , subject(subject)
@@ -65,8 +65,8 @@ public:
   {
   }
 
-  Result Check(InputBuffer potentialIssuerDER,
-               /*optional*/ const InputBuffer* additionalNameConstraints,
+  Result Check(Input potentialIssuerDER,
+               /*optional*/ const Input* additionalNameConstraints,
                /*out*/ bool& keepGoing);
 
   Result CheckResult() const;
@@ -77,7 +77,7 @@ private:
   const PRTime time;
   const KeyPurposeId requiredEKUIfPresent;
   const CertPolicyId& requiredPolicy;
-  /*optional*/ InputBuffer const* const stapledOCSPResponse;
+  /*optional*/ Input const* const stapledOCSPResponse;
   const unsigned int subCACount;
 
   Result RecordResult(Result currentResult, /*out*/ bool& keepGoing);
@@ -126,8 +126,8 @@ PathBuildingStep::CheckResult() const
 
 // The code that executes in the inner loop of BuildForward
 Result
-PathBuildingStep::Check(InputBuffer potentialIssuerDER,
-           /*optional*/ const InputBuffer* additionalNameConstraints,
+PathBuildingStep::Check(Input potentialIssuerDER,
+           /*optional*/ const Input* additionalNameConstraints,
                 /*out*/ bool& keepGoing)
 {
   BackCert potentialIssuer(potentialIssuerDER, EndEntityOrCA::MustBeCA,
@@ -146,10 +146,9 @@ PathBuildingStep::Check(InputBuffer potentialIssuerDER,
   bool loopDetected = false;
   for (const BackCert* prev = potentialIssuer.childCert;
        !loopDetected && prev != nullptr; prev = prev->childCert) {
-    if (InputBuffersAreEqual(potentialIssuer.GetSubjectPublicKeyInfo(),
-                             prev->GetSubjectPublicKeyInfo()) &&
-        InputBuffersAreEqual(potentialIssuer.GetSubject(),
-                             prev->GetSubject())) {
+    if (InputsAreEqual(potentialIssuer.GetSubjectPublicKeyInfo(),
+                       prev->GetSubjectPublicKeyInfo()) &&
+        InputsAreEqual(potentialIssuer.GetSubject(), prev->GetSubject())) {
       // XXX: error code
       return RecordResult(Result::ERROR_UNKNOWN_ISSUER, keepGoing);
     }
@@ -211,7 +210,7 @@ BuildForward(TrustDomain& trustDomain,
              KeyUsage requiredKeyUsageIfPresent,
              KeyPurposeId requiredEKUIfPresent,
              const CertPolicyId& requiredPolicy,
-             /*optional*/ const InputBuffer* stapledOCSPResponse,
+             /*optional*/ const Input* stapledOCSPResponse,
              unsigned int subCACount)
 {
   Result rv;
@@ -294,12 +293,12 @@ BuildForward(TrustDomain& trustDomain,
 }
 
 Result
-BuildCertChain(TrustDomain& trustDomain, InputBuffer certDER,
+BuildCertChain(TrustDomain& trustDomain, Input certDER,
                PRTime time, EndEntityOrCA endEntityOrCA,
                KeyUsage requiredKeyUsageIfPresent,
                KeyPurposeId requiredEKUIfPresent,
                const CertPolicyId& requiredPolicy,
-               /*optional*/ const InputBuffer* stapledOCSPResponse)
+               /*optional*/ const Input* stapledOCSPResponse)
 {
   // XXX: Support the legacy use of the subject CN field for indicating the
   // domain name the certificate is valid for.

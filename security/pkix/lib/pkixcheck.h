@@ -41,7 +41,7 @@ Result CheckIssuerIndependentProperties(
           unsigned int subCACount,
           /*out*/ TrustLevel& trustLevel);
 
-Result CheckNameConstraints(InputBuffer encodedNameConstraints,
+Result CheckNameConstraints(Input encodedNameConstraints,
                             const BackCert& firstChild,
                             KeyPurposeId requiredEKUIfPresent);
 

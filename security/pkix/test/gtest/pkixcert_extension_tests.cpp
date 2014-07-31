@@ -32,7 +32,7 @@ using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 
 // Creates a self-signed certificate with the given extension.
-static InputBuffer
+static Input
 CreateCert(PLArenaPool* arena, const char* subjectStr,
            SECItem const* const* extensions, // null-terminated array
            /*out*/ ScopedSECKEYPrivateKey& subjectKey)
@@ -55,13 +55,13 @@ CreateCert(PLArenaPool* arena, const char* subjectStr,
                                   subjectDER, extensions,
                                   nullptr, SEC_OID_SHA256, subjectKey);
   EXPECT_TRUE(cert);
-  InputBuffer result;
+  Input result;
   EXPECT_EQ(Success, result.Init(cert->data, cert->len));
   return result;
 }
 
 // Creates a self-signed certificate with the given extension.
-static InputBuffer
+static Input
 CreateCert(PLArenaPool* arena, const char* subjectStr,
            const SECItem* extension,
            /*out*/ ScopedSECKEYPrivateKey& subjectKey)
@@ -74,14 +74,14 @@ class TrustEverythingTrustDomain : public TrustDomain
 {
 private:
   virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
-                              InputBuffer candidateCert,
+                              Input candidateCert,
                               /*out*/ TrustLevel& trustLevel)
   {
     trustLevel = TrustLevel::TrustAnchor;
     return Success;
   }
 
-  virtual Result FindIssuer(InputBuffer /*encodedIssuerName*/,
+  virtual Result FindIssuer(Input /*encodedIssuerName*/,
                             IssuerChecker& /*checker*/, PRTime /*time*/)
   {
     ADD_FAILURE();
@@ -89,8 +89,8 @@ private:
   }
 
   virtual Result CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
-                                 /*optional*/ const InputBuffer*,
-                                 /*optional*/ const InputBuffer*)
+                                 /*optional*/ const Input*,
+                                 /*optional*/ const Input*)
   {
     return Success;
   }
@@ -101,19 +101,19 @@ private:
   }
 
   virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
-                                  InputBuffer subjectPublicKeyInfo)
+                                  Input subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
                                              nullptr);
   }
 
-  virtual Result DigestBuf(InputBuffer, /*out*/ uint8_t*, size_t)
+  virtual Result DigestBuf(Input, /*out*/ uint8_t*, size_t)
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual Result CheckPublicKey(InputBuffer subjectPublicKeyInfo)
+  virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
   }
@@ -155,7 +155,7 @@ TEST_F(pkixcert_extension, UnknownCriticalExtension)
   const char* certCN = "CN=Cert With Unknown Critical Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
-  InputBuffer cert(CreateCert(arena.get(), certCN,
+  Input cert(CreateCert(arena.get(), certCN,
                               &unknownCriticalExtension, key));
   ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
             BuildCertChain(trustDomain, cert, now,
@@ -186,7 +186,7 @@ TEST_F(pkixcert_extension, UnknownNonCriticalExtension)
   const char* certCN = "CN=Cert With Unknown NonCritical Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
-  InputBuffer cert(CreateCert(arena.get(), certCN,
+  Input cert(CreateCert(arena.get(), certCN,
                               &unknownNonCriticalExtension, key));
   ASSERT_EQ(Success,
             BuildCertChain(trustDomain, cert, now,
@@ -218,7 +218,7 @@ TEST_F(pkixcert_extension, WrongOIDCriticalExtension)
   const char* certCN = "CN=Cert With Critical Wrong OID Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
-  InputBuffer cert(CreateCert(arena.get(), certCN,
+  Input cert(CreateCert(arena.get(), certCN,
                               &wrongOIDCriticalExtension, key));
   ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
             BuildCertChain(trustDomain, cert, now,
@@ -252,7 +252,7 @@ TEST_F(pkixcert_extension, CriticalAIAExtension)
   const char* certCN = "CN=Cert With Critical AIA Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
-  InputBuffer cert(CreateCert(arena.get(), certCN, &criticalAIAExtension, key));
+  Input cert(CreateCert(arena.get(), certCN, &criticalAIAExtension, key));
   ASSERT_EQ(Success,
             BuildCertChain(trustDomain, cert, now,
                            EndEntityOrCA::MustBeEndEntity,
@@ -282,7 +282,7 @@ TEST_F(pkixcert_extension, UnknownCriticalCEExtension)
   const char* certCN = "CN=Cert With Unknown Critical id-ce Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
-  InputBuffer cert(CreateCert(arena.get(), certCN,
+  Input cert(CreateCert(arena.get(), certCN,
                               &unknownCriticalCEExtension, key));
   ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
             BuildCertChain(trustDomain, cert, now,
@@ -313,7 +313,7 @@ TEST_F(pkixcert_extension, KnownCriticalCEExtension)
   const char* certCN = "CN=Cert With Known Critical id-ce Extension";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
-  InputBuffer cert(CreateCert(arena.get(), certCN, &criticalCEExtension, key));
+  Input cert(CreateCert(arena.get(), certCN, &criticalCEExtension, key));
   ASSERT_EQ(Success,
             BuildCertChain(trustDomain, cert, now,
                            EndEntityOrCA::MustBeEndEntity,
@@ -344,7 +344,7 @@ TEST_F(pkixcert_extension, DuplicateSubjectAltName)
   static const char* certCN = "CN=Cert With Duplicate subjectAltName";
   ScopedSECKEYPrivateKey key;
   // cert is owned by the arena
-  InputBuffer cert(CreateCert(arena.get(), certCN, extensions, key));
+  Input cert(CreateCert(arena.get(), certCN, extensions, key));
   ASSERT_EQ(Result::ERROR_EXTENSION_VALUE_INVALID,
             BuildCertChain(trustDomain, cert, now,
                            EndEntityOrCA::MustBeEndEntity,

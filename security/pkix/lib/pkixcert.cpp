@@ -37,13 +37,13 @@ BackCert::Init()
   //         signatureAlgorithm   AlgorithmIdentifier,
   //         signatureValue       BIT STRING  }
 
-  Input tbsCertificate;
+  Reader tbsCertificate;
 
   // The scope of |input| and |certificate| are limited to this block so we
   // don't accidentally confuse them for tbsCertificate later.
   {
-    Input input(der);
-    Input certificate;
+    Reader input(der);
+    Reader certificate;
     rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, certificate);
     if (rv != Success) {
       return rv;
@@ -158,10 +158,10 @@ BackCert::Init()
   return der::End(tbsCertificate);
 }
 
-// XXX: The second value is of type |const InputBupkffer&| instead of type
-// |InputBuffer| due to limitations in our std::bind polyfill.
+// XXX: The second value is of type |const Input&| instead of type |Input| due
+// to limitations in our std::bind polyfill.
 Result
-BackCert::RememberExtension(Input& extnID, const InputBuffer& extnValue,
+BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
                             /*out*/ bool& understood)
 {
   understood = false;
@@ -203,7 +203,7 @@ BackCert::RememberExtension(Input& extnID, const InputBuffer& extnValue,
     0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01
   };
 
-  InputBuffer* out = nullptr;
+  Input* out = nullptr;
 
   // We already enforce the maximum possible constraints for policies so we
   // can safely ignore even critical policy constraint extensions.
@@ -211,7 +211,7 @@ BackCert::RememberExtension(Input& extnID, const InputBuffer& extnValue,
   // XXX: Doing it this way won't allow us to detect duplicate
   // policyConstraints extensions, but that's OK because (and only because) we
   // ignore the extension.
-  InputBuffer dummyPolicyConstraints;
+  Input dummyPolicyConstraints;
 
   // RFC says "Conforming CAs MUST mark this extension as non-critical" for
   // both authorityKeyIdentifier and subjectKeyIdentifier, and we do not use
