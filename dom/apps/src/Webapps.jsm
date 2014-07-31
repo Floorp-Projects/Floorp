@@ -389,8 +389,7 @@ this.DOMApplicationRegistry = {
   updateOfflineCacheForApp: function(aId) {
     let app = this.webapps[aId];
     this._readManifests([{ id: aId }]).then((aResult) => {
-      let manifest =
-        new ManifestHelper(aResult[0].manifest, app.origin, app.manifestURL);
+      let manifest = new ManifestHelper(aResult[0].manifest, app.origin);
       OfflineCacheInstaller.installCache({
         cachePath: app.cachePath,
         appId: aId,
@@ -676,7 +675,7 @@ this.DOMApplicationRegistry = {
       return;
     }
 
-    let manifest = new ManifestHelper(aManifest, aApp.origin, aApp.manifestURL);
+    let manifest = new ManifestHelper(aManifest, aApp.origin);
     let launchPathURI = Services.io.newURI(manifest.fullLaunchPath(aEntryPoint), null, null);
     let manifestURI = Services.io.newURI(aApp.manifestURL, null, null);
     root.messages.forEach(function registerPages(aMessage) {
@@ -690,7 +689,7 @@ this.DOMApplicationRegistry = {
         let fullHandlerPath;
         try {
           if (handlerPath && handlerPath.trim()) {
-            fullHandlerPath = manifest.resolveURL(handlerPath);
+            fullHandlerPath = manifest.resolveFromOrigin(handlerPath);
           } else {
             throw new Error("Empty or blank handler path.");
           }
@@ -706,7 +705,7 @@ this.DOMApplicationRegistry = {
 
       if (SystemMessagePermissionsChecker
             .isSystemMessagePermittedToRegister(messageName,
-                                                aApp.manifestURL,
+                                                aApp.origin,
                                                 aManifest)) {
         msgmgr.registerPage(messageName, handlerPageURI, manifestURI);
       }
@@ -734,7 +733,7 @@ this.DOMApplicationRegistry = {
       return;
     }
 
-    let manifest = new ManifestHelper(aManifest, aApp.origin, aApp.manifestURL);
+    let manifest = new ManifestHelper(aManifest, aApp.origin);
     let launchPathURI = Services.io.newURI(manifest.fullLaunchPath(aEntryPoint),
                                            null, null);
     let manifestURI = Services.io.newURI(aApp.manifestURL, null, null);
@@ -748,7 +747,7 @@ this.DOMApplicationRegistry = {
       let handlerPath = connection.handler_path;
       if (handlerPath) {
         try {
-          fullHandlerPath = manifest.resolveURL(handlerPath);
+          fullHandlerPath = manifest.resolveFromOrigin(handlerPath);
         } catch(e) {
           debug("Connection's handler path is invalid. Skipping: keyword: " +
                 keyword + " handler_path: " + handlerPath);
@@ -761,7 +760,7 @@ this.DOMApplicationRegistry = {
 
       if (SystemMessagePermissionsChecker
             .isSystemMessagePermittedToRegister("connection",
-                                                aApp.manifestURL,
+                                                aApp.origin,
                                                 aManifest)) {
         msgmgr.registerPage("connection", handlerPageURI, manifestURI);
       }
@@ -813,7 +812,7 @@ this.DOMApplicationRegistry = {
       return activitiesToRegister;
     }
 
-    let manifest = new ManifestHelper(aManifest, aApp.origin, aApp.manifestURL);
+    let manifest = new ManifestHelper(aManifest, aApp.origin);
     for (let activity in root.activities) {
       let description = root.activities[activity];
       let href = description.href;
@@ -822,7 +821,7 @@ this.DOMApplicationRegistry = {
       }
 
       try {
-        href = manifest.resolveURL(href);
+        href = manifest.resolveFromOrigin(href);
       } catch (e) {
         debug("Activity href (" + href + ") is invalid, skipping. " +
               "Error is: " + e);
@@ -852,7 +851,7 @@ this.DOMApplicationRegistry = {
 
       if (SystemMessagePermissionsChecker
             .isSystemMessagePermittedToRegister("activity",
-                                                aApp.manifestURL,
+                                                aApp.origin,
                                                 aManifest)) {
         msgmgr.registerPage("activity", launchPathURI, manifestURI);
       }
@@ -962,8 +961,7 @@ this.DOMApplicationRegistry = {
           return;
         }
 
-        let localeManifest =
-          new ManifestHelper(manifest, app.origin, app.manifestURL);
+        let localeManifest = new ManifestHelper(manifest, app.origin);
 
         app.name = manifest.name;
         app.csp = manifest.csp || "";
@@ -1465,8 +1463,7 @@ this.DOMApplicationRegistry = {
       let results = yield this._readManifests([{ id: id }]);
 
       let jsonManifest = results[0].manifest;
-      let manifest =
-        new ManifestHelper(jsonManifest, app.origin, app.manifestURL);
+      let manifest = new ManifestHelper(jsonManifest, app.origin);
 
       if (manifest.appcache_path) {
         debug("appcache found");
@@ -1500,7 +1497,7 @@ this.DOMApplicationRegistry = {
       throw new Error("MISSING_UPDATE_MANIFEST");
     }
 
-    let manifest = new ManifestHelper(json, app.origin, app.manifestURL);
+    let manifest = new ManifestHelper(json, app.manifestURL);
     let newApp = {
       manifestURL: aManifestURL,
       origin: app.origin,
@@ -1811,8 +1808,7 @@ this.DOMApplicationRegistry = {
             }
           }
         };
-        let helper =
-          new ManifestHelper(manifest, aData.origin, aData.manifestURL);
+        let helper = new ManifestHelper(manifest, aData.manifestURL);
         debug("onlyCheckAppCache - launch updateSvc.checkForUpdate for " +
               helper.fullAppcachePath());
         updateSvc.checkForUpdate(Services.io.newURI(helper.fullAppcachePath(), null, null),
@@ -1994,8 +1990,7 @@ this.DOMApplicationRegistry = {
     let manFile = OS.Path.join(dir, "staged-update.webapp");
     yield this._writeFile(manFile, JSON.stringify(aNewManifest));
 
-    let manifest =
-      new ManifestHelper(aNewManifest, aApp.origin, aApp.manifestURL);
+    let manifest = new ManifestHelper(aNewManifest, aApp.manifestURL);
     // A package is available: set downloadAvailable to fire the matching
     // event.
     aApp.downloadAvailable = true;
@@ -2041,8 +2036,7 @@ this.DOMApplicationRegistry = {
       let manFile = OS.Path.join(dir, "manifest.webapp");
       yield this._writeFile(manFile, JSON.stringify(aNewManifest));
 
-      manifest =
-        new ManifestHelper(aNewManifest, aApp.origin, aApp.manifestURL);
+      manifest = new ManifestHelper(aNewManifest, aApp.origin);
 
       if (supportUseCurrentProfile()) {
         // Update the permissions for this app.
@@ -2061,8 +2055,7 @@ this.DOMApplicationRegistry = {
       aApp.role = manifest.role || "";
       aApp.updateTime = Date.now();
     } else {
-      manifest =
-        new ManifestHelper(aOldManifest, aApp.origin, aApp.manifestURL);
+      manifest = new ManifestHelper(aOldManifest, aApp.origin);
     }
 
     // Update the registry.
@@ -2571,8 +2564,7 @@ this.DOMApplicationRegistry = {
     yield this._writeManifestFile(id, aData.isPackage, jsonManifest);
 
     debug("app.origin: " + app.origin);
-    let manifest =
-      new ManifestHelper(jsonManifest, app.origin, app.manifestURL);
+    let manifest = new ManifestHelper(jsonManifest, app.origin);
 
     let appObject = this._cloneApp(aData, app, manifest, jsonManifest, id, localId);
 
@@ -2626,7 +2618,7 @@ this.DOMApplicationRegistry = {
 
       // origin for install apps is meaningless here, since it's app:// and this
       // can't be used to resolve package paths.
-      manifest = new ManifestHelper(jsonManifest, app.origin, app.manifestURL);
+      manifest = new ManifestHelper(jsonManifest, app.manifestURL);
 
       this.queuedPackageDownload[app.manifestURL] = {
         manifest: manifest,

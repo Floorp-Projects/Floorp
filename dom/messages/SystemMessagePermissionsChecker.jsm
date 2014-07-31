@@ -170,20 +170,18 @@ this.SystemMessagePermissionsChecker = {
    * app at start-up based on the permissions claimed in the app's manifest.
    * @param string aSysMsgName
    *        The system messsage name.
-   * @param string aManifestURL
-   *        The app's manifest URL.
+   * @param string aOrigin
+   *        The app's origin.
    * @param object aManifest
    *        The app's manifest.
    * @returns bool
    *        Is permitted or not.
    **/
   isSystemMessagePermittedToRegister:
-    function isSystemMessagePermittedToRegister(aSysMsgName,
-                                                aManifestURL,
-                                                aManifest) {
+    function isSystemMessagePermittedToRegister(aSysMsgName, aOrigin, aManifest) {
     debug("isSystemMessagePermittedToRegister(): " +
           "aSysMsgName: " + aSysMsgName + ", " +
-          "aManifestURL: " + aManifestURL + ", " +
+          "aOrigin: " + aOrigin + ", " +
           "aManifest: " + JSON.stringify(aManifest));
 
     let permNames = this.getSystemMessagePermissions(aSysMsgName);
@@ -209,22 +207,20 @@ this.SystemMessagePermissionsChecker = {
       break;
     }
 
-    // It's ok here to not pass the origin to ManifestHelper since we only
-    // need the permission property and that doesn't depend on uri resolution.
-    let newManifest = new ManifestHelper(aManifest, aManifestURL, aManifestURL);
+    let newManifest = new ManifestHelper(aManifest, aOrigin);
 
     for (let permName in permNames) {
       // The app doesn't claim valid permissions for this sytem message.
       if (!newManifest.permissions || !newManifest.permissions[permName]) {
         debug("'" + aSysMsgName + "' isn't permitted by '" + permName + "'. " +
-              "Please add the permission for app: '" + aManifestURL + "'.");
+              "Please add the permission for app: '" + aOrigin + "'.");
         return false;
       }
       let permValue = PermissionsTable[permName][appStatus];
       if (permValue != Ci.nsIPermissionManager.PROMPT_ACTION &&
           permValue != Ci.nsIPermissionManager.ALLOW_ACTION) {
         debug("'" + aSysMsgName + "' isn't permitted by '" + permName + "'. " +
-              "Please add the permission for app: '" + aManifestURL + "'.");
+              "Please add the permission for app: '" + aOrigin + "'.");
         return false;
       }
 
