@@ -1112,7 +1112,7 @@ let Front = Class({
       let message = (packet.error == "unknownError" && packet.message) ?
                     "Protocol error: " + packet.message :
                     packet.error;
-      deferred.reject(message);
+      deferred.reject(packet.error);
     } else {
       deferred.resolve(packet);
     }
