@@ -1,0 +1,25 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <padding
+                android:bottom="@dimen/card_background_padding_y"
+                android:top="@dimen/card_background_padding_y"
+                android:left="@dimen/card_background_padding_x"
+                android:right="@dimen/card_background_padding_x"/>
+            <solid android:color="@android:color/transparent"/>
+        </shape>
+    </item>
+
+    <!-- Background -->
+    <item>
+        <shape>
+            <solid android:color="@color/card_background"/>
+            <corners android:radius="5dp"/>
+            <stroke android:width="1dp" android:color="@color/card_border" />
+        </shape>
+    </item>
+</layer-list>
