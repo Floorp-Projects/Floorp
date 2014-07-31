@@ -318,6 +318,13 @@ ImageWrapper::SetAnimationStartTime(const TimeStamp& aTime)
   mInnerImage->SetAnimationStartTime(aTime);
 }
 
+nsIntSize
+ImageWrapper::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
+                                      GraphicsFilter aFilter, uint32_t aFlags)
+{
+  return mInnerImage->OptimalImageSizeForDest(aDest, aWhichFrame, aFilter, aFlags);
+}
+
 NS_IMETHODIMP_(nsIntRect)
 ImageWrapper::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
 {

@@ -242,6 +242,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void discardAllPhis();
     void discardAllResumePoints(bool discardEntry = true);
 
+    // Same as |void discard(MInstruction *ins)| but assuming that
+    // all operands are already discarded.
+    void discardIgnoreOperands(MInstruction *ins);
+
     // Discards a phi instruction and updates predecessor successorWithPhis.
     MPhiIterator discardPhiAt(MPhiIterator &at);
 
