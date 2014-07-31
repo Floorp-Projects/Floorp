@@ -393,6 +393,8 @@ protected:
   void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const {}
 #endif
 
+  bool InWorkerThread();
+
   RefPtr<LayerTransactionChild> mShadowManager;
 
 private:
