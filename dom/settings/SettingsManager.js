@@ -143,8 +143,7 @@ SettingsLock.prototype = {
               let result = event.target.result[i];
               var name = result.settingName;
               if (DEBUG) debug("VAL: " + result.userValue +", " + result.defaultValue + "\n");
-              var value = result.userValue !== undefined ? result.userValue : result.defaultValue;
-              results[name] = this._wrap(value);
+              results[name] = result.userValue !== undefined ? result.userValue : result.defaultValue;
             }
 
             this._open = true;
