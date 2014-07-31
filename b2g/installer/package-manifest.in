@@ -722,6 +722,11 @@
 @BINPATH@/chrome/pippki@JAREXT@
 @BINPATH@/chrome/pippki.manifest
 
+; For process sandboxing
+#if defined(XP_WIN)
+@BINPATH@/@DLL_PREFIX@sandboxbroker@DLL_SUFFIX@
+#endif
+
 ; for Solaris SPARC
 #ifdef SOLARIS
 bin/libfreebl_32fpu_3.chk
