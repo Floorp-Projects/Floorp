@@ -2161,7 +2161,7 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
                 else if (JSID_IS_ATOM(id))
                     idType = JSID_TYPE_STRING;
                 else
-                    MOZ_CRASH("Object property is not yet supported by XDR.");
+                    MOZ_CRASH("Symbol property is not yet supported by XDR.");
 
                 tmpValue = obj->getSlot(i);
             }
@@ -4926,12 +4926,6 @@ js::LookupPropertyPure(JSObject *obj, jsid id, JSObject **objp, Shape **propp)
     return LookupPropertyPureInline(obj, id, objp, propp);
 }
 
-static inline bool
-IdIsLength(ThreadSafeContext *cx, jsid id)
-{
-    return JSID_IS_ATOM(id) && cx->names().length == JSID_TO_ATOM(id);
-}
-
 /*
  * A pure version of GetPropertyHelper that can be called from parallel code
  * without locking. This code path cannot GC. This variant returns false
@@ -4970,7 +4964,7 @@ js::GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 
     /* Special case 'length' on Array and TypedArray. */
-    if (IdIsLength(cx, id)) {
+    if (JSID_IS_ATOM(id, cx->names().length)) {
         if (obj->is<ArrayObject>()) {
             vp->setNumber(obj->as<ArrayObject>().length());
             return true;
@@ -5817,6 +5811,8 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
             JS_snprintf(buf, bufsize, "%ld", (long)JSID_TO_INT(propid));
         } else if (JSID_IS_ATOM(propid)) {
             PutEscapedString(buf, bufsize, JSID_TO_ATOM(propid), 0);
+        } else if (JSID_IS_SYMBOL(propid)) {
+            JS_snprintf(buf, bufsize, "**SYMBOL KEY**");
         } else {
             JS_snprintf(buf, bufsize, "**FINALIZED ATOM KEY**");
         }
