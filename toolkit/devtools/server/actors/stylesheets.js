@@ -24,8 +24,9 @@ loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-l
 let TRANSITION_CLASS = "moz-styleeditor-transitioning";
 let TRANSITION_DURATION_MS = 500;
 let TRANSITION_BUFFER_MS = 1000;
-let TRANSITION_RULE = "\
-:root.moz-styleeditor-transitioning, :root.moz-styleeditor-transitioning * {\
+let TRANSITION_RULE_SELECTOR =
+".moz-styleeditor-transitioning:root, .moz-styleeditor-transitioning:root *";
+let TRANSITION_RULE = TRANSITION_RULE_SELECTOR + " {\
 transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
 transition-delay: 0ms !important;\
 transition-timing-function: ease-out !important;\
@@ -907,20 +908,16 @@ let StyleSheetActor = protocol.ActorClass({
    * to remove the rule after a certain time.
    */
   _insertTransistionRule: function() {
-    // Insert the global transition rule
-    // Use a ref count to make sure we do not add it multiple times.. and remove
-    // it only when all pending StyleSheets-generated transitions ended.
-    if (this._transitionRefCount == 0) {
-      this.rawSheet.insertRule(TRANSITION_RULE, this.rawSheet.cssRules.length);
-      this.document.documentElement.classList.add(TRANSITION_CLASS);
-    }
+    this.document.documentElement.classList.add(TRANSITION_CLASS);
 
-    this._transitionRefCount++;
+    // We always add the rule since we've just reset all the rules
+    this.rawSheet.insertRule(TRANSITION_RULE, this.rawSheet.cssRules.length);
 
     // Set up clean up and commit after transition duration (+buffer)
     // @see _onTransitionEnd
-    this.window.setTimeout(this._onTransitionEnd.bind(this),
-                           TRANSITION_DURATION_MS + TRANSITION_BUFFER_MS);
+    this.window.clearTimeout(this._transitionTimeout);
+    this._transitionTimeout = this.window.setTimeout(this._onTransitionEnd.bind(this),
+                              TRANSITION_DURATION_MS + TRANSITION_BUFFER_MS);
   },
 
   /**
@@ -929,9 +926,12 @@ let StyleSheetActor = protocol.ActorClass({
    */
   _onTransitionEnd: function()
   {
-    if (--this._transitionRefCount == 0) {
-      this.document.documentElement.classList.remove(TRANSITION_CLASS);
-      this.rawSheet.deleteRule(this.rawSheet.cssRules.length - 1);
+    this.document.documentElement.classList.remove(TRANSITION_CLASS);
+
+    let index = this.rawSheet.cssRules.length - 1;
+    let rule = this.rawSheet.cssRules[index];
+    if (rule.selectorText == TRANSITION_RULE_SELECTOR) {
+      this.rawSheet.deleteRule(index);
     }
 
     events.emit(this, "style-applied");
