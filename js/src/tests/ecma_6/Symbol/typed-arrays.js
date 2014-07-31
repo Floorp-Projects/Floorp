@@ -3,23 +3,14 @@
 
 // Symbol-to-number type conversions involving typed arrays.
 
-var tests = [
-    {T: Uint8Array, result: 0},
-    {T: Uint8ClampedArray, result: 0},
-    {T: Int16Array, result: 0},
-    {T: Float32Array, result: NaN}
-];
+for (var T of [Uint8Array, Uint8ClampedArray, Int16Array, Float32Array]) {
+    // Typed array constructors convert symbols using ToNumber(), which throws.
+    assertThrowsInstanceOf(() => new T([Symbol("a")]), TypeError);
 
-for (var {T, result} of tests) {
-    // Typed array constructors convert symbols to NaN or 0.
-    var arr = new T([Symbol("a")]);
-    assertEq(arr.length, 1);
-    assertEq(arr[0], result);
-
-    // Assignment also converts symbols to NaN or 0.
-    arr[0] = 0;
-    assertEq(arr[0] = Symbol.iterator, Symbol.iterator);
-    assertEq(arr[0], result);
+    // Assignment does the same.
+    var arr = new T([1]);
+    assertThrowsInstanceOf(() => { arr[0] = Symbol.iterator; }, TypeError);
+    assertEq(arr[0], 1);
 }
 
 if (typeof reportCompare === "function")

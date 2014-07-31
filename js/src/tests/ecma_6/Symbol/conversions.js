@@ -21,10 +21,12 @@ for (var sym of symbols) {
     assertThrowsInstanceOf(() => String(symobj), TypeError);
     assertThrowsInstanceOf(() => symobj < 0, TypeError);
     assertThrowsInstanceOf(() => 0 < symobj, TypeError);
-    assertThrowsInstanceOf(() => symobj == 0, TypeError);
-    assertThrowsInstanceOf(() => 0 != symobj, TypeError);
     assertThrowsInstanceOf(() => symobj + 1, TypeError);
     assertThrowsInstanceOf(() => "" + symobj, TypeError);
+    assertEq(sym == symobj, true);
+    assertEq(sym === symobj, false);
+    assertEq(symobj == 0, false);
+    assertEq(0 != symobj, true);
 
     // 7.1.2 ToBoolean
     assertEq(Boolean(sym), true);
@@ -33,8 +35,8 @@ for (var sym of symbols) {
     assertEq(sym && 13, 13);
 
     // 7.1.3 ToNumber
-    assertEq(+sym, NaN);
-    assertEq(sym | 0, 0);
+    assertThrowsInstanceOf(() => +sym, TypeError);
+    assertThrowsInstanceOf(() => sym | 0, TypeError);
 
     // 7.1.12 ToString
     assertThrowsInstanceOf(() => String(sym), TypeError);
