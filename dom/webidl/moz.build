@@ -718,6 +718,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'MozWifiStatusChangeEvent.webidl',
     ]
 
+if CONFIG['MOZ_NFC']:
+    GENERATED_EVENTS_WEBIDL_FILES += [
+        'MozNFCPeerEvent.webidl',
+    ]
+
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner']:
     WEBIDL_FILES += [
         'BrowserFeedWriter.webidl',
