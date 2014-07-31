@@ -46,6 +46,3 @@
     // reflow so that that rare edge case doesn't lead to reftest
     // failures.
     branch.setBoolPref("layout.interruptible-reflow.enabled", false);
-    // Disable the auto-hide feature of touch caret to avoid potential
-    // intermittent issues.
-    branch.setIntPref("touchcaret.expiration.time", 0);
