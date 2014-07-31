@@ -72,17 +72,72 @@ public:
   nsresult GetSelectionAndRoot(nsISelection** aSelection,
                                nsIContent** aRoot) const;
 
+  struct TextChangeData
+  {
+    // mStartOffset is the start offset of modified or removed text in
+    // original content and inserted text in new content.
+    uint32_t mStartOffset;
+    // mRemovalEndOffset is the end offset of modified or removed text in
+    // original content.  If the value is same as mStartOffset, no text hasn't
+    // been removed yet.
+    uint32_t mRemovedEndOffset;
+    // mAddedEndOffset is the end offset of inserted text or same as
+    // mStartOffset if just removed.  The vlaue is offset in the new content.
+    uint32_t mAddedEndOffset;
+
+    bool mCausedOnlyByComposition;
+    bool mStored;
+
+    TextChangeData()
+      : mStartOffset(0)
+      , mRemovedEndOffset(0)
+      , mAddedEndOffset(0)
+      , mCausedOnlyByComposition(false)
+      , mStored(false)
+    {
+    }
+
+    TextChangeData(uint32_t aStartOffset,
+                   uint32_t aRemovedEndOffset,
+                   uint32_t aAddedEndOffset,
+                   bool aCausedByComposition)
+      : mStartOffset(aStartOffset)
+      , mRemovedEndOffset(aRemovedEndOffset)
+      , mAddedEndOffset(aAddedEndOffset)
+      , mCausedOnlyByComposition(aCausedByComposition)
+      , mStored(true)
+    {
+      MOZ_ASSERT(aRemovedEndOffset >= aStartOffset,
+                 "removed end offset must not be smaller than start offset");
+      MOZ_ASSERT(aAddedEndOffset >= aStartOffset,
+                 "added end offset must not be smaller than start offset");
+    }
+    // Positive if text is added. Negative if text is removed.
+    int64_t Difference() const 
+    {
+      return mAddedEndOffset - mRemovedEndOffset;
+    }
+  };
+
 private:
   ~IMEContentObserver() {}
 
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
+  // Returns true if there is no pending data.
+  bool StoreTextChangeData(const TextChangeData& aTextChangeData);
+
+#ifdef DEBUG
+  void TestMergingTextChangeData();
+#endif
 
   nsCOMPtr<nsIWidget> mWidget;
   nsCOMPtr<nsISelection> mSelection;
   nsCOMPtr<nsIContent> mRootContent;
   nsCOMPtr<nsINode> mEditableNode;
   nsCOMPtr<nsIDocShell> mDocShell;
+
+  TextChangeData mTextChangeData;
 
   EventStateManager* mESM;
 
