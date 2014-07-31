@@ -196,26 +196,7 @@ private:
   T* mInstance;
 };
 
-class UnixSocketImplRunnable : public nsRunnable
-{
-public:
-  UnixSocketImpl* GetImpl() const
-  {
-    return mImpl;
-  }
-protected:
-  UnixSocketImplRunnable(UnixSocketImpl* aImpl)
-  : mImpl(aImpl)
-  {
-    MOZ_ASSERT(aImpl);
-  }
-  virtual ~UnixSocketImplRunnable()
-  { }
-private:
-  UnixSocketImpl* mImpl;
-};
-
-class OnSocketEventRunnable : public UnixSocketImplRunnable
+class OnSocketEventRunnable : public SocketIORunnable<UnixSocketImpl>
 {
 public:
   enum SocketEvent {
@@ -225,7 +206,7 @@ public:
   };
 
   OnSocketEventRunnable(UnixSocketImpl* aImpl, SocketEvent e)
-  : UnixSocketImplRunnable(aImpl)
+  : SocketIORunnable<UnixSocketImpl>(aImpl)
   , mEvent(e)
   {
     MOZ_ASSERT(!NS_IsMainThread());
@@ -235,7 +216,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    UnixSocketImpl* impl = GetImpl();
+    UnixSocketImpl* impl = GetIO();
 
     if (impl->IsShutdownOnMainThread()) {
       NS_WARNING("CloseSocket has already been called!");
@@ -256,11 +237,11 @@ private:
   SocketEvent mEvent;
 };
 
-class SocketReceiveRunnable : public UnixSocketImplRunnable
+class SocketReceiveRunnable : public SocketIORunnable<UnixSocketImpl>
 {
 public:
   SocketReceiveRunnable(UnixSocketImpl* aImpl, UnixSocketRawData* aData)
-  : UnixSocketImplRunnable(aImpl)
+  : SocketIORunnable<UnixSocketImpl>(aImpl)
   , mRawData(aData)
   {
     MOZ_ASSERT(aData);
@@ -270,7 +251,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    UnixSocketImpl* impl = GetImpl();
+    UnixSocketImpl* impl = GetIO();
 
     if (impl->IsShutdownOnMainThread()) {
       NS_WARNING("mConsumer is null, aborting receive!");
@@ -287,18 +268,18 @@ private:
   nsAutoPtr<UnixSocketRawData> mRawData;
 };
 
-class RequestClosingSocketRunnable : public UnixSocketImplRunnable
+class RequestClosingSocketRunnable : public SocketIORunnable<UnixSocketImpl>
 {
 public:
   RequestClosingSocketRunnable(UnixSocketImpl* aImpl)
-  : UnixSocketImplRunnable(aImpl)
+  : SocketIORunnable<UnixSocketImpl>(aImpl)
   { }
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    UnixSocketImpl* impl = GetImpl();
+    UnixSocketImpl* impl = GetIO();
     if (impl->IsShutdownOnMainThread()) {
       NS_WARNING("CloseSocket has already been called!");
       // Since we've already explicitly closed and the close happened before
