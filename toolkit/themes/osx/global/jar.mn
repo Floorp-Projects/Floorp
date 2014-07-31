@@ -143,7 +143,6 @@ toolkit.jar:
   skin/classic/global/icons/webapps-16@2x.png                        (icons/webapps-16@2x.png)
   skin/classic/global/icons/webapps-64.png                           (icons/webapps-64.png)
   skin/classic/global/inContentUI/background-texture.png            (inContentUI/background-texture.png)
-  skin/classic/global/loop/loop-call.png                             (loop/loop-call.png)
   skin/classic/global/notification/close.png                         (notification/close.png)
   skin/classic/global/notification/critical-bar-background.png       (notification/critical-bar-background.png)
   skin/classic/global/notification/error-icon.png                    (notification/error-icon.png)
