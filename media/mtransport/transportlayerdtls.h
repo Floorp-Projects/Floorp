@@ -126,6 +126,7 @@ class TransportLayerDtls : public TransportLayer {
 
 
   bool Setup();
+  bool SetupCipherSuites(PRFileDesc* ssl_fd) const;
   void Handshake();
 
   static SECStatus GetClientAuthDataHook(void *arg, PRFileDesc *fd,
