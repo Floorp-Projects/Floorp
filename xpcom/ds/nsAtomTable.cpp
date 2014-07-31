@@ -497,20 +497,20 @@ SizeOfStaticAtomTableEntryExcludingThis(const nsAString& aKey,
   return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
-size_t
-NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf)
+void
+NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
+                                 size_t* aMain, size_t* aStatic)
 {
-  size_t n = 0;
-  if (gAtomTable.ops) {
-    n += PL_DHashTableSizeOfExcludingThis(&gAtomTable,
-                                          SizeOfAtomTableEntryExcludingThis,
-                                          aMallocSizeOf);
-  }
-  if (gStaticAtomTable) {
-    n += gStaticAtomTable->SizeOfIncludingThis(SizeOfStaticAtomTableEntryExcludingThis,
-                                               aMallocSizeOf);
-  }
-  return n;
+  *aMain = gAtomTable.ops
+         ? PL_DHashTableSizeOfExcludingThis(&gAtomTable,
+                                            SizeOfAtomTableEntryExcludingThis,
+                                            aMallocSizeOf)
+         : 0;
+
+  *aStatic = gStaticAtomTable
+           ? gStaticAtomTable->SizeOfIncludingThis(SizeOfStaticAtomTableEntryExcludingThis,
+                                                   aMallocSizeOf)
+           : 0;
 }
 
 #define ATOM_HASHTABLE_INITIAL_SIZE  4096
