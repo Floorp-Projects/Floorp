@@ -167,7 +167,8 @@ let AlertsHelper = {
     this._listeners[uid] = listener;
 
     appsService.getManifestFor(listener.manifestURL).then((manifest) => {
-      let helper = new ManifestHelper(manifest, listener.manifestURL);
+      let app = appsService.getAppByManifestURL(listener.manifestURL);
+      let helper = new ManifestHelper(manifest, app.origin, app.manifestURL);
       let getNotificationURLFor = function(messages) {
         if (!messages) {
           return null;
@@ -179,8 +180,7 @@ let AlertsHelper = {
             return helper.fullLaunchPath();
           } else if (typeof message === "object" &&
                      kNotificationSystemMessageName in message) {
-            return helper.resolveFromOrigin(
-              message[kNotificationSystemMessageName]);
+            return helper.resolveURL(message[kNotificationSystemMessageName]);
           }
         }
 
@@ -220,7 +220,8 @@ let AlertsHelper = {
     // If we have a manifest URL, get the icon and title from the manifest
     // to prevent spoofing.
     appsService.getManifestFor(manifestURL).then((manifest) => {
-      let helper = new ManifestHelper(manifest, manifestURL);
+      let app = appsService.getAppByManifestURL(manifestURL);
+      let helper = new ManifestHelper(manifest, app.origin, manifestURL);
       send(helper.name, helper.iconURLForSize(kNotificationIconSize));
     });
   },
