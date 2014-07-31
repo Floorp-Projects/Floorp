@@ -131,8 +131,8 @@ Editor.modes = {
  * properties go to CodeMirror's documentation (see below).
  *
  * Other than that, it accepts one additional and optional
- * property contextMenu. This property should be an ID of
- * an element we can use as a context menu.
+ * property contextMenu. This property should be an element, or
+ * an ID of an element that we can use as a context menu.
  *
  * This object is also an event emitter.
  *
@@ -286,7 +286,9 @@ Editor.prototype = {
       cm.getWrapperElement().addEventListener("contextmenu", (ev) => {
         ev.preventDefault();
         if (!this.config.contextMenu) return;
-        let popup = el.ownerDocument.getElementById(this.config.contextMenu);
+        let popup = this.config.contextMenu;
+        if (typeof popup == "string")
+          popup = el.ownerDocument.getElementById(this.config.contextMenu);
         popup.openPopupAtScreen(ev.screenX, ev.screenY, true);
       }, false);
 
