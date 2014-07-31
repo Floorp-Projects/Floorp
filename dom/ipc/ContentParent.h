@@ -577,6 +577,7 @@ private:
 
     virtual bool RecvDataStoreGetStores(
                        const nsString& aName,
+                       const nsString& aOwner,
                        const IPC::Principal& aPrincipal,
                        InfallibleTArray<DataStoreSetting>* aValue) MOZ_OVERRIDE;
 

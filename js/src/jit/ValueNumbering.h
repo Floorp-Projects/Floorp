@@ -73,8 +73,8 @@ class ValueNumberer
     bool dependenciesBroken_;         // Have we broken AliasAnalysis?
 
     bool deleteDefsRecursively(MDefinition *def);
-    bool pushDeadPhiOperands(MPhi *phi, const MBasicBlock *phiBlock);
-    bool pushDeadInsOperands(MInstruction *ins);
+    bool discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock);
+    bool discardInsOperands(MInstruction *ins);
     bool deleteDef(MDefinition *def);
     bool processDeadDefs();
 

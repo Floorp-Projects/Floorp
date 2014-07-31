@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var util = {
-  // Compare the contents of two ArrayBufferViews
+  // Compare the contents of two ArrayBuffer(View)s
   memcmp: function util_memcmp(x, y) {
     if (!x || !y) { return false; }
 
+    var xb = new Uint8Array(x);
+    var yb = new Uint8Array(y);
     if (x.byteLength !== y.byteLength) { return false; }
 
-    var xb = new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
-    var yb = new Uint8Array(y.buffer, y.byteOffset, y.byteLength);
     for (var i=0; i<xb.byteLength; ++i) {
       if (xb[i] !== yb[i]) {
         return false;

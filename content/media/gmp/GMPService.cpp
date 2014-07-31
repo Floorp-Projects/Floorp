@@ -9,6 +9,7 @@
 #include "GMPVideoDecoderParent.h"
 #include "nsIObserverService.h"
 #include "GeckoChildProcessHost.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsXPCOMPrivate.h"
@@ -145,6 +146,11 @@ GeckoMediaPluginService::Init()
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false)));
 
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    prefs->AddObserver("media.gmp.plugin.crash", this, false);
+  }
+
   // Kick off scanning for plugins
   nsCOMPtr<nsIThread> thread;
   unused << GetThread(getter_AddRefs(thread));
@@ -155,7 +161,26 @@ GeckoMediaPluginService::Observe(nsISupports* aSubject,
                                  const char* aTopic,
                                  const char16_t* aSomeData)
 {
-  if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsCOMPtr<nsIPrefBranch> branch( do_QueryInterface(aSubject) );
+    if (branch) {
+      bool crashNow = false;
+      if (NS_LITERAL_STRING("media.gmp.plugin.crash").Equals(aSomeData)) {
+        branch->GetBoolPref("media.gmp.plugin.crash",  &crashNow);
+      }
+      if (crashNow) {
+        nsCOMPtr<nsIThread> gmpThread;
+        {
+          MutexAutoLock lock(mMutex);
+          gmpThread = mGMPThread;
+        }
+        if (gmpThread) {
+          gmpThread->Dispatch(WrapRunnable(this, &GeckoMediaPluginService::CrashPlugins),
+                              NS_DISPATCH_NORMAL);
+        }
+      }
+    }
+  } else if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
     nsCOMPtr<nsIThread> gmpThread;
     {
       MutexAutoLock lock(mMutex);
@@ -338,6 +363,17 @@ GeckoMediaPluginService::UnloadPlugins()
     mPlugins[i]->CloseActive(true);
   }
   mPlugins.Clear();
+}
+
+void
+GeckoMediaPluginService::CrashPlugins()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+
+  MutexAutoLock lock(mMutex);
+  for (uint32_t i = 0; i < mPlugins.Length(); i++) {
+    mPlugins[i]->Crash();
+  }
 }
 
 void

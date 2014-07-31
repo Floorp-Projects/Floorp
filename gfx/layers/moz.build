@@ -80,6 +80,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
         EXPORTS.mozilla.layers += [
             'd3d11/CompositorD3D11.h',
+            'd3d11/ReadbackManagerD3D11.h',
             'd3d11/TextureD3D11.h',
             'ipc/ShadowLayerUtilsD3D10.h',
         ]
@@ -96,6 +97,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
         SOURCES += [
             'd3d11/CompositorD3D11.cpp',
+            'd3d11/ReadbackManagerD3D11.cpp',
         ]
 
 EXPORTS.gfxipc += [

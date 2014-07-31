@@ -198,17 +198,8 @@ SOURCES += [
 EXTRA_COMPONENTS += [
     'contentAreaDropListener.js',
     'contentAreaDropListener.manifest',
-    'contentSecurityPolicy.manifest',
     'messageWakeupService.js',
     'messageWakeupService.manifest',
-]
-
-EXTRA_PP_COMPONENTS += [
-    'contentSecurityPolicy.js',
-]
-
-EXTRA_JS_MODULES += [
-    'CSPUtils.jsm',
 ]
 
 FAIL_ON_WARNINGS = True

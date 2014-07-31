@@ -8,3 +8,4 @@ user_pref("dom.mozBrowserFramesEnabled", "%(OOP)s");
 user_pref("dom.mozBrowserFramesWhitelist","app://test-container.gaiamobile.org,http://mochi.test:8888");
 user_pref("dom.testing.datastore_enabled_for_hosted_apps", true);
 user_pref("marionette.force-local", true);
+user_pref("touchcaret.expiration.time", 0);

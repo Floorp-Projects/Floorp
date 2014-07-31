@@ -79,6 +79,14 @@ class SyntaxParseHandler
     Node newTemplateStringLiteral(JSAtom *atom, const TokenPos &pos) {
         return NodeGeneric;
     }
+
+    Node newCallSiteObject(uint32_t begin, unsigned blockidGen) {
+        return NodeGeneric;
+    }
+
+    bool addToCallSiteObject(Node callSiteObj, Node rawNode, Node cookedNode) {
+        return true;
+    }
 #endif
 
     Node newThisLiteral(const TokenPos &pos) { return NodeGeneric; }

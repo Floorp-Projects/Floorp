@@ -144,6 +144,17 @@ function CheckObjectCoercible(v) {
         ThrowError(JSMSG_CANT_CONVERT_TO, ToString(v), "object");
 }
 
+/* Spec: ECMAScript Draft, 6 edition May 22, 2014, 7.1.15 */
+function ToLength(v) {
+    v = ToInteger(v);
+
+    if (v <= 0)
+        return 0;
+
+    // Math.pow(2, 53) - 1 = 0x1fffffffffffff
+    return v < 0x1fffffffffffff ? v : 0x1fffffffffffff;
+}
+
 /********** Testing code **********/
 
 #ifdef ENABLE_PARALLEL_JS
