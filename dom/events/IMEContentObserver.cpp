@@ -78,6 +78,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 IMEContentObserver::IMEContentObserver()
   : mESM(nullptr)
   , mIsEditorInTransaction(false)
+  , mIsSelectionChangeEventPending(false)
+  , mSelectionChangeCausedOnlyByComposition(false)
+  , mIsPositionChangeEventPending(false)
 {
 #ifdef DEBUG
   TestMergingTextChangeData();
@@ -365,8 +368,7 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   nsresult rv = aSelection->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
   if (count > 0 && mWidget) {
-    nsContentUtils::AddScriptRunner(
-      new SelectionChangeEvent(this, causedByComposition));
+    MaybeNotifyIMEOfSelectionChange(causedByComposition);
   }
   return NS_OK;
 }
@@ -397,18 +399,14 @@ private:
 void
 IMEContentObserver::ScrollPositionChanged()
 {
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
+  MaybeNotifyIMEOfPositionChange();
 }
 
 NS_IMETHODIMP
 IMEContentObserver::Reflow(DOMHighResTimeStamp aStart,
                            DOMHighResTimeStamp aEnd)
 {
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
+  MaybeNotifyIMEOfPositionChange();
   return NS_OK;
 }
 
@@ -416,9 +414,7 @@ NS_IMETHODIMP
 IMEContentObserver::ReflowInterruptible(DOMHighResTimeStamp aStart,
                                         DOMHighResTimeStamp aEnd)
 {
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
+  MaybeNotifyIMEOfPositionChange();
   return NS_OK;
 }
 
@@ -666,8 +662,7 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   uint32_t newEnd = offset + aInfo->mReplaceLength;
 
   TextChangeData data(offset, oldEnd, newEnd, causedByComposition);
-  StoreTextChangeData(data);
-  FlushMergeableNotifications();
+  MaybeNotifyIMEOfTextChange(data);
 }
 
 void
@@ -702,8 +697,7 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
 
   TextChangeData data(offset, offset, offset + addingLength,
                       causedByComposition);
-  StoreTextChangeData(data);
-  FlushMergeableNotifications();
+  MaybeNotifyIMEOfTextChange(data);
 }
 
 void
@@ -765,8 +759,7 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   }
 
   TextChangeData data(offset, offset + textLength, offset, causedByComposition);
-  StoreTextChangeData(data);
-  FlushMergeableNotifications();
+  MaybeNotifyIMEOfTextChange(data);
 }
 
 static nsIContent*
@@ -823,8 +816,7 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
 
   TextChangeData data(start, start + mPreAttrChangeLength,
                       start + postAttrChangeLength, causedByComposition);
-  StoreTextChangeData(data);
-  FlushMergeableNotifications();
+  MaybeNotifyIMEOfTextChange(data);
 }
 
 NS_IMETHODIMP
@@ -851,15 +843,55 @@ IMEContentObserver::CancelEditAction()
 }
 
 void
+IMEContentObserver::MaybeNotifyIMEOfTextChange(const TextChangeData& aData)
+{
+  StoreTextChangeData(aData);
+  MOZ_ASSERT(mTextChangeData.mStored,
+             "mTextChangeData must have text change data");
+  FlushMergeableNotifications();
+}
+
+void
+IMEContentObserver::MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition)
+{
+  if (!mIsSelectionChangeEventPending) {
+    mSelectionChangeCausedOnlyByComposition = aCausedByComposition;
+  } else {
+    mSelectionChangeCausedOnlyByComposition =
+      mSelectionChangeCausedOnlyByComposition && aCausedByComposition;
+  }
+  mIsSelectionChangeEventPending = true;
+  FlushMergeableNotifications();
+}
+
+void
+IMEContentObserver::MaybeNotifyIMEOfPositionChange()
+{
+  mIsPositionChangeEventPending = true;
+  FlushMergeableNotifications();
+}
+
+void
 IMEContentObserver::FlushMergeableNotifications()
 {
-  if (mIsEditorInTransaction) {
+  if (mIsEditorInTransaction || !mWidget) {
     return;
   }
 
   if (mTextChangeData.mStored) {
     nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
     mTextChangeData.mStored = false;
+  }
+
+  if (mIsSelectionChangeEventPending) {
+    nsContentUtils::AddScriptRunner(
+      new SelectionChangeEvent(this, mSelectionChangeCausedOnlyByComposition));
+    mIsSelectionChangeEventPending = false;
+  }
+
+  if (mIsPositionChangeEventPending) {
+    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
+    mIsPositionChangeEventPending = false;
   }
 }
 

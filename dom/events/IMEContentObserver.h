@@ -126,6 +126,10 @@ public:
 private:
   ~IMEContentObserver() {}
 
+  void MaybeNotifyIMEOfTextChange(const TextChangeData& aTextChangeData);
+  void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition);
+  void MaybeNotifyIMEOfPositionChange();
+
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
   /**
@@ -156,6 +160,9 @@ private:
   uint32_t mPreAttrChangeLength;
 
   bool mIsEditorInTransaction;
+  bool mIsSelectionChangeEventPending;
+  bool mSelectionChangeCausedOnlyByComposition;
+  bool mIsPositionChangeEventPending;
 };
 
 } // namespace mozilla
