@@ -328,10 +328,8 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
     // See getTokenInternal() for an explanation of maybeStrSpecial[].
     memset(maybeStrSpecial, 0, sizeof(maybeStrSpecial));
     maybeStrSpecial[unsigned('"')] = true;
-#ifdef JS_HAS_TEMPLATE_STRINGS
     maybeStrSpecial[unsigned('`')] = true;
     maybeStrSpecial[unsigned('$')] = true;
-#endif
     maybeStrSpecial[unsigned('\'')] = true;
     maybeStrSpecial[unsigned('\\')] = true;
     maybeStrSpecial[unsigned('\n')] = true;
@@ -1073,11 +1071,7 @@ enum FirstCharKind {
 #define T_COMMA     TOK_COMMA
 #define T_COLON     TOK_COLON
 #define T_BITNOT    TOK_BITNOT
-#ifdef JS_HAS_TEMPLATE_STRINGS
 #define Templat     String
-#else
-#define Templat     Other
-#endif
 #define _______     Other
 static const uint8_t firstCharKinds[] = {
 /*         0        1        2        3        4        5        6        7        8        9    */
@@ -1118,13 +1112,11 @@ TokenStream::getTokenInternal(Modifier modifier)
 
     // Check if in the middle of a template string. Have to get this out of
     // the way first.
-#ifdef JS_HAS_TEMPLATE_STRINGS
     if (MOZ_UNLIKELY(modifier == TemplateTail)) {
         if (!getStringOrTemplateToken('`', &tp))
             goto error;
         goto out;
     }
-#endif
 
   retry:
     if (MOZ_UNLIKELY(!userbuf.hasRawChars())) {
@@ -1649,9 +1641,7 @@ bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
 {
     *tp = newToken(-1);
     int c;
-#ifdef JS_HAS_TEMPLATE_STRINGS
     int nc = -1;
-#endif
     tokenbuf.clear();
     while (true) {
         // We need to detect any of these chars:  " or ', \n (or its
@@ -1679,12 +1669,10 @@ bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
                         c = peekChar();
                         // Strict mode code allows only \0, then a non-digit.
                         if (val != 0 || JS7_ISDEC(c)) {
-#ifdef JS_HAS_TEMPLATE_STRINGS
                             if (qc == '`') {
                                 reportError(JSMSG_DEPRECATED_OCTAL);
                                 return false;
                             }
-#endif
                             if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
                                 return false;
                             flags.sawOctalEscape = true;
@@ -1740,13 +1728,10 @@ bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
                 reportError(JSMSG_UNTERMINATED_STRING);
                 return false;
             } else if (TokenBuf::isRawEOLChar(c)) {
-#ifdef JS_HAS_TEMPLATE_STRINGS
                 if (qc != '`') {
-#endif
                     ungetCharIgnoreEOL(c);
                     reportError(JSMSG_UNTERMINATED_STRING);
                     return false;
-#ifdef JS_HAS_TEMPLATE_STRINGS
                 }
                 if (c == '\r') {
                     c = '\n';
@@ -1757,7 +1742,6 @@ bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
                 if ((nc = getCharIgnoreEOL()) == '{')
                     break;
                 ungetCharIgnoreEOL(nc);
-#endif
             }
         }
         if (!tokenbuf.append(c))
@@ -1766,18 +1750,14 @@ bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
     JSAtom *atom = atomize(cx, tokenbuf);
     if (!atom)
         return false;
-#ifdef JS_HAS_TEMPLATE_STRINGS
     if (qc != '`') {
-#endif
         (*tp)->type = TOK_STRING;
-#ifdef JS_HAS_TEMPLATE_STRINGS
     } else {
         if (c == '$' && nc == '{')
             (*tp)->type = TOK_TEMPLATE_HEAD;
         else
             (*tp)->type = TOK_NO_SUBS_TEMPLATE;
     }
-#endif
     (*tp)->setAtom(atom);
     return true;
 }
@@ -1862,10 +1842,8 @@ TokenKindToString(TokenKind tt)
       case TOK_NAME:            return "TOK_NAME";
       case TOK_NUMBER:          return "TOK_NUMBER";
       case TOK_STRING:          return "TOK_STRING";
-#ifdef JS_HAS_TEMPLATE_STRINGS
       case TOK_TEMPLATE_HEAD:   return "TOK_TEMPLATE_HEAD";
       case TOK_NO_SUBS_TEMPLATE:return "TOK_NO_SUBS_TEMPLATE";
-#endif
       case TOK_REGEXP:          return "TOK_REGEXP";
       case TOK_TRUE:            return "TOK_TRUE";
       case TOK_FALSE:           return "TOK_FALSE";
