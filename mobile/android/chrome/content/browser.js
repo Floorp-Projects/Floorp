@@ -304,6 +304,19 @@ var BrowserApp = {
         BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
         Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
         sendMessageToJava({ type: "Gecko:DelayedStartup" });
+
+        // Queue up some other performance-impacting initializations
+        Services.tm.mainThread.dispatch(function() {
+          // Init LoginManager
+          Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+
+#ifdef MOZ_SAFE_BROWSING
+        Services.tm.mainThread.dispatch(function() {
+          // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
+          SafeBrowsing.init();
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+#endif
       } catch(ex) { console.log(ex); }
     }, false);
 
@@ -400,9 +413,6 @@ var BrowserApp = {
     ShumwayUtils.init();
 #endif
 
-    // Init LoginManager
-    Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-
     let url = null;
     let pinned = false;
     if ("arguments" in window) {
@@ -441,11 +451,6 @@ var BrowserApp = {
 
     // notify java that gecko has loaded
     sendMessageToJava({ type: "Gecko:Ready" });
-
-#ifdef MOZ_SAFE_BROWSING
-    // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
-    setTimeout(function() { SafeBrowsing.init(); }, 5000);
-#endif
   },
 
   get _startupStatus() {
