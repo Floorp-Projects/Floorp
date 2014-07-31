@@ -62,31 +62,32 @@ packToFloat16(float v)
 
     // pull the sign from v into f16bits
     uint16_t f16Bits = uint16_t(f32Bits >> 16) & 0x8000;
+    const uint32_t mantissa = f32Bits & 0x7FFFFF;
+    const uint32_t exp = (f32Bits >> 23) & 0xFF;
 
-    // handle +/- 0
-    if ((f32Bits & 0x7FFFFFFF) == 0x00000000) {
-        return f16Bits;
+    // Adapted from: OpenGL ES 2.0 Programming Guide Appx.
+    // Converting Float to Half-Float
+    // 143 = 255 - 127 + 15
+    //     = sp_max - sp_bias + hp_bias
+    if (exp >= 143) {
+        if (mantissa && exp == 0xFF) {
+            // Single precision was NaN
+            return f16Bits | kFloat16Value_NaN;
+        } else {
+            // Outside range, store as infinity
+            return f16Bits | kFloat16Value_Infinity;
+        }
     }
 
-    // handle NaN
-    if (f32Value != f32Value) {
-        return f16Bits | kFloat16Value_NaN;
+    // too small, try to make a denormalized number
+    // 112 = 255 - 127 - (15 + 1)
+    //     = sp_max - sp_bias - (hp_bias + 1)
+    if (exp <= 112) {
+        return f16Bits | uint16_t(mantissa >> (14 + 112 - exp));
     }
 
-    int32_t exp = int32_t(f32Bits >> 23) - 127;
-
-    // too small, we clamp it to -0 or +0
-    if (exp < -14) {
-        return f16Bits;
-    }
-
-    // too big, we clamp it to -inf/+inf
-    if (exp > 15) {
-        return f16Bits | kFloat16Value_Infinity;
-    }
-
-    f16Bits |= uint16_t(exp + 15) << 10;
-    f16Bits |= uint16_t(f32Bits >> 13) & 0x03FF;
+    f16Bits |= uint16_t(exp - 112) << 10;
+    f16Bits |= uint16_t(mantissa >> 13) & 0x03FF;
 
     return f16Bits;
 }
@@ -94,21 +95,41 @@ packToFloat16(float v)
 MOZ_ALWAYS_INLINE float
 unpackFromFloat16(uint16_t v)
 {
-    union
-    {
+    union {
         float f32Value;
         uint32_t f32Bits;
     };
 
     // grab sign bit
     f32Bits = uint32_t(v & 0x8000) << 16;
+    uint16_t exp = (v >> 10) & 0x001F;
+    uint16_t mantissa = v & 0x03FF;
 
-    if ((v & 0x7FFF) == 0x0000) {
-        // +0 or -0
+    if (exp) {
+        // Handle denormalized numbers
+        // Adapted from: OpenGL ES 2.0 Programming Guide Appx.
+        // Converting Float to Half-Float
+        if (mantissa) {
+            exp = 112; // See packToFloat16
+            mantissa <<= 1;
+            // For every leading zero, decrement the exponent
+            // and shift the mantissa to the left
+            while ((mantissa & (1 << 10)) == 0) {
+                mantissa <<= 1;
+                --exp;
+            }
+            mantissa &= 0x03FF;
+
+            f32Bits |= (exp << 23) | (mantissa << 13);
+
+            // Denormalized number
+            return f32Value;
+        }
+
+        // +/- zero
         return f32Value;
     }
 
-    uint16_t exp = (v >> 10) & 0x001F;
     if (exp == 0x001F) {
         if (v & 0x03FF) {
             // this is a NaN
