@@ -411,7 +411,6 @@ gbjar.sources += [
     'TouchEventInterceptor.java',
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
-    'VideoPlayer.java',
     'Webapp.java',
     'webapp/Allocator.java',
     'webapp/ApkResources.java',
