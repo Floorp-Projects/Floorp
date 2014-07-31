@@ -2521,7 +2521,6 @@ class JSPurpleBuffer
   {
     MOZ_ASSERT(mValues.IsEmpty());
     MOZ_ASSERT(mObjects.IsEmpty());
-    MOZ_ASSERT(mTenuredObjects.IsEmpty());
   }
 
 public:
@@ -2538,7 +2537,6 @@ public:
     mReferenceToThis = nullptr;
     mValues.Clear();
     mObjects.Clear();
-    mTenuredObjects.Clear();
     mozilla::DropJSObjects(this);
     NS_RELEASE_THIS();
   }
@@ -2547,9 +2545,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(JSPurpleBuffer)
 
   JSPurpleBuffer*& mReferenceToThis;
-  SegmentedArray<JS::Heap<JS::Value>> mValues;
-  SegmentedArray<JS::Heap<JSObject*>> mObjects;
-  SegmentedArray<JS::TenuredHeap<JSObject*>> mTenuredObjects;
+
+  // These are raw pointers instead of Heap<T> because we only need Heap<T> for
+  // pointers which may point into the nursery. The purple buffer never contains
+  // pointers to the nursery because nursery gcthings can never be gray and only
+  // gray things can be inserted into the purple buffer.
+  SegmentedArray<JS::Value> mValues;
+  SegmentedArray<JSObject*> mObjects;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(JSPurpleBuffer)
@@ -2563,21 +2565,21 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSPurpleBuffer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-#define NS_TRACE_SEGMENTED_ARRAY(_field)                                       \
-    {                                                                          \
-        auto segment = tmp->_field.GetFirstSegment();                          \
-        while (segment) {                                                      \
-            for (uint32_t i = segment->Length(); i > 0;) {                     \
-                aCallbacks.Trace(&segment->ElementAt(--i), #_field, aClosure); \
-            }                                                                  \
-            segment = segment->getNext();                                      \
-        }                                                                      \
-    }
+#define NS_TRACE_SEGMENTED_ARRAY(_field, _type)                                \
+  {                                                                            \
+    auto segment = tmp->_field.GetFirstSegment();                              \
+    while (segment) {                                                          \
+      for (uint32_t i = segment->Length(); i > 0;) {                           \
+        js::gc::CallTraceCallbackOnNonHeap<_type, TraceCallbacks>(             \
+            &segment->ElementAt(--i), aCallbacks, #_field, aClosure);          \
+      }                                                                        \
+      segment = segment->getNext();                                            \
+    }                                                                          \
+  }
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(JSPurpleBuffer)
-  NS_TRACE_SEGMENTED_ARRAY(mValues)
-  NS_TRACE_SEGMENTED_ARRAY(mObjects)
-  NS_TRACE_SEGMENTED_ARRAY(mTenuredObjects)
+  NS_TRACE_SEGMENTED_ARRAY(mValues, JS::Value)
+  NS_TRACE_SEGMENTED_ARRAY(mObjects, JSObject*)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(JSPurpleBuffer, AddRef)
@@ -2644,10 +2646,12 @@ public:
   virtual void Trace(JS::Heap<JS::Value>* aValue, const char* aName,
                      void* aClosure) const
   {
-    if (aValue->isMarkable()) {
-      void* thing = aValue->toGCThing();
+    JS::Value val = *aValue;
+    if (val.isMarkable()) {
+      void* thing = val.toGCThing();
       if (thing && xpc_GCThingIsGrayCCThing(thing)) {
-        mCollector->GetJSPurpleBuffer()->mValues.AppendElement(*aValue);
+        MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
+        mCollector->GetJSPurpleBuffer()->mValues.AppendElement(val);
       }
     }
   }
@@ -2657,20 +2661,24 @@ public:
   {
   }
 
+  void AppendJSObjectToPurpleBuffer(JSObject *obj) const
+  {
+    if (obj && xpc_GCThingIsGrayCCThing(obj)) {
+      MOZ_ASSERT(!js::gc::IsInsideNursery(JS::AsCell(obj)));
+      mCollector->GetJSPurpleBuffer()->mObjects.AppendElement(obj);
+    }
+  }
+
   virtual void Trace(JS::Heap<JSObject*>* aObject, const char* aName,
                      void* aClosure) const
   {
-    if (*aObject && xpc_GCThingIsGrayCCThing(*aObject)) {
-      mCollector->GetJSPurpleBuffer()->mObjects.AppendElement(*aObject);
-    }
+    AppendJSObjectToPurpleBuffer(*aObject);
   }
 
   virtual void Trace(JS::TenuredHeap<JSObject*>* aObject, const char* aName,
                      void* aClosure) const
   {
-    if (*aObject && xpc_GCThingIsGrayCCThing(*aObject)) {
-      mCollector->GetJSPurpleBuffer()->mTenuredObjects.AppendElement(*aObject);
-    }
+    AppendJSObjectToPurpleBuffer(*aObject);
   }
 
   virtual void Trace(JS::Heap<JSString*>* aString, const char* aName,
@@ -3817,6 +3825,8 @@ JSPurpleBuffer*
 nsCycleCollector::GetJSPurpleBuffer()
 {
   if (!mJSPurpleBuffer) {
+    // The Release call here confuses the GC analysis.
+    JS::AutoSuppressGCAnalysis nogc;
     // JSPurpleBuffer keeps itself alive, but we need to create it in such way
     // that it ends up in the normal purple buffer. That happens when
     // nsRefPtr goes out of the scope and calls Release.
