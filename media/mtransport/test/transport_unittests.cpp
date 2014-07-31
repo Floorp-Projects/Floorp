@@ -876,6 +876,17 @@ TEST_F(TransportTest, TestSrtpMismatch) {
   ASSERT_EQ(0, p2_->srtpCipher());
 }
 
+// NSS doesn't support DHE suites on the server end.
+// This checks to see if we barf when that's the only option available.
+TEST_F(TransportTest, TestDheOnlyFails) {
+  SetDtlsPeer();
+
+  // p2_ is the client
+  // setting this on p1_ (the server) causes NSS to assert
+  ConfigureOneCipher(p2_, TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
+  ConnectSocketExpectFail();
+}
+
 TEST(PushTests, LayerFail) {
   mozilla::RefPtr<TransportFlow> flow = new TransportFlow();
   nsresult rv;
