@@ -4,6 +4,7 @@
 
 "use strict";
 
+const LOOPBACK_ADDR = "127.0.0.";
 
 const iceStateTransitions = {
   "new": ["checking", "closed"], //Note: 'failed' might need to added here
@@ -755,9 +756,9 @@ function PCT_setMediaConstraints(constraintsLocal, constraintsRemote) {
 };
 
 /**
- * Sets the media constraints used on a createOffer call in the test.
+ * Sets the media options used on a createOffer call in the test.
  *
- * @param {object} constraints the media constraints to use on createOffer
+ * @param {object} options the media constraints to use on createOffer
  */
 PeerConnectionTest.prototype.setOfferOptions =
 function PCT_setOfferOptions(options) {
@@ -1896,6 +1897,24 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
+   * Checks for audio in given offer options.
+   *
+   * @param options
+   *        The options to be examined.
+   */
+  audioInOfferOptions : function
+    PCW_audioInOfferOptions(options) {
+    if (!options) {
+      return 0;
+    }
+    if (options.offerToReceiveAudio) {
+      return 1;
+    } else {
+      return 0;
+    }
+  },
+
+  /**
    * Counts the amount of video tracks in a given media constraint.
    *
    * @param constraint
@@ -1913,6 +1932,24 @@ PeerConnectionWrapper.prototype = {
       }
     }
     return videoTracks;
+  },
+
+  /**
+   * Checks for video in given offer options.
+   *
+   * @param options
+   *        The options to be examined.
+   */
+  videoInOfferOptions : function
+    PCW_videoInOfferOptions(options) {
+    if (!options) {
+      return 0;
+    }
+    if (options.offerToReceiveVideo) {
+      return 1;
+    } else {
+      return 0;
+    }
   },
 
   /*
@@ -2018,6 +2055,59 @@ PeerConnectionWrapper.prototype = {
         }
       }, 60000);
     }
+  },
+
+  verifySdp : function PCW_verifySdp(desc, expectedType, constraints, offerOptions) {
+    info("Examining this SessionDescription: " + JSON.stringify(desc));
+    info("constraints: " + JSON.stringify(constraints));
+    info("offerOptions: " + JSON.stringify(offerOptions));
+    ok(desc, "SessionDescription is not null");
+    is(desc.type, expectedType, "SessionDescription type is " + expectedType);
+    ok(desc.sdp.length > 10, "SessionDescription body length is plausible");
+    ok(desc.sdp.contains("a=ice-ufrag"), "ICE username is present in SDP");
+    ok(desc.sdp.contains("a=ice-pwd"), "ICE password is present in SDP");
+    ok(desc.sdp.contains("a=fingerprint"), "ICE fingerprint is present in SDP");
+    //TODO: update this for loopback support bug 1027350
+    ok(!desc.sdp.contains(LOOPBACK_ADDR), "loopback interface is absent from SDP");
+    //TODO: update this for trickle ICE bug 1041832
+    ok(desc.sdp.contains("a=candidate"), "at least one ICE candidate is present in SDP");
+    //TODO: how can we check for absence/presence of m=application?
+
+    //TODO: how to handle media contraints + offer options
+    var audioTracks = this.countAudioTracksInMediaConstraint(constraints);
+    if (constraints.length === 0) {
+      audioTracks = this.audioInOfferOptions(offerOptions);
+    }
+    info("expected audio tracks: " + audioTracks);
+    if (audioTracks == 0) {
+      ok(!desc.sdp.contains("m=audio"), "audio m-line is absent from SDP");
+    } else {
+      ok(desc.sdp.contains("m=audio"), "audio m-line is present in SDP");
+      ok(desc.sdp.contains("a=rtpmap:109 opus/48000/2"), "OPUS codec is present in SDP");
+      //TODO: ideally the rtcp-mux should be for the m=audio, and not just
+      //      anywhere in the SDP (JS SDP parser bug 1045429)
+      ok(desc.sdp.contains("a=rtcp-mux"), "RTCP Mux is offered in SDP");
+
+    }
+
+    //TODO: how to handle media contraints + offer options
+    var videoTracks = this.countVideoTracksInMediaConstraint(constraints);
+    if (constraints.length === 0) {
+      videoTracks = this.videoInOfferOptions(offerOptions);
+    }
+    info("expected video tracks: " + videoTracks);
+    if (videoTracks == 0) {
+      ok(!desc.sdp.contains("m=video"), "video m-line is absent from SDP");
+    } else {
+      ok(desc.sdp.contains("m=video"), "video m-line is present in SDP");
+      if (this.h264) {
+        ok(desc.sdp.contains("a=rtpmap:126 H264/90000"), "H.264 codec is present in SDP");
+      } else {
+        ok(desc.sdp.contains("a=rtpmap:120 VP8/90000"), "VP8 codec is present in SDP");
+      }
+      ok(desc.sdp.contains("a=rtcp-mux"), "RTCP Mux is offered in SDP");
+    }
+
   },
 
   /**
