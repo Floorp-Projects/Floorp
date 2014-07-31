@@ -1142,24 +1142,16 @@ public class GeckoAppShell
 
         final String scheme = uri.getScheme();
 
-        final Intent intent;
-
         // Compute our most likely intent, then check to see if there are any
         // custom handlers that would apply.
         // Start with the original URI. If we end up modifying it, we'll
         // overwrite it.
-        final Intent likelyIntent = getIntentForActionString(action);
-        likelyIntent.setData(uri);
+        final Intent intent = getIntentForActionString(action);
+        intent.setData(uri);
 
-        if ("vnd.youtube".equals(scheme) && !hasHandlersForIntent(likelyIntent)) {
-            // Special-case YouTube to use our own player if no system handler
-            // exists.
-            intent = new Intent(VideoPlayer.VIDEO_ACTION);
-            intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                "org.mozilla.gecko.VideoPlayer");
-            intent.setData(uri);
-        } else {
-            intent = likelyIntent;
+        if ("vnd.youtube".equals(scheme) && !hasHandlersForIntent(intent)) {
+            // TODO: reload the page to request HTML5 video.
+            // For now, we will simply fail.
         }
 
         // Have a special handling for SMS, as the message body
