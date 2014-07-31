@@ -271,6 +271,7 @@ class MacroAssemblerNone : public Assembler
 
     template <typename T, typename S> void storePtr(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store32(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void store32_NoSecondScratch(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeFloat32(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void storeDouble(T, S) { MOZ_CRASH(); }
     template <typename T, typename S> void store8(T, S) { MOZ_CRASH(); }
@@ -389,8 +390,11 @@ class ABIArgGenerator
     ABIArg &current() { MOZ_CRASH(); }
     uint32_t stackBytesConsumedSoFar() const { MOZ_CRASH(); }
 
-    static const Register NonArgReturnVolatileReg0;
-    static const Register NonArgReturnVolatileReg1;
+    static const Register NonArgReturnReg0;
+    static const Register NonArgReturnReg1;
+    static const Register NonArg_VolatileReg;
+    static const Register NonReturn_VolatileReg0;
+    static const Register NonReturn_VolatileReg1;
 };
 
 static inline void PatchJump(CodeLocationJump &, CodeLocationLabel) { MOZ_CRASH(); }

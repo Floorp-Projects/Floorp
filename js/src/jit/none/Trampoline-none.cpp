@@ -41,8 +41,11 @@ void MacroAssembler::PopRegsInMaskIgnore(RegisterSet, RegisterSet) { MOZ_CRASH()
 void MacroAssembler::alignFrameForICArguments(AfterICSaveLive &) { MOZ_CRASH(); }
 void MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive &) { MOZ_CRASH(); }
 
-const Register ABIArgGenerator::NonArgReturnVolatileReg0 = { 0 };
-const Register ABIArgGenerator::NonArgReturnVolatileReg1 = { 0 };
+const Register ABIArgGenerator::NonArgReturnReg0 = { 0 };
+const Register ABIArgGenerator::NonArgReturnReg1 = { 0 };
+const Register ABIArgGenerator::NonArg_VolatileReg = { 0 };
+const Register ABIArgGenerator::NonReturn_VolatileReg0 = { 0 };
+const Register ABIArgGenerator::NonReturn_VolatileReg1 = { 0 };
 
 IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &iter, BailoutStack *bailout)
   : JitFrameIterator(iter)
