@@ -56,6 +56,11 @@ interface MozNFC : EventTarget {
     */
    MozNFCPeer? getNFCPeer(DOMString sessionToken);
 
+   /**
+    * This event will be fired when another NFCPeer is detected, and user confirms
+    * to share data to the NFCPeer object by calling mozNFC.notifyUserAcceptedP2P.
+    * The event will be type of NFCPeerEvent.
+    */
    [CheckPermissions="nfc-write"]
    attribute EventHandler onpeerready;
    [CheckPermissions="nfc-write"]
