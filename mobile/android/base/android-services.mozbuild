@@ -472,14 +472,6 @@ sync_thirdparty_java_files = [
 ]
 
 sync_java_files = [
-    'background/announcements/Announcement.java',
-    'background/announcements/AnnouncementPresenter.java',
-    'background/announcements/AnnouncementsBroadcastReceiver.java',
-    'background/announcements/AnnouncementsBroadcastService.java',
-    'background/announcements/AnnouncementsFetchDelegate.java',
-    'background/announcements/AnnouncementsFetcher.java',
-    'background/announcements/AnnouncementsFetchResourceDelegate.java',
-    'background/announcements/AnnouncementsService.java',
     'background/BackgroundService.java',
     'background/bagheera/BagheeraClient.java',
     'background/bagheera/BagheeraRequestDelegate.java',
@@ -853,7 +845,6 @@ sync_java_files = [
 ]
 
 sync_generated_java_files = [
-    'org/mozilla/gecko/background/announcements/AnnouncementsConstants.java',
     'org/mozilla/gecko/background/common/GlobalConstants.java',
     'org/mozilla/gecko/background/healthreport/HealthReportConstants.java',
     'org/mozilla/gecko/fxa/FxAccountConstants.java',
