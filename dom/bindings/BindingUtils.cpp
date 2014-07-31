@@ -25,6 +25,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
+#include "nsUTF8Utils.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"
@@ -2136,6 +2137,36 @@ NonVoidByteStringToJsval(JSContext *cx, const nsACString &str,
 
     rval.setString(jsStr);
     return true;
+}
+
+
+template<typename T> static void
+NormalizeScalarValueStringInternal(JSContext* aCx, T& aString)
+{
+  char16_t* start = aString.BeginWriting();
+  // Must use const here because we can't pass char** to UTF16CharEnumerator as
+  // it expects const char**.  Unclear why this is illegal...
+  const char16_t* nextChar = start;
+  const char16_t* end = aString.Data() + aString.Length();
+  while (nextChar < end) {
+    uint32_t enumerated = UTF16CharEnumerator::NextChar(&nextChar, end);
+    if (enumerated == UCS2_REPLACEMENT_CHAR) {
+      int32_t lastCharIndex = (nextChar - start) - 1;
+      start[lastCharIndex] = static_cast<char16_t>(enumerated);
+    }
+  }
+}
+
+void
+NormalizeScalarValueString(JSContext* aCx, nsAString& aString)
+{
+  NormalizeScalarValueStringInternal(aCx, aString);
+}
+
+void
+NormalizeScalarValueString(JSContext* aCx, binding_detail::FakeString& aString)
+{
+  NormalizeScalarValueStringInternal(aCx, aString);
 }
 
 bool

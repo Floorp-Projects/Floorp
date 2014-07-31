@@ -4486,7 +4486,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         declArgs=declArgs,
                                         holderArgs=holderArgs)
 
-    if type.isDOMString():
+    if type.isDOMString() or type.isScalarValueString():
         assert not isEnforceRange and not isClamp
 
         treatAs = {
@@ -4504,11 +4504,17 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         nullBehavior = treatAs[treatNullAs]
 
         def getConversionCode(varName):
+            normalizeCode = ""
+            if type.isScalarValueString():
+                normalizeCode = "NormalizeScalarValueString(cx, %s);\n" % varName
+
             conversionCode = (
                 "if (!ConvertJSValueToString(cx, ${val}, %s, %s, %s)) {\n"
                 "%s"
-                "}\n" % (nullBehavior, undefinedBehavior, varName,
-                         exceptionCodeIndented.define()))
+                "}\n"
+                "%s" % (nullBehavior, undefinedBehavior, varName,
+                        exceptionCodeIndented.define(), normalizeCode))
+
             if defaultValue is None:
                 return conversionCode
 
@@ -5423,7 +5429,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         wrappingCode += wrapAndSetPtr(wrap, failed)
         return (wrappingCode, False)
 
-    if type.isDOMString():
+    if type.isDOMString() or type.isScalarValueString():
         if type.nullable():
             return (wrapAndSetPtr("xpc::StringToJsval(cx, %s, ${jsvalHandle})" % result), False)
         else:
@@ -5701,7 +5707,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         if returnType.nullable():
             result = CGTemplatedType("Nullable", result)
         return result, None, None, None
-    if returnType.isDOMString():
+    if returnType.isDOMString() or returnType.isScalarValueString():
         if isMember:
             return CGGeneric("nsString"), "ref", None, None
         return CGGeneric("DOMString"), "ref", None, None
@@ -8091,7 +8097,7 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         typeName = CGGeneric(type.name)
         return CGWrapper(typeName, post=" const &")
 
-    if type.isDOMString():
+    if type.isDOMString() or type.isScalarValueString():
         return CGGeneric("const nsAString&")
 
     if type.isByteString():
@@ -11695,7 +11701,7 @@ class CGNativeMember(ClassMethod):
             return (result.define(),
                     "%s(%s)" % (result.define(), defaultReturnArg),
                     "return ${declName};\n")
-        if type.isDOMString():
+        if type.isDOMString() or type.isScalarValueString():
             if isMember:
                 # No need for a third element in the isMember case
                 return "nsString", None, None
@@ -11815,7 +11821,7 @@ class CGNativeMember(ClassMethod):
     def getArgs(self, returnType, argList):
         args = [self.getArg(arg) for arg in argList]
         # Now the outparams
-        if returnType.isDOMString():
+        if returnType.isDOMString() or returnType.isScalarValueString():
             args.append(Argument("nsString&", "aRetVal"))
         elif returnType.isByteString():
             args.append(Argument("nsCString&", "aRetVal"))
@@ -11941,7 +11947,7 @@ class CGNativeMember(ClassMethod):
 
             return type.name, True, True
 
-        if type.isDOMString():
+        if type.isDOMString() or type.isScalarValueString():
             if isMember:
                 declType = "nsString"
             else:
@@ -13744,7 +13750,7 @@ class CGEventGetter(CGNativeMember):
         memberName = CGDictionary.makeMemberName(self.member.identifier.name)
         if (type.isPrimitive() and type.tag() in builtinNames) or type.isEnum() or type.isGeckoInterface():
             return "return " + memberName + ";\n"
-        if type.isDOMString() or type.isByteString():
+        if type.isDOMString() or type.isByteString() or type.isScalarValueString():
             return "aRetVal = " + memberName + ";\n"
         if type.isSpiderMonkeyInterface() or type.isObject():
             return fill(
@@ -14118,7 +14124,7 @@ class CGEventClass(CGBindingImplClass):
             nativeType = CGGeneric(type.unroll().inner.identifier.name)
             if type.nullable():
                 nativeType = CGTemplatedType("Nullable", nativeType)
-        elif type.isDOMString():
+        elif type.isDOMString() or type.isScalarValueString():
             nativeType = CGGeneric("nsString")
         elif type.isByteString():
             nativeType = CGGeneric("nsCString")
