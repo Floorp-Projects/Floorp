@@ -816,33 +816,6 @@ pref("plugin.state.f5 ssl vpn plugin", 2);
 pref("plugin.state.f5 sam inspection host plugin", 2);
 #endif
 
-// Roblox Launcher Plugin, bug 1024073
-#ifdef XP_WIN
-pref("plugin.state.nprobloxproxy", 2);
-#endif
-#ifdef XP_MACOSX
-pref("plugins.state.nproblox", 2);
-#endif
-
-// Box Edit, bug 1029654
-#ifdef XP_WIN
-pref("plugins.state.npboxedit", 2);
-#endif
-#ifdef XP_MACOSX
-pref("plugins.state.box edit", 2);
-#endif
-
-// Nexus Personal, bug 1024965
-#ifdef XP_WIN
-pref("plugins.state.np_prsnl", 2);
-#endif
-#ifdef XP_MACOSX
-pref("plugins.state.personalplugin", 2);
-#endif
-#ifdef UNIX_BUT_NOT_MAC
-pref("plugins.state.libplugins", 2);
-#endif
-
 // display door hanger if flash not installed
 pref("plugins.notifyMissingFlash", true);
 
