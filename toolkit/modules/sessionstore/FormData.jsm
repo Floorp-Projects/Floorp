@@ -41,6 +41,44 @@ function getDocumentURI(doc) {
 }
 
 /**
+ * Returns whether the given value is a valid credit card number based on
+ * the Luhn algorithm. See https://en.wikipedia.org/wiki/Luhn_algorithm.
+ */
+function isValidCCNumber(value) {
+  // Remove dashes and whitespace.
+  let ccNumber = value.replace(/[-\s]+/g, "");
+
+  // Check for non-alphanumeric characters.
+  if (/[^0-9]/.test(ccNumber)) {
+    return false;
+  }
+
+  // Check for invalid length.
+  let length = ccNumber.length;
+  if (length != 9 && length != 15 && length != 16) {
+    return false;
+  }
+
+  let total = 0;
+  for (let i = 0; i < length; i++) {
+    let currentChar = ccNumber.charAt(length - i - 1);
+    let currentDigit = parseInt(currentChar, 10);
+
+    if (i % 2) {
+      // Double every other value.
+      total += currentDigit * 2;
+      // If the doubled value has two digits, add the digits together.
+      if (currentDigit > 4) {
+        total -= 9;
+      }
+    } else {
+      total += currentDigit;
+    }
+  }
+  return total % 10 == 0;
+}
+
+/**
  * The public API exported by this module that allows to collect
  * and restore form data for a document and its subframes.
  */
@@ -108,6 +146,12 @@ let FormDataInternal = {
       // Only generate a limited number of XPath expressions for perf reasons
       // (cf. bug 477564)
       if (!node.id && generatedCount > MAX_TRAVERSED_XPATHS) {
+        continue;
+      }
+
+      // We do not want to collect credit card numbers.
+      if (node instanceof Ci.nsIDOMHTMLInputElement &&
+          isValidCCNumber(node.value)) {
         continue;
       }
 

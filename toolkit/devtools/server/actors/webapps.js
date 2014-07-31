@@ -283,8 +283,7 @@ WebappsActor.prototype = {
 
         // We can't have appcache for packaged apps.
         if (!aApp.origin.startsWith("app://")) {
-          reg.startOfflineCacheDownload(
-            new ManifestHelper(manifest, aApp.origin, aApp.manifestURL));
+          reg.startOfflineCacheDownload(new ManifestHelper(manifest, aApp.origin));
         }
       });
       // Cleanup by removing the temporary directory.
@@ -748,7 +747,7 @@ WebappsActor.prototype = {
     let deferred = promise.defer();
 
     this._findManifestByURL(manifestURL).then(jsonManifest => {
-      let manifest = new ManifestHelper(jsonManifest, app.origin, manifestURL);
+      let manifest = new ManifestHelper(jsonManifest, app.origin);
       let iconURL = manifest.iconURLForSize(aRequest.size || 128);
       if (!iconURL) {
         deferred.resolve({

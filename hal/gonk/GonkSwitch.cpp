@@ -334,6 +334,8 @@ private:
   SwitchHandlerArray mHandler;
   bool mHeadphonesFromInputDev;
 
+  // This function might also get called on the main thread
+  // (from IsHeadphoneEventFromInputDev)
   void Init()
   {
     RefPtr<SwitchHandlerHeadphone> switchHeadPhone =
@@ -458,12 +460,12 @@ GetCurrentSwitchState(SwitchDevice aDevice)
 static void
 NotifySwitchStateIOThread(SwitchDevice aDevice, SwitchState aState)
 {
+  InitializeResourceIfNeed();
   sSwitchObserver->Notify(aDevice, aState);
 }
 
 void NotifySwitchStateFromInputDevice(SwitchDevice aDevice, SwitchState aState)
 {
-  InitializeResourceIfNeed();
   XRE_GetIOMessageLoop()->PostTask(
       FROM_HERE,
       NewRunnableFunction(NotifySwitchStateIOThread, aDevice, aState));
@@ -471,8 +473,10 @@ void NotifySwitchStateFromInputDevice(SwitchDevice aDevice, SwitchState aState)
 
 bool IsHeadphoneEventFromInputDev()
 {
-  InitializeResourceIfNeed();
-  return sSwitchObserver->GetHeadphonesFromInputDev();
+  // Instead of calling InitializeResourceIfNeed, create new SwitchEventObserver
+  // to prevent calling RegisterUeventListener in main thread.
+  RefPtr<SwitchEventObserver> switchObserver = new SwitchEventObserver();
+  return switchObserver->GetHeadphonesFromInputDev();
 }
 
 } // hal_impl
