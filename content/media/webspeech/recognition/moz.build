@@ -3,13 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+
 XPIDL_MODULE = 'dom_webspeechrecognition'
 
 XPIDL_SOURCES = [
   'nsISpeechRecognitionService.idl'
 ]
-
-TEST_DIRS += ['test']
 
 EXPORTS.mozilla.dom += [
     'SpeechGrammar.h',
