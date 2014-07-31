@@ -8,6 +8,7 @@
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include <fcntl.h>
+#include "mozilla/unused.h"
 
 static const size_t MAX_READ_SIZE = 1 << 16;
 
@@ -171,34 +172,6 @@ private:
    * Task member for delayed connect task. Should only be access on main thread.
    */
   CancelableTask* mDelayedConnectTask;
-};
-
-class SocketSendTask : public SocketIOTask<UnixSocketImpl>
-{
-public:
-  SocketSendTask(UnixSocketImpl* aImpl,
-                 UnixSocketConsumer* aConsumer,
-                 UnixSocketRawData* aData)
-  : SocketIOTask<UnixSocketImpl>(aImpl)
-  , mConsumer(aConsumer)
-  , mData(aData)
-  {
-    MOZ_ASSERT(aConsumer);
-    MOZ_ASSERT(aData);
-  }
-  void Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!IsCanceled());
-
-    UnixSocketImpl* impl = GetIO();
-    MOZ_ASSERT(!impl->IsShutdownOnIOThread());
-
-    impl->Send(mData);
-  }
-private:
-  nsRefPtr<UnixSocketConsumer> mConsumer;
-  UnixSocketRawData* mData;
 };
 
 class SocketListenTask : public SocketIOTask<UnixSocketImpl>
@@ -538,27 +511,28 @@ UnixSocketConsumer::SendSocketData(UnixSocketRawData* aData)
   }
 
   MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new SocketSendTask(mImpl, this, aData));
+  XRE_GetIOMessageLoop()->PostTask(
+    FROM_HERE, new SocketIOSendTask<UnixSocketImpl>(mImpl, aData));
+
   return true;
 }
 
 bool
 UnixSocketConsumer::SendSocketData(const nsACString& aStr)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mImpl) {
-    return false;
-  }
   if (aStr.Length() > MAX_READ_SIZE) {
     return false;
   }
 
-  MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
-  UnixSocketRawData* d = new UnixSocketRawData(aStr.BeginReading(),
-                                               aStr.Length());
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new SocketSendTask(mImpl, this, d));
+  nsAutoPtr<UnixSocketRawData> data(
+    new UnixSocketRawData(aStr.BeginReading(), aStr.Length()));
+
+  if (!SendSocketData(data)) {
+    return false;
+  }
+
+  unused << data.forget();
+
   return true;
 }
 
