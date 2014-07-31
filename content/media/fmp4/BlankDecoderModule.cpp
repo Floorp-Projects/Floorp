@@ -211,11 +211,12 @@ public:
   }
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                                              layers::LayersBackend aLayersBackend,
-                                              layers::ImageContainer* aImageContainer,
-                                              MediaTaskQueue* aVideoTaskQueue,
-                                              MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
+  virtual MediaDataDecoder*
+  CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                    layers::LayersBackend aLayersBackend,
+                    layers::ImageContainer* aImageContainer,
+                    MediaTaskQueue* aVideoTaskQueue,
+                    MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
     BlankVideoDataCreator* decoder = new BlankVideoDataCreator(
       aConfig.display_width, aConfig.display_height, aImageContainer);
     return new BlankMediaDataDecoder<BlankVideoDataCreator>(decoder,
@@ -224,9 +225,10 @@ public:
   }
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                                             MediaTaskQueue* aAudioTaskQueue,
-                                             MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
+  virtual MediaDataDecoder*
+  CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                   MediaTaskQueue* aAudioTaskQueue,
+                   MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
     BlankAudioDataCreator* decoder = new BlankAudioDataCreator(
       aConfig.channel_count, aConfig.samples_per_second);
     return new BlankMediaDataDecoder<BlankAudioDataCreator>(decoder,

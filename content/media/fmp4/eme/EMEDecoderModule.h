@@ -41,10 +41,10 @@ public:
                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateAACDecoder(
-    const mp4_demuxer::AudioDecoderConfig& aConfig,
-    MediaTaskQueue* aAudioTaskQueue,
-    MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+  virtual MediaDataDecoder*
+  CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                   MediaTaskQueue* aAudioTaskQueue,
+                   MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
 private:
   nsRefPtr<CDMProxy> mProxy;
