@@ -1563,38 +1563,12 @@ function JSTermHelpers(aOwner)
   /**
    * Returns the currently selected object in the highlighter.
    *
-   * TODO: this implementation crosses the client/server boundaries! This is not
-   * usable within a remote browser. To implement this feature correctly we need
-   * support for remote inspection capabilities within the Inspector as well.
-   * See bug 787975.
-   *
-   * @return nsIDOMElement|null
-   *         The DOM element currently selected in the highlighter.
+   * @return Object representing the current selection in the
+   *         Inspector, or null if no selection exists.
    */
-   Object.defineProperty(aOwner.sandbox, "$0", {
+  Object.defineProperty(aOwner.sandbox, "$0", {
     get: function() {
-      let window = aOwner.chromeWindow();
-      if (!window) {
-        return null;
-      }
-
-      let target = null;
-      try {
-        target = devtools.TargetFactory.forTab(window.gBrowser.selectedTab);
-      }
-      catch (ex) {
-        // If we report this exception the user will get it in the Browser
-        // Console every time when she evaluates any string.
-      }
-
-      if (!target) {
-        return null;
-      }
-
-      let toolbox = gDevTools.getToolbox(target);
-      let node = toolbox && toolbox.selection ? toolbox.selection.node : null;
-
-      return node ? aOwner.makeDebuggeeValue(node) : null;
+      return aOwner.makeDebuggeeValue(aOwner.selectedNode)
     },
     enumerable: true,
     configurable: false
