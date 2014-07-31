@@ -644,9 +644,13 @@ class LocationService
       mInUse = 1;
     }
 
-    size_t SizeOfExcludingThis() {
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+    {
       // Don't measure mLibrary because it's externally owned.
-      return MallocSizeOf(mFunction) + MallocSizeOf(mFileName);
+      size_t n = 0;
+      n += aMallocSizeOf(mFunction);
+      n += aMallocSizeOf(mFileName);
+      return n;
     }
   };
 
@@ -732,18 +736,18 @@ public:
     }
   }
 
-  size_t SizeOfIncludingThis()
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
-    size_t n = MallocSizeOf(this);
+    size_t n = aMallocSizeOf(this);
     for (uint32_t i = 0; i < kNumEntries; i++) {
-      n += mEntries[i].SizeOfExcludingThis();
+      n += mEntries[i].SizeOfExcludingThis(aMallocSizeOf);
     }
 
-    n += mLibraryStrings.sizeOfExcludingThis(MallocSizeOf);
+    n += mLibraryStrings.sizeOfExcludingThis(aMallocSizeOf);
     for (StringTable::Range r = mLibraryStrings.all();
          !r.empty();
          r.popFront()) {
-      n += MallocSizeOf(r.front());
+      n += aMallocSizeOf(r.front());
     }
 
     return n;
@@ -2225,7 +2229,7 @@ AnalyzeImpl(Analyzer *aAnalyzer, const Writer& aWriter)
     aAnalyzer->PrintStats(aWriter);
 
     W("    Location service:     %10s bytes\n",
-      Show(locService->SizeOfIncludingThis(), gBuf1, kBufLen));
+      Show(locService->SizeOfIncludingThis(MallocSizeOf), gBuf1, kBufLen));
 
     W("  }\n");
     W("  Counts {\n");
