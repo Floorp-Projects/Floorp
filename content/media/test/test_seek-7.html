@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 7;
+
+function test_seek7(v, seekTime, is, ok, finish) {
+
+// If a NaN is passed to currentTime, make sure this is caught
+// otherwise an infinite loop in the Ogg backend occurs.
+var completed = false;
+var thrown1 = false;
+var thrown2 = false;
+var thrown3 = false;
+
+function startTest() {
+  if (completed)
+    return;
+
+  try {
+    v.currentTime = NaN;
+  } catch(e) {
+    thrown1 = true;
+  }
+
+  try {
+    v.currentTime = Math.random;
+  } catch(e) {
+    thrown3 = true;
+  }
+
+  completed = true;
+  ok(thrown1, "Setting currentTime to invalid value of NaN");
+  ok(thrown3, "Setting currentTime to invalid value of a function");
+  finish();
+}
+
+v.addEventListener("loadedmetadata", startTest, false);
+
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>
