@@ -1,5 +1,0 @@
-    <!-- So we can start our service. -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-    <!-- So we can receive messages from Fennec. -->
-    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE" />
