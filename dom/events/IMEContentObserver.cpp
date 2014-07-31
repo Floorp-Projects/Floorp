@@ -82,6 +82,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 
 IMEContentObserver::IMEContentObserver()
   : mESM(nullptr)
+  , mPreCharacterDataChangeLength(-1)
   , mIsEditorInTransaction(false)
   , mIsSelectionChangeEventPending(false)
   , mSelectionChangeCausedOnlyByComposition(false)
@@ -641,12 +642,15 @@ IMEContentObserver::StoreTextChangeData(const TextChangeData& aTextChangeData)
 }
 
 void
-IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
-                                         nsIContent* aContent,
-                                         CharacterDataChangeInfo* aInfo)
+IMEContentObserver::CharacterDataWillChange(nsIDocument* aDocument,
+                                            nsIContent* aContent,
+                                            CharacterDataChangeInfo* aInfo)
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
                "character data changed for non-text node");
+  MOZ_ASSERT(mPreCharacterDataChangeLength < 0,
+             "CharacterDataChanged() should've reset "
+             "mPreCharacterDataChangeLength");
 
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
@@ -657,6 +661,38 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
     return;
   }
 
+  mPreCharacterDataChangeLength =
+    ContentEventHandler::GetNativeTextLength(aContent, aInfo->mChangeStart,
+                                             aInfo->mChangeEnd);
+  MOZ_ASSERT(mPreCharacterDataChangeLength >=
+               aInfo->mChangeEnd - aInfo->mChangeStart,
+             "The computed length must be same as or larger than XP length");
+}
+
+void
+IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
+                                         nsIContent* aContent,
+                                         CharacterDataChangeInfo* aInfo)
+{
+  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
+               "character data changed for non-text node");
+
+  mEndOfAddedTextCache.Clear();
+  mStartOfRemovingTextRangeCache.Clear();
+
+  int64_t removedLength = mPreCharacterDataChangeLength;
+  mPreCharacterDataChangeLength = -1;
+
+  bool causedByComposition = IsEditorHandlingEventForComposition();
+  if (!mTextChangeData.mStored && causedByComposition &&
+      !mUpdatePreference.WantChangesCausedByComposition()) {
+    return;
+  }
+
+  MOZ_ASSERT(removedLength >= 0,
+             "mPreCharacterDataChangeLength should've been set by "
+             "CharacterDataWillChange()");
+
   uint32_t offset = 0;
   // get offsets of change and fire notification
   nsresult rv =
@@ -666,8 +702,13 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
                                                   LINE_BREAK_TYPE_NATIVE);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  uint32_t oldEnd = offset + aInfo->mChangeEnd - aInfo->mChangeStart;
-  uint32_t newEnd = offset + aInfo->mReplaceLength;
+  uint32_t newLength =
+    ContentEventHandler::GetNativeTextLength(aContent, aInfo->mChangeStart,
+                                             aInfo->mChangeStart +
+                                               aInfo->mReplaceLength);
+
+  uint32_t oldEnd = offset + static_cast<uint32_t>(removedLength);
+  uint32_t newEnd = offset + newLength;
 
   TextChangeData data(offset, oldEnd, newEnd, causedByComposition);
   MaybeNotifyIMEOfTextChange(data);
