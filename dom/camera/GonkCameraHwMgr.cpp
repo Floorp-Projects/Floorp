@@ -234,6 +234,7 @@ GonkCameraHardware::Connect(mozilla::nsGonkCameraControl* aTarget, uint32_t aCam
   nsresult rv = cameraHardware->Init();
   if (NS_FAILED(rv)) {
     DOM_CAMERA_LOGE("Failed to initialize camera hardware (0x%X)\n", rv);
+    cameraHardware->Close();
     return nullptr;
   }
 
