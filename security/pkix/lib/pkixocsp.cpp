@@ -85,8 +85,8 @@ private:
 static Result
 CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
                             BackCert& potentialSigner,
-                            InputBuffer issuerSubject,
-                            InputBuffer issuerSubjectPublicKeyInfo,
+                            Input issuerSubject,
+                            Input issuerSubjectPublicKeyInfo,
                             PRTime time)
 {
   Result rv;
@@ -129,7 +129,7 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   // XXX(bug 926270) XXX(bug 1008133) XXX(bug 980163): Improve name
   // comparison.
   // TODO: needs test
-  if (!InputBuffersAreEqual(potentialSigner.GetIssuer(), issuerSubject)) {
+  if (!InputsAreEqual(potentialSigner.GetIssuer(), issuerSubject)) {
     return Result::ERROR_OCSP_RESPONDER_CERT_INVALID;
   }
 
@@ -150,34 +150,34 @@ MOZILLA_PKIX_ENUM_CLASS ResponderIDType : uint8_t
   byKey = der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 2
 };
 
-static inline Result OCSPResponse(Input&, Context&);
-static inline Result ResponseBytes(Input&, Context&);
-static inline Result BasicResponse(Input&, Context&);
+static inline Result OCSPResponse(Reader&, Context&);
+static inline Result ResponseBytes(Reader&, Context&);
+static inline Result BasicResponse(Reader&, Context&);
 static inline Result ResponseData(
-                       Input& tbsResponseData,
+                       Reader& tbsResponseData,
                        Context& context,
                        const SignedDataWithSignature& signedResponseData,
                        const DERArray& certs);
-static inline Result SingleResponse(Input& input, Context& context);
-static Result ExtensionNotUnderstood(Input& extnID, InputBuffer extnValue,
+static inline Result SingleResponse(Reader& input, Context& context);
+static Result ExtensionNotUnderstood(Reader& extnID, Input extnValue,
                                      /*out*/ bool& understood);
-static inline Result CertID(Input& input,
+static inline Result CertID(Reader& input,
                             const Context& context,
                             /*out*/ bool& match);
 static Result MatchKeyHash(TrustDomain& trustDomain,
-                           InputBuffer issuerKeyHash,
-                           InputBuffer issuerSubjectPublicKeyInfo,
+                           Input issuerKeyHash,
+                           Input issuerSubjectPublicKeyInfo,
                            /*out*/ bool& match);
 static Result KeyHash(TrustDomain& trustDomain,
-                      InputBuffer subjectPublicKeyInfo,
+                      Input subjectPublicKeyInfo,
                       /*out*/ uint8_t* hashBuf, size_t hashBufSize);
 
 static Result
 MatchResponderID(TrustDomain& trustDomain,
                  ResponderIDType responderIDType,
-                 InputBuffer responderID,
-                 InputBuffer potentialSignerSubject,
-                 InputBuffer potentialSignerSubjectPublicKeyInfo,
+                 Input responderID,
+                 Input potentialSignerSubject,
+                 Input potentialSignerSubjectPublicKeyInfo,
                  /*out*/ bool& match)
 {
   match = false;
@@ -186,13 +186,13 @@ MatchResponderID(TrustDomain& trustDomain,
     case ResponderIDType::byName:
       // XXX(bug 926270) XXX(bug 1008133) XXX(bug 980163): Improve name
       // comparison.
-      match = InputBuffersAreEqual(responderID, potentialSignerSubject);
+      match = InputsAreEqual(responderID, potentialSignerSubject);
       return Success;
 
     case ResponderIDType::byKey:
     {
-      Input input(responderID);
-      InputBuffer keyHash;
+      Reader input(responderID);
+      Input keyHash;
       Result rv = der::ExpectTagAndGetValue(input, der::OCTET_STRING, keyHash);
       if (rv != Success) {
         return rv;
@@ -209,7 +209,7 @@ MatchResponderID(TrustDomain& trustDomain,
 static Result
 VerifyOCSPSignedData(TrustDomain& trustDomain,
                      const SignedDataWithSignature& signedResponseData,
-                     InputBuffer spki)
+                     Input spki)
 {
   Result rv = trustDomain.VerifySignedData(signedResponseData, spki);
   if (rv == Result::ERROR_BAD_SIGNATURE) {
@@ -226,7 +226,7 @@ VerifyOCSPSignedData(TrustDomain& trustDomain,
 // *directly* to issuerCert.
 static Result
 VerifySignature(Context& context, ResponderIDType responderIDType,
-                InputBuffer responderID, const DERArray& certs,
+                Input responderID, const DERArray& certs,
                 const SignedDataWithSignature& signedResponseData)
 {
   bool match;
@@ -291,7 +291,7 @@ MapBadDERToMalformedOCSPResponse(Result rv)
 Result
 VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
                           PRTime time, uint16_t maxOCSPLifetimeInDays,
-                          InputBuffer encodedResponse,
+                          Input encodedResponse,
                           /*out*/ bool& expired,
                           /*optional out*/ PRTime* thisUpdate,
                           /*optional out*/ PRTime* validThrough)
@@ -302,7 +302,7 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
   Context context(trustDomain, certID, time, maxOCSPLifetimeInDays,
                   thisUpdate, validThrough);
 
-  Input input(encodedResponse);
+  Reader input(encodedResponse);
   Result rv = der::Nested(input, der::SEQUENCE,
                           bind(OCSPResponse, _1, ref(context)));
   if (rv != Success) {
@@ -336,7 +336,7 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
 //       responseBytes          [0] EXPLICIT ResponseBytes OPTIONAL }
 //
 static inline Result
-OCSPResponse(Input& input, Context& context)
+OCSPResponse(Reader& input, Context& context)
 {
   // OCSPResponseStatus ::= ENUMERATED {
   //     successful            (0),  -- Response has valid confirmations
@@ -371,7 +371,7 @@ OCSPResponse(Input& input, Context& context)
 //     responseType   OBJECT IDENTIFIER,
 //     response       OCTET STRING }
 static inline Result
-ResponseBytes(Input& input, Context& context)
+ResponseBytes(Reader& input, Context& context)
 {
   static const uint8_t id_pkix_ocsp_basic[] = {
     0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x01
@@ -392,9 +392,9 @@ ResponseBytes(Input& input, Context& context)
 //    signature            BIT STRING,
 //    certs            [0] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
 Result
-BasicResponse(Input& input, Context& context)
+BasicResponse(Reader& input, Context& context)
 {
-  Input tbsResponseData;
+  Reader tbsResponseData;
   SignedDataWithSignature signedData;
   Result rv = der::SignedData(input, tbsResponseData, signedData);
   if (rv != Success) {
@@ -413,7 +413,7 @@ BasicResponse(Input& input, Context& context)
     // and too long and we'll have leftover data that won't parse as a cert.
 
     // [0] wrapper
-    Input wrapped;
+    Reader wrapped;
     rv = der::ExpectTagAndGetValue(
           input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0, wrapped);
     if (rv != Success) {
@@ -425,7 +425,7 @@ BasicResponse(Input& input, Context& context)
     }
 
     // SEQUENCE wrapper
-    Input certsSequence;
+    Reader certsSequence;
     rv = der::ExpectTagAndGetValue(wrapped, der::SEQUENCE, certsSequence);
     if (rv != Success) {
       return rv;
@@ -437,7 +437,7 @@ BasicResponse(Input& input, Context& context)
 
     // sequence of certificates
     while (!certsSequence.AtEnd()) {
-      InputBuffer cert;
+      Input cert;
       rv = der::ExpectTagAndGetTLV(certsSequence, der::SEQUENCE, cert);
       if (rv != Success) {
         return rv;
@@ -459,7 +459,7 @@ BasicResponse(Input& input, Context& context)
 //    responses               SEQUENCE OF SingleResponse,
 //    responseExtensions  [1] EXPLICIT Extensions OPTIONAL }
 static inline Result
-ResponseData(Input& input, Context& context,
+ResponseData(Reader& input, Context& context,
              const SignedDataWithSignature& signedResponseData,
              const DERArray& certs)
 {
@@ -476,7 +476,7 @@ ResponseData(Input& input, Context& context,
   // ResponderID ::= CHOICE {
   //    byName              [1] Name,
   //    byKey               [2] KeyHash }
-  InputBuffer responderID;
+  Input responderID;
   ResponderIDType responderIDType
     = input.Peek(static_cast<uint8_t>(ResponderIDType::byName))
     ? ResponderIDType::byName
@@ -528,7 +528,7 @@ ResponseData(Input& input, Context& context,
 //                                              CrlEntryExtensions, ...}
 //                                              } OPTIONAL }
 static inline Result
-SingleResponse(Input& input, Context& context)
+SingleResponse(Reader& input, Context& context)
 {
   bool match = false;
   Result rv = der::Nested(input, der::SEQUENCE,
@@ -660,7 +660,7 @@ SingleResponse(Input& input, Context& context)
 //        issuerKeyHash       OCTET STRING, -- Hash of issuer's public key
 //        serialNumber        CertificateSerialNumber }
 static inline Result
-CertID(Input& input, const Context& context, /*out*/ bool& match)
+CertID(Reader& input, const Context& context, /*out*/ bool& match)
 {
   match = false;
 
@@ -675,25 +675,25 @@ CertID(Input& input, const Context& context, /*out*/ bool& match)
     return rv;
   }
 
-  InputBuffer issuerNameHash;
+  Input issuerNameHash;
   rv = der::ExpectTagAndGetValue(input, der::OCTET_STRING, issuerNameHash);
   if (rv != Success) {
     return rv;
   }
 
-  InputBuffer issuerKeyHash;
+  Input issuerKeyHash;
   rv = der::ExpectTagAndGetValue(input, der::OCTET_STRING, issuerKeyHash);
   if (rv != Success) {
     return rv;
   }
 
-  InputBuffer serialNumber;
+  Input serialNumber;
   rv = der::CertificateSerialNumber(input, serialNumber);
   if (rv != Success) {
     return rv;
   }
 
-  if (!InputBuffersAreEqual(serialNumber, context.certID.serialNumber)) {
+  if (!InputsAreEqual(serialNumber, context.certID.serialNumber)) {
     // This does not reference the certificate we're interested in.
     // Consume the rest of the input and return successfully to
     // potentially continue processing other responses.
@@ -722,8 +722,8 @@ CertID(Input& input, const Context& context, /*out*/ bool& match)
   if (rv != Success) {
     return rv;
   }
-  InputBuffer computed(hashBuf);
-  if (!InputBuffersAreEqual(computed, issuerNameHash)) {
+  Input computed(hashBuf);
+  if (!InputsAreEqual(computed, issuerNameHash)) {
     // Again, not interested in this response. Consume input, return success.
     input.SkipToEnd();
     return Success;
@@ -744,8 +744,8 @@ CertID(Input& input, const Context& context, /*out*/ bool& match)
 //                          -- the tag, length, and number of unused
 //                          -- bits] in the responder's certificate)
 static Result
-MatchKeyHash(TrustDomain& trustDomain, InputBuffer keyHash,
-             const InputBuffer subjectPublicKeyInfo, /*out*/ bool& match)
+MatchKeyHash(TrustDomain& trustDomain, Input keyHash,
+             const Input subjectPublicKeyInfo, /*out*/ bool& match)
 {
   if (keyHash.GetLength() != TrustDomain::DIGEST_LENGTH)  {
     return Result::ERROR_OCSP_MALFORMED_RESPONSE;
@@ -756,14 +756,14 @@ MatchKeyHash(TrustDomain& trustDomain, InputBuffer keyHash,
   if (rv != Success) {
     return rv;
   }
-  InputBuffer computed(hashBuf);
-  match = InputBuffersAreEqual(computed, keyHash);
+  Input computed(hashBuf);
+  match = InputsAreEqual(computed, keyHash);
   return Success;
 }
 
 // TODO(bug 966856): support SHA-2 hashes
 Result
-KeyHash(TrustDomain& trustDomain, const InputBuffer subjectPublicKeyInfo,
+KeyHash(TrustDomain& trustDomain, const Input subjectPublicKeyInfo,
         /*out*/ uint8_t* hashBuf, size_t hashBufSize)
 {
   if (!hashBuf || hashBufSize != TrustDomain::DIGEST_LENGTH) {
@@ -776,13 +776,13 @@ KeyHash(TrustDomain& trustDomain, const InputBuffer subjectPublicKeyInfo,
   //    algorithm            AlgorithmIdentifier,
   //    subjectPublicKey     BIT STRING  }
 
-  Input spki;
+  Reader spki;
   Result rv;
 
   {
     // The scope of input is limited to reduce the possibility of confusing it
     // with spki in places we need to be using spki below.
-    Input input(subjectPublicKeyInfo);
+    Reader input(subjectPublicKeyInfo);
     rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, spki);
     if (rv != Success) {
       return rv;
@@ -799,7 +799,7 @@ KeyHash(TrustDomain& trustDomain, const InputBuffer subjectPublicKeyInfo,
     return rv;
   }
 
-  InputBuffer subjectPublicKey;
+  Input subjectPublicKey;
   rv = der::BitStringWithNoUnusedBits(spki, subjectPublicKey);
   if (rv != Success) {
     return rv;
@@ -813,7 +813,7 @@ KeyHash(TrustDomain& trustDomain, const InputBuffer subjectPublicKeyInfo,
 }
 
 Result
-ExtensionNotUnderstood(Input& /*extnID*/, InputBuffer /*extnValue*/,
+ExtensionNotUnderstood(Reader& /*extnID*/, Input /*extnValue*/,
                        /*out*/ bool& understood)
 {
   understood = false;
@@ -932,7 +932,7 @@ CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
   // reqCert.serialNumber (INTEGER)
   *d++ = 0x02; // INTEGER
   *d++ = static_cast<uint8_t>(certID.serialNumber.GetLength());
-  Input serialNumber(certID.serialNumber);
+  Reader serialNumber(certID.serialNumber);
   do {
     rv = serialNumber.Read(*d);
     if (rv != Success) {

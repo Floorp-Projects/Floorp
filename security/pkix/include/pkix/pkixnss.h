@@ -33,7 +33,7 @@ namespace mozilla { namespace pkix {
 
 // Verify the given signed data using the given public key.
 Result VerifySignedData(const SignedDataWithSignature& sd,
-                        InputBuffer subjectPublicKeyInfo,
+                        Input subjectPublicKeyInfo,
                         void* pkcs11PinArg);
 
 // Computes the SHA-1 hash of the data in the current item.
@@ -47,11 +47,11 @@ Result VerifySignedData(const SignedDataWithSignature& sd,
 // TODO: Taking the output buffer as (uint8_t*, size_t) is counter to our
 // other, extensive, memory safety efforts in mozilla::pkix, and we should find
 // a way to provide a more-obviously-safe interface.
-Result DigestBuf(InputBuffer item, /*out*/ uint8_t* digestBuf,
+Result DigestBuf(Input item, /*out*/ uint8_t* digestBuf,
                  size_t digestBufLen);
 
 // Checks, for RSA keys and DSA keys, that the modulus is at least 1024 bits.
-Result CheckPublicKey(InputBuffer subjectPublicKeyInfo);
+Result CheckPublicKey(Input subjectPublicKeyInfo);
 
 Result MapPRErrorCodeToResult(PRErrorCode errorCode);
 PRErrorCode MapResultToPRErrorCode(Result result);
@@ -76,7 +76,7 @@ enum ErrorCode {
 
 void RegisterErrorTable();
 
-inline SECItem UnsafeMapInputBufferToSECItem(InputBuffer ib)
+inline SECItem UnsafeMapInputToSECItem(Input ib)
 {
   SECItem result = {
     siBuffer,

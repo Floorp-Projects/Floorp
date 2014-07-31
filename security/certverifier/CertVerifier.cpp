@@ -156,11 +156,11 @@ SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
 }
 
 static Result
-BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, InputBuffer certDER,
+BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, Input certDER,
                              PRTime time, KeyUsage ku1, KeyUsage ku2,
                              KeyUsage ku3, KeyPurposeId eku,
                              const CertPolicyId& requiredPolicy,
-                             const InputBuffer* stapledOCSPResponse)
+                             const Input* stapledOCSPResponse)
 {
   Result rv = BuildCertChain(trustDomain, certDER, time,
                              EndEntityOrCA::MustBeEndEntity, ku1,
@@ -209,7 +209,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 
   Result rv;
 
-  InputBuffer certDER;
+  Input certDER;
   rv = certDER.Init(cert->derCert.data, cert->derCert.len);
   if (rv != Success) {
     PR_SetError(MapResultToPRErrorCode(rv), 0);
@@ -232,17 +232,17 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
   ocsp_get_config ocspGETConfig = mOCSPGETEnabled ? ocsp_get_enabled
                                                   : ocsp_get_disabled;
 
-  InputBuffer stapledOCSPResponseInputBuffer;
-  const InputBuffer* stapledOCSPResponse = nullptr;
+  Input stapledOCSPResponseInput;
+  const Input* stapledOCSPResponse = nullptr;
   if (stapledOCSPResponseSECItem) {
-    rv = stapledOCSPResponseInputBuffer.Init(stapledOCSPResponseSECItem->data,
-                                             stapledOCSPResponseSECItem->len);
+    rv = stapledOCSPResponseInput.Init(stapledOCSPResponseSECItem->data,
+                                       stapledOCSPResponseSECItem->len);
     if (rv != Success) {
       // The stapled OCSP response was too big.
       PR_SetError(SEC_ERROR_OCSP_MALFORMED_RESPONSE, 0);
       return SECFailure;
     }
-    stapledOCSPResponse = &stapledOCSPResponseInputBuffer;
+    stapledOCSPResponse = &stapledOCSPResponseInput;
   }
 
   switch (usage) {

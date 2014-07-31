@@ -94,8 +94,8 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
 }
 
 Result
-AppTrustDomain::FindIssuer(InputBuffer encodedIssuerName,
-                           IssuerChecker& checker, PRTime time)
+AppTrustDomain::FindIssuer(Input encodedIssuerName, IssuerChecker& checker,
+                           PRTime time)
 
 {
   MOZ_ASSERT(mTrustedRoot);
@@ -112,7 +112,7 @@ AppTrustDomain::FindIssuer(InputBuffer encodedIssuerName,
   // 2. Secondly, iterate through the certificates that were stored in the CMS
   //    message, passing each one to checker.Check.
   SECItem encodedIssuerNameSECItem =
-    UnsafeMapInputBufferToSECItem(encodedIssuerName);
+    UnsafeMapInputToSECItem(encodedIssuerName);
   ScopedCERTCertList
     candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
                                           &encodedIssuerNameSECItem, time,
@@ -120,7 +120,7 @@ AppTrustDomain::FindIssuer(InputBuffer encodedIssuerName,
   if (candidates) {
     for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
          !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
-      InputBuffer certDER;
+      Input certDER;
       Result rv = certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
       if (rv != Success) {
         continue; // probably too big
@@ -144,7 +144,7 @@ AppTrustDomain::FindIssuer(InputBuffer encodedIssuerName,
 Result
 AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                              const CertPolicyId& policy,
-                             InputBuffer candidateCertDER,
+                             Input candidateCertDER,
                      /*out*/ TrustLevel& trustLevel)
 {
   MOZ_ASSERT(policy.IsAnyPolicy());
@@ -162,7 +162,7 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   // information without constructing a CERTCertificate here, but NSS doesn't
   // expose it in any other easy-to-use fashion.
   SECItem candidateCertDERSECItem =
-    UnsafeMapInputBufferToSECItem(candidateCertDER);
+    UnsafeMapInputToSECItem(candidateCertDER);
   ScopedCERTCertificate candidateCert(
     CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &candidateCertDERSECItem,
                             nullptr, false, true));
@@ -201,14 +201,14 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 
 Result
 AppTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData,
-                                 InputBuffer subjectPublicKeyInfo)
+                                 Input subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
                                            mPinArg);
 }
 
 Result
-AppTrustDomain::DigestBuf(InputBuffer item, /*out*/ uint8_t* digestBuf,
+AppTrustDomain::DigestBuf(Input item, /*out*/ uint8_t* digestBuf,
                           size_t digestBufLen)
 {
   return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
@@ -216,8 +216,8 @@ AppTrustDomain::DigestBuf(InputBuffer item, /*out*/ uint8_t* digestBuf,
 
 Result
 AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, PRTime time,
-                                /*optional*/ const InputBuffer*,
-                                /*optional*/ const InputBuffer*)
+                                /*optional*/ const Input*,
+                                /*optional*/ const Input*)
 {
   // We don't currently do revocation checking. If we need to distrust an Apps
   // certificate, we will use the active distrust mechanism.
@@ -236,7 +236,7 @@ AppTrustDomain::IsChainValid(const DERArray& certChain)
 }
 
 Result
-AppTrustDomain::CheckPublicKey(InputBuffer subjectPublicKeyInfo)
+AppTrustDomain::CheckPublicKey(Input subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
 }

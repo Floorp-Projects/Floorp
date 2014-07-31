@@ -31,7 +31,7 @@ using namespace mozilla::pkix::test;
 
 namespace mozilla { namespace pkix {
 
-Result CheckValidity(const InputBuffer encodedValidity, PRTime time);
+Result CheckValidity(const Input encodedValidity, PRTime time);
 
 } } // namespace mozilla::pkix
 
@@ -69,7 +69,7 @@ TEST_F(pkixcheck_CheckValidity, BothEmptyNull)
     0x17/*UTCTime*/, 0/*length*/,
     0x17/*UTCTime*/, 0/*length*/,
   };
-  static const InputBuffer validity(DER);
+  static const Input validity(DER);
   ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(validity, NOW));
 }
 
@@ -79,7 +79,7 @@ TEST_F(pkixcheck_CheckValidity, NotBeforeEmptyNull)
     0x17/*UTCTime*/, 0x00/*length*/,
     NEWER_UTCTIME
   };
-  static const InputBuffer validity(DER);
+  static const Input validity(DER);
   ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(validity, NOW));
 }
 
@@ -89,7 +89,7 @@ TEST_F(pkixcheck_CheckValidity, NotAfterEmptyNull)
     NEWER_UTCTIME,
     0x17/*UTCTime*/, 0x00/*length*/,
   };
-  static const InputBuffer validity(DER);
+  static const Input validity(DER);
   ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(validity, NOW));
 }
 
@@ -97,7 +97,7 @@ static const uint8_t OLDER_UTCTIME_NEWER_UTCTIME_DATA[] = {
   OLDER_UTCTIME,
   NEWER_UTCTIME,
 };
-static const InputBuffer
+static const Input
 OLDER_UTCTIME_NEWER_UTCTIME(OLDER_UTCTIME_NEWER_UTCTIME_DATA);
 
 TEST_F(pkixcheck_CheckValidity, Valid_UTCTIME_UTCTIME)
@@ -111,7 +111,7 @@ TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_GENERALIZEDTIME)
     OLDER_GENERALIZEDTIME,
     NEWER_GENERALIZEDTIME,
   };
-  static const InputBuffer validity(DER);
+  static const Input validity(DER);
   ASSERT_EQ(Success, CheckValidity(validity, NOW));
 }
 
@@ -121,7 +121,7 @@ TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_UTCTIME)
     OLDER_GENERALIZEDTIME,
     NEWER_UTCTIME,
   };
-  static const InputBuffer validity(DER);
+  static const Input validity(DER);
   ASSERT_EQ(Success, CheckValidity(validity, NOW));
 }
 
@@ -131,7 +131,7 @@ TEST_F(pkixcheck_CheckValidity, Valid_UTCTIME_GENERALIZEDTIME)
     OLDER_UTCTIME,
     NEWER_GENERALIZEDTIME,
   };
-  static const InputBuffer validity(DER);
+  static const Input validity(DER);
   ASSERT_EQ(Success, CheckValidity(validity, NOW));
 }
 
@@ -153,6 +153,6 @@ TEST_F(pkixcheck_CheckValidity, InvalidNotAfterBeforeNotBefore)
     NEWER_UTCTIME,
     OLDER_UTCTIME,
   };
-  static const InputBuffer validity(DER);
+  static const Input validity(DER);
   ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(validity, NOW));
 }

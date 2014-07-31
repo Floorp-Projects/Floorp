@@ -56,16 +56,16 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     PrintPRError("CERT_FindCertIssuer failed");
     return nullptr;
   }
-  InputBuffer issuer;
+  Input issuer;
   if (issuer.Init(cert->derIssuer.data, cert->derIssuer.len) != Success) {
     return nullptr;
   }
-  InputBuffer issuerPublicKey;
+  Input issuerPublicKey;
   if (issuerPublicKey.Init(issuerCert->derPublicKey.data,
                            issuerCert->derPublicKey.len) != Success) {
     return nullptr;
   }
-  InputBuffer serialNumber;
+  Input serialNumber;
   if (serialNumber.Init(cert->serialNumber.data,
                         cert->serialNumber.len) != Success) {
     return nullptr;

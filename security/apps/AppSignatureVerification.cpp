@@ -542,7 +542,7 @@ VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
   if (trustDomain.SetTrustedRoot(context.trustedRoot) != SECSuccess) {
     return MapSECStatus(SECFailure);
   }
-  InputBuffer certDER;
+  Input certDER;
   Result rv = certDER.Init(signerCert->derCert.data, signerCert->derCert.len);
   if (rv != Success) {
     return mozilla::psm::GetXPCOMFromNSSError(MapResultToPRErrorCode(rv));

@@ -37,12 +37,12 @@
 
 namespace mozilla { namespace pkix { namespace test {
 
-class TestInputBuffer : public InputBuffer
+class TestInput : public Input
 {
 public:
   template <size_t N>
-  explicit TestInputBuffer(const char (&valueString)[N])
-    : InputBuffer(reinterpret_cast<const uint8_t(&)[N-1]>(valueString))
+  explicit TestInput(const char (&valueString)[N])
+    : Input(reinterpret_cast<const uint8_t(&)[N-1]>(valueString))
   {
   }
 };
@@ -95,8 +95,7 @@ const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
 SECStatus TamperOnce(SECItem& item, const uint8_t* from, size_t fromLen,
                      const uint8_t* to, size_t toLen);
 
-Result InitInputBufferFromSECItem(const SECItem* secItem,
-                                  /*out*/ InputBuffer& inputBuffer);
+Result InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Encode Certificates

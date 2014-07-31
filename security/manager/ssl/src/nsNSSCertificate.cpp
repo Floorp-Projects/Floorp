@@ -1526,7 +1526,7 @@ ConstructCERTCertListFromReversedDERArray(
 
   size_t numCerts = certArray.GetLength();
   for (size_t i = 0; i < numCerts; ++i) {
-    SECItem certDER(UnsafeMapInputBufferToSECItem(*certArray.GetDER(i)));
+    SECItem certDER(UnsafeMapInputToSECItem(*certArray.GetDER(i)));
     ScopedCERTCertificate cert(CERT_NewTempCertificate(certDB, &certDER,
                                                        nullptr, false, true));
     if (!cert) {
