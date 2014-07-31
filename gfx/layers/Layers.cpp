@@ -922,7 +922,7 @@ ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   aAttrs = ContainerLayerAttributes(GetFrameMetrics(), mScrollHandoffParentId,
                                     mPreXScale, mPreYScale,
                                     mInheritedXScale, mInheritedYScale,
-                                    mBackgroundColor);
+                                    mBackgroundColor, mContentDescription);
 }
 
 bool
