@@ -457,6 +457,35 @@ private:
   T* mIO;
 };
 
+/* |SocketIOSendTask| transfers an instance of |UnixSocketRawData| to
+ * the I/O thread and queues it up for sending the contained data.
+ */
+template <typename T>
+class SocketIOSendTask MOZ_FINAL : public SocketIOTask<T>
+{
+public:
+  SocketIOSendTask(T* aIO, UnixSocketRawData* aData)
+  : SocketIOTask<T>(aIO)
+  , mData(aData)
+  {
+    MOZ_ASSERT(aData);
+  }
+
+  void Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!SocketIOTask<T>::IsCanceled());
+
+    T* io = SocketIOTask<T>::GetIO();
+    MOZ_ASSERT(!io->IsShutdownOnIOThread());
+
+    io->Send(mData);
+  }
+
+private:
+  UnixSocketRawData* mData;
+};
+
 }
 }
 
