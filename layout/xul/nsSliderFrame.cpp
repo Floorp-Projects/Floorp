@@ -438,12 +438,15 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         break;
       }
       if (mChange) {
-        // We're in the process of moving the thumb to the mouse,
-        // but the mouse just moved.  Make sure to update our
-        // destination point.
+        // On Linux the destination point is determined by the initial click
+        // on the scrollbar track and doesn't change until the mouse button
+        // is released.
+#ifndef MOZ_WIDGET_GTK
+        // On the other platforms we need to update the destination point now.
         mDestinationPoint = eventPoint;
         StopRepeat();
         StartRepeat();
+#endif
         break;
       }
 
@@ -1081,7 +1084,25 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
 
   mChange = change;
   DragThumb(true);
+  // On Linux we want to keep scrolling in the direction indicated by |change|
+  // until the mouse is released. On the other platforms we want to stop
+  // scrolling as soon as the scrollbar thumb has reached the current mouse
+  // position.
+#ifdef MOZ_WIDGET_GTK
+  nsRect clientRect;
+  GetClientRect(clientRect);
+
+  // Set the destination point to the very end of the scrollbar so that
+  // scrolling doesn't stop halfway through.
+  if (change > 0) {
+    mDestinationPoint = nsPoint(clientRect.width, clientRect.height);
+  }
+  else {
+    mDestinationPoint = nsPoint(0, 0);
+  }
+#else
   mDestinationPoint = eventPoint;
+#endif
   StartRepeat();
   PageUpDown(change);
   return NS_OK;
