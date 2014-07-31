@@ -423,14 +423,12 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
     RootedScript script(cx);
 
     {
-        JS::AutoSaveContextOptions asco(cx);
-        JS::ContextOptionsRef(cx).setNoScriptRval(true);
-
         CompileOptions options(cx);
         options.setIntroductionType("js shell file")
                .setUTF8(true)
                .setFileAndLine(filename, 1)
-               .setCompileAndGo(true);
+               .setCompileAndGo(true)
+               .setNoScriptRval(true);
 
         gGotError = false;
         (void) JS::Compile(cx, obj, options, file, &script);
@@ -1247,8 +1245,6 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         RootedScript script(cx);
 
         {
-            JS::AutoSaveContextOptions asco(cx);
-            JS::ContextOptionsRef(cx).setNoScriptRval(options.noScriptRval);
             if (saveBytecode) {
                 if (!JS::CompartmentOptionsRef(cx).getSingletonsAsTemplates()) {
                     JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
@@ -1458,13 +1454,11 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
     RootedScript script(cx);
     int64_t startClock = PRMJ_Now();
     {
-        JS::AutoSaveContextOptions asco(cx);
-        JS::ContextOptionsRef(cx).setNoScriptRval(true);
-
         JS::CompileOptions options(cx);
         options.setIntroductionType("js shell run")
                .setFileAndLine(filename.ptr(), 1)
-               .setCompileAndGo(true);
+               .setCompileAndGo(true)
+               .setNoScriptRval(true);
         if (!JS_CompileUCScript(cx, thisobj, ucbuf, buflen, options, &script))
             return false;
     }
@@ -2186,14 +2180,12 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
     RootedScript script(cx);
 
     {
-        JS::AutoSaveContextOptions asco(cx);
-        JS::ContextOptionsRef(cx).setNoScriptRval(true);
-
         CompileOptions options(cx);
         options.setIntroductionType("js shell disFile")
                .setUTF8(true)
                .setFileAndLine(filename.ptr(), 1)
-               .setCompileAndGo(true);
+               .setCompileAndGo(true)
+               .setNoScriptRval(true);
 
         if (!JS::Compile(cx, thisobj, options, filename.ptr(), &script))
             return false;
@@ -3332,12 +3324,11 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
     if (!stableChars.initTwoByte(cx, scriptContents))
         return false;
 
-    JS::AutoSaveContextOptions asco(cx);
-    JS::ContextOptionsRef(cx).setNoScriptRval(true);
     JS::CompileOptions options(cx);
     options.setIntroductionType("js shell compile")
            .setFileAndLine("<string>", 1)
-           .setCompileAndGo(true);
+           .setCompileAndGo(true)
+           .setNoScriptRval(true);
     RootedScript script(cx);
     const jschar *chars = stableChars.twoByteRange().start().get();
     bool ok = JS_CompileUCScript(cx, global, chars,
