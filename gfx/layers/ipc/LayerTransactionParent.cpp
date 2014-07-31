@@ -353,6 +353,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         containerLayer->SetPreScale(attrs.preXScale(), attrs.preYScale());
         containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
         containerLayer->SetBackgroundColor(attrs.backgroundColor().value());
+        containerLayer->SetContentDescription(attrs.contentDescription());
         break;
       }
       case Specific::TColorLayerAttributes: {
