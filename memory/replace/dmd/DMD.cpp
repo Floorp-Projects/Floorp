@@ -718,20 +718,20 @@ public:
     // Sometimes we get nothing useful.  Just print "???" for the entire entry
     // so that fix-linux-stack.pl doesn't complain about an empty filename.
     if (!entry.mFunction && !entry.mLibrary[0] && entry.mLOffset == 0) {
-      W("    ??? 0x%x\n", entryPc);
+      aWriter.Write("    ??? 0x%x\n", entryPc);
     } else {
       // Use "???" for unknown functions.
       const char* entryFunction = entry.mFunction ? entry.mFunction : "???";
       if (entry.mFileName) {
         // On Windows we can get the filename and line number at runtime.
-        W("    %s (%s:%lu) 0x%x\n",
-          entryFunction, entry.mFileName, entry.mLineNo, entryPc);
+        aWriter.Write("    %s (%s:%lu) 0x%x\n",
+                      entryFunction, entry.mFileName, entry.mLineNo, entryPc);
       } else {
         // On Linux and Mac we cannot get the filename and line number at
         // runtime, so we print the offset in a form that fix-linux-stack.pl and
         // fix_macosx_stack.py can post-process.
-        W("    %s[%s +0x%X] 0x%x\n",
-          entryFunction, entry.mLibrary, entry.mLOffset, entryPc);
+        aWriter.Write("    %s[%s +0x%X] 0x%x\n",
+                      entryFunction, entry.mLibrary, entry.mLOffset, entryPc);
       }
     }
   }
