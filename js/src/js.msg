@@ -442,3 +442,4 @@ MSG_DEF(JSMSG_PROXY_CONSTRUCT_OBJECT,   387, 0, JSEXN_TYPEERR, "proxy [[Construc
 MSG_DEF(JSMSG_PROXY_GETOWN_OBJORUNDEF,  388, 0, JSEXN_TYPEERR, "proxy [[GetOwnProperty]] must return an object or undefined")
 MSG_DEF(JSMSG_CANT_REPORT_C_AS_NC,      389, 0, JSEXN_TYPEERR, "proxy can't report existing configurable property as non-configurable")
 MSG_DEF(JSMSG_PROXY_REVOKED,            390, 0, JSEXN_TYPEERR, "illegal operation attempted on a revoked proxy")
+MSG_DEF(JSMSG_TEMPLSTR_UNTERM_EXPR,     391, 0, JSEXN_SYNTAXERR, "missing } in template string")

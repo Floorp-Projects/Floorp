@@ -530,10 +530,10 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   rv = SetCsp(csp);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // need to link in the CSP context here (link in a reference to this
-  // nsIPrincipal and to the URI of the protected resource).
+  // need to link in the CSP context here (link in the URI of the protected
+  // resource).
   if (csp) {
-    csp->SetRequestContext(codebase, nullptr, this, nullptr);
+    csp->SetRequestContext(codebase, nullptr, nullptr);
   }
 
   SetDomain(domain);

@@ -17,16 +17,9 @@ interface nsIPrincipal;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(3e923bf6-a974-4f3b-91c4-b4fd48b37732)]
+[scriptable, uuid(ee599622-99e3-491a-890e-6ee254bf1390)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
-
-  /**
-   * Set to true when the CSP has been read in and parsed and is ready to
-   * enforce.  This is a barrier for the nsDocument so it doesn't load any
-   * sub-content until either it knows that a CSP is ready or will not be used.
-   */
-  readonly attribute boolean isInitialized;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -50,14 +43,11 @@ interface nsIContentSecurityPolicy : nsISerializable
    * Parse and install a CSP policy.
    * @param aPolicy
    *        String representation of the policy (e.g., header value)
-   * @param selfURI
-   *        the URI of the protected document/principal
    * @param reportOnly
    *        Should this policy affect content, script and style processing or
    *        just send reports if it is violated?
    */
-  void appendPolicy(in AString policyString, in nsIURI selfURI,
-                    in boolean reportOnly);
+  void appendPolicy(in AString policyString, in boolean reportOnly);
 
   /**
    * Whether this policy allows in-page script.
@@ -188,7 +178,6 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   void setRequestContext(in nsIURI selfURI,
                          in nsIURI referrer,
-                         in nsIPrincipal documentPrincipal,
                          in nsIChannel aChannel);
 
   /**

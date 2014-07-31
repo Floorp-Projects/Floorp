@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body style="transform:translateY(50px);">
+  <span style="padding:2px; background:yellow">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+<script>
+console.log(document.body.getBoundingClientRect());
+document.body.style.transform = "translateY(30px)";
+function doTest() {
+  document.body.style.transform = "translateY(10px)";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>

@@ -23,7 +23,7 @@
 // JS::ubi::Node is a pointer-like type designed for internal use by heap
 // analysis tools. A ubi::Node can refer to:
 //
-// - a JS value, like a string or object;
+// - a JS value, like a string, object, or symbol;
 // - an internal SpiderMonkey structure, like a shape or a scope chain object
 // - an instance of some embedding-provided type: in Firefox, an XPCOM
 //   object, or an internal DOM node class instance
@@ -315,10 +315,10 @@ class Node {
         return is<T>() ? static_cast<T *>(base()->ptr) : nullptr;
     }
 
-    // If this node refers to something that can be represented as a
-    // JavaScript value that is safe to expose to JavaScript code, return that
-    // value. Otherwise return UndefinedValue(). JSStrings and some (but not
-    // all!) JSObjects can be exposed.
+    // If this node refers to something that can be represented as a JavaScript
+    // value that is safe to expose to JavaScript code, return that value.
+    // Otherwise return UndefinedValue(). JSStrings, JS::Symbols, and some (but
+    // not all!) JSObjects can be exposed.
     JS::Value exposeToJS() const;
 
     const jschar *typeName()        const { return base()->typeName(); }
@@ -427,6 +427,7 @@ class TracerConcrete : public Base {
 
 template<> struct Concrete<JSObject> : TracerConcrete<JSObject> { };
 template<> struct Concrete<JSString> : TracerConcrete<JSString> { };
+template<> struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> { };
 template<> struct Concrete<JSScript> : TracerConcrete<JSScript> { };
 template<> struct Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> { };
 template<> struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> { };

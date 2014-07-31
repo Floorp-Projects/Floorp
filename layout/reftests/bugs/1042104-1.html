@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+#container {
+  height: 500px;
+  width: 500px;
+  position: relative;
+  overflow: hidden;
+}
+#panel {
+  position:absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  transform: translateX(-500px);
+  background-color: yellow;
+}
+#tog {
+  position: absolute;
+  height: 50px;
+  width: 50px;
+  left: 0;
+  bottom: 0;
+  background-color: black;
+}
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="panel">
+    <div style="width:300px; height:50px; background:blue;"></div>
+  </div>
+</div>
+<div id="tog"></div>
+<script>
+console.log(panel.getBoundingClientRect());
+panel.style.transform = "translateX(-450px)";
+console.log(panel.getBoundingClientRect());
+panel.style.transform = "translateX(-400px)";
+function doTest() {
+  panel.style.transform = "translateX(0)";
+  tog.style.visibility = "hidden";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
