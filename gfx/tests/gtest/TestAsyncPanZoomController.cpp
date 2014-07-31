@@ -1764,7 +1764,7 @@ private:
 
 class MockTask : public CancelableTask {
 public:
-  MockTask(const TaskRunMetrics& aMetrics)
+  MockTask(TaskRunMetrics& aMetrics)
     : mMetrics(aMetrics)
   {}
 
@@ -1777,7 +1777,7 @@ public:
   }
 
 private:
-  TaskRunMetrics mMetrics;
+  TaskRunMetrics& mMetrics;
 };
 
 class APZTaskThrottlerTester : public ::testing::Test {
@@ -1797,7 +1797,7 @@ protected:
 
   UniquePtr<CancelableTask> NewTask()
   {
-    return MakeUnique<MockTask>(&metrics);
+    return MakeUnique<MockTask>(metrics);
   }
 
   TimeStamp now;
