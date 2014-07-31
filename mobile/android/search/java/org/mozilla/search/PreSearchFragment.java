@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -21,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 
@@ -34,7 +36,12 @@ public class PreSearchFragment extends Fragment {
 
     private ListView listView;
 
-    private final String[] PROJECTION = new String[]{SearchHistory.QUERY, SearchHistory._ID};
+    private static final String[] PROJECTION = new String[]{ SearchHistory.QUERY, SearchHistory._ID };
+
+    // Limit search history query results to 5 items. This value matches the number of search
+    // suggestions we return in SearchFragment.
+    private static final Uri SEARCH_HISTORY_URI = SearchHistory.CONTENT_URI.buildUpon().
+            appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(Constants.SUGGESTION_MAX)).build();
 
     private static final int LOADER_ID_SEARCH_HISTORY = 1;
 
@@ -128,8 +135,8 @@ public class PreSearchFragment extends Fragment {
     private class SearchHistoryLoaderCallbacks implements LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new CursorLoader(getActivity(), SearchHistory.CONTENT_URI,
-                    PROJECTION, null, null, SearchHistory.DATE_LAST_VISITED + " DESC");
+            return new CursorLoader(getActivity(), SEARCH_HISTORY_URI, PROJECTION, null, null,
+                    SearchHistory.DATE_LAST_VISITED + " DESC");
         }
 
         @Override
