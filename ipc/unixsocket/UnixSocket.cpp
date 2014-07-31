@@ -19,6 +19,10 @@ static const size_t MAX_READ_SIZE = 1 << 16;
 namespace mozilla {
 namespace ipc {
 
+//
+// UnixSocketImpl
+//
+
 class UnixSocketImpl : public UnixSocketWatcher
 {
 public:
@@ -740,16 +744,16 @@ UnixSocketImpl::OnSocketCanSendWithoutBlocking()
   }
 }
 
-UnixSocketConsumer::UnixSocketConsumer() : mImpl(nullptr)
-                                         , mConnectionStatus(SOCKET_DISCONNECTED)
-                                         , mConnectTimestamp(0)
-                                         , mConnectDelayMs(0)
-{
-}
+//
+// UnixSocketConsumer
+//
+
+UnixSocketConsumer::UnixSocketConsumer()
+: mImpl(nullptr)
+{ }
 
 UnixSocketConsumer::~UnixSocketConsumer()
 {
-  MOZ_ASSERT(mConnectionStatus == SOCKET_DISCONNECTED);
   MOZ_ASSERT(!mImpl);
 }
 
@@ -813,38 +817,11 @@ void
 UnixSocketConsumer::GetSocketAddr(nsAString& aAddrStr)
 {
   aAddrStr.Truncate();
-  if (!mImpl || mConnectionStatus != SOCKET_CONNECTED) {
+  if (!mImpl || GetConnectionStatus() != SOCKET_CONNECTED) {
     NS_WARNING("No socket currently open!");
     return;
   }
   mImpl->GetSocketAddr(aAddrStr);
-}
-
-void
-UnixSocketConsumer::NotifySuccess()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mConnectionStatus = SOCKET_CONNECTED;
-  mConnectTimestamp = PR_IntervalNow();
-  OnConnectSuccess();
-}
-
-void
-UnixSocketConsumer::NotifyError()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mConnectionStatus = SOCKET_DISCONNECTED;
-  mConnectDelayMs = CalculateConnectDelayMs();
-  OnConnectError();
-}
-
-void
-UnixSocketConsumer::NotifyDisconnect()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mConnectionStatus = SOCKET_DISCONNECTED;
-  mConnectDelayMs = CalculateConnectDelayMs();
-  OnDisconnect();
 }
 
 bool
@@ -865,7 +842,7 @@ UnixSocketConsumer::ConnectSocket(UnixSocketConnector* aConnector,
   nsCString addr(aAddress);
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   mImpl = new UnixSocketImpl(ioLoop, this, connector.forget(), addr);
-  mConnectionStatus = SOCKET_CONNECTING;
+  SetConnectionStatus(SOCKET_CONNECTING);
   if (aDelayMs > 0) {
     SocketDelayedConnectTask* connectTask = new SocketDelayedConnectTask(mImpl);
     mImpl->SetDelayedConnectTask(connectTask);
@@ -891,30 +868,10 @@ UnixSocketConsumer::ListenSocket(UnixSocketConnector* aConnector)
 
   mImpl = new UnixSocketImpl(XRE_GetIOMessageLoop(), this, connector.forget(),
                              EmptyCString());
-  mConnectionStatus = SOCKET_LISTENING;
+  SetConnectionStatus(SOCKET_LISTENING);
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new SocketListenTask(mImpl));
   return true;
-}
-
-uint32_t
-UnixSocketConsumer::CalculateConnectDelayMs() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  uint32_t connectDelayMs = mConnectDelayMs;
-
-  if ((PR_IntervalNow()-mConnectTimestamp) > connectDelayMs) {
-    // reset delay if connection has been opened for a while, or...
-    connectDelayMs = 0;
-  } else if (!connectDelayMs) {
-    // ...start with a delay of ~1 sec, or...
-    connectDelayMs = 1<<10;
-  } else if (connectDelayMs < (1<<16)) {
-    // ...otherwise increase delay by a factor of 2
-    connectDelayMs <<= 1;
-  }
-  return connectDelayMs;
 }
 
 } // namespace ipc
