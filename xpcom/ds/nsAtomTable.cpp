@@ -152,56 +152,54 @@ struct AtomTableEntry : public PLDHashEntryHdr
 
 struct AtomTableKey
 {
+  AtomTableKey(const char16_t* aUTF16String, uint32_t aLength, uint32_t aHash)
+    : mUTF16String(aUTF16String)
+    , mUTF8String(nullptr)
+    , mLength(aLength)
+    , mHash(aHash)
+  {
+    MOZ_ASSERT(mHash == HashString(mUTF16String, mLength));
+  }
+
+  AtomTableKey(const char* aUTF8String, uint32_t aLength, uint32_t aHash)
+    : mUTF16String(nullptr)
+    , mUTF8String(aUTF8String)
+    , mLength(aLength)
+    , mHash(aHash)
+  {
+    mozilla::DebugOnly<bool> err;
+    MOZ_ASSERT(aHash == HashUTF8AsUTF16(mUTF8String, mLength, &err));
+  }
+
   AtomTableKey(const char16_t* aUTF16String, uint32_t aLength,
-               /*inout*/ uint32_t& aHash)
+               uint32_t* aHashOut)
     : mUTF16String(aUTF16String)
     , mUTF8String(nullptr)
     , mLength(aLength)
   {
-    if (aHash) {
-      MOZ_ASSERT(aHash == HashString(mUTF16String, mLength));
-      mHash = aHash;
-    } else {
-      UpdateHashKey();
-      aHash = mHash;
-    }
+    mHash = HashString(mUTF16String, mLength);
+    *aHashOut = mHash;
   }
 
-  AtomTableKey(const char* aUTF8String, uint32_t aLength,
-               /*inout*/ uint32_t& aHash)
+  AtomTableKey(const char* aUTF8String, uint32_t aLength, uint32_t* aHashOut)
     : mUTF16String(nullptr)
     , mUTF8String(aUTF8String)
     , mLength(aLength)
   {
-    if (aHash) {
-      mozilla::DebugOnly<bool> err;
-      MOZ_ASSERT(aHash == HashUTF8AsUTF16(mUTF8String, mLength, &err));
-      mHash = aHash;
-    } else {
-      UpdateHashKey();
-      aHash = mHash;
+    bool err;
+    mHash = HashUTF8AsUTF16(mUTF8String, mLength, &err);
+    if (err) {
+      mUTF8String = nullptr;
+      mLength = 0;
+      mHash = 0;
     }
+    *aHashOut = mHash;
   }
 
   const char16_t* mUTF16String;
   const char* mUTF8String;
   uint32_t mLength;
   uint32_t mHash;
-
-  void UpdateHashKey()
-  {
-    if (mUTF8String) {
-      bool err;
-      mHash = HashUTF8AsUTF16(mUTF8String, mLength, &err);
-      if (err) {
-        mUTF8String = nullptr;
-        mLength = 0;
-        mHash = 0;
-      }
-    } else {
-      mHash = HashString(mUTF16String, mLength);
-    }
-  }
 };
 
 static PLDHashNumber
@@ -525,11 +523,11 @@ EnsureTableExists()
 }
 
 static inline AtomTableEntry*
-GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t& aHash)
+GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t* aHashOut)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   EnsureTableExists();
-  AtomTableKey key(aString, aLength, aHash);
+  AtomTableKey key(aString, aLength, aHashOut);
   AtomTableEntry* e = static_cast<AtomTableEntry*>(
     PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
   if (!e) {
@@ -539,11 +537,11 @@ GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t& aHash)
 }
 
 static inline AtomTableEntry*
-GetAtomHashEntry(const char16_t* aString, uint32_t aLength, uint32_t& aHash)
+GetAtomHashEntry(const char16_t* aString, uint32_t aLength, uint32_t* aHashOut)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   EnsureTableExists();
-  AtomTableKey key(aString, aLength, aHash);
+  AtomTableKey key(aString, aLength, aHashOut);
   AtomTableEntry* e = static_cast<AtomTableEntry*>(
     PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
   if (!e) {
@@ -589,10 +587,10 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
     uint32_t stringLen =
       aAtoms[i].mStringBuffer->StorageSize() / sizeof(char16_t) - 1;
 
-    uint32_t hash = 0;
+    uint32_t hash;
     AtomTableEntry* he =
       GetAtomHashEntry((char16_t*)aAtoms[i].mStringBuffer->Data(),
-                       stringLen, hash);
+                       stringLen, &hash);
 
     if (he->mAtom) {
       // there already is an atom with this name in the table.. but we
@@ -629,10 +627,10 @@ NS_NewAtom(const char* aUTF8String)
 already_AddRefed<nsIAtom>
 NS_NewAtom(const nsACString& aUTF8String)
 {
-  uint32_t hash = 0;
+  uint32_t hash;
   AtomTableEntry* he = GetAtomHashEntry(aUTF8String.Data(),
                                         aUTF8String.Length(),
-                                        hash);
+                                        &hash);
 
   if (he->mAtom) {
     nsCOMPtr<nsIAtom> atom = he->mAtom;
@@ -661,10 +659,10 @@ NS_NewAtom(const char16_t* aUTF16String)
 already_AddRefed<nsIAtom>
 NS_NewAtom(const nsAString& aUTF16String)
 {
-  uint32_t hash = 0;
+  uint32_t hash;
   AtomTableEntry* he = GetAtomHashEntry(aUTF16String.Data(),
                                         aUTF16String.Length(),
-                                        hash);
+                                        &hash);
 
   if (he->mAtom) {
     nsCOMPtr<nsIAtom> atom = he->mAtom;
@@ -681,10 +679,10 @@ NS_NewAtom(const nsAString& aUTF16String)
 nsIAtom*
 NS_NewPermanentAtom(const nsAString& aUTF16String)
 {
-  uint32_t hash = 0;
+  uint32_t hash;
   AtomTableEntry* he = GetAtomHashEntry(aUTF16String.Data(),
                                         aUTF16String.Length(),
-                                        hash);
+                                        &hash);
 
   AtomImpl* atom = he->mAtom;
   if (atom) {
