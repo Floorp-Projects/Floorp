@@ -66,22 +66,26 @@ AppleDecoderModule::Shutdown()
   return NS_OK;
 }
 
-MediaDataDecoder*
+already_AddRefed<MediaDataDecoder>
 AppleDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                                       layers::LayersBackend aLayersBackend,
                                       layers::ImageContainer* aImageContainer,
                                       MediaTaskQueue* aVideoTaskQueue,
                                       MediaDataDecoderCallback* aCallback)
 {
-  return new AppleVTDecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
+  nsRefPtr<MediaDataDecoder> decoder =
+    new AppleVTDecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
+  return decoder.forget();
 }
 
-MediaDataDecoder*
+already_AddRefed<MediaDataDecoder>
 AppleDecoderModule::CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                                      MediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  return new AppleATDecoder(aConfig, aAudioTaskQueue, aCallback);
+  nsRefPtr<MediaDataDecoder> decoder =
+    new AppleATDecoder(aConfig, aAudioTaskQueue, aCallback);
+  return decoder.forget();
 }
 
 } // namespace mozilla
