@@ -117,11 +117,12 @@ interface nsIRequest : nsISupports
      */
     const unsigned long LOAD_NORMAL = 0;
 
-    /** 
-     * Don't deliver status notifications to the nsIProgressEventSink, or keep 
-     * this load from completing the nsILoadGroup it may belong to.
+    /**
+     * Do not deliver status notifications to the nsIProgressEventSink and
+     * do not block the loadgroup from completing (should this load belong to one).
+     * Note: Progress notifications will still be delivered.
      */
-    const unsigned long LOAD_BACKGROUND = 1 << 0; 
+    const unsigned long LOAD_BACKGROUND = 1 << 0;
 
     /**************************************************************************
      * The following flags control the flow of data into the cache.

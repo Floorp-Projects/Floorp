@@ -5427,14 +5427,18 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
     }
 
     // block socket status event after Cancel or OnStopRequest has been called.
-    if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && !(mLoadFlags & LOAD_BACKGROUND)) {
-        LOG(("sending status notification [this=%p status=%x progress=%llu/%llu]\n",
+    if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending) {
+        LOG(("sending progress%s notification [this=%p status=%x"
+             " progress=%llu/%llu]\n",
+            (mLoadFlags & LOAD_BACKGROUND)? "" : " and status",
             this, status, progress, progressMax));
 
-        nsAutoCString host;
-        mURI->GetHost(host);
-        mProgressSink->OnStatus(this, nullptr, status,
-                                NS_ConvertUTF8toUTF16(host).get());
+        if (!(mLoadFlags & LOAD_BACKGROUND)) {
+            nsAutoCString host;
+            mURI->GetHost(host);
+            mProgressSink->OnStatus(this, nullptr, status,
+                                    NS_ConvertUTF8toUTF16(host).get());
+        }
 
         if (progress > 0) {
             MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
@@ -5447,11 +5451,6 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
             }
         }
     }
-#ifdef DEBUG
-    else
-        LOG(("skipping status notification [this=%p sink=%p pending=%u background=%x]\n",
-            this, mProgressSink.get(), mIsPending, (mLoadFlags & LOAD_BACKGROUND)));
-#endif
 
     return NS_OK;
 }
