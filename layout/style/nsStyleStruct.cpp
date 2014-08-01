@@ -1326,20 +1326,28 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   nsChangeHint hint =
     (mZIndex == aOther.mZIndex) ? NS_STYLE_HINT_NONE : nsChangeHint_RepaintFrame;
 
+  if (mOrder != aOther.mOrder) {
+    // "order" impacts both layout order and stacking order, so we need both a
+    // reflow and a repaint when it changes.  (Technically, we only need a
+    // reflow if we're in a multi-line flexbox (which we can't be sure about,
+    // since that's determined by styling on our parent) -- there, "order" can
+    // affect which flex line we end up on, & hence can affect our sizing by
+    // changing the group of flex items we're competing with for space.)
+    return NS_CombineHint(hint, NS_CombineHint(nsChangeHint_RepaintFrame,
+                                               nsChangeHint_AllReflowHints));
+  }
+
   if (mBoxSizing != aOther.mBoxSizing) {
     // Can affect both widths and heights; just a bad scene.
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
   // Properties that apply to flex items:
-  // NOTE: Changes to "order" on a flex item may trigger some repositioning.
-  // If we're in a multi-line flex container, it also may affect our size
-  // (and that of our container & siblings) by shuffling items between lines.
+  // XXXdholbert These should probably be more targeted (bug 819536)
   if (mAlignSelf != aOther.mAlignSelf ||
       mFlexBasis != aOther.mFlexBasis ||
       mFlexGrow != aOther.mFlexGrow ||
-      mFlexShrink != aOther.mFlexShrink ||
-      mOrder != aOther.mOrder) {
+      mFlexShrink != aOther.mFlexShrink) {
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
