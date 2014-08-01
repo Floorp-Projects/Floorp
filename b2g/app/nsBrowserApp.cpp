@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
@@ -163,9 +164,22 @@ static int do_main(int argc, char* argv[])
   return XRE_main(argc, argv, &sAppData, 0);
 }
 
-int main(int argc, char* argv[])
+#ifdef MOZ_B2G_LOADER
+/*
+ * The main() in B2GLoader.cpp is the new main function instead of the
+ * main() here if it is enabled.  So, rename it to b2g_man().
+ */
+#define main b2g_main
+#define _CONST const
+#else
+#define _CONST
+#endif
+
+int main(int argc, _CONST char* argv[])
 {
+#ifndef MOZ_B2G_LOADER
   char exePath[MAXPATHLEN];
+#endif
 
 #ifdef MOZ_WIDGET_GONK
   // This creates a ThreadPool for binder ipc. A ThreadPool is necessary to
@@ -175,7 +189,9 @@ int main(int argc, char* argv[])
   android::ProcessState::self()->startThreadPool();
 #endif
 
-  nsresult rv = mozilla::BinaryPath::Get(argv[0], exePath);
+  nsresult rv;
+#ifndef MOZ_B2G_LOADER
+  rv = mozilla::BinaryPath::Get(argv[0], exePath);
   if (NS_FAILED(rv)) {
     Output("Couldn't calculate the application directory.\n");
     return 255;
@@ -186,6 +202,7 @@ int main(int argc, char* argv[])
     return 255;
 
   strcpy(++lastSlash, XPCOM_DLL);
+#endif // MOZ_B2G_LOADER
 
 #if defined(XP_UNIX)
   // If the b2g app is launched from adb shell, then the shell will wind
@@ -209,6 +226,9 @@ int main(int argc, char* argv[])
   DllBlocklist_Initialize();
 #endif
 
+  // B2G loader has already initialized Gecko so we can't initialize
+  // it again here.
+#ifndef MOZ_B2G_LOADER
   // We do this because of data in bug 771745
   XPCOMGlueEnablePreload();
 
@@ -219,6 +239,7 @@ int main(int argc, char* argv[])
   }
   // Reset exePath so that it is the directory name and not the xpcom dll name
   *lastSlash = 0;
+#endif // MOZ_B2G_LOADER
 
   rv = XPCOMGlueLoadXULFunctions(kXULFuncs);
   if (NS_FAILED(rv)) {
@@ -253,7 +274,25 @@ int main(int argc, char* argv[])
   int result;
   {
     ScopedLogging log;
-    result = do_main(argc, argv);
+    char **_argv;
+
+    /*
+     * Duplicate argument vector to conform non-const argv of
+     * do_main() since XRE_main() is very stupid with non-const argv.
+     */
+    _argv = new char *[argc + 1];
+    for (int i = 0; i < argc; i++) {
+      _argv[i] = strdup(argv[i]);
+      MOZ_ASSERT(_argv[i] != nullptr);
+    }
+    _argv[argc] = nullptr;
+
+    result = do_main(argc, _argv);
+
+    for (int i = 0; i < argc; i++) {
+      free(_argv[i]);
+    }
+    delete[] _argv;
   }
 
   return result;

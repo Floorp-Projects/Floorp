@@ -358,6 +358,10 @@ add_task(function* test_special_searches() {
     matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
   });
 
+  // Disable autoFill for the next tests, see test_autoFill_default_behavior.js
+  // for specific tests.
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+
   // Test default usage by setting certain bits of default.behavior to 1
   do_log_info("foo -> default history");
   Services.prefs.setIntPref("browser.urlbar.default.behavior", 1);
