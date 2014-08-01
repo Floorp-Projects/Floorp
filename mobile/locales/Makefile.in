@@ -36,11 +36,6 @@ SUBMAKEFILES += \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
         $(NULL)
 
-DEFINES += \
-	-DAB_CD=$(AB_CD) \
-	$(NULL)
-
-
 ###########################################################################
 # Default target, preserve existing functionality for:
 #    gmake -C $obj/mobile/locales
