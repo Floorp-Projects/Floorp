@@ -36,6 +36,18 @@
 #include "nsIScriptError.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
+#ifdef MOZ_B2G_LOADER
+#include "mozilla/XPTInterfaceInfoManager.h"
+#endif
+
+#ifdef MOZ_B2G_LOADER
+#define XPTONLY_MANIFEST &nsComponentManagerImpl::XPTOnlyManifestManifest
+#define XPTONLY_XPT &nsComponentManagerImpl::XPTOnlyManifestXPT
+#else
+#define XPTONLY_MANIFEST nullptr
+#define XPTONLY_XPT nullptr
+#endif
+
 
 using namespace mozilla;
 
@@ -64,36 +76,43 @@ struct ManifestDirective
     (nsChromeRegistry::ManifestProcessingContext& cx,
      int lineno, char *const *argv,
      bool platform, bool contentaccessible);
+#ifdef MOZ_B2G_LOADER
+  // The function to handle the directive for XPT Only parsing.
+  void (*xptonlyfunc)(nsComponentManagerImpl::XPTOnlyManifestProcessingContext& cx,
+                      int lineno, char *const * argv);
+#else
+  void *xptonlyfunc;
+#endif
 
   bool isContract;
 };
 static const ManifestDirective kParsingTable[] = {
   { "manifest",         1, false, true, true, false,
-    &nsComponentManagerImpl::ManifestManifest, nullptr },
+    &nsComponentManagerImpl::ManifestManifest, nullptr, XPTONLY_MANIFEST },
   { "binary-component", 1, true, false, false, false,
-    &nsComponentManagerImpl::ManifestBinaryComponent, nullptr },
+    &nsComponentManagerImpl::ManifestBinaryComponent, nullptr, nullptr },
   { "interfaces",       1, true, false, false, false,
-    &nsComponentManagerImpl::ManifestXPT, nullptr },
+    &nsComponentManagerImpl::ManifestXPT, nullptr, XPTONLY_XPT },
   { "component",        2, true, false, false, false,
-    &nsComponentManagerImpl::ManifestComponent, nullptr },
+    &nsComponentManagerImpl::ManifestComponent, nullptr, nullptr },
   { "contract",         2, true, false, false, false,
-    &nsComponentManagerImpl::ManifestContract, nullptr, true},
+    &nsComponentManagerImpl::ManifestContract, nullptr, nullptr, true},
   { "category",         3, true, false, false, false,
-    &nsComponentManagerImpl::ManifestCategory, nullptr },
+    &nsComponentManagerImpl::ManifestCategory, nullptr, nullptr },
   { "content",          2, true, true, true,  true,
-    nullptr, &nsChromeRegistry::ManifestContent },
+    nullptr, &nsChromeRegistry::ManifestContent, nullptr },
   { "locale",           3, true, true, true,  false,
-    nullptr, &nsChromeRegistry::ManifestLocale },
+    nullptr, &nsChromeRegistry::ManifestLocale, nullptr },
   { "skin",             3, false, true, true,  false,
-    nullptr, &nsChromeRegistry::ManifestSkin },
+    nullptr, &nsChromeRegistry::ManifestSkin, nullptr },
   { "overlay",          2, true, true, false,  false,
-    nullptr, &nsChromeRegistry::ManifestOverlay },
+    nullptr, &nsChromeRegistry::ManifestOverlay, nullptr },
   { "style",            2, false, true, false,  false,
-    nullptr, &nsChromeRegistry::ManifestStyle },
+    nullptr, &nsChromeRegistry::ManifestStyle, nullptr },
   { "override",         2, true, true, true,  false,
-    nullptr, &nsChromeRegistry::ManifestOverride },
+    nullptr, &nsChromeRegistry::ManifestOverride, nullptr },
   { "resource",         2, true, true, false,  false,
-    nullptr, &nsChromeRegistry::ManifestResource }
+    nullptr, &nsChromeRegistry::ManifestResource, nullptr }
 };
 
 static const char kWhitespace[] = "\t ";
@@ -126,8 +145,16 @@ struct AutoPR_smprintf_free
 
 } // anonymous namespace
 
+/**
+ * If we are pre-loading XPTs, this method may do nothing because the
+ * console service is not initialized.
+ */
 void LogMessage(const char* aMsg, ...)
 {
+  if (!nsComponentManagerImpl::gComponentManager) {
+    return;
+  }
+
   nsCOMPtr<nsIConsoleService> console =
     do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   if (!console)
@@ -143,6 +170,10 @@ void LogMessage(const char* aMsg, ...)
   console->LogMessage(error);
 }
 
+/**
+ * If we are pre-loading XPTs, this method may do nothing because the
+ * console service is not initialized.
+ */
 void LogMessageWithContext(FileLocation &aFile,
                            uint32_t aLineNumber, const char* aMsg, ...)
 {
@@ -152,6 +183,10 @@ void LogMessageWithContext(FileLocation &aFile,
   va_end(args);
   if (!formatted)
     return;
+
+  if (!nsComponentManagerImpl::gComponentManager) {
+    return;
+  }
 
   nsCString file;
   aFile.GetURIString(file);
@@ -388,11 +423,23 @@ struct CachedDirective
 } // anonymous namespace
 
 
+/**
+ * For XPT-Only mode, the parser handles only directives of "manifest"
+ * and "interfaces", and always call the function given by |xptonlyfunc|
+ * variable of struct |ManifestDirective|.
+ *
+ * This function is safe to be called before the component manager is
+ * ready if aXPTOnly is true for it don't invoke any component during
+ * parsing.
+ */
 void
-ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOnly)
+ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOnly, bool aXPTOnly)
 {
   nsComponentManagerImpl::ManifestProcessingContext mgrcx(type, file, aChromeOnly);
   nsChromeRegistry::ManifestProcessingContext chromecx(type, file);
+#ifdef MOZ_B2G_LOADER
+  nsComponentManagerImpl::XPTOnlyManifestProcessingContext xptonlycx(file);
+#endif
   nsresult rv;
 
   NS_NAMED_LITERAL_STRING(kPlatform, "platform");
@@ -416,7 +463,12 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
   nsAutoString osTarget;
   nsAutoString abi;
 
-  nsCOMPtr<nsIXULAppInfo> xapp (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
+  nsCOMPtr<nsIXULAppInfo> xapp;
+  if (!aXPTOnly) {
+    // Avoid to create any component for XPT only mode.
+    // No xapp means no ID, version, ..., modifiers checking.
+    xapp = do_GetService(XULAPPINFO_SERVICE_CONTRACTID);
+  }
   if (xapp) {
     nsAutoCString s;
     rv = xapp->GetID(s);
@@ -516,9 +568,10 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
     for (const ManifestDirective* d = kParsingTable;
 	 d < ArrayEnd(kParsingTable);
 	 ++d) {
-      if (!strcmp(d->directive, token)) {
-	directive = d;
-	break;
+      if (!strcmp(d->directive, token) &&
+          (!aXPTOnly || d->xptonlyfunc)) {
+        directive = d;
+        break;
       }
     }
 
@@ -577,8 +630,9 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
           CheckStringFlag(kABI, wtoken, abi, stABI) ||
           CheckVersionFlag(kOsVersion, wtoken, osVersion, stOsVersion) ||
           CheckVersionFlag(kAppVersion, wtoken, appVersion, stAppVersion) ||
-          CheckVersionFlag(kGeckoVersion, wtoken, geckoVersion, stGeckoVersion))
+          CheckVersionFlag(kGeckoVersion, wtoken, geckoVersion, stGeckoVersion)) {
         continue;
+      }
 
 #if defined(MOZ_WIDGET_ANDROID)
       bool tablet = false;
@@ -619,6 +673,11 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
         stABI == eBad)
       continue;
 
+#ifdef MOZ_B2G_LOADER
+    if (aXPTOnly) {
+      directive->xptonlyfunc(xptonlycx, line, argv);
+    } else
+#endif /* MOZ_B2G_LOADER */
     if (directive->regfunc) {
       if (GeckoProcessType_Default != XRE_GetProcessType())
         continue;
@@ -636,7 +695,7 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
       (nsChromeRegistry::gChromeRegistry->*(directive->regfunc))
 	(chromecx, line, argv, platform, contentAccessible);
     }
-    else if (directive->ischrome || !aChromeOnly) {
+    else if (directive->mgrfunc && (directive->ischrome || !aChromeOnly)) {
       if (directive->isContract) {
         CachedDirective* cd = contracts.AppendElement();
         cd->lineno = line;
@@ -646,6 +705,9 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
       else
         (nsComponentManagerImpl::gComponentManager->*(directive->mgrfunc))
           (mgrcx, line, argv);
+    } else {
+      LogMessageWithContext(file, line,
+                            "No valid manifest directive.");
     }
   }
 

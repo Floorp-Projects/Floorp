@@ -878,6 +878,10 @@ void mozilla_sampler_unlock()
 
 bool mozilla_sampler_register_thread(const char* aName, void* stackTop)
 {
+  if (sInitCount == 0) {
+    return false;
+  }
+
 #if defined(MOZ_WIDGET_GONK) && !defined(MOZ_PROFILING)
   // The only way to profile secondary threads on b2g
   // is to build with profiling OR have the profiler
@@ -895,6 +899,10 @@ bool mozilla_sampler_register_thread(const char* aName, void* stackTop)
 
 void mozilla_sampler_unregister_thread()
 {
+  if (sInitCount == 0) {
+    return;
+  }
+
   Sampler::UnregisterCurrentThread();
 
   PseudoStack *stack = tlsPseudoStack.get();
@@ -906,6 +914,10 @@ void mozilla_sampler_unregister_thread()
 }
 
 void mozilla_sampler_sleep_start() {
+    if (sInitCount == 0) {
+	return;
+    }
+
     PseudoStack *stack = tlsPseudoStack.get();
     if (stack == nullptr) {
       return;
@@ -914,6 +926,10 @@ void mozilla_sampler_sleep_start() {
 }
 
 void mozilla_sampler_sleep_end() {
+    if (sInitCount == 0) {
+	return;
+    }
+
     PseudoStack *stack = tlsPseudoStack.get();
     if (stack == nullptr) {
       return;

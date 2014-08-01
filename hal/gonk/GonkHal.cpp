@@ -68,6 +68,7 @@
 #include "UeventPoller.h"
 #include "nsIWritablePropertyBag2.h"
 #include <algorithm>
+#include "PowerWakeLock.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 #define NsecPerMsec  1000000LL
@@ -667,6 +668,7 @@ void
 SetScreenEnabled(bool aEnabled)
 {
   GetGonkDisplay()->SetEnabled(aEnabled);
+  gPowerWakelock = nullptr;
   sScreenEnabled = aEnabled;
 }
 
