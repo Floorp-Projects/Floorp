@@ -77,6 +77,7 @@ private:
   nsRefPtr<GMPParent> mPlugin;
   GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
+  nsCOMPtr<nsIThread> mEncodedThread;
 };
 
 } // namespace gmp
