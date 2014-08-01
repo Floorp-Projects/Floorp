@@ -34,6 +34,7 @@ add_test(function test_prefs() {
   GMPPrefs.set(GMPPrefs.KEY_ADDON_LAST_UPDATE, "4", addon2);
   GMPPrefs.set(GMPPrefs.KEY_ADDON_PATH, "5", addon2);
   GMPPrefs.set(GMPPrefs.KEY_ADDON_VERSION, "6", addon2);
+  GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, false, addon2);
   GMPPrefs.set(GMPPrefs.KEY_CERT_CHECKATTRS, true);
 
   do_check_true(GMPPrefs.get(GMPPrefs.KEY_LOG_ENABLED));
@@ -45,7 +46,9 @@ add_test(function test_prefs() {
   do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_LAST_UPDATE, addon2), "4");
   do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_PATH, addon2), "5");
   do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_VERSION, addon2), "6");
+  do_check_eq(GMPPrefs.get(GMPPrefs.KEY_ADDON_AUTOUPDATE, addon2), false);
   do_check_true(GMPPrefs.get(GMPPrefs.KEY_CERT_CHECKATTRS));
+  GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, true, addon2);
   run_next_test();
 });
 
@@ -476,6 +479,48 @@ function test_checkForAddons_installAddon(id, includeSize,wantInstallReject) {
 add_task(test_checkForAddons_installAddon.bind(null, "1", true, false));
 add_task(test_checkForAddons_installAddon.bind(null, "2", false, false));
 add_task(test_checkForAddons_installAddon.bind(null, "3", true, true));
+
+/**
+ * Tests simpleCheckAndInstall autoupdate disabled
+ */
+add_task(function test_simpleCheckAndInstall() {
+    GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, false, OPEN_H264_ID);
+    let installManager = new GMPInstallManager();
+    let promise = installManager.simpleCheckAndInstall();
+    promise.then((result) => {
+        do_check_eq(result.status, "check-disabled");
+    }, () => {
+        do_throw("simple check should not reject");
+    });
+});
+
+/**
+ * Tests simpleCheckAndInstall nothing to install
+ */
+add_task(function test_simpleCheckAndInstall() {
+    GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, true, OPEN_H264_ID);
+    let installManager = new GMPInstallManager();
+    let promise = installManager.simpleCheckAndInstall();
+    promise.then((result) => {
+        do_check_eq(result.status, "nothing-new-to-install");
+    }, () => {
+        do_throw("simple check should not reject");
+    });
+});
+
+/**
+ * Tests simpleCheckAndInstall too frequent
+ */
+add_task(function test_simpleCheckAndInstall() {
+    GMPPrefs.set(GMPPrefs.KEY_ADDON_AUTOUPDATE, true, OPEN_H264_ID);
+    let installManager = new GMPInstallManager();
+    let promise = installManager.simpleCheckAndInstall();
+    promise.then((result) => {
+        do_check_eq(result.status, "too-frequent-no-check");
+    }, () => {
+        do_throw("simple check should not reject");
+    });
+});
 
 /**
  * Tests that installing addons when there is no server works as expected
