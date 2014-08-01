@@ -12,7 +12,6 @@
 class nsTraceRefcnt
 {
 public:
-  static void Startup();
   static void Shutdown();
 
   enum StatisticsType {
