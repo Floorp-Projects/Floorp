@@ -11,7 +11,6 @@
 // use XPCOM assertion/debugging macros, etc.
 
 #include "nscore.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/SSE.h"
 
 #include "nsCharTraits.h"
@@ -168,11 +167,6 @@ private:
  * Extract the next UCS-4 character from the buffer and return it.  The
  * pointer passed in is advanced to the start of the next character in the
  * buffer.  If non-null, the err parameter is filled in if an error occurs.
- *
- * If an error occurs that causes UCS2_REPLACEMENT_CHAR to be returned, then
- * the buffer will be updated to move only a single UCS-2 character.
- *
- * Any other error returns 0 and does not move the buffer position.
  */
 
 
@@ -265,7 +259,10 @@ public:
       return 0xFFFD;
     }
 
-    MOZ_ASSERT_UNREACHABLE("Impossible UCS-2 character value.");
+    if (aErr) {
+      *aErr = true;
+    }
+    return 0;
   }
 };
 
