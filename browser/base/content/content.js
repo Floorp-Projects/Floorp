@@ -246,6 +246,7 @@ addMessageListener("WebChannelMessageToContent", function (e) {
 let ContentSearchMediator = {
 
   whitelist: new Set([
+    "about:home",
     "about:newtab",
   ]),
 
@@ -274,7 +275,7 @@ let ContentSearchMediator = {
   },
 
   get _contentWhitelisted() {
-    return this.whitelist.has(content.document.documentURI.toLowerCase());
+    return this.whitelist.has(content.document.documentURI);
   },
 
   _sendMsg: function (type, data=null) {
@@ -285,12 +286,14 @@ let ContentSearchMediator = {
   },
 
   _fireEvent: function (type, data=null) {
-    content.dispatchEvent(new content.CustomEvent("ContentSearchService", {
+    let event = Cu.cloneInto({
       detail: {
         type: type,
         data: data,
       },
-    }));
+    }, content);
+    content.dispatchEvent(new content.CustomEvent("ContentSearchService",
+                                                  event));
   },
 };
 ContentSearchMediator.init(this);
