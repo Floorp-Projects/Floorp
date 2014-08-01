@@ -10,7 +10,7 @@
 #include "gfxPlatformFontList.h"
 
 using namespace mozilla;
-using mozilla::services::GetObserverService;
+using services::GetObserverService;
 
 void
 FontInfoData::Load()
@@ -211,6 +211,7 @@ gfxFontInfoLoader::LoadFontInfoTimerFire()
 gfxFontInfoLoader::~gfxFontInfoLoader()
 {
     RemoveShutdownObserver();
+    MOZ_COUNT_DTOR(gfxFontInfoLoader);
 }
 
 void
