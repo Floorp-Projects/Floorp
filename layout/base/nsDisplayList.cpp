@@ -63,6 +63,8 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
+using namespace mozilla::gfx;
+
 typedef FrameMetrics::ViewID ViewID;
 
 #ifdef DEBUG
@@ -4596,7 +4598,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
   gfx3DMatrix result;
   // Call IsSVGTransformed() regardless of the value of
   // disp->mSpecifiedTransform, since we still need any transformFromSVGParent.
-  mozilla::gfx::Matrix svgTransform, transformFromSVGParent;
+  Matrix svgTransform, transformFromSVGParent;
   bool hasSVGTransforms =
     frame && frame->IsSVGTransformed(&svgTransform, &transformFromSVGParent);
   /* Transformed frames always have a transform, or are preserving 3d (and might still have perspective!) */
@@ -4771,7 +4773,7 @@ static bool IsFrameVisible(nsIFrame* aFrame, const gfx3DMatrix& aMatrix)
   return true;
 }
 
-const gfx3DMatrix&
+const Matrix4x4&
 nsDisplayTransform::GetTransform()
 {
   if (mTransform.IsIdentity()) {
@@ -4782,7 +4784,7 @@ nsDisplayTransform::GetTransform()
                   0.0f);
     if (mTransformGetter) {
       mTransform = mTransformGetter(mFrame, scale);
-      mTransform.ChangeBasis(newOrigin);
+      mTransform.ChangeBasis(newOrigin.x, newOrigin.y, newOrigin.z);
     } else {
       /**
        * Passing true as the final argument means that we want to shift the
@@ -4792,9 +4794,9 @@ nsDisplayTransform::GetTransform()
        * to be an ancestor of the preserve-3d chain, so we only need to do
        * this once.
        */
-      mTransform =
+      mTransform = ToMatrix4x4(
         GetResultingTransformMatrix(mFrame, ToReferenceFrame(), scale,
-                                    nullptr, nullptr, true);
+                                    nullptr, nullptr, true));
     }
   }
   return mTransform;
@@ -4810,7 +4812,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
                                                        LayerManager *aManager,
                                                        const ContainerLayerParameters& aContainerParameters)
 {
-  const gfx3DMatrix& newTransformMatrix = GetTransform();
+  const gfx3DMatrix& newTransformMatrix = To3DMatrix(GetTransform());
 
   if (mFrame->StyleDisplay()->mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN &&
       newTransformMatrix.IsBackfaceVisible()) {
@@ -4923,7 +4925,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
    */
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  gfx3DMatrix matrix = GetTransform();
+  gfx3DMatrix matrix = To3DMatrix(GetTransform());
 
   if (!IsFrameVisible(mFrame, matrix)) {
     return;
@@ -4999,7 +5001,7 @@ nsDisplayTransform::GetHitDepthAtPoint(nsDisplayListBuilder* aBuilder, const nsP
 {
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  gfx3DMatrix matrix = GetTransform();
+  gfx3DMatrix matrix = To3DMatrix(GetTransform());
 
   NS_ASSERTION(IsFrameVisible(mFrame, matrix), "We can't have hit a frame that isn't visible!");
 
@@ -5025,7 +5027,7 @@ nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder *aBuilder, bool* aSnap
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   return nsLayoutUtils::MatrixTransformRect(untransformedBounds,
-                                            GetTransform(),
+                                            To3DMatrix(GetTransform()),
                                             factor);
 }
 
@@ -5061,10 +5063,10 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
       return nsRegion();
   }
 
-  const gfx3DMatrix& matrix = GetTransform();
+  const Matrix4x4& matrix = GetTransform();
 
   nsRegion result;
-  gfxMatrix matrix2d;
+  Matrix matrix2d;
   bool tmpSnap;
   if (matrix.Is2D(&matrix2d) &&
       matrix2d.PreservesAxisAlignedRectangles() &&
@@ -5084,9 +5086,9 @@ bool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aCol
   if (!UntransformVisibleRect(aBuilder, &untransformedVisible)) {
     return false;
   }
-  const gfx3DMatrix& matrix = GetTransform();
+  const Matrix4x4& matrix = GetTransform();
 
-  gfxMatrix matrix2d;
+  Matrix matrix2d;
   return matrix.Is2D(&matrix2d) &&
          matrix2d.PreservesAxisAlignedRectangles() &&
          mStoredList.GetVisibleRect().Contains(untransformedVisible) &&
@@ -5211,7 +5213,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aTransformedBounds,
 bool nsDisplayTransform::UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
                                                 nsRect *aOutRect)
 {
-  const gfx3DMatrix& matrix = GetTransform();
+  const gfx3DMatrix& matrix = To3DMatrix(GetTransform());
   if (matrix.IsSingular())
     return false;
 
@@ -5243,7 +5245,7 @@ void
 nsDisplayTransform::WriteDebugInfo(nsACString& aTo)
 {
   std::stringstream ss;
-  AppendToString(ss, gfx::ToMatrix4x4(GetTransform()));
+  AppendToString(ss, GetTransform());
   aTo += ss.str().c_str();
 }
 #endif
