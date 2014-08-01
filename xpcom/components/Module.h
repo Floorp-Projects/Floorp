@@ -25,8 +25,8 @@ struct Module
 
   struct CIDEntry;
 
-  typedef already_AddRefed<nsIFactory> (*GetFactoryProcPtr)
-    (const Module& module, const CIDEntry& entry);
+  typedef already_AddRefed<nsIFactory> (*GetFactoryProcPtr)(
+    const Module& module, const CIDEntry& entry);
 
   typedef nsresult (*ConstructorProcPtr)(nsISupports* aOuter,
                                          const nsIID& aIID,
@@ -62,7 +62,7 @@ struct Module
   struct ContractIDEntry
   {
     const char* contractid;
-    nsID const * cid;
+    nsID const* cid;
     ProcessSelector processSelector;
   };
 
