@@ -12,7 +12,6 @@
 #include "Layers.h"                     // for LayerManager, etc
 #include "TiledLayerBuffer.h"           // for TiledLayerBuffer
 #include "Units.h"                      // for CSSPoint
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -289,7 +288,7 @@ struct BasicTiledLayerPaintData {
    * the closest ancestor layer which scrolls, and is used to obtain
    * the composition bounds that are relevant for this layer.
    */
-  gfx3DMatrix mTransformToCompBounds;
+  gfx::Matrix4x4 mTransformToCompBounds;
 
   /*
    * The critical displayport of the content from the nearest ancestor layer

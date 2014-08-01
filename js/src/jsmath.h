@@ -92,39 +92,39 @@ class MathCache
 extern JSObject *
 js_InitMathClass(JSContext *cx, js::HandleObject obj);
 
+namespace js {
+
 extern double
 math_random_no_outparam(JSContext *cx);
 
 extern bool
-js_math_random(JSContext *cx, unsigned argc, js::Value *vp);
+math_random(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
-js_math_abs_handle(JSContext *cx, js::HandleValue v, js::MutableHandleValue r);
+math_abs_handle(JSContext *cx, js::HandleValue v, js::MutableHandleValue r);
 
 extern bool
-js_math_abs(JSContext *cx, unsigned argc, js::Value *vp);
+math_abs(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
-js_math_max(JSContext *cx, unsigned argc, js::Value *vp);
+math_max(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
-js_math_min(JSContext *cx, unsigned argc, js::Value *vp);
+math_min(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
-js_math_sqrt(JSContext *cx, unsigned argc, js::Value *vp);
+math_sqrt(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
-js_math_pow_handle(JSContext *cx, js::HandleValue base, js::HandleValue power,
-                   js::MutableHandleValue result);
+math_pow_handle(JSContext *cx, js::HandleValue base, js::HandleValue power,
+                js::MutableHandleValue result);
 
 extern bool
-js_math_pow(JSContext *cx, unsigned argc, js::Value *vp);
+math_pow(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
-js_minmax_impl(JSContext *cx, bool max, js::HandleValue a, js::HandleValue b,
-               js::MutableHandleValue res);
-
-namespace js {
+minmax_impl(JSContext *cx, bool max, js::HandleValue a, js::HandleValue b,
+            js::MutableHandleValue res);
 
 extern bool
 math_sqrt_handle(JSContext *cx, js::HandleValue number, js::MutableHandleValue result);

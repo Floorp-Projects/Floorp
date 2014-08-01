@@ -59,7 +59,7 @@ public:
             MacroAssemblerX86Common::setSSECheckState();
         }
         // Only check once.
-        ASSERT(s_sseCheckState != NotCheckedSSE);
+        MOZ_ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState;
     }
@@ -80,7 +80,7 @@ private:
             setSSECheckState();
         }
         // Only check once.
-        ASSERT(s_sseCheckState != NotCheckedSSE);
+        MOZ_ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE;
 #endif
@@ -95,7 +95,7 @@ private:
             setSSECheckState();
         }
         // Only check once.
-        ASSERT(s_sseCheckState != NotCheckedSSE);
+        MOZ_ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE2;
 #endif
@@ -120,7 +120,7 @@ private:
             setSSECheckState();
         }
         // Only check once.
-        ASSERT(s_sseCheckState != NotCheckedSSE);
+        MOZ_ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE3;
 #endif
@@ -135,7 +135,7 @@ private:
             setSSECheckState();
         }
         // Only check once.
-        ASSERT(s_sseCheckState != NotCheckedSSE);
+        MOZ_ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSSE3;
 #endif
@@ -150,7 +150,7 @@ private:
             setSSECheckState();
         }
         // Only check once.
-        ASSERT(s_sseCheckState != NotCheckedSSE);
+        MOZ_ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE4_1;
 #endif
@@ -165,7 +165,7 @@ private:
             setSSECheckState();
         }
         // Only check once.
-        ASSERT(s_sseCheckState != NotCheckedSSE);
+        MOZ_ASSERT(s_sseCheckState != NotCheckedSSE);
 
         return s_sseCheckState >= HasSSE4_2;
 #endif
