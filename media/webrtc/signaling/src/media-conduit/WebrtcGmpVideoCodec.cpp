@@ -420,7 +420,6 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
         default:
           // really that it's not in the enum; gives more readable error
           MOZ_ASSERT(aEncodedFrame->BufferType() != GMP_BufferSingle);
-          aEncodedFrame->Destroy();
           return;
       }
       webrtc::EncodedImage unit(buffer, size, size);
@@ -433,7 +432,6 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
       buffer += size;
     }
   }
-  aEncodedFrame->Destroy();
 }
 
 // Decoder.
