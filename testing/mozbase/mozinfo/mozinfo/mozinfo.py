@@ -71,6 +71,8 @@ elif system == "Darwin":
 elif sys.platform in ('solaris', 'sunos5'):
     info['os'] = 'unix'
     os_version = version = sys.platform
+else:
+    os_version = version = unknown
 
 info['version'] = version
 info['os_version'] = os_version
