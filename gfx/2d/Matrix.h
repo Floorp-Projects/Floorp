@@ -224,6 +224,16 @@ public:
            !FuzzyEqual(_12, 0.0) || !FuzzyEqual(_21, 0.0);
   }
 
+  /**
+   * Returns true if the matrix has any transform other
+   * than a translation or a -1 y scale (y axis flip)
+   */
+  bool HasNonTranslationOrFlip() const {
+      return !FuzzyEqual(_11, 1.0) ||
+             (!FuzzyEqual(_22, 1.0) && !FuzzyEqual(_22, -1.0)) ||
+             !FuzzyEqual(_21, 0.0) || !FuzzyEqual(_12, 0.0);
+  }
+
   /* Returns true if the matrix is an identity matrix.
    */
   bool IsIdentity() const
@@ -603,6 +613,36 @@ public:
            gfx::FuzzyEqual(_43, o._43) && gfx::FuzzyEqual(_44, o._44);
   }
 
+  bool IsBackfaceVisible() const
+  {
+    // Inverse()._33 < 0;
+    Float det = Determinant();
+    Float __33 = _12*_24*_41 - _14*_22*_41 +
+                _14*_21*_42 - _11*_24*_42 -
+                _12*_21*_44 + _11*_22*_44;
+    return (__33 * det) < 0;
+  }
+
+  void NudgeToIntegersFixedEpsilon()
+  {
+    static const float error = 1e-5f;
+    NudgeToInteger(&_11, error);
+    NudgeToInteger(&_12, error);
+    NudgeToInteger(&_13, error);
+    NudgeToInteger(&_14, error);
+    NudgeToInteger(&_21, error);
+    NudgeToInteger(&_22, error);
+    NudgeToInteger(&_23, error);
+    NudgeToInteger(&_24, error);
+    NudgeToInteger(&_31, error);
+    NudgeToInteger(&_32, error);
+    NudgeToInteger(&_33, error);
+    NudgeToInteger(&_34, error);
+    NudgeToInteger(&_41, error);
+    NudgeToInteger(&_42, error);
+    NudgeToInteger(&_43, error);
+    NudgeToInteger(&_44, error);
+  }
 
   // Set all the members of the matrix to NaN
   void SetNAN();
