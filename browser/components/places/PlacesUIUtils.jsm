@@ -1014,6 +1014,33 @@ this.PlacesUIUtils = {
            Weave.Service.engineManager.get("tabs") &&
            Weave.Service.engineManager.get("tabs").enabled;
   },
+
+  /**
+   * Returns the passed URL with a #moz-resolution fragment
+   * for the specified dimensions and devicePixelRatio.
+   *
+   * @param aWindow
+   *        A window from where we want to get the device
+   *        pixel Ratio
+   *
+   * @param aURL
+   *        The URL where we should add the fragment
+   *
+   * @param aWidth
+   *        The target image width
+   *
+   * @param aHeight
+   *        The target image height
+   *
+   * @return The URL with the fragment at the end
+   */
+  getImageURLForResolution:
+  function PUIU_getImageURLForResolution(aWindow, aURL, aWidth = 16, aHeight = 16) {
+    let width  = Math.round(aWidth * aWindow.devicePixelRatio);
+    let height = Math.round(aHeight * aWindow.devicePixelRatio);
+    return aURL + (aURL.contains("#") ? "&" : "#") +
+           "-moz-resolution=" + width + "," + height;
+  },
 };
 
 XPCOMUtils.defineLazyServiceGetter(PlacesUIUtils, "RDF",
