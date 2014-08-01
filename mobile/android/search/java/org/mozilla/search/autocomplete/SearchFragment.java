@@ -13,6 +13,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -136,8 +137,12 @@ public class SearchFragment extends Fragment implements AcceptsJumpTaps {
 
             @Override
             public void onSubmit(String text) {
-                transitionToWaiting();
-                searchListener.onSearch(text);
+                // Don't submit an empty query.
+                final String trimmedQuery = text.trim();
+                if (!TextUtils.isEmpty(trimmedQuery)) {
+                    transitionToWaiting();
+                    searchListener.onSearch(trimmedQuery);
+                }
             }
         });
 
