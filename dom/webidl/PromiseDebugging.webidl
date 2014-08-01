@@ -16,5 +16,5 @@ enum PromiseDebuggingState { "pending", "fulfilled", "rejected" };
 
 [ChromeOnly]
 interface PromiseDebugging {
-  static PromiseDebuggingStateHolder getState(Promise p);
+  static PromiseDebuggingStateHolder getState(Promise<any> p);
 };
