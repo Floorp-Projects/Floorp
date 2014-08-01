@@ -17,6 +17,12 @@ public:
 
   //DesktopDeviceInfo Interfaces
   virtual int32_t Init();
+  virtual int32_t Refresh();
+
+private:
+#if !defined(MULTI_MONITOR_SCREENSHARE)
+  int32_t MultiMonitorScreenshare();
+#endif
 };
 
 }// namespace webrtc
