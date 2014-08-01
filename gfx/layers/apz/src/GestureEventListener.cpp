@@ -388,6 +388,8 @@ nsEventStatus GestureEventListener::HandleInputTouchCancel()
 
 void GestureEventListener::HandleInputTimeoutLongTap()
 {
+  GEL_LOG("Running long-tap timeout task in state %d\n", mState);
+
   mLongTapTimeoutTask = nullptr;
 
   switch (mState) {
@@ -414,6 +416,8 @@ void GestureEventListener::HandleInputTimeoutLongTap()
 
 void GestureEventListener::HandleInputTimeoutMaxTap()
 {
+  GEL_LOG("Running max-tap timeout task in state %d\n", mState);
+
   mMaxTapTimeoutTask = nullptr;
 
   if (mState == GESTURE_FIRST_SINGLE_TOUCH_DOWN) {

@@ -32,7 +32,7 @@ namespace internal {
 
 // Too complicated to be inline
 Result
-ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
+ExpectTagAndGetLength(Reader& input, uint8_t expectedTag, uint16_t& length)
 {
   PR_ASSERT((expectedTag & 0x1F) != 0x1F); // high tag number form not allowed
 
@@ -44,7 +44,7 @@ ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
   }
 
   if (tag != expectedTag) {
-    return Fail(SEC_ERROR_BAD_DER);
+    return Result::ERROR_BAD_DER;
   }
 
   // The short form of length is a single byte with the high order bit set
@@ -66,7 +66,7 @@ ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
     }
     if (length2 < 128) {
       // Not shortest possible encoding
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
     }
     length = length2;
   } else if (length1 == 0x82) {
@@ -76,11 +76,11 @@ ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
     }
     if (length < 256) {
       // Not shortest possible encoding
-      return Fail(SEC_ERROR_BAD_DER);
+      return Result::ERROR_BAD_DER;
     }
   } else {
     // We don't support lengths larger than 2^16 - 1.
-    return Fail(SEC_ERROR_BAD_DER);
+    return Result::ERROR_BAD_DER;
   }
 
   // Ensure the input is long enough for the length it says it has.
@@ -90,7 +90,7 @@ ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
 } // namespace internal
 
 static Result
-OptionalNull(Input& input)
+OptionalNull(Reader& input)
 {
   if (input.Peek(NULLTag)) {
     return Null(input);
@@ -101,7 +101,8 @@ OptionalNull(Input& input)
 namespace {
 
 Result
-DigestAlgorithmOIDValue(Input& algorithmID, /*out*/ DigestAlgorithm& algorithm)
+DigestAlgorithmOIDValue(Reader& algorithmID,
+                        /*out*/ DigestAlgorithm& algorithm)
 {
   // RFC 4055 Section 2.1
   // python DottedOIDToCode.py id-sha1 1.3.14.3.2.26
@@ -132,14 +133,14 @@ DigestAlgorithmOIDValue(Input& algorithmID, /*out*/ DigestAlgorithm& algorithm)
   } else if (algorithmID.MatchRest(id_sha512)) {
     algorithm = DigestAlgorithm::sha512;
   } else {
-    return Fail(SEC_ERROR_INVALID_ALGORITHM);
+    return Result::ERROR_INVALID_ALGORITHM;
   }
 
   return Success;
 }
 
 Result
-SignatureAlgorithmOIDValue(Input& algorithmID,
+SignatureAlgorithmOIDValue(Reader& algorithmID,
                            /*out*/ SignatureAlgorithm& algorithm)
 {
   // RFC 5758 Section 3.1 (id-dsa-with-sha224 is intentionally excluded)
@@ -227,7 +228,7 @@ SignatureAlgorithmOIDValue(Input& algorithmID,
     algorithm = SignatureAlgorithm::dsa_with_sha256;
   } else {
     // Any MD5-based signature algorithm, or any unknown signature algorithm.
-    return Fail(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+    return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
   }
 
   return Success;
@@ -235,16 +236,16 @@ SignatureAlgorithmOIDValue(Input& algorithmID,
 
 template <typename OidValueParser, typename Algorithm>
 Result
-AlgorithmIdentifier(OidValueParser oidValueParser, Input& input,
+AlgorithmIdentifier(OidValueParser oidValueParser, Reader& input,
                     /*out*/ Algorithm& algorithm)
 {
-  Input value;
+  Reader value;
   Result rv = ExpectTagAndGetValue(input, SEQUENCE, value);
   if (rv != Success) {
     return rv;
   }
 
-  Input algorithmID;
+  Reader algorithmID;
   rv = ExpectTagAndGetValue(value, der::OIDTag, algorithmID);
   if (rv != Success) {
     return rv;
@@ -265,23 +266,23 @@ AlgorithmIdentifier(OidValueParser oidValueParser, Input& input,
 } // unnamed namespace
 
 Result
-SignatureAlgorithmIdentifier(Input& input,
+SignatureAlgorithmIdentifier(Reader& input,
                              /*out*/ SignatureAlgorithm& algorithm)
 {
   return AlgorithmIdentifier(SignatureAlgorithmOIDValue, input, algorithm);
 }
 
 Result
-DigestAlgorithmIdentifier(Input& input, /*out*/ DigestAlgorithm& algorithm)
+DigestAlgorithmIdentifier(Reader& input, /*out*/ DigestAlgorithm& algorithm)
 {
   return AlgorithmIdentifier(DigestAlgorithmOIDValue, input, algorithm);
 }
 
 Result
-SignedData(Input& input, /*out*/ Input& tbs,
+SignedData(Reader& input, /*out*/ Reader& tbs,
            /*out*/ SignedDataWithSignature& signedData)
 {
-  Input::Mark mark(input.GetMark());
+  Reader::Mark mark(input.GetMark());
 
   Result rv;
   rv = ExpectTagAndGetValue(input, SEQUENCE, tbs);
@@ -289,7 +290,7 @@ SignedData(Input& input, /*out*/ Input& tbs,
     return rv;
   }
 
-  rv = input.GetSECItem(siBuffer, mark, signedData.data);
+  rv = input.GetInput(mark, signedData.data);
   if (rv != Success) {
     return rv;
   }
@@ -299,45 +300,56 @@ SignedData(Input& input, /*out*/ Input& tbs,
     return rv;
   }
 
-  rv = ExpectTagAndGetValue(input, BIT_STRING, signedData.signature);
+  rv = BitStringWithNoUnusedBits(input, signedData.signature);
+  if (rv == Result::ERROR_BAD_DER) {
+    rv = Result::ERROR_BAD_SIGNATURE;
+  }
+  return rv;
+}
+
+Result
+BitStringWithNoUnusedBits(Reader& input, /*out*/ Input& value)
+{
+  Reader valueWithUnusedBits;
+  Result rv = ExpectTagAndGetValue(input, BIT_STRING, valueWithUnusedBits);
   if (rv != Success) {
     return rv;
   }
-  if (signedData.signature.len == 0) {
-    return Fail(SEC_ERROR_BAD_SIGNATURE);
-  }
-  unsigned int unusedBitsAtEnd = signedData.signature.data[0];
-  // XXX: Really the constraint should be that unusedBitsAtEnd must be less
-  // than 7. But, we suspect there are no real-world OCSP responses or X.509
-  // certificates with non-zero unused bits. It seems like NSS assumes this in
-  // various places, so we enforce it too in order to simplify this code. If we
-  // find compatibility issues, we'll know we're wrong and we'll have to figure
-  // out how to shift the bits around.
-  if (unusedBitsAtEnd != 0) {
-    return Fail(SEC_ERROR_BAD_SIGNATURE);
-  }
-  ++signedData.signature.data;
-  --signedData.signature.len;
 
-  return Success;
+  uint8_t unusedBitsAtEnd;
+  if (valueWithUnusedBits.Read(unusedBitsAtEnd) != Success) {
+    return Result::ERROR_BAD_DER;
+  }
+  // XXX: Really the constraint should be that unusedBitsAtEnd must be less
+  // than 7. But, we suspect there are no real-world values in OCSP responses
+  // or certificates with non-zero unused bits. It seems like NSS assumes this
+  // in various places, so we enforce it too in order to simplify this code. If
+  // we find compatibility issues, we'll know we're wrong and we'll have to
+  // figure out how to shift the bits around.
+  if (unusedBitsAtEnd != 0) {
+    return Result::ERROR_BAD_DER;
+  }
+  Reader::Mark mark(valueWithUnusedBits.GetMark());
+  valueWithUnusedBits.SkipToEnd();
+  return valueWithUnusedBits.GetInput(mark, value);
 }
 
 static inline Result
-ReadDigit(Input& input, /*out*/ int& value)
+ReadDigit(Reader& input, /*out*/ int& value)
 {
   uint8_t b;
   if (input.Read(b) != Success) {
-    return Fail(SEC_ERROR_INVALID_TIME);
+    return Result::ERROR_INVALID_TIME;
   }
   if (b < '0' || b > '9') {
-    return Fail(SEC_ERROR_INVALID_TIME);
+    return Result::ERROR_INVALID_TIME;
   }
   value = b - '0';
   return Success;
 }
 
 static inline Result
-ReadTwoDigits(Input& input, int minValue, int maxValue, /*out*/ int& value)
+ReadTwoDigits(Reader& input, int minValue, int maxValue, /*out*/ int& value)
 {
   int hi;
   Result rv = ReadDigit(input, hi);
@@ -351,7 +363,7 @@ ReadTwoDigits(Input& input, int minValue, int maxValue, /*out*/ int& value)
   }
   value = (hi * 10) + lo;
   if (value < minValue || value > maxValue) {
-    return Fail(SEC_ERROR_INVALID_TIME);
+    return Result::ERROR_INVALID_TIME;
   }
   return Success;
 }
@@ -373,11 +385,11 @@ namespace internal {
 // must always be in the format YYMMDDHHMMSSZ. Timezone formats of the form
 // +HH:MM or -HH:MM or NOT accepted.
 Result
-TimeChoice(Input& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
+TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
 {
   int days;
 
-  Input input;
+  Reader input;
   Result rv = ExpectTagAndGetValue(tagged, expectedTag, input);
   if (rv != Success) {
     return rv;
@@ -402,12 +414,12 @@ TimeChoice(Input& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
     yearHi = yearLo >= 50 ? 19 : 20;
   } else {
     PR_NOT_REACHED("invalid tag given to TimeChoice");
-    return Fail(SEC_ERROR_INVALID_TIME);
+    return Result::ERROR_INVALID_TIME;
   }
   int year = (yearHi * 100) + yearLo;
   if (year < 1970) {
     // We don't support dates before January 1, 1970 because that is the epoch.
-    return Fail(SEC_ERROR_INVALID_TIME); // TODO: better error code
+    return Result::ERROR_INVALID_TIME;
   }
   if (year > 1970) {
     // This is NOT equivalent to daysBeforeYear(year - 1970) because the
@@ -466,7 +478,7 @@ TimeChoice(Input& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
              break;
     default:
       PR_NOT_REACHED("month already bounds-checked by ReadTwoDigits");
-      return Fail(PR_INVALID_STATE_ERROR);
+      return Result::FATAL_ERROR_INVALID_STATE;
   }
 
   int dayOfMonth;
@@ -494,13 +506,13 @@ TimeChoice(Input& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
 
   uint8_t b;
   if (input.Read(b) != Success) {
-    return Fail(SEC_ERROR_INVALID_TIME);
+    return Result::ERROR_INVALID_TIME;
   }
   if (b != 'Z') {
-    return Fail(SEC_ERROR_INVALID_TIME); // TODO: better error code?
+    return Result::ERROR_INVALID_TIME;
   }
   if (End(input) != Success) {
-    return Fail(SEC_ERROR_INVALID_TIME);
+    return Result::ERROR_INVALID_TIME;
   }
 
   int64_t totalSeconds = (static_cast<int64_t>(days) * 24 * 60 * 60) +

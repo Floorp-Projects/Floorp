@@ -340,7 +340,7 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   if (!prop || !prop->ReferencesValidResources()) {
     return aDirtyRect;
   }
-  
+
   // Convert aDirtyRect into "user space" in app units:
   nsPoint toUserSpace =
     aFrame->GetOffsetTo(firstFrame) + GetOffsetToBoundingBox(firstFrame);

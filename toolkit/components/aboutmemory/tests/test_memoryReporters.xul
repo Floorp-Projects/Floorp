@@ -97,8 +97,8 @@
       present.images = true;
     } else if (aPath.search(/^explicit\/xpti-working-set$/) >= 0) {
       present.xptiWorkingSet = true;
-    } else if (aPath.search(/^explicit\/atom-tables$/) >= 0) {
-      present.atomTable = true;
+    } else if (aPath.search(/^explicit\/atom-tables\/main$/) >= 0) {
+      present.atomTablesMain = true;
     } else if (/\[System Principal\].*this-is-a-sandbox-name/.test(aPath)) {
       // A system compartment with a location (such as a sandbox) should
       // show that location.
@@ -224,7 +224,7 @@
   ok(present.places,                      "places is present");
   ok(present.images,                      "images is present");
   ok(present.xptiWorkingSet,              "xpti-working-set is present");
-  ok(present.atomTable,                   "atom-table is present");
+  ok(present.atomTablesMain,              "atom-tables/main is present");
   ok(present.sandboxLocation,             "sandbox locations are present");
   ok(present.bigString,                   "large string is present");
   ok(present.smallString1,                "small string 1 is present");

@@ -27,35 +27,29 @@ interface DataStore : EventTarget {
   [GetterThrows]
   readonly attribute boolean readOnly;
 
-  // Promise<any>
   [Throws]
-  Promise get(DataStoreKey... id);
+  Promise<any> get(DataStoreKey... id);
 
-  // Promise<void>
   [Throws]
-  Promise put(any obj, DataStoreKey id, optional DOMString revisionId = "");
+  Promise<void> put(any obj, DataStoreKey id, optional DOMString revisionId = "");
 
-  // Promise<DataStoreKey>
   [Throws]
-  Promise add(any obj, optional DataStoreKey id,
-              optional DOMString revisionId = "");
+  Promise<DataStoreKey> add(any obj, optional DataStoreKey id,
+                            optional DOMString revisionId = "");
 
-  // Promise<boolean>
   [Throws]
-  Promise remove(DataStoreKey id, optional DOMString revisionId = "");
+  Promise<boolean> remove(DataStoreKey id, optional DOMString revisionId = "");
 
-  // Promise<void>
   [Throws]
-  Promise clear(optional DOMString revisionId = "");
+  Promise<void> clear(optional DOMString revisionId = "");
 
   [GetterThrows]
   readonly attribute DOMString revisionId;
 
   attribute EventHandler onchange;
 
-  // Promise<unsigned long>
   [Throws]
-  Promise getLength();
+  Promise<unsigned long> getLength();
 
   [NewObject, Throws]
   DataStoreCursor sync(optional DOMString revisionId = "");
@@ -78,9 +72,8 @@ interface DataStoreCursor {
   [GetterThrows]
   readonly attribute DataStore store;
 
-  // Promise<DataStoreTask>
   [Throws]
-  Promise next();
+  Promise<DataStoreTask> next();
 
   [Throws]
   void close();

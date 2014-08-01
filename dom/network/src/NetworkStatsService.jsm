@@ -691,7 +691,7 @@ this.NetworkStatsService = {
    */
   networkStatsAvailable: function networkStatsAvailable(aCallback, aNetId,
                                                         aResult, aRxBytes,
-                                                        aTxBytes, aDate) {
+                                                        aTxBytes, aTimestamp) {
     if (!aResult) {
       if (aCallback) {
         aCallback(false, "Netd IPC error");
@@ -703,7 +703,7 @@ this.NetworkStatsService = {
                   serviceType:    "",
                   networkId:      this._networks[aNetId].network.id,
                   networkType:    this._networks[aNetId].network.type,
-                  date:           aDate,
+                  date:           new Date(aTimestamp),
                   rxBytes:        aTxBytes,
                   txBytes:        aRxBytes,
                   isAccumulative: true };

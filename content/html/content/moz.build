@@ -5,4 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['public', 'src']
-TEST_DIRS += ['test']
+
+MOCHITEST_MANIFESTS += [
+    'test/forms/mochitest.ini',
+    'test/mochitest.ini',
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'test/chrome.ini',
+    'test/forms/chrome.ini',
+]
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

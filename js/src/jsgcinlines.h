@@ -72,8 +72,8 @@ ThreadSafeContext::isThreadLocal(T thing) const
     {
         // GC should be suppressed in preparation for mutating thread local
         // objects, as we don't want to trip any barriers.
-        JS_ASSERT(!thing->zoneFromAnyThread()->needsBarrier());
-        JS_ASSERT(!thing->runtimeFromAnyThread()->needsBarrier());
+        JS_ASSERT(!thing->zoneFromAnyThread()->needsIncrementalBarrier());
+        JS_ASSERT(!thing->runtimeFromAnyThread()->needsIncrementalBarrier());
 
         return true;
     }

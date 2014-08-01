@@ -106,7 +106,7 @@ public:
   // for |#ifdef NS_BUILD_REFCNT_LOGGING| access to reference count
   nsrefcnt GetRefCount() { return mRefCnt; }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf);
 };
 
 /**
@@ -470,11 +470,19 @@ AtomImpl::IsStaticAtom()
 }
 
 size_t
-AtomImpl::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+AtomImpl::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 {
-  return aMallocSizeOf(this) +
-         nsStringBuffer::FromData(mString)->SizeOfIncludingThisIfUnshared(
+  size_t n = aMallocSizeOf(this);
+
+  // Don't measure static atoms. Nb: here "static" means "permanent", and while
+  // it's not guaranteed that permanent atoms are actually stored in static
+  // data, it is very likely. And we don't want to call |aMallocSizeOf| on
+  // static data, so we err on the side of caution.
+  if (!IsStaticAtom()) {
+    n += nsStringBuffer::FromData(mString)->SizeOfIncludingThisIfUnshared(
            aMallocSizeOf);
+  }
+  return n;
 }
 
 //----------------------------------------------------------------------
@@ -488,29 +496,21 @@ SizeOfAtomTableEntryExcludingThis(PLDHashEntryHdr* aHdr,
   return entry->mAtom->SizeOfIncludingThis(aMallocSizeOf);
 }
 
-static size_t
-SizeOfStaticAtomTableEntryExcludingThis(const nsAString& aKey,
-                                        nsIAtom* const& aData,
-                                        MallocSizeOf aMallocSizeOf,
-                                        void* aArg)
+void
+NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf,
+                                 size_t* aMain, size_t* aStatic)
 {
-  return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-}
+  *aMain = gAtomTable.ops
+         ? PL_DHashTableSizeOfExcludingThis(&gAtomTable,
+                                            SizeOfAtomTableEntryExcludingThis,
+                                            aMallocSizeOf)
+         : 0;
 
-size_t
-NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf)
-{
-  size_t n = 0;
-  if (gAtomTable.ops) {
-    n += PL_DHashTableSizeOfExcludingThis(&gAtomTable,
-                                          SizeOfAtomTableEntryExcludingThis,
-                                          aMallocSizeOf);
-  }
-  if (gStaticAtomTable) {
-    n += gStaticAtomTable->SizeOfIncludingThis(SizeOfStaticAtomTableEntryExcludingThis,
-                                               aMallocSizeOf);
-  }
-  return n;
+  // The atoms in the this table are almost certainly stored in static data, so
+  // we don't need a SizeOfEntry function.
+  *aStatic = gStaticAtomTable
+           ? gStaticAtomTable->SizeOfIncludingThis(nullptr, aMallocSizeOf)
+           : 0;
 }
 
 #define ATOM_HASHTABLE_INITIAL_SIZE  4096

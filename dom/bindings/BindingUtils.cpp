@@ -1607,6 +1607,29 @@ DictionaryBase::ParseJSON(JSContext* aCx,
                       aJSON.Length(), aVal);
 }
 
+bool
+DictionaryBase::StringifyToJSON(JSContext* aCx,
+                                JS::MutableHandle<JS::Value> aValue,
+                                nsAString& aJSON)
+{
+  return JS_Stringify(aCx, aValue, JS::NullPtr(), JS::NullHandleValue,
+                      AppendJSONToString, &aJSON);
+}
+
+/* static */
+bool
+DictionaryBase::AppendJSONToString(const jschar* aJSONData,
+                                   uint32_t aDataLength,
+                                   void* aString)
+{
+  nsAString* string = static_cast<nsAString*>(aString);
+  string->Append(static_cast<const char16_t*>(aJSONData),
+                 aDataLength);
+  return true;
+}
+
+
+
 static JSString*
 ConcatJSString(JSContext* cx, const char* pre, JS::Handle<JSString*> str, const char* post)
 {

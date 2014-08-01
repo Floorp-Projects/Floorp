@@ -2338,6 +2338,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   NS_PRECONDITION(IsOuterWindow(), "Must only be called on outer windows");
 
+  // Bail out early if we're in process of closing down the window.
+  NS_ENSURE_STATE(!mCleanedUp);
+
   if (IsFrozen()) {
     // This outer is now getting its first inner, thaw the outer now
     // that it's ready and is getting an inner window.

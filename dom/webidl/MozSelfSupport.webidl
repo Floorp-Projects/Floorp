@@ -37,5 +37,5 @@ interface MozSelfSupportImpl
    * @return Promise<Object>
    *         Resolved when the FHR payload data has been collected.
    */
-  Promise getHealthReportPayload();
+  Promise<object> getHealthReportPayload();
 };
