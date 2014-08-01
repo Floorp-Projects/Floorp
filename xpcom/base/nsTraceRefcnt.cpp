@@ -1382,9 +1382,7 @@ void
 nsTraceRefcnt::Shutdown()
 {
 #ifdef NS_IMPL_REFCNT_LOGGING
-#ifdef STACKWALKING_AVAILABLE
   gCodeAddressService = nullptr;
-#endif
   if (gBloatView) {
     PL_HashTableDestroy(gBloatView);
     gBloatView = nullptr;
