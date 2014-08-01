@@ -65,8 +65,8 @@ public:
           // Special case for BSP specific formats (mainly YUV formats, count it as normal YUV buffer).
           : (stride * height * 3 / 2);
 
-        nsPrintfCString gpath("gralloc/pid(%d)/buffer(width=%d, height=%d, bpp=%d)",
-            pid, gb->getWidth(), height, bpp);
+        nsPrintfCString gpath("gralloc/pid(%d)/buffer(width=%d, height=%d, bpp=%d, stride=%d)",
+            pid, gb->getWidth(), height, bpp, stride);
 
         rv = aHandleReport->Callback(EmptyCString(), gpath, KIND_OTHER, UNITS_BYTES, amount,
             NS_LITERAL_CSTRING(

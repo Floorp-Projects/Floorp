@@ -227,7 +227,7 @@ BaselineCompiler::compile()
         baselineScript->setModifiesArguments();
 
     // All barriers are emitted off-by-default, toggle them on if needed.
-    if (cx->zone()->needsBarrier())
+    if (cx->zone()->needsIncrementalBarrier())
         baselineScript->toggleBarriers(true);
 
     // All SPS instrumentation is emitted toggled off.  Toggle them on if needed.

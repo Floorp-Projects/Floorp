@@ -37,6 +37,16 @@
 
 namespace mozilla { namespace pkix { namespace test {
 
+class TestInput : public Input
+{
+public:
+  template <size_t N>
+  explicit TestInput(const char (&valueString)[N])
+    : Input(reinterpret_cast<const uint8_t(&)[N-1]>(valueString))
+  {
+  }
+};
+
 namespace {
 
 inline void
@@ -84,6 +94,8 @@ const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
 // in digital signatures, keys, hashes, etc.
 SECStatus TamperOnce(SECItem& item, const uint8_t* from, size_t fromLen,
                      const uint8_t* to, size_t toLen);
+
+Result InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Encode Certificates

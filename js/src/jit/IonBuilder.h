@@ -696,6 +696,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineStringObject(CallInfo &callInfo);
     InliningStatus inlineStringSplit(CallInfo &callInfo);
     InliningStatus inlineStrCharCodeAt(CallInfo &callInfo);
+    InliningStatus inlineConstantCharCodeAt(CallInfo &callInfo);
     InliningStatus inlineStrFromCharCode(CallInfo &callInfo);
     InliningStatus inlineStrCharAt(CallInfo &callInfo);
     InliningStatus inlineStrReplace(CallInfo &callInfo);

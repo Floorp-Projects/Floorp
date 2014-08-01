@@ -6,7 +6,6 @@
 #define NSSErrorsService_h
 
 #include "nsINSSErrorsService.h"
-
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
@@ -14,12 +13,6 @@
 
 namespace mozilla {
 namespace psm {
-
-enum PSMErrorCodes {
-  PSM_ERROR_KEY_PINNING_FAILURE = (nsINSSErrorsService::PSM_ERROR_BASE + 0)
-};
-
-void RegisterPSMErrorTable();
 
 class NSSErrorsService MOZ_FINAL : public nsINSSErrorsService
 {

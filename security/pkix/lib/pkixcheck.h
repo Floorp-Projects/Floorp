@@ -26,10 +26,10 @@
 #define mozilla_pkix__pkixcheck_h
 
 #include "pkix/pkixtypes.h"
-#include "pkixutil.h"
-#include "certt.h"
 
 namespace mozilla { namespace pkix {
+
+class BackCert;
 
 Result CheckIssuerIndependentProperties(
           TrustDomain& trustDomain,
@@ -39,9 +39,9 @@ Result CheckIssuerIndependentProperties(
           KeyPurposeId requiredEKUIfPresent,
           const CertPolicyId& requiredPolicy,
           unsigned int subCACount,
-          /*optional out*/ TrustLevel* trustLevel = nullptr);
+          /*out*/ TrustLevel& trustLevel);
 
-Result CheckNameConstraints(const SECItem& encodedNameConstraints,
+Result CheckNameConstraints(Input encodedNameConstraints,
                             const BackCert& firstChild,
                             KeyPurposeId requiredEKUIfPresent);
 

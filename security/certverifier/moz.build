@@ -32,6 +32,7 @@ if CONFIG['_MSC_VER']:
   CXXFLAGS += [
     '-wd4480', # nonstandard extension used: specifying underlying type for
                # enum 'enum'
+    '-wd4481', # nonstandard extension used: override specifier 'keyword'
     '-wd4510', # default constructor could not be generated
     '-wd4512', # assignment operator could not be generated
     '-wd4514', # 'function': unreferenced inline function has been removed

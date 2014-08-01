@@ -1,0 +1,46 @@
+﻿<!DOCTYPE HTML>
+<html>
+    <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1045270
+-->
+  <head>
+    <title>Test for Bug 583514</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1045270">Mozilla Bug 1045270</a>
+    <p id="display"></p>
+    <div id="content">
+      <input type=number>
+    </div>
+    <pre id="test">
+    <script type="application/javascript">
+
+    /** Test for Bug 1045270 **/
+
+    var input = document.querySelector("input");
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForFocus(function() {
+      input.focus();
+      input.addEventListener("input", function() {
+        // reframe
+        document.body.style.display = "none";
+        document.body.style.display = "";
+        document.body.offsetLeft; // flush
+      }, false);
+      synthesizeKey("1", {});
+      SimpleTest.executeSoon(function() {
+        synthesizeKey("2", {});
+        SimpleTest.executeSoon(function() {
+          is(input.value, 12, "Reframe should restore focus and selection properly");
+          SimpleTest.finish();
+        });
+      });
+    });
+
+    </script>
+    </pre>
+  </body>
+</html>

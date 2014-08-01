@@ -39,7 +39,6 @@ interface BluetoothDevice : EventTarget
    * If the operation succeeds, the promise will be resolved with up-to-date
    * UUID list which is identical to attribute uuids.
    */
-  // Promise<sequence<DOMString>>
   [NewObject, Throws]
-  Promise                                   fetchUuids();
+  Promise<sequence<DOMString>>              fetchUuids();
 };

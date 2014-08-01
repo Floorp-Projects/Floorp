@@ -150,9 +150,9 @@ partial interface HTMLMediaElement {
   [Pref="media.eme.enabled"]
   readonly attribute MediaKeys? mediaKeys;
 
-  // Promise<any>
+  // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
   [Pref="media.eme.enabled", Throws, NewObject]
-  Promise setMediaKeys(MediaKeys? mediaKeys);
+  Promise<void> setMediaKeys(MediaKeys? mediaKeys);
 
   [Pref="media.eme.enabled"]
   attribute EventHandler onneedkey;

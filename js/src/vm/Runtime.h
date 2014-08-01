@@ -982,8 +982,8 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
 
   public:
-    void setNeedsBarrier(bool needs) {
-        needsBarrier_ = needs;
+    void setNeedsIncrementalBarrier(bool needs) {
+        needsIncrementalBarrier_ = needs;
     }
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)

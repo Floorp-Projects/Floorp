@@ -43,6 +43,8 @@
 #include "nsIController.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/HTMLInputElement.h"
+#include "nsNumberControlFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1423,7 +1425,8 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     newEditor->AddEditorObserver(mTextListener);
 
   // Restore our selection after being bound to a new frame
-  if (mSelectionCached) {
+  HTMLInputElement* number = GetParentNumberControl(mBoundFrame);
+  if (number ? number->IsSelectionCached() : mSelectionCached) {
     if (mRestoringSelection) // paranoia
       mRestoringSelection->Revoke();
     mRestoringSelection = new RestoreSelectionState(this, mBoundFrame);
@@ -1433,9 +1436,64 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   }
 
   // The selection cache is no longer going to be valid
-  mSelectionCached = false;
+  if (number) {
+    number->ClearSelectionCached();
+  } else {
+    mSelectionCached = false;
+  }
 
   return rv;
+}
+
+bool
+nsTextEditorState::IsSelectionCached() const
+{
+  if (mBoundFrame) {
+    HTMLInputElement* number = GetParentNumberControl(mBoundFrame);
+    if (number) {
+      return number->IsSelectionCached();
+    }
+  }
+  return mSelectionCached;
+}
+
+nsTextEditorState::SelectionProperties&
+nsTextEditorState::GetSelectionProperties()
+{
+  if (mBoundFrame) {
+    HTMLInputElement* number = GetParentNumberControl(mBoundFrame);
+    if (number) {
+      return number->GetSelectionProperties();
+    }
+  }
+  return mSelectionProperties;
+}
+
+HTMLInputElement*
+nsTextEditorState::GetParentNumberControl(nsFrame* aFrame) const
+{
+  MOZ_ASSERT(aFrame);
+  nsIContent* content = aFrame->GetContent();
+  MOZ_ASSERT(content);
+  nsIContent* parent = content->GetParent();
+  if (!parent) {
+    return nullptr;
+  }
+  nsIContent* parentOfParent = parent->GetParent();
+  if (!parentOfParent) {
+    return nullptr;
+  }
+  HTMLInputElement* input = HTMLInputElement::FromContent(parentOfParent);
+  if (input) {
+    // This function might be called during frame reconstruction as a result
+    // of changing the input control's type from number to something else. In
+    // that situation, the type of the control has changed, but its frame has
+    // not been reconstructed yet.  So we need to check the type of the input
+    // control in addition to the type of the frame.
+    return (input->GetType() == NS_FORM_INPUT_NUMBER) ? input : nullptr;
+  }
+
+  return nullptr;
 }
 
 void
@@ -1478,10 +1536,21 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // GetSelectionRange before calling DestroyEditor, and only if
   // mEditorInitialized indicates that we actually have an editor available.
   if (mEditorInitialized) {
-    mBoundFrame->GetSelectionRange(&mSelectionProperties.mStart,
-                                   &mSelectionProperties.mEnd,
-                                   &mSelectionProperties.mDirection);
-    mSelectionCached = true;
+    HTMLInputElement* number = GetParentNumberControl(aFrame);
+    if (number) {
+      // If we are inside a number control, cache the selection on the
+      // parent control, because this text editor state will be destroyed
+      // together with the native anonymous text control.
+      SelectionProperties props;
+      mBoundFrame->GetSelectionRange(&props.mStart, &props.mEnd,
+                                     &props.mDirection);
+      number->SetSelectionProperties(props);
+    } else {
+      mBoundFrame->GetSelectionRange(&mSelectionProperties.mStart,
+                                     &mSelectionProperties.mEnd,
+                                     &mSelectionProperties.mDirection);
+      mSelectionCached = true;
+    }
   }
 
   // Destroy our editor

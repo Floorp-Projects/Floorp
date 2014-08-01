@@ -1179,6 +1179,12 @@ IonBuilder::inlineStrCharCodeAt(CallInfo &callInfo)
     if (argType != MIRType_Int32 && argType != MIRType_Double)
         return InliningStatus_NotInlined;
 
+    // Check for STR.charCodeAt(IDX) where STR is a constant string and IDX is a
+    // constant integer.
+    InliningStatus constInlineStatus = inlineConstantCharCodeAt(callInfo);
+    if (constInlineStatus != InliningStatus_NotInlined)
+        return constInlineStatus;
+
     callInfo.setImplicitlyUsedUnchecked();
 
     MInstruction *index = MToInt32::New(alloc(), callInfo.getArg(0));
@@ -1192,6 +1198,39 @@ IonBuilder::inlineStrCharCodeAt(CallInfo &callInfo)
     MCharCodeAt *charCode = MCharCodeAt::New(alloc(), callInfo.thisArg(), index);
     current->add(charCode);
     current->push(charCode);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineConstantCharCodeAt(CallInfo &callInfo)
+{
+    if (!callInfo.thisArg()->isConstant())
+        return InliningStatus_NotInlined;
+
+    if (!callInfo.getArg(0)->isConstant())
+        return InliningStatus_NotInlined;
+
+    const js::Value *strval = callInfo.thisArg()->toConstant()->vp();
+    const js::Value *idxval  = callInfo.getArg(0)->toConstant()->vp();
+
+    if (!strval->isString() || !idxval->isInt32())
+        return InliningStatus_NotInlined;
+
+    JSString *str = strval->toString();
+    if (!str->isLinear())
+        return InliningStatus_NotInlined;
+
+    int32_t idx = idxval->toInt32();
+    if (idx < 0 || (uint32_t(idx) >= str->length()))
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    JSLinearString &linstr = str->asLinear();
+    jschar ch = linstr.latin1OrTwoByteChar(idx);
+    MConstant *result = MConstant::New(alloc(), Int32Value(ch));
+    current->add(result);
+    current->push(result);
     return InliningStatus_Inlined;
 }
 

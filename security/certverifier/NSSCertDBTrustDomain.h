@@ -41,6 +41,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain
 {
 
 public:
+  typedef mozilla::pkix::Result Result;
+
   enum OCSPFetching {
     NeverFetchOCSP = 0,
     FetchOCSPForDVSoftFail = 1,
@@ -54,30 +56,38 @@ public:
           /*optional*/ CERTChainVerifyCallback* checkChainCallback = nullptr,
           /*optional*/ ScopedCERTCertList* builtChain = nullptr);
 
-  virtual SECStatus FindIssuer(const SECItem& encodedIssuerName,
-                               IssuerChecker& checker, PRTime time);
+  virtual Result FindIssuer(mozilla::pkix::Input encodedIssuerName,
+                            IssuerChecker& checker,
+                            PRTime time) MOZ_OVERRIDE;
 
-  virtual SECStatus GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                                 const mozilla::pkix::CertPolicyId& policy,
-                                 const SECItem& candidateCertDER,
-                         /*out*/ mozilla::pkix::TrustLevel* trustLevel);
+  virtual Result GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
+                              const mozilla::pkix::CertPolicyId& policy,
+                              mozilla::pkix::Input candidateCertDER,
+                              /*out*/ mozilla::pkix::TrustLevel& trustLevel)
+                              MOZ_OVERRIDE;
 
-  virtual SECStatus VerifySignedData(
-                      const mozilla::pkix::SignedDataWithSignature& signedData,
-                      const SECItem& subjectPublicKeyInfo);
+  virtual Result CheckPublicKey(mozilla::pkix::Input subjectPublicKeyInfo)
+                                MOZ_OVERRIDE;
 
-  virtual SECStatus DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
-                              size_t digestBufLen);
+  virtual Result VerifySignedData(
+                   const mozilla::pkix::SignedDataWithSignature& signedData,
+                   mozilla::pkix::Input subjectPublicKeyInfo)
+                   MOZ_OVERRIDE;
 
-  virtual SECStatus CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                                    const mozilla::pkix::CertID& certID,
-                                    PRTime time,
-                       /*optional*/ const SECItem* stapledOCSPResponse,
-                       /*optional*/ const SECItem* aiaExtension);
+  virtual Result DigestBuf(mozilla::pkix::Input item,
+                           /*out*/ uint8_t* digestBuf,
+                           size_t digestBufLen) MOZ_OVERRIDE;
 
-  virtual SECStatus IsChainValid(const mozilla::pkix::DERArray& certChain);
+  virtual Result CheckRevocation(
+                   mozilla::pkix::EndEntityOrCA endEntityOrCA,
+                   const mozilla::pkix::CertID& certID,
+                   PRTime time,
+      /*optional*/ const mozilla::pkix::Input* stapledOCSPResponse,
+      /*optional*/ const mozilla::pkix::Input* aiaExtension)
+                   MOZ_OVERRIDE;
 
-  virtual SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo);
+  virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain)
+                              MOZ_OVERRIDE;
 
 private:
   enum EncodedResponseSource {
@@ -85,9 +95,9 @@ private:
     ResponseWasStapled = 2
   };
   static const PRTime ServerFailureDelay = 5 * 60 * PR_USEC_PER_SEC;
-  SECStatus VerifyAndMaybeCacheEncodedOCSPResponse(
+  Result VerifyAndMaybeCacheEncodedOCSPResponse(
     const mozilla::pkix::CertID& certID, PRTime time,
-    uint16_t maxLifetimeInDays, const SECItem& encodedResponse,
+    uint16_t maxLifetimeInDays, mozilla::pkix::Input encodedResponse,
     EncodedResponseSource responseSource, /*out*/ bool& expired);
 
   const SECTrustType mCertDBTrustType;

@@ -39,7 +39,7 @@ function test_strict() {
 
   // Issued by otherCA, which is not in the pinset for pinning.example.com.
   add_connection_test("bad.include-subdomains.pinning.example.com",
-    getXPCOMStatusFromNSS(PSM_ERROR_KEY_PINNING_FAILURE));
+    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
 
   // These domains serve certs that match the pinset.
   add_connection_test("include-subdomains.pinning.example.com", Cr.NS_OK);
@@ -101,7 +101,7 @@ function test_enforce_test_mode() {
 
   // Issued by otherCA, which is not in the pinset for pinning.example.com.
   add_connection_test("bad.include-subdomains.pinning.example.com",
-    getXPCOMStatusFromNSS(PSM_ERROR_KEY_PINNING_FAILURE));
+    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
 
   // These domains serve certs that match the pinset.
   add_connection_test("include-subdomains.pinning.example.com", Cr.NS_OK);
@@ -117,7 +117,7 @@ function test_enforce_test_mode() {
   // bad.include-subdomains.pinning.example.com, is in test-mode, but we are
   // enforcing test mode pins.
   add_connection_test("test-mode.pinning.example.com",
-    getXPCOMStatusFromNSS(PSM_ERROR_KEY_PINNING_FAILURE));
+    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
 }
 
 function check_pinning_telemetry() {

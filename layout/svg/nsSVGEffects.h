@@ -104,7 +104,7 @@ protected:
  * track when those resources change and when the DOM changes in ways
  * that affect which element is referenced by a given ID (e.g., when
  * element IDs change). The code here is responsible for that.
- * 
+ *
  * When a frame references a supporting resource, we create a property
  * object derived from nsSVGIDRenderingObserver to manage the relationship. The
  * property object is attached to the referencing frame.
@@ -140,7 +140,7 @@ protected:
   private:
     nsSVGIDRenderingObserver* mContainer;
   };
-  
+
   SourceReference mElement;
   // The frame that this property is attached to
   nsIFrame *mFrame;
@@ -250,7 +250,7 @@ private:
 
   bool mValid;
 };
- 
+
 class nsSVGPaintingProperty : public nsSVGIDRenderingObserver {
 public:
   nsSVGPaintingProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
@@ -270,7 +270,7 @@ protected:
  * the observer will force repainting of whatever part of the document
  * is needed, and then at paint time the observer will do a clean lookup
  * of the referenced element and [re-]add itself to the element's observer list.
- * 
+ *
  * InvalidateAll must be called before this object is destroyed, i.e.
  * before the referenced frame is destroyed. This should normally happen
  * via nsSVGContainerFrame::RemoveFrame, since only frames in the frame
