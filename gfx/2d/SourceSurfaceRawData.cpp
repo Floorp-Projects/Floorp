@@ -28,6 +28,20 @@ SourceSurfaceRawData::InitWrappingData(uint8_t *aData,
   return true;
 }
 
+void
+SourceSurfaceRawData::GuaranteePersistance()
+{
+  if (mOwnData) {
+    return;
+  }
+
+  uint8_t* oldData = mRawData;
+  mRawData = new uint8_t[mStride * mSize.height];
+
+  memcpy(mRawData, oldData, mStride * mSize.height);
+  mOwnData = true;
+}
+
 bool
 SourceSurfaceAlignedRawData::Init(const IntSize &aSize,
                                   SurfaceFormat aFormat)

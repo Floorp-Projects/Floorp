@@ -12,8 +12,8 @@
 #include "jscompartment.h"
 #include "jsutil.h"
 
-#include "assembler/jit/ExecutableAllocator.h"
 #include "gc/Marking.h"
+#include "jit/ExecutableAllocator.h"
 #include "jit/JitCompartment.h"
 
 using mozilla::DebugOnly;

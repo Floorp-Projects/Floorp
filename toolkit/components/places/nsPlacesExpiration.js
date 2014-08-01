@@ -206,10 +206,9 @@ const EXPIRATION_QUERIES = {
        + "SELECT h.id, h.url, h.guid, h.last_visit_date, :limit_uris "
        + "FROM moz_places h "
        + "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
-       + "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
        + "WHERE h.last_visit_date IS NULL "
+       +   "AND h.foreign_count = 0 "
        +   "AND v.id IS NULL "
-       +   "AND b.id IS NULL "
        +   "AND frecency <> -1 "
        + "LIMIT :limit_uris",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN_DIRTY |
@@ -231,10 +230,9 @@ const EXPIRATION_QUERIES = {
        +   "SELECT h.id "
        +   "FROM moz_places h "
        +   "LEFT JOIN moz_historyvisits v ON h.id = v.place_id "
-       +   "LEFT JOIN moz_bookmarks b ON h.id = b.fk "
        +   "WHERE h.last_visit_date IS NULL "
+       +     "AND h.foreign_count = 0 "
        +     "AND v.id IS NULL "
-       +     "AND b.id IS NULL "
        +   "LIMIT :limit_uris "
        + ")",
     actions: ACTION.CLEAR_HISTORY

@@ -462,10 +462,10 @@ static void PaintHeaderFooter(nsIFrame* aFrame, nsRenderingContext* aCtx,
   static_cast<nsPageFrame*>(aFrame)->PaintHeaderFooter(*aCtx, aPt);
 }
 
-static gfx3DMatrix ComputePageTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
+static gfx::Matrix4x4 ComputePageTransform(nsIFrame* aFrame, float aAppUnitsPerPixel)
 {
   float scale = aFrame->PresContext()->GetPageScale();
-  return gfx3DMatrix::ScalingMatrix(scale, scale, 1);
+  return gfx::Matrix4x4().Scale(scale, scale, 1);
 }
 
 //------------------------------------------------------------------------------

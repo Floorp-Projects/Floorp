@@ -121,7 +121,7 @@ function LoginObserver(captivePortalDetector) {
 
   // Public interface of LoginObserver
   let observer = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIHttpActivityOberver,
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIHttpActivityObserver,
                                            Ci.nsITimerCallback]),
 
     attach: function attach() {
@@ -228,7 +228,7 @@ function CaptivePortalDetector() {
   this._requestQueue = []; // Maintain a progress table, store callbacks and the ongoing XHR
   this._interfaceNames = {}; // Maintain names of the requested network interfaces
 
-  debug('CaptiveProtalDetector initiated, waitng for network connection established');
+  debug('CaptiveProtalDetector initiated, waiting for network connection established');
 }
 
 CaptivePortalDetector.prototype = {
@@ -247,7 +247,7 @@ CaptivePortalDetector.prototype = {
 
     // Prevent multiple requests on a single network interface
     if (this._interfaceNames[aInterfaceName]) {
-      throw Components.Exception('Do not allow multiple request on one interface: ' + aInterface);
+      throw Components.Exception('Do not allow multiple request on one interface: ' + aInterfaceName);
     }
 
     let request = {interfaceName: aInterfaceName};

@@ -69,8 +69,8 @@ function runTest() {
 addEventListener('testready', function() {
   SpecialPowers.pushPrefEnv(
     {set: [
-      /* Cause the grace period of priority privilege for the high-priority
-       * process to time out after 1s. */
+      /* Cause the CPU wake lock taken on behalf of the high-priority process
+       * to time out after 1s. */
        ["dom.ipc.systemMessageCPULockTimeoutSec", 1],
        ["dom.wakelock.enabled", true]
     ]},

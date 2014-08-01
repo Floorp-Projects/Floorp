@@ -32,7 +32,7 @@ const REGEX_MATCH_FUNCTION_NAME = /^\(?function\s+([^(\s]+)\s*\(/;
 const REGEX_MATCH_FUNCTION_ARGS = /^\(?function\s*[^\s(]*\s*\((.+?)\)/;
 
 // Number of terminal entries for the self-xss prevention to go away
-const CONSOLE_ENTRY_THRESHOLD = 10
+const CONSOLE_ENTRY_THRESHOLD = 5
 let WebConsoleUtils = {
   /**
    * Convenience function to unwrap a wrapped object.
