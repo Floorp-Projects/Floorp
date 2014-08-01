@@ -19,13 +19,13 @@ interface nsIWifiTetheringCallback : nsISupports
   void wifiTetheringEnabledChange(in jsval error);
 };
 
-[scriptable, function, uuid(e079aa2a-ec0a-4bbd-b1a4-d81a9faae464)]
+[scriptable, function, uuid(9c128e68-5e4b-4626-bb88-84ec54cce5d8)]
 interface nsINetworkStatsCallback : nsISupports
 {
   void networkStatsAvailable(in boolean success,
                              in unsigned long rxBytes,
                              in unsigned long txBytes,
-                             in jsval date);
+                             in unsigned long long timestamp);
 };
 
 [scriptable, function, uuid(0706bfa2-ac2d-11e2-9a8d-7b6d988d4767)]
