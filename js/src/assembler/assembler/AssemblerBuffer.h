@@ -36,13 +36,13 @@
 
 #include <string.h>
 #include <limits.h>
-#include "assembler/jit/ExecutableAllocator.h"
-
 #include <stdarg.h>
+
 #include "jsfriendapi.h"
 #include "jsopcode.h"
 #include "jsutil.h"
 
+#include "jit/ExecutableAllocator.h"
 #include "jit/IonSpewer.h"
 #include "js/RootingAPI.h"
 
