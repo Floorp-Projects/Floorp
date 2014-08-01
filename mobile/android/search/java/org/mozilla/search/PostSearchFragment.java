@@ -81,6 +81,7 @@ public class PostSearchFragment extends Fragment {
         // Only load URLs if they're different than what's already
         // loaded in the webview.
         if (!TextUtils.equals(webview.getUrl(), url)) {
+            webview.loadUrl("about:blank");
             webview.loadUrl(url);
         }
     }
