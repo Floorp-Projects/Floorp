@@ -76,12 +76,12 @@ enum ErrorCode {
 
 void RegisterErrorTable();
 
-inline SECItem UnsafeMapInputToSECItem(Input ib)
+inline SECItem UnsafeMapInputToSECItem(Input input)
 {
   SECItem result = {
     siBuffer,
-    const_cast<uint8_t*>(ib.UnsafeGetData()),
-    ib.GetLength()
+    const_cast<uint8_t*>(input.UnsafeGetData()),
+    input.GetLength()
   };
   return result;
 }
