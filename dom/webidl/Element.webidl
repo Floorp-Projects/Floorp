@@ -153,7 +153,7 @@ partial interface Element {
 
   // scrolling
   void scrollIntoView();
-  void scrollIntoView(boolean top, optional ScrollOptions options);
+  void scrollIntoView(boolean top);
   // None of the CSSOM attributes are [Pure], because they flush
            attribute long scrollTop;   // scroll on setting
            attribute long scrollLeft;  // scroll on setting
