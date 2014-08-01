@@ -30,12 +30,24 @@ class File(object):
     def mtime(self):
         return self._times[1]
 
+    @property
+    def modified(self):
+        '''Returns whether the file was modified since the instance was
+        created. Result is memoized.'''
+        if hasattr(self, '_modified'):
+            return self._modified
+
+        modified = True
+        if os.path.exists(self._path):
+            if open(self._path, 'rb').read() == self._content:
+                modified = False
+        self._modified = modified
+        return modified
+
     def update_time(self):
         '''If the file hasn't changed since the instance was created,
            restore its old modification time.'''
-        if not os.path.exists(self._path):
-            return
-        if open(self._path, 'rb').read() == self._content:
+        if not self.modified:
             os.utime(self._path, self._times)
 
 
@@ -101,7 +113,8 @@ def maybe_clear_cache(data):
             print 'to:'
             print '  %s' % env.get(precious, 'undefined')
             os.remove(data['cache-file'])
-            return
+            return True
+    return False
 
 
 def split_template(s):
@@ -118,7 +131,7 @@ def get_config_files(data):
         return [], []
 
     configure = mozpath.join(data['srcdir'], 'configure')
-    config_files = [(config_status, configure)]
+    config_files = []
     command_files = []
 
     # Scan the config.status output for information about configuration files
@@ -159,6 +172,13 @@ def prepare(data_file, srcdir, objdir, shell, args):
     # will take it from the configure path anyways).
     parser.add_argument('--srcdir', type=str)
 
+    data_file = os.path.join(objdir, data_file)
+    previous_args = None
+    if os.path.exists(data_file):
+        with open(data_file, 'rb') as f:
+            data = pickle.load(f)
+            previous_args = data['args']
+
     # Msys likes to break environment variables and command line arguments,
     # so read those from stdin, as they are passed from the configure script
     # when necessary (on windows).
@@ -194,25 +214,31 @@ def prepare(data_file, srcdir, objdir, shell, args):
     else:
         data['cache-file'] = mozpath.join(objdir, 'config.cache')
 
+    if previous_args is not None:
+        data['previous-args'] = previous_args
+
     try:
         os.makedirs(objdir)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
-    with open(os.path.join(objdir, data_file), 'wb') as f:
+    with open(data_file, 'wb') as f:
         pickle.dump(data, f)
 
 
 def run(data_file, objdir):
+    ret = 0
+
     with open(os.path.join(objdir, data_file), 'rb') as f:
         data = pickle.load(f)
 
     data['objdir'] = objdir
 
     cache_file = data['cache-file']
+    cleared_cache = True
     if os.path.exists(cache_file):
-        maybe_clear_cache(data)
+        cleared_cache = maybe_clear_cache(data)
 
     config_files, command_files = get_config_files(data)
     contents = []
@@ -227,26 +253,77 @@ def run(data_file, objdir):
         if os.path.isfile(f):
             contents.append(File(f))
 
+    # Only run configure if one of the following is true:
+    # - config.status doesn't exist
+    # - config.status is older than configure
+    # - the configure arguments changed
+    # - the environment changed in a way that requires a cache clear.
     configure = mozpath.join(data['srcdir'], 'configure')
-    command = [data['shell'], configure]
-    for kind in ('target', 'build', 'host'):
-        if data.get(kind) is not None:
-            command += ['--%s=%s' % (kind, data[kind])]
-    command += data['args']
-    command += ['--cache-file=%s' % cache_file]
+    config_status_path = mozpath.join(objdir, 'config.status')
+    skip_configure = True
+    if not os.path.exists(config_status_path):
+        skip_configure = False
+        config_status = None
+    else:
+        config_status = File(config_status_path)
+        if config_status.mtime < os.path.getmtime(configure) or \
+                data.get('previous-args', data['args']) != data['args'] or \
+                cleared_cache:
+            skip_configure = False
 
-    print 'configuring in %s' % os.path.relpath(objdir, os.getcwd())
-    print 'running %s' % ' '.join(command)
-    sys.stdout.flush()
-    ret = subprocess.call(command, cwd=objdir, env=data['env'])
+    if not skip_configure:
+        command = [data['shell'], configure]
+        for kind in ('target', 'build', 'host'):
+            if data.get(kind) is not None:
+                command += ['--%s=%s' % (kind, data[kind])]
+        command += data['args']
+        command += ['--cache-file=%s' % cache_file]
 
-    for f in contents:
-        # Still touch config.status if configure is newer than its original
-        # mtime.
-        if os.path.basename(f.path) == 'config.status' and \
-                os.path.getmtime(configure) > f.mtime:
-            continue
-        f.update_time()
+        # Pass --no-create to configure so that it doesn't run config.status.
+        # We're going to run it ourselves.
+        command += ['--no-create']
+
+        print 'configuring in %s' % os.path.relpath(objdir, os.getcwd())
+        print 'running %s' % ' '.join(command[:-1])
+        sys.stdout.flush()
+        ret = subprocess.call(command, cwd=objdir, env=data['env'])
+
+        if ret:
+            return ret
+
+        # Leave config.status with a new timestamp if configure is newer than
+        # its original mtime.
+        if config_status and os.path.getmtime(configure) <= config_status.mtime:
+            config_status.update_time()
+
+    # Only run config.status if one of the following is true:
+    # - config.status changed or did not exist
+    # - one of the templates for config files is newer than the corresponding
+    #   config file.
+    skip_config_status = True
+    if not config_status or config_status.modified:
+        # If config.status doesn't exist after configure (because it's not
+        # an autoconf configure), skip it.
+        if os.path.exists(config_status_path):
+            skip_config_status = False
+    else:
+        # config.status changed or was created, so we need to update the
+        # list of config and command files.
+        config_files, command_files = get_config_files(data)
+        for f, t in config_files:
+            if os.path.getmtime(f) < os.path.getmtime(t):
+                skip_config_status = False
+
+    if not skip_config_status:
+        if skip_configure:
+            print 'running config.status in %s' % os.path.relpath(objdir,
+                os.getcwd())
+            sys.stdout.flush()
+        ret = subprocess.call([data['shell'], '-c', './config.status'],
+            cwd=objdir, env=data['env'])
+
+        for f in contents:
+            f.update_time()
 
     return ret
 
