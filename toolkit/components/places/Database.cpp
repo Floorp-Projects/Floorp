@@ -739,6 +739,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 24 uses schema version 23.
 
+      if (currentSchemaVersion < 24) {
+        rv = MigrateV24Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      // Firefox 34 uses schema version 24.
+
       // Schema Upgrades must add migration code here.
 
       rv = UpdateBookmarkRootTitles();
@@ -959,6 +965,13 @@ Database::InitTempTriggers()
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_TYPED_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_FOREIGNCOUNT_AFTERDELETE_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_FOREIGNCOUNT_AFTERINSERT_TRIGGER);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_FOREIGNCOUNT_AFTERUPDATE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1910,6 +1923,36 @@ Database::MigrateV23Up()
 
   nsCOMPtr<mozIStoragePendingStatement> ps;
   rv = updatePrefixesStmt->ExecuteAsync(nullptr, getter_AddRefs(ps));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV24Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+ // Add a foreign_count column to moz_places
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT foreign_count FROM moz_places"
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_places ADD COLUMN foreign_count INTEGER DEFAULT 0 NOT NULL"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Adjust counts for all the rows
+  nsCOMPtr<mozIStorageStatement> updateStmt;
+  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_places SET foreign_count = "
+    "(SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id) "
+  ), getter_AddRefs(updateStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+  mozStorageStatementScoper updateScoper(updateStmt);
+  rv = updateStmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
