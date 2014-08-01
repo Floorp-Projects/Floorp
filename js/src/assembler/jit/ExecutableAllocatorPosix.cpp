@@ -30,9 +30,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
-#include "assembler/wtf/Assertions.h"
 #include "assembler/wtf/VMTags.h"
 #include "js/Utility.h"
 
@@ -54,8 +54,8 @@ ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 
 void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
 {
-    int result = munmap(alloc.pages, alloc.size);
-    ASSERT_UNUSED(result, !result);
+    mozilla::DebugOnly<int> result = munmap(alloc.pages, alloc.size);
+    MOZ_ASSERT(!result);
 }
 
 #if WTF_ENABLE_ASSEMBLER_WX_EXCLUSIVE
