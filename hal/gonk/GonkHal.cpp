@@ -68,7 +68,6 @@
 #include "UeventPoller.h"
 #include "nsIWritablePropertyBag2.h"
 #include <algorithm>
-#include "PowerWakeLock.h"
 
 #define NsecPerMsec  1000000LL
 #define NsecPerSec   1000000000
@@ -667,7 +666,6 @@ void
 SetScreenEnabled(bool aEnabled)
 {
   GetGonkDisplay()->SetEnabled(aEnabled);
-  gPowerWakelock = nullptr;
   sScreenEnabled = aEnabled;
 }
 
