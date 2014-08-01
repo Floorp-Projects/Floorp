@@ -57,7 +57,7 @@ function updateUI() {
     return;
   }
 
-  if (project.type != "runtimeApp") {
+  if (project.type != "runtimeApp" && project.type != "mainProcess") {
     document.querySelector("#toolbar").classList.remove("hidden");
     document.querySelector("#locationHeader").classList.remove("hidden");
     document.querySelector("#location").textContent = project.location;
@@ -87,6 +87,8 @@ function updateUI() {
       document.querySelector("#type").textContent = manifest.type || "web";
       document.querySelector("#manifestURLHeader").classList.remove("hidden");
       document.querySelector("#manifestURL").textContent = manifestURL;
+    } else if (project.type == "mainProcess") {
+      document.querySelector("#type").textContent = project.name;
     } else {
       document.querySelector("#type").textContent = project.type + " " + (manifest.type || "web");
     }
