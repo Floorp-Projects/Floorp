@@ -28,17 +28,6 @@ public:
   static void DemangleSymbol(const char* aSymbol, char* aBuffer, int aBufLen);
 
   static void WalkTheStack(FILE* aStream);
-
-  /**
-   * This is a variant of |WalkTheStack| that uses |CodeAddressService| to cache
-   * the results of |NS_DescribeCodeAddress|. If |WalkTheStackCached| is being
-   * called frequently, it will be a few orders of magnitude faster than
-   * |WalkTheStack|. However, the cache uses a lot of memory, which can cause
-   * OOM crashes. Therefore, this should only be used for things like refcount
-   * logging which walk the stack extremely frequently.
-   */
-  static void WalkTheStackCached(FILE* aStream);
-
   /**
    * Tell nsTraceRefcnt whether refcounting, allocation, and destruction
    * activity is legal.  This is used to trigger assertions for any such
