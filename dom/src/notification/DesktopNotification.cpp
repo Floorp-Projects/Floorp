@@ -9,11 +9,9 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "nsIDOMDesktopNotification.h"
-#include "TabChild.h"
 #include "mozilla/Preferences.h"
 #include "nsGlobalWindow.h"
 #include "nsIAppsService.h"
-#include "PCOMContentPermissionRequestChild.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "PermissionMessageUtils.h"
@@ -24,12 +22,10 @@ namespace dom {
 /*
  * Simple Request
  */
-class DesktopNotificationRequest : public nsIContentPermissionRequest,
-                                   public nsRunnable,
-                                   public PCOMContentPermissionRequestChild
-
+class DesktopNotificationRequest : public nsIContentPermissionRequest
+                                 , public nsRunnable
 {
-  ~DesktopNotificationRequest()
+  virtual ~DesktopNotificationRequest()
   {
   }
 
@@ -42,26 +38,10 @@ public:
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
-    nsCOMPtr<nsIContentPermissionPrompt> prompt =
-      do_CreateInstance(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
-    if (prompt) {
-      prompt->Prompt(this);
-    }
+    nsCOMPtr<nsPIDOMWindow> window = mDesktopNotification->GetOwner();
+    nsContentPermissionUtils::AskPermission(this, window);
     return NS_OK;
   }
-
-  virtual bool Recv__delete__(const bool& aAllow,
-                              const InfallibleTArray<PermissionChoice>& choices) MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(choices.IsEmpty(), "DesktopNotification doesn't support permission choice");
-    if (aAllow) {
-      (void) Allow(JS::UndefinedHandleValue);
-    } else {
-     (void) Cancel();
-    }
-   return true;
-  }
-  virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
 
   nsRefPtr<DesktopNotification> mDesktopNotification;
 };
@@ -164,38 +144,6 @@ DesktopNotification::Init()
 {
   nsRefPtr<DesktopNotificationRequest> request = new DesktopNotificationRequest(this);
 
-  // if we are in the content process, then remote it to the parent.
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-
-    // if for some reason mOwner is null, just silently
-    // bail.  The user will not see a notification, and that
-    // is fine.
-    if (!GetOwner())
-      return;
-
-    // because owner implements nsITabChild, we can assume that it is
-    // the one and only TabChild for this docshell.
-    TabChild* child = TabChild::GetFrom(GetOwner()->GetDocShell());
-
-    // Retain a reference so the object isn't deleted without IPDL's knowledge.
-    // Corresponding release occurs in DeallocPContentPermissionRequest.
-    nsRefPtr<DesktopNotificationRequest> copy = request;
-
-    nsTArray<PermissionRequest> permArray;
-    nsTArray<nsString> emptyOptions;
-    permArray.AppendElement(PermissionRequest(
-                            NS_LITERAL_CSTRING("desktop-notification"),
-                            NS_LITERAL_CSTRING("unused"),
-                            emptyOptions));
-    child->SendPContentPermissionRequestConstructor(copy.forget().take(),
-                                                    permArray,
-                                                    IPC::Principal(mPrincipal));
-
-    request->Sendprompt();
-    return;
-  }
-
-  // otherwise, dispatch it
   NS_DispatchToMainThread(request);
 }
 
@@ -310,7 +258,7 @@ DesktopNotificationCenter::WrapObject(JSContext* aCx)
 /* ------------------------------------------------------------------------ */
 
 NS_IMPL_ISUPPORTS_INHERITED(DesktopNotificationRequest, nsRunnable,
-			    nsIContentPermissionRequest)
+                            nsIContentPermissionRequest)
 
 NS_IMETHODIMP
 DesktopNotificationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
@@ -363,10 +311,10 @@ NS_IMETHODIMP
 DesktopNotificationRequest::GetTypes(nsIArray** aTypes)
 {
   nsTArray<nsString> emptyOptions;
-  return CreatePermissionArray(NS_LITERAL_CSTRING("desktop-notification"),
-                               NS_LITERAL_CSTRING("unused"),
-                               emptyOptions,
-                               aTypes);
+  return nsContentPermissionUtils::CreatePermissionArray(NS_LITERAL_CSTRING("desktop-notification"),
+                                                         NS_LITERAL_CSTRING("unused"),
+                                                         emptyOptions,
+                                                         aTypes);
 }
 
 } // namespace dom
