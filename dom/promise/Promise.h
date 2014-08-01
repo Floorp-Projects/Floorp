@@ -14,6 +14,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/WeakPtr.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "js/TypeDecls.h"
@@ -50,7 +51,8 @@ public:
 };
 
 class Promise MOZ_FINAL : public nsISupports,
-                          public nsWrapperCache
+                          public nsWrapperCache,
+                          public SupportsWeakPtr<Promise>
 {
   friend class NativePromiseCallback;
   friend class PromiseResolverMixin;
@@ -71,6 +73,7 @@ class Promise MOZ_FINAL : public nsISupports,
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Promise)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(Promise)
 
   // Promise creation tries to create a JS reflector for the Promise, so is
   // fallible.  Furthermore, we don't want to do JS-wrapping on a 0-refcount

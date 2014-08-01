@@ -6,7 +6,7 @@
 
 #include "jit/MIRGraph.h"
 
-#include "jit/AsmJS.h"
+#include "asmjs/AsmJSValidate.h"
 #include "jit/BytecodeAnalysis.h"
 #include "jit/Ion.h"
 #include "jit/IonSpewer.h"

@@ -45,3 +45,8 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+# The midl generated code include Windows headers which defines min and max
+# macros which conflicts with std::min/max.  Suppress the macros:
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['NOMINMAX'] = True

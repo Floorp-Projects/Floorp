@@ -35,7 +35,6 @@
 #include <ui/GraphicBuffer.h>
 #endif
 
-class gfx3DMatrix;
 class nsIWidget;
 
 namespace mozilla {

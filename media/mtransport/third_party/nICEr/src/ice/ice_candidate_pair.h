@@ -65,7 +65,7 @@ struct nr_ice_cand_pair_ {
   void *stun_client_handle;
 
   void *stun_cb_timer;
-  void *restart_controlled_cb_timer;
+  void *restart_role_change_cb_timer;
   void *restart_nominated_cb_timer;
 
   TAILQ_ENTRY(nr_ice_cand_pair_) entry;
@@ -82,6 +82,7 @@ int nr_ice_candidate_pair_do_triggered_check(nr_ice_peer_ctx *pctx, nr_ice_cand_
 int nr_ice_candidate_pair_insert(nr_ice_cand_pair_head *head,nr_ice_cand_pair *pair);
 void nr_ice_candidate_pair_restart_stun_nominated_cb(NR_SOCKET s, int how, void *cb_arg);
 int nr_ice_candidate_pair_destroy(nr_ice_cand_pair **pairp);
+void nr_ice_candidate_pair_role_change(nr_ice_cand_pair *pair);
 
 #ifdef __cplusplus
 }

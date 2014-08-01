@@ -28,11 +28,11 @@
 #include "jsscript.h"
 #include "jstypes.h"
 
+#include "asmjs/AsmJSValidate.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/TokenStream.h"
-#include "jit/AsmJS.h"
 #include "vm/Shape.h"
 
 #include "jsatominlines.h"

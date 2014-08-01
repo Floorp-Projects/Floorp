@@ -1436,6 +1436,20 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             type = types.join(" ");
           }
 
+          // Check if we have a search engine name
+          let searchEngine = "";
+          let searchIndex = types.indexOf("search");
+          if (searchIndex >= 0) {
+            const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
+
+            [title, searchEngine] = title.split(TITLE_SEARCH_ENGINE_SEPARATOR);
+
+            // Remove the "search" substring so that the correct style, if any,
+            // is applied below.
+            types.splice(searchIndex, 1);
+            type = types.join(" ");
+          }
+
           // If we have a tag match, show the tags and icon
           if (type == "tag") {
             // Configure the extra box for tags display
@@ -1496,7 +1510,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
           // Emphasize the matching search terms for the description
           this._setUpDescription(this._title, title);
-          this._setUpDescription(this._url, url);
+          if (!searchEngine) {
+            this._setUpDescription(this._url, url);
+          } else {
+            // The search engine name, when present, is not emphasized.
+            this._setUpDescription(this._url, searchEngine, true);
+          }
 
           // Set up overflow on a timeout because the contents of the box
           // might not have a width yet even though we just changed them

@@ -682,6 +682,12 @@ this.PlacesDBUtils = {
       ")");
     cleanupStatements.push(fixRedirectsHidden);
 
+    // L.4 recalculate foreign_count.
+    let fixForeignCount = DBConn.createAsyncStatement(
+      "UPDATE moz_places SET foreign_count = " +
+      "(SELECT count(*) FROM moz_bookmarks WHERE fk = moz_places.id )");
+    cleanupStatements.push(fixForeignCount);
+
     // MAINTENANCE STATEMENTS SHOULD GO ABOVE THIS POINT!
 
     return cleanupStatements;
