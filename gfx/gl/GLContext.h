@@ -746,9 +746,9 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fAttachShader(GLuint program, GLuint shader) {
+    void fAttachShader(GLProgram program, GLuint shader) {
         BEFORE_GL_CALL;
-        mSymbols.fAttachShader(program, shader);
+        mSymbols.fAttachShader(program.Name(), shader);
         AFTER_GL_CALL;
     }
 
@@ -759,9 +759,9 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fBindAttribLocation(GLuint program, GLuint index, const GLchar* name) {
+    void fBindAttribLocation(GLProgram program, GLuint index, const GLchar* name) {
         BEFORE_GL_CALL;
-        mSymbols.fBindAttribLocation(program, index, name);
+        mSymbols.fBindAttribLocation(program.Name(), index, name);
         AFTER_GL_CALL;
     }
 
@@ -966,9 +966,9 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fDetachShader(GLuint program, GLuint shader) {
+    void fDetachShader(GLProgram program, GLuint shader) {
         BEFORE_GL_CALL;
-        mSymbols.fDetachShader(program, shader);
+        mSymbols.fDetachShader(program.Name(), shader);
         AFTER_GL_CALL;
     }
 
@@ -1077,27 +1077,27 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fGetActiveAttrib(GLuint program, GLuint index, GLsizei maxLength, GLsizei* length, GLint* size, GLenum* type, GLchar* name) {
+    void fGetActiveAttrib(GLProgram program, GLuint index, GLsizei maxLength, GLsizei* length, GLint* size, GLenum* type, GLchar* name) {
         BEFORE_GL_CALL;
-        mSymbols.fGetActiveAttrib(program, index, maxLength, length, size, type, name);
+        mSymbols.fGetActiveAttrib(program.Name(), index, maxLength, length, size, type, name);
         AFTER_GL_CALL;
     }
 
-    void fGetActiveUniform(GLuint program, GLuint index, GLsizei maxLength, GLsizei* length, GLint* size, GLenum* type, GLchar* name) {
+    void fGetActiveUniform(GLProgram program, GLuint index, GLsizei maxLength, GLsizei* length, GLint* size, GLenum* type, GLchar* name) {
         BEFORE_GL_CALL;
-        mSymbols.fGetActiveUniform(program, index, maxLength, length, size, type, name);
+        mSymbols.fGetActiveUniform(program.Name(), index, maxLength, length, size, type, name);
         AFTER_GL_CALL;
     }
 
-    void fGetAttachedShaders(GLuint program, GLsizei maxCount, GLsizei* count, GLuint* shaders) {
+    void fGetAttachedShaders(GLProgram program, GLsizei maxCount, GLsizei* count, GLuint* shaders) {
         BEFORE_GL_CALL;
-        mSymbols.fGetAttachedShaders(program, maxCount, count, shaders);
+        mSymbols.fGetAttachedShaders(program.Name(), maxCount, count, shaders);
         AFTER_GL_CALL;
     }
 
-    GLint fGetAttribLocation(GLuint program, const GLchar* name) {
+    GLint fGetAttribLocation(GLProgram program, const GLchar* name) {
         BEFORE_GL_CALL;
-        GLint retval = mSymbols.fGetAttribLocation(program, name);
+        GLint retval = mSymbols.fGetAttribLocation(program.Name(), name);
         AFTER_GL_CALL;
         return retval;
     }
@@ -1164,6 +1164,14 @@ public:
                 raw_fGetIntegerv(pname, params);
                 break;
         }
+    }
+
+    void fGetIntegerv(GLenum pname, GLProgram *params) {
+        MOZ_ASSERT(pname == LOCAL_GL_CURRENT_PROGRAM, "GetIntegerv(int, GLProgram*) must be called for LOCAL_GL_CURRENT_PROGRAM");
+
+        GLint name;
+        fGetIntegerv(pname, &name);
+        *params = GLProgram(name);
     }
 
     void GetUIntegerv(GLenum pname, GLuint *params) {
@@ -2011,10 +2019,10 @@ private:
     }
 
 public:
-    GLuint fCreateProgram() {
+    GLProgram fCreateProgram() {
         GLuint ret = raw_fCreateProgram();
         TRACKING_CONTEXT(CreatedProgram(this, ret));
-        return ret;
+        return GLProgram(ret);
     }
 
     GLuint fCreateShader(GLenum t) {

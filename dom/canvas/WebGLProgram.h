@@ -39,7 +39,7 @@ public:
         mAttachedShaders.Clear();
     }
 
-    GLuint GLName() { return mGLName; }
+    gl::GLProgram GLName() { return mGLName; }
     const nsTArray<WebGLRefPtr<WebGLShader> >& AttachedShaders() const { return mAttachedShaders; }
     bool LinkStatus() { return mLinkStatus; }
     uint32_t Generation() const { return mGeneration.value(); }
@@ -118,7 +118,7 @@ protected:
         DeleteOnce();
     }
 
-    GLuint mGLName;
+    gl::GLProgram mGLName;
     bool mLinkStatus;
     // attached shaders of the program object
     nsTArray<WebGLRefPtr<WebGLShader> > mAttachedShaders;

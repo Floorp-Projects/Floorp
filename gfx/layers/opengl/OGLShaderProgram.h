@@ -237,7 +237,7 @@ struct ProgramProfileOGL
   do {                                                                  \
     GLuint currentProgram;                                              \
     mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram);       \
-    NS_ASSERTION(currentProgram == mProgram,                            \
+    NS_ASSERTION(gl::GLProgram(currentProgram) == mProgram,         \
                  "SetUniform with wrong program active!");              \
   } while (0)
 #else
@@ -387,7 +387,7 @@ public:
 protected:
   RefPtr<GLContext> mGL;
   // the OpenGL id of the program
-  GLuint mProgram;
+  gl::GLProgram mProgram;
   ProgramProfileOGL mProfile;
   enum {
     STATE_NEW,

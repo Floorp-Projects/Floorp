@@ -18,7 +18,6 @@ namespace gl {
 
 GLBlitTextureImageHelper::GLBlitTextureImageHelper(GLContext* gl)
     : mGL(gl)
-    , mBlitProgram(0)
     , mBlitFramebuffer(0)
 
 {
