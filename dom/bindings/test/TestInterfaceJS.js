@@ -45,9 +45,7 @@ TestInterfaceJS.prototype = {
   pingPongAny: function(any) { checkGlobal(any); return any; },
   pingPongObject: function(obj) { checkGlobal(obj); return obj; },
 
-  getCallerPrincipal: function() { return Cu.getWebIDLCallerPrincipal().origin; },
-
-  convertSVS: function(svs) { return svs; }
+  getCallerPrincipal: function() { return Cu.getWebIDLCallerPrincipal().origin; }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS])
