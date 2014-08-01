@@ -1540,8 +1540,9 @@ class IDLUnresolvedType(IDLType):
         Unresolved types are interface types
     """
 
-    def __init__(self, location, name):
+    def __init__(self, location, name, promiseInnerType=None):
         IDLType.__init__(self, location, name)
+        self._promiseInnerType = promiseInnerType
 
     def isComplete(self):
         return False
@@ -1562,8 +1563,11 @@ class IDLUnresolvedType(IDLType):
                 obj = obj.complete(scope)
             return obj
 
+        if self._promiseInnerType and not self._promiseInnerType.isComplete():
+            self._promiseInnerType = self._promiseInnerType.complete(scope)
+
         name = self.name.resolve(scope, None)
-        return IDLWrapperType(self.location, obj)
+        return IDLWrapperType(self.location, obj, self._promiseInnerType)
 
     def isDistinguishableFrom(self, other):
         raise TypeError("Can't tell whether an unresolved type is or is not "
@@ -2157,11 +2161,13 @@ class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
         return self.inner._getDependentObjects()
 
 class IDLWrapperType(IDLType):
-    def __init__(self, location, inner):
+    def __init__(self, location, inner, promiseInnerType=None):
         IDLType.__init__(self, location, inner.identifier.name)
         self.inner = inner
         self._identifier = inner.identifier
         self.builtin = False
+        assert not promiseInnerType or inner.identifier.name == "Promise"
+        self._promiseInnerType = promiseInnerType
 
     def __eq__(self, other):
         return isinstance(other, IDLWrapperType) and \
@@ -3873,6 +3879,7 @@ class Tokenizer(object):
         "object": "OBJECT",
         "octet": "OCTET",
         "optional": "OPTIONAL",
+        "Promise": "PROMISE",
         "sequence": "SEQUENCE",
         "MozMap": "MOZMAP",
         "short": "SHORT",
@@ -4893,6 +4900,20 @@ class Parser(Tokenizer):
             type = IDLNullableType(self.getLocation(p, 5), type)
         p[0] = type
 
+    # Note: Promise<void> is allowed, so we want to parametrize on
+    # ReturnType, not Type.  Also, we want this to end up picking up
+    # the Promise interface for now, hence the games with IDLUnresolvedType.
+    def p_NonAnyTypePromiseType(self, p):
+        """
+            NonAnyType : PROMISE LT ReturnType GT Null
+        """
+        innerType = p[3]
+        promiseIdent = IDLUnresolvedIdentifier(self.getLocation(p, 1), "Promise")
+        type = IDLUnresolvedType(self.getLocation(p, 1), promiseIdent, p[3])
+        if p[5]:
+            type = IDLNullableType(self.getLocation(p, 5), type)
+        p[0] = type
+
     def p_NonAnyTypeMozMapType(self, p):
         """
             NonAnyType : MOZMAP LT Type GT Null
@@ -4908,6 +4929,11 @@ class Parser(Tokenizer):
             NonAnyType : ScopedName TypeSuffix
         """
         assert isinstance(p[1], IDLUnresolvedIdentifier)
+
+        if p[1].name == "Promise":
+            raise WebIDLError("Promise used without saying what it's "
+                              "parametrized over",
+                              [self.getLocation(p, 1)])
 
         type = None
 

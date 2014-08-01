@@ -21,7 +21,7 @@ interface Notification : EventTarget {
   static void requestPermission(optional NotificationPermissionCallback permissionCallback);
 
   [Throws]
-  static Promise get(optional GetNotificationOptions filter);
+  static Promise<sequence<Notification>> get(optional GetNotificationOptions filter);
 
   attribute EventHandler onclick;
 

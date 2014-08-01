@@ -13,5 +13,5 @@
  Func="mozilla::dom::workers::ServiceWorkerEventsVisible"]
 interface InstallPhaseEvent : Event {
   // https://github.com/slightlyoff/ServiceWorker/issues/261
-  void waitUntil(Promise p);
+  void waitUntil(Promise<any> p);
 };
