@@ -1199,7 +1199,7 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc,
   //   and RC.Inverse() * QC.Inverse() * PC.Inverse() * PA.Inverse()                at P.
   gfx3DMatrix childUntransform = ancestorUntransform
                                * aApzc->GetCSSTransform().Inverse()
-                               * gfx3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse();
+                               * gfx::To3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse();
   gfxPointH3D hitTestPointForChildLayers = childUntransform.ProjectPoint(aHitTestPoint);
   APZCTM_LOG("Untransformed %f %f to layer coordinates %f %f for APZC %p\n",
            aHitTestPoint.x, aHitTestPoint.y,
@@ -1347,7 +1347,7 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& 
   // ancestorUntransform is OC.Inverse() * NC.Inverse() * MC.Inverse()
   gfx3DMatrix ancestorUntransform = aApzc->GetAncestorTransform().Inverse();
   // asyncUntransform is LA.Inverse()
-  gfx3DMatrix asyncUntransform = gfx3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse();
+  gfx3DMatrix asyncUntransform = gfx::To3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse();
   // nontransientAsyncTransform is LN
   gfx3DMatrix nontransientAsyncTransform = aApzc->GetNontransientAsyncTransform();
   // transientAsyncUntransform is LT.Inverse()
@@ -1362,7 +1362,7 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& 
     // ancestorUntransform is updated to RC.Inverse() * QC.Inverse() when parent == P
     ancestorUntransform = parent->GetAncestorTransform().Inverse();
     // asyncUntransform is updated to PA.Inverse() when parent == P
-    asyncUntransform = gfx3DMatrix(parent->GetCurrentAsyncTransform()).Inverse();
+    asyncUntransform = gfx::To3DMatrix(parent->GetCurrentAsyncTransform()).Inverse();
     // untransformSinceLastApzc is RC.Inverse() * QC.Inverse() * PC.Inverse() * PA.Inverse()
     gfx3DMatrix untransformSinceLastApzc = ancestorUntransform * parent->GetCSSTransform().Inverse() * asyncUntransform;
 
