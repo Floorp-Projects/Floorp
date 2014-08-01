@@ -27,7 +27,7 @@ class nsSVGFilterPaintCallback;
 
 /**
  * This class performs all filter processing.
- * 
+ *
  * We build a graph of the filter image data flow, essentially
  * converting the filter graph to SSA. This lets us easily propagate
  * analysis data (such as bounding-boxes) over the filter primitive graph.

@@ -317,7 +317,7 @@ nsSVGMarkerProperty::DoUpdate()
   // Repaint asynchronously in case the marker frame is being torn down
   nsChangeHint changeHint =
     nsChangeHint(nsChangeHint_RepaintFrame);
-  
+
   // Don't need to request ReflowFrame if we're being reflowed.
   if (!(mFrame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
     // XXXjwatt: We need to unify SVG into standard reflow so we can just use
@@ -539,7 +539,7 @@ nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame, const nsStyleSVGPaint *aPai
 
   return static_cast<nsSVGPaintServerFrame*>(result);
 }
- 
+
 nsSVGClipPathFrame *
 nsSVGEffects::EffectProperties::GetClipPathFrame(bool *aOK)
 {
@@ -614,7 +614,7 @@ GatherEnumerator(nsPtrHashKey<nsSVGRenderingObserver>* aEntry, void* aArg)
   nsTArray<nsSVGRenderingObserver*>* array =
     static_cast<nsTArray<nsSVGRenderingObserver*>*>(aArg);
   array->AppendElement(aEntry->GetKey());
-          
+
   return PL_DHASH_REMOVE;
 }
 
@@ -628,7 +628,7 @@ GatherEnumeratorForReflow(nsPtrHashKey<nsSVGRenderingObserver>* aEntry, void* aA
   nsTArray<nsSVGRenderingObserver*>* array =
     static_cast<nsTArray<nsSVGRenderingObserver*>*>(aArg);
   array->AppendElement(aEntry->GetKey());
-          
+
   return PL_DHASH_REMOVE;
 }
 
