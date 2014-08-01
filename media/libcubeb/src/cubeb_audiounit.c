@@ -286,7 +286,7 @@ audiounit_install_device_changed_callback(cubeb_stream * stm)
 }
 
 static int
-audiounit_uninstall_device_changed_callback()
+audiounit_uninstall_device_changed_callback(cubeb_stream * stm)
 {
   OSStatus r;
   AudioDeviceID id;
@@ -303,7 +303,7 @@ audiounit_uninstall_device_changed_callback()
 
   r = AudioObjectRemovePropertyListener(id, &datasource_address,
                                         &audiounit_property_listener_callback,
-                                        NULL);
+                                        stm);
   if (r != noErr) {
     return CUBEB_ERROR;
   }
@@ -317,7 +317,7 @@ audiounit_uninstall_device_changed_callback()
   r = AudioObjectRemovePropertyListener(kAudioObjectSystemObject,
                                         &default_device_address,
                                         &audiounit_property_listener_callback,
-                                        NULL);
+                                        stm);
   if (r != noErr) {
     return CUBEB_ERROR;
   }
@@ -661,7 +661,7 @@ audiounit_stream_destroy(cubeb_stream * stm)
 #endif
   }
 
-  audiounit_uninstall_device_changed_callback();
+  audiounit_uninstall_device_changed_callback(stm);
 
   r = pthread_mutex_destroy(&stm->mutex);
   assert(r == 0);
