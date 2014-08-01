@@ -1145,7 +1145,7 @@ GetCompositorSideCompositionBounds(ContainerLayer* aScrollAncestor,
 
   // Next, apply the APZ's async transform (this includes the nontransient component
   // as well).
-  transform = transform * gfx3DMatrix(aAPZTransform);
+  transform = transform * To3DMatrix(aAPZTransform);
 
   // Finally, put back the scroll ancestor's local transform.
   transform = transform * layerTransform;
