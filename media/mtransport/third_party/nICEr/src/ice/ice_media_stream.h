@@ -65,7 +65,7 @@ struct nr_ice_media_stream_ {
   nr_ice_cand_pair_head check_list;
   void *timer;  /* Check list periodic timer */
 
-//  nr_ice_cand_pair_head valid_list;
+/*  nr_ice_cand_pair_head valid_list; */
 
   STAILQ_ENTRY(nr_ice_media_stream_) entry;
 };
@@ -96,6 +96,7 @@ int
 nr_ice_peer_ctx_parse_media_stream_attribute(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, char *attr);
 int nr_ice_media_stream_disable_component(nr_ice_media_stream *stream, int component_id);
 int nr_ice_media_stream_pair_new_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *pstream, nr_ice_candidate *cand);
+void nr_ice_media_stream_role_change(nr_ice_media_stream *stream);
 
 #ifdef __cplusplus
 }

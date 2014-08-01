@@ -97,7 +97,11 @@ EXPORTS.js += [
 ]
 
 UNIFIED_SOURCES += [
-    'assembler/jit/ExecutableAllocator.cpp',
+    'asmjs/AsmJSFrameIterator.cpp',
+    'asmjs/AsmJSLink.cpp',
+    'asmjs/AsmJSModule.cpp',
+    'asmjs/AsmJSSignalHandlers.cpp',
+    'asmjs/AsmJSValidate.cpp',
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
     'builtin/MapObject.cpp',
@@ -137,11 +141,6 @@ UNIFIED_SOURCES += [
     'irregexp/RegExpParser.cpp',
     'irregexp/RegExpStack.cpp',
     'jit/AliasAnalysis.cpp',
-    'jit/AsmJS.cpp',
-    'jit/AsmJSFrameIterator.cpp',
-    'jit/AsmJSLink.cpp',
-    'jit/AsmJSModule.cpp',
-    'jit/AsmJSSignalHandlers.cpp',
     'jit/BacktrackingAllocator.cpp',
     'jit/Bailouts.cpp',
     'jit/BaselineBailouts.cpp',
@@ -159,6 +158,7 @@ UNIFIED_SOURCES += [
     'jit/CompileWrappers.cpp',
     'jit/EdgeCaseAnalysis.cpp',
     'jit/EffectiveAddressAnalysis.cpp',
+    'jit/ExecutableAllocator.cpp',
     'jit/Ion.cpp',
     'jit/IonAnalysis.cpp',
     'jit/IonBuilder.cpp',
@@ -363,13 +363,13 @@ elif CONFIG['JS_CODEGEN_ARM']:
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
-        'assembler/jit/ExecutableAllocatorWin.cpp',
+        'jit/ExecutableAllocatorWin.cpp',
     ]
     # _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
     DEFINES['_CRT_RAND_S'] = True
 else:
     SOURCES += [
-        'assembler/jit/ExecutableAllocatorPosix.cpp',
+        'jit/ExecutableAllocatorPosix.cpp',
     ]
 
 if CONFIG['ENABLE_ION']:

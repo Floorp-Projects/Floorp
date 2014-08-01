@@ -14,8 +14,8 @@
 #include "jsinfer.h"
 #include "jstypes.h"
 
-#include "assembler/jit/ExecutableAllocator.h"
 #include "gc/Heap.h"
+#include "jit/ExecutableAllocator.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonTypes.h"
 

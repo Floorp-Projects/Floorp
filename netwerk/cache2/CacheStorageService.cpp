@@ -1074,11 +1074,40 @@ void CacheStorageService::ForceEntryValidFor(nsACString &aCacheEntryKey,
 {
   mozilla::MutexAutoLock lock(mLock);
 
+  TimeStamp now = TimeStamp::NowLoRes();
+  ForcedValidEntriesPrune(now);
+
   // This will be the timeout
-  TimeStamp validUntil = TimeStamp::NowLoRes() +
-    TimeDuration::FromSeconds(aSecondsToTheFuture);
+  TimeStamp validUntil = now + TimeDuration::FromSeconds(aSecondsToTheFuture);
 
   mForcedValidEntries.Put(aCacheEntryKey, validUntil);
+}
+
+namespace { // anon
+
+PLDHashOperator PruneForcedValidEntries(
+  const nsACString& aKey, TimeStamp& aTimeStamp, void* aClosure)
+{
+  TimeStamp* now = static_cast<TimeStamp*>(aClosure);
+  if (aTimeStamp < *now) {
+    return PL_DHASH_REMOVE;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+} // anon
+
+// Cleans out the old entries in mForcedValidEntries
+void CacheStorageService::ForcedValidEntriesPrune(TimeStamp &now)
+{
+  static TimeDuration const oneMinute = TimeDuration::FromSeconds(60);
+  static TimeStamp dontPruneUntil = now + oneMinute;
+  if (now < dontPruneUntil)
+    return;
+
+  mForcedValidEntries.Enumerate(PruneForcedValidEntries, &now);
+  dontPruneUntil = now + oneMinute;
 }
 
 void

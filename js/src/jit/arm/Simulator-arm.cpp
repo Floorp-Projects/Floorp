@@ -33,8 +33,8 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include "asmjs/AsmJSValidate.h"
 #include "jit/arm/Assembler-arm.h"
-#include "jit/AsmJS.h"
 #include "vm/Runtime.h"
 
 extern "C" {

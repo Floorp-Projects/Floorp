@@ -7,6 +7,8 @@
 #ifndef jit_mips_Architecture_mips_h
 #define jit_mips_Architecture_mips_h
 
+#include "mozilla/MathAlgorithms.h"
+
 #include <limits.h>
 #include <stdint.h>
 

@@ -17,6 +17,7 @@
 EXPORTS += [
     'GonkPermission.h',
     'OrientationObserver.h',
+    'PowerWakeLock.h',
 ]
 
 DIRS += ['libdisplay', 'nativewindow']
@@ -57,6 +58,7 @@ SOURCES += [
     'nsWindow.cpp',
     'OrientationObserver.cpp',
     'ParentProcessController.cpp',
+    'PowerWakeLock.cpp',
     'ProcessOrientation.cpp',
     'WidgetTraceEvent.cpp'
 ]
