@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<script>
+
+function boom()
+{
+  var video = document.createElement('video');
+  var track = video.addTextTrack('chapters');
+  window.meep = new TrackEvent("t", { "track": track });
+  document.documentElement.style.expando = null;
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+</body>
+
+</html>

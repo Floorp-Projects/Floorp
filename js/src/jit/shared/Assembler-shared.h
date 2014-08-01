@@ -11,7 +11,7 @@
 
 #include <limits.h>
 
-#include "jit/AsmJSFrameIterator.h"
+#include "asmjs/AsmJSFrameIterator.h"
 #include "jit/IonAllocPolicy.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
