@@ -92,7 +92,8 @@ function onPopupMenuShowing(event) {
 
   if (activeStreams.length == 1) {
     webrtcUI.showSharingDoorhanger(activeStreams[0], type);
-    return false;
+    event.preventDefault();
+    return;
   }
 
   for (let stream of activeStreams) {
@@ -102,8 +103,6 @@ function onPopupMenuShowing(event) {
     item.stream = stream;
     popup.appendChild(item);
   }
-
-  return true;
 }
 
 function onPopupMenuHiding(event) {
