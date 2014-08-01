@@ -277,7 +277,8 @@ private:
 
   void HandleTouchStartEvent(WidgetTouchEvent* aEvent);
   void HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent);
-  void SendPendingResponseToApz();
+  void SendPointerCancelToContent(const WidgetTouchEvent& aEvent);
+  bool SendPendingResponseToApz();
   void CancelGesture();
 
   // Sync event dispatching

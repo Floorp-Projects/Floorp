@@ -1294,9 +1294,13 @@ MetroInput::HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent)
       mWidget->ApzContentConsumingTouch(mTargetAPZCGuid);
     } else {
       mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid);
+      if (apzcStatus == nsEventStatus_eConsumeDoDefault) {
+        SendPointerCancelToContent(transformedEvent);
+      }
     }
     mCancelable = false;
   }
+
   // Cancel the gesture detection as well if content is taking this block.
   if (nsEventStatus_eConsumeNoDefault == contentStatus) {
     CancelGesture();
@@ -1304,6 +1308,22 @@ MetroInput::HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent)
 }
 
 void
+MetroInput::SendPointerCancelToContent(const WidgetTouchEvent& aEvent)
+{
+  // The APZ is consuming the touch pointers specified in |aEvent| so
+  // we need to send pointer-cancel events for them to content. We
+  // do that by sending touchcancel events which the EventStateManager
+  // turns into pointer-cancel events
+  WidgetTouchEvent cancel(aEvent);
+  cancel.message = NS_TOUCH_CANCEL;
+  for (uint32_t i = 0; i < cancel.touches.Length(); i++) {
+    cancel.touches[i]->convertToPointer = true;
+  }
+  nsEventStatus status;
+  mWidget->DispatchEvent(&cancel, status);
+}
+
+bool
 MetroInput::SendPendingResponseToApz()
 {
   // If this is called, content has missed its chance to consume this event block
@@ -1311,7 +1331,9 @@ MetroInput::SendPendingResponseToApz()
   if (mCancelable) {
     mWidget->ApzContentIgnoringTouch(mTargetAPZCGuid);
     mCancelable = false;
+    return true;
   }
+  return false;
 }
 
 void
@@ -1399,7 +1421,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   // If we get here, content has already had its chance to consume this event
   // block. If it didn't do so we can inform the APZ that content is ignoring
   // this event block.
-  SendPendingResponseToApz();
+  bool responseSent = SendPendingResponseToApz();
 
   // Normal processing of events. Send it to the APZ first for handling and
   // untransformation. then pass the untransformed event to content.
@@ -1407,6 +1429,10 @@ MetroInput::DeliverNextQueuedTouchEvent()
   status = mWidget->ApzReceiveInputEvent(event, nullptr);
   if (status == nsEventStatus_eConsumeNoDefault) {
     CancelGesture();
+    return;
+  }
+  if (responseSent && status == nsEventStatus_eConsumeDoDefault) {
+    SendPointerCancelToContent(*event);
     return;
   }
   DUMP_TOUCH_IDS("DOM(4)", event);
