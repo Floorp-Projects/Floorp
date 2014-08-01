@@ -50,6 +50,7 @@
 #include "nsXPCOMCID.h"
 #include "nsIDocument.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsCxPusher.h"
 
 using namespace mozilla;
@@ -150,14 +151,13 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
 {
     NS_ENSURE_TRUE(mRequestor, NS_OK);
 
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(mRequestor));
-    NS_ENSURE_TRUE(scriptGlobal, NS_OK);
+    nsCOMPtr<nsIGlobalObject> globalObject = do_GetInterface(mRequestor);
+    NS_ENSURE_TRUE(globalObject, NS_OK);
 
-    nsIScriptContext *context = scriptGlobal->GetContext();
-    NS_ENSURE_TRUE(context, NS_OK);
-
-    AutoPushJSContext cx(context->GetNativeContext());
-    NS_ENSURE_TRUE(cx, NS_OK);
+    // We're going to run script via JS_CallFunctionName, so we need an
+    // AutoEntryScript. This is Gecko specific and not in any spec.
+    dom::AutoEntryScript aes(globalObject);
+    JSContext* cx = aes.cx();
 
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
     NS_ENSURE_TRUE(global, NS_OK);
