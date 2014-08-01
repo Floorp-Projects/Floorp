@@ -165,7 +165,7 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   mPostFilterDirtyRegion = FrameSpaceToFilterSpace(aPostFilterDirtyRegion);
   mPreFilterDirtyRegion = FrameSpaceToFilterSpace(aPreFilterDirtyRegion);
   if (aPreFilterVisualOverflowRectOverride) {
-    mTargetBounds = 
+    mTargetBounds =
       FrameSpaceToFilterSpace(aPreFilterVisualOverflowRectOverride);
   } else {
     nsRect preFilterVOR = mTargetFrame->GetPreEffectsVisualOverflowRect();
@@ -318,7 +318,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   if (!matrix.IsSingular()) {
     gfx->Multiply(matrix);
     gfx->Rectangle(FilterSpaceToUserSpace(neededRect));
-    if ((aSource == &mFillPaint && 
+    if ((aSource == &mFillPaint &&
          nsSVGUtils::SetupCairoFillPaint(mTargetFrame, gfx)) ||
         (aSource == &mStrokePaint &&
          nsSVGUtils::SetupCairoStrokePaint(mTargetFrame, gfx))) {
@@ -398,7 +398,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();
   mSourceGraphic.mSurfaceRect = ToIntRect(neededRect);
-   
+
   return NS_OK;
 }
 

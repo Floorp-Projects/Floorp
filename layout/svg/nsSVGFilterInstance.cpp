@@ -73,12 +73,12 @@ nsSVGFilterInstance::ComputeBounds()
   // deprecate that, since it's too confusing for a bare number to be sometimes
   // interpreted as a fraction of the bounding box and sometimes as user-space
   // units). So really only percentage values should be used in this case.
-  
+
   // Set the user space bounds (i.e. the filter region in user space).
   nsSVGLength2 XYWH[4];
   NS_ABORT_IF_FALSE(sizeof(mFilterElement->mLengthAttributes) == sizeof(XYWH),
                     "XYWH size incorrect");
-  memcpy(XYWH, mFilterElement->mLengthAttributes, 
+  memcpy(XYWH, mFilterElement->mLengthAttributes,
     sizeof(mFilterElement->mLengthAttributes));
   XYWH[0] = *mFilterFrame->GetLengthValue(SVGFilterElement::ATTR_X);
   XYWH[1] = *mFilterFrame->GetLengthValue(SVGFilterElement::ATTR_Y);
