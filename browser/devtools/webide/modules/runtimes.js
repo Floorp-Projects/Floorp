@@ -91,6 +91,7 @@ SimulatorRuntime.prototype = {
     return simulator.launch({port: port}).then(() => {
       connection.port = port;
       connection.keepConnecting = true;
+      connection.once(Connection.Events.DISCONNECTED, simulator.close);
       connection.connect();
     });
   },

@@ -297,31 +297,38 @@ exports.AppManager = AppManager = {
   },
 
   connectToRuntime: function(runtime) {
-    if (this.connection.status == Connection.Status.CONNECTED) {
-      return promise.reject("Already connected");
+
+    if (this.connection.status == Connection.Status.CONNECTED &&
+        this.selectedRuntime === runtime) {
+      // Already connected
+      return promise.resolve();
     }
-    this.selectedRuntime = runtime;
+
     let deferred = promise.defer();
 
-    let onConnectedOrDisconnected = () => {
-      this.connection.off(Connection.Events.CONNECTED, onConnectedOrDisconnected);
-      this.connection.off(Connection.Events.DISCONNECTED, onConnectedOrDisconnected);
-      if (this.connection.status == Connection.Status.CONNECTED) {
-        deferred.resolve();
-      } else {
+    this.disconnectRuntime().then(() => {
+      this.selectedRuntime = runtime;
+
+      let onConnectedOrDisconnected = () => {
+        this.connection.off(Connection.Events.CONNECTED, onConnectedOrDisconnected);
+        this.connection.off(Connection.Events.DISCONNECTED, onConnectedOrDisconnected);
+        if (this.connection.status == Connection.Status.CONNECTED) {
+          deferred.resolve();
+        } else {
+          deferred.reject();
+        }
+      }
+      this.connection.on(Connection.Events.CONNECTED, onConnectedOrDisconnected);
+      this.connection.on(Connection.Events.DISCONNECTED, onConnectedOrDisconnected);
+      try {
+        this.selectedRuntime.connect(this.connection).then(
+          () => {},
+          () => {deferred.reject()});
+      } catch(e) {
+        console.error(e);
         deferred.reject();
       }
-    }
-    this.connection.on(Connection.Events.CONNECTED, onConnectedOrDisconnected);
-    this.connection.on(Connection.Events.DISCONNECTED, onConnectedOrDisconnected);
-    try {
-      this.selectedRuntime.connect(this.connection).then(
-        () => {},
-        () => {deferred.reject()});
-    } catch(e) {
-      console.error(e);
-      deferred.reject();
-    }
+    }, deferred.reject);
 
     return deferred.promise;
   },
