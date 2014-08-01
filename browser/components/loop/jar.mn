@@ -42,6 +42,7 @@ browser.jar:
   content/browser/loop/shared/js/models.js  (content/shared/js/models.js)
   content/browser/loop/shared/js/router.js  (content/shared/js/router.js)
   content/browser/loop/shared/js/views.js   (content/shared/js/views.js)
+  content/browser/loop/shared/js/utils.js   (content/shared/js/utils.js)
 
   # Shared libs
   content/browser/loop/shared/libs/react-0.10.0.js    (content/shared/libs/react-0.10.0.js)
