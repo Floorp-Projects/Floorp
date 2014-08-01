@@ -64,6 +64,7 @@ public:
   virtual ~DesktopDeviceInfo() {};
 
   virtual int32_t Init() = 0;
+  virtual int32_t Refresh() = 0;
   virtual int32_t getDisplayDeviceCount() = 0;
   virtual int32_t getDesktopDisplayDeviceInfo(int32_t nIndex,
                                               DesktopDisplayDevice & desktopDisplayDevice) = 0;
@@ -98,6 +99,7 @@ protected:
   DesktopApplicationList desktop_application_list_;
 
   int32_t initializeWindowList();
+  int32_t RefreshWindowList();
 };
 };
 
