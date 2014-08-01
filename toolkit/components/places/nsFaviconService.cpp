@@ -579,7 +579,12 @@ nsFaviconService::GetFaviconDataAsync(nsIURI* aFaviconURI,
   );
   NS_ENSURE_STATE(stmt);
 
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aFaviconURI);
+  // Ignore the ref part of the URI before querying the database because
+  // we may have added the #-moz-resolution ref for rendering purposes.
+
+  nsAutoCString faviconURI;
+  aFaviconURI->GetSpecIgnoringRef(faviconURI);
+  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), faviconURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStoragePendingStatement> pendingStatement;

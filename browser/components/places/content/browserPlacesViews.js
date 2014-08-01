@@ -362,7 +362,8 @@ PlacesViewBase.prototype = {
 
       let icon = aPlacesNode.icon;
       if (icon)
-        element.setAttribute("image", icon);
+        element.setAttribute("image",
+                             PlacesUIUtils.getImageURLForResolution(window, icon));
     }
 
     element._placesNode = aPlacesNode;
@@ -500,7 +501,8 @@ PlacesViewBase.prototype = {
     if (!icon)
       elt.removeAttribute("image");
     else if (icon != elt.getAttribute("image"))
-      elt.setAttribute("image", icon);
+      elt.setAttribute("image",
+                       PlacesUIUtils.getImageURLForResolution(window, icon));
   },
 
   nodeAnnotationChanged:
@@ -1016,7 +1018,8 @@ PlacesToolbar.prototype = {
       button.setAttribute("label", aChild.title);
       let icon = aChild.icon;
       if (icon)
-        button.setAttribute("image", icon);
+        button.setAttribute("image",
+                            PlacesUIUtils.getImageURLForResolution(window, icon));
 
       if (PlacesUtils.containerTypes.indexOf(type) != -1) {
         button.setAttribute("type", "menu");
@@ -1840,7 +1843,8 @@ PlacesPanelMenuView.prototype = {
       button.setAttribute("label", aChild.title);
       let icon = aChild.icon;
       if (icon)
-        button.setAttribute("image", icon);
+        button.setAttribute("image",
+                            PlacesUIUtils.getImageURLForResolution(window, icon));
 
       if (PlacesUtils.containerTypes.indexOf(type) != -1) {
         button.setAttribute("container", "true");
