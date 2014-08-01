@@ -2741,25 +2741,18 @@ public:
     static already_AddRefed<nsJSID> NewID(const nsID& id);
 
     nsJSID();
-    virtual ~nsJSID();
 
     void Reset();
     const nsID& GetInvalidIID() const;
 
 protected:
+    virtual ~nsJSID();
     static char gNoString[];
     nsID    mID;
     char*   mNumber;
     char*   mName;
 };
 
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsJSID>
-{
-  static const bool value = true;
-};
-}
 
 // nsJSIID
 
@@ -2811,7 +2804,7 @@ private:
     void ResolveName();
 
 private:
-    nsJSID mDetails;
+    nsRefPtr<nsJSID> mDetails;
 };
 
 
