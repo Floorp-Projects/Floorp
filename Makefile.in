@@ -219,6 +219,7 @@ ifdef MOZ_CRASHREPORTER
 	echo building symbol store
 	$(RM) -r $(DIST)/crashreporter-symbols
 	$(RM) '$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip'
+	$(RM) '$(DIST)/$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
 	$(NSINSTALL) -D $(DIST)/crashreporter-symbols
 	OBJCOPY='$(OBJCOPY)' \
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \

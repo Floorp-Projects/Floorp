@@ -11,7 +11,6 @@
 #include "ImageLayers.h"                // for ImageLayer
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "ShadowLayerParent.h"          // for ShadowLayerParent
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxPoint3D.h"                 // for gfxPoint3D
 #include "CompositableTransactionParent.h"  // for EditReplyVector
 #include "ShadowLayersManager.h"        // for ShadowLayersManager
@@ -631,7 +630,7 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   // from the shadow transform by undoing the translations in
   // AsyncCompositionManager::SampleValue.
 
-  gfx3DMatrix transform = gfx::To3DMatrix(layer->AsLayerComposite()->GetShadowTransform());
+  Matrix4x4 transform = layer->AsLayerComposite()->GetShadowTransform();
   if (ContainerLayer* c = layer->AsContainerLayer()) {
     // Undo the scale transform applied by AsyncCompositionManager::SampleValue
     transform.ScalePost(1.0f/c->GetInheritedXScale(),
@@ -658,11 +657,12 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
 
   // Undo the translation to the origin of the reference frame applied by
   // AsyncCompositionManager::SampleValue
-  transform.Translate(-scaledOrigin);
+  transform.Translate(-scaledOrigin.x, -scaledOrigin.y, -scaledOrigin.z);
 
   // Undo the rebasing applied by
   // nsDisplayTransform::GetResultingTransformMatrixInternal
-  transform.ChangeBasis(-scaledOrigin - transformOrigin);
+  gfxPoint3D basis = -scaledOrigin - transformOrigin;
+  transform.ChangeBasis(basis.x, basis.y, basis.z);
 
   // Convert to CSS pixels (this undoes the operations performed by
   // nsStyleTransformMatrix::ProcessTranslatePart which is called from

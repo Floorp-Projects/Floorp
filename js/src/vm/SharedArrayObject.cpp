@@ -20,7 +20,8 @@
 #endif
 
 #include "mozilla/Atomics.h"
-#include "jit/AsmJS.h"
+
+#include "asmjs/AsmJSValidate.h"
 
 using namespace js;
 

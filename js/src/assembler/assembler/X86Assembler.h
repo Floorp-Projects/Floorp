@@ -37,7 +37,6 @@
 #if ENABLE_ASSEMBLER && (WTF_CPU_X86 || WTF_CPU_X86_64)
 
 #include "assembler/assembler/AssemblerBuffer.h"
-#include "assembler/wtf/Assertions.h"
 #include "js/Vector.h"
 
 namespace JSC {
@@ -430,7 +429,7 @@ public:
             : m_offset(offset)
             , m_used(false)
         {
-            ASSERT(m_offset == offset);
+            MOZ_ASSERT(m_offset == offset);
         }
         int offset() const {
             return m_offset;
@@ -3266,8 +3265,8 @@ public:
 
     void linkJump(JmpSrc from, JmpDst to)
     {
-        ASSERT(from.m_offset != -1);
-        ASSERT(to.m_offset != -1);
+        MOZ_ASSERT(from.m_offset != -1);
+        MOZ_ASSERT(to.m_offset != -1);
 
         // Sanity check - if the assembler has OOM'd, it will start overwriting
         // its internal buffer and thus our links could be garbage.
@@ -3282,7 +3281,7 @@ public:
 
     static void linkJump(void* code, JmpSrc from, void* to)
     {
-        ASSERT(from.m_offset != -1);
+        MOZ_ASSERT(from.m_offset != -1);
 
         staticSpew("##link     ((%d)) jumps to ((%p))",
                    from.m_offset, to);
@@ -3291,7 +3290,7 @@ public:
 
     static void linkCall(void* code, JmpSrc from, void* to)
     {
-        ASSERT(from.m_offset != -1);
+        MOZ_ASSERT(from.m_offset != -1);
 
         staticSpew("##linkCall");
         setRel32(reinterpret_cast<char*>(code) + from.m_offset, to);
@@ -3299,7 +3298,7 @@ public:
 
     static void linkPointer(void* code, JmpDst where, void* value)
     {
-        ASSERT(where.m_offset != -1);
+        MOZ_ASSERT(where.m_offset != -1);
 
         staticSpew("##linkPointer");
         setPointer(reinterpret_cast<char*>(code) + where.m_offset, value);
@@ -3366,20 +3365,20 @@ public:
 
     static unsigned getCallReturnOffset(JmpSrc call)
     {
-        ASSERT(call.m_offset >= 0);
+        MOZ_ASSERT(call.m_offset >= 0);
         return call.m_offset;
     }
 
     static void* getRelocatedAddress(void* code, JmpSrc jump)
     {
-        ASSERT(jump.m_offset != -1);
+        MOZ_ASSERT(jump.m_offset != -1);
 
         return reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(code) + jump.m_offset);
     }
 
     static void* getRelocatedAddress(void* code, JmpDst destination)
     {
-        ASSERT(destination.m_offset != -1);
+        MOZ_ASSERT(destination.m_offset != -1);
 
         return reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(code) + destination.m_offset);
     }
@@ -3412,7 +3411,7 @@ public:
     static void setRel32(void* from, void* to)
     {
         intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
-        ASSERT(offset == static_cast<int32_t>(offset));
+        MOZ_ASSERT(offset == static_cast<int32_t>(offset));
 #define JS_CRASH(x) *(int *)x = 0
         if (offset != static_cast<int32_t>(offset))
             JS_CRASH(0xC0DE);
@@ -3459,7 +3458,7 @@ public:
     static int32_t addressImmediate(const void *address) {
 #if WTF_CPU_X86_64
         // x64's 64-bit addresses don't all fit in the 32-bit immediate.
-        ASSERT(isAddressImmediate(address));
+        MOZ_ASSERT(isAddressImmediate(address));
 #endif
         return static_cast<int32_t>(reinterpret_cast<intptr_t>(address));
     }
@@ -3759,7 +3758,7 @@ private:
         void oneByteOp8(OneByteOpcodeID opcode, GroupOpcodeID groupOp, RegisterID rm)
         {
 #if !WTF_CPU_X86_64
-            ASSERT(!byteRegRequiresRex(rm));
+            MOZ_ASSERT(!byteRegRequiresRex(rm));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(byteRegRequiresRex(rm), 0, 0, rm);
@@ -3770,7 +3769,7 @@ private:
         // Like oneByteOp8, but never emits a REX prefix.
         void oneByteOp8_norex(OneByteOpcodeID opcode, GroupOpcodeID groupOp, RegisterID rm)
         {
-            ASSERT(!regRequiresRex(rm));
+            MOZ_ASSERT(!regRequiresRex(rm));
             m_buffer.ensureSpace(maxInstructionSize);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(groupOp, rm);
@@ -3779,7 +3778,7 @@ private:
         void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
         {
 #if !WTF_CPU_X86_64
-            ASSERT(!byteRegRequiresRex(reg));
+            MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(byteRegRequiresRex(reg), reg, 0, base);
@@ -3790,7 +3789,7 @@ private:
         void oneByteOp8_disp32(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
         {
 #if !WTF_CPU_X86_64
-            ASSERT(!byteRegRequiresRex(reg));
+            MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(byteRegRequiresRex(reg), reg, 0, base);
@@ -3801,7 +3800,7 @@ private:
         void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, RegisterID index, int scale, int offset)
         {
 #if !WTF_CPU_X86_64
-            ASSERT(!byteRegRequiresRex(reg));
+            MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
             emitRexIf(byteRegRequiresRex(reg), reg, index, base);
@@ -3996,7 +3995,7 @@ private:
 
         void putModRmSib(ModRmMode mode, int reg, RegisterID base, RegisterID index, int scale)
         {
-            ASSERT(mode != ModRmRegister);
+            MOZ_ASSERT(mode != ModRmRegister);
 
             putModRm(mode, reg, hasSib);
             m_buffer.putByteUnchecked((scale << 6) | ((index & 7) << 3) | (base & 7));
@@ -4061,7 +4060,7 @@ private:
 
         void memoryModRM(int reg, RegisterID base, RegisterID index, int scale, int offset)
         {
-            ASSERT(index != noIndex);
+            MOZ_ASSERT(index != noIndex);
 
 #if WTF_CPU_X86_64
             if (!offset && (base != noBase) && (base != noBase2))
@@ -4080,7 +4079,7 @@ private:
 
         void memoryModRM_disp32(int reg, RegisterID index, int scale, int offset)
         {
-            ASSERT(index != noIndex);
+            MOZ_ASSERT(index != noIndex);
 
             // NB: the base-less memoryModRM overloads generate different code
             // then the base-full memoryModRM overloads in the base == noBase

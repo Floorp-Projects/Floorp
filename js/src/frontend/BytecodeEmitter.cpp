@@ -27,9 +27,9 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "asmjs/AsmJSLink.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
-#include "jit/AsmJSLink.h"
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"

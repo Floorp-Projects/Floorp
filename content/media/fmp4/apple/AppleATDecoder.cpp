@@ -131,6 +131,7 @@ AppleATDecoder::Drain()
 {
   LOG("Draining AudioToolbox AAC decoder");
   mTaskQueue->AwaitIdle();
+  mCallback->DrainComplete();
   return Flush();
 }
 

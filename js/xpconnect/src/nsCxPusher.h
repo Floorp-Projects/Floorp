@@ -155,29 +155,6 @@ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-/**
- * Use AutoPushJSContext when you want to use a specific JSContext that may or
- * may not be already on the stack. This differs from nsCxPusher in that it only
- * pushes in the case that the given cx is not the active cx on the JSContext
- * stack, which avoids an expensive JS_SaveFrameChain in the common case.
- *
- * Most consumers of this should probably just use AutoJSContext. But the goal
- * here is to preserve the existing behavior while ensure proper cx-stack
- * semantics in edge cases where the context being used doesn't match the active
- * context.
- *
- * NB: This will not push a null cx even if aCx is null. Make sure you know what
- * you're doing.
- */
-class MOZ_STACK_CLASS AutoPushJSContext {
-  Maybe<AutoCxPusher> mPusher;
-  JSContext* mCx;
-
-public:
-  explicit AutoPushJSContext(JSContext* aCx);
-  operator JSContext*() { return mCx; }
-};
-
 } // namespace mozilla
 
 #endif /* nsCxPusher_h */

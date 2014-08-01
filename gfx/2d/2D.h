@@ -288,6 +288,9 @@ public:
   Matrix mMatrix;                 //!< Transforms the pattern into user space
 };
 
+class StoredPattern;
+class DrawTargetCaptureImpl;
+
 /**
  * This is the base class for source surfaces. These objects are surfaces
  * which may be used as a source in a SurfacePattern or a DrawSurface call.
@@ -331,6 +334,15 @@ public:
   }
 
 protected:
+  friend class DrawTargetCaptureImpl;
+  friend class StoredPattern;
+
+  // This is for internal use, it ensures the SourceSurface's data remains
+  // valid during the lifetime of the SourceSurface.
+  // @todo XXX - We need something better here :(. But we may be able to get rid
+  // of CreateWrappingDataSourceSurface in the future.
+  virtual void GuaranteePersistance() {}
+
   UserData mUserData;
 };
 
@@ -395,6 +407,7 @@ public:
    */
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 
+protected:
   bool mIsMapped;
 };
 
@@ -608,6 +621,8 @@ protected:
   GlyphRenderingOptions() {}
 };
 
+class DrawTargetCapture;
+
 /** This is the main class used for all the drawing. It is created through the
  * factory and accepts drawing commands. The results of drawing to a target
  * may be used either through a Snapshot or by flushing the target and directly
@@ -645,6 +660,15 @@ public:
    * this draw target outside of GFX 2D code.
    */
   virtual void Flush() = 0;
+
+  /**
+   * Realize a DrawTargetCapture onto the draw target.
+   *
+   * @param aSource Capture DrawTarget to draw
+   * @param aTransform Transform to apply when replaying commands
+   */
+  virtual void DrawCapturedDT(DrawTargetCapture *aCaptureDT,
+                              const Matrix& aTransform);
 
   /**
    * Draw a surface to the draw target. Possibly doing partial drawing or
@@ -882,6 +906,14 @@ public:
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const = 0;
 
   /**
+   * Create a DrawTarget that captures the drawing commands and can be replayed
+   * onto a compatible DrawTarget afterwards.
+   *
+   * @param aSize Size of the area this DT will capture. 
+   */
+  virtual TemporaryRef<DrawTargetCapture> CreateCaptureDT(const IntSize& aSize);
+
+  /**
    * Create a draw target optimized for drawing a shadow.
    *
    * Note that aSigma is the blur radius that must be used when we draw the
@@ -991,6 +1023,10 @@ protected:
   bool mPermitSubpixelAA : 1;
 
   SurfaceFormat mFormat;
+};
+
+class DrawTargetCapture : public DrawTarget
+{
 };
 
 class DrawEventRecorder : public RefCounted<DrawEventRecorder>

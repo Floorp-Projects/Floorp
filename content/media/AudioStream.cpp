@@ -588,11 +588,6 @@ void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
         if (cubeb_stream_set_panning(mCubebStream, 0.0) != CUBEB_OK) {
           NS_WARNING("Could not pan audio output to the center.");
         }
-        // This a microphone that goes through the headphone plug, reset the
-        // output to prevent echo building up.
-        if (strcmp(device->input_name, "emic") == 0) {
-          Reset();
-        }
       }
       cubeb_stream_device_destroy(mCubebStream, device);
     }
@@ -600,10 +595,30 @@ void AudioStream::PanOutputIfNeeded(bool aMicrophoneActive)
 #endif
 }
 
-void AudioStream::DeviceChangedCallback() {
+void AudioStream::ResetStreamIfNeeded()
+{
+  cubeb_device * device;
+  // Only reset a device if a mic is active, and this is a low latency stream.
+  if (!mMicrophoneActive || mLatencyRequest != LowLatency) {
+    return;
+  }
+  if (cubeb_stream_get_current_device(mCubebStream, &device) == CUBEB_OK) {
+    // This a microphone that goes through the headphone plug, reset the
+    // output to prevent echo building up.
+    if (strcmp(device->input_name, "emic") == 0) {
+      LOG(("Resetting audio output"));
+      Reset();
+    }
+    cubeb_stream_device_destroy(mCubebStream, device);
+  }
+}
+
+void AudioStream::DeviceChangedCallback()
+{
   MonitorAutoLock mon(mMonitor);
   PanOutputIfNeeded(mMicrophoneActive);
   mShouldDropFrames = true;
+  ResetStreamIfNeeded();
 }
 
 // This code used to live inside AudioStream::Init(), but on Mac (others?)
@@ -1127,6 +1142,9 @@ AudioStream::GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTimeMs)
 void
 AudioStream::Reset()
 {
+
+  MOZ_ASSERT(mLatencyRequest == LowLatency, "We should only be reseting low latency streams");
+
   mShouldDropFrames = true;
   mNeedsStart = true;
 
@@ -1160,21 +1178,13 @@ AudioStream::Reset()
   mBuffer.Reset();
   mBuffer.SetCapacity(bufferLimit);
 
-
-  if (mLatencyRequest == LowLatency) {
-    // Don't block this thread to initialize a cubeb stream.
-    // When this is done, it will start callbacks from Cubeb.  Those will
-    // cause us to move from INITIALIZED to RUNNING.  Until then, we
-    // can't access any cubeb functions.
-    // Use a RefPtr to avoid leaks if Dispatch fails
-    RefPtr<AudioInitTask> init = new AudioInitTask(this, mLatencyRequest, params);
-    init->Dispatch();
-    return;
-  }
-  // High latency - open synchronously
-  OpenCubeb(params, mLatencyRequest);
-
-  CheckForStart();
+  // Don't block this thread to initialize a cubeb stream.
+  // When this is done, it will start callbacks from Cubeb.  Those will
+  // cause us to move from INITIALIZED to RUNNING.  Until then, we
+  // can't access any cubeb functions.
+  // Use a RefPtr to avoid leaks if Dispatch fails
+  RefPtr<AudioInitTask> init = new AudioInitTask(this, mLatencyRequest, params);
+  init->Dispatch();
 }
 
 long

@@ -485,7 +485,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // this instruction.
     CodeOffsetLabel toggledCall(JitCode *target, bool enabled);
 
-    static size_t ToggledCallSize() {
+    static size_t ToggledCallSize(uint8_t *code) {
         // Four instructions used in: MacroAssemblerMIPSCompat::toggledCall
         return 4 * sizeof(uint32_t);
     }
@@ -1091,6 +1091,12 @@ public:
     void store32(Register src, const BaseIndex &address);
     void store32(Imm32 src, const Address &address);
     void store32(Imm32 src, const BaseIndex &address);
+
+    // NOTE: This will use second scratch on MIPS. Only ARM needs the
+    // implementation without second scratch.
+    void store32_NoSecondScratch(Imm32 src, const Address &address) {
+        store32(src, address);
+    }
 
     void storePtr(ImmWord imm, const Address &address);
     void storePtr(ImmPtr imm, const Address &address);

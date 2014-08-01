@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<script>
+
+function boom()
+{
+  var video = document.createElement('video');
+  var track = video.addTextTrack('chapters');
+  track.expando = new TrackEvent("t", { "track": track })
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+</body>
+
+</html>
