@@ -551,35 +551,35 @@ NS_IMPL_CI_INTERFACE_GETTER(nsJSCID, nsIJSID, nsIJSCID)
 #define XPC_MAP_FLAGS               0
 #include "xpc_map_end.h" /* This will #undef the above */
 
-nsJSCID::nsJSCID()  {}
+nsJSCID::nsJSCID()  { mDetails = new nsJSID(); }
 nsJSCID::~nsJSCID() {}
 
 NS_IMETHODIMP nsJSCID::GetName(char * *aName)
-    {ResolveName(); return mDetails.GetName(aName);}
+    {ResolveName(); return mDetails->GetName(aName);}
 
 NS_IMETHODIMP nsJSCID::GetNumber(char * *aNumber)
-    {return mDetails.GetNumber(aNumber);}
+    {return mDetails->GetNumber(aNumber);}
 
 NS_IMETHODIMP_(const nsID*) nsJSCID::GetID()
-    {return &mDetails.ID();}
+    {return &mDetails->ID();}
 
 NS_IMETHODIMP nsJSCID::GetValid(bool *aValid)
-    {return mDetails.GetValid(aValid);}
+    {return mDetails->GetValid(aValid);}
 
 NS_IMETHODIMP nsJSCID::Equals(nsIJSID *other, bool *_retval)
-    {return mDetails.Equals(other, _retval);}
+    {return mDetails->Equals(other, _retval);}
 
 NS_IMETHODIMP nsJSCID::Initialize(const char *idString)
-    {return mDetails.Initialize(idString);}
+    {return mDetails->Initialize(idString);}
 
 NS_IMETHODIMP nsJSCID::ToString(char **_retval)
-    {ResolveName(); return mDetails.ToString(_retval);}
+    {ResolveName(); return mDetails->ToString(_retval);}
 
 void
 nsJSCID::ResolveName()
 {
-    if (!mDetails.NameIsSet())
-        mDetails.SetNameToNoString();
+    if (!mDetails->NameIsSet())
+        mDetails->SetNameToNoString();
 }
 
 //static
@@ -602,7 +602,7 @@ nsJSCID::NewID(const char* str)
         nsCID *cid;
         if (NS_FAILED(registrar->ContractIDToCID(str, &cid)))
             return nullptr;
-        bool success = idObj->mDetails.InitWithName(*cid, str);
+        bool success = idObj->mDetails->InitWithName(*cid, str);
         nsMemory::Free(cid);
         if (!success)
             return nullptr;
@@ -634,10 +634,10 @@ NS_IMETHODIMP
 nsJSCID::CreateInstance(HandleValue iidval, JSContext *cx,
                         uint8_t optionalArgc, MutableHandleValue retval)
 {
-    if (!mDetails.IsValid())
+    if (!mDetails->IsValid())
         return NS_ERROR_XPC_BAD_CID;
 
-    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, mDetails.ID()))) {
+    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, mDetails->ID()))) {
         NS_ERROR("how are we not being called from chrome here?");
         return NS_OK;
     }
@@ -653,7 +653,7 @@ nsJSCID::CreateInstance(HandleValue iidval, JSContext *cx,
         return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsISupports> inst;
-    rv = compMgr->CreateInstance(mDetails.ID(), nullptr, *iid, getter_AddRefs(inst));
+    rv = compMgr->CreateInstance(mDetails->ID(), nullptr, *iid, getter_AddRefs(inst));
     MOZ_ASSERT(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
 
     if (NS_FAILED(rv) || !inst)
@@ -670,10 +670,10 @@ NS_IMETHODIMP
 nsJSCID::GetService(HandleValue iidval, JSContext *cx, uint8_t optionalArgc,
                     MutableHandleValue retval)
 {
-    if (!mDetails.IsValid())
+    if (!mDetails->IsValid())
         return NS_ERROR_XPC_BAD_CID;
 
-    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, mDetails.ID()))) {
+    if (NS_FAILED(nsXPConnect::SecurityManager()->CanCreateInstance(cx, mDetails->ID()))) {
         MOZ_ASSERT(JS_IsExceptionPending(cx),
                    "security manager vetoed GetService without setting exception");
         return NS_OK;
@@ -690,7 +690,7 @@ nsJSCID::GetService(HandleValue iidval, JSContext *cx, uint8_t optionalArgc,
         return rv;
 
     nsCOMPtr<nsISupports> srvc;
-    rv = svcMgr->GetService(mDetails.ID(), *iid, getter_AddRefs(srvc));
+    rv = svcMgr->GetService(mDetails->ID(), *iid, getter_AddRefs(srvc));
     MOZ_ASSERT(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
     if (NS_FAILED(rv) || !srvc)
         return NS_ERROR_XPC_GS_RETURNED_FAILURE;
@@ -752,7 +752,7 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         if (ci) {
             nsID cid;
             if (NS_SUCCEEDED(ci->GetClassIDNoAlloc(&cid)))
-                *bp = cid.Equals(mDetails.ID());
+                *bp = cid.Equals(mDetails->ID());
         }
     }
 
