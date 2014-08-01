@@ -175,4 +175,36 @@
   "END" \
 )
 
+#define CREATE_FOREIGNCOUNT_AFTERDELETE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterdelete_trigger " \
+  "AFTER DELETE ON moz_bookmarks FOR EACH ROW " \
+  "BEGIN " \
+    "UPDATE moz_places " \
+    "SET foreign_count = foreign_count - 1 " \
+    "WHERE id = OLD.fk;" \
+  "END" \
+)
+
+#define CREATE_FOREIGNCOUNT_AFTERINSERT_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterinsert_trigger " \
+  "AFTER INSERT ON moz_bookmarks FOR EACH ROW " \
+  "BEGIN " \
+    "UPDATE moz_places " \
+    "SET foreign_count = foreign_count + 1 " \
+    "WHERE id = NEW.fk;" \
+  "END" \
+)
+
+#define CREATE_FOREIGNCOUNT_AFTERUPDATE_TRIGGER NS_LITERAL_CSTRING( \
+  "CREATE TEMP TRIGGER moz_bookmarks_foreign_count_afterupdate_trigger " \
+  "AFTER UPDATE OF fk ON moz_bookmarks FOR EACH ROW " \
+  "BEGIN " \
+    "UPDATE moz_places " \
+    "SET foreign_count = foreign_count + 1 " \
+    "WHERE id = NEW.fk;" \
+    "UPDATE moz_places " \
+    "SET foreign_count = foreign_count - 1 " \
+    "WHERE id = OLD.fk;" \
+  "END" \
+)
 #endif // __nsPlacesTriggers_h__
