@@ -435,15 +435,18 @@ HttpChannelChild::OnTransportAndData(const nsresult& channelStatus,
     return;
 
   // cache the progress sink so we don't have to query for it each time.
-  if (!mProgressSink)
+  if (!mProgressSink) {
     GetCallback(mProgressSink);
+  }
 
   // Hold queue lock throughout all three calls, else we might process a later
   // necko msg in between them.
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  // block status/progress after Cancel or OnStopRequest has been called,
+  // Block status/progress after Cancel or OnStopRequest has been called,
   // or if channel has LOAD_BACKGROUND set.
+  // Note: Progress events will be received directly in RecvOnProgress if
+  // LOAD_BACKGROUND is set.
   // - JDUELL: may not need mStatus/mIsPending checks, given this is always called
   //   during OnDataAvailable, and we've already checked mCanceled.  Code
   //   dupe'd from nsHttpChannel
@@ -604,15 +607,14 @@ HttpChannelChild::OnProgress(const uint64_t& progress,
     return;
 
   // cache the progress sink so we don't have to query for it each time.
-  if (!mProgressSink)
+  if (!mProgressSink) {
     GetCallback(mProgressSink);
+  }
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  // block socket status event after Cancel or OnStopRequest has been called,
-  // or if channel has LOAD_BACKGROUND set
-  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending &&
-      !(mLoadFlags & LOAD_BACKGROUND))
+  // Block socket status event after Cancel or OnStopRequest has been called.
+  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending)
   {
     if (progress > 0) {
       MOZ_ASSERT(progress <= progressMax, "unexpected progress values");

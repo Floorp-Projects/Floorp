@@ -705,9 +705,9 @@ HttpChannelParent::OnProgress(nsIRequest *aRequest,
     mStoredProgress = aProgress;
     mStoredProgressMax = aProgressMax;
   } else {
-    // Send to child now.  The only case I've observed that this handles (i.e.
-    // non-ODA status with progress > 0) is data upload progress notification
-    // (status == NS_NET_STATUS_SENDING_TO)
+    // Send OnProgress events to the child for data upload progress notifications
+    // (i.e. status == NS_NET_STATUS_SENDING_TO) or if the channel has
+    // LOAD_BACKGROUND set.
     if (mIPCClosed || !SendOnProgress(aProgress, aProgressMax))
       return NS_ERROR_UNEXPECTED;
   }
