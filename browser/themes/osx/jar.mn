@@ -117,23 +117,27 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-16@2x.png
   skin/classic/browser/webRTC-shareDevice-64.png
   skin/classic/browser/webRTC-shareDevice-64@2x.png
-  skin/classic/browser/webRTC-sharingDevice-16.png
-  skin/classic/browser/webRTC-sharingDevice-16@2x.png
+  skin/classic/browser/webRTC-sharingDevice-16.png    (../shared/webrtc/webRTC-sharingDevice-16.png)
+  skin/classic/browser/webRTC-sharingDevice-16@2x.png (../shared/webrtc/webRTC-sharingDevice-16@2x.png)
   skin/classic/browser/webRTC-shareMicrophone-16.png
   skin/classic/browser/webRTC-shareMicrophone-16@2x.png
   skin/classic/browser/webRTC-shareMicrophone-64.png
   skin/classic/browser/webRTC-shareMicrophone-64@2x.png
-  skin/classic/browser/webRTC-sharingMicrophone-16.png
-  skin/classic/browser/webRTC-sharingMicrophone-16@2x.png
+  skin/classic/browser/webRTC-sharingMicrophone-16.png (../shared/webrtc/webRTC-sharingMicrophone-16.png)
+  skin/classic/browser/webRTC-sharingMicrophone-16@2x.png (../shared/webrtc/webRTC-sharingMicrophone-16@2x.png)
   skin/classic/browser/webRTC-shareScreen-16.png      (../shared/webrtc/webRTC-shareScreen-16.png)
   skin/classic/browser/webRTC-shareScreen-16@2x.png   (../shared/webrtc/webRTC-shareScreen-16@2x.png)
   skin/classic/browser/webRTC-shareScreen-64.png      (../shared/webrtc/webRTC-shareScreen-64.png)
   skin/classic/browser/webRTC-shareScreen-64@2x.png   (../shared/webrtc/webRTC-shareScreen-64@2x.png)
   skin/classic/browser/webRTC-sharingScreen-16.png    (../shared/webrtc/webRTC-sharingScreen-16.png)
   skin/classic/browser/webRTC-sharingScreen-16@2x.png (../shared/webrtc/webRTC-sharingScreen-16@2x.png)
-  skin/classic/browser/webRTC-camera-black-16.png
-  skin/classic/browser/webRTC-microphone-black-16.png
-  skin/classic/browser/webRTC-screen-black-16.png
+  skin/classic/browser/webRTC-sharingDevice-menubar.png
+  skin/classic/browser/webRTC-sharingDevice-menubar@2x.png
+  skin/classic/browser/webRTC-sharingMicrophone-menubar.png
+  skin/classic/browser/webRTC-sharingMicrophone-menubar@2x.png
+  skin/classic/browser/webRTC-sharingScreen-menubar.png
+  skin/classic/browser/webRTC-sharingScreen-menubar@2x.png
+  skin/classic/browser/webRTC-indicator.css
   skin/classic/browser/loop/toolbar.png               (loop/toolbar.png)
   skin/classic/browser/loop/toolbar@2x.png            (loop/toolbar@2x.png)
   skin/classic/browser/loop/toolbar-inverted.png      (loop/toolbar-inverted.png)
