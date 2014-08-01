@@ -130,7 +130,7 @@ WebGLContext::BindAttribLocation(WebGLProgram *prog, GLuint location,
     if (!ValidateObject("bindAttribLocation: program", prog))
         return;
 
-    GLuint progname = prog->GLName();
+    GLProgram progname = prog->GLName();
 
     if (!ValidateGLSLVariableName(name, "bindAttribLocation"))
         return;
@@ -855,7 +855,7 @@ WebGLContext::GetActiveAttrib(WebGLProgram *prog, uint32_t index)
     MakeContextCurrent();
 
     GLint len = 0;
-    GLuint progname = prog->GLName();;
+    GLProgram progname = prog->GLName();;
     gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &len);
     if (len == 0)
         return nullptr;
@@ -946,7 +946,7 @@ WebGLContext::GetActiveUniform(WebGLProgram *prog, uint32_t index)
     MakeContextCurrent();
 
     GLint len = 0;
-    GLuint progname = prog->GLName();
+    GLProgram progname = prog->GLName();
     gl->fGetProgramiv(progname, LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH, &len);
     if (len == 0)
         return nullptr;
@@ -1024,7 +1024,7 @@ WebGLContext::GetAttribLocation(WebGLProgram *prog, const nsAString& name)
     nsCString mappedName;
     prog->MapIdentifier(cname, &mappedName);
 
-    GLuint progname = prog->GLName();
+    GLProgram progname = prog->GLName();
 
     MakeContextCurrent();
     return gl->fGetAttribLocation(progname, mappedName.get());
@@ -1372,7 +1372,7 @@ WebGLContext::GetProgramParameter(WebGLProgram *prog, GLenum pname)
     if (!ValidateObjectAllowDeleted("getProgramParameter: program", prog))
         return JS::NullValue();
 
-    GLuint progname = prog->GLName();
+    GLProgram progname = prog->GLName();
 
     MakeContextCurrent();
 
@@ -1439,7 +1439,7 @@ WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsACString& retval)
         return;
     }
 
-    GLuint progname = prog->GLName();
+    GLProgram progname = prog->GLName();
 
     MakeContextCurrent();
 
@@ -1638,7 +1638,7 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         return JS::NullValue();
     }
 
-    GLuint progname = prog->GLName();
+    GLProgram progname = prog->GLName();
 
     MakeContextCurrent();
 
@@ -1768,7 +1768,7 @@ WebGLContext::GetUniformLocation(WebGLProgram *prog, const nsAString& name)
     nsCString mappedName;
     prog->MapIdentifier(cname, &mappedName);
 
-    GLuint progname = prog->GLName();
+    GLProgram progname = prog->GLName();
     MakeContextCurrent();
     GLint intlocation = gl->fGetUniformLocation(progname, mappedName.get());
 
@@ -1902,7 +1902,7 @@ WebGLContext::LinkProgram(WebGLProgram *program)
     InvalidateBufferFetching(); // we do it early in this function
     // as some of the validation below changes program state
 
-    GLuint progname = program->GLName();
+    GLProgram progname = program->GLName();
 
     if (!program->NextGeneration()) {
         // XXX throw?
@@ -2919,7 +2919,7 @@ WebGLContext::UseProgram(WebGLProgram *prog)
 
     InvalidateBufferFetching();
 
-    GLuint progname = prog ? prog->GLName() : 0;
+    GLProgram progname = prog ? prog->GLName() : GLProgram(0);
 
     if (prog && !prog->LinkStatus())
         return ErrorInvalidOperation("useProgram: program was not linked successfully");
@@ -2948,7 +2948,7 @@ WebGLContext::ValidateProgram(WebGLProgram *prog)
     }
 #endif
 
-    GLuint progname = prog->GLName();
+    GLProgram progname = prog->GLName();
     gl->fValidateProgram(progname);
 }
 

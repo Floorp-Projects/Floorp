@@ -50,6 +50,66 @@ typedef intptr_t GLintptr;
 
 #endif /* #if !defined(__gltypes_h_) && !defined(__gl_h_) */
 
+namespace mozilla {
+namespace gl {
+
+enum {
+    BufferObject,
+    ShaderObject,
+    ProgramObject,
+    ProgramPipelineObject,
+    TextureObject,
+    SamplerObject,
+    RenderbufferObject,
+    FramebufferObject,
+    VertexArrayObject,
+    TransformFeedbackObject,
+    QueryObject,
+    SyncObject,
+};
+
+// Generic GL object handles
+/*
+ * Each GL object type has an associated strongly-typed handle type.
+ * By default the handles are initialized to the zero OpenGL name but if
+ * need be can be explicitely initialized to a specific name.
+ * Some exmaples:
+ *   GLTexture tex; // tex is 0
+ *   tex = 42 // error
+ *   tex = GLTexture(42); // tex is 42
+ *   tex = GLTexture(); // tex is 0 again
+ *
+ *   void f(GLTexture tex);
+ *   f(tex); // ok
+ *   f(42); // error
+ *   f(GLTexture()) // ok, it is the 0 handle
+ */
+
+template<int Type>
+struct ObjectHandle
+{
+    ObjectHandle(): mName(0) {}
+
+    // The explicit here is to prevent automatic conversions when calling functions
+    explicit ObjectHandle(GLuint name): mName(name) {}
+
+    operator bool() const {
+        return mName != 0;
+    }
+
+    GLuint Name() const {
+        return mName;
+    }
+
+private:
+    GLuint mName;
+};
+
+typedef ObjectHandle<ProgramObject> GLProgram;
+
+}
+}
+
 #include <stdint.h>
 
 // ARB_sync
