@@ -505,7 +505,7 @@ Experiments.Experiments.prototype = {
       hasTimer: !!this._hasTimer,
       hasAddonProvider: !!gAddonProvider,
       latestLogs: this._forensicsLogs,
-      experiments: this._experiments.keys(),
+      experiments: this._experiments ? this._experiments.keys() : null,
       terminateReason: this._terminateReason,
     };
     if (this._latestError) {
