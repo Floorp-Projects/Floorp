@@ -27,11 +27,11 @@
 
 #if ENABLE_ASSEMBLER && WTF_OS_UNIX && !WTF_OS_SYMBIAN
 
-#include <sys/mman.h>
-#include <unistd.h>
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TaggedAnonymousMemory.h"
+
+#include <sys/mman.h>
+#include <unistd.h>
 
 #include "js/Utility.h"
 

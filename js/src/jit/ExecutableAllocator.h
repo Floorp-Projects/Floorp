@@ -26,8 +26,8 @@
 #ifndef assembler_jit_ExecutableAllocator_h
 #define assembler_jit_ExecutableAllocator_h
 
-#include <stddef.h> // for ptrdiff_t
 #include <limits>
+#include <stddef.h> // for ptrdiff_t
 
 #include "jsalloc.h"
 
