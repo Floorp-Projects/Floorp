@@ -8,10 +8,9 @@
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
-#include "mozilla/dom/TabChild.h"
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
-#include "nsString.h"
+#include "nsContentPermissionHelper.h"
 
 namespace mozilla {
 namespace dom {
@@ -62,34 +61,14 @@ FileSystemPermissionRequest::~FileSystemPermissionRequest()
 {
 }
 
-bool
-FileSystemPermissionRequest::Recv__delete__(const bool& aAllow,
-               const InfallibleTArray<PermissionChoice>& aChoices)
-{
-  MOZ_ASSERT(aChoices.IsEmpty(),
-             "FileSystemPermissionRequest doesn't support permission choice");
-  if (aAllow) {
-    Allow(JS::UndefinedHandleValue);
-  } else {
-    Cancel();
-  }
-  return true;
-}
-
-void
-FileSystemPermissionRequest::IPDLRelease()
-{
-  Release();
-}
-
 NS_IMETHODIMP
 FileSystemPermissionRequest::GetTypes(nsIArray** aTypes)
 {
   nsTArray<nsString> emptyOptions;
-  return CreatePermissionArray(mPermissionType,
-                               mPermissionAccess,
-                               emptyOptions,
-                               aTypes);
+  return nsContentPermissionUtils::CreatePermissionArray(mPermissionType,
+                                                         mPermissionAccess,
+                                                         emptyOptions,
+                                                         aTypes);
 }
 
 NS_IMETHODIMP
@@ -147,42 +126,12 @@ FileSystemPermissionRequest::Run()
     return NS_OK;
   }
 
-  if (FileSystemUtils::IsParentProcess()) {
-    nsCOMPtr<nsIContentPermissionPrompt> prompt
-      = do_CreateInstance(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
-    if (!prompt || NS_FAILED(prompt->Prompt(this))) {
-      Cancel();
-    }
-    return NS_OK;
-  }
-
   if (!mWindow) {
     Cancel();
     return NS_OK;
   }
 
-  // because owner implements nsITabChild, we can assume that it is
-  // the one and only TabChild.
-  TabChild* child = TabChild::GetFrom(mWindow->GetDocShell());
-  if (!child) {
-    Cancel();
-    return NS_OK;
-  }
-
-  // Retain a reference so the object isn't deleted without IPDL's
-  // knowledge. Corresponding release occurs in
-  // DeallocPContentPermissionRequest.
-  AddRef();
-
-  nsTArray<PermissionRequest> permArray;
-  nsTArray<nsString> emptyOptions;
-  permArray.AppendElement(PermissionRequest(mPermissionType,
-                                            mPermissionAccess,
-                                            emptyOptions));
-  child->SendPContentPermissionRequestConstructor(
-    this, permArray, IPC::Principal(mPrincipal));
-
-  Sendprompt();
+  nsContentPermissionUtils::AskPermission(this, mWindow);
   return NS_OK;
 }
 
