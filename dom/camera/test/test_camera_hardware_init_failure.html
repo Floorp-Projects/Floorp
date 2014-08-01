@@ -17,6 +17,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=940424
 
 <script class="testbody" type="text/javascript;version=1.7">
 
+SimpleTest.waitForExplicitFinish();
+
 var whichCamera = navigator.mozCameras.getListOfCameras()[0];
 var initialConfig = {
   mode: 'picture',
@@ -27,24 +29,65 @@ var initialConfig = {
   }
 };
 
-function end() {
-  CameraTest.end();
-}
+var tests = [
+  {
+    name: "init-failure",
+    key: "init-failure",
+    func: function testInitFailure(test) {
+      function onSuccess(camera, config) {
+        ok(false, "onSuccess called incorrectly");
+        camera.release();
+        test.next();
+      }
+      function onError(error) {
+        ok(true, "onError called correctly on init failure");
+        test.next();
+      }
+      info("Running test: init-failure");
+      navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+    }
+  },
+  /* This test case (init-success) *must* follow the preceeding test case
+     (init-failure) in order for the desired condition to be verified */
+  {
+    name: "init-success",
+    key: "",
+    func: function(test) {
+      function onSuccess(camera, config) {
+        ok(true, "onSuccess called correctly");
+        camera.release();
+        test.next();
+      }
+      function onError(error) {
+        ok(false, "onError called incorrectly: " + error);
+        test.next();
+      }
+      info("Running test: init-success");
+      navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError)
+    }
+  }
+];
+
+var testGenerator = function() {
+  for (var i = 0; i < tests.length; ++i ) {
+    yield tests[i];
+  }
+}();
 
 CameraTest.begin("hardware", function(test) {
-  test.set("init-failure", function(type) {
-    function onSuccess(camera, config) {
-      ok(false, "onSuccess called incorrectly");
-      camera.release();
-      test.done(end);
+  CameraTest.next = function() {
+    try {
+      var t = testGenerator.next();
+      test.set(t.key, t.func.bind(undefined, CameraTest));
+    } catch(e) {
+      if (e instanceof StopIteration) {
+        CameraTest.end();
+      } else {
+        throw e;
+      }
     }
-    function onError(error) {
-      ok(true, "onError called correctly on init failure");
-      test.done(end);
-    }
-    info("Running test: " + type);
-    navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
-  });
+  };
+  CameraTest.next();
 });
 
 </script>
