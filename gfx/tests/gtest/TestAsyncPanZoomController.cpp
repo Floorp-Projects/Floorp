@@ -711,9 +711,9 @@ TEST_F(APZCBasicTester, ComplexTransform) {
     nsIntRegion(nsIntRect(0, 0, 300, 300)),
     nsIntRegion(nsIntRect(0, 0, 150, 300)),
   };
-  gfx3DMatrix transforms[] = {
-    gfx3DMatrix(),
-    gfx3DMatrix(),
+  Matrix4x4 transforms[] = {
+    Matrix4x4(),
+    Matrix4x4(),
   };
   transforms[0].ScalePost(0.5f, 0.5f, 1.0f); // this results from the 2.0 resolution on the root layer
   transforms[1].ScalePost(2.0f, 1.0f, 1.0f); // this is the 2.0 x-axis CSS transform on the child layer
@@ -1451,12 +1451,12 @@ CreateTestLayerTree1(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<La
     nsIntRegion(nsIntRect(10,10,20,20)),
     nsIntRegion(nsIntRect(5,5,20,20)),
   };
-  gfx3DMatrix transforms[] = {
-    gfx3DMatrix(),
-    gfx3DMatrix(),
-    gfx3DMatrix(),
-    gfx3DMatrix(),
-    gfx3DMatrix(),
+  Matrix4x4 transforms[] = {
+    Matrix4x4(),
+    Matrix4x4(),
+    Matrix4x4(),
+    Matrix4x4(),
+    Matrix4x4(),
   };
   return CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, aLayerManager, aLayers);
 }
@@ -1472,11 +1472,11 @@ CreateTestLayerTree2(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<La
     nsIntRegion(nsIntRect(10,60,40,40)),
     nsIntRegion(nsIntRect(10,60,40,40)),
   };
-  gfx3DMatrix transforms[] = {
-    gfx3DMatrix(),
-    gfx3DMatrix(),
-    gfx3DMatrix(),
-    gfx3DMatrix(),
+  Matrix4x4 transforms[] = {
+    Matrix4x4(),
+    Matrix4x4(),
+    Matrix4x4(),
+    Matrix4x4(),
   };
   return CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, aLayerManager, aLayers);
 }
