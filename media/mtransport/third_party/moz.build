@@ -50,7 +50,6 @@ nrappkit_non_unified_sources = [
     'nrappkit/src/util/hex.c',
     'nrappkit/src/util/libekr/debug.c',
     'nrappkit/src/util/libekr/r_assoc.c',
-    'nrappkit/src/util/libekr/r_bitfield.c',
     'nrappkit/src/util/libekr/r_crc32.c',
     'nrappkit/src/util/libekr/r_data.c',
     'nrappkit/src/util/libekr/r_errors.c',
