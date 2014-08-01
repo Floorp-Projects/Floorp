@@ -22,8 +22,8 @@
 #include "jsstr.h"
 #include "jstypes.h"
 
+#include "asmjs/AsmJSModule.h"
 #include "frontend/SourceNotes.h"
-#include "jit/AsmJSModule.h"
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
 

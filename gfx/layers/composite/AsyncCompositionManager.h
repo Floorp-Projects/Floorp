@@ -8,12 +8,12 @@
 
 #include "Units.h"                      // for LayerPoint, etc
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerManagerComposite
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "mozilla/Attributes.h"         // for MOZ_DELETE, MOZ_FINAL, etc
 #include "mozilla/RefPtr.h"             // for RefCounted
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/layers/LayersMessages.h"  // for TargetConfig
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"            // for LayerManager::AddRef, etc
@@ -34,17 +34,17 @@ struct ViewTransform {
     , mScale(aScale)
   {}
 
-  operator gfx3DMatrix() const
+  operator gfx::Matrix4x4() const
   {
     return
-      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0) *
-      gfx3DMatrix::ScalingMatrix(mScale.scale, mScale.scale, 1);
+      gfx::Matrix4x4().Translate(mTranslation.x, mTranslation.y, 0) *
+      gfx::Matrix4x4().Scale(mScale.scale, mScale.scale, 1);
   }
 
   // For convenience, to avoid writing the cumbersome
-  // "gfx3dMatrix(a) * gfx3DMatrix(b)".
-  friend gfx3DMatrix operator*(const ViewTransform& a, const ViewTransform& b) {
-    return gfx3DMatrix(a) * gfx3DMatrix(b);
+  // "gfx::Matrix4x4(a) * gfx::Matrix4x4(b)".
+  friend gfx::Matrix4x4 operator*(const ViewTransform& a, const ViewTransform& b) {
+    return gfx::Matrix4x4(a) * gfx::Matrix4x4(b);
   }
 
   bool operator==(const ViewTransform& rhs) const {
