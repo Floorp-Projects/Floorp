@@ -437,37 +437,6 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
 extern JS_FRIEND_API(bool)
 UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind);
 
-} /* namespace JS */
-
-namespace js {
-namespace gc {
-
-static MOZ_ALWAYS_INLINE void
-ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
-{
-    MOZ_ASSERT(kind != JSTRACE_SHAPE);
-
-    JS::shadow::Runtime *rt = GetGCThingRuntime(thing);
-#ifdef JSGC_GENERATIONAL
-    /*
-     * GC things residing in the nursery cannot be gray: they have no mark bits.
-     * All live objects in the nursery are moved to tenured at the beginning of
-     * each GC slice, so the gray marker never sees nursery things.
-     */
-    if (IsInsideNursery((Cell *)thing))
-        return;
-#endif
-    if (JS::IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing, kind))
-        JS::IncrementalReferenceBarrier(thing, kind);
-    else if (JS::GCThingIsMarkedGray(thing))
-        JS::UnmarkGrayGCThingRecursively(thing, kind);
-}
-
-} /* namespace gc */
-} /* namespace js */
-
-namespace JS {
-
 /*
  * This should be called when an object that is marked gray is exposed to the JS
  * engine (by handing it to running JS code or writing it into live JS
@@ -475,15 +444,30 @@ namespace JS {
  * we conservatively mark the object black.
  */
 static MOZ_ALWAYS_INLINE void
-ExposeObjectToActiveJS(JSObject *obj)
+ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
 {
-    js::gc::ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
+    MOZ_ASSERT(kind != JSTRACE_SHAPE);
+
+    shadow::Runtime *rt = js::gc::GetGCThingRuntime(thing);
+#ifdef JSGC_GENERATIONAL
+    /*
+     * GC things residing in the nursery cannot be gray: they have no mark bits.
+     * All live objects in the nursery are moved to tenured at the beginning of
+     * each GC slice, so the gray marker never sees nursery things.
+     */
+    if (js::gc::IsInsideNursery((js::gc::Cell *)thing))
+        return;
+#endif
+    if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing, kind))
+        IncrementalReferenceBarrier(thing, kind);
+    else if (GCThingIsMarkedGray(thing))
+        UnmarkGrayGCThingRecursively(thing, kind);
 }
 
 static MOZ_ALWAYS_INLINE void
-ExposeScriptToActiveJS(JSScript *script)
+ExposeObjectToActiveJS(JSObject *obj)
 {
-    js::gc::ExposeGCThingToActiveJS(script, JSTRACE_SCRIPT);
+    ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
 }
 
 /*
