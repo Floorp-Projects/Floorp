@@ -898,6 +898,7 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
       status->mCipherName.Assign(cipherInfo.cipherSuiteName);
       infoObject->SetKEAUsed(cipherInfo.keaType);
       infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
+      infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
     }
   }
 
