@@ -5296,7 +5296,10 @@ GCRuntime::shrinkBuffers()
     AutoLockGC lock(rt);
     JS_ASSERT(!rt->isHeapBusy());
 
-    helperState.startBackgroundShrink();
+    if (CanUseExtraThreads())
+        helperState.startBackgroundShrink();
+    else
+        expireChunksAndArenas(true);
 }
 
 void
