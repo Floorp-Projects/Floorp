@@ -173,9 +173,13 @@ SandboxFilterImpl::Build() {
 #if SYSCALL_EXISTS(getuid32)
   Allow(SYSCALL(getuid32));
   Allow(SYSCALL(geteuid32));
+  Allow(SYSCALL(getgid32));
+  Allow(SYSCALL(getegid32));
 #else
   Allow(SYSCALL(getuid));
   Allow(SYSCALL(geteuid));
+  Allow(SYSCALL(getgid));
+  Allow(SYSCALL(getegid));
 #endif
   // Some newer archs (e.g., x64 and x32) have only rt_sigreturn, but
   // ARM has and uses both syscalls -- rt_sigreturn for SA_SIGINFO
@@ -225,6 +229,8 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(sched_yield));
   Allow(SYSCALL(sched_getscheduler));
   Allow(SYSCALL(sched_setscheduler));
+  Allow(SYSCALL(sched_getparam));
+  Allow(SYSCALL(sched_setparam));
   Allow(SYSCALL(sigaltstack));
 
   /* Always last and always OK calls */
@@ -282,7 +288,6 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(umask));
   Allow(SYSCALL(getresgid));
   Allow(SYSCALL(poll));
-  Allow(SYSCALL(getegid));
   Allow(SYSCALL(inotify_init1));
   Allow(SYSCALL(wait4));
   Allow(SYSVIPCCALL(shmctl, SHMCTL));
@@ -297,7 +302,6 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(inotify_add_watch));
   Allow(SYSCALL(rt_sigprocmask));
   Allow(SYSVIPCCALL(shmget, SHMGET));
-  Allow(SYSCALL(getgid));
 #if SYSCALL_EXISTS(utimes)
   Allow(SYSCALL(utimes));
 #else
