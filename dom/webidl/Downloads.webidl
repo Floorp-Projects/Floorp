@@ -29,14 +29,15 @@ enum DownloadState {
 interface DOMDownloadManager : EventTarget {
   // This promise returns an array of downloads with all the current
   // download objects.
-  Promise getDownloads();
+  Promise<sequence<DOMDownload>> getDownloads();
 
   // Removes one download from the downloads set. Returns a promise resolved
   // with the finalized download.
-  Promise remove(DOMDownload download);
+  Promise<DOMDownload> remove(DOMDownload download);
 
-  // Removes all the completed downloads from the set.
-  Promise clearAllDone();
+  // Removes all the completed downloads from the set.  Returns an
+  // array of the completed downloads that were removed.
+  Promise<sequence<DOMDownload>> clearAllDone();
 
   // Fires when a new download starts.
   attribute EventHandler ondownloadstart;
@@ -84,11 +85,11 @@ interface DOMDownload : EventTarget {
   readonly attribute DOMError? error;
 
   // Pauses the download.
-  Promise pause();
+  Promise<DOMDownload> pause();
 
   // Resumes the download. This resolves only once the download has
   // succeeded.
-  Promise resume();
+  Promise<DOMDownload> resume();
 
   // This event is triggered anytime a property of the object changes:
   // - when the transfer progresses, updating currentBytes.

@@ -113,7 +113,7 @@ interface MozInputContext: EventTarget {
     * Get the whole text content of the input field.
     * @return DOMString
     */
-   Promise getText(optional long offset, optional long length);
+   Promise<DOMString> getText(optional long offset, optional long length);
    // The start and stop position of the selection.
    readonly attribute long selectionStart;
    readonly attribute long selectionEnd;
@@ -134,7 +134,7 @@ interface MozInputContext: EventTarget {
      *
      * @return boolean
      */
-    Promise setSelectionRange(long start, long length);
+    Promise<boolean> setSelectionRange(long start, long length);
 
     /* User moves the cursor, or changes the selection with other means. If the text around
      * cursor has changed, but the cursor has not been moved, the IME won't get notification.
@@ -150,7 +150,7 @@ interface MozInputContext: EventTarget {
      * @param length The length of text to replace. Defaults to 0.
      * @return boolean
      */
-     Promise replaceSurroundingText(DOMString text, optional long offset, optional long length);
+    Promise<boolean> replaceSurroundingText(DOMString text, optional long offset, optional long length);
 
     /*
      *
@@ -160,7 +160,7 @@ interface MozInputContext: EventTarget {
      * TODO: maybe updateSurroundingText(DOMString beforeText, DOMString afterText); ?
      * @return boolean
      */
-    Promise deleteSurroundingText(long offset, long length);
+    Promise<boolean> deleteSurroundingText(long offset, long length);
 
     /*
     * Notifies when the text around the cursor is changed, due to either text
@@ -187,7 +187,7 @@ interface MozInputContext: EventTarget {
       * parameter repeat to true and invoke sendKey n-1 times, and then set
       * repeat to false in the last invoke.
       */
-    Promise sendKey(long keyCode, long charCode, long modifiers, optional boolean repeat);
+    Promise<boolean> sendKey(long keyCode, long charCode, long modifiers, optional boolean repeat);
 
     /*
      * Set current composing text. This method will start composition or update
@@ -216,8 +216,9 @@ interface MozInputContext: EventTarget {
      * To finish composition and commit text to current input field, an IME
      * should call |endComposition|.
      */
-    Promise setComposition(DOMString text, optional long cursor,
-                           optional sequence<CompositionClauseParameters> clauses);
+    // XXXbz what is this promise resolved with?
+    Promise<any> setComposition(DOMString text, optional long cursor,
+                                optional sequence<CompositionClauseParameters> clauses);
 
     /*
      * End composition, clear the composing text and commit given text to
@@ -232,7 +233,8 @@ interface MozInputContext: EventTarget {
      * |replaceSurroundingText|, |deleteSurroundingText|, user moving the
      * cursor, changing the focus, etc.
      */
-    Promise endComposition(optional DOMString text);
+    // XXXbz what is this promise resolved with?
+    Promise<any> endComposition(optional DOMString text);
 };
 
 enum CompositionClauseSelectionType {
