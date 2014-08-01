@@ -569,15 +569,15 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   if (!mMixer && shouldMix) {
     mMixer = new AudioMixer(AudioMixerCallback);
     for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-      for (uint32_t i = 0; i < mStreams[i]->mAudioOutputStreams.Length(); ++i) {
-        mStreams[i]->mAudioOutputStreams[i].mStream->SetMicrophoneActive(true);
+      for (uint32_t j = 0; j < mStreams[i]->mAudioOutputStreams.Length(); ++j) {
+        mStreams[i]->mAudioOutputStreams[j].mStream->SetMicrophoneActive(true);
       }
     }
   } else if (mMixer && !shouldMix) {
     mMixer = nullptr;
     for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-      for (uint32_t i = 0; i < mStreams[i]->mAudioOutputStreams.Length(); ++i) {
-        mStreams[i]->mAudioOutputStreams[i].mStream->SetMicrophoneActive(false);
+      for (uint32_t j = 0; j < mStreams[i]->mAudioOutputStreams.Length(); ++j) {
+        mStreams[i]->mAudioOutputStreams[j].mStream->SetMicrophoneActive(false);
       }
     }
   }
