@@ -10,7 +10,6 @@
 #include "GLTypes.h"
 #include "nsRect.h"
 #include "nsTArray.h"
-#include "gfx3DMatrix.h"
 
 namespace mozilla {
 namespace gl {

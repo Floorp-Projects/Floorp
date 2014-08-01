@@ -20,7 +20,7 @@
 #include "InputData.h"
 #include "Axis.h"
 #include "TaskThrottler.h"
-#include "gfx3DMatrix.h"
+#include "mozilla/gfx/Matrix.h"
 #include "nsRegion.h"
 
 #include "base/message_loop.h"
@@ -69,6 +69,7 @@ class AsyncPanZoomController {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomController)
 
   typedef mozilla::MonitorAutoLock MonitorAutoLock;
+  typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef uint32_t TouchBehaviorFlags;
 
 public:
@@ -221,9 +222,9 @@ public:
   /**
    * Returns the part of the async transform that will remain once Gecko does a
    * repaint at the desired metrics. That is, in the steady state:
-   * gfx3DMatrix(GetCurrentAsyncTransform()) === GetNontransientAsyncTransform()
+   * Matrix4x4(GetCurrentAsyncTransform()) === GetNontransientAsyncTransform()
    */
-  gfx3DMatrix GetNontransientAsyncTransform();
+  Matrix4x4 GetNontransientAsyncTransform();
 
   /**
    * Returns the transform to take something from the coordinate space of the
@@ -232,7 +233,7 @@ public:
    * processed, this is needed to transform input events properly into a space
    * gecko will understand.
    */
-  gfx3DMatrix GetTransformToLastDispatchedPaint();
+  Matrix4x4 GetTransformToLastDispatchedPaint();
 
   /**
    * Recalculates the displayport. Ideally, this should paint an area bigger
@@ -942,19 +943,19 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetLayerHitTestData(const nsIntRegion& aRegion, const gfx3DMatrix& aTransformToLayer,
-                           const gfx3DMatrix& aTransformForLayer) {
+  void SetLayerHitTestData(const nsIntRegion& aRegion, const Matrix4x4& aTransformToLayer,
+                           const Matrix4x4& aTransformForLayer) {
     mVisibleRegion = aRegion;
     mAncestorTransform = aTransformToLayer;
     mCSSTransform = aTransformForLayer;
     UpdateTransformScale();
   }
 
-  gfx3DMatrix GetAncestorTransform() const {
+  Matrix4x4 GetAncestorTransform() const {
     return mAncestorTransform;
   }
 
-  gfx3DMatrix GetCSSTransform() const {
+  Matrix4x4 GetCSSTransform() const {
     return mCSSTransform;
   }
 
@@ -974,9 +975,9 @@ private:
   nsIntRegion mVisibleRegion;
   /* This is the cumulative CSS transform for all the layers between the parent
    * APZC and this one (not inclusive) */
-  gfx3DMatrix mAncestorTransform;
+  Matrix4x4 mAncestorTransform;
   /* This is the CSS transform for this APZC's layer. */
-  gfx3DMatrix mCSSTransform;
+  Matrix4x4 mCSSTransform;
 
 
   /* ===================================================================

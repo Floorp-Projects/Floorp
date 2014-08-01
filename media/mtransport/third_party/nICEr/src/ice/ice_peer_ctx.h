@@ -49,6 +49,7 @@ struct nr_ice_peer_ctx_ {
   nr_ice_handler *handler;
 
   UCHAR controlling; /* 1 for controlling, 0 for controlled */
+  UCHAR controlling_conflict_resolved;
   UINT8 tiebreaker;
 
   char *peer_ufrag;
@@ -86,6 +87,7 @@ int nr_ice_peer_ctx_find_component(nr_ice_peer_ctx *pctx, nr_ice_media_stream *s
 int nr_ice_peer_ctx_deliver_packet_maybe(nr_ice_peer_ctx *pctx, nr_ice_component *comp, nr_transport_addr *source_addr, UCHAR *data, int len);
 int nr_ice_peer_ctx_disable_component(nr_ice_peer_ctx *pctx, nr_ice_media_stream *lstream, int component_id);
 int nr_ice_peer_ctx_pair_new_trickle_candidate(nr_ice_ctx *ctx, nr_ice_peer_ctx *pctx, nr_ice_candidate *cand);
+void nr_ice_peer_ctx_switch_controlling_role(nr_ice_peer_ctx *pctx);
 
 #ifdef __cplusplus
 }

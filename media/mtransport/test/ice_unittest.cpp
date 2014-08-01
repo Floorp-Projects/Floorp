@@ -41,6 +41,10 @@
 #include "stun_udp_socket_filter.h"
 #include "mozilla/net/DNS.h"
 
+#include "ice_ctx.h"
+#include "ice_peer_ctx.h"
+#include "ice_media_stream.h"
+
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
@@ -232,7 +236,8 @@ class IceTestPeer : public sigslot::has_slots<> {
       expected_local_transport_(kNrIceTransportUdp),
       expected_remote_type_(NrIceCandidate::ICE_HOST),
       trickle_mode_(TRICKLE_NONE),
-      trickled_(0) {
+      trickled_(0),
+      simulate_ice_lite_(false) {
     ice_ctx_->SignalGatheringStateChange.connect(
         this,
         &IceTestPeer::GatheringStateChange);
@@ -329,7 +334,11 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   // Get various pieces of state
   std::vector<std::string> GetGlobalAttributes() {
-    return ice_ctx_->GetGlobalAttributes();
+    std::vector<std::string> attrs(ice_ctx_->GetGlobalAttributes());
+    if (simulate_ice_lite_) {
+      attrs.push_back("ice-lite");
+    }
+    return attrs;
   }
 
    std::vector<std::string> GetCandidates(size_t stream) {
@@ -792,6 +801,34 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   int trickled() { return trickled_; }
 
+  void SetControlling(NrIceCtx::Controlling controlling) {
+    nsresult res;
+    test_utils->sts_target()->Dispatch(
+        WrapRunnableRet(ice_ctx_,
+                        &NrIceCtx::SetControlling,
+                        controlling,
+                        &res),
+        NS_DISPATCH_SYNC);
+    ASSERT_TRUE(NS_SUCCEEDED(res));
+  }
+
+  void SetTiebreaker(uint64_t tiebreaker) {
+    test_utils->sts_target()->Dispatch(
+        WrapRunnable(this,
+                     &IceTestPeer::SetTiebreaker_s,
+                     tiebreaker),
+        NS_DISPATCH_SYNC);
+  }
+
+  void SetTiebreaker_s(uint64_t tiebreaker) {
+    ice_ctx_->peer()->tiebreaker = tiebreaker;
+  }
+
+  void SimulateIceLite() {
+    simulate_ice_lite_ = true;
+    SetControlling(NrIceCtx::ICE_CONTROLLED);
+  }
+
  private:
   std::string name_;
   nsRefPtr<NrIceCtx> ice_ctx_;
@@ -814,6 +851,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   NrIceCandidate::Type expected_remote_type_;
   TrickleMode trickle_mode_;
   int trickled_;
+  bool simulate_ice_lite_;
 };
 
 void SchedulableTrickleCandidate::Trickle() {
@@ -932,8 +970,12 @@ class IceConnectTest : public ::testing::Test {
   }
 
   void Connect() {
-    p1_->Connect(p2_, TRICKLE_NONE);
+    // IceTestPeer::Connect grabs attributes from the first arg, and gives them
+    // to |this|, meaning that p2_->Connect(p1_, ...) simulates p1 sending an
+    // offer to p2. Order matters here because it determines which peer is
+    // controlling.
     p2_->Connect(p1_, TRICKLE_NONE);
+    p1_->Connect(p2_, TRICKLE_NONE);
 
     ASSERT_TRUE_WAIT(p1_->ready_ct() == 1 && p2_->ready_ct() == 1,
                      kDefaultTimeout);
@@ -977,8 +1019,8 @@ class IceConnectTest : public ::testing::Test {
   }
 
   void ConnectTrickle(TrickleMode trickle = TRICKLE_SIMULATE) {
-    p1_->Connect(p2_, trickle);
     p2_->Connect(p1_, trickle);
+    p1_->Connect(p2_, trickle);
   }
 
   void SimulateTrickle(size_t stream) {
@@ -1004,8 +1046,8 @@ class IceConnectTest : public ::testing::Test {
   }
 
   void ConnectThenDelete() {
-    p1_->Connect(p2_, TRICKLE_NONE, true);
     p2_->Connect(p1_, TRICKLE_NONE, false);
+    p1_->Connect(p2_, TRICKLE_NONE, true);
     test_utils->sts_target()->Dispatch(WrapRunnable(this,
                                                     &IceConnectTest::CloseP1),
                                        NS_DISPATCH_SYNC);
@@ -1259,6 +1301,69 @@ TEST_F(IceConnectTest, TestConnect) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
   Connect();
+}
+
+TEST_F(IceConnectTest, TestConnectBothControllingP1Wins) {
+  AddStream("first", 1);
+  p1_->SetTiebreaker(1);
+  p2_->SetTiebreaker(0);
+  ASSERT_TRUE(Gather());
+  p1_->SetControlling(NrIceCtx::ICE_CONTROLLING);
+  p2_->SetControlling(NrIceCtx::ICE_CONTROLLING);
+  Connect();
+}
+
+TEST_F(IceConnectTest, TestConnectBothControllingP2Wins) {
+  AddStream("first", 1);
+  p1_->SetTiebreaker(0);
+  p2_->SetTiebreaker(1);
+  ASSERT_TRUE(Gather());
+  p1_->SetControlling(NrIceCtx::ICE_CONTROLLING);
+  p2_->SetControlling(NrIceCtx::ICE_CONTROLLING);
+  Connect();
+}
+
+TEST_F(IceConnectTest, TestConnectIceLiteOfferer) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather());
+  p1_->SimulateIceLite();
+  Connect();
+}
+
+TEST_F(IceConnectTest, TestTrickleBothControllingP1Wins) {
+  AddStream("first", 1);
+  p1_->SetTiebreaker(1);
+  p2_->SetTiebreaker(0);
+  ASSERT_TRUE(Gather());
+  p1_->SetControlling(NrIceCtx::ICE_CONTROLLING);
+  p2_->SetControlling(NrIceCtx::ICE_CONTROLLING);
+  ConnectTrickle();
+  SimulateTrickle(0);
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+}
+
+TEST_F(IceConnectTest, TestTrickleBothControllingP2Wins) {
+  AddStream("first", 1);
+  p1_->SetTiebreaker(0);
+  p2_->SetTiebreaker(1);
+  ASSERT_TRUE(Gather());
+  p1_->SetControlling(NrIceCtx::ICE_CONTROLLING);
+  p2_->SetControlling(NrIceCtx::ICE_CONTROLLING);
+  ConnectTrickle();
+  SimulateTrickle(0);
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+}
+
+TEST_F(IceConnectTest, TestTrickleIceLiteOfferer) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather());
+  p1_->SimulateIceLite();
+  ConnectTrickle();
+  SimulateTrickle(0);
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
 }
 
 TEST_F(IceConnectTest, TestConnectTwoComponents) {
@@ -1601,8 +1706,8 @@ TEST_F(IceConnectTest, TestPollCandPairsDuringConnect) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
 
-  p1_->Connect(p2_, TRICKLE_NONE, false);
   p2_->Connect(p1_, TRICKLE_NONE, false);
+  p1_->Connect(p2_, TRICKLE_NONE, false);
 
   std::vector<NrIceCandidatePair> pairs1;
   std::vector<NrIceCandidatePair> pairs2;
@@ -1627,8 +1732,8 @@ TEST_F(IceConnectTest, TestRLogRingBuffer) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
 
-  p1_->Connect(p2_, TRICKLE_NONE, false);
   p2_->Connect(p1_, TRICKLE_NONE, false);
+  p1_->Connect(p2_, TRICKLE_NONE, false);
 
   std::vector<NrIceCandidatePair> pairs1;
   std::vector<NrIceCandidatePair> pairs2;

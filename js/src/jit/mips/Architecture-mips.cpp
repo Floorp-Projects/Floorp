@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "jit/RegisterSets.h"
+
 #define HWCAP_MIPS (1 << 31)
 #define HWCAP_FPU (1 << 0)
 

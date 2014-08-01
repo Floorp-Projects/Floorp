@@ -13,12 +13,12 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TypedEnum.h"
 #include "mozilla/TypedEnumBits.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsTObserverArray.h"
-#include "nsTWeakRef.h"
 
 class nsIScriptError;
 
@@ -65,7 +65,7 @@ private:
 
   // XXXnsm: Right now we don't need to support AddPromise() after
   // already being resolved (i.e. true Promise-like behaviour).
-  nsTArray<nsTWeakRef<Promise>> mPromises;
+  nsTArray<WeakPtr<Promise>> mPromises;
 };
 
 /*

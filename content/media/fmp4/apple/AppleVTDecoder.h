@@ -52,7 +52,8 @@ private:
   nsresult SubmitFrame(mp4_demuxer::MP4Sample* aSample);
   // Method to set up the decompression session.
   nsresult InitializeSession();
-  nsresult DrainReorderedFrames();
+  nsresult WaitForAsynchronousFrames();
+  void DrainReorderedFrames();
 };
 
 } // namespace mozilla

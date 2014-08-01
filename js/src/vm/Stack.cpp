@@ -10,9 +10,9 @@
 
 #include "jscntxt.h"
 
+#include "asmjs/AsmJSFrameIterator.h"
+#include "asmjs/AsmJSModule.h"
 #include "gc/Marking.h"
-#include "jit/AsmJSFrameIterator.h"
-#include "jit/AsmJSModule.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitCompartment.h"
 #include "js/GCAPI.h"

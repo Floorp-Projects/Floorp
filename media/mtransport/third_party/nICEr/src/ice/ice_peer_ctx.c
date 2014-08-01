@@ -68,15 +68,10 @@ int nr_ice_peer_ctx_create(nr_ice_ctx *ctx, nr_ice_handler *handler,char *label,
 
     /* Decide controlling vs. controlled */
     if(ctx->flags & NR_ICE_CTX_FLAGS_LITE){
-      if(pctx->peer_lite){
-        r_log(LOG_ICE,LOG_ERR,"Both sides are ICE-Lite");
-        ABORT(R_BAD_DATA);
-      }
-
       pctx->controlling=0;
     }
     else{
-      if(pctx->peer_lite || (ctx->flags & NR_ICE_CTX_FLAGS_OFFERER))
+      if(ctx->flags & NR_ICE_CTX_FLAGS_OFFERER)
         pctx->controlling=1;
       else if(ctx->flags & NR_ICE_CTX_FLAGS_ANSWERER)
         pctx->controlling=0;
@@ -364,6 +359,13 @@ int nr_ice_peer_ctx_pair_candidates(nr_ice_peer_ctx *pctx)
     nr_ice_media_stream *stream;
     int r,_status;
 
+    if(pctx->peer_lite && !pctx->controlling) {
+      if(pctx->ctx->flags & NR_ICE_CTX_FLAGS_LITE){
+        r_log(LOG_ICE,LOG_ERR,"Both sides are ICE-Lite");
+        ABORT(R_BAD_DATA);
+      }
+      nr_ice_peer_ctx_switch_controlling_role(pctx);
+    }
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): peer (%s) pairing candidates",pctx->ctx->label,pctx->label);
 
@@ -723,4 +725,31 @@ int nr_ice_peer_ctx_deliver_packet_maybe(nr_ice_peer_ctx *pctx, nr_ice_component
     return(_status);
   }
 
+void nr_ice_peer_ctx_switch_controlling_role(nr_ice_peer_ctx *pctx)
+  {
+    int controlling = !(pctx->controlling);
+    if(pctx->controlling_conflict_resolved) {
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): peer (%s) %s called more than once; "
+            "this probably means the peer is confused. Not switching roles.",
+            pctx->ctx->label,pctx->label,__FUNCTION__);
+      return;
+    }
+
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): detected "
+          "role conflict. Switching to %s",
+          pctx->label,
+          controlling ? "controlling" : "controlled");
+
+    pctx->controlling = controlling;
+    pctx->controlling_conflict_resolved = 1;
+
+    if(pctx->state == NR_ICE_PEER_STATE_PAIRED) {
+      /*  We have formed candidate pairs. We need to inform them. */
+      nr_ice_media_stream *pstream=STAILQ_FIRST(&pctx->peer_streams);
+      while(pstream) {
+        nr_ice_media_stream_role_change(pstream);
+        pstream = STAILQ_NEXT(pstream, entry);
+      }
+    }
+  }
 

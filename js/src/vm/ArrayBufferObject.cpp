@@ -33,11 +33,11 @@
 #endif
 #include "jswrapper.h"
 
+#include "asmjs/AsmJSModule.h"
+#include "asmjs/AsmJSValidate.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
-#include "jit/AsmJS.h"
-#include "jit/AsmJSModule.h"
 #include "js/MemoryMetrics.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

@@ -42,3 +42,5 @@ LOCAL_INCLUDES += [
     '/media/webrtc/trunk/webrtc/modules/video_capture/windows',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['NOMINMAX'] = True

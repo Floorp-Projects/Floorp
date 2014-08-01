@@ -23,7 +23,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "assembler/jit/ExecutableAllocator.h"
+#include "jit/ExecutableAllocator.h"
 
 #if ENABLE_ASSEMBLER && WTF_OS_WINDOWS
 

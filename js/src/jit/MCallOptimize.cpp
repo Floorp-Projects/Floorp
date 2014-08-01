@@ -46,7 +46,7 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineArraySplice(callInfo);
 
     // Math natives.
-    if (native == js_math_abs)
+    if (native == js::math_abs)
         return inlineMathAbs(callInfo);
     if (native == js::math_floor)
         return inlineMathFloor(callInfo);
@@ -54,19 +54,19 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineMathCeil(callInfo);
     if (native == js::math_round)
         return inlineMathRound(callInfo);
-    if (native == js_math_sqrt)
+    if (native == js::math_sqrt)
         return inlineMathSqrt(callInfo);
-    if (native == math_atan2)
+    if (native == js::math_atan2)
         return inlineMathAtan2(callInfo);
     if (native == js::math_hypot)
         return inlineMathHypot(callInfo);
-    if (native == js_math_max)
+    if (native == js::math_max)
         return inlineMathMinMax(callInfo, true /* max */);
-    if (native == js_math_min)
+    if (native == js::math_min)
         return inlineMathMinMax(callInfo, false /* max */);
-    if (native == js_math_pow)
+    if (native == js::math_pow)
         return inlineMathPow(callInfo);
-    if (native == js_math_random)
+    if (native == js::math_random)
         return inlineMathRandom(callInfo);
     if (native == js::math_imul)
         return inlineMathImul(callInfo);

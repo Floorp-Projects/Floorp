@@ -9,11 +9,11 @@
 #include "jscntxt.h"
 #include "jsscript.h"
 
+#include "asmjs/AsmJSLink.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/NameFunctions.h"
 #include "frontend/Parser.h"
-#include "jit/AsmJSLink.h"
 #include "vm/GlobalObject.h"
 #include "vm/TraceLogging.h"
 
