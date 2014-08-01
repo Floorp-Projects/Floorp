@@ -192,44 +192,29 @@ ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET);
  * nsMutationGuard on the stack before unexpected mutations could occur.
  * You can then at any time call Mutated to check if any unexpected mutations
  * have occurred.
- *
- * When a guard is instantiated sMutationCount is set to 300. It is then
- * decremented by every mutation (capped at 0). This means that we can only
- * detect 300 mutations during the lifetime of a single guard, however that
- * should be more then we ever care about as we usually only care if more then
- * one mutation has occurred.
- *
- * When the guard goes out of scope it will adjust sMutationCount so that over
- * the lifetime of the guard the guard itself has not affected sMutationCount,
- * while mutations that happened while the guard was alive still will. This
- * allows a guard to be instantiated even if there is another guard higher up
- * on the callstack watching for mutations.
- *
- * The only thing that has to be avoided is for an outer guard to be used
- * while an inner guard is alive. This can be avoided by only ever
- * instantiating a single guard per scope and only using the guard in the
- * current scope.
  */
 class nsMutationGuard {
 public:
   nsMutationGuard()
   {
-    mDelta = eMaxMutations - sMutationCount;
-    sMutationCount = eMaxMutations;
-  }
-  ~nsMutationGuard()
-  {
-    sMutationCount =
-      mDelta > sMutationCount ? 0 : sMutationCount - mDelta;
+    mStartingGeneration = sGeneration;
   }
 
   /**
    * Returns true if any unexpected mutations have occurred. You can pass in
    * an 8-bit ignore count to ignore a number of expected mutations.
+   *
+   * We don't need to care about overflow because subtraction of uint64_t's is
+   * finding the difference between two elements of the group Z < 2^64.  Once
+   * we know the difference between two elements we only need to check that is
+   * less than the given number of mutations to know less than that many
+   * mutations occured.  Assuming constant 1ns mutations it would take 584
+   * years for sGeneration to fully wrap around so we can ignore a guard living
+   * through a full wrap around.
    */
   bool Mutated(uint8_t aIgnoreCount)
   {
-    return sMutationCount < static_cast<uint32_t>(eMaxMutations - aIgnoreCount);
+    return (sGeneration - mStartingGeneration) > aIgnoreCount;
   }
 
   // This function should be called whenever a mutation that we want to keep
@@ -237,26 +222,15 @@ public:
   // removed, but we might do it for attribute changes too in the future.
   static void DidMutate()
   {
-    if (sMutationCount) {
-      --sMutationCount;
-    }
+    sGeneration++;
   }
 
 private:
-  // mDelta is the amount sMutationCount was adjusted when the guard was
-  // initialized. It is needed so that we can undo that adjustment once
-  // the guard dies.
-  uint32_t mDelta;
+  // This is the value sGeneration had when the guard was constructed.
+  uint64_t mStartingGeneration;
 
-  // The value 300 is not important, as long as it is bigger then anything
-  // ever passed to Mutated().
-  enum { eMaxMutations = 300 };
-
-
-  // sMutationCount is a global mutation counter which is decreased by one at
-  // every mutation. It is capped at 0 to avoid wrapping.
-  // Its value is always between 0 and 300, inclusive.
-  static uint32_t sMutationCount;
+  // This value is incremented on every mutation, for the life of the process.
+  static uint64_t sGeneration;
 };
 
 // This should be used for any nsINode sub-class that has fields of its own
