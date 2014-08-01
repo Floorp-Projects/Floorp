@@ -42,9 +42,6 @@ dictionary NetworkCommandOptions
   DOMString usbEndIp;                 // for "setWifiTethering".
   DOMString dns1;                     // for "setWifiTethering".
   DOMString dns2;                     // for "setWifiTethering".
-  float rxBytes;                      // for "getNetworkInterfaceStats".
-  float txBytes;                      // for "getNetworkInterfaceStats".
-  DOMString date;                     // for "getNetworkInterfaceStats".
   long threshold;                     // for "setNetworkInterfaceAlarm",
                                       //     "enableNetworkInterfaceAlarm".
   DOMString startIp;                  // for "setDhcpServer".
@@ -72,9 +69,6 @@ dictionary NetworkResultOptions
   DOMString resultReason = "";        // for all commands.
   boolean error = false;              // for all commands.
 
-  float rxBytes = -1;                 // for "getNetworkInterfaceStats".
-  float txBytes = -1;                 // for "getNetworkInterfaceStats".
-  DOMString date = "";                // for "getNetworkInterfaceStats".
   boolean enable = false;             // for "setWifiTethering", "setUSBTethering"
                                       //     "enableUsbRndis".
   boolean result = false;             // for "enableUsbRndis".
