@@ -45,11 +45,39 @@ using namespace mozilla;
  */
 static PLDHashTable gAtomTable;
 
+class StaticAtomEntry : public PLDHashEntryHdr
+{
+public:
+  typedef const nsAString& KeyType;
+  typedef const nsAString* KeyTypePointer;
+
+  explicit StaticAtomEntry(KeyTypePointer aKey) {}
+  StaticAtomEntry(const StaticAtomEntry& aOther) : mAtom(aOther.mAtom) {}
+  ~StaticAtomEntry() {}
+
+  bool KeyEquals(KeyTypePointer aKey) const
+  {
+    // njn: this is a heavyweight way to compare two char16ptr_t values!
+    return mAtom->Equals(*aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    return HashString(*aKey);
+  }
+
+  enum { ALLOW_MEMMOVE = true };
+
+  nsIAtom* mAtom;
+};
+
 /**
- * A hashtable of static atoms that existed at app startup. This hashtable helps
- * nsHtml5AtomTable.
+ * A hashtable of static atoms that existed at app startup. This hashtable
+ * helps nsHtml5AtomTable.
  */
-static nsDataHashtable<nsStringHashKey, nsIAtom*>* gStaticAtomTable = 0;
+typedef nsTHashtable<StaticAtomEntry> StaticAtomTable;
+static StaticAtomTable* gStaticAtomTable = nullptr;
 
 /**
  * Whether it is still OK to add atoms to gStaticAtomTable.
@@ -572,7 +600,7 @@ nsresult
 RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 {
   if (!gStaticAtomTable && !gStaticAtomTableSealed) {
-    gStaticAtomTable = new nsDataHashtable<nsStringHashKey, nsIAtom*>();
+    gStaticAtomTable = new StaticAtomTable();
   }
 
   for (uint32_t i = 0; i < aAtomCount; ++i) {
@@ -601,7 +629,9 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
     *aAtoms[i].mAtom = atom;
 
     if (!gStaticAtomTableSealed) {
-      gStaticAtomTable->Put(nsAtomString(atom), atom);
+      StaticAtomEntry* entry =
+        gStaticAtomTable->PutEntry(nsDependentAtomString(atom));
+      entry->mAtom = atom;
     }
   }
   return NS_OK;
@@ -698,11 +728,8 @@ NS_GetStaticAtom(const nsAString& aUTF16String)
 {
   NS_PRECONDITION(gStaticAtomTable, "Static atom table not created yet.");
   NS_PRECONDITION(gStaticAtomTableSealed, "Static atom table not sealed yet.");
-  nsIAtom* atom;
-  if (!gStaticAtomTable->Get(aUTF16String, &atom)) {
-    atom = nullptr;
-  }
-  return atom;
+  StaticAtomEntry* entry = gStaticAtomTable->GetEntry(aUTF16String);
+  return entry ? entry->mAtom : nullptr;
 }
 
 void
