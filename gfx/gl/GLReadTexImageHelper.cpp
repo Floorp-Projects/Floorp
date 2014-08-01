@@ -23,10 +23,6 @@ using namespace mozilla::gfx;
 GLReadTexImageHelper::GLReadTexImageHelper(GLContext* gl)
     : mGL(gl)
 {
-    mPrograms[0] = 0;
-    mPrograms[1] = 0;
-    mPrograms[2] = 0;
-    mPrograms[3] = 0;
 }
 
 GLReadTexImageHelper::~GLReadTexImageHelper()
@@ -83,7 +79,7 @@ readTextureImageFS_TEXTURE_RECTANGLE[] =
     "uniform sampler2DRect uTexture;\n"
     "void main() { gl_FragColor = texture2DRect(uTexture, vTexCoord).bgra; }";
 
-GLuint
+GLProgram
 GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget,
                                              int aConfig)
 {
@@ -118,7 +114,7 @@ GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget,
         mGL->fShaderSource(fs, 1, &readTextureImageFS, nullptr);
         mGL->fCompileShader(fs);
 
-        GLuint program = mGL->fCreateProgram();
+        GLProgram program = mGL->fCreateProgram();
         mGL->fAttachShader(program, vs);
         mGL->fAttachShader(program, fs);
         mGL->fBindAttribLocation(program, 0, "aVertex");
@@ -130,7 +126,7 @@ GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget,
 
         if (!success) {
             mGL->fDeleteProgram(program);
-            program = 0;
+            program = GLProgram(0);
         }
 
         mGL->fDeleteShader(vs);
@@ -621,7 +617,8 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
                                                    SurfaceFormat::R8G8B8A8,
                                                    stride);
 
-    GLint oldrb, oldfb, oldprog, oldTexUnit, oldTex;
+    GLint oldrb, oldfb, oldTexUnit, oldTex;
+    GLProgram oldprog;
     GLuint rb, fb;
 
     do {
@@ -669,7 +666,7 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
         MOZ_ASSERT(mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) == LOCAL_GL_FRAMEBUFFER_COMPLETE);
 
         /* Setup vertex and fragment shader */
-        GLuint program = TextureImageProgramFor(aTextureTarget, aConfig);
+        GLProgram program = TextureImageProgramFor(aTextureTarget, aConfig);
         MOZ_ASSERT(program);
 
         mGL->fUseProgram(program);

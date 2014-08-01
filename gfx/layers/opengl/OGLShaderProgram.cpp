@@ -486,7 +486,7 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
   if (!vertexShader || !fragmentShader)
     return false;
 
-  GLint result = mGL->fCreateProgram();
+  gl::GLProgram result = mGL->fCreateProgram();
   mGL->fAttachShader(result, vertexShader);
   mGL->fAttachShader(result, fragmentShader);
 

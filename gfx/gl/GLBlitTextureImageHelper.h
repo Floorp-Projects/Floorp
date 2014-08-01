@@ -25,7 +25,8 @@ class GLBlitTextureImageHelper MOZ_FINAL
     GLContext* mGL;
 
     // lazy-initialized things
-    GLuint mBlitProgram, mBlitFramebuffer;
+    GLProgram mBlitProgram;
+    GLuint mBlitFramebuffer;
     void UseBlitProgram();
     void SetBlitFramebufferForDestTexture(GLuint aTexture);
 
