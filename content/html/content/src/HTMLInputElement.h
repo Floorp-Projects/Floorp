@@ -22,12 +22,12 @@
 #include "nsIContentPrefService2.h"
 #include "mozilla/Decimal.h"
 #include "nsContentUtils.h"
+#include "nsTextEditorState.h"
 
 class nsDOMFileList;
 class nsIRadioGroupContainer;
 class nsIRadioGroupVisitor;
 class nsIRadioVisitor;
-class nsTextEditorState;
 
 namespace mozilla {
 
@@ -249,6 +249,28 @@ public:
   static void DestroyUploadLastDir();
 
   void MaybeLoadImage();
+
+  void SetSelectionProperties(const nsTextEditorState::SelectionProperties& aProps)
+  {
+    MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
+    mSelectionCached = true;
+    mSelectionProperties = aProps;
+  }
+  bool IsSelectionCached() const
+  {
+    MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
+    return mSelectionCached;
+  }
+  void ClearSelectionCached()
+  {
+    MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
+    mSelectionCached = false;
+  }
+  nsTextEditorState::SelectionProperties& GetSelectionProperties()
+  {
+    MOZ_ASSERT(mType == NS_FORM_INPUT_NUMBER);
+    return mSelectionProperties;
+  }
 
   // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
@@ -1255,6 +1277,13 @@ protected:
    */
   nsCOMPtr<nsITimer> mProgressTimer;
 
+  /**
+   * The selection properties cache for number controls.  This is needed because
+   * the number controls don't recycle their text field, so the normal cache in
+   * nsTextEditorState cannot do its job.
+   */
+  nsTextEditorState::SelectionProperties mSelectionProperties;
+
   // Step scale factor values, for input types that have one.
   static const Decimal kStepScaleFactorDate;
   static const Decimal kStepScaleFactorNumberRange;
@@ -1295,6 +1324,7 @@ protected:
   bool                     mNumberControlSpinnerIsSpinning : 1;
   bool                     mNumberControlSpinnerSpinsUp : 1;
   bool                     mPickerRunning : 1;
+  bool                     mSelectionCached : 1;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

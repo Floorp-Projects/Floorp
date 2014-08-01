@@ -7,6 +7,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
+const Cu = Components.utils;
 
 const POSITION_UNAVAILABLE = Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE;
 const SETTINGS_DEBUG_ENABLED = "geolocation.debugging.enabled";

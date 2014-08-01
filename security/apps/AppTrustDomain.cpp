@@ -10,7 +10,7 @@
 
 #include "AppTrustDomain.h"
 #include "certdb.h"
-#include "pkix/pkix.h"
+#include "pkix/pkixnss.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsIX509CertDB.h"
 #include "nsNSSCertificate.h"
@@ -93,15 +93,14 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
   return SECSuccess;
 }
 
-SECStatus
-AppTrustDomain::FindIssuer(const SECItem& encodedIssuerName,
-                           IssuerChecker& checker, PRTime time)
+Result
+AppTrustDomain::FindIssuer(Input encodedIssuerName, IssuerChecker& checker,
+                           PRTime time)
 
 {
   MOZ_ASSERT(mTrustedRoot);
   if (!mTrustedRoot) {
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_INVALID_STATE;
   }
 
   // TODO(bug 1035418): If/when mozilla::pkix relaxes the restriction that
@@ -112,18 +111,26 @@ AppTrustDomain::FindIssuer(const SECItem& encodedIssuerName,
   // 1. First, try the trusted trust anchor.
   // 2. Secondly, iterate through the certificates that were stored in the CMS
   //    message, passing each one to checker.Check.
+  SECItem encodedIssuerNameSECItem =
+    UnsafeMapInputToSECItem(encodedIssuerName);
   ScopedCERTCertList
     candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
-                                          &encodedIssuerName, time, true));
+                                          &encodedIssuerNameSECItem, time,
+                                          true));
   if (candidates) {
     for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
          !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
+      Input certDER;
+      Result rv = certDER.Init(n->cert->derCert.data, n->cert->derCert.len);
+      if (rv != Success) {
+        continue; // probably too big
+      }
+
       bool keepGoing;
-      SECStatus srv = checker.Check(n->cert->derCert,
-                                    nullptr/*additionalNameConstraints*/,
-                                    keepGoing);
-      if (srv != SECSuccess) {
-        return SECFailure;
+      rv = checker.Check(certDER, nullptr/*additionalNameConstraints*/,
+                         keepGoing);
+      if (rv != Success) {
+        return rv;
       }
       if (!keepGoing) {
         break;
@@ -131,25 +138,22 @@ AppTrustDomain::FindIssuer(const SECItem& encodedIssuerName,
     }
   }
 
-  return SECSuccess;
+  return Success;
 }
 
-SECStatus
+Result
 AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                              const CertPolicyId& policy,
-                             const SECItem& candidateCertDER,
-                     /*out*/ TrustLevel* trustLevel)
+                             Input candidateCertDER,
+                     /*out*/ TrustLevel& trustLevel)
 {
   MOZ_ASSERT(policy.IsAnyPolicy());
-  MOZ_ASSERT(trustLevel);
   MOZ_ASSERT(mTrustedRoot);
-  if (!trustLevel || !policy.IsAnyPolicy()) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return SECFailure;
+  if (!policy.IsAnyPolicy()) {
+    return Result::FATAL_ERROR_INVALID_ARGS;
   }
   if (!mTrustedRoot) {
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_INVALID_STATE;
   }
 
   // Handle active distrust of the certificate.
@@ -157,12 +161,13 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   // XXX: This would be cleaner and more efficient if we could get the trust
   // information without constructing a CERTCertificate here, but NSS doesn't
   // expose it in any other easy-to-use fashion.
+  SECItem candidateCertDERSECItem =
+    UnsafeMapInputToSECItem(candidateCertDER);
   ScopedCERTCertificate candidateCert(
-    CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                            const_cast<SECItem*>(&candidateCertDER), nullptr,
-                            false, true));
+    CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &candidateCertDERSECItem,
+                            nullptr, false, true));
   if (!candidateCert) {
-    return SECFailure;
+    return MapPRErrorCodeToResult(PR_GetError());
   }
 
   CERTCertTrust trust;
@@ -179,54 +184,59 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                               : CERTDB_TRUSTED;
     if (((flags & (relevantTrustBit | CERTDB_TERMINAL_RECORD)))
             == CERTDB_TERMINAL_RECORD) {
-      *trustLevel = TrustLevel::ActivelyDistrusted;
-      return SECSuccess;
+      trustLevel = TrustLevel::ActivelyDistrusted;
+      return Success;
     }
   }
 
   // mTrustedRoot is the only trust anchor for this validation.
   if (CERT_CompareCerts(mTrustedRoot.get(), candidateCert.get())) {
-    *trustLevel = TrustLevel::TrustAnchor;
-    return SECSuccess;
+    trustLevel = TrustLevel::TrustAnchor;
+    return Success;
   }
 
-  *trustLevel = TrustLevel::InheritsTrust;
-  return SECSuccess;
+  trustLevel = TrustLevel::InheritsTrust;
+  return Success;
 }
 
-SECStatus
+Result
 AppTrustDomain::VerifySignedData(const SignedDataWithSignature& signedData,
-                                 const SECItem& subjectPublicKeyInfo)
+                                 Input subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
                                            mPinArg);
 }
 
-SECStatus
-AppTrustDomain::DigestBuf(const SECItem& item, /*out*/ uint8_t* digestBuf,
+Result
+AppTrustDomain::DigestBuf(Input item, /*out*/ uint8_t* digestBuf,
                           size_t digestBufLen)
 {
   return ::mozilla::pkix::DigestBuf(item, digestBuf, digestBufLen);
 }
 
-SECStatus
+Result
 AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, PRTime time,
-                                /*optional*/ const SECItem*,
-                                /*optional*/ const SECItem*)
+                                /*optional*/ const Input*,
+                                /*optional*/ const Input*)
 {
   // We don't currently do revocation checking. If we need to distrust an Apps
   // certificate, we will use the active distrust mechanism.
-  return SECSuccess;
+  return Success;
 }
 
-SECStatus
+Result
 AppTrustDomain::IsChainValid(const DERArray& certChain)
 {
-  return ConstructCERTCertListFromReversedDERArray(certChain, mCertChain);
+  SECStatus srv = ConstructCERTCertListFromReversedDERArray(certChain,
+                                                            mCertChain);
+  if (srv != SECSuccess) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  return Success;
 }
 
-SECStatus
-AppTrustDomain::CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+Result
+AppTrustDomain::CheckPublicKey(Input subjectPublicKeyInfo)
 {
   return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
 }

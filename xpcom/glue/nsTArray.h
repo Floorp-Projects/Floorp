@@ -31,7 +31,11 @@ class Heap;
 
 class nsRegion;
 class nsIntRegion;
-
+namespace mozilla {
+namespace layers {
+struct TileClient;
+}
+}
 //
 // nsTArray is a resizable array class, like std::vector.
 //
@@ -645,6 +649,13 @@ struct nsTArray_CopyChooser<nsIntRegion>
 {
   typedef nsTArray_CopyWithConstructors<nsIntRegion> Type;
 };
+
+template<>
+struct nsTArray_CopyChooser<mozilla::layers::TileClient>
+{
+  typedef nsTArray_CopyWithConstructors<mozilla::layers::TileClient> Type;
+};
+
 
 //
 // Base class for nsTArray_Impl that is templated on element type and derived

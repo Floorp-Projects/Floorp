@@ -12,5 +12,4 @@ DIRS += [
     'xul',
 ]
 
-TEST_DIRS += ['test']
-
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

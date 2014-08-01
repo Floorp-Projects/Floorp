@@ -2241,15 +2241,6 @@ private:
   }
 };
 
-static bool
-JSONCreator(const jschar* aBuf, uint32_t aLen, void* aData)
-{
-  nsAString* result = static_cast<nsAString*>(aData);
-  result->Append(static_cast<const char16_t*>(aBuf),
-                 static_cast<uint32_t>(aLen));
-  return true;
-}
-
 template<class KeyEncryptTask>
 class WrapKeyTask : public ExportKeyTask
 {
@@ -2273,30 +2264,11 @@ private:
   nsRefPtr<KeyEncryptTask> mTask;
   bool mResolved;
 
-  static bool StringifyJWK(const JsonWebKey& aJwk, nsAString& aRetVal)
-  {
-    // XXX: This should move into DictionaryBase and Codegen.py,
-    //      in the same way as ParseJSON is split out. (Bug 1038399)
-    // We use AutoSafeJSContext even though the exact compartment
-    // doesn't matter (since we're making an XPCOM string)
-    MOZ_ASSERT(NS_IsMainThread());
-    AutoSafeJSContext cx;
-    JS::Rooted<JS::Value> obj(cx);
-    bool ok = ToJSValue(cx, aJwk, &obj);
-    if (!ok) {
-      JS_ClearPendingException(cx);
-      return false;
-    }
-
-    return JS_Stringify(cx, &obj, JS::NullPtr(), JS::NullHandleValue,
-                        JSONCreator, &aRetVal);
-  }
-
   virtual nsresult AfterCrypto() MOZ_OVERRIDE {
     // If wrapping JWK, stringify the JSON
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       nsAutoString json;
-      if (!StringifyJWK(mJwk, json)) {
+      if (!mJwk.ToJSON(json)) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
 

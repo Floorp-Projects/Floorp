@@ -55,9 +55,11 @@ if CONFIG['MOZ_EME']:
     DIRS += ['eme']
 
 TEST_DIRS += [
-    'test',
     'gtest',
 ]
+
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 EXPORTS += [
     'AbstractMediaDecoder.h',

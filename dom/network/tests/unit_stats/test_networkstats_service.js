@@ -47,7 +47,7 @@ add_test(function test_networkStatsAvailable_ok() {
     NetworkStatsService.networkStatsAvailable(function (success, msg) {
       do_check_eq(success, true);
       run_next_test();
-    }, netId, true, 1234, 4321, new Date());
+    }, netId, true, 1234, 4321, Date.now());
   });
 });
 
@@ -58,7 +58,7 @@ add_test(function test_networkStatsAvailable_failure() {
     NetworkStatsService.networkStatsAvailable(function (success, msg) {
       do_check_eq(success, false);
       run_next_test();
-    }, netId, false, 1234, 4321, new Date());
+    }, netId, false, 1234, 4321, Date.now());
   });
 });
 

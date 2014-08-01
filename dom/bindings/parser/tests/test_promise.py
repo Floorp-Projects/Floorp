@@ -2,9 +2,9 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
-            interface Promise {};
+            interface _Promise {};
             interface A {
-              legacycaller Promise foo();
+              legacycaller Promise<any> foo();
             };
         """)
         results = parser.finish()
@@ -18,9 +18,9 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
-            interface Promise {};
+            interface _Promise {};
             interface A {
-              Promise foo();
+              Promise<any> foo();
               long foo(long arg);
             };
         """)
@@ -35,10 +35,10 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
-            interface Promise {};
+            interface _Promise {};
             interface A {
               long foo(long arg);
-              Promise foo();
+              Promise<any> foo();
             };
         """)
         results = parser.finish();
@@ -50,10 +50,10 @@ def WebIDLTest(parser, harness):
 
     parser = parser.reset()
     parser.parse("""
-        interface Promise {};
+        interface _Promise {};
         interface A {
-          Promise foo();
-          Promise foo(long arg);
+          Promise<any> foo();
+          Promise<any> foo(long arg);
         };
     """)
     results = parser.finish();
