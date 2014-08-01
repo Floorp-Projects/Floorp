@@ -22,19 +22,38 @@ DesktopDeviceInfoX11::DesktopDeviceInfoX11() {
 DesktopDeviceInfoX11::~DesktopDeviceInfoX11() {
 }
 
-int32_t DesktopDeviceInfoX11::Init() {
 #if !defined(MULTI_MONITOR_SCREENSHARE)
+int32_t DesktopDeviceInfoX11::MultiMonitorScreenshare()
+{
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
-  if(pDesktopDeviceInfo){
+  if (pDesktopDeviceInfo) {
     pDesktopDeviceInfo->setScreenId(0);
     pDesktopDeviceInfo->setDeviceName("Primary Monitor");
     pDesktopDeviceInfo->setUniqueIdName("\\screen\\monitor#1");
 
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
+  return 0;
+}
+#endif
+
+int32_t DesktopDeviceInfoX11::Init() {
+#if !defined(MULTI_MONITOR_SCREENSHARE)
+  MultiMonitorScreenshare();
 #endif
 
   initializeWindowList();
+
+  return 0;
+}
+
+int32_t DesktopDeviceInfoX11::Refresh() {
+#if !defined(MULTI_MONITOR_SCREENSHARE)
+  desktop_display_list_.clear();
+  MultiMonitorScreenshare();
+#endif
+
+  RefreshWindowList();
 
   return 0;
 }

@@ -42,6 +42,7 @@ public:
 
     int32_t Init();
     virtual uint32_t NumberOfDevices();
+    int32_t Refresh() { return 0; }
 
     /*
      * Returns the available capture devices.
