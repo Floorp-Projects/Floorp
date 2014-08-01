@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/AsmJSLink.h"
+#include "asmjs/AsmJSLink.h"
 
 #include "mozilla/PodOperations.h"
 
@@ -17,8 +17,8 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
+#include "asmjs/AsmJSModule.h"
 #include "frontend/BytecodeCompiler.h"
-#include "jit/AsmJSModule.h"
 #include "jit/Ion.h"
 #include "jit/JitCommon.h"
 #ifdef JS_ION_PERF
@@ -185,11 +185,11 @@ ValidateMathBuiltinFunction(JSContext *cx, AsmJSModule::Global &global, HandleVa
       case AsmJSMathBuiltin_floor: native = math_floor; break;
       case AsmJSMathBuiltin_exp: native = math_exp; break;
       case AsmJSMathBuiltin_log: native = math_log; break;
-      case AsmJSMathBuiltin_pow: native = js_math_pow; break;
-      case AsmJSMathBuiltin_sqrt: native = js_math_sqrt; break;
-      case AsmJSMathBuiltin_min: native = js_math_min; break;
-      case AsmJSMathBuiltin_max: native = js_math_max; break;
-      case AsmJSMathBuiltin_abs: native = js_math_abs; break;
+      case AsmJSMathBuiltin_pow: native = math_pow; break;
+      case AsmJSMathBuiltin_sqrt: native = math_sqrt; break;
+      case AsmJSMathBuiltin_min: native = math_min; break;
+      case AsmJSMathBuiltin_max: native = math_max; break;
+      case AsmJSMathBuiltin_abs: native = math_abs; break;
       case AsmJSMathBuiltin_atan2: native = math_atan2; break;
       case AsmJSMathBuiltin_imul: native = math_imul; break;
       case AsmJSMathBuiltin_fround: native = math_fround; break;

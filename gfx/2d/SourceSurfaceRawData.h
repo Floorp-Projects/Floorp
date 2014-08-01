@@ -32,6 +32,8 @@ public:
                         SurfaceFormat aFormat,
                         bool aOwnData);
 
+  virtual void GuaranteePersistance();
+
 private:
   uint8_t *mRawData;
   int32_t mStride;

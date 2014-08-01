@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_AsmJSModule_h
-#define jit_AsmJSModule_h
+#ifndef asmjs_AsmJSModule_h
+#define asmjs_AsmJSModule_h
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
@@ -13,9 +13,9 @@
 
 #include "jsscript.h"
 
+#include "asmjs/AsmJSFrameIterator.h"
+#include "asmjs/AsmJSValidate.h"
 #include "gc/Marking.h"
-#include "jit/AsmJS.h"
-#include "jit/AsmJSFrameIterator.h"
 #include "jit/IonMacroAssembler.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
@@ -1223,4 +1223,4 @@ class AsmJSModuleObject : public JSObject
 
 }  // namespace js
 
-#endif /* jit_AsmJSModule_h */
+#endif /* asmjs_AsmJSModule_h */
