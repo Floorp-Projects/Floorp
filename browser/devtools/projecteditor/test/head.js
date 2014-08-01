@@ -14,6 +14,7 @@ const ProjectEditor = devtools.require("projecteditor/projecteditor");
 const TEST_URL_ROOT = "http://mochi.test:8888/browser/browser/devtools/projecteditor/test/";
 const SAMPLE_WEBAPP_URL = TEST_URL_ROOT + "/helper_homepage.html";
 let TEMP_PATH;
+let TEMP_FOLDER_NAME = "ProjectEditor" + (new Date().getTime());
 
 // All test are asynchronous
 waitForExplicitFinish();
@@ -29,6 +30,7 @@ registerCleanupFunction(() => gDevTools.testing = false);
 registerCleanupFunction(() => {
   // Services.prefs.clearUserPref("devtools.dump.emit");
   TEMP_PATH = null;
+  TEMP_FOLDER_NAME = null;
 });
 
 // Auto close the toolbox and close the test tabs when the test ends
@@ -90,13 +92,22 @@ function loadHelperScript(filePath) {
 }
 
 function addProjectEditorTabForTempDirectory(opts = {}) {
-  TEMP_PATH = buildTempDirectoryStructure();
+  try {
+    TEMP_PATH = buildTempDirectoryStructure();
+  } catch (e) {
+    // Bug 1037292 - The test servers sometimes are unable to
+    // write to the temporary directory due to locked files
+    // or access denied errors.  Try again if this failed.
+    info ("Project Editor temp directory creation failed.  Trying again.");
+    TEMP_PATH = buildTempDirectoryStructure();
+  }
   let customOpts = {
     name: "Test",
     iconUrl: "chrome://browser/skin/devtools/tool-options.svg",
     projectOverviewURL: SAMPLE_WEBAPP_URL
   };
 
+  info ("Adding a project editor tab for editing at: " + TEMP_PATH);
   return addProjectEditorTab(opts).then((projecteditor) => {
     return projecteditor.setProjectToAppPath(TEMP_PATH, customOpts).then(() => {
       return projecteditor;
@@ -128,19 +139,22 @@ function addProjectEditorTab(opts = {}) {
  */
 function buildTempDirectoryStructure() {
 
+  let dirName = TEMP_FOLDER_NAME;
+  info ("Building a temporary directory at " + dirName);
+
   // First create (and remove) the temp dir to discard any changes
-  let TEMP_DIR = FileUtils.getDir("TmpD", ["ProjectEditor"], true);
+  let TEMP_DIR = FileUtils.getDir("TmpD", [dirName], true);
   TEMP_DIR.remove(true);
 
   // Now rebuild our fake project.
-  TEMP_DIR = FileUtils.getDir("TmpD", ["ProjectEditor"], true);
+  TEMP_DIR = FileUtils.getDir("TmpD", [dirName], true);
 
-  FileUtils.getDir("TmpD", ["ProjectEditor", "css"], true);
-  FileUtils.getDir("TmpD", ["ProjectEditor", "data"], true);
-  FileUtils.getDir("TmpD", ["ProjectEditor", "img", "icons"], true);
-  FileUtils.getDir("TmpD", ["ProjectEditor", "js"], true);
+  FileUtils.getDir("TmpD", [dirName, "css"], true);
+  FileUtils.getDir("TmpD", [dirName, "data"], true);
+  FileUtils.getDir("TmpD", [dirName, "img", "icons"], true);
+  FileUtils.getDir("TmpD", [dirName, "js"], true);
 
-  let htmlFile = FileUtils.getFile("TmpD", ["ProjectEditor", "index.html"]);
+  let htmlFile = FileUtils.getFile("TmpD", [dirName, "index.html"]);
   htmlFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   writeToFileSync(htmlFile, [
     '<!DOCTYPE html>',
@@ -156,14 +170,14 @@ function buildTempDirectoryStructure() {
     '</html>'].join("\n")
   );
 
-  let readmeFile = FileUtils.getFile("TmpD", ["ProjectEditor", "README.md"]);
+  let readmeFile = FileUtils.getFile("TmpD", [dirName, "README.md"]);
   readmeFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   writeToFileSync(readmeFile, [
     '## Readme'
     ].join("\n")
   );
 
-  let licenseFile = FileUtils.getFile("TmpD", ["ProjectEditor", "LICENSE"]);
+  let licenseFile = FileUtils.getFile("TmpD", [dirName, "LICENSE"]);
   licenseFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   writeToFileSync(licenseFile, [
    '/* This Source Code Form is subject to the terms of the Mozilla Public',
@@ -172,7 +186,7 @@ function buildTempDirectoryStructure() {
     ].join("\n")
   );
 
-  let cssFile = FileUtils.getFile("TmpD", ["ProjectEditor", "css", "styles.css"]);
+  let cssFile = FileUtils.getFile("TmpD", [dirName, "css", "styles.css"]);
   cssFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   writeToFileSync(cssFile, [
     'body {',
@@ -181,13 +195,13 @@ function buildTempDirectoryStructure() {
     ].join("\n")
   );
 
-  FileUtils.getFile("TmpD", ["ProjectEditor", "js", "script.js"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  FileUtils.getFile("TmpD", [dirName, "js", "script.js"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
-  FileUtils.getFile("TmpD", ["ProjectEditor", "img", "fake.png"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  FileUtils.getFile("TmpD", ["ProjectEditor", "img", "icons", "16x16.png"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  FileUtils.getFile("TmpD", ["ProjectEditor", "img", "icons", "32x32.png"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  FileUtils.getFile("TmpD", ["ProjectEditor", "img", "icons", "128x128.png"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  FileUtils.getFile("TmpD", ["ProjectEditor", "img", "icons", "vector.svg"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  FileUtils.getFile("TmpD", [dirName, "img", "fake.png"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  FileUtils.getFile("TmpD", [dirName, "img", "icons", "16x16.png"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  FileUtils.getFile("TmpD", [dirName, "img", "icons", "32x32.png"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  FileUtils.getFile("TmpD", [dirName, "img", "icons", "128x128.png"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  FileUtils.getFile("TmpD", [dirName, "img", "icons", "vector.svg"]).createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
 
   return TEMP_DIR.path;
 }
@@ -241,7 +255,7 @@ function writeToFileSync(file, data) {
 }
 
 function getTempFile(path) {
-  let parts = ["ProjectEditor"];
+  let parts = [TEMP_FOLDER_NAME];
   parts = parts.concat(path.split("/"));
   return FileUtils.getFile("TmpD", parts);
 }
