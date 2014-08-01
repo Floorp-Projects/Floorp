@@ -12,7 +12,7 @@
 #include "jsfun.h"
 #include "jsscript.h"
 
-#include "jit/AsmJSFrameIterator.h"
+#include "asmjs/AsmJSFrameIterator.h"
 #include "jit/JitFrameIterator.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
 #include "jit/Registers.h" // for RegisterDump

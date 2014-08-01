@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_AsmJSFrameIterator_h
-#define jit_AsmJSFrameIterator_h
+#ifndef asmjs_AsmJSFrameIterator_h
+#define asmjs_AsmJSFrameIterator_h
 
 #include "mozilla/NullPtr.h"
 
@@ -159,4 +159,4 @@ GenerateAsmJSExitEpilogue(jit::MacroAssembler &masm, unsigned framePushed, AsmJS
 
 } // namespace js
 
-#endif // jit_AsmJSFrameIterator_h
+#endif // asmjs_AsmJSFrameIterator_h

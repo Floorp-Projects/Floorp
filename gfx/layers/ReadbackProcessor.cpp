@@ -7,7 +7,6 @@
 #include <sys/types.h>                  // for int32_t
 #include "Layers.h"                     // for Layer, ThebesLayer, etc
 #include "ReadbackLayer.h"              // for ReadbackLayer, ReadbackSink
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxContext.h"                 // for gfxContext
 #include "gfxRect.h"                    // for gfxRect
