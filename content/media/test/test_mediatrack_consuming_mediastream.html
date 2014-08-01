@@ -48,9 +48,7 @@ function startTest() {
 
       function checkTrackRemoved() {
         if (isPlaying) {
-          is(audioOnremovetrack, 1, 'Calls of onremovetrack on audioTracks should be 1.');
           is(element.audioTracks.length, 0, 'The length of audioTracks should be 0.');
-          is(videoOnremovetrack, 1, 'Calls of onremovetrack on videoTracks should be 1.');
           is(element.videoTracks.length, 0, 'The length of videoTracks should be 0.');
         }
       }
