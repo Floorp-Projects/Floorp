@@ -213,12 +213,6 @@ CommandFunc NetworkUtils::sStopDhcpServerChain[] = {
   NetworkUtils::setDhcpServerSuccess
 };
 
-CommandFunc NetworkUtils::sNetworkInterfaceStatsChain[] = {
-  NetworkUtils::getRxBytes,
-  NetworkUtils::getTxBytes,
-  NetworkUtils::networkInterfaceStatsSuccess
-};
-
 CommandFunc NetworkUtils::sNetworkInterfaceEnableAlarmChain[] = {
   NetworkUtils::enableAlarm,
   NetworkUtils::setQuota,
@@ -619,29 +613,6 @@ void NetworkUtils::clearWifiTetherParms(CommandChain* aChain,
   next(aChain, false, aResult);
 }
 
-void NetworkUtils::getRxBytes(CommandChain* aChain,
-                              CommandCallback aCallback,
-                              NetworkResultOptions& aResult)
-{
-  char command[MAX_COMMAND_SIZE];
-  snprintf(command, MAX_COMMAND_SIZE - 1, "interface readrxcounter %s", GET_CHAR(mIfname));
-
-  doCommand(command, aChain, aCallback);
-}
-
-void NetworkUtils::getTxBytes(CommandChain* aChain,
-                              CommandCallback aCallback,
-                              NetworkResultOptions& aResult)
-{
-  NetworkParams& options = aChain->getParams();
-  options.mRxBytes = atof(NS_ConvertUTF16toUTF8(aResult.mResultReason).get());
-
-  char command[MAX_COMMAND_SIZE];
-  snprintf(command, MAX_COMMAND_SIZE - 1, "interface readtxcounter %s", GET_CHAR(mIfname));
-
-  doCommand(command, aChain, aCallback);
-}
-
 void NetworkUtils::enableAlarm(CommandChain* aChain,
                                CommandCallback aCallback,
                                NetworkResultOptions& aResult)
@@ -994,20 +965,6 @@ void NetworkUtils::usbTetheringSuccess(CommandChain* aChain,
   postMessage(aChain->getParams(), aResult);
 }
 
-void NetworkUtils::networkInterfaceStatsFail(NetworkParams& aOptions, NetworkResultOptions& aResult)
-{
-  postMessage(aOptions, aResult);
-}
-
-void NetworkUtils::networkInterfaceStatsSuccess(CommandChain* aChain,
-                                                CommandCallback aCallback,
-                                                NetworkResultOptions& aResult)
-{
-  ASSIGN_FIELD(mRxBytes)
-  ASSIGN_FIELD_VALUE(mTxBytes, atof(NS_ConvertUTF16toUTF8(aResult.mResultReason).get()))
-  postMessage(aChain->getParams(), aResult);
-}
-
 void NetworkUtils::networkInterfaceAlarmFail(NetworkParams& aOptions, NetworkResultOptions& aResult)
 {
   postMessage(aOptions, aResult);
@@ -1109,7 +1066,6 @@ void NetworkUtils::ExecuteCommand(NetworkParams aOptions)
     BUILD_ENTRY(removeHostRoutes),
     BUILD_ENTRY(addSecondaryRoute),
     BUILD_ENTRY(removeSecondaryRoute),
-    BUILD_ENTRY(getNetworkInterfaceStats),
     BUILD_ENTRY(setNetworkInterfaceAlarm),
     BUILD_ENTRY(enableNetworkInterfaceAlarm),
     BUILD_ENTRY(disableNetworkInterfaceAlarm),
@@ -1515,16 +1471,6 @@ bool NetworkUtils::removeSecondaryRoute(NetworkParams& aOptions)
 
   doCommand(command, nullptr, nullptr);
   return true;
-}
-
-bool NetworkUtils::getNetworkInterfaceStats(NetworkParams& aOptions)
-{
-  DEBUG("getNetworkInterfaceStats: %s", GET_CHAR(mIfname));
-  aOptions.mRxBytes = -1;
-  aOptions.mTxBytes = -1;
-
-  RUN_CHAIN(aOptions, sNetworkInterfaceStatsChain, networkInterfaceStatsFail);
-  return  true;
 }
 
 bool NetworkUtils::setNetworkInterfaceAlarm(NetworkParams& aOptions)
