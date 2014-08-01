@@ -46,6 +46,16 @@ this.SearchSuggestionController.prototype = {
    */
   maxRemoteResults: 10,
 
+  /**
+   * The maximum time (ms) to wait before giving up on a remote suggestions.
+   */
+  remoteTimeout: REMOTE_TIMEOUT,
+
+  /**
+   * The additional parameter used when searching form history.
+   */
+  formHistoryParam: DEFAULT_FORM_HISTORY_PARAM,
+
   // Private properties
   /**
    * The last form history result used to improve the performance of subsequent searches.
@@ -168,7 +178,7 @@ this.SearchSuggestionController.prototype = {
           this._remoteResultTimer = Cc["@mozilla.org/timer;1"].
                                     createInstance(Ci.nsITimer);
           this._remoteResultTimer.initWithCallback(this._onRemoteTimeout.bind(this),
-                                                   REMOTE_TIMEOUT,
+                                                   this.remoteTimeout || REMOTE_TIMEOUT,
                                                    Ci.nsITimer.TYPE_ONE_SHOT);
         }
 
@@ -199,7 +209,8 @@ this.SearchSuggestionController.prototype = {
 
     let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"].
                       createInstance(Ci.nsIAutoCompleteSearch);
-    formHistory.startSearch(searchTerm, DEFAULT_FORM_HISTORY_PARAM, this._formHistoryResult,
+    formHistory.startSearch(searchTerm, this.formHistoryParam || DEFAULT_FORM_HISTORY_PARAM,
+                            this._formHistoryResult,
                             acSearchObserver);
     return deferredFormHistory;
   },
@@ -346,4 +357,14 @@ this.SearchSuggestionController.prototype = {
     this._deferredRemoteResult = null;
     this._searchString = null;
   },
+};
+
+/**
+ * Determines whether the given engine offers search suggestions.
+ *
+ * @param {nsISearchEngine} engine - The search engine
+ * @return {boolean} True if the engine offers suggestions and false otherwise.
+ */
+this.SearchSuggestionController.engineOffersSuggestions = function(engine) {
+ return engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON);
 };
