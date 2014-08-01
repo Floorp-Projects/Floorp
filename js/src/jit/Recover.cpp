@@ -697,7 +697,7 @@ RPow::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue result(cx);
 
     MOZ_ASSERT(base.isNumber() && power.isNumber());
-    if (!js_math_pow_handle(cx, base, power, &result))
+    if (!js::math_pow_handle(cx, base, power, &result))
         return false;
 
     iter.storeInstructionResult(result);
@@ -724,7 +724,7 @@ RPowHalf::recover(JSContext *cx, SnapshotIterator &iter) const
     power.setNumber(0.5);
 
     MOZ_ASSERT(base.isNumber());
-    if (!js_math_pow_handle(cx, base, power, &result))
+    if (!js::math_pow_handle(cx, base, power, &result))
         return false;
 
     iter.storeInstructionResult(result);
@@ -752,7 +752,7 @@ RMinMax::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue b(cx, iter.read());
     RootedValue result(cx);
 
-    if (!js_minmax_impl(cx, isMax_, a, b, &result))
+    if (!js::minmax_impl(cx, isMax_, a, b, &result))
         return false;
 
     iter.storeInstructionResult(result);
@@ -776,7 +776,7 @@ RAbs::recover(JSContext *cx, SnapshotIterator &iter) const
     RootedValue v(cx, iter.read());
     RootedValue result(cx);
 
-    if (!js_math_abs_handle(cx, v, &result))
+    if (!js::math_abs_handle(cx, v, &result))
         return false;
 
     iter.storeInstructionResult(result);
