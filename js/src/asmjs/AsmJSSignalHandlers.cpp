@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/AsmJSSignalHandlers.h"
+#include "asmjs/AsmJSSignalHandlers.h"
 
 #include "mozilla/DebugOnly.h"
 
+#include "asmjs/AsmJSModule.h"
 #include "assembler/assembler/MacroAssembler.h"
-#include "jit/AsmJSModule.h"
 #include "vm/Runtime.h"
 
 using namespace js;

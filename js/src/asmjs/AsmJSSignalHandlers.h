@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_AsmJSSignalHandlers_h
-#define jit_AsmJSSignalHandlers_h
+#ifndef asmjs_AsmJSSignalHandlers_h
+#define asmjs_AsmJSSignalHandlers_h
 
 struct JSRuntime;
 
@@ -52,4 +52,4 @@ class AsmJSMachExceptionHandler
 
 } // namespace js
 
-#endif // jit_AsmJSSignalHandlers_h
+#endif // asmjs_AsmJSSignalHandlers_h
