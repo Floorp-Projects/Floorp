@@ -1228,7 +1228,7 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
 
   LayerRect transformedCompositionBounds =
     GetCompositorSideCompositionBounds(scrollAncestor,
-                                       aPaintData->mTransformToCompBounds,
+                                       To3DMatrix(aPaintData->mTransformToCompBounds),
                                        viewTransform);
 
   TILING_LOG("TILING %p: Progressive update transformed compositor bounds %s\n", mThebesLayer, Stringify(transformedCompositionBounds).c_str());
