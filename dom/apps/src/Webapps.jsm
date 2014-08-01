@@ -151,6 +151,11 @@ XPCOMUtils.defineLazyGetter(this, "updateSvc", function() {
 const STORE_ID_PENDING_PREFIX = "#unknownID#";
 
 this.DOMApplicationRegistry = {
+  // pseudo-constants for the different application kinds.
+  get kPackaged()       "packaged",
+  get kHosted()         "hosted",
+  get kHostedAppcache() "hosted-appcache",
+
   // Path to the webapps.json file where we store the registry data.
   appsFile: null,
   webapps: { },
@@ -245,16 +250,16 @@ this.DOMApplicationRegistry = {
         }
 
         // Default storeId to "" and storeVersion to 0
-        if (this.webapps[id].storeId === undefined) {
-          this.webapps[id].storeId = "";
+        if (app.storeId === undefined) {
+          app.storeId = "";
         }
-        if (this.webapps[id].storeVersion === undefined) {
-          this.webapps[id].storeVersion = 0;
+        if (app.storeVersion === undefined) {
+          app.storeVersion = 0;
         }
 
         // Default role to "".
-        if (this.webapps[id].role === undefined) {
-          this.webapps[id].role = "";
+        if (app.role === undefined) {
+          app.role = "";
         }
 
         // At startup we can't be downloading, and the $TMP directory
@@ -342,6 +347,13 @@ this.DOMApplicationRegistry = {
         app.role = aResult.manifest.role || "";
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(aResult.redirects);
+        }
+        if (app.origin.startsWith("app://")) {
+          app.kind = this.kPackaged;
+        } else {
+          // Hosted apps, can be appcached or not.
+          app.kind = aResult.manifest.appcache_path ? this.kHostedAppcache
+                                                    : this.kHosted;
         }
       });
 
@@ -970,6 +982,13 @@ this.DOMApplicationRegistry = {
         app.role = localeManifest.role;
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(manifest.redirects);
+        }
+        if (app.origin.startsWith("app://")) {
+          app.kind = this.kPackaged;
+        } else {
+          // Hosted apps, can be appcached or not.
+          app.kind = aResult.manifest.appcache_path ? this.kHostedAppcache
+                                                    : this.kHosted;
         }
         this._registerSystemMessages(manifest, app);
         this._registerInterAppConnections(manifest, app);
@@ -1647,7 +1666,7 @@ this.DOMApplicationRegistry = {
   }),
 
   startOfflineCacheDownload: function(aManifest, aApp, aProfileDir, aIsUpdate) {
-    if (!aManifest.appcache_path) {
+    if (aApp.kind !== this.kHostedAppcache) {
       return;
     }
 
@@ -1755,8 +1774,7 @@ this.DOMApplicationRegistry = {
 
     // If the app is packaged and its manifestURL has an app:// scheme,
     // then we can't have an update.
-    if (app.origin.startsWith("app://") &&
-        app.manifestURL.startsWith("app://")) {
+    if (app.kind == this.kPackaged && app.manifestURL.startsWith("app://")) {
       sendError("NOT_UPDATABLE");
       return;
     }
@@ -1772,21 +1790,16 @@ this.DOMApplicationRegistry = {
 #endif
 
     if (onlyCheckAppCache) {
-      // Bail out for packaged apps.
-      if (app.origin.startsWith("app://")) {
+      // Bail out for packaged apps & hosted apps without appcache.
+      if (app.kind !== this.kHostedAppcache) {
         sendError("NOT_UPDATABLE");
         return;
       }
 
-      // We need the manifest to check if we have an appcache.
+      // We need the manifest to get the appcache path.
       this._readManifests([{ id: id }]).then((aResult) => {
-        let manifest = aResult[0].manifest;
-        if (!manifest.appcache_path) {
-          sendError("NOT_UPDATABLE");
-          return;
-        }
-
         debug("Checking only appcache for " + aData.manifestURL);
+        let manifest = aResult[0].manifest;
         // Check if the appcache is updatable, and send "downloadavailable" or
         // "downloadapplied".
         let updateObserver = {
@@ -1825,7 +1838,7 @@ this.DOMApplicationRegistry = {
     function onload(xhr, oldManifest) {
       debug("Got http status=" + xhr.status + " for " + aData.manifestURL);
       let oldHash = app.manifestHash;
-      let isPackage = app.origin.startsWith("app://");
+      let isPackage = app.kind == DOMApplicationRegistry.kPackaged;
 
       if (xhr.status == 200) {
         let manifest = xhr.response;
@@ -2069,7 +2082,7 @@ this.DOMApplicationRegistry = {
     this.webapps[aId] = aApp;
     yield this._saveApps();
 
-    if (!manifest.appcache_path) {
+    if (aApp.kind !== this.kHostedAppcache) {
       this.broadcastMessage("Webapps:UpdateState", {
         app: aApp,
         manifest: aApp.manifest,
@@ -2431,23 +2444,26 @@ this.DOMApplicationRegistry = {
     appObject.appStatus =
       aNewApp.appStatus || Ci.nsIPrincipal.APP_STATUS_INSTALLED;
 
-    if (aLocaleManifest.appcache_path) {
+    if (appObject.kind == this.kHostedAppcache) {
       appObject.installState = "pending";
       appObject.downloadAvailable = true;
       appObject.downloading = true;
       appObject.downloadSize = 0;
       appObject.readyToApplyDownload = false;
-    } else if (aLocaleManifest.package_path) {
+    } else if (appObject.kind == this.kPackaged) {
       appObject.installState = "pending";
       appObject.downloadAvailable = true;
       appObject.downloading = true;
       appObject.downloadSize = aLocaleManifest.size;
       appObject.readyToApplyDownload = false;
-    } else {
+    } else if (appObject.kind == this.kHosted) {
       appObject.installState = "installed";
       appObject.downloadAvailable = false;
       appObject.downloading = false;
       appObject.readyToApplyDownload = false;
+    } else {
+      debug("Unknown app kind: " + appObject.kind);
+      throw Error("Unknown app kind: " + appObject.kind);
     }
 
     appObject.localId = aLocalId;
@@ -2574,6 +2590,13 @@ this.DOMApplicationRegistry = {
     let manifest =
       new ManifestHelper(jsonManifest, app.origin, app.manifestURL);
 
+    // Set the application kind.
+    if (aData.isPackage) {
+      app.kind = this.kPackaged;
+    } else {
+      app.kind = manifest.appcache_path ? this.kHostedAppcache : this.kHosted;
+    }
+
     let appObject = this._cloneApp(aData, app, manifest, jsonManifest, id, localId);
 
     this.webapps[id] = appObject;
@@ -2604,13 +2627,13 @@ this.DOMApplicationRegistry = {
 
     let dontNeedNetwork = false;
 
-    if (manifest.appcache_path) {
+    if (appObject.kind == this.kHostedAppcache) {
       this.queuedDownload[app.manifestURL] = {
         manifest: manifest,
         app: appObject,
         profileDir: aProfileDir
       }
-    } else if (manifest.package_path) {
+    } else if (appObject.kind == this.kPackaged) {
       // If it is a local app then it must been installed from a local file
       // instead of web.
       // In that case, we would already have the manifest, not just the update
@@ -2621,7 +2644,7 @@ this.DOMApplicationRegistry = {
       if (aData.app.localInstallPath) {
         dontNeedNetwork = true;
         jsonManifest.package_path = "file://" + aData.app.localInstallPath;
-      }   
+      }
 #endif
 
       // origin for install apps is meaningless here, since it's app:// and this
