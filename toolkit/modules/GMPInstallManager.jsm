@@ -27,7 +27,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
 
 this.EXPORTED_SYMBOLS = ["GMPInstallManager", "GMPExtractor", "GMPDownloader",
-                         "GMPAddon", "GMPPrefs"];
+                         "GMPAddon", "GMPPrefs", "OPEN_H264_ID"];
 
 var gLocale = null;
 const PARENT_LOGGER_ID = "GMPInstallManager";
@@ -109,6 +109,7 @@ let GMPPrefs = {
   KEY_ADDON_LAST_UPDATE: "media.{0}.lastUpdate",
   KEY_ADDON_PATH: "media.{0}.path",
   KEY_ADDON_VERSION: "media.{0}.version",
+  KEY_ADDON_AUTOUPDATE: "media.{0}.autoupdate",
   KEY_URL: "media.gmp-manager.url",
   KEY_URL_OVERRIDE: "media.gmp-manager.url.override",
   KEY_CERT_CHECKATTRS: "media.gmp-manager.cert.checkAttributes",
@@ -414,11 +415,20 @@ GMPInstallManager.prototype = {
     GMPPrefs.set(GMPPrefs.KEY_UPDATE_LAST_CHECK, now);
   },
   /**
-   * Wrapper for checkForAddons and installaddon.
+   * Wrapper for checkForAddons and installAddon.
    * Will only install if not already installed and will log the results.
+   * This will only install/update the OpenH264 plugin
    */
   simpleCheckAndInstall: function() {
     let log = getScopedLogger("GMPInstallManager.simpleCheckAndInstall");
+
+    let autoUpdate = GMPPrefs.get(GMPPrefs.KEY_ADDON_AUTOUPDATE,
+                                  OPEN_H264_ID, true);
+    if (!autoUpdate) {
+        log.info("Auto-update is off for openh264, aborting check.");
+        return Promise.resolve({status: "check-disabled"});
+    }
+
     let secondsBetweenChecks =
       GMPPrefs.get(GMPPrefs.KEY_UPDATE_SECONDS_BETWEEN_CHECKS, undefined,
                    DEFAULT_SECONDS_BETWEEN_CHECKS)
@@ -427,9 +437,10 @@ GMPInstallManager.prototype = {
              " seconds ago, minimum seconds: " + secondsBetweenChecks);
     if (secondsBetweenChecks > secondsSinceLast) {
       log.info("Will not check for updates.");
-      return Promise.resolve();
+      return Promise.resolve({status: "too-frequent-no-check"});
     }
 
+    let deferred = Promise.defer();
     let promise = this.checkForAddons();
     promise.then(gmpAddons => {
       this._updateLastCheck();
@@ -441,22 +452,31 @@ GMPInstallManager.prototype = {
       });
       if (!addonsToInstall.length) {
         log.info("No new addons to install, returning");
-        return;
+        return deferred.resolve({status: "nothing-new-to-install"});
       }
+      // Only 1 addon will be returned because of the gmpAddon.isOpenH264
+      // check above.
       addonsToInstall.forEach(gmpAddon => {
         promise = this.installAddon(gmpAddon);
         promise.then(extractedPaths => {
           // installed!
           log.info("Addon installed successfully: " + gmpAddon.toString());
+          return deferred.resolve({status: "addon-install"});
         }, () => {
           if (!GMPPrefs.get(GMPPrefs.KEY_LOG_ENABLED)) {
-            Cu.reportError(gmpAddon.toString() + " could not be installed. Enable " +
+            Cu.reportError(gmpAddon.toString() +
+                           " could not be installed. Enable " +
                            GMPPrefs.KEY_LOG_ENABLED + " for details!");
           }
           log.error("Could not install addon: " + gmpAddon.toString());
+          deferred.reject();
         });
       });
+    }, () => {
+        log.error("Could not check for addons");
+        deferred.reject();
     });
+    return deferred.promise;
   },
 
   /**
