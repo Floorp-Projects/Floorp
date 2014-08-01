@@ -19,7 +19,7 @@ add_task(function() {
   let historyButton = document.getElementById("history-panelmenu");
   let historySubview = document.getElementById("PanelUI-history");
   let subviewShownPromise = subviewShown(historySubview);
-  EventUtils.synthesizeMouseAtCenter(historyButton, {});
+  historyButton.click();
   yield subviewShownPromise;
 
   let tabsFromOtherComputers = document.getElementById("sync-tabs-menuitem2");
@@ -34,7 +34,7 @@ add_task(function() {
   yield PanelUI.show({type: "command"});
 
   subviewShownPromise = subviewShown(historySubview);
-  EventUtils.synthesizeMouseAtCenter(historyButton, {});
+  historyButton.click();
   yield subviewShownPromise;
 
   is(tabsFromOtherComputers.hidden, false, "The Tabs From Other Computers menuitem should be shown when sync is enabled.");
