@@ -3013,6 +3013,55 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time to calculate the md5 hash for a backup"
   },
+  "PLACES_FAVICON_ICO_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the ICO favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_PNG_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the PNG favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_GIF_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the GIF favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_JPEG_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the JPEG favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_BMP_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the BMP favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_SVG_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the SVG favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_OTHER_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of favicon files without a specific file type probe, loaded from the web (Bytes)"
+  },
   "FENNEC_DISTRIBUTION_REFERRER_INVALID": {
     "expires_in_version": "never",
     "kind": "flag",
