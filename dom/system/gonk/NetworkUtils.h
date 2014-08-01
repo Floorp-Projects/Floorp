@@ -60,9 +60,6 @@ public:
     mDns1 = aOther.mDns1;
     mDns2 = aOther.mDns2;
     mDnses = aOther.mDnses;
-    mRxBytes = aOther.mRxBytes;
-    mTxBytes = aOther.mTxBytes;
-    mDate = aOther.mDate;
     mStartIp = aOther.mStartIp;
     mEndIp = aOther.mEndIp;
     mServerIp = aOther.mServerIp;
@@ -136,9 +133,6 @@ public:
     COPY_OPT_STRING_FIELD(mDns1, EmptyString())
     COPY_OPT_STRING_FIELD(mDns2, EmptyString())
     COPY_SEQUENCE_FIELD(mDnses, nsString)
-    COPY_OPT_FIELD(mRxBytes, -1)
-    COPY_OPT_FIELD(mTxBytes, -1)
-    COPY_OPT_STRING_FIELD(mDate, EmptyString())
     COPY_OPT_STRING_FIELD(mStartIp, EmptyString())
     COPY_OPT_STRING_FIELD(mEndIp, EmptyString())
     COPY_OPT_STRING_FIELD(mServerIp, EmptyString())
@@ -186,9 +180,6 @@ public:
   nsString mDns1;
   nsString mDns2;
   nsTArray<nsString> mDnses;
-  float mRxBytes;
-  float mTxBytes;
-  nsString mDate;
   nsString mStartIp;
   nsString mEndIp;
   nsString mServerIp;
@@ -271,7 +262,6 @@ private:
   bool removeNetworkRoute(NetworkParams& aOptions);
   bool addSecondaryRoute(NetworkParams& aOptions);
   bool removeSecondaryRoute(NetworkParams& aOptions);
-  bool getNetworkInterfaceStats(NetworkParams& aOptions);
   bool setNetworkInterfaceAlarm(NetworkParams& aOptions);
   bool enableNetworkInterfaceAlarm(NetworkParams& aOptions);
   bool disableNetworkInterfaceAlarm(NetworkParams& aOptions);
@@ -297,7 +287,6 @@ private:
   static CommandFunc sUpdateUpStreamChain[];
   static CommandFunc sStartDhcpServerChain[];
   static CommandFunc sStopDhcpServerChain[];
-  static CommandFunc sNetworkInterfaceStatsChain[];
   static CommandFunc sNetworkInterfaceEnableAlarmChain[];
   static CommandFunc sNetworkInterfaceDisableAlarmChain[];
   static CommandFunc sNetworkInterfaceSetAlarmChain[];
@@ -317,8 +306,6 @@ private:
   static void startSoftAP(PARAMS);
   static void stopSoftAP(PARAMS);
   static void clearWifiTetherParms(PARAMS);
-  static void getRxBytes(PARAMS);
-  static void getTxBytes(PARAMS);
   static void enableAlarm(PARAMS);
   static void disableAlarm(PARAMS);
   static void setQuota(PARAMS);
@@ -340,7 +327,6 @@ private:
   static void setInterfaceDns(PARAMS);
   static void wifiTetheringSuccess(PARAMS);
   static void usbTetheringSuccess(PARAMS);
-  static void networkInterfaceStatsSuccess(PARAMS);
   static void networkInterfaceAlarmSuccess(PARAMS);
   static void updateUpStreamSuccess(PARAMS);
   static void setDhcpServerSuccess(PARAMS);
@@ -357,7 +343,6 @@ private:
   static void usbTetheringFail(PARAMS);
   static void updateUpStreamFail(PARAMS);
   static void setDhcpServerFail(PARAMS);
-  static void networkInterfaceStatsFail(PARAMS);
   static void networkInterfaceAlarmFail(PARAMS);
   static void setDnsFail(PARAMS);
 #undef PARAMS
