@@ -109,3 +109,8 @@ window[sharingscreen][sharingvideo] > #shareSeparator,
 window[sharingscreen][sharingaudio] > #shareSeparator {
   display: -moz-box;
 }
+
+:-moz-any(#audioVideoButton, #screenShareButton,
+          #firefoxButton):-moz-focusring > .button-box {
+  border: none;
+}
