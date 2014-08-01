@@ -392,3 +392,8 @@ input[type=button] {
 .newtab-search-panel-engine[selected] {
   background: url("chrome://global/skin/menu/shared-menu-check.png") center left 4px no-repeat transparent;
 }
+
+.searchSuggestionTable {
+  font: message-box;
+  font-size: 16px;
+}
