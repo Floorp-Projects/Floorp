@@ -100,6 +100,7 @@ function _setAppProperties(aObj, aApp) {
   aObj.storeVersion = aApp.storeVersion || 0;
   aObj.role = aApp.role || "";
   aObj.redirects = aApp.redirects;
+  aObj.kind = aApp.kind;
 }
 
 this.AppsUtils = {
