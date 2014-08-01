@@ -21,11 +21,9 @@
     ", frecency INTEGER DEFAULT -1 NOT NULL" \
     ", last_visit_date INTEGER " \
     ", guid TEXT" \
+    ", foreign_count INTEGER DEFAULT 0 NOT NULL" \
   ")" \
 )
-#define MOZ_PLACES_COLUMNS \
-  "id, url, title, rev_host, visit_count, hidden, typed, favicon_id, " \
-  "frecency, last_visit_date"
 
 #define CREATE_MOZ_HISTORYVISITS NS_LITERAL_CSTRING( \
   "CREATE TABLE moz_historyvisits (" \
@@ -37,8 +35,6 @@
     ", session INTEGER" \
   ")" \
 )
-#define MOZ_HISTORYVISITS_COLUMNS \
-  "id, from_visit, place_id, visit_date, visit_type, session"
 
 
 #define CREATE_MOZ_INPUTHISTORY NS_LITERAL_CSTRING( \
