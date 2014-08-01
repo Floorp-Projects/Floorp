@@ -48,7 +48,8 @@ this.WebappRT = {
 
   get localeManifest() {
     return new ManifestHelper(this.config.app.manifest,
-                              this.config.app.origin);
+                              this.config.app.origin,
+                              this.config.app.manifestURL);
   },
 
   get appID() {
