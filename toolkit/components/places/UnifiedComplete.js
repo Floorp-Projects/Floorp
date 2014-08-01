@@ -22,25 +22,25 @@ const DEFAULT_BEHAVIOR = 0;
 const PREF_BRANCH = "browser.urlbar.";
 
 // Prefs are defined as [pref name, default value].
-const PREF_ENABLED =            [ "autocomplete.enabled", true ];
-const PREF_AUTOFILL =           [ "autoFill",             true ];
-const PREF_AUTOFILL_TYPED =     [ "autoFill.typed",       true ];
-const PREF_AUTOFILL_PRIORITY =  [ "autoFill.priority",    true ];
-const PREF_DELAY =              [ "delay",                  50 ];
-const PREF_BEHAVIOR =           [ "matchBehavior", MATCH_BOUNDARY_ANYWHERE ];
-const PREF_DEFAULT_BEHAVIOR =   [ "default.behavior", DEFAULT_BEHAVIOR ];
-const PREF_EMPTY_BEHAVIOR =     [ "default.behavior.emptyRestriction",
-                                  Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY |
-                                  Ci.mozIPlacesAutoComplete.BEHAVIOR_TYPED ];
-const PREF_FILTER_JS =          [ "filter.javascript",    true ];
-const PREF_MAXRESULTS =         [ "maxRichResults",         25 ];
-const PREF_RESTRICT_HISTORY =   [ "restrict.history",      "^" ];
-const PREF_RESTRICT_BOOKMARKS = [ "restrict.bookmark",     "*" ];
-const PREF_RESTRICT_TYPED =     [ "restrict.typed",        "~" ];
-const PREF_RESTRICT_TAG =       [ "restrict.tag",          "+" ];
-const PREF_RESTRICT_SWITCHTAB = [ "restrict.openpage",     "%" ];
-const PREF_MATCH_TITLE =        [ "match.title",           "#" ];
-const PREF_MATCH_URL =          [ "match.url",             "@" ];
+const PREF_ENABLED =                [ "autocomplete.enabled",   true ];
+const PREF_AUTOFILL =               [ "autoFill",               true ];
+const PREF_AUTOFILL_TYPED =         [ "autoFill.typed",         true ];
+const PREF_AUTOFILL_SEARCHENGINES = [ "autoFill.searchEngines", true ];
+const PREF_DELAY =                  [ "delay",                  50 ];
+const PREF_BEHAVIOR =               [ "matchBehavior", MATCH_BOUNDARY_ANYWHERE ];
+const PREF_DEFAULT_BEHAVIOR =       [ "default.behavior", DEFAULT_BEHAVIOR ];
+const PREF_EMPTY_BEHAVIOR =         [ "default.behavior.emptyRestriction",
+                                      Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY |
+                                      Ci.mozIPlacesAutoComplete.BEHAVIOR_TYPED ];
+const PREF_FILTER_JS =              [ "filter.javascript",      true ];
+const PREF_MAXRESULTS =             [ "maxRichResults",         25 ];
+const PREF_RESTRICT_HISTORY =       [ "restrict.history",       "^" ];
+const PREF_RESTRICT_BOOKMARKS =     [ "restrict.bookmark",      "*" ];
+const PREF_RESTRICT_TYPED =         [ "restrict.typed",         "~" ];
+const PREF_RESTRICT_TAG =           [ "restrict.tag",           "+" ];
+const PREF_RESTRICT_SWITCHTAB =     [ "restrict.openpage",      "%" ];
+const PREF_MATCH_TITLE =            [ "match.title",            "#" ];
+const PREF_MATCH_URL =              [ "match.url",              "@" ];
 
 // Match type constants.
 // These indicate what type of search function we should be using.
@@ -62,11 +62,14 @@ const QUERYTYPE_AUTOFILL_URL  = 3;
 // "comment" back into the title and the tag.
 const TITLE_TAGS_SEPARATOR = " \u2013 ";
 
+// This separator identifies the search engine name in the title.
+const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
+
 // Telemetry probes.
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
 
-// The default frecency value used when inserting priority results.
-const FRECENCY_PRIORITY_DEFAULT = 1000;
+// The default frecency value used when inserting search engine results.
+const FRECENCY_SEARCHENGINES_DEFAULT = 1000;
 
 // Sqlite result row index constants.
 const QUERYINDEX_QUERYTYPE     = 0;
@@ -359,7 +362,7 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.enabled = prefs.get(...PREF_ENABLED);
     store.autofill = prefs.get(...PREF_AUTOFILL);
     store.autofillTyped = prefs.get(...PREF_AUTOFILL_TYPED);
-    store.autofillPriority = prefs.get(...PREF_AUTOFILL_PRIORITY);
+    store.autofillSearchEngines = prefs.get(...PREF_AUTOFILL_SEARCHENGINES);
     store.delay = prefs.get(...PREF_DELAY);
     store.matchBehavior = prefs.get(...PREF_BEHAVIOR);
     store.filterJavaScript = prefs.get(...PREF_FILTER_JS);
@@ -629,8 +632,12 @@ Search.prototype = {
     this._pendingQuery = true;
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT);
 
+    // Since we call the synchronous parseSubmissionURL function later, we must
+    // wait for the initialization of PlacesSearchAutocompleteProvider first.
+    yield PlacesSearchAutocompleteProvider.ensureInitialized();
+
     // For any given search, we run many queries:
-    // 1) priority domains
+    // 1) search engine domains
     // 2) inline completion
     // 3) keywords (this._keywordQuery)
     // 4) adaptive learning (this._adaptiveQuery)
@@ -649,7 +656,7 @@ Search.prototype = {
         PlacesUtils.bookmarks.getURIForKeyword(this._searchTokens[0])) {
       queries.unshift(this._keywordQuery);
     } else if (this._searchTokens.length == 1) {
-      yield this._matchPriorityUrl();
+      yield this._matchSearchEngineUrl();
     }
 
     if (this._shouldAutofill) {
@@ -700,22 +707,21 @@ Search.prototype = {
     }
   }),
 
-  _matchPriorityUrl: function* () {
-    if (!Prefs.autofillPriority)
+  _matchSearchEngineUrl: function* () {
+    if (!Prefs.autofillSearchEngines)
       return;
 
-    // Handle priority matches for search engine domains.
-    let priorityMatch =
-        yield PlacesSearchAutocompleteProvider.findMatchByToken(this._searchString);
-    if (priorityMatch) {
+    let match = yield PlacesSearchAutocompleteProvider.findMatchByToken(
+                                                           this._searchString);
+    if (match) {
       this._result.setDefaultIndex(0);
       this._addFrecencyMatch({
-        value: priorityMatch.token,
-        comment: priorityMatch.engineName,
-        icon: priorityMatch.iconUrl,
+        value: match.token,
+        comment: match.engineName,
+        icon: match.iconUrl,
         style: "priority-search",
-        finalCompleteValue: priorityMatch.url,
-        frecency: FRECENCY_PRIORITY_DEFAULT
+        finalCompleteValue: match.url,
+        frecency: FRECENCY_SEARCHENGINES_DEFAULT
       });
     }
   },
@@ -754,6 +760,30 @@ Search.prototype = {
     this._frecencyMatches.sort((a, b) => a.frecency - b.frecency);
   },
 
+  _maybeRestyleSearchMatch: function (match) {
+    // Return if the URL does not represent a search result.
+    let parseResult =
+      PlacesSearchAutocompleteProvider.parseSubmissionURL(match.value);
+    if (!parseResult) {
+      return;
+    }
+
+    // Do not apply the special style if the user is doing a search from the
+    // location bar but the entered terms match an irrelevant portion of the
+    // URL. For example, "https://www.google.com/search?q=terms&client=firefox"
+    // when searching for "Firefox".
+    let terms = parseResult.terms.toLowerCase();
+    if (this._searchTokens.length > 0 &&
+        this._searchTokens.every(token => terms.indexOf(token) == -1)) {
+      return;
+    }
+
+    // Use the special separator that the binding will use to style the item.
+    match.style = "search " + match.style;
+    match.comment = parseResult.terms + TITLE_SEARCH_ENGINE_SEPARATOR +
+                    parseResult.engineName;
+  },
+
   _addMatch: function (match) {
     let notifyResults = false;
 
@@ -779,10 +809,19 @@ Search.prototype = {
         this._usedPlaceIds.add(match.placeId);
       this._usedURLs.add(urlMapKey);
 
+      if (!match.style) {
+        match.style = "favicon";
+      }
+
+      // Restyle past searches, unless they are bookmarks or special results.
+      if (match.style == "favicon") {
+        this._maybeRestyleSearchMatch(match);
+      }
+
       this._result.appendMatch(match.value,
                                match.comment,
                                match.icon || PlacesUtils.favicons.defaultFavicon.spec,
-                               match.style || "favicon",
+                               match.style,
                                match.finalCompleteValue);
       notifyResults = true;
     }
