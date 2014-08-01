@@ -127,6 +127,25 @@ public:
    * handle them. The event may need to be converted to a WidgetInputEvent
    * by the caller if it wants to do this.
    *
+   * The following values may be returned by this function:
+   * nsEventStatus_eConsumeNoDefault is returned to indicate the
+   *   caller should discard the event with extreme prejudice.
+   *   Currently this is only returned if the APZ determines that
+   *   something is in overscroll and the event should be ignored entirely.
+   *   There may be other scenarios where this return code might be used in
+   *   the future.
+   * nsEventStatus_eIgnore is returned to indicate that the APZ code didn't
+   *   use this event. This might be because it was directed at a point on
+   *   the screen where there was no APZ, or because the thing the user was
+   *   trying to do was not allowed. (For example, attempting to pan a
+   *   non-pannable document).
+   * nsEventStatus_eConsumeDoDefault is returned to indicate that the APZ
+   *   code may have used this event to do some user-visible thing. Note that
+   *   in some cases CONSUMED is returned even if the event was NOT used. This
+   *   is because we cannot always know at the time of event delivery whether
+   *   the event will be used or not. So we err on the side of sending
+   *   CONSUMED when we are uncertain.
+   *
    * @param aEvent input event object; is modified in-place
    * @param aOutTargetGuid returns the guid of the apzc this event was
    * delivered to. May be null.
@@ -149,6 +168,7 @@ public:
    * @param aEvent input event object; is modified in-place
    * @param aOutTargetGuid returns the guid of the apzc this event was
    * delivered to. May be null.
+   * @return See documentation for other ReceiveInputEvent above.
    */
   nsEventStatus ReceiveInputEvent(WidgetInputEvent& aEvent,
                                   ScrollableLayerGuid* aOutTargetGuid);
