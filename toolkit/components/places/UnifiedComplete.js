@@ -198,10 +198,30 @@ const SQL_HOST_QUERY = sql(
 
 const SQL_TYPED_HOST_QUERY = SQL_HOST_QUERY.replace("/*CONDITIONS*/",
                                                     "AND typed = 1");
+
+const SQL_BOOKMARKED_HOST_QUERY = sql(
+  "/* do not warn (bug NA): not worth to index on (typed, frecency) */",
+  "SELECT :query_type, host || '/', IFNULL(prefix, '') || host || '/',",
+         "NULL, (",
+            "SELECT foreign_count > 0 FROM moz_places ",
+            "WHERE rev_host = get_unreversed_host(host || '.') || '.'",
+                "OR rev_host = get_unreversed_host(host || '.') || '.www.'",
+          ") AS bookmarked, NULL, NULL, NULL, NULL, NULL, NULL, frecency",
+  "FROM moz_hosts",
+  "WHERE host BETWEEN :searchString AND :searchString || X'FFFF'",
+  "AND bookmarked",
+  "AND frecency <> 0",
+  "/*CONDITIONS*/",
+  "ORDER BY frecency DESC",
+  "LIMIT 1");
+
+const SQL_BOOKMARKED_TYPED_HOST_QUERY =
+  SQL_BOOKMARKED_HOST_QUERY.replace("/*CONDITIONS*/", "AND typed = 1");
+
 const SQL_URL_QUERY = sql(
   "/* do not warn (bug no): cannot use an index */",
   "SELECT :query_type, h.url, NULL,",
-         "NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, h.frecency",
+         "NULL, foreign_count > 0 AS bookmarked, NULL, NULL, NULL, NULL, NULL, NULL, h.frecency",
   "FROM moz_places h",
   "WHERE h.frecency <> 0",
   "/*CONDITIONS*/",
@@ -214,6 +234,13 @@ const SQL_URL_QUERY = sql(
 
 const SQL_TYPED_URL_QUERY = SQL_URL_QUERY.replace("/*CONDITIONS*/",
                                                   "AND typed = 1");
+
+// TODO (bug 1045924): use foreign_count once available.
+const SQL_BOOKMARKED_URL_QUERY =
+  SQL_URL_QUERY.replace("/*CONDITIONS*/", "AND bookmarked");
+
+const SQL_BOOKMARKED_TYPED_URL_QUERY =
+  SQL_URL_QUERY.replace("/*CONDITIONS*/", "AND bookmarked AND typed = 1");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Getters
@@ -784,7 +811,8 @@ Search.prototype = {
     }
 
     match.value = this._strippedPrefix + trimmedHost;
-    match.comment = trimmedHost;
+    // Remove the trailing slash.
+    match.comment = stripHttpAndTrim(trimmedHost);
     match.finalCompleteValue = untrimmedHost;
     match.frecency = frecency;
     return match;
@@ -1020,8 +1048,18 @@ Search.prototype = {
     // Then, we should not try to autofill if the behavior is not the default.
     // TODO (bug 751709): Ideally we should have a more fine-grained behavior
     // here, but for now it's enough to just check for default behavior.
-    if (Prefs.defaultBehavior != DEFAULT_BEHAVIOR)
-      return false;
+    if (Prefs.defaultBehavior != DEFAULT_BEHAVIOR) {
+      // autoFill can only cope with history or bookmarks entries
+      // (typed or not).
+      if (!this.hasBehavior("typed") &&
+          !this.hasBehavior("history") &&
+          !this.hasBehavior("bookmark"))
+        return false;
+
+      // autoFill doesn't search titles or tags.
+      if (this.hasBehavior("title") || this.hasBehavior("tags"))
+        return false;
+    }
 
     // Don't try to autofill if the search term includes any whitespace.
     // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
@@ -1049,13 +1087,21 @@ Search.prototype = {
    * @return an array consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
-  get _hostQuery() [
-    Prefs.autofillTyped ? SQL_TYPED_HOST_QUERY : SQL_HOST_QUERY,
-    {
-      query_type: QUERYTYPE_AUTOFILL_HOST,
-      searchString: this._searchString.toLowerCase()
-    }
-  ],
+  get _hostQuery() {
+    let typed = Prefs.autofillTyped || this.hasBehavior("typed");
+    let bookmarked =  this.hasBehavior("bookmark");
+
+    return [
+      bookmarked ? typed ? SQL_BOOKMARKED_TYPED_HOST_QUERY
+                         : SQL_BOOKMARKED_HOST_QUERY
+                 : typed ? SQL_TYPED_HOST_QUERY
+                         : SQL_HOST_QUERY,
+      {
+        query_type: QUERYTYPE_AUTOFILL_HOST,
+        searchString: this._searchString.toLowerCase()
+      }
+    ];
+  },
 
   /**
    * Obtains the query to search for autoFill url results.
@@ -1063,15 +1109,23 @@ Search.prototype = {
    * @return an array consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
-  get _urlQuery() [
-    Prefs.autofillTyped ? SQL_TYPED_URL_QUERY : SQL_URL_QUERY,
-    {
-      query_type: QUERYTYPE_AUTOFILL_URL,
-      searchString: this._autofillUrlSearchString,
-      matchBehavior: MATCH_BEGINNING_CASE_SENSITIVE,
-      searchBehavior: Ci.mozIPlacesAutoComplete.BEHAVIOR_URL
-    }
-  ],
+  get _urlQuery()  {
+    let typed = Prefs.autofillTyped || this.hasBehavior("typed");
+    let bookmarked =  this.hasBehavior("bookmark");
+
+    return [
+      bookmarked ? typed ? SQL_BOOKMARKED_TYPED_URL_QUERY
+                         : SQL_BOOKMARKED_URL_QUERY
+                 : typed ? SQL_TYPED_URL_QUERY
+                         : SQL_URL_QUERY,
+      {
+        query_type: QUERYTYPE_AUTOFILL_URL,
+        searchString: this._autofillUrlSearchString,
+        matchBehavior: MATCH_BEGINNING_CASE_SENSITIVE,
+        searchBehavior: Ci.mozIPlacesAutoComplete.BEHAVIOR_URL
+      }
+    ];
+  },
 
  /**
    * Notifies the listener about results.
