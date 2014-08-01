@@ -13,7 +13,7 @@
 class nsIFile;
 
 void ParseManifest(NSLocationType type, mozilla::FileLocation &file,
-                   char* buf, bool aChromeOnly);
+                   char* buf, bool aChromeOnly, bool aXPTOnly=false);
 
 void LogMessage(const char* aMsg, ...);
 
