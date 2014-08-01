@@ -64,21 +64,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 
 // construction, destruction
-nsGenericHTMLElement*
-NS_NewHTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                      mozilla::dom::FromParser aFromParser)
-{
-  mozilla::dom::HTMLFormElement* it = new mozilla::dom::HTMLFormElement(aNodeInfo);
-
-  nsresult rv = it->Init();
-
-  if (NS_FAILED(rv)) {
-    delete it;
-    return nullptr;
-  }
-
-  return it;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Form)
 
 namespace mozilla {
 namespace dom {
@@ -99,6 +85,7 @@ bool HTMLFormElement::gPasswordManagerInitialized = false;
 
 HTMLFormElement::HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
+    mControls(new HTMLFormControlsCollection(MOZ_THIS_IN_INITIALIZER_LIST())),
     mSelectedRadioButtons(4),
     mRequiredRadioButtonCounts(4),
     mValueMissingRadioGroups(4),
@@ -130,14 +117,6 @@ HTMLFormElement::~HTMLFormElement()
 
   Clear();
 }
-
-nsresult
-HTMLFormElement::Init()
-{
-  mControls = new HTMLFormControlsCollection(this);
-  return NS_OK;
-}
-
 
 // nsISupports
 
@@ -191,7 +170,7 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
 // nsIDOMHTMLFormElement
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(HTMLFormElement)
+NS_IMPL_ELEMENT_CLONE(HTMLFormElement)
 
 nsIHTMLCollection*
 HTMLFormElement::Elements()
