@@ -33,6 +33,9 @@ gyp_vars = {
     # saves 4MB when webrtc_trace is off
     'enable_lazy_trace_alloc': 0,
 
+    'use_x11': 1 if CONFIG['MOZ_X11'] else 0,
+    'use_glib': 1 if CONFIG['GLIB_LIBS'] else 0,
+
      # turn off mandatory use of NEON and instead use NEON detection
     'arm_neon': 0,
     'arm_neon_optional': 1,
