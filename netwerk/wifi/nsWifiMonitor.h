@@ -21,6 +21,10 @@
 #include "mozilla/Attributes.h"
 #include "nsIInterfaceRequestor.h"
 
+#ifdef XP_WIN
+class WinWifiScanner;
+#endif
+
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo *gWifiMonitorLog;
 #endif
@@ -71,6 +75,9 @@ class nsWifiMonitor MOZ_FINAL : nsIRunnable, nsIWifiMonitor, nsIObserver
 
   mozilla::ReentrantMonitor mReentrantMonitor;
 
+#ifdef XP_WIN
+  nsAutoPtr<WinWifiScanner> mWinWifiScanner;
+#endif
 };
 #else
 #include "nsIWifi.h"
