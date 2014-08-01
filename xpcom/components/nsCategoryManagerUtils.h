@@ -9,8 +9,8 @@
 #include "nsICategoryManager.h"
 
 void
-NS_CreateServicesFromCategory(const char *category,
-                              nsISupports *origin,
-                              const char *observerTopic);
+NS_CreateServicesFromCategory(const char* aCategory,
+                              nsISupports* aOrigin,
+                              const char* aObserverTopic);
 
 #endif
