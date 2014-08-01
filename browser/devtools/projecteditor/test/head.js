@@ -90,7 +90,15 @@ function loadHelperScript(filePath) {
 }
 
 function addProjectEditorTabForTempDirectory(opts = {}) {
-  TEMP_PATH = buildTempDirectoryStructure();
+  try {
+    TEMP_PATH = buildTempDirectoryStructure();
+  } catch (e) {
+    // Bug 1037292 - The test servers sometimes are unable to
+    // write to the temporary directory due to locked files
+    // or access denied errors.  Try again if this failed.
+    info ("Project Editor temp directory creation failed.  Trying again.");
+    TEMP_PATH = buildTempDirectoryStructure();
+  }
   let customOpts = {
     name: "Test",
     iconUrl: "chrome://browser/skin/devtools/tool-options.svg",
