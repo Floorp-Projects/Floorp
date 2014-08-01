@@ -13,6 +13,7 @@
 #include "GMPParent.h"
 #include "mozilla/gmp/GMPTypes.h"
 #include "nsThreadUtils.h"
+#include "runnable_utils.h"
 
 template <>
 class nsAutoRefTraits<GMPVideoi420Frame> : public nsPointerRefTraits<GMPVideoi420Frame>
