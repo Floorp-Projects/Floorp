@@ -30,6 +30,7 @@ EXPORTS.mozilla.dom += [
     'OwningNonNull.h',
     'PrimitiveConversions.h',
     'RootedDictionary.h',
+    'StructuredClone.h',
     'ToJSValue.h',
     'TypedArray.h',
     'UnionMember.h',
@@ -79,6 +80,10 @@ UNIFIED_SOURCES += [
     'DOMJSProxyHandler.cpp',
     'Exceptions.cpp',
     'ToJSValue.cpp',
+]
+
+SOURCES += [
+    'StructuredClone.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
