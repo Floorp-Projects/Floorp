@@ -52,11 +52,11 @@ function consoleOpened(HUD) {
     WebConsoleUtils.usageCount = 0;
     is(WebConsoleUtils.usageCount, 0, "Test for usage count getter")
     // Input some commands to check if usage counting is working
-    for(let i = 0; i <= 5; i++){
+    for(let i = 0; i <= 3; i++){
       jsterm.setInputValue(i);
       jsterm.execute();
     }
-    is(WebConsoleUtils.usageCount, 6, "Usage count incremented")
+    is(WebConsoleUtils.usageCount, 4, "Usage count incremented")
     WebConsoleUtils.usageCount = 0;
     updateEditUIVisibility();
 

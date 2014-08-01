@@ -91,10 +91,10 @@ browser.jar:
         skin/classic/browser/notification-pluginBlocked.png          (../shared/plugins/notification-pluginBlocked.png)
         skin/classic/browser/webRTC-shareDevice-16.png
         skin/classic/browser/webRTC-shareDevice-64.png
-        skin/classic/browser/webRTC-sharingDevice-16.png
+        skin/classic/browser/webRTC-sharingDevice-16.png             (../shared/webrtc/webRTC-sharingDevice-16.png)
         skin/classic/browser/webRTC-shareMicrophone-16.png
         skin/classic/browser/webRTC-shareMicrophone-64.png
-        skin/classic/browser/webRTC-sharingMicrophone-16.png
+        skin/classic/browser/webRTC-sharingMicrophone-16.png         (../shared/webrtc/webRTC-sharingMicrophone-16.png)
         skin/classic/browser/webRTC-shareScreen-16.png               (../shared/webrtc/webRTC-shareScreen-16.png)
         skin/classic/browser/webRTC-shareScreen-64.png               (../shared/webrtc/webRTC-shareScreen-64.png)
         skin/classic/browser/webRTC-sharingScreen-16.png             (../shared/webrtc/webRTC-sharingScreen-16.png)
@@ -510,10 +510,10 @@ browser.jar:
         skin/classic/aero/browser/notification-pluginBlocked.png    (../shared/plugins/notification-pluginBlocked.png)
         skin/classic/aero/browser/webRTC-shareDevice-16.png
         skin/classic/aero/browser/webRTC-shareDevice-64.png
-        skin/classic/aero/browser/webRTC-sharingDevice-16.png
+        skin/classic/aero/browser/webRTC-sharingDevice-16.png             (../shared/webrtc/webRTC-sharingDevice-16.png)
         skin/classic/aero/browser/webRTC-shareMicrophone-16.png
         skin/classic/aero/browser/webRTC-shareMicrophone-64.png
-        skin/classic/aero/browser/webRTC-sharingMicrophone-16.png
+        skin/classic/aero/browser/webRTC-sharingMicrophone-16.png         (../shared/webrtc/webRTC-sharingMicrophone-16.png)
         skin/classic/aero/browser/webRTC-shareScreen-16.png               (../shared/webrtc/webRTC-shareScreen-16.png)
         skin/classic/aero/browser/webRTC-shareScreen-64.png               (../shared/webrtc/webRTC-shareScreen-64.png)
         skin/classic/aero/browser/webRTC-sharingScreen-16.png             (../shared/webrtc/webRTC-sharingScreen-16.png)

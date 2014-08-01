@@ -185,6 +185,10 @@
 #include "GTestRunner.h"
 #endif
 
+#ifdef MOZ_B2G_LOADER
+#include "ProcessUtils.h"
+#endif
+
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #endif
@@ -3771,6 +3775,10 @@ XREMain::XRE_mainRun()
 {
   nsresult rv = NS_OK;
   NS_ASSERTION(mScopedXPCom, "Scoped xpcom not initialized.");
+
+#ifdef MOZ_B2G_LOADER
+  mozilla::ipc::ProcLoaderClientGeckoInit();
+#endif
 
 #ifdef NS_FUNCTION_TIMER
   // initialize some common services, so we don't pay the cost for these at odd times later on;
