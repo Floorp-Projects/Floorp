@@ -48,6 +48,7 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsAlgorithm.h"
@@ -352,25 +353,7 @@ struct WorkerStructuredCloneCallbacks
     // See if the object is an ImageData.
     else if (aTag == SCTAG_DOM_IMAGEDATA) {
       MOZ_ASSERT(!aData);
-
-      // Read the information out of the stream.
-      uint32_t width, height;
-      JS::Rooted<JS::Value> dataArray(aCx);
-      if (!JS_ReadUint32Pair(aReader, &width, &height) ||
-          !JS_ReadTypedArray(aReader, &dataArray))
-      {
-        return nullptr;
-      }
-      MOZ_ASSERT(dataArray.isObject());
-
-      {
-        // Construct the ImageData.
-        nsRefPtr<ImageData> imageData = new ImageData(width, height,
-                                                      dataArray.toObject());
-        // Wrap it in a JS::Value, protected from a moving GC during ~nsRefPtr.
-        result = imageData->WrapObject(aCx);
-      }
-      return result;
+      return ReadStructuredCloneImageData(aCx, aReader);
     }
 
     Error(aCx, 0);
@@ -418,17 +401,7 @@ struct WorkerStructuredCloneCallbacks
     {
       ImageData* imageData = nullptr;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aObj, imageData))) {
-        // Prepare the ImageData internals.
-        uint32_t width = imageData->Width();
-        uint32_t height = imageData->Height();
-        JS::Rooted<JSObject*> dataArray(aCx, imageData->GetDataObject());
-
-        // Write the internals to the stream.
-        JSAutoCompartment ac(aCx, dataArray);
-        JS::Rooted<JS::Value> arrayValue(aCx, JS::ObjectValue(*dataArray));
-        return JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEDATA, 0) &&
-               JS_WriteUint32Pair(aWriter, width, height) &&
-               JS_WriteTypedArray(aWriter, arrayValue);
+        return WriteStructuredCloneImageData(aCx, aWriter, imageData);
       }
     }
 
