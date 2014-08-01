@@ -530,6 +530,10 @@ ContainerRender(ContainerT* aContainer,
     LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(aContainer->GetMaskLayer(),
                                                             effectChain,
                                                             !aContainer->GetTransform().CanDraw2D());
+    if (autoMaskEffect.Failed()) {
+      NS_WARNING("Failed to apply a mask effect.");
+      return;
+    }
 
     aContainer->AddBlendModeEffect(effectChain);
     effectChain.mPrimaryEffect = new EffectRenderTarget(surface);
