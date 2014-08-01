@@ -25,6 +25,7 @@
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsSize.h"                     // for nsIntSize
 #include "gfxReusableSharedImageSurfaceWrapper.h"
+#include "nsExpirationTracker.h"        // for nsExpirationTracker
 #include "nsMathUtils.h"               // for NS_roundf
 #include "gfx2DGlue.h"
 #include "LayersLogging.h"
@@ -402,9 +403,44 @@ gfxShmSharedReadLock::GetReadCount() {
   return info->readCount;
 }
 
+class TileExpiry MOZ_FINAL : public nsExpirationTracker<TileClient, 3>
+{
+  public:
+    TileExpiry() : nsExpirationTracker<TileClient, 3>(1000) {}
+  private:
+    virtual void NotifyExpired(TileClient* aTile)
+    {
+      aTile->DiscardBackBuffer();
+    }
+};
+
+TileExpiry *TileExpirer()
+{
+  static TileExpiry * sTileExpiry = new TileExpiry();
+  return sTileExpiry;
+}
+
+void
+TileClient::PrivateProtector::Set(TileClient * const aContainer, RefPtr<TextureClient> aNewValue)
+{
+  if (mBuffer) {
+    TileExpirer()->RemoveObject(aContainer);
+  }
+  mBuffer = aNewValue;
+  if (mBuffer) {
+    TileExpirer()->AddObject(aContainer);
+  }
+}
+
+void
+TileClient::PrivateProtector::Set(TileClient * const aContainer, TextureClient* aNewValue)
+{
+  Set(aContainer, RefPtr<TextureClient>(aNewValue));
+}
+
 // Placeholder
 TileClient::TileClient()
-  : mBackBuffer(nullptr)
+  : mBackBuffer()
   , mFrontBuffer(nullptr)
   , mBackLock(nullptr)
   , mFrontLock(nullptr)
@@ -412,9 +448,17 @@ TileClient::TileClient()
 {
 }
 
+TileClient::~TileClient()
+{
+  if (mExpirationState.IsTracked()) {
+    MOZ_ASSERT(mBackBuffer);
+    TileExpirer()->RemoveObject(this);
+  }
+}
+
 TileClient::TileClient(const TileClient& o)
 {
-  mBackBuffer = o.mBackBuffer;
+  mBackBuffer.Set(this, o.mBackBuffer);
   mFrontBuffer = o.mFrontBuffer;
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
@@ -431,7 +475,7 @@ TileClient&
 TileClient::operator=(const TileClient& o)
 {
   if (this == &o) return *this;
-  mBackBuffer = o.mBackBuffer;
+  mBackBuffer.Set(this, o.mBackBuffer);
   mFrontBuffer = o.mFrontBuffer;
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
@@ -465,7 +509,7 @@ TileClient::Flip()
 #endif
   RefPtr<TextureClient> frontBuffer = mFrontBuffer;
   mFrontBuffer = mBackBuffer;
-  mBackBuffer = frontBuffer;
+  mBackBuffer.Set(this, frontBuffer);
   RefPtr<gfxSharedReadLock> frontLock = mFrontLock;
   mFrontLock = mBackLock;
   mBackLock = frontLock;
@@ -582,7 +626,7 @@ TileClient::DiscardBackBuffer()
 #endif
     }
     mBackLock->ReadUnlock();
-    mBackBuffer = nullptr;
+    mBackBuffer.Set(this, nullptr);
     mBackLock = nullptr;
   }
 }
@@ -609,7 +653,7 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion, TextureClientPool *aP
       // this case we just want to drop it and not return it to the pool.
       aPool->ReportClientLost();
     }
-    mBackBuffer = aPool->GetTextureClient();
+    mBackBuffer.Set(this, aPool->GetTextureClient());
     // Create a lock for our newly created back-buffer.
     if (mManager->AsShadowForwarder()->IsSameProcess()) {
       // If our compositor is in the same process, we can save some cycles by not
