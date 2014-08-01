@@ -48,26 +48,6 @@ loop.conversation = (function(OT, mozL10n) {
       }
     },
 
-    /**
-     * Used for adding different styles to the panel
-     * @returns {String} Corresponds to the client platform
-     * */
-    _getTargetPlatform: function() {
-      var platform="unknown_platform";
-
-      if (navigator.platform.indexOf("Win") !== -1) {
-        platform = "windows";
-      }
-      if (navigator.platform.indexOf("Mac") !== -1) {
-        platform = "mac";
-      }
-      if (navigator.platform.indexOf("Linux") !== -1) {
-        platform = "linux";
-      }
-
-      return platform;
-    },
-
     _handleAccept: function() {
       this.props.model.trigger("accept");
     },
@@ -97,7 +77,8 @@ loop.conversation = (function(OT, mozL10n) {
       var btnClassAccept = "btn btn-success btn-accept";
       var btnClassBlock = "btn btn-error btn-block";
       var btnClassDecline = "btn btn-error btn-decline";
-      var conversationPanelClass = "incoming-call " + this._getTargetPlatform();
+      var conversationPanelClass = "incoming-call " +
+                                  loop.shared.utils.getTargetPlatform();
       var cx = React.addons.classSet;
       var declineDropdownMenuClasses = cx({
         "native-dropdown-menu": true,

@@ -9,15 +9,9 @@
     <link rel="stylesheet" type="text/css" href="shared/css/common.css">
     <link rel="stylesheet" type="text/css" href="shared/css/conversation.css">
     <link rel="stylesheet" type="text/css" href="css/webapp.css">
-    <link rel="prefetch" type="application/l10n" href="l10n/data.ini">
+    <link type="application/l10n" href="l10n/data.ini">
   </head>
-  <body onload="loop.webapp.init();">
-
-    <header>
-      <h1>Loop</h1>
-    </header>
-
-    <div id="messages"></div>
+  <body>
 
     <div id="main"></div>
 
@@ -39,6 +33,7 @@
 
     <!-- app scripts -->
     <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript" src="shared/js/utils.js"></script>
     <script type="text/javascript" src="shared/js/models.js"></script>
     <script type="text/javascript" src="shared/js/views.js"></script>
     <script type="text/javascript" src="shared/js/router.js"></script>
@@ -46,11 +41,10 @@
     <script type="text/javascript" src="js/webapp.js"></script>
 
     <script>
-    // Set the 'lang' and 'dir' attributes to <html> when the page is translated
-    window.addEventListener('localized', function() {
-      document.documentElement.lang = document.webL10n.getLanguage();
-      document.documentElement.dir = document.webL10n.getDirection();
-    }, false);
+      // Wait for all the localization notes to load
+      window.addEventListener('localized', function() {
+        loop.webapp.init();
+      }, false);
     </script>
   </body>
 </html>
