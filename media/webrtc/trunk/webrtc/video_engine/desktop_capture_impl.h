@@ -43,6 +43,7 @@ public:
   virtual ~ScreenDeviceInfoImpl(void);
 
   int32_t Init();
+  int32_t Refresh();
 
   virtual uint32_t NumberOfDevices();
   virtual int32_t GetDeviceName(uint32_t deviceNumber,
@@ -80,6 +81,7 @@ public:
   virtual ~AppDeviceInfoImpl(void);
 
   int32_t Init();
+  int32_t Refresh();
 
   virtual uint32_t NumberOfDevices();
   virtual int32_t GetDeviceName(uint32_t deviceNumber,
@@ -116,6 +118,7 @@ public:
   virtual ~WindowDeviceInfoImpl(void) {};
 
   int32_t Init();
+  int32_t Refresh();
 
   virtual uint32_t NumberOfDevices();
   virtual int32_t GetDeviceName(uint32_t deviceNumber,
@@ -229,7 +232,7 @@ private:
   TickTime _lastProcessTime; // last time the module process function was called.
   TickTime _lastFrameRateCallbackTime; // last time the frame rate callback function was called.
   bool _frameRateCallBack; // true if EnableFrameRateCallback
-  bool _noPictureAlarmCallBack; //true if EnableNoPictureAlarm
+  bool _noPictureAlarmCallBack; // true if EnableNoPictureAlarm
   VideoCaptureAlarm _captureAlarm; // current value of the noPictureAlarm
 
   int32_t _setCaptureDelay; // The currently used capture delay
