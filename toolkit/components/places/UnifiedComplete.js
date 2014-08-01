@@ -264,8 +264,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PriorityUrlProvider",
-                                  "resource://gre/modules/PriorityUrlProvider.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesSearchAutocompleteProvider",
+                                  "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "textURIService",
                                    "@mozilla.org/intl/texttosuburi;1",
@@ -703,14 +703,17 @@ Search.prototype = {
   _matchPriorityUrl: function* () {
     if (!Prefs.autofillPriority)
       return;
-    let priorityMatch = yield PriorityUrlProvider.getMatch(this._searchString);
+
+    // Handle priority matches for search engine domains.
+    let priorityMatch =
+        yield PlacesSearchAutocompleteProvider.findMatchByToken(this._searchString);
     if (priorityMatch) {
       this._result.setDefaultIndex(0);
       this._addFrecencyMatch({
         value: priorityMatch.token,
-        comment: priorityMatch.title,
+        comment: priorityMatch.engineName,
         icon: priorityMatch.iconUrl,
-        style: "priority-" + priorityMatch.reason,
+        style: "priority-search",
         finalCompleteValue: priorityMatch.url,
         frecency: FRECENCY_PRIORITY_DEFAULT
       });
