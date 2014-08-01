@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_AsmJSLink_h
-#define jit_AsmJSLink_h
+#ifndef asmjs_AsmJSLink_h
+#define asmjs_AsmJSLink_h
 
 #include "NamespaceImports.h"
 
@@ -47,4 +47,4 @@ AsmJSFunctionToString(JSContext *cx, HandleFunction fun);
 
 } // namespace js
 
-#endif // jit_AsmJS_h
+#endif // asmjs_AsmJSLink_h

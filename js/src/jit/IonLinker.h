@@ -11,7 +11,7 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 
-#include "assembler/jit/ExecutableAllocator.h"
+#include "jit/ExecutableAllocator.h"
 #include "jit/IonCode.h"
 #include "jit/IonMacroAssembler.h"
 #include "jit/JitCompartment.h"

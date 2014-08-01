@@ -22,7 +22,6 @@
 #include "TiledLayerBuffer.h"           // for TiledLayerComposer
 #include "Units.h"                      // for ScreenIntRect
 #include "gfx2DGlue.h"                  // for ToMatrix4x4
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxPrefs.h"                   // for gfxPrefs
 #ifdef XP_MACOSX
 #include "gfxPlatformMac.h"
@@ -564,7 +563,7 @@ LayerManagerComposite::WorldTransformRect(nsIntRect& aRect)
 static void
 SubtractTransformedRegion(nsIntRegion& aRegion,
                           const nsIntRegion& aRegionToSubtract,
-                          const gfx3DMatrix& aTransform)
+                          const Matrix4x4& aTransform)
 {
   if (aRegionToSubtract.IsEmpty()) {
     return;
@@ -574,7 +573,7 @@ SubtractTransformedRegion(nsIntRegion& aRegion,
   // subtract it from the screen region.
   nsIntRegionRectIterator it(aRegionToSubtract);
   while (const nsIntRect* rect = it.Next()) {
-    gfxRect incompleteRect = aTransform.TransformBounds(gfxRect(*rect));
+    Rect incompleteRect = aTransform.TransformBounds(ToRect(*rect));
     aRegion.Sub(aRegion, nsIntRect(incompleteRect.x,
                                    incompleteRect.y,
                                    incompleteRect.width,
@@ -586,7 +585,7 @@ SubtractTransformedRegion(nsIntRegion& aRegion,
 LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
                                                       nsIntRegion& aScreenRegion,
                                                       nsIntRegion& aLowPrecisionScreenRegion,
-                                                      const gfx3DMatrix& aTransform)
+                                                      const Matrix4x4& aTransform)
 {
   if (aLayer->GetOpacity() <= 0.f ||
       (aScreenRegion.IsEmpty() && aLowPrecisionScreenRegion.IsEmpty())) {
@@ -597,10 +596,10 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
   ContainerLayer* container = aLayer->AsContainerLayer();
   if (container) {
     // Accumulate the transform of intermediate surfaces
-    gfx3DMatrix transform = aTransform;
+    Matrix4x4 transform = aTransform;
     if (container->UseIntermediateSurface()) {
-      transform = gfx::To3DMatrix(aLayer->GetEffectiveTransform());
-      transform.PreMultiply(aTransform);
+      transform = aLayer->GetEffectiveTransform();
+      transform = aTransform * transform;
     }
     for (Layer* child = aLayer->GetFirstChild(); child;
          child = child->GetNextSibling()) {
@@ -621,8 +620,8 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
 
   if (!incompleteRegion.IsEmpty()) {
     // Calculate the transform to get between screen and layer space
-    gfx3DMatrix transformToScreen = To3DMatrix(aLayer->GetEffectiveTransform());
-    transformToScreen.PreMultiply(aTransform);
+    Matrix4x4 transformToScreen = aLayer->GetEffectiveTransform();
+    transformToScreen = aTransform * transformToScreen;
 
     SubtractTransformedRegion(aScreenRegion, incompleteRegion, transformToScreen);
 
@@ -650,14 +649,12 @@ LayerManagerComposite::ComputeRenderIntegrityInternal(Layer* aLayer,
 #ifdef MOZ_ANDROID_OMTC
 static float
 GetDisplayportCoverage(const CSSRect& aDisplayPort,
-                       const gfx3DMatrix& aTransformToScreen,
+                       const Matrix4x4& aTransformToScreen,
                        const nsIntRect& aScreenRect)
 {
-  gfxRect transformedDisplayport =
-    aTransformToScreen.TransformBounds(gfxRect(aDisplayPort.x,
-                                               aDisplayPort.y,
-                                               aDisplayPort.width,
-                                               aDisplayPort.height));
+  Rect transformedDisplayport =
+    aTransformToScreen.TransformBounds(aDisplayPort.ToUnknownRect());
+
   transformedDisplayport.RoundOut();
   nsIntRect displayport = nsIntRect(transformedDisplayport.x,
                                     transformedDisplayport.y,
@@ -700,15 +697,15 @@ LayerManagerComposite::ComputeRenderIntegrity()
     // This is derived from the code in
     // AsyncCompositionManager::TransformScrollableLayer
     const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
-    gfx3DMatrix transform = gfx::To3DMatrix(primaryScrollable->GetEffectiveTransform());
+    Matrix4x4 transform = primaryScrollable->GetEffectiveTransform();
     transform.ScalePost(metrics.mResolution.scale, metrics.mResolution.scale, 1);
 
     // Clip the screen rect to the document bounds
-    gfxRect documentBounds =
-      transform.TransformBounds(gfxRect(metrics.mScrollableRect.x - metrics.GetScrollOffset().x,
-                                        metrics.mScrollableRect.y - metrics.GetScrollOffset().y,
-                                        metrics.mScrollableRect.width,
-                                        metrics.mScrollableRect.height));
+    Rect documentBounds =
+      transform.TransformBounds(Rect(metrics.mScrollableRect.x - metrics.GetScrollOffset().x,
+                                     metrics.mScrollableRect.y - metrics.GetScrollOffset().y,
+                                     metrics.mScrollableRect.width,
+                                     metrics.mScrollableRect.height));
     documentBounds.RoundOut();
     screenRect = screenRect.Intersect(nsIntRect(documentBounds.x, documentBounds.y,
                                                 documentBounds.width, documentBounds.height));
@@ -747,7 +744,7 @@ LayerManagerComposite::ComputeRenderIntegrity()
 
   nsIntRegion screenRegion(screenRect);
   nsIntRegion lowPrecisionScreenRegion(screenRect);
-  gfx3DMatrix transform;
+  Matrix4x4 transform;
   ComputeRenderIntegrityInternal(root, screenRegion,
                                  lowPrecisionScreenRegion, transform);
 
