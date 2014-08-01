@@ -989,13 +989,15 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), failures);
 
-    bool restoreObjReg = false;
     Register scratchReg = output.valueReg().scratchReg();
+    bool spillObjReg = scratchReg == object;
+    Label pop1AndFail;
+    Label *maybePopAndFail = failures;
 
     // Save off the object register if it aliases the scratchReg
-    if (scratchReg == object) {
+    if (spillObjReg) {
         masm.push(object);
-        restoreObjReg = true;
+        maybePopAndFail = &pop1AndFail;
     }
 
     // Note: this may clobber the object register if it's used as scratch.
@@ -1008,9 +1010,9 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     masm.branchPtr(Assembler::NotEqual,
                    Address(holderReg, JSObject::offsetOfShape()),
                    ImmGCPtr(holder->lastProperty()),
-                   failures);
+                   maybePopAndFail);
 
-    if (restoreObjReg)
+    if (spillObjReg)
         masm.pop(object);
 
     // Now we're good to go to invoke the native call.
@@ -1022,6 +1024,10 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     attacher.jumpRejoin(masm);
 
     // Jump to next stub.
+    if (spillObjReg) {
+        masm.bind(&pop1AndFail);
+        masm.pop(object);
+    }
     masm.bind(failures);
     attacher.jumpNextStub(masm);
 
