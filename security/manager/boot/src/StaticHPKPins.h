@@ -770,7 +770,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "domains.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "doubleclick.net", true, false, false, -1, &kPinset_google_root_pems },
   { "drive.google.com", true, false, false, -1, &kPinset_google_root_pems },
-  { "dropbox.com", false, true, false, -1, &kPinset_dropbox },
+  { "dropbox.com", false, false, false, -1, &kPinset_dropbox },
   { "encrypted.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "exclude-subdomains.pinning.example.com", false, false, false, 0, &kPinset_mozilla_test },
   { "g.co", true, false, false, -1, &kPinset_google_root_pems },
@@ -1053,7 +1053,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "wf-training-hrd.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "wf-training-master.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "wf-trial-hrd.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
-  { "www.dropbox.com", true, true, false, -1, &kPinset_dropbox },
+  { "www.dropbox.com", true, false, false, -1, &kPinset_dropbox },
   { "www.gmail.com", false, false, false, -1, &kPinset_google_root_pems },
   { "www.googlemail.com", false, false, false, -1, &kPinset_google_root_pems },
   { "www.torproject.org", true, false, false, -1, &kPinset_tor },
@@ -1068,4 +1068,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1415441689844000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1415746122795000);

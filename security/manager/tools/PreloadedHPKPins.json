@@ -37,6 +37,9 @@
     "production_domains": [
       // Chrome's test domain.
       "pinningtest.appspot.com",
+      // Dropbox
+      "dropbox.com",
+      "www.dropbox.com",
       // Twitter
       "api.twitter.com",
       "business.twitter.com",
