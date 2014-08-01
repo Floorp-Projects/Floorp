@@ -55,6 +55,7 @@ EXTRA_JS_MODULES += [
     'Task.jsm',
     'TelemetryTimestamps.jsm',
     'Timer.jsm',
+    'WebChannel.jsm',
     'ZipUtils.jsm',
 ]
 

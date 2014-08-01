@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>fxa_oauth_test</title>
+</head>
+<body>
+<script>
+  window.onload = function(){
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: "oauth_client_id",
+        message: {
+          command: "oauth_complete",
+          data: {
+            state: "state",
+            code: "code1",
+            closeWindow: "signin",
+          },
+        },
+      },
+    });
+
+    window.dispatchEvent(event);
+  };
+</script>
+</body>
+</html>
