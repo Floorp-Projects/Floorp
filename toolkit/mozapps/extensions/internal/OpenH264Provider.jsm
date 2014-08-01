@@ -18,12 +18,13 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-//Cu.import("resource://gre/modules/GMPInstallManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
                                   "resource://gre/modules/GMPInstallManager.jsm");
 
 const URI_EXTENSION_STRINGS    = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME         = "type.%ID%.name";
+
+const SEC_IN_A_DAY              = 24 * 60 * 60;
 
 const OPENH264_PLUGIN_ID       = "gmp-gmpopenh264";
 const OPENH264_PREF_BRANCH     = "media." + OPENH264_PLUGIN_ID + ".";
@@ -38,6 +39,8 @@ const OPENH264_PREF_LOGGING_LEVEL = OPENH264_PREF_LOGGING + ".level"; // media.g
 const OPENH264_PREF_LOGGING_DUMP = OPENH264_PREF_LOGGING + ".dump"; // media.gmp-gmpopenh264.provider.logging.dump
 const OPENH264_HOMEPAGE_URL    = "http://www.openh264.org/";
 const OPENH264_OPTIONS_URL     = "chrome://mozapps/content/extensions/openH264Prefs.xul";
+
+const GMP_PREF_LASTCHECK       = "media.gmp-manager.lastCheck";
 
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
@@ -172,9 +175,25 @@ let OpenH264Wrapper = {
 
     AddonManagerPrivate.callNoUpdateListeners(this, aListener);
 
-    if (aReason !== AddonManager.UPDATE_WHEN_USER_REQUESTED ||
-        this._updateTask !== null) {
-      return;
+    if (aReason === AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
+      if (!AddonManager.shouldAutoUpdate(this)) {
+        this._log.trace("findUpdates() - no autoupdate");
+        return Promise.resolve(false);
+      }
+
+      let secSinceLastCheck = Date.now() / 1000 - Preferences.get(GMP_PREF_LASTCHECK, 0);
+      if (secSinceLastCheck <= SEC_IN_A_DAY) {
+        this._log.trace("findUpdates() - last check was less then a day ago");
+        return Promise.resolve(false);
+      }
+    } else if (aReason !== AddonManager.UPDATE_WHEN_USER_REQUESTED) {
+      this._log.trace("findUpdates() - unsupported reason");
+      return Promise.resolve(false);
+    }
+
+    if (this._updateTask !== null) {
+      this._log.trace("findUpdates() - update task already running");
+      return this._updateTask;
     }
 
     this._updateTask = Task.spawn(function* OpenH264Provider_updateTask() {
@@ -184,7 +203,10 @@ let OpenH264Wrapper = {
         let addons = yield installManager.checkForAddons();
         let openH264 = addons.find(addon => addon.isOpenH264);
         if (openH264 && !openH264.isInstalled) {
+          this._log.trace("findUpdates() - found update, installing");
           yield installManager.installAddon(openH264);
+        } else {
+          this._log.trace("findUpdates() - no updates");
         }
         this._log.info("findUpdates() - updateTask succeeded");
       } catch (e) {
@@ -192,8 +214,11 @@ let OpenH264Wrapper = {
         throw e;
       } finally {
         this._updateTask = null;
+        return true;
       }
     }.bind(this));
+
+    return this._updateTask;
   },
 
   get pluginMimeTypes() { return []; },
