@@ -60,20 +60,6 @@ public:
                                  hal::ProcessPriority aPriority);
 
   /**
-   * Reset the process priority of a given ContentParent's process in
-   * consideration of system message handling.
-   *
-   * Note that because this method takes a ContentParent*, you can only set the
-   * priority of your subprocesses.  In fact, because we don't support nested
-   * content processes (bug 761935), you can only call this method from the
-   * main process.
-   *
-   * The process priority manager will determine a new appropriate priority.
-   */
-  static void ResetProcessPriority(dom::ContentParent* aContentParent,
-                                   bool aHandleSystemMessage);
-
-  /**
    * Returns true iff this process's priority is FOREGROUND*.
    *
    * Note that because process priorities are set in the main process, it's
