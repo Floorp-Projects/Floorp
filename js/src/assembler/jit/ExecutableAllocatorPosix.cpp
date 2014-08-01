@@ -33,7 +33,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
-#include "assembler/wtf/VMTags.h"
 #include "js/Utility.h"
 
 namespace JSC {
@@ -45,7 +44,7 @@ size_t ExecutableAllocator::determinePageSize()
 
 ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
-    void *allocation = MozTaggedAnonymousMmap(NULL, n, INITIAL_PROTECTION_FLAGS, MAP_PRIVATE | MAP_ANON, VM_TAG_FOR_EXECUTABLEALLOCATOR_MEMORY, 0, "js-jit-code");
+    void *allocation = MozTaggedAnonymousMmap(NULL, n, INITIAL_PROTECTION_FLAGS, MAP_PRIVATE | MAP_ANON, -1, 0, "js-jit-code");
     if (allocation == MAP_FAILED)
         allocation = NULL;
     ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
