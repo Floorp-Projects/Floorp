@@ -23,6 +23,13 @@ class nsISelectionController;
 class nsFrameSelection;
 class nsIEditor;
 class nsITextControlElement;
+class nsFrame;
+
+namespace mozilla {
+namespace dom {
+class HTMLInputElement;
+}
+}
 
 /**
  * nsTextEditorState is a class which is responsible for managing the state of
@@ -203,10 +210,8 @@ public:
     nsITextControlFrame::SelectionDirection mDirection;
   };
 
-  bool IsSelectionCached() const { return mSelectionCached; }
-  SelectionProperties& GetSelectionProperties() {
-    return mSelectionProperties;
-  }
+  bool IsSelectionCached() const;
+  SelectionProperties& GetSelectionProperties();
   void WillInitEagerly() { mSelectionRestoreEagerInit = true; }
   bool HasNeverInitializedBefore() const { return !mEverInited; }
 
@@ -234,6 +239,8 @@ private:
   nsresult InitializeRootNode();
 
   void FinishedRestoringSelection() { mRestoringSelection = nullptr; }
+
+  mozilla::dom::HTMLInputElement* GetParentNumberControl(nsFrame* aFrame) const;
 
   class InitializationGuard {
   public:
