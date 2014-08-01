@@ -52,6 +52,32 @@ def isTypeCopyConstructible(type):
             (type.isInterface() and type.isGeckoInterface()))
 
 
+def idlTypeNeedsCycleCollection(type):
+    type = type.unroll()  # Takes care of sequences and nullables
+    if ((type.isPrimitive() and type.tag() in builtinNames) or
+        type.isEnum() or
+        type.isDOMString() or
+        type.isByteString() or
+        type.isAny() or
+        type.isObject() or
+        type.isSpiderMonkeyInterface()):
+        return False
+    elif type.isCallback() or type.isGeckoInterface():
+        return True
+    elif type.isUnion():
+        return any(idlTypeNeedsCycleCollection(t) for t in type.flatMemberTypes)
+    elif type.isMozMap():
+        if idlTypeNeedsCycleCollection(type.inner):
+            raise TypeError("Cycle collection for type %s is not supported" % type)
+        return False
+    elif type.isDictionary():
+        if any(idlTypeNeedsCycleCollection(m.type) for m in type.inner.members):
+            raise TypeError("Cycle collection for type %s is not supported" % type)
+        return False
+    else:
+        raise TypeError("Don't know whether to cycle-collect type %s" % type)
+
+
 def wantsAddProperty(desc):
     return (desc.concrete and
             desc.wrapperCache and
@@ -1160,6 +1186,8 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
     declarations = set()
     unionStructs = dict()
     owningUnionStructs = dict()
+    traverseMethods = dict()
+    unlinkMethods = dict()
 
     for t, descriptor, dictionary in getAllTypes(descriptors, dictionaries, callbacks):
         # Add info for the given type.  descriptor and dictionary, if present, are
@@ -1227,8 +1255,20 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                 assert not f.nullable()
                 addHeadersForType(f)
 
+            if idlTypeNeedsCycleCollection(t):
+                declarations.add(("mozilla::dom::%s" % CGUnionStruct.unionTypeName(t, True), False))
+                traverseMethods[name] = CGCycleCollectionTraverseForOwningUnionMethod(t)
+                unlinkMethods[name] = CGCycleCollectionUnlinkForOwningUnionMethod(t)
+
+    # The order of items in CGList is important.
+    # Since the union structs friend the unlinkMethods, the forward-declaration
+    # for these methods should come before the class declaration. Otherwise
+    # some compilers treat the friend declaration as a forward-declaration in
+    # the class scope.
     return (headers, implheaders, declarations,
-            CGList(SortedDictValues(unionStructs) +
+            CGList(SortedDictValues(traverseMethods) +
+                   SortedDictValues(unlinkMethods) +
+                   SortedDictValues(unionStructs) +
                    SortedDictValues(owningUnionStructs),
                    "\n"))
 
@@ -3262,6 +3302,47 @@ class CGIsPermittedMethod(CGAbstractMethod):
             caseList.append(CGCase("'%s'" % firstLetter, cases[firstLetter]))
         switch = CGSwitch("propFirstChar", caseList)
         return switch.define() + "\nreturn false;\n"
+
+
+class CGCycleCollectionTraverseForOwningUnionMethod(CGAbstractMethod):
+    """
+    ImplCycleCollectionUnlink for owning union type.
+    """
+    def __init__(self, type):
+        self.type = type
+        args = [Argument("nsCycleCollectionTraversalCallback&", "aCallback"),
+                Argument("%s&" % CGUnionStruct.unionTypeName(type, True), "aUnion"),
+                Argument("const char*", "aName"),
+                Argument("uint32_t", "aFlags", "0")]
+        CGAbstractMethod.__init__(self, None, "ImplCycleCollectionTraverse", "void", args)
+
+    def definition_body(self):
+        memberNames = [getUnionMemberName(t)
+                       for t in self.type.flatMemberTypes
+                       if idlTypeNeedsCycleCollection(t)]
+        assert memberNames
+
+        conditionTemplate = 'aUnion.Is%s()'
+        functionCallTemplate = 'ImplCycleCollectionTraverse(aCallback, aUnion.GetAs%s(), "m%s", aFlags);\n'
+
+        ifStaments = (CGIfWrapper(CGGeneric(functionCallTemplate % (m, m)),
+                                  conditionTemplate % m)
+                      for m in memberNames)
+
+        return CGElseChain(ifStaments).define()
+
+
+class CGCycleCollectionUnlinkForOwningUnionMethod(CGAbstractMethod):
+    """
+    ImplCycleCollectionUnlink for owning union type.
+    """
+    def __init__(self, type):
+        args = [Argument("%s&" % CGUnionStruct.unionTypeName(type, True), "aUnion")]
+        CGAbstractMethod.__init__(self, None, "ImplCycleCollectionUnlink", "void", args)
+
+    def definition_body(self):
+        return "aUnion.Uninit();\n"
+
 
 builtinNames = {
     IDLType.Tags.bool: 'bool',
@@ -8464,7 +8545,11 @@ class CGUnionStruct(CGThing):
         else:
             disallowCopyConstruction = True
 
-        friend = "  friend class %sArgument;\n" % str(self.type) if not self.ownsMembers else ""
+        if self.ownsMembers:
+            friend = "  friend void ImplCycleCollectionUnlink(%s& aUnion);\n" % CGUnionStruct.unionTypeName(self.type, True)
+        else:
+            friend = "  friend class %sArgument;\n" % str(self.type)
+
         bases = [ClassBase("AllOwningUnionBase")] if self.ownsMembers else []
         return CGClass(selfName,
                        bases=bases,
@@ -10695,7 +10780,7 @@ def initIdsClassMethod(identifiers, atomCacheName):
         Argument("JSContext*", "cx"),
         Argument("%s*" % atomCacheName, "atomsCache")
     ], static=True, body=body, visibility="private")
-        
+
 class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
         self.dictionary = dictionary
@@ -10884,7 +10969,7 @@ class CGDictionary(CGThing):
     def initIdsMethod(self):
         assert self.needToInitIds
         return initIdsClassMethod([m.identifier.name for m in self.dictionary.members],
-                                  "%sAtoms" % self.makeClassName(self.dictionary))             
+                                  "%sAtoms" % self.makeClassName(self.dictionary))
 
     def traceDictionaryMethod(self):
         body = ""
@@ -14033,7 +14118,7 @@ class CGEventClass(CGBindingImplClass):
         retVal = ""
         for m in self.descriptor.interface.members:
             # Unroll the type so we pick up sequences of interfaces too.
-            if m.isAttr() and m.type.unroll().isGeckoInterface():
+            if m.isAttr() and idlTypeNeedsCycleCollection(m.type):
                 retVal += ("  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(" +
                            CGDictionary.makeMemberName(m.identifier.name) +
                            ")\n")
@@ -14045,7 +14130,7 @@ class CGEventClass(CGBindingImplClass):
             if m.isAttr():
                 name = CGDictionary.makeMemberName(m.identifier.name)
                 # Unroll the type so we pick up sequences of interfaces too.
-                if m.type.unroll().isGeckoInterface():
+                if idlTypeNeedsCycleCollection(m.type):
                     retVal += "  NS_IMPL_CYCLE_COLLECTION_UNLINK(" + name + ")\n"
                 elif m.type.isAny():
                     retVal += "  tmp->" + name + ".setUndefined();\n"
