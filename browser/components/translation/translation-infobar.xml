@@ -166,12 +166,17 @@
             let bundle = Cc["@mozilla.org/intl/stringbundle;1"]
                            .getService(Ci.nsIStringBundleService)
                            .createBundle("chrome://global/locale/languageNames.properties");
+            let sortByLocalizedName = function(aList) {
+              return aList.map(code => [code, bundle.GetStringFromName(code)])
+                          .sort((a, b) => a[1].localeCompare(b[1]));
+            };
 
             // Fill the lists of supported source languages.
             let detectedLanguage = this._getAnonElt("detectedLanguage");
             let fromLanguage = this._getAnonElt("fromLanguage");
-            for (let code of Translation.supportedSourceLanguages) {
-              let name = bundle.GetStringFromName(code);
+            let sourceLanguages =
+              sortByLocalizedName(Translation.supportedSourceLanguages);
+            for (let [code, name] of sourceLanguages) {
               detectedLanguage.appendItem(name, code);
               fromLanguage.appendItem(name, code);
             }
@@ -183,8 +188,10 @@
 
             // Fill the list of supported target languages.
             let toLanguage = this._getAnonElt("toLanguage");
-            for (let code of Translation.supportedTargetLanguages)
-              toLanguage.appendItem(bundle.GetStringFromName(code), code);
+            let targetLanguages =
+              sortByLocalizedName(Translation.supportedTargetLanguages);
+            for (let [code, name] of targetLanguages)
+              toLanguage.appendItem(name, code);
 
             if (aTranslation.translatedTo)
               toLanguage.value = aTranslation.translatedTo;
