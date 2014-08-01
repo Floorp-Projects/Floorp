@@ -699,6 +699,8 @@ sysinstall_cmd = install_cmd
 # MOZ_UI_LOCALE directly, but use an intermediate variable that can be
 # overridden by the command line. (Besides, AB_CD is prettier).
 AB_CD = $(MOZ_UI_LOCALE)
+# Many locales directories want this definition.
+DEFINES += -DAB_CD=$(AB_CD)
 
 ifndef L10NBASEDIR
   L10NBASEDIR = $(error L10NBASEDIR not defined by configure)
