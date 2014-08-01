@@ -215,12 +215,21 @@ static sp<ABuffer> MakeAVCCodecSpecificData(
 }
 
 sp<ABuffer> MakeAACCodecSpecificData(const char *params) {
+    if (!params || !strlen(params)) {
+      return NULL;
+    }
     AString val;
-    CHECK(GetAttribute(params, "config", &val));
+    if (!GetAttribute(params, "config", &val)) {
+        return NULL;
+    }
 
     sp<ABuffer> config = decodeHex(val);
-    CHECK(config != NULL);
-    CHECK_GE(config->size(), 4u);
+    if (!config.get()) {
+      return NULL;
+    }
+    if (config->size() < 4u) {
+      return NULL;
+    }
 
     const uint8_t *data = config->data();
     uint32_t x = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
@@ -476,6 +485,10 @@ APacketSource::APacketSource(
 
         sp<ABuffer> codecSpecificData =
             MakeAACCodecSpecificData(params.c_str());
+        if (!codecSpecificData.get()) {
+            mInitCheck = ERROR_UNSUPPORTED;
+            return;
+        }
 
         mFormat->setData(
                 kKeyESDS, 0,

@@ -8,7 +8,6 @@
 #include "base/basictypes.h"
 
 #include "BasicLayers.h"
-#include "gfx3DMatrix.h"
 #ifdef MOZ_ENABLE_D3D9_LAYER
 # include "LayerManagerD3D9.h"
 #endif //MOZ_ENABLE_D3D9_LAYER
@@ -31,6 +30,7 @@
 
 typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 namespace mozilla {
@@ -47,11 +47,11 @@ struct ViewTransform {
     , mYScale(aYScale)
   {}
 
-  operator gfx3DMatrix() const
+  operator Matrix4x4() const
   {
     return
-      gfx3DMatrix::Translation(mTranslation.x, mTranslation.y, 0) *
-      gfx3DMatrix::ScalingMatrix(mXScale, mYScale, 1);
+      Matrix4x4().Translate(mTranslation.x, mTranslation.y, 0) *
+      Matrix4x4().Scale(mXScale, mYScale, 1);
   }
 
   nsIntPoint mTranslation;
@@ -65,23 +65,23 @@ struct ViewTransform {
 // much easier because we only expect the diagonals and the translation
 // coordinates of the matrix to be non-zero.
 
-static double GetXScale(const gfx3DMatrix& aTransform)
+static double GetXScale(const Matrix4x4& aTransform)
 {
   return aTransform._11;
 }
  
-static double GetYScale(const gfx3DMatrix& aTransform)
+static double GetYScale(const Matrix4x4& aTransform)
 {
   return aTransform._22;
 }
 
-static void Scale(gfx3DMatrix& aTransform, double aXScale, double aYScale)
+static void Scale(Matrix4x4& aTransform, double aXScale, double aYScale)
 {
   aTransform._11 *= aXScale;
   aTransform._22 *= aYScale;
 }
 
-static void ReverseTranslate(gfx3DMatrix& aTransform, const gfxPoint& aOffset)
+static void ReverseTranslate(Matrix4x4& aTransform, const gfxPoint& aOffset)
 {
   aTransform._41 -= aOffset.x;
   aTransform._42 -= aOffset.y;
@@ -89,7 +89,7 @@ static void ReverseTranslate(gfx3DMatrix& aTransform, const gfxPoint& aOffset)
 
 
 static void ApplyTransform(nsRect& aRect,
-                           gfx3DMatrix& aTransform,
+                           Matrix4x4& aTransform,
                            nscoord auPerDevPixel)
 {
   aRect.x = aRect.x * aTransform._11 + aTransform._41 * auPerDevPixel;
@@ -203,14 +203,14 @@ ComputeShadowTreeTransform(nsIFrame* aContainerFrame,
 static void
 BuildListForLayer(Layer* aLayer,
                   nsFrameLoader* aRootFrameLoader,
-                  const gfx3DMatrix& aTransform,
+                  const Matrix4x4& aTransform,
                   nsDisplayListBuilder* aBuilder,
                   nsDisplayList& aShadowTree,
                   nsIFrame* aSubdocFrame)
 {
   const FrameMetrics* metrics = GetFrameMetrics(aLayer);
 
-  gfx3DMatrix transform;
+  Matrix4x4 transform;
 
   if (metrics && metrics->IsScrollable()) {
     const ViewID scrollId = metrics->GetScrollId();
@@ -225,14 +225,14 @@ BuildListForLayer(Layer* aLayer,
       aRootFrameLoader->GetCurrentRemoteFrame()->GetContentView(scrollId);
     // XXX why don't we include aLayer->GetTransform() in the inverse-scale here?
     // This seems wrong, but it doesn't seem to cause bugs!
-    gfx3DMatrix applyTransform = ComputeShadowTreeTransform(
+    Matrix4x4 applyTransform = ComputeShadowTreeTransform(
       aSubdocFrame, aRootFrameLoader, metrics, view->GetViewConfig(),
       1 / GetXScale(aTransform), 1 / GetYScale(aTransform));
-    transform = applyTransform * To3DMatrix(aLayer->GetTransform()) * aTransform;
+    transform = applyTransform * aLayer->GetTransform() * aTransform;
 
     // As mentioned above, bounds calculation also depends on the scale
     // of this layer.
-    gfx3DMatrix tmpTransform = aTransform;
+    Matrix4x4 tmpTransform = aTransform;
     Scale(tmpTransform, GetXScale(applyTransform), GetYScale(applyTransform));
 
     // Calculate rect for this layer based on aTransform.
@@ -247,7 +247,7 @@ BuildListForLayer(Layer* aLayer,
       new (aBuilder) nsDisplayRemoteShadow(aBuilder, aSubdocFrame, bounds, scrollId));
 
   } else {
-    transform = To3DMatrix(aLayer->GetTransform()) * aTransform;
+    transform = aLayer->GetTransform() * aTransform;
   }
 
   for (Layer* child = aLayer->GetFirstChild(); child;
@@ -272,7 +272,7 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
 
   const FrameMetrics* metrics = GetFrameMetrics(aLayer);
 
-  gfx3DMatrix shadowTransform = To3DMatrix(aLayer->GetTransform());
+  Matrix4x4 shadowTransform = aLayer->GetTransform();
   ViewTransform layerTransform = aTransform;
 
   if (metrics && metrics->IsScrollable()) {
@@ -280,7 +280,7 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
     const nsContentView* view =
       aFrameLoader->GetCurrentRemoteFrame()->GetContentView(scrollId);
     NS_ABORT_IF_FALSE(view, "Array of views should be consistent with layer tree");
-    gfx3DMatrix currentTransform = To3DMatrix(aLayer->GetTransform());
+    Matrix4x4 currentTransform = aLayer->GetTransform();
 
     const ViewConfig& config = view->GetViewConfig();
     // With temporary scale we should compensate translation
@@ -293,14 +293,14 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
     );
 
     // Apply the layer's own transform *before* the view transform
-    shadowTransform = gfx3DMatrix(viewTransform) * currentTransform;
+    shadowTransform = Matrix4x4(viewTransform) * currentTransform;
 
     layerTransform = viewTransform;
     if (metrics->IsRootScrollable()) {
       // Apply the translation *before* we do the rest of the transforms.
       nsIntPoint offset = GetContentRectLayerOffset(aFrame, aBuilder);
       shadowTransform = shadowTransform *
-          gfx3DMatrix::Translation(float(offset.x), float(offset.y), 0.0);
+          Matrix4x4().Translate(float(offset.x), float(offset.y), 0.0);
     }
   }
 
@@ -332,7 +332,7 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
                             1.0f/aLayer->GetPostYScale(),
                             1);
 
-  shadow->SetShadowTransform(gfx::ToMatrix4x4(shadowTransform));
+  shadow->SetShadowTransform(shadowTransform);
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
     TransformShadowTree(aBuilder, aFrameLoader, aFrame, child, layerTransform,
@@ -376,7 +376,7 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
     return;
   const FrameMetrics metrics = container->GetFrameMetrics();
   const ViewID scrollId = metrics.GetScrollId();
-  gfx3DMatrix transform = To3DMatrix(aLayer->GetTransform());
+  Matrix4x4 transform = aLayer->GetTransform();
   aXScale *= GetXScale(transform);
   aYScale *= GetYScale(transform);
 

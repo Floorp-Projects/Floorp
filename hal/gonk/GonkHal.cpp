@@ -68,8 +68,8 @@
 #include "UeventPoller.h"
 #include "nsIWritablePropertyBag2.h"
 #include <algorithm>
+#include "PowerWakeLock.h"
 
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 #define NsecPerMsec  1000000LL
 #define NsecPerSec   1000000000
 
@@ -667,6 +667,7 @@ void
 SetScreenEnabled(bool aEnabled)
 {
   GetGonkDisplay()->SetEnabled(aEnabled);
+  gPowerWakelock = nullptr;
   sScreenEnabled = aEnabled;
 }
 
@@ -1397,15 +1398,15 @@ SetNiceForPid(int aPid, int aNice)
   errno = 0;
   int origProcPriority = getpriority(PRIO_PROCESS, aPid);
   if (errno) {
-    LOG("Unable to get nice for pid=%d; error %d.  SetNiceForPid bailing.",
-        aPid, errno);
+    HAL_LOG(("Unable to get nice for pid=%d; error %d.  SetNiceForPid bailing.",
+             aPid, errno));
     return;
   }
 
   int rv = setpriority(PRIO_PROCESS, aPid, aNice);
   if (rv) {
-    LOG("Unable to set nice for pid=%d; error %d.  SetNiceForPid bailing.",
-        aPid, errno);
+    HAL_LOG(("Unable to set nice for pid=%d; error %d.  SetNiceForPid bailing.",
+             aPid, errno));
     return;
   }
 
@@ -1419,7 +1420,7 @@ SetNiceForPid(int aPid, int aNice)
 
   DIR* tasksDir = opendir(nsPrintfCString("/proc/%d/task/", aPid).get());
   if (!tasksDir) {
-    LOG("Unable to open /proc/%d/task.  SetNiceForPid bailing.", aPid);
+    HAL_LOG(("Unable to open /proc/%d/task.  SetNiceForPid bailing.", aPid));
     return;
   }
 
@@ -1452,9 +1453,9 @@ SetNiceForPid(int aPid, int aNice)
     // Get and set the task's new priority.
     int origtaskpriority = getpriority(PRIO_PROCESS, tid);
     if (errno) {
-      LOG("Unable to get nice for tid=%d (pid=%d); error %d.  This isn't "
-          "necessarily a problem; it could be a benign race condition.",
-          tid, aPid, errno);
+      HAL_LOG(("Unable to get nice for tid=%d (pid=%d); error %d.  This isn't "
+               "necessarily a problem; it could be a benign race condition.",
+               tid, aPid, errno));
       continue;
     }
 
@@ -1472,15 +1473,15 @@ SetNiceForPid(int aPid, int aNice)
     rv = setpriority(PRIO_PROCESS, tid, newtaskpriority);
 
     if (rv) {
-      LOG("Unable to set nice for tid=%d (pid=%d); error %d.  This isn't "
-          "necessarily a problem; it could be a benign race condition.",
-          tid, aPid, errno);
+      HAL_LOG(("Unable to set nice for tid=%d (pid=%d); error %d.  This isn't "
+               "necessarily a problem; it could be a benign race condition.",
+               tid, aPid, errno));
       continue;
     }
   }
 
-  LOG("Changed nice for pid %d from %d to %d.",
-      aPid, origProcPriority, aNice);
+  HAL_LOG(("Changed nice for pid %d from %d to %d.",
+           aPid, origProcPriority, aNice));
 
   closedir(tasksDir);
 }
@@ -1514,11 +1515,11 @@ SetProcessPriority(int aPid,
     int clampedOomScoreAdj = clamped<int>(oomScoreAdj, OOM_SCORE_ADJ_MIN,
                                                        OOM_SCORE_ADJ_MAX);
     if(clampedOomScoreAdj != oomScoreAdj) {
-      HAL_LOG(("Clamping OOM adjustment for pid %d to %d",
-               aPid, clampedOomScoreAdj));
+      HAL_LOG(("Clamping OOM adjustment for pid %d to %d", aPid,
+               clampedOomScoreAdj));
     } else {
-      HAL_LOG(("Setting OOM adjustment for pid %d to %d",
-               aPid, clampedOomScoreAdj));
+      HAL_LOG(("Setting OOM adjustment for pid %d to %d", aPid,
+               clampedOomScoreAdj));
     }
 
     // We try the newer interface first, and fall back to the older interface
@@ -1533,9 +1534,8 @@ SetProcessPriority(int aPid,
                   nsPrintfCString("%d", oomAdj).get());
     }
   } else {
-    LOG("Unable to read oom_score_adj pref for priority %s; "
-        "are the prefs messed up?",
-        ProcessPriorityToString(aPriority));
+    HAL_ERR(("Unable to read oom_score_adj pref for priority %s; "
+             "are the prefs messed up?", ProcessPriorityToString(aPriority)));
     MOZ_ASSERT(false);
   }
 
@@ -1550,15 +1550,14 @@ SetProcessPriority(int aPid,
     rv = Preferences::GetInt("hal.processPriorityManager.gonk.LowCPUNice",
                              &nice);
   } else {
-    LOG("Unable to read niceness pref for priority %s; "
-        "are the prefs messed up?",
-        ProcessPriorityToString(aPriority));
+    HAL_ERR(("Unable to read niceness pref for priority %s; "
+             "are the prefs messed up?", ProcessPriorityToString(aPriority)));
     MOZ_ASSERT(false);
     rv = NS_ERROR_FAILURE;
   }
 
   if (NS_SUCCEEDED(rv)) {
-    LOG("Setting nice for pid %d to %d", aPid, nice);
+    HAL_LOG(("Setting nice for pid %d to %d", aPid, nice));
     SetNiceForPid(aPid, nice);
   }
 }
@@ -1576,13 +1575,13 @@ SetThreadNiceValue(pid_t aTid, ThreadPriority aThreadPriority, int aValue)
   MOZ_ASSERT(aThreadPriority < NUM_THREAD_PRIORITY);
   MOZ_ASSERT(aThreadPriority >= 0);
 
-  LOG("Setting thread %d to priority level %s; nice level %d",
-      aTid, ThreadPriorityToString(aThreadPriority), aValue);
+  HAL_LOG(("Setting thread %d to priority level %s; nice level %d",
+           aTid, ThreadPriorityToString(aThreadPriority), aValue));
   int rv = setpriority(PRIO_PROCESS, aTid, aValue);
 
   if (rv) {
-    LOG("Failed to set thread %d to priority level %s; error %s",
-        aTid, ThreadPriorityToString(aThreadPriority), strerror(errno));
+    HAL_LOG(("Failed to set thread %d to priority level %s; error %s", aTid,
+             ThreadPriorityToString(aThreadPriority), strerror(errno)));
   }
 }
 
@@ -1598,15 +1597,16 @@ SetRealTimeThreadPriority(pid_t aTid,
   MOZ_ASSERT(IsValidRealTimePriority(aValue, policy), "Invalid real time priority");
 
   // Setting real time priorities requires using sched_setscheduler
-  LOG("Setting thread %d to priority level %s; Real Time priority %d, Schedule FIFO",
-      aTid, ThreadPriorityToString(aThreadPriority), aValue);
+  HAL_LOG(("Setting thread %d to priority level %s; Real Time priority %d, "
+           "Schedule FIFO", aTid, ThreadPriorityToString(aThreadPriority),
+           aValue));
   sched_param schedParam;
   schedParam.sched_priority = aValue;
   int rv = sched_setscheduler(aTid, policy, &schedParam);
 
   if (rv) {
-    LOG("Failed to set thread %d to real time priority level %s; error %s",
-        aTid, ThreadPriorityToString(aThreadPriority), strerror(errno));
+    HAL_LOG(("Failed to set thread %d to real time priority level %s; error %s",
+             aTid, ThreadPriorityToString(aThreadPriority), strerror(errno)));
   }
 }
 
@@ -1624,7 +1624,8 @@ SetThreadPriority(pid_t aTid, hal::ThreadPriority aThreadPriority)
       threadPriorityStr = ThreadPriorityToString(aThreadPriority);
       break;
     default:
-      LOG("Unrecognized thread priority %d; Doing nothing", aThreadPriority);
+      HAL_ERR(("Unrecognized thread priority %d; Doing nothing",
+               aThreadPriority));
       return;
   }
 
@@ -1686,7 +1687,8 @@ SetCurrentThreadPriority(ThreadPriority aThreadPriority)
       break;
     }
     default:
-      LOG("Unrecognized thread priority %d; Doing nothing", aThreadPriority);
+      HAL_LOG(("Unrecognized thread priority %d; Doing nothing",
+               aThreadPriority));
       return;
   }
 }

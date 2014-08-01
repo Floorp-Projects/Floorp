@@ -92,6 +92,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
         aColor = TEXT_NORMAL_COLOR;
         break;
     case eColorID_TextSelectBackground:
+        aColor = NS_RGBA(0x33,0xb5,0xe5,0x66);
+        break;
     case eColorID_IMESelectedRawTextBackground:
     case eColorID_IMESelectedConvertedTextBackground:
         // still used

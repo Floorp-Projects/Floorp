@@ -1126,30 +1126,31 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
  */
 static LayerRect
 GetCompositorSideCompositionBounds(ContainerLayer* aScrollAncestor,
-                                   const gfx3DMatrix& aTransformToCompBounds,
+                                   const Matrix4x4& aTransformToCompBounds,
                                    const ViewTransform& aAPZTransform)
 {
-  gfx3DMatrix nonTransientAPZTransform = gfx3DMatrix::ScalingMatrix(
+  Matrix4x4 nonTransientAPZUntransform = Matrix4x4().Scale(
     aScrollAncestor->GetFrameMetrics().mResolution.scale,
     aScrollAncestor->GetFrameMetrics().mResolution.scale,
     1.f);
+  nonTransientAPZUntransform.Invert();
 
-  gfx3DMatrix layerTransform = gfx::To3DMatrix(aScrollAncestor->GetTransform());
+  Matrix4x4 layerTransform = aScrollAncestor->GetTransform();
+  Matrix4x4 layerUntransform = layerTransform;
+  layerUntransform.Invert();
 
   // First take off the last two "terms" of aTransformToCompBounds, which
   // are the scroll ancestor's local transform and the APZ's nontransient async
   // transform.
-  gfx3DMatrix transform = aTransformToCompBounds;
-  transform = transform * layerTransform.Inverse();
-  transform = transform * nonTransientAPZTransform.Inverse();
+  Matrix4x4 transform = aTransformToCompBounds * layerUntransform * nonTransientAPZUntransform;
 
   // Next, apply the APZ's async transform (this includes the nontransient component
   // as well).
-  transform = transform * gfx3DMatrix(aAPZTransform);
+  transform = transform * Matrix4x4(aAPZTransform);
 
   // Finally, put back the scroll ancestor's local transform.
   transform = transform * layerTransform;
-  return TransformTo<LayerPixel>(transform.Inverse(),
+  return TransformTo<LayerPixel>(To3DMatrix(transform).Inverse(),
             aScrollAncestor->GetFrameMetrics().mCompositionBounds);
 }
 
