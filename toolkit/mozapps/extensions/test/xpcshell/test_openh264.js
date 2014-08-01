@@ -15,23 +15,48 @@ const OPENH264_PREF_AUTOUPDATE = OPENH264_PREF_BRANCH + "autoupdate";
 const PREF_LOGGING             = OPENH264_PREF_BRANCH + "provider.logging";
 const PREF_LOGGING_LEVEL       = PREF_LOGGING + ".level";
 const PREF_LOGGING_DUMP        = PREF_LOGGING + ".dump";
+const GMP_PREF_LASTCHECK       = "media.gmp-manager.lastCheck";
+const GMP_PREF_LOG             = "media.gmp-manager.log";
+const SEC_IN_A_DAY             = 24 * 60 * 60;
 
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));
 
-let gProfileDir = null;
+let MockGMPAddon = Object.freeze({
+  id: OPENH264_PLUGIN_ID,
+  isOpenH264: true,
+  isInstalled: false,
+});
+
+let gInstalledAddonId = "";
+
+function MockGMPInstallManager() {
+}
+
+MockGMPInstallManager.prototype = {
+  checkForAddons: () => Promise.resolve([MockGMPAddon]),
+
+  installAddon: addon => {
+    gInstalledAddonId = addon.id;
+    return Promise.resolve();
+  },
+};
+
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   startupManager();
+
+  Services.prefs.setBoolPref(PREF_LOGGING_DUMP, true);
+  Services.prefs.setIntPref(PREF_LOGGING_LEVEL, 0);
+  Services.prefs.setBoolPref(GMP_PREF_LOG, true);
+
   run_next_test();
 }
 
 add_task(function* test_notInstalled() {
   Services.prefs.setCharPref(OPENH264_PREF_PATH, "");
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, false);
-  Services.prefs.setBoolPref(PREF_LOGGING_DUMP, true);
-  Services.prefs.setIntPref(PREF_LOGGING_LEVEL, 0);
 
   let addons = yield promiseAddonsByIDs([OPENH264_PLUGIN_ID]);
   Assert.equal(addons.length, 1);
@@ -217,4 +242,36 @@ add_task(function* test_pluginRegistration() {
   Services.prefs.setBoolPref(OPENH264_PREF_ENABLED, true);
   Assert.equal(addedPath, file.path);
   Assert.equal(removedPath, null);
+});
+
+add_task(function* test_periodicUpdate() {
+  let OpenH264Scope = Cu.import("resource://gre/modules/addons/OpenH264Provider.jsm");
+  Object.defineProperty(OpenH264Scope, "GMPInstallManager", {
+    value: MockGMPInstallManager,
+    writable: true,
+    enumerable: true,
+    configurable: true
+  });
+
+  Services.prefs.clearUserPref(OPENH264_PREF_AUTOUPDATE);
+  let addons = yield promiseAddonsByIDs([OPENH264_PLUGIN_ID]);
+  let prefs = Services.prefs;
+  Assert.equal(addons.length, 1);
+  let addon = addons[0];
+
+  addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
+  Services.prefs.setIntPref(GMP_PREF_LASTCHECK, 0);
+  let result = yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+  Assert.strictEqual(result, false);
+
+  addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
+  Services.prefs.setIntPref(GMP_PREF_LASTCHECK, Date.now() / 1000 - 60);
+  result = yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+  Assert.strictEqual(result, false);
+
+  Services.prefs.setIntPref(GMP_PREF_LASTCHECK, Date.now() / 1000 - 2 * SEC_IN_A_DAY);
+  gInstalledAddonId = "";
+  result = yield addon.findUpdates({}, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+  Assert.strictEqual(result, true);
+  Assert.equal(gInstalledAddonId, OPENH264_PLUGIN_ID);
 });
