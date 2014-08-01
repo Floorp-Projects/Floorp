@@ -969,7 +969,7 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
 #endif
 
 #if !defined(XP_MACOSX)
-static bool sHandlersInstalled = false;
+static bool sInstalledHandlers = false;
 #endif
 
 bool
@@ -989,7 +989,7 @@ js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
 #else
     // Assume Windows or Unix. For these platforms, there is a single,
     // process-wide signal handler installed. Take care to only install it once.
-    if (sHandlersInstalled)
+    if (sInstalledHandlers)
         return true;
 
 # if defined(XP_WIN)
@@ -1007,7 +1007,7 @@ js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
         return false;
 # endif
 
-    sHandlersInstalled = true;
+    sInstalledHandlers = true;
 #endif
     return true;
 }
