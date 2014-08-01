@@ -97,6 +97,11 @@ EXPORTS.js += [
 ]
 
 UNIFIED_SOURCES += [
+    'asmjs/AsmJSFrameIterator.cpp',
+    'asmjs/AsmJSLink.cpp',
+    'asmjs/AsmJSModule.cpp',
+    'asmjs/AsmJSSignalHandlers.cpp',
+    'asmjs/AsmJSValidate.cpp',
     'assembler/jit/ExecutableAllocator.cpp',
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
@@ -137,11 +142,6 @@ UNIFIED_SOURCES += [
     'irregexp/RegExpParser.cpp',
     'irregexp/RegExpStack.cpp',
     'jit/AliasAnalysis.cpp',
-    'jit/AsmJS.cpp',
-    'jit/AsmJSFrameIterator.cpp',
-    'jit/AsmJSLink.cpp',
-    'jit/AsmJSModule.cpp',
-    'jit/AsmJSSignalHandlers.cpp',
     'jit/BacktrackingAllocator.cpp',
     'jit/Bailouts.cpp',
     'jit/BaselineBailouts.cpp',

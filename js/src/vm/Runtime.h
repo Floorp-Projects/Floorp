@@ -25,14 +25,14 @@
 #endif
 #include "jsscript.h"
 
+#ifdef XP_MACOSX
+# include "asmjs/AsmJSSignalHandlers.h"
+#endif
 #include "ds/FixedSizeHash.h"
 #include "frontend/ParseMaps.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"
 #include "irregexp/RegExpStack.h"
-#ifdef XP_MACOSX
-# include "jit/AsmJSSignalHandlers.h"
-#endif
 #include "js/HashTable.h"
 #include "js/Vector.h"
 #include "vm/CommonPropertyNames.h"

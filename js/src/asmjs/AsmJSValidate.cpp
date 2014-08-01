@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/AsmJS.h"
+#include "asmjs/AsmJSValidate.h"
 
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
@@ -17,10 +17,10 @@
 #include "jsprf.h"
 #include "prmjtime.h"
 
+#include "asmjs/AsmJSLink.h"
+#include "asmjs/AsmJSModule.h"
+#include "asmjs/AsmJSSignalHandlers.h"
 #include "frontend/Parser.h"
-#include "jit/AsmJSLink.h"
-#include "jit/AsmJSModule.h"
-#include "jit/AsmJSSignalHandlers.h"
 #include "jit/CodeGenerator.h"
 #include "jit/CompileWrappers.h"
 #include "jit/MIR.h"
