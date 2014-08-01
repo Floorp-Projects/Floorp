@@ -348,6 +348,16 @@ interface TestJSImplInterface {
   void passVariadicByteString(ByteString... arg);
   void PassUnionByteString((ByteString or long) arg);
 
+  // ScalarValueString types
+  void passSVS(ScalarValueString arg);
+  void passNullableSVS(ScalarValueString? arg);
+  void passOptionalSVS(optional ScalarValueString arg);
+  void passOptionalSVSWithDefaultValue(optional ScalarValueString arg = "abc");
+  void passOptionalNullableSVS(optional ScalarValueString? arg);
+  void passOptionalNullableSVSWithDefaultValue(optional ScalarValueString? arg = null);
+  void passVariadicSVS(ScalarValueString... arg);
+  ScalarValueString receiveSVS();
+
   // Enumerated types
   void passEnum(MyTestEnum arg);
   void passNullableEnum(MyTestEnum? arg);
@@ -445,9 +455,11 @@ interface TestJSImplInterface {
   void passUnion21((MozMap<long> or long) arg);
   void passUnion22((MozMap<object> or long) arg);
   void passUnionWithCallback((EventHandler or long) arg);
+  void passUnionWithByteString((ByteString or long) arg);
   void passUnionWithMozMap((MozMap<DOMString> or DOMString) arg);
   void passUnionWithMozMapAndSequence((MozMap<DOMString> or sequence<DOMString>) arg);
   void passUnionWithSequenceAndMozMap((sequence<DOMString> or MozMap<DOMString>) arg);
+  void passUnionWithSVS((ScalarValueString or long) arg);
 #endif
   void passUnionWithNullable((object? or long) arg);
   void passNullableUnion((object or long)? arg);
