@@ -104,19 +104,16 @@ namespace mozilla {
 
 class GenericModule MOZ_FINAL : public nsIModule
 {
-    ~GenericModule() {}
+  ~GenericModule() {}
 
 public:
-    explicit GenericModule(const mozilla::Module* aData)
-        : mData(aData)
-    {
-    }
+  explicit GenericModule(const mozilla::Module* aData) : mData(aData) {}
 
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIMODULE
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIMODULE
 
 private:
-    const mozilla::Module* mData;
+  const mozilla::Module* mData;
 };
 
 } // namespace mozilla
