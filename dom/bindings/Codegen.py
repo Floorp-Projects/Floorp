@@ -9637,13 +9637,14 @@ class CGProxyUnwrap(CGAbstractMethod):
             type=self.descriptor.nativeType)
 
 
-class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
+class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('JS::Handle<jsid>', 'id'),
+                Argument('bool', 'ignoreNamedProps'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc')]
-        ClassMethod.__init__(self, "getOwnPropertyDescriptor", "bool", args,
+        ClassMethod.__init__(self, "getOwnPropDescriptor", "bool", args,
                              virtual=True, override=True, const=True)
         self.descriptor = descriptor
 
@@ -9714,6 +9715,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             condition = "!HasPropertyOnPrototype(cx, proxy, id)"
             if self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
                 condition = "(!isXray || %s)" % condition
+            condition = "!ignoreNamedProps && " + condition
             if self.descriptor.supportsIndexedProperties():
                 condition = "!IsArrayIndex(index) && " + condition
             namedGet = (CGIfWrapper(CGProxyNamedGetter(self.descriptor, templateValues),
@@ -10372,7 +10374,7 @@ class CGDOMJSProxyHandler(CGClass):
     def __init__(self, descriptor):
         assert (descriptor.supportsIndexedProperties() or
                 descriptor.supportsNamedProperties())
-        methods = [CGDOMJSProxyHandler_getOwnPropertyDescriptor(descriptor),
+        methods = [CGDOMJSProxyHandler_getOwnPropDescriptor(descriptor),
                    CGDOMJSProxyHandler_defineProperty(descriptor),
                    ClassUsingDeclaration("mozilla::dom::DOMProxyHandler",
                                          "defineProperty"),
