@@ -7,9 +7,9 @@
 // Moz headers (alphabetical)
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
+#include "win_wlanLibrary.h"
 
 class nsWifiAccessPoint;
-class WinWLANLibrary;
 
 class WinWifiScanner {
  public:
