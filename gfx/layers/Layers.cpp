@@ -1775,6 +1775,14 @@ LayerManager::DumpSelf(std::stringstream& aStream, const char* aPrefix)
 }
 
 void
+LayerManager::Dump()
+{
+  std::stringstream ss;
+  Dump(ss);
+  print_stderr(ss);
+}
+
+void
 LayerManager::Dump(layerscope::LayersPacket* aPacket)
 {
   DumpPacket(aPacket);
