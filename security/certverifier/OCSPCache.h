@@ -29,8 +29,8 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Vector.h"
 #include "pkix/Result.h"
+#include "pkix/Time.h"
 #include "prerror.h"
-#include "prtime.h"
 #include "seccomon.h"
 
 namespace mozilla { namespace pkix {
@@ -60,7 +60,7 @@ public:
   // status and the time through which the status is considered trustworthy.
   bool Get(const mozilla::pkix::CertID& aCertID,
            /*out*/ mozilla::pkix::Result& aResult,
-           /*out*/ PRTime& aValidThrough);
+           /*out*/ mozilla::pkix::Time& aValidThrough);
 
   // Caches the status of the given certificate (issued by the given issuer).
   // The status is considered trustworthy through the given time.
@@ -72,8 +72,9 @@ public:
   // status with a less recent thisUpdate unless the less recent status
   // indicates the certificate is revoked.
   mozilla::pkix::Result Put(const mozilla::pkix::CertID& aCertID,
-                            mozilla::pkix::Result aResult, PRTime aThisUpdate,
-                            PRTime aValidThrough);
+                            mozilla::pkix::Result aResult,
+                            mozilla::pkix::Time aThisUpdate,
+                            mozilla::pkix::Time aValidThrough);
 
   // Removes everything from the cache.
   void Clear();
@@ -82,13 +83,19 @@ private:
   class Entry
   {
   public:
-    mozilla::pkix::Result Init(const mozilla::pkix::CertID& aCertID,
-                               mozilla::pkix::Result aResult,
-                               PRTime aThisUpdate, PRTime aValidThrough);
+    Entry(mozilla::pkix::Result aResult,
+          mozilla::pkix::Time aThisUpdate,
+          mozilla::pkix::Time aValidThrough)
+      : mResult(aResult)
+      , mThisUpdate(aThisUpdate)
+      , mValidThrough(aValidThrough)
+    {
+    }
+    mozilla::pkix::Result Init(const mozilla::pkix::CertID& aCertID);
 
     mozilla::pkix::Result mResult;
-    PRTime mThisUpdate;
-    PRTime mValidThrough;
+    mozilla::pkix::Time mThisUpdate;
+    mozilla::pkix::Time mValidThrough;
     // The SHA-384 hash of the concatenation of the DER encodings of the
     // issuer name and issuer key, followed by the serial number.
     // See the documentation for CertIDHash in OCSPCache.cpp.

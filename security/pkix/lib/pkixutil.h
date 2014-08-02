@@ -182,6 +182,17 @@ private:
   void operator=(const NonOwningDERArray&) /* = delete*/;
 };
 
+inline unsigned int
+DaysBeforeYear(unsigned int year)
+{
+  PR_ASSERT(year >= 1);
+  PR_ASSERT(year <= 9999);
+  return ((year - 1u) * 365u)
+       + ((year - 1u) / 4u)    // leap years are every 4 years,
+       - ((year - 1u) / 100u)  // except years divisible by 100,
+       + ((year - 1u) / 400u); // except years divisible by 400.
+}
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix__pkixutil_h

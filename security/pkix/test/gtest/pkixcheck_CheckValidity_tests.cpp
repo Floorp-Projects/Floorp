@@ -31,11 +31,11 @@ using namespace mozilla::pkix::test;
 
 namespace mozilla { namespace pkix {
 
-Result CheckValidity(const Input encodedValidity, PRTime time);
+Result CheckValidity(const Input encodedValidity, Time time);
 
 } } // namespace mozilla::pkix
 
-static const PRTime PAST_TIME(YMDHMS(1998, 12, 31, 12, 23, 56));
+static const Time PAST_TIME(YMDHMS(1998, 12, 31, 12, 23, 56));
 
 #define OLDER_GENERALIZEDTIME \
   0x18, 15,                               /* tag, length */ \
@@ -47,7 +47,7 @@ static const PRTime PAST_TIME(YMDHMS(1998, 12, 31, 12, 23, 56));
   '9', '9', '0', '1', '0', '1',           /* (19)99-01-01 */ \
   '0', '0', '0', '0', '0', '0', 'Z'       /* 00:00:00Z */
 
-static const PRTime NOW(YMDHMS(2016, 12, 31, 12, 23, 56));
+static const Time NOW(YMDHMS(2016, 12, 31, 12, 23, 56));
 
 #define NEWER_GENERALIZEDTIME \
   0x18, 15,                               /* tag, length */ \
@@ -59,7 +59,7 @@ static const PRTime NOW(YMDHMS(2016, 12, 31, 12, 23, 56));
   '2', '1', '0', '1', '0', '1',           /* 2021-01-01 */ \
   '0', '0', '0', '0', '0', '0', 'Z'       /* 00:00:00Z */
 
-static const PRTime FUTURE_TIME(YMDHMS(2025, 12, 31, 12, 23, 56));
+static const Time FUTURE_TIME(YMDHMS(2025, 12, 31, 12, 23, 56));
 
 class pkixcheck_CheckValidity : public ::testing::Test { };
 
