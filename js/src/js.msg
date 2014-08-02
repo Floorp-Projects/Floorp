@@ -130,7 +130,7 @@ MSG_DEF(JSMSG_BAD_APPLY_ARGS,          1, JSEXN_TYPEERR, "second argument to Fun
 MSG_DEF(JSMSG_BAD_FORMAL,              0, JSEXN_SYNTAXERR, "malformed formal parameter")
 MSG_DEF(JSMSG_CALLER_IS_STRICT,        0, JSEXN_TYPEERR, "access to strict mode caller function is censored")
 MSG_DEF(JSMSG_DEPRECATED_USAGE,        1, JSEXN_REFERENCEERR, "deprecated {0} usage")
-MSG_DEF(JSMSG_FUNCTION_ARGUMENTS_AND_REST, 0, JSEXN_ERR, "the 'arguments' property of a function with a rest parameter may not be used")
+MSG_DEF(JSMSG_FUNCTION_ARGUMENTS_AND_REST, 0, JSEXN_TYPEERR, "the 'arguments' property of a function with a rest parameter may not be used")
 MSG_DEF(JSMSG_NOT_SCRIPTED_FUNCTION,   1, JSEXN_TYPEERR, "{0} is not a scripted function")
 MSG_DEF(JSMSG_NO_REST_NAME,            0, JSEXN_SYNTAXERR, "no parameter name after ...")
 MSG_DEF(JSMSG_PARAMETER_AFTER_REST,    0, JSEXN_SYNTAXERR, "parameter after rest parameter")
