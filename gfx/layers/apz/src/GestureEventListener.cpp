@@ -383,6 +383,8 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
 nsEventStatus GestureEventListener::HandleInputTouchCancel()
 {
   SetState(GESTURE_NONE);
+  CancelMaxTapTimeoutTask();
+  CancelLongTapTimeoutTask();
   return nsEventStatus_eIgnore;
 }
 
