@@ -30,9 +30,10 @@ public:
                               MOZ_OVERRIDE;
   virtual Result FindIssuer(mozilla::pkix::Input encodedIssuerName,
                             IssuerChecker& checker,
-                            PRTime time) MOZ_OVERRIDE;
+                            mozilla::pkix::Time time) MOZ_OVERRIDE;
   virtual Result CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                                 const mozilla::pkix::CertID& certID, PRTime time,
+                                 const mozilla::pkix::CertID& certID,
+                                 mozilla::pkix::Time time,
                     /*optional*/ const mozilla::pkix::Input* stapledOCSPresponse,
                     /*optional*/ const mozilla::pkix::Input* aiaExtension);
   virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain)

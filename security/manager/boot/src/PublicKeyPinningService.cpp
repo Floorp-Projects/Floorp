@@ -18,6 +18,7 @@
 #include "sechash.h"
 
 using namespace mozilla;
+using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
 #if defined(PR_LOGGING)
@@ -289,13 +290,13 @@ CheckChainAgainstAllNames(const CERTCertList* certList, bool enforceTestMode)
 bool
 PublicKeyPinningService::ChainHasValidPins(const CERTCertList* certList,
                                            const char* hostname,
-                                           const PRTime time,
+                                           mozilla::pkix::Time time,
                                            bool enforceTestMode)
 {
   if (!certList) {
     return false;
   }
-  if (time > kPreloadPKPinsExpirationTime) {
+  if (time > TimeFromElapsedSecondsAD(kPreloadPKPinsExpirationTime)) {
     return true;
   }
   if (!hostname || hostname[0] == 0) {

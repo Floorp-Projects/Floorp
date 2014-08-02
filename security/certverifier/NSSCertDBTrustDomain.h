@@ -58,7 +58,7 @@ public:
 
   virtual Result FindIssuer(mozilla::pkix::Input encodedIssuerName,
                             IssuerChecker& checker,
-                            PRTime time) MOZ_OVERRIDE;
+                            mozilla::pkix::Time time) MOZ_OVERRIDE;
 
   virtual Result GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                               const mozilla::pkix::CertPolicyId& policy,
@@ -81,7 +81,7 @@ public:
   virtual Result CheckRevocation(
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
                    const mozilla::pkix::CertID& certID,
-                   PRTime time,
+                   mozilla::pkix::Time time,
       /*optional*/ const mozilla::pkix::Input* stapledOCSPResponse,
       /*optional*/ const mozilla::pkix::Input* aiaExtension)
                    MOZ_OVERRIDE;
@@ -94,9 +94,8 @@ private:
     ResponseIsFromNetwork = 1,
     ResponseWasStapled = 2
   };
-  static const PRTime ServerFailureDelay = 5 * 60 * PR_USEC_PER_SEC;
   Result VerifyAndMaybeCacheEncodedOCSPResponse(
-    const mozilla::pkix::CertID& certID, PRTime time,
+    const mozilla::pkix::CertID& certID, mozilla::pkix::Time time,
     uint16_t maxLifetimeInDays, mozilla::pkix::Input encodedResponse,
     EncodedResponseSource responseSource, /*out*/ bool& expired);
 

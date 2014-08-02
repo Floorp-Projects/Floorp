@@ -95,7 +95,7 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
 
 Result
 AppTrustDomain::FindIssuer(Input encodedIssuerName, IssuerChecker& checker,
-                           PRTime time)
+                           Time)
 
 {
   MOZ_ASSERT(mTrustedRoot);
@@ -215,7 +215,7 @@ AppTrustDomain::DigestBuf(Input item, /*out*/ uint8_t* digestBuf,
 }
 
 Result
-AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, PRTime time,
+AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, Time,
                                 /*optional*/ const Input*,
                                 /*optional*/ const Input*)
 {
