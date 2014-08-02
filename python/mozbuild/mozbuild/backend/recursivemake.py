@@ -733,10 +733,10 @@ class RecursiveMakeBackend(CommonBackend):
                             continue
                         if t == b'tools' and not re.search('(?:^|\s)tools.*::', content, re.M):
                             continue
-                        if objdir == bf.environment.topobjdir:
+                        if objdir == self.environment.topobjdir:
                             continue
                         self._no_skip['tools'].add(mozpath.relpath(objdir,
-                            bf.environment.topobjdir))
+                            self.environment.topobjdir))
 
         # Write out a master list of all IPDL source files.
         ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
