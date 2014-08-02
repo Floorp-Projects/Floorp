@@ -256,6 +256,13 @@ WebappsActor.prototype = {
       reg._saveApps().then(() => {
         aApp.manifest = manifest;
 
+        // We need the manifest to set the app kind for hosted apps,
+        // because of appcache.
+        if (aApp.kind == undefined) {
+          aApp.kind = manifest.appcache_path ? reg.kHostedAppcache
+                                             : reg.kHosted;
+        }
+
         // Needed to evict manifest cache on content side
         // (has to be dispatched first, otherwise other messages like
         // Install:Return:OK are going to use old manifest version)
@@ -284,7 +291,7 @@ WebappsActor.prototype = {
         // We can't have appcache for packaged apps.
         if (!aApp.origin.startsWith("app://")) {
           reg.startOfflineCacheDownload(
-            new ManifestHelper(manifest, aApp.origin, aApp.manifestURL));
+            new ManifestHelper(manifest, aApp.origin, aApp.manifestURL), aApp);
         }
       });
       // Cleanup by removing the temporary directory.
@@ -532,6 +539,7 @@ WebappsActor.prototype = {
             manifestURL: manifestURL,
             appStatus: appType,
             receipts: aReceipts,
+            kind: DOMApplicationRegistry.kPackaged,
           }
 
           self._registerApp(deferred, app, id, aDir);
