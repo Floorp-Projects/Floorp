@@ -1553,7 +1553,7 @@ MediaManager::GetUserMedia(bool aPrivileged,
       }
       /* Deny screensharing if the requesting document is not from a host
        on the whitelist. */
-      if (!HostHasPermission(*docURI)) {
+      if (!aPrivileged && !HostHasPermission(*docURI)) {
         return runnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
       }
     }
