@@ -4,5 +4,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
+XPIDL_SOURCES += [
+    'nsIAppShellService.idl',
+    'nsIPopupWindowManager.idl',
+    'nsIWindowMediator.idl',
+    'nsIWindowMediatorListener.idl',
+    'nsIXULBrowserWindow.idl',
+    'nsIXULWindow.idl',
+]
+
+XPIDL_MODULE = 'appshell'
+
+EXPORTS += [
+    'nsAppShellCID.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsAppShellFactory.cpp',
+    'nsAppShellService.cpp',
+    'nsAppShellWindowEnumerator.cpp',
+    'nsChromeTreeOwner.cpp',
+    'nsContentTreeOwner.cpp',
+    'nsWebShellWindow.cpp',
+    'nsWindowMediator.cpp',
+    'nsXULWindow.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
+FAIL_ON_WARNINGS = True
+MSVC_ENABLE_PGO = True
+
+FINAL_LIBRARY = 'xul'
