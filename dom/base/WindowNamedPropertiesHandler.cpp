@@ -83,10 +83,11 @@ GetWindowFromGlobal(JSObject* aGlobal)
 }
 
 bool
-WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
-                                                       JS::Handle<JSObject*> aProxy,
-                                                       JS::Handle<jsid> aId,
-                                                       JS::MutableHandle<JSPropertyDescriptor> aDesc)
+WindowNamedPropertiesHandler::getOwnPropDescriptor(JSContext* aCx,
+                                                   JS::Handle<JSObject*> aProxy,
+                                                   JS::Handle<jsid> aId,
+                                                   bool /* unused */,
+                                                   JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   // Note: The infallibleInit call below depends on this check.
   if (!JSID_IS_STRING(aId)) {
