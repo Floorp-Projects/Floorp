@@ -37,6 +37,9 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
+  virtual void RemoveFrame(ChildListID aListID,
+                           nsIFrame* aOldFrame) MOZ_OVERRIDE;
+
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) MOZ_OVERRIDE;
