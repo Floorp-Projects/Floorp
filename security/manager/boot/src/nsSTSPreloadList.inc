@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1417255584916000);
+const PRTime gPreloadListExpirationTime = INT64_C(1417860884683000);
 
 class nsSTSPreload
 {
@@ -61,6 +61,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "code.google.com", true },
   { "codereview.appspot.com", false },
   { "codereview.chromium.org", true },
+  { "config.schokokeks.org", false },
   { "conformal.com", true },
   { "controlcenter.gigahost.dk", true },
   { "crm.onlime.ch", false },
@@ -80,6 +81,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "dm.mylookout.com", false },
   { "docs.google.com", true },
   { "docs.python.org", true },
+  { "domains.google.com", true },
   { "donmez.ws", false },
   { "download.jitsi.org", false },
   { "drive.google.com", true },
@@ -184,7 +186,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "passport.yandex.ua", false },
   { "passwd.io", true },
   { "paste.linode.com", false },
-  { "pastebin.linode.com", false },
   { "pay.gigahost.dk", true },
   { "paymill.com", true },
   { "paymill.de", false },
@@ -247,6 +248,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "webfilings.appspot.com", true },
   { "webmail.gigahost.dk", false },
   { "webmail.onlime.ch", false },
+  { "webmail.schokokeks.org", false },
   { "wepay.com", false },
   { "wf-bigsky-master.appspot.com", true },
   { "wf-demo-eu.appspot.com", true },
@@ -272,6 +274,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.entropia.de", false },
   { "www.eternalgoth.co.uk", true },
   { "www.evernote.com", false },
+  { "www.gamesdepartment.co.uk", false },
   { "www.getcloak.com", false },
   { "www.gmail.com", false },
   { "www.googlemail.com", false },
@@ -288,7 +291,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.noisebridge.net", false },
   { "www.opsmate.com", true },
   { "www.python.org", true },
-  { "www.rme.li", false },
   { "www.simbolo.co.uk", false },
   { "www.simple.com", false },
   { "www.therapynotes.com", false },
