@@ -262,7 +262,7 @@ BuildForward(TrustDomain& trustDomain,
     }
     ++subCACount;
   } else {
-    PR_ASSERT(subCACount == 0);
+    assert(subCACount == 0);
   }
 
   // Find a trusted issuer.
