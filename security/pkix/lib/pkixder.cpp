@@ -35,7 +35,7 @@ namespace internal {
 Result
 ExpectTagAndGetLength(Reader& input, uint8_t expectedTag, uint16_t& length)
 {
-  PR_ASSERT((expectedTag & 0x1F) != 0x1F); // high tag number form not allowed
+  assert((expectedTag & 0x1F) != 0x1F); // high tag number form not allowed
 
   uint8_t tag;
   Result rv;

@@ -952,7 +952,7 @@ CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
     ++d;
   } while (!serialNumber.AtEnd());
 
-  PR_ASSERT(d == out + totalLen);
+  assert(d == out + totalLen);
 
   return Success;
 }
