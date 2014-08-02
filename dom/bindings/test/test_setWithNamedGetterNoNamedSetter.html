@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1043690
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1043690</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1043690">Mozilla Bug 1043690</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<form>
+  <input name="action">
+</form>
+</div>
+  <script type="application/javascript">
+
+  /** Test for Bug 1043690 **/
+  var f = document.querySelector("form");
+  var i = document.querySelector("input");
+  ise(f.getAttribute("action"), null, "Should have no action attribute");
+  ise(f.action, i, "form.action should be the input");
+  f.action = "http://example.org";
+  ise(f.getAttribute("action"), "http://example.org",
+      "Should have an action attribute now");
+  ise(f.action, i, "form.action should still be the input");
+  i.remove();
+  ise(f.action, "http://example.org/",
+      "form.action should no longer be shadowed");
+
+
+  </script>
+<pre id="test">
+</pre>
+</body>
+</html>
