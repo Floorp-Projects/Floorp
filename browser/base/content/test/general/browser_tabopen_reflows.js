@@ -14,7 +14,8 @@ const EXPECTED_REFLOWS = [
     "onxbltransitionend@chrome://browser/content/tabbrowser.xml|",
 
   // switching focus in updateCurrentBrowser() causes reflows
-  "updateCurrentBrowser@chrome://browser/content/tabbrowser.xml|" +
+  "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.xml|" +
+    "updateCurrentBrowser@chrome://browser/content/tabbrowser.xml|" +
     "onselect@chrome://browser/content/browser.xul|",
 
   // switching focus in openLinkIn() causes reflows
