@@ -324,6 +324,7 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
   // called if CertVerifier::VerifyCert succeeded.
   switch (defaultErrorCodeToReport) {
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
     case SEC_ERROR_UNKNOWN_ISSUER:
     {
       collectedErrors = nsICertOverrideService::ERROR_UNTRUSTED;
