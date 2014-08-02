@@ -1565,12 +1565,16 @@ MediaManager::GetUserMedia(bool aPrivileged,
     auto& tc = c.mVideo.GetAsMediaTrackConstraints();
     // deny screensharing request if support is disabled
     if (tc.mMediaSource != dom::MediaSourceEnum::Camera) {
-      if (!Preferences::GetBool("media.getusermedia.screensharing.enabled", false)) {
+      if (tc.mMediaSource == dom::MediaSourceEnum::Browser) {
+        if (!Preferences::GetBool("media.getusermedia.browser.enabled", false)) {
+          return runnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
+        }
+      } else if (!Preferences::GetBool("media.getusermedia.screensharing.enabled", false)) {
         return runnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
       }
       /* Deny screensharing if the requesting document is not from a host
        on the whitelist. */
-      if (!HostHasPermission(*docURI)) {
+      if (!aPrivileged && !HostHasPermission(*docURI)) {
         return runnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
       }
     }
