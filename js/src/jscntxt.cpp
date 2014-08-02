@@ -142,6 +142,10 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
     if (JSFunction *clone = ExistingCloneFunctionAtCallsite(cx->compartment()->callsiteClones, fun, script, pc))
         return clone;
 
+    MOZ_ASSERT(fun->isSelfHostedBuiltin(),
+               "only self-hosted builtin functions may be cloned at call sites, and "
+               "Function.prototype.caller relies on this");
+
     RootedObject parent(cx, fun->environment());
     JSFunction *clone = CloneFunctionObject(cx, fun, parent);
     if (!clone)

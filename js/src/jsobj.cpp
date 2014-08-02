@@ -121,14 +121,6 @@ CreateObjectPrototype(JSContext *cx, JSProtoKey key)
 }
 
 static bool
-ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
-{
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
-                                 JSMSG_THROW_TYPE_ERROR);
-    return false;
-}
-
-static bool
 FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject proto)
 {
     Rooted<GlobalObject*> self(cx, cx->global());
@@ -139,15 +131,6 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
     if (!evalobj)
         return false;
     self->setOriginalEval(evalobj);
-
-    /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
-    RootedFunction throwTypeError(cx, NewFunction(cx, js::NullPtr(), ThrowTypeError, 0,
-                                                  JSFunction::NATIVE_FUN, self, js::NullPtr()));
-    if (!throwTypeError)
-        return false;
-    if (!JSObject::preventExtensions(cx, throwTypeError))
-        return false;
-    self->setThrowTypeError(throwTypeError);
 
     RootedObject intrinsicsHolder(cx);
     if (cx->runtime()->isSelfHostingGlobal(self)) {
