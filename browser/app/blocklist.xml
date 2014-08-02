@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1406149943000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1406936041000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -335,6 +335,12 @@
     </emItem>
       <emItem  blockID="i47" id="youtube@youtube2.com">
                                                           <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i67" id="youtube2@youtube2.com">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                                                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i360" id="ytd@mybrowserbar.com">
@@ -1209,7 +1215,7 @@
                                                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i570" id="jid1-vW9nopuIAJiRHw@jetpack">
+      <emItem  blockID="i680" id="jid1-bKSXgRwy1UQeRA@jetpack">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                                                     <prefs>
@@ -1647,8 +1653,8 @@
                                                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i67" id="youtube2@youtube2.com">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i570" id="jid1-vW9nopuIAJiRHw@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                                                     <prefs>
               </prefs>
