@@ -33,6 +33,7 @@
 #include "pk11pub.h"
 #include "pkix/pkixnss.h"
 #include "pkixder.h"
+#include "pkixutil.h"
 #include "prerror.h"
 #include "prinit.h"
 #include "prprf.h"
@@ -492,7 +493,7 @@ PRTimeToTimeChoice(PLArenaPool* arena, PRTime time)
                                                           : GeneralizedTime);
 }
 
-PRTime
+Time
 YMDHMS(int16_t year, int16_t month, int16_t day,
        int16_t hour, int16_t minutes, int16_t seconds)
 {
@@ -506,7 +507,10 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
   tm.tm_year = year;
   tm.tm_params.tp_gmt_offset = 0;
   tm.tm_params.tp_dst_offset = 0;
-  return PR_ImplodeTime(&tm);
+  PRTime time = PR_ImplodeTime(&tm);
+  return TimeFromElapsedSecondsAD((time / PR_USEC_PER_SEC) +
+                                  (DaysBeforeYear(1970) *
+                                   Time::ONE_DAY_IN_SECONDS));
 }
 
 static SECItem*

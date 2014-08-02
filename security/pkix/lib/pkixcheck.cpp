@@ -35,10 +35,10 @@
 namespace mozilla { namespace pkix {
 
 Result
-CheckValidity(Input encodedValidity, PRTime time)
+CheckValidity(Input encodedValidity, Time time)
 {
   Reader validity(encodedValidity);
-  PRTime notBefore;
+  Time notBefore(Time::uninitialized);
   if (der::TimeChoice(validity, notBefore) != Success) {
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
@@ -46,7 +46,7 @@ CheckValidity(Input encodedValidity, PRTime time)
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
 
-  PRTime notAfter;
+  Time notAfter(Time::uninitialized);
   if (der::TimeChoice(validity, notAfter) != Success) {
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
@@ -618,7 +618,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
 Result
 CheckIssuerIndependentProperties(TrustDomain& trustDomain,
                                  const BackCert& cert,
-                                 PRTime time,
+                                 Time time,
                                  KeyUsage requiredKeyUsageIfPresent,
                                  KeyPurposeId requiredEKUIfPresent,
                                  const CertPolicyId& requiredPolicy,

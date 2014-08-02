@@ -24,8 +24,6 @@
 
 #include "pkix/pkix.h"
 
-#include <limits>
-
 #include "pkixcheck.h"
 #include "pkixutil.h"
 
@@ -33,7 +31,7 @@ namespace mozilla { namespace pkix {
 
 static Result BuildForward(TrustDomain& trustDomain,
                            const BackCert& subject,
-                           PRTime time,
+                           Time time,
                            KeyUsage requiredKeyUsageIfPresent,
                            KeyPurposeId requiredEKUIfPresent,
                            const CertPolicyId& requiredPolicy,
@@ -49,7 +47,7 @@ class PathBuildingStep : public TrustDomain::IssuerChecker
 {
 public:
   PathBuildingStep(TrustDomain& trustDomain, const BackCert& subject,
-                   PRTime time, KeyPurposeId requiredEKUIfPresent,
+                   Time time, KeyPurposeId requiredEKUIfPresent,
                    const CertPolicyId& requiredPolicy,
                    /*optional*/ const Input* stapledOCSPResponse,
                    unsigned int subCACount)
@@ -74,7 +72,7 @@ public:
 private:
   TrustDomain& trustDomain;
   const BackCert& subject;
-  const PRTime time;
+  const Time time;
   const KeyPurposeId requiredEKUIfPresent;
   const CertPolicyId& requiredPolicy;
   /*optional*/ Input const* const stapledOCSPResponse;
@@ -208,7 +206,7 @@ PathBuildingStep::Check(Input potentialIssuerDER,
 static Result
 BuildForward(TrustDomain& trustDomain,
              const BackCert& subject,
-             PRTime time,
+             Time time,
              KeyUsage requiredKeyUsageIfPresent,
              KeyPurposeId requiredEKUIfPresent,
              const CertPolicyId& requiredPolicy,
@@ -296,7 +294,7 @@ BuildForward(TrustDomain& trustDomain,
 
 Result
 BuildCertChain(TrustDomain& trustDomain, Input certDER,
-               PRTime time, EndEntityOrCA endEntityOrCA,
+               Time time, EndEntityOrCA endEntityOrCA,
                KeyUsage requiredKeyUsageIfPresent,
                KeyPurposeId requiredEKUIfPresent,
                const CertPolicyId& requiredPolicy,
