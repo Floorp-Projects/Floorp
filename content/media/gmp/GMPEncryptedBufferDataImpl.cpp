@@ -26,6 +26,10 @@ GMPEncryptedBufferDataImpl::GMPEncryptedBufferDataImpl(const GMPDecryptionData& 
   MOZ_ASSERT(mClearBytes.Length() == mCipherBytes.Length());
 }
 
+GMPEncryptedBufferDataImpl::~GMPEncryptedBufferDataImpl()
+{
+}
+
 void
 GMPEncryptedBufferDataImpl::RelinquishData(GMPDecryptionData& aData)
 {
