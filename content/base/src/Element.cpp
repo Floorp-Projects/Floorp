@@ -2736,8 +2736,7 @@ Element::SetTokenList(nsIAtom* aAtom, nsIVariant* aValue)
 }
 
 bool
-Element::MozMatchesSelector(const nsAString& aSelector,
-                            ErrorResult& aError)
+Element::Matches(const nsAString& aSelector, ErrorResult& aError)
 {
   nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aError);
   if (!selectorList) {
