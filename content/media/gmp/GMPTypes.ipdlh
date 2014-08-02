@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using GMPBufferType from "gmp-video-codec.h";
+using GMPAudioCodecType from "gmp-audio-codec.h";
 
 namespace mozilla {
 namespace gmp {
@@ -45,6 +46,29 @@ struct GMPVideoi420FrameData
   int32_t mHeight;
   uint64_t mTimestamp; // microseconds
   uint64_t mDuration; // microseconds
+};
+
+struct GMPAudioCodecData
+{
+  GMPAudioCodecType mCodecType;
+  uint32_t mChannelCount;
+  uint32_t mBitsPerChannel;
+  uint32_t mSamplesPerSecond;
+
+  uint8_t[] mExtraData;
+};
+
+struct GMPAudioEncodedSampleData
+{
+  uint8_t[] mData;
+  uint64_t mTimeStamp; // microseconds.
+  GMPDecryptionData mDecryptionData;
+};
+
+struct GMPAudioDecodedSampleData
+{
+  int16_t[] mData;
+  uint64_t mTimeStamp; // microseconds.
 };
 
 }
