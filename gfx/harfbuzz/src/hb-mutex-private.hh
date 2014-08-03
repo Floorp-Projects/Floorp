@@ -44,7 +44,6 @@
 
 #elif !defined(HB_NO_MT) && (defined(_WIN32) || defined(__CYGWIN__))
 
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 typedef CRITICAL_SECTION hb_mutex_impl_t;
 #define HB_MUTEX_IMPL_INIT	{ NULL, 0, 0, NULL, NULL, 0 }

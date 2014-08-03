@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2014  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,57 +21,21 @@
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
- * Google Author(s): Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod, Roozbeh Pournader
  */
 
-#include "hb-font-private.hh" /* Shall be first since may include windows.h */
+#ifndef HB_OT_FONT_H
+#define HB_OT_FONT_H
 
-#include "hb-open-type-private.hh"
+#include "hb.h"
 
-#include "hb-ot-hhea-table.hh"
-#include "hb-ot-hmtx-table.hh"
-
-#include <string.h>
+HB_BEGIN_DECLS
 
 
-
-#if 0
-struct hb_tt_font_t
-{
-  const struct hhea *hhea;
-  hb_blob_t *hhea_blob;
-};
+void
+hb_ot_font_set_funcs (hb_font_t *font);
 
 
-static hb_tt_font_t *
-_hb_tt_font_create (hb_font_t *font)
-{
-  /* TODO Remove this object altogether */
-  hb_tt_font_t *tt = (hb_tt_font_t *) calloc (1, sizeof (hb_tt_font_t));
+HB_END_DECLS
 
-  tt->hhea_blob = Sanitizer<hhea>::sanitize (font->face->reference_table (HB_OT_TAG_hhea));
-  tt->hhea = Sanitizer<hhea>::lock_instance (tt->hhea_blob);
-
-  return tt;
-}
-
-static void
-_hb_tt_font_destroy (hb_tt_font_t *tt)
-{
-  hb_blob_destroy (tt->hhea_blob);
-
-  free (tt);
-}
-
-static inline const hhea&
-_get_hhea (hb_face_t *face)
-{
-  return likely (face->tt && face->tt->hhea) ? *face->tt->hhea : Null(hhea);
-}
-
-
-/*
- * hb_tt_font_funcs_t
- */
-
-#endif
+#endif /* HB_OT_FONT_H */
