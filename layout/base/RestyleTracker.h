@@ -380,7 +380,7 @@ inline bool RestyleTracker::AddPendingRestyle(Element* aElement,
   // We can only treat this element as a restyle root if we would
   // actually restyle its descendants (so either call
   // ReResolveStyleContext on it or just reframe it).
-  if ((aRestyleHint & (eRestyle_Self | eRestyle_Subtree)) ||
+  if ((aRestyleHint & ~eRestyle_LaterSiblings) ||
       (aMinChangeHint & nsChangeHint_ReconstructFrame)) {
     for (const Element* cur = aElement; !cur->HasFlag(RootBit()); ) {
       nsIContent* parent = cur->GetFlattenedTreeParent();

@@ -2346,11 +2346,7 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     }
   }
 
-  nsRestyleHint childRestyleHint = aRestyleHint;
-
-  if (childRestyleHint == eRestyle_Self) {
-    childRestyleHint = nsRestyleHint(0);
-  }
+  nsRestyleHint childRestyleHint = nsRestyleHint(aRestyleHint & eRestyle_Subtree);
 
   {
     nsRefPtr<nsStyleContext> oldContext = mFrame->StyleContext();
