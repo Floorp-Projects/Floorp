@@ -79,7 +79,7 @@
   </popupset>
 
   <box flex="1" class="devtools-responsive-container theme-body">
-    <vbox flex="1">
+    <vbox flex="1" class="devtools-main-content">
       <toolbar id="inspector-toolbar"
         class="devtools-toolbar"
         nowindowdrag="true">

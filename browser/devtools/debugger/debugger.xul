@@ -410,7 +410,7 @@
       </tabbox>
       <splitter id="sources-and-editor-splitter"
                 class="devtools-side-splitter"/>
-      <deck id="editor-deck" flex="1">
+      <deck id="editor-deck" flex="1" class="devtools-main-content">
         <vbox id="editor"/>
         <vbox id="black-boxed-message"
               align="center"
