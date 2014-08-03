@@ -1341,6 +1341,11 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                     nsPrintfCString("unexpected replacement bits 0x%lX",
                                     uint32_t(aReplacements)).get());
 
+  // FIXME (perf): This should probably not rebuild the whole path, but
+  // only the path from the last change in the rule tree, like
+  // ReplaceAnimationRule in nsStyleSet.cpp does.  (That could then
+  // perhaps share this code, too?)
+
   nsTArray<RuleNodeInfo> rules;
   for (nsRuleNode* ruleNode = aOldRuleNode; !ruleNode->IsRoot();
        ruleNode = ruleNode->GetParent()) {
