@@ -41,7 +41,7 @@
       <vbox id="snapshots-list" flex="1"/>
     </vbox>
 
-    <vbox id="debugging-pane" flex="1">
+    <vbox id="debugging-pane" class="devtools-main-content" flex="1">
       <hbox id="reload-notice"
             class="notice-container"
             align="center"
