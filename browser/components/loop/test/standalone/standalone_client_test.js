@@ -40,6 +40,65 @@ describe("loop.StandaloneClient", function() {
       });
     });
 
+    describe("#requestCallUrlInfo", function() {
+      var client, fakeServerErrorDescription;
+
+      beforeEach(function() {
+        client = new loop.StandaloneClient(
+          {baseServerUrl: "http://fake.api"}
+        );
+      });
+
+      describe("should make the requests to the server", function() {
+
+        it("should throw if loopToken is missing", function() {
+          expect(client.requestCallUrlInfo).to
+                                .throw(/Missing required parameter loopToken/);
+        });
+
+        it("should make a GET request for the call url creation date", function() {
+          client.requestCallUrlInfo("fakeCallUrlToken", function() {});
+
+          expect(requests).to.have.length.of(1);
+          expect(requests[0].url)
+                            .to.eql("http://fake.api/calls/fakeCallUrlToken");
+          expect(requests[0].method).to.eql("GET");
+        });
+
+        it("should call the callback with (null, serverResponse)", function() {
+          var successCallback = sandbox.spy(function() {});
+          var serverResponse = {
+            calleeFriendlyName: "Andrei",
+            urlCreationDate: 0
+          };
+
+          client.requestCallUrlInfo("fakeCallUrlToken", successCallback);
+          requests[0].respond(200, {"Content-Type": "application/json"},
+                              JSON.stringify(serverResponse));
+
+          sinon.assert.calledWithExactly(successCallback,
+                                         null,
+                                         serverResponse);
+        });
+
+        it("should log the error if the requests fails", function() {
+          sinon.stub(console, "error");
+          var serverResponse = {error: true};
+          var error = JSON.stringify(serverResponse);
+
+          client.requestCallUrlInfo("fakeCallUrlToken", sandbox.stub());
+          requests[0].respond(404, {"Content-Type": "application/json"},
+                              error);
+
+          sinon.assert.calledOnce(console.error);
+          sinon.assert.calledWithExactly(console.error, "Server error",
+                                        "HTTP 404 Not Found", serverResponse);
+        });
+      })
+    });
+
+
+
     describe("requestCallInfo", function() {
       var client, fakeServerErrorDescription;
 

@@ -5,6 +5,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/searchSuggestionUI.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/newtab/newTab.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/newtab/newTab.css" type="text/css"?>
 
@@ -97,4 +98,6 @@
 
   <xul:script type="text/javascript;version=1.8"
               src="chrome://browser/content/newtab/newTab.js"/>
+  <xul:script type="text/javascript;version=1.8"
+              src="chrome://browser/content/searchSuggestionUI.js"/>
 </xul:window>

@@ -96,7 +96,20 @@ h1, h2, h3 {
   }
 
 .btn-large {
-  padding: .4em 1.6em;
+  /* Dimensions from spec
+   * https://people.mozilla.org/~dhenein/labs/loop-link-spec/#call-start */
+  padding: .5em;
+  font-size: 18px;
+  height: auto;
+}
+
+/*
+ * Left / Right padding elements
+ * used to center components
+ * */
+.flex-padding-1 {
+  display: flex;
+  flex: 1;
 }
 
 .btn-info {
@@ -209,6 +222,8 @@ h1, h2, h3 {
 .button-group {
   display: flex;
   width: 100%;
+  align-content: space-between;
+  justify-content: center;
 }
 
 .button-group .btn {
@@ -269,6 +284,26 @@ h1, h2, h3 {
 .fade-out {
   transition: opacity 0.5s ease-in;
   opacity: 0;
+}
+
+.btn-large .icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-size: 20px;
+  background-repeat: no-repeat;
+  vertical-align: top;
+  margin-left: 10px;
+}
+
+.icon-video {
+  background-image: url("../img/video-inverse-14x14.png");
+}
+
+@media (min-resolution: 2dppx) {
+  .icon-video {
+    background-image: url("../img/video-inverse-14x14@2x.png");
+  }
 }
 
 /*
