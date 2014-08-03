@@ -684,7 +684,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
           dont_AddRef(static_cast<nsIXPCScriptable*>(classInfoHelper));
         uint32_t flags = classInfoHelper->GetScriptableFlags();
         sciProto.SetCallback(helper.forget());
-        sciProto.SetFlags(flags);
+        sciProto.SetFlags(XPCNativeScriptableFlags(flags));
         sciProto.SetInterfacesBitmap(classInfoHelper->GetInterfacesBitmap());
 
         return;
@@ -698,7 +698,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
         if (helper) {
             uint32_t flags = helper->GetScriptableFlags();
             sciProto.SetCallback(helper.forget());
-            sciProto.SetFlags(flags);
+            sciProto.SetFlags(XPCNativeScriptableFlags(flags));
         }
     }
 }
@@ -725,7 +725,7 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
     if (helper) {
         uint32_t flags = helper->GetScriptableFlags();
         sciWrapper.SetCallback(helper.forget());
-        sciWrapper.SetFlags(flags);
+        sciWrapper.SetFlags(XPCNativeScriptableFlags(flags));
 
         // A whole series of assertions to catch bad uses of scriptable flags on
         // the siWrapper...
