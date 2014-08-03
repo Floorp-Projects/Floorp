@@ -164,26 +164,6 @@ public:
   // whose updating is suppressed on the main thread (to save
   // unnecessary work), while leaving all other aspects of style
   // out-of-date.
-  //
-  // Performs an animation-only style flush to make styles from
-  // throttled transitions up-to-date prior to processing an unrelated
-  // style change, so that any transitions triggered by that style
-  // change produce correct results.
-  //
-  // In more detail:  when we're able to run animations on the
-  // compositor, we sometimes "throttle" these animations by skipping
-  // updating style data on the main thread.  However, whenever we
-  // process a normal (non-animation) style change, any changes in
-  // computed style on elements that have transition-* properties set
-  // may need to trigger new transitions; this process requires knowing
-  // both the old and new values of the property.  To do this correctly,
-  // we need to have an up-to-date *old* value of the property on the
-  // primary frame.  So the purpose of the mini-flush is to update the
-  // style for all throttled transitions and animations to the current
-  // animation state without making any other updates, so that when we
-  // process the queued style updates we'll have correct old data to
-  // compare against.  When we do this, we don't bother touching frames
-  // other than primary frames.
   void UpdateOnlyAnimationStyles();
 
   bool ThrottledAnimationStyleIsUpToDate() const {
@@ -199,8 +179,7 @@ public:
   // Helper that does part of the work of RebuildAllStyleData, shared by
   // RestyleElement for 'rem' handling.
   void DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
-                             nsChangeHint aExtraHint,
-                             nsRestyleHint aRestyleHint);
+                             nsChangeHint aExtraHint);
 
   // See PostRestyleEventCommon below.
   void PostRestyleEvent(Element* aElement,
