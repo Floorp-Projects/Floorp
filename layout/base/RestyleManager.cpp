@@ -1579,8 +1579,18 @@ RestyleManager::UpdateOnlyAnimationStyles()
 
   transitionManager->SetInAnimationOnlyStyleUpdate(true);
 
-  transitionManager->UpdateAllThrottledStyles();
-  animationManager->UpdateAllThrottledStyles();
+  RestyleTracker tracker(ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE |
+                         ELEMENT_IS_POTENTIAL_ANIMATION_ONLY_RESTYLE_ROOT);
+  tracker.Init(this);
+
+  // FIXME:  We should have the transition manager and animation manager
+  // add only the elements for which animations are currently throttled
+  // (i.e., animating on the compositor with main-thread style updates
+  // suppressed).
+  transitionManager->AddStyleUpdatesTo(tracker);
+  animationManager->AddStyleUpdatesTo(tracker);
+
+  tracker.ProcessRestyles();
 
   transitionManager->SetInAnimationOnlyStyleUpdate(false);
 }
