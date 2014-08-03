@@ -1255,30 +1255,6 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
-                                 nsStyleContext* aOldStyle,
-                                 const nsTArray<RuleAndLevel>& aRules)
-{
-  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
-  for (int32_t i = aRules.Length() - 1; i >= 0; --i) {
-    ruleWalker.SetLevel(aRules[i].mLevel, false, false);
-    ruleWalker.ForwardOnPossiblyCSSRule(aRules[i].mRule);
-  }
-
-  uint32_t flags = eNoFlags;
-  if (aOldStyle->IsLinkContext()) {
-    flags |= eIsLink;
-  }
-  if (aOldStyle->RelevantLinkVisited()) {
-    flags |= eIsVisitedLink;
-  }
-
-  return GetContext(aParentContext, ruleWalker.CurrentNode(), nullptr,
-                    nullptr, nsCSSPseudoElements::ePseudo_NotPseudoElement,
-                    nullptr, flags);
-}
-
-already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
                                       const nsCOMArray<nsIStyleRule> &aRules)
 {
@@ -1321,6 +1297,36 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
                     nullptr, flags);
 }
 
+struct RuleNodeInfo {
+  nsIStyleRule* mRule;
+  uint8_t mLevel;
+  bool mIsImportant;
+};
+
+struct CascadeLevel {
+  uint8_t mLevel;
+  bool mIsImportant;
+  nsRestyleHint mLevelReplacementHint;
+};
+
+static const CascadeLevel gCascadeLevels[] = {
+  { nsStyleSet::eAgentSheet,      false, nsRestyleHint(0) },
+  { nsStyleSet::eUserSheet,       false, nsRestyleHint(0) },
+  { nsStyleSet::ePresHintSheet,   false, nsRestyleHint(0) },
+  { nsStyleSet::eDocSheet,        false, nsRestyleHint(0) },
+  { nsStyleSet::eScopedDocSheet,  false, nsRestyleHint(0) },
+  { nsStyleSet::eStyleAttrSheet,  false, nsRestyleHint(0) },
+  { nsStyleSet::eOverrideSheet,   false, nsRestyleHint(0) },
+  { nsStyleSet::eAnimationSheet,  false, eRestyle_CSSAnimations },
+  { nsStyleSet::eScopedDocSheet,  true,  nsRestyleHint(0) },
+  { nsStyleSet::eDocSheet,        true,  nsRestyleHint(0) },
+  { nsStyleSet::eStyleAttrSheet,  true,  nsRestyleHint(0) },
+  { nsStyleSet::eOverrideSheet,   true,  nsRestyleHint(0) },
+  { nsStyleSet::eUserSheet,       true,  nsRestyleHint(0) },
+  { nsStyleSet::eAgentSheet,      true,  nsRestyleHint(0) },
+  { nsStyleSet::eTransitionSheet, false, eRestyle_CSSTransitions },
+};
+
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                                         nsStyleContext* aNewParentContext,
@@ -1334,63 +1340,94 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                     nsPrintfCString("unexpected replacement bits 0x%lX",
                                     uint32_t(aReplacements)).get());
 
-  nsRuleNode* ruleNode = aOldStyleContext->RuleNode();
-  nsTArray<nsStyleSet::RuleAndLevel> rules;
-  do {
-    if (ruleNode->IsRoot()) {
-      break;
-    }
+  nsTArray<RuleNodeInfo> rules;
+  for (nsRuleNode* ruleNode = aOldStyleContext->RuleNode(); !ruleNode->IsRoot();
+       ruleNode = ruleNode->GetParent()) {
+    RuleNodeInfo* curRule = rules.AppendElement();
+    curRule->mRule = ruleNode->GetRule();
+    curRule->mLevel = ruleNode->GetLevel();
+    curRule->mIsImportant = ruleNode->IsImportantRule();
+  }
 
-    nsStyleSet::RuleAndLevel curRule;
-    curRule.mLevel = ruleNode->GetLevel();
-    curRule.mRule = ruleNode->GetRule();
+  nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
+  auto rulesIndex = rules.Length();
 
-    // FIXME: This will eventually need to handle adding a rule where we
-    // don't currently have one!
+  for (const CascadeLevel *level = gCascadeLevels,
+                       *levelEnd = ArrayEnd(gCascadeLevels);
+       level != levelEnd; ++level) {
+    ruleWalker.SetLevel(level->mLevel, level->mIsImportant, false);
 
-    switch (curRule.mLevel) {
-    case nsStyleSet::eAnimationSheet:
-      if (aReplacements & eRestyle_CSSAnimations) {
-        nsAnimationManager* animationManager = PresContext()->AnimationManager();
-        ElementAnimationCollection* collection = animationManager->GetElementAnimations(
-          aElement, aOldStyleContext->GetPseudoType(), false);
-        NS_ASSERTION(collection,
-          "Rule has level eAnimationSheet without animation on manager");
+    bool doReplace = level->mLevelReplacementHint & aReplacements;
+    if (doReplace) {
+      switch (level->mLevelReplacementHint) {
+        case eRestyle_CSSAnimations: {
+          nsAnimationManager* animationManager =
+            PresContext()->AnimationManager();
+          ElementAnimationCollection* collection = animationManager->GetElementAnimations(
+            aElement, aOldStyleContext->GetPseudoType(), false);
 
-        animationManager->UpdateStyleAndEvents(
-          collection, PresContext()->RefreshDriver()->MostRecentRefresh(),
-          EnsureStyleRule_IsNotThrottled);
-        curRule.mRule = collection->mStyleRule;
+          if (collection) {
+            animationManager->UpdateStyleAndEvents(
+              collection, PresContext()->RefreshDriver()->MostRecentRefresh(),
+              EnsureStyleRule_IsNotThrottled);
+            if (collection->mStyleRule) {
+              ruleWalker.ForwardOnPossiblyCSSRule(collection->mStyleRule);
+            }
+          }
+          break;
+        }
+        case eRestyle_CSSTransitions: {
+          nsPresContext* presContext = PresContext();
+          ElementAnimationCollection* collection =
+            presContext->TransitionManager()->GetElementTransitions(
+              aElement,
+              aOldStyleContext->GetPseudoType(),
+              false);
+
+          if (collection) {
+            collection->EnsureStyleRuleFor(
+              presContext->RefreshDriver()->MostRecentRefresh(),
+              EnsureStyleRule_IsNotThrottled);
+            if (collection->mStyleRule) {
+              ruleWalker.ForwardOnPossiblyCSSRule(collection->mStyleRule);
+            }
+          }
+          break;
+        }
+        default:
+          break;
       }
-      break;
-    case nsStyleSet::eTransitionSheet:
-      if (aReplacements & eRestyle_CSSTransitions) {
-        nsPresContext* presContext = PresContext();
-        ElementAnimationCollection* collection =
-          presContext->TransitionManager()->GetElementTransitions(
-            aElement,
-            aOldStyleContext->GetPseudoType(),
-            false);
-        NS_ASSERTION(collection,
-          "Rule has level eTransitionSheet without transition on manager");
+    }
 
-        collection->EnsureStyleRuleFor(
-          presContext->RefreshDriver()->MostRecentRefresh(),
-          EnsureStyleRule_IsNotThrottled);
-        curRule.mRule = collection->mStyleRule;
+    while (rulesIndex != 0) {
+      --rulesIndex;
+      const RuleNodeInfo& ruleInfo = rules[rulesIndex];
+
+      if (ruleInfo.mLevel != level->mLevel ||
+          ruleInfo.mIsImportant != level->mIsImportant) {
+        ++rulesIndex;
+        break;
       }
-      break;
-    default:
-      break;
-    }
 
-    if (curRule.mRule) {
-      rules.AppendElement(curRule);
+      if (!doReplace) {
+        ruleWalker.ForwardOnPossiblyCSSRule(ruleInfo.mRule);
+      }
     }
-  } while ((ruleNode = ruleNode->GetParent()));
+  }
 
   // FIXME: Does this handle visited contexts correctly???
-  return ResolveStyleForRules(aNewParentContext, aOldStyleContext, rules);
+
+  uint32_t flags = eNoFlags;
+  if (aOldStyleContext->IsLinkContext()) {
+    flags |= eIsLink;
+  }
+  if (aOldStyleContext->RelevantLinkVisited()) {
+    flags |= eIsVisitedLink;
+  }
+
+  return GetContext(aNewParentContext, ruleWalker.CurrentNode(), nullptr,
+                    nullptr, nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                    nullptr, flags);
 }
 
 
