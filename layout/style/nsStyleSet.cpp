@@ -1478,6 +1478,14 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                  "aElement should be the element and not the pseudo-element");
   }
 
+  if (aElement && aElement->IsRootOfAnonymousSubtree()) {
+    // For anonymous subtree roots, don't tweak "display" value based on whether
+    // or not the parent is styled as a flex/grid container. (If the parent
+    // has anonymous-subtree kids, then we know it's not actually going to get
+    // a flex/grid container frame, anyway.)
+    flags |= eSkipParentDisplayBasedStyleFixup;
+  }
+
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
                     aOldStyleContext->GetPseudo(), pseudoType,
                     elementForAnimation, flags);
