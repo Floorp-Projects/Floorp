@@ -35,6 +35,7 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsCSSRules.h"
 #include "nsPrintfCString.h"
+#include "nsIFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1451,10 +1452,35 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
     }
   }
 
+  nsCSSPseudoElements::Type pseudoType = aOldStyleContext->GetPseudoType();
+  Element* elementForAnimation = nullptr;
+  if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+      pseudoType == nsCSSPseudoElements::ePseudo_before ||
+      pseudoType == nsCSSPseudoElements::ePseudo_after) {
+    // We want to compute a correct elementForAnimation to pass in
+    // because at this point the parameter is more than just the element
+    // for animation; it's also used for the SetBodyTextColor call when
+    // it's the body element.
+    // However, we only want to set the flag to call CheckAnimationRule
+    // if we're dealing with a replacement (such as style attribute
+    // replacement) that could lead to the animation property changing,
+    // and we explicitly do NOT want to call CheckAnimationRule when
+    // we're trying to do an animation-only update.
+    if (aReplacements & ~(eRestyle_CSSTransitions | eRestyle_CSSAnimations)) {
+      flags |= eDoAnimation;
+    }
+    elementForAnimation = aElement;
+    NS_ASSERTION(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+                 !elementForAnimation->GetPrimaryFrame() ||
+                 elementForAnimation->GetPrimaryFrame()->StyleContext()->
+                     GetPseudoType() ==
+                   nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                 "aElement should be the element and not the pseudo-element");
+  }
+
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
-                    aOldStyleContext->GetPseudo(),
-                    aOldStyleContext->GetPseudoType(),
-                    nullptr, flags);
+                    aOldStyleContext->GetPseudo(), pseudoType,
+                    elementForAnimation, flags);
 }
 
 
