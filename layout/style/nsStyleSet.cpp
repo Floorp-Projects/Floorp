@@ -1431,9 +1431,13 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
   uint32_t flags = eNoFlags;
   if (aOldStyleContext->IsLinkContext()) {
     flags |= eIsLink;
-  }
-  if (aOldStyleContext->RelevantLinkVisited()) {
-    flags |= eIsVisitedLink;
+
+    // GetContext handles propagating RelevantLinkVisited state from the
+    // parent in non-link cases; all we need to pass in is if this link
+    // is visited.
+    if (aOldStyleContext->RelevantLinkVisited()) {
+      flags |= eIsVisitedLink;
+    }
   }
 
   return GetContext(aNewParentContext, ruleNode, nullptr,
