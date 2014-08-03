@@ -835,24 +835,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE  0x6
 #define NS_STYLE_UNICODE_BIDI_PLAINTEXT         0x8
 
-// See nsStyleTable (here for HTML 4.0 for now, should probably change to side flags)
-#define NS_STYLE_TABLE_FRAME_NONE               0
-#define NS_STYLE_TABLE_FRAME_ABOVE              1
-#define NS_STYLE_TABLE_FRAME_BELOW              2
-#define NS_STYLE_TABLE_FRAME_HSIDES             3
-#define NS_STYLE_TABLE_FRAME_VSIDES             4
-#define NS_STYLE_TABLE_FRAME_LEFT               5
-#define NS_STYLE_TABLE_FRAME_RIGHT              6
-#define NS_STYLE_TABLE_FRAME_BOX                7
-#define NS_STYLE_TABLE_FRAME_BORDER             8
-
-// See nsStyleTable
-#define NS_STYLE_TABLE_RULES_NONE               0
-#define NS_STYLE_TABLE_RULES_GROUPS             1
-#define NS_STYLE_TABLE_RULES_ROWS               2
-#define NS_STYLE_TABLE_RULES_COLS               3
-#define NS_STYLE_TABLE_RULES_ALL                4
-
 #define NS_STYLE_TABLE_LAYOUT_AUTO              0
 #define NS_STYLE_TABLE_LAYOUT_FIXED             1
 
