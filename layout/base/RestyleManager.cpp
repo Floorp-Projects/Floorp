@@ -906,8 +906,15 @@ RestyleManager::RestyleElement(Element*        aElement,
     ComputeStyleChangeFor(aPrimaryFrame, &changeList, aMinHint,
                           aRestyleTracker, aRestyleHint);
     ProcessRestyledFrames(changeList);
-  } else {
-    // no frames, reconstruct for content
+  } else if (aRestyleHint & ~eRestyle_LaterSiblings) {
+    // We're restyling an element with no frame, so we should try to
+    // make one if its new style says it should have one.  But in order
+    // to try to honor the restyle hint (which we'd like to do so that,
+    // for example, an animation-only style flush doesn't flush other
+    // buffered style changes), we only do this if the restyle hint says
+    // we have *some* restyling for this frame.  This means we'll
+    // potentially get ahead of ourselves in that case, but not as much
+    // as we would if we didn't check the restyle hint.
     FrameConstructor()->MaybeRecreateFramesForElement(aElement);
   }
 }
