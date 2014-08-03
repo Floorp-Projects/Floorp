@@ -1574,8 +1574,15 @@ RestyleManager::UpdateOnlyAnimationStyles()
   }
   mLastUpdateForThrottledAnimations = now;
 
-  mPresContext->TransitionManager()->UpdateAllThrottledStyles();
-  mPresContext->AnimationManager()->UpdateAllThrottledStyles();
+  nsTransitionManager* transitionManager = mPresContext->TransitionManager();
+  nsAnimationManager* animationManager = mPresContext->AnimationManager();
+
+  transitionManager->SetInAnimationOnlyStyleUpdate(true);
+
+  transitionManager->UpdateAllThrottledStyles();
+  animationManager->UpdateAllThrottledStyles();
+
+  transitionManager->SetInAnimationOnlyStyleUpdate(false);
 }
 
 void
