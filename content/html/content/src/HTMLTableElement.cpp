@@ -622,29 +622,6 @@ HTMLTableElement::DeleteRow(int32_t aIndex, ErrorResult& aError)
   row->RemoveFromParent();
 }
 
-static const nsAttrValue::EnumTable kFrameTable[] = {
-  { "void",   NS_STYLE_TABLE_FRAME_NONE },
-  { "above",  NS_STYLE_TABLE_FRAME_ABOVE },
-  { "below",  NS_STYLE_TABLE_FRAME_BELOW },
-  { "hsides", NS_STYLE_TABLE_FRAME_HSIDES },
-  { "lhs",    NS_STYLE_TABLE_FRAME_LEFT },
-  { "rhs",    NS_STYLE_TABLE_FRAME_RIGHT },
-  { "vsides", NS_STYLE_TABLE_FRAME_VSIDES },
-  { "box",    NS_STYLE_TABLE_FRAME_BOX },
-  { "border", NS_STYLE_TABLE_FRAME_BORDER },
-  { 0 }
-};
-
-static const nsAttrValue::EnumTable kRulesTable[] = {
-  { "none",   NS_STYLE_TABLE_RULES_NONE },
-  { "groups", NS_STYLE_TABLE_RULES_GROUPS },
-  { "rows",   NS_STYLE_TABLE_RULES_ROWS },
-  { "cols",   NS_STYLE_TABLE_RULES_COLS },
-  { "all",    NS_STYLE_TABLE_RULES_ALL },
-  { 0 }
-};
-
-
 bool
 HTMLTableElement::ParseAttribute(int32_t aNamespaceID,
                                  nsIAtom* aAttribute,
@@ -679,12 +656,6 @@ HTMLTableElement::ParseAttribute(int32_t aNamespaceID,
     if (aAttribute == nsGkAtoms::bgcolor ||
         aAttribute == nsGkAtoms::bordercolor) {
       return aResult.ParseColor(aValue);
-    }
-    if (aAttribute == nsGkAtoms::frame) {
-      return aResult.ParseEnumValue(aValue, kFrameTable, false);
-    }
-    if (aAttribute == nsGkAtoms::rules) {
-      return aResult.ParseEnumValue(aValue, kRulesTable, false);
     }
     if (aAttribute == nsGkAtoms::hspace ||
         aAttribute == nsGkAtoms::vspace) {
