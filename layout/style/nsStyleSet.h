@@ -399,6 +399,12 @@ class nsStyleSet
                           ElementDependentRuleProcessorData* aData,
                           bool aWalkAllXBLStylesheets);
 
+  // Helper for ResolveStyleWithReplacement
+  nsRuleNode* RuleNodeWithReplacement(mozilla::dom::Element* aElement,
+                                      nsRuleNode* aOldRuleNode,
+                                      nsCSSPseudoElements::Type aPseudoType,
+                                      nsRestyleHint aReplacements);
+
   /**
    * Bit-flags that can be passed to GetContext() in its parameter 'aFlags'.
    */
