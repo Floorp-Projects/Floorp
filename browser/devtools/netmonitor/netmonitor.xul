@@ -51,7 +51,7 @@
       <hbox id="network-table-and-sidebar"
             class="devtools-responsive-container"
             flex="1">
-        <vbox id="network-table" flex="1">
+        <vbox id="network-table" flex="1" class="devtools-main-content">
           <toolbar id="requests-menu-toolbar"
                    class="devtools-toolbar"
                    align="center">

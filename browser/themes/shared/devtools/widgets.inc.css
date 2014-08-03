@@ -34,6 +34,16 @@
   -moz-box-orient: horizontal;
 }
 
+.devtools-main-content {
+  min-width: 50px;
+}
+
+.devtools-main-content,
+.devtools-sidebar-tabs {
+  /* Prevent some children that should be hidden from remaining visible as this is shrunk (Bug 971959) */
+  position: relative;
+}
+
 @media (max-width: 700px) {
   .devtools-responsive-container {
     -moz-box-orient: vertical;

@@ -120,7 +120,7 @@
         </xul:box> <!-- .splitview-nav-container -->
       </xul:box>   <!-- .splitview-controller -->
       <xul:splitter class="devtools-side-splitter splitview-landscape-splitter devtools-invisible-splitter"/>
-      <xul:box class="splitview-side-details"/>
+      <xul:box class="splitview-side-details devtools-main-content"/>
 
       <div id="splitview-templates" hidden="true">
         <li id="splitview-tpl-summary-stylesheet" tabindex="0">
