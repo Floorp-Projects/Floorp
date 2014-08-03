@@ -1452,7 +1452,8 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
   }
 
   return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
-                    nullptr, nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                    aOldStyleContext->GetPseudo(),
+                    aOldStyleContext->GetPseudoType(),
                     nullptr, flags);
 }
 
