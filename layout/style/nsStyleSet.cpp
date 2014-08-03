@@ -1426,7 +1426,18 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
     RuleNodeWithReplacement(aElement, aOldStyleContext->RuleNode(),
                             aOldStyleContext->GetPseudoType(), aReplacements);
 
-  // FIXME: Does this handle visited contexts correctly???
+  nsRuleNode* visitedRuleNode = nullptr;
+  nsStyleContext* oldStyleIfVisited = aOldStyleContext->GetStyleIfVisited();
+  if (oldStyleIfVisited) {
+    if (oldStyleIfVisited->RuleNode() == aOldStyleContext->RuleNode()) {
+      visitedRuleNode = ruleNode;
+    } else {
+      visitedRuleNode =
+        RuleNodeWithReplacement(aElement, oldStyleIfVisited->RuleNode(),
+                                oldStyleIfVisited->GetPseudoType(),
+                                aReplacements);
+    }
+  }
 
   uint32_t flags = eNoFlags;
   if (aOldStyleContext->IsLinkContext()) {
@@ -1440,7 +1451,7 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
     }
   }
 
-  return GetContext(aNewParentContext, ruleNode, nullptr,
+  return GetContext(aNewParentContext, ruleNode, visitedRuleNode,
                     nullptr, nsCSSPseudoElements::ePseudo_NotPseudoElement,
                     nullptr, flags);
 }
