@@ -51,7 +51,7 @@ gyp_vars = {
     # codec enable/disables:
     'include_g711': 1,
     'include_opus': 1,
-    'include_g722': 0,
+    'include_g722': 1,
     'include_ilbc': 0,
     'include_isac': 0,
     'include_pcm16b': 1,

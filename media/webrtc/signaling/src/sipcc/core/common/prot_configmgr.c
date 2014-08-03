@@ -735,6 +735,11 @@ config_set_current_codec_table (int codec_mask, rtp_ptype *codecs)
         idx++;
     }
 
+    if (codec_mask & VCM_CODEC_RESOURCE_G722) {
+        codecs[idx] = RTP_G722;
+        idx++;
+    }
+
     if (codec_mask & VCM_CODEC_RESOURCE_G711) {
         codecs[idx] = RTP_PCMU;
         idx++;
@@ -749,11 +754,6 @@ config_set_current_codec_table (int codec_mask, rtp_ptype *codecs)
 
     if (codec_mask & VCM_CODEC_RESOURCE_LINEAR) {
         codecs[idx] = RTP_L16;
-        idx++;
-    }
-
-    if (codec_mask & VCM_CODEC_RESOURCE_G722) {
-        codecs[idx] = RTP_G722;
         idx++;
     }
 
