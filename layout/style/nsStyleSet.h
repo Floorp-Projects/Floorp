@@ -318,10 +318,6 @@ class nsStyleSet
   // Note: EndReconstruct should not be called if BeginReconstruct fails
   void EndReconstruct();
 
-  bool IsInRuleTreeReconstruct() const {
-    return mInReconstruct;
-  }
-
   // Let the style set know that a particular sheet is the quirks sheet.  This
   // sheet must already have been added to the UA sheets.  The pointer must not
   // be null.  This should only be called once for a given style set.
