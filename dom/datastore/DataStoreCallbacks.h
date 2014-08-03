@@ -20,7 +20,13 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
 
-  virtual void Run(DataStoreDB* aDb, bool aSuccess) = 0;
+  enum RunStatus {
+    Success,
+    CreatedSchema,
+    Error
+  };
+
+  virtual void Run(DataStoreDB* aDb, RunStatus aStatus) = 0;
 
 protected:
   virtual ~DataStoreDBCallback()
