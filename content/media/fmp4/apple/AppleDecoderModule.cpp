@@ -56,13 +56,21 @@ AppleDecoderModule::Startup()
   return NS_OK;
 }
 
+class UnlinkTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() MOZ_OVERRIDE {
+    MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
+    AppleVTLinker::Unlink();
+    AppleCMLinker::Unlink();
+    return NS_OK;
+  }
+};
+
 nsresult
 AppleDecoderModule::Shutdown()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-  AppleVTLinker::Unlink();
-  AppleCMLinker::Unlink();
-
+  nsRefPtr<nsIRunnable> task(new UnlinkTask());
+  NS_DispatchToMainThread(task);
   return NS_OK;
 }
 
