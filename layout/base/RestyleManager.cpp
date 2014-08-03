@@ -2583,11 +2583,15 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
     NS_ASSERTION(extraPseudoTag &&
                  extraPseudoTag != nsCSSAnonBoxes::mozNonElement,
                  "extra style context is not pseudo element");
-    if (extraPseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
+    if (!(aRestyleHint & (eRestyle_Self | eRestyle_Subtree))) {
+      Element* element = extraPseudoType != nsCSSPseudoElements::ePseudo_AnonBox
+                           ? mContent->AsElement() : nullptr;
+      newExtraContext =
+        styleSet->ReparentStyleContext(oldExtraContext, newContext, element);
+    } else if (extraPseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
       newExtraContext = styleSet->ResolveAnonymousBoxStyle(extraPseudoTag,
                                                            newContext);
-    }
-    else {
+    } else {
       // Don't expect XUL tree stuff here, since it needs a comparator and
       // all.
       NS_ASSERTION(extraPseudoType <
