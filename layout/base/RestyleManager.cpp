@@ -2471,11 +2471,9 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
       newContext =
         styleSet->ReparentStyleContext(oldContext, parentContext, element);
     } else {
-      MOZ_ASSERT(!(~aRestyleHint & (eRestyle_CSSTransitions |
-                                    eRestyle_CSSAnimations)),
-                 "unexpected restyle bits");
       newContext =
-        styleSet->ResolveStyleWithReplacement(element, parentContext, oldContext);
+        styleSet->ResolveStyleWithReplacement(element, parentContext, oldContext,
+                                              aRestyleHint);
     }
   } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
     newContext = styleSet->ResolveAnonymousBoxStyle(pseudoTag,
@@ -2716,13 +2714,11 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
                                     mFrame->StyleContext(),
                                     mTreeMatchContext);
       } else if (thisChildHint) {
-        MOZ_ASSERT(!(~thisChildHint & (eRestyle_CSSTransitions |
-                                       eRestyle_CSSAnimations)),
-                   "unexpected restyle bits");
         undisplayedContext =
           styleSet->ResolveStyleWithReplacement(undisplayed->mContent->AsElement(),
                                                 mFrame->StyleContext(),
-                                                undisplayed->mStyle);
+                                                undisplayed->mStyle,
+                                                thisChildHint);
       } else {
         undisplayedContext =
           styleSet->ReparentStyleContext(undisplayed->mStyle,

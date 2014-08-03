@@ -251,7 +251,8 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
 
   nsStyleSet* styleSet = mPresContext->StyleSet();
   nsRefPtr<nsStyleContext> newStyle =
-    styleSet->ResolveStyleWithReplacement(aElement, aParentStyle, oldStyle);
+    styleSet->ResolveStyleWithReplacement(aElement, aParentStyle, oldStyle,
+      nsRestyleHint(eRestyle_CSSTransitions | eRestyle_CSSAnimations));
 
   // We absolutely must call CalcStyleDifference in order to ensure the
   // new context has all the structs cached that the old context had.

@@ -34,6 +34,7 @@
 #include "nsHTMLCSSStyleSheet.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsCSSRules.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1323,8 +1324,16 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
 already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                                         nsStyleContext* aNewParentContext,
-                                        nsStyleContext* aOldStyleContext)
+                                        nsStyleContext* aOldStyleContext,
+                                        nsRestyleHint aReplacements)
 {
+  NS_ABORT_IF_FALSE(!(aReplacements & ~(eRestyle_CSSTransitions |
+                                        eRestyle_CSSAnimations)),
+                    // FIXME: Once bug 931668 lands we'll have a better
+                    // way to print these.
+                    nsPrintfCString("unexpected replacement bits 0x%lX",
+                                    uint32_t(aReplacements)).get());
+
   nsRuleNode* ruleNode = aOldStyleContext->RuleNode();
   nsTArray<nsStyleSet::RuleAndLevel> rules;
   do {
@@ -1334,34 +1343,45 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
 
     nsStyleSet::RuleAndLevel curRule;
     curRule.mLevel = ruleNode->GetLevel();
+    curRule.mRule = ruleNode->GetRule();
 
-    if (curRule.mLevel == nsStyleSet::eAnimationSheet) {
-      nsAnimationManager* animationManager = PresContext()->AnimationManager();
-      ElementAnimationCollection* collection = animationManager->GetElementAnimations(
-        aElement, aOldStyleContext->GetPseudoType(), false);
-      NS_ASSERTION(collection,
-        "Rule has level eAnimationSheet without animation on manager");
+    // FIXME: This will eventually need to handle adding a rule where we
+    // don't currently have one!
 
-      animationManager->UpdateStyleAndEvents(
-        collection, PresContext()->RefreshDriver()->MostRecentRefresh(),
-        EnsureStyleRule_IsNotThrottled);
-      curRule.mRule = collection->mStyleRule;
-    } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
-      nsPresContext* presContext = PresContext();
-      ElementAnimationCollection* collection =
-        presContext->TransitionManager()->GetElementTransitions(
-          aElement,
-          aOldStyleContext->GetPseudoType(),
-          false);
-      NS_ASSERTION(collection,
-        "Rule has level eTransitionSheet without transition on manager");
+    switch (curRule.mLevel) {
+    case nsStyleSet::eAnimationSheet:
+      if (aReplacements & eRestyle_CSSAnimations) {
+        nsAnimationManager* animationManager = PresContext()->AnimationManager();
+        ElementAnimationCollection* collection = animationManager->GetElementAnimations(
+          aElement, aOldStyleContext->GetPseudoType(), false);
+        NS_ASSERTION(collection,
+          "Rule has level eAnimationSheet without animation on manager");
 
-      collection->EnsureStyleRuleFor(
-        presContext->RefreshDriver()->MostRecentRefresh(),
-        EnsureStyleRule_IsNotThrottled);
-      curRule.mRule = collection->mStyleRule;
-    } else {
-      curRule.mRule = ruleNode->GetRule();
+        animationManager->UpdateStyleAndEvents(
+          collection, PresContext()->RefreshDriver()->MostRecentRefresh(),
+          EnsureStyleRule_IsNotThrottled);
+        curRule.mRule = collection->mStyleRule;
+      }
+      break;
+    case nsStyleSet::eTransitionSheet:
+      if (aReplacements & eRestyle_CSSTransitions) {
+        nsPresContext* presContext = PresContext();
+        ElementAnimationCollection* collection =
+          presContext->TransitionManager()->GetElementTransitions(
+            aElement,
+            aOldStyleContext->GetPseudoType(),
+            false);
+        NS_ASSERTION(collection,
+          "Rule has level eTransitionSheet without transition on manager");
+
+        collection->EnsureStyleRuleFor(
+          presContext->RefreshDriver()->MostRecentRefresh(),
+          EnsureStyleRule_IsNotThrottled);
+        curRule.mRule = collection->mStyleRule;
+      }
+      break;
+    default:
+      break;
     }
 
     if (curRule.mRule) {

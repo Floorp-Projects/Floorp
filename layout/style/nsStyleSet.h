@@ -134,12 +134,14 @@ class nsStyleSet
   ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
                             const nsCOMArray<nsIStyleRule> &aRules);
 
-  // Resolve style by replacing the animation and transition rules, but
-  // otherwise maintaining the status quo.
+  // Resolve style by making replacements in the list of style rules as
+  // described by aReplacements, but otherwise maintaining the status
+  // quo.
   already_AddRefed<nsStyleContext>
   ResolveStyleWithReplacement(mozilla::dom::Element* aElement,
                               nsStyleContext* aNewParentContext,
-                              nsStyleContext* aOldStyleContext);
+                              nsStyleContext* aOldStyleContext,
+                              nsRestyleHint aReplacements);
 
   // Get a style context for a non-element (which no rules will match),
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame
