@@ -6,11 +6,12 @@ if len (sys.argv) != 4:
 	print >>sys.stderr, "usage: ./gen-indic-table.py IndicSyllabicCategory.txt IndicMatraCategory.txt Blocks.txt"
 	sys.exit (1)
 
+BLACKLISTED_BLOCKS = ["Thai", "Lao", "Tibetan"]
+
 files = [file (x) for x in sys.argv[1:]]
 
 headers = [[f.readline () for i in range (2)] for f in files]
 
-blocks = {}
 data = [{} for f in files]
 values = [{} for f in files]
 for i, f in enumerate (files):
@@ -35,10 +36,7 @@ for i, f in enumerate (files):
 
 		for u in range (start, end + 1):
 			data[i][u] = t
-		values[i][t] = values[i].get (t, 0) + 1
-
-		if i == 2:
-			blocks[t] = (start, end)
+		values[i][t] = values[i].get (t, 0) + end - start + 1
 
 # Merge data into one dict:
 defaults = ('Other', 'Not_Applicable', 'No_Block')
@@ -52,9 +50,14 @@ for i,d in enumerate (data):
 		if not u in combined:
 			combined[u] = list (defaults)
 		combined[u][i] = v
+combined = {k:v for k,v in combined.items() if v[2] not in BLACKLISTED_BLOCKS}
 data = combined
 del combined
 num = len (data)
+
+for u in [0x17CD, 0x17CE, 0x17CF, 0x17D0, 0x17D3]:
+	if data[u][0] == 'Other':
+		data[u][0] = "Vowel_Dependent"
 
 # Move the outliers NO-BREAK SPACE and DOTTED CIRCLE out
 singles = {}
@@ -81,6 +84,10 @@ print
 # Shorten values
 short = [{
 	"Bindu":		'Bi',
+	"Cantillation_Mark":	'Ca',
+	"Joiner":		'ZWJ',
+	"Non_Joiner":		'ZWNJ',
+	"Number":		'Nd',
 	"Visarga":		'Vs',
 	"Vowel":		'Vo',
 	"Vowel_Dependent":	'M',
@@ -88,14 +95,14 @@ short = [{
 },{
 	"Not_Applicable":	'x',
 }]
-all_shorts = [[],[]]
+all_shorts = [{},{}]
 
 # Add some of the values, to make them more readable, and to avoid duplicates
 
 
 for i in range (2):
 	for v,s in short[i].items ():
-		all_shorts[i].append (s)
+		all_shorts[i][s] = v
 
 what = ["INDIC_SYLLABIC_CATEGORY", "INDIC_MATRA_CATEGORY"]
 what_short = ["ISC", "IMC"]
@@ -110,8 +117,8 @@ for i in range (2):
 		else:
 			s = ''.join ([c for c in v_no_and if ord ('A') <= ord (c) <= ord ('Z')])
 			if s in all_shorts[i]:
-				raise Exception ("Duplicate short value alias", v, s)
-			all_shorts[i].append (s)
+				raise Exception ("Duplicate short value alias", v, all_shorts[i][s])
+			all_shorts[i][s] = v
 			short[i][v] = s
 		print "#define %s_%s	%s_%s	%s/* %3d chars; %s */" % \
 			(what_short[i], s, what[i], v.upper (), \
@@ -124,11 +131,16 @@ print
 
 total = 0
 used = 0
+last_block = None
 def print_block (block, start, end, data):
-	print
-	print
-	print "  /* %s  (%04X..%04X) */" % (block, start, end)
+	global total, used, last_block
+	if block and block != last_block:
+		print
+		print
+		print "  /* %s */" % block
 	num = 0
+	assert start % 8 == 0
+	assert (end+1) % 8 == 0
 	for u in range (start, end+1):
 		if u % 8 == 0:
 			print
@@ -138,14 +150,15 @@ def print_block (block, start, end, data):
 		d = data.get (u, defaults)
 		sys.stdout.write ("%9s" % ("_(%s,%s)," % (short[0][d[0]], short[1][d[1]])))
 
-	global total, used
 	total += end - start + 1
 	used += num
+	if block:
+		last_block = block
 
 uu = data.keys ()
 uu.sort ()
 
-last = -1
+last = -100000
 num = 0
 offset = 0
 starts = []
@@ -155,11 +168,16 @@ for u in uu:
 	if u <= last:
 		continue
 	block = data[u][2]
-	(start, end) = blocks[block]
+
+	start = u//8*8
+	end = start+1
+	while end in uu and block == data[end][2]:
+		end += 1
+	end = (end-1)//8*8 + 7
 
 	if start != last + 1:
-		if start - last <= 33:
-			print_block ("FILLER", last+1, start-1, data)
+		if start - last <= 1+16*3:
+			print_block (None, last+1, start-1, data)
 			last = start-1
 		else:
 			if last >= 0:
@@ -167,7 +185,7 @@ for u in uu:
 				offset += ends[-1] - starts[-1]
 			print
 			print
-			print "#define indic_offset_0x%04x %d" % (start, offset)
+			print "#define indic_offset_0x%04xu %d" % (start, offset)
 			starts.append (start)
 
 	print_block (block, start, end, data)
@@ -176,19 +194,30 @@ ends.append (last + 1)
 offset += ends[-1] - starts[-1]
 print
 print
-print "#define indic_offset_total %d" % offset
-print
 occupancy = used * 100. / total
-print "}; /* Table occupancy: %d%% */" % occupancy
+page_bits = 12
+print "}; /* Table items: %d; occupancy: %d%% */" % (offset, occupancy)
 print
 print "INDIC_TABLE_ELEMENT_TYPE"
 print "hb_indic_get_categories (hb_codepoint_t u)"
 print "{"
-for (start,end) in zip (starts, ends):
-	offset = "indic_offset_0x%04x" % start
-	print "  if (0x%04X <= u && u <= 0x%04X) return indic_table[u - 0x%04X + %s];" % (start, end, start, offset)
-for u,d in singles.items ():
-	print "  if (unlikely (u == 0x%04X)) return _(%s,%s);" % (u, short[0][d[0]], short[1][d[1]])
+print "  switch (u >> %d)" % page_bits
+print "  {"
+pages = set([u>>page_bits for u in starts+ends+singles.keys()])
+for p in sorted(pages):
+	print "    case 0x%0Xu:" % p
+	for (start,end) in zip (starts, ends):
+		if p not in [start>>page_bits, end>>page_bits]: continue
+		offset = "indic_offset_0x%04xu" % start
+		print "      if (hb_in_range (u, 0x%04Xu, 0x%04Xu)) return indic_table[u - 0x%04Xu + %s];" % (start, end, start, offset)
+	for u,d in singles.items ():
+		if p != u>>page_bits: continue
+		print "      if (unlikely (u == 0x%04Xu)) return _(%s,%s);" % (u, short[0][d[0]], short[1][d[1]])
+	print "      break;"
+	print ""
+print "    default:"
+print "      break;"
+print "  }"
 print "  return _(x,x);"
 print "}"
 print

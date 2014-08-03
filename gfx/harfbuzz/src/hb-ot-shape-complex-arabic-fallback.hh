@@ -33,6 +33,8 @@
 #include "hb-ot-layout-gsub-table.hh"
 
 
+/* Features ordered the same as the entries in shaping_table rows,
+ * followed by rlig.  Don't change. */
 static const hb_tag_t arabic_fallback_features[] =
 {
   HB_TAG('i','n','i','t'),
@@ -40,16 +42,6 @@ static const hb_tag_t arabic_fallback_features[] =
   HB_TAG('f','i','n','a'),
   HB_TAG('i','s','o','l'),
   HB_TAG('r','l','i','g'),
-};
-
-/* Same order as the fallback feature array */
-enum {
-  FALLBACK_INIT,
-  FALLBACK_MEDI,
-  FALLBACK_FINA,
-  FALLBACK_ISOL,
-  FALLBACK_RLIG,
-  ARABIC_NUM_FALLBACK_FEATURES
 };
 
 static OT::SubstLookup *
@@ -71,7 +63,7 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
 	!hb_font_get_glyph (font, u, 0, &u_glyph) ||
 	!hb_font_get_glyph (font, s, 0, &s_glyph) ||
 	u_glyph == s_glyph ||
-	u_glyph > 0xFFFF || s_glyph > 0xFFFF)
+	u_glyph > 0xFFFFu || s_glyph > 0xFFFFu)
       continue;
 
     glyphs[num_glyphs].set (u_glyph);
@@ -79,6 +71,9 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
 
     num_glyphs++;
   }
+
+  if (!num_glyphs)
+    return NULL;
 
   /* Bubble-sort!
    * May not be good-enough for presidential candidate interviews, but good-enough for us... */
@@ -157,6 +152,9 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
     }
   }
 
+  if (!num_ligatures)
+    return NULL;
+
   OT::Supplier<OT::GlyphID>   first_glyphs_supplier                      (first_glyphs, num_first_glyphs);
   OT::Supplier<unsigned int > ligature_per_first_glyph_count_supplier    (ligature_per_first_glyph_count_list, num_first_glyphs);
   OT::Supplier<OT::GlyphID>   ligatures_supplier                         (ligature_list, num_ligatures);
@@ -193,16 +191,107 @@ arabic_fallback_synthesize_lookup (const hb_ot_shape_plan_t *plan,
     return arabic_fallback_synthesize_lookup_ligature (plan, font);
 }
 
+#define ARABIC_FALLBACK_MAX_LOOKUPS 5
+
 struct arabic_fallback_plan_t
 {
   ASSERT_POD ();
 
-  hb_mask_t mask_array[ARABIC_NUM_FALLBACK_FEATURES];
-  OT::SubstLookup *lookup_array[ARABIC_NUM_FALLBACK_FEATURES];
-  hb_ot_layout_lookup_accelerator_t accel_array[ARABIC_NUM_FALLBACK_FEATURES];
+  unsigned int num_lookups;
+  bool free_lookups;
+
+  hb_mask_t mask_array[ARABIC_FALLBACK_MAX_LOOKUPS];
+  OT::SubstLookup *lookup_array[ARABIC_FALLBACK_MAX_LOOKUPS];
+  hb_ot_layout_lookup_accelerator_t accel_array[ARABIC_FALLBACK_MAX_LOOKUPS];
 };
 
 static const arabic_fallback_plan_t arabic_fallback_plan_nil = {};
+
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(HB_WITH_WIN1256)
+#define HB_WITH_WIN1256
+#endif
+
+#ifdef HB_WITH_WIN1256
+#include "hb-ot-shape-complex-arabic-win1256.hh"
+#endif
+
+struct ManifestLookup {
+  OT::Tag tag;
+  OT::OffsetTo<OT::SubstLookup> lookupOffset;
+};
+typedef OT::ArrayOf<ManifestLookup> Manifest;
+
+static bool
+arabic_fallback_plan_init_win1256 (arabic_fallback_plan_t *fallback_plan,
+				   const hb_ot_shape_plan_t *plan,
+				   hb_font_t *font)
+{
+#ifdef HB_WITH_WIN1256
+  /* Does this font look like it's Windows-1256-encoded? */
+  hb_codepoint_t g;
+  if (!(hb_font_get_glyph (font, 0x0627u, 0, &g) && g == 199 /* ALEF */ &&
+	hb_font_get_glyph (font, 0x0644u, 0, &g) && g == 225 /* LAM */ &&
+	hb_font_get_glyph (font, 0x0649u, 0, &g) && g == 236 /* ALEF MAKSURA */ &&
+	hb_font_get_glyph (font, 0x064Au, 0, &g) && g == 237 /* YEH */ &&
+	hb_font_get_glyph (font, 0x0652u, 0, &g) && g == 250 /* SUKUN */))
+    return false;
+
+  const Manifest &manifest = reinterpret_cast<const Manifest&> (arabic_win1256_gsub_lookups.manifest);
+  ASSERT_STATIC (sizeof (arabic_win1256_gsub_lookups.manifestData) / sizeof (ManifestLookup)
+		 <= ARABIC_FALLBACK_MAX_LOOKUPS);
+  /* TODO sanitize the table? */
+
+  unsigned j = 0;
+  unsigned int count = manifest.len;
+  for (unsigned int i = 0; i < count; i++)
+  {
+    fallback_plan->mask_array[j] = plan->map.get_1_mask (manifest[i].tag);
+    if (fallback_plan->mask_array[j])
+    {
+      fallback_plan->lookup_array[j] = const_cast<OT::SubstLookup*> (&(&manifest+manifest[i].lookupOffset));
+      if (fallback_plan->lookup_array[j])
+      {
+	fallback_plan->accel_array[j].init (*fallback_plan->lookup_array[j]);
+	j++;
+      }
+    }
+  }
+
+  fallback_plan->num_lookups = j;
+  fallback_plan->free_lookups = false;
+
+  return j > 0;
+#else
+  return false;
+#endif
+}
+
+static bool
+arabic_fallback_plan_init_unicode (arabic_fallback_plan_t *fallback_plan,
+				   const hb_ot_shape_plan_t *plan,
+				   hb_font_t *font)
+{
+  ASSERT_STATIC (ARRAY_LENGTH_CONST(arabic_fallback_features) <= ARABIC_FALLBACK_MAX_LOOKUPS);
+  unsigned int j = 0;
+  for (unsigned int i = 0; i < ARRAY_LENGTH(arabic_fallback_features) ; i++)
+  {
+    fallback_plan->mask_array[j] = plan->map.get_1_mask (arabic_fallback_features[i]);
+    if (fallback_plan->mask_array[j])
+    {
+      fallback_plan->lookup_array[j] = arabic_fallback_synthesize_lookup (plan, font, i);
+      if (fallback_plan->lookup_array[j])
+      {
+	fallback_plan->accel_array[j].init (*fallback_plan->lookup_array[j]);
+	j++;
+      }
+    }
+  }
+
+  fallback_plan->num_lookups = j;
+  fallback_plan->free_lookups = true;
+
+  return j > 0;
+}
 
 static arabic_fallback_plan_t *
 arabic_fallback_plan_create (const hb_ot_shape_plan_t *plan,
@@ -212,17 +301,21 @@ arabic_fallback_plan_create (const hb_ot_shape_plan_t *plan,
   if (unlikely (!fallback_plan))
     return const_cast<arabic_fallback_plan_t *> (&arabic_fallback_plan_nil);
 
-  for (unsigned int i = 0; i < ARABIC_NUM_FALLBACK_FEATURES; i++)
-  {
-    fallback_plan->mask_array[i] = plan->map.get_1_mask (arabic_fallback_features[i]);
-    if (fallback_plan->mask_array[i]) {
-      fallback_plan->lookup_array[i] = arabic_fallback_synthesize_lookup (plan, font, i);
-      if (fallback_plan->lookup_array[i])
-	fallback_plan->accel_array[i].init (*fallback_plan->lookup_array[i]);
-    }
-  }
+  fallback_plan->num_lookups = 0;
+  fallback_plan->free_lookups = false;
 
-  return fallback_plan;
+  /* Try synthesizing GSUB table using Unicode Arabic Presentation Forms,
+   * in case the font has cmap entries for the presentation-forms characters. */
+  if (arabic_fallback_plan_init_unicode (fallback_plan, plan, font))
+    return fallback_plan;
+
+  /* See if this looks like a Windows-1256-encoded font.  If it does, use a
+   * hand-coded GSUB table. */
+  if (arabic_fallback_plan_init_win1256 (fallback_plan, plan, font))
+    return fallback_plan;
+
+  free (fallback_plan);
+  return const_cast<arabic_fallback_plan_t *> (&arabic_fallback_plan_nil);
 }
 
 static void
@@ -231,11 +324,12 @@ arabic_fallback_plan_destroy (arabic_fallback_plan_t *fallback_plan)
   if (!fallback_plan || fallback_plan == &arabic_fallback_plan_nil)
     return;
 
-  for (unsigned int i = 0; i < ARABIC_NUM_FALLBACK_FEATURES; i++)
+  for (unsigned int i = 0; i < fallback_plan->num_lookups; i++)
     if (fallback_plan->lookup_array[i])
     {
       fallback_plan->accel_array[i].fini (fallback_plan->lookup_array[i]);
-      free (fallback_plan->lookup_array[i]);
+      if (fallback_plan->free_lookups)
+	free (fallback_plan->lookup_array[i]);
     }
 
   free (fallback_plan);
@@ -247,7 +341,7 @@ arabic_fallback_plan_shape (arabic_fallback_plan_t *fallback_plan,
 			    hb_buffer_t *buffer)
 {
   OT::hb_apply_context_t c (0, font, buffer);
-  for (unsigned int i = 0; i < ARABIC_NUM_FALLBACK_FEATURES; i++)
+  for (unsigned int i = 0; i < fallback_plan->num_lookups; i++)
     if (fallback_plan->lookup_array[i]) {
       c.set_lookup_mask (fallback_plan->mask_array[i]);
       hb_ot_layout_substitute_lookup (&c,

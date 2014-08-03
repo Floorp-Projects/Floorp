@@ -289,6 +289,8 @@ _hb_ot_shape_normalize (const hb_ot_shape_plan_t *plan,
 			hb_buffer_t *buffer,
 			hb_font_t *font)
 {
+  _hb_buffer_assert_unicode_vars (buffer);
+
   hb_ot_shape_normalization_mode_t mode = plan->shaper->normalization_preference;
   const hb_ot_shape_normalize_context_t c = {
     plan,

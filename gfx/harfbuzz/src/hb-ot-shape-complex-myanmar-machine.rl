@@ -44,7 +44,7 @@ C    = 1;
 D    = 19;
 D0   = 20;
 DB   = 3;
-GB   = 12;
+GB   = 11;
 H    = 4;
 IV   = 2;
 MH   = 21;
@@ -68,7 +68,7 @@ k = (Ra As H);			# Kinzi
 
 c = C|Ra;			# is_consonant
 
-medial_group = MY? MR? ((MW MH? | MH) As?)?;
+medial_group = MY? MR? MW? MH? As?;
 main_vowel_group = VPre* VAbv* VBlw* A* (DB As?)?;
 post_vowel_group = VPst MH? As* VAbv* A* (DB As?)?;
 pwo_tone_group = PT A* DB? As?;

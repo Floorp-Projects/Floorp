@@ -131,8 +131,11 @@ main (int argc, char **argv)
 	    else
 	      printf ("      Language System %2d of %2d: %.4s\n", n_langsys, num_langsys,
 		      (const char *)script.get_lang_sys_tag (n_langsys));
-	    if (langsys.get_required_feature_index () == Index::NOT_FOUND_INDEX)
+	    if (!langsys.has_required_feature ())
 	      printf ("        No required feature\n");
+	    else
+	      printf ("        Required feature index: %d\n",
+		      langsys.get_required_feature_index ());
 
 	    int num_features = langsys.get_feature_count ();
 	    printf ("        %d feature(s) found in language system\n", num_features);
@@ -147,11 +150,10 @@ main (int argc, char **argv)
 	printf ("    %d feature(s) found in table\n", num_features);
 	for (int n_feature = 0; n_feature < num_features; n_feature++) {
 	  const Feature &feature = g.get_feature (n_feature);
-	  printf ("    Feature %2d of %2d: %.4s; %d lookup(s)\n", n_feature, num_features,
-	          (const char *)g.get_feature_tag(n_feature),
-		  feature.get_lookup_count());
-
 	  int num_lookups = feature.get_lookup_count ();
+	  printf ("    Feature %2d of %2d: %c%c%c%c\n", n_feature, num_features,
+	          HB_UNTAG(g.get_feature_tag(n_feature)));
+
 	  printf ("        %d lookup(s) found in feature\n", num_lookups);
 	  for (int n_lookup = 0; n_lookup < num_lookups; n_lookup++) {
 	    printf ("        Lookup index %2d of %2d: %d\n", n_lookup, num_lookups,
