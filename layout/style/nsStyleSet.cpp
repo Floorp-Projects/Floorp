@@ -1321,6 +1321,60 @@ nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
 }
 
 already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
+                                        nsStyleContext* aNewParentContext,
+                                        nsStyleContext* aOldStyleContext)
+{
+  nsRuleNode* ruleNode = aOldStyleContext->RuleNode();
+  nsTArray<nsStyleSet::RuleAndLevel> rules;
+  do {
+    if (ruleNode->IsRoot()) {
+      break;
+    }
+
+    nsStyleSet::RuleAndLevel curRule;
+    curRule.mLevel = ruleNode->GetLevel();
+
+    if (curRule.mLevel == nsStyleSet::eAnimationSheet) {
+      nsAnimationManager* animationManager = PresContext()->AnimationManager();
+      ElementAnimationCollection* collection = animationManager->GetElementAnimations(
+        aElement, aOldStyleContext->GetPseudoType(), false);
+      NS_ASSERTION(collection,
+        "Rule has level eAnimationSheet without animation on manager");
+
+      animationManager->UpdateStyleAndEvents(
+        collection, PresContext()->RefreshDriver()->MostRecentRefresh(),
+        EnsureStyleRule_IsNotThrottled);
+      curRule.mRule = collection->mStyleRule;
+    } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
+      nsPresContext* presContext = PresContext();
+      ElementAnimationCollection* collection =
+        presContext->TransitionManager()->GetElementTransitions(
+          aElement,
+          aOldStyleContext->GetPseudoType(),
+          false);
+      NS_ASSERTION(collection,
+        "Rule has level eTransitionSheet without transition on manager");
+
+      collection->EnsureStyleRuleFor(
+        presContext->RefreshDriver()->MostRecentRefresh(),
+        EnsureStyleRule_IsNotThrottled);
+      curRule.mRule = collection->mStyleRule;
+    } else {
+      curRule.mRule = ruleNode->GetRule();
+    }
+
+    if (curRule.mRule) {
+      rules.AppendElement(curRule);
+    }
+  } while ((ruleNode = ruleNode->GetParent()));
+
+  // FIXME: Does this handle visited contexts correctly???
+  return ResolveStyleForRules(aNewParentContext, aOldStyleContext, rules);
+}
+
+
+already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 {
   return GetContext(aParentContext, mRuleTree, nullptr,
