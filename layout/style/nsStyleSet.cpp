@@ -1327,11 +1327,11 @@ static const CascadeLevel gCascadeLevels[] = {
   { nsStyleSet::eTransitionSheet, false, eRestyle_CSSTransitions },
 };
 
-already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
-                                        nsStyleContext* aNewParentContext,
-                                        nsStyleContext* aOldStyleContext,
-                                        nsRestyleHint aReplacements)
+nsRuleNode*
+nsStyleSet::RuleNodeWithReplacement(Element* aElement,
+                                    nsRuleNode* aOldRuleNode,
+                                    nsCSSPseudoElements::Type aPseudoType,
+                                    nsRestyleHint aReplacements)
 {
   NS_ABORT_IF_FALSE(!(aReplacements & ~(eRestyle_CSSTransitions |
                                         eRestyle_CSSAnimations)),
@@ -1341,7 +1341,7 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                                     uint32_t(aReplacements)).get());
 
   nsTArray<RuleNodeInfo> rules;
-  for (nsRuleNode* ruleNode = aOldStyleContext->RuleNode(); !ruleNode->IsRoot();
+  for (nsRuleNode* ruleNode = aOldRuleNode; !ruleNode->IsRoot();
        ruleNode = ruleNode->GetParent()) {
     RuleNodeInfo* curRule = rules.AppendElement();
     curRule->mRule = ruleNode->GetRule();
@@ -1364,7 +1364,7 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
           nsAnimationManager* animationManager =
             PresContext()->AnimationManager();
           ElementAnimationCollection* collection = animationManager->GetElementAnimations(
-            aElement, aOldStyleContext->GetPseudoType(), false);
+            aElement, aPseudoType, false);
 
           if (collection) {
             animationManager->UpdateStyleAndEvents(
@@ -1380,9 +1380,7 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
           nsPresContext* presContext = PresContext();
           ElementAnimationCollection* collection =
             presContext->TransitionManager()->GetElementTransitions(
-              aElement,
-              aOldStyleContext->GetPseudoType(),
-              false);
+              aElement, aPseudoType, false);
 
           if (collection) {
             collection->EnsureStyleRuleFor(
@@ -1415,6 +1413,19 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
     }
   }
 
+  return ruleWalker.CurrentNode();
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
+                                        nsStyleContext* aNewParentContext,
+                                        nsStyleContext* aOldStyleContext,
+                                        nsRestyleHint aReplacements)
+{
+  nsRuleNode* ruleNode =
+    RuleNodeWithReplacement(aElement, aOldStyleContext->RuleNode(),
+                            aOldStyleContext->GetPseudoType(), aReplacements);
+
   // FIXME: Does this handle visited contexts correctly???
 
   uint32_t flags = eNoFlags;
@@ -1425,7 +1436,7 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
     flags |= eIsVisitedLink;
   }
 
-  return GetContext(aNewParentContext, ruleWalker.CurrentNode(), nullptr,
+  return GetContext(aNewParentContext, ruleNode, nullptr,
                     nullptr, nsCSSPseudoElements::ePseudo_NotPseudoElement,
                     nullptr, flags);
 }
