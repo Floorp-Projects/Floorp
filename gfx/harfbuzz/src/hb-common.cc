@@ -299,9 +299,11 @@ hb_language_from_string (const char *str, int len)
 
   if (len >= 0)
   {
+    /* NUL-terminate it. */
     len = MIN (len, (int) sizeof (strbuf) - 1);
-    str = (char *) memcpy (strbuf, str, len);
+    memcpy (strbuf, str, len);
     strbuf[len] = '\0';
+    str = strbuf;
   }
 
   hb_language_item_t *item = lang_find_or_insert (str);
@@ -369,7 +371,7 @@ hb_script_from_iso15924_tag (hb_tag_t tag)
     return HB_SCRIPT_INVALID;
 
   /* Be lenient, adjust case (one capital letter followed by three small letters) */
-  tag = (tag & 0xDFDFDFDF) | 0x00202020;
+  tag = (tag & 0xDFDFDFDFu) | 0x00202020u;
 
   switch (tag) {
 
@@ -389,7 +391,7 @@ hb_script_from_iso15924_tag (hb_tag_t tag)
   }
 
   /* If it looks right, just use the tag as a script */
-  if (((uint32_t) tag & 0xE0E0E0E0) == 0x40606060)
+  if (((uint32_t) tag & 0xE0E0E0E0u) == 0x40606060u)
     return (hb_script_t) tag;
 
   /* Otherwise, return unknown */
@@ -482,6 +484,14 @@ hb_script_get_horizontal_direction (hb_script_t script)
     case HB_SCRIPT_MEROITIC_CURSIVE:
     case HB_SCRIPT_MEROITIC_HIEROGLYPHS:
 
+    /* Unicode-7.0 additions */
+    case HB_SCRIPT_MANICHAEAN:
+    case HB_SCRIPT_MENDE_KIKAKUI:
+    case HB_SCRIPT_NABATAEAN:
+    case HB_SCRIPT_OLD_NORTH_ARABIAN:
+    case HB_SCRIPT_PALMYRENE:
+    case HB_SCRIPT_PSALTER_PAHLAVI:
+
       return HB_DIRECTION_RTL;
   }
 
@@ -559,7 +569,7 @@ hb_version_string (void)
 }
 
 /**
- * hb_version_check:
+ * hb_version_atleast:
  * @major: 
  * @minor: 
  * @micro: 
@@ -571,9 +581,9 @@ hb_version_string (void)
  * Since: 1.0
  **/
 hb_bool_t
-hb_version_check (unsigned int major,
-		  unsigned int minor,
-		  unsigned int micro)
+hb_version_atleast (unsigned int major,
+		    unsigned int minor,
+		    unsigned int micro)
 {
-  return HB_VERSION_CHECK (major, minor, micro);
+  return HB_VERSION_ATLEAST (major, minor, micro);
 }

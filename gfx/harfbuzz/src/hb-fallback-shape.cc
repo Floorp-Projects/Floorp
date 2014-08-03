@@ -105,34 +105,36 @@ _hb_fallback_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
    * shaper which many people unfortunately still request.
    */
 
-  bool has_space;
   hb_codepoint_t space;
-  has_space = font->get_glyph (' ', 0, &space);
+  bool has_space = font->get_glyph (' ', 0, &space);
 
   buffer->clear_positions ();
 
+  hb_direction_t direction = buffer->props.direction;
+  hb_unicode_funcs_t *unicode = buffer->unicode;
   unsigned int count = buffer->len;
-
+  hb_glyph_info_t *info = buffer->info;
+  hb_glyph_position_t *pos = buffer->pos;
   for (unsigned int i = 0; i < count; i++)
   {
-    if (has_space && buffer->unicode->is_default_ignorable (buffer->info[i].codepoint)) {
-      buffer->info[i].codepoint = space;
-      buffer->pos[i].x_advance = 0;
-      buffer->pos[i].y_advance = 0;
+    if (has_space && unicode->is_default_ignorable (info[i].codepoint)) {
+      info[i].codepoint = space;
+      pos[i].x_advance = 0;
+      pos[i].y_advance = 0;
       continue;
     }
-    font->get_glyph (buffer->info[i].codepoint, 0, &buffer->info[i].codepoint);
-    font->get_glyph_advance_for_direction (buffer->info[i].codepoint,
-					   buffer->props.direction,
-					   &buffer->pos[i].x_advance,
-					   &buffer->pos[i].y_advance);
-    font->subtract_glyph_origin_for_direction (buffer->info[i].codepoint,
-					       buffer->props.direction,
-					       &buffer->pos[i].x_offset,
-					       &buffer->pos[i].y_offset);
+    font->get_glyph (info[i].codepoint, 0, &info[i].codepoint);
+    font->get_glyph_advance_for_direction (info[i].codepoint,
+					   direction,
+					   &pos[i].x_advance,
+					   &pos[i].y_advance);
+    font->subtract_glyph_origin_for_direction (info[i].codepoint,
+					       direction,
+					       &pos[i].x_offset,
+					       &pos[i].y_offset);
   }
 
-  if (HB_DIRECTION_IS_BACKWARD (buffer->props.direction))
+  if (HB_DIRECTION_IS_BACKWARD (direction))
     hb_buffer_reverse (buffer);
 
   return true;

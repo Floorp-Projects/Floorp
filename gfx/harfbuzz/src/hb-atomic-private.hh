@@ -44,21 +44,24 @@
 
 #elif !defined(HB_NO_MT) && (defined(_WIN32) || defined(__CYGWIN__))
 
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#if defined(__MINGW32__) && !defined(MemoryBarrier)
+/* MinGW has a convoluted history of supporting MemoryBarrier
+ * properly.  As such, define a function to wrap the whole
+ * thing. */
 static inline void _HBMemoryBarrier (void) {
+#if !defined(MemoryBarrier)
   long dummy = 0;
   InterlockedExchange (&dummy, 1);
-}
-# define MemoryBarrier _HBMemoryBarrier
+#else
+  MemoryBarrier ();
 #endif
+}
 
 typedef LONG hb_atomic_int_t;
 #define hb_atomic_int_add(AI, V)	InterlockedExchangeAdd (&(AI), (V))
 
-#define hb_atomic_ptr_get(P)		(MemoryBarrier (), (void *) *(P))
+#define hb_atomic_ptr_get(P)		(_HBMemoryBarrier (), (void *) *(P))
 #define hb_atomic_ptr_cmpexch(P,O,N)	(InterlockedCompareExchangePointer ((void **) (P), (void *) (N), (void *) (O)) == (void *) (O))
 
 
@@ -78,7 +81,7 @@ typedef int32_t hb_atomic_int_t;
 #if (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_4 || __IPHONE_VERSION_MIN_REQUIRED >= 20100)
 #define hb_atomic_ptr_cmpexch(P,O,N)	OSAtomicCompareAndSwapPtrBarrier ((void *) (O), (void *) (N), (void **) (P))
 #else
-#if __ppc64__ || __x86_64__ || __arm64__
+#if __ppc64__ || __x86_64__ || __aarch64__
 #define hb_atomic_ptr_cmpexch(P,O,N)    OSAtomicCompareAndSwap64Barrier ((int64_t) (O), (int64_t) (N), (int64_t*) (P))
 #else
 #define hb_atomic_ptr_cmpexch(P,O,N)    OSAtomicCompareAndSwap32Barrier ((int32_t) (O), (int32_t) (N), (int32_t*) (P))

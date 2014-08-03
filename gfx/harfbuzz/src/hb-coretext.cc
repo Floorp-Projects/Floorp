@@ -37,6 +37,38 @@
 #endif
 
 
+static void
+release_table_data (void *user_data)
+{
+  CFDataRef cf_data = reinterpret_cast<CFDataRef> (user_data);
+  CFRelease(cf_data);
+}
+
+static hb_blob_t *
+reference_table  (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data)
+{
+  CGFontRef cg_font = reinterpret_cast<CGFontRef> (user_data);
+  CFDataRef cf_data = CGFontCopyTableForTag (cg_font, tag);
+  if (unlikely (!cf_data))
+    return NULL;
+
+  const char *data = reinterpret_cast<const char*> (CFDataGetBytePtr (cf_data));
+  const size_t length = CFDataGetLength (cf_data);
+  if (!data || !length)
+    return NULL;
+
+  return hb_blob_create (data, length, HB_MEMORY_MODE_READONLY,
+			 reinterpret_cast<void *> (const_cast<__CFData *> (cf_data)),
+			 release_table_data);
+}
+
+hb_face_t *
+hb_coretext_face_create (CGFontRef cg_font)
+{
+  return hb_face_create_for_tables (reference_table, CGFontRetain (cg_font), (hb_destroy_func_t) CGFontRelease);
+}
+
+
 HB_SHAPER_DATA_ENSURE_DECLARE(coretext, face)
 HB_SHAPER_DATA_ENSURE_DECLARE(coretext, font)
 
@@ -65,15 +97,22 @@ _hb_coretext_shaper_face_data_create (hb_face_t *face)
   if (unlikely (!data))
     return NULL;
 
-  hb_blob_t *blob = hb_face_reference_blob (face);
-  unsigned int blob_length;
-  const char *blob_data = hb_blob_get_data (blob, &blob_length);
-  if (unlikely (!blob_length))
-    DEBUG_MSG (CORETEXT, face, "Face has empty blob");
+  if (face->destroy == (hb_destroy_func_t) CGFontRelease)
+  {
+    data->cg_font = CGFontRetain ((CGFontRef) face->user_data);
+  }
+  else
+  {
+    hb_blob_t *blob = hb_face_reference_blob (face);
+    unsigned int blob_length;
+    const char *blob_data = hb_blob_get_data (blob, &blob_length);
+    if (unlikely (!blob_length))
+      DEBUG_MSG (CORETEXT, face, "Face has empty blob");
 
-  CGDataProviderRef provider = CGDataProviderCreateWithData (blob, blob_data, blob_length, &release_data);
-  data->cg_font = CGFontCreateWithDataProvider (provider);
-  CGDataProviderRelease (provider);
+    CGDataProviderRef provider = CGDataProviderCreateWithData (blob, blob_data, blob_length, &release_data);
+    data->cg_font = CGFontCreateWithDataProvider (provider);
+    CGDataProviderRelease (provider);
+  }
 
   if (unlikely (!data->cg_font)) {
     DEBUG_MSG (CORETEXT, face, "Face CGFontCreateWithDataProvider() failed");
@@ -438,7 +477,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
       event->start = false;
       event->feature = feature;
     }
-    feature_events.sort ();
+    feature_events.qsort ();
     /* Add a strategic final event. */
     {
       active_feature_t feature;
@@ -468,14 +507,12 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 	if (unlikely (!range))
 	  goto fail_features;
 
-	unsigned int offset = feature_records.len;
-
 	if (active_features.len)
 	{
 	  CFMutableArrayRef features_array = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 
 	  /* TODO sort and resolve conflicting features? */
-	  /* active_features.sort (); */
+	  /* active_features.qsort (); */
 	  for (unsigned int j = 0; j < active_features.len; j++)
 	  {
 	    CFStringRef keys[2] = {
@@ -573,13 +610,13 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
   for (unsigned int i = 0; i < buffer->len; i++) {
     hb_codepoint_t c = buffer->info[i].codepoint;
     buffer->info[i].utf16_index() = chars_len;
-    if (likely (c < 0x10000))
+    if (likely (c <= 0xFFFFu))
       pchars[chars_len++] = c;
-    else if (unlikely (c >= 0x110000))
-      pchars[chars_len++] = 0xFFFD;
+    else if (unlikely (c > 0x10FFFFu))
+      pchars[chars_len++] = 0xFFFDu;
     else {
-      pchars[chars_len++] = 0xD800 + ((c - 0x10000) >> 10);
-      pchars[chars_len++] = 0xDC00 + ((c - 0x10000) & ((1 << 10) - 1));
+      pchars[chars_len++] = 0xD800u + ((c - 0x10000u) >> 10);
+      pchars[chars_len++] = 0xDC00u + ((c - 0x10000u) & ((1 << 10) - 1));
     }
   }
 
@@ -605,7 +642,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
       hb_codepoint_t c = buffer->info[i].codepoint;
       unsigned int cluster = buffer->info[i].cluster;
       log_clusters[chars_len++] = cluster;
-      if (c >= 0x10000 && c < 0x110000)
+      if (hb_in_range (c, 0x10000u, 0x10FFFFu))
 	log_clusters[chars_len++] = cluster; /* Surrogates. */
     }
 
@@ -677,10 +714,10 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
         for (CFIndex j = range.location; j < range.location + range.length; j++)
 	{
 	    UniChar ch = CFStringGetCharacterAtIndex (string_ref, j);
-	    if (hb_in_range<UniChar> (ch, 0xDC00, 0xDFFF) && range.location < j)
+	    if (hb_in_range<UniChar> (ch, 0xDC00u, 0xDFFFu) && range.location < j)
 	    {
 	      ch = CFStringGetCharacterAtIndex (string_ref, j - 1);
-	      if (hb_in_range<UniChar> (ch, 0xD800, 0xDBFF))
+	      if (hb_in_range<UniChar> (ch, 0xD800u, 0xDBFFu))
 	        /* This is the second of a surrogate pair.  Don't need .notdef
 		 * for this one. */
 	        continue;
@@ -809,4 +846,98 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
   CFRelease (line);
 
   return true;
+}
+
+
+/*
+ * AAT shaper
+ */
+
+HB_SHAPER_DATA_ENSURE_DECLARE(coretext_aat, face)
+HB_SHAPER_DATA_ENSURE_DECLARE(coretext_aat, font)
+
+
+/*
+ * shaper face data
+ */
+
+struct hb_coretext_aat_shaper_face_data_t {};
+
+hb_coretext_aat_shaper_face_data_t *
+_hb_coretext_aat_shaper_face_data_create (hb_face_t *face)
+{
+  hb_blob_t *mort_blob = face->reference_table (HB_CORETEXT_TAG_MORT);
+  /* Umm, we just reference the table to check whether it exists.
+   * Maybe add better API for this? */
+  if (!hb_blob_get_length (mort_blob))
+  {
+    hb_blob_destroy (mort_blob);
+    mort_blob = face->reference_table (HB_CORETEXT_TAG_MORX);
+    if (!hb_blob_get_length (mort_blob))
+    {
+      hb_blob_destroy (mort_blob);
+      return NULL;
+    }
+  }
+  hb_blob_destroy (mort_blob);
+
+  return hb_coretext_shaper_face_data_ensure (face) ? (hb_coretext_aat_shaper_face_data_t *) HB_SHAPER_DATA_SUCCEEDED : NULL;
+}
+
+void
+_hb_coretext_aat_shaper_face_data_destroy (hb_coretext_aat_shaper_face_data_t *data HB_UNUSED)
+{
+}
+
+
+/*
+ * shaper font data
+ */
+
+struct hb_coretext_aat_shaper_font_data_t {};
+
+hb_coretext_aat_shaper_font_data_t *
+_hb_coretext_aat_shaper_font_data_create (hb_font_t *font)
+{
+  return hb_coretext_shaper_font_data_ensure (font) ? (hb_coretext_aat_shaper_font_data_t *) HB_SHAPER_DATA_SUCCEEDED : NULL;
+}
+
+void
+_hb_coretext_aat_shaper_font_data_destroy (hb_coretext_aat_shaper_font_data_t *data HB_UNUSED)
+{
+}
+
+
+/*
+ * shaper shape_plan data
+ */
+
+struct hb_coretext_aat_shaper_shape_plan_data_t {};
+
+hb_coretext_aat_shaper_shape_plan_data_t *
+_hb_coretext_aat_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan HB_UNUSED,
+					     const hb_feature_t *user_features HB_UNUSED,
+					     unsigned int        num_user_features HB_UNUSED)
+{
+  return (hb_coretext_aat_shaper_shape_plan_data_t *) HB_SHAPER_DATA_SUCCEEDED;
+}
+
+void
+_hb_coretext_aat_shaper_shape_plan_data_destroy (hb_coretext_aat_shaper_shape_plan_data_t *data HB_UNUSED)
+{
+}
+
+
+/*
+ * shaper
+ */
+
+hb_bool_t
+_hb_coretext_aat_shape (hb_shape_plan_t    *shape_plan,
+			hb_font_t          *font,
+			hb_buffer_t        *buffer,
+			const hb_feature_t *features,
+			unsigned int        num_features)
+{
+  return _hb_coretext_shape (shape_plan, font, buffer, features, num_features);
 }
