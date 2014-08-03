@@ -2671,6 +2671,20 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
 void
 ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
 {
+  // We'd like style resolution to be exact in the sense that an
+  // animation-only style flush flushes only the styles it requests
+  // flushing and doesn't update any other styles.  This means avoiding
+  // constructing new frames during such a flush.
+  //
+  // For a ::before or ::after, we'll do an eRestyle_Subtree due to
+  // RestyleHintForOp in nsCSSRuleProcessor.cpp (via its
+  // HasAttributeDependentStyle or HasStateDependentStyle), given that
+  // we store pseudo-elements in selectors like they were children.
+  //
+  // Also, it's faster to skip the work we do on undisplayed children
+  // and pseudo-elements when we can skip it.
+  bool mightReframePseudos = aChildRestyleHint & eRestyle_Subtree;
+
   RestyleUndisplayedChildren(aChildRestyleHint);
 
   // Check whether we might need to create a new ::before frame.
@@ -2681,7 +2695,7 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
   // ReconstructFrame hint.  Using an out of date style context could
   // trigger assertions about mismatched rule trees.
   if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
-      aChildRestyleHint) {
+      mightReframePseudos) {
     RestyleBeforePseudo();
   }
 
@@ -2710,7 +2724,7 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
   // Check whether we might need to create a new ::after frame.
   // See comments above regarding :before.
   if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
-      aChildRestyleHint) {
+      mightReframePseudos) {
     RestyleAfterPseudo(lastContinuation);
   }
 }
