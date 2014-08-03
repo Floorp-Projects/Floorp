@@ -209,6 +209,7 @@ struct hb_graphite2_cluster_t {
   unsigned int num_chars;
   unsigned int base_glyph;
   unsigned int num_glyphs;
+  unsigned int cluster;
 };
 
 hb_bool_t
@@ -299,6 +300,7 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
   memset (clusters, 0, sizeof (clusters[0]) * buffer->len);
 
   hb_codepoint_t *pg = gids;
+  clusters[0].cluster = buffer->info[0].cluster;
   for (is = gr_seg_first_slot (seg), ic = 0; is; is = gr_slot_next_in_segment (is), ic++)
   {
     unsigned int before = gr_slot_before (is);
@@ -316,6 +318,7 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
     {
       hb_graphite2_cluster_t *c = clusters + ci + 1;
       c->base_char = clusters[ci].base_char + clusters[ci].num_chars;
+      c->cluster = buffer->info[c->base_char].cluster;
       c->num_chars = before - c->base_char;
       c->base_glyph = ic;
       c->num_glyphs = 0;
@@ -335,7 +338,7 @@ _hb_graphite2_shape (hb_shape_plan_t    *shape_plan,
     {
       hb_glyph_info_t *info = &buffer->info[clusters[i].base_glyph + j];
       info->codepoint = gids[clusters[i].base_glyph + j];
-      info->cluster = gr_cinfo_base(gr_seg_cinfo(seg, clusters[i].base_char));
+      info->cluster = clusters[i].cluster;
     }
   }
   buffer->len = glyph_count;
