@@ -654,6 +654,15 @@ AudioContext::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv)
   mDestination->SetMozAudioChannelType(aValue, aRv);
 }
 
+AudioChannel
+AudioContext::TestAudioChannelInAudioNodeStream()
+{
+  MediaStream* stream = mDestination->Stream();
+  MOZ_ASSERT(stream);
+
+  return stream->AudioChannelType();
+}
+
 size_t
 AudioContext::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {

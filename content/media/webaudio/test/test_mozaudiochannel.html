@@ -50,11 +50,18 @@ function test_permission(aChannel) {
 
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
+  var channel = SpecialPowers.wrap(ac).testAudioChannelInAudioNodeStream();
+  is(channel, "normal", "AudioNodeStream is using the correct default audio channel.");
+
   SpecialPowers.pushPermissions(
     [{ "type": "audio-channel-" + aChannel, "allow": true, "context": document }],
     function() {
       ac.mozAudioChannelType = aChannel;
       is(ac.mozAudioChannelType, aChannel, "Default ac channel == '" + aChannel + "'");
+
+      var channel = SpecialPowers.wrap(ac).testAudioChannelInAudioNodeStream();
+      is(channel, aChannel, "AudioNodeStream is using the correct new audio channel.");
+
       runTest();
     }
   );
@@ -69,6 +76,10 @@ function test_preferences(aChannel) {
           var ac = new AudioContext(aChannel);
           ok(ac, "AudioContext created");
           is(ac.mozAudioChannelType, aChannel, "Default ac channel == '" + aChannel + "'");
+
+          var channel = SpecialPowers.wrap(ac).testAudioChannelInAudioNodeStream();
+          is(channel, aChannel, "AudioNodeStream is using the correct audio channel.");
+
           runTest();
         }
       );
@@ -85,6 +96,21 @@ function test_wrong_preferences() {
       runTest();
     }
   );
+}
+
+function test_testAudioChannelInAudioNodeStream() {
+  var ac = new AudioContext();
+  ok(ac, "AudioContext created");
+
+  var status = false;
+  try {
+    ac.testAudioChannelInAudioNodeStream();
+  } catch(e) {
+    status = true;
+  }
+
+  ok(status, "testAudioChannelInAudioNodeStream() should not exist in content.");
+  runTest();
 }
 
 var tests = [
@@ -105,6 +131,8 @@ var tests = [
   function() { test_preferences("publicnotification"); },
 
   test_wrong_preferences,
+
+  test_testAudioChannelInAudioNodeStream,
 ];
 
 function runTest() {
