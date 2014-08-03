@@ -262,18 +262,15 @@ SessionStartup.prototype = {
    * Get the session state as a jsval
    */
   get state() {
-    this._ensureInitialized();
     return this._initialState;
   },
 
   /**
    * Determines whether there is a pending session restore. Should only be
    * called after initialization has completed.
-   * @throws Error if initialization is not complete yet.
    * @returns bool
    */
   doRestore: function sss_doRestore() {
-    this._ensureInitialized();
     return this._willRestore();
   },
 
@@ -324,7 +321,6 @@ SessionStartup.prototype = {
    * Get the type of pending session store, if any.
    */
   get sessionType() {
-    this._ensureInitialized();
     return this._sessionType;
   },
 
@@ -332,17 +328,7 @@ SessionStartup.prototype = {
    * Get whether the previous session crashed.
    */
   get previousSessionCrashed() {
-    this._ensureInitialized();
     return this._previousSessionCrashed;
-  },
-
-  // Ensure that initialization is complete. If initialization is not complete
-  // yet, something is attempting to use the old synchronous initialization,
-  // throw an error.
-  _ensureInitialized: function sss__ensureInitialized() {
-    if (!this._initialized) {
-      throw new Error("Session Store is not initialized.");
-    }
   },
 
   /* ........ QueryInterface .............. */
