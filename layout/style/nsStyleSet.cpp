@@ -1345,6 +1345,9 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
   // only the path from the last change in the rule tree, like
   // ReplaceAnimationRule in nsStyleSet.cpp does.  (That could then
   // perhaps share this code, too?)
+  // But if we do that, we'll need to pass whether we are rebuilding the
+  // rule tree from ElementRestyler::RestyleSelf to avoid taking that
+  // path when we're rebuilding the rule tree.
 
   nsTArray<RuleNodeInfo> rules;
   for (nsRuleNode* ruleNode = aOldRuleNode; !ruleNode->IsRoot();
