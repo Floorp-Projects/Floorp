@@ -340,7 +340,7 @@ hb_glib_unicode_decompose_compatibility (hb_unicode_funcs_t *ufuncs HB_UNUSED,
 					 void               *user_data HB_UNUSED)
 {
 #if GLIB_CHECK_VERSION(2,29,12)
-  return g_unichar_fully_decompose (u, TRUE, decomposed, HB_UNICODE_MAX_DECOMPOSITION_LEN);
+  return g_unichar_fully_decompose (u, true, decomposed, HB_UNICODE_MAX_DECOMPOSITION_LEN);
 #endif
 
   /* If the user doesn't have GLib >= 2.29.12 we have to perform
