@@ -1577,7 +1577,7 @@ public class GeckoAppShell
     public static boolean checkForGeckoProcs() {
 
         class GeckoPidCallback implements GeckoProcessesVisitor {
-            public boolean otherPidExist = false;
+            public boolean otherPidExist;
             @Override
             public boolean callback(int pid) {
                 if (pid != android.os.Process.myPid()) {
@@ -2099,12 +2099,12 @@ public class GeckoAppShell
         sGeckoInterface = aGeckoInterface;
     }
 
-    public static android.hardware.Camera sCamera = null;
+    public static android.hardware.Camera sCamera;
 
     static native void cameraCallbackBridge(byte[] data);
 
     static int kPreferedFps = 25;
-    static byte[] sCameraBuffer = null;
+    static byte[] sCameraBuffer;
 
 
     @WrapElementForJNI(stubName = "InitCameraWrapper")
