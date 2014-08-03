@@ -192,6 +192,8 @@ let TabMirror = function(deviceId, window) {
   let constraints = {
     video: {
       mediaSource: "browser",
+      browserWindow: windowId,
+      scrollWithPage: true,
       advanced: [
         { width: { min: videoWidth, max: videoWidth },
           height: { min: videoHeight, max: videoHeight }
