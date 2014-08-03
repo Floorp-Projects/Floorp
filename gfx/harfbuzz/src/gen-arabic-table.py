@@ -3,34 +3,48 @@
 import sys
 import os.path
 
-if len (sys.argv) != 3:
-	print >>sys.stderr, "usage: ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt"
+if len (sys.argv) != 4:
+	print >>sys.stderr, "usage: ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt"
 	sys.exit (1)
 
 files = [file (x) for x in sys.argv[1:]]
 
-headers = [[files[0].readline (), files[0].readline ()]]
+headers = [[files[0].readline (), files[0].readline ()], [files[2].readline (), files[2].readline ()]]
 headers.append (["UnicodeData.txt does not have a header."])
 while files[0].readline ().find ('##################') < 0:
 	pass
 
+blocks = {}
+def read_blocks(f):
+	global blocks
+	for line in f:
+
+		j = line.find ('#')
+		if j >= 0:
+			line = line[:j]
+
+		fields = [x.strip () for x in line.split (';')]
+		if len (fields) == 1:
+			continue
+
+		uu = fields[0].split ('..')
+		start = int (uu[0], 16)
+		if len (uu) == 1:
+			end = start
+		else:
+			end = int (uu[1], 16)
+
+		t = fields[1]
+
+		for u in range (start, end + 1):
+			blocks[u] = t
 
 def print_joining_table(f):
 
-	print
-	print "static const uint8_t joining_table[] ="
-	print "{"
-
-	min_u = 0x110000
-	max_u = 0
-	num = 0
-	last = -1
-	block = ''
+	values = {}
 	for line in f:
 
 		if line[0] == '#':
-			if line.find (" characters"):
-				block = line[2:].strip ()
 			continue
 
 		fields = [x.strip () for x in line.split (';')]
@@ -38,43 +52,100 @@ def print_joining_table(f):
 			continue
 
 		u = int (fields[0], 16)
-		if u == 0x200C or u == 0x200D:
-			continue
-		if u < last:
-			raise Exception ("Input data character not sorted", u)
-		min_u = min (min_u, u)
-		max_u = max (max_u, u)
-		num += 1
-
-		if block:
-			print "\n  /* %s */\n" % block
-			block = ''
-
-		if last != -1:
-			last += 1
-			while last < u:
-				print "  JOINING_TYPE_X, /* %04X */" % last
-				last += 1
-		else:
-			last = u
 
 		if fields[3] in ["ALAPH", "DALATH RISH"]:
 			value = "JOINING_GROUP_" + fields[3].replace(' ', '_')
 		else:
 			value = "JOINING_TYPE_" + fields[2]
-		print "  %s, /* %s */" % (value, '; '.join(fields))
+		values[u] = value
+
+	short_value = {}
+	for value in set([v for v in values.values()] + ['JOINING_TYPE_X']):
+		short = ''.join(x[0] for x in value.split('_')[2:])
+		assert short not in short_value.values()
+		short_value[value] = short
 
 	print
-	print "};"
+	for value,short in short_value.items():
+		print "#define %s	%s" % (short, value)
+
+	uu = sorted(values.keys())
+	num = len(values)
+	all_blocks = set([blocks[u] for u in uu])
+
+	last = -100000
+	ranges = []
+	for u in uu:
+		if u - last <= 1+16*5:
+			ranges[-1][-1] = u
+		else:
+			ranges.append([u,u])
+		last = u
+
 	print
-	print "#define JOINING_TABLE_FIRST	0x%04X" % min_u
-	print "#define JOINING_TABLE_LAST	0x%04X" % max_u
+	print "static const uint8_t joining_table[] ="
+	print "{"
+	last_block = None
+	offset = 0
+	for start,end in ranges:
+
+		print
+		print "#define joining_offset_0x%04xu %d" % (start, offset)
+
+		for u in range(start, end+1):
+
+			block = blocks.get(u, last_block)
+			value = values.get(u, "JOINING_TYPE_X")
+
+			if block != last_block or u == start:
+				if u != start:
+					print
+				if block in all_blocks:
+					print "\n  /* %s */" % block
+				else:
+					print "\n  /* FILLER */"
+				last_block = block
+				if u % 32 != 0:
+					print
+					print "  /* %04X */" % (u//32*32), "  " * (u % 32),
+
+			if u % 32 == 0:
+				print
+				print "  /* %04X */ " % u,
+			sys.stdout.write("%s," % short_value[value])
+		print
+
+		offset += end - start + 1
+	print
+	occupancy = num * 100. / offset
+	print "}; /* Table items: %d; occupancy: %d%% */" % (offset, occupancy)
 	print
 
-	occupancy = num * 100 / (max_u - min_u + 1)
-	# Maintain at least 40% occupancy in the table */
-	if occupancy < 40:
-		raise Exception ("Table too sparse, please investigate: ", occupancy)
+	page_bits = 12;
+	print
+	print "static unsigned int"
+	print "joining_type (hb_codepoint_t u)"
+	print "{"
+	print "  switch (u >> %d)" % page_bits
+	print "  {"
+	pages = set([u>>page_bits for u in [s for s,e in ranges]+[e for s,e in ranges]])
+	for p in sorted(pages):
+		print "    case 0x%0Xu:" % p
+		for (start,end) in ranges:
+			if p not in [start>>page_bits, end>>page_bits]: continue
+			offset = "joining_offset_0x%04xu" % start
+			print "      if (hb_in_range (u, 0x%04Xu, 0x%04Xu)) return joining_table[u - 0x%04Xu + %s];" % (start, end, start, offset)
+		print "      break;"
+		print ""
+	print "    default:"
+	print "      break;"
+	print "  }"
+	print "  return X;"
+	print "}"
+	print
+	for value,short in short_value.items():
+		print "#undef %s" % (short)
+	print
 
 def print_shaping_table(f):
 
@@ -124,13 +195,13 @@ def print_shaping_table(f):
 	for u in range (min_u, max_u + 1):
 		s = [shapes[u][shape] if u in shapes and shape in shapes[u] else 0
 		     for shape in  ['initial', 'medial', 'final', 'isolated']]
-		value = ', '.join ("0x%04X" % c for c in s)
+		value = ', '.join ("0x%04Xu" % c for c in s)
 		print "  {%s}, /* U+%04X %s */" % (value, u, names[u] if u in names else "")
 
 	print "};"
 	print
-	print "#define SHAPING_TABLE_FIRST	0x%04X" % min_u
-	print "#define SHAPING_TABLE_LAST	0x%04X" % max_u
+	print "#define SHAPING_TABLE_FIRST	0x%04Xu" % min_u
+	print "#define SHAPING_TABLE_LAST	0x%04Xu" % max_u
 	print
 
 	ligas = {}
@@ -160,9 +231,9 @@ def print_shaping_table(f):
 	keys.sort ()
 	for first in keys:
 
-		print "  { 0x%04X, {" % (first)
+		print "  { 0x%04Xu, {" % (first)
 		for liga in ligas[first]:
-			print "    { 0x%04X, 0x%04X }, /* %s */" % (liga[0], liga[1], names[liga[1]])
+			print "    { 0x%04Xu, 0x%04Xu }, /* %s */" % (liga[0], liga[1], names[liga[1]])
 		print "  }},"
 
 	print "};"
@@ -174,7 +245,7 @@ print "/* == Start of generated table == */"
 print "/*"
 print " * The following table is generated by running:"
 print " *"
-print " *   ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt"
+print " *   ./gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt"
 print " *"
 print " * on files with these headers:"
 print " *"
@@ -187,6 +258,7 @@ print "#ifndef HB_OT_SHAPE_COMPLEX_ARABIC_TABLE_HH"
 print "#define HB_OT_SHAPE_COMPLEX_ARABIC_TABLE_HH"
 print
 
+read_blocks (files[2])
 print_joining_table (files[0])
 print_shaping_table (files[1])
 

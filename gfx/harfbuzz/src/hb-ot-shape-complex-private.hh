@@ -56,6 +56,7 @@ enum hb_ot_shape_zero_width_marks_type_t {
   HB_COMPLEX_SHAPER_IMPLEMENT (arabic) \
   HB_COMPLEX_SHAPER_IMPLEMENT (hangul) \
   HB_COMPLEX_SHAPER_IMPLEMENT (hebrew) \
+  HB_COMPLEX_SHAPER_IMPLEMENT (myanmar_old) \
   HB_COMPLEX_SHAPER_IMPLEMENT (indic) \
   HB_COMPLEX_SHAPER_IMPLEMENT (myanmar) \
   HB_COMPLEX_SHAPER_IMPLEMENT (sea) \
@@ -172,6 +173,10 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
 
     /* Unicode-6.0 additions */
     case HB_SCRIPT_MANDAIC:
+
+    /* Unicode-7.0 additions */
+    case HB_SCRIPT_MANICHAEAN:
+    case HB_SCRIPT_PSALTER_PAHLAVI:
 
       /* For Arabic script, use the Arabic shaper even if no OT script tag was found.
        * This is because we do fallback shaping for Arabic script (and not others). */
@@ -325,10 +330,10 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
 	return &_hb_ot_complex_shaper_default;
 
     case HB_SCRIPT_MYANMAR:
-      /* For Myanmar, we only want to use the Myanmar shaper if the "new" script
-       * tag is found.  For "old" script tag we want to use the default shaper. */
       if (planner->map.chosen_script[0] == HB_TAG ('m','y','m','2'))
 	return &_hb_ot_complex_shaper_myanmar;
+      else if (planner->map.chosen_script[0] == HB_TAG ('m','y','m','r'))
+	return &_hb_ot_complex_shaper_myanmar_old;
       else
 	return &_hb_ot_complex_shaper_default;
 
