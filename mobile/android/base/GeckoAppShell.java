@@ -47,6 +47,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeJSContainer;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.webapp.Allocator;
 
 import android.app.Activity;
 import android.app.ActivityManager;
