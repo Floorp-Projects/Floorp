@@ -441,11 +441,6 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
     //  - for Math and other builtin calls, when profiling is activated, we
     //    patch all call sites to instead call through a thunk; and
     //  - for interrupts, we just accept that we'll lose the innermost frame.
-    // However, we do want FFI trampolines to show up in callstacks (so that
-    // they properly accumulate self-time) and for this we use the exitReason.
-
-    exitReason_ = activation.exitReason();
-
     void *pc = ReturnAddressFromFP(fp);
     const AsmJSModule::CodeRange *codeRange = module_->lookupCodeRange(pc);
     JS_ASSERT(codeRange);
@@ -470,6 +465,17 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
       case AsmJSModule::CodeRange::Thunk:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
+
+    // Since, despite the above reasoning for skipping a frame, we do want FFI
+    // trampolines and interrupts to show up in the profile (so they can
+    // accumulate self time and explain performance faults), an "exit reason" is
+    // stored on all the paths leaving asm.js and the iterator logic treats this
+    // reason as its own frame. If we have exited asm.js code without setting an
+    // exit reason, the reason will be None and this means the code was
+    // asynchronously interrupted.
+    exitReason_ = activation.exitReason();
+    if (exitReason_ == AsmJSExit::None)
+        exitReason_ = AsmJSExit::Interrupt;
 
     JS_ASSERT(!done());
 }
@@ -668,7 +674,7 @@ AsmJSProfilingFrameIterator::label() const
     //     browser/devtools/profiler/cleopatra/js/parserWorker.js.
     const char *ionFFIDescription = "fast FFI trampoline (in asm.js)";
     const char *slowFFIDescription = "slow FFI trampoline (in asm.js)";
-    const char *interruptDescription = "slow script interrupt trampoline (in asm.js)";
+    const char *interruptDescription = "interrupt due to out-of-bounds or long execution (in asm.js)";
 
     switch (AsmJSExit::ExtractReasonKind(exitReason_)) {
       case AsmJSExit::Reason_None:
