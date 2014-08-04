@@ -323,6 +323,9 @@ nsJARChannel::LookupFile()
 {
     LOG(("nsJARChannel::LookupFile [this=%x %s]\n", this, mSpec.get()));
 
+    if (mJarFile)
+        return NS_OK;
+
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
 
@@ -887,6 +890,24 @@ nsJARChannel::GetJarFile(nsIFile **aFile)
 {
     NS_IF_ADDREF(*aFile = mJarFile);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJARChannel::GetZipEntry(nsIZipEntry **aZipEntry)
+{
+    nsresult rv = LookupFile();
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (!mJarFile)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<nsIZipReader> reader;
+    rv = gJarHandler->JarCache()->GetZip(mJarFile, getter_AddRefs(reader));
+    if (NS_FAILED(rv))
+        return rv;
+
+    return reader->GetEntry(mJarEntry, aZipEntry);
 }
 
 NS_IMETHODIMP
