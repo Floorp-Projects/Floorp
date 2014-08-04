@@ -25,6 +25,8 @@
 #ifndef mozilla_pkix__Result_h
 #define mozilla_pkix__Result_h
 
+#include <cassert>
+
 #include "pkix/enumclass.h"
 
 namespace mozilla { namespace pkix {
@@ -101,6 +103,13 @@ inline bool
 IsFatalError(Result rv)
 {
   return static_cast<unsigned int>(rv) & FATAL_ERROR_FLAG;
+}
+
+inline Result
+NotReached(const char* /*explanation*/, Result result)
+{
+  assert(false);
+  return result;
 }
 
 } } // namespace mozilla::pkix

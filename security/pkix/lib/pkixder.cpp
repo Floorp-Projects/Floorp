@@ -418,8 +418,8 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ Time& time)
     }
     yearHi = yearLo >= 50u ? 19u : 20u;
   } else {
-    PR_NOT_REACHED("invalid tag given to TimeChoice");
-    return Result::ERROR_INVALID_TIME;
+    return NotReached("invalid tag given to TimeChoice",
+                      Result::ERROR_INVALID_TIME);
   }
   unsigned int year = (yearHi * 100u) + yearLo;
   if (year < 1970u) {
@@ -474,8 +474,8 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ Time& time)
                                         jul + aug + sep + oct + nov;
              break;
     default:
-      PR_NOT_REACHED("month already bounds-checked by ReadTwoDigits");
-      return Result::FATAL_ERROR_INVALID_STATE;
+      return NotReached("month already bounds-checked by ReadTwoDigits",
+                        Result::FATAL_ERROR_INVALID_STATE);
   }
 
   unsigned int dayOfMonth;
