@@ -8,14 +8,13 @@ interface nsIDeletedMessageInfo;
 interface nsIDOMMozSmsMessage;
 interface nsIDOMMozMmsMessage;
 interface nsIDOMMozMobileMessageThread;
-interface nsIDOMMozSmsSegmentInfo;
 
 %{C++
 #define MOBILE_MESSAGE_SERVICE_CID { 0x829c1dd6, 0x0466, 0x4591, { 0x83, 0x6f, 0xb8, 0xf6, 0xfd, 0x1f, 0x7b, 0xa5 } }
 #define MOBILE_MESSAGE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessageservice;1"
 %}
 
-[scriptable, builtinclass, uuid(afb83948-003a-11e4-899b-bb8a8d45e7f0)]
+[scriptable, builtinclass, uuid(bc28e604-53ee-4be9-af20-268ce9efc61a)]
 interface nsIMobileMessageService : nsISupports
 {
   [implicit_jscontext]
@@ -49,10 +48,6 @@ interface nsIMobileMessageService : nsISupports
                                        in jsval              attachments,
                                        in unsigned long long expiryDate,
                                        in boolean            readReportRequested);
-
-  nsIDOMMozSmsSegmentInfo createSmsSegmentInfo(in long segments,
-                                               in long charsPerSegment,
-                                               in long charsAvailableInLastSegment);
 
   [implicit_jscontext]
   nsIDOMMozMobileMessageThread createThread(in unsigned long long id,
