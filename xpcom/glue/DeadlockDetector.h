@@ -195,6 +195,7 @@ private:
     OrderingEntry(const T* aResource)
       : mFirstSeen(CallStack::kNone)
       , mOrderedLT()        // FIXME bug 456272: set to empirical dep size?
+      , mExternalRefs()
       , mResource(aResource)
     {
     }
@@ -207,12 +208,14 @@ private:
     {
       size_t n = aMallocSizeOf(this);
       n += mOrderedLT.SizeOfExcludingThis(aMallocSizeOf);
+      n += mExternalRefs.SizeOfExcludingThis(aMallocSizeOf);
       n += mResource->SizeOfIncludingThis(aMallocSizeOf);
       return n;
     }
 
     CallStack mFirstSeen; // first site from which the resource appeared
     HashEntryArray mOrderedLT; // this <_o Other
+    HashEntryArray mExternalRefs; // hash entries that reference this
     const T* mResource;
   };
 
@@ -286,12 +289,28 @@ public:
     mOrdering.Put(aResource, new OrderingEntry(aResource));
   }
 
-  // Nb: implementing a Remove() method makes the detector "more
-  // unsound."  By removing a resource from the orderings, deadlocks
-  // may be missed that would otherwise have been found.  However,
-  // removing resources possibly reduces the # of false positives,
-  // and additionally saves space.  So it's a trade off; we have
-  // chosen to err on the side of caution and not implement Remove().
+  void Remove(T* aResource)
+  {
+    PRAutoLock _(mLock);
+
+    OrderingEntry* entry = mOrdering.Get(aResource);
+
+    // Iterate the external refs and remove the entry from them.
+    HashEntryArray& refs = entry->mExternalRefs;
+    for (index_type i = 0; i < refs.Length(); i++) {
+      refs[i]->mOrderedLT.RemoveElementSorted(entry);
+    }
+
+    // Iterate orders and remove this entry from their refs.
+    HashEntryArray& orders = entry->mOrderedLT;
+    for (index_type i = 0; i < orders.Length(); i++) {
+      orders[i]->mExternalRefs.RemoveElementSorted(entry);
+    }
+
+    // Now the entry can be safely removed.
+    mOrdering.Remove(aResource);
+    delete aResource;
+  }
 
   /**
    * CheckAcquisition This method is called after acquiring |aLast|,
@@ -372,6 +391,7 @@ public:
     // poset.  this is fine, but we now need to add this
     // ordering constraint.
     current->mOrderedLT.InsertElementSorted(proposed);
+    proposed->mExternalRefs.InsertElementSorted(current);
     return 0;
   }
 
