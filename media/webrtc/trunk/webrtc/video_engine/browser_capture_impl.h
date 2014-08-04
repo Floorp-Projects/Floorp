@@ -11,8 +11,6 @@ namespace webrtc {
   public:
     virtual uint32_t NumberOfDevices() { return 1; }
 
-    virtual int32_t Refresh() { return 0; }
-
     virtual int32_t GetDeviceName(uint32_t deviceNumber,
                                   char* deviceNameUTF8,
                                   uint32_t deviceNameLength,
