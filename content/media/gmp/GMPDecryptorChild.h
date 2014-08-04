@@ -120,7 +120,7 @@ private:
 
 #ifdef DEBUG
   GMPChild* mPlugin;
-#endif           
+#endif
 };
 
 } // namespace gmp

@@ -15,7 +15,9 @@ namespace gmp {
 
 class GMPChild;
 
-void InitPlatformAPI(GMPPlatformAPI& aPlatformAPI);
+void InitPlatformAPI(GMPPlatformAPI& aPlatformAPI, GMPChild* aChild);
+
+GMPErr RunOnMainThread(GMPTask* aTask);
 
 class GMPThreadImpl : public GMPThread
 {
