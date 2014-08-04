@@ -6736,7 +6736,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
                      0.0f;
     event.convertToPointer = mouseEvent->convertToPointer = false;
     aShell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus);
-  } else if (aEvent->mClass == NS_TOUCH_EVENT) {
+  } else if (aEvent->mClass == eTouchEventClass) {
     WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
     // loop over all touches and dispatch pointer events on each touch
     // copy the event
@@ -6927,7 +6927,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       // document that is being captured.
       retargetEventDoc = capturingContent->GetCrossShadowCurrentDoc();
 #ifdef ANDROID
-    } else if (aEvent->mClass == NS_TOUCH_EVENT) {
+    } else if (aEvent->mClass == eTouchEventClass) {
       retargetEventDoc = GetTouchEventTargetDocument();
 #endif
     }
@@ -6975,7 +6975,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
   if (aEvent->IsUsingCoordinates()) {
     ReleasePointerCaptureCaller releasePointerCaptureCaller;
     if (nsLayoutUtils::AreAsyncAnimationsEnabled() && mDocument) {
-      if (aEvent->mClass == NS_TOUCH_EVENT) {
+      if (aEvent->mClass == eTouchEventClass) {
         nsIDocument::UnlockPointer();
       }
 
@@ -7056,7 +7056,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     }
 
     // all touch events except for touchstart use a captured target
-    if (aEvent->mClass == NS_TOUCH_EVENT &&
+    if (aEvent->mClass == eTouchEventClass &&
         aEvent->message != NS_TOUCH_START) {
       captureRetarget = true;
     }
@@ -7762,7 +7762,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
           "Somebody changed aEvent to cause a DOM event!");
         nsPresShellEventCB eventCB(this);
-        if (aEvent->mClass == NS_TOUCH_EVENT) {
+        if (aEvent->mClass == eTouchEventClass) {
           DispatchTouchEvent(aEvent, aStatus, &eventCB, touchIsNew);
         } else {
           nsCOMPtr<nsINode> eventTarget = mCurrentEventContent.get();

@@ -165,9 +165,9 @@ public:
   {
   }
 
-  WidgetTouchEvent(const WidgetTouchEvent& aOther) :
-    WidgetInputEvent(aOther.mFlags.mIsTrusted, aOther.message, aOther.widget,
-                     NS_TOUCH_EVENT)
+  WidgetTouchEvent(const WidgetTouchEvent& aOther)
+    : WidgetInputEvent(aOther.mFlags.mIsTrusted, aOther.message, aOther.widget,
+                       eTouchEventClass)
   {
     modifiers = aOther.modifiers;
     time = aOther.time;
@@ -177,8 +177,8 @@ public:
     MOZ_COUNT_CTOR(WidgetTouchEvent);
   }
 
-  WidgetTouchEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
-    WidgetInputEvent(aIsTrusted, aMessage, aWidget, NS_TOUCH_EVENT)
+  WidgetTouchEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+    : WidgetInputEvent(aIsTrusted, aMessage, aWidget, eTouchEventClass)
   {
     MOZ_COUNT_CTOR(WidgetTouchEvent);
     mFlags.mCancelable = message != NS_TOUCH_CANCEL;
@@ -191,7 +191,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_TOUCH_EVENT,
+    MOZ_ASSERT(mClass == eTouchEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetTouchEvent* result = new WidgetTouchEvent(false, message, nullptr);
