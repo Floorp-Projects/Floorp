@@ -652,7 +652,7 @@ MetroWidget::DispatchScrollEvent(mozilla::WidgetGUIEvent* aEvent)
 {
   WidgetGUIEvent* newEvent = nullptr;
   switch(aEvent->mClass) {
-    case NS_WHEEL_EVENT:
+    case eWheelEventClass:
     {
       WidgetWheelEvent* oldEvent = aEvent->AsWheelEvent();
       WidgetWheelEvent* wheelEvent =

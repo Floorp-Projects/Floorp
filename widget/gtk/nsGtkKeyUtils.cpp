@@ -649,7 +649,7 @@ KeymapWrapper::InitInputEvent(WidgetInputEvent& aInputEvent,
     switch(aInputEvent.mClass) {
         case eMouseEventClass:
         case eMouseScrollEventClass:
-        case NS_WHEEL_EVENT:
+        case eWheelEventClass:
         case eDragEventClass:
         case NS_SIMPLE_GESTURE_EVENT:
             break;

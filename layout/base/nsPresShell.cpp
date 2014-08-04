@@ -6898,7 +6898,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
   nsIContent* capturingContent =
     (aEvent->HasMouseEventMessage() ||
-     aEvent->mClass == NS_WHEEL_EVENT ? GetCapturingContent() : nullptr);
+     aEvent->mClass == eWheelEventClass ? GetCapturingContent() : nullptr);
 
   nsCOMPtr<nsIDocument> retargetEventDoc;
   if (!aDontRetargetEvents) {

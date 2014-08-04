@@ -428,20 +428,27 @@ private:
 public:
   virtual WidgetWheelEvent* AsWheelEvent() MOZ_OVERRIDE { return this; }
 
-  WidgetWheelEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
-    WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, NS_WHEEL_EVENT),
-    deltaX(0.0), deltaY(0.0), deltaZ(0.0),
-    deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL),
-    customizedByUserPrefs(false), isMomentum(false), mIsNoLineOrPageDelta(false),
-    lineOrPageDeltaX(0), lineOrPageDeltaY(0), scrollType(SCROLL_DEFAULT),
-    overflowDeltaX(0.0), overflowDeltaY(0.0),
-    mViewPortIsOverscrolled(false)
+  WidgetWheelEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+    : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eWheelEventClass)
+    , deltaX(0.0)
+    , deltaY(0.0)
+    , deltaZ(0.0)
+    , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    , customizedByUserPrefs(false)
+    , isMomentum(false)
+    , mIsNoLineOrPageDelta(false)
+    , lineOrPageDeltaX(0)
+    , lineOrPageDeltaY(0)
+    , scrollType(SCROLL_DEFAULT)
+    , overflowDeltaX(0.0)
+    , overflowDeltaY(0.0)
+    , mViewPortIsOverscrolled(false)
   {
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_WHEEL_EVENT,
+    MOZ_ASSERT(mClass == eWheelEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetWheelEvent* result = new WidgetWheelEvent(false, message, nullptr);
