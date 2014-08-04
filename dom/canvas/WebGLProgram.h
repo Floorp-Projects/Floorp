@@ -81,6 +81,22 @@ public:
     /* Getters for cached program info */
     bool IsAttribInUse(unsigned i) const { return mAttribsInUse[i]; }
 
+    /* Initialize the maps used by MapIdentifier and ReverseMapIdentifier. This should
+     * be called after each time the program has been successfully linked.
+     */
+    void InitializeUniformAndAttributeMaps();
+
+    /* Clear the maps used by MapIdentifier and ReverseMapIdentifier. This should be
+     * called each time the program has failed to link.
+     */
+    void ClearUniformAndAttributeMaps() {
+        if (mIdentifierMap)
+            mIdentifierMap->Clear();
+
+        if (mIdentifierReverseMap)
+            mIdentifierReverseMap->Clear();
+    }
+
     /* Maps identifier |name| to the mapped identifier |*mappedName|
      * Both are ASCII strings.
      */
