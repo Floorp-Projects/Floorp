@@ -180,7 +180,7 @@ private:
   typedef nsTArray<PLHashEntry*> HashEntryArray;
   typedef typename HashEntryArray::index_type index_type;
   typedef typename HashEntryArray::size_type size_type;
-  static const HashEntryArray::index_type NoIndex = HashEntryArray::NoIndex;
+  static const index_type NoIndex = HashEntryArray::NoIndex;
 
   /**
    * Value type for the ordering table.  Contains the other
@@ -191,9 +191,10 @@ private:
    */
   struct OrderingEntry
   {
-    OrderingEntry()
+    OrderingEntry(const T* aResource)
       : mFirstSeen(CallStack::kNone)
       , mOrderedLT()        // FIXME bug 456272: set to empirical dep size?
+      , mResource(aResource)
     {
     }
     ~OrderingEntry()
@@ -202,6 +203,7 @@ private:
 
     CallStack mFirstSeen; // first site from which the resource appeared
     HashEntryArray mOrderedLT; // this <_o Other
+    const T* mResource;
   };
 
   static void* TableAlloc(void* /*aPool*/, size_t aSize)
@@ -240,7 +242,7 @@ private:
 
   void PutEntry(T* aKey)
   {
-    PL_HashTableAdd(mOrdering, aKey, new OrderingEntry());
+    PL_HashTableAdd(mOrdering, aKey, new OrderingEntry(aKey));
   }
 
   // XXX need these helper methods because OrderingEntry doesn't have
