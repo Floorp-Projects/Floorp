@@ -130,9 +130,9 @@ GetIMEStateSetOpenName(IMEState::Open aOpen)
 }
 
 static const char*
-GetEventStructName(nsEventStructType aEventStructType)
+GetEventClassIDName(EventClassID aEventClassID)
 {
-  switch (aEventStructType) {
+  switch (aEventClassID) {
     case NS_COMPOSITION_EVENT:
       return "NS_COMPOSITION_EVENT";
     case NS_TEXT_EVENT:
@@ -850,16 +850,16 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
 {
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
     ("ISM: IMEStateManager::DispatchCompositionEvent(aNode=0x%p, "
-     "aPresContext=0x%p, aEvent={ eventStructType=%s, message=%s, "
+     "aPresContext=0x%p, aEvent={ mClass=%s, message=%s, "
      " mFlags={ mIsTrusted=%s, mPropagationStopped=%s } })",
      aEventTargetNode, aPresContext,
-     GetEventStructName(aEvent->eventStructType),
+     GetEventClassIDName(aEvent->mClass),
      GetEventMessageName(aEvent->message),
      GetBoolName(aEvent->mFlags.mIsTrusted),
      GetBoolName(aEvent->mFlags.mPropagationStopped)));
 
-  MOZ_ASSERT(aEvent->eventStructType == NS_COMPOSITION_EVENT ||
-             aEvent->eventStructType == NS_TEXT_EVENT);
+  MOZ_ASSERT(aEvent->mClass == NS_COMPOSITION_EVENT ||
+             aEvent->mClass == NS_TEXT_EVENT);
   if (!aEvent->mFlags.mIsTrusted || aEvent->mFlags.mPropagationStopped) {
     return;
   }

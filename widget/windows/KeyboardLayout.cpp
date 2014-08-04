@@ -280,7 +280,7 @@ ModifierKeyState::InitInputEvent(WidgetInputEvent& aInputEvent) const
 {
   aInputEvent.modifiers = mModifiers;
 
-  switch(aInputEvent.eventStructType) {
+  switch(aInputEvent.mClass) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
@@ -296,10 +296,10 @@ ModifierKeyState::InitInputEvent(WidgetInputEvent& aInputEvent) const
 void
 ModifierKeyState::InitMouseEvent(WidgetInputEvent& aMouseEvent) const
 {
-  NS_ASSERTION(aMouseEvent.eventStructType == NS_MOUSE_EVENT ||
-               aMouseEvent.eventStructType == NS_WHEEL_EVENT ||
-               aMouseEvent.eventStructType == NS_DRAG_EVENT ||
-               aMouseEvent.eventStructType == NS_SIMPLE_GESTURE_EVENT,
+  NS_ASSERTION(aMouseEvent.mClass == NS_MOUSE_EVENT ||
+               aMouseEvent.mClass == NS_WHEEL_EVENT ||
+               aMouseEvent.mClass == NS_DRAG_EVENT ||
+               aMouseEvent.mClass == NS_SIMPLE_GESTURE_EVENT,
                "called with non-mouse event");
 
   if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
