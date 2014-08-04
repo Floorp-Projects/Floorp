@@ -325,15 +325,15 @@ class InternalSVGZoomEvent : public WidgetGUIEvent
 public:
   virtual InternalSVGZoomEvent* AsSVGZoomEvent() MOZ_OVERRIDE { return this; }
 
-  InternalSVGZoomEvent(bool aIsTrusted, uint32_t aMessage) :
-    WidgetGUIEvent(aIsTrusted, aMessage, nullptr, NS_SVGZOOM_EVENT)
+  InternalSVGZoomEvent(bool aIsTrusted, uint32_t aMessage)
+    : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eSVGZoomEventClass)
   {
     mFlags.mCancelable = false;
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_SVGZOOM_EVENT,
+    MOZ_ASSERT(mClass == eSVGZoomEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalSVGZoomEvent* result = new InternalSVGZoomEvent(false, message);
