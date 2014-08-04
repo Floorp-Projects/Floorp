@@ -50,7 +50,7 @@ public:
     //     in PreHandleEvent() and not to dispatch as a DOM event into the DOM
     //     tree like ContentQueryEvent.  Then, this event doesn't need to
     //     support Duplicate().
-    MOZ_ASSERT(eventStructType == NS_GESTURENOTIFY_EVENT,
+    MOZ_ASSERT(mClass == NS_GESTURENOTIFY_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetGestureNotifyEvent* result =
@@ -116,7 +116,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_SIMPLE_GESTURE_EVENT,
+    MOZ_ASSERT(mClass == NS_SIMPLE_GESTURE_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetSimpleGestureEvent* result =
@@ -190,7 +190,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_TOUCH_EVENT,
+    MOZ_ASSERT(mClass == NS_TOUCH_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetTouchEvent* result = new WidgetTouchEvent(false, message, nullptr);

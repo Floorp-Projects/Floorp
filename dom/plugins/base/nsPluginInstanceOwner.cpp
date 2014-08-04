@@ -1638,7 +1638,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
   if (mInstance) {
     WidgetKeyboardEvent* keyEvent =
       aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
-    if (keyEvent && keyEvent->eventStructType == NS_KEY_EVENT) {
+    if (keyEvent && keyEvent->mClass == NS_KEY_EVENT) {
       nsEventStatus rv = ProcessEvent(*keyEvent);
       if (nsEventStatus_eConsumeNoDefault == rv) {
         aKeyEvent->PreventDefault();
@@ -1673,7 +1673,7 @@ nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
 
   WidgetMouseEvent* mouseEvent =
     aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
-  if (mouseEvent && mouseEvent->eventStructType == NS_MOUSE_EVENT) {
+  if (mouseEvent && mouseEvent->mClass == NS_MOUSE_EVENT) {
     mLastMouseDownButtonType = mouseEvent->button;
     nsEventStatus rv = ProcessEvent(*mouseEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
@@ -1698,7 +1698,7 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
 
   WidgetMouseEvent* mouseEvent =
     aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
-  if (mouseEvent && mouseEvent->eventStructType == NS_MOUSE_EVENT) {
+  if (mouseEvent && mouseEvent->mClass == NS_MOUSE_EVENT) {
     nsEventStatus rv = ProcessEvent(*mouseEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
       aMouseEvent->PreventDefault();
@@ -1904,7 +1904,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   // we can get synthetic events from the EventStateManager... these
   // have no pluginEvent
   NPEvent pluginEvent;
-  if (anEvent.eventStructType == NS_MOUSE_EVENT) {
+  if (anEvent.mClass == NS_MOUSE_EVENT) {
     if (!pPluginEvent) {
       // XXX Should extend this list to synthesize events for more event
       // types
@@ -2011,8 +2011,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   XEvent pluginEvent = XEvent();
   pluginEvent.type = 0;
 
-  switch(anEvent.eventStructType)
-    {
+  switch(anEvent.mClass) {
     case NS_MOUSE_EVENT:
       {
         switch (anEvent.message)
@@ -2213,8 +2212,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       fm->SetFocus(elem, 0);
     }
   }
-  switch(anEvent.eventStructType)
-    {
+  switch(anEvent.mClass) {
     case NS_MOUSE_EVENT:
       {
         switch (anEvent.message)

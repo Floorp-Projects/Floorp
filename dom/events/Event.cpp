@@ -157,7 +157,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
     tmp->mEvent->target = nullptr;
     tmp->mEvent->currentTarget = nullptr;
     tmp->mEvent->originalTarget = nullptr;
-    switch (tmp->mEvent->eventStructType) {
+    switch (tmp->mEvent->mClass) {
       case NS_MOUSE_EVENT:
       case NS_MOUSE_SCROLL_EVENT:
       case NS_WHEEL_EVENT:
@@ -195,7 +195,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->target)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->currentTarget)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->originalTarget)
-    switch (tmp->mEvent->eventStructType) {
+    switch (tmp->mEvent->mClass) {
       case NS_MOUSE_EVENT:
       case NS_MOUSE_SCROLL_EVENT:
       case NS_WHEEL_EVENT:
@@ -525,7 +525,7 @@ Event::SetEventType(const nsAString& aEventTypeArg)
   if (mIsMainThreadEvent) {
     mEvent->typeString.Truncate();
     mEvent->userType =
-      nsContentUtils::GetEventIdAndAtom(aEventTypeArg, mEvent->eventStructType,
+      nsContentUtils::GetEventIdAndAtom(aEventTypeArg, mEvent->mClass,
                                         &(mEvent->message));
   } else {
     mEvent->userType = nullptr;
@@ -661,7 +661,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
   // check for exceptions:
   PopupControlState abuse = openAbused;
 
-  switch(aEvent->eventStructType) {
+  switch(aEvent->mClass) {
   case NS_EVENT :
     // For these following events only allow popups if they're
     // triggered while handling user input. See
@@ -847,13 +847,13 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
   }
 
   if (!aEvent || 
-       (aEvent->eventStructType != NS_MOUSE_EVENT &&
-        aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-        aEvent->eventStructType != NS_WHEEL_EVENT &&
-        aEvent->eventStructType != NS_POINTER_EVENT &&
-        aEvent->eventStructType != NS_TOUCH_EVENT &&
-        aEvent->eventStructType != NS_DRAG_EVENT &&
-        aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT)) {
+       (aEvent->mClass != NS_MOUSE_EVENT &&
+        aEvent->mClass != NS_MOUSE_SCROLL_EVENT &&
+        aEvent->mClass != NS_WHEEL_EVENT &&
+        aEvent->mClass != NS_POINTER_EVENT &&
+        aEvent->mClass != NS_TOUCH_EVENT &&
+        aEvent->mClass != NS_DRAG_EVENT &&
+        aEvent->mClass != NS_SIMPLE_GESTURE_EVENT)) {
     return nsIntPoint(0, 0);
   }
 
@@ -903,13 +903,13 @@ Event::GetClientCoords(nsPresContext* aPresContext,
   }
 
   if (!aEvent ||
-      (aEvent->eventStructType != NS_MOUSE_EVENT &&
-       aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       aEvent->eventStructType != NS_WHEEL_EVENT &&
-       aEvent->eventStructType != NS_TOUCH_EVENT &&
-       aEvent->eventStructType != NS_DRAG_EVENT &&
-       aEvent->eventStructType != NS_POINTER_EVENT &&
-       aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
+      (aEvent->mClass != NS_MOUSE_EVENT &&
+       aEvent->mClass != NS_MOUSE_SCROLL_EVENT &&
+       aEvent->mClass != NS_WHEEL_EVENT &&
+       aEvent->mClass != NS_TOUCH_EVENT &&
+       aEvent->mClass != NS_DRAG_EVENT &&
+       aEvent->mClass != NS_POINTER_EVENT &&
+       aEvent->mClass != NS_SIMPLE_GESTURE_EVENT) ||
       !aPresContext ||
       !aEvent->AsGUIEvent()->widget) {
     return aDefaultPoint;

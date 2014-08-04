@@ -497,7 +497,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (aEvent->mFlags.mIsTrusted &&
       ((mouseEvent && mouseEvent->IsReal()) ||
-       aEvent->eventStructType == NS_WHEEL_EVENT) &&
+       aEvent->mClass == NS_WHEEL_EVENT) &&
       !sIsPointerLocked) {
     sLastScreenPoint =
       UIEvent::CalculateScreenPoint(aPresContext, aEvent);
@@ -511,8 +511,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       ((mouseEvent && mouseEvent->IsReal() &&
         mouseEvent->message != NS_MOUSE_ENTER &&
         mouseEvent->message != NS_MOUSE_EXIT) ||
-       aEvent->eventStructType == NS_WHEEL_EVENT ||
-       aEvent->eventStructType == NS_KEY_EVENT)) {
+       aEvent->mClass == NS_WHEEL_EVENT ||
+       aEvent->mClass == NS_KEY_EVENT)) {
     if (gMouseOrKeyboardEventCounter == 0) {
       nsCOMPtr<nsIObserverService> obs =
         mozilla::services::GetObserverService();
@@ -1089,7 +1089,7 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     return false;
   }
 
-  switch (aEvent->eventStructType) {
+  switch (aEvent->mClass) {
   case NS_MOUSE_EVENT: {
     return remote->SendRealMouseEvent(*aEvent->AsMouseEvent());
   }
@@ -1156,7 +1156,7 @@ EventStateManager::GetChildProcessOffset(nsFrameLoader* aFrameLoader,
 bool
 CrossProcessSafeEvent(const WidgetEvent& aEvent)
 {
-  switch (aEvent.eventStructType) {
+  switch (aEvent.mClass) {
   case NS_KEY_EVENT:
   case NS_WHEEL_EVENT:
     return true;
@@ -1200,7 +1200,7 @@ EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
   //
   // NB: the elements of |targets| must be unique, for correctness.
   nsAutoTArray<nsCOMPtr<nsIContent>, 1> targets;
-  if (aEvent->eventStructType != NS_TOUCH_EVENT ||
+  if (aEvent->mClass != NS_TOUCH_EVENT ||
       aEvent->message == NS_TOUCH_START) {
     // If this event only has one target, and it's remote, add it to
     // the array.
@@ -3013,7 +3013,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case NS_DRAGDROP_ENTER:
   case NS_DRAGDROP_OVER:
     {
-      NS_ASSERTION(aEvent->eventStructType == NS_DRAG_EVENT, "Expected a drag event");
+      NS_ASSERTION(aEvent->mClass == NS_DRAG_EVENT, "Expected a drag event");
 
       nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
       if (!dragSession)
@@ -3787,7 +3787,7 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
   // hover state itself, and we have optimizations for hover switching between
   // two nearby elements both deep in the DOM tree that would be defeated by
   // switching the hover state to null here.
-  bool isPointer = aMouseEvent->eventStructType == NS_POINTER_EVENT;
+  bool isPointer = aMouseEvent->mClass == NS_POINTER_EVENT;
   if (!aMovingInto && !isPointer) {
     // Unset :hover
     SetContentState(nullptr, NS_EVENT_STATE_HOVER);
@@ -3850,7 +3850,7 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   // DispatchMouseOrPointerEvent() call below, since NotifyMouseOut() resets it, bug 298477.
   nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
 
-  bool isPointer = aMouseEvent->eventStructType == NS_POINTER_EVENT;
+  bool isPointer = aMouseEvent->mClass == NS_POINTER_EVENT;
   
   Maybe<EnterLeaveDispatcher> enterDispatcher;
   if (dispatch) {

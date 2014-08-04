@@ -4894,7 +4894,7 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMKeyEvent* aDOMKeyEvent,
   WidgetKeyboardEvent* nativeKeyEvent =
     aDOMKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
   if (nativeKeyEvent) {
-    NS_ASSERTION(nativeKeyEvent->eventStructType == NS_KEY_EVENT,
+    NS_ASSERTION(nativeKeyEvent->mClass == NS_KEY_EVENT,
                  "wrong type of native event");
     // nsShortcutCandidate::mCharCode is a candidate charCode.
     // nsShoftcutCandidate::mIgnoreShift means the mCharCode should be tried to

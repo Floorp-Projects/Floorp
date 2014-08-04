@@ -69,7 +69,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  switch(mEvent->eventStructType) {
+  switch(mEvent->mClass) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
@@ -123,7 +123,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
                                aButton, aRelatedTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  switch(mEvent->eventStructType) {
+  switch(mEvent->mClass) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
@@ -154,7 +154,7 @@ MouseEvent::Constructor(const GlobalObject& aGlobal,
                     aRv);
   e->SetTrusted(trusted);
 
-  switch (e->mEvent->eventStructType) {
+  switch (e->mEvent->mClass) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
@@ -213,8 +213,7 @@ MouseEvent::GetButton(int16_t* aButton)
 int16_t
 MouseEvent::Button()
 {
-  switch(mEvent->eventStructType)
-  {
+  switch(mEvent->mClass) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
@@ -239,8 +238,7 @@ MouseEvent::GetButtons(uint16_t* aButtons)
 uint16_t
 MouseEvent::Buttons()
 {
-  switch(mEvent->eventStructType)
-  {
+  switch(mEvent->mClass) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
@@ -265,8 +263,7 @@ already_AddRefed<EventTarget>
 MouseEvent::GetRelatedTarget()
 {
   nsCOMPtr<EventTarget> relatedTarget;
-  switch(mEvent->eventStructType)
-  {
+  switch(mEvent->mClass) {
     case NS_MOUSE_EVENT:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:

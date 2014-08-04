@@ -1728,7 +1728,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
     clickCount = sourceMouseEvent->clickCount;
     pressure = sourceMouseEvent->pressure;
     inputSource = sourceMouseEvent->inputSource;
-  } else if (aSourceEvent->eventStructType == NS_KEY_EVENT) {
+  } else if (aSourceEvent->mClass == NS_KEY_EVENT) {
     inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;

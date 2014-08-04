@@ -466,8 +466,8 @@ nsRangeFrame::GetValueAsFractionOfRange()
 Decimal
 nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
 {
-  MOZ_ASSERT(aEvent->eventStructType == NS_MOUSE_EVENT ||
-             aEvent->eventStructType == NS_TOUCH_EVENT,
+  MOZ_ASSERT(aEvent->mClass == NS_MOUSE_EVENT ||
+             aEvent->mClass == NS_TOUCH_EVENT,
              "Unexpected event type - aEvent->refPoint may be meaningless");
 
   MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
@@ -485,7 +485,7 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
   Decimal range = maximum - minimum;
 
   LayoutDeviceIntPoint absPoint;
-  if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+  if (aEvent->mClass == NS_TOUCH_EVENT) {
     MOZ_ASSERT(aEvent->AsTouchEvent()->touches.Length() == 1,
                "Unexpected number of touches");
     absPoint = LayoutDeviceIntPoint::FromUntyped(

@@ -1869,15 +1869,15 @@ nsPoint
 nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                                              nsIFrame* aFrame)
 {
-  if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT &&
-                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-                  aEvent->eventStructType != NS_WHEEL_EVENT &&
-                  aEvent->eventStructType != NS_DRAG_EVENT &&
-                  aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
-                  aEvent->eventStructType != NS_POINTER_EVENT &&
-                  aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
-                  aEvent->eventStructType != NS_TOUCH_EVENT &&
-                  aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
+  if (!aEvent || (aEvent->mClass != NS_MOUSE_EVENT &&
+                  aEvent->mClass != NS_MOUSE_SCROLL_EVENT &&
+                  aEvent->mClass != NS_WHEEL_EVENT &&
+                  aEvent->mClass != NS_DRAG_EVENT &&
+                  aEvent->mClass != NS_SIMPLE_GESTURE_EVENT &&
+                  aEvent->mClass != NS_POINTER_EVENT &&
+                  aEvent->mClass != NS_GESTURENOTIFY_EVENT &&
+                  aEvent->mClass != NS_TOUCH_EVENT &&
+                  aEvent->mClass != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   return GetEventCoordinatesRelativeTo(aEvent,

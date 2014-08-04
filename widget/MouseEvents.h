@@ -78,10 +78,12 @@ protected:
   }
 
   WidgetMouseEventBase(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
-                       nsEventStructType aStructType) :
-    WidgetInputEvent(aIsTrusted, aMessage, aWidget, aStructType),
-    button(0), buttons(0), pressure(0),
-    inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
+                       EventClassID aEventClassID)
+    : WidgetInputEvent(aIsTrusted, aMessage, aWidget, aEventClassID)
+    , button(0)
+    , buttons(0)
+    , pressure(0)
+    , inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
  {
  }
 
@@ -188,10 +190,14 @@ protected:
   }
 
   WidgetMouseEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
-                   nsEventStructType aStructType, reasonType aReason) :
-    WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aStructType),
-    acceptActivation(false), ignoreRootScrollFrame(false),
-    reason(aReason), context(eNormal), exit(eChild), clickCount(0)
+                   EventClassID aEventClassID, reasonType aReason)
+    : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aEventClassID)
+    , acceptActivation(false)
+    , ignoreRootScrollFrame(false)
+    , reason(aReason)
+    , context(eNormal)
+    , exit(eChild)
+    , clickCount(0)
   {
     switch (aMessage) {
       case NS_MOUSEENTER:
@@ -239,7 +245,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_MOUSE_EVENT,
+    MOZ_ASSERT(mClass == NS_MOUSE_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetMouseEvent* result =
@@ -311,7 +317,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_DRAG_EVENT,
+    MOZ_ASSERT(mClass == NS_DRAG_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetDragEvent* result = new WidgetDragEvent(false, message, nullptr);
@@ -370,7 +376,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_MOUSE_SCROLL_EVENT,
+    MOZ_ASSERT(mClass == NS_MOUSE_SCROLL_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetMouseScrollEvent* result =
@@ -432,7 +438,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_WHEEL_EVENT,
+    MOZ_ASSERT(mClass == NS_WHEEL_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetWheelEvent* result = new WidgetWheelEvent(false, message, nullptr);
@@ -575,7 +581,7 @@ public:
     , height(0)
     , isPrimary(true)
   {
-    eventStructType = NS_POINTER_EVENT;
+    mClass = NS_POINTER_EVENT;
     UpdateFlags();
   }
 
@@ -599,7 +605,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_POINTER_EVENT,
+    MOZ_ASSERT(mClass == NS_POINTER_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetPointerEvent* result =
