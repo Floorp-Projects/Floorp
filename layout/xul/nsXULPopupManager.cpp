@@ -546,7 +546,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
             return;
           nsIFrame* rootDocumentRootFrame = rootDocPresContext->
               PresShell()->FrameManager()->GetRootFrame();
-          if ((event->mClass == NS_MOUSE_EVENT || 
+          if ((event->mClass == eMouseEventClass || 
                event->mClass == NS_MOUSE_SCROLL_EVENT ||
                event->mClass == NS_WHEEL_EVENT) &&
                !event->AsGUIEvent()->widget) {

@@ -166,17 +166,17 @@ EVENT(change,
 EVENT(click,
       NS_MOUSE_CLICK,
       EventNameType_All,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(contextmenu,
       NS_CONTEXTMENU,
       EventNameType_HTMLXUL,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 // Not supported yet
 // EVENT(cuechange)
 EVENT(dblclick,
       NS_MOUSE_DOUBLECLICK,
       EventNameType_HTMLXUL,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(drag,
       NS_DRAGDROP_DRAG,
       EventNameType_HTMLXUL,
@@ -252,31 +252,31 @@ EVENT(loadstart,
 EVENT(mousedown,
       NS_MOUSE_BUTTON_DOWN,
       EventNameType_All,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(mouseenter,
       NS_MOUSEENTER,
       EventNameType_All,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(mouseleave,
       NS_MOUSELEAVE,
       EventNameType_All,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(mousemove,
       NS_MOUSE_MOVE,
       EventNameType_All,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(mouseout,
       NS_MOUSE_EXIT_SYNTH,
       EventNameType_All,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(mouseover,
       NS_MOUSE_ENTER_SYNTH,
       EventNameType_All,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(mouseup,
       NS_MOUSE_BUTTON_UP,
       EventNameType_All,
-      NS_MOUSE_EVENT)
+      eMouseEventClass)
 EVENT(mozfullscreenchange,
       NS_FULLSCREENCHANGE,
       EventNameType_HTML,
@@ -572,7 +572,7 @@ DOCUMENT_ONLY_EVENT(readystatechange,
 NON_IDL_EVENT(MozMouseHittest,
               NS_MOUSE_MOZHITTEST,
               EventNameType_None,
-              NS_MOUSE_EVENT)
+              eMouseEventClass)
 
 NON_IDL_EVENT(DOMAttrModified,
               NS_MUTATION_ATTRMODIFIED,

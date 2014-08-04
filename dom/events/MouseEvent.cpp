@@ -70,7 +70,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   switch(mEvent->mClass) {
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
@@ -124,7 +124,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   switch(mEvent->mClass) {
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
@@ -155,7 +155,7 @@ MouseEvent::Constructor(const GlobalObject& aGlobal,
   e->SetTrusted(trusted);
 
   switch (e->mEvent->mClass) {
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
@@ -214,7 +214,7 @@ int16_t
 MouseEvent::Button()
 {
   switch(mEvent->mClass) {
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
@@ -239,7 +239,7 @@ uint16_t
 MouseEvent::Buttons()
 {
   switch(mEvent->mClass) {
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
@@ -264,7 +264,7 @@ MouseEvent::GetRelatedTarget()
 {
   nsCOMPtr<EventTarget> relatedTarget;
   switch(mEvent->mClass) {
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:

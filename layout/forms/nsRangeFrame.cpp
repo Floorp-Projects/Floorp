@@ -466,7 +466,7 @@ nsRangeFrame::GetValueAsFractionOfRange()
 Decimal
 nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
 {
-  MOZ_ASSERT(aEvent->mClass == NS_MOUSE_EVENT ||
+  MOZ_ASSERT(aEvent->mClass == eMouseEventClass ||
              aEvent->mClass == NS_TOUCH_EVENT,
              "Unexpected event type - aEvent->refPoint may be meaningless");
 

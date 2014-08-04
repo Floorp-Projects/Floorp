@@ -215,7 +215,7 @@ public:
 
   WidgetMouseEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
                    reasonType aReason, contextType aContext = eNormal) :
-    WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, NS_MOUSE_EVENT),
+    WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eMouseEventClass),
     acceptActivation(false), ignoreRootScrollFrame(false),
     reason(aReason), context(aContext), exit(eChild), clickCount(0)
   {
@@ -245,7 +245,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_MOUSE_EVENT,
+    MOZ_ASSERT(mClass == eMouseEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetMouseEvent* result =

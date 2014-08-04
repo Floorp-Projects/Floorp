@@ -2465,7 +2465,7 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
     return HandleDrag(aPresContext, aEvent, aEventStatus);
   }
 
-  if ((aEvent->mClass == NS_MOUSE_EVENT &&
+  if ((aEvent->mClass == eMouseEventClass &&
        aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) ||
       aEvent->mClass == NS_TOUCH_EVENT) {
     if (aEvent->message == NS_MOUSE_BUTTON_DOWN || aEvent->message == NS_TOUCH_START) {
@@ -3073,7 +3073,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
                                   WidgetGUIEvent* aEvent,
                                   nsEventStatus* aEventStatus)
 {
-  MOZ_ASSERT(aEvent->mClass == NS_MOUSE_EVENT,
+  MOZ_ASSERT(aEvent->mClass == eMouseEventClass,
              "HandleDrag can only handle mouse event");
 
   bool selectable;
@@ -3209,7 +3209,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
                                      WidgetGUIEvent* aEvent,
                                      nsEventStatus* aEventStatus)
 {
-  if (aEvent->mClass != NS_MOUSE_EVENT) {
+  if (aEvent->mClass != eMouseEventClass) {
     return NS_OK;
   }
 
