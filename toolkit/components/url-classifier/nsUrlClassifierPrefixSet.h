@@ -57,12 +57,12 @@ protected:
   // called with a non-empty array.
   bool mHasPrefixes;
   // the prefix for each index.
-  FallibleTArray<uint32_t> mIndexPrefixes;
+  nsTArray<uint32_t> mIndexPrefixes;
   // the value corresponds to the beginning of the run
   // (an index in |_deltas|) for the index
-  FallibleTArray<uint32_t> mIndexStarts;
+  nsTArray<uint32_t> mIndexStarts;
   // array containing deltas from indices.
-  FallibleTArray<uint16_t> mDeltas;
+  nsTArray<uint16_t> mDeltas;
 
   nsCString mMemoryReportPath;
 };
