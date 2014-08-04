@@ -1193,11 +1193,11 @@ nsSocketTransport::InitiateSocket()
             nsRefPtr<nsNetAddr> netaddr = new nsNetAddr(&mNetAddr);
             netaddr->GetAddress(ipaddr);
             fprintf_stderr(stderr,
-                           "Non-local network connections are disabled and a connection "
-                           "attempt to %s (%s) was made.  You should only access hostnames "
+                           "FATAL ERROR: Non-local network connections are disabled and a connection "
+                           "attempt to %s (%s) was made.\n You should only access hostnames "
                            "available via the test networking proxy (if running mochitests) "
-                           "or from a test-specific httpd.js server (if running xpcshell tests)."
-                           " Browser services should be disabled or redirected to a local server.\n",
+                           "or from a test-specific httpd.js server (if running xpcshell tests). "
+                           "Browser services should be disabled or redirected to a local server.\n",
                            mHost.get(), ipaddr.get());
             MOZ_CRASH("Attempting to connect to non-local address!");
         }
