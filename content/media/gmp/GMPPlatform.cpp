@@ -162,12 +162,10 @@ GMPThreadImpl::GMPThreadImpl()
 : mMutex("GMPThreadImpl"),
   mThread("GMPThread")
 {
-  MOZ_COUNT_CTOR(GMPThread);
 }
 
 GMPThreadImpl::~GMPThreadImpl()
 {
-  MOZ_COUNT_DTOR(GMPThread);
 }
 
 void
@@ -191,13 +189,10 @@ GMPThreadImpl::Post(GMPTask* aTask)
 void
 GMPThreadImpl::Join()
 {
-  {
-    MutexAutoLock lock(mMutex);
-    if (mThread.IsRunning()) {
-      mThread.Stop();
-    }
+  MutexAutoLock lock(mMutex);
+  if (mThread.IsRunning()) {
+    mThread.Stop();
   }
-  delete this;
 }
 
 GMPMutexImpl::GMPMutexImpl()
