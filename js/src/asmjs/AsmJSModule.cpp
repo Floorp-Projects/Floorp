@@ -1235,6 +1235,7 @@ AsmJSModule::CodeRange::CodeRange(Kind kind, uint32_t begin, uint32_t profilingR
 
     JS_ASSERT(begin_ < profilingReturn_);
     JS_ASSERT(profilingReturn_ < end_);
+    JS_ASSERT(u.kind_ == IonFFI || u.kind_ == SlowFFI || u.kind_ == Interrupt);
 }
 
 AsmJSModule::CodeRange::CodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin,
