@@ -1907,6 +1907,27 @@ NormalizeScalarValueString(JSContext* aCx, nsAString& aString);
 void
 NormalizeScalarValueString(JSContext* aCx, binding_detail::FakeString& aString);
 
+template<typename T>
+inline bool
+ConvertIdToString(JSContext* cx, JS::HandleId id, T& result, bool& isSymbol)
+{
+  if (MOZ_LIKELY(JSID_IS_STRING(id))) {
+    if (!AssignJSString(cx, result, JSID_TO_STRING(id))) {
+      return false;
+    }
+  } else if (JSID_IS_SYMBOL(id)) {
+    isSymbol = true;
+    return true;
+  } else {
+    JS::RootedValue nameVal(cx, js::IdToValue(id));
+    if (!ConvertJSValueToString(cx, nameVal, eStringify, eStringify, result)) {
+      return false;
+    }
+  }
+  isSymbol = false;
+  return true;
+}
+
 bool
 ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
                            bool nullable, nsACString& result);
