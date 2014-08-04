@@ -64,7 +64,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
 
   // MiscEvents.h
   eCommandEventClass,                // WidgetCommandEvent
-  NS_CONTENT_COMMAND_EVENT,          // WidgetContentCommandEvent
+  eContentCommandEventClass,         // WidgetContentCommandEvent
   NS_PLUGIN_EVENT,                   // WidgetPluginEvent
 
   // InternalMutationEvent.h (dom/events)
