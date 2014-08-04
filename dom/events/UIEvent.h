@@ -132,7 +132,7 @@ public:
 
   virtual uint32_t Which()
   {
-    MOZ_ASSERT(mEvent->mClass != NS_KEY_EVENT,
+    MOZ_ASSERT(mEvent->mClass != eKeyboardEventClass,
                "Key events should override Which()");
     MOZ_ASSERT(mEvent->mClass != NS_MOUSE_EVENT,
                "Mouse events should override Which()");

@@ -4271,7 +4271,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
   if (nsEventStatus_eConsumeNoDefault == aVisitor.mEventStatus ||
       !(aVisitor.mEvent->mClass == NS_MOUSE_EVENT ||
         aVisitor.mEvent->mClass == NS_TOUCH_EVENT ||
-        aVisitor.mEvent->mClass == NS_KEY_EVENT)) {
+        aVisitor.mEvent->mClass == eKeyboardEventClass)) {
     return;
   }
 
