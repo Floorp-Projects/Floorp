@@ -60,7 +60,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
   eTransitionEventClass,             // InternalTransitionEvent
   eAnimationEventClass,              // InternalAnimationEvent
   eSVGZoomEventClass,                // InternalSVGZoomEvent
-  NS_SMIL_TIME_EVENT,                // InternalSMILTimeEvent
+  eSMILTimeEventClass,               // InternalSMILTimeEvent
 
   // MiscEvents.h
   NS_COMMAND_EVENT,                  // WidgetCommandEvent
