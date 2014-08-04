@@ -42,11 +42,6 @@ int32_t ScreenDeviceInfoImpl::Init() {
   return 0;
 }
 
-int32_t ScreenDeviceInfoImpl::Refresh() {
-  desktop_device_info_->Refresh();
-  return 0;
-}
-
 uint32_t ScreenDeviceInfoImpl::NumberOfDevices() {
   return desktop_device_info_->getDisplayDeviceCount();
 }
@@ -135,11 +130,6 @@ AppDeviceInfoImpl::~AppDeviceInfoImpl(void) {
 
 int32_t AppDeviceInfoImpl::Init() {
   desktop_device_info_.reset(DesktopDeviceInfoImpl::Create());
-  return 0;
-}
-
-int32_t AppDeviceInfoImpl::Refresh() {
-  desktop_device_info_->Refresh();
   return 0;
 }
 
@@ -235,11 +225,6 @@ VideoCaptureModule* DesktopCaptureImpl::Create(const int32_t id,
 
 int32_t WindowDeviceInfoImpl::Init() {
   desktop_device_info_.reset(DesktopDeviceInfoImpl::Create());
-  return 0;
-}
-
-int32_t WindowDeviceInfoImpl::Refresh() {
-  desktop_device_info_->Refresh();
   return 0;
 }
 
