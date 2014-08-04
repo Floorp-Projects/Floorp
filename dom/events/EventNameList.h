@@ -296,43 +296,43 @@ EVENT(mozpointerlockerror,
 EVENT(pointerdown,
       NS_POINTER_DOWN,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(pointermove,
       NS_POINTER_MOVE,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(pointerup,
       NS_POINTER_UP,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(pointercancel,
       NS_POINTER_CANCEL,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(pointerover,
       NS_POINTER_OVER,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(pointerout,
       NS_POINTER_OUT,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(pointerenter,
       NS_POINTER_ENTER,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(pointerleave,
       NS_POINTER_LEAVE,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(gotpointercapture,
       NS_POINTER_GOT_CAPTURE,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 EVENT(lostpointercapture,
       NS_POINTER_LOST_CAPTURE,
       EventNameType_All,
-      NS_POINTER_EVENT)
+      ePointerEventClass)
 
 // Not supported yet; probably never because "wheel" is a better idea.
 // EVENT(mousewheel)
