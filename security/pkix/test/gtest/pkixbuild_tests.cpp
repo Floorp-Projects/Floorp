@@ -22,6 +22,7 @@
  * limitations under the License.
  */
 
+#include "cert.h"
 #include "nssgtest.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
@@ -32,6 +33,10 @@
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
+
+typedef ScopedPtr<CERTCertificate, CERT_DestroyCertificate>
+          ScopedCERTCertificate;
+typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
 
 // The result is owned by the arena
 static Input
