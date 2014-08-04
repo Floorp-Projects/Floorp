@@ -149,7 +149,7 @@ NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
                       nsXBLEventHandler** aResult)
 {
   switch (nsContentUtils::GetEventCategory(nsDependentAtomString(aEventType))) {
-    case NS_DRAG_EVENT:
+    case eDragEventClass:
     case eMouseEventClass:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
