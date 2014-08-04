@@ -3013,7 +3013,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case NS_DRAGDROP_ENTER:
   case NS_DRAGDROP_OVER:
     {
-      NS_ASSERTION(aEvent->mClass == NS_DRAG_EVENT, "Expected a drag event");
+      NS_ASSERTION(aEvent->mClass == eDragEventClass, "Expected a drag event");
 
       nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
       if (!dragSession)

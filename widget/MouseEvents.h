@@ -305,9 +305,10 @@ class WidgetDragEvent : public WidgetMouseEvent
 public:
   virtual WidgetDragEvent* AsDragEvent() MOZ_OVERRIDE { return this; }
 
-  WidgetDragEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
-    WidgetMouseEvent(aIsTrusted, aMessage, aWidget, NS_DRAG_EVENT, eReal),
-    userCancelled(false), mDefaultPreventedOnContent(false)
+  WidgetDragEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+    : WidgetMouseEvent(aIsTrusted, aMessage, aWidget, eDragEventClass, eReal)
+    , userCancelled(false)
+    , mDefaultPreventedOnContent(false)
   {
     mFlags.mCancelable =
       (aMessage != NS_DRAGDROP_EXIT_SYNTH &&
@@ -317,7 +318,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_DRAG_EVENT,
+    MOZ_ASSERT(mClass == eDragEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetDragEvent* result = new WidgetDragEvent(false, message, nullptr);
