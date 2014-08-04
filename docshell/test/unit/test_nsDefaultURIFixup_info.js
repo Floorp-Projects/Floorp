@@ -59,7 +59,8 @@ let testcases = [
   ["test.", "http://test./", "http://www.test./", true, true],
   [".test", "http://.test/", "http://www..test/", true, true],
   ["mozilla is amazing", null, null, true, true],
-  ["", null, null, true, true]
+  ["", null, null, true, true],
+  ["[]", null, null, true, true]
 ];
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
@@ -114,7 +115,7 @@ function run_test() {
 
       // Check the preferred URI
       if (couldDoKeywordLookup && expectKeywordLookup) {
-        let urlparamInput = testInput.replace(/ /g, '+');
+        let urlparamInput = encodeURIComponent(testInput).replace("%20", "+", "g");
         let searchURL = kSearchEngineURL.replace("{searchTerms}", urlparamInput);
         do_check_eq(info.preferredURI.spec, searchURL);
       } else {
