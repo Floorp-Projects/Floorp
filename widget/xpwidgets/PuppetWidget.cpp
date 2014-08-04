@@ -291,7 +291,7 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   }
   uint32_t seqno = kLatestSeqno;
   switch (event->mClass) {
-  case NS_COMPOSITION_EVENT:
+  case eCompositionEventClass:
     seqno = event->AsCompositionEvent()->mSeqno;
     break;
   case NS_TEXT_EVENT:

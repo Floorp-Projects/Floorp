@@ -133,8 +133,8 @@ static const char*
 GetEventClassIDName(EventClassID aEventClassID)
 {
   switch (aEventClassID) {
-    case NS_COMPOSITION_EVENT:
-      return "NS_COMPOSITION_EVENT";
+    case eCompositionEventClass:
+      return "eCompositionEventClass";
     case NS_TEXT_EVENT:
       return "NS_TEXT_EVENT";
     default:
@@ -858,7 +858,7 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
      GetBoolName(aEvent->mFlags.mIsTrusted),
      GetBoolName(aEvent->mFlags.mPropagationStopped)));
 
-  MOZ_ASSERT(aEvent->mClass == NS_COMPOSITION_EVENT ||
+  MOZ_ASSERT(aEvent->mClass == eCompositionEventClass ||
              aEvent->mClass == NS_TEXT_EVENT);
   if (!aEvent->mFlags.mIsTrusted || aEvent->mFlags.mPropagationStopped) {
     return;

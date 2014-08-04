@@ -699,7 +699,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eKeyboardEventClass:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
                                     aEvent->AsKeyboardEvent());
-    case NS_COMPOSITION_EVENT:
+    case eCompositionEventClass:
       return NS_NewDOMCompositionEvent(aDOMEvent, aOwner, aPresContext,
                                        aEvent->AsCompositionEvent());
     case NS_MOUSE_EVENT:
