@@ -32,7 +32,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
   eUIEventClass,                     // InternalUIEvent
 
   // TextEvents.h
-  NS_KEY_EVENT,                      // WidgetKeyboardEvent
+  eKeyboardEventClass,               // WidgetKeyboardEvent
   NS_COMPOSITION_EVENT,              // WidgetCompositionEvent
   NS_TEXT_EVENT,                     // WidgetTextEvent
   NS_QUERY_CONTENT_EVENT,            // WidgetQueryContentEvent

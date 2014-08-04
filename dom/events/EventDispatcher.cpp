@@ -696,7 +696,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case NS_SCROLLAREA_EVENT:
       return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext,
                                       aEvent->AsScrollAreaEvent());
-    case NS_KEY_EVENT:
+    case eKeyboardEventClass:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
                                     aEvent->AsKeyboardEvent());
     case NS_COMPOSITION_EVENT:

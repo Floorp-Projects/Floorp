@@ -228,15 +228,15 @@ EVENT(invalid,
 EVENT(keydown,
       NS_KEY_DOWN,
       EventNameType_HTMLXUL,
-      NS_KEY_EVENT)
+      eKeyboardEventClass)
 EVENT(keypress,
       NS_KEY_PRESS,
       EventNameType_HTMLXUL,
-      NS_KEY_EVENT)
+      eKeyboardEventClass)
 EVENT(keyup,
       NS_KEY_UP,
       EventNameType_HTMLXUL,
-      NS_KEY_EVENT)
+      eKeyboardEventClass)
 EVENT(loadeddata,
       NS_LOADEDDATA,
       EventNameType_HTML,

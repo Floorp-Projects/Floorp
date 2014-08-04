@@ -712,7 +712,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
       }
     }
     break;
-  case NS_KEY_EVENT :
+  case eKeyboardEventClass:
     if (aEvent->mFlags.mIsTrusted) {
       uint32_t key = aEvent->AsKeyboardEvent()->keyCode;
       switch(aEvent->message) {
