@@ -1874,7 +1874,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                   aEvent->mClass != eWheelEventClass &&
                   aEvent->mClass != eDragEventClass &&
                   aEvent->mClass != NS_SIMPLE_GESTURE_EVENT &&
-                  aEvent->mClass != NS_POINTER_EVENT &&
+                  aEvent->mClass != ePointerEventClass &&
                   aEvent->mClass != NS_GESTURENOTIFY_EVENT &&
                   aEvent->mClass != NS_TOUCH_EVENT &&
                   aEvent->mClass != eQueryContentEventClass))

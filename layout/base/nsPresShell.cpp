@@ -7183,7 +7183,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       }
     }
 
-    if (aEvent->mClass == NS_POINTER_EVENT &&
+    if (aEvent->mClass == ePointerEventClass &&
         aEvent->message != NS_POINTER_DOWN) {
       if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
         uint32_t pointerId = pointerEvent->pointerId;

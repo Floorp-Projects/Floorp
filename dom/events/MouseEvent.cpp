@@ -74,7 +74,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     case eMouseScrollEventClass:
     case eWheelEventClass:
     case eDragEventClass:
-    case NS_POINTER_EVENT:
+    case ePointerEventClass:
     case NS_SIMPLE_GESTURE_EVENT: {
       WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
       mouseEventBase->relatedTarget = aRelatedTarget;
@@ -128,7 +128,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     case eMouseScrollEventClass:
     case eWheelEventClass:
     case eDragEventClass:
-    case NS_POINTER_EVENT:
+    case ePointerEventClass:
     case NS_SIMPLE_GESTURE_EVENT:
       mEvent->AsInputEvent()->modifiers = modifiers;
       return NS_OK;
@@ -159,7 +159,7 @@ MouseEvent::Constructor(const GlobalObject& aGlobal,
     case eMouseScrollEventClass:
     case eWheelEventClass:
     case eDragEventClass:
-    case NS_POINTER_EVENT:
+    case ePointerEventClass:
     case NS_SIMPLE_GESTURE_EVENT:
       e->mEvent->AsMouseEventBase()->buttons = aParam.mButtons;
       break;
@@ -218,7 +218,7 @@ MouseEvent::Button()
     case eMouseScrollEventClass:
     case eWheelEventClass:
     case eDragEventClass:
-    case NS_POINTER_EVENT:
+    case ePointerEventClass:
     case NS_SIMPLE_GESTURE_EVENT:
       return mEvent->AsMouseEventBase()->button;
     default:
@@ -243,7 +243,7 @@ MouseEvent::Buttons()
     case eMouseScrollEventClass:
     case eWheelEventClass:
     case eDragEventClass:
-    case NS_POINTER_EVENT:
+    case ePointerEventClass:
     case NS_SIMPLE_GESTURE_EVENT:
       return mEvent->AsMouseEventBase()->buttons;
     default:
@@ -268,7 +268,7 @@ MouseEvent::GetRelatedTarget()
     case eMouseScrollEventClass:
     case eWheelEventClass:
     case eDragEventClass:
-    case NS_POINTER_EVENT:
+    case ePointerEventClass:
     case NS_SIMPLE_GESTURE_EVENT:
       relatedTarget =
         do_QueryInterface(mEvent->AsMouseEventBase()->relatedTarget);

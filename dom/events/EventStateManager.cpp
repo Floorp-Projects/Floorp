@@ -3787,7 +3787,7 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
   // hover state itself, and we have optimizations for hover switching between
   // two nearby elements both deep in the DOM tree that would be defeated by
   // switching the hover state to null here.
-  bool isPointer = aMouseEvent->mClass == NS_POINTER_EVENT;
+  bool isPointer = aMouseEvent->mClass == ePointerEventClass;
   if (!aMovingInto && !isPointer) {
     // Unset :hover
     SetContentState(nullptr, NS_EVENT_STATE_HOVER);
@@ -3850,7 +3850,7 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   // DispatchMouseOrPointerEvent() call below, since NotifyMouseOut() resets it, bug 298477.
   nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
 
-  bool isPointer = aMouseEvent->mClass == NS_POINTER_EVENT;
+  bool isPointer = aMouseEvent->mClass == ePointerEventClass;
   
   Maybe<EnterLeaveDispatcher> enterDispatcher;
   if (dispatch) {

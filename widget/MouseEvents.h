@@ -577,7 +577,7 @@ public:
   virtual WidgetPointerEvent* AsPointerEvent() MOZ_OVERRIDE { return this; }
 
   WidgetPointerEvent(bool aIsTrusted, uint32_t aMsg, nsIWidget* w)
-    : WidgetMouseEvent(aIsTrusted, aMsg, w, NS_POINTER_EVENT, eReal)
+    : WidgetMouseEvent(aIsTrusted, aMsg, w, ePointerEventClass, eReal)
     , width(0)
     , height(0)
     , isPrimary(true)
@@ -591,7 +591,7 @@ public:
     , height(0)
     , isPrimary(true)
   {
-    mClass = NS_POINTER_EVENT;
+    mClass = ePointerEventClass;
     UpdateFlags();
   }
 
@@ -615,7 +615,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_POINTER_EVENT,
+    MOZ_ASSERT(mClass == ePointerEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetPointerEvent* result =
