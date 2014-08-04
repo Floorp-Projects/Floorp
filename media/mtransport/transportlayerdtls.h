@@ -73,10 +73,8 @@ class TransportLayerDtls : public TransportLayer {
                                  const unsigned char *digest_value,
                                  size_t digest_len);
 
-  nsresult GetCipherSuite(uint16_t* cipherSuite) const;
-
   nsresult SetSrtpCiphers(std::vector<uint16_t> ciphers);
-  nsresult GetSrtpCipher(uint16_t *cipher) const;
+  nsresult GetSrtpCipher(uint16_t *cipher);
 
   nsresult ExportKeyingMaterial(const std::string& label,
                                 bool use_context,
