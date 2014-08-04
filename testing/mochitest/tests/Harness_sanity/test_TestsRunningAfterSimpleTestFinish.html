@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for whether SimpLeTest.ok after SimpleTest.finish is causing an error to be logged</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<div id="content" class="testbody">
+  <script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(function() {
+      ok(true, "This should pass");
+      SimpleTest.finish();
+    });
+    window.onbeforeunload = function() {
+      ok(true, "This should cause failures in the harness, because it's run after SimpleTest.finish()");
+    }
+  </script>
+</div>
+</body>
+</html>
