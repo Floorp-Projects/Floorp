@@ -47,7 +47,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_SCROLLPORT_EVENT,
+    MOZ_ASSERT(mClass == NS_SCROLLPORT_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalScrollPortEvent* result =
@@ -88,7 +88,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_SCROLLAREA_EVENT,
+    MOZ_ASSERT(mClass == NS_SCROLLAREA_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalScrollAreaEvent* result =
@@ -129,7 +129,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_FORM_EVENT,
+    MOZ_ASSERT(mClass == NS_FORM_EVENT,
                "Duplicate() must be overridden by sub class");
     InternalFormEvent* result = new InternalFormEvent(false, message);
     result->AssignFormEventData(*this, true);
@@ -166,7 +166,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_CLIPBOARD_EVENT,
+    MOZ_ASSERT(mClass == NS_CLIPBOARD_EVENT,
                "Duplicate() must be overridden by sub class");
     InternalClipboardEvent* result = new InternalClipboardEvent(false, message);
     result->AssignClipboardEventData(*this, true);
@@ -202,7 +202,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_FOCUS_EVENT,
+    MOZ_ASSERT(mClass == NS_FOCUS_EVENT,
                "Duplicate() must be overridden by sub class");
     InternalFocusEvent* result = new InternalFocusEvent(false, message);
     result->AssignFocusEventData(*this, true);
@@ -247,7 +247,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_TRANSITION_EVENT,
+    MOZ_ASSERT(mClass == NS_TRANSITION_EVENT,
                "Duplicate() must be overridden by sub class");
     InternalTransitionEvent* result =
       new InternalTransitionEvent(false, message);
@@ -292,7 +292,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_ANIMATION_EVENT,
+    MOZ_ASSERT(mClass == NS_ANIMATION_EVENT,
                "Duplicate() must be overridden by sub class");
     InternalAnimationEvent* result = new InternalAnimationEvent(false, message);
     result->AssignAnimationEventData(*this, true);
@@ -332,7 +332,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_SVGZOOM_EVENT,
+    MOZ_ASSERT(mClass == NS_SVGZOOM_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalSVGZoomEvent* result = new InternalSVGZoomEvent(false, message);
@@ -369,7 +369,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_SMIL_TIME_EVENT,
+    MOZ_ASSERT(mClass == NS_SMIL_TIME_EVENT,
                "Duplicate() must be overridden by sub class");
     InternalSMILTimeEvent* result = new InternalSMILTimeEvent(false, message);
     result->AssignSMILTimeEventData(*this, true);

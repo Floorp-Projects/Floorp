@@ -110,7 +110,7 @@ TextComposition::NotityUpdateComposition(WidgetGUIEvent* aEvent)
       mCompositionStartOffset = 0;
     }
     mCompositionTargetOffset = mCompositionStartOffset;
-  } else if (aEvent->eventStructType != NS_TEXT_EVENT) {
+  } else if (aEvent->mClass != NS_TEXT_EVENT) {
     return;
   } else {
     mCompositionTargetOffset =

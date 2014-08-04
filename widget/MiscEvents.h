@@ -110,7 +110,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_COMMAND_EVENT,
+    MOZ_ASSERT(mClass == NS_COMMAND_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetCommandEvent* result =
@@ -153,7 +153,7 @@ public:
   {
     // NOTE: PluginEvent has to be dispatched to nsIFrame::HandleEvent().
     //       So, this event needs to support Duplicate().
-    MOZ_ASSERT(eventStructType == NS_PLUGIN_EVENT,
+    MOZ_ASSERT(mClass == NS_PLUGIN_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetPluginEvent* result = new WidgetPluginEvent(false, message, nullptr);

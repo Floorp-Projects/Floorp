@@ -27,7 +27,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_MUTATION_EVENT,
+    MOZ_ASSERT(mClass == NS_MUTATION_EVENT,
                "Duplicate() must be overridden by sub class");
     InternalMutationEvent* result = new InternalMutationEvent(false, message);
     result->AssignMutationEventData(*this, true);

@@ -99,7 +99,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_KEY_EVENT,
+    MOZ_ASSERT(mClass == NS_KEY_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetKeyboardEvent* result =
@@ -232,7 +232,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_TEXT_EVENT,
+    MOZ_ASSERT(mClass == NS_TEXT_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetTextEvent* result = new WidgetTextEvent(false, message, nullptr);
@@ -313,7 +313,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_COMPOSITION_EVENT,
+    MOZ_ASSERT(mClass == NS_COMPOSITION_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetCompositionEvent* result =
@@ -566,7 +566,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_EDITOR_INPUT_EVENT,
+    MOZ_ASSERT(mClass == NS_EDITOR_INPUT_EVENT,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalEditorInputEvent* result =

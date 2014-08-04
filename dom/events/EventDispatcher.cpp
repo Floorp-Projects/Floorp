@@ -684,7 +684,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   *aDOMEvent = nullptr;
 
   if (aEvent) {
-    switch(aEvent->eventStructType) {
+    switch(aEvent->mClass) {
     case NS_MUTATION_EVENT:
       return NS_NewDOMMutationEvent(aDOMEvent, aOwner, aPresContext,
                                     aEvent->AsMutationEvent());

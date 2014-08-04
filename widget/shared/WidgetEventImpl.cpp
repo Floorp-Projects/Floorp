@@ -46,25 +46,25 @@ WidgetEvent::As##aName() const \
 bool
 WidgetEvent::IsQueryContentEvent() const
 {
-  return eventStructType == NS_QUERY_CONTENT_EVENT;
+  return mClass == NS_QUERY_CONTENT_EVENT;
 }
 
 bool
 WidgetEvent::IsSelectionEvent() const
 {
-  return eventStructType == NS_SELECTION_EVENT;
+  return mClass == NS_SELECTION_EVENT;
 }
 
 bool
 WidgetEvent::IsContentCommandEvent() const
 {
-  return eventStructType == NS_CONTENT_COMMAND_EVENT;
+  return mClass == NS_CONTENT_COMMAND_EVENT;
 }
 
 bool
 WidgetEvent::IsNativeEventDelivererForPlugin() const
 {
-  return eventStructType == NS_PLUGIN_EVENT;
+  return mClass == NS_PLUGIN_EVENT;
 }
 
 
@@ -215,7 +215,7 @@ WidgetEvent::IsTargetedAtFocusedContent() const
 bool
 WidgetEvent::IsAllowedToDispatchDOMEvent() const
 {
-  switch (eventStructType) {
+  switch (mClass) {
     case NS_MOUSE_EVENT:
     case NS_POINTER_EVENT:
       // We want synthesized mouse moves to cause mouseover and mouseout

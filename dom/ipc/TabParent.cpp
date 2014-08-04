@@ -779,7 +779,7 @@ void
 TabParent::MapEventCoordinatesForChildProcess(
   const LayoutDeviceIntPoint& aOffset, WidgetEvent* aEvent)
 {
-  if (aEvent->eventStructType != NS_TOUCH_EVENT) {
+  if (aEvent->mClass != NS_TOUCH_EVENT) {
     aEvent->refPoint = aOffset;
   } else {
     aEvent->refPoint = LayoutDeviceIntPoint();
@@ -1015,7 +1015,7 @@ TabParent::TryCapture(const WidgetGUIEvent& aEvent)
 {
   MOZ_ASSERT(sEventCapturer == this && mEventCaptureDepth > 0);
 
-  if (aEvent.eventStructType != NS_TOUCH_EVENT) {
+  if (aEvent.mClass != NS_TOUCH_EVENT) {
     // Only capture of touch events is implemented, for now.
     return false;
   }
