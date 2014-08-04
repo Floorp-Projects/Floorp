@@ -1638,7 +1638,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
   if (mInstance) {
     WidgetKeyboardEvent* keyEvent =
       aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
-    if (keyEvent && keyEvent->mClass == NS_KEY_EVENT) {
+    if (keyEvent && keyEvent->mClass == eKeyboardEventClass) {
       nsEventStatus rv = ProcessEvent(*keyEvent);
       if (nsEventStatus_eConsumeNoDefault == rv) {
         aKeyEvent->PreventDefault();
@@ -2119,7 +2119,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
 
    //XXX case NS_MOUSE_SCROLL_EVENT: not received.
 
-   case NS_KEY_EVENT:
+   case eKeyboardEventClass:
       if (anEvent.mPluginEvent)
         {
           XKeyEvent &event = pluginEvent.xkey;
@@ -2266,10 +2266,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       }
       break;
 
-    case NS_KEY_EVENT:
+    case eKeyboardEventClass:
      {
        const WidgetKeyboardEvent& keyEvent = *anEvent.AsKeyboardEvent();
-       LOG("Firing NS_KEY_EVENT %d %d\n", keyEvent.keyCode, keyEvent.charCode);
+       LOG("Firing eKeyboardEventClass %d %d\n",
+           keyEvent.keyCode, keyEvent.charCode);
        // pluginEvent is initialized by nsWindow::InitKeyEvent().
        const ANPEvent* pluginEvent = static_cast<const ANPEvent*>(keyEvent.mPluginEvent);
        if (pluginEvent) {

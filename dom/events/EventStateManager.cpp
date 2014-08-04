@@ -512,7 +512,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mouseEvent->message != NS_MOUSE_ENTER &&
         mouseEvent->message != NS_MOUSE_EXIT) ||
        aEvent->mClass == NS_WHEEL_EVENT ||
-       aEvent->mClass == NS_KEY_EVENT)) {
+       aEvent->mClass == eKeyboardEventClass)) {
     if (gMouseOrKeyboardEventCounter == 0) {
       nsCOMPtr<nsIObserverService> obs =
         mozilla::services::GetObserverService();
@@ -1093,7 +1093,7 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
   case NS_MOUSE_EVENT: {
     return remote->SendRealMouseEvent(*aEvent->AsMouseEvent());
   }
-  case NS_KEY_EVENT: {
+  case eKeyboardEventClass: {
     return remote->SendRealKeyEvent(*aEvent->AsKeyboardEvent());
   }
   case NS_WHEEL_EVENT: {
@@ -1157,7 +1157,7 @@ bool
 CrossProcessSafeEvent(const WidgetEvent& aEvent)
 {
   switch (aEvent.mClass) {
-  case NS_KEY_EVENT:
+  case eKeyboardEventClass:
   case NS_WHEEL_EVENT:
     return true;
   case NS_MOUSE_EVENT:
