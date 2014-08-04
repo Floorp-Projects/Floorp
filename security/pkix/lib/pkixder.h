@@ -37,8 +37,6 @@
 // they are able to do so; otherwise they fail with the input mark in an
 // undefined state.
 
-#include <cassert>
-
 #include "pkix/Input.h"
 #include "pkix/pkixtypes.h"
 
