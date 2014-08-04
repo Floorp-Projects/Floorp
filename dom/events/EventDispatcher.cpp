@@ -729,7 +729,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eSVGZoomEventClass:
       return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext,
                                    aEvent->AsSVGZoomEvent());
-    case NS_SMIL_TIME_EVENT:
+    case eSMILTimeEventClass:
       return NS_NewDOMTimeEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsSMILTimeEvent());
     case NS_COMMAND_EVENT:
