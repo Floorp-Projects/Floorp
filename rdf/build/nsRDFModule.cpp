@@ -146,34 +146,14 @@ static const mozilla::Module::ContractIDEntry kRDFContracts[] = {
     { nullptr }
 };
 
-static nsresult
-StartupRDFModule()
-{
-    if (RDFServiceImpl::gRDFService) {
-        NS_ERROR("Leaked the RDF service from a previous startup.");
-        RDFServiceImpl::gRDFService = nullptr;
-    }
-
-    return NS_OK;
-}
-
-static void
-ShutdownRDFModule()
-{
-    if (RDFServiceImpl::gRDFService) {
-        // XXX make this an assertion!
-        NS_WARNING("Leaking the RDF Service.");
-    }
-}
-
 static const mozilla::Module kRDFModule = {
     mozilla::Module::kVersion,
     kRDFCIDs,
     kRDFContracts,
     nullptr,
     nullptr,
-    StartupRDFModule,
-    ShutdownRDFModule
+    nullptr,
+    nullptr
 };
 
 NSMODULE_DEFN(nsRDFModule) = &kRDFModule;
