@@ -689,6 +689,15 @@ GlobalHelperThreadState::canStartGCHelperTask()
     return !gcHelperWorklist().empty();
 }
 
+static void
+LeaveParseTaskZone(JSRuntime *rt, ParseTask *task)
+{
+    // Mark the zone as no longer in use by an ExclusiveContext, and available
+    // to be collected by the GC.
+    task->cx->leaveCompartment(task->cx->compartment());
+    rt->clearUsedByExclusiveThread(task->cx->zone());
+}
+
 JSScript *
 GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *token)
 {
@@ -709,13 +718,11 @@ GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
     }
     JS_ASSERT(parseTask);
 
-    // Mark the zone as no longer in use by an ExclusiveContext, and available
-    // to be collected by the GC.
-    parseTask->cx->leaveCompartment(parseTask->cx->compartment());
-    rt->clearUsedByExclusiveThread(parseTask->cx->zone());
     if (!maybecx) {
+        LeaveParseTaskZone(rt, parseTask);
         return nullptr;
     }
+
     JSContext *cx = maybecx;
     JS_ASSERT(cx->compartment());
 
@@ -730,6 +737,8 @@ GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
     {
         return nullptr;
     }
+
+    LeaveParseTaskZone(rt, parseTask);
 
     // Point the prototypes of any objects in the script's compartment to refer
     // to the corresponding prototype in the new compartment. This will briefly
