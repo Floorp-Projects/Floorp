@@ -685,7 +685,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
 
   if (aEvent) {
     switch(aEvent->mClass) {
-    case NS_MUTATION_EVENT:
+    case eMutationEventClass:
       return NS_NewDOMMutationEvent(aDOMEvent, aOwner, aPresContext,
                                     aEvent->AsMutationEvent());
     case eGUIEventClass:
