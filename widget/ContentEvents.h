@@ -194,15 +194,16 @@ class InternalFocusEvent : public InternalUIEvent
 public:
   virtual InternalFocusEvent* AsFocusEvent() MOZ_OVERRIDE { return this; }
 
-  InternalFocusEvent(bool aIsTrusted, uint32_t aMessage) :
-    InternalUIEvent(aIsTrusted, aMessage, NS_FOCUS_EVENT),
-    fromRaise(false), isRefocus(false)
+  InternalFocusEvent(bool aIsTrusted, uint32_t aMessage)
+    : InternalUIEvent(aIsTrusted, aMessage, eFocusEventClass)
+    , fromRaise(false)
+    , isRefocus(false)
   {
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_FOCUS_EVENT,
+    MOZ_ASSERT(mClass == eFocusEventClass,
                "Duplicate() must be overridden by sub class");
     InternalFocusEvent* result = new InternalFocusEvent(false, message);
     result->AssignFocusEventData(*this, true);
