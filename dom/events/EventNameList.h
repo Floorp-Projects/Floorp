@@ -887,15 +887,15 @@ NON_IDL_EVENT(transitionend,
 NON_IDL_EVENT(animationstart,
               NS_ANIMATION_START,
               EventNameType_None,
-              NS_ANIMATION_EVENT)
+              eAnimationEventClass)
 NON_IDL_EVENT(animationend,
               NS_ANIMATION_END,
               EventNameType_None,
-              NS_ANIMATION_EVENT)
+              eAnimationEventClass)
 NON_IDL_EVENT(animationiteration,
               NS_ANIMATION_ITERATION,
               EventNameType_None,
-              NS_ANIMATION_EVENT)
+              eAnimationEventClass)
 
 NON_IDL_EVENT(audioprocess,
               NS_AUDIO_PROCESS,
