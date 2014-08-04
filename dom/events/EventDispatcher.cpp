@@ -688,7 +688,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case NS_MUTATION_EVENT:
       return NS_NewDOMMutationEvent(aDOMEvent, aOwner, aPresContext,
                                     aEvent->AsMutationEvent());
-    case NS_GUI_EVENT:
+    case eGUIEventClass:
     case NS_SCROLLPORT_EVENT:
     case NS_UI_EVENT:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
