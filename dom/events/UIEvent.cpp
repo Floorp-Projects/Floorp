@@ -53,7 +53,7 @@ UIEvent::UIEvent(EventTarget* aOwner,
       break;
     }
 
-    case NS_SCROLLPORT_EVENT:
+    case eScrollPortEventClass:
     {
       InternalScrollPortEvent* scrollEvent = mEvent->AsScrollPortEvent();
       mDetail = (int32_t)scrollEvent->orient;

@@ -39,15 +39,15 @@ public:
   };
 
   InternalScrollPortEvent(bool aIsTrusted, uint32_t aMessage,
-                          nsIWidget* aWidget) :
-    WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_SCROLLPORT_EVENT),
-    orient(vertical)
+                          nsIWidget* aWidget)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eScrollPortEventClass)
+    , orient(vertical)
   {
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_SCROLLPORT_EVENT,
+    MOZ_ASSERT(mClass == eScrollPortEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalScrollPortEvent* result =
