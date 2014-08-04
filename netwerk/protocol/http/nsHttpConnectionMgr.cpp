@@ -673,6 +673,7 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
               "abandon this connection yet."));
     }
 
+    ProcessPendingQ(ent->mConnInfo);
     PostEvent(&nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ);
 }
 

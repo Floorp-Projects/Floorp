@@ -547,7 +547,8 @@ VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
   if (rv != Success) {
     return mozilla::psm::GetXPCOMFromNSSError(MapResultToPRErrorCode(rv));
   }
-  rv = BuildCertChain(trustDomain, certDER, PR_Now(),
+
+  rv = BuildCertChain(trustDomain, certDER, Now(),
                       EndEntityOrCA::MustBeEndEntity,
                       KeyUsage::digitalSignature,
                       KeyPurposeId::id_kp_codeSigning,

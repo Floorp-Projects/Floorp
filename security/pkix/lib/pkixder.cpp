@@ -23,8 +23,9 @@
  */
 
 #include "pkixder.h"
+
 #include "pkix/bind.h"
-#include "cert.h"
+#include "pkixutil.h"
 
 namespace mozilla { namespace pkix { namespace der {
 
@@ -335,7 +336,7 @@ BitStringWithNoUnusedBits(Reader& input, /*out*/ Input& value)
 }
 
 static inline Result
-ReadDigit(Reader& input, /*out*/ int& value)
+ReadDigit(Reader& input, /*out*/ unsigned int& value)
 {
   uint8_t b;
   if (input.Read(b) != Success) {
@@ -344,19 +345,20 @@ ReadDigit(Reader& input, /*out*/ int& value)
   if (b < '0' || b > '9') {
     return Result::ERROR_INVALID_TIME;
   }
-  value = b - '0';
+  value = static_cast<unsigned int>(b - static_cast<uint8_t>('0'));
   return Success;
 }
 
 static inline Result
-ReadTwoDigits(Reader& input, int minValue, int maxValue, /*out*/ int& value)
+ReadTwoDigits(Reader& input, unsigned int minValue, unsigned int maxValue,
+              /*out*/ unsigned int& value)
 {
-  int hi;
+  unsigned int hi;
   Result rv = ReadDigit(input, hi);
   if (rv != Success) {
     return rv;
   }
-  int lo;
+  unsigned int lo;
   rv = ReadDigit(input, lo);
   if (rv != Success) {
     return rv;
@@ -368,15 +370,6 @@ ReadTwoDigits(Reader& input, int minValue, int maxValue, /*out*/ int& value)
   return Success;
 }
 
-inline int
-daysBeforeYear(int year)
-{
-  return (365 * (year - 1))
-       + ((year - 1) / 4)    // leap years are every 4 years,
-       - ((year - 1) / 100)  // except years divisible by 100,
-       + ((year - 1) / 400); // except years divisible by 400.
-}
-
 namespace internal {
 
 // We parse GeneralizedTime and UTCTime according to RFC 5280 and we do not
@@ -385,9 +378,9 @@ namespace internal {
 // must always be in the format YYMMDDHHMMSSZ. Timezone formats of the form
 // +HH:MM or -HH:MM or NOT accepted.
 Result
-TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
+TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ Time& time)
 {
-  int days;
+  unsigned int days;
 
   Reader input;
   Result rv = ExpectTagAndGetValue(tagged, expectedTag, input);
@@ -395,8 +388,8 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
     return rv;
   }
 
-  int yearHi;
-  int yearLo;
+  unsigned int yearHi;
+  unsigned int yearLo;
   if (expectedTag == GENERALIZED_TIME) {
     rv = ReadTwoDigits(input, 0, 99, yearHi);
     if (rv != Success) {
@@ -411,47 +404,39 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
     if (rv != Success) {
       return rv;
     }
-    yearHi = yearLo >= 50 ? 19 : 20;
+    yearHi = yearLo >= 50u ? 19u : 20u;
   } else {
     PR_NOT_REACHED("invalid tag given to TimeChoice");
     return Result::ERROR_INVALID_TIME;
   }
-  int year = (yearHi * 100) + yearLo;
-  if (year < 1970) {
+  unsigned int year = (yearHi * 100u) + yearLo;
+  if (year < 1970u) {
     // We don't support dates before January 1, 1970 because that is the epoch.
     return Result::ERROR_INVALID_TIME;
   }
-  if (year > 1970) {
-    // This is NOT equivalent to daysBeforeYear(year - 1970) because the
-    // leap year calculations in daysBeforeYear only works on absolute years.
-    days = daysBeforeYear(year) - daysBeforeYear(1970);
-    // We subtract 1 because we're interested in knowing how many days there
-    // were *before* the given year, relative to 1970.
-  } else {
-    days = 0;
-  }
+  days = DaysBeforeYear(year);
 
-  int month;
-  rv = ReadTwoDigits(input, 1, 12, month);
+  unsigned int month;
+  rv = ReadTwoDigits(input, 1u, 12u, month);
   if (rv != Success) {
     return rv;
   }
-  int daysInMonth;
-  static const int jan = 31;
-  const int feb = ((year % 4 == 0) &&
-                   ((year % 100 != 0) || (year % 400 == 0)))
-                ? 29
-                : 28;
-  static const int mar = 31;
-  static const int apr = 30;
-  static const int may = 31;
-  static const int jun = 30;
-  static const int jul = 31;
-  static const int aug = 31;
-  static const int sep = 30;
-  static const int oct = 31;
-  static const int nov = 30;
-  static const int dec = 31;
+  unsigned int daysInMonth;
+  static const unsigned int jan = 31u;
+  const unsigned int feb = ((year % 4u == 0u) &&
+                           ((year % 100u != 0u) || (year % 400u == 0u)))
+                         ? 29u
+                         : 28u;
+  static const unsigned int mar = 31u;
+  static const unsigned int apr = 30u;
+  static const unsigned int may = 31u;
+  static const unsigned int jun = 30u;
+  static const unsigned int jul = 31u;
+  static const unsigned int aug = 31u;
+  static const unsigned int sep = 30u;
+  static const unsigned int oct = 31u;
+  static const unsigned int nov = 30u;
+  static const unsigned int dec = 31u;
   switch (month) {
     case 1:  daysInMonth = jan; break;
     case 2:  daysInMonth = feb; days += jan; break;
@@ -481,25 +466,25 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
       return Result::FATAL_ERROR_INVALID_STATE;
   }
 
-  int dayOfMonth;
-  rv = ReadTwoDigits(input, 1, daysInMonth, dayOfMonth);
+  unsigned int dayOfMonth;
+  rv = ReadTwoDigits(input, 1u, daysInMonth, dayOfMonth);
   if (rv != Success) {
     return rv;
   }
   days += dayOfMonth - 1;
 
-  int hours;
-  rv = ReadTwoDigits(input, 0, 23, hours);
+  unsigned int hours;
+  rv = ReadTwoDigits(input, 0u, 23u, hours);
   if (rv != Success) {
     return rv;
   }
-  int minutes;
-  rv = ReadTwoDigits(input, 0, 59, minutes);
+  unsigned int minutes;
+  rv = ReadTwoDigits(input, 0u, 59u, minutes);
   if (rv != Success) {
     return rv;
   }
-  int seconds;
-  rv = ReadTwoDigits(input, 0, 59, seconds);
+  unsigned int seconds;
+  rv = ReadTwoDigits(input, 0u, 59u, seconds);
   if (rv != Success) {
     return rv;
   }
@@ -515,12 +500,12 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ PRTime& time)
     return Result::ERROR_INVALID_TIME;
   }
 
-  int64_t totalSeconds = (static_cast<int64_t>(days) * 24 * 60 * 60) +
-                         (static_cast<int64_t>(hours)     * 60 * 60) +
-                         (static_cast<int64_t>(minutes)        * 60) +
-                         seconds;
+  uint64_t totalSeconds = (static_cast<uint64_t>(days) * 24u * 60u * 60u) +
+                          (static_cast<uint64_t>(hours)      * 60u * 60u) +
+                          (static_cast<uint64_t>(minutes)          * 60u) +
+                          seconds;
 
-  time = totalSeconds * PR_USEC_PER_SEC;
+  time = TimeFromElapsedSecondsAD(totalSeconds);
   return Success;
 }
 

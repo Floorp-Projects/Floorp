@@ -95,21 +95,6 @@ private:
   void operator=(const Bind2&) /*= delete*/;
 };
 
-template <typename R, typename P1, typename B1, typename B2, typename B3>
-class Bind3
-{
-public:
-  typedef R (*F)(P1&, B1, B2&, B3&);
-  Bind3(F f, B1& b1, B2& b2, B3& b3) : f(f), b1(b1), b2(b2), b3(b3) { }
-  R operator()(P1& p1) const { return f(p1, b1, b2, b3); }
-private:
-  const F f;
-  B1& b1;
-  B2& b2;
-  B3& b3;
-  void operator=(const Bind3&) /*= delete*/;
-};
-
 template <typename R, typename P1, typename B1, typename B2, typename B3,
           typename B4>
 class Bind4
@@ -155,13 +140,6 @@ inline internal::Bind2<R, P1, B1, B2>
 bind(R (*f)(P1&, B1&, B2&), Placeholder1&, B1& b1, B2& b2)
 {
   return internal::Bind2<R, P1, B1, B2>(f, b1, b2);
-}
-
-template <typename R, typename P1, typename B1, typename B2, typename B3>
-inline internal::Bind3<R, P1, const B1, const B2, B3>
-bind(R (*f)(P1&, B1, const B2&, B3&), Placeholder1&, B1& b1, const B2& b2, B3& b3)
-{
-  return internal::Bind3<R, P1, const B1, const B2, B3>(f, b1, b2, b3);
 }
 
 template <typename R, typename P1, typename B1, typename B2, typename B3,

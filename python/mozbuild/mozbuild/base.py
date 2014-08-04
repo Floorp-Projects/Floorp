@@ -621,7 +621,7 @@ class MachCommandConditions(object):
 
     @staticmethod
     def is_firefox_or_mulet(cls):
-        """Must have a Mulet build."""
+        """Must have a Firefox or Mulet build."""
         return (MachCommandConditions.is_firefox(cls) or
                 MachCommandConditions.is_mulet(cls))
 

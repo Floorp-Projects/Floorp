@@ -37,9 +37,10 @@ public:
   }
 
   WidgetGestureNotifyEvent(bool aIsTrusted, uint32_t aMessage,
-                           nsIWidget *aWidget) :
-    WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_GESTURENOTIFY_EVENT),
-    panDirection(ePanNone), displayPanFeedback(false)
+                           nsIWidget *aWidget)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eGestureNotifyEventClass)
+    , panDirection(ePanNone)
+    , displayPanFeedback(false)
   {
   }
 
@@ -50,7 +51,7 @@ public:
     //     in PreHandleEvent() and not to dispatch as a DOM event into the DOM
     //     tree like ContentQueryEvent.  Then, this event doesn't need to
     //     support Duplicate().
-    MOZ_ASSERT(eventStructType == NS_GESTURENOTIFY_EVENT,
+    MOZ_ASSERT(mClass == eGestureNotifyEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetGestureNotifyEvent* result =
@@ -96,7 +97,7 @@ public:
   WidgetSimpleGestureEvent(bool aIsTrusted, uint32_t aMessage,
                            nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget,
-                           NS_SIMPLE_GESTURE_EVENT)
+                           eSimpleGestureEventClass)
     , allowedDirections(0)
     , direction(0)
     , delta(0.0)
@@ -106,7 +107,7 @@ public:
 
   WidgetSimpleGestureEvent(const WidgetSimpleGestureEvent& aOther)
     : WidgetMouseEventBase(aOther.mFlags.mIsTrusted, aOther.message,
-                           aOther.widget, NS_SIMPLE_GESTURE_EVENT)
+                           aOther.widget, eSimpleGestureEventClass)
     , allowedDirections(aOther.allowedDirections)
     , direction(aOther.direction)
     , delta(aOther.delta)
@@ -116,7 +117,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_SIMPLE_GESTURE_EVENT,
+    MOZ_ASSERT(mClass == eSimpleGestureEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetSimpleGestureEvent* result =
@@ -164,9 +165,9 @@ public:
   {
   }
 
-  WidgetTouchEvent(const WidgetTouchEvent& aOther) :
-    WidgetInputEvent(aOther.mFlags.mIsTrusted, aOther.message, aOther.widget,
-                     NS_TOUCH_EVENT)
+  WidgetTouchEvent(const WidgetTouchEvent& aOther)
+    : WidgetInputEvent(aOther.mFlags.mIsTrusted, aOther.message, aOther.widget,
+                       eTouchEventClass)
   {
     modifiers = aOther.modifiers;
     time = aOther.time;
@@ -176,8 +177,8 @@ public:
     MOZ_COUNT_CTOR(WidgetTouchEvent);
   }
 
-  WidgetTouchEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
-    WidgetInputEvent(aIsTrusted, aMessage, aWidget, NS_TOUCH_EVENT)
+  WidgetTouchEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
+    : WidgetInputEvent(aIsTrusted, aMessage, aWidget, eTouchEventClass)
   {
     MOZ_COUNT_CTOR(WidgetTouchEvent);
     mFlags.mCancelable = message != NS_TOUCH_CANCEL;
@@ -190,7 +191,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_TOUCH_EVENT,
+    MOZ_ASSERT(mClass == eTouchEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetTouchEvent* result = new WidgetTouchEvent(false, message, nullptr);

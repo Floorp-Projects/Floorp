@@ -14,9 +14,9 @@ using namespace std;
 #include "mozilla/Scoped.h"
 #include "mozilla/SyncRunnable.h"
 #include <MediaConduitInterface.h>
+#include "GmpVideoCodec.h"
 #include "nsIEventTarget.h"
 #include "FakeMediaStreamsImpl.h"
-#include "GmpVideoCodec.h"
 #include "nsThreadUtils.h"
 #include "runnable_utils.h"
 

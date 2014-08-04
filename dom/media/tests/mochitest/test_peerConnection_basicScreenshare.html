@@ -17,18 +17,23 @@
     title: "Basic screenshare-only peer connection"
   });
 
+  SimpleTest.expectAssertions(0, 1); // Bug 1047842
+
   var test;
   runNetworkTest(function (options) {
+    const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
+    if (IsMacOSX10_6orOlder() || isWinXP) {
+        ok(true, "Screensharing disabled for OSX10.6 and WinXP");
+        SimpleTest.finish();
+        return;
+    }
     test = new PeerConnectionTest(options);
     var constraints = {
       video: {
-        mandatory:{
-          chromeMediaSource:'screen',
-          maxWidth:screen.availWidth,
-          maxHeight:screen.availHeight
-        },
-        optional:[]
-      }
+         mozMediaSource: "screen",
+         mediaSource: "screen"
+      },
+      fake: false
     };
     test.setMediaConstraints([constraints], [constraints]);
     test.run();

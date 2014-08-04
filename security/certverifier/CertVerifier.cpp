@@ -86,7 +86,7 @@ struct ChainValidationCallbackState
   const char* hostname;
   const CertVerifier::pinning_enforcement_config pinningEnforcementLevel;
   const SECCertificateUsage usage;
-  const PRTime time;
+  const Time time;
 };
 
 SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
@@ -157,7 +157,7 @@ SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
 
 static Result
 BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, Input certDER,
-                             PRTime time, KeyUsage ku1, KeyUsage ku2,
+                             Time time, KeyUsage ku1, KeyUsage ku2,
                              KeyUsage ku3, KeyPurposeId eku,
                              const CertPolicyId& requiredPolicy,
                              const Input* stapledOCSPResponse)
@@ -183,7 +183,7 @@ BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, Input certDER,
 
 SECStatus
 CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
-                         PRTime time, void* pinArg, const char* hostname,
+                         Time time, void* pinArg, const char* hostname,
                          const Flags flags,
             /*optional*/ const SECItem* stapledOCSPResponseSECItem,
         /*optional out*/ ScopedCERTCertList* builtChain,
@@ -429,7 +429,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 SECStatus
 CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
                      /*optional*/ const SECItem* stapledOCSPResponse,
-                                  PRTime time,
+                                  Time time,
                      /*optional*/ void* pinarg,
                                   const char* hostname,
                                   bool saveIntermediatesInPermanentDatabase,

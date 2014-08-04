@@ -278,8 +278,8 @@ ApzcTapAndCheckStatus(AsyncPanZoomController* aApzc, int aX, int aY, int& aTime,
 {
   nsEventStatus statuses[2];
   ApzcTap(aApzc, aX, aY, aTime, aTapLength, &statuses);
-  EXPECT_EQ(nsEventStatus_eConsumeNoDefault, statuses[0]);
-  EXPECT_EQ(nsEventStatus_eIgnore, statuses[1]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[1]);
 }
 
 static void
@@ -328,7 +328,7 @@ ApzcPan(AsyncPanZoomController* aApzc,
   if (!aKeepFingerDown) {
     status = ApzcUp(aApzc, 10, aTouchEndY, aTime);
   } else {
-    status = (nsEventStatus)-1;
+    status = nsEventStatus_eIgnore;
   }
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[3] = status;
@@ -346,35 +346,19 @@ ApzcPanAndCheckStatus(AsyncPanZoomController* aApzc,
                       int& aTime,
                       int aTouchStartY,
                       int aTouchEndY,
-                      bool expectIgnoredPan,
-                      bool hasTouchListeners,
+                      bool aExpectConsumed,
                       nsTArray<uint32_t>* aAllowedTouchBehaviors)
 {
   nsEventStatus statuses[4]; // down, move, move, up
   ApzcPan(aApzc, aTime, aTouchStartY, aTouchEndY, false, aAllowedTouchBehaviors, &statuses);
 
-  nsEventStatus touchStartStatus;
-  if (hasTouchListeners || gfxPrefs::TouchActionEnabled()) {
-    // APZC shouldn't consume the start event now, instead queueing it up
-    // waiting for content's response and/or allowed behavior.
-    touchStartStatus = nsEventStatus_eConsumeDoDefault;
-  } else {
-    // APZC should go into the touching state and therefore consume the event.
-    touchStartStatus = nsEventStatus_eConsumeNoDefault;
-  }
-  EXPECT_EQ(touchStartStatus, statuses[0]);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
 
   nsEventStatus touchMoveStatus;
-  if (hasTouchListeners) {
-    // APZC will queue up this event while waiting for content's response.
+  if (aExpectConsumed) {
     touchMoveStatus = nsEventStatus_eConsumeDoDefault;
-  } else if (expectIgnoredPan) {
-    // APZC should ignore panning, be in TOUCHING state and therefore return eIgnore.
-    // The same applies to all consequent touch move events.
-    touchMoveStatus = nsEventStatus_eIgnore;
   } else {
-    // APZC should go into the panning state and therefore consume the event.
-    touchMoveStatus = nsEventStatus_eConsumeNoDefault;
+    touchMoveStatus = nsEventStatus_eIgnore;
   }
   EXPECT_EQ(touchMoveStatus, statuses[1]);
   EXPECT_EQ(touchMoveStatus, statuses[2]);
@@ -495,11 +479,12 @@ ApzcPinchWithTouchInputAndCheckStatus(AsyncPanZoomController* aApzc,
   nsEventStatus statuses[4];  // down, move, move, up
   ApzcPinchWithTouchInput(aApzc, aFocusX, aFocusY, aScale, inputId, aAllowedTouchBehaviors, &statuses);
 
-  nsEventStatus expectedStatus = aShouldTriggerPinch
-      ? nsEventStatus_eConsumeNoDefault
+  nsEventStatus expectedMoveStatus = aShouldTriggerPinch
+      ? nsEventStatus_eConsumeDoDefault
       : nsEventStatus_eIgnore;
-  EXPECT_EQ(statuses[1], expectedStatus);
-  EXPECT_EQ(statuses[2], expectedStatus);
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, statuses[0]);
+  EXPECT_EQ(expectedMoveStatus, statuses[1]);
+  EXPECT_EQ(expectedMoveStatus, statuses[2]);
 }
 
 class APZCPinchTester : public APZCBasicTester {
@@ -788,7 +773,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
 
 class APZCPanningTester : public APZCBasicTester {
 protected:
-  void DoPanTest(bool aShouldTriggerScroll, uint32_t aBehavior)
+  void DoPanTest(bool aShouldTriggerScroll, bool aShouldBeConsumed, uint32_t aBehavior)
   {
     if (aShouldTriggerScroll) {
       EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(AtLeast(1));
@@ -808,7 +793,7 @@ protected:
     allowedTouchBehaviors.AppendElement(aBehavior);
 
     // Pan down
-    ApzcPanAndCheckStatus(apzc, time, touchStart, touchEnd, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
+    ApzcPanAndCheckStatus(apzc, time, touchStart, touchEnd, aShouldBeConsumed, &allowedTouchBehaviors);
     apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
     if (aShouldTriggerScroll) {
@@ -824,7 +809,7 @@ protected:
     apzc->CancelAnimation();
 
     // Pan back
-    ApzcPanAndCheckStatus(apzc, time, touchEnd, touchStart, !aShouldTriggerScroll, false, &allowedTouchBehaviors);
+    ApzcPanAndCheckStatus(apzc, time, touchEnd, touchStart, aShouldBeConsumed, &allowedTouchBehaviors);
     apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
     EXPECT_EQ(ScreenPoint(), pointOut);
@@ -844,7 +829,7 @@ protected:
     // Pan down
     nsTArray<uint32_t> allowedTouchBehaviors;
     allowedTouchBehaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
-    ApzcPanAndCheckStatus(apzc, time, touchStart, touchEnd, true, true, &allowedTouchBehaviors);
+    ApzcPanAndCheckStatus(apzc, time, touchStart, touchEnd, true, &allowedTouchBehaviors);
 
     // Send the signal that content has handled and preventDefaulted the touch
     // events. This flushes the event queue.
@@ -862,7 +847,7 @@ protected:
 };
 
 TEST_F(APZCPanningTester, Pan) {
-  DoPanTest(true, mozilla::layers::AllowedTouchBehavior::NONE);
+  DoPanTest(true, true, mozilla::layers::AllowedTouchBehavior::NONE);
 }
 
 // In the each of the following 4 pan tests we are performing two pan gestures: vertical pan from top
@@ -870,25 +855,28 @@ TEST_F(APZCPanningTester, Pan) {
 // According to the pointer-events/touch-action spec AUTO and PAN_Y touch-action values allow vertical
 // scrolling while NONE and PAN_X forbid it. The first parameter of DoPanTest method specifies this
 // behavior.
+// However, the events will be marked as consumed even if the behavior in PAN_X, because the user could
+// move their finger horizontally too - APZ has no way of knowing beforehand and so must consume the
+// events.
 TEST_F(APZCPanningTester, PanWithTouchActionAuto) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
-  DoPanTest(true, mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN
-                  | mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
+  DoPanTest(true, true, mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN
+                      | mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
 }
 
 TEST_F(APZCPanningTester, PanWithTouchActionNone) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
-  DoPanTest(false, 0);
+  DoPanTest(false, false, 0);
 }
 
 TEST_F(APZCPanningTester, PanWithTouchActionPanX) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
-  DoPanTest(false, mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN);
+  DoPanTest(false, true, mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN);
 }
 
 TEST_F(APZCPanningTester, PanWithTouchActionPanY) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
-  DoPanTest(true, mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
+  DoPanTest(true, true, mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
 }
 
 TEST_F(APZCPanningTester, PanWithPreventDefaultAndTouchAction) {
@@ -1160,14 +1148,7 @@ protected:
     int time = 0;
 
     nsEventStatus status = ApzcDown(apzc, 10, 10, time);
-    if (gfxPrefs::TouchActionEnabled()) {
-      // If touch-action is enabled, then the event is queued until the
-      // allowed touch behavior is set.
-      EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
-    } else {
-      // Otherwise, it is processed immediately.
-      EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
-    }
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
     if (gfxPrefs::TouchActionEnabled()) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
@@ -1218,7 +1199,7 @@ protected:
     // prevent-defaulted, we should get a long-tap-up event.
     check.Call("preHandleLongTapUp");
     status = ApzcUp(apzc, 10, 10, time);
-    EXPECT_EQ(nsEventStatus_eIgnore, status);
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
     check.Call("postHandleLongTapUp");
 
     apzc->AssertStateIsReset();
@@ -1236,14 +1217,7 @@ protected:
 
     int time = 0;
     nsEventStatus status = ApzcDown(apzc, touchX, touchStartY, time);
-    if (gfxPrefs::TouchActionEnabled()) {
-      // If touch-action is enabled, then the event is queued until the
-      // allowed touch behavior is set.
-      EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
-    } else {
-      // Otherwise, it is processed immediately.
-      EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
-    }
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
     if (gfxPrefs::TouchActionEnabled()) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
@@ -1288,11 +1262,11 @@ protected:
     MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, time, TimeStamp(), 0);
     mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(touchX, touchEndY), ScreenSize(0, 0), 0, 0));
     status = apzc->ReceiveInputEvent(mti);
-    EXPECT_EQ(nsEventStatus_eIgnore, status);
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
     EXPECT_CALL(*mcc, HandleLongTapUp(CSSPoint(touchX, touchEndY), 0, apzc->GetGuid())).Times(0);
     status = ApzcUp(apzc, touchX, touchEndY, time);
-    EXPECT_EQ(nsEventStatus_eIgnore, status);
+    EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
     ScreenPoint pointOut;
     ViewTransform viewTransformOut;

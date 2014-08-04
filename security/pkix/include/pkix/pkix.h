@@ -89,7 +89,7 @@ namespace mozilla { namespace pkix {
 // TODO(bug 968451): Document more of these.
 
 Result BuildCertChain(TrustDomain& trustDomain, Input cert,
-                      PRTime time, EndEntityOrCA endEntityOrCA,
+                      Time time, EndEntityOrCA endEntityOrCA,
                       KeyUsage requiredKeyUsageIfPresent,
                       KeyPurposeId requiredEKUIfPresent,
                       const CertPolicyId& requiredPolicy,
@@ -114,12 +114,12 @@ Result CreateEncodedOCSPRequest(TrustDomain& trustDomain,
 // which the encoded response is considered trustworthy (that is, if a response had a
 // thisUpdate time of validThrough, it would be considered trustworthy).
 Result VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
-                                 const CertID& certID, PRTime time,
+                                 const CertID& certID, Time time,
                                  uint16_t maxLifetimeInDays,
                                  Input encodedResponse,
                        /* out */ bool& expired,
-              /* optional out */ PRTime* thisUpdate = nullptr,
-              /* optional out */ PRTime* validThrough = nullptr);
+              /* optional out */ Time* thisUpdate = nullptr,
+              /* optional out */ Time* validThrough = nullptr);
 
 } } // namespace mozilla::pkix
 

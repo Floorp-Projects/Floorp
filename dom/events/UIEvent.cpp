@@ -46,15 +46,14 @@ UIEvent::UIEvent(EventTarget* aOwner,
   
   // Fill mDetail and mView according to the mEvent (widget-generated
   // event) we've got
-  switch(mEvent->eventStructType)
-  {
-    case NS_UI_EVENT:
+  switch(mEvent->mClass) {
+    case eUIEventClass:
     {
       mDetail = mEvent->AsUIEvent()->detail;
       break;
     }
 
-    case NS_SCROLLPORT_EVENT:
+    case eScrollPortEventClass:
     {
       InternalScrollPortEvent* scrollEvent = mEvent->AsScrollPortEvent();
       mDetail = (int32_t)scrollEvent->orient;
@@ -119,12 +118,12 @@ UIEvent::GetMovementPoint()
   }
 
   if (!mEvent ||
-      (mEvent->eventStructType != NS_MOUSE_EVENT &&
-       mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       mEvent->eventStructType != NS_WHEEL_EVENT &&
-       mEvent->eventStructType != NS_DRAG_EVENT &&
-       mEvent->eventStructType != NS_POINTER_EVENT &&
-       mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
+      (mEvent->mClass != eMouseEventClass &&
+       mEvent->mClass != eMouseScrollEventClass &&
+       mEvent->mClass != eWheelEventClass &&
+       mEvent->mClass != eDragEventClass &&
+       mEvent->mClass != ePointerEventClass &&
+       mEvent->mClass != eSimpleGestureEventClass) ||
        !mEvent->AsGUIEvent()->widget) {
     return nsIntPoint(0, 0);
   }
@@ -297,13 +296,13 @@ nsIntPoint
 UIEvent::GetLayerPoint() const
 {
   if (!mEvent ||
-      (mEvent->eventStructType != NS_MOUSE_EVENT &&
-       mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-       mEvent->eventStructType != NS_WHEEL_EVENT &&
-       mEvent->eventStructType != NS_POINTER_EVENT &&
-       mEvent->eventStructType != NS_TOUCH_EVENT &&
-       mEvent->eventStructType != NS_DRAG_EVENT &&
-       mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
+      (mEvent->mClass != eMouseEventClass &&
+       mEvent->mClass != eMouseScrollEventClass &&
+       mEvent->mClass != eWheelEventClass &&
+       mEvent->mClass != ePointerEventClass &&
+       mEvent->mClass != eTouchEventClass &&
+       mEvent->mClass != eDragEventClass &&
+       mEvent->mClass != eSimpleGestureEventClass) ||
       !mPresContext ||
       mEventIsInternal) {
     return mLayerPoint;

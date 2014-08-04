@@ -63,23 +63,24 @@ public:
   // instance. It's expected that there will be multiple
   // PlatformDecoderModules alive at the same time. There is one
   // PlatformDecoderModule created per MP4Reader.
-  // This is called on the decode thread.
+  // This is called on the decode task queue.
   static PlatformDecoderModule* Create();
 
   // Creates a PlatformDecoderModule that uses a CDMProxy to decrypt or
   // decrypt-and-decode EME encrypted content. If the CDM only decrypts and
   // does not decode, we create a PDM and use that to create MediaDataDecoders
   // that we use on on aTaskQueue to decode the decrypted stream.
+  // This is called on the decode task queue.
   static PlatformDecoderModule* CreateCDMWrapper(CDMProxy* aProxy,
                                                  bool aHasAudio,
                                                  bool aHasVideo,
                                                  MediaTaskQueue* aTaskQueue);
 
-  // Called to shutdown the decoder module and cleanup state. This should
-  // block until shutdown is complete. This is called after Shutdown() has
-  // been called on all MediaDataDecoders created from this
-  // PlatformDecoderModule.
-  // Called on the main thread only.
+  // Called to shutdown the decoder module and cleanup state. The PDM
+  // is deleted immediately after Shutdown() is called. Shutdown() is
+  // called after Shutdown() has been called on all MediaDataDecoders
+  // created from this PlatformDecoderModule.
+  // This is called on the decode task queue.
   virtual nsresult Shutdown() = 0;
 
   // Creates an H.264 decoder. The layers backend is passed in so that
@@ -92,7 +93,7 @@ public:
   // COINIT_MULTITHREADED.
   // Returns nullptr if the decoder can't be created.
   // It is safe to store a reference to aConfig.
-  // Called on decode thread.
+  // This is called on the decode task queue.
   virtual already_AddRefed<MediaDataDecoder>
   CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                     layers::LayersBackend aLayersBackend,
@@ -109,7 +110,7 @@ public:
   // On Windows the task queue's threads in have MSCOM initialized with
   // COINIT_MULTITHREADED.
   // It is safe to store a reference to aConfig.
-  // Called on decode thread.
+  // This is called on the decode task queue.
   virtual already_AddRefed<MediaDataDecoder>
   CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                    MediaTaskQueue* aAudioTaskQueue,
