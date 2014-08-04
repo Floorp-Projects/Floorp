@@ -37,9 +37,10 @@ public:
   }
 
   WidgetGestureNotifyEvent(bool aIsTrusted, uint32_t aMessage,
-                           nsIWidget *aWidget) :
-    WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_GESTURENOTIFY_EVENT),
-    panDirection(ePanNone), displayPanFeedback(false)
+                           nsIWidget *aWidget)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eGestureNotifyEventClass)
+    , panDirection(ePanNone)
+    , displayPanFeedback(false)
   {
   }
 
@@ -50,7 +51,7 @@ public:
     //     in PreHandleEvent() and not to dispatch as a DOM event into the DOM
     //     tree like ContentQueryEvent.  Then, this event doesn't need to
     //     support Duplicate().
-    MOZ_ASSERT(mClass == NS_GESTURENOTIFY_EVENT,
+    MOZ_ASSERT(mClass == eGestureNotifyEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetGestureNotifyEvent* result =
