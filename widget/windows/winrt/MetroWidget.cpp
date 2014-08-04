@@ -661,7 +661,7 @@ MetroWidget::DispatchScrollEvent(mozilla::WidgetGUIEvent* aEvent)
       newEvent = static_cast<WidgetGUIEvent*>(wheelEvent);
     }
     break;
-    case NS_CONTENT_COMMAND_EVENT:
+    case eContentCommandEventClass:
     {
       WidgetContentCommandEvent* oldEvent = aEvent->AsContentCommandEvent();
       WidgetContentCommandEvent* cmdEvent =
