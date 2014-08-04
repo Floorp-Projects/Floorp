@@ -159,7 +159,7 @@ describe("loop.conversation", function() {
             sinon.assert.calledOnce(router.loadReactComponent);
             sinon.assert.calledWith(router.loadReactComponent,
               sinon.match(function(value) {
-                return TestUtils.isComponentOfType(value,
+                return TestUtils.isDescriptorOfType(value,
                   loop.conversation.IncomingCallView);
               }));
         });
@@ -207,7 +207,7 @@ describe("loop.conversation", function() {
           sinon.assert.calledOnce(router.loadReactComponent);
           sinon.assert.calledWith(router.loadReactComponent,
             sinon.match(function(value) {
-              return TestUtils.isComponentOfType(value,
+              return TestUtils.isDescriptorOfType(value,
                 loop.shared.views.ConversationView);
             }));
         });
@@ -273,7 +273,7 @@ describe("loop.conversation", function() {
           sinon.assert.calledOnce(router.loadReactComponent);
           sinon.assert.calledWith(router.loadReactComponent,
             sinon.match(function(value) {
-              return TestUtils.isComponentOfType(value,
+              return TestUtils.isDescriptorOfType(value,
                 loop.shared.views.FeedbackView);
             }));
         });
