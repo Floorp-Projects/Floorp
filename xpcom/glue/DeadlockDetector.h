@@ -207,75 +207,6 @@ private:
     const T* mResource;
   };
 
-  // Hash table "interface" the rest of the code should use
-
-  void PutEntry(T* aKey)
-  {
-    mOrdering.Put(aKey, new OrderingEntry(aKey));
-  }
-
-  // XXX need these helper methods because OrderingEntry doesn't have
-  // XXX access to underlying PLHashEntry
-
-  /**
-   * Add the order |aFirst <_o aSecond|.
-   *
-   * WARNING: this does not check whether it's sane to add this
-   * order.  In the "best" bad case, when this order already exists,
-   * adding it anyway may unnecessarily result in O(n^2) space.  In
-   * the "worst" bad case, adding it anyway will cause
-   * |InTransitiveClosure()| to diverge.
-   */
-  void AddOrder(OrderingEntry* aLT, OrderingEntry* aGT)
-  {
-    aLT->mOrderedLT
-      .InsertElementSorted(aGT);
-  }
-
-  /**
-   * Return true iff the order |aFirst < aSecond| has been
-   * *explicitly* added.
-   *
-   * Does not consider transitivity.
-   */
-  bool IsOrdered(const OrderingEntry* aFirst, const OrderingEntry* aSecond)
-  const
-  {
-    return aFirst->mOrderedLT.BinaryIndexOf(aSecond) != NoIndex;
-  }
-
-  /**
-   * Return a pointer to the array of all elements "that" for
-   * which the order |this < that| has been explicitly added.
-   *
-   * NOTE: this does *not* consider transitive orderings.
-   */
-  OrderingEntry* const* GetOrders(const OrderingEntry* aEntry) const
-  {
-    return
-      aEntry->mOrderedLT.Elements();
-  }
-
-  /**
-   * Return the number of elements "that" for which the order
-   * |this < that| has been explicitly added.
-   *
-   * NOTE: this does *not* consider transitive orderings.
-   */
-  size_type NumOrders(const OrderingEntry* aEntry) const
-  {
-    return
-      aEntry->mOrderedLT.Length();
-  }
-
-  /** Make a ResourceAcquisition out of |aEntry|. */
-  ResourceAcquisition MakeResourceAcquisition(const OrderingEntry* aEntry) const
-  {
-    return ResourceAcquisition(
-      aEntry->mResource,
-      aEntry->mFirstSeen);
-  }
-
   // Throwaway RAII lock to make the following code safer.
   struct PRAutoLock
   {
@@ -326,7 +257,7 @@ public:
   void Add(T* aResource)
   {
     PRAutoLock _(mLock);
-    PutEntry(aResource);
+    mOrdering.Put(aResource, new OrderingEntry(aResource));
   }
 
   // Nb: implementing a Remove() method makes the detector "more
@@ -389,7 +320,8 @@ public:
       if (!cycle) {
         NS_RUNTIMEABORT("can't allocate dep. cycle array");
       }
-      cycle->AppendElement(MakeResourceAcquisition(current));
+      cycle->AppendElement(ResourceAcquisition(current->mResource,
+                                               current->mFirstSeen));
       cycle->AppendElement(ResourceAcquisition(aProposed,
                                                aCallContext));
       return cycle;
@@ -413,7 +345,7 @@ public:
     // |aLast|, |aProposed| are unordered according to our
     // poset.  this is fine, but we now need to add this
     // ordering constraint.
-    AddOrder(current, proposed);
+    current->mOrderedLT.InsertElementSorted(proposed);
     return 0;
   }
 
@@ -426,13 +358,16 @@ public:
   bool InTransitiveClosure(const OrderingEntry* aStart,
                            const OrderingEntry* aTarget) const
   {
-    if (IsOrdered(aStart, aTarget)) {
+    // NB: Using a static comparator rather than default constructing one shows
+    //     a 9% improvement in scalability tests on some systems.
+    static nsDefaultComparator<const OrderingEntry*, const OrderingEntry*> comp;
+    if (aStart->mOrderedLT.BinaryIndexOf(aTarget, comp) != NoIndex) {
       return true;
     }
 
     index_type i = 0;
-    size_type len = NumOrders(aStart);
-    for (const OrderingEntry* const* it = GetOrders(aStart); i < len; ++i, ++it) {
+    size_type len = aStart->mOrderedLT.Length();
+    for (const OrderingEntry* const* it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
       if (InTransitiveClosure(*it, aTarget)) {
         return true;
       }
@@ -463,7 +398,8 @@ public:
     if (!chain) {
       NS_RUNTIMEABORT("can't allocate dep. cycle array");
     }
-    chain->AppendElement(MakeResourceAcquisition(aStart));
+    chain->AppendElement(ResourceAcquisition(aStart->mResource,
+                                             aStart->mFirstSeen));
 
     NS_ASSERTION(GetDeductionChain_Helper(aStart, aTarget, chain),
                  "GetDeductionChain called when there's no deadlock");
@@ -476,15 +412,17 @@ public:
                                 const OrderingEntry* aTarget,
                                 ResourceAcquisitionArray* aChain)
   {
-    if (IsOrdered(aStart, aTarget)) {
-      aChain->AppendElement(MakeResourceAcquisition(aTarget));
+    if (aStart->mOrderedLT.BinaryIndexOf(aTarget) != NoIndex) {
+      aChain->AppendElement(ResourceAcquisition(aTarget->mResource,
+                                                aTarget->mFirstSeen));
       return true;
     }
 
     index_type i = 0;
-    size_type len = NumOrders(aStart);
-    for (const OrderingEntry* const* it = GetOrders(aStart); i < len; ++i, ++it) {
-      aChain->AppendElement(MakeResourceAcquisition(*it));
+    size_type len = aStart->mOrderedLT.Length();
+    for (const OrderingEntry* const* it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
+      aChain->AppendElement(ResourceAcquisition((*it)->mResource,
+                                                (*it)->mFirstSeen));
       if (GetDeductionChain_Helper(*it, aTarget, aChain)) {
         return true;
       }
