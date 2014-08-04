@@ -741,7 +741,7 @@ NON_IDL_EVENT(SVGScroll,
 NON_IDL_EVENT(SVGZoom,
               NS_SVG_ZOOM,
               EventNameType_None,
-              NS_SVGZOOM_EVENT)
+              eSVGZoomEventClass)
 
 // Only map the ID to the real event name when ID_TO_EVENT is defined.
 #ifndef ID_TO_EVENT
