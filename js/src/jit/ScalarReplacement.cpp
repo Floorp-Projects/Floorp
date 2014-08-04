@@ -51,6 +51,81 @@ ReplaceResumePointOperands(MResumePoint *resumePoint, MDefinition *object, MDefi
     }
 }
 
+template <typename MemoryView>
+class EmulateStateOf
+{
+  private:
+    typedef typename MemoryView::BlockState BlockState;
+
+    MIRGenerator *mir_;
+    MIRGraph &graph_;
+
+    // Block state at the entrance of all basic blocks.
+    Vector<BlockState *, 8, SystemAllocPolicy> states_;
+
+  public:
+    EmulateStateOf(MIRGenerator *mir, MIRGraph &graph)
+      : mir_(mir),
+        graph_(graph)
+    {
+    }
+
+    bool run(MemoryView &view);
+};
+
+template <typename MemoryView>
+bool
+EmulateStateOf<MemoryView>::run(MemoryView &view)
+{
+    // Initialize the current block state of each block to an unknown state.
+    if (!states_.appendN(nullptr, graph_.numBlocks()))
+        return false;
+
+    // Initialize the first block which needs to be traversed in RPO.
+    MBasicBlock *startBlock = view.startingBlock();
+    if (!view.initStartingState(&states_[startBlock->id()]))
+        return false;
+
+    // Iterate over each basic block which has a valid entry state, and merge
+    // the state in the successor blocks.
+    for (ReversePostorderIterator block = graph_.rpoBegin(startBlock); block != graph_.rpoEnd(); block++) {
+        if (mir_->shouldCancel(MemoryView::phaseName))
+            return false;
+
+        // Get the block state as the result of the merge of all predecessors
+        // which have already been visited in RPO.  This means that backedges
+        // are not yet merged into the loop.
+        BlockState *state = states_[block->id()];
+        if (!state)
+            continue;
+        view.setEntryBlockState(state);
+
+        // Iterates over resume points, phi and instructions.
+        for (MNodeIterator iter(*block); iter; ) {
+            // Increment the iterator before visiting the instruction, as the
+            // visit function might discard itself from the basic block.
+            MNode *ins = *iter++;
+            if (ins->isDefinition()) {
+                if (!ins->toDefinition()->accept(&view))
+                    return false;
+            } else if (!view.visitResumePoint(ins->toResumePoint())) {
+                return false;
+            }
+        }
+
+        // For each successor, merge the current state into the state of the
+        // successors.
+        for (size_t s = 0; s < block->numSuccessors(); s++) {
+            MBasicBlock *succ = block->getSuccessor(s);
+            if (!view.mergeIntoSuccessorState(*block, succ, &states_[succ->id()]))
+                return false;
+        }
+    }
+
+    states_.clear();
+    return true;
+}
+
 // Returns False if the object is not escaped and if it is optimizable by
 // ScalarReplacementOfObject.
 //
@@ -116,231 +191,264 @@ IsObjectEscaped(MInstruction *ins)
     return false;
 }
 
-struct ObjectTrait {
+class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
+{
+  public:
     typedef MObjectState BlockState;
-    typedef Vector<BlockState *, 8, SystemAllocPolicy> GraphState;
+    static const char *phaseName;
+
+  private:
+    TempAllocator &alloc_;
+    MConstant *undefinedVal_;
+    MInstruction *obj_;
+    MBasicBlock *startBlock_;
+    BlockState *state_;
+
+  public:
+    ObjectMemoryView(TempAllocator &alloc, MInstruction *obj);
+
+    MBasicBlock *startingBlock();
+    bool initStartingState(BlockState **pState);
+
+    void setEntryBlockState(BlockState *state);
+    bool mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ, BlockState **pSuccState);
+
+#ifdef DEBUG
+    void assertSuccess();
+#else
+    void assertSuccess() {}
+#endif
+
+  public:
+    bool visitResumePoint(MResumePoint *rp);
+    bool visitStoreFixedSlot(MStoreFixedSlot *ins);
+    bool visitLoadFixedSlot(MLoadFixedSlot *ins);
+    bool visitStoreSlot(MStoreSlot *ins);
+    bool visitLoadSlot(MLoadSlot *ins);
+    bool visitGuardShape(MGuardShape *ins);
 };
 
-// This function replaces every MStoreFixedSlot / MStoreSlot by an MObjectState
-// which emulates the content of the object. Every MLoadFixedSlot and MLoadSlot
-// is replaced by the corresponding value.
-//
-// In order to restore the value of the object correctly in case of bailouts, we
-// replace all references of the allocation by the MObjectState definitions.
-static bool
-ScalarReplacementOfObject(MIRGenerator *mir, MIRGraph &graph,
-                          ObjectTrait::GraphState &states,
-                          MInstruction *obj)
+const char *ObjectMemoryView::phaseName = "Scalar Replacement of Object";
+
+ObjectMemoryView::ObjectMemoryView(TempAllocator &alloc, MInstruction *obj)
+  : alloc_(alloc),
+    obj_(obj),
+    startBlock_(obj->block())
 {
-    typedef ObjectTrait::BlockState BlockState;
+}
 
-    // For each basic block, we record the last/first state of the object in
-    // each of the basic blocks.
-    if (!states.appendN(nullptr, graph.numBlocks()))
-        return false;
+MBasicBlock *
+ObjectMemoryView::startingBlock()
+{
+    return startBlock_;
+}
 
+bool
+ObjectMemoryView::initStartingState(BlockState **pState)
+{
     // Uninitialized slots have an "undefined" value.
-    MBasicBlock *objBlock = obj->block();
-    MConstant *undefinedVal = MConstant::New(graph.alloc(), UndefinedValue());
-    objBlock->insertBefore(obj, undefinedVal);
-    states[objBlock->id()] = BlockState::New(graph.alloc(), obj, undefinedVal);
+    undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
+    startBlock_->insertBefore(obj_, undefinedVal_);
 
-    // Iterate over each basic block and save the object's layout.
-    for (ReversePostorderIterator block = graph.rpoBegin(obj->block()); block != graph.rpoEnd(); block++) {
-        if (mir->shouldCancel("Scalar Replacement of Object"))
-            return false;
+    // Create a new block state and insert at it at the location of the new object.
+    BlockState *state = BlockState::New(alloc_, obj_, undefinedVal_);
+    startBlock_->insertAfter(obj_, state);
 
-        BlockState *state = states[block->id()];
-        if (!state) {
-            MOZ_ASSERT(!objBlock->dominates(*block));
-            continue;
+    *pState = state;
+    return true;
+}
+
+void
+ObjectMemoryView::setEntryBlockState(BlockState *state)
+{
+    state_ = state;
+}
+
+bool
+ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
+                                          BlockState **pSuccState)
+{
+    BlockState *succState = *pSuccState;
+
+    // When a block has no state yet, create an empty one for the
+    // successor.
+    if (!succState) {
+        // If the successor is not dominated then the object cannot flow
+        // in this basic block without a Phi.  We know that no Phi exist
+        // in non-dominated successors as the conservative escaped
+        // analysis fails otherwise.  Such condition can succeed if the
+        // successor is a join at the end of a if-block and the object
+        // only exists within the branch.
+        if (!startBlock_->dominates(succ))
+            return true;
+
+        // If there is only one predecessor, carry over the last state of the
+        // block to the successor.  As the block state is immutable, if the
+        // current block has multiple successors, they will share the same entry
+        // state.
+        if (succ->numPredecessors() <= 1) {
+            *pSuccState = state_;
+            return true;
         }
 
-        // Insert the state either at the location of the new object, or after
-        // all the phi nodes if the block has multiple predecessors.
-        if (*block == objBlock)
-            objBlock->insertAfter(obj, state);
-        else if (block->numPredecessors() > 1)
-            block->insertBefore(*block->begin(), state);
-        else
-            MOZ_ASSERT(state->block()->dominates(*block));
+        // If we have multiple predecessors, then we allocate one Phi node for
+        // each predecessor, and create a new block state which only has phi
+        // nodes.  These would later be removed by the removal of redundant phi
+        // nodes.
+        succState = BlockState::Copy(alloc_, state_);
+        size_t numPreds = succ->numPredecessors();
+        for (size_t slot = 0; slot < state_->numSlots(); slot++) {
+            MPhi *phi = MPhi::New(alloc_);
+            if (!phi->reserveLength(numPreds))
+                return false;
 
-        // Replace the local variable references by references to the object state.
-        ReplaceResumePointOperands(block->entryResumePoint(), obj, state);
+            // Fill the input of the successors Phi with undefined
+            // values, and each block later fills the Phi inputs.
+            for (size_t p = 0; p < numPreds; p++)
+                phi->addInput(undefinedVal_);
 
-        for (MDefinitionIterator ins(*block); ins; ) {
-            switch (ins->op()) {
-              case MDefinition::Op_ObjectState: {
-                ins++;
-                continue;
-              }
-
-              case MDefinition::Op_LoadFixedSlot: {
-                MLoadFixedSlot *def = ins->toLoadFixedSlot();
-
-                // Skip loads made on other objects.
-                if (def->object() != obj)
-                    break;
-
-                // Replace load by the slot value.
-                ins->replaceAllUsesWith(state->getFixedSlot(def->slot()));
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                continue;
-              }
-
-              case MDefinition::Op_StoreFixedSlot: {
-                MStoreFixedSlot *def = ins->toStoreFixedSlot();
-
-                // Skip stores made on other objects.
-                if (def->object() != obj)
-                    break;
-
-                // Clone the state and update the slot value.
-                state = BlockState::Copy(graph.alloc(), state);
-                state->setFixedSlot(def->slot(), def->value());
-                block->insertBefore(ins->toInstruction(), state);
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                continue;
-              }
-
-              case MDefinition::Op_GuardShape: {
-                MGuardShape *def = ins->toGuardShape();
-
-                // Skip loads made on other objects.
-                if (def->obj() != obj)
-                    break;
-
-                // Replace the shape guard by its object.
-                ins->replaceAllUsesWith(obj);
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                continue;
-              }
-
-              case MDefinition::Op_LoadSlot: {
-                MLoadSlot *def = ins->toLoadSlot();
-
-                // Skip loads made on other objects.
-                MSlots *slots = def->slots()->toSlots();
-                if (slots->object() != obj) {
-                    // Guard objects are replaced when they are visited.
-                    MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj);
-                    break;
-                }
-
-                // Replace load by the slot value.
-                ins->replaceAllUsesWith(state->getDynamicSlot(def->slot()));
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                if (!slots->hasLiveDefUses())
-                    slots->block()->discard(slots);
-                continue;
-              }
-
-              case MDefinition::Op_StoreSlot: {
-                MStoreSlot *def = ins->toStoreSlot();
-
-                // Skip stores made on other objects.
-                MSlots *slots = def->slots()->toSlots();
-                if (slots->object() != obj) {
-                    // Guard objects are replaced when they are visited.
-                    MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj);
-                    break;
-                }
-
-                // Clone the state and update the slot value.
-                state = BlockState::Copy(graph.alloc(), state);
-                state->setDynamicSlot(def->slot(), def->value());
-                block->insertBefore(ins->toInstruction(), state);
-
-                // Remove original instruction.
-                ins = block->discardDefAt(ins);
-                if (!slots->hasLiveDefUses())
-                    slots->block()->discard(slots);
-                continue;
-              }
-
-              default:
-                break;
-            }
-
-            // Replace the local variable references by references to the object state.
-            if (ins->isInstruction())
-                ReplaceResumePointOperands(ins->toInstruction()->resumePoint(), obj, state);
-
-            ins++;
+            // Add Phi in the list of Phis of the basic block.
+            succ->addPhi(phi);
+            succState->setSlot(slot, phi);
         }
 
-        // For each successor, copy/merge the current state as being the initial
-        // state of the successor block.
-        for (size_t s = 0; s < block->numSuccessors(); s++) {
-            MBasicBlock *succ = block->getSuccessor(s);
-            BlockState *succState = states[succ->id()];
+        // Insert the newly created block state instruction at the beginning
+        // of the successor block, after all the phi nodes.  Note that it
+        // would be captured by the entry resume point of the successor
+        // block.
+        succ->insertBefore(*succ->begin(), succState);
+        *pSuccState = succState;
+    }
 
-            // When a block has no state yet, create an empty one for the
-            // successor.
-            if (!succState) {
-                // If the successor is not dominated then the object cannot flow
-                // in this basic block without a Phi.  We know that no Phi exist
-                // in non-dominated successors as the conservative escaped
-                // analysis fails otherwise.  Such condition can succeed if the
-                // successor is a join at the end of a if-block and the object
-                // only exists within the branch.
-                if (!objBlock->dominates(succ))
-                    continue;
+    if (succ->numPredecessors() > 1) {
+        size_t currIndex = succ->indexForPredecessor(curr);
+        MOZ_ASSERT(succ->getPredecessor(currIndex) == curr);
 
-                if (succ->numPredecessors() > 1) {
-                    succState = states[succ->id()] = BlockState::Copy(graph.alloc(), state);
-                    size_t numPreds = succ->numPredecessors();
-                    for (size_t slot = 0; slot < state->numSlots(); slot++) {
-                        MPhi *phi = MPhi::New(graph.alloc());
-                        if (!phi->reserveLength(numPreds))
-                            return false;
-
-                        // Fill the input of the successors Phi with undefined
-                        // values, and each block later fills the Phi inputs.
-                        for (size_t p = 0; p < numPreds; p++)
-                            phi->addInput(undefinedVal);
-
-                        // Add Phi in the list of Phis of the basic block.
-                        succ->addPhi(phi);
-                        succState->setSlot(slot, phi);
-                    }
-                } else {
-                    succState = states[succ->id()] = state;
-                }
-            }
-
-            if (succ->numPredecessors() > 1) {
-                // The current block might appear multiple times among the
-                // predecessors. As we need to replace all the inputs, we need
-                // to check all predecessors against the current block to
-                // replace the Phi node operands.
-                size_t numPreds = succ->numPredecessors();
-                for (size_t p = 0; p < numPreds; p++) {
-                    if (succ->getPredecessor(p) != *block)
-                        continue;
-
-                    // Copy the current slot state to the predecessor index of
-                    // each Phi of the same slot.
-                    for (size_t slot = 0; slot < state->numSlots(); slot++) {
-                        MPhi *phi = succState->getSlot(slot)->toPhi();
-                        phi->replaceOperand(p, state->getSlot(slot));
-                    }
-                }
-            }
+        // Copy the current slot states to the index of current block in all the
+        // Phi created during the first visit of the successor.
+        for (size_t slot = 0; slot < state_->numSlots(); slot++) {
+            MPhi *phi = succState->getSlot(slot)->toPhi();
+            phi->replaceOperand(currIndex, state_->getSlot(slot));
         }
     }
 
-    MOZ_ASSERT(!obj->hasLiveDefUses());
-    obj->setRecoveredOnBailout();
-    states.clear();
+    return true;
+}
+
+#ifdef DEBUG
+void
+ObjectMemoryView::assertSuccess()
+{
+    for (MUseIterator i(obj_->usesBegin()); i != obj_->usesEnd(); i++) {
+        MNode *ins = (*i)->consumer();
+
+        // Resume points have been replaced by the object state.
+        MOZ_ASSERT(!ins->isResumePoint());
+
+        MDefinition *def = ins->toDefinition();
+
+        if (def->isRecoveredOnBailout())
+            continue;
+
+        // The only remaining uses would be removed by DCE, which will also
+        // recover the object on bailouts.
+        MOZ_ASSERT(def->isSlots());
+        MOZ_ASSERT(!def->hasOneUse());
+    }
+}
+#endif
+
+bool
+ObjectMemoryView::visitResumePoint(MResumePoint *rp)
+{
+    ReplaceResumePointOperands(rp, obj_, state_);
+    return true;
+}
+
+bool
+ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot *ins)
+{
+    // Skip stores made on other objects.
+    if (ins->object() != obj_)
+        return true;
+
+    // Clone the state and update the slot value.
+    state_ = BlockState::Copy(alloc_, state_);
+    state_->setFixedSlot(ins->slot(), ins->value());
+    ins->block()->insertBefore(ins->toInstruction(), state_);
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
+    return true;
+}
+
+bool
+ObjectMemoryView::visitLoadFixedSlot(MLoadFixedSlot *ins)
+{
+    // Skip loads made on other objects.
+    if (ins->object() != obj_)
+        return true;
+
+    // Replace load by the slot value.
+    ins->replaceAllUsesWith(state_->getFixedSlot(ins->slot()));
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
+    return true;
+}
+
+bool
+ObjectMemoryView::visitStoreSlot(MStoreSlot *ins)
+{
+    // Skip stores made on other objects.
+    MSlots *slots = ins->slots()->toSlots();
+    if (slots->object() != obj_) {
+        // Guard objects are replaced when they are visited.
+        MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj_);
+        return true;
+    }
+
+    // Clone the state and update the slot value.
+    state_ = BlockState::Copy(alloc_, state_);
+    state_->setDynamicSlot(ins->slot(), ins->value());
+    ins->block()->insertBefore(ins->toInstruction(), state_);
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
+    return true;
+}
+
+bool
+ObjectMemoryView::visitLoadSlot(MLoadSlot *ins)
+{
+    // Skip loads made on other objects.
+    MSlots *slots = ins->slots()->toSlots();
+    if (slots->object() != obj_) {
+        // Guard objects are replaced when they are visited.
+        MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj_);
+        return true;
+    }
+
+    // Replace load by the slot value.
+    ins->replaceAllUsesWith(state_->getDynamicSlot(ins->slot()));
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
+    return true;
+}
+
+bool
+ObjectMemoryView::visitGuardShape(MGuardShape *ins)
+{
+    // Skip loads made on other objects.
+    if (ins->obj() != obj_)
+        return true;
+
+    // Replace the shape guard by its object.
+    ins->replaceAllUsesWith(obj_);
+
+    // Remove original instruction.
+    ins->block()->discard(ins);
     return true;
 }
 
@@ -362,7 +470,6 @@ IndexOf(MDefinition *ins, int32_t *res)
     *res = index.toInt32();
     return true;
 }
-
 
 // Returns False if the array is not escaped and if it is optimizable by
 // ScalarReplacementOfArray.
@@ -740,7 +847,7 @@ ScalarReplacementOfArray(MIRGenerator *mir, MIRGraph &graph,
 bool
 ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
 {
-    ObjectTrait::GraphState objectStates;
+    EmulateStateOf<ObjectMemoryView> replaceObject(mir, graph);
     ArrayTrait::GraphState arrayStates;
 
     for (ReversePostorderIterator block = graph.rpoBegin(); block != graph.rpoEnd(); block++) {
@@ -749,8 +856,10 @@ ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
 
         for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
             if (ins->isNewObject() && !IsObjectEscaped(*ins)) {
-                if (!ScalarReplacementOfObject(mir, graph, objectStates, *ins))
+                ObjectMemoryView view(graph.alloc(), *ins);
+                if (!replaceObject.run(view))
                     return false;
+                view.assertSuccess();
                 continue;
             }
 
