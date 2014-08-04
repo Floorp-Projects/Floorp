@@ -3609,7 +3609,7 @@ nsContentUtils::GetEventCategory(const nsAString& aName)
   if (sStringEventTable->Get(aName, &mapping))
     return mapping.mStructType;
 
-  return NS_EVENT;
+  return eBasicEventClass;
 }
 
 nsIAtom*
@@ -3639,7 +3639,7 @@ nsContentUtils::GetEventIdAndAtom(const nsAString& aName,
   mapping.mAtom = atom;
   mapping.mId = NS_USER_DEFINED_EVENT;
   mapping.mType = EventNameType_None;
-  mapping.mStructType = NS_EVENT_NULL;
+  mapping.mStructType = eBasicEventClass;
   sStringEventTable->Put(aName, mapping);
   return mapping.mAtom;
 }

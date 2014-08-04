@@ -465,7 +465,7 @@ public:
 
   virtual void HandleEvent(EventChainPostVisitor& aVisitor) MOZ_OVERRIDE
   {
-    if (aVisitor.mPresContext && aVisitor.mEvent->mClass != NS_EVENT) {
+    if (aVisitor.mPresContext && aVisitor.mEvent->mClass != eBasicEventClass) {
       if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN ||
           aVisitor.mEvent->message == NS_MOUSE_BUTTON_UP) {
         // Mouse-up and mouse-down events call nsFrame::HandlePress/Release

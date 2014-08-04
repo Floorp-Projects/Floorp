@@ -1034,7 +1034,7 @@ public:
 
   /**
    * Return the category for the event with the given name. The name is the
-   * event name *without* the 'on' prefix. Returns NS_EVENT if the event
+   * event name *without* the 'on' prefix. Returns eBasicEventClass if the event
    * is not known to be in any particular category.
    *
    * @param aName the event name to look up
