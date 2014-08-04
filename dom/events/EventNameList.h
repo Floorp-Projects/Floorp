@@ -883,7 +883,7 @@ NON_IDL_EVENT(MozEdgeUICompleted,
 NON_IDL_EVENT(transitionend,
               NS_TRANSITION_END,
               EventNameType_None,
-              NS_TRANSITION_EVENT)
+              eTransitionEventClass)
 NON_IDL_EVENT(animationstart,
               NS_ANIMATION_START,
               EventNameType_None,
