@@ -92,6 +92,11 @@
 // Define an unknown mechanism type
 #define UNKNOWN_CK_MECHANISM        CKM_VENDOR_DEFINED+1
 
+// python security/pkix/tools/DottedOIDToCode.py id-ecDH 1.3.132.112
+static const uint8_t id_ecDH[] = { 0x2b, 0x81, 0x04, 0x70 };
+const SECItem SEC_OID_DATA_EC_DH = { siBuffer, (unsigned char*)id_ecDH,
+                                     PR_ARRAY_SIZE(id_ecDH) };
+
 namespace mozilla {
 namespace dom {
 

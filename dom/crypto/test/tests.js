@@ -2191,3 +2191,65 @@ TestArray.addTest(
       .then(complete(that), error(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "SPKI import/export of public ECDH keys (P-256)",
+  function () {
+    var that = this;
+    var alg = { name: "ECDH" };
+    var keys = ["spki", "spki_id_ecpk"];
+
+    function doImport(key) {
+      return crypto.subtle.importKey("spki", tv.ecdh_p256[key], alg, true, ["deriveBits"]);
+    }
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("spki", x);
+    }
+
+    function nextKey() {
+      var key = keys.shift();
+      var imported = doImport(key);
+      var derived = imported.then(doExport);
+
+      return derived.then(function (x) {
+        if (!util.memcmp(x, tv.ecdh_p256.spki)) {
+          throw "exported key is invalid";
+        }
+
+        if (keys.length) {
+          return nextKey();
+        }
+      });
+    }
+
+    nextKey().then(complete(that), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "SPKI/JWK import ECDH keys (P-256) and derive a known secret",
+  function () {
+    var that = this;
+    var alg = { name: "ECDH" };
+
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x; }
+    function setPriv(x) { privKey = x; }
+
+    function doDerive() {
+      var alg = { name: "ECDH", public: pubKey };
+      return crypto.subtle.deriveBits(alg, privKey, tv.ecdh_p256.secret.byteLength * 8);
+    }
+
+    Promise.all([
+      crypto.subtle.importKey("spki", tv.ecdh_p256.spki, alg, false, ["deriveBits"])
+        .then(setPub),
+      crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_priv, alg, false, ["deriveBits"])
+        .then(setPriv)
+    ]).then(doDerive)
+      .then(memcmp_complete(that, tv.ecdh_p256.secret), error(that));
+  }
+);
