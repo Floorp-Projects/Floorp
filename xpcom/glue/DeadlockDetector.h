@@ -269,7 +269,12 @@ public:
   SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t n = aMallocSizeOf(this);
-    n += mOrdering.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOf);
+
+    {
+      PRAutoLock _(mLock);
+      n += mOrdering.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOf);
+    }
+
     return n;
   }
 
