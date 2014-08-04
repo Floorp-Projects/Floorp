@@ -453,13 +453,7 @@ bool TransportLayerDtls::Setup() {
     return false;
   pr_fd->secret = reinterpret_cast<PRFilePrivate *>(nspr_io_adapter_.get());
 
-  ScopedPRFileDesc ssl_fd;
-  if (mode_ == DGRAM) {
-    ssl_fd = DTLS_ImportFD(nullptr, pr_fd);
-  } else {
-    ssl_fd = SSL_ImportFD(nullptr, pr_fd);
-  }
-
+  ScopedPRFileDesc ssl_fd(DTLS_ImportFD(nullptr, pr_fd));
   MOZ_ASSERT(ssl_fd != nullptr);  // This should never happen
   if (!ssl_fd) {
     return false;
@@ -777,28 +771,22 @@ void TransportLayerDtls::Handshake() {
     int32_t err = PR_GetError();
     switch(err) {
       case SSL_ERROR_RX_MALFORMED_HANDSHAKE:
-        if (mode_ != DGRAM) {
-          MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Malformed TLS message");
-          TL_SET_STATE(TS_ERROR);
-        } else {
-          MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Malformed DTLS message; ignoring");
-        }
-        // Fall through
+        MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Malformed DTLS message; ignoring");
+        // If this were TLS (and not DTLS), this would be fatal, but
+        // here we're required to ignore bad messages, so fall through
       case PR_WOULD_BLOCK_ERROR:
         MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "Handshake would have blocked");
-        if (mode_ == DGRAM) {
-          PRIntervalTime timeout;
-          rv = DTLS_GetHandshakeTimeout(ssl_fd_, &timeout);
-          if (rv == SECSuccess) {
-            uint32_t timeout_ms = PR_IntervalToMilliseconds(timeout);
+        PRIntervalTime timeout;
+        rv = DTLS_GetHandshakeTimeout(ssl_fd_, &timeout);
+        if (rv == SECSuccess) {
+          uint32_t timeout_ms = PR_IntervalToMilliseconds(timeout);
 
-            MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Setting DTLS timeout to " <<
-                 timeout_ms);
-            timer_->SetTarget(target_);
-            timer_->InitWithFuncCallback(TimerCallback,
-                                         this, timeout_ms,
-                                         nsITimer::TYPE_ONE_SHOT);
-          }
+          MOZ_MTLOG(ML_DEBUG,
+                    LAYER_INFO << "Setting DTLS timeout to " << timeout_ms);
+          timer_->SetTarget(target_);
+          timer_->InitWithFuncCallback(TimerCallback,
+                                       this, timeout_ms,
+                                       nsITimer::TYPE_ONE_SHOT);
         }
         break;
       default:
