@@ -48,7 +48,7 @@ public:
          aEvent->mClass != eWheelEventClass &&
          aEvent->mClass != eDragEventClass &&
          aEvent->mClass != ePointerEventClass &&
-         aEvent->mClass != NS_SIMPLE_GESTURE_EVENT)) {
+         aEvent->mClass != eSimpleGestureEventClass)) {
       return nsIntPoint(0, 0);
     }
 
@@ -75,7 +75,7 @@ public:
          aEvent->mClass != eWheelEventClass &&
          aEvent->mClass != eDragEventClass &&
          aEvent->mClass != ePointerEventClass &&
-         aEvent->mClass != NS_SIMPLE_GESTURE_EVENT) ||
+         aEvent->mClass != eSimpleGestureEventClass) ||
         !aPresContext ||
         !aEvent->AsGUIEvent()->widget) {
       return aDefaultClientPoint

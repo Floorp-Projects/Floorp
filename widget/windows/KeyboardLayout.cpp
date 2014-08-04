@@ -285,7 +285,7 @@ ModifierKeyState::InitInputEvent(WidgetInputEvent& aInputEvent) const
     case eMouseScrollEventClass:
     case eWheelEventClass:
     case eDragEventClass:
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       InitMouseEvent(aInputEvent);
       break;
     default:
@@ -299,7 +299,7 @@ ModifierKeyState::InitMouseEvent(WidgetInputEvent& aMouseEvent) const
   NS_ASSERTION(aMouseEvent.mClass == eMouseEventClass ||
                aMouseEvent.mClass == eWheelEventClass ||
                aMouseEvent.mClass == eDragEventClass ||
-               aMouseEvent.mClass == NS_SIMPLE_GESTURE_EVENT,
+               aMouseEvent.mClass == eSimpleGestureEventClass,
                "called with non-mouse event");
 
   if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {

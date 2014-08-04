@@ -735,7 +735,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case NS_COMMAND_EVENT:
       return NS_NewDOMCommandEvent(aDOMEvent, aOwner, aPresContext,
                                    aEvent->AsCommandEvent());
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       return NS_NewDOMSimpleGestureEvent(aDOMEvent, aOwner, aPresContext,
                                          aEvent->AsSimpleGestureEvent());
     case ePointerEventClass:
