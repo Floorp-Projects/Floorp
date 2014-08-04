@@ -726,7 +726,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eClipboardEventClass:
       return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
                                      aEvent->AsClipboardEvent());
-    case NS_SVGZOOM_EVENT:
+    case eSVGZoomEventClass:
       return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext,
                                    aEvent->AsSVGZoomEvent());
     case NS_SMIL_TIME_EVENT:
