@@ -2,8 +2,6 @@
  * Tests tagged template string functionality.
  */
 
-function testCaseFn() {
-/*
 function check(actual, expected) {
     assertEq(actual.length, expected.length);
     for (var i = 0; i < expected.length; i++)
@@ -34,12 +32,3 @@ if (helperThreadCount() !== 0) {
     assertEq(Object.isFrozen(a), true);
     assertEq(Object.isFrozen(a.raw), true);
 }
-*/
-/*End func*/}
-
-var str = testCaseFn.toString().replace("/*","").replace("*/","");
-str = str.replace("function testCaseFn() {\n", "").replace("/*End func*/}","");
-var hasTemplateStrings = false;
-try { eval("``"); hasTemplateStrings = true; } catch (exc) { }
-if (hasTemplateStrings)
-    eval(str);

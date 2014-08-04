@@ -59,7 +59,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_simple)
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
     IonContext ic(cx, &alloc);
-    JitRuntime *jrt = cx->runtime()->getJitRuntime(cx);
     AutoFlushICache afc("test");
 
     MacroAssembler masm;
@@ -104,7 +103,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen)
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
     IonContext ic(cx, &alloc);
-    JitRuntime *jrt = cx->runtime()->getJitRuntime(cx);
     AutoFlushICache afc("test");
     MacroAssembler masm;
     MoveEmitter mover(masm);
@@ -206,7 +204,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen2)
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
     IonContext ic(cx, &alloc);
-    JitRuntime *jrt = cx->runtime()->getJitRuntime(cx);
     AutoFlushICache afc("test");
     MacroAssembler masm;
     MoveEmitter mover(masm);
@@ -321,7 +318,6 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen3)
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
     IonContext ic(cx, &alloc);
-    JitRuntime *jrt = cx->runtime()->getJitRuntime(cx);
     AutoFlushICache afc("test");
     MacroAssembler masm;
     MoveEmitter mover(masm);

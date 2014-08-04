@@ -83,7 +83,7 @@ public:
   virtual WidgetKeyboardEvent* AsKeyboardEvent() MOZ_OVERRIDE { return this; }
 
   WidgetKeyboardEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
-    : WidgetInputEvent(aIsTrusted, aMessage, aWidget, NS_KEY_EVENT)
+    : WidgetInputEvent(aIsTrusted, aMessage, aWidget, eKeyboardEventClass)
     , keyCode(0)
     , charCode(0)
     , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
@@ -99,7 +99,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_KEY_EVENT,
+    MOZ_ASSERT(mClass == eKeyboardEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetKeyboardEvent* result =
@@ -224,7 +224,7 @@ public:
   virtual WidgetTextEvent* AsTextEvent() MOZ_OVERRIDE { return this; }
 
   WidgetTextEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_TEXT_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eTextEventClass)
     , mSeqno(kLatestSeqno)
     , isChar(false)
   {
@@ -232,7 +232,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_TEXT_EVENT,
+    MOZ_ASSERT(mClass == eTextEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetTextEvent* result = new WidgetTextEvent(false, message, nullptr);
@@ -302,7 +302,7 @@ public:
 
   WidgetCompositionEvent(bool aIsTrusted, uint32_t aMessage,
                          nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_COMPOSITION_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eCompositionEventClass)
     , mSeqno(kLatestSeqno)
   {
     // XXX compositionstart is cancelable in draft of DOM3 Events.
@@ -313,7 +313,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_COMPOSITION_EVENT,
+    MOZ_ASSERT(mClass == eCompositionEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetCompositionEvent* result =
@@ -360,7 +360,7 @@ public:
 
   WidgetQueryContentEvent(bool aIsTrusted, uint32_t aMessage,
                           nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_QUERY_CONTENT_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eQueryContentEventClass)
     , mSucceeded(false)
     , mWasAsync(false)
     , mUseNativeLineBreak(true)
@@ -497,7 +497,7 @@ public:
   }
 
   WidgetSelectionEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_SELECTION_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eSelectionEventClass)
     , mSeqno(kLatestSeqno)
     , mOffset(0)
     , mLength(0)
@@ -551,7 +551,7 @@ public:
 
   InternalEditorInputEvent(bool aIsTrusted, uint32_t aMessage,
                            nsIWidget* aWidget)
-    : InternalUIEvent(aIsTrusted, aMessage, aWidget, NS_EDITOR_INPUT_EVENT)
+    : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass)
     , mIsComposing(false)
   {
     if (!aIsTrusted) {
@@ -566,7 +566,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_EDITOR_INPUT_EVENT,
+    MOZ_ASSERT(mClass == eEditorInputEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalEditorInputEvent* result =

@@ -724,6 +724,16 @@ protected:
   bool mWarnAboutSyncHtml;
   bool mLoadLengthComputable;
   uint64_t mLoadTotal; // 0 if not known.
+  // Amount of script-exposed (i.e. after undoing gzip compresion) data
+  // received.
+  uint64_t mDataAvailable;
+  // Number of HTTP message body bytes received so far. This quantity is
+  // in the same units as Content-Length and mLoadTotal, and hence counts
+  // compressed bytes when the channel has gzip Content-Encoding. If the
+  // channel does not have Content-Encoding, this will be the same as
+  // mDataReceived except between the OnProgress that changes mLoadTransferred
+  // and the corresponding OnDataAvailable (which changes mDataReceived).
+  // Ordering of OnProgress and OnDataAvailable is undefined.
   uint64_t mLoadTransferred;
   nsCOMPtr<nsITimer> mProgressNotifier;
   void HandleProgressTimerCallback();

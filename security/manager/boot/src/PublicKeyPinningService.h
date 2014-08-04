@@ -6,6 +6,7 @@
 #define PublicKeyPinningService_h
 
 #include "cert.h"
+#include "pkix/Time.h"
 
 namespace mozilla {
 namespace psm {
@@ -26,7 +27,7 @@ public:
    */
   static bool ChainHasValidPins(const CERTCertList* certList,
                                 const char* hostname,
-                                const PRTime time,
+                                mozilla::pkix::Time time,
                                 bool enforceTestMode);
 };
 

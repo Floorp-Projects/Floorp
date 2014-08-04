@@ -1,0 +1,41 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test ScalarValueString</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, function() {
+  var testInterfaceJS = new TestInterfaceJS();
+  ok(testInterfaceJS, "got a TestInterfaceJS object");
+  // For expected values, see algorithm definition here:
+  //  http://heycam.github.io/webidl/#dfn-obtain-unicode
+  var testList = [
+    { string:   "foo",
+      expected: "foo" },
+    { string:   "This is U+2070E: \ud841\udf0e",
+      expected: "This is U+2070E: \ud841\udf0e" },
+    { string:   "Missing low surrogate: \ud841",
+      expected: "Missing low surrogate: \ufffd" },
+    { string:   "Missing low surrogate with trailer: \ud841!!",
+      expected: "Missing low surrogate with trailer: \ufffd!!" },
+    { string:   "Missing high surrogate: \udf0e",
+      expected: "Missing high surrogate: \ufffd" },
+    { string:   "Missing high surrogate with trailer: \udf0e!!",
+      expected: "Missing high surrogate with trailer: \ufffd!!" },
+    { string:   "U+2070E after malformed: \udf0e\ud841\udf0e",
+      expected: "U+2070E after malformed: \ufffd\ud841\udf0e" }
+  ];
+  testList.forEach(function(test) {
+    is(testInterfaceJS.convertSVS(test.string), test.expected, "Convert '" + test.string + "'");
+  });
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

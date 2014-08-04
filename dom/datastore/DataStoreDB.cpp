@@ -78,6 +78,7 @@ NS_IMPL_ISUPPORTS(DataStoreDB, nsIDOMEventListener)
 
 DataStoreDB::DataStoreDB(const nsAString& aManifestURL, const nsAString& aName)
   : mState(Inactive)
+  , mCreatedSchema(false)
 {
   mDatabaseName.Assign(aName);
   mDatabaseName.Append('|');
@@ -145,9 +146,11 @@ DataStoreDB::HandleEvent(nsIDOMEvent* aEvent)
 
     rv = DatabaseOpened();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      mCallback->Run(this, false);
+      mCallback->Run(this, DataStoreDBCallback::Error);
     } else {
-      mCallback->Run(this, true);
+      mCallback->Run(this, mCreatedSchema
+                      ? DataStoreDBCallback::CreatedSchema :
+                        DataStoreDBCallback::Success);
     }
 
     mRequest = nullptr;
@@ -155,13 +158,13 @@ DataStoreDB::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   if (type.EqualsASCII("upgradeneeded")) {
-    return UpgradeSchema();
+    return UpgradeSchema(aEvent);
   }
 
   if (type.EqualsASCII("error") || type.EqualsASCII("blocked")) {
     RemoveEventListeners();
     mState = Inactive;
-    mCallback->Run(this, false);
+    mCallback->Run(this, DataStoreDBCallback::Error);
     mRequest = nullptr;
     return NS_OK;
   }
@@ -170,9 +173,22 @@ DataStoreDB::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 nsresult
-DataStoreDB::UpgradeSchema()
+DataStoreDB::UpgradeSchema(nsIDOMEvent* aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // This DB has been just created and we have to inform the callback about
+  // this.
+  mCreatedSchema = true;
+
+#ifdef DEBUG
+  nsCOMPtr<IDBVersionChangeEvent> event = do_QueryInterface(aEvent);
+  MOZ_ASSERT(event);
+
+  Nullable<uint64_t> version = event->GetNewVersion();
+  MOZ_ASSERT(!version.IsNull());
+  MOZ_ASSERT(version.Value() == DATASTOREDB_VERSION);
+#endif
 
   AutoSafeJSContext cx;
 

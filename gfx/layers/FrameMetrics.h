@@ -7,7 +7,6 @@
 #define GFX_FRAMEMETRICS_H
 
 #include <stdint.h>                     // for uint32_t, uint64_t
-#include <string>                       // for std::string
 #include "Units.h"                      // for CSSRect, CSSPixel, etc
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
@@ -92,7 +91,6 @@ public:
     , mZoom(1)
     , mUpdateScrollOffset(false)
     , mScrollGeneration(0)
-    , mContentDescription()
     , mRootCompositionSize(0, 0)
     , mDisplayPortMargins(0, 0, 0, 0)
     , mUseDisplayPortMargins(false)
@@ -103,8 +101,6 @@ public:
 
   bool operator==(const FrameMetrics& aOther) const
   {
-    // mContentDescription is not compared on purpose as it's only used
-    // for debugging.
     return mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
            mRootCompositionSize == aOther.mRootCompositionSize &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
@@ -402,18 +398,6 @@ public:
     return mScrollGeneration;
   }
 
-  std::string GetContentDescription() const
-  {
-    return std::string(mContentDescription);
-  }
-
-  void SetContentDescription(const std::string& aContentDescription)
-  {
-    strncpy(mContentDescription, aContentDescription.c_str(), sizeof(mContentDescription));
-    // forcibly null-terminate in case aContentDescription is too long
-    mContentDescription[sizeof(mContentDescription) - 1] = '\0';
-  }
-
   ViewID GetScrollId() const
   {
     return mScrollId;
@@ -502,10 +486,6 @@ private:
   bool mUpdateScrollOffset;
   // The scroll generation counter used to acknowledge the scroll offset update.
   uint32_t mScrollGeneration;
-
-  // A description of the content element corresponding to this frame.
-  // This is empty unless the apz.printtree pref is turned on.
-  char mContentDescription[20];
 
   // The size of the root scrollable's composition bounds, but in local CSS pixels.
   CSSSize mRootCompositionSize;

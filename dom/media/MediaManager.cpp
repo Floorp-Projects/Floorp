@@ -54,6 +54,13 @@
 #include "MediaPermissionGonk.h"
 #endif
 
+#if defined(XP_MACOSX)
+#include "nsCocoaFeatures.h"
+#endif
+#if defined (XP_WIN)
+#include "mozilla/WindowsVersion.h"
+#endif
+
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaStream::GetCurrentTime.
 #ifdef GetCurrentTime
@@ -1574,7 +1581,15 @@ MediaManager::GetUserMedia(bool aPrivileged,
       }
       /* Deny screensharing if the requesting document is not from a host
        on the whitelist. */
-      if (!aPrivileged && !HostHasPermission(*docURI)) {
+      // Block screen/window sharing on Mac OSX 10.6 and WinXP until proved that they work
+      if (
+#if defined(XP_MACOSX)
+          !nsCocoaFeatures::OnLionOrLater() ||
+#endif
+#if defined (XP_WIN)
+          !IsVistaOrLater() ||
+#endif
+          (!aPrivileged && !HostHasPermission(*docURI))) {
         return runnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
       }
     }

@@ -42,6 +42,8 @@ elif CONFIG['OS_ARCH'] == 'FreeBSD':
 elif CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'nsWifiScannerWin.cpp',
+        'win_wifiScanner.cpp',
+        'win_wlanLibrary.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'SunOS':
     CXXFLAGS += CONFIG['GLIB_CFLAGS']

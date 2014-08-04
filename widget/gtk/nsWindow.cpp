@@ -6211,7 +6211,7 @@ NS_IMETHODIMP
 nsWindow::BeginMoveDrag(WidgetMouseEvent* aEvent)
 {
     NS_ABORT_IF_FALSE(aEvent, "must have event");
-    NS_ABORT_IF_FALSE(aEvent->eventStructType == NS_MOUSE_EVENT,
+    NS_ABORT_IF_FALSE(aEvent->mClass == eMouseEventClass,
                       "event must have correct struct type");
 
     GdkWindow *gdk_window;
@@ -6234,7 +6234,7 @@ nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
 {
     NS_ENSURE_ARG_POINTER(aEvent);
 
-    if (aEvent->eventStructType != NS_MOUSE_EVENT) {
+    if (aEvent->mClass != eMouseEventClass) {
         // you can only begin a resize drag with a mouse event
         return NS_ERROR_INVALID_ARG;
     }

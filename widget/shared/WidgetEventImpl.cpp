@@ -46,25 +46,25 @@ WidgetEvent::As##aName() const \
 bool
 WidgetEvent::IsQueryContentEvent() const
 {
-  return eventStructType == NS_QUERY_CONTENT_EVENT;
+  return mClass == eQueryContentEventClass;
 }
 
 bool
 WidgetEvent::IsSelectionEvent() const
 {
-  return eventStructType == NS_SELECTION_EVENT;
+  return mClass == eSelectionEventClass;
 }
 
 bool
 WidgetEvent::IsContentCommandEvent() const
 {
-  return eventStructType == NS_CONTENT_COMMAND_EVENT;
+  return mClass == eContentCommandEventClass;
 }
 
 bool
 WidgetEvent::IsNativeEventDelivererForPlugin() const
 {
-  return eventStructType == NS_PLUGIN_EVENT;
+  return mClass == ePluginEventClass;
 }
 
 
@@ -215,9 +215,9 @@ WidgetEvent::IsTargetedAtFocusedContent() const
 bool
 WidgetEvent::IsAllowedToDispatchDOMEvent() const
 {
-  switch (eventStructType) {
-    case NS_MOUSE_EVENT:
-    case NS_POINTER_EVENT:
+  switch (mClass) {
+    case eMouseEventClass:
+    case ePointerEventClass:
       // We want synthesized mouse moves to cause mouseover and mouseout
       // DOM events (EventStateManager::PreHandleEvent), but not mousemove
       // DOM events.
@@ -225,7 +225,7 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
       // do not have a reliable refPoint.
       return AsMouseEvent()->reason == WidgetMouseEvent::eReal;
 
-    case NS_WHEEL_EVENT: {
+    case eWheelEventClass: {
       // wheel event whose all delta values are zero by user pref applied, it
       // shouldn't cause a DOM event.
       const WidgetWheelEvent* wheelEvent = AsWheelEvent();
@@ -235,9 +235,9 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
 
     // Following events are handled in EventStateManager, so, we don't need to
     // dispatch DOM event for them into the DOM tree.
-    case NS_QUERY_CONTENT_EVENT:
-    case NS_SELECTION_EVENT:
-    case NS_CONTENT_COMMAND_EVENT:
+    case eQueryContentEventClass:
+    case eSelectionEventClass:
+    case eContentCommandEventClass:
       return false;
 
     default:

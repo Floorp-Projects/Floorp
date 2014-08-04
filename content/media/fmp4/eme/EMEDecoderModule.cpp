@@ -184,7 +184,6 @@ EMEDecoderModule::~EMEDecoderModule()
 nsresult
 EMEDecoderModule::Shutdown()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   if (mPDM) {
     return mPDM->Shutdown();
   }

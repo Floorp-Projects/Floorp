@@ -115,9 +115,8 @@ public:
    * based on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class.
    * HandleInputEvent() should be used internally.
-   * This function returns nsEventStatus_eIgnore for events that are ignored,
-   * and nsEventStatus_eConsumeDoDefault for events that are queued for
-   * processing pending a content response.
+   * See the documentation on APZCTreeManager::ReceiveInputEvent for info on
+   * return values from this function.
    */
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
@@ -543,6 +542,14 @@ private:
    * or just the local APZC if not.
    */
   void CancelAnimationForHandoffChain();
+
+  /**
+   * Given the number of touch points in an input event and touch block they
+   * belong to, check if the event can result in a panning/zooming behavior.
+   * This is primarily used to figure out when to dispatch the pointercancel
+   * event for the pointer events spec.
+   */
+  bool ArePointerEventsConsumable(TouchBlockState* aBlock, uint32_t aTouchPoints);
 
   /**
    * Helper to set the current state. Holds the monitor before actually setting

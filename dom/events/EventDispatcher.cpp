@@ -684,70 +684,70 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   *aDOMEvent = nullptr;
 
   if (aEvent) {
-    switch(aEvent->eventStructType) {
-    case NS_MUTATION_EVENT:
+    switch(aEvent->mClass) {
+    case eMutationEventClass:
       return NS_NewDOMMutationEvent(aDOMEvent, aOwner, aPresContext,
                                     aEvent->AsMutationEvent());
-    case NS_GUI_EVENT:
-    case NS_SCROLLPORT_EVENT:
-    case NS_UI_EVENT:
+    case eGUIEventClass:
+    case eScrollPortEventClass:
+    case eUIEventClass:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
                               aEvent->AsGUIEvent());
-    case NS_SCROLLAREA_EVENT:
+    case eScrollAreaEventClass:
       return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext,
                                       aEvent->AsScrollAreaEvent());
-    case NS_KEY_EVENT:
+    case eKeyboardEventClass:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
                                     aEvent->AsKeyboardEvent());
-    case NS_COMPOSITION_EVENT:
+    case eCompositionEventClass:
       return NS_NewDOMCompositionEvent(aDOMEvent, aOwner, aPresContext,
                                        aEvent->AsCompositionEvent());
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsMouseEvent());
-    case NS_FOCUS_EVENT:
+    case eFocusEventClass:
       return NS_NewDOMFocusEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsFocusEvent());
-    case NS_MOUSE_SCROLL_EVENT:
+    case eMouseScrollEventClass:
       return NS_NewDOMMouseScrollEvent(aDOMEvent, aOwner, aPresContext,
                                        aEvent->AsMouseScrollEvent());
-    case NS_WHEEL_EVENT:
+    case eWheelEventClass:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsWheelEvent());
-    case NS_EDITOR_INPUT_EVENT:
+    case eEditorInputEventClass:
       return NS_NewDOMInputEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsEditorInputEvent());
-    case NS_DRAG_EVENT:
+    case eDragEventClass:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsDragEvent());
-    case NS_TEXT_EVENT:
+    case eTextEventClass:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
                               aEvent->AsTextEvent());
-    case NS_CLIPBOARD_EVENT:
+    case eClipboardEventClass:
       return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
                                      aEvent->AsClipboardEvent());
-    case NS_SVGZOOM_EVENT:
+    case eSVGZoomEventClass:
       return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext,
                                    aEvent->AsSVGZoomEvent());
-    case NS_SMIL_TIME_EVENT:
+    case eSMILTimeEventClass:
       return NS_NewDOMTimeEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsSMILTimeEvent());
-    case NS_COMMAND_EVENT:
+    case eCommandEventClass:
       return NS_NewDOMCommandEvent(aDOMEvent, aOwner, aPresContext,
                                    aEvent->AsCommandEvent());
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       return NS_NewDOMSimpleGestureEvent(aDOMEvent, aOwner, aPresContext,
                                          aEvent->AsSimpleGestureEvent());
-    case NS_POINTER_EVENT:
+    case ePointerEventClass:
       return NS_NewDOMPointerEvent(aDOMEvent, aOwner, aPresContext,
                                    aEvent->AsPointerEvent());
-    case NS_TOUCH_EVENT:
+    case eTouchEventClass:
       return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsTouchEvent());
-    case NS_TRANSITION_EVENT:
+    case eTransitionEventClass:
       return NS_NewDOMTransitionEvent(aDOMEvent, aOwner, aPresContext,
                                       aEvent->AsTransitionEvent());
-    case NS_ANIMATION_EVENT:
+    case eAnimationEventClass:
       return NS_NewDOMAnimationEvent(aDOMEvent, aOwner, aPresContext,
                                      aEvent->AsAnimationEvent());
     default:

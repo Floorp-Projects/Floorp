@@ -1728,7 +1728,7 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
     clickCount = sourceMouseEvent->clickCount;
     pressure = sourceMouseEvent->pressure;
     inputSource = sourceMouseEvent->inputSource;
-  } else if (aSourceEvent->eventStructType == NS_KEY_EVENT) {
+  } else if (aSourceEvent->mClass == eKeyboardEventClass) {
     inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
   event.pressure = pressure;
@@ -2736,8 +2736,7 @@ Element::SetTokenList(nsIAtom* aAtom, nsIVariant* aValue)
 }
 
 bool
-Element::MozMatchesSelector(const nsAString& aSelector,
-                            ErrorResult& aError)
+Element::Matches(const nsAString& aSelector, ErrorResult& aError)
 {
   nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aError);
   if (!selectorList) {

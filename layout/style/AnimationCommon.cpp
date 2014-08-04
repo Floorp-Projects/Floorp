@@ -248,53 +248,11 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
   }
 
   nsStyleContext* oldStyle = primaryFrame->StyleContext();
-  nsRuleNode* ruleNode = oldStyle->RuleNode();
-  nsTArray<nsStyleSet::RuleAndLevel> rules;
-  do {
-    if (ruleNode->IsRoot()) {
-      break;
-    }
 
-    nsStyleSet::RuleAndLevel curRule;
-    curRule.mLevel = ruleNode->GetLevel();
-
-    if (curRule.mLevel == nsStyleSet::eAnimationSheet) {
-      ElementAnimationCollection* collection =
-        mPresContext->AnimationManager()->GetElementAnimations(
-          aElement,
-          oldStyle->GetPseudoType(),
-          false);
-      NS_ASSERTION(collection,
-        "Rule has level eAnimationSheet without animation on manager");
-
-      mPresContext->AnimationManager()->UpdateStyleAndEvents(
-        collection, mPresContext->RefreshDriver()->MostRecentRefresh(),
-        EnsureStyleRule_IsNotThrottled);
-      curRule.mRule = collection->mStyleRule;
-    } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
-      ElementAnimationCollection* collection =
-        mPresContext->TransitionManager()->GetElementTransitions(
-          aElement,
-          oldStyle->GetPseudoType(),
-          false);
-      NS_ASSERTION(collection,
-        "Rule has level eTransitionSheet without transition on manager");
-
-      collection->EnsureStyleRuleFor(
-        mPresContext->RefreshDriver()->MostRecentRefresh(),
-        EnsureStyleRule_IsNotThrottled);
-      curRule.mRule = collection->mStyleRule;
-    } else {
-      curRule.mRule = ruleNode->GetRule();
-    }
-
-    if (curRule.mRule) {
-      rules.AppendElement(curRule);
-    }
-  } while ((ruleNode = ruleNode->GetParent()));
-
-  nsRefPtr<nsStyleContext> newStyle = mPresContext->PresShell()->StyleSet()->
-    ResolveStyleForRules(aParentStyle, oldStyle, rules);
+  nsStyleSet* styleSet = mPresContext->StyleSet();
+  nsRefPtr<nsStyleContext> newStyle =
+    styleSet->ResolveStyleWithReplacement(aElement, aParentStyle, oldStyle,
+      nsRestyleHint(eRestyle_CSSTransitions | eRestyle_CSSAnimations));
 
   // We absolutely must call CalcStyleDifference in order to ensure the
   // new context has all the structs cached that the old context had.
@@ -306,8 +264,7 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
 
   primaryFrame->SetStyleContext(newStyle);
 
-  ReparentBeforeAndAfter(aElement, primaryFrame, newStyle,
-                         mPresContext->PresShell()->StyleSet());
+  ReparentBeforeAndAfter(aElement, primaryFrame, newStyle, styleSet);
 
   return newStyle;
 }

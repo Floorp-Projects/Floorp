@@ -159,7 +159,8 @@ def WebIDLTest(parser, harness):
                  "object", "Callback", "Callback2", "optional Dict",
                  "optional Dict2", "sequence<long>", "sequence<short>",
                  "MozMap<object>", "MozMap<Dict>", "MozMap<long>",
-                 "long[]", "short[]", "Date", "Date?", "any" ]
+                 "long[]", "short[]", "Date", "Date?", "any",
+                 "ScalarValueString" ]
     # When we can parse Date and RegExp, we need to add them here.
 
     # Try to categorize things a bit to keep list lengths down
@@ -170,7 +171,7 @@ def WebIDLTest(parser, harness):
     primitives = numerics + booleans
     nonNumerics = allBut(argTypes, numerics)
     nonBooleans = allBut(argTypes, booleans)
-    strings = [ "DOMString", "ByteString", "Enum", "Enum2" ]
+    strings = [ "DOMString", "ByteString", "Enum", "Enum2", "ScalarValueString" ]
     nonStrings = allBut(argTypes, strings)
     nonObjects = primitives + strings
     objects = allBut(argTypes, nonObjects )
@@ -204,6 +205,7 @@ def WebIDLTest(parser, harness):
     setDistinguishable("boolean?", allBut(nonBooleans, nullables))
     setDistinguishable("DOMString", nonStrings)
     setDistinguishable("ByteString", nonStrings)
+    setDistinguishable("ScalarValueString", nonStrings)
     setDistinguishable("Enum", nonStrings)
     setDistinguishable("Enum2", nonStrings)
     setDistinguishable("Interface", notRelatedInterfaces)

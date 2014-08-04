@@ -8,6 +8,7 @@
 
 #include "jscntxt.h"
 #include "jsmath.h"
+#include "jsobj.h"
 #include "jsstr.h"
 
 #include "builtin/TypedObject.h"
@@ -924,6 +925,42 @@ RNewObject::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MNewArray::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArray));
+    writer.writeUnsigned(count());
+    writer.writeByte(isAllocating());
+    return true;
+}
+
+RNewArray::RNewArray(CompactBufferReader &reader)
+{
+    count_ = reader.readUnsigned();
+    isAllocating_ = reader.readByte();
+}
+
+bool
+RNewArray::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedObject templateObject(cx, &iter.read().toObject());
+    RootedValue result(cx);
+    RootedTypeObject type(cx);
+
+    // See CodeGenerator::visitNewArrayCallVM
+    if (!templateObject->hasSingletonType())
+        type = templateObject->type();
+
+    JSObject *resultObject = NewDenseArray(cx, count_, type, isAllocating_);
+    if (!resultObject)
+        return false;
+
+    result.setObject(*resultObject);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MNewDerivedTypedObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -982,5 +1019,43 @@ RObjectState::recover(JSContext *cx, SnapshotIterator &iter) const
 
     val.setObject(*object);
     iter.storeInstructionResult(val);
+    return true;
+}
+
+bool
+MArrayState::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_ArrayState));
+    writer.writeUnsigned(numElements());
+    return true;
+}
+
+RArrayState::RArrayState(CompactBufferReader &reader)
+{
+    numElements_ = reader.readUnsigned();
+}
+
+bool
+RArrayState::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue result(cx);
+    JSObject *object = &iter.read().toObject();
+    uint32_t initLength = iter.read().toInt32();
+
+    object->setDenseInitializedLength(initLength);
+    for (size_t index = 0; index < numElements(); index++) {
+        Value val = iter.read();
+
+        if (index >= initLength) {
+            MOZ_ASSERT(val.isUndefined());
+            continue;
+        }
+
+        object->initDenseElement(index, val);
+    }
+
+    result.setObject(*object);
+    iter.storeInstructionResult(result);
     return true;
 }

@@ -3013,6 +3013,55 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time to calculate the md5 hash for a backup"
   },
+  "PLACES_FAVICON_ICO_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the ICO favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_PNG_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the PNG favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_GIF_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the GIF favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_JPEG_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the JPEG favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_BMP_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the BMP favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_SVG_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of the SVG favicon files loaded from the web (Bytes)"
+  },
+  "PLACES_FAVICON_OTHER_SIZES": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "high": 524288,
+    "n_buckets" : 100,
+    "description": "PLACES: Size of favicon files without a specific file type probe, loaded from the web (Bytes)"
+  },
   "FENNEC_DISTRIBUTION_REFERRER_INVALID": {
     "expires_in_version": "never",
     "kind": "flag",
@@ -6426,32 +6475,38 @@
     "extended_statistics_ok": true
   },
   "CERT_PINNING_RESULTS": {
+    "alert_emails": ["pinning@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Certificate pinning results (0 = failure, 1 = success)"
   },
   "CERT_PINNING_TEST_RESULTS": {
+    "alert_emails": ["pinning@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Certificate pinning test results (0 = failure, 1 = success)"
   },
   "CERT_PINNING_MOZ_RESULTS": {
+    "alert_emails": ["pinning@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Certificate pinning results for Mozilla sites (0 = failure, 1 = success)"
   },
   "CERT_PINNING_MOZ_TEST_RESULTS": {
+    "alert_emails": ["pinning@mozilla.org"],
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Certificate pinning test results for Mozilla sites (0 = failure, 1 = success)"
   },
   "CERT_PINNING_MOZ_RESULTS_BY_HOST": {
+    "alert_emails": ["pinning@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 512,
     "description": "Certificate pinning results by host for Mozilla operational sites"
   },
   "CERT_PINNING_MOZ_TEST_RESULTS_BY_HOST": {
+    "alert_emails": ["pinning@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 512,

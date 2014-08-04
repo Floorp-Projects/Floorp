@@ -69,13 +69,13 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  switch(mEvent->eventStructType) {
-    case NS_MOUSE_EVENT:
-    case NS_MOUSE_SCROLL_EVENT:
-    case NS_WHEEL_EVENT:
-    case NS_DRAG_EVENT:
-    case NS_POINTER_EVENT:
-    case NS_SIMPLE_GESTURE_EVENT: {
+  switch(mEvent->mClass) {
+    case eMouseEventClass:
+    case eMouseScrollEventClass:
+    case eWheelEventClass:
+    case eDragEventClass:
+    case ePointerEventClass:
+    case eSimpleGestureEventClass: {
       WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
       mouseEventBase->relatedTarget = aRelatedTarget;
       mouseEventBase->button = aButton;
@@ -123,13 +123,13 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
                                aButton, aRelatedTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  switch(mEvent->eventStructType) {
-    case NS_MOUSE_EVENT:
-    case NS_MOUSE_SCROLL_EVENT:
-    case NS_WHEEL_EVENT:
-    case NS_DRAG_EVENT:
-    case NS_POINTER_EVENT:
-    case NS_SIMPLE_GESTURE_EVENT:
+  switch(mEvent->mClass) {
+    case eMouseEventClass:
+    case eMouseScrollEventClass:
+    case eWheelEventClass:
+    case eDragEventClass:
+    case ePointerEventClass:
+    case eSimpleGestureEventClass:
       mEvent->AsInputEvent()->modifiers = modifiers;
       return NS_OK;
     default:
@@ -154,13 +154,13 @@ MouseEvent::Constructor(const GlobalObject& aGlobal,
                     aRv);
   e->SetTrusted(trusted);
 
-  switch (e->mEvent->eventStructType) {
-    case NS_MOUSE_EVENT:
-    case NS_MOUSE_SCROLL_EVENT:
-    case NS_WHEEL_EVENT:
-    case NS_DRAG_EVENT:
-    case NS_POINTER_EVENT:
-    case NS_SIMPLE_GESTURE_EVENT:
+  switch (e->mEvent->mClass) {
+    case eMouseEventClass:
+    case eMouseScrollEventClass:
+    case eWheelEventClass:
+    case eDragEventClass:
+    case ePointerEventClass:
+    case eSimpleGestureEventClass:
       e->mEvent->AsMouseEventBase()->buttons = aParam.mButtons;
       break;
     default:
@@ -213,14 +213,13 @@ MouseEvent::GetButton(int16_t* aButton)
 int16_t
 MouseEvent::Button()
 {
-  switch(mEvent->eventStructType)
-  {
-    case NS_MOUSE_EVENT:
-    case NS_MOUSE_SCROLL_EVENT:
-    case NS_WHEEL_EVENT:
-    case NS_DRAG_EVENT:
-    case NS_POINTER_EVENT:
-    case NS_SIMPLE_GESTURE_EVENT:
+  switch(mEvent->mClass) {
+    case eMouseEventClass:
+    case eMouseScrollEventClass:
+    case eWheelEventClass:
+    case eDragEventClass:
+    case ePointerEventClass:
+    case eSimpleGestureEventClass:
       return mEvent->AsMouseEventBase()->button;
     default:
       NS_WARNING("Tried to get mouse button for non-mouse event!");
@@ -239,14 +238,13 @@ MouseEvent::GetButtons(uint16_t* aButtons)
 uint16_t
 MouseEvent::Buttons()
 {
-  switch(mEvent->eventStructType)
-  {
-    case NS_MOUSE_EVENT:
-    case NS_MOUSE_SCROLL_EVENT:
-    case NS_WHEEL_EVENT:
-    case NS_DRAG_EVENT:
-    case NS_POINTER_EVENT:
-    case NS_SIMPLE_GESTURE_EVENT:
+  switch(mEvent->mClass) {
+    case eMouseEventClass:
+    case eMouseScrollEventClass:
+    case eWheelEventClass:
+    case eDragEventClass:
+    case ePointerEventClass:
+    case eSimpleGestureEventClass:
       return mEvent->AsMouseEventBase()->buttons;
     default:
       MOZ_CRASH("Tried to get mouse buttons for non-mouse event!");
@@ -265,14 +263,13 @@ already_AddRefed<EventTarget>
 MouseEvent::GetRelatedTarget()
 {
   nsCOMPtr<EventTarget> relatedTarget;
-  switch(mEvent->eventStructType)
-  {
-    case NS_MOUSE_EVENT:
-    case NS_MOUSE_SCROLL_EVENT:
-    case NS_WHEEL_EVENT:
-    case NS_DRAG_EVENT:
-    case NS_POINTER_EVENT:
-    case NS_SIMPLE_GESTURE_EVENT:
+  switch(mEvent->mClass) {
+    case eMouseEventClass:
+    case eMouseScrollEventClass:
+    case eWheelEventClass:
+    case eDragEventClass:
+    case ePointerEventClass:
+    case eSimpleGestureEventClass:
       relatedTarget =
         do_QueryInterface(mEvent->AsMouseEventBase()->relatedTarget);
       break;
