@@ -577,31 +577,31 @@ NON_IDL_EVENT(MozMouseHittest,
 NON_IDL_EVENT(DOMAttrModified,
               NS_MUTATION_ATTRMODIFIED,
               EventNameType_HTMLXUL,
-              NS_MUTATION_EVENT)
+              eMutationEventClass)
 NON_IDL_EVENT(DOMCharacterDataModified,
               NS_MUTATION_CHARACTERDATAMODIFIED,
               EventNameType_HTMLXUL,
-              NS_MUTATION_EVENT)
+              eMutationEventClass)
 NON_IDL_EVENT(DOMNodeInserted,
               NS_MUTATION_NODEINSERTED,
               EventNameType_HTMLXUL,
-              NS_MUTATION_EVENT)
+              eMutationEventClass)
 NON_IDL_EVENT(DOMNodeRemoved,
               NS_MUTATION_NODEREMOVED,
               EventNameType_HTMLXUL,
-              NS_MUTATION_EVENT)
+              eMutationEventClass)
 NON_IDL_EVENT(DOMNodeInsertedIntoDocument,
               NS_MUTATION_NODEINSERTEDINTODOCUMENT,
               EventNameType_HTMLXUL,
-              NS_MUTATION_EVENT)
+              eMutationEventClass)
 NON_IDL_EVENT(DOMNodeRemovedFromDocument,
               NS_MUTATION_NODEREMOVEDFROMDOCUMENT,
               EventNameType_HTMLXUL,
-              NS_MUTATION_EVENT)
+              eMutationEventClass)
 NON_IDL_EVENT(DOMSubtreeModified,
               NS_MUTATION_SUBTREEMODIFIED,
               EventNameType_HTMLXUL,
-              NS_MUTATION_EVENT)
+              eMutationEventClass)
 
 NON_IDL_EVENT(DOMActivate,
               NS_UI_ACTIVATE,

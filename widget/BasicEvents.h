@@ -68,7 +68,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
   ePluginEventClass,                 // WidgetPluginEvent
 
   // InternalMutationEvent.h (dom/events)
-  NS_MUTATION_EVENT                  // InternalMutationEvent
+  eMutationEventClass                // InternalMutationEvent
 };
 
 } // namespace mozilla
