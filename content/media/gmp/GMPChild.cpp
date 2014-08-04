@@ -304,7 +304,7 @@ GMPChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
 bool
 GMPChild::RecvCrashPluginNow()
 {
-  abort();
+  MOZ_CRASH();
   return true;
 }
 
