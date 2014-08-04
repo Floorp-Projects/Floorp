@@ -543,7 +543,8 @@ PeerConnectionMedia::DtlsConnected(TransportLayer *dtlsLayer,
   bool privacyRequested = false;
   // TODO (Bug 952678) set privacy mode, ask the DTLS layer about that
   GetMainThread()->Dispatch(
-    WrapRunnable(mParent, &PeerConnectionImpl::SetDtlsConnected, privacyRequested),
+    WrapRunnable(nsRefPtr<PeerConnectionImpl>(mParent),
+                 &PeerConnectionImpl::SetDtlsConnected, privacyRequested),
     NS_DISPATCH_NORMAL);
 }
 
@@ -749,12 +750,13 @@ RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByLevel_m(int level) {
 bool RemoteSourceStreamInfo::SetUsingBundle_m(int aLevel, bool decision) {
   ASSERT_ON_THREAD(mParent->GetMainThread());
 
-  RefPtr<MediaPipeline> pipeline(GetPipelineByLevel_m(aLevel));
+  // Avoid adding and dropping an extra ref
+  MediaPipeline *pipeline = GetPipelineByLevel_m(aLevel);
 
   if (pipeline) {
     RUN_ON_THREAD(mParent->GetSTSThread(),
                   WrapRunnable(
-                      pipeline,
+                      RefPtr<MediaPipeline>(pipeline),
                       &MediaPipeline::SetUsingBundle_s,
                       decision
                   ),
