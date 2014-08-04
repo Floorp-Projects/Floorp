@@ -79,8 +79,12 @@ MOZ_NATIVE_DEVICES=
 # Mark as WebGL conformant
 MOZ_WEBGL_CONFORMANT=1
 
-# Don't enable the Search Activity.
-# MOZ_ANDROID_SEARCH_ACTIVITY=1
+# Enable the Search Activity in nightly.
+if test "$NIGHTLY_BUILD"; then
+  MOZ_ANDROID_SEARCH_ACTIVITY=1
+else
+  MOZ_ANDROID_SEARCH_ACTIVITY=
+fi
 
 # Don't enable the Mozilla Location Service stumbler.
 # MOZ_ANDROID_MLS_STUMBLER=1
