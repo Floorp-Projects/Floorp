@@ -129,3 +129,8 @@ USE_LIBS += [
     'xpcomglue_s',
     'xul',
 ]
+
+if CONFIG['MOZ_DMD']:
+    USE_LIBS += [
+        'dmd'
+    ]
