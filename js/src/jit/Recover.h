@@ -46,6 +46,7 @@ namespace jit {
     _(Atan2)                                    \
     _(StringSplit)                              \
     _(NewObject)                                \
+    _(NewArray)                                 \
     _(NewDerivedTypedObject)                    \
     _(ObjectState)                              \
     _(ArrayState)
@@ -466,6 +467,22 @@ class RNewObject MOZ_FINAL : public RInstruction
 
   public:
     RINSTRUCTION_HEADER_(NewObject)
+
+    virtual uint32_t numOperands() const {
+        return 1;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RNewArray MOZ_FINAL : public RInstruction
+{
+  private:
+    uint32_t count_;
+    bool isAllocating_;
+
+  public:
+    RINSTRUCTION_HEADER_(NewArray)
 
     virtual uint32_t numOperands() const {
         return 1;

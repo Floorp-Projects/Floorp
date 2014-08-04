@@ -335,7 +335,10 @@ IonBuilder::inlineArray(CallInfo &callInfo)
     else
         templateObject->clearShouldConvertDoubleElements();
 
-    MNewArray *ins = MNewArray::New(alloc(), constraints(), initLength, templateObject,
+    MConstant *templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
+    current->add(templateConst);
+
+    MNewArray *ins = MNewArray::New(alloc(), constraints(), initLength, templateConst,
                                     templateObject->type()->initialHeap(constraints()),
                                     allocating);
     current->add(ins);

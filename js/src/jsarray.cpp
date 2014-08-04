@@ -3055,21 +3055,12 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
      * Allocate dense elements eagerly for small arrays, to avoid reallocating
      * elements when filling the array.
      */
-    RootedObject obj(cx);
-    obj = (length <= ArrayObject::EagerAllocationMaxLength)
-          ? NewDenseAllocatedArray(cx, length)
-          : NewDenseUnallocatedArray(cx, length);
+    bool allocateArray = length <= ArrayObject::EagerAllocationMaxLength;
+    RootedObject obj(cx, NewDenseArray(cx, length, type, allocateArray));
     if (!obj)
         return false;
-    Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
 
-    arr->setType(type);
-
-    /* If the length calculation overflowed, make sure that is marked for the new type. */
-    if (arr->length() > INT32_MAX)
-        arr->setLength(cx, arr->length());
-
-    args.rval().setObject(*arr);
+    args.rval().setObject(*obj);
     return true;
 }
 
@@ -3262,6 +3253,33 @@ js::NewDenseUnallocatedArray(ExclusiveContext *cx, uint32_t length, JSObject *pr
                              NewObjectKind newKind /* = GenericObject */)
 {
     return NewArray<false>(cx, length, proto, newKind);
+}
+
+ArrayObject * JS_FASTCALL
+js::NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleTypeObject type, bool allocateArray)
+{
+    NewObjectKind newKind = !type ? SingletonObject : GenericObject;
+    if (type && type->shouldPreTenure())
+        newKind = TenuredObject;
+
+    // Allocate dense elements eagerly for small arrays, to avoid reallocating
+    // elements when filling the array.
+    ArrayObject *arr = allocateArray
+                       ? NewDenseAllocatedArray(cx, length, nullptr, newKind)
+                       : NewDenseUnallocatedArray(cx, length, nullptr, newKind);
+
+    if (!arr)
+        return nullptr;
+
+    if (type)
+        arr->setType(type);
+
+    // If the length calculation overflowed, make sure that is marked for the
+    // new type.
+    if (arr->length() > INT32_MAX)
+        arr->setLength(cx, arr->length());
+
+    return arr;
 }
 
 ArrayObject *
