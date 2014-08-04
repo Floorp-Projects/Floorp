@@ -92,7 +92,7 @@ class TransportLayer : public sigslot::has_slots<> {
   virtual void WasInserted() {}
   virtual void SetState(State state, const char *file, unsigned line);
   // Check if we are on the right thread
-  void CheckThread() const {
+  void CheckThread() {
     NS_ABORT_IF_FALSE(CheckThreadInt(), "Wrong thread");
   }
 
@@ -105,7 +105,7 @@ class TransportLayer : public sigslot::has_slots<> {
  private:
   DISALLOW_COPY_ASSIGN(TransportLayer);
 
-  bool CheckThreadInt() const {
+  bool CheckThreadInt() {
     bool on;
 
     if (!target_)  // OK if no thread set.
