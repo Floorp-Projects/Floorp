@@ -224,7 +224,7 @@ public:
   virtual WidgetTextEvent* AsTextEvent() MOZ_OVERRIDE { return this; }
 
   WidgetTextEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_TEXT_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eTextEventClass)
     , mSeqno(kLatestSeqno)
     , isChar(false)
   {
@@ -232,7 +232,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_TEXT_EVENT,
+    MOZ_ASSERT(mClass == eTextEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetTextEvent* result = new WidgetTextEvent(false, message, nullptr);

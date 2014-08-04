@@ -7784,7 +7784,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
           }
           if (eventTarget) {
             if (aEvent->mClass == eCompositionEventClass ||
-                aEvent->mClass == NS_TEXT_EVENT) {
+                aEvent->mClass == eTextEventClass) {
               IMEStateManager::DispatchCompositionEvent(eventTarget,
                 mPresContext, aEvent, aStatus, eventCBPtr);
             } else {
