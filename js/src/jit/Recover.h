@@ -47,7 +47,8 @@ namespace jit {
     _(StringSplit)                              \
     _(NewObject)                                \
     _(NewDerivedTypedObject)                    \
-    _(ObjectState)
+    _(ObjectState)                              \
+    _(ArrayState)
 
 class RResumePoint;
 class SnapshotIterator;
@@ -499,6 +500,26 @@ class RObjectState MOZ_FINAL : public RInstruction
     virtual uint32_t numOperands() const {
         // +1 for the object.
         return numSlots() + 1;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RArrayState MOZ_FINAL : public RInstruction
+{
+  private:
+    uint32_t numElements_;
+
+  public:
+    RINSTRUCTION_HEADER_(ArrayState)
+
+    uint32_t numElements() const {
+        return numElements_;
+    }
+    virtual uint32_t numOperands() const {
+        // +1 for the array.
+        // +1 for the initalized length.
+        return numElements() + 2;
     }
 
     bool recover(JSContext *cx, SnapshotIterator &iter) const;
