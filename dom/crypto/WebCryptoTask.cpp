@@ -258,6 +258,26 @@ GetKeySizeForAlgorithm(JSContext* aCx, const ObjectOrString& aAlgorithm,
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
+inline bool
+MapOIDTagToNamedCurve(SECOidTag aOIDTag, nsString& aResult)
+{
+  switch (aOIDTag) {
+    case SEC_OID_SECG_EC_SECP256R1:
+      aResult.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P256);
+      break;
+    case SEC_OID_SECG_EC_SECP384R1:
+      aResult.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P384);
+      break;
+    case SEC_OID_SECG_EC_SECP521R1:
+      aResult.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P521);
+      break;
+    default:
+      return false;
+  }
+
+  return true;
+}
+
 // Helper function to clone data from an ArrayBuffer or ArrayBufferView object
 inline bool
 CloneData(JSContext* aCx, CryptoBuffer& aDst, JS::Handle<JSObject*> aSrc)
@@ -1682,16 +1702,12 @@ private:
 
   virtual nsresult DoCrypto() MOZ_OVERRIDE
   {
-    if (!mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
-
     // Import the key data itself
     ScopedSECKEYPublicKey pubKey;
     ScopedSECKEYPrivateKey privKey;
 
     nsNSSShutDownPreventionLock locker;
-    if (mJwk.mD.WasPassed()) {
+    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) && mJwk.mD.WasPassed()) {
       // Private key import
       privKey = CryptoKey::PrivateKeyFromJwk(mJwk, locker);
       if (!privKey) {
@@ -1700,19 +1716,47 @@ private:
 
       mKey->SetPrivateKey(privKey.get());
       mKey->SetType(CryptoKey::PRIVATE);
-    } else {
+    } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI) ||
+               (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) &&
+                !mJwk.mD.WasPassed())) {
       // Public key import
-      pubKey = CryptoKey::PublicKeyFromJwk(mJwk, locker);
+      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
+        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
+      } else {
+        pubKey = CryptoKey::PublicKeyFromJwk(mJwk, locker);
+      }
+
       if (!pubKey) {
         return NS_ERROR_DOM_DATA_ERR;
       }
 
+      if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
+        if (!CheckEncodedECParameters(&pubKey->u.ec.DEREncodedParams)) {
+          return NS_ERROR_DOM_OPERATION_ERR;
+        }
+
+        // Construct the OID tag.
+        SECItem oid = { siBuffer, nullptr, 0 };
+        oid.len = pubKey->u.ec.DEREncodedParams.data[1];
+        oid.data = pubKey->u.ec.DEREncodedParams.data + 2;
+
+        // Find a matching and supported named curve.
+        if (!MapOIDTagToNamedCurve(SECOID_FindOIDTag(&oid), mNamedCurve)) {
+          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        }
+      }
+
       mKey->SetPublicKey(pubKey.get());
       mKey->SetType(CryptoKey::PUBLIC);
+    } else {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
-    if (!NormalizeNamedCurveValue(mJwk.mCrv.Value(), mNamedCurve)) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    // Extract 'crv' parameter from JWKs.
+    if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
+      if (!NormalizeNamedCurveValue(mJwk.mCrv.Value(), mNamedCurve)) {
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      }
     }
 
     return NS_OK;
