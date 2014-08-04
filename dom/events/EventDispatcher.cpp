@@ -723,7 +723,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eTextEventClass:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
                               aEvent->AsTextEvent());
-    case NS_CLIPBOARD_EVENT:
+    case eClipboardEventClass:
       return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
                                      aEvent->AsClipboardEvent());
     case NS_SVGZOOM_EVENT:
