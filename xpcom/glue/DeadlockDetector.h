@@ -202,6 +202,15 @@ private:
     {
     }
 
+    size_t
+    SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+    {
+      size_t n = aMallocSizeOf(this);
+      n += mOrderedLT.SizeOfExcludingThis(aMallocSizeOf);
+      n += mResource->SizeOfIncludingThis(aMallocSizeOf);
+      return n;
+    }
+
     CallStack mFirstSeen; // first site from which the resource appeared
     HashEntryArray mOrderedLT; // this <_o Other
     const T* mResource;
@@ -242,6 +251,23 @@ public:
   ~DeadlockDetector()
   {
     PR_DestroyLock(mLock);
+  }
+
+  static size_t
+  SizeOfEntryExcludingThis(const T* aKey, const nsAutoPtr<OrderingEntry>& aEntry,
+                           MallocSizeOf aMallocSizeOf, void* aUserArg)
+  {
+    // NB: Key is accounted for in the entry.
+    size_t n = aEntry->SizeOfIncludingThis(aMallocSizeOf);
+    return n;
+  }
+
+  size_t
+  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t n = aMallocSizeOf(this);
+    n += mOrdering.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOf);
+    return n;
   }
 
   /**
