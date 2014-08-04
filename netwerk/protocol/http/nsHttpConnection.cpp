@@ -482,17 +482,20 @@ nsHttpConnection::SetupNPNList(nsISSLSocketControl *ssl, uint32_t caps)
 
     // The first protocol is used as the fallback if none of the
     // protocols supported overlap with the server's list.
-    // In the case of overlap, matching priority is driven by
-    // the order of the server's advertisement.
+    // When using ALPN the advertised preferences are protocolArray indicies
+    // {1, .., N, 0} in decreasing order.
+    // For NPN, In the case of overlap, matching priority is driven by
+    // the order of the server's advertisement - with index 0 used when
+    // there is no match.
     protocolArray.AppendElement(NS_LITERAL_CSTRING("http/1.1"));
 
     if (gHttpHandler->IsSpdyEnabled() &&
         !(caps & NS_HTTP_DISALLOW_SPDY)) {
         LOG(("nsHttpConnection::SetupSSL Allow SPDY NPN selection"));
-        for (uint32_t index = 0; index < SpdyInformation::kCount; ++index) {
-            if (gHttpHandler->SpdyInfo()->ProtocolEnabled(index))
+        for (uint32_t index = SpdyInformation::kCount; index > 0; --index) {
+            if (gHttpHandler->SpdyInfo()->ProtocolEnabled(index - 1))
                 protocolArray.AppendElement(
-                    gHttpHandler->SpdyInfo()->VersionString[index]);
+                    gHttpHandler->SpdyInfo()->VersionString[index - 1]);
         }
     }
 
