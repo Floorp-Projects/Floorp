@@ -497,7 +497,7 @@ public:
   }
 
   WidgetSelectionEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_SELECTION_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eSelectionEventClass)
     , mSeqno(kLatestSeqno)
     , mOffset(0)
     , mLength(0)
