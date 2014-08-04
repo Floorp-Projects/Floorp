@@ -5116,7 +5116,7 @@ EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
     // lineOrPageDeltaY for wheel events which are caused by pixel only
     // devices.  Ignore mouse wheel transaction for computing this.  The
     // lineOrPageDelta values will be used by dispatching legacy
-    // NS_MOUSE_SCROLL_EVENT (DOMMouseScroll) but not be used for scrolling
+    // eMouseScrollEventClass (DOMMouseScroll) but not be used for scrolling
     // of default action.  The transaction should be used only for the default
     // action.
     nsIScrollableFrame* scrollTarget =

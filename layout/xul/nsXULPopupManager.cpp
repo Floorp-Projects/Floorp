@@ -547,7 +547,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
           nsIFrame* rootDocumentRootFrame = rootDocPresContext->
               PresShell()->FrameManager()->GetRootFrame();
           if ((event->mClass == eMouseEventClass || 
-               event->mClass == NS_MOUSE_SCROLL_EVENT ||
+               event->mClass == eMouseScrollEventClass ||
                event->mClass == NS_WHEEL_EVENT) &&
                !event->AsGUIEvent()->widget) {
             // no widget, so just use the client point if available

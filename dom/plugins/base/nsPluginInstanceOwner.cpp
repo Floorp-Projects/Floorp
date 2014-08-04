@@ -2117,7 +2117,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       }
       break;
 
-   //XXX case NS_MOUSE_SCROLL_EVENT: not received.
+   //XXX case eMouseScrollEventClass: not received.
 
    case eKeyboardEventClass:
       if (anEvent.mPluginEvent)
