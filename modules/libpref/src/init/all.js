@@ -2790,7 +2790,11 @@ pref("intl.keyboard.per_window_layout", false);
 
 #ifdef NS_ENABLE_TSF
 // Enable/Disable TSF support on Vista or later.
+#ifdef NIGHTLY_BUILD
+pref("intl.tsf.enable", true);
+#else
 pref("intl.tsf.enable", false);
+#endif
 // Force enable TSF even on WinXP or WinServer 2003.
 // Be aware, TSF framework on prior to Vista is not enough stable.
 pref("intl.tsf.force_enable", false);
