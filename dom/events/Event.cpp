@@ -662,7 +662,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
   PopupControlState abuse = openAbused;
 
   switch(aEvent->mClass) {
-  case NS_EVENT :
+  case eBasicEventClass:
     // For these following events only allow popups if they're
     // triggered while handling user input. See
     // nsPresShell::HandleEventInternal() for details.

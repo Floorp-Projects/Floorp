@@ -26,7 +26,7 @@ typedef uint8_t EventClassIDType;
 enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
 {
   // BasicEvents.h
-  NS_EVENT,                          // WidgetEvent
+  eBasicEventClass,                  // WidgetEvent
   eGUIEventClass,                    // WidgetGUIEvent
   eInputEventClass,                  // WidgetInputEvent
   eUIEventClass,                     // InternalUIEvent
@@ -647,7 +647,7 @@ protected:
 
 public:
   WidgetEvent(bool aIsTrusted, uint32_t aMessage)
-    : mClass(NS_EVENT)
+    : mClass(eBasicEventClass)
     , message(aMessage)
     , refPoint(0, 0)
     , lastRefPoint(0, 0)
@@ -675,7 +675,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const
   {
-    MOZ_ASSERT(mClass == NS_EVENT,
+    MOZ_ASSERT(mClass == eBasicEventClass,
                "Duplicate() must be overridden by sub class");
     WidgetEvent* result = new WidgetEvent(false, message);
     result->AssignEventData(*this, true);
