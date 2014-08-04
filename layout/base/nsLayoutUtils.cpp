@@ -1873,7 +1873,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                   aEvent->mClass != eMouseScrollEventClass &&
                   aEvent->mClass != eWheelEventClass &&
                   aEvent->mClass != eDragEventClass &&
-                  aEvent->mClass != NS_SIMPLE_GESTURE_EVENT &&
+                  aEvent->mClass != eSimpleGestureEventClass &&
                   aEvent->mClass != ePointerEventClass &&
                   aEvent->mClass != eGestureNotifyEventClass &&
                   aEvent->mClass != NS_TOUCH_EVENT &&

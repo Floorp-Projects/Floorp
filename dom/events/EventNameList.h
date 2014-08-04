@@ -822,63 +822,63 @@ NON_IDL_EVENT(gamepaddisconnected,
 NON_IDL_EVENT(MozSwipeGestureStart,
               NS_SIMPLE_GESTURE_SWIPE_START,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureUpdate,
               NS_SIMPLE_GESTURE_SWIPE_UPDATE,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGestureEnd,
               NS_SIMPLE_GESTURE_SWIPE_END,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozSwipeGesture,
               NS_SIMPLE_GESTURE_SWIPE,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozMagnifyGestureStart,
               NS_SIMPLE_GESTURE_MAGNIFY_START,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozMagnifyGestureUpdate,
               NS_SIMPLE_GESTURE_MAGNIFY_UPDATE,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozMagnifyGesture,
               NS_SIMPLE_GESTURE_MAGNIFY,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozRotateGestureStart,
               NS_SIMPLE_GESTURE_ROTATE_START,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozRotateGestureUpdate,
               NS_SIMPLE_GESTURE_ROTATE_UPDATE,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozRotateGesture,
               NS_SIMPLE_GESTURE_ROTATE,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozTapGesture,
               NS_SIMPLE_GESTURE_TAP,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozPressTapGesture,
               NS_SIMPLE_GESTURE_PRESSTAP,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozEdgeUIStarted,
               NS_SIMPLE_GESTURE_EDGE_STARTED,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozEdgeUICanceled,
               NS_SIMPLE_GESTURE_EDGE_CANCELED,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 NON_IDL_EVENT(MozEdgeUICompleted,
               NS_SIMPLE_GESTURE_EDGE_COMPLETED,
               EventNameType_None,
-              NS_SIMPLE_GESTURE_EVENT)
+              eSimpleGestureEventClass)
 
 NON_IDL_EVENT(transitionend,
               NS_TRANSITION_END,

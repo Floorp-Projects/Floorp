@@ -161,7 +161,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
       case eMouseEventClass:
       case eMouseScrollEventClass:
       case eWheelEventClass:
-      case NS_SIMPLE_GESTURE_EVENT:
+      case eSimpleGestureEventClass:
       case ePointerEventClass:
         tmp->mEvent->AsMouseEventBase()->relatedTarget = nullptr;
         break;
@@ -199,7 +199,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
       case eMouseEventClass:
       case eMouseScrollEventClass:
       case eWheelEventClass:
-      case NS_SIMPLE_GESTURE_EVENT:
+      case eSimpleGestureEventClass:
       case ePointerEventClass:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(tmp->mEvent->AsMouseEventBase()->relatedTarget);
@@ -853,7 +853,7 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
         aEvent->mClass != ePointerEventClass &&
         aEvent->mClass != NS_TOUCH_EVENT &&
         aEvent->mClass != eDragEventClass &&
-        aEvent->mClass != NS_SIMPLE_GESTURE_EVENT)) {
+        aEvent->mClass != eSimpleGestureEventClass)) {
     return nsIntPoint(0, 0);
   }
 
@@ -909,7 +909,7 @@ Event::GetClientCoords(nsPresContext* aPresContext,
        aEvent->mClass != NS_TOUCH_EVENT &&
        aEvent->mClass != eDragEventClass &&
        aEvent->mClass != ePointerEventClass &&
-       aEvent->mClass != NS_SIMPLE_GESTURE_EVENT) ||
+       aEvent->mClass != eSimpleGestureEventClass) ||
       !aPresContext ||
       !aEvent->AsGUIEvent()->widget) {
     return aDefaultPoint;

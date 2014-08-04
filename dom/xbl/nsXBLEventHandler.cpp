@@ -153,7 +153,7 @@ NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
     case eMouseEventClass:
     case eMouseScrollEventClass:
     case eWheelEventClass:
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       *aResult = new nsXBLMouseEventHandler(aHandler);
       break;
     default:

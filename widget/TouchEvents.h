@@ -97,7 +97,7 @@ public:
   WidgetSimpleGestureEvent(bool aIsTrusted, uint32_t aMessage,
                            nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget,
-                           NS_SIMPLE_GESTURE_EVENT)
+                           eSimpleGestureEventClass)
     , allowedDirections(0)
     , direction(0)
     , delta(0.0)
@@ -107,7 +107,7 @@ public:
 
   WidgetSimpleGestureEvent(const WidgetSimpleGestureEvent& aOther)
     : WidgetMouseEventBase(aOther.mFlags.mIsTrusted, aOther.message,
-                           aOther.widget, NS_SIMPLE_GESTURE_EVENT)
+                           aOther.widget, eSimpleGestureEventClass)
     , allowedDirections(aOther.allowedDirections)
     , direction(aOther.direction)
     , delta(aOther.delta)
@@ -117,7 +117,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_SIMPLE_GESTURE_EVENT,
+    MOZ_ASSERT(mClass == eSimpleGestureEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetSimpleGestureEvent* result =

@@ -75,7 +75,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     case eWheelEventClass:
     case eDragEventClass:
     case ePointerEventClass:
-    case NS_SIMPLE_GESTURE_EVENT: {
+    case eSimpleGestureEventClass: {
       WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
       mouseEventBase->relatedTarget = aRelatedTarget;
       mouseEventBase->button = aButton;
@@ -129,7 +129,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     case eWheelEventClass:
     case eDragEventClass:
     case ePointerEventClass:
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       mEvent->AsInputEvent()->modifiers = modifiers;
       return NS_OK;
     default:
@@ -160,7 +160,7 @@ MouseEvent::Constructor(const GlobalObject& aGlobal,
     case eWheelEventClass:
     case eDragEventClass:
     case ePointerEventClass:
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       e->mEvent->AsMouseEventBase()->buttons = aParam.mButtons;
       break;
     default:
@@ -219,7 +219,7 @@ MouseEvent::Button()
     case eWheelEventClass:
     case eDragEventClass:
     case ePointerEventClass:
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       return mEvent->AsMouseEventBase()->button;
     default:
       NS_WARNING("Tried to get mouse button for non-mouse event!");
@@ -244,7 +244,7 @@ MouseEvent::Buttons()
     case eWheelEventClass:
     case eDragEventClass:
     case ePointerEventClass:
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       return mEvent->AsMouseEventBase()->buttons;
     default:
       MOZ_CRASH("Tried to get mouse buttons for non-mouse event!");
@@ -269,7 +269,7 @@ MouseEvent::GetRelatedTarget()
     case eWheelEventClass:
     case eDragEventClass:
     case ePointerEventClass:
-    case NS_SIMPLE_GESTURE_EVENT:
+    case eSimpleGestureEventClass:
       relatedTarget =
         do_QueryInterface(mEvent->AsMouseEventBase()->relatedTarget);
       break;
