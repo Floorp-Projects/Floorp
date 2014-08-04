@@ -632,9 +632,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_tampered_eku)
   static const uint8_t EKU_OCSP_SIGNER[] = { EKU_PREFIX, 0x09 }; // OCSPSigning
 #undef EKU_PREFIX
   SECItem responseSECItem = UnsafeMapInputToSECItem(response);
-  ASSERT_SECSuccess(TamperOnce(responseSECItem,
-                               EKU_SERVER_AUTH, PR_ARRAY_SIZE(EKU_SERVER_AUTH),
-                               EKU_OCSP_SIGNER, PR_ARRAY_SIZE(EKU_OCSP_SIGNER)));
+  ASSERT_EQ(Success,
+            TamperOnce(responseSECItem,
+                       EKU_SERVER_AUTH, PR_ARRAY_SIZE(EKU_SERVER_AUTH),
+                       EKU_OCSP_SIGNER, PR_ARRAY_SIZE(EKU_OCSP_SIGNER)));
 
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,

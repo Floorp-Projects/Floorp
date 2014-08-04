@@ -92,8 +92,10 @@ const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
 // The string to search for must be 8 or more bytes long so that it is
 // extremely unlikely that there will ever be any false positive matches
 // in digital signatures, keys, hashes, etc.
-SECStatus TamperOnce(SECItem& item, const uint8_t* from, size_t fromLen,
-                     const uint8_t* to, size_t toLen);
+//
+// Returns true on success, false on failure.
+Result TamperOnce(SECItem& item, const uint8_t* from, size_t fromLen,
+                  const uint8_t* to, size_t toLen);
 
 Result InitInputFromSECItem(const SECItem* secItem, /*out*/ Input& input);
 

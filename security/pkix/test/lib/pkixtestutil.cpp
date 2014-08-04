@@ -96,21 +96,17 @@ OpenFile(const char* dir, const char* filename, const char* mode)
   return file.release();
 }
 
-SECStatus
+Result
 TamperOnce(SECItem& item,
            const uint8_t* from, size_t fromLen,
            const uint8_t* to, size_t toLen)
 {
   if (!item.data || !from || !to || fromLen != toLen) {
-    PR_NOT_REACHED("invalid args to TamperOnce");
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
   if (fromLen < 8) {
-    PR_NOT_REACHED("invalid parameter to TamperOnce; fromLen must be at least 8");
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
-    return SECFailure;
+    return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
   uint8_t* p = item.data;
@@ -121,23 +117,20 @@ TamperOnce(SECItem& item,
                                                            remaining));
     if (!foundFirstByte) {
       if (alreadyFoundMatch) {
-        return SECSuccess;
+        return Success;
       }
-      PR_SetError(SEC_ERROR_BAD_DATA, 0);
-      return SECFailure;
+      return Result::FATAL_ERROR_INVALID_ARGS;
     }
     remaining -= (foundFirstByte - p);
     if (remaining < fromLen) {
       if (alreadyFoundMatch) {
-        return SECSuccess;
+        return Success;
       }
-      PR_SetError(SEC_ERROR_BAD_DATA, 0);
-      return SECFailure;
+      return Result::FATAL_ERROR_INVALID_ARGS;
     }
     if (!memcmp(foundFirstByte, from, fromLen)) {
       if (alreadyFoundMatch) {
-        PR_SetError(SEC_ERROR_BAD_DATA, 0);
-        return SECFailure;
+        return Result::FATAL_ERROR_INVALID_ARGS;
       }
       alreadyFoundMatch = true;
       memmove(foundFirstByte, to, toLen);
