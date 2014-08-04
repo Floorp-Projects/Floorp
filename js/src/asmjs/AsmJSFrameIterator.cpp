@@ -79,7 +79,8 @@ AsmJSFrameIterator::settle()
         fp_ = nullptr;
         JS_ASSERT(done());
         break;
-      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::IonFFI:
+      case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
       case AsmJSModule::CodeRange::Thunk:
@@ -462,7 +463,8 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
         callerFP_ = CallerFPFromFP(fp);
         AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
         break;
-      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::IonFFI:
+      case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
       case AsmJSModule::CodeRange::Thunk:
@@ -505,7 +507,8 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
     const AsmJSModule::CodeRange *codeRange = module_->lookupCodeRange(state.pc);
     switch (codeRange->kind()) {
       case AsmJSModule::CodeRange::Function:
-      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::IonFFI:
+      case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Thunk: {
         // While codeRange describes the *current* frame, the fp/pc state stored in
@@ -606,7 +609,8 @@ AsmJSProfilingFrameIterator::operator++()
         callerPC_ = nullptr;
         break;
       case AsmJSModule::CodeRange::Function:
-      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::IonFFI:
+      case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
       case AsmJSModule::CodeRange::Thunk:
@@ -657,19 +661,22 @@ AsmJSProfilingFrameIterator::label() const
 {
     JS_ASSERT(!done());
 
-    // Note: this label is regexp-matched by
-    // browser/devtools/profiler/cleopatra/js/parserWorker.js.
-
     // Use the same string for both time inside and under so that the two
     // entries will be coalesced by the profiler.
-    const char *ffiDescription = "FFI trampoline (in asm.js)";
+    //
+    // NB: these labels are regexp-matched by
+    //     browser/devtools/profiler/cleopatra/js/parserWorker.js.
+    const char *ionFFIDescription = "fast FFI trampoline (in asm.js)";
+    const char *slowFFIDescription = "slow FFI trampoline (in asm.js)";
     const char *interruptDescription = "slow script interrupt trampoline (in asm.js)";
 
     switch (AsmJSExit::ExtractReasonKind(exitReason_)) {
       case AsmJSExit::Reason_None:
         break;
-      case AsmJSExit::Reason_FFI:
-        return ffiDescription;
+      case AsmJSExit::Reason_IonFFI:
+        return ionFFIDescription;
+      case AsmJSExit::Reason_SlowFFI:
+        return slowFFIDescription;
       case AsmJSExit::Reason_Interrupt:
         return interruptDescription;
       case AsmJSExit::Reason_Builtin:
@@ -680,7 +687,8 @@ AsmJSProfilingFrameIterator::label() const
     switch (codeRange->kind()) {
       case AsmJSModule::CodeRange::Function:  return codeRange->functionProfilingLabel(*module_);
       case AsmJSModule::CodeRange::Entry:     return "entry trampoline (in asm.js)";
-      case AsmJSModule::CodeRange::FFI:       return ffiDescription;
+      case AsmJSModule::CodeRange::IonFFI:    return ionFFIDescription;
+      case AsmJSModule::CodeRange::SlowFFI:   return slowFFIDescription;
       case AsmJSModule::CodeRange::Interrupt: return interruptDescription;
       case AsmJSModule::CodeRange::Inline:    return "inline stub (in asm.js)";
       case AsmJSModule::CodeRange::Thunk:     return BuiltinToName(codeRange->thunkTarget());
