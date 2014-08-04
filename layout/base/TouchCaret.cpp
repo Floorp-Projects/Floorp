@@ -465,6 +465,22 @@ TouchCaret::CancelExpirationTimer()
   }
 }
 
+void
+TouchCaret::SetSelectionDragState(bool aState)
+{
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell) {
+    return;
+  }
+
+  nsRefPtr<nsCaret> caret = presShell->GetCaret();
+  nsISelection* caretSelection = caret->GetCaretDOMSelection();
+  nsRect focusRect;
+  nsIFrame* caretFocusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsRefPtr<nsFrameSelection> fs = caretFocusFrame->GetFrameSelection();
+  fs->SetDragState(aState);
+}
+
 nsEventStatus
 TouchCaret::HandleEvent(WidgetEvent* aEvent)
 {
@@ -628,6 +644,7 @@ TouchCaret::HandleMouseUpEvent(WidgetMouseEvent* aEvent)
 
     case TOUCHCARET_MOUSEDRAG_ACTIVE:
       if (aEvent->button == WidgetMouseEvent::eLeftButton) {
+        SetSelectionDragState(false);
         LaunchExpirationTimer();
         SetState(TOUCHCARET_NONE);
         status = nsEventStatus_eConsumeNoDefault;
@@ -672,6 +689,7 @@ TouchCaret::HandleTouchUpEvent(WidgetTouchEvent* aEvent)
 
     case TOUCHCARET_TOUCHDRAG_ACTIVE:
       if (mTouchesId.Length() == 0) {
+        SetSelectionDragState(false);
         // No more finger on the screen.
         SetState(TOUCHCARET_NONE);
         LaunchExpirationTimer();
@@ -717,6 +735,7 @@ TouchCaret::HandleMouseDownEvent(WidgetMouseEvent* aEvent)
       if (aEvent->button == WidgetMouseEvent::eLeftButton) {
         nsPoint point = GetEventPosition(aEvent);
         if (IsOnTouchCaret(point)) {
+          SetSelectionDragState(true);
           // Cache distence of the event point to the center of touch caret.
           mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - point.y;
           // Enter TOUCHCARET_MOUSEDRAG_ACTIVE state and cancel the timer.
@@ -769,6 +788,7 @@ TouchCaret::HandleTouchDownEvent(WidgetTouchEvent* aEvent)
           int32_t touchId = aEvent->touches[i]->Identifier();
           nsPoint point = GetEventPosition(aEvent, touchId);
           if (IsOnTouchCaret(point)) {
+            SetSelectionDragState(true);
             // Touch start position is contained in touch caret.
             mActiveTouchId = touchId;
             // Cache distance of the event point to the center of touch caret.
