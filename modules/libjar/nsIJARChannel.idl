@@ -6,8 +6,9 @@
 #include "nsIChannel.idl"
 
 interface nsIFile;
+interface nsIZipEntry;
 
-[scriptable, builtinclass, uuid(5a4f8df0-3bd9-45c2-9db9-67e74c3dd47d)]
+[scriptable, builtinclass, uuid(8cce289f-1671-452e-b9c3-3b7366ec8337)]
 interface nsIJARChannel : nsIChannel
 {
     /**
@@ -27,6 +28,12 @@ interface nsIJARChannel : nsIChannel
      * Returns the JAR file.
      */
     readonly attribute nsIFile jarFile;
+
+    /**
+     * Returns the zip entry if the file is synchronously accessible.
+     * This will work even without opening the channel.
+     */
+    readonly attribute nsIZipEntry zipEntry;
 
     /**
      * For child process, set this to make sure that a valid file descriptor of
