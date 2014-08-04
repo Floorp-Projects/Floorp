@@ -11167,7 +11167,7 @@ class CGDictionary(CGThing):
 
     @staticmethod
     def makeMemberName(name):
-        return "m" + name[0].upper() + name[1:]
+        return "m" + name[0].upper() + name[1:].replace("-", "_")
 
     def getMemberType(self, memberInfo):
         _, conversionInfo = memberInfo
@@ -11351,7 +11351,7 @@ class CGDictionary(CGThing):
 
     @staticmethod
     def makeIdName(name):
-        return name + "_id"
+        return name.replace("-", "_") + "_id"
 
     @staticmethod
     def getDictionaryDependenciesFromType(type):
