@@ -336,8 +336,9 @@ class ParallelSafetyVisitor : public MInstructionVisitor
 static void
 TransplantResumePoint(MInstruction *oldInstruction, MInstruction *replacementInstruction)
 {
+    MOZ_ASSERT(!oldInstruction->isDiscarded());
     if (MResumePoint *rp = oldInstruction->resumePoint()) {
-        replacementInstruction->setResumePoint(rp);
+        replacementInstruction->stealResumePoint(oldInstruction);
         if (rp->instruction() == oldInstruction)
             rp->setInstruction(replacementInstruction);
     }
@@ -436,6 +437,10 @@ ParallelSafetyVisitor::convertToBailout(MInstructionIterator &iter)
 
     clearUnsafe();
 
+    // Allocate a new bailout instruction and transplant the resume point.
+    MBail *bail = MBail::New(graph_.alloc(), Bailout_ParallelUnsafe);
+    TransplantResumePoint(ins, bail);
+
     // Discard the rest of the block and sever its link to its successors in
     // the CFG.
     for (size_t i = 0; i < block->numSuccessors(); i++)
@@ -443,8 +448,6 @@ ParallelSafetyVisitor::convertToBailout(MInstructionIterator &iter)
     block->discardAllInstructionsStartingAt(iter);
 
     // End the block in a bail.
-    MBail *bail = MBail::New(graph_.alloc(), Bailout_ParallelUnsafe);
-    TransplantResumePoint(ins, bail);
     block->add(bail);
     block->end(MUnreachable::New(alloc()));
     return true;

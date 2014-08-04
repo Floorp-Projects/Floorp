@@ -1765,6 +1765,9 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
                 if (MResumePoint *resume = iter->toInstruction()->resumePoint()) {
                     if (MInstruction *ins = resume->instruction())
                         JS_ASSERT(ins->block() == iter->block());
+
+                    for (uint32_t i = 0, e = resume->numOperands(); i < e; i++)
+                        MOZ_ASSERT(resume->getUseFor(i)->hasProducer());
                 }
             }
 
