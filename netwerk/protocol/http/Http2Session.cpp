@@ -2947,14 +2947,6 @@ Http2Session::ConfirmTLSProfile()
     RETURN_SESSION_ERROR(this, INADEQUATE_SECURITY);
   }
 
-  int16_t macAlgorithm = ssl->GetMACAlgorithmUsed();
-  LOG3(("Http2Session::ConfirmTLSProfile %p MAC Algortihm (aead==6) %d\n",
-        this, macAlgorithm));
-  if (macAlgorithm != nsISSLSocketControl::nsISSLSocketControl::SSL_MAC_AEAD) {
-    LOG3(("Http2Session::ConfirmTLSProfile %p FAILED due to lack of AEAD\n", this));
-    RETURN_SESSION_ERROR(this, INADEQUATE_SECURITY);
-  }
-
   /* We are required to send SNI. We do that already, so no check is done
    * here to make sure we did. */
 
