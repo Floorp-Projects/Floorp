@@ -741,7 +741,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case ePointerEventClass:
       return NS_NewDOMPointerEvent(aDOMEvent, aOwner, aPresContext,
                                    aEvent->AsPointerEvent());
-    case NS_TOUCH_EVENT:
+    case eTouchEventClass:
       return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsTouchEvent());
     case NS_TRANSITION_EVENT:

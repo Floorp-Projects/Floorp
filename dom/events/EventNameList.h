@@ -550,19 +550,19 @@ WINDOW_ONLY_EVENT(moznetworkdownload,
 TOUCH_EVENT(touchstart,
             NS_TOUCH_START,
             EventNameType_All,
-            NS_TOUCH_EVENT)
+            eTouchEventClass)
 TOUCH_EVENT(touchend,
             NS_TOUCH_END,
             EventNameType_All,
-            NS_TOUCH_EVENT)
+            eTouchEventClass)
 TOUCH_EVENT(touchmove,
             NS_TOUCH_MOVE,
             EventNameType_All,
-            NS_TOUCH_EVENT )
+            eTouchEventClass )
 TOUCH_EVENT(touchcancel,
             NS_TOUCH_CANCEL,
             EventNameType_All,
-            NS_TOUCH_EVENT)
+            eTouchEventClass)
 
 DOCUMENT_ONLY_EVENT(readystatechange,
                     NS_READYSTATECHANGE,

@@ -300,7 +300,7 @@ UIEvent::GetLayerPoint() const
        mEvent->mClass != eMouseScrollEventClass &&
        mEvent->mClass != eWheelEventClass &&
        mEvent->mClass != ePointerEventClass &&
-       mEvent->mClass != NS_TOUCH_EVENT &&
+       mEvent->mClass != eTouchEventClass &&
        mEvent->mClass != eDragEventClass &&
        mEvent->mClass != eSimpleGestureEventClass) ||
       !mPresContext ||

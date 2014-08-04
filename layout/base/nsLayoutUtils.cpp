@@ -1876,7 +1876,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                   aEvent->mClass != eSimpleGestureEventClass &&
                   aEvent->mClass != ePointerEventClass &&
                   aEvent->mClass != eGestureNotifyEventClass &&
-                  aEvent->mClass != NS_TOUCH_EVENT &&
+                  aEvent->mClass != eTouchEventClass &&
                   aEvent->mClass != eQueryContentEventClass))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 

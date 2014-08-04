@@ -78,7 +78,7 @@ GetPrefsFor(EventClassID aEventClassID)
 {
   EventRadiusPrefs* prefs = nullptr;
   const char* prefBranch = nullptr;
-  if (aEventClassID == NS_TOUCH_EVENT) {
+  if (aEventClassID == eTouchEventClass) {
     prefBranch = "touch";
     prefs = &sTouchEventRadiusPrefs;
   } else if (aEventClassID == eMouseEventClass) {
