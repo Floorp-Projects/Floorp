@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from threading import Lock
+import codecs
 
 from ..structuredlog import log_levels
 
@@ -50,6 +51,16 @@ class StreamHandler(BaseHandler):
 
     def __init__(self,  stream, formatter):
         assert stream is not None
+
+        # This is a hack to deal with the case where we are passed a
+        # StreamWriter (e.g. by mach for stdout). A StreamWriter requires
+        # the code to handle unicode in exactly the opposite way compared
+        # to a normal stream i.e. you always have to pass in a Unicode
+        # object rather than a string object. Cope with that by extracting
+        # the underlying raw stream.
+        if isinstance(stream, codecs.StreamWriter):
+            stream = stream.stream
+
         self.stream = stream
         BaseHandler.__init__(self, formatter)
 
@@ -61,9 +72,11 @@ class StreamHandler(BaseHandler):
         if not formatted:
             return
         with self._lock:
-            #XXX Should encoding be the formatter's responsibility?
-            try:
-                self.stream.write(formatted.encode("utf8", "replace"))
-            except:
-                raise
+            if isinstance(formatted, unicode):
+                self.stream.write(formatted.encode("utf-8", "replace"))
+            elif isinstance(formatted, str):
+                self.stream.write(formatted)
+            else:
+                assert False, "Got output from the formatter of an unexpected type"
+
             self.stream.flush()
