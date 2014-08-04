@@ -21,6 +21,37 @@ const MODE_WRONLY = FileUtils.MODE_WRONLY;
 const MODE_CREATE = FileUtils.MODE_CREATE;
 const MODE_TRUNCATE = FileUtils.MODE_TRUNCATE;
 
+// nsSearchService.js uses Services.appinfo.name to build a salt for a hash.
+var XULAppInfo = {
+  vendor: "Mozilla",
+  name: "XPCShell",
+  ID: "xpcshell@test.mozilla.org",
+  version: "5",
+  appBuildID: "2007010101",
+  platformVersion: "1.9",
+  platformBuildID: "2007010101",
+  inSafeMode: false,
+  logConsoleErrors: true,
+  OS: "XPCShell",
+  XPCOMABI: "noarch-spidermonkey",
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime,
+                                         Ci.nsISupports])
+};
+
+var XULAppInfoFactory = {
+  createInstance: function (outer, iid) {
+    if (outer != null)
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    return XULAppInfo.QueryInterface(iid);
+  }
+};
+
+Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+          .registerFactory(Components.ID("{ecff8849-cee8-40a7-bd4a-3f4fdfeddb5c}"),
+                           "XULAppInfo", "@mozilla.org/xre/app-info;1",
+                           XULAppInfoFactory);
+
 // Need to create and register a profile folder.
 var gProfD = do_get_profile();
 
