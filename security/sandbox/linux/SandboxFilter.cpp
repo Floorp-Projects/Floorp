@@ -191,6 +191,11 @@ SandboxFilterImplContent::Build() {
   Allow(SYSCALL(fsync));
   Allow(SYSCALL(msync));
 
+#if defined(ANDROID) && !defined(MOZ_MEMORY)
+  // Android's libc's realloc uses mremap.
+  Allow(SYSCALL(mremap));
+#endif
+
   /* Should remove all of the following in the future, if possible */
   Allow(SYSCALL(getpriority));
   Allow(SYSCALL(sched_get_priority_min));
