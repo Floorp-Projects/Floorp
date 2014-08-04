@@ -54,7 +54,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
   // ContentEvents.h
   eScrollPortEventClass,             // InternalScrollPortEvent
   eScrollAreaEventClass,             // InternalScrollAreaEvent
-  NS_FORM_EVENT,                     // InternalFormEvent
+  eFormEventClass,                   // InternalFormEvent
   NS_FOCUS_EVENT,                    // InternalFocusEvent
   NS_CLIPBOARD_EVENT,                // InternalClipboardEvent
   NS_TRANSITION_EVENT,               // InternalTransitionEvent

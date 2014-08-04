@@ -787,7 +787,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
       }
     }
     break;
-  case NS_FORM_EVENT :
+  case eFormEventClass:
     // For these following events only allow popups if they're
     // triggered while handling user input. See
     // nsPresShell::HandleEventInternal() for details.
