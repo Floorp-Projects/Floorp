@@ -159,14 +159,14 @@ public:
     return this;
   }
 
-  InternalClipboardEvent(bool aIsTrusted, uint32_t aMessage) :
-    WidgetEvent(aIsTrusted, aMessage, NS_CLIPBOARD_EVENT)
+  InternalClipboardEvent(bool aIsTrusted, uint32_t aMessage)
+    : WidgetEvent(aIsTrusted, aMessage, eClipboardEventClass)
   {
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_CLIPBOARD_EVENT,
+    MOZ_ASSERT(mClass == eClipboardEventClass,
                "Duplicate() must be overridden by sub class");
     InternalClipboardEvent* result = new InternalClipboardEvent(false, message);
     result->AssignClipboardEventData(*this, true);

@@ -171,7 +171,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
         dragEvent->relatedTarget = nullptr;
         break;
       }
-      case NS_CLIPBOARD_EVENT:
+      case eClipboardEventClass:
         tmp->mEvent->AsClipboardEvent()->clipboardData = nullptr;
         break;
       case NS_MUTATION_EVENT:
@@ -212,7 +212,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
         cb.NoteXPCOMChild(dragEvent->relatedTarget);
         break;
       }
-      case NS_CLIPBOARD_EVENT:
+      case eClipboardEventClass:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->clipboardData");
         cb.NoteXPCOMChild(tmp->mEvent->AsClipboardEvent()->clipboardData);
         break;

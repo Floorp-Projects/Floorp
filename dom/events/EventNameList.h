@@ -407,15 +407,15 @@ EVENT(wheel,
 EVENT(copy,
       NS_COPY,
       EventNameType_HTMLXUL,
-      NS_CLIPBOARD_EVENT)
+      eClipboardEventClass)
 EVENT(cut,
       NS_CUT,
       EventNameType_HTMLXUL,
-      NS_CLIPBOARD_EVENT)
+      eClipboardEventClass)
 EVENT(paste,
       NS_PASTE,
       EventNameType_HTMLXUL,
-      NS_CLIPBOARD_EVENT)
+      eClipboardEventClass)
 // Gecko-specific extensions that apply to elements
 EVENT(beforescriptexecute,
       NS_BEFORE_SCRIPT_EXECUTE,
