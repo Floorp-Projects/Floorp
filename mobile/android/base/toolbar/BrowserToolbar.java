@@ -182,7 +182,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         Tabs.registerOnTabsChangedListener(this);
         isSwitchingTabs = true;
-        isAnimatingEntry = false;
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Reader:Click",
@@ -198,8 +197,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         urlBarEntryDefaultLayoutParams = (RelativeLayout.LayoutParams) urlBarEntry.getLayoutParams();
         // API level 19 adds a RelativeLayout.LayoutParams copy constructor, so we explicitly cast
         // to ViewGroup.MarginLayoutParams to ensure consistency across platforms.
-        urlBarEntryShrunkenLayoutParams = new RelativeLayout.LayoutParams(
-                (ViewGroup.MarginLayoutParams) urlBarEntryDefaultLayoutParams);
+        urlBarEntryShrunkenLayoutParams = new RelativeLayout.LayoutParams(urlBarEntryDefaultLayoutParams);
         // Note: a shrunken phone layout is not displayed on any known devices,
         // and thus shrunken layout params for phone are not maintained.
         if (HardwareUtils.isTablet()) {
@@ -488,7 +486,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        // If the motion event has occured below the toolbar (due to the scroll
+        // If the motion event has occurred below the toolbar (due to the scroll
         // offset), let it pass through to the page.
         if (event != null && event.getY() > getHeight() + ViewHelper.getTranslationY(this)) {
             return false;

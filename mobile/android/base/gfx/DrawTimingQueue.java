@@ -37,7 +37,6 @@ final class DrawTimingQueue {
         mMetrics = new DisplayPortMetrics[BUFFER_SIZE];
         mTimestamps = new long[BUFFER_SIZE];
         mHead = BUFFER_SIZE - 1;
-        mTail = 0;
     }
 
     /**
