@@ -311,7 +311,8 @@ def run(data_file, objdir):
         # list of config and command files.
         config_files, command_files = get_config_files(data)
         for f, t in config_files:
-            if os.path.getmtime(f) < os.path.getmtime(t):
+            if not os.path.exists(t) or \
+                    os.path.getmtime(f) < os.path.getmtime(t):
                 skip_config_status = False
 
     if not skip_config_status:
