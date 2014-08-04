@@ -70,6 +70,7 @@ WEBIDL_FILES = [
     'Contacts.webidl',
     'ConvolverNode.webidl',
     'Coordinates.webidl',
+    'CSPReport.webidl',
     'CSS.webidl',
     'CSSPrimitiveValue.webidl',
     'CSSRuleList.webidl',
