@@ -21,8 +21,9 @@ import java.util.Locale;
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
 
-    // This matches AppConstants, but we're built earlier.
+    // These match AppConstants, but we're built earlier.
     private static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
+    private static final String MOZ_APP_ABI = "@MOZ_APP_ABI@";
 
     private static volatile Intent sIntent;
     private static File sCacheFile;
@@ -264,6 +265,8 @@ public final class GeckoLoader {
         final StringBuilder message = new StringBuilder("LOAD ");
         message.append(lib);
 
+        // These might differ. If so, we know why the library won't load!
+        message.append(": ABI: " + MOZ_APP_ABI + ", " + android.os.Build.CPU_ABI);
         message.append(": Data: " + context.getApplicationInfo().dataDir);
         try {
             final boolean appLibExists = new File("/data/app-lib/" + ANDROID_PACKAGE_NAME + "/lib" + lib + ".so").exists();
@@ -336,9 +339,17 @@ public final class GeckoLoader {
 
             // Attempt 2: use nativeLibraryDir, which should also work.
             final String libDir = context.getApplicationInfo().nativeLibraryDir;
-            if (attemptLoad(libDir + "/lib" + lib + ".so")) {
-                // Success!
-                return null;
+            final String libPath = libDir + "/lib" + lib + ".so";
+
+            // Does it even exist?
+            if (new File(libPath).exists()) {
+                if (attemptLoad(libPath)) {
+                    // Success!
+                    return null;
+                }
+                Log.wtf(LOGTAG, "Library exists but couldn't load!");
+            } else {
+                Log.wtf(LOGTAG, "Library doesn't exist when it should.");
             }
 
             // We failed. Return the original cause.

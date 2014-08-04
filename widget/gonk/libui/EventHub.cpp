@@ -51,12 +51,6 @@
 #include <sys/limits.h>
 #include <sha1.h>
 
-#include "PowerWakeLock.h"
-#include "mozilla/Hal.h"
-using namespace mozilla;
-using namespace mozilla::hal;
-using namespace mozilla::hal_impl;
-
 /* this macro is used to tell if "bit" is set in "array"
  * it selects a byte from the array, and does a boolean AND
  * operation with a byte that only has the relevant bit set.
@@ -861,10 +855,6 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                         event->type = iev.type;
                         event->code = iev.code;
                         event->value = iev.value;
-			if (event->code == KEY_POWER && event->value
-                          && !hal::GetScreenEnabled()) {
-                          gPowerWakelock = new PowerWakelock();
-                        }
                         event += 1;
                         capacity -= 1;
                     }
