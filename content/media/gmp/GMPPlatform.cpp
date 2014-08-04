@@ -4,17 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPPlatform.h"
-#include "GMPTimerChild.h"
 #include "mozilla/Monitor.h"
 #include "nsAutoPtr.h"
-#include "GMPChild.h"
-#include <ctime>
 
 namespace mozilla {
 namespace gmp {
 
 static MessageLoop* sMainLoop = nullptr;
-static GMPChild* sChild = nullptr;
 
 // We just need a refcounted wrapper for GMPTask objects.
 class Runnable MOZ_FINAL
@@ -145,29 +141,11 @@ CreateMutex(GMPMutex** aMutex)
   return GMPNoErr;
 }
 
-GMPErr
-SetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS)
-{
-  GMPTimerChild* timers = sChild->GetGMPTimers();
-  NS_ENSURE_TRUE(timers, GMPGenericErr);
-  return timers->SetTimer(aTask, aTimeoutMS);
-}
-
-GMPErr
-GetClock(GMPTimestamp* aOutTime)
-{
-  *aOutTime = time(0) * 1000;
-  return GMPNoErr;
-}
-
 void
-InitPlatformAPI(GMPPlatformAPI& aPlatformAPI, GMPChild* aChild)
+InitPlatformAPI(GMPPlatformAPI& aPlatformAPI)
 {
   if (!sMainLoop) {
     sMainLoop = MessageLoop::current();
-  }
-  if (!sChild) {
-    sChild = aChild;
   }
 
   aPlatformAPI.version = 0;
@@ -176,8 +154,8 @@ InitPlatformAPI(GMPPlatformAPI& aPlatformAPI, GMPChild* aChild)
   aPlatformAPI.syncrunonmainthread = &SyncRunOnMainThread;
   aPlatformAPI.createmutex = &CreateMutex;
   aPlatformAPI.createrecord = nullptr;
-  aPlatformAPI.settimer = &SetTimerOnMainThread;
-  aPlatformAPI.getcurrenttime = &GetClock;
+  aPlatformAPI.settimer = nullptr;
+  aPlatformAPI.getcurrenttime = nullptr;
 }
 
 GMPThreadImpl::GMPThreadImpl()
