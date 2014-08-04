@@ -35,7 +35,7 @@ class TransportLayerNSPRAdapter {
   input_() {}
 
   void PacketReceived(const void *data, int32_t len);
-  int32_t Read(void *data, int32_t len);
+  int32_t Recv(void *buf, int32_t buflen);
   int32_t Write(const void *buf, int32_t length);
 
  private:
