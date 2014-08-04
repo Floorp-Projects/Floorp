@@ -29,6 +29,7 @@
 #include <limits>
 #include <new>
 
+#include "cert.h"
 #include "cryptohi.h"
 #include "hasht.h"
 #include "pk11pub.h"

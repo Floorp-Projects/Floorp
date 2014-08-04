@@ -28,7 +28,6 @@
 #include <ctime>
 #include <stdint.h>
 
-#include "cert.h"
 #include "keyhi.h"
 #include "pkix/enumclass.h"
 #include "pkix/pkixtypes.h"
@@ -72,8 +71,6 @@ SECITEM_FreeItem_true(SECItem* item)
 
 } // unnamed namespace
 
-typedef ScopedPtr<CERTCertificate, CERT_DestroyCertificate> ScopedCERTCertificate;
-typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
 typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
 typedef mozilla::pkix::ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
   ScopedSECKEYPublicKey;
@@ -172,17 +169,6 @@ public:
   // TODO(bug 980538): add a way to specify what certificates are included.
 
   // The fields below are in the order that they appear in an OCSP response.
-
-  // By directly using the issuer name & SPKI and signer name & private key,
-  // instead of extracting those things out of CERTCertificate objects, we
-  // avoid poor interactions with the NSS CERTCertificate caches. In
-  // particular, there are some tests in which it is important that we know
-  // that the issuer and/or signer certificates are NOT in the NSS caches
-  // because we ant to make sure that our path building logic will find them
-  // or we want to test what happens when those certificates cannot be found.
-  // This concern doesn't apply to |cert| above because our verification code
-  // for certificate chains and for OCSP responses take the end-entity cert
-  // as a CERTCertificate anyway.
 
   enum OCSPResponseStatus {
     successful = 0,
