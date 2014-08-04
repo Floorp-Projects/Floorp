@@ -8,6 +8,7 @@
 
 #include "jscntxt.h"
 #include "jsmath.h"
+#include "jsobj.h"
 #include "jsstr.h"
 
 #include "builtin/TypedObject.h"
@@ -982,5 +983,43 @@ RObjectState::recover(JSContext *cx, SnapshotIterator &iter) const
 
     val.setObject(*object);
     iter.storeInstructionResult(val);
+    return true;
+}
+
+bool
+MArrayState::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_ArrayState));
+    writer.writeUnsigned(numElements());
+    return true;
+}
+
+RArrayState::RArrayState(CompactBufferReader &reader)
+{
+    numElements_ = reader.readUnsigned();
+}
+
+bool
+RArrayState::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue result(cx);
+    JSObject *object = &iter.read().toObject();
+    uint32_t initLength = iter.read().toInt32();
+
+    object->setDenseInitializedLength(initLength);
+    for (size_t index = 0; index < numElements(); index++) {
+        Value val = iter.read();
+
+        if (index >= initLength) {
+            MOZ_ASSERT(val.isUndefined());
+            continue;
+        }
+
+        object->initDenseElement(index, val);
+    }
+
+    result.setObject(*object);
+    iter.storeInstructionResult(result);
     return true;
 }

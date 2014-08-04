@@ -1916,6 +1916,87 @@ class MObjectState : public MVariadicInstruction
     }
 };
 
+// Represent the contents of all elements of an array.  This instruction is not
+// lowered and is not used to generate code.
+class MArrayState : public MVariadicInstruction
+{
+  private:
+    uint32_t numElements_;
+
+    MArrayState(MDefinition *arr)
+    {
+        // This instruction is only used as a summary for bailout paths.
+        setRecoveredOnBailout();
+        numElements_ = arr->toNewArray()->count();
+    }
+
+    bool init(TempAllocator &alloc, MDefinition *obj, MDefinition *len) {
+        if (!MVariadicInstruction::init(alloc, numElements() + 2))
+            return false;
+        initOperand(0, obj);
+        initOperand(1, len);
+        return true;
+    }
+
+    void initElement(uint32_t index, MDefinition *def) {
+        initOperand(index + 2, def);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ArrayState)
+
+    static MArrayState *New(TempAllocator &alloc, MDefinition *arr, MDefinition *undefinedVal,
+                            MDefinition *initLength)
+    {
+        MArrayState *res = new(alloc) MArrayState(arr);
+        if (!res || !res->init(alloc, arr, initLength))
+            return nullptr;
+        for (size_t i = 0; i < res->numElements(); i++)
+            res->initElement(i, undefinedVal);
+        return res;
+    }
+
+    static MArrayState *Copy(TempAllocator &alloc, MArrayState *state)
+    {
+        MDefinition *arr = state->array();
+        MDefinition *len = state->initializedLength();
+        MArrayState *res = new(alloc) MArrayState(arr);
+        if (!res || !res->init(alloc, arr, len))
+            return nullptr;
+        for (size_t i = 0; i < res->numElements(); i++)
+            res->initElement(i, state->getElement(i));
+        return res;
+    }
+
+    MDefinition *array() const {
+        return getOperand(0);
+    }
+
+    MDefinition *initializedLength() const {
+        return getOperand(1);
+    }
+    void setInitializedLength(MDefinition *def) {
+        replaceOperand(1, def);
+    }
+
+
+    size_t numElements() const {
+        return numElements_;
+    }
+
+    MDefinition *getElement(uint32_t index) const {
+        return getOperand(index + 2);
+    }
+    void setElement(uint32_t index, MDefinition *def) {
+        replaceOperand(index + 2, def);
+    }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
+    }
+};
+
 // Setting __proto__ in an object literal.
 class MMutateProto
   : public MAryInstruction<2>,
