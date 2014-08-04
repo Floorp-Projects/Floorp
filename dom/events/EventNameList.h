@@ -180,31 +180,31 @@ EVENT(dblclick,
 EVENT(drag,
       NS_DRAGDROP_DRAG,
       EventNameType_HTMLXUL,
-      NS_DRAG_EVENT)
+      eDragEventClass)
 EVENT(dragend,
       NS_DRAGDROP_END,
       EventNameType_HTMLXUL,
-      NS_DRAG_EVENT)
+      eDragEventClass)
 EVENT(dragenter,
       NS_DRAGDROP_ENTER,
       EventNameType_HTMLXUL,
-      NS_DRAG_EVENT)
+      eDragEventClass)
 EVENT(dragleave,
       NS_DRAGDROP_LEAVE_SYNTH,
       EventNameType_HTMLXUL,
-      NS_DRAG_EVENT)
+      eDragEventClass)
 EVENT(dragover,
       NS_DRAGDROP_OVER_SYNTH,
       EventNameType_HTMLXUL,
-      NS_DRAG_EVENT)
+      eDragEventClass)
 EVENT(dragstart,
       NS_DRAGDROP_START,
       EventNameType_HTMLXUL,
-      NS_DRAG_EVENT)
+      eDragEventClass)
 EVENT(drop,
       NS_DRAGDROP_DROP,
       EventNameType_HTMLXUL,
-      NS_DRAG_EVENT)
+      eDragEventClass)
 EVENT(durationchange,
       NS_DURATIONCHANGE,
       EventNameType_HTML,
@@ -702,15 +702,15 @@ NON_IDL_EVENT(commandupdate,
 NON_IDL_EVENT(dragexit,
               NS_DRAGDROP_EXIT_SYNTH,
               EventNameType_XUL,
-              NS_DRAG_EVENT)
+              eDragEventClass)
 NON_IDL_EVENT(dragdrop,
               NS_DRAGDROP_DRAGDROP,
               EventNameType_XUL,
-              NS_DRAG_EVENT)
+              eDragEventClass)
 NON_IDL_EVENT(draggesture,
               NS_DRAGDROP_GESTURE,
               EventNameType_XUL,
-              NS_DRAG_EVENT)
+              eDragEventClass)
 NON_IDL_EVENT(overflow,
               NS_SCROLLPORT_OVERFLOW,
               EventNameType_XUL,

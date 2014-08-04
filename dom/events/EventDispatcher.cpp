@@ -717,7 +717,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eEditorInputEventClass:
       return NS_NewDOMInputEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsEditorInputEvent());
-    case NS_DRAG_EVENT:
+    case eDragEventClass:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsDragEvent());
     case eTextEventClass:
