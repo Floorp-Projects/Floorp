@@ -66,7 +66,6 @@ int ViEInputManager::NumberOfCaptureDevices() {
   CriticalSectionScoped cs(device_info_cs_.get());
   GetDeviceInfo();
   assert(capture_device_info_);
-  capture_device_info_->Refresh();
   return capture_device_info_->NumberOfDevices();
 }
 

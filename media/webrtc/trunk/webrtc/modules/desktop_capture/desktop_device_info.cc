@@ -251,11 +251,4 @@ int32_t DesktopDeviceInfoImpl::initializeWindowList() {
   return 0;
 }
 
-int32_t DesktopDeviceInfoImpl::RefreshWindowList() {
-  desktop_window_list_.clear();
-  initializeWindowList();
-
-  return 0;
-}
-
 }
