@@ -64,7 +64,7 @@ WidgetEvent::IsContentCommandEvent() const
 bool
 WidgetEvent::IsNativeEventDelivererForPlugin() const
 {
-  return mClass == NS_PLUGIN_EVENT;
+  return mClass == ePluginEventClass;
 }
 
 
