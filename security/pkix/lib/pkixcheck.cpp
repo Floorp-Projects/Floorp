@@ -194,9 +194,9 @@ CertPolicyId::IsAnyPolicy() const {
   if (this == &CertPolicyId::anyPolicy) {
     return true;
   }
-  return numBytes == PR_ARRAY_SIZE(::mozilla::pkix::anyPolicy) &&
+  return numBytes == sizeof(::mozilla::pkix::anyPolicy) &&
          !memcmp(bytes, ::mozilla::pkix::anyPolicy,
-                 PR_ARRAY_SIZE(::mozilla::pkix::anyPolicy));
+                 sizeof(::mozilla::pkix::anyPolicy));
 }
 
 // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
@@ -524,12 +524,12 @@ MatchEKU(Reader& value, KeyPurposeId requiredEKU,
         break;
 
       case KeyPurposeId::anyExtendedKeyUsage:
-        PR_NOT_REACHED("anyExtendedKeyUsage should start with found==true");
-        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+        return NotReached("anyExtendedKeyUsage should start with found==true",
+                          Result::FATAL_ERROR_LIBRARY_FAILURE);
 
       default:
-        PR_NOT_REACHED("unrecognized EKU");
-        return Result::FATAL_ERROR_LIBRARY_FAILURE;
+        return NotReached("unrecognized EKU",
+                          Result::FATAL_ERROR_LIBRARY_FAILURE);
     }
   }
 
