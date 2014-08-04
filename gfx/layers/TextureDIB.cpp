@@ -27,11 +27,11 @@ DIBTextureClient::~DIBTextureClient()
 
 TemporaryRef<TextureClient>
 DIBTextureClient::CreateSimilar(TextureFlags aFlags,
-                                  TextureAllocationFlags aAllocFlags) const
+                                TextureAllocationFlags aAllocFlags) const
 {
   RefPtr<TextureClient> tex = new DIBTextureClient(mFormat, mFlags | aFlags);
 
-  if (!tex->AllocateForSurface(mSize, ALLOC_DEFAULT)) {
+  if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
     return nullptr;
   }
 
