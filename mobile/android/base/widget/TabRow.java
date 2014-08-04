@@ -19,7 +19,6 @@ public class TabRow extends LinearLayout
 
     public TabRow(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mChecked = false;
     }
 
     @Override
