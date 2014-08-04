@@ -401,7 +401,6 @@ RenderLayers(ContainerT* aContainer,
   for (size_t i = 0u; i < aContainer->mPrepared->mLayers.Length(); i++) {
     PreparedLayer& preparedData = aContainer->mPrepared->mLayers[i];
     LayerComposite* layerToRender = preparedData.mLayer;
-
     nsIntRect clipRect = preparedData.mClipRect;
     if (layerToRender->HasLayerBeenComposited()) {
       // Composer2D will compose this layer so skip GPU composition
@@ -503,11 +502,6 @@ ContainerRender(ContainerT* aContainer,
                  LayerManagerComposite* aManager,
                  const nsIntRect& aClipRect)
 {
-  nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
-  if (visibleRect.IsEmpty()) {
-    return;
-  }
-
   MOZ_ASSERT(aContainer->mPrepared);
   if (aContainer->UseIntermediateSurface()) {
     RefPtr<CompositingRenderTarget> surface;
@@ -522,6 +516,7 @@ ContainerRender(ContainerT* aContainer,
 
     float opacity = aContainer->GetEffectiveOpacity();
 
+    nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
 #ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::sDumpPainting) {
       RefPtr<gfx::DataSourceSurface> surf = surface->Dump(aManager->GetCompositor());
