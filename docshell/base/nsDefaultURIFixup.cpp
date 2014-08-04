@@ -960,7 +960,8 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
              colonLoc == uint32_t(kNotFound) && qMarkLoc == uint32_t(kNotFound))
     {
         nsAutoCString asciiHost;
-        if (NS_SUCCEEDED(aFixupInfo->mFixedURI->GetAsciiHost(asciiHost)) &&
+        if (aFixupInfo->mFixedURI &&
+            NS_SUCCEEDED(aFixupInfo->mFixedURI->GetAsciiHost(asciiHost)) &&
             !asciiHost.IsEmpty())
         {
             // Check if this domain is whitelisted as an actual
