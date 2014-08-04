@@ -65,8 +65,6 @@ public:
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
-  void EnsureTiled() { mRequiresTiledProperties = true; }
-
   virtual void InvalidateRegion(const nsIntRegion& aRegion)
   {
     NS_RUNTIMEABORT("ThebesLayerComposites can't fill invalidated regions");
@@ -92,7 +90,6 @@ private:
 
 private:
   RefPtr<ContentHost> mBuffer;
-  bool mRequiresTiledProperties;
 };
 
 } /* layers */
