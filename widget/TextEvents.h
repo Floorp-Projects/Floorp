@@ -360,7 +360,7 @@ public:
 
   WidgetQueryContentEvent(bool aIsTrusted, uint32_t aMessage,
                           nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_QUERY_CONTENT_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eQueryContentEventClass)
     , mSucceeded(false)
     , mWasAsync(false)
     , mUseNativeLineBreak(true)
