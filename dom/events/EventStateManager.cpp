@@ -1099,7 +1099,7 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
   case eWheelEventClass: {
     return remote->SendMouseWheelEvent(*aEvent->AsWheelEvent());
   }
-  case NS_TOUCH_EVENT: {
+  case eTouchEventClass: {
     // Let the child process synthesize a mouse event if needed, and
     // ensure we don't synthesize one in this process.
     *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -1171,7 +1171,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
     default:
       return false;
     }
-  case NS_TOUCH_EVENT:
+  case eTouchEventClass:
     switch (aEvent.message) {
     case NS_TOUCH_START:
     case NS_TOUCH_MOVE:
@@ -1200,7 +1200,7 @@ EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
   //
   // NB: the elements of |targets| must be unique, for correctness.
   nsAutoTArray<nsCOMPtr<nsIContent>, 1> targets;
-  if (aEvent->mClass != NS_TOUCH_EVENT ||
+  if (aEvent->mClass != eTouchEventClass ||
       aEvent->message == NS_TOUCH_START) {
     // If this event only has one target, and it's remote, add it to
     // the array.

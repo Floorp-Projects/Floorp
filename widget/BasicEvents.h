@@ -49,7 +49,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
   // TouchEvents.h
   eGestureNotifyEventClass,          // WidgetGestureNotifyEvent
   eSimpleGestureEventClass,          // WidgetSimpleGestureEvent
-  NS_TOUCH_EVENT,                    // WidgetTouchEvent
+  eTouchEventClass,                  // WidgetTouchEvent
 
   // ContentEvents.h
   NS_SCROLLPORT_EVENT,               // InternalScrollPortEvent

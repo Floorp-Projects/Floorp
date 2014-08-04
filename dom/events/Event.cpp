@@ -740,7 +740,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
       }
     }
     break;
-  case NS_TOUCH_EVENT :
+  case eTouchEventClass:
     if (aEvent->mFlags.mIsTrusted) {
       switch (aEvent->message) {
       case NS_TOUCH_START :
@@ -851,7 +851,7 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
         aEvent->mClass != eMouseScrollEventClass &&
         aEvent->mClass != eWheelEventClass &&
         aEvent->mClass != ePointerEventClass &&
-        aEvent->mClass != NS_TOUCH_EVENT &&
+        aEvent->mClass != eTouchEventClass &&
         aEvent->mClass != eDragEventClass &&
         aEvent->mClass != eSimpleGestureEventClass)) {
     return nsIntPoint(0, 0);
@@ -906,7 +906,7 @@ Event::GetClientCoords(nsPresContext* aPresContext,
       (aEvent->mClass != eMouseEventClass &&
        aEvent->mClass != eMouseScrollEventClass &&
        aEvent->mClass != eWheelEventClass &&
-       aEvent->mClass != NS_TOUCH_EVENT &&
+       aEvent->mClass != eTouchEventClass &&
        aEvent->mClass != eDragEventClass &&
        aEvent->mClass != ePointerEventClass &&
        aEvent->mClass != eSimpleGestureEventClass) ||
