@@ -388,6 +388,8 @@ class MDefinition : public MNode
 
     virtual Opcode op() const = 0;
     virtual const char *opName() const = 0;
+    virtual bool accept(MDefinitionVisitor *visitor) = 0;
+
     void printName(FILE *fp) const;
     static void PrintOpcodeName(FILE *fp, Opcode op);
     virtual void printOpcode(FILE *fp) const;
@@ -777,8 +779,6 @@ class MInstruction
       : resumePoint_(nullptr)
     { }
 
-    virtual bool accept(MInstructionVisitor *visitor) = 0;
-
     void setResumePoint(MResumePoint *resumePoint) {
         JS_ASSERT(!resumePoint_);
         resumePoint_ = resumePoint;
@@ -800,7 +800,7 @@ class MInstruction
     const char *opName() const {                                            \
         return #opcode;                                                     \
     }                                                                       \
-    bool accept(MInstructionVisitor *visitor) {                             \
+    bool accept(MDefinitionVisitor *visitor) {                              \
         return visitor->visit##opcode(this);                                \
     }
 

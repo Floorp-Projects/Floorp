@@ -235,7 +235,7 @@ namespace jit {
  MIR_OPCODE_LIST(FORWARD_DECLARE)
 #undef FORWARD_DECLARE
 
-class MInstructionVisitor // interface i.e. pure abstract class
+class MDefinitionVisitor // interface i.e. pure abstract class
 {
   public:
 #define VISIT_INS(op) virtual bool visit##op(M##op *) = 0;
@@ -243,7 +243,7 @@ class MInstructionVisitor // interface i.e. pure abstract class
 #undef VISIT_INS
 };
 
-class MInstructionVisitorWithDefaults : public MInstructionVisitor
+class MDefinitionVisitorWithDefaults : public MDefinitionVisitor
 {
   public:
 #define VISIT_INS(op) virtual bool visit##op(M##op *) { MOZ_ASSUME_UNREACHABLE("NYI: " #op); }

@@ -65,7 +65,7 @@ using parallel::SpewCompile;
         return insertWriteGuard(prop, prop->obj());                           \
     }
 
-class ParallelSafetyVisitor : public MInstructionVisitor
+class ParallelSafetyVisitor : public MDefinitionVisitor
 {
     MIRGraph &graph_;
     bool unsafe_;
