@@ -551,7 +551,7 @@ public:
 
   InternalEditorInputEvent(bool aIsTrusted, uint32_t aMessage,
                            nsIWidget* aWidget)
-    : InternalUIEvent(aIsTrusted, aMessage, aWidget, NS_EDITOR_INPUT_EVENT)
+    : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass)
     , mIsComposing(false)
   {
     if (!aIsTrusted) {
@@ -566,7 +566,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_EDITOR_INPUT_EVENT,
+    MOZ_ASSERT(mClass == eEditorInputEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     InternalEditorInputEvent* result =
