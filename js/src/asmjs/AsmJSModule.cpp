@@ -790,18 +790,31 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
 }
 
 void
-AsmJSModule::restoreToInitialState(ArrayBufferObject *maybePrevBuffer, ExclusiveContext *cx)
+AsmJSModule::restoreToInitialState(uint8_t *prevCode, ArrayBufferObject *maybePrevBuffer,
+                                   ExclusiveContext *cx)
 {
 #ifdef DEBUG
     // Put the absolute links back to -1 so PatchDataWithValueCheck assertions
     // in staticallyLink are valid.
     for (size_t imm = 0; imm < AsmJSImm_Limit; imm++) {
+        void *callee = AddressOf(AsmJSImmKind(imm), cx);
+
+        // If we are in profiling mode, calls to builtins will have been patched
+        // by setProfilingEnabled to be calls to thunks.
+        AsmJSExit::BuiltinKind builtin;
+        void *profilingCallee = profilingEnabled_ && ImmKindIsBuiltin(AsmJSImmKind(imm), &builtin)
+                                ? prevCode + builtinThunkOffsets_[builtin]
+                                : nullptr;
+
         const AsmJSModule::OffsetVector &offsets = staticLinkData_.absoluteLinks[imm];
-        void *target = AddressOf(AsmJSImmKind(imm), cx);
         for (size_t i = 0; i < offsets.length(); i++) {
-            Assembler::PatchDataWithValueCheck(CodeLocationLabel(code_ + offsets[i]),
+            uint8_t *caller = code_ + offsets[i];
+            void *originalValue = profilingCallee && !lookupCodeRange(caller)->isThunk()
+                                  ? profilingCallee
+                                  : callee;
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(caller),
                                                PatchedImmPtr((void*)-1),
-                                               PatchedImmPtr(target));
+                                               PatchedImmPtr(originalValue));
         }
     }
 #endif
@@ -1538,7 +1551,7 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
     // flush all of them at once.
     out.setAutoFlushICacheRange();
 
-    out.restoreToInitialState(maybeHeap_, cx);
+    out.restoreToInitialState(code_, maybeHeap_, cx);
     return true;
 }
 

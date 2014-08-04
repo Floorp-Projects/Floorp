@@ -1148,7 +1148,8 @@ class AsmJSModule
     }
     void initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx);
     bool clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const;
-    void restoreToInitialState(ArrayBufferObject *maybePrevBuffer, ExclusiveContext *cx);
+    void restoreToInitialState(uint8_t *prevCode, ArrayBufferObject *maybePrevBuffer,
+                               ExclusiveContext *cx);
 
     /*************************************************************************/
     // Functions that can be called after dynamic linking succeeds:
