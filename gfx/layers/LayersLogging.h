@@ -164,4 +164,10 @@ Stringify(const T& obj)
 } // namespace
 } // namespace
 
+// versions of printf_stderr and fprintf_stderr that deal with line
+// truncation on android by printing individual lines out of the
+// stringstream as separate calls to logcat.
+void print_stderr(std::stringstream& aStr);
+void fprint_stderr(FILE* aFile, std::stringstream& aStr);
+
 #endif /* GFX_LAYERSLOGGING_H */

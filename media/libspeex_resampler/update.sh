@@ -10,7 +10,8 @@
 set -e -x
 
 cp $1/libspeexdsp/resample.c src
-cp $1/libspeexdsp/resample_sse.h src
+cp $1/libspeexdsp/resample_sse.h src/resample_sse.c
+cp $1/libspeexdsp/resample_neon.h src/resample_neon.c
 cp $1/libspeexdsp/arch.h src
 cp $1/libspeexdsp/stack_alloc.h src
 cp $1/libspeexdsp/fixed_generic.h src
@@ -20,6 +21,7 @@ cp $1/COPYING .
 
 # apply outstanding local patches
 patch -p3 < outside-speex.patch
-patch -p3 < sse-detect-runtime.patch
+patch -p3 < simd-detect-runtime.patch
 patch -p3 < set-skip-frac.patch
 patch -p3 < hugemem.patch
+patch -p3 < remove-empty-asm-clobber.patch

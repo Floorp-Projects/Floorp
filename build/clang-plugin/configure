@@ -3,7 +3,7 @@
 PLATFORM=`uname`
 
 # Default srcdir to this directory
-srcdir=
+srcdir=$(dirname $0)
 
 for option; do
   case "$option" in

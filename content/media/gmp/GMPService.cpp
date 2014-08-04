@@ -18,6 +18,7 @@
 #include "nsIConsoleService.h"
 #include "mozilla/unused.h"
 #include "GMPDecryptorParent.h"
+#include "GMPAudioDecoderParent.h"
 #include "runnable_utils.h"
 
 namespace mozilla {
@@ -236,6 +237,37 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
 
   NS_ADDREF(mGMPThread);
   *aThread = mGMPThread;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
+                                            const nsAString& aOrigin,
+                                            GMPAudioDecoderProxy** aGMPAD)
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
+  NS_ENSURE_ARG(aGMPAD);
+
+  if (mShuttingDownOnGMPThread) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
+                                               NS_LITERAL_CSTRING("decode-audio"),
+                                               *aTags);
+  if (!gmp) {
+    return NS_ERROR_FAILURE;
+  }
+
+  GMPAudioDecoderParent* gmpADP;
+  nsresult rv = gmp->GetGMPAudioDecoder(&gmpADP);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  *aGMPAD = gmpADP;
 
   return NS_OK;
 }

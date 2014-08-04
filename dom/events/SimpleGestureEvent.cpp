@@ -17,7 +17,8 @@ SimpleGestureEvent::SimpleGestureEvent(EventTarget* aOwner,
                aEvent ? aEvent :
                         new WidgetSimpleGestureEvent(false, 0, nullptr))
 {
-  NS_ASSERTION(mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT, "event type mismatch");
+  NS_ASSERTION(mEvent->mClass == eSimpleGestureEventClass,
+               "event type mismatch");
 
   if (aEvent) {
     mEventIsInternal = false;

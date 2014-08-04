@@ -39,7 +39,6 @@
 
 #include "pkix/Input.h"
 #include "pkix/pkixtypes.h"
-#include "prtime.h"
 
 namespace mozilla { namespace pkix { namespace der {
 
@@ -333,7 +332,7 @@ namespace internal {
 // Only times from 1970-01-01-00:00:00 onward are accepted, in order to
 // eliminate the chance for complications in converting times to traditional
 // time formats that start at 1970.
-Result TimeChoice(Reader& input, uint8_t tag, /*out*/ PRTime& time);
+Result TimeChoice(Reader& input, uint8_t tag, /*out*/ Time& time);
 
 } // namespace internal
 
@@ -341,7 +340,7 @@ Result TimeChoice(Reader& input, uint8_t tag, /*out*/ PRTime& time);
 // eliminate the chance for complications in converting times to traditional
 // time formats that start at 1970.
 inline Result
-GeneralizedTime(Reader& input, /*out*/ PRTime& time)
+GeneralizedTime(Reader& input, /*out*/ Time& time)
 {
   return internal::TimeChoice(input, GENERALIZED_TIME, time);
 }
@@ -350,7 +349,7 @@ GeneralizedTime(Reader& input, /*out*/ PRTime& time)
 // eliminate the chance for complications in converting times to traditional
 // time formats that start at 1970.
 inline Result
-TimeChoice(Reader& input, /*out*/ PRTime& time)
+TimeChoice(Reader& input, /*out*/ Time& time)
 {
   uint8_t expectedTag = input.Peek(UTCTime) ? UTCTime : GENERALIZED_TIME;
   return internal::TimeChoice(input, expectedTag, time);

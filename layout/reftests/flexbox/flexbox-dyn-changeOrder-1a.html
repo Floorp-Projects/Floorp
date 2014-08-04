@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!--
+    This test checks that we repaint, when a flex item is brought towards
+    the viewer in the stacking-order, without moving in the "x" or "y"
+    dimensions onscreen, using the "order" and "margin-left" properties.
+
+    This test should end up rendering as a lime square, 100px by 100px.
+-->
+<html class="reftest-wait">
+<head>
+<style>
+#container {
+  display: flex;
+}
+
+#container > * {
+  width: 100px;
+  height: 100px;
+}
+
+#a {
+  background-color: red;
+}
+
+#b {
+  background-color: lime;
+}
+
+.foreground {
+  order: 1;
+  margin-left: -100px;
+}
+</style>
+<script>
+  function tweak() {
+    var a = document.getElementById("a");
+    var b = document.getElementById("b");
+    a.classList.remove("foreground");
+    b.classList.add("foreground");
+    document.documentElement.removeAttribute("class");
+  }
+
+  window.addEventListener("MozReftestInvalidate", tweak, false);
+</script>
+</head>
+<body>
+  <div id="container">
+    <div id="a" class="foreground"></div>
+    <div id="b"></div>
+  </div>
+</body>
+</html>

@@ -2546,7 +2546,7 @@ nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
 
 static uint32_t GetDropEffect(WidgetGUIEvent* aEvent)
 {
-  NS_ASSERTION(aEvent->eventStructType == NS_DRAG_EVENT, "wrong event type");
+  NS_ASSERTION(aEvent->mClass == eDragEventClass, "wrong event type");
   WidgetDragEvent* dragEvent = aEvent->AsDragEvent();
   nsContentUtils::SetDataTransferInEvent(dragEvent);
 
@@ -2724,7 +2724,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
       rv = mView->GetParentIndex(parentIndex, &parentIndex);
     }
 
-    NS_ASSERTION(aEvent->eventStructType == NS_DRAG_EVENT, "wrong event type");
+    NS_ASSERTION(aEvent->mClass == eDragEventClass, "wrong event type");
     WidgetDragEvent* dragEvent = aEvent->AsDragEvent();
     nsContentUtils::SetDataTransferInEvent(dragEvent);
 

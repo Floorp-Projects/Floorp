@@ -13,6 +13,7 @@
 #include "GMPParent.h"
 #include "mozilla/gmp/GMPTypes.h"
 #include "nsThreadUtils.h"
+#include "runnable_utils.h"
 
 template <>
 class nsAutoRefTraits<GMPVideoi420Frame> : public nsPointerRefTraits<GMPVideoi420Frame>
@@ -62,10 +63,16 @@ GMPVideoEncoderParent::GMPVideoEncoderParent(GMPParent *aPlugin)
   mVideoHost(MOZ_THIS_IN_INITIALIZER_LIST())
 {
   MOZ_ASSERT(mPlugin);
+
+  nsresult rv = NS_NewNamedThread("GMPEncoded", getter_AddRefs(mEncodedThread));
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH();
+  }
 }
 
 GMPVideoEncoderParent::~GMPVideoEncoderParent()
 {
+  mEncodedThread->Shutdown();
 }
 
 GMPVideoHostImpl&
@@ -250,6 +257,21 @@ GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
   mVideoHost.ActorDestroyed();
 }
 
+static void
+EncodedCallback(GMPVideoEncoderCallbackProxy* aCallback,
+                GMPVideoEncodedFrame* aEncodedFrame,
+                nsTArray<uint8_t>* aCodecSpecificInfo,
+                nsCOMPtr<nsIThread> aThread)
+{
+  aCallback->Encoded(aEncodedFrame, *aCodecSpecificInfo);
+  delete aCodecSpecificInfo;
+  // Ugh.  Must destroy the frame on GMPThread.
+  // XXX add locks to the ShmemManager instead?
+  aThread->Dispatch(WrapRunnable(aEncodedFrame,
+                                &GMPVideoEncodedFrame::Destroy),
+                   NS_DISPATCH_NORMAL);
+}
+
 bool
 GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame,
                                    const nsTArray<uint8_t>& aCodecSpecificInfo)
@@ -259,12 +281,14 @@ GMPVideoEncoderParent::RecvEncoded(const GMPVideoEncodedFrameData& aEncodedFrame
   }
 
   auto f = new GMPVideoEncodedFrameImpl(aEncodedFrame, &mVideoHost);
+  nsTArray<uint8_t> *codecSpecificInfo = new nsTArray<uint8_t>;
+  codecSpecificInfo->AppendElements((uint8_t*)aCodecSpecificInfo.Elements(), aCodecSpecificInfo.Length());
+  nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
 
-  // Ignore any return code. It is OK for this to fail without killing the process.
-  mCallback->Encoded(f, aCodecSpecificInfo);
+  mEncodedThread->Dispatch(WrapRunnableNM(&EncodedCallback,
+                                          mCallback, f, codecSpecificInfo, thread),
+                           NS_DISPATCH_NORMAL);
 
-  // Return SHM to sender to recycle
-  //SendEncodedReturn(aEncodedFrame, aCodecSpecificInfo);
   return true;
 }
 

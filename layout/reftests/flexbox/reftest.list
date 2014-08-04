@@ -32,6 +32,8 @@ fuzzy-if(B2G,10,3) random-if(winWidget) == flexbox-align-self-baseline-horiz-3.x
 == flexbox-dyn-changeFrameWidth-2.xhtml flexbox-dyn-changeFrameWidth-2-ref.xhtml
 == flexbox-dyn-changeFrameWidth-3.xhtml flexbox-dyn-changeFrameWidth-3-ref.xhtml
 == flexbox-dyn-changeFrameWidth-4.xhtml flexbox-dyn-changeFrameWidth-4-ref.xhtml
+== flexbox-dyn-changeOrder-1a.html flexbox-dyn-changeOrder-1-ref.html
+== flexbox-dyn-changeOrder-1b.html flexbox-dyn-changeOrder-1-ref.html
 == flexbox-dyn-changePadding-1a.xhtml flexbox-dyn-changePadding-1-ref.xhtml
 == flexbox-dyn-changePadding-1b.xhtml flexbox-dyn-changePadding-1-ref.xhtml
 

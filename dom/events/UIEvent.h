@@ -43,12 +43,12 @@ public:
                                          WidgetEvent* aEvent)
   {
     if (!aEvent ||
-        (aEvent->eventStructType != NS_MOUSE_EVENT &&
-         aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-         aEvent->eventStructType != NS_WHEEL_EVENT &&
-         aEvent->eventStructType != NS_DRAG_EVENT &&
-         aEvent->eventStructType != NS_POINTER_EVENT &&
-         aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT)) {
+        (aEvent->mClass != eMouseEventClass &&
+         aEvent->mClass != eMouseScrollEventClass &&
+         aEvent->mClass != eWheelEventClass &&
+         aEvent->mClass != eDragEventClass &&
+         aEvent->mClass != ePointerEventClass &&
+         aEvent->mClass != eSimpleGestureEventClass)) {
       return nsIntPoint(0, 0);
     }
 
@@ -70,12 +70,12 @@ public:
                                           CSSIntPoint* aDefaultClientPoint)
   {
     if (!aEvent ||
-        (aEvent->eventStructType != NS_MOUSE_EVENT &&
-         aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-         aEvent->eventStructType != NS_WHEEL_EVENT &&
-         aEvent->eventStructType != NS_DRAG_EVENT &&
-         aEvent->eventStructType != NS_POINTER_EVENT &&
-         aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
+        (aEvent->mClass != eMouseEventClass &&
+         aEvent->mClass != eMouseScrollEventClass &&
+         aEvent->mClass != eWheelEventClass &&
+         aEvent->mClass != eDragEventClass &&
+         aEvent->mClass != ePointerEventClass &&
+         aEvent->mClass != eSimpleGestureEventClass) ||
         !aPresContext ||
         !aEvent->AsGUIEvent()->widget) {
       return aDefaultClientPoint
@@ -132,9 +132,9 @@ public:
 
   virtual uint32_t Which()
   {
-    MOZ_ASSERT(mEvent->eventStructType != NS_KEY_EVENT,
+    MOZ_ASSERT(mEvent->mClass != eKeyboardEventClass,
                "Key events should override Which()");
-    MOZ_ASSERT(mEvent->eventStructType != NS_MOUSE_EVENT,
+    MOZ_ASSERT(mEvent->mClass != eMouseEventClass,
                "Mouse events should override Which()");
     return 0;
   }

@@ -95,6 +95,7 @@ namespace jit {
     _(NewRunOnceCallObject)                                                 \
     _(NewStringObject)                                                      \
     _(ObjectState)                                                          \
+    _(ArrayState)                                                           \
     _(InitElem)                                                             \
     _(InitElemGetterSetter)                                                 \
     _(MutateProto)                                                          \
@@ -234,7 +235,7 @@ namespace jit {
  MIR_OPCODE_LIST(FORWARD_DECLARE)
 #undef FORWARD_DECLARE
 
-class MInstructionVisitor // interface i.e. pure abstract class
+class MDefinitionVisitor // interface i.e. pure abstract class
 {
   public:
 #define VISIT_INS(op) virtual bool visit##op(M##op *) = 0;
@@ -242,10 +243,21 @@ class MInstructionVisitor // interface i.e. pure abstract class
 #undef VISIT_INS
 };
 
-class MInstructionVisitorWithDefaults : public MInstructionVisitor
+// MDefinition visitor which raises a Not Yet Implemented error for
+// non-overloaded visit functions.
+class MDefinitionVisitorDefaultNYI : public MDefinitionVisitor
 {
   public:
 #define VISIT_INS(op) virtual bool visit##op(M##op *) { MOZ_ASSUME_UNREACHABLE("NYI: " #op); }
+    MIR_OPCODE_LIST(VISIT_INS)
+#undef VISIT_INS
+};
+
+// MDefinition visitor which ignores non-overloaded visit functions.
+class MDefinitionVisitorDefaultNoop : public MDefinitionVisitor
+{
+  public:
+#define VISIT_INS(op) virtual bool visit##op(M##op *) { return true; }
     MIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };

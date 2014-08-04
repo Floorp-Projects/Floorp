@@ -62,7 +62,7 @@ nsUsageArrayHelper::check(uint32_t previousCheckResult,
                           const char *suffix,
                           CertVerifier * certVerifier,
                           SECCertificateUsage aCertUsage,
-                          PRTime time,
+                          mozilla::pkix::Time time,
                           CertVerifier::Flags flags,
                           uint32_t &aCounter,
                           char16_t **outUsages)
@@ -194,7 +194,8 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
   uint32_t &count = *_count;
   count = 0;
 
-  PRTime now = PR_Now();
+  mozilla::pkix::Time now(mozilla::pkix::Now());
+
   CertVerifier::Flags flags = localOnly ? CertVerifier::FLAG_LOCAL_ONLY : 0;
 
   // The following list of checks must be < max_returned_out_array_size

@@ -1616,7 +1616,7 @@ EnableTraceLogger(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
-    args.rval().setBoolean(TraceLoggerEnable(logger));
+    args.rval().setBoolean(TraceLoggerEnable(logger, cx));
 
     return true;
 }

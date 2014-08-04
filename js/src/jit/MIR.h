@@ -92,7 +92,14 @@ MIRType MIRTypeFromValue(const js::Value &vp)
      * on instructions which are only used by ResumePoint or by other flagged
      * instructions.
      */                                                                         \
-    _(RecoveredOnBailout)
+    _(RecoveredOnBailout)                                                       \
+                                                                                \
+    /* The current instruction got discarded from the MIR Graph. This is useful
+     * when we want to iterate over resume points and instructions, while
+     * handling instructions which are discarded without reporting to the
+     * iterator.
+     */                                                                         \
+    _(Discarded)
 
 class MDefinition;
 class MInstruction;
@@ -381,6 +388,8 @@ class MDefinition : public MNode
 
     virtual Opcode op() const = 0;
     virtual const char *opName() const = 0;
+    virtual bool accept(MDefinitionVisitor *visitor) = 0;
+
     void printName(FILE *fp) const;
     static void PrintOpcodeName(FILE *fp, Opcode op);
     virtual void printOpcode(FILE *fp) const;
@@ -770,11 +779,14 @@ class MInstruction
       : resumePoint_(nullptr)
     { }
 
-    virtual bool accept(MInstructionVisitor *visitor) = 0;
-
     void setResumePoint(MResumePoint *resumePoint) {
         JS_ASSERT(!resumePoint_);
         resumePoint_ = resumePoint;
+    }
+    // Used to transfer the resume point to the rewritten instruction.
+    void stealResumePoint(MInstruction *ins) {
+        resumePoint_ = ins->resumePoint_;
+        ins->resumePoint_ = nullptr;
     }
     MResumePoint *resumePoint() const {
         return resumePoint_;
@@ -788,7 +800,7 @@ class MInstruction
     const char *opName() const {                                            \
         return #opcode;                                                     \
     }                                                                       \
-    bool accept(MInstructionVisitor *visitor) {                             \
+    bool accept(MDefinitionVisitor *visitor) {                              \
         return visitor->visit##opcode(this);                                \
     }
 
@@ -1588,7 +1600,7 @@ bool
 MergeTypes(MIRType *ptype, types::TemporaryTypeSet **ptypeSet,
            MIRType newType, types::TemporaryTypeSet *newTypeSet);
 
-class MNewArray : public MNullaryInstruction
+class MNewArray : public MUnaryInstruction
 {
   public:
     enum AllocatingBehaviour {
@@ -1599,32 +1611,33 @@ class MNewArray : public MNullaryInstruction
   private:
     // Number of space to allocate for the array.
     uint32_t count_;
-    // Template for the created object.
-    CompilerRootObject templateObject_;
+
+    // Heap where the array should be allocated.
     gc::InitialHeap initialHeap_;
     // Allocate space at initialization or not
     AllocatingBehaviour allocating_;
 
-    MNewArray(types::CompilerConstraintList *constraints, uint32_t count, JSObject *templateObject,
+    MNewArray(types::CompilerConstraintList *constraints, uint32_t count, MConstant *templateConst,
               gc::InitialHeap initialHeap, AllocatingBehaviour allocating)
-      : count_(count),
-        templateObject_(templateObject),
+      : MUnaryInstruction(templateConst),
+        count_(count),
         initialHeap_(initialHeap),
         allocating_(allocating)
     {
+        JSObject *obj = templateObject();
         setResultType(MIRType_Object);
-        if (!templateObject->hasSingletonType())
-            setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+        if (!obj->hasSingletonType())
+            setResultTypeSet(MakeSingletonTypeSet(constraints, obj));
     }
 
   public:
     INSTRUCTION_HEADER(NewArray)
 
     static MNewArray *New(TempAllocator &alloc, types::CompilerConstraintList *constraints,
-                          uint32_t count, JSObject *templateObject,
+                          uint32_t count, MConstant *templateConst,
                           gc::InitialHeap initialHeap, AllocatingBehaviour allocating)
     {
-        return new(alloc) MNewArray(constraints, count, templateObject, initialHeap, allocating);
+        return new(alloc) MNewArray(constraints, count, templateConst, initialHeap, allocating);
     }
 
     uint32_t count() const {
@@ -1632,7 +1645,7 @@ class MNewArray : public MNullaryInstruction
     }
 
     JSObject *templateObject() const {
-        return templateObject_;
+        return &getOperand(0)->toConstant()->value().toObject();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -1655,6 +1668,13 @@ class MNewArray : public MNullaryInstruction
     // notation.
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        // The template object can safely be used in the recover instruction
+        // because it can never be mutated by any other function execution.
+        return true;
     }
 };
 
@@ -1908,6 +1928,87 @@ class MObjectState : public MVariadicInstruction
     }
     void setDynamicSlot(uint32_t slot, MDefinition *def) {
         setSlot(slot + numFixedSlots(), def);
+    }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
+    }
+};
+
+// Represent the contents of all elements of an array.  This instruction is not
+// lowered and is not used to generate code.
+class MArrayState : public MVariadicInstruction
+{
+  private:
+    uint32_t numElements_;
+
+    MArrayState(MDefinition *arr)
+    {
+        // This instruction is only used as a summary for bailout paths.
+        setRecoveredOnBailout();
+        numElements_ = arr->toNewArray()->count();
+    }
+
+    bool init(TempAllocator &alloc, MDefinition *obj, MDefinition *len) {
+        if (!MVariadicInstruction::init(alloc, numElements() + 2))
+            return false;
+        initOperand(0, obj);
+        initOperand(1, len);
+        return true;
+    }
+
+    void initElement(uint32_t index, MDefinition *def) {
+        initOperand(index + 2, def);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ArrayState)
+
+    static MArrayState *New(TempAllocator &alloc, MDefinition *arr, MDefinition *undefinedVal,
+                            MDefinition *initLength)
+    {
+        MArrayState *res = new(alloc) MArrayState(arr);
+        if (!res || !res->init(alloc, arr, initLength))
+            return nullptr;
+        for (size_t i = 0; i < res->numElements(); i++)
+            res->initElement(i, undefinedVal);
+        return res;
+    }
+
+    static MArrayState *Copy(TempAllocator &alloc, MArrayState *state)
+    {
+        MDefinition *arr = state->array();
+        MDefinition *len = state->initializedLength();
+        MArrayState *res = new(alloc) MArrayState(arr);
+        if (!res || !res->init(alloc, arr, len))
+            return nullptr;
+        for (size_t i = 0; i < res->numElements(); i++)
+            res->initElement(i, state->getElement(i));
+        return res;
+    }
+
+    MDefinition *array() const {
+        return getOperand(0);
+    }
+
+    MDefinition *initializedLength() const {
+        return getOperand(1);
+    }
+    void setInitializedLength(MDefinition *def) {
+        replaceOperand(1, def);
+    }
+
+
+    size_t numElements() const {
+        return numElements_;
+    }
+
+    MDefinition *getElement(uint32_t index) const {
+        return getOperand(index + 2);
+    }
+    void setElement(uint32_t index, MDefinition *def) {
+        replaceOperand(index + 2, def);
     }
 
     bool writeRecoverData(CompactBufferWriter &writer) const;
@@ -4007,6 +4108,7 @@ class MMinMax
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    MDefinition *foldsTo(TempAllocator &alloc);
     void computeRange(TempAllocator &alloc);
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {

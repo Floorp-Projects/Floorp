@@ -293,7 +293,7 @@ HTMLCanvasElement::CopyInnerTo(Element* aDest)
 
 nsresult HTMLCanvasElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
-  if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
+  if (aVisitor.mEvent->mClass == eMouseEventClass) {
     WidgetMouseEventBase* evt = (WidgetMouseEventBase*)aVisitor.mEvent;
     if (mCurrentContext) {
       nsIFrame *frame = GetPrimaryFrame();

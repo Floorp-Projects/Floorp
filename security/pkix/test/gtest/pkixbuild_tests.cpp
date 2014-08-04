@@ -126,14 +126,14 @@ private:
   }
 
   virtual Result FindIssuer(Input encodedIssuerName,
-                            IssuerChecker& checker, PRTime time)
+                            IssuerChecker& checker, Time time)
   {
     SECItem encodedIssuerNameSECItem =
       UnsafeMapInputToSECItem(encodedIssuerName);
     ScopedCERTCertList
       candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
-                                            &encodedIssuerNameSECItem, time,
-                                            true));
+                                            &encodedIssuerNameSECItem, 0,
+                                            false));
     if (candidates) {
       for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
            !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
@@ -158,7 +158,7 @@ private:
     return Success;
   }
 
-  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
+  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, Time,
                                  /*optional*/ const Input*,
                                  /*optional*/ const Input*)
   {

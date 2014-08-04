@@ -103,9 +103,10 @@ protected:
   NSSTest();
 
   ScopedPLArenaPool arena;
-  static PRTime now;
-  static PRTime oneDayBeforeNow;
-  static PRTime oneDayAfterNow;
+  static mozilla::pkix::Time now;
+  static PRTime pr_now;
+  static PRTime pr_oneDayBeforeNow;
+  static PRTime pr_oneDayAfterNow;
 };
 
 } } } // namespace mozilla::pkix::test

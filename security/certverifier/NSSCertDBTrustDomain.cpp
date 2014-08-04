@@ -33,6 +33,8 @@ using namespace mozilla::pkix;
 extern PRLogModuleInfo* gCertVerifierLog;
 #endif
 
+static const uint64_t ServerFailureDelaySeconds = 5 * 60;
+
 namespace mozilla { namespace psm {
 
 const char BUILTIN_ROOTS_MODULE_DEFAULT_NAME[] = "Builtin Roots Module";
@@ -97,15 +99,15 @@ static const uint8_t PERMIT_FRANCE_GOV_NAME_CONSTRAINTS_DATA[] =
 
 Result
 NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
-                                 IssuerChecker& checker, PRTime time)
+                                 IssuerChecker& checker, Time)
 {
   // TODO: NSS seems to be ambiguous between "no potential issuers found" and
   // "there was an error trying to retrieve the potential issuers."
   SECItem encodedIssuerNameSECItem = UnsafeMapInputToSECItem(encodedIssuerName);
   ScopedCERTCertList
     candidates(CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
-                                          &encodedIssuerNameSECItem, time,
-                                          true));
+                                          &encodedIssuerNameSECItem, 0,
+                                          false));
   if (candidates) {
     for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
          !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
@@ -307,7 +309,7 @@ GetOCSPAuthorityInfoAccessLocation(PLArenaPool* arena,
 
 Result
 NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
-                                      const CertID& certID, PRTime time,
+                                      const CertID& certID, Time time,
                          /*optional*/ const Input* stapledOCSPResponse,
                          /*optional*/ const Input* aiaExtension)
 {
@@ -372,7 +374,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
   }
 
   Result cachedResponseResult = Success;
-  PRTime cachedResponseValidThrough = 0;
+  Time cachedResponseValidThrough(Time::uninitialized);
   bool cachedResponsePresent = mOCSPCache.Get(certID,
                                               cachedResponseResult,
                                               cachedResponseValidThrough);
@@ -522,7 +524,10 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
   if (response.GetLength() == 0) {
     Result error = rv;
     if (attemptedRequest) {
-      PRTime timeout = time + ServerFailureDelay;
+      Time timeout(time);
+      if ( timeout.AddSeconds(ServerFailureDelaySeconds) != Success) {
+        return Result::FATAL_ERROR_LIBRARY_FAILURE; // integer overflow
+      }
       rv = mOCSPCache.Put(certID, error, time, timeout);
       if (rv != Success) {
         return rv;
@@ -586,12 +591,12 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
 
 Result
 NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
-  const CertID& certID, PRTime time, uint16_t maxLifetimeInDays,
+  const CertID& certID, Time time, uint16_t maxLifetimeInDays,
   Input encodedResponse, EncodedResponseSource responseSource,
   /*out*/ bool& expired)
 {
-  PRTime thisUpdate = 0;
-  PRTime validThrough = 0;
+  Time thisUpdate(Time::uninitialized);
+  Time validThrough(Time::uninitialized);
   Result rv = VerifyEncodedOCSPResponse(*this, certID, time,
                                         maxLifetimeInDays, encodedResponse,
                                         expired, &thisUpdate, &validThrough);
@@ -607,7 +612,10 @@ NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   // repeatedly requesting a response from a failing server).
   if (rv != Success && rv != Result::ERROR_REVOKED_CERTIFICATE &&
       rv != Result::ERROR_OCSP_UNKNOWN_CERT) {
-    validThrough = time + ServerFailureDelay;
+    validThrough = time;
+    if (validThrough.AddSeconds(ServerFailureDelaySeconds) != Success) {
+      return Result::FATAL_ERROR_LIBRARY_FAILURE; // integer overflow
+    }
   }
   if (responseSource == ResponseIsFromNetwork ||
       rv == Success ||

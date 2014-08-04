@@ -4271,6 +4271,7 @@ fi
 if test "$COMPILE_ENVIRONMENT"; then
   if test "$MOZ_ENABLE_GTK3"; then
     PKG_CHECK_MODULES(MOZ_GTK3, gtk+-3.0 >= $GTK3_VERSION gtk+-unix-print-3.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
+    MOZ_GTK3_CFLAGS="-I${_topsrcdir}/widget/gtk/compat-gtk3 $MOZ_GTK3_CFLAGS"
   fi
   if test "$MOZ_ENABLE_GTK"; then
     if test "$MOZ_X11"; then
@@ -4278,6 +4279,7 @@ if test "$COMPILE_ENVIRONMENT"; then
     fi
 
     PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
+    MOZ_GTK2_CFLAGS="-I${_topsrcdir}/widget/gtk/compat $MOZ_GTK2_CFLAGS"
   fi
 
 fi # COMPILE_ENVIRONMENT
@@ -4988,9 +4990,11 @@ AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
 AC_SUBST(MOZ_WEBRTC_X11_LIBS)
 
-dnl Use integers over floats for audio on B2G and Android, because audio
-dnl backends for those platforms don't support floats.
-if test "$OS_TARGET" = "Android"; then
+dnl Use integers over floats for audio on B2G and Android
+dnl (regarless of the CPU architecture, because audio
+dnl backends for those platforms don't support floats. We also
+dnl use integers on ARM with other OS, because it's more efficient.
+if test "$OS_TARGET" = "Android" -o "$CPU_ARCH" = "arm"; then
     MOZ_SAMPLE_TYPE_S16=1
     AC_DEFINE(MOZ_SAMPLE_TYPE_S16)
     AC_SUBST(MOZ_SAMPLE_TYPE_S16)
@@ -5395,6 +5399,8 @@ fi
 
 if test -n "$MOZ_TREMOR"; then
     AC_DEFINE(MOZ_TREMOR)
+    # Tremor doesn't have an encoder.
+    MOZ_WEBM_ENCODER=
 fi
 
 if test -n "$MOZ_OPUS"; then

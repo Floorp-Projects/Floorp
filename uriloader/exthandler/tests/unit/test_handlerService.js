@@ -448,7 +448,9 @@ function run_test() {
   lolType = handlerSvc.getTypeFromExtension("lolcat");
   do_check_eq(lolType, "application/lolcat");
 
-  if (env.get("PERSONAL_MAILCAP")) {
+  // test mailcap entries with needsterminal are ignored on non-Windows non-Mac.
+  if (!("@mozilla.org/windows-registry-key;1" in Cc) && !("nsILocalFileMac" in Ci)) {
+    env.set('PERSONAL_MAILCAP', do_get_file('mailcap').path);
     handlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", null);
     do_check_eq(handlerInfo.preferredAction, Ci.nsIHandlerInfo.useSystemDefault);
     do_check_eq(handlerInfo.defaultDescription, "sed");

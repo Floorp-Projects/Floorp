@@ -243,7 +243,7 @@ function StructuredLogger(name) {
 
         var allData = {action: action,
                        time: new Date().getTime(),
-                       thread: null,
+                       thread: "",
                        pid: null,
                        source: this.name};
 

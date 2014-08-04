@@ -133,7 +133,6 @@ struct nsTraceRefcntStats
   double mObjsOutstandingSquared;
 };
 
-// I hope to turn this on for everybody once we hit it a little less.
 #ifdef DEBUG
 static const char kStaticCtorDtorWarning[] =
   "XPCOM objects created/destroyed from static ctor/dtor";
@@ -1374,11 +1373,6 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
     UNLOCK_TRACELOG();
   }
 #endif
-}
-
-void
-nsTraceRefcnt::Startup()
-{
 }
 
 void

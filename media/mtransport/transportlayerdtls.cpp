@@ -9,6 +9,8 @@
 #include <queue>
 #include <algorithm>
 
+#include "mozilla/UniquePtr.h"
+
 #include "logging.h"
 #include "ssl.h"
 #include "sslerr.h"
@@ -61,12 +63,12 @@ struct Packet {
   Packet() : data_(nullptr), len_(0), offset_(0) {}
 
   void Assign(const void *data, int32_t len) {
-    data_ = new uint8_t[len];
-    memcpy(data_, data, len);
+    data_.reset(new uint8_t[len]);
+    memcpy(data_.get(), data, len);
     len_ = len;
   }
 
-  ScopedDeleteArray<uint8_t> data_;
+  UniquePtr<uint8_t[]> data_;
   int32_t len_;
   int32_t offset_;
 };
@@ -84,7 +86,7 @@ int32_t TransportLayerNSPRAdapter::Read(void *data, int32_t len) {
 
   Packet* front = input_.front();
   int32_t to_read = std::min(len, front->len_ - front->offset_);
-  memcpy(data, front->data_, to_read);
+  memcpy(data, front->data_.get(), to_read);
   front->offset_ += to_read;
 
   if (front->offset_ == front->len_) {

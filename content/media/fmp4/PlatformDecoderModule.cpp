@@ -109,6 +109,9 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
 PlatformDecoderModule*
 PlatformDecoderModule::Create()
 {
+  // Note: This runs on the decode thread.
+  MOZ_ASSERT(!NS_IsMainThread());
+
   if (sUseBlankDecoder) {
     return CreateBlankDecoderModule();
   }
