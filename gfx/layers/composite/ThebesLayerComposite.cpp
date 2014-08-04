@@ -108,12 +108,6 @@ ThebesLayerComposite::GetRenderState()
 void
 ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 {
-  const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
-
-  if (visibleRegion.IsEmpty()) {
-    return;
-  }
-
   if (!mBuffer || !mBuffer->IsAttached()) {
     return;
   }
@@ -138,6 +132,8 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
   EffectChain effectChain(this);
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
   AddBlendModeEffect(effectChain);
+
+  const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
 
   TiledLayerProperties tiledLayerProps;
   if (mRequiresTiledProperties) {
