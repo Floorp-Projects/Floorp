@@ -396,34 +396,67 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     getInitialState: function() {
-      return {reason: "", custom: ""};
+      return {category: "", description: ""};
     },
 
     getInitialProps: function() {
       return {pending: false};
     },
 
-    handleReasonChange: function(event) {
-      var reason = event.target.value;
-      if (reason === "other") {
-        this.setState({reason: reason});
-      } else {
-        // resets custom text field
-        this.setState({custom: ""});
+    _getCategories: function() {
+      return {
+        audio_quality: __("feedback_category_audio_quality"),
+        video_quality: __("feedback_category_video_quality"),
+        disconnected : __("feedback_category_was_disconnected"),
+        confusing:     __("feedback_category_confusing"),
+        other:         __("feedback_category_other")
+      };
+    },
+
+    _getCategoryFields: function() {
+      var categories = this._getCategories();
+      return Object.keys(categories).map(function(category, key) {
+        return (
+          <label key={key}>
+            <input type="radio" ref="category" name="category"
+                   value={category}
+                   onChange={this.handleCategoryChange} />
+            {categories[category]}
+          </label>
+        );
+      }, this);
+    },
+
+    /**
+     * Checks if the form is ready for submission:
+     * - a category (reason) must be chosen
+     * - no feedback submission should be pending
+     *
+     * @return {Boolean}
+     */
+    _isFormReady: function() {
+      return this.state.category !== "" && !this.props.pending;
+    },
+
+    handleCategoryChange: function(event) {
+      var category = event.target.value;
+      if (category !== "other") {
+        // resets description text field
+        this.setState({description: ""});
       }
+      this.setState({category: category});
     },
 
     handleCustomTextChange: function(event) {
-      this.setState({custom: event.target.value});
+      this.setState({description: event.target.value});
     },
 
     handleFormSubmit: function(event) {
       event.preventDefault();
-      var reason = this.refs.reason.getDOMNode().value.trim();
-      var custom = this.refs.custom.getDOMNode().value.trim();
       this.props.sendFeedback({
-        reason: reason,
-        custom: reason === "other" ? custom : ""
+        happy: false,
+        category: this.state.category,
+        description: this.state.description
       });
     },
 
@@ -432,37 +465,13 @@ loop.shared.views = (function(_, OT, l10n) {
         <FeedbackLayout title={__("feedback_what_makes_you_sad")}
                         reset={this.props.reset}>
           <form onSubmit={this.handleFormSubmit}>
-            <label>
-              <input type="radio" ref="reason" name="reason"
-                     value="audio_quality" onChange={this.handleReasonChange} />
-              {__("feedback_reason_audio_quality")}
-            </label>
-            <label>
-              <input type="radio" ref="reason" name="reason"
-                     value="video_quality" onChange={this.handleReasonChange} />
-              {__("feedback_reason_video_quality")}
-            </label>
-            <label>
-              <input type="radio" ref="reason" name="reason"
-                     value="disconnected" onChange={this.handleReasonChange} />
-              {__("feedback_reason_was_disconnected")}
-            </label>
-            <label>
-              <input type="radio" ref="reason" name="reason" value="confusing"
-                     onChange={this.handleReasonChange} />
-              {__("feedback_reason_confusing")}
-            </label>
-            <label>
-              <input type="radio" ref="reason" name="reason" value="other"
-                     onChange={this.handleReasonChange} />
-              {__("feedback_reason_other")}
-            </label>
-            <p><input type="text" ref="custom" name="custom"
-                      disabled={this.state.reason !== "other"}
+            {this._getCategoryFields()}
+            <p><input type="text" ref="description" name="description"
+                      disabled={this.state.category !== "other"}
                       onChange={this.handleCustomTextChange}
-                      value={this.state.custom} /></p>
+                      value={this.state.description} /></p>
             <button type="submit" className="btn btn-success"
-                    disabled={this.props.pending}>
+                    disabled={!this._isFormReady()}>
               {__("feedback_submit_button")}
             </button>
           </form>
@@ -530,7 +539,7 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     handleHappyClick: function() {
-      this.setState({step: "finished"});
+      this.sendFeedback({happy: true}, this._onFeedbackSent);
     },
 
     handleSadClick: function() {
