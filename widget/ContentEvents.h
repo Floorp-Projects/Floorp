@@ -240,7 +240,7 @@ public:
   }
 
   InternalTransitionEvent(bool aIsTrusted, uint32_t aMessage)
-    : WidgetEvent(aIsTrusted, aMessage, NS_TRANSITION_EVENT)
+    : WidgetEvent(aIsTrusted, aMessage, eTransitionEventClass)
     , elapsedTime(0.0)
   {
     mFlags.mCancelable = false;
@@ -248,7 +248,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_TRANSITION_EVENT,
+    MOZ_ASSERT(mClass == eTransitionEventClass,
                "Duplicate() must be overridden by sub class");
     InternalTransitionEvent* result =
       new InternalTransitionEvent(false, message);
