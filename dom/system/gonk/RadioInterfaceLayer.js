@@ -4240,11 +4240,9 @@ RadioInterface.prototype = {
       charsInLastSegment = 0;
     }
 
-    let result = gMobileMessageService
-                 .createSmsSegmentInfo(options.segmentMaxSeq,
-                                       options.segmentChars,
-                                       options.segmentChars - charsInLastSegment);
-    request.notifySegmentInfoForTextGot(result);
+    request.notifySegmentInfoForTextGot(options.segmentMaxSeq,
+                                        options.segmentChars,
+                                        options.segmentChars - charsInLastSegment);
   },
 
   getSmscAddress: function(request) {
