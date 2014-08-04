@@ -720,7 +720,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case NS_DRAG_EVENT:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsDragEvent());
-    case NS_TEXT_EVENT:
+    case eTextEventClass:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
                               aEvent->AsTextEvent());
     case NS_CLIPBOARD_EVENT:
