@@ -767,6 +767,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "dist.torproject.org", true, false, false, -1, &kPinset_tor },
   { "dl.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "docs.google.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "domains.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "doubleclick.net", true, false, false, -1, &kPinset_google_root_pems },
   { "drive.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "dropbox.com", false, true, false, -1, &kPinset_dropbox },
@@ -1063,8 +1064,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "ytimg.com", true, false, false, -1, &kPinset_google_root_pems },
 };
 
-// Pinning Preload List Length = 325;
+// Pinning Preload List Length = 326;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1414836387591000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1415441689844000);
