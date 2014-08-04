@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MobileMessageCallback.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIDOMMozMmsMessage.h"
-#include "nsIDOMSmsSegmentInfo.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "MmsMessage.h"
@@ -226,9 +226,28 @@ MobileMessageCallback::NotifyMarkMessageReadFailed(int32_t aError)
 }
 
 NS_IMETHODIMP
-MobileMessageCallback::NotifySegmentInfoForTextGot(nsIDOMMozSmsSegmentInfo *aInfo)
+MobileMessageCallback::NotifySegmentInfoForTextGot(int32_t aSegments,
+                                                   int32_t aCharsPerSegment,
+                                                   int32_t aCharsAvailableInLastSegment)
 {
-  return NotifySuccess(aInfo, true);
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mDOMRequest->GetOwner()))) {
+    return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
+  }
+
+  SmsSegmentInfo info;
+  info.mSegments = aSegments;
+  info.mCharsPerSegment = aCharsPerSegment;
+  info.mCharsAvailableInLastSegment = aCharsAvailableInLastSegment;
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> val(cx);
+  if (!ToJSValue(cx, info, &val)) {
+    JS_ClearPendingException(cx);
+    return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
+  }
+
+  return NotifySuccess(val, true);
 }
 
 NS_IMETHODIMP
