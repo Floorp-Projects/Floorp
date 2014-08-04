@@ -43,6 +43,7 @@ if CONFIG['_MSC_VER']:
                # class copy constructor is inaccessible or deleted
     '-wd4626', # assignment operator could not be generated because a base
                # class assignment operator is inaccessible or deleted
+    '-wd4640', # construction of local static object is not thread-safe
     '-wd4710', # 'function': function not inlined
     '-wd4711', # function 'function' selected for inline expansion
     '-wd4820', # 'bytes' bytes padding added after construct 'member_name'
