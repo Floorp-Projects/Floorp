@@ -60,7 +60,7 @@ static PRDescIdentity transport_layer_identity = PR_INVALID_IO_LAYER;
 // All of this stuff is assumed to happen solely in a single thread
 // (generally the SocketTransportService thread)
 struct Packet {
-  Packet() : data_(nullptr), len_(0), offset_(0) {}
+  Packet() : data_(nullptr), len_(0) {}
 
   void Assign(const void *data, int32_t len) {
     data_.reset(new uint8_t[len]);
@@ -70,7 +70,6 @@ struct Packet {
 
   UniquePtr<uint8_t[]> data_;
   int32_t len_;
-  int32_t offset_;
 };
 
 void TransportLayerNSPRAdapter::PacketReceived(const void *data, int32_t len) {
@@ -78,23 +77,26 @@ void TransportLayerNSPRAdapter::PacketReceived(const void *data, int32_t len) {
   input_.back()->Assign(data, len);
 }
 
-int32_t TransportLayerNSPRAdapter::Read(void *data, int32_t len) {
+int32_t TransportLayerNSPRAdapter::Recv(void *buf, int32_t buflen) {
   if (input_.empty()) {
     PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
-    return TE_WOULDBLOCK;
+    return -1;
   }
 
   Packet* front = input_.front();
-  int32_t to_read = std::min(len, front->len_ - front->offset_);
-  memcpy(data, front->data_.get(), to_read);
-  front->offset_ += to_read;
-
-  if (front->offset_ == front->len_) {
-    input_.pop();
-    delete front;
+  if (buflen < front->len_) {
+    MOZ_ASSERT(false, "Not enough buffer space to receive into");
+    PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0);
+    return -1;
   }
 
-  return to_read;
+  int32_t count = front->len_;
+  memcpy(buf, front->data_.get(), count);
+
+  input_.pop();
+  delete front;
+
+  return count;
 }
 
 int32_t TransportLayerNSPRAdapter::Write(const void *buf, int32_t length) {
@@ -121,8 +123,8 @@ static PRStatus TransportLayerClose(PRFileDesc *f) {
 }
 
 static int32_t TransportLayerRead(PRFileDesc *f, void *buf, int32_t length) {
-  TransportLayerNSPRAdapter *io = reinterpret_cast<TransportLayerNSPRAdapter *>(f->secret);
-  return io->Read(buf, length);
+  UNIMPLEMENTED;
+  return -1;
 }
 
 static int32_t TransportLayerWrite(PRFileDesc *f, const void *buf, int32_t length) {
@@ -200,8 +202,8 @@ static PRStatus TransportLayerShutdown(PRFileDesc *f, int32_t how) {
   return PR_FAILURE;
 }
 
-// This function does not support peek.
-static int32_t TransportLayerRecv(PRFileDesc *f, void *buf, int32_t amount,
+// This function does not support peek, or waiting until `to`
+static int32_t TransportLayerRecv(PRFileDesc *f, void *buf, int32_t buflen,
                                   int32_t flags, PRIntervalTime to) {
   MOZ_ASSERT(flags == 0);
   if (flags != 0) {
@@ -209,7 +211,8 @@ static int32_t TransportLayerRecv(PRFileDesc *f, void *buf, int32_t amount,
     return -1;
   }
 
-  return TransportLayerRead(f, buf, amount);
+  TransportLayerNSPRAdapter *io = reinterpret_cast<TransportLayerNSPRAdapter *>(f->secret);
+  return io->Recv(buf, buflen);
 }
 
 // Note: this is always nonblocking and assumes a zero timeout.
