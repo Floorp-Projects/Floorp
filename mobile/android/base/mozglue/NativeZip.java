@@ -21,7 +21,6 @@ public class NativeZip implements NativeReference {
 
     public NativeZip(String path) {
         mObj = getZip(path);
-        mInput = null;
     }
 
     public NativeZip(InputStream input) {
