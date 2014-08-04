@@ -138,6 +138,7 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
 
 PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
     : mParent(parent),
+      mParentHandle(parent->GetHandle()),
       mIceCtx(nullptr),
       mDNSResolver(new mozilla::NrIceResolver()),
       mMainThread(mParent->GetMainThread()),
@@ -535,16 +536,29 @@ PeerConnectionMedia::IceStreamReady(NrIceMediaStream *aStream)
 
 
 void
-PeerConnectionMedia::DtlsConnected(TransportLayer *dtlsLayer,
-                                   TransportLayer::State state)
+PeerConnectionMedia::DtlsConnected_s(TransportLayer *dtlsLayer,
+                                     TransportLayer::State state)
 {
   dtlsLayer->SignalStateChange.disconnect(this);
 
   bool privacyRequested = false;
   // TODO (Bug 952678) set privacy mode, ask the DTLS layer about that
+  // This has to be a dispatch to a static method, we could be going away
   GetMainThread()->Dispatch(
-    WrapRunnable(mParent, &PeerConnectionImpl::SetDtlsConnected, privacyRequested),
+    WrapRunnableNM(&PeerConnectionMedia::DtlsConnected_m,
+                   mParentHandle, privacyRequested),
     NS_DISPATCH_NORMAL);
+}
+
+void
+PeerConnectionMedia::DtlsConnected_m(const std::string& aParentHandle,
+                                     bool aPrivacyRequested)
+{
+  PeerConnectionWrapper pcWrapper(aParentHandle);
+  PeerConnectionImpl* pc = pcWrapper.impl();
+  if (pc) {
+    pc->SetDtlsConnected(aPrivacyRequested);
+  }
 }
 
 void
@@ -566,7 +580,7 @@ PeerConnectionMedia::ConnectDtlsListener_s(const RefPtr<TransportFlow>& aFlow)
 {
   TransportLayer* dtls = aFlow->GetLayer(TransportLayerDtls::ID());
   if (dtls) {
-    dtls->SignalStateChange.connect(this, &PeerConnectionMedia::DtlsConnected);
+    dtls->SignalStateChange.connect(this, &PeerConnectionMedia::DtlsConnected_s);
   }
 }
 
@@ -749,12 +763,13 @@ RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByLevel_m(int level) {
 bool RemoteSourceStreamInfo::SetUsingBundle_m(int aLevel, bool decision) {
   ASSERT_ON_THREAD(mParent->GetMainThread());
 
-  RefPtr<MediaPipeline> pipeline(GetPipelineByLevel_m(aLevel));
+  // Avoid adding and dropping an extra ref
+  MediaPipeline *pipeline = GetPipelineByLevel_m(aLevel);
 
   if (pipeline) {
     RUN_ON_THREAD(mParent->GetSTSThread(),
                   WrapRunnable(
-                      pipeline,
+                      RefPtr<MediaPipeline>(pipeline),
                       &MediaPipeline::SetUsingBundle_s,
                       decision
                   ),
