@@ -691,25 +691,6 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
   return true;
 }
 
-nsresult TransportLayerDtls::GetCipherSuite(uint16_t* cipherSuite) const {
-  CheckThread();
-  if (!cipherSuite) {
-    MOZ_MTLOG(ML_ERROR, LAYER_INFO << "GetCipherSuite passed a nullptr");
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (state_ != TS_OPEN) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  SSLChannelInfo info;
-  SECStatus rv = SSL_GetChannelInfo(ssl_fd_, &info, sizeof(info));
-  if (rv != SECSuccess) {
-    MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "GetCipherSuite can't get channel info");
-    return NS_ERROR_FAILURE;
-  }
-  *cipherSuite = info.cipherSuite;
-  return NS_OK;
-}
-
 void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
   if (state <= state_) {
     MOZ_MTLOG(ML_ERROR, "Lower layer state is going backwards from ours");
@@ -921,7 +902,7 @@ nsresult TransportLayerDtls::SetSrtpCiphers(std::vector<uint16_t> ciphers) {
   return NS_OK;
 }
 
-nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) const {
+nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) {
   CheckThread();
   SECStatus rv = SSL_GetSRTPCipher(ssl_fd_, cipher);
   if (rv != SECSuccess) {
