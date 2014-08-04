@@ -61,6 +61,19 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // as needed.
     void setVariable(uint32_t slot);
 
+    enum ReferencesType {
+        RefType_AssertNoUses = 1 << 0,
+        RefType_DiscardOperands = 1 << 1,
+        RefType_DiscardResumePoint = 1 << 2,
+        RefType_Default = RefType_AssertNoUses | RefType_DiscardOperands | RefType_DiscardResumePoint
+    };
+
+    // Remove all references to an instruction such that it can be removed from
+    // the list of instruction, without keeping any dangling pointer to it. This
+    // includes the operands of the instruction, and the resume point if
+    // present.
+    void prepareForDiscard(MInstruction *ins, ReferencesType refType = RefType_Default);
+
   public:
     ///////////////////////////////////////////////////////
     ////////// BEGIN GRAPH BUILDING INSTRUCTIONS //////////
