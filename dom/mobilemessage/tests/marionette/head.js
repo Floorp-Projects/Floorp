@@ -22,6 +22,7 @@ function pushPrefEnv(aPrefs) {
   let deferred = Promise.defer();
 
   SpecialPowers.pushPrefEnv(aPrefs, function() {
+    ok(true, "preferences pushed: " + JSON.stringify(aPrefs));
     deferred.resolve();
   });
 
