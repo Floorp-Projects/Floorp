@@ -1967,8 +1967,11 @@ WebGLContext::LinkProgram(WebGLProgram *program)
             if (program == mCurrentProgram)
                 gl->fUseProgram(progname);
         }
+
+        program->InitializeUniformAndAttributeMaps();
     } else {
         program->SetLinkStatus(false);
+        program->ClearUniformAndAttributeMaps();
 
         if (ShouldGenerateWarnings()) {
 
