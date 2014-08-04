@@ -761,7 +761,7 @@ NON_IDL_EVENT(begin,
 NON_IDL_EVENT(beginEvent,
               NS_SMIL_BEGIN,
               EventNameType_None,
-              NS_SMIL_TIME_EVENT)
+              eSMILTimeEventClass)
 // Only map the ID to the real event name when ID_TO_EVENT is defined.
 #ifndef ID_TO_EVENT
 NON_IDL_EVENT(end,
@@ -772,7 +772,7 @@ NON_IDL_EVENT(end,
 NON_IDL_EVENT(endEvent,
               NS_SMIL_END,
               EventNameType_None,
-              NS_SMIL_TIME_EVENT)
+              eSMILTimeEventClass)
 // Only map the ID to the real event name when ID_TO_EVENT is defined.
 #ifndef ID_TO_EVENT
 NON_IDL_EVENT(repeat,
@@ -783,7 +783,7 @@ NON_IDL_EVENT(repeat,
 NON_IDL_EVENT(repeatEvent,
               NS_SMIL_REPEAT,
               EventNameType_None,
-              NS_SMIL_TIME_EVENT)
+              eSMILTimeEventClass)
 
 NON_IDL_EVENT(MozAfterPaint,
               NS_AFTERPAINT,
