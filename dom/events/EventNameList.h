@@ -606,15 +606,15 @@ NON_IDL_EVENT(DOMSubtreeModified,
 NON_IDL_EVENT(DOMActivate,
               NS_UI_ACTIVATE,
               EventNameType_HTMLXUL,
-              NS_UI_EVENT)
+              eUIEventClass)
 NON_IDL_EVENT(DOMFocusIn,
               NS_UI_FOCUSIN,
               EventNameType_HTMLXUL,
-              NS_UI_EVENT)
+              eUIEventClass)
 NON_IDL_EVENT(DOMFocusOut,
               NS_UI_FOCUSOUT,
               EventNameType_HTMLXUL,
-              NS_UI_EVENT)
+              eUIEventClass)
                                   
 NON_IDL_EVENT(DOMMouseScroll,
               NS_MOUSE_SCROLL,

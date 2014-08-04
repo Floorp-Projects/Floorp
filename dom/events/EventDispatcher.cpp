@@ -690,7 +690,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
                                     aEvent->AsMutationEvent());
     case eGUIEventClass:
     case NS_SCROLLPORT_EVENT:
-    case NS_UI_EVENT:
+    case eUIEventClass:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
                               aEvent->AsGUIEvent());
     case NS_SCROLLAREA_EVENT:
