@@ -140,9 +140,9 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       return (
         /* jshint ignore:start */
-        React.DOM.button( {className:this._getClasses(),
-                title:this._getTitle(),
-                onClick:this.handleClick})
+        React.DOM.button({className: this._getClasses(), 
+                title: this._getTitle(), 
+                onClick: this.handleClick})
         /* jshint ignore:end */
       );
     }
@@ -181,16 +181,16 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        React.DOM.ul( {className:"conversation-toolbar"}, 
-          React.DOM.li(null, React.DOM.button( {className:"btn btn-hangup",
-                      onClick:this.handleClickHangup,
-                      title:__("hangup_button_title")})),
-          React.DOM.li(null, MediaControlButton( {action:this.handleToggleVideo,
-                                  enabled:this.props.video.enabled,
-                                  scope:"local", type:"video"} )),
-          React.DOM.li(null, MediaControlButton( {action:this.handleToggleAudio,
-                                  enabled:this.props.audio.enabled,
-                                  scope:"local", type:"audio"} ))
+        React.DOM.ul({className: "conversation-toolbar"}, 
+          React.DOM.li(null, React.DOM.button({className: "btn btn-hangup", 
+                      onClick: this.handleClickHangup, 
+                      title: __("hangup_button_title")})), 
+          React.DOM.li(null, MediaControlButton({action: this.handleToggleVideo, 
+                                  enabled: this.props.video.enabled, 
+                                  scope: "local", type: "video"})), 
+          React.DOM.li(null, MediaControlButton({action: this.handleToggleAudio, 
+                                  enabled: this.props.audio.enabled, 
+                                  scope: "local", type: "audio"}))
         )
       );
       /* jshint ignore:end */
@@ -336,16 +336,16 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        React.DOM.div( {className:"conversation"}, 
-          ConversationToolbar( {video:this.state.video,
-                               audio:this.state.audio,
-                               publishStream:this.publishStream,
-                               hangup:this.hangup} ),
-          React.DOM.div( {className:"media nested"}, 
-            React.DOM.div( {className:"video_wrapper remote_wrapper"}, 
-              React.DOM.div( {className:"video_inner remote"})
-            ),
-            React.DOM.div( {className:"local"})
+        React.DOM.div({className: "conversation"}, 
+          ConversationToolbar({video: this.state.video, 
+                               audio: this.state.audio, 
+                               publishStream: this.publishStream, 
+                               hangup: this.hangup}), 
+          React.DOM.div({className: "media nested"}, 
+            React.DOM.div({className: "video_wrapper remote_wrapper"}, 
+              React.DOM.div({className: "video_inner remote"})
+            ), 
+            React.DOM.div({className: "local"})
           )
         )
       );
@@ -367,18 +367,18 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     render: function() {
-      var backButton = React.DOM.div(null );
+      var backButton = React.DOM.div(null);
       if (this.props.reset) {
         backButton = (
-          React.DOM.button( {className:"back", type:"button", onClick:this.props.reset}, 
-            "« ",__("feedback_back_button")
+          React.DOM.button({className: "back", type: "button", onClick: this.props.reset}, 
+            "« ", __("feedback_back_button")
           )
         );
       }
       return (
-        React.DOM.div( {className:"feedback"}, 
-          backButton,
-          React.DOM.h3(null, this.props.title),
+        React.DOM.div({className: "feedback"}, 
+          backButton, 
+          React.DOM.h3(null, this.props.title), 
           this.props.children
         )
       );
@@ -417,10 +417,10 @@ loop.shared.views = (function(_, OT, l10n) {
       var categories = this._getCategories();
       return Object.keys(categories).map(function(category, key) {
         return (
-          React.DOM.label( {key:key}, 
-            React.DOM.input( {type:"radio", ref:"category", name:"category",
-                   value:category,
-                   onChange:this.handleCategoryChange} ),
+          React.DOM.label({key: key}, 
+            React.DOM.input({type: "radio", ref: "category", name: "category", 
+                   value: category, 
+                   onChange: this.handleCategoryChange}), 
             categories[category]
           )
         );
@@ -462,16 +462,16 @@ loop.shared.views = (function(_, OT, l10n) {
 
     render: function() {
       return (
-        FeedbackLayout( {title:__("feedback_what_makes_you_sad"),
-                        reset:this.props.reset}, 
-          React.DOM.form( {onSubmit:this.handleFormSubmit}, 
-            this._getCategoryFields(),
-            React.DOM.p(null, React.DOM.input( {type:"text", ref:"description", name:"description",
-                      disabled:this.state.category !== "other",
-                      onChange:this.handleCustomTextChange,
-                      value:this.state.description} )),
-            React.DOM.button( {type:"submit", className:"btn btn-success",
-                    disabled:!this._isFormReady()}, 
+        FeedbackLayout({title: __("feedback_what_makes_you_sad"), 
+                        reset: this.props.reset}, 
+          React.DOM.form({onSubmit: this.handleFormSubmit}, 
+            this._getCategoryFields(), 
+            React.DOM.p(null, React.DOM.input({type: "text", ref: "description", name: "description", 
+                      disabled: this.state.category !== "other", 
+                      onChange: this.handleCustomTextChange, 
+                      value: this.state.description})), 
+            React.DOM.button({type: "submit", className: "btn btn-success", 
+                    disabled: !this._isFormReady()}, 
               __("feedback_submit_button")
             )
           )
@@ -506,8 +506,8 @@ loop.shared.views = (function(_, OT, l10n) {
         window.close();
       }
       return (
-        FeedbackLayout( {title:__("feedback_thank_you_heading")}, 
-          React.DOM.p( {className:"info thank-you"}, __("feedback_window_will_close_in", {
+        FeedbackLayout({title: __("feedback_thank_you_heading")}, 
+          React.DOM.p({className: "info thank-you"}, __("feedback_window_will_close_in", {
             countdown: this.state.countdown
           }))
         )
@@ -565,20 +565,20 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       switch(this.state.step) {
         case "finished":
-          return FeedbackReceived(null );
+          return FeedbackReceived(null);
         case "form":
-          return FeedbackForm( {feedbackApiClient:this.props.feedbackApiClient,
-                               sendFeedback:this.sendFeedback,
-                               reset:this.reset,
-                               pending:this.state.pending} );
+          return FeedbackForm({feedbackApiClient: this.props.feedbackApiClient, 
+                               sendFeedback: this.sendFeedback, 
+                               reset: this.reset, 
+                               pending: this.state.pending});
         default:
           return (
-            FeedbackLayout( {title:__("feedback_call_experience_heading")}, 
-              React.DOM.div( {className:"faces"}, 
-                React.DOM.button( {className:"face face-happy",
-                        onClick:this.handleHappyClick}),
-                React.DOM.button( {className:"face face-sad",
-                        onClick:this.handleSadClick})
+            FeedbackLayout({title: __("feedback_call_experience_heading")}, 
+              React.DOM.div({className: "faces"}, 
+                React.DOM.button({className: "face face-happy", 
+                        onClick: this.handleHappyClick}), 
+                React.DOM.button({className: "face face-sad", 
+                        onClick: this.handleSadClick})
               )
             )
           );

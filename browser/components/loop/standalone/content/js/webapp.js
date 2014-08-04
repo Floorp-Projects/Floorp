@@ -42,14 +42,14 @@ loop.webapp = (function($, _, OT, webL10n) {
 
     render: function() {
       if (this.props.helper.isFirefox(navigator.userAgent)) {
-        return React.DOM.div(null );
+        return React.DOM.div(null);
       }
       return (
-        React.DOM.div( {className:"promote-firefox"}, 
-          React.DOM.h3(null, __("promote_firefox_hello_heading")),
+        React.DOM.div({className: "promote-firefox"}, 
+          React.DOM.h3(null, __("promote_firefox_hello_heading")), 
           React.DOM.p(null, 
-            React.DOM.a( {className:"btn btn-large btn-success",
-               href:"https://www.mozilla.org/firefox/"}, 
+            React.DOM.a({className: "btn btn-large btn-success", 
+               href: "https://www.mozilla.org/firefox/"}, 
               __("get_firefox_button")
             )
           )
@@ -69,13 +69,13 @@ loop.webapp = (function($, _, OT, webL10n) {
     render: function() {
       /* jshint ignore:start */
       return (
-        React.DOM.div( {className:"expired-url-info"}, 
-          React.DOM.div( {className:"info-panel"}, 
-            React.DOM.div( {className:"firefox-logo"} ),
-            React.DOM.h1(null, __("call_url_unavailable_notification_heading")),
+        React.DOM.div({className: "expired-url-info"}, 
+          React.DOM.div({className: "info-panel"}, 
+            React.DOM.div({className: "firefox-logo"}), 
+            React.DOM.h1(null, __("call_url_unavailable_notification_heading")), 
             React.DOM.h4(null, __("call_url_unavailable_notification_message"))
-          ),
-          PromoteFirefoxView( {helper:this.props.helper} )
+          ), 
+          PromoteFirefoxView({helper: this.props.helper})
         )
       );
       /* jshint ignore:end */
@@ -100,15 +100,15 @@ loop.webapp = (function($, _, OT, webL10n) {
 
       return (
         /* jshint ignore:start */
-        React.DOM.header( {className:"container-box"}, 
-          React.DOM.h1( {className:"light-weight-font"}, 
+        React.DOM.header({className: "container-box"}, 
+          React.DOM.h1({className: "light-weight-font"}, 
             React.DOM.strong(null, __("brandShortname")), " ", __("clientShortname")
-          ),
-          React.DOM.div( {className:"loop-logo", title:"Firefox WebRTC! logo"}),
-          React.DOM.h3( {className:"call-url"}, 
+          ), 
+          React.DOM.div({className: "loop-logo", title: "Firefox WebRTC! logo"}), 
+          React.DOM.h3({className: "call-url"}, 
             conversationUrl
-          ),
-          React.DOM.h4( {className:urlCreationDateClasses} , 
+          ), 
+          React.DOM.h4({className: urlCreationDateClasses}, 
             callUrlCreationDateString
           )
         )
@@ -120,8 +120,8 @@ loop.webapp = (function($, _, OT, webL10n) {
   var ConversationFooter = React.createClass({displayName: 'ConversationFooter',
     render: function() {
       return (
-        React.DOM.div( {className:"footer container-box"}, 
-          React.DOM.div( {title:"Mozilla Logo", className:"footer-logo"})
+        React.DOM.div({className: "footer container-box"}, 
+          React.DOM.div({title: "Mozilla Logo", className: "footer-logo"})
         )
       );
     }
@@ -217,34 +217,34 @@ loop.webapp = (function($, _, OT, webL10n) {
 
       return (
         /* jshint ignore:start */
-        React.DOM.div( {className:"container"}, 
-          React.DOM.div( {className:"container-box"}, 
+        React.DOM.div({className: "container"}, 
+          React.DOM.div({className: "container-box"}, 
 
-            ConversationHeader(
-              {urlCreationDateString:this.state.urlCreationDateString} ),
+            ConversationHeader({
+              urlCreationDateString: this.state.urlCreationDateString}), 
 
-            React.DOM.p( {className:"large-font light-weight-font"}, 
+            React.DOM.p({className: "large-font light-weight-font"}, 
               __("initiate_call_button_label")
-            ),
+            ), 
 
-            React.DOM.div( {id:"messages"}),
+            React.DOM.div({id: "messages"}), 
 
-            React.DOM.div( {className:"button-group"}, 
-              React.DOM.div( {className:"flex-padding-1"}),
-              React.DOM.button( {ref:"submitButton", onClick:this._initiate,
-                className:callButtonClasses,
-                disabled:this.state.disableCallButton}, 
-                __("initiate_call_button"),
-                React.DOM.i( {className:"icon icon-video"})
-              ),
-              React.DOM.div( {className:"flex-padding-1"})
-            ),
+            React.DOM.div({className: "button-group"}, 
+              React.DOM.div({className: "flex-padding-1"}), 
+              React.DOM.button({ref: "submitButton", onClick: this._initiate, 
+                className: callButtonClasses, 
+                disabled: this.state.disableCallButton}, 
+                __("initiate_call_button"), 
+                React.DOM.i({className: "icon icon-video"})
+              ), 
+              React.DOM.div({className: "flex-padding-1"})
+            ), 
 
-            React.DOM.p( {className:"terms-service",
-               dangerouslySetInnerHTML:{__html: tosHTML}})
-          ),
+            React.DOM.p({className: "terms-service", 
+               dangerouslySetInnerHTML: {__html: tosHTML}})
+          ), 
 
-          ConversationFooter(null )
+          ConversationFooter(null)
         )
         /* jshint ignore:end */
       );
