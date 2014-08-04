@@ -42,7 +42,6 @@ EXPORTS.mozilla.dom += [
     'MobileMessageManager.h',
     'SmsFilter.h',
     'SmsMessage.h',
-    'SmsSegmentInfo.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -60,7 +59,6 @@ UNIFIED_SOURCES += [
     'MobileMessageThread.cpp',
     'SmsFilter.cpp',
     'SmsMessage.cpp',
-    'SmsSegmentInfo.cpp',
     'SmsServicesFactory.cpp',
 ]
 

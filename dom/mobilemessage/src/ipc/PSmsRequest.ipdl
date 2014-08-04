@@ -74,7 +74,9 @@ struct ReplyMarkeMessageReadFail
 
 struct ReplyGetSegmentInfoForText
 {
-  SmsSegmentInfoData infoData;
+  int32_t segments;
+  int32_t charsPerSegment;
+  int32_t charsAvailableInLastSegment;
 };
 
 struct ReplyGetSegmentInfoForTextFail
