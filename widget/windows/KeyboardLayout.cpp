@@ -283,7 +283,7 @@ ModifierKeyState::InitInputEvent(WidgetInputEvent& aInputEvent) const
   switch(aInputEvent.mClass) {
     case eMouseEventClass:
     case eMouseScrollEventClass:
-    case NS_WHEEL_EVENT:
+    case eWheelEventClass:
     case eDragEventClass:
     case NS_SIMPLE_GESTURE_EVENT:
       InitMouseEvent(aInputEvent);
@@ -297,7 +297,7 @@ void
 ModifierKeyState::InitMouseEvent(WidgetInputEvent& aMouseEvent) const
 {
   NS_ASSERTION(aMouseEvent.mClass == eMouseEventClass ||
-               aMouseEvent.mClass == NS_WHEEL_EVENT ||
+               aMouseEvent.mClass == eWheelEventClass ||
                aMouseEvent.mClass == eDragEventClass ||
                aMouseEvent.mClass == NS_SIMPLE_GESTURE_EVENT,
                "called with non-mouse event");

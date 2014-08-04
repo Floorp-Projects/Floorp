@@ -497,7 +497,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (aEvent->mFlags.mIsTrusted &&
       ((mouseEvent && mouseEvent->IsReal()) ||
-       aEvent->mClass == NS_WHEEL_EVENT) &&
+       aEvent->mClass == eWheelEventClass) &&
       !sIsPointerLocked) {
     sLastScreenPoint =
       UIEvent::CalculateScreenPoint(aPresContext, aEvent);
@@ -511,7 +511,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       ((mouseEvent && mouseEvent->IsReal() &&
         mouseEvent->message != NS_MOUSE_ENTER &&
         mouseEvent->message != NS_MOUSE_EXIT) ||
-       aEvent->mClass == NS_WHEEL_EVENT ||
+       aEvent->mClass == eWheelEventClass ||
        aEvent->mClass == eKeyboardEventClass)) {
     if (gMouseOrKeyboardEventCounter == 0) {
       nsCOMPtr<nsIObserverService> obs =
@@ -1096,7 +1096,7 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
   case eKeyboardEventClass: {
     return remote->SendRealKeyEvent(*aEvent->AsKeyboardEvent());
   }
-  case NS_WHEEL_EVENT: {
+  case eWheelEventClass: {
     return remote->SendMouseWheelEvent(*aEvent->AsWheelEvent());
   }
   case NS_TOUCH_EVENT: {
@@ -1158,7 +1158,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
 {
   switch (aEvent.mClass) {
   case eKeyboardEventClass:
-  case NS_WHEEL_EVENT:
+  case eWheelEventClass:
     return true;
   case eMouseEventClass:
     switch (aEvent.message) {

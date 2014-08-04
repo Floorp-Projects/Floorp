@@ -225,7 +225,7 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
       // do not have a reliable refPoint.
       return AsMouseEvent()->reason == WidgetMouseEvent::eReal;
 
-    case NS_WHEEL_EVENT: {
+    case eWheelEventClass: {
       // wheel event whose all delta values are zero by user pref applied, it
       // shouldn't cause a DOM event.
       const WidgetWheelEvent* wheelEvent = AsWheelEvent();

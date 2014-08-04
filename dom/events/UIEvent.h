@@ -45,7 +45,7 @@ public:
     if (!aEvent ||
         (aEvent->mClass != eMouseEventClass &&
          aEvent->mClass != eMouseScrollEventClass &&
-         aEvent->mClass != NS_WHEEL_EVENT &&
+         aEvent->mClass != eWheelEventClass &&
          aEvent->mClass != eDragEventClass &&
          aEvent->mClass != NS_POINTER_EVENT &&
          aEvent->mClass != NS_SIMPLE_GESTURE_EVENT)) {
@@ -72,7 +72,7 @@ public:
     if (!aEvent ||
         (aEvent->mClass != eMouseEventClass &&
          aEvent->mClass != eMouseScrollEventClass &&
-         aEvent->mClass != NS_WHEEL_EVENT &&
+         aEvent->mClass != eWheelEventClass &&
          aEvent->mClass != eDragEventClass &&
          aEvent->mClass != NS_POINTER_EVENT &&
          aEvent->mClass != NS_SIMPLE_GESTURE_EVENT) ||

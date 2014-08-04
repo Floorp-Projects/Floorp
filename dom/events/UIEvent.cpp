@@ -120,7 +120,7 @@ UIEvent::GetMovementPoint()
   if (!mEvent ||
       (mEvent->mClass != eMouseEventClass &&
        mEvent->mClass != eMouseScrollEventClass &&
-       mEvent->mClass != NS_WHEEL_EVENT &&
+       mEvent->mClass != eWheelEventClass &&
        mEvent->mClass != eDragEventClass &&
        mEvent->mClass != NS_POINTER_EVENT &&
        mEvent->mClass != NS_SIMPLE_GESTURE_EVENT) ||
@@ -298,7 +298,7 @@ UIEvent::GetLayerPoint() const
   if (!mEvent ||
       (mEvent->mClass != eMouseEventClass &&
        mEvent->mClass != eMouseScrollEventClass &&
-       mEvent->mClass != NS_WHEEL_EVENT &&
+       mEvent->mClass != eWheelEventClass &&
        mEvent->mClass != NS_POINTER_EVENT &&
        mEvent->mClass != NS_TOUCH_EVENT &&
        mEvent->mClass != eDragEventClass &&
