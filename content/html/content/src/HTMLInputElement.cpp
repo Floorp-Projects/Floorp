@@ -4269,7 +4269,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
   MOZ_ASSERT(mType == NS_FORM_INPUT_RANGE);
 
   if (nsEventStatus_eConsumeNoDefault == aVisitor.mEventStatus ||
-      !(aVisitor.mEvent->mClass == NS_MOUSE_EVENT ||
+      !(aVisitor.mEvent->mClass == eMouseEventClass ||
         aVisitor.mEvent->mClass == NS_TOUCH_EVENT ||
         aVisitor.mEvent->mClass == eKeyboardEventClass)) {
     return;

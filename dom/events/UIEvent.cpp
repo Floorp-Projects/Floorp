@@ -118,7 +118,7 @@ UIEvent::GetMovementPoint()
   }
 
   if (!mEvent ||
-      (mEvent->mClass != NS_MOUSE_EVENT &&
+      (mEvent->mClass != eMouseEventClass &&
        mEvent->mClass != NS_MOUSE_SCROLL_EVENT &&
        mEvent->mClass != NS_WHEEL_EVENT &&
        mEvent->mClass != NS_DRAG_EVENT &&
@@ -296,7 +296,7 @@ nsIntPoint
 UIEvent::GetLayerPoint() const
 {
   if (!mEvent ||
-      (mEvent->mClass != NS_MOUSE_EVENT &&
+      (mEvent->mClass != eMouseEventClass &&
        mEvent->mClass != NS_MOUSE_SCROLL_EVENT &&
        mEvent->mClass != NS_WHEEL_EVENT &&
        mEvent->mClass != NS_POINTER_EVENT &&

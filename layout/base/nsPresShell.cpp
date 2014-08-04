@@ -6704,7 +6704,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
                                 nsEventStatus* aStatus)
 {
   uint32_t pointerMessage = 0;
-  if (aEvent->mClass == NS_MOUSE_EVENT) {
+  if (aEvent->mClass == eMouseEventClass) {
     WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
     // if it is not mouse then it is likely will come as touch event
     if (!mouseEvent->convertToPointer) {
@@ -7154,7 +7154,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       } else {
         eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       }
-      if (mouseEvent && mouseEvent->mClass == NS_MOUSE_EVENT &&
+      if (mouseEvent && mouseEvent->mClass == eMouseEventClass &&
           mouseEvent->ignoreRootScrollFrame) {
         flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
       }
@@ -7209,7 +7209,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
     // Suppress mouse event if it's being targeted at an element inside
     // a document which needs events suppressed
-    if (aEvent->mClass == NS_MOUSE_EVENT &&
+    if (aEvent->mClass == eMouseEventClass &&
         frame->PresContext()->Document()->EventHandlingSuppressed()) {
       if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
         mNoDelayedMouseEvents = true;

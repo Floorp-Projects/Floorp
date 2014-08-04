@@ -1090,7 +1090,7 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
   }
 
   switch (aEvent->mClass) {
-  case NS_MOUSE_EVENT: {
+  case eMouseEventClass: {
     return remote->SendRealMouseEvent(*aEvent->AsMouseEvent());
   }
   case eKeyboardEventClass: {
@@ -1160,7 +1160,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
   case eKeyboardEventClass:
   case NS_WHEEL_EVENT:
     return true;
-  case NS_MOUSE_EVENT:
+  case eMouseEventClass:
     switch (aEvent.message) {
     case NS_MOUSE_BUTTON_DOWN:
     case NS_MOUSE_BUTTON_UP:
