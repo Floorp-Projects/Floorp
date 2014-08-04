@@ -705,7 +705,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eMouseEventClass:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsMouseEvent());
-    case NS_FOCUS_EVENT:
+    case eFocusEventClass:
       return NS_NewDOMFocusEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsFocusEvent());
     case eMouseScrollEventClass:

@@ -177,7 +177,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
       case NS_MUTATION_EVENT:
         tmp->mEvent->AsMutationEvent()->mRelatedNode = nullptr;
         break;
-      case NS_FOCUS_EVENT:
+      case eFocusEventClass:
         tmp->mEvent->AsFocusEvent()->relatedTarget = nullptr;
         break;
       default:
@@ -220,7 +220,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");
         cb.NoteXPCOMChild(tmp->mEvent->AsMutationEvent()->mRelatedNode);
         break;
-      case NS_FOCUS_EVENT:
+      case eFocusEventClass:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(tmp->mEvent->AsFocusEvent()->relatedTarget);
         break;
