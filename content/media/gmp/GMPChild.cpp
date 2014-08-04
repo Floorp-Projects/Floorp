@@ -6,6 +6,7 @@
 #include "GMPChild.h"
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
+#include "GMPAudioDecoderChild.h"
 #include "GMPDecryptorChild.h"
 #include "GMPVideoHost.h"
 #include "nsIFile.h"
@@ -170,6 +171,19 @@ GMPChild::ProcessingError(Result aWhat)
   }
 }
 
+PGMPAudioDecoderChild*
+GMPChild::AllocPGMPAudioDecoderChild()
+{
+  return new GMPAudioDecoderChild(this);
+}
+
+bool
+GMPChild::DeallocPGMPAudioDecoderChild(PGMPAudioDecoderChild* aActor)
+{
+  delete aActor;
+  return true;
+}
+
 mozilla::dom::PCrashReporterChild*
 GMPChild::AllocPCrashReporterChild(const NativeThreadId& aThread)
 {
@@ -206,6 +220,22 @@ bool
 GMPChild::DeallocPGMPDecryptorChild(PGMPDecryptorChild* aActor)
 {
   delete aActor;
+  return true;
+}
+
+bool
+GMPChild::RecvPGMPAudioDecoderConstructor(PGMPAudioDecoderChild* aActor)
+{
+  auto vdc = static_cast<GMPAudioDecoderChild*>(aActor);
+
+  void* vd = nullptr;
+  GMPErr err = mGetAPIFunc("decode-audio", &vdc->Host(), &vd);
+  if (err != GMPNoErr || !vd) {
+    return false;
+  }
+
+  vdc->Init(static_cast<GMPAudioDecoder*>(vd));
+
   return true;
 }
 
@@ -274,7 +304,7 @@ GMPChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
 bool
 GMPChild::RecvCrashPluginNow()
 {
-  abort();
+  MOZ_CRASH();
   return true;
 }
 

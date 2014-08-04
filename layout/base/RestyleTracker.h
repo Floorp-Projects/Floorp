@@ -19,6 +19,7 @@
 namespace mozilla {
 
 class RestyleManager;
+class ElementRestyler;
 
 /** 
  * Helper class that collects a list of frames that need
@@ -230,6 +231,8 @@ class RestyleTracker {
 public:
   typedef mozilla::dom::Element Element;
 
+  friend class ElementRestyler; // for AddPendingRestyleToTable
+
   RestyleTracker(Element::FlagsType aRestyleBits) :
     mRestyleBits(aRestyleBits),
     mHaveLaterSiblingRestyles(false)
@@ -261,7 +264,7 @@ public:
    * if the element already had eRestyle_LaterSiblings set on it.
    */
   bool AddPendingRestyle(Element* aElement, nsRestyleHint aRestyleHint,
-                           nsChangeHint aMinChangeHint);
+                         nsChangeHint aMinChangeHint);
 
   /**
    * Process the restyles we've been tracking.
@@ -312,6 +315,9 @@ public:
   };
 
 private:
+  bool AddPendingRestyleToTable(Element* aElement, nsRestyleHint aRestyleHint,
+                                nsChangeHint aMinChangeHint);
+
   /**
    * Handle a single mPendingRestyles entry.  aRestyleHint must not
    * include eRestyle_LaterSiblings; that needs to be dealt with
@@ -352,9 +358,10 @@ private:
   bool mHaveLaterSiblingRestyles;
 };
 
-inline bool RestyleTracker::AddPendingRestyle(Element* aElement,
-                                                nsRestyleHint aRestyleHint,
-                                                nsChangeHint aMinChangeHint)
+inline bool
+RestyleTracker::AddPendingRestyleToTable(Element* aElement,
+                                         nsRestyleHint aRestyleHint,
+                                         nsChangeHint aMinChangeHint)
 {
   RestyleData existingData;
   existingData.mRestyleHint = nsRestyleHint(0);
@@ -377,10 +384,21 @@ inline bool RestyleTracker::AddPendingRestyle(Element* aElement,
 
   mPendingRestyles.Put(aElement, existingData);
 
+  return hadRestyleLaterSiblings;
+}
+
+inline bool
+RestyleTracker::AddPendingRestyle(Element* aElement,
+                                  nsRestyleHint aRestyleHint,
+                                  nsChangeHint aMinChangeHint)
+{
+  bool hadRestyleLaterSiblings =
+    AddPendingRestyleToTable(aElement, aRestyleHint, aMinChangeHint);
+
   // We can only treat this element as a restyle root if we would
   // actually restyle its descendants (so either call
   // ReResolveStyleContext on it or just reframe it).
-  if ((aRestyleHint & (eRestyle_Self | eRestyle_Subtree)) ||
+  if ((aRestyleHint & ~eRestyle_LaterSiblings) ||
       (aMinChangeHint & nsChangeHint_ReconstructFrame)) {
     for (const Element* cur = aElement; !cur->HasFlag(RootBit()); ) {
       nsIContent* parent = cur->GetFlattenedTreeParent();

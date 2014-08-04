@@ -213,9 +213,10 @@ WyciwygChannelChild::OnDataAvailable(const nsCString& data,
   if (NS_FAILED(rv))
     Cancel(rv);
 
-  if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
+  if (mProgressSink && NS_SUCCEEDED(rv)) {
     mProgressSink->OnProgress(this, nullptr, offset + data.Length(),
                               uint64_t(mContentLength));
+  }
 }
 
 class WyciwygStopRequestEvent : public ChannelEvent

@@ -116,7 +116,7 @@ DragEvent::GetDataTransfer()
   // with the drag. It is initialized when an attempt is made to retrieve it
   // rather that when the event is created to avoid duplicating the data when
   // no listener ever uses it.
-  if (!mEvent || mEvent->eventStructType != NS_DRAG_EVENT) {
+  if (!mEvent || mEvent->mClass != eDragEventClass) {
     NS_WARNING("Tried to get dataTransfer from non-drag event!");
     return nullptr;
   }

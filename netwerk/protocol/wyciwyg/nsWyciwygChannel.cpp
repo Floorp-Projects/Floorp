@@ -699,9 +699,10 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
   rv = mListener->OnDataAvailable(this, mListenerContext, input, offset, count);
 
   // XXX handle 64-bit stuff for real
-  if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
+  if (mProgressSink && NS_SUCCEEDED(rv)) {
     mProgressSink->OnProgress(this, nullptr, offset + count,
                               uint64_t(mContentLength));
+  }
 
   return rv; // let the pump cancel on failure
 }

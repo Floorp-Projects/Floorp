@@ -829,13 +829,6 @@ export CL_INCLUDES_PREFIX
 # non-English systems.
 export NONASCII
 
-ifdef MOZ_GTK2_CFLAGS
-MOZ_GTK2_CFLAGS := -I$(topsrcdir)/widget/gtk/compat $(MOZ_GTK2_CFLAGS)
-endif
-ifdef MOZ_GTK3_CFLAGS
-MOZ_GTK3_CFLAGS := -I$(topsrcdir)/widget/gtk/compat-gtk3 $(MOZ_GTK3_CFLAGS)
-endif
-
 DEFINES += -DNO_NSPR_10_SUPPORT
 
 ifdef IS_GYP_DIR

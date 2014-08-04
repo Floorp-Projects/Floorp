@@ -26,6 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800386
   var forwardFailed = false;
 
   var xhr = new XMLHttpRequest;
+  var xhr2 = new XMLHttpRequest;
+
   var eventSink = xhr.getInterface(Components.interfaces.nsIProgressEventSink);
   isnot(eventSink, null, "Should get event sink directly!");
 
@@ -36,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800386
       if (aIID.equals(Components.interfaces.nsIProgressEventSink)) {
         triedForwarding = true;
         try {
-          return xhr.getInterface(aIID);
+          return xhr2.getInterface(aIID);
         } catch (e) {
           forwardFailed = true;
         }

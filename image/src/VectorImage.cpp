@@ -880,18 +880,20 @@ VectorImage::Draw(gfxContext* aContext,
                                       aSVGContext, animTime, aFlags));
   }
 
+  gfxFloat opacity = aSVGContext ? aSVGContext->GetGlobalOpacity() : 1.0;
+
   // Draw.
   if (drawable) {
-    Show(drawable, params);
+    Show(drawable, params, opacity);
   } else {
-    CreateDrawableAndShow(params);
+    CreateDrawableAndShow(params, opacity);
   }
 
   return NS_OK;
 }
 
 void
-VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
+VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams, gfxFloat aOpacity)
 {
   mSVGDocumentWrapper->UpdateViewportBounds(aParams.viewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
@@ -912,7 +914,7 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
                      // The image is too big to fit in the cache:
                      !SurfaceCache::CanHold(aParams.imageRect.Size());
   if (bypassCache)
-    return Show(svgDrawable, aParams);
+    return Show(svgDrawable, aParams, aOpacity);
 
   // Try to create an offscreen surface.
   RefPtr<gfx::DrawTarget> target =
@@ -922,7 +924,7 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs
   // could be set such that the cache isn't the limiting factor.
   if (!target)
-    return Show(svgDrawable, aParams);
+    return Show(svgDrawable, aParams, aOpacity);
 
   nsRefPtr<gfxContext> ctx = new gfxContext(target);
 
@@ -949,12 +951,12 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
   // to draw before returning from this function.
   nsRefPtr<gfxDrawable> drawable =
     new gfxSurfaceDrawable(surface, ThebesIntSize(aParams.imageRect.Size()));
-  Show(drawable, aParams);
+  Show(drawable, aParams, aOpacity);
 }
 
 
 void
-VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams)
+VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams, gfxFloat aOpacity)
 {
   MOZ_ASSERT(aDrawable, "Should have a gfxDrawable by now");
   gfxUtils::DrawPixelSnapped(aParams.context, aDrawable,
@@ -962,7 +964,7 @@ VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams)
                              aParams.subimage, aParams.sourceRect,
                              ThebesIntRect(aParams.imageRect), aParams.fill,
                              SurfaceFormat::B8G8R8A8,
-                             aParams.filter, aParams.flags);
+                             aParams.filter, aParams.flags, aOpacity);
 
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
   mRenderingObserver->ResumeHonoringInvalidations();

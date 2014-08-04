@@ -1260,7 +1260,6 @@ class PropertyByValue : public ParseNode
     }
 };
 
-#ifdef JS_HAS_TEMPLATE_STRINGS
 /*
  * A CallSiteNode represents the implicit call site object argument in a TaggedTemplate.
  */
@@ -1275,7 +1274,6 @@ struct CallSiteNode : public ListNode {
         return pn_head->getConstantValue(cx, vp);
     }
 };
-#endif
 
 #ifdef DEBUG
 void DumpParseTree(ParseNode *pn, int indent = 0);
@@ -1472,9 +1470,7 @@ ParseNode::isConstant()
     switch (pn_type) {
       case PNK_NUMBER:
       case PNK_STRING:
-#ifdef JS_HAS_TEMPLATE_STRINGS
       case PNK_TEMPLATE_STRING:
-#endif
       case PNK_NULL:
       case PNK_FALSE:
       case PNK_TRUE:

@@ -9,8 +9,6 @@
 // get the string version, obtain the actual lines to run, and then use eval to
 // do the actual evaluation.
 
-function testCaseFn() {
-/*
 function syntaxError (script) {
     try {
         Function(script);
@@ -289,15 +287,5 @@ assertEq(String.raw`h\r\ney${4}there\n`, "h\\r\\ney4there\\n");
 assertEq(String.raw`hey`, "hey");
 assertEq(String.raw``, "");
 
-
-*/
-/*End func*/}
-
-var str = testCaseFn.toString().replace("/*","").replace("*/","");
-str = str.replace("function testCaseFn() {\n", "").replace("/*End func*/}","");
-var hasTemplateStrings = false;
-try { eval("``"); hasTemplateStrings = true; } catch (exc) { }
-if (hasTemplateStrings)
-    eval(str);
 
 reportCompare(0, 0, "ok");

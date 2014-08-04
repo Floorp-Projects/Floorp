@@ -381,24 +381,31 @@ MediaEngineWebRTC::Shutdown()
   MutexAutoLock lock(mMutex);
 
   // Clear callbacks before we go away since the engines may outlive us
+  mVideoSources.Clear();
+  mAudioSources.Clear();
   if (mVideoEngine) {
-    mVideoSources.Clear();
     mVideoEngine->SetTraceCallback(nullptr);
     webrtc::VideoEngine::Delete(mVideoEngine);
   }
 
   if (mScreenEngine) {
+    mScreenEngine->SetTraceCallback(nullptr);
     webrtc::VideoEngine::Delete(mScreenEngine);
   }
+  if (mWinEngine) {
+    mWinEngine->SetTraceCallback(nullptr);
+    webrtc::VideoEngine::Delete(mWinEngine);
+  }
   if (mBrowserEngine) {
+    mBrowserEngine->SetTraceCallback(nullptr);
     webrtc::VideoEngine::Delete(mBrowserEngine);
   }
   if (mAppEngine) {
+    mAppEngine->SetTraceCallback(nullptr);
     webrtc::VideoEngine::Delete(mAppEngine);
   }
 
   if (mVoiceEngine) {
-    mAudioSources.Clear();
     mVoiceEngine->SetTraceCallback(nullptr);
     webrtc::VoiceEngine::Delete(mVoiceEngine);
   }
@@ -406,6 +413,7 @@ MediaEngineWebRTC::Shutdown()
   mVideoEngine = nullptr;
   mVoiceEngine = nullptr;
   mScreenEngine = nullptr;
+  mWinEngine = nullptr;
   mBrowserEngine = nullptr;
   mAppEngine = nullptr;
 

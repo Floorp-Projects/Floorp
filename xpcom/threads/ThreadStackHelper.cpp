@@ -21,6 +21,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
 #include "google_breakpad/processor/call_stack.h"
@@ -333,7 +334,7 @@ public:
   // Processor context
   Context mContext;
   // Stack area
-  ScopedDeleteArray<uint8_t> mStack;
+  UniquePtr<uint8_t[]> mStack;
   // Start of stack area
   uintptr_t mStackBase;
   // Size of stack area
@@ -384,7 +385,7 @@ ThreadStackHelper::GetNativeStack(Stack& aStack)
 {
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
   ThreadContext context;
-  context.mStack = new uint8_t[ThreadContext::kMaxStackSize];
+  context.mStack = MakeUnique<uint8_t[]>(ThreadContext::kMaxStackSize);
 
   ScopedSetPtr<ThreadContext> contextPtr(mContextToFill, &context);
 
@@ -764,7 +765,7 @@ ThreadStackHelper::FillThreadContext(void* aContext)
 #endif
 
 #ifndef MOZ_ASAN
-  memcpy(mContextToFill->mStack, reinterpret_cast<void*>(sp), stackSize);
+  memcpy(mContextToFill->mStack.get(), reinterpret_cast<void*>(sp), stackSize);
 #else
   // ASan will flag memcpy for access outside of stack frames,
   // so roll our own memcpy here.

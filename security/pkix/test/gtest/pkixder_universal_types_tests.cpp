@@ -315,7 +315,7 @@ TEST_F(pkixder_universal_types_tests, EnumeratedInvalidZeroLength)
 template <uint16_t LENGTH>
 Result
 TimeChoiceForEquivalentUTCTime(const uint8_t (&generalizedTimeDER)[LENGTH],
-                               /*out*/ PRTime& value)
+                               /*out*/ Time& value)
 {
   static_assert(LENGTH >= 4,
                 "TimeChoiceForEquivalentUTCTime input too small");
@@ -334,14 +334,14 @@ TimeChoiceForEquivalentUTCTime(const uint8_t (&generalizedTimeDER)[LENGTH],
 
 template <uint16_t LENGTH>
 void
-ExpectGoodTime(PRTime expectedValue,
+ExpectGoodTime(Time expectedValue,
                const uint8_t (&generalizedTimeDER)[LENGTH])
 {
   // GeneralizedTime
   {
     Input input(generalizedTimeDER);
     Reader reader(input);
-    PRTime value = 0;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Success, GeneralizedTime(reader, value));
     EXPECT_EQ(expectedValue, value);
   }
@@ -350,14 +350,14 @@ ExpectGoodTime(PRTime expectedValue,
   {
     Input input(generalizedTimeDER);
     Reader reader(input);
-    PRTime value = 0;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Success, TimeChoice(reader, value));
     EXPECT_EQ(expectedValue, value);
   }
 
   // TimeChoice: UTCTime
   {
-    PRTime value = 0;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Success,
               TimeChoiceForEquivalentUTCTime(generalizedTimeDER, value));
     EXPECT_EQ(expectedValue, value);
@@ -372,7 +372,7 @@ ExpectBadTime(const uint8_t (&generalizedTimeDER)[LENGTH])
   {
     Input input(generalizedTimeDER);
     Reader reader(input);
-    PRTime value;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(reader, value));
   }
 
@@ -380,13 +380,13 @@ ExpectBadTime(const uint8_t (&generalizedTimeDER)[LENGTH])
   {
     Input input(generalizedTimeDER);
     Reader reader(input);
-    PRTime value;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(reader, value));
   }
 
   // TimeChoice: UTCTime
   {
-    PRTime value;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Result::ERROR_INVALID_TIME,
               TimeChoiceForEquivalentUTCTime(generalizedTimeDER, value));
   }
@@ -421,7 +421,7 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidZeroLength)
     0x00                            // Length = 0
   };
 
-  PRTime value;
+  Time value(Time::uninitialized);
 
   // GeneralizedTime
   Input gtBuf(DER_GENERALIZED_TIME_INVALID_ZERO_LENGTH);
@@ -512,7 +512,7 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeYearValidRange)
       '2', '3', '5', '9', '5', '9', 'Z' // 23:59:59Z
     };
 
-    PRTime expectedValue = YMDHMS(i, 12, 31, 23, 59, 59);
+    Time expectedValue = YMDHMS(i, 12, 31, 23, 59, 59);
 
     // We have to test GeneralizedTime separately from UTCTime instead of using
     // ExpectGooDtime because the range of UTCTime is less than the range of
@@ -522,7 +522,7 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeYearValidRange)
     {
       Input input(DER);
       Reader reader(input);
-      PRTime value = 0;
+      Time value(Time::uninitialized);
       ASSERT_EQ(Success, GeneralizedTime(reader, value));
       EXPECT_EQ(expectedValue, value);
     }
@@ -531,14 +531,14 @@ TEST_F(pkixder_universal_types_tests, GeneralizedTimeYearValidRange)
     {
       Input input(DER);
       Reader reader(input);
-      PRTime value = 0;
+      Time value(Time::uninitialized);
       ASSERT_EQ(Success, TimeChoice(reader, value));
       EXPECT_EQ(expectedValue, value);
     }
 
     // TimeChoice: UTCTime, which is limited to years less than 2049.
     if (i <= 2049) {
-      PRTime value = 0;
+      Time value(Time::uninitialized);
       ASSERT_EQ(Success, TimeChoiceForEquivalentUTCTime(DER, value));
       EXPECT_EQ(expectedValue, value);
     }
@@ -671,13 +671,13 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebLeapYear2400)
 
   // We don't use ExpectGoodTime here because UTCTime can't represent 2400.
 
-  PRTime expectedValue = YMDHMS(2400, 2, 29, 16, 45, 40);
+  Time expectedValue = YMDHMS(2400, 2, 29, 16, 45, 40);
 
   // GeneralizedTime
   {
     Input input(DER);
     Reader reader(input);
-    PRTime value = 0;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Success, GeneralizedTime(reader, value));
     EXPECT_EQ(expectedValue, value);
   }
@@ -686,7 +686,7 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebLeapYear2400)
   {
     Input input(DER);
     Reader reader(input);
-    PRTime value = 0;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Success, TimeChoice(reader, value));
     EXPECT_EQ(expectedValue, value);
   }
@@ -718,7 +718,7 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebNotLeapYear2100)
   {
     Input input(DER);
     Reader reader(input);
-    PRTime value;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(reader, value));
   }
 
@@ -726,7 +726,7 @@ TEST_F(pkixder_universal_types_tests, TimeMonthFebNotLeapYear2100)
   {
     Input input(DER);
     Reader reader(input);
-    PRTime value;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(reader, value));
   }
 }
@@ -856,7 +856,7 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidCenturyChar)
   {
     Input input(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR);
     Reader reader(input);
-    PRTime value = 0;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Result::ERROR_INVALID_TIME, GeneralizedTime(reader, value));
   }
 
@@ -864,7 +864,7 @@ TEST_F(pkixder_universal_types_tests, TimeInvalidCenturyChar)
   {
     Input input(DER_GENERALIZED_TIME_INVALID_CENTURY_CHAR);
     Reader reader(input);
-    PRTime value = 0;
+    Time value(Time::uninitialized);
     ASSERT_EQ(Result::ERROR_INVALID_TIME, TimeChoice(reader, value));
   }
 

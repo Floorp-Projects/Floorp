@@ -1963,7 +1963,6 @@ Parser<SyntaxParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
     return true;
 }
 
-#ifdef JS_HAS_TEMPLATE_STRINGS
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::addExprAndGetNextTemplStrToken(Node nodeList, TokenKind &tt)
@@ -2030,7 +2029,6 @@ Parser<ParseHandler>::templateLiteral()
     } while (tt == TOK_TEMPLATE_HEAD);
     return nodeList;
 }
-#endif
 
 template <typename ParseHandler>
 typename ParseHandler::Node
@@ -2311,7 +2309,6 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     return outerpc->innerFunctions.append(fun);
 }
 
-#ifdef JS_HAS_TEMPLATE_STRINGS
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::appendToCallSiteObj(Node callSiteObj)
@@ -2329,7 +2326,6 @@ Parser<ParseHandler>::appendToCallSiteObj(Node callSiteObj)
 
     return handler.addToCallSiteObject(callSiteObj, rawNode, cookedNode);
 }
-#endif
 
 template <>
 ParseNode *
@@ -6964,32 +6960,21 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
             nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
             if (!nextMember)
                 return null();
-        } else if ((allowCallSyntax &&
-                    tt == TOK_LP)
-#ifdef JS_HAS_TEMPLATE_STRINGS
-                   || tt == TOK_TEMPLATE_HEAD
-                   || tt == TOK_NO_SUBS_TEMPLATE
-#endif
-                  )
+        } else if ((allowCallSyntax && tt == TOK_LP) ||
+                   tt == TOK_TEMPLATE_HEAD ||
+                   tt == TOK_NO_SUBS_TEMPLATE)
         {
             JSOp op = JSOP_CALL;
-#ifdef JS_HAS_TEMPLATE_STRINGS
             if (tt == TOK_LP)
-#endif
                 nextMember = handler.newList(PNK_CALL, null(), JSOP_CALL);
-#ifdef JS_HAS_TEMPLATE_STRINGS
             else
                 nextMember = handler.newList(PNK_TAGGED_TEMPLATE, null(), JSOP_CALL);
-#endif
+
             if (!nextMember)
                 return null();
 
             if (JSAtom *atom = handler.isName(lhs)) {
-                if (
-#ifdef JS_HAS_TEMPLATE_STRINGS
-                    tt == TOK_LP &&
-#endif
-                    atom == context->names().eval) {
+                if (tt == TOK_LP && atom == context->names().eval) {
                     /* Select JSOP_EVAL and flag pc as heavyweight. */
                     op = JSOP_EVAL;
                     pc->sc->setBindingsAccessedDynamically();
@@ -7015,20 +7000,16 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
             handler.setBeginPosition(nextMember, lhs);
             handler.addList(nextMember, lhs);
 
-#ifdef JS_HAS_TEMPLATE_STRINGS
             if (tt == TOK_LP) {
-#endif
                 bool isSpread = false;
                 if (!argumentList(nextMember, &isSpread))
                     return null();
                 if (isSpread)
                     op = (op == JSOP_EVAL ? JSOP_SPREADEVAL : JSOP_SPREADCALL);
-#ifdef JS_HAS_TEMPLATE_STRINGS
             } else {
                 if (!taggedTemplate(nextMember, tt))
                     return null();
             }
-#endif
             handler.setOp(nextMember, op);
         } else {
             tokenStream.ungetToken();
@@ -7071,14 +7052,12 @@ Parser<ParseHandler>::stringLiteral()
     return handler.newStringLiteral(stopStringCompression(), pos());
 }
 
-#ifdef JS_HAS_TEMPLATE_STRINGS
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::noSubstitutionTemplate()
 {
     return handler.newTemplateStringLiteral(stopStringCompression(), pos());
 }
-#endif
 
 template <typename ParseHandler>
 JSAtom * Parser<ParseHandler>::stopStringCompression() {
@@ -7092,8 +7071,6 @@ JSAtom * Parser<ParseHandler>::stopStringCompression() {
         sct->abort();
     return atom;
 }
-
-
 
 template <typename ParseHandler>
 typename ParseHandler::Node
@@ -7495,12 +7472,12 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
       case TOK_LP:
         return parenExprOrGeneratorComprehension();
 
-#ifdef JS_HAS_TEMPLATE_STRINGS
       case TOK_TEMPLATE_HEAD:
         return templateLiteral();
+
       case TOK_NO_SUBS_TEMPLATE:
         return noSubstitutionTemplate();
-#endif
+
       case TOK_STRING:
         return stringLiteral();
 

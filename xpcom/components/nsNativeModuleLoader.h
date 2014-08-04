@@ -16,32 +16,29 @@ class FileLocation;
 
 class nsNativeModuleLoader MOZ_FINAL
 {
- public:
-    const mozilla::Module* LoadModule(mozilla::FileLocation &aFile);
+public:
+  const mozilla::Module* LoadModule(mozilla::FileLocation& aFile);
 
-    nsresult Init();
+  nsresult Init();
 
-    void UnloadLibraries();
+  void UnloadLibraries();
 
- private:
-    struct NativeLoadData
-    {
-        NativeLoadData()
-            : mModule(nullptr)
-            , mLibrary(nullptr)
-        { }
+private:
+  struct NativeLoadData
+  {
+    NativeLoadData() : mModule(nullptr), mLibrary(nullptr) {}
 
-        const mozilla::Module* mModule;
-        PRLibrary* mLibrary;
-    };
+    const mozilla::Module* mModule;
+    PRLibrary* mLibrary;
+  };
 
-    static PLDHashOperator
-    ReleaserFunc(nsIHashable* aHashedFile, NativeLoadData &aLoadData, void*);
+  static PLDHashOperator
+  ReleaserFunc(nsIHashable* aHashedFile, NativeLoadData& aLoadData, void*);
 
-    static PLDHashOperator
-    UnloaderFunc(nsIHashable* aHashedFile, NativeLoadData &aLoadData, void*);
+  static PLDHashOperator
+  UnloaderFunc(nsIHashable* aHashedFile, NativeLoadData& aLoadData, void*);
 
-    nsDataHashtable<nsHashableHashKey, NativeLoadData> mLibraries;
+  nsDataHashtable<nsHashableHashKey, NativeLoadData> mLibraries;
 };
 
 #endif /* nsNativeModuleLoader_h__ */

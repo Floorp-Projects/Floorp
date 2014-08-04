@@ -52,6 +52,9 @@ interface Element : Node {
   [Pure]
   boolean hasAttributeNS(DOMString? namespace, DOMString localName);
 
+  [Throws, Pure]
+  boolean matches(DOMString selector);
+
   [Pure]
   HTMLCollection getElementsByTagName(DOMString localName);
   [Throws, Pure]

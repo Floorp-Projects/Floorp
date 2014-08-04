@@ -577,22 +577,7 @@ public:
    * Dump information about just this layer manager itself to aStream
    */
   void DumpSelf(std::stringstream& aStream, const char* aPrefix="");
-  void Dump() {
-    std::stringstream ss;
-    Dump(ss);
-    char line[1024];
-    while (!ss.eof()) {
-      ss.getline(line, sizeof(line));
-      if (!ss.eof() || strlen(line) > 0) {
-        printf_stderr("%s\n", line);
-      }
-      if (ss.fail()) {
-        // line was too long, skip to next newline
-        ss.clear();
-        ss.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      }
-    }
-  }
+  void Dump();
 
   /**
    * Dump information about this layer manager and its managed tree to
@@ -1770,6 +1755,17 @@ public:
     Mutated();
   }
 
+  void SetContentDescription(const std::string& aContentDescription)
+  {
+    if (mContentDescription == aContentDescription) {
+      return;
+    }
+
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ContentDescription", this));
+    mContentDescription = aContentDescription;
+    Mutated();
+  }
+
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs);
 
   void SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray);
@@ -1789,6 +1785,7 @@ public:
   float GetInheritedYScale() const { return mInheritedYScale; }
 
   gfxRGBA GetBackgroundColor() const { return mBackgroundColor; }
+  const std::string& GetContentDescription() const { return mContentDescription; }
 
   MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
 
@@ -1881,6 +1878,10 @@ protected:
   // When multi-layer-apz (bug 967844) is implemented, this is likely to move
   // elsewhere (e.g. to Layer).
   gfxRGBA mBackgroundColor;
+  // A description of the content element corresponding to this frame.
+  // This is empty unless this ContainerLayer is scrollable and the
+  // apz.printtree pref is turned on.
+  std::string mContentDescription;
   bool mUseIntermediateSurface;
   bool mSupportsComponentAlphaChildren;
   bool mMayHaveReadbackChild;

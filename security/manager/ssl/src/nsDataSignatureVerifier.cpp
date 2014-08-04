@@ -269,7 +269,7 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
 
   return MapSECStatus(certVerifier->VerifyCert(cert,
                                                certificateUsageObjectSigner,
-                                               PR_Now(), pinArg,
+                                               Now(), pinArg,
                                                nullptr, // hostname
                                                0, // flags
                                                nullptr, // stapledOCSPResponse

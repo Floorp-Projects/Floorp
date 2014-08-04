@@ -290,14 +290,14 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
     mIMEComposing = true;
   }
   uint32_t seqno = kLatestSeqno;
-  switch (event->eventStructType) {
-  case NS_COMPOSITION_EVENT:
+  switch (event->mClass) {
+  case eCompositionEventClass:
     seqno = event->AsCompositionEvent()->mSeqno;
     break;
-  case NS_TEXT_EVENT:
+  case eTextEventClass:
     seqno = event->AsTextEvent()->mSeqno;
     break;
-  case NS_SELECTION_EVENT:
+  case eSelectionEventClass:
     seqno = event->AsSelectionEvent()->mSeqno;
     break;
   default:

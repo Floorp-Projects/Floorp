@@ -12,6 +12,7 @@ SOURCES += [
     'lib/pkixder.cpp',
     'lib/pkixnss.cpp',
     'lib/pkixocsp.cpp',
+    'lib/pkixtime.cpp',
 ]
 
 LOCAL_INCLUDES += [

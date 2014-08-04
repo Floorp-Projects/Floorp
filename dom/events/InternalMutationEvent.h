@@ -18,16 +18,16 @@ class InternalMutationEvent : public WidgetEvent
 public:
   virtual InternalMutationEvent* AsMutationEvent() MOZ_OVERRIDE { return this; }
 
-  InternalMutationEvent(bool aIsTrusted, uint32_t aMessage) :
-    WidgetEvent(aIsTrusted, aMessage, NS_MUTATION_EVENT),
-    mAttrChange(0)
+  InternalMutationEvent(bool aIsTrusted, uint32_t aMessage)
+    : WidgetEvent(aIsTrusted, aMessage, eMutationEventClass)
+    , mAttrChange(0)
   {
     mFlags.mCancelable = false;
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(eventStructType == NS_MUTATION_EVENT,
+    MOZ_ASSERT(mClass == eMutationEventClass,
                "Duplicate() must be overridden by sub class");
     InternalMutationEvent* result = new InternalMutationEvent(false, message);
     result->AssignMutationEventData(*this, true);

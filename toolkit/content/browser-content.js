@@ -53,13 +53,13 @@ let ClickEventHandler = {
     return false;
   },
 
-  startScroll: function(event) {
+  findNearestScrollableElement: function(aNode) {
     // this is a list of overflow property values that allow scrolling
     const scrollingAllowed = ['scroll', 'auto'];
 
     // go upward in the DOM and find any parent element that has a overflow
     // area and can therefore be scrolled
-    for (this._scrollable = event.originalTarget; this._scrollable;
+    for (this._scrollable = aNode; this._scrollable;
          this._scrollable = this._scrollable.parentNode) {
       // do not use overflow based autoscroll for <html> and <body>
       // Elements or non-html elements such as svg or Document nodes
@@ -96,16 +96,25 @@ let ClickEventHandler = {
     }
 
     if (!this._scrollable) {
-      this._scrollable = event.originalTarget.ownerDocument.defaultView;
+      this._scrollable = aNode.ownerDocument.defaultView;
       if (this._scrollable.scrollMaxX > 0) {
         this._scrolldir = this._scrollable.scrollMaxY > 0 ? "NSEW" : "EW";
       } else if (this._scrollable.scrollMaxY > 0) {
         this._scrolldir = "NS";
+      } else if (this._scrollable.frameElement) {
+        this.findNearestScrollableElement(this._scrollable.frameElement);
       } else {
         this._scrollable = null; // abort scrolling
-        return;
       }
     }
+  },
+
+  startScroll: function(event) {
+
+    this.findNearestScrollableElement(event.originalTarget);
+
+    if (!this._scrollable)
+      return;
 
     let [enabled] = sendSyncMessage("Autoscroll:Start",
                                     {scrolldir: this._scrolldir,

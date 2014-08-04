@@ -458,17 +458,6 @@ FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
   sObjectClass = js::GetObjectJSClass(obj);
 }
 
-static inline JSString *
-IdToString(JSContext *cx, jsid id)
-{
-  if (JSID_IS_STRING(id))
-    return JSID_TO_STRING(id);
-  JS::Rooted<JS::Value> idval(cx);
-  if (!::JS_IdToValue(cx, id, &idval))
-    return nullptr;
-  return JS::ToString(cx, idval);
-}
-
 static inline nsresult
 WrapNative(JSContext *cx, nsISupports *native,
            nsWrapperCache *cache, const nsIID* aIID, JS::MutableHandle<JS::Value> vp,

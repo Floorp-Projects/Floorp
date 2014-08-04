@@ -81,7 +81,7 @@
 #include "ClientLayerManager.h"
 #include "nsRefreshDriver.h"
 #include "nsIContentViewer.h"
-
+#include "LayersLogging.h"
 #include "mozilla/Preferences.h"
 
 #ifdef MOZ_XUL
@@ -1869,15 +1869,15 @@ nsPoint
 nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                                              nsIFrame* aFrame)
 {
-  if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT &&
-                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-                  aEvent->eventStructType != NS_WHEEL_EVENT &&
-                  aEvent->eventStructType != NS_DRAG_EVENT &&
-                  aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
-                  aEvent->eventStructType != NS_POINTER_EVENT &&
-                  aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
-                  aEvent->eventStructType != NS_TOUCH_EVENT &&
-                  aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
+  if (!aEvent || (aEvent->mClass != eMouseEventClass &&
+                  aEvent->mClass != eMouseScrollEventClass &&
+                  aEvent->mClass != eWheelEventClass &&
+                  aEvent->mClass != eDragEventClass &&
+                  aEvent->mClass != eSimpleGestureEventClass &&
+                  aEvent->mClass != ePointerEventClass &&
+                  aEvent->mClass != eGestureNotifyEventClass &&
+                  aEvent->mClass != eTouchEventClass &&
+                  aEvent->mClass != eQueryContentEventClass))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   return GetEventCoordinatesRelativeTo(aEvent,
@@ -2694,7 +2694,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 
     std::stringstream ss;
     nsFrame::PrintDisplayList(&builder, list, ss);
-    fprintf_stderr(stderr, "%s", ss.str().c_str());
+    print_stderr(ss);
   }
 #endif
 
@@ -3081,18 +3081,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       ss << "</body></html>";
     }
 
-    char line[1024];
-    while (!ss.eof()) {
-      ss.getline(line, sizeof(line));
-      if (!ss.eof() || strlen(line) > 0) {
-        fprintf_stderr(gfxUtils::sDumpPaintFile, "%s\n", line);
-      }
-      if (ss.fail()) {
-        // line was too long, skip to next newline
-        ss.clear();
-        ss.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      }
-    }
+    fprint_stderr(gfxUtils::sDumpPaintFile, ss);
 
     if (gfxUtils::sDumpPaintingToFile) {
       fclose(gfxUtils::sDumpPaintFile);

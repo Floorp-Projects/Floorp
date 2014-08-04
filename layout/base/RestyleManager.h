@@ -179,7 +179,8 @@ public:
   // Helper that does part of the work of RebuildAllStyleData, shared by
   // RestyleElement for 'rem' handling.
   void DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
-                             nsChangeHint aExtraHint);
+                             nsChangeHint aExtraHint,
+                             nsRestyleHint aRestyleHint);
 
   // See PostRestyleEventCommon below.
   void PostRestyleEvent(Element* aElement,

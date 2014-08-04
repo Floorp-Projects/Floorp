@@ -122,7 +122,6 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to,
             FloatRegister src = to.floatReg();
             // Just always store the largest possible size. Currently, this is
             // a double. When SIMD is added, two doubles will need to be stored.
-            FloatRegister src2 = src.doubleOverlay();
             masm.ma_vstr(src.doubleOverlay(), cycleSlot(slotId, 0));
         }
         break;

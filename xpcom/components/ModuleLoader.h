@@ -34,7 +34,7 @@ public:
    * to be loaded multiple times. The Module object should either be
    * statically or permanently allocated; it will not be freed.
    */
-  virtual const Module* LoadModule(mozilla::FileLocation &aFile) = 0;
+  virtual const Module* LoadModule(mozilla::FileLocation& aFile) = 0;
 };
 NS_DEFINE_STATIC_IID_ACCESSOR(ModuleLoader, MOZILLA_MODULELOADER_PSEUDO_IID)
 

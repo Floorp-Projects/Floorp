@@ -97,23 +97,7 @@ static void speex_free (void *ptr) {free(ptr);}
 #define NULL 0
 #endif
 
-#include "sse_detect.h"
-
-/* We compile SSE code on x86 all the time, but we only use it if we find at
- * runtime that the CPU supports it. */
-#ifdef _USE_SSE
-#ifdef _MSC_VER
-#define inline __inline
-#endif
-#include "resample_sse.h"
-#ifdef _MSC_VER
-#undef inline
-#endif
-#endif
-
-#ifdef _USE_NEON
-#include "resample_neon.h"
-#endif
+#include "simd_detect.h"
 
 /* Numer of elements to allocate on the stack */
 #ifdef VAR_ARRAYS
@@ -360,7 +344,7 @@ static int resampler_basic_direct_single(SpeexResamplerState *st, spx_uint32_t c
       const spx_word16_t *iptr = & in[last_sample];
 
 #ifdef OVERRIDE_INNER_PRODUCT_SINGLE
-      if (!moz_has_sse()) {
+      if (!moz_speex_have_single_simd()) {
 #endif
       int j;
       sum = 0;
@@ -422,7 +406,7 @@ static int resampler_basic_direct_double(SpeexResamplerState *st, spx_uint32_t c
       const spx_word16_t *iptr = & in[last_sample];
 
 #ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
-      if(moz_has_sse2()) {
+      if(moz_speex_have_double_simd()) {
 #endif
       int j;
       double accum[4] = {0,0,0,0};
@@ -482,7 +466,7 @@ static int resampler_basic_interpolate_single(SpeexResamplerState *st, spx_uint3
 
 
 #ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
-      if (!moz_has_sse()) {
+      if (!moz_speex_have_single_simd()) {
 #endif
       int j;
       spx_word32_t accum[4] = {0,0,0,0};
@@ -549,7 +533,7 @@ static int resampler_basic_interpolate_double(SpeexResamplerState *st, spx_uint3
 
 
 #ifdef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
-      if (!moz_has_sse2()) {
+      if (!moz_speex_have_double_simd()) {
 #endif
       int j;
       double accum[4] = {0,0,0,0};

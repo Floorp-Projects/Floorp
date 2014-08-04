@@ -252,9 +252,32 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
  * restyling is necessary, use |nsRestyleHint(0)|.
  */
 enum nsRestyleHint {
-  eRestyle_Self = 0x1,
-  eRestyle_Subtree = 0x2, /* self and descendants */
-  eRestyle_LaterSiblings = 0x4 /* implies "and descendants" */
+  // Rerun selector matching on the element.  If a new style context
+  // results, update the style contexts of descendants.  (Irrelevant if
+  // eRestyle_Subtree is also set, since that implies a superset of the
+  // work.)
+  eRestyle_Self = (1<<0),
+
+  // Rerun selector matching on the element and all of its descendants.
+  eRestyle_Subtree = (1<<1),
+
+  // Rerun selector matching on all later siblings of the element and
+  // all of their descendants.
+  eRestyle_LaterSiblings = (1<<2),
+
+  // Replace the style data coming from CSS transitions without updating
+  // any other style data.  If a new style context results, update style
+  // contexts on the descendants.  (Irrelevant if eRestyle_Self or
+  // eRestyle_Subtree is also set, since those imply a superset of the
+  // work.)
+  eRestyle_CSSTransitions = (1<<3),
+
+  // Replace the style data coming from CSS animations without updating
+  // any other style data.  If a new style context results, update style
+  // contexts on the descendants.  (Irrelevant if eRestyle_Self or
+  // eRestyle_Subtree is also set, since those imply a superset of the
+  // work.)
+  eRestyle_CSSAnimations = (1<<4),
 };
 
 
