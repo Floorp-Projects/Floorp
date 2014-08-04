@@ -47,7 +47,7 @@ UIEvent::UIEvent(EventTarget* aOwner,
   // Fill mDetail and mView according to the mEvent (widget-generated
   // event) we've got
   switch(mEvent->mClass) {
-    case NS_UI_EVENT:
+    case eUIEventClass:
     {
       mDetail = mEvent->AsUIEvent()->detail;
       break;

@@ -29,7 +29,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
   NS_EVENT,                          // WidgetEvent
   eGUIEventClass,                    // WidgetGUIEvent
   eInputEventClass,                  // WidgetInputEvent
-  NS_UI_EVENT,                       // InternalUIEvent
+  eUIEventClass,                     // InternalUIEvent
 
   // TextEvents.h
   NS_KEY_EVENT,                      // WidgetKeyboardEvent
@@ -1171,14 +1171,14 @@ public:
   virtual InternalUIEvent* AsUIEvent() MOZ_OVERRIDE { return this; }
 
   InternalUIEvent(bool aIsTrusted, uint32_t aMessage)
-    : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, NS_UI_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, nullptr, eUIEventClass)
     , detail(0)
   {
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_UI_EVENT,
+    MOZ_ASSERT(mClass == eUIEventClass,
                "Duplicate() must be overridden by sub class");
     InternalUIEvent* result = new InternalUIEvent(false, message);
     result->AssignUIEventData(*this, true);
