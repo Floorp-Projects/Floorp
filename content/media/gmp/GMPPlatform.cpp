@@ -203,18 +203,10 @@ GMPThreadImpl::Join()
 GMPMutexImpl::GMPMutexImpl()
 : mMutex("gmp-mutex")
 {
-  MOZ_COUNT_CTOR(GMPMutexImpl);
 }
 
 GMPMutexImpl::~GMPMutexImpl()
 {
-  MOZ_COUNT_DTOR(GMPMutexImpl);
-}
-
-void
-GMPMutexImpl::Destroy()
-{
-  delete this;
 }
 
 void
