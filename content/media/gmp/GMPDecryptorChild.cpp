@@ -149,8 +149,13 @@ GMPDecryptorChild::Decrypted(GMPBuffer* aBuffer, GMPErr aResult)
 {
   MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
 
+  if (!aBuffer) {
+    NS_WARNING("GMPDecryptorCallback passed bull GMPBuffer");
+    return;
+  }
   auto buffer = static_cast<GMPBufferImpl*>(aBuffer);
   SendDecrypted(buffer->mId, aResult, buffer->mData);
+  delete buffer;
 }
 
 void
@@ -307,6 +312,8 @@ GMPDecryptorChild::RecvDecrypt(const uint32_t& aId,
 
   GMPEncryptedBufferDataImpl metadata(aMetadata);
 
+  // Note: the GMPBufferImpl created here is deleted when the GMP passes
+  // it back in the Decrypted() callback above.
   mSession->Decrypt(new GMPBufferImpl(aId, aBuffer), &metadata);
   return true;
 }
