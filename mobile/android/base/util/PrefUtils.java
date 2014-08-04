@@ -5,15 +5,15 @@
 
 package org.mozilla.gecko.util;
 
-import android.content.SharedPreferences;
-import android.os.Build;
-import android.util.Log;
-
 import java.util.HashSet;
 import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.mozilla.gecko.AppConstants.Versions;
+
+import android.content.SharedPreferences;
+import android.util.Log;
 
 
 public class PrefUtils {
@@ -27,7 +27,7 @@ public class PrefUtils {
             return defaultVal;
         }
 
-        if (Build.VERSION.SDK_INT < 11) {
+        if (Versions.preHC) {
             return getFromJSON(prefs, key);
         }
 
@@ -60,7 +60,7 @@ public class PrefUtils {
     public static SharedPreferences.Editor putStringSet(final SharedPreferences.Editor edit,
                                     final String key,
                                     final Set<String> vals) {
-        if (Build.VERSION.SDK_INT < 11) {
+        if (Versions.preHC) {
             final JSONArray json = new JSONArray(vals);
             edit.putString(key, json.toString()).apply();
         } else {
