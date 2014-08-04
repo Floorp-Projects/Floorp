@@ -159,7 +159,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
     tmp->mEvent->originalTarget = nullptr;
     switch (tmp->mEvent->mClass) {
       case eMouseEventClass:
-      case NS_MOUSE_SCROLL_EVENT:
+      case eMouseScrollEventClass:
       case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
       case NS_POINTER_EVENT:
@@ -197,7 +197,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->originalTarget)
     switch (tmp->mEvent->mClass) {
       case eMouseEventClass:
-      case NS_MOUSE_SCROLL_EVENT:
+      case eMouseScrollEventClass:
       case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
       case NS_POINTER_EVENT:
@@ -848,7 +848,7 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
 
   if (!aEvent || 
        (aEvent->mClass != eMouseEventClass &&
-        aEvent->mClass != NS_MOUSE_SCROLL_EVENT &&
+        aEvent->mClass != eMouseScrollEventClass &&
         aEvent->mClass != NS_WHEEL_EVENT &&
         aEvent->mClass != NS_POINTER_EVENT &&
         aEvent->mClass != NS_TOUCH_EVENT &&
@@ -904,7 +904,7 @@ Event::GetClientCoords(nsPresContext* aPresContext,
 
   if (!aEvent ||
       (aEvent->mClass != eMouseEventClass &&
-       aEvent->mClass != NS_MOUSE_SCROLL_EVENT &&
+       aEvent->mClass != eMouseScrollEventClass &&
        aEvent->mClass != NS_WHEEL_EVENT &&
        aEvent->mClass != NS_TOUCH_EVENT &&
        aEvent->mClass != eDragEventClass &&

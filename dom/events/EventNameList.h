@@ -619,11 +619,11 @@ NON_IDL_EVENT(DOMFocusOut,
 NON_IDL_EVENT(DOMMouseScroll,
               NS_MOUSE_SCROLL,
               EventNameType_HTMLXUL,
-              NS_MOUSE_SCROLL_EVENT)
+              eMouseScrollEventClass)
 NON_IDL_EVENT(MozMousePixelScroll,
               NS_MOUSE_PIXEL_SCROLL,
               EventNameType_HTMLXUL,
-              NS_MOUSE_SCROLL_EVENT)
+              eMouseScrollEventClass)
                                                 
 NON_IDL_EVENT(open,
               NS_OPEN,
