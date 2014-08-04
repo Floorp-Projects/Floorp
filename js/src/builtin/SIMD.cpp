@@ -675,7 +675,8 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
     // bits select the first lane, the next log2(L) the second, and so on.
     const uint32_t SELECT_SHIFT = FloorLog2(V::lanes);
     const uint32_t SELECT_MASK  = V::lanes - 1;
-    const uint32_t MAX_MASK_VALUE = uint32_t(pow(double(V::lanes), double(V::lanes))) - 1;
+    const int32_t MAX_MASK_VALUE = int32_t(pow(double(V::lanes), double(V::lanes))) - 1;
+    JS_ASSERT(MAX_MASK_VALUE > 0);
 
     Elem result[V::lanes];
     if (args.length() == 2) {
