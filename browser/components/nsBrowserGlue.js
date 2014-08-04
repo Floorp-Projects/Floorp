@@ -1343,7 +1343,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 22;
+    const UI_VERSION = 23;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1614,6 +1614,17 @@ BrowserGlue.prototype = {
       // Reset the Sync promobox count to promote the new FxAccount-based Sync.
       Services.prefs.clearUserPref("browser.syncPromoViewsLeft");
       Services.prefs.clearUserPref("browser.syncPromoViewsLeftMap");
+    }
+
+    if (currentUIVersion < 23) {
+      const kSelectedEnginePref = "browser.search.selectedEngine";
+      if (Services.prefs.prefHasUserValue(kSelectedEnginePref)) {
+        try {
+          let name = Services.prefs.getComplexValue(kSelectedEnginePref,
+                                                    Ci.nsIPrefLocalizedString).data;
+          Services.search.currentEngine = Services.search.getEngineByName(name);
+        } catch (ex) {}
+      }
     }
 
     if (this._dirty)

@@ -3254,18 +3254,27 @@ SearchService.prototype = {
     // Clear the engines, too, so we don't stick with the stale ones.
     this._engines = {};
     this.__sortedEngines = null;
+    this._currentEngine = null;
+    this._defaultEngine = null;
 
-    // Typically we'll re-init as a result of a pref observer,
-    // so signal to 'callers' that we're done.
-    return this._asyncLoadEngines()
-               .then(() => {
-                       Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-complete");
-                       gInitialized = true;
-                     },
-                     (err) => {
-                       LOG("Reinit failed: " + err);
-                       Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-failed");
-                     });
+    // Clear the metadata service.
+    engineMetadataService._initState = engineMetadataService._InitStates.NOT_STARTED;
+    engineMetadataService._initializer = null;
+
+    Task.spawn(function* () {
+      try {
+        yield engineMetadataService.init();
+        yield this._asyncLoadEngines();
+
+        // Typically we'll re-init as a result of a pref observer,
+        // so signal to 'callers' that we're done.
+        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-complete");
+        gInitialized = true;
+      } catch (err) {
+        LOG("Reinit failed: " + err);
+        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-failed");
+      }
+    }.bind(this));
   },
 
   _readCacheFile: function SRCH_SVC__readCacheFile(aFile) {
@@ -3790,13 +3799,21 @@ SearchService.prototype = {
                                       });
   },
 
-  _setEngineByPref: function SRCH_SVC_setEngineByPref(aEngineType, aPref) {
-    this._ensureInitialized();
-    let newEngine = this.getEngineByName(getLocalizedPref(aPref, ""));
-    if (!newEngine)
-      FAIL("Can't find engine in store!", Cr.NS_ERROR_UNEXPECTED);
+  _getVerificationHash: function SRCH_SVC__getVerificationHash(aName) {
+    let str = OS.Path.basename(OS.Constants.Path.profileDir) + aName;
 
-    this[aEngineType] = newEngine;
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                      .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+
+    // Data is an array of bytes.
+    let data = converter.convertToByteArray(str, {});
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+                   .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA256);
+    hasher.update(data, data.length);
+
+    return hasher.finish(true);
   },
 
   // nsIBrowserSearchService
@@ -4125,9 +4142,6 @@ SearchService.prototype = {
 
     this._defaultEngine = newDefaultEngine;
 
-    // Set a flag to keep track that this setter was called properly, not by
-    // setting the pref alone.
-    this._changingDefaultEngine = true;
     let defPref = BROWSER_SEARCH_PREF + "defaultenginename";
     // If we change the default engine in the future, that change should impact
     // users who have switched away from and then back to the build's "default"
@@ -4140,7 +4154,6 @@ SearchService.prototype = {
     else {
       setLocalizedPref(defPref, this._defaultEngine.name);
     }
-    this._changingDefaultEngine = false;
 
     notifyAction(this._defaultEngine, SEARCH_ENGINE_DEFAULT);
   },
@@ -4148,13 +4161,16 @@ SearchService.prototype = {
   get currentEngine() {
     this._ensureInitialized();
     if (!this._currentEngine) {
-      let selectedEngine = getLocalizedPref(BROWSER_SEARCH_PREF +
-                                            "selectedEngine");
-      this._currentEngine = this.getEngineByName(selectedEngine);
+      let name = engineMetadataService.getGlobalAttr("current");
+      if (engineMetadataService.getGlobalAttr("hash") == this._getVerificationHash(name)) {
+        this._currentEngine = this.getEngineByName(name);
+      }
     }
 
     if (!this._currentEngine || this._currentEngine.hidden)
-      this._currentEngine = this.defaultEngine;
+      this._currentEngine = this._originalDefaultEngine;
+    if (!this._currentEngine || this._currentEngine.hidden)
+      this._currentEngine = this._getSortedEngines(false)[0];
     return this._currentEngine;
   },
 
@@ -4175,23 +4191,18 @@ SearchService.prototype = {
 
     this._currentEngine = newCurrentEngine;
 
-    var currentEnginePref = BROWSER_SEARCH_PREF + "selectedEngine";
-
-    // Set a flag to keep track that this setter was called properly, not by
-    // setting the pref alone.
-    this._changingCurrentEngine = true;
     // If we change the default engine in the future, that change should impact
     // users who have switched away from and then back to the build's "default"
     // engine. So clear the user pref when the currentEngine is set to the
     // build's default engine, so that the currentEngine getter falls back to
     // whatever the default is.
+    let newName = this._currentEngine.name;
     if (this._currentEngine == this._originalDefaultEngine) {
-      Services.prefs.clearUserPref(currentEnginePref);
+      newName = "";
     }
-    else {
-      setLocalizedPref(currentEnginePref, this._currentEngine.name);
-    }
-    this._changingCurrentEngine = false;
+
+    engineMetadataService.setGlobalAttr("current", newName);
+    engineMetadataService.setGlobalAttr("hash", this._getVerificationHash(newName));
 
     notifyAction(this._currentEngine, SEARCH_ENGINE_CURRENT);
   },
@@ -4374,26 +4385,12 @@ SearchService.prototype = {
         break;
 
       case "nsPref:changed":
-#ifdef MOZ_FENNEC
         if (aVerb == LOCALE_PREF) {
           // Locale changed. Re-init. We rely on observers, because we can't
           // return this promise to anyone.
           this._asyncReInit();
           break;
         }
-#endif
-
-        let currPref = BROWSER_SEARCH_PREF + "selectedEngine";
-        if (aVerb == currPref && !this._changingCurrentEngine) {
-          this._setEngineByPref("currentEngine", currPref);
-          break;
-        }
-
-        let defPref = BROWSER_SEARCH_PREF + "defaultenginename";
-        if (aVerb == defPref && !this._changingDefaultEngine) {
-          this._setEngineByPref("defaultEngine", defPref);
-        }
-        break;
     }
   },
 
@@ -4439,8 +4436,6 @@ SearchService.prototype = {
   _addObservers: function SRCH_SVC_addObservers() {
     Services.obs.addObserver(this, SEARCH_ENGINE_TOPIC, false);
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC, false);
-    Services.prefs.addObserver(BROWSER_SEARCH_PREF + "defaultenginename", this, false);
-    Services.prefs.addObserver(BROWSER_SEARCH_PREF + "selectedEngine", this, false);
 
 #ifdef MOZ_FENNEC
     Services.prefs.addObserver(LOCALE_PREF, this, false);
@@ -4490,8 +4485,6 @@ SearchService.prototype = {
   _removeObservers: function SRCH_SVC_removeObservers() {
     Services.obs.removeObserver(this, SEARCH_ENGINE_TOPIC);
     Services.obs.removeObserver(this, QUIT_APPLICATION_TOPIC);
-    Services.prefs.removeObserver(BROWSER_SEARCH_PREF + "defaultenginename", this);
-    Services.prefs.removeObserver(BROWSER_SEARCH_PREF + "selectedEngine", this);
 
 #ifdef MOZ_FENNEC
     Services.prefs.removeObserver(LOCALE_PREF, this);
@@ -4651,6 +4644,11 @@ var engineMetadataService = {
     return record[aName];
   },
 
+  _globalFakeEngine: {_id: "[global]"},
+  getGlobalAttr: function epsGetGlobalAttr(name) {
+    return this.getAttr(this._globalFakeEngine, name);
+  },
+
   _setAttr: function epsSetAttr(engine, name, value) {
     // attr names must be lower case
     name = name.toLowerCase();
@@ -4682,6 +4680,10 @@ var engineMetadataService = {
     if (this._setAttr(engine, key, value)) {
       this._commit();
     }
+  },
+
+  setGlobalAttr: function epsGetGlobalAttr(key, value) {
+    this.setAttr(this._globalFakeEngine, key, value);
   },
 
   /**
@@ -4718,14 +4720,10 @@ var engineMetadataService = {
    * (= 100ms). If the function is called again before the expiration of
    * the delay, commits are merged and the function is again delayed by
    * the same amount of time.
-   *
-   * @param aStore is an optional parameter specifying the object to serialize.
-   *               If not specified, this._store is used.
    */
-  _commit: function epsCommit(aStore) {
+  _commit: function epsCommit() {
     LOG("metadata _commit: start");
-    let store = aStore || this._store;
-    if (!store) {
+    if (!this._store) {
       LOG("metadata _commit: nothing to do");
       return;
     }
@@ -4734,7 +4732,7 @@ var engineMetadataService = {
       LOG("metadata _commit: initializing lazy writer");
       function writeCommit() {
         LOG("metadata writeCommit: start");
-        let data = gEncoder.encode(JSON.stringify(store));
+        let data = gEncoder.encode(JSON.stringify(engineMetadataService._store));
         let path = engineMetadataService._jsonFile;
         LOG("metadata writeCommit: path " + path);
         let promise = OS.File.writeAtomic(path, data, { tmpPath: path + ".tmp" });
