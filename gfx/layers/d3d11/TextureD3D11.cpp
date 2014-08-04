@@ -192,7 +192,7 @@ TextureClientD3D11::CreateSimilar(TextureFlags aFlags,
 {
   RefPtr<TextureClient> tex = new TextureClientD3D11(mFormat, mFlags | aFlags);
 
-  if (!tex->AllocateForSurface(mSize, ALLOC_DEFAULT)) {
+  if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
     return nullptr;
   }
 
