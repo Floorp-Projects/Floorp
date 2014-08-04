@@ -2416,7 +2416,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     generateImpliedEndTags();
                                 }
                                 if (eltPos != currentPtr) {
-                                    if (eltPos != NOT_FOUND_ON_STACK) {
+                                    if (eltPos == NOT_FOUND_ON_STACK) {
                                         errStartTagSeenWithoutRuby(name);
                                     } else {
                                         errUnclosedChildrenInRuby();
@@ -2434,7 +2434,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 }
                                 if (eltPos != currentPtr) {
                                     if (!isCurrent("rtc")) {
-                                        if (eltPos != NOT_FOUND_ON_STACK) {
+                                        if (eltPos == NOT_FOUND_ON_STACK) {
                                             errStartTagSeenWithoutRuby(name);
                                         } else {
                                             errUnclosedChildrenInRuby();
