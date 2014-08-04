@@ -624,6 +624,8 @@ SGN_NewContext
 SGN_Update
 SSL_AuthCertificateComplete
 SSL_AuthCertificateHook
+SSL_CipherPrefGet
+SSL_CipherPrefSet
 SSL_CipherPrefSetDefault
 SSL_ClearSessionCache
 SSL_ConfigSecureServer
