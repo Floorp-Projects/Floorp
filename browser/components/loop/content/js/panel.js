@@ -77,22 +77,22 @@ loop.panel = (function(_, mozL10n) {
                               __("display_name_available_status");
 
       return (
-        React.DOM.div( {className:"footer component-spacer"}, 
-          React.DOM.div( {className:"do-not-disturb"}, 
-            React.DOM.p( {className:"dnd-status", onClick:this.showDropdownMenu}, 
-              React.DOM.span(null, availabilityText),
-              React.DOM.i( {className:availabilityStatus})
-            ),
-            React.DOM.ul( {className:availabilityDropdown,
-                onMouseLeave:this.hideDropdownMenu}, 
-              React.DOM.li( {onClick:this.changeAvailability("available"),
-                  className:"dnd-menu-item dnd-make-available"}, 
-                React.DOM.i( {className:"status status-available"}),
+        React.DOM.div({className: "footer component-spacer"}, 
+          React.DOM.div({className: "do-not-disturb"}, 
+            React.DOM.p({className: "dnd-status", onClick: this.showDropdownMenu}, 
+              React.DOM.span(null, availabilityText), 
+              React.DOM.i({className: availabilityStatus})
+            ), 
+            React.DOM.ul({className: availabilityDropdown, 
+                onMouseLeave: this.hideDropdownMenu}, 
+              React.DOM.li({onClick: this.changeAvailability("available"), 
+                  className: "dnd-menu-item dnd-make-available"}, 
+                React.DOM.i({className: "status status-available"}), 
                 React.DOM.span(null, __("display_name_available_status"))
-              ),
-              React.DOM.li( {onClick:this.changeAvailability("do-not-disturb"),
-                  className:"dnd-menu-item dnd-make-unavailable"}, 
-                React.DOM.i( {className:"status status-dnd"}),
+              ), 
+              React.DOM.li({onClick: this.changeAvailability("do-not-disturb"), 
+                  className: "dnd-menu-item dnd-make-unavailable"}, 
+                React.DOM.i({className: "status status-dnd"}), 
                 React.DOM.span(null, __("display_name_dnd_status"))
               )
             )
@@ -113,21 +113,21 @@ loop.panel = (function(_, mozL10n) {
         var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
         var tosHTML = __("legal_text_and_links2", {
           "terms_of_use": React.renderComponentToStaticMarkup(
-            React.DOM.a( {href:terms_of_use_url, target:"_blank"}, 
+            React.DOM.a({href: terms_of_use_url, target: "_blank"}, 
               __("legal_text_tos")
             )
           ),
           "privacy_notice": React.renderComponentToStaticMarkup(
-            React.DOM.a( {href:privacy_notice_url, target:"_blank"}, 
+            React.DOM.a({href: privacy_notice_url, target: "_blank"}, 
               __("legal_text_privacy")
             )
           ),
         });
         navigator.mozLoop.setLoopCharPref('seenToS', 'seen');
-        return React.DOM.p( {className:"terms-service",
-                  dangerouslySetInnerHTML:{__html: tosHTML}});
+        return React.DOM.p({className: "terms-service", 
+                  dangerouslySetInnerHTML: {__html: tosHTML}});
       } else {
-        return React.DOM.div(null );
+        return React.DOM.div(null);
       }
     }
   });
@@ -139,11 +139,11 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       return (
-        React.DOM.div( {className:"component-spacer share generate-url"}, 
-          React.DOM.div( {className:"description"}, 
-            React.DOM.p( {className:"description-content"}, this.props.summary)
-          ),
-          React.DOM.div( {className:"action"}, 
+        React.DOM.div({className: "component-spacer share generate-url"}, 
+          React.DOM.div({className: "description"}, 
+            React.DOM.p({className: "description-content"}, this.props.summary)
+          ), 
+          React.DOM.div({className: "action"}, 
             this.props.children
           )
         )
@@ -210,10 +210,10 @@ loop.panel = (function(_, mozL10n) {
       // from the react lib.
       var cx = React.addons.classSet;
       return (
-        PanelLayout( {summary:__("share_link_header_text")}, 
-          React.DOM.div( {className:"invite"}, 
-            React.DOM.input( {type:"url", value:this.state.callUrl, readOnly:"true",
-                   className:cx({'pending': this.state.pending})} )
+        PanelLayout({summary: __("share_link_header_text")}, 
+          React.DOM.div({className: "invite"}, 
+            React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
+                   className: cx({'pending': this.state.pending})})
           )
         )
       );
@@ -232,10 +232,10 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       return (
         React.DOM.div(null, 
-          CallUrlResult( {client:this.props.client,
-                       notifier:this.props.notifier} ),
-          ToSView(null ),
-          AvailabilityDropdown(null )
+          CallUrlResult({client: this.props.client, 
+                       notifier: this.props.notifier}), 
+          ToSView(null), 
+          AvailabilityDropdown(null)
         )
       );
     }
@@ -302,8 +302,8 @@ loop.panel = (function(_, mozL10n) {
       var client = new loop.Client({
         baseServerUrl: navigator.mozLoop.serverUrl
       });
-      this.loadReactComponent(PanelView( {client:client,
-                                         notifier:this._notifier} ));
+      this.loadReactComponent(PanelView({client: client, 
+                                         notifier: this._notifier}));
     }
   });
 
