@@ -121,15 +121,15 @@ class InternalFormEvent : public WidgetEvent
 public:
   virtual InternalFormEvent* AsFormEvent() MOZ_OVERRIDE { return this; }
 
-  InternalFormEvent(bool aIsTrusted, uint32_t aMessage) :
-    WidgetEvent(aIsTrusted, aMessage, NS_FORM_EVENT),
-    originator(nullptr)
+  InternalFormEvent(bool aIsTrusted, uint32_t aMessage)
+    : WidgetEvent(aIsTrusted, aMessage, eFormEventClass)
+    , originator(nullptr)
   {
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_FORM_EVENT,
+    MOZ_ASSERT(mClass == eFormEventClass,
                "Duplicate() must be overridden by sub class");
     InternalFormEvent* result = new InternalFormEvent(false, message);
     result->AssignFormEventData(*this, true);
