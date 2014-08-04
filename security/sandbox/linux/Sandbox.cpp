@@ -26,6 +26,7 @@
 #include "mozilla/dom/Exceptions.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "prenv.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -41,23 +42,14 @@
 #include "SandboxFilter.h"
 #endif
 
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG 1
-#endif
-#include "prlog.h"
-#include "prenv.h"
-
 // See definition of SandboxDie, below.
 #include "sandbox/linux/seccomp-bpf/die.h"
 
 namespace mozilla {
 #if defined(ANDROID)
 #define LOG_ERROR(args...) __android_log_print(ANDROID_LOG_ERROR, "Sandbox", ## args)
-#elif defined(PR_LOGGING)
-static PRLogModuleInfo* gSeccompSandboxLog;
-#define LOG_ERROR(args...) PR_LOG(mozilla::gSeccompSandboxLog, PR_LOG_ERROR, (args))
 #else
-#define LOG_ERROR(args...)
+#define LOG_ERROR(fmt, args...) fprintf(stderr, "Sandbox: " fmt, ## args)
 #endif
 
 /**
@@ -434,13 +426,6 @@ IsSandboxingSupported(void)
 void
 SetCurrentProcessSandbox()
 {
-#if !defined(ANDROID) && defined(PR_LOGGING)
-  if (!gSeccompSandboxLog) {
-    gSeccompSandboxLog = PR_NewLogModule("SeccompSandbox");
-  }
-  PR_ASSERT(gSeccompSandboxLog);
-#endif
-
   if (InstallSyscallReporter()) {
     LOG_ERROR("install_syscall_reporter() failed\n");
   }
