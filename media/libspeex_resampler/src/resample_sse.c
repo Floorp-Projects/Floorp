@@ -34,10 +34,12 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "simd_detect.h"
+
 #include <xmmintrin.h>
 
 #define OVERRIDE_INNER_PRODUCT_SINGLE
-static inline float inner_product_single(const float *a, const float *b, unsigned int len)
+float inner_product_single(const float *a, const float *b, unsigned int len)
 {
    int i;
    float ret;
@@ -54,7 +56,7 @@ static inline float inner_product_single(const float *a, const float *b, unsigne
 }
 
 #define OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
-static inline float interpolate_product_single(const float *a, const float *b, unsigned int len, const spx_uint32_t oversample, float *frac) {
+float interpolate_product_single(const float *a, const float *b, unsigned int len, const spx_uint32_t oversample, float *frac) {
   int i;
   float ret;
   __m128 sum = _mm_setzero_ps();
@@ -75,7 +77,7 @@ static inline float interpolate_product_single(const float *a, const float *b, u
 #include <emmintrin.h>
 #define OVERRIDE_INNER_PRODUCT_DOUBLE
 
-static inline double inner_product_double(const float *a, const float *b, unsigned int len)
+double inner_product_double(const float *a, const float *b, unsigned int len)
 {
    int i;
    double ret;
@@ -97,7 +99,7 @@ static inline double inner_product_double(const float *a, const float *b, unsign
 }
 
 #define OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
-static inline double interpolate_product_double(const float *a, const float *b, unsigned int len, const spx_uint32_t oversample, float *frac) {
+double interpolate_product_double(const float *a, const float *b, unsigned int len, const spx_uint32_t oversample, float *frac) {
   int i;
   double ret;
   __m128d sum;

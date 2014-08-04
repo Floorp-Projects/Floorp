@@ -199,21 +199,15 @@ private:
 
   // First, read the comment in gfx/layers/apz/src/TouchBlockState.h.
   // The following booleans track the following pieces of state:
-  // mApzConsumingTouch - if events from the current touch block should be
-  //    sent to the APZ. This is true unless the touchstart hit no APZ
-  //    instances, in which case we don't need to send the rest of the touch
-  //    block to the APZ code.
   // mCancelable - if we have not yet notified the APZ code about the prevent-
   //    default status of the current touch block. This is flipped from true
-  //    to false when this notification happens (or would have happened, in
-  //    the case that mApzConsumingTouch is false).
+  //    to false when this notification happens.
   // mRecognizerWantsEvents - If the gesture recognizer should be receiving
   //    events. This is normally true, but will be set to false if the APZ
   //    decides the touch block should be thrown away entirely, or if content
   //    consumes the touch block.
   //    XXX There is a hazard with mRecognizerWantsEvents because it is accessed
   //    both in the sync and async portions of the code.
-  bool mApzConsumingTouch;
   bool mCancelable;
   bool mRecognizerWantsEvents;
 
@@ -283,7 +277,8 @@ private:
 
   void HandleTouchStartEvent(WidgetTouchEvent* aEvent);
   void HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent);
-  void SendPendingResponseToApz();
+  void SendPointerCancelToContent(const WidgetTouchEvent& aEvent);
+  bool SendPendingResponseToApz();
   void CancelGesture();
 
   // Sync event dispatching

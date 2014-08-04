@@ -35,10 +35,10 @@
 namespace mozilla { namespace pkix {
 
 Result
-CheckValidity(Input encodedValidity, PRTime time)
+CheckValidity(Input encodedValidity, Time time)
 {
   Reader validity(encodedValidity);
-  PRTime notBefore;
+  Time notBefore(Time::uninitialized);
   if (der::TimeChoice(validity, notBefore) != Success) {
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
@@ -46,7 +46,7 @@ CheckValidity(Input encodedValidity, PRTime time)
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
 
-  PRTime notAfter;
+  Time notAfter(Time::uninitialized);
   if (der::TimeChoice(validity, notAfter) != Success) {
     return Result::ERROR_EXPIRED_CERTIFICATE;
   }
@@ -179,50 +179,24 @@ CheckKeyUsage(EndEntityOrCA endEntityOrCA, const Input* encodedKeyUsage,
 // "The user-initial-policy-set contains the special value any-policy if the
 // user is not concerned about certificate policy."
 //
-// id-ce OBJECT IDENTIFIER  ::=  {joint-iso-ccitt(2) ds(5) 29}
-// id-ce-certificatePolicies OBJECT IDENTIFIER ::=  { id-ce 32 }
-// anyPolicy OBJECT IDENTIFIER ::= { id-ce-certificatePolicies 0 }
+// python DottedOIDToCode.py anyPolicy 2.5.29.32.0
 
-/*static*/ const CertPolicyId CertPolicyId::anyPolicy = {
-  4, { (40*2)+5, 29, 32, 0 }
+static const uint8_t anyPolicy[] = {
+  0x55, 0x1d, 0x20, 0x00
 };
 
-bool CertPolicyId::IsAnyPolicy() const
-{
-  return this == &anyPolicy ||
-         (numBytes == anyPolicy.numBytes &&
-          !memcmp(bytes, anyPolicy.bytes, anyPolicy.numBytes));
-}
+/*static*/ const CertPolicyId CertPolicyId::anyPolicy = {
+  4, { 0x55, 0x1d, 0x20, 0x00 }
+};
 
-// PolicyInformation ::= SEQUENCE {
-//         policyIdentifier   CertPolicyId,
-//         policyQualifiers   SEQUENCE SIZE (1..MAX) OF
-//                                 PolicyQualifierInfo OPTIONAL }
-inline Result
-CheckPolicyInformation(Reader& input, EndEntityOrCA endEntityOrCA,
-                       const CertPolicyId& requiredPolicy,
-                       /*in/out*/ bool& found)
-{
-  if (input.MatchTLV(der::OIDTag, requiredPolicy.numBytes,
-                     requiredPolicy.bytes)) {
-    found = true;
-  } else if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-             input.MatchTLV(der::OIDTag, CertPolicyId::anyPolicy.numBytes,
-                            CertPolicyId::anyPolicy.bytes)) {
-    found = true;
+bool
+CertPolicyId::IsAnyPolicy() const {
+  if (this == &CertPolicyId::anyPolicy) {
+    return true;
   }
-
-  // RFC 5280 Section 4.2.1.4 says "Optional qualifiers, which MAY be present,
-  // are not expected to change the definition of the policy." Also, it seems
-  // that Section 6, which defines validation, does not require any matching of
-  // qualifiers. Thus, doing anything with the policy qualifiers would be a
-  // waste of time and a source of potential incompatibilities, so we just
-  // ignore them.
-
-  // Skip unmatched OID and/or policyQualifiers
-  input.SkipToEnd();
-
-  return Success;
+  return numBytes == PR_ARRAY_SIZE(::mozilla::pkix::anyPolicy) &&
+         !memcmp(bytes, ::mozilla::pkix::anyPolicy,
+                 PR_ARRAY_SIZE(::mozilla::pkix::anyPolicy));
 }
 
 // certificatePolicies ::= SEQUENCE SIZE (1..MAX) OF PolicyInformation
@@ -238,17 +212,14 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
-  // Ignore all policy information if the caller indicates any policy is
-  // acceptable. See TrustDomain::GetCertTrust and the policy part of
-  // BuildCertChain's documentation.
-  if (requiredPolicy.IsAnyPolicy()) {
+  bool requiredPolicyFound = requiredPolicy.IsAnyPolicy();
+  if (requiredPolicyFound) {
     return Success;
   }
 
   // Bug 989051. Until we handle inhibitAnyPolicy we will fail close when
-  // inhibitAnyPolicy extension is present and we need to evaluate certificate
-  // policies.
-  if (encodedInhibitAnyPolicy) {
+  // inhibitAnyPolicy extension is present and we are validating for a policy.
+  if (!requiredPolicyFound && encodedInhibitAnyPolicy) {
     return Result::ERROR_POLICY_VALIDATION_FAILED;
   }
 
@@ -258,25 +229,63 @@ CheckCertificatePolicies(EndEntityOrCA endEntityOrCA,
   // which policies is made by the TrustDomain's GetCertTrust method.
   if (trustLevel == TrustLevel::TrustAnchor &&
       endEntityOrCA == EndEntityOrCA::MustBeCA) {
-    return Success;
+    requiredPolicyFound = true;
   }
 
-  if (!encodedCertificatePolicies) {
-    return Result::ERROR_POLICY_VALIDATION_FAILED;
+  Input requiredPolicyDER;
+  if (requiredPolicyDER.Init(requiredPolicy.bytes, requiredPolicy.numBytes)
+        != Success) {
+    return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
-  bool found = false;
+  if (encodedCertificatePolicies) {
+    Reader extension(*encodedCertificatePolicies);
+    Reader certificatePolicies;
+    Result rv = der::ExpectTagAndGetValue(extension, der::SEQUENCE,
+                                          certificatePolicies);
+    if (rv != Success) {
+      return Result::ERROR_POLICY_VALIDATION_FAILED;
+    }
+    if (!extension.AtEnd()) {
+      return Result::ERROR_POLICY_VALIDATION_FAILED;
+    }
 
-  Reader input(*encodedCertificatePolicies);
-  if (der::NestedOf(input, der::SEQUENCE, der::SEQUENCE, der::EmptyAllowed::No,
-                    bind(CheckPolicyInformation, _1, endEntityOrCA,
-                         requiredPolicy, ref(found))) != Success) {
-    return Result::ERROR_POLICY_VALIDATION_FAILED;
+    do {
+      // PolicyInformation ::= SEQUENCE {
+      //         policyIdentifier   CertPolicyId,
+      //         policyQualifiers   SEQUENCE SIZE (1..MAX) OF
+      //                                 PolicyQualifierInfo OPTIONAL }
+      Reader policyInformation;
+      rv = der::ExpectTagAndGetValue(certificatePolicies, der::SEQUENCE,
+                                     policyInformation);
+      if (rv != Success) {
+        return Result::ERROR_POLICY_VALIDATION_FAILED;
+      }
+
+      Reader policyIdentifier;
+      rv = der::ExpectTagAndGetValue(policyInformation, der::OIDTag,
+                                     policyIdentifier);
+      if (rv != Success) {
+        return rv;
+      }
+
+      if (policyIdentifier.MatchRest(requiredPolicyDER)) {
+        requiredPolicyFound = true;
+      } else if (endEntityOrCA == EndEntityOrCA::MustBeCA &&
+                 policyIdentifier.MatchRest(anyPolicy)) {
+        requiredPolicyFound = true;
+      }
+
+      // RFC 5280 Section 4.2.1.4 says "Optional qualifiers, which MAY be
+      // present, are not expected to change the definition of the policy." Also,
+      // it seems that Section 6, which defines validation, does not require any
+      // matching of qualifiers. Thus, doing anything with the policy qualifiers
+      // would be a waste of time and a source of potential incompatibilities, so
+      // we just ignore them.
+    } while (!requiredPolicyFound && !certificatePolicies.AtEnd());
   }
-  if (der::End(input) != Success) {
-    return Result::ERROR_POLICY_VALIDATION_FAILED;
-  }
-  if (!found) {
+
+  if (!requiredPolicyFound) {
     return Result::ERROR_POLICY_VALIDATION_FAILED;
   }
 
@@ -609,7 +618,7 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
 Result
 CheckIssuerIndependentProperties(TrustDomain& trustDomain,
                                  const BackCert& cert,
-                                 PRTime time,
+                                 Time time,
                                  KeyUsage requiredKeyUsageIfPresent,
                                  KeyPurposeId requiredEKUIfPresent,
                                  const CertPolicyId& requiredPolicy,

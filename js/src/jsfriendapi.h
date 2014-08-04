@@ -46,6 +46,10 @@ template <class T>
 class Heap;
 } /* namespace JS */
 
+namespace js {
+class JS_FRIEND_API(BaseProxyHandler);
+} /* namespace js */
+
 extern JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 
@@ -2459,6 +2463,33 @@ extern JS_FRIEND_API(bool)
 CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                     unsigned attrs,
                     JSPropertyOp getter = nullptr, JSStrictPropertyOp setter = nullptr);
+
+/*
+ * Helper function for HTMLDocument and HTMLFormElement.
+ *
+ * These are the only two interfaces that have [OverrideBuiltins], a named
+ * getter, and no named setter. They're implemented as proxies with a custom
+ * getOwnPropertyDescriptor() method. Unfortunately, overriding
+ * getOwnPropertyDescriptor() automatically affects the behavior of set(),
+ * which normally is just common sense but is *not* desired for these two
+ * interfaces.
+ *
+ * The fix is for these two interfaces to override set() to ignore the
+ * getOwnPropertyDescriptor() override.
+ *
+ * SetPropertyIgnoringNamedGetter is exposed to make it easier to override
+ * set() in this way.  It carries out all the steps of BaseProxyHandler::set()
+ * except the initial getOwnPropertyDescriptor()/getPropertyDescriptor() calls.
+ * The caller must supply those results as the 'desc' and 'descIsOwn'
+ * parameters.
+ *
+ * Implemented in jsproxy.cpp.
+ */
+JS_FRIEND_API(bool)
+SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handler,
+                               JS::HandleObject proxy, JS::HandleObject receiver,
+                               JS::HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
+                               bool descIsOwn, bool strict, JS::MutableHandleValue vp);
 
 JS_FRIEND_API(void)
 ReportErrorWithId(JSContext *cx, const char *msg, JS::HandleId id);

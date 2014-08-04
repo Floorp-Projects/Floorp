@@ -17,7 +17,7 @@ CompositionEvent::CompositionEvent(EventTarget* aOwner,
   : UIEvent(aOwner, aPresContext,
             aEvent ? aEvent : new WidgetCompositionEvent(false, 0, nullptr))
 {
-  NS_ASSERTION(mEvent->eventStructType == NS_COMPOSITION_EVENT,
+  NS_ASSERTION(mEvent->mClass == eCompositionEventClass,
                "event type mismatch");
 
   if (aEvent) {

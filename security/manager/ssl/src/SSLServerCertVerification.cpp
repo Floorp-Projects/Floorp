@@ -130,6 +130,8 @@
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
+using namespace mozilla::pkix;
+
 namespace mozilla { namespace psm {
 
 namespace {
@@ -324,6 +326,7 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
   // called if CertVerifier::VerifyCert succeeded.
   switch (defaultErrorCodeToReport) {
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
     case SEC_ERROR_UNKNOWN_ISSUER:
     {
       collectedErrors = nsICertOverrideService::ERROR_UNTRUSTED;
@@ -620,7 +623,8 @@ public:
                             CERTCertificate* serverCert,
                             SECItem* stapledOCSPResponse,
                             uint32_t providerFlags,
-                            PRTime time);
+                            Time time,
+                            PRTime prtime);
 private:
   NS_DECL_NSIRUNNABLE
 
@@ -631,13 +635,15 @@ private:
                                CERTCertificate* cert,
                                SECItem* stapledOCSPResponse,
                                uint32_t providerFlags,
-                               PRTime time);
+                               Time time,
+                               PRTime prtime);
   const RefPtr<SharedCertVerifier> mCertVerifier;
   const void* const mFdForLogging;
   const RefPtr<TransportSecurityInfo> mInfoObject;
   const ScopedCERTCertificate mCert;
   const uint32_t mProviderFlags;
-  const PRTime mTime;
+  const Time mTime;
+  const PRTime mPRTime;
   const TimeStamp mJobStartTime;
   const ScopedSECItem mStapledOCSPResponse;
 };
@@ -645,13 +651,15 @@ private:
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
     const RefPtr<SharedCertVerifier>& certVerifier, const void* fdForLogging,
     TransportSecurityInfo* infoObject, CERTCertificate* cert,
-    SECItem* stapledOCSPResponse, uint32_t providerFlags, PRTime time)
+    SECItem* stapledOCSPResponse, uint32_t providerFlags,
+    Time time, PRTime prtime)
   : mCertVerifier(certVerifier)
   , mFdForLogging(fdForLogging)
   , mInfoObject(infoObject)
   , mCert(CERT_DupCertificate(cert))
   , mProviderFlags(providerFlags)
   , mTime(time)
+  , mPRTime(prtime)
   , mJobStartTime(TimeStamp::Now())
   , mStapledOCSPResponse(SECITEM_DupItem(stapledOCSPResponse))
 {
@@ -727,7 +735,7 @@ BlockServerCertChangeForSpdy(nsNSSSocketInfo* infoObject,
 SECStatus
 AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
                 CERTCertificate* cert, SECItem* stapledOCSPResponse,
-                uint32_t providerFlags, PRTime time)
+                uint32_t providerFlags, Time time)
 {
   MOZ_ASSERT(infoObject);
   MOZ_ASSERT(cert);
@@ -802,7 +810,8 @@ SSLServerCertVerificationJob::Dispatch(
   CERTCertificate* serverCert,
   SECItem* stapledOCSPResponse,
   uint32_t providerFlags,
-  PRTime time)
+  Time time,
+  PRTime prtime)
 {
   // Runs on the socket transport thread
   if (!certVerifier || !infoObject || !serverCert) {
@@ -814,7 +823,7 @@ SSLServerCertVerificationJob::Dispatch(
   RefPtr<SSLServerCertVerificationJob> job(
     new SSLServerCertVerificationJob(certVerifier, fdForLogging, infoObject,
                                      serverCert, stapledOCSPResponse,
-                                     providerFlags, time));
+                                     providerFlags, time, prtime));
 
   nsresult nrv;
   if (!gCertVerificationThreadPool) {
@@ -888,7 +897,7 @@ SSLServerCertVerificationJob::Run()
       RefPtr<CertErrorRunnable> runnable(
           CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject,
                                   mCert.get(), mFdForLogging, mProviderFlags,
-                                  mTime));
+                                  mPRTime));
       if (!runnable) {
         // CreateCertErrorRunnable set a new error code
         error = PR_GetError();
@@ -968,9 +977,8 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
 
   socketInfo->SetFullHandshake();
 
-  // This value of "now" is used both here for OCSP stapling and later
-  // when calling CreateCertErrorRunnable.
-  PRTime now = PR_Now();
+  Time now(Now());
+  PRTime prnow(PR_Now());
 
   if (BlockServerCertChangeForSpdy(socketInfo, serverCert) != SECSuccess)
     return SECFailure;
@@ -1012,7 +1020,8 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
     socketInfo->SetCertVerificationWaiting();
     SECStatus rv = SSLServerCertVerificationJob::Dispatch(
                      certVerifier, static_cast<const void*>(fd), socketInfo,
-                     serverCert, stapledOCSPResponse, providerFlags, now);
+                     serverCert, stapledOCSPResponse, providerFlags, now,
+                     prnow);
     return rv;
   }
 
@@ -1033,7 +1042,7 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
     RefPtr<CertErrorRunnable> runnable(
         CreateCertErrorRunnable(*certVerifier, error, socketInfo, serverCert,
                                 static_cast<const void*>(fd), providerFlags,
-                                now));
+                                prnow));
     if (!runnable) {
       // CreateCertErrorRunnable sets a new error code when it fails
       error = PR_GetError();

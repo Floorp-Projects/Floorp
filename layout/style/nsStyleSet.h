@@ -112,27 +112,21 @@ class nsStyleSet
   ResolveStyleForRules(nsStyleContext* aParentContext,
                        const nsTArray< nsCOMPtr<nsIStyleRule> > &aRules);
 
-  // used in ResolveStyleForRules below
-  struct RuleAndLevel
-  {
-    nsIStyleRule* mRule;
-    uint8_t mLevel;
-  };
-
-  // Get a new style context for aElement for the rules in aRules
-  // aRules is an array of rules and their levels in reverse order,
-  // that is from the leaf-most to the root-most rule in the rule tree.
-  already_AddRefed<nsStyleContext>
-  ResolveStyleForRules(nsStyleContext* aParentContext,
-                       nsStyleContext* aOldStyle,
-                       const nsTArray<RuleAndLevel>& aRules);
-
   // Get a style context that represents aBaseContext, but as though
   // it additionally matched the rules in the aRules array (in that
   // order, as more specific than any other rules).
   already_AddRefed<nsStyleContext>
   ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
                             const nsCOMArray<nsIStyleRule> &aRules);
+
+  // Resolve style by making replacements in the list of style rules as
+  // described by aReplacements, but otherwise maintaining the status
+  // quo.
+  already_AddRefed<nsStyleContext>
+  ResolveStyleWithReplacement(mozilla::dom::Element* aElement,
+                              nsStyleContext* aNewParentContext,
+                              nsStyleContext* aOldStyleContext,
+                              nsRestyleHint aReplacements);
 
   // Get a style context for a non-element (which no rules will match),
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame
@@ -324,6 +318,10 @@ class nsStyleSet
   // Note: EndReconstruct should not be called if BeginReconstruct fails
   void EndReconstruct();
 
+  bool IsInRuleTreeReconstruct() const {
+    return mInReconstruct;
+  }
+
   // Let the style set know that a particular sheet is the quirks sheet.  This
   // sheet must already have been added to the UA sheets.  The pointer must not
   // be null.  This should only be called once for a given style set.
@@ -404,6 +402,12 @@ class nsStyleSet
   void WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
                           ElementDependentRuleProcessorData* aData,
                           bool aWalkAllXBLStylesheets);
+
+  // Helper for ResolveStyleWithReplacement
+  nsRuleNode* RuleNodeWithReplacement(mozilla::dom::Element* aElement,
+                                      nsRuleNode* aOldRuleNode,
+                                      nsCSSPseudoElements::Type aPseudoType,
+                                      nsRestyleHint aReplacements);
 
   /**
    * Bit-flags that can be passed to GetContext() in its parameter 'aFlags'.

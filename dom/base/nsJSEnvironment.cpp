@@ -54,10 +54,11 @@
 #include "nsScriptNameSpaceManager.h"
 #include "StructuredCloneTags.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/dom/ErrorEvent.h"
-#include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/CryptoKey.h"
+#include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ImageDataBinding.h"
+#include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "nsAXPCNativeCallContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -2811,25 +2812,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
                           void* closure)
 {
   if (tag == SCTAG_DOM_IMAGEDATA) {
-    // Read the information out of the stream.
-    uint32_t width, height;
-    JS::Rooted<JS::Value> dataArray(cx);
-    if (!JS_ReadUint32Pair(reader, &width, &height) ||
-        !JS_ReadTypedArray(reader, &dataArray)) {
-      return nullptr;
-    }
-    MOZ_ASSERT(dataArray.isObject());
-
-    // Protect the result from a moving GC in ~nsRefPtr.
-    JS::Rooted<JSObject*> result(cx);
-    {
-      // Construct the ImageData.
-      nsRefPtr<ImageData> imageData = new ImageData(width, height,
-                                                    dataArray.toObject());
-      // Wrap it in a JS::Value.
-      result = imageData->WrapObject(cx);
-    }
-    return result;
+    return ReadStructuredCloneImageData(cx, reader);
   } else if (tag == SCTAG_DOM_WEBCRYPTO_KEY) {
     nsIGlobalObject *global = xpc::GetNativeForGlobal(JS::CurrentGlobalOrNull(cx));
     if (!global) {
@@ -2863,17 +2846,7 @@ NS_DOMWriteStructuredClone(JSContext* cx,
   // Handle ImageData cloning
   ImageData* imageData;
   if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, obj, imageData))) {
-    // Prepare the ImageData internals.
-    uint32_t width = imageData->Width();
-    uint32_t height = imageData->Height();
-    JS::Rooted<JSObject*> dataArray(cx, imageData->GetDataObject());
-
-    // Write the internals to the stream.
-    JSAutoCompartment ac(cx, dataArray);
-    JS::Rooted<JS::Value> arrayValue(cx, JS::ObjectValue(*dataArray));
-    return JS_WriteUint32Pair(writer, SCTAG_DOM_IMAGEDATA, 0) &&
-           JS_WriteUint32Pair(writer, width, height) &&
-           JS_WriteTypedArray(writer, arrayValue);
+    return WriteStructuredCloneImageData(cx, writer, imageData);
   }
 
   // Handle Key cloning

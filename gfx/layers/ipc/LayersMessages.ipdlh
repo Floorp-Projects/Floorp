@@ -41,6 +41,7 @@ using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
 using struct mozilla::layers::FenceHandleFromChild from "mozilla/layers/FenceUtils.h";
 using mozilla::layers::TextureIdentifier from "mozilla/layers/CompositorTypes.h";
+using std::string from "string";
 
 namespace mozilla {
 namespace layers {
@@ -227,6 +228,7 @@ struct ContainerLayerAttributes {
   float inheritedXScale;
   float inheritedYScale;
   LayerColor backgroundColor;
+  string contentDescription;
 };
 struct ColorLayerAttributes     { LayerColor color; nsIntRect bounds; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };

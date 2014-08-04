@@ -470,7 +470,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
             isMouseOutsideThumb = true;
         }
       }
-      if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+      if (aEvent->mClass == eTouchEventClass) {
         *aEventStatus = nsEventStatus_eConsumeNoDefault;
       }
       if (isMouseOutsideThumb)
@@ -523,7 +523,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
 
     DragThumb(true);
-    if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+    if (aEvent->mClass == eTouchEventClass) {
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
     }
 

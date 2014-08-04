@@ -625,8 +625,8 @@ nsContentUtils::InitializeEventTable() {
   NS_ASSERTION(!sStringEventTable, "EventTable already initialized!");
 
   static const EventNameMapping eventArray[] = {
-#define EVENT(name_,  _id, _type, _struct)          \
-    { nsGkAtoms::on##name_, _id, _type, _struct },
+#define EVENT(name_,  _id, _type, _class)          \
+    { nsGkAtoms::on##name_, _id, _type, _class },
 #define WINDOW_ONLY_EVENT EVENT
 #define NON_IDL_EVENT EVENT
 #include "mozilla/EventNameList.h"
@@ -658,9 +658,9 @@ nsContentUtils::InitializeTouchEventTable()
   if (!sEventTableInitialized && sAtomEventTable && sStringEventTable) {
     sEventTableInitialized = true;
     static const EventNameMapping touchEventArray[] = {
-#define EVENT(name_,  _id, _type, _struct)
-#define TOUCH_EVENT(name_,  _id, _type, _struct)      \
-      { nsGkAtoms::on##name_, _id, _type, _struct },
+#define EVENT(name_,  _id, _type, _class)
+#define TOUCH_EVENT(name_,  _id, _type, _class)      \
+      { nsGkAtoms::on##name_, _id, _type, _class },
 #include "mozilla/EventNameList.h"
 #undef TOUCH_EVENT
 #undef EVENT
@@ -3602,25 +3602,25 @@ nsContentUtils::GetEventId(nsIAtom* aName)
 }
 
 // static
-uint32_t
-nsContentUtils::GetEventCategory(const nsAString& aName)
+mozilla::EventClassID
+nsContentUtils::GetEventClassID(const nsAString& aName)
 {
   EventNameMapping mapping;
   if (sStringEventTable->Get(aName, &mapping))
-    return mapping.mStructType;
+    return mapping.mEventClassID;
 
-  return NS_EVENT;
+  return eBasicEventClass;
 }
 
 nsIAtom*
 nsContentUtils::GetEventIdAndAtom(const nsAString& aName,
-                                  uint32_t aEventStruct,
+                                  mozilla::EventClassID aEventClassID,
                                   uint32_t* aEventID)
 {
   EventNameMapping mapping;
   if (sStringEventTable->Get(aName, &mapping)) {
-    *aEventID =
-      mapping.mStructType == aEventStruct ? mapping.mId : NS_USER_DEFINED_EVENT;
+    *aEventID = mapping.mEventClassID == aEventClassID ? mapping.mId :
+                                                         NS_USER_DEFINED_EVENT;
     return mapping.mAtom;
   }
 
@@ -3639,7 +3639,7 @@ nsContentUtils::GetEventIdAndAtom(const nsAString& aName,
   mapping.mAtom = atom;
   mapping.mId = NS_USER_DEFINED_EVENT;
   mapping.mType = EventNameType_None;
-  mapping.mStructType = NS_EVENT_NULL;
+  mapping.mEventClassID = eBasicEventClass;
   sStringEventTable->Put(aName, mapping);
   return mapping.mAtom;
 }
@@ -4894,7 +4894,7 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMKeyEvent* aDOMKeyEvent,
   WidgetKeyboardEvent* nativeKeyEvent =
     aDOMKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
   if (nativeKeyEvent) {
-    NS_ASSERTION(nativeKeyEvent->eventStructType == NS_KEY_EVENT,
+    NS_ASSERTION(nativeKeyEvent->mClass == eKeyboardEventClass,
                  "wrong type of native event");
     // nsShortcutCandidate::mCharCode is a candidate charCode.
     // nsShoftcutCandidate::mIgnoreShift means the mCharCode should be tried to

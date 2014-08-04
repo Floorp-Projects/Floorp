@@ -12,12 +12,12 @@
 
 class nsIFile;
 
-void ParseManifest(NSLocationType type, mozilla::FileLocation &file,
-                   char* buf, bool aChromeOnly, bool aXPTOnly=false);
+void ParseManifest(NSLocationType aType, mozilla::FileLocation& aFile,
+                   char* aBuf, bool aChromeOnly, bool aXPTOnly = false);
 
 void LogMessage(const char* aMsg, ...);
 
-void LogMessageWithContext(mozilla::FileLocation &aFile,
+void LogMessageWithContext(mozilla::FileLocation& aFile,
                            uint32_t aLineNumber, const char* aMsg, ...);
 
 #endif // ManifestParser_h

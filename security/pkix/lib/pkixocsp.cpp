@@ -32,10 +32,6 @@
 
 namespace mozilla { namespace pkix {
 
-static const PRTime ONE_DAY
-  = INT64_C(24) * INT64_C(60) * INT64_C(60) * PR_USEC_PER_SEC;
-static const PRTime SLOP = ONE_DAY;
-
 // These values correspond to the tag values in the ASN.1 CertStatus
 MOZILLA_PKIX_ENUM_CLASS CertStatus : uint8_t {
   Good = der::CONTEXT_SPECIFIC | 0,
@@ -46,9 +42,9 @@ MOZILLA_PKIX_ENUM_CLASS CertStatus : uint8_t {
 class Context
 {
 public:
-  Context(TrustDomain& trustDomain, const CertID& certID, PRTime time,
-          uint16_t maxLifetimeInDays, /*optional out*/ PRTime* thisUpdate,
-          /*optional out*/ PRTime* validThrough)
+  Context(TrustDomain& trustDomain, const CertID& certID, Time time,
+          uint16_t maxLifetimeInDays, /*optional out*/ Time* thisUpdate,
+          /*optional out*/ Time* validThrough)
     : trustDomain(trustDomain)
     , certID(certID)
     , time(time)
@@ -59,20 +55,20 @@ public:
     , expired(false)
   {
     if (thisUpdate) {
-      *thisUpdate = 0;
+      *thisUpdate = TimeFromElapsedSecondsAD(0);
     }
     if (validThrough) {
-      *validThrough = 0;
+      *validThrough = TimeFromElapsedSecondsAD(0);
     }
   }
 
   TrustDomain& trustDomain;
   const CertID& certID;
-  const PRTime time;
+  const Time time;
   const uint16_t maxLifetimeInDays;
   CertStatus certStatus;
-  PRTime* thisUpdate;
-  PRTime* validThrough;
+  Time* thisUpdate;
+  Time* validThrough;
   bool expired;
 
 private:
@@ -87,7 +83,7 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
                             BackCert& potentialSigner,
                             Input issuerSubject,
                             Input issuerSubjectPublicKeyInfo,
-                            PRTime time)
+                            Time time)
 {
   Result rv;
 
@@ -290,11 +286,11 @@ MapBadDERToMalformedOCSPResponse(Result rv)
 
 Result
 VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
-                          PRTime time, uint16_t maxOCSPLifetimeInDays,
+                          Time time, uint16_t maxOCSPLifetimeInDays,
                           Input encodedResponse,
                           /*out*/ bool& expired,
-                          /*optional out*/ PRTime* thisUpdate,
-                          /*optional out*/ PRTime* validThrough)
+                          /*optional out*/ Time* thisUpdate,
+                          /*optional out*/ Time* validThrough)
 {
   // Always initialize this to something reasonable.
   expired = false;
@@ -497,7 +493,7 @@ ResponseData(Reader& input, Context& context,
   }
 
   // TODO: Do we even need to parse this? Should we just skip it?
-  PRTime producedAt;
+  Time producedAt(Time::uninitialized);
   rv = der::GeneralizedTime(input, producedAt);
   if (rv != Success) {
     return rv;
@@ -591,24 +587,28 @@ SingleResponse(Reader& input, Context& context)
   //    be available about the status of the certificate (nextUpdate) is
   //    greater than the current time.
 
-  const PRTime maxLifetime =
-    context.maxLifetimeInDays * ONE_DAY;
-
-  PRTime thisUpdate;
+  Time thisUpdate(Time::uninitialized);
   rv = der::GeneralizedTime(input, thisUpdate);
   if (rv != Success) {
     return rv;
   }
 
-  if (thisUpdate > context.time + SLOP) {
+  static const uint64_t SLOP_SECONDS = Time::ONE_DAY_IN_SECONDS;
+
+  Time timePlusSlop(context.time);
+  rv = timePlusSlop.AddSeconds(SLOP_SECONDS);
+  if (rv != Success) {
+    return rv;
+  }
+  if (thisUpdate > timePlusSlop) {
     return Result::ERROR_OCSP_FUTURE_RESPONSE;
   }
 
-  PRTime notAfter;
+  Time notAfter(Time::uninitialized);
   static const uint8_t NEXT_UPDATE_TAG =
     der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0;
   if (input.Peek(NEXT_UPDATE_TAG)) {
-    PRTime nextUpdate;
+    Time nextUpdate(Time::uninitialized);
     rv = der::Nested(input, NEXT_UPDATE_TAG,
                     bind(der::GeneralizedTime, _1, ref(nextUpdate)));
     if (rv != Success) {
@@ -618,22 +618,33 @@ SingleResponse(Reader& input, Context& context)
     if (nextUpdate < thisUpdate) {
       return Result::ERROR_OCSP_MALFORMED_RESPONSE;
     }
-    if (nextUpdate - thisUpdate <= maxLifetime) {
+    notAfter = thisUpdate;
+    if (notAfter.AddSeconds(context.maxLifetimeInDays *
+                            Time::ONE_DAY_IN_SECONDS) != Success) {
+      // This could only happen if we're dealing with times beyond the year
+      // 10,000AD.
+      return Result::ERROR_OCSP_FUTURE_RESPONSE;
+    }
+    if (nextUpdate <= notAfter) {
       notAfter = nextUpdate;
-    } else {
-      notAfter = thisUpdate + maxLifetime;
     }
   } else {
     // NSS requires all OCSP responses without a nextUpdate to be recent.
     // Match that stricter behavior.
-    notAfter = thisUpdate + ONE_DAY;
+    notAfter = thisUpdate;
+    if (notAfter.AddSeconds(Time::ONE_DAY_IN_SECONDS) != Success) {
+      // This could only happen if we're dealing with times beyond the year
+      // 10,000AD.
+      return Result::ERROR_OCSP_FUTURE_RESPONSE;
+    }
   }
 
-  if (context.time < SLOP) { // prevent underflow
-    return Result::FATAL_ERROR_INVALID_ARGS;
+  Time timeMinusSlop(context.time);
+  rv = timeMinusSlop.SubtractSeconds(SLOP_SECONDS);
+  if (rv != Success) {
+    return rv;
   }
-
-  if (context.time - SLOP > notAfter) {
+  if (timeMinusSlop > notAfter) {
     context.expired = true;
   }
 
