@@ -793,7 +793,7 @@ NON_IDL_EVENT(MozAfterPaint,
 NON_IDL_EVENT(MozScrolledAreaChanged,
               NS_SCROLLEDAREACHANGED,
               EventNameType_None,
-              NS_SCROLLAREA_EVENT)
+              eScrollAreaEventClass)
 
 #ifdef MOZ_GAMEPAD
 NON_IDL_EVENT(gamepadbuttondown,

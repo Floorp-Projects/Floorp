@@ -693,7 +693,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eUIEventClass:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
                               aEvent->AsGUIEvent());
-    case NS_SCROLLAREA_EVENT:
+    case eScrollAreaEventClass:
       return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext,
                                       aEvent->AsScrollAreaEvent());
     case eKeyboardEventClass:
