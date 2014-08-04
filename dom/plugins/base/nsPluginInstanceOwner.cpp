@@ -1673,7 +1673,7 @@ nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
 
   WidgetMouseEvent* mouseEvent =
     aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
-  if (mouseEvent && mouseEvent->mClass == NS_MOUSE_EVENT) {
+  if (mouseEvent && mouseEvent->mClass == eMouseEventClass) {
     mLastMouseDownButtonType = mouseEvent->button;
     nsEventStatus rv = ProcessEvent(*mouseEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
@@ -1698,7 +1698,7 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
 
   WidgetMouseEvent* mouseEvent =
     aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
-  if (mouseEvent && mouseEvent->mClass == NS_MOUSE_EVENT) {
+  if (mouseEvent && mouseEvent->mClass == eMouseEventClass) {
     nsEventStatus rv = ProcessEvent(*mouseEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
       aMouseEvent->PreventDefault();
@@ -1904,7 +1904,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   // we can get synthetic events from the EventStateManager... these
   // have no pluginEvent
   NPEvent pluginEvent;
-  if (anEvent.mClass == NS_MOUSE_EVENT) {
+  if (anEvent.mClass == eMouseEventClass) {
     if (!pPluginEvent) {
       // XXX Should extend this list to synthesize events for more event
       // types
@@ -2012,7 +2012,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
   pluginEvent.type = 0;
 
   switch(anEvent.mClass) {
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
       {
         switch (anEvent.message)
           {
@@ -2213,7 +2213,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
     }
   }
   switch(anEvent.mClass) {
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
       {
         switch (anEvent.message)
           {

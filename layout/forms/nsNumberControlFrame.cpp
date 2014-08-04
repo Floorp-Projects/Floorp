@@ -563,7 +563,7 @@ nsNumberControlFrame::GetNumberControlFrameForSpinButton(nsIFrame* aFrame)
 int32_t
 nsNumberControlFrame::GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const
 {
-  MOZ_ASSERT(aEvent->mClass == NS_MOUSE_EVENT, "Unexpected event type");
+  MOZ_ASSERT(aEvent->mClass == eMouseEventClass, "Unexpected event type");
 
   if (!mSpinBox) {
     // we don't have a spinner

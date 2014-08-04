@@ -702,7 +702,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eCompositionEventClass:
       return NS_NewDOMCompositionEvent(aDOMEvent, aOwner, aPresContext,
                                        aEvent->AsCompositionEvent());
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsMouseEvent());
     case NS_FOCUS_EVENT:

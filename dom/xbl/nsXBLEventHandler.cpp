@@ -13,6 +13,7 @@
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/EventTarget.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 nsXBLEventHandler::nsXBLEventHandler(nsXBLPrototypeHandler* aHandler)
@@ -149,7 +150,7 @@ NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
 {
   switch (nsContentUtils::GetEventCategory(nsDependentAtomString(aEventType))) {
     case NS_DRAG_EVENT:
-    case NS_MOUSE_EVENT:
+    case eMouseEventClass:
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
