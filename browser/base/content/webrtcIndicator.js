@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cu = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/webrtcUI.jsm");
 
@@ -129,7 +129,12 @@ let PositionHandler = {
   adjustPosition: function() {
     if (!this.positionCustomized) {
       // Center the window horizontally on the screen (not the available area).
-      window.moveTo((screen.width - document.documentElement.clientWidth) / 2, 0);
+      // Until we have moved the window to y=0, 'screen.width' may give a value
+      // for a secondary screen, so use values from the screen manager instead.
+      let width = {};
+      Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager)
+        .primaryScreen.GetRectDisplayPix({}, {}, width, {});
+      window.moveTo((width.value - document.documentElement.clientWidth) / 2, 0);
     } else {
       // This will ensure we're at y=0.
       this.setXPosition(window.screenX);
