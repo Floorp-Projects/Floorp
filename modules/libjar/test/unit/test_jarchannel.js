@@ -87,6 +87,20 @@ add_test(testAsync);
 // Run same test again so we test the codepath for a zipcache hit
 add_test(testAsync);
 
+/**
+ * Basic test for nsIZipReader.
+ * This relies on the jar cache to succeed in child processes.
+ */
+function testZipEntry() {
+    var uri = jarBase + "/inner40.zip";
+    var chan = ios.newChannel(uri, null, null).QueryInterface(Ci.nsIJARChannel);
+    var entry = chan.zipEntry;
+    do_check_true(entry.CRC32 == 0x8b635486);
+    do_check_true(entry.realSize == 184);
+    run_next_test();
+}
+
+add_test(testZipEntry);
 
 // In e10s child processes we don't currently support 
 // 1) synchronously opening jar files on parent
