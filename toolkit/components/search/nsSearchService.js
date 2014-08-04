@@ -3800,14 +3800,22 @@ SearchService.prototype = {
   },
 
   _getVerificationHash: function SRCH_SVC__getVerificationHash(aName) {
-    let str = OS.Path.basename(OS.Constants.Path.profileDir) + aName;
+    let disclaimer = "By modifying this file, I agree that I am doing so " +
+      "only within $appName itself, using official, user-driven search " +
+      "engine selection processes, and in a way which does not circumvent " +
+      "user consent. I acknowledge that any attempt to change this file " +
+      "from outside of $appName is a malicious act, and will be responded " +
+      "to accordingly."
+
+    let salt = OS.Path.basename(OS.Constants.Path.profileDir) + aName +
+               disclaimer.replace(/\$appName/g, Services.appinfo.name);
 
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                       .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
 
     // Data is an array of bytes.
-    let data = converter.convertToByteArray(str, {});
+    let data = converter.convertToByteArray(salt, {});
     let hasher = Cc["@mozilla.org/security/hash;1"]
                    .createInstance(Ci.nsICryptoHash);
     hasher.init(hasher.SHA256);
