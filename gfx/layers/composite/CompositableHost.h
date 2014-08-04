@@ -37,14 +37,6 @@ class DataSourceSurface;
 
 namespace layers {
 
-// Some properties of a Layer required for tiling
-struct TiledLayerProperties
-{
-  nsIntRegion mVisibleRegion;
-  nsIntRegion mValidRegion;
-  CSSToScreenScale mEffectiveResolution;
-};
-
 class Layer;
 class SurfaceDescriptor;
 class Compositor;
@@ -121,8 +113,7 @@ public:
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
                          const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr,
-                         TiledLayerProperties* aLayerProperties = nullptr) = 0;
+                         const nsIntRegion* aVisibleRegion = nullptr) = 0;
 
   /**
    * Update the content host.
