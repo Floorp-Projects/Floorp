@@ -259,7 +259,7 @@ MobileMessageDB.prototype = {
       update(currentVersion);
     };
     request.onerror = function(event) {
-      //TODO look at event.target.Code and change error constant accordingly
+      // TODO look at event.target.Code and change error constant accordingly.
       if (DEBUG) debug("Error opening database!");
       callback(Cr.NS_ERROR_FAILURE, null);
     };
@@ -299,9 +299,9 @@ MobileMessageDB.prototype = {
           debug("Transaction " + txn + " completed.");
         };
         txn.onerror = function onerror(event) {
-          //TODO check event.target.errorCode and show an appropiate error
-          //     message according to it.
-          debug("Error occurred during transaction: " + event.target.errorCode);
+          // TODO check event.target.error.name and show an appropiate error
+          // message according to it.
+          debug("Error occurred during transaction: " + event.target.error.name);
         };
       }
       let stores;
@@ -368,7 +368,7 @@ MobileMessageDB.prototype = {
       request.onerror = function onerror(event) {
         if (DEBUG) {
           debug("Could not get the last key from mobile message database " +
-                event.target.errorCode);
+                event.target.error.name);
         }
       };
     });
@@ -852,7 +852,7 @@ MobileMessageDB.prototype = {
       request.onerror = function onerror(event) {
         if (DEBUG) {
           if (event.target) {
-            debug("Caught error on transaction", event.target.errorCode);
+            debug("Caught error on transaction", event.target.error.name);
           }
         }
         cursor.continue();
@@ -2056,8 +2056,11 @@ MobileMessageDB.prototype = {
         notifyResult(Cr.NS_OK, capture.messageRecord);
       };
       aTransaction.onabort = function(event) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Cr.NS_ERROR_FILE_NO_DEVICE_SPACE
+                    : Cr.NS_ERROR_FAILURE;
+        notifyResult(error, null);
       };
 
       aFunc(capture, aStores);
@@ -2093,8 +2096,11 @@ MobileMessageDB.prototype = {
         self.notifyDeletedInfo(deletedInfo);
       };
       txn.onabort = function onabort(event) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Cr.NS_ERROR_FILE_NO_DEVICE_SPACE
+                    : Cr.NS_ERROR_FAILURE;
+        notifyResult(error, null);
       };
 
       let messageStore = stores[0];
@@ -2787,7 +2793,7 @@ MobileMessageDB.prototype = {
       txn.onerror = function onerror(event) {
         if (DEBUG) {
           if (event.target) {
-            debug("Caught error on transaction", event.target.errorCode);
+            debug("Caught error on transaction", event.target.error.name);
           }
         }
         aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
@@ -2834,7 +2840,7 @@ MobileMessageDB.prototype = {
       txn.onerror = function onerror(event) {
         if (DEBUG) {
           if (event.target) {
-            debug("Caught error on transaction", event.target.errorCode);
+            debug("Caught error on transaction", event.target.error.name);
           }
         }
         aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
@@ -2898,9 +2904,12 @@ MobileMessageDB.prototype = {
         aCallback.notify(Cr.NS_OK, completeMessage);
       };
 
-      txn.onabort = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
-        aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
+      txn.onabort = function onabort(event) {
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Cr.NS_ERROR_FILE_NO_DEVICE_SPACE
+                    : Cr.NS_ERROR_FAILURE;
+        aCallback.notify(error, null);
       };
 
       aSmsSegment.hash = aSmsSegment.sender + ":" +
@@ -3013,10 +3022,12 @@ MobileMessageDB.prototype = {
 
       let deletedInfo = { messageIds: [], threadIds: [] };
 
-      txn.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
-        //TODO look at event.target.errorCode, pick appropriate error constant
-        aRequest.notifyDeleteMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      txn.onabort = function onabort(event) {
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Ci.nsIMobileMessageCallback.STORAGE_FULL_ERROR
+                    : Ci.nsIMobileMessageCallback.INTERNAL_ERROR;
+        aRequest.notifyDeleteMessageFailed(error);
       };
 
       const messageStore = stores[0];
@@ -3097,9 +3108,12 @@ MobileMessageDB.prototype = {
         return;
       }
 
-      txn.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
-        aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      txn.onabort = function(event) {
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Ci.nsIMobileMessageCallback.STORAGE_FULL_ERROR
+                    : Ci.nsIMobileMessageCallback.INTERNAL_ERROR;
+        aRequest.notifyMarkMessageReadFailed(error);
       };
 
       let messageStore = stores[0];
@@ -3190,7 +3204,7 @@ MobileMessageDB.prototype = {
         return;
       }
       txn.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
+        if (DEBUG) debug("Caught error on transaction ", event.target.error.name);
         collector.collect(null, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
       };
       let request = threadStore.index("lastTimestamp").openKeyCursor(null, PREV);
@@ -3242,7 +3256,7 @@ let FilterSearcherHelper = {
       }
     };
     request.onerror = function onerror(event) {
-      if (DEBUG && event) debug("IDBRequest error " + event.target.errorCode);
+      if (DEBUG && event) debug("IDBRequest error " + event.target.error.name);
       collect(txn, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
     };
   },
@@ -3294,8 +3308,8 @@ let FilterSearcherHelper = {
    */
   transact: function(mmdb, txn, error, filter, reverse, collect) {
     if (error) {
-      //TODO look at event.target.errorCode, pick appropriate error constant.
-      if (DEBUG) debug("IDBRequest error " + error.target.errorCode);
+      // TODO look at event.target.error.name, pick appropriate error constant.
+      if (DEBUG) debug("IDBRequest error " + event.target.error.name);
       collect(txn, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
       return;
     }
