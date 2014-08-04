@@ -52,7 +52,7 @@ ul {
 }
 
 @media (max-width: 675px) {
-  #errorTitle {
+  #errorTitleText {
     padding-top: 0;
     background-image: none;
     -moz-padding-start: 0;
