@@ -429,7 +429,7 @@ EVENT(afterscriptexecute,
 FORWARDED_EVENT(blur,
                 NS_BLUR_CONTENT,
                 EventNameType_HTMLXUL,
-                NS_FOCUS_EVENT)
+                eFocusEventClass)
 ERROR_EVENT(error,
             NS_LOAD_ERROR,
             EventNameType_All,
@@ -437,7 +437,7 @@ ERROR_EVENT(error,
 FORWARDED_EVENT(focus,
                 NS_FOCUS_CONTENT,
                 EventNameType_HTMLXUL,
-                NS_FOCUS_EVENT)
+                eFocusEventClass)
 FORWARDED_EVENT(load,
                 NS_LOAD,
                 EventNameType_All,
