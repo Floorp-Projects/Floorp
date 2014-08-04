@@ -45,3 +45,10 @@
 .showcase > section .example > h3 {
   border-bottom: 1px dashed #aaa;
 }
+
+.showcase p.note {
+  margin: 0;
+  padding: 0;
+  color: #666;
+  font-style: italic;
+}

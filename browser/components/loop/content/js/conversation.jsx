@@ -131,7 +131,6 @@ loop.conversation = (function(OT, mozL10n) {
       "call/accept": "accept",
       "call/decline": "decline",
       "call/ongoing": "conversation",
-      "call/ended": "ended",
       "call/declineAndBlock": "declineAndBlock",
       "call/feedback": "feedback"
     },
@@ -157,7 +156,7 @@ loop.conversation = (function(OT, mozL10n) {
      *                             by the router from the URL.
      */
     incoming: function(loopVersion) {
-      window.navigator.mozLoop.startAlerting();
+      navigator.mozLoop.startAlerting();
       this._conversation.set({loopVersion: loopVersion});
       this._conversation.once("accept", function() {
         this.navigate("call/accept", {trigger: true});
@@ -177,7 +176,7 @@ loop.conversation = (function(OT, mozL10n) {
      * Accepts an incoming call.
      */
     accept: function() {
-      window.navigator.mozLoop.stopAlerting();
+      navigator.mozLoop.stopAlerting();
       this._conversation.initiate({
         client: new loop.Client(),
         outgoing: false
@@ -188,7 +187,7 @@ loop.conversation = (function(OT, mozL10n) {
      * Declines an incoming call.
      */
     decline: function() {
-      window.navigator.mozLoop.stopAlerting();
+      navigator.mozLoop.stopAlerting();
       // XXX For now, we just close the window
       window.close();
     },
@@ -200,7 +199,7 @@ loop.conversation = (function(OT, mozL10n) {
      *   after a callUrl is received
      */
     declineAndBlock: function() {
-      window.navigator.mozLoop.stopAlerting();
+      navigator.mozLoop.stopAlerting();
       var token = navigator.mozLoop.getLoopCharPref('loopToken');
       var client = new loop.Client();
       client.deleteCallUrl(token, function(error) {
@@ -234,13 +233,13 @@ loop.conversation = (function(OT, mozL10n) {
      * Call has ended, display a feedback form.
      */
     feedback: function() {
+      document.title = mozL10n.get("call_has_ended");
+
       this.loadReactComponent(sharedViews.FeedbackView({
-        // XXX for now we pass in a fake feeback API client (see bug 972992)
-        feedbackApiClient: {
-          send: function(fields, cb) {
-            cb();
-          }
-        }
+        feedbackApiClient: new loop.FeedbackAPIClient({
+          baseUrl: navigator.mozLoop.getLoopCharPref("feedback.baseUrl"),
+          product: navigator.mozLoop.getLoopCharPref("feedback.product")
+        })
       }));
     }
   });
@@ -251,7 +250,7 @@ loop.conversation = (function(OT, mozL10n) {
   function init() {
     // Do the initial L10n setup, we do this before anything
     // else to ensure the L10n environment is setup correctly.
-    mozL10n.initialize(window.navigator.mozLoop);
+    mozL10n.initialize(navigator.mozLoop);
 
     document.title = mozL10n.get("incoming_call_title");
 

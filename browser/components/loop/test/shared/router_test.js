@@ -161,14 +161,6 @@ describe("loop.shared.router", function() {
         sinon.assert.calledOnce(router.endCall);
       });
 
-      it("should warn the user that the session has ended", function() {
-        conversation.trigger("session:ended");
-
-        sinon.assert.calledOnce(notifier.warnL10n);
-        sinon.assert.calledWithExactly(notifier.warnL10n,
-                                       "call_has_ended");
-      });
-
       it("should warn the user when peer hangs up", function() {
         conversation.trigger("session:peer-hungup");
 

@@ -47,7 +47,7 @@ describe("loop.conversation", function() {
   });
 
   afterEach(function() {
-    delete window.navigator.mozLoop;
+    delete navigator.mozLoop;
     sandbox.restore();
   });
 
@@ -79,7 +79,7 @@ describe("loop.conversation", function() {
 
       sinon.assert.calledOnce(document.mozL10n.initialize);
       sinon.assert.calledWithExactly(document.mozL10n.initialize,
-        window.navigator.mozLoop);
+        navigator.mozLoop);
     });
 
     it("should set the document title", function() {
@@ -165,10 +165,10 @@ describe("loop.conversation", function() {
         });
 
         it("should start alerting", function() {
-          sandbox.stub(window.navigator.mozLoop, "startAlerting");
+          sandbox.stub(navigator.mozLoop, "startAlerting");
           router.incoming("fakeVersion");
 
-          sinon.assert.calledOnce(window.navigator.mozLoop.startAlerting);
+          sinon.assert.calledOnce(navigator.mozLoop.startAlerting);
         });
       });
 
@@ -187,10 +187,10 @@ describe("loop.conversation", function() {
         });
 
         it("should stop alerting", function() {
-          sandbox.stub(window.navigator.mozLoop, "stopAlerting");
+          sandbox.stub(navigator.mozLoop, "stopAlerting");
           router.accept();
 
-          sinon.assert.calledOnce(window.navigator.mozLoop.stopAlerting);
+          sinon.assert.calledOnce(navigator.mozLoop.stopAlerting);
         });
       });
 
@@ -241,16 +241,28 @@ describe("loop.conversation", function() {
         });
 
         it("should stop alerting", function() {
-          sandbox.stub(window.navigator.mozLoop, "stopAlerting");
+          sandbox.stub(navigator.mozLoop, "stopAlerting");
           router.decline();
 
-          sinon.assert.calledOnce(window.navigator.mozLoop.stopAlerting);
+          sinon.assert.calledOnce(navigator.mozLoop.stopAlerting);
         });
       });
 
       describe("#feedback", function() {
+        var oldTitle;
+
         beforeEach(function() {
+          oldTitle = document.title;
+          sandbox.stub(document.mozL10n, "get").returns("Call ended");
+        });
+
+        beforeEach(function() {
+          sandbox.stub(loop, "FeedbackAPIClient");
           sandbox.stub(router, "loadReactComponent");
+        });
+
+        afterEach(function() {
+          document.title = oldTitle;
         });
 
         // XXX When the call is ended gracefully, we should check that we
@@ -265,14 +277,20 @@ describe("loop.conversation", function() {
                 loop.shared.views.FeedbackView);
             }));
         });
+
+        it("should update the conversation window title", function() {
+          router.feedback();
+
+          expect(document.title).eql("Call ended");
+        });
       });
 
       describe("#blocked", function() {
         it("should call mozLoop.stopAlerting", function() {
-          sandbox.stub(window.navigator.mozLoop, "stopAlerting");
+          sandbox.stub(navigator.mozLoop, "stopAlerting");
           router.declineAndBlock();
 
-          sinon.assert.calledOnce(window.navigator.mozLoop.stopAlerting);
+          sinon.assert.calledOnce(navigator.mozLoop.stopAlerting);
         });
 
         it("should call delete call", function() {
