@@ -472,6 +472,20 @@ tv = {
       y: "is9pWAaneK4RdxmdLfsq5IwizDmUS2w8OGS99sKm3ek"
     },
 
+    // vector with algorithm = id-ecDH
+    spki: util.hex2abv(
+      "3056301006042b81047006082a8648ce3d030107034200045ce7b86e3b326604" +
+      "03e63712ef0998deae1027faec3c1be9f76f934dfeb58e98f4cf075b39405dd1" +
+      "f1adeb090107edcfb2b4963739d87679e3056cb0557d0adf"
+    ),
+
+    // vector with algorithm = id-ecPublicKey
+    spki_id_ecpk: util.hex2abv(
+      "3059301306072a8648ce3d020106082a8648ce3d030107034200045ce7b86e3b" +
+      "32660403e63712ef0998deae1027faec3c1be9f76f934dfeb58e98f4cf075b39" +
+      "405dd1f1adeb090107edcfb2b4963739d87679e3056cb0557d0adf"
+    ),
+
     secret: util.hex2abv(
       "35669cd5c244ba6c1ea89b8802c3d1db815cd769979072e6556eb98548c65f7d"
     )
