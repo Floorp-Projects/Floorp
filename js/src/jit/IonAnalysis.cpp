@@ -427,8 +427,10 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             // TypedObject, ArrayState and its allocation, may be legitimately
             // dead in Ion code, but are still needed if we bail out. They can
             // recover on bailout.
-            if (ins->canRecoverOnBailout())
+            if (ins->isNewDerivedTypedObject() || ins->isRecoveredOnBailout()) {
+                MOZ_ASSERT(ins->canRecoverOnBailout());
                 continue;
+            }
 
             // If the instruction's behavior has been constant folded into a
             // separate instruction, we can't determine precisely where the
