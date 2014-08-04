@@ -3251,7 +3251,7 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   // handled without the editor being initialized.  These events include:
   // mousein/move/out, overflow/underflow, and DOM mutation events.
   if (!IsSingleLineTextControl(false) ||
-      aVisitor.mEvent->mClass == NS_MUTATION_EVENT) {
+      aVisitor.mEvent->mClass == eMutationEventClass) {
     return false;
   }
 

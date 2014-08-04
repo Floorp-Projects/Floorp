@@ -814,7 +814,7 @@ nsIContent::PreHandleEvent(EventChainPreVisitor& aVisitor)
     // all the events are allowed even in the native anonymous content..
     nsCOMPtr<nsIContent> t = do_QueryInterface(aVisitor.mEvent->originalTarget);
     NS_ASSERTION(!t || !t->ChromeOnlyAccess() ||
-                 aVisitor.mEvent->mClass != NS_MUTATION_EVENT ||
+                 aVisitor.mEvent->mClass != eMutationEventClass ||
                  aVisitor.mDOMEvent,
                  "Mutation event dispatched in native anonymous content!?!");
 #endif
