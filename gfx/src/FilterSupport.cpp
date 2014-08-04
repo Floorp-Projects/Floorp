@@ -1102,6 +1102,15 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
             IntPoint offset = surfaceRect.TopLeft();
             sourceFilterNode = FilterWrappers::ForSurface(aDT, surf, offset);
 
+            // Clip the original SourceGraphic to the first filter region if the
+            // surface isn't already sized appropriately.
+            if ((inputIndex == FilterPrimitiveDescription::kPrimitiveIndexSourceGraphic ||
+                 inputIndex == FilterPrimitiveDescription::kPrimitiveIndexSourceAlpha) &&
+                !descr.FilterSpaceBounds().Contains(aSourceGraphicRect)) {
+              sourceFilterNode =
+                FilterWrappers::Crop(aDT, sourceFilterNode, descr.FilterSpaceBounds());
+            }
+
             if (inputIndex == FilterPrimitiveDescription::kPrimitiveIndexSourceAlpha) {
               sourceFilterNode = FilterWrappers::ToAlpha(aDT, sourceFilterNode);
             }
