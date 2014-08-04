@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
@@ -16,62 +17,6 @@
 #include "nsIWidget.h"
 #include "nsString.h"
 #include "Units.h"
-
-namespace mozilla {
-
-/******************************************************************************
- * Event Class ID
- ******************************************************************************/
-typedef uint8_t EventClassIDType;
-enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
-{
-  // BasicEvents.h
-  eBasicEventClass,                  // WidgetEvent
-  eGUIEventClass,                    // WidgetGUIEvent
-  eInputEventClass,                  // WidgetInputEvent
-  eUIEventClass,                     // InternalUIEvent
-
-  // TextEvents.h
-  eKeyboardEventClass,               // WidgetKeyboardEvent
-  eCompositionEventClass,            // WidgetCompositionEvent
-  eTextEventClass,                   // WidgetTextEvent
-  eQueryContentEventClass,           // WidgetQueryContentEvent
-  eSelectionEventClass,              // WidgetSelectionEvent
-  eEditorInputEventClass,            // InternalEditorInputEvent
-
-  // MouseEvents.h
-  eMouseEventClass,                  // WidgetMouseEvent
-  eDragEventClass,                   // WidgetDragEvent
-  eMouseScrollEventClass,            // WidgetMouseScrollEvent
-  eWheelEventClass,                  // WidgetWheelEvent
-  ePointerEventClass,                // PointerEvent
-
-  // TouchEvents.h
-  eGestureNotifyEventClass,          // WidgetGestureNotifyEvent
-  eSimpleGestureEventClass,          // WidgetSimpleGestureEvent
-  eTouchEventClass,                  // WidgetTouchEvent
-
-  // ContentEvents.h
-  eScrollPortEventClass,             // InternalScrollPortEvent
-  eScrollAreaEventClass,             // InternalScrollAreaEvent
-  eFormEventClass,                   // InternalFormEvent
-  eFocusEventClass,                  // InternalFocusEvent
-  eClipboardEventClass,              // InternalClipboardEvent
-  eTransitionEventClass,             // InternalTransitionEvent
-  eAnimationEventClass,              // InternalAnimationEvent
-  eSVGZoomEventClass,                // InternalSVGZoomEvent
-  eSMILTimeEventClass,               // InternalSMILTimeEvent
-
-  // MiscEvents.h
-  eCommandEventClass,                // WidgetCommandEvent
-  eContentCommandEventClass,         // WidgetContentCommandEvent
-  ePluginEventClass,                 // WidgetPluginEvent
-
-  // InternalMutationEvent.h (dom/events)
-  eMutationEventClass                // InternalMutationEvent
-};
-
-} // namespace mozilla
 
 /******************************************************************************
  * Messages
