@@ -48,7 +48,6 @@ class TransportLayerNSPRAdapter {
 class TransportLayerDtls : public TransportLayer {
  public:
   TransportLayerDtls() :
-      TransportLayer(DGRAM),
       role_(CLIENT),
       verification_mode_(VERIFY_UNSET),
       ssl_fd_(nullptr),
