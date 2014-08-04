@@ -79,8 +79,8 @@ extern const PRTime ONE_DAY;
 mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
                            int16_t hour, int16_t minutes, int16_t seconds);
 
-SECStatus GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
-                          /*out*/ ScopedSECKEYPrivateKey& privateKey);
+Result GenerateKeyPair(/*out*/ ScopedSECKEYPublicKey& publicKey,
+                       /*out*/ ScopedSECKEYPrivateKey& privateKey);
 
 // The result will be owned by the arena
 const SECItem* ASCIIToDERName(PLArenaPool* arena, const char* cn);
