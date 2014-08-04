@@ -188,6 +188,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     CUSTOM_OP(NewRunOnceCallObject)
     CUSTOM_OP(NewDerivedTypedObject)
     SAFE_OP(ObjectState)
+    SAFE_OP(ArrayState)
     UNSAFE_OP(InitElem)
     UNSAFE_OP(InitElemGetterSetter)
     UNSAFE_OP(MutateProto)
