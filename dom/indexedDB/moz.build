@@ -60,7 +60,6 @@ UNIFIED_SOURCES += [
     'IDBTransaction.cpp',
     'IDBWrapperCache.cpp',
     'IndexedDatabaseManager.cpp',
-    'Key.cpp',
     'KeyPath.cpp',
     'PermissionRequestBase.cpp',
     'ReportInternalError.cpp',
@@ -68,6 +67,7 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     'ActorsParent.cpp', # This file is huge.
+    'Key.cpp', # We disable a warning on this file only
 ]
 
 IPDL_SOURCES += [
@@ -87,6 +87,11 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
+if CONFIG['GNU_CC']:
+    # Suppress gcc warning about a comparison being always false due to the
+    # range of the data type
+    SOURCES['Key.cpp'].flags += ['-Wno-error=type-limits']
+
 LOCAL_INCLUDES += [
     '/db/sqlite3/src',
     '/dom/base',
@@ -96,3 +101,6 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
     '/xpcom/threads',
 ]
+
+if CONFIG['ENABLE_INTL_API']:
+    CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
