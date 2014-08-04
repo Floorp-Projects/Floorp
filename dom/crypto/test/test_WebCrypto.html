@@ -1882,6 +1882,43 @@ TestArray.addTest(
       .then(complete(that), error(that));
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that we check keys before using them for encryption/signatures",
+  function() {
+    var that = this;
+
+    function doCheckRSASSA() {
+      var alg = {name: "HMAC", hash: {name: "SHA-1"}};
+
+      function doSign(x) {
+        return crypto.subtle.sign("RSASSA-PKCS1-v1_5", x, new Uint8Array());
+      }
+
+      return crypto.subtle.generateKey(alg, false, ["sign"]).then(doSign);
+    }
+
+    function doCheckRSAES() {
+      var alg = {
+        name: "RSAES-PKCS1-v1_5",
+        modulusLength: 1024,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      };
+
+      function doEncrypt(x) {
+        var alg = {name: "RSA-OAEP", hash: "SHA-1"};
+        return crypto.subtle.encrypt(alg, x.publicKey, new Uint8Array());
+      }
+
+      return crypto.subtle.generateKey(alg, false, ["encrypt"]).then(doEncrypt);
+    }
+
+    doCheckRSASSA().then(error(that), function () {
+      doCheckRSAES().then(error(that), complete(that));
+    });
+  }
+);
 /*]]>*/</script>
 </head>
 
