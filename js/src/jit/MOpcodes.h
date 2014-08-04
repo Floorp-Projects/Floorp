@@ -243,10 +243,21 @@ class MDefinitionVisitor // interface i.e. pure abstract class
 #undef VISIT_INS
 };
 
+// MDefinition visitor which raises a Not Yet Implemented error for
+// non-overloaded visit functions.
 class MDefinitionVisitorWithDefaults : public MDefinitionVisitor
 {
   public:
 #define VISIT_INS(op) virtual bool visit##op(M##op *) { MOZ_ASSUME_UNREACHABLE("NYI: " #op); }
+    MIR_OPCODE_LIST(VISIT_INS)
+#undef VISIT_INS
+};
+
+// MDefinition visitor which ignores non-overloaded visit functions.
+class MDefinitionVisitorDefaultNoop : public MDefinitionVisitor
+{
+  public:
+#define VISIT_INS(op) virtual bool visit##op(M##op *) { return true; }
     MIR_OPCODE_LIST(VISIT_INS)
 #undef VISIT_INS
 };
