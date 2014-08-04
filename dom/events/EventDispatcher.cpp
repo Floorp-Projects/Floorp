@@ -732,7 +732,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eSMILTimeEventClass:
       return NS_NewDOMTimeEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsSMILTimeEvent());
-    case NS_COMMAND_EVENT:
+    case eCommandEventClass:
       return NS_NewDOMCommandEvent(aDOMEvent, aOwner, aPresContext,
                                    aEvent->AsCommandEvent());
     case eSimpleGestureEventClass:

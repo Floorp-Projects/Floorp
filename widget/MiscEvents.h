@@ -100,17 +100,17 @@ public:
   virtual WidgetCommandEvent* AsCommandEvent() MOZ_OVERRIDE { return this; }
 
   WidgetCommandEvent(bool aIsTrusted, nsIAtom* aEventType,
-                     nsIAtom* aCommand, nsIWidget* aWidget) :
-    WidgetGUIEvent(aIsTrusted, NS_USER_DEFINED_EVENT, aWidget,
-                   NS_COMMAND_EVENT),
-    command(aCommand)
+                     nsIAtom* aCommand, nsIWidget* aWidget)
+    : WidgetGUIEvent(aIsTrusted, NS_USER_DEFINED_EVENT, aWidget,
+                     eCommandEventClass)
+    , command(aCommand)
   {
     userType = aEventType;
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_COMMAND_EVENT,
+    MOZ_ASSERT(mClass == eCommandEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetCommandEvent* result =

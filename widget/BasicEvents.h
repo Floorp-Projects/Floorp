@@ -63,7 +63,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
   eSMILTimeEventClass,               // InternalSMILTimeEvent
 
   // MiscEvents.h
-  NS_COMMAND_EVENT,                  // WidgetCommandEvent
+  eCommandEventClass,                // WidgetCommandEvent
   NS_CONTENT_COMMAND_EVENT,          // WidgetContentCommandEvent
   NS_PLUGIN_EVENT,                   // WidgetPluginEvent
 
