@@ -1434,6 +1434,14 @@ public:
 
   virtual int32_t GetMaxLayerSize() { return Manager()->GetMaxTextureSize(); }
 
+  /**
+   * Returns true if this layer's effective transform is not just
+   * a translation by integers, or if this layer or some ancestor layer
+   * is marked as having a transform that may change without a full layer
+   * transaction.
+   */
+  bool MayResample();
+
 protected:
   Layer(LayerManager* aManager, void* aImplData);
 
@@ -1481,14 +1489,6 @@ protected:
   gfx::Matrix4x4 SnapTransform(const gfx::Matrix4x4& aTransform,
                                const gfxRect& aSnapRect,
                                gfx::Matrix* aResidualTransform);
-
-  /**
-   * Returns true if this layer's effective transform is not just
-   * a translation by integers, or if this layer or some ancestor layer
-   * is marked as having a transform that may change without a full layer
-   * transaction.
-   */
-  bool MayResample();
 
   LayerManager* mManager;
   ContainerLayer* mParent;
