@@ -122,7 +122,7 @@ UIEvent::GetMovementPoint()
        mEvent->mClass != eMouseScrollEventClass &&
        mEvent->mClass != eWheelEventClass &&
        mEvent->mClass != eDragEventClass &&
-       mEvent->mClass != NS_POINTER_EVENT &&
+       mEvent->mClass != ePointerEventClass &&
        mEvent->mClass != NS_SIMPLE_GESTURE_EVENT) ||
        !mEvent->AsGUIEvent()->widget) {
     return nsIntPoint(0, 0);
@@ -299,7 +299,7 @@ UIEvent::GetLayerPoint() const
       (mEvent->mClass != eMouseEventClass &&
        mEvent->mClass != eMouseScrollEventClass &&
        mEvent->mClass != eWheelEventClass &&
-       mEvent->mClass != NS_POINTER_EVENT &&
+       mEvent->mClass != ePointerEventClass &&
        mEvent->mClass != NS_TOUCH_EVENT &&
        mEvent->mClass != eDragEventClass &&
        mEvent->mClass != NS_SIMPLE_GESTURE_EVENT) ||
