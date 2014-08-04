@@ -670,7 +670,7 @@ NON_IDL_EVENT(compositionend,
 NON_IDL_EVENT(command,
               NS_XUL_COMMAND,
               EventNameType_XUL,
-              NS_INPUT_EVENT)
+              eInputEventClass)
 NON_IDL_EVENT(close,
               NS_XUL_CLOSE,
               EventNameType_XUL,
