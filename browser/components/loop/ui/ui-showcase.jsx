@@ -22,6 +22,7 @@
   // 3. Shared components
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
   var ConversationView = loop.shared.views.ConversationView;
+  var FeedbackView = loop.shared.views.FeedbackView;
 
   // Local helpers
   function returnTrue() {
@@ -31,6 +32,13 @@
   function returnFalse() {
     return false;
   }
+
+  // Feedback API client configured to send data to the stage input server,
+  // which is available at https://input.allizom.org
+  var stageFeedbackApiClient = new loop.FeedbackAPIClient({
+    baseUrl: "https://input.allizom.org/api/v1/feedback",
+    product: "Loop"
+  });
 
   var Example = React.createClass({
     render: function() {
@@ -111,6 +119,22 @@
           <Section name="ConversationView">
             <Example summary="Default">
               <ConversationView video={{enabled: true}} audio={{enabled: true}} />
+            </Example>
+          </Section>
+
+          <Section name="FeedbackView">
+            <p className="note">
+              <strong>Note:</strong> For the useable demo, you can access submitted data at&nbsp;
+              <a href="https://input.allizom.org/">input.allizom.org</a>.
+            </p>
+            <Example summary="Default (useable demo)" dashed="true" style={{width: "280px"}}>
+              <FeedbackView feedbackApiClient={stageFeedbackApiClient} />
+            </Example>
+            <Example summary="Detailed form" dashed="true" style={{width: "280px"}}>
+              <FeedbackView step="form" />
+            </Example>
+            <Example summary="Thank you!" dashed="true" style={{width: "280px"}}>
+              <FeedbackView step="finished" />
             </Example>
           </Section>
 

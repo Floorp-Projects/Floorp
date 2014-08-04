@@ -149,7 +149,7 @@ describe("loop.webapp", function() {
           sinon.assert.calledOnce(router.loadReactComponent);
           sinon.assert.calledWith(router.loadReactComponent,
             sinon.match(function(value) {
-              return React.addons.TestUtils.isComponentOfType(
+              return React.addons.TestUtils.isDescriptorOfType(
                 value, loop.webapp.CallUrlExpiredView);
             }));
         });
@@ -168,7 +168,7 @@ describe("loop.webapp", function() {
           sinon.assert.calledOnce(router.loadReactComponent);
           sinon.assert.calledWithExactly(router.loadReactComponent,
             sinon.match(function(value) {
-              return React.addons.TestUtils.isComponentOfType(
+              return React.addons.TestUtils.isDescriptorOfType(
                 value, loop.webapp.ConversationFormView);
             }));
         });
@@ -193,7 +193,7 @@ describe("loop.webapp", function() {
           sinon.assert.calledOnce(router.loadReactComponent);
           sinon.assert.calledWith(router.loadReactComponent,
             sinon.match(function(value) {
-              return React.addons.TestUtils.isComponentOfType(
+              return React.addons.TestUtils.isDescriptorOfType(
                 value, loop.shared.views.ConversationView);
             }));
         });

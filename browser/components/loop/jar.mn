@@ -22,6 +22,8 @@ browser.jar:
   content/browser/loop/shared/css/conversation.css  (content/shared/css/conversation.css)
 
   # Shared images
+  content/browser/loop/shared/img/happy.png                     (content/shared/img/happy.png)
+  content/browser/loop/shared/img/sad.png                       (content/shared/img/sad.png)
   content/browser/loop/shared/img/icon_32.png                   (content/shared/img/icon_32.png)
   content/browser/loop/shared/img/icon_64.png                   (content/shared/img/icon_64.png)
   content/browser/loop/shared/img/loading-icon.gif              (content/shared/img/loading-icon.gif)
@@ -39,13 +41,14 @@ browser.jar:
   content/browser/loop/shared/img/dropdown-inverse@2x.png    (content/shared/img/dropdown-inverse@2x.png)
 
   # Shared scripts
-  content/browser/loop/shared/js/models.js  (content/shared/js/models.js)
-  content/browser/loop/shared/js/router.js  (content/shared/js/router.js)
-  content/browser/loop/shared/js/views.js   (content/shared/js/views.js)
-  content/browser/loop/shared/js/utils.js   (content/shared/js/utils.js)
+  content/browser/loop/shared/js/feedbackApiClient.js (content/shared/js/feedbackApiClient.js)
+  content/browser/loop/shared/js/models.js            (content/shared/js/models.js)
+  content/browser/loop/shared/js/router.js            (content/shared/js/router.js)
+  content/browser/loop/shared/js/views.js             (content/shared/js/views.js)
+  content/browser/loop/shared/js/utils.js             (content/shared/js/utils.js)
 
   # Shared libs
-  content/browser/loop/shared/libs/react-0.10.0.js    (content/shared/libs/react-0.10.0.js)
+  content/browser/loop/shared/libs/react-0.11.1.js    (content/shared/libs/react-0.11.1.js)
   content/browser/loop/shared/libs/lodash-2.4.1.js    (content/shared/libs/lodash-2.4.1.js)
   content/browser/loop/shared/libs/jquery-2.1.0.js    (content/shared/libs/jquery-2.1.0.js)
   content/browser/loop/shared/libs/backbone-1.1.2.js  (content/shared/libs/backbone-1.1.2.js)

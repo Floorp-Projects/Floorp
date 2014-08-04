@@ -1575,10 +1575,14 @@ pref("loop.enabled", false);
 
 pref("loop.server", "https://loop.services.mozilla.com");
 pref("loop.seenToS", "unseen");
+pref("loop.legal.ToS_url", "https://accounts.firefox.com/legal/terms");
+pref("loop.legal.privacy_url", "https://www.mozilla.org/privacy/");
 pref("loop.do_not_disturb", false);
 pref("loop.ringtone", "chrome://browser/content/loop/shared/sounds/Firefox-Long.ogg");
 pref("loop.retry_delay.start", 60000);
 pref("loop.retry_delay.limit", 300000);
+pref("loop.feedback.baseUrl", "https://input.mozilla.org/api/v1/feedback");
+pref("loop.feedback.product", "Loop");
 
 // serverURL to be assigned by services team
 pref("services.push.serverURL", "wss://push.services.mozilla.com/");
