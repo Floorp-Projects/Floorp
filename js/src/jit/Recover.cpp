@@ -925,6 +925,42 @@ RNewObject::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MNewArray::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArray));
+    writer.writeUnsigned(count());
+    writer.writeByte(isAllocating());
+    return true;
+}
+
+RNewArray::RNewArray(CompactBufferReader &reader)
+{
+    count_ = reader.readUnsigned();
+    isAllocating_ = reader.readByte();
+}
+
+bool
+RNewArray::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedObject templateObject(cx, &iter.read().toObject());
+    RootedValue result(cx);
+    RootedTypeObject type(cx);
+
+    // See CodeGenerator::visitNewArrayCallVM
+    if (!templateObject->hasSingletonType())
+        type = templateObject->type();
+
+    JSObject *resultObject = NewDenseArray(cx, count_, type, isAllocating_);
+    if (!resultObject)
+        return false;
+
+    result.setObject(*resultObject);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MNewDerivedTypedObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
