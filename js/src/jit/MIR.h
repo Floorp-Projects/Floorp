@@ -92,7 +92,14 @@ MIRType MIRTypeFromValue(const js::Value &vp)
      * on instructions which are only used by ResumePoint or by other flagged
      * instructions.
      */                                                                         \
-    _(RecoveredOnBailout)
+    _(RecoveredOnBailout)                                                       \
+                                                                                \
+    /* The current instruction got discarded from the MIR Graph. This is useful
+     * when we want to iterate over resume points and instructions, while
+     * handling instructions which are discarded without reporting to the
+     * iterator.
+     */                                                                         \
+    _(Discarded)
 
 class MDefinition;
 class MInstruction;
@@ -775,6 +782,11 @@ class MInstruction
     void setResumePoint(MResumePoint *resumePoint) {
         JS_ASSERT(!resumePoint_);
         resumePoint_ = resumePoint;
+    }
+    // Used to transfer the resume point to the rewritten instruction.
+    void stealResumePoint(MInstruction *ins) {
+        resumePoint_ = ins->resumePoint_;
+        ins->resumePoint_ = nullptr;
     }
     MResumePoint *resumePoint() const {
         return resumePoint_;
