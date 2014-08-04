@@ -18,7 +18,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
   Services.prefs.clearUserPref("browser.rights.override");
   Services.prefs.clearUserPref("browser.rights." + gRightsVersion + ".shown");
-  Services.prefs.clearUserPref("browser.aboutHomeSnippets.updateUrl");
 });
 
 let gTests = [
@@ -216,7 +215,7 @@ let gTests = [
   {
     let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
     let rightsData = AboutHomeUtils.knowYourRightsData;
-    
+
     ok(!rightsData, "AboutHomeUtils.knowYourRightsData should be FALSE");
 
     let snippetsElt = doc.getElementById("snippets");
@@ -433,9 +432,6 @@ function test()
     for (let test of gTests) {
       info(test.desc);
 
-      // Make sure we don't try to load snippets from the network.
-      Services.prefs.setCharPref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
-
       if (test.beforeRun)
         yield test.beforeRun();
 
@@ -516,7 +512,7 @@ function promiseBrowserAttributes(aTab)
   let observer = new MutationObserver(function (mutations) {
     for (let mutation of mutations) {
       info("Got attribute mutation: " + mutation.attributeName +
-                                    " from " + mutation.oldValue); 
+                                    " from " + mutation.oldValue);
       // Now we just have to wait for the last attribute.
       if (mutation.attributeName == "searchEngineName") {
         info("Remove attributes observer");
