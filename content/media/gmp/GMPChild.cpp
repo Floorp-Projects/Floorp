@@ -243,7 +243,7 @@ GMPChild::RecvPGMPVideoEncoderConstructor(PGMPVideoEncoderChild* aActor)
 bool
 GMPChild::RecvCrashPluginNow()
 {
-  abort();
+  MOZ_CRASH();
   return true;
 }
 
