@@ -29,9 +29,11 @@ public:
 
   WidgetContentCommandEvent(bool aIsTrusted, uint32_t aMessage,
                             nsIWidget* aWidget,
-                            bool aOnlyEnabledCheck = false) :
-    WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_CONTENT_COMMAND_EVENT),
-    mOnlyEnabledCheck(aOnlyEnabledCheck), mSucceeded(false), mIsEnabled(false)
+                            bool aOnlyEnabledCheck = false)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eContentCommandEventClass)
+    , mOnlyEnabledCheck(aOnlyEnabledCheck)
+    , mSucceeded(false)
+    , mIsEnabled(false)
   {
   }
 
