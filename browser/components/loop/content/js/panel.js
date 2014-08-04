@@ -108,12 +108,21 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      var tosHTML = __("legal_text_and_links", {
-        "terms_of_use_url": "https://accounts.firefox.com/legal/terms",
-        "privacy_notice_url": "www.mozilla.org/privacy/"
-      });
-
       if (this.state.seenToS == "unseen") {
+        var terms_of_use_url = navigator.mozLoop.getLoopCharPref('legal.ToS_url');
+        var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
+        var tosHTML = __("legal_text_and_links2", {
+          "terms_of_use": React.renderComponentToStaticMarkup(
+            React.DOM.a( {href:terms_of_use_url, target:"_blank"}, 
+              __("legal_text_tos")
+            )
+          ),
+          "privacy_notice": React.renderComponentToStaticMarkup(
+            React.DOM.a( {href:privacy_notice_url, target:"_blank"}, 
+              __("legal_text_privacy")
+            )
+          ),
+        });
         navigator.mozLoop.setLoopCharPref('seenToS', 'seen');
         return React.DOM.p( {className:"terms-service",
                   dangerouslySetInnerHTML:{__html: tosHTML}});
