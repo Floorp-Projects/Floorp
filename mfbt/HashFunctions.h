@@ -292,13 +292,13 @@ HashKnownLength(const T* aStr, size_t aLength)
 MOZ_WARN_UNUSED_RESULT inline uint32_t
 HashString(const char* aStr)
 {
-  return detail::HashUntilZero(aStr);
+  return detail::HashUntilZero(reinterpret_cast<const unsigned char*>(aStr));
 }
 
 MOZ_WARN_UNUSED_RESULT inline uint32_t
 HashString(const char* aStr, size_t aLength)
 {
-  return detail::HashKnownLength(aStr, aLength);
+  return detail::HashKnownLength(reinterpret_cast<const unsigned char*>(aStr), aLength);
 }
 
 MOZ_WARN_UNUSED_RESULT
