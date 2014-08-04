@@ -135,8 +135,8 @@ GetEventClassIDName(EventClassID aEventClassID)
   switch (aEventClassID) {
     case eCompositionEventClass:
       return "eCompositionEventClass";
-    case NS_TEXT_EVENT:
-      return "NS_TEXT_EVENT";
+    case eTextEventClass:
+      return "eTextEventClass";
     default:
       return "unacceptable event struct type";
   }
@@ -859,7 +859,7 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
      GetBoolName(aEvent->mFlags.mPropagationStopped)));
 
   MOZ_ASSERT(aEvent->mClass == eCompositionEventClass ||
-             aEvent->mClass == NS_TEXT_EVENT);
+             aEvent->mClass == eTextEventClass);
   if (!aEvent->mFlags.mIsTrusted || aEvent->mFlags.mPropagationStopped) {
     return;
   }
