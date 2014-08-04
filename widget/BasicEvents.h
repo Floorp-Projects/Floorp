@@ -36,7 +36,7 @@ enum EventClassID MOZ_ENUM_TYPE(EventClassIDType)
   eCompositionEventClass,            // WidgetCompositionEvent
   eTextEventClass,                   // WidgetTextEvent
   eQueryContentEventClass,           // WidgetQueryContentEvent
-  NS_SELECTION_EVENT,                // WidgetSelectionEvent
+  eSelectionEventClass,              // WidgetSelectionEvent
   NS_EDITOR_INPUT_EVENT,             // InternalEditorInputEvent
 
   // MouseEvents.h
