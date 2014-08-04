@@ -61,6 +61,13 @@ extern ArrayObject * JS_FASTCALL
 NewDenseUnallocatedArray(ExclusiveContext *cx, uint32_t length, JSObject *proto = nullptr,
                          NewObjectKind newKind = GenericObject);
 
+/*
+ * Create a dense array with a set length, but only allocates space for the
+ * contents if the length is not excessive.
+ */
+extern ArrayObject * JS_FASTCALL
+NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleTypeObject type, bool allocateArray);
+
 /* Create a dense array with a copy of the dense array elements in src. */
 extern ArrayObject *
 NewDenseCopiedArray(JSContext *cx, uint32_t length, HandleObject src, uint32_t elementOffset, JSObject *proto = nullptr);

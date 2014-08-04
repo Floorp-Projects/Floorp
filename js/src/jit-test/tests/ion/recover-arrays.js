@@ -204,6 +204,19 @@ function arrayAlloc2(i) {
     return 0;
 }
 
+function build(l) { var arr = []; for (var i = 0; i < l; i++) arr.push(i); return arr }
+var uceFault_arrayAlloc3 = eval(uneval(uceFault).replace('uceFault', 'uceFault_arrayAlloc3'));
+var arrayAlloc3 = function (i) {
+    var a = [1,2];
+    if (uceFault_arrayAlloc0(i) || uceFault_arrayAlloc0(i)) {
+        assertEq(a[0], 0);
+        assertEq(a[4095], 4095);
+        return a.length;
+    }
+    return 0;
+};
+var arrayAlloc3 = eval(uneval(arrayAlloc3).replace('[1,2]', '[' + build(4096).join(",") + ']'));
+
 // Prevent compilation of the top-level
 eval(uneval(resumeHere));
 
@@ -231,6 +244,7 @@ for (var i = 0; i < 100; i++) {
     arrayAlloc0(i);
     arrayAlloc1(i);
     arrayAlloc2(i);
+    arrayAlloc3(i);
 }
 
 // If arr[1] is not defined, then we fallback on the prototype which instead of
