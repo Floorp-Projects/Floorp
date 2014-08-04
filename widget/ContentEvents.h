@@ -285,7 +285,7 @@ public:
   }
 
   InternalAnimationEvent(bool aIsTrusted, uint32_t aMessage)
-    : WidgetEvent(aIsTrusted, aMessage, NS_ANIMATION_EVENT)
+    : WidgetEvent(aIsTrusted, aMessage, eAnimationEventClass)
     , elapsedTime(0.0)
   {
     mFlags.mCancelable = false;
@@ -293,7 +293,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_ANIMATION_EVENT,
+    MOZ_ASSERT(mClass == eAnimationEventClass,
                "Duplicate() must be overridden by sub class");
     InternalAnimationEvent* result = new InternalAnimationEvent(false, message);
     result->AssignAnimationEventData(*this, true);
