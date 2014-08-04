@@ -1950,7 +1950,7 @@ class Mochitest(MochitestUtilsMixin):
 
     def fix_stack(self, message):
       if message['action'] == 'log' and self.stackFixerFunction:
-        message['message'] = self.stackFixerFunction(message['message'].encode('ascii', 'replace'))
+        message['message'] = self.stackFixerFunction(message['message'].encode('utf-8', 'replace'))
       return message
 
     def record_last_test(self, message):
