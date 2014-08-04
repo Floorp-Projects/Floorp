@@ -658,15 +658,15 @@ NON_IDL_EVENT(text,
 NON_IDL_EVENT(compositionstart,
               NS_COMPOSITION_START,
               EventNameType_XUL,
-              NS_COMPOSITION_EVENT)
+              eCompositionEventClass)
 NON_IDL_EVENT(compositionupdate,
               NS_COMPOSITION_UPDATE,
               EventNameType_XUL,
-              NS_COMPOSITION_EVENT)
+              eCompositionEventClass)
 NON_IDL_EVENT(compositionend,
               NS_COMPOSITION_END,
               EventNameType_XUL,
-              NS_COMPOSITION_EVENT)
+              eCompositionEventClass)
 NON_IDL_EVENT(command,
               NS_XUL_COMMAND,
               EventNameType_XUL,

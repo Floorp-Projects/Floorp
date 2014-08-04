@@ -302,7 +302,7 @@ public:
 
   WidgetCompositionEvent(bool aIsTrusted, uint32_t aMessage,
                          nsIWidget* aWidget)
-    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_COMPOSITION_EVENT)
+    : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, eCompositionEventClass)
     , mSeqno(kLatestSeqno)
   {
     // XXX compositionstart is cancelable in draft of DOM3 Events.
@@ -313,7 +313,7 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mClass == NS_COMPOSITION_EVENT,
+    MOZ_ASSERT(mClass == eCompositionEventClass,
                "Duplicate() must be overridden by sub class");
     // Not copying widget, it is a weak reference.
     WidgetCompositionEvent* result =
