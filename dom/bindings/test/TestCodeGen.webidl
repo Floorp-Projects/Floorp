@@ -909,6 +909,8 @@ dictionary Dict : ParentDict {
   sequence<long>? seq3;
   sequence<long>? seq4 = null;
   sequence<long>? seq5 = [];
+
+  long dashed-name;
 };
 
 dictionary ParentDict : GrandparentDict {
