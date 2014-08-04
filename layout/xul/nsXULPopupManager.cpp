@@ -548,7 +548,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
               PresShell()->FrameManager()->GetRootFrame();
           if ((event->mClass == eMouseEventClass || 
                event->mClass == eMouseScrollEventClass ||
-               event->mClass == NS_WHEEL_EVENT) &&
+               event->mClass == eWheelEventClass) &&
                !event->AsGUIEvent()->widget) {
             // no widget, so just use the client point if available
             nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);

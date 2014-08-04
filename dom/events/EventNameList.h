@@ -403,7 +403,7 @@ EVENT(waiting,
 EVENT(wheel,
       NS_WHEEL_WHEEL,
       EventNameType_All,
-      NS_WHEEL_EVENT)
+      eWheelEventClass)
 EVENT(copy,
       NS_COPY,
       EventNameType_HTMLXUL,

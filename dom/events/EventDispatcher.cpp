@@ -711,7 +711,7 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
     case eMouseScrollEventClass:
       return NS_NewDOMMouseScrollEvent(aDOMEvent, aOwner, aPresContext,
                                        aEvent->AsMouseScrollEvent());
-    case NS_WHEEL_EVENT:
+    case eWheelEventClass:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsWheelEvent());
     case eEditorInputEventClass:
