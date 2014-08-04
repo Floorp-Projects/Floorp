@@ -28,7 +28,7 @@ public:
   // Only one usage per verification is supported.
   SECStatus VerifyCert(CERTCertificate* cert,
                        SECCertificateUsage usage,
-                       PRTime time,
+                       mozilla::pkix::Time time,
                        void* pinArg,
                        const char* hostname,
                        Flags flags = 0,
@@ -39,7 +39,7 @@ public:
   SECStatus VerifySSLServerCert(
                     CERTCertificate* peerCert,
        /*optional*/ const SECItem* stapledOCSPResponse,
-                    PRTime time,
+                    mozilla::pkix::Time time,
        /*optional*/ void* pinarg,
                     const char* hostname,
                     bool saveIntermediatesInPermanentDatabase = false,

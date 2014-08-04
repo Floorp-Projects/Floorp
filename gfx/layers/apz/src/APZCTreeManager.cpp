@@ -269,7 +269,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                      << "\tsr=" << container->GetFrameMetrics().mScrollableRect
                      << (aLayer->GetVisibleRegion().IsEmpty() ? "\tscrollinfo" : "")
                      << (apzc->HasScrollgrab() ? "\tscrollgrab" : "")
-                     << "\t" << container->GetFrameMetrics().GetContentDescription();
+                     << "\t" << container->GetContentDescription();
 
         // Bind the APZC instance into the tree of APZCs
         if (aNextSibling) {
@@ -419,6 +419,7 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
   nsEventStatus result = nsEventStatus_eIgnore;
   Matrix4x4 transformToApzc;
   Matrix4x4 transformToGecko;
+  bool inOverscrolledApzc = false;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
@@ -426,7 +427,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       break;
     } case PANGESTURE_INPUT: {
       PanGestureInput& panInput = aEvent.AsPanGestureInput();
-      bool inOverscrolledApzc = false;
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(panInput.mPanStartPoint,
                                                             &inOverscrolledApzc);
       if (apzc) {
@@ -455,7 +455,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       break;
     } case PINCHGESTURE_INPUT: {
       PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
-      bool inOverscrolledApzc = false;
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(pinchInput.mFocusPoint,
                                                             &inOverscrolledApzc);
       if (apzc) {
@@ -465,19 +464,15 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         PinchGestureInput inputForApzc(pinchInput);
         GetInputTransforms(apzc, transformToApzc, transformToGecko);
         ApplyTransform(&(inputForApzc.mFocusPoint), transformToApzc);
-        apzc->ReceiveInputEvent(inputForApzc);
+        result = apzc->ReceiveInputEvent(inputForApzc);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
         TransformScreenToGecko(&(pinchInput.mFocusPoint), apzc, this);
       }
-      result = inOverscrolledApzc ? nsEventStatus_eConsumeNoDefault
-             : apzc ? nsEventStatus_eConsumeDoDefault
-             : nsEventStatus_eIgnore;
       break;
     } case TAPGESTURE_INPUT: {
       TapGestureInput& tapInput = aEvent.AsTapGestureInput();
-      bool inOverscrolledApzc = false;
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(tapInput.mPoint),
                                                             &inOverscrolledApzc);
       if (apzc) {
@@ -487,17 +482,17 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         TapGestureInput inputForApzc(tapInput);
         GetInputTransforms(apzc, transformToApzc, transformToGecko);
         ApplyTransform(&(inputForApzc.mPoint), transformToApzc);
-        apzc->ReceiveInputEvent(inputForApzc);
+        result = apzc->ReceiveInputEvent(inputForApzc);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
         TransformScreenToGecko(&(tapInput.mPoint), apzc, this);
       }
-      result = inOverscrolledApzc ? nsEventStatus_eConsumeNoDefault
-             : apzc ? nsEventStatus_eConsumeDoDefault
-             : nsEventStatus_eIgnore;
       break;
     }
+  }
+  if (inOverscrolledApzc) {
+    result = nsEventStatus_eConsumeNoDefault;
   }
   return result;
 }
@@ -594,6 +589,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     }
   }
 
+  nsEventStatus result = nsEventStatus_eIgnore;
   if (mApzcForInputBlock) {
     mApzcForInputBlock->GetGuid(aOutTargetGuid);
     // For computing the input for the APZC, used the cached transform.
@@ -604,7 +600,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
       ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
     }
-    mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
+    result = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
 
     // For computing the event to pass back to Gecko, use the up-to-date transforms.
     // This ensures that transformToApzc and transformToGecko are in sync
@@ -616,10 +612,9 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
       ApplyTransform(&(aInput.mTouches[i].mScreenPoint), outTransform);
     }
   }
-
-  nsEventStatus result = mInOverscrolledApzc ? nsEventStatus_eConsumeNoDefault
-                       : mApzcForInputBlock ? nsEventStatus_eConsumeDoDefault
-                       : nsEventStatus_eIgnore;
+  if (mInOverscrolledApzc) {
+    result = nsEventStatus_eConsumeNoDefault;
+  }
 
   if (aInput.mType == MultiTouchInput::MULTITOUCH_END) {
     if (mTouchCount >= aInput.mTouches.Length()) {
@@ -667,6 +662,7 @@ APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
                               ScrollableLayerGuid* aOutTargetGuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  nsEventStatus result = nsEventStatus_eIgnore;
 
   // Transform the refPoint.
   // If the event hits an overscrolled APZC, instruct the caller to ignore it.
@@ -681,9 +677,10 @@ APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
     Matrix4x4 outTransform = transformToApzc * transformToGecko;
     ApplyTransform(&(aEvent.refPoint), outTransform);
   }
-  return inOverscrolledApzc ? nsEventStatus_eConsumeNoDefault
-       : apzc ? nsEventStatus_eConsumeDoDefault
-       : nsEventStatus_eIgnore;
+  if (inOverscrolledApzc) {
+    result = nsEventStatus_eConsumeNoDefault;
+  }
+  return result;
 }
 
 nsEventStatus
@@ -696,8 +693,8 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  switch (aEvent.eventStructType) {
-    case NS_TOUCH_EVENT: {
+  switch (aEvent.mClass) {
+    case eTouchEventClass: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
       MultiTouchInput touchInput(touchEvent);
       nsEventStatus result = ProcessTouchInput(touchInput, aOutTargetGuid);

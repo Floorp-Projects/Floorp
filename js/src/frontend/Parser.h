@@ -434,13 +434,12 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     JSAtom * stopStringCompression();
 
     Node stringLiteral();
-#ifdef JS_HAS_TEMPLATE_STRINGS
     Node noSubstitutionTemplate();
     Node templateLiteral();
     bool taggedTemplate(Node nodeList, TokenKind tt);
     bool appendToCallSiteObj(Node callSiteObj);
     bool addExprAndGetNextTemplStrToken(Node nodeList, TokenKind &tt);
-#endif
+
     inline Node newName(PropertyName *name);
 
     inline bool abortIfSyntaxParser();

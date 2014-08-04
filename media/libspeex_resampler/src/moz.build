@@ -11,11 +11,8 @@ EXPORTS.speex += [
 ]
 
 SOURCES += [
-  'sse_detect.cpp',
-]
-
-SOURCES += [
     'resample.c',
+    'simd_detect.cpp',
 ]
 
 MSVC_ENABLE_PGO = True
@@ -31,16 +28,26 @@ DEFINES['EXPORT'] = ''
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
-if CONFIG['OS_TARGET'] == 'Android':
+if CONFIG['MOZ_SAMPLE_TYPE_S16']:
     DEFINES['FIXED_POINT'] = True
 else:
     DEFINES['FLOATING_POINT'] = True
 
 # Only use SSE code when using floating point samples, and on x86
-if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['OS_TARGET'] != 'Android':
+if CONFIG['INTEL_ARCHITECTURE'] and not CONFIG['MOZ_SAMPLE_TYPE_S16']:
     DEFINES['_USE_SSE'] = True
     DEFINES['_USE_SSE2'] = True
-    SOURCES['resample.c'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES += [
+        'resample_sse.c'
+    ]
+    SOURCES['resample_sse.c'].flags += CONFIG['SSE2_FLAGS']
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    DEFINES['_USE_NEON'] = True
+    SOURCES += [
+        'resample_neon.c'
+    ]
+    SOURCES['resample_neon.c'].flags += ['-mfpu=neon']
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:

@@ -17,4 +17,6 @@ interface TestInterfaceJS {
 
   // For testing bug 968335.
   DOMString getCallerPrincipal();
+
+  DOMString convertSVS(ScalarValueString svs);
 };

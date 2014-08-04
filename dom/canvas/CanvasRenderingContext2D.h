@@ -667,7 +667,8 @@ protected:
   void DrawDirectlyToCanvas(const nsLayoutUtils::DirectDrawInfo& image,
                             mozilla::gfx::Rect* bounds, double dx, double dy,
                             double dw, double dh, double sx, double sy,
-                            double sw, double sh, gfxIntSize imgSize);
+                            double sw, double sh, gfxIntSize imgSize,
+                            gfxFloat opacity);
 
   nsString& GetFont()
   {

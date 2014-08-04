@@ -142,6 +142,11 @@ MP4Reader::Shutdown()
   }
   // Dispose of the queued sample before shutting down the demuxer
   mQueuedVideoSample = nullptr;
+
+  if (mPlatform) {
+    mPlatform->Shutdown();
+    mPlatform = nullptr;
+  }
 }
 
 void

@@ -50,7 +50,7 @@ private:
 
   nsresult CreateFactoryIfNeeded();
 
-  nsresult UpgradeSchema();
+  nsresult UpgradeSchema(nsIDOMEvent* aEvent);
 
   nsresult DatabaseOpened();
 
@@ -75,6 +75,7 @@ private:
 
   IDBTransactionMode mTransactionMode;
   Sequence<nsString> mObjectStores;
+  bool mCreatedSchema;
 };
 
 } // namespace dom

@@ -50,8 +50,13 @@ public:
 
   bool SoftStreamError(nsresult code)
   {
+    if (NS_SUCCEEDED(code)) {
+      return false;
+    }
+
     return (code == NS_BASE_STREAM_CLOSED || code == NS_BINDING_FAILED ||
             code == NS_BINDING_ABORTED || code == NS_BINDING_REDIRECTED ||
+            code == NS_ERROR_INVALID_CONTENT_ENCODING ||
             code == NS_BINDING_RETARGETED || code == NS_ERROR_CORRUPTED_CONTENT);
   }
 };

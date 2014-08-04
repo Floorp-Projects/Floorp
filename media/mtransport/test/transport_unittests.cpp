@@ -10,6 +10,8 @@
 #include <string>
 #include <map>
 
+#include "mozilla/UniquePtr.h"
+
 #include "sigslot.h"
 
 #include "logging.h"
@@ -123,8 +125,8 @@ class TransportLayerLossy : public TransportLayer {
     loss_mask_ |= (1 << (packet & 32));
   }
 
-  void SetInspector(Inspector* inspector) {
-    inspector_ = inspector;
+  void SetInspector(UniquePtr<Inspector> inspector) {
+    inspector_ = Move(inspector);
   }
 
   void StateChange(TransportLayer *layer, State state) {
@@ -153,7 +155,7 @@ class TransportLayerLossy : public TransportLayer {
  private:
   uint32_t loss_mask_;
   uint32_t packet_;
-  ScopedDeletePtr<Inspector> inspector_;
+  UniquePtr<Inspector> inspector_;
 };
 
 // Process DTLS Records
@@ -231,8 +233,8 @@ class DtlsInspectorInjector : public DtlsRecordInspector {
       packet_type_(packet_type),
       handshake_type_(handshake_type),
       injected_(false) {
-    data_ = new unsigned char[len];
-    memcpy(data_, data, len);
+    data_.reset(new unsigned char[len]);
+    memcpy(data_.get(), data, len);
     len_ = len;
   }
 
@@ -261,14 +263,14 @@ class DtlsInspectorInjector : public DtlsRecordInspector {
       }
     }
 
-    layer->SendPacket(data_, len_);
+    layer->SendPacket(data_.get(), len_);
   }
 
  private:
   uint8_t packet_type_;
   uint8_t handshake_type_;
   bool injected_;
-  ScopedDeleteArray<unsigned char> data_;
+  UniquePtr<unsigned char[]> data_;
   size_t len_;
 };
 
@@ -292,7 +294,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
         gathering_complete_(false)
  {
     std::vector<NrIceStunServer> stun_servers;
-    ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(
+    UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
         std::string((char *)"stun.services.mozilla.com"), 3478));
     stun_servers.push_back(*server);
     EXPECT_TRUE(NS_SUCCEEDED(ice_ctx_->SetStunServers(stun_servers)));
@@ -511,8 +513,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
     lossy_->SetLoss(loss);
   }
 
-  void SetInspector(Inspector* inspector) {
-    lossy_->SetInspector(inspector);
+  void SetInspector(UniquePtr<Inspector> inspector) {
+    lossy_->SetInspector(Move(inspector));
   }
 
   TransportLayer::State state() {
@@ -705,7 +707,7 @@ TEST_F(TransportTest, TestConnectTwoDigestsBothBad) {
 
 TEST_F(TransportTest, TestConnectInjectCCS) {
   SetDtlsPeer();
-  p2_->SetInspector(new DtlsInspectorInjector(
+  p2_->SetInspector(MakeUnique<DtlsInspectorInjector>(
       kTlsHandshakeType,
       kTlsHandshakeCertificate,
       kTlsFakeChangeCipherSpec,

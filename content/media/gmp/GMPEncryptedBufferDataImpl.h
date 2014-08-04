@@ -20,6 +20,7 @@ private:
 public:
   GMPEncryptedBufferDataImpl(const CryptoSample& aCrypto);
   GMPEncryptedBufferDataImpl(const GMPDecryptionData& aData);
+  virtual ~GMPEncryptedBufferDataImpl();
 
   void RelinquishData(GMPDecryptionData& aData);
 
