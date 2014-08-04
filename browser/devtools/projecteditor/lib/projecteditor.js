@@ -175,6 +175,12 @@ var ProjectEditor = Class({
 
   _buildMenubar: function() {
 
+    this.contextMenuPopup = this.document.getElementById("context-menu-popup");
+    this.contextMenuPopup.addEventListener("popupshowing", this._updateContextMenuItems);
+
+    this.textEditorContextMenuPopup = this.document.getElementById("texteditor-context-popup");
+    this.textEditorContextMenuPopup.addEventListener("popupshowing", this._updateMenuItems);
+
     this.editMenu = this.document.getElementById("edit-menu");
     this.fileMenu = this.document.getElementById("file-menu");
 
@@ -191,6 +197,7 @@ var ProjectEditor = Class({
       body.appendChild(this.editorCommandset);
       body.appendChild(this.editorKeyset);
       body.appendChild(this.contextMenuPopup);
+      body.appendChild(this.textEditorContextMenuPopup);
 
       let index = this.menuindex || 0;
       this.menubar.insertBefore(this.editMenu, this.menubar.children[index]);
@@ -231,9 +238,6 @@ var ProjectEditor = Class({
 
     this.editorCommandset = this.document.getElementById("editMenuCommands");
     this.editorKeyset = this.document.getElementById("editMenuKeys");
-
-    this.contextMenuPopup = this.document.getElementById("context-menu-popup");
-    this.contextMenuPopup.addEventListener("popupshowing", this._updateContextMenuItems);
 
     this.projectEditorCommandset.addEventListener("command", (evt) => {
       evt.stopPropagation();
@@ -313,6 +317,7 @@ var ProjectEditor = Class({
     this.editorCommandset.remove();
     this.editorKeyset.remove();
     this.contextMenuPopup.remove();
+    this.textEditorContextMenuPopup.remove();
     this.editMenu.remove();
     this.fileMenu.remove();
 

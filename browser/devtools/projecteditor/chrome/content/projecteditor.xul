@@ -53,6 +53,14 @@
   <popupset>
     <menupopup id="context-menu-popup">
     </menupopup>
+    <menupopup id="texteditor-context-popup">
+      <menuitem id="cMenu_cut"/>
+      <menuitem id="cMenu_copy"/>
+      <menuitem id="cMenu_paste"/>
+      <menuitem id="cMenu_delete"/>
+      <menuseparator/>
+      <menuitem id="cMenu_selectAll"/>
+    </menupopup>
   </popupset>
 
   <deck id="main-deck" flex="1">

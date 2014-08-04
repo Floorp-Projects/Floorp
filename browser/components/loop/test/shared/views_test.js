@@ -401,6 +401,144 @@ describe("loop.shared.views", function() {
     });
   });
 
+  describe("FeedbackView", function() {
+    var comp, fakeFeedbackApiClient;
+
+    beforeEach(function() {
+      fakeFeedbackApiClient = {send: sandbox.stub()};
+      comp = TestUtils.renderIntoDocument(sharedViews.FeedbackView({
+        feedbackApiClient: fakeFeedbackApiClient
+      }));
+    });
+
+    // local test helpers
+    function clickHappyFace(comp) {
+      var happyFace = comp.getDOMNode().querySelector(".face-happy");
+      TestUtils.Simulate.click(happyFace);
+    }
+
+    function clickSadFace(comp) {
+      var sadFace = comp.getDOMNode().querySelector(".face-sad");
+      TestUtils.Simulate.click(sadFace);
+    }
+
+    function fillSadFeedbackForm(comp, category, text) {
+      TestUtils.Simulate.change(
+        comp.getDOMNode().querySelector("[value='" + category + "']"));
+
+      if (text) {
+        TestUtils.Simulate.change(
+          comp.getDOMNode().querySelector("[name='description']"), {
+            target: {value: "fake reason"}
+          });
+      }
+    }
+
+    function submitSadFeedbackForm(comp, category, text) {
+      TestUtils.Simulate.submit(comp.getDOMNode().querySelector("form"));
+    }
+
+    describe("Happy feedback", function() {
+      it("should send feedback data when clicking on the happy face",
+        function() {
+          clickHappyFace(comp);
+
+          sinon.assert.calledOnce(fakeFeedbackApiClient.send);
+          sinon.assert.calledWith(fakeFeedbackApiClient.send, {happy: true});
+        });
+
+      it("should thank the user once happy feedback data is sent", function() {
+        fakeFeedbackApiClient.send = function(data, cb) {
+          cb();
+        };
+
+        clickHappyFace(comp);
+
+        expect(comp.getDOMNode()
+                   .querySelectorAll(".feedback .thank-you").length).eql(1);
+        expect(comp.getDOMNode().querySelector("button.back")).to.be.a("null");
+      });
+    });
+
+    describe("Sad feedback", function() {
+      it("should bring the user to feedback form when clicking on the sad face",
+        function() {
+          clickSadFace(comp);
+
+          expect(comp.getDOMNode().querySelectorAll("form").length).eql(1);
+        });
+
+      it("should disable the form submit button when no category is chosen",
+        function() {
+          clickSadFace(comp);
+
+          expect(comp.getDOMNode()
+                     .querySelector("form button").disabled).eql(true);
+        });
+
+      it("should enable the form submit button once a choice is made",
+        function() {
+          clickSadFace(comp);
+
+          fillSadFeedbackForm(comp, "confusing");
+
+          expect(comp.getDOMNode()
+                     .querySelector("form button").disabled).eql(false);
+        });
+
+      it("should disable the form submit button once the form is submitted",
+        function() {
+          clickSadFace(comp);
+          fillSadFeedbackForm(comp, "confusing");
+
+          submitSadFeedbackForm(comp);
+
+          expect(comp.getDOMNode()
+                     .querySelector("form button").disabled).eql(true);
+        });
+
+      it("should send feedback data when the form is submitted", function() {
+        clickSadFace(comp);
+        fillSadFeedbackForm(comp, "confusing");
+
+        submitSadFeedbackForm(comp);
+
+        sinon.assert.calledOnce(fakeFeedbackApiClient.send);
+        sinon.assert.calledWithMatch(fakeFeedbackApiClient.send, {
+          happy: false,
+          category: "confusing"
+        });
+      });
+
+      it("should send feedback data when user has entered a custom description",
+        function() {
+          clickSadFace(comp);
+
+          fillSadFeedbackForm(comp, "other", "fake reason");
+          submitSadFeedbackForm(comp);
+
+          sinon.assert.calledOnce(fakeFeedbackApiClient.send);
+          sinon.assert.calledWith(fakeFeedbackApiClient.send, {
+            happy: false,
+            category: "other",
+            description: "fake reason"
+          });
+        });
+
+      it("should thank the user when feedback data has been sent", function() {
+        fakeFeedbackApiClient.send = function(data, cb) {
+          cb();
+        };
+        clickSadFace(comp);
+        fillSadFeedbackForm(comp, "confusing");
+        submitSadFeedbackForm(comp);
+
+        expect(comp.getDOMNode()
+                   .querySelectorAll(".feedback .thank-you").length).eql(1);
+      });
+    });
+  });
+
   describe("NotificationView", function() {
     var collection, model, view;
 
