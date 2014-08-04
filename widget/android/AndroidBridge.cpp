@@ -1065,11 +1065,7 @@ AndroidBridge::GetSegmentInfoForText(const nsAString& aText,
 #else
     ALOG_BRIDGE("AndroidBridge::GetSegmentInfoForText");
 
-    dom::mobilemessage::SmsSegmentInfoData data;
-
-    data.segments() = 0;
-    data.charsPerSegment() = 0;
-    data.charsAvailableInLastSegment() = 0;
+    int32_t segments, charsPerSegment, charsAvailableInLastSegment;
 
     JNIEnv *env = GetJNIEnv();
 
@@ -1086,17 +1082,18 @@ AndroidBridge::GetSegmentInfoForText(const nsAString& aText,
 
     jint* info = env->GetIntArrayElements(arr, JNI_FALSE);
 
-    data.segments() = info[0]; // msgCount
-    data.charsPerSegment() = info[2]; // codeUnitsRemaining
+    segments = info[0]; // msgCount
+    charsPerSegment = info[2]; // codeUnitsRemaining
     // segmentChars = (codeUnitCount + codeUnitsRemaining) / msgCount
-    data.charsAvailableInLastSegment() = (info[1] + info[2]) / info[0];
+    charsAvailableInLastSegment = (info[1] + info[2]) / info[0];
 
     env->ReleaseIntArrayElements(arr, info, JNI_ABORT);
 
     // TODO Bug 908598 - Should properly use |QueueSmsRequest(...)| to queue up
     // the nsIMobileMessageCallback just like other functions.
-    nsCOMPtr<nsIDOMMozSmsSegmentInfo> info = new SmsSegmentInfo(data);
-    return aRequest->NotifySegmentInfoForTextGot(info);
+    return aRequest->NotifySegmentInfoForTextGot(segments,
+                                                 charsPerSegment,
+                                                 charsAvailableInLastSegment);
 #endif
 }
 

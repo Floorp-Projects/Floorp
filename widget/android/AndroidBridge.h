@@ -59,7 +59,6 @@ class NetworkInformation;
 namespace dom {
 namespace mobilemessage {
 struct SmsFilterData;
-struct SmsSegmentInfoData;
 } // namespace mobilemessage
 } // namespace dom
 
