@@ -143,6 +143,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_compressed_ETC1_RGB8_texture",
     "GL_EXT_draw_range_elements",
     "GL_EXT_shader_texture_lod",
+    "GL_NV_fence",
     nullptr
 };
 
@@ -1071,6 +1072,26 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 NS_ERROR("GL supports KHR_debug without supplying its functions.");
 
                 MarkExtensionUnsupported(KHR_debug);
+                ClearSymbols(extSymbols);
+            }
+        }
+
+        if (IsExtensionSupported(NV_fence)) {
+            SymLoadStruct extSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGenFences,    { "GenFencesNV",    nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDeleteFences, { "DeleteFencesNV", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fSetFence,     { "SetFenceNV",     nullptr } },
+                { (PRFuncPtr*) &mSymbols.fTestFence,    { "TestFenceNV",    nullptr } },
+                { (PRFuncPtr*) &mSymbols.fFinishFence,  { "FinishFenceNV",  nullptr } },
+                { (PRFuncPtr*) &mSymbols.fIsFence,      { "IsFenceNV",      nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetFenceiv,   { "GetFenceivNV",   nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(&extSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports NV_fence without supplying its functions.");
+
+                MarkExtensionUnsupported(NV_fence);
                 ClearSymbols(extSymbols);
             }
         }

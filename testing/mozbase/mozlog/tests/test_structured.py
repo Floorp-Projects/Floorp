@@ -363,6 +363,35 @@ class TestTypeconversions(BaseStructuredTest):
                 self.assertEquals(data[-1], "☺\n")
             self.logger.suite_end()
 
+    def test_arguments(self):
+        self.logger.info(message="test")
+        self.assert_log_equals({"action": "log",
+                                "message": "test",
+                                "level": "INFO"})
+
+        self.logger.suite_start([], {})
+        self.assert_log_equals({"action": "suite_start",
+                                "tests": [],
+                                "run_info": {}})
+        self.logger.test_start(test="test1")
+        self.logger.test_status("subtest1", "FAIL", test="test1", status="PASS")
+        self.assert_log_equals({"action": "test_status",
+                                "test": "test1",
+                                "subtest": "subtest1",
+                                "status": "PASS",
+                                "expected": "FAIL"})
+        self.logger.process_output(123, "data", "test")
+        self.assert_log_equals({"action": "process_output",
+                                "process": "123",
+                                "command": "test",
+                                "data": "data"})
+        self.assertRaises(TypeError, self.logger.test_status, subtest="subtest2",
+                          status="FAIL", expected="PASS")
+        self.assertRaises(TypeError, self.logger.test_status, "test1", "subtest1",
+                          "PASS", "FAIL", "message", "stack", {}, "unexpected")
+        self.assertRaises(TypeError, self.logger.test_status, "test1", test="test2")
+        self.logger.suite_end()
+
 class TestCommandline(unittest.TestCase):
     def test_setup_logging(self):
         parser = argparse.ArgumentParser()

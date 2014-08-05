@@ -1328,7 +1328,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 generateImpliedEndTags();
               }
               if (eltPos != currentPtr) {
-                if (eltPos != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+                if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
                   errStartTagSeenWithoutRuby(name);
                 } else {
                   errUnclosedChildrenInRuby();
@@ -1345,7 +1345,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               }
               if (eltPos != currentPtr) {
                 if (!isCurrent(nsHtml5Atoms::rtc)) {
-                  if (eltPos != NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
+                  if (eltPos == NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK) {
                     errStartTagSeenWithoutRuby(name);
                   } else {
                     errUnclosedChildrenInRuby();

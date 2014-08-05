@@ -48,8 +48,6 @@
             <menuitem value="ar"              label="&font.langGroup.arabic;"/>
             <menuitem value="x-armn"          label="&font.langGroup.armenian;"/>
             <menuitem value="x-beng"          label="&font.langGroup.bengali;"/>
-            <menuitem value="x-baltic"        label="&font.langGroup.baltic;"/>
-            <menuitem value="x-central-euro"  label="&font.langGroup.latin2;"/>
             <menuitem value="zh-CN"           label="&font.langGroup.simpl-chinese;"/>
             <menuitem value="zh-HK"           label="&font.langGroup.trad-chinese-hk;"/>
             <menuitem value="zh-TW"           label="&font.langGroup.trad-chinese;"/>
@@ -65,6 +63,7 @@
             <menuitem value="x-knda"          label="&font.langGroup.kannada;"/>
             <menuitem value="x-khmr"          label="&font.langGroup.khmer;"/>
             <menuitem value="ko"              label="&font.langGroup.korean;"/>
+            <menuitem value="x-western"       label="&font.langGroup.latin;"/>
             <menuitem value="x-mlym"          label="&font.langGroup.malayalam;"/>
             <menuitem value="x-orya"          label="&font.langGroup.oriya;"/>
             <menuitem value="x-sinh"          label="&font.langGroup.sinhala;"/>
@@ -72,10 +71,8 @@
             <menuitem value="x-telu"          label="&font.langGroup.telugu;"/>
             <menuitem value="th"              label="&font.langGroup.thai;"/>
             <menuitem value="x-tibt"          label="&font.langGroup.tibetan;"/>
-            <menuitem value="tr"              label="&font.langGroup.turkish;"/>
             <menuitem value="x-cans"          label="&font.langGroup.canadian;"/>
-            <menuitem value="x-western"       label="&font.langGroup.latin1;"/>
-            <menuitem value="x-unicode"       label="&font.langGroup.unicode;"/>
+            <menuitem value="x-unicode"       label="&font.langGroup.other;"/>
           </menupopup>
         </menulist>
       </caption>

@@ -580,10 +580,6 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
     if (yoffset + height > texHeight || yoffset + height < 0)
       return ErrorInvalidValue("copyTexSubImage2D: yoffset+height is too large");
 
-    GLenum webGLFormat = imageInfo.WebGLFormat();
-    if (IsGLDepthFormat(webGLFormat) || IsGLDepthStencilFormat(webGLFormat))
-        return ErrorInvalidOperation("copyTexSubImage2D: a base internal format of DEPTH_COMPONENT or DEPTH_STENCIL isn't supported");
-
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeAttachments())
             return ErrorInvalidFramebufferOperation("copyTexSubImage2D: incomplete framebuffer");
@@ -597,6 +593,7 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
         ClearBackbufferIfNeeded();
     }
 
+    GLenum webGLFormat = imageInfo.WebGLFormat();
     bool texFormatRequiresAlpha = FormatHasAlpha(webGLFormat);
     bool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment(0).HasAlpha()
                                                : bool(gl->GetPixelFormat().alpha > 0);

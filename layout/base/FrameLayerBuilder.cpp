@@ -569,9 +569,9 @@ public:
       const_cast<nsIFrame*>(aContainerItem ? aContainerItem->ReferenceFrameForChildren() :
                                              mBuilder->FindReferenceFrameFor(mContainerFrame));
     mContainerAnimatedGeometryRoot = aContainerItem
-      ? nsLayoutUtils::GetAnimatedGeometryRootFor(aContainerItem, aBuilder)
+      ? nsLayoutUtils::GetAnimatedGeometryRootFor(aContainerItem, aBuilder, aManager)
       : mContainerReferenceFrame;
-    NS_ASSERTION(!aContainerItem || !aContainerItem->ShouldFixToViewport(aBuilder),
+    NS_ASSERTION(!aContainerItem || !aContainerItem->ShouldFixToViewport(aManager),
                  "Container items never return true for ShouldFixToViewport");
     mContainerFixedPosFrame =
         FindFixedPosFrameForLayerData(mContainerAnimatedGeometryRoot, false);
@@ -2563,7 +2563,7 @@ ContainerState::ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
     // Try using the actual active scrolled root of the backmost item, as that
     // should result in the least invalidation when scrolling.
     *aAnimatedGeometryRoot =
-      nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
+      nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder, mManager);
     return true;
   }
   return false;
@@ -2760,7 +2760,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
     } else {
       forceInactive = false;
       if (mManager->IsWidgetLayerManager()) {
-        animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
+        animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder, mManager);
       } else {
         // For inactive layer subtrees, splitting content into ThebesLayers
         // based on animated geometry roots is pointless. It's more efficient
@@ -2773,7 +2773,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       }
     }
     bool shouldFixToViewport = !animatedGeometryRoot->GetParent() &&
-      item->ShouldFixToViewport(mBuilder);
+      item->ShouldFixToViewport(mManager);
 
     if (maxLayers != -1 && layerCount >= maxLayers) {
       forceInactive = true;

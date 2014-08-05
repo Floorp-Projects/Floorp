@@ -774,6 +774,15 @@ BuiltinToImmKind(AsmJSExit::BuiltinKind builtin)
     return AsmJSImmKind(builtin);
 }
 
+static inline bool
+ImmKindIsBuiltin(AsmJSImmKind imm, AsmJSExit::BuiltinKind *builtin)
+{
+    if (unsigned(imm) >= unsigned(AsmJSExit::Builtin_Limit))
+        return false;
+    *builtin = AsmJSExit::BuiltinKind(imm);
+    return true;
+}
+
 // Pointer to be embedded as an immediate in asm.js code.
 class AsmJSImmPtr
 {
