@@ -67,7 +67,7 @@ struct ImageValue;
  */
 class nsCheapString : public nsString {
 public:
-  nsCheapString(nsStringBuffer* aBuf)
+  explicit nsCheapString(nsStringBuffer* aBuf)
   {
     if (aBuf)
       aBuf->ToString(aBuf->StorageSize()/sizeof(char16_t) - 1, *this);
