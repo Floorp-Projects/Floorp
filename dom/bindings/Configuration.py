@@ -138,6 +138,8 @@ class Configuration:
                 getter = lambda x: x.interface.isJSImplemented()
             elif key == 'isNavigatorProperty':
                 getter = lambda x: x.interface.getNavigatorProperty() != None
+            elif key == 'isExposedInAllWorkers':
+                getter = lambda x: not x.interface.isExternal() and "Worker" in x.interface._exposureGlobalNames
             else:
                 # Have to watch out: just closing over "key" is not enough,
                 # since we're about to mutate its value
@@ -562,6 +564,14 @@ class Descriptor(DescriptorProvider):
         object or if we need to coerce null/undefined to the global.
         """
         return self.hasXPConnectImpls or self.interface.isOnGlobalProtoChain()
+
+    def isGlobal(self):
+        """
+        Returns true if this is the primary interface for a global object
+        of some sort.
+        """
+        return (self.interface.getExtendedAttribute("Global") or
+                self.interface.getExtendedAttribute("PrimaryGlobal"))
 
 # Some utility methods
 def getTypesFromDescriptor(descriptor):

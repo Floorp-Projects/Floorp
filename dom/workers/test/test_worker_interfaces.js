@@ -30,10 +30,7 @@ var ecmaGlobals =
     "Float32Array",
     "Float64Array",
     "Function",
-    // NB: We haven't bothered to resolve constants like Infinity and NaN on
-    // Xrayed windows (which are seen from the XBL scope). We could support
-    // this if needed with some refactoring.
-    {name: "Infinity"},
+    "Infinity",
     "Int16Array",
     "Int32Array",
     "Int8Array",
@@ -43,7 +40,7 @@ var ecmaGlobals =
     "JSON",
     "Map",
     "Math",
-    {name: "NaN"},
+    "NaN",
     "Number",
     "Object",
     "Proxy",
@@ -75,9 +72,11 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Blob",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "Console",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "DedicatedWorkerGlobalScope",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "DataStore", b2g: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "DataStoreCursor", b2g: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DOMException",
 // IMPORTANT: Do not change this list without review from a DOM peer!

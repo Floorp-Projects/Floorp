@@ -2028,7 +2028,6 @@ GK_ATOM(zh_tw, "zh-tw")
 GK_ATOM(x_cyrillic, "x-cyrillic")
 GK_ATOM(he, "he")
 GK_ATOM(ar, "ar")
-GK_ATOM(x_baltic, "x-baltic")
 GK_ATOM(x_devanagari, "x-devanagari")
 GK_ATOM(x_tamil, "x-tamil")
 GK_ATOM(x_armn, "x-armn")
@@ -2048,7 +2047,6 @@ GK_ATOM(x_tibt, "x-tibt")
 
 // used in gfxGDIFontList.h
 GK_ATOM(ko_xxx, "ko-xxx")
-GK_ATOM(x_central_euro, "x-central-euro")
 GK_ATOM(x_symbol, "x-symbol")
 
 // additional languages that have special case transformations

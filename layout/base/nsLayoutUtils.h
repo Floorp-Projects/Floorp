@@ -498,7 +498,8 @@ public:
    * geometry root.
    */
   static nsIFrame* GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
-                                              nsDisplayListBuilder* aBuilder);
+                                              nsDisplayListBuilder* aBuilder,
+                                              mozilla::layers::LayerManager* aManager);
 
   /**
    * Finds the nearest ancestor frame to aFrame that is considered to have (or

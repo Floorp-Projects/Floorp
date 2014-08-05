@@ -137,6 +137,7 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
     mKEAExpected(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
     mKEAKeyBits(0),
     mSSLVersionUsed(nsISSLSocketControl::SSL_VERSION_UNKNOWN),
+    mMACAlgorithmUsed(nsISSLSocketControl::SSL_MAC_UNKNOWN),
     mProviderFlags(providerFlags),
     mSocketCreationTimestamp(TimeStamp::Now()),
     mPlaintextBytesRead(0)
@@ -192,6 +193,13 @@ NS_IMETHODIMP
 nsNSSSocketInfo::GetSSLVersionUsed(int16_t* aSSLVersionUsed)
 {
   *aSSLVersionUsed = mSSLVersionUsed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetMACAlgorithmUsed(int16_t* aMac)
+{
+  *aMac = mMACAlgorithmUsed;
   return NS_OK;
 }
 

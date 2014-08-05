@@ -13,7 +13,8 @@
  * http://www.openwebfoundation.org/legal/the-owf-1-0-agreements/owfa-1-0.
  */
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=(Window, Worker)]
 interface URLUtilsReadOnly {
   stringifier;
   readonly attribute DOMString href;

@@ -37,15 +37,14 @@ interface ServiceWorkerContainer {
 };
 
 // Testing only.
-[ChromeOnly, Pref="dom.serviceWorkers.testing.enabled"]
 partial interface ServiceWorkerContainer {
-  [Throws]
+  [Throws,Pref="dom.serviceWorkers.testing.enabled"]
   Promise<any> clearAllServiceWorkerData();
 
-  [Throws]
+  [Throws,Pref="dom.serviceWorkers.testing.enabled"]
   DOMString getScopeForUrl(DOMString url);
 
-  [Throws]
+  [Throws,Pref="dom.serviceWorkers.testing.enabled"]
   DOMString getControllingWorkerScriptURLForPath(DOMString path);
 };
 
