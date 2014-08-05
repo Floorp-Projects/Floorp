@@ -2374,13 +2374,13 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
     unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan(), a->getClass());
 
     if (adynamic) {
-        reserved.newaslots = cx->pod_malloc<HeapSlot>(adynamic);
+        reserved.newaslots = a->zone()->pod_malloc<HeapSlot>(adynamic);
         if (!reserved.newaslots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(reserved.newaslots, adynamic);
     }
     if (bdynamic) {
-        reserved.newbslots = cx->pod_malloc<HeapSlot>(bdynamic);
+        reserved.newbslots = b->zone()->pod_malloc<HeapSlot>(bdynamic);
         if (!reserved.newbslots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(reserved.newbslots, bdynamic);
@@ -2856,13 +2856,13 @@ AllocateSlots(ThreadSafeContext *cx, JSObject *obj, uint32_t nslots)
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gc.nursery.allocateSlots(cx->asJSContext(), obj, nslots);
+        return cx->asJSContext()->runtime()->gc.nursery.allocateSlots(obj, nslots);
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().allocateSlots(obj, nslots);
 #endif
-    return cx->pod_malloc<HeapSlot>(nslots);
+    return obj->zone()->pod_malloc<HeapSlot>(nslots);
 }
 
 // This will not run the garbage collector.  If a nursery cannot accomodate the slot array
@@ -2875,8 +2875,7 @@ ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
-        return cx->asJSContext()->runtime()->gc.nursery.reallocateSlots(cx->asJSContext(),
-                                                                        obj, oldSlots,
+        return cx->asJSContext()->runtime()->gc.nursery.reallocateSlots(obj, oldSlots,
                                                                         oldCount, newCount);
     }
 #endif
@@ -2886,8 +2885,7 @@ ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
                                                                   oldCount, newCount);
     }
 #endif
-    return (HeapSlot *)cx->realloc_(oldSlots, oldCount * sizeof(HeapSlot),
-                                    newCount * sizeof(HeapSlot));
+    return obj->zone()->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
 }
 
 /* static */ bool
@@ -2958,7 +2956,7 @@ FreeSlots(ThreadSafeContext *cx, HeapSlot *slots)
 #ifdef JSGC_GENERATIONAL
     // Note: threads without a JSContext do not have access to GGC nursery allocated things.
     if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gc.nursery.freeSlots(cx->asJSContext(), slots);
+        return cx->asJSContext()->runtime()->gc.nursery.freeSlots(slots);
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
@@ -3186,14 +3184,14 @@ AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext())
-        return cx->asJSContext()->runtime()->gc.nursery.allocateElements(cx->asJSContext(), obj, nelems);
+        return cx->asJSContext()->runtime()->gc.nursery.allocateElements(obj, nelems);
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().allocateElements(obj, nelems);
 #endif
 
-    return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
+    return reinterpret_cast<js::ObjectElements *>(obj->zone()->pod_malloc<HeapSlot>(nelems));
 }
 
 // This will not run the garbage collector.  If a nursery cannot accomodate the element array
@@ -3204,9 +3202,8 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
 {
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
-        return cx->asJSContext()->runtime()->gc.nursery.reallocateElements(cx->asJSContext(), obj,
-                                                                           oldHeader, oldCount,
-                                                                           newCount);
+        return cx->asJSContext()->runtime()->gc.nursery.reallocateElements(obj, oldHeader,
+                                                                           oldCount, newCount);
     }
 #endif
 #ifdef JSGC_FJGENERATIONAL
@@ -3216,8 +3213,9 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
     }
 #endif
 
-    return static_cast<js::ObjectElements *>(cx->realloc_(oldHeader, oldCount * sizeof(HeapSlot),
-                                                          newCount * sizeof(HeapSlot)));
+    return reinterpret_cast<js::ObjectElements *>(
+            obj->zone()->pod_realloc<HeapSlot>(reinterpret_cast<HeapSlot *>(oldHeader),
+                                               oldCount, newCount));
 }
 
 // Round up |count| to one of our standard slot counts.  Up to 1 mebislot (i.e.
