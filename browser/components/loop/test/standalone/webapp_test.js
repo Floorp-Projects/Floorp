@@ -69,9 +69,13 @@ describe("loop.webapp", function() {
   });
 
   describe("WebappRouter", function() {
-    var router, conversation;
+    var router, conversation, client;
 
     beforeEach(function() {
+      client = new loop.StandaloneClient({
+        baseServerUrl: "http://fake.example.com"
+      });
+      sandbox.stub(client, "requestCallInfo");
       conversation = new sharedModels.ConversationModel({}, {
         sdk: {},
         pendingCallTimeout: 1000
@@ -79,6 +83,7 @@ describe("loop.webapp", function() {
       sandbox.stub(loop.webapp.WebappRouter.prototype, "loadReactComponent");
       router = new loop.webapp.WebappRouter({
         helper: {},
+        client: client,
         conversation: conversation,
         notifier: notifier
       });
@@ -162,14 +167,14 @@ describe("loop.webapp", function() {
           expect(conversation.get("loopToken")).eql("fakeToken");
         });
 
-        it("should load the ConversationFormView", function() {
+        it("should load the StartConversationView", function() {
           router.initiate("fakeToken");
 
           sinon.assert.calledOnce(router.loadReactComponent);
           sinon.assert.calledWithExactly(router.loadReactComponent,
             sinon.match(function(value) {
               return React.addons.TestUtils.isDescriptorOfType(
-                value, loop.webapp.ConversationFormView);
+                value, loop.webapp.StartConversationView);
             }));
         });
 
@@ -242,7 +247,8 @@ describe("loop.webapp", function() {
 
       it("should navigate to call/ongoing/:token once call session is ready",
         function() {
-          conversation.trigger("session:ready");
+          router.setupOutgoingCall();
+          conversation.outgoing(fakeSessionData);
 
           sinon.assert.calledOnce(router.navigate);
           sinon.assert.calledWith(router.navigate, "call/ongoing/fakeToken");
@@ -270,17 +276,81 @@ describe("loop.webapp", function() {
           sinon.assert.calledWithMatch(router.navigate, "call/fakeToken");
         });
 
-      it("should navigate to call/expired when a session:expired event is " +
-         "received", function() {
-        conversation.trigger("session:expired");
+      describe("#setupOutgoingCall", function() {
+        beforeEach(function() {
+          router.initiate();
+        });
 
-        sinon.assert.calledOnce(router.navigate);
-        sinon.assert.calledWith(router.navigate, "/call/expired");
+        describe("No loop token", function() {
+          it("should navigate to home", function() {
+            conversation.setupOutgoingCall();
+
+            sinon.assert.calledOnce(router.navigate);
+            sinon.assert.calledWithMatch(router.navigate, "home");
+          });
+
+          it("should display an error", function() {
+            conversation.setupOutgoingCall();
+
+            sinon.assert.calledOnce(notifier.errorL10n);
+          });
+        });
+
+        describe("Has loop token", function() {
+          beforeEach(function() {
+            conversation.set("loopToken", "fakeToken");
+            sandbox.stub(conversation, "outgoing");
+          });
+
+          it("should call requestCallInfo on the client",
+            function() {
+              conversation.setupOutgoingCall();
+
+              sinon.assert.calledOnce(client.requestCallInfo);
+              sinon.assert.calledWith(client.requestCallInfo, "fakeToken",
+                                      "audio-video");
+            });
+
+          describe("requestCallInfo response handling", function() {
+            it("should navigate to call/expired when a session has expired",
+               function() {
+                client.requestCallInfo.callsArgWith(2, {errno: 105});
+                conversation.setupOutgoingCall();
+
+                sinon.assert.calledOnce(router.navigate);
+                sinon.assert.calledWith(router.navigate, "/call/expired");
+              });
+
+            it("should navigate to home on any other error", function() {
+              client.requestCallInfo.callsArgWith(2, {errno: 104});
+              conversation.setupOutgoingCall();
+
+              sinon.assert.calledOnce(router.navigate);
+              sinon.assert.calledWith(router.navigate, "home");
+              });
+
+            it("should notify the user on any other error", function() {
+              client.requestCallInfo.callsArgWith(2, {errno: 104});
+              conversation.setupOutgoingCall();
+
+              sinon.assert.calledOnce(notifier.errorL10n);
+            });
+
+            it("should call outgoing on the conversation model when details " +
+               "are successfully received", function() {
+                client.requestCallInfo.callsArgWith(2, null, fakeSessionData);
+                conversation.setupOutgoingCall();
+
+                sinon.assert.calledOnce(conversation.outgoing);
+                sinon.assert.calledWithExactly(conversation.outgoing, fakeSessionData);
+              });
+          });
+        });
       });
     });
   });
 
-  describe("ConversationFormView", function() {
+  describe("StartConversationView", function() {
     var conversation;
 
     beforeEach(function() {
@@ -298,7 +368,8 @@ describe("loop.webapp", function() {
     });
 
     describe("#initiate", function() {
-      var conversation, initiate, view, fakeSubmitEvent, requestCallUrlInfo;
+      var conversation, setupOutgoingCall, view, fakeSubmitEvent,
+          requestCallUrlInfo;
 
       beforeEach(function() {
         conversation = new sharedModels.ConversationModel({}, {
@@ -307,17 +378,17 @@ describe("loop.webapp", function() {
         });
 
         fakeSubmitEvent = {preventDefault: sinon.spy()};
-        initiate = sinon.stub(conversation, "initiate");
+        setupOutgoingCall = sinon.stub(conversation, "setupOutgoingCall");
 
         var standaloneClientStub = {
           requestCallUrlInfo: function(token, cb) {
             cb(null, {urlCreationDate: 0});
           },
           settings: {baseServerUrl: loop.webapp.baseServerUrl}
-        }
+        };
 
         view = React.addons.TestUtils.renderIntoDocument(
-            loop.webapp.ConversationFormView({
+            loop.webapp.StartConversationView({
               model: conversation,
               notifier: notifier,
               client: standaloneClientStub
@@ -329,11 +400,7 @@ describe("loop.webapp", function() {
         var button = view.getDOMNode().querySelector("button");
         React.addons.TestUtils.Simulate.click(button);
 
-        sinon.assert.calledOnce(initiate);
-        sinon.assert.calledWith(initiate, sinon.match(function (value) {
-          return !!value.outgoing &&
-            (value.client.settings.baseServerUrl === loop.webapp.baseServerUrl)
-        }, "outgoing: true && correct baseServerUrl"));
+        sinon.assert.calledOnce(setupOutgoingCall);
       });
 
       it("should disable current form once session is initiated", function() {
@@ -373,7 +440,7 @@ describe("loop.webapp", function() {
         requestCallUrlInfo = sandbox.stub();
 
         view = React.addons.TestUtils.renderIntoDocument(
-            loop.webapp.ConversationFormView({
+            loop.webapp.StartConversationView({
               model: conversation,
               notifier: notifier,
               client: {requestCallUrlInfo: requestCallUrlInfo}
