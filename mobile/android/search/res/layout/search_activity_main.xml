@@ -5,10 +5,17 @@
 <merge
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
     tools:context=".MainActivity">
+
+    <org.mozilla.search.autocomplete.ClearableEditText
+        android:id="@+id/search_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/search_bar_height"
+        android:paddingTop="@dimen/search_bar_padding_y"
+        android:paddingBottom="@dimen/search_bar_padding_y"
+        android:paddingLeft="@dimen/card_background_padding_x"
+        android:paddingRight="@dimen/card_background_padding_x"
+        android:layout_gravity="top"/>
 
     <fragment
         android:id="@+id/postsearch"
@@ -26,12 +33,22 @@
         android:layout_marginTop="@dimen/search_bar_height"
         android:layout_gravity="top"/>
 
-    <fragment
-        android:id="@+id/search_fragment"
-        android:name="org.mozilla.search.autocomplete.SearchFragment"
+    <LinearLayout
+        android:id="@+id/suggestions_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="top"/>
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/search_bar_height"
+        android:visibility="invisible"
+        android:layout_gravity="top">
+
+        <fragment
+            android:id="@+id/suggestions"
+            android:name="org.mozilla.search.autocomplete.SuggestionsFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
 
     <View
         android:id="@+id/animation_card"
