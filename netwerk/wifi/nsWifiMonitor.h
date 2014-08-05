@@ -38,7 +38,7 @@ class nsWifiListener
 {
  public:
 
-  nsWifiListener(nsMainThreadPtrHolder<nsIWifiListener>* aListener)
+  explicit nsWifiListener(nsMainThreadPtrHolder<nsIWifiListener>* aListener)
   {
     mListener = aListener;
     mHasSentData = false;

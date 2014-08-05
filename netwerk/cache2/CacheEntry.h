@@ -354,7 +354,7 @@ private:
 class CacheEntryHandle : public nsICacheEntry
 {
 public:
-  CacheEntryHandle(CacheEntry* aEntry);
+  explicit CacheEntryHandle(CacheEntry* aEntry);
   CacheEntry* Entry() const { return mEntry; }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -376,7 +376,7 @@ private:
   virtual ~CacheOutputCloseListener();
 
   NS_DECL_NSIRUNNABLE
-  CacheOutputCloseListener(CacheEntry* aEntry);
+  explicit CacheOutputCloseListener(CacheEntry* aEntry);
 
 private:
   nsRefPtr<CacheEntry> mEntry;

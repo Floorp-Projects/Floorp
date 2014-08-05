@@ -36,7 +36,7 @@ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
-  nsDomainEntry(KeyTypePointer aEntry)
+  explicit nsDomainEntry(KeyTypePointer aEntry)
   {
   }
 

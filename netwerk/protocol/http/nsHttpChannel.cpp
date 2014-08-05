@@ -154,7 +154,7 @@ WillRedirect(const nsHttpResponseHead * response)
 class AutoRedirectVetoNotifier
 {
 public:
-    AutoRedirectVetoNotifier(nsHttpChannel* channel) : mChannel(channel)
+    explicit AutoRedirectVetoNotifier(nsHttpChannel* channel) : mChannel(channel)
     {
       if (mChannel->mHasAutoRedirectVetoNotifier) {
         MOZ_CRASH("Nested AutoRedirectVetoNotifier on the stack");
