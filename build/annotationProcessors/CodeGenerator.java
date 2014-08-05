@@ -427,7 +427,7 @@ public class CodeGenerator {
      */
     private void writeMethodBody(String methodSignature, String aCMethodName, Method aMethod,
             Class<?> aClass, boolean aIsStaticBridgeMethod, boolean aIsMultithreaded,
-				 boolean aNoThrow, boolean aNarrowChars) {
+            boolean aNoThrow, boolean aNarrowChars) {
         Class<?>[] argumentTypes = aMethod.getParameterTypes();
         Class<?> returnType = aMethod.getReturnType();
 
@@ -495,8 +495,8 @@ public class CodeGenerator {
         // value.
         if (isObjectReturningMethod) {
             wrapperMethodBodies.append("    ")
-		.append(Utils.getCReturnType(returnType, aNarrowChars))
-		.append(" ret = static_cast<").append(Utils.getCReturnType(returnType, aNarrowChars)).append(">(env->PopLocalFrame(temp));\n" +
+                               .append(Utils.getCReturnType(returnType, aNarrowChars))
+                               .append(" ret = static_cast<").append(Utils.getCReturnType(returnType, aNarrowChars)).append(">(env->PopLocalFrame(temp));\n" +
                                        "    return ret;\n");
         } else if (!returnType.getCanonicalName().equals("void")) {
             // If we're a primitive-returning function, just return the directly-obtained primative
