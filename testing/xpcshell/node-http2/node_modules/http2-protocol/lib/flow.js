@@ -19,7 +19,7 @@ exports.Flow = Flow;
 // * **setInitialWindow(size)**: the initial flow control window size can be changed *any time*
 //   ([as described in the standard][1]) using this method
 //
-// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.9.2
+// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-14#section-6.9.2
 
 // API for child classes
 // ---------------------
