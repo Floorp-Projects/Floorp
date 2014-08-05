@@ -291,7 +291,7 @@ public:
 class AccReorderEvent : public AccEvent
 {
 public:
-  AccReorderEvent(Accessible* aTarget) :
+  explicit AccReorderEvent(Accessible* aTarget) :
     AccEvent(::nsIAccessibleEvent::EVENT_REORDER, aTarget,
              eAutoDetect, eCoalesceReorder) { }
   virtual ~AccReorderEvent() { }
@@ -499,7 +499,7 @@ private:
 class downcast_accEvent
 {
 public:
-  downcast_accEvent(AccEvent* e) : mRawPtr(e) { }
+  explicit downcast_accEvent(AccEvent* e) : mRawPtr(e) { }
 
   template<class Destination>
   operator Destination*() {

@@ -96,7 +96,7 @@ struct GroupPos
 class index_t
 {
 public:
-  index_t(int32_t aVal) : mVal(aVal) {}
+  MOZ_IMPLICIT index_t(int32_t aVal) : mVal(aVal) {}
 
   operator uint32_t() const
   {
