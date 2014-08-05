@@ -132,6 +132,12 @@ struct MallocProvider
         return mozilla::UniquePtr<T[], JS::FreePolicy>(pod_calloc<T>(numElems, comp, cx));
     }
 
+    template <class T>
+    T *pod_realloc(T *prior, size_t oldSize, size_t newSize) {
+        return (T *)realloc_(prior, oldSize * sizeof(T), newSize * sizeof(T));
+    }
+
+
     JS_DECLARE_NEW_METHODS(new_, malloc_, MOZ_ALWAYS_INLINE)
     JS_DECLARE_MAKE_METHODS(make_unique, new_, MOZ_ALWAYS_INLINE)
 };
