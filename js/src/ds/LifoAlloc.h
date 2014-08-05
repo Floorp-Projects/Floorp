@@ -529,11 +529,14 @@ class LifoAllocPolicy
         memset(p, 0, numElems * sizeof(T));
         return p;
     }
-    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
-        void *n = malloc_(bytes);
+    template <typename T>
+    T *pod_realloc(T *p, size_t oldSize, size_t newSize) {
+        if (newSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+            return nullptr;
+        T *n = (T *)malloc_(newSize * sizeof(T));
         if (fb == Fallible && !n)
             return nullptr;
-        memcpy(n, p, Min(oldBytes, bytes));
+        memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
         return n;
     }
     void free_(void *p) {

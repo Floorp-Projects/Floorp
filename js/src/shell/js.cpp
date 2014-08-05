@@ -499,7 +499,7 @@ ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, 
          * coincides with the end of a line.
          */
         int startline = lineno;
-        typedef Vector<char, 32, ContextAllocPolicy> CharBuffer;
+        typedef Vector<char, 32> CharBuffer;
         CharBuffer buffer(cx);
         do {
             ScheduleWatchdog(cx->runtime(), -1);
@@ -1507,7 +1507,7 @@ ReadLine(JSContext *cx, unsigned argc, jsval *vp)
         char *tmp;
         bufsize *= 2;
         if (bufsize > buflength) {
-            tmp = (char *) JS_realloc(cx, buf, bufsize);
+            tmp = static_cast<char *>(JS_realloc(cx, buf, bufsize / 2, bufsize));
         } else {
             JS_ReportOutOfMemory(cx);
             tmp = nullptr;
@@ -1529,7 +1529,7 @@ ReadLine(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     /* Shrink the buffer to the real size. */
-    char *tmp = static_cast<char*>(JS_realloc(cx, buf, buflength));
+    char *tmp = static_cast<char *>(JS_realloc(cx, buf, bufsize, buflength));
     if (!tmp) {
         JS_free(cx, buf);
         return false;
