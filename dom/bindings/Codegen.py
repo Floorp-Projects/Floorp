@@ -9548,7 +9548,7 @@ class CGProxyIndexedPresenceChecker(CGProxyIndexedGetter):
 
     foundVar: See the docstring for CGProxySpecialOperation.
     """
-    def __init__(self, descriptor, foundVar=None):
+    def __init__(self, descriptor, foundVar):
         CGProxyIndexedGetter.__init__(self, descriptor, foundVar=foundVar)
         self.cgRoot.append(CGGeneric("(void)result;\n"))
 
@@ -9934,13 +9934,14 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             if self.descriptor.supportsNamedProperties():
                 set += fill(
                     """
+                    bool found;
                     $*{presenceChecker}
 
                     if (found) {
                       return js::IsInNonStrictPropertySet(cx) || ThrowErrorMessage(cx, MSG_NO_NAMED_SETTER, "${name}");
                     }
                     """,
-                    presenceChecker=CGProxyNamedPresenceChecker(self.descriptor).define(),
+                    presenceChecker=CGProxyNamedPresenceChecker(self.descriptor, foundVar="found").define(),
                     name=self.descriptor.name)
             set += ("return mozilla::dom::DOMProxyHandler::defineProperty(%s);\n" %
                     ", ".join(a.name for a in self.args))
@@ -9958,40 +9959,51 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
         self.descriptor = descriptor
 
     def getBody(self):
-        def getDeleterBody(type):
+        def getDeleterBody(type, foundVar=None):
             """
             type should be "Named" or "Indexed"
             """
             assert type in ("Named", "Indexed")
             deleter = self.descriptor.operations[type + 'Deleter']
             if deleter:
+                decls = ""
                 if (not deleter.signatures()[0][0].isPrimitive() or
                     deleter.signatures()[0][0].nullable() or
                     deleter.signatures()[0][0].tag() != IDLType.Tags.bool):
                     setBp = "*bp = true;\n"
                 else:
-                    setBp = dedent("""
-                        if (found) {
+                    decls += "bool result;\n"
+                    if foundVar is None:
+                        foundVar = "found"
+                        decls += "bool found;\n"
+                    setBp = fill(
+                        """
+                        if (${foundVar}) {
                           *bp = result;
                         } else {
                           *bp = true;
                         }
-                        """)
+                        """,
+                        foundVar=foundVar)
                 deleterClass = globals()["CGProxy%sDeleter" % type]
-                body = (deleterClass(self.descriptor).define() +
+                body = (decls +
+                        deleterClass(self.descriptor, resultVar="result", foundVar=foundVar).define() +
                         setBp)
             elif getattr(self.descriptor, "supports%sProperties" % type)():
                 presenceCheckerClass = globals()["CGProxy%sPresenceChecker" % type]
+                foundDecl = ""
+                if foundVar is None:
+                    foundVar = "found"
+                    foundDecl = "bool found;\n"
                 body = fill(
                     """
+                    $*{foundDecl}
                     $*{presenceChecker}
-                    if (found) {
-                      *bp = false;
-                    } else {
-                      *bp = true;
-                    }
+                    *bp = !${foundVar};
                     """,
-                    presenceChecker=presenceCheckerClass(self.descriptor).define())
+                    foundDecl=foundDecl,
+                    presenceChecker=presenceCheckerClass(self.descriptor, foundVar=foundVar).define(),
+                    foundVar=foundVar)
             else:
                 body = None
             return body
@@ -10029,15 +10041,20 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
             delete += CallOnUnforgeableHolder(self.descriptor, unforgeable)
             delete += "\n"
 
-        namedBody = getDeleterBody("Named")
+        namedBody = getDeleterBody("Named", foundVar="found")
         if namedBody is not None:
             # We always return above for an index id in the case when we support
             # indexed properties, so we can just treat the id as a name
             # unconditionally here.
-            delete += (namedBody +
-                       "if (found) {\n"
-                       "  return true;\n"
-                       "}\n")
+            delete += fill(
+                """
+                bool found;
+                $*{namedBody}
+                if (found) {
+                  return true;
+                }
+                """,
+                namedBody=namedBody)
             if not self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
                 delete = CGIfWrapper(CGGeneric(delete),
                                      "!HasPropertyOnPrototype(cx, proxy, id)").define()
@@ -10142,6 +10159,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                 """
                 int32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
+                  bool found;
                   $*{presenceChecker}
 
                   *bp = found;
@@ -10149,7 +10167,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                 }
 
                 """,
-                presenceChecker=CGProxyIndexedPresenceChecker(self.descriptor).define())
+                presenceChecker=CGProxyIndexedPresenceChecker(self.descriptor, foundVar="found").define())
         else:
             indexed = ""
 
@@ -10171,11 +10189,12 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
             # property names, so no need to check for those here.
             named = fill(
                 """
+                bool found;
                 $*{presenceChecker}
 
                 *bp = found;
                 """,
-                presenceChecker=CGProxyNamedPresenceChecker(self.descriptor).define())
+                presenceChecker=CGProxyNamedPresenceChecker(self.descriptor, foundVar="found").define())
             if not self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
                 named = CGIfWrapper(CGGeneric(named + "return true;\n"),
                                     "!HasPropertyOnPrototype(cx, proxy, id)").define()
