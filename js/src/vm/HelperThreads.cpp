@@ -735,6 +735,7 @@ GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
         !GlobalObject::ensureConstructor(cx, global, JSProto_RegExp) ||
         !GlobalObject::ensureConstructor(cx, global, JSProto_Iterator))
     {
+        LeaveParseTaskZone(rt, parseTask);
         return nullptr;
     }
 
