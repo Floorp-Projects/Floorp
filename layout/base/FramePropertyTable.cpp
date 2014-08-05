@@ -231,15 +231,7 @@ FramePropertyTable::DeleteAll()
 size_t
 FramePropertyTable::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return mEntries.SizeOfExcludingThis(SizeOfPropertyTableEntryExcludingThis,
-                                      aMallocSizeOf);
+  return mEntries.SizeOfExcludingThis(aMallocSizeOf);
 }
 
-/* static */ size_t
-FramePropertyTable::SizeOfPropertyTableEntryExcludingThis(Entry* aEntry,
-                      mozilla::MallocSizeOf aMallocSizeOf, void *)
-{
-  return aEntry->mProp.SizeOfExcludingThis(aMallocSizeOf);
-}
-
-}
+} // namespace mozilla

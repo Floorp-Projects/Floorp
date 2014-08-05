@@ -766,10 +766,7 @@ private:
 
         void Clear();
 
-        static size_t
-        SizeOfEntryExcludingThis(FontTableHashEntry *aEntry,
-                                 mozilla::MallocSizeOf aMallocSizeOf,
-                                 void* aUserArg);
+        size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
     private:
         static void DeleteFontTableBlobData(void *aBlobData);
@@ -2211,15 +2208,15 @@ protected:
             return aKey->mHashKey;
         }
 
+        size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+        {
+            return aMallocSizeOf(mShapedWord.get());
+        }
+
         enum { ALLOW_MEMMOVE = true };
 
         nsAutoPtr<gfxShapedWord> mShapedWord;
     };
-
-    static size_t
-    WordCacheEntrySizeOfExcludingThis(CacheHashEntry*   aHashEntry,
-                                      mozilla::MallocSizeOf aMallocSizeOf,
-                                      void*             aUserArg);
 
     nsAutoPtr<nsTHashtable<CacheHashEntry> > mWordCache;
 

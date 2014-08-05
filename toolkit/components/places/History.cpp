@@ -2223,12 +2223,6 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
   return NS_OK;
 }
 
-/* static */ size_t
-History::SizeOfEntryExcludingThis(KeyClass* aEntry, mozilla::MallocSizeOf aMallocSizeOf, void *)
-{
-  return aEntry->array.SizeOfExcludingThis(aMallocSizeOf);
-}
-
 MOZ_DEFINE_MALLOC_SIZE_OF(HistoryMallocSizeOf)
 
 NS_IMETHODIMP
@@ -2246,7 +2240,7 @@ size_t
 History::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOfThis)
 {
   return aMallocSizeOfThis(this) +
-         mObservers.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOfThis);
+         mObservers.SizeOfExcludingThis(aMallocSizeOfThis);
 }
 
 /* static */

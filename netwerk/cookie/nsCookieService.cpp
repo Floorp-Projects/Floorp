@@ -630,14 +630,6 @@ nsCookieEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return amount;
 }
 
-static size_t
-HostTableEntrySizeOfExcludingThis(nsCookieEntry *aEntry,
-                                  MallocSizeOf aMallocSizeOf,
-                                  void *arg)
-{
-  return aEntry->SizeOfExcludingThis(aMallocSizeOf);
-}
-
 size_t
 CookieDomainTuple::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
@@ -649,28 +641,18 @@ CookieDomainTuple::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return amount;
 }
 
-static size_t
-ReadSetEntrySizeOfExcludingThis(nsCookieKey *aEntry,
-                                MallocSizeOf aMallocSizeOf,
-                                void *)
-{
-  return aEntry->SizeOfExcludingThis(aMallocSizeOf);
-}
-
 size_t
 DBState::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = 0;
 
   amount += aMallocSizeOf(this);
-  amount += hostTable.SizeOfExcludingThis(HostTableEntrySizeOfExcludingThis,
-                                          aMallocSizeOf);
+  amount += hostTable.SizeOfExcludingThis(aMallocSizeOf);
   amount += hostArray.SizeOfExcludingThis(aMallocSizeOf);
   for (uint32_t i = 0; i < hostArray.Length(); ++i) {
     amount += hostArray[i].SizeOfExcludingThis(aMallocSizeOf);
   }
-  amount += readSet.SizeOfExcludingThis(ReadSetEntrySizeOfExcludingThis,
-                                        aMallocSizeOf);
+  amount += readSet.SizeOfExcludingThis(aMallocSizeOf);
 
   return amount;
 }

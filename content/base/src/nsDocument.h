@@ -221,13 +221,11 @@ public:
       return mozilla::HashGeneric(aKey->mCallback, aKey->mData);
     }
     enum { ALLOW_MEMMOVE = true };
-    
+
     ChangeCallback mKey;
   };
 
-  static size_t SizeOfExcludingThis(nsIdentifierMapEntry* aEntry,
-                                    mozilla::MallocSizeOf aMallocSizeOf,
-                                    void* aArg);
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
   void FireChangeCallbacks(Element* aOldElement, Element* aNewElement,

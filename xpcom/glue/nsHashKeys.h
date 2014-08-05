@@ -92,6 +92,15 @@ public:
   {
     return mozilla::HashString(*aKey);
   }
+
+#ifdef MOZILLA_INTERNAL_API
+  // To avoid double-counting, only measure the string if it is unshared.
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return GetKey().SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+  }
+#endif
+
   enum { ALLOW_MEMMOVE = true };
 
 private:
@@ -140,6 +149,12 @@ public:
   }
   enum { ALLOW_MEMMOVE = true };
 
+  // To avoid double-counting, only measure the string if it is unshared.
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return GetKey().SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+  }
+
 private:
   const nsString mStr;
 };
@@ -169,6 +184,15 @@ public:
   {
     return mozilla::HashString(*aKey);
   }
+
+#ifdef MOZILLA_INTERNAL_API
+  // To avoid double-counting, only measure the string if it is unshared.
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return GetKey().SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+  }
+#endif
+
   enum { ALLOW_MEMMOVE = true };
 
 private:
@@ -521,7 +545,7 @@ public:
     return mozilla::HashString(aKey);
   }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
     return aMallocSizeOf(mKey);
   }
@@ -569,6 +593,11 @@ public:
   static PLDHashNumber HashKey(KeyTypePointer aKey)
   {
     return mozilla::HashString(aKey);
+  }
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(mKey);
   }
 
   enum { ALLOW_MEMMOVE = true };
