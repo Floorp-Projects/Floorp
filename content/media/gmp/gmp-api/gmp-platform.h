@@ -50,7 +50,7 @@ class GMPThread {
 public:
   virtual ~GMPThread() {}
   virtual void Post(GMPTask* aTask) = 0;
-  virtual void Join() = 0;
+  virtual void Join() = 0; // Deletes GMPThread!
 };
 
 class GMPMutex {
