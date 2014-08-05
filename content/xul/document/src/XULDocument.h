@@ -412,14 +412,7 @@ protected:
 
     /**
      * Execute the precompiled script object scoped by this XUL document's
-     * containing window object, and using its associated script context.
-     */
-    nsresult ExecuteScript(nsIScriptContext *aContext,
-                           JS::Handle<JSScript*> aScriptObject);
-
-    /**
-     * Helper method for the above that uses aScript to find the appropriate
-     * script context and object.
+     * containing window object.
      */
     nsresult ExecuteScript(nsXULPrototypeScript *aScript);
 

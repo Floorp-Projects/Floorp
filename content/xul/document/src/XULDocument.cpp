@@ -87,6 +87,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/NodeInfoInlines.h"
 #include "mozilla/dom/ProcessingInstruction.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/XULDocumentBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/LoadInfo.h"
@@ -3683,39 +3684,6 @@ XULDocument::OnScriptCompileComplete(JSScript* aScript, nsresult aStatus)
 }
 
 nsresult
-XULDocument::ExecuteScript(nsIScriptContext * aContext,
-                           JS::Handle<JSScript*> aScriptObject)
-{
-    NS_PRECONDITION(aScriptObject != nullptr && aContext != nullptr, "null ptr");
-    if (! aScriptObject || ! aContext)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_ENSURE_TRUE(mScriptGlobalObject, NS_ERROR_NOT_INITIALIZED);
-
-    // Execute the precompiled script with the given version
-    nsAutoMicroTask mt;
-    JSContext *cx = aContext->GetNativeContext();
-    AutoCxPusher pusher(cx);
-    JS::Rooted<JSObject*> baseGlobal(cx, mScriptGlobalObject->GetGlobalJSObject());
-    NS_ENSURE_TRUE(baseGlobal, NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(nsContentUtils::GetSecurityManager()->ScriptAllowed(baseGlobal), NS_OK);
-
-    JSAddonId *addonId = MapURIToAddonID(mCurrentPrototype->GetURI());
-    JS::Rooted<JSObject*> global(cx, xpc::GetAddonScope(cx, baseGlobal, addonId));
-    NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-
-    JS::ExposeObjectToActiveJS(global);
-    xpc_UnmarkGrayScript(aScriptObject);
-    JSAutoCompartment ac(cx, global);
-
-    // The script is in the compilation scope. Clone it into the target scope
-    // and execute it.
-    if (!JS::CloneAndExecuteScript(cx, global, aScriptObject))
-        nsJSUtils::ReportPendingException(cx);
-    return NS_OK;
-}
-
-nsresult
 XULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
 {
     NS_PRECONDITION(aScript != nullptr, "null ptr");
@@ -3726,16 +3694,34 @@ XULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     rv = mScriptGlobalObject->EnsureScriptEnvironment();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIScriptContext> context =
-      mScriptGlobalObject->GetScriptContext();
-    // failure getting a script context is fatal.
-    NS_ENSURE_TRUE(context != nullptr, NS_ERROR_UNEXPECTED);
+    JS::HandleScript scriptObject = aScript->GetScriptObject();
+    NS_ENSURE_TRUE(scriptObject, NS_ERROR_UNEXPECTED);
 
-    if (aScript->GetScriptObject())
-        rv = ExecuteScript(context, aScript->GetScriptObject());
-    else
-        rv = NS_ERROR_UNEXPECTED;
-    return rv;
+    // Execute the precompiled script with the given version
+    nsAutoMicroTask mt;
+
+    // We're about to run script via JS::CloneAndExecuteScript, so we need an
+    // AutoEntryScript. This is Gecko specific and not in any spec.
+    AutoEntryScript aes(mScriptGlobalObject);
+    JSContext* cx = aes.cx();
+    JS::Rooted<JSObject*> baseGlobal(cx, JS::CurrentGlobalOrNull(cx));
+    NS_ENSURE_TRUE(nsContentUtils::GetSecurityManager()->ScriptAllowed(baseGlobal), NS_OK);
+
+    JSAddonId* addonId = MapURIToAddonID(mCurrentPrototype->GetURI());
+    JS::Rooted<JSObject*> global(cx, xpc::GetAddonScope(cx, baseGlobal, addonId));
+    NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+
+    JS::ExposeObjectToActiveJS(global);
+    xpc_UnmarkGrayScript(scriptObject);
+    JSAutoCompartment ac(cx, global);
+
+    // The script is in the compilation scope. Clone it into the target scope
+    // and execute it.
+    if (!JS::CloneAndExecuteScript(cx, global, scriptObject)) {
+        nsJSUtils::ReportPendingException(cx);
+    }
+
+    return NS_OK;
 }
 
 
