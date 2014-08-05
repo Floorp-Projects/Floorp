@@ -2240,11 +2240,6 @@ pref("font.minimum-size.tr", 0);
 pref("font.size.variable.tr", 16);
 pref("font.size.fixed.tr", 13);
 
-pref("font.default.x-baltic", "serif");
-pref("font.minimum-size.x-baltic", 0);
-pref("font.size.variable.x-baltic", 16);
-pref("font.size.fixed.x-baltic", 13);
-
 pref("font.default.x-central-euro", "serif");
 pref("font.minimum-size.x-central-euro", 0);
 pref("font.size.variable.x-central-euro", 16);
@@ -2535,11 +2530,6 @@ pref("font.name.serif.tr", "Times New Roman");
 pref("font.name.sans-serif.tr", "Arial");
 pref("font.name.monospace.tr", "Courier New");
 pref("font.name.cursive.tr", "Comic Sans MS");
-
-pref("font.name.serif.x-baltic", "Times New Roman");
-pref("font.name.sans-serif.x-baltic", "Arial");
-pref("font.name.monospace.x-baltic", "Courier New");
-pref("font.name.cursive.x-baltic", "Comic Sans MS");
 
 pref("font.name.serif.x-central-euro", "Times New Roman");
 pref("font.name.sans-serif.x-central-euro", "Arial");
@@ -2920,17 +2910,6 @@ pref("font.name-list.serif.x-armn", "Mshtakan");
 pref("font.name-list.sans-serif.x-armn", "Mshtakan");
 pref("font.name-list.monospace.x-armn", "Mshtakan");
 
-pref("font.name.serif.x-baltic", "Times");
-pref("font.name.sans-serif.x-baltic", "Helvetica");
-pref("font.name.monospace.x-baltic", "Courier");
-pref("font.name.cursive.x-baltic", "Apple Chancery");
-pref("font.name.fantasy.x-baltic", "Papyrus");
-pref("font.name-list.serif.x-baltic", "Times");
-pref("font.name-list.sans-serif.x-baltic", "Helvetica");
-pref("font.name-list.monospace.x-baltic", "Courier");
-pref("font.name-list.cursive.x-baltic", "Apple Chancery");
-pref("font.name-list.fantasy.x-baltic", "Papyrus");
-
 // SolaimanLipi, Rupali http://ekushey.org/?page/mac_download
 pref("font.name.serif.x-beng", "Bangla MN");
 pref("font.name.sans-serif.x-beng", "Bangla Sangam MN");
@@ -3269,10 +3248,6 @@ pref("font.name.serif.tr", "Charis SIL Compact");
 pref("font.name.sans-serif.tr", "Fira Sans");
 pref("font.name.monospace.tr", "Fira Mono");
 
-pref("font.name.serif.x-baltic", "Charis SIL Compact");
-pref("font.name.sans-serif.x-baltic", "Fira Sans");
-pref("font.name.monospace.x-baltic", "Fira Mono");
-
 pref("font.name.serif.x-central-euro", "Charis SIL Compact");
 pref("font.name.sans-serif.x-central-euro", "Fira Sans");
 pref("font.name.monospace.x-central-euro", "Fira Mono");
@@ -3343,12 +3318,6 @@ pref("font.name.monospace.tr", "Droid Sans Mono");
 pref("font.name-list.serif.tr", "Droid Serif");
 pref("font.name-list.sans-serif.tr", "Clear Sans, Roboto, Droid Sans");
 
-pref("font.name.serif.x-baltic", "Charis SIL Compact");
-pref("font.name.sans-serif.x-baltic", "Clear Sans");
-pref("font.name.monospace.x-baltic", "Droid Sans Mono");
-pref("font.name-list.serif.x-baltic", "Droid Serif");
-pref("font.name-list.sans-serif.x-baltic", "Clear Sans, Roboto, Droid Sans");
-
 pref("font.name.serif.x-central-euro", "Charis SIL Compact");
 pref("font.name.sans-serif.x-central-euro", "Clear Sans");
 pref("font.name.monospace.x-central-euro", "Droid Sans Mono");
@@ -3409,9 +3378,6 @@ pref("font.minimum-size.th", 13);
 
 pref("font.default.tr", "sans-serif");
 pref("font.size.fixed.tr", 12);
-
-pref("font.default.x-baltic", "sans-serif");
-pref("font.size.fixed.x-baltic", 12);
 
 pref("font.default.x-central-euro", "sans-serif");
 pref("font.size.fixed.x-central-euro", 12);
@@ -3528,11 +3494,6 @@ pref("font.name.serif.tr", "serif");
 pref("font.name.sans-serif.tr", "sans-serif");
 pref("font.name.monospace.tr", "monospace");
 pref("font.size.fixed.tr", 12);
-
-pref("font.name.serif.x-baltic", "serif");
-pref("font.name.sans-serif.x-baltic", "sans-serif");
-pref("font.name.monospace.x-baltic", "monospace");
-pref("font.size.fixed.x-baltic", 12);
 
 pref("font.name.serif.x-central-euro", "serif");
 pref("font.name.sans-serif.x-central-euro", "sans-serif");
