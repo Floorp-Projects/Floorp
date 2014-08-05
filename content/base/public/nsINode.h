@@ -1093,9 +1093,10 @@ protected:
   }
   
 public:
-  void GetTextContent(nsAString& aTextContent)
+  void GetTextContent(nsAString& aTextContent,
+                      mozilla::ErrorResult& aError)
   {
-    GetTextContentInternal(aTextContent);
+    GetTextContentInternal(aTextContent, aError);
   }
   void SetTextContent(const nsAString& aTextContent,
                       mozilla::ErrorResult& aError)
@@ -1702,7 +1703,8 @@ protected:
     return IsEditableInternal();
   }
 
-  virtual void GetTextContentInternal(nsAString& aTextContent);
+  virtual void GetTextContentInternal(nsAString& aTextContent,
+                                      mozilla::ErrorResult& aError);
   virtual void SetTextContentInternal(const nsAString& aTextContent,
                                       mozilla::ErrorResult& aError)
   {
@@ -1985,8 +1987,9 @@ ToCanonicalSupports(nsINode* aPointer)
   } \
   NS_IMETHOD GetTextContent(nsAString& aTextContent) __VA_ARGS__ \
   { \
-    nsINode::GetTextContent(aTextContent); \
-    return NS_OK; \
+    mozilla::ErrorResult rv; \
+    nsINode::GetTextContent(aTextContent, rv); \
+    return rv.ErrorCode(); \
   } \
   NS_IMETHOD SetTextContent(const nsAString& aTextContent) __VA_ARGS__ \
   { \
