@@ -1000,33 +1000,11 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JS_DefineProperty(cx, param, "principal", JS::UndefinedHandleValue, JSPROP_ENUMERATE);
       }
 
-      // message.principal = { appId: <id>, origin: <origin>, isInBrowserElement: <something> }
+      // message.principal = the principal
       else {
-        JS::Rooted<JSObject*> principalObj(cx,
-          JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
-
-        uint32_t appId;
-        nsresult rv = aPrincipal->GetAppId(&appId);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        JS_DefineProperty(cx, principalObj, "appId", appId, JSPROP_ENUMERATE);
-
-        nsCString origin;
-        rv = aPrincipal->GetOrigin(getter_Copies(origin));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        JS::Rooted<JSString*> originStr(cx, JS_NewStringCopyN(cx, origin.get(), origin.Length()));
-        NS_ENSURE_TRUE(originStr, NS_ERROR_OUT_OF_MEMORY);
-        JS_DefineProperty(cx, principalObj, "origin", originStr, JSPROP_ENUMERATE);
-
-        bool browser;
-        rv = aPrincipal->GetIsInBrowserElement(&browser);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        JS::Rooted<JS::Value> browserValue(cx, JS::BooleanValue(browser));
-        JS_DefineProperty(cx, principalObj, "isInBrowserElement", browserValue, JSPROP_ENUMERATE);
-
-        JS_DefineProperty(cx, param, "principal", principalObj, JSPROP_ENUMERATE);
+        JS::Rooted<JS::Value> principalValue(cx);
+        rv = nsContentUtils::WrapNative(cx, aPrincipal, &NS_GET_IID(nsIPrincipal), &principalValue);
+        JS_DefineProperty(cx, param, "principal", principalValue, JSPROP_ENUMERATE);
       }
 
       JS::Rooted<JS::Value> thisValue(cx, JS::UndefinedValue());
