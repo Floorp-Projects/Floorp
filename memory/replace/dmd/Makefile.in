@@ -6,7 +6,3 @@
 # Disable mozglue.
 WRAP_LDFLAGS 	=
 MOZ_GLUE_LDFLAGS=
-
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS         += $(call EXPAND_LIBNAME,dbghelp)
-endif

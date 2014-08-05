@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_LIBS      += $(NSPR_LIBS)
-OS_LIBS += $(EDITLINE_LIBS) $(MOZ_ZLIB_LIBS)
 ifdef MOZ_NATIVE_FFI
 OS_LIBS += $(MOZ_FFI_LIBS)
 endif

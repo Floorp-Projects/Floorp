@@ -7,17 +7,6 @@ EXTRA_LIBS += \
   $(NSS_LIBS) \
   $(NULL)
 
-OS_LIBS += \
-  $(MOZ_WEBRTC_X11_LIBS) \
-  $(REALTIME_LIBS) \
-  $(NULL)
-
-ifdef MOZ_ALSA
-OS_LIBS += \
-  $(MOZ_ALSA_LIBS) \
-  $(NULL)
-endif
-
 ifeq ($(OS_TARGET),Android)
 EXTRA_LIBS += \
   $(STLPORT_LDFLAGS) \
@@ -26,63 +15,6 @@ EXTRA_LIBS += \
 CPPFLAGS += \
   $(STLPORT_CPPFLAGS) \
   $(NULL)
-endif
-
-ifdef MOZ_NATIVE_JPEG
-OS_LIBS += \
-  $(MOZ_JPEG_LIBS) \
-  $(NULL)
-endif
-
-ifdef MOZ_NATIVE_LIBVPX
-OS_LIBS += \
-  $(MOZ_LIBVPX_LIBS) \
-  $(NULL)
-endif
-
-ifndef MOZ_TREE_PIXMAN
-OS_LIBS += \
-  $(MOZ_PIXMAN_LIBS) \
-  $(NULL)
-endif
-
-ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += \
-  $(XLIBS) \
-  $(MOZ_GTK2_LIBS) \
-  -lgmodule-2.0 -lgthread-2.0 \
-  $(NULL)
-endif
-
-ifeq (gtk3,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += \
-  $(MOZ_GTK3_LIBS) \
-  $(FT2_LIBS) \
-  $(NULL)
-endif
-
-ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += \
-  $(XLIBS) \
-  $(TK_LIBS) \
-  $(MOZ_PANGO_LIBS) \
-  $(NULL)
-endif
-
-ifneq (,$(filter Linux DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
-OS_LIBS += \
-  $(MOZ_CAIRO_OSLIBS) \
-  $(NULL)
-endif
-
-ifeq ($(OS_TARGET),Darwin)
-OS_LIBS += \
-  $(TK_LIBS) \
-  $(NULL)
-endif
-
-ifdef MOZ_NATIVE_ZLIB
-OS_LIBS += $(MOZ_ZLIB_LIBS)
 endif
 
 include $(topsrcdir)/config/config.mk

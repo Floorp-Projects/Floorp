@@ -14,13 +14,6 @@ EXTRA_LIBS += \
   $(NULL)
 endif
 
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += \
-  -lbinder \
-  -lutils \
-  $(NULL)
-endif
-
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
 MOZ_WINCONSOLE = 1

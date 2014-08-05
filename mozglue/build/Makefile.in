@@ -27,11 +27,6 @@ ifneq (,$(filter -DEFAULTLIB:mozcrt,$(MOZ_GLUE_LDFLAGS)))
 NO_INSTALL_IMPORT_LIBRARY = 1
 endif
 
-
-OS_LIBS += \
-	$(call EXPAND_LIBNAME,version) \
-	$(NULL)
-
 endif
 
 ifeq (Darwin_1,$(OS_TARGET)_$(MOZ_REPLACE_MALLOC))

@@ -7,22 +7,7 @@
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
 
-ifdef MOZ_NATIVE_BZ2
-OS_LIBS += \
-  $(MOZ_BZ2_LIBS) \
-  $(NULL)
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32 shlwapi)
-endif
-
-ifdef MOZ_WIDGET_GTK
-OS_LIBS += $(TK_LIBS)
-endif
-
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
-OS_LIBS += -lcutils -lsysutils
 # clear out all the --wrap flags and remove dependency on mozglue for Gonk
 WRAP_LDFLAGS :=
 endif #}
@@ -52,11 +37,6 @@ libs::
 	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS
 	rm -f $(DIST)/bin/updater
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,crypt32)
-OS_LIBS += $(call EXPAND_LIBNAME,advapi32)
 endif
 
 CXXFLAGS += $(MOZ_BZ2_CFLAGS)

@@ -22,8 +22,6 @@ SFX_MODULE = $(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
 APP_VERSION := $(shell cat $(topsrcdir)/browser/config/version.txt)
 DEFINES += -DAPP_VERSION=$(APP_VERSION)
 
-OS_LIBS += $(call EXPAND_LIBNAME,shell32)
-
 # Uninstaller
 ifdef LOCALE_MERGEDIR
 PPL_LOCALE_ARGS = \

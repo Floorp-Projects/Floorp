@@ -11,3 +11,12 @@ FORCE_SHARED_LIB = True
 DEFINES['REGISTER_PROXY_DLL'] = True
 
 DEFFILE = SRCDIR + '/IA2Marshal.def'
+
+OS_LIBS += [
+    'uuid',
+    'kernel32',
+    'rpcns4',
+    'rpcrt4',
+    'ole32',
+    'oleaut32',
+]

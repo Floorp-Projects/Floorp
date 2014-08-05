@@ -26,10 +26,6 @@ NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXULRUNNER_ICO='"$(DIST)/branding/xulrunner.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document.ico"'

@@ -5,7 +5,6 @@
 
 ifeq (WINNT,$(OS_TARGET))
 EXTRA_LIBS += $(NSPR_LIBS)
-OS_LIBS += $(call EXPAND_LIBNAME,usp10 ole32)
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -13,6 +12,4 @@ include $(topsrcdir)/config/rules.mk
 ifeq (WINNT,$(OS_TARGET))
 symbols.def: symbols.def.in $(GLOBAL_DEPS)
 	$(call py_action,preprocessor,$(ACDEFINES) $< -o $@)
-
-OS_LIBS += $(call EXPAND_LIBNAME, msimg32 winmm)
 endif

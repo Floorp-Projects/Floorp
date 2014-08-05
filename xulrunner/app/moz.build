@@ -42,6 +42,16 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'splash.rc'
+    OS_LIBS += [
+        'comctl32',
+        'comdlg32',
+        'uuid',
+        'shell32',
+        'ole32',
+        'oleaut32',
+        'version',
+        'winspool',
+    ]
 
 USE_LIBS += [
     'xpcomglue',
