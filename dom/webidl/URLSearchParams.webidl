@@ -14,7 +14,8 @@
  */
 
 [Constructor(optional DOMString init = ""),
- Constructor(URLSearchParams init)]
+ Constructor(URLSearchParams init),
+ Exposed=(Window,Worker)]
 interface URLSearchParams {
   void append(DOMString name, DOMString value);
   void delete(DOMString name);
