@@ -4321,6 +4321,26 @@ IonBuilder::inlineSingleCall(CallInfo &callInfo, JSFunction *target)
     return InliningStatus_Inlined;
 }
 
+class DiscardPropCacheResumePoint
+{
+    MGetPropertyCache *propCache_;
+
+  public:
+    DiscardPropCacheResumePoint(MGetPropertyCache *propCache)
+      : propCache_(propCache)
+    {
+    }
+
+    ~DiscardPropCacheResumePoint() {
+        if (!propCache_)
+            return;
+
+        InlinePropertyTable *propTable = propCache_->propTable();
+        if (MResumePoint *rp = propTable->takePriorResumePoint())
+            propCache_->block()->discardPreAllocatedResumePoint(rp);
+    }
+};
+
 IonBuilder::InliningStatus
 IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
                            bool lambda, CallInfo &callInfo)
@@ -4363,6 +4383,8 @@ IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
 
         return inlineSingleCall(callInfo, target);
     }
+
+    DiscardPropCacheResumePoint discardRp(propCache);
 
     // Choose a subset of the targets for polymorphic inlining.
     BoolVector choiceSet(alloc());
@@ -4455,9 +4477,10 @@ IonBuilder::inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBl
     // Construct a block into which the MGetPropertyCache can be moved.
     // This is subtle: the pc and resume point are those of the MGetPropertyCache!
     InlinePropertyTable *propTable = cache->propTable();
+    MResumePoint *priorResumePoint = propTable->takePriorResumePoint();
     JS_ASSERT(propTable->pc() != nullptr);
-    JS_ASSERT(propTable->priorResumePoint() != nullptr);
-    MBasicBlock *getPropBlock = newBlock(prepBlock, propTable->pc(), propTable->priorResumePoint());
+    JS_ASSERT(priorResumePoint != nullptr);
+    MBasicBlock *getPropBlock = newBlock(prepBlock, propTable->pc(), priorResumePoint);
     if (!getPropBlock)
         return false;
 
