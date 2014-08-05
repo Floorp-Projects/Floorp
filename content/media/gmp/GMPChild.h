@@ -8,6 +8,7 @@
 
 #include "mozilla/gmp/PGMPChild.h"
 #include "GMPSharedMemManager.h"
+#include "GMPTimerChild.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
 
@@ -27,6 +28,9 @@ public:
             IPC::Channel* aChannel);
   bool LoadPluginLibrary(const std::string& aPluginPath);
   MessageLoop* GMPMessageLoop();
+
+  // Main thread only.
+  GMPTimerChild* GetGMPTimers();
 
   // GMPSharedMem
   virtual void CheckThread() MOZ_OVERRIDE;
@@ -51,10 +55,15 @@ private:
   virtual bool DeallocPGMPAudioDecoderChild(PGMPAudioDecoderChild* aActor) MOZ_OVERRIDE;
   virtual bool RecvPGMPAudioDecoderConstructor(PGMPAudioDecoderChild* aActor) MOZ_OVERRIDE;
 
+  virtual PGMPTimerChild* AllocPGMPTimerChild() MOZ_OVERRIDE;
+  virtual bool DeallocPGMPTimerChild(PGMPTimerChild* aActor) MOZ_OVERRIDE;
+
   virtual bool RecvCrashPluginNow() MOZ_OVERRIDE;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   virtual void ProcessingError(Result aWhat) MOZ_OVERRIDE;
+
+  nsRefPtr<GMPTimerChild> mTimerChild;
 
   PRLibrary* mLib;
   GMPGetAPIFunc mGetAPIFunc;
