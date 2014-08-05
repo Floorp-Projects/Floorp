@@ -51,7 +51,7 @@ namespace {
 class TimerObserverRunnable : public nsRunnable
 {
 public:
-  TimerObserverRunnable(nsIObserver* aObserver)
+  explicit TimerObserverRunnable(nsIObserver* aObserver)
     : mObserver(aObserver)
   {
   }

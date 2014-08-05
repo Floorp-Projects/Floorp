@@ -243,7 +243,7 @@ struct nsThreadShutdownContext
 class nsThreadShutdownAckEvent : public nsRunnable
 {
 public:
-  nsThreadShutdownAckEvent(nsThreadShutdownContext* aCtx)
+  explicit nsThreadShutdownAckEvent(nsThreadShutdownContext* aCtx)
     : mShutdownContext(aCtx)
   {
   }
