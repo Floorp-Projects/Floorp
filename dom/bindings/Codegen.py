@@ -78,9 +78,7 @@ def idlTypeNeedsCycleCollection(type):
 
 
 def wantsAddProperty(desc):
-    return (desc.concrete and
-            desc.wrapperCache and
-            not desc.interface.getExtendedAttribute("Global"))
+    return (desc.concrete and desc.wrapperCache and not desc.isGlobal())
 
 
 # We'll want to insert the indent at the beginnings of lines, but we
@@ -372,7 +370,7 @@ class CGDOMJSClass(CGThing):
 JS_NULL_CLASS_EXT,
 JS_NULL_OBJECT_OPS
 """
-        if self.descriptor.interface.getExtendedAttribute("Global"):
+        if self.descriptor.isGlobal():
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
             traceHook = "JS_GlobalObjectTraceHook"
             reservedSlots = "JSCLASS_GLOBAL_APPLICATION_SLOTS"
@@ -415,7 +413,7 @@ JS_NULL_OBJECT_OPS
             newResolveHook = "(JSResolveOp)" + NEWRESOLVE_HOOK_NAME
             classFlags += " | JSCLASS_NEW_RESOLVE"
             enumerateHook = ENUMERATE_HOOK_NAME
-        elif self.descriptor.interface.getExtendedAttribute("Global"):
+        elif self.descriptor.isGlobal():
             newResolveHook = "(JSResolveOp) mozilla::dom::ResolveGlobal"
             classFlags += " | JSCLASS_NEW_RESOLVE"
             enumerateHook = "mozilla::dom::EnumerateGlobal"
@@ -1521,7 +1519,7 @@ def finalizeHook(descriptor, hookName, freeOp):
         finalize += "ClearWrapper(self, self);\n"
     if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
         finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
-    if descriptor.interface.getExtendedAttribute("Global"):
+    if descriptor.isGlobal():
         finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
     finalize += ("AddForDeferredFinalization<%s, %s >(self);\n" %
                  (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
@@ -2599,7 +2597,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             interfaceClass = "nullptr"
             interfaceCache = "nullptr"
 
-        isGlobal = self.descriptor.interface.getExtendedAttribute("Global") is not None
+        isGlobal = self.descriptor.isGlobal() is not None
         if not isGlobal and self.properties.hasNonChromeOnly():
             properties = "&sNativeProperties"
         elif self.properties.hasNonChromeOnly():
@@ -7323,7 +7321,7 @@ class CGNewResolveHook(CGAbstractBindingMethod):
             """))
 
     def definition_body(self):
-        if self.descriptor.interface.getExtendedAttribute("Global"):
+        if self.descriptor.isGlobal():
             # Resolve standard classes
             prefix = dedent("""
                 if (!ResolveGlobal(cx, obj, id, objp)) {
@@ -7372,7 +7370,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
             """))
 
     def definition_body(self):
-        if self.descriptor.interface.getExtendedAttribute("Global"):
+        if self.descriptor.isGlobal():
             # Enumerate standard classes
             prefix = dedent("""
                 if (!EnumerateGlobal(cx, obj)) {
@@ -10666,7 +10664,7 @@ class CGDescriptor(CGThing):
                 if descriptor.interface.hasMembersInSlots():
                     cgThings.append(CGUpdateMemberSlotsMethod(descriptor))
 
-            if descriptor.interface.getExtendedAttribute("Global"):
+            if descriptor.isGlobal():
                 assert descriptor.wrapperCache
                 cgThings.append(CGWrapGlobalMethod(descriptor, properties))
             elif descriptor.wrapperCache:
