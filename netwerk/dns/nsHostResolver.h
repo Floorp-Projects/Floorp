@@ -106,7 +106,7 @@ private:
     // of gencnt.
     nsTArray<nsCString> mBlacklistedItems;
 
-    nsHostRecord(const nsHostKey *key);           /* use Create() instead */
+    explicit nsHostRecord(const nsHostKey *key);           /* use Create() instead */
    ~nsHostRecord();
 };
 
@@ -239,8 +239,8 @@ public:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
-    nsHostResolver(uint32_t maxCacheEntries = 50, uint32_t maxCacheLifetime = 60,
-                   uint32_t lifetimeGracePeriod = 0);
+   explicit nsHostResolver(uint32_t maxCacheEntries = 50, uint32_t maxCacheLifetime = 60,
+                            uint32_t lifetimeGracePeriod = 0);
    ~nsHostResolver();
 
     nsresult Init();

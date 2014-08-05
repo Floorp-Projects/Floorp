@@ -31,7 +31,7 @@ typedef mozilla::net::LoadContextInfo LoadContextInfo;
 // Must release mChannel on the main thread
 class nsWyciwygAsyncEvent : public nsRunnable {
 public:
-  nsWyciwygAsyncEvent(nsWyciwygChannel *aChannel) : mChannel(aChannel) {}
+  explicit nsWyciwygAsyncEvent(nsWyciwygChannel *aChannel) : mChannel(aChannel) {}
 
   ~nsWyciwygAsyncEvent()
   {
@@ -49,7 +49,7 @@ protected:
 
 class nsWyciwygSetCharsetandSourceEvent : public nsWyciwygAsyncEvent {
 public:
-  nsWyciwygSetCharsetandSourceEvent(nsWyciwygChannel *aChannel)
+  explicit nsWyciwygSetCharsetandSourceEvent(nsWyciwygChannel *aChannel)
     : nsWyciwygAsyncEvent(aChannel) {}
 
   NS_IMETHOD Run()

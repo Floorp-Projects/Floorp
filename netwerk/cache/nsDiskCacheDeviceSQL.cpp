@@ -91,7 +91,7 @@ DecomposeCacheEntryKey(const nsCString *fullKey,
 class AutoResetStatement
 {
   public:
-    AutoResetStatement(mozIStorageStatement *s)
+    explicit AutoResetStatement(mozIStorageStatement *s)
       : mStatement(s) {}
     ~AutoResetStatement() { mStatement->Reset(); }
     mozIStorageStatement *operator->() { return mStatement; }
@@ -275,7 +275,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICACHEDEVICEINFO
 
-  nsOfflineCacheDeviceInfo(nsOfflineCacheDevice* device)
+  explicit nsOfflineCacheDeviceInfo(nsOfflineCacheDevice* device)
     : mDevice(device)
   {}
 
@@ -861,7 +861,7 @@ nsApplicationCache::GetUsage(uint32_t *usage)
 
 class nsCloseDBEvent : public nsRunnable {
 public:
-  nsCloseDBEvent(mozIStorageConnection *aDB)
+  explicit nsCloseDBEvent(mozIStorageConnection *aDB)
   {
     mDB = aDB;
   }

@@ -41,7 +41,7 @@ public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  Http2Session(nsISocketTransport *);
+  explicit Http2Session(nsISocketTransport *);
 
   bool AddStream(nsAHttpTransaction *, int32_t,
                  bool, nsIInterfaceRequestor *);
