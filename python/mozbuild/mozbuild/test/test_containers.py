@@ -7,6 +7,7 @@ import unittest
 from mozunit import main
 
 from mozbuild.util import (
+    List,
     ReadOnlyDefaultDict,
     ReadOnlyDict,
 )
@@ -49,6 +50,21 @@ class TestReadOnlyDefaultDict(unittest.TestCase):
         self.assertEqual(test['foo'], 1)
 
         self.assertEqual(test['qux'], False)
+
+
+class TestList(unittest.TestCase):
+    def test_add_list(self):
+        test = List([1, 2, 3])
+
+        test += [4, 5, 6]
+
+        self.assertEqual(test, [1, 2, 3, 4, 5, 6])
+
+    def test_add_string(self):
+        test = List([1, 2, 3])
+
+        with self.assertRaises(ValueError):
+            test += 'string'
 
 
 if __name__ == '__main__':
