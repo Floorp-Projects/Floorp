@@ -14,6 +14,7 @@ import traceback
 here = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, here)
 
+from automationutils import processLeakLog
 from runtests import Mochitest
 from runtests import MochitestUtilsMixin
 from runtests import MessageLogger
@@ -121,7 +122,6 @@ class B2GMochitest(MochitestUtilsMixin):
         """ Prepare, configure, run tests and cleanup """
 
         manifest = self.build_profile(options)
-        self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
         # configuring the message logger's buffering
         self.message_logger.buffering = options.quiet
@@ -160,6 +160,19 @@ class B2GMochitest(MochitestUtilsMixin):
             if not self.app_ctx.dm.dirExists(posixpath.dirname(self.remote_log)):
                 self.app_ctx.dm.mkDirs(self.remote_log)
 
+            self.leak_report_file = posixpath.join(self.app_ctx.remote_test_root,
+                                                   'log', 'runtests_leaks.log')
+
+            # We don't want to copy the host env onto the device, so pass in an
+            # empty env.
+            self.browserEnv = self.buildBrowserEnv(options, env={})
+
+            # XXXkhuey MOZ_DISABLE_NONLOCAL_CONNECTIONS is busted on b2g, so make
+            # sure we don't pass it through (bug 1039019).
+            if 'MOZ_DISABLE_NONLOCAL_CONNECTIONS' in self.browserEnv:
+                del self.browserEnv['MOZ_DISABLE_NONLOCAL_CONNECTIONS']
+            self.runner.env.update(self.browserEnv)
+
             self.startServers(options, None)
             self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
             self.test_script_args.append(not options.emulator)
@@ -193,6 +206,12 @@ class B2GMochitest(MochitestUtilsMixin):
             if status is None:
                 # the runner has timed out
                 status = 124
+
+            local_leak_file = tempfile.NamedTemporaryFile()
+            self.app_ctx.dm.getFile(self.leak_report_file, local_leak_file.name)
+            self.app_ctx.dm.removeFile(self.leak_report_file)
+
+            processLeakLog(local_leak_file.name, options.leakThreshold)
         except KeyboardInterrupt:
             log.info("runtests.py | Received keyboard interrupt.\n");
             status = -1
