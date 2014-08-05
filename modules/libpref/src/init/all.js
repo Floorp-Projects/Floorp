@@ -2240,11 +2240,6 @@ pref("font.minimum-size.tr", 0);
 pref("font.size.variable.tr", 16);
 pref("font.size.fixed.tr", 13);
 
-pref("font.default.x-central-euro", "serif");
-pref("font.minimum-size.x-central-euro", 0);
-pref("font.size.variable.x-central-euro", 16);
-pref("font.size.fixed.x-central-euro", 13);
-
 pref("font.default.x-cyrillic", "serif");
 pref("font.minimum-size.x-cyrillic", 0);
 pref("font.size.variable.x-cyrillic", 16);
@@ -2530,11 +2525,6 @@ pref("font.name.serif.tr", "Times New Roman");
 pref("font.name.sans-serif.tr", "Arial");
 pref("font.name.monospace.tr", "Courier New");
 pref("font.name.cursive.tr", "Comic Sans MS");
-
-pref("font.name.serif.x-central-euro", "Times New Roman");
-pref("font.name.sans-serif.x-central-euro", "Arial");
-pref("font.name.monospace.x-central-euro", "Courier New");
-pref("font.name.cursive.x-central-euro", "Comic Sans MS");
 
 pref("font.name.serif.x-cyrillic", "Times New Roman");
 pref("font.name.sans-serif.x-cyrillic", "Arial");
@@ -2925,17 +2915,6 @@ pref("font.name-list.serif.x-cans", "Euphemia UCAS");
 pref("font.name-list.sans-serif.x-cans", "Euphemia UCAS");
 pref("font.name-list.monospace.x-cans", "Euphemia UCAS");
 
-pref("font.name.serif.x-central-euro", "Times");
-pref("font.name.sans-serif.x-central-euro", "Helvetica");
-pref("font.name.monospace.x-central-euro", "Courier");
-pref("font.name.cursive.x-central-euro", "Apple Chancery");
-pref("font.name.fantasy.x-central-euro", "Papyrus");
-pref("font.name-list.serif.x-central-euro", "Times");
-pref("font.name-list.sans-serif.x-central-euro", "Helvetica");
-pref("font.name-list.monospace.x-central-euro", "Courier");
-pref("font.name-list.cursive.x-central-euro", "Apple Chancery");
-pref("font.name-list.fantasy.x-central-euro", "Papyrus");
-
 pref("font.name.serif.x-cyrillic", "Times");
 pref("font.name.sans-serif.x-cyrillic", "Helvetica");
 pref("font.name.monospace.x-cyrillic", "Monaco");
@@ -3248,10 +3227,6 @@ pref("font.name.serif.tr", "Charis SIL Compact");
 pref("font.name.sans-serif.tr", "Fira Sans");
 pref("font.name.monospace.tr", "Fira Mono");
 
-pref("font.name.serif.x-central-euro", "Charis SIL Compact");
-pref("font.name.sans-serif.x-central-euro", "Fira Sans");
-pref("font.name.monospace.x-central-euro", "Fira Mono");
-
 pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
 pref("font.name.sans-serif.x-cyrillic", "Fira Sans");
 pref("font.name.monospace.x-cyrillic", "Fira Mono");
@@ -3318,12 +3293,6 @@ pref("font.name.monospace.tr", "Droid Sans Mono");
 pref("font.name-list.serif.tr", "Droid Serif");
 pref("font.name-list.sans-serif.tr", "Clear Sans, Roboto, Droid Sans");
 
-pref("font.name.serif.x-central-euro", "Charis SIL Compact");
-pref("font.name.sans-serif.x-central-euro", "Clear Sans");
-pref("font.name.monospace.x-central-euro", "Droid Sans Mono");
-pref("font.name-list.serif.x-central-euro", "Droid Serif");
-pref("font.name-list.sans-serif.x-central-euro", "Clear Sans, Roboto, Droid Sans");
-
 pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
 pref("font.name.sans-serif.x-cyrillic", "Clear Sans");
 pref("font.name.monospace.x-cyrillic", "Droid Sans Mono");
@@ -3378,9 +3347,6 @@ pref("font.minimum-size.th", 13);
 
 pref("font.default.tr", "sans-serif");
 pref("font.size.fixed.tr", 12);
-
-pref("font.default.x-central-euro", "sans-serif");
-pref("font.size.fixed.x-central-euro", 12);
 
 pref("font.default.x-cyrillic", "sans-serif");
 pref("font.size.fixed.x-cyrillic", 12);
@@ -3494,11 +3460,6 @@ pref("font.name.serif.tr", "serif");
 pref("font.name.sans-serif.tr", "sans-serif");
 pref("font.name.monospace.tr", "monospace");
 pref("font.size.fixed.tr", 12);
-
-pref("font.name.serif.x-central-euro", "serif");
-pref("font.name.sans-serif.x-central-euro", "sans-serif");
-pref("font.name.monospace.x-central-euro", "monospace");
-pref("font.size.fixed.x-central-euro", 12);
 
 pref("font.name.serif.x-cyrillic", "serif");
 pref("font.name.sans-serif.x-cyrillic", "sans-serif");
