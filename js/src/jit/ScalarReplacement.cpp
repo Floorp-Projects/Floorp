@@ -526,7 +526,7 @@ IsArrayEscaped(MInstruction *ins)
                     int32_t index;
                     if (!IndexOf(access, &index))
                         return true;
-                    if (index < 0 || count <= index)
+                    if (index < 0 || count <= uint32_t(index))
                         return true;
                     break;
                   }
@@ -547,7 +547,7 @@ IsArrayEscaped(MInstruction *ins)
                     int32_t index;
                     if (!IndexOf(access, &index))
                         return true;
-                    if (index < 0 || count <= index)
+                    if (index < 0 || count <= uint32_t(index))
                         return true;
 
                     // We are not yet encoding magic hole constants in resume points.
