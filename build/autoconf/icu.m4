@@ -116,7 +116,6 @@ fi
 AC_SUBST(MOZ_ICU_DBG_SUFFIX)
 AC_SUBST(ENABLE_INTL_API)
 AC_SUBST(ICU_LIB_NAMES)
-AC_SUBST(MOZ_ICU_LIBS)
 
 if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
     dnl We build ICU as a static library for non-shared js builds and as a shared library for shared js builds.
