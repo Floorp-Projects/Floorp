@@ -161,9 +161,6 @@ struct ShapeTable {
     /* By definition, hashShift = HASH_BITS - log2(capacity). */
     uint32_t capacity() const { return JS_BIT(HASH_BITS - hashShift); }
 
-    /* Computes the size of the entries array for a given capacity. */
-    static size_t sizeOfEntries(size_t cap) { return cap * sizeof(Shape *); }
-
     /*
      * This counts the ShapeTable object itself (which must be
      * heap-allocated) and its |entries| array.
@@ -187,7 +184,7 @@ struct ShapeTable {
 
     /*
      * NB: init and change are fallible but do not report OOM, so callers can
-     * cope or ignore. They do however use the context's calloc_ method in
+     * cope or ignore. They do however use the context's calloc method in
      * order to update the malloc counter on success.
      */
     bool            init(ThreadSafeContext *cx, Shape *lastProp);
