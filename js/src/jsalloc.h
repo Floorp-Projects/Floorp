@@ -26,7 +26,7 @@ class SystemAllocPolicy
 {
   public:
     void *malloc_(size_t bytes) { return js_malloc(bytes); }
-    void *calloc_(size_t bytes) { return js_calloc(bytes); }
+    template <typename T> T *pod_calloc(size_t numElems) { return js_pod_calloc<T>(numElems); }
     void *realloc_(void *p, size_t oldBytes, size_t bytes) { return js_realloc(p, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const {}
@@ -62,10 +62,11 @@ class TempAllocPolicy
         return p;
     }
 
-    void *calloc_(size_t bytes) {
-        void *p = js_calloc(bytes);
+    template <typename T>
+    T *pod_calloc(size_t numElems) {
+        T *p = js_pod_calloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
-            p = onOutOfMemory(nullptr, bytes);
+            p = (T *)onOutOfMemory(reinterpret_cast<void *>(1), numElems * sizeof(T));
         return p;
     }
 
