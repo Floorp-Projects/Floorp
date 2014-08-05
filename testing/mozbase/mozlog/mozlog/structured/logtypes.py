@@ -53,20 +53,27 @@ class log_action(object):
         values = {}
         values.update(kwargs)
 
-        j = -1
-        for i, arg in enumerate(args):
-            j += 1
-            # Skip over non-defaulted args supplied as keyword arguments
-            while self.args_no_default[j] in values:
-                j += 1
-                if j == len(self.args_no_default):
-                    raise TypeError("Too many arguments")
-            values[self.args_no_default[j]] = arg
+        positional_no_default = [item for item in self.args_no_default if item not in values]
 
-        for k in range(j+1, len(self.args_no_default)):
-            if self.args_no_default[k] not in values:
-                raise TypeError("Missing required argument %s\n%r\n%r\n%r" %
-                                (self.args_no_default[k], args, kwargs, values))
+        num_no_default = len(positional_no_default)
+
+        if len(args) < num_no_default:
+            raise TypeError("Too few arguments")
+
+        if len(args) > num_no_default + len(self.args_with_default):
+            raise TypeError("Too many arguments")
+
+        for i, name in enumerate(positional_no_default):
+            values[name] = args[i]
+
+        positional_with_default = [self.args_with_default[i]
+                                   for i in range(len(args) - num_no_default)]
+
+
+        for i, name in enumerate(positional_with_default):
+            if name in values:
+                raise TypeError("Argument %s specified twice" % name)
+            values[name] = args[i + num_no_default]
 
         # Fill in missing arguments
         for name in self.args_with_default:
@@ -74,9 +81,12 @@ class log_action(object):
                 values[name] = self.args[name].default
 
         for key, value in values.iteritems():
-            out_value = self.args[key](value)
-            if out_value is not missing:
-                data[key] = out_value
+            if key in self.args:
+                out_value = self.args[key](value)
+                if out_value is not missing:
+                    data[key] = out_value
+            else:
+                raise TypeError("Unrecognised argument %s" % key)
 
         return data
 

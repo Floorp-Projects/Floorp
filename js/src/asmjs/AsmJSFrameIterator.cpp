@@ -79,7 +79,8 @@ AsmJSFrameIterator::settle()
         fp_ = nullptr;
         JS_ASSERT(done());
         break;
-      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::IonFFI:
+      case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
       case AsmJSModule::CodeRange::Thunk:
@@ -440,11 +441,6 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
     //  - for Math and other builtin calls, when profiling is activated, we
     //    patch all call sites to instead call through a thunk; and
     //  - for interrupts, we just accept that we'll lose the innermost frame.
-    // However, we do want FFI trampolines to show up in callstacks (so that
-    // they properly accumulate self-time) and for this we use the exitReason.
-
-    exitReason_ = activation.exitReason();
-
     void *pc = ReturnAddressFromFP(fp);
     const AsmJSModule::CodeRange *codeRange = module_->lookupCodeRange(pc);
     JS_ASSERT(codeRange);
@@ -462,12 +458,24 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation &activation)
         callerFP_ = CallerFPFromFP(fp);
         AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
         break;
-      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::IonFFI:
+      case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
       case AsmJSModule::CodeRange::Thunk:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
+
+    // Since, despite the above reasoning for skipping a frame, we do want FFI
+    // trampolines and interrupts to show up in the profile (so they can
+    // accumulate self time and explain performance faults), an "exit reason" is
+    // stored on all the paths leaving asm.js and the iterator logic treats this
+    // reason as its own frame. If we have exited asm.js code without setting an
+    // exit reason, the reason will be None and this means the code was
+    // asynchronously interrupted.
+    exitReason_ = activation.exitReason();
+    if (exitReason_ == AsmJSExit::None)
+        exitReason_ = AsmJSExit::Interrupt;
 
     JS_ASSERT(!done());
 }
@@ -505,7 +513,8 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation &
     const AsmJSModule::CodeRange *codeRange = module_->lookupCodeRange(state.pc);
     switch (codeRange->kind()) {
       case AsmJSModule::CodeRange::Function:
-      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::IonFFI:
+      case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Thunk: {
         // While codeRange describes the *current* frame, the fp/pc state stored in
@@ -606,7 +615,8 @@ AsmJSProfilingFrameIterator::operator++()
         callerPC_ = nullptr;
         break;
       case AsmJSModule::CodeRange::Function:
-      case AsmJSModule::CodeRange::FFI:
+      case AsmJSModule::CodeRange::IonFFI:
+      case AsmJSModule::CodeRange::SlowFFI:
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
       case AsmJSModule::CodeRange::Thunk:
@@ -657,19 +667,22 @@ AsmJSProfilingFrameIterator::label() const
 {
     JS_ASSERT(!done());
 
-    // Note: this label is regexp-matched by
-    // browser/devtools/profiler/cleopatra/js/parserWorker.js.
-
     // Use the same string for both time inside and under so that the two
     // entries will be coalesced by the profiler.
-    const char *ffiDescription = "FFI trampoline (in asm.js)";
-    const char *interruptDescription = "slow script interrupt trampoline (in asm.js)";
+    //
+    // NB: these labels are regexp-matched by
+    //     browser/devtools/profiler/cleopatra/js/parserWorker.js.
+    const char *ionFFIDescription = "fast FFI trampoline (in asm.js)";
+    const char *slowFFIDescription = "slow FFI trampoline (in asm.js)";
+    const char *interruptDescription = "interrupt due to out-of-bounds or long execution (in asm.js)";
 
     switch (AsmJSExit::ExtractReasonKind(exitReason_)) {
       case AsmJSExit::Reason_None:
         break;
-      case AsmJSExit::Reason_FFI:
-        return ffiDescription;
+      case AsmJSExit::Reason_IonFFI:
+        return ionFFIDescription;
+      case AsmJSExit::Reason_SlowFFI:
+        return slowFFIDescription;
       case AsmJSExit::Reason_Interrupt:
         return interruptDescription;
       case AsmJSExit::Reason_Builtin:
@@ -680,7 +693,8 @@ AsmJSProfilingFrameIterator::label() const
     switch (codeRange->kind()) {
       case AsmJSModule::CodeRange::Function:  return codeRange->functionProfilingLabel(*module_);
       case AsmJSModule::CodeRange::Entry:     return "entry trampoline (in asm.js)";
-      case AsmJSModule::CodeRange::FFI:       return ffiDescription;
+      case AsmJSModule::CodeRange::IonFFI:    return ionFFIDescription;
+      case AsmJSModule::CodeRange::SlowFFI:   return slowFFIDescription;
       case AsmJSModule::CodeRange::Interrupt: return interruptDescription;
       case AsmJSModule::CodeRange::Inline:    return "inline stub (in asm.js)";
       case AsmJSModule::CodeRange::Thunk:     return BuiltinToName(codeRange->thunkTarget());

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+  </head>
+  <body>
+    <div id="host"></div>
+    <script>
+      var host = document.getElementById("host");
+      var root = host.createShadowRoot();
+      root.innerHTML = "<span>a</span>";
+
+      function tweak() {
+        var span = document.createElement("span");
+        span.innerHTML = "b";
+
+        // Span should not be visible because it is not distributed to any
+        // insertion points in the shadow DOM.
+        host.appendChild(span);
+
+        document.documentElement.removeAttribute("class");
+      }
+
+      window.addEventListener("MozReftestInvalidate", tweak, false);
+    </script>
+  </body>
+</html>
