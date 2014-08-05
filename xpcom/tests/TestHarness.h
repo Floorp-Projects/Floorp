@@ -100,8 +100,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
   public:
     NS_DECL_ISUPPORTS
 
-    ScopedXPCOM(const char* testName,
-                nsIDirectoryServiceProvider *dirSvcProvider = nullptr)
+    explicit ScopedXPCOM(const char* testName,
+                         nsIDirectoryServiceProvider *dirSvcProvider = nullptr)
     : mDirSvcProvider(dirSvcProvider)
     {
       mTestName = testName;
