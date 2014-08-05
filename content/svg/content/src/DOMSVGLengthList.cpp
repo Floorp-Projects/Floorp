@@ -181,20 +181,20 @@ DOMSVGLengthList::Initialize(DOMSVGLength& newItem,
     return nullptr;
   }
 
-  // If newItem is already in a list we should insert a clone of newItem, and
-  // for consistency, this should happen even if *this* is the list that
-  // newItem is currently in. Note that in the case of newItem being in this
-  // list, the Clear() call before the InsertItemBefore() call would remove it
-  // from this list, and so the InsertItemBefore() call would not insert a
-  // clone of newItem, it would actually insert newItem. To prevent that from
-  // happening we have to do the clone here, if necessary.
+  // If newItem already has an owner or is reflecting an attribute, we should
+  // insert a clone of newItem, and for consistency, this should happen even if
+  // *this* is the list that newItem is currently in. Note that in the case of
+  // newItem being in this list, the Clear() call before the InsertItemBefore()
+  // call would remove it from this list, and so the InsertItemBefore() call
+  // would not insert a clone of newItem, it would actually insert newItem. To
+  // prevent that from happening we have to do the clone here, if necessary.
 
   nsRefPtr<DOMSVGLength> domItem = &newItem;
   if (!domItem) {
     error.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
     return nullptr;
   }
-  if (domItem->HasOwner()) {
+  if (domItem->HasOwner() || domItem->IsReflectingAttribute()) {
     domItem = domItem->Copy();
   }
 
@@ -249,7 +249,7 @@ DOMSVGLengthList::InsertItemBefore(DOMSVGLength& newItem,
     error.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
     return nullptr;
   }
-  if (domItem->HasOwner()) {
+  if (domItem->HasOwner() || domItem->IsReflectingAttribute()) {
     domItem = domItem->Copy(); // must do this before changing anything!
   }
 
@@ -296,7 +296,7 @@ DOMSVGLengthList::ReplaceItem(DOMSVGLength& newItem,
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
-  if (domItem->HasOwner()) {
+  if (domItem->HasOwner() || domItem->IsReflectingAttribute()) {
     domItem = domItem->Copy(); // must do this before changing anything!
   }
 
