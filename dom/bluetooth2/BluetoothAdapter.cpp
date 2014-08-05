@@ -4,27 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
-#include "nsDOMClassInfo.h"
-#include "nsTArrayHelpers.h"
+#include "BluetoothReplyRunnable.h"
+#include "BluetoothService.h"
+#include "BluetoothUtils.h"
 #include "DOMRequest.h"
-#include "nsThreadUtils.h"
+#include "nsTArrayHelpers.h"
 
-#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothAdapter2Binding.h"
 #include "mozilla/dom/BluetoothAttributeEvent.h"
 #include "mozilla/dom/BluetoothStatusChangedEvent.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/LazyIdleThread.h"
 
-#include "BluetoothAdapter.h"
-#include "BluetoothClassOfDevice.h"
-#include "BluetoothDevice.h"
-#include "BluetoothDiscoveryHandle.h"
-#include "BluetoothReplyRunnable.h"
-#include "BluetoothService.h"
-#include "BluetoothUtils.h"
+#include "mozilla/dom/bluetooth/BluetoothAdapter.h"
+#include "mozilla/dom/bluetooth/BluetoothClassOfDevice.h"
+#include "mozilla/dom/bluetooth/BluetoothDevice.h"
+#include "mozilla/dom/bluetooth/BluetoothDiscoveryHandle.h"
+#include "mozilla/dom/bluetooth/BluetoothPairingListener.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -32,7 +28,8 @@ using namespace mozilla::dom;
 USING_BLUETOOTH_NAMESPACE
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(BluetoothAdapter, DOMEventTargetHelper,
-                                   mDevices, mDiscoveryHandleInUse)
+                                   mDevices, mDiscoveryHandleInUse,
+                                   mPairingReqs)
 
 // QueryInterface implementation for BluetoothAdapter
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothAdapter)
@@ -220,6 +217,8 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
 
+  mPairingReqs = BluetoothPairingListener::Create(aWindow);
+
   const InfallibleTArray<BluetoothNamedValue>& values =
     aValue.get_ArrayOfBluetoothNamedValue();
   for (uint32_t i = 0; i < values.Length(); ++i) {
@@ -350,6 +349,8 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     if (mDiscoveryHandleInUse) {
       HandleDeviceFound(v);
     }
+  } else if (aData.name().EqualsLiteral("PairingRequest")) {
+    HandlePairingRequest(v);
   } else if (aData.name().EqualsLiteral(PAIRED_STATUS_CHANGED_ID) ||
              aData.name().EqualsLiteral(HFP_STATUS_CHANGED_ID) ||
              aData.name().EqualsLiteral(SCO_STATUS_CHANGED_ID) ||
@@ -427,7 +428,7 @@ BluetoothAdapter::StartDiscovery(ErrorResult& aRv)
   BT_API2_LOGR();
 
   // Clear unpaired devices before start discovery
-  for (uint32_t i = mDevices.Length() - 1; i >= 0; i--) {
+  for (int32_t i = mDevices.Length() - 1; i >= 0; i--) {
     if (!mDevices[i]->Paired()) {
       mDevices.RemoveElementAt(i);
     }
@@ -812,6 +813,45 @@ BluetoothAdapter::HandleDeviceFound(const BluetoothValue& aValue)
 
   // Notify application of discovered device via discovery handle
   mDiscoveryHandleInUse->DispatchDeviceEvent(discoveredDevice);
+}
+
+void
+BluetoothAdapter::HandlePairingRequest(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(mPairingReqs);
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(arr.Length() == 3 &&
+             arr[0].value().type() == BluetoothValue::TnsString && // address
+             arr[1].value().type() == BluetoothValue::TnsString && // passkey
+             arr[2].value().type() == BluetoothValue::TnsString);  // type
+
+  nsString deviceAddress = arr[0].value().get_nsString();
+  nsString passkey = arr[1].value().get_nsString();
+  nsString type = arr[2].value().get_nsString();
+
+  // Create a temporary device with deviceAddress for searching
+  InfallibleTArray<BluetoothNamedValue> props;
+  BT_APPEND_NAMED_VALUE(props, "Address", deviceAddress);
+  nsRefPtr<BluetoothDevice> device =
+    BluetoothDevice::Create(GetOwner(), props);
+
+  // Find the remote device by address
+  size_t index = mDevices.IndexOf(device,
+                                  0, /* aStart */
+                                  BluetoothDeviceComparator());
+
+  if (index == mDevices.NoIndex) {
+    BT_WARNING("Cannot find the remote device with address %s",
+               NS_ConvertUTF16toUTF8(deviceAddress).get());
+    return;
+  }
+
+  // Notify application of pairing requests
+  mPairingReqs->DispatchPairingEvent(mDevices[index], passkey, type);
 }
 
 void
