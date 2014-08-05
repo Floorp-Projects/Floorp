@@ -30,10 +30,10 @@ class nsHtml5StreamParser;
 class nsIContent;
 class nsIDocument;
 
-class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
-                              public nsIContentSink,
-                              public nsAHtml5TreeOpSink,
-                              public mozilla::LinkedListElement<nsHtml5TreeOpExecutor>
+class nsHtml5TreeOpExecutor MOZ_FINAL : public nsHtml5DocumentBuilder,
+                                        public nsIContentSink,
+                                        public nsAHtml5TreeOpSink,
+                                        public mozilla::LinkedListElement<nsHtml5TreeOpExecutor>
 {
   friend class nsHtml5FlushLoopGuard;
 

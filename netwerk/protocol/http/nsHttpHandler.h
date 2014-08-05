@@ -43,10 +43,10 @@ class nsHttpTransaction;
 // nsHttpHandler - protocol handler for HTTP and HTTPS
 //-----------------------------------------------------------------------------
 
-class nsHttpHandler : public nsIHttpProtocolHandler
-                    , public nsIObserver
-                    , public nsSupportsWeakReference
-                    , public nsISpeculativeConnect
+class nsHttpHandler MOZ_FINAL : public nsIHttpProtocolHandler
+                              , public nsIObserver
+                              , public nsSupportsWeakReference
+                              , public nsISpeculativeConnect
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

@@ -25,11 +25,11 @@ class nsAutoString;
 class nsINSSComponent;
 class nsIASN1Sequence;
 
-class nsNSSCertificate : public nsIX509Cert,
-                         public nsIIdentityInfo,
-                         public nsISerializable,
-                         public nsIClassInfo,
-                         public nsNSSShutDownObject
+class nsNSSCertificate MOZ_FINAL : public nsIX509Cert,
+                                   public nsIIdentityInfo,
+                                   public nsISerializable,
+                                   public nsIClassInfo,
+                                   public nsNSSShutDownObject
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

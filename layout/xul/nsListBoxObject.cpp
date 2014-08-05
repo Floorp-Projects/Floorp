@@ -15,7 +15,7 @@
 #include "nsListBoxBodyFrame.h"
 #include "ChildIterator.h"
 
-class nsListBoxObject : public nsPIListBoxObject, public nsBoxObject
+class nsListBoxObject MOZ_FINAL : public nsPIListBoxObject, public nsBoxObject
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

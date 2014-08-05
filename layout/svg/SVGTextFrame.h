@@ -238,7 +238,7 @@ struct SVGTextContextPaint : public gfxTextContextPaint {
  * itself do the painting.  Otherwise, a DrawPathCallback is passed to
  * PaintText so that we can fill the text geometry with SVG paint servers.
  */
-class SVGTextFrame : public SVGTextFrameBase
+class SVGTextFrame MOZ_FINAL : public SVGTextFrameBase
 {
   friend nsIFrame*
   NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

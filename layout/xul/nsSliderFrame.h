@@ -20,7 +20,7 @@ class nsSliderFrame;
 
 nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-class nsSliderMediator : public nsIDOMEventListener
+class nsSliderMediator MOZ_FINAL : public nsIDOMEventListener
 {
 public:
 

@@ -16,7 +16,7 @@ class nsITransaction;
 class nsTransactionManager;
 class nsTransactionStack;
 
-class nsTransactionItem
+class nsTransactionItem MOZ_FINAL
 {
   nsCOMArray<nsISupports>  mData;
   nsCOMPtr<nsITransaction> mTransaction;

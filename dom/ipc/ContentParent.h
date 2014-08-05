@@ -65,11 +65,11 @@ class TabContext;
 class PFileDescriptorSetParent;
 class ContentBridgeParent;
 
-class ContentParent : public PContentParent
-                    , public nsIContentParent
-                    , public nsIObserver
-                    , public nsIDOMGeoPositionCallback
-                    , public mozilla::LinkedListElement<ContentParent>
+class ContentParent MOZ_FINAL : public PContentParent
+                              , public nsIContentParent
+                              , public nsIObserver
+                              , public nsIDOMGeoPositionCallback
+                              , public mozilla::LinkedListElement<ContentParent>
 {
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;

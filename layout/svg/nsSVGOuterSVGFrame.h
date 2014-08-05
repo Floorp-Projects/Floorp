@@ -18,8 +18,8 @@ class nsSVGForeignObjectFrame;
 
 typedef nsSVGDisplayContainerFrame nsSVGOuterSVGFrameBase;
 
-class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
-                           public nsISVGSVGFrame
+class nsSVGOuterSVGFrame MOZ_FINAL : public nsSVGOuterSVGFrameBase,
+                                     public nsISVGSVGFrame
 {
   friend nsContainerFrame*
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

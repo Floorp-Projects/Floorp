@@ -25,7 +25,7 @@ enum nsTableColGroupType {
  *
  * @author  sclark
  */
-class nsTableColGroupFrame : public nsContainerFrame
+class nsTableColGroupFrame MOZ_FINAL : public nsContainerFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
