@@ -41,8 +41,8 @@ public:
 
   static ChildPrivileges DefaultChildPrivileges();
 
-  GeckoChildProcessHost(GeckoProcessType aProcessType,
-                        ChildPrivileges aPrivileges=base::PRIVILEGES_DEFAULT);
+  explicit GeckoChildProcessHost(GeckoProcessType aProcessType,
+                                 ChildPrivileges aPrivileges=base::PRIVILEGES_DEFAULT);
 
   ~GeckoChildProcessHost();
 

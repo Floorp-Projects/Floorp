@@ -118,10 +118,10 @@ private:
   nscoord GetCaretYCenterPosition();
 
   /**
-   * Simulate mouse down state when we change the selection range.
+   * Simulate drag state when we change the selection range.
    * Hence, the selection change event will fire normally.
    */
-  void SetMouseDownState(bool aState);
+  void SetSelectionDragState(bool aState);
 
   void SetSelectionDirection(bool aForward);
 

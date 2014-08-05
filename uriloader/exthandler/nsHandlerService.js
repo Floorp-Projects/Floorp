@@ -569,8 +569,8 @@ HandlerService.prototype = {
       if (!objpath)
         return null;
       
-      let interface = this._getValue(aHandlerAppID, NC_INTERFACE);
-      if (!interface)
+      let iface = this._getValue(aHandlerAppID, NC_INTERFACE);
+      if (!iface)
         return null;
       
       handlerApp = Cc["@mozilla.org/uriloader/dbus-handler-app;1"].
@@ -578,7 +578,7 @@ HandlerService.prototype = {
       handlerApp.service   = service;
       handlerApp.method    = method;
       handlerApp.objectPath   = objpath;
-      handlerApp.dBusInterface = interface;
+      handlerApp.dBusInterface = iface;
       
     }
     else

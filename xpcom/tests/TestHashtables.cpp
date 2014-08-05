@@ -21,7 +21,7 @@ namespace TestHashtables {
 class TestUniChar // for nsClassHashtable
 {
 public:
-  TestUniChar(uint32_t aWord)
+  explicit TestUniChar(uint32_t aWord)
   {
     printf("    TestUniChar::TestUniChar() %u\n", aWord);
     mWord = aWord;
@@ -70,7 +70,7 @@ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
-  EntityToUnicodeEntry(const char* aKey) { mNode = nullptr; }
+  explicit EntityToUnicodeEntry(const char* aKey) { mNode = nullptr; }
   EntityToUnicodeEntry(const EntityToUnicodeEntry& aEntry) { mNode = aEntry.mNode; }
   ~EntityToUnicodeEntry() { }
 

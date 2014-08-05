@@ -29,7 +29,7 @@ public:
     nsresult Init();
 
 protected:
-    nsDSURIContentListener(nsDocShell* aDocShell);
+    explicit nsDSURIContentListener(nsDocShell* aDocShell);
     virtual ~nsDSURIContentListener();
 
     void DropDocShellreference() {

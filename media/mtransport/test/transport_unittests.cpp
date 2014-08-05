@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <algorithm>
 
 #include "mozilla/UniquePtr.h"
 
@@ -18,6 +19,7 @@
 #include "nspr.h"
 #include "nss.h"
 #include "ssl.h"
+#include "sslproto.h"
 
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
@@ -291,7 +293,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
                                   TransportLayerDtls::SERVER)),
         streams_(), candidates_(),
         peer_(nullptr),
-        gathering_complete_(false)
+        gathering_complete_(false),
+        enabled_cipersuites_(),
+        disabled_cipersuites_()
  {
     std::vector<NrIceStunServer> stun_servers;
     UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
@@ -361,6 +365,18 @@ class TransportTestPeer : public sigslot::has_slots<> {
     }
   }
 
+  void SetupSrtp() {
+    // this mimics the setup we do elsewhere
+    std::vector<uint16_t> srtp_ciphers;
+    srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
+    srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_32);
+
+    SetSrtpCiphers(srtp_ciphers);
+ }
+
+  void SetSrtpCiphers(std::vector<uint16_t>& srtp_ciphers) {
+    ASSERT_TRUE(NS_SUCCEEDED(dtls_->SetSrtpCiphers(srtp_ciphers)));
+  }
 
   void ConnectSocket_s(TransportTestPeer *peer) {
     nsresult res;
@@ -374,7 +390,20 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(lossy_));
     ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(dtls_));
 
+    TweakCiphers(dtls_->internal_fd());
+
     flow_->SignalPacketReceived.connect(this, &TransportTestPeer::PacketReceived);
+  }
+
+  void TweakCiphers(PRFileDesc* fd) {
+    for (auto it = enabled_cipersuites_.begin();
+         it != enabled_cipersuites_.end(); ++it) {
+      SSL_CipherPrefSet(fd, *it, PR_TRUE);
+    }
+    for (auto it = disabled_cipersuites_.begin();
+         it != disabled_cipersuites_.end(); ++it) {
+      SSL_CipherPrefSet(fd, *it, PR_FALSE);
+    }
   }
 
   void ConnectSocket(TransportTestPeer *peer) {
@@ -517,6 +546,12 @@ class TransportTestPeer : public sigslot::has_slots<> {
     lossy_->SetInspector(Move(inspector));
   }
 
+  void SetCipherSuiteChanges(const std::vector<uint16_t>& enableThese,
+                             const std::vector<uint16_t>& disableThese) {
+    disabled_cipersuites_ = disableThese;
+    enabled_cipersuites_ = enableThese;
+  }
+
   TransportLayer::State state() {
     TransportLayer::State tstate;
 
@@ -536,6 +571,31 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   size_t received() { return received_; }
 
+  uint16_t cipherSuite() const {
+    nsresult rv;
+    uint16_t cipher;
+    RUN_ON_THREAD(test_utils->sts_target(),
+                  WrapRunnableRet(dtls_, &TransportLayerDtls::GetCipherSuite,
+                                  &cipher, &rv));
+
+    if (NS_FAILED(rv)) {
+      return TLS_NULL_WITH_NULL_NULL; // i.e., not good
+    }
+    return cipher;
+  }
+
+  uint16_t srtpCipher() const {
+    nsresult rv;
+    uint16_t cipher;
+    RUN_ON_THREAD(test_utils->sts_target(),
+                  WrapRunnableRet(dtls_, &TransportLayerDtls::GetSrtpCipher,
+                                  &cipher, &rv));
+    if (NS_FAILED(rv)) {
+      return 0; // the SRTP equivalent of TLS_NULL_WITH_NULL_NULL
+    }
+    return cipher;
+  }
+
  private:
   std::string name_;
   nsCOMPtr<nsIEventTarget> target_;
@@ -554,6 +614,8 @@ class TransportTestPeer : public sigslot::has_slots<> {
   bool gathering_complete_;
   unsigned char fingerprint_[TransportLayerDtls::kMaxDigestLength];
   size_t fingerprint_len_;
+  std::vector<uint16_t> enabled_cipersuites_;
+  std::vector<uint16_t> disabled_cipersuites_;
 };
 
 
@@ -587,6 +649,11 @@ class TransportTest : public ::testing::Test {
     p2_ = new TransportTestPeer(target_, "P2");
   }
 
+  void SetupSrtp() {
+    p1_->SetupSrtp();
+    p2_->SetupSrtp();
+  }
+
   void SetDtlsPeer(int digests = 1, unsigned int damage = 0) {
     p1_->SetDtlsPeer(p2_, digests, damage);
     p2_->SetDtlsPeer(p1_, digests, damage);
@@ -607,6 +674,9 @@ class TransportTest : public ::testing::Test {
 
     ASSERT_TRUE_WAIT(p1_->connected(), 10000);
     ASSERT_TRUE_WAIT(p2_->connected(), 10000);
+
+    ASSERT_EQ(p1_->cipherSuite(), p2_->cipherSuite());
+    ASSERT_EQ(p1_->srtpCipher(), p2_->srtpCipher());
   }
 
   void ConnectSocketExpectFail() {
@@ -662,7 +732,25 @@ TEST_F(TransportTest, TestNoDtlsVerificationSettings) {
 TEST_F(TransportTest, TestConnect) {
   SetDtlsPeer();
   ConnectSocket();
+
+  // check that we got the right suite
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
+
+  // no SRTP on this one
+  ASSERT_EQ(0, p1_->srtpCipher());
 }
+
+TEST_F(TransportTest, TestConnectSrtp) {
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocket();
+
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
+
+  // SRTP is on
+  ASSERT_EQ(SRTP_AES128_CM_HMAC_SHA1_80, p1_->srtpCipher());
+}
+
 
 TEST_F(TransportTest, TestConnectDestroyFlowsMainThread) {
   SetDtlsPeer();
@@ -740,6 +828,65 @@ TEST_F(TransportTest, TestTransferIce) {
   TransferTest(1);
 }
 
+// test the default configuration against a peer that supports only
+// one of the mandatory-to-implement suites, which should succeed
+static void ConfigureOneCipher(TransportTestPeer* peer, uint16_t suite) {
+  std::vector<uint16_t> justOne;
+  justOne.push_back(suite);
+  std::vector<uint16_t> everythingElse(SSL_GetImplementedCiphers(),
+                                       SSL_GetImplementedCiphers()
+                                       + SSL_GetNumImplementedCiphers());
+  std::remove(everythingElse.begin(), everythingElse.end(), suite);
+  peer->SetCipherSuiteChanges(justOne, everythingElse);
+}
+
+TEST_F(TransportTest, TestCipherMismatch) {
+  SetDtlsPeer();
+  ConfigureOneCipher(p1_, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256);
+  ConfigureOneCipher(p2_, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA);
+  ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, TestCipherMandatoryOnlyGcm) {
+  SetDtlsPeer();
+  ConfigureOneCipher(p1_, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256);
+  ConnectSocket();
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
+}
+
+TEST_F(TransportTest, TestCipherMandatoryOnlyCbc) {
+  SetDtlsPeer();
+  ConfigureOneCipher(p1_, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA);
+  ConnectSocket();
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA, p1_->cipherSuite());
+}
+
+TEST_F(TransportTest, TestSrtpMismatch) {
+  std::vector<uint16_t> setA;
+  setA.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
+  std::vector<uint16_t> setB;
+  setB.push_back(SRTP_AES128_CM_HMAC_SHA1_32);
+
+  p1_->SetSrtpCiphers(setA);
+  p2_->SetSrtpCiphers(setB);
+  SetDtlsPeer();
+  ConnectSocket();
+
+  ASSERT_EQ(0, p1_->srtpCipher());
+  ASSERT_EQ(0, p2_->srtpCipher());
+}
+
+// NSS doesn't support DHE suites on the server end.
+// This checks to see if we barf when that's the only option available.
+TEST_F(TransportTest, TestDheOnlyFails) {
+  SetDtlsPeer();
+
+  // p2_ is the client
+  // setting this on p1_ (the server) causes NSS to assert
+  ConfigureOneCipher(p2_, TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
+  ConnectSocketExpectFail();
+}
+
 TEST(PushTests, LayerFail) {
   mozilla::RefPtr<TransportFlow> flow = new TransportFlow();
   nsresult rv;
@@ -759,7 +906,6 @@ TEST(PushTests, LayerFail) {
   ASSERT_TRUE(NS_FAILED(rv));
   ASSERT_EQ(true, destroyed1);
 }
-
 
 TEST(PushTests, LayersFail) {
   mozilla::RefPtr<TransportFlow> flow = new TransportFlow();
