@@ -24,7 +24,6 @@ class KeyAlgorithm;
 enum KeyAlgorithmStructuredCloneTags {
   SCTAG_KEYALG,
   SCTAG_AESKEYALG,
-  SCTAG_ECKEYALG,
   SCTAG_HMACKEYALG,
   SCTAG_RSAKEYALG,
   SCTAG_RSAHASHEDKEYALG
