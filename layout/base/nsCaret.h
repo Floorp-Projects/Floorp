@@ -34,7 +34,7 @@ class Selection;
 }
 
 //-----------------------------------------------------------------------------
-class nsCaret : public nsISelectionListener
+class nsCaret MOZ_FINAL : public nsISelectionListener
 {
   public:
     nsCaret();

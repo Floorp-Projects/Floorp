@@ -35,13 +35,13 @@ class ASpdySession;
 // accessed from any other thread.
 //-----------------------------------------------------------------------------
 
-class nsHttpConnection : public nsAHttpSegmentReader
-                       , public nsAHttpSegmentWriter
-                       , public nsIInputStreamCallback
-                       , public nsIOutputStreamCallback
-                       , public nsITransportEventSink
-                       , public nsIInterfaceRequestor
-                       , public NudgeTunnelCallback
+class nsHttpConnection MOZ_FINAL : public nsAHttpSegmentReader
+                                 , public nsAHttpSegmentWriter
+                                 , public nsIInputStreamCallback
+                                 , public nsIOutputStreamCallback
+                                 , public nsITransportEventSink
+                                 , public nsIInterfaceRequestor
+                                 , public NudgeTunnelCallback
 {
     virtual ~nsHttpConnection();
 

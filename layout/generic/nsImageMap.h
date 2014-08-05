@@ -21,8 +21,8 @@ class nsIFrame;
 class nsIContent;
 struct nsRect;
 
-class nsImageMap : public nsStubMutationObserver,
-                   public nsIDOMEventListener
+class nsImageMap MOZ_FINAL : public nsStubMutationObserver,
+                             public nsIDOMEventListener
 {
 public:
   nsImageMap();

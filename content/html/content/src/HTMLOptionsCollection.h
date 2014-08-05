@@ -29,9 +29,9 @@ class HTMLSelectElement;
  * The collection of options in the select (what you get back when you do
  * select.options in DOM)
  */
-class HTMLOptionsCollection : public nsIHTMLCollection
-                            , public nsIDOMHTMLOptionsCollection
-                            , public nsWrapperCache
+class HTMLOptionsCollection MOZ_FINAL : public nsIHTMLCollection
+                                      , public nsIDOMHTMLOptionsCollection
+                                      , public nsWrapperCache
 {
   typedef HTMLOptionElementOrHTMLOptGroupElement HTMLOptionOrOptGroupElement;
 public:

@@ -54,7 +54,7 @@ using mozilla::unused;          // <snicker>
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class nsGeolocationRequest
+class nsGeolocationRequest MOZ_FINAL
  : public nsIContentPermissionRequest
  , public nsITimerCallback
  , public nsIGeolocationUpdate

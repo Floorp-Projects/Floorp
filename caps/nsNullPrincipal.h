@@ -27,7 +27,7 @@ class nsIURI;
 
 #define NS_NULLPRINCIPAL_SCHEME "moz-nullprincipal"
 
-class nsNullPrincipal : public nsJSPrincipals
+class nsNullPrincipal MOZ_FINAL : public nsJSPrincipals
 {
 public:
   nsNullPrincipal();

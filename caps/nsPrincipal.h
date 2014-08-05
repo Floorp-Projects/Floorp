@@ -44,7 +44,7 @@ protected:
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
 };
 
-class nsPrincipal : public nsBasePrincipal
+class nsPrincipal MOZ_FINAL : public nsBasePrincipal
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

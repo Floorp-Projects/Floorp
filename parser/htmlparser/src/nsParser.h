@@ -62,9 +62,9 @@ class nsIRunnable;
 #endif
 
 
-class nsParser : public nsIParser,
-                 public nsIStreamListener,
-                 public nsSupportsWeakReference
+class nsParser MOZ_FINAL : public nsIParser,
+                           public nsIStreamListener,
+                           public nsSupportsWeakReference
 {
     /**
      * Destructor

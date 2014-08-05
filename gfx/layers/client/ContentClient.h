@@ -123,8 +123,8 @@ public:
 };
 
 // thin wrapper around RotatedContentBuffer, for on-mtc
-class ContentClientBasic : public ContentClient
-                         , protected RotatedContentBuffer
+class ContentClientBasic MOZ_FINAL : public ContentClient
+                                   , protected RotatedContentBuffer
 {
 public:
   ContentClientBasic();

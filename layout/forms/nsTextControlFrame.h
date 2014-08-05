@@ -24,10 +24,10 @@ class Element;
 }
 }
 
-class nsTextControlFrame : public nsContainerFrame,
-                           public nsIAnonymousContentCreator,
-                           public nsITextControlFrame,
-                           public nsIStatefulFrame
+class nsTextControlFrame MOZ_FINAL : public nsContainerFrame,
+                                     public nsIAnonymousContentCreator,
+                                     public nsITextControlFrame,
+                                     public nsIStatefulFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
