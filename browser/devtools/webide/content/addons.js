@@ -6,7 +6,7 @@ const Cu = Components.utils;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 const {GetAvailableAddons, ForgetAddonsList} = require("devtools/webide/addons");
-const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
+const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);
