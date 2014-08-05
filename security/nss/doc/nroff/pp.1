@@ -2,12 +2,12 @@
 .\"     Title: PP
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date:  5 June 2014
+.\"      Date: 29 July 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "PP" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
+.TH "PP" "1" "29 July 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,8 +30,8 @@
 .SH "NAME"
 pp \- Prints certificates, keys, crls, and pkcs7 files
 .SH "SYNOPSIS"
-.HP \w'\fBpp\ \-t\ type\ [\-a]\ [\-i\ input]\ [\-o\ output]\fR\ 'u
-\fBpp \-t type [\-a] [\-i input] [\-o output]\fR
+.HP \w'\fBpp\ \-t\ type\ [\-a]\ [\-i\ input]\ [\-o\ output]\ [\-u]\ [\-w]\fR\ 'u
+\fBpp \-t type [\-a] [\-i input] [\-o output] [\-u] [\-w]\fR
 .SH "STATUS"
 .PP
 This documentation is still work in progress\&. Please contribute to the initial review in
@@ -57,9 +57,19 @@ Input is in ascii encoded form (RFC1113)
 Define an input file to use (default is stdin)
 .RE
 .PP
-\fB\-u \fR \fIoutputfile\fR
+\fB\-o \fR \fIoutputfile\fR
 .RS 4
 Define an output file to use (default is stdout)
+.RE
+.PP
+\fB\-u \fR
+.RS 4
+Use UTF\-8 (default is to show non\-ascii as \&.)
+.RE
+.PP
+\fB\-w \fR
+.RS 4
+Don\*(Aqt wrap long output lines
 .RE
 .SH "ADDITIONAL RESOURCES"
 .PP
