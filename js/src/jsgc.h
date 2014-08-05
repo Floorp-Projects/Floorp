@@ -1090,19 +1090,6 @@ class GCHelperState
         CANCEL_ALLOCATION
     };
 
-    /*
-     * During the finalization we do not free immediately. Rather we add the
-     * corresponding pointers to a buffer which we later release on a
-     * separated thread.
-     *
-     * The buffer is implemented as a vector of 64K arrays of pointers, not as
-     * a simple vector, to avoid realloc calls during the vector growth and to
-     * not bloat the binary size of the inlined freeLater method. Any OOM
-     * during buffer growth results in the pointer being freed immediately.
-     */
-    static const size_t FREE_ARRAY_SIZE = size_t(1) << 16;
-    static const size_t FREE_ARRAY_LENGTH = FREE_ARRAY_SIZE / sizeof(void *);
-
     // Associated runtime.
     JSRuntime *const rt;
 
@@ -1126,16 +1113,9 @@ class GCHelperState
     bool              sweepFlag;
     bool              shrinkFlag;
 
-    Vector<void **, 16, js::SystemAllocPolicy> freeVector;
-    void            **freeCursor;
-    void            **freeCursorEnd;
-
     bool              backgroundAllocation;
 
     friend class js::gc::ArenaLists;
-
-    void
-    replenishAndFreeLater(void *ptr);
 
     static void freeElementsAndArray(void **array, void **end) {
         JS_ASSERT(array <= end);
@@ -1155,8 +1135,6 @@ class GCHelperState
         thread(nullptr),
         sweepFlag(false),
         shrinkFlag(false),
-        freeCursor(nullptr),
-        freeCursorEnd(nullptr),
         backgroundAllocation(true)
     { }
 
@@ -1201,14 +1179,6 @@ class GCHelperState
     bool shouldShrink() const {
         JS_ASSERT(isBackgroundSweeping());
         return shrinkFlag;
-    }
-
-    void freeLater(void *ptr) {
-        JS_ASSERT(!isBackgroundSweeping());
-        if (freeCursor != freeCursorEnd)
-            *freeCursor++ = ptr;
-        else
-            replenishAndFreeLater(ptr);
     }
 };
 
