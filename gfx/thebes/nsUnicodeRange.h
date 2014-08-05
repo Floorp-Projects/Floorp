@@ -19,32 +19,31 @@ const uint8_t   kRangeGreek    =    1;
 const uint8_t   kRangeTurkish  =    2;
 const uint8_t   kRangeHebrew   =    3;
 const uint8_t   kRangeArabic   =    4;
-const uint8_t   kRangeBaltic   =    5;
-const uint8_t   kRangeThai     =    6;
-const uint8_t   kRangeKorean   =    7;
-const uint8_t   kRangeJapanese =    8;
-const uint8_t   kRangeSChinese =    9;
-const uint8_t   kRangeTChinese =   10;
-const uint8_t   kRangeDevanagari = 11;
-const uint8_t   kRangeTamil    =   12;
-const uint8_t   kRangeArmenian =   13;
-const uint8_t   kRangeBengali  =   14;
-const uint8_t   kRangeCanadian =   15;
-const uint8_t   kRangeEthiopic =   16;
-const uint8_t   kRangeGeorgian =   17;
-const uint8_t   kRangeGujarati =   18;
-const uint8_t   kRangeGurmukhi =   19;
-const uint8_t   kRangeKhmer    =   20;
-const uint8_t   kRangeMalayalam =  21;
-const uint8_t   kRangeOriya     =  22;
-const uint8_t   kRangeTelugu    =  23;
-const uint8_t   kRangeKannada   =  24;
-const uint8_t   kRangeSinhala   =  25;
-const uint8_t   kRangeTibetan   =  26;
+const uint8_t   kRangeThai     =    5;
+const uint8_t   kRangeKorean   =    6;
+const uint8_t   kRangeJapanese =    7;
+const uint8_t   kRangeSChinese =    8;
+const uint8_t   kRangeTChinese =    9;
+const uint8_t   kRangeDevanagari = 10;
+const uint8_t   kRangeTamil    =   11;
+const uint8_t   kRangeArmenian =   12;
+const uint8_t   kRangeBengali  =   13;
+const uint8_t   kRangeCanadian =   14;
+const uint8_t   kRangeEthiopic =   15;
+const uint8_t   kRangeGeorgian =   16;
+const uint8_t   kRangeGujarati =   17;
+const uint8_t   kRangeGurmukhi =   18;
+const uint8_t   kRangeKhmer    =   19;
+const uint8_t   kRangeMalayalam =  20;
+const uint8_t   kRangeOriya     =  21;
+const uint8_t   kRangeTelugu    =  22;
+const uint8_t   kRangeKannada   =  23;
+const uint8_t   kRangeSinhala   =  24;
+const uint8_t   kRangeTibetan   =  25;
 
-const uint8_t   kRangeSpecificItemNum = 27;
+const uint8_t   kRangeSpecificItemNum = 26;
 
-//range/rangeSet grow to this place 27-29
+//range/rangeSet grow to this place 26-29
 
 const uint8_t   kRangeSetStart  =  30;   // range set definition starts from here
 const uint8_t   kRangeSetLatin  =  30;

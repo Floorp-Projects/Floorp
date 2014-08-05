@@ -235,7 +235,6 @@ static const char *gPrefLangNames[] = {
     "zh-HK",
     "ko",
     "x-cyrillic",
-    "x-baltic",
     "el",
     "tr",
     "th",
@@ -1244,7 +1243,6 @@ gfxPlatform::GetFontPrefLangFor(uint8_t aUnicodeRange)
         case kRangeTurkish:    return eFontPrefLang_Turkish;
         case kRangeHebrew:     return eFontPrefLang_Hebrew;
         case kRangeArabic:     return eFontPrefLang_Arabic;
-        case kRangeBaltic:     return eFontPrefLang_Baltic;
         case kRangeThai:       return eFontPrefLang_Thai;
         case kRangeKorean:     return eFontPrefLang_Korean;
         case kRangeJapanese:   return eFontPrefLang_Japanese;
