@@ -626,13 +626,17 @@ function isUuidsEqual(aUuidArray1, aUuidArray2) {
 }
 
 /**
- * Wait for pending emulator transactions and call |finish()|.
+ * Flush permission settings and call |finish()|.
  */
 function cleanUp() {
-  // Use ok here so that we have at least one test run.
-  ok(true, ":: CLEANING UP ::");
+  waitFor(function() {
+    SpecialPowers.flushPermissions(function() {
+      // Use ok here so that we have at least one test run.
+      ok(true, "permissions flushed");
 
-  waitFor(finish, function() {
+      finish();
+    });
+  }, function() {
     return pendingEmulatorCmdCount === 0;
   });
 }
