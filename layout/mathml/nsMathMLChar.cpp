@@ -45,7 +45,7 @@ static void
 NormalizeDefaultFont(nsFont& aFont)
 {
   if (aFont.fontlist.GetDefaultFontType() != eFamily_none) {
-    aFont.fontlist.Append(aFont.fontlist.GetDefaultFontType());
+    aFont.fontlist.Append(FontFamilyName(aFont.fontlist.GetDefaultFontType()));
     aFont.fontlist.SetDefaultFontType(eFamily_none);
   }
 }

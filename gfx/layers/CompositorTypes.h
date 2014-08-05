@@ -199,11 +199,11 @@ struct TextureFactoryIdentifier
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
 
-  TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
-                           GeckoProcessType aParentProcessId = GeckoProcessType_Default,
-                           int32_t aMaxTextureSize = 4096,
-                           bool aSupportsTextureBlitting = false,
-                           bool aSupportsPartialUploads = false)
+  explicit TextureFactoryIdentifier(LayersBackend aLayersBackend = LayersBackend::LAYERS_NONE,
+                                    GeckoProcessType aParentProcessId = GeckoProcessType_Default,
+                                    int32_t aMaxTextureSize = 4096,
+                                    bool aSupportsTextureBlitting = false,
+                                    bool aSupportsPartialUploads = false)
     : mParentBackend(aLayersBackend)
     , mParentProcessId(aParentProcessId)
     , mSupportedBlendModes(gfx::CompositionOp::OP_OVER)
@@ -246,7 +246,7 @@ struct TextureInfo
     , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
 
-  TextureInfo(CompositableType aType)
+  explicit TextureInfo(CompositableType aType)
     : mCompositableType(aType)
     , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
     , mTextureFlags(TextureFlags::NO_FLAGS)

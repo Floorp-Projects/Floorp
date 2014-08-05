@@ -26,9 +26,9 @@ class gfxPattern MOZ_FINAL{
     NS_INLINE_DECL_REFCOUNTING(gfxPattern)
 
 public:
-    gfxPattern(cairo_pattern_t *aPattern);
-    gfxPattern(const gfxRGBA& aColor);
-    gfxPattern(gfxASurface *surface); // from another surface
+    explicit gfxPattern(cairo_pattern_t *aPattern);
+    explicit gfxPattern(const gfxRGBA& aColor);
+    explicit gfxPattern(gfxASurface *surface); // from another surface
     // linear
     gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1); // linear
     gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,

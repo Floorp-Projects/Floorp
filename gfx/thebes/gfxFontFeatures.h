@@ -104,7 +104,7 @@ private:
         typedef const FeatureValueHashKey &KeyType;
         typedef const FeatureValueHashKey *KeyTypePointer;
 
-        FeatureValueHashEntry(KeyTypePointer aKey) { }
+        explicit FeatureValueHashEntry(KeyTypePointer aKey) { }
         FeatureValueHashEntry(const FeatureValueHashEntry& toCopy)
         {
             NS_ERROR("Should not be called");
