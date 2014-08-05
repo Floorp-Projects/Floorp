@@ -12,7 +12,8 @@
  * this document.
  */
 
-[Global, Func="mozilla::dom::workers::DedicatedWorkerGlobalScope::Visible"]
+[Global=(Worker,DedicatedWorker),
+ Func="mozilla::dom::workers::DedicatedWorkerGlobalScope::Visible"]
 interface DedicatedWorkerGlobalScope : WorkerGlobalScope {
   [Throws]
   void postMessage(any message, optional sequence<any> transfer);
