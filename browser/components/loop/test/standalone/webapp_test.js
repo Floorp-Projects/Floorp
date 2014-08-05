@@ -17,6 +17,9 @@ describe("loop.webapp", function() {
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
+    // conversation#outgoing sets timers, so we need to use fake ones
+    // to prevent random failures.
+    sandbox.useFakeTimers();
     notifier = {
       notify: sandbox.spy(),
       warn: sandbox.spy(),
