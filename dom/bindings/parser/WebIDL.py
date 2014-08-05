@@ -1049,9 +1049,12 @@ class IDLInterface(IDLObjectWithScope):
                                       "an interface with inherited interfaces",
                                       [attr.location, self.location])
             elif identifier == "Global":
-                if not attr.noArguments():
-                    raise WebIDLError("[Global] must take no arguments",
-                                      [attr.location])
+                if attr.hasValue():
+                    self.globalNames = [ attr.value() ]
+                elif attr.hasArgs():
+                    self.globalNames = attr.args()
+                else:
+                    self.globalNames = [ self.identifier.name ]
                 self._isOnGlobalProtoChain = True
             elif (identifier == "NeedNewResolve" or
                   identifier == "OverrideBuiltins" or
