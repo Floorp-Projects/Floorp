@@ -48,7 +48,6 @@
             <menuitem value="ar"              label="&font.langGroup.arabic;"/>
             <menuitem value="x-armn"          label="&font.langGroup.armenian;"/>
             <menuitem value="x-beng"          label="&font.langGroup.bengali;"/>
-            <menuitem value="x-central-euro"  label="&font.langGroup.latin2;"/>
             <menuitem value="zh-CN"           label="&font.langGroup.simpl-chinese;"/>
             <menuitem value="zh-HK"           label="&font.langGroup.trad-chinese-hk;"/>
             <menuitem value="zh-TW"           label="&font.langGroup.trad-chinese;"/>

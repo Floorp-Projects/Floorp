@@ -2043,7 +2043,6 @@ GK_ATOM(x_tibt, "x-tibt")
 
 // used in gfxGDIFontList.h
 GK_ATOM(ko_xxx, "ko-xxx")
-GK_ATOM(x_central_euro, "x-central-euro")
 GK_ATOM(x_symbol, "x-symbol")
 
 // additional languages that have special case transformations
