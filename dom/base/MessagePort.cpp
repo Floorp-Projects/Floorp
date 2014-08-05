@@ -28,7 +28,7 @@ class DispatchEventRunnable : public nsRunnable
   friend class MessagePort;
 
   public:
-    DispatchEventRunnable(MessagePort* aPort)
+    explicit DispatchEventRunnable(MessagePort* aPort)
       : mPort(aPort)
     {
     }

@@ -97,7 +97,7 @@ private:
 class ShutdownThread MOZ_FINAL : public nsRunnable
 {
 public:
-  ShutdownThread(nsIThread *thread)
+  explicit ShutdownThread(nsIThread *thread)
     : mThread(thread)
   {
   }
@@ -122,7 +122,7 @@ private:
 class PACLoadComplete MOZ_FINAL : public nsRunnable
 {
 public:
-  PACLoadComplete(nsPACMan *aPACMan)
+  explicit PACLoadComplete(nsPACMan *aPACMan)
     : mPACMan(aPACMan)
   {
   }
@@ -149,7 +149,7 @@ class ExecutePACThreadAction MOZ_FINAL : public nsRunnable
 {
 public:
   // by default we just process the queue
-  ExecutePACThreadAction(nsPACMan *aPACMan)
+  explicit ExecutePACThreadAction(nsPACMan *aPACMan)
     : mPACMan(aPACMan)
     , mCancel(false)
     , mSetupPAC(false)

@@ -149,6 +149,15 @@ private:
   nsPoint GetEventPosition(WidgetTouchEvent* aEvent, int32_t aIdentifier);
 
   /**
+   * Set mouse down state in nsFrameSelection, we'll set state to true when
+   * user start dragging caret and set state to false when user release the
+   * caret. The reason for setting this state is it will fire drag reason
+   * when moving caret and fire mouseup reason when releasing caret. So that
+   * the display behavior of copy/paste menu becomes more reasonable.
+   */
+  void SetSelectionDragState(bool aState);
+
+  /**
    * Get the coordinates of a given mouse event, relative to canvas frame.
    * @param aEvent the event
    * @return the point, or (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if

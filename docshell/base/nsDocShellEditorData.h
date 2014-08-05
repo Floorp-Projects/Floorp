@@ -20,7 +20,7 @@ class nsDocShellEditorData
 {
 public:
 
-  nsDocShellEditorData(nsIDocShell* inOwningDocShell);
+  explicit nsDocShellEditorData(nsIDocShell* inOwningDocShell);
   ~nsDocShellEditorData();
 
   nsresult MakeEditable(bool inWaitForUriLoad);

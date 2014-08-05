@@ -27,7 +27,7 @@ CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
 // This class is used to suspend a request across a function scope.
 class ScopedRequestSuspender {
 public:
-  ScopedRequestSuspender(nsIRequest *request)
+  explicit ScopedRequestSuspender(nsIRequest *request)
     : mRequest(request) {
     if (mRequest && NS_FAILED(mRequest->Suspend())) {
       NS_WARNING("Couldn't suspend pump");
