@@ -632,23 +632,22 @@ PinRequestCallback(bt_bdaddr_t* aRemoteBdAddress,
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  InfallibleTArray<BluetoothNamedValue> propertiesArray;
-  nsAutoString remoteAddress;
-  BdAddressTypeToString(aRemoteBdAddress, remoteAddress);
+  InfallibleTArray<BluetoothNamedValue> props;
+  nsAutoString deviceAddress;
+  BdAddressTypeToString(aRemoteBdAddress, deviceAddress);
 
-  BT_APPEND_NAMED_VALUE(propertiesArray, "address", remoteAddress);
-  BT_APPEND_NAMED_VALUE(propertiesArray, "method",
-                        NS_LITERAL_STRING("pincode"));
-  BT_APPEND_NAMED_VALUE(propertiesArray, "name",
-                        NS_ConvertUTF8toUTF16(
-                          (const char*)aRemoteBdName->name));
+  BT_APPEND_NAMED_VALUE(props, "address", deviceAddress);
+  BT_APPEND_NAMED_VALUE(props, "passkey", EmptyString());
+  BT_APPEND_NAMED_VALUE(props, "type",
+                        NS_LITERAL_STRING(PAIRING_REQ_TYPE_ENTERPINCODE));
 
-  BluetoothValue value = propertiesArray;
-  BluetoothSignal signal(NS_LITERAL_STRING("RequestPinCode"),
-                         NS_LITERAL_STRING(KEY_LOCAL_AGENT), value);
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+  BluetoothSignal signal(NS_LITERAL_STRING("PairingRequest"),
+                         NS_LITERAL_STRING(KEY_ADAPTER),
+                         BluetoothValue(props));
+
+  nsRefPtr<DistributeBluetoothSignalTask> task =
+    new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(task))) {
     BT_WARNING("Failed to dispatch to main thread!");
   }
 }
@@ -660,24 +659,49 @@ SspRequestCallback(bt_bdaddr_t* aRemoteBdAddress, bt_bdname_t* aRemoteBdName,
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  InfallibleTArray<BluetoothNamedValue> propertiesArray;
-  nsAutoString remoteAddress;
-  BdAddressTypeToString(aRemoteBdAddress, remoteAddress);
+  InfallibleTArray<BluetoothNamedValue> props;
+  nsAutoString deviceAddress;
+  BdAddressTypeToString(aRemoteBdAddress, deviceAddress);
 
-  BT_APPEND_NAMED_VALUE(propertiesArray, "address", remoteAddress);
-  BT_APPEND_NAMED_VALUE(propertiesArray, "method",
-                        NS_LITERAL_STRING("confirmation"));
-  BT_APPEND_NAMED_VALUE(propertiesArray, "name",
-                        NS_ConvertUTF8toUTF16(
-                          (const char*)aRemoteBdName->name));
-  BT_APPEND_NAMED_VALUE(propertiesArray, "passkey", aPasskey);
+  nsAutoString passkey;
+  nsAutoString pairingType;
 
-  BluetoothValue value = propertiesArray;
-  BluetoothSignal signal(NS_LITERAL_STRING("RequestConfirmation"),
-                         NS_LITERAL_STRING(KEY_LOCAL_AGENT), value);
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+  /**
+   * Assign pairing request type and passkey based on the pairing variant.
+   *
+   * passkey value based on pairing request type:
+   * 1) aPasskey: PAIRING_REQ_TYPE_CONFIRMATION and
+   *              PAIRING_REQ_TYPE_DISPLAYPASSKEY
+   * 2) empty string: PAIRING_REQ_TYPE_CONSENT
+   */
+  switch (aPairingVariant) {
+    case BT_SSP_VARIANT_PASSKEY_CONFIRMATION:
+      pairingType.AssignLiteral(PAIRING_REQ_TYPE_CONFIRMATION);
+      passkey.AppendInt(aPasskey);
+      break;
+    case BT_SSP_VARIANT_PASSKEY_NOTIFICATION:
+      pairingType.AssignLiteral(PAIRING_REQ_TYPE_DISPLAYPASSKEY);
+      passkey.AppendInt(aPasskey);
+      break;
+    case BT_SSP_VARIANT_CONSENT:
+      pairingType.AssignLiteral(PAIRING_REQ_TYPE_CONSENT);
+      break;
+    default:
+      BT_WARNING("Unhandled SSP Bonding Variant: %d", aPairingVariant);
+      return;
+  }
+
+  BT_APPEND_NAMED_VALUE(props, "address", deviceAddress);
+  BT_APPEND_NAMED_VALUE(props, "passkey", passkey);
+  BT_APPEND_NAMED_VALUE(props, "type", pairingType);
+
+  BluetoothSignal signal(NS_LITERAL_STRING("PairingRequest"),
+                         NS_LITERAL_STRING(KEY_ADAPTER),
+                         BluetoothValue(props));
+
+  nsRefPtr<DistributeBluetoothSignalTask> task =
+    new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(task))) {
     BT_WARNING("Failed to dispatch to main thread!");
   }
 }
