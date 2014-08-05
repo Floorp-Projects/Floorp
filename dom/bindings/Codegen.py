@@ -638,7 +638,9 @@ class CGPrototypeJSClass(CGThing):
                 nullptr,               /* hasInstance */
                 nullptr,               /* construct */
                 nullptr,               /* trace */
-                JSCLASS_NO_INTERNAL_MEMBERS
+                JS_NULL_CLASS_SPEC,
+                JS_NULL_CLASS_EXT,
+                JS_NULL_OBJECT_OPS
               },
               eInterfacePrototype,
               ${hooks},
@@ -702,7 +704,9 @@ class CGInterfaceObjectJSClass(CGThing):
                 ${hasInstance}, /* hasInstance */
                 ${ctorname}, /* construct */
                 nullptr,               /* trace */
-                JSCLASS_NO_INTERNAL_MEMBERS
+                JS_NULL_CLASS_SPEC,
+                JS_NULL_CLASS_EXT,
+                JS_NULL_OBJECT_OPS
               },
               eInterface,
               ${hooks},
