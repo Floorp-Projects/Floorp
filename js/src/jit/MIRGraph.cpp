@@ -105,8 +105,8 @@ MIRGraph::removeBlock(MBasicBlock *block)
         }
     }
 
-    block->discardAllInstructions();
     block->discardAllResumePoints();
+    block->discardAllInstructions();
 
     // Note: phis are disconnected from the rest of the graph, but are not
     // removed entirely. If the block being removed is a loop header then
@@ -297,7 +297,6 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, const BytecodeSite 
     pc_(site.pc()),
     lir_(nullptr),
     entryResumePoint_(nullptr),
-    outerResumePoint_(nullptr),
     successorWithPhis_(nullptr),
     positionInPhiSuccessor_(0),
     loopDepth_(0),
@@ -817,10 +816,11 @@ void
 MBasicBlock::discardAllInstructionsStartingAt(MInstructionIterator &iter)
 {
     while (iter != end()) {
-        // Discard operands and resume point operands and flag the instruction
-        // as discarded.  Also we do not assert that we have no uses as blocks
-        // might be removed in reverse post order.
-        prepareForDiscard(*iter, RefType_DefaultNoAssert);
+        // We only discard operands and flag the instruction as discarded as the
+        // resume points are exepected to be removed separately.  Also we do not
+        // assert that we have no uses as block might be removed in reverse post
+        // order.
+        prepareForDiscard(*iter, RefType_DiscardOperands);
         iter = instructions_.removeAt(iter);
     }
 }
@@ -845,24 +845,17 @@ MBasicBlock::discardAllPhis()
 void
 MBasicBlock::discardAllResumePoints(bool discardEntry)
 {
-    if (outerResumePoint_) {
-        discardResumePoint(outerResumePoint_);
-        outerResumePoint_ = nullptr;
+    for (MResumePointIterator iter = resumePointsBegin(); iter != resumePointsEnd(); ) {
+        MResumePoint *rp = *iter;
+        if (rp == entryResumePoint() && !discardEntry) {
+            iter++;
+        } else {
+            rp->discardUses();
+            iter = resumePoints_.removeAt(iter);
+        }
     }
-
-    if (discardEntry && entryResumePoint_)
+    if (discardEntry)
         clearEntryResumePoint();
-
-#ifdef DEBUG
-    if (!entryResumePoint()) {
-        MOZ_ASSERT(resumePointsEmpty());
-    } else {
-        MResumePointIterator iter(resumePointsBegin());
-        MOZ_ASSERT(iter != resumePointsEnd());
-        iter++;
-        MOZ_ASSERT(iter == resumePointsEnd());
-    }
-#endif
 }
 
 void
