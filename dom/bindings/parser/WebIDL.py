@@ -3920,6 +3920,45 @@ class Tokenizer(object):
                                  lextab='webidllex',
                                  reflags=re.DOTALL)
 
+class SqueakyCleanLogger(object):
+    errorWhitelist = [
+        # Web IDL defines the WHITESPACE token, but doesn't actually
+        # use it ... so far.
+        "Token 'WHITESPACE' defined, but not used",
+        # And that means we have an unused token
+        "There is 1 unused token",
+        # Web IDL defines a OtherOrComma rule that's only used in
+        # ExtendedAttributeInner, which we don't use yet.
+        "Rule 'OtherOrComma' defined, but not used",
+        # And an unused rule
+        "There is 1 unused rule",
+        # And the OtherOrComma grammar symbol is unreachable.
+        "Symbol 'OtherOrComma' is unreachable",
+        # Which means the Other symbol is unreachable.
+        "Symbol 'Other' is unreachable",
+        ]
+    def __init__(self):
+        self.errors = []
+    def debug(self, msg, *args, **kwargs):
+        pass
+    info = debug
+    def warning(self, msg, *args, **kwargs):
+        if msg == "%s:%d: Rule '%s' defined, but not used":
+            # Munge things so we don't have to hardcode filenames and
+            # line numbers in our whitelist.
+            whitelistmsg = "Rule '%s' defined, but not used"
+            whitelistargs = args[2:]
+        else:
+            whitelistmsg = msg
+            whitelistargs = args
+        if (whitelistmsg % whitelistargs) not in SqueakyCleanLogger.errorWhitelist:
+            self.errors.append(msg % args)
+    error = warning
+
+    def reportGrammarErrors(self):
+        if self.errors:
+            raise WebIDLError("\n".join(self.errors), [])
+
 class Parser(Tokenizer):
     def getLocation(self, p, i):
         return Location(self.lexer, p.lineno(i), p.lexpos(i), self._filename)
@@ -5209,10 +5248,12 @@ class Parser(Tokenizer):
 
     def __init__(self, outputdir='', lexer=None):
         Tokenizer.__init__(self, outputdir, lexer)
+
+        logger = SqueakyCleanLogger()
         self.parser = yacc.yacc(module=self,
                                 outputdir=outputdir,
                                 tabmodule='webidlyacc',
-                                errorlog=yacc.NullLogger()
+                                errorlog=logger
                                 # Pickling the grammar is a speedup in
                                 # some cases (older Python?) but a
                                 # significant slowdown in others.
@@ -5220,6 +5261,8 @@ class Parser(Tokenizer):
                                 # becomes a speedup again.
                                 # , picklefile='WebIDLGrammar.pkl'
                             )
+        logger.reportGrammarErrors()
+
         self._globalScope = IDLScope(BuiltinLocation("<Global Scope>"), None, None)
         self._installBuiltins(self._globalScope)
         self._productions = []
