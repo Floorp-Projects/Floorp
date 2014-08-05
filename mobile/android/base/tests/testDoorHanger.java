@@ -1,5 +1,8 @@
 package org.mozilla.gecko.tests;
 
+import android.widget.CheckBox;
+import android.view.View;
+import com.jayway.android.robotium.solo.Condition;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,8 +43,10 @@ public class testDoorHanger extends BaseTest {
         mAsserter.is(mSolo.searchText(GEO_MESSAGE), true, "Geolocation doorhanger has been displayed");
 
         // Test "Share" button hides the notification
+        waitForCheckBox();
         mSolo.clickOnCheckBox(0);
         mSolo.clickOnButton(GEO_ALLOW);
+        waitForTextDismissed(GEO_MESSAGE);
         mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Geolocation doorhanger has been hidden when allowing share");
 
         // Re-trigger geolocation notification
@@ -49,8 +54,10 @@ public class testDoorHanger extends BaseTest {
         waitForText(GEO_MESSAGE);
 
         // Test "Don't share" button hides the notification
+        waitForCheckBox();
         mSolo.clickOnCheckBox(0);
         mSolo.clickOnButton(GEO_DENY);
+        waitForTextDismissed(GEO_MESSAGE);
         mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Geolocation doorhanger has been hidden when denying share");
 
         /* FIXME: disabled on fig - bug 880060 (for some reason this fails because of some raciness)
@@ -104,8 +111,10 @@ public class testDoorHanger extends BaseTest {
         waitForText(OFFLINE_MESSAGE);
 
         // Test doorhanger dismissed when tapping "Don't share"
+        waitForCheckBox();
         mSolo.clickOnCheckBox(0);
         mSolo.clickOnButton(OFFLINE_DENY);
+        waitForTextDismissed(OFFLINE_MESSAGE);
         mAsserter.is(mSolo.searchText(OFFLINE_MESSAGE), false, "Offline storage doorhanger notification is hidden when denying storage");
 
         // Load offline storage page
@@ -114,6 +123,7 @@ public class testDoorHanger extends BaseTest {
 
         // Test doorhanger dismissed when tapping "Allow" and is not displayed again
         mSolo.clickOnButton(OFFLINE_ALLOW);
+        waitForTextDismissed(OFFLINE_MESSAGE);
         mAsserter.is(mSolo.searchText(OFFLINE_MESSAGE), false, "Offline storage doorhanger notification is hidden when allowing storage");
         inputAndLoadUrl(OFFLINE_STORAGE_URL);
         mAsserter.is(mSolo.searchText(OFFLINE_MESSAGE), false, "Offline storage doorhanger is no longer triggered");
@@ -136,6 +146,7 @@ public class testDoorHanger extends BaseTest {
 
         // Test doorhanger is dismissed when tapping "Don't save"
         mSolo.clickOnButton(LOGIN_DENY);
+        waitForTextDismissed(LOGIN_MESSAGE);
         mAsserter.is(mSolo.searchText(LOGIN_MESSAGE), false, "Login doorhanger notification is hidden when denying saving password");
 
         // Load login page
@@ -144,10 +155,38 @@ public class testDoorHanger extends BaseTest {
 
         // Test doorhanger is dismissed when tapping "Save" and is no longer triggered
         mSolo.clickOnButton(LOGIN_ALLOW);
+        waitForTextDismissed(LOGIN_MESSAGE);
         mAsserter.is(mSolo.searchText(LOGIN_MESSAGE), false, "Login doorhanger notification is hidden when allowing saving password");
+    }
 
-        // Reload the page and check that there is no doorhanger displayed
-        inputAndLoadUrl(LOGIN_URL);
-        mAsserter.is(mSolo.searchText(LOGIN_MESSAGE), false, "Login doorhanger is not re-triggered");
+    // wait for a CheckBox view that is clickable
+    private void waitForCheckBox() {
+        waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                for (CheckBox view : mSolo.getCurrentViews(CheckBox.class)) {
+                    // checking isClickable alone is not sufficient --
+                    // intermittent "cannot click" errors persist unless
+                    // additional checks are used
+                    if (view.isClickable() &&
+                        view.getVisibility() == View.VISIBLE &&
+                        view.getWidth() > 0 &&
+                        view.getHeight() > 0) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }, MAX_WAIT_MS);
+    }
+
+    // wait until the specified text is *not* displayed
+    private void waitForTextDismissed(final String text) {
+        waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                return !mSolo.searchText(text);
+            }
+        }, MAX_WAIT_MS);
     }
 }
