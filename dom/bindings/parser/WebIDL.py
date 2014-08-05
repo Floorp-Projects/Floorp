@@ -4765,6 +4765,7 @@ class Parser(Tokenizer):
                               | ExtendedAttributeArgList
                               | ExtendedAttributeIdent
                               | ExtendedAttributeNamedArgList
+                              | ExtendedAttributeIdentList
         """
         p[0] = IDLExtendedAttribute(self.getLocation(p, 1), p[1])
 
@@ -5238,6 +5239,34 @@ class Parser(Tokenizer):
             ExtendedAttributeNamedArgList : IDENTIFIER EQUALS IDENTIFIER LPAREN ArgumentList RPAREN
         """
         p[0] = (p[1], p[3], p[5])
+
+    def p_ExtendedAttributeIdentList(self, p):
+        """
+            ExtendedAttributeIdentList : IDENTIFIER EQUALS LPAREN IdentifierList RPAREN
+        """
+        p[0] = (p[1], p[4])
+
+    def p_IdentifierList(self, p):
+        """
+            IdentifierList : IDENTIFIER Identifiers
+        """
+        idents = list(p[2])
+        idents.insert(0, p[1])
+        p[0] = idents
+
+    def p_IdentifiersList(self, p):
+        """
+            Identifiers : COMMA IDENTIFIER Identifiers
+        """
+        idents = list(p[3])
+        idents.insert(0, p[2])
+        p[0] = idents
+
+    def p_IdentifiersEmpty(self, p):
+        """
+            Identifiers :
+        """
+        p[0] = []
 
     def p_error(self, p):
         if not p:
