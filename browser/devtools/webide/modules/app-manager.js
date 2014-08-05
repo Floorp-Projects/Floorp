@@ -26,7 +26,7 @@ const {USBRuntime, WiFiRuntime, SimulatorRuntime,
        gLocalRuntime, gRemoteRuntime} = require("devtools/webide/runtimes");
 const discovery = require("devtools/toolkit/discovery/discovery");
 
-const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
+const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
 const WIFI_SCANNING_PREF = "devtools.remote.wifi.scan";
 
