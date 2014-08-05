@@ -31,10 +31,9 @@ namespace mozilla {
  *      Responsible for OOM reporting when null is returned.
  *  - template <typename T> T* pod_calloc(size_t)
  *      Responsible for OOM reporting when null is returned.
- *  - void* realloc_(void*, size_t, size_t)
- *      Responsible for OOM reporting when null is returned.  The *used* bytes
- *      of the previous buffer is passed in (rather than the old allocation
- *      size), in addition to the *new* allocation size requested.
+ *  - template <typename T> T* pod_realloc(T*, size_t, size_t)
+ *      Responsible for OOM reporting when null is returned.  The old allocation
+ *      size is passed in, in addition to the new allocation size requested.
  *  - void free_(void*)
  *  - void reportAllocOverflow() const
  *      Called on allocation overflow (that is, an allocation implicitly tried
@@ -67,9 +66,12 @@ public:
     return static_cast<T*>(calloc(aNumElems, sizeof(T)));
   }
 
-  void* realloc_(void* aPtr, size_t aOldBytes, size_t aBytes)
+  template <typename T>
+  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
   {
-    return realloc(aPtr, aBytes);
+    if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+        return nullptr;
+    return static_cast<T*>(realloc(aPtr, aNewSize * sizeof(T)));
   }
 
   void free_(void* aPtr)

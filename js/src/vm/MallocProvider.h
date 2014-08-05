@@ -130,21 +130,22 @@ struct MallocProvider
         return MOZ_LIKELY(!!p2) ? p2 : client->onOutOfMemory(p, newBytes);
     }
 
-    void *realloc_(void *p, size_t bytes) {
-        Client *client = static_cast<Client *>(this);
-        /*
-         * For compatibility we do not account for realloc that increases
-         * previously allocated memory.
-         */
-        if (!p)
-            client->updateMallocCounter(bytes);
-        void *p2 = js_realloc(p, bytes);
-        return MOZ_LIKELY(!!p2) ? p2 : client->onOutOfMemory(p, bytes);
-    }
-
     template <class T>
     T *pod_realloc(T *prior, size_t oldSize, size_t newSize) {
-        return (T *)realloc_(prior, oldSize * sizeof(T), newSize * sizeof(T));
+        T *p = js_pod_realloc(prior, oldSize, newSize);
+        if (MOZ_LIKELY(p)) {
+            // For compatibility we do not account for realloc that decreases
+            // previously allocated memory.
+            if (newSize > oldSize)
+                client()->updateMallocCounter((newSize - oldSize) * sizeof(T));
+            return p;
+        }
+        if (newSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
+            client()->reportAllocationOverflow();
+            return nullptr;
+        }
+        client()->onOutOfMemory(prior, newSize * sizeof(T));
+        return nullptr;
     }
 
     JS_DECLARE_NEW_METHODS(new_, pod_malloc<uint8_t>, MOZ_ALWAYS_INLINE)
