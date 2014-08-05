@@ -399,7 +399,7 @@ class ProxyListener : public nsIStreamListener
                     , public nsIThreadRetargetableStreamListener
 {
 public:
-  ProxyListener(nsIStreamListener *dest);
+  explicit ProxyListener(nsIStreamListener *dest);
 
   /* additional members */
   NS_DECL_ISUPPORTS

@@ -31,7 +31,7 @@ MOZ_END_ENUM_CLASS(Flip)
  */
 struct Orientation
 {
-  Orientation(Angle aRotation = Angle::D0, Flip mFlip = Flip::Unflipped)
+  explicit Orientation(Angle aRotation = Angle::D0, Flip mFlip = Flip::Unflipped)
     : rotation(aRotation)
     , flip(mFlip)
   { }
