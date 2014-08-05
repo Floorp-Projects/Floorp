@@ -34,7 +34,7 @@ class CppEclipseBackend(CommonBackend):
         self._bin_suffix = self.environment.substs['BIN_SUFFIX']
         self._cxx = self.environment.substs['CXX']
         # Note: We need the C Pre Processor (CPP) flags, not the CXX flags
-        self._cppflags = self.environment.substs['CPPFLAGS']
+        self._cppflags = self.environment.substs.get('CPPFLAGS', '')
 
         def detailed(summary):
             return ('\n' + \
