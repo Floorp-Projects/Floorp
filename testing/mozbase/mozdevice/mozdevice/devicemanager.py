@@ -404,14 +404,16 @@ class DeviceManager(object):
         Format of tuples is (processId, processName, userId)
         """
 
-    def processExist(self, processName):
+    def processInfo(self, processName):
         """
-        Returns True if process with name processName is running on device.
+        Returns information on the process with processName.
+        Information on process is in tuple format: (pid, process path, user)
+        If a process with the specified name does not exist this function will return None.
         """
         if not isinstance(processName, basestring):
             raise TypeError("Process name %s is not a string" % processName)
 
-        pid = None
+        processInfo = None
 
         #filter out extra spaces
         parts = filter(lambda x: x != '', processName.split(' '))
@@ -434,10 +436,17 @@ class DeviceManager(object):
         for proc in procList:
             procName = proc[1].split('/')[-1]
             if (procName == app):
-                pid = proc[0]
+                processInfo = proc
                 break
-        return pid
+        return processInfo
 
+    def processExist(self, processName):
+        """
+        Returns True if process with name processName is running on device.
+        """
+        processInfo = self.processInfo(processName)
+        if processInfo:
+            return processInfo[0]
 
     @abstractmethod
     def killProcess(self, processName, sig=None):
