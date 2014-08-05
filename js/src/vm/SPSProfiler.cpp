@@ -321,12 +321,16 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime *rt,
         return;
     }
     size_before = *profiler->size_;
+    // We want to push a CPP frame so the profiler can correctly order JS and native stacks.
     profiler->push("js::RunScript", this, nullptr, nullptr, /* copy = */ false);
+    // We also want to push a JS frame so the hang monitor can catch script hangs.
+    profiler->push("js::RunScript", nullptr, script, script->code(), /* copy = */ false);
 }
 
 SPSEntryMarker::~SPSEntryMarker()
 {
     if (profiler != nullptr) {
+        profiler->pop();
         profiler->pop();
         JS_ASSERT(size_before == *profiler->size_);
     }
