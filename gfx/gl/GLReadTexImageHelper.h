@@ -33,9 +33,9 @@ class GLReadTexImageHelper MOZ_FINAL
     // The GLContext is the sole owner of the GLBlitHelper.
     GLContext* mGL;
 
-    GLProgram mPrograms[4];
+    GLuint mPrograms[4];
 
-    GLProgram TextureImageProgramFor(GLenum aTextureTarget, int aShader);
+    GLuint TextureImageProgramFor(GLenum aTextureTarget, int aShader);
 
     bool DidGLErrorOccur(const char* str);
 

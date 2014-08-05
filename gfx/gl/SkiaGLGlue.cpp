@@ -56,12 +56,12 @@ GrGLvoid glActiveTexture_mozilla(GrGLenum texture)
 
 GrGLvoid glAttachShader_mozilla(GrGLuint program, GrGLuint shader)
 {
-    return sGLContext.get()->fAttachShader(mozilla::gl::GLProgram(program), shader);
+    return sGLContext.get()->fAttachShader(program, shader);
 }
 
 GrGLvoid glBindAttribLocation_mozilla(GrGLuint program, GrGLuint index, const GLchar* name)
 {
-    return sGLContext.get()->fBindAttribLocation(mozilla::gl::GLProgram(program), index, name);
+    return sGLContext.get()->fBindAttribLocation(program, index, name);
 }
 
 GrGLvoid glBindBuffer_mozilla(GrGLenum target, GrGLuint buffer)
@@ -142,7 +142,7 @@ GrGLvoid glCopyTexSubImage2D_mozilla(GrGLenum target, GrGLint level, GrGLint xof
 
 GrGLuint glCreateProgram_mozilla(void)
 {
-    return sGLContext.get()->fCreateProgram().Name();
+    return sGLContext.get()->fCreateProgram();
 }
 
 GrGLuint glCreateShader_mozilla(GrGLenum type)
@@ -167,7 +167,7 @@ GrGLvoid glDeleteFramebuffers_mozilla(GrGLsizei n, const GrGLuint* framebuffers)
 
 GrGLvoid glDeleteProgram_mozilla(GrGLuint program)
 {
-    return sGLContext.get()->fDeleteProgram(mozilla::gl::GLProgram(program));
+    return sGLContext.get()->fDeleteProgram(program);
 }
 
 GrGLvoid glDeleteRenderbuffers_mozilla(GrGLsizei n, const GrGLuint* renderbuffers)
@@ -292,12 +292,12 @@ GrGLvoid glGetIntegerv_mozilla(GrGLenum pname, GrGLint* params)
 
 GrGLvoid glGetProgramInfoLog_mozilla(GrGLuint program, GrGLsizei bufsize, GrGLsizei* length, char* infolog)
 {
-    return sGLContext.get()->fGetProgramInfoLog(mozilla::gl::GLProgram(program), bufsize, length, infolog);
+    return sGLContext.get()->fGetProgramInfoLog(program, bufsize, length, infolog);
 }
 
 GrGLvoid glGetProgramiv_mozilla(GrGLuint program, GrGLenum pname, GrGLint* params)
 {
-    return sGLContext.get()->fGetProgramiv(mozilla::gl::GLProgram(program), pname, params);
+    return sGLContext.get()->fGetProgramiv(program, pname, params);
 }
 
 GrGLvoid glGetRenderbufferParameteriv_mozilla(GrGLenum target, GrGLenum pname, GrGLint* params)
@@ -396,7 +396,7 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
 
 GrGLint glGetUniformLocation_mozilla(GrGLuint program, const char* name)
 {
-    return sGLContext.get()->fGetUniformLocation(mozilla::gl::GLProgram(program), name);
+    return sGLContext.get()->fGetUniformLocation(program, name);
 }
 
 GrGLvoid glLineWidth_mozilla(GrGLfloat width)
@@ -406,7 +406,7 @@ GrGLvoid glLineWidth_mozilla(GrGLfloat width)
 
 GrGLvoid glLinkProgram_mozilla(GrGLuint program)
 {
-    return sGLContext.get()->fLinkProgram(mozilla::gl::GLProgram(program));
+    return sGLContext.get()->fLinkProgram(program);
 }
 
 GrGLvoid glPixelStorei_mozilla(GrGLenum pname, GrGLint param)
@@ -578,7 +578,7 @@ GrGLvoid glUniformMatrix4fv_mozilla(GrGLint location, GrGLsizei count, GrGLboole
 
 GrGLvoid glUseProgram_mozilla(GrGLuint program)
 {
-    return sGLContext.get()->fUseProgram(mozilla::gl::GLProgram(program));
+    return sGLContext.get()->fUseProgram(program);
 }
 
 GrGLvoid glVertexAttrib4fv_mozilla(GrGLuint index, const GrGLfloat* values)

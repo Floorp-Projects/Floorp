@@ -281,7 +281,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
 
     bool success = false;
 
-    gl::GLProgram *programPtr;
+    GLuint *programPtr;
     GLuint *fragShaderPtr;
     const char* fragShaderSource;
     switch (target) {
@@ -311,7 +311,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         return false;
     }
 
-    gl::GLProgram& program = *programPtr;
+    GLuint& program = *programPtr;
     GLuint& fragShader = *fragShaderPtr;
 
     // Use do-while(false) to let us break on failure
@@ -519,11 +519,11 @@ GLBlitHelper::DeleteTexBlitProgram()
     }
     if (mTex2DBlit_Program) {
         mGL->fDeleteProgram(mTex2DBlit_Program);
-        mTex2DBlit_Program = GLProgram(0);
+        mTex2DBlit_Program = 0;
     }
     if (mTex2DRectBlit_Program) {
         mGL->fDeleteProgram(mTex2DRectBlit_Program);
-        mTex2DRectBlit_Program = GLProgram(0);
+        mTex2DRectBlit_Program = 0;
     }
     if (mTexExternalBlit_FragShader) {
         mGL->fDeleteShader(mTexExternalBlit_FragShader);
@@ -535,11 +535,11 @@ GLBlitHelper::DeleteTexBlitProgram()
     }
     if (mTexExternalBlit_Program) {
         mGL->fDeleteProgram(mTexExternalBlit_Program);
-        mTexExternalBlit_Program = GLProgram(0);
+        mTexExternalBlit_Program = 0;
     }
     if (mTexYUVPlanarBlit_Program) {
         mGL->fDeleteProgram(mTexYUVPlanarBlit_Program);
-        mTexYUVPlanarBlit_Program = GLProgram(0);
+        mTexYUVPlanarBlit_Program = 0;
     }
 }
 
