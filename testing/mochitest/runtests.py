@@ -1161,15 +1161,16 @@ class Mochitest(MochitestUtilsMixin):
     # This is fatal for desktop environments.
     raise EnvironmentError('Could not find gmp-fake')
 
-  def buildBrowserEnv(self, options, debugger=False):
+  def buildBrowserEnv(self, options, debugger=False, env=None):
     """build the environment variables for the specific test and operating system"""
     if mozinfo.info["asan"]:
       lsanPath = SCRIPT_DIR
     else:
       lsanPath = None
 
-    browserEnv = self.environment(xrePath=options.xrePath, debugger=debugger,
-                                  dmdPath=options.dmdPath, lsanPath=lsanPath)
+    browserEnv = self.environment(xrePath=options.xrePath, env=env,
+                                  debugger=debugger, dmdPath=options.dmdPath,
+                                  lsanPath=lsanPath)
 
     # These variables are necessary for correct application startup; change
     # via the commandline at your own risk.
