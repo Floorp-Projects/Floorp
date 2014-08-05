@@ -108,7 +108,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISIMPLEENUMERATOR
 
-  nsSHEnumerator(nsSHistory *  aHistory);
+  explicit nsSHEnumerator(nsSHistory *  aHistory);
   
 protected:
   friend class nsSHistory;
