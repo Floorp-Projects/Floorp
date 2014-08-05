@@ -37,9 +37,9 @@ class StringPiece {
   // in a "const char*" or a "string" wherever a "StringPiece" is
   // expected.
   StringPiece() : ptr_(NULL), length_(0) { }
-  StringPiece(const char* str)
+  MOZ_IMPLICIT StringPiece(const char* str)
     : ptr_(str), length_((str == NULL) ? 0 : strlen(str)) { }
-  StringPiece(const std::string& str)
+  MOZ_IMPLICIT StringPiece(const std::string& str)
     : ptr_(str.data()), length_(str.size()) { }
   StringPiece(const char* offset, size_type len)
     : ptr_(offset), length_(len) { }
