@@ -26,10 +26,6 @@ public @interface WrapElementForJNI {
     // of the Java method will be used.
     String stubName() default "";
 
-    // Optional parameter specifying if the generated method should be a static member of AndroidBridge
-    // By default, an instance member is produced. This is almost always what is wanted.
-    boolean generateStatic() default false;
-
     /**
      * If set, the generated method stub will support being called from any thread via the use of
      * GetJNIForThread. This is rarely useful, at time of writing, as well as possibly risky.
