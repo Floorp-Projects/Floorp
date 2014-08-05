@@ -40,7 +40,7 @@ IPDL_SOURCES += [
     'ipc/PMobileConnectionTypes.ipdlh',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
     EXTRA_COMPONENTS += [
         'gonk/MobileConnectionGonkService.js',
         'gonk/MobileConnectionGonkService.manifest',
