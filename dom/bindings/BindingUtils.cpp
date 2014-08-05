@@ -426,7 +426,7 @@ DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
 static JSObject*
 CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       JS::Handle<JSObject*> constructorProto,
-                      const JSClass* constructorClass,
+                      const js::Class* constructorClass,
                       const JSNativeHolder* constructorNative,
                       unsigned ctorNargs, const NamedConstructor* namedConstructors,
                       JS::Handle<JSObject*> proto,
@@ -437,7 +437,8 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
   JS::Rooted<JSObject*> constructor(cx);
   if (constructorClass) {
     MOZ_ASSERT(constructorProto);
-    constructor = JS_NewObject(cx, constructorClass, constructorProto, global);
+    constructor = JS_NewObject(cx, Jsvalify(constructorClass), constructorProto,
+                               global);
   } else {
     MOZ_ASSERT(constructorNative);
     MOZ_ASSERT(constructorProto == JS_GetFunctionPrototype(cx, global));
@@ -566,12 +567,12 @@ DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
 static JSObject*
 CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
                                JS::Handle<JSObject*> parentProto,
-                               const JSClass* protoClass,
+                               const js::Class* protoClass,
                                const NativeProperties* properties,
                                const NativeProperties* chromeOnlyProperties)
 {
   JS::Rooted<JSObject*> ourProto(cx,
-    JS_NewObjectWithUniqueType(cx, protoClass, parentProto, global));
+    JS_NewObjectWithUniqueType(cx, Jsvalify(protoClass), parentProto, global));
   if (!ourProto ||
       !DefineProperties(cx, ourProto, properties, chromeOnlyProperties)) {
     return nullptr;
@@ -625,9 +626,9 @@ DefineProperties(JSContext* cx, JS::Handle<JSObject*> obj,
 void
 CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
-                       const JSClass* protoClass, JS::Heap<JSObject*>* protoCache,
+                       const js::Class* protoClass, JS::Heap<JSObject*>* protoCache,
                        JS::Handle<JSObject*> constructorProto,
-                       const JSClass* constructorClass, const JSNativeHolder* constructor,
+                       const js::Class* constructorClass, const JSNativeHolder* constructor,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
                        JS::Heap<JSObject*>* constructorCache,
                        const NativeProperties* properties,

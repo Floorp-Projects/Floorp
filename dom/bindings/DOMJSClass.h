@@ -219,11 +219,11 @@ struct DOMJSClass
 // Special JSClass for DOM interface and interface prototype objects.
 struct DOMIfaceAndProtoJSClass
 {
-  // It would be nice to just inherit from JSClass, but that precludes pure
+  // It would be nice to just inherit from js::Class, but that precludes pure
   // compile-time initialization of the form
   // |DOMJSInterfaceAndPrototypeClass = {...};|, since C++ only allows brace
   // initialization for aggregate/POD types.
-  const JSClass mBase;
+  const js::Class mBase;
 
   // Either eInterface or eInterfacePrototype
   DOMObjectType mType;
@@ -245,7 +245,7 @@ struct DOMIfaceAndProtoJSClass
     return FromJSClass(Jsvalify(base));
   }
 
-  const JSClass* ToJSClass() const { return &mBase; }
+  const JSClass* ToJSClass() const { return Jsvalify(&mBase); }
 };
 
 class ProtoAndIfaceCache;
