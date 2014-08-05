@@ -211,7 +211,7 @@ public:
     }
   };
 
-  EventListenerManager(dom::EventTarget* aTarget);
+  explicit EventListenerManager(dom::EventTarget* aTarget);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(EventListenerManager)
 
