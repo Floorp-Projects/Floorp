@@ -177,8 +177,8 @@ public:
           SetOriginalOffset(aOriginalStringOffset);
     }
 
-    gfxSkipCharsIterator(const gfxSkipChars& aSkipChars,
-                         int32_t aOriginalStringToSkipCharsOffset = 0)
+    explicit gfxSkipCharsIterator(const gfxSkipChars& aSkipChars,
+                                  int32_t aOriginalStringToSkipCharsOffset = 0)
         : mSkipChars(&aSkipChars),
           mOriginalStringOffset(0),
           mSkippedStringOffset(0),
