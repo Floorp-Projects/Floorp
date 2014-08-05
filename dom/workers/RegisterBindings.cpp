@@ -10,28 +10,7 @@
 
 #include "jsapi.h"
 #include "js/OldDebugAPI.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/ConsoleBinding.h"
-#include "mozilla/dom/DOMExceptionBinding.h"
-#include "mozilla/dom/EventBinding.h"
-#include "mozilla/dom/EventHandlerBinding.h"
-#include "mozilla/dom/EventTargetBinding.h"
-#include "mozilla/dom/FileReaderSyncBinding.h"
-#include "mozilla/dom/HeadersBinding.h"
-#include "mozilla/dom/ImageData.h"
-#include "mozilla/dom/ImageDataBinding.h"
-#include "mozilla/dom/MessageEventBinding.h"
-#include "mozilla/dom/MessagePortBinding.h"
-#include "mozilla/dom/PromiseBinding.h"
-#include "mozilla/dom/TextDecoderBinding.h"
-#include "mozilla/dom/TextEncoderBinding.h"
-#include "mozilla/dom/XMLHttpRequestBinding.h"
-#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
-#include "mozilla/dom/URLBinding.h"
-#include "mozilla/dom/URLSearchParamsBinding.h"
-#include "mozilla/dom/WorkerBinding.h"
-#include "mozilla/dom/WorkerLocationBinding.h"
-#include "mozilla/dom/WorkerNavigatorBinding.h"
+#include "mozilla/dom/RegisterWorkerBindings.h"
 #include "mozilla/OSFileConstants.h"
 
 USING_WORKERS_NAMESPACE
@@ -40,15 +19,13 @@ using namespace mozilla::dom;
 bool
 WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
 {
-  JS::Rooted<JSObject*> eventTargetProto(aCx,
-    EventTargetBinding::GetProtoObject(aCx, aGlobal));
-  if (!eventTargetProto) {
+  // Init Web IDL bindings
+  if (!RegisterWorkerBindings(aCx, aGlobal)) {
     return false;
   }
 
   if (IsChromeWorker()) {
-    if (!ChromeWorkerBinding::GetConstructorObject(aCx, aGlobal) ||
-        !DefineChromeWorkerFunctions(aCx, aGlobal) ||
+    if (!DefineChromeWorkerFunctions(aCx, aGlobal) ||
         !DefineOSFileConstants(aCx, aGlobal)) {
       return false;
     }
@@ -56,29 +33,6 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
 
   // Init other classes we care about.
   if (!file::InitClasses(aCx, aGlobal)) {
-    return false;
-  }
-
-  // Init other paris-bindings.
-  if (!ConsoleBinding::GetConstructorObject(aCx, aGlobal) ||
-      !DOMExceptionBinding::GetConstructorObject(aCx, aGlobal) ||
-      !EventBinding::GetConstructorObject(aCx, aGlobal) ||
-      !FileReaderSyncBinding_workers::GetConstructorObject(aCx, aGlobal) ||
-      (HeadersBinding::ConstructorEnabled(aCx, aGlobal) &&
-       !HeadersBinding::GetConstructorObject(aCx, aGlobal)) ||
-      !ImageDataBinding::GetConstructorObject(aCx, aGlobal) ||
-      !MessageEventBinding::GetConstructorObject(aCx, aGlobal) ||
-      !MessagePortBinding::GetConstructorObject(aCx, aGlobal) ||
-      !PromiseBinding::GetConstructorObject(aCx, aGlobal) ||
-      !TextDecoderBinding::GetConstructorObject(aCx, aGlobal) ||
-      !TextEncoderBinding::GetConstructorObject(aCx, aGlobal) ||
-      !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, aGlobal) ||
-      !XMLHttpRequestUploadBinding_workers::GetConstructorObject(aCx, aGlobal) ||
-      !URLBinding_workers::GetConstructorObject(aCx, aGlobal) ||
-      !URLSearchParamsBinding::GetConstructorObject(aCx, aGlobal) ||
-      !WorkerBinding::GetConstructorObject(aCx, aGlobal) ||
-      !WorkerLocationBinding_workers::GetConstructorObject(aCx, aGlobal) ||
-      !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, aGlobal)) {
     return false;
   }
 
