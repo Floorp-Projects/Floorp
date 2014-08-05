@@ -3653,6 +3653,10 @@ status_t MPEG4Source::fragmentedRead(
 Vector<MediaSource::Indice> MPEG4Source::exportIndex()
 {
   Vector<Indice> index;
+  if (!mTimescale) {
+    return index;
+  }
+
   for (uint32_t sampleIndex = 0; sampleIndex < mSampleTable->countSamples();
           sampleIndex++) {
       off64_t offset;
