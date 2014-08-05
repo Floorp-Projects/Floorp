@@ -14,6 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=515116
 <div id="content" style="display:none;">
 <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
   <text id="text" x="10cm 20cm 30mc"/>
+  <rect id="rect" x="40" y="50"/>
+  <text id="text2" x="60"/>
 </svg>
 </div>
 <pre id="test">
@@ -73,6 +75,77 @@ function run_tests()
   text.removeAttribute("x");
   text.removeAttributeNS(null, "x");
   eventChecker.finish();
+
+  // Test that the addition of an owned SVGLength to an SVGLengthList creates a
+  // copy of the SVGLength, and an unowned SVGLength does not make a copy
+  var text2 = document.getElementById("text2");
+  var rect = document.getElementById("rect");
+  var subtests = [
+    function initialize(aItem) {
+      text.removeAttribute("x");
+      return lengths.initialize(aItem);
+    },
+    function insertItemBefore(aItem) {
+      text.removeAttribute("x");
+      return lengths.insertItemBefore(aItem, 0);
+    },
+    function replaceItem(aItem) {
+      text.setAttribute("x", "10");
+      return lengths.replaceItem(aItem, 0);
+    },
+    function appendItem(aItem) {
+      text.removeAttribute("x");
+      return lengths.appendItem(aItem);
+    }
+  ];
+  subtests.forEach(function(aFunction) {
+    // -- Adding an unowned SVGLength
+    var name = aFunction.name;
+    var existingItem = document.getElementById("svg").createSVGLength();
+    var newItem = aFunction(existingItem);
+    is(newItem, lengths.getItem(0), name + " return value is correct when passed an unowned object");
+    is(newItem, existingItem, name + " did not make a copy when passed an unowned object");
+  });
+  subtests.forEach(function(aFunction) {
+    // -- Adding an SVGLength that is a baseVal
+    var name = aFunction.name;
+    var existingItem = rect.x.baseVal;
+    var newItem = aFunction(existingItem);
+    is(newItem, lengths.getItem(0), name + " return value is correct when passed a baseVal");
+    isnot(newItem, existingItem, name + " made a copy when passed a baseVal");
+    is(newItem.value, existingItem.value, name + " made a copy with the right values when passed a baseVal");
+    is(rect.x.baseVal, existingItem, name + " left the original object alone when passed a baseVal");
+  });
+  subtests.forEach(function(aFunction) {
+    // -- Adding an SVGLength that is an animVal
+    var name = aFunction.name;
+    var existingItem = rect.x.animVal;
+    var newItem = aFunction(existingItem);
+    is(newItem, lengths.getItem(0), name + " return value is correct when passed an animVal");
+    isnot(newItem, existingItem, name + " made a copy when passed an animVal");
+    is(newItem.value, existingItem.value, name + " made a copy with the right values when passed an animVal");
+    is(rect.x.animVal, existingItem, name + " left the original object alone when passed an animVal");
+  });
+  subtests.forEach(function(aFunction) {
+    // -- Adding an SVGLength that is in a baseVal list
+    var name = aFunction.name;
+    var existingItem = text2.x.baseVal.getItem(0);
+    var newItem = aFunction(existingItem);
+    is(newItem, lengths.getItem(0), name + " return value is correct when passed a baseVal list item");
+    isnot(newItem, existingItem, name + " made a copy when passed a baseVal list item");
+    is(newItem.value, existingItem.value, name + " made a copy with the right values when passed a baseVal list item");
+    is(text2.x.baseVal.getItem(0), existingItem, name + " left the original object alone when passed a baseVal list item");
+  });
+  subtests.forEach(function(aFunction) {
+    // -- Adding an SVGLength that is in a animVal list
+    var name = aFunction.name;
+    var existingItem = text2.x.animVal.getItem(0);
+    var newItem = aFunction(existingItem);
+    is(newItem, lengths.getItem(0), name + " return value is correct when passed a animVal list item");
+    isnot(newItem, existingItem, name + " made a copy when passed a animVal list item");
+    is(newItem.value, existingItem.value, name + " made a copy with the right values when passed a animVal list item");
+    is(text2.x.animVal.getItem(0), existingItem, name + " left the original object alone when passed a animVal list item");
+  });
 
   SimpleTest.finish();
 }
