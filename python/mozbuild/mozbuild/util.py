@@ -228,6 +228,40 @@ def resolve_target_to_make(topobjdir, target):
         reldir = os.path.dirname(reldir)
 
 
+class List(list):
+    """A list specialized for moz.build environments.
+
+    We overload the assignment and append operations to require that the
+    appended thing is a list. This avoids bad surprises coming from appending
+    a string to a list, which would just add each letter of the string.
+    """
+    def extend(self, l):
+        if not isinstance(l, list):
+            raise ValueError('List can only be extended with other list instances.')
+
+        return list.extend(self, l)
+
+    def __setslice__(self, i, j, sequence):
+        if not isinstance(sequence, list):
+            raise ValueError('List can only be sliced with other list instances.')
+
+        return list.__setslice__(self, i, j, sequence)
+
+    def __add__(self, other):
+        if not isinstance(other, list):
+            raise ValueError('Only lists can be appended to lists.')
+
+        return list.__add__(self, other)
+
+    def __iadd__(self, other):
+        if not isinstance(other, list):
+            raise ValueError('Only lists can be appended to lists.')
+
+        list.__iadd__(self, other)
+
+        return self
+
+
 class UnsortedError(Exception):
     def __init__(self, srtd, original):
         assert len(srtd) == len(original)

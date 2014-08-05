@@ -21,6 +21,7 @@ from collections import OrderedDict
 from mozbuild.util import (
     HierarchicalStringList,
     HierarchicalStringListWithFlagsFactory,
+    List,
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithFlagsFactory,
 )
@@ -65,7 +66,7 @@ VARIABLES = {
         file.
         """, 'export'),
 
-    'ANDROID_RES_DIRS': (list, list,
+    'ANDROID_RES_DIRS': (List, list,
         """Android resource directories.
 
         This variable contains a list of directories, each relative to
@@ -80,7 +81,7 @@ VARIABLES = {
         populated by calling add_android_eclipse{_library}_project().
         """, 'export'),
 
-    'SOURCES': (StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': list}), list,
+    'SOURCES': (StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List}), list,
         """Source code files.
 
         This variable contains a list of source code files to compile.
@@ -153,14 +154,14 @@ VARIABLES = {
            })
         """, None),
 
-    'DELAYLOAD_DLLS': (list, list,
+    'DELAYLOAD_DLLS': (List, list,
         """Delay-loaded DLLs.
 
         This variable contains a list of DLL files which the module being linked
         should load lazily.  This only has an effect when building with MSVC.
         """, None),
 
-    'DIRS': (list, list,
+    'DIRS': (List, list,
         """Child directories to descend into looking for build frontend files.
 
         This works similarly to the ``DIRS`` variable in make files. Each str
@@ -347,7 +348,7 @@ VARIABLES = {
         """Build sources listed in this file without VISIBILITY_FLAGS.
         """, None),
 
-    'OS_LIBS': (list, list,
+    'OS_LIBS': (List, list,
         """System link libraries.
 
         This variable contains a list of system libaries to link against.
@@ -440,7 +441,7 @@ VARIABLES = {
         ``HOST_BIN_SUFFIX``, the name will remain unchanged.
         """, None),
 
-    'TEST_DIRS': (list, list,
+    'TEST_DIRS': (List, list,
         """Like DIRS but only for directories that contain test-only code.
 
         If tests are not enabled, this variable will be ignored.
@@ -717,7 +718,7 @@ VARIABLES = {
         """Directories containing Python packages that Sphinx documents.
         """, None),
 
-    'CFLAGS': (list, list,
+    'CFLAGS': (List, list,
         """Flags passed to the C compiler for all of the C source files
            declared in this directory.
 
@@ -726,7 +727,7 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
-    'CXXFLAGS': (list, list,
+    'CXXFLAGS': (List, list,
         """Flags passed to the C++ compiler for all of the C++ source files
            declared in this directory.
 
@@ -735,7 +736,7 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
-    'CMFLAGS': (list, list,
+    'CMFLAGS': (List, list,
         """Flags passed to the Objective-C compiler for all of the Objective-C
            source files declared in this directory.
 
@@ -744,7 +745,7 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
-    'CMMFLAGS': (list, list,
+    'CMMFLAGS': (List, list,
         """Flags passed to the Objective-C++ compiler for all of the
            Objective-C++ source files declared in this directory.
 
@@ -753,7 +754,7 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
-    'LDFLAGS': (list, list,
+    'LDFLAGS': (List, list,
         """Flags passed to the linker when linking all of the libraries and
            executables declared in this directory.
 
@@ -762,7 +763,7 @@ VARIABLES = {
            appear in the moz.build file.
         """, 'libs'),
 
-    'EXTRA_DSO_LDOPTS': (list, list,
+    'EXTRA_DSO_LDOPTS': (List, list,
         """Flags passed to the linker when linking a shared library.
 
            Note that the ordering of flags matter here, these flags will be
@@ -770,7 +771,7 @@ VARIABLES = {
            appear in the moz.build file.
         """, 'libs'),
 
-    'WIN32_EXE_LDFLAGS': (list, list,
+    'WIN32_EXE_LDFLAGS': (List, list,
         """Flags passed to the linker when linking a Windows .exe executable
            declared in this directory.
 
@@ -781,6 +782,12 @@ VARIABLES = {
            This variable only has an effect on Windows.
         """, 'libs'),
 }
+
+# Sanity check: we don't want any variable above to have a list as storage type.
+for name, (storage_type, input_types, docs, tier) in VARIABLES.items():
+    if storage_type == list:
+        raise RuntimeError('%s has a "list" storage type. Use "List" instead.'
+            % name)
 
 # The set of functions exposed to the sandbox.
 #
