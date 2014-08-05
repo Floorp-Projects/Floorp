@@ -24,7 +24,7 @@ loop.conversation = (function(OT, mozL10n) {
   var IncomingCallView = React.createClass({displayName: 'IncomingCallView',
 
     propTypes: {
-      model: React.PropTypes.func.isRequired
+      model: React.PropTypes.object.isRequired
     },
 
     /**
@@ -61,13 +61,13 @@ loop.conversation = (function(OT, mozL10n) {
       var btnClassDecline = "btn btn-success btn-accept";
       var conversationPanelClass = "incoming-call " + this._getTargetPlatform();
       return (
-        React.DOM.div( {className:conversationPanelClass}, 
-          React.DOM.h2(null, __("incoming_call")),
-          React.DOM.div( {className:"button-group"}, 
-            React.DOM.button( {className:btnClassAccept, onClick:this._handleDecline}, 
+        React.DOM.div({className: conversationPanelClass}, 
+          React.DOM.h2(null, __("incoming_call")), 
+          React.DOM.div({className: "button-group"}, 
+            React.DOM.button({className: btnClassAccept, onClick: this._handleDecline}, 
               __("incoming_call_decline_button")
-            ),
-            React.DOM.button( {className:btnClassDecline, onClick:this._handleAccept}, 
+            ), 
+            React.DOM.button({className: btnClassDecline, onClick: this._handleAccept}, 
               __("incoming_call_answer_button")
             )
           )
@@ -142,15 +142,31 @@ loop.conversation = (function(OT, mozL10n) {
     incoming: function(loopVersion) {
       window.navigator.mozLoop.startAlerting();
       this._conversation.set({loopVersion: loopVersion});
-      this._conversation.once("accept", function() {
+      this._conversation.once("accept", () => {
         this.navigate("call/accept", {trigger: true});
-      }.bind(this));
-      this._conversation.once("decline", function() {
+      });
+      this._conversation.once("decline", () => {
         this.navigate("call/decline", {trigger: true});
-      }.bind(this));
-      this.loadReactComponent(loop.conversation.IncomingCallView({
-        model: this._conversation
-      }));
+      });
+      this._conversation.once("call:incoming", this.startCall, this);
+      this._client.requestCallsInfo(loopVersion, (err, sessionData) => {
+        if (err) {
+          console.error("Failed to get the sessionData", err);
+          // XXX Not the ideal response, but bug 1047410 will be replacing
+          //this by better "call failed" UI.
+          this._notifier.errorL10n("cannot_start_call_session_not_ready");
+          return;
+        }
+        // XXX For incoming calls we might have more than one call queued.
+        // For now, we'll just assume the first call is the right information.
+        // We'll probably really want to be getting this data from the
+        // background worker on the desktop client.
+        // Bug 1032700 should fix this.
+        this._conversation.setSessionData(sessionData[0]);
+        this.loadReactComponent(loop.conversation.IncomingCallView({
+          model: this._conversation
+        }));
+      });
     },
 
     /**
@@ -158,10 +174,7 @@ loop.conversation = (function(OT, mozL10n) {
      */
     accept: function() {
       window.navigator.mozLoop.stopAlerting();
-      this._conversation.initiate({
-        client: new loop.Client(),
-        outgoing: false
-      });
+      this._conversation.incoming();
     },
 
     /**
@@ -210,8 +223,12 @@ loop.conversation = (function(OT, mozL10n) {
 
     document.title = mozL10n.get("incoming_call_title");
 
+    var client = new loop.Client();
     router = new ConversationRouter({
-      conversation: new loop.shared.models.ConversationModel({}, {sdk: OT}),
+      client: client,
+      conversation: new loop.shared.models.ConversationModel(
+        {},         // Model attributes
+        {sdk: OT}), // Model dependencies
       notifier: new sharedViews.NotificationListView({el: "#messages"})
     });
     Backbone.history.start();
