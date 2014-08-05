@@ -2231,8 +2231,8 @@ MobileMessageDB.prototype = {
             self.updateThreadByMessageChange(aMessageStore,
                                              aThreadStore,
                                              oldMessageRecord.threadId,
-                                             aMessageRecord.id,
-                                             oldMessageRecord.read,
+                                             [aMessageRecord.id],
+                                             oldMessageRecord.read ? 0 : 1,
                                              aDeletedInfo);
           }
         };
@@ -2483,18 +2483,23 @@ MobileMessageDB.prototype = {
   },
 
   updateThreadByMessageChange: function(messageStore, threadStore, threadId,
-                                        messageId, messageRead, deletedInfo) {
+                                        removedMsgIds, ignoredUnreadCount, deletedInfo) {
     let self = this;
     threadStore.get(threadId).onsuccess = function(event) {
       // This must exist.
       let threadRecord = event.target.result;
       if (DEBUG) debug("Updating thread record " + JSON.stringify(threadRecord));
 
-      if (!messageRead) {
-        threadRecord.unreadCount--;
+      if (ignoredUnreadCount > 0) {
+        if (DEBUG) {
+          debug("Updating unread count : " + threadRecord.unreadCount +
+                " -> " + (threadRecord.unreadCount - ignoredUnreadCount));
+        }
+        threadRecord.unreadCount -= ignoredUnreadCount;
       }
 
-      if (threadRecord.lastMessageId == messageId) {
+      if (removedMsgIds.indexOf(threadRecord.lastMessageId) >= 0) {
+        if (DEBUG) debug("MRU entry was deleted.");
         // Check most recent sender/receiver.
         let range = IDBKeyRange.bound([threadId, 0], [threadId, ""]);
         let request = messageStore.index("threadId")
@@ -2503,7 +2508,7 @@ MobileMessageDB.prototype = {
           let cursor = event.target.result;
           if (!cursor) {
             if (DEBUG) {
-              debug("Deleting mru entry for thread id " + threadId);
+              debug("All messages were deleted. Delete this thread.");
             }
             threadStore.delete(threadId);
             if (deletedInfo) {
@@ -2528,13 +2533,8 @@ MobileMessageDB.prototype = {
           }
           threadStore.put(threadRecord);
         };
-      } else if (!messageRead) {
-        // Shortcut, just update the unread count.
-        if (DEBUG) {
-          debug("Updating unread count for thread id " + threadId + ": " +
-                (threadRecord.unreadCount + 1) + " -> " +
-                threadRecord.unreadCount);
-        }
+      } else if (ignoredUnreadCount > 0) {
+        if (DEBUG) debug("Shortcut, just update the unread count.");
         threadStore.put(threadRecord);
       }
     };
@@ -3039,6 +3039,20 @@ MobileMessageDB.prototype = {
         self.notifyDeletedInfo(deletedInfo);
       };
 
+      let threadsToUpdate = {};
+      let numOfMessagesToDelete = length;
+      let updateThreadInfo = function() {
+        for (let threadId in threadsToUpdate) {
+          let threadInfo = threadsToUpdate[threadId];
+          self.updateThreadByMessageChange(messageStore,
+                                           threadStore,
+                                           threadInfo.threadId,
+                                           threadInfo.removedMsgIds,
+                                           threadInfo.ignoredUnreadCount,
+                                           deletedInfo);
+        }
+      };
+
       for (let i = 0; i < length; i++) {
         let messageId = messageIds[i];
         deleted[i] = false;
@@ -3051,22 +3065,40 @@ MobileMessageDB.prototype = {
             // First actually delete the message.
             messageStore.delete(messageId).onsuccess = function(event) {
               if (DEBUG) debug("Message id " + messageId + " deleted");
-              if (deletedInfo) {
-                deletedInfo.messageIds.push(messageId);
+
+              numOfMessagesToDelete--;
+              deleted[messageIndex] = true;
+              deletedInfo.messageIds.push(messageId);
+
+              // Cache thread info to be updated.
+              let threadId = messageRecord.threadId;
+              if (!threadsToUpdate[threadId]) {
+                threadsToUpdate[threadId] = {
+                  threadId: threadId,
+                  removedMsgIds: [messageId],
+                  ignoredUnreadCount: (!messageRecord.read) ? 1 : 0
+                };
+              } else {
+                let threadInfo = threadsToUpdate[threadId];
+                threadInfo.removedMsgIds.push(messageId);
+                if (!messageRecord.read) {
+                  threadInfo.ignoredUnreadCount++;
+                }
               }
 
-              deleted[messageIndex] = true;
-
-              // Then update unread count and most recent message.
-              self.updateThreadByMessageChange(messageStore,
-                                               threadStore,
-                                               messageRecord.threadId,
-                                               messageId,
-                                               messageRecord.read,
-                                               deletedInfo);
+              // After all messsages are deleted, update unread count and most
+              // recent message of related threads at once.
+              if (!numOfMessagesToDelete) {
+                updateThreadInfo();
+              }
             };
-          } else if (DEBUG) {
-            debug("Message id " + messageId + " does not exist");
+          } else {
+            if (DEBUG) debug("Message id " + messageId + " does not exist");
+
+            numOfMessagesToDelete--;
+            if (!numOfMessagesToDelete) {
+              updateThreadInfo();
+            }
           }
         }.bind(null, i);
       }
