@@ -211,8 +211,6 @@ public:
             bit = HEBREW_CHARSET;
         } else if (aLangGroup == nsGkAtoms::ar) {
             bit = ARABIC_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::x_baltic) {
-            bit = BALTIC_CHARSET;
         } else if (aLangGroup == nsGkAtoms::x_cyrillic) {
             bit = RUSSIAN_CHARSET;
         } else if (aLangGroup == nsGkAtoms::th) {
