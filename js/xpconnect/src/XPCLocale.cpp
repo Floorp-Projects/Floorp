@@ -213,8 +213,8 @@ private:
           // nsIUnicodeDecoder::Convert may use fewer than srcLength PRUnichars
           if (unicharLength + 1 < srcLength + 1) {
             char16_t *shrunkUnichars =
-              (char16_t *)JS_realloc(cx, unichars,
-                                      (unicharLength + 1) * sizeof(char16_t));
+              static_cast<char16_t *>(JS_realloc(cx, unichars, srcLength + 1,
+                                                 unicharLength + 1));
             if (shrunkUnichars)
               unichars = shrunkUnichars;
           }

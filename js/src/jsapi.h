@@ -1858,7 +1858,7 @@ extern JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes);
 
 extern JS_PUBLIC_API(void *)
-JS_realloc(JSContext *cx, void *p, size_t nbytes);
+JS_realloc(JSContext *cx, void *p, size_t oldBytes, size_t newBytes);
 
 /*
  * A wrapper for js_free(p) that may delay js_free(p) invocation as a
