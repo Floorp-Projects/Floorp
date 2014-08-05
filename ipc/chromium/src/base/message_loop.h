@@ -458,7 +458,7 @@ public:
 //
 class MessageLoopForUI : public MessageLoop {
  public:
-  explicit MessageLoopForUI(Type type=TYPE_UI) : MessageLoop(type) {
+  MessageLoopForUI(Type type=TYPE_UI) : MessageLoop(type) {
   }
 
   // Returns the MessageLoopForUI of the current thread.
