@@ -2235,11 +2235,6 @@ pref("font.minimum-size.th", 0);
 pref("font.size.variable.th", 16);
 pref("font.size.fixed.th", 13);
 
-pref("font.default.tr", "serif");
-pref("font.minimum-size.tr", 0);
-pref("font.size.variable.tr", 16);
-pref("font.size.fixed.tr", 13);
-
 pref("font.default.x-cyrillic", "serif");
 pref("font.minimum-size.x-cyrillic", 0);
 pref("font.size.variable.x-cyrillic", 16);
@@ -2520,11 +2515,6 @@ pref("font.name.serif.th", "Tahoma");
 pref("font.name.sans-serif.th", "Tahoma");
 pref("font.name.monospace.th", "Tahoma");
 pref("font.name.cursive.th", "Tahoma");
-
-pref("font.name.serif.tr", "Times New Roman");
-pref("font.name.sans-serif.tr", "Arial");
-pref("font.name.monospace.tr", "Courier New");
-pref("font.name.cursive.tr", "Comic Sans MS");
 
 pref("font.name.serif.x-cyrillic", "Times New Roman");
 pref("font.name.sans-serif.x-cyrillic", "Arial");
@@ -2882,17 +2872,6 @@ pref("font.name-list.serif.th", "Thonburi");
 pref("font.name-list.sans-serif.th", "Thonburi");
 pref("font.name-list.monospace.th", "Ayuthaya");
 
-pref("font.name.serif.tr", "Times");
-pref("font.name.sans-serif.tr", "Helvetica");
-pref("font.name.monospace.tr", "Courier");
-pref("font.name.cursive.tr", "Apple Chancery");
-pref("font.name.fantasy.tr", "Papyrus");
-pref("font.name-list.serif.tr", "Times");
-pref("font.name-list.sans-serif.tr", "Helvetica");
-pref("font.name-list.monospace.tr", "Courier");
-pref("font.name-list.cursive.tr", "Apple Chancery");
-pref("font.name-list.fantasy.tr", "Papyrus");
-
 pref("font.name.serif.x-armn", "Mshtakan");
 pref("font.name.sans-serif.x-armn", "Mshtakan");
 pref("font.name.monospace.x-armn", "Mshtakan");
@@ -3223,10 +3202,6 @@ pref("font.name.sans-serif.th", "Fira Sans");
 pref("font.name.monospace.th", "Fira Mono");
 pref("font.name-list.sans-serif.th", "Fira Sans, Noto Sans Thai, Droid Sans Thai");
 
-pref("font.name.serif.tr", "Charis SIL Compact");
-pref("font.name.sans-serif.tr", "Fira Sans");
-pref("font.name.monospace.tr", "Fira Mono");
-
 pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
 pref("font.name.sans-serif.x-cyrillic", "Fira Sans");
 pref("font.name.monospace.x-cyrillic", "Fira Mono");
@@ -3287,12 +3262,6 @@ pref("font.name.monospace.th", "Droid Sans Mono");
 pref("font.name-list.serif.th", "Droid Serif");
 pref("font.name-list.sans-serif.th", "Droid Sans Thai, Clear Sans, Droid Sans");
 
-pref("font.name.serif.tr", "Charis SIL Compact");
-pref("font.name.sans-serif.tr", "Clear Sans");
-pref("font.name.monospace.tr", "Droid Sans Mono");
-pref("font.name-list.serif.tr", "Droid Serif");
-pref("font.name-list.sans-serif.tr", "Clear Sans, Roboto, Droid Sans");
-
 pref("font.name.serif.x-cyrillic", "Charis SIL Compact");
 pref("font.name.sans-serif.x-cyrillic", "Clear Sans");
 pref("font.name.monospace.x-cyrillic", "Droid Sans Mono");
@@ -3344,9 +3313,6 @@ pref("font.size.fixed.el", 12);
 pref("font.size.fixed.he", 12);
 
 pref("font.minimum-size.th", 13);
-
-pref("font.default.tr", "sans-serif");
-pref("font.size.fixed.tr", 12);
 
 pref("font.default.x-cyrillic", "sans-serif");
 pref("font.size.fixed.x-cyrillic", 12);
@@ -3455,11 +3421,6 @@ pref("font.name.serif.th", "serif");
 pref("font.name.sans-serif.th", "sans-serif");
 pref("font.minimum-size.th", 13);
 pref("font.name.monospace.th", "monospace");
-
-pref("font.name.serif.tr", "serif");
-pref("font.name.sans-serif.tr", "sans-serif");
-pref("font.name.monospace.tr", "monospace");
-pref("font.size.fixed.tr", 12);
 
 pref("font.name.serif.x-cyrillic", "serif");
 pref("font.name.sans-serif.x-cyrillic", "sans-serif");

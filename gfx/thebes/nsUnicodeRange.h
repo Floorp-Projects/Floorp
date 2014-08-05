@@ -16,34 +16,33 @@ class nsIAtom;
 // frequently used range definitions
 const uint8_t   kRangeCyrillic =    0;
 const uint8_t   kRangeGreek    =    1;
-const uint8_t   kRangeTurkish  =    2;
-const uint8_t   kRangeHebrew   =    3;
-const uint8_t   kRangeArabic   =    4;
-const uint8_t   kRangeThai     =    5;
-const uint8_t   kRangeKorean   =    6;
-const uint8_t   kRangeJapanese =    7;
-const uint8_t   kRangeSChinese =    8;
-const uint8_t   kRangeTChinese =    9;
-const uint8_t   kRangeDevanagari = 10;
-const uint8_t   kRangeTamil    =   11;
-const uint8_t   kRangeArmenian =   12;
-const uint8_t   kRangeBengali  =   13;
-const uint8_t   kRangeCanadian =   14;
-const uint8_t   kRangeEthiopic =   15;
-const uint8_t   kRangeGeorgian =   16;
-const uint8_t   kRangeGujarati =   17;
-const uint8_t   kRangeGurmukhi =   18;
-const uint8_t   kRangeKhmer    =   19;
-const uint8_t   kRangeMalayalam =  20;
-const uint8_t   kRangeOriya     =  21;
-const uint8_t   kRangeTelugu    =  22;
-const uint8_t   kRangeKannada   =  23;
-const uint8_t   kRangeSinhala   =  24;
-const uint8_t   kRangeTibetan   =  25;
+const uint8_t   kRangeHebrew   =    2;
+const uint8_t   kRangeArabic   =    3;
+const uint8_t   kRangeThai     =    4;
+const uint8_t   kRangeKorean   =    5;
+const uint8_t   kRangeJapanese =    6;
+const uint8_t   kRangeSChinese =    7;
+const uint8_t   kRangeTChinese =    8;
+const uint8_t   kRangeDevanagari =  9;
+const uint8_t   kRangeTamil    =   10;
+const uint8_t   kRangeArmenian =   11;
+const uint8_t   kRangeBengali  =   12;
+const uint8_t   kRangeCanadian =   13;
+const uint8_t   kRangeEthiopic =   14;
+const uint8_t   kRangeGeorgian =   15;
+const uint8_t   kRangeGujarati =   16;
+const uint8_t   kRangeGurmukhi =   17;
+const uint8_t   kRangeKhmer    =   18;
+const uint8_t   kRangeMalayalam =  19;
+const uint8_t   kRangeOriya     =  20;
+const uint8_t   kRangeTelugu    =  21;
+const uint8_t   kRangeKannada   =  22;
+const uint8_t   kRangeSinhala   =  23;
+const uint8_t   kRangeTibetan   =  24;
 
-const uint8_t   kRangeSpecificItemNum = 26;
+const uint8_t   kRangeSpecificItemNum = 25;
 
-//range/rangeSet grow to this place 26-29
+//range/rangeSet grow to this place 25-29
 
 const uint8_t   kRangeSetStart  =  30;   // range set definition starts from here
 const uint8_t   kRangeSetLatin  =  30;

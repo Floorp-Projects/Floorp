@@ -205,8 +205,6 @@ public:
             bit = CHINESEBIG5_CHARSET;
         } else if (aLangGroup == nsGkAtoms::el_) {
             bit = GREEK_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::tr) {
-            bit = TURKISH_CHARSET;
         } else if (aLangGroup == nsGkAtoms::he) {
             bit = HEBREW_CHARSET;
         } else if (aLangGroup == nsGkAtoms::ar) {

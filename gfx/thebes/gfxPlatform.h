@@ -81,30 +81,29 @@ enum eFontPrefLang {
     eFontPrefLang_Korean      =  5,
     eFontPrefLang_Cyrillic    =  6,
     eFontPrefLang_Greek       =  7,
-    eFontPrefLang_Turkish     =  8,
-    eFontPrefLang_Thai        =  9,
-    eFontPrefLang_Hebrew      = 10,
-    eFontPrefLang_Arabic      = 11,
-    eFontPrefLang_Devanagari  = 12,
-    eFontPrefLang_Tamil       = 13,
-    eFontPrefLang_Armenian    = 14,
-    eFontPrefLang_Bengali     = 15,
-    eFontPrefLang_Canadian    = 16,
-    eFontPrefLang_Ethiopic    = 17,
-    eFontPrefLang_Georgian    = 18,
-    eFontPrefLang_Gujarati    = 19,
-    eFontPrefLang_Gurmukhi    = 20,
-    eFontPrefLang_Khmer       = 21,
-    eFontPrefLang_Malayalam   = 22,
-    eFontPrefLang_Oriya       = 23,
-    eFontPrefLang_Telugu      = 24,
-    eFontPrefLang_Kannada     = 25,
-    eFontPrefLang_Sinhala     = 26,
-    eFontPrefLang_Tibetan     = 27,
+    eFontPrefLang_Thai        =  8,
+    eFontPrefLang_Hebrew      =  9,
+    eFontPrefLang_Arabic      = 10,
+    eFontPrefLang_Devanagari  = 11,
+    eFontPrefLang_Tamil       = 12,
+    eFontPrefLang_Armenian    = 13,
+    eFontPrefLang_Bengali     = 14,
+    eFontPrefLang_Canadian    = 15,
+    eFontPrefLang_Ethiopic    = 16,
+    eFontPrefLang_Georgian    = 17,
+    eFontPrefLang_Gujarati    = 18,
+    eFontPrefLang_Gurmukhi    = 19,
+    eFontPrefLang_Khmer       = 20,
+    eFontPrefLang_Malayalam   = 21,
+    eFontPrefLang_Oriya       = 22,
+    eFontPrefLang_Telugu      = 23,
+    eFontPrefLang_Kannada     = 24,
+    eFontPrefLang_Sinhala     = 25,
+    eFontPrefLang_Tibetan     = 26,
 
-    eFontPrefLang_Others      = 28, // x-unicode
+    eFontPrefLang_Others      = 27, // x-unicode
 
-    eFontPrefLang_CJKSet      = 29  // special code for CJK set
+    eFontPrefLang_CJKSet      = 28  // special code for CJK set
 };
 
 enum eCMSMode {
