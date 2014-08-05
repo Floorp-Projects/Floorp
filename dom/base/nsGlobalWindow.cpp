@@ -9901,7 +9901,7 @@ nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
 {
   FORWARD_TO_INNER_VOID(SetFocusedNode, (aNode, aFocusMethod, aNeedsFocus));
 
-  if (aNode && aNode->GetCurrentDoc() != mDoc) {
+  if (aNode && aNode->GetComposedDoc() != mDoc) {
     NS_WARNING("Trying to set focus to a node from a wrong document");
     return;
   }

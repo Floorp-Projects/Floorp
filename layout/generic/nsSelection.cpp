@@ -3277,8 +3277,8 @@ CompareToRangeStart(nsINode* aCompareNode, int32_t aCompareOffset,
   NS_ENSURE_STATE(aCompareNode && start);
   // If the nodes that we're comparing are not in the same document,
   // assume that aCompareNode will fall at the end of the ranges.
-  if (aCompareNode->GetCurrentDoc() != start->GetCurrentDoc() ||
-      !start->GetCurrentDoc()) {
+  if (aCompareNode->GetComposedDoc() != start->GetComposedDoc() ||
+      !start->GetComposedDoc()) {
     *aCmp = 1;
   } else {
     *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
@@ -3295,8 +3295,8 @@ CompareToRangeEnd(nsINode* aCompareNode, int32_t aCompareOffset,
   NS_ENSURE_STATE(aCompareNode && end);
   // If the nodes that we're comparing are not in the same document,
   // assume that aCompareNode will fall at the end of the ranges.
-  if (aCompareNode->GetCurrentDoc() != end->GetCurrentDoc() ||
-      !end->GetCurrentDoc()) {
+  if (aCompareNode->GetComposedDoc() != end->GetComposedDoc() ||
+      !end->GetComposedDoc()) {
     *aCmp = 1;
   } else {
     *aCmp = nsContentUtils::ComparePoints(aCompareNode, aCompareOffset,
