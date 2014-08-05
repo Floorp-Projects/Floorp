@@ -296,7 +296,7 @@ IMEContentObserver::IsManaging(nsPresContext* aPresContext,
   if (!mSelection || !mRootContent || !mEditableNode) {
     return false; // failed to initialize.
   }
-  if (!mRootContent->IsInDoc()) {
+  if (!mRootContent->IsInComposedDoc()) {
     return false; // the focused editor has already been reframed.
   }
   return mEditableNode == IMEStateManager::GetRootEditableNode(aPresContext,

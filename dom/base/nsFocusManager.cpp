@@ -243,7 +243,7 @@ nsFocusManager::Observe(nsISupports *aSubject,
 static nsPIDOMWindow*
 GetContentWindow(nsIContent* aContent)
 {
-  nsIDocument* doc = aContent->GetCurrentDoc();
+  nsIDocument* doc = aContent->GetComposedDoc();
   if (doc) {
     nsIDocument* subdoc = doc->GetSubDocumentFor(aContent);
     if (subdoc)
@@ -257,7 +257,7 @@ GetContentWindow(nsIContent* aContent)
 static nsPIDOMWindow*
 GetCurrentWindow(nsIContent* aContent)
 {
-  nsIDocument *doc = aContent->GetCurrentDoc();
+  nsIDocument* doc = aContent->GetComposedDoc();
   return doc ? doc->GetWindow() : nullptr;
 }
 
@@ -304,7 +304,7 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
         menulist->GetInputField(getter_AddRefs(inputField));
       }
       else if (aContent->Tag() == nsGkAtoms::scale) {
-        nsCOMPtr<nsIDocument> doc = aContent->GetCurrentDoc();
+        nsCOMPtr<nsIDocument> doc = aContent->GetComposedDoc();
         if (!doc)
           return nullptr;
 
@@ -919,7 +919,7 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
   nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
   nsCOMPtr<nsIPresShell> presShell = focusedDocShell->GetPresShell();
 
-  if (oldFocusedContent && oldFocusedContent->IsInDoc()) {
+  if (oldFocusedContent && oldFocusedContent->IsInComposedDoc()) {
     NotifyFocusStateChange(oldFocusedContent,
                            mFocusedWindow->ShouldShowFocusRing(),
                            false);
@@ -927,7 +927,7 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
 
     if (presShell) {
       SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell,
-                           oldFocusedContent->GetCurrentDoc(),
+                           oldFocusedContent->GetComposedDoc(),
                            oldFocusedContent, 1, false);
     }
   }
@@ -1403,7 +1403,7 @@ bool
 nsFocusManager::IsNonFocusableRoot(nsIContent* aContent)
 {
   NS_PRECONDITION(aContent, "aContent must not be NULL");
-  NS_PRECONDITION(aContent->IsInDoc(), "aContent must be in a document");
+  NS_PRECONDITION(aContent->IsInComposedDoc(), "aContent must be in a document");
 
   // If aContent is in designMode, the root element is not focusable.
   // NOTE: in designMode, most elements are not focusable, just the document is
@@ -1411,7 +1411,7 @@ nsFocusManager::IsNonFocusableRoot(nsIContent* aContent)
   // Also, if aContent is not editable but it isn't in designMode, it's not
   // focusable.
   // And in userfocusignored context nothing is focusable.
-  nsIDocument* doc = aContent->GetCurrentDoc();
+  nsIDocument* doc = aContent->GetComposedDoc();
   NS_ASSERTION(doc, "aContent must have current document");
   return aContent == doc->GetRootElement() &&
            (doc->HasFlag(NODE_IS_EDITABLE) || !aContent->IsEditable() ||
@@ -1430,7 +1430,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
   if (redirectedFocus)
     return CheckIfFocusable(redirectedFocus, aFlags);
 
-  nsCOMPtr<nsIDocument> doc = aContent->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> doc = aContent->GetComposedDoc();
   // can't focus elements that are not in documents
   if (!doc) {
     LOGCONTENT("Cannot focus %s because content not in document", aContent)
@@ -1496,7 +1496,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   // hold a reference to the focused content, which may be null
   nsCOMPtr<nsIContent> content = mFocusedContent;
   if (content) {
-    if (!content->IsInDoc()) {
+    if (!content->IsInComposedDoc()) {
       mFocusedContent = nullptr;
       return true;
     }
@@ -1547,7 +1547,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
 
   // Don't fire blur event on the root content which isn't editable.
   bool sendBlurEvent =
-    content && content->IsInDoc() && !IsNonFocusableRoot(content);
+    content && content->IsInComposedDoc() && !IsNonFocusableRoot(content);
   if (content) {
     if (sendBlurEvent) {
       NotifyFocusStateChange(content, shouldShowFocusRing, false);
@@ -1589,7 +1589,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
       window->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
 
     SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell,
-                         content->GetCurrentDoc(), content, 1, false);
+                         content->GetComposedDoc(), content, 1, false);
   }
 
   // if we are leaving the document or the window was lowered, make the caret
@@ -1777,7 +1777,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     aWindow->SetFocusedNode(aContent, focusMethod);
 
     bool sendFocusEvent =
-      aContent && aContent->IsInDoc() && !IsNonFocusableRoot(aContent);
+      aContent && aContent->IsInComposedDoc() && !IsNonFocusableRoot(aContent);
     nsPresContext* presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
       // if the focused element changed, scroll it into view
@@ -1789,7 +1789,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
       // if this is an object/plug-in/remote browser, focus its widget.  Note that we might
       // no longer be in the same document, due to the events we fired above when
       // aIsNewDocument.
-      if (presShell->GetDocument() == aContent->GetDocument()) {
+      if (presShell->GetDocument() == aContent->GetComposedDoc()) {
         if (aAdjustWidgets && objectFrameWidget && !sTestMode)
           objectFrameWidget->SetFocus(false);
 
@@ -1810,7 +1810,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
         aWindow->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
 
       SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell,
-                           aContent->GetCurrentDoc(),
+                           aContent->GetComposedDoc(),
                            aContent, aFlags & FOCUSMETHOD_MASK,
                            aWindowRaised, isRefocus);
     } else {
@@ -2152,7 +2152,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
 
   nsRefPtr<nsFrameSelection> frameSelection;
   if (aContent) {
-    NS_ASSERTION(aContent->GetDocument() == aPresShell->GetDocument(),
+    NS_ASSERTION(aContent->GetComposedDoc() == aPresShell->GetDocument(),
                  "Wrong document?");
     nsIFrame *focusFrame = aContent->GetPrimaryFrame();
     if (focusFrame)
@@ -2355,7 +2355,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
 
   nsCOMPtr<nsIDocument> doc;
   if (startContent)
-    doc = startContent->GetCurrentDoc();
+    doc = startContent->GetComposedDoc();
   else
     doc = aWindow->GetExtantDoc();
   if (!doc)
@@ -2447,7 +2447,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
       if (startContent == rootContent) {
         doNavigation = false;
       } else {
-        nsIDocument* doc = startContent->GetCurrentDoc();
+        nsIDocument* doc = startContent->GetComposedDoc();
         if (startContent ==
               nsLayoutUtils::GetEditableRootContentByContentEditable(doc)) {
           doNavigation = false;
@@ -2769,7 +2769,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
 
           // found a node with a matching tab index. Check if it is a child
           // frame. If so, navigate into the child frame instead.
-          nsIDocument* doc = currentContent->GetCurrentDoc();
+          nsIDocument* doc = currentContent->GetComposedDoc();
           NS_ASSERTION(doc, "content not in document");
           nsIDocument* subdoc = doc->GetSubDocumentFor(currentContent);
           if (subdoc) {
@@ -2862,7 +2862,8 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
         nsCOMPtr<nsPIDOMWindow> window = GetCurrentWindow(aRootContent);
         NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
         NS_IF_ADDREF(*aResultContent =
-                     GetRootForFocus(window, aRootContent->GetCurrentDoc(), false, true));
+                     GetRootForFocus(window, aRootContent->GetComposedDoc(),
+                                     false, true));
       }
       break;
     }
@@ -2884,7 +2885,7 @@ nsFocusManager::GetNextTabbableMapArea(bool aForward,
   nsAutoString useMap;
   aImageContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, useMap);
 
-  nsCOMPtr<nsIDocument> doc = aImageContent->GetDocument();
+  nsCOMPtr<nsIDocument> doc = aImageContent->GetComposedDoc();
   if (doc) {
     nsCOMPtr<nsIContent> mapContent = doc->FindImageMap(useMap);
     if (!mapContent)
@@ -3134,7 +3135,7 @@ nsFocusManager::GetNextTabbablePanel(nsIDocument* aDocument, nsIFrame* aCurrentP
 
     // Skip over non-panels
     if (popupFrame->GetContent()->Tag() != nsGkAtoms::panel ||
-        (aDocument && popupFrame->GetContent()->GetCurrentDoc() != aDocument)) {
+        (aDocument && popupFrame->GetContent()->GetComposedDoc() != aDocument)) {
       continue;
     }
 
@@ -3166,7 +3167,7 @@ nsFocusManager::GetNextTabbableDocument(nsIContent* aStartContent, bool aForward
   nsCOMPtr<nsIDocShell> startDocShell;
 
   if (aStartContent) {
-    doc = aStartContent->GetCurrentDoc();
+    doc = aStartContent->GetComposedDoc();
     if (doc) {
       startDocShell = doc->GetWindow()->GetDocShell();
     }
