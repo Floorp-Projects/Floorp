@@ -15,6 +15,49 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548193
 
 <iframe style="width:200px;height:200px;" id='cspframe'></iframe>
 <script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * We try to load an inline-src using a policy that constrains
+ * all scripts from running (script-src 'none'). We verify that
+ * the generated csp-report contains the expceted values. If any
+ * of the JSON is not formatted properly (e.g. not properly escaped)
+ * then JSON.parse will fail, which allows to pinpoint such errors
+ * in the catch block, and the test will fail. Since we use an
+ * observer, we can set the actual report-uri to a foo value.
+ */
+
+const testfile = "tests/content/base/test/csp/file_csp_report.html";
+const reportURI = "http://mochi.test:8888/foo.sjs";
+const policy = "script-src 'none'; report-uri " + reportURI;
+const docUri = "http://mochi.test:8888/tests/content/base/test/csp/file_csp_testserver.sjs" +
+               "?file=tests/content/base/test/csp/file_csp_report.html" +
+               "&csp=script-src%20%27none%27%3B%20report-uri%20http%3A//mochi.test%3A8888/foo.sjs";
+
+window.checkResults = function(reportObj) {
+  var cspReport = reportObj["csp-report"];
+
+  is(cspReport["document-uri"], docUri, "Incorrect document-uri");
+
+  // we can not test for the whole referrer since it includes platform specific information
+  ok(cspReport["referrer"].startsWith("http://mochi.test:8888/tests/content/base/test/csp/test_csp_report.html"),
+     "Incorrect referrer");
+
+  is(cspReport["blocked-uri"], "self", "Incorrect blocked-uri");
+
+  is(cspReport["violated-directive"], "script-src 'none'", "Incorrect violated-directive");
+
+  is(cspReport["original-policy"], "script-src 'none'; report-uri http://mochi.test:8888/foo.sjs",
+     "Incorrect original-policy");
+
+  is(cspReport["source-file"], docUri, "Incorrect source-file");
+
+  is(cspReport["script-sample"], "\n    var foo = \"propEscFoo\";\n    var bar...",
+     "Incorrect script-sample");
+
+  is(cspReport["line-number"], "7", "Incorrect line-number");
+}
+
 // This is used to watch requests go out so we can see if the report is
 // sent correctly
 function examiner() {
@@ -26,17 +69,15 @@ examiner.prototype  = {
     if (!SpecialPowers.can_QI(subject))
       return;
 
-    const reportURI = "http://mochi.test:8888/csp-report.cgi";
-
     if (topic === "http-on-opening-request") {
       var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
       if (asciiSpec !== reportURI) return;
 
-      // Verify that the report was properly formatted.
-      // We'll parse the report text as JSON and verify that the properties
-      // have expected values.
-      var reportText = "{}";
       try {
+        // Verify that the report was properly formatted.
+        // We'll parse the report text as JSON and verify that the properties
+        // have expected values.
+        var reportText = "{}";
         var uploadStream = SpecialPowers.wrap(SpecialPowers.do_QueryInterface(subject, "nsIUploadChannel")).uploadStream;
 
         if (uploadStream) {
@@ -55,13 +96,18 @@ examiner.prototype  = {
           // rewind stream as we are supposed to - there will be an assertion later if we don't.
           SpecialPowers.do_QueryInterface(uploadStream, "nsISeekableStream").seek(SpecialPowers.Ci.nsISeekableStream.NS_SEEK_SET, 0);
         }
+        try {
+          var reportObj = JSON.parse(reportText);
+        }
+        catch (e) {
+          ok(false, "Could not parse JSON (exception: " + e + ")");
+        }
+        // test for the proper values in the report object
+        window.checkResults(reportObj);
       }
-      catch(e) {}
-
-      var reportObj = JSON.parse(reportText);
-
-      // test for the proper values in the report object
-      window.checkResults(reportObj);
+      catch (e) {
+        ok(false, "Could not query report (exception: " + e + ")");
+      }
 
       // finish up
       window.examiner.remove();
@@ -74,35 +120,18 @@ examiner.prototype  = {
     SpecialPowers.removeObserver(this, "http-on-opening-request");
   }
 }
-
-// content file that triggers a violation report
-var testFile = "file_csp_report.sjs";
-
-window.checkResults = function(reportObj) {
-  var cspReport = reportObj["csp-report"];
-  // correct violating request
-  is(cspReport["document-uri"],
-     "http://mochi.test:8888/tests/content/base/test/csp/" + testFile,
-     "Incorrect violating request");
-  // correct blocked-uri
-  is(cspReport["blocked-uri"],
-     "http://example.org/tests/content/base/test/file_CSP.sjs?testid=img_bad&type=img/png",
-     "Incorrect blocked uri");
-  // correct violated-directive
-  is(cspReport["violated-directive"], "default-src http://mochi.test:8888",
-     "Incorrect violated directive");
-  // not practical to test request-headers as header names and values will
-  // change with the trunk
-}
-
 window.examiner = new examiner();
-
 SimpleTest.waitForExplicitFinish();
 
 // load the resource which will generate a CSP violation report
 // save this for last so that our listeners are registered.
-// ... this loads the testbed of good and bad requests.
-document.getElementById("cspframe").src = testFile;
+var src = "file_csp_testserver.sjs";
+// append the file that should be served
+src += "?file=" + escape(testfile);
+// append the CSP that should be used to serve the file
+src += "&csp=" + escape(policy);
+document.getElementById("cspframe").src = src;
+
 </script>
 </pre>
 </body>
