@@ -7,12 +7,11 @@ load 474744-1.html
 HTTP load 481136-1.html # needs to be HTTP to recognize the ogg as an audio file?
 load 493915-1.html
 load 492286-1.xhtml
-skip-if(Android) load 495794-1.html
+load 495794-1.html
 load 576612-1.html
-skip-if(Android||B2G) load 691096-1.html # Android sound API can't handle playing large number of sounds at once, bug 852821 for B2G
 load 752784-1.html
-skip-if(Android||B2G) load 789075-1.html # load failed, bug 833371 for B2G
-skip-if(Android||B2G) HTTP load 795892-1.html # load failed, bug 833371 for B2G
+skip-if(Android||B2G) load 789075-1.html # bug 1048926
+skip-if(Android||B2G) HTTP load 795892-1.html # bug 1048926
 load 844563.html
 load 846612.html
 load 852838.html
@@ -40,7 +39,7 @@ load 878328.html
 load 878407.html
 load 878478.html
 load 880129.html
-skip-if(B2G) load 880202.html # load failed, bug 908306 for B2G
+load 880202.html
 load 880342-1.html
 load 880342-2.html
 load 880384.html
@@ -69,10 +68,13 @@ load 966636.html
 load 986901.html
 load 990794.html
 load 1015662.html
-skip-if(Android||B2G) test-pref(media.navigator.permission.disabled,true) load 1028458.html
+skip-if(Android||B2G) test-pref(media.navigator.permission.disabled,true) load 1028458.html # bug 1048863
 load buffer-source-ended-1.html
 HTTP load media-element-source-seek-1.html
-skip-if(B2G) load oscillator-ended-1.html # intermittent B2G timeouts, bug 920338
-skip-if(B2G) load oscillator-ended-2.html # intermittent B2G timeouts, bug 920338
+load oscillator-ended-1.html
+load oscillator-ended-2.html
 load offline-buffer-source-ended-1.html
 include ../../mediasource/test/crashtests/crashtests.list
+
+# This needs to run at the end to avoid leaking busted state into other tests.
+load 691096-1.html
