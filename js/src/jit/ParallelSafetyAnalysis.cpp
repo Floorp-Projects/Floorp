@@ -337,11 +337,8 @@ static void
 TransplantResumePoint(MInstruction *oldInstruction, MInstruction *replacementInstruction)
 {
     MOZ_ASSERT(!oldInstruction->isDiscarded());
-    if (MResumePoint *rp = oldInstruction->resumePoint()) {
+    if (oldInstruction->resumePoint())
         replacementInstruction->stealResumePoint(oldInstruction);
-        if (rp->instruction() == oldInstruction)
-            rp->setInstruction(replacementInstruction);
-    }
 }
 
 bool
