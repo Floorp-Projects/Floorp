@@ -1196,13 +1196,15 @@ class RecursiveMakeBackend(CommonBackend):
             self.environment.topobjdir), obj.KIND)
 
     def _process_linked_libraries(self, obj, backend_file):
-        def recursive_get_shared_libs(lib):
+        def write_shared_and_system_libs(lib):
             for l in lib.linked_libraries:
                 if isinstance(l, StaticLibrary):
-                    for q in recursive_get_shared_libs(l):
-                        yield q
+                    write_shared_and_system_libs(l)
                 else:
-                    yield l
+                    backend_file.write_once('SHARED_LIBS += %s/%s\n'
+                        % (pretty_relpath(l), l.import_name))
+            for l in lib.linked_system_libs:
+                backend_file.write_once('OS_LIBS += %s\n' % l)
 
         def pretty_relpath(lib):
             return '$(DEPTH)/%s' % mozpath.relpath(lib.objdir, topobjdir)
@@ -1238,9 +1240,7 @@ class RecursiveMakeBackend(CommonBackend):
                     backend_file.write_once('STATIC_LIBS += %s/%s\n'
                                         % (relpath, lib.import_name))
                     if isinstance(obj, SharedLibrary):
-                        for l in recursive_get_shared_libs(lib):
-                            backend_file.write_once('SHARED_LIBS += %s/%s\n'
-                                        % (pretty_relpath(l), l.import_name))
+                        write_shared_and_system_libs(lib)
                 elif isinstance(obj, SharedLibrary):
                     assert lib.variant != lib.COMPONENT
                     backend_file.write_once('SHARED_LIBS += %s/%s\n'
@@ -1249,9 +1249,7 @@ class RecursiveMakeBackend(CommonBackend):
                 if isinstance(lib, StaticLibrary):
                     backend_file.write_once('STATIC_LIBS += %s/%s\n'
                                         % (relpath, lib.import_name))
-                    for l in recursive_get_shared_libs(lib):
-                        backend_file.write_once('SHARED_LIBS += %s/%s\n'
-                                        % (pretty_relpath(l), l.import_name))
+                    write_shared_and_system_libs(lib)
                 else:
                     assert lib.variant != lib.COMPONENT
                     backend_file.write_once('SHARED_LIBS += %s/%s\n'
@@ -1260,6 +1258,12 @@ class RecursiveMakeBackend(CommonBackend):
                 assert isinstance(lib, HostLibrary)
                 backend_file.write_once('HOST_LIBS += %s/%s\n'
                                    % (relpath, lib.import_name))
+
+        for lib in obj.linked_system_libs:
+            if obj.KIND == 'target':
+                backend_file.write_once('OS_LIBS += %s\n' % lib)
+            else:
+                backend_file.write_once('HOST_EXTRA_LIBS += %s\n' % lib)
 
     def _write_manifests(self, dest, manifests):
         man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',

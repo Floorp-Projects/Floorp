@@ -290,11 +290,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'MSVC_ENABLE_PGO': [
                 'MSVC_ENABLE_PGO := 1',
             ],
-            'OS_LIBS': [
-                'OS_LIBS += foo.so',
-                'OS_LIBS += -l123',
-                'OS_LIBS += bar.a',
-            ],
             'SSRCS': [
                 'SSRCS += baz.S',
                 'SSRCS += foo.S',

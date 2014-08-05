@@ -14,7 +14,11 @@ GENERATED_INCLUDES += [
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    OS_LIBS += [ '$(call EXPAND_LIBNAME,psapi shell32 dbghelp)' ]
+    OS_LIBS += [
+        'psapi',
+        'shell32',
+        'dbghelp',
+    ]
 
     DEFINES.update({
         'UNICODE': True,
