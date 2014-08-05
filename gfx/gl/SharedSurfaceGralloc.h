@@ -57,6 +57,7 @@ public:
 
     virtual void Fence() MOZ_OVERRIDE;
     virtual bool WaitSync() MOZ_OVERRIDE;
+    virtual bool PollSync() MOZ_OVERRIDE;
 
     virtual void WaitForBufferOwnership() MOZ_OVERRIDE;
 
