@@ -10,8 +10,12 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  function onWindowLoad()
-  {
+  function onWindowLoad() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.unsafe_legacy_crypto.enabled", true]]},
+                              runTest);
+  }
+
+  function runTest() {
     // Does it work at all?
     try {
       var crmfObject = crypto.generateCRMFRequest("CN=undefined", "regToken",

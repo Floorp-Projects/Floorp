@@ -44,15 +44,19 @@ var checkTestResults = function() {
   SimpleTest.finish();
 }
 
+function loadElements() {
+  // save this for last so that our listeners are registered.
+  // ... this loads the testbed of good and bad requests.
+  document.getElementById('cspframe').src = 'file_CSP_evalscript_main_getCRMFRequest.html';
+  document.getElementById('cspframe2').src = 'file_CSP_evalscript_main_allowed_getCRMFRequest.html';
+  document.getElementById('cspframe3').src = 'file_CSP_evalscript_no_CSP_at_all.html';
+}
+
 //////////////////////////////////////////////////////////////////////
 // set up and go
 SimpleTest.waitForExplicitFinish();
-
-// save this for last so that our listeners are registered.
-// ... this loads the testbed of good and bad requests.
-document.getElementById('cspframe').src = 'file_CSP_evalscript_main_getCRMFRequest.html';
-document.getElementById('cspframe2').src = 'file_CSP_evalscript_main_allowed_getCRMFRequest.html';
-document.getElementById('cspframe3').src = 'file_CSP_evalscript_no_CSP_at_all.html';
+SpecialPowers.pushPrefEnv({"set": [["dom.unsafe_legacy_crypto.enabled", true]]},
+                          loadElements);
 </script>
 </pre>
 </body>
