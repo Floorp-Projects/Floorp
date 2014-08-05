@@ -65,6 +65,7 @@ DIRS += [
     'mathml',
     'media',
     'messages',
+    'mobileconnection',
     'notification',
     'offline',
     'power',
@@ -111,7 +112,6 @@ if CONFIG['MOZ_B2G_RIL']:
     DIRS += [
         'icc',
         'cellbroadcast',
-        'mobileconnection',
         'voicemail',
         'wappush',
     ]
