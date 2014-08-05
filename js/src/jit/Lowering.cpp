@@ -3883,3 +3883,32 @@ LIRGenerator::generate()
     lirGraph_.setArgumentSlotCount(maxargslots_);
     return true;
 }
+
+bool
+LIRGenerator::visitPhi(MPhi *phi)
+{
+    // Phi nodes are not lowered because they are only meaningful for the register allocator.
+    MOZ_ASSUME_UNREACHABLE("Unexpected Phi node during Lowering.");
+}
+
+bool
+LIRGenerator::visitBeta(MBeta *beta)
+{
+    // Beta nodes are supposed to be removed before because they are
+    // only used to carry the range information for Range analysis
+    MOZ_ASSUME_UNREACHABLE("Unexpected Beta node during Lowering.");
+}
+
+bool
+LIRGenerator::visitObjectState(MObjectState *objState)
+{
+    // ObjectState nodes are always recovered on bailouts
+    MOZ_ASSUME_UNREACHABLE("Unexpected ObjectState node during Lowering.");
+}
+
+bool
+LIRGenerator::visitArrayState(MArrayState *objState)
+{
+    // ArrayState nodes are always recovered on bailouts
+    MOZ_ASSUME_UNREACHABLE("Unexpected ArrayState node during Lowering.");
+}
