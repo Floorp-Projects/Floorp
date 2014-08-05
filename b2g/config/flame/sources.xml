@@ -68,6 +68,7 @@
   <project name="platform/external/libnfc-nxp" path="external/libnfc-nxp" revision="42f5b41d22bbbad1b16b9cd3aba0512a399f32a6"/>
   <project name="platform/external/libnl-headers" path="external/libnl-headers" revision="6ccf7349d61f73ac26a0675d735d903ab919c658"/>
   <project name="platform/external/libogg" path="external/libogg" revision="ec0b24fb1468abe37be4164a6feb16568e036bde"/>
+  <project name="platform/external/libpcap" path="external/libpcap" revision="3a7bce5dda6a8db92c9248846d0255e68c3a5b2a"/>
   <project name="platform/external/libpng" path="external/libpng" revision="8c58193420963d07311bb616b98a9d50a072696b"/>
   <project name="platform/external/libselinux" path="external/libselinux" revision="f8bdc31c321543a22a7aa3fa8eb42f3d398811a2"/>
   <project name="platform/external/libsepol" path="external/libsepol" revision="b0e0162a246f2c051427154909c0ecd694cc4805"/>
@@ -90,6 +91,7 @@
   <project name="platform/external/strace" path="external/strace" revision="1a4e05d53dec658a061acb9869cb1eb1342cd09d"/>
   <project name="platform/external/svox" path="external/svox" revision="843824a45e0839947049fdaf5c5be278ab0e09b1"/>
   <project name="platform/external/tagsoup" path="external/tagsoup" revision="68c2ec9e0acdb3214b7fb91dbab8c9fab8736817"/>
+  <project name="platform/external/tcpdump" path="external/tcpdump" revision="b3aacfd59332c1a5dead9975e60c6fa8cf6e6bee"/>
   <project name="platform/external/tinyalsa" path="external/tinyalsa" revision="42fc2d393c868d5db609e39551d64f1e60fefa0e"/>
   <project name="platform/external/tinyxml" path="external/tinyxml" revision="494e448824844d866e805831d1d5f5acb654065c"/>
   <project name="platform/external/tinyxml2" path="external/tinyxml2" revision="c74b546f5af36968ffa56d7fd4529f4273b96f48"/>
