@@ -313,7 +313,6 @@ class GCRuntime
     void waitBackgroundSweepEnd() { helperState.waitBackgroundSweepEnd(); }
     void waitBackgroundSweepOrAllocEnd() { helperState.waitBackgroundSweepOrAllocEnd(); }
     void startBackgroundAllocationIfIdle() { helperState.startBackgroundAllocationIfIdle(); }
-    void freeLater(void *p) { helperState.freeLater(p); }
 
 #ifdef DEBUG
 
