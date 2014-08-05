@@ -123,7 +123,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="878804e0becfe5635bb8ccbf2671333d546c6fb6"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="d7e5ed0a081a39419932b8b9fdefc9b2d903850d"/>
-  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="30d40a5636ff28a554f1d8e9d975bfd04c2463d3"/>
+  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="ebb14165369f5edc3f335d5bde6eef8439073589"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="2b1d8b5b7a760230f4c94c02e733e3929f44253a"/>
   <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="e81502511cda303c803e63f049574634bc96f9f2"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="81c4a859d75d413ad688067829d21b7ba9205f81"/>
