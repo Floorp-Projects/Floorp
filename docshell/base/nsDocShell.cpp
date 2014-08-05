@@ -10772,19 +10772,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
         nsCOMPtr<nsIPrincipal> origPrincipal = origDocument->NodePrincipal();
 
         scContainer = new nsStructuredCloneContainer();
-        JSContext *cx = aCx;
-        nsCxPusher pusher;
-        if (!cx) {
-            cx = nsContentUtils::GetContextFromDocument(document);
-            pusher.Push(cx);
-        }
-        rv = scContainer->InitFromJSVal(aData, cx);
-
-        // If we're running in the document's context and the structured clone
-        // failed, clear the context's pending exception.  See bug 637116.
-        if (NS_FAILED(rv) && !aCx) {
-            JS_ClearPendingException(aCx);
-        }
+        rv = scContainer->InitFromJSVal(aData);
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIDocument> newDocument = GetDocument();
