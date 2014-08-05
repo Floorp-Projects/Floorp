@@ -21,6 +21,7 @@
 #include "nsThreadUtils.h"
 #include "prlog.h"
 #include "SubBufferDecoder.h"
+#include "mozilla/Preferences.h"
 
 struct JSContext;
 class JSObject;
