@@ -1054,7 +1054,7 @@ MPhi::reserveLength(size_t length)
 {
     // Initializes a new MPhi to have an Operand vector of at least the given
     // capacity. This permits use of addInput() instead of addInputSlow(), the
-    // latter of which may call realloc_().
+    // latter of which may call realloc().
     JS_ASSERT(numOperands() == 0);
 #if DEBUG
     capacity_ = length;

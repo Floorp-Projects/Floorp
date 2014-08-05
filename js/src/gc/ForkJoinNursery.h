@@ -210,7 +210,8 @@ class ForkJoinNursery
     // Reallocate an external slot array, unregister the old array and
     // register the new array.  If the allocation fails then leave
     // everything unchanged.
-    HeapSlot *reallocateHugeSlots(HeapSlot *oldSlots, uint32_t oldSize, uint32_t newSize);
+    HeapSlot *reallocateHugeSlots(JSObject *obj, HeapSlot *oldSlots,
+                                  uint32_t oldCount, uint32_t newCount);
 
     // Walk the list of registered slot arrays and free them all.
     void sweepHugeSlots();
