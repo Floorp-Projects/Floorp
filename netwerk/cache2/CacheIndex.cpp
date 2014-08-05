@@ -3587,18 +3587,6 @@ CacheIndex::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
 
 // Memory reporting
 
-namespace { // anon
-
-size_t
-CollectIndexEntryMemory(CacheIndexEntry* aEntry,
-                        mozilla::MallocSizeOf mallocSizeOf,
-                        void *arg)
-{
-  return aEntry->SizeOfExcludingThis(mallocSizeOf);
-}
-
-} // anon
-
 size_t
 CacheIndex::SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const
 {
@@ -3624,9 +3612,9 @@ CacheIndex::SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) cons
   n += mallocSizeOf(mRWBuf);
   n += mallocSizeOf(mRWHash);
 
-  n += mIndex.SizeOfExcludingThis(&CollectIndexEntryMemory, mallocSizeOf);
-  n += mPendingUpdates.SizeOfExcludingThis(&CollectIndexEntryMemory, mallocSizeOf);
-  n += mTmpJournal.SizeOfExcludingThis(&CollectIndexEntryMemory, mallocSizeOf);
+  n += mIndex.SizeOfExcludingThis(mallocSizeOf);
+  n += mPendingUpdates.SizeOfExcludingThis(mallocSizeOf);
+  n += mTmpJournal.SizeOfExcludingThis(mallocSizeOf);
 
   // mFrecencyArray and mExpirationArray items are reported by
   // mIndex/mPendingUpdates

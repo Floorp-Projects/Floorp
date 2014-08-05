@@ -951,13 +951,6 @@ nsDNSService::GetDNSCacheEntries(nsTArray<mozilla::net::DNSCacheEntries> *args)
     return NS_OK;
 }
 
-static size_t
-SizeOfLocalDomainsEntryExcludingThis(nsCStringHashKey* entry,
-                                     MallocSizeOf mallocSizeOf, void*)
-{
-    return entry->GetKey().SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
-}
-
 size_t
 nsDNSService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
@@ -969,8 +962,7 @@ nsDNSService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     size_t n = mallocSizeOf(this);
     n += mResolver->SizeOfIncludingThis(mallocSizeOf);
     n += mIPv4OnlyDomains.SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
-    n += mLocalDomains.SizeOfExcludingThis(SizeOfLocalDomainsEntryExcludingThis,
-                                           mallocSizeOf);
+    n += mLocalDomains.SizeOfExcludingThis(mallocSizeOf);
     return n;
 }
 
