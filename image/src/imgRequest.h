@@ -50,7 +50,7 @@ class imgRequest : public nsIStreamListener,
 
 public:
   typedef mozilla::image::ImageURL ImageURL;
-  imgRequest(imgLoader* aLoader);
+  explicit imgRequest(imgLoader* aLoader);
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
