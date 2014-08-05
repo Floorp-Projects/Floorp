@@ -328,11 +328,15 @@ class LinkageWrongKindError(Exception):
 
 class Linkable(SandboxDerived):
     """Generic sandbox container object for programs and libraries"""
-    __slots__ = ('linked_libraries')
+    __slots__ = (
+        'linked_libraries',
+        'linked_system_libs',
+    )
 
     def __init__(self, sandbox):
         SandboxDerived.__init__(self, sandbox)
         self.linked_libraries = []
+        self.linked_system_libs = []
 
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
@@ -343,6 +347,20 @@ class Linkable(SandboxDerived):
             raise LinkageWrongKindError('%s != %s' % (obj.KIND, self.KIND))
         self.linked_libraries.append(obj)
         obj.refs.append(self)
+
+    def link_system_library(self, lib):
+        # The '$' check is here as a special temporary rule, allowing the
+        # inherited use of make variables, most notably in TK_LIBS.
+        if not lib.startswith('$') and not lib.startswith('-'):
+            if self.config.substs.get('GNU_CC'):
+                lib = '-l%s' % lib
+            else:
+                lib = '%s%s%s' % (
+                    self.config.import_prefix,
+                    lib,
+                    self.config.import_suffix,
+                )
+        self.linked_system_libs.append(lib)
 
 
 class BaseProgram(Linkable):
