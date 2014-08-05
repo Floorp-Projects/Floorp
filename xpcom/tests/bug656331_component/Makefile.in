@@ -15,13 +15,6 @@ EXTRA_LIBS += \
   $(NSPR_LIBS) \
   $(NULL)
 
-# Need to link with CoreFoundation on Mac
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += \
-  $(TK_LIBS) \
-  $(NULL)
-endif
-
 LIB_FILES = $(SHARED_LIBRARY)
 LIB_DEST = $(testxpcobjdir)/$(unittestlocation)
 INSTALL_TARGETS += LIB

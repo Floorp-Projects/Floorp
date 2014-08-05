@@ -61,8 +61,6 @@ midl_TARGET := export
 
 include $(topsrcdir)/config/rules.mk
 
-OS_LIBS += $(call EXPAND_LIBNAME,uuid kernel32 rpcns4 rpcrt4 ole32 oleaut32)
-
 # generate list of to-be-generated files that are missing
 # but ignore special file dlldata.c
 missing:=$(strip $(foreach onefile,$(strip $(subst dlldata.c,,$(MIDL_GENERATED_FILES))),$(if $(wildcard $(onefile)),,$(onefile))))

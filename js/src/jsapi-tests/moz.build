@@ -99,3 +99,5 @@ GENERATED_INCLUDES += ['..']
 USE_LIBS += [
     'static:js',
 ]
+
+OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']

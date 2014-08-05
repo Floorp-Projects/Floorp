@@ -35,6 +35,9 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     ]
     DEFFILE = 'mozglue.def'
     DISABLE_STL_WRAPPING = True
+    OS_LIBS += [
+        'version',
+    ]
 
 if CONFIG['MOZ_NUWA_PROCESS']:
     EXPORTS.ipc += [

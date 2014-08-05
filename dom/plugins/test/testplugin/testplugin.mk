@@ -3,17 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-include $(topsrcdir)/config/config.mk
-OS_LIBS += \
-                $(MOZ_QT_LIBS) \
-                $(XLDFLAGS) \
-                $(XLIBS)
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-OS_LIBS  += $(call EXPAND_LIBNAME,msimg32)
-
 # Windows opt builds without PGO break nptest.dll
 MOZ_OPTIMIZE=
 endif
@@ -31,10 +21,4 @@ INSTALL_TARGETS += \
 else
 TEST_PLUGIN_DEST = $(DIST)/plugins
 INSTALL_TARGETS += TEST_PLUGIN
-endif
-
-include $(topsrcdir)/config/rules.mk
-
-ifneq (,$(filter gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
-OS_LIBS += $(MOZ_GTK2_LIBS) $(XLDFLAGS) $(XLIBS) $(XEXT_LIBS)
 endif

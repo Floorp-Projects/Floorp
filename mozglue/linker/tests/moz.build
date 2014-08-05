@@ -17,3 +17,6 @@ USE_LIBS += [
     'linker',
 ]
 DISABLE_STL_WRAPPING = True
+
+if CONFIG['MOZ_LINKER']:
+    OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']

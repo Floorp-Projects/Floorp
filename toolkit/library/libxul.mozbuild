@@ -40,16 +40,6 @@ if CONFIG['ACCESSIBILITY']:
 if CONFIG['MOZ_WEBRTC']:
     DELAYLOAD_DLLS += ['msdmo.dll']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    LDFLAGS += [
-        '-framework OpenGL',
-        '-framework SystemConfiguration',
-        '-framework QTKit',
-        '-framework IOKit',
-        '-F%s' % CONFIG['MACOS_PRIVATE_FRAMEWORKS_DIR'],
-        '-framework CoreUI',
-    ]
-
 if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
     LOCAL_INCLUDES += [
         '/widget/windows',

@@ -45,3 +45,7 @@ USE_LIBS += [
     'xpcomglue_s',
     'xul',
 ]
+
+# Need to link with CoreFoundation on Mac
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    OS_LIBS += CONFIG['TK_LIBS']

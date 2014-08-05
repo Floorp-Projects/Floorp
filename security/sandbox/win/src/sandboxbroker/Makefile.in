@@ -7,5 +7,3 @@ MOZ_GLUE_LDFLAGS =
 EXTRA_LIBS += \
 	$(NSPR_LIBS) \
 	$(NULL)
-
-OS_LIBS += $(call EXPAND_LIBNAME,dbghelp)

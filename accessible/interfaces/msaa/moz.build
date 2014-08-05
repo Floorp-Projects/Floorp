@@ -21,3 +21,10 @@ FORCE_SHARED_LIB = True
 DEFINES['REGISTER_PROXY_DLL'] = True
 
 DEFFILE = SRCDIR + '/AccessibleMarshal.def'
+
+OS_LIBS += [
+    'kernel32',
+    'rpcns4',
+    'rpcrt4',
+    'oleaut32',
+]

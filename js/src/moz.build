@@ -481,3 +481,28 @@ if CONFIG['_MSC_VER']:
 # the code in js/src/assembler.
 DEFINES['USE_SYSTEM_MALLOC'] = 1
 DEFINES['ENABLE_ASSEMBLER'] = 1
+
+if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
+    OS_LIBS += [
+        'm',
+    ]
+
+OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+
+if CONFIG['OS_ARCH'] == 'FreeBSD':
+    OS_LIBS += [
+        '-pthread',
+    ]
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    OS_LIBS += [
+        'dl',
+    ]
+
+if CONFIG['OS_ARCH'] == 'SunOS':
+    OS_LIBS += [
+        'posix4',
+        'dl',
+        'nsl',
+        'socket',
+    ]

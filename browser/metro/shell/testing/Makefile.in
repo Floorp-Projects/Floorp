@@ -5,14 +5,3 @@
 # don't use moz glue libs
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
-
-include $(topsrcdir)/config/config.mk
-
-OS_LIBS += \
-	kernel32.lib \
-	user32.lib \
-	ole32.lib \
-	shlwapi.lib \
-	propsys.lib \
-	advapi32.lib \
-	$(NULL)

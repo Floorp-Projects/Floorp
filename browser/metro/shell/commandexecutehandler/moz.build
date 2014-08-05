@@ -20,3 +20,13 @@ for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM'):
 NO_PGO = True
 
 RCINCLUDE = 'CommandExecuteHandler.rc'
+
+OS_LIBS += [
+    'kernel32',
+    'user32',
+    'ole32',
+    'shlwapi',
+    'propsys',
+    'advapi32',
+    'wininet',
+]

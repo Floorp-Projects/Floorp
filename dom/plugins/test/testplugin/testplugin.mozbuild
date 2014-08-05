@@ -36,6 +36,9 @@ elif toolkit == 'windows':
     UNIFIED_SOURCES += [
         relative_path + '/nptest_windows.cpp',
     ]
+    OS_LIBS += [
+        'msimg32',
+    ]
 
 FORCE_SHARED_LIB = True
 
@@ -56,7 +59,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' and '64' in CONFIG['OS_TEST']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
     CXXFLAGS += CONFIG['MOZ_GTK2_CFLAGS']
     CFLAGS += CONFIG['MOZ_GTK2_CFLAGS']
+    OS_LIBS += CONFIG['MOZ_GTK2_LIBS']
+    OS_LIBS += CONFIG['XLDFLAGS']
+    OS_LIBS += CONFIG['XLIBS']
+    OS_LIBS += CONFIG['XEXT_LIBS']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']
     CFLAGS += CONFIG['MOZ_QT_CFLAGS']
+    OS_LIBS += CONFIG['MOZ_QT_LIBS']
+    OS_LIBS += CONFIG['XLDFLAGS']
+    OS_LIBS += CONFIG['XLIBS']

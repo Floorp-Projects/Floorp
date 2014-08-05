@@ -5,9 +5,3 @@
 EXTRA_LIBS += \
 	$(NSPR_LIBS) \
     $(NULL)
-
-OS_LIBS += \
-	$(MOZ_DBUS_GLIB_LIBS) \
-	$(NULL)
-                
-include $(topsrcdir)/config/rules.mk

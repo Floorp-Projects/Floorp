@@ -200,22 +200,10 @@ else
 NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
-# HP-UX does not require the extra linking of "-lm"
-ifeq (,$(filter HP-UX WINNT,$(OS_ARCH)))
-OS_LIBS	+= -lm
-endif
-
 CFLAGS += $(MOZ_ZLIB_CFLAGS)
-OS_LIBS += $(MOZ_ZLIB_LIBS)
 
 EXTRA_LIBS += $(MOZ_ICU_LIBS)
 
-ifeq ($(OS_ARCH),FreeBSD)
-OS_LIBS	+= -pthread
-endif
-ifeq ($(OS_ARCH),Linux)
-OS_LIBS	+= -ldl
-endif
 # Silence warnings on AIX/HP-UX from non-GNU compilers
 ifndef GNU_CC
 ifeq ($(OS_ARCH),AIX)
@@ -242,7 +230,6 @@ CXXFLAGS += -mcpu=v9
 endif # GNU_CC
 
 endif
-OS_LIBS	+= -lposix4 -ldl -lnsl -lsocket
 endif
 
 SCRIPTS = $(JS_CONFIG_NAME)

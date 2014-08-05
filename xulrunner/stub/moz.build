@@ -42,9 +42,16 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     USE_LIBS += [
         'xpcomglue_staticruntime',
     ]
+    OS_LIBS += [
+        'shell32',
+    ]
 else:
     USE_LIBS += [
         'xpcomglue',
     ]
 
 DISABLE_STL_WRAPPING = True
+
+# Need to link with CoreFoundation on Mac
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    OS_LIBS += CONFIG['TK_LIBS']

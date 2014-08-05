@@ -14,4 +14,4 @@ UNIFIED_SOURCES += [
 
 FORCE_SHARED_LIB = True
 
-EXTRA_DSO_LDOPTS += ['-framework Carbon']
+OS_LIBS += ['-framework Carbon']

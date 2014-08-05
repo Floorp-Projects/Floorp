@@ -33,7 +33,16 @@ if not CONFIG['MOZ_ENABLE_SIGNMAR']:
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     USE_STATIC_LIBS = True
+
+    OS_LIBS += [
+        'ws2_32',
+    ]
+    if CONFIG['MOZ_ENABLE_SIGNMAR']:
+        OS_LIBS += [
+            'crypt32',
+            'advapi32',
+        ]
 elif CONFIG['OS_ARCH'] == 'Darwin':
-    LDFLAGS += [
+    OS_LIBS += [
       '-framework Security',
     ]

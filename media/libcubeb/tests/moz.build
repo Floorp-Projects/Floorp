@@ -31,6 +31,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'cubeb',
         'speex',
     ]
+    OS_LIBS += [
+        'ole32'
+    ]
 else:
     # Otherwise, we can just grab all the compiled .o and compile against that,
     # linking the appriopriate libraries.
@@ -48,3 +51,16 @@ USE_LIBS += [
     'xpcomglue_s',
     'xul',
 ]
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+    OS_LIBS += [
+        '-framework AudioUnit',
+        '-framework CoreAudio',
+    ]
+elif CONFIG['OS_TARGET'] == 'OpenBSD':
+    OS_LIBS += [
+        'sndio',
+    ]
+else:
+    OS_LIBS += CONFIG['MOZ_ALSA_LIBS']
+    OS_LIBS += CONFIG['MOZ_PULSEAUDIO_LIBS']

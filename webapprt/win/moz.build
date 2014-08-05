@@ -47,3 +47,7 @@ USE_LIBS += [
 ]
 
 DISABLE_STL_WRAPPING = True
+
+OS_LIBS += [
+    'shell32',
+]

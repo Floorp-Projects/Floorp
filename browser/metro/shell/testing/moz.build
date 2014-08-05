@@ -20,3 +20,12 @@ NO_PGO = True
 
 # static win runtime linking
 USE_STATIC_LIBS = True
+
+OS_LIBS += [
+    'kernel32',
+    'user32',
+    'ole32',
+    'shlwapi',
+    'propsys',
+    'advapi32',
+]
