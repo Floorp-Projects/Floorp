@@ -139,7 +139,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
     private final ThemedImageView editCancel;
 
-    private final View[] tabletDisplayModeViews;
+    private List<View> tabletDisplayModeViews;
     private boolean hidForwardButtonOnStartEditing;
 
     private boolean shouldShrinkURLBar;
@@ -281,8 +281,15 @@ public class BrowserToolbar extends ThemedRelativeLayout
                 updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
             }
         };
+    }
 
-        tabletDisplayModeViews = new View[] {
+    public ArrayList<View> populateTabletViews() {
+        if (!HardwareUtils.isTablet()) {
+            // Avoid the runtime and memory overhead for non-tablet devices.
+            return null;
+        }
+
+        final View[] allTabletDisplayModeViews = new View[] {
             actionItemBar,
             backButton,
             menuButton,
@@ -290,6 +297,18 @@ public class BrowserToolbar extends ThemedRelativeLayout
             tabsButton,
             tabsCounter,
         };
+        final ArrayList<View> listToPopulate = new ArrayList<View>(allTabletDisplayModeViews.length);
+
+        // Some tablet devices do not display all of the Views but instead rely on visibility
+        // to hide them. Find and return the ones that are relevant to our device.
+        for (final View v : allTabletDisplayModeViews) {
+            // These views should all be initialized and we explicitly do not
+            // check for null because we may be hiding bugs.
+            if (v.getVisibility() == View.VISIBLE) {
+                listToPopulate.add(v);
+            }
+        };
+        return listToPopulate;
     }
 
     @Override
@@ -1031,6 +1050,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private void showEditingOnTablet() {
+        if (tabletDisplayModeViews == null) {
+            tabletDisplayModeViews = populateTabletViews();
+        }
+
         urlBarEntry.setLayoutParams(urlBarEntryShrunkenLayoutParams);
 
         // Hide display elements.
@@ -1167,6 +1190,12 @@ public class BrowserToolbar extends ThemedRelativeLayout
     }
 
     private void stopEditingOnTablet() {
+        if (tabletDisplayModeViews == null) {
+            throw new IllegalStateException("We initialize tabletDisplayModeViews in the " +
+                    "transition to show editing mode and don't expect stop editing to be called " +
+                    "first.");
+        }
+
         urlBarEntry.setLayoutParams(urlBarEntryDefaultLayoutParams);
 
         // Show display elements.
