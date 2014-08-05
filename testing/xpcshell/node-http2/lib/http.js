@@ -121,7 +121,7 @@
 //
 // [1]: http://nodejs.org/api/https.html
 // [2]: http://nodejs.org/api/http.html
-// [3]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-8.1.3.2
+// [3]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-14#section-8.1.3.2
 // [expect-continue]: https://github.com/http2/http2-spec/issues/18
 // [connect]: https://github.com/http2/http2-spec/issues/230
 
@@ -246,7 +246,7 @@ function IncomingMessage(stream) {
 }
 IncomingMessage.prototype = Object.create(PassThrough.prototype, { constructor: { value: IncomingMessage } });
 
-// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-8.1.3.1)
+// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-14#section-8.1.3.1)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.
@@ -560,7 +560,7 @@ function IncomingRequest(stream) {
 }
 IncomingRequest.prototype = Object.create(IncomingMessage.prototype, { constructor: { value: IncomingRequest } });
 
-// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-8.1.3.1)
+// [Request Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-14#section-8.1.3.1)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.
@@ -609,6 +609,10 @@ function OutgoingResponse(stream) {
 OutgoingResponse.prototype = Object.create(OutgoingMessage.prototype, { constructor: { value: OutgoingResponse } });
 
 OutgoingResponse.prototype.writeHead = function writeHead(statusCode, reasonPhrase, headers) {
+  if (this.headersSent) {
+    return;
+  }
+
   if (typeof reasonPhrase === 'string') {
     this._log.warn('Reason phrase argument was present but ignored by the writeHead method');
   } else {
@@ -999,7 +1003,7 @@ function IncomingResponse(stream) {
 }
 IncomingResponse.prototype = Object.create(IncomingMessage.prototype, { constructor: { value: IncomingResponse } });
 
-// [Response Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-8.1.3.2)
+// [Response Header Fields](http://tools.ietf.org/html/draft-ietf-httpbis-http2-14#section-8.1.3.2)
 // * `headers` argument: HTTP/2.0 request and response header fields carry information as a series
 //   of key-value pairs. This includes the target URI for the request, the status code for the
 //   response, as well as HTTP header fields.

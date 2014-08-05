@@ -76,149 +76,60 @@ ax-age=3600; version=1': '94e783f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7
 };
 
 var test_headers = [{
-  // literal w/index, name index
+  // index
   header: {
     name: 1,
-    value: 'GET',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('42' + '03474554', 'hex')
-}, {
-  // literal w/index, name index
-  header: {
-    name: 6,
-    value: 'http',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('47' + '839d29af', 'hex')
-}, {
-  // literal w/index, name index
-  header: {
-    name: 5,
-    value: '/',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('46' + '012F', 'hex')
-}, {
-  // literal w/index, name index
-  header: {
-    name: 3,
-    value: 'www.foo.com',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('44' + '89f1e3c2f29ceb90f4ff', 'hex')
-}, {
-  // literal w/index, name index
-  header: {
-    name: 2,
-    value: 'https',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('43' + '849d29ad1f', 'hex')
-}, {
-  // literal w/index, name index
-  header: {
-    name: 1,
-    value: 'www.bar.com',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('42' + '89f1e3c2f18ec5c87a7f', 'hex')
-}, {
-  // literal w/index, name index
-  header: {
-    name: 29,
-    value: 'no-cache',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('5e' + '86a8eb10649cbf', 'hex')
-}, {
-  // indexed
-  header: {
-    name: 3,
-    value: 3,
+    value: 1,
     index: false,
     mustNeverIndex: false,
     contextUpdate: false,
-    clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('84', 'hex')
+  buffer: new Buffer('82', 'hex')
 }, {
-  // indexed
+  // index
   header: {
     name: 5,
     value: 5,
     index: false,
     mustNeverIndex: false,
     contextUpdate: false,
-    clearReferenceSet: false,
     newMaxSize: 0
   },
   buffer: new Buffer('86', 'hex')
 }, {
-  // literal w/index, name index
+  // index
   header: {
-    name: 4,
-    value: '/custom-path.css',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('45' + '8b6096a127a56ac699d72211', 'hex')
-}, {
-  // literal w/index, new name & value
-  header: {
-    name: 'custom-key',
-    value: 'custom-value',
-    index: true,
-    mustNeverIndex: false,
-    contextUpdate: false,
-    clearReferenceSet: false,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('40' + '8825a849e95ba97d7f' + '8925a849e95bb8e8b4bf', 'hex')
-}, {
-  // indexed
-  header: {
-    name: 2,
-    value: 2,
+    name: 3,
+    value: 3,
     index: false,
     mustNeverIndex: false,
     contextUpdate: false,
-    clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('83', 'hex')
+  buffer: new Buffer('84', 'hex')
+}, {
+  // literal w/index, name index
+  header: {
+    name: 0,
+    value: 'www.foo.com',
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('41' + '89f1e3c2f29ceb90f4ff', 'hex')
+}, {
+  // indexed
+  header: {
+    name: 1,
+    value: 1,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('82', 'hex')
 }, {
   // indexed
   header: {
@@ -227,10 +138,163 @@ var test_headers = [{
     index: false,
     mustNeverIndex: false,
     contextUpdate: false,
-    clearReferenceSet: false,
     newMaxSize: 0
   },
   buffer: new Buffer('87', 'hex')
+}, {
+  // indexed
+  header: {
+    name: 3,
+    value: 3,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('84', 'hex')
+}, {
+  // literal w/index, name index
+  header: {
+    name: 0,
+    value: 'www.bar.com',
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('41' + '89f1e3c2f18ec5c87a7f', 'hex')
+}, {
+  // literal w/index, name index
+  header: {
+    name: 23,
+    value: 'no-cache',
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('58' + '86a8eb10649cbf', 'hex')
+}, {
+  // index
+  header: {
+    name: 1,
+    value: 1,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('82', 'hex')
+}, {
+  // index
+  header: {
+    name: 6,
+    value: 6,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('87', 'hex')
+}, {
+  // literal w/index, name index
+  header: {
+    name: 3,
+    value: '/custom-path.css',
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('44' + '8b6096a127a56ac699d72211', 'hex')
+}, {
+  // index
+  header: {
+    name: 63,
+    value: 63,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('C0', 'hex')
+}, {
+  // literal w/index, new name & value
+  header: {
+    name: 'custom-key',
+    value: 'custom-value',
+    index: true,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('40' + '8825a849e95ba97d7f' + '8925a849e95bb8e8b4bf', 'hex')
+}, {
+  // index
+  header: {
+    name: 1,
+    value: 1,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('82', 'hex')
+}, {
+  // index
+  header: {
+    name: 6,
+    value: 6,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('87', 'hex')
+}, {
+  // index
+  header: {
+    name: 62,
+    value: 62,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('BF', 'hex')
+}, {
+  // index
+  header: {
+    name: 65,
+    value: 65,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('C2', 'hex')
+}, {
+  // index
+  header: {
+    name: 64,
+    value: 64,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('C1', 'hex')
+}, {
+  // index
+  header: {
+    name: 61,
+    value: 61,
+    index: false,
+    mustNeverIndex: false,
+    contextUpdate: false,
+    newMaxSize: 0
+  },
+  buffer: new Buffer('BE', 'hex')
 }, {
   // Literal w/o index, name index
   header: {
@@ -239,7 +303,6 @@ var test_headers = [{
     index: false,
     mustNeverIndex: false,
     contextUpdate: false,
-    clearReferenceSet: false,
     newMaxSize: 0
   },
   buffer: new Buffer('07' + '86f138d25ee5b3', 'hex')
@@ -251,7 +314,6 @@ var test_headers = [{
     index: false,
     mustNeverIndex: false,
     contextUpdate: false,
-    clearReferenceSet: false,
     newMaxSize: 0
   },
   buffer: new Buffer('00' + '8294e7' + '03626172', 'hex')
@@ -263,7 +325,6 @@ var test_headers = [{
     index: false,
     mustNeverIndex: true,
     contextUpdate: false,
-    clearReferenceSet: false,
     newMaxSize: 0
   },
   buffer: new Buffer('17' + '86f138d25ee5b3', 'hex')
@@ -275,7 +336,6 @@ var test_headers = [{
     index: false,
     mustNeverIndex: true,
     contextUpdate: false,
-    clearReferenceSet: false,
     newMaxSize: 0
   },
   buffer: new Buffer('10' + '8294e7' + '03626172', 'hex')
@@ -286,21 +346,9 @@ var test_headers = [{
     index: false,
     mustNeverIndex: false,
     contextUpdate: true,
-    clearReferenceSet: true,
-    newMaxSize: 0
-  },
-  buffer: new Buffer('30', 'hex')
-}, {
-  header: {
-    name: -1,
-    value: -1,
-    index: false,
-    mustNeverIndex: false,
-    contextUpdate: true,
-    clearReferenceSet: false,
     newMaxSize: 100
   },
-  buffer: new Buffer('2F55', 'hex')
+  buffer: new Buffer('3F45', 'hex')
 }];
 
 var test_header_sets = [{
@@ -328,7 +376,7 @@ var test_header_sets = [{
     ':authority': 'www.bar.com',
     'custom-key': 'custom-value'
   },
-  buffer: util.concat(test_headers.slice(9, 13).map(function(test) { return test.buffer; }))
+  buffer: util.concat(test_headers.slice(9, 14).map(function(test) { return test.buffer; }))
 }, {
   headers: {
     ':method': 'GET',
@@ -337,15 +385,7 @@ var test_header_sets = [{
     ':authority': ['www.foo.com', 'www.bar.com'],
     'custom-key': 'custom-value'
   },
-  buffer: test_headers[3].buffer
-}, {
-  headers: {
-    ':status': '200',
-    'user-agent': 'my-user-agent',
-    'cookie': 'first; second; third; third; fourth',
-    'multiple': ['first', 'second', 'third', 'third; fourth'],
-    'verylong': (new Buffer(9000)).toString('hex')
-  }
+  buffer: util.concat(test_headers.slice(14, 19).map(function(test) { return test.buffer; }))
 }];
 
 describe('compressor.js', function() {
