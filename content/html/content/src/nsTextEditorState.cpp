@@ -769,7 +769,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
     nsIContent* content = mFrame->GetContent();
     if (content) 
     {
-      nsCOMPtr<nsIDocument> doc = content->GetDocument();
+      nsCOMPtr<nsIDocument> doc = content->GetComposedDoc();
       if (doc) 
       {
         nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
@@ -955,7 +955,7 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate,
   nsIContent* content = mFrame->GetContent();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
   
-  nsCOMPtr<nsIDocument> doc = content->GetDocument();
+  nsCOMPtr<nsIDocument> doc = content->GetComposedDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsPIDOMWindow *domWindow = doc->GetWindow();

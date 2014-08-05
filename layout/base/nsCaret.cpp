@@ -676,8 +676,8 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   if (!presShell)
     return NS_ERROR_FAILURE;
 
-  if (!aContentNode || !aContentNode->IsInDoc() ||
-      presShell->GetDocument() != aContentNode->GetCurrentDoc())
+  if (!aContentNode || !aContentNode->IsInComposedDoc() ||
+      presShell->GetDocument() != aContentNode->GetComposedDoc())
     return NS_ERROR_FAILURE;
 
   nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
@@ -1018,8 +1018,8 @@ void nsCaret::DrawCaret(bool aInvalidate)
       mDrawn = false;
       return;
     }
-    if (!mLastContent->IsInDoc() ||
-        presShell->GetDocument() != mLastContent->GetCurrentDoc())
+    if (!mLastContent->IsInComposedDoc() ||
+        presShell->GetDocument() != mLastContent->GetComposedDoc())
     {
       mLastContent = nullptr;
       mDrawn = false;
