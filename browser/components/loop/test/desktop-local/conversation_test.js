@@ -103,14 +103,16 @@ describe("loop.conversation", function() {
   });
 
   describe("ConversationRouter", function() {
-    var conversation;
+    var conversation, client;
 
     beforeEach(function() {
+      client = new loop.Client();
       conversation = new loop.shared.models.ConversationModel({}, {
         sdk: {},
-        pendingCallTimeout: 1000
+        pendingCallTimeout: 1000,
       });
-      sandbox.stub(conversation, "initiate");
+      sandbox.stub(client, "requestCallsInfo");
+      sandbox.stub(conversation, "setSessionData");
     });
 
     describe("Routes", function() {
@@ -118,10 +120,12 @@ describe("loop.conversation", function() {
 
       beforeEach(function() {
         router = new ConversationRouter({
+          client: client,
           conversation: conversation,
           notifier: notifier
         });
         sandbox.stub(router, "loadView");
+        sandbox.stub(conversation, "incoming");
       });
 
       describe("#incoming", function() {
@@ -144,13 +148,58 @@ describe("loop.conversation", function() {
           stubComponent(loop.conversation, "IncomingCallView");
         });
 
+        it("should start alerting", function() {
+          sandbox.stub(navigator.mozLoop, "startAlerting");
+          router.incoming("fakeVersion");
+
+          sinon.assert.calledOnce(navigator.mozLoop.startAlerting);
+        });
+
         it("should set the loopVersion on the conversation model", function() {
           router.incoming("fakeVersion");
 
           expect(conversation.get("loopVersion")).to.equal("fakeVersion");
         });
 
-        it("should display the incoming call view", function() {
+        it("should call requestCallsInfo on the client",
+          function() {
+            router.incoming(42);
+
+            sinon.assert.calledOnce(client.requestCallsInfo);
+            sinon.assert.calledWith(client.requestCallsInfo, 42);
+          });
+
+        it("should display an error if requestCallsInfo returns an error",
+          function(){
+            client.requestCallsInfo.callsArgWith(1, "failed");
+
+            router.incoming(42);
+
+            sinon.assert.calledOnce(notifier.errorL10n);
+          });
+
+        describe("requestCallsInfo successful", function() {
+          var fakeSessionData;
+
+          beforeEach(function() {
+            fakeSessionData  = {
+              sessionId:    "sessionId",
+              sessionToken: "sessionToken",
+              apiKey:       "apiKey"
+            };
+
+            client.requestCallsInfo.callsArgWith(1, null, [fakeSessionData]);
+          });
+
+          it("should store the session data", function() {
+            router.incoming(42);
+
+            sinon.assert.calledOnce(conversation.setSessionData);
+            sinon.assert.calledWithExactly(conversation.setSessionData,
+                                           fakeSessionData);
+          });
+
+          it("should display the incoming call view", function() {
             router.incoming("fakeVersion");
 
             sinon.assert.calledOnce(loop.conversation.IncomingCallView);
@@ -162,13 +211,7 @@ describe("loop.conversation", function() {
                 return TestUtils.isDescriptorOfType(value,
                   loop.conversation.IncomingCallView);
               }));
-        });
-
-        it("should start alerting", function() {
-          sandbox.stub(navigator.mozLoop, "startAlerting");
-          router.incoming("fakeVersion");
-
-          sinon.assert.calledOnce(navigator.mozLoop.startAlerting);
+          });
         });
       });
 
@@ -176,14 +219,7 @@ describe("loop.conversation", function() {
         it("should initiate the conversation", function() {
           router.accept();
 
-          sinon.assert.calledOnce(conversation.initiate);
-          sinon.assert.calledWithMatch(conversation.initiate, {
-            client: {
-              mozLoop: navigator.mozLoop,
-              settings: {}
-            },
-            outgoing: false
-          });
+          sinon.assert.calledOnce(conversation.incoming);
         });
 
         it("should stop alerting", function() {
@@ -337,14 +373,17 @@ describe("loop.conversation", function() {
                      "navigate");
         conversation.set("loopToken", "fakeToken");
         router = new loop.conversation.ConversationRouter({
+          client: client,
           conversation: conversation,
           notifier: notifier
         });
       });
 
-      it("should navigate to call/ongoing once the call session is ready",
+      it("should navigate to call/ongoing once the call is ready",
         function() {
-          conversation.setReady(fakeSessionData);
+          router.incoming(42);
+
+          conversation.incoming();
 
           sinon.assert.calledOnce(router.navigate);
           sinon.assert.calledWith(router.navigate, "call/ongoing");
