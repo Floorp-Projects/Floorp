@@ -297,10 +297,10 @@ class Time {
 
   // Return a new time modified by some delta.
   Time operator+(TimeDelta delta) const {
-    return us_ + delta.delta_;
+    return Time(us_ + delta.delta_);
   }
   Time operator-(TimeDelta delta) const {
-    return us_ - delta.delta_;
+    return Time(us_ - delta.delta_);
   }
 
   // Comparison operators
@@ -334,7 +334,7 @@ class Time {
   // |is_local = true| or UTC |is_local = false|.
   static Time FromExploded(bool is_local, const Exploded& exploded);
 
-  Time(int64_t us) : us_(us) {
+  explicit Time(int64_t us) : us_(us) {
   }
 
   // The representation of Jan 1, 1970 UTC in microseconds since the

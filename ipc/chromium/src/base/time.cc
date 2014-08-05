@@ -51,7 +51,7 @@ int64_t TimeDelta::InMicroseconds() const {
 Time Time::FromTimeT(time_t tt) {
   if (tt == 0)
     return Time();  // Preserve 0 so we can tell it doesn't exist.
-  return (tt * kMicrosecondsPerSecond) + kTimeTToMicrosecondsOffset;
+  return Time((tt * kMicrosecondsPerSecond) + kTimeTToMicrosecondsOffset);
 }
 
 time_t Time::ToTimeT() const {
@@ -62,8 +62,8 @@ time_t Time::ToTimeT() const {
 
 // static
 Time Time::FromDoubleT(double dt) {
-  return (dt * static_cast<double>(kMicrosecondsPerSecond)) +
-      kTimeTToMicrosecondsOffset;
+  return Time((dt * static_cast<double>(kMicrosecondsPerSecond)) +
+      kTimeTToMicrosecondsOffset);
 }
 
 double Time::ToDoubleT() const {
