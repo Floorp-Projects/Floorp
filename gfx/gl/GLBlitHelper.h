@@ -105,16 +105,16 @@ class GLBlitHelper MOZ_FINAL
     GLuint mTexBlit_VertShader;
     GLuint mTex2DBlit_FragShader;
     GLuint mTex2DRectBlit_FragShader;
-    gl::GLProgram mTex2DBlit_Program;
-    gl::GLProgram mTex2DRectBlit_Program;
+    GLuint mTex2DBlit_Program;
+    GLuint mTex2DRectBlit_Program;
 
     GLint mYFlipLoc;
 
     // Data for image blit path
     GLuint mTexExternalBlit_FragShader;
     GLuint mTexYUVPlanarBlit_FragShader;
-    gl::GLProgram mTexExternalBlit_Program;
-    gl::GLProgram mTexYUVPlanarBlit_Program;
+    GLuint mTexExternalBlit_Program;
+    GLuint mTexYUVPlanarBlit_Program;
     GLuint mFBO;
     GLuint mSrcTexY;
     GLuint mSrcTexCb;
