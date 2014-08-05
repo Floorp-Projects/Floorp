@@ -10,7 +10,11 @@
 // While not explicitly restricted to ServiceWorkerGlobalScope, it probably
 // should be. https://github.com/slightlyoff/ServiceWorker/issues/254
 [Constructor(DOMString type, optional InstallEventInit eventInitDict),
- Func="mozilla::dom::workers::ServiceWorkerEventsVisible"]
+ Func="mozilla::dom::workers::ServiceWorkerEventsVisible",
+ // XXXbz I have no idea where this should be exposed.  The spec makes
+ // no sense.  But since it returns a ServiceWorker and that's only
+ // exposed in Window, let's say Window.
+ Exposed=Window]
 interface InstallEvent : InstallPhaseEvent {
   // The currently active worker for this scope when this worker is asked to
   // install itself.
