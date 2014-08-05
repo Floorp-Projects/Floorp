@@ -26,7 +26,6 @@
 #define mozilla_pkix_test__pkixtestutils_h
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include "cert.h"
 #include "keyhi.h"
@@ -50,11 +49,6 @@ public:
 namespace {
 
 inline void
-fclose_void(FILE* file) {
-  (void) fclose(file);
-}
-
-inline void
 SECITEM_FreeItem_true(SECItem* item)
 {
   SECITEM_FreeItem(item, true);
@@ -64,14 +58,11 @@ SECITEM_FreeItem_true(SECItem* item)
 
 typedef ScopedPtr<CERTCertificate, CERT_DestroyCertificate> ScopedCERTCertificate;
 typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
-typedef mozilla::pkix::ScopedPtr<FILE, fclose_void> ScopedFILE;
 typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
 typedef mozilla::pkix::ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
   ScopedSECKEYPublicKey;
 typedef mozilla::pkix::ScopedPtr<SECKEYPrivateKey, SECKEY_DestroyPrivateKey>
   ScopedSECKEYPrivateKey;
-
-FILE* OpenFile(const char* dir, const char* filename, const char* mode);
 
 extern const PRTime ONE_DAY;
 
