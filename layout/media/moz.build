@@ -17,3 +17,9 @@ if CONFIG['MOZ_WEBRTC']:
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     DEFFILE = 'symbols.def'
+    OS_LIBS += [
+        'usp10',
+        'ole32',
+        'msimg32',
+        'winmm',
+    ]

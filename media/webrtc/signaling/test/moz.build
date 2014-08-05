@@ -72,7 +72,7 @@ if CONFIG['OS_TARGET'] == 'Darwin':
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
     ]
-    LDFLAGS += [
+    OS_LIBS += [
         '-framework AudioToolbox',
         '-framework AudioUnit',
         '-framework Carbon',
@@ -121,3 +121,45 @@ if CONFIG['JS_SHARED_LIBRARY']:
     USE_LIBS += [
         'js',
     ]
+
+OS_LIBS += CONFIG['MOZ_WEBRTC_X11_LIBS']
+OS_LIBS += CONFIG['REALTIME_LIBS']
+
+if CONFIG['MOZ_ALSA']:
+    OS_LIBS += CONFIG['MOZ_ALSA_LIBS']
+
+if CONFIG['MOZ_NATIVE_JPEG']:
+    OS_LIBS += CONFIG['MOZ_JPEG_LIBS']
+
+if CONFIG['MOZ_NATIVE_LIBVPX']:
+    OS_LIBS += CONFIG['MOZ_LIBVPX_LIBS']
+
+if not CONFIG['MOZ_TREE_PIXMAN']:
+    OS_LIBS += CONFIG['MOZ_PIXMAN_LIBS']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+    OS_LIBS += CONFIG['XLIBS']
+    OS_LIBS += CONFIG['MOZ_GTK2_LIBS']
+    OS_LIBS += [
+        'gmodule-2.0',
+        'gthread-2.0',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+    OS_LIBS += CONFIG['MOZ_GTK3_LIBS']
+    OS_LIBS += CONFIG['FT2_LIBS']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    OS_LIBS += CONFIG['XLIBS']
+    OS_LIBS += CONFIG['TK_LIBS']
+    OS_LIBS += CONFIG['MOZ_PANGO_LIBS']
+
+if CONFIG['OS_TARGET'] in ('Linux', 'DragonFly', 'FreeBSD', 'NetBSD',
+        'OpenBSD'):
+    OS_LIBS += CONFIG['MOZ_CAIRO_OSLIBS']
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+    OS_LIBS += CONFIG['TK_LIBS']
+
+if CONFIG['MOZ_NATIVE_ZLIB']:
+    OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']

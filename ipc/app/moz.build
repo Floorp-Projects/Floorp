@@ -57,3 +57,9 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
     LDFLAGS += ['/HEAP:0x40000']
 
 FAIL_ON_WARNINGS = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    OS_LIBS += [
+        'binder',
+        'utils',
+    ]

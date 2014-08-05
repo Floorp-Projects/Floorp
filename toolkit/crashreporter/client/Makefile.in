@@ -12,18 +12,15 @@ MOZ_GLUE_PROGRAM_LDFLAGS =
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,comctl32 shell32 wininet shlwapi)
 MOZ_WINCONSOLE = 0
 endif
 
 ifdef MOZ_WIDGET_GTK
 OS_CXXFLAGS += $(TK_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
-OS_LIBS += $(TK_LIBS) $(MOZ_GTHREAD_LIBS)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
-OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk

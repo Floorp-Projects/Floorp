@@ -23,3 +23,7 @@ if CONFIG['GNU_CC']:
     WIN32_EXE_LDFLAGS += ['-municode']
 
 RCINCLUDE = 'HangUIDlg.rc'
+
+OS_LIBS += [
+    'comctl32',
+]

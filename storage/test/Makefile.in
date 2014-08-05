@@ -6,7 +6,3 @@
 EXTRA_LIBS += \
 	$(NSPR_LIBS) \
 	$(NULL)
-
-OS_LIBS += \
-	$(SQLITE_LIBS) \
-	$(NULL)

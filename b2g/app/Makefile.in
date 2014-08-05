@@ -7,37 +7,6 @@ include $(topsrcdir)/config/makefiles/rcs.mk
 
 PREF_JS_EXPORTS = $(srcdir)/b2g.js
 
-ifndef LIBXUL_SDK
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += \
-  -lui \
-  -lEGL \
-  -lhardware_legacy \
-  -lhardware \
-  -lcutils \
-  $(MOZ_ZLIB_LIBS) \
-  $(NULL)
-ifeq ($(ANDROID_VERSION),$(findstring $(ANDROID_VERSION),17 18 19))
-OS_LIBS += \
-  -lgui \
-  -lsuspend \
-  $(NULL)
-endif
-endif
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += \
-  -lbinder \
-  -lutils \
-  $(NULL)
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,version)
-endif
-endif #LIBXUL_SDK
-
 UA_UPDATE_FILE = ua-update.json
 
 $(UA_UPDATE_FILE): % : %.in

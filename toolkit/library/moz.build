@@ -90,3 +90,239 @@ USE_LIBS += ['StaticXULComponentsEnd']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CXXFLAGS += CONFIG['TK_CFLAGS']
+
+if CONFIG['MOZ_WEBRTC']:
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        OS_LIBS += [
+            'secur32',
+            'crypt32',
+            'iphlpapi',
+            'strmiids',
+            'dmoguids',
+            'wmcodecdspuuid',
+            'amstrmid',
+            'msdmo',
+            'wininet',
+        ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    OS_LIBS += [
+        '-framework OpenGL',
+        '-framework SystemConfiguration',
+        '-framework QTKit',
+        '-framework IOKit',
+        '-F%s' % CONFIG['MACOS_PRIVATE_FRAMEWORKS_DIR'],
+        '-framework CoreUI',
+        'cups',
+    ]
+
+if CONFIG['MOZ_WMF']:
+    OS_LIBS += [
+        'mfuuid',
+        'wmcodecdspuuid',
+        'strmiids',
+    ]
+
+if CONFIG['MOZ_DIRECTSHOW']:
+    OS_LIBS += [
+        'dmoguids',
+        'wmcodecdspuuid',
+        'strmiids',
+        'msdmo',
+    ]
+
+if CONFIG['OS_ARCH'] == 'FreeBSD':
+    OS_LIBS += [
+        'util',
+    ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += [
+        'shell32',
+        'ole32',
+        'version',
+        'winspool',
+    ]
+
+if CONFIG['MOZ_B2G_BT_BLUEZ'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    OS_LIBS += [
+        'dbus',
+    ]
+
+if CONFIG['MOZ_B2G_CAMERA']:
+    OS_LIBS += [
+        'stagefright',
+        'stagefright_omx',
+    ]
+
+if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
+    OS_LIBS += [
+        'rt',
+    ]
+
+OS_LIBS += CONFIG['MOZ_CAIRO_OSLIBS']
+OS_LIBS += CONFIG['MOZ_WEBRTC_X11_LIBS']
+OS_LIBS += CONFIG['MOZ_APP_EXTRA_LIBS']
+OS_LIBS += CONFIG['SQLITE_LIBS']
+
+if CONFIG['MOZ_NATIVE_JPEG']:
+    OS_LIBS += CONFIG['MOZ_JPEG_LIBS']
+
+if CONFIG['MOZ_NATIVE_PNG']:
+    OS_LIBS += CONFIG['MOZ_PNG_LIBS']
+
+if CONFIG['MOZ_NATIVE_ZLIB']:
+    OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+
+if CONFIG['MOZ_NATIVE_HUNSPELL']:
+    OS_LIBS += CONFIG['MOZ_HUNSPELL_LIBS']
+
+if CONFIG['MOZ_NATIVE_LIBEVENT']:
+    OS_LIBS += CONFIG['MOZ_LIBEVENT_LIBS']
+
+if CONFIG['MOZ_NATIVE_LIBVPX']:
+    OS_LIBS += CONFIG['MOZ_LIBVPX_LIBS']
+
+if not CONFIG['MOZ_TREE_PIXMAN']:
+    OS_LIBS += CONFIG['MOZ_PIXMAN_LIBS']
+
+if CONFIG['MOZ_ALSA']:
+    OS_LIBS += CONFIG['MOZ_ALSA_LIBS']
+
+if CONFIG['HAVE_CLOCK_MONOTONIC']:
+    OS_LIBS += CONFIG['REALTIME_LIBS']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    OS_LIBS += [
+        'GLESv2',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    OS_LIBS += [
+        'ui',
+        'media',
+        'hardware_legacy',
+        'hardware',
+        'utils',
+        'cutils',
+        'sysutils',
+        'camera_client',
+        'sensorservice',
+        'stagefright',
+        'stagefright_foundation',
+        'stagefright_omx',
+        'binder',
+        'gui',
+        'mtp',
+    ]
+
+if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
+    OS_LIBS += [
+        'stagefright_foundation',
+    ]
+
+OS_LIBS += CONFIG['ICONV_LIBS']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    OS_LIBS += CONFIG['TK_LIBS']
+
+if CONFIG['OS_ARCH'] == 'OpenBSD':
+    OS_LIBS += [
+        'sndio',
+    ]
+
+if CONFIG['MOZ_ENABLE_DBUS']:
+    OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
+
+if CONFIG['MOZ_WIDGET_GTK']:
+    if CONFIG['MOZ_ENABLE_GTK3']:
+        OS_LIBS += [l for l in CONFIG['TK_LIBS']
+            if l not in ('-lgtk-3', '-lgdk-3')]
+    else:
+        OS_LIBS += CONFIG['TK_LIBS']
+    OS_LIBS += CONFIG['XLDFLAGS']
+    OS_LIBS += CONFIG['XLIBS']
+    OS_LIBS += CONFIG['XEXT_LIBS']
+    OS_LIBS += CONFIG['MOZ_PANGO_LIBS']
+    OS_LIBS += CONFIG['XT_LIBS']
+    OS_LIBS += [
+        'gthread-2.0',
+    ]
+    OS_LIBS += CONFIG['FT2_LIBS']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    OS_LIBS += CONFIG['XLDFLAGS']
+    OS_LIBS += CONFIG['XLIBS']
+    OS_LIBS += CONFIG['XT_LIBS']
+    OS_LIBS += CONFIG['MOZ_QT_LIBS']
+    OS_LIBS += CONFIG['FT2_LIBS']
+    OS_LIBS += CONFIG['MOZ_PANGO_LIBS']
+
+if CONFIG['MOZ_ENABLE_STARTUP_NOTIFICATION']:
+    OS_LIBS += CONFIG['MOZ_STARTUP_NOTIFICATION_LIBS']
+
+if CONFIG['MOZ_ENABLE_LIBPROXY']:
+    OS_LIBS += CONFIG['MOZ_LIBPROXY_LIBS']
+
+if CONFIG['OS_ARCH'] == 'SunOS':
+    OS_LIBS += [
+        'elf',
+    ]
+    if CONFIG['GNU_CC']:
+        OS_LIBS += [
+            'demangle',
+        ]
+
+if CONFIG['OS_ARCH'] == 'FreeBSD':
+    OS_LIBS += [
+        'util',
+    ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += [
+        'shell32',
+        'ole32',
+        'version',
+        'winspool',
+        'comdlg32',
+        'imm32',
+        'msimg32',
+        'shlwapi',
+        'psapi',
+        'ws2_32',
+        'dbghelp',
+        'rasapi32',
+        'rasdlg',
+        'iphlpapi',
+        'uxtheme',
+        'setupapi',
+        'secur32',
+        'sensorsapi',
+        'portabledeviceguids',
+        'windowscodecs',
+        'wininet',
+        'wbemuuid',
+        'wintrust',
+        'wtsapi32',
+    ]
+    if CONFIG['ACCESSIBILITY']:
+        OS_LIBS += [
+            'oleacc',
+        ]
+    if CONFIG['MOZ_METRO']:
+        OS_LIBS += [
+            'uiautomationcore',
+            'runtimeobject',
+        ]
+
+if CONFIG['MOZ_ENABLE_QT']:
+    OS_LIBS += CONFIG['XEXT_LIBS']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' and CONFIG['MOZ_GSTREAMER']:
+    OS_LIBS += CONFIG['GSTREAMER_LIBS']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    OS_LIBS += [
+        'usp10',
+        'oleaut32',
+    ]

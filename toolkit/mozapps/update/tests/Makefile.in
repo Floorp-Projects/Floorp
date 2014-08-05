@@ -69,10 +69,6 @@ INI_TEST_FILES = \
 MOZ_GLUE_LDFLAGS =
 MOZ_WINCONSOLE = 1
 
-ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,wintrust shlwapi)
-endif
-
 endif # Not Android
 
 include $(topsrcdir)/config/rules.mk

@@ -58,7 +58,7 @@ if CONFIG['MOZ_APPLEMEDIA']:
       'apple/AppleVTDecoder.cpp',
       'apple/AppleVTLinker.cpp',
   ]
-  LDFLAGS += [
+  OS_LIBS += [
       '-framework AudioToolbox',
   ]
 

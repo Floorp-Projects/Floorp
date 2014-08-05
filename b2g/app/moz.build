@@ -58,8 +58,31 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
             'mozz',
         ]
 
+    OS_LIBS += [
+        'ui',
+        'EGL',
+        'hardware_legacy',
+        'hardware',
+        'cutils',
+    ]
+    OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
+    if CONFIG['ANDROID_VERSION'] in ('17', '18', '19'):
+        OS_LIBS += [
+            'gui',
+            'suspend',
+        ]
+    OS_LIBS += [
+        'binder',
+        'utils',
+    ]
+
 USE_LIBS += [
     'xpcomglue',
 ]
 
 DISABLE_STL_WRAPPING = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += [
+        'version',
+    ]

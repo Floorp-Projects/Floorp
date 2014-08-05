@@ -2,17 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifdef MOZ_WIDGET_GTK
-ifdef MOZ_X11
-
-OS_LIBS += $(TK_LIBS) $(XSS_LIBS)
-
-endif # X11
-endif # GTK
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 
-OS_LIBS += $(call EXPAND_LIBNAME,gdiplus)
 MOZ_GLUE_PROGRAM_LDFLAGS =
 
 endif # windows

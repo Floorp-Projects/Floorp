@@ -29,3 +29,16 @@ USE_LIBS += [
     'xpcomglue_s',
     'xul',
 ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += [
+        'ole32',
+        'shell32',
+        'shlwapi',
+        'version',
+    ]
+
+# Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
+# GTK2: Need to link with glib for GNOME shell service
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'gtk2', 'gtk3'):
+    OS_LIBS += CONFIG['TK_LIBS']

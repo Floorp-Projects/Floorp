@@ -15,3 +15,22 @@ LIBRARY_NAME = 'mozgtk'
 SONAME = 'mozgtk'
 
 FORCE_SHARED_LIB = True
+
+# If LDFLAGS contains -Wl,--as-needed, we need to add -Wl,--no-as-needed
+# before the gtk libraries, otherwise the linker will drop those dependencies
+# because no symbols are used from them. But those dependencies need to be
+# kept for things to work properly.
+if '-Wl,--as-needed' in CONFIG['OS_LDFLAGS']:
+    no_as_needed = ['-Wl,--no-as-needed']
+    as_needed = ['-Wl,--as-needed']
+else:
+    no_as_needed = []
+    as_needed = []
+
+OS_LIBS += [f for f in CONFIG['MOZ_GTK3_LIBS'] if f.startswith('-L')]
+OS_LIBS += no_as_needed
+OS_LIBS += [
+    'gtk-3',
+    'gdk-3',
+]
+OS_LIBS += as_needed
