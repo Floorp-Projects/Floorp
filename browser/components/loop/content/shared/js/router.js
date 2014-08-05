@@ -121,9 +121,12 @@ loop.shared.router = (function(l10n) {
       if (!options.conversation) {
         throw new Error("missing required conversation");
       }
+      if (!options.client) {
+        throw new Error("missing required client");
+      }
       this._conversation = options.conversation;
+      this._client = options.client;
 
-      this.listenTo(this._conversation, "session:ready", this._onSessionReady);
       this.listenTo(this._conversation, "session:ended", this._onSessionEnded);
       this.listenTo(this._conversation, "session:peer-hungup",
                                         this._onPeerHungup);
@@ -146,21 +149,9 @@ loop.shared.router = (function(l10n) {
     },
 
     /**
-     * Starts the call. This method should be overriden.
-     */
-    startCall: function() {},
-
-    /**
      * Ends the call. This method should be overriden.
      */
     endCall: function() {},
-
-    /**
-     * Session is ready.
-     */
-    _onSessionReady: function() {
-      this.startCall();
-    },
 
     /**
      * Session has ended. Notifies the user and ends the call.

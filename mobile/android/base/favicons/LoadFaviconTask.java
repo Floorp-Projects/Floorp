@@ -140,25 +140,42 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
                 Header header = response.getFirstHeader("Location");
 
                 // Handle mad webservers.
-                if (header == null) {
-                    return null;
+                final String newURI;
+                try {
+                    if (header == null) {
+                        return null;
+                    }
+
+                    newURI = header.getValue();
+                    if (newURI == null || newURI.equals(faviconURI.toString())) {
+                        return null;
+                    }
+
+                    if (visited.contains(newURI)) {
+                        // Already been redirected here - abort.
+                        return null;
+                    }
+
+                    visited.add(newURI);
+                } finally {
+                    // Consume the entity before recurse or exit.
+                    try {
+                        response.getEntity().consumeContent();
+                    } catch (Exception e) {
+                        // Doesn't matter.
+                    }
                 }
 
-                String newURI = header.getValue();
-                if (newURI == null || newURI.equals(faviconURI.toString())) {
-                    return null;
-                }
-
-                if (visited.contains(newURI)) {
-                    // Already been redirected here - abort.
-                    return null;
-                }
-
-                visited.add(newURI);
                 return tryDownloadRecurse(new URI(newURI), visited);
             }
 
             if (status >= 400) {
+                // Consume the entity and exit.
+                try {
+                    response.getEntity().consumeContent();
+                } catch (Exception e) {
+                    // Doesn't matter.
+                }
                 return null;
             }
         }
