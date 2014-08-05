@@ -123,24 +123,24 @@ typedef enum {
 //***    nsDocShell
 //*****************************************************************************
 
-class nsDocShell : public nsDocLoader,
-                   public nsIDocShell,
-                   public nsIWebNavigation,
-                   public nsIBaseWindow, 
-                   public nsIScrollable, 
-                   public nsITextScroll, 
-                   public nsIDocCharset, 
-                   public nsIContentViewerContainer,
-                   public nsIRefreshURI,
-                   public nsIWebProgressListener,
-                   public nsIWebPageDescriptor,
-                   public nsIAuthPromptProvider,
-                   public nsILoadContext,
-                   public nsIWebShellServices,
-                   public nsILinkHandler,
-                   public nsIClipboardCommands,
-                   public nsIDOMStorageManager,
-                   public mozilla::SupportsWeakPtr<nsDocShell>
+class nsDocShell MOZ_FINAL : public nsDocLoader,
+                             public nsIDocShell,
+                             public nsIWebNavigation,
+                             public nsIBaseWindow,
+                             public nsIScrollable,
+                             public nsITextScroll,
+                             public nsIDocCharset,
+                             public nsIContentViewerContainer,
+                             public nsIRefreshURI,
+                             public nsIWebProgressListener,
+                             public nsIWebPageDescriptor,
+                             public nsIAuthPromptProvider,
+                             public nsILoadContext,
+                             public nsIWebShellServices,
+                             public nsILinkHandler,
+                             public nsIClipboardCommands,
+                             public nsIDOMStorageManager,
+                             public mozilla::SupportsWeakPtr<nsDocShell>
 {
     friend class nsDSURIContentListener;
 

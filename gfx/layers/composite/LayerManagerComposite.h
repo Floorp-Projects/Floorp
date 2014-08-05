@@ -66,7 +66,7 @@ class TextRenderer;
 class CompositingRenderTarget;
 struct FPSState;
 
-class LayerManagerComposite : public LayerManager
+class LayerManagerComposite MOZ_FINAL : public LayerManager
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::IntSize IntSize;

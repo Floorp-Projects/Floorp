@@ -62,8 +62,8 @@ private:
 
 };
 
-class nsOfflineCacheDevice : public nsCacheDevice
-                           , public nsISupports
+class nsOfflineCacheDevice MOZ_FINAL : public nsCacheDevice
+                                     , public nsISupports
 {
 public:
   nsOfflineCacheDevice();

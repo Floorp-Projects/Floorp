@@ -25,7 +25,7 @@
 
 // Derive from nsIObjectOutputStream so this class can be used as a superclass
 // by nsObjectOutputStream.
-class nsBinaryOutputStream : public nsIObjectOutputStream
+class nsBinaryOutputStream MOZ_FINAL : public nsIObjectOutputStream
 {
 public:
   nsBinaryOutputStream()
@@ -68,9 +68,7 @@ private:
 
 #define NS_BINARYINPUTSTREAM_CONTRACTID "@mozilla.org/binaryinputstream;1"
 
-// Derive from nsIObjectInputStream so this class can be used as a superclass
-// by nsObjectInputStream.
-class nsBinaryInputStream : public nsIObjectInputStream
+class nsBinaryInputStream MOZ_FINAL : public nsIObjectInputStream
 {
 public:
   nsBinaryInputStream()

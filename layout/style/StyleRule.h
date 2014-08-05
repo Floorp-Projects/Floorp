@@ -282,7 +282,7 @@ class DOMCSSStyleRule;
 
 class StyleRule;
 
-class ImportantRule : public nsIStyleRule {
+class ImportantRule MOZ_FINAL : public nsIStyleRule {
 public:
   explicit ImportantRule(Declaration *aDeclaration);
 

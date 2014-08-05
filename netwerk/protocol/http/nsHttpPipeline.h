@@ -16,9 +16,9 @@ class nsIOutputStream;
 
 namespace mozilla { namespace net {
 
-class nsHttpPipeline : public nsAHttpConnection
-                     , public nsAHttpTransaction
-                     , public nsAHttpSegmentReader
+class nsHttpPipeline MOZ_FINAL : public nsAHttpConnection
+                               , public nsAHttpTransaction
+                               , public nsAHttpSegmentReader
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

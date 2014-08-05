@@ -360,7 +360,7 @@ nsComboboxControlFrame::ShowList(bool aShowList)
   return weakFrame.IsAlive();
 }
 
-class nsResizeDropdownAtFinalPosition
+class nsResizeDropdownAtFinalPosition MOZ_FINAL
   : public nsIReflowCallback, public nsRunnable
 {
 public:

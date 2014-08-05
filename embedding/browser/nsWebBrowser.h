@@ -72,18 +72,18 @@ public:
 {0xcda5863a, 0xaa9c, 0x411e, { 0xbe, 0x49, 0xea, 0x0d, 0x52, 0x5a, 0xb4, 0xb5 }}
 
 
-class nsWebBrowser : public nsIWebBrowser,
-                     public nsIWebNavigation,
-                     public nsIWebBrowserSetup,
-                     public nsIDocShellTreeItem,
-                     public nsIBaseWindow,
-                     public nsIScrollable, 
-                     public nsITextScroll, 
-                     public nsIInterfaceRequestor,
-                     public nsIWebBrowserPersist,
-                     public nsIWebBrowserFocus,
-                     public nsIWebProgressListener,
-                     public nsIWebBrowserStream,
+class nsWebBrowser MOZ_FINAL : public nsIWebBrowser,
+                               public nsIWebNavigation,
+                               public nsIWebBrowserSetup,
+                               public nsIDocShellTreeItem,
+                               public nsIBaseWindow,
+                               public nsIScrollable, 
+                               public nsITextScroll, 
+                               public nsIInterfaceRequestor,
+                               public nsIWebBrowserPersist,
+                               public nsIWebBrowserFocus,
+                               public nsIWebProgressListener,
+                               public nsIWebBrowserStream,
                      public nsIWidgetListener,
                      public nsSupportsWeakReference
 {

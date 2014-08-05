@@ -2336,7 +2336,7 @@ public:
 /**
  * The standard display item to paint the outer CSS box-shadows of a frame.
  */
-class nsDisplayBoxShadowOuter : public nsDisplayItem {
+class nsDisplayBoxShadowOuter MOZ_FINAL : public nsDisplayItem {
 public:
   nsDisplayBoxShadowOuter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame)

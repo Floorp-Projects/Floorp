@@ -45,7 +45,7 @@ class OggCodecStore
     Monitor mMonitor;
 };
 
-class OggReader : public MediaDecoderReader
+class OggReader MOZ_FINAL : public MediaDecoderReader
 {
 public:
   OggReader(AbstractMediaDecoder* aDecoder);
