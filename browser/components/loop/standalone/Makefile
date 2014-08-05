@@ -15,8 +15,8 @@ test:
 lint:
 	@$(NODE_LOCAL_BIN)/jshint *.js content test
 
-runserver: config
-	@node server.js
+runserver: remove_old_config
+	node server.js
 
 frontend:
 	@echo "Not implemented yet."
@@ -36,6 +36,19 @@ version:
 	@echo $(SOURCE_STAMP) > content/VERSION.txt
 	@echo $(SOURCE_DATE) >> content/VERSION.txt
 
+
+# The local node server used for client dev (server.js) used to use a static
+# content/config.js.  Now that information is server up dynamically.  This
+# target is depended on by runserver, and removes any copies of that to avoid
+# confusion.
+remove_old_config:
+	@rm -f content/config.js
+
+
+# The services development deployment, however, still wants a static config
+# file, and needs an easy way to generate one.  This target is for folks
+# working with that deployment.
+.PHONY: config
 config:
 	@echo "var loop = loop || {};" > content/config.js
 	@echo "loop.config = loop.config || {};" >> content/config.js
