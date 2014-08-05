@@ -32,7 +32,7 @@ loop.webapp = (function($, _, OT) {
    * Conversation launcher view. A ConversationModel is associated and attached
    * as a `model` property.
    */
-  var ConversationFormView = sharedViews.BaseView.extend({
+  var StartConversationView = sharedViews.BaseView.extend({
     template: _.template([
       '<form>',
       '  <p>',
@@ -42,7 +42,7 @@ loop.webapp = (function($, _, OT) {
     ].join("")),
 
     events: {
-      "submit": "initiate"
+      "submit": "initiateOutgoingCall"
     },
 
     /**
@@ -89,17 +89,9 @@ loop.webapp = (function($, _, OT) {
      *
      * @param {SubmitEvent} event
      */
-    initiate: function(event) {
+    initiateOutgoingCall: function(event) {
       event.preventDefault();
-      this.model.initiate({
-        client: new loop.StandaloneClient({
-          baseServerUrl: baseServerUrl,
-        }),
-        outgoing: true,
-        // For now, we assume both audio and video as there is no
-        // other option to select.
-        callType: "audio-video"
-      });
+      this.model.setupOutgoingCall();
       this.disableForm();
     }
   });
@@ -124,14 +116,51 @@ loop.webapp = (function($, _, OT) {
     },
 
     /**
-     * @override {loop.shared.router.BaseConversationRouter.startCall}
+     * Starts the set up of a call, obtaining the required information from the
+     * server.
      */
-    startCall: function() {
-      if (!this._conversation.get("loopToken")) {
+    setupOutgoingCall: function() {
+      var loopToken = this._conversation.get("loopToken");
+      if (!loopToken) {
         this._notifier.errorL10n("missing_conversation_info");
         this.navigate("home", {trigger: true});
       } else {
-        this.navigate("call/ongoing/" + this._conversation.get("loopToken"), {
+        this._conversation.once("call:outgoing", this.startCall, this);
+
+        // XXX For now, we assume both audio and video as there is no
+        // other option to select (bug 1048333)
+        this._client.requestCallInfo(this._conversation.get("loopToken"), "audio-video",
+                                     (err, sessionData) => {
+          if (err) {
+            switch (err.errno) {
+              // loop-server sends 404 + INVALID_TOKEN (errno 105) whenever a token is
+              // missing OR expired; we treat this information as if the url is always
+              // expired.
+              case 105:
+                this._onSessionExpired();
+                break;
+              default:
+                this._notifier.errorL10n("missing_conversation_info");
+                this.navigate("home", {trigger: true});
+                break;
+            }
+            return;
+          }
+          this._conversation.outgoing(sessionData);
+        });
+      }
+    },
+
+    /**
+     * Actually starts the call.
+     */
+    startCall: function() {
+      var loopToken = this._conversation.get("loopToken");
+      if (!loopToken) {
+        this._notifier.errorL10n("missing_conversation_info");
+        this.navigate("home", {trigger: true});
+      } else {
+        this.navigate("call/ongoing/" + loopToken, {
           trigger: true
         });
       }
@@ -180,10 +209,14 @@ loop.webapp = (function($, _, OT) {
         this._conversation.endSession();
       }
       this._conversation.set("loopToken", loopToken);
-      this.loadView(new ConversationFormView({
+
+      var startView = new StartConversationView({
         model: this._conversation,
-        notifier: this._notifier
-      }));
+        notifier: this._notifier,
+        client: this._client
+      });
+      this._conversation.once("call:outgoing:setup", this.setupOutgoingCall, this);
+      this.loadView(startView);
     },
 
     /**
@@ -218,8 +251,12 @@ loop.webapp = (function($, _, OT) {
    */
   function init() {
     var helper = new WebappHelper();
+    var client = new loop.StandaloneClient({
+      baseServerUrl: baseServerUrl
+    });
     router = new WebappRouter({
       notifier: new sharedViews.NotificationListView({el: "#messages"}),
+      client: client,
       conversation: new sharedModels.ConversationModel({}, {
         sdk: OT,
         pendingCallTimeout: loop.config.pendingCallTimeout
@@ -235,7 +272,7 @@ loop.webapp = (function($, _, OT) {
 
   return {
     baseServerUrl: baseServerUrl,
-    ConversationFormView: ConversationFormView,
+    StartConversationView: StartConversationView,
     HomeView: HomeView,
     WebappHelper: WebappHelper,
     init: init,
