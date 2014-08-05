@@ -40,6 +40,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLContentElement.h"
+#include "mozilla/dom/HTMLShadowElement.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/TouchEvent.h"
@@ -6869,6 +6870,45 @@ nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
   // Check if the content is a web components content insertion point.
   if (aContent->IsHTML(nsGkAtoms::content)) {
     return static_cast<const HTMLContentElement*>(aContent)->IsInsertionPoint();
+  }
+
+  return false;
+}
+
+// static
+bool
+nsContentUtils::HasDistributedChildren(nsIContent* aContent)
+{
+  if (!aContent) {
+    return false;
+  }
+
+  if (aContent->GetShadowRoot()) {
+    // Children of a shadow root host are distributed
+    // to content insertion points in the shadow root.
+    return true;
+  }
+
+  ShadowRoot* shadow = ShadowRoot::FromNode(aContent);
+  if (shadow) {
+    // Children of a shadow root are distributed to
+    // the shadow insertion point of the younger shadow root.
+    return shadow->GetYoungerShadow();
+  }
+
+  HTMLShadowElement* shadowEl = HTMLShadowElement::FromContent(aContent);
+  if (shadowEl && shadowEl->IsInsertionPoint()) {
+    // Children of a shadow insertion points are distributed
+    // to the insertion points in the older shadow root.
+    return shadow->GetOlderShadow();
+  }
+
+  HTMLContentElement* contentEl = HTMLContentElement::FromContent(aContent);
+  if (contentEl && contentEl->IsInsertionPoint()) {
+    // Children of a content insertion point are distributed to the
+    // content insertion point if the content insertion point does
+    // not match any nodes (fallback content).
+    return contentEl->MatchedNodes().IsEmpty();
   }
 
   return false;
