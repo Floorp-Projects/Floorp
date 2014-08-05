@@ -26,6 +26,7 @@ public:
 
     virtual void Fence() MOZ_OVERRIDE;
     virtual bool WaitSync() MOZ_OVERRIDE { return true; }
+    virtual bool PollSync() MOZ_OVERRIDE { return true; }
 
     virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                             GLenum format, GLenum type, GLvoid *pixels) MOZ_OVERRIDE;
