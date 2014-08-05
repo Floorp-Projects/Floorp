@@ -34,7 +34,7 @@ class DeviceManagerADB(DeviceManager):
 
     def __init__(self, host=None, port=5555, retryLimit=5, packageName='fennec',
                  adbPath='adb', deviceSerial=None, deviceRoot=None,
-                 logLevel=mozlog.ERROR, autoconnect=True, **kwargs):
+                 logLevel=mozlog.ERROR, autoconnect=True, runAdbAsRoot=False, **kwargs):
         DeviceManager.__init__(self, logLevel=logLevel,
                                deviceRoot=deviceRoot)
         self.host = host
@@ -47,6 +47,10 @@ class DeviceManagerADB(DeviceManager):
         # The serial number of the device to use with adb, used in cases
         # where multiple devices are being managed by the same adb instance.
         self._deviceSerial = deviceSerial
+
+        # Some devices do no start adb as root, if allowed you can use
+        # this to reboot adbd on the device as root automatically
+        self._runAdbAsRoot = runAdbAsRoot
 
         if packageName == 'fennec':
             if os.getenv('USER'):
@@ -472,7 +476,10 @@ class DeviceManagerADB(DeviceManager):
     def reboot(self, wait = False, **kwargs):
         self._checkCmd(["reboot"])
         if wait:
-            self._checkCmd(["wait-for-device", "shell", "ls", "/sbin"])
+            self._checkCmd(["wait-for-device"])
+            if self._runAdbAsRoot:
+                self._adb_root()
+            self._checkCmd(["shell", "ls", "/sbin"])
 
     def updateApp(self, appBundlePath, **kwargs):
         return self._runCmd(["install", "-r", appBundlePath]).output
@@ -641,6 +648,9 @@ class DeviceManagerADB(DeviceManager):
         if data.find('uid=0(root)') >= 0:
             self._haveSu = True
 
+        if self._runAdbAsRoot:
+            self._adb_root()
+
     def _isUnzipAvailable(self):
         data = self._runCmd(["shell", "unzip"]).output
         for line in data:
@@ -665,3 +675,13 @@ class DeviceManagerADB(DeviceManager):
             self._useZip = True
         else:
             raise DMError("zip not available")
+
+    def _adb_root(self):
+        """ Some devices require us to reboot adbd as root.
+            This function takes care of it.
+        """
+        if self.processInfo("adbd")[2] != "root":
+            self._checkCmd(["root"])
+            self._checkCmd(["wait-for-device"])
+            if self.processInfo("adbd")[2] != "root":
+                raise DMError("We tried rebooting adbd as root, however, it failed.")
