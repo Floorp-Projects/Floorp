@@ -171,9 +171,7 @@ private:
   nsTArray<nsRefPtr<GMPVideoEncoderParent>> mVideoEncoders;
   nsTArray<nsRefPtr<GMPDecryptorParent>> mDecryptors;
   nsTArray<nsRefPtr<GMPAudioDecoderParent>> mAudioDecoders;
-#ifdef DEBUG
   nsCOMPtr<nsIThread> mGMPThread;
-#endif
   // Origin the plugin is assigned to, or empty if the the plugin is not
   // assigned to an origin.
   nsAutoString mOrigin;
