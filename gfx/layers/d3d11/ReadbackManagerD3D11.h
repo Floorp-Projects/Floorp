@@ -23,7 +23,6 @@ class ReadbackManagerD3D11 MOZ_FINAL
   NS_INLINE_DECL_REFCOUNTING(ReadbackManagerD3D11)
 public:
   ReadbackManagerD3D11();
-  ~ReadbackManagerD3D11();
 
   /**
    * Tell the readback manager to post a readback task.
@@ -36,6 +35,8 @@ public:
   void PostTask(ID3D10Texture2D* aTexture, TextureReadbackSink* aSink);
 
 private:
+  ~ReadbackManagerD3D11();
+
   friend DWORD WINAPI StartTaskThread(void *aManager);
 
   void ProcessTasks();
