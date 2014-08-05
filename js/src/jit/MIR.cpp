@@ -231,6 +231,23 @@ MDefinition::analyzeEdgeCasesBackward()
 {
 }
 
+void
+MInstruction::setResumePoint(MResumePoint *resumePoint)
+{
+    JS_ASSERT(!resumePoint_);
+    resumePoint_ = resumePoint;
+    resumePoint_->setInstruction(this);
+}
+
+void
+MInstruction::stealResumePoint(MInstruction *ins)
+{
+    MOZ_ASSERT(ins->resumePoint_->instruction() == ins);
+    resumePoint_ = ins->resumePoint_;
+    ins->resumePoint_ = nullptr;
+    resumePoint_->replaceInstruction(this);
+}
+
 static bool
 MaybeEmulatesUndefined(MDefinition *op)
 {
