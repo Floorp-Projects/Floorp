@@ -328,8 +328,7 @@ ClientTiledLayerBuffer::GetContentType(SurfaceMode* aMode) const
       }
 #endif
   } else if (mode == SurfaceMode::SURFACE_OPAQUE) {
-    if (mThebesLayer->GetVisibleRegion().GetNumRects() > 1 &&
-        mThebesLayer->MayResample()) {
+    if (mThebesLayer->MayResample()) {
       mode = SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
       content = gfxContentType::COLOR_ALPHA;
     }
