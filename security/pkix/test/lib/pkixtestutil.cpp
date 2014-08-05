@@ -25,6 +25,7 @@
 #include "pkixtestutil.h"
 
 #include <cerrno>
+#include <cstdio>
 #include <limits>
 #include <new>
 
@@ -53,7 +54,12 @@ deleteCharArray(char* chars)
   delete[] chars;
 }
 
-} // unnamed namespace
+inline void
+fclose_void(FILE* file) {
+  (void) fclose(file);
+}
+
+typedef mozilla::pkix::ScopedPtr<FILE, fclose_void> ScopedFILE;
 
 FILE*
 OpenFile(const char* dir, const char* filename, const char* mode)
@@ -88,6 +94,8 @@ OpenFile(const char* dir, const char* filename, const char* mode)
 #endif
   return file.release();
 }
+
+} // unnamed namespace
 
 Result
 TamperOnce(SECItem& item,
