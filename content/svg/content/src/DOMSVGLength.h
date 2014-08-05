@@ -59,6 +59,11 @@ class ErrorResult;
  * This means that these DOM tearoffs have space to store these values, even
  * though they're not used in the common case.
  *
+ * Objects of this type are also used to reflect the baseVal and animVal of
+ * a single, non-list SVGLength attribute. Getting and settings values of the
+ * DOMSVGLength in this case requires reading and writing to the corresponding
+ * nsSVGLength2 object.
+ *
  * This class also stores its current list index, attribute enum, and whether
  * it belongs to a baseVal or animVal list. This is so that objects of this
  * type can find their corresponding internal SVGLength.
@@ -106,16 +111,10 @@ public:
                                                    bool aAnimVal);
 
   /**
-   * Create an unowned copy of an owned length. The caller is responsible for
-   * the first AddRef().
+   * Create an unowned copy of a length that is owned or is reflecting a single
+   * attribute. The caller is responsible for the first AddRef().
    */
-  DOMSVGLength* Copy() {
-    NS_ASSERTION(mList, "unexpected caller");
-    DOMSVGLength *copy = new DOMSVGLength();
-    SVGLength &length = InternalItem();
-    copy->NewValueSpecifiedUnits(length.GetUnit(), length.GetValueInCurrentUnits());
-    return copy;
-  }
+  DOMSVGLength* Copy();
 
   bool IsInList() const {
     return !!mList;
@@ -127,6 +126,16 @@ public:
    */
   bool HasOwner() const {
     return !!mList;
+  }
+
+  /**
+   * Returns whether this length object is reflecting a single SVG element
+   * attribute.  This includes the baseVal or animVal of SVGRectElement.x, for
+   * example, but not an item in an SVGLengthList, such as those in the
+   * baseVal or animVal of SVGTextElement.x.
+   */
+  bool IsReflectingAttribute() const {
+    return mVal;
   }
 
   /**
