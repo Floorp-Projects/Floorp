@@ -519,11 +519,14 @@ class LifoAllocPolicy
     void *malloc_(size_t bytes) {
         return fb == Fallible ? alloc_.alloc(bytes) : alloc_.allocInfallible(bytes);
     }
-    void *calloc_(size_t bytes) {
-        void *p = malloc_(bytes);
+    template <typename T>
+    T *pod_calloc(size_t numElems) {
+        if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+            return nullptr;
+        T *p = (T *)malloc_(numElems * sizeof(T));
         if (fb == Fallible && !p)
             return nullptr;
-        memset(p, 0, bytes);
+        memset(p, 0, numElems * sizeof(T));
         return p;
     }
     void *realloc_(void *p, size_t oldBytes, size_t bytes) {

@@ -1372,7 +1372,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     static const unsigned LARGE_ALLOCATION = 25 * 1024 * 1024;
 
     void *callocCanGC(size_t bytes) {
-        void *p = calloc_(bytes);
+        void *p = (void *)pod_calloc<uint8_t>(bytes);
         if (MOZ_LIKELY(!!p))
             return p;
         return onOutOfMemoryCanGC(reinterpret_cast<void *>(1), bytes);
@@ -1652,7 +1652,12 @@ class RuntimeAllocPolicy
   public:
     MOZ_IMPLICIT RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
     void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
-    void *calloc_(size_t bytes) { return runtime->calloc_(bytes); }
+
+    template <typename T>
+    T *pod_calloc(size_t numElems) {
+        return runtime->pod_calloc<T>(numElems);
+    }
+
     void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const {}

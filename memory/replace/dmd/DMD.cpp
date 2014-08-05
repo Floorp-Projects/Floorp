@@ -109,6 +109,14 @@ public:
     return p;
   }
 
+  template <typename T>
+  static T* pod_calloc(size_t aNumElems)
+  {
+    void* p = gMallocTable->calloc(aNumElems, sizeof(T));
+    ExitOnFailure(p);
+    return (T*)p;
+  }
+
   // This realloc_ is the one we use for direct reallocs within DMD.
   static void* realloc_(void* aPtr, size_t aNewSize)
   {
