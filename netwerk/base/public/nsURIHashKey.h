@@ -19,7 +19,7 @@ public:
     typedef nsIURI* KeyType;
     typedef const nsIURI* KeyTypePointer;
 
-    nsURIHashKey(const nsIURI* aKey) :
+    explicit nsURIHashKey(const nsIURI* aKey) :
         mKey(const_cast<nsIURI*>(aKey)) { MOZ_COUNT_CTOR(nsURIHashKey); }
     nsURIHashKey(const nsURIHashKey& toCopy) :
         mKey(toCopy.mKey) { MOZ_COUNT_CTOR(nsURIHashKey); }

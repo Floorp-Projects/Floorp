@@ -1608,7 +1608,7 @@ nsSocketTransport::GetFD_Locked()
 class ThunkPRClose : public nsRunnable
 {
 public:
-  ThunkPRClose(PRFileDesc *fd) : mFD(fd) {}
+  explicit ThunkPRClose(PRFileDesc *fd) : mFD(fd) {}
 
   NS_IMETHOD Run()
   {
