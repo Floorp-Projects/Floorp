@@ -476,7 +476,10 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
   envVar = None
   dmdLibrary = None
   preloadEnvVar = None
-  if mozinfo.isUnix:
+  if mozinfo.info['toolkit'] == "gonk":
+    # Skip all of this, it's only valid for the host.
+    pass
+  elif mozinfo.isUnix:
     envVar = "LD_LIBRARY_PATH"
     env['MOZILLA_FIVE_HOME'] = xrePath
     dmdLibrary = "libdmd.so"
