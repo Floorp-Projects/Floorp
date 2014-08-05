@@ -554,7 +554,7 @@ let memoryWatcher = {
       });
     }
 
-    let timer = setTimeout(() => this.measure(target), 300);
+    let timer = setTimeout(() => this.measure(target), 500);
     this._timers.set(target, timer);
   },
 
