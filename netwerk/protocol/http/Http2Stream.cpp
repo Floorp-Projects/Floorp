@@ -444,8 +444,8 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   // note that we could still have 1 frame for 0 bytes of data. that's ok.
 
   uint32_t messageSize = dataLength;
-  messageSize += 13; // frame header + priority overhead in HEADERS frame
-  messageSize += (numFrames - 1) * 8; // frame header overhead in CONTINUATION frames
+  messageSize += Http2Session::kFrameHeaderBytes + 5; // frame header + priority overhead in HEADERS frame
+  messageSize += (numFrames - 1) * Http2Session::kFrameHeaderBytes; // frame header overhead in CONTINUATION frames
 
   EnsureBuffer(mTxInlineFrame, dataLength + messageSize,
                mTxInlineFrameUsed, mTxInlineFrameSize);
@@ -478,7 +478,7 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
       frameLen + (idx ? 0 : 5),
       (idx) ? Http2Session::FRAME_TYPE_CONTINUATION : Http2Session::FRAME_TYPE_HEADERS,
       flags, mStreamID);
-    outputOffset += 8;
+    outputOffset += Http2Session::kFrameHeaderBytes;
 
     if (!idx) {
       // Priority - Dependency is 0, weight is our gecko-calculated weight,
@@ -570,9 +570,9 @@ Http2Stream::AdjustInitialWindow()
   }
 
   uint8_t *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
-  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + 12,
+  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + Http2Session::kFrameHeaderBytes + 4,
                mTxInlineFrameUsed, mTxInlineFrameSize);
-  mTxInlineFrameUsed += 12;
+  mTxInlineFrameUsed += Http2Session::kFrameHeaderBytes + 4;
 
   mSession->CreateFrameHeader(packet, 4,
                               Http2Session::FRAME_TYPE_WINDOW_UPDATE,
@@ -582,7 +582,7 @@ Http2Stream::AdjustInitialWindow()
   uint32_t bump = ASpdySession::kInitialRwin - mClientReceiveWindow;
   mClientReceiveWindow += bump;
   bump = PR_htonl(bump);
-  memcpy(packet + 8, &bump, 4);
+  memcpy(packet + Http2Session::kFrameHeaderBytes, &bump, 4);
   LOG3(("AdjustInitialwindow increased flow control window %p 0x%X\n",
         this, stream->mStreamID));
 }
@@ -604,9 +604,9 @@ Http2Stream::AdjustPushedPriority()
     return;
 
   uint8_t *packet = mTxInlineFrame.get() + mTxInlineFrameUsed;
-  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + 13,
+  EnsureBuffer(mTxInlineFrame, mTxInlineFrameUsed + Http2Session::kFrameHeaderBytes + 5,
                mTxInlineFrameUsed, mTxInlineFrameSize);
-  mTxInlineFrameUsed += 13;
+  mTxInlineFrameUsed += Http2Session::kFrameHeaderBytes + 5;
 
   mSession->CreateFrameHeader(packet, 5,
                               Http2Session::FRAME_TYPE_PRIORITY,
@@ -614,8 +614,8 @@ Http2Stream::AdjustPushedPriority()
                               mPushSource->mStreamID);
 
   mPushSource->SetPriority(mPriority);
-  memset(packet + 8, 0, 4);
-  memcpy(packet + 12, &mPriorityWeight, 1);
+  memset(packet + Http2Session::kFrameHeaderBytes, 0, 4);
+  memcpy(packet + Http2Session::kFrameHeaderBytes + 4, &mPriorityWeight, 1);
 
   LOG3(("AdjustPushedPriority %p id 0x%X to weight %X\n", this, mPushSource->mStreamID,
         mPriorityWeight));
@@ -831,7 +831,7 @@ Http2Stream::GenerateDataFrameHeader(uint32_t dataLength, bool lastFrame)
                               Http2Session::FRAME_TYPE_DATA,
                               frameFlags, mStreamID);
 
-  mTxInlineFrameUsed = 8;
+  mTxInlineFrameUsed = Http2Session::kFrameHeaderBytes;
   mTxStreamFrameSize = dataLength;
 }
 
