@@ -700,7 +700,7 @@ IonBuilder::build()
     // register/stack pressure.
     MCheckOverRecursed *check = MCheckOverRecursed::New(alloc());
     current->add(check);
-    check->setResumePoint(MResumePoint::Copy(alloc(), current->entryResumePoint()));
+    check->setResumePoint(current->entryResumePoint());
 
     // Parameters have been checked to correspond to the typeset, now we unbox
     // what we can in an infallible manner.
@@ -735,7 +735,7 @@ IonBuilder::build()
     for (uint32_t i = 0; i < info().endArgSlot(); i++) {
         MInstruction *ins = current->getEntrySlot(i)->toInstruction();
         if (ins->type() == MIRType_Value)
-            ins->setResumePoint(MResumePoint::Copy(alloc(), current->entryResumePoint()));
+            ins->setResumePoint(current->entryResumePoint());
     }
 
     // lazyArguments should never be accessed in |argsObjAliasesFormals| scripts.

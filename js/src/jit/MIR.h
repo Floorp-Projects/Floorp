@@ -10253,7 +10253,6 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
   public:
     static MResumePoint *New(TempAllocator &alloc, MBasicBlock *block, jsbytecode *pc,
                              MResumePoint *parent, Mode mode);
-    static MResumePoint *Copy(TempAllocator &alloc, MResumePoint *src);
 
     MNode::Kind kind() const {
         return MNode::ResumePoint;
