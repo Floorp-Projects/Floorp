@@ -224,6 +224,8 @@ class IDLScope(IDLObject):
         # A mapping from global name to the set of global interfaces
         # that have that global name.
         self.globalNameMapping = defaultdict(set)
+        self.primaryGlobalAttr = None
+        self.primaryGlobalName = None
 
     def __str__(self):
         return self.QName()
@@ -643,8 +645,10 @@ class IDLInterface(IDLObjectWithScope):
 
             self.totalMembersInSlots = self.parent.totalMembersInSlots
 
-            # Interfaces with [Global] must not have anything inherit from them
-            if self.parent.getExtendedAttribute("Global"):
+            # Interfaces with [Global] or [PrimaryGlobal] must not
+            # have anything inherit from them
+            if (self.parent.getExtendedAttribute("Global") or
+                self.parent.getExtendedAttribute("PrimaryGlobal")):
                 # Note: This is not a self.parent.isOnGlobalProtoChain() check
                 # because ancestors of a [Global] interface can have other
                 # descendants.
@@ -1105,6 +1109,20 @@ class IDLInterface(IDLObjectWithScope):
                 self.parentScope.globalNames.update(self.globalNames)
                 for globalName in self.globalNames:
                     self.parentScope.globalNameMapping[globalName].add(self.identifier.name)
+                self._isOnGlobalProtoChain = True
+            elif identifier == "PrimaryGlobal":
+                if not attr.noArguments():
+                    raise WebIDLError("[PrimaryGlobal] must take no arguments",
+                                      [attr.location])
+                if self.parentScope.primaryGlobalAttr is not None:
+                    raise WebIDLError(
+                        "[PrimaryGlobal] specified twice",
+                        [attr.location,
+                         self.parentScope.primaryGlobalAttr.location])
+                self.parentScope.primaryGlobalAttr = attr
+                self.parentScope.primaryGlobalName = self.identifier.name
+                self.parentScope.globalNames.add(self.identifier.name)
+                self.parentScope.globalNameMapping[self.identifier.name].add(self.identifier.name)
                 self._isOnGlobalProtoChain = True
             elif (identifier == "NeedNewResolve" or
                   identifier == "OverrideBuiltins" or
