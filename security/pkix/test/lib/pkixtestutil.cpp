@@ -1052,7 +1052,7 @@ ResponseBytes(OCSPResponseContext& context)
   SECItem id_pkix_ocsp_basic = {
     siBuffer,
     const_cast<uint8_t*>(id_pkix_ocsp_basic_encoded),
-    PR_ARRAY_SIZE(id_pkix_ocsp_basic_encoded)
+    sizeof(id_pkix_ocsp_basic_encoded)
   };
   SECItem* response = BasicOCSPResponse(context);
   if (!response) {
@@ -1110,7 +1110,7 @@ OCSPExtension(OCSPResponseContext& context, OCSPResponseExtension* extension)
     SECItem critical = {
       siBuffer,
       const_cast<uint8_t*>(trueEncoded),
-      PR_ARRAY_SIZE(trueEncoded)
+      sizeof(trueEncoded)
     };
     if (output.Add(&critical) != Success) {
       return nullptr;
