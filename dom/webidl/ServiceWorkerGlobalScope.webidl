@@ -14,7 +14,8 @@
 // ServiceWorkerGlobalScope (itself).
 [Global=(Worker,ServiceWorker),
  Func="mozilla::dom::workers::ServiceWorkerGlobalScope::Visible",
- Pref="dom.serviceWorkers.enabled"]
+ Pref="dom.serviceWorkers.enabled",
+ Exposed=ServiceWorker]
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   // FIXME(nsm): Bug 982725
   // readonly attribute CacheList caches;
