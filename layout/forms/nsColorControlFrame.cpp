@@ -62,7 +62,7 @@ nsColorControlFrame::GetFrameName(nsAString& aResult) const
 nsresult
 nsColorControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
-  nsCOMPtr<nsIDocument> doc = mContent->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
   mColorContent = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Mark the element to be native anonymous before setting any attributes.
