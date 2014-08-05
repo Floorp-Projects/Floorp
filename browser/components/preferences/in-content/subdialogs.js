@@ -134,8 +134,13 @@ let gSubDialog = {
 
     // Do this on load to wait for the CSS to load and apply before calculating the size.
     let docEl = this._frame.contentDocument.documentElement;
+
+    // padding-bottom doesn't seem to be included in the scrollHeight of the document element in XUL
+    // so add it ourselves.
+    let paddingBottom = parseFloat(this._frame.contentWindow.getComputedStyle(docEl).paddingBottom);
+
     this._frame.style.width = docEl.style.width || docEl.scrollWidth + "px";
-    this._frame.style.height = docEl.style.height || docEl.scrollHeight + "px";
+    this._frame.style.height = docEl.style.height || (docEl.scrollHeight + paddingBottom) + "px";
 
     this._overlay.style.visibility = "visible";
     this._frame.focus();
