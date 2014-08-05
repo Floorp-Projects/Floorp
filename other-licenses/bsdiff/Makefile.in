@@ -25,14 +25,6 @@
 # This program is output to dist/host/bin because it is only needed by the
 # build system and is not intended to be included in Mozilla distributions.
 
-ifdef MOZ_NATIVE_BZ2
-HOST_EXTRA_LIBS += $(MOZ_BZ2_LIBS)
-endif
-
-ifeq ($(HOST_OS_ARCH),WINNT)
-HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,Ws2_32)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 HOST_CXXFLAGS += $(MOZ_BZ2_CFLAGS)

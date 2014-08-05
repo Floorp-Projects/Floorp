@@ -28,3 +28,7 @@ DEFINES['IMPL_MFBT'] = True
 DISABLE_STL_WRAPPING = True
 
 TEST_DIRS += ['tests']
+
+HOST_OS_LIBS += [
+    'z',
+]
