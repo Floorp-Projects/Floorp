@@ -58,6 +58,9 @@ interface BluetoothAdapter : EventTarget {
   readonly attribute boolean                discoverable;
   readonly attribute boolean                discovering;
 
+  [AvailableIn=CertifiedApps]
+  readonly attribute BluetoothPairingListener pairingReqs;
+
   // Fired when pairing process is completed
            attribute EventHandler   onpairedstatuschanged;
 

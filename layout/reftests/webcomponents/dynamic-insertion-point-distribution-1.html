@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+  </head>
+  <body>
+    <div id="host"></div>
+    <script>
+      var host = document.getElementById("host");
+      var root = host.createShadowRoot();
+      root.innerHTML = 'a <content></content> c';
+
+      function tweak() {
+        var span = document.createElement("span");
+        span.innerHTML = "b";
+
+        // Span should be distributed to insertion point between 'a' and 'c'.
+        host.appendChild(span);
+
+        document.documentElement.removeAttribute("class");
+      }
+
+      window.addEventListener("MozReftestInvalidate", tweak, false);
+    </script>
+  </body>
+</html>

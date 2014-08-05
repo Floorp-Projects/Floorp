@@ -14,3 +14,5 @@ pref(dom.webcomponents.enabled,true) == basic-shadow-element-1.html basic-shadow
 pref(dom.webcomponents.enabled,true) == nested-shadow-element-1.html nested-shadow-element-1-ref.html
 pref(dom.webcomponents.enabled,true) == update-dist-node-descendants-1.html update-dist-node-descendants-1-ref.html
 pref(dom.webcomponents.enabled,true) random-if(B2G&&browserIsRemote) == input-transition-1.html input-transition-1-ref.html # Failure on B2G emulator due to Bug 1018381
+pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-1.html dynamic-insertion-point-distribution-1-ref.html
+pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-2.html dynamic-insertion-point-distribution-2-ref.html

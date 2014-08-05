@@ -3580,11 +3580,17 @@ ChromeWorkerPrivate::Constructor(const GlobalObject& aGlobal,
 
 // static
 bool
-ChromeWorkerPrivate::WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */)
+ChromeWorkerPrivate::WorkerAvailable(JSContext* aCx, JSObject* /* unused */)
 {
-  // Chrome is always allowed to use workers, and content is never allowed to
-  // use ChromeWorker, so all we have to check is the caller.
-  return nsContentUtils::ThreadsafeIsCallerChrome();
+  // Chrome is always allowed to use workers, and content is never
+  // allowed to use ChromeWorker, so all we have to check is the
+  // caller.  However, chrome workers apparently might not have a
+  // system principal, so we have to check for them manually.
+  if (NS_IsMainThread()) {
+    return nsContentUtils::IsCallerChrome();
+  }
+
+  return GetWorkerPrivateFromContext(aCx)->IsChromeWorker();
 }
 
 // static

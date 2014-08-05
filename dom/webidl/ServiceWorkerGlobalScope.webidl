@@ -10,10 +10,8 @@
  * this document.
  */
 
-// The Pref controls exposure in general, the Func restricts it to inside the
-// ServiceWorkerGlobalScope (itself).
-[Global, Func="mozilla::dom::workers::ServiceWorkerGlobalScope::Visible",
- Pref="dom.serviceWorkers.enabled"]
+[Global=(Worker,ServiceWorker),
+ Exposed=ServiceWorker]
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   // FIXME(nsm): Bug 982725
   // readonly attribute CacheList caches;

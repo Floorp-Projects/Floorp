@@ -13,7 +13,8 @@
  */
 
 [Constructor(DOMString scriptURL),
- Func="mozilla::dom::workers::WorkerPrivate::WorkerAvailable"]
+ Func="mozilla::dom::workers::WorkerPrivate::WorkerAvailable",
+ Exposed=(Window,Worker)]
 interface Worker : EventTarget {
   void terminate();
 
@@ -26,6 +27,7 @@ interface Worker : EventTarget {
 Worker implements AbstractWorker;
 
 [Constructor(DOMString scriptURL),
- Func="mozilla::dom::workers::ChromeWorkerPrivate::WorkerAvailable"]
+ Func="mozilla::dom::workers::ChromeWorkerPrivate::WorkerAvailable",
+ Exposed=(Window,Worker)]
 interface ChromeWorker : Worker {
 };

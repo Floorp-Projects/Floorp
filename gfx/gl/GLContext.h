@@ -412,6 +412,7 @@ public:
         OES_compressed_ETC1_RGB8_texture,
         EXT_draw_range_elements,
         EXT_shader_texture_lod,
+        NV_fence,
         Extensions_Max,
         Extensions_End
     };
@@ -2499,6 +2500,67 @@ public:
         realGLboolean ret = mSymbols.fIsVertexArray(array);
         AFTER_GL_CALL;
         return ret;
+    }
+
+// -----------------------------------------------------------------------------
+// Extension NV_fence
+public:
+    void fGenFences(GLsizei n, GLuint* fences)
+    {
+        ASSERT_SYMBOL_PRESENT(fGenFences);
+        BEFORE_GL_CALL;
+        mSymbols.fGenFences(n, fences);
+        AFTER_GL_CALL;
+    }
+
+    void fDeleteFences(GLsizei n, const GLuint* fences)
+    {
+        ASSERT_SYMBOL_PRESENT(fDeleteFences);
+        BEFORE_GL_CALL;
+        mSymbols.fDeleteFences(n, fences);
+        AFTER_GL_CALL;
+    }
+
+    void fSetFence(GLuint fence, GLenum condition)
+    {
+        ASSERT_SYMBOL_PRESENT(fSetFence);
+        BEFORE_GL_CALL;
+        mSymbols.fSetFence(fence, condition);
+        AFTER_GL_CALL;
+    }
+
+    realGLboolean fTestFence(GLuint fence)
+    {
+        ASSERT_SYMBOL_PRESENT(fTestFence);
+        BEFORE_GL_CALL;
+        realGLboolean ret = mSymbols.fTestFence(fence);
+        AFTER_GL_CALL;
+        return ret;
+    }
+
+    void fFinishFence(GLuint fence)
+    {
+        ASSERT_SYMBOL_PRESENT(fFinishFence);
+        BEFORE_GL_CALL;
+        mSymbols.fFinishFence(fence);
+        AFTER_GL_CALL;
+    }
+
+    realGLboolean fIsFence(GLuint fence)
+    {
+        ASSERT_SYMBOL_PRESENT(fIsFence);
+        BEFORE_GL_CALL;
+        realGLboolean ret = mSymbols.fIsFence(fence);
+        AFTER_GL_CALL;
+        return ret;
+    }
+
+    void fGetFenceiv(GLuint fence, GLenum pname, GLint* params)
+    {
+        ASSERT_SYMBOL_PRESENT(fGetFenceiv);
+        BEFORE_GL_CALL;
+        mSymbols.fGetFenceiv(fence, pname, params);
+        AFTER_GL_CALL;
     }
 
 

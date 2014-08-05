@@ -51,18 +51,10 @@ SharedSurface_ANGLEShareHandle::UnlockProdImpl()
 {
 }
 
-
 void
 SharedSurface_ANGLEShareHandle::Fence()
 {
     mGL->fFinish();
-}
-
-bool
-SharedSurface_ANGLEShareHandle::WaitSync()
-{
-    // Since we glFinish in Fence(), we're always going to be resolved here.
-    return true;
 }
 
 static void

@@ -10,9 +10,9 @@
 
 #include <stdlib.h>
 
-#include "plhash.h"
 #include "prlock.h"
 
+#include "nsClassHashtable.h"
 #include "nsTArray.h"
 
 #ifdef NS_TRACE_MALLOC
@@ -177,10 +177,11 @@ public:
   typedef nsTArray<ResourceAcquisition> ResourceAcquisitionArray;
 
 private:
-  typedef nsTArray<PLHashEntry*> HashEntryArray;
+  struct OrderingEntry;
+  typedef nsTArray<OrderingEntry*> HashEntryArray;
   typedef typename HashEntryArray::index_type index_type;
   typedef typename HashEntryArray::size_type size_type;
-  static const HashEntryArray::index_type NoIndex = HashEntryArray::NoIndex;
+  static const index_type NoIndex = HashEntryArray::NoIndex;
 
   /**
    * Value type for the ordering table.  Contains the other
@@ -191,121 +192,32 @@ private:
    */
   struct OrderingEntry
   {
-    OrderingEntry()
+    OrderingEntry(const T* aResource)
       : mFirstSeen(CallStack::kNone)
       , mOrderedLT()        // FIXME bug 456272: set to empirical dep size?
+      , mExternalRefs()
+      , mResource(aResource)
     {
     }
     ~OrderingEntry()
     {
     }
 
+    size_t
+    SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+    {
+      size_t n = aMallocSizeOf(this);
+      n += mOrderedLT.SizeOfExcludingThis(aMallocSizeOf);
+      n += mExternalRefs.SizeOfExcludingThis(aMallocSizeOf);
+      n += mResource->SizeOfIncludingThis(aMallocSizeOf);
+      return n;
+    }
+
     CallStack mFirstSeen; // first site from which the resource appeared
     HashEntryArray mOrderedLT; // this <_o Other
+    HashEntryArray mExternalRefs; // hash entries that reference this
+    const T* mResource;
   };
-
-  static void* TableAlloc(void* /*aPool*/, size_t aSize)
-  {
-    return operator new(aSize);
-  }
-  static void TableFree(void* /*aPool*/, void* aItem)
-  {
-    operator delete(aItem);
-  }
-  static PLHashEntry* EntryAlloc(void* /*aPool*/, const void* aKey)
-  {
-    return new PLHashEntry;
-  }
-  static void EntryFree(void* /*aPool*/, PLHashEntry* aEntry, unsigned aFlag)
-  {
-    delete static_cast<T*>(const_cast<void*>(aEntry->key));
-    delete static_cast<OrderingEntry*>(aEntry->value);
-    aEntry->value = 0;
-    if (aFlag == HT_FREE_ENTRY) {
-      delete aEntry;
-    }
-  }
-  static PLHashNumber HashKey(const void* aKey)
-  {
-    return static_cast<PLHashNumber>(NS_PTR_TO_INT32(aKey) >> 2);
-  }
-  static const PLHashAllocOps kAllocOps;
-
-  // Hash table "interface" the rest of the code should use
-
-  PLHashEntry** GetEntry(const T* aKey)
-  {
-    return PL_HashTableRawLookup(mOrdering, HashKey(aKey), aKey);
-  }
-
-  void PutEntry(T* aKey)
-  {
-    PL_HashTableAdd(mOrdering, aKey, new OrderingEntry());
-  }
-
-  // XXX need these helper methods because OrderingEntry doesn't have
-  // XXX access to underlying PLHashEntry
-
-  /**
-   * Add the order |aFirst <_o aSecond|.
-   *
-   * WARNING: this does not check whether it's sane to add this
-   * order.  In the "best" bad case, when this order already exists,
-   * adding it anyway may unnecessarily result in O(n^2) space.  In
-   * the "worst" bad case, adding it anyway will cause
-   * |InTransitiveClosure()| to diverge.
-   */
-  void AddOrder(PLHashEntry* aLT, PLHashEntry* aGT)
-  {
-    static_cast<OrderingEntry*>(aLT->value)->mOrderedLT
-      .InsertElementSorted(aGT);
-  }
-
-  /**
-   * Return true iff the order |aFirst < aSecond| has been
-   * *explicitly* added.
-   *
-   * Does not consider transitivity.
-   */
-  bool IsOrdered(const PLHashEntry* aFirst, const PLHashEntry* aSecond)
-  const
-  {
-    const OrderingEntry* entry =
-      static_cast<const OrderingEntry*>(aFirst->value);
-    return entry->mOrderedLT.BinaryIndexOf(aSecond) != NoIndex;
-  }
-
-  /**
-   * Return a pointer to the array of all elements "that" for
-   * which the order |this < that| has been explicitly added.
-   *
-   * NOTE: this does *not* consider transitive orderings.
-   */
-  PLHashEntry* const* GetOrders(const PLHashEntry* aEntry) const
-  {
-    return
-      static_cast<const OrderingEntry*>(aEntry->value)->mOrderedLT.Elements();
-  }
-
-  /**
-   * Return the number of elements "that" for which the order
-   * |this < that| has been explicitly added.
-   *
-   * NOTE: this does *not* consider transitive orderings.
-   */
-  size_type NumOrders(const PLHashEntry* aEntry) const
-  {
-    return
-      static_cast<const OrderingEntry*>(aEntry->value)->mOrderedLT.Length();
-  }
-
-  /** Make a ResourceAcquisition out of |aEntry|. */
-  ResourceAcquisition MakeResourceAcquisition(const PLHashEntry* aEntry) const
-  {
-    return ResourceAcquisition(
-      static_cast<const T*>(aEntry->key),
-      static_cast<const OrderingEntry*>(aEntry->value)->mFirstSeen);
-  }
 
   // Throwaway RAII lock to make the following code safer.
   struct PRAutoLock
@@ -326,15 +238,8 @@ public:
    *        that will be checked.
    */
   explicit DeadlockDetector(uint32_t aNumResourcesGuess = kDefaultNumBuckets)
+    : mOrdering(aNumResourcesGuess)
   {
-    mOrdering = PL_NewHashTable(aNumResourcesGuess,
-                                HashKey,
-                                PL_CompareValues, PL_CompareValues,
-                                &kAllocOps, 0);
-    if (!mOrdering) {
-      NS_RUNTIMEABORT("couldn't initialize resource ordering table");
-    }
-
     mLock = PR_NewLock();
     if (!mLock) {
       NS_RUNTIMEABORT("couldn't allocate deadlock detector lock");
@@ -348,8 +253,29 @@ public:
    */
   ~DeadlockDetector()
   {
-    PL_HashTableDestroy(mOrdering);
     PR_DestroyLock(mLock);
+  }
+
+  static size_t
+  SizeOfEntryExcludingThis(const T* aKey, const nsAutoPtr<OrderingEntry>& aEntry,
+                           MallocSizeOf aMallocSizeOf, void* aUserArg)
+  {
+    // NB: Key is accounted for in the entry.
+    size_t n = aEntry->SizeOfIncludingThis(aMallocSizeOf);
+    return n;
+  }
+
+  size_t
+  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    size_t n = aMallocSizeOf(this);
+
+    {
+      PRAutoLock _(mLock);
+      n += mOrdering.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOf);
+    }
+
+    return n;
   }
 
   /**
@@ -365,15 +291,31 @@ public:
   void Add(T* aResource)
   {
     PRAutoLock _(mLock);
-    PutEntry(aResource);
+    mOrdering.Put(aResource, new OrderingEntry(aResource));
   }
 
-  // Nb: implementing a Remove() method makes the detector "more
-  // unsound."  By removing a resource from the orderings, deadlocks
-  // may be missed that would otherwise have been found.  However,
-  // removing resources possibly reduces the # of false positives,
-  // and additionally saves space.  So it's a trade off; we have
-  // chosen to err on the side of caution and not implement Remove().
+  void Remove(T* aResource)
+  {
+    PRAutoLock _(mLock);
+
+    OrderingEntry* entry = mOrdering.Get(aResource);
+
+    // Iterate the external refs and remove the entry from them.
+    HashEntryArray& refs = entry->mExternalRefs;
+    for (index_type i = 0; i < refs.Length(); i++) {
+      refs[i]->mOrderedLT.RemoveElementSorted(entry);
+    }
+
+    // Iterate orders and remove this entry from their refs.
+    HashEntryArray& orders = entry->mOrderedLT;
+    for (index_type i = 0; i < orders.Length(); i++) {
+      orders[i]->mExternalRefs.RemoveElementSorted(entry);
+    }
+
+    // Now the entry can be safely removed.
+    mOrdering.Remove(aResource);
+    delete aResource;
+  }
 
   /**
    * CheckAcquisition This method is called after acquiring |aLast|,
@@ -404,10 +346,11 @@ public:
     NS_ASSERTION(aProposed, "null resource");
     PRAutoLock _(mLock);
 
-    PLHashEntry* second = *GetEntry(aProposed);
-    OrderingEntry* e = static_cast<OrderingEntry*>(second->value);
-    if (CallStack::kNone == e->mFirstSeen) {
-      e->mFirstSeen = aCallContext;
+    OrderingEntry* proposed = mOrdering.Get(aProposed);
+    NS_ASSERTION(proposed, "missing ordering entry");
+
+    if (CallStack::kNone == proposed->mFirstSeen) {
+      proposed->mFirstSeen = aCallContext;
     }
 
     if (!aLast) {
@@ -415,33 +358,35 @@ public:
       return 0;
     }
 
-    PLHashEntry* first = *GetEntry(aLast);
+    OrderingEntry* current = mOrdering.Get(aLast);
+    NS_ASSERTION(current, "missing ordering entry");
 
     // this is the crux of the deadlock detector algorithm
 
-    if (first == second) {
+    if (current == proposed) {
       // reflexive deadlock.  fastpath b/c InTransitiveClosure is
       // not applicable here.
       ResourceAcquisitionArray* cycle = new ResourceAcquisitionArray();
       if (!cycle) {
         NS_RUNTIMEABORT("can't allocate dep. cycle array");
       }
-      cycle->AppendElement(MakeResourceAcquisition(first));
+      cycle->AppendElement(ResourceAcquisition(current->mResource,
+                                               current->mFirstSeen));
       cycle->AppendElement(ResourceAcquisition(aProposed,
                                                aCallContext));
       return cycle;
     }
-    if (InTransitiveClosure(first, second)) {
+    if (InTransitiveClosure(current, proposed)) {
       // we've already established |aLast < aProposed|.  all is well.
       return 0;
     }
-    if (InTransitiveClosure(second, first)) {
+    if (InTransitiveClosure(proposed, current)) {
       // the order |aProposed < aLast| has been deduced, perhaps
       // transitively.  we're attempting to violate that
       // constraint by acquiring resources in the order
       // |aLast < aProposed|, and thus we may deadlock under the
       // right conditions.
-      ResourceAcquisitionArray* cycle = GetDeductionChain(second, first);
+      ResourceAcquisitionArray* cycle = GetDeductionChain(proposed, current);
       // show how acquiring |aProposed| would complete the cycle
       cycle->AppendElement(ResourceAcquisition(aProposed,
                                                aCallContext));
@@ -450,7 +395,8 @@ public:
     // |aLast|, |aProposed| are unordered according to our
     // poset.  this is fine, but we now need to add this
     // ordering constraint.
-    AddOrder(first, second);
+    current->mOrderedLT.InsertElementSorted(proposed);
+    proposed->mExternalRefs.InsertElementSorted(current);
     return 0;
   }
 
@@ -460,16 +406,19 @@ public:
    *
    * @precondition |aStart != aTarget|
    */
-  bool InTransitiveClosure(const PLHashEntry* aStart,
-                           const PLHashEntry* aTarget) const
+  bool InTransitiveClosure(const OrderingEntry* aStart,
+                           const OrderingEntry* aTarget) const
   {
-    if (IsOrdered(aStart, aTarget)) {
+    // NB: Using a static comparator rather than default constructing one shows
+    //     a 9% improvement in scalability tests on some systems.
+    static nsDefaultComparator<const OrderingEntry*, const OrderingEntry*> comp;
+    if (aStart->mOrderedLT.BinaryIndexOf(aTarget, comp) != NoIndex) {
       return true;
     }
 
     index_type i = 0;
-    size_type len = NumOrders(aStart);
-    for (const PLHashEntry* const* it = GetOrders(aStart); i < len; ++i, ++it) {
+    size_type len = aStart->mOrderedLT.Length();
+    for (const OrderingEntry* const* it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
       if (InTransitiveClosure(*it, aTarget)) {
         return true;
       }
@@ -493,14 +442,15 @@ public:
    *
    * @precondition |aStart != aTarget|
    */
-  ResourceAcquisitionArray* GetDeductionChain(const PLHashEntry* aStart,
-                                              const PLHashEntry* aTarget)
+  ResourceAcquisitionArray* GetDeductionChain(const OrderingEntry* aStart,
+                                              const OrderingEntry* aTarget)
   {
     ResourceAcquisitionArray* chain = new ResourceAcquisitionArray();
     if (!chain) {
       NS_RUNTIMEABORT("can't allocate dep. cycle array");
     }
-    chain->AppendElement(MakeResourceAcquisition(aStart));
+    chain->AppendElement(ResourceAcquisition(aStart->mResource,
+                                             aStart->mFirstSeen));
 
     NS_ASSERTION(GetDeductionChain_Helper(aStart, aTarget, chain),
                  "GetDeductionChain called when there's no deadlock");
@@ -509,19 +459,21 @@ public:
 
   // precondition: |aStart != aTarget|
   // invariant: |aStart| is the last element in |aChain|
-  bool GetDeductionChain_Helper(const PLHashEntry* aStart,
-                                const PLHashEntry* aTarget,
+  bool GetDeductionChain_Helper(const OrderingEntry* aStart,
+                                const OrderingEntry* aTarget,
                                 ResourceAcquisitionArray* aChain)
   {
-    if (IsOrdered(aStart, aTarget)) {
-      aChain->AppendElement(MakeResourceAcquisition(aTarget));
+    if (aStart->mOrderedLT.BinaryIndexOf(aTarget) != NoIndex) {
+      aChain->AppendElement(ResourceAcquisition(aTarget->mResource,
+                                                aTarget->mFirstSeen));
       return true;
     }
 
     index_type i = 0;
-    size_type len = NumOrders(aStart);
-    for (const PLHashEntry* const* it = GetOrders(aStart); i < len; ++i, ++it) {
-      aChain->AppendElement(MakeResourceAcquisition(*it));
+    size_type len = aStart->mOrderedLT.Length();
+    for (const OrderingEntry* const* it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
+      aChain->AppendElement(ResourceAcquisition((*it)->mResource,
+                                                (*it)->mFirstSeen));
       if (GetDeductionChain_Helper(*it, aTarget, aChain)) {
         return true;
       }
@@ -534,7 +486,8 @@ public:
    * The partial order on resource acquisitions used by the deadlock
    * detector.
    */
-  PLHashTable* mOrdering;     // T* -> PLHashEntry<OrderingEntry>
+  nsClassHashtable<nsPtrHashKey<const T>, OrderingEntry> mOrdering;
+
 
   /**
    * Protects contentious methods.
@@ -546,13 +499,6 @@ public:
 private:
   DeadlockDetector(const DeadlockDetector& aDD) MOZ_DELETE;
   DeadlockDetector& operator=(const DeadlockDetector& aDD) MOZ_DELETE;
-};
-
-
-template<typename T>
-const PLHashAllocOps DeadlockDetector<T>::kAllocOps = {
-  DeadlockDetector<T>::TableAlloc, DeadlockDetector<T>::TableFree,
-  DeadlockDetector<T>::EntryAlloc, DeadlockDetector<T>::EntryFree
 };
 
 
