@@ -267,7 +267,7 @@ SECITEM_AllocItem(SECItem & item, uint32_t len)
 class ScopedAutoSECItem MOZ_FINAL : public SECItem
 {
 public:
-  ScopedAutoSECItem(uint32_t initialAllocatedLen = 0)
+  explicit ScopedAutoSECItem(uint32_t initialAllocatedLen = 0)
   {
     data = nullptr;
     len = 0;
