@@ -10,8 +10,6 @@ EXTRA_PP_COMPONENTS = ['bar.pp.js', 'foo.pp.js']
 HOST_SOURCES += ['bar.cpp', 'foo.cpp']
 HOST_SOURCES += ['bar.c', 'foo.c']
 
-OS_LIBS = ['foo.so', '-l123', 'bar.a']
-
 SOURCES += ['bar.c', 'foo.c']
 
 SOURCES += ['bar.mm', 'foo.mm']

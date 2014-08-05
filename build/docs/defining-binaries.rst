@@ -158,6 +158,33 @@ Similar to ``SIMPLE_PROGRAMS``, is ``CPP_UNIT_TESTS``, which defines, with the
 same rules, C++ unit tests programs.
 
 
+Linking with system libraries
+=============================
+
+Programs and libraries usually need to link with system libraries, such as a
+widget toolkit, etc. Those required dependencies can be given with the
+``OS_LIBS`` variable.
+
+   OS_LIBS += [
+       'foo',
+       'bar',
+   ]
+
+This expands to ``foo.lib bar.lib`` when building with MSVC, and
+``-lfoo -lbar`` otherwise.
+
+For convenience with ``pkg-config``, ``OS_LIBS`` can also take linker flags
+such as ``-L/some/path`` and ``-llib``, such that it is possible to directly
+assign ``LIBS`` variables from ``CONFIG``, such as:
+
+   OS_LIBS += CONFIG['MOZ_PANGO_LIBS']
+
+(assuming ``CONFIG['MOZ_PANGO_LIBS']`` is a list, not a string)
+
+Like ``USE_LIBS``, this variable applies to static and shared libraries, as
+well as programs.
+
+
 Building both static and shared libraries
 =========================================
 

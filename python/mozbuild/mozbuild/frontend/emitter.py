@@ -314,6 +314,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 self._static_linking_shared.add(obj)
             obj.link_library(candidates[0])
 
+        # Link system libraries from OS_LIBS/HOST_OS_LIBS.
+        for lib in sandbox.get(variable.replace('USE', 'OS'), []):
+            obj.link_system_library(lib)
+
     def emit_from_sandbox(self, sandbox):
         """Convert a MozbuildSandbox to tree metadata objects.
 
@@ -381,7 +385,6 @@ class TreeMetadataEmitter(LoggingMixin):
             'IS_GYP_DIR',
             'MSVC_ENABLE_PGO',
             'NO_DIST_INSTALL',
-            'OS_LIBS',
             'PYTHON_UNIT_TESTS',
             'RCFILE',
             'RESFILE',
