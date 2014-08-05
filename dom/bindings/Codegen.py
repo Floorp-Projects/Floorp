@@ -2032,6 +2032,11 @@ def methodLength(method):
     return min(overloadLength(arguments) for retType, arguments in signatures)
 
 
+def isMaybeExposedIn(member, descriptor):
+    # All we can say for sure is that if this is a worker descriptor
+    # and member is only exposed in windows, then it's not exposed.
+    return not descriptor.workers or member.exposureSet != set(["Window"])
+
 class MethodDefiner(PropertyDefiner):
     """
     A class for defining methods on a prototype object.
@@ -2049,7 +2054,8 @@ class MethodDefiner(PropertyDefiner):
             methods = [m for m in descriptor.interface.members if
                        m.isMethod() and m.isStatic() == static and
                        MemberIsUnforgeable(m, descriptor) == unforgeable and
-                       not m.isIdentifierLess()]
+                       not m.isIdentifierLess() and
+                       isMaybeExposedIn(m, descriptor)]
         else:
             methods = []
         self.chrome = []
@@ -2263,7 +2269,8 @@ class AttrDefiner(PropertyDefiner):
         if descriptor.interface.hasInterfacePrototypeObject() or static:
             attributes = [m for m in descriptor.interface.members if
                           m.isAttr() and m.isStatic() == static and
-                          MemberIsUnforgeable(m, descriptor) == unforgeable]
+                          MemberIsUnforgeable(m, descriptor) == unforgeable and
+                          isMaybeExposedIn(m, descriptor)]
         else:
             attributes = []
         self.chrome = [m for m in attributes if isChromeOnly(m)]
@@ -2346,7 +2353,8 @@ class ConstDefiner(PropertyDefiner):
     def __init__(self, descriptor, name):
         PropertyDefiner.__init__(self, descriptor, name)
         self.name = name
-        constants = [m for m in descriptor.interface.members if m.isConst()]
+        constants = [m for m in descriptor.interface.members if m.isConst() and
+                     isMaybeExposedIn(m, descriptor)]
         self.chrome = [m for m in constants if isChromeOnly(m)]
         self.regular = [m for m in constants if not isChromeOnly(m)]
 
@@ -10468,6 +10476,8 @@ class CGDescriptor(CGThing):
                                                NamedConstructorName(n)))
         for m in descriptor.interface.members:
             if m.isMethod() and m.identifier.name == 'queryInterface':
+                continue
+            if not isMaybeExposedIn(m, descriptor):
                 continue
             if m.isMethod() and m == descriptor.operations['Jsonifier']:
                 hasJsonifier = True

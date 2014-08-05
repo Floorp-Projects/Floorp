@@ -220,18 +220,6 @@ public:
   void
   GetResponseText(nsAString& aResponseText, ErrorResult& aRv);
 
-  JSObject*
-  GetResponseXML() const
-  {
-    return nullptr;
-  }
-
-  JSObject*
-  GetChannel() const
-  {
-    return nullptr;
-  }
-
   void
   GetInterface(JSContext* cx, JS::Handle<JSObject*> aIID,
                JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv)
