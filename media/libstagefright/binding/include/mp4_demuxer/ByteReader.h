@@ -5,16 +5,15 @@
 #ifndef BYTE_READER_H_
 #define BYTE_READER_H_
 
-#include "mozilla/Endian.h"
 #include "mozilla/Vector.h"
 #include "nsTArray.h"
 
-namespace mp4_demuxer {
+namespace mp4_demuxer
+{
 
 class ByteReader
 {
 public:
-  ByteReader() : mPtr(nullptr), mRemaining(0) {}
   ByteReader(const mozilla::Vector<uint8_t>& aData)
     : mPtr(&aData[0]), mRemaining(aData.length())
   {
@@ -22,12 +21,6 @@ public:
   ByteReader(const uint8_t* aData, size_t aSize)
     : mPtr(aData), mRemaining(aSize)
   {
-  }
-  void SetData(const nsTArray<uint8_t>& aData)
-  {
-    MOZ_ASSERT(!mPtr && !mRemaining);
-    mPtr = &aData[0];
-    mRemaining = aData.Length();
   }
 
   ~ByteReader()
@@ -63,27 +56,7 @@ public:
       MOZ_ASSERT(false);
       return 0;
     }
-    return mozilla::BigEndian::readUint16(ptr);
-  }
-
-  uint32_t ReadU32()
-  {
-    auto ptr = Read(4);
-    if (!ptr) {
-      MOZ_ASSERT(false);
-      return 0;
-    }
-    return mozilla::BigEndian::readUint32(ptr);
-  }
-
-  uint64_t ReadU64()
-  {
-    auto ptr = Read(8);
-    if (!ptr) {
-      MOZ_ASSERT(false);
-      return 0;
-    }
-    return mozilla::BigEndian::readUint64(ptr);
+    return ptr[0] << 8 | ptr[1];
   }
 
   const uint8_t* Read(size_t aCount)

@@ -64,10 +64,8 @@ SOURCES += [
 UNIFIED_SOURCES += [
     'binding/Adts.cpp',
     'binding/AnnexB.cpp',
-    'binding/Box.cpp',
     'binding/DecoderData.cpp',
     'binding/Index.cpp',
-    'binding/MoofParser.cpp',
     'binding/mp4_demuxer.cpp',
     'frameworks/av/media/libstagefright/DataSource.cpp',
     'frameworks/av/media/libstagefright/ESDS.cpp',
