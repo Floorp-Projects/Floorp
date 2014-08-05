@@ -338,9 +338,18 @@ ClientTiledThebesLayer::RenderLayer()
   TILING_LOG("TILING %p: Initial low-precision valid region %s\n", this, Stringify(mLowPrecisionValidRegion).c_str());
 
   nsIntRegion neededRegion = mVisibleRegion;
-  if (neededRegion.GetNumRects() > 1 &&
-      MayResample()) {
-    neededRegion = neededRegion.GetBounds();
+  if (MayResample()) {
+    // If we're resampling then bilinear filtering can read up to 1 pixel
+    // outside of our texture coords. Make the visible region a single rect,
+    // and pad it out by 1 pixel (restricted to tile boundaries) so that
+    // we always have valid content or transparent pixels to sample from.
+    nsIntRect bounds = neededRegion.GetBounds();
+    nsIntRect wholeTiles = bounds;
+    wholeTiles.Inflate(nsIntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()));
+    nsIntRect padded = bounds;
+    padded.Inflate(1);
+    padded.IntersectRect(padded, wholeTiles);
+    neededRegion = padded;
   }
 
   nsIntRegion invalidRegion;
