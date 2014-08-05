@@ -20,6 +20,6 @@ public class AnnotationInfo {
         isStatic = aIsStatic;
         isMultithreaded = aIsMultithreaded;
         noThrow = aNoThrow;
-	narrowChars = aNarrowChars;
+        narrowChars = aNarrowChars;
     }
 }
