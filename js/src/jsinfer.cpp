@@ -3443,7 +3443,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
 
     size_t numBytes = sizeof(TypeNewScript)
                     + (initializerList.length() * sizeof(TypeNewScript::Initializer));
-    TypeNewScript *newScript = (TypeNewScript *) cx->calloc_(numBytes);
+    TypeNewScript *newScript = (TypeNewScript *) type->zone()->pod_calloc<uint8_t>(numBytes);
     if (!newScript)
         return;
 
@@ -3606,7 +3606,7 @@ JSScript::makeTypes(JSContext *cx)
     unsigned count = TypeScript::NumTypeSets(this);
 
     TypeScript *typeScript = (TypeScript *)
-        cx->calloc_(TypeScript::SizeIncludingTypeArray(count));
+        zone()->pod_calloc<uint8_t>(TypeScript::SizeIncludingTypeArray(count));
     if (!typeScript)
         return false;
 
