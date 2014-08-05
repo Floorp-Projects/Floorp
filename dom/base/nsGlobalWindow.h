@@ -1323,7 +1323,8 @@ public:
                     mozilla::ErrorResult& aError);
   nsRect GetInnerScreenRect();
 
-  void ScrollTo(const mozilla::CSSIntPoint& aScroll);
+  void ScrollTo(const mozilla::CSSIntPoint& aScroll,
+                const mozilla::dom::ScrollOptions& aOptions);
 
   bool IsFrame()
   {
