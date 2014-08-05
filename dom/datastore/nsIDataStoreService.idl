@@ -7,9 +7,8 @@
 
 interface nsIDOMWindow;
 interface nsIPrincipal;
-interface nsIArray;
 
-[scriptable, uuid(79944b1c-187d-11e4-abb6-74d02b97e723)]
+[scriptable, uuid(9b59c49a-0cd7-11e4-b096-74d02b97e723)]
 interface nsIDataStoreService : nsISupports
 {
   void installDataStore(in unsigned long appId,
@@ -27,8 +26,6 @@ interface nsIDataStoreService : nsISupports
   nsISupports getDataStores(in nsIDOMWindow window,
                             in DOMString name,
                             in DOMString owner);
-
-  nsIArray getAppManifestURLsForDataStore(in DOMString name);
 
   boolean checkPermission(in nsIPrincipal principal);
 };
