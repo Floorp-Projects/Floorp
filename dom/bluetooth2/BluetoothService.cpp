@@ -344,20 +344,13 @@ BluetoothService::DistributeSignal(const BluetoothSignal& aSignal)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aSignal.path().EqualsLiteral(KEY_LOCAL_AGENT)) {
-    Notify(aSignal);
-    return;
-  } else if (aSignal.path().EqualsLiteral(KEY_REMOTE_AGENT)) {
-    Notify(aSignal);
-    return;
-  }
-
   BluetoothSignalObserverList* ol;
   if (!mBluetoothSignalObserverTable.Get(aSignal.path(), &ol)) {
     BT_WARNING("No observer registered for path %s",
                NS_ConvertUTF16toUTF8(aSignal.path()).get());
     return;
   }
+
   MOZ_ASSERT(ol->Length());
   ol->Broadcast(aSignal);
 }
@@ -734,53 +727,4 @@ BluetoothService::FireAdapterStateChanged(bool aEnable)
   BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
                          NS_LITERAL_STRING(KEY_ADAPTER), value);
   DistributeSignal(signal);
-}
-
-void
-BluetoothService::Notify(const BluetoothSignal& aData)
-{
-  nsString type = NS_LITERAL_STRING("bluetooth-pairing-request");
-
-  AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(),
-                                             JS::NullPtr()));
-  NS_ENSURE_TRUE_VOID(obj);
-
-  if (!SetJsObject(cx, aData.value(), obj)) {
-    BT_WARNING("Failed to set properties of system message!");
-    return;
-  }
-
-  BT_LOGD("[S] %s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(aData.name()).get());
-
-  if (aData.name().EqualsLiteral("RequestConfirmation")) {
-    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 4,
-      "RequestConfirmation: Wrong length of parameters");
-  } else if (aData.name().EqualsLiteral("RequestPinCode")) {
-    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
-      "RequestPinCode: Wrong length of parameters");
-  } else if (aData.name().EqualsLiteral("RequestPasskey")) {
-    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
-      "RequestPinCode: Wrong length of parameters");
-  } else if (aData.name().EqualsLiteral("Cancel")) {
-    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 0,
-      "Cancel: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-cancel");
-  } else if (aData.name().EqualsLiteral(PAIRED_STATUS_CHANGED_ID)) {
-    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 1,
-      "pairedstatuschanged: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-pairedstatuschanged");
-  } else {
-    BT_WARNING("Not handling service signal: %s",
-               NS_ConvertUTF16toUTF8(aData.name()).get());
-    return;
-  }
-
-  nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
-    do_GetService("@mozilla.org/system-message-internal;1");
-  NS_ENSURE_TRUE_VOID(systemMessenger);
-
-  JS::Rooted<JS::Value> value(cx, JS::ObjectValue(*obj));
-  systemMessenger->BroadcastMessage(type, value,
-                                    JS::UndefinedHandleValue);
 }
