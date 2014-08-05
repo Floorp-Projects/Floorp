@@ -171,7 +171,6 @@ elif test -z "$JS_POSIX_NSPR"; then
 fi
 
 AC_SUBST(NSPR_CFLAGS)
-AC_SUBST(NSPR_LIBS)
 
 NSPR_PKGCONF_CHECK="nspr"
 if test -n "$MOZ_NATIVE_NSPR"; then

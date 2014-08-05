@@ -2773,11 +2773,11 @@ else
 fi # $no_x
 
 AC_SUBST_LIST(XCFLAGS)
-AC_SUBST(XLDFLAGS)
-AC_SUBST(XLIBS)
-AC_SUBST(XEXT_LIBS)
-AC_SUBST(XT_LIBS)
-AC_SUBST(XSS_LIBS)
+AC_SUBST_LIST(XLDFLAGS)
+AC_SUBST_LIST(XLIBS)
+AC_SUBST_LIST(XEXT_LIBS)
+AC_SUBST_LIST(XT_LIBS)
+AC_SUBST_LIST(XSS_LIBS)
 
 dnl ========================================================
 dnl = pthread support
@@ -2934,7 +2934,7 @@ if test "$ac_cv_clock_monotonic" != "no"; then
     REALTIME_LIBS=$ac_cv_clock_monotonic
     AC_DEFINE(HAVE_CLOCK_MONOTONIC)
     AC_SUBST(HAVE_CLOCK_MONOTONIC)
-    AC_SUBST(REALTIME_LIBS)
+    AC_SUBST_LIST(REALTIME_LIBS)
 fi
 
 dnl check for wcrtomb/mbrtowc
@@ -3052,7 +3052,7 @@ LIBS=$_SAVE_LIBS
     ;;
 esac
 
-AC_SUBST(ICONV_LIBS)
+AC_SUBST_LIST(ICONV_LIBS)
 
 AM_LANGINFO_CODESET
 
@@ -3502,7 +3502,6 @@ LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
 AC_SUBST(MOZ_NATIVE_LIBEVENT)
-AC_SUBST(MOZ_LIBEVENT_LIBS)
 
 dnl ========================================================
 dnl = If NSS was not detected in the system,
@@ -4331,7 +4330,6 @@ then
     TK_LIBS="$TK_LIBS $MOZ_STARTUP_NOTIFICATION_LIBS"
 fi
 AC_SUBST(MOZ_ENABLE_STARTUP_NOTIFICATION)
-AC_SUBST(MOZ_STARTUP_NOTIFICATION_LIBS)
 
 dnl ========================================================
 dnl Disable printing
@@ -4509,7 +4507,7 @@ fi
 
 AC_SUBST(GTK_CONFIG)
 AC_SUBST_LIST(TK_CFLAGS)
-AC_SUBST(TK_LIBS)
+AC_SUBST_LIST(TK_LIBS)
 
 AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_GTK3)
@@ -4519,11 +4517,9 @@ AC_SUBST(MOZ_ENABLE_QTNETWORK)
 AC_SUBST(MOZ_ENABLE_QMSYSTEM2)
 AC_SUBST(MOZ_ENABLE_QTMOBILITY)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
-AC_SUBST(MOZ_GTK2_LIBS)
-AC_SUBST(MOZ_GTK3_LIBS)
 AC_SUBST(MOZ_WIDGET_GTK)
 AC_SUBST_LIST(MOZ_QT_CFLAGS)
-AC_SUBST(MOZ_QT_LIBS)
+AC_SUBST_LIST(MOZ_QT_LIBS)
 
 AC_SUBST(MOC)
 AC_SUBST(RCC)
@@ -4610,7 +4606,6 @@ then
     PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
 
     PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION)
-    AC_SUBST(MOZ_PANGO_LIBS)
 fi
 
 dnl ========================================================
@@ -4651,7 +4646,6 @@ then
     fi
 
     AC_SUBST(MOZ_ENABLE_GNOMEVFS)
-    AC_SUBST(MOZ_GNOMEVFS_LIBS)
 
     dnl ========================================================
     dnl = GIO support module
@@ -4682,7 +4676,6 @@ then
     fi
 
     AC_SUBST(MOZ_ENABLE_GIO)
-    AC_SUBST(MOZ_GIO_LIBS)
 
     dnl ========================================================
     dnl = GConf support module
@@ -4711,7 +4704,6 @@ then
     fi
 
     AC_SUBST(MOZ_ENABLE_GCONF)
-    AC_SUBST(MOZ_GCONF_LIBS)
 fi
 
 dnl ========================================================
@@ -4734,7 +4726,6 @@ then
     fi
 fi
 AC_SUBST(MOZ_ENABLE_LIBPROXY)
-AC_SUBST(MOZ_LIBPROXY_LIBS)
 
 dnl ========================================================
 dnl = GNOME component (mozgnome)
@@ -4799,8 +4790,6 @@ then
     fi
 fi
 AC_SUBST(MOZ_ENABLE_DBUS)
-AC_SUBST(MOZ_DBUS_LIBS)
-AC_SUBST(MOZ_DBUS_GLIB_LIBS)
 
 dnl ========================================================
 dnl = Enable Android History instead of Places
@@ -4989,7 +4978,7 @@ AC_SUBST(MOZ_PEERCONNECTION)
 AC_SUBST(MOZ_WEBRTC_ASSERT_ALWAYS)
 AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
-AC_SUBST(MOZ_WEBRTC_X11_LIBS)
+AC_SUBST_LIST(MOZ_WEBRTC_X11_LIBS)
 
 dnl Use integers over floats for audio on B2G and Android
 dnl (regarless of the CPU architecture, because audio
@@ -5277,7 +5266,7 @@ fi
 
 AC_SUBST(MOZ_NATIVE_LIBVPX)
 AC_SUBST_LIST(MOZ_LIBVPX_CFLAGS)
-AC_SUBST(MOZ_LIBVPX_LIBS)
+AC_SUBST_LIST(MOZ_LIBVPX_LIBS)
 
 if test "$MOZ_WEBM"; then
     if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
@@ -5434,7 +5423,6 @@ if test -n "$MOZ_ALSA"; then
 fi
 
 AC_SUBST(MOZ_ALSA)
-AC_SUBST(MOZ_ALSA_LIBS)
 
 dnl ========================================================
 dnl = Disable PulseAudio
@@ -5520,8 +5508,6 @@ if test -n "$MOZ_GSTREAMER"; then
         AC_MSG_ERROR([gstreamer-plugins-base found, but no libgstvideo. Something has gone terribly wrong. Try reinstalling gstreamer-plugins-base; failing that, disable the gstreamer backend with --disable-gstreamer.])
     fi
     LDFLAGS=$_SAVE_LDFLAGS
-
-    AC_SUBST(GSTREAMER_LIBS)
 fi
 
 AC_SUBST(MOZ_GSTREAMER)
@@ -5927,7 +5913,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
   if test "$OS_TARGET" = "Linux" -o "$OS_ARCH" = "SunOS" && \
     test -z "$SKIP_LIBRARY_CHECKS"; then
     PKG_CHECK_MODULES(MOZ_GTHREAD, gthread-2.0)
-    AC_SUBST(MOZ_GTHREAD_LIBS)
   fi
 
   if test "$OS_ARCH" = "WINNT"; then
@@ -7047,7 +7032,7 @@ AC_SUBST(MOZ_JEMALLOC3)
 AC_SUBST(MOZ_NATIVE_JEMALLOC)
 AC_SUBST(MOZ_GLUE_LDFLAGS)
 AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
-AC_SUBST(WIN32_CRT_LIBS)
+AC_SUBST_LIST(WIN32_CRT_LIBS)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
 
@@ -7855,8 +7840,7 @@ if test -z "${GLIB_GMODULE_LIBS}" \
     GLIB_GMODULE_LIBS=`$GLIB_CONFIG gmodule --libs`
 fi
 
-AC_SUBST(GLIB_LIBS)
-AC_SUBST(GLIB_GMODULE_LIBS)
+AC_SUBST_LIST(GLIB_GMODULE_LIBS)
 
 dnl ========================================================
 dnl Graphics checks.
@@ -7992,7 +7976,7 @@ else
     MOZ_PIXMAN_LIBS="$PIXMAN_LIBS"
 fi
 AC_SUBST(MOZ_PIXMAN_CFLAGS)
-AC_SUBST(MOZ_PIXMAN_LIBS)
+AC_SUBST_LIST(MOZ_PIXMAN_LIBS)
 
 # Check for headers defining standard int types.
 if test -n "$COMPILE_ENVIRONMENT"; then
@@ -8112,8 +8096,8 @@ fi
 
 AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST_LIST(MOZ_CAIRO_CFLAGS)
-AC_SUBST(MOZ_CAIRO_LIBS)
-AC_SUBST(MOZ_CAIRO_OSLIBS)
+AC_SUBST_LIST(MOZ_CAIRO_LIBS)
+AC_SUBST_LIST(MOZ_CAIRO_OSLIBS)
 AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
@@ -8632,11 +8616,11 @@ AC_SUBST(MOZ_NATIVE_PNG)
 AC_SUBST(MOZ_NATIVE_BZ2)
 
 AC_SUBST(MOZ_JPEG_CFLAGS)
-AC_SUBST(MOZ_JPEG_LIBS)
+AC_SUBST_LIST(MOZ_JPEG_LIBS)
 AC_SUBST(MOZ_BZ2_CFLAGS)
-AC_SUBST(MOZ_BZ2_LIBS)
+AC_SUBST_LIST(MOZ_BZ2_LIBS)
 AC_SUBST(MOZ_PNG_CFLAGS)
-AC_SUBST(MOZ_PNG_LIBS)
+AC_SUBST_LIST(MOZ_PNG_LIBS)
 
 if test "$MOZ_WIDGET_TOOLKIT" = gonk -a -n "$MOZ_NUWA_PROCESS"; then
     export MOZ_NUWA_PROCESS
@@ -8653,11 +8637,9 @@ fi
 AC_SUBST(MOZ_B2G_LOADER)
 
 AC_SUBST(NSPR_CFLAGS)
-AC_SUBST(NSPR_LIBS)
 AC_SUBST(MOZ_NATIVE_NSPR)
 
 AC_SUBST(NSS_CFLAGS)
-AC_SUBST(NSS_LIBS)
 AC_SUBST(MOZ_NATIVE_NSS)
 AC_SUBST(NSS_DISABLE_DBM)
 
@@ -8732,7 +8714,7 @@ AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
-AC_SUBST(MOZ_APP_EXTRA_LIBS)
+AC_SUBST_LIST(MOZ_APP_EXTRA_LIBS)
 
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
