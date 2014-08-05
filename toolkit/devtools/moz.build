@@ -5,20 +5,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'server',
+    'acorn',
+    'apps',
     'client',
+    'discovery',
     'gcli',
     'jsbeautify',
-    'sourcemap',
-    'webconsole',
-    'apps',
-    'styleinspector',
-    'acorn',
     'pretty-fast',
     'qrcode',
-    'transport',
+    'security',
+    'server',
+    'sourcemap',
+    'styleinspector',
     'tern',
-    'discovery'
+    'transport',
+    'webconsole',
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
