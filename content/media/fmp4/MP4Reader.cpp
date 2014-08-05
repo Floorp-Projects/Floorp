@@ -105,7 +105,6 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mVideo("MP4 video decoder data", Preferences::GetUint("media.mp4-video-decode-ahead", 2))
   , mLastReportedNumDecodedFrames(0)
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
-  , mTimeRangesMonitor("MP4Reader::TimeRanges")
   , mDemuxerInitialized(false)
   , mIsEncrypted(false)
 {
@@ -706,30 +705,20 @@ MP4Reader::Seek(int64_t aTime,
   return NS_OK;
 }
 
-void
-MP4Reader::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
-                             int64_t aOffset)
+nsresult
+MP4Reader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
   nsTArray<MediaByteRange> ranges;
   if (NS_FAILED(mDecoder->GetResource()->GetCachedRanges(ranges))) {
-    return;
+    return NS_ERROR_FAILURE;
   }
 
   nsTArray<Interval<Microseconds>> timeRanges;
   mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
 
-  MonitorAutoLock mon(mTimeRangesMonitor);
-  mTimeRanges = timeRanges;
-}
-
-
-nsresult
-MP4Reader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
-{
-  MonitorAutoLock mon(mTimeRangesMonitor);
-  for (size_t i = 0; i < mTimeRanges.Length(); i++) {
-    aBuffered->Add((mTimeRanges[i].start - aStartTime) / 1000000.0,
-                   (mTimeRanges[i].end - aStartTime) / 1000000.0);
+  for (size_t i = 0; i < timeRanges.Length(); i++) {
+    aBuffered->Add((timeRanges[i].start - aStartTime) / 1000000.0,
+                   (timeRanges[i].end - aStartTime) / 1000000.0);
   }
 
   return NS_OK;

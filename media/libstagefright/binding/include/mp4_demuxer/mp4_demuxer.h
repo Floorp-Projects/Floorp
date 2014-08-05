@@ -9,7 +9,6 @@
 #include "nsTArray.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "mp4_demuxer/Interval.h"
-#include "nsISupportsImpl.h"
 
 namespace mozilla { class MediaByteRange; }
 
@@ -21,14 +20,12 @@ typedef int64_t Microseconds;
 
 class Stream
 {
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Stream);
 
+public:
   virtual bool ReadAt(int64_t offset, void* data, size_t size,
                       size_t* bytes_read) = 0;
   virtual bool Length(int64_t* size) = 0;
 
-protected:
   virtual ~Stream() {}
 };
 
@@ -69,7 +66,6 @@ private:
   CryptoFile mCrypto;
 
   nsAutoPtr<StageFrightPrivate> mPrivate;
-  nsRefPtr<Stream> mSource;
 };
 
 } // namespace mozilla
