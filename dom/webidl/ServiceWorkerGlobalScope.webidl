@@ -10,11 +10,7 @@
  * this document.
  */
 
-// The Pref controls exposure in general, the Func restricts it to inside the
-// ServiceWorkerGlobalScope (itself).
 [Global=(Worker,ServiceWorker),
- Func="mozilla::dom::workers::ServiceWorkerGlobalScope::Visible",
- Pref="dom.serviceWorkers.enabled",
  Exposed=ServiceWorker]
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   // FIXME(nsm): Bug 982725

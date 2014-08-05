@@ -1016,6 +1016,12 @@ class IDLInterface(IDLObjectWithScope):
                     attr = fowardAttr
                     putForwards = attr.getExtendedAttribute("PutForwards")
 
+        if (self.getExtendedAttribute("Pref") and
+            self._exposureGlobalNames != set([self.parentScope.primaryGlobalName])):
+            raise WebIDLError("[Pref] used on an member that is not %s-only" %
+                              self.parentScope.primaryGlobalName,
+                              [self.location])
+
 
     def isInterface(self):
         return True
@@ -3018,6 +3024,14 @@ class IDLInterfaceMember(IDLObjectWithIdentifier):
                                   [self.location])
         globalNameSetToExposureSet(scope, self._exposureGlobalNames,
                                    self.exposureSet)
+        self._scope = scope
+
+    def validate(self):
+        if (self.getExtendedAttribute("Pref") and
+            self.exposureSet != set([self._scope.primaryGlobalName])):
+            raise WebIDLError("[Pref] used on an interface member that is not "
+                              "%s-only" % self._scope.primaryGlobalName,
+                              [self.location])
 
 class IDLConst(IDLInterfaceMember):
     def __init__(self, location, identifier, type, value):
@@ -3059,7 +3073,7 @@ class IDLConst(IDLInterfaceMember):
         self.value = coercedValue
 
     def validate(self):
-        pass
+        IDLInterfaceMember.validate(self)
 
     def handleExtendedAttribute(self, attr):
         identifier = attr.identifier()
@@ -3173,6 +3187,8 @@ class IDLAttribute(IDLInterfaceMember):
                                   [self.location])
 
     def validate(self):
+        IDLInterfaceMember.validate(self)
+
         if ((self.getExtendedAttribute("Cached") or
              self.getExtendedAttribute("StoreInSlot")) and
             not self.getExtendedAttribute("Constant") and
@@ -3797,6 +3813,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                                   if len(self.signaturesForArgCount(i)) != 0 ]
 
     def validate(self):
+        IDLInterfaceMember.validate(self)
+
         # Make sure our overloads are properly distinguishable and don't have
         # different argument types before the distinguishing args.
         for argCount in self.allowedArgCounts:
