@@ -42,7 +42,7 @@ static nsIAtom **gUnicodeRangeToLangGroupAtomTable[] =
 
 /**********************************************************************
  * Unicode subranges as defined in unicode 3.0
- * x-western, x-central-euro, tr  -> latin 
+ * x-western, tr  -> latin 
  *  0000 - 036f 
  *  1e00 - 1eff
  *  2000 - 206f  (general punctuation)
