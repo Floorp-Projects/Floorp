@@ -205,20 +205,14 @@ public:
             bit = CHINESEBIG5_CHARSET;
         } else if (aLangGroup == nsGkAtoms::el_) {
             bit = GREEK_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::tr) {
-            bit = TURKISH_CHARSET;
         } else if (aLangGroup == nsGkAtoms::he) {
             bit = HEBREW_CHARSET;
         } else if (aLangGroup == nsGkAtoms::ar) {
             bit = ARABIC_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::x_baltic) {
-            bit = BALTIC_CHARSET;
         } else if (aLangGroup == nsGkAtoms::x_cyrillic) {
             bit = RUSSIAN_CHARSET;
         } else if (aLangGroup == nsGkAtoms::th) {
             bit = THAI_CHARSET;
-        } else if (aLangGroup == nsGkAtoms::x_central_euro) {
-            bit = EASTEUROPE_CHARSET;
         } else if (aLangGroup == nsGkAtoms::x_symbol) {
             bit = SYMBOL_CHARSET;
         }

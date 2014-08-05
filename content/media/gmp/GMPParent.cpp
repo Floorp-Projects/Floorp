@@ -16,6 +16,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/unused.h"
 #include "nsIObserverService.h"
+#include "GMPTimerParent.h"
 #include "runnable_utils.h"
 
 #include "mozilla/dom/CrashReporterParent.h"
@@ -92,7 +93,7 @@ GMPParent::Init(GeckoMediaPluginService *aService, nsIFile* aPluginDir)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this, 
+  LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this,
        NS_LossyConvertUTF16toASCII(leafname).get()));
 
   MOZ_ASSERT(leafname.Length() > 4);
@@ -328,7 +329,6 @@ GMPParent::State() const
   return mState;
 }
 
-#ifdef DEBUG
 // Not changing to use mService since we'll be removing it
 nsIThread*
 GMPParent::GMPThread()
@@ -350,7 +350,6 @@ GMPParent::GMPThread()
 
   return mGMPThread;
 }
-#endif
 
 bool
 GMPParent::SupportsAPI(const nsCString& aAPI, const nsCString& aTag)
@@ -615,6 +614,28 @@ GMPParent::DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor)
 {
   GMPAudioDecoderParent* vdp = static_cast<GMPAudioDecoderParent*>(aActor);
   NS_RELEASE(vdp);
+  return true;
+}
+
+bool
+GMPParent::RecvPGMPTimerConstructor(PGMPTimerParent* actor)
+{
+  return true;
+}
+
+PGMPTimerParent*
+GMPParent::AllocPGMPTimerParent()
+{
+  GMPTimerParent* p = new GMPTimerParent(GMPThread());
+  NS_ADDREF(p); // Released in DeallocPGMPTimerParent.
+  return p;
+}
+
+bool
+GMPParent::DeallocPGMPTimerParent(PGMPTimerParent* aActor)
+{
+  GMPTimerParent* p = static_cast<GMPTimerParent*>(aActor);
+  NS_RELEASE(p);
   return true;
 }
 

@@ -251,6 +251,30 @@ SharedSurface_Gralloc::WaitSync()
     return true;
 }
 
+bool
+SharedSurface_Gralloc::PollSync()
+{
+    if (!mSync) {
+        // We must not be needed.
+        return true;
+    }
+    MOZ_ASSERT(mEGL->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
+
+    EGLint status = 0;
+    MOZ_ALWAYS_TRUE( mEGL->fGetSyncAttrib(mEGL->Display(),
+                                         mSync,
+                                         LOCAL_EGL_SYNC_STATUS_KHR,
+                                         &status) );
+    if (status != LOCAL_EGL_SIGNALED_KHR) {
+        return false;
+    }
+
+    MOZ_ALWAYS_TRUE( mEGL->fDestroySync(mEGL->Display(), mSync) );
+    mSync = 0;
+
+    return true;
+}
+
 void
 SharedSurface_Gralloc::WaitForBufferOwnership()
 {

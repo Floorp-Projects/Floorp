@@ -18,6 +18,8 @@
 #include "MediaTaskQueue.h"
 #include "SharedThreadPool.h"
 #include "mozilla/EMELog.h"
+#include "EMEH264Decoder.h"
+#include "EMEAACDecoder.h"
 #include <string>
 
 namespace mozilla {
@@ -199,8 +201,13 @@ EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
                                     MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesVideo) {
-    NS_WARNING("Support for CDM that decodes video not yet supported");
-    return nullptr;
+    nsRefPtr<MediaDataDecoder> decoder(new EMEH264Decoder(mProxy,
+                                                          aConfig,
+                                                          aLayersBackend,
+                                                          aImageContainer,
+                                                          aVideoTaskQueue,
+                                                          aCallback));
+    return decoder.forget();
   }
 
   nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateH264Decoder(aConfig,
@@ -225,8 +232,11 @@ EMEDecoderModule::CreateAACDecoder(const AudioDecoderConfig& aConfig,
                                    MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesAudio) {
-    NS_WARNING("Support for CDM that decodes audio not yet supported");
-    return nullptr;
+    nsRefPtr<MediaDataDecoder> decoder(new EMEAACDecoder(mProxy,
+                                                         aConfig,
+                                                         aAudioTaskQueue,
+                                                         aCallback));
+    return decoder.forget();
   }
 
   nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAACDecoder(aConfig,

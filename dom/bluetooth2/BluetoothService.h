@@ -33,7 +33,6 @@ class BluetoothSignal;
 typedef mozilla::ObserverList<BluetoothSignal> BluetoothSignalObserverList;
 
 class BluetoothService : public nsIObserver
-                       , public BluetoothSignalObserver
 {
   class ToggleBtTask;
   friend class ToggleBtTask;
@@ -96,13 +95,6 @@ public:
    */
   void
   DistributeSignal(const BluetoothSignal& aEvent);
-
-  /**
-   * Called when get a Bluetooth Signal from BluetoothDBusService
-   *
-   */
-  void
-  Notify(const BluetoothSignal& aParam);
 
   /**
    * Returns the BluetoothService singleton. Only to be called from main thread.

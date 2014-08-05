@@ -10,7 +10,7 @@ function assertEqualStacks(got, expect)
     got = String(got).replace(/ \([^\)]*\)/g, "");
 
     // Shorten FFI/entry trampolines
-    got = got.replace(/FFI trampoline/g, "<").replace(/entry trampoline/g, ">");
+    got = got.replace(/(fast|slow) FFI trampoline/g, "<").replace(/entry trampoline/g, ">");
 
     assertEq(got, expect);
 }

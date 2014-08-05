@@ -24,7 +24,7 @@ interface nsIDOMCrypto;
 typedef any Transferable;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[Global, NeedNewResolve]
+[PrimaryGlobal, NeedNewResolve]
 /*sealed*/ interface Window : EventTarget {
   // the current browsing context
   [Unforgeable, Throws,
@@ -90,7 +90,7 @@ Window implements GlobalEventHandlers;
 Window implements WindowEventHandlers;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[NoInterfaceObject]
+[NoInterfaceObject, Exposed=(Window,Worker)]
 interface WindowTimers {
   [Throws] long setTimeout(Function handler, optional long timeout = 0, any... arguments);
   [Throws] long setTimeout(DOMString handler, optional long timeout = 0, any... unused);
@@ -102,7 +102,7 @@ interface WindowTimers {
 Window implements WindowTimers;
 
 // http://www.whatwg.org/specs/web-apps/current-work/
-[NoInterfaceObject]
+[NoInterfaceObject, Exposed=(Window,Worker)]
 interface WindowBase64 {
   [Throws] DOMString btoa(DOMString btoa);
   [Throws] DOMString atob(DOMString atob);

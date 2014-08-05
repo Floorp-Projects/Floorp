@@ -41,7 +41,7 @@
 
 class GMPTask {
 public:
-  virtual void Destroy() = 0;
+  virtual void Destroy() = 0; // Deletes object.
   virtual ~GMPTask() {}
   virtual void Run() = 0;
 };
@@ -50,7 +50,7 @@ class GMPThread {
 public:
   virtual ~GMPThread() {}
   virtual void Post(GMPTask* aTask) = 0;
-  virtual void Join() = 0;
+  virtual void Join() = 0; // Deletes object after join completes.
 };
 
 class GMPMutex {
@@ -58,6 +58,7 @@ public:
   virtual ~GMPMutex() {}
   virtual void Acquire() = 0;
   virtual void Release() = 0;
+  virtual void Destroy() = 0; // Deletes object.
 };
 
 // Time is defined as the number of milliseconds since the
@@ -72,6 +73,8 @@ typedef GMPErr (*GMPCreateRecordPtr)(const char* aRecordName,
                                      uint32_t aRecordNameSize,
                                      GMPRecord** aOutRecord,
                                      GMPRecordClient* aClient);
+
+// Call on main thread only.
 typedef GMPErr (*GMPSetTimerOnMainThreadPtr)(GMPTask* aTask, int64_t aTimeoutMS);
 typedef GMPErr (*GMPGetCurrentTimePtr)(GMPTimestamp* aOutTime);
 
