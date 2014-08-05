@@ -78,9 +78,7 @@ def idlTypeNeedsCycleCollection(type):
 
 
 def wantsAddProperty(desc):
-    return (desc.concrete and
-            desc.wrapperCache and
-            not desc.interface.getExtendedAttribute("Global"))
+    return (desc.concrete and desc.wrapperCache and not desc.isGlobal())
 
 
 # We'll want to insert the indent at the beginnings of lines, but we
@@ -372,7 +370,7 @@ class CGDOMJSClass(CGThing):
 JS_NULL_CLASS_EXT,
 JS_NULL_OBJECT_OPS
 """
-        if self.descriptor.interface.getExtendedAttribute("Global"):
+        if self.descriptor.isGlobal():
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
             traceHook = "JS_GlobalObjectTraceHook"
             reservedSlots = "JSCLASS_GLOBAL_APPLICATION_SLOTS"
@@ -415,7 +413,7 @@ JS_NULL_OBJECT_OPS
             newResolveHook = "(JSResolveOp)" + NEWRESOLVE_HOOK_NAME
             classFlags += " | JSCLASS_NEW_RESOLVE"
             enumerateHook = ENUMERATE_HOOK_NAME
-        elif self.descriptor.interface.getExtendedAttribute("Global"):
+        elif self.descriptor.isGlobal():
             newResolveHook = "(JSResolveOp) mozilla::dom::ResolveGlobal"
             classFlags += " | JSCLASS_NEW_RESOLVE"
             enumerateHook = "mozilla::dom::EnumerateGlobal"
@@ -1521,7 +1519,7 @@ def finalizeHook(descriptor, hookName, freeOp):
         finalize += "ClearWrapper(self, self);\n"
     if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
         finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
-    if descriptor.interface.getExtendedAttribute("Global"):
+    if descriptor.isGlobal():
         finalize += "mozilla::dom::FinalizeGlobal(CastToJSFreeOp(%s), obj);\n" % freeOp
     finalize += ("AddForDeferredFinalization<%s, %s >(self);\n" %
                  (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
@@ -2034,6 +2032,11 @@ def methodLength(method):
     return min(overloadLength(arguments) for retType, arguments in signatures)
 
 
+def isMaybeExposedIn(member, descriptor):
+    # All we can say for sure is that if this is a worker descriptor
+    # and member is only exposed in windows, then it's not exposed.
+    return not descriptor.workers or member.exposureSet != set(["Window"])
+
 class MethodDefiner(PropertyDefiner):
     """
     A class for defining methods on a prototype object.
@@ -2051,7 +2054,8 @@ class MethodDefiner(PropertyDefiner):
             methods = [m for m in descriptor.interface.members if
                        m.isMethod() and m.isStatic() == static and
                        MemberIsUnforgeable(m, descriptor) == unforgeable and
-                       not m.isIdentifierLess()]
+                       not m.isIdentifierLess() and
+                       isMaybeExposedIn(m, descriptor)]
         else:
             methods = []
         self.chrome = []
@@ -2265,7 +2269,8 @@ class AttrDefiner(PropertyDefiner):
         if descriptor.interface.hasInterfacePrototypeObject() or static:
             attributes = [m for m in descriptor.interface.members if
                           m.isAttr() and m.isStatic() == static and
-                          MemberIsUnforgeable(m, descriptor) == unforgeable]
+                          MemberIsUnforgeable(m, descriptor) == unforgeable and
+                          isMaybeExposedIn(m, descriptor)]
         else:
             attributes = []
         self.chrome = [m for m in attributes if isChromeOnly(m)]
@@ -2348,7 +2353,8 @@ class ConstDefiner(PropertyDefiner):
     def __init__(self, descriptor, name):
         PropertyDefiner.__init__(self, descriptor, name)
         self.name = name
-        constants = [m for m in descriptor.interface.members if m.isConst()]
+        constants = [m for m in descriptor.interface.members if m.isConst() and
+                     isMaybeExposedIn(m, descriptor)]
         self.chrome = [m for m in constants if isChromeOnly(m)]
         self.regular = [m for m in constants if not isChromeOnly(m)]
 
@@ -2599,7 +2605,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             interfaceClass = "nullptr"
             interfaceCache = "nullptr"
 
-        isGlobal = self.descriptor.interface.getExtendedAttribute("Global") is not None
+        isGlobal = self.descriptor.isGlobal() is not None
         if not isGlobal and self.properties.hasNonChromeOnly():
             properties = "&sNativeProperties"
         elif self.properties.hasNonChromeOnly():
@@ -7323,7 +7329,7 @@ class CGNewResolveHook(CGAbstractBindingMethod):
             """))
 
     def definition_body(self):
-        if self.descriptor.interface.getExtendedAttribute("Global"):
+        if self.descriptor.isGlobal():
             # Resolve standard classes
             prefix = dedent("""
                 if (!ResolveGlobal(cx, obj, id, objp)) {
@@ -7372,7 +7378,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
             """))
 
     def definition_body(self):
-        if self.descriptor.interface.getExtendedAttribute("Global"):
+        if self.descriptor.isGlobal():
             # Enumerate standard classes
             prefix = dedent("""
                 if (!EnumerateGlobal(cx, obj)) {
@@ -10471,6 +10477,8 @@ class CGDescriptor(CGThing):
         for m in descriptor.interface.members:
             if m.isMethod() and m.identifier.name == 'queryInterface':
                 continue
+            if not isMaybeExposedIn(m, descriptor):
+                continue
             if m.isMethod() and m == descriptor.operations['Jsonifier']:
                 hasJsonifier = True
                 hasMethod = descriptor.needsSpecialGenericOps()
@@ -10626,9 +10634,7 @@ class CGDescriptor(CGThing):
 
         if ((descriptor.interface.hasInterfaceObject() or descriptor.interface.getNavigatorProperty()) and
             not descriptor.interface.isExternal() and
-            descriptor.isExposedConditionally() and
-            # Workers stuff is never conditional
-            not descriptor.workers):
+            descriptor.isExposedConditionally()):
             cgThings.append(CGConstructorEnabled(descriptor))
 
         if (descriptor.interface.hasMembersInSlots() and
@@ -10666,7 +10672,7 @@ class CGDescriptor(CGThing):
                 if descriptor.interface.hasMembersInSlots():
                     cgThings.append(CGUpdateMemberSlotsMethod(descriptor))
 
-            if descriptor.interface.getExtendedAttribute("Global"):
+            if descriptor.isGlobal():
                 assert descriptor.wrapperCache
                 cgThings.append(CGWrapGlobalMethod(descriptor, properties))
             elif descriptor.wrapperCache:
@@ -11323,6 +11329,48 @@ class CGDictionary(CGThing):
             not CGDictionary.isDictionaryCopyConstructible(dictionary.parent)):
             return False
         return all(isTypeCopyConstructible(m.type) for m in dictionary.members)
+
+
+class CGRegisterWorkerBindings(CGAbstractMethod):
+    def __init__(self, config):
+        CGAbstractMethod.__init__(self, None, 'RegisterWorkerBindings', 'bool',
+                                  [Argument('JSContext*', 'aCx'),
+                                   Argument('JS::Handle<JSObject*>', 'aObj')])
+        self.config = config
+
+    def definition_body(self):
+        # We have to be a bit careful: Some of the interfaces we want to expose
+        # in workers only have one descriptor, while others have both a worker
+        # and a non-worker descriptor.  When both are present we want the worker
+        # descriptor, but otherwise we want whatever descriptor we've got.
+        descriptors = self.config.getDescriptors(hasInterfaceObject=True,
+                                                 isExposedInAllWorkers=True,
+                                                 register=True,
+                                                 skipGen=False,
+                                                 workers=True)
+        workerDescriptorIfaceNames = set(d.interface.identifier.name for
+                                         d in descriptors)
+        descriptors.extend(
+            filter(
+                lambda d: d.interface.identifier.name not in workerDescriptorIfaceNames,
+                self.config.getDescriptors(hasInterfaceObject=True,
+                                           isExposedInAllWorkers=True,
+                                           register=True,
+                                           skipGen=False,
+                                           workers=False)))
+        conditions = []
+        for desc in descriptors:
+            bindingNS = toBindingNamespace(desc.name)
+            condition = "!%s::GetConstructorObject(aCx, aObj)" % bindingNS
+            if desc.isExposedConditionally():
+                condition = (
+                    "%s::ConstructorEnabled(aCx, aObj) && " % bindingNS
+                    + condition)
+            conditions.append(condition)
+        lines = [CGIfWrapper(CGGeneric("return false;\n"), condition) for
+                 condition in conditions]
+        lines.append(CGGeneric("return true;\n"))
+        return CGList(lines, "\n").define()
 
 
 class CGRegisterProtos(CGAbstractMethod):
@@ -13712,6 +13760,33 @@ class GlobalGenRoots():
 
         # Add include guards.
         curr = CGIncludeGuard('RegisterBindings', curr)
+
+        # Done.
+        return curr
+
+    @staticmethod
+    def RegisterWorkerBindings(config):
+
+        # TODO - Generate the methods we want
+        curr = CGRegisterWorkerBindings(config)
+
+        # Wrap all of that in our namespaces.
+        curr = CGNamespace.build(['mozilla', 'dom'],
+                                 CGWrapper(curr, post='\n'))
+        curr = CGWrapper(curr, post='\n')
+
+        # Add the includes
+        defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
+                          for desc in config.getDescriptors(hasInterfaceObject=True,
+                                                            register=True,
+                                                            isExposedInAllWorkers=True,
+                                                            skipGen=False)]
+
+        curr = CGHeaders([], [], [], [], [], defineIncludes,
+                         'RegisterWorkerBindings', curr)
+
+        # Add include guards.
+        curr = CGIncludeGuard('RegisterWorkerBindings', curr)
 
         # Done.
         return curr

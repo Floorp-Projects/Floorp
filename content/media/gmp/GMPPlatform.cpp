@@ -4,13 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPPlatform.h"
+#include "GMPTimerChild.h"
 #include "mozilla/Monitor.h"
 #include "nsAutoPtr.h"
+#include "GMPChild.h"
+#include <ctime>
 
 namespace mozilla {
 namespace gmp {
 
 static MessageLoop* sMainLoop = nullptr;
+static GMPChild* sChild = nullptr;
 
 // We just need a refcounted wrapper for GMPTask objects.
 class Runnable MOZ_FINAL
@@ -141,11 +145,29 @@ CreateMutex(GMPMutex** aMutex)
   return GMPNoErr;
 }
 
+GMPErr
+SetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS)
+{
+  GMPTimerChild* timers = sChild->GetGMPTimers();
+  NS_ENSURE_TRUE(timers, GMPGenericErr);
+  return timers->SetTimer(aTask, aTimeoutMS);
+}
+
+GMPErr
+GetClock(GMPTimestamp* aOutTime)
+{
+  *aOutTime = time(0) * 1000;
+  return GMPNoErr;
+}
+
 void
-InitPlatformAPI(GMPPlatformAPI& aPlatformAPI)
+InitPlatformAPI(GMPPlatformAPI& aPlatformAPI, GMPChild* aChild)
 {
   if (!sMainLoop) {
     sMainLoop = MessageLoop::current();
+  }
+  if (!sChild) {
+    sChild = aChild;
   }
 
   aPlatformAPI.version = 0;
@@ -154,18 +176,20 @@ InitPlatformAPI(GMPPlatformAPI& aPlatformAPI)
   aPlatformAPI.syncrunonmainthread = &SyncRunOnMainThread;
   aPlatformAPI.createmutex = &CreateMutex;
   aPlatformAPI.createrecord = nullptr;
-  aPlatformAPI.settimer = nullptr;
-  aPlatformAPI.getcurrenttime = nullptr;
+  aPlatformAPI.settimer = &SetTimerOnMainThread;
+  aPlatformAPI.getcurrenttime = &GetClock;
 }
 
 GMPThreadImpl::GMPThreadImpl()
 : mMutex("GMPThreadImpl"),
   mThread("GMPThread")
 {
+  MOZ_COUNT_CTOR(GMPThread);
 }
 
 GMPThreadImpl::~GMPThreadImpl()
 {
+  MOZ_COUNT_DTOR(GMPThread);
 }
 
 void
@@ -189,19 +213,30 @@ GMPThreadImpl::Post(GMPTask* aTask)
 void
 GMPThreadImpl::Join()
 {
-  MutexAutoLock lock(mMutex);
-  if (mThread.IsRunning()) {
-    mThread.Stop();
+  {
+    MutexAutoLock lock(mMutex);
+    if (mThread.IsRunning()) {
+      mThread.Stop();
+    }
   }
+  delete this;
 }
 
 GMPMutexImpl::GMPMutexImpl()
 : mMutex("gmp-mutex")
 {
+  MOZ_COUNT_CTOR(GMPMutexImpl);
 }
 
 GMPMutexImpl::~GMPMutexImpl()
 {
+  MOZ_COUNT_DTOR(GMPMutexImpl);
+}
+
+void
+GMPMutexImpl::Destroy()
+{
+  delete this;
 }
 
 void

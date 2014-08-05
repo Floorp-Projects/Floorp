@@ -4,6 +4,7 @@
 
 #include "mp4_demuxer/Index.h"
 #include "mp4_demuxer/Interval.h"
+#include "mp4_demuxer/MoofParser.h"
 #include "media/stagefright/MediaSource.h"
 #include "MediaResource.h"
 
@@ -71,11 +72,13 @@ RangeFinder::Contains(MediaByteRange aByteRange)
   return false;
 }
 
-void
-Index::Init(const stagefright::Vector<MediaSource::Indice>& aIndex)
+Index::Index(const stagefright::Vector<MediaSource::Indice>& aIndex,
+             Stream* aSource, uint32_t aTrackId)
+  : mMonitor("mp4_demuxer::Index")
 {
-  MOZ_ASSERT(mIndex.IsEmpty());
-  if (!aIndex.isEmpty()) {
+  if (aIndex.isEmpty()) {
+    mMoofParser = new MoofParser(aSource, aTrackId);
+  } else {
     mIndex.AppendElements(&aIndex[0], aIndex.size());
   }
 }
@@ -85,12 +88,29 @@ Index::ConvertByteRangesToTimeRanges(
   const nsTArray<MediaByteRange>& aByteRanges,
   nsTArray<Interval<Microseconds>>* aTimeRanges)
 {
+  nsTArray<stagefright::MediaSource::Indice> moofIndex;
+  nsTArray<stagefright::MediaSource::Indice>* index;
+  if (mMoofParser) {
+    {
+      MonitorAutoLock mon(mMonitor);
+      mMoofParser->RebuildFragmentedIndex(aByteRanges);
+
+      // We take the index out of the moof parser and move it into a local
+      // variable so we don't get concurrency issues. It gets freed when we
+      // exit this function.
+      moofIndex = mMoofParser->mIndex;
+    }
+    index = &moofIndex;
+  } else {
+    index = &mIndex;
+  }
+
   nsTArray<Interval<Microseconds>> timeRanges;
   RangeFinder rangeFinder(aByteRanges);
 
   bool hasSync = false;
-  for (size_t i = 0; i < mIndex.Length(); i++) {
-    const MediaSource::Indice& indice = mIndex[i];
+  for (size_t i = 0; i < index->Length(); i++) {
+    const MediaSource::Indice& indice = (*index)[i];
     if (!rangeFinder.Contains(MediaByteRange(indice.start_offset,
                                              indice.end_offset))) {
       // We process the index in decode order so we clear hasSync when we hit

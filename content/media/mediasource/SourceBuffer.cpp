@@ -21,6 +21,7 @@
 #include "nsThreadUtils.h"
 #include "prlog.h"
 #include "SubBufferDecoder.h"
+#include "mozilla/Preferences.h"
 
 struct JSContext;
 class JSObject;
@@ -166,8 +167,19 @@ public:
     }
 
     uint32_t chunk_size = BigEndian::readUint32(aData);
-    return chunk_size > 8 && aData[4] == 'f' && aData[5] == 't' &&
-      aData[6] == 'y' && aData[7] == 'p';
+    if (chunk_size < 8) {
+      return false;
+    }
+
+    if (Preferences::GetBool("media.mediasource.allow_init_moov", false)) {
+      if (aData[4] == 'm' && aData[5] == 'o' && aData[6] == 'o' &&
+          aData[7] == 'v') {
+        return true;
+      }
+    }
+
+    return aData[4] == 'f' && aData[5] == 't' && aData[6] == 'y' &&
+           aData[7] == 'p';
   }
 };
 

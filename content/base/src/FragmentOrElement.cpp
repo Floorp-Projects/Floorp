@@ -152,21 +152,23 @@ nsIContent::FindFirstNonChromeOnlyAccessContent() const
 nsIContent*
 nsIContent::GetFlattenedTreeParent() const
 {
-  nsIContent* parent = nullptr;
+  nsIContent* parent = GetParent();
 
-  nsTArray<nsIContent*>* destInsertionPoints = GetExistingDestInsertionPoints();
-  if (destInsertionPoints && !destInsertionPoints->IsEmpty()) {
-    // This node was distributed into an insertion point. The last node in
-    // the list of destination insertion insertion points is where this node
-    // appears in the composed tree (see Shadow DOM spec).
-    nsIContent* lastInsertionPoint = destInsertionPoints->LastElement();
-    parent = lastInsertionPoint->GetParent();
+  if (nsContentUtils::HasDistributedChildren(parent)) {
+    // This node is distributed to insertion points, thus we
+    // need to consult the destination insertion points list to
+    // figure out where this node was inserted in the flattened tree.
+    // It may be the case that |parent| distributes its children
+    // but the child does not match any insertion points, thus
+    // the flattened tree parent is nullptr.
+    nsTArray<nsIContent*>* destInsertionPoints = GetExistingDestInsertionPoints();
+    parent = destInsertionPoints && !destInsertionPoints->IsEmpty() ?
+      destInsertionPoints->LastElement()->GetParent() : nullptr;
   } else if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    parent = GetXBLInsertionParent();
-  }
-
-  if (!parent) {
-    parent = GetParent();
+    nsIContent* insertionParent = GetXBLInsertionParent();
+    if (insertionParent) {
+      parent = insertionParent;
+    }
   }
 
   // Shadow roots never shows up in the flattened tree. Return the host

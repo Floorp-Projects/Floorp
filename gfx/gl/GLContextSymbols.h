@@ -497,6 +497,22 @@ struct GLContextSymbols
     // draw_range_elements
     typedef void (GLAPIENTRY * PFNGLDRAWRANGEELEMENTS) (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid* indices);
     PFNGLDRAWRANGEELEMENTS fDrawRangeElements;
+
+    // NV_fence
+    typedef void (GLAPIENTRY * pfnGenFencesT) (GLsizei n, GLuint* fences);
+    pfnGenFencesT fGenFences;
+    typedef void (GLAPIENTRY * pfnDeleteFencesT) (GLsizei n, const GLuint* fences);
+    pfnDeleteFencesT fDeleteFences;
+    typedef void (GLAPIENTRY * pfnSetFenceT) (GLuint fence, GLenum condition);
+    pfnSetFenceT fSetFence;
+    typedef realGLboolean (GLAPIENTRY * pfnTestFenceT) (GLuint fence);
+    pfnTestFenceT fTestFence;
+    typedef void (GLAPIENTRY * pfnFinishFenceT) (GLuint fence);
+    pfnFinishFenceT fFinishFence;
+    typedef realGLboolean (GLAPIENTRY * pfnIsFenceT) (GLuint fence);
+    pfnIsFenceT fIsFence;
+    typedef void (GLAPIENTRY * pfnGetFenceivT) (GLuint fence, GLenum pname, GLint* params);
+    pfnGetFenceivT fGetFenceiv;
 };
 
 }

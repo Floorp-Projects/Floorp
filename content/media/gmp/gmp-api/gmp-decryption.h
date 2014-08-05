@@ -257,6 +257,9 @@ public:
   // same GMPBuffer object and return it to Gecko by calling Decrypted(),
   // with the GMPNoErr successcode. If decryption fails, call Decrypted()
   // with a failure code, and an error event will fire on the media element.
+  // Note: When Decrypted() is called and aBuffer is passed back, aBuffer
+  // is deleted. Don't forget to call Decrypted(), as otherwise aBuffer's
+  // memory will leak!
   virtual void Decrypt(GMPBuffer* aBuffer,
                        GMPEncryptedBufferMetadata* aMetadata) = 0;
 

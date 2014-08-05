@@ -7,10 +7,14 @@
 interface nsISupports;
 interface IID;
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ // Need Exposed here, because this is a mixin onto things like Event
+ // that are exposed in workers.
+ Exposed=(Window,Worker)]
 interface LegacyQueryInterface {
   // Legacy QueryInterface, only exposed to chrome or XBL code on the
   // main thread.
+  [Exposed=Window]
   nsISupports queryInterface(IID iid);
 };
 
