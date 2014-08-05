@@ -23,12 +23,13 @@ interface Crypto {
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 [NoInterfaceObject]
 interface CryptoLegacy {
+  [Pref="dom.unsafe_legacy_crypto.enabled"]
   readonly attribute DOMString version;
 
-  [SetterThrows]
+  [SetterThrows,Pref="dom.unsafe_legacy_crypto.enabled"]
   attribute boolean enableSmartCardEvents;
 
-  [Throws,NewObject]
+  [Throws,NewObject,Pref="dom.unsafe_legacy_crypto.enabled"]
   CRMFObject? generateCRMFRequest(ByteString? reqDN,
                                   ByteString? regToken,
                                   ByteString? authenticator,
@@ -36,16 +37,17 @@ interface CryptoLegacy {
                                   ByteString? jsCallback,
                                   any... args);
 
-  [Throws]
+  [Throws,Pref="dom.unsafe_legacy_crypto.enabled"]
   DOMString importUserCertificates(DOMString nickname,
                                    DOMString cmmfResponse,
                                    boolean doForcedBackup);
 
+  [Pref="dom.unsafe_legacy_crypto.enabled"]
   DOMString signText(DOMString stringToSign,
                      DOMString caOption,
                      ByteString... args);
 
-  [Throws]
+  [Throws,Pref="dom.unsafe_legacy_crypto.enabled"]
   void logout();
 };
 
