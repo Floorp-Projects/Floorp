@@ -222,7 +222,6 @@ private:
         data[2] = length % 256;
         break;
       default:
-        PR_NOT_REACHED("EncodeLength: bad lengthLength");
         abort();
     }
   }
@@ -292,7 +291,6 @@ HashAlgorithmToLength(SECOidTag hashAlg)
     case SEC_OID_SHA512:
       return SHA512_LENGTH;
     default:
-      PR_NOT_REACHED("HashAlgorithmToLength: bad hashAlg");
       abort();
   }
   return 0;
@@ -1415,8 +1413,8 @@ CertStatus(OCSPResponseContext& context)
                           revocationTime);
     }
     default:
-      PR_NOT_REACHED("CertStatus: bad context.certStatus");
-      abort();
+      assert(false);
+      // fall through
   }
   return nullptr;
 }
