@@ -209,11 +209,15 @@ loop.panel = (function(_, mozL10n) {
       // readOnly attr will suppress a warning regarding this issue
       // from the react lib.
       var cx = React.addons.classSet;
+      var inputCSSClass = {
+        "pending": this.state.pending,
+        "callUrl": !this.state.pending
+      };
       return (
         <PanelLayout summary={__("share_link_header_text")}>
           <div className="invite">
             <input type="url" value={this.state.callUrl} readOnly="true"
-                   className={cx({'pending': this.state.pending})} />
+                   className={cx(inputCSSClass)} />
           </div>
         </PanelLayout>
       );
