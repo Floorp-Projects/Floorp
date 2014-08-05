@@ -497,9 +497,6 @@ this.AddonRepository = {
   // A cache of the add-ons stored in the database
   _addons: null,
 
-  // An array of callbacks pending the retrieval of add-ons from AddonDatabase
-  _pendingCallbacks: null,
-
   // Whether a search is currently in progress
   _searching: false,
 
@@ -527,7 +524,7 @@ this.AddonRepository = {
 
   // Maximum number of results to return
   _maxResults: null,
-  
+
   /**
    * Shut down AddonRepository
    * return: promise{integer} resolves with the result of flushing
@@ -537,7 +534,6 @@ this.AddonRepository = {
     this.cancelSearch();
 
     this._addons = null;
-    this._pendingCallbacks = null;
     return AddonDatabase.shutdown(false);
   },
 
@@ -580,40 +576,19 @@ this.AddonRepository = {
       return;
     }
 
-    let self = this;
     function getAddon(aAddons) {
-      aCallback((aId in aAddons) ? aAddons[aId] : null);
+      aCallback(aAddons.get(aId) || null);
     }
 
     if (this._addons == null) {
-      if (this._pendingCallbacks == null) {
-        // Data has not been retrieved from the database, so retrieve it
-        this._pendingCallbacks = [];
-        this._pendingCallbacks.push(getAddon);
+      AddonDatabase.retrieveStoredData().then(aAddons => {
+        this._addons = aAddons;
+        getAddon(aAddons);
+      });
 
-        let addons = yield AddonDatabase.retrieveStoredData();
-        let pendingCallbacks = self._pendingCallbacks;
-
-        // Check if cache was shutdown or deleted before callback was called
-        if (pendingCallbacks == null)
-          return;
-
-        // Callbacks may want to trigger a other caching operations that may
-        // affect _addons and _pendingCallbacks, so set to final values early
-        self._pendingCallbacks = null;
-        self._addons = addons;
-
-        pendingCallbacks.forEach(function(aCallback) aCallback(addons));
-
-        return;
-      }
-
-      // Data is being retrieved from the database, so wait
-      this._pendingCallbacks.push(getAddon);
       return;
     }
 
-    // Data has been retrieved, so immediately return result
     getAddon(this._addons);
   }),
 
@@ -638,7 +613,6 @@ this.AddonRepository = {
    */
   _clearCache: function () {
     this._addons = null;
-    this._pendingCallbacks = null;
     return AddonDatabase.delete().then(() =>
       new Promise((resolve, reject) =>
         AddonManagerPrivate.updateAddonRepositoryData(resolve))
@@ -674,8 +648,10 @@ this.AddonRepository = {
     yield new Promise((resolve, reject) =>
       self._beginGetAddons(addonsToCache, {
         searchSucceeded: function repopulateCacheInternal_searchSucceeded(aAddons) {
-          self._addons = {};
-          aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
+          self._addons = new Map();
+          for (let addon of aAddons) {
+            self._addons.set(addon.id, addon);
+          }
           AddonDatabase.repopulate(aAddons, resolve);
         },
         searchFailed: function repopulateCacheInternal_searchFailed() {
@@ -718,7 +694,9 @@ this.AddonRepository = {
 
       self.getAddonsByIDs(aAddons, {
         searchSucceeded: function cacheAddons_searchSucceeded(aAddons) {
-          aAddons.forEach(function(aAddon) { self._addons[aAddon.id] = aAddon; });
+          for (let addon of aAddons) {
+            self._addons.set(addon.id, addon);
+          }
           AddonDatabase.insertAddons(aAddons, aCallback);
         },
         searchFailed: function cacheAddons_searchFailed() {
@@ -1747,22 +1725,13 @@ var AddonDatabase = {
   },
 
   /**
-   * Asynchronously retrieve all add-ons from the database, and pass it
-   * to the specified callback
-   *
-   * @param  aCallback
-   *         The callback to pass the add-ons back to
+   * Asynchronously retrieve all add-ons from the database
+   * @return: Promise{Map}
+   *          Resolves when the add-ons are retrieved from the database
    */
-  retrieveStoredData: Task.async(function* (){
-    let db = yield this.openConnection();
-    let result = {};
-
-    for (let [key, value] of db.addons) {
-      result[key] = value;
-    }
-
-    return result;
-  }),
+  retrieveStoredData: function (){
+    return this.openConnection().then(db => db.addons);
+  },
 
   /**
    * Asynchronously repopulates the database so it only contains the
