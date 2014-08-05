@@ -634,8 +634,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_tampered_eku)
   SECItem responseSECItem = UnsafeMapInputToSECItem(response);
   ASSERT_EQ(Success,
             TamperOnce(responseSECItem,
-                       EKU_SERVER_AUTH, PR_ARRAY_SIZE(EKU_SERVER_AUTH),
-                       EKU_OCSP_SIGNER, PR_ARRAY_SIZE(EKU_OCSP_SIGNER)));
+                       EKU_SERVER_AUTH, sizeof(EKU_SERVER_AUTH),
+                       EKU_OCSP_SIGNER, sizeof(EKU_OCSP_SIGNER)));
 
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
