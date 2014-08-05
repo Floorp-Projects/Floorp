@@ -578,7 +578,7 @@ nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
   mInnerWindow(nullptr), mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
   mWindowID(++gNextWindowID), mHasNotifiedGlobalCreated(false),
-  mMarkedCCGeneration(0), mSendAfterRemotePaint(false)
+  mMarkedCCGeneration(0)
  {}
 
 nsPIDOMWindow::~nsPIDOMWindow() {}
@@ -3794,21 +3794,6 @@ nsPIDOMWindow::RefreshMediaElements()
   if (service) {
     service->RefreshAgentsVolume(this);
   }
-}
-
-void
-nsPIDOMWindow::SendAfterRemotePaintIfRequested()
-{
-  if (!mSendAfterRemotePaint) {
-    return;
-  }
-
-  mSendAfterRemotePaint = false;
-
-  nsContentUtils::DispatchChromeEvent(GetExtantDoc(),
-                                      GetParentTarget(),
-                                      NS_LITERAL_STRING("MozAfterRemotePaint"),
-                                      false, false);
 }
 
 // nsISpeechSynthesisGetter
