@@ -35,7 +35,7 @@ public:
   static Hash16_t Hash16(const char* aData, uint32_t aSize,
                          uint32_t aInitval=0);
 
-  CacheHash(uint32_t aInitval=0);
+  explicit CacheHash(uint32_t aInitval=0);
 
   void     Update(const char *aData, uint32_t aLen);
   Hash32_t GetHash();
