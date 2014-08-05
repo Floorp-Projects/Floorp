@@ -66,7 +66,7 @@ partial interface DataStore {
 //                   which currently plays a role of C++ proxy directing to the
 //                   JS codes implemented by the DataStoreCursorImpl WebIDL.
 
-[Pref="dom.datastore.enabled",
+[Func="Navigator::HasDataStoreSupport",
  ChromeConstructor,
  Exposed=(Window,Worker)]
 interface DataStoreCursor {

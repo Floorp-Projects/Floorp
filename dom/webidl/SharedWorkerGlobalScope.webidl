@@ -13,7 +13,6 @@
  */
 
 [Global=(Worker,SharedWorker),
- Func="mozilla::dom::workers::SharedWorkerGlobalScope::Visible",
  Exposed=SharedWorker]
 interface SharedWorkerGlobalScope : WorkerGlobalScope {
   readonly attribute DOMString name;
