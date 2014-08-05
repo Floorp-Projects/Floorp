@@ -8480,9 +8480,25 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIContent*   aContainer,
       return ::GetContentInsertionFrameFor(aContainer);
     }
 
+    if (nsContentUtils::HasDistributedChildren(aContainer)) {
+      // The container distributes nodes, use the frame of the flattened tree parent.
+      // It may be the case that the node is distributed but not matched to any
+      // insertion points, so there is no flattened parent.
+      nsIContent* flattenedParent = aChildContent->GetFlattenedTreeParent();
+      return flattenedParent ? ::GetContentInsertionFrameFor(flattenedParent) : nullptr;
+    }
+
     insertionElement = bindingManager->FindNestedInsertionPoint(aContainer, aChildContent);
   }
   else {
+    if (nsContentUtils::HasDistributedChildren(aContainer)) {
+      // The container distributes nodes to shadow DOM insertion points.
+      // Return with aMultiple set to true to induce callers to insert children
+      // individually into the node's flattened tree parent.
+      *aMultiple = true;
+      return nullptr;
+    }
+
     bool multiple;
     insertionElement = bindingManager->FindNestedSingleInsertionPoint(aContainer, &multiple);
 

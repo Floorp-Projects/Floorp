@@ -21,6 +21,8 @@ class HTMLContentElement MOZ_FINAL : public nsGenericHTMLElement
 public:
   HTMLContentElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLContentElement, content)
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
