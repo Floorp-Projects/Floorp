@@ -10634,9 +10634,7 @@ class CGDescriptor(CGThing):
 
         if ((descriptor.interface.hasInterfaceObject() or descriptor.interface.getNavigatorProperty()) and
             not descriptor.interface.isExternal() and
-            descriptor.isExposedConditionally() and
-            # Workers stuff is never conditional
-            not descriptor.workers):
+            descriptor.isExposedConditionally()):
             cgThings.append(CGConstructorEnabled(descriptor))
 
         if (descriptor.interface.hasMembersInSlots() and
@@ -11331,6 +11329,48 @@ class CGDictionary(CGThing):
             not CGDictionary.isDictionaryCopyConstructible(dictionary.parent)):
             return False
         return all(isTypeCopyConstructible(m.type) for m in dictionary.members)
+
+
+class CGRegisterWorkerBindings(CGAbstractMethod):
+    def __init__(self, config):
+        CGAbstractMethod.__init__(self, None, 'RegisterWorkerBindings', 'bool',
+                                  [Argument('JSContext*', 'aCx'),
+                                   Argument('JS::Handle<JSObject*>', 'aObj')])
+        self.config = config
+
+    def definition_body(self):
+        # We have to be a bit careful: Some of the interfaces we want to expose
+        # in workers only have one descriptor, while others have both a worker
+        # and a non-worker descriptor.  When both are present we want the worker
+        # descriptor, but otherwise we want whatever descriptor we've got.
+        descriptors = self.config.getDescriptors(hasInterfaceObject=True,
+                                                 isExposedInAllWorkers=True,
+                                                 register=True,
+                                                 skipGen=False,
+                                                 workers=True)
+        workerDescriptorIfaceNames = set(d.interface.identifier.name for
+                                         d in descriptors)
+        descriptors.extend(
+            filter(
+                lambda d: d.interface.identifier.name not in workerDescriptorIfaceNames,
+                self.config.getDescriptors(hasInterfaceObject=True,
+                                           isExposedInAllWorkers=True,
+                                           register=True,
+                                           skipGen=False,
+                                           workers=False)))
+        conditions = []
+        for desc in descriptors:
+            bindingNS = toBindingNamespace(desc.name)
+            condition = "!%s::GetConstructorObject(aCx, aObj)" % bindingNS
+            if desc.isExposedConditionally():
+                condition = (
+                    "%s::ConstructorEnabled(aCx, aObj) && " % bindingNS
+                    + condition)
+            conditions.append(condition)
+        lines = [CGIfWrapper(CGGeneric("return false;\n"), condition) for
+                 condition in conditions]
+        lines.append(CGGeneric("return true;\n"))
+        return CGList(lines, "\n").define()
 
 
 class CGRegisterProtos(CGAbstractMethod):
@@ -13720,6 +13760,33 @@ class GlobalGenRoots():
 
         # Add include guards.
         curr = CGIncludeGuard('RegisterBindings', curr)
+
+        # Done.
+        return curr
+
+    @staticmethod
+    def RegisterWorkerBindings(config):
+
+        # TODO - Generate the methods we want
+        curr = CGRegisterWorkerBindings(config)
+
+        # Wrap all of that in our namespaces.
+        curr = CGNamespace.build(['mozilla', 'dom'],
+                                 CGWrapper(curr, post='\n'))
+        curr = CGWrapper(curr, post='\n')
+
+        # Add the includes
+        defineIncludes = [CGHeaders.getDeclarationFilename(desc.interface)
+                          for desc in config.getDescriptors(hasInterfaceObject=True,
+                                                            register=True,
+                                                            isExposedInAllWorkers=True,
+                                                            skipGen=False)]
+
+        curr = CGHeaders([], [], [], [], [], defineIncludes,
+                         'RegisterWorkerBindings', curr)
+
+        # Add include guards.
+        curr = CGIncludeGuard('RegisterWorkerBindings', curr)
 
         # Done.
         return curr
