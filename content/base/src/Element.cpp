@@ -586,7 +586,13 @@ Element::GetScrollFrame(nsIFrame **aStyledFrame, bool aFlushLayout)
 }
 
 void
-Element::ScrollIntoView(bool aTop)
+Element::ScrollIntoView()
+{
+  ScrollIntoView(true, ScrollOptions());
+}
+
+void
+Element::ScrollIntoView(bool aTop, const ScrollOptions &aOptions)
 {
   nsIDocument *document = GetCurrentDoc();
   if (!document) {
