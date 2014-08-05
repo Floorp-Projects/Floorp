@@ -807,6 +807,8 @@ public class BrowserApp extends GeckoApp
             String text = Clipboard.getText();
             if (!TextUtils.isEmpty(text)) {
                 enterEditingMode(text);
+                showBrowserSearch();
+                mBrowserSearch.filter(text, null);
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "paste");
             }
             return true;
