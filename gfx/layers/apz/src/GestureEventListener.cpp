@@ -54,7 +54,9 @@ GestureEventListener::GestureEventListener(AsyncPanZoomController* aAsyncPanZoom
     mState(GESTURE_NONE),
     mSpanChange(0.0f),
     mPreviousSpan(0.0f),
-    mLastTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0)
+    mLastTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0),
+    mLongTapTimeoutTask(nullptr),
+    mMaxTapTimeoutTask(nullptr)
 {
 }
 
@@ -383,6 +385,8 @@ nsEventStatus GestureEventListener::HandleInputTouchEnd()
 nsEventStatus GestureEventListener::HandleInputTouchCancel()
 {
   SetState(GESTURE_NONE);
+  CancelMaxTapTimeoutTask();
+  CancelLongTapTimeoutTask();
   return nsEventStatus_eIgnore;
 }
 
