@@ -549,6 +549,12 @@ bool TransportLayerDtls::Setup() {
     return false;
   }
 
+  rv = SSL_OptionSet(ssl_fd, SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
+  if (rv != SECSuccess) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't disable ECDHE key reuse");
+    return false;
+  }
+
   if (!SetupCipherSuites(ssl_fd)) {
     return false;
   }
