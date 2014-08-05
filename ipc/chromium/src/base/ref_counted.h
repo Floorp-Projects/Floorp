@@ -120,7 +120,7 @@ template<typename T>
 class RefCountedData : public base::RefCounted< base::RefCountedData<T> > {
  public:
   RefCountedData() : data() {}
-  RefCountedData(const T& in_value) : data(in_value) {}
+  explicit RefCountedData(const T& in_value) : data(in_value) {}
 
   T data;
 };
@@ -181,7 +181,7 @@ class scoped_refptr {
   scoped_refptr() : ptr_(NULL) {
   }
 
-  scoped_refptr(T* p) : ptr_(p) {
+  MOZ_IMPLICIT scoped_refptr(T* p) : ptr_(p) {
     if (ptr_)
       ptr_->AddRef();
   }
