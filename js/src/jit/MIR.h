@@ -779,15 +779,9 @@ class MInstruction
       : resumePoint_(nullptr)
     { }
 
-    void setResumePoint(MResumePoint *resumePoint) {
-        JS_ASSERT(!resumePoint_);
-        resumePoint_ = resumePoint;
-    }
+    void setResumePoint(MResumePoint *resumePoint);
     // Used to transfer the resume point to the rewritten instruction.
-    void stealResumePoint(MInstruction *ins) {
-        resumePoint_ = ins->resumePoint_;
-        ins->resumePoint_ = nullptr;
-    }
+    void stealResumePoint(MInstruction *ins);
     MResumePoint *resumePoint() const {
         return resumePoint_;
     }
@@ -10302,6 +10296,12 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
         return instruction_;
     }
     void setInstruction(MInstruction *ins) {
+        MOZ_ASSERT(!instruction_);
+        instruction_ = ins;
+    }
+    // Only to be used by stealResumePoint.
+    void replaceInstruction(MInstruction *ins) {
+        MOZ_ASSERT(instruction_);
         instruction_ = ins;
     }
     Mode mode() const {
