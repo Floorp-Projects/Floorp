@@ -640,6 +640,12 @@ protected:
 
     // Convenience method for getting our parent docshell.  Can return null
     already_AddRefed<nsDocShell> GetParentDocshell();
+
+    // Check if we have an app redirect registered for the URI and redirect if
+    // needed. Returns true if a redirect happened, false otherwise.
+    bool DoAppRedirectIfNeeded(nsIURI * aURI,
+                               nsIDocShellLoadInfo * aLoadInfo,
+                               bool aFirstParty);
 protected:
     nsresult GetCurScrollPos(int32_t scrollOrientation, int32_t * curPos);
     nsresult SetCurScrollPosEx(int32_t curHorizontalPos, int32_t curVerticalPos);
