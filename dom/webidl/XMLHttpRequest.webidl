@@ -130,7 +130,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws]
   readonly attribute DOMString? responseText;
 
-  [Throws=MainThread, Exposed=Window]
+  [Throws, Exposed=Window]
   readonly attribute Document? responseXML;
 
   // Mozilla-specific stuff
@@ -138,7 +138,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [ChromeOnly, SetterThrows=Workers]
   attribute boolean mozBackgroundRequest;
 
-  [ChromeOnly]
+  [ChromeOnly, Exposed=Window]
   readonly attribute MozChannel? channel;
 
   [Throws]
