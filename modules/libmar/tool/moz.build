@@ -46,3 +46,8 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     OS_LIBS += [
       '-framework Security',
     ]
+
+if CONFIG['HOST_OS_ARCH'] == 'WINNT':
+    HOST_OS_LIBS += [
+        'ws2_32',
+    ]

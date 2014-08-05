@@ -10,9 +10,16 @@ HOST_SOURCES += [
 
 HOST_PROGRAM = 'mbsdiff'
 
-if not CONFIG['MOZ_NATIVE_BZ2']:
+if CONFIG['MOZ_NATIVE_BZ2']:
+    HOST_OS_LIBS += CONFIG['MOZ_BZ2_LIBS']
+else:
     HOST_USE_LIBS += [
         'hostbz2',
+    ]
+
+if CONFIG['HOST_OS_ARCH'] == 'WINNT':
+    HOST_OS_LIBS += [
+        'ws2_32',
     ]
 
 LOCAL_INCLUDES += [

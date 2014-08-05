@@ -28,10 +28,6 @@ EXTRA_LIBS += \
   $(NULL)
 endif
 
-ifeq ($(HOST_OS_ARCH),WINNT)
-HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,ws2_32)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef CROSS_COMPILE
