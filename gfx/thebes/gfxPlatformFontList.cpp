@@ -1139,14 +1139,6 @@ SizeOfPrefFontEntryExcludingThis
 }
 
 static size_t
-SizeOfStringEntryExcludingThis(nsStringHashKey*  aHashEntry,
-                               MallocSizeOf      aMallocSizeOf,
-                               void*             aUserArg)
-{
-    return aHashEntry->GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-}
-
-static size_t
 SizeOfSharedCmapExcludingThis(CharMapHashKey*   aHashEntry,
                               MallocSizeOf      aMallocSizeOf,
                               void*             aUserArg)
@@ -1192,8 +1184,7 @@ gfxPlatformFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                        aMallocSizeOf);
 
     aSizes->mFontListSize +=
-        mBadUnderlineFamilyNames.SizeOfExcludingThis(SizeOfStringEntryExcludingThis,
-                                                     aMallocSizeOf);
+        mBadUnderlineFamilyNames.SizeOfExcludingThis(aMallocSizeOf);
 
     aSizes->mFontListSize +=
         mSharedCmaps.SizeOfExcludingThis(SizeOfSharedCmapExcludingThis,

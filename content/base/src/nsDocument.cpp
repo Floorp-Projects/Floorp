@@ -665,13 +665,10 @@ nsIdentifierMapEntry::HasIdElementExposedAsHTMLDocumentProperty()
          nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(idElement);
 }
 
-// static
 size_t
-nsIdentifierMapEntry::SizeOfExcludingThis(nsIdentifierMapEntry* aEntry,
-                                          MallocSizeOf aMallocSizeOf,
-                                          void*)
+nsIdentifierMapEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  return aEntry->GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  return nsStringHashKey::SizeOfExcludingThis(aMallocSizeOf);
 }
 
 // Helper structs for the content->subdoc map
@@ -12032,8 +12029,7 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
     mStyledLinks.SizeOfExcludingThis(nullptr, aWindowSizes->mMallocSizeOf);
 
   aWindowSizes->mDOMOtherSize +=
-    mIdentifierMap.SizeOfExcludingThis(nsIdentifierMapEntry::SizeOfExcludingThis,
-                                       aWindowSizes->mMallocSizeOf);
+    mIdentifierMap.SizeOfExcludingThis(aWindowSizes->mMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:

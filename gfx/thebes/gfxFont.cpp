@@ -1086,18 +1086,15 @@ gfxFontEntry::GetColorLayersInfo(uint32_t aGlyphId,
                                              aLayerColors);
 }
 
-/* static */ size_t
-gfxFontEntry::FontTableHashEntry::SizeOfEntryExcludingThis
-    (FontTableHashEntry *aEntry,
-     MallocSizeOf aMallocSizeOf,
-     void* aUserArg)
+size_t
+gfxFontEntry::FontTableHashEntry::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
     size_t n = 0;
-    if (aEntry->mBlob) {
-        n += aMallocSizeOf(aEntry->mBlob);
+    if (mBlob) {
+        n += aMallocSizeOf(mBlob);
     }
-    if (aEntry->mSharedBlobData) {
-        n += aEntry->mSharedBlobData->SizeOfIncludingThis(aMallocSizeOf);
+    if (mSharedBlobData) {
+        n += mSharedBlobData->SizeOfIncludingThis(aMallocSizeOf);
     }
     return n;
 }
@@ -1115,9 +1112,7 @@ gfxFontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
     }
     if (mFontTableCache) {
         aSizes->mFontTableCacheSize +=
-            mFontTableCache->SizeOfIncludingThis(
-                FontTableHashEntry::SizeOfEntryExcludingThis,
-                aMallocSizeOf);
+            mFontTableCache->SizeOfIncludingThis(aMallocSizeOf);
     }
 }
 
@@ -4612,14 +4607,6 @@ gfxFont::SynthesizeSpaceWidth(uint32_t aCh)
     }
 }
 
-/*static*/ size_t
-gfxFont::WordCacheEntrySizeOfExcludingThis(CacheHashEntry*   aHashEntry,
-                                           MallocSizeOf aMallocSizeOf,
-                                           void*             aUserArg)
-{
-    return aMallocSizeOf(aHashEntry->mShapedWord.get());
-}
-
 void
 gfxFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                 FontCacheSizes* aSizes) const
@@ -4629,9 +4616,7 @@ gfxFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
             mGlyphExtentsArray[i]->SizeOfIncludingThis(aMallocSizeOf);
     }
     if (mWordCache) {
-        aSizes->mShapedWords +=
-            mWordCache->SizeOfIncludingThis(WordCacheEntrySizeOfExcludingThis,
-                                            aMallocSizeOf);
+        aSizes->mShapedWords += mWordCache->SizeOfIncludingThis(aMallocSizeOf);
     }
 }
 

@@ -112,13 +112,6 @@ nsPresArena::Free(uint32_t aCode, void* aPtr)
   list->mEntries.AppendElement(aPtr);
 }
 
-/* static */ size_t
-nsPresArena::SizeOfFreeListEntryExcludingThis(
-  FreeList* aEntry, mozilla::MallocSizeOf aMallocSizeOf, void*)
-{
-  return aEntry->mEntries.SizeOfExcludingThis(aMallocSizeOf);
-}
-
 struct EnumerateData {
   nsArenaMemoryStats* stats;
   size_t total;
@@ -192,8 +185,7 @@ nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
   // we've not measured explicitly.
 
   size_t mallocSize = PL_SizeOfArenaPoolExcludingPool(&mPool, aMallocSizeOf);
-  mallocSize += mFreeLists.SizeOfExcludingThis(SizeOfFreeListEntryExcludingThis,
-                                               aMallocSizeOf);
+  mallocSize += mFreeLists.SizeOfExcludingThis(aMallocSizeOf);
 
   EnumerateData data = { aArenaStats, 0 };
   mFreeLists.EnumerateEntries(FreeListEnumerator, &data);
