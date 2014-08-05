@@ -411,7 +411,7 @@ public class GeckoAppShell
      *  The Gecko-side API: API methods that Gecko calls
      */
 
-    @WrapElementForJNI(allowMultithread = true, generateStatic = true, noThrow = true)
+    @WrapElementForJNI(allowMultithread = true, noThrow = true)
     public static void handleUncaughtException(Thread thread, Throwable e) {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExited)) {
             // We've called System.exit. All exceptions after this point are Android
@@ -452,14 +452,14 @@ public class GeckoAppShell
         }
     }
 
-    @WrapElementForJNI(generateStatic = true)
+    @WrapElementForJNI
     public static void notifyIME(int type) {
         if (editableListener != null) {
             editableListener.notifyIME(type);
         }
     }
 
-    @WrapElementForJNI(generateStatic = true)
+    @WrapElementForJNI
     public static void notifyIMEContext(int state, String typeHint,
                                         String modeHint, String actionHint) {
         if (editableListener != null) {
@@ -468,7 +468,7 @@ public class GeckoAppShell
         }
     }
 
-    @WrapElementForJNI(generateStatic = true)
+    @WrapElementForJNI
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
         if (newEnd < 0) { // Selection change
             editableListener.onSelectionChange(start, end);

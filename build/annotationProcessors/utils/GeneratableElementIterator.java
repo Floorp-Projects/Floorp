@@ -73,7 +73,6 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                 final String annotationTypeName = annotationType.getName();
                 if (annotationTypeName.equals("org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI")) {
                     String stubName = null;
-                    boolean isStaticStub = false;
                     boolean isMultithreadedStub = false;
                     boolean noThrow = false;
                     boolean narrowChars = false;
@@ -82,11 +81,6 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                         final Method stubNameMethod = annotationType.getDeclaredMethod("stubName");
                         stubNameMethod.setAccessible(true);
                         stubName = (String) stubNameMethod.invoke(annotation);
-
-                        // Detemine if the generated stub should be static.
-                        final Method staticStubMethod = annotationType.getDeclaredMethod("generateStatic");
-                        staticStubMethod.setAccessible(true);
-                        isStaticStub = (Boolean) staticStubMethod.invoke(annotation);
 
                         // Determine if the generated stub is to allow calls from multiple threads.
                         final Method multithreadedStubMethod = annotationType.getDeclaredMethod("allowMultithread");
@@ -124,7 +118,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                     }
 
                     AnnotationInfo annotationInfo = new AnnotationInfo(
-                        stubName, isStaticStub, isMultithreadedStub, noThrow, narrowChars);
+                        stubName, isMultithreadedStub, noThrow, narrowChars);
                     mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                     return;
                 }
@@ -134,7 +128,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
             // thanks to the "Generate everything" annotation.
             if (mIterateEveryEntry) {
                 AnnotationInfo annotationInfo = new AnnotationInfo(
-                    candidateElement.getName(), false, false, false, false);
+                    candidateElement.getName(), false, false, false);
                 mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                 return;
             }
