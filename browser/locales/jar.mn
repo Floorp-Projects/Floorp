@@ -64,6 +64,8 @@
     locale/browser/devtools/font-inspector.dtd     (%chrome/browser/devtools/font-inspector.dtd)
     locale/browser/devtools/app-manager.dtd        (%chrome/browser/devtools/app-manager.dtd)
     locale/browser/devtools/app-manager.properties (%chrome/browser/devtools/app-manager.properties)
+    locale/browser/devtools/webide.dtd             (%chrome/browser/devtools/webide.dtd)
+    locale/browser/devtools/webide.properties      (%chrome/browser/devtools/webide.properties)
     locale/browser/loop/loop.properties            (%chrome/browser/loop/loop.properties)
     locale/browser/newTab.dtd                      (%chrome/browser/newTab.dtd)
     locale/browser/newTab.properties               (%chrome/browser/newTab.properties)

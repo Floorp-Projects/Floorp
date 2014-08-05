@@ -20,9 +20,3 @@ webide.jar:
     content/prefs.xhtml               (prefs.xhtml)
     content/monitor.xhtml             (monitor.xhtml)
     content/monitor.js                (monitor.js)
-
-# Temporarily include locales in content, until we're ready
-# to localize webide
-
-    content/webide.dtd                (../locales/en-US/webide.dtd)
-    content/webide.properties         (../locales/en-US/webide.properties)
