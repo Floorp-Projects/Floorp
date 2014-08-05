@@ -179,11 +179,6 @@ ifneq ($(_MSC_VER),$(_MSC_VER_6))
      -we4015 -we4028 -we4033 -we4035 -we4045 -we4047 -we4053 -we4054 -we4063 \
      -we4064 -we4078 -we4087 -we4090 -we4098 -we4390 -we4551 -we4553 -we4715
 
-    # VS2012 defaults to -arch:SSE2. Use -arch:IA32 to avoid requiring SSE2.
-    ifeq ($(_MSC_VER_GE_11),1)
-	OS_CFLAGS += -arch:IA32
-    endif
-
     ifeq ($(_MSC_VER_GE_12),1)
 	OS_CFLAGS += -FS
     endif
@@ -201,6 +196,11 @@ ifdef USE_64
 	DEFINES += -D_AMD64_
 else
 	DEFINES += -D_X86_
+	# VS2012 defaults to -arch:SSE2. Use -arch:IA32 to avoid requiring
+	# SSE2.
+	ifeq ($(_MSC_VER_GE_11),1)
+		OS_CFLAGS += -arch:IA32
+	endif
 endif
 endif
 ifeq ($(CPU_ARCH), ALPHA)

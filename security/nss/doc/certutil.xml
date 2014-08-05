@@ -204,6 +204,11 @@ If this option is not used, the validity check defaults to the current system ti
       </varlistentry>
 
       <varlistentry>
+        <term>--dump-ext-val OID </term>
+        <listitem><para>For single cert, print binary DER encoding of extension OID.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>-e </term>
         <listitem><para>Check a certificate's signature during the process of validating a certificate.</para></listitem>
       </varlistentry>
@@ -211,6 +216,26 @@ If this option is not used, the validity check defaults to the current system ti
       <varlistentry>
         <term>--email email-address</term>
         <listitem><para>Specify the email address of a certificate to list. Used with the -L command option.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>--extGeneric OID:critical-flag:filename[,OID:critical-flag:filename]... </term>
+        <listitem>
+          <para>
+Add one or multiple extensions that certutil cannot encode yet, by loading their encodings from external files.
+           </para>
+	<itemizedlist>
+	<listitem>
+<para>OID (example): 1.2.3.4</para>
+	</listitem>
+	<listitem>
+<para>critical-flag: critical or not-critical</para>
+	</listitem>
+	<listitem>
+<para>filename: full path to a file containing an encoded extension</para>
+	</listitem>
+	</itemizedlist>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
@@ -374,6 +399,15 @@ of the attribute codes:
 	</listitem>
 	<listitem>
 <para><command>V</command> (as an SSL server)</para>
+	</listitem>
+	<listitem>
+<para><command>L</command> (as an SSL CA)</para>
+	</listitem>
+	<listitem>
+<para><command>A</command> (as Any CA)</para>
+	</listitem>
+	<listitem>
+<para><command>Y</command> (Verify CA)</para>
 	</listitem>
 	<listitem>
 <para><command>S</command> (as an email signer)</para>
@@ -646,6 +680,17 @@ of the attribute codes:
       <varlistentry>
         <term>--extNC</term>
         <listitem><para>Add a Name Constraint extension to the certificate. X.509 certificate extensions are described in RFC 5280.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>--extSAN type:name[,type:name]...</term>
+        <listitem><para>
+Create a Subject Alt Name extension with one or multiple names.
+          </para>
+          <para>
+-type: directory, dn, dns, edi, ediparty, email, ip, ipaddr, other, registerid, rfc822, uri, x400, x400addr
+        </para>
+        </listitem>
       </varlistentry>
 
       <varlistentry>
