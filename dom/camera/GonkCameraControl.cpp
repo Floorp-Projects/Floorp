@@ -122,7 +122,11 @@ nsGonkCameraControl::StartImpl(const Configuration* aInitialConfig)
   }
 
   OnHardwareStateChange(CameraControlListener::kHardwareOpen);
-  return StartPreviewImpl();
+  if (aInitialConfig) {
+    return StartPreviewImpl();
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -256,6 +260,11 @@ nsGonkCameraControl::SetConfigurationImpl(const Configuration& aConfig)
 {
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
   MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
+
+  if (aConfig.mMode == kUnspecifiedMode) {
+    DOM_CAMERA_LOGW("Can't set camera mode to 'unspecified', ignoring\n");
+    return NS_ERROR_INVALID_ARG;
+  }
 
   // Stop any currently running preview
   nsresult rv = PausePreview();

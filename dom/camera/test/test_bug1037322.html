@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1037322</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id="viewfinder" width="200" height="200" autoplay></video>
+<img src="#" alt="This image is going to load" id="testimage"/>
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var config = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+
+function onError(e) {
+  ok(false, "Error: " + JSON.stringify(e));
+}
+
+var Camera = {
+  cameraObj: null,
+
+  get viewfinder() {
+    return document.getElementById('viewfinder');
+  },
+
+  start: function test_start() {
+    function setConfig_onSuccess(cfg) {
+      // Check our specific configuration
+      ok(cfg.mode === config.mode, "Configured mode = " + cfg.mode);
+      ok(cfg.previewSize.width === config.previewSize.width &&
+         cfg.previewSize.height === config.previewSize.height,
+         "Configured preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
+      ok(cfg.recorderProfile === config.recorderProfile,
+         "Configured recorder profile = '" + cfg.recorderProfile + "'");
+
+      SimpleTest.finish();
+    }
+
+    function getCamera_onSuccess(camera, cfg) {
+      Camera.cameraObj = camera;
+      Camera.viewfinder.mozSrcObject = camera;
+      Camera.viewfinder.play();
+
+      // Check the default configuration
+      ok(cfg.mode === "unspecified", "Initial mode = " + cfg.mode);
+      ok(cfg.previewSize.width === 0 && cfg.previewSize.height === 0,
+         "Initial preview size = " + cfg.previewSize.width + "x" + cfg.previewSize.height);
+      ok(cfg.recorderProfile === "",
+         "Initial recorder profile = '" + cfg.recorderProfile + "'");
+
+      // Apply our specific configuration
+      camera.setConfiguration(config, setConfig_onSuccess, onError);
+    }
+
+    navigator.mozCameras.getCamera(whichCamera, {}, getCamera_onSuccess, onError);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener('beforeunload', function() {
+  Camera.viewfinder.mozSrcObject = null;
+  if (Camera.cameraObj) {
+    Camera.cameraObj.release();
+    Camera.cameraObj = null;
+  }
+});
+
+Camera.start();
+
+</script>
+</body>
+
+</html>
