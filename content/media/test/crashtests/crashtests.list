@@ -1,5 +1,5 @@
 skip-if(Android||B2G) load 0-timescale.html # bug 1048628 for Android
-skip-if(B2G) load 459439-1.html # bug 888557
+skip-if(Android||B2G) load 459439-1.html # bug 888557
 load 466607-1.html
 load 466945-1.html
 load 468763-1.html
