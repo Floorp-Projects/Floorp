@@ -123,7 +123,7 @@ public:
   {
     NSSTest::SetUpTestCase();
     if (!SetUpTestCaseInner()) {
-      PR_Abort();
+      abort();
     }
   }
 
@@ -135,7 +135,7 @@ public:
     // The result of ASCIIToDERName is owned by the arena
     if (InitInputFromSECItem(ASCIIToDERName(arena.get(), rootName),
                              rootNameDER) != Success) {
-      PR_Abort();
+      abort();
     }
 
     Input serialNumberDER;
@@ -143,17 +143,17 @@ public:
     if (InitInputFromSECItem(
           CreateEncodedSerialNumber(arena.get(), ++rootIssuedCount),
           serialNumberDER) != Success) {
-      PR_Abort();
+      abort();
     }
 
     Input rootSPKIDER;
     if (InitInputFromSECItem(rootSPKI.get(), rootSPKIDER) != Success) {
-      PR_Abort();
+      abort();
     }
     endEntityCertID = new (std::nothrow) CertID(rootNameDER, rootSPKIDER,
                                                 serialNumberDER);
     if (!endEntityCertID) {
-      PR_Abort();
+      abort();
     }
   }
 
@@ -807,11 +807,11 @@ public:
           "CN=OCSPGetCertTrustTest Signer", OCSPResponseContext::good,
           byKey, SEC_OID_OCSP_RESPONDER, &signerCertDER));
     if (response.Init(createdResponse) != Success) {
-      PR_Abort();
+      abort();
     }
 
     if (response.GetLength() == 0 || signerCertDER.GetLength() == 0) {
-      PR_Abort();
+      abort();
     }
   }
 

@@ -210,7 +210,7 @@ public:
     // Initialize the tail of the cert chains we'll be using once, to make the
     // tests run faster (generating the keys is slow).
     if (!trustDomain.SetUpCertChainTail()) {
-      PR_Abort();
+      abort();
     }
   }
 

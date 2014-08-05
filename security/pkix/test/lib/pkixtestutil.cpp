@@ -223,7 +223,7 @@ private:
         break;
       default:
         PR_NOT_REACHED("EncodeLength: bad lengthLength");
-        PR_Abort();
+        abort();
     }
   }
 
@@ -293,7 +293,7 @@ HashAlgorithmToLength(SECOidTag hashAlg)
       return SHA512_LENGTH;
     default:
       PR_NOT_REACHED("HashAlgorithmToLength: bad hashAlg");
-      PR_Abort();
+      abort();
   }
   return 0;
 }
@@ -1416,7 +1416,7 @@ CertStatus(OCSPResponseContext& context)
     }
     default:
       PR_NOT_REACHED("CertStatus: bad context.certStatus");
-      PR_Abort();
+      abort();
   }
   return nullptr;
 }
