@@ -124,11 +124,19 @@ CryptoSample::Update(sp<MetaData>& aMetaData)
 }
 
 void
-AudioDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
+TrackConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
 {
   // aMimeType points to a string from MediaDefs.cpp so we don't need to copy it
   mime_type = aMimeType;
   duration = FindInt64(aMetaData, kKeyDuration);
+  mTrackId = FindInt32(aMetaData, kKeyTrackID);
+  crypto.Update(aMetaData);
+}
+
+void
+AudioDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
+{
+  TrackConfig::Update(aMetaData, aMimeType);
   channel_count = FindInt32(aMetaData, kKeyChannelCount);
   bits_per_sample = FindInt32(aMetaData, kKeySampleSize);
   samples_per_second = FindInt32(aMetaData, kKeySampleRate);
@@ -145,8 +153,6 @@ AudioDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
                                    size);
     }
   }
-
-  crypto.Update(aMetaData);
 }
 
 bool
@@ -159,9 +165,7 @@ AudioDecoderConfig::IsValid()
 void
 VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
 {
-  // aMimeType points to a string from MediaDefs.cpp so we don't need to copy it
-  mime_type = aMimeType;
-  duration = FindInt64(aMetaData, kKeyDuration);
+  TrackConfig::Update(aMetaData, aMimeType);
   display_width = FindInt32(aMetaData, kKeyDisplayWidth);
   display_height = FindInt32(aMetaData, kKeyDisplayHeight);
 
@@ -171,8 +175,6 @@ VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
     extra_data[4] |= 3;
     annex_b = AnnexB::ConvertExtraDataToAnnexB(extra_data);
   }
-
-  crypto.Update(aMetaData);
 }
 
 bool
