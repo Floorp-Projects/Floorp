@@ -27,26 +27,6 @@ EXTRA_LIBS	+= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-ifdef HAVE_BOUTELL_GD
-ifeq ($(OS_ARCH),WINNT)
-LOCAL_INCLUDES	+= \
-		-I'$(HAVE_BOUTELL_GD)' \
-		$(NULL)
-OS_LIBS		+= \
-		-lmozz_s \
-		'$(HAVE_BOUTELL_GD)/gd.lib' \
-		$(NULL)
-else
-OS_LIBS		+= \
-		-lgd \
-		$(NULL)
-endif
-
-DEFINES		+= \
-		-DHAVE_BOUTELL_GD \
-		$(NULL)
-endif
-
 EXTRA_DEPS = $(EXTRACSRCS:.c=.$(OBJ_SUFFIX)) $(EXTRACPPSRCS:.cpp=.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
