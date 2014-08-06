@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include <vector>
 #include <dlfcn.h>
+#include <signal.h>
 #include "CustomElf.h"
 #include "Mappable.h"
 #include "Logging.h"
@@ -353,6 +354,11 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
     if (strcmp(symbol + 2, "gnu_Unwind_Find_exidx") == 0)
       return FunctionPtr(__wrap___gnu_Unwind_Find_exidx);
 #endif
+  } else if (symbol[0] == 's' && symbol[1] == 'i') {
+    if (strcmp(symbol + 2, "gnal") == 0)
+      return FunctionPtr(signal);
+    if (strcmp(symbol + 2, "gaction") == 0)
+      return FunctionPtr(sigaction);
   }
 
 #define MISSING_FLASH_SYMNAME_START "_ZN7android10VectorImpl19reservedVectorImpl"
