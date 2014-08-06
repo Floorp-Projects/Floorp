@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.tabspanel;
+package org.mozilla.gecko.tabs;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.tabspanel.TabsPanel.PanelView;
+import org.mozilla.gecko.tabs.TabsPanel.PanelView;
 
 import android.content.Context;
 import android.util.Log;
