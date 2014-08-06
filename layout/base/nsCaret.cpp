@@ -119,6 +119,7 @@ IsBidiUI()
 nsCaret::nsCaret()
 : mPresShell(nullptr)
 , mIsBlinking(true)
+, mIsBlinkOn(false)
 , mVisible(false)
 , mDrawn(false)
 , mPendingDraw(false)
@@ -495,25 +496,37 @@ nsCaret::CheckSelectionLanguageChange()
 nsIFrame*
 nsCaret::GetPaintGeometry(nsRect* aRect)
 {
-  // Return null if we're not drawn to prevent anybody from trying to draw us.
-  if (!mDrawn)
+  // Return null if we should not be visible.
+  if (!IsVisible() || (mIsBlinking && !mIsBlinkOn)) {
     return nullptr;
+  }
 
   // Update selection language direction now so the new direction will be
   // taken into account when computing the caret position below.
   CheckSelectionLanguageChange();
 
   nsFrameSelection* frameSelection = GetFrameSelection();
-  if (!frameSelection)
+  if (!frameSelection) {
     return nullptr;
+  }
   int32_t contentOffset;
   nsIFrame *frame = nullptr;
   nsresult rv = GetCaretFrameForNodeOffset(frameSelection,
                                            mLastContent, mLastContentOffset,
                                            mLastHint, mLastBidiLevel, &frame,
                                            &contentOffset);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return nullptr;
+  }
+
+  // now we have a frame, check whether it's appropriate to show the caret here
+  const nsStyleUserInterface* userinterface = frame->StyleUserInterface();
+  if ((!mIgnoreUserModify &&
+       userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
+      userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+      userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
+    return nullptr;
+  }
 
   // If the offset falls outside of the frame, then don't paint the caret.
   int32_t startOffset, endOffset;
@@ -648,6 +661,8 @@ nsresult nsCaret::PrimeTimer()
 //-----------------------------------------------------------------------------
 void nsCaret::StartBlinking()
 {
+  mIsBlinkOn = true;
+
   if (mReadOnly) {
     // Make sure the one draw command we use for a readonly caret isn't
     // done until the selection is set
@@ -701,16 +716,6 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*          aNode,
                                aBidiLevel, &theFrame, &theFrameOffset);
   if (NS_FAILED(rv) || !theFrame)
     return false;
-
-  // now we have a frame, check whether it's appropriate to show the caret here
-  const nsStyleUserInterface* userinterface = theFrame->StyleUserInterface();
-  if ((!mIgnoreUserModify &&
-       userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
-      (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
-      (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
-  {
-    return false;
-  }
 
   if (!mDrawn)
   {
@@ -1111,6 +1116,7 @@ void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
 {
   nsCaret   *theCaret = reinterpret_cast<nsCaret*>(aClosure);
   if (!theCaret) return;
+  theCaret->mIsBlinkOn = !theCaret->mIsBlinkOn;
   
   theCaret->DrawCaret(true);
 }
