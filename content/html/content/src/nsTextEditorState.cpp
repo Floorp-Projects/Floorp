@@ -45,6 +45,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsNumberControlFrame.h"
+#include "nsFrameSelection.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -546,7 +547,7 @@ nsTextInputSelectionImpl::CompleteMove(bool aForward, bool aExtend)
 
   // make the caret be either at the very beginning (0) or the very end
   int32_t offset = 0;
-  nsFrameSelection::HINT hint = nsFrameSelection::HINTLEFT;
+  CaretAssociationHint hint = CARET_ASSOCIATE_BEFORE;
   if (aForward)
   {
     offset = parentDIV->GetChildCount();
@@ -561,7 +562,7 @@ nsTextInputSelectionImpl::CompleteMove(bool aForward, bool aExtend)
       if (child->Tag() == nsGkAtoms::br)
       {
         --offset;
-        hint = nsFrameSelection::HINTRIGHT; // for Bug 106855
+        hint = CARET_ASSOCIATE_AFTER; // for Bug 106855
       }
     }
   }

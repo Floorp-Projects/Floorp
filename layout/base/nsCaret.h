@@ -13,11 +13,19 @@
 #include "nsCoord.h"
 #include "nsISelectionListener.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsFrameSelection.h"
+#include "CaretAssociationHint.h"
+#include "nsPoint.h"
+#include "nsRect.h"
 
-class nsRenderingContext;
 class nsDisplayListBuilder;
+class nsFrameSelection;
+class nsIContent;
+class nsIDOMNode;
+class nsIFrame;
+class nsINode;
+class nsIPresShell;
 class nsITimer;
+class nsRenderingContext;
 
 //-----------------------------------------------------------------------------
 class nsCaret : public nsISelectionListener
@@ -30,6 +38,8 @@ class nsCaret : public nsISelectionListener
 
   public:
     NS_DECL_ISUPPORTS
+
+    typedef mozilla::CaretAssociationHint CaretAssociationHint;
 
     nsresult Init(nsIPresShell *inPresShell);
     void Terminate();
@@ -142,7 +152,7 @@ class nsCaret : public nsISelectionListener
     static nsresult GetCaretFrameForNodeOffset(nsFrameSelection* aFrameSelection,
                                                nsIContent* aContentNode,
                                                int32_t aOffset,
-                                               nsFrameSelection::HINT aFrameHint,
+                                               CaretAssociationHint aFrameHint,
                                                uint8_t aBidiLevel,
                                                nsIFrame** aReturnFrame,
                                                int32_t* aReturnOffset);
@@ -160,7 +170,7 @@ protected:
 
     bool          DrawAtPositionWithHint(nsIDOMNode* aNode,
                                          int32_t aOffset,
-                                         nsFrameSelection::HINT aFrameHint,
+                                         CaretAssociationHint aFrameHint,
                                          uint8_t aBidiLevel,
                                          bool aInvalidate);
 
@@ -233,7 +243,7 @@ protected:
                                               // actually drawn (anon <BR> in text control)
     int32_t               mLastContentOffset; // the offset for the last request
 
-    nsFrameSelection::HINT mLastHint;        // the hint associated with the last request, see also
+    CaretAssociationHint  mLastHint;          // the hint associated with the last request, see also
                                               // mLastBidiLevel below
 
 };

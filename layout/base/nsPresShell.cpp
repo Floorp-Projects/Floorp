@@ -119,6 +119,7 @@
 #include "nsSVGEffects.h"
 #include "SVGFragmentIdentifier.h"
 #include "nsArenaMemoryStats.h"
+#include "nsFrameSelection.h"
 
 #include "nsPerformance.h"
 #include "nsRefreshDriver.h"
@@ -2433,7 +2434,8 @@ PresShell::CompleteMove(bool aForward, bool aExtend)
   nsIFrame::CaretPosition pos =
     frame->GetExtremeCaretPosition(!aForward);
   mSelection->HandleClick(pos.mResultContent, pos.mContentOffset,
-                          pos.mContentOffset, aExtend, false, aForward);
+                          pos.mContentOffset, aExtend, false,
+                          aForward ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE);
   if (limiter) {
     // HandleClick resets ancestorLimiter, so set it again.
     mSelection->SetAncestorLimiter(limiter);
@@ -2653,6 +2655,19 @@ PresShell::RestoreRootScrollPosition()
   nsIScrollableFrame* scrollableFrame = GetRootScrollFrameAsScrollable();
   if (scrollableFrame) {
     scrollableFrame->ScrollToRestoredPosition();
+  }
+}
+
+void
+PresShell::MaybeReleaseCapturingContent()
+{
+  nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
+  if (frameSelection) {
+    frameSelection->SetDragState(false);
+  }
+  if (gCaptureInfo.mContent &&
+      gCaptureInfo.mContent->OwnerDoc() == mDocument) {
+    SetCapturingContent(nullptr, 0);
   }
 }
 

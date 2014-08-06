@@ -287,7 +287,7 @@ TouchCaret::MoveCaret(const nsPoint& movePoint)
                   offsets.EndOffset(),
                   false,
                   false,
-                  offsets.associateWithNext);
+                  offsets.associate);
 
   if (!weakScrollable.IsAlive()) {
     return;

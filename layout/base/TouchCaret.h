@@ -10,7 +10,6 @@
 #include "nsISelectionListener.h"
 #include "nsIScrollObserver.h"
 #include "nsIWeakReferenceUtils.h"
-#include "nsFrameSelection.h"
 #include "nsITimer.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TouchEvents.h"

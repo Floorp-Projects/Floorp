@@ -440,8 +440,8 @@ ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
 
   nsRefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
   int32_t offsetInFrame;
-  nsFrameSelection::HINT hint =
-    aForward ? nsFrameSelection::HINTLEFT : nsFrameSelection::HINTRIGHT;
+  CaretAssociationHint hint =
+    aForward ? CARET_ASSOCIATE_BEFORE : CARET_ASSOCIATE_AFTER;
   nsIFrame* frame = fs->GetFrameForNodeOffset(aContent, int32_t(*aXPOffset),
                                               hint, &offsetInFrame);
   if (!frame) {

@@ -17,6 +17,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsWinUtils.h"
+#include "nsRange.h"
 
 #include "nsAutoPtr.h"
 
