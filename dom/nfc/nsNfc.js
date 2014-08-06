@@ -200,12 +200,14 @@ mozNfc.prototype = {
     if (this._nfcContentHelper.setSessionToken(sessionToken)) {
       return this._window.MozNFCTag._create(this._window, obj);
     }
-    return null;
+    throw new Error("Unable to create NFCTag object, Reason:  Bad SessionToken " +
+                     sessionToken);
   },
 
   getNFCPeer: function getNFCPeer(sessionToken) {
     if (!sessionToken || !this._nfcContentHelper.setSessionToken(sessionToken)) {
-      return null;
+      throw new Error("Unable to create NFCPeer object, Reason:  Bad SessionToken " +
+                      sessionToken);
     }
 
     if (!this.nfcObject) {
