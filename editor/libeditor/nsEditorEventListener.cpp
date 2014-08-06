@@ -696,7 +696,7 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
       NS_ENSURE_SUCCESS(rv, rv);
 
       mCaret->SetVisible(true);
-      mCaret->DrawAtPosition(parent, offset);
+      mCaret->SetCaretPosition(parent, offset);
     }
   }
   else

@@ -85,15 +85,12 @@ class nsCaret : public nsISelectionListener
      */
     void SetVisibilityDuringSelection(bool aVisibility);
 
-    /** DrawAtPosition
-     *
-     *  Draw the caret explicitly, at the specified node and offset.
-     *  To avoid drawing glitches, you should call EraseCaret()
-     *  after each call to DrawAtPosition().
-     *
-     *  Note: This call breaks the caret's ability to blink at all.
+    /**
+     * Set the caret's position explicitly to the specified node and offset
+     * instead of tracking its selection.
+     * Passing null for aNode would set the caret to track its selection again.
      **/
-    nsresult DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset);
+    void SetCaretPosition(nsIDOMNode* aNode, int32_t aOffset);
 
     /**
      * Schedule a repaint for the frame where the caret would appear.
@@ -203,11 +200,6 @@ protected:
      */
     int32_t               mOverrideOffset;
 
-    /**
-     * mIsBlinking is true when caret blinking is enabled. When false,
-     * the caret will always be on.
-     */
-    bool                  mIsBlinking;
     /**
      * mIsBlinkOn is true when we're in a blink cycle where the caret is on.
      */
