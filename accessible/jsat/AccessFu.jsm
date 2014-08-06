@@ -2,25 +2,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global AccessFu, Components, Utils, PrefCache, Logger, Services,
+          PointerAdapter, dump, Presentation, Rect */
+/* exported AccessFu */
+
 'use strict';
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const {utils: Cu, interfaces: Ci} = Components;
 
-this.EXPORTED_SYMBOLS = ['AccessFu'];
+this.EXPORTED_SYMBOLS = ['AccessFu']; // jshint ignore:line
 
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 
-const ACCESSFU_DISABLE = 0;
+const ACCESSFU_DISABLE = 0; // jshint ignore:line
 const ACCESSFU_ENABLE = 1;
 const ACCESSFU_AUTO = 2;
 
 const SCREENREADER_SETTING = 'accessibility.screenreader';
 
-this.AccessFu = {
+this.AccessFu = { // jshint ignore:line
   /**
    * Initialize chrome-layer accessibility functionality.
    * If accessibility is enabled on the platform, then a special accessibility
@@ -76,8 +77,9 @@ this.AccessFu = {
    * with arrow keys.
    */
   _enable: function _enable() {
-    if (this._enabled)
+    if (this._enabled) {
       return;
+    }
     this._enabled = true;
 
     Cu.import('resource://gre/modules/accessibility/Utils.jsm');
@@ -86,7 +88,7 @@ this.AccessFu = {
 
     Logger.info('Enabled');
 
-    for each (let mm in Utils.AllMessageManagers) {
+    for (let mm of Utils.AllMessageManagers) {
       this._addMessageListeners(mm);
       this._loadFrameScript(mm);
     }
@@ -142,8 +144,9 @@ this.AccessFu = {
    * Disable AccessFu and return to default interaction mode.
    */
   _disable: function _disable() {
-    if (!this._enabled)
+    if (!this._enabled) {
       return;
+    }
 
     this._enabled = false;
 
@@ -155,7 +158,7 @@ this.AccessFu = {
       this.announce('screenReaderStopped');
     }
 
-    for each (let mm in Utils.AllMessageManagers) {
+    for (let mm of Utils.AllMessageManagers) {
       mm.sendAsyncMessage('AccessFu:Stop');
       this._removeMessageListeners(mm);
     }
@@ -193,10 +196,11 @@ this.AccessFu = {
       }
       let activatePref = this._activatePref.value;
       if (activatePref == ACCESSFU_ENABLE ||
-          this._systemPref && activatePref == ACCESSFU_AUTO)
+          this._systemPref && activatePref == ACCESSFU_AUTO) {
         this._enable();
-      else
+      } else {
         this._disable();
+      }
     } catch (x) {
       dump('Error ' + x.message + ' ' + x.fileName + ':' + x.lineNumber);
     }
@@ -231,9 +235,10 @@ this.AccessFu = {
   },
 
   _output: function _output(aPresentationData, aBrowser) {
-    for each (let presenter in aPresentationData) {
-      if (!presenter)
+    for (let presenter of aPresentationData) {
+      if (!presenter) {
         continue;
+      }
 
       try {
         Output[presenter.type](presenter.details, aBrowser);
@@ -389,8 +394,8 @@ this.AccessFu = {
   _processedMessageManagers: [],
 
   /**
-   * Adjusts the given bounds relative to the given browser. Converts from screen
-   * or device pixels to either device or CSS pixels.
+   * Adjusts the given bounds relative to the given browser. Converts from
+   * screen or device pixels to either device or CSS pixels.
    * @param {Rect} aJsonBounds the bounds to adjust
    * @param {browser} aBrowser the browser we want the bounds relative to
    * @param {bool} aToCSSPixels whether to convert to CSS pixels (as opposed to
@@ -398,44 +403,46 @@ this.AccessFu = {
    * @param {bool} aFromDevicePixels whether to convert from device pixels (as
    *               opposed to screen pixels)
    */
-  adjustContentBounds: function(aJsonBounds, aBrowser, aToCSSPixels, aFromDevicePixels) {
-    let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
-                          aJsonBounds.right - aJsonBounds.left,
-                          aJsonBounds.bottom - aJsonBounds.top);
-    let win = Utils.win;
-    let dpr = win.devicePixelRatio;
-    let vp = Utils.getViewport(win);
-    let offset = { left: -win.mozInnerScreenX, top: -win.mozInnerScreenY };
+  adjustContentBounds:
+    function(aJsonBounds, aBrowser, aToCSSPixels, aFromDevicePixels) {
+      let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
+                            aJsonBounds.right - aJsonBounds.left,
+                            aJsonBounds.bottom - aJsonBounds.top);
+      let win = Utils.win;
+      let dpr = win.devicePixelRatio;
+      let vp = Utils.getViewport(win);
+      let offset = { left: -win.mozInnerScreenX, top: -win.mozInnerScreenY };
 
-    if (!aBrowser.contentWindow) {
-      // OOP browser, add offset of browser.
-      // The offset of the browser element in relation to its parent window.
-      let clientRect = aBrowser.getBoundingClientRect();
-      let win = aBrowser.ownerDocument.defaultView;
-      offset.left += clientRect.left + win.mozInnerScreenX;
-      offset.top += clientRect.top + win.mozInnerScreenY;
+      if (!aBrowser.contentWindow) {
+        // OOP browser, add offset of browser.
+        // The offset of the browser element in relation to its parent window.
+        let clientRect = aBrowser.getBoundingClientRect();
+        let win = aBrowser.ownerDocument.defaultView;
+        offset.left += clientRect.left + win.mozInnerScreenX;
+        offset.top += clientRect.top + win.mozInnerScreenY;
+      }
+
+      // Here we scale from screen pixels to layout device pixels by dividing by
+      // the resolution (caused by pinch-zooming). The resolution is the
+      // viewport zoom divided by the devicePixelRatio. If there's no viewport,
+      // then we're on a platform without pinch-zooming and we can just ignore
+      // this.
+      if (!aFromDevicePixels && vp) {
+        bounds = bounds.scale(vp.zoom / dpr, vp.zoom / dpr);
+      }
+
+      // Add the offset; the offset is in CSS pixels, so multiply the
+      // devicePixelRatio back in before adding to preserve unit consistency.
+      bounds = bounds.translate(offset.left * dpr, offset.top * dpr);
+
+      // If we want to get to CSS pixels from device pixels, this needs to be
+      // further divided by the devicePixelRatio due to widget scaling.
+      if (aToCSSPixels) {
+        bounds = bounds.scale(1 / dpr, 1 / dpr);
+      }
+
+      return bounds.expandToIntegers();
     }
-
-    // Here we scale from screen pixels to layout device pixels by dividing by
-    // the resolution (caused by pinch-zooming). The resolution is the viewport
-    // zoom divided by the devicePixelRatio. If there's no viewport, then we're
-    // on a platform without pinch-zooming and we can just ignore this.
-    if (!aFromDevicePixels && vp) {
-      bounds = bounds.scale(vp.zoom / dpr, vp.zoom / dpr);
-    }
-
-    // Add the offset; the offset is in CSS pixels, so multiply the
-    // devicePixelRatio back in before adding to preserve unit consistency.
-    bounds = bounds.translate(offset.left * dpr, offset.top * dpr);
-
-    // If we want to get to CSS pixels from device pixels, this needs to be
-    // further divided by the devicePixelRatio due to widget scaling.
-    if (aToCSSPixels) {
-      bounds = bounds.scale(1 / dpr, 1 / dpr);
-    }
-
-    return bounds.expandToIntegers();
-  }
 };
 
 var Output = {
@@ -450,8 +457,9 @@ var Output = {
       if (aOutput && 'output' in aOutput) {
         this.startOffset = aOutput.startOffset;
         this.endOffset = aOutput.endOffset;
-        // We need to append a space at the end so that the routing key corresponding
-        // to the end of the output (i.e. the space) can be hit to move the caret there.
+        // We need to append a space at the end so that the routing key
+        // corresponding to the end of the output (i.e. the space) can be hit to
+        // move the caret there.
         this.text = aOutput.output + ' ';
         this.selectionStart = typeof aOutput.selectionStart === 'number' ?
                               aOutput.selectionStart : this.selectionStart;
@@ -499,8 +507,10 @@ var Output = {
       braille.startOffset = this.startOffset;
       braille.endOffset = this.endOffset;
       braille.text = this.text;
-      this.selectionStart = braille.selectionStart = aSelection.selectionStart + this.startOffset;
-      this.selectionEnd = braille.selectionEnd = aSelection.selectionEnd + this.startOffset;
+      this.selectionStart = braille.selectionStart =
+        aSelection.selectionStart + this.startOffset;
+      this.selectionEnd = braille.selectionEnd =
+        aSelection.selectionEnd + this.startOffset;
 
       return braille;
     }
@@ -577,8 +587,9 @@ var Output = {
       case 'tabstate-change':
       {
         let highlightBox = this.highlightBox ? this.highlightBox.get() : null;
-        if (highlightBox)
+        if (highlightBox) {
           highlightBox.style.display = 'none';
+        }
         break;
       }
     }
@@ -602,20 +613,25 @@ var Output = {
       return;
     }
 
-    for each (let androidEvent in aDetails) {
+    for (let androidEvent of aDetails) {
       androidEvent.type = 'Accessibility:Event';
-      if (androidEvent.bounds)
-        androidEvent.bounds = AccessFu.adjustContentBounds(androidEvent.bounds, aBrowser);
+      if (androidEvent.bounds) {
+        androidEvent.bounds = AccessFu.adjustContentBounds(
+          androidEvent.bounds, aBrowser);
+      }
 
       switch(androidEvent.eventType) {
         case ANDROID_VIEW_TEXT_CHANGED:
-          androidEvent.brailleOutput = this.brailleState.adjustText(androidEvent.text);
+          androidEvent.brailleOutput = this.brailleState.adjustText(
+            androidEvent.text);
           break;
         case ANDROID_VIEW_TEXT_SELECTION_CHANGED:
-          androidEvent.brailleOutput = this.brailleState.adjustSelection(androidEvent.brailleOutput);
+          androidEvent.brailleOutput = this.brailleState.adjustSelection(
+            androidEvent.brailleOutput);
           break;
         default:
-          androidEvent.brailleOutput = this.brailleState.init(androidEvent.brailleOutput);
+          androidEvent.brailleOutput = this.brailleState.init(
+            androidEvent.brailleOutput);
           break;
       }
       this.androidBridge.handleGeckoMessage(androidEvent);
@@ -731,16 +747,18 @@ var Input = {
     let target = aEvent.target;
 
     // Ignore keys with modifiers so the content could take advantage of them.
-    if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey)
+    if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey) {
       return;
+    }
 
     switch (aEvent.keyCode) {
       case 0:
         // an alphanumeric key was pressed, handle it separately.
         // If it was pressed with either alt or ctrl, just pass through.
         // If it was pressed with meta, pass the key on without the meta.
-        if (this.editState.editing)
+        if (this.editState.editing) {
           return;
+        }
 
         let key = String.fromCharCode(aEvent.charCode);
         try {
@@ -752,43 +770,50 @@ var Input = {
         break;
       case aEvent.DOM_VK_RIGHT:
         if (this.editState.editing) {
-          if (!this.editState.atEnd)
+          if (!this.editState.atEnd) {
             // Don't move forward if caret is not at end of entry.
             // XXX: Fix for rtl
             return;
-          else
+          } else {
             target.blur();
+          }
         }
-        this.moveCursor(aEvent.shiftKey ? 'moveLast' : 'moveNext', 'Simple', 'keyboard');
+        this.moveCursor(aEvent.shiftKey ?
+          'moveLast' : 'moveNext', 'Simple', 'keyboard');
         break;
       case aEvent.DOM_VK_LEFT:
         if (this.editState.editing) {
-          if (!this.editState.atStart)
+          if (!this.editState.atStart) {
             // Don't move backward if caret is not at start of entry.
             // XXX: Fix for rtl
             return;
-          else
+          } else {
             target.blur();
+          }
         }
-        this.moveCursor(aEvent.shiftKey ? 'moveFirst' : 'movePrevious', 'Simple', 'keyboard');
+        this.moveCursor(aEvent.shiftKey ?
+          'moveFirst' : 'movePrevious', 'Simple', 'keyboard');
         break;
       case aEvent.DOM_VK_UP:
         if (this.editState.multiline) {
-          if (!this.editState.atStart)
+          if (!this.editState.atStart) {
             // Don't blur content if caret is not at start of text area.
             return;
-          else
+          } else {
             target.blur();
+          }
         }
 
-        if (Utils.MozBuildApp == 'mobile/android')
+        if (Utils.MozBuildApp == 'mobile/android') {
           // Return focus to native Android browser chrome.
           Services.androidBridge.handleGeckoMessage(
               { type: 'ToggleChrome:Focus' });
+        }
         break;
       case aEvent.DOM_VK_RETURN:
-        if (this.editState.editing)
+        if (this.editState.editing) {
           return;
+        }
         this.activateCurrent();
         break;
     default:
@@ -862,7 +887,8 @@ var Input = {
 
   activateContextMenu: function activateContextMenu(aDetails) {
     if (Utils.MozBuildApp === 'mobile/android') {
-      let p = AccessFu.adjustContentBounds(aDetails.bounds, Utils.CurrentBrowser,
+      let p = AccessFu.adjustContentBounds(aDetails.bounds,
+                                           Utils.CurrentBrowser,
                                            true, true).center();
       Services.obs.notifyObservers(null, 'Gesture:LongPress',
                                    JSON.stringify({x: p.x, y: p.y}));
@@ -881,7 +907,8 @@ var Input = {
 
   sendScrollMessage: function sendScrollMessage(aPage, aHorizontal) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    mm.sendAsyncMessage('AccessFu:Scroll', {page: aPage, horizontal: aHorizontal, origin: 'top'});
+    mm.sendAsyncMessage('AccessFu:Scroll',
+      {page: aPage, horizontal: aHorizontal, origin: 'top'});
   },
 
   doScroll: function doScroll(aDetails) {
@@ -940,13 +967,15 @@ var Input = {
     },
 
     previous: function quickNavMode_previous() {
-      if (--this._currentIndex < 0)
+      if (--this._currentIndex < 0) {
         this._currentIndex = this.modes.length - 1;
+      }
     },
 
     next: function quickNavMode_next() {
-      if (++this._currentIndex >= this.modes.length)
+      if (++this._currentIndex >= this.modes.length) {
         this._currentIndex = 0;
+      }
     },
 
     updateModes: function updateModes(aModes) {
