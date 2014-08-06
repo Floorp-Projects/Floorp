@@ -523,7 +523,7 @@ public:
   : mRes(aRes)
   { }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothAvrcpInterface::Init failed: %d",
                (int)aStatus);
@@ -551,7 +551,7 @@ public:
   : mRes(aRes)
   { }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothA2dpInterface::Init failed: %d",
                (int)aStatus);
@@ -682,7 +682,7 @@ public:
   : mRes(aRes)
   { }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothAvrcpInterface::Cleanup failed: %d",
                (int)aStatus);
@@ -711,7 +711,7 @@ public:
   : mRes(aRes)
   { }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothA2dpInterface::Cleanup failed: %d",
                (int)aStatus);
@@ -808,7 +808,7 @@ BluetoothA2dpManager::OnConnectError()
 class ConnectResultHandler MOZ_FINAL : public BluetoothA2dpResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_LOGR("BluetoothA2dpInterface::Connect failed: %d", (int)aStatus);
 
@@ -859,7 +859,7 @@ BluetoothA2dpManager::OnDisconnectError()
 class DisconnectResultHandler MOZ_FINAL : public BluetoothA2dpResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_LOGR("BluetoothA2dpInterface::Disconnect failed: %d", (int)aStatus);
 

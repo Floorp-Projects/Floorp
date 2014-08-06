@@ -447,7 +447,7 @@ public:
     MOZ_ASSERT(mInterface);
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::Init failed: %d", (int)aStatus);
     if (mRes) {
@@ -554,7 +554,7 @@ public:
   : mRes(aRes)
   { }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::Cleanup failed: %d", (int)aStatus);
     if (mRes) {
@@ -803,7 +803,7 @@ class CindResponseResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::CindResponse failed: %d",
                (int)aStatus);
@@ -829,7 +829,7 @@ class CopsResponseResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::CopsResponse failed: %d",
                (int)aStatus);
@@ -869,7 +869,7 @@ class AtResponseResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::AtResponse failed: %d",
                (int)aStatus);
@@ -999,7 +999,7 @@ class VolumeControlResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::VolumeControl failed: %d",
                (int)aStatus);
@@ -1147,7 +1147,7 @@ class ClccResponseResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::ClccResponse failed: %d",
                (int)aStatus);
@@ -1184,7 +1184,7 @@ class FormattedAtResponseResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::FormattedAtResponse failed: %d",
                (int)aStatus);
@@ -1213,7 +1213,7 @@ class PhoneStateChangeResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::PhoneStateChange failed: %d",
                (int)aStatus);
@@ -1245,7 +1245,7 @@ class DeviceStatusNotificationResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING(
       "BluetoothHandsfreeInterface::DeviceStatusNotification failed: %d",
@@ -1501,7 +1501,7 @@ class ConnectAudioResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::ConnectAudio failed: %d",
                (int)aStatus);
@@ -1527,7 +1527,7 @@ class DisconnectAudioResultHandler MOZ_FINAL
 : public BluetoothHandsfreeResultHandler
 {
 public:
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::DisconnectAudio failed: %d",
                (int)aStatus);
@@ -1578,7 +1578,7 @@ public:
     MOZ_ASSERT(mHfpManager);
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::Connect failed: %d",
                (int)aStatus);
@@ -1631,7 +1631,7 @@ public:
     MOZ_ASSERT(mHfpManager);
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     BT_WARNING("BluetoothHandsfreeInterface::Disconnect failed: %d",
                (int)aStatus);
