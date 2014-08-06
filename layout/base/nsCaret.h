@@ -169,6 +169,10 @@ class nsCaret : public nsISelectionListener
 protected:
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 
+    // Schedule a repaint for the frame where the caret would appear.
+    // Does not check visibility etc.
+    void          SchedulePaint();
+
     void          KillTimer();
     nsresult      PrimeTimer();
 
@@ -180,6 +184,8 @@ protected:
                                          CaretAssociationHint aFrameHint,
                                          uint8_t aBidiLevel,
                                          bool aInvalidate);
+
+    mozilla::dom::Selection* GetSelectionInternal();
 
     struct Metrics {
       nscoord mBidiIndicatorSize; // width and height of bidi indicator
@@ -219,8 +225,6 @@ protected:
     // 2. A menu popup is open, but there is no caret present in any popup.
     // 3. The caret selection is empty.
     bool IsMenuPopupHidingCaret();
-
-protected:
 
     nsWeakPtr             mPresShell;
     nsWeakPtr             mDomSelectionWeak;
