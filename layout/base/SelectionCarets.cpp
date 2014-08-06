@@ -806,9 +806,7 @@ SelectionCarets::GetCaretVisible()
   nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
   NS_ENSURE_TRUE(caret, false);
 
-  bool caretVisible = false;
-  caret->GetCaretVisible(&caretVisible);
-  return caretVisible;
+  return caret->IsVisible();
 }
 
 nsISelection*

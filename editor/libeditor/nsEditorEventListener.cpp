@@ -726,7 +726,7 @@ nsEditorEventListener::CleanupDragDropCaret()
   if (mCaret)
   {
     mCaret->EraseCaret();
-    mCaret->SetCaretVisible(false);    // hide it, so that it turns off its timer
+    mCaret->SetVisible(false);    // hide it, so that it turns off its timer
 
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
     if (presShell)

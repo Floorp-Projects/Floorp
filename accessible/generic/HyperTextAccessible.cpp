@@ -1322,8 +1322,7 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
   nsRefPtr<nsCaret> caret = mDoc->PresShell()->GetCaret();
   NS_ENSURE_TRUE(caret, nsIntRect());
 
-  bool isVisible = false;
-  caret->GetCaretVisible(&isVisible);
+  bool isVisible = caret->IsVisible();
   if (!isVisible)
     return nsIntRect();
 

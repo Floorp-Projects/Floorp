@@ -260,7 +260,7 @@ void nsCaret::SetSelection(nsISelection *aDOMSel)
 
 
 //-----------------------------------------------------------------------------
-void nsCaret::SetCaretVisible(bool inMakeVisible)
+void nsCaret::SetVisible(bool inMakeVisible)
 {
   mVisible = inMakeVisible;
   if (mVisible) {
@@ -274,11 +274,9 @@ void nsCaret::SetCaretVisible(bool inMakeVisible)
 
 
 //-----------------------------------------------------------------------------
-nsresult nsCaret::GetCaretVisible(bool *outMakeVisible)
+bool nsCaret::IsVisible()
 {
-  NS_ENSURE_ARG_POINTER(outMakeVisible);
-  *outMakeVisible = (mVisible && MustDrawCaret());
-  return NS_OK;
+  return mVisible && MustDrawCaret();
 }
 
 
