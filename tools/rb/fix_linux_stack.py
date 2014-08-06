@@ -212,14 +212,20 @@ addr2lines = {}
 def addressToSymbol(file, address):
     converter = None
     address_adjustment = None
+    cache = None
     if not file in addr2lines:
         debug_file = separate_debug_file_for(file) or file
         converter = unbufferedLineConverter('/usr/bin/addr2line', ['-C', '-f', '-e', debug_file])
         address_adjustment = address_adjustment_for(file)
-        addr2lines[file] = (converter, address_adjustment)
+        cache = {}
+        addr2lines[file] = (converter, address_adjustment, cache)
     else:
-        (converter, address_adjustment) = addr2lines[file]
-    return converter.convert(hex(int(address, 16) + address_adjustment))
+        (converter, address_adjustment, cache) = addr2lines[file]
+    if address in cache:
+        return cache[address]
+    result = converter.convert(hex(int(address, 16) + address_adjustment))
+    cache[address] = result
+    return result
 
 line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9a-f]{1,8})\](.*)$")
 balance_tree_re = re.compile("^([ \|0-9-]*)")
