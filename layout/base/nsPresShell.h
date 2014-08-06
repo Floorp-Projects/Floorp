@@ -30,7 +30,6 @@
 #include "nsAutoPtr.h"
 #include "nsIWidget.h"
 #include "nsStyleSet.h"
-#include "nsFrameSelection.h"
 #include "nsContentUtils.h" // For AddScriptBlocker().
 #include "nsRefreshDriver.h"
 #include "mozilla/Attributes.h"
@@ -546,17 +545,7 @@ protected:
   // Utility method to restore the root scrollframe state
   void RestoreRootScrollPosition();
 
-  void MaybeReleaseCapturingContent()
-  {
-    nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
-    if (frameSelection) {
-      frameSelection->SetDragState(false);
-    }
-    if (gCaptureInfo.mContent &&
-        gCaptureInfo.mContent->OwnerDoc() == mDocument) {
-      SetCapturingContent(nullptr, 0);
-    }
-  }
+  void MaybeReleaseCapturingContent();
 
   nsresult HandleRetargetedEvent(mozilla::WidgetEvent* aEvent,
                                  nsEventStatus* aStatus,

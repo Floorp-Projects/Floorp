@@ -1269,7 +1269,7 @@ HyperTextAccessible::CaretLineNumber()
 
   int32_t returnOffsetUnused;
   uint32_t caretOffset = domSel->FocusOffset();
-  nsFrameSelection::HINT hint = frameSelection->GetHint();
+  CaretAssociationHint hint = frameSelection->GetHint();
   nsIFrame *caretFrame = frameSelection->GetFrameForNodeOffset(caretContent, caretOffset,
                                                                hint, &returnOffsetUnused);
   NS_ENSURE_TRUE(caretFrame, -1);

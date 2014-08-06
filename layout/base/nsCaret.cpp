@@ -121,7 +121,7 @@ nsCaret::nsCaret()
 , mKeyboardRTL(false)
 , mLastBidiLevel(0)
 , mLastContentOffset(0)
-, mLastHint(nsFrameSelection::HINTLEFT)
+, mLastHint(CARET_ASSOCIATE_BEFORE)
 {
 }
 
@@ -597,11 +597,11 @@ void nsCaret::StopBlinking()
 }
 
 bool
-nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
-                                int32_t                 aOffset,
-                                nsFrameSelection::HINT  aFrameHint,
-                                uint8_t                 aBidiLevel,
-                                bool                    aInvalidate)
+nsCaret::DrawAtPositionWithHint(nsIDOMNode*          aNode,
+                                int32_t              aOffset,
+                                CaretAssociationHint aFrameHint,
+                                uint8_t              aBidiLevel,
+                                bool                 aInvalidate)
 {
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aNode);
   if (!contentNode)
@@ -664,13 +664,13 @@ IsBidiUI()
 }
 
 nsresult 
-nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*      aFrameSelection,
-                                    nsIContent*            aContentNode,
-                                    int32_t                aOffset,
-                                    nsFrameSelection::HINT aFrameHint,
-                                    uint8_t                aBidiLevel,
-                                    nsIFrame**             aReturnFrame,
-                                    int32_t*               aReturnOffset)
+nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
+                                    nsIContent*          aContentNode,
+                                    int32_t              aOffset,
+                                    CaretAssociationHint aFrameHint,
+                                    uint8_t              aBidiLevel,
+                                    nsIFrame**           aReturnFrame,
+                                    int32_t*             aReturnOffset)
 {
   if (!aFrameSelection)
     return NS_ERROR_FAILURE;
@@ -974,7 +974,7 @@ void nsCaret::DrawCaret(bool aInvalidate)
 
   nsCOMPtr<nsIDOMNode> node;
   int32_t offset;
-  nsFrameSelection::HINT hint;
+  CaretAssociationHint hint;
   uint8_t bidiLevel;
 
   if (!mDrawn)
@@ -990,7 +990,7 @@ void nsCaret::DrawCaret(bool aInvalidate)
 
     bool hintRight;
     privateSelection->GetInterlinePosition(&hintRight);//translate hint.
-    hint = hintRight ? nsFrameSelection::HINTRIGHT : nsFrameSelection::HINTLEFT;
+    hint = hintRight ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE;
 
     // get the node and offset, which is where we want the caret to draw
     domSelection->GetFocusNode(getter_AddRefs(node));

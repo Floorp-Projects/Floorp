@@ -44,6 +44,7 @@
 #include "nsDisplayList.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
+#include "nsIContent.h"
 
 #include "nsContentUtils.h"
 
