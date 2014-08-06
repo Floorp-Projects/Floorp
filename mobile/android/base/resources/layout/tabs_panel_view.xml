@@ -3,8 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.tabspanel.TabsPanel xmlns:android="http://schemas.android.com/apk/res/android"
-                                       android:id="@+id/tabs_panel"
-                                       android:layout_width="match_parent"
-                                       android:layout_height="match_parent"
-                                       android:background="@color/background_tabs"/>
+<org.mozilla.gecko.tabs.TabsPanel xmlns:android="http://schemas.android.com/apk/res/android"
+                                  android:id="@+id/tabs_panel"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="match_parent"
+                                  android:background="@color/background_tabs"/>
