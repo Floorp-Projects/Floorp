@@ -565,6 +565,10 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
         if (mProxyConfig == PROXYCONFIG_PAC) {
             prefBranch->GetCharPref(PROXY_PREF("autoconfig_url"),
                                     getter_Copies(tempString));
+            if (mPACMan && !mPACMan->IsPACURI(tempString)) {
+                LOG(("PAC Thread URI Changed - Reset Pac Thread"));
+                ResetPACThread();
+            }
         } else if (mProxyConfig == PROXYCONFIG_WPAD) {
             // We diverge from the WPAD spec here in that we don't walk the
             // hosts's FQDN, stripping components until we hit a TLD.  Doing so
