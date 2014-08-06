@@ -283,7 +283,7 @@ void nsCaret::SetCaretReadOnly(bool inMakeReadonly)
   mReadOnly = inMakeReadonly;
 }
 
-nsresult
+/* static */ nsresult
 nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
                              int32_t   aFrameOffset,
                              nsRect*   aRect,
@@ -339,7 +339,8 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
   return NS_OK;
 }
 
-nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
+/* static */ nsIFrame*
+nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
 {
   nsCOMPtr<nsIDOMNode> focusNode;
   nsresult rv = aSelection->GetFocusNode(getter_AddRefs(focusNode));
@@ -355,9 +356,8 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
   if (!contentNode)
     return nullptr;
 
-  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
-  if (!frameSelection)
-    return nullptr;
+  nsFrameSelection* frameSelection =
+      static_cast<Selection*>(aSelection)->GetFrameSelection();
   uint8_t bidiLevel = frameSelection->GetCaretBidiLevel();
   nsIFrame* frame;
   int32_t frameOffset;
