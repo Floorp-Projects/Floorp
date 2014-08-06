@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
-
-
 EXPORTS += [
     'nsSVGClass.h',
     'nsSVGElement.h',
@@ -39,7 +36,6 @@ EXPORTS.mozilla.dom += [
     'SVGComponentTransferFunctionElement.h',
     'SVGDefsElement.h',
     'SVGDescElement.h',
-    'SVGDocument.h',
     'SVGEllipseElement.h',
     'SVGFEBlendElement.h',
     'SVGFEColorMatrixElement.h',
@@ -164,7 +160,6 @@ UNIFIED_SOURCES += [
     'SVGContentUtils.cpp',
     'SVGDefsElement.cpp',
     'SVGDescElement.cpp',
-    'SVGDocument.cpp',
     'SVGElementFactory.cpp',
     'SVGEllipseElement.cpp',
     'SVGFEBlendElement.cpp',
@@ -256,10 +251,10 @@ FAIL_ON_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/content/src',
-    '/content/html/document/src',
     '/dom',
     '/dom/smil',
     '/dom/xbl',
@@ -270,4 +265,3 @@ LOCAL_INCLUDES += [
     '/layout/xul',
 ]
 
-FINAL_LIBRARY = 'xul'
