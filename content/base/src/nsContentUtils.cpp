@@ -3961,6 +3961,7 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
   // than fire DOMNodeRemoved in all corner cases. We also rely on it for
   // nsAutoScriptBlockerSuppressNodeRemoved.
   if (!IsSafeToRunScript()) {
+    WarnScriptWasIgnored(aOwnerDoc);
     return;
   }
 
@@ -5089,6 +5090,25 @@ nsContentUtils::RemoveScriptBlocker()
   sRemovingScriptBlockers = true;
 #endif
   sBlockedScriptRunners->RemoveElementsAt(originalFirstBlocker, blockersCount);
+}
+
+/* static */
+void
+nsContentUtils::WarnScriptWasIgnored(nsIDocument* aDocument)
+{
+  nsAutoString msg;
+  if (aDocument) {
+    nsCOMPtr<nsIURI> uri = aDocument->GetDocumentURI();
+    if (uri) {
+      nsCString spec;
+      uri->GetSpec(spec);
+      msg.Append(NS_ConvertUTF8toUTF16(spec));
+      msg.AppendLiteral(" : ");
+    }
+  }
+  msg.AppendLiteral("Unable to run script because scripts are blocked internally.");
+
+  LogSimpleConsoleError(msg, "DOM");
 }
 
 /* static */
