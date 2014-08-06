@@ -97,7 +97,7 @@ nsResURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 //----------------------------------------------------------------------------
 
 nsResProtocolHandler::nsResProtocolHandler()
-    : mSubstitutions(32)
+    : mSubstitutions(16)
 {
 #if defined(PR_LOGGING)
     gResLog = PR_NewLogModule("nsResProtocol");

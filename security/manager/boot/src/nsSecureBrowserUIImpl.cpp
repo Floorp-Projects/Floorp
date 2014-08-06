@@ -457,7 +457,7 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
     mTransferringRequests.ops = nullptr;
   }
   PL_DHashTableInit(&mTransferringRequests, &gMapOps, nullptr,
-                    sizeof(RequestHashEntry), 16);
+                    sizeof(RequestHashEntry));
 }
 
 nsresult

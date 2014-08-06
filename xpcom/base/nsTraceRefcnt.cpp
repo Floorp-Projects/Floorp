@@ -214,10 +214,7 @@ static const PLHashAllocOps typesToLogHashAllocOps = {
 class CodeAddressServiceStringTable MOZ_FINAL
 {
 public:
-  CodeAddressServiceStringTable()
-    : mSet(64)
-  {
-  }
+  CodeAddressServiceStringTable() : mSet(32) {}
 
   const char* Intern(const char* aString)
   {

@@ -13,12 +13,12 @@
 using namespace mozilla;
 
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 16)
-#define XPTI_HASHTABLE_SIZE             2048
+#define XPTI_HASHTABLE_LENGTH           1024
 
 XPTInterfaceInfoManager::xptiWorkingSet::xptiWorkingSet()
     : mTableReentrantMonitor("xptiWorkingSet::mTableReentrantMonitor")
-    , mIIDTable(XPTI_HASHTABLE_SIZE)
-    , mNameTable(XPTI_HASHTABLE_SIZE)
+    , mIIDTable(XPTI_HASHTABLE_LENGTH)
+    , mNameTable(XPTI_HASHTABLE_LENGTH)
 {
     MOZ_COUNT_CTOR(xptiWorkingSet);
 

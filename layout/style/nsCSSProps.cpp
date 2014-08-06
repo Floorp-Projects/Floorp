@@ -115,13 +115,13 @@ static nsCSSProperty gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 };
 
 nsStaticCaseInsensitiveNameTable*
-CreateStaticTable(const char* const aRawTable[], int32_t aSize)
+CreateStaticTable(const char* const aRawTable[], int32_t aLength)
 {
   auto table = new nsStaticCaseInsensitiveNameTable();
   if (table) {
 #ifdef DEBUG
     // let's verify the table...
-    for (int32_t index = 0; index < aSize; ++index) {
+    for (int32_t index = 0; index < aLength; ++index) {
       nsAutoCString temp1(aRawTable[index]);
       nsAutoCString temp2(aRawTable[index]);
       ToLowerCase(temp1);
@@ -131,7 +131,7 @@ CreateStaticTable(const char* const aRawTable[], int32_t aSize)
                         "underscore char in case insensitive name table");
     }
 #endif
-    table->Init(aRawTable, aSize);
+    table->Init(aRawTable, aLength);
   }
   return table;
 }

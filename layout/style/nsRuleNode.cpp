@@ -1511,7 +1511,7 @@ nsRuleNode::Transition(nsIStyleRule* aRule, uint8_t aLevel,
     if (curr)
       next = curr;
     else if (numKids >= kMaxChildrenInList)
-      ConvertChildrenToHash();
+      ConvertChildrenToHash(numKids);
   }
 
   if (ChildrenAreHashed()) {
@@ -1572,13 +1572,13 @@ void nsRuleNode::SetUsedDirectly()
 }
 
 void
-nsRuleNode::ConvertChildrenToHash()
+nsRuleNode::ConvertChildrenToHash(int32_t aNumKids)
 {
   NS_ASSERTION(!ChildrenAreHashed() && HaveChildren(),
                "must have a non-empty list of children");
   PLDHashTable *hash = PL_NewDHashTable(&ChildrenHashOps, nullptr,
                                         sizeof(ChildrenHashEntry),
-                                        kMaxChildrenInList * 4);
+                                        aNumKids);
   if (!hash)
     return;
   for (nsRuleNode* curr = ChildrenList(); curr; curr = curr->mNextSibling) {
