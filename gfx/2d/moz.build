@@ -10,7 +10,6 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.gfx += [
     '2D.h',
-    'BaseCoord.h',
     'BaseMargin.h',
     'BasePoint.h',
     'BasePoint3D.h',
@@ -19,7 +18,6 @@ EXPORTS.mozilla.gfx += [
     'BaseSize.h',
     'Blur.h',
     'BorrowedContext.h',
-    'Coord.h',
     'DataSurfaceHelpers.h',
     'Filters.h',
     'Helpers.h',
