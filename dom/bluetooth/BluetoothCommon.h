@@ -214,6 +214,49 @@ enum ControlPlayStatus {
   PLAYSTATUS_ERROR    = 0xFF,
 };
 
+enum BluetoothAvrcpPlayerAttribute {
+  AVRCP_PLAYER_ATTRIBUTE_EQUALIZER,
+  AVRCP_PLAYER_ATTRIBUTE_REPEAT,
+  AVRCP_PLAYER_ATTRIBUTE_SHUFFLE,
+  AVRCP_PLAYER_ATTRIBUTE_SCAN
+};
+
+enum BluetoothAvrcpStatus {
+  AVRCP_STATUS_BAD_COMMAND,
+  AVRCP_STATUS_BAD_PARAMETER,
+  AVRCP_STATUS_NOT_FOUND,
+  AVRCP_STATUS_INTERNAL_ERROR,
+  AVRCP_STATUS_SUCCESS
+};
+
+enum BluetoothAvrcpEvent {
+  AVRCP_EVENT_PLAY_STATUS_CHANGED,
+  AVRCP_EVENT_TRACK_CHANGE,
+  AVRCP_EVENT_TRACK_REACHED_END,
+  AVRCP_EVENT_TRACK_REACHED_START,
+  AVRCP_EVENT_PLAY_POS_CHANGED,
+  AVRCP_EVENT_APP_SETTINGS_CHANGED
+};
+
+enum BluetoothAvrcpNotification {
+  AVRCP_NTF_INTERIM,
+  AVRCP_NTF_CHANGED
+};
+
+struct BluetoothAvrcpElementAttribute {
+  uint32_t mId;
+  nsString mValue;
+};
+
+struct BluetoothAvrcpNotificationParam {
+  ControlPlayStatus mPlayStatus;
+  uint8_t mTrack[8];
+  uint32_t mSongPos;
+  uint8_t mNumAttr;
+  uint8_t mIds[256];
+  uint8_t mValues[256];
+};
+
 END_BLUETOOTH_NAMESPACE
 
 #endif // mozilla_dom_bluetooth_bluetoothcommon_h__
