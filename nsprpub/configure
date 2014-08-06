@@ -7269,6 +7269,9 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
 	else
 	    $as_echo "#define _X86_ 1" >>confdefs.h
 
+            if test -z "$GNU_CC" -a "$MSC_VER" -ge "1700"; then
+                                                CFLAGS="$CFLAGS -arch:IA32"
+            fi
 	fi
         ;;
     x86_64)
