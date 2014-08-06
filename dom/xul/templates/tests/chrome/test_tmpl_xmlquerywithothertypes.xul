@@ -17,13 +17,13 @@
   <data id="output">
     <groupbox anyid="true" container="true" empty="false">
       <caption label="Reptiles false"/>
-      <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" value="Chameleon"/>
+      <label id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" value="Chameleon"/>
     </groupbox>
     <groupbox anyid="true" container="true" empty="false">
       <caption label="Birds true"/>
-      <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" value="Emu"/>
-      <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Tyto-alba" value="Barn Owl"/>
-      <label id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Corvus-corax" value="Raven"/>
+      <label id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" value="Emu"/>
+      <label id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Tyto-alba" value="Barn Owl"/>
+      <label id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Corvus-corax" value="Raven"/>
     </groupbox>
   </data>
 
