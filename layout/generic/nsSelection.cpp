@@ -457,9 +457,7 @@ nsFrameSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested b
     return NS_ERROR_NULL_POINTER;
 
   int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-  nsresult result = caret->SetCaretDOMSelection(mDomSelections[index]);
-  if (NS_FAILED(result))
-    return result;
+  caret->SetSelection(mDomSelections[index]);
 
   nsRect coord;
   nsIFrame* caretFrame = caret->GetGeometry(&coord);

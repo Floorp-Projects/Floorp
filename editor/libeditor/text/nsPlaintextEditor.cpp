@@ -872,7 +872,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
     rv = InsertText(widgetTextEvent->theText);
 
     if (caretP) {
-      caretP->SetCaretDOMSelection(selection);
+      caretP->SetSelection(selection);
     }
   }
 

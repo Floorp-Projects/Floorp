@@ -3528,7 +3528,7 @@ SVGTextFrame::NotifySVGChanged(uint32_t aFlags)
 static int32_t
 GetCaretOffset(nsCaret* aCaret)
 {
-  nsCOMPtr<nsISelection> selection = aCaret->GetCaretDOMSelection();
+  nsCOMPtr<nsISelection> selection = aCaret->GetSelection();
   if (!selection) {
     return -1;
   }

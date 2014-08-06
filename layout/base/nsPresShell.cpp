@@ -8083,7 +8083,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
 
   // caret selection, this is a temporary weak reference, so no refcounting is
   // needed
-  nsISelection* domSelection = caret->GetCaretDOMSelection();
+  nsISelection* domSelection = caret->GetSelection();
   NS_ENSURE_TRUE(domSelection, false);
 
   // since the match could be an anonymous textnode inside a
