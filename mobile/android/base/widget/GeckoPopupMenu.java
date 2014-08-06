@@ -113,6 +113,12 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
      */
     public void setAnchor(View anchor) {
         mAnchor = anchor;
+
+        // Reposition the popup if the anchor changes while it's showing.
+        if (mMenuPopup.isShowing()) {
+            mMenuPopup.dismiss();
+            mMenuPopup.showAsDropDown(mAnchor);
+        }
     }
 
     public void setOnDismissListener(OnDismissListener listener) {
