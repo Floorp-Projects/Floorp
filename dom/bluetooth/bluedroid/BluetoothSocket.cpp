@@ -650,7 +650,7 @@ public:
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new AcceptTask(mImpl, aFd));
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     BT_LOGR("BluetoothSocketInterface::Accept failed: %d", (int)aStatus);
@@ -832,7 +832,7 @@ public:
                                      new SocketConnectTask(mImpl, aFd));
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     BT_WARNING("Connect failed: %d", (int)aStatus);
@@ -851,17 +851,14 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aDeviceAddress,
                               aChannel, mAuth, mEncrypt);
 
-  bt_bdaddr_t remoteBdAddress;
-  StringToBdAddressType(aDeviceAddress, &remoteBdAddress);
-
   // TODO: uuid as argument
-  sBluetoothSocketInterface->Connect(&remoteBdAddress,
-                                     BTSOCK_RFCOMM,
-                                     UUID_OBEX_OBJECT_PUSH,
-                                     aChannel,
-                                     (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
-                                     (BTSOCK_FLAG_AUTH * mAuth),
-                                     new ConnectSocketResultHandler(mImpl));
+  sBluetoothSocketInterface->Connect(
+    aDeviceAddress,
+    BluetoothSocketType::RFCOMM,
+    UUID_OBEX_OBJECT_PUSH,
+    aChannel, mEncrypt, mAuth,
+    new ConnectSocketResultHandler(mImpl));
+
   return true;
 }
 
@@ -882,7 +879,7 @@ public:
                                      new SocketListenTask(mImpl, aFd));
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -902,13 +899,13 @@ BluetoothSocket::Listen(int aChannel)
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aChannel, mAuth,
                               mEncrypt);
 
-  sBluetoothSocketInterface->Listen(BTSOCK_RFCOMM,
-                                    "OBEX Object Push",
-                                    UUID_OBEX_OBJECT_PUSH,
-                                    aChannel,
-                                    (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
-                                    (BTSOCK_FLAG_AUTH * mAuth),
-                                    new ListenResultHandler(mImpl));
+  sBluetoothSocketInterface->Listen(
+    BluetoothSocketType::RFCOMM,
+    NS_LITERAL_STRING("OBEX Object Push"),
+    UUID_OBEX_OBJECT_PUSH,
+    aChannel, mEncrypt, mAuth,
+    new ListenResultHandler(mImpl));
+
   return true;
 }
 
