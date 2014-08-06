@@ -851,17 +851,14 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aDeviceAddress,
                               aChannel, mAuth, mEncrypt);
 
-  bt_bdaddr_t remoteBdAddress;
-  StringToBdAddressType(aDeviceAddress, &remoteBdAddress);
-
   // TODO: uuid as argument
-  sBluetoothSocketInterface->Connect(&remoteBdAddress,
-                                     BTSOCK_RFCOMM,
-                                     UUID_OBEX_OBJECT_PUSH,
-                                     aChannel,
-                                     (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
-                                     (BTSOCK_FLAG_AUTH * mAuth),
-                                     new ConnectSocketResultHandler(mImpl));
+  sBluetoothSocketInterface->Connect(
+    aDeviceAddress,
+    BluetoothSocketType::RFCOMM,
+    UUID_OBEX_OBJECT_PUSH,
+    aChannel, mEncrypt, mAuth,
+    new ConnectSocketResultHandler(mImpl));
+
   return true;
 }
 
@@ -902,13 +899,13 @@ BluetoothSocket::Listen(int aChannel)
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aChannel, mAuth,
                               mEncrypt);
 
-  sBluetoothSocketInterface->Listen(BTSOCK_RFCOMM,
-                                    "OBEX Object Push",
-                                    UUID_OBEX_OBJECT_PUSH,
-                                    aChannel,
-                                    (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
-                                    (BTSOCK_FLAG_AUTH * mAuth),
-                                    new ListenResultHandler(mImpl));
+  sBluetoothSocketInterface->Listen(
+    BluetoothSocketType::RFCOMM,
+    NS_LITERAL_STRING("OBEX Object Push"),
+    UUID_OBEX_OBJECT_PUSH,
+    aChannel, mEncrypt, mAuth,
+    new ListenResultHandler(mImpl));
+
   return true;
 }
 

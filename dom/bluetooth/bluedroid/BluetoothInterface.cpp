@@ -179,6 +179,50 @@ Convert(const nsAString& aIn, bt_pin_code_t& aOut)
   return NS_OK;
 }
 
+static nsresult
+Convert(const bt_bdaddr_t& aIn, nsAString& aOut)
+{
+  char str[BLUETOOTH_ADDRESS_LENGTH + 1];
+
+  int res = snprintf(str, sizeof(str), "%02x:%02x:%02x:%02x:%02x:%02x",
+                     static_cast<int>(aIn.address[0]),
+                     static_cast<int>(aIn.address[1]),
+                     static_cast<int>(aIn.address[2]),
+                     static_cast<int>(aIn.address[3]),
+                     static_cast<int>(aIn.address[4]),
+                     static_cast<int>(aIn.address[5]));
+  if (res < 0) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  } else if ((size_t)res >= sizeof(str)) {
+    return NS_ERROR_OUT_OF_MEMORY; /* string buffer too small */
+  }
+
+  aOut = NS_ConvertUTF8toUTF16(str);
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(BluetoothSocketType aIn, btsock_type_t& aOut)
+{
+  // FIXME: Array member [0] is currently invalid, but required
+  //        by gcc. Start values in |BluetoothSocketType| at index
+  //        0 to fix this problem.
+  static const btsock_type_t sSocketType[] = {
+    [0] = static_cast<btsock_type_t>(0), // invalid, [0] required by gcc
+    [BluetoothSocketType::RFCOMM] = BTSOCK_RFCOMM,
+    [BluetoothSocketType::SCO] = BTSOCK_SCO,
+    [BluetoothSocketType::L2CAP] = BTSOCK_L2CAP,
+    // EL2CAP is not supported by Bluedroid
+  };
+  if (aIn == BluetoothSocketType::EL2CAP ||
+      aIn >= MOZ_ARRAY_LENGTH(sSocketType) || !sSocketType[aIn]) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sSocketType[aIn];
+  return NS_OK;
+}
+
 //
 // Result handling
 //
@@ -347,16 +391,26 @@ DispatchBluetoothSocketResult(
 }
 
 void
-BluetoothSocketInterface::Listen(btsock_type_t aType,
-                                 const char* aServiceName,
-                                 const uint8_t* aServiceUuid,
-                                 int aChannel, int aFlags,
+BluetoothSocketInterface::Listen(BluetoothSocketType aType,
+                                 const nsAString& aServiceName,
+                                 const uint8_t aServiceUuid[16],
+                                 int aChannel, bool aEncrypt, bool aAuth,
                                  BluetoothSocketResultHandler* aRes)
 {
   int fd;
+  bt_status_t status;
+  btsock_type_t type = BTSOCK_RFCOMM; // silences compiler warning
 
-  bt_status_t status = mInterface->listen(aType, aServiceName, aServiceUuid,
-                                          aChannel, &fd, aFlags);
+  if (NS_SUCCEEDED(Convert(aType, type))) {
+    status = mInterface->listen(type,
+                                NS_ConvertUTF16toUTF8(aServiceName).get(),
+                                aServiceUuid, aChannel, &fd,
+                                (BTSOCK_FLAG_ENCRYPT * aEncrypt) |
+                                (BTSOCK_FLAG_AUTH * aAuth));
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+
   if (aRes) {
     DispatchBluetoothSocketResult(aRes, &BluetoothSocketResultHandler::Listen,
                                   fd, status);
@@ -567,11 +621,12 @@ private:
 
   void ReadBdAddress(unsigned long aOffset, nsAString& aBdAddress) const
   {
-    char str[18];
-    sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
-            mBuf[aOffset + 0], mBuf[aOffset + 1], mBuf[aOffset + 2],
-            mBuf[aOffset + 3], mBuf[aOffset + 4], mBuf[aOffset + 5]);
-    aBdAddress.AssignLiteral(str);
+    const bt_bdaddr_t* bdAddress =
+      reinterpret_cast<const bt_bdaddr_t*>(mBuf+aOffset);
+
+    if (NS_FAILED(Convert(*bdAddress, aBdAddress))) {
+      aBdAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
+    }
   }
 
   MessageLoopForIO::FileDescriptorWatcher mWatcher;
@@ -651,23 +706,34 @@ private:
 };
 
 void
-BluetoothSocketInterface::Connect(const bt_bdaddr_t* aBdAddr,
-                                  btsock_type_t aType, const uint8_t* aUuid,
-                                  int aChannel, int aFlags,
+BluetoothSocketInterface::Connect(const nsAString& aBdAddr,
+                                  BluetoothSocketType aType,
+                                  const uint8_t aUuid[16],
+                                  int aChannel, bool aEncrypt, bool aAuth,
                                   BluetoothSocketResultHandler* aRes)
 {
   int fd;
+  bt_status_t status;
+  bt_bdaddr_t bdAddr;
+  btsock_type_t type = BTSOCK_RFCOMM; // silences compiler warning
 
-  bt_status_t status = mInterface->connect(aBdAddr, aType, aUuid, aChannel,
-                                           &fd, aFlags);
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr)) &&
+      NS_SUCCEEDED(Convert(aType, type))) {
+    status = mInterface->connect(&bdAddr, type, aUuid, aChannel, &fd,
+                                 (BTSOCK_FLAG_ENCRYPT * aEncrypt) |
+                                 (BTSOCK_FLAG_AUTH * aAuth));
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+
   if (status == BT_STATUS_SUCCESS) {
     /* receive Bluedroid's socket-setup messages */
     Task* t = new SocketMessageWatcherTask(new ConnectWatcher(fd, aRes));
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE, t);
   } else if (aRes) {
-      DispatchBluetoothSocketResult(aRes,
-                                    &BluetoothSocketResultHandler::Connect,
-                                    -1, EmptyString(), 0, status);
+    DispatchBluetoothSocketResult(aRes,
+                                  &BluetoothSocketResultHandler::Connect,
+                                  -1, EmptyString(), 0, status);
   }
 }
 
