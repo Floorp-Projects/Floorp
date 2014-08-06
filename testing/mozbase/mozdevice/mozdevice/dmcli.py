@@ -222,7 +222,7 @@ class DMCli(object):
             self.parser.error("Unknown device manager type: %s" % type)
 
     def deviceroot(self, args):
-        return self.dm.deviceRoot
+        print self.dm.deviceRoot
 
     def push(self, args):
         (src, dest) = (args.local_file, args.remote_file)
