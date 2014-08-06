@@ -141,12 +141,13 @@ class nsCaret : public nsISelectionListener
 
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 
-    nsresult      GetCaretFrameForNodeOffset(nsIContent* aContentNode,
-                                             int32_t aOffset,
-                                             nsFrameSelection::HINT aFrameHint,
-                                             uint8_t aBidiLevel,
-                                             nsIFrame** aReturnFrame,
-                                             int32_t* aReturnOffset);
+    static nsresult GetCaretFrameForNodeOffset(nsFrameSelection* aFrameSelection,
+                                               nsIContent* aContentNode,
+                                               int32_t aOffset,
+                                               nsFrameSelection::HINT aFrameHint,
+                                               uint8_t aBidiLevel,
+                                               nsIFrame** aReturnFrame,
+                                               int32_t* aReturnOffset);
 
     void CheckCaretDrawingState();
 
@@ -228,7 +229,6 @@ protected:
     bool                  mIgnoreUserModify;
 
     bool                  mKeyboardRTL;       // is the keyboard language right-to-left
-    bool                  mBidiUI;            // is bidi UI turned on
     nsRect                mHookRect;          // directional hook on the caret
     uint8_t               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
     nsRect                mCaretRect;         // the last caret rect, in the coodinates of the last frame.
