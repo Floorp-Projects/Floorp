@@ -208,10 +208,8 @@ let UI = {
   setupBusyTimeout: function() {
     this.cancelBusyTimeout();
     this._busyTimeout = setTimeout(() => {
-      let busyPromise = this._busyPromise;
       this.unbusy();
       UI.reportError("error_operationTimeout", this._busyOperationDescription);
-      busyPromise.reject("promise timeout: " + this._busyOperationDescription);
     }, 30000);
   },
 
