@@ -139,11 +139,6 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   mPresShell = do_GetWeakReference(inPresShell);    // the presshell owns us, so no addref
   NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
-  // XXX we should just do this LookAndFeel consultation every time
-  // we need these values.
-  mCaretAspectRatio =
-    LookAndFeel::GetFloat(LookAndFeel::eFloatID_CaretAspectRatio, 0.0f);
-
   mBlinkRate = static_cast<uint32_t>(
     LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, mBlinkRate));
   mShowDuringSelection =
@@ -195,7 +190,8 @@ DrawCJKCaret(nsIFrame* aFrame, int32_t aOffset)
 nsCaret::Metrics nsCaret::ComputeMetrics(nsIFrame* aFrame, int32_t aOffset, nscoord aCaretHeight)
 {
   // Compute nominal sizes in appunits
-  nscoord caretWidth = (aCaretHeight * mCaretAspectRatio) +
+  nscoord caretWidth =
+    (aCaretHeight * LookAndFeel::GetFloat(LookAndFeel::eFloatID_CaretAspectRatio, 0.0f)) +
     nsPresContext::CSSPixelsToAppUnits(
         LookAndFeel::GetInt(LookAndFeel::eIntID_CaretWidth, 1));
 
