@@ -434,7 +434,7 @@ nsFrameSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested b
     return result;
 
   nsRect coord;
-  nsIFrame* caretFrame = caret->GetGeometry(mDomSelections[index], &coord);
+  nsIFrame* caretFrame = caret->GetGeometry(&coord);
   if (!caretFrame)
     return NS_ERROR_FAILURE;
   nsPoint viewOffset(0, 0);
@@ -1869,10 +1869,8 @@ nsFrameSelection::CommonPageMove(bool aForward,
   if (!domSel) 
     return;
 
-  nsRefPtr<nsCaret> caret = mShell->GetCaret();
-
   nsRect caretPos;
-  nsIFrame* caretFrame = caret->GetGeometry(domSel, &caretPos);
+  nsIFrame* caretFrame = nsCaret::GetGeometry(domSel, &caretPos);
   if (!caretFrame) 
     return;
   

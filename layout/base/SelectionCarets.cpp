@@ -794,9 +794,8 @@ SelectionCarets::GetCaretFocusFrame()
   nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
   NS_ENSURE_TRUE(caret, nullptr);
 
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  return caret->GetGeometry(caretSelection, &focusRect);
+  return caret->GetGeometry(&focusRect);
 }
 
 bool

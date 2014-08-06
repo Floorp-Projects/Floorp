@@ -1322,16 +1322,13 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
   nsRefPtr<nsCaret> caret = mDoc->PresShell()->GetCaret();
   NS_ENSURE_TRUE(caret, nsIntRect());
 
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
-  NS_ENSURE_TRUE(caretSelection, nsIntRect());
-
   bool isVisible = false;
   caret->GetCaretVisible(&isVisible);
   if (!isVisible)
     return nsIntRect();
 
   nsRect rect;
-  nsIFrame* frame = caret->GetGeometry(caretSelection, &rect);
+  nsIFrame* frame = caret->GetGeometry(&rect);
   if (!frame || rect.IsEmpty())
     return nsIntRect();
 
