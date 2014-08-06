@@ -3640,7 +3640,8 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
   gfxMatrix currentMatrix = gfx->CurrentMatrix();
 
   nsRefPtr<nsCaret> caret = presContext->PresShell()->GetCaret();
-  nsIFrame* caretFrame = caret->GetCaretFrame();
+  nsRect caretRect;
+  nsIFrame* caretFrame = caret->GetPaintGeometry(&caretRect);
 
   TextRenderedRunIterator it(this, TextRenderedRunIterator::eVisibleFrames);
   TextRenderedRun run = it.Current();
