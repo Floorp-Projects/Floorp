@@ -10,11 +10,13 @@
  * used during painting and hit testing
  */
 
-#include "mozilla/dom/TabChild.h"
-#include "mozilla/layers/PLayerTransaction.h"
-
 #include "nsDisplayList.h"
 
+#include <stdint.h>
+#include <algorithm>
+
+#include "mozilla/dom/TabChild.h"
+#include "mozilla/layers/PLayerTransaction.h"
 #include "nsCSSRendering.h"
 #include "nsRenderingContext.h"
 #include "nsISelectionController.h"
@@ -56,9 +58,8 @@
 #include "UnitTransforms.h"
 #include "LayersLogging.h"
 #include "FrameLayerBuilder.h"
-
-#include <stdint.h>
-#include <algorithm>
+#include "nsCaret.h"
+#include "nsISelection.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
