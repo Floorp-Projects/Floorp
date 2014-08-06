@@ -1433,9 +1433,9 @@ endif
 # file would be $(DIST)/include/bar/baz/qux.h instead of $(DIST)/include/qux.h
 
 # If we're using binary nsinstall and it's not built yet, fallback to python nsinstall.
-ifneq (,$(filter $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX),$(install_cmd)))
-ifeq (,$(wildcard $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX)))
-nsinstall_is_usable = $(if $(wildcard $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX)),yes)
+ifneq (,$(filter $(DEPTH)/config/nsinstall$(HOST_BIN_SUFFIX),$(install_cmd)))
+ifeq (,$(wildcard $(DEPTH)/config/nsinstall$(HOST_BIN_SUFFIX)))
+nsinstall_is_usable = $(if $(wildcard $(DEPTH)/config/nsinstall$(HOST_BIN_SUFFIX)),yes)
 
 define install_cmd_override
 $(1): install_cmd = $$(if $$(nsinstall_is_usable),$$(INSTALL),$$(NSINSTALL_PY) -t) $$(1)
