@@ -71,7 +71,7 @@ public:
 
   virtual void RenderLayer() { RenderLayer(nullptr); }
 
-  virtual void RenderLayer(ReadbackProcessor *aReadback);
+  virtual void RenderLayer(ReadbackProcessor *aReadback) MOZ_OVERRIDE;
 
   virtual void ClearCachedResources()
   {
