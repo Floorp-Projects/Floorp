@@ -66,6 +66,9 @@ int component_id, nr_ice_cand_pair **potentials,int potential_ct);
 
   /* A message was delivered to us */
   int (*msg_recvd)(void *obj, nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, int component_id, UCHAR *msg, int len);
+
+  /* ICE has started checking. */
+  int (*ice_checking)(void *obj, nr_ice_peer_ctx *pctx);
 } nr_ice_handler_vtbl;
 
 typedef struct nr_ice_handler_ {
