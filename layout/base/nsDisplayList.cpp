@@ -832,12 +832,13 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   // Also compute and set the background color on the container.
   // This is needed for APZ overscrolling support.
   if (aScrollFrame) {
-    // FindBackground() does not work for a root scroll frame, need to use the
-    // root frame instead.
-    nsIFrame* backgroundFrame = isRootScrollFrame ? presShell->GetRootFrame() : aScrollFrame;
-    nsStyleContext* backgroundStyle;
-    if (nsCSSRendering::FindBackground(backgroundFrame, &backgroundStyle)) {
-      aRoot->SetBackgroundColor(backgroundStyle->StyleBackground()->mBackgroundColor);
+    if (isRootScrollFrame) {
+      aRoot->SetBackgroundColor(presShell->GetCanvasBackground());
+    } else {
+      nsStyleContext* backgroundStyle;
+      if (nsCSSRendering::FindBackground(aScrollFrame, &backgroundStyle)) {
+        aRoot->SetBackgroundColor(backgroundStyle->StyleBackground()->mBackgroundColor);
+      }
     }
   }
 }
