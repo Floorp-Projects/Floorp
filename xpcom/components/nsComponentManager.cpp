@@ -215,7 +215,7 @@ namespace {
 class MOZ_STACK_CLASS MutexLock
 {
 public:
-  MutexLock(SafeMutex& aMutex)
+  explicit MutexLock(SafeMutex& aMutex)
     : mMutex(aMutex)
     , mLocked(false)
   {

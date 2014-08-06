@@ -209,7 +209,7 @@ protected:
         // Weak mRequest is ok; we'll be told if it decides to go away.
         nsIRequest * const mRequest;
 
-        nsStatusInfo(nsIRequest* aRequest) :
+        explicit nsStatusInfo(nsIRequest* aRequest) :
             mRequest(aRequest)
         {
             MOZ_COUNT_CTOR(nsStatusInfo);
@@ -222,7 +222,7 @@ protected:
 
     struct nsRequestInfo : public PLDHashEntryHdr
     {
-        nsRequestInfo(const void* key)
+        explicit nsRequestInfo(const void* key)
             : mKey(key), mCurrentProgress(0), mMaxProgress(0), mUploading(false)
             , mLastStatus(nullptr)
         {

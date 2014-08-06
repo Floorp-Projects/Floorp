@@ -728,7 +728,7 @@ HttpChannelChild::DoNotifyListenerCleanup()
 class DeleteSelfEvent : public ChannelEvent
 {
  public:
-  DeleteSelfEvent(HttpChannelChild* child) : mChild(child) {}
+  explicit DeleteSelfEvent(HttpChannelChild* child) : mChild(child) {}
   void Run() { mChild->DeleteSelf(); }
  private:
   HttpChannelChild* mChild;
@@ -852,7 +852,7 @@ HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
 class Redirect3Event : public ChannelEvent
 {
  public:
-  Redirect3Event(HttpChannelChild* child) : mChild(child) {}
+  explicit Redirect3Event(HttpChannelChild* child) : mChild(child) {}
   void Run() { mChild->Redirect3Complete(); }
  private:
   HttpChannelChild* mChild;
@@ -872,7 +872,7 @@ HttpChannelChild::RecvRedirect3Complete()
 class HttpFlushedForDiversionEvent : public ChannelEvent
 {
  public:
-  HttpFlushedForDiversionEvent(HttpChannelChild* aChild)
+  explicit HttpFlushedForDiversionEvent(HttpChannelChild* aChild)
   : mChild(aChild)
   {
     MOZ_RELEASE_ASSERT(aChild);

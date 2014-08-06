@@ -198,7 +198,7 @@ public:
 class EventChainPostVisitor : public mozilla::EventChainVisitor
 {
 public:
-  EventChainPostVisitor(EventChainVisitor& aOther)
+  explicit EventChainPostVisitor(EventChainVisitor& aOther)
     : EventChainVisitor(aOther.mPresContext, aOther.mEvent,
                         aOther.mDOMEvent, aOther.mEventStatus)
   {

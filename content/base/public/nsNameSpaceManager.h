@@ -20,7 +20,7 @@ public:
   typedef const nsAString* KeyType;
   typedef const nsAString* KeyTypePointer;
 
-  nsNameSpaceKey(KeyTypePointer aKey) : mKey(aKey)
+  explicit nsNameSpaceKey(KeyTypePointer aKey) : mKey(aKey)
   {
   }
   nsNameSpaceKey(const nsNameSpaceKey& toCopy) : mKey(toCopy.mKey)

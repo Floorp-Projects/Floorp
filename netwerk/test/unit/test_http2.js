@@ -25,7 +25,7 @@ var bigListenerMD5 = '8f607cfdd2c87d6a7eedb657dafbd836';
 
 function checkIsHttp2(request) {
   try {
-    if (request.getResponseHeader("X-Firefox-Spdy") == "h2-13") {
+    if (request.getResponseHeader("X-Firefox-Spdy") == "h2-14") {
       if (request.getResponseHeader("X-Connection-Http2") == "yes") {
         return true;
       }

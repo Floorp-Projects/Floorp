@@ -727,7 +727,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         canNotPlacePoolMaxInst_ = maxInst;
 #endif
 
-        canNotPlacePool_++;
+        canNotPlacePool_ = true;
     }
 
     void leaveNoPool() {
@@ -738,7 +738,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         MOZ_ASSERT(this->nextOffset().getOffset() - canNotPlacePoolStartOffset_ <= canNotPlacePoolMaxInst_ * InstSize);
     }
 
-    ptrdiff_t poolSizeBefore(ptrdiff_t offset) const {
+    size_t poolSizeBefore(size_t offset) const {
         // Linear search of the poolInfo to find the pool before the given
         // buffer offset, and then return the cumulative size of the pools
         // before this offset. This is used to convert a buffer offset to its
@@ -783,13 +783,13 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     }
 
   private:
-    void patchBranch(Inst *i, int curpool, BufferOffset branch) {
+    void patchBranch(Inst *i, unsigned curpool, BufferOffset branch) {
         const Inst *ci = i;
         ptrdiff_t offset = Asm::GetBranchOffset(ci);
         // If the offset is 0, then there is nothing to do.
         if (offset == 0)
             return;
-        int destOffset = branch.getOffset() + offset;
+        unsigned destOffset = branch.getOffset() + offset;
         if (offset > 0) {
             while (curpool < numDumps_ && poolInfo_[curpool].offset <= destOffset) {
                 offset += poolInfo_[curpool].size;
@@ -798,13 +798,8 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         } else {
             // Ignore the pool that comes next, since this is a backwards
             // branch.
-            curpool--;
-            while (curpool >= 0 && poolInfo_[curpool].offset > destOffset) {
-                offset -= poolInfo_[curpool].size;
-                curpool--;
-            }
-            // Can't assert anything here, since the first pool may be after the
-            // target.
+            for (int p = curpool - 1; p >= 0 && poolInfo_[p].offset > destOffset; p--)
+                offset -= poolInfo_[p].size;
         }
         Asm::RetargetNearBranch(i, offset, false);
     }

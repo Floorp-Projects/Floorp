@@ -710,7 +710,7 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
     // disable selection mousedown state on activation
     // XXXndeakin P3 not sure if this is necessary, but it doesn't hurt
     nsRefPtr<nsFrameSelection> frameSelection = presShell->FrameSelection();
-    frameSelection->SetMouseDownState(false);
+    frameSelection->SetDragState(false);
   }
 
   Focus(currentWindow, currentFocus, 0, true, false, true, true);

@@ -166,7 +166,7 @@ class FileOpenHelper : public CacheFileIOListener
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  FileOpenHelper(CacheIndex* aIndex)
+  explicit FileOpenHelper(CacheIndex* aIndex)
     : mIndex(aIndex)
     , mCanceled(false)
   {}
@@ -1822,7 +1822,7 @@ CacheIndex::RemoveIndexFromDisk()
 class WriteLogHelper
 {
 public:
-  WriteLogHelper(PRFileDesc *aFD)
+  explicit WriteLogHelper(PRFileDesc *aFD)
     : mStatus(NS_OK)
     , mFD(aFD)
     , mBufSize(kMaxBufSize)
