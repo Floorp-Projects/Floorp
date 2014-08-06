@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="4dp"
+                     android:topRightRadius="0dp"
+                     android:bottomLeftRadius="0dp"
+                     android:bottomRightRadius="0dp"/>
+            <solid android:color="@color/widget_button_pressed"/>
+        </shape>
+    </item>
+
+    <!-- The left button is gray in its off state -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="4dp"
+                     android:topRightRadius="0dp"
+                     android:bottomLeftRadius="0dp"
+                     android:bottomRightRadius="0dp"/>
+            <solid android:color="@color/widget_logo_highlight"/>
+        </shape>
+    </item>
+
+</selector>
