@@ -27,7 +27,6 @@
 #include "skia/SkLayerDrawLooper.h"
 #include "skia/SkDashPathEffect.h"
 #include "Logging.h"
-#include "HelpersSkia.h"
 #include "Tools.h"
 #include "DataSurfaceHelpers.h"
 #include <algorithm>
@@ -763,10 +762,9 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 
   bitmap.eraseARGB(0, 0, 0, 0);
 
-  SkAutoTUnref<SkCanvas> canvas(new SkCanvas(device.get()));
+  mCanvas.adopt(new SkCanvas(device.get()));
   mSize = aSize;
 
-  mCanvas = canvas.get();
   mFormat = aFormat;
   return true;
 }
@@ -780,7 +778,6 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
   MOZ_ASSERT(aGrContext, "null GrContext");
 
   mGrContext = aGrContext;
-
   mSize = aSize;
   mFormat = aFormat;
 
@@ -801,8 +798,7 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
   mTexture = (uint32_t)skiaTexture->getTextureHandle();
 
   SkAutoTUnref<SkBaseDevice> device(new SkGpuDevice(mGrContext.get(), skiaTexture->asRenderTarget()));
-  SkAutoTUnref<SkCanvas> canvas(new SkCanvas(device.get()));
-  mCanvas = canvas.get();
+  mCanvas.adopt(new SkCanvas(device.get()));
 
   return true;
 }
@@ -827,10 +823,9 @@ DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride
                                        alphaType);
   bitmap.setInfo(info, aStride);
   bitmap.setPixels(aData);
-  SkAutoTUnref<SkCanvas> canvas(new SkCanvas(new SkBitmapDevice(bitmap)));
+  mCanvas.adopt(new SkCanvas(new SkBitmapDevice(bitmap)));
 
   mSize = aSize;
-  mCanvas = canvas.get();
   mFormat = aFormat;
 }
 
