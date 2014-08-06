@@ -44,7 +44,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
         System.arraycopy(aCtors, 0, objs, offset, aCtors.length);
 
         // Sort the elements to ensure determinism.
-        Arrays.sort(objs, new AlphabeticAnnotatableEntityComparator());
+        Arrays.sort(objs, new AlphabeticAnnotatableEntityComparator<Member>());
         mObjects = objs;
 
         // Check for "Wrap ALL the things" flag.
