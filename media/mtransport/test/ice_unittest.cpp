@@ -226,6 +226,7 @@ class IceTestPeer : public sigslot::has_slots<> {
       gathering_complete_(false),
       ready_ct_(0),
       ice_complete_(false),
+      ice_reached_checking_(false),
       received_(0),
       sent_(0),
       fake_resolver_(),
@@ -393,6 +394,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     return streams_[stream]->state() == NrIceMediaStream::ICE_OPEN;
   }
   bool ice_complete() { return ice_complete_; }
+  bool ice_reached_checking() { return ice_reached_checking_; }
   size_t received() { return received_; }
   size_t sent() { return sent_; }
 
@@ -760,11 +762,20 @@ class IceTestPeer : public sigslot::has_slots<> {
   void ConnectionStateChange(NrIceCtx* ctx,
                              NrIceCtx::ConnectionState state) {
     (void)ctx;
-    if (state != NrIceCtx::ICE_CTX_OPEN) {
-      return;
+    switch (state) {
+      case NrIceCtx::ICE_CTX_INIT:
+        break;
+      case NrIceCtx::ICE_CTX_CHECKING:
+        std::cerr << "ICE checking " << name_ << std::endl;
+        ice_reached_checking_ = true;
+        break;
+      case NrIceCtx::ICE_CTX_OPEN:
+        std::cerr << "ICE completed " << name_ << std::endl;
+        ice_complete_ = true;
+        break;
+      case NrIceCtx::ICE_CTX_FAILED:
+        break;
     }
-    std::cerr << "ICE completed " << name_ << std::endl;
-    ice_complete_ = true;
   }
 
   void PacketReceived(NrIceMediaStream *stream, int component, const unsigned char *data,
@@ -840,6 +851,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   bool gathering_complete_;
   int ready_ct_;
   bool ice_complete_;
+  bool ice_reached_checking_;
   size_t received_;
   size_t sent_;
   NrIceResolverFake fake_resolver_;
@@ -981,6 +993,7 @@ class IceConnectTest : public ::testing::Test {
                      kDefaultTimeout);
     ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(),
                      kDefaultTimeout);
+    AssertCheckingReached();
 
     p1_->DumpAndCheckActiveCandidates();
     p2_->DumpAndCheckActiveCandidates();
@@ -1011,6 +1024,11 @@ class IceConnectTest : public ::testing::Test {
                      p2_->ready_ct() == expected_streams, kDefaultTimeout);
     ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(),
                      kDefaultTimeout);
+  }
+
+  void AssertCheckingReached() {
+    ASSERT_TRUE(p1_->ice_reached_checking());
+    ASSERT_TRUE(p2_->ice_reached_checking());
   }
 
   void WaitForGather() {
@@ -1341,6 +1359,7 @@ TEST_F(IceConnectTest, TestTrickleBothControllingP1Wins) {
   SimulateTrickle(0);
   ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestTrickleBothControllingP2Wins) {
@@ -1354,6 +1373,7 @@ TEST_F(IceConnectTest, TestTrickleBothControllingP2Wins) {
   SimulateTrickle(0);
   ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestTrickleIceLiteOfferer) {
@@ -1364,6 +1384,7 @@ TEST_F(IceConnectTest, TestTrickleIceLiteOfferer) {
   SimulateTrickle(0);
   ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestConnectTwoComponents) {
@@ -1429,6 +1450,7 @@ TEST_F(IceConnectTest, TestConnectTrickleOneStreamOneComponent) {
   SimulateTrickle(0);
   ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestConnectTrickleTwoStreamsOneComponent) {
@@ -1440,6 +1462,7 @@ TEST_F(IceConnectTest, TestConnectTrickleTwoStreamsOneComponent) {
   SimulateTrickle(1);
   ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestConnectRealTrickleOneStreamOneComponent) {
@@ -1450,6 +1473,7 @@ TEST_F(IceConnectTest, TestConnectRealTrickleOneStreamOneComponent) {
   ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
   WaitForGather();  // ICE can complete before we finish gathering.
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestSendReceive) {
@@ -1526,6 +1550,7 @@ TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelay) {
 
   ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelayOneSided) {
@@ -1542,6 +1567,7 @@ TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelayOneSided) {
 
   ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestConnectTurnWithLargeTrickleDelay) {
@@ -1560,6 +1586,7 @@ TEST_F(IceConnectTest, TestConnectTurnWithLargeTrickleDelay) {
 
   ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
+  AssertCheckingReached();
 }
 
 TEST_F(IceConnectTest, TestConnectTurnTcp) {
