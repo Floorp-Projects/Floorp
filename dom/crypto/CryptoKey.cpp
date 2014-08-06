@@ -560,7 +560,11 @@ bool ReadAndEncodeAttribute(SECKEYPrivateKey* aKey,
                             CK_ATTRIBUTE_TYPE aAttribute,
                             Optional<nsString>& aDst)
 {
-  ScopedSECItem item(new SECItem());
+  ScopedSECItem item(::SECITEM_AllocItem(nullptr, nullptr, 0));
+  if (!item) {
+    return false;
+  }
+
   if (PK11_ReadRawAttribute(PK11_TypePrivKey, aKey, aAttribute, item)
         != SECSuccess) {
     return false;
