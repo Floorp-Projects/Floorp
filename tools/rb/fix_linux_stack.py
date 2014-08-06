@@ -227,7 +227,7 @@ def addressToSymbol(file, address):
     cache[address] = result
     return result
 
-line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9a-f]{1,8})\](.*)$")
+line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$")
 balance_tree_re = re.compile("^([ \|0-9-]*)")
 
 def fixSymbols(line):
