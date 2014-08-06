@@ -410,6 +410,8 @@ int nr_ice_media_stream_start_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream 
       nr_ice_media_stream_check_timer_cb(0,0,stream);
     }
 
+    nr_ice_peer_ctx_stream_started_checks(pctx, stream);
+
     _status=0;
   abort:
     return(_status);

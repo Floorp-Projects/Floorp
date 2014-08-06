@@ -571,6 +571,17 @@ int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first)
     return(_status);
   }
 
+void nr_ice_peer_ctx_stream_started_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream)
+  {
+    if (!pctx->checks_started) {
+      r_log(LOG_ICE,LOG_NOTICE,"ICE(%s): peer (%s) is now checking",pctx->ctx->label,pctx->label);
+      pctx->checks_started = 1;
+      if (pctx->handler && pctx->handler->vtbl->ice_checking) {
+        pctx->handler->vtbl->ice_checking(pctx->handler->obj, pctx);
+      }
+    }
+  }
+
 #ifndef NDEBUG
 int nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx,FILE *out)
   {
