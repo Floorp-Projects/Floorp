@@ -277,7 +277,7 @@ void nsCaret::SetCaretVisible(bool inMakeVisible)
 nsresult nsCaret::GetCaretVisible(bool *outMakeVisible)
 {
   NS_ENSURE_ARG_POINTER(outMakeVisible);
-  *outMakeVisible = (mVisible && MustDrawCaret(true));
+  *outMakeVisible = (mVisible && MustDrawCaret());
   return NS_OK;
 }
 
@@ -893,13 +893,13 @@ nsCaret::CheckCaretDrawingState()
 {
   if (mDrawn) {
     // The caret is drawn; if it shouldn't be, erase it.
-    if (!mVisible || !MustDrawCaret(true))
+    if (!mVisible || !MustDrawCaret())
       EraseCaret();
   }
   else
   {
     // The caret is not drawn; if it should be, draw it.
-    if (mPendingDraw && (mVisible && MustDrawCaret(true)))
+    if (mPendingDraw && (mVisible && MustDrawCaret()))
       DrawCaret(true);
   }
 }
@@ -935,11 +935,8 @@ size_t nsCaret::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
      (see IsMenuPopupHidingCaret()).
   
 ----------------------------------------------------------------------------- */
-bool nsCaret::MustDrawCaret(bool aIgnoreDrawnState)
+bool nsCaret::MustDrawCaret()
 {
-  if (!aIgnoreDrawnState && mDrawn)
-    return true;
-
   nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
   if (!domSelection)
     return false;
@@ -1009,7 +1006,7 @@ bool nsCaret::IsMenuPopupHidingCaret()
 void nsCaret::DrawCaret(bool aInvalidate)
 {
   // Do we need to draw the caret at all?
-  if (!MustDrawCaret(false))
+  if (!mDrawn && !MustDrawCaret())
     return;
   
   // Can we draw the caret now?
