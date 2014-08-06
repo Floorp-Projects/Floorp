@@ -136,20 +136,25 @@ let AlertsHelper = {
         });
       } catch (e) {
         // we get an exception if the app is not launched yet
-        gSystemMessenger.sendMessage(kNotificationSystemMessageName, {
-            clicked: (detail.type === kDesktopNotificationClick),
-            title: listener.title,
-            body: listener.text,
-            imageURL: listener.imageURL,
-            lang: listener.lang,
-            dir: listener.dir,
-            id: listener.id,
-            tag: listener.tag,
-            timestamp: listener.timestamp
-          },
-          Services.io.newURI(listener.target, null, null),
-          Services.io.newURI(listener.manifestURL, null, null)
-        );
+        if (detail.type !== kDesktopNotificationShow) {
+          // excluding the 'show' event: there is no reason a unlaunched app
+          // would want to be notified that a notification is shown. This
+          // happens when a notification is still displayed at reboot time.
+          gSystemMessenger.sendMessage(kNotificationSystemMessageName, {
+              clicked: (detail.type === kDesktopNotificationClick),
+              title: listener.title,
+              body: listener.text,
+              imageURL: listener.imageURL,
+              lang: listener.lang,
+              dir: listener.dir,
+              id: listener.id,
+              tag: listener.tag,
+              timestamp: listener.timestamp
+            },
+            Services.io.newURI(listener.target, null, null),
+            Services.io.newURI(listener.manifestURL, null, null)
+          );
+        }
       }
     }
 

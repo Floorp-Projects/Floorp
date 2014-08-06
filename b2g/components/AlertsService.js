@@ -42,6 +42,7 @@ const kMessageAppNotificationReturn  = "app-notification-return";
 const kMessageAlertNotificationSend  = "alert-notification-send";
 const kMessageAlertNotificationClose = "alert-notification-close";
 
+const kTopicAlertShow          = "alertshow";
 const kTopicAlertFinished      = "alertfinished";
 const kTopicAlertClickCallback = "alertclickcallback";
 
@@ -136,21 +137,26 @@ AlertsService.prototype = {
       // notification via a system message containing the title/text/icon of
       // the notification so the app get a change to react.
       if (data.target) {
-        gSystemMessenger.sendMessage(kNotificationSystemMessageName, {
-            clicked: (topic === kTopicAlertClickCallback),
-            title: listener.title,
-            body: listener.text,
-            imageURL: listener.imageURL,
-            lang: listener.lang,
-            dir: listener.dir,
-            id: listener.id,
-            tag: listener.tag,
-            dbId: listener.dbId,
-            timestamp: listener.timestamp
-          },
-          Services.io.newURI(data.target, null, null),
-          Services.io.newURI(listener.manifestURL, null, null)
-        );
+        if (topic !== kTopicAlertShow) {
+          // excluding the 'show' event: there is no reason a unlaunched app
+          // would want to be notified that a notification is shown. This
+          // happens when a notification is still displayed at reboot time.
+          gSystemMessenger.sendMessage(kNotificationSystemMessageName, {
+              clicked: (topic === kTopicAlertClickCallback),
+              title: listener.title,
+              body: listener.text,
+              imageURL: listener.imageURL,
+              lang: listener.lang,
+              dir: listener.dir,
+              id: listener.id,
+              tag: listener.tag,
+              dbId: listener.dbId,
+              timestamp: listener.timestamp
+            },
+            Services.io.newURI(data.target, null, null),
+            Services.io.newURI(listener.manifestURL, null, null)
+          );
+        }
       }
     }
 
