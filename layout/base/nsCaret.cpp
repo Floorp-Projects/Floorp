@@ -130,7 +130,7 @@ nsCaret::nsCaret()
 //-----------------------------------------------------------------------------
 nsCaret::~nsCaret()
 {
-  KillTimer();
+  StopBlinking();
 }
 
 //-----------------------------------------------------------------------------
@@ -211,7 +211,7 @@ void nsCaret::Terminate()
   // this doesn't erase the caret if it's drawn. Should it? We might not have
   // a good drawing environment during teardown.
   
-  KillTimer();
+  StopBlinking();
   mBlinkTimer = nullptr;
 
   // unregiser ourselves as a selection listener
@@ -240,13 +240,7 @@ void nsCaret::SetSelection(nsISelection *aDOMSel)
 {
   MOZ_ASSERT(aDOMSel);
   mDomSelectionWeak = do_GetWeakReference(aDOMSel);   // weak reference to pres shell
-  if (mVisible)
-  {
-    // Stop the caret from blinking in its previous location.
-    StopBlinking();
-    // Start the caret blinking in the new location.
-    StartBlinking();
-  }
+  ResetBlinking();
   SchedulePaint();
 }
 
@@ -255,13 +249,8 @@ void nsCaret::SetSelection(nsISelection *aDOMSel)
 void nsCaret::SetVisible(bool inMakeVisible)
 {
   mVisible = inMakeVisible;
-  if (mVisible) {
-    SetIgnoreUserModify(true);
-    StartBlinking();
-  } else {
-    StopBlinking();
-    SetIgnoreUserModify(false);
-  }
+  mIgnoreUserModify = mVisible;
+  ResetBlinking();
   SchedulePaint();
 }
 
@@ -296,6 +285,7 @@ bool nsCaret::IsVisible()
 void nsCaret::SetCaretReadOnly(bool inMakeReadonly)
 {
   mReadOnly = inMakeReadonly;
+  ResetBlinking();
   SchedulePaint();
 }
 
@@ -437,6 +427,7 @@ nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset)
   // tell us. Setting mIsBlinking to false tells us to not set a timer to erase
   // ourselves, our consumer will take care of that.
   mIsBlinking = false;
+  ResetBlinking();
 
   mOverrideContent = do_QueryInterface(aNode);
   mOverrideOffset = aOffset;
@@ -539,7 +530,9 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aDomSel, int16_t aReason)
+NS_IMETHODIMP
+nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aDomSel,
+                                int16_t aReason)
 {
   if (aReason & nsISelectionListener::MOUSEUP_REASON)//this wont do
     return NS_OK;
@@ -557,68 +550,46 @@ NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aD
   if (domSel != aDomSel)
     return NS_OK;
 
-  if (mVisible)
-  {
-    // Stop the caret from blinking in its previous location.
+  ResetBlinking();
+  SchedulePaint();
+
+  return NS_OK;
+}
+
+
+//-----------------------------------------------------------------------------
+void nsCaret::ResetBlinking()
+{
+  if (mReadOnly || !mIsBlinking) {
     StopBlinking();
-
-    // Start the caret blinking in the new location.
-    StartBlinking();
-  }
-
-  return NS_OK;
-}
-
-
-//-----------------------------------------------------------------------------
-void nsCaret::KillTimer()
-{
-  if (mBlinkTimer)
-  {
-    mBlinkTimer->Cancel();
-  }
-}
-
-
-//-----------------------------------------------------------------------------
-nsresult nsCaret::PrimeTimer()
-{
-  // set up the blink timer
-  if (!mReadOnly && mIsBlinking)
-  {
-    if (!mBlinkTimer) {
-      nsresult  err;
-      mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);    
-      if (NS_FAILED(err))
-        return err;
-    }    
-
-    uint32_t blinkRate = static_cast<uint32_t>(
-      LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, 500));
-
-    mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, blinkRate,
-                                      nsITimer::TYPE_REPEATING_SLACK);
-  }
-
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-void nsCaret::StartBlinking()
-{
-  mIsBlinkOn = true;
-
-  if (mReadOnly) {
     return;
   }
 
-  PrimeTimer();
+  mIsBlinkOn = true;
+
+  if (!mBlinkTimer) {
+    nsresult  err;
+    mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
+    if (NS_FAILED(err))
+      return;
+  } else {
+    mBlinkTimer->Cancel();
+  }
+
+  uint32_t blinkRate = static_cast<uint32_t>(
+    LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, 500));
+
+  mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, blinkRate,
+                                    nsITimer::TYPE_REPEATING_SLACK);
 }
 
 //-----------------------------------------------------------------------------
 void nsCaret::StopBlinking()
 {
-  KillTimer();
+  if (mBlinkTimer)
+  {
+    mBlinkTimer->Cancel();
+  }
 }
 
 nsresult 
