@@ -165,12 +165,6 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
     privateSelection->AddSelectionListener(this);
   mDomSelectionWeak = do_GetWeakReference(domSelection);
   
-  // set up the blink timer
-  if (mVisible)
-  {
-    StartBlinking();
-  }
-
   return NS_OK;
 }
 
