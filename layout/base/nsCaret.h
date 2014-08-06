@@ -188,12 +188,10 @@ protected:
                                         nsRect*   aRect,
                                         nscoord*  aBidiIndicatorSize);
 
-    // Returns true if the caret should be drawn. When |mDrawn| is true,
-    // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|
-    // is true, we don't take into account whether the caret is currently
-    // drawn or not. This can be used to determine if the caret is drawn when
-    // it shouldn't be.
-    bool          MustDrawCaret(bool aIgnoreDrawnState);
+    // Returns true if the caret should be drawn. We don't take into account
+    // whether the caret is currently drawn or not. This can be used to
+    // determine if the caret is drawn when it shouldn't be.
+    bool          MustDrawCaret();
 
     void          DrawCaret(bool aInvalidate);
     void          DrawCaretAfterBriefDelay();
