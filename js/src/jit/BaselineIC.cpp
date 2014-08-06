@@ -6560,6 +6560,9 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
 
     JS_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH || op == JSOP_GETXPROP);
 
+    // After the  Genericstub was added, we should never reach the Fallbackstub again.
+    JS_ASSERT(!stub->hasStub(ICStub::GetProp_Generic));
+
     RootedPropertyName name(cx, frame->script()->getName(pc));
     if (!ComputeGetPropResult(cx, frame, op, name, val, res))
         return false;
@@ -6575,7 +6578,14 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
         return false;
 
     if (stub->numOptimizedStubs() >= ICGetProp_Fallback::MAX_OPTIMIZED_STUBS) {
-        // TODO: Discard all stubs in this IC and replace with generic getprop stub.
+        // Discard all stubs in this IC and replace with generic getprop stub.
+        for(ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++)
+            iter.unlink(cx);
+        ICGetProp_Generic::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub());
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(frame->script()));
+        if (!newStub)
+            return false;
+        stub->addNewStub(newStub);
         return true;
     }
 
@@ -7434,6 +7444,45 @@ ICGetProp_ArgumentsCallee::Compiler::generateStubCode(MacroAssembler &masm)
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
+    return true;
+}
+
+static bool
+DoGetPropGeneric(JSContext *cx, BaselineFrame *frame, ICGetProp_Generic *stub, MutableHandleValue val, MutableHandleValue res)
+{
+    jsbytecode *pc = stub->getChainFallback()->icEntry()->pc(frame->script());
+    JSOp op = JSOp(*pc);
+    RootedPropertyName name(cx, frame->script()->getName(pc));
+    return ComputeGetPropResult(cx, frame, op, name, val, res);
+}
+
+typedef bool (*DoGetPropGenericFn)(JSContext *, BaselineFrame *, ICGetProp_Generic *, MutableHandleValue, MutableHandleValue);
+static const VMFunction DoGetPropGenericInfo = FunctionInfo<DoGetPropGenericFn>(DoGetPropGeneric);
+
+bool
+ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    GeneralRegisterSet regs(availableGeneralRegs(1));
+
+    Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
+
+    // Sync for the decompiler.
+    EmitStowICValues(masm, 1);
+
+    enterStubFrame(masm, scratch);
+
+    // Push arguments.
+    masm.pushValue(R0);
+    masm.push(BaselineStubReg);
+    masm.loadPtr(Address(BaselineFrameReg, 0), R0.scratchReg());
+    masm.pushBaselineFramePtr(R0.scratchReg(), R0.scratchReg());
+
+    if(!callVM(DoGetPropGenericInfo, masm))
+        return false;
+
+    leaveStubFrame(masm);
+    EmitUnstowICValues(masm, 1, /* discard = */ true);
+    EmitEnterTypeMonitorIC(masm);
     return true;
 }
 
