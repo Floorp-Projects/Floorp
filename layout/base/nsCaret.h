@@ -161,6 +161,7 @@ protected:
     // Schedule a repaint for the frame where the caret would appear.
     // Does not check visibility etc.
     void          SchedulePaint();
+    void          CheckSelectionLanguageChange();
 
     void          KillTimer();
     nsresult      PrimeTimer();
@@ -229,7 +230,6 @@ protected:
 
     bool                  mIgnoreUserModify;
 
-    bool                  mKeyboardRTL;       // is the keyboard language right-to-left
     uint8_t               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
 
     nsCOMPtr<nsIContent>  mLastContent;       // store the content the caret was last requested to be drawn

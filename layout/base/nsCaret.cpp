@@ -108,6 +108,12 @@ AdjustCaretFrameForLineEnd(nsIFrame** aFrame, int32_t* aOffset)
   }
 }
 
+static bool
+IsBidiUI()
+{
+  return Preferences::GetBool("bidi.browser.ui");
+}
+
 //-----------------------------------------------------------------------------
 
 nsCaret::nsCaret()
@@ -119,7 +125,6 @@ nsCaret::nsCaret()
 , mReadOnly(false)
 , mShowDuringSelection(false)
 , mIgnoreUserModify(true)
-, mKeyboardRTL(false)
 , mLastBidiLevel(0)
 , mLastContentOffset(0)
 , mLastHint(CARET_ASSOCIATE_BEFORE)
@@ -449,12 +454,37 @@ nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset)
   return rv;
 }
 
+void
+nsCaret::CheckSelectionLanguageChange()
+{
+  // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
+  bool isKeyboardRTL = false;
+  nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
+  // if bidiKeyboard->IsLangRTL() fails, there is no way to tell the
+  // keyboard direction, or the user has no right-to-left keyboard
+  // installed, so we never draw the hook.
+  if (bidiKeyboard && NS_SUCCEEDED(bidiKeyboard->IsLangRTL(&isKeyboardRTL)) &&
+      IsBidiUI()) {
+    // Call SelectionLanguageChange on every paint. Mostly it will be a noop
+    // but it should be fast anyway. This guarantees we never paint the caret
+    // at the wrong place.
+    Selection* selection = GetSelectionInternal();
+    if (selection) {
+      selection->SelectionLanguageChange(isKeyboardRTL);
+    }
+  }
+}
+
 nsIFrame*
 nsCaret::GetPaintGeometry(nsRect* aRect)
 {
   // Return null if we're not drawn to prevent anybody from trying to draw us.
   if (!mDrawn)
     return nullptr;
+
+  // Update selection language direction now so the new direction will be
+  // taken into account when computing the caret position below.
+  CheckSelectionLanguageChange();
 
   nsFrameSelection* frameSelection = GetFrameSelection();
   if (!frameSelection)
@@ -686,12 +716,6 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*          aNode,
     theFrame->SchedulePaint();
 
   return true;
-}
-
-static bool
-IsBidiUI()
-{
-  return Preferences::GetBool("bidi.browser.ui");
 }
 
 nsresult 
@@ -1084,36 +1108,14 @@ nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
 
   aHookRect->SetEmpty();
 
-  // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
-  bool isCaretRTL = false;
+  bool isCaretRTL;
   nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
-  // if bidiKeyboard->IsLangRTL() fails, there is no way to tell the
-  // keyboard direction, or the user has no right-to-left keyboard
-  // installed, so we never draw the hook.
   if (bidiKeyboard && NS_SUCCEEDED(bidiKeyboard->IsLangRTL(&isCaretRTL)) &&
       IsBidiUI()) {
-    if (isCaretRTL != mKeyboardRTL) {
-      /* if the caret bidi level and the keyboard language direction are not in
-       * synch, the keyboard language must have been changed by the
-       * user, and if the caret is in a boundary condition (between left-to-right and
-       * right-to-left characters) it may have to change position to
-       * reflect the location in which the next character typed will
-       * appear. We will call |SelectionLanguageChange| and exit
-       * without drawing the caret in the old position.
-       */ 
-      mKeyboardRTL = isCaretRTL;
-      nsCOMPtr<nsISelectionPrivate> domSelection = do_QueryReferent(mDomSelectionWeak);
-      if (!domSelection ||
-          NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
-        *aCaretRect = *aHookRect = nsRect();
-        return;
-    }
     // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
     // The height of the hook rectangle is the same as the width of the caret
     // rectangle.
-    aHookRect->SetRect(aCaretRect->x + ((isCaretRTL) ?
-                       bidiIndicatorSize * -1 :
-                       aCaretRect->width),
+    aHookRect->SetRect(aCaretRect->x + (isCaretRTL ? bidiIndicatorSize * -1 : aCaretRect->width),
                        aCaretRect->y + bidiIndicatorSize,
                        bidiIndicatorSize,
                        aCaretRect->width);
