@@ -164,10 +164,9 @@ protected:
     };
     static Metrics ComputeMetrics(nsIFrame* aFrame, int32_t aOffset,
                                   nscoord aCaretHeight);
-    static nsresult GetGeometryForFrame(nsIFrame* aFrame,
-                                        int32_t   aFrameOffset,
-                                        nsRect*   aRect,
-                                        nscoord*  aBidiIndicatorSize);
+    static nsRect GetGeometryForFrame(nsIFrame* aFrame,
+                                      int32_t   aFrameOffset,
+                                      nscoord*  aBidiIndicatorSize);
 
     void          ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
                                     nsRect* aCaretRect, nsRect* aHookRect);
