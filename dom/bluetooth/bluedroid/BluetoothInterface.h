@@ -15,6 +15,7 @@
 #include <hardware/bt_rc.h>
 #endif
 #include "BluetoothCommon.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -371,28 +372,28 @@ public:
   /* Adapter Properties */
 
   void GetAdapterProperties(BluetoothResultHandler* aRes);
-  void GetAdapterProperty(bt_property_type_t aType,
+  void GetAdapterProperty(const nsAString& aName,
                           BluetoothResultHandler* aRes);
-  void SetAdapterProperty(const bt_property_t* aProperty,
+  void SetAdapterProperty(const BluetoothNamedValue& aProperty,
                           BluetoothResultHandler* aRes);
 
   /* Remote Device Properties */
 
-  void GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr,
+  void GetRemoteDeviceProperties(const nsAString& aRemoteAddr,
                                  BluetoothResultHandler* aRes);
-  void GetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                               bt_property_type_t aType,
+  void GetRemoteDeviceProperty(const nsAString& aRemoteAddr,
+                               const nsAString& aName,
                                BluetoothResultHandler* aRes);
-  void SetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                               const bt_property_t* aProperty,
+  void SetRemoteDeviceProperty(const nsAString& aRemoteAddr,
+                               const BluetoothNamedValue& aProperty,
                                BluetoothResultHandler* aRes);
 
   /* Remote Services */
 
-  void GetRemoteServiceRecord(bt_bdaddr_t* aRemoteAddr,
-                              bt_uuid_t* aUuid,
+  void GetRemoteServiceRecord(const nsAString& aRemoteAddr,
+                              const uint8_t aUuid[16],
                               BluetoothResultHandler* aRes);
-  void GetRemoteServices(bt_bdaddr_t* aRemoteAddr,
+  void GetRemoteServices(const nsAString& aRemoteAddr,
                          BluetoothResultHandler* aRes);
 
   /* Discovery */
@@ -402,23 +403,23 @@ public:
 
   /* Bonds */
 
-  void CreateBond(const bt_bdaddr_t* aBdAddr, BluetoothResultHandler* aRes);
-  void RemoveBond(const bt_bdaddr_t* aBdAddr, BluetoothResultHandler* aRes);
-  void CancelBond(const bt_bdaddr_t* aBdAddr, BluetoothResultHandler* aRes);
+  void CreateBond(const nsAString& aBdAddr, BluetoothResultHandler* aRes);
+  void RemoveBond(const nsAString& aBdAddr, BluetoothResultHandler* aRes);
+  void CancelBond(const nsAString& aBdAddr, BluetoothResultHandler* aRes);
 
   /* Authentication */
 
-  void PinReply(const bt_bdaddr_t* aBdAddr, uint8_t aAccept,
-                uint8_t aPinLen, bt_pin_code_t* aPinCode,
+  void PinReply(const nsAString& aBdAddr, bool aAccept,
+                const nsAString& aPinCode,
                 BluetoothResultHandler* aRes);
 
-  void SspReply(const bt_bdaddr_t* aBdAddr, bt_ssp_variant_t aVariant,
-                uint8_t aAccept, uint32_t aPasskey,
+  void SspReply(const nsAString& aBdAddr, const nsAString& aVariant,
+                bool aAccept, uint32_t aPasskey,
                 BluetoothResultHandler* aRes);
 
   /* DUT Mode */
 
-  void DutModeConfigure(uint8_t aEnable, BluetoothResultHandler* aRes);
+  void DutModeConfigure(bool aEnable, BluetoothResultHandler* aRes);
   void DutModeSend(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
                    BluetoothResultHandler* aRes);
 
