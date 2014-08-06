@@ -55,6 +55,7 @@
 #include "nsPrintfCString.h"
 #include "UnitTransforms.h"
 #include "LayersLogging.h"
+#include "FrameLayerBuilder.h"
 
 #include <stdint.h>
 #include <algorithm>

@@ -21,6 +21,7 @@ EXPORTS += [
     'DisplayListClipState.h',
     'FrameLayerBuilder.h',
     'FramePropertyTable.h',
+    'LayerState.h',
     'nsArenaMemoryStats.h',
     'nsBidi.h',
     'nsBidiPresUtils.h',

@@ -8,6 +8,9 @@
 
 #include "nsFrame.h"
 
+#include <stdarg.h>
+#include <algorithm>
+
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 
@@ -30,7 +33,6 @@
 #include "nsIPresShell.h"
 #include "prlog.h"
 #include "prprf.h"
-#include <stdarg.h>
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "RestyleManager.h"
@@ -48,7 +50,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsIPercentHeightObserver.h"
 #include "nsStyleStructInlines.h"
-#include <algorithm>
+#include "FrameLayerBuilder.h"
 
 #include "nsBidiPresUtils.h"
 
