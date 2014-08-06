@@ -65,8 +65,10 @@ let testcases = [
 
 if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
   testcases.push(["C:\\some\\file.txt", "file:///C:/some/file.txt", null, false, true]);
+  testcases.push(["//mozilla", "http://mozilla/", "http://www.mozilla.com/", false, true]);
 } else {
   testcases.push(["/some/file.txt", "file:///some/file.txt", null, false, true]);
+  testcases.push(["//mozilla", "file:////mozilla", null, false, true]);
 }
 
 function run_test() {

@@ -1,52 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-<?xml-stylesheet href="chrome://global/skin/global.css"?>
-<?xml-stylesheet href="chrome://browser/skin/devtools/common.css"?>
-<?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css"?>
-<?xml-stylesheet href="chrome://browser/skin/devtools/profiler.css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css"?>
-
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/profiler.css" type="text/css"?>
 <!DOCTYPE window [
-<!ENTITY % profilerDTD SYSTEM "chrome://browser/locale/devtools/profiler.dtd">
+  <!ENTITY % profilerDTD SYSTEM "chrome://browser/locale/devtools/profiler.dtd">
   %profilerDTD;
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://browser/content/devtools/theme-switching.js"/>
+  <script type="application/javascript" src="profiler.js"/>
+  <script type="application/javascript" src="ui-recordings.js"/>
+  <script type="application/javascript" src="ui-profile.js"/>
 
-  <script type="application/javascript;version=1.8"
-          src="chrome://browser/content/devtools/theme-switching.js"/>
-  <script type="text/javascript" src="sidebar.js"/>
-  <box flex="1" id="profiler-chrome"
-    class="devtools-responsive-container theme-body">
-    <vbox class="profiler-sidebar theme-sidebar">
-      <toolbar class="devtools-toolbar">
-        <hbox id="profiler-controls">
-          <toolbarbutton id="profiler-start"
-            tooltiptext="&startProfiler.tooltip;"
-            class="devtools-toolbarbutton"
-            disabled="true"/>
-          <toolbarbutton id="profiler-import"
-            class="devtools-toolbarbutton"
-            disabled="true"
-            label="&importProfile.label;"/>
+  <hbox class="theme-body" flex="1">
+    <vbox id="recordings-pane">
+      <toolbar id="recordings-toolbar"
+               class="devtools-toolbar">
+        <hbox id="recordings-controls"
+              class="devtools-toolbarbutton-group">
+          <toolbarbutton id="record-button"
+                         class="devtools-toolbarbutton"
+                         oncommand="RecordingsListView._onRecordButtonClick()"
+                         tooltiptext="&profilerUI.recordButton.tooltip;"/>
+          <toolbarbutton id="import-button"
+                         class="devtools-toolbarbutton"
+                         oncommand="RecordingsListView._onImportButtonClick()"
+                         label="&profilerUI.importButton;"/>
+          <toolbarbutton id="clear-button"
+                         class="devtools-toolbarbutton"
+                         oncommand="RecordingsListView._onClearButtonClick()"
+                         label="&profilerUI.clearButton;"/>
         </hbox>
       </toolbar>
+      <vbox id="recordings-list" flex="1"/>
+    </vbox>
 
-      <vbox id="profiles-list" flex="1">
+    <deck id="profile-pane"
+          class="devtools-responsive-container"
+          flex="1">
+      <hbox id="empty-notice"
+            class="notice-container"
+            align="center"
+            pack="center"
+            flex="1">
+        <label value="&profilerUI.emptyNotice1;"/>
+        <button id="profiling-notice-button"
+                class="devtools-toolbarbutton"
+                standalone="true"
+                oncommand="RecordingsListView._onRecordButtonClick()"/>
+        <label value="&profilerUI.emptyNotice2;"/>
+      </hbox>
+
+      <hbox id="recording-notice"
+            class="notice-container"
+            align="center"
+            pack="center"
+            flex="1">
+        <label value="&profilerUI.stopNotice1;"/>
+        <button id="profiling-notice-button"
+                class="devtools-toolbarbutton"
+                standalone="true"
+                checked="true"
+                oncommand="RecordingsListView._onRecordButtonClick()"/>
+        <label value="&profilerUI.stopNotice2;"/>
+      </hbox>
+
+      <hbox id="loading-notice"
+            class="notice-container"
+            align="center"
+            pack="center"
+            flex="1">
+        <label value="&profilerUI.loadingNotice;"/>
+      </hbox>
+
+      <tabbox id="profile-content"
+              class="theme-sidebar devtools-sidebar-tabs"
+              flex="1">
+        <hbox>
+          <tabs/>
+          <button id="profile-newtab-button"
+                  tooltiptext="&profilerUI.newtab.tooltiptext;"/>
+        </hbox>
+        <tabpanels flex="1"/>
+      </tabbox>
+    </deck>
+  </hbox>
+
+  <template>
+    <!-- Template for a tab inside the #profile-content tabbox. -->
+    <tab id="profile-content-tab-template" covered="true">
+      <label class="tab-title-label"/>
+    </tab>
+
+    <!-- Template for a panel inside the #profile-content tabbox. -->
+    <tabpanel id="profile-content-tabpanel-template">
+      <vbox class="framerate"/>
+      <vbox class="categories"/>
+      <vbox class="call-tree" flex="1">
+        <hbox class="call-tree-headers-container">
+          <label class="plain call-tree-header"
+                 type="duration"
+                 crop="end"
+                 value="&profilerUI.table.duration;"/>
+          <label class="plain call-tree-header"
+                 type="percentage"
+                 crop="end"
+                 value="&profilerUI.table.percentage;"/>
+          <label class="plain call-tree-header"
+                 type="invocations"
+                 crop="end"
+                 value="&profilerUI.table.invocations;"/>
+          <label class="plain call-tree-header"
+                 type="function"
+                 crop="end"
+                 value="&profilerUI.table.function;"/>
+        </hbox>
+        <vbox class="call-tree-cells-container" flex="1"/>
       </vbox>
-    </vbox>
+    </tabpanel>
+  </template>
 
-    <splitter class="devtools-side-splitter devtools-invisible-splitter"/>
-
-    <vbox flex="1" id="profiler-report">
-      <!-- Example:
-      <iframe id="profiler-cleo-1"
-        src="devtools/cleopatra.html" flex="1"></iframe>
-      -->
-    </vbox>
-  </box>
 </window>

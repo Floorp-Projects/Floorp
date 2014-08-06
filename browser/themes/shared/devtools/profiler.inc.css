@@ -1,78 +1,450 @@
-%if 0
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.profiler-sidebar-empty-notice {
-  max-width: 176px;
-  padding: 10px;
-  background-color: rgb(61, 69, 76);
-  color: white;
-  font-weight: bold;
+/* Reload and waiting notices */
+
+.notice-container {
+  margin-top: -50vh;
+  font-size: 120%;
 }
 
-.profiler-sidebar {
-  min-width: 196px;
+.theme-dark .notice-container {
+  background: #343c45; /* Toolbars */
+  color: #f5f7fa; /* Light foreground text */
 }
 
-.profiler-sidebar + .devtools-side-splitter {
-  border-color: transparent;
+.theme-light .notice-container {
+  background: #f0f1f2; /* Toolbars */
+  color: #585959; /* Grey foreground text */
 }
 
-.profiler-sidebar .devtools-toolbar {
+#empty-notice button,
+#recording-notice button {
+  min-width: 30px;
+  min-height: 28px;
+  margin: 0;
+  list-style-image: url(profiler-stopwatch.svg);
+}
+
+#empty-notice button[checked],
+#recording-notice button[checked] {
+  list-style-image: url(profiler-stopwatch-checked.svg);
+}
+
+#empty-notice button .button-text,
+#recording-notice button .button-text {
+  display: none;
+}
+
+.theme-dark #loading-notice {
+  font-size: 250%;
+  color: rgba(255,255,255,0.2);
+}
+
+.theme-light #loading-notice {
+  font-size: 250%;
+  color: rgba(0,0,0,0.2);
+}
+
+/* Recordings pane */
+
+#recordings-pane > tabs {
   -moz-border-end: 1px solid;
 }
 
-.theme-dark .profiler-sidebar .devtools-toolbar {
-  -moz-border-end-color: black; /* Match the splitter. */
+#recordings-pane .devtools-toolbar {
+  -moz-border-end: 1px solid;
 }
 
-.theme-light .profiler-sidebar .devtools-toolbar {
-  -moz-border-end-color: #aaa; /* Match the splitter color. */
+.theme-dark #recordings-pane > tabs,
+.theme-dark #recordings-pane .devtools-toolbar {
+  -moz-border-end-color: #000; /* Splitters */
 }
 
-
-.profiler-sidebar-item {
-  padding: 3px 5px;
+.theme-light #recordings-pane > tabs,
+.theme-light #recordings-pane .devtools-toolbar {
+  -moz-border-end-color: #aaa; /* Splitters */
 }
 
-.profiler-sidebar-item, .side-menu-widget-item-contents {
-  cursor: default;
+#record-button {
+  list-style-image: url(profiler-stopwatch.svg);
 }
 
-.profiler-sidebar-item > h3 {
-  font-size: 13px;
-  display: block;
-  cursor: pointer;
+#record-button[checked] {
+  list-style-image: url(profiler-stopwatch-checked.svg);
 }
 
-.profiler-sidebar-item > hbox {
-  margin-top: 2px;
+#record-button[locked] {
+  pointer-events: none;
 }
 
-.profiler-sidebar-item > hbox > a {
-  display: none;
+/* Recording items */
+
+.recording-item {
+  padding: 4px;
+}
+
+.recording-item-title {
+  font-size: 110%;
+}
+
+.recording-item-footer {
+  padding-top: 4px;
+  font-size: 90%;
+}
+
+.recording-item-save {
   text-decoration: underline;
   cursor: pointer;
 }
 
-.selected [state=completed] .profiler-sidebar-item > hbox > a {
-  display: block;
+.theme-dark .recording-item-duration,
+.theme-dark .recording-item-save {
+  color: #b6babf; /* Foreground (Text) - Grey */
 }
 
-.theme-dark .selected .profiler-sidebar-item > hbox {
-  color: #b6babf;
+.theme-light .recording-item-duration,
+.theme-light .recording-item-save {
+  color: #585959; /* Foreground (Text) - Grey */
 }
 
-.theme-light .selected .profiler-sidebar-item > hbox {
-  color: #ebeced;
+#recordings-list .selected label {
+  /* Text inside a selected item should not be custom colored. */
+  color: inherit !important;
 }
 
-#profiler-start {
-  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch.svg");
+/* Profile pane */
+
+#profile-content tabs {
+  -moz-box-align: stretch;
+  height: 24px;
+  font: inherit;
 }
 
-#profiler-start[checked] {
-  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch-checked.svg");
+#profile-content tab {
+  -moz-box-flex: 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  text-shadow: none;
+  transition-duration: 0.25s;
+  transition-timing-function: ease-in-out;
+  transition-property: opacity, transform;
+}
+
+.theme-dark #profile-content tab {
+  color: #8fa1b2; /* Body Text */
+}
+
+.theme-light #profile-content tab {
+  color: #18191a; /* Body Text */
+}
+
+#profile-content tab:not([selected]) {
+  cursor: pointer;
+}
+
+#profile-content tab[covered] {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.theme-dark #profile-content tab {
+  -moz-appearance: none;
+  -moz-border-end: 1px solid #000; /* Splitters */
+}
+
+.theme-light #profile-content tab {
+  -moz-appearance: none;
+  -moz-border-end: 1px solid #aaa; /* Splitters */
+}
+
+.theme-dark #profile-content tab:hover {
+  background-color: rgba(0,0,0,0.3);
+}
+
+.theme-light #profile-content tab:hover {
+  background-color: rgba(255,255,255,0.8);
+}
+
+.theme-dark #profile-content tab[selected] {
+  background-color: #1d4f73; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light #profile-content tab[selected] {
+  background-color: #4c9ed9; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+#profile-content tabpanel {
+  -moz-box-orient: vertical;
+  transform: translateZ(1px); /* Make sure the tabpanel appears above the tab */
+}
+
+#profile-newtab-button {
+  -moz-appearance: none;
+  background-color: transparent;
+  background-position: 4px 2px;
+  background-size: 54px 20px;
+  min-width: 26px;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.theme-dark #profile-newtab-button {
+  background-color: rgba(112,191,83,0.2);
+}
+
+.theme-light #profile-newtab-button {
+  background-color: rgba(44,187,15,0.2);
+}
+
+.theme-dark #profile-newtab-button {
+  background-image: url(newtab-inverted.png);
+}
+
+.theme-light #profile-newtab-button {
+  background-image: url(newtab.png);
+}
+
+@media (min-resolution: 2dppx) {
+  .theme-dark #profile-newtab-button {
+    background-image: url(newtab-inverted@2x.png);
+  }
+
+  .theme-light #profile-newtab-button {
+    background-image: url(newtab@2x.png);
+  }
+}
+
+#profile-newtab-button:hover {
+  background-position: 40px 2px;
+}
+
+#profile-newtab-button:hover:active {
+  background-position: 22px 2px;
+}
+
+/* Profile call tree */
+
+.theme-dark .call-tree-headers-container {
+  border-top: 1px solid #000;
+}
+
+.theme-light .call-tree-headers-container {
+  border-top: 1px solid #aaa;
+}
+
+.call-tree-cells-container {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+  overflow: auto;
+}
+
+.call-tree-cells-container[categories-hidden] .call-tree-category {
+  display: none;
+}
+
+.call-tree-header[type="duration"],
+.call-tree-cell[type="duration"] {
+  width: 7em;
+}
+
+.call-tree-header[type="percentage"],
+.call-tree-cell[type="percentage"] {
+  width: 5em;
+}
+
+.call-tree-header[type="invocations"],
+.call-tree-cell[type="invocations"] {
+  width: 5em;
+}
+
+.call-tree-header[type="function"],
+.call-tree-cell[type="function"] {
+  -moz-box-flex: 1;
+}
+
+.call-tree-header,
+.call-tree-cell {
+  -moz-box-align: center;
+  overflow: hidden;
+  padding: 1px 4px;
+}
+
+.call-tree-header:not(:last-child),
+.call-tree-cell:not(:last-child) {
+  -moz-border-end: 1px solid;
+}
+
+.theme-dark .call-tree-header,
+.theme-dark .call-tree-cell {
+  -moz-border-end-color: rgba(255,255,255,0.15);
+  color: #8fa1b2; /* Body Text */
+}
+
+.theme-light .call-tree-header,
+.theme-light .call-tree-cell {
+  -moz-border-end-color: rgba(0,0,0,0.15);
+  color: #18191a; /* Body Text */
+}
+
+.call-tree-header:not(:last-child) {
+  text-align: center;
+}
+
+.call-tree-cell:not(:last-child) {
+  text-align: end;
+}
+
+.theme-dark .call-tree-header {
+  background-color: #252c33; /* Tab Toolbar */
+}
+
+.theme-light .call-tree-header {
+  background-color: #ebeced; /* Tab Toolbar */
+}
+
+.theme-dark .call-tree-item:last-child:not(:focus) {
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.theme-light .call-tree-item:last-child:not(:focus) {
+  border-bottom: 1px solid rgba(0,0,0,0.15);
+}
+
+.theme-dark .call-tree-item:nth-child(2n) {
+  background-color: rgba(29,79,115,0.15);
+}
+
+.theme-light .call-tree-item:nth-child(2n) {
+  background-color: rgba(76,158,217,0.1);
+}
+
+.theme-dark .call-tree-item:hover {
+  background-color: rgba(29,79,115,0.25);
+}
+
+.theme-light .call-tree-item:hover {
+  background-color: rgba(76,158,217,0.2);
+}
+
+.theme-dark .call-tree-item:focus {
+  background-color: #1d4f73; /* Select Highlight Blue */
+}
+
+.theme-light .call-tree-item:focus {
+  background-color: #4c9ed9; /* Select Highlight Blue */
+}
+
+.call-tree-item:focus label {
+  color: #f5f7fa !important; /* Light foreground text */
+}
+
+.theme-dark .call-tree-item:focus .call-tree-cell {
+  -moz-border-end-color: rgba(0,0,0,0.3);
+}
+
+.theme-light .call-tree-item:focus .call-tree-cell {
+  -moz-border-end-color: rgba(255,255,255,0.5);
+}
+
+.call-tree-item:not([origin="content"]) .call-tree-name,
+.call-tree-item:not([origin="content"]) .call-tree-url,
+.call-tree-item:not([origin="content"]) .call-tree-line {
+  /* Style chrome and non-JS nodes differently. */
+  opacity: 0.6;
+}
+
+.call-tree-url {
+  -moz-margin-start: 4px !important;
+  cursor: pointer;
+}
+
+.call-tree-url:hover {
+  text-decoration: underline;
+}
+
+.theme-dark .call-tree-url {
+  color: #46afe3;
+}
+
+.theme-light .call-tree-url {
+  color: #0088cc;
+}
+
+.theme-dark .call-tree-line {
+  color: #d96629;
+}
+
+.theme-light .call-tree-line {
+  color: #f13c00;
+}
+
+.call-tree-host {
+  -moz-margin-start: 8px !important;
+  font-size: 90%;
+}
+
+.theme-dark .call-tree-host {
+  color: #8fa1b2;
+}
+
+.theme-light .call-tree-host {
+  color: #8fa1b2;
+}
+
+.call-tree-url[value=""],
+.call-tree-line[value=""],
+.call-tree-host[value=""] {
+  display: none;
+}
+
+.call-tree-zoom {
+  -moz-appearance: none;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 11px;
+  min-width: 11px;
+  -moz-margin-start: 8px !important;
+  cursor: zoom-in;
+  opacity: 0;
+}
+
+.theme-dark .call-tree-zoom {
+  background-image: url(magnifying-glass.png);
+}
+
+.theme-light .call-tree-zoom {
+  background-image: url(magnifying-glass-light.png);
+}
+
+@media (min-resolution: 2dppx) {
+  .theme-dark .call-tree-zoom {
+    background-image: url(magnifying-glass@2x.png);
+  }
+
+  .theme-light .call-tree-zoom {
+    background-image: url(magnifying-glass-light@2x.png);
+  }
+}
+
+.call-tree-item:hover .call-tree-zoom {
+  transition: opacity 0.3s ease-in;
+  opacity: 1;
+}
+
+.call-tree-item:hover .call-tree-zoom:hover {
+  opacity: 0;
+}
+
+.call-tree-category {
+  transform: scale(0.75);
+  transform-origin: center right;
 }
