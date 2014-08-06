@@ -212,9 +212,19 @@ protected:
 
     nsCOMPtr<nsITimer>    mBlinkTimer;
 
+    /**
+     * mIsBlinking is true when caret blinking is enabled. When false,
+     * the caret will always be on.
+     */
     bool                  mIsBlinking;
-
-    bool                  mVisible;           // is the caret blinking
+    /**
+     * mIsBlinkOn is true when we're in a blink cycle where the caret is on.
+     */
+    bool                  mIsBlinkOn;
+    /**
+     * mIsVisible is true when SetVisible was last called with 'true'.
+     */
+    bool                  mVisible;
 
     bool                  mDrawn;             // Denotes when the caret is physically drawn on the screen.
     bool                  mPendingDraw;       // True when the last on-state draw was suppressed.
