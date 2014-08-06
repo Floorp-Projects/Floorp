@@ -332,7 +332,7 @@ EXTRA_LIBS += $(DEPTH)/nsprpub/lib/ds/$(LIB_PREFIX)plds4$(SUFFIX)
 EXTRA_LIBS += $(DEPTH)/nsprpub/lib/libc/src/$(LIB_PREFIX)plc4$(SUFFIX)
 
 # Add all static libraries for nss, smime, ssl and nssutil
-EXTRA_LIBS += $(addprefix ../,$(NSS_STATIC_LIBS))
+EXTRA_LIBS += $(addprefix $(DEPTH)/security/,$(NSS_STATIC_LIBS))
 
 nss_def_file := $(srcdir)/nss.def
 
@@ -368,7 +368,7 @@ ifdef MOZ_FOLD_LIBS
 # Force the linker to include everything from the static libraries.
 EXPAND_LIBS_EXEC += --extract
 
-$(SHARED_LIBRARY): $(addprefix ../,$(NSS_STATIC_LIBS))
+$(SHARED_LIBRARY): $(addprefix $(DEPTH)/security/,$(NSS_STATIC_LIBS))
 
 ifdef IMPORT_LIB_SUFFIX
 IMPORT_PREFIX = $(LIB_PREFIX)
@@ -389,7 +389,7 @@ $(DIST)/lib/$(DLL_PREFIX)freebl3$(DLL_SUFFIX): libs-nss/lib/freebl
 $(DIST)/lib/$(DLL_PREFIX)nssckbi$(DLL_SUFFIX): libs-nss/lib/ckfw
 $(DIST)/lib/$(DLL_PREFIX)softokn3$(DLL_SUFFIX): libs-nss/lib/softoken
 $(DIST)/lib/$(DLL_PREFIX)nssdbm3$(DLL_SUFFIX): libs-nss/lib/softoken
-$(foreach lib,$(NSS_STATIC_LIBS),$(eval ../$(lib): libs-$(patsubst %/,%,$(dir $(lib)))))
+$(foreach lib,$(NSS_STATIC_LIBS),$(eval $(DEPTH)/security/$(lib): libs-$(patsubst %/,%,$(dir $(lib)))))
 
 # Create fake import libraries for the folded libraries, so that linking
 # against them works both for the NSS build system (see dependencies below)
@@ -468,4 +468,4 @@ endif # MOZ_FOLD_LIBS
 
 # Work around NSS build system race condition creating certdata.c in
 # security/nss/lib/ckfw/builtins. See bug #836220.
-libs-nss/lib$(if $(MOZ_FOLD_LIBS),/ckfw): $(call mkdir_deps,../nss/lib/ckfw/builtins)
+libs-nss/lib$(if $(MOZ_FOLD_LIBS),/ckfw): $(call mkdir_deps,$(DEPTH)/security/nss/lib/ckfw/builtins)

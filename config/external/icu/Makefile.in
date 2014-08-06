@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-STANDALONE_MAKEFILE = 1
-
 # Ensure that this happens before including rules.mk
 ifdef ENABLE_INTL_API
   ifndef MOZ_NATIVE_ICU
@@ -29,7 +27,7 @@ ifdef ENABLE_INTL_API
         ICU_DEST := $(DIST)/bin
         INSTALL_TARGETS += ICU
         $(ICU_FILES): buildicu
-        ICU_TARGET := default
+        ICU_TARGET := target
       endif
     else # !MOZ_SHARED_ICU
       ifeq ($(OS_ARCH),WINNT)
@@ -44,7 +42,7 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef ENABLE_INTL_API
 ifndef MOZ_NATIVE_ICU
-default:: buildicu
+target:: buildicu
 
 # - Force ICU to use the standard suffix for object files because expandlibs
 #   will discard all files with a non-standard suffix (bug 857450).
@@ -54,16 +52,16 @@ buildicu::
 # Msys screws up GENRBOPTS when it contains spaces, so all genrb flags need
 # to be stuck together. See https://bugzilla.mozilla.org/show_bug.cgi?id=1034594#c34
 ifdef CROSS_COMPILE
-	+$(MAKE) -j1 -C host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kRC'
+	+$(MAKE) -j1 -C $(DEPTH)/intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kRC'
 endif
-	+$(MAKE) -j1 -C target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kR'
+	+$(MAKE) -j1 -C $(DEPTH)/intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kR'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
 ifdef CROSS_COMPILE
-	+$(MAKE) -C host $@ STATIC_O=$(OBJ_SUFFIX)
+	+$(MAKE) -C $(DEPTH)/intl/icu/host $@ STATIC_O=$(OBJ_SUFFIX)
 endif
-	+$(MAKE) -C target $@ STATIC_O=$(OBJ_SUFFIX)
+	+$(MAKE) -C $(DEPTH)/intl/icu/target $@ STATIC_O=$(OBJ_SUFFIX)
 
 endif
 endif
