@@ -34,7 +34,7 @@ class nsIMemoryReporter;
 class CategoryLeaf : public nsDepCharHashKey
 {
 public:
-  CategoryLeaf(const char* aKey) : nsDepCharHashKey(aKey), value(nullptr) {}
+  explicit CategoryLeaf(const char* aKey) : nsDepCharHashKey(aKey), value(nullptr) {}
   const char* value;
 };
 

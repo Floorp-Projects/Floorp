@@ -52,8 +52,8 @@ public:
   // These are the types of objects that can own properties. No object should
   // inherit more then one of these classes.
   // To add support for more types just add to this list.
-  nsPropertyOwner(const nsINode* aObject) : mObject(aObject) {}
-  nsPropertyOwner(const nsIFrame* aObject) : mObject(aObject) {}
+  MOZ_IMPLICIT nsPropertyOwner(const nsINode* aObject) : mObject(aObject) {}
+  MOZ_IMPLICIT nsPropertyOwner(const nsIFrame* aObject) : mObject(aObject) {}
 
   operator const void*() { return mObject; }
   const void* get() { return mObject; }

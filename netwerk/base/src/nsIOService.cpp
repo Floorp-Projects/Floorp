@@ -497,7 +497,7 @@ nsIOService::GetProtocolFlags(const char* scheme, uint32_t *flags)
 class AutoIncrement
 {
     public:
-        AutoIncrement(uint32_t *var) : mVar(var)
+        explicit AutoIncrement(uint32_t *var) : mVar(var)
         {
             ++*var;
         }

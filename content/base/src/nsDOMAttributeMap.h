@@ -55,7 +55,7 @@ public:
   typedef const nsAttrKey& KeyType;
   typedef const nsAttrKey* KeyTypePointer;
 
-  nsAttrHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
+  explicit nsAttrHashKey(KeyTypePointer aKey) : mKey(*aKey) {}
   nsAttrHashKey(const nsAttrHashKey& aCopy) : mKey(aCopy.mKey) {}
   ~nsAttrHashKey() {}
 
@@ -89,7 +89,7 @@ public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::ErrorResult ErrorResult;
 
-  nsDOMAttributeMap(Element *aContent);
+  explicit nsDOMAttributeMap(Element *aContent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMAttributeMap)

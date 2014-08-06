@@ -103,6 +103,119 @@ add_task(function test_MPLocked() {
   yield fxa.signOut(/* localOnly = */ true)
 });
 
+add_task(function test_migrationMPUnlocked() {
+  // first manually save a signedInUser.json to simulate a first-run with
+  // pre-migrated data.
+  let fxa = new FxAccounts({});
+
+  let creds = {
+    email: "test@example.com",
+    sessionToken: "sessionToken",
+    kA: "the kA value",
+    kB: "the kB value",
+    verified: true
+  };
+  let toWrite = {
+    version: fxa.version,
+    accountData: creds,
+  }
+
+  let path = OS.Path.join(OS.Constants.Path.profileDir, "signedInUser.json");
+  yield CommonUtils.writeJSON(toWrite, path);
+
+  // now load it - it should migrate.
+  let data = yield fxa.getSignedInUser();
+  Assert.deepEqual(data, creds, "we got all the data back");
+
+  // and verify it was actually migrated - re-read signedInUser back.
+  let data = yield CommonUtils.readJSON(path);
+
+  Assert.strictEqual(data.accountData.email, creds.email, "correct email in the clear text");
+  Assert.strictEqual(data.accountData.sessionToken, creds.sessionToken, "correct sessionToken in the clear text");
+  Assert.strictEqual(data.accountData.verified, creds.verified, "correct verified flag");
+
+  Assert.ok(!("kA" in data.accountData), "kA not stored in clear text");
+  Assert.ok(!("kB" in data.accountData), "kB not stored in clear text");
+
+  let login = getLoginMgrData();
+  Assert.strictEqual(login.username, creds.email, "email matches");
+  let loginData = JSON.parse(login.password);
+  Assert.strictEqual(loginData.version, data.version, "same version flag in both places");
+  Assert.strictEqual(loginData.accountData.kA, creds.kA, "correct kA in the login mgr");
+  Assert.strictEqual(loginData.accountData.kB, creds.kB, "correct kB in the login mgr");
+
+  Assert.ok(!("email" in loginData), "email not stored in the login mgr json");
+  Assert.ok(!("sessionToken" in loginData), "sessionToken not stored in the login mgr json");
+  Assert.ok(!("verified" in loginData), "verified not stored in the login mgr json");
+
+  yield fxa.signOut(/* localOnly = */ true);
+  Assert.strictEqual(getLoginMgrData(), null, "login mgr data deleted on logout");
+});
+
+add_task(function test_migrationMPLocked() {
+  // first manually save a signedInUser.json to simulate a first-run with
+  // pre-migrated data.
+  let fxa = new FxAccounts({});
+
+  let creds = {
+    email: "test@example.com",
+    sessionToken: "sessionToken",
+    kA: "the kA value",
+    kB: "the kB value",
+    verified: true
+  };
+  let toWrite = {
+    version: fxa.version,
+    accountData: creds,
+  }
+
+  let path = OS.Path.join(OS.Constants.Path.profileDir, "signedInUser.json");
+  yield CommonUtils.writeJSON(toWrite, path);
+
+  // pretend the MP is locked.
+  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", function() false);
+
+  // now load it - it should *not* migrate, but should only give the JSON-safe
+  // data back.
+  let data = yield fxa.getSignedInUser();
+  Assert.ok(!data.kA);
+  Assert.ok(!data.kB);
+
+  // and verify the data on disk wan't migrated.
+  data = yield CommonUtils.readJSON(path);
+  Assert.deepEqual(data, toWrite);
+
+  // Now "unlock" and re-ask for the signedInUser - it should migrate.
+  fxa.internal.signedInUserStorage.__defineGetter__("_isLoggedIn", function() true);
+  data = yield fxa.getSignedInUser();
+  // this time we should have got all the data, not just the JSON-safe fields.
+  Assert.strictEqual(data.kA, creds.kA);
+  Assert.strictEqual(data.kB, creds.kB);
+
+  // And verify the data in the JSON was migrated
+  data = yield CommonUtils.readJSON(path);
+  Assert.strictEqual(data.accountData.email, creds.email, "correct email in the clear text");
+  Assert.strictEqual(data.accountData.sessionToken, creds.sessionToken, "correct sessionToken in the clear text");
+  Assert.strictEqual(data.accountData.verified, creds.verified, "correct verified flag");
+
+  Assert.ok(!("kA" in data.accountData), "kA not stored in clear text");
+  Assert.ok(!("kB" in data.accountData), "kB not stored in clear text");
+
+  let login = getLoginMgrData();
+  Assert.strictEqual(login.username, creds.email, "email matches");
+  let loginData = JSON.parse(login.password);
+  Assert.strictEqual(loginData.version, data.version, "same version flag in both places");
+  Assert.strictEqual(loginData.accountData.kA, creds.kA, "correct kA in the login mgr");
+  Assert.strictEqual(loginData.accountData.kB, creds.kB, "correct kB in the login mgr");
+
+  Assert.ok(!("email" in loginData), "email not stored in the login mgr json");
+  Assert.ok(!("sessionToken" in loginData), "sessionToken not stored in the login mgr json");
+  Assert.ok(!("verified" in loginData), "verified not stored in the login mgr json");
+
+  yield fxa.signOut(/* localOnly = */ true);
+  Assert.strictEqual(getLoginMgrData(), null, "login mgr data deleted on logout");
+});
+
 add_task(function test_consistentWithMPEdgeCases() {
   let fxa = new FxAccounts({});
 

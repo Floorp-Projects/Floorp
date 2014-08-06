@@ -109,7 +109,7 @@ protected:
 
     // playback parameters
     CheckedUint32 mInputIndex;
-    bool mEndOfStream;
+    bool mInputEndOfStream;
     int64_t mSeekTimeUs;
     bool mFlushed; // meaningless when mSeekTimeUs is invalid.
   };

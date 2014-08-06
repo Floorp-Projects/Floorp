@@ -10448,6 +10448,59 @@ def stripTrailingWhitespace(text):
     lines = text.splitlines()
     return '\n'.join(line.rstrip() for line in lines) + tail
 
+class MemberProperties:
+    def __init__(self):
+        self.isGenericMethod = False
+        self.isCrossOriginMethod = False
+        self.isPromiseReturningMethod = False
+        self.isGenericGetter = False
+        self.isLenientGetter = False
+        self.isCrossOriginGetter = False
+        self.isGenericSetter = False
+        self.isLenientSetter = False
+        self.isCrossOriginSetter = False
+        self.isJsonifier = False
+
+def memberProperties(m, descriptor):
+    props = MemberProperties()
+    if m.isMethod():
+        if m == descriptor.operations['Jsonifier']:
+            props.isGenericMethod = descriptor.needsSpecialGenericOps()
+            props.isJsonifier = True
+        elif (not m.isIdentifierLess() or m == descriptor.operations['Stringifier']):
+            if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
+                if m.returnsPromise() and descriptor.needsSpecialGenericOps():
+                    props.isPromiseReturningMethod = True
+                if m.getExtendedAttribute("CrossOriginCallable"):
+                    props.isCrossOriginMethod = True
+                elif descriptor.needsSpecialGenericOps():
+                    props.isGenericMethod = True
+    elif m.isAttr():
+        if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
+            if m.hasLenientThis():
+                props.isLenientGetter = True
+            elif m.getExtendedAttribute("CrossOriginReadable"):
+                props.isCrossOriginGetter = True
+            elif descriptor.needsSpecialGenericOps():
+                props.isGenericGetter = True
+        if not m.readonly:
+            if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
+                if m.hasLenientThis():
+                    props.isLenientSetter = True
+                elif IsCrossOriginWritable(m, descriptor):
+                    props.isCrossOriginSetter = True
+                elif descriptor.needsSpecialGenericOps():
+                    props.isGenericSetter = True
+        elif m.getExtendedAttribute("PutForwards"):
+            if IsCrossOriginWritable(m, descriptor):
+                props.isCrossOriginSetter = True
+            elif descriptor.needsSpecialGenericOps():
+                props.isGenericSetter = True
+        elif m.getExtendedAttribute("Replaceable"):
+            if descriptor.needsSpecialGenericOps():
+                props.isGenericSetter = True
+
+    return props
 
 class CGDescriptor(CGThing):
     def __init__(self, descriptor):
@@ -10467,9 +10520,9 @@ class CGDescriptor(CGThing):
                                   descriptor.nativeType))
         # These are set to true if at least one non-static
         # method/getter/setter or jsonifier exist on the interface.
-        (hasMethod, hasGetter, hasLenientGetter, hasSetter, hasJsonifier,
-            hasLenientSetter,
-            hasPromiseReturningMethod) = False, False, False, False, False, False, False
+        (hasMethod, hasGetter, hasLenientGetter, hasSetter, hasLenientSetter,
+            hasPromiseReturningMethod) = False, False, False, False, False, False
+        jsonifierMethod = None
         crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
         for n in descriptor.interface.namedConstructors:
             cgThings.append(CGClassConstructor(descriptor, n,
@@ -10479,29 +10532,26 @@ class CGDescriptor(CGThing):
                 continue
             if not isMaybeExposedIn(m, descriptor):
                 continue
-            if m.isMethod() and m == descriptor.operations['Jsonifier']:
-                hasJsonifier = True
-                hasMethod = descriptor.needsSpecialGenericOps()
-                jsonifierMethod = m
-            elif (m.isMethod() and
-                  (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
-                if m.isStatic():
-                    assert descriptor.interface.hasInterfaceObject()
-                    cgThings.append(CGStaticMethod(descriptor, m))
-                    if m.returnsPromise():
-                        cgThings.append(CGStaticMethodJitinfo(m))
-                elif descriptor.interface.hasInterfacePrototypeObject():
-                    specializedMethod = CGSpecializedMethod(descriptor, m)
-                    cgThings.append(specializedMethod)
-                    if m.returnsPromise():
-                        if descriptor.needsSpecialGenericOps():
-                            hasPromiseReturningMethod = True
-                        cgThings.append(CGMethodPromiseWrapper(descriptor, specializedMethod))
-                    cgThings.append(CGMemberJITInfo(descriptor, m))
-                    if m.getExtendedAttribute("CrossOriginCallable"):
-                        crossOriginMethods.add(m.identifier.name)
-                    elif descriptor.needsSpecialGenericOps():
-                        hasMethod = True
+
+            props = memberProperties(m, descriptor)
+
+            if m.isMethod():
+                if props.isJsonifier:
+                    jsonifierMethod = m
+                elif not m.isIdentifierLess() or m == descriptor.operations['Stringifier']:
+                    if m.isStatic():
+                        assert descriptor.interface.hasInterfaceObject()
+                        cgThings.append(CGStaticMethod(descriptor, m))
+                        if m.returnsPromise():
+                            cgThings.append(CGStaticMethodJitinfo(m))
+                    elif descriptor.interface.hasInterfacePrototypeObject():
+                        specializedMethod = CGSpecializedMethod(descriptor, m)
+                        cgThings.append(specializedMethod)
+                        if m.returnsPromise():
+                            cgThings.append(CGMethodPromiseWrapper(descriptor, specializedMethod))
+                        cgThings.append(CGMemberJITInfo(descriptor, m))
+                        if props.isCrossOriginMethod:
+                            crossOriginMethods.add(m.identifier.name)
             elif m.isAttr():
                 if m.stringifier:
                     raise TypeError("Stringifier attributes not supported yet. "
@@ -10512,12 +10562,8 @@ class CGDescriptor(CGThing):
                     cgThings.append(CGStaticGetter(descriptor, m))
                 elif descriptor.interface.hasInterfacePrototypeObject():
                     cgThings.append(CGSpecializedGetter(descriptor, m))
-                    if m.hasLenientThis():
-                        hasLenientGetter = True
-                    elif m.getExtendedAttribute("CrossOriginReadable"):
+                    if props.isCrossOriginGetter:
                         crossOriginGetters.add(m.identifier.name)
-                    elif descriptor.needsSpecialGenericOps():
-                        hasGetter = True
                 if not m.readonly:
                     for extAttr in ["PutForwards", "Replaceable"]:
                         if m.getExtendedAttribute(extAttr):
@@ -10530,26 +10576,27 @@ class CGDescriptor(CGThing):
                         cgThings.append(CGStaticSetter(descriptor, m))
                     elif descriptor.interface.hasInterfacePrototypeObject():
                         cgThings.append(CGSpecializedSetter(descriptor, m))
-                        if m.hasLenientThis():
-                            hasLenientSetter = True
-                        elif IsCrossOriginWritable(m, descriptor):
+                        if props.isCrossOriginSetter:
                             crossOriginSetters.add(m.identifier.name)
-                        elif descriptor.needsSpecialGenericOps():
-                            hasSetter = True
                 elif m.getExtendedAttribute("PutForwards"):
                     cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
-                    if IsCrossOriginWritable(m, descriptor):
+                    if props.isCrossOriginSetter:
                         crossOriginSetters.add(m.identifier.name)
-                    elif descriptor.needsSpecialGenericOps():
-                        hasSetter = True
                 elif m.getExtendedAttribute("Replaceable"):
                     cgThings.append(CGSpecializedReplaceableSetter(descriptor, m))
-                    if descriptor.needsSpecialGenericOps():
-                        hasSetter = True
                 if (not m.isStatic() and
                     descriptor.interface.hasInterfacePrototypeObject()):
                     cgThings.append(CGMemberJITInfo(descriptor, m))
-        if hasJsonifier:
+
+            hasMethod = hasMethod or props.isGenericMethod
+            hasPromiseReturningMethod = (hasPromiseReturningMethod or
+                                         props.isPromiseReturningMethod)
+            hasGetter = hasGetter or props.isGenericGetter
+            hasLenientGetter = hasLenientGetter or props.isLenientGetter
+            hasSetter = hasSetter or props.isGenericSetter
+            hasLenientSetter = hasLenientSetter or props.isLenientSetter
+
+        if jsonifierMethod:
             cgThings.append(CGJsonifierMethod(descriptor, jsonifierMethod))
             cgThings.append(CGMemberJITInfo(descriptor, jsonifierMethod))
         if hasMethod:
@@ -11603,9 +11650,29 @@ class CGBindingRoot(CGThing):
     """
     def __init__(self, config, prefix, webIDLFile):
         bindingHeaders = {}
+        bindingDeclareHeaders = dict.fromkeys((
+            'mozilla/dom/BindingDeclarations.h',
+            'mozilla/dom/Nullable.h',
+            'mozilla/ErrorResult.h',
+            ),
+            True)
+
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                             hasInterfaceOrInterfacePrototypeObject=True,
                                             skipGen=False)
+
+        def descriptorHasCrossOriginProperties(desc):
+            def hasCrossOriginProperty(m):
+                props = memberProperties(m, desc)
+                return (props.isCrossOriginMethod or
+                        props.isCrossOriginGetter or
+                        props.isCrossOriginSetter)
+
+            return any(hasCrossOriginProperty(m) for m in desc.interface.members)
+
+        bindingDeclareHeaders["jsapi.h"] = any(descriptorHasCrossOriginProperties(d) for d in descriptors)
+        bindingDeclareHeaders["jspubtd.h"] = not bindingDeclareHeaders["jsapi.h"]
+        bindingDeclareHeaders["js/RootingAPI.h"] = not bindingDeclareHeaders["jsapi.h"]
 
         def descriptorRequiresPreferences(desc):
             iface = desc.interface
@@ -11647,6 +11714,7 @@ class CGBindingRoot(CGThing):
                                                     isCallback=True)
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
                                               isJSImplemented=True)
+        bindingDeclareHeaders["nsWeakReference.h"] = jsImplemented
         bindingHeaders["nsPIDOMWindow.h"] = jsImplemented
         bindingHeaders["AtomList.h"] = hasNonEmptyDictionaries or jsImplemented or callbackDescriptors
 
@@ -11751,21 +11819,15 @@ class CGBindingRoot(CGThing):
         bindingHeaders = [header
                           for header, include in bindingHeaders.iteritems()
                           if include]
-        declareIncludes = [
-            'mozilla/dom/BindingDeclarations.h',
-            'mozilla/dom/Nullable.h',
-            'mozilla/ErrorResult.h',
-            'jspubtd.h',
-            'js/RootingAPI.h',
-        ]
-        if jsImplemented:
-            declareIncludes.append('nsWeakReference.h')
+        bindingDeclareHeaders = [header
+                                 for header, include in bindingDeclareHeaders.iteritems()
+                                 if include]
 
         curr = CGHeaders(descriptors,
                          dictionaries,
                          mainCallbacks + workerCallbacks,
                          callbackDescriptors,
-                         declareIncludes,
+                         bindingDeclareHeaders,
                          bindingHeaders,
                          prefix,
                          curr,

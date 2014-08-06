@@ -41,7 +41,7 @@ public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  Http2Session(nsISocketTransport *);
+  explicit Http2Session(nsISocketTransport *);
 
   bool AddStream(nsAHttpTransaction *, int32_t,
                  bool, nsIInterfaceRequestor *);
@@ -112,7 +112,6 @@ public:
   const static uint8_t kFlag_END_HEADERS = 0x04; // headers, continuation
   const static uint8_t kFlag_END_PUSH_PROMISE = 0x04; // push promise
   const static uint8_t kFlag_ACK = 0x01; // ping and settings
-  const static uint8_t kFlag_END_SEGMENT = 0x02; // data
   const static uint8_t kFlag_PADDED = 0x08; // data, headers, push promise, continuation
   const static uint8_t kFlag_PRIORITY = 0x20; // headers
 
@@ -120,7 +119,8 @@ public:
     SETTINGS_TYPE_HEADER_TABLE_SIZE = 1, // compression table size
     SETTINGS_TYPE_ENABLE_PUSH = 2,     // can be used to disable push
     SETTINGS_TYPE_MAX_CONCURRENT = 3,  // streams recvr allowed to initiate
-    SETTINGS_TYPE_INITIAL_WINDOW = 4  // bytes for flow control default
+    SETTINGS_TYPE_INITIAL_WINDOW = 4,  // bytes for flow control default
+    SETTINGS_TYPE_MAX_FRAME_SIZE = 5   // max frame size settings sender allows receipt of
   };
 
   // This should be big enough to hold all of your control packets,
@@ -148,9 +148,16 @@ public:
   // The default rwin is 64KB - 1 unless updated by a settings frame
   const static uint32_t kDefaultRwin = 65535;
 
-  // Frames with HTTP semantics are limited to 2^14 - 1 bytes of length in
-  // order to preserve responsiveness
-  const static uint32_t kMaxFrameData = 16383;
+  // We limit frames to 2^14 bytes of length in order to preserve responsiveness
+  // This is the smallest allowed value for SETTINGS_MAX_FRAME_SIZE
+  const static uint32_t kMaxFrameData = 0x4000;
+
+  const static uint8_t kFrameLengthBytes = 3;
+  const static uint8_t kFrameStreamIDBytes = 4;
+  const static uint8_t kFrameFlagBytes = 1;
+  const static uint8_t kFrameTypeBytes = 1;
+  const static uint8_t kFrameHeaderBytes = kFrameLengthBytes + kFrameFlagBytes +
+    kFrameTypeBytes + kFrameStreamIDBytes;
 
   static nsresult RecvHeaders(Http2Session *);
   static nsresult RecvPriority(Http2Session *);

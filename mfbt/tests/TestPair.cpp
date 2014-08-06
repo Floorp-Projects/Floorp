@@ -29,21 +29,21 @@ using mozilla::Pair;
 INSTANTIATE(int, int, prim1, 2 * sizeof(int));
 INSTANTIATE(int, long, prim2, 2 * sizeof(long));
 
-struct EmptyClass { EmptyClass(int) {} };
-struct NonEmpty { char mC; NonEmpty(int) {} };
+struct EmptyClass { explicit EmptyClass(int) {} };
+struct NonEmpty { char mC; explicit NonEmpty(int) {} };
 
 INSTANTIATE(int, EmptyClass, both1, sizeof(int));
 INSTANTIATE(int, NonEmpty, both2, 2 * sizeof(int));
 INSTANTIATE(EmptyClass, NonEmpty, both3, 1);
 
-struct A { char dummy; A(int) {} };
-struct B : A { B(int aI) : A(aI) {} };
+struct A { char dummy; explicit A(int) {} };
+struct B : A { explicit B(int aI) : A(aI) {} };
 
 INSTANTIATE(A, A, class1, 2);
 INSTANTIATE(A, B, class2, 2);
 INSTANTIATE(A, EmptyClass, class3, 1);
 
-struct OtherEmpty : EmptyClass { OtherEmpty(int aI) : EmptyClass(aI) {} };
+struct OtherEmpty : EmptyClass { explicit OtherEmpty(int aI) : EmptyClass(aI) {} };
 
 // C++11 requires distinct objects of the same type, within the same "most
 // derived object", to have different addresses.  Pair allocates its elements as
