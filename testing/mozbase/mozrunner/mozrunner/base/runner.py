@@ -20,7 +20,7 @@ class BaseRunner(object):
     The base runner class for all mozrunner objects, both local and remote.
     """
     __metaclass__ = ABCMeta
-    last_test = 'automation'
+    last_test = 'mozrunner-startup'
     process_handler = None
     timeout = None
     output_timeout = None
