@@ -141,7 +141,6 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
 
   // XXX we should just do this LookAndFeel consultation every time
   // we need these values.
-  mCaretWidthCSSPx = LookAndFeel::GetInt(LookAndFeel::eIntID_CaretWidth, 1);
   mCaretAspectRatio =
     LookAndFeel::GetFloat(LookAndFeel::eFloatID_CaretAspectRatio, 0.0f);
 
@@ -197,7 +196,8 @@ nsCaret::Metrics nsCaret::ComputeMetrics(nsIFrame* aFrame, int32_t aOffset, nsco
 {
   // Compute nominal sizes in appunits
   nscoord caretWidth = (aCaretHeight * mCaretAspectRatio) +
-                       nsPresContext::CSSPixelsToAppUnits(mCaretWidthCSSPx);
+    nsPresContext::CSSPixelsToAppUnits(
+        LookAndFeel::GetInt(LookAndFeel::eIntID_CaretWidth, 1));
 
   if (DrawCJKCaret(aFrame, aOffset)) {
     caretWidth += nsPresContext::CSSPixelsToAppUnits(1);
