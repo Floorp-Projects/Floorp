@@ -168,9 +168,8 @@ TouchCaret::GetContentBoundary()
   }
 
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   nsIFrame* canvasFrame = GetCanvasFrame();
 
   // Get the editing host to determine the touch caret dragable boundary.
@@ -213,9 +212,8 @@ TouchCaret::GetCaretYCenterPosition()
   }
 
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   nsRect caretRect = focusFrame->GetRectRelativeToSelf();
   nsIFrame *canvasFrame = GetCanvasFrame();
   nsLayoutUtils::TransformRect(focusFrame, canvasFrame, caretRect);
@@ -264,9 +262,8 @@ TouchCaret::MoveCaret(const nsPoint& movePoint)
 
   // Get scrollable frame.
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   nsIFrame* scrollable =
     nsLayoutUtils::GetClosestFrameOfType(focusFrame, nsGkAtoms::scrollFrame);
 
@@ -455,9 +452,10 @@ TouchCaret::UpdatePosition()
     return;
   }
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
+
+  // Caret is visible and shown, update touch caret.
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   if (!focusFrame || focusRect.IsEmpty()) {
     return;
   }
@@ -538,9 +536,8 @@ TouchCaret::SetSelectionDragState(bool aState)
   }
 
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* caretFocusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* caretFocusFrame = caret->GetGeometry(&focusRect);
   nsRefPtr<nsFrameSelection> fs = caretFocusFrame->GetFrameSelection();
   fs->SetDragState(aState);
 }

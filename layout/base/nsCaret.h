@@ -88,15 +88,6 @@ class nsCaret : public nsISelectionListener
      **/
     nsresult DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset);
 
-    /**
-     * Gets the position and size of the caret that would be drawn for
-     * the focus node/offset of aSelection (assuming it would be drawn,
-     * i.e., disregarding blink status). The geometry is stored in aRect,
-     * and we return the frame aRect is relative to.
-     * @param aRect must be non-null
-     */
-    nsIFrame* GetGeometry(nsISelection* aSelection,
-                          nsRect* aRect);
     /** GetCaretFrame
      *  Get the current frame that the caret should be drawn in. If the caret is
      *  not currently visible (i.e., it is between blinks), then this will
@@ -115,6 +106,10 @@ class nsCaret : public nsISelectionListener
       r.UnionRect(mCaretRect, GetHookRect());
       return r;
     }
+    nsIFrame* GetGeometry(nsRect* aRect)
+    {
+      return GetGeometry(GetCaretDOMSelection(), aRect);
+    }
 
     /** PaintCaret
      *  Actually paint the caret onto the given rendering context.
@@ -127,6 +122,17 @@ class nsCaret : public nsISelectionListener
     //nsISelectionListener interface
     NS_DECL_NSISELECTIONLISTENER
 
+    /**
+     * Gets the position and size of the caret that would be drawn for
+     * the focus node/offset of aSelection (assuming it would be drawn,
+     * i.e., disregarding blink status). The geometry is stored in aRect,
+     * and we return the frame aRect is relative to.
+     * Only looks at the focus node of aSelection, so you can call it even if
+     * aSelection is not collapsed.
+     * @param aRect must be non-null
+     */
+    static nsIFrame* GetGeometry(nsISelection* aSelection,
+                                 nsRect* aRect);
     static nsresult GetCaretFrameForNodeOffset(nsFrameSelection* aFrameSelection,
                                                nsIContent* aContentNode,
                                                int32_t aOffset,
@@ -156,11 +162,12 @@ protected:
       nscoord mBidiIndicatorSize; // width and height of bidi indicator
       nscoord mCaretWidth;        // full caret width including bidi indicator
     };
-    Metrics ComputeMetrics(nsIFrame* aFrame, int32_t aOffset, nscoord aCaretHeight);
-    nsresult GetGeometryForFrame(nsIFrame* aFrame,
-                                 int32_t   aFrameOffset,
-                                 nsRect*   aRect,
-                                 nscoord*  aBidiIndicatorSize);
+    static Metrics ComputeMetrics(nsIFrame* aFrame, int32_t aOffset,
+                                  nscoord aCaretHeight);
+    static nsresult GetGeometryForFrame(nsIFrame* aFrame,
+                                        int32_t   aFrameOffset,
+                                        nsRect*   aRect,
+                                        nscoord*  aBidiIndicatorSize);
 
     // Returns true if the caret should be drawn. When |mDrawn| is true,
     // this returns true, so that we erase the drawn caret. If |aIgnoreDrawnState|
