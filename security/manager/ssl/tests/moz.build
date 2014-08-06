@@ -16,3 +16,6 @@ TEST_DIRS += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
+    XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell-smartcards.ini']
