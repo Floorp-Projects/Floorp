@@ -46,15 +46,10 @@ interface MozNFCManager {
  NavigatorProperty="mozNfc",
  Func="Navigator::HasNFCSupport"]
 interface MozNFC : EventTarget {
-   /**
-    * Returns MozNFCTag object or null in case of invalid sessionToken
-    */
-   MozNFCTag? getNFCTag(DOMString sessionToken);
-
-   /**
-    * Returns MozNFCPeer object or null in case of invalid sessionToken
-    */
-   MozNFCPeer? getNFCPeer(DOMString sessionToken);
+   [Throws]
+   MozNFCTag getNFCTag(DOMString sessionId);
+   [Throws]
+   MozNFCPeer getNFCPeer(DOMString sessionId);
 
    /**
     * This event will be fired when another NFCPeer is detected, and user confirms
