@@ -78,7 +78,6 @@ namespace CSF
 
         static int gVideoCodecGmpMask;
     private:
-        static bool scanForGmpCodecs();
         void CandidateReady(mozilla::NrIceMediaStream* stream,
                             const std::string& candidate);
 
