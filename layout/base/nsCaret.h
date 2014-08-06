@@ -105,14 +105,6 @@ class nsCaret : public nsISelectionListener
      **/
     nsresult DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset);
 
-    /** GetCaretFrame
-     *  Get the current frame that the caret should be drawn in. If the caret is
-     *  not currently visible (i.e., it is between blinks), then this will
-     *  return null.
-     *
-     *  @param aOffset is result of the caret offset in the content.
-     */
-    nsIFrame* GetCaretFrame(int32_t *aOffset = nullptr);
     /**
      * Returns a frame to paint in, and the bounds of the painted caret
      * relative to that frame.
