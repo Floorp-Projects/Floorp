@@ -1835,9 +1835,6 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
   }
 #endif
 
-  if (mCaret)
-    mCaret->EraseCaret();
-
   // XXX Do a full invalidate at the beginning so that invalidates along
   // the way don't have region accumulation issues?
 
@@ -3936,9 +3933,6 @@ PresShell::UnsuppressAndInvalidate()
     // let's assume that outline on a root frame is not supported
     rootFrame->InvalidateFrame();
 
-    if (mCaretEnabled && mCaret) {
-      mCaret->CheckCaretDrawingState();
-    }
     if (mTouchCaret) {
       mTouchCaret->UpdatePositionIfNeeded();
     }
@@ -8635,10 +8629,6 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
 
   if (sSynthMouseMove) {
     SynthesizeMouseMove(false);
-  }
-
-  if (mCaret) {
-    mCaret->UpdateCaretPosition();
   }
 
   if (mTouchCaret) {

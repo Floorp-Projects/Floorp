@@ -695,11 +695,7 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
       nsresult rv = aDragEvent->GetRangeOffset(&offset);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // to avoid flicker, we could track the node and offset to see if we moved
-      if (mCaret)
-        mCaret->EraseCaret();
-      
-      //mCaret->SetCaretVisible(true);   // make sure it's visible
+      mCaret->SetVisible(true);
       mCaret->DrawAtPosition(parent, offset);
     }
   }
@@ -713,7 +709,7 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
 
     if (mCaret)
     {
-      mCaret->EraseCaret();
+      mCaret->SetVisible(false);
     }
   }
 
@@ -725,7 +721,6 @@ nsEditorEventListener::CleanupDragDropCaret()
 {
   if (mCaret)
   {
-    mCaret->EraseCaret();
     mCaret->SetVisible(false);    // hide it, so that it turns off its timer
 
     nsCOMPtr<nsIPresShell> presShell = GetPresShell();
