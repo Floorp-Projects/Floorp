@@ -199,9 +199,7 @@ protected:
 
     nsCOMPtr<nsITimer>    mBlinkTimer;
 
-    // XXX these fields should go away and the values be acquired as needed,
-    // probably by ComputeMetrics.
-    uint32_t              mBlinkRate;         // time for one cyle (on then off), in milliseconds
+    bool                  mIsBlinking;
 
     bool                  mVisible;           // is the caret blinking
 
