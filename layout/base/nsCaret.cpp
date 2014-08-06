@@ -457,16 +457,6 @@ nsIFrame * nsCaret::GetCaretFrame(int32_t *aOffset)
   return frame;
 }
 
-void nsCaret::InvalidateOutsideCaret()
-{
-  nsIFrame *frame = GetCaretFrame();
-
-  // Only invalidate if we are not fully contained by our frame's rect.
-  if (frame && !frame->GetVisualOverflowRect().Contains(GetCaretRect())) {
-    frame->SchedulePaint();
-  }
-}
-
 void nsCaret::UpdateCaretPosition()
 {
   // We'll recalculate anyway if we're not drawn right now.
