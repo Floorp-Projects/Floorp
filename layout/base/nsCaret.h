@@ -196,6 +196,17 @@ protected:
     nsCOMPtr<nsITimer>    mBlinkTimer;
 
     /**
+     * The content to draw the caret at. If null, we use mDomSelectionWeak's
+     * focus node instead.
+     */
+    nsCOMPtr<nsINode>     mOverrideContent;
+    /**
+     * The character offset to draw the caret at.
+     * Ignored if mOverrideContent is null.
+     */
+    int32_t               mOverrideOffset;
+
+    /**
      * mIsBlinking is true when caret blinking is enabled. When false,
      * the caret will always be on.
      */
@@ -208,26 +219,21 @@ protected:
      * mIsVisible is true when SetVisible was last called with 'true'.
      */
     bool                  mVisible;
-
-    bool                  mDrawn;             // Denotes when the caret is physically drawn on the screen.
-    bool                  mPendingDraw;       // True when the last on-state draw was suppressed.
-
-    bool                  mReadOnly;          // it the caret in readonly state (draws differently)
-    bool                  mShowDuringSelection; // show when text is selected
-
+    /**
+     * mReadOnly is true when the caret is set to "read only" mode (i.e.,
+     * it doesn't blink).
+     */
+    bool                  mReadOnly;
+    /**
+     * mShowDuringSelection is true when the caret should be shown even when
+     * the selection is not collapsed.
+     */
+    bool                  mShowDuringSelection;
+    /**
+     * mIgnoreUserModify is true when the caret should be shown even when
+     * it's in non-user-modifiable content.
+     */
     bool                  mIgnoreUserModify;
-
-    uint8_t               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
-
-    nsCOMPtr<nsINode>     mLastContent;       // store the content the caret was last requested to be drawn
-                                              // in (by DrawAtPosition()/DrawCaret()),
-                                              // note that this can be different than where it was
-                                              // actually drawn (anon <BR> in text control)
-    int32_t               mLastContentOffset; // the offset for the last request
-
-    CaretAssociationHint  mLastHint;          // the hint associated with the last request, see also
-                                              // mLastBidiLevel below
-
 };
 
 #endif //nsCaret_h__
