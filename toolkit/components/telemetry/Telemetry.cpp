@@ -632,7 +632,7 @@ private:
   AddonMapType mAddonMap;
 
   // This is used for speedy string->Telemetry::ID conversions
-  typedef nsBaseHashtableET<nsCharPtrHashKey, Telemetry::ID> CharPtrEntryType;
+  typedef nsBaseHashtableET<nsDepCharHashKey, Telemetry::ID> CharPtrEntryType;
   typedef AutoHashtable<CharPtrEntryType> HistogramMapType;
   HistogramMapType mHistogramMap;
   bool mCanRecord;
