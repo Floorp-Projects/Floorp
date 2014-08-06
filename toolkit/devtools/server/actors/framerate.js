@@ -83,6 +83,15 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
   }),
 
   /**
+   * Returns whether this actor is currently active.
+   */
+  isRecording: method(function() {
+    return !!this._recording;
+  }, {
+    response: { recording: RetVal("boolean") }
+  }),
+
+  /**
    * Gets the refresh driver ticks recorded so far.
    */
   getPendingTicks: method(function(beginAt = 0, endAt = Number.MAX_SAFE_INTEGER) {

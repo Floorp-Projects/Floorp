@@ -47,11 +47,11 @@
 
     <!-- Note: for an unknown reason, scrolling in the TabsTray
          does not work unless it is laid out after the empty view. -->
-    <org.mozilla.gecko.tabspanel.TabsTray android:id="@+id/private_tabs_tray"
-                                          style="@style/TabsList"
-                                          android:layout_width="match_parent"
-                                          android:layout_height="match_parent"
-                                          android:choiceMode="singleChoice"
-                                          gecko:tabs="tabs_private"/>
+    <org.mozilla.gecko.tabs.TabsTray android:id="@+id/private_tabs_tray"
+                                     style="@style/TabsList"
+                                     android:layout_width="match_parent"
+                                     android:layout_height="match_parent"
+                                     android:choiceMode="singleChoice"
+                                     gecko:tabs="tabs_private"/>
 
 </merge>

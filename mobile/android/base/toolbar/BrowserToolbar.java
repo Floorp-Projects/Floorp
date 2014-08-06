@@ -125,7 +125,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private RelativeLayout.LayoutParams urlBarEntryShrunkenLayoutParams;
     private ImageView urlBarTranslatingEdge;
     private boolean isSwitchingTabs;
-    private ShapedButton tabsButton;
+    private ThemedImageButton tabsButton;
     private ImageButton backButton;
     private ImageButton forwardButton;
 
@@ -212,7 +212,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
             urlBarTranslatingEdge.getDrawable().setLevel(6000);
         }
 
-        tabsButton = (ShapedButton) findViewById(R.id.tabs);
+        tabsButton = (ThemedImageButton) findViewById(R.id.tabs);
         tabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
         if (Versions.feature11Plus) {
             tabsCounter.setLayerType(View.LAYER_TYPE_SOFTWARE, null);

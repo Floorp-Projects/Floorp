@@ -28,122 +28,111 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:gravity="center">
 
-    <LinearLayout android:id="@+id/spinners"
+    <LinearLayout android:id="@+id/date_spinners"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
+        android:orientation="horizontal"
+        android:layout_marginLeft="1dip"
+        android:layout_marginRight="1dip"
         android:gravity="center">
 
-        <LinearLayout android:id="@+id/date_spinners"
-            android:layout_width="wrap_content"
+        <!-- Month -->
+        <android.widget.NumberPicker
+            android:id="@+id/month"
+            android:layout_width="60dip"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginLeft="1dip"
             android:layout_marginRight="1dip"
-            android:layout_weight="1"
-            android:gravity="center">
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
 
-            <!-- Month -->
-            <android.widget.NumberPicker
-                android:id="@+id/month"
-                android:layout_width="60dip"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dip"
-                android:layout_marginRight="1dip"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                />
-
-            <!-- Week -->
-            <android.widget.NumberPicker
-                android:id="@+id/week"
-                android:layout_width="60dip"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dip"
-                android:layout_marginRight="1dip"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                />
-
-            <!-- Day -->
-            <android.widget.NumberPicker
-                android:id="@+id/day"
-                android:layout_width="60dip"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dip"
-                android:layout_marginRight="1dip"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                />
-
-            <!-- Year -->
-            <android.widget.NumberPicker
-                android:id="@+id/year"
-                android:layout_width="75dip"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dip"
-                android:layout_marginRight="1dip"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                />
-
-        </LinearLayout>
-
-        <LinearLayout android:id="@+id/time_spinners"
-            android:layout_width="wrap_content"
+        <!-- Week -->
+        <android.widget.NumberPicker
+            android:id="@+id/week"
+            android:layout_width="60dip"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginLeft="1dip"
             android:layout_marginRight="1dip"
-            android:layout_weight="1"
-            android:gravity="center">
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
 
-            <!-- Hour -->
-            <android.widget.NumberPicker
-                android:id="@+id/hour"
-                android:layout_width="60dip"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dip"
-                android:layout_marginRight="1dip"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                />
+        <!-- Day -->
+        <android.widget.NumberPicker
+            android:id="@+id/day"
+            android:layout_width="60dip"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="1dip"
+            android:layout_marginRight="1dip"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
 
-            <TextView android:id="@+id/mincolon"
-                android:text=":"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dip"
-                android:layout_marginRight="1dip"/>
-
-            <!-- Minute -->
-            <android.widget.NumberPicker
-                android:id="@+id/minute"
-                android:layout_width="60dip"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dip"
-                android:layout_marginRight="1dip"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                />
-
-            <!-- AMPM -->
-            <android.widget.NumberPicker
-                android:id="@+id/ampm"
-                android:layout_width="60dip"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dip"
-                android:layout_marginRight="1dip"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                />
-
-        </LinearLayout>
+        <!-- Year -->
+        <android.widget.NumberPicker
+            android:id="@+id/year"
+            android:layout_width="75dip"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="1dip"
+            android:layout_marginRight="1dip"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
 
     </LinearLayout>
+
+    <LinearLayout android:id="@+id/time_spinners"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginLeft="1dip"
+        android:layout_marginRight="1dip"
+        android:gravity="center">
+
+        <!-- Hour -->
+        <android.widget.NumberPicker
+            android:id="@+id/hour"
+            android:layout_width="60dip"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="1dip"
+            android:layout_marginRight="1dip"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
+
+        <TextView android:id="@+id/mincolon"
+            android:text="@string/colon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="1dip"
+            android:layout_marginRight="1dip"/>
+
+        <!-- Minute -->
+        <android.widget.NumberPicker
+            android:id="@+id/minute"
+            android:layout_width="60dip"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="1dip"
+            android:layout_marginRight="1dip"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
+
+        <!-- AMPM -->
+        <android.widget.NumberPicker
+            android:id="@+id/ampm"
+            android:layout_width="60dip"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="1dip"
+            android:layout_marginRight="1dip"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            />
+
+        </LinearLayout>
 
 </LinearLayout>
