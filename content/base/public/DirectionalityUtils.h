@@ -79,12 +79,20 @@ void WalkDescendantsSetDirAuto(mozilla::dom::Element* aElement,
 void WalkDescendantsClearAncestorDirAuto(mozilla::dom::Element* aElement);
 
 /**
- * When the contents of a text node have changed, deal with any elements whose
- * directionality needs to change
+ * When the contents of a text node are about to change, retrieve the current
+ * directionality of the text
+ *
+ * @return whether the text node affects the directionality of any element
  */
-void SetDirectionFromChangedTextNode(nsIContent* aTextNode, uint32_t aOffset,
-                                     const char16_t* aBuffer, uint32_t aLength,
-                                     bool aNotify);
+bool TextNodeWillChangeDirection(nsIContent* aTextNode, Directionality* aOldDir,
+                                 uint32_t aOffset);
+
+/**
+ * After the contents of a text node have changed, change the directionality
+ * of any elements whose directionality is determined by that node
+ */
+void TextNodeChangedDirection(nsIContent* aTextNode, Directionality aOldDir,
+                              bool aNotify);
 
 /**
  * When a text node is appended to an element, find any ancestors with dir=auto
