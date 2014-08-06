@@ -650,7 +650,7 @@ public:
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new AcceptTask(mImpl, aFd));
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     BT_LOGR("BluetoothSocketInterface::Accept failed: %d", (int)aStatus);
@@ -832,7 +832,7 @@ public:
                                      new SocketConnectTask(mImpl, aFd));
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     BT_WARNING("Connect failed: %d", (int)aStatus);
@@ -879,7 +879,7 @@ public:
                                      new SocketListenTask(mImpl, aFd));
   }
 
-  void OnError(bt_status_t aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
