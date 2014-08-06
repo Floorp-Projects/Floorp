@@ -1595,9 +1595,8 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     // fire drag gesture if mouse has moved enough
     LayoutDeviceIntPoint pt = aEvent->refPoint +
       LayoutDeviceIntPoint::FromUntyped(aEvent->widget->WidgetToScreenOffset());
-    LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
-    if (Abs(distance.x.value) > SafeCast<uint32_t>(pixelThresholdX) ||
-        Abs(distance.y.value) > SafeCast<uint32_t>(pixelThresholdY)) {
+    if (DeprecatedAbs(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
+        DeprecatedAbs(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
       if (Prefs::ClickHoldContextMenu()) {
         // stop the click-hold before we fire off the drag gesture, in case
         // it takes a long time
