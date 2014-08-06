@@ -59,7 +59,7 @@ ClientTiledThebesLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 static LayerRect
 ApplyParentLayerToLayerTransform(const gfx::Matrix4x4& aTransform, const ParentLayerRect& aParentLayerRect)
 {
-  return TransformTo<LayerPixel>(gfx::To3DMatrix(aTransform), aParentLayerRect);
+  return TransformTo<LayerPixel>(aTransform, aParentLayerRect);
 }
 
 static gfx::Matrix4x4
