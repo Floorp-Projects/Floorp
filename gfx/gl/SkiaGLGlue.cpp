@@ -895,10 +895,7 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 SkiaGLGlue::SkiaGLGlue(GLContext* context)
     : mGLContext(context)
 {
-    SkAutoTUnref<GrGLInterface> i(CreateGrGLInterfaceFromGLContext(mGLContext));
-    i->fCallbackData = reinterpret_cast<GrGLInterfaceCallbackData>(this);
-    mGrGLInterface = i;
-    SkAutoTUnref<GrContext> gr(GrContext::Create(kOpenGL_GrBackend, (GrBackendContext)mGrGLInterface.get()));
-
-    mGrContext = gr;
+    mGrGLInterface.adopt(CreateGrGLInterfaceFromGLContext(mGLContext));
+    mGrGLInterface->fCallbackData = reinterpret_cast<GrGLInterfaceCallbackData>(this);
+    mGrContext.adopt(GrContext::Create(kOpenGL_GrBackend, (GrBackendContext)mGrGLInterface.get()));
 }
