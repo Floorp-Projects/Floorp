@@ -156,10 +156,7 @@ protected:
 
     void          CheckSelectionLanguageChange();
 
-    void          KillTimer();
-    nsresult      PrimeTimer();
-
-    void          StartBlinking();
+    void          ResetBlinking();
     void          StopBlinking();
 
     mozilla::dom::Selection* GetSelectionInternal();
