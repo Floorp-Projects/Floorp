@@ -20,6 +20,166 @@ struct interface_traits
 { };
 
 //
+// Conversion
+//
+
+static nsresult
+Convert(const nsAString& aIn, bt_property_type_t& aOut)
+{
+  if (aIn.EqualsLiteral("Name")) {
+    aOut = BT_PROPERTY_BDNAME;
+  } else if (aIn.EqualsLiteral("Discoverable")) {
+    aOut = BT_PROPERTY_ADAPTER_SCAN_MODE;
+  } else if (aIn.EqualsLiteral("DiscoverableTimeout")) {
+    aOut = BT_PROPERTY_ADAPTER_DISCOVERY_TIMEOUT;
+  } else {
+    BT_LOGR("Invalid property name: %s", NS_ConvertUTF16toUTF8(aIn).get());
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  return NS_OK;
+}
+
+static nsresult
+Convert(bool aIn, bt_scan_mode_t& aOut)
+{
+  static const bt_scan_mode_t sScanMode[] = {
+    [false] = BT_SCAN_MODE_CONNECTABLE,
+    [true] = BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sScanMode)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sScanMode[aIn];
+  return NS_OK;
+}
+
+struct ConvertNamedValue
+{
+  ConvertNamedValue(const BluetoothNamedValue& aNamedValue)
+  : mNamedValue(aNamedValue)
+  { }
+
+  const BluetoothNamedValue& mNamedValue;
+
+  // temporary fields
+  nsCString mStringValue;
+  bt_scan_mode_t mScanMode;
+};
+
+static nsresult
+Convert(ConvertNamedValue& aIn, bt_property_t& aOut)
+{
+  nsresult rv = Convert(aIn.mNamedValue.name(), aOut.type);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (aIn.mNamedValue.value().type() == BluetoothValue::Tuint32_t) {
+    // Set discoverable timeout
+    aOut.val =
+      reinterpret_cast<void*>(aIn.mNamedValue.value().get_uint32_t());
+  } else if (aIn.mNamedValue.value().type() == BluetoothValue::TnsString) {
+    // Set name
+    aIn.mStringValue =
+      NS_ConvertUTF16toUTF8(aIn.mNamedValue.value().get_nsString());
+    aOut.val =
+      const_cast<void*>(static_cast<const void*>(aIn.mStringValue.get()));
+    aOut.len = strlen(static_cast<char*>(aOut.val));
+  } else if (aIn.mNamedValue.value().type() == BluetoothValue::Tbool) {
+    // Set scan mode
+    rv = Convert(aIn.mNamedValue.value().get_bool(), aIn.mScanMode);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    aOut.val = &aIn.mScanMode;
+    aOut.len = sizeof(aIn.mScanMode);
+  } else {
+    BT_LOGR("Invalid property value type");
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const nsAString& aIn, bt_bdaddr_t& aOut)
+{
+  NS_ConvertUTF16toUTF8 bdAddressUTF8(aIn);
+  const char* str = bdAddressUTF8.get();
+
+  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(aOut.address); ++i, ++str) {
+    aOut.address[i] =
+      static_cast<uint8_t>(strtoul(str, const_cast<char**>(&str), 16));
+  }
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const nsAString& aIn, bt_ssp_variant_t& aOut)
+{
+  if (aIn.EqualsLiteral("PasskeyConfirmation")) {
+    aOut = BT_SSP_VARIANT_PASSKEY_CONFIRMATION;
+  } else if (aIn.EqualsLiteral("PasskeyEntry")) {
+    aOut = BT_SSP_VARIANT_PASSKEY_ENTRY;
+  } else if (aIn.EqualsLiteral("Consent")) {
+    aOut = BT_SSP_VARIANT_CONSENT;
+  } else if (aIn.EqualsLiteral("PasskeyNotification")) {
+    aOut = BT_SSP_VARIANT_PASSKEY_NOTIFICATION;
+  } else {
+    BT_LOGR("Invalid SSP variant name: %s", NS_ConvertUTF16toUTF8(aIn).get());
+    aOut = BT_SSP_VARIANT_PASSKEY_CONFIRMATION; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bool& aIn, uint8_t& aOut)
+{
+  // casting converts true/false to either 1 or 0
+  aOut = static_cast<uint8_t>(aIn);
+  return NS_OK;
+}
+
+static nsresult
+Convert(const uint8_t aIn[16], bt_uuid_t& aOut)
+{
+  if (sizeof(aOut.uu) != 16) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  memcpy(aOut.uu, aIn, sizeof(aOut.uu));
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const nsAString& aIn, bt_pin_code_t& aOut)
+{
+  if (aIn.Length() > MOZ_ARRAY_LENGTH(aOut.pin)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  NS_ConvertUTF16toUTF8 pinCodeUTF8(aIn);
+  const char* str = pinCodeUTF8.get();
+
+  nsAString::size_type i;
+
+  // Fill pin into aOut
+  for (i = 0; i < aIn.Length(); ++i, ++str) {
+    aOut.pin[i] = static_cast<uint8_t>(*str);
+  }
+
+  // Clear remaining bytes in aOut
+  size_t ntrailing =
+    (MOZ_ARRAY_LENGTH(aOut.pin) - aIn.Length()) * sizeof(aOut.pin[0]);
+  memset(aOut.pin + aIn.Length(), 0, ntrailing);
+
+  return NS_OK;
+}
+
+//
 // Result handling
 //
 
@@ -1314,23 +1474,41 @@ BluetoothInterface::GetAdapterProperties(BluetoothResultHandler* aRes)
 }
 
 void
-BluetoothInterface::GetAdapterProperty(bt_property_type_t aType,
+BluetoothInterface::GetAdapterProperty(const nsAString& aName,
                                        BluetoothResultHandler* aRes)
 {
-  int status = mInterface->get_adapter_property(aType);
+  int status;
+  bt_property_type_t type;
+
+  /* FIXME: you need to implement the missing conversion functions */
+  NS_NOTREACHED("Conversion function missing");
+
+  if (false /* TODO: we don't support any values for aName currently */) {
+    status = mInterface->get_adapter_property(type);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
-                            &BluetoothResultHandler::GetAdapterProperty,
+                            &BluetoothResultHandler::GetAdapterProperties,
                             status);
   }
 }
 
 void
-BluetoothInterface::SetAdapterProperty(const bt_property_t* aProperty,
+BluetoothInterface::SetAdapterProperty(const BluetoothNamedValue& aProperty,
                                        BluetoothResultHandler* aRes)
 {
-  int status = mInterface->set_adapter_property(aProperty);
+  int status;
+  ConvertNamedValue convertProperty(aProperty);
+  bt_property_t property;
+
+  if (NS_SUCCEEDED(Convert(convertProperty, property))) {
+    status = mInterface->set_adapter_property(&property);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1342,10 +1520,17 @@ BluetoothInterface::SetAdapterProperty(const bt_property_t* aProperty,
 /* Remote Device Properties */
 
 void
-BluetoothInterface::GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr,
+BluetoothInterface::GetRemoteDeviceProperties(const nsAString& aRemoteAddr,
                                               BluetoothResultHandler* aRes)
 {
-  int status = mInterface->get_remote_device_properties(aRemoteAddr);
+  int status;
+  bt_bdaddr_t addr;
+
+  if (NS_SUCCEEDED(Convert(aRemoteAddr, addr))) {
+    status = mInterface->get_remote_device_properties(&addr);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1355,11 +1540,23 @@ BluetoothInterface::GetRemoteDeviceProperties(bt_bdaddr_t *aRemoteAddr,
 }
 
 void
-BluetoothInterface::GetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                                            bt_property_type_t aType,
+BluetoothInterface::GetRemoteDeviceProperty(const nsAString& aRemoteAddr,
+                                            const nsAString& aName,
                                             BluetoothResultHandler* aRes)
 {
-  int status = mInterface->get_remote_device_property(aRemoteAddr, aType);
+  int status;
+  bt_bdaddr_t remoteAddr;
+  bt_property_type_t name;
+
+  /* FIXME: you need to implement the missing conversion functions */
+  NS_NOTREACHED("Conversion function missing");
+
+  if (NS_SUCCEEDED(Convert(aRemoteAddr, remoteAddr)) &&
+      false /* TODO: we don't support any values for aName currently */) {
+    status = mInterface->get_remote_device_property(&remoteAddr, name);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1369,11 +1566,23 @@ BluetoothInterface::GetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
 }
 
 void
-BluetoothInterface::SetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
-                                            const bt_property_t* aProperty,
+BluetoothInterface::SetRemoteDeviceProperty(const nsAString& aRemoteAddr,
+                                            const BluetoothNamedValue& aProperty,
                                             BluetoothResultHandler* aRes)
 {
-  int status = mInterface->set_remote_device_property(aRemoteAddr, aProperty);
+  int status;
+  bt_bdaddr_t remoteAddr;
+  bt_property_t property;
+
+  /* FIXME: you need to implement the missing conversion functions */
+  NS_NOTREACHED("Conversion function missing");
+
+  if (NS_SUCCEEDED(Convert(aRemoteAddr, remoteAddr)) &&
+      false /* TODO: we don't support any values for aProperty currently */) {
+    status = mInterface->set_remote_device_property(&remoteAddr, &property);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1385,11 +1594,20 @@ BluetoothInterface::SetRemoteDeviceProperty(bt_bdaddr_t* aRemoteAddr,
 /* Remote Services */
 
 void
-BluetoothInterface::GetRemoteServiceRecord(bt_bdaddr_t* aRemoteAddr,
-                                           bt_uuid_t* aUuid,
+BluetoothInterface::GetRemoteServiceRecord(const nsAString& aRemoteAddr,
+                                           const uint8_t aUuid[16],
                                            BluetoothResultHandler* aRes)
 {
-  int status = mInterface->get_remote_service_record(aRemoteAddr, aUuid);
+  int status;
+  bt_bdaddr_t remoteAddr;
+  bt_uuid_t uuid;
+
+  if (NS_SUCCEEDED(Convert(aRemoteAddr, remoteAddr)) &&
+      NS_SUCCEEDED(Convert(aUuid, uuid))) {
+    status = mInterface->get_remote_service_record(&remoteAddr, &uuid);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1399,10 +1617,17 @@ BluetoothInterface::GetRemoteServiceRecord(bt_bdaddr_t* aRemoteAddr,
 }
 
 void
-BluetoothInterface::GetRemoteServices(bt_bdaddr_t* aRemoteAddr,
+BluetoothInterface::GetRemoteServices(const nsAString& aRemoteAddr,
                                       BluetoothResultHandler* aRes)
 {
-  int status = mInterface->get_remote_services(aRemoteAddr);
+  int status;
+  bt_bdaddr_t remoteAddr;
+
+  if (NS_SUCCEEDED(Convert(aRemoteAddr, remoteAddr))) {
+    status = mInterface->get_remote_services(&remoteAddr);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1440,10 +1665,17 @@ BluetoothInterface::CancelDiscovery(BluetoothResultHandler* aRes)
 /* Bonds */
 
 void
-BluetoothInterface::CreateBond(const bt_bdaddr_t* aBdAddr,
+BluetoothInterface::CreateBond(const nsAString& aBdAddr,
                                BluetoothResultHandler* aRes)
 {
-  int status = mInterface->create_bond(aBdAddr);
+  bt_bdaddr_t bdAddr;
+  int status;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
+    status = mInterface->create_bond(&bdAddr);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1453,10 +1685,17 @@ BluetoothInterface::CreateBond(const bt_bdaddr_t* aBdAddr,
 }
 
 void
-BluetoothInterface::RemoveBond(const bt_bdaddr_t* aBdAddr,
+BluetoothInterface::RemoveBond(const nsAString& aBdAddr,
                                BluetoothResultHandler* aRes)
 {
-  int status = mInterface->remove_bond(aBdAddr);
+  bt_bdaddr_t bdAddr;
+  int status;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
+    status = mInterface->remove_bond(&bdAddr);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1466,10 +1705,17 @@ BluetoothInterface::RemoveBond(const bt_bdaddr_t* aBdAddr,
 }
 
 void
-BluetoothInterface::CancelBond(const bt_bdaddr_t* aBdAddr,
+BluetoothInterface::CancelBond(const nsAString& aBdAddr,
                                BluetoothResultHandler* aRes)
 {
-  int status = mInterface->cancel_bond(aBdAddr);
+  bt_bdaddr_t bdAddr;
+  int status;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
+    status = mInterface->cancel_bond(&bdAddr);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1481,11 +1727,23 @@ BluetoothInterface::CancelBond(const bt_bdaddr_t* aBdAddr,
 /* Authentication */
 
 void
-BluetoothInterface::PinReply(const bt_bdaddr_t* aBdAddr, uint8_t aAccept,
-                             uint8_t aPinLen, bt_pin_code_t* aPinCode,
+BluetoothInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
+                             const nsAString& aPinCode,
                              BluetoothResultHandler* aRes)
 {
-  int status = mInterface->pin_reply(aBdAddr, aAccept, aPinLen, aPinCode);
+  int status;
+  bt_bdaddr_t bdAddr;
+  uint8_t accept;
+  bt_pin_code_t pinCode;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr)) &&
+      NS_SUCCEEDED(Convert(aAccept, accept)) &&
+      NS_SUCCEEDED(Convert(aPinCode, pinCode))) {
+    status = mInterface->pin_reply(&bdAddr, accept, aPinCode.Length(),
+                                   &pinCode);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1495,12 +1753,23 @@ BluetoothInterface::PinReply(const bt_bdaddr_t* aBdAddr, uint8_t aAccept,
 }
 
 void
-BluetoothInterface::SspReply(const bt_bdaddr_t* aBdAddr,
-                             bt_ssp_variant_t aVariant,
-                             uint8_t aAccept, uint32_t aPasskey,
+BluetoothInterface::SspReply(const nsAString& aBdAddr,
+                             const nsAString& aVariant,
+                             bool aAccept, uint32_t aPasskey,
                              BluetoothResultHandler* aRes)
 {
-  int status = mInterface->ssp_reply(aBdAddr, aVariant, aAccept, aPasskey);
+  int status;
+  bt_bdaddr_t bdAddr;
+  bt_ssp_variant_t variant;
+  uint8_t accept;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr)) &&
+      NS_SUCCEEDED(Convert(aVariant, variant)) &&
+      NS_SUCCEEDED(Convert(aAccept, accept))) {
+    status = mInterface->ssp_reply(&bdAddr, variant, accept, aPasskey);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
@@ -1512,10 +1781,17 @@ BluetoothInterface::SspReply(const bt_bdaddr_t* aBdAddr,
 /* DUT Mode */
 
 void
-BluetoothInterface::DutModeConfigure(uint8_t aEnable,
+BluetoothInterface::DutModeConfigure(bool aEnable,
                                      BluetoothResultHandler* aRes)
 {
-  int status = mInterface->dut_mode_configure(aEnable);
+  int status;
+  uint8_t enable;
+
+  if (NS_SUCCEEDED(Convert(aEnable, enable))) {
+    status = mInterface->dut_mode_configure(enable);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothResult(aRes,
