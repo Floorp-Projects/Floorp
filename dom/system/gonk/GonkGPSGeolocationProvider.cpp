@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
+#include "GonkGPSGeolocationProvider.h"
+
 #include <pthread.h>
 #include <hardware/gps.h>
 
-#include "GonkGPSGeolocationProvider.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "nsContentUtils.h"
 #include "nsGeoPosition.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINetworkManager.h"
 #include "nsIObserverService.h"
 #include "nsJSUtils.h"
+#include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "nsContentUtils.h"
 #include "prtime.h"
 
 #ifdef MOZ_B2G_RIL
@@ -335,9 +337,24 @@ GonkGPSGeolocationProvider::SetAGpsDataConn(nsAString& aApn)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mAGpsInterface);
 
+  bool hasUpdateNetworkAvailability = false;
+  if (mAGpsRilInterface->size >= sizeof(AGpsRilInterface) &&
+      mAGpsRilInterface->update_network_availability) {
+    hasUpdateNetworkAvailability = true;
+  }
+
   int32_t connectionState = GetDataConnectionState();
+  NS_ConvertUTF16toUTF8 apn(aApn);
   if (connectionState == nsINetworkInterface::NETWORK_STATE_CONNECTED) {
-    NS_ConvertUTF16toUTF8 apn(aApn);
+    // The definition of availability is
+    // 1. The device is connected to the home network
+    // 2. The device is connected to a foreign network and data
+    //    roaming is enabled
+    // RIL turns on/off data connection automatically when the data
+    // roaming setting changes.
+    if (hasUpdateNetworkAvailability) {
+      mAGpsRilInterface->update_network_availability(true, apn.get());
+    }
 #ifdef AGPS_HAVE_DUAL_APN
     mAGpsInterface->data_conn_open(AGPS_TYPE_SUPL,
                                    apn.get(),
@@ -346,6 +363,9 @@ GonkGPSGeolocationProvider::SetAGpsDataConn(nsAString& aApn)
     mAGpsInterface->data_conn_open(apn.get());
 #endif
   } else if (connectionState == nsINetworkInterface::NETWORK_STATE_DISCONNECTED) {
+    if (hasUpdateNetworkAvailability) {
+      mAGpsRilInterface->update_network_availability(false, apn.get());
+    }
 #ifdef AGPS_HAVE_DUAL_APN
     mAGpsInterface->data_conn_closed(AGPS_TYPE_SUPL);
 #else
@@ -357,7 +377,7 @@ GonkGPSGeolocationProvider::SetAGpsDataConn(nsAString& aApn)
 #endif // MOZ_B2G_RIL
 
 void
-GonkGPSGeolocationProvider::RequestSettingValue(char* aKey)
+GonkGPSGeolocationProvider::RequestSettingValue(const char* aKey)
 {
   MOZ_ASSERT(aKey);
   nsCOMPtr<nsISettingsService> ss = do_GetService("@mozilla.org/settingsService;1");
@@ -815,6 +835,29 @@ GonkGPSGeolocationProvider::SetHighAccuracy(bool)
   return NS_OK;
 }
 
+namespace {
+int
+ConvertToGpsNetworkType(int aNetworkInterfaceType)
+{
+  switch (aNetworkInterfaceType) {
+    case nsINetworkInterface::NETWORK_TYPE_WIFI:
+      return AGPS_RIL_NETWORK_TYPE_WIFI;
+    case nsINetworkInterface::NETWORK_TYPE_MOBILE:
+      return AGPS_RIL_NETWORK_TYPE_MOBILE;
+    case nsINetworkInterface::NETWORK_TYPE_MOBILE_MMS:
+      return AGPS_RIL_NETWORK_TYPE_MOBILE_MMS;
+    case nsINetworkInterface::NETWORK_TYPE_MOBILE_SUPL:
+      return AGPS_RIL_NETWORK_TYPE_MOBILE_SUPL;
+    case nsINetworkInterface::NETWORK_TYPE_MOBILE_DUN:
+      return AGPS_RIL_NETWORK_TTYPE_MOBILE_DUN;
+    default:
+      NS_WARNING(nsPrintfCString("Unknown network type mapping %d",
+                                 aNetworkInterfaceType).get());
+      return -1;
+  }
+}
+} // anonymous namespace
+
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
                                     const char* aTopic,
@@ -824,8 +867,40 @@ GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
 
 #ifdef MOZ_B2G_RIL
   if (!strcmp(aTopic, kNetworkConnStateChangedTopic)) {
-    nsCOMPtr<nsIRilNetworkInterface> iface = do_QueryInterface(aSubject);
+    nsCOMPtr<nsINetworkInterface> iface = do_QueryInterface(aSubject);
     if (!iface) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIRilNetworkInterface> rilface = do_QueryInterface(aSubject);
+    if (mAGpsRilInterface && mAGpsRilInterface->update_network_state) {
+      int32_t state;
+      int32_t type;
+      iface->GetState(&state);
+      iface->GetType(&type);
+      bool connected = (state == nsINetworkInterface::NETWORK_STATE_CONNECTED);
+      bool roaming = false;
+      int gpsNetworkType = ConvertToGpsNetworkType(type);
+      if (gpsNetworkType >= 0) {
+        if (rilface && mRadioInterface) {
+          nsCOMPtr<nsIRilContext> rilCtx;
+          mRadioInterface->GetRilContext(getter_AddRefs(rilCtx));
+          if (rilCtx) {
+            nsCOMPtr<nsIMobileConnectionInfo> voice;
+            rilCtx->GetVoice(getter_AddRefs(voice));
+            if (voice) {
+              voice->GetRoaming(&roaming);
+            }
+          }
+        }
+        mAGpsRilInterface->update_network_state(
+          connected,
+          gpsNetworkType,
+          roaming,
+          /* extra_info = */ nullptr);
+      }
+    }
+    // No data connection
+    if (!rilface) {
       return NS_OK;
     }
 

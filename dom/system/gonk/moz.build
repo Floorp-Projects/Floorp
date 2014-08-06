@@ -95,24 +95,6 @@ if CONFIG['MOZ_B2G_RIL']:
         'ril_worker.js',
     ]
 
-if CONFIG['MOZ_NFC']:
-    SOURCES += [
-        'NfcMessageHandler.cpp',
-        'NfcService.cpp',
-    ]
-    XPIDL_SOURCES += [
-        'nsINfcContentHelper.idl',
-        'nsINfcService.idl',
-    ]
-    EXTRA_COMPONENTS += [
-        'Nfc.js',
-        'Nfc.manifest',
-        'NfcContentHelper.js',
-    ]
-    EXTRA_JS_MODULES += [
-       'nfc_consts.js',
-    ]
-
 FAIL_ON_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -120,7 +102,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/bluetooth',
-    '/dom/nfc',
     '/dom/src/geolocation',
     '/dom/wifi',
 ]
