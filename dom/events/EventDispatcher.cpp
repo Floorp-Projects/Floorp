@@ -25,6 +25,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -399,6 +400,10 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
   NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
+
+#ifdef NIGHTLY_BUILD
+  MOZ_RELEASE_ASSERT(!mozilla::ipc::ProcessingUrgentMessages());
+#endif
 
   // If we're dispatching an already created DOMEvent object, make
   // sure it is initialized!
