@@ -5637,7 +5637,9 @@ js::DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValu
 
     RootedValue val(cx, ObjectValue(*obj));
     js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, val, str,
-                         (hint == JSTYPE_VOID) ? "primitive type" : TypeStrings[hint]);
+                         hint == JSTYPE_VOID
+                         ? "primitive type"
+                         : hint == JSTYPE_STRING ? "string" : "number");
     return false;
 }
 

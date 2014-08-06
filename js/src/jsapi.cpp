@@ -450,14 +450,6 @@ JS_TypeOfValue(JSContext *cx, HandleValue value)
     return TypeOfValue(value);
 }
 
-JS_PUBLIC_API(const char *)
-JS_GetTypeName(JSContext *cx, JSType type)
-{
-    if ((unsigned)type >= (unsigned)JSTYPE_LIMIT)
-        return nullptr;
-    return TypeStrings[type];
-}
-
 JS_PUBLIC_API(bool)
 JS_StrictlyEqual(JSContext *cx, jsval value1, jsval value2, bool *equal)
 {
