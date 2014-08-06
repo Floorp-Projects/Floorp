@@ -68,10 +68,6 @@ LOCAL_INCLUDES += [
     '../base',
 ]
   
-if CONFIG['ANDROID_VERSION'] >= '18'and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    DEFINES['MOZ_GONK_MEDIACODEC'] = True
-    DIRS += ['gonk']
-
 FINAL_LIBRARY = 'xul'
 
 FAIL_ON_WARNINGS = True
