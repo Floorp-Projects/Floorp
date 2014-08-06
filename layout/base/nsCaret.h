@@ -56,7 +56,7 @@ class nsCaret : public nsISelectionListener
      *  @param outMakeVisible true if it is shown, false if it is hidden
      *  @return NS_OK
      */
-    virtual nsresult GetCaretVisible(bool *outMakeVisible);
+    nsresult GetCaretVisible(bool *outMakeVisible);
     /** SetCaretReadOnly set the appearance of the caret
      *  @param inMakeReadonly true to show the caret in a 'read only' state,
      *         false to show the caret in normal, editing state
@@ -96,9 +96,9 @@ class nsCaret : public nsISelectionListener
      * @param aRect must be non-null
      * @param aBidiIndicatorSize if non-null, set to the bidi indicator size.
      */
-    virtual nsIFrame* GetGeometry(nsISelection* aSelection,
-                                  nsRect* aRect,
-                                  nscoord* aBidiIndicatorSize = nullptr);
+    nsIFrame* GetGeometry(nsISelection* aSelection,
+                          nsRect* aRect,
+                          nscoord* aBidiIndicatorSize = nullptr);
     /** GetCaretFrame
      *  Get the current frame that the caret should be drawn in. If the caret is
      *  not currently visible (i.e., it is between blinks), then this will
