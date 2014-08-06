@@ -6,6 +6,8 @@
 
 #include "TouchCaret.h"
 
+#include <algorithm>
+
 #include "nsCOMPtr.h"
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
@@ -27,7 +29,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsView.h"
 #include "nsDOMTokenList.h"
-#include <algorithm>
+#include "nsCaret.h"
 
 using namespace mozilla;
 

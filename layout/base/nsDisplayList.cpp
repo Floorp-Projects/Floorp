@@ -2724,6 +2724,30 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
   }
 }
 
+nsDisplayCaret::nsDisplayCaret(nsDisplayListBuilder* aBuilder,
+                               nsIFrame* aCaretFrame,
+                               nsCaret *aCaret)
+  : nsDisplayItem(aBuilder, aCaretFrame)
+  , mCaret(aCaret)
+{
+  MOZ_COUNT_CTOR(nsDisplayCaret);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayCaret::~nsDisplayCaret()
+{
+  MOZ_COUNT_DTOR(nsDisplayCaret);
+}
+#endif
+
+nsRect
+nsDisplayCaret::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+{
+  *aSnap = false;
+  // The caret returns a rect in the coordinates of mFrame.
+  return mCaret->GetCaretRect() + ToReferenceFrame();
+}
+
 void
 nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
                       nsRenderingContext* aCtx) {

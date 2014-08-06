@@ -18,7 +18,6 @@
 #include "nsContainerFrame.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsCaret.h"
 #include "plarena.h"
 #include "nsRegion.h"
 #include "FrameLayerBuilder.h"
@@ -36,6 +35,7 @@ class nsRenderingContext;
 class nsDisplayTableItem;
 class nsISelection;
 class nsDisplayLayerEventRegions;
+class nsCaret;
 
 namespace mozilla {
 namespace layers {
@@ -1951,21 +1951,12 @@ protected:
 class nsDisplayCaret : public nsDisplayItem {
 public:
   nsDisplayCaret(nsDisplayListBuilder* aBuilder, nsIFrame* aCaretFrame,
-                 nsCaret *aCaret)
-    : nsDisplayItem(aBuilder, aCaretFrame), mCaret(aCaret) {
-    MOZ_COUNT_CTOR(nsDisplayCaret);
-  }
+                 nsCaret *aCaret);
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayCaret() {
-    MOZ_COUNT_DTOR(nsDisplayCaret);
-  }
+  virtual ~nsDisplayCaret();
 #endif
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE {
-    *aSnap = false;
-    // The caret returns a rect in the coordinates of mFrame.
-    return mCaret->GetCaretRect() + ToReferenceFrame();
-  }
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("Caret", TYPE_CARET)
 protected:
