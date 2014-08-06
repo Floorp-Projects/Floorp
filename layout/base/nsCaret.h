@@ -63,17 +63,15 @@ class nsCaret : public nsISelectionListener
      */
     void SetIgnoreUserModify(bool aIgnoreUserModify);
     void CheckCaretDrawingState();
-    /** SetCaretVisible will set the visibility of the caret
+    /** SetVisible will set the visibility of the caret
      *  @param inMakeVisible true to show the caret, false to hide it
      */
-    void SetCaretVisible(bool intMakeVisible);
-    /** GetCaretVisible will get the visibility of the caret.
+    void SetVisible(bool intMakeVisible);
+    /** IsVisible will get the visibility of the caret.
      *  This returns false if the caret is hidden for any reason (other than
      *  blinking off).
-     *  @param outMakeVisible true if it is shown, false if it is hidden
-     *  @return NS_OK
      */
-    nsresult GetCaretVisible(bool *outMakeVisible);
+    bool IsVisible();
     /** SetCaretReadOnly set the appearance of the caret
      *  @param inMakeReadonly true to show the caret in a 'read only' state,
      *         false to show the caret in normal, editing state

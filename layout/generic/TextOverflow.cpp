@@ -690,8 +690,7 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
 
   // Inhibit the markers if a descendant content owns the caret.
   nsRefPtr<nsCaret> caret = aBlockFrame->PresContext()->PresShell()->GetCaret();
-  bool visible = false;
-  if (caret && NS_SUCCEEDED(caret->GetCaretVisible(&visible)) && visible) {
+  if (caret && caret->IsVisible()) {
     nsCOMPtr<nsISelection> domSelection = caret->GetSelection();
     if (domSelection) {
       nsCOMPtr<nsIDOMNode> node;

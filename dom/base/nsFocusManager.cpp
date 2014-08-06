@@ -2145,8 +2145,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
   if (!caret)
     return NS_OK;
 
-  bool caretVisible = false;
-  caret->GetCaretVisible(&caretVisible);
+  bool caretVisible = caret->IsVisible();
   if (!aVisible && !caretVisible)
     return NS_OK;
 
