@@ -724,6 +724,18 @@ public:
   {
     return mMarkedCCGeneration;
   }
+
+  // Sets the condition that we send an NS_AFTER_REMOTE_PAINT message just before the next
+  // composite.  Used in non-e10s implementations.
+  void SetRequestNotifyAfterRemotePaint()
+  {
+    mSendAfterRemotePaint = true;
+  }
+
+  // Sends an NS_AFTER_REMOTE_PAINT message if requested by
+  // SetRequestNotifyAfterRemotePaint().
+  void SendAfterRemotePaintIfRequested();
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
@@ -815,6 +827,10 @@ protected:
   bool mHasNotifiedGlobalCreated;
 
   uint32_t mMarkedCCGeneration;
+
+  // If true, send an NS_AFTER_REMOTE_PAINT message before compositing in a
+  // non-e10s implementation.
+  bool mSendAfterRemotePaint;
 };
 
 

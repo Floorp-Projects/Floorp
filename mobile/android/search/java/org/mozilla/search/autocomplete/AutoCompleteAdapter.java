@@ -11,8 +11,9 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import org.mozilla.search.AcceptsSearchQuery;
 import org.mozilla.search.R;
-import org.mozilla.search.autocomplete.SearchFragment.Suggestion;
+import org.mozilla.search.autocomplete.SuggestionsFragment.Suggestion;
 
 import java.util.List;
 
@@ -21,15 +22,20 @@ import java.util.List;
  */
 class AutoCompleteAdapter extends ArrayAdapter<Suggestion> {
 
-    private final AcceptsJumpTaps acceptsJumpTaps;
+    private final AcceptsSearchQuery searchListener;
 
     private final LayoutInflater inflater;
 
-    public AutoCompleteAdapter(Context context, AcceptsJumpTaps acceptsJumpTaps) {
+    public AutoCompleteAdapter(Context context) {
         // Uses '0' for the template id since we are overriding getView
         // and supplying our own view.
         super(context, 0);
-        this.acceptsJumpTaps = acceptsJumpTaps;
+
+        if (context instanceof AcceptsSearchQuery) {
+            searchListener = (AcceptsSearchQuery) context;
+        } else {
+            throw new ClassCastException(context.toString() + " must implement AcceptsSearchQuery.");
+        }
 
         // Disable notifying on change. We will notify ourselves in update.
         setNotifyOnChange(false);
@@ -40,7 +46,7 @@ class AutoCompleteAdapter extends ArrayAdapter<Suggestion> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.search_auto_complete_row, null);
+            convertView = inflater.inflate(R.layout.search_suggestions_row, null);
         }
 
         final Suggestion suggestion = getItem(position);
@@ -52,7 +58,7 @@ class AutoCompleteAdapter extends ArrayAdapter<Suggestion> {
         jumpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                acceptsJumpTaps.onJumpTap(suggestion.value);
+                searchListener.onSuggest(suggestion.value);
             }
         });
 

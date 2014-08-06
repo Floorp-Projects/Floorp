@@ -100,10 +100,6 @@ public class TabsPanel extends LinearLayout
         setOrientation(LinearLayout.VERTICAL);
 
         mCurrentPanel = Panel.NORMAL_TABS;
-        mVisible = false;
-        mHeaderVisible = false;
-
-        mIsSideBar = false;
 
         mPopupMenu = new GeckoPopupMenu(context);
         mPopupMenu.inflate(R.menu.tabs_menu);

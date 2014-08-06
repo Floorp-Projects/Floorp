@@ -61,7 +61,6 @@ class MemoryMonitor extends BroadcastReceiver {
     private MemoryMonitor() {
         mPressureDecrementer = new PressureDecrementer();
         mMemoryPressure = MEMORY_PRESSURE_NONE;
-        mStoragePressure = false;
     }
 
     public void init(final Context context) {

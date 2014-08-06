@@ -161,9 +161,9 @@ public class Utils {
 
         // Check for CharSequences (Strings and things that are string-like)
         if (isCharSequence(type)) {
-	    if (aNarrowChars) {
-		return "const nsACString&";
-	    }
+            if (aNarrowChars) {
+                return "const nsACString&";
+            }
             return "const nsAString&";
         }
 
@@ -303,7 +303,7 @@ public class Utils {
      * @param aConstructor The Constructor to generate a signature for.
      * @return The canonical JNI type signature for this method.
      */
-    protected static String getTypeSignatureStringForConstructor(Constructor aConstructor) {
+    protected static String getTypeSignatureStringForConstructor(Constructor<?> aConstructor) {
         Class<?>[] arguments = aConstructor.getParameterTypes();
         return getTypeSignatureInternal(arguments, Void.class);
     }
@@ -314,11 +314,11 @@ public class Utils {
         } else if (aMember instanceof Field) {
             return getTypeSignatureStringForField((Field) aMember);
         } else {
-            return getTypeSignatureStringForConstructor((Constructor) aMember);
+            return getTypeSignatureStringForConstructor((Constructor<?>) aMember);
         }
     }
 
-    public static String getTypeSignatureString(Constructor aConstructor) {
+    public static String getTypeSignatureString(Constructor<?> aConstructor) {
         Class<?>[] arguments = aConstructor.getParameterTypes();
         StringBuilder sb = new StringBuilder();
         sb.append('(');

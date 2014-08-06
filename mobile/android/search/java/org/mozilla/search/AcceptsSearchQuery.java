@@ -10,6 +10,13 @@ import android.graphics.Rect;
  * Allows fragments to pass a search event to the main activity.
  */
 public interface AcceptsSearchQuery {
+
+    /**
+     * Shows search suggestions.
+     * @param query
+     */
+    void onSuggest(String query);
+
     /**
      * Starts a search.
      *
@@ -30,6 +37,5 @@ public interface AcceptsSearchQuery {
      */
     public interface SuggestionAnimation {
         public Rect getStartBounds();
-        public void onAnimationEnd();
     }
 }

@@ -5,7 +5,7 @@
   XUL Widget Test for deck
   -->
 <window title="Deck Test"
-        onload="setTimeout(test_deck, 0);"
+        onload="setTimeout(run_tests, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
@@ -20,7 +20,27 @@
   <button id="d2b1" label="Button One"/>
   <button id="d2b2" label="Button Two"/>
 </deck>
-
+<deck id="deck3" selectedIndex="1">
+  <button id="d3b1" label="Remove me"/>
+  <button id="d3b2" label="Keep me selected"/>
+</deck>
+<deck id="deck4" selectedIndex="5">
+  <button id="d4b1" label="Remove me"/>
+  <button id="d4b2" label="Remove me"/>
+  <button id="d4b3" label="Remove me"/>
+  <button id="d4b4" label="Button 4"/>
+  <button id="d4b5" label="Button 5"/>
+  <button id="d4b6" label="Keep me selected"/>
+  <button id="d4b7" label="Button 7"/>
+</deck>
+<deck id="deck5" selectedIndex="2">
+  <button id="d5b1" label="Button 1"/>
+  <button id="d5b2" label="Button 2"/>
+  <button id="d5b3" label="Keep me selected"/>
+  <button id="d5b4" label="Remove me"/>
+  <button id="d5b5" label="Remove me"/>
+  <button id="d5b6" label="Remove me"/>
+</deck>
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
@@ -28,6 +48,12 @@
   <script type="application/javascript"><![CDATA[
 
 SimpleTest.waitForExplicitFinish();
+
+function run_tests() {
+  test_deck();
+  test_deck_child_removal();
+  SimpleTest.finish();
+}
 
 function test_deck()
 {
@@ -48,10 +74,59 @@ function test_deck()
   deck = $("deck2");
   ok(deck.selectedIndex === '1', "deck two selectedIndex");
   synthesizeMouseExpectEvent(deck, 9, 9, { }, $("d2b2"), "click", "mouse on deck two");
-
-  SimpleTest.finish();
 }
 
+function test_deck_child_removal()
+{
+  // Start with a simple case where we have two child nodes in a deck, with
+  // the second child (index 1) selected. Removing the first node should
+  // automatically set the selectedIndex at 0.
+  let deck = $("deck3");
+  let child = $("d3b1");
+  is(deck.selectedIndex, "1", "Should have the deck element at index 1 selected");
+
+  // Remove the child at the 0th index. The deck should automatically
+  // set the selectedIndex to "0".
+  child.remove();
+  is(deck.selectedIndex, "0", "Should have the deck element at index 0 selected");
+
+  // Now scale it up by using a deck with 7 child nodes, and remove the
+  // first three, making sure that the selectedIndex is decremented
+  // each time.
+  deck = $("deck4");
+  let expectedIndex = 5;
+  is(deck.selectedIndex, expectedIndex,
+     "Should have the deck element at index " + expectedIndex + " selected");
+
+  for (let i = 0; i < 3; ++i) {
+    deck.firstChild.remove();
+    expectedIndex--;
+    is(deck.selectedIndex, expectedIndex,
+       "Should have the deck element at index " + expectedIndex + " selected");
+  }
+
+  // Check that removing the currently selected node doesn't change
+  // behaviour.
+  deck.childNodes[expectedIndex].remove();
+  is(deck.selectedIndex, expectedIndex,
+     "The selectedIndex should not change when removing the node " +
+     "at the selected index.");
+
+  // Finally, make sure we haven't changed the behaviour when removing
+  // nodes at indexes greater than the selected node.
+  deck = $("deck5");
+  expectedIndex = 2;
+  is(deck.selectedIndex, expectedIndex,
+     "Should have the deck element at index " + expectedIndex + " selected");
+
+  // And then remove all of the nodes, starting from last to first, making
+  // sure that the selectedIndex does not change.
+  while (deck.lastChild) {
+    deck.lastChild.remove();
+    is(deck.selectedIndex, expectedIndex,
+       "Should have the deck element at index " + expectedIndex + " selected");
+  }
+}
 ]]>
 </script>
 

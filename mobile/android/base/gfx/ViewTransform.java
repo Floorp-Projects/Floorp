@@ -23,12 +23,6 @@ public class ViewTransform {
         x = inX;
         y = inY;
         scale = inScale;
-        fixedLayerMarginLeft = 0;
-        fixedLayerMarginTop = 0;
-        fixedLayerMarginRight = 0;
-        fixedLayerMarginBottom = 0;
-        offsetX = 0;
-        offsetY = 0;
     }
 }
 

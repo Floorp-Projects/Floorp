@@ -4,8 +4,10 @@
 
 package org.mozilla.gecko.mozglue.generatorannotations;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * This annotation is used to tag methods that are to have wrapper methods generated in the android
@@ -20,15 +22,12 @@ import java.lang.annotation.RetentionPolicy;
  * Java method to be invoked from the C side from multiple threads. Often, this isn't what is wanted
  * and may lead to subtle bugs.
  */
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WrapElementForJNI {
     // Optional parameter specifying the name of the generated method stub. If omitted, the name
     // of the Java method will be used.
     String stubName() default "";
-
-    // Optional parameter specifying if the generated method should be a static member of AndroidBridge
-    // By default, an instance member is produced. This is almost always what is wanted.
-    boolean generateStatic() default false;
 
     /**
      * If set, the generated method stub will support being called from any thread via the use of
