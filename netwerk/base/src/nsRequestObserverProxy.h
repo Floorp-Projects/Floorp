@@ -41,7 +41,7 @@ protected:
 class nsARequestObserverEvent : public nsRunnable
 {
 public:
-    nsARequestObserverEvent(nsIRequest *);
+    explicit nsARequestObserverEvent(nsIRequest *);
 
 protected:
     virtual ~nsARequestObserverEvent() {}

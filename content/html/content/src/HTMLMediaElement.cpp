@@ -3895,6 +3895,11 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
   if (playingThroughTheAudioChannel != mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannel = playingThroughTheAudioChannel;
 
+    // If we are not playing, we don't need to create a new audioChannelAgent.
+    if (!mAudioChannelAgent && !mPlayingThroughTheAudioChannel) {
+       return;
+    }
+
     if (!mAudioChannelAgent) {
       nsresult rv;
       mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1", &rv);

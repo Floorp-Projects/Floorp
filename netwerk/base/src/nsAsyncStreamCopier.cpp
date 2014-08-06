@@ -31,7 +31,7 @@ public:
      * @param aCopier
      *        The nsAsyncStreamCopier requesting the information.
      */
-    AsyncApplyBufferingPolicyEvent(nsAsyncStreamCopier* aCopier)
+    explicit AsyncApplyBufferingPolicyEvent(nsAsyncStreamCopier* aCopier)
         : mCopier(aCopier)
       , mTarget(NS_GetCurrentThread())
       { }

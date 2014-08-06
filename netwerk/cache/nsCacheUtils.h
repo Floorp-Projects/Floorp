@@ -19,7 +19,7 @@ class nsIThread;
   */
 class nsShutdownThread : public nsRunnable {
 public:
-  nsShutdownThread(nsIThread *aThread);
+  explicit nsShutdownThread(nsIThread *aThread);
   ~nsShutdownThread();
 
   NS_IMETHOD Run();

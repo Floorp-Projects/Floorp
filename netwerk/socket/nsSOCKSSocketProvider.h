@@ -21,7 +21,7 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSISOCKETPROVIDER
 
-    nsSOCKSSocketProvider(uint32_t version) : mVersion(version) {}
+    explicit nsSOCKSSocketProvider(uint32_t version) : mVersion(version) {}
 
     static nsresult CreateV4(nsISupports *, REFNSIID aIID, void **aResult);
     static nsresult CreateV5(nsISupports *, REFNSIID aIID, void **aResult);

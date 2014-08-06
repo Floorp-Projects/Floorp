@@ -34,7 +34,7 @@ public:
     ALL_ENTRIES
   };
 
-  CacheEntryTable(EType aType) : mType(aType) { }
+  explicit CacheEntryTable(EType aType) : mType(aType) { }
   EType Type() const
   {
     return mType;

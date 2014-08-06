@@ -91,5 +91,5 @@ random-if(!(cocoaWidget||winWidget)) == arial-arabic.html arial-arabic-ref.html
 
 != syntheticbold-rotated.html syntheticbold-rotated-ref.html
 
-HTTP(..) == font-synthesis-1.html font-synthesis-1-ref.html
-HTTP(..) == font-synthesis-2.html font-synthesis-2-ref.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-synthesis-1.html font-synthesis-1-ref.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-synthesis-2.html font-synthesis-2-ref.html

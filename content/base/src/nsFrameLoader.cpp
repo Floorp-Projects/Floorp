@@ -2326,7 +2326,7 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
       return false;
     }
     return tabParent->SendAsyncMessage(nsString(aMessage), data, cpows,
-                                       aPrincipal);
+                                       IPC::Principal(aPrincipal));
   }
 
   if (mChildMessageManager) {
