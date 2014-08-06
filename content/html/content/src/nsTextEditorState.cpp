@@ -418,10 +418,8 @@ nsTextInputSelectionImpl::GetCaretVisible(bool *_retval)
   {
     nsRefPtr<nsCaret> caret = shell->GetCaret();
     if (caret) {
-      nsISelection* domSel = mFrameSelection->
-        GetSelection(nsISelectionController::SELECTION_NORMAL);
-      if (domSel)
-        return caret->GetCaretVisible(_retval);
+      *_retval = caret->IsVisible();
+      return NS_OK;
     }
   }
   return NS_ERROR_FAILURE;

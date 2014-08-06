@@ -2236,7 +2236,7 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(bool aInEnable)
 
     MOZ_ASSERT(mCaret || mTouchCaret);
     if (mCaret) {
-      mCaret->SetCaretVisible(mCaretEnabled);
+      mCaret->SetVisible(mCaretEnabled);
     }
     if (mTouchCaret) {
       mTouchCaret->SyncVisibilityWithCaret();
@@ -2271,8 +2271,7 @@ NS_IMETHODIMP PresShell::GetCaretVisible(bool *aOutIsVisible)
 {
   *aOutIsVisible = false;
   if (mCaret) {
-    nsresult rv = mCaret->GetCaretVisible(aOutIsVisible);
-    NS_ENSURE_SUCCESS(rv,rv);
+    *aOutIsVisible = mCaret->IsVisible();
   }
   return NS_OK;
 }
@@ -8076,9 +8075,8 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   nsRefPtr<nsCaret> caret = GetCaret();
   NS_ENSURE_TRUE(caret, false);
 
-  bool caretVisible = false;
-  rv = caret->GetCaretVisible(&caretVisible);
-  if (NS_FAILED(rv) || ! caretVisible)
+  bool caretVisible = caret->IsVisible();
+  if (!caretVisible)
     return false;
 
   // caret selection, this is a temporary weak reference, so no refcounting is

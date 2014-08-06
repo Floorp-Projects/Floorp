@@ -420,16 +420,13 @@ TouchCaret::IsDisplayable()
     return false;
   }
 
-  bool caretVisible = false;
-  caret->GetCaretVisible(&caretVisible);
-  if (!caretVisible) {
+  if (!caret->IsVisible()) {
     TOUCHCARET_LOG("Caret is not visible!");
     return false;
   }
 
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   if (!focusFrame) {
     TOUCHCARET_LOG("Focus frame is not valid!");
     return false;
