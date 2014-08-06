@@ -299,7 +299,6 @@ function RTCPeerConnection() {
   this._onReplaceTrackSuccess = null;
   this._onReplaceTrackFailure = null;
 
-  this._pendingType = null;
   this._localType = null;
   this._remoteType = null;
   this._trickleIce = false;
@@ -419,32 +418,27 @@ RTCPeerConnection.prototype = {
    */
   _queueOrRun: function(obj) {
     this._checkClosed();
-    if (!this._pending) {
-      if (obj.type !== undefined) {
-        this._pendingType = obj.type;
-      }
-      obj.func.apply(this, obj.args);
-      if (obj.wait) {
-        this._pending = true;
-      }
-    } else {
+
+    if (this._pending) {
+      // We are waiting for a callback before doing any more work.
       this._queue.push(obj);
+    } else {
+      this._pending = obj.wait;
+      obj.func.apply(this, obj.args);
     }
   },
 
   // Pick the next item from the queue and run it.
   _executeNext: function() {
-    if (this._queue.length) {
+
+    // Maybe _pending should be a string, and we should
+    // take a string arg and make sure they match to detect errors?
+    this._pending = false;
+
+    while (this._queue.length && !this._pending) {
       let obj = this._queue.shift();
-      if (obj.type !== undefined) {
-        this._pendingType = obj.type;
-      }
-      obj.func.apply(this, obj.args);
-      if (!obj.wait) {
-        this._executeNext();
-      }
-    } else {
-      this._pending = false;
+      // Doesn't re-queue since _pending is false
+      this._queueOrRun(obj);
     }
   },
 
@@ -604,6 +598,8 @@ RTCPeerConnection.prototype = {
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
+    this._localType = desc.type;
+
     let type;
     switch (desc.type) {
       case "offer":
@@ -622,8 +618,7 @@ RTCPeerConnection.prototype = {
     this._queueOrRun({
       func: this._setLocalDescription,
       args: [type, desc.sdp, onSuccess, onError],
-      wait: true,
-      type: desc.type
+      wait: true
     });
   },
 
@@ -634,6 +629,8 @@ RTCPeerConnection.prototype = {
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
+    this._remoteType = desc.type;
+
     let type;
     switch (desc.type) {
       case "offer":
@@ -652,8 +649,7 @@ RTCPeerConnection.prototype = {
     this._queueOrRun({
       func: this._setRemoteDescription,
       args: [type, desc.sdp, onSuccess, onError],
-      wait: true,
-      type: desc.type
+      wait: true
     });
   },
 
@@ -691,8 +687,6 @@ RTCPeerConnection.prototype = {
       if (!setRemoteComplete || !idpComplete || !onSuccess) {
         return;
       }
-      this._remoteType = this._pendingType;
-      this._pendingType = null;
       this.callCB(onSuccess);
       onSuccess = null;
       this._executeNext();
@@ -775,7 +769,7 @@ RTCPeerConnection.prototype = {
     this._onAddIceCandidateSuccess = onSuccess || null;
     this._onAddIceCandidateError = onError || null;
 
-    this._queueOrRun({ func: this._addIceCandidate, args: [cand], wait: true });
+    this._queueOrRun({ func: this._addIceCandidate, args: [cand], wait: false });
   },
 
   _addIceCandidate: function(cand) {
@@ -951,7 +945,7 @@ RTCPeerConnection.prototype = {
     this._queueOrRun({
       func: this._getStats,
       args: [selector, onSuccess, onError],
-      wait: true
+      wait: false
     });
   },
 
@@ -1113,8 +1107,6 @@ PeerConnectionObserver.prototype = {
   },
 
   onSetLocalDescriptionSuccess: function() {
-    this._dompc._localType = this._dompc._pendingType;
-    this._dompc._pendingType = null;
     this._dompc.callCB(this._dompc._onSetLocalDescriptionSuccess);
 
     if (this._dompc._iceGatheringState == "complete") {
@@ -1127,31 +1119,30 @@ PeerConnectionObserver.prototype = {
   },
 
   onSetRemoteDescriptionSuccess: function() {
+    // This function calls _executeNext() for us
     this._dompc._onSetRemoteDescriptionSuccess();
   },
 
   onSetLocalDescriptionError: function(code, message) {
-    this._dompc._pendingType = null;
+    this._localType = null;
     this._dompc.callCB(this._dompc._onSetLocalDescriptionFailure,
                        new RTCError(code, message));
     this._dompc._executeNext();
   },
 
   onSetRemoteDescriptionError: function(code, message) {
-    this._dompc._pendingType = null;
+    this._remoteType = null;
     this._dompc.callCB(this._dompc._onSetRemoteDescriptionFailure,
                        new RTCError(code, message));
     this._dompc._executeNext();
   },
 
   onAddIceCandidateSuccess: function() {
-    this._dompc._pendingType = null;
     this._dompc.callCB(this._dompc._onAddIceCandidateSuccess);
     this._dompc._executeNext();
   },
 
   onAddIceCandidateError: function(code, message) {
-    this._dompc._pendingType = null;
     this._dompc.callCB(this._dompc._onAddIceCandidateError,
                        new RTCError(code, message));
     this._dompc._executeNext();
