@@ -1019,7 +1019,49 @@ SEGVHandler::FinishInitialization()
   if (signalHandlingBroken || signalHandlingSlow)
     return;
 
-  if (!Divert(sigaction, __wrap_sigaction))
+  typedef int (*sigaction_func)(int, const struct sigaction *,
+                                struct sigaction *);
+
+  sigaction_func libc_sigaction;
+
+#if defined(ANDROID)
+  /* Android > 4.4 comes with a sigaction wrapper in a LD_PRELOADed library
+   * (libsigchain) for ART. That wrapper kind of does the same trick as we
+   * do, so we need extra care in handling it.
+   * - Divert the libc's sigaction, assuming the LD_PRELOADed library uses
+   *   it under the hood (which is more or less true according to the source
+   *   of that library, since it's doing a lookup in RTLD_NEXT)
+   * - With the LD_PRELOADed library in place, all calls to sigaction from
+   *   from system libraries will go to the LD_PRELOADed library.
+   * - The LD_PRELOADed library calls to sigaction go to our __wrap_sigaction.
+   * - The calls to sigaction from libraries faulty.lib loads are sent to
+   *   the LD_PRELOADed library.
+   * In practice, for signal handling, this means:
+   * - The signal handler registered to the kernel is ours.
+   * - Our handler redispatches to the LD_PRELOADed library's if there's a
+   *   segfault we don't handle.
+   * - The LD_PRELOADed library redispatches according to whatever system
+   *   library or faulty.lib-loaded library set with sigaction.
+   *
+   * When there is no sigaction wrapper in place:
+   * - Divert the libc's sigaction.
+   * - Calls to sigaction from system library and faulty.lib-loaded libraries
+   *   all go to the libc's sigaction, which end up in our __wrap_sigaction.
+   * - The signal handler registered to the kernel is ours.
+   * - Our handler redispatches according to whatever system library or
+   *   faulty.lib-loaded library set with sigaction.
+   */
+  void *libc = dlopen("libc.so", RTLD_GLOBAL | RTLD_LAZY);
+  if (libc) {
+    libc_sigaction =
+      reinterpret_cast<sigaction_func>(dlsym(libc, "sigaction"));
+  } else
+#endif
+  {
+    libc_sigaction = sigaction;
+  }
+
+  if (!Divert(libc_sigaction, __wrap_sigaction))
     return;
 
   /* Setup an alternative stack if the already existing one is not big
