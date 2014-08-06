@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.tabspanel;
+package org.mozilla.gecko.tabs;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.TabsAccessor;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.tabspanel.TabsPanel.Panel;
+import org.mozilla.gecko.tabs.TabsPanel.Panel;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout;
 

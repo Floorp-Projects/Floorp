@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.tabspanel;
+package org.mozilla.gecko.tabs;
 
 import java.util.Locale;
 
 import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.tabspanel.TabsPanel.CloseAllPanelView;
+import org.mozilla.gecko.tabs.TabsPanel.CloseAllPanelView;
 
 import android.content.Context;
 import android.util.AttributeSet;

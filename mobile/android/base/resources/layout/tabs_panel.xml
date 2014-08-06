@@ -10,7 +10,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/browser_toolbar_height">
 
-        <view class="org.mozilla.gecko.tabspanel.TabsPanel$TabsPanelToolbar"
+        <view class="org.mozilla.gecko.tabs.TabsPanel$TabsPanelToolbar"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:background="@color/background_tabs">
@@ -26,26 +26,26 @@
 
     </RelativeLayout>
 
-    <view class="org.mozilla.gecko.tabspanel.TabsPanel$TabsListContainer"
+    <view class="org.mozilla.gecko.tabs.TabsPanel$TabsListContainer"
           android:id="@+id/tabs_container"
           android:layout_width="match_parent"
           android:layout_height="wrap_content">
 
-        <org.mozilla.gecko.tabspanel.TabsTray android:id="@+id/normal_tabs"
-                                              style="@style/TabsList"
-                                              android:layout_width="match_parent"
-                                              android:layout_height="match_parent"
-                                              android:choiceMode="singleChoice"
-                                              android:visibility="gone"
-                                              gecko:tabs="tabs_normal"/>
+        <org.mozilla.gecko.tabs.TabsTray android:id="@+id/normal_tabs"
+                                         style="@style/TabsList"
+                                         android:layout_width="match_parent"
+                                         android:layout_height="match_parent"
+                                         android:choiceMode="singleChoice"
+                                         android:visibility="gone"
+                                         gecko:tabs="tabs_normal"/>
 
-        <org.mozilla.gecko.tabspanel.PrivateTabsPanel
+        <org.mozilla.gecko.tabs.PrivateTabsPanel
                 android:id="@+id/private_tabs_panel"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:visibility="gone"/>
 
-        <org.mozilla.gecko.tabspanel.RemoteTabsPanel
+        <org.mozilla.gecko.tabs.RemoteTabsPanel
                 android:id="@+id/remote_tabs"
                 android:layout_height="match_parent"
                 android:layout_width="match_parent"
