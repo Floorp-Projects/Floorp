@@ -7863,13 +7863,13 @@ s_mp_sqr_comba_4 PROC
         mov rsi, rdx
 
         push rbp
+        push rbx
         sub rsp, 80
         mov r11, rsi
         xor esi, esi
         mov r10, rsi
         mov rbp, rsi
         mov r8, rsi
-        push rbx
         mov rbx, rsi
         mov rcx, qword ptr [16+rdi]
         mov rdi, rsi
