@@ -649,7 +649,7 @@ clean clobber realclean clobber_all::
 ifdef TIERS
 clean clobber realclean clobber_all distclean::
 	$(foreach dir, \
-		$(foreach tier, $(TIERS), $(tier_$(tier)_staticdirs) $(tier_$(tier)_dirs)), \
+		$(foreach tier, $(TIERS), $(tier_$(tier)_dirs)), \
 		-$(call SUBMAKE,$@,$(dir)))
 else
 clean clobber realclean clobber_all distclean::
