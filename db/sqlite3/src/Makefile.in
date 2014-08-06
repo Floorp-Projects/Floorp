@@ -11,13 +11,8 @@ ifeq ($(OS_ARCH),WINNT)
 DEFFILE = $(CURDIR)/sqlite-processed.def
 
 GARBAGE += \
-  sqlite-version.h \
   $(DEFFILE) \
   $(NULL)
-
-# We generate the appropriate version header file with our python script.
-sqlite-version.h: sqlite-version.py sqlite3.h
-	$(PYTHON) $^ > $@
 
 # We have to preprocess our def file because we need different symbols in debug
 # builds exposed that are not built in non-debug builds.
@@ -25,7 +20,6 @@ $(DEFFILE): sqlite.def
 	@$(call py_action,preprocessor,$(DEFINES) $(XULPPFLAGS) \
 	  $(srcdir)/sqlite.def -o $(DEFFILE))
 
-export:: sqlite-version.h
 else
 ifndef MOZ_FOLD_LIBS
 ifdef GCC_USE_GNU_LD
