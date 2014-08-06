@@ -196,11 +196,8 @@ protected:
 
     void          DrawCaret(bool aInvalidate);
     void          DrawCaretAfterBriefDelay();
-    bool          UpdateCaretRects(nsIFrame* aFrame, int32_t aFrameOffset);
-    nsRect        GetHookRect()
-    {
-      return mHookRect;
-    }
+    void          ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
+                                    nsRect* aCaretRect, nsRect* aHookRect);
     void          ToggleDrawnStatus() { mDrawn = !mDrawn; }
 
     nsFrameSelection* GetFrameSelection();
@@ -233,9 +230,7 @@ protected:
     bool                  mIgnoreUserModify;
 
     bool                  mKeyboardRTL;       // is the keyboard language right-to-left
-    nsRect                mHookRect;          // directional hook on the caret
     uint8_t               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
-    nsRect                mCaretRect;         // the last caret rect, in the coodinates of the last frame.
 
     nsCOMPtr<nsIContent>  mLastContent;       // store the content the caret was last requested to be drawn
                                               // in (by DrawAtPosition()/DrawCaret()),
