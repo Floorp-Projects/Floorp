@@ -580,6 +580,11 @@ public:
    */
   nsresult MaintainSelection(nsSelectionAmount aAmount = eSelectNoAmount);
 
+  nsresult ConstrainFrameAndPointToAnchorSubtree(nsIFrame *aFrame,
+                                                 nsPoint& aPoint,
+                                                 nsIFrame **aRetFrame,
+                                                 nsPoint& aRetPoint);
+
   nsFrameSelection();
 
   void StartBatchChanges();
@@ -642,8 +647,6 @@ private:
   nsresult     FetchDesiredX(nscoord &aDesiredX); //the x position requested by the Key Handling for up down
   void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
   void         SetDesiredX(nscoord aX); //set the mDesiredX
-
-  nsresult     ConstrainFrameAndPointToAnchorSubtree(nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint);
 
   uint32_t     GetBatching() const {return mBatching; }
   bool         GetNotifyFrames() const { return mNotifyFrames; }
