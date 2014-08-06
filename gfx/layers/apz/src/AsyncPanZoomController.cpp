@@ -2906,7 +2906,7 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
 ParentLayerPoint AsyncPanZoomController::ToParentLayerCoords(const ScreenPoint& aPoint)
 {
-  return TransformTo<ParentLayerPixel>(To3DMatrix(GetNontransientAsyncTransform() * GetCSSTransform()), aPoint);
+  return TransformTo<ParentLayerPixel>(GetNontransientAsyncTransform() * GetCSSTransform(), aPoint);
 }
 
 void AsyncPanZoomController::UpdateTransformScale()
