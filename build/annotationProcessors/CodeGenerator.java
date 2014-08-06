@@ -209,7 +209,7 @@ public class CodeGenerator {
 
     public void generateConstructor(AnnotatableEntity aCtorTuple) {
         // Unpack the tuple and extract some useful fields from the Method..
-        Constructor theCtor = aCtorTuple.getConstructor();
+        Constructor<?> theCtor = aCtorTuple.getConstructor();
         String CMethodName = mCClassName;
 
         generateMemberCommon(theCtor, mCClassName, mClassToWrap);
@@ -295,7 +295,7 @@ public class CodeGenerator {
         }
 
         Method m;
-        Constructor c;
+        Constructor<?> c;
 
         Class<?> returnType;
 
@@ -305,7 +305,7 @@ public class CodeGenerator {
             returnType = m.getReturnType();
             localReferencesNeeded = Utils.enumerateReferenceArguments(m.getParameterTypes());
         } else {
-            c = (Constructor) aMethod;
+            c = (Constructor<?>) aMethod;
             returnType = Void.class;
             localReferencesNeeded = Utils.enumerateReferenceArguments(c.getParameterTypes());
         }
@@ -371,7 +371,7 @@ public class CodeGenerator {
         return argumentContent;
     }
 
-    private void writeCtorBody(String implementationSignature, Constructor theCtor,
+    private void writeCtorBody(String implementationSignature, Constructor<?> theCtor,
             boolean aIsThreaded, boolean aNoThrow) {
         Class<?>[] argumentTypes = theCtor.getParameterTypes();
 
