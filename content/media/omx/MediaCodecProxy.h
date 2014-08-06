@@ -10,12 +10,18 @@
 #include <nsString.h>
 
 #include <stagefright/MediaCodec.h>
+#include <stagefright/MediaBuffer.h>
 #include <utils/threads.h>
 
 #include "MediaResourceHandler.h"
 
 namespace android {
-
+// This class is intended to be a proxy for MediaCodec with codec resource
+// management. Basically user can use it like MediaCodec, but need to handle
+// the listener when Codec is reserved for Async case. A good example is
+// MediaCodecReader.cpp. Another useage is to use configure(), Prepare(),
+// Input(), and Output(). It is used in GonkVideoDecoderManager.cpp which
+// doesn't need to handle the buffers for codec.
 class MediaCodecProxy : public MediaResourceHandler::ResourceListener
 {
 public:
@@ -34,6 +40,9 @@ public:
     virtual void codecCanceled() = 0;
   };
 
+  enum {
+    kKeyBufferIndex = 'bfin',
+  };
   // Check whether MediaCodec has been allocated.
   bool allocated() const;
 
@@ -104,6 +113,13 @@ public:
   // pending, an error is pending.
   void requestActivityNotification(const sp<AMessage> &aNotify);
 
+  status_t Input(const uint8_t* aData, uint32_t aDataSize,
+                 int64_t aTimestampUsecs, uint64_t flags);
+  status_t Output(MediaBuffer** aBuffer, int64_t aTimeoutUs);
+  bool Prepare();
+  bool IsWaitingResources();
+  bool IsDormantNeeded();
+  void ReleaseMediaResources();
 protected:
   virtual ~MediaCodecProxy();
 
@@ -149,6 +165,10 @@ private:
   // MediaCodec instance
   mutable RWLock mCodecLock;
   sp<MediaCodec> mCodec;
+  //MediaCodec buffers to hold input/output data.
+  Vector<sp<ABuffer> > mInputBuffers;
+  Vector<sp<ABuffer> > mOutputBuffers;
+
 };
 
 } // namespace android
