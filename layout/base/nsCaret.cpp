@@ -557,20 +557,21 @@ void nsCaret::ResetBlinking()
     return;
   }
 
-  if (!mBlinkTimer) {
+  if (mBlinkTimer) {
+    mBlinkTimer->Cancel();
+  } else {
     nsresult  err;
     mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
     if (NS_FAILED(err))
       return;
-  } else {
-    mBlinkTimer->Cancel();
   }
 
   uint32_t blinkRate = static_cast<uint32_t>(
     LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, 500));
-
-  mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, blinkRate,
-                                    nsITimer::TYPE_REPEATING_SLACK);
+  if (blinkRate > 0) {
+    mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, blinkRate,
+                                      nsITimer::TYPE_REPEATING_SLACK);
+  }
 }
 
 //-----------------------------------------------------------------------------
