@@ -111,7 +111,7 @@ AdjustCaretFrameForLineEnd(nsIFrame** aFrame, int32_t* aOffset)
 
 nsCaret::nsCaret()
 : mPresShell(nullptr)
-, mBlinkRate(500)
+, mIsBlinking(true)
 , mVisible(false)
 , mDrawn(false)
 , mPendingDraw(false)
@@ -139,8 +139,6 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   mPresShell = do_GetWeakReference(inPresShell);    // the presshell owns us, so no addref
   NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
-  mBlinkRate = static_cast<uint32_t>(
-    LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, mBlinkRate));
   mShowDuringSelection =
     LookAndFeel::GetInt(LookAndFeel::eIntID_ShowCaretDuringSelection,
                         mShowDuringSelection ? 1 : 0) != 0;
@@ -392,7 +390,7 @@ void nsCaret::EraseCaret()
 {
   if (mDrawn) {
     DrawCaret(true);
-    if (mReadOnly && mBlinkRate) {
+    if (mReadOnly && mIsBlinking) {
       // If readonly we don't have a blink timer set, so caret won't
       // be redrawn automatically. We need to force the caret to get
       // redrawn right after the paint
@@ -417,9 +415,9 @@ nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset)
   bidiLevel = frameSelection->GetCaretBidiLevel();
 
   // DrawAtPosition is used by consumers who want us to stay drawn where they
-  // tell us. Setting mBlinkRate to 0 tells us to not set a timer to erase
+  // tell us. Setting mIsBlinking to false tells us to not set a timer to erase
   // ourselves, our consumer will take care of that.
-  mBlinkRate = 0;
+  mIsBlinking = false;
 
   nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
   nsresult rv = DrawAtPositionWithHint(aNode, aOffset,
@@ -547,7 +545,7 @@ void nsCaret::KillTimer()
 nsresult nsCaret::PrimeTimer()
 {
   // set up the blink timer
-  if (!mReadOnly && mBlinkRate > 0)
+  if (!mReadOnly && mIsBlinking)
   {
     if (!mBlinkTimer) {
       nsresult  err;
@@ -556,7 +554,10 @@ nsresult nsCaret::PrimeTimer()
         return err;
     }    
 
-    mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, mBlinkRate,
+    uint32_t blinkRate = static_cast<uint32_t>(
+      LookAndFeel::GetInt(LookAndFeel::eIntID_CaretBlinkTime, 500));
+
+    mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, blinkRate,
                                       nsITimer::TYPE_REPEATING_SLACK);
   }
 
