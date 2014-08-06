@@ -19,11 +19,12 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "plarena.h"
+#include "Layers.h"
 #include "nsRegion.h"
-#include "FrameLayerBuilder.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayListInvalidation.h"
 #include "DisplayListClipState.h"
+#include "LayerState.h"
 
 #include <stdint.h>
 
@@ -38,6 +39,7 @@ class nsDisplayLayerEventRegions;
 class nsCaret;
 
 namespace mozilla {
+class FrameLayerBuilder;
 namespace layers {
 class Layer;
 class ImageLayer;
