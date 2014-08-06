@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 8;
+
+function test_seek8(v, seekTime, is, ok, finish) {
+
+function startTest() {
+  v.currentTime = 1000;
+}
+
+function seekEnded() {
+  ok(Math.abs(v.currentTime - v.duration) < 0.2,
+     "currentTime " + v.currentTime + " close to " + v.duration);
+  finish();
+}
+
+v.addEventListener("loadedmetadata", startTest, false);
+v.addEventListener("seeked", seekEnded, false);
+
+}
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

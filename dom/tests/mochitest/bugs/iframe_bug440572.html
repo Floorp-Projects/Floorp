@@ -6,11 +6,11 @@ var success = 0;
 
 try {
   parent[name].success = 1;
+  parent.postMessage(success ? "success" : "failure", "http://mochi.test:8888");
 } catch (e) {
-  parent.postMessage(e, "http://mochi.test:8888");
+  parent.postMessage(e.toString(), "http://mochi.test:8888");
 }
 
-parent.postMessage(success ? "success" : "failure", "http://mochi.test:8888");
 </script>
 <p>Move on, nothing to see here...</p>
 </body>

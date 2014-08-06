@@ -45,8 +45,7 @@
       <checkbox label="&engine.bookmarks.label;"
                 accesskey="&engine.bookmarks.accesskey;"
                 preference="engine.bookmarks"/>
-      <checkbox id="fxa-pweng-chk"
-                label="&engine.passwords.label;"
+      <checkbox label="&engine.passwords.label;"
                 accesskey="&engine.passwords.accesskey;"
                 preference="engine.passwords"/>
       <checkbox label="&engine.history.label;"

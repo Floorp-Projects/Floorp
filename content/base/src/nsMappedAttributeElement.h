@@ -28,7 +28,7 @@ class nsMappedAttributeElement : public nsMappedAttributeElementBase
 
 protected:
 
-  nsMappedAttributeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+  explicit nsMappedAttributeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsMappedAttributeElementBase(aNodeInfo)
   {}
 

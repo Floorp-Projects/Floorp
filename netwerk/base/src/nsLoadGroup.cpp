@@ -50,7 +50,7 @@ static PRLogModuleInfo* gLoadGroupLog = nullptr;
 class RequestMapEntry : public PLDHashEntryHdr
 {
 public:
-    RequestMapEntry(nsIRequest *aRequest) :
+    explicit RequestMapEntry(nsIRequest *aRequest) :
         mKey(aRequest)
     {
     }

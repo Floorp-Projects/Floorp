@@ -684,17 +684,21 @@ Sync11Service.prototype = {
       return false;
     }
 
-    // Unlock master password, or return.
     // Attaching auth credentials to a request requires access to
     // passwords, which means that Resource.get can throw MP-related
     // exceptions!
-    // Try to fetch the passphrase first, while we still have control.
-    try {
-      this.identity.syncKey;
-    } catch (ex) {
-      this._log.debug("Fetching passphrase threw " + ex +
-                      "; assuming master password locked.");
-      this.status.login = MASTER_PASSWORD_LOCKED;
+    // So we ask the identity to verify the login state after unlocking the
+    // master password (ie, this call is expected to prompt for MP unlock
+    // if necessary) while we still have control.
+    let cb = Async.makeSpinningCallback();
+    this.identity.unlockAndVerifyAuthState().then(
+      result => cb(null, result),
+      cb
+    );
+    let unlockedState = cb.wait();
+    this._log.debug("Fetching unlocked auth state returned " + unlockedState);
+    if (unlockedState != STATUS_OK) {
+      this.status.login = unlockedState;
       return false;
     }
 

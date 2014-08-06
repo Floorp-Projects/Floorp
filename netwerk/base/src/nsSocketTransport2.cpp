@@ -1194,7 +1194,7 @@ nsSocketTransport::InitiateSocket()
             netaddr->GetAddress(ipaddr);
             fprintf_stderr(stderr,
                            "FATAL ERROR: Non-local network connections are disabled and a connection "
-                           "attempt to %s (%s) was made.\n You should only access hostnames "
+                           "attempt to %s (%s) was made.\nYou should only access hostnames "
                            "available via the test networking proxy (if running mochitests) "
                            "or from a test-specific httpd.js server (if running xpcshell tests). "
                            "Browser services should be disabled or redirected to a local server.\n",
@@ -1608,7 +1608,7 @@ nsSocketTransport::GetFD_Locked()
 class ThunkPRClose : public nsRunnable
 {
 public:
-  ThunkPRClose(PRFileDesc *fd) : mFD(fd) {}
+  explicit ThunkPRClose(PRFileDesc *fd) : mFD(fd) {}
 
   NS_IMETHOD Run()
   {

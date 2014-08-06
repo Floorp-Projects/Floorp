@@ -15,7 +15,7 @@ pref("security.ssl.enable_false_start", true);
 pref("security.ssl.false_start.require-npn", true);
 pref("security.ssl.false_start.require-forward-secrecy", true);
 pref("security.ssl.enable_npn", true);
-pref("security.ssl.enable_alpn", false);
+pref("security.ssl.enable_alpn", true);
 
 pref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", true);
 pref("security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256", true);

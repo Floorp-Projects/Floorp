@@ -109,16 +109,6 @@ WeaveService.prototype = {
   },
 
   /**
-   * Returns whether the password engine is allowed. We explicitly disallow
-   * the password engine when a master password is used to ensure those can't
-   * be accessed without the master key.
-   */
-  get allowPasswordsEngine() {
-    // This doesn't apply to old-style sync, it's only an issue for FxA.
-    return !this.fxAccountsEnabled || !Utils.mpEnabled();
-  },
-
-  /**
    * Whether Sync appears to be enabled.
    *
    * This returns true if all the Sync preferences for storing account

@@ -27,9 +27,10 @@ window.addEventListener("message", receiveMessage, false);
 
 function runtests()
 {
-  for (i in messages) {
-    is(messages[i], "success", "test in frame failed.");
-  }
+  is(messages.length, 3, "received the right number of messages.");
+  is(messages[0], "success", "test in frame failed.");
+  isnot(messages[1], "success", "parent[\"content\"] should be the WebIDL property of Window.");
+  isnot(messages[2], "success", "parent[\"dump\"] should be the WebIDL property of Window.");
 
   SimpleTest.finish();
 }

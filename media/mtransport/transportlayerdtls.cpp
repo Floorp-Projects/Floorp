@@ -500,11 +500,11 @@ bool TransportLayerDtls::Setup() {
     }
   }
 
-  // Require TLS 1.1. Perhaps some day in the future we will allow
-  // TLS 1.0 for stream modes.
+  // Require TLS 1.1 or 1.2. Perhaps some day in the future we will allow TLS
+  // 1.0 for stream modes.
   SSLVersionRange version_range = {
     SSL_LIBRARY_VERSION_TLS_1_1,
-    SSL_LIBRARY_VERSION_TLS_1_1
+    SSL_LIBRARY_VERSION_TLS_1_2
   };
 
   rv = SSL_VersionRangeSet(ssl_fd, &version_range);
@@ -549,16 +549,14 @@ bool TransportLayerDtls::Setup() {
     return false;
   }
 
-  // Set the SRTP ciphers
-  if (srtp_ciphers_.size()) {
-    // Note: std::vector is guaranteed to contiguous
-    rv = SSL_SetSRTPCiphers(ssl_fd, &srtp_ciphers_[0],
-                            srtp_ciphers_.size());
+  rv = SSL_OptionSet(ssl_fd, SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
+  if (rv != SECSuccess) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't disable ECDHE key reuse");
+    return false;
+  }
 
-    if (rv != SECSuccess) {
-      MOZ_MTLOG(ML_ERROR, "Couldn't set SRTP cipher suite");
-      return false;
-    }
+  if (!SetupCipherSuites(ssl_fd)) {
+    return false;
   }
 
   // Certificate validation
@@ -588,6 +586,135 @@ bool TransportLayerDtls::Setup() {
   return true;
 }
 
+// Ciphers we need to enable.  These are on by default in standard firefox
+// builds, but can be disabled with prefs and they aren't on in our unit tests
+// since that uses NSS default configuration.
+// Only override prefs to comply with MUST statements in the security-arch.
+static const uint32_t EnabledCiphers[] = {
+  TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+  TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+};
+
+// Disalbe all NSS suites modes without PFS or with old and rusty ciphersuites.
+// Anything outside this list is governed by the usual combination of policy
+// and user preferences.
+static const uint32_t DisabledCiphers[] = {
+  TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
+  TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+  TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+  TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+
+  TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
+  TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
+  TLS_DHE_DSS_WITH_RC4_128_SHA,
+
+  TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
+  TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
+  TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
+  TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
+  TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
+  TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
+  TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
+  TLS_ECDH_RSA_WITH_RC4_128_SHA,
+
+  TLS_RSA_WITH_AES_128_GCM_SHA256,
+  TLS_RSA_WITH_AES_128_CBC_SHA,
+  TLS_RSA_WITH_AES_128_CBC_SHA256,
+  TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,
+  TLS_RSA_WITH_AES_256_CBC_SHA,
+  TLS_RSA_WITH_AES_256_CBC_SHA256,
+  TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,
+  TLS_RSA_WITH_SEED_CBC_SHA,
+  SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,
+  TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+  TLS_RSA_WITH_RC4_128_SHA,
+  TLS_RSA_WITH_RC4_128_MD5,
+
+  TLS_DHE_RSA_WITH_DES_CBC_SHA,
+  TLS_DHE_DSS_WITH_DES_CBC_SHA,
+  SSL_RSA_FIPS_WITH_DES_CBC_SHA,
+  TLS_RSA_WITH_DES_CBC_SHA,
+
+  TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,
+  TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,
+
+  TLS_RSA_EXPORT_WITH_RC4_40_MD5,
+  TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
+
+  TLS_ECDHE_ECDSA_WITH_NULL_SHA,
+  TLS_ECDHE_RSA_WITH_NULL_SHA,
+  TLS_ECDH_ECDSA_WITH_NULL_SHA,
+  TLS_ECDH_RSA_WITH_NULL_SHA,
+
+  TLS_RSA_WITH_NULL_SHA,
+  TLS_RSA_WITH_NULL_SHA256,
+  TLS_RSA_WITH_NULL_MD5,
+};
+
+bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
+  SECStatus rv;
+
+  // Set the SRTP ciphers
+  if (!srtp_ciphers_.empty()) {
+    // Note: std::vector is guaranteed to contiguous
+    rv = SSL_SetSRTPCiphers(ssl_fd, &srtp_ciphers_[0], srtp_ciphers_.size());
+
+    if (rv != SECSuccess) {
+      MOZ_MTLOG(ML_ERROR, "Couldn't set SRTP cipher suite");
+      return false;
+    }
+  }
+
+  for (size_t i = 0; i < PR_ARRAY_SIZE(EnabledCiphers); ++i) {
+    MOZ_MTLOG(ML_INFO, LAYER_INFO << "Enabling: " << EnabledCiphers[i]);
+    rv = SSL_CipherPrefSet(ssl_fd, EnabledCiphers[i], PR_TRUE);
+    if (rv != SECSuccess) {
+      MOZ_MTLOG(ML_ERROR, LAYER_INFO <<
+                "Unable to enable suite: " << EnabledCiphers[i]);
+      return false;
+    }
+  }
+
+  for (size_t i = 0; i < PR_ARRAY_SIZE(DisabledCiphers); ++i) {
+    MOZ_MTLOG(ML_INFO, LAYER_INFO << "Disabling: " << DisabledCiphers[i]);
+
+    PRBool enabled = false;
+    rv = SSL_CipherPrefGet(ssl_fd, DisabledCiphers[i], &enabled);
+    if (rv != SECSuccess) {
+      MOZ_MTLOG(ML_NOTICE, LAYER_INFO <<
+                "Unable to check if suite is enabled: " << DisabledCiphers[i]);
+      return false;
+    }
+    if (enabled) {
+      rv = SSL_CipherPrefSet(ssl_fd, DisabledCiphers[i], PR_FALSE);
+      if (rv != SECSuccess) {
+        MOZ_MTLOG(ML_NOTICE, LAYER_INFO <<
+                  "Unable to disable suite: " << DisabledCiphers[i]);
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+nsresult TransportLayerDtls::GetCipherSuite(uint16_t* cipherSuite) const {
+  CheckThread();
+  if (!cipherSuite) {
+    MOZ_MTLOG(ML_ERROR, LAYER_INFO << "GetCipherSuite passed a nullptr");
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (state_ != TS_OPEN) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  SSLChannelInfo info;
+  SECStatus rv = SSL_GetChannelInfo(ssl_fd_, &info, sizeof(info));
+  if (rv != SECSuccess) {
+    MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "GetCipherSuite can't get channel info");
+    return NS_ERROR_FAILURE;
+  }
+  *cipherSuite = info.cipherSuite;
+  return NS_OK;
+}
 
 void TransportLayerDtls::StateChange(TransportLayer *layer, State state) {
   if (state <= state_) {
@@ -800,7 +927,7 @@ nsresult TransportLayerDtls::SetSrtpCiphers(std::vector<uint16_t> ciphers) {
   return NS_OK;
 }
 
-nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) {
+nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) const {
   CheckThread();
   SECStatus rv = SSL_GetSRTPCipher(ssl_fd_, cipher);
   if (rv != SECSuccess) {

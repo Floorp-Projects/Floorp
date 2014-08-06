@@ -1102,10 +1102,12 @@ FragmentOrElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 }
 
 void
-FragmentOrElement::GetTextContentInternal(nsAString& aTextContent)
+FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
+                                          ErrorResult& aError)
 {
-  if(!nsContentUtils::GetNodeTextContent(this, true, aTextContent))
-    NS_RUNTIMEABORT("OOM");
+  if(!nsContentUtils::GetNodeTextContent(this, true, aTextContent)) {
+    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+  }
 }
 
 void

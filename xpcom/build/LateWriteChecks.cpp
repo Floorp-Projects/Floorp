@@ -94,7 +94,7 @@ static void RecordStackWalker(void *aPC, void *aSP, void *aClosure)
 class LateWriteObserver MOZ_FINAL : public IOInterposeObserver
 {
 public:
-  LateWriteObserver(const char* aProfileDirectory)
+  explicit LateWriteObserver(const char* aProfileDirectory)
     : mProfileDirectory(PL_strdup(aProfileDirectory))
   {
   }

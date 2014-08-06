@@ -53,7 +53,7 @@ public:
   NS_IMETHOD Suspend();
   NS_IMETHOD Resume();
 
-  FTPChannelChild(nsIURI* uri);
+  explicit FTPChannelChild(nsIURI* uri);
 
   void AddIPDLReference();
   void ReleaseIPDLReference();
