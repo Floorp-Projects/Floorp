@@ -4,6 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
+
+XPIDL_SOURCES += [
+    'nsIXULBuilderListener.idl',
+    'nsIXULSortService.idl',
+    'nsIXULTemplateBuilder.idl',
+    'nsIXULTemplateQueryProcessor.idl',
+    'nsIXULTemplateResult.idl',
+    'nsIXULTemplateRuleFilter.idl',
+]
+
+XPIDL_MODULE = 'xultmpl'
+
 UNIFIED_SOURCES += [
     'nsContentSupportMap.cpp',
     'nsContentTestNode.cpp',
@@ -36,9 +49,9 @@ UNIFIED_SOURCES += [
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
-    '../../content/src',
     '/content/base/src',
     '/dom/base',
+    '/dom/xul',
     '/layout/xul/tree/',
 ]
 
