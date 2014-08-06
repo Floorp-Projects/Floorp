@@ -27,6 +27,12 @@ class nsIPresShell;
 class nsITimer;
 class nsRenderingContext;
 
+namespace mozilla {
+namespace dom {
+class Selection;
+}
+}
+
 //-----------------------------------------------------------------------------
 class nsCaret : public nsISelectionListener
 {
@@ -44,8 +50,9 @@ class nsCaret : public nsISelectionListener
     nsresult Init(nsIPresShell *inPresShell);
     void Terminate();
 
-    nsresult SetCaretDOMSelection(nsISelection *inDOMSel);
-    nsISelection* GetCaretDOMSelection();
+    void SetSelection(nsISelection *aDOMSel);
+    nsISelection* GetSelection();
+
     /**
      * Sets whether the caret should only be visible in nodes that are not
      * user-modify: read-only, or whether it should be visible in all nodes.
@@ -123,7 +130,7 @@ class nsCaret : public nsISelectionListener
      */
     nsIFrame* GetGeometry(nsRect* aRect)
     {
-      return GetGeometry(GetCaretDOMSelection(), aRect);
+      return GetGeometry(GetSelection(), aRect);
     }
 
     /** PaintCaret

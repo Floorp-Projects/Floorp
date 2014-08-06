@@ -692,7 +692,7 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
   nsRefPtr<nsCaret> caret = aBlockFrame->PresContext()->PresShell()->GetCaret();
   bool visible = false;
   if (caret && NS_SUCCEEDED(caret->GetCaretVisible(&visible)) && visible) {
-    nsCOMPtr<nsISelection> domSelection = caret->GetCaretDOMSelection();
+    nsCOMPtr<nsISelection> domSelection = caret->GetSelection();
     if (domSelection) {
       nsCOMPtr<nsIDOMNode> node;
       domSelection->GetFocusNode(getter_AddRefs(node));

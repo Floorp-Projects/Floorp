@@ -632,7 +632,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   if (!caret) return;
 
   // Scroll the current selection into view
-  nsISelection *caretSelection = caret->GetCaretDOMSelection();
+  nsISelection *caretSelection = caret->GetSelection();
   const bool isFocusedRightNow = ourSel == caretSelection;
   if (!isFocusedRightNow) {
     // Don't scroll the current selection if we've been focused using the mouse.
@@ -654,7 +654,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   }
 
   // tell the caret to use our selection
-  caret->SetCaretDOMSelection(ourSel);
+  caret->SetSelection(ourSel);
 
   // mutual-exclusion: the selection is either controlled by the
   // document or by the text input/area. Clear any selection in the

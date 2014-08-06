@@ -232,16 +232,16 @@ void nsCaret::Terminate()
 NS_IMPL_ISUPPORTS(nsCaret, nsISelectionListener)
 
 //-----------------------------------------------------------------------------
-nsISelection* nsCaret::GetCaretDOMSelection()
+nsISelection* nsCaret::GetSelection()
 {
   nsCOMPtr<nsISelection> sel(do_QueryReferent(mDomSelectionWeak));
-  return sel;  
+  return sel;
 }
 
 //-----------------------------------------------------------------------------
-nsresult nsCaret::SetCaretDOMSelection(nsISelection *aDOMSel)
+void nsCaret::SetSelection(nsISelection *aDOMSel)
 {
-  NS_ENSURE_ARG_POINTER(aDOMSel);
+  MOZ_ASSERT(aDOMSel);
   mDomSelectionWeak = do_GetWeakReference(aDOMSel);   // weak reference to pres shell
   if (mVisible)
   {
@@ -250,7 +250,6 @@ nsresult nsCaret::SetCaretDOMSelection(nsISelection *aDOMSel)
     // Start the caret blinking in the new location.
     StartBlinking();
   }
-  return NS_OK;
 }
 
 

@@ -351,7 +351,7 @@ TouchCaret::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel,
   // multiple selections.
   // If this notification is for a selection that is not the one the
   // the caret is currently interested in , then there is nothing to do!
-  if (aSel != caret->GetCaretDOMSelection()) {
+  if (aSel != caret->GetSelection()) {
     TOUCHCARET_LOG("Return for selection mismatch!");
     return NS_OK;
   }

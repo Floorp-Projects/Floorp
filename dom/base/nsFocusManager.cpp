@@ -2176,7 +2176,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
       // Caret must blink on non-editable elements
       caret->SetIgnoreUserModify(true);
       // Tell the caret which selection to use
-      caret->SetCaretDOMSelection(domSelection);
+      caret->SetSelection(domSelection);
 
       // In content, we need to set the caret. The only special case is edit
       // fields, which have a different frame selection from the document.

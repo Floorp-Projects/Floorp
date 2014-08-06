@@ -4927,7 +4927,7 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
   NS_ENSURE_TRUE(caret, NS_ERROR_UNEXPECTED);
   caret->SetIgnoreUserModify(false);
-  caret->SetCaretDOMSelection(selection);
+  caret->SetSelection(selection);
   selCon->SetCaretReadOnly(IsReadonly());
   selCon->SetCaretEnabled(true);
 

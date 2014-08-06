@@ -815,7 +815,7 @@ nsISelection*
 SelectionCarets::GetSelection()
 {
   nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
-  return caret->GetCaretDOMSelection();
+  return caret->GetSelection();
 }
 
 nsresult
