@@ -136,7 +136,7 @@ class FTPEventSinkProxy MOZ_FINAL : public nsIFTPEventSink
     ~FTPEventSinkProxy() {}
 
 public:
-    FTPEventSinkProxy(nsIFTPEventSink* aTarget)
+    explicit FTPEventSinkProxy(nsIFTPEventSink* aTarget)
         : mTarget(aTarget)
         , mTargetThread(do_GetCurrentThread())
     { }

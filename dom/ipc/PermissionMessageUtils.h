@@ -17,7 +17,7 @@ class Principal {
 
 public:
   Principal() : mPrincipal(nullptr) {}
-  Principal(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {}
+  explicit Principal(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {}
   operator nsIPrincipal*() const { return mPrincipal.get(); }
 
 private:

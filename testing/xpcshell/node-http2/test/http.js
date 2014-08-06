@@ -85,7 +85,7 @@ describe('http.js', function() {
       request[name].apply(request, originalArguments);
       var mockFallbackRequest = { on: util.noop };
       mockFallbackRequest[name] = function() {
-        expect(arguments).to.deep.equal(originalArguments);
+        expect(Array.prototype.slice.call(arguments)).to.deep.equal(originalArguments);
         done();
       };
       request._fallback(mockFallbackRequest);
@@ -109,6 +109,22 @@ describe('http.js', function() {
       it('should act as a proxy for the backing HTTPS agent\'s `abort` method', function(done) {
         testFallbackProxyMethod('abort', [], done);
       });
+    });
+  });
+  describe('OutgoingResponse', function() {
+    it('should throw error when writeHead is called multiple times on it', function() {
+      var called = false;
+      var stream = { _log: util.log, headers: function () {
+        if (called) {
+          throw new Error('Should not send headers twice');
+        } else {
+          called = true;
+        }
+      }, once: util.noop };
+      var response = new http2.OutgoingResponse(stream);
+
+      response.writeHead(200);
+      response.writeHead(404)
     });
   });
   describe('test scenario', function() {

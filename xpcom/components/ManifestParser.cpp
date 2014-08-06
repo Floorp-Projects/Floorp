@@ -153,7 +153,7 @@ IsNewline(char aChar)
 namespace {
 struct AutoPR_smprintf_free
 {
-  AutoPR_smprintf_free(char* aBuf) : mBuf(aBuf) {}
+  explicit AutoPR_smprintf_free(char* aBuf) : mBuf(aBuf) {}
 
   ~AutoPR_smprintf_free()
   {

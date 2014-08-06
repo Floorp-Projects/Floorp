@@ -303,7 +303,12 @@ function FxAccountsInternal() {
 
   // We don't reference |profileDir| in the top-level module scope
   // as we may be imported before we know where it is.
+  // We only want the fancy new LoginManagerStorage on desktop.
+#if defined(MOZ_B2G)
   this.signedInUserStorage = new JSONStorage({
+#else
+  this.signedInUserStorage = new LoginManagerStorage({
+#endif
     filename: DEFAULT_STORAGE_FILENAME,
     baseDir: OS.Constants.Path.profileDir,
   });
@@ -900,6 +905,194 @@ JSONStorage.prototype = {
     return CommonUtils.readJSON(this.path);
   }
 };
+
+/**
+ * LoginManagerStorage constructor that creates instances that may set/get
+ * from a combination of a clear-text JSON file and stored securely in
+ * the nsILoginManager.
+ *
+ * @param options {
+ *                  filename: of the plain-text file to write to
+ *                  baseDir: directory where the file resides
+ *                }
+ * @return instance
+ */
+
+function LoginManagerStorage(options) {
+  // we reuse the JSONStorage for writing the plain-text stuff.
+  this.jsonStorage = new JSONStorage(options);
+}
+
+LoginManagerStorage.prototype = {
+  // The fields in the credentials JSON object that are stored in plain-text
+  // in the profile directory.  All other fields are stored in the login manager,
+  // and thus are only available when the master-password is unlocked.
+
+  // a hook point for testing.
+  get _isLoggedIn() {
+    return Services.logins.isLoggedIn;
+  },
+
+  // Clear any data from the login manager.  Returns true if the login manager
+  // was unlocked (even if no existing logins existed) or false if it was
+  // locked (meaning we don't even know if it existed or not.)
+  _clearLoginMgrData: Task.async(function* () {
+    try { // Services.logins might be third-party and broken...
+      yield Services.logins.initializationPromise;
+      if (!this._isLoggedIn) {
+        return false;
+      }
+      let logins = Services.logins.findLogins({}, FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
+      for (let login of logins) {
+        Services.logins.removeLogin(login);
+      }
+      return true;
+    } catch (ex) {
+      log.error("Failed to clear login data: ${}", ex);
+      return false;
+    }
+  }),
+
+  set: Task.async(function* (contents) {
+    if (!contents) {
+      // User is signing out - write the null to the json file.
+      yield this.jsonStorage.set(contents);
+
+      // And nuke it from the login manager.
+      let cleared = yield this._clearLoginMgrData();
+      if (!cleared) {
+        // just log a message - we verify that the email address matches when
+        // we reload it, so having a stale entry doesn't really hurt.
+        log.info("not removing credentials from login manager - not logged in");
+      }
+      return;
+    }
+
+    // We are saving actual data.
+    // Split the data into 2 chunks - one to go to the plain-text, and the
+    // other to write to the login manager.
+    let toWriteJSON = {version: contents.version};
+    let accountDataJSON = toWriteJSON.accountData = {};
+    let toWriteLoginMgr = {version: contents.version};
+    let accountDataLoginMgr = toWriteLoginMgr.accountData = {};
+    for (let [name, value] of Iterator(contents.accountData)) {
+      if (FXA_PWDMGR_PLAINTEXT_FIELDS.indexOf(name) >= 0) {
+        accountDataJSON[name] = value;
+      } else {
+        accountDataLoginMgr[name] = value;
+      }
+    }
+    yield this.jsonStorage.set(toWriteJSON);
+
+    try { // Services.logins might be third-party and broken...
+      // and the stuff into the login manager.
+      yield Services.logins.initializationPromise;
+      // If MP is locked we silently fail - the user may need to re-auth
+      // next startup.
+      if (!this._isLoggedIn) {
+        log.info("not saving credentials to login manager - not logged in");
+        return;
+      }
+      // write the rest of the data to the login manager.
+      let loginInfo = new Components.Constructor(
+         "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+      let login = new loginInfo(FXA_PWDMGR_HOST,
+                                null, // aFormSubmitURL,
+                                FXA_PWDMGR_REALM, // aHttpRealm,
+                                contents.accountData.email, // aUsername
+                                JSON.stringify(toWriteLoginMgr), // aPassword
+                                "", // aUsernameField
+                                "");// aPasswordField
+
+      let existingLogins = Services.logins.findLogins({}, FXA_PWDMGR_HOST, null,
+                                                      FXA_PWDMGR_REALM);
+      if (existingLogins.length) {
+        Services.logins.modifyLogin(existingLogins[0], login);
+      } else {
+        Services.logins.addLogin(login);
+      }
+    } catch (ex) {
+      log.error("Failed to save data to the login manager: ${}", ex);
+    }
+  }),
+
+  get: Task.async(function* () {
+    // we need to suck some data from the .json file in the profile dir and
+    // some other from the login manager.
+    let data = yield this.jsonStorage.get();
+    if (!data) {
+      // no user logged in, nuke the storage data incase we couldn't remove
+      // it previously and then we are done.
+      yield this._clearLoginMgrData();
+      return null;
+    }
+
+    // if we have encryption keys it must have been saved before we
+    // used the login manager, so re-save it.
+    if (data.accountData.kA || data.accountData.kB || data.keyFetchToken) {
+      // We need to migrate, but the MP might be locked (eg, on the first run
+      // with this enabled, we will get here very soon after startup, so will
+      // certainly be locked.)  This means we can't actually store the data in
+      // the login manager (and thus might lose it if we migrated now)
+      // So if the MP is locked, we *don't* migrate, but still just return
+      // the subset of data we now store in the JSON.
+      // This will cause sync to notice the lack of keys, force an unlock then
+      // re-fetch the account data to see if the keys are there.  At *that*
+      // point we will end up back here, but because the MP is now unlocked
+      // we can actually perform the migration.
+      if (!this._isLoggedIn) {
+        // return the "safe" subset but leave the storage alone.
+        log.info("account data needs migration to the login manager but the MP is locked.");
+        let result = {
+          version: data.version,
+          accountData: {},
+        };
+        for (let fieldName of FXA_PWDMGR_PLAINTEXT_FIELDS) {
+          result.accountData[fieldName] = data.accountData[fieldName];
+        }
+        return result;
+      }
+      // actually migrate - just calling .set() will split everything up.
+      log.info("account data is being migrated to the login manager.");
+      yield this.set(data);
+    }
+
+    try { // Services.logins might be third-party and broken...
+      // read the data from the login manager and merge it for return.
+      yield Services.logins.initializationPromise;
+
+      if (!this._isLoggedIn) {
+        log.info("returning partial account data as the login manager is locked.");
+        return data;
+      }
+
+      let logins = Services.logins.findLogins({}, FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
+      if (logins.length == 0) {
+        // This could happen if the MP was locked when we wrote the data.
+        log.info("Can't find the rest of the credentials in the login manager");
+        return data;
+      }
+      let login = logins[0];
+      if (login.username == data.accountData.email) {
+        let lmData = JSON.parse(login.password);
+        if (lmData.version == data.version) {
+          // Merge the login manager data
+          copyObjectProperties(lmData.accountData, data.accountData);
+        } else {
+          log.info("version field in the login manager doesn't match - ignoring it");
+          yield this._clearLoginMgrData();
+        }
+      } else {
+        log.info("username in the login manager doesn't match - ignoring it");
+        yield this._clearLoginMgrData();
+      }
+    } catch (ex) {
+      log.error("Failed to get data from the login manager: ${}", ex);
+    }
+    return data;
+  }),
+
+}
 
 // A getter for the instance to export
 XPCOMUtils.defineLazyGetter(this, "fxAccounts", function() {

@@ -178,5 +178,18 @@ SERVER_ERRNO_TO_ERROR[ERRNO_INCORRECT_EMAIL_CASE]           = ERROR_INCORRECT_EM
 SERVER_ERRNO_TO_ERROR[ERRNO_SERVICE_TEMP_UNAVAILABLE]       = ERROR_SERVICE_TEMP_UNAVAILABLE;
 SERVER_ERRNO_TO_ERROR[ERRNO_UNKNOWN_ERROR]                  = ERROR_UNKNOWN;
 
+// FxAccounts has the ability to "split" the credentials between a plain-text
+// JSON file in the profile dir and in the login manager.
+// These constants relate to that.
+
+// The fields we save in the plaintext JSON.
+// See bug 1013064 comments 23-25 for why the sessionToken is "safe"
+this.FXA_PWDMGR_PLAINTEXT_FIELDS = ["email", "verified", "authAt",
+                                    "sessionToken", "uid"];
+// The pseudo-host we use in the login manager
+this.FXA_PWDMGR_HOST = "chrome://FirefoxAccounts";
+// The realm we use in the login manager.
+this.FXA_PWDMGR_REALM = "Firefox Accounts credentials";
+
 // Allow this file to be imported via Components.utils.import().
 this.EXPORTED_SYMBOLS = Object.keys(this);

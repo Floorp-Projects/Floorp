@@ -47,7 +47,7 @@ public:
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
 
-    nsSocketInputStream(nsSocketTransport *);
+    explicit nsSocketInputStream(nsSocketTransport *);
     virtual ~nsSocketInputStream();
 
     bool     IsReferenced() { return mReaderRefCnt > 0; }
@@ -77,7 +77,7 @@ public:
     NS_DECL_NSIOUTPUTSTREAM
     NS_DECL_NSIASYNCOUTPUTSTREAM
 
-    nsSocketOutputStream(nsSocketTransport *);
+    explicit nsSocketOutputStream(nsSocketTransport *);
     virtual ~nsSocketOutputStream();
 
     bool     IsReferenced() { return mWriterRefCnt > 0; }
@@ -181,8 +181,8 @@ private:
     public:
       typedef mozilla::MutexAutoLock MutexAutoLock;
 
-      PRFileDescAutoLock(nsSocketTransport *aSocketTransport,
-                         nsresult *aConditionWhileLocked = nullptr)
+      explicit PRFileDescAutoLock(nsSocketTransport *aSocketTransport,
+                                  nsresult *aConditionWhileLocked = nullptr)
         : mSocketTransport(aSocketTransport)
         , mFd(nullptr)
       {
@@ -223,7 +223,7 @@ private:
     class LockedPRFileDesc
     {
     public:
-      LockedPRFileDesc(nsSocketTransport *aSocketTransport)
+      explicit LockedPRFileDesc(nsSocketTransport *aSocketTransport)
         : mSocketTransport(aSocketTransport)
         , mFd(nullptr)
       {

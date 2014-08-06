@@ -87,7 +87,7 @@ public:
   typedef const SHA1Sum::Hash& KeyType;
   typedef const SHA1Sum::Hash* KeyTypePointer;
 
-  CacheIndexEntry(KeyTypePointer aKey)
+  explicit CacheIndexEntry(KeyTypePointer aKey)
   {
     MOZ_COUNT_CTOR(CacheIndexEntry);
     mRec = new CacheIndexRecord();
@@ -970,7 +970,7 @@ private:
     }
 
   private:
-    DiskConsumptionObserver(nsWeakPtr const &aWeakObserver)
+    explicit DiskConsumptionObserver(nsWeakPtr const &aWeakObserver)
       : mObserver(aWeakObserver) { }
     virtual ~DiskConsumptionObserver() { }
 
@@ -998,7 +998,7 @@ private:
 
 class CacheIndexAutoLock {
 public:
-  CacheIndexAutoLock(CacheIndex *aIndex)
+  explicit CacheIndexAutoLock(CacheIndex *aIndex)
     : mIndex(aIndex)
     , mLocked(true)
   {
@@ -1030,7 +1030,7 @@ private:
 
 class CacheIndexAutoUnlock {
 public:
-  CacheIndexAutoUnlock(CacheIndex *aIndex)
+  explicit CacheIndexAutoUnlock(CacheIndex *aIndex)
     : mIndex(aIndex)
     , mLocked(false)
   {
