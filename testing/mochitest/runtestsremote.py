@@ -637,6 +637,9 @@ def main():
     dm.killProcess(procName)
 
     if options.robocopIni != "":
+        # turning buffering off as it's not used in robocop
+        message_logger.buffering = False
+
         # sut may wait up to 300 s for a robocop am process before returning
         dm.default_timeout = 320
         mp = manifestparser.TestManifest(strict=False)
@@ -647,10 +650,6 @@ def main():
         my_tests = tests
         for test in robocop_tests:
             tests.append(test['name'])
-        # suite_start message when running robocop tests
-        log.suite_start(tests)
-        # turning buffering off as it's not used in robocop
-        message_logger.buffering = False
 
         if options.totalChunks:
             tests_per_chunk = math.ceil(len(tests) / (options.totalChunks * 1.0))
@@ -676,6 +675,8 @@ def main():
             dm._checkCmd(["install", "-r", options.robocopApk])
 
         retVal = None
+        # Filtering tests
+        active_tests = []
         for test in robocop_tests:
             if options.testPath and options.testPath != test['name']:
                 continue
@@ -687,6 +688,11 @@ def main():
                 log.info('TEST-INFO | skipping %s | %s' % (test['name'], test['disabled']))
                 continue
 
+            active_tests.append(test)
+
+        log.suite_start([t['name'] for t in active_tests])
+
+        for test in active_tests:
             # When running in a loop, we need to create a fresh profile for each cycle
             if mochitest.localProfile:
                 options.profilePath = mochitest.localProfile
