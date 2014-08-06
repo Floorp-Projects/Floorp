@@ -4,11 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'base',
-    'html',
-    'media',
-    'xul',
-]
+if CONFIG['MOZ_XUL']:
+    XPIDL_SOURCES += [
+        'nsIXULContextMenuBuilder.idl',
+    ]
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+XPIDL_MODULE = 'xul'
+
