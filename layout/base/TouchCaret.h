@@ -16,6 +16,9 @@
 #include "mozilla/TouchEvents.h"
 #include "Units.h"
 
+class nsIFrame;
+class nsIPresShell;
+
 namespace mozilla {
 
 /**
