@@ -62,15 +62,6 @@ class nsCaret : public nsISelectionListener
      */
     void    SetCaretReadOnly(bool inMakeReadonly);
 
-    /** GetCaretReadOnly get the appearance of the caret
-     *  @return true if the caret is in 'read only' state, otherwise,
-     *          returns false
-     */
-    bool GetCaretReadOnly()
-    {
-      return mReadOnly;
-    }
-
     /**
      * Gets the position and size of the caret that would be drawn for
      * the focus node/offset of aSelection (assuming it would be drawn,
