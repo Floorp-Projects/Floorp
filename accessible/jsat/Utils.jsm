@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Relations',
   'resource://gre/modules/accessibility/Constants.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'States',
   'resource://gre/modules/accessibility/Constants.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'PluralForm',
+  'resource://gre/modules/PluralForm.jsm');
 
 this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext', 'PrefCache', 'SettingCache'];
 
@@ -189,10 +191,49 @@ this.Utils = {
     return this.isContentProcess;
   },
 
+  localize: function localize(aOutput) {
+    let outputArray = Array.isArray(aOutput) ? aOutput : [aOutput];
+    let localized =
+      [this.stringBundle.get(details) for (details of outputArray)]; // jshint ignore:line
+    // Clean up the white space.
+    let trimmed;
+    return [trimmed for (word of localized) if (word && // jshint ignore:line
+      (trimmed = word.trim()))]; // jshint ignore:line
+  },
+
   get stringBundle() {
     delete this.stringBundle;
-    this.stringBundle = Services.strings.createBundle(
+    let bundle = Services.strings.createBundle(
       'chrome://global/locale/AccessFu.properties');
+    this.stringBundle = {
+      get: function stringBundle_get(aDetails = {}) {
+        if (!aDetails || typeof aDetails === 'string') {
+          return aDetails;
+        }
+        let str = '';
+        let string = aDetails.string;
+        if (!string) {
+          return str;
+        }
+        try {
+          let args = aDetails.args;
+          let count = aDetails.count;
+          if (args) {
+            str = bundle.formatStringFromName(string, args, args.length);
+          } else {
+            str = bundle.GetStringFromName(string);
+          }
+          if (count) {
+            str = PluralForm.get(count, str);
+            str = str.replace('#1', count);
+          }
+        } catch (e) {
+          Logger.debug('Failed to get a string from a bundle for', string);
+        } finally {
+          return str;
+        }
+      }
+    };
     return this.stringBundle;
   },
 

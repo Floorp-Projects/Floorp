@@ -12,7 +12,6 @@ const Cr = Components.results;
 this.EXPORTED_SYMBOLS = ['AccessFu'];
 
 Cu.import('resource://gre/modules/Services.jsm');
-
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 
 const ACCESSFU_DISABLE = 0;
@@ -135,8 +134,7 @@ this.AccessFu = {
     }
 
     if (Utils.MozBuildApp !== 'mobile/android') {
-      this.announce(
-        Utils.stringBundle.GetStringFromName('screenReaderStarted'));
+      this.announce('screenReaderStarted');
     }
   },
 
@@ -154,8 +152,7 @@ this.AccessFu = {
     Utils.win.document.removeChild(this.stylesheet.get());
 
     if (Utils.MozBuildApp !== 'mobile/android') {
-      this.announce(
-        Utils.stringBundle.GetStringFromName('screenReaderStopped'));
+      this.announce('screenReaderStopped');
     }
 
     for each (let mm in Utils.AllMessageManagers) {
@@ -509,97 +506,8 @@ var Output = {
     }
   },
 
-  speechHelper: {
-    EARCONS: ['virtual_cursor_move.ogg',
-              'virtual_cursor_key.ogg',
-              'clicked.ogg'],
-
-    earconBuffers: {},
-
-    inited: false,
-
-    webspeechEnabled: false,
-
-    deferredOutputs: [],
-
-    init: function init() {
-      let window = Utils.win;
-      this.webspeechEnabled = !!window.speechSynthesis &&
-        !!window.SpeechSynthesisUtterance;
-
-      let settingsToGet = 2;
-      let settingsCallback = (aName, aSetting) => {
-        if (--settingsToGet > 0) {
-          return;
-        }
-
-        this.inited = true;
-
-        for (let actions of this.deferredOutputs) {
-          this.output(actions);
-        }
-      };
-
-      this._volumeSetting = new SettingCache(
-        'accessibility.screenreader-volume', settingsCallback,
-        { defaultValue: 1, callbackNow: true, callbackOnce: true });
-      this._rateSetting = new SettingCache(
-        'accessibility.screenreader-rate', settingsCallback,
-        { defaultValue: 0, callbackNow: true, callbackOnce: true });
-
-      for (let earcon of this.EARCONS) {
-        let earconName = /(^.*)\..*$/.exec(earcon)[1];
-        this.earconBuffers[earconName] = new WeakMap();
-        this.earconBuffers[earconName].set(
-          window, new window.Audio('chrome://global/content/accessibility/' + earcon));
-      }
-    },
-
-    uninit: function uninit() {
-      if (this.inited) {
-        delete this._volumeSetting;
-        delete this._rateSetting;
-      }
-      this.inited = false;
-    },
-
-    output: function output(aActions) {
-      if (!this.inited) {
-        this.deferredOutputs.push(aActions);
-        return;
-      }
-
-      for (let action of aActions) {
-        let window = Utils.win;
-        Logger.debug('tts.' + action.method, '"' + action.data + '"',
-                     JSON.stringify(action.options));
-
-        if (!action.options.enqueue && this.webspeechEnabled) {
-          window.speechSynthesis.cancel();
-        }
-
-        if (action.method === 'speak' && this.webspeechEnabled) {
-          let utterance = new window.SpeechSynthesisUtterance(action.data);
-          let requestedRate = this._rateSetting.value;
-          utterance.volume = this._volumeSetting.value;
-          utterance.rate = requestedRate >= 0 ?
-            requestedRate + 1 : 1 / (Math.abs(requestedRate) + 1);
-          window.speechSynthesis.speak(utterance);
-        } else if (action.method === 'playEarcon') {
-          let audioBufferWeakMap = this.earconBuffers[action.data];
-          if (audioBufferWeakMap) {
-            let node = audioBufferWeakMap.get(window).cloneNode(false);
-            node.volume = this._volumeSetting.value;
-            node.play();
-          }
-        }
-      }
-    }
-  },
-
   start: function start() {
     Cu.import('resource://gre/modules/Geometry.jsm');
-    this.speechHelper.init();
   },
 
   stop: function stop() {
@@ -607,22 +515,32 @@ var Output = {
       Utils.win.document.documentElement.removeChild(this.highlightBox.get());
       delete this.highlightBox;
     }
+  },
 
-    if (this.announceBox) {
-      Utils.win.document.documentElement.removeChild(this.announceBox.get());
-      delete this.announceBox;
+  B2G: function B2G(aDetails) {
+    let details = {
+      type: 'accessfu-output',
+      details: JSON.stringify(aDetails)
+    };
+    let window = Utils.win;
+    if (window.shell) {
+      // On B2G device.
+      window.shell.sendChromeEvent(details);
+    } else {
+      // Dispatch custom event to have support for desktop and screen reader
+      // emulator add-on.
+      window.dispatchEvent(new window.CustomEvent(details.type, {
+        bubbles: true,
+        cancelable: true,
+        detail: details
+      }));
     }
-
-    this.speechHelper.uninit();
   },
 
-  Speech: function Speech(aDetails, aBrowser) {
-    this.speechHelper.output(aDetails.actions);
-  },
-
-  Visual: function Visual(aDetails, aBrowser) {
-    switch (aDetails.method) {
-      case 'showBounds':
+  Visual: function Visual(aDetail, aBrowser) {
+    switch (aDetail.eventType) {
+      case 'viewport-change':
+      case 'vc-change':
       {
         let highlightBox = null;
         if (!this.highlightBox) {
@@ -643,8 +561,8 @@ var Output = {
           highlightBox = this.highlightBox.get();
         }
 
-        let padding = aDetails.padding;
-        let r = AccessFu.adjustContentBounds(aDetails.bounds, aBrowser, true);
+        let padding = aDetail.padding;
+        let r = AccessFu.adjustContentBounds(aDetail.bounds, aBrowser, true);
 
         // First hide it to avoid flickering when changing the style.
         highlightBox.style.display = 'none';
@@ -656,43 +574,11 @@ var Output = {
 
         break;
       }
-      case 'hideBounds':
+      case 'tabstate-change':
       {
         let highlightBox = this.highlightBox ? this.highlightBox.get() : null;
         if (highlightBox)
           highlightBox.style.display = 'none';
-        break;
-      }
-      case 'showAnnouncement':
-      {
-        let announceBox = this.announceBox ? this.announceBox.get() : null;
-        if (!announceBox) {
-          announceBox = Utils.win.document.
-            createElementNS('http://www.w3.org/1999/xhtml', 'div');
-          announceBox.id = 'announce-box';
-          Utils.win.document.documentElement.appendChild(announceBox);
-          this.announceBox = Cu.getWeakReference(announceBox);
-        }
-
-        announceBox.innerHTML = '<div>' + aDetails.text + '</div>';
-        announceBox.classList.add('showing');
-
-        if (this._announceHideTimeout)
-          Utils.win.clearTimeout(this._announceHideTimeout);
-
-        if (aDetails.duration > 0)
-          this._announceHideTimeout = Utils.win.setTimeout(
-            function () {
-              announceBox.classList.remove('showing');
-              this._announceHideTimeout = 0;
-            }.bind(this), aDetails.duration);
-        break;
-      }
-      case 'hideAnnouncement':
-      {
-        let announceBox = this.announceBox ? this.announceBox.get() : null;
-        if (announceBox)
-          announceBox.classList.remove('showing');
         break;
       }
     }
@@ -736,12 +622,8 @@ var Output = {
     }
   },
 
-  Haptic: function Haptic(aDetails, aBrowser) {
-    Utils.win.navigator.vibrate(aDetails.pattern);
-  },
-
-  Braille: function Braille(aDetails, aBrowser) {
-    Logger.debug('Braille output: ' + aDetails.text);
+  Braille: function Braille(aDetails) {
+    Logger.debug('Braille output: ' + aDetails.output);
   }
 };
 

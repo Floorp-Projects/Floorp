@@ -47,204 +47,204 @@
     }
 
     var tests = [{
-      expected: [{
-        "method": "speak",
-        "data": "hidden I will be hidden",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"}, "I will be hidden"],
         "options": {
           "enqueue": true
         }
-      }],
+      },
       action: function action() {
         [hide(id) for (id of ["to_hide1", "to_hide2", "to_hide3", "to_hide4"])];
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "hidden I will be hidden",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"},"I will be hidden"],
         "options": {
           "enqueue": true
         }
-      }],
+      },
       action: function action() {
         [hide(id) for (id of ["to_hide_descendant1", "to_hide_descendant2",
           "to_hide_descendant3", "to_hide_descendant4"])];
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "I will be shown",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I will be shown"],
         "options": {
           "enqueue": true
         }
-      }],
+      },
       action: function action() {
         [show(id) for (id of ["to_show1", "to_show2", "to_show3", "to_show4"])];
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "I will be shown",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I will be shown"],
         "options": {
           "enqueue": true
         }
-      }],
+      },
       action: function action() {
         [show(id) for (id of ["to_show_descendant1", "to_show_descendant2",
           "to_show_descendant3", "to_show_descendant4"])];
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "hidden I will be hidden",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"}, "I will be hidden"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         hide("to_hide_live_assertive");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "I will be shown",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I will be shown"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         [show(id) for (id of ["to_show_live_off", "to_show_live_assertive"])];
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "Text Added",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["Text Added"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         updateText("text_add", "Text Added");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "Text Added",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["Text Added"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         updateHTML("text_add", "Text Added");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "hidden Text Removed",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"}, "Text Removed"],
         "options": {
           "enqueue": true
         }
-      }],
+      },
       action: function action() {
         updateText("text_remove", "");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "Descendant Text Added",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["Descendant Text Added"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         updateText("text_add_descendant", "Descendant Text Added");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "Descendant Text Added",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["Descendant Text Added"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         updateHTML("text_add_descendant", "Descendant Text Added");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "hidden Descendant Text Removed",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"}, "Descendant Text Removed"],
         "options": {
           "enqueue": true
         }
-      }],
+      },
       action: function action() {
         updateText("text_remove_descendant", "");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "Descendant Text Added",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["Descendant Text Added"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         updateText("text_add_descendant2", "Descendant Text Added");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "Descendant Text Added",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["Descendant Text Added"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         updateHTML("text_add_descendant2", "Descendant Text Added");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "hidden Descendant Text Removed",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": [{"string": "hidden"}, "Descendant Text Removed"],
         "options": {
           "enqueue": true
         }
-      }],
+      },
       action: function action() {
         updateText("text_remove_descendant2", "");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "I am replaced main",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I am replaced", {"string": "main"}],
         "options": {
           "enqueue": true
         }
-      }],
+      },
       action: function action() {
         var region = document.getElementById("to_replace_region");
         var child = document.getElementById("to_replace");
         child.setAttribute("role", "main");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "I am a replaced text",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I am a replaced text"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         updateText("to_replace_text", "I am a replaced text");
       }
     }, {
-      expected: [{
-        "method": "speak",
-        "data": "I am a replaced text",
+      expected: {
+        "eventType": "liveregion-change",
+        "data": ["I am a replaced text"],
         "options": {
           "enqueue": false
         }
-      }],
+      },
       action: function action() {
         updateHTML("to_replace_text", "I am a replaced text");
       }

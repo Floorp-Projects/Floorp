@@ -130,7 +130,6 @@ Presenter.prototype = {
 /**
  * Visual presenter. Draws a box around the virtual cursor's position.
  */
-
 this.VisualPresenter = function VisualPresenter() {
   this._displayedAccessibles = new WeakMap();
 };
@@ -161,7 +160,7 @@ VisualPresenter.prototype = {
       return {
         type: this.type,
         details: {
-          method: 'showBounds',
+          eventType: 'viewport-change',
           bounds: bounds,
           padding: this.BORDER_PADDING
         }
@@ -194,7 +193,7 @@ VisualPresenter.prototype = {
       return {
         type: this.type,
         details: {
-          method: 'showBounds',
+          eventType: 'vc-change',
           bounds: bounds,
           padding: this.BORDER_PADDING
         }
@@ -212,20 +211,9 @@ VisualPresenter.prototype = {
   tabStateChanged: function VisualPresenter_tabStateChanged(aDocObj,
                                                             aPageState) {
     if (aPageState == 'newdoc')
-      return {type: this.type, details: {method: 'hideBounds'}};
+      return {type: this.type, details: {eventType: 'tabstate-change'}};
 
     return null;
-  },
-
-  announce: function VisualPresenter_announce(aAnnouncement) {
-    return {
-      type: this.type,
-      details: {
-        method: 'showAnnouncement',
-        text: aAnnouncement,
-        duration: 1000
-      }
-    };
   }
 };
 
@@ -297,7 +285,8 @@ AndroidPresenter.prototype = {
       let state = Utils.getState(aContext.accessible);
       androidEvents.push({eventType: (isExploreByTouch) ?
                            this.ANDROID_VIEW_HOVER_ENTER : focusEventType,
-                         text: UtteranceGenerator.genForContext(aContext).output,
+                         text: Utils.localize(UtteranceGenerator.genForContext(
+                           aContext)),
                          bounds: aContext.bounds,
                          clickable: aContext.accessible.actionCount > 0,
                          checkable: state.contains(States.CHECKABLE),
@@ -323,7 +312,8 @@ AndroidPresenter.prototype = {
       type: this.type,
       details: [{
         eventType: this.ANDROID_VIEW_CLICKED,
-        text: UtteranceGenerator.genForAction(aObject, aActionName),
+        text: Utils.localize(UtteranceGenerator.genForAction(aObject,
+          aActionName)),
         checked: state.contains(States.CHECKED)
       }]
     };
@@ -337,7 +327,7 @@ AndroidPresenter.prototype = {
   tabStateChanged: function AndroidPresenter_tabStateChanged(aDocObj,
                                                              aPageState) {
     return this.announce(
-      UtteranceGenerator.genForTabStateChange(aDocObj, aPageState).join(' '));
+      UtteranceGenerator.genForTabStateChange(aDocObj, aPageState));
   },
 
   textChanged: function AndroidPresenter_textChanged(aIsInserted, aStart,
@@ -421,18 +411,18 @@ AndroidPresenter.prototype = {
   },
 
   editingModeChanged: function AndroidPresenter_editingModeChanged(aIsEditing) {
-    return this.announce(
-      UtteranceGenerator.genForEditingMode(aIsEditing).join(' '));
+    return this.announce(UtteranceGenerator.genForEditingMode(aIsEditing));
   },
 
   announce: function AndroidPresenter_announce(aAnnouncement) {
+    let localizedAnnouncement = Utils.localize(aAnnouncement).join(' ');
     return {
       type: this.type,
       details: [{
         eventType: (Utils.AndroidSdkVersion >= 16) ?
           this.ANDROID_ANNOUNCEMENT : this.ANDROID_VIEW_TEXT_CHANGED,
-        text: [aAnnouncement],
-        addedCount: aAnnouncement.length,
+        text: [localizedAnnouncement],
+        addedCount: localizedAnnouncement.length,
         removedCount: 0,
         fromIndex: 0
       }]
@@ -442,118 +432,99 @@ AndroidPresenter.prototype = {
   liveRegion: function AndroidPresenter_liveRegion(aContext, aIsPolite,
     aIsHide, aModifiedText) {
     return this.announce(
-      UtteranceGenerator.genForLiveRegion(aContext, aIsHide,
-        aModifiedText).join(' '));
+      UtteranceGenerator.genForLiveRegion(aContext, aIsHide, aModifiedText));
   }
 };
 
 /**
- * A speech presenter for direct TTS output
+ * A B2G presenter for Gaia.
  */
+this.B2GPresenter = function B2GPresenter() {};
 
-this.SpeechPresenter = function SpeechPresenter() {};
-
-SpeechPresenter.prototype = {
+B2GPresenter.prototype = {
   __proto__: Presenter.prototype,
 
-  type: 'Speech',
+  type: 'B2G',
 
-  pivotChanged: function SpeechPresenter_pivotChanged(aContext, aReason) {
-    if (!aContext.accessible)
+  /**
+   * A pattern used for haptic feedback.
+   * @type {Array}
+   */
+  PIVOT_CHANGE_HAPTIC_PATTERN: [40],
+
+  /**
+   * Pivot move reasons.
+   * @type {Array}
+   */
+  pivotChangedReasons: ['none', 'next', 'prev', 'first', 'last', 'text',
+    'point'],
+
+  pivotChanged: function B2GPresenter_pivotChanged(aContext, aReason) {
+    if (!aContext.accessible) {
       return null;
+    }
 
     return {
       type: this.type,
       details: {
-        actions: [
-          {method: 'playEarcon',
-           data: aContext.accessible.role === Roles.KEY ?
-             'virtual_cursor_key' : 'virtual_cursor_move',
-           options: {}},
-          {method: 'speak',
-            data: UtteranceGenerator.genForContext(aContext).output.join(' '),
-            options: {enqueue: true}}
-        ]
+        eventType: 'vc-change',
+        data: UtteranceGenerator.genForContext(aContext),
+        options: {
+          pattern: this.PIVOT_CHANGE_HAPTIC_PATTERN,
+          isKey: aContext.accessible.role === Roles.KEY,
+          reason: this.pivotChangedReasons[aReason]
+        }
       }
     };
   },
 
-  valueChanged: function SpeechPresenter_valueChanged(aAccessible) {
+  valueChanged: function B2GPresenter_valueChanged(aAccessible) {
     return {
       type: this.type,
       details: {
-        actions: [
-          { method: 'speak',
-            data: aAccessible.value,
-            options: { enqueue: false } }
-        ]
+        eventType: 'value-change',
+        data: aAccessible.value
       }
-    }
+    };
   },
 
-  actionInvoked: function SpeechPresenter_actionInvoked(aObject, aActionName) {
-    let actions = [];
-    if (aActionName === 'click') {
-      actions.push({method: 'playEarcon',
-                    data: 'clicked',
-                    options: {}});
-    } else {
-      actions.push({method: 'speak',
-                    data: UtteranceGenerator.genForAction(aObject, aActionName).join(' '),
-                    options: {enqueue: false}});
-    }
-    return { type: this.type, details: { actions: actions } };
-  },
-
-  liveRegion: function SpeechPresenter_liveRegion(aContext, aIsPolite, aIsHide,
-    aModifiedText) {
+  actionInvoked: function B2GPresenter_actionInvoked(aObject, aActionName) {
     return {
       type: this.type,
       details: {
-        actions: [{
-          method: 'speak',
+        eventType: 'action',
+        data: UtteranceGenerator.genForAction(aObject, aActionName)
+      }
+    };
+  },
+
+  liveRegion: function
+    B2GPresenter_liveRegion(aContext, aIsPolite, aIsHide, aModifiedText) {
+      return {
+        type: this.type,
+        details: {
+          eventType: 'liveregion-change',
           data: UtteranceGenerator.genForLiveRegion(aContext, aIsHide,
-            aModifiedText).join(' '),
+            aModifiedText),
           options: {enqueue: aIsPolite}
-        }]
-      }
-    };
-  },
+        }
+      };
+    },
 
-  announce: function SpeechPresenter_announce(aAnnouncement) {
+  announce: function B2GPresenter_announce(aAnnouncement) {
     return {
       type: this.type,
       details: {
-        actions: [{
-          method: 'speak', data: aAnnouncement, options: { enqueue: false }
-        }]
+        eventType: 'announcement',
+        data: aAnnouncement
       }
     };
-  }
-};
-
-/**
- * A haptic presenter
- */
-
-this.HapticPresenter = function HapticPresenter() {};
-
-HapticPresenter.prototype = {
-  __proto__: Presenter.prototype,
-
-  type: 'Haptic',
-
-  PIVOT_CHANGE_PATTERN: [40],
-
-  pivotChanged: function HapticPresenter_pivotChanged(aContext, aReason) {
-    return { type: this.type, details: { pattern: this.PIVOT_CHANGE_PATTERN } };
   }
 };
 
 /**
  * A braille presenter
  */
-
 this.BraillePresenter = function BraillePresenter() {};
 
 BraillePresenter.prototype = {
@@ -566,23 +537,28 @@ BraillePresenter.prototype = {
       return null;
     }
 
-    let brailleOutput = BrailleGenerator.genForContext(aContext);
-    brailleOutput.output = brailleOutput.output.join(' ');
-    brailleOutput.selectionStart = 0;
-    brailleOutput.selectionEnd = 0;
-
-    return { type: this.type, details: brailleOutput };
+    return {
+      type: this.type,
+      details: {
+        output: Utils.localize(BrailleGenerator.genForContext(aContext)).join(
+          ' '),
+        selectionStart: 0,
+        selectionEnd: 0
+      }
+    };
   },
 
   textSelectionChanged: function BraillePresenter_textSelectionChanged(aText, aStart,
                                                                        aEnd, aOldStart,
                                                                        aOldEnd, aIsFromUser) {
-    return { type: this.type,
-             details: { selectionStart: aStart,
-                        selectionEnd: aEnd } };
-  },
-
-
+    return {
+      type: this.type,
+      details: {
+        selectionStart: aStart,
+        selectionEnd: aEnd
+      }
+    };
+  }
 };
 
 this.Presentation = {
@@ -590,9 +566,8 @@ this.Presentation = {
     delete this.presenters;
     let presenterMap = {
       'mobile/android': [VisualPresenter, AndroidPresenter],
-      'b2g': [VisualPresenter, SpeechPresenter, HapticPresenter],
-      'browser': [VisualPresenter, SpeechPresenter, HapticPresenter,
-                  AndroidPresenter]
+      'b2g': [VisualPresenter, B2GPresenter],
+      'browser': [VisualPresenter, B2GPresenter, AndroidPresenter]
     };
     this.presenters = [new P() for (P of presenterMap[Utils.MozBuildApp])];
     return this.presenters;
@@ -648,7 +623,7 @@ this.Presentation = {
   announce: function Presentation_announce(aAnnouncement) {
     // XXX: Typically each presenter uses the UtteranceGenerator,
     // but there really isn't a point here.
-    return [p.announce(UtteranceGenerator.genForAnnouncement(aAnnouncement)[0])
+    return [p.announce(UtteranceGenerator.genForAnnouncement(aAnnouncement))
               for each (p in this.presenters)];
   },
 
