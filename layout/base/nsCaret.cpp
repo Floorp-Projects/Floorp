@@ -117,18 +117,13 @@ IsBidiUI()
 //-----------------------------------------------------------------------------
 
 nsCaret::nsCaret()
-: mPresShell(nullptr)
+: mOverrideOffset(0)
 , mIsBlinking(true)
 , mIsBlinkOn(false)
 , mVisible(false)
-, mDrawn(false)
-, mPendingDraw(false)
 , mReadOnly(false)
 , mShowDuringSelection(false)
 , mIgnoreUserModify(true)
-, mLastBidiLevel(0)
-, mLastContentOffset(0)
-, mLastHint(CARET_ASSOCIATE_BEFORE)
 {
 }
 
@@ -233,7 +228,7 @@ void nsCaret::Terminate()
   mDomSelectionWeak = nullptr;
   mPresShell = nullptr;
 
-  mLastContent = nullptr;
+  mOverrideContent = nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -420,8 +415,8 @@ nsCaret::GetSelectionInternal()
 
 void nsCaret::SchedulePaint()
 {
-  nsINode* focusNode = mLastContent ?
-    mLastContent.get() : GetSelectionInternal()->GetFocusNode();
+  nsINode* focusNode = mOverrideContent ?
+    mOverrideContent.get() : GetSelectionInternal()->GetFocusNode();
   if (!focusNode || !focusNode->IsContent()) {
     return;
   }
@@ -449,8 +444,8 @@ nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset)
   // ourselves, our consumer will take care of that.
   mIsBlinking = false;
 
-  mLastContent = do_QueryInterface(aNode);
-  mLastContentOffset = aOffset;
+  mOverrideContent = do_QueryInterface(aNode);
+  mOverrideOffset = aOffset;
 
   SchedulePaint();
 
@@ -492,7 +487,7 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
 
   int32_t frameOffset;
   nsIFrame *frame = GetFrameAndOffset(GetSelectionInternal(),
-      mLastContent, mLastContentOffset, &frameOffset);
+      mOverrideContent, mOverrideOffset, &frameOffset);
   if (!frame) {
     return nullptr;
   }
@@ -530,7 +525,7 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
 {
   int32_t contentOffset;
   nsIFrame* frame = GetFrameAndOffset(GetSelectionInternal(),
-    mLastContent, mLastContentOffset, &contentOffset);
+    mOverrideContent, mOverrideOffset, &contentOffset);
   if (!frame) {
     return;
   }
