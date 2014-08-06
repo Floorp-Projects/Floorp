@@ -31,9 +31,8 @@ WebGLContext::BindBuffer(GLenum target, WebGLBuffer *buffer)
     }
 
     if (buffer) {
-        if (!buffer->Target()) {
-            buffer->SetTarget(target);
-            buffer->SetHasEverBeenBound(true);
+        if (!buffer->HasEverBeenBound()) {
+            buffer->BindTo(target);
         } else if (target != buffer->Target()) {
             return ErrorInvalidOperation("bindBuffer: buffer already bound to a different target");
         }
@@ -67,12 +66,11 @@ WebGLContext::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
     }
 
     if (buffer) {
-        if (!buffer->Target()) {
-            buffer->SetTarget(target);
-            buffer->SetHasEverBeenBound(true);
-        } else if (target != buffer->Target()) {
+        if (!buffer->HasEverBeenBound())
+            buffer->BindTo(target);
+
+        if (target != buffer->Target())
             return ErrorInvalidOperation("bindBuffer: buffer already bound to a different target");
-        }
     }
 
     WebGLRefPtr<WebGLBuffer>* bufferSlot = GetBufferSlotByTarget(target, "bindBuffer");
@@ -108,12 +106,12 @@ WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
     }
 
     if (buffer) {
-        if (!buffer->Target()) {
-            buffer->SetTarget(target);
-            buffer->SetHasEverBeenBound(true);
-        } else if (target != buffer->Target()) {
+        if (!buffer->HasEverBeenBound())
+            buffer->BindTo(target);
+
+        if (target != buffer->Target())
             return ErrorInvalidOperation("bindBuffer: buffer already bound to a different target");
-        }
+
         CheckedInt<WebGLsizeiptr> checked_neededByteLength = CheckedInt<WebGLsizeiptr>(offset) + size;
         if (!checked_neededByteLength.isValid() ||
             checked_neededByteLength.value() > buffer->ByteLength())

@@ -60,6 +60,8 @@
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsAXPCNativeCallContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 
@@ -2830,6 +2832,46 @@ NS_DOMReadStructuredClone(JSContext* cx,
       }
     }
     return result;
+  } else if (tag == SCTAG_DOM_NULL_PRINCIPAL ||
+             tag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
+             tag == SCTAG_DOM_CONTENT_PRINCIPAL) {
+    mozilla::ipc::PrincipalInfo info;
+    if (tag == SCTAG_DOM_SYSTEM_PRINCIPAL) {
+      info = mozilla::ipc::SystemPrincipalInfo();
+    } else if (tag == SCTAG_DOM_NULL_PRINCIPAL) {
+      info = mozilla::ipc::NullPrincipalInfo();
+    } else {
+      uint32_t appId = data;
+
+      uint32_t isInBrowserElement, specLength;
+      if (!JS_ReadUint32Pair(reader, &isInBrowserElement, &specLength)) {
+        return nullptr;
+      }
+
+      nsAutoCString spec;
+      spec.SetLength(specLength);
+      if (!JS_ReadBytes(reader, spec.BeginWriting(), specLength)) {
+        return nullptr;
+      }
+
+      info = mozilla::ipc::ContentPrincipalInfo(appId, isInBrowserElement, spec);
+    }
+
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(info, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+      return nullptr;
+    }
+
+    JS::RootedValue result(cx);
+    rv = nsContentUtils::WrapNative(cx, principal, &NS_GET_IID(nsIPrincipal), &result);
+    if (NS_FAILED(rv)) {
+      xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+      return nullptr;
+    }
+
+    return result.toObjectOrNull();
   }
 
   // Don't know what this is. Bail.
@@ -2854,6 +2896,31 @@ NS_DOMWriteStructuredClone(JSContext* cx,
   if (NS_SUCCEEDED(UNWRAP_OBJECT(CryptoKey, obj, key))) {
     return JS_WriteUint32Pair(writer, SCTAG_DOM_WEBCRYPTO_KEY, 0) &&
            key->WriteStructuredClone(writer);
+  }
+
+  if (xpc::IsReflector(obj)) {
+    nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(obj);
+    nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(base);
+    if (principal) {
+      mozilla::ipc::PrincipalInfo info;
+      if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(principal, &info)))) {
+        xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+        return false;
+      }
+
+      if (info.type() == mozilla::ipc::PrincipalInfo::TNullPrincipalInfo) {
+        return JS_WriteUint32Pair(writer, SCTAG_DOM_NULL_PRINCIPAL, 0);
+      }
+      if (info.type() == mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
+        return JS_WriteUint32Pair(writer, SCTAG_DOM_SYSTEM_PRINCIPAL, 0);
+      }
+
+      MOZ_ASSERT(info.type() == mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
+      const mozilla::ipc::ContentPrincipalInfo& cInfo = info;
+      return JS_WriteUint32Pair(writer, SCTAG_DOM_CONTENT_PRINCIPAL, cInfo.appId()) &&
+             JS_WriteUint32Pair(writer, cInfo.isInBrowserElement(), cInfo.spec().Length()) &&
+             JS_WriteBytes(writer, cInfo.spec().get(), cInfo.spec().Length());
+    }
   }
 
   // Don't know what this is

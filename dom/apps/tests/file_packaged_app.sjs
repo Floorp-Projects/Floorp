@@ -106,7 +106,7 @@ function handleRequest(request, response) {
         response.write(resource);
         aTimer.cancel();
         response.finish();
-      }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+      }, 15000, Ci.nsITimer.TYPE_ONE_SHOT);
     } else {
       response.write(resource);
     }

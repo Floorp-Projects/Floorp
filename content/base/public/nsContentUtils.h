@@ -1521,6 +1521,13 @@ public:
   }
 
   /**
+   * Call this function if !IsSafeToRunScript() and we fail to run the script
+   * (rather than using AddScriptRunner as we usually do). |aDocument| is
+   * optional as it is only used for showing the URL in the console.
+   */
+  static void WarnScriptWasIgnored(nsIDocument* aDocument);
+
+  /**
    * Retrieve information about the viewport as a data structure.
    * This will return information in the viewport META data section
    * of the document. This can be used in lieu of ProcessViewportInfo(),
