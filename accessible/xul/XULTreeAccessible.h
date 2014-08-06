@@ -20,7 +20,7 @@ namespace a11y {
  * A class the represents the XUL Tree widget.
  */
 const uint32_t kMaxTreeColumns = 100;
-const uint32_t kDefaultTreeCacheSize = 256;
+const uint32_t kDefaultTreeCacheLength = 128;
 
 /**
  * Accessible class for XUL tree element.

@@ -472,7 +472,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal)
   , mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal)
   , mJSRuntime(nullptr)
-  , mJSHolders(512)
+  , mJSHolders(256)
   , mOutOfMemoryState(OOMState::OK)
   , mLargeAllocationFailureState(OOMState::OK)
 {

@@ -23,21 +23,24 @@
 #endif
 
 /*
- * Table size limit; do not exceed.  The max capacity used to be 1<<23 but that
- * occasionally that wasn't enough.  Making it much bigger than 1<<26 probably
- * isn't worthwhile -- tables that big are kind of ridiculous.  Also, the
- * growth operation will (deliberately) fail if |capacity * entrySize|
+ * Table capacity limit; do not exceed.  The max capacity used to be 1<<23 but
+ * that occasionally that wasn't enough.  Making it much bigger than 1<<26
+ * probably isn't worthwhile -- tables that big are kind of ridiculous.  Also,
+ * the growth operation will (deliberately) fail if |capacity * entrySize|
  * overflows a uint32_t, and entrySize is always at least 8 bytes.
  */
-#undef PL_DHASH_MAX_SIZE
-#define PL_DHASH_MAX_SIZE     ((uint32_t)1 << 26)
+#define PL_DHASH_MAX_CAPACITY           ((uint32_t)1 << 26)
 
-/* Minimum table size, or gross entry count (net is at most .75 loaded). */
-#ifndef PL_DHASH_MIN_SIZE
-#define PL_DHASH_MIN_SIZE 16
-#elif (PL_DHASH_MIN_SIZE & (PL_DHASH_MIN_SIZE - 1)) != 0
-#error "PL_DHASH_MIN_SIZE must be a power of two!"
-#endif
+#define PL_DHASH_MIN_CAPACITY           16
+
+/*
+ * Making this half of the max capacity ensures it'll fit. Nobody should need
+ * an initial length anywhere nearly this large, anyway.
+ */
+#define PL_DHASH_MAX_INITIAL_LENGTH     (PL_DHASH_MAX_CAPACITY / 2)
+
+/* This gives a default initial capacity of 16. */
+#define PL_DHASH_DEFAULT_INITIAL_LENGTH 8
 
 /*
  * Multiplicative hash uses an unsigned 32 bit integer and the golden ratio,
@@ -162,9 +165,9 @@ PL_DHASH_ENTRY_IS_LIVE(PLDHashEntryHdr* aEntry)
  * and k=2, we want alpha >= .4.  For k=4, esize could be 6, and alpha >= .5
  * would still obtain.
  *
- * The current implementation uses a configurable lower bound on alpha, which
- * defaults to .25, when deciding to shrink the table (while still respecting
- * PL_DHASH_MIN_SIZE).
+ * The current implementation uses a lower bound of 0.25 for alpha when
+ * deciding whether to shrink the table (while still respecting
+ * PL_DHASH_MIN_CAPACITY).
  *
  * Note a qualitative difference between chaining and double hashing: under
  * chaining, entry addresses are stable across table shrinks and grows.  With
@@ -223,7 +226,7 @@ struct PLDHashTable
  * We store hashShift rather than sizeLog2 to optimize the collision-free case
  * in SearchTable.
  */
-#define PL_DHASH_TABLE_SIZE(table) \
+#define PL_DHASH_TABLE_CAPACITY(table) \
     ((uint32_t)1 << (PL_DHASH_BITS - (table)->hashShift))
 
 /*
@@ -381,9 +384,9 @@ NS_COM_GLUE const PLDHashTableOps* PL_DHashGetStubOps(void);
  * Note that the entry storage at aTable->entryStore will be allocated using
  * the aOps->allocTable callback.
  */
-NS_COM_GLUE PLDHashTable* PL_NewDHashTable(const PLDHashTableOps* aOps,
-                                           void* aData, uint32_t aEntrySize,
-                                           uint32_t aCapacity);
+NS_COM_GLUE PLDHashTable* PL_NewDHashTable(
+  const PLDHashTableOps* aOps, void* aData, uint32_t aEntrySize,
+  uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
  * Finalize aTable's data, free its entry storage (via aTable->ops->freeTable),
@@ -392,16 +395,17 @@ NS_COM_GLUE PLDHashTable* PL_NewDHashTable(const PLDHashTableOps* aOps,
 NS_COM_GLUE void PL_DHashTableDestroy(PLDHashTable* aTable);
 
 /*
- * Initialize aTable with aOps, aData, aEntrySize, and aCapacity. Capacity is
- * a guess for the smallest table size at which the table will usually be less
- * than 75% loaded (the table will grow or shrink as needed; capacity serves
- * only to avoid inevitable early growth from PL_DHASH_MIN_SIZE).  This will
- * crash if it can't allocate enough memory, or if entrySize or capacity are
- * too large.
+ * Initialize aTable with aOps, aData, aEntrySize, and aCapacity. The table's
+ * initial capacity will be chosen such that |aLength| elements can be inserted
+ * without rehashing. If |aLength| is a power-of-two, this capacity will be
+ * |2*length|.
+ *
+ * This function will crash if it can't allocate enough memory, or if
+ * |aEntrySize| and/or |aLength| are too large.
  */
-NS_COM_GLUE void PL_DHashTableInit(PLDHashTable* aTable,
-                                   const PLDHashTableOps* aOps, void* aData,
-                                   uint32_t aEntrySize, uint32_t aCapacity);
+NS_COM_GLUE void PL_DHashTableInit(
+  PLDHashTable* aTable, const PLDHashTableOps* aOps, void* aData,
+  uint32_t aEntrySize, uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
  * Initialize aTable. This is the same as PL_DHashTableInit, except that it
@@ -409,7 +413,8 @@ NS_COM_GLUE void PL_DHashTableInit(PLDHashTable* aTable,
  */
 MOZ_WARN_UNUSED_RESULT NS_COM_GLUE bool PL_DHashTableInit(
   PLDHashTable* aTable, const PLDHashTableOps* aOps, void* aData,
-  uint32_t aEntrySize, uint32_t aCapacity, const mozilla::fallible_t&);
+  uint32_t aEntrySize, const mozilla::fallible_t&,
+  uint32_t aLength = PL_DHASH_DEFAULT_INITIAL_LENGTH);
 
 /*
  * Finalize aTable's data, free its entry storage using aTable->ops->freeTable,

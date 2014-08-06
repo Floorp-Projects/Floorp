@@ -74,7 +74,7 @@ HTMLFormControlsCollection::HTMLFormControlsCollection(HTMLFormElement* aForm)
   // Initialize the elements list to have an initial capacity
   // of 8 to reduce allocations on small forms.
   , mElements(8)
-  , mNameLookupTable(HTMLFormElement::FORM_CONTROL_LIST_HASHTABLE_SIZE)
+  , mNameLookupTable(HTMLFormElement::FORM_CONTROL_LIST_HASHTABLE_LENGTH)
 {
   SetIsDOMBinding();
 }

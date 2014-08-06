@@ -1612,7 +1612,7 @@ nsDOMWindowUtils::GetTranslationNodes(nsIDOMNode* aRoot,
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
 
-  nsTHashtable<nsPtrHashKey<nsIContent>> translationNodesHash(1000);
+  nsTHashtable<nsPtrHashKey<nsIContent>> translationNodesHash(500);
   nsRefPtr<nsTranslationNodeList> list = new nsTranslationNodeList;
 
   uint32_t limit = 15000;
