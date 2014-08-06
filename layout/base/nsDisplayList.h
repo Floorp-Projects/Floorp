@@ -21,7 +21,6 @@
 #include "plarena.h"
 #include "Layers.h"
 #include "nsRegion.h"
-#include "nsLayoutUtils.h"
 #include "nsDisplayListInvalidation.h"
 #include "DisplayListClipState.h"
 #include "LayerState.h"
@@ -2150,20 +2149,7 @@ public:
   static nsRegion GetInsideClipRegion(nsDisplayItem* aItem, nsPresContext* aPresContext, uint8_t aClip,
                                       const nsRect& aRect, bool* aSnap);
 
-  virtual bool ShouldFixToViewport(LayerManager* aManager) MOZ_OVERRIDE
-  {
-    // APZ doesn't (yet) know how to scroll the visible region for these type of
-    // items, so don't layerize them if it's enabled.
-    if (nsLayoutUtils::UsesAsyncScrolling() ||
-        (aManager && aManager->ShouldAvoidComponentAlphaLayers())) {
-      return false;
-    }
-
-    // Put background-attachment:fixed background images in their own
-    // compositing layer, unless we have APZ enabled
-    return mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
-           !mBackgroundStyle->mLayers[mLayer].mImage.IsEmpty();
-  }
+  virtual bool ShouldFixToViewport(LayerManager* aManager) MOZ_OVERRIDE;
 
 protected:
   typedef class mozilla::layers::ImageContainer ImageContainer;
