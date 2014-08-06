@@ -4,13 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This script uses atos to process the output of nsTraceRefcnt's Mac OS
-# X stack walking code.  This is useful for two things:
+# This script uses addr2line (part of binutils) to process the output of
+# nsTraceRefcnt's Linux stack walking code.  This is useful for two
+# things:
 #  (1) Getting line number information out of
-#      |nsTraceRefcntImpl::WalkTheStack|'s output in debug builds.
-#  (2) Getting function names out of |nsTraceRefcntImpl::WalkTheStack|'s
-#      output on all builds (where it mostly prints UNKNOWN because only
-#      a handful of symbols are exported from component libraries).
+#      |nsTraceRefcnt::WalkTheStack|'s output in debug builds.
+#  (2) Getting function names out of |nsTraceRefcnt::WalkTheStack|'s
+#      output on optimized builds (where it mostly prints UNKNOWN
+#      because only a handful of symbols are exported from component
+#      libraries).
 #
 # Use the script by piping output containing stacks (such as raw stacks
 # or make-tree.pl balance trees) through this script.
