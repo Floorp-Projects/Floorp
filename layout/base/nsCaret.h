@@ -62,7 +62,6 @@ class nsCaret : public nsISelectionListener
      *                          those with user-modify: read-only
      */
     void SetIgnoreUserModify(bool aIgnoreUserModify);
-    void CheckCaretDrawingState();
     /** SetVisible will set the visibility of the caret
      *  @param inMakeVisible true to show the caret, false to hide it
      */
@@ -86,16 +85,6 @@ class nsCaret : public nsISelectionListener
      */
     void SetVisibilityDuringSelection(bool aVisibility);
 
-    /** EraseCaret
-     *  this will erase the caret if its drawn and reset drawn status
-     */
-    void EraseCaret();
-    /** UpdateCaretPosition
-     *  Update the caret's current frame and rect, but don't draw yet. This is
-     *  useful for flickerless moving of the caret (e.g., when the frame the
-     *  caret is in reflows and is moved).
-     */
-    void UpdateCaretPosition();
     /** DrawAtPosition
      *
      *  Draw the caret explicitly, at the specified node and offset.
@@ -105,6 +94,12 @@ class nsCaret : public nsISelectionListener
      *  Note: This call breaks the caret's ability to blink at all.
      **/
     nsresult DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset);
+
+    /**
+     * Schedule a repaint for the frame where the caret would appear.
+     * Does not check visibility etc.
+     */
+    void SchedulePaint();
 
     /**
      * Returns a frame to paint in, and the bounds of the painted caret
@@ -159,9 +154,6 @@ class nsCaret : public nsISelectionListener
 protected:
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 
-    // Schedule a repaint for the frame where the caret would appear.
-    // Does not check visibility etc.
-    void          SchedulePaint();
     void          CheckSelectionLanguageChange();
 
     void          KillTimer();
@@ -169,12 +161,6 @@ protected:
 
     void          StartBlinking();
     void          StopBlinking();
-
-    bool          DrawAtPositionWithHint(nsIDOMNode* aNode,
-                                         int32_t aOffset,
-                                         CaretAssociationHint aFrameHint,
-                                         uint8_t aBidiLevel,
-                                         bool aInvalidate);
 
     mozilla::dom::Selection* GetSelectionInternal();
 
@@ -189,11 +175,8 @@ protected:
                                         nsRect*   aRect,
                                         nscoord*  aBidiIndicatorSize);
 
-    void          DrawCaret(bool aInvalidate);
-    void          DrawCaretAfterBriefDelay();
     void          ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
                                     nsRect* aCaretRect, nsRect* aHookRect);
-    void          ToggleDrawnStatus() { mDrawn = !mDrawn; }
 
     nsFrameSelection* GetFrameSelection();
 
@@ -236,7 +219,7 @@ protected:
 
     uint8_t               mLastBidiLevel;     // saved bidi level of the last draw request, to use when we erase
 
-    nsCOMPtr<nsIContent>  mLastContent;       // store the content the caret was last requested to be drawn
+    nsCOMPtr<nsINode>     mLastContent;       // store the content the caret was last requested to be drawn
                                               // in (by DrawAtPosition()/DrawCaret()),
                                               // note that this can be different than where it was
                                               // actually drawn (anon <BR> in text control)
