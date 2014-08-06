@@ -63,7 +63,10 @@ public class LocaleListPreference extends ListPreference {
         private static byte[] getPixels(final Bitmap b) {
             final int byteCount;
             if (Versions.feature19Plus) {
-                byteCount = b.getAllocationByteCount();
+                // TODO: when Bug 1042829 lands, do the right thing for KitKat devices.
+                // Which is:
+                // byteCount = b.getAllocationByteCount();
+                byteCount = b.getRowBytes() * b.getHeight();
             } else {
                 // Close enough for government work.
                 // Equivalent to getByteCount, but works on <12.
