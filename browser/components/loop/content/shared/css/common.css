@@ -58,7 +58,13 @@ h1, h2, h3 {
 }
 
 .hide {
-  display: none;
+  /**
+   * Force the display: none as it can conflict with other display.
+   * You usually want to avoid !important statements as much as
+   * possible. In this case, it makes sense as it's unlikely we want a
+   * class to undo the hide feature.
+   */
+  display: none !important;
 }
 
 .visually-hidden {
