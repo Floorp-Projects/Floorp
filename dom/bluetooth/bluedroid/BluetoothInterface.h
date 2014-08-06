@@ -216,9 +216,9 @@ public:
             BluetoothA2dpResultHandler* aRes);
   void Cleanup(BluetoothA2dpResultHandler* aRes);
 
-  void Connect(bt_bdaddr_t *aBdAddr,
+  void Connect(const nsAString& aBdAddr,
                BluetoothA2dpResultHandler* aRes);
-  void Disconnect(bt_bdaddr_t *aBdAddr,
+  void Disconnect(const nsAString& aBdAddr,
                   BluetoothA2dpResultHandler* aRes);
 
 protected:
