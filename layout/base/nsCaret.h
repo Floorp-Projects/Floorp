@@ -68,8 +68,11 @@ class nsCaret : public nsISelectionListener
      */
     void SetVisible(bool intMakeVisible);
     /** IsVisible will get the visibility of the caret.
-     *  This returns false if the caret is hidden for any reason (other than
-     *  blinking off).
+     *  This returns false if the caret is hidden because it was set
+     *  to not be visible, or because the selection is not collapsed, or
+     *  because an open popup is hiding the caret.
+     *  It does not take account of blinking or the caret being hidden
+     *  because we're in non-editable/disabled content.
      */
     bool IsVisible();
     /** SetCaretReadOnly set the appearance of the caret
@@ -185,11 +188,6 @@ protected:
                                         int32_t   aFrameOffset,
                                         nsRect*   aRect,
                                         nscoord*  aBidiIndicatorSize);
-
-    // Returns true if the caret should be drawn. We don't take into account
-    // whether the caret is currently drawn or not. This can be used to
-    // determine if the caret is drawn when it shouldn't be.
-    bool          MustDrawCaret();
 
     void          DrawCaret(bool aInvalidate);
     void          DrawCaretAfterBriefDelay();
