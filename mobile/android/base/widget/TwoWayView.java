@@ -320,18 +320,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
     public TwoWayView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
-        mNeedSync = false;
-        mVelocityTracker = null;
-
         mLayoutMode = LAYOUT_NORMAL;
         mTouchMode = TOUCH_MODE_REST;
         mLastTouchMode = TOUCH_MODE_UNKNOWN;
 
-        mIsAttached = false;
-
-        mContextMenuInfo = null;
-
-        mOnScrollListener = null;
         mLastScrollState = OnScrollListener.SCROLL_STATE_IDLE;
 
         final ViewConfiguration vc = ViewConfiguration.get(context);
@@ -340,13 +332,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         mFlingVelocity = vc.getScaledMinimumFlingVelocity();
         mOverscrollDistance = getScaledOverscrollDistance(vc);
 
-        mOverScroll = 0;
-
         mScroller = new Scroller(context);
 
         mIsVertical = true;
-
-        mItemsCanFocus = false;
 
         mTempRect = new Rect();
 
@@ -355,11 +343,9 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         mSelectorPosition = INVALID_POSITION;
 
         mSelectorRect = new Rect();
-        mSelectedStart = 0;
 
         mResurrectToPosition = INVALID_POSITION;
 
-        mSelectedStart = 0;
         mNextSelectedPosition = INVALID_POSITION;
         mNextSelectedRowId = INVALID_ROW_ID;
         mSelectedPosition = INVALID_POSITION;
@@ -368,17 +354,10 @@ public class TwoWayView extends AdapterView<ListAdapter> implements
         mOldSelectedRowId = INVALID_ROW_ID;
 
         mChoiceMode = ChoiceMode.NONE;
-        mCheckedItemCount = 0;
-        mCheckedIdStates = null;
-        mCheckStates = null;
 
         mRecycler = new RecycleBin();
-        mDataSetObserver = null;
 
         mAreAllItemsSelectable = true;
-
-        mStartEdge = null;
-        mEndEdge = null;
 
         setClickable(true);
         setFocusableInTouchMode(true);
