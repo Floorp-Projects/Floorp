@@ -322,9 +322,9 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
     nsNodeUtils::CharacterDataWillChange(this, &info);
   }
 
-  if (NodeType() == nsIDOMNode::TEXT_NODE) {
-    SetDirectionFromChangedTextNode(this, aOffset, aBuffer, aLength, aNotify);
-  }
+  Directionality oldDir = eDir_NotSet;
+  bool dirAffectsAncestor = (NodeType() == nsIDOMNode::TEXT_NODE &&
+                             TextNodeWillChangeDirection(this, &oldDir, aOffset));
 
   if (aOffset == 0 && endOffset == textLength) {
     // Replacing whole text or old text was empty.  Don't bother to check for
@@ -369,6 +369,10 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
     // If we found bidi characters in mText.SetTo() above, indicate that the
     // document contains bidi characters.
     document->SetBidiEnabled();
+  }
+
+  if (dirAffectsAncestor) {
+    TextNodeChangedDirection(this, oldDir, aNotify);
   }
 
   // Notify observers
