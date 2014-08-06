@@ -111,13 +111,6 @@ class nsCaret : public nsISelectionListener
       return r;
     }
 
-    /** InvalidateOutsideCaret
-     *  Invalidate the area that the caret currently occupies if the caret is
-     *  outside of its frame's overflow area. This is used when the content that
-     *  the caret is currently drawn is is being deleted or reflowed.
-     */
-    void      InvalidateOutsideCaret();
-
     /** UpdateCaretPosition
      *  Update the caret's current frame and rect, but don't draw yet. This is
      *  useful for flickerless moving of the caret (e.g., when the frame the
