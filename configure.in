@@ -261,7 +261,6 @@ if test -n "$gonkdir" ; then
         MOZ_OMX_ENCODER=1
         AC_SUBST(MOZ_OMX_ENCODER)
         AC_DEFINE(MOZ_OMX_ENCODER)
-	MOZ_FMP4=1
         ;;
     19)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
@@ -276,7 +275,7 @@ if test -n "$gonkdir" ; then
         MOZ_AUDIO_OFFLOAD=1
         AC_SUBST(MOZ_AUDIO_OFFLOAD)
         AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-	MOZ_FMP4=1
+
         ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
@@ -3776,11 +3775,7 @@ MOZ_WEBM=1
 MOZ_GSTREAMER=
 MOZ_DIRECTSHOW=
 MOZ_WMF=
-if test -n "$MOZ_FMP4"; then
-  MOZ_FMP4=1
-else
-  MOZ_FMP4 =
-fi
+MOZ_FMP4=
 MOZ_EME=1
 MOZ_FFMPEG=
 MOZ_WEBRTC=1
