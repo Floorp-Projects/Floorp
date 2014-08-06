@@ -184,7 +184,7 @@ interface nsISearchEngine : nsISupports
   AString getResultDomain([optional] in AString responseType);
 };
 
-[scriptable, uuid(856a31ff-b451-4101-b12e-ff399485ac8a)]
+[scriptable, uuid(0dc93e51-a7bf-4a16-862d-4b3469ff6206)]
 interface nsISearchParseSubmissionResult : nsISupports
 {
   /**
@@ -199,6 +199,20 @@ interface nsISearchParseSubmissionResult : nsISupports
    * terms were specified or the URL does not represent a search submission.
    */
   readonly attribute AString terms;
+
+  /**
+   * The offset of the string |terms| in the URL passed in to
+   * nsISearchEngine::parseSubmissionURL, or -1 if the URL does not represent
+   * a search submission.
+   */
+  readonly attribute long termsOffset;
+
+  /**
+   * The length of the |terms| in the original encoding of the URL passed in to
+   * nsISearchEngine::parseSubmissionURL. If the search term in the original
+   * URL is encoded then this will be bigger than |terms.length|.
+   */
+  readonly attribute long termsLength;
 };
 
 [scriptable, uuid(9fc39136-f08b-46d3-b232-96f4b7b0e235)]
