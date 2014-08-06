@@ -276,33 +276,39 @@ public:
             BluetoothAvrcpResultHandler* aRes);
   void Cleanup(BluetoothAvrcpResultHandler* aRes);
 
-  void GetPlayStatusRsp(btrc_play_status_t aPlayStatus,
+  void GetPlayStatusRsp(ControlPlayStatus aPlayStatus,
                         uint32_t aSongLen, uint32_t aSongPos,
                         BluetoothAvrcpResultHandler* aRes);
 
-  void ListPlayerAppAttrRsp(int aNumAttr, btrc_player_attr_t* aPAttrs,
+  void ListPlayerAppAttrRsp(int aNumAttr,
+                            const BluetoothAvrcpPlayerAttribute* aPAttrs,
                             BluetoothAvrcpResultHandler* aRes);
   void ListPlayerAppValueRsp(int aNumVal, uint8_t* aPVals,
                              BluetoothAvrcpResultHandler* aRes);
 
-  void GetPlayerAppValueRsp(btrc_player_settings_t* aPVals,
+  /* TODO: redesign this interface once we actually use it */
+  void GetPlayerAppValueRsp(uint8_t aNumAttrs,
+                            const uint8_t* aIds, const uint8_t* aValues,
                             BluetoothAvrcpResultHandler* aRes);
+  /* TODO: redesign this interface once we actually use it */
   void GetPlayerAppAttrTextRsp(int aNumAttr,
-                               btrc_player_setting_text_t* aPAttrs,
+                               const uint8_t* aIds, const char** aTexts,
                                BluetoothAvrcpResultHandler* aRes);
+  /* TODO: redesign this interface once we actually use it */
   void GetPlayerAppValueTextRsp(int aNumVal,
-                                btrc_player_setting_text_t* aPVals,
+                                const uint8_t* aIds, const char** aTexts,
                                 BluetoothAvrcpResultHandler* aRes);
 
-  void GetElementAttrRsp(uint8_t aNumAttr, btrc_element_attr_val_t* aPAttrs,
+  void GetElementAttrRsp(uint8_t aNumAttr,
+                         const BluetoothAvrcpElementAttribute* aAttr,
                          BluetoothAvrcpResultHandler* aRes);
 
-  void SetPlayerAppValueRsp(btrc_status_t aRspStatus,
+  void SetPlayerAppValueRsp(BluetoothAvrcpStatus aRspStatus,
                             BluetoothAvrcpResultHandler* aRes);
 
-  void RegisterNotificationRsp(btrc_event_id_t aEventId,
-                               btrc_notification_type_t aType,
-                               btrc_register_notification_t* aPParam,
+  void RegisterNotificationRsp(BluetoothAvrcpEvent aEvent,
+                               BluetoothAvrcpNotification aType,
+                               const BluetoothAvrcpNotificationParam& aParam,
                                BluetoothAvrcpResultHandler* aRes);
 
   void SetVolume(uint8_t aVolume, BluetoothAvrcpResultHandler* aRes);

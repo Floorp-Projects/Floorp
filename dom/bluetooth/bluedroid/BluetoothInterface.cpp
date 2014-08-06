@@ -355,6 +355,153 @@ Convert(BluetoothHandsfreeVolumeType aIn, bthf_volume_type_t& aOut)
   return NS_OK;
 }
 
+#if ANDROID_VERSION >= 18
+static nsresult
+Convert(ControlPlayStatus aIn, btrc_play_status_t& aOut)
+{
+  static const btrc_play_status_t sPlayStatus[] = {
+    [PLAYSTATUS_STOPPED] = BTRC_PLAYSTATE_STOPPED,
+    [PLAYSTATUS_PLAYING] = BTRC_PLAYSTATE_PLAYING,
+    [PLAYSTATUS_PAUSED] = BTRC_PLAYSTATE_PAUSED,
+    [PLAYSTATUS_FWD_SEEK] = BTRC_PLAYSTATE_FWD_SEEK,
+    [PLAYSTATUS_REV_SEEK] = BTRC_PLAYSTATE_REV_SEEK
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sPlayStatus)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sPlayStatus[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(enum BluetoothAvrcpPlayerAttribute aIn, btrc_player_attr_t& aOut)
+{
+  static const btrc_player_attr_t sPlayerAttr[] = {
+    [AVRCP_PLAYER_ATTRIBUTE_EQUALIZER] = BTRC_PLAYER_ATTR_EQUALIZER,
+    [AVRCP_PLAYER_ATTRIBUTE_REPEAT] = BTRC_PLAYER_ATTR_REPEAT,
+    [AVRCP_PLAYER_ATTRIBUTE_SHUFFLE] = BTRC_PLAYER_ATTR_SHUFFLE,
+    [AVRCP_PLAYER_ATTRIBUTE_SCAN] = BTRC_PLAYER_ATTR_SCAN
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sPlayerAttr)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sPlayerAttr[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(enum BluetoothAvrcpStatus aIn, btrc_status_t& aOut)
+{
+  static const btrc_status_t sStatus[] = {
+    [AVRCP_STATUS_BAD_COMMAND] = BTRC_STS_BAD_CMD,
+    [AVRCP_STATUS_BAD_PARAMETER] = BTRC_STS_BAD_PARAM,
+    [AVRCP_STATUS_NOT_FOUND] = BTRC_STS_NOT_FOUND,
+    [AVRCP_STATUS_INTERNAL_ERROR] = BTRC_STS_INTERNAL_ERR,
+    [AVRCP_STATUS_SUCCESS] = BTRC_STS_NO_ERROR
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sStatus)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sStatus[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(enum BluetoothAvrcpEvent aIn, btrc_event_id_t& aOut)
+{
+  static const btrc_event_id_t sEventId[] = {
+    [AVRCP_EVENT_PLAY_STATUS_CHANGED] = BTRC_EVT_PLAY_STATUS_CHANGED,
+    [AVRCP_EVENT_TRACK_CHANGE] = BTRC_EVT_TRACK_CHANGE,
+    [AVRCP_EVENT_TRACK_REACHED_END] = BTRC_EVT_TRACK_REACHED_END,
+    [AVRCP_EVENT_TRACK_REACHED_START] = BTRC_EVT_TRACK_REACHED_START,
+    [AVRCP_EVENT_PLAY_POS_CHANGED] = BTRC_EVT_PLAY_POS_CHANGED,
+    [AVRCP_EVENT_APP_SETTINGS_CHANGED] = BTRC_EVT_APP_SETTINGS_CHANGED
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sEventId)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sEventId[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(enum BluetoothAvrcpNotification aIn, btrc_notification_type_t& aOut)
+{
+  static const btrc_notification_type_t sNotificationType[] = {
+    [AVRCP_NTF_INTERIM] = BTRC_NOTIFICATION_TYPE_INTERIM,
+    [AVRCP_NTF_CHANGED] = BTRC_NOTIFICATION_TYPE_CHANGED
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sNotificationType)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sNotificationType[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(const BluetoothAvrcpElementAttribute& aIn, btrc_element_attr_val_t& aOut)
+{
+  const NS_ConvertUTF16toUTF8 value(aIn.mValue);
+  size_t len = std::min<size_t>(strlen(value.get()), sizeof(aOut.text) - 1);
+
+  memcpy(aOut.text, value.get(), len);
+  aOut.text[len] = '\0';
+  aOut.attr_id = aIn.mId;
+
+  return NS_OK;
+}
+
+#endif
+
+/* |ConvertArray| is a helper for converting arrays. Pass an
+ * instance of this structure as the first argument to |Convert|
+ * to convert an array. The output type has to support the array
+ * subscript operator.
+ */
+template <typename T>
+struct ConvertArray
+{
+  ConvertArray(const T* aData, unsigned long aLength)
+  : mData(aData)
+  , mLength(aLength)
+  { }
+
+  const T* mData;
+  unsigned long mLength;
+};
+
+/* This implementation of |Convert| converts the elements of an
+ * array one-by-one. The result data structures must have enough
+ * memory allocated.
+ */
+template<typename Tin, typename Tout>
+static nsresult
+Convert(const ConvertArray<Tin>& aIn, Tout& aOut)
+{
+  for (unsigned long i = 0; i < aIn.mLength; ++i) {
+    nsresult rv = Convert(aIn.mData[i], aOut[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+/* This implementation of |Convert| is a helper that automatically
+ * allocates enough memory to hold the conversion results. The
+ * actual conversion is performed by the array-conversion helper
+ * above.
+ */
+template<typename Tin, typename Tout>
+static nsresult
+Convert(const ConvertArray<Tin>& aIn, nsAutoArrayPtr<Tout>& aOut)
+{
+  aOut = new Tout[aIn.mLength];
+  Tout* out = aOut.get();
+
+  return Convert<Tin, Tout*>(aIn, out);
+}
+
 //
 // Result handling
 //
@@ -1490,12 +1637,19 @@ BluetoothAvrcpInterface::Cleanup(BluetoothAvrcpResultHandler* aRes)
 }
 
 void
-BluetoothAvrcpInterface::GetPlayStatusRsp(btrc_play_status_t aPlayStatus,
+BluetoothAvrcpInterface::GetPlayStatusRsp(ControlPlayStatus aPlayStatus,
                                           uint32_t aSongLen, uint32_t aSongPos,
                                           BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->get_play_status_rsp(aPlayStatus, aSongLen,
-                                                       aSongPos);
+  bt_status_t status;
+  btrc_play_status_t playStatus = BTRC_PLAYSTATE_STOPPED;
+
+  if (!(NS_FAILED(Convert(aPlayStatus, playStatus)))) {
+    status = mInterface->get_play_status_rsp(playStatus, aSongLen, aSongPos);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+
   if (aRes) {
     DispatchBluetoothAvrcpResult(
       aRes, &BluetoothAvrcpResultHandler::GetPlayStatusRsp, status);
@@ -1504,10 +1658,18 @@ BluetoothAvrcpInterface::GetPlayStatusRsp(btrc_play_status_t aPlayStatus,
 
 void
 BluetoothAvrcpInterface::ListPlayerAppAttrRsp(
-  int aNumAttr, btrc_player_attr_t* aPAttrs,
+  int aNumAttr, const BluetoothAvrcpPlayerAttribute* aPAttrs,
   BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->list_player_app_attr_rsp(aNumAttr, aPAttrs);
+  bt_status_t status;
+  ConvertArray<BluetoothAvrcpPlayerAttribute> pAttrsArray(aPAttrs, aNumAttr);
+  nsAutoArrayPtr<btrc_player_attr_t> pAttrs;
+
+  if (NS_SUCCEEDED(Convert(pAttrsArray, pAttrs))) {
+    status = mInterface->list_player_app_attr_rsp(aNumAttr, pAttrs);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothAvrcpResult(
@@ -1529,9 +1691,20 @@ BluetoothAvrcpInterface::ListPlayerAppValueRsp(
 
 void
 BluetoothAvrcpInterface::GetPlayerAppValueRsp(
-  btrc_player_settings_t* aPVals, BluetoothAvrcpResultHandler* aRes)
+  uint8_t aNumAttrs, const uint8_t* aIds, const uint8_t* aValues,
+  BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->get_player_app_value_rsp(aPVals);
+  bt_status_t status;
+  btrc_player_settings_t pVals;
+
+  /* FIXME: you need to implement the missing conversion functions */
+  NS_NOTREACHED("Conversion function missing");
+
+  if (false /* TODO: we don't support any player app values currently */) {
+    status = mInterface->get_player_app_value_rsp(&pVals);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothAvrcpResult(
@@ -1541,11 +1714,21 @@ BluetoothAvrcpInterface::GetPlayerAppValueRsp(
 
 void
 BluetoothAvrcpInterface::GetPlayerAppAttrTextRsp(
-  int aNumAttr, btrc_player_setting_text_t* aPAttrs,
+  int aNumAttr, const uint8_t* aIds, const char** aTexts,
   BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->get_player_app_attr_text_rsp(aNumAttr,
-                                                                aPAttrs);
+  bt_status_t status;
+  btrc_player_setting_text_t* aPAttrs;
+
+  /* FIXME: you need to implement the missing conversion functions */
+  NS_NOTREACHED("Conversion function missing");
+
+  if (false /* TODO: we don't support any attributes currently */) {
+    status = mInterface->get_player_app_attr_text_rsp(aNumAttr, aPAttrs);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+
   if (aRes) {
     DispatchBluetoothAvrcpResult(
       aRes, &BluetoothAvrcpResultHandler::GetPlayerAppAttrTextRsp, status);
@@ -1554,11 +1737,21 @@ BluetoothAvrcpInterface::GetPlayerAppAttrTextRsp(
 
 void
 BluetoothAvrcpInterface::GetPlayerAppValueTextRsp(
-  int aNumVal, btrc_player_setting_text_t* aPVals,
+  int aNumVal, const uint8_t* aIds, const char** aTexts,
   BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->get_player_app_value_text_rsp(aNumVal,
-                                                                 aPVals);
+  bt_status_t status;
+  btrc_player_setting_text_t* pVals;
+
+  /* FIXME: you need to implement the missing conversion functions */
+  NS_NOTREACHED("Conversion function missing");
+
+  if (false /* TODO: we don't support any values currently */) {
+    status = mInterface->get_player_app_value_text_rsp(aNumVal, pVals);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+
   if (aRes) {
     DispatchBluetoothAvrcpResult(
       aRes, &BluetoothAvrcpResultHandler::GetPlayerAppValueTextRsp, status);
@@ -1567,10 +1760,18 @@ BluetoothAvrcpInterface::GetPlayerAppValueTextRsp(
 
 void
 BluetoothAvrcpInterface::GetElementAttrRsp(
-  uint8_t aNumAttr, btrc_element_attr_val_t* aPAttrs,
+  uint8_t aNumAttr, const BluetoothAvrcpElementAttribute* aAttrs,
   BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->get_element_attr_rsp(aNumAttr, aPAttrs);
+  bt_status_t status;
+  ConvertArray<BluetoothAvrcpElementAttribute> pAttrsArray(aAttrs, aNumAttr);
+  nsAutoArrayPtr<btrc_element_attr_val_t> pAttrs;
+
+  if (NS_SUCCEEDED(Convert(pAttrsArray, pAttrs))) {
+    status = mInterface->get_element_attr_rsp(aNumAttr, pAttrs);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothAvrcpResult(
@@ -1580,9 +1781,16 @@ BluetoothAvrcpInterface::GetElementAttrRsp(
 
 void
 BluetoothAvrcpInterface::SetPlayerAppValueRsp(
-  btrc_status_t aRspStatus, BluetoothAvrcpResultHandler* aRes)
+  BluetoothAvrcpStatus aRspStatus, BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->set_player_app_value_rsp(aRspStatus);
+  bt_status_t status;
+  btrc_status_t rspStatus = BTRC_STS_BAD_CMD; // silences compiler warning
+
+  if (NS_SUCCEEDED(Convert(aRspStatus, rspStatus))) {
+    status = mInterface->set_player_app_value_rsp(rspStatus);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothAvrcpResult(
@@ -1592,11 +1800,55 @@ BluetoothAvrcpInterface::SetPlayerAppValueRsp(
 
 void
 BluetoothAvrcpInterface::RegisterNotificationRsp(
-  btrc_event_id_t aEventId, btrc_notification_type_t aType,
-  btrc_register_notification_t* aPParam, BluetoothAvrcpResultHandler* aRes)
+  BluetoothAvrcpEvent aEvent, BluetoothAvrcpNotification aType,
+  const BluetoothAvrcpNotificationParam& aParam,
+  BluetoothAvrcpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->register_notification_rsp(aEventId, aType,
-                                                             aPParam);
+  nsresult rv;
+  bt_status_t status;
+  btrc_event_id_t event = { };
+  btrc_notification_type_t type = BTRC_NOTIFICATION_TYPE_INTERIM;
+  btrc_register_notification_t param;
+
+  switch (aEvent) {
+    case AVRCP_EVENT_PLAY_STATUS_CHANGED:
+      rv = Convert(aParam.mPlayStatus, param.play_status);
+      break;
+    case AVRCP_EVENT_TRACK_CHANGE:
+      MOZ_ASSERT(sizeof(aParam.mTrack) == sizeof(param.track));
+      memcpy(param.track, aParam.mTrack, sizeof(param.track));
+      rv = NS_OK;
+      break;
+    case AVRCP_EVENT_TRACK_REACHED_END:
+      NS_NOTREACHED("Unknown conversion");
+      rv = NS_ERROR_ILLEGAL_VALUE;
+      break;
+    case AVRCP_EVENT_TRACK_REACHED_START:
+      NS_NOTREACHED("Unknown conversion");
+      rv = NS_ERROR_ILLEGAL_VALUE;
+      break;
+    case AVRCP_EVENT_PLAY_POS_CHANGED:
+      param.song_pos = aParam.mSongPos;
+      rv = NS_OK;
+      break;
+    case AVRCP_EVENT_APP_SETTINGS_CHANGED:
+      NS_NOTREACHED("Unknown conversion");
+      rv = NS_ERROR_ILLEGAL_VALUE;
+      break;
+    default:
+      NS_NOTREACHED("Unknown conversion");
+      rv = NS_ERROR_ILLEGAL_VALUE;
+      break;
+  }
+
+  if (NS_SUCCEEDED(rv) &&
+      NS_SUCCEEDED(Convert(aEvent, event)) &&
+      NS_SUCCEEDED(Convert(aType, type))) {
+    status = mInterface->register_notification_rsp(event, type, &param);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
+
   if (aRes) {
     DispatchBluetoothAvrcpResult(
       aRes, &BluetoothAvrcpResultHandler::RegisterNotificationRsp, status);
