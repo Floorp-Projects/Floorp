@@ -56,7 +56,7 @@ interface nsISystemMessagesWrapper: nsISupports
  * Implements an interface to allow specific message types to
  * configure some behaviors
  */
-[scriptable, uuid(a0e970f6-faa9-4605-89d6-fafae8b10a80)]
+[scriptable, uuid(31b78730-21c6-11e4-8c21-0800200c9a66)]
 interface nsISystemMessagesConfigurator: nsISupports
 {
   /*
@@ -64,4 +64,13 @@ interface nsISystemMessagesConfigurator: nsISupports
    * that the app will be brought to the front always.
    */
   readonly attribute boolean mustShowRunningApp;
+
+  /*
+   * A broadcast filter for a specific message type.
+   *
+   * @return Promise which resolves with |true| or |false| to indicate if
+   *         we want to dispatch this message.
+   */
+  jsval shouldDispatch(in DOMString manifestURL, in DOMString pageURL,
+                       in DOMString type, in jsval message, [optional] in jsval extra);
 };
