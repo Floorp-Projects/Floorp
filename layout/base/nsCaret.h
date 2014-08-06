@@ -94,11 +94,9 @@ class nsCaret : public nsISelectionListener
      * i.e., disregarding blink status). The geometry is stored in aRect,
      * and we return the frame aRect is relative to.
      * @param aRect must be non-null
-     * @param aBidiIndicatorSize if non-null, set to the bidi indicator size.
      */
     nsIFrame* GetGeometry(nsISelection* aSelection,
-                          nsRect* aRect,
-                          nscoord* aBidiIndicatorSize = nullptr);
+                          nsRect* aRect);
     /** GetCaretFrame
      *  Get the current frame that the caret should be drawn in. If the caret is
      *  not currently visible (i.e., it is between blinks), then this will
