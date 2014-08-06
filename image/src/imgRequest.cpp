@@ -652,8 +652,8 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   if (chan) {
     nsCOMPtr<nsIScriptSecurityManager> secMan = nsContentUtils::GetSecurityManager();
     if (secMan) {
-      nsresult rv = secMan->GetChannelPrincipal(chan,
-                                                getter_AddRefs(mPrincipal));
+      nsresult rv = secMan->GetChannelResultPrincipal(chan,
+                                                      getter_AddRefs(mPrincipal));
       if (NS_FAILED(rv)) {
         return rv;
       }

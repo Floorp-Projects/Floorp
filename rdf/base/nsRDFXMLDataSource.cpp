@@ -882,7 +882,7 @@ RDFXMLDataSourceImpl::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPrincipal> oldPrincipal;
-    secMan->GetChannelPrincipal(aOldChannel, getter_AddRefs(oldPrincipal));
+    secMan->GetChannelResultPrincipal(aOldChannel, getter_AddRefs(oldPrincipal));
 
     nsCOMPtr<nsIURI> newURI;
     aNewChannel->GetURI(getter_AddRefs(newURI));
