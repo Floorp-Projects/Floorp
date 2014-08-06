@@ -15,6 +15,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'nsCSSFilterInstance.cpp',
     'nsFilterInstance.cpp',
     'nsSVGAFrame.cpp',
     'nsSVGClipPathFrame.cpp',

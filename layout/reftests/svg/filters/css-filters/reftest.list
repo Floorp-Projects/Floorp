@@ -1,0 +1,9 @@
+# These tests verify that CSS filters behave properly.
+# e.g. filter: blur(3px)
+
+default-preferences pref(layout.css.filters.enabled,true)
+
+== blur.html blur-ref.html
+== blur.svg blur-ref.svg
+== blur-zero-radius.html blur-zero-radius-ref.html
+== blur-zoomed-page.html blur-zoomed-page-ref.html

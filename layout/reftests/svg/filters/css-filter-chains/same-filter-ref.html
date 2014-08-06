@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filter Chains: Filters of the Same Type</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <style type="text/css">
+    #target {
+      filter: url(#blur);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square.</p>
+  <div id="target"></div>
+  <svg width="0" height="0">
+    <filter id="blur" x="-50" y="-50" width="200" height="200" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="1" color-interpolation-filters="sRGB"/>
+      <feGaussianBlur stdDeviation="2" color-interpolation-filters="sRGB"/>
+      <feGaussianBlur stdDeviation="3" color-interpolation-filters="sRGB"/>
+    </filter>
+  </svg>
+</body>
+</html>
