@@ -35,10 +35,10 @@ public:
 #endif
 
 protected:
-  IDBWrapperCache(DOMEventTargetHelper* aOwner)
+  explicit IDBWrapperCache(DOMEventTargetHelper* aOwner)
     : DOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
   { }
-  IDBWrapperCache(nsPIDOMWindow* aOwner)
+  explicit IDBWrapperCache(nsPIDOMWindow* aOwner)
     : DOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
   { }
 

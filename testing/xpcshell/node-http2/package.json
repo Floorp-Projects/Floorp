@@ -1,13 +1,13 @@
 {
   "name": "http2",
-  "version": "2.6.0",
+  "version": "2.7.1",
   "description": "An HTTP/2 client and server implementation",
   "main": "lib/index.js",
   "engines" : {
     "node" : ">=0.10.19"
   },
   "dependencies": {
-    "http2-protocol": ">=0.13.0"
+    "http2-protocol": ">=0.14.1"
   },
   "devDependencies": {
     "istanbul": "*",

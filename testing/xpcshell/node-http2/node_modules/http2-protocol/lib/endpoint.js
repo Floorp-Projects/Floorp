@@ -167,8 +167,6 @@ function pipeAndFilter(stream1, stream2, filter) {
   }
 }
 
-var MAX_HTTP_PAYLOAD_SIZE = 16383;
-
 Endpoint.prototype._initializeDataFlow = function _initializeDataFlow(role, settings, filters) {
   var firstStreamId, compressorRole, decompressorRole;
   if (role === 'CLIENT') {
@@ -181,8 +179,8 @@ Endpoint.prototype._initializeDataFlow = function _initializeDataFlow(role, sett
     decompressorRole = 'REQUEST';
   }
 
-  this._serializer   = new Serializer(this._log, MAX_HTTP_PAYLOAD_SIZE);
-  this._deserializer = new Deserializer(this._log, MAX_HTTP_PAYLOAD_SIZE);
+  this._serializer   = new Serializer(this._log);
+  this._deserializer = new Deserializer(this._log);
   this._compressor   = new Compressor(this._log, compressorRole);
   this._decompressor = new Decompressor(this._log, decompressorRole);
   this._connection   = new Connection(this._log, firstStreamId, settings);
@@ -193,9 +191,9 @@ Endpoint.prototype._initializeDataFlow = function _initializeDataFlow(role, sett
   pipeAndFilter(this._decompressor, this._connection, filters.afterDecompression);
 
   this._connection.on('ACKNOWLEDGED_SETTINGS_HEADER_TABLE_SIZE',
-                      this._decompressor.setTableSizeLimit.bind(this._decompressor))
+                      this._decompressor.setTableSizeLimit.bind(this._decompressor));
   this._connection.on('RECEIVING_SETTINGS_HEADER_TABLE_SIZE',
-                      this._compressor.setTableSizeLimit.bind(this._compressor))
+                      this._compressor.setTableSizeLimit.bind(this._compressor));
 };
 
 var noread = {};

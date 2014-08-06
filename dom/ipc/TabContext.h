@@ -254,7 +254,7 @@ public:
    * This constructor copies the information in aContext and sets IsValid() as
    * appropriate.
    */
-  MaybeInvalidTabContext(const IPCTabContext& aContext);
+  explicit MaybeInvalidTabContext(const IPCTabContext& aContext);
 
   /**
    * Was the IPCTabContext we received in our constructor valid?

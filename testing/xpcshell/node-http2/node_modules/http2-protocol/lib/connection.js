@@ -392,6 +392,7 @@ Connection.prototype._initializeSettingsManagement = function _initializeSetting
 
   // * Forwarding SETTINGS frames to the `_receiveSettings` method
   this.on('SETTINGS', this._receiveSettings);
+  this.on('RECEIVING_SETTINGS_MAX_FRAME_SIZE', this._sanityCheckMaxFrameSize);
 };
 
 // * Checking that the first frame the other endpoint sends is SETTINGS
@@ -427,6 +428,13 @@ Connection.prototype._receiveSettings = function _receiveSettings(frame) {
     for (var name in frame.settings) {
       this.emit('RECEIVING_' + name, frame.settings[name]);
     }
+  }
+};
+
+Connection.prototype._sanityCheckMaxFrameSize = function _sanityCheckMaxFrameSize(value) {
+  if ((value < 0x4000) || (value >= 0x01000000)) {
+    this._log.fatal('Received invalid value for max frame size: ' + value);
+    this.emit('error');
   }
 };
 

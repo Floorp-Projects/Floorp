@@ -3,14 +3,14 @@ default-preferences  pref(media.peerconnection.enabled,true) pref(media.navigato
 load 780790.html
 load 791270.html
 load 791278.html
-load 791330.html
+skip-if(Android||B2G) load 791330.html # bug 909925
 load 799419.html
 load 802982.html
 load 812785.html
 load 834100.html
 load 836349.html
 load 837324.html
-load 855796.html
+skip-if(Android||B2G) load 855796.html # bug 909925
 load 860143.html
 load 861958.html
-load 863929.html
+skip-if(Android||B2G) load 863929.html # bug 909925

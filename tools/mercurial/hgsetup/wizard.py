@@ -23,6 +23,7 @@ from mozversioncontrol.repoupdate import (
 )
 
 from .config import (
+    HgIncludeException,
     HOST_FINGERPRINTS,
     MercurialConfig,
 )
@@ -193,6 +194,10 @@ class MercurialSetupWizard(object):
             print('Error importing existing Mercurial config!\n')
             for error in e.errors:
                 print(error.message)
+
+            return 1
+        except HgIncludeException as e:
+            print(e.message)
 
             return 1
 
