@@ -476,6 +476,13 @@ nsIFrame * nsCaret::GetCaretFrame(int32_t *aOffset)
   return frame;
 }
 
+nsIFrame*
+nsCaret::GetPaintGeometry(nsRect* aRect)
+{
+  aRect->UnionRect(mCaretRect, GetHookRect());
+  return GetCaretFrame();
+}
+
 void nsCaret::UpdateCaretPosition()
 {
   // We'll recalculate anyway if we're not drawn right now.

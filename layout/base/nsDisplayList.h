@@ -354,6 +354,12 @@ public:
     return CurrentPresShellState()->mCaretFrame;
   }
   /**
+   * Get the rectangle we're supposed to draw the caret into.
+   */
+  const nsRect& GetCaretRect() {
+    return CurrentPresShellState()->mCaretRect;
+  }
+  /**
    * Get the caret associated with the current presshell.
    */
   nsCaret* GetCaret();
@@ -703,6 +709,7 @@ private:
   struct PresShellState {
     nsIPresShell* mPresShell;
     nsIFrame*     mCaretFrame;
+    nsRect        mCaretRect;
     nsRect        mPrevDirtyRect;
     uint32_t      mFirstFrameMarkedForDisplay;
     bool          mIsBackgroundOnly;
@@ -1951,8 +1958,7 @@ protected:
 
 class nsDisplayCaret : public nsDisplayItem {
 public:
-  nsDisplayCaret(nsDisplayListBuilder* aBuilder, nsIFrame* aCaretFrame,
-                 nsCaret *aCaret);
+  nsDisplayCaret(nsDisplayListBuilder* aBuilder, nsIFrame* aCaretFrame);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayCaret();
 #endif
@@ -1962,6 +1968,7 @@ public:
   NS_DISPLAY_DECL_NAME("Caret", TYPE_CARET)
 protected:
   nsRefPtr<nsCaret> mCaret;
+  nsRect mBounds;
 };
 
 /**
