@@ -64,6 +64,7 @@ var std_Object_create = Object.create;
 var std_Object_getOwnPropertyNames = Object.getOwnPropertyNames;
 var std_Object_hasOwnProperty = Object.prototype.hasOwnProperty;
 var std_Object_getPrototypeOf = Object.getPrototypeOf;
+var std_Object_getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
 var std_RegExp_test = RegExp.prototype.test;
 var std_String_fromCharCode = String.fromCharCode;
 var std_String_charCodeAt = String.prototype.charCodeAt;
