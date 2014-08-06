@@ -104,7 +104,7 @@ interface nsIUpdateUpStreamCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(f96461fa-e844-45d2-a6c3-8cd23ab0916b)]
+[scriptable, uuid(ddb38428-0cf2-4c6a-a3c9-5e2f00fc54db)]
 interface nsINetworkService : nsISupports
 {
   /**
@@ -254,18 +254,34 @@ interface nsINetworkService : nsISupports
   /**
    * Add host route.
    *
-   * @param networkInterface
-   *        The network interface we want to add to the host route.
+   * @param interfaceName
+   *        Network interface name for the output of the host route.
+   * @param gateway
+   *        Gateway ip for the output of the host route.
+   * @param host
+   *        Host ip we want to add route for.
+   *
+   * @return A deferred promise that resolves on success or rejects with a
+   *         specified reason otherwise.
    */
-  void addHostRoute(in nsINetworkInterface networkInterface);
+  jsval addHostRoute(in DOMString interfaceName, in DOMString gateway,
+                     in DOMString host);
 
   /**
    * Remove host route.
    *
-   * @param network
-   *        The network interface we want to remove from the host route.
+   * @param interfaceName
+   *        Network interface name for the output of the host route.
+   * @param gateway
+   *        Gateway ip for the output of the host route.
+   * @param host
+   *        Host ip we want to remove route for.
+   *
+   * @return A deferred promise that resolves on success or rejects with a
+   *         specified reason otherwise.
    */
-  void removeHostRoute(in nsINetworkInterface network);
+  jsval removeHostRoute(in DOMString interfaceName, in DOMString gateway,
+                        in DOMString host);
 
   /**
    * Remove all host routes.
@@ -274,26 +290,6 @@ interface nsINetworkService : nsISupports
    *        The interface name we want remove from the routing table.
    */
   void removeHostRoutes(in DOMString interfaceName);
-
-  /**
-   * Add host route with resolve.
-   *
-   * @param network
-   *        The network interface we want to add to the host route.
-   * @param hosts
-   *        The array of host names we want to add.
-   */
-  void addHostRouteWithResolve(in nsINetworkInterface network, in jsval hosts);
-
-  /**
-   * Remove host route with resolve.
-   *
-   * @param network
-   *        The network interface we want to remove from the host route.
-   * @param hosts
-   *        The array of host names we want to remove.
-   */
-  void removeHostRouteWithResolve(in nsINetworkInterface network, in jsval hosts);
 
   /**
    * Add route to secondary routing table.
