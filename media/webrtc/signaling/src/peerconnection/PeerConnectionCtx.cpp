@@ -280,7 +280,7 @@ FreeOnMain_m(nsAutoPtr<RTCStatsQueries> aQueryList) {
 static void
 EverySecondTelemetryCallback_s(nsAutoPtr<RTCStatsQueries> aQueryList) {
   using namespace Telemetry;
- 
+
   if(!PeerConnectionCtx::isActive()) {
     return;
   }
@@ -391,6 +391,8 @@ PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer, void *closure
 #endif
 
 nsresult PeerConnectionCtx::Initialize() {
+  initGMP();
+
   mCCM = CSF::CallControlManager::create();
 
   NS_ENSURE_TRUE(mCCM.get(), NS_ERROR_FAILURE);
@@ -465,8 +467,48 @@ nsresult PeerConnectionCtx::Initialize() {
   return NS_OK;
 }
 
+static void GMPReady_m() {
+  if (PeerConnectionCtx::isActive()) {
+    PeerConnectionCtx::GetInstance()->onGMPReady();
+  }
+};
+
+static void GMPReady() {
+  PeerConnectionCtx::gMainThread->Dispatch(WrapRunnableNM(&GMPReady_m),
+                                           NS_DISPATCH_NORMAL);
+};
+
+void PeerConnectionCtx::initGMP()
+{
+  mGMPService = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+
+  if (!mGMPService) {
+    CSFLogError(logTag, "%s failed to get the gecko-media-plugin-service",
+                __FUNCTION__);
+    return;
+  }
+
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = mGMPService->GetThread(getter_AddRefs(thread));
+
+  if (NS_FAILED(rv)) {
+    mGMPService = nullptr;
+    CSFLogError(logTag,
+                "%s failed to get the gecko-media-plugin thread, err=%u",
+                __FUNCTION__,
+                static_cast<unsigned>(rv));
+    return;
+  }
+
+  // presumes that all GMP dir scans have been queued for the GMPThread
+  thread->Dispatch(WrapRunnableNM(&GMPReady), NS_DISPATCH_NORMAL);
+}
+
 nsresult PeerConnectionCtx::Cleanup() {
   CSFLogDebug(logTag, "%s", __FUNCTION__);
+
+  mQueuedJSEPOperations.Clear();
+  mGMPService = nullptr;
 
   mCCM->destroy();
   mCCM->removeCCObserver(this);
@@ -485,6 +527,18 @@ PeerConnectionCtx::~PeerConnectionCtx() {
 
 CSF::CC_CallPtr PeerConnectionCtx::createCall() {
   return mDevice->createCall();
+}
+
+void PeerConnectionCtx::queueJSEPOperation(nsRefPtr<nsIRunnable> aOperation) {
+  mQueuedJSEPOperations.AppendElement(aOperation);
+}
+
+void PeerConnectionCtx::onGMPReady() {
+  mGMPReady = true;
+  for (size_t i = 0; i < mQueuedJSEPOperations.Length(); ++i) {
+    mQueuedJSEPOperations[i]->Run();
+  }
+  mQueuedJSEPOperations.Clear();
 }
 
 void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,

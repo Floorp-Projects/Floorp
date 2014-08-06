@@ -1218,7 +1218,18 @@ PeerConnectionImpl::CreateOffer(const SipccOfferOptions& aOptions)
 
   cc_media_options_t* cc_options = aOptions.build();
   NS_ENSURE_TRUE(cc_options, NS_ERROR_UNEXPECTED);
-  mInternal->mCall->createOffer(cc_options, tc);
+
+  if (!PeerConnectionCtx::GetInstance()->isReady()) {
+    // Uh oh. We're not ready yet. Enqueue this operation.
+    PeerConnectionCtx::GetInstance()->queueJSEPOperation(
+        WrapRunnable(mInternal->mCall,
+                     &CSF::CC_Call::createOffer,
+                     cc_options,
+                     tc));
+  } else {
+    mInternal->mCall->createOffer(cc_options, tc);
+  }
+
   return NS_OK;
 }
 
@@ -1275,8 +1286,21 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
   STAMP_TIMECARD(tc, "Set Remote Description");
 
   mRemoteRequestedSDP = aSDP;
-  mInternal->mCall->setRemoteDescription((cc_jsep_action_t)action,
-                                         mRemoteRequestedSDP, tc);
+
+  if (!PeerConnectionCtx::GetInstance()->isReady()) {
+    // Uh oh. We're not ready yet. Enqueue this operation. (This must be a
+    // remote offer, or else we would not have gotten this far)
+    PeerConnectionCtx::GetInstance()->queueJSEPOperation(
+        WrapRunnable(mInternal->mCall,
+                     &CSF::CC_Call::setRemoteDescription,
+                     (cc_jsep_action_t)action,
+                     mRemoteRequestedSDP,
+                     tc));
+  } else {
+    mInternal->mCall->setRemoteDescription((cc_jsep_action_t)action,
+                                           mRemoteRequestedSDP, tc);
+  }
+
   return NS_OK;
 }
 
