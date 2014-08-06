@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <!--
-  xml query with sort other field
+  xml query simple
 -->
 
 <window title="XUL Template Tests" width="500" height="600"
@@ -15,10 +15,10 @@
   <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
 
   <data id="output">
-    <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Tyto-alba" label="Barn Owl"/>
-    <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" label="Emu"/>
-    <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Corvus-corax" label="Raven"/>
-    <button id="chrome://mochitests/content/chrome/content/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" label="Chameleon"/>
+    <button id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Chamaeleo-chamaelon" label="Chameleon 2"/>
+    <button id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Dromaius-novaehollandiae" label="Emu 12"/>
+    <button id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Tyto-alba" label="Barn Owl 4"/>
+    <button id="chrome://mochitests/content/chrome/dom/xul/templates/tests/chrome/animals.xml#Corvus-corax" label="Raven 0"/>
   </data>
 
 <script src="templates_shared.js"/>
@@ -27,7 +27,7 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-var testid ="xml query with sort other field";
+var testid ="xml query simple";
 var queryType = "xml";
 var isTreeBuilder = false;
 var needsOpen = false;
@@ -39,12 +39,9 @@ var changes = [];
 ]]>
 </script>
 
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.xml" querytype="xml" ref="." sort="?id" sortDirection="descending">
-<template>
-<query expr="class/species"/>
-<action>
-<button uri="?" label="?name"/>
-</action>
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.xml" querytype="xml" ref=".">
+<template expr="class/species">
+<button uri="?" label="?name ?specimens"/>
 </template>
 </vbox>
 

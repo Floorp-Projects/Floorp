@@ -4,6 +4,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if CONFIG['MOZ_XUL']:
+    DIRS += ['templates']
+
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
+XPIDL_SOURCES += [
+    'nsIController.idl',
+    'nsIControllers.idl',
+]
+
+if CONFIG['MOZ_XUL']:
+    XPIDL_SOURCES += [
+        'nsIXULContextMenuBuilder.idl',
+        'nsIXULOverlayProvider.idl',
+    ]
+    EXPORTS += [
+        'nsIXULDocument.h',
+    ]
+
+
 UNIFIED_SOURCES += [
     'nsXULControllers.cpp',
 ]
@@ -12,6 +33,9 @@ if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
         'nsXULCommandDispatcher.cpp',
         'nsXULContentSink.cpp',
+        'nsXULContextMenuBuilder.cpp',
+        'nsXULElement.cpp',
+        'nsXULPopupListener.cpp',
         'nsXULPrototypeCache.cpp',
         'nsXULPrototypeDocument.cpp',
         'XULDocument.cpp',
@@ -23,12 +47,12 @@ MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
     '/content/base/src',
-    '/content/xul/content/src',
-    '/content/xul/templates/src',
+    '/content/html/content/src',
     '/docshell/base',
     '/dom/base',
     '/dom/xbl',
     '/dom/xml',
+    '/dom/xul/templates',
     '/layout/base',
     '/layout/generic',
     '/layout/style',
@@ -36,3 +60,5 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+XPIDL_MODULE = 'xul'

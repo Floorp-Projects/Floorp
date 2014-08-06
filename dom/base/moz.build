@@ -158,7 +158,7 @@ LOCAL_INCLUDES += [
     '../xbl',
     '/content/base/src',
     '/content/html/document/src',
-    '/content/xul/document/src',
+    '/dom/xul',
     '/layout/base',
     '/layout/generic',
     '/layout/style',
