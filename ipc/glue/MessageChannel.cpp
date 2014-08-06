@@ -13,6 +13,7 @@
 #include "mozilla/Move.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
+#include "nsContentUtils.h"
 
 // Undo the damage done by mozzconf.h
 #undef compress
@@ -188,6 +189,31 @@ private:
     CxxStackFrame& operator=(const CxxStackFrame&) MOZ_DELETE;
 };
 
+namespace {
+
+class MOZ_STACK_CLASS MaybeScriptBlocker {
+public:
+    MaybeScriptBlocker(MessageChannel *aChannel
+                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mBlocked(aChannel->ShouldBlockScripts())
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        if (mBlocked) {
+            nsContentUtils::AddScriptBlocker();
+        }
+    }
+    ~MaybeScriptBlocker() {
+        if (mBlocked) {
+            nsContentUtils::RemoveScriptBlocker();
+        }
+    }
+private:
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+    bool mBlocked;
+};
+
+} /* namespace {} */
+
 MessageChannel::MessageChannel(MessageListener *aListener)
   : mListener(aListener),
     mChannelState(ChannelClosed),
@@ -207,7 +233,8 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mDispatchingUrgentMessageCount(0),
     mRemoteStackDepthGuess(false),
     mSawInterruptOutMsg(false),
-    mAbortOnError(false)
+    mAbortOnError(false),
+    mBlockScripts(false)
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
 
@@ -568,6 +595,9 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
 bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
+    // See comment in DispatchUrgentMessage.
+    MaybeScriptBlocker scriptBlocker(this);
+
     // Sanity checks.
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
@@ -596,6 +626,9 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 bool
 MessageChannel::UrgentCall(Message* aMsg, Message* aReply)
 {
+    // See comment in DispatchUrgentMessage.
+    MaybeScriptBlocker scriptBlocker(this);
+
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
     IPC_ASSERT(mSide == ParentSide, "cannot send urgent requests from child");
@@ -625,6 +658,9 @@ MessageChannel::UrgentCall(Message* aMsg, Message* aReply)
 bool
 MessageChannel::RPCCall(Message* aMsg, Message* aReply)
 {
+    // See comment in DispatchUrgentMessage.
+    MaybeScriptBlocker scriptBlocker(this);
+
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
     IPC_ASSERT(mSide == ChildSide, "cannot send rpc messages from parent");
@@ -1102,6 +1138,34 @@ MessageChannel::DispatchUrgentMessage(const Message& aMsg)
     Message *reply = nullptr;
 
     MOZ_ASSERT(NS_IsMainThread());
+
+    // We don't want to run any code that might run a nested event loop here, so
+    // we avoid running event handlers. Once we've sent the response to the
+    // urgent message, it's okay to run event handlers again since the parent is
+    // no longer blocked.
+    //
+    // We also put script blockers at the start of every synchronous send
+    // call. That way we won't run any scripts while waiting for a response to
+    // another message. Running scripts could cause us to send more sync
+    // messages, and the other side wouldn't know what to do if it received a
+    // sync message while dispatching another sync message. (In practice, the
+    // other side would queue the second sync message, while we would need it to
+    // dispatch that message before sending the reply to the original sync
+    // message. Otherwise the replies would come out of order.)
+    //
+    // We omit the script blocker for InterruptCall since interrupt messages are
+    // designed to handle this sort of re-entry. (For example, if the child
+    // sends an intr message to the parent, the child will process any queued
+    // async messages from the parent while waiting for the intr response. In
+    // doing so, the child could trigger sync messages to be sent to the parent
+    // while the parent is still dispatching the intr message. If the parent
+    // sends an intr reply while the child is waiting for a sync response, the
+    // intr reply will be queued in mPending. Once the sync reply is received,
+    // InterruptCall will find the intr reply in mPending and run it.)  The
+    // situation where we run event handlers while waiting for an intr reply is
+    // no different than the one where we process async messages while waiting
+    // for an intr reply.
+    MaybeScriptBlocker scriptBlocker(this);
 
     gDispatchingUrgentMessageCount++;
     mDispatchingUrgentMessageCount++;
@@ -1644,6 +1708,13 @@ MessageChannel::CloseWithError()
     SynchronouslyClose();
     mChannelState = ChannelError;
     PostErrorNotifyTask();
+}
+
+void
+MessageChannel::BlockScripts()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    mBlockScripts = true;
 }
 
 void
