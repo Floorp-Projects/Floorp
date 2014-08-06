@@ -141,38 +141,26 @@ class RecursiveMakeTraversal(object):
     from Makefiles.
 
     Each directory may have one or more types of subdirectories:
-        - parallel
-        - static
         - (normal) dirs
         - tests
-
-    The "traditional" recursive make backend recurses through those by first
-    building the current directory, followed by parallel directories (in
-    parallel), then static directories, dirs, tests and tools (all
-    sequentially).
     """
-    SubDirectoryCategories = ['parallel', 'static', 'dirs', 'tests']
+    SubDirectoryCategories = ['dirs', 'tests']
     SubDirectoriesTuple = namedtuple('SubDirectories', SubDirectoryCategories)
     class SubDirectories(SubDirectoriesTuple):
         def __new__(self):
-            return RecursiveMakeTraversal.SubDirectoriesTuple.__new__(self, [], [], [], [])
+            return RecursiveMakeTraversal.SubDirectoriesTuple.__new__(self, [], [])
 
     def __init__(self):
         self._traversal = {}
 
-    def add(self, dir, **kargs):
+    def add(self, dir, dirs=[], tests=[]):
         """
-        Function signature is, in fact:
-            def add(self, dir, parallel=[], static=[], dirs=[],
-                               tests=[], tools=[])
-        but it's done with **kargs to avoid repetitive code.
-
         Adds a directory to traversal, registering its subdirectories,
         sorted by categories. If the directory was already added to
         traversal, adds the new subdirectories to the already known lists.
         """
         subdirs = self._traversal.setdefault(dir, self.SubDirectories())
-        for key, value in kargs.items():
+        for key, value in (('dirs', dirs), ('tests', tests)):
             assert(key in self.SubDirectoryCategories)
             getattr(subdirs, key).extend(value)
 
@@ -181,8 +169,7 @@ class RecursiveMakeTraversal(object):
         """
         Default filter for use with compute_dependencies and traverse.
         """
-        return current, subdirs.parallel, \
-               subdirs.static + subdirs.dirs + subdirs.tests
+        return current, [], subdirs.dirs + subdirs.tests
 
     def call_filter(self, current, filter):
         """
@@ -512,8 +499,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         # Traverse directories in parallel, and skip static dirs
         def parallel_filter(current, subdirs):
-            all_subdirs = subdirs.parallel + subdirs.dirs + \
-                          subdirs.tests
+            all_subdirs = subdirs.dirs + subdirs.tests
             if current in self._may_skip[tier] \
                     or current.startswith('subtiers/'):
                 current = None
@@ -526,8 +512,7 @@ class RecursiveMakeBackend(CommonBackend):
             if current in self._may_skip['libs'] \
                     or current.startswith('subtiers/'):
                 current = None
-            return current, [], subdirs.parallel + \
-                subdirs.dirs + subdirs.tests
+            return current, [], subdirs.dirs + subdirs.tests
 
         # Because of bug 925236 and possible other unknown race conditions,
         # don't parallelize the tools tier. There aren't many directories for
@@ -536,8 +521,7 @@ class RecursiveMakeBackend(CommonBackend):
             if current not in self._no_skip['tools'] \
                     or current.startswith('subtiers/'):
                 current = None
-            return current, [], subdirs.parallel + \
-                subdirs.dirs + subdirs.tests
+            return current, [], subdirs.dirs + subdirs.tests
 
         filters = [
             ('export', parallel_filter),
@@ -828,16 +812,9 @@ class RecursiveMakeBackend(CommonBackend):
                 self._traversal.add('subtiers/%s' % tier,
                                     dirs=relativize(dirs))
 
-            # tier_static_dirs should have the same keys as tier_dirs.
-            if obj.tier_static_dirs[tier]:
-                fh.write('staticdirs += %s\n' % (
-                    ' '.join(obj.tier_static_dirs[tier])))
-                self._traversal.add('subtiers/%s' % tier,
-                                    static=relativize(obj.tier_static_dirs[tier]))
-
             self._traversal.add('', dirs=['subtiers/%s' % tier])
 
-            for d in dirs + obj.tier_static_dirs[tier]:
+            for d in dirs:
                 if d.trigger:
                     self._triggers[d.trigger].add('%s/target' % d)
 
