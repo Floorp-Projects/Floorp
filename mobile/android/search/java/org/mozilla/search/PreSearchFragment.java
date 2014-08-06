@@ -110,10 +110,6 @@ public class PreSearchFragment extends Fragment {
                         public Rect getStartBounds() {
                             return startBounds;
                         }
-
-                        @Override
-                        public void onAnimationEnd() {
-                        }
                     });
                 }
             }

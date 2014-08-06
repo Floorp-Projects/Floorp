@@ -79,7 +79,7 @@ private:
   void StartGPS();
   void ShutdownGPS();
   void InjectLocation(double latitude, double longitude, float accuracy);
-  void RequestSettingValue(char* aKey);
+  void RequestSettingValue(const char* aKey);
 #ifdef MOZ_B2G_RIL
   void SetupAGPS();
   int32_t GetDataConnectionState();

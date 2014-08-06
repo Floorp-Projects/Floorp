@@ -19,7 +19,7 @@ public final class INIParser extends INISection {
     private File mFile;
 
     // List of sections in the current iniFile. null if the file has not been parsed yet
-    private Hashtable<String, INISection> mSections = null;
+    private Hashtable<String, INISection> mSections;
 
     // create a parser. The file will not be read until you attempt to
     // access sections or properties inside it. At that point its read synchronously

@@ -162,8 +162,6 @@ class AnimatorProxy {
             mTempMatrix = new Matrix();
 
             mAlpha = 1;
-            mTranslationX = 0;
-            mTranslationY = 0;
 
             loadCurrentTransformation(view);
 

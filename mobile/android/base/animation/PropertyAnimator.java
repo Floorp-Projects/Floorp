@@ -66,7 +66,6 @@ public class PropertyAnimator implements Runnable {
         mElementsList = new ArrayList<ElementHolder>();
         mFramePoster = FramePoster.create(this);
         mUseHardwareLayer = true;
-        mListeners = null;
     }
 
     public void setUseHardwareLayer(boolean useHardwareLayer) {

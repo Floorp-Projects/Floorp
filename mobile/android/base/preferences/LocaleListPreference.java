@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.R;
 
@@ -58,9 +59,34 @@ public class LocaleListPreference extends ListPreference {
             c.drawText(text, 0, BITMAP_HEIGHT / 2, this.paint);
             return b;
         }
-        private static byte[] getPixels(Bitmap b) {
-            ByteBuffer buffer = ByteBuffer.allocate(b.getByteCount());
-            b.copyPixelsToBuffer(buffer);
+
+        private static byte[] getPixels(final Bitmap b) {
+            final int byteCount;
+            if (Versions.feature19Plus) {
+                // TODO: when Bug 1042829 lands, do the right thing for KitKat devices.
+                // Which is:
+                // byteCount = b.getAllocationByteCount();
+                byteCount = b.getRowBytes() * b.getHeight();
+            } else {
+                // Close enough for government work.
+                // Equivalent to getByteCount, but works on <12.
+                byteCount = b.getRowBytes() * b.getHeight();
+            }
+
+            final ByteBuffer buffer = ByteBuffer.allocate(byteCount);
+            try {
+                b.copyPixelsToBuffer(buffer);
+            } catch (RuntimeException e) {
+                // Android throws this if there's not enough space in the buffer.
+                // This should never occur, but if it does, we don't
+                // really care -- we probably don't need the entire image.
+                // This is awful. I apologize.
+                if ("Buffer not large enough for pixels".equals(e.getMessage())) {
+                    return buffer.array();
+                }
+                throw e;
+            }
+
             return buffer.array();
         }
 

@@ -48,10 +48,10 @@ public class AnnotatableEntity {
         }
         return (Field) mMember;
     }
-    public Constructor getConstructor() {
+    public Constructor<?> getConstructor() {
         if (mEntityType != ENTITY_TYPE.CONSTRUCTOR) {
             throw new UnsupportedOperationException("Attempt to cast to unsupported member type.");
         }
-        return (Constructor) mMember;
+        return (Constructor<?>) mMember;
     }
 }

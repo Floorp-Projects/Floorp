@@ -112,7 +112,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, builtinclass, uuid(a5cefcc8-551b-4901-83f3-7436b09ecaba)]
+[scriptable, builtinclass, uuid(d52ca6a8-8237-4ae0-91d7-7be4f1db24ef)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -204,6 +204,13 @@ interface nsIFrameLoader : nsISupports
                                 in long aCharCode,
                                 in long aModifiers,
                                 [optional] in boolean aPreventDefault);
+
+  /**
+   * Request that the next time a remote layer transaction has been
+   * received by the Compositor, a MozAfterRemoteFrame event be sent
+   * to the window.
+   */
+  void requestNotifyAfterRemotePaint();
 
   /** 
    * The default rendering mode is synchronous scrolling.  In this

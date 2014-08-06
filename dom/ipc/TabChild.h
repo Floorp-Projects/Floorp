@@ -501,6 +501,8 @@ protected:
 
     virtual bool DeallocPIndexedDBChild(PIndexedDBChild* aActor) MOZ_OVERRIDE;
 
+    virtual bool RecvRequestNotifyAfterRemotePaint();
+
 private:
     /**
      * Create a new TabChild object.

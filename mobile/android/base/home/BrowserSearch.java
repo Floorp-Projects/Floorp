@@ -772,7 +772,6 @@ public class BrowserSearch extends HomeFragment
             super(context);
             mSuggestClient = suggestClient;
             mSearchTerm = searchTerm;
-            mSuggestions = null;
         }
 
         @Override
