@@ -740,7 +740,7 @@ already_AddRefed<nsIPrincipal> RtspMediaResource::GetCurrentPrincipal()
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
   if (!secMan || !mChannel)
     return nullptr;
-  secMan->GetChannelPrincipal(mChannel, getter_AddRefs(principal));
+  secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
   return principal.forget();
 }
 

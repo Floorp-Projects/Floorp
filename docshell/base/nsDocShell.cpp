@@ -6580,7 +6580,7 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
             NS_ENSURE_SUCCESS(rv, rv);
 
             nsCOMPtr<nsIPrincipal> principal;
-            rv = secMan->GetChannelPrincipal(aChannel, getter_AddRefs(principal));
+            rv = secMan->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
             NS_ENSURE_SUCCESS(rv, rv);
 
             SetupReferrerFromChannel(aChannel);
