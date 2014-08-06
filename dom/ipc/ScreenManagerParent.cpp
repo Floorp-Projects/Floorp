@@ -24,13 +24,13 @@ ScreenManagerParent::ScreenManagerParent(uint32_t* aNumberOfScreens,
     MOZ_CRASH("Couldn't get nsIScreenManager from ScreenManagerParent.");
   }
 
-  unused << RecvRefresh(aNumberOfScreens, aSystemDefaultScale, aSuccess);
+  unused << AnswerRefresh(aNumberOfScreens, aSystemDefaultScale, aSuccess);
 }
 
 bool
-ScreenManagerParent::RecvRefresh(uint32_t* aNumberOfScreens,
-                                 float* aSystemDefaultScale,
-                                 bool* aSuccess)
+ScreenManagerParent::AnswerRefresh(uint32_t* aNumberOfScreens,
+                                   float* aSystemDefaultScale,
+                                   bool* aSuccess)
 {
   *aSuccess = false;
 
@@ -49,9 +49,9 @@ ScreenManagerParent::RecvRefresh(uint32_t* aNumberOfScreens,
 }
 
 bool
-ScreenManagerParent::RecvScreenRefresh(const uint32_t& aId,
-                                       ScreenDetails* aRetVal,
-                                       bool* aSuccess)
+ScreenManagerParent::AnswerScreenRefresh(const uint32_t& aId,
+                                         ScreenDetails* aRetVal,
+                                         bool* aSuccess)
 {
   *aSuccess = false;
 
@@ -70,8 +70,8 @@ ScreenManagerParent::RecvScreenRefresh(const uint32_t& aId,
 }
 
 bool
-ScreenManagerParent::RecvGetPrimaryScreen(ScreenDetails* aRetVal,
-                                          bool* aSuccess)
+ScreenManagerParent::AnswerGetPrimaryScreen(ScreenDetails* aRetVal,
+                                            bool* aSuccess)
 {
   *aSuccess = false;
 
@@ -91,12 +91,12 @@ ScreenManagerParent::RecvGetPrimaryScreen(ScreenDetails* aRetVal,
 }
 
 bool
-ScreenManagerParent::RecvScreenForRect(const int32_t& aLeft,
-                                       const int32_t& aTop,
-                                       const int32_t& aWidth,
-                                       const int32_t& aHeight,
-                                       ScreenDetails* aRetVal,
-                                       bool* aSuccess)
+ScreenManagerParent::AnswerScreenForRect(const int32_t& aLeft,
+                                         const int32_t& aTop,
+                                         const int32_t& aWidth,
+                                         const int32_t& aHeight,
+                                         ScreenDetails* aRetVal,
+                                         bool* aSuccess)
 {
   *aSuccess = false;
 
@@ -116,9 +116,9 @@ ScreenManagerParent::RecvScreenForRect(const int32_t& aLeft,
 }
 
 bool
-ScreenManagerParent::RecvScreenForBrowser(PBrowserParent* aBrowser,
-                                          ScreenDetails* aRetVal,
-                                          bool* aSuccess)
+ScreenManagerParent::AnswerScreenForBrowser(PBrowserParent* aBrowser,
+                                            ScreenDetails* aRetVal,
+                                            bool* aSuccess)
 {
   *aSuccess = false;
 

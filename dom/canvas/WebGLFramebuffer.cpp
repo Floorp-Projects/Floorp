@@ -24,9 +24,9 @@ WebGLFramebuffer::WrapObject(JSContext* cx)
 }
 
 WebGLFramebuffer::WebGLFramebuffer(WebGLContext* context)
-    : WebGLContextBoundObject(context)
+    : WebGLBindableName()
+    , WebGLContextBoundObject(context)
     , mStatus(0)
-    , mHasEverBeenBound(false)
     , mDepthAttachment(LOCAL_GL_DEPTH_ATTACHMENT)
     , mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT)
     , mDepthStencilAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
@@ -79,8 +79,9 @@ WebGLFramebuffer::Attachment::HasAlpha() const
 bool
 WebGLFramebuffer::Attachment::IsReadableFloat() const
 {
-    if (Texture() && Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel)) {
-        GLenum type = Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).WebGLType();
+    const WebGLTexture* tex = Texture();
+    if (tex && tex->HasImageInfoAt(mTexImageTarget, mTexImageLevel)) {
+        GLenum type = tex->ImageInfoAt(mTexImageTarget, mTexImageLevel).WebGLType();
         switch (type) {
         case LOCAL_GL_FLOAT:
         case LOCAL_GL_HALF_FLOAT_OES:
@@ -89,8 +90,9 @@ WebGLFramebuffer::Attachment::IsReadableFloat() const
         return false;
     }
 
-    if (Renderbuffer()) {
-        GLenum format = Renderbuffer()->InternalFormat();
+    const WebGLRenderbuffer* rb = Renderbuffer();
+    if (rb) {
+        GLenum format = rb->InternalFormat();
         switch (format) {
         case LOCAL_GL_RGB16F:
         case LOCAL_GL_RGBA16F:
@@ -101,6 +103,8 @@ WebGLFramebuffer::Attachment::IsReadableFloat() const
         return false;
     }
 
+    // If we arrive here Attachment isn't correct setup because it has
+    // no texture nor render buffer pointer.
     MOZ_ASSERT(false, "Should not get here.");
     return false;
 }

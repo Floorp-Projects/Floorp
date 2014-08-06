@@ -494,7 +494,7 @@ parent:
 
     PNecko();
 
-    sync PScreenManager()
+    rpc PScreenManager()
         returns (uint32_t numberOfScreens,
                  float systemDefaultScale,
                  bool success);

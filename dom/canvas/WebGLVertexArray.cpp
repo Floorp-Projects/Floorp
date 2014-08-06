@@ -20,9 +20,8 @@ WebGLVertexArray::WrapObject(JSContext *cx) {
 }
 
 WebGLVertexArray::WebGLVertexArray(WebGLContext* context)
-    : WebGLContextBoundObject(context)
-    , mGLName(0)
-    , mHasEverBeenBound(false)
+    : WebGLBindableName()
+    , WebGLContextBoundObject(context)
 {
     SetIsDOMBinding();
     context->mVertexArrays.insertBack(this);
