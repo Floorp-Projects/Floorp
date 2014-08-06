@@ -4,7 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['tlsserver']
+UNIFIED_SOURCES += [
+    'pkcs11testmodule.cpp',
+]
 
-if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
-    DIRS += ['pkcs11testmodule']
+LIBRARY_NAME = 'pkcs11testmodule'
+
+FORCE_SHARED_LIB = True
+# C_GetFunctionList needs to be exported. As it turns out, it's much easier to
+# just export all the symbols.
+NO_VISIBILITY_FLAGS = True
+NO_DIST_INSTALL = True
