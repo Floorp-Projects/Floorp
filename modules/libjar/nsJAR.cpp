@@ -77,7 +77,7 @@ nsJARManifestItem::~nsJARManifestItem()
 
 // The following initialization makes a guess of 10 entries per jarfile.
 nsJAR::nsJAR(): mZip(new nsZipArchive()),
-                mManifestData(10),
+                mManifestData(8),
                 mParsedManifest(false),
                 mGlobalStatus(JAR_MANIFEST_NOT_PARSED),
                 mReleaseTime(PR_INTERVAL_NO_TIMEOUT),
@@ -1028,7 +1028,7 @@ NS_IMPL_ISUPPORTS(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsW
 
 nsZipReaderCache::nsZipReaderCache()
   : mLock("nsZipReaderCache.mLock")
-  , mZips(16)
+  , mZips()
   , mMustCacheFd(false)
 #ifdef ZIP_CACHE_HIT_RATE
     ,

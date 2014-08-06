@@ -57,7 +57,7 @@ class txLoadedDocumentsHash : public nsTHashtable<txLoadedDocumentEntry>
 {
 public:
     txLoadedDocumentsHash()
-        : nsTHashtable<txLoadedDocumentEntry>(8),
+        : nsTHashtable<txLoadedDocumentEntry>(4),
           mSourceDocument(nullptr)
     {
     }

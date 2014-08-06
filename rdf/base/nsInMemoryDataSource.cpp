@@ -163,8 +163,8 @@ Assertion::Assertion(nsIRDFResource* aSource)
 
     NS_ADDREF(mSource);
 
-    u.hash.mPropertyHash = PL_NewDHashTable(PL_DHashGetStubOps(),
-                      nullptr, sizeof(Entry), PL_DHASH_MIN_SIZE);
+    u.hash.mPropertyHash =
+        PL_NewDHashTable(PL_DHashGetStubOps(), nullptr, sizeof(Entry));
 }
 
 Assertion::Assertion(nsIRDFResource* aSource,
@@ -785,14 +785,12 @@ InMemoryDataSource::Init()
     PL_DHashTableInit(&mForwardArcs,
                       PL_DHashGetStubOps(),
                       nullptr,
-                      sizeof(Entry),
-                      PL_DHASH_MIN_SIZE);
+                      sizeof(Entry));
 
     PL_DHashTableInit(&mReverseArcs,
                       PL_DHashGetStubOps(),
                       nullptr,
-                      sizeof(Entry),
-                      PL_DHASH_MIN_SIZE);
+                      sizeof(Entry));
 
 #ifdef PR_LOGGING
     if (! gLog)
