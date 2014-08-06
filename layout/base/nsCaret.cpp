@@ -449,38 +449,27 @@ nsresult nsCaret::DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset)
   return rv;
 }
 
-nsIFrame * nsCaret::GetCaretFrame(int32_t *aOffset)
+nsIFrame*
+nsCaret::GetPaintGeometry(nsRect* aRect)
 {
   // Return null if we're not drawn to prevent anybody from trying to draw us.
   if (!mDrawn)
     return nullptr;
 
-  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  nsFrameSelection* frameSelection = GetFrameSelection();
   if (!frameSelection)
     return nullptr;
-
-  // Recompute the frame that we're supposed to draw in to guarantee that
-  // we're not going to try to draw into a stale (dead) frame.
-  int32_t offset;
+  int32_t contentOffset;
   nsIFrame *frame = nullptr;
   nsresult rv = GetCaretFrameForNodeOffset(frameSelection,
                                            mLastContent, mLastContentOffset,
                                            mLastHint, mLastBidiLevel, &frame,
-                                           &offset);
+                                           &contentOffset);
   if (NS_FAILED(rv))
     return nullptr;
 
-  if (aOffset) {
-    *aOffset = offset;
-  }
-  return frame;
-}
-
-nsIFrame*
-nsCaret::GetPaintGeometry(nsRect* aRect)
-{
   aRect->UnionRect(mCaretRect, GetHookRect());
-  return GetCaretFrame();
+  return frame;
 }
 
 void nsCaret::UpdateCaretPosition()
@@ -503,13 +492,23 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
   NS_ASSERTION(mDrawn, "The caret shouldn't be drawing");
 
   const nsRect drawCaretRect = mCaretRect + aOffset;
-  int32_t contentOffset;
 
-#ifdef DEBUG
-  nsIFrame* frame =
-#endif
-    GetCaretFrame(&contentOffset);
+  nsFrameSelection* frameSelection = GetFrameSelection();
+  if (!frameSelection) {
+    return;
+  }
+
+  int32_t contentOffset;
+  nsIFrame *frame = nullptr;
+  nsresult rv = GetCaretFrameForNodeOffset(frameSelection,
+                                           mLastContent, mLastContentOffset,
+                                           mLastHint, mLastBidiLevel, &frame,
+                                           &contentOffset);
+  if (NS_FAILED(rv)) {
+    return;
+  }
   NS_ASSERTION(frame == aForFrame, "We're referring different frame");
+
   // If the offset falls outside of the frame, then don't paint the caret.
   int32_t startOffset, endOffset;
   if (aForFrame->GetType() == nsGkAtoms::textFrame &&
@@ -522,8 +521,9 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
 
   aCtx->SetColor(foregroundColor);
   aCtx->FillRect(drawCaretRect);
-  if (!GetHookRect().IsEmpty())
+  if (!GetHookRect().IsEmpty()) {
     aCtx->FillRect(GetHookRect() + aOffset);
+  }
 }
 
 
@@ -1141,7 +1141,8 @@ nsCaret::SetIgnoreUserModify(bool aIgnoreUserModify)
     // in a read-only node we must erase it, else the next call
     // to DrawCaret() won't erase the old caret, due to the new
     // mIgnoreUserModify value.
-    nsIFrame *frame = GetCaretFrame();
+    nsRect r;
+    nsIFrame *frame = GetPaintGeometry(&r);
     if (frame) {
       const nsStyleUserInterface* userinterface = frame->StyleUserInterface();
       if (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) {
