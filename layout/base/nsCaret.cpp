@@ -41,6 +41,7 @@ static const int32_t kMinBidiIndicatorPixels = 2;
 #include "nsContentUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /**
  * Find the first frame in an in-order traversal of the frame subtree rooted
@@ -368,6 +369,28 @@ nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
 
   GetGeometryForFrame(frame, frameOffset, aRect, nullptr);
   return frame;
+}
+
+Selection*
+nsCaret::GetSelectionInternal()
+{
+  return static_cast<Selection*>(GetSelection());
+}
+
+void nsCaret::SchedulePaint()
+{
+  nsINode* focusNode = mLastContent ?
+    mLastContent.get() : GetSelectionInternal()->GetFocusNode();
+  if (!focusNode || !focusNode->IsContent()) {
+    return;
+  }
+  nsIFrame* f = focusNode->AsContent()->GetPrimaryFrame();
+  if (!f) {
+    return;
+  }
+  // This may not be the correct continuation frame, but that's OK since we're
+  // just scheduling a paint of the window (or popup).
+  f->SchedulePaint();
 }
 
 void nsCaret::DrawCaretAfterBriefDelay()
@@ -1100,11 +1123,7 @@ void nsCaret::CaretBlinkCallback(nsITimer *aTimer, void *aClosure)
 nsFrameSelection*
 nsCaret::GetFrameSelection()
 {
-  nsCOMPtr<nsISelection> sel = do_QueryReferent(mDomSelectionWeak);
-  if (!sel)
-    return nullptr;
-
-  return static_cast<dom::Selection*>(sel.get())->GetFrameSelection();
+  return GetSelectionInternal()->GetFrameSelection();
 }
 
 void
