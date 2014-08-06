@@ -203,6 +203,13 @@ loop.panel = (function(_, mozL10n) {
       }
     },
 
+    _generateMailto: function() {
+      return encodeURI([
+        "mailto:?subject=" + __("share_email_subject") + "&",
+        "body=" + __("share_email_body", {callUrl: this.state.callUrl})
+      ].join(""));
+    },
+
     render: function() {
       // XXX setting elem value from a state (in the callUrl input)
       // makes it immutable ie read only but that is fine in our case.
@@ -218,6 +225,12 @@ loop.panel = (function(_, mozL10n) {
           <div className="invite">
             <input type="url" value={this.state.callUrl} readOnly="true"
                    className={cx(inputCSSClass)} />
+          <a className={cx({btn: true, hide: !this.state.callUrl})}
+             href={this._generateMailto()}>
+           <span>
+            {__("share_button")}
+           </span>
+          </a>
           </div>
         </PanelLayout>
       );

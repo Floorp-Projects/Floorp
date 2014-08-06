@@ -3,6 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- LOCALIZATION NOTE : FILE This file contains the Profiler strings -->
+<!-- LOCALIZATION NOTE : FILE Do not translate commandkey -->
 
 <!-- LOCALIZATION NOTE : FILE The correct localization of this file might be to
   - keep it in English, or another language commonly spoken among web developers.
@@ -10,10 +11,39 @@
   - A good criteria is the language in which you'd find the best
   - documentation on web development on the web. -->
 
-<!-- LOCALIZATION NOTE (profiler.importProfile): This string is displayed
-  -  on a button that opens a dialog to import a saved profile data file. -->
-<!ENTITY importProfile.label "Import…">
+<!-- LOCALIZATION NOTE (profilerUI.emptyNotice1/2): This is the label shown
+  -  in the call list view when empty. -->
+<!ENTITY profilerUI.emptyNotice1    "Click on the">
+<!ENTITY profilerUI.emptyNotice2    "button to start recording JavaScript function calls.">
 
-<!-- LOCALIZATION NOTE (profiler.startProfiler): This string is displayed
-  -  on a button that starts a new profile  -->
-<!ENTITY startProfiler.tooltip "Start profiling">
+<!-- LOCALIZATION NOTE (profilerUI.stopNotice1/2): This is the label shown
+  -  in the call list view while recording a profile. -->
+<!ENTITY profilerUI.stopNotice1    "Click on the">
+<!ENTITY profilerUI.stopNotice2    "button again to stop profiling.">
+
+<!-- LOCALIZATION NOTE (profilerUI.loadingNotice): This is the label shown
+  -  in the call list view while loading a profile. -->
+<!ENTITY profilerUI.loadingNotice "Loading…">
+
+<!-- LOCALIZATION NOTE (profilerUI.recordButton): This string is displayed
+  -  on a button that starts a new profile. -->
+<!ENTITY profilerUI.recordButton.tooltip "Record JavaScript function calls.">
+
+<!-- LOCALIZATION NOTE (profilerUI.importButton): This string is displayed
+  -  on a button that opens a dialog to import a saved profile data file. -->
+<!ENTITY profilerUI.importButton "Import…">
+
+<!-- LOCALIZATION NOTE (profilerUI.clearButton): This string is displayed
+  -  on a button that remvoes all the recordings. -->
+<!ENTITY profilerUI.clearButton "Clear">
+
+<!-- LOCALIZATION NOTE (profilerUI.table.*): These strings are displayed
+  -  in the call tree headers for a recording. -->
+<!ENTITY profilerUI.table.duration    "Time (ms)">
+<!ENTITY profilerUI.table.percentage  "Cost">
+<!ENTITY profilerUI.table.invocations "Calls">
+<!ENTITY profilerUI.table.function    "Function">
+
+<!-- LOCALIZATION NOTE (profilerUI.newtab.tooltiptext): The tooltiptext shown
+  -  on the "+" (new tab) button for a profile when a selection is available. -->
+<!ENTITY profilerUI.newtab.tooltiptext "Add new tab from selection">
