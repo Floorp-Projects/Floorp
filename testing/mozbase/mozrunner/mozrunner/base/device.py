@@ -19,36 +19,33 @@ class DeviceRunner(BaseRunner):
     The base runner class used for running gecko on
     remote devices (or emulators), such as B2G.
     """
+    env = { 'MOZ_CRASHREPORTER': '1',
+            'MOZ_CRASHREPORTER_NO_REPORT': '1',
+            'MOZ_CRASHREPORTER_SHUTDOWN': '1',
+            'MOZ_HIDE_RESULTS_TABLE': '1',
+            'NSPR_LOG_MODULES': 'signaling:5,mtransport:5,datachannel:5',
+            'R_LOG_LEVEL': '6',
+            'R_LOG_DESTINATION': 'stderr',
+            'R_LOG_VERBOSE': '1',
+            'NO_EM_RESTART': '1', }
+
     def __init__(self, device_class, device_args=None, **kwargs):
+        process_log = tempfile.NamedTemporaryFile(suffix='pidlog')
+        self._env = dict(self.env)
+        self._env['MOZ_PROCESS_LOG'] = process_log.name
+        self._env.update(kwargs.pop('env', {}) or {})
+
         process_args = {'stream': sys.stdout,
                         'processOutputLine': self.on_output,
                         'onTimeout': self.on_timeout }
         process_args.update(kwargs.get('process_args') or {})
 
         kwargs['process_args'] = process_args
+        kwargs['env'] = {}
         BaseRunner.__init__(self, **kwargs)
 
         device_args = device_args or {}
         self.device = device_class(**device_args)
-
-        process_log = tempfile.NamedTemporaryFile(suffix='pidlog')
-        self._env =  { 'MOZ_CRASHREPORTER': '1',
-                       'MOZ_CRASHREPORTER_NO_REPORT': '1',
-                       'MOZ_CRASHREPORTER_SHUTDOWN': '1',
-                       'MOZ_HIDE_RESULTS_TABLE': '1',
-                       'MOZ_PROCESS_LOG': process_log.name,
-                       'NSPR_LOG_MODULES': 'signaling:5,mtransport:5,datachannel:5',
-                       'R_LOG_LEVEL': '6',
-                       'R_LOG_DESTINATION': 'stderr',
-                       'R_LOG_VERBOSE': '1',
-                       'NO_EM_RESTART': '1', }
-        if kwargs.get('env'):
-            self._env.update(kwargs['env'])
-
-        # In this case we need to pass in env as part of the command.
-        # Make this empty so runner doesn't pass anything into the
-        # process class.
-        self.env = None
 
     @property
     def command(self):
@@ -79,7 +76,13 @@ class DeviceRunner(BaseRunner):
             raise Exception("Network did not come up when starting device")
         self.app_ctx.stop_application()
 
+        # In this case we need to pass in env as part of the command.
+        # Make this empty so BaseRunner doesn't pass anything into the
+        # process class.
+        self._env = self.env
+        self.env = None
         BaseRunner.start(self, *args, **kwargs)
+        self.env = self._env
 
         timeout = 10 # seconds
         starttime = datetime.datetime.now()
