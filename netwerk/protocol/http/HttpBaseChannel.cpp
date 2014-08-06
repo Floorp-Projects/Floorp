@@ -1736,7 +1736,7 @@ HttpBaseChannel::GetPrincipal(bool requireAppId)
       return nullptr;
   }
 
-  securityManager->GetChannelPrincipal(this, getter_AddRefs(mPrincipal));
+  securityManager->GetChannelResultPrincipal(this, getter_AddRefs(mPrincipal));
   if (!mPrincipal) {
       LOG(("HttpBaseChannel::GetPrincipal: No channel principal [this=%p]",
            this));
