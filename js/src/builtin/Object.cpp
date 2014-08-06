@@ -1233,6 +1233,7 @@ const JSFunctionSpec js::object_static_methods[] = {
  * in a different array.
  */
 const JSFunctionSpec js::object_static_selfhosted_methods[] = {
+    JS_SELF_HOSTED_FN("assign",        "ObjectStaticAssign",        2,0),
     JS_FS_END
 };
 
