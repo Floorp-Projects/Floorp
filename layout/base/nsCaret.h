@@ -113,17 +113,14 @@ class nsCaret : public nsISelectionListener
      *  @param aOffset is result of the caret offset in the content.
      */
     nsIFrame* GetCaretFrame(int32_t *aOffset = nullptr);
-    /** GetCaretRect
-     *  Get the current caret rect. Only call this when GetCaretFrame returns
-     *  non-null.
-     *  This rect includes any extra decorations for bidi.
+    /**
+     * Returns a frame to paint in, and the bounds of the painted caret
+     * relative to that frame.
+     * The rectangle includes bidi decorations.
+     * Returns null if the caret should not be drawn (including if it's blinked
+     * off).
      */
-    nsRect GetCaretRect()
-    {
-      nsRect r;
-      r.UnionRect(mCaretRect, GetHookRect());
-      return r;
-    }
+    nsIFrame* GetPaintGeometry(nsRect* aRect);
     /**
      * A simple wrapper around GetGeometry. Does not take any caret state into
      * account other than the current selection.

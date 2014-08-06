@@ -942,19 +942,10 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
     return;
 
   nsRefPtr<nsCaret> caret = state->mPresShell->GetCaret();
-  state->mCaretFrame = caret->GetCaretFrame();
-  NS_ASSERTION(state->mCaretFrame == caret->GetCaretFrame(),
-               "GetCaretFrame() is unstable");
-
+  state->mCaretFrame = caret->GetPaintGeometry(&state->mCaretRect);
   if (state->mCaretFrame) {
-    // Check if the dirty rect intersects with the caret's dirty rect.
-    nsRect caretRect =
-      caret->GetCaretRect() + state->mCaretFrame->GetOffsetTo(aReferenceFrame);
-    if (caretRect.Intersects(aDirtyRect)) {
-      // Okay, our rects intersect, let's mark the frame and all of its ancestors.
-      mFramesMarkedForDisplay.AppendElement(state->mCaretFrame);
-      MarkFrameForDisplay(state->mCaretFrame, nullptr);
-    }
+    mFramesMarkedForDisplay.AppendElement(state->mCaretFrame);
+    MarkFrameForDisplay(state->mCaretFrame, nullptr);
   }
 }
 
@@ -2743,10 +2734,10 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayCaret::nsDisplayCaret(nsDisplayListBuilder* aBuilder,
-                               nsIFrame* aCaretFrame,
-                               nsCaret *aCaret)
+                               nsIFrame* aCaretFrame)
   : nsDisplayItem(aBuilder, aCaretFrame)
-  , mCaret(aCaret)
+  , mCaret(aBuilder->GetCaret())
+  , mBounds(aBuilder->GetCaretRect() + ToReferenceFrame())
 {
   MOZ_COUNT_CTOR(nsDisplayCaret);
 }
@@ -2761,9 +2752,9 @@ nsDisplayCaret::~nsDisplayCaret()
 nsRect
 nsDisplayCaret::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  *aSnap = false;
+  *aSnap = true;
   // The caret returns a rect in the coordinates of mFrame.
-  return mCaret->GetCaretRect() + ToReferenceFrame();
+  return mBounds;
 }
 
 void
