@@ -7,7 +7,6 @@
 #define GFX_LAYER_TREE_INVALIDATION_H
 
 #include "nsRegion.h"                   // for nsIntRegion
-#include "mozilla/UniquePtr.h"          // for UniquePtr
 
 class nsPresContext;
 struct nsIntPoint;
@@ -43,7 +42,7 @@ struct LayerProperties
    * @param Layer tree to copy, or nullptr if we have no 
    * initial layer tree.
    */
-  static UniquePtr<LayerProperties> CloneFrom(Layer* aRoot);
+  static LayerProperties* CloneFrom(Layer* aRoot);
 
   /**
    * Clear all invalidation status from this layer tree.

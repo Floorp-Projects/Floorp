@@ -23,7 +23,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for etc
 #include "mozilla/layers/TextureHost.h"  // for TextureHost
 #include "mozilla/mozalloc.h"           // for operator delete
-#include "mozilla/UniquePtr.h"          // for UniquePtr
+#include "nsAutoPtr.h"                  // for nsAutoPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
@@ -375,7 +375,7 @@ private:
     nsIntPoint mBufferRotation;
   };
 
-  nsTArray<UniquePtr<Request> > mUpdateList;
+  nsTArray<nsAutoPtr<Request> > mUpdateList;
 
   // Specific to OGL to avoid exposing methods on TextureSource that only
   // have one implementation.

@@ -340,7 +340,7 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
 
   if (drawFps) {
     if (!mFPS) {
-      mFPS = MakeUnique<FPSState>();
+      mFPS = new FPSState();
     }
 
     float fillRatio = mCompositor->GetFillRatio();

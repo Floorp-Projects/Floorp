@@ -31,7 +31,7 @@ namespace mozilla {
 namespace layers {
 
 struct LayerPropertiesBase;
-UniquePtr<LayerPropertiesBase> CloneLayerTreePropertiesInternal(Layer* aRoot);
+LayerPropertiesBase* CloneLayerTreePropertiesInternal(Layer* aRoot);
 
 static nsIntRect
 TransformRect(const nsIntRect& aRect, const Matrix4x4& aTransform)
@@ -199,7 +199,7 @@ struct LayerPropertiesBase : public LayerProperties
   }
 
   nsRefPtr<Layer> mLayer;
-  UniquePtr<LayerPropertiesBase> mMaskLayer;
+  nsAutoPtr<LayerPropertiesBase> mMaskLayer;
   nsIntRegion mVisibleRegion;
   nsIntRegion mInvalidRegion;
   Matrix4x4 mTransform;
@@ -218,7 +218,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
     , mPreYScale(aLayer->GetPreYScale())
   {
     for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
-      mChildren.AppendElement(Move(CloneLayerTreePropertiesInternal(child)));
+      mChildren.AppendElement(CloneLayerTreePropertiesInternal(child));
     }
   }
 
@@ -315,7 +315,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
   }
 
   // The old list of children:
-  nsAutoTArray<UniquePtr<LayerPropertiesBase>,1> mChildren;
+  nsAutoTArray<nsAutoPtr<LayerPropertiesBase>,1> mChildren;
   float mPreXScale;
   float mPreYScale;
 };
@@ -383,29 +383,29 @@ struct ImageLayerProperties : public LayerPropertiesBase
   ScaleMode mScaleMode;
 };
 
-UniquePtr<LayerPropertiesBase>
+LayerPropertiesBase*
 CloneLayerTreePropertiesInternal(Layer* aRoot)
 {
   if (!aRoot) {
-    return MakeUnique<LayerPropertiesBase>();
+    return new LayerPropertiesBase();
   }
 
   switch (aRoot->GetType()) {
     case Layer::TYPE_CONTAINER:
     case Layer::TYPE_REF:
-      return MakeUnique<ContainerLayerProperties>(aRoot->AsContainerLayer());
+      return new ContainerLayerProperties(aRoot->AsContainerLayer());
     case Layer::TYPE_COLOR:
-      return MakeUnique<ColorLayerProperties>(static_cast<ColorLayer*>(aRoot));
+      return new ColorLayerProperties(static_cast<ColorLayer*>(aRoot));
     case Layer::TYPE_IMAGE:
-      return MakeUnique<ImageLayerProperties>(static_cast<ImageLayer*>(aRoot));
+      return new ImageLayerProperties(static_cast<ImageLayer*>(aRoot));
     default:
-      return MakeUnique<LayerPropertiesBase>(aRoot);
+      return new LayerPropertiesBase(aRoot);
   }
 
   return nullptr;
 }
 
-/* static */ UniquePtr<LayerProperties>
+/* static */ LayerProperties*
 LayerProperties::CloneFrom(Layer* aRoot)
 {
   return CloneLayerTreePropertiesInternal(aRoot);
