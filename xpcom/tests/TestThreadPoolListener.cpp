@@ -115,7 +115,7 @@ Listener::OnThreadShuttingDown()
 class AutoCreateAndDestroyReentrantMonitor
 {
 public:
-  AutoCreateAndDestroyReentrantMonitor(ReentrantMonitor** aReentrantMonitorPtr)
+  explicit AutoCreateAndDestroyReentrantMonitor(ReentrantMonitor** aReentrantMonitorPtr)
   : mReentrantMonitorPtr(aReentrantMonitorPtr) {
     *aReentrantMonitorPtr = new ReentrantMonitor("TestThreadPoolListener::AutoMon");
     TEST_ASSERTION(*aReentrantMonitorPtr, "Out of memory!");

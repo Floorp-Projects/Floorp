@@ -517,7 +517,8 @@ class GeckoInputConnection
                     GeckoInputConnection.class.notify();
                 }
                 Looper.loop();
-                sBackgroundHandler = null;
+                // We should never be exiting the thread loop.
+                throw new IllegalThreadStateException("unreachable code");
             }
         }, LOGTAG);
         backgroundThread.setDaemon(true);
@@ -562,11 +563,7 @@ class GeckoInputConnection
         if (!canReturnCustomHandler()) {
             return defHandler;
         }
-        // getBackgroundHandler() is synchronized and requires locking,
-        // but if we already have our handler, we don't have to lock
-        final Handler newHandler = sBackgroundHandler != null
-                                 ? sBackgroundHandler
-                                 : getBackgroundHandler();
+        final Handler newHandler = getBackgroundHandler();
         if (mEditableClient.setInputConnectionHandler(newHandler)) {
             return newHandler;
         }

@@ -238,7 +238,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHEENTRYINFO
 
-    nsCacheEntryInfo(nsCacheEntry* entry)
+    explicit nsCacheEntryInfo(nsCacheEntry* entry)
         :   mCacheEntry(entry)
     {
     }

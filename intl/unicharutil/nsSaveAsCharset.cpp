@@ -356,7 +356,7 @@ nsresult nsSaveAsCharset::SetupCharsetList(const char *charsetList)
     mCharsetListIndex = -1;
   }
 
-  nsCWhitespaceTokenizer tokenizer = nsDependentCString(charsetList);
+  nsCWhitespaceTokenizer tokenizer((nsDependentCString(charsetList)));
   while (tokenizer.hasMoreTokens()) {
     ParseString(tokenizer.nextToken(), ',', mCharsetList);
   }

@@ -16,6 +16,10 @@ HOST_FINGERPRINTS = {
 }
 
 
+class HgIncludeException(Exception):
+    pass
+
+
 class MercurialConfig(object):
     """Interface for manipulating a Mercurial config file."""
 
@@ -34,6 +38,15 @@ class MercurialConfig(object):
             self.config_path = infile
         else:
             infile = None
+
+        # Mercurial configuration files allow an %include directive to include
+        # other files, this is not supported by ConfigObj, so throw a useful
+        # error saying this.
+        with open(infile, 'r') as f:
+            for line in f:
+                if line.startswith('%include'):
+                    raise HgIncludeException(
+                        '%include directive is not supported by MercurialConfig')
 
         # write_empty_values is necessary to prevent built-in extensions (which
         # have no value) from being dropped on write.
