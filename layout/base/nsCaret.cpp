@@ -354,9 +354,11 @@ GetFrameAndOffset(Selection* aSelection,
   if (aOverrideNode) {
     focusNode = aOverrideNode;
     focusOffset = aOverrideOffset;
-  } else {
+  } else if (aSelection) {
     focusNode = aSelection->GetFocusNode();
     aSelection->GetFocusOffset(&focusOffset);
+  } else {
+    return nullptr;
   }
 
   if (!focusNode || !focusNode->IsContent()) {
@@ -397,8 +399,15 @@ nsCaret::GetSelectionInternal()
 
 void nsCaret::SchedulePaint()
 {
-  nsINode* focusNode = mOverrideContent ?
-    mOverrideContent.get() : GetSelectionInternal()->GetFocusNode();
+  Selection* selection = GetSelectionInternal();
+  nsINode* focusNode;
+  if (mOverrideContent) {
+    focusNode = mOverrideContent;
+  } else if (selection) {
+    focusNode = selection->GetFocusNode();
+  } else {
+    return;
+  }
   if (!focusNode || !focusNode->IsContent()) {
     return;
   }
