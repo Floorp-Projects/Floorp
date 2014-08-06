@@ -132,6 +132,9 @@ var commandsPeerConnection = [
           send_message({"offer": test.pcLocal._last_offer,
                         "offer_constraints": test.pcLocal.constraints,
                         "offer_options": test.pcLocal.offerOptions});
+          test._local_offer = test.pcLocal._last_offer;
+          test._offer_constraints = test.pcLocal.constraints;
+          test._offer_options = test.pcLocal.offerOptions;
         }
         test.next();
       });
@@ -199,6 +202,8 @@ var commandsPeerConnection = [
         if (!test.pcLocal) {
           send_message({"answer": test.pcRemote._last_answer,
                         "answer_constraints": test.pcRemote.constraints});
+          test._remote_answer = test.pcRemote._last_answer;
+          test._answer_constraints = test.pcRemote.constraints;
         }
         test.next();
       });
