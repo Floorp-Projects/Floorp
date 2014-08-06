@@ -52,6 +52,9 @@ public:
   {
     Update(aNewValidRegion, aPaintRegion);
   }
+
+  void UnlockTile(TestTiledLayerTile aTile) {}
+  void PostValidate(const nsIntRegion& aPaintRegion) {}
 };
 
 TEST(TiledLayerBuffer, TileConstructor) {

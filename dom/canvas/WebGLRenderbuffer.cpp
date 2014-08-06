@@ -43,12 +43,12 @@ WebGLRenderbuffer::WrapObject(JSContext *cx) {
 }
 
 WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext *context)
-    : WebGLContextBoundObject(context)
+    : WebGLBindableName()
+    , WebGLContextBoundObject(context)
     , mPrimaryRB(0)
     , mSecondaryRB(0)
     , mInternalFormat(0)
     , mInternalFormatForGL(0)
-    , mHasEverBeenBound(false)
     , mImageDataStatus(WebGLImageDataStatus::NoImageData)
 {
     SetIsDOMBinding();

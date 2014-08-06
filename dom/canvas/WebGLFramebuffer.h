@@ -6,6 +6,7 @@
 #ifndef WEBGLFRAMEBUFFER_H_
 #define WEBGLFRAMEBUFFER_H_
 
+#include "WebGLBindableName.h"
 #include "WebGLObjectModel.h"
 
 #include "nsWrapperCache.h"
@@ -23,6 +24,7 @@ namespace gl {
 
 class WebGLFramebuffer MOZ_FINAL
     : public nsWrapperCache
+    , public WebGLBindableName
     , public WebGLRefCountedObject<WebGLFramebuffer>
     , public LinkedListElement<WebGLFramebuffer>
     , public WebGLContextBoundObject
@@ -91,10 +93,6 @@ public:
     };
 
     void Delete();
-
-    bool HasEverBeenBound() { return mHasEverBeenBound; }
-    void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    GLuint GLName() { return mGLName; }
 
     void FramebufferRenderbuffer(GLenum target,
                                  GLenum attachment,
@@ -182,9 +180,6 @@ private:
     }
 
     mutable GLenum mStatus;
-
-    GLuint mGLName;
-    bool mHasEverBeenBound;
 
     // we only store pointers to attached renderbuffers, not to attached textures, because
     // we will only need to initialize renderbuffers. Textures are already initialized.

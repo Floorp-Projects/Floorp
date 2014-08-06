@@ -3149,14 +3149,14 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
             isFull = false;
         }
 
-        zone->scheduledForDestruction = false;
-        zone->maybeAlive = false;
         zone->setPreservingCode(false);
     }
 
     for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
         JS_ASSERT(c->gcLiveArrayBuffers.empty());
         c->marked = false;
+        c->scheduledForDestruction = false;
+        c->maybeAlive = false;
         if (shouldPreserveJITCode(c, currentTime, reason))
             c->zone()->setPreservingCode(true);
     }
@@ -3255,40 +3255,50 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
         bufferGrayRoots();
 
     /*
-     * This code ensures that if a zone is "dead", then it will be
-     * collected in this GC. A zone is considered dead if its maybeAlive
+     * This code ensures that if a compartment is "dead", then it will be
+     * collected in this GC. A compartment is considered dead if its maybeAlive
      * flag is false. The maybeAlive flag is set if:
-     *   (1) the zone has incoming cross-compartment edges, or
-     *   (2) an object in the zone was marked during root marking, either
+     *   (1) the compartment has incoming cross-compartment edges, or
+     *   (2) an object in the compartment was marked during root marking, either
      *       as a black root or a gray root.
      * If the maybeAlive is false, then we set the scheduledForDestruction flag.
-     * At any time later in the GC, if we try to mark an object whose
-     * zone is scheduled for destruction, we will assert.
-     * NOTE: Due to bug 811587, we only assert if gcManipulatingDeadCompartments
-     * is true (e.g., if we're doing a brain transplant).
+     * At the end of the GC, we look for compartments where
+     * scheduledForDestruction is true. These are compartments that were somehow
+     * "revived" during the incremental GC. If any are found, we do a special,
+     * non-incremental GC of those compartments to try to collect them.
      *
-     * The purpose of this check is to ensure that a zone that we would
-     * normally destroy is not resurrected by a read barrier or an
-     * allocation. This might happen during a function like JS_TransplantObject,
-     * which iterates over all compartments, live or dead, and operates on their
-     * objects. See bug 803376 for details on this problem. To avoid the
-     * problem, we are very careful to avoid allocation and read barriers during
-     * JS_TransplantObject and the like. The code here ensures that we don't
-     * regress.
+     * Compartments can be revived for a variety of reasons. On reason is bug
+     * 811587, where a reflector that was dead can be revived by DOM code that
+     * still refers to the underlying DOM node.
      *
-     * Note that there are certain cases where allocations or read barriers in
-     * dead zone are difficult to avoid. We detect such cases (via the
-     * gcObjectsMarkedInDeadCompartment counter) and redo any ongoing GCs after
-     * the JS_TransplantObject function has finished. This ensures that the dead
-     * zones will be cleaned up. See AutoMarkInDeadZone and
-     * AutoMaybeTouchDeadZones for details.
+     * Read barriers and allocations can also cause revival. This might happen
+     * during a function like JS_TransplantObject, which iterates over all
+     * compartments, live or dead, and operates on their objects. See bug 803376
+     * for details on this problem. To avoid the problem, we try to avoid
+     * allocation and read barriers during JS_TransplantObject and the like.
      */
 
     /* Set the maybeAlive flag based on cross-compartment edges. */
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
-            Cell *dst = e.front().key().wrapped;
-            dst->tenuredZone()->maybeAlive = true;
+            const CrossCompartmentKey &key = e.front().key();
+            JSCompartment *dest;
+            switch (key.kind) {
+              case CrossCompartmentKey::ObjectWrapper:
+              case CrossCompartmentKey::DebuggerObject:
+              case CrossCompartmentKey::DebuggerSource:
+              case CrossCompartmentKey::DebuggerEnvironment:
+                dest = static_cast<JSObject *>(key.wrapped)->compartment();
+                break;
+              case CrossCompartmentKey::DebuggerScript:
+                dest = static_cast<JSScript *>(key.wrapped)->compartment();
+                break;
+              default:
+                dest = nullptr;
+                break;
+            }
+            if (dest)
+                dest->maybeAlive = true;
         }
     }
 
@@ -3297,9 +3307,9 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
      * during MarkRuntime.
      */
 
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (!zone->maybeAlive && !rt->isAtomsZone(zone))
-            zone->scheduledForDestruction = true;
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        if (!c->maybeAlive && !rt->isAtomsCompartment(c))
+            c->scheduledForDestruction = true;
     }
     foundBlackGrayEdges = false;
 
@@ -4631,8 +4641,8 @@ GCRuntime::resetIncrementalGC(const char *reason)
       case SWEEP:
         marker.reset();
 
-        for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
-            zone->scheduledForDestruction = false;
+        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+            c->scheduledForDestruction = false;
 
         /* Finish sweeping the current zone group, then abort. */
         abortSweepAfterCurrentGroup = true;
@@ -5152,12 +5162,29 @@ GCRuntime::collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
             JS::PrepareForFullGC(rt);
 
         /*
+         * This code makes an extra effort to collect compartments that we
+         * thought were dead at the start of the GC. See the large comment in
+         * beginMarkPhase.
+         */
+        bool repeatForDeadZone = false;
+        if (incremental && incrementalState == NO_INCREMENTAL) {
+            for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+                if (c->scheduledForDestruction) {
+                    incremental = false;
+                    repeatForDeadZone = true;
+                    reason = JS::gcreason::COMPARTMENT_REVIVED;
+                    c->zone()->scheduleGC();
+                }
+            }
+        }
+
+        /*
          * If we reset an existing GC, we need to start a new one. Also, we
          * repeat GCs that happen during shutdown (the gcShouldCleanUpEverything
          * case) until we can be sure that no additional garbage is created
          * (which typically happens if roots are dropped during finalizers).
          */
-        repeat = (poked && cleanUpEverything) || wasReset;
+        repeat = (poked && cleanUpEverything) || wasReset || repeatForDeadZone;
     } while (repeat);
 
     if (incrementalState == NO_INCREMENTAL)
@@ -5716,34 +5743,6 @@ ArenaLists::containsArena(JSRuntime *rt, ArenaHeader *needle)
     return false;
 }
 
-
-AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSContext *cx)
-  : runtime(cx->runtime()),
-    markCount(runtime->gc.objectsMarkedInDeadZonesCount()),
-    inIncremental(JS::IsIncrementalGCInProgress(runtime)),
-    manipulatingDeadZones(runtime->gc.isManipulatingDeadZones())
-{
-    runtime->gc.setManipulatingDeadZones(true);
-}
-
-AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSObject *obj)
-  : runtime(obj->compartment()->runtimeFromMainThread()),
-    markCount(runtime->gc.objectsMarkedInDeadZonesCount()),
-    inIncremental(JS::IsIncrementalGCInProgress(runtime)),
-    manipulatingDeadZones(runtime->gc.isManipulatingDeadZones())
-{
-    runtime->gc.setManipulatingDeadZones(true);
-}
-
-AutoMaybeTouchDeadZones::~AutoMaybeTouchDeadZones()
-{
-    runtime->gc.setManipulatingDeadZones(manipulatingDeadZones);
-
-    if (inIncremental && runtime->gc.objectsMarkedInDeadZonesCount() != markCount) {
-        JS::PrepareForFullGC(runtime);
-        js::GC(runtime, GC_NORMAL, JS::gcreason::TRANSPLANT);
-    }
-}
 
 AutoSuppressGC::AutoSuppressGC(ExclusiveContext *cx)
   : suppressGC_(cx->perThreadData->suppressGC)

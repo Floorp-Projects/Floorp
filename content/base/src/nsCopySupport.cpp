@@ -634,8 +634,10 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
   }
 
   // It seems to be unsafe to fire an event handler during reflow (bug 393696)
-  if (!nsContentUtils::IsSafeToRunScript())
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    nsContentUtils::WarnScriptWasIgnored(doc);
     return false;
+  }
 
   nsCOMPtr<nsIDocShell> docShell = piWindow->GetDocShell();
   const bool chromeShell =
