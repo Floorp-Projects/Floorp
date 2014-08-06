@@ -1371,10 +1371,17 @@ BluetoothA2dpInterface::Cleanup(BluetoothA2dpResultHandler* aRes)
 }
 
 void
-BluetoothA2dpInterface::Connect(bt_bdaddr_t *aBdAddr,
+BluetoothA2dpInterface::Connect(const nsAString& aBdAddr,
                                 BluetoothA2dpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->connect(aBdAddr);
+  bt_status_t status;
+  bt_bdaddr_t bdAddr;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
+    status = mInterface->connect(&bdAddr);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Connect,
@@ -1383,10 +1390,17 @@ BluetoothA2dpInterface::Connect(bt_bdaddr_t *aBdAddr,
 }
 
 void
-BluetoothA2dpInterface::Disconnect(bt_bdaddr_t *aBdAddr,
+BluetoothA2dpInterface::Disconnect(const nsAString& aBdAddr,
                                    BluetoothA2dpResultHandler* aRes)
 {
-  bt_status_t status = mInterface->disconnect(aBdAddr);
+  bt_status_t status;
+  bt_bdaddr_t bdAddr;
+
+  if (NS_SUCCEEDED(Convert(aBdAddr, bdAddr))) {
+    status = mInterface->disconnect(&bdAddr);
+  } else {
+    status = BT_STATUS_PARM_INVALID;
+  }
 
   if (aRes) {
     DispatchBluetoothA2dpResult(aRes, &BluetoothA2dpResultHandler::Disconnect,
