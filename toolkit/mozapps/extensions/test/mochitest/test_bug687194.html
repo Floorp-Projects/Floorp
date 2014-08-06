@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for registering/unregistering chrome OOP</title>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+  <script type="application/javascript;version=1.8">
+    "use strict";
+
+    SimpleTest.waitForExplicitFinish();
+
+    const childFrameURL =
+      "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
+
+    function childFrameScript() {
+      "use strict";
+
+      var ios =
+          Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService(Components.interfaces.nsIIOService);
+      let cr =
+          Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                    .getService(Ci.nsIXULChromeRegistry);
+      addMessageListener("test687194:resolveChromeURI", function(message) {
+        let result;
+        let threw = false;
+        try {
+            let uri = ios.newURI(message.data.URI, null, null);
+            result = cr.convertChromeURL(uri).spec;
+        } catch (e) {
+            threw = true;
+            result = "EXCEPTION: " + e;
+        }
+
+        message.target.sendAsyncMessage("test687194:resolveChromeURI:Answer",
+                                        { threw: threw, result: result });
+      });
+    }
+
+    let test;
+    function* testStructure(mm) {
+      let lastResult;
+
+      mm.addMessageListener("test687194:resolveChromeURI:Answer", function(msg) {
+        test.next(msg.data);
+      });
+
+      mm.sendAsyncMessage("test687194:resolveChromeURI",
+                          { URI: "chrome://bug687194/content/e10sbug.js" });
+      lastResult = yield;
+      is(lastResult.threw, true, "URI shouldn't resolve to begin with");
+
+      let { AddonManager } = SpecialPowers.Cu.import("resource://gre/modules/AddonManager.jsm", {});
+      const INSTALL_URI =
+        "http://mochi.test:8888/tests/toolkit/mozapps/extensions/test/mochitest/file_bug687194.xpi"
+      AddonManager.getInstallForURL(INSTALL_URI, (install) => {
+        install = SpecialPowers.wrap(install);
+        install.addListener({
+          onInstallEnded: function(install, addon) {
+            SimpleTest.executeSoon(() => test.next(addon));
+          }
+        });
+        install.install();
+      }, "application/x-xpinstall");
+
+      let addon = SpecialPowers.wrap(yield);
+
+      mm.sendAsyncMessage("test687194:resolveChromeURI",
+                          { URI: "chrome://bug687194/content/e10sbug.js" });
+      lastResult = yield;
+      is(lastResult.threw, false, "able to resolve after the installation");
+
+      let listener = {
+        onUninstalled: function(removedAddon) {
+          if (SpecialPowers.wrap(removedAddon).id === addon.id) {
+            AddonManager.removeAddonListener(listener);
+            SimpleTest.executeSoon(() => test.next());
+          }
+        }
+      };
+      AddonManager.addAddonListener(listener);
+      addon.uninstall();
+
+      yield;
+
+      mm.sendAsyncMessage("test687194:resolveChromeURI",
+                          { URI: "chrome://bug687194/content/e10sbug.js" });
+      lastResult = yield;
+      is(lastResult.threw, true, "should have unregistered the URI");
+      SimpleTest.finish();
+    }
+
+    function runTests() {
+      info("Browser prefs set.");
+
+      let iframe = document.createElement("iframe");
+      SpecialPowers.wrap(iframe).mozbrowser = true;
+      iframe.id = "iframe";
+      iframe.src = childFrameURL;
+
+      iframe.addEventListener("mozbrowserloadend", function() {
+        info("Got iframe load event.");
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+        mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
+                           false);
+
+        test = testStructure(mm);
+        test.next();
+      });
+
+      document.body.appendChild(iframe);
+    }
+
+    addEventListener("load", function() {
+      info("Got load event.");
+
+      SpecialPowers.addPermission("browser", true, document);
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["dom.ipc.browser_frames.oop_by_default", true],
+          ["dom.mozBrowserFramesEnabled", true],
+          ["browser.pagethumbnails.capturing_disabled", true]
+        ]
+      }, runTests);
+    });
+  </script>
+</body>
+</html>
