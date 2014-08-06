@@ -35,7 +35,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/UniquePtr.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -6185,10 +6184,9 @@ PresShell::Paint(nsView*        aViewToPaint,
       bool computeInvalidRect = computeInvalidFunc ||
                                 (layerManager->GetBackendType() == LayersBackend::LAYERS_BASIC);
 
-      UniquePtr<LayerProperties> props;
-      if (computeInvalidRect) {
-        props = Move(LayerProperties::CloneFrom(layerManager->GetRoot()));
-      }
+      nsAutoPtr<LayerProperties> props(computeInvalidRect ?
+                                         LayerProperties::CloneFrom(layerManager->GetRoot()) :
+                                         nullptr);
 
       MaybeSetupTransactionIdAllocator(layerManager, aViewToPaint);
 
