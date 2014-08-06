@@ -4,12 +4,15 @@
 
 package org.mozilla.gecko.mozglue.generatorannotations;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Handy shortcut annotation. Functionally equivalent to tagging every member individually with default
  * settings.
  */
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WrapEntireClassForJNI {}
