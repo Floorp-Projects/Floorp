@@ -292,6 +292,7 @@ AboutReader.prototype = {
     let newRect = new Rect(viewport.cssX, newY, viewport.cssWidth, viewport.cssHeight);
 
     this._setToolbarVisibility(false);
+    this._setBrowserToolbarVisiblity(false);
     this._scrolled  = true;
     ZoomHelper.zoomToRect(newRect, -1, false, false);
   },
@@ -520,6 +521,13 @@ AboutReader.prototype = {
 
   _toggleToolbarVisibility: function Reader_toggleToolbarVisibility() {
     this._setToolbarVisibility(!this._getToolbarVisibility());
+  },
+
+  _setBrowserToolbarVisiblity: function Reader_setBrowserToolbarVisiblity(visible) {
+    gChromeWin.sendMessageToJava({
+      type: "BrowserToolbar:Visibility",
+      visible: visible
+    });
   },
 
   _setSystemUIVisibility: function Reader_setSystemUIVisibility(visible) {

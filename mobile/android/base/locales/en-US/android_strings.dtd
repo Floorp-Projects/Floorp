@@ -466,6 +466,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
      traditions in your locale. -->
 <!ENTITY ellipsis "…">
 
+<!ENTITY colon ":">
+
 <!-- These are only used for accessiblity for the done and overflow-menu buttons in the actionbar.
      They are never shown to users -->
 <!ENTITY actionbar_menu "Menu">
