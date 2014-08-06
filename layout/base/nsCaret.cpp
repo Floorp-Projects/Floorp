@@ -176,7 +176,6 @@ nsresult nsCaret::Init(nsIPresShell *inPresShell)
   {
     StartBlinking();
   }
-  mBidiUI = Preferences::GetBool("bidi.browser.ui");
 
   return NS_OK;
 }
@@ -369,7 +368,7 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
   uint8_t bidiLevel = frameSelection->GetCaretBidiLevel();
   nsIFrame* frame;
   int32_t frameOffset;
-  rv = GetCaretFrameForNodeOffset(contentNode, focusOffset,
+  rv = GetCaretFrameForNodeOffset(frameSelection, contentNode, focusOffset,
                                   frameSelection->GetHint(), bidiLevel,
                                   &frame, &frameOffset);
   if (NS_FAILED(rv) || !frame)
@@ -441,11 +440,16 @@ nsIFrame * nsCaret::GetCaretFrame(int32_t *aOffset)
   if (!mDrawn)
     return nullptr;
 
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  if (!frameSelection)
+    return nullptr;
+
   // Recompute the frame that we're supposed to draw in to guarantee that
   // we're not going to try to draw into a stale (dead) frame.
   int32_t offset;
   nsIFrame *frame = nullptr;
-  nsresult rv = GetCaretFrameForNodeOffset(mLastContent, mLastContentOffset,
+  nsresult rv = GetCaretFrameForNodeOffset(frameSelection,
+                                           mLastContent, mLastContentOffset,
                                            mLastHint, mLastBidiLevel, &frame,
                                            &offset);
   if (NS_FAILED(rv))
@@ -607,11 +611,16 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   if (!contentNode)
     return false;
 
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  if (!frameSelection)
+    return nullptr;
+
   nsIFrame* theFrame = nullptr;
   int32_t   theFrameOffset = 0;
 
-  nsresult rv = GetCaretFrameForNodeOffset(contentNode, aOffset, aFrameHint, aBidiLevel,
-                                           &theFrame, &theFrameOffset);
+  nsresult rv =
+    GetCaretFrameForNodeOffset(frameSelection, contentNode, aOffset, aFrameHint,
+                               aBidiLevel, &theFrame, &theFrameOffset);
   if (NS_FAILED(rv) || !theFrame)
     return false;
 
@@ -652,17 +661,24 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   return true;
 }
 
-nsresult 
-nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
-                                    int32_t                 aOffset,
-                                    nsFrameSelection::HINT aFrameHint,
-                                    uint8_t                 aBidiLevel,
-                                    nsIFrame**              aReturnFrame,
-                                    int32_t*                aReturnOffset)
+static bool
+IsBidiUI()
 {
+  return Preferences::GetBool("bidi.browser.ui");
+}
 
-  //get frame selection and find out what frame to use...
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+nsresult 
+nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*      aFrameSelection,
+                                    nsIContent*            aContentNode,
+                                    int32_t                aOffset,
+                                    nsFrameSelection::HINT aFrameHint,
+                                    uint8_t                aBidiLevel,
+                                    nsIFrame**             aReturnFrame,
+                                    int32_t*               aReturnOffset)
+{
+  if (!aFrameSelection)
+    return NS_ERROR_FAILURE;
+  nsIPresShell* presShell = aFrameSelection->GetShell();
   if (!presShell)
     return NS_ERROR_FAILURE;
 
@@ -670,15 +686,11 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
       presShell->GetDocument() != aContentNode->GetComposedDoc())
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
-  if (!frameSelection)
-    return NS_ERROR_FAILURE;
-
   nsIFrame* theFrame = nullptr;
   int32_t   theFrameOffset = 0;
 
-  theFrame = frameSelection->GetFrameForNodeOffset(aContentNode, aOffset,
-                                                   aFrameHint, &theFrameOffset);
+  theFrame = aFrameSelection->GetFrameForNodeOffset(
+      aContentNode, aOffset, aFrameHint, &theFrameOffset);
   if (!theFrame)
     return NS_ERROR_FAILURE;
 
@@ -695,7 +707,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
   // NS_STYLE_DIRECTION_LTR : LTR or Default
   // NS_STYLE_DIRECTION_RTL
   // NS_STYLE_DIRECTION_INHERIT
-  if (mBidiUI)
+  if (IsBidiUI())
   {
     // If there has been a reflow, take the caret Bidi level to be the level of the current frame
     if (aBidiLevel & BIDI_LEVEL_UNDEFINED)
@@ -711,7 +723,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
     theFrame->GetOffsets(start, end);
     if (start == 0 || end == 0 || start == theFrameOffset || end == theFrameOffset)
     {
-      nsPrevNextBidiLevels levels = frameSelection->
+      nsPrevNextBidiLevels levels = aFrameSelection->
         GetPrevNextBidiLevels(aContentNode, aOffset, false);
     
       /* Boundary condition, we need to know the Bidi levels of the characters before and after the caret */
@@ -791,7 +803,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                    && !((levelBefore ^ levelAfter) & 1)                 // before and after have the same parity
                    && ((aBidiLevel ^ levelAfter) & 1))                  // caret has different parity
           {
-            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(frameAfter, eDirNext, aBidiLevel, &theFrame)))
+            if (NS_SUCCEEDED(aFrameSelection->GetFrameFromLevel(frameAfter, eDirNext, aBidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
               levelAfter = NS_GET_EMBEDDING_LEVEL(theFrame);
@@ -805,7 +817,7 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
                    && !((levelBefore ^ levelAfter) & 1)                 // before and after have the same parity
                    && ((aBidiLevel ^ levelAfter) & 1))                  // caret has different parity
           {
-            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(frameBefore, eDirPrevious, aBidiLevel, &theFrame)))
+            if (NS_SUCCEEDED(aFrameSelection->GetFrameFromLevel(frameBefore, eDirPrevious, aBidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
               levelBefore = NS_GET_EMBEDDING_LEVEL(theFrame);
@@ -820,8 +832,6 @@ nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
     }
   }
 
-  NS_ASSERTION(!theFrame || theFrame->PresContext()->PresShell() == presShell,
-               "caret frame is in wrong document");
   *aReturnFrame = theFrame;
   *aReturnOffset = theFrameOffset;
   return NS_OK;
@@ -1051,7 +1061,7 @@ nsCaret::UpdateCaretRects(nsIFrame* aFrame, int32_t aFrameOffset)
   // keyboard direction, or the user has no right-to-left keyboard
   // installed, so we never draw the hook.
   if (bidiKeyboard && NS_SUCCEEDED(bidiKeyboard->IsLangRTL(&isCaretRTL)) &&
-      mBidiUI) {
+      IsBidiUI()) {
     if (isCaretRTL != mKeyboardRTL) {
       /* if the caret bidi level and the keyboard language direction are not in
        * synch, the keyboard language must have been changed by the
