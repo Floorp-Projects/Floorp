@@ -2611,15 +2611,16 @@ size_t
 TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
+
   // Ignore the hashtables in mAddonMap; they are not significant.
   n += mAddonMap.SizeOfExcludingThis(nullptr, aMallocSizeOf);
   n += mHistogramMap.SizeOfExcludingThis(nullptr, aMallocSizeOf);
   { // Scope for mHashMutex lock
     MutexAutoLock lock(mHashMutex);
-    n += mPrivateSQL.SizeOfExcludingThis(nullptr, aMallocSizeOf);
-    n += mSanitizedSQL.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+    n += mPrivateSQL.SizeOfExcludingThis(aMallocSizeOf);
+    n += mSanitizedSQL.SizeOfExcludingThis(aMallocSizeOf);
   }
-  n += mTrackedDBs.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  n += mTrackedDBs.SizeOfExcludingThis(aMallocSizeOf);
   { // Scope for mHangReportsMutex lock
     MutexAutoLock lock(mHangReportsMutex);
     n += mHangReports.SizeOfExcludingThis();
