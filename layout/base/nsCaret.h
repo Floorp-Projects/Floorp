@@ -50,9 +50,9 @@ class nsCaret : public nsISelectionListener
      *  @param inMakeVisible true to show the caret, false to hide it
      */
     void SetCaretVisible(bool intMakeVisible);
-    /** GetCaretVisible will get the visibility of the caret
-     *  This function is virtual so that it can be used by nsCaretAccessible
-     *  without linking
+    /** GetCaretVisible will get the visibility of the caret.
+     *  This returns false if the caret is hidden for any reason (other than
+     *  blinking off).
      *  @param outMakeVisible true if it is shown, false if it is hidden
      *  @return NS_OK
      */
@@ -99,6 +99,7 @@ class nsCaret : public nsISelectionListener
     /** GetCaretRect
      *  Get the current caret rect. Only call this when GetCaretFrame returns
      *  non-null.
+     *  This rect includes any extra decorations for bidi.
      */
     nsRect GetCaretRect()
     {
@@ -106,6 +107,10 @@ class nsCaret : public nsISelectionListener
       r.UnionRect(mCaretRect, GetHookRect());
       return r;
     }
+    /**
+     * A simple wrapper around GetGeometry. Does not take any caret state into
+     * account other than the current selection.
+     */
     nsIFrame* GetGeometry(nsRect* aRect)
     {
       return GetGeometry(GetCaretDOMSelection(), aRect);
@@ -129,6 +134,7 @@ class nsCaret : public nsISelectionListener
      * and we return the frame aRect is relative to.
      * Only looks at the focus node of aSelection, so you can call it even if
      * aSelection is not collapsed.
+     * This rect does not include any extra decorations for bidi.
      * @param aRect must be non-null
      */
     static nsIFrame* GetGeometry(nsISelection* aSelection,
