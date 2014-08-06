@@ -468,7 +468,20 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
   if (NS_FAILED(rv))
     return nullptr;
 
-  aRect->UnionRect(mCaretRect, GetHookRect());
+  // If the offset falls outside of the frame, then don't paint the caret.
+  int32_t startOffset, endOffset;
+  if (frame->GetType() == nsGkAtoms::textFrame &&
+      (NS_FAILED(frame->GetOffsets(startOffset, endOffset)) ||
+      startOffset > contentOffset ||
+      endOffset < contentOffset)) {
+    return nullptr;
+  }
+
+  nsRect caretRect;
+  nsRect hookRect;
+  ComputeCaretRects(frame, contentOffset, &caretRect, &hookRect);
+
+  aRect->UnionRect(caretRect, hookRect);
   return frame;
 }
 
@@ -491,8 +504,6 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
 {
   NS_ASSERTION(mDrawn, "The caret shouldn't be drawing");
 
-  const nsRect drawCaretRect = mCaretRect + aOffset;
-
   nsFrameSelection* frameSelection = GetFrameSelection();
   if (!frameSelection) {
     return;
@@ -509,20 +520,15 @@ void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
   }
   NS_ASSERTION(frame == aForFrame, "We're referring different frame");
 
-  // If the offset falls outside of the frame, then don't paint the caret.
-  int32_t startOffset, endOffset;
-  if (aForFrame->GetType() == nsGkAtoms::textFrame &&
-      (NS_FAILED(aForFrame->GetOffsets(startOffset, endOffset)) ||
-      startOffset > contentOffset ||
-      endOffset < contentOffset)) {
-    return;
-  }
   nscolor foregroundColor = aForFrame->GetCaretColorAt(contentOffset);
-
   aCtx->SetColor(foregroundColor);
-  aCtx->FillRect(drawCaretRect);
-  if (!GetHookRect().IsEmpty()) {
-    aCtx->FillRect(GetHookRect() + aOffset);
+
+  nsRect caretRect;
+  nsRect hookRect;
+  ComputeCaretRects(frame, contentOffset, &caretRect, &hookRect);
+  aCtx->FillRect(caretRect + aOffset);
+  if (!hookRect.IsEmpty()) {
+    aCtx->FillRect(hookRect + aOffset);
   }
 }
 
@@ -674,10 +680,6 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*          aNode,
         return false;
       frameSelection->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
     }
-
-    // Only update the caret's rect when we're not currently drawn.
-    if (!UpdateCaretRects(theFrame, theFrameOffset))
-      return false;
   }
 
   if (aInvalidate)
@@ -1060,24 +1062,27 @@ void nsCaret::DrawCaret(bool aInvalidate)
   ToggleDrawnStatus();
 }
 
-bool
-nsCaret::UpdateCaretRects(nsIFrame* aFrame, int32_t aFrameOffset)
+void
+nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
+                           nsRect* aCaretRect, nsRect* aHookRect)
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
 
   nscoord bidiIndicatorSize;
   nsresult rv =
-    GetGeometryForFrame(aFrame, aFrameOffset, &mCaretRect, &bidiIndicatorSize);
+    GetGeometryForFrame(aFrame, aFrameOffset, aCaretRect, &bidiIndicatorSize);
   if (NS_FAILED(rv)) {
-    return false;
+    *aCaretRect = *aHookRect = nsRect();
+    return;
   }
 
   // on RTL frames the right edge of mCaretRect must be equal to framePos
   const nsStyleVisibility* vis = aFrame->StyleVisibility();
-  if (NS_STYLE_DIRECTION_RTL == vis->mDirection)
-    mCaretRect.x -= mCaretRect.width;
+  if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
+    aCaretRect->x -= aCaretRect->width;
+  }
 
-  mHookRect.SetEmpty();
+  aHookRect->SetEmpty();
 
   // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
   bool isCaretRTL = false;
@@ -1100,19 +1105,19 @@ nsCaret::UpdateCaretRects(nsIFrame* aFrame, int32_t aFrameOffset)
       nsCOMPtr<nsISelectionPrivate> domSelection = do_QueryReferent(mDomSelectionWeak);
       if (!domSelection ||
           NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
-        return false;
+        *aCaretRect = *aHookRect = nsRect();
+        return;
     }
     // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
     // The height of the hook rectangle is the same as the width of the caret
     // rectangle.
-    mHookRect.SetRect(mCaretRect.x + ((isCaretRTL) ?
-                      bidiIndicatorSize * -1 :
-                      mCaretRect.width),
-                      mCaretRect.y + bidiIndicatorSize,
-                      bidiIndicatorSize,
-                      mCaretRect.width);
+    aHookRect->SetRect(aCaretRect->x + ((isCaretRTL) ?
+                       bidiIndicatorSize * -1 :
+                       aCaretRect->width),
+                       aCaretRect->y + bidiIndicatorSize,
+                       bidiIndicatorSize,
+                       aCaretRect->width);
   }
-  return true;
 }
 
 //-----------------------------------------------------------------------------
