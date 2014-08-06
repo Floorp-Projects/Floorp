@@ -339,8 +339,7 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
   return NS_OK;
 }
 
-nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
-                               nscoord* aBidiIndicatorSize)
+nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
 {
   nsCOMPtr<nsIDOMNode> focusNode;
   nsresult rv = aSelection->GetFocusNode(getter_AddRefs(focusNode));
@@ -368,7 +367,7 @@ nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect,
   if (NS_FAILED(rv) || !frame)
     return nullptr;
 
-  GetGeometryForFrame(frame, frameOffset, aRect, aBidiIndicatorSize);
+  GetGeometryForFrame(frame, frameOffset, aRect, nullptr);
   return frame;
 }
 
