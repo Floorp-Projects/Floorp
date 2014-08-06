@@ -334,6 +334,7 @@ public:
   virtual void ClearCachedResources() { }
 
   virtual void RenderLayer() = 0;
+  virtual void RenderLayerWithReadback(ReadbackProcessor *aReadback) { RenderLayer(); }
 
   virtual ClientThebesLayer* AsThebes() { return nullptr; }
 
