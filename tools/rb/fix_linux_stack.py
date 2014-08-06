@@ -169,16 +169,57 @@ def separate_debug_file_for(file):
                 return f
     return None
 
+elf_type_re = re.compile("^\s*Type:\s+(\S+)")
+elf_text_section_re = re.compile("^\s*\[\s*\d+\]\s+\.text\s+\w+\s+(\w+)\s+(\w+)\s+")
+
+def address_adjustment_for(file):
+    """
+    Return the address adjustment to use for a file.
+
+    addr2line wants offsets relative to the base address for shared
+    libraries, but it wants addresses including the base address offset
+    for executables.  This returns the appropriate address adjustment to
+    add to an offset within file.  See bug 230336.
+    """
+    readelf = subprocess.Popen(['readelf', '-h', file],
+                               stdout=subprocess.PIPE)
+    elftype = None
+    for line in readelf.stdout.readlines():
+        m = elf_type_re.match(line)
+        if m:
+            elftype = m.groups()[0]
+            break
+    readelf.terminate()
+
+    if elftype != "EXEC":
+        # If we're not dealing with an executable, return 0.
+        return 0
+
+    adjustment = 0
+    readelf = subprocess.Popen(['readelf', '-S', file],
+                               stdout=subprocess.PIPE)
+    for line in readelf.stdout.readlines():
+        m = elf_text_section_re.match(line)
+        if m:
+            # Subtract the .text section's offset within the
+            # file from its base address.
+            adjustment = int(m.groups()[0], 16) - int(m.groups()[1], 16);
+            break
+    readelf.terminate()
+    return adjustment
+
 addr2lines = {}
 def addressToSymbol(file, address):
     converter = None
+    address_adjustment = None
     if not file in addr2lines:
         debug_file = separate_debug_file_for(file) or file
         converter = unbufferedLineConverter('/usr/bin/addr2line', ['-C', '-f', '-e', debug_file])
-        addr2lines[file] = converter
+        address_adjustment = address_adjustment_for(file)
+        addr2lines[file] = (converter, address_adjustment)
     else:
-        converter = addr2lines[file]
-    return converter.convert(address)
+        (converter, address_adjustment) = addr2lines[file]
+    return converter.convert(hex(int(address, 16) + address_adjustment))
 
 line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9a-f]{1,8})\](.*)$")
 balance_tree_re = re.compile("^([ \|0-9-]*)")
