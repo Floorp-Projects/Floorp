@@ -139,6 +139,57 @@ enum BluetoothSocketType {
   EL2CAP = 4
 };
 
+enum BluetoothHandsfreeAtResponse {
+  HFP_AT_RESPONSE_ERROR,
+  HFP_AT_RESPONSE_OK
+};
+
+enum BluetoothHandsfreeCallAddressType {
+  HFP_CALL_ADDRESS_TYPE_UNKNOWN,
+  HFP_CALL_ADDRESS_TYPE_INTERNATIONAL
+};
+
+enum BluetoothHandsfreeCallDirection {
+  HFP_CALL_DIRECTION_OUTGOING,
+  HFP_CALL_DIRECTION_INCOMING
+};
+
+enum BluetoothHandsfreeCallMode {
+  HFP_CALL_MODE_VOICE,
+  HFP_CALL_MODE_DATA,
+  HFP_CALL_MODE_FAX
+};
+
+enum BluetoothHandsfreeCallMptyType {
+  HFP_CALL_MPTY_TYPE_SINGLE,
+  HFP_CALL_MPTY_TYPE_MULTI
+};
+
+enum BluetoothHandsfreeCallState {
+  HFP_CALL_STATE_ACTIVE,
+  HFP_CALL_STATE_HELD,
+  HFP_CALL_STATE_DIALING,
+  HFP_CALL_STATE_ALERTING,
+  HFP_CALL_STATE_INCOMING,
+  HFP_CALL_STATE_WAITING,
+  HFP_CALL_STATE_IDLE
+};
+
+enum BluetoothHandsfreeNetworkState {
+  HFP_NETWORK_STATE_NOT_AVAILABLE,
+  HFP_NETWORK_STATE_AVAILABLE
+};
+
+enum BluetoothHandsfreeServiceType {
+  HFP_SERVICE_TYPE_HOME,
+  HFP_SERVICE_TYPE_ROAMING
+};
+
+enum BluetoothHandsfreeVolumeType {
+  HFP_VOLUME_TYPE_SPEAKER,
+  HFP_VOLUME_TYPE_MICROPHONE
+};
+
 class BluetoothSignal;
 typedef mozilla::Observer<BluetoothSignal> BluetoothSignalObserver;
 
