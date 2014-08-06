@@ -878,14 +878,6 @@ void nsCaret::CaretBlinkCallback(nsITimer* aTimer, void* aClosure)
   theCaret->SchedulePaint();
 }
 
-
-//-----------------------------------------------------------------------------
-nsFrameSelection*
-nsCaret::GetFrameSelection()
-{
-  return GetSelectionInternal()->GetFrameSelection();
-}
-
 void
 nsCaret::SetIgnoreUserModify(bool aIgnoreUserModify)
 {

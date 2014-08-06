@@ -172,8 +172,6 @@ protected:
     void          ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
                                     nsRect* aCaretRect, nsRect* aHookRect);
 
-    nsFrameSelection* GetFrameSelection();
-
     // Returns true if we should not draw the caret because of XUL menu popups.
     // The caret should be hidden if:
     // 1. An open popup contains the caret, but a menu popup exists before the
