@@ -73,7 +73,6 @@ DIRS += [
     'plugins/base',
     'plugins/ipc',
     'indexedDB',
-    'svg',
     'system',
     'ipc',
     'identity',

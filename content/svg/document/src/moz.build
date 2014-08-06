@@ -4,12 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'base',
-    'html',
-    'media',
-    'svg',
-    'xul',
+EXPORTS.mozilla.dom += [
+    'SVGDocument.h',
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+SOURCES += [
+    'SVGDocument.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/html/document/src',
+    '/content/svg/content/src',
+    '/dom/xml',
+    '/layout/style',
+]
+
+FINAL_LIBRARY = 'xul'
