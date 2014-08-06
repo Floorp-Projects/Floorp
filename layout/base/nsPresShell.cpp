@@ -2209,13 +2209,6 @@ already_AddRefed<SelectionCarets> PresShell::GetSelectionCarets() const
   return selectionCaret.forget();
 }
 
-void PresShell::MaybeInvalidateCaretPosition()
-{
-  if (mCaret) {
-    mCaret->InvalidateOutsideCaret();
-  }
-}
-
 void PresShell::SetCaret(nsCaret *aNewCaret)
 {
   mCaret = aNewCaret;
@@ -4288,29 +4281,6 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 }
 
 void
-PresShell::CharacterDataWillChange(nsIDocument *aDocument,
-                                   nsIContent*  aContent,
-                                   CharacterDataChangeInfo* aInfo)
-{
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-
-  if (mCaret) {
-    // Invalidate the caret's current location before we call into the frame
-    // constructor. It is important to do this now, and not wait until the
-    // resulting reflow, because this call causes continuation frames of the
-    // text frame the caret is in to forget what part of the content they
-    // refer to, making it hard for them to return the correct continuation
-    // frame to the caret.
-    //
-    // It's also important to do this before the content actually changes, since
-    // in bidi text the caret needs to look at the content to determine its
-    // position and shape.
-    mCaret->InvalidateOutsideCaret();
-  }
-}
-
-void
 PresShell::CharacterDataChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,
                                 CharacterDataChangeInfo* aInfo)
@@ -4503,11 +4473,6 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-
-  // Make sure that the caret doesn't leave a turd where the child used to be.
-  if (mCaret) {
-    mCaret->InvalidateOutsideCaret();
-  }
 
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
@@ -8633,12 +8598,6 @@ PresShell::DidCauseReflow()
 void
 PresShell::WillDoReflow()
 {
-  // We just reflowed, tell the caret that its frame might have moved.
-  // XXXbz that comment makes no sense
-  if (mCaret) {
-    mCaret->InvalidateOutsideCaret();
-  }
-
   mPresContext->FlushUserFontSet();
 
   mPresContext->FlushCounterStyles();
@@ -8666,9 +8625,6 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
   }
 
   if (mCaret) {
-    // Update the caret's position now to account for any changes created by
-    // the reflow.
-    mCaret->InvalidateOutsideCaret();
     mCaret->UpdateCaretPosition();
   }
 

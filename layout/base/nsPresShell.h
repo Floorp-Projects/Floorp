@@ -229,7 +229,6 @@ public:
   virtual mozilla::dom::Element* GetSelectionCaretsEndElement() const MOZ_OVERRIDE;
   // caret handling
   virtual already_AddRefed<nsCaret> GetCaret() const MOZ_OVERRIDE;
-  virtual void MaybeInvalidateCaretPosition() MOZ_OVERRIDE;
   NS_IMETHOD SetCaretEnabled(bool aInEnable) MOZ_OVERRIDE;
   NS_IMETHOD SetCaretReadOnly(bool aReadOnly) MOZ_OVERRIDE;
   NS_IMETHOD GetCaretEnabled(bool *aOutEnabled) MOZ_OVERRIDE;
@@ -276,7 +275,6 @@ public:
   NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED
 
   // nsIMutationObserver
-  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
