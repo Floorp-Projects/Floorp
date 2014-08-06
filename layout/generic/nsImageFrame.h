@@ -19,6 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "nsIReflowCallback.h"
+#include "nsTObserverArray.h"
 
 class nsImageMap;
 class nsIURI;
@@ -150,14 +151,7 @@ public:
   /**
    * Return a map element associated with this image.
    */
-  mozilla::dom::Element* GetMapElement() const
-  {
-    nsAutoString usemap;
-    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, usemap)) {
-      return mContent->OwnerDoc()->FindImageMap(usemap);
-    }
-    return nullptr;
-  }
+  mozilla::dom::Element* GetMapElement() const;
 
   /**
    * Return true if the image has associated image map.
