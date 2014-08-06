@@ -240,6 +240,10 @@ Stream.prototype._writeUpstream = function _writeUpstream(frame) {
 
   // * If it's a control frame. Call the appropriate handler method.
   if (frame.type === 'HEADERS') {
+    if (this._processedHeaders && !frame.flags['END_STREAM']) {
+      this.emit('error', 'PROTOCOL_ERROR');
+    }
+    this._processedHeaders = true;
     this._onHeaders(frame);
   } else if (frame.type === 'PUSH_PROMISE') {
     this._onPromise(frame);
@@ -346,7 +350,7 @@ Stream.prototype._finishing = function _finishing() {
   }
 };
 
-// [Stream States](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-5.1)
+// [Stream States](http://tools.ietf.org/html/draft-ietf-httpbis-http2-14#section-5.1)
 // ----------------
 //
 //                           +--------+
@@ -381,6 +385,7 @@ Stream.prototype._initializeState = function _initializeState() {
   this._initiated = undefined;
   this._closedByUs = undefined;
   this._closedWithRst = undefined;
+  this._processedHeaders = false;
 };
 
 // Only `_setState` should change `this.state` directly. It also logs the state change and notifies

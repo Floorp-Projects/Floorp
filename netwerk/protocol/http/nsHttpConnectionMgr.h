@@ -274,7 +274,7 @@ private:
     class nsConnectionEntry
     {
     public:
-        nsConnectionEntry(nsHttpConnectionInfo *ci);
+        explicit nsConnectionEntry(nsHttpConnectionInfo *ci);
         ~nsConnectionEntry();
 
         nsRefPtr<nsHttpConnectionInfo> mConnInfo;
@@ -401,7 +401,7 @@ private:
         NS_DECL_THREADSAFE_ISUPPORTS
         NS_DECL_NSAHTTPCONNECTION(mConn)
 
-        nsConnectionHandle(nsHttpConnection *conn) { NS_ADDREF(mConn = conn); }
+        explicit nsConnectionHandle(nsHttpConnection *conn) { NS_ADDREF(mConn = conn); }
 
         nsHttpConnection *mConn;
     };

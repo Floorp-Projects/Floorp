@@ -73,8 +73,10 @@ class TransportLayerDtls : public TransportLayer {
                                  const unsigned char *digest_value,
                                  size_t digest_len);
 
+  nsresult GetCipherSuite(uint16_t* cipherSuite) const;
+
   nsresult SetSrtpCiphers(std::vector<uint16_t> ciphers);
-  nsresult GetSrtpCipher(uint16_t *cipher);
+  nsresult GetSrtpCipher(uint16_t *cipher) const;
 
   nsresult ExportKeyingMaterial(const std::string& label,
                                 bool use_context,
@@ -95,6 +97,9 @@ class TransportLayerDtls : public TransportLayer {
   void StateChange(TransportLayer *layer, State state);
   void PacketReceived(TransportLayer* layer, const unsigned char *data,
                       size_t len);
+
+  // For testing use only.  Returns the fd.
+  PRFileDesc* internal_fd() { CheckThread(); return ssl_fd_.rwget(); }
 
   TRANSPORT_LAYER_ID("dtls")
 
@@ -126,6 +131,7 @@ class TransportLayerDtls : public TransportLayer {
 
 
   bool Setup();
+  bool SetupCipherSuites(PRFileDesc* ssl_fd) const;
   void Handshake();
 
   static SECStatus GetClientAuthDataHook(void *arg, PRFileDesc *fd,

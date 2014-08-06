@@ -1,3 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="seek_support.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// The data being used in these tests is specified in manifest.js.
+// The functions to build the test array and to run a specific test are in
+//      seek_support.js.
+
+const SEEK_TEST_NUMBER = 10;
+
 function test_seek10(v, seekTime, is, ok, finish) {
 
 // Test bug 523335 - ensure that if we close a stream while seeking, we
@@ -28,3 +47,10 @@ v.addEventListener("loadeddata", startTest, false);
 v.addEventListener("seeking", seeking, false);
 
 }
+
+manager.runTests(createTestArray(), startTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -59,7 +59,7 @@ class MessageLoopTimerCallback
   : public nsITimerCallback
 {
 public:
-  MessageLoopTimerCallback(MessageLoopIdleTask* aTask);
+  explicit MessageLoopTimerCallback(MessageLoopIdleTask* aTask);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK

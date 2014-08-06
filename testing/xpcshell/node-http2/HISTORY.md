@@ -1,6 +1,16 @@
 Version history
 ===============
 
+### 2.7.1 (2014-08-01) ###
+
+* Require protocol 0.14.1 (bugfix release)
+
+### 2.7.0 (2014-07-31) ###
+
+* Upgrade to the latest draft: [draft-ietf-httpbis-http2-14]
+
+[draft-ietf-httpbis-http2-14]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-14
+
 ### 2.6.0 (2014-06-18) ###
 
 * Upgrade to the latest draft: [draft-ietf-httpbis-http2-13]

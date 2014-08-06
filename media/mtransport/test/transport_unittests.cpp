@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <algorithm>
 
 #include "mozilla/UniquePtr.h"
 
@@ -18,6 +19,7 @@
 #include "nspr.h"
 #include "nss.h"
 #include "ssl.h"
+#include "sslproto.h"
 
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
@@ -50,6 +52,7 @@ const uint8_t kTlsChangeCipherSpecType = 0x14;
 const uint8_t kTlsHandshakeType =        0x16;
 
 const uint8_t kTlsHandshakeCertificate = 0x0b;
+const uint8_t kTlsHandshakeServerKeyExchange = 0x0c;
 
 const uint8_t kTlsFakeChangeCipherSpec[] = {
   kTlsChangeCipherSpecType,  // Type
@@ -165,6 +168,61 @@ class TransportLayerLossy : public TransportLayer {
     if (remaining() < expected) return false; \
   } while(0)
 
+class TlsParser {
+ public:
+  TlsParser(const unsigned char *data, size_t len)
+      : buffer_(data, len), offset_(0) {}
+
+  bool Read(unsigned char* val) {
+    if (remaining() < 1) {
+      return false;
+    }
+    *val = *ptr();
+    consume(1);
+    return true;
+  }
+
+  // Read an integral type of specified width.
+  bool Read(uint32_t *val, size_t len) {
+    if (len > sizeof(uint32_t))
+      return false;
+
+    *val = 0;
+
+    for (size_t i=0; i<len; ++i) {
+      unsigned char tmp;
+
+      if (!Read(&tmp))
+        return false;
+
+      (*val) = ((*val) << 8) + tmp;
+    }
+
+    return true;
+  }
+
+  bool Read(unsigned char* val, size_t len) {
+    if (remaining() < len) {
+      return false;
+    }
+
+    if (val) {
+      memcpy(val, ptr(), len);
+    }
+    consume(len);
+
+    return true;
+  }
+
+ private:
+  size_t remaining() const { return buffer_.len() - offset_; }
+  const uint8_t *ptr() const { return buffer_.data() + offset_; }
+  void consume(size_t len) { offset_ += len; }
+
+  DataBuffer buffer_;
+  size_t offset_;
+};
+
 class DtlsRecordParser {
  public:
   DtlsRecordParser(const unsigned char *data, size_t len)
@@ -196,7 +254,6 @@ class DtlsRecordParser {
   size_t remaining() const { return buffer_.len() - offset_; }
   const uint8_t *ptr() const { return buffer_.data() + offset_; }
   void consume(size_t len) { offset_ += len; }
-
 
   DataBuffer buffer_;
   size_t offset_;
@@ -274,6 +331,110 @@ class DtlsInspectorInjector : public DtlsRecordInspector {
   size_t len_;
 };
 
+// Make a copy of the first instance of a message.
+class DtlsInspectorRecordHandshakeMessage : public DtlsRecordInspector {
+ public:
+  DtlsInspectorRecordHandshakeMessage(uint8_t handshake_type)
+      : handshake_type_(handshake_type),
+        buffer_() {}
+
+  virtual void OnRecord(TransportLayer* layer,
+                        uint8_t content_type,
+                        const unsigned char *data, size_t len) {
+    // Only do this once.
+    if (buffer_.len()) {
+      return;
+    }
+
+    // Check that the first byte is as requested.
+    if (content_type != kTlsHandshakeType) {
+      return;
+    }
+
+    TlsParser parser(data, len);
+    unsigned char message_type;
+    // Read the handshake message type.
+    if (!parser.Read(&message_type)) {
+      return;
+    }
+    if (message_type != handshake_type_) {
+      return;
+    }
+
+    uint32_t length;
+    if (!parser.Read(&length, 3)) {
+      return;
+    }
+
+    uint32_t message_seq;
+    if (!parser.Read(&message_seq, 2)) {
+      return;
+    }
+
+    uint32_t fragment_offset;
+    if (!parser.Read(&fragment_offset, 3)) {
+      return;
+    }
+
+    uint32_t fragment_length;
+    if (!parser.Read(&fragment_length, 3)) {
+      return;
+    }
+
+    if ((fragment_offset != 0) || (fragment_length != length)) {
+      // This shouldn't happen because all current tests where we
+      // are using this code don't fragment.
+      return;
+    }
+
+    buffer_.Allocate(length);
+    if (!parser.Read(buffer_.data(), length)) {
+      return;
+    }
+  }
+
+  const DataBuffer& buffer() { return buffer_; }
+
+ private:
+  uint8_t handshake_type_;
+  DataBuffer buffer_;
+};
+
+class TlsServerKeyExchangeECDHE {
+ public:
+  bool Parse(const unsigned char* data, size_t len) {
+    TlsParser parser(data, len);
+
+    uint8_t curve_type;
+    if (!parser.Read(&curve_type)) {
+      return false;
+    }
+
+    if (curve_type != 3) {  // named_curve
+      return false;
+    }
+
+    uint32_t named_curve;
+    if (!parser.Read(&named_curve, 2)) {
+      return false;
+    }
+
+    uint32_t point_length;
+    if (!parser.Read(&point_length, 1)) {
+      return false;
+    }
+
+    public_key_.Allocate(point_length);
+    if (!parser.Read(public_key_.data(), point_length)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  DataBuffer public_key_;
+};
+
 namespace {
 class TransportTestPeer : public sigslot::has_slots<> {
  public:
@@ -291,8 +452,10 @@ class TransportTestPeer : public sigslot::has_slots<> {
                                   TransportLayerDtls::SERVER)),
         streams_(), candidates_(),
         peer_(nullptr),
-        gathering_complete_(false)
- {
+        gathering_complete_(false),
+        enabled_cipersuites_(),
+        disabled_cipersuites_(),
+        reuse_dhe_key_(false) {
     std::vector<NrIceStunServer> stun_servers;
     UniquePtr<NrIceStunServer> server(NrIceStunServer::Create(
         std::string((char *)"stun.services.mozilla.com"), 3478));
@@ -361,6 +524,18 @@ class TransportTestPeer : public sigslot::has_slots<> {
     }
   }
 
+  void SetupSrtp() {
+    // this mimics the setup we do elsewhere
+    std::vector<uint16_t> srtp_ciphers;
+    srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
+    srtp_ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_32);
+
+    SetSrtpCiphers(srtp_ciphers);
+ }
+
+  void SetSrtpCiphers(std::vector<uint16_t>& srtp_ciphers) {
+    ASSERT_TRUE(NS_SUCCEEDED(dtls_->SetSrtpCiphers(srtp_ciphers)));
+  }
 
   void ConnectSocket_s(TransportTestPeer *peer) {
     nsresult res;
@@ -374,7 +549,33 @@ class TransportTestPeer : public sigslot::has_slots<> {
     ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(lossy_));
     ASSERT_EQ((nsresult)NS_OK, flow_->PushLayer(dtls_));
 
+    if (dtls_->state() != TransportLayer::TS_ERROR) {
+      // Don't execute these blocks if DTLS didn't initialize.
+      TweakCiphers(dtls_->internal_fd());
+      if (reuse_dhe_key_) {
+        // TransportLayerDtls automatically sets this pref to false
+        // so set it back for test.
+        // This is pretty gross. Dig directly into the NSS FD. The problem
+        // is that we are testing a feature which TransaportLayerDtls doesn't
+        // expose.
+        SECStatus rv = SSL_OptionSet(dtls_->internal_fd(),
+                                     SSL_REUSE_SERVER_ECDHE_KEY, PR_TRUE);
+        ASSERT_EQ(SECSuccess, rv);
+      }
+    }
+
     flow_->SignalPacketReceived.connect(this, &TransportTestPeer::PacketReceived);
+  }
+
+  void TweakCiphers(PRFileDesc* fd) {
+    for (auto it = enabled_cipersuites_.begin();
+         it != enabled_cipersuites_.end(); ++it) {
+      SSL_CipherPrefSet(fd, *it, PR_TRUE);
+    }
+    for (auto it = disabled_cipersuites_.begin();
+         it != disabled_cipersuites_.end(); ++it) {
+      SSL_CipherPrefSet(fd, *it, PR_FALSE);
+    }
   }
 
   void ConnectSocket(TransportTestPeer *peer) {
@@ -517,6 +718,22 @@ class TransportTestPeer : public sigslot::has_slots<> {
     lossy_->SetInspector(Move(inspector));
   }
 
+  void SetInspector(Inspector* in) {
+    UniquePtr<Inspector> inspector(in);
+
+    lossy_->SetInspector(Move(inspector));
+  }
+
+  void SetCipherSuiteChanges(const std::vector<uint16_t>& enableThese,
+                             const std::vector<uint16_t>& disableThese) {
+    disabled_cipersuites_ = disableThese;
+    enabled_cipersuites_ = enableThese;
+  }
+
+  void SetReuseECDHEKey() {
+    reuse_dhe_key_ = true;
+  }
+
   TransportLayer::State state() {
     TransportLayer::State tstate;
 
@@ -536,6 +753,31 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
   size_t received() { return received_; }
 
+  uint16_t cipherSuite() const {
+    nsresult rv;
+    uint16_t cipher;
+    RUN_ON_THREAD(test_utils->sts_target(),
+                  WrapRunnableRet(dtls_, &TransportLayerDtls::GetCipherSuite,
+                                  &cipher, &rv));
+
+    if (NS_FAILED(rv)) {
+      return TLS_NULL_WITH_NULL_NULL; // i.e., not good
+    }
+    return cipher;
+  }
+
+  uint16_t srtpCipher() const {
+    nsresult rv;
+    uint16_t cipher;
+    RUN_ON_THREAD(test_utils->sts_target(),
+                  WrapRunnableRet(dtls_, &TransportLayerDtls::GetSrtpCipher,
+                                  &cipher, &rv));
+    if (NS_FAILED(rv)) {
+      return 0; // the SRTP equivalent of TLS_NULL_WITH_NULL_NULL
+    }
+    return cipher;
+  }
+
  private:
   std::string name_;
   nsCOMPtr<nsIEventTarget> target_;
@@ -554,6 +796,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
   bool gathering_complete_;
   unsigned char fingerprint_[TransportLayerDtls::kMaxDigestLength];
   size_t fingerprint_len_;
+  std::vector<uint16_t> enabled_cipersuites_;
+  std::vector<uint16_t> disabled_cipersuites_;
+  bool reuse_dhe_key_;
 };
 
 
@@ -583,8 +828,17 @@ class TransportTest : public ::testing::Test {
     target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
 
+    Reset();
+  }
+
+  void Reset() {
     p1_ = new TransportTestPeer(target_, "P1");
     p2_ = new TransportTestPeer(target_, "P2");
+  }
+
+  void SetupSrtp() {
+    p1_->SetupSrtp();
+    p2_->SetupSrtp();
   }
 
   void SetDtlsPeer(int digests = 1, unsigned int damage = 0) {
@@ -607,6 +861,9 @@ class TransportTest : public ::testing::Test {
 
     ASSERT_TRUE_WAIT(p1_->connected(), 10000);
     ASSERT_TRUE_WAIT(p2_->connected(), 10000);
+
+    ASSERT_EQ(p1_->cipherSuite(), p2_->cipherSuite());
+    ASSERT_EQ(p1_->srtpCipher(), p2_->srtpCipher());
   }
 
   void ConnectSocketExpectFail() {
@@ -662,7 +919,25 @@ TEST_F(TransportTest, TestNoDtlsVerificationSettings) {
 TEST_F(TransportTest, TestConnect) {
   SetDtlsPeer();
   ConnectSocket();
+
+  // check that we got the right suite
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
+
+  // no SRTP on this one
+  ASSERT_EQ(0, p1_->srtpCipher());
 }
+
+TEST_F(TransportTest, TestConnectSrtp) {
+  SetupSrtp();
+  SetDtlsPeer();
+  ConnectSocket();
+
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
+
+  // SRTP is on
+  ASSERT_EQ(SRTP_AES128_CM_HMAC_SHA1_80, p1_->srtpCipher());
+}
+
 
 TEST_F(TransportTest, TestConnectDestroyFlowsMainThread) {
   SetDtlsPeer();
@@ -716,6 +991,59 @@ TEST_F(TransportTest, TestConnectInjectCCS) {
   ConnectSocket();
 }
 
+
+TEST_F(TransportTest, TestConnectVerifyNewECDHE) {
+  SetDtlsPeer();
+  DtlsInspectorRecordHandshakeMessage *i1 = new
+    DtlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
+  p1_->SetInspector(i1);
+  ConnectSocket();
+  TlsServerKeyExchangeECDHE dhe1;
+  ASSERT_TRUE(dhe1.Parse(i1->buffer().data(), i1->buffer().len()));
+
+  Reset();
+  SetDtlsPeer();
+  DtlsInspectorRecordHandshakeMessage *i2 = new
+    DtlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
+  p1_->SetInspector(i2);
+  ConnectSocket();
+  TlsServerKeyExchangeECDHE dhe2;
+  ASSERT_TRUE(dhe2.Parse(i2->buffer().data(), i2->buffer().len()));
+
+  // Now compare these two to see if they are the same.
+  ASSERT_FALSE((dhe1.public_key_.len() == dhe2.public_key_.len()) &&
+               (!memcmp(dhe1.public_key_.data(), dhe2.public_key_.data(),
+                        dhe1.public_key_.len())));
+}
+
+TEST_F(TransportTest, TestConnectVerifyReusedECDHE) {
+  SetDtlsPeer();
+  DtlsInspectorRecordHandshakeMessage *i1 = new
+    DtlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
+  p1_->SetInspector(i1);
+  p1_->SetReuseECDHEKey();
+  ConnectSocket();
+  TlsServerKeyExchangeECDHE dhe1;
+  ASSERT_TRUE(dhe1.Parse(i1->buffer().data(), i1->buffer().len()));
+
+  Reset();
+  SetDtlsPeer();
+  DtlsInspectorRecordHandshakeMessage *i2 = new
+    DtlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
+
+  p1_->SetInspector(i2);
+  p1_->SetReuseECDHEKey();
+
+  ConnectSocket();
+  TlsServerKeyExchangeECDHE dhe2;
+  ASSERT_TRUE(dhe2.Parse(i2->buffer().data(), i2->buffer().len()));
+
+  // Now compare these two to see if they are the same.
+  ASSERT_EQ(dhe1.public_key_.len(), dhe2.public_key_.len());
+  ASSERT_TRUE(!memcmp(dhe1.public_key_.data(), dhe2.public_key_.data(),
+                      dhe1.public_key_.len()));
+}
+
 TEST_F(TransportTest, TestTransfer) {
   SetDtlsPeer();
   ConnectSocket();
@@ -740,6 +1068,65 @@ TEST_F(TransportTest, TestTransferIce) {
   TransferTest(1);
 }
 
+// test the default configuration against a peer that supports only
+// one of the mandatory-to-implement suites, which should succeed
+static void ConfigureOneCipher(TransportTestPeer* peer, uint16_t suite) {
+  std::vector<uint16_t> justOne;
+  justOne.push_back(suite);
+  std::vector<uint16_t> everythingElse(SSL_GetImplementedCiphers(),
+                                       SSL_GetImplementedCiphers()
+                                       + SSL_GetNumImplementedCiphers());
+  std::remove(everythingElse.begin(), everythingElse.end(), suite);
+  peer->SetCipherSuiteChanges(justOne, everythingElse);
+}
+
+TEST_F(TransportTest, TestCipherMismatch) {
+  SetDtlsPeer();
+  ConfigureOneCipher(p1_, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256);
+  ConfigureOneCipher(p2_, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA);
+  ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, TestCipherMandatoryOnlyGcm) {
+  SetDtlsPeer();
+  ConfigureOneCipher(p1_, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256);
+  ConnectSocket();
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, p1_->cipherSuite());
+}
+
+TEST_F(TransportTest, TestCipherMandatoryOnlyCbc) {
+  SetDtlsPeer();
+  ConfigureOneCipher(p1_, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA);
+  ConnectSocket();
+  ASSERT_EQ(TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA, p1_->cipherSuite());
+}
+
+TEST_F(TransportTest, TestSrtpMismatch) {
+  std::vector<uint16_t> setA;
+  setA.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
+  std::vector<uint16_t> setB;
+  setB.push_back(SRTP_AES128_CM_HMAC_SHA1_32);
+
+  p1_->SetSrtpCiphers(setA);
+  p2_->SetSrtpCiphers(setB);
+  SetDtlsPeer();
+  ConnectSocket();
+
+  ASSERT_EQ(0, p1_->srtpCipher());
+  ASSERT_EQ(0, p2_->srtpCipher());
+}
+
+// NSS doesn't support DHE suites on the server end.
+// This checks to see if we barf when that's the only option available.
+TEST_F(TransportTest, TestDheOnlyFails) {
+  SetDtlsPeer();
+
+  // p2_ is the client
+  // setting this on p1_ (the server) causes NSS to assert
+  ConfigureOneCipher(p2_, TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
+  ConnectSocketExpectFail();
+}
+
 TEST(PushTests, LayerFail) {
   mozilla::RefPtr<TransportFlow> flow = new TransportFlow();
   nsresult rv;
@@ -759,7 +1146,6 @@ TEST(PushTests, LayerFail) {
   ASSERT_TRUE(NS_FAILED(rv));
   ASSERT_EQ(true, destroyed1);
 }
-
 
 TEST(PushTests, LayersFail) {
   mozilla::RefPtr<TransportFlow> flow = new TransportFlow();

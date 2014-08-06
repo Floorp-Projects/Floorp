@@ -150,13 +150,13 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
       mDragMode = START_FRAME;
       mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - ptInCanvas.y;
       SetSelectionDirection(false);
-      SetMouseDownState(true);
+      SetSelectionDragState(true);
       return nsEventStatus_eConsumeNoDefault;
     } else if (mVisible && IsOnRect(GetEndFrameRect(), ptInCanvas, inflateSize)) {
       mDragMode = END_FRAME;
       mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - ptInCanvas.y;
       SetSelectionDirection(true);
-      SetMouseDownState(true);
+      SetSelectionDragState(true);
       return nsEventStatus_eConsumeNoDefault;
     } else {
       mDragMode = NONE;
@@ -171,7 +171,7 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
     if (mDragMode != NONE) {
       // Only care about same id
       if (mActiveTouchId == nowTouchId) {
-        SetMouseDownState(false);
+        SetSelectionDragState(false);
         mDragMode = NONE;
         mActiveTouchId = -1;
       }
@@ -521,11 +521,11 @@ SelectionCarets::SelectWord()
 
   nsIFrame* caretFocusFrame = GetCaretFocusFrame();
   nsRefPtr<nsFrameSelection> fs = caretFocusFrame->GetFrameSelection();
-  fs->SetMouseDownState(true);
+  fs->SetDragState(true);
   nsFrame* frame = static_cast<nsFrame*>(ptFrame);
   nsresult rs = frame->SelectByTypeAtPoint(mPresShell->GetPresContext(), ptInFrame,
                                            eSelectWord, eSelectWord, 0);
-  fs->SetMouseDownState(false);
+  fs->SetDragState(false);
 
   // Clear maintain selection otherwise we cannot select less than a word
   fs->MaintainSelection();
@@ -695,14 +695,14 @@ SelectionCarets::GetCaretYCenterPosition()
 }
 
 void
-SelectionCarets::SetMouseDownState(bool aState)
+SelectionCarets::SetSelectionDragState(bool aState)
 {
   nsIFrame* caretFocusFrame = GetCaretFocusFrame();
   nsRefPtr<nsFrameSelection> fs = caretFocusFrame->GetFrameSelection();
-  if (fs->GetMouseDownState() == aState) {
+  if (fs->GetDragState() == aState) {
     return;
   }
-  fs->SetMouseDownState(aState);
+  fs->SetDragState(aState);
 
   if (aState) {
     fs->StartBatchChanges();

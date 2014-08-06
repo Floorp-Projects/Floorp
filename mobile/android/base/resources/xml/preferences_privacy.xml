@@ -51,7 +51,7 @@
                             gecko:initialValues="@array/pref_clear_on_exit_defaults"
 
                             android:title="@string/pref_clear_on_exit_title"
-                            android:summary="@string/pref_clear_on_exit_summary"
+                            android:summary="@string/pref_clear_on_exit_summary2"
 
                             android:dialogTitle="@string/pref_clear_on_exit_dialog_title"
                             android:positiveButtonText="@string/button_set"/>
