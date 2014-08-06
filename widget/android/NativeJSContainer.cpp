@@ -407,7 +407,7 @@ template <bool (*InValue)(JSContext*, JS::HandleValue)> bool
 CheckProperty(JNIEnv* env, JSContext* cx, JS::HandleValue val) {
     if (!(*InValue)(cx, val)) {
         AndroidBridge::ThrowException(env,
-            "java/lang/IllegalArgumentException",
+            "org/mozilla/gecko/util/NativeJSObject$InvalidPropertyException",
             "Property type mismatch");
         return false;
     }
@@ -678,7 +678,7 @@ GetProperty(JNIEnv* env, jobject instance, jstring name,
     if (val.isUndefined() || val.isNull()) {
         if (option == FallbackOption::THROW) {
             AndroidBridge::ThrowException(env,
-                "java/lang/IllegalArgumentException",
+                "org/mozilla/gecko/util/NativeJSObject$InvalidPropertyException",
                 "Property does not exist");
         }
         return fallback;
