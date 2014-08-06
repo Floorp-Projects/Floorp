@@ -51,12 +51,16 @@ public:
 
   // Init and Cleanup is handled by BluetoothInterface
 
-  void Listen(btsock_type_t aType,
-              const char* aServiceName, const uint8_t* aServiceUuid,
-              int aChannel, int aFlags, BluetoothSocketResultHandler* aRes);
+  void Listen(BluetoothSocketType aType,
+              const nsAString& aServiceName,
+              const uint8_t aServiceUuid[16],
+              int aChannel, bool aEncrypt, bool aAuth,
+              BluetoothSocketResultHandler* aRes);
 
-  void Connect(const bt_bdaddr_t* aBdAddr, btsock_type_t aType,
-               const uint8_t* aUuid, int aChannel, int aFlags,
+  void Connect(const nsAString& aBdAddr,
+               BluetoothSocketType aType,
+               const uint8_t aUuid[16],
+               int aChannel, bool aEncrypt, bool aAuth,
                BluetoothSocketResultHandler* aRes);
 
   void Accept(int aFd, BluetoothSocketResultHandler* aRes);
