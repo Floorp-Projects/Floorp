@@ -50,9 +50,10 @@ let loaderGlobals = {
   console: console,
   _Iterator: Iterator,
   loader: {
-    lazyGetter: XPCOMUtils.defineLazyGetter.bind(XPCOMUtils),
-    lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils),
-    lazyServiceGetter: XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils)
+    lazyGetter: (...args) => devtools.lazyGetter.apply(devtools, args),
+    lazyImporter: (...args) => devtools.lazyImporter.apply(devtools, args),
+    lazyServiceGetter: (...args) => devtools.lazyServiceGetter.apply(devtools, args),
+    lazyRequireGetter: (...args) => devtools.lazyRequireGetter.apply(devtools, args)
   },
 };
 
@@ -276,6 +277,9 @@ SrcdirProvider.prototype = {
  */
 this.DevToolsLoader = function DevToolsLoader() {
   this.require = this.require.bind(this);
+  this.lazyGetter = XPCOMUtils.defineLazyGetter.bind(XPCOMUtils);
+  this.lazyImporter = XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils);
+  this.lazyServiceGetter = XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils);
   this.lazyRequireGetter = this.lazyRequireGetter.bind(this);
 };
 
@@ -310,10 +314,14 @@ DevToolsLoader.prototype = {
    *    The property name.
    * @param String module
    *    The module path.
+   * @param Boolean destructure
+   *    Pass true if the property name is a member of the module's exports.
    */
-  lazyRequireGetter: function (obj, property, module) {
+  lazyRequireGetter: function (obj, property, module, destructure) {
     Object.defineProperty(obj, property, {
-      get: () => this.require(module)
+      get: () => destructure
+        ? this.require(module)[property]
+        : this.require(module || property)
     });
   },
 

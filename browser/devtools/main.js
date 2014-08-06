@@ -30,7 +30,7 @@ loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/styleeditor/
 loader.lazyGetter(this, "ShaderEditorPanel", () => require("devtools/shadereditor/panel").ShaderEditorPanel);
 loader.lazyGetter(this, "CanvasDebuggerPanel", () => require("devtools/canvasdebugger/panel").CanvasDebuggerPanel);
 loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/webaudioeditor/panel").WebAudioEditorPanel);
-loader.lazyGetter(this, "ProfilerPanel", () => require("devtools/profiler/panel"));
+loader.lazyGetter(this, "ProfilerPanel", () => require("devtools/profiler/panel").ProfilerPanel);
 loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/panel").NetMonitorPanel);
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/scratchpad/scratchpad-panel").ScratchpadPanel);
 
@@ -264,18 +264,17 @@ Tools.webAudioEditor = {
 Tools.jsprofiler = {
   id: "jsprofiler",
   accesskey: l10n("profiler.accesskey", profilerStrings),
-  key: l10n("profiler2.commandkey", profilerStrings),
+  key: l10n("profiler.commandkey2", profilerStrings),
   ordinal: 7,
   modifiers: "shift",
   visibilityswitch: "devtools.profiler.enabled",
   icon: "chrome://browser/skin/devtools/tool-profiler.svg",
   invertIconForLightTheme: true,
   url: "chrome://browser/content/devtools/profiler.xul",
-  label: l10n("profiler.label", profilerStrings),
-  panelLabel: l10n("profiler.panelLabel", profilerStrings),
+  label: l10n("profiler.label2", profilerStrings),
+  panelLabel: l10n("profiler.panelLabel2", profilerStrings),
   tooltip: l10n("profiler.tooltip2", profilerStrings),
   inMenu: true,
-  commands: "devtools/profiler/commands",
 
   isTargetSupported: function (target) {
     return !target.isAddon;

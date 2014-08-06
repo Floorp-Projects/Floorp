@@ -10,7 +10,7 @@
 }
 
 .component-spacer {
-  padding: 5px 10px;
+  padding: 5px 10px 10px 10px;
 }
 
 .spacer {
@@ -73,6 +73,28 @@
 .share .action button {
   font-size: .9em;
   padding-top: 6px;
+}
+
+.share .action .btn {
+  background-color: #0096DD;
+  border: 1px solid #0095DD;
+  color: #fff;
+  width: 50%;
+  height: 26px;
+  text-align: center;
+  font-family: 'Lucida Grande', sans-serif;
+  margin-top: 10px;
+}
+
+.share .action .btn:hover {
+  background-color: #008ACB;
+  border: 1px solid #008ACB;
+}
+
+.share .action .btn span {
+  margin-top: 2px;
+  font-size: 12px;
+  display: inline-block;
 }
 
 /* Specific cases */
