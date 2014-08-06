@@ -31,30 +31,62 @@ class nsCaret : public nsISelectionListener
   public:
     NS_DECL_ISUPPORTS
 
-    nsresult    Init(nsIPresShell *inPresShell);
-    void    Terminate();
+    nsresult Init(nsIPresShell *inPresShell);
+    void Terminate();
 
-    nsISelection*    GetCaretDOMSelection();
-    nsresult    SetCaretDOMSelection(nsISelection *inDOMSel);
-
+    nsresult SetCaretDOMSelection(nsISelection *inDOMSel);
+    nsISelection* GetCaretDOMSelection();
+    /**
+     * Sets whether the caret should only be visible in nodes that are not
+     * user-modify: read-only, or whether it should be visible in all nodes.
+     *
+     * @param aIgnoreUserModify true to have the cursor visible in all nodes,
+     *                          false to have it visible in all nodes except
+     *                          those with user-modify: read-only
+     */
+    void SetIgnoreUserModify(bool aIgnoreUserModify);
+    void CheckCaretDrawingState();
+    /** SetCaretVisible will set the visibility of the caret
+     *  @param inMakeVisible true to show the caret, false to hide it
+     */
+    void SetCaretVisible(bool intMakeVisible);
     /** GetCaretVisible will get the visibility of the caret
      *  This function is virtual so that it can be used by nsCaretAccessible
      *  without linking
      *  @param outMakeVisible true if it is shown, false if it is hidden
      *  @return NS_OK
      */
-    virtual nsresult    GetCaretVisible(bool *outMakeVisible);
-
-    /** SetCaretVisible will set the visibility of the caret
-     *  @param inMakeVisible true to show the caret, false to hide it
-     */
-    void    SetCaretVisible(bool intMakeVisible);
-
+    virtual nsresult GetCaretVisible(bool *outMakeVisible);
     /** SetCaretReadOnly set the appearance of the caret
      *  @param inMakeReadonly true to show the caret in a 'read only' state,
      *         false to show the caret in normal, editing state
      */
-    void    SetCaretReadOnly(bool inMakeReadonly);
+    void SetCaretReadOnly(bool inMakeReadonly);
+    /**
+     * @param aVisibility true if the caret should be visible even when the
+     * selection is not collapsed.
+     */
+    void SetVisibilityDuringSelection(bool aVisibility);
+
+    /** EraseCaret
+     *  this will erase the caret if its drawn and reset drawn status
+     */
+    void EraseCaret();
+    /** UpdateCaretPosition
+     *  Update the caret's current frame and rect, but don't draw yet. This is
+     *  useful for flickerless moving of the caret (e.g., when the frame the
+     *  caret is in reflows and is moved).
+     */
+    void UpdateCaretPosition();
+    /** DrawAtPosition
+     *
+     *  Draw the caret explicitly, at the specified node and offset.
+     *  To avoid drawing glitches, you should call EraseCaret()
+     *  after each call to DrawAtPosition().
+     *
+     *  Note: This call breaks the caret's ability to blink at all.
+     **/
+    nsresult DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset);
 
     /**
      * Gets the position and size of the caret that would be drawn for
@@ -67,24 +99,6 @@ class nsCaret : public nsISelectionListener
     virtual nsIFrame* GetGeometry(nsISelection* aSelection,
                                   nsRect* aRect,
                                   nscoord* aBidiIndicatorSize = nullptr);
-
-    /** EraseCaret
-     *  this will erase the caret if its drawn and reset drawn status
-     */
-    void    EraseCaret();
-
-    void    SetVisibilityDuringSelection(bool aVisibility);
-
-    /** DrawAtPosition
-     *
-     *  Draw the caret explicitly, at the specified node and offset.
-     *  To avoid drawing glitches, you should call EraseCaret()
-     *  after each call to DrawAtPosition().
-     *
-     *  Note: This call breaks the caret's ability to blink at all.
-     **/
-    nsresult    DrawAtPosition(nsIDOMNode* aNode, int32_t aOffset);
-
     /** GetCaretFrame
      *  Get the current frame that the caret should be drawn in. If the caret is
      *  not currently visible (i.e., it is between blinks), then this will
@@ -92,48 +106,28 @@ class nsCaret : public nsISelectionListener
      *
      *  @param aOffset is result of the caret offset in the content.
      */
-    nsIFrame*     GetCaretFrame(int32_t *aOffset = nullptr);
-
+    nsIFrame* GetCaretFrame(int32_t *aOffset = nullptr);
     /** GetCaretRect
      *  Get the current caret rect. Only call this when GetCaretFrame returns
      *  non-null.
      */
-    nsRect        GetCaretRect()
+    nsRect GetCaretRect()
     {
       nsRect r;
       r.UnionRect(mCaretRect, GetHookRect());
       return r;
     }
 
-    /** UpdateCaretPosition
-     *  Update the caret's current frame and rect, but don't draw yet. This is
-     *  useful for flickerless moving of the caret (e.g., when the frame the
-     *  caret is in reflows and is moved).
-     */
-    void      UpdateCaretPosition();
-
     /** PaintCaret
      *  Actually paint the caret onto the given rendering context.
      */
-    void      PaintCaret(nsDisplayListBuilder *aBuilder,
-                         nsRenderingContext *aCtx,
-                         nsIFrame *aForFrame,
-                         const nsPoint &aOffset);
-    /**
-     * Sets whether the caret should only be visible in nodes that are not
-     * user-modify: read-only, or whether it should be visible in all nodes.
-     *
-     * @param aIgnoreUserModify true to have the cursor visible in all nodes,
-     *                          false to have it visible in all nodes except
-     *                          those with user-modify: read-only
-     */
-
-    void SetIgnoreUserModify(bool aIgnoreUserModify);
+    void PaintCaret(nsDisplayListBuilder *aBuilder,
+                    nsRenderingContext *aCtx,
+                    nsIFrame *aForFrame,
+                    const nsPoint &aOffset);
 
     //nsISelectionListener interface
     NS_DECL_NSISELECTIONLISTENER
-
-    static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 
     static nsresult GetCaretFrameForNodeOffset(nsFrameSelection* aFrameSelection,
                                                nsIContent* aContentNode,
@@ -143,11 +137,10 @@ class nsCaret : public nsISelectionListener
                                                nsIFrame** aReturnFrame,
                                                int32_t* aReturnOffset);
 
-    void CheckCaretDrawingState();
-
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
+    static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 
     void          KillTimer();
     nsresult      PrimeTimer();
