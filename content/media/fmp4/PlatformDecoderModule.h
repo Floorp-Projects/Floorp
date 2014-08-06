@@ -123,6 +123,7 @@ protected:
   // Caches pref media.fragmented-mp4.use-blank-decoder
   static bool sUseBlankDecoder;
   static bool sFFmpegDecoderEnabled;
+  static bool sGonkDecoderEnabled;
 };
 
 // A callback used by MediaDataDecoder to return output/errors to the
@@ -144,6 +145,10 @@ public:
   virtual void InputExhausted() = 0;
 
   virtual void DrainComplete() = 0;
+
+  virtual void NotifyResourcesStatusChanged() {};
+
+  virtual void ReleaseMediaResources() {};
 };
 
 // MediaDataDecoder is the interface exposed by decoders created by the
@@ -209,6 +214,15 @@ public:
   // returned.
   virtual nsresult Shutdown() = 0;
 
+  // For Codec Resource Management
+  virtual bool IsWaitingMediaResources() {
+    return false;
+  };
+  virtual bool IsDormantNeeded() {
+    return false;
+  };
+  virtual void ReleaseMediaResources() {};
+  virtual void ReleaseDecoder() {};
 };
 
 } // namespace mozilla
