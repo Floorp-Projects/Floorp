@@ -16,6 +16,14 @@ import android.os.Bundle;
 @JNITarget
 public class NativeJSObject
 {
+    @SuppressWarnings("serial")
+    @JNITarget
+    public static final class InvalidPropertyException extends RuntimeException {
+        public InvalidPropertyException(final String msg) {
+            super(msg);
+        }
+    }
+
     private final NativeJSContainer mContainer;
     private final int mObjectIndex;
 
@@ -35,9 +43,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -53,9 +63,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -69,9 +81,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -87,9 +101,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -103,9 +119,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -121,9 +139,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -137,9 +157,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -155,9 +177,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -171,9 +195,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -189,9 +215,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -205,9 +233,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -223,9 +253,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -239,9 +271,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -257,9 +291,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -273,9 +309,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -291,9 +329,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -307,9 +347,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -325,9 +367,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -341,9 +385,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -359,9 +405,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -375,9 +423,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -393,9 +443,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -409,9 +461,11 @@ public class NativeJSObject
      * @param name
      *        Property name
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property does not exist or if its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -427,9 +481,11 @@ public class NativeJSObject
      * @param fallback
      *        Value to return if property does not exist
      * @throws IllegalArgumentException
+     *         If name is null
+     * @throws InvalidPropertyException
      *         If the property exists and its type does not match the return type
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException
@@ -442,8 +498,10 @@ public class NativeJSObject
      *
      * @param name
      *        Property name
+     * @throws IllegalArgumentException
+     *         If name is null
      * @throws NullPointerException
-     *         If name is null or if this JS object has been disposed
+     *         If this JS object has been disposed
      * @throws IllegalThreadStateException
      *         If not called on the thread this object is attached to
      * @throws UnsupportedOperationException

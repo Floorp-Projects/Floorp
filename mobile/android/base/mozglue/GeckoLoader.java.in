@@ -6,17 +6,21 @@
 
 package org.mozilla.gecko.mozglue;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
+import java.util.Locale;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
-
-import java.io.File;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
-import java.util.Locale;
 
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
@@ -261,6 +265,89 @@ public final class GeckoLoader {
         loadNSSLibsNative(apkName, false);
     }
 
+    /**
+     * Copy a library out of our APK.
+     *
+     * @param context a Context.
+     * @param lib the name of the library; e.g., "mozglue".
+     * @param outDir the output directory for the .so. No trailing slash.
+     * @return true on success, false on failure.
+     */
+    private static boolean extractLibrary(final Context context, final String lib, final String outDir) {
+        final String apkPath = context.getApplicationInfo().sourceDir;
+
+        // Sanity check.
+        if (!apkPath.endsWith(".apk")) {
+            Log.w(LOGTAG, "sourceDir is not an APK.");
+            return false;
+        }
+
+        // Try to extract the named library from the APK.
+        File outDirFile = new File(outDir);
+        if (!outDirFile.isDirectory()) {
+            if (!outDirFile.mkdirs()) {
+                Log.e(LOGTAG, "Couldn't create " + outDir);
+                return false;
+            }
+        }
+
+        final String abi = android.os.Build.CPU_ABI;
+        try {
+            final ZipFile zipFile = new ZipFile(new File(apkPath));
+            try {
+                final String libPath = "lib/" + abi + "/lib" + lib + ".so";
+                final ZipEntry entry = zipFile.getEntry(libPath);
+                if (entry == null) {
+                    Log.w(LOGTAG, libPath + " not found in APK " + apkPath);
+                    return false;
+                }
+
+                final InputStream in = zipFile.getInputStream(entry);
+                try {
+                    final String outPath = outDir + "/lib" + lib + ".so";
+                    final FileOutputStream out = new FileOutputStream(outPath);
+                    final byte[] bytes = new byte[1024];
+                    int read;
+
+                    Log.d(LOGTAG, "Copying " + libPath + " to " + outPath);
+                    boolean failed = false;
+                    try {
+                        while ((read = in.read(bytes, 0, 1024)) != -1) {
+                            out.write(bytes, 0, read);
+                        }
+                    } catch (Exception e) {
+                        Log.w(LOGTAG, "Failing library copy.", e);
+                        failed = true;
+                    } finally {
+                        out.close();
+                    }
+
+                    if (failed) {
+                        // Delete the partial copy so we don't fail to load it.
+                        // Don't bother to check the return value -- there's nothing
+                        // we can do about a failure.
+                        new File(outPath).delete();
+                    } else {
+                        // Mark the file as executable. This doesn't seem to be
+                        // necessary for the loader, but it's the normal state of
+                        // affairs.
+                        Log.d(LOGTAG, "Marking " + outPath + " as executable.");
+                        new File(outPath).setExecutable(true);
+                    }
+
+                    return !failed;
+                } finally {
+                    in.close();
+                }
+            } finally {
+                zipFile.close();
+            }
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Failed to extract lib from APK.", e);
+            return false;
+        }
+    }
+
     private static String getLoadDiagnostics(final Context context, final String lib) {
         final StringBuilder message = new StringBuilder("LOAD ");
         message.append(lib);
@@ -364,6 +451,15 @@ public final class GeckoLoader {
             return;
         }
 
+        // If we're in a mismatched UID state (Bug 1042935 Comment 16) there's really
+        // nothing we can do.
+        if (Build.VERSION.SDK_INT >= 9) {
+            final String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
+            if (nativeLibPath.contains("mismatched_uid")) {
+                throw new RuntimeException("Fatal: mismatched UID: cannot load.");
+            }
+        }
+
         // Attempt 3: try finding the path the pseudo-supported way using .dataDir.
         final String dataLibPath = context.getApplicationInfo().dataDir + "/lib/lib" + lib + ".so";
         if (attemptLoad(dataLibPath)) {
@@ -378,6 +474,23 @@ public final class GeckoLoader {
         // Attempt 5: even more optimistic.
         if (attemptLoad("/data/data/" + ANDROID_PACKAGE_NAME + "/lib/lib" + lib + ".so")) {
             return;
+        }
+
+        // Look in our files directory, copying from the APK first if necessary.
+        final String filesLibDir = context.getFilesDir() + "/lib";
+        final String filesLibPath = filesLibDir + "/lib" + lib + ".so";
+        if (new File(filesLibPath).exists()) {
+            if (attemptLoad(filesLibPath)) {
+                return;
+            }
+        } else {
+            // Try copying.
+            if (extractLibrary(context, lib, filesLibDir)) {
+                // Let's try it!
+                if (attemptLoad(filesLibPath)) {
+                    return;
+                }
+            }
         }
 
         // Give up loudly, leaking information to debug the failure.
