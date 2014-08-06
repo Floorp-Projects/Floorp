@@ -393,7 +393,7 @@ template <class T>
 class HttpAsyncAborter
 {
 public:
-  HttpAsyncAborter(T *derived) : mThis(derived), mCallOnResume(0) {}
+  explicit HttpAsyncAborter(T *derived) : mThis(derived), mCallOnResume(0) {}
 
   // Aborts channel: calls OnStart/Stop with provided status, removes channel
   // from loadGroup.

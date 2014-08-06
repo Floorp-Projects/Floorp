@@ -41,7 +41,7 @@ class nsRange MOZ_FINAL : public nsIDOMRange,
   virtual ~nsRange();
 
 public:
-  nsRange(nsINode* aNode)
+  explicit nsRange(nsINode* aNode)
     : mRoot(nullptr)
     , mStartOffset(0)
     , mEndOffset(0)
@@ -290,7 +290,7 @@ protected:
 
   struct MOZ_STACK_CLASS AutoInvalidateSelection
   {
-    AutoInvalidateSelection(nsRange* aRange) : mRange(aRange)
+    explicit AutoInvalidateSelection(nsRange* aRange) : mRange(aRange)
     {
 #ifdef DEBUG
       mWasInSelection = mRange->IsInSelection();

@@ -79,7 +79,7 @@ public:
 class PerThreadData
 {
 public:
-  PerThreadData(bool aIsMainThread = false)
+  explicit PerThreadData(bool aIsMainThread = false)
     : mIsMainThread(aIsMainThread)
     , mIsHandlingObservation(false)
     , mCurrentGeneration(0)

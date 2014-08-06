@@ -40,7 +40,7 @@ class ChannelEventQueue MOZ_FINAL
   NS_INLINE_DECL_REFCOUNTING(ChannelEventQueue)
 
  public:
-  ChannelEventQueue(nsISupports *owner)
+  explicit ChannelEventQueue(nsISupports *owner)
     : mSuspendCount(0)
     , mSuspended(false)
     , mForced(false)
@@ -165,7 +165,7 @@ ChannelEventQueue::MaybeFlushQueue()
 class AutoEventEnqueuer
 {
  public:
-  AutoEventEnqueuer(ChannelEventQueue *queue) : mEventQueue(queue) {
+  explicit AutoEventEnqueuer(ChannelEventQueue *queue) : mEventQueue(queue) {
     mEventQueue->StartForcedQueueing();
   }
   ~AutoEventEnqueuer() {

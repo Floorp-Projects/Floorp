@@ -29,7 +29,7 @@ class MOZ_STACK_CLASS InfoObject
 
   private:
   // We need to ensure that this object lives on the stack so that GC sees it properly
-  InfoObject(JSContext *aCx);
+  explicit InfoObject(JSContext *aCx);
   InfoObject(InfoObject&);
 
   JSContext *mCx;

@@ -183,7 +183,7 @@ public:
     return *this = aOther->SelfReferencingWeakPtr();
   }
 
-  WeakPtr(T* aOther)
+  MOZ_IMPLICIT WeakPtr(T* aOther)
   {
     *this = aOther;
   }

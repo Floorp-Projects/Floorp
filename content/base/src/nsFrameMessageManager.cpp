@@ -1729,10 +1729,10 @@ public:
     }
     if (aIsSync) {
       return cc->SendSyncMessage(PromiseFlatString(aMessage), data, cpows,
-                                 aPrincipal, aJSONRetVal);
+                                 IPC::Principal(aPrincipal), aJSONRetVal);
     }
     return cc->CallRpcMessage(PromiseFlatString(aMessage), data, cpows,
-                              aPrincipal, aJSONRetVal);
+                              IPC::Principal(aPrincipal), aJSONRetVal);
   }
 
   virtual bool DoSendAsyncMessage(JSContext* aCx,
@@ -1755,7 +1755,7 @@ public:
       return false;
     }
     return cc->SendAsyncMessage(PromiseFlatString(aMessage), data, cpows,
-                                aPrincipal);
+                                IPC::Principal(aPrincipal));
   }
 
 };

@@ -57,7 +57,7 @@ class MessageChannel : HasResultCodes
     typedef IPC::Message Message;
     typedef mozilla::ipc::Transport Transport;
 
-    MessageChannel(MessageListener *aListener);
+    explicit MessageChannel(MessageListener *aListener);
     ~MessageChannel();
 
     // "Open" from the perspective of the transport layer; the underlying
@@ -381,7 +381,7 @@ class MessageChannel : HasResultCodes
     class RefCountedTask
     {
       public:
-        RefCountedTask(CancelableTask* aTask)
+        explicit RefCountedTask(CancelableTask* aTask)
           : mTask(aTask)
         { }
       private:
@@ -401,7 +401,7 @@ class MessageChannel : HasResultCodes
     class DequeueTask : public Task
     {
       public:
-        DequeueTask(RefCountedTask* aTask)
+        explicit DequeueTask(RefCountedTask* aTask)
           : mTask(aTask)
         { }
         void Run() { mTask->Run(); }
@@ -441,7 +441,7 @@ class MessageChannel : HasResultCodes
 
     class AutoEnterPendingReply {
       public:
-        AutoEnterPendingReply(size_t &replyVar)
+        explicit AutoEnterPendingReply(size_t &replyVar)
           : mReplyVar(replyVar)
         {
             mReplyVar++;
@@ -487,7 +487,7 @@ class MessageChannel : HasResultCodes
     class AutoEnterRPCTransaction
     {
       public:
-       AutoEnterRPCTransaction(MessageChannel *aChan)
+       explicit AutoEnterRPCTransaction(MessageChannel *aChan)
         : mChan(aChan),
           mOldTransaction(mChan->mCurrentRPCTransaction)
        {

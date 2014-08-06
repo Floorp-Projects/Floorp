@@ -357,7 +357,7 @@ private:
   class OnCacheEntryInfoRunnable : public nsRunnable
   {
   public:
-    OnCacheEntryInfoRunnable(WalkDiskCacheRunnable* aWalker)
+    explicit OnCacheEntryInfoRunnable(WalkDiskCacheRunnable* aWalker)
       : mWalker(aWalker)
     {
     }
@@ -1498,7 +1498,7 @@ class CacheEntryDoomByKeyCallback : public CacheFileIOListener
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  CacheEntryDoomByKeyCallback(nsICacheEntryDoomCallback* aCallback)
+  explicit CacheEntryDoomByKeyCallback(nsICacheEntryDoomCallback* aCallback)
     : mCallback(aCallback) { }
 
 private:
@@ -1688,7 +1688,7 @@ CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
   class Callback : public nsRunnable
   {
   public:
-    Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
+    explicit Callback(nsICacheEntryDoomCallback* aCallback) : mCallback(aCallback) { }
     NS_IMETHODIMP Run()
     {
       mCallback->OnCacheEntryDoomed(NS_OK);

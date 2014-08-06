@@ -560,20 +560,20 @@ Assembler::finish()
     isFinished = true;
 
     for (unsigned int i = 0; i < tmpDataRelocations_.length(); i++) {
-        int offset = tmpDataRelocations_[i].getOffset();
-        int real_offset = offset + m_buffer.poolSizeBefore(offset);
+        size_t offset = tmpDataRelocations_[i].getOffset();
+        size_t real_offset = offset + m_buffer.poolSizeBefore(offset);
         dataRelocations_.writeUnsigned(real_offset);
     }
 
     for (unsigned int i = 0; i < tmpJumpRelocations_.length(); i++) {
-        int offset = tmpJumpRelocations_[i].getOffset();
-        int real_offset = offset + m_buffer.poolSizeBefore(offset);
+        size_t offset = tmpJumpRelocations_[i].getOffset();
+        size_t real_offset = offset + m_buffer.poolSizeBefore(offset);
         jumpRelocations_.writeUnsigned(real_offset);
     }
 
     for (unsigned int i = 0; i < tmpPreBarriers_.length(); i++) {
-        int offset = tmpPreBarriers_[i].getOffset();
-        int real_offset = offset + m_buffer.poolSizeBefore(offset);
+        size_t offset = tmpPreBarriers_[i].getOffset();
+        size_t real_offset = offset + m_buffer.poolSizeBefore(offset);
         preBarriers_.writeUnsigned(real_offset);
     }
 }

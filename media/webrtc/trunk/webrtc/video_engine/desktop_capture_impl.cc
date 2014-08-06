@@ -359,7 +359,12 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
     MouseCursorMonitor * pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(webrtc::DesktopCaptureOptions::CreateDefault(), webrtc::kFullDesktopScreenId);
     desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pAppCapturer, pMouseCursorMonitor));
   } else if (type == Screen) {
-    ScreenCapturer *pScreenCapturer = ScreenCapturer::Create();
+
+    DesktopCaptureOptions options = DesktopCaptureOptions::CreateDefault();
+    // Leave desktop effects enabled during WebRTC captures.
+    options.set_disable_effects(false);
+
+    ScreenCapturer *pScreenCapturer = ScreenCapturer::Create(options);
     if (!pScreenCapturer) {
       return -1;
     }
@@ -368,7 +373,7 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
     pScreenCapturer->SelectScreen(screenid);
     pScreenCapturer->SetMouseShapeObserver(this);
 
-    MouseCursorMonitor * pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(webrtc::DesktopCaptureOptions::CreateDefault(), screenid);
+    MouseCursorMonitor * pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(options, screenid);
     desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pScreenCapturer, pMouseCursorMonitor));
   } else if (type == Window) {
     WindowCapturer *pWindowCapturer = WindowCapturer::Create();

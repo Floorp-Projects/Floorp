@@ -60,15 +60,21 @@ var globalPasted = false;
 function pasteArea()
 {
   var pasteArea = document.getElementById("paste-selection-area");
+  var pasteAreaRect = pasteArea.getBoundingClientRect();
+  var pasteAreaCenterX = pasteAreaRect.left + pasteAreaRect.width/2;
+  var pasteAreaCenterY = pasteAreaRect.top + pasteAreaRect.height/2;
+  var util = SpecialPowers.getDOMWindowUtils(window);
+
   pasteArea.focus();
-  synthesizeMouse(pasteArea, 8, 8, { button: 1 });
+  util.sendMouseEventToWindow("mousedown", pasteAreaCenterX, pasteAreaCenterY, 1, 1, 0, true);
+  util.sendMouseEventToWindow("mouseup",   pasteAreaCenterX, pasteAreaCenterY, 1, 1, 0, true);
 
   var usesMouseButtonPaste = SpecialPowers.getBoolPref("middlemouse.paste");
   if (usesMouseButtonPaste) {
     // The data transfer should contain the selection data when the selection clipboard is supported,
     // not the global clipboard data.
     var expectedText = supportsSelectionClipboard ? "COPY TEXT" : "CLIPBOARD";
-    is(document.getElementById("paste-selection-area").value, expectedText, "data pasted properly from selection");
+    is(document.getElementById("paste-selection-area").value, expectedText, "In pasteArea(): data pasted properly from selection");
     ok(selectionPasted, "selection event fired");
   }
   else {
@@ -92,7 +98,7 @@ function pastedSelection(event)
   ok(navigator.platform.indexOf("Mac") == -1 && navigator.platform.indexOf("Win") == -1, "middle click enabled on right platforms");
 
   var expectedText = supportsSelectionClipboard ? "COPY TEXT" : "CLIPBOARD";
-  is(event.clipboardData.getData("text/plain"), expectedText, "data pasted properly from selection");
+  is(event.clipboardData.getData("text/plain"), expectedText, "In pastedSelection(): data pasted properly from selection");
 
   selectionPasted = true;
 }
