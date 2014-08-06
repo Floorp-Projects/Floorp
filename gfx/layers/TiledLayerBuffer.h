@@ -506,6 +506,11 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
     x += width;
   }
 
+  AsDerived().PostValidate(aPaintRegion);
+  for (unsigned int i = 0; i < newRetainedTiles.Length(); ++i) {
+    AsDerived().UnlockTile(newRetainedTiles[i]);
+  }
+
   // At this point, oldTileCount should be zero
   NS_ABORT_IF_FALSE(oldTileCount == 0, "Failed to release old tiles");
 

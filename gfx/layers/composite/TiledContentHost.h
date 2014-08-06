@@ -154,6 +154,8 @@ protected:
 
   void SwapTiles(TileHost& aTileA, TileHost& aTileB) { std::swap(aTileA, aTileB); }
 
+  void UnlockTile(TileHost aTile) {}
+  void PostValidate(const nsIntRegion& aPaintRegion) {}
 private:
   CSSToParentLayerScale mFrameResolution;
   bool mHasDoubleBufferedTiles;
