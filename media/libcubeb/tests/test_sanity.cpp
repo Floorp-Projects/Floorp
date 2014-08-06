@@ -515,7 +515,6 @@ main(int argc, char * argv[])
   test_init_destroy_multiple_contexts();
   test_init_destroy_stream();
   test_init_destroy_multiple_streams();
-  test_init_destroy_multiple_contexts_and_streams();
   test_basic_stream_operations();
   test_stream_position();
 
@@ -525,6 +524,8 @@ main(int argc, char * argv[])
    * and is not documented as a possible return value for this call. Hence, we
    * try to limit the number of streams we create in this test. */
   if (!is_windows_7()) {
+    test_init_destroy_multiple_contexts_and_streams();
+
     delay_callback = 0;
     test_init_start_stop_destroy_multiple_streams(0, 0);
     test_init_start_stop_destroy_multiple_streams(1, 0);
