@@ -202,7 +202,6 @@ protected:
     // XXX these fields should go away and the values be acquired as needed,
     // probably by ComputeMetrics.
     uint32_t              mBlinkRate;         // time for one cyle (on then off), in milliseconds
-    nscoord               mCaretWidthCSSPx;   // caret width in CSS pixels
     float                 mCaretAspectRatio;  // caret width/height aspect ratio
 
     bool                  mVisible;           // is the caret blinking
