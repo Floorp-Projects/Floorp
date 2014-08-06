@@ -264,7 +264,7 @@ Tools.webAudioEditor = {
 Tools.jsprofiler = {
   id: "jsprofiler",
   accesskey: l10n("profiler.accesskey", profilerStrings),
-  key: l10n("profiler2.commandkey", profilerStrings),
+  key: l10n("profiler.commandkey2", profilerStrings),
   ordinal: 7,
   modifiers: "shift",
   visibilityswitch: "devtools.profiler.enabled",
