@@ -12,6 +12,7 @@
         "use strict";
 
         const swPref = "dom.workers.sharedWorkers.enabled";
+        const scrollbarPref = "layout.testing.overlay-scrollbars.always-visible";
         const bfCacheEnabledPref = "browser.sessionhistory.cache_subframes";
         const bfCacheDepthPref = "browser.sessionhistory.max_total_viewers";
         const bfCacheDepth = 10;
@@ -26,7 +27,13 @@
             ok(!("SharedWorker" in window), "No SharedWorker without pref set");
           }
 
-          SpecialPowers.pushPrefEnv({ set: [[swPref, true]] }, sendToGenerator);
+          // Enable SharedWorkers and force scrollbar to always be shown.  The
+          // scrollbar setting is necessary to avoid the fade-in/fade-out from
+          // evicting our document from the BF cache below.  If bug 1049277
+          // is fixed, then we can stop setting the scrollbar pref here.
+          SpecialPowers.pushPrefEnv({ set: [[swPref, true],
+                                            [scrollbarPref, true]] },
+                                    sendToGenerator);
           yield undefined;
 
           window.addEventListener("message", function(event) {
