@@ -23,6 +23,8 @@
     <dimen name="card_padding_x">38dp</dimen>
     <dimen name="card_padding_y">23dp</dimen>
 
+    <dimen name="search_bar_padding_y">10dp</dimen>
+
     <!-- Widget Buttons -->
     <dimen name="widget_header_height">70dp</dimen>
     <dimen name="widget_button_offset">-50dp</dimen>

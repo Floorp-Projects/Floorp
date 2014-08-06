@@ -4,9 +4,12 @@
 
 package org.mozilla.gecko.mozglue.generatorannotations;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface GeneratorOptions {
     // Specifies a custom name for the generated C++ class. If left empty, is AndroidJavaClassName.

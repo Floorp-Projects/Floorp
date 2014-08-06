@@ -48,7 +48,7 @@ public class GeckoMenuItem implements MenuItem {
     private GeckoActionProvider mActionProvider;
     private final GeckoMenu mMenu;
     private GeckoSubMenu mSubMenu;
-    private MenuItem.OnMenuItemClickListener mMenuItemClickListener = null;
+    private MenuItem.OnMenuItemClickListener mMenuItemClickListener;
     private OnShowAsActionChangedListener mShowAsActionChangedListener;
 
     public GeckoMenuItem(GeckoMenu menu, int id, int order, int titleRes) {

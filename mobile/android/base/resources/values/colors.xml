@@ -76,7 +76,6 @@
   <color name="suggestion_primary">#dddddd</color>
   <color name="suggestion_pressed">#bbbbbb</color>
   <color name="tab_row_pressed">#4D000000</color>
-  <color name="dialogtitle_textcolor">#ffffff</color>
 
   <color name="textbox_background">#FFF</color>
   <color name="textbox_background_disabled">#DDD</color>

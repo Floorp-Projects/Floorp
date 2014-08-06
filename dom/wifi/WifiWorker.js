@@ -810,15 +810,6 @@ var WifiManager = (function() {
       manager.connectionInfo.id = -1;
       return true;
     }
-    // Association reject is triggered mostly on incorrect WEP key.
-    if (eventData.indexOf("CTRL-EVENT-ASSOC-REJECT") === 0) {
-      notify("passwordmaybeincorrect");
-      if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
-        manager.authenticationFailuresCount = 0;
-        notify("disconnected", {connectionInfo: manager.connectionInfo});
-      }
-      return true;
-    }
     if (eventData.indexOf("CTRL-EVENT-CONNECTED") === 0) {
       // Format: CTRL-EVENT-CONNECTED - Connection to 00:1e:58:ec:d5:6d completed (reauth) [id=1 id_str=]
       var bssid = event.split(" ")[4];

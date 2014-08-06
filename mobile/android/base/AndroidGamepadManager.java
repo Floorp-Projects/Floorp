@@ -38,7 +38,7 @@ public class AndroidGamepadManager {
         private Axis(int axis) {
             this.axis = axis;
         }
-    };
+    }
 
     // A list of gamepad button mappings. Axes are determined at
     // runtime, as they vary by Android version.
@@ -51,7 +51,7 @@ public class AndroidGamepadManager {
         private Trigger(int button) {
             this.button = button;
         }
-    };
+    }
 
     private static final int FIRST_DPAD_BUTTON = 12;
     // A list of axis number, gamepad button mappings for negative, positive.
@@ -69,7 +69,7 @@ public class AndroidGamepadManager {
             this.negativeButton = negativeButton;
             this.positiveButton = positiveButton;
         }
-    };
+    }
 
     private static enum Button {
         A(KeyEvent.KEYCODE_BUTTON_A),
@@ -94,7 +94,7 @@ public class AndroidGamepadManager {
         private Button(int button) {
             this.button = button;
         }
-    };
+    }
 
     private static class Gamepad {
         // ID from GamepadService
@@ -129,9 +129,9 @@ public class AndroidGamepadManager {
     }
 
     private static boolean sStarted;
-    private static HashMap<Integer, Gamepad> sGamepads = null;
-    private static HashMap<Integer, List<KeyEvent>> sPendingGamepads = null;
-    private static InputManager.InputDeviceListener sListener = null;
+    private static HashMap<Integer, Gamepad> sGamepads;
+    private static HashMap<Integer, List<KeyEvent>> sPendingGamepads;
+    private static InputManager.InputDeviceListener sListener;
     private static Timer sPollTimer;
 
     private AndroidGamepadManager() {

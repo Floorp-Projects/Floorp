@@ -76,7 +76,7 @@ var CustomStyle = (function CustomStyleClosure() {
 
   CustomStyle.getProp = function get(propName, element) {
     // check cache only when no element is given
-    if (arguments.length == 1 && typeof _cache[propName] == 'string') {
+    if (arguments.length === 1 && typeof _cache[propName] === 'string') {
       return _cache[propName];
     }
 
@@ -84,7 +84,7 @@ var CustomStyle = (function CustomStyleClosure() {
     var style = element.style, prefixed, uPropName;
 
     // test standard property first
-    if (typeof style[propName] == 'string') {
+    if (typeof style[propName] === 'string') {
       return (_cache[propName] = propName);
     }
 
@@ -94,7 +94,7 @@ var CustomStyle = (function CustomStyleClosure() {
     // test vendor specific properties
     for (var i = 0, l = prefixes.length; i < l; i++) {
       prefixed = prefixes[i] + uPropName;
-      if (typeof style[prefixed] == 'string') {
+      if (typeof style[prefixed] === 'string') {
         return (_cache[propName] = prefixed);
       }
     }
@@ -105,7 +105,7 @@ var CustomStyle = (function CustomStyleClosure() {
 
   CustomStyle.setProp = function set(propName, element, str) {
     var prop = this.getProp(propName);
-    if (prop != 'undefined') {
+    if (prop !== 'undefined') {
       element.style[prop] = str;
     }
   };
@@ -139,7 +139,7 @@ function getOutputScale(ctx) {
   return {
     sx: pixelRatio,
     sy: pixelRatio,
-    scaled: pixelRatio != 1
+    scaled: pixelRatio !== 1
   };
 }
 
@@ -207,7 +207,7 @@ function getPDFFileNameFromURL(url) {
                            reFilename.exec(splitURI[3]);
   if (suggestedFilename) {
     suggestedFilename = suggestedFilename[0];
-    if (suggestedFilename.indexOf('%') != -1) {
+    if (suggestedFilename.indexOf('%') !== -1) {
       // URL-encoded %2Fpath%2Fto%2Ffile.pdf should be file.pdf
       try {
         suggestedFilename =
@@ -465,6 +465,7 @@ var Preferences = {
     }.bind(this));
   }
 };
+
 
 
 
@@ -1617,7 +1618,9 @@ var SecondaryToolbar = {
   },
 
   lastPageClick: function secondaryToolbarLastPageClick(evt) {
-    PDFView.page = PDFView.pdfDocument.numPages;
+    if (PDFView.pdfDocument) {
+      PDFView.page = PDFView.pdfDocument.numPages;
+    }
     this.close();
   },
 
@@ -2512,10 +2515,10 @@ var DocumentProperties = {
 
     // As per spec, utRel = 'Z' means equal to universal time.
     // The other cases ('-' and '+') have to be handled here.
-    if (utRel == '-') {
+    if (utRel === '-') {
       hours += offsetHours;
       minutes += offsetMinutes;
-    } else if (utRel == '+') {
+    } else if (utRel === '+') {
       hours -= offsetHours;
       minutes += offsetMinutes;
     }
@@ -2554,6 +2557,7 @@ var PDFView = {
   isViewerEmbedded: (window.parent !== window),
   idleTimeout: null,
   currentPosition: null,
+  url: '',
 
   // called once when the document is loaded
   initialize: function pdfViewInitialize() {
@@ -3204,7 +3208,7 @@ var PDFView = {
         var pdfOpenParams = PDFView.getAnchorUrl('#page=' + pageNumber);
         var destKind = dest[1];
         if (typeof destKind === 'object' && 'name' in destKind &&
-            destKind.name == 'XYZ') {
+            destKind.name === 'XYZ') {
           var scale = (dest[4] || this.currentScaleValue);
           var scaleNumber = parseFloat(scale);
           if (scaleNumber) {
@@ -4019,9 +4023,9 @@ var PDFView = {
 
       // In case we are already on the first or the last page there is no need
       // to do anything.
-      if ((currentPage == 1 && pageFlipDirection == PageFlipDirection.UP) ||
-          (currentPage == this.pages.length &&
-           pageFlipDirection == PageFlipDirection.DOWN)) {
+      if ((currentPage === 1 && pageFlipDirection === PageFlipDirection.UP) ||
+          (currentPage === this.pages.length &&
+           pageFlipDirection === PageFlipDirection.DOWN)) {
         return;
       }
 
@@ -5477,7 +5481,7 @@ function webViewerInitialized() {
     document.getElementById('viewFind').classList.add('hidden');
   }
 
-  // Listen for unsuporrted features to trigger the fallback UI.
+  // Listen for unsupported features to trigger the fallback UI.
   PDFJS.UnsupportedManager.listen(PDFView.fallback.bind(PDFView));
 
   // Suppress context menus for some controls
@@ -5486,7 +5490,7 @@ function webViewerInitialized() {
   var mainContainer = document.getElementById('mainContainer');
   var outerContainer = document.getElementById('outerContainer');
   mainContainer.addEventListener('transitionend', function(e) {
-    if (e.target == mainContainer) {
+    if (e.target === mainContainer) {
       var event = document.createEvent('UIEvents');
       event.initUIEvent('resize', false, false, window, 0);
       window.dispatchEvent(event);
@@ -5690,7 +5694,7 @@ function selectScaleOption(value) {
   var predefinedValueFound = false;
   for (var i = 0; i < options.length; i++) {
     var option = options[i];
-    if (option.value != value) {
+    if (option.value !== value) {
       option.selected = false;
       continue;
     }
@@ -5948,8 +5952,8 @@ window.addEventListener('keydown', function keydown(evt) {
         }
         break;
       case 35: // end
-        if (PresentationMode.active ||
-            PDFView.page < PDFView.pdfDocument.numPages) {
+        if (PresentationMode.active || (PDFView.pdfDocument &&
+            PDFView.page < PDFView.pdfDocument.numPages)) {
           PDFView.page = PDFView.pdfDocument.numPages;
           handled = true;
         }

@@ -352,6 +352,8 @@ protected:
                                                         bool* aSuccess) MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
 
+    virtual bool RecvRemotePaintIsReady() MOZ_OVERRIDE;
+
     // IME
     static TabParent *mIMETabParent;
     nsString mIMECacheText;

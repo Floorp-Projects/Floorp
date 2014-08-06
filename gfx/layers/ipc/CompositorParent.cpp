@@ -1126,6 +1126,7 @@ public:
     : mTransport(aTransport)
     , mChildProcessId(aOtherProcess)
     , mCompositorThreadHolder(sCompositorThreadHolder)
+    , mNotifyAfterRemotePaint(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -1152,6 +1153,11 @@ public:
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) { return true; }
   virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) MOZ_OVERRIDE { return true; }
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) MOZ_OVERRIDE  { return true; }
+
+  /**
+   * Tells this CompositorParent to send a message when the compositor has received the transaction.
+   */
+  virtual bool RecvRequestNotifyAfterRemotePaint() MOZ_OVERRIDE;
 
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
@@ -1194,6 +1200,9 @@ private:
   base::ProcessId mChildProcessId;
 
   nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
+  // If true, we should send a RemotePaintIsReady message when the layer transaction
+  // is received
+  bool mNotifyAfterRemotePaint;
 };
 
 void
@@ -1284,6 +1293,13 @@ static void
 RemoveIndirectTree(uint64_t aId)
 {
   sIndirectLayerTrees.erase(aId);
+}
+
+bool
+CrossProcessCompositorParent::RecvRequestNotifyAfterRemotePaint()
+{
+  mNotifyAfterRemotePaint = true;
+  return true;
 }
 
 void
@@ -1380,6 +1396,13 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
 
   state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite,
       aPaintSequenceNumber, aIsRepeatTransaction);
+
+  // Send the 'remote paint ready' message to the content thread if it has already asked.
+  if(mNotifyAfterRemotePaint)  {
+    unused << SendRemotePaintIsReady();
+    mNotifyAfterRemotePaint = false;
+  }
+
   aLayerTree->SetPendingTransactionId(aTransactionId);
 }
 
