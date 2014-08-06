@@ -422,6 +422,7 @@ class ICEntry
     _(GetProp_DOMProxyShadowed) \
     _(GetProp_ArgumentsLength)  \
     _(GetProp_ArgumentsCallee)  \
+    _(GetProp_Generic)          \
                                 \
     _(SetProp_Fallback)         \
     _(SetProp_Native)           \
@@ -800,6 +801,7 @@ class ICStub
           case GetProp_CallDOMProxyNative:
           case GetProp_CallDOMProxyWithGenerationNative:
           case GetProp_DOMProxyShadowed:
+          case GetProp_Generic:
           case SetProp_CallScripted:
           case SetProp_CallNative:
           case RetSub_Fallback:
@@ -4091,7 +4093,7 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
     { }
 
   public:
-    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+    static const uint32_t MAX_OPTIMIZED_STUBS = 16;
 
     static inline ICGetProp_Fallback *New(ICStubSpace *space, JitCode *code) {
         if (!code)
@@ -4132,6 +4134,39 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
             if (!stub || !stub->initMonitoringChain(cx, space))
                 return nullptr;
             return stub;
+        }
+    };
+};
+
+// Stub for sites, which are too polymorphic (i.e. MAX_OPTIMIZED_STUBS was reached)
+class ICGetProp_Generic : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+  protected:
+    explicit ICGetProp_Generic(JitCode *stubCode, ICStub *firstMonitorStub)
+      : ICMonitoredStub(ICStub::GetProp_Generic, stubCode, firstMonitorStub) {}
+
+  public:
+    static inline ICGetProp_Generic *New(ICStubSpace *space, JitCode *code, ICStub *firstMonitorStub)
+    {
+        if(!code)
+            return nullptr;
+        return space->allocate<ICGetProp_Generic>(code, firstMonitorStub);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+        ICStub *firstMonitorStub_;
+      public:
+        explicit Compiler(JSContext *cx, ICStub *firstMonitorStub)
+          : ICStubCompiler(cx, ICStub::GetProp_Generic),
+            firstMonitorStub_(firstMonitorStub)
+        {}
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICGetProp_Generic::New(space, getStubCode(), firstMonitorStub_);
         }
     };
 };
