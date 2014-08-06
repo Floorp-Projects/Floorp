@@ -57,7 +57,6 @@ public:
 
   bool KeyEquals(KeyTypePointer aKey) const
   {
-    // njn: this is a heavyweight way to compare two char16ptr_t values!
     return mAtom->Equals(*aKey);
   }
 
