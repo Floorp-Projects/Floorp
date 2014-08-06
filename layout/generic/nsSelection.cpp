@@ -3923,18 +3923,10 @@ Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
   nsFrameSelection::HINT hint = mFrameSelection->GetHint();
 
   if (aVisual) {
-    nsIPresShell *presShell = mFrameSelection->GetShell();
-    if (!presShell)
-      return NS_ERROR_FAILURE;
-
-    nsRefPtr<nsCaret> caret = presShell->GetCaret();
-    if (!caret)
-      return NS_ERROR_FAILURE;
-    
     uint8_t caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
 
-    return caret->GetCaretFrameForNodeOffset(content, FocusOffset(),
-      hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
+    return nsCaret::GetCaretFrameForNodeOffset(mFrameSelection,
+      content, FocusOffset(), hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
   }
   
   *aReturnFrame = mFrameSelection->
