@@ -29,12 +29,6 @@ class nsCaret : public nsISelectionListener
     virtual ~nsCaret();
 
   public:
-    enum EViewCoordinates {
-      eTopLevelWindowCoordinates,
-      eRenderingViewCoordinates,
-      eClosestViewCoordinates
-    };
-
     NS_DECL_ISUPPORTS
 
     nsresult    Init(nsIPresShell *inPresShell);
