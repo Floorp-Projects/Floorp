@@ -4,11 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'base',
-    'html',
-    'media',
-    'xul',
-]
+DIRS += ['public', 'src']
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
