@@ -78,7 +78,7 @@ var AccessFuTest = {
       if (!data) {
         return;
       }
-      isDeeply(data.details.actions, aWaitForData, "Data is correct");
+      isDeeply(data.details, aWaitForData, "Data is correct");
       aListener.apply(listener);
     };
     Services.obs.addObserver(listener, 'accessfu-output', false);
@@ -288,8 +288,9 @@ AccessFuContentTest.prototype = {
     var android = this.extractAndroid(aMessage.json, expected.android);
     if ((speech && expected.speak) || (android && expected.android)) {
       if (expected.speak) {
-        (SimpleTest[expected.speak_checkFunc] || is)(speech, expected.speak,
-          '"' + speech + '" spoken');
+        var checkFunc = SimpleTest[expected.speak_checkFunc] || isDeeply;
+        checkFunc.apply(SimpleTest, [speech, expected.speak,
+          '"' + JSON.stringify(speech) + '" spoken']);
       }
 
       if (expected.android) {
@@ -332,11 +333,9 @@ AccessFuContentTest.prototype = {
     }
 
     for (var output of aData) {
-      if (output && output.type === 'Speech') {
-        for (var action of output.details.actions) {
-          if (action && action.method == 'speak') {
-            return action.data;
-          }
+      if (output && output.type === 'B2G') {
+        if (output.details && output.details.data[0].string !== 'clickAction') {
+          return output.details.data;
         }
       }
     }
@@ -345,6 +344,10 @@ AccessFuContentTest.prototype = {
   },
 
   extractAndroid: function(aData, aExpectedEvents) {
+    if (!aData) {
+      return null;
+    }
+
     for (var output of aData) {
       if (output && output.type === 'Android') {
         for (var i in output.details) {

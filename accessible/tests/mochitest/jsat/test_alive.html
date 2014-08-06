@@ -23,13 +23,10 @@
     function settingsStart() {
       ok(true, "EventManager was stopped.");
       isnot(AccessFu._enabled, true, "AccessFu was disabled.");
-      AccessFuTest.once([{
-        "method": "speak",
-        "data": "Screen reader started",
-        "options": {
-          "enqueue": false
-        }
-      }], AccessFuTest.nextTest);
+      AccessFuTest.once({
+        "eventType": "announcement",
+        "data": [{string: "screenReaderStarted"}]
+      }, AccessFuTest.nextTest);
       // XXX: Bug 978076 - test start with SettingsManager.
       //navigator.mozSettings.createLock().set(
       //  {'accessibility.screenreader': false});
@@ -39,13 +36,10 @@
     // Make sure EventManager is started again.
     function settingsStop() {
       ok(AccessFu._enabled, "AccessFu was enabled again.");
-      AccessFuTest.once([{
-        "method": "speak",
-        "data": "Screen reader stopped",
-        "options": {
-          "enqueue": false
-        }
-      }], AccessFuTest.finish);
+      AccessFuTest.once({
+        "eventType": "announcement",
+        "data": [{string: "screenReaderStopped"}]
+      }, AccessFuTest.finish);
       // XXX: Bug 978076 - test stop with SettingsManager.
       //navigator.mozSettings.createLock().set(
       //  {'accessibility.screenreader': false});

@@ -23,68 +23,72 @@
   <script type="application/javascript">
     function doTest() {
       var doc = currentTabDocument();
-      var iframe = doc.createElement("iframe");
+      var iframe = doc.createElement('iframe');
       iframe.mozbrowser = true;
-      iframe.addEventListener("mozbrowserloadend", function () {
+      iframe.addEventListener('mozbrowserloadend', function () {
       var contentTest = new AccessFuContentTest(
         [
           // Simple traversal forward
           [ContentMessages.simpleMoveNext, {
-            speak: 'Phone status bar Traversal Rule test document'
+            speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: 'wow heading level 1 such app'
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]} ,'such app']
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: 'many option not checked check button First item list 1 item'
+            speak: ['many option', {'string': 'stateNotChecked'},
+              {'string': 'checkbutton'}, {'string': 'listStart'},
+              {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}]
           }],
           // check checkbox
           [ContentMessages.activateCurrent(), {
-            speak: 'checked'
+            speak: [{'string': 'checkAction'}]
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: 'much range label'
+            speak: ['much range', {'string': 'label'}]
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: 'much range 5 slider'
+            speak: ['much range', '5', {'string': 'slider'}]
           }],
           [ContentMessages.adjustRangeUp,
-           { speak: '6'}],
+           { speak: ['6']}],
           [ContentMessages.simpleMoveNext, {
-            speak: 'Home button'
+            speak: ['Home', {'string': 'pushbutton'}]
           }],
 
           // Simple traversal backward
           [ContentMessages.simpleMovePrevious, {
-            speak: 'much range 6 slider such app'
+            speak: ['much range', '6', {'string': 'slider'}, 'such app']
           }],
           [ContentMessages.adjustRangeDown,
-           { speak: '5'}],
+           { speak: ['5']}],
           [ContentMessages.simpleMovePrevious, {
-            speak: 'much range label'
+            speak: ['much range', {'string': 'label'}]
           }],
           [ContentMessages.simpleMovePrevious, {
-            speak: 'many option checked check button First item list 1 item'
+            speak: ['many option', {'string': 'stateChecked'},
+              {'string': 'checkbutton'}, {'string': 'listStart'},
+              {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}]
           }],
           // uncheck checkbox
           [ContentMessages.activateCurrent(), {
-            speak: 'unchecked'
+            speak: [{'string': 'uncheckAction'}]
           }],
           [ContentMessages.simpleMovePrevious, {
-            speak: 'wow heading level 1'
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]}]
           }],
           [ContentMessages.simpleMovePrevious, {
-            speak: 'Phone status bar'
+            speak: ['Phone status bar']
           }],
 
           // Moving to the absolute last item from an embedded document
           // fails. Bug 972035.
           [ContentMessages.simpleMoveNext, {
-            speak: 'wow heading level 1 such app'
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
           }],
           // Move from an inner frame to the last element in the parent doc
           [ContentMessages.simpleMoveLast, {
-            speak: 'Home button',
+            speak: ['Home', {'string': 'pushbutton'}],
             speak_checkFunc: 'todo_is'
           }],
 
@@ -93,16 +97,18 @@
           // Moving to the absolute first item from an embedded document
           // fails. Bug 972035.
           [ContentMessages.simpleMoveNext, {
-            speak: 'Phone status bar Traversal Rule test document'
+            speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: 'wow heading level 1 such app'
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: 'many option not checked check button First item list 1 item'
+            speak: ['many option', {'string': 'stateNotChecked'},
+              {'string': 'checkbutton'}, {'string': 'listStart'},
+              {'string': 'list'}, {'string': 'listItemsCount', 'count': 1}]
           }],
           [ContentMessages.simpleMoveFirst, {
-            speak: 'Phone status bar',
+            speak: ['Phone status bar'],
             speak_checkFunc: 'todo_is'
           }],
 
@@ -111,10 +117,10 @@
 
           // Move cursor with focus in outside document
           [ContentMessages.simpleMoveNext, {
-            speak: 'Phone status bar Traversal Rule test document'
+            speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [ContentMessages.focusSelector('button#home', false), {
-            speak: 'Home button'
+            speak: ['Home', {'string': 'pushbutton'}]
           }],
 
           // Blur button and reset cursor
@@ -124,13 +130,13 @@
           // Set focus on element outside of embedded frame while
           // cursor is in frame
           [ContentMessages.simpleMoveNext, {
-            speak: 'Phone status bar Traversal Rule test document'
+            speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: 'wow heading level 1 such app'
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
           }],
           [ContentMessages.focusSelector('button#home', false), {
-            speak: 'Home button'
+            speak: ['Home button']
           }]
 
           // Blur button and reset cursor
@@ -143,51 +149,52 @@
 
           // Open dialog in outer doc, while cursor is also in outer doc
           [ContentMessages.simpleMoveNext, {
-            speak: 'Phone status bar Traversal Rule test document'
+            speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [doc.defaultView.showAlert, {
-            speak: 'This is an alert! heading level 1 dialog'
+            speak: ['This is an alert! heading level 1 dialog']
           }],
 
           [function() {
             doc.defaultView.hideAlert()
           }, {
-            speak: 'wow heading level 1 such app'
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
           }],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Open dialog in outer doc, while cursor is in inner frame
           [ContentMessages.simpleMoveNext, {
-            speak: 'Phone status bar Traversal Rule test document'
+            speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [ContentMessages.simpleMoveNext, {
-            speak: 'wow heading level 1 such app'
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
           }],
           [doc.defaultView.showAlert, {
-            speak: 'This is an alert! heading level 1 dialog'
+            speak: ['This is an alert! heading level 1 dialog']
           }],
 
           // XXX: Place cursor back where it was.
           [doc.defaultView.hideAlert, {
-            speak: 'many option not checked check button such app'
+            speak: ['many option not checked check button such app']
           }],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Open dialog, then focus on something when closing
           [ContentMessages.simpleMoveNext, {
-            speak: 'Phone status bar Traversal Rule test document'
+            speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [doc.defaultView.showAlert, {
-            speak: 'This is an alert! heading level 1 dialog'
+            speak: ['This is an alert! heading level 1 dialog']
           }],
 
           [function() {
             doc.defaultView.hideAlert();
             doc.querySelector('button#home').focus();
           }, {
-            speak: 'Home button Traversal Rule test document'
+            speak: ['Home', {'string': 'pushbutton'},
+              'Traversal Rule test document']
           }]
         ]);
 
@@ -207,17 +214,17 @@
         openBrowserWindow(
           function () {
             SpecialPowers.pushPrefEnv({
-              "set": [
+              'set': [
                 // TODO: remove this as part of bug 820712
-                ["network.disable.ipc.security", true],
+                ['network.disable.ipc.security', true],
 
 
-                ["dom.ipc.browser_frames.oop_by_default", true],
-                ["dom.mozBrowserFramesEnabled", true],
-                ["browser.pagethumbnails.capturing_disabled", true]
+                ['dom.ipc.browser_frames.oop_by_default', true],
+                ['dom.mozBrowserFramesEnabled', true],
+                ['browser.pagethumbnails.capturing_disabled', true]
               ]
             }, doTest) },
-          getRootDirectory(window.location.href) + "doc_content_integration.html");
+          getRootDirectory(window.location.href) + 'doc_content_integration.html');
         });
   </script>
 </head>
