@@ -5,7 +5,9 @@
 %endif
 @namespace html "http://www.w3.org/1999/xhtml";
 
+html|body,
 page {
+  font: message-box;
   -moz-appearance: none;
   background-color: #f1f1f1;
   color: #424e5a;
@@ -21,12 +23,9 @@ treecol {
 }
 
 html|body {
-  font: message-box;
   font-size: 15px;
   font-weight: normal;
   margin: 0;
-  color: #424e5a;
-  background-color: #f1f1f1;
 }
 
 html|h1 {
@@ -128,38 +127,9 @@ tab[selected] {
 /* html buttons */
 
 html|button {
-  line-height: 20px;
-  height: 30px;
-  max-height: 30px;
   padding: 3px;
-  color: #333333;
-  border: 1px solid rgba(23,50,77,.4);
-  border-radius: 5px;
-  background-color: #f1f1f1;
-  background-image: linear-gradient(#fff, rgba(255,255,255,.1));
-  box-shadow: 0 1px 1px 0 #fff, inset 0 2px 2px 0 #fff;
-  text-shadow: 0 1px 1px #fefffe;
-  -moz-appearance: none;
-  -moz-border-top-colors: none !important;
-  -moz-border-right-colors: none !important;
-  -moz-border-bottom-colors: none !important;
-  -moz-border-left-colors: none !important;
-}
-
-html|button:enabled:hover {
-  background-image: linear-gradient(#fff, rgba(255,255,255,.6));
-}
-
-html|button:enabled:hover:active {
-  background-image: linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.6));
-}
-
-html|button:disabled {
-  cursor: not-allowed;
-  color: rgba(115,121,128,.5);
-  border-color: rgba(23,50,77,.25);
-  background-image: linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,.1));
-  text-shadow: 0 1px 1px #fff;
+  /* override forms.css */
+  font-size: inherit;
 }
 
 /* xul buttons and menulists */
@@ -181,21 +151,25 @@ menulist {
   background-color: #FBFBFB;
 }
 
+html|button:enabled:hover,
 button:not([disabled="true"]):hover,
 colorpicker[type="button"]:not([disabled="true"]):hover,
 menulist:not([disabled="true"]):hover {
   background-color: #EBEBEB;
 }
 
+html|button:enabled:hover:active,
 button:not([disabled="true"]):hover:active,
 colorpicker[type="button"]:not([disabled="true"]):hover:active,
 menulist[open="true"]:not([disabled="true"]) {
   background-color: #DADADA;
 }
 
+html|button:disabled,
 button[disabled="true"],
 colorpicker[type="button"][disabled="true"],
 menulist[disabled="true"] {
+  cursor: not-allowed;
   opacity: 0.5;
 }
 
