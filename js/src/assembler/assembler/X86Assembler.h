@@ -285,7 +285,9 @@ private:
     typedef enum {
         OP2_UD2             = 0x0B,
         OP2_MOVSD_VsdWsd    = 0x10,
+        OP2_MOVPS_VpsWps    = 0x10,
         OP2_MOVSD_WsdVsd    = 0x11,
+        OP2_MOVPS_WpsVps    = 0x11,
         OP2_UNPCKLPS_VsdWsd = 0x14,
         OP2_MOVAPD_VsdWsd   = 0x28,
         OP2_MOVAPS_VsdWsd   = 0x28,
@@ -2865,6 +2867,32 @@ public:
         spew("movaps     %d(%s,%s,%d), %s",
              offset, nameIReg(base), nameIReg(index), 1<<scale, nameFPReg(dst));
         m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, base, index, scale, offset);
+    }
+
+
+    void movups_rm(XMMRegisterID src, int offset, RegisterID base)
+    {
+        spew("movups     %s, %s0x%x(%s)",
+             nameFPReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.twoByteOp(OP2_MOVPS_WpsVps, (RegisterID)src, base, offset);
+    }
+    void movups_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("movups     %s, %d(%s,%s,%d)",
+             nameFPReg(src), offset, nameIReg(base), nameIReg(index), 1<<scale);
+        m_formatter.twoByteOp(OP2_MOVPS_WpsVps, (RegisterID)src, base, index, scale, offset);
+    }
+    void movups_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("movups     %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void movups_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    {
+        spew("movups     %d(%s,%s,%d), %s",
+             offset, nameIReg(base), nameIReg(index), 1<<scale, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVPS_VpsWps, (RegisterID)dst, base, index, scale, offset);
     }
 
     void movapd_rr(XMMRegisterID src, XMMRegisterID dst)

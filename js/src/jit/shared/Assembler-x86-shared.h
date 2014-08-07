@@ -439,6 +439,32 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
+    void movups(const Operand &src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.movups_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_SCALE:
+            masm.movups_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+    void movups(FloatRegister src, const Operand &dest) {
+        JS_ASSERT(HasSSE2());
+        switch (dest.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.movups_rm(src.code(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.movups_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
 
     // movsd and movss are only provided in load/store form since the
     // register-to-register form has different semantics (it doesn't clobber
