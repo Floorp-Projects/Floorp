@@ -53,4 +53,65 @@ endif
 
 ifndef INCLUDED_AUTOCONF_MK
 default::
+else
+
+# Integrate with mozbuild-generated make files. We first verify that no
+# variables provided by the automatically generated .mk files are
+# present. If they are, this is a violation of the separation of
+# responsibility between Makefile.in and mozbuild files.
+_MOZBUILD_EXTERNAL_VARIABLES := \
+  ANDROID_GENERATED_RESFILES \
+  ANDROID_RES_DIRS \
+  CMSRCS \
+  CMMSRCS \
+  CPP_UNIT_TESTS \
+  DIRS \
+  EXTRA_PP_COMPONENTS \
+  EXTRA_PP_JS_MODULES \
+  FORCE_SHARED_LIB \
+  FORCE_STATIC_LIB \
+  FINAL_LIBRARY \
+  HOST_CSRCS \
+  HOST_CMMSRCS \
+  HOST_LIBRARY_NAME \
+  HOST_PROGRAM \
+  HOST_SIMPLE_PROGRAMS \
+  IS_COMPONENT \
+  JAR_MANIFEST \
+  JAVA_JAR_TARGETS \
+  JS_MODULES_PATH \
+  LIBRARY_NAME \
+  MODULE \
+  MSVC_ENABLE_PGO \
+  NO_DIST_INSTALL \
+  PARALLEL_DIRS \
+  PROGRAM \
+  RESOURCE_FILES \
+  SDK_HEADERS \
+  SIMPLE_PROGRAMS \
+  TEST_DIRS \
+  TIERS \
+  TOOL_DIRS \
+  XPCSHELL_TESTS \
+  XPIDL_MODULE \
+  $(NULL)
+
+_DEPRECATED_VARIABLES := \
+  ANDROID_RESFILES \
+  LIBXUL_LIBRARY \
+  MOCHITEST_A11Y_FILES \
+  MOCHITEST_BROWSER_FILES \
+  MOCHITEST_BROWSER_FILES_PARTS \
+  MOCHITEST_CHROME_FILES \
+  MOCHITEST_FILES \
+  MOCHITEST_FILES_PARTS \
+  MOCHITEST_METRO_FILES \
+  MOCHITEST_ROBOCOP_FILES \
+  SHORT_LIBNAME \
+  $(NULL)
+
+# Freeze the values specified by moz.build to catch them if they fail.
+
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES) $(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
+
 endif
