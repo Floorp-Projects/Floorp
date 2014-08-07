@@ -5,6 +5,4 @@
 
 SDK_BINARY	= $(PROGRAM)
 
-EXTRA_LIBS +=	$(NSPR_LIBS)
-
 NSDISTMODE = copy

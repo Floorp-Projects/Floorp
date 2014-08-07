@@ -16,20 +16,6 @@ EXTRA_DEPS += symverscript
 endif
 endif
 
-EXTRA_LIBS += \
-  $(NSS_LIBS) \
-  $(NULL)
-
-ifdef ENABLE_INTL_API
-ifneq (,$(JS_SHARED_LIBRARY)$(MOZ_NATIVE_ICU))
-OS_LIBS += $(MOZ_ICU_LIBS)
-endif
-endif
-
-ifdef MOZ_NATIVE_FFI
-OS_LIBS += $(MOZ_FFI_LIBS)
-endif
-
 ifdef MOZ_WEBRTC
 ifeq (WINNT,$(OS_TARGET))
 ifndef MOZ_HAS_WINSDK_WITH_D3D
@@ -38,12 +24,6 @@ OS_LDFLAGS += \
   $(NULL)
 endif
 endif
-endif
-
-EXTRA_LIBS += $(NSPR_LIBS)
-
-ifdef MOZ_TREE_FREETYPE
-OS_LIBS += $(FT2_LIBS)
 endif
 
 # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is

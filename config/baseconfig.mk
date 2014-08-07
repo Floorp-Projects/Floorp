@@ -52,4 +52,82 @@ include_deps = $(eval $(if $(2),,-)include $(1))
 
 ifndef INCLUDED_AUTOCONF_MK
 default::
+else
+
+# Integrate with mozbuild-generated make files. We first verify that no
+# variables provided by the automatically generated .mk files are
+# present. If they are, this is a violation of the separation of
+# responsibility between Makefile.in and mozbuild files.
+_MOZBUILD_EXTERNAL_VARIABLES := \
+  ANDROID_GENERATED_RESFILES \
+  ANDROID_RES_DIRS \
+  CMSRCS \
+  CMMSRCS \
+  CPP_UNIT_TESTS \
+  DIRS \
+  EXTRA_DSO_LDOPTS \
+  EXTRA_JS_MODULES \
+  EXTRA_PP_COMPONENTS \
+  EXTRA_PP_JS_MODULES \
+  FORCE_SHARED_LIB \
+  FORCE_STATIC_LIB \
+  FINAL_LIBRARY \
+  HOST_CSRCS \
+  HOST_CMMSRCS \
+  HOST_EXTRA_LIBS \
+  HOST_LIBRARY_NAME \
+  HOST_PROGRAM \
+  HOST_SIMPLE_PROGRAMS \
+  IS_COMPONENT \
+  JAR_MANIFEST \
+  JAVA_JAR_TARGETS \
+  LD_VERSION_SCRIPT \
+  LIBRARY_NAME \
+  LIBS \
+  MAKE_FRAMEWORK \
+  MODULE \
+  MSVC_ENABLE_PGO \
+  NO_DIST_INSTALL \
+  OS_LIBS \
+  PARALLEL_DIRS \
+  PROGRAM \
+  PYTHON_UNIT_TESTS \
+  RESOURCE_FILES \
+  SDK_HEADERS \
+  SDK_LIBRARY \
+  SHARED_LIBRARY_LIBS \
+  SHARED_LIBRARY_NAME \
+  SIMPLE_PROGRAMS \
+  SONAME \
+  STATIC_LIBRARY_NAME \
+  TEST_DIRS \
+  TIERS \
+  TOOL_DIRS \
+  XPCSHELL_TESTS \
+  XPIDL_MODULE \
+  $(NULL)
+
+_DEPRECATED_VARIABLES := \
+  ANDROID_RESFILES \
+  EXPORT_LIBRARY \
+  EXTRA_LIBS \
+  HOST_LIBS \
+  LIBXUL_LIBRARY \
+  MOCHITEST_A11Y_FILES \
+  MOCHITEST_BROWSER_FILES \
+  MOCHITEST_BROWSER_FILES_PARTS \
+  MOCHITEST_CHROME_FILES \
+  MOCHITEST_FILES \
+  MOCHITEST_FILES_PARTS \
+  MOCHITEST_METRO_FILES \
+  MOCHITEST_ROBOCOP_FILES \
+  SHORT_LIBNAME \
+  TESTING_JS_MODULES \
+  TESTING_JS_MODULE_DIR \
+  $(NULL)
+
+# Freeze the values specified by moz.build to catch them if they fail.
+
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES) $(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
+
 endif

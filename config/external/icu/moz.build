@@ -3,3 +3,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LIBRARY_NAME = 'icu'
+
+if CONFIG['MOZ_NATIVE_ICU']:
+    OS_LIBS += CONFIG['MOZ_ICU_LIBS']
+else:
+    USE_LIBS += sorted(
+        '%s/intl/icu/target/lib/%s%s' % (
+            'static:' if not CONFIG['MOZ_SHARED_ICU'] else '',
+            l,
+            CONFIG['MOZ_ICU_DBG_SUFFIX']
+        ) for l in CONFIG['ICU_LIB_NAMES']
+    )

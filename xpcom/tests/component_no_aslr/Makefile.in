@@ -9,10 +9,6 @@ MANIFEST = testcompnoaslr.manifest
 MANIFEST_PATH = $(testxpcobjdir)/$(unittestlocation)
 PP_TARGETS += MANIFEST
 
-EXTRA_LIBS += \
-		$(NSPR_LIBS) \
-		$(NULL)
-
 LIB_FILES = $(SHARED_LIBRARY)
 LIB_DEST = $(testxpcobjdir)/$(unittestlocation)
 INSTALL_TARGETS += LIB

@@ -635,7 +635,9 @@ SSL_ForceHandshake
 SSL_GetChannelInfo
 SSL_GetCipherSuiteInfo
 SSL_GetClientAuthDataHook
+SSL_GetImplementedCiphers
 SSL_GetNextProto
+SSL_GetNumImplementedCiphers
 SSL_GetSRTPCipher
 SSL_HandshakeCallback
 SSL_HandshakeNegotiatedExtension

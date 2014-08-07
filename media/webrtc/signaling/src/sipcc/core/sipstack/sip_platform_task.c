@@ -409,6 +409,10 @@ sip_platform_task_loop (void *arg)
      * - Forever-loop exits in sip_process_int_msg()::THREAD_UNLOAD
      */
     while (TRUE) {
+      sip_process_int_msg();
+
+#if 0
+       /* We don't actually want to select anything else. See bug 1049291 */
         /*
          * Wait on events or timeout
          */
@@ -501,6 +505,7 @@ sip_platform_task_loop (void *arg)
                 }
             }
         }
+#endif
     }
 }
 
@@ -536,10 +541,13 @@ sip_platform_task_set_listen_socket (cpr_socket_t s)
 void
 sip_platform_task_set_read_socket (cpr_socket_t s)
 {
+#if 0
+  /* Removed calls to select(). See bug 1049291 */
     if (s != INVALID_SOCKET) {
         FD_SET(s, &read_fds);
         nfds = MAX(nfds, (uint32_t)s);
     }
+#endif
 }
 
 /**
@@ -574,8 +582,11 @@ sip_platform_task_reset_listen_socket (cpr_socket_t s)
 void
 sip_platform_task_clr_read_socket (cpr_socket_t s)
 {
+#if 0
+  /* Removed calls to select(). See bug 1049291 */
     if (s != INVALID_SOCKET) {
         FD_CLR(s, &read_fds);
     }
+#endif
 }
 

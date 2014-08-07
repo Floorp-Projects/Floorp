@@ -29,88 +29,22 @@ endif
 
 -include $(DEPTH)/.mozconfig.mk
 
-# Integrate with mozbuild-generated make files. We first verify that no
-# variables provided by the automatically generated .mk files are
-# present. If they are, this is a violation of the separation of
-# responsibility between Makefile.in and mozbuild files.
-_MOZBUILD_EXTERNAL_VARIABLES := \
-  ANDROID_GENERATED_RESFILES \
-  ANDROID_RES_DIRS \
-  CMSRCS \
-  CMMSRCS \
-  CPP_UNIT_TESTS \
-  DIRS \
-  EXTRA_DSO_LDOPTS \
-  EXTRA_JS_MODULES \
-  EXTRA_PP_COMPONENTS \
-  EXTRA_PP_JS_MODULES \
-  FORCE_SHARED_LIB \
-  FORCE_STATIC_LIB \
-  FINAL_LIBRARY \
-  HOST_CSRCS \
-  HOST_CMMSRCS \
-  HOST_EXTRA_LIBS \
-  HOST_LIBRARY_NAME \
-  HOST_PROGRAM \
-  HOST_SIMPLE_PROGRAMS \
-  IS_COMPONENT \
-  JAR_MANIFEST \
-  JAVA_JAR_TARGETS \
-  LD_VERSION_SCRIPT \
-  LIBRARY_NAME \
-  LIBS \
-  MAKE_FRAMEWORK \
-  MODULE \
-  MSVC_ENABLE_PGO \
-  NO_DIST_INSTALL \
-  PARALLEL_DIRS \
-  PROGRAM \
-  PYTHON_UNIT_TESTS \
-  RESOURCE_FILES \
-  SDK_HEADERS \
-  SDK_LIBRARY \
-  SHARED_LIBRARY_LIBS \
-  SHARED_LIBRARY_NAME \
-  SIMPLE_PROGRAMS \
-  SONAME \
-  STATIC_LIBRARY_NAME \
-  TEST_DIRS \
-  TIERS \
-  TOOL_DIRS \
-  XPCSHELL_TESTS \
-  XPIDL_MODULE \
-  $(NULL)
-
-_DEPRECATED_VARIABLES := \
-  ANDROID_RESFILES \
-  EXPORT_LIBRARY \
-  HOST_LIBS \
-  LIBXUL_LIBRARY \
-  MOCHITEST_A11Y_FILES \
-  MOCHITEST_BROWSER_FILES \
-  MOCHITEST_BROWSER_FILES_PARTS \
-  MOCHITEST_CHROME_FILES \
-  MOCHITEST_FILES \
-  MOCHITEST_FILES_PARTS \
-  MOCHITEST_METRO_FILES \
-  MOCHITEST_ROBOCOP_FILES \
-  SHORT_LIBNAME \
-  TESTING_JS_MODULES \
-  TESTING_JS_MODULE_DIR \
-  $(NULL)
-
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
 # Using $(firstword) may not be perfect. But it should be good enough for most
 # scenarios.
 _current_makefile = $(CURDIR)/$(firstword $(MAKEFILE_LIST))
 
-$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $(filter file override,$(subst $(NULL) ,_,$(origin $(var)))),\
-    $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
+CHECK_MOZBUILD_VARIABLES = $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES), \
+  $(if $(subst $($(var)_FROZEN),,'$($(var))'), \
+	  $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
+  )) $(foreach var,$(_DEPRECATED_VARIABLES), \
+	$(if $(subst $($(var)_FROZEN),,'$($(var))'), \
+    $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build),\
     ))
 
-$(foreach var,$(_DEPRECATED_VARIABLES),$(if $(filter file override,$(subst $(NULL) ,_,$(origin $(var)))),\
-    $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build)\
-    ))
+# Check variables set after autoconf.mk (included at the top of Makefiles) is
+# included and before config.mk is included.
+_eval_for_side_effects := $(CHECK_MOZBUILD_VARIABLES)
 
 # Import the automatically generated backend file. If this file doesn't exist,
 # the backend hasn't been properly configured. We want this to be a fatal
@@ -121,18 +55,7 @@ include backend.mk
 endif
 
 # Freeze the values specified by moz.build to catch them if they fail.
-
-$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
-$(foreach var,$(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
-
-CHECK_MOZBUILD_VARIABLES = $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES), \
-  $(if $(subst $($(var)_FROZEN),,'$($(var))'), \
-	  $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
-  )) $(foreach var,$(_DEPRECATED_VARIABLES), \
-	$(if $(subst $($(var)_FROZEN),,'$($(var))'), \
-    $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build),\
-    ))
-
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES) $(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
 endif
 
 space = $(NULL) $(NULL)
@@ -850,3 +773,6 @@ DISABLE_STL_WRAPPING := 1
 # Skip most Mozilla-specific include locations.
 INCLUDES = -I. $(LOCAL_INCLUDES) -I$(DEPTH)/dist/include
 endif
+
+# Freeze the values specified by moz.build to catch them if they fail.
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES) $(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))

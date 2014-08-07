@@ -10,7 +10,12 @@ EXPORTS += [
     'zlib.h',
 ]
 
-LIBRARY_NAME = 'mozz'
+if CONFIG['ZLIB_IN_MOZGLUE']:
+    FINAL_LIBRARY = 'mozglue'
+    DEFINES['IMPL_MFBT'] = True
+else:
+    # The final library is in config/external/zlib
+    FINAL_LIBRARY = 'zlib'
 
 SOURCES += [
     'adler32.c',
@@ -29,6 +34,3 @@ SOURCES += [
     'uncompr.c',
     'zutil.c',
 ]
-
-if CONFIG['ZLIB_IN_MOZGLUE']:
-    DEFINES['IMPL_MFBT'] = True

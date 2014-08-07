@@ -102,7 +102,7 @@ load 927734-1.html
 load 930270-1.html
 load 930270-2.html
 load 945048-1.html
-load 972199-1.html
+pref(layers.offmainthreadcomposition.async-animations,true) load 972199-1.html
 load 989965-1.html
 load 992333-1.html
 pref(dom.webcomponents.enabled,true) load 1017798-1.html

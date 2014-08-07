@@ -20,6 +20,7 @@ from mozunit import (
 from mozbuild.util import (
     FileAvoidWrite,
     hash_file,
+    memoize,
     resolve_target_to_make,
     MozbuildDeletionError,
     HierarchicalStringList,
@@ -427,6 +428,28 @@ class TestHierarchicalStringListWithFlagsFactory(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             l.x['y'].baz = False
+
+
+class TestMemoize(unittest.TestCase):
+    def test_memoize(self):
+        self._count = 0
+        @memoize
+        def wrapped(a, b):
+            self._count += 1
+            return a + b
+
+        self.assertEqual(wrapped(1, 1), 2)
+        self.assertEqual(self._count, 1)
+        self.assertEqual(wrapped(1, 1), 2)
+        self.assertEqual(self._count, 1)
+        self.assertEqual(wrapped(2, 1), 3)
+        self.assertEqual(self._count, 2)
+        self.assertEqual(wrapped(1, 2), 3)
+        self.assertEqual(self._count, 3)
+        self.assertEqual(wrapped(1, 2), 3)
+        self.assertEqual(self._count, 3)
+        self.assertEqual(wrapped(1, 1), 2)
+        self.assertEqual(self._count, 3)
 
 
 if __name__ == '__main__':

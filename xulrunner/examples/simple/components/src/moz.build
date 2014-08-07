@@ -21,6 +21,7 @@ XPI_NAME = 'simple'
 
 USE_LIBS += [
     'mozalloc',
+    'nspr',
     'xpcomglue_s',
     'xul',
 ]

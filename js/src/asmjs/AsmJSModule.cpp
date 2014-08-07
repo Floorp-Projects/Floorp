@@ -701,8 +701,7 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         break;
     }
 
-    MOZ_ASSUME_UNREACHABLE("Bad AsmJSImmKind");
-    return nullptr;
+    MOZ_CRASH("Bad AsmJSImmKind");
 }
 
 void
