@@ -33,6 +33,7 @@ from ..frontend.data import (
     Defines,
     DirectoryTraversal,
     Exports,
+    ExternalLibrary,
     GeneratedInclude,
     HostLibrary,
     HostProgram,
@@ -1209,8 +1210,9 @@ class RecursiveMakeBackend(CommonBackend):
             self._compile_graph[build_target].add('build/stlport/target')
 
         for lib in obj.linked_libraries:
-            self._compile_graph[build_target].add(
-                self._build_target_for_obj(lib))
+            if not isinstance(lib, ExternalLibrary):
+                self._compile_graph[build_target].add(
+                    self._build_target_for_obj(lib))
             relpath = pretty_relpath(lib)
             if isinstance(obj, Library):
                 if isinstance(lib, StaticLibrary):
