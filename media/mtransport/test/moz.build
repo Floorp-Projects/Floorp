@@ -89,9 +89,17 @@ USE_LIBS += [
     'mtransport_s',
     'nicer',
     'nrappkit',
+    'nspr',
+    'nss',
     'xpcomglue_s',
     'xul',
 ]
+
+if not CONFIG['MOZ_NATIVE_NSS'] and not CONFIG['MOZ_FOLD_LIBS']:
+    USE_LIBS += [
+        # Statically linking NSS libssl ensures that we can debug NSS too
+        'static:/security/nss/lib/ssl/ssl',
+    ]
 
 if CONFIG['MOZ_SCTP']:
     USE_LIBS += [

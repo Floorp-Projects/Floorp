@@ -8,10 +8,6 @@ endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 WRAP_LDFLAGS =
-else
-EXTRA_LIBS += \
-  $(NSPR_LIBS) \
-  $(NULL)
 endif
 
 ifndef MOZ_WINCONSOLE

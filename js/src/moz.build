@@ -438,10 +438,20 @@ if CONFIG['JS_SHARED_LIBRARY']:
 FORCE_STATIC_LIB = True
 STATIC_LIBRARY_NAME = 'js_static'
 
-if not CONFIG['MOZ_NATIVE_ZLIB'] and not CONFIG['ZLIB_IN_MOZGLUE']:
+if CONFIG['JS_HAS_CTYPES']:
     USE_LIBS += [
-        'mozz',
+        'ffi',
     ]
+
+if CONFIG['ENABLE_INTL_API']:
+    USE_LIBS += [
+        'icu',
+    ]
+
+USE_LIBS += [
+    'nspr',
+    'zlib',
+]
 
 if CONFIG['MOZ_ETW']:
     GENERATED_FILES = [
@@ -486,8 +496,6 @@ if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
     OS_LIBS += [
         'm',
     ]
-
-OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
 if CONFIG['OS_ARCH'] == 'FreeBSD':
     OS_LIBS += [

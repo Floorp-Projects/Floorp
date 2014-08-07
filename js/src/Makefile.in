@@ -15,7 +15,6 @@ endif
 TOPLEVEL_BUILD := 1
 
 run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
-EXTRA_LIBS		+= $(NSPR_LIBS)
 
 DIST_INSTALL = 1
 NO_EXPAND_LIBS = 1
@@ -23,14 +22,6 @@ NO_EXPAND_LIBS = 1
 ifdef JS_HAS_CTYPES
 ifdef MOZ_NATIVE_FFI
 LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
-endif
-
-ifdef MOZ_NATIVE_FFI
-OS_LIBS += $(MOZ_FFI_LIBS)
-else
-EXTRA_LIBS += \
-    ctypes/libffi/.libs/libffi.$(LIB_SUFFIX) \
-    $(NULL)
 endif
 
 # Windows needs this to be linked with a static library.
@@ -194,15 +185,7 @@ DIST_GARBAGE = config.cache config.log config.status* \
 distclean::
 	$(RM) $(DIST_GARBAGE)
 
-ifneq ($(findstring -L,$(NSPR_LIBS)),)
-NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
-else
-NSPR_STATIC_PATH = $(DIST)/lib
-endif
-
 CFLAGS += $(MOZ_ZLIB_CFLAGS)
-
-EXTRA_LIBS += $(MOZ_ICU_LIBS)
 
 # Silence warnings on AIX/HP-UX from non-GNU compilers
 ifndef GNU_CC

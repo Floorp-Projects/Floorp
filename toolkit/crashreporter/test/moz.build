@@ -41,6 +41,7 @@ include('/toolkit/crashreporter/crashreporter.mozbuild')
 
 USE_LIBS += [
     'mozalloc',
+    'nspr',
     'xpcomglue_s',
     'xul',
 ]
