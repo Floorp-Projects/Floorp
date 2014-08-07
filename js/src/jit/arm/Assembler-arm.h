@@ -94,8 +94,10 @@ static MOZ_CONSTEXPR_VAR Register FramePointer = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = r0;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = { FloatRegisters::d0, VFPRegister::Single };
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = { FloatRegisters::d0, VFPRegister::Double};
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimdReg = InvalidFloatReg;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = { FloatRegisters::d30, VFPRegister::Single };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = { FloatRegisters::d15, VFPRegister::Double };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = InvalidFloatReg;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchUIntReg = { FloatRegisters::d15, VFPRegister::UInt };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchIntReg = { FloatRegisters::d15, VFPRegister::Int };
 

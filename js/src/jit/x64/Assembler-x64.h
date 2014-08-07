@@ -76,6 +76,8 @@ static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = xmm0;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = xmm15;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = xmm0;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = xmm15;
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnSimdReg = xmm0;
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchSimdReg = xmm15;
 
 // Avoid rbp, which is the FramePointer, which is unavailable in some modes.
 static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = r8;
