@@ -27,14 +27,14 @@ interface nsIDocument;
  * string containing a copy of the container's serialized data, using
  * getDataAsBase64.
  */
-[scriptable, uuid(c8852f01-4c05-47c3-acca-253a958f39f6)]
+[scriptable, uuid(8144021a-7f8a-483a-a0f1-ca02b761403f)]
 interface nsIStructuredCloneContainer : nsISupports
 {
   /**
    * Initialize this structured clone container so it contains a clone of the
    * given jsval.
    */
-  [noscript, implicit_jscontext]
+  [noscript]
   void initFromJSVal(in jsval aData);
 
   /**

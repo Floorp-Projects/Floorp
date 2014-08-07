@@ -26,6 +26,11 @@
 namespace js {
 namespace jit {
 
+static const uint32_t Simd128DataSize = 4 * sizeof(int32_t);
+static_assert(Simd128DataSize == 4 * sizeof(int32_t), "SIMD data should be able to contain int32x4");
+static_assert(Simd128DataSize == 4 * sizeof(float), "SIMD data should be able to contain float32x4");
+static_assert(Simd128DataSize == 2 * sizeof(double), "SIMD data should be able to contain float64x2");
+
 enum Scale {
     TimesOne = 0,
     TimesTwo = 1,

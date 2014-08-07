@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1048178
+-->
+<window title="Mozilla Bug 1048178"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"/>
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1048178"
+     target="_blank">Mozilla Bug 1048178</a>
+
+  <hbox>
+      <scrollbar id="scroller"
+                 orient="horizontal"
+                 curpos="0"
+                 maxpos="500"
+                 pageincrement="500"
+                 width="500"
+                 style="margin:0"/>
+  </hbox>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+/** Test for Bug 1048178 **/
+var scrollbarTester = {
+  scrollbar: null,
+  startTest: function() {
+    this.scrollbar = $("scroller");
+    this.setScrollToClick(false);
+    this.testThumbDragging();
+    SimpleTest.finish();
+  },
+  testThumbDragging: function() {
+    var x = 400; // on the right half of the scroolbar
+    var y = 5;
+
+    this.mousedown(x, y, 0);
+    this.mousedown(x, y, 2);
+    this.mouseup(x, y, 2);
+    this.mouseup(x, y, 0);
+
+    var newPos = this.getPos(); // sould be '500'
+
+    this.mousedown(x, y, 0);
+    this.mousemove(x-1, y, 0);
+    this.mouseup(x-1, y, 0);
+
+    var newPos2 = this.getPos();
+    ok(newPos2 < newPos,
+       "Scrollbar thumb should follow the mouse when dragged.");
+  },
+  setScrollToClick: function(value) {
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+    var uiBranch = prefService.getBranch("ui.");
+    uiBranch.setIntPref("scrollToClick", value ? 1 : 0);
+  },
+  getPos: function() {
+    return this.scrollbar.getAttribute("curpos");
+  },
+  mousedown: function(x, y, button) {
+    synthesizeMouse(this.scrollbar, x, y, { type: "mousedown", 'button': button });
+  },
+  mousemove: function(x, y, button) {
+    synthesizeMouse(this.scrollbar, x, y, { type: "mousemove", 'button': button });
+  },
+  mouseup: function(x, y, button) {
+    synthesizeMouse(this.scrollbar, x, y, { type: "mouseup", 'button': button });
+  }
+}
+
+function doTest() {
+  setTimeout(function() { scrollbarTester.startTest(); }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+
+]]></script>
+</window>

@@ -21,3 +21,20 @@ keeping them separate from other `Debugger` facilities.
     You can retrieve the allocation site for a given object with the
     [`Debugger.Object.prototype.allocationSite`][allocation-site] accessor
     property.
+
+`maxAllocationsLogLength`
+:   The maximum number of allocation sites to accumulate in the allocations log
+    at a time. Its default value is `5000`.
+
+## Function Properties of the `Debugger.Memory.prototype` Object
+
+`drainAllocationsLog()`
+:   When `trackingAllocationSites` is `true`, this method returns an array of
+    allocation sites (as [captured stacks][saved-frame]) for recent `Object`
+    allocations within the set of debuggees. *Recent* is defined as the
+    `maxAllocationsLogLength` most recent `Object` allocations since the last
+    call to `drainAllocationsLog`. Therefore, calling this method effectively
+    clears the log.
+
+    When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
+    `Error`.
