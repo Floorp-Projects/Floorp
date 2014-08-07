@@ -186,6 +186,13 @@
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
 
+          function addSelectionRange(start, end) {
+            let range = document.createRange();
+            range.setStart(textNode, start);
+            range.setEnd(textNode, end);
+            selection.addRange(range);
+          }
+
           let protocol = value.match(/^[a-z\d.+\-]+:(?=[^\d])/);
           if (protocol &&
               ["http:", "https:", "ftp:"].indexOf(protocol[0]) == -1)
@@ -215,19 +222,27 @@
 
           let rangeLength = preDomain.length + subDomain.length;
           if (rangeLength) {
-            let range = document.createRange();
-            range.setStart(textNode, 0);
-            range.setEnd(textNode, rangeLength);
-            selection.addRange(range);
+            addSelectionRange(0, rangeLength);
           }
 
-          let startRest = preDomain.length + domain.length;
-          if (startRest < value.length) {
-            let range = document.createRange();
-            range.setStart(textNode, startRest);
-            range.setEnd(textNode, value.length);
-            selection.addRange(range);
-          }
+          Services.search.init(() => {
+            // Bail out if the URL changed in the meantime.
+            if (value != textNode.textContent) {
+              return;
+            }
+
+            let startRest = preDomain.length + domain.length;
+            let result = Services.search.parseSubmissionURL(value);
+
+            if (result.termsOffset > -1 && result.termsLength) {
+              addSelectionRange(startRest, result.termsOffset);
+              startRest = result.termsOffset + result.termsLength;
+            }
+
+            if (startRest < value.length) {
+              addSelectionRange(startRest, value.length);
+            }
+          });
         ]]></body>
       </method>
 
