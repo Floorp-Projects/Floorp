@@ -191,7 +191,6 @@ sub separate_debug_file_for($) {
         $global_debug_dir . dirname($file) . '/' . $basename
     );
     foreach my $result (@possible_results) {
-        print "$file $result " . (-f $result) . "\n";
         if (-f $result) {
             # XXX We should check the hash.
             return $result;
