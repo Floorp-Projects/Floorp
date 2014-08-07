@@ -43,6 +43,13 @@ SplitCriticalEdgesForBlock(MIRGraph &graph, MBasicBlock *block)
         graph.insertBlockAfter(block, split);
         split->end(MGoto::New(graph.alloc(), target));
 
+        // The entry resume point will not be used for anything, and may have
+        // the wrong stack depth, so remove it.
+        if (MResumePoint *rp = split->entryResumePoint()) {
+            rp->discardUses();
+            split->clearEntryResumePoint();
+        }
+
         block->replaceSuccessor(i, split);
         target->replacePredecessor(block, split);
     }
@@ -383,6 +390,26 @@ jit::FoldTests(MIRGraph &graph)
     }
 }
 
+static void
+EliminateTriviallyDeadResumePointOperands(MIRGraph &graph, MResumePoint *rp)
+{
+    // If we will pop the top of the stack immediately after resuming,
+    // then don't preserve the top value in the resume point.
+    if (rp->mode() != MResumePoint::ResumeAt || *rp->pc() != JSOP_POP)
+        return;
+
+    size_t top = rp->stackDepth() - 1;
+    JS_ASSERT(!rp->isObservableOperand(top));
+
+    MDefinition *def = rp->getOperand(top);
+    if (def->isConstant())
+        return;
+
+    MConstant *constant = MConstant::New(graph.alloc(), MagicValue(JS_OPTIMIZED_OUT));
+    rp->block()->insertBefore(*(rp->block()->begin()), constant);
+    rp->replaceOperand(top, constant);
+}
+
 // Operands to a resume point which are dead at the point of the resume can be
 // replaced with a magic value. This analysis supports limited detection of
 // dead operands, pruning those which are defined in the resume point's basic
@@ -406,11 +433,17 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
         if (mir->shouldCancel("Eliminate Dead Resume Point Operands (main loop)"))
             return false;
 
+        if (MResumePoint *rp = block->entryResumePoint())
+            EliminateTriviallyDeadResumePointOperands(graph, rp);
+
         // The logic below can get confused on infinite loops.
         if (block->isLoopHeader() && block->backedge() == *block)
             continue;
 
         for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
+            if (MResumePoint *rp = ins->resumePoint())
+                EliminateTriviallyDeadResumePointOperands(graph, rp);
+
             // No benefit to replacing constant operands with other constants.
             if (ins->isConstant())
                 continue;

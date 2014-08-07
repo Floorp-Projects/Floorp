@@ -2081,6 +2081,11 @@ tools are selected during the Xcode/Developer Tools installation.])
 	    AC_DEFINE(_AMD64_)
 	else		
 	    AC_DEFINE(_X86_)
+            if test -z "$GNU_CC" -a "$MSC_VER" -ge "1700"; then
+                dnl Visual C++ 2012 defaults to -arch:SSE2. Use -arch:IA32
+                dnl to avoid requiring SSE2.
+                CFLAGS="$CFLAGS -arch:IA32"
+            fi
 	fi
         ;;
     x86_64)

@@ -95,8 +95,6 @@ namespace gfx {
 
 // Some convenience FilterNode creation functions.
 
-static const float kMaxStdDeviation = 500;
-
 namespace FilterWrappers {
 
   static TemporaryRef<FilterNode>
@@ -1312,9 +1310,9 @@ FilterSupport::ComputeResultChangeRegion(const FilterDescription& aFilter,
   return resultChangeRegions[resultChangeRegions.Length() - 1];
 }
 
-static nsIntRegion
-PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
-                              const nsTArray<nsIntRegion>& aInputExtents)
+nsIntRegion
+FilterSupport::PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
+                                             const nsTArray<nsIntRegion>& aInputExtents)
 {
   const AttributeMap& atts = aDescription.Attributes();
   switch (aDescription.Type()) {

@@ -5,10 +5,6 @@
 XPCSHELLTESTROOT = $(abspath $(DEPTH))/_tests/xpcshell/$(relativesrcdir)
 CHROMETESTROOT = $(abspath $(DEPTH))/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
-DEFINES += \
-  -DAB_CD=$(AB_CD) \
-  $(NULL)
-
 PP_TARGETS            += aus-update-head
 aus-update-head_FLAGS := -Fsubstitution $(DEFINES) $(ACDEFINES)
 aus-update-head       := $(srcdir)/unit_aus_update/head_update.js

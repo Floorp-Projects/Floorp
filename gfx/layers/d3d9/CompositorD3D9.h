@@ -89,7 +89,10 @@ public:
 
   IDirect3DDevice9* device() const
   {
-    return mDeviceManager
+    // If the reset counts don't match it means the device was lost and we are
+    // in the process of recreating a new one or will be soon.
+    // cf. comment in EnsureSwapChain.
+    return mDeviceManager && mDeviceResetCount == mDeviceManager->GetDeviceResetCount()
            ? mDeviceManager->device()
            : nullptr;
   }

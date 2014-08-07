@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS and SVG Filter Chains: CSS Filter as Last Filter</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <style type="text/css">
+    #target {
+      filter: url(#red-to-green-and-blur);
+      background-color: #f00;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square.</p>
+  <div id="target"></div>
+  <svg width="0" height="0">
+    <filter id="red-to-green-and-blur" x="-50" y="-50" width="200" height="200" filterUnits="userSpaceOnUse">
+      <!-- Turn the red square into a green square. -->
+      <feColorMatrix type="hueRotate" values="90" color-interpolation-filters="sRGB"/>
+      <!-- Blur the red square. -->
+      <feGaussianBlur stdDeviation="3" color-interpolation-filters="sRGB"/>
+    </filter>
+  </svg>
+</body>
+</html>
