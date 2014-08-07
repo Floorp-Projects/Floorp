@@ -4,11 +4,12 @@
 
 /**
  * /!\ FIXME: THIS IS A HORRID HACK which fakes both the mozL10n and webL10n
- * objects and makes them returning "fake string" for any requested string id.
+ * objects and makes them returning the string id and serialized vars if any,
+ * for any requested string id.
  * @type {Object}
  */
 document.webL10n = document.mozL10n = {
-  get: function() {
-    return "fake text";
+  get: function(sringId, vars) {
+    return "" + sringId + (vars ? ";" + JSON.stringify(vars) : "");
   }
 };
