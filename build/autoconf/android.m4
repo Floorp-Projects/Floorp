@@ -221,7 +221,7 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
 
     AC_SUBST(ANDROID_CPU_ARCH)
 
-    if test -z "$STLPORT_CPPFLAGS$STLPORT_LDFLAGS$STLPORT_LIBS"; then
+    if test -z "$STLPORT_CPPFLAGS$STLPORT_LIBS"; then
         if test -n "$MOZ_ANDROID_LIBSTDCXX" ; then
             if test -e "$android_ndk/sources/cxx-stl/gnu-libstdc++/$android_gnu_compiler_version/libs/$ANDROID_CPU_ARCH/libgnustl_static.a"; then
                 # android-ndk-r8b
