@@ -2210,7 +2210,7 @@ CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::Ha
  * Implemented in jsproxy.cpp.
  */
 JS_FRIEND_API(bool)
-SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handler,
+SetPropertyIgnoringNamedGetter(JSContext *cx, BaseProxyHandler *handler,
                                JS::HandleObject proxy, JS::HandleObject receiver,
                                JS::HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
                                bool descIsOwn, bool strict, JS::MutableHandleValue vp);
