@@ -194,6 +194,7 @@ static const uint32_t CodeAlignment = 8;
 // here such that it is accessible from the entire codebase. Once full support
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
 static const bool SupportsSimd = true;
+static const uint32_t SimdStackAlignment = 16;
 
 static const Scale ScalePointer = TimesEight;
 

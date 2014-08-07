@@ -68,10 +68,14 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
         // An MAsmJSCall does not align the stack pointer at calls sites but instead
         // relies on the a priori stack adjustment (in the prologue) on platforms
         // (like x64) which require the stack to be aligned.
-        if (StackKeptAligned || gen->needsInitialStackAlignment()) {
+        if (StackKeptAligned || gen->performsCall() || gen->usesSimd()) {
             unsigned alignmentAtCall = sizeof(AsmJSFrame) + frameDepth_;
+            unsigned firstFixup = 0;
             if (unsigned rem = alignmentAtCall % StackAlignment)
-                frameDepth_ += StackAlignment - rem;
+                frameDepth_ += (firstFixup = StackAlignment - rem);
+
+            if (gen->usesSimd())
+                setupSimdAlignment(firstFixup);
         }
 
         // FrameSizeClass is only used for bailing, which cannot happen in
@@ -80,6 +84,38 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     } else {
         frameClass_ = FrameSizeClass::FromDepth(frameDepth_);
     }
+}
+
+void
+CodeGeneratorShared::setupSimdAlignment(unsigned fixup)
+{
+    JS_STATIC_ASSERT(SimdStackAlignment % StackAlignment == 0);
+    //  At this point, we have:
+    //      (frameDepth_ + sizeof(AsmJSFrame)) % StackAlignment == 0
+    //  which means we can add as many SimdStackAlignment as needed.
+
+    //  The next constraint is to have all stack slots
+    //  aligned for SIMD. That's done by having the first stack slot
+    //  aligned. We need an offset such that:
+    //      (frameDepth_ - offset) % SimdStackAlignment == 0
+    frameInitialAdjustment_ = frameDepth_ % SimdStackAlignment;
+
+    //  We need to ensure that the first stack slot is actually
+    //  located in this frame and not beforehand, when taking this
+    //  offset into account, i.e.:
+    //      frameDepth_ - initial adjustment >= frameDepth_ - fixup
+    //  <=>                            fixup >= initial adjustment
+    //
+    //  For instance, on x86 with gcc, if the initial frameDepth
+    //  % 16 is 8, then the fixup is 0, although the initial
+    //  adjustment is 8. The first stack slot would be located at
+    //  frameDepth - 8 in this case, which is obviously before
+    //  frameDepth.
+    //
+    //  If that's not the case, we add SimdStackAlignment to the
+    //  fixup, which will keep on satisfying other constraints.
+    if (frameInitialAdjustment_ > int32_t(fixup))
+        frameDepth_ += SimdStackAlignment;
 }
 
 bool
