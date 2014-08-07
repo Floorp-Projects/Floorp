@@ -115,6 +115,12 @@ static const uint32_t StackAlignment = 4;
 static const bool StackKeptAligned = false;
 static const uint32_t CodeAlignment = 8;
 
+// This boolean indicates whether we support SIMD instructions flavoured for
+// this architecture or not. Rather than a method in the LIRGenerator, it is
+// here such that it is accessible from the entire codebase. Once full support
+// for SIMD is reached on all tier-1 platforms, this constant can be deleted.
+static const bool SupportsSimd = true;
+
 struct ImmTag : public Imm32
 {
     ImmTag(JSValueTag mask)
