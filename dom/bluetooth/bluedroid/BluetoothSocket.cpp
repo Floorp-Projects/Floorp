@@ -198,29 +198,7 @@ private:
   T* mInstance;
 };
 
-class DroidSocketImplRunnable : public nsRunnable
-{
-public:
-  DroidSocketImpl* GetImpl() const
-  {
-    return mImpl;
-  }
-
-protected:
-  DroidSocketImplRunnable(DroidSocketImpl* aImpl)
-  : mImpl(aImpl)
-  {
-    MOZ_ASSERT(aImpl);
-  }
-
-  virtual ~DroidSocketImplRunnable()
-  { }
-
-private:
-  DroidSocketImpl* mImpl;
-};
-
-class OnSocketEventRunnable : public DroidSocketImplRunnable
+class OnSocketEventRunnable : public SocketIORunnable<DroidSocketImpl>
 {
 public:
   enum SocketEvent {
@@ -230,7 +208,7 @@ public:
   };
 
   OnSocketEventRunnable(DroidSocketImpl* aImpl, SocketEvent e)
-  : DroidSocketImplRunnable(aImpl)
+  : SocketIORunnable<DroidSocketImpl>(aImpl)
   , mEvent(e)
   {
     MOZ_ASSERT(!NS_IsMainThread());
@@ -240,7 +218,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    DroidSocketImpl* impl = GetImpl();
+    DroidSocketImpl* impl = GetIO();
 
     if (impl->IsShutdownOnMainThread()) {
       NS_WARNING("CloseSocket has already been called!");
@@ -262,19 +240,20 @@ private:
   SocketEvent mEvent;
 };
 
-class RequestClosingSocketTask : public nsRunnable
+class RequestClosingSocketTask : public SocketIORunnable<DroidSocketImpl>
 {
 public:
-  RequestClosingSocketTask(DroidSocketImpl* aImpl) : mImpl(aImpl)
-  {
-    MOZ_ASSERT(aImpl);
-  }
+  RequestClosingSocketTask(DroidSocketImpl* aImpl)
+  : SocketIORunnable<DroidSocketImpl>(aImpl)
+  { }
 
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mImpl->IsShutdownOnMainThread()) {
+    DroidSocketImpl* impl = GetIO();
+
+    if (impl->IsShutdownOnMainThread()) {
       NS_WARNING("CloseSocket has already been called!");
       // Since we've already explicitly closed and the close happened before
       // this, this isn't really an error. Since we've warned, return OK.
@@ -283,11 +262,9 @@ public:
 
     // Start from here, same handling flow as calling CloseSocket() from
     // upper layer
-    mImpl->mConsumer->CloseDroidSocket();
+    impl->mConsumer->CloseDroidSocket();
     return NS_OK;
   }
-private:
-  DroidSocketImpl* mImpl;
 };
 
 class ShutdownSocketTask : public Task {
@@ -314,33 +291,35 @@ public:
   ShutdownSocketTask(DroidSocketImpl* aImpl) : mImpl(aImpl) { }
 };
 
-class SocketReceiveTask : public nsRunnable
+class SocketReceiveTask : public SocketIORunnable<DroidSocketImpl>
 {
 public:
-  SocketReceiveTask(DroidSocketImpl* aImpl, UnixSocketRawData* aData) :
-    mImpl(aImpl),
-    mRawData(aData)
+  SocketReceiveTask(DroidSocketImpl* aImpl, UnixSocketRawData* aData)
+  : SocketIORunnable<DroidSocketImpl>(aImpl)
+  , mRawData(aData)
   {
-    MOZ_ASSERT(aImpl);
     MOZ_ASSERT(aData);
   }
 
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    if (mImpl->IsShutdownOnMainThread()) {
+
+    DroidSocketImpl* impl = GetIO();
+
+    if (impl->IsShutdownOnMainThread()) {
       NS_WARNING("mConsumer is null, aborting receive!");
       // Since we've already explicitly closed and the close happened before
       // this, this isn't really an error. Since we've warned, return OK.
       return NS_OK;
     }
 
-    MOZ_ASSERT(mImpl->mConsumer);
-    mImpl->mConsumer->ReceiveSocketData(mRawData);
+    MOZ_ASSERT(impl->mConsumer);
+    impl->mConsumer->ReceiveSocketData(mRawData);
     return NS_OK;
   }
+
 private:
-  DroidSocketImpl* mImpl;
   nsAutoPtr<UnixSocketRawData> mRawData;
 };
 
@@ -627,29 +606,26 @@ private:
   DroidSocketImpl* mImpl;
 };
 
-class AcceptRunnable MOZ_FINAL : public nsRunnable
+class AcceptRunnable MOZ_FINAL : public SocketIORunnable<DroidSocketImpl>
 {
 public:
-  AcceptRunnable(int aFd, DroidSocketImpl* aImpl)
-  : mFd(aFd)
-  , mImpl(aImpl)
-  {
-    MOZ_ASSERT(mImpl);
-  }
+  AcceptRunnable(DroidSocketImpl* aImpl, int aFd)
+  : SocketIORunnable<DroidSocketImpl>(aImpl)
+  , mFd(aFd)
+  { }
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(sBluetoothSocketInterface);
 
-    sBluetoothSocketInterface->Accept(mFd, new AcceptResultHandler(mImpl));
+    sBluetoothSocketInterface->Accept(mFd, new AcceptResultHandler(GetIO()));
 
     return NS_OK;
   }
 
 private:
   int mFd;
-  DroidSocketImpl* mImpl;
 };
 
 void
@@ -663,7 +639,7 @@ DroidSocketImpl::OnSocketCanAcceptWithoutBlocking(int aFd)
    */
 
   RemoveWatchers(READ_WATCHER);
-  nsRefPtr<AcceptRunnable> t = new AcceptRunnable(aFd, this);
+  nsRefPtr<AcceptRunnable> t = new AcceptRunnable(this, aFd);
   NS_DispatchToMainThread(t);
 }
 
