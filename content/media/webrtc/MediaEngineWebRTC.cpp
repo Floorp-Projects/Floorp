@@ -384,7 +384,7 @@ MediaEngineWebRTC::Shutdown()
     webrtc::VideoEngine::Delete(mWinEngine);
   }
   if (mAppEngine) {
-    mBrowserEngine->SetTraceCallback(nullptr);
+    mAppEngine->SetTraceCallback(nullptr);
     webrtc::VideoEngine::Delete(mAppEngine);
   }
 
