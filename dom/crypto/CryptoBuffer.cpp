@@ -150,7 +150,7 @@ CryptoBuffer::ToSECItem() const
     return nullptr;
   }
 
-  SECItem* item = ::SECITEM_AllocItem(nullptr, nullptr, 0);
+  SECItem* item = new SECItem();
   item->type = siBuffer;
   item->data = data;
   item->len = Length();
