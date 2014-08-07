@@ -3005,8 +3005,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
       mToReferenceFrame = i->ToReferenceFrame();
     }
   }
-  mVisibleRect = aBuilder->GetDirtyRect() +
-      aBuilder->GetCurrentFrameOffsetToReferenceFrame();
+  mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
@@ -3035,8 +3034,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
       mToReferenceFrame = aItem->ToReferenceFrame();
     }
   }
-  mVisibleRect = aBuilder->GetDirtyRect() +
-      aBuilder->GetCurrentFrameOffsetToReferenceFrame();
+  mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
 }
 
 nsDisplayWrapList::~nsDisplayWrapList() {
