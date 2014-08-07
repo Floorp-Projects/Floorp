@@ -106,7 +106,7 @@ class MochitestRunner(MozbuildObject):
 
     def run_b2g_test(self, test_paths=None, b2g_home=None, xre_path=None,
                      total_chunks=None, this_chunk=None, no_window=None,
-                     **kwargs):
+                     repeat=0, run_until_failure=False, **kwargs):
         """Runs a b2g mochitest.
 
         test_paths is an enumerable of paths to tests. It can be a relative path
@@ -152,6 +152,8 @@ class MochitestRunner(MozbuildObject):
         options.noWindow = no_window
         options.totalChunks = total_chunks
         options.thisChunk = this_chunk
+        options.repeat = repeat
+        options.runUntilFailure = run_until_failure
 
         options.symbolsPath = os.path.join(self.distdir, 'crashreporter-symbols')
 
@@ -585,6 +587,16 @@ def B2GCommand(func):
             'directory, or omitted. If omitted, the entire test suite is ' \
             'executed.')
     func = path(func)
+
+    repeat = CommandArgument('--repeat', type=int, default=0,
+        help='Repeat the test the given number of times.')
+    func = repeat(func)
+
+    runUntilFailure = CommandArgument("--run-until-failure", action='store_true',
+        help='Run tests repeatedly and stops on the first time a test fails. ' \
+             'Default cap is 30 runs, which can be overwritten ' \
+             'with the --repeat parameter.')
+    func = runUntilFailure(func)
 
     return func
 
