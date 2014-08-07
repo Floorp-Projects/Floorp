@@ -60,14 +60,6 @@ ul {
   }
 }
 
-
-/* common.css overrides */
-
-button {
-  font-size: 1em;
-  min-width: 150px;
-}
-
 /* Pressing the retry button will cause the cursor to flicker from a pointer to
  * not-allowed. Override the disabled cursor behaviour since we will never show
  * the button disabled as the initial state. */

@@ -1,0 +1,60 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../shared/in-content/common.inc.css
+
+xul|tabs {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+xul|tab[selected] {
+  text-shadow: none;
+}
+
+xul|button,
+xul|colorpicker[type="button"],
+xul|menulist {
+  margin-top: 3px;
+}
+
+xul|menulist:not([editable="true"]) > xul|menupopup > xul|menuitem[checked="true"]::before,
+xul|menulist:not([editable="true"]) > xul|menupopup > xul|menuitem[selected="true"]::before {
+  display: none;
+}
+
+xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
+  display: -moz-box;
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+xul|menulist > xul|menupopup xul|menu,
+xul|menulist > xul|menupopup xul|menuitem,
+xul|button[type="menu"] > xul|menupopup xul|menu,
+xul|button[type="menu"] > xul|menupopup xul|menuitem {
+  -moz-padding-end: 34px;
+}
+
+xul|*.help-button > xul|*.button-box > xul|*.button-icon {
+  -moz-margin-start: 0;
+}
+
+xul|*.checkbox-icon {
+  margin-right: 0;
+}
+
+xul|*.radio-icon {
+  -moz-margin-end: 0;
+}
+
+xul|*.numberbox-input-box {
+  -moz-appearance: none;
+  border-width: 0;
+}
+
+xul|description {
+  font-size: 1.25rem;
+  line-height: 22px;
+}

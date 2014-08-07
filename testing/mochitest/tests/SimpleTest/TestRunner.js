@@ -492,6 +492,14 @@ TestRunner.getLoadedTestURL = function () {
     return prefix + $('testframe').contentWindow.location.pathname;
 };
 
+TestRunner.setParameterInfo = function (params) {
+    this._params = params;
+};
+
+TestRunner.getParameterInfo = function() {
+    return this._params;
+};
+
 /**
  * TestRunner entry point.
  *
@@ -506,7 +514,14 @@ TestRunner.runTests = function (/*url...*/) {
 
     TestRunner._urls = flattenArguments(arguments);
 
-    $('testframe').src="";
+    var singleTestRun = this._urls.length <= 1 && TestRunner.repeat <= 1;
+    TestRunner.showTestReport = singleTestRun;
+    var frame = $('testframe');
+    frame.src="";
+    if (singleTestRun) {
+        document.body.setAttribute("singletest", singleTestRun);
+        frame.removeAttribute("scrolling");
+    }
     TestRunner._checkForHangs();
     TestRunner.runNextTest();
 };
@@ -551,7 +566,10 @@ TestRunner.runNextTest = function() {
         TestRunner._makeIframe(url, 0);
     } else {
         $("current-test").innerHTML = "<b>Finished</b>";
-        TestRunner._makeIframe("about:blank", 0);
+        // Only unload the last test to run if we're running more than one test.
+        if (TestRunner._urls.length > 1) {
+            TestRunner._makeIframe("about:blank", 0);
+        }
 
         var passCount = parseInt($("pass-count").innerHTML, 10);
         var failCount = parseInt($("fail-count").innerHTML, 10);
@@ -693,6 +711,12 @@ TestRunner.testFinished = function(tests) {
         }
 
         TestRunner.updateUI(tests);
+
+        // Don't show the interstitial if we just run one test with no repeats:
+        if (TestRunner._urls.length == 1 && TestRunner.repeat <= 1) {
+            TestRunner.testUnloaded();
+            return;
+        }
 
         var interstitialURL;
         if ($('testframe').contentWindow.location.protocol == "chrome:") {

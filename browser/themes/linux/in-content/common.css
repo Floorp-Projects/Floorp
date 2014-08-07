@@ -1,0 +1,62 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../shared/in-content/common.inc.css
+
+xul|tab[selected] {
+  /* Override styles for tab[selected] from
+     toolkit/themes/linux/global/tabbox.css */
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+xul|button,
+xul|colorpicker[type="button"],
+xul|menulist {
+  margin: 2px 4px;
+}
+
+xul|button > xul|*.button-box,
+xul|menulist > xul|*.menulist-label-box {
+  -moz-appearance: none;
+}
+
+xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
+  -moz-appearance: none !important;
+}
+
+xul|*.help-button > xul|*.button-box > xul|*.button-icon {
+  -moz-margin-end: 0;
+}
+
+xul|menulist {
+  font-size: inherit;
+}
+
+xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
+  display: -moz-box;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+xul|checkbox {
+  -moz-binding: url("chrome://global/content/bindings/checkbox.xml#checkbox");
+  -moz-box-align: center;
+}
+
+xul|radio {
+  -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
+  -moz-box-align: center;
+  -moz-margin-start: 0;
+}
+
+xul|*.radio-label-box {
+  -moz-appearance: none;
+}
+
+xul|*.numberbox-input-box {
+  -moz-appearance: none;
+  border-width: 0;
+}
