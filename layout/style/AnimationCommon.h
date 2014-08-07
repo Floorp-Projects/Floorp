@@ -34,6 +34,7 @@ class nsStyleChangeList;
 
 namespace mozilla {
 
+class RestyleTracker;
 class StyleAnimationValue;
 struct ElementPropertyTransition;
 struct ElementAnimationCollection;
@@ -66,6 +67,11 @@ public:
    * Notify the manager that the pres context is going away.
    */
   void Disconnect();
+
+  // Tell the restyle tracker about all the styles that we're currently
+  // animating, so that it can update the animation rule for these
+  // elements.
+  void AddStyleUpdatesTo(mozilla::RestyleTracker& aTracker);
 
   enum FlushFlags {
     Can_Throttle,
@@ -527,6 +533,18 @@ struct ElementAnimationCollection : public PRCList
   bool IsForElement() const { // rather than for a pseudo-element
     return mElementProperty == nsGkAtoms::animationsProperty ||
            mElementProperty == nsGkAtoms::transitionsProperty;
+  }
+
+  bool IsForTransitions() const {
+    return mElementProperty == nsGkAtoms::transitionsProperty ||
+           mElementProperty == nsGkAtoms::transitionsOfBeforeProperty ||
+           mElementProperty == nsGkAtoms::transitionsOfAfterProperty;
+  }
+
+  bool IsForAnimations() const {
+    return mElementProperty == nsGkAtoms::animationsProperty ||
+           mElementProperty == nsGkAtoms::animationsOfBeforeProperty ||
+           mElementProperty == nsGkAtoms::animationsOfAfterProperty;
   }
 
   nsString PseudoElement()

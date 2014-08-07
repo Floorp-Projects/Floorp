@@ -166,6 +166,28 @@ CommonAnimationManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
+void
+CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
+{
+  PRCList* next = PR_LIST_HEAD(&mElementCollections);
+  while (next != &mElementCollections) {
+    ElementAnimationCollection* collection = static_cast<ElementAnimationCollection*>(next);
+    next = PR_NEXT_LINK(next);
+
+    if (!collection->IsForElement()) {
+      // We don't support compositor-driven animation of :before/:after
+      // transitions or animations, so at least skip those.
+      // FIXME: We'll need to handle this before using this for the
+      // transitions redesign.
+      continue;
+    }
+
+    nsRestyleHint rshint = collection->IsForTransitions()
+      ? eRestyle_CSSTransitions : eRestyle_CSSAnimations;
+    aTracker.AddPendingRestyle(collection->mElement, rshint, nsChangeHint(0));
+  }
+}
+
 /* static */ bool
 CommonAnimationManager::ExtractComputedValueForTransition(
                           nsCSSProperty aProperty,
