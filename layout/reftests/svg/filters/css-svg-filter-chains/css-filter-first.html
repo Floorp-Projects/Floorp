@@ -1,0 +1,33 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS and SVG Filter Chains: CSS Filter as First Filter</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#FilterProperty">
+  <link rel="match" href="css-filter-first-ref.html">
+  <meta name="assert"
+        content="A filter chain starting with a CSS filter function followed by
+                 an SVG reference filter should render correctly.">
+  <style type="text/css">
+    #target {
+      filter: blur(3px) url(#red-to-green);
+      background-color: #f00;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square.</p>
+  <div id="target"></div>
+  <svg width="0" height="0">
+    <filter id="red-to-green" x="-50" y="-50" width="200" height="200" filterUnits="userSpaceOnUse">
+      <feColorMatrix type="hueRotate" values="90" color-interpolation-filters="sRGB"/>
+    </filter>
+  </svg>
+</body>
+</html>

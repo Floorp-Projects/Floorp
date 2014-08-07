@@ -18,17 +18,12 @@ class SVGImageContext
 public:
   SVGImageContext() { }
 
-  SVGImageContext(SVGPreserveAspectRatio aPreserveAspectRatio,
-                  gfxFloat aOpacity = 1.0)
-    : mPreserveAspectRatio(aPreserveAspectRatio), mGlobalOpacity(aOpacity)
+  SVGImageContext(SVGPreserveAspectRatio aPreserveAspectRatio)
+    : mPreserveAspectRatio(aPreserveAspectRatio)
   { }
 
   const SVGPreserveAspectRatio& GetPreserveAspectRatio() const {
     return mPreserveAspectRatio;
-  }
-
-  gfxFloat GetGlobalOpacity() const {
-    return mGlobalOpacity;
   }
 
   bool operator==(const SVGImageContext& aOther) const {
@@ -45,7 +40,6 @@ public:
 
 private:
   SVGPreserveAspectRatio mPreserveAspectRatio;
-  gfxFloat mGlobalOpacity;
 };
 
 } // namespace mozilla

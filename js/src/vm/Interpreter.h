@@ -203,7 +203,7 @@ class RunState
         return (GeneratorState *)this;
     }
 
-    JSScript *script() const { return script_; }
+    JS::HandleScript script() const { return script_; }
 
     virtual InterpreterFrame *pushInterpreterFrame(JSContext *cx) = 0;
     virtual void setReturnValue(Value v) = 0;

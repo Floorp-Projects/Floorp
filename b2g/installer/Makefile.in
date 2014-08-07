@@ -11,7 +11,6 @@ MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 MOZ_PKG_MANIFEST_P = $(srcdir)/package-manifest.in
 
 DEFINES += \
-	-DAB_CD=$(AB_CD) \
 	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
 	-DPREF_DIR=$(PREF_DIR) \
 	$(NULL)

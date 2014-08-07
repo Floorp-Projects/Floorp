@@ -10,8 +10,6 @@ include $(topsrcdir)/config/config.mk
 #########################################
 # l10s prefs file
 
-DEFINES += -DAB_CD=$(AB_CD)
-
 # copying firefox-l10n.js over from LOCALE_SRCDIR or browser
 PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/firefox-l10n.js) \
                     $(topsrcdir)/$(relativesrcdir)/en-US/firefox-l10n.js )

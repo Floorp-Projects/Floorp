@@ -36,6 +36,7 @@
 #include "nsThreadUtils.h"
 #include "nsString.h"
 #include "prlog.h"
+#include "mozilla/dom/CSPReportBinding.h"
 
 using namespace mozilla;
 
@@ -591,12 +592,10 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
   }
 #endif
 
+  dom::CSPReport report;
   nsresult rv;
-  nsString csp_report;
-  csp_report.AppendASCII("{\"csp-report\": {");
 
   // blocked-uri
-  csp_report.AppendASCII("\"blocked-uri\": \"");
   if (aBlockedContentSource) {
     nsAutoCString reportBlockedURI;
     nsCOMPtr<nsIURI> uri = do_QueryInterface(aBlockedContentSource);
@@ -609,68 +608,59 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
         cstr->GetData(reportBlockedURI);
       }
     }
-    csp_report.AppendASCII(reportBlockedURI.get());
+    if (reportBlockedURI.IsEmpty()) {
+      // this can happen for frame-ancestors violation where the violating
+      // ancestor is cross-origin.
+      NS_WARNING("No blocked URI (null aBlockedContentSource) for CSP violation report.");
+    }
+    report.mCsp_report.mBlocked_uri = NS_ConvertUTF8toUTF16(reportBlockedURI);
   }
-  else {
-    // this can happen for frame-ancestors violation where the violating
-    // ancestor is cross-origin.
-    NS_WARNING("No blocked URI (null aBlockedContentSource) for CSP violation report.");
-  }
-  csp_report.AppendASCII("\", ");
 
   // document-uri
-  csp_report.AppendASCII("\"document-uri\": \"");
   if (aOriginalURI) {
     nsAutoCString reportDocumentURI;
     aOriginalURI->GetSpec(reportDocumentURI);
-    csp_report.AppendASCII(reportDocumentURI.get());
+    report.mCsp_report.mDocument_uri = NS_ConvertUTF8toUTF16(reportDocumentURI);
   }
-  csp_report.AppendASCII("\", ");
 
   // original-policy
-  csp_report.AppendASCII("\"original-policy\": \"");
   nsAutoString originalPolicy;
   rv = this->GetPolicy(aViolatedPolicyIndex, originalPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
-  csp_report.Append(originalPolicy);
-  csp_report.AppendASCII("\", ");
+  report.mCsp_report.mOriginal_policy = originalPolicy;
 
   // referrer
-  csp_report.AppendASCII("\"referrer\": \"");
   if (mReferrer) {
     nsAutoCString referrerURI;
     mReferrer->GetSpec(referrerURI);
-    csp_report.AppendASCII(referrerURI.get());
+    report.mCsp_report.mReferrer = NS_ConvertUTF8toUTF16(referrerURI);
   }
-  csp_report.AppendASCII("\", ");
 
   // violated-directive
-  csp_report.AppendASCII("\"violated-directive\": \"");
-  csp_report.Append(aViolatedDirective);
-  csp_report.AppendASCII("\"");
+  report.mCsp_report.mViolated_directive = aViolatedDirective;
 
   // source-file
   if (!aSourceFile.IsEmpty()) {
-    csp_report.AppendASCII(", \"source-file\": \"");
-    csp_report.Append(aSourceFile);
-    csp_report.AppendASCII("\"");
+    report.mCsp_report.mSource_file.Construct();
+    report.mCsp_report.mSource_file.Value() = aSourceFile;
   }
 
   // script-sample
   if (!aScriptSample.IsEmpty()) {
-    csp_report.AppendASCII(", \"script-sample\": \"");
-    csp_report.Append(aScriptSample);
-    csp_report.AppendASCII("\"");
+    report.mCsp_report.mScript_sample.Construct();
+    report.mCsp_report.mScript_sample.Value() = aScriptSample;
   }
 
   // line-number
   if (aLineNum != 0) {
-    csp_report.AppendASCII(", \"line-number\": \"");
-    csp_report.AppendInt(aLineNum);
-    csp_report.AppendASCII("\"");
+    report.mCsp_report.mLine_number.Construct();
+    report.mCsp_report.mLine_number.Value() = aLineNum;
   }
 
-  csp_report.AppendASCII("}}\n\n");
+  nsString csp_report;
+  if (!report.ToJSON(csp_report)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // ---------- Assembled, now send it to all the report URIs ----------- //
 

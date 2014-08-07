@@ -27,9 +27,9 @@
         [
           // Read-only text tests
           [ContentMessages.simpleMoveFirst, {
-            speak: 'These are my awards, Mother. From Army. ' +
+            speak: ['These are my awards, Mother. From Army. ' +
               'The seal is for marksmanship, and the gorilla is ' +
-              'for sand racing. Text content test document'
+              'for sand racing.', 'Text content test document']
           }],
           [ContentMessages.moveNextBy('word'), {
             speak: 'These',
@@ -142,8 +142,8 @@
 
           // Editable text tests.
           [ContentMessages.focusSelector('textarea'), {
-            speak: 'Please refrain from Mayoneggs during this ' +
-              'salmonella scare. text area'
+            speak: ['Please refrain from Mayoneggs during this ' +
+              'salmonella scare.', {string: 'textarea'}]
           }],
           [null, { // When we first focus, caret is at 0.
               android: [{

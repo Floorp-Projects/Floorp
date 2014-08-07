@@ -335,7 +335,8 @@ function onLoad()
     appendElementWithText(row2, "div", "opsRowLabel", "Save memory reports");
   appendButton(row2, SvDesc, saveReportsToFile, "Measure and save" + kEllipsis);
 
-  // XXX njn: still not happy with the placement of this checkbox
+  // XXX: this isn't a great place for this checkbox, but I can't think of
+  // anywhere better.
   let label2 = appendElementWithText(labelDiv2, "label", "");
   gAnonymize = appendElement(label2, "input", "");
   gAnonymize.type = "checkbox";

@@ -649,7 +649,7 @@ clean clobber realclean clobber_all::
 ifdef TIERS
 clean clobber realclean clobber_all distclean::
 	$(foreach dir, \
-		$(foreach tier, $(TIERS), $(tier_$(tier)_staticdirs) $(tier_$(tier)_dirs)), \
+		$(foreach tier, $(TIERS), $(tier_$(tier)_dirs)), \
 		-$(call SUBMAKE,$@,$(dir)))
 else
 clean clobber realclean clobber_all distclean::
@@ -1358,9 +1358,9 @@ $(error XPI_NAME must be set for INSTALL_EXTENSION_ID)
 endif
 
 tools::
-	$(RM) -r '$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)'
-	$(NSINSTALL) -D '$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)'
-	$(call copy_dir,$(FINAL_TARGET),$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID))
+	$(RM) -r '$(DIST)/bin/distribution$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)'
+	$(NSINSTALL) -D '$(DIST)/bin/distribution$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)'
+	$(call copy_dir,$(FINAL_TARGET),$(DIST)/bin/distribution$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID))
 
 endif
 
@@ -1433,9 +1433,9 @@ endif
 # file would be $(DIST)/include/bar/baz/qux.h instead of $(DIST)/include/qux.h
 
 # If we're using binary nsinstall and it's not built yet, fallback to python nsinstall.
-ifneq (,$(filter $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX),$(install_cmd)))
-ifeq (,$(wildcard $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX)))
-nsinstall_is_usable = $(if $(wildcard $(DIST)/bin/nsinstall$(HOST_BIN_SUFFIX)),yes)
+ifneq (,$(filter $(DEPTH)/config/nsinstall$(HOST_BIN_SUFFIX),$(install_cmd)))
+ifeq (,$(wildcard $(DEPTH)/config/nsinstall$(HOST_BIN_SUFFIX)))
+nsinstall_is_usable = $(if $(wildcard $(DEPTH)/config/nsinstall$(HOST_BIN_SUFFIX)),yes)
 
 define install_cmd_override
 $(1): install_cmd = $$(if $$(nsinstall_is_usable),$$(INSTALL),$$(NSINSTALL_PY) -t) $$(1)

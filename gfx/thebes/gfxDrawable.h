@@ -38,8 +38,7 @@ public:
                         const gfxRect& aFillRect,
                         bool aRepeat,
                         const GraphicsFilter& aFilter,
-                        const gfxMatrix& aTransform = gfxMatrix(),
-                        gfxFloat aOpacity = 1.0) = 0;
+                        const gfxMatrix& aTransform = gfxMatrix()) = 0;
     virtual gfxIntSize Size() { return mSize; }
 
 protected:
@@ -63,8 +62,7 @@ public:
                         const gfxRect& aFillRect,
                         bool aRepeat,
                         const GraphicsFilter& aFilter,
-                        const gfxMatrix& aTransform = gfxMatrix(),
-                        gfxFloat aOpacity = 1.0);
+                        const gfxMatrix& aTransform = gfxMatrix());
     
 protected:
     mozilla::RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
@@ -109,8 +107,7 @@ public:
                         const gfxRect& aFillRect,
                         bool aRepeat,
                         const GraphicsFilter& aFilter,
-                        const gfxMatrix& aTransform = gfxMatrix(),
-                        gfxFloat aOpacity = 1.0);
+                        const gfxMatrix& aTransform = gfxMatrix());
 
 protected:
     already_AddRefed<gfxSurfaceDrawable> MakeSurfaceDrawable(const GraphicsFilter aFilter = GraphicsFilter::FILTER_FAST);
@@ -133,8 +130,7 @@ public:
                         const gfxRect& aFillRect,
                         bool aRepeat,
                         const GraphicsFilter& aFilter,
-                        const gfxMatrix& aTransform = gfxMatrix(),
-                        gfxFloat aOpacity = 1.0);
+                        const gfxMatrix& aTransform = gfxMatrix());
 
 protected:
     already_AddRefed<gfxCallbackDrawable> MakeCallbackDrawable();

@@ -70,10 +70,6 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
 if CONFIG['SOLARIS_SUNPRO_CC']:
     NO_PGO = True
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    RCFILE  = 'sqlite.rc'
-    RESFILE = 'sqlite.res'
-
 if CONFIG['OS_ARCH'] == 'Linux' and \
    not CONFIG['MOZ_FOLD_LIBS'] and \
    CONFIG['GCC_USE_GNU_LD']:

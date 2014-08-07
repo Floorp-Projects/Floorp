@@ -22,340 +22,372 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         // generator function within the UtteranceGenerator.
         var tests = [{
           accOrElmOrID: "anchor",
-          expectedUtterance: [["link", "title"], ["title", "link"]],
-          expectedBraille: [["lnk", "title"], ["title", "lnk"]]
+          expectedUtterance: [[{"string": "link"}, "title"],
+            ["title", {"string": "link"}]],
+          expectedBraille: [[{"string": "linkAbbr"}, "title"],
+            ["title", {"string": "linkAbbr"}]]
         }, {
           accOrElmOrID: "anchor_titleandtext",
-          expectedUtterance: [["link", "goes to the tests -", "Tests"],
-                             ["Tests", "- goes to the tests", "link"]],
-          expectedBraille:   [["lnk", "goes to the tests -", "Tests"],
-                             ["Tests", "- goes to the tests", "lnk"]],
+          expectedUtterance: [[{"string": "link"}, "goes to the tests -",
+            "Tests"], ["Tests", "- goes to the tests", {"string": "link"}]],
+          expectedBraille:   [[{"string": "linkAbbr"}, "goes to the tests -",
+            "Tests"], ["Tests", "- goes to the tests", {"string": "linkAbbr"}]],
         }, {
           accOrElmOrID: "anchor_duplicatedtitleandtext",
-          expectedUtterance: [["link", "Tests"], ["Tests", "link"]],
-          expectedBraille: [["lnk", "Tests"], ["Tests", "lnk"]]
+          expectedUtterance: [[{"string": "link"}, "Tests"],
+            ["Tests", {"string": "link"}]],
+          expectedBraille: [[{"string": "linkAbbr"}, "Tests"],
+            ["Tests", {"string": "linkAbbr"}]]
         }, {
           accOrElmOrID: "anchor_arialabelandtext",
-          expectedUtterance: [["link", "goes to the tests - Tests"],
-                              ["Tests - goes to the tests", "link"]],
-          expectedBraille: [["lnk", "goes to the tests - Tests"],
-                              ["Tests - goes to the tests", "lnk"]],
+          expectedUtterance: [[{"string": "link"}, "goes to the tests - Tests"],
+            ["Tests - goes to the tests", {"string": "link"}]],
+          expectedBraille: [[{"string": "linkAbbr"},
+            "goes to the tests - Tests"], ["Tests - goes to the tests",
+            {"string": "linkAbbr"}]],
         }, {
           accOrElmOrID: "textarea",
-          expectedUtterance: [[
-            "text area", "This is the text area text."
-          ], [
-            "This is the text area text.", "text area"
-          ],],
-          expectedBraille: [[
-            "txtarea", "This is the text area text."
-          ], [
-            "This is the text area text.", "txtarea"
-          ],],
+          expectedUtterance: [[{"string": "textarea"},
+            "This is the text area text."], ["This is the text area text.",
+            {"string": "textarea"}]],
+          expectedBraille: [[{"string": "textareaAbbr"},
+            "This is the text area text."], ["This is the text area text.",
+            {"string": "textareaAbbr"}]],
         }, {
           accOrElmOrID: "heading",
-          expectedUtterance: [
-            ["heading level 1", "Test heading"],
-            ["Test heading", "heading level 1"]
-          ],
-          expectedBraille: [
-            ["heading", "Test heading"],
-            ["Test heading", "heading"]
-          ]
+          expectedUtterance: [[{"string": "headingLevel", "args": [1]},
+            "Test heading"], ["Test heading",
+            {"string": "headingLevel", "args": [1]}]],
+          expectedBraille: [[{"string": "headingAbbr"}, "Test heading"],
+                            ["Test heading", {"string": "headingAbbr"}]]
         }, {
           accOrElmOrID: "list",
-          expectedUtterance: [
-            ["list 1 item", "First item", "1.", "list one"],
-            ["1.", "list one", "First item", "list 1 item"]
+          expectedUtterance: [[{"string": "list"},
+            {"string": "listItemsCount", "count":1}, {"string": "listStart"},
+            "1.", "list one"], ["1.", "list one", {"string": "listStart"},
+            {"string": "list"}, {"string": "listItemsCount", "count":1}]
           ],
-          expectedBraille: [
-            ["list", "list one"],
-            ["list one", "list"]
-          ]
+          expectedBraille: [[{"string": "listAbbr"}, "list one"],
+            ["list one", {"string": "listAbbr"}]]
         }, {
           accOrElmOrID: "dlist",
-          expectedUtterance: [
-            ["definition list 0.5 items", "dd one"],
-            ["dd one", "definition list 0.5 items"]
+          expectedUtterance: [[{"string": "definitionlist"},
+            {"string": "listItemsCount", "count": 0.5}, "dd one"], ["dd one",
+            {"string": "definitionlist"},
+            {"string": "listItemsCount", "count": 0.5}]
           ],
-          expectedBraille: [
-            ["definition list", "dd one"],
-            ["dd one", "definition list"]
-          ]
+          expectedBraille: [[{"string": "definitionlistAbbr"}, "dd one"],
+                            ["dd one", {"string": "definitionlistAbbr"}]]
         }, {
           accOrElmOrID: "li_one",
-          expectedUtterance: [
-            ["list 1 item", "First item", "1.", "list one"],
-            ["1.", "list one", "First item", "list 1 item"]
+          expectedUtterance: [[{"string": "list"},
+            {"string": "listItemsCount", "count": 1}, {"string": "listStart"},
+            "1.", "list one"], ["1.", "list one", {"string": "listStart"},
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}]
           ],
-          expectedBraille: [
-            ["1.", "list one"],
-            ["1.", "list one"]
-          ]
+          expectedBraille: [["1.", "list one"], ["1.", "list one"]]
         },
         {
           accOrElmOrID: "li_two",
-          expectedUtterance: [
-            ["list 1 item", "First item", "list two"],
-            ["list two", "First item", "list 1 item"]
+          expectedUtterance: [[{"string": "list"},
+            {"string": "listItemsCount", "count": 1}, {"string": "listStart"},
+            "list two"], ["list two", {"string": "listStart"},
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}]
           ],
-          expectedBraille: [
-            ["*", "list two"],
-            ["*", "list two"]
-          ]
+          expectedBraille: [["*", "list two"], ["*", "list two"]]
         }, {
           accOrElmOrID: "cell",
-          expectedUtterance: [[
-            "table with 1 column and 1 row", "Fruits and vegetables",
-            "Column 1 Row 1", "list 4 items", "First item", "link", "Apples",
-            "link", "Bananas", "link", "Peaches", "Last item", "link", "Plums"
-          ], [
-            "Apples", "link", "First item", "Bananas", "link", "Peaches",
-            "link", "Plums", "link", "Last item", "list 4 items",
-            "Column 1 Row 1", "Fruits and vegetables",
-            "table with 1 column and 1 row"
-          ]],
-          expectedBraille: [[
-            "c1r1", "list", "lnk", "Apples", "lnk", "Bananas", "lnk",
-            "Peaches", "lnk", "Plums"
-          ], [
-            "Apples", "lnk", "Bananas", "lnk", "Peaches", "lnk", "Plums",
-            "lnk", "list", "c1r1"
-          ]]
+          expectedUtterance: [[{"string":"table"},
+            {"string": "tblColumnInfo", "count": 1},
+            {"string": "tblRowInfo", "count": 1}, "Fruits and vegetables",
+            {"string": "columnInfo", "args": [1]},
+            {"string": "rowInfo", "args": [1]}, {"string": "list"},
+            {"string": "listItemsCount", "count": 4}, {"string": "listStart"},
+            {"string": "link"}, "Apples", {"string": "link"}, "Bananas",
+            {"string": "link"}, "Peaches", {"string": "listEnd"},
+            {"string": "link"}, "Plums"], ["Apples", {"string": "link"},
+            {"string": "listStart"}, "Bananas", {"string": "link"}, "Peaches",
+            {"string": "link"}, "Plums", {"string": "link"},
+            {"string": "listEnd"}, {"string": "list"},
+            {"string": "listItemsCount", "count": 4},
+            {"string": "columnInfo", "args": [1]},
+            {"string": "rowInfo", "args": [1]}, "Fruits and vegetables",
+            {"string":"table"}, {"string": "tblColumnInfo", "count": 1},
+            {"string": "tblRowInfo", "count": 1}]],
+          expectedBraille: [[{"string": "cellInfoAbbr", "args": [ 1, 1]},
+            {"string": "listAbbr"}, {"string": "linkAbbr"}, "Apples",
+            {"string": "linkAbbr"}, "Bananas", {"string": "linkAbbr"},
+            "Peaches", {"string": "linkAbbr"}, "Plums"], ["Apples",
+            {"string": "linkAbbr"}, "Bananas", {"string": "linkAbbr"},
+            "Peaches", {"string": "linkAbbr"}, "Plums", {"string": "linkAbbr"},
+            {"string": "listAbbr"},
+            {"string": "cellInfoAbbr", "args": [ 1, 1]}]]
         }, {
           accOrElmOrID: "date",
-          expectedUtterance: [["date entry", "2011-09-29"], ["2011-09-29", "date entry"]],
-          expectedBraille: [["date entry", "2011-09-29"], ["2011-09-29", "date entry"]]
+          expectedUtterance: [[{"string": "textInputType_date"},
+            {"string": "entry"}, "2011-09-29"], ["2011-09-29",
+            {"string": "textInputType_date"}, {"string": "entry"}]],
+          expectedBraille: [[{"string": "textInputType_date"},
+            {"string": "entryAbbr"}, "2011-09-29"], ["2011-09-29",
+            {"string": "textInputType_date"}, {"string": "entryAbbr"}]]
         }, {
           accOrElmOrID: "email",
-          expectedUtterance: [
-            ["e-mail entry", "test@example.com"],
-            ["test@example.com", "e-mail entry"]
-          ],
-          expectedBraille: [
-            ["e-mail entry", "test@example.com"],
-            ["test@example.com", "e-mail entry"]
-          ]
+          expectedUtterance: [[{"string": "textInputType_email"},
+            {"string": "entry"}, "test@example.com"], ["test@example.com",
+            {"string": "textInputType_email"}, {"string": "entry"}]],
+          expectedBraille: [[{"string": "textInputType_email"},
+            {"string": "entryAbbr"}, "test@example.com"], ["test@example.com",
+            {"string": "textInputType_email"}, {"string": "entryAbbr"}]]
         }, {
           accOrElmOrID: "search",
-          expectedUtterance: [
-            ["search entry", "This is a search"],
-            ["This is a search", "search entry"]
-          ],
-          expectedBraille: [
-            ["search entry", "This is a search"],
-            ["This is a search", "search entry"]
-          ]
+          expectedUtterance: [[{"string": "textInputType_search"},
+            {"string": "entry"}, "This is a search"], ["This is a search",
+            {"string": "textInputType_search"}, {"string": "entry"}]],
+          expectedBraille: [[{"string": "textInputType_search"},
+            {"string": "entryAbbr"}, "This is a search"], ["This is a search",
+            {"string": "textInputType_search"}, {"string": "entryAbbr"}]]
         }, {
           accOrElmOrID: "tel",
-          expectedUtterance: [
-            ["telephone entry", "555-5555"], ["555-5555", "telephone entry"]
-          ],
-          expectedBraille: [
-            ["telephone entry", "555-5555"], ["555-5555", "telephone entry"]
-          ]
+          expectedUtterance: [[{"string": "textInputType_tel"},
+            {"string": "entry"}, "555-5555"], ["555-5555",
+            {"string": "textInputType_tel"}, {"string": "entry"}]],
+          expectedBraille: [[{"string": "textInputType_tel"},
+            {"string": "entryAbbr"}, "555-5555"], ["555-5555",
+            {"string": "textInputType_tel"}, {"string": "entryAbbr"}]]
         }, {
           accOrElmOrID: "url",
-          expectedUtterance: [
-            ["URL entry", "http://example.com"],
-            ["http://example.com", "URL entry"]
-          ],
-          expectedBraille: [
-            ["URL entry", "http://example.com"],
-            ["http://example.com", "URL entry"]
-          ]
+          expectedUtterance: [[{"string": "textInputType_url"},
+            {"string": "entry"}, "http://example.com"], ["http://example.com",
+            {"string": "textInputType_url"}, {"string": "entry"}]],
+          expectedBraille: [[{"string": "textInputType_url"},
+            {"string": "entryAbbr"}, "http://example.com"],
+            ["http://example.com", {"string": "textInputType_url"},
+            {"string": "entryAbbr"}]]
         }, {
           accOrElmOrID: "textInput",
-          expectedUtterance: [["entry", "This is text."], ["This is text.", "entry"]],
-          expectedBraille: [["entry", "This is text."], ["This is text.", "entry"]]
+          expectedUtterance: [[{"string": "entry"}, "This is text."],
+                              ["This is text.", {"string": "entry"}]],
+          expectedBraille: [[{"string": "entryAbbr"}, "This is text."],
+                            ["This is text.", {"string": "entryAbbr"}]]
         }, {
           // Test pivot to list from li_one.
           accOrElmOrID: "list",
           oldAccOrElmOrID: "li_one",
-          expectedUtterance: [
-            ["list 1 item", "First item", "1.", "list one"],
-            ["1.", "list one", "First item", "list 1 item"]
+          expectedUtterance: [[{"string": "list"},
+            {"string": "listItemsCount", "count": 1}, {"string": "listStart"},
+            "1.", "list one"], ["1.", "list one", {"string": "listStart"},
+            {"string": "list"}, {"string": "listItemsCount", "count": 1}]
           ],
-          expectedBraille: [
-            ["list", "list one"],
-            ["list one", "list"]
-          ]
+          expectedBraille: [[{"string": "listAbbr"}, "list one"],
+                            ["list one", {"string": "listAbbr"}]]
         }, {
           // Test pivot to "apples" link from the table cell.
           accOrElmOrID: "apples",
           oldAccOrElmOrID: "cell",
-          expectedUtterance: [
-            ["list 4 items", "First item", "link", "Apples"],
-            ["Apples", "link", "First item", "list 4 items"]
+          expectedUtterance: [[{"string": "list"},
+            {"string": "listItemsCount", "count": 4}, {"string": "listStart"},
+            {"string": "link"}, "Apples"], ["Apples", {"string": "link"},
+            {"string": "listStart"}, {"string": "list"},
+            {"string": "listItemsCount", "count": 4}]
           ],
-          expectedBraille: [
-            ["*", "lnk", "Apples"],
-            ["*", "Apples", "lnk"]
-          ]
+          expectedBraille: [["*", {"string": "linkAbbr"}, "Apples"],
+                            ["*", "Apples", {"string": "linkAbbr"}]]
         }, {
-          // Test pivot to 'bananas' link from 'apples' link.
+          // Test pivot to "bananas" link from "apples" link.
           accOrElmOrID: "bananas",
           oldAccOrElmOrID: "apples",
-          expectedUtterance: [["link", "Bananas"], ["Bananas", "link"]],
-          expectedBraille: [["*", "lnk", "Bananas"], ["*", "Bananas", "lnk"]]
+          expectedUtterance: [[{"string": "link"}, "Bananas"],
+                              ["Bananas", {"string": "link"}]],
+          expectedBraille: [["*", {"string": "linkAbbr"}, "Bananas"],
+                            ["*", "Bananas", {"string": "linkAbbr"}]]
         }, {
           // test unavailable state utterance
-          accOrElmOrID: 'unavailableButton',
-          expectedUtterance: [["unavailable button", "I am unavailable"],
-            ["I am unavailable", "unavailable button"]],
-          expectedBraille: [["btn", "I am unavailable"],
-            ["I am unavailable", "btn"]]
+          accOrElmOrID: "unavailableButton",
+          expectedUtterance: [[{"string": "stateUnavailable"},
+            {"string": "pushbutton"}, "I am unavailable"], ["I am unavailable",
+            {"string": "stateUnavailable"}, {"string": "pushbutton"}]],
+          expectedBraille: [[{"string": "pushbuttonAbbr"}, "I am unavailable"],
+                            ["I am unavailable", {"string": "pushbuttonAbbr"}]]
         }, {
           // test expanded state utterance
-          accOrElmOrID: 'expandedButton',
-          expectedUtterance: [["expanded button", "I am expanded"],
-            ["I am expanded", "expanded button"]],
-          expectedBraille: [["btn", "I am expanded"],
-            ["I am expanded", "btn"]]
+          accOrElmOrID: "expandedButton",
+          expectedUtterance: [[{"string": "stateExpanded"},
+            {"string": "pushbutton"}, "I am expanded"], ["I am expanded",
+            {"string": "stateExpanded"}, {"string": "pushbutton"}]],
+          expectedBraille: [[{"string": "pushbuttonAbbr"}, "I am expanded"],
+                            ["I am expanded", {"string": "pushbuttonAbbr"}]]
         }, {
           // test collapsed state utterance
-          accOrElmOrID: 'collapsedButton',
-          expectedUtterance: [["collapsed button", "I am collapsed"],
-            ["I am collapsed", "collapsed button"]],
-          expectedBraille: [["btn", "I am collapsed"],
-            ["I am collapsed", "btn"]]
+          accOrElmOrID: "collapsedButton",
+          expectedUtterance: [[{"string": "stateCollapsed"},
+            {"string": "pushbutton"}, "I am collapsed"], ["I am collapsed",
+            {"string": "stateCollapsed"}, {"string": "pushbutton"}]],
+          expectedBraille: [[{"string": "pushbuttonAbbr"}, "I am collapsed"],
+                            ["I am collapsed", {"string": "pushbuttonAbbr"}]]
         }, {
           // test required state utterance
-          accOrElmOrID: 'requiredInput',
-          expectedUtterance: [["required entry", "I am required"],
-            ["I am required", "required entry"]],
-          expectedBraille: [["entry", "I am required"],
-            ["I am required", "entry"]]
+          accOrElmOrID: "requiredInput",
+          expectedUtterance: [[{"string": "stateRequired"}, {"string": "entry"},
+            "I am required"], ["I am required", {"string": "stateRequired"},
+            {"string": "entry"}]],
+          expectedBraille: [[{"string": "entryAbbr"}, "I am required"],
+                            ["I am required", {"string": "entryAbbr"}]]
         }, {
           // test has popup state utterance
-          accOrElmOrID: 'hasPopupButton',
-          expectedUtterance: [["has pop up button menu", "I have a popup"],
-            ["I have a popup", "has pop up button menu"]],
-          expectedBraille: [["button menu", "I have a popup"],
-            ["I have a popup", "button menu"]]
+          accOrElmOrID: "hasPopupButton",
+          expectedUtterance: [[{"string": "stateHasPopup"},
+            {"string": "buttonmenu"}, "I have a popup"], ["I have a popup",
+            {"string": "stateHasPopup"}, {"string": "buttonmenu"}]],
+          expectedBraille: [[{"string": "buttonmenuAbbr"}, "I have a popup"],
+                            ["I have a popup", {"string": "buttonmenuAbbr"}]]
         }, {
           // Test selected tab
-          accOrElmOrID: 'tab1',
-          expectedUtterance: [['tab list', 'selected tab 1 of 2', 'Account'],
-            ['Account', 'selected tab 1 of 2', 'tab list']],
-          expectedBraille: [['tab 1 of 2', 'Account'],
-            ['Account', 'tab 1 of 2']]
+          accOrElmOrID: "tab1",
+          expectedUtterance: [[{"string": "pagetablist"},
+            {"string": "stateSelected"}, {"string": "pagetab"},
+            {"string": "objItemOfN", "args": [1, 2]}, "Account"], ["Account",
+            {"string": "stateSelected"}, {"string": "pagetab"},
+            {"string": "objItemOfN", "args": [1, 2]}, {"string": "pagetablist"}]
+          ],
+          expectedBraille: [[{"string": "pagetabAbbr"},
+            {"string": "objItemOfN", "args": [1, 2]}, "Account"], ["Account",
+            {"string": "pagetabAbbr"},
+            {"string": "objItemOfN", "args": [1, 2]}]]
         }, {
           // Test unselected tab
-          accOrElmOrID: 'tab2',
-          expectedUtterance: [['tab list', 'tab 2 of 2', 'Advanced'],
-            ['Advanced', 'tab 2 of 2', 'tab list']],
-          expectedBraille: [['tab 2 of 2', 'Advanced'],
-            ['Advanced', 'tab 2 of 2']]
-        },
-
-        {
+          accOrElmOrID: "tab2",
+          expectedUtterance: [[{"string": "pagetablist"}, {"string": "pagetab"},
+            {"string": "objItemOfN", "args": [2, 2]}, "Advanced"], ["Advanced",
+            {"string": "pagetab"}, {"string": "objItemOfN", "args": [2, 2]},
+            {"string": "pagetablist"}]],
+          expectedBraille: [[{"string": "pagetabAbbr"},
+            {"string": "objItemOfN", "args": [2, 2]}, "Advanced"], ["Advanced",
+            {"string": "pagetabAbbr"},
+            {"string": "objItemOfN", "args": [2, 2]}]]
+        }, {
           // Landing on this label should mimic landing on the checkbox.
           accOrElmOrID: "label1",
-          expectedUtterance: [['not checked check button', 'Orange'],
-                     ['Orange', 'not checked check button']],
-          expectedBraille: [['( )', 'Orange'],
-                     ['Orange', '( )']]
-        },
-        {
+          expectedUtterance: [[{"string": "stateNotChecked"},
+            {"string": "checkbutton"}, "Orange"], ["Orange",
+            {"string": "stateNotChecked"}, {"string": "checkbutton"}]],
+          expectedBraille: [[{"string": "stateUncheckedAbbr"}, "Orange"],
+                            ["Orange", {"string": "stateUncheckedAbbr"}]]
+        }, {
           // Here we get a top-level view of the form.
           accOrElmOrID: "form1",
-          expectedUtterance: [['label', 'not checked check button', 'Orange', 'Orange',
-                      'not checked check button', 'Blue', 'label', 'Blue'],
-                     ['Orange', 'not checked check button', 'Orange', 'label',
-                      'Blue', 'not checked check button', 'Blue', 'label']],
-          expectedBraille: [['label', '( )', 'Orange', 'Orange',
-                      '( )', 'Blue', 'label', 'Blue'],
-                     ['Orange', '( )', 'Orange', 'label',
-                      'Blue', '( )', 'Blue', 'label']]
-        },
-        {
+          expectedUtterance: [[{"string": "label"},
+            {"string": "stateNotChecked"}, {"string": "checkbutton"}, "Orange",
+            "Orange", {"string": "stateNotChecked"}, {"string": "checkbutton"},
+            "Blue", {"string": "label"}, "Blue"], ["Orange",
+            {"string": "stateNotChecked"}, {"string": "checkbutton"}, "Orange",
+            {"string": "label"}, "Blue", {"string": "stateNotChecked"},
+            {"string": "checkbutton"}, "Blue", {"string": "label"}]],
+          expectedBraille: [[{"string": "labelAbbr"},
+            {"string": "stateUncheckedAbbr"}, "Orange", "Orange",
+            {"string": "stateUncheckedAbbr"}, "Blue", {"string": "labelAbbr"},
+            "Blue"], ["Orange", {"string": "stateUncheckedAbbr"}, "Orange",
+            {"string": "labelAbbr"}, "Blue", {"string": "stateUncheckedAbbr"},
+            "Blue", {"string": "labelAbbr"}]]
+        }, {
           // This is a non-nesting label.
           accOrElmOrID: "label2",
-          expectedUtterance: [['label', 'Blue'], ['Blue', 'label']],
-          expectedBraille: [['label', 'Blue'], ['Blue', 'label']]
-        },
-        {
+          expectedUtterance: [[{"string": "label"}, "Blue"],
+                              ["Blue", {"string": "label"}]],
+          expectedBraille: [[{"string": "labelAbbr"}, "Blue"],
+                            ["Blue", {"string": "labelAbbr"}]]
+        }, {
           // This is a distinct control.
           accOrElmOrID: "input2",
-          expectedUtterance: [['not checked check button', 'Blue'],
-                     ['Blue', 'not checked check button']],
-          expectedBraille: [['( )', 'Blue'],
-                     ['Blue', '( )']]
-        },
-        {
+          expectedUtterance: [[{"string": "stateNotChecked"},
+            {"string": "checkbutton"}, "Blue"], ["Blue",
+            {"string": "stateNotChecked"}, {"string": "checkbutton"}]],
+          expectedBraille: [[{"string": "stateUncheckedAbbr"}, "Blue"], ["Blue",
+            {"string": "stateUncheckedAbbr"}]]
+        }, {
           // This is a nested control.
           accOrElmOrID: "input1",
-          expectedUtterance: [['not checked check button', 'Orange'],
-                     ['Orange', 'not checked check button']],
-          expectedBraille: [['( )', 'Orange'],
-                     ['Orange', '( )']]
-        },
-        {
+          expectedUtterance: [[{"string": "stateNotChecked"},
+            {"string": "checkbutton"}, "Orange"], ["Orange",
+            {"string": "stateNotChecked"}, {"string": "checkbutton"}]],
+          expectedBraille: [[{"string": "stateUncheckedAbbr"}, "Orange"],
+            ["Orange", {"string": "stateUncheckedAbbr"}]]
+        }, {
           // Landing on this label should mimic landing on the entry.
           accOrElmOrID: "label3",
-          expectedUtterance: [['entry', 'Joe', 'First name:'],
-                     ['First name:', 'Joe', 'entry']],
-          expectedBraille: [['entry', 'Joe', 'First name:'],
-                     ['First name:', 'Joe', 'entry']]
-        },
-        {
+          expectedUtterance: [[{"string": "entry"}, "Joe", "First name:"],
+                             ["First name:", "Joe", {"string": "entry"}]],
+          expectedBraille: [[{"string": "entryAbbr"}, "Joe", "First name:"],
+                            ["First name:", "Joe", {"string": "entryAbbr"}]]
+        }, {
           // This is a nested control with a value.
           accOrElmOrID: "input3",
-          expectedUtterance: [['entry', 'Joe', 'First name:'],
-                     ['First name:', 'Joe', 'entry']],
-          expectedBraille: [['entry', 'Joe', 'First name:'],
-                     ['First name:', 'Joe', 'entry']]
-        },
-        {
+          expectedUtterance: [[{"string": "entry"}, "Joe", "First name:"],
+                              ["First name:", "Joe", {"string": "entry"}]],
+          expectedBraille: [[{"string": "entryAbbr"}, "Joe", "First name:"],
+                            ["First name:", "Joe", {"string": "entryAbbr"}]]
+        }, {
           // This is a nested control with a value.
           accOrElmOrID: "input4",
-          expectedUtterance: [['slider', '3', 'Points:'],
-                     ['Points:', '3', 'slider']],
-          expectedBraille: [['slider', '3', 'Points:'],
-                     ['Points:', '3', 'slider']]
-        },{
+          expectedUtterance: [[{"string": "slider"}, "3", "Points:"],
+                              ["Points:", "3", {"string": "slider"}]],
+          expectedBraille: [[{"string": "sliderAbbr"}, "3", "Points:"],
+                            ["Points:", "3", {"string": "sliderAbbr"}]]
+        }, {
           accOrElmOrID: "password",
-          expectedUtterance: [["password text", "Secret Password"],
-                              ["Secret Password", "password text"]],
-          expectedBraille: [["passwdtxt", "Secret Password"],
-                            ["Secret Password", "passwdtxt"]]
-        },{
+          expectedUtterance: [[{"string": "passwordtext"}, "Secret Password"],
+                              ["Secret Password", {"string": "passwordtext"}]],
+          expectedBraille: [[{"string": "passwordtextAbbr"}, "Secret Password"],
+                            ["Secret Password", {"string": "passwordtextAbbr"}]]
+        }, {
           accOrElmOrID: "input5",
-          expectedUtterance: [["checked check button", "Boring label"],
-                              ["Boring label", "checked check button"]],
-          expectedBraille: [["(x)", "Boring label"],
-                            ["Boring label", "(x)"]]
-        },{
+          expectedUtterance: [[{"string": "stateChecked"},
+            {"string": "checkbutton"}, "Boring label"], ["Boring label",
+            {"string": "stateChecked"}, {"string": "checkbutton"}]],
+          expectedBraille: [[{"string": "stateCheckedAbbr"}, "Boring label"],
+            ["Boring label", {"string": "stateCheckedAbbr"}]]
+        }, {
           accOrElmOrID: "radio_unselected",
-          expectedUtterance: [["not checked radio button", "any old radio button"],
-                              ["any old radio button", "not checked radio button"]],
-          expectedBraille: [["( )", "any old radio button"],
-                            ["any old radio button", "( )"]]
-        },{
+          expectedUtterance: [[{"string": "stateNotChecked"},
+            {"string": "radiobutton"}, "any old radio button"],
+            ["any old radio button", {"string": "stateNotChecked"},
+            {"string": "radiobutton"}]
+          ],
+          expectedBraille: [
+            [{"string": "stateUncheckedAbbr"}, "any old radio button"],
+            ["any old radio button", {"string": "stateUncheckedAbbr"}]]
+        }, {
           accOrElmOrID: "radio_selected",
-          expectedUtterance: [["checked radio button", "a unique radio button"],
-                              ["a unique radio button", "checked radio button"]],
-          expectedBraille: [["(x)", "a unique radio button"],
-                            ["a unique radio button", "(x)"]]
-        },{
+          expectedUtterance: [[{"string": "stateChecked"},
+            {"string": "radiobutton"}, "a unique radio button"],
+            ["a unique radio button", {"string": "stateChecked"},
+            {"string": "radiobutton"}]],
+          expectedBraille: [
+            [{"string": "stateCheckedAbbr"}, "a unique radio button"],
+            ["a unique radio button", {"string": "stateCheckedAbbr"}]]
+        }, {
           accOrElmOrID: "togglebutton_notpressed",
-          expectedUtterance: [["toggle button", "I ain't pressed"],
-                              ["I ain't pressed", "toggle button"]],
-          expectedBraille: [["( )", "I ain't pressed"],
-                            ["I ain't pressed", "( )"]]
-        },{
+          expectedUtterance: [[{"string": "togglebutton"}, "I am not pressed"],
+                              ["I am not pressed", {"string": "togglebutton"}]],
+          expectedBraille: [
+            [{"string": "stateUnpressedAbbr"}, "I am not pressed"],
+            ["I am not pressed", {"string": "stateUnpressedAbbr"}]]
+        }, {
           accOrElmOrID: "togglebutton_pressed",
-          expectedUtterance: [["pressed toggle button", "I am pressed!"],
-                              ["I am pressed!", "pressed toggle button"]],
-          expectedBraille: [["(x)", "I am pressed!"],
-                            ["I am pressed!", "(x)"]]
+          expectedUtterance: [[{"string": "statePressed"},
+            {"string": "togglebutton"}, "I am pressed!"], ["I am pressed!",
+            {"string": "statePressed"}, {"string": "togglebutton"}]],
+          expectedBraille: [[{"string": "statePressedAbbr"}, "I am pressed!"],
+                            ["I am pressed!", {"string": "statePressedAbbr"}]]
         }, {
           accOrElmOrID: "listbox-option",
-          expectedUtterance: [["list box", "option", "Search suggestion"],
-            ["Search suggestion", "option", "list box"]],
-          expectedBraille: [["option", "Search suggestion"],
-            ["Search suggestion", "option"]]
+          expectedUtterance: [[{"string": "listbox"},
+            {"string": "listboxoption"}, "Search suggestion"],
+            ["Search suggestion", {"string": "listboxoption"},
+            {"string": "listbox"}]
+          ],
+          expectedBraille: [
+            [{"string": "listboxoptionAbbr"}, "Search suggestion"],
+            ["Search suggestion", {"string": "listboxoptionAbbr"}]]
         }];
 
         // Test all possible utterance order preference values.
@@ -471,7 +503,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <input id="url" type="url" value="http://example.com" />
       <input id="textInput" type="text" value="This is text." />
       <label>Points: <input id="range" type="range" name="points" min="1" max="10" value="3"></label>
-      <div id="togglebutton_notpressed" aria-pressed="false" role="button" tabindex="-1">I ain't pressed</div>
+      <div id="togglebutton_notpressed" aria-pressed="false" role="button" tabindex="-1">I am not pressed</div>
       <div id="togglebutton_pressed" aria-pressed="true" role="button" tabindex="-1">I am pressed!</div>
       <ul role="listbox" style="list-style-type: none;">
         <li role="option" id="listbox-option">Search suggestion</li>

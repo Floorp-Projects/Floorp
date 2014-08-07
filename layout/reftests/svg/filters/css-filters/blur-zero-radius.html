@@ -1,0 +1,27 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Blur with Zero Radius</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-blur">
+  <link rel="match" href="blur-zero-radius-ref.html">
+  <meta name="assert" content="Given a zero blur radius, the CSS blur filter
+                               function will not blur an HTML element.">
+  <style type="text/css">
+    #target {
+      filter: blur(0);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a green square. It should not be blurred.</p>
+  <div id="target"></div>
+</body>
+</html>

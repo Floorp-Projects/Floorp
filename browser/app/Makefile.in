@@ -11,7 +11,6 @@ PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
 AB_CD = en-US
 
 DEFINES += \
-  -DAB_CD=$(AB_CD) \
   -DFIREFOX_ICO='"$(DIST)/branding/firefox.ico"' \
   -DDOCUMENT_ICO='"$(DIST)/branding/document.ico"' \
   -DNEWWINDOW_ICO='"$(DIST)/branding/newwindow.ico"' \

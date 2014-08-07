@@ -89,5 +89,3 @@ WebGLContext::IsVertexArray(WebGLVertexArray *array)
            !array->IsDeleted() &&
            array->HasEverBeenBound();
 }
-
-
