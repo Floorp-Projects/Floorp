@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Choose the correct gradient repeat count even when there's a non-identity pattern matrix</title>
+
+<style>
+
+html {
+  overflow: hidden;
+}
+
+div {
+  box-sizing: border-box;
+  width: 240px;
+  height: 320px;
+
+  /* Scale a 240x320 gradient down by a factor of 8 into a 30x40 border image. */
+  /* 240x320 gives a diagonal of 400px, so we should get 5 repetitions of a 80px long gradient. */
+  /* tan(36.8698976deg) == 240 / 320 */
+  border-left: 30px solid;
+  border-top: 40px solid;
+  border-image: repeating-linear-gradient(-36.8698976deg, blue, blue 40px, lime 40px, lime 80px);
+}
+
+</style>
+
+<div></div>
