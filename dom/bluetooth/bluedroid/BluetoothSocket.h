@@ -23,14 +23,13 @@ public:
                   bool aAuth,
                   bool aEncrypt);
 
-  bool Connect(const nsAString& aDeviceAddress, int aChannel);
+  bool ConnectSocket(const nsAString& aDeviceAddress, int aChannel);
 
-  bool Listen(int aChannel);
+  bool ListenSocket(int aChannel);
 
-  inline void Disconnect()
-  {
-    CloseDroidSocket();
-  }
+  void CloseSocket();
+
+  bool SendSocketData(mozilla::ipc::UnixSocketRawData* aData);
 
   virtual void OnConnectSuccess() MOZ_OVERRIDE;
   virtual void OnConnectError() MOZ_OVERRIDE;
@@ -46,19 +45,6 @@ public:
   inline void SetAddress(const nsAString& aDeviceAddress)
   {
     mDeviceAddress = aDeviceAddress;
-  }
-
-  void CloseDroidSocket();
-  bool SendDroidSocketData(mozilla::ipc::UnixSocketRawData* aData);
-
-  void CloseSocket() MOZ_OVERRIDE
-  {
-    CloseDroidSocket();
-  }
-
-  bool SendSocketData(mozilla::ipc::UnixSocketRawData* aMessage) MOZ_OVERRIDE
-  {
-    return SendDroidSocketData(aMessage);
   }
 
 private:
