@@ -831,9 +831,6 @@ nsSVGOuterSVGFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
     }
-    if (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled()) {
-      return gfxMatrix();
-    }
   }
   if (!mCanvasTM) {
     NS_ASSERTION(!aTransformRoot, "transform root will be ignored here");

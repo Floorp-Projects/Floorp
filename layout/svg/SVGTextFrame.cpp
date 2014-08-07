@@ -3432,8 +3432,11 @@ SVGTextFrame::FindCloserFrameForSelection(
     userRect.Scale(devPxPerCSSPx);
 
     if (!userRect.IsEmpty()) {
-      nsRect rect = nsSVGUtils::ToCanvasBounds(userRect.ToThebesRect(),
-                                               GetCanvasTM(FOR_HIT_TESTING),
+      gfxMatrix m;
+      if (!NS_SVGDisplayListHitTestingEnabled()) {
+        m = GetCanvasTM(FOR_OUTERSVG_TM);
+      }
+      nsRect rect = nsSVGUtils::ToCanvasBounds(userRect.ToThebesRect(), m,
                                                presContext);
 
       if (nsLayoutUtils::PointIsCloserToRect(aPoint, rect,
@@ -3892,9 +3895,6 @@ SVGTextFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
       !aTransformRoot) {
     if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
-    }
-    if (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled()) {
-      return gfxMatrix();
     }
   }
   if (!mCanvasTM) {
