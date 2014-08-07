@@ -144,6 +144,9 @@ MoveEmitterX86::emit(const MoveResolver &moves)
           case MoveOp::INT32X4:
             emitInt32X4Move(from, to);
             break;
+          case MoveOp::FLOAT32X4:
+            emitFloat32X4Move(from, to);
+            break;
           default:
             MOZ_ASSUME_UNREACHABLE("Unexpected move type");
         }
@@ -236,6 +239,14 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
             masm.storeAlignedInt32x4(to.floatReg(), cycleSlot());
         }
         break;
+      case MoveOp::FLOAT32X4:
+        if (to.isMemory()) {
+            masm.loadAlignedFloat32x4(toAddress(to), ScratchSimdReg);
+            masm.storeAlignedFloat32x4(ScratchSimdReg, cycleSlot());
+        } else {
+            masm.storeAlignedFloat32x4(to.floatReg(), cycleSlot());
+        }
+        break;
       case MoveOp::FLOAT32:
         if (to.isMemory()) {
             masm.loadFloat32(toAddress(to), ScratchFloat32Reg);
@@ -289,6 +300,16 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
             masm.storeAlignedInt32x4(ScratchSimdReg, toAddress(to));
         } else {
             masm.loadAlignedInt32x4(cycleSlot(), to.floatReg());
+        }
+        break;
+      case MoveOp::FLOAT32X4:
+        JS_ASSERT(pushedAtCycle_ != -1);
+        JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= Simd128DataSize);
+        if (to.isMemory()) {
+            masm.loadAlignedFloat32x4(cycleSlot(), ScratchSimdReg);
+            masm.storeAlignedFloat32x4(ScratchSimdReg, toAddress(to));
+        } else {
+            masm.loadAlignedFloat32x4(cycleSlot(), to.floatReg());
         }
         break;
       case MoveOp::FLOAT32:
@@ -447,6 +468,24 @@ MoveEmitterX86::emitInt32X4Move(const MoveOperand &from, const MoveOperand &to)
         JS_ASSERT(from.isMemory());
         masm.loadAlignedInt32x4(toAddress(from), ScratchSimdReg);
         masm.storeAlignedInt32x4(ScratchSimdReg, toAddress(to));
+    }
+}
+
+void
+MoveEmitterX86::emitFloat32X4Move(const MoveOperand &from, const MoveOperand &to)
+{
+    if (from.isFloatReg()) {
+        if (to.isFloatReg())
+            masm.moveAlignedFloat32x4(from.floatReg(), to.floatReg());
+        else
+            masm.storeAlignedFloat32x4(from.floatReg(), toAddress(to));
+    } else if (to.isFloatReg()) {
+        masm.loadAlignedFloat32x4(toAddress(from), to.floatReg());
+    } else {
+        // Memory to memory move.
+        JS_ASSERT(from.isMemory());
+        masm.loadAlignedFloat32x4(toAddress(from), ScratchSimdReg);
+        masm.storeAlignedFloat32x4(ScratchSimdReg, toAddress(to));
     }
 }
 

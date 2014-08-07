@@ -1571,11 +1571,12 @@ CodeGenerator::visitMoveGroup(LMoveGroup *group)
 #else
           case LDefinition::BOX:
 #endif
-          case LDefinition::GENERAL:  moveType = MoveOp::GENERAL; break;
-          case LDefinition::INT32:    moveType = MoveOp::INT32;   break;
-          case LDefinition::FLOAT32:  moveType = MoveOp::FLOAT32; break;
-          case LDefinition::DOUBLE:   moveType = MoveOp::DOUBLE;  break;
-          case LDefinition::INT32X4:  moveType = MoveOp::INT32X4; break;
+          case LDefinition::GENERAL:    moveType = MoveOp::GENERAL;   break;
+          case LDefinition::INT32:      moveType = MoveOp::INT32;     break;
+          case LDefinition::FLOAT32:    moveType = MoveOp::FLOAT32;   break;
+          case LDefinition::DOUBLE:     moveType = MoveOp::DOUBLE;    break;
+          case LDefinition::INT32X4:    moveType = MoveOp::INT32X4;   break;
+          case LDefinition::FLOAT32X4:  moveType = MoveOp::FLOAT32X4; break;
           default: MOZ_ASSUME_UNREACHABLE("Unexpected move type");
         }
 
