@@ -404,6 +404,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       SignalIceGatheringStateChange;
   sigslot::signal2<mozilla::NrIceCtx*, mozilla::NrIceCtx::ConnectionState>
       SignalIceConnectionStateChange;
+  sigslot::signal2<const std::string&, uint16_t> SignalCandidate;
 
  private:
   // Shutdown media transport. Must be called on STS thread.
@@ -419,6 +420,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void IceConnectionStateChange(mozilla::NrIceCtx* ctx,
                                 mozilla::NrIceCtx::ConnectionState state);
   void IceStreamReady(mozilla::NrIceMediaStream *aStream);
+  void OnCandidateFound(mozilla::NrIceMediaStream *aStream,
+                        const std::string &candidate);
 
   // The parent PC
   PeerConnectionImpl *mParent;

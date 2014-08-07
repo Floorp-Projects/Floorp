@@ -7582,30 +7582,4 @@ gsmsdp_find_level_from_mid(fsmdef_dcb_t * dcb_p, const char * mid, uint16_t *lev
     return CC_CAUSE_VALUE_NOT_FOUND;
 }
 
-/**
- * The function performs cleaning candidate list of a given call. It walks
- * through the list and deallocates each candidate entry.
- *
- * @param[in]dcb   - pointer to fsmdef_def_t for the dcb whose
- *                   media list to be cleaned.
- *
- * @return  none
- *
- * @pre     (dcb not_eq NULL)
- */
-void gsmsdp_clean_candidate_list (fsmdef_dcb_t *dcb_p)
-{
-    fsmdef_candidate_t *candidate = NULL;
-
-    while (TRUE) {
-        /* unlink head and free the media */
-        candidate = (fsmdef_candidate_t *)sll_lite_unlink_head(&dcb_p->candidate_list);
-        if (candidate) {
-            strlib_free(candidate->candidate);
-            free(candidate);
-        } else {
-            break;
-        }
-    }
-}
 

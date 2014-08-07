@@ -86,6 +86,12 @@ cc_return_t CCAPI_AddICECandidate(cc_call_handle_t handle,
                                   cc_level_t level,
                                   Timecard *tc);
 
+cc_return_t CCAPI_FoundICECandidate(cc_call_handle_t handle,
+                                    cc_string_t candidate,
+                                    cc_string_t mid,
+                                    cc_level_t level,
+                                    Timecard *tc);
+
 /**
  * Send digits on the call - can be invoked either to dial additional digits or send DTMF
  * @param [in] handle - call handle

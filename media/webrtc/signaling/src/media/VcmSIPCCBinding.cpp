@@ -4,8 +4,6 @@
 
 #include "CSFLog.h"
 
-#include "CC_Common.h"
-
 #include "CSFMediaProvider.h"
 #include "CSFAudioTermination.h"
 #include "CSFVideoTermination.h"
@@ -51,7 +49,6 @@
 extern "C" {
 #include "ccsdp.h"
 #include "vcm.h"
-#include "cc_call_feature.h"
 #include "cip_mmgr_mediadefinitions.h"
 #include "cip_Sipcc_CodecMask.h"
 
@@ -94,7 +91,6 @@ int VcmSIPCCBinding::gAudioCodecMask = 0;
 int VcmSIPCCBinding::gVideoCodecMask = 0;
 int VcmSIPCCBinding::gVideoCodecGmpMask = 0;
 nsIThread *VcmSIPCCBinding::gMainThread = nullptr;
-nsIEventTarget *VcmSIPCCBinding::gSTSThread = nullptr;
 nsCOMPtr<nsIPrefBranch> VcmSIPCCBinding::gBranch = nullptr;
 
 static mozilla::RefPtr<TransportFlow> vcmCreateTransportFlow(
@@ -136,57 +132,11 @@ VcmSIPCCBinding::VcmSIPCCBinding ()
   }
 }
 
-class VcmIceOpaque : public NrIceOpaque {
- public:
-  VcmIceOpaque(cc_call_handle_t call_handle,
-               uint16_t level) :
-      call_handle_(call_handle),
-      level_(level) {}
-
-  virtual ~VcmIceOpaque() {}
-
-  cc_call_handle_t call_handle_;
-  uint16_t level_;
-};
-
-
 VcmSIPCCBinding::~VcmSIPCCBinding ()
 {
-    assert(gSelf);
-    gSelf = nullptr;
-    // In case we're torn down while STS is still running,
-    // we try to dispatch to STS to disconnect all of the
-    // ICE signals. If STS is no longer running, this will
-    // harmlessly fail.
-    SyncRunnable::DispatchToThread(
-      gSTSThread,
-      WrapRunnable(this, &VcmSIPCCBinding::disconnect_all),
-      true);
-
+  assert(gSelf);
+  gSelf = nullptr;
   gBranch = nullptr;
-}
-
-void VcmSIPCCBinding::CandidateReady(NrIceMediaStream* stream,
-                                     const std::string& candidate)
-{
-    // This is called on the STS thread
-    NrIceOpaque *opaque = stream->opaque();
-    MOZ_ASSERT(opaque);
-
-    VcmIceOpaque *vcm_opaque = static_cast<VcmIceOpaque *>(opaque);
-    CSFLogDebug(logTag, "Candidate ready on call %u, level %u: %s",
-                vcm_opaque->call_handle_, vcm_opaque->level_, candidate.c_str());
-
-    char *candidate_tmp = (char *)malloc(candidate.size() + 1);
-    if (!candidate_tmp)
-        return;
-    sstrncpy(candidate_tmp, candidate.c_str(), candidate.size() + 1);
-    // Send a message to the GSM thread.
-    CC_CallFeature_FoundICECandidate(vcm_opaque->call_handle_,
-                                     candidate_tmp,
-                                     nullptr,
-                                     vcm_opaque->level_,
-                                     nullptr);
 }
 
 void VcmSIPCCBinding::setStreamObserver(StreamObserver* obs)
@@ -313,26 +263,9 @@ void VcmSIPCCBinding::setMainThread(nsIThread *thread)
   gMainThread = thread;
 }
 
-void VcmSIPCCBinding::setSTSThread(nsIEventTarget *thread)
-{
-  gSTSThread = thread;
-}
-
 nsIThread* VcmSIPCCBinding::getMainThread()
 {
   return gMainThread;
-}
-
-nsIEventTarget* VcmSIPCCBinding::getSTSThread()
-{
-  return gSTSThread;
-}
-
-void VcmSIPCCBinding::connectCandidateSignal(
-    NrIceMediaStream *stream)
-{
-  stream->SignalCandidate.connect(gSelf,
-                                  &VcmSIPCCBinding::CandidateReady);
 }
 
 nsCOMPtr<nsIPrefBranch> VcmSIPCCBinding::getPrefBranch()
@@ -568,132 +501,12 @@ void vcmRxAllocPort(cc_mcapid_t mcap_id,
     *port_allocated = port;
 }
 
+static void InformPCOfNewMline_m(const std::string &peerconnection,
+                                 uint16_t level) {
+  sipcc::PeerConnectionWrapper pc(peerconnection.c_str());
+  ENSURE_PC_NO_RET(pc, peerconnection.c_str());
 
-/**
- *  Gets the ICE objects for a stream.
- *
- *  @param[in]  mcap_id - Media Capability ID
- *  @param[in]  group_id - group identifier to which stream belongs.
- *  @param[in]  stream_id - stream identifier
- *  @param[in]  call_handle  - call identifier
- *  @param[in]  peerconnection - the peerconnection in use
- *  @param[in]  level - the m-line index (1-based)
- *  @param[out] ctx - the NrIceCtx
- *  @param[out] stream - the NrIceStream
- */
-
-static short vcmGetIceStream_m(cc_mcapid_t mcap_id,
-                               cc_groupid_t group_id,
-                               cc_streamid_t stream_id,
-                               cc_call_handle_t  call_handle,
-                               const char *peerconnection,
-                               uint16_t level,
-                               mozilla::RefPtr<NrIceCtx> *ctx,
-                               mozilla::RefPtr<NrIceMediaStream> *stream)
-{
-  CSFLogDebug( logTag, "%s: group_id=%d stream_id=%d call_handle=%d PC = %s",
-    __FUNCTION__, group_id, stream_id, call_handle, peerconnection);
-
-  // Note: we don't acquire any media resources here, and we assume that the
-  // ICE streams already exist, so we're just acquiring them. Any logic
-  // to make them on demand is elsewhere.
-  sipcc::PeerConnectionWrapper pc(peerconnection);
-  ENSURE_PC(pc, VCM_ERROR);
-
-  *ctx = pc.impl()->media()->ice_ctx();
-  MOZ_ASSERT(*ctx);
-  if (!*ctx)
-    return VCM_ERROR;
-
-  CSFLogDebug( logTag, "%s: Getting stream %d", __FUNCTION__, level);
-  *stream = pc.impl()->media()->ice_media_stream(level-1);
-  MOZ_ASSERT(*stream);
-  if (!*stream) {
-    return VCM_ERROR;
-  }
-
-  return 0;
-}
-
-/**
- *  Gets the ICE parameters for a stream. Called "alloc" for style consistency
- *  @param[in]  ctx_in - the ICE ctx
- *  @param[in]  stream_in - the ICE stream
- *  @param[in]  call_handle  - call identifier
- *  @param[in]  stream_id - stream identifier
- *  @param[in]  level - the m-line index (1-based)
- *  @param[out] default_addrp - the ICE default addr
- *  @param[out] port_allocatedp - the ICE default port
- *  @param[out] candidatesp - the ICE candidate array
- *  @param[out] candidate_ctp length of the array
- *
- *  @return 0 for success; VCM_ERROR for failure
- *
- */
-static short vcmRxAllocICE_s(TemporaryRef<NrIceCtx> ctx_in,
-                             TemporaryRef<NrIceMediaStream> stream_in,
-                             cc_call_handle_t  call_handle,
-                             cc_streamid_t stream_id,
-                             uint16_t level,
-                             char **default_addrp, /* Out */
-                             int *default_portp, /* Out */
-                             char ***candidatesp, /* Out */
-                             int *candidate_ctp /* Out */
-)
-{
-  // Make a concrete reference to ctx_in and stream_in so we
-  // can use the pointers (TemporaryRef is not dereferencable).
-  RefPtr<NrIceCtx> ctx(ctx_in);
-  RefPtr<NrIceMediaStream> stream(stream_in);
-
-  *default_addrp = nullptr;
-  *default_portp = -1;
-  *candidatesp = nullptr;
-  *candidate_ctp = 0;
-
-  // This can be called multiple times; don't connect to the signal more than
-  // once (see bug 1018473 for an explanation).
-  if (!stream->opaque()) {
-    // Set the opaque so we can correlate events.
-    stream->SetOpaque(new VcmIceOpaque(call_handle, level));
-
-    // Attach ourself to the candidate signal.
-    VcmSIPCCBinding::connectCandidateSignal(stream);
-  }
-
-  std::vector<std::string> candidates = stream->GetCandidates();
-  CSFLogDebug( logTag, "%s: Got %lu candidates", __FUNCTION__, (unsigned long) candidates.size());
-
-  std::string default_addr;
-  int default_port;
-
-  nsresult res = stream->GetDefaultCandidate(1, &default_addr, &default_port);
-  MOZ_ASSERT(NS_SUCCEEDED(res));
-  if (!NS_SUCCEEDED(res)) {
-    return VCM_ERROR;
-  }
-
-  CSFLogDebug( logTag, "%s: Got default candidates %s:%d", __FUNCTION__,
-    default_addr.c_str(), default_port);
-
-  // Note: this leaks memory if we are out of memory. Oh well.
-  *candidatesp = (char **) cpr_malloc(candidates.size() * sizeof(char *));
-  if (!(*candidatesp))
-    return VCM_ERROR;
-
-  for (size_t i=0; i<candidates.size(); i++) {
-    (*candidatesp)[i] = (char *) cpr_malloc(candidates[i].size() + 1);
-    sstrncpy((*candidatesp)[i], candidates[i].c_str(), candidates[i].size() + 1);
-  }
-  *candidate_ctp = candidates.size();
-
-  // Copy the default address
-  *default_addrp = (char *) cpr_malloc(default_addr.size() + 1);
-  if (!*default_addrp)
-    return VCM_ERROR;
-  sstrncpy(*default_addrp, default_addr.c_str(), default_addr.size() + 1);
-  *default_portp = default_port; /* This is the signal that things are cool */
-  return 0;
+  pc.impl()->OnNewMline(level);
 }
 
 
@@ -726,46 +539,36 @@ short vcmRxAllocICE(cc_mcapid_t mcap_id,
                    int *candidate_ctp /* Out */
                    )
 {
-  int ret;
+  *default_addrp = nullptr;
+  *default_portp = -1;
+  *candidatesp = nullptr;
+  *candidate_ctp = 0;
 
-  mozilla::RefPtr<NrIceCtx> ctx;
-  mozilla::RefPtr<NrIceMediaStream> stream;
+  // draft-ivov-mmusic-trickle-ice-01.txt says to use port 9
+  // but "::" instead of "0.0.0.0". Since we don't do any
+  // IPv6 we are ignoring that for now.
+  std::string default_addr("0.0.0.0");
+  int default_port = 9;
 
-  // First, get a strong ref to the ICE context and stream from the
-  // main thread.
-  mozilla::SyncRunnable::DispatchToThread(
-      VcmSIPCCBinding::getMainThread(),
-      WrapRunnableNMRet(&vcmGetIceStream_m,
-                        mcap_id,
-                        group_id,
-                        stream_id,
-                        call_handle,
-                        peerconnection,
-                        level,
-                        &ctx,
-                        &stream,
-                        &ret));
-  if (ret)
-    return ret;
+  // Copy the default address
+  *default_addrp = (char *) cpr_malloc(default_addr.size() + 1);
+  if (!*default_addrp)
+    return VCM_ERROR;
+  sstrncpy(*default_addrp, default_addr.c_str(), default_addr.size() + 1);
+  *default_portp = default_port; /* This is the signal that things are cool */
 
-  // Now get the ICE parameters from the STS thread.
-  // We .forget() the strong refs so that they can be
-  // released on the STS thread.
-  mozilla::SyncRunnable::DispatchToThread(
-      VcmSIPCCBinding::getSTSThread(),
-                        WrapRunnableNMRet(&vcmRxAllocICE_s,
-                        ctx.forget(),
-                        stream.forget(),
-                        call_handle,
-                        stream_id,
-                        level,
-                        default_addrp,
-                        default_portp,
-                        candidatesp,
-                        candidate_ctp,
-                        &ret));
+  // Now, we let the PeerConnectionImpl know that another m-line has been added
+  // This is necessary to avoid trickling extra candidates that aren't needed.
+  std::string pc_handle(peerconnection);
+  nsresult rv = VcmSIPCCBinding::getMainThread()->Dispatch(
+      WrapRunnableNM(&InformPCOfNewMline_m, pc_handle, level),
+      NS_DISPATCH_NORMAL);
 
-  return ret;
+  if (NS_FAILED(rv)) {
+    return VCM_ERROR;
+  }
+
+  return 0;
 }
 
 /* Get ICE global parameters (ufrag and pwd)

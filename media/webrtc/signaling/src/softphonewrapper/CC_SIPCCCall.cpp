@@ -584,3 +584,12 @@ void CC_SIPCCCall::addICECandidate(const std::string & candidate,
   CCAPI_AddICECandidate(callHandle, candidate.c_str(), mid.c_str(),
                         (cc_level_t) level, tc);
 }
+
+
+void CC_SIPCCCall::foundICECandidate(const std::string & candidate,
+                                     const std::string & mid,
+                                     unsigned short level,
+                                     Timecard *tc) {
+  CCAPI_FoundICECandidate(callHandle, candidate.c_str(), mid.c_str(),
+                          (cc_level_t) level, tc);
+}
