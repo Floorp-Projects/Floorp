@@ -112,6 +112,7 @@ TEST_HARNESS_BINS := \
   certutil$(BIN_SUFFIX) \
   pk12util$(BIN_SUFFIX) \
   BadCertServer$(BIN_SUFFIX) \
+  ClientAuthServer$(BIN_SUFFIX) \
   OCSPStaplingServer$(BIN_SUFFIX) \
   GenerateOCSPResponse$(BIN_SUFFIX) \
   fix_stack_using_bpsyms.py \

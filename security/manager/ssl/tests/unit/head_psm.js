@@ -57,6 +57,7 @@ const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED       = SEC_ERROR_BASE + 176;
 const SEC_ERROR_APPLICATION_CALLBACK_ERROR              = SEC_ERROR_BASE + 178;
 
 const SSL_ERROR_BAD_CERT_DOMAIN                         = SSL_ERROR_BASE +  12;
+const SSL_ERROR_BAD_CERT_ALERT                          = SSL_ERROR_BASE +  17;
 
 const MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE            = MOZILLA_PKIX_ERROR_BASE +   0;
 
@@ -202,7 +203,8 @@ function run_test() {
   add_connection_test("<test-name-1>.example.com",
                       getXPCOMStatusFromNSS(SEC_ERROR_xxx),
                       function() { ... },
-                      function(aTransportSecurityInfo) { ... });
+                      function(aTransportSecurityInfo) { ... },
+                      function(aTransport) { ... });
   [...]
   add_connection_test("<test-name-n>.example.com", Cr.NS_OK);
 
@@ -223,8 +225,11 @@ function add_tls_server_setup(serverBinName) {
 // called before the connection is attempted.
 // aWithSecurityInfo is a callback function that takes an
 // nsITransportSecurityInfo, which is called after the TLS handshake succeeds.
+// aAfterStreamOpen is a callback function that is called with the
+// nsISocketTransport once the output stream is ready.
 function add_connection_test(aHost, aExpectedResult,
-                             aBeforeConnect, aWithSecurityInfo) {
+                             aBeforeConnect, aWithSecurityInfo,
+                             aAfterStreamOpen) {
   const REMOTE_PORT = 8443;
 
   function Connection(aHost) {
@@ -268,6 +273,9 @@ function add_connection_test(aHost, aExpectedResult,
 
     // nsIOutputStreamCallback
     onOutputStreamReady: function(aStream) {
+      if (aAfterStreamOpen) {
+        aAfterStreamOpen(this.transport);
+      }
       let sslSocketControl = this.transport.securityInfo
                                .QueryInterface(Ci.nsISSLSocketControl);
       sslSocketControl.proxyStartSSL();

@@ -1,0 +1,4 @@
+component {a70153f2-3590-4317-93e9-73b3e7ffca5d} cert_dialog.js
+contract @mozilla.org/nsCertificateDialogs;1 {a70153f2-3590-4317-93e9-73b3e7ffca5d}
+component {01ae923c-81bb-45db-b860-d423b0fc4fe1} cert_dialog.js
+contract @mozilla.org/embedcomp/window-watcher;1 {01ae923c-81bb-45db-b860-d423b0fc4fe1}
