@@ -184,6 +184,7 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
     // seek completes. This makes our logic a bit messy.
     bool eof = false;
     nsAutoPtr<VideoData> video;
+    nsAutoPtr<VideoData> prev;
     while (HasVideo() && !eof) {
       while (VideoQueue().GetSize() == 0 && !eof) {
         bool skip = false;
@@ -206,7 +207,23 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
         VideoQueue().Finish();
         break;
       }
+      
+      // Duplicate handling: if we're dropping frames up the seek target, we must
+      // be wary of Theora duplicate frames. They don't have an image, so if the
+      // target frame is in a run of duplicates, we won't have an image to draw
+      // after the seek. So store the last frame encountered while dropping, and
+      // copy its Image forward onto duplicate frames, so that every frame has
+      // an Image.
+      prev = video;
       video = VideoQueue().PeekFront();
+      if (video->mDuplicate && prev && !prev->mDuplicate) {
+        VideoData* temp =
+          VideoData::ShallowCopyUpdateTimestampAndDuration(prev,
+                                                           video->mTime,
+                                                           video->mDuration);
+        video = temp;
+      }
+      
       // If the frame end time is less than the seek target, we won't want
       // to display this frame after the seek, so discard it.
       if (video && video->GetEndTime() <= aTarget) {
