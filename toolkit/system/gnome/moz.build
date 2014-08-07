@@ -35,6 +35,7 @@ LOCAL_INCLUDES += [
 
 USE_LIBS += [
     'mozalloc',
+    'nspr',
     'xpcomglue_s',
     'xul',
 ]

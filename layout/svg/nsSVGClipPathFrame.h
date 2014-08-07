@@ -41,9 +41,10 @@ public:
                      nsIFrame* aParent,
                      const gfxMatrix &aMatrix);
 
-  bool ClipHitTest(nsIFrame* aParent,
-                     const gfxMatrix &aMatrix,
-                     const nsPoint &aPoint);
+  /**
+   * aPoint is expected to be in aClippedFrame's SVG user space.
+   */
+  bool PointIsInsideClipPath(nsIFrame* aClippedFrame, const gfxPoint &aPoint);
 
   // Check if this clipPath is made up of more than one geometry object.
   // If so, the clipping API in cairo isn't enough and we need to use
@@ -77,6 +78,14 @@ public:
 
   SVGBBox 
   GetBBoxForClipPathFrame(const SVGBBox &aBBox, const gfxMatrix &aMatrix);
+
+  /**
+   * If the clipPath element transforms its children due to
+   * clipPathUnits="objectBoundingBox" being set on it and/or due to the
+   * 'transform' attribute being set on it, this function returns the resulting
+   * transform.
+   */
+  gfxMatrix GetClipPathTransform(nsIFrame* aClippedFrame);
 
  private:
   // A helper class to allow us to paint clip paths safely. The helper

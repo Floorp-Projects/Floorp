@@ -497,6 +497,20 @@ class SharedLibrary(Library):
             self.soname = self.lib_name
 
 
+class ExternalLibrary(object):
+    """Empty mixin for libraries built by an external build system."""
+
+
+class ExternalStaticLibrary(StaticLibrary, ExternalLibrary):
+    """Sandbox container for static libraries built by an external build
+    system."""
+
+
+class ExternalSharedLibrary(SharedLibrary, ExternalLibrary):
+    """Sandbox container for shared libraries built by an external build
+    system."""
+
+
 class HostLibrary(BaseLibrary):
     """Sandbox container object for a host library"""
     KIND = 'host'

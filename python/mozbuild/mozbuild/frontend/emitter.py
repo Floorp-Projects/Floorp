@@ -13,7 +13,10 @@ import time
 
 from collections import OrderedDict
 from mach.mixin.logging import LoggingMixin
-from mozbuild.util import OrderedDefaultDict
+from mozbuild.util import (
+    memoize,
+    OrderedDefaultDict,
+)
 
 import mozpack.path as mozpath
 import manifestparser
@@ -29,6 +32,8 @@ from .data import (
     GeneratedInclude,
     GeneratedWebIDLFile,
     ExampleWebIDLInterface,
+    ExternalStaticLibrary,
+    ExternalSharedLibrary,
     HeaderFileSubstitution,
     HostLibrary,
     HostProgram,
@@ -64,6 +69,7 @@ from .reader import (
 )
 
 from .gyp_reader import GypSandbox
+from .sandbox import GlobalNamespace
 
 
 class TreeMetadataEmitter(LoggingMixin):
@@ -94,6 +100,17 @@ class TreeMetadataEmitter(LoggingMixin):
         self._binaries = OrderedDict()
         self._linkage = []
         self._static_linking_shared = set()
+
+        # Keep track of external paths (third party build systems), starting
+        # from what we run a subconfigure in. We'll eliminate some directories
+        # as we traverse them with moz.build (e.g. js/src).
+        subconfigures = os.path.join(self.config.topobjdir, 'subconfigures')
+        paths = []
+        if os.path.exists(subconfigures):
+            paths = open(subconfigures).read().splitlines()
+        self._external_paths = set(mozpath.normsep(d) for d in paths)
+        # Add security/nss manually, since it doesn't have a subconfigure.
+        self._external_paths.add('security/nss')
 
     def emit(self, output):
         """Convert the BuildReader output into data structures.
@@ -254,6 +271,16 @@ class TreeMetadataEmitter(LoggingMixin):
                 dir = mozpath.relpath(dir, obj.topobjdir)
                 candidates = [l for l in candidates if l.relobjdir == dir]
                 if not candidates:
+                    # If the given directory is under one of the external
+                    # (third party) paths, use a fake library reference to
+                    # there.
+                    for d in self._external_paths:
+                        if dir.startswith('%s/' % d):
+                            candidates = [self._get_external_library(dir, name,
+                                force_static)]
+                            break
+
+                if not candidates:
                     raise SandboxValidationError(
                         '%s contains "%s", but there is no "%s" %s in %s.'
                         % (variable, path, name,
@@ -317,6 +344,27 @@ class TreeMetadataEmitter(LoggingMixin):
         # Link system libraries from OS_LIBS/HOST_OS_LIBS.
         for lib in sandbox.get(variable.replace('USE', 'OS'), []):
             obj.link_system_library(lib)
+
+    @memoize
+    def _get_external_library(self, dir, name, force_static):
+        # Create ExternalStaticLibrary or ExternalSharedLibrary object with a
+        # mock sandbox more or less truthful about where the external library
+        # is.
+        sandbox = GlobalNamespace()
+        sandbox.config = self.config
+        sandbox.main_path = dir
+        sandbox.all_paths = set([dir])
+        with sandbox.allow_all_writes() as s:
+            s['TOPSRCDIR'] = self.config.topsrcdir
+            s['TOPOBJDIR'] = self.config.topobjdir
+            s['RELATIVEDIR'] = dir
+            s['SRCDIR'] = mozpath.join(self.config.topsrcdir, dir)
+            s['OBJDIR'] = mozpath.join(self.config.topobjdir, dir)
+
+        if force_static:
+            return ExternalStaticLibrary(sandbox, name)
+        else:
+            return ExternalSharedLibrary(sandbox, name)
 
     def emit_from_sandbox(self, sandbox):
         """Convert a MozbuildSandbox to tree metadata objects.
@@ -944,6 +992,10 @@ class TreeMetadataEmitter(LoggingMixin):
         o.dirs = sandbox.get('DIRS', [])
         o.test_dirs = sandbox.get('TEST_DIRS', [])
         o.affected_tiers = sandbox.get_affected_tiers()
+
+        # Some paths have a subconfigure, yet also have a moz.build. Those
+        # shouldn't end up in self._external_paths.
+        self._external_paths -= { o.relobjdir }
 
         if 'TIERS' in sandbox:
             for tier in sandbox['TIERS']:

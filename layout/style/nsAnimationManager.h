@@ -132,9 +132,6 @@ public:
                        nsCSSPseudoElements::Type aPseudoType,
                        bool aCreateIfNeeded);
 
-  // Updates styles on throttled animations. See note on nsTransitionManager
-  void UpdateAllThrottledStyles();
-
 protected:
   virtual void ElementCollectionRemoved() MOZ_OVERRIDE
   {
@@ -161,14 +158,6 @@ private:
                     float aToKey, nsStyleContext* aToContext);
   nsIStyleRule* GetAnimationRule(mozilla::dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
-
-  // Update the animated styles of an element and its descendants.
-  // If the element has an animation, it is flushed back to its primary frame.
-  // If the element does not have an animation, then its style is reparented.
-  void UpdateThrottledStylesForSubtree(nsIContent* aContent,
-                                       nsStyleContext* aParentStyle,
-                                       nsStyleChangeList &aChangeList);
-  void UpdateAllThrottledStylesInternal();
 
   // The guts of DispatchEvents
   void DoDispatchEvents();

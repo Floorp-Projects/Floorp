@@ -8,9 +8,7 @@ include $(topsrcdir)/config/rules.mk
 ifdef LIBXUL_SDK
 $(error config/external/nspr/Makefile.in is not compatible with --enable-libxul-sdk=)
 endif
-ifdef MOZ_NATIVE_NSPR
-$(error config/external/nspr/Makefile.in is not compatible with MOZ_NATIVE_NSPR)
-endif
+ifdef MOZ_BUILD_NSPR
 
 # Copy NSPR to the SDK
 ABS_DIST = $(abspath $(DIST))
@@ -46,3 +44,5 @@ ifneq (,$(filter WINNT,$(OS_ARCH))) # {
 else # } {
 	$(RM) -f $(DIST)/sdk/lib/$(LIB_PREFIX)nspr4.$(LIB_SUFFIX) $(DIST)/sdk/lib/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) $(DIST)/sdk/lib/$(LIB_PREFIX)plds4.$(LIB_SUFFIX)
 endif # }
+
+endif

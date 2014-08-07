@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CryptoBuffer.h"
+#include "secitem.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/UnionTypes.h"
 
@@ -150,7 +151,7 @@ CryptoBuffer::ToSECItem() const
     return nullptr;
   }
 
-  SECItem* item = new SECItem();
+  SECItem* item = ::SECITEM_AllocItem(nullptr, nullptr, 0);
   item->type = siBuffer;
   item->data = data;
   item->len = Length();

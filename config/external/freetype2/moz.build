@@ -3,3 +3,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LIBRARY_NAME = 'freetype'
+
+if CONFIG['MOZ_TREE_FREETYPE']:
+    USE_LIBS += [
+        'static:/modules/freetype2/.libs/freetype',
+    ]
+else:
+    OS_LIBS += CONFIG['FT2_LIBS']

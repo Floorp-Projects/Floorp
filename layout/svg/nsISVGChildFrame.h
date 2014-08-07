@@ -62,11 +62,13 @@ public:
                             const nsIntRect *aDirtyRect,
                             nsIFrame* aTransformRoot = nullptr) = 0;
 
-  // Check if this frame or children contain the given point,
-  // specified in app units relative to the origin of the outer
-  // svg frame (origin ill-defined in the case of borders - bug
-  // 290770).  See bug 290852 for foreignObject complications.
-  virtual nsIFrame* GetFrameForPoint(const nsPoint &aPoint)=0;
+  /**
+   * Returns the frame that should handle pointer events at aPoint.  aPoint is
+   * expected to be in the SVG user space of the frame on which this method is
+   * called.  The frame returned may be the frame on which this method is
+   * called, any of its descendants or else nullptr.
+   */
+  virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) = 0;
 
   // Get bounds in our nsSVGOuterSVGFrame's coordinates space (in app units)
   virtual nsRect GetCoveredRegion()=0;
@@ -86,7 +88,6 @@ public:
    */
   enum RequestingCanvasTMFor {
     FOR_PAINTING = 1,
-    FOR_HIT_TESTING,
     FOR_OUTERSVG_TM
   };
 

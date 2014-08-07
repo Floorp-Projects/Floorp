@@ -12,3 +12,7 @@ DEFINES['XPCOM_GLUE'] = True
 
 OS_LIBS += CONFIG['XLDFLAGS']
 OS_LIBS += CONFIG['XLIBS']
+
+USE_LIBS += [
+    'nspr',
+]

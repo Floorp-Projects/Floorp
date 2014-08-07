@@ -15,6 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
+#include "nsLayoutUtils.h"
 #include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
@@ -82,8 +83,11 @@ nsDisplaySVGPathGeometry::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& 
   nsSVGPathGeometryFrame *frame = static_cast<nsSVGPathGeometryFrame*>(mFrame);
   nsPoint pointRelativeToReferenceFrame = aRect.Center();
   // ToReferenceFrame() includes frame->GetPosition(), our user space position.
-  nsPoint userSpacePt = pointRelativeToReferenceFrame -
-                          (ToReferenceFrame() - frame->GetPosition());
+  nsPoint userSpacePtInAppUnits = pointRelativeToReferenceFrame -
+                                   (ToReferenceFrame() - frame->GetPosition());
+  gfxPoint userSpacePt =
+    gfxPoint(userSpacePtInAppUnits.x, userSpacePtInAppUnits.y) /
+      frame->PresContext()->AppUnitsPerCSSPixel();
   if (frame->GetFrameForPoint(userSpacePt)) {
     aOutFrames->AppendElement(frame);
   }
@@ -236,12 +240,8 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
 }
 
 nsIFrame*
-nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
+nsSVGPathGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint)
 {
-  gfxMatrix hitTestingTM = GetCanvasTM(FOR_HIT_TESTING);
-  if (hitTestingTM.IsSingular()) {
-    return nullptr;
-  }
   FillRule fillRule;
   uint16_t hitTestFlags;
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
@@ -250,11 +250,15 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
                  ? FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
   } else {
     hitTestFlags = GetHitTestFlags();
-    nsPoint point =
-      nsSVGUtils::TransformOuterSVGPointToChildFrame(aPoint, hitTestingTM, PresContext());
-    if (!hitTestFlags || ((hitTestFlags & SVG_HIT_TEST_CHECK_MRECT) &&
-                          !mRect.Contains(point))) {
+    if (!hitTestFlags) {
       return nullptr;
+    }
+    if (hitTestFlags & SVG_HIT_TEST_CHECK_MRECT) {
+      gfxRect rect =
+        nsLayoutUtils::RectToGfxRect(mRect, PresContext()->AppUnitsPerCSSPixel());
+      if (!rect.Contains(aPoint)) {
+        return nullptr;
+      }
     }
     fillRule = StyleSVG()->mFillRule == NS_STYLE_FILL_RULE_NONZERO
                  ? FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
@@ -277,26 +281,14 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
     return nullptr; // no path, so we don't paint anything that can be hit
   }
 
-  if (!hitTestingTM.IsIdentity()) {
-    // We'll only get here if we don't have a nsDisplayItem that has called us
-    // (for example, if we're a NS_FRAME_IS_NONDISPLAY frame under a clipPath).
-    RefPtr<PathBuilder> builder =
-      path->TransformedCopyToBuilder(ToMatrix(hitTestingTM), fillRule);
-    path = builder->Finish();
-  }
-
-  int32_t appUnitsPerCSSPx = PresContext()->AppUnitsPerCSSPixel();
-  Point userSpacePoint = Point(Float(aPoint.x) / appUnitsPerCSSPx,
-                               Float(aPoint.y) / appUnitsPerCSSPx);
-
   if (hitTestFlags & SVG_HIT_TEST_FILL) {
-    isHit = path->ContainsPoint(userSpacePoint, Matrix());
+    isHit = path->ContainsPoint(ToPoint(aPoint), Matrix());
   }
   if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
+    Point point = ToPoint(aPoint);
     SVGContentUtils::AutoStrokeOptions stroke;
     SVGContentUtils::GetStrokeOptions(&stroke, content, StyleContext(), nullptr);
-    Matrix nonScalingStrokeMatrix =
-      ToMatrix(nsSVGUtils::GetStrokeTransform(this));
+    Matrix nonScalingStrokeMatrix = ToMatrix(nsSVGUtils::GetStrokeTransform(this));
     if (!nonScalingStrokeMatrix.IsIdentity()) {
       // We need to transform the path back into the appropriate ancestor
       // coordinate system in order for non-scaled stroke to be correct.
@@ -305,12 +297,12 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
       if (!nonScalingStrokeMatrix.Invert()) {
         return nullptr;
       }
-      userSpacePoint = ToMatrix(hitTestingTM) * nonScalingStrokeMatrix * userSpacePoint;
+      point = nonScalingStrokeMatrix * point;
       RefPtr<PathBuilder> builder =
         path->TransformedCopyToBuilder(nonScalingStrokeMatrix, fillRule);
       path = builder->Finish();
     }
-    isHit = path->StrokeContainsPoint(stroke, userSpacePoint, Matrix());
+    isHit = path->StrokeContainsPoint(stroke, point, Matrix());
   }
 
   if (isHit && nsSVGUtils::HitTestClip(this, aPoint))
@@ -559,9 +551,6 @@ nsSVGPathGeometryFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
   if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
     if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
-    }
-    if (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled()) {
-      return gfxMatrix();
     }
   }
 

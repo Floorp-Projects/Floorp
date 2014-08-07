@@ -17,6 +17,7 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 USE_LIBS += [
     'mozalloc',
+    'nspr',
     'xpcomglue_s',
     'xul',
 ]

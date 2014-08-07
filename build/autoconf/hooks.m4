@@ -15,6 +15,7 @@ define([_MOZ_AC_INIT_PREPARE], defn([AC_INIT_PREPARE]))
 define([AC_INIT_PREPARE],
 [_MOZ_AC_INIT_PREPARE($1)
 MOZ_CONFIG_LOG_TRAP
+> subconfigures
 ])
 
 define([AC_OUTPUT_SUBDIRS],
@@ -28,6 +29,11 @@ define([AC_OUTPUT_SUBDIRS],
     objdir=$moz_config_dir
     ;;
   esac
+  dnl Because config.status, storing AC_SUBSTs, is written before any
+  dnl subconfigure runs, we need to use a file. Moreover, some subconfigures
+  dnl are started from a subshell, and variable modifications from a subshell
+  dnl wouldn't be preserved.
+  echo $objdir >> subconfigures
 
   dumpenv="true | "
   case "$host" in
