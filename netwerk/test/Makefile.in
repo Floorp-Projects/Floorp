@@ -7,10 +7,3 @@
 DEFINES += $(TK_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
-
-# One of the xpcshell unit tests needs this file, so make sure it winds
-#  up in the test directory.
-libs::
-	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/data
-	$(INSTALL) $(topsrcdir)/netwerk/dns/effective_tld_names.dat \
-          $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/
