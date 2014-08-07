@@ -333,7 +333,8 @@ private:
 
   ShaderConfigOGL GetShaderConfigFor(Effect *aEffect,
                                      MaskType aMask = MaskType::MaskNone,
-                                     gfx::CompositionOp aOp = gfx::CompositionOp::OP_OVER) const;
+                                     gfx::CompositionOp aOp = gfx::CompositionOp::OP_OVER,
+                                     bool aColorMatrix = false) const;
   ShaderProgramOGL* GetShaderProgramFor(const ShaderConfigOGL &aConfig);
 
   /**
