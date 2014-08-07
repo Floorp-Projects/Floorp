@@ -129,7 +129,7 @@ tab[selected] {
 html|button {
   padding: 3px;
   /* override forms.css */
-  font-size: inherit;
+  font: inherit;
 }
 
 /* xul buttons and menulists */
@@ -139,30 +139,30 @@ colorpicker[type="button"],
 menulist {
   -moz-appearance: none;
   height: 30px;
-  color: #333333;
+  color: #333;
   line-height: 20px;
-  text-shadow: 0 1px 1px #FEFFFE;
-  border: 1px solid #C1C1C1;
+  text-shadow: 0 1px 1px #fefffe;
+  border: 1px solid #c1c1c1;
   -moz-border-top-colors: none !important;
   -moz-border-right-colors: none !important;
   -moz-border-bottom-colors: none !important;
   -moz-border-left-colors: none !important;
   border-radius: 2px;
-  background-color: #FBFBFB;
+  background-color: #fbfbfb;
 }
 
 html|button:enabled:hover,
 button:not([disabled="true"]):hover,
 colorpicker[type="button"]:not([disabled="true"]):hover,
 menulist:not([disabled="true"]):hover {
-  background-color: #EBEBEB;
+  background-color: #ebebeb;
 }
 
 html|button:enabled:hover:active,
 button:not([disabled="true"]):hover:active,
 colorpicker[type="button"]:not([disabled="true"]):hover:active,
 menulist[open="true"]:not([disabled="true"]) {
-  background-color: #DADADA;
+  background-color: #dadada;
 }
 
 html|button:disabled,
@@ -199,19 +199,19 @@ button[type="menu"] > .button-box > .button-menu-dropmarker {
 .help-button {
   min-width: 30px;
   border-radius: 2px;
-  border: 1px solid #C1C1C1;
-  background-color: #FFCB00;
+  border: 1px solid #c1c1c1;
+  background-color: #ffcb00;
   background-image: none;
   box-shadow: none;
 }
 
 .help-button:not([disabled="true"]):hover {
-  background-color: #F4C200;
+  background-color: #f4c200;
   background-image: none;
 }
 
 .help-button:not([disabled="true"]):hover:active {
-  background-color: #EABA00;
+  background-color: #eaba00;
   background-image: none;
 }
 
@@ -311,7 +311,7 @@ button[type="menu"] > menupopup {
   -moz-appearance: none;
   border: 1px solid rgba(23,50,77,0.4);
   border-radius: 2px;
-  background-color: #FFFFFF;
+  background-color: #fff;
 }
 
 menulist > menupopup menu,
@@ -322,7 +322,7 @@ button[type="menu"] > menupopup menuitem {
   font-size: 1.25rem;
   line-height: 22px;
   height: 40px;
-  color: #333333;
+  color: #333;
   -moz-padding-start: 10px;
   -moz-padding-end: 30px;
 }
@@ -331,7 +331,7 @@ menulist > menupopup > menu[_moz-menuactive="true"],
 menulist > menupopup > menuitem[_moz-menuactive="true"],
 button[type="menu"] > menupopup > menu[_moz-menuactive="true"],
 button[type="menu"] > menupopup > menuitem[_moz-menuactive="true"] {
-  color: #333333;
+  color: #333;
   background-color: transparent;
   background-image: linear-gradient(rgba(76,177,255,0.25), rgba(23,146,229,0.25));
 }
@@ -341,7 +341,7 @@ menulist > menupopup > menuitem[selected="true"],
 button[type="menu"] > menupopup > menu[selected="true"],
 button[type="menu"] > menupopup > menuitem[selected="true"] {
   color: #fff;
-  background-image: linear-gradient(#4CB1FF, #1792E5);
+  background-image: linear-gradient(#4cb1ff, #1792e5);
 }
 
 menulist > menupopup menuseparator,
@@ -359,22 +359,22 @@ button[type="menu"] > menupopup menuseparator {
 textbox {
   -moz-appearance: none;
   height: 30px;
-  color: #333333;
+  color: #333;
   line-height: 20px;
-  text-shadow: 0 1px 1px #FEFFFE;
+  text-shadow: 0 1px 1px #fefffe;
   padding-right: 10px;
   padding-left: 10px;
-  border: 1px solid #C1C1C1;
+  border: 1px solid #c1c1c1;
   -moz-border-top-colors: none !important;
   -moz-border-right-colors: none !important;
   -moz-border-bottom-colors: none !important;
   -moz-border-left-colors: none !important;
   border-radius: 2px;
-  background-color: #FFF;
+  background-color: #fff;
 }
 
 textbox[focused] {
-  border-color: #0095DD;
+  border-color: #0095dd;
 }
 
 textbox[disabled="true"] {
@@ -388,18 +388,18 @@ textbox[disabled="true"] {
 html|a.inline-link {
   font-size: 1.25rem;
   line-height: 22px;
-  color: #0095DD;
+  color: #0095dd;
 }
 
 .text-link:hover,
 .inline-link:hover {
-  color: #4CB1FF;
+  color: #4cb1ff;
   text-decoration: none;
 }
 
 .text-link:hover:active,
 .inline-link:hover:active {
-  color: #FF9500;
+  color: #ff9500;
   text-decoration: none;
 }
 
@@ -414,23 +414,23 @@ checkbox {
   width: 23px;
   height: 23px;
   border-radius: 2px;
-  border: 1px solid #C1C1C1;
+  border: 1px solid #c1c1c1;
   -moz-margin-end: 10px;
   background-color: #f1f1f1;
-  background-image: linear-gradient(#ffffff, rgba(255,255,255,0.8));
+  background-image: linear-gradient(#fff, rgba(255,255,255,0.8));
   background-position: center center;
   background-repeat: no-repeat;
-  box-shadow: 0 1px 1px 0 #ffffff, inset 0 2px 0 0 rgba(0,0,0,0.03);
+  box-shadow: 0 1px 1px 0 #fff, inset 0 2px 0 0 rgba(0,0,0,0.03);
 }
 
 checkbox:not([disabled="true"]):hover > .checkbox-check {
-  border-color: #0095DD;
+  border-color: #0095dd;
 }
 
 .checkbox-check[checked] {
   background-image: url("chrome://browser/skin/in-content/check.png"),
                     /* !important needed to override toolkit !important rule */
-                    linear-gradient(#ffffff, rgba(255,255,255,0.8)) !important;
+                    linear-gradient(#fff, rgba(255,255,255,0.8)) !important;
 }
 
 checkbox[disabled="true"] > .checkbox-check {
@@ -446,7 +446,7 @@ checkbox[disabled="true"] > .checkbox-check {
   .checkbox-check[checked] {
     background-size: 12px 12px, auto;
     background-image: url("chrome://browser/skin/in-content/check@2x.png"),
-                      linear-gradient(#ffffff, rgba(255,255,255,0.8)) !important;
+                      linear-gradient(#fff, rgba(255,255,255,0.8)) !important;
   }
 }
 
@@ -454,16 +454,16 @@ checkbox[disabled="true"] > .checkbox-check {
   -moz-appearance: none;
   width: 23px;
   height: 23px;
-  border: 1px solid #C1C1C1;
+  border: 1px solid #c1c1c1;
   border-radius: 50%;
   -moz-margin-end: 10px;
   background-color: #f1f1f1;
-  background-image: linear-gradient(#ffffff, rgba(255,255,255,0.80));
-  box-shadow: 0 1px 1px 0 #ffffff, inset 0 2px 0 0 rgba(0,0,0,0.03);
+  background-image: linear-gradient(#fff, rgba(255,255,255,0.80));
+  box-shadow: 0 1px 1px 0 #fff, inset 0 2px 0 0 rgba(0,0,0,0.03);
 }
 
 radio:not([disabled="true"]):hover > .radio-check {
-  border-color: #0095DD;
+  border-color: #0095dd;
 }
 
 .radio-check[selected] {
@@ -509,7 +509,7 @@ radio[disabled="true"] > .radio-check {
 .category[selected] {
   background-color: #343f48;
   color: #f2f2f2;
-  box-shadow: inset 4px 0 0 0 #FF9500;
+  box-shadow: inset 4px 0 0 0 #ff9500;
 }
 
 #categories[keyboard-navigation="true"]:-moz-focusring > .category[current] {
