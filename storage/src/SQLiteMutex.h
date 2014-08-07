@@ -29,7 +29,7 @@ public:
    * @param aName
    *        A name which can be used to reference this mutex.
    */
-  SQLiteMutex(const char *aName)
+  explicit SQLiteMutex(const char *aName)
   : BlockingResourceBase(aName, eMutex)
   , mMutex(nullptr)
   {
@@ -131,7 +131,7 @@ private:
 class MOZ_STACK_CLASS SQLiteMutexAutoLock
 {
 public:
-  SQLiteMutexAutoLock(SQLiteMutex &aMutex)
+  explicit SQLiteMutexAutoLock(SQLiteMutex &aMutex)
   : mMutex(aMutex)
   {
     mMutex.lock();
@@ -153,7 +153,7 @@ private:
 class MOZ_STACK_CLASS SQLiteMutexAutoUnlock
 {
 public:
-  SQLiteMutexAutoUnlock(SQLiteMutex &aMutex)
+  explicit SQLiteMutexAutoUnlock(SQLiteMutex &aMutex)
   : mMutex(aMutex)
   {
     mMutex.unlock();
