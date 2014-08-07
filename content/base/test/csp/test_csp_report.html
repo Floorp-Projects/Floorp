@@ -37,6 +37,11 @@ const docUri = "http://mochi.test:8888/tests/content/base/test/csp/file_csp_test
 window.checkResults = function(reportObj) {
   var cspReport = reportObj["csp-report"];
 
+  // The following uris' fragments should be stripped before reporting:
+  //    * document-uri
+  //    * blocked-uri
+  //    * source-file
+  // see http://www.w3.org/TR/CSP11/#violation-reports
   is(cspReport["document-uri"], docUri, "Incorrect document-uri");
 
   // we can not test for the whole referrer since it includes platform specific information
@@ -130,6 +135,9 @@ var src = "file_csp_testserver.sjs";
 src += "?file=" + escape(testfile);
 // append the CSP that should be used to serve the file
 src += "&csp=" + escape(policy);
+// appending a fragment so we can test that it's correctly stripped
+// for document-uri and source-file.
+src += "#foo";
 document.getElementById("cspframe").src = src;
 
 </script>
