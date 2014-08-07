@@ -5,11 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaCodecProxy.h"
-
 #include <string.h>
-
 #include <binder/IPCThreadState.h>
+#include <stagefright/foundation/ABuffer.h>
+#include <stagefright/foundation/ADebug.h>
+#include <stagefright/MetaData.h>
 
+#define LOG_TAG "MediaCodecProxy"
+#include <android/log.h>
+#define ALOG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define TIMEOUT_DEQUEUE_INPUTBUFFER_MS 1000000ll
 namespace android {
 
 sp<MediaCodecProxy>
@@ -386,6 +391,107 @@ MediaCodecProxy::resourceCanceled()
   sp<CodecResourceListener> listener = mListener.promote();
   if (listener != nullptr) {
     listener->codecCanceled();
+  }
+}
+
+bool MediaCodecProxy::Prepare()
+{
+
+  status_t err;
+  if (start() != OK) {
+    ALOG("Couldn't start MediaCodec");
+    return false;
+  }
+  if (getInputBuffers(&mInputBuffers) != OK) {
+    ALOG("Couldn't get input buffers from MediaCodec");
+    return false;
+  }
+  if (getOutputBuffers(&mOutputBuffers) != OK) {
+    ALOG("Couldn't get output buffers from MediaCodec");
+    return false;
+  }
+
+  return true;
+}
+
+status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
+                                int64_t aTimestampUsecs, uint64_t aflags)
+{
+  if (mCodec == nullptr) {
+    ALOG("MediaCodec has not been inited from input!");
+    return NO_INIT;
+  }
+
+  size_t index;
+  status_t err = dequeueInputBuffer(&index, TIMEOUT_DEQUEUE_INPUTBUFFER_MS);
+  if (err != OK) {
+    ALOG("dequeueInputBuffer returned %d", err);
+    return err;
+  }
+  const sp<ABuffer> &dstBuffer = mInputBuffers.itemAt(index);
+
+  CHECK_LE(aDataSize, dstBuffer->capacity());
+  dstBuffer->setRange(0, aDataSize);
+
+  memcpy(dstBuffer->data(), aData, aDataSize);
+  err = queueInputBuffer(index, 0, dstBuffer->size(), aTimestampUsecs, aflags);
+  if (err != OK) {
+    ALOG("queueInputBuffer returned %d", err);
+    return err;
+  }
+  return err;
+}
+
+status_t MediaCodecProxy::Output(MediaBuffer** aBuffer, int64_t aTimeoutUs)
+{
+
+  if (mCodec == nullptr) {
+    ALOG("MediaCodec has not been inited from output!");
+    return NO_INIT;
+  }
+
+  size_t index = 0;
+  size_t offset = 0;
+  size_t size = 0;
+  int64_t timeUs = 0;
+  uint32_t flags = 0;
+
+  *aBuffer = nullptr;
+
+  status_t err = dequeueOutputBuffer(&index, &offset, &size,
+                                      &timeUs, &flags, aTimeoutUs);
+  if (err != OK) {
+    ALOG("Output returned %d", err);
+    return err;
+  }
+
+  MediaBuffer *buffer;
+
+  buffer = new MediaBuffer(mOutputBuffers.itemAt(index));
+  sp<MetaData> metaData = buffer->meta_data();
+  metaData->setInt32(kKeyBufferIndex, index);
+  metaData->setInt64(kKeyTime, timeUs);
+  buffer->set_range(buffer->range_offset(), size);
+  *aBuffer = buffer;
+  return err;
+}
+
+bool MediaCodecProxy::IsWaitingResources()
+{
+  return mCodec == nullptr;
+}
+
+bool MediaCodecProxy::IsDormantNeeded()
+{
+  return mCodecLooper.get() ? true : false;
+}
+
+void MediaCodecProxy::ReleaseMediaResources()
+{
+  if (mCodec.get()) {
+    mCodec->stop();
+    mCodec->release();
+    mCodec.clear();
   }
 }
 
