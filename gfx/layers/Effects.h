@@ -121,7 +121,28 @@ struct EffectRenderTarget : public TexturedEffect
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   RefPtr<CompositingRenderTarget> mRenderTarget;
+
+protected:
+  EffectRenderTarget(EffectTypes aType, CompositingRenderTarget *aRenderTarget)
+    : TexturedEffect(aType, aRenderTarget, true, gfx::Filter::LINEAR)
+    , mRenderTarget(aRenderTarget)
+  {}
+
 };
+
+// Render to a render target rather than the screen.
+struct EffectColorMatrix : public Effect
+{
+  EffectColorMatrix(gfx::Matrix5x4 aMatrix)
+    : Effect(EffectTypes::COLOR_MATRIX)
+    , mColorMatrix(aMatrix)
+  {}
+
+  virtual const char* Name() { return "EffectColorMatrix"; }
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
+  const gfx::Matrix5x4 mColorMatrix;
+};
+
 
 struct EffectRGB : public TexturedEffect
 {
