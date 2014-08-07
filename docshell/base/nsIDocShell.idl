@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(8ccc5a61-e053-4851-ab00-dadab0dffd7f)]
+[scriptable, builtinclass, uuid(3646c915-df79-4500-8b57-c65ab9c3b39f)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -568,6 +568,19 @@ interface nsIDocShell : nsIDocShellTreeItem
    * hasMixedActiveContentBlocked.
    */
   [infallible] readonly attribute boolean hasMixedDisplayContentBlocked;
+
+   /**
+   * This attribute determines whether a document has Tracking Content
+   * that has been blocked from loading.
+   */
+   [infallible] readonly attribute boolean hasTrackingContentBlocked;
+
+   /**
+   * This attribute determines whether Tracking Content is loaded on the
+   * document. When it is true, tracking content was not blocked and has
+   * loaded (or is about to load) on the page.
+   */
+  [infallible] readonly attribute boolean hasTrackingContentLoaded;
 
   /**
    * Disconnects this docshell's editor from its window, and stores the
