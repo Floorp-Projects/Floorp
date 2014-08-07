@@ -497,17 +497,26 @@ class MacroAssembler : public MacroAssemblerSpecific
         return extractObject(source, scratch);
     }
 
-    void PushRegsInMask(RegisterSet set);
+    void PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet);
+    void PushRegsInMask(RegisterSet set) {
+        PushRegsInMask(set, FloatRegisterSet());
+    }
     void PushRegsInMask(GeneralRegisterSet set) {
         PushRegsInMask(RegisterSet(set, FloatRegisterSet()));
     }
     void PopRegsInMask(RegisterSet set) {
         PopRegsInMaskIgnore(set, RegisterSet());
     }
+    void PopRegsInMask(RegisterSet set, FloatRegisterSet simdSet) {
+        PopRegsInMaskIgnore(set, RegisterSet(), simdSet);
+    }
     void PopRegsInMask(GeneralRegisterSet set) {
         PopRegsInMask(RegisterSet(set, FloatRegisterSet()));
     }
-    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore);
+    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet);
+    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore) {
+        PopRegsInMaskIgnore(set, ignore, FloatRegisterSet());
+    }
 
     void branchIfFunctionHasNoScript(Register fun, Label *label) {
         // 16-bit loads are slow and unaligned 32-bit loads may be too so

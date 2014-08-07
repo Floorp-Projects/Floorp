@@ -13,9 +13,13 @@ using namespace js;
 using namespace js::jit;
 
 void
-MacroAssembler::PushRegsInMask(RegisterSet set)
+MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
-    int32_t diffF = set.fpus().size() * sizeof(double);
+    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
+    JS_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    unsigned numSimd = simdSet.size();
+    unsigned numDouble = doubleSet.size();
+    int32_t diffF = numDouble * sizeof(double) + numSimd * Simd128DataSize;
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
     // On x86, always use push to push the integer registers, as it's fast
@@ -27,27 +31,50 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
     JS_ASSERT(diffG == 0);
 
     reserveStack(diffF);
-    for (FloatRegisterBackwardIterator iter(set.fpus()); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
         diffF -= sizeof(double);
+        numDouble -= 1;
         storeDouble(*iter, Address(StackPointer, diffF));
     }
+    JS_ASSERT(numDouble == 0);
+    for (FloatRegisterBackwardIterator iter(simdSet); iter.more(); iter++) {
+        diffF -= Simd128DataSize;
+        numSimd -= 1;
+        // XXX how to choose the right move type?
+        storeUnalignedInt32x4(*iter, Address(StackPointer, diffF));
+    }
+    JS_ASSERT(numSimd == 0);
     JS_ASSERT(diffF == 0);
 }
 
 void
-MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
+MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
 {
+    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
+    JS_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    unsigned numSimd = simdSet.size();
+    unsigned numDouble = doubleSet.size();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
-    int32_t diffF = set.fpus().size() * sizeof(double);
+    int32_t diffF = numDouble * sizeof(double) + numSimd * Simd128DataSize;
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
-    for (FloatRegisterBackwardIterator iter(set.fpus()); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(simdSet); iter.more(); iter++) {
+        diffF -= Simd128DataSize;
+        numSimd -= 1;
+        if (!ignore.has(*iter))
+            // XXX how to choose the right move type?
+            loadUnalignedInt32x4(Address(StackPointer, diffF), *iter);
+    }
+    JS_ASSERT(numSimd == 0);
+    for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
         diffF -= sizeof(double);
+        numDouble -= 1;
         if (!ignore.has(*iter))
             loadDouble(Address(StackPointer, diffF), *iter);
     }
     freeStack(reservedF);
+    JS_ASSERT(numDouble == 0);
     JS_ASSERT(diffF == 0);
 
     // On x86, use pop to pop the integer registers, if we're not going to
