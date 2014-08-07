@@ -45,7 +45,7 @@ RInstruction::readRecoverData(CompactBufferReader &reader, RInstructionStorage *
         break;
 
         RECOVER_OPCODE_LIST(MATCH_OPCODES_)
-#   undef DEFINE_OPCODES_
+#   undef MATCH_OPCODES_
 
       case Recover_Invalid:
       default:
