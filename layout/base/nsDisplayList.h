@@ -624,7 +624,7 @@ public:
       : mContainingBlockClip(aContainingBlockClip)
       , mDirtyRect(aDirtyRect)
     {}
-    OutOfFlowDisplayData(const nsRect &aDirtyRect)
+    explicit OutOfFlowDisplayData(const nsRect &aDirtyRect)
       : mDirtyRect(aDirtyRect)
     {}
     DisplayItemClip mContainingBlockClip;
@@ -808,7 +808,7 @@ public:
    * This constructor is only used in rare cases when we need to construct
    * temporary items.
    */
-  nsDisplayItem(nsIFrame* aFrame)
+  explicit nsDisplayItem(nsIFrame* aFrame)
     : mFrame(aFrame)
     , mClip(nullptr)
     , mReferenceFrame(nullptr)
@@ -830,7 +830,7 @@ public:
   struct HitTestState {
     typedef nsTArray<ViewID> ShadowArray;
 
-    HitTestState(ShadowArray* aShadows = nullptr)
+    explicit HitTestState(ShadowArray* aShadows = nullptr)
       : mShadows(aShadows) {
     }
 
@@ -1744,7 +1744,7 @@ struct nsDisplayListCollection : public nsDisplayListSet {
   nsDisplayListCollection() :
     nsDisplayListSet(&mLists[0], &mLists[1], &mLists[2], &mLists[3], &mLists[4],
                      &mLists[5]) {}
-  nsDisplayListCollection(nsDisplayList* aBorderBackground) :
+  explicit nsDisplayListCollection(nsDisplayList* aBorderBackground) :
     nsDisplayListSet(aBorderBackground, &mLists[1], &mLists[2], &mLists[3], &mLists[4],
                      &mLists[5]) {}
 
@@ -3412,7 +3412,7 @@ public:
   nsCharClipDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame), mLeftEdge(0), mRightEdge(0) {}
 
-  nsCharClipDisplayItem(nsIFrame* aFrame)
+  explicit nsCharClipDisplayItem(nsIFrame* aFrame)
     : nsDisplayItem(aFrame) {}
 
   struct ClipEdges {

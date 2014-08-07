@@ -41,7 +41,7 @@ public:
 
   typedef enum {eIsPrinting, eIsPrintPreview } ePrintDataType;
 
-  nsPrintData(ePrintDataType aType);
+  explicit nsPrintData(ePrintDataType aType);
   ~nsPrintData(); // non-virtual
 
   // Listener Helper Methods

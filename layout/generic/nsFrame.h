@@ -517,7 +517,7 @@ public:
 
 protected:
   // Protected constructor and destructor
-  nsFrame(nsStyleContext* aContext);
+  explicit nsFrame(nsStyleContext* aContext);
   virtual ~nsFrame();
 
   /**
@@ -751,7 +751,7 @@ public:
   };
 
   struct DR_layout_cookie {
-    DR_layout_cookie(nsIFrame* aFrame);
+    explicit DR_layout_cookie(nsIFrame* aFrame);
     ~DR_layout_cookie();
 
     nsIFrame* mFrame;
