@@ -9,56 +9,6 @@ prefpane .groupbox-title {
   margin-bottom: 0;
 }
 
-tabs {
-  padding-right: 0;
-  padding-left: 0;
-}
-
-tab[selected] {
-  text-shadow: none;
-}
-
-button,
-colorpicker[type="button"],
-menulist {
-  margin-top: 3px;
-}
-
-menulist:not([editable="true"]) > menupopup > menuitem[checked="true"]::before,
-menulist:not([editable="true"]) > menupopup > menuitem[selected="true"]::before {
-  display: none;
-}
-
-menulist:not([editable="true"]) > .menulist-dropmarker {
-  display: -moz-box;
-  margin-top: 1px;
-  margin-bottom: 1px;
-}
-
-menulist > menupopup menu,
-menulist > menupopup menuitem,
-button[type="menu"] > menupopup menu,
-button[type="menu"] > menupopup menuitem {
-  -moz-padding-end: 34px;
-}
-
-.help-button > .button-box > .button-icon {
-  -moz-margin-start: 0;
-}
-
-.checkbox-icon {
-  margin-right: 0;
-}
-
-.radio-icon {
-  -moz-margin-end: 0;
-}
-
-.numberbox-input-box {
-  -moz-appearance: none;
-  border-width: 0;
-}
-
 spinbuttons {
   -moz-appearance: none;
 }
@@ -86,11 +36,6 @@ spinbuttons {
   margin-top: 2px;
   -moz-margin-start: 2px;
   -moz-margin-end: 8px !important;
-}
-
-description {
-  font-size: 1.25rem;
-  line-height: 22px;
 }
 
 #downloadFolder > .fileFieldContentBox {
