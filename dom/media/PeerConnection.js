@@ -1108,13 +1108,6 @@ PeerConnectionObserver.prototype = {
 
   onSetLocalDescriptionSuccess: function() {
     this._dompc.callCB(this._dompc._onSetLocalDescriptionSuccess);
-
-    if (this._dompc._iceGatheringState == "complete") {
-        // If we are not trickling or we completed gathering prior
-        // to setLocal, then trigger a call of onicecandidate here.
-        this.foundIceCandidate(null);
-    }
-
     this._dompc._executeNext();
   },
 
@@ -1149,13 +1142,17 @@ PeerConnectionObserver.prototype = {
   },
 
   onIceCandidate: function(level, mid, candidate) {
-    this.foundIceCandidate(new this._dompc._win.mozRTCIceCandidate(
-        {
-            candidate: candidate,
-            sdpMid: mid,
-            sdpMLineIndex: level - 1
-        }
-    ));
+    if (candidate == "") {
+      this.foundIceCandidate(null);
+    } else {
+      this.foundIceCandidate(new this._dompc._win.mozRTCIceCandidate(
+          {
+              candidate: candidate,
+              sdpMid: mid,
+              sdpMLineIndex: level - 1
+          }
+      ));
+    }
   },
 
 
@@ -1226,20 +1223,6 @@ PeerConnectionObserver.prototype = {
   //
   handleIceGatheringStateChange: function(gatheringState) {
     this._dompc.changeIceGatheringState(gatheringState);
-
-    if (gatheringState === "complete") {
-      if (!this._dompc._trickleIce) {
-        // If we are not trickling, then the queue is in a pending state
-        // waiting for ICE gathering and executeNext frees it
-        this._dompc._executeNext();
-      }
-      else if (this._dompc.localDescription) {
-        // If we are trickling but we have already done setLocal,
-        // then we need to send a final foundIceCandidate(null) to indicate
-        // that we are done gathering.
-        this.foundIceCandidate(null);
-      }
-    }
   },
 
   onStateChange: function(state) {

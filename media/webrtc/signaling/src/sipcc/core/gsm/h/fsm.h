@@ -433,8 +433,6 @@ typedef struct {
 
     char digest_alg[FSMDEF_MAX_DIGEST_ALG_LEN];
     char digest[FSMDEF_MAX_DIGEST_LEN];
-
-    sll_lite_list_t candidate_list;
 } fsmdef_dcb_t;
 
 typedef enum fsm_types_t_ {

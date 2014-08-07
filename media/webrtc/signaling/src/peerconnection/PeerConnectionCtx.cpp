@@ -196,8 +196,6 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
     MOZ_ASSERT(gMainThread == mainThread);
   }
 
-  CSF::VcmSIPCCBinding::setSTSThread(stsThread);
-
   nsresult res;
 
   MOZ_ASSERT(NS_IsMainThread());

@@ -130,6 +130,7 @@ namespace CSF
         virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
         virtual CC_SIPCCCallMediaDataPtr getMediaData();
         virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *);
+        virtual void foundICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *);
 
     private:
         virtual bool setAudioMute(bool mute);

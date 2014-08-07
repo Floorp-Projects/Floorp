@@ -126,7 +126,6 @@ fsmdef_media_t* gsmsdp_find_media_by_media_type(fsmdef_dcb_t *dcb, sdp_media_e 	
 
 extern void gsmsdp_set_ice_attribute (sdp_attr_e sdp_attr, uint16_t level,
                                       void *sdp_p, char *ice_attrib);
-extern void gsmsdp_clean_candidate_list(fsmdef_dcb_t *dcb);
 
 #endif
 
