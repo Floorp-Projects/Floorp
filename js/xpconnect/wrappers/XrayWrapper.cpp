@@ -10,6 +10,7 @@
 
 #include "nsIContent.h"
 #include "nsIControllers.h"
+#include "nsIScriptError.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 
@@ -503,7 +504,7 @@ public:
         if (!ok || desc.object())
             return ok;
 
-        return SilentFailure(cx, id, "Object is not safely Xrayable");
+        return SilentFailure(cx, id, "object is not safely Xrayable");
     }
 
     bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
@@ -576,17 +577,69 @@ public:
 bool
 SilentFailure(JSContext *cx, HandleId id, const char *reason)
 {
-#ifdef DEBUG
-    nsAutoJSString name;
-    if (!name.init(cx, id))
+    CompartmentPrivate *priv = CompartmentPrivate::Get(CurrentGlobalOrNull(cx));
+    bool alreadyWarnedOnce = priv->warnedAboutXrays;
+    priv->warnedAboutXrays = true;
+
+    // The browser console warning is only emitted for the first violation,
+    // whereas the (debug-only) NS_WARNING is emitted for each violation.
+#ifndef DEBUG
+    if (alreadyWarnedOnce)
+        return true;
+#endif
+
+    nsAutoJSString propertyName;
+    if (!propertyName.init(cx, id))
         return false;
     AutoFilename filename;
     unsigned line = 0;
     DescribeScriptedCaller(cx, &filename, &line);
+
+    // Warn to the terminal for the logs.
     NS_WARNING(nsPrintfCString("Silently denied access to property |%s|: %s (@%s:%u)",
-                               NS_LossyConvertUTF16toASCII(name).get(), reason,
+                               NS_LossyConvertUTF16toASCII(propertyName).get(), reason,
                                filename.get(), line).get());
-#endif
+
+    // If this isn't the first warning on this topic for this global, we've
+    // already bailed out in opt builds. Now that the NS_WARNING is done, bail
+    // out in debug builds as well.
+    if (alreadyWarnedOnce)
+        return true;
+
+    //
+    // Log a message to the console service.
+    //
+
+    // Grab the pieces.
+    nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(consoleService, true);
+    nsCOMPtr<nsIScriptError> errorObject = do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+    NS_ENSURE_TRUE(errorObject, true);
+
+    // Compute the current window id if any.
+    uint64_t windowId = 0;
+    nsGlobalWindow *win = WindowGlobalOrNull(CurrentGlobalOrNull(cx));
+    if (win)
+      windowId = win->WindowID();
+
+    nsPrintfCString errorMessage("XrayWrapper denied access to property %s (reason: %s). "
+                                 "See https://developer.mozilla.org/en-US/docs/Xray_vision "
+                                 "for more information. Note that only the first denied "
+                                 "property access from a given global object will be reported.",
+                                 NS_LossyConvertUTF16toASCII(propertyName).get(),
+                                 reason);
+    nsString filenameStr(NS_ConvertASCIItoUTF16(filename.get()));
+    nsresult rv = errorObject->InitWithWindowID(NS_ConvertASCIItoUTF16(errorMessage),
+                                                filenameStr,
+                                                EmptyString(),
+                                                line, 0,
+                                                nsIScriptError::warningFlag,
+                                                "XPConnect",
+                                                windowId);
+    NS_ENSURE_SUCCESS(rv, true);
+    rv = consoleService->LogMessage(errorObject);
+    NS_ENSURE_SUCCESS(rv, true);
+
     return true;
 }
 
@@ -612,8 +665,10 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         return true;
 
     // Disallow accessor properties.
-    if (desc.hasGetterOrSetter())
-        return SilentFailure(cx, id, "Property has accessor");
+    if (desc.hasGetterOrSetter()) {
+        JSAutoCompartment ac(cx, wrapper);
+        return SilentFailure(cx, id, "property has accessor");
+    }
 
     // Apply extra scrutiny to objects.
     if (desc.value().isObject()) {
@@ -621,17 +676,23 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         JSAutoCompartment ac(cx, propObj);
 
         // Disallow non-subsumed objects.
-        if (!AccessCheck::subsumes(target, propObj))
-            return SilentFailure(cx, id, "Value not same-origin with target");
+        if (!AccessCheck::subsumes(target, propObj)) {
+            JSAutoCompartment ac(cx, wrapper);
+            return SilentFailure(cx, id, "value not same-origin with target");
+        }
 
         // Disallow non-Xrayable objects.
         XrayType xrayType = GetXrayType(propObj);
-        if (xrayType == NotXray || xrayType == XrayForOpaqueObject)
-            return SilentFailure(cx, id, "Value not Xrayable");
+        if (xrayType == NotXray || xrayType == XrayForOpaqueObject) {
+            JSAutoCompartment ac(cx, wrapper);
+            return SilentFailure(cx, id, "value not Xrayable");
+        }
 
         // Disallow callables.
-        if (JS_ObjectIsCallable(cx, propObj))
-            return SilentFailure(cx, id, "Value is callable");
+        if (JS_ObjectIsCallable(cx, propObj)) {
+            JSAutoCompartment ac(cx, wrapper);
+            return SilentFailure(cx, id, "value is callable");
+        }
     }
 
     // Disallow any property that shadows something on its (Xrayed)
@@ -645,7 +706,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         return false;
     }
     if (foundOnProto)
-        return SilentFailure(cx, id, "Value shadows a property on the standard prototype");
+        return SilentFailure(cx, id, "value shadows a property on the standard prototype");
 
     // We made it! Assign over the descriptor, and don't forget to wrap.
     outDesc.assign(desc.get());
