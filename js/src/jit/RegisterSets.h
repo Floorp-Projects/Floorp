@@ -351,6 +351,11 @@ class TypedRegisterSet
     static inline TypedRegisterSet Not(const TypedRegisterSet &in) {
         return TypedRegisterSet(~in.bits_ & T::Codes::AllocatableMask);
     }
+    static inline TypedRegisterSet Subtract(const TypedRegisterSet &lhs,
+                                            const TypedRegisterSet &rhs)
+    {
+        return TypedRegisterSet(lhs.bits_ & ~rhs.bits_);
+    }
     static inline TypedRegisterSet VolatileNot(const TypedRegisterSet &in) {
         const SetType allocatableVolatile =
             T::Codes::AllocatableMask & T::Codes::VolatileMask;
