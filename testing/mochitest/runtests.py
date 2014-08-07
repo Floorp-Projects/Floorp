@@ -1639,6 +1639,9 @@ class Mochitest(MochitestUtilsMixin):
       # if we use the directory provided by the user.
       result = self.runMochitests(options, onLaunch)
 
+      # Dump the logging buffer
+      self.message_logger.dump_buffered()
+
     # printing total number of tests
     if options.browserChrome:
       print "TEST-INFO | checking window state"
