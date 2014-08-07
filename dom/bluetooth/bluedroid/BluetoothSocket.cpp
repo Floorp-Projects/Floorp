@@ -75,41 +75,12 @@ public:
     SOCKET_IS_CONNECTED
   };
 
-  DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer, int aFd)
-    : ipc::UnixFdWatcher(aIOLoop, aFd)
-    , mConsumer(aConsumer)
-    , mShuttingDownOnIOThread(false)
-    , mChannel(0)
-    , mAuth(false)
-    , mEncrypt(false)
-    , mConnectionStatus(SOCKET_IS_DISCONNECTED)
-  { }
-
-  DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer,
-                  int aChannel, bool aAuth, bool aEncrypt)
+  DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer)
     : ipc::UnixFdWatcher(aIOLoop)
     , mConsumer(aConsumer)
     , mShuttingDownOnIOThread(false)
-    , mChannel(aChannel)
-    , mAuth(aAuth)
-    , mEncrypt(aEncrypt)
     , mConnectionStatus(SOCKET_IS_DISCONNECTED)
   { }
-
-  DroidSocketImpl(MessageLoop* aIOLoop, BluetoothSocket* aConsumer,
-                  const nsAString& aDeviceAddress,
-                  int aChannel, bool aAuth, bool aEncrypt)
-    : ipc::UnixFdWatcher(aIOLoop)
-    , mConsumer(aConsumer)
-    , mShuttingDownOnIOThread(false)
-    , mDeviceAddress(aDeviceAddress)
-    , mChannel(aChannel)
-    , mAuth(aAuth)
-    , mEncrypt(aEncrypt)
-    , mConnectionStatus(SOCKET_IS_DISCONNECTED)
-  {
-    MOZ_ASSERT(!mDeviceAddress.IsEmpty());
-  }
 
   ~DroidSocketImpl()
   {
@@ -205,10 +176,6 @@ private:
    */
   bool mShuttingDownOnIOThread;
 
-  nsString mDeviceAddress;
-  int mChannel;
-  bool mAuth;
-  bool mEncrypt;
   ConnectionStatus mConnectionStatus;
 };
 
@@ -848,8 +815,7 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_FALSE(mImpl, false);
 
-  mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aDeviceAddress,
-                              aChannel, mAuth, mEncrypt);
+  mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this);
 
   // TODO: uuid as argument
   sBluetoothSocketInterface->Connect(
@@ -896,8 +862,7 @@ BluetoothSocket::Listen(int aChannel)
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_FALSE(mImpl, false);
 
-  mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this, aChannel, mAuth,
-                              mEncrypt);
+  mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this);
 
   sBluetoothSocketInterface->Listen(
     BluetoothSocketType::RFCOMM,
