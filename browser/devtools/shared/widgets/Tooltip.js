@@ -1204,6 +1204,7 @@ EventTooltip.prototype = {
   _headerClicked: function(event) {
     if (event.target.classList.contains("event-tooltip-debugger-icon")) {
       this._debugClicked(event);
+      event.stopPropagation();
     }
 
     let doc = this._tooltip.doc;
@@ -1331,7 +1332,7 @@ EventTooltip.prototype = {
       node.removeEventListener("click", this._debugClicked);
     }
 
-    this._tooltip = this._eventListenerInfos =  this._toolbox = null;
+    this._eventListenerInfos = this._toolbox = this._tooltip = null;
   }
 };
 
