@@ -46,7 +46,7 @@ public:
   typedef URIPrincipalAndCORSModeHashKey* KeyType;
   typedef const URIPrincipalAndCORSModeHashKey* KeyTypePointer;
 
-  URIPrincipalAndCORSModeHashKey(const URIPrincipalAndCORSModeHashKey* aKey)
+  explicit URIPrincipalAndCORSModeHashKey(const URIPrincipalAndCORSModeHashKey* aKey)
     : nsURIHashKey(aKey->mKey), mPrincipal(aKey->mPrincipal),
       mCORSMode(aKey->mCORSMode)
   {
@@ -130,7 +130,7 @@ enum StyleSheetState {
 class Loader MOZ_FINAL {
 public:
   Loader();
-  Loader(nsIDocument*);
+  explicit Loader(nsIDocument*);
 
  private:
   // Private destructor, to discourage deletion outside of Release():

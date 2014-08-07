@@ -654,9 +654,9 @@ public:
    *                no scrollbar showing and less than one device pixel of
    *                scrollable distance), don't scroll. Defaults to false.
    */
-    ScrollAxis(int16_t aWhere = SCROLL_MINIMUM,
-               WhenToScroll aWhen = SCROLL_IF_NOT_FULLY_VISIBLE,
-               bool aOnlyIfPerceivedScrollableDirection = false) :
+    explicit ScrollAxis(int16_t aWhere = SCROLL_MINIMUM,
+                        WhenToScroll aWhen = SCROLL_IF_NOT_FULLY_VISIBLE,
+                        bool aOnlyIfPerceivedScrollableDirection = false) :
       mWhereToScroll(aWhere), mWhenToScroll(aWhen),
       mOnlyIfPerceivedScrollableDirection(aOnlyIfPerceivedScrollableDirection)
     {}

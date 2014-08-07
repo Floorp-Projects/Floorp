@@ -118,7 +118,7 @@ private:
     typedef const void* KeyTypePointer;
     KeyTypePointer mKey;
 
-    FreeList(KeyTypePointer aKey)
+    explicit FreeList(KeyTypePointer aKey)
     : mEntrySize(0), mEntriesEverAllocated(0), mKey(aKey) {}
     // Default copy constructor and destructor are ok.
 
