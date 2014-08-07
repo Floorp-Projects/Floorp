@@ -12,6 +12,8 @@ SOURCES += [
 
 USE_LIBS += [
     'mozalloc',
+    'nspr',
+    'nss',
 ]
 
 # This isn't XPCOM code, but it wants to use STL, so disable the STL

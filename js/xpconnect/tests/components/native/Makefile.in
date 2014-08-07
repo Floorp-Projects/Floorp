@@ -9,10 +9,6 @@ MANIFEST = xpctest.manifest
 MANIFEST_PATH = $(testxpcobjdir)/$(componentdir)
 PP_TARGETS += MANIFEST
 
-EXTRA_LIBS += \
-  $(NSPR_LIBS) \
-  $(NULL)
-
 LIB_FILES = $(SHARED_LIBRARY)
 LIB_DEST = $(testxpcobjdir)/$(componentdir)
 INSTALL_TARGETS += LIB

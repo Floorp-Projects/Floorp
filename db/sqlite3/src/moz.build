@@ -9,16 +9,16 @@ EXPORTS += [
     'sqlite3.h',
 ]
 
-LIBRARY_NAME = 'mozsqlite3'
+if CONFIG['MOZ_FOLD_LIBS']:
+    # When folding libraries, sqlite is actually in the nss library.
+    FINAL_LIBRARY = 'nss'
+else:
+    # The final library is in config/external/sqlite
+    FINAL_LIBRARY = 'sqlite'
 
 SOURCES += [
     'sqlite3.c',
 ]
-
-if CONFIG['MOZ_FOLD_LIBS']:
-    FORCE_STATIC_LIB = True
-else:
-    FORCE_SHARED_LIB = True
 
 # -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
 # don't have to vacuum to make sure the data is not visible in the file.
@@ -69,11 +69,6 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
 # disable PGO for Sun Studio
 if CONFIG['SOLARIS_SUNPRO_CC']:
     NO_PGO = True
-
-if CONFIG['OS_ARCH'] == 'Linux' and \
-   not CONFIG['MOZ_FOLD_LIBS'] and \
-   CONFIG['GCC_USE_GNU_LD']:
-    LD_VERSION_SCRIPT = 'sqlite-processed.def'
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:

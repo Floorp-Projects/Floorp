@@ -28,7 +28,12 @@ if CONFIG['MOZ_ENABLE_SIGNMAR']:
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-if not CONFIG['MOZ_ENABLE_SIGNMAR']:
+if CONFIG['MOZ_ENABLE_SIGNMAR']:
+    USE_LIBS += [
+        'nspr',
+        'nss',
+    ]
+else:
     DEFINES['NO_SIGN_VERIFY'] = True
 
 if CONFIG['OS_ARCH'] == 'WINNT':

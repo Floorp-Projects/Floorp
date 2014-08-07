@@ -23,6 +23,8 @@ LOCAL_INCLUDES += [
 USE_LIBS += [
     'mozalloc',
     'mozillapkix',
+    'nspr',
+    'nss',
     'pkixtestutil',
     'tlsserver',
 ]
