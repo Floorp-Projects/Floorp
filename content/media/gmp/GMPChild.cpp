@@ -77,7 +77,8 @@ GMPChild::LoadPluginLibrary(const std::string& aPluginPath)
   nsDependentCString pluginPath(aPluginPath.c_str());
 
   nsCOMPtr<nsIFile> libFile;
-  nsresult rv = NS_NewNativeLocalFile(pluginPath, true, getter_AddRefs(libFile));
+  nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(pluginPath),
+                                true, getter_AddRefs(libFile));
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -99,16 +100,16 @@ GMPChild::LoadPluginLibrary(const std::string& aPluginPath)
 #endif
   libFile->AppendRelativePath(binaryName);
 
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
   nsAutoCString nativePath;
   libFile->GetNativePath(nativePath);
 
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
   // Enable sandboxing here -- we know the plugin file's path, but
   // this process's execution hasn't been affected by its content yet.
   mozilla::SetMediaPluginSandbox(nativePath.get());
 #endif
 
-  mLib = PR_LoadLibrary(nativePath.get());
+  libFile->Load(&mLib);
   if (!mLib) {
     return false;
   }
