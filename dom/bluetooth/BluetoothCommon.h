@@ -132,11 +132,76 @@ extern bool gBluetoothDebugFlag;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+enum BluetoothStatus {
+  STATUS_SUCCESS,
+  STATUS_FAIL,
+  STATUS_NOT_READY,
+  STATUS_NOMEM,
+  STATUS_BUSY,
+  STATUS_DONE,
+  STATUS_UNSUPPORTED,
+  STATUS_PARM_INVALID,
+  STATUS_UNHANDLED,
+  STATUS_AUTH_FAILURE,
+  STATUS_RMT_DEV_DOWN
+};
+
 enum BluetoothSocketType {
   RFCOMM = 1,
   SCO    = 2,
   L2CAP  = 3,
   EL2CAP = 4
+};
+
+enum BluetoothHandsfreeAtResponse {
+  HFP_AT_RESPONSE_ERROR,
+  HFP_AT_RESPONSE_OK
+};
+
+enum BluetoothHandsfreeCallAddressType {
+  HFP_CALL_ADDRESS_TYPE_UNKNOWN,
+  HFP_CALL_ADDRESS_TYPE_INTERNATIONAL
+};
+
+enum BluetoothHandsfreeCallDirection {
+  HFP_CALL_DIRECTION_OUTGOING,
+  HFP_CALL_DIRECTION_INCOMING
+};
+
+enum BluetoothHandsfreeCallMode {
+  HFP_CALL_MODE_VOICE,
+  HFP_CALL_MODE_DATA,
+  HFP_CALL_MODE_FAX
+};
+
+enum BluetoothHandsfreeCallMptyType {
+  HFP_CALL_MPTY_TYPE_SINGLE,
+  HFP_CALL_MPTY_TYPE_MULTI
+};
+
+enum BluetoothHandsfreeCallState {
+  HFP_CALL_STATE_ACTIVE,
+  HFP_CALL_STATE_HELD,
+  HFP_CALL_STATE_DIALING,
+  HFP_CALL_STATE_ALERTING,
+  HFP_CALL_STATE_INCOMING,
+  HFP_CALL_STATE_WAITING,
+  HFP_CALL_STATE_IDLE
+};
+
+enum BluetoothHandsfreeNetworkState {
+  HFP_NETWORK_STATE_NOT_AVAILABLE,
+  HFP_NETWORK_STATE_AVAILABLE
+};
+
+enum BluetoothHandsfreeServiceType {
+  HFP_SERVICE_TYPE_HOME,
+  HFP_SERVICE_TYPE_ROAMING
+};
+
+enum BluetoothHandsfreeVolumeType {
+  HFP_VOLUME_TYPE_SPEAKER,
+  HFP_VOLUME_TYPE_MICROPHONE
 };
 
 class BluetoothSignal;
@@ -161,6 +226,49 @@ enum ControlPlayStatus {
   PLAYSTATUS_REV_SEEK = 0x04,
   PLAYSTATUS_UNKNOWN,
   PLAYSTATUS_ERROR    = 0xFF,
+};
+
+enum BluetoothAvrcpPlayerAttribute {
+  AVRCP_PLAYER_ATTRIBUTE_EQUALIZER,
+  AVRCP_PLAYER_ATTRIBUTE_REPEAT,
+  AVRCP_PLAYER_ATTRIBUTE_SHUFFLE,
+  AVRCP_PLAYER_ATTRIBUTE_SCAN
+};
+
+enum BluetoothAvrcpStatus {
+  AVRCP_STATUS_BAD_COMMAND,
+  AVRCP_STATUS_BAD_PARAMETER,
+  AVRCP_STATUS_NOT_FOUND,
+  AVRCP_STATUS_INTERNAL_ERROR,
+  AVRCP_STATUS_SUCCESS
+};
+
+enum BluetoothAvrcpEvent {
+  AVRCP_EVENT_PLAY_STATUS_CHANGED,
+  AVRCP_EVENT_TRACK_CHANGE,
+  AVRCP_EVENT_TRACK_REACHED_END,
+  AVRCP_EVENT_TRACK_REACHED_START,
+  AVRCP_EVENT_PLAY_POS_CHANGED,
+  AVRCP_EVENT_APP_SETTINGS_CHANGED
+};
+
+enum BluetoothAvrcpNotification {
+  AVRCP_NTF_INTERIM,
+  AVRCP_NTF_CHANGED
+};
+
+struct BluetoothAvrcpElementAttribute {
+  uint32_t mId;
+  nsString mValue;
+};
+
+struct BluetoothAvrcpNotificationParam {
+  ControlPlayStatus mPlayStatus;
+  uint8_t mTrack[8];
+  uint32_t mSongPos;
+  uint8_t mNumAttr;
+  uint8_t mIds[256];
+  uint8_t mValues[256];
 };
 
 END_BLUETOOTH_NAMESPACE
