@@ -16,6 +16,16 @@ waitForExplicitFinish();
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
+function getFrameScript() {
+  let mm = gBrowser.selectedBrowser.messageManager;
+  let frameURL = "chrome://browser/content/devtools/frame-script-utils.js";
+  mm.loadFrameScript(frameURL, false);
+  SimpleTest.registerCleanupFunction(() => {
+    mm = null;
+  });
+  return mm;
+}
+
 gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
   gDevTools.testing = false;
