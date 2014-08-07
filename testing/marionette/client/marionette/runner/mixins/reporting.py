@@ -50,7 +50,7 @@ class HTMLReportingTestRunnerMixin(object):
         errors = sum([len(results.errors) for results in results_list])
         passes = sum([results.passed for results in results_list])
         unexpected_passes = sum([len(results.unexpectedSuccesses) for results in results_list])
-        test_time = self.elapsedtime.total_seconds()
+        test_time = self.elapsedtime
         test_logs = []
 
         def _extract_html_from_result(result):
