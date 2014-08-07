@@ -65,7 +65,7 @@ public:
   virtual nsresult PaintSVG(nsRenderingContext *aContext,
                             const nsIntRect *aDirtyRect,
                             nsIFrame* aTransformRoot) MOZ_OVERRIDE;
-  virtual nsIFrame* GetFrameForPoint(const nsPoint &aPoint) MOZ_OVERRIDE;
+  virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;
 
   // nsSVGPathGeometryFrame methods:
@@ -418,13 +418,25 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
 }
 
 nsIFrame*
-nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
+nsSVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint)
 {
+  Rect rect;
+  SVGImageElement *element = static_cast<SVGImageElement*>(mContent);
+  element->GetAnimatedLengthValues(&rect.x, &rect.y,
+                                   &rect.width, &rect.height, nullptr);
+
+  if (!rect.Contains(ToPoint(aPoint))) {
+    return nullptr;
+  }
+
   // Special case for raster images -- we only want to accept points that fall
-  // in the underlying image's (transformed) native bounds.  That region
-  // doesn't necessarily map to our <image> element's [x,y,width,height].  So,
-  // we have to look up the native image size & our image transform in order
-  // to filter out points that fall outside that area.
+  // in the underlying image's (scaled to fit) native bounds.  That region
+  // doesn't necessarily map to our <image> element's [x,y,width,height] if the
+  // raster image's aspect ratio is being preserved.  We have to look up the
+  // native image size & our viewBox transform in order to filter out points
+  // that fall outside that area.  (This special case doesn't apply to vector
+  // images because they don't limit their drawing to explicit "native
+  // bounds" -- they have an infinite canvas on which to place content.)
   if (StyleDisplay()->IsScrollableOverflow() && mImageContainer) {
     if (mImageContainer->GetType() == imgIContainer::TYPE_RASTER) {
       int32_t nativeWidth, nativeHeight;
@@ -433,23 +445,19 @@ nsSVGImageFrame::GetFrameForPoint(const nsPoint &aPoint)
           nativeWidth == 0 || nativeHeight == 0) {
         return nullptr;
       }
-
-      if (!nsSVGUtils::HitTestRect(
-               GetRasterImageTransform(nativeWidth, nativeHeight,
-                                       FOR_HIT_TESTING),
-               0, 0, nativeWidth, nativeHeight,
-               PresContext()->AppUnitsToFloatCSSPixels(aPoint.x),
-               PresContext()->AppUnitsToFloatCSSPixels(aPoint.y))) {
+      Matrix viewBoxTM =
+        SVGContentUtils::GetViewBoxTransform(rect.width, rect.height,
+                                             0, 0, nativeWidth, nativeHeight,
+                                             element->mPreserveAspectRatio);
+      if (!nsSVGUtils::HitTestRect(viewBoxTM,
+                                   0, 0, nativeWidth, nativeHeight,
+                                   aPoint.x - rect.x, aPoint.y - rect.y)) {
         return nullptr;
       }
     }
-    // The special case above doesn't apply to vector images, because they
-    // don't limit their drawing to explicit "native bounds" -- they have
-    // an infinite canvas on which to place content.  So it's reasonable to
-    // just fall back on our <image> element's own bounds here.
   }
 
-  return nsSVGImageFrameBase::GetFrameForPoint(aPoint);
+  return this;
 }
 
 nsIAtom *

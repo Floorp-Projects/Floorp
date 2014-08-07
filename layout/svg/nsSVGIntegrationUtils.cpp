@@ -366,7 +366,9 @@ nsSVGIntegrationUtils::HitTestFrameForEffects(nsIFrame* aFrame, const nsPoint& a
       aFrame->GetOffsetTo(firstFrame) + GetOffsetToBoundingBox(firstFrame);
   }
   nsPoint pt = aPt + toUserSpace;
-  return nsSVGUtils::HitTestClip(firstFrame, pt);
+  gfxPoint userSpacePt =
+    gfxPoint(pt.x, pt.y) / aFrame->PresContext()->AppUnitsPerCSSPixel();
+  return nsSVGUtils::HitTestClip(firstFrame, userSpacePt);
 }
 
 class RegularFramePaintCallback : public nsSVGFilterPaintCallback
