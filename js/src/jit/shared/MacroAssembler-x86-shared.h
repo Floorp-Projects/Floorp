@@ -492,6 +492,12 @@ class MacroAssemblerX86Shared : public Assembler
     void moveAlignedFloat32x4(FloatRegister src, FloatRegister dest) {
         movaps(src, dest);
     }
+    void loadUnalignedFloat32x4(const Address &src, FloatRegister dest) {
+        movups(Operand(src), dest);
+    }
+    void storeUnalignedFloat32x4(FloatRegister src, const Address &dest) {
+        movups(src, Operand(dest));
+    }
 
     void moveFloatAsDouble(Register src, FloatRegister dest) {
         movd(src, dest);
