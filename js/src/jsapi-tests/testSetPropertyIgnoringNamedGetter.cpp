@@ -15,19 +15,19 @@ class CustomProxyHandler : public DirectProxyHandler {
     CustomProxyHandler() : DirectProxyHandler(nullptr) {}
 
     bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                               MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE
+                               MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE
     {
         return impl(cx, proxy, id, desc, false);
     }
 
     bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                  MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE
+                                  MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE
     {
         return impl(cx, proxy, id, desc, true);
     }
 
     bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-             HandleId id, bool strict, MutableHandleValue vp) const MOZ_OVERRIDE
+             HandleId id, bool strict, MutableHandleValue vp) MOZ_OVERRIDE
     {
         Rooted<JSPropertyDescriptor> desc(cx);
         if (!DirectProxyHandler::getPropertyDescriptor(cx, proxy, id, &desc))
@@ -38,7 +38,7 @@ class CustomProxyHandler : public DirectProxyHandler {
 
   private:
     bool impl(JSContext *cx, HandleObject proxy, HandleId id,
-              MutableHandle<JSPropertyDescriptor> desc, bool ownOnly) const
+              MutableHandle<JSPropertyDescriptor> desc, bool ownOnly)
     {
         if (JSID_IS_STRING(id)) {
             bool match;
@@ -59,7 +59,7 @@ class CustomProxyHandler : public DirectProxyHandler {
 
 };
 
-const CustomProxyHandler customProxyHandler;
+CustomProxyHandler customProxyHandler;
 
 
 BEGIN_TEST(testSetPropertyIgnoringNamedGetter_direct)
