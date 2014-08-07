@@ -699,7 +699,8 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if ((aBuilder->IsForEventDelivery() &&
        NS_SVGDisplayListHitTestingEnabled()) ||
-      NS_SVGDisplayListPaintingEnabled()) {
+      (!aBuilder->IsForEventDelivery() &&
+       NS_SVGDisplayListPaintingEnabled())) {
     nsDisplayList *contentList = aLists.Content();
     nsDisplayListSet set(contentList, contentList, contentList,
                          contentList, contentList, contentList);
