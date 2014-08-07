@@ -6632,7 +6632,8 @@ class MTypedArrayElements
 
 // Checks whether a typed object is neutered.
 class MNeuterCheck
-  : public MUnaryInstruction
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
 {
   private:
     explicit MNeuterCheck(MDefinition *object)
@@ -6662,6 +6663,10 @@ class MNeuterCheck
 
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::ObjectFields);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
