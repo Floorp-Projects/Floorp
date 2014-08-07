@@ -466,6 +466,10 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
+    void movdqa(FloatRegister src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        masm.movdqa_rr(src.code(), dest.code());
+    }
     void cvtss2sd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.cvtss2sd_rr(src.code(), dest.code());
