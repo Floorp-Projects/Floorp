@@ -22,10 +22,9 @@ if not CONFIG['LIBXUL_SDK']:
         # a console application.
         WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
-    if not CONFIG['MOZ_NATIVE_ZLIB'] and not CONFIG['ZLIB_IN_MOZCONFIG']:
-        USE_LIBS += [
-            'mozz',
-        ]
+    USE_LIBS += [
+        'zlib',
+    ]
 
 DEFINES['XPCOM_GLUE'] = True
 
@@ -53,11 +52,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'display',
         'mozpng',
     ]
-    if not CONFIG['MOZ_NATIVE_ZLIB']:
-        USE_LIBS += [
-            'mozz',
-        ]
-
     OS_LIBS += [
         'ui',
         'EGL',

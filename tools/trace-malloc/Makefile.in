@@ -21,10 +21,13 @@ CPPSRCS += $(EXTRACPPSRCS)
 
 include $(topsrcdir)/config/config.mk
 
+# This is the last use of EXTRA_LIBS, and it would be sad to not have an
+# error if it's used in other Makefiles just because of it. So hack around
+# the check.
+_DEPRECATED_VARIABLES := $(filter-out EXTRA_LIBS,$(_DEPRECATED_VARIABLES))
 EXTRA_LIBS	+= \
 		tmreader.$(OBJ_SUFFIX) \
 		adreader.$(OBJ_SUFFIX) \
-		$(NSPR_LIBS) \
 		$(NULL)
 
 EXTRA_DEPS = $(EXTRACSRCS:.c=.$(OBJ_SUFFIX)) $(EXTRACPPSRCS:.cpp=.$(OBJ_SUFFIX))

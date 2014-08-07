@@ -82,7 +82,6 @@ ifdef COMPILE_ENVIRONMENT
 # which stuff links.
 SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS)
 INCLUDES += -I$(DIST)/include/testing
-EXTRA_LIBS += $(NSPR_LIBS)
 
 ifndef MOZ_PROFILE_GENERATE
 CPP_UNIT_TESTS_FILES = $(CPP_UNIT_TESTS)
@@ -565,7 +564,8 @@ everything::
 	$(MAKE) clean
 	$(MAKE) all
 
-STATIC_LIBS_DEPS := $(wildcard $(addsuffix .$(LIBS_DESC_SUFFIX),$(STATIC_LIBS)))
+STATIC_LIB_DEP = $(if $(wildcard $(1).$(LIBS_DESC_SUFFIX)),$(1).$(LIBS_DESC_SUFFIX),$(1))
+STATIC_LIBS_DEPS := $(foreach l,$(STATIC_LIBS),$(call STATIC_LIB_DEP,$(l)))
 
 # Dependencies which, if modified, should cause everything to rebuild
 GLOBAL_DEPS += Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk

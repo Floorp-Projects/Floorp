@@ -22,7 +22,3 @@ CPPSRCS += \
   $(filter-out $(LIBCPPSRCS),$(PROGCPPSRCS)) \
   $(LIBCPPSRCS) \
   $(NULL)
-
-EXTRA_LIBS += \
-	$(NSPR_LIBS) \
-	$(NULL)

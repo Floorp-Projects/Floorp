@@ -38,13 +38,8 @@ FAIL_ON_WARNINGS = True
 
 USE_LIBS += [
     'mozalloc',
+    'nspr',
+    'sqlite',
     'xpcomglue_s',
     'xul',
 ]
-
-if not CONFIG['MOZ_NATIVE_SQLITE'] and not CONFIG['MOZ_FOLD_LIBS']:
-    USE_LIBS += [
-        'mozsqlite3',
-    ]
-
-OS_LIBS += CONFIG['SQLITE_LIBS']

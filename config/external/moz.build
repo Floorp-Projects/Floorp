@@ -5,9 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 external_dirs = []
-if not CONFIG['MOZ_NATIVE_SQLITE']:
-    external_dirs += ['db/sqlite3/src']
 
+DIRS += [
+    'sqlite',
+]
 if not CONFIG['MOZ_NATIVE_JPEG']:
     external_dirs += ['media/libjpeg']
 

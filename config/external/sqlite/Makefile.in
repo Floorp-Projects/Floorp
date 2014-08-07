@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LIB_IS_C_ONLY    = 1
+
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_ARCH),WINNT)
+# This needs to stay there for now
+DEFFILE = $(DEPTH)/db/sqlite3/src/sqlite-processed.def
+
+else
+ifndef MOZ_FOLD_LIBS
+ifdef GCC_USE_GNU_LD
+
+GARBAGE += \
+  $(LD_VERSION_SCRIPT) \
+  $(NULL)
+
+# Convert to the format we need for ld.
+$(LD_VERSION_SCRIPT): $(topsrcdir)/db/sqlite3/src/sqlite.def
+	@$(call py_action,convert_def_file, \
+	  $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) -o $@ $^)
+
+endif
+endif
+endif
+
+
+ifeq (Darwin,$(OS_TARGET))
+# On OSX, with jemalloc enabled, having sqlite linked against mozglue
+# causes crashes in NSS standalone tools.
+MOZ_GLUE_LDFLAGS =
+endif
