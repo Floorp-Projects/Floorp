@@ -8,10 +8,6 @@ EXTRA_LIBS += \
   $(NULL)
 
 ifeq ($(OS_TARGET),Android)
-EXTRA_LIBS += \
-  $(STLPORT_LDFLAGS) \
-  $(STLPORT_LIBS) \
-  $(NULL)
 CPPFLAGS += \
   $(STLPORT_CPPFLAGS) \
   $(NULL)
