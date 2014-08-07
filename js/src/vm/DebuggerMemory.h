@@ -37,6 +37,9 @@ class DebuggerMemory : public JSObject {
 
     static bool setTrackingAllocationSites(JSContext *cx, unsigned argc, Value *vp);
     static bool getTrackingAllocationSites(JSContext *cx, unsigned argc, Value *vp);
+    static bool drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp);
+    static bool setMaxAllocationsLogLength(JSContext*cx, unsigned argc, Value *vp);
+    static bool getMaxAllocationsLogLength(JSContext*cx, unsigned argc, Value *vp);
 };
 
 } /* namespace js */

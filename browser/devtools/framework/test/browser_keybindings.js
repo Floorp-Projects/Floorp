@@ -18,7 +18,7 @@ function test()
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);
     doc = content.document;
     node = doc.querySelector("h1");
-    waitForFocus(setupKeyBindingsTest, content);
+    waitForFocus(setupKeyBindingsTest);
   }, true);
 
   content.location = "data:text/html,<html><head><title>Test for the " +

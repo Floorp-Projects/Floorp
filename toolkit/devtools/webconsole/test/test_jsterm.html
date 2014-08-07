@@ -16,6 +16,9 @@ SimpleTest.waitForExplicitFinish();
 
 let gState;
 
+let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let {MAX_AUTOCOMPLETE_ATTEMPTS,MAX_AUTOCOMPLETIONS} = devtools.require("devtools/toolkit/webconsole/utils");
+
 function startTest()
 {
   removeEventListener("load", startTest);
@@ -35,10 +38,21 @@ function onAttach(aState, aResponse)
   top.foobarObject.omgstr = "foobarz" +
     (new Array(DebuggerServer.LONG_STRING_LENGTH * 2)).join("abb");
 
+  top.largeObject1 = Object.create(null);
+  for (let i = 0; i < MAX_AUTOCOMPLETE_ATTEMPTS + 1; i++) {
+    top.largeObject1['a' + i] = i;
+  }
+
+  top.largeObject2 = Object.create(null);
+  for (let i = 0; i < MAX_AUTOCOMPLETIONS * 2; i++) {
+    top.largeObject2['a' + i] = i;
+  }
+
   gState = aState;
 
   let tests = [doAutocomplete1, doAutocomplete2, doAutocomplete3,
-               doAutocomplete4, doSimpleEval, doWindowEval, doEvalWithException,
+               doAutocomplete4, doAutocompleteLarge1, doAutocompleteLarge2,
+               doSimpleEval, doWindowEval, doEvalWithException,
                doEvalWithHelper, doEvalString, doEvalLongString];
   runTests(tests, testEnd);
 }
@@ -108,6 +122,39 @@ function onAutocomplete4(aResponse)
 {
   ok(!aResponse.matchProp, "matchProp");
   is(aResponse.matches.length, 0, "matches.length");
+
+  nextTest();
+}
+
+function doAutocompleteLarge1()
+{
+  // Check that completion requests with too large objects will
+  // have no suggestions.
+  info("test autocomplete for 'window.largeObject1.'");
+  gState.client.autocomplete("window.largeObject1.", 20, onAutocompleteLarge1);
+}
+
+function onAutocompleteLarge1(aResponse)
+{
+  ok(!aResponse.matchProp, "matchProp");
+  info (aResponse.matches.join("|"));
+  is(aResponse.matches.length, 0, "Bailed out with too many properties");
+
+  nextTest();
+}
+
+function doAutocompleteLarge2()
+{
+  // Check that completion requests with pretty large objects will
+  // have MAX_AUTOCOMPLETIONS suggestions
+  info("test autocomplete for 'window.largeObject2.'");
+  gState.client.autocomplete("window.largeObject2.", 20, onAutocompleteLarge2);
+}
+
+function onAutocompleteLarge2(aResponse)
+{
+  ok(!aResponse.matchProp, "matchProp");
+  is(aResponse.matches.length, MAX_AUTOCOMPLETIONS, "matches.length is MAX_AUTOCOMPLETIONS");
 
   nextTest();
 }

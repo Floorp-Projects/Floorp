@@ -565,6 +565,112 @@ function rstr_split(i) {
     return i;
 }
 
+var uceFault_regexp_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_test'))
+function rregexp_test(i) {
+    var re = new RegExp("str\\d+" + i + "\\d+rts");
+    var res = re.test("str01234567899876543210rts");
+    if (uceFault_regexp_test(i) || uceFault_regexp_test(i)) {
+        assertEq(res, true);
+    }
+    return i;
+}
+
+var uceFault_regexp_y_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_test'))
+function rregexp_y_test(i) {
+    var re = new RegExp("str\\d+" + (i % 10), "y");
+    var res = re.test("str00123456789");
+    if (uceFault_regexp_y_test(i) || uceFault_regexp_y_test(i)) {
+        assertEq(res, true);
+    }
+
+    assertEq(re.lastIndex == 0, false);
+    return i;
+}
+
+var uceFault_regexp_y_literal_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_literal_test'))
+function rregexp_y_literal_test(i) {
+    var re = /str\d*0/y;
+    var res = re.test("str00123456789");
+    if (uceFault_regexp_y_literal_test(i) || uceFault_regexp_y_literal_test(i)) {
+        assertEq(res, true);
+    }
+
+    assertEq(re.lastIndex == 0, false);
+    return i;
+}
+
+var uceFault_regexp_g_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_test'))
+function rregexp_g_test(i) {
+    var re = new RegExp("str\\d+" + (i % 10), "g");
+    var res = re.test("str00123456789str00123456789");
+    if (uceFault_regexp_g_test(i) || uceFault_regexp_g_test(i)) {
+        assertEq(res, true);
+    }
+
+    assertEq(re.lastIndex == 0, false);
+    return i;
+}
+
+var uceFault_regexp_g_literal_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_literal_test'))
+function rregexp_g_literal_test(i) {
+    var re = /str\d*0/g;
+    var res = re.test("str00123456789str00123456789");
+    if (uceFault_regexp_g_literal_test(i) || uceFault_regexp_g_literal_test(i)) {
+        assertEq(res, true);
+    }
+
+    assertEq(re.lastIndex == 0, false);
+    return i;
+}
+
+var uceFault_regexp_i_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_test'))
+function rregexp_i_test(i) {
+    var re = new RegExp("str\\d+" + (i % 10), "i");
+    var res = re.test("STR00123456789");
+    if (uceFault_regexp_i_test(i) || uceFault_regexp_i_test(i)) {
+        assertEq(res, true);
+    }
+
+    assertEq(re.lastIndex == 0, true);
+    return i;
+}
+
+var uceFault_regexp_i_literal_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_literal_test'))
+function rregexp_i_literal_test(i) {
+    var re = /str\d*0/i;
+    var res = re.test("STR00123456789");
+    if (uceFault_regexp_i_literal_test(i) || uceFault_regexp_i_literal_test(i)) {
+        assertEq(res, true);
+    }
+
+    assertEq(re.lastIndex == 0, true);
+    return i;
+}
+
+var uceFault_regexp_m_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_test'))
+function rregexp_m_test(i) {
+    var re = new RegExp("^str\\d+" + (i % 10), "m");
+    var res = re.test("abc\nstr00123456789");
+    if (uceFault_regexp_m_test(i) || uceFault_regexp_m_test(i)) {
+        assertEq(res, true);
+    }
+
+    assertEq(re.lastIndex == 0, true);
+    return i;
+}
+
+var uceFault_regexp_m_literal_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_literal_test'))
+function rregexp_m_literal_test(i) {
+    var re = /^str\d*0/m;
+    var res = re.test("abc\nstr00123456789");
+    if (uceFault_regexp_m_literal_test(i) || uceFault_regexp_m_literal_test(i)) {
+        assertEq(res, true);
+    }
+
+    assertEq(re.lastIndex == 0, true);
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -626,6 +732,15 @@ for (i = 0; i < 100; i++) {
     ratan2_number(i);
     ratan2_object(i);
     rstr_split(i);
+    rregexp_test(i);
+    rregexp_y_test(i);
+    rregexp_y_literal_test(i);
+    rregexp_g_test(i);
+    rregexp_g_literal_test(i);
+    rregexp_i_test(i);
+    rregexp_i_literal_test(i);
+    rregexp_m_test(i);
+    rregexp_m_literal_test(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
