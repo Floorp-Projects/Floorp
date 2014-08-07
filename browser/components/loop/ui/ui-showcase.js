@@ -93,8 +93,14 @@
       return (
         ShowCase(null, 
           Section({name: "PanelView"}, 
-            Example({summary: "332px wide", dashed: "true", style: {width: "332px"}}, 
+            React.DOM.p({className: "note"}, 
+              React.DOM.strong(null, "Note:"), " 332px wide."
+            ), 
+            Example({summary: "Pending call url retrieval", dashed: "true", style: {width: "332px"}}, 
               PanelView(null)
+            ), 
+            Example({summary: "Call URL retrieved", dashed: "true", style: {width: "332px"}}, 
+              PanelView({callUrl: "http://invalid.example.url/"})
             )
           ), 
 

@@ -48,7 +48,8 @@ describe("loop.panel", function() {
         return "en-US";
       },
       setLoopCharPref: sandbox.stub(),
-      getLoopCharPref: sandbox.stub().returns("unseen")
+      getLoopCharPref: sandbox.stub().returns("unseen"),
+      copyString: sandbox.stub()
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
@@ -314,9 +315,28 @@ describe("loop.panel", function() {
         }));
         view.setState({pending: false, callUrl: "http://example.com"});
 
-        TestUtils.findRenderedDOMComponentWithTag(view, "a");
-        var shareButton = view.getDOMNode().querySelector("a.btn");
-        expect(shareButton.href).to.equal(encodeURI(mailto));
+        TestUtils.findRenderedDOMComponentWithClass(view, "btn-email");
+        expect(view.getDOMNode().querySelector(".btn-email").dataset.mailto)
+              .to.equal(encodeURI(mailto));
+      });
+
+      it("should feature a copy button capable of copying the call url when clicked", function() {
+        fakeClient.requestCallUrl = sandbox.stub();
+        var view = TestUtils.renderIntoDocument(loop.panel.CallUrlResult({
+          notifier: notifier,
+          client: fakeClient
+        }));
+        view.setState({
+          pending: false,
+          copied: false,
+          callUrl: "http://example.com"
+        });
+
+        TestUtils.Simulate.click(view.getDOMNode().querySelector(".btn-copy"));
+
+        sinon.assert.calledOnce(navigator.mozLoop.copyString);
+        sinon.assert.calledWithExactly(navigator.mozLoop.copyString,
+          view.state.callUrl);
       });
 
       it("should notify the user when the operation failed", function() {

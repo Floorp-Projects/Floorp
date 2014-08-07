@@ -11,8 +11,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/loop/MozLoopService.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
-  "resource://gre/modules/MozSocialAPI.jsm");
-
+                                        "resource://gre/modules/MozSocialAPI.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
+                                         "@mozilla.org/widget/clipboardhelper;1",
+                                         "nsIClipboardHelper");
 this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
 
 /**
@@ -225,6 +227,19 @@ function injectLoopAPI(targetWindow) {
         });
       }
     },
+
+    /**
+     * Copies passed string onto the system clipboard.
+     *
+     * @param {String} str The string to copy
+     */
+    copyString: {
+      enumerable: true,
+      writable: true,
+      value: function(str) {
+        clipboardHelper.copyString(str);
+      }
+    }
   };
 
   let contentObj = Cu.createObjectIn(targetWindow);
