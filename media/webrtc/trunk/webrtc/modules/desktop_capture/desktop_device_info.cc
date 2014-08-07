@@ -4,6 +4,7 @@
 
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
 #include "webrtc/modules/desktop_capture/window_capturer.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 #include <cstddef>
 #include <cstdlib>
