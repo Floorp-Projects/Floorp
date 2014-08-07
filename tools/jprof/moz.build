@@ -23,6 +23,6 @@ LOCAL_INCLUDES += [
 
 OS_LIBS += [
     'dl',
-    'gfd',
+    'bfd',
     'iberty',
 ]

@@ -12,5 +12,3 @@ libs:: TestXREMakeCommandLineWin.ini
 check::
 	@echo 'Running TestXREMakeCommandLineWin tests'
 	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestXREMakeCommandLineWin.exe
-	@echo 'Running TestDllInterceptor tests'
-	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestDllInterceptor.exe

@@ -72,7 +72,7 @@ class TestBuildReader(unittest.TestCase):
         reader = self.reader('traversal-tier-simple')
 
         sandboxes = list(reader.read_topsrcdir())
-        self.assertEqual(len(sandboxes), 4)
+        self.assertEqual(len(sandboxes), 6)
 
         for sandbox in sandboxes:
             self.assertIsInstance(sandbox.metadata, dict)

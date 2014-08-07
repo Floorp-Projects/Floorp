@@ -4,9 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if not CONFIG['LIBXUL_SDK']:
-    app_libxul_dirs = []
-    app_libxul_static_dirs = []
-
     include('/toolkit/toolkit.mozbuild')
 elif CONFIG['ENABLE_TESTS']:
     add_tier_dir('testharness', 'testing/mochitest')

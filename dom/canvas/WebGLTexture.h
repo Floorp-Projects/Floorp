@@ -6,8 +6,9 @@
 #ifndef WEBGLTEXTURE_H_
 #define WEBGLTEXTURE_H_
 
-#include "WebGLObjectModel.h"
+#include "WebGLBindableName.h"
 #include "WebGLFramebufferAttachable.h"
+#include "WebGLObjectModel.h"
 
 #include "nsWrapperCache.h"
 
@@ -27,6 +28,7 @@ inline bool is_pot_assuming_nonnegative(GLsizei x)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLTexture MOZ_FINAL
     : public nsWrapperCache
+    , public WebGLBindableName
     , public WebGLRefCountedObject<WebGLTexture>
     , public LinkedListElement<WebGLTexture>
     , public WebGLContextBoundObject
@@ -36,11 +38,6 @@ public:
     WebGLTexture(WebGLContext *context);
 
     void Delete();
-
-    bool HasEverBeenBound() const { return mHasEverBeenBound; }
-    void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    GLuint GLName() const { return mGLName; }
-    GLenum Target() const { return mTarget; }
 
     WebGLContext *GetParentObject() const {
         return Context();
@@ -58,9 +55,6 @@ protected:
 
     friend class WebGLContext;
     friend class WebGLFramebuffer;
-
-    bool mHasEverBeenBound;
-    GLuint mGLName;
 
     // we store information about the various images that are part of
     // this texture (cubemap faces, mipmap levels)
@@ -205,7 +199,6 @@ public:
 
 protected:
 
-    GLenum mTarget;
     GLenum mMinFilter, mMagFilter, mWrapS, mWrapT;
 
     size_t mFacesCount, mMaxLevelWithCustomImages;
@@ -278,7 +271,7 @@ public:
     bool IsMipmapCubeComplete() const;
 
     void SetFakeBlackStatus(WebGLTextureFakeBlackStatus x);
-    
+
     // Returns the current fake-black-status, except if it was Unknown,
     // in which case this function resolves it first, so it never returns Unknown.
     WebGLTextureFakeBlackStatus ResolvedFakeBlackStatus();

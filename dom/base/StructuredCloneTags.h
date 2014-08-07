@@ -35,6 +35,10 @@ enum StructuredCloneTags {
   // This tag is for WebCrypto keys
   SCTAG_DOM_WEBCRYPTO_KEY,
 
+  SCTAG_DOM_NULL_PRINCIPAL,
+  SCTAG_DOM_SYSTEM_PRINCIPAL,
+  SCTAG_DOM_CONTENT_PRINCIPAL,
+
   SCTAG_DOM_MAX
 };
 

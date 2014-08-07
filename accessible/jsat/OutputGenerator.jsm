@@ -2,17 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global Components, XPCOMUtils, Utils, PrefCache, States, Roles, Logger */
+/* exported UtteranceGenerator, BrailleGenerator */
+
 'use strict';
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const {utils: Cu, interfaces: Ci} = Components;
 
 const INCLUDE_DESC = 0x01;
 const INCLUDE_NAME = 0x02;
 const INCLUDE_VALUE = 0x04;
-const INCLUDE_CUSTOM = 0x08;
 const NAME_FROM_SUBTREE_RULE = 0x10;
 const IGNORE_EXPLICIT_NAME = 0x20;
 
@@ -20,22 +19,20 @@ const OUTPUT_DESC_FIRST = 0;
 const OUTPUT_DESC_LAST = 1;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Utils',
+XPCOMUtils.defineLazyModuleGetter(this, 'Utils', // jshint ignore:line
   'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'PrefCache',
+XPCOMUtils.defineLazyModuleGetter(this, 'PrefCache', // jshint ignore:line
   'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Logger',
+XPCOMUtils.defineLazyModuleGetter(this, 'Logger', // jshint ignore:line
   'resource://gre/modules/accessibility/Utils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'PluralForm',
-  'resource://gre/modules/PluralForm.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Roles',
+XPCOMUtils.defineLazyModuleGetter(this, 'Roles', // jshint ignore:line
   'resource://gre/modules/accessibility/Constants.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'States',
+XPCOMUtils.defineLazyModuleGetter(this, 'States', // jshint ignore:line
   'resource://gre/modules/accessibility/Constants.jsm');
 
-this.EXPORTED_SYMBOLS = ['UtteranceGenerator', 'BrailleGenerator'];
+this.EXPORTED_SYMBOLS = ['UtteranceGenerator', 'BrailleGenerator']; // jshint ignore:line
 
-this.OutputGenerator = {
+let OutputGenerator = {
 
   defaultOutputOrder: OUTPUT_DESC_LAST,
 
@@ -44,12 +41,9 @@ this.OutputGenerator = {
    * @param {PivotContext} aContext object that generates and caches
    *    context information for a given accessible and its relationship with
    *    another accessible.
-   * @return {Object} An object that neccessarily has an output property which
-   *    is an array of strings. Depending on the utterance order,
-   *    the strings describe the context for an accessible object either
+   * @return {Object} An array of speech data. Depending on the utterance order,
+   *    the data describes the context for an accessible object either
    *    starting from the accessible's ancestry or accessible's subtree.
-   *    The object may also have properties specific to the type of output
-   *    generated.
    */
   genForContext: function genForContext(aContext) {
     let output = [];
@@ -73,19 +67,16 @@ this.OutputGenerator = {
     if (this.outputOrder === OUTPUT_DESC_FIRST) {
       contextStart.forEach(addOutput);
       addOutput(aContext.accessible);
-      [addOutput(node) for
-        (node of aContext.subtreeGenerator(true, ignoreSubtree))];
+      [addOutput(node) for // jshint ignore:line
+        (node of aContext.subtreeGenerator(true, ignoreSubtree))]; // jshint ignore:line
     } else {
-      [addOutput(node) for
-        (node of aContext.subtreeGenerator(false, ignoreSubtree))];
+      [addOutput(node) for // jshint ignore:line
+        (node of aContext.subtreeGenerator(false, ignoreSubtree))]; // jshint ignore:line
       addOutput(aContext.accessible);
       contextStart.reverse().forEach(addOutput);
     }
 
-    // Clean up the white space.
-    let trimmed;
-    output = [trimmed for (word of output) if (trimmed = word.trim())];
-    return {output: output};
+    return output;
   },
 
 
@@ -96,10 +87,10 @@ this.OutputGenerator = {
    * @param {PivotContext} aContext object that generates and caches
    *    context information for a given accessible and its relationship with
    *    another accessible.
-   * @return {Array} Two string array. The first string describes the object
-   *    and its state. The second string is the object's name. Whether the
-   *    object's description or it's role is included is determined by
-   *    {@link roleRuleMap}.
+   * @return {Array} A 2 element array of speech data. The first element
+   *    describes the object and its state. The second element is the object's
+   *    name. Whether the object's description or it's role is included is
+   *    determined by {@link roleRuleMap}.
    */
   genForObject: function genForObject(aAccessible, aContext) {
     let roleString = Utils.AccRetrieval.getStringRole(aAccessible.role);
@@ -109,8 +100,9 @@ this.OutputGenerator = {
 
     let flags = this.roleRuleMap[roleString] || 0;
 
-    if (aAccessible.childCount == 0)
+    if (aAccessible.childCount === 0) {
       flags |= INCLUDE_NAME;
+    }
 
     return func.apply(this, [aAccessible, roleString,
                              Utils.getState(aAccessible), flags, aContext]);
@@ -122,17 +114,16 @@ this.OutputGenerator = {
    *    invoked in.
    * @param {string} aActionName the name of the action, one of the keys in
    *    {@link gActionMap}.
-   * @return {Array} A one string array with the action.
+   * @return {Array} A one element array with action data.
    */
-  genForAction: function genForAction(aObject, aActionName) {},
+  genForAction: function genForAction(aObject, aActionName) {}, // jshint ignore:line
 
   /**
-   * Generates output for an announcement. Basically attempts to localize
-   * the announcement string.
+   * Generates output for an announcement.
    * @param {string} aAnnouncement unlocalized announcement.
-   * @return {Array} A one string array with the announcement.
+   * @return {Array} An announcement speech data to be localized.
    */
-  genForAnnouncement: function genForAnnouncement(aAnnouncement) {},
+  genForAnnouncement: function genForAnnouncement(aAnnouncement) {}, // jshint ignore:line
 
   /**
    * Generates output for a tab state change.
@@ -142,17 +133,23 @@ this.OutputGenerator = {
    *    {@link Presenter.tabStateChanged}.
    * @return {Array} The tab state utterace.
    */
-  genForTabStateChange: function genForTabStateChange(aObject, aTabState) {},
+  genForTabStateChange: function genForTabStateChange(aObject, aTabState) {}, // jshint ignore:line
 
   /**
    * Generates output for announcing entering and leaving editing mode.
    * @param {aIsEditing} boolean true if we are in editing mode
    * @return {Array} The mode utterance
    */
-  genForEditingMode: function genForEditingMode(aIsEditing) {},
+  genForEditingMode: function genForEditingMode(aIsEditing) {}, // jshint ignore:line
 
-  _getContextStart: function getContextStart(aContext) {},
+  _getContextStart: function getContextStart(aContext) {}, // jshint ignore:line
 
+  /**
+   * Adds an accessible name and description to the output if available.
+   * @param {Array} aOutput Output array.
+   * @param {nsIAccessible} aAccessible current accessible object.
+   * @param {Number} aFlags output flags.
+   */
   _addName: function _addName(aOutput, aAccessible, aFlags) {
     let name;
     if ((Utils.getAttributes(aAccessible)['explicit-name'] === 'true' &&
@@ -173,10 +170,10 @@ this.OutputGenerator = {
       }
     }
 
-    if (name) {
-      aOutput[this.outputOrder === OUTPUT_DESC_FIRST ?
-        'push' : 'unshift'](name);
+    if (!name || !name.trim()) {
+      return;
     }
+    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift'](name);
   },
 
   /**
@@ -189,23 +186,18 @@ this.OutputGenerator = {
     if (!landmarkName) {
       return;
     }
-
-    let landmark = Utils.stringBundle.GetStringFromName(landmarkName);
-    if (!landmark) {
-      return;
-    }
-
-    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'unshift' : 'push'](
-      landmark);
+    aOutput[this.outputOrder === OUTPUT_DESC_FIRST ? 'unshift' : 'push']({
+      string: landmarkName
+    });
   },
 
   /**
    * Adds an entry type attribute to the description if available.
-   * @param {Array} aDesc Description array.
+   * @param {Array} aOutput Output array.
    * @param {nsIAccessible} aAccessible current accessible object.
    * @param {String} aRoleStr aAccessible's role string.
    */
-  _addType: function _addType(aDesc, aAccessible, aRoleStr) {
+  _addType: function _addType(aOutput, aAccessible, aRoleStr) {
     if (aRoleStr !== 'entry') {
       return;
     }
@@ -215,13 +207,12 @@ this.OutputGenerator = {
     if (!typeName || typeName === 'text') {
       return;
     }
-    typeName = 'textInputType_' + typeName;
-    try {
-      aDesc.push(Utils.stringBundle.GetStringFromName(typeName));
-    } catch (x) {
-      Logger.warning('Failed to get a string from a bundle for', typeName);
-    }
+    aOutput.push({string: 'textInputType_' + typeName});
   },
+
+  _addState: function _addState(aOutput, aState) {}, // jshint ignore:line
+
+  _addRole: function _addRole(aOutput, aRoleStr) {}, // jshint ignore:line
 
   get outputOrder() {
     if (!this._utteranceOrder) {
@@ -233,16 +224,6 @@ this.OutputGenerator = {
 
   _getOutputName: function _getOutputName(aName) {
     return aName.replace(' ', '');
-  },
-
-  _getLocalizedRole: function _getLocalizedRole(aRoleStr) {},
-
-  _getLocalizedState: function _getLocalizedState(aState) {},
-
-  _getPluralFormString: function _getPluralFormString(aString, aCount) {
-    let str = Utils.stringBundle.GetStringFromName(this._getOutputName(aString));
-    str = PluralForm.get(aCount, str);
-    return str.replace('#1', aCount);
   },
 
   roleRuleMap: {
@@ -322,32 +303,26 @@ this.OutputGenerator = {
     'app root': IGNORE_EXPLICIT_NAME },
 
   objectOutputFunctions: {
-    _generateBaseOutput: function _generateBaseOutput(aAccessible, aRoleStr, aState, aFlags) {
-      let output = [];
+    _generateBaseOutput:
+      function _generateBaseOutput(aAccessible, aRoleStr, aState, aFlags) {
+        let output = [];
 
-      if (aFlags & INCLUDE_DESC) {
-        let desc = this._getLocalizedState(aState);
-        let roleStr = this._getLocalizedRole(aRoleStr);
-        if (roleStr) {
-          this._addType(desc, aAccessible, aRoleStr);
-          desc.push(roleStr);
+        if (aFlags & INCLUDE_DESC) {
+          this._addState(output, aState);
+          this._addType(output, aAccessible, aRoleStr);
+          this._addRole(output, aRoleStr);
         }
-        output.push(desc.join(' '));
-      }
 
-      if (aFlags & INCLUDE_VALUE) {
-        let value = aAccessible.value;
-        if (value) {
-          output[this.outputOrder === OUTPUT_DESC_FIRST ?
-                 'push' : 'unshift'](value);
+        if (aFlags & INCLUDE_VALUE && aAccessible.value.trim()) {
+          output[this.outputOrder === OUTPUT_DESC_FIRST ? 'push' : 'unshift'](
+            aAccessible.value);
         }
-      }
 
-      this._addName(output, aAccessible, aFlags);
-      this._addLandmark(output, aAccessible);
+        this._addName(output, aAccessible, aFlags);
+        this._addLandmark(output, aAccessible);
 
-      return output;
-    },
+        return output;
+      },
 
     label: function label(aAccessible, aRoleStr, aState, aFlags, aContext) {
       if (aContext.isNestedControl ||
@@ -367,16 +342,16 @@ this.OutputGenerator = {
     },
 
     pagetab: function pagetab(aAccessible, aRoleStr, aState, aFlags) {
-      let localizedRole = this._getLocalizedRole(aRoleStr);
       let itemno = {};
       let itemof = {};
       aAccessible.groupPosition({}, itemof, itemno);
       let output = [];
-      let desc = this._getLocalizedState(aState);
-      desc.push(
-        Utils.stringBundle.formatStringFromName(
-          'objItemOf', [localizedRole, itemno.value, itemof.value], 3));
-      output.push(desc.join(' '));
+      this._addState(output, aState);
+      this._addRole(output, aRoleStr);
+      output.push({
+        string: 'objItemOfN',
+        args: [itemno.value, itemof.value]
+      });
 
       this._addName(output, aAccessible, aFlags);
       this._addLandmark(output, aAccessible);
@@ -398,13 +373,14 @@ this.OutputGenerator = {
         if (table.isProbablyForLayout()) {
           return output;
         }
-        let tableColumnInfo = this._getPluralFormString('tableColumnInfo',
-          table.columnCount);
-        let tableRowInfo = this._getPluralFormString('tableRowInfo',
-          table.rowCount);
-        output.push(Utils.stringBundle.formatStringFromName(
-          this._getOutputName('tableInfo'), [this._getLocalizedRole(aRoleStr),
-            tableColumnInfo, tableRowInfo], 3));
+        this._addRole(output, aRoleStr);
+        output.push.call(output, {
+          string: this._getOutputName('tblColumnInfo'),
+          count: table.columnCount
+        }, {
+          string: this._getOutputName('tblRowInfo'),
+          count: table.rowCount
+        });
         this._addName(output, aAccessible, aFlags);
         this._addLandmark(output, aAccessible);
         return output;
@@ -415,7 +391,7 @@ this.OutputGenerator = {
 
 /**
  * Generates speech utterances from objects, actions and state changes.
- * An utterance is an array of strings.
+ * An utterance is an array of speech data.
  *
  * It should not be assumed that flattening an utterance array would create a
  * gramatically correct sentence. For example, {@link genForObject} might
@@ -429,7 +405,7 @@ this.OutputGenerator = {
  * clicked event. Speaking only 'clicked' makes sense. Speaking 'button' does
  * not.
  */
-this.UtteranceGenerator = {
+this.UtteranceGenerator = {  // jshint ignore:line
   __proto__: OutputGenerator,
 
   gActionMap: {
@@ -451,63 +427,58 @@ this.UtteranceGenerator = {
 
   //TODO: May become more verbose in the future.
   genForAction: function genForAction(aObject, aActionName) {
-    return [Utils.stringBundle.GetStringFromName(this.gActionMap[aActionName])];
+    return [{string: this.gActionMap[aActionName]}];
   },
 
-  genForLiveRegion: function genForLiveRegion(aContext, aIsHide, aModifiedText) {
-    let utterance = [];
-    if (aIsHide) {
-      utterance.push(Utils.stringBundle.GetStringFromName('hidden'));
-    }
-    return utterance.concat(
-      aModifiedText || this.genForContext(aContext).output);
-  },
+  genForLiveRegion:
+    function genForLiveRegion(aContext, aIsHide, aModifiedText) {
+      let utterance = [];
+      if (aIsHide) {
+        utterance.push({string: 'hidden'});
+      }
+      return utterance.concat(aModifiedText || this.genForContext(aContext));
+    },
 
   genForAnnouncement: function genForAnnouncement(aAnnouncement) {
-    try {
-      return [Utils.stringBundle.GetStringFromName(aAnnouncement)];
-    } catch (x) {
-      return [aAnnouncement];
-    }
+    return [{
+      string: aAnnouncement
+    }];
   },
 
   genForTabStateChange: function genForTabStateChange(aObject, aTabState) {
     switch (aTabState) {
       case 'newtab':
-        return [Utils.stringBundle.GetStringFromName('tabNew')];
+        return [{string: 'tabNew'}];
       case 'loading':
-        return [Utils.stringBundle.GetStringFromName('tabLoading')];
+        return [{string: 'tabLoading'}];
       case 'loaded':
-        return [aObject.name || '',
-                Utils.stringBundle.GetStringFromName('tabLoaded')];
+        return [aObject.name, {string: 'tabLoaded'}];
       case 'loadstopped':
-        return [Utils.stringBundle.GetStringFromName('tabLoadStopped')];
+        return [{string: 'tabLoadStopped'}];
       case 'reload':
-        return [Utils.stringBundle.GetStringFromName('tabReload')];
+        return [{string: 'tabReload'}];
       default:
         return [];
     }
   },
 
   genForEditingMode: function genForEditingMode(aIsEditing) {
-    return [Utils.stringBundle.GetStringFromName(
-      aIsEditing ? 'editingMode' : 'navigationMode')];
+    return [{string: aIsEditing ? 'editingMode' : 'navigationMode'}];
   },
 
   objectOutputFunctions: {
 
     __proto__: OutputGenerator.objectOutputFunctions,
 
-    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aState, aFlags) {
-      return this.objectOutputFunctions._generateBaseOutput.apply(this, arguments);
+    defaultFunc: function defaultFunc() {
+      return this.objectOutputFunctions._generateBaseOutput.apply(
+        this, arguments);
     },
 
     heading: function heading(aAccessible, aRoleStr, aState, aFlags) {
       let level = {};
       aAccessible.groupPosition(level, {}, {});
-      let utterance =
-        [Utils.stringBundle.formatStringFromName(
-          'headingLevel', [level.value], 1)];
+      let utterance = [{string: 'headingLevel', args: [level.value]}];
 
       this._addName(utterance, aAccessible, aFlags);
       this._addLandmark(utterance, aAccessible);
@@ -520,10 +491,14 @@ this.UtteranceGenerator = {
       let itemof = {};
       aAccessible.groupPosition({}, itemof, itemno);
       let utterance = [];
-      if (itemno.value == 1) // Start of list
-        utterance.push(Utils.stringBundle.GetStringFromName('listStart'));
-      else if (itemno.value == itemof.value) // last item
-        utterance.push(Utils.stringBundle.GetStringFromName('listEnd'));
+      if (itemno.value == 1) {
+        // Start of list
+        utterance.push({string: 'listStart'});
+      }
+      else if (itemno.value == itemof.value) {
+        // last item
+        utterance.push({string: 'listEnd'});
+      }
 
       this._addName(utterance, aAccessible, aFlags);
       this._addLandmark(utterance, aAccessible);
@@ -536,16 +511,18 @@ this.UtteranceGenerator = {
         (aAccessible, aRoleStr, aFlags, aAccessible.childCount);
     },
 
-    definitionlist: function definitionlist(aAccessible, aRoleStr, aState, aFlags) {
-      return this._getListUtterance
-        (aAccessible, aRoleStr, aFlags, aAccessible.childCount / 2);
-    },
+    definitionlist:
+      function definitionlist(aAccessible, aRoleStr, aState, aFlags) {
+        return this._getListUtterance
+          (aAccessible, aRoleStr, aFlags, aAccessible.childCount / 2);
+      },
 
     application: function application(aAccessible, aRoleStr, aState, aFlags) {
       // Don't utter location of applications, it gets tiring.
-      if (aAccessible.name != aAccessible.DOMNode.location)
+      if (aAccessible.name != aAccessible.DOMNode.location) {
         return this.objectOutputFunctions.defaultFunc.apply(this,
           [aAccessible, aRoleStr, aState, aFlags]);
+      }
 
       return [];
     },
@@ -554,35 +531,32 @@ this.UtteranceGenerator = {
       let utterance = [];
       let cell = aContext.getCellInfo(aAccessible);
       if (cell) {
-        let desc = [];
-        let addCellChanged = function addCellChanged(aDesc, aChanged, aString, aIndex) {
-          if (aChanged) {
-            aDesc.push(Utils.stringBundle.formatStringFromName(aString,
-              [aIndex + 1], 1));
-          }
-        };
-        let addExtent = function addExtent(aDesc, aExtent, aString) {
+        let addCellChanged =
+          function addCellChanged(aUtterance, aChanged, aString, aIndex) {
+            if (aChanged) {
+              aUtterance.push({string: aString, args: [aIndex + 1]});
+            }
+          };
+        let addExtent = function addExtent(aUtterance, aExtent, aString) {
           if (aExtent > 1) {
-            aDesc.push(Utils.stringBundle.formatStringFromName(aString,
-              [aExtent], 1));
+            aUtterance.push({string: aString, args: [aExtent]});
           }
         };
-        let addHeaders = function addHeaders(aDesc, aHeaders) {
+        let addHeaders = function addHeaders(aUtterance, aHeaders) {
           if (aHeaders.length > 0) {
-            aDesc.push.apply(aDesc, aHeaders);
+            aUtterance.push.apply(aUtterance, aHeaders);
           }
         };
 
-        addCellChanged(desc, cell.columnChanged, 'columnInfo', cell.columnIndex);
-        addCellChanged(desc, cell.rowChanged, 'rowInfo', cell.rowIndex);
+        addCellChanged(utterance, cell.columnChanged, 'columnInfo',
+          cell.columnIndex);
+        addCellChanged(utterance, cell.rowChanged, 'rowInfo', cell.rowIndex);
 
-        addExtent(desc, cell.columnExtent, 'spansColumns');
-        addExtent(desc, cell.rowExtent, 'spansRows');
+        addExtent(utterance, cell.columnExtent, 'spansColumns');
+        addExtent(utterance, cell.rowExtent, 'spansRows');
 
-        addHeaders(desc, cell.columnHeaders);
-        addHeaders(desc, cell.rowHeaders);
-
-        utterance.push(desc.join(' '));
+        addHeaders(utterance, cell.columnHeaders);
+        addHeaders(utterance, cell.rowHeaders);
       }
 
       this._addName(utterance, aAccessible, aFlags);
@@ -612,86 +586,71 @@ this.UtteranceGenerator = {
     return aContext.newAncestry;
   },
 
-  _getLocalizedRole: function _getLocalizedRole(aRoleStr) {
-    try {
-      return Utils.stringBundle.GetStringFromName(
-        this._getOutputName(aRoleStr));
-    } catch (x) {
-      return '';
-    }
+  _addRole: function _addRole(aOutput, aRoleStr) {
+    aOutput.push({string: this._getOutputName(aRoleStr)});
   },
 
-  _getLocalizedState: function _getLocalizedState(aState) {
-    let stateUtterances = [];
+  _addState: function _addState(aOutput, aState) {
 
     if (aState.contains(States.UNAVAILABLE)) {
-      stateUtterances.push(
-        Utils.stringBundle.GetStringFromName('stateUnavailable'));
+      aOutput.push({string: 'stateUnavailable'});
     }
 
     // Don't utter this in Jelly Bean, we let TalkBack do it for us there.
     // This is because we expose the checked information on the node itself.
-    // XXX: this means the checked state is always appended to the end, regardless
-    // of the utterance ordering preference.
+    // XXX: this means the checked state is always appended to the end,
+    // regardless of the utterance ordering preference.
     if ((Utils.AndroidSdkVersion < 16 || Utils.MozBuildApp === 'browser') &&
       aState.contains(States.CHECKABLE)) {
       let statetr = aState.contains(States.CHECKED) ?
         'stateChecked' : 'stateNotChecked';
-      stateUtterances.push(Utils.stringBundle.GetStringFromName(statetr));
+      aOutput.push({string: statetr});
     }
 
     if (aState.contains(States.PRESSED)) {
-      stateUtterances.push(
-        Utils.stringBundle.GetStringFromName('statePressed'));
+      aOutput.push({string: 'statePressed'});
     }
 
     if (aState.contains(States.EXPANDABLE)) {
       let statetr = aState.contains(States.EXPANDED) ?
         'stateExpanded' : 'stateCollapsed';
-      stateUtterances.push(Utils.stringBundle.GetStringFromName(statetr));
+      aOutput.push({string: statetr});
     }
 
     if (aState.contains(States.REQUIRED)) {
-      stateUtterances.push(
-        Utils.stringBundle.GetStringFromName('stateRequired'));
+      aOutput.push({string: 'stateRequired'});
     }
 
     if (aState.contains(States.TRAVERSED)) {
-      stateUtterances.push(
-        Utils.stringBundle.GetStringFromName('stateTraversed'));
+      aOutput.push({string: 'stateTraversed'});
     }
 
     if (aState.contains(States.HASPOPUP)) {
-      stateUtterances.push(
-        Utils.stringBundle.GetStringFromName('stateHasPopup'));
+      aOutput.push({string: 'stateHasPopup'});
     }
 
     if (aState.contains(States.SELECTED)) {
-      stateUtterances.push(
-        Utils.stringBundle.GetStringFromName('stateSelected'));
+      aOutput.push({string: 'stateSelected'});
     }
-
-    return stateUtterances;
   },
 
-  _getListUtterance: function _getListUtterance(aAccessible, aRoleStr, aFlags, aItemCount) {
-    let desc = [];
-    let roleStr = this._getLocalizedRole(aRoleStr);
-    if (roleStr) {
-      desc.push(roleStr);
+  _getListUtterance:
+    function _getListUtterance(aAccessible, aRoleStr, aFlags, aItemCount) {
+      let utterance = [];
+      this._addRole(utterance, aRoleStr);
+      utterance.push({
+        string: this._getOutputName('listItemsCount'),
+        count: aItemCount
+      });
+
+      this._addName(utterance, aAccessible, aFlags);
+      this._addLandmark(utterance, aAccessible);
+
+      return utterance;
     }
-    desc.push(this._getPluralFormString('listItemsCount', aItemCount));
-    let utterance = [desc.join(' ')];
-
-    this._addName(utterance, aAccessible, aFlags);
-    this._addLandmark(utterance, aAccessible);
-
-    return utterance;
-  }
 };
 
-
-this.BrailleGenerator = {
+this.BrailleGenerator = {  // jshint ignore:line
   __proto__: OutputGenerator,
 
   genForContext: function genForContext(aContext) {
@@ -700,10 +659,10 @@ this.BrailleGenerator = {
     let acc = aContext.accessible;
 
     // add the static text indicating a list item; do this for both listitems or
-    // direct first children of listitems, because these are both common browsing
-    // scenarios
+    // direct first children of listitems, because these are both common
+    // browsing scenarios
     let addListitemIndicator = function addListitemIndicator(indicator = '*') {
-      output.output.unshift(indicator);
+      output.unshift(indicator);
     };
 
     if (acc.indexInParent === 1 &&
@@ -724,12 +683,6 @@ this.BrailleGenerator = {
       }
     }
 
-    if (acc instanceof Ci.nsIAccessibleText) {
-      output.endOffset = this.outputOrder === OUTPUT_DESC_FIRST ?
-                         output.output.join(' ').length : acc.characterCount;
-      output.startOffset = output.endOffset - acc.characterCount;
-    }
-
     return output;
   },
 
@@ -737,8 +690,9 @@ this.BrailleGenerator = {
 
     __proto__: OutputGenerator.objectOutputFunctions,
 
-    defaultFunc: function defaultFunc(aAccessible, aRoleStr, aState, aFlags) {
-      return this.objectOutputFunctions._generateBaseOutput.apply(this, arguments);
+    defaultFunc: function defaultFunc() {
+      return this.objectOutputFunctions._generateBaseOutput.apply(
+        this, arguments);
     },
 
     listitem: function listitem(aAccessible, aRoleStr, aState, aFlags) {
@@ -754,20 +708,19 @@ this.BrailleGenerator = {
       let braille = [];
       let cell = aContext.getCellInfo(aAccessible);
       if (cell) {
-        let desc = [];
-        let addHeaders = function addHeaders(aDesc, aHeaders) {
+        let addHeaders = function addHeaders(aBraille, aHeaders) {
           if (aHeaders.length > 0) {
-            aDesc.push.apply(aDesc, aHeaders);
+            aBraille.push.apply(aBraille, aHeaders);
           }
         };
 
-        desc.push(Utils.stringBundle.formatStringFromName(
-          this._getOutputName('cellInfo'), [cell.columnIndex + 1,
-            cell.rowIndex + 1], 2));
+        braille.push({
+          string: this._getOutputName('cellInfo'),
+          args: [cell.columnIndex + 1, cell.rowIndex + 1]
+        });
 
-        addHeaders(desc, cell.columnHeaders);
-        addHeaders(desc, cell.rowHeaders);
-        braille.push(desc.join(' '));
+        addHeaders(braille, cell.columnHeaders);
+        addHeaders(braille, cell.rowHeaders);
       }
 
       this._addName(braille, aAccessible, aFlags);
@@ -783,7 +736,7 @@ this.BrailleGenerator = {
       return this.objectOutputFunctions.cell.apply(this, arguments);
     },
 
-    statictext: function statictext(aAccessible, aRoleStr, aState, aFlags) {
+    statictext: function statictext(aAccessible) {
       // Since we customize the list bullet's output, we add the static
       // text from the first node in each listitem, so skip it here.
       if (Utils.isListItemDecorator(aAccessible)) {
@@ -793,27 +746,25 @@ this.BrailleGenerator = {
       return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
     },
 
-    _useStateNotRole: function _useStateNotRole(aAccessible, aRoleStr, aState, aFlags) {
-      let braille = [];
+    _useStateNotRole:
+      function _useStateNotRole(aAccessible, aRoleStr, aState, aFlags) {
+        let braille = [];
+        this._addState(braille, aState, aAccessible.role);
+        this._addName(braille, aAccessible, aFlags);
+        this._addLandmark(braille, aAccessible);
 
-      let desc = this._getLocalizedState(aState, aAccessible.role);
-      braille.push(desc.join(' '));
+        return braille;
+      },
 
-      this._addName(braille, aAccessible, aFlags);
-      this._addLandmark(braille, aAccessible);
-
-      return braille;
-    },
-
-    checkbutton: function checkbutton(aAccessible, aRoleStr, aState, aFlags) {
+    checkbutton: function checkbutton() {
       return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
     },
 
-    radiobutton: function radiobutton(aAccessible, aRoleStr, aState, aFlags) {
+    radiobutton: function radiobutton() {
       return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
     },
 
-    togglebutton: function radiobutton(aAccessible, aRoleStr, aState, aFlags) {
+    togglebutton: function togglebutton() {
       return this.objectOutputFunctions._useStateNotRole.apply(this, arguments);
     }
   },
@@ -830,42 +781,24 @@ this.BrailleGenerator = {
     return OutputGenerator._getOutputName(aName) + 'Abbr';
   },
 
-  _getLocalizedRole: function _getLocalizedRole(aRoleStr) {
-    try {
-      return Utils.stringBundle.GetStringFromName(
-        this._getOutputName(aRoleStr));
-    } catch (x) {
-      try {
-        return Utils.stringBundle.GetStringFromName(
-          OutputGenerator._getOutputName(aRoleStr));
-      } catch (y) {
-        return '';
-      }
-    }
+  _addRole: function _addRole(aBraille, aRoleStr) {
+    aBraille.push({string: this._getOutputName(aRoleStr)});
   },
 
-  _getLocalizedState: function _getLocalizedState(aState, aRole) {
-    let stateBraille = [];
-
-    let getResultMarker = function getResultMarker(aMarker) {
-      // aMarker is a simple boolean.
-      let resultMarker = [];
-      resultMarker.push('(');
-      resultMarker.push(aMarker ? 'x' : ' ');
-      resultMarker.push(')');
-
-      return resultMarker.join('');
-    };
-
+  _addState: function _addState(aBraille, aState, aRole) {
     if (aState.contains(States.CHECKABLE)) {
-      stateBraille.push(getResultMarker(aState.contains(States.CHECKED)));
+      aBraille.push({
+        string: aState.contains(States.CHECKED) ?
+          this._getOutputName('stateChecked') :
+          this._getOutputName('stateUnchecked')
+      });
     }
-
     if (aRole === Roles.TOGGLE_BUTTON) {
-      stateBraille.push(getResultMarker(aState.contains(States.PRESSED)));
+      aBraille.push({
+        string: aState.contains(States.PRESSED) ?
+          this._getOutputName('statePressed') :
+          this._getOutputName('stateUnpressed')
+      });
     }
-
-    return stateBraille;
   }
-
 };

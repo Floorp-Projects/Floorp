@@ -5,7 +5,7 @@
 #  Takes two arguments:
 #
 #  -b : a bugnumber
-#  -type : template type. {html|xhtml|xul|th}. defaults to html.
+#  -type : template type. {html|xhtml|xul|th|chrome|chromexul}. defaults to html.
 #
 #  perl gen_template.pl -b 345876 -type xul
 #
@@ -21,6 +21,8 @@ if ($template_type eq "xul") {
   $template_type = "$FindBin::RealBin/static/xhtml.template.txt";
 } elsif ($template_type eq "chrome") {
   $template_type = "$FindBin::RealBin/static/chrome.template.txt";
+} elsif ($template_type eq "chromexul") {
+  $template_type = "$FindBin::RealBin/static/chromexul.template.txt";
 } elsif ($template_type eq "th") {
   $template_type = "$FindBin::RealBin/static/th.template.txt";
 } else {
