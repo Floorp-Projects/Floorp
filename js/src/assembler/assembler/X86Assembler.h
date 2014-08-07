@@ -289,6 +289,7 @@ private:
         OP2_UNPCKLPS_VsdWsd = 0x14,
         OP2_MOVAPD_VsdWsd   = 0x28,
         OP2_MOVAPS_VsdWsd   = 0x28,
+        OP2_MOVAPS_WsdVsd   = 0x29,
         OP2_CVTSI2SD_VsdEd  = 0x2A,
         OP2_CVTTSD2SI_GdWsd = 0x2C,
         OP2_UCOMISD_VsdWsd  = 0x2E,
@@ -2835,13 +2836,39 @@ public:
     }
 #endif
 
-    void movaps_rr(XMMRegisterID src, XMMRegisterID dst) {
+    void movaps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
         spew("movaps     %s, %s",
              nameFPReg(src), nameFPReg(dst));
         m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
+    void movaps_rm(XMMRegisterID src, int offset, RegisterID base)
+    {
+        spew("movaps     %s, %s0x%x(%s)",
+             nameFPReg(src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.twoByteOp(OP2_MOVAPS_WsdVsd, (RegisterID)src, base, offset);
+    }
+    void movaps_rm(XMMRegisterID src, int offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("movaps     %s, %d(%s,%s,%d)",
+             nameFPReg(src), offset, nameIReg(base), nameIReg(index), 1<<scale);
+        m_formatter.twoByteOp(OP2_MOVAPS_WsdVsd, (RegisterID)src, base, index, scale, offset);
+    }
+    void movaps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("movaps     %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, base, offset);
+    }
+    void movaps_mr(int offset, RegisterID base, RegisterID index, int scale, XMMRegisterID dst)
+    {
+        spew("movaps     %d(%s,%s,%d), %s",
+             offset, nameIReg(base), nameIReg(index), 1<<scale, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, base, index, scale, offset);
+    }
 
-    void movapd_rr(XMMRegisterID src, XMMRegisterID dst) {
+    void movapd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
         spew("movapd     %s, %s",
              nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);

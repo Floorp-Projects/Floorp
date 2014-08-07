@@ -402,15 +402,42 @@ class AssemblerX86Shared : public AssemblerShared
         masm.xchgl_rr(src.code(), dest.code());
     }
 
-    // Eventually movapd and movaps should be overloaded to support loads and
+    // Eventually movapd should be overloaded to support loads and
     // stores too.
     void movapd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.movapd_rr(src.code(), dest.code());
     }
+
     void movaps(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.movaps_rr(src.code(), dest.code());
+    }
+    void movaps(const Operand &src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.movaps_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_SCALE:
+            masm.movaps_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+    void movaps(FloatRegister src, const Operand &dest) {
+        JS_ASSERT(HasSSE2());
+        switch (dest.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.movaps_rm(src.code(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.movaps_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
     }
 
     // movsd and movss are only provided in load/store form since the

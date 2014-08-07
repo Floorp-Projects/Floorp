@@ -434,6 +434,7 @@ class LDefinition
         FLOAT32,    // 32-bit floating-point value (FPU).
         DOUBLE,     // 64-bit floating-point value (FPU).
         INT32X4,    // SIMD data containing four 32-bit integers (FPU).
+        FLOAT32X4,  // SIMD data containing four 32-bit floats (FPU).
 #ifdef JS_NUNBOX32
         // A type virtual register must be followed by a payload virtual
         // register, as both will be tracked as a single gcthing.
@@ -485,7 +486,7 @@ class LDefinition
         return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK);
     }
     bool isSimdType() const {
-        return type() == INT32X4;
+        return type() == INT32X4 || type() == FLOAT32X4;
     }
     bool isCompatibleReg(const AnyRegister &r) const {
         if (isFloatReg() && r.isFloat()) {
@@ -576,6 +577,8 @@ class LDefinition
             return LDefinition::GENERAL;
           case MIRType_Int32x4:
             return LDefinition::INT32X4;
+          case MIRType_Float32x4:
+            return LDefinition::FLOAT32X4;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected type");
         }
