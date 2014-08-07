@@ -180,89 +180,61 @@ private:
   ConnectionStatus mConnectionStatus;
 };
 
-class ShutdownSocketTask : public Task {
-  virtual void Run()
+class ShutdownSocketTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
+{
+public:
+  ShutdownSocketTask(DroidSocketImpl* aImpl)
+  : SocketIOTask<DroidSocketImpl>(aImpl)
+  { }
+
+  void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
+
+    DroidSocketImpl* impl = GetIO();
 
     // At this point, there should be no new events on the IO thread after this
     // one with the possible exception of a SocketAcceptTask that
     // ShutdownOnIOThread will cancel for us. We are now fully shut down, so we
     // can send a message to the main thread that will delete mImpl safely knowing
     // that no more tasks reference it.
-    mImpl->ShutdownOnIOThread();
+    impl->ShutdownOnIOThread();
 
     nsRefPtr<nsRunnable> r =
-      new SocketIODeleteInstanceRunnable<DroidSocketImpl>(mImpl);
+      new SocketIODeleteInstanceRunnable<DroidSocketImpl>(impl);
     nsresult rv = NS_DispatchToMainThread(r);
     NS_ENSURE_SUCCESS_VOID(rv);
   }
-
-  DroidSocketImpl* mImpl;
-
-public:
-  ShutdownSocketTask(DroidSocketImpl* aImpl) : mImpl(aImpl) { }
 };
 
-class SocketSendTask : public Task
+class SocketSendTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
 {
 public:
   SocketSendTask(BluetoothSocket* aConsumer, DroidSocketImpl* aImpl,
                  UnixSocketRawData* aData)
-    : mConsumer(aConsumer),
-      mImpl(aImpl),
-      mData(aData)
+    : SocketIOTask<DroidSocketImpl>(aImpl)
+    , mData(aData)
   {
-    MOZ_ASSERT(aConsumer);
-    MOZ_ASSERT(aImpl);
-    MOZ_ASSERT(aData);
+    MOZ_ASSERT(mData);
   }
 
-  void
-  Run()
+  void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!mImpl->IsShutdownOnIOThread());
+    MOZ_ASSERT(!GetIO()->IsShutdownOnIOThread());
 
-    mImpl->Send(mData);
+    GetIO()->Send(mData);
   }
 
 private:
-  nsRefPtr<BluetoothSocket> mConsumer;
-  DroidSocketImpl* mImpl;
   UnixSocketRawData* mData;
 };
 
-class DroidSocketImplTask : public CancelableTask
-{
-public:
-  DroidSocketImpl* GetDroidSocketImpl() const
-  {
-    return mDroidSocketImpl;
-  }
-  void Cancel() MOZ_OVERRIDE
-  {
-    mDroidSocketImpl = nullptr;
-  }
-  bool IsCanceled() const
-  {
-    return !mDroidSocketImpl;
-  }
-protected:
-  DroidSocketImplTask(DroidSocketImpl* aDroidSocketImpl)
-  : mDroidSocketImpl(aDroidSocketImpl)
-  {
-    MOZ_ASSERT(mDroidSocketImpl);
-  }
-private:
-  DroidSocketImpl* mDroidSocketImpl;
-};
-
-class SocketConnectTask : public DroidSocketImplTask
+class SocketConnectTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
 {
 public:
   SocketConnectTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
-  : DroidSocketImplTask(aDroidSocketImpl)
+  : SocketIOTask<DroidSocketImpl>(aDroidSocketImpl)
   , mFd(aFd)
   { }
 
@@ -270,26 +242,28 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
-    GetDroidSocketImpl()->Connect(mFd);
+
+    GetIO()->Connect(mFd);
   }
 
 private:
   int mFd;
 };
 
-class SocketListenTask : public DroidSocketImplTask
+class SocketListenTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
 {
 public:
   SocketListenTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
-  : DroidSocketImplTask(aDroidSocketImpl)
+  : SocketIOTask<DroidSocketImpl>(aDroidSocketImpl)
   , mFd(aFd)
   { }
 
   void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
+
     if (!IsCanceled()) {
-      GetDroidSocketImpl()->Listen(mFd);
+      GetIO()->Listen(mFd);
     }
   }
 
@@ -297,17 +271,19 @@ private:
   int mFd;
 };
 
-class SocketConnectClientFdTask : public Task
+class SocketConnectClientFdTask MOZ_FINAL
+: public SocketIOTask<DroidSocketImpl>
 {
-  virtual void Run()
+  SocketConnectClientFdTask(DroidSocketImpl* aImpl)
+  : SocketIOTask<DroidSocketImpl>(aImpl)
+  { }
+
+  void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    mImpl->ConnectClientFd();
-  }
 
-  DroidSocketImpl* mImpl;
-public:
-  SocketConnectClientFdTask(DroidSocketImpl* aImpl) : mImpl(aImpl) { }
+    GetIO()->ConnectClientFd();
+  }
 };
 
 void
@@ -400,11 +376,11 @@ DroidSocketImpl::OnSocketCanReceiveWithoutBlocking(int aFd)
   }
 }
 
-class AcceptTask MOZ_FINAL : public DroidSocketImplTask
+class AcceptTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
 {
 public:
   AcceptTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
-  : DroidSocketImplTask(aDroidSocketImpl)
+  : SocketIOTask<DroidSocketImpl>(aDroidSocketImpl)
   , mFd(aFd)
   { }
 
@@ -413,7 +389,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
 
-    GetDroidSocketImpl()->Accept(mFd);
+    GetIO()->Accept(mFd);
   }
 
 private:
