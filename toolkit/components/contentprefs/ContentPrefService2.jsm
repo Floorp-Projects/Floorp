@@ -29,7 +29,7 @@ let EXPORTED_SYMBOLS = [
 const { interfaces: Ci, classes: Cc, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/ContentPrefUtils.jsm");
 Cu.import("resource://gre/modules/ContentPrefStore.jsm");
 
 function ContentPrefService2(cps) {
@@ -822,39 +822,6 @@ ContentPrefService2.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 };
-
-function ContentPref(domain, name, value) {
-  this.domain = domain;
-  this.name = name;
-  this.value = value;
-}
-
-ContentPref.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPref]),
-};
-
-function cbHandleResult(callback, pref) {
-  safeCallback(callback, "handleResult", [pref]);
-}
-
-function cbHandleCompletion(callback, reason) {
-  safeCallback(callback, "handleCompletion", [reason]);
-}
-
-function cbHandleError(callback, nsresult) {
-  safeCallback(callback, "handleError", [nsresult]);
-}
-
-function safeCallback(callbackObj, methodName, args) {
-  if (!callbackObj || typeof(callbackObj[methodName]) != "function")
-    return;
-  try {
-    callbackObj[methodName].apply(callbackObj, args);
-  }
-  catch (err) {
-    Cu.reportError(err);
-  }
-}
 
 function checkGroupArg(group) {
   if (!group || typeof(group) != "string")
