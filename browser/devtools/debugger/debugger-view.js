@@ -213,6 +213,7 @@ let DebuggerView = {
     bindKey("_doGlobalSearch", "globalSearchKey", { alt: true });
     bindKey("_doFunctionSearch", "functionSearchKey");
     extraKeys[Editor.keyFor("jumpToLine")] = false;
+    extraKeys["Esc"] = false;
 
     function bindKey(func, key, modifiers = {}) {
       let key = document.getElementById(key).getAttribute("key");
