@@ -11,7 +11,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463934
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463934">Mozilla Bug 463934</a>
 <p id="display"></p>
-<div id="content" style="display: none"></div>
+<div id="content">
+  <svg id="outer-1" xmlns="http://www.w3.org/2000/svg" width="30" height="30"></svg>
+  <svg id="outer-2" xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+       style="padding: 10px;">
+  </svg>
+  <svg id="outer-3" xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+       style="border: 10px solid black;">
+  </svg>
+  <svg id="outer-4" xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+       style="border: 10px solid black; padding: 10px">
+  </svg>
+</div>
 
 <iframe id="svg" src="bounds-helper.svg"></iframe>
 
@@ -42,6 +53,24 @@ function isWithAbsTolerance(a, b, tolerance, message)
 
 function runTest()
 {
+  var bounds;
+
+  bounds = document.getElementById("outer-1").getBoundingClientRect();
+  is(bounds.width, 30, "outer-svg 1 getBoundingClientRect().width");
+  is(bounds.height, 30, "outer-svg 1 getBoundingClientRect().height");
+
+  bounds = document.getElementById("outer-2").getBoundingClientRect();
+  is(bounds.width, 50, "outer-svg 2 getBoundingClientRect().width");
+  is(bounds.height, 50, "outer-svg 2 getBoundingClientRect().height");
+
+  bounds = document.getElementById("outer-3").getBoundingClientRect();
+  is(bounds.width, 50, "outer-svg 3 getBoundingClientRect().width");
+  is(bounds.height, 50, "outer-svg 3 getBoundingClientRect().height");
+
+  bounds = document.getElementById("outer-4").getBoundingClientRect();
+  is(bounds.width, 70, "outer-svg 4 getBoundingClientRect().width");
+  is(bounds.height, 70, "outer-svg 4 getBoundingClientRect().height");
+
   var doc = $("svg").contentWindow.document;
 
   var svg1Bounds = doc.getElementById("svg1").getBoundingClientRect();
