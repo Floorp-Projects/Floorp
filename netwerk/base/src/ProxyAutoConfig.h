@@ -31,6 +31,7 @@ public:
 
   nsresult Init(const nsCString &aPACURI,
                 const nsCString &aPACScript);
+  void     SetThreadLocalIndex(uint32_t index);
   void     Shutdown();
   void     GC();
   bool     MyIPAddress(const JS::CallArgs &aArgs);
