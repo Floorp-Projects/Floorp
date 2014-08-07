@@ -64,16 +64,12 @@ public:
                             const nsIntRegion& aOldValidRegionBack,
                             nsIntRegion* aUpdatedRegionBack) = 0;
 
-  virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
-  bool PaintWillResample() { return mPaintWillResample; }
+  virtual void SetPaintWillResample(bool aResample) { }
 
 protected:
   ContentHost(const TextureInfo& aTextureInfo)
     : CompositableHost(aTextureInfo)
-    , mPaintWillResample(false)
   {}
-
-  bool mPaintWillResample;
 };
 
 /**
@@ -101,7 +97,10 @@ public:
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
                          const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr);
+                         const nsIntRegion* aVisibleRegion = nullptr,
+                         TiledLayerProperties* aLayerProperties = nullptr);
+
+  virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
 
   virtual NewTextureSource* GetTextureSource() = 0;
   virtual NewTextureSource* GetTextureSourceOnWhite() = 0;
@@ -114,9 +113,11 @@ protected:
     return mBufferRect.TopLeft() - mBufferRotation;
   }
 
+  bool PaintWillResample() { return mPaintWillResample; }
 
   nsIntRect mBufferRect;
   nsIntPoint mBufferRotation;
+  bool mPaintWillResample;
   bool mInitialised;
 };
 

@@ -50,7 +50,8 @@ public:
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
                          const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr) MOZ_OVERRIDE;
+                         const nsIntRegion* aVisibleRegion = nullptr,
+                         TiledLayerProperties* aLayerProperties = nullptr) MOZ_OVERRIDE;
 
   virtual void UseTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
 

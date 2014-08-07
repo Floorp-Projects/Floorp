@@ -335,23 +335,8 @@ ClientTiledThebesLayer::RenderLayer()
   TILING_LOG("TILING %p: Initial valid region %s\n", this, Stringify(mValidRegion).c_str());
   TILING_LOG("TILING %p: Initial low-precision valid region %s\n", this, Stringify(mLowPrecisionValidRegion).c_str());
 
-  nsIntRegion neededRegion = mVisibleRegion;
-  if (MayResample()) {
-    // If we're resampling then bilinear filtering can read up to 1 pixel
-    // outside of our texture coords. Make the visible region a single rect,
-    // and pad it out by 1 pixel (restricted to tile boundaries) so that
-    // we always have valid content or transparent pixels to sample from.
-    nsIntRect bounds = neededRegion.GetBounds();
-    nsIntRect wholeTiles = bounds;
-    wholeTiles.Inflate(nsIntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()));
-    nsIntRect padded = bounds;
-    padded.Inflate(1);
-    padded.IntersectRect(padded, wholeTiles);
-    neededRegion = padded;
-  }
-
   nsIntRegion invalidRegion;
-  invalidRegion.Sub(neededRegion, mValidRegion);
+  invalidRegion.Sub(mVisibleRegion, mValidRegion);
   if (invalidRegion.IsEmpty()) {
     EndPaint();
     return;
@@ -366,7 +351,7 @@ ClientTiledThebesLayer::RenderLayer()
     // In some cases we can take a fast path and just be done with it.
     if (UseFastPath()) {
       TILING_LOG("TILING %p: Taking fast-path\n", this);
-      mValidRegion = neededRegion;
+      mValidRegion = mVisibleRegion;
       mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion, callback, data);
       ClientManager()->Hold(this);
       mContentClient->UseTiledLayerBuffer(TiledContentClient::TILED_BUFFER);
@@ -383,7 +368,7 @@ ClientTiledThebesLayer::RenderLayer()
     // Make sure that tiles that fall outside of the visible region or outside of the
     // critical displayport are discarded on the first update. Also make sure that we
     // only draw stuff inside the critical displayport on the first update.
-    mValidRegion.And(mValidRegion, neededRegion);
+    mValidRegion.And(mValidRegion, mVisibleRegion);
     if (!mPaintData.mCriticalDisplayPort.IsEmpty()) {
       mValidRegion.And(mValidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
       invalidRegion.And(invalidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
@@ -402,7 +387,7 @@ ClientTiledThebesLayer::RenderLayer()
   if (gfxPrefs::UseLowPrecisionBuffer()) {
     // Calculate the invalid region for the low precision buffer. Make sure
     // to remove the valid high-precision area so we don't double-paint it.
-    lowPrecisionInvalidRegion.Sub(neededRegion, mLowPrecisionValidRegion);
+    lowPrecisionInvalidRegion.Sub(mVisibleRegion, mLowPrecisionValidRegion);
     lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, mValidRegion);
   }
   TILING_LOG("TILING %p: Low-precision invalid region %s\n", this, Stringify(lowPrecisionInvalidRegion).c_str());

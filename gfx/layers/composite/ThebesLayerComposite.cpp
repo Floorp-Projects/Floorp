@@ -38,6 +38,7 @@ ThebesLayerComposite::ThebesLayerComposite(LayerManagerComposite *aManager)
   : ThebesLayer(aManager, nullptr)
   , LayerComposite(aManager)
   , mBuffer(nullptr)
+  , mRequiresTiledProperties(false)
 {
   MOZ_COUNT_CTOR(ThebesLayerComposite);
   mImplData = static_cast<LayerComposite*>(this);
@@ -134,6 +135,13 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 
   const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
 
+  TiledLayerProperties tiledLayerProps;
+  if (mRequiresTiledProperties) {
+    tiledLayerProps.mVisibleRegion = visibleRegion;
+    tiledLayerProps.mEffectiveResolution = GetEffectiveResolution();
+    tiledLayerProps.mValidRegion = mValidRegion;
+  }
+
   mBuffer->SetPaintWillResample(MayResample());
 
   mBuffer->Composite(effectChain,
@@ -141,8 +149,14 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
                      GetEffectiveTransform(),
                      GetEffectFilter(),
                      clipRect,
-                     &visibleRegion);
+                     &visibleRegion,
+                     mRequiresTiledProperties ? &tiledLayerProps
+                                              : nullptr);
   mBuffer->BumpFlashCounter();
+
+  if (mRequiresTiledProperties) {
+    mValidRegion = tiledLayerProps.mValidRegion;
+  }
 
   mCompositeManager->GetCompositor()->MakeCurrent();
 }
