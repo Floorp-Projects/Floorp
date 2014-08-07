@@ -7,6 +7,7 @@
 #ifndef AudioEventTimeline_h_
 #define AudioEventTimeline_h_
 
+#include <algorithm>
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/TypedEnum.h"
@@ -421,8 +422,7 @@ public:
       // After the duration, return the last curve value
       return aCurve[aCurveLength - 1];
     }
-    double ratio = (t - startTime) / duration;
-    MOZ_ASSERT(ratio >= 0.0, "Ratio can never be negative here");
+    double ratio = std::max((t - startTime) / duration, 0.0);
     if (ratio >= 1.0) {
       return aCurve[aCurveLength - 1];
     }
