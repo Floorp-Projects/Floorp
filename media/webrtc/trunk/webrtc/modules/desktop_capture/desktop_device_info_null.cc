@@ -12,6 +12,7 @@ public:
   ~DesktopDeviceInfoNull();
 
   virtual int32_t Init();
+  virtual int32_t Refresh();
 };
 
 DesktopDeviceInfo * DesktopDeviceInfoImpl::Create() {
