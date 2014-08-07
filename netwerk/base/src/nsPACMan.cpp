@@ -255,6 +255,9 @@ PendingPACQuery::Run()
 
 //-----------------------------------------------------------------------------
 
+static bool sThreadLocalSetup = false;
+static uint32_t sThreadLocalIndex = 0xdeadbeef; // out of range
+
 nsPACMan::nsPACMan()
   : mLoadPending(false)
   , mShutdown(false)
@@ -262,6 +265,11 @@ nsPACMan::nsPACMan()
   , mInProgress(false)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "pacman must be created on main thread");
+  if (!sThreadLocalSetup){
+    sThreadLocalSetup = true;
+    PR_NewThreadPrivateIndex(&sThreadLocalIndex, nullptr);
+  }
+  mPAC.SetThreadLocalIndex(sThreadLocalIndex);
 }
 
 nsPACMan::~nsPACMan()
