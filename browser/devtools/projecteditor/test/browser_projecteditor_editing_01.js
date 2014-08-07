@@ -38,6 +38,10 @@ function testEditFile(projecteditor, filePath, newData) {
 
   info ("Setting text in the editor and doing checks before saving");
 
+  editor.editor.undo();
+  editor.editor.undo();
+  is (editor.editor.getText(), initialData, "Editor is still loaded with correct contents after undo");
+
   editor.editor.setText(newData);
   is (editor.editor.getText(), newData, "Editor has been filled with new data");
   is (viewContainer.label.textContent, "*" + originalTreeLabel, "Label is marked as changed");
