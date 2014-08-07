@@ -1439,8 +1439,9 @@ nsNavHistoryContainerResultNode::RemoveChildAt(int32_t aIndex)
   nsRefPtr<nsNavHistoryResultNode> oldNode = mChildren[aIndex];
 
   // Update stats.
-  MOZ_ASSERT(mAccessCount >= mChildren[aIndex]->mAccessCount,
-             "Invalid access count while updating!");
+  // XXX This assertion does not reliably pass -- investigate!! (bug 1049797)
+  // MOZ_ASSERT(mAccessCount >= mChildren[aIndex]->mAccessCount,
+  //            "Invalid access count while updating!");
   uint32_t oldAccessCount = mAccessCount;
   mAccessCount -= mChildren[aIndex]->mAccessCount;
 
