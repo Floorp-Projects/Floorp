@@ -28,7 +28,6 @@
 #include "nsIFile.h"
 #include "mozJSComponentLoader.h"
 #include "mozJSLoaderUtils.h"
-#include "nsIJSRuntimeService.h"
 #include "nsIXPConnect.h"
 #include "nsIObserverService.h"
 #include "nsIScriptSecurityManager.h"
@@ -74,7 +73,6 @@ static const JSClass kFakeBackstagePassJSClass =
     JS_ConvertStub
 };
 
-static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
 static const char kJSCachePrefix[] = "jsloader";
@@ -287,9 +285,7 @@ ReportOnCaller(JSCLContextHelper &helper,
 }
 
 mozJSComponentLoader::mozJSComponentLoader()
-    : mRuntime(nullptr),
-      mContext(nullptr),
-      mModules(16),
+    : mModules(16),
       mImports(16),
       mInProgressImports(16),
       mInitialized(false),
@@ -396,22 +392,6 @@ mozJSComponentLoader::ReallyInit()
 #if defined(MOZ_B2G) && !defined(MOZ_MULET)
     mReuseLoaderGlobal = true;
 #endif
-
-    /*
-     * Get the JSRuntime from the runtime svc, if possible.
-     * We keep a reference around, because it's a Bad Thing if the runtime
-     * service gets shut down before we're done.  Bad!
-     */
-
-    mRuntimeService = do_GetService(kJSRuntimeServiceContractID, &rv);
-    if (NS_FAILED(rv) ||
-        NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
-        return rv;
-
-    // Create our compilation context.
-    mContext = JS_NewContext(mRuntime, 256);
-    if (!mContext)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIScriptSecurityManager> secman =
         do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
@@ -1074,11 +1054,13 @@ mozJSComponentLoader::UnloadModules()
     if (mLoaderGlobal) {
         MOZ_ASSERT(mReuseLoaderGlobal, "How did this happen?");
 
-        JSAutoRequest ar(mContext);
-        RootedObject global(mContext, mLoaderGlobal->GetJSObject());
+        dom::AutoJSAPI jsapi;
+        jsapi.Init();
+        JSContext* cx = jsapi.cx();
+        RootedObject global(cx, mLoaderGlobal->GetJSObject());
         if (global) {
-            JSAutoCompartment ac(mContext, global);
-            JS_SetAllNonReservedSlotsToUndefined(mContext, global);
+            JSAutoCompartment ac(cx, global);
+            JS_SetAllNonReservedSlotsToUndefined(cx, global);
         } else {
             NS_WARNING("Going to leak!");
         }
@@ -1090,11 +1072,6 @@ mozJSComponentLoader::UnloadModules()
     mImports.Clear();
 
     mModules.Enumerate(ClearModules, nullptr);
-
-    JS_DestroyContextNoGC(mContext);
-    mContext = nullptr;
-
-    mRuntimeService = nullptr;
 }
 
 NS_IMETHODIMP
