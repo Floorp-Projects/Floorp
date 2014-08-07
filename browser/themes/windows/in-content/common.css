@@ -4,32 +4,32 @@
 
 %include ../../shared/in-content/common.inc.css
 
-caption {
+xul|caption {
   background-color: transparent;
 }
 
-button,
-colorpicker[type="button"],
-menulist {
+xul|button,
+xul|colorpicker[type="button"],
+xul|menulist {
   margin: 2px 4px;
 }
 
-menulist:not([editable="true"]) > .menulist-dropmarker {
+xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
   margin-top: 1px;
   margin-bottom: 1px;
 }
 
-checkbox {
+xul|checkbox {
   -moz-padding-start: 0;
 }
 
-radio {
+xul|radio {
   -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
   -moz-margin-start: 0;
   -moz-padding-start: 0;
 }
 
-.radio-icon,
-.checkbox-icon {
+xul|*.radio-icon,
+xul|*.checkbox-icon {
   -moz-margin-end: 0;
 }
