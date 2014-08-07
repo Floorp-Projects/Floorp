@@ -184,8 +184,10 @@ public:
                       bool aIs3D = false);
     ~AutoAddMaskEffect();
 
+    bool Failed() const { return mFailed; }
   private:
     CompositableHost* mCompositable;
+    bool mFailed;
   };
 
   /**

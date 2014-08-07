@@ -5882,7 +5882,7 @@ nsWindow::DispatchEventToRootAccessible(uint32_t aEventType)
     }
 
     nsCOMPtr<nsIAccessibilityService> accService =
-        do_GetService("@mozilla.org/accessibilityService;1");
+        services::GetAccessibilityService();
     if (!accService) {
         return;
     }
