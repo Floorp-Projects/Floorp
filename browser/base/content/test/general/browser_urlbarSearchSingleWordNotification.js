@@ -3,16 +3,30 @@
 
 "use strict";
 
+let notificationObserver;
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("browser.fixup.domainwhitelist.localhost");
+  if (notificationObserver) {
+    notificationObserver.disconnect();
+  }
 });
 
 function promiseNotificationForTab(value, expected, tab=gBrowser.selectedTab) {
   let deferred = Promise.defer();
   let notificationBox = gBrowser.getNotificationBox(tab.linkedBrowser);
   if (expected) {
-    waitForCondition(() => notificationBox.getNotificationWithValue(value) !== null,
-                     deferred.resolve, "Were expecting to get a notification");
+    let checkForNotification = function() {
+      if (notificationBox.getNotificationWithValue(value)) {
+        notificationObserver.disconnect();
+        notificationObserver = null;
+        deferred.resolve();
+      }
+    }
+    if (notificationObserver) {
+      notificationObserver.disconnect();
+    }
+    notificationObserver = new MutationObserver(checkForNotification);
+    notificationObserver.observe(notificationBox, {childList: true});
   } else {
     setTimeout(() => {
       is(notificationBox.getNotificationWithValue(value), null, "We are expecting to not get a notification");
