@@ -427,7 +427,7 @@ protected:
 class nsPrintEventDispatcher
 {
 public:
-  nsPrintEventDispatcher(nsIDocument* aTop) : mTop(aTop)
+  explicit nsPrintEventDispatcher(nsIDocument* aTop) : mTop(aTop)
   {
     nsDocumentViewer::DispatchBeforePrint(mTop);
   }
@@ -442,7 +442,7 @@ public:
 class nsDocumentShownDispatcher : public nsRunnable
 {
 public:
-  nsDocumentShownDispatcher(nsCOMPtr<nsIDocument> aDocument)
+  explicit nsDocumentShownDispatcher(nsCOMPtr<nsIDocument> aDocument)
   : mDocument(aDocument) {}
 
   NS_IMETHOD Run() MOZ_OVERRIDE;
