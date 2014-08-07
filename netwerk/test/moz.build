@@ -69,3 +69,5 @@ USE_LIBS += [
     'xpcomglue_s',
     'xul',
 ]
+
+CXXFLAGS += CONFIG['TK_CFLAGS']
