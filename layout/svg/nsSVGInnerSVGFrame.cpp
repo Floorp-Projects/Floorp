@@ -7,6 +7,7 @@
 #include "nsSVGInnerSVGFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
@@ -18,6 +19,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
 nsIFrame*
 NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -252,7 +254,7 @@ nsSVGInnerSVGFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 nsIFrame*
-nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
+nsSVGInnerSVGFrame::GetFrameForPoint(const gfxPoint& aPoint)
 {
   NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
                (mState & NS_FRAME_IS_NONDISPLAY),
@@ -260,16 +262,11 @@ nsSVGInnerSVGFrame::GetFrameForPoint(const nsPoint &aPoint)
                "SVG should take this code path");
 
   if (StyleDisplay()->IsScrollableOverflow()) {
-    nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
-
-    float clipX, clipY, clipWidth, clipHeight;
-    content->GetAnimatedLengthValues(&clipX, &clipY, &clipWidth, &clipHeight, nullptr);
-
-    if (!nsSVGUtils::HitTestRect(gfx::ToMatrix(parent->GetCanvasTM(FOR_HIT_TESTING)),
-                                 clipX, clipY, clipWidth, clipHeight,
-                                 PresContext()->AppUnitsToDevPixels(aPoint.x),
-                                 PresContext()->AppUnitsToDevPixels(aPoint.y))) {
+    Rect clip;
+    static_cast<nsSVGElement*>(mContent)->
+      GetAnimatedLengthValues(&clip.x, &clip.y,
+                              &clip.width, &clip.height, nullptr);
+    if (!clip.Contains(ToPoint(aPoint))) {
       return nullptr;
     }
   }
