@@ -253,22 +253,6 @@ private:
     const JSCLContextHelper& operator=(const JSCLContextHelper &) MOZ_DELETE;
 };
 
-
-class JSCLAutoErrorReporterSetter
-{
-public:
-    JSCLAutoErrorReporterSetter(JSContext* cx, JSErrorReporter reporter)
-        {mContext = cx; mOldReporter = JS_SetErrorReporter(cx, reporter);}
-    ~JSCLAutoErrorReporterSetter()
-        {JS_SetErrorReporter(mContext, mOldReporter);}
-private:
-    JSContext* mContext;
-    JSErrorReporter mOldReporter;
-
-    JSCLAutoErrorReporterSetter(const JSCLAutoErrorReporterSetter &) MOZ_DELETE;
-    const JSCLAutoErrorReporterSetter& operator=(const JSCLAutoErrorReporterSetter &) MOZ_DELETE;
-};
-
 static nsresult
 ReportOnCaller(JSContext *callerContext,
                const char *format, ...) {
@@ -476,10 +460,12 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
     if (mModules.Get(spec, &mod))
     return mod;
 
-    nsAutoPtr<ModuleEntry> entry(new ModuleEntry(mContext));
+    dom::AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
 
-    JSAutoRequest ar(mContext);
-    RootedValue dummy(mContext);
+    nsAutoPtr<ModuleEntry> entry(new ModuleEntry(cx));
+    RootedValue dummy(cx);
     rv = ObjectForLocation(info, file, &entry->obj, &entry->thisObjectKey,
                            &entry->location, false, &dummy);
     if (NS_FAILED(rv)) {
@@ -496,7 +482,6 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
     if (NS_FAILED(rv))
         return nullptr;
 
-    JSCLContextHelper cx(mContext);
     JSAutoCompartment ac(cx, entry->obj);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> cm_holder;
@@ -527,8 +512,6 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
     if (!file_jsobj) {
         return nullptr;
     }
-
-    JSCLAutoErrorReporterSetter aers(cx, xpc::SystemErrorReporter);
 
     RootedValue NSGetFactory_val(cx);
     if (!JS_GetProperty(cx, entryObj, "NSGetFactory", &NSGetFactory_val) ||
