@@ -90,6 +90,17 @@ enum TelemetryAlgorithm {
     return NS_ERROR_DOM_UNKNOWN_ERR; \
   }
 
+// Safety check for algorithms that use keys, suitable for constructors
+#define CHECK_KEY_ALGORITHM(keyAlg, algName) \
+  { \
+    nsString keyAlgName; \
+    keyAlg->GetName(keyAlgName); \
+    if (!keyAlgName.EqualsLiteral(algName)) { \
+      mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR; \
+      return; \
+    } \
+  }
+
 class ClearException
 {
 public:
@@ -256,6 +267,8 @@ public:
     // Cache parameters depending on the specific algorithm
     TelemetryAlgorithm telemetryAlg;
     if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CBC)) {
+      CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_AES_CBC);
+
       mMechanism = CKM_AES_CBC_PAD;
       telemetryAlg = TA_AES_CBC;
       AesCbcParams params;
@@ -267,6 +280,8 @@ public:
 
       ATTEMPT_BUFFER_INIT(mIv, params.mIv.Value())
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR)) {
+      CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_AES_CTR);
+
       mMechanism = CKM_AES_CTR;
       telemetryAlg = TA_AES_CTR;
       AesCtrParams params;
@@ -285,6 +300,8 @@ public:
 
       mCounterLength = params.mLength.Value();
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_GCM)) {
+      CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_AES_GCM);
+
       mMechanism = CKM_AES_GCM;
       telemetryAlg = TA_AES_GCM;
       AesGcmParams params;
@@ -412,6 +429,8 @@ public:
   {
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSAES_PKCS1);
 
+    CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_RSAES_PKCS1);
+
     ATTEMPT_BUFFER_INIT(mData, aData);
 
     if (mEncrypt) {
@@ -485,6 +504,8 @@ public:
     , mSymKey(aKey.GetSymKey())
     , mSign(aSign)
   {
+    CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_HMAC);
+
     ATTEMPT_BUFFER_INIT(mData, aData);
     if (!aSign) {
       ATTEMPT_BUFFER_INIT(mSignature, aSignature);
@@ -591,6 +612,8 @@ public:
     , mVerified(false)
   {
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_RSASSA_PKCS1);
+
+    CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_RSASSA_PKCS1);
 
     ATTEMPT_BUFFER_INIT(mData, aData);
     if (!aSign) {
