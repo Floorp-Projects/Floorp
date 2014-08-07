@@ -8,30 +8,31 @@
 <?xml-stylesheet href="chrome://mozapps/content/preferences/preferences.css"?>
 
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
-<?xml-stylesheet 
+<?xml-stylesheet href="chrome://browser/skin/in-content/common.css"?>
+<?xml-stylesheet
   href="chrome://browser/skin/preferences/in-content/preferences.css"?>
-<?xml-stylesheet 
+<?xml-stylesheet
   href="chrome://browser/content/preferences/handlers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
 
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
 <!ENTITY % globalPreferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
-<!ENTITY % preferencesDTD SYSTEM 
+<!ENTITY % preferencesDTD SYSTEM
   "chrome://browser/locale/preferences/preferences.dtd">
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
 <!ENTITY % tabsDTD SYSTEM "chrome://browser/locale/preferences/tabs.dtd">
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
-<!ENTITY % securityDTD SYSTEM 
+<!ENTITY % securityDTD SYSTEM
   "chrome://browser/locale/preferences/security.dtd">
 <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
 <!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
 <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
 <!ENTITY % contentDTD SYSTEM "chrome://browser/locale/preferences/content.dtd">
-<!ENTITY % applicationsDTD SYSTEM 
+<!ENTITY % applicationsDTD SYSTEM
   "chrome://browser/locale/preferences/applications.dtd">
-<!ENTITY % advancedDTD SYSTEM 
+<!ENTITY % advancedDTD SYSTEM
   "chrome://browser/locale/preferences/advanced.dtd">
 %brandDTD;
 %globalPreferencesDTD;
@@ -70,7 +71,7 @@
           src="chrome://browser/content/preferences/in-content/preferences.js"/>
   <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
 
-  <stringbundle id="bundleBrand" 
+  <stringbundle id="bundleBrand"
                 src="chrome://branding/locale/brand.properties"/>
   <stringbundle id="bundlePreferences"
                 src="chrome://browser/locale/preferences/preferences.properties"/>
