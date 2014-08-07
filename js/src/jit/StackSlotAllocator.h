@@ -83,7 +83,7 @@ class StackSlotAllocator
           case LDefinition::SLOTS:
 #endif
           case LDefinition::INT32:
-          case LDefinition::FLOAT32: return freeSlot(index);
+          case LDefinition::FLOAT32:   return freeSlot(index);
 #if JS_BITS_PER_WORD == 64
           case LDefinition::GENERAL:
           case LDefinition::OBJECT:
@@ -96,8 +96,9 @@ class StackSlotAllocator
           case LDefinition::TYPE:
           case LDefinition::PAYLOAD:
 #endif
-          case LDefinition::DOUBLE:  return freeDoubleSlot(index);
-          case LDefinition::INT32X4: return freeQuadSlot(index);
+          case LDefinition::DOUBLE:    return freeDoubleSlot(index);
+          case LDefinition::FLOAT32X4:
+          case LDefinition::INT32X4:   return freeQuadSlot(index);
         }
         MOZ_ASSUME_UNREACHABLE("Unknown slot type");
     }
@@ -110,7 +111,7 @@ class StackSlotAllocator
           case LDefinition::SLOTS:
 #endif
           case LDefinition::INT32:
-          case LDefinition::FLOAT32: return allocateSlot();
+          case LDefinition::FLOAT32:   return allocateSlot();
 #if JS_BITS_PER_WORD == 64
           case LDefinition::GENERAL:
           case LDefinition::OBJECT:
@@ -123,8 +124,9 @@ class StackSlotAllocator
           case LDefinition::TYPE:
           case LDefinition::PAYLOAD:
 #endif
-          case LDefinition::DOUBLE:  return allocateDoubleSlot();
-          case LDefinition::INT32X4: return allocateQuadSlot();
+          case LDefinition::DOUBLE:    return allocateDoubleSlot();
+          case LDefinition::FLOAT32X4:
+          case LDefinition::INT32X4:   return allocateQuadSlot();
         }
         MOZ_ASSUME_UNREACHABLE("Unknown slot type");
     }
