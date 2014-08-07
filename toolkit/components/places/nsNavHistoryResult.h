@@ -579,14 +579,12 @@ public:
   int32_t FindChild(nsNavHistoryResultNode* aNode)
     { return mChildren.IndexOf(aNode); }
 
-  nsresult InsertChildAt(nsNavHistoryResultNode* aNode, int32_t aIndex,
-                         bool aIsTemporary = false);
+  nsresult InsertChildAt(nsNavHistoryResultNode* aNode, int32_t aIndex);
   nsresult InsertSortedChild(nsNavHistoryResultNode* aNode,
-                             bool aIsTemporary = false,
                              bool aIgnoreDuplicates = false);
   bool EnsureItemPosition(uint32_t aIndex);
 
-  nsresult RemoveChildAt(int32_t aIndex, bool aIsTemporary = false);
+  nsresult RemoveChildAt(int32_t aIndex);
 
   void RecursiveFindURIs(bool aOnlyOne,
                          nsNavHistoryContainerResultNode* aContainer,
