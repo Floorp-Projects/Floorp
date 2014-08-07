@@ -65,6 +65,8 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     debugScopes(nullptr),
     enumerators(nullptr),
     compartmentStats(nullptr),
+    scheduledForDestruction(false),
+    maybeAlive(true),
     jitCompartment_(nullptr)
 {
     runtime_->numCompartments++;

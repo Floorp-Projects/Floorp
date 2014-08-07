@@ -2,6 +2,15 @@
 # subregion. The fe*-2 tests test with no clipping (which stresses
 # the automatic optimal surface-size computation a bit more).
 
+# CSS filter tests
+include css-filters/reftest.list
+
+# CSS filter chain tests
+include css-filter-chains/reftest.list
+
+# Combined CSS and SVG filter chain tests
+include css-svg-filter-chains/reftest.list
+
 # SVG filter chain tests
 include svg-filter-chains/reftest.list
 

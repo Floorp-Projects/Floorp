@@ -5,6 +5,7 @@
 import sys
 import optparse
 
+from collections import defaultdict
 from structuredlog import StructuredLogger, set_default_logger
 import handlers
 import formatters
@@ -16,6 +17,16 @@ log_formatters = {
     'html': (formatters.HTMLFormatter, "HTML report"),
     'mach': (formatters.MachFormatter, "Human-readable output"),
     'tbpl': (formatters.TbplFormatter, "TBPL style log format"),
+}
+
+def level_filter_wrapper(formatter, level):
+    return handlers.LogLevelFilter(formatter, level)
+
+fmt_options = {
+    # <option name>: (<wrapper function>, description, <applicable formatters>)
+    'level': (level_filter_wrapper,
+              "A least log level to subscribe to for the given formatter (debug, info, error, etc.)",
+              ["mach", "tbpl"]),
 }
 
 
@@ -50,7 +61,10 @@ def add_logging_group(parser):
         for name, (cls, help_str) in log_formatters.iteritems():
             group.add_option("--log-" + name, action="append", type="str",
                              help=help_str)
-
+        for optname, (cls, help_str, formatters) in fmt_options.iteritems():
+            for fmt in formatters:
+                group.add_option("--log-%s-%s" % (fmt, optname), action="store",
+                                 type="str", help=help_str)
         parser.add_option_group(group)
     else:
         group = parser.add_argument_group(group_name,
@@ -58,6 +72,38 @@ def add_logging_group(parser):
         for name, (cls, help_str) in log_formatters.iteritems():
             group.add_argument("--log-" + name, action="append", type=log_file,
                                help=help_str)
+
+        for optname, (cls, help_str, formatters) in fmt_options.iteritems():
+            for fmt in formatters:
+                group.add_argument("--log-%s-%s" % (fmt, optname), action="store",
+                                   type=str, help=help_str)
+
+
+def setup_handlers(logger, formatters, formatter_options):
+    """
+    Add handlers to the given logger according to the formatters and
+    options provided.
+
+    :param logger: The logger configured by this function.
+    :param formatters: A dict of {formatter, [streams]} to use in handlers.
+    :param formatter_options: a dict of {formatter: {option: value}} to
+                              to use when configuring formatters.
+    """
+    unused_options = set(formatter_options.keys()) - set(formatters.keys())
+    if unused_options:
+        msg = ("Options specified for unused formatter(s) (%s) have no effect" %
+               list(unused_options))
+        raise ValueError(msg)
+
+    for fmt, streams in formatters.iteritems():
+        formatter_cls = log_formatters[fmt][0]
+        formatter = formatter_cls()
+        for option, value in formatter_options[fmt].iteritems():
+            formatter = fmt_options[option][0](formatter, value)
+
+        for value in streams:
+            logger.add_handler(handlers.StreamHandler(stream=value,
+                                                      formatter=formatter))
 
 
 def setup_logging(suite, args, defaults=None):
@@ -78,8 +124,16 @@ def setup_logging(suite, args, defaults=None):
 
     :rtype: StructuredLogger
     """
+
+    _option_defaults = {
+        'level': 'info',
+    }
+
     logger = StructuredLogger(suite)
-    prefix = "log_"
+    # Keep track of any options passed for formatters.
+    formatter_options = defaultdict(lambda: _option_defaults.copy())
+    # Keep track of formatters and list of streams specified.
+    formatters = {}
     found = False
     found_stdout_logger = False
     if not hasattr(args, 'iteritems'):
@@ -92,31 +146,38 @@ def setup_logging(suite, args, defaults=None):
             defaults = {"raw": sys.stdout}
 
     for name, values in args.iteritems():
-        if name.startswith(prefix) and values is not None:
-            for value in values:
-                found = True
-                if isinstance(value, str):
-                    value = log_file(value)
-                if value == sys.stdout:
-                    found_stdout_logger = True
-                formatter_cls = log_formatters[name[len(prefix):]][0]
-                logger.add_handler(handlers.StreamHandler(stream=value,
-                                                          formatter=formatter_cls()))
+        parts = name.split('_')
+        if len(parts) > 3:
+            continue
+        # Our args will be ['log', <formatter>] or ['log', <formatter>, <option>].
+        if parts[0] == 'log' and values is not None:
+            if len(parts) == 1 or parts[1] not in log_formatters:
+                continue
+            if len(parts) == 2:
+                _, formatter = parts
+                formatters[formatter] = []
+                for value in values:
+                    found = True
+                    if isinstance(value, str):
+                        value = log_file(value)
+                    if value == sys.stdout:
+                        found_stdout_logger = True
+                    formatters[formatter].append(value)
+            if len(parts) == 3:
+                _, formatter, opt = parts
+                formatter_options[formatter][opt] = values
 
     #If there is no user-specified logging, go with the default options
     if not found:
         for name, value in defaults.iteritems():
-            formatter_cls = log_formatters[name][0]
-            logger.add_handler(handlers.StreamHandler(stream=value,
-                                                      formatter=formatter_cls()))
+            formatters[name] = [value]
 
     elif not found_stdout_logger and sys.stdout in defaults.values():
         for name, value in defaults.iteritems():
             if value == sys.stdout:
-                formatter_cls = log_formatters[name][0]
-                logger.add_handler(handlers.StreamHandler(stream=value,
-                                                          formatter=formatter_cls()))
+                formatters[name] = [value]
 
+    setup_handlers(logger, formatters, formatter_options)
     set_default_logger(logger)
 
     return logger

@@ -547,13 +547,11 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
         NS_WARNING("Failed to lock the tile's front buffer");
         return;
       }
-      TextureClientAutoUnlock autoFront(mFrontBuffer);
 
       if (!mBackBuffer->Lock(OpenMode::OPEN_WRITE)) {
         NS_WARNING("Failed to lock the tile's back buffer");
         return;
       }
-      TextureClientAutoUnlock autoBack(mBackBuffer);
 
       // Copy the bounding rect of regionToCopy. As tiles are quite small, it
       // is unlikely that we'd save much by copying each individual rect of the
@@ -589,6 +587,9 @@ TileClient::DiscardFrontBuffer()
 #endif
     mManager->GetTexturePool(mFrontBuffer->GetFormat())->ReturnTextureClientDeferred(mFrontBuffer);
     mFrontLock->ReadUnlock();
+    if (mFrontBuffer->IsLocked()) {
+      mFrontBuffer->Unlock();
+    }
     mFrontBuffer = nullptr;
     mFrontLock = nullptr;
   }
@@ -626,6 +627,9 @@ TileClient::DiscardBackBuffer()
 #endif
     }
     mBackLock->ReadUnlock();
+    if (mBackBuffer->IsLocked()) {
+      mBackBuffer->Unlock();
+    }
     mBackBuffer.Set(this, nullptr);
     mBackLock = nullptr;
   }
@@ -784,8 +788,7 @@ ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                            GetTileStart(paintBounds.YMost() - 1);
   }
   */
-
-  if (useSinglePaintBuffer) {
+  if (useSinglePaintBuffer && !gfxPrefs::TiledDrawTargetEnabled()) {
     nsRefPtr<gfxContext> ctxt;
 
     const nsIntRect bounds = aPaintRegion.GetBounds();
@@ -921,6 +924,35 @@ void PadDrawTargetOutFromRegion(RefPtr<DrawTarget> drawTarget, nsIntRegion &regi
   }
 }
 
+void
+ClientTiledLayerBuffer::PostValidate(const nsIntRegion& aPaintRegion)
+{
+  if (gfxPrefs::TiledDrawTargetEnabled() && mMoz2DTiles.size() > 0) {
+    gfx::TileSet tileset;
+    tileset.mTiles = &mMoz2DTiles[0];
+    tileset.mTileCount = mMoz2DTiles.size();
+    RefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
+    drawTarget->SetTransform(Matrix());
+
+    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+
+    mCallback(mThebesLayer, ctx, aPaintRegion, DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
+    mMoz2DTiles.clear();
+  }
+}
+
+void
+ClientTiledLayerBuffer::UnlockTile(TileClient aTile)
+{
+  // We locked the back buffer, and flipped so we now need to unlock the front
+  if (aTile.mFrontBuffer && aTile.mFrontBuffer->IsLocked()) {
+    aTile.mFrontBuffer->Unlock();
+  }
+  if (aTile.mBackBuffer && aTile.mBackBuffer->IsLocked()) {
+    aTile.mBackBuffer->Unlock();
+  }
+}
+
 TileClient
 ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                                     const nsIntPoint& aTileOrigin,
@@ -958,10 +990,64 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                         mManager->GetTexturePool(gfxPlatform::GetPlatform()->Optimal2DFormatForContent(GetContentType())),
                         &createdTextureClient, !usingSinglePaintBuffer);
 
-  if (!backBuffer || !backBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
-    NS_WARNING("Failed to lock tile TextureClient for updating.");
-    aTile.DiscardFrontBuffer();
-    aTile.DiscardBackBuffer();
+  // the back buffer may have been already locked in ValidateBackBufferFromFront
+  if (!backBuffer->IsLocked()) {
+    if (!backBuffer->Lock(OpenMode::OPEN_READ_WRITE)) {
+      NS_WARNING("Failed to lock tile TextureClient for updating.");
+      aTile.DiscardFrontBuffer();
+      return aTile;
+    }
+  }
+
+  if (gfxPrefs::TiledDrawTargetEnabled()) {
+    nsIntRegionRectIterator it(aDirtyRegion);
+    for (const nsIntRect* dirtyRect = it.Next(); dirtyRect != nullptr; dirtyRect = it.Next()) {
+      gfx::Rect drawRect(dirtyRect->x - aTileOrigin.x,
+                         dirtyRect->y - aTileOrigin.y,
+                         dirtyRect->width,
+                         dirtyRect->height);
+      drawRect.Scale(mResolution);
+
+      gfx::IntRect copyRect(NS_roundf((dirtyRect->x - mSinglePaintBufferOffset.x) * mResolution),
+                            NS_roundf((dirtyRect->y - mSinglePaintBufferOffset.y) * mResolution),
+                            drawRect.width,
+                            drawRect.height);
+      gfx::IntPoint copyTarget(NS_roundf(drawRect.x), NS_roundf(drawRect.y));
+      // Mark the newly updated area as invalid in the front buffer
+      aTile.mInvalidFront.Or(aTile.mInvalidFront, nsIntRect(copyTarget.x, copyTarget.y, copyRect.width, copyRect.height));
+    }
+
+    // The new buffer is now validated, remove the dirty region from it.
+    aTile.mInvalidBack.Sub(nsIntRect(0, 0, GetTileSize().width, GetTileSize().height),
+                           offsetScaledDirtyRegion);
+
+    aTile.Flip();
+
+    if (createdTextureClient) {
+      if (!mCompositableClient->AddTextureClient(backBuffer)) {
+        NS_WARNING("Failed to add tile TextureClient.");
+        aTile.DiscardFrontBuffer();
+        aTile.DiscardBackBuffer();
+        return aTile;
+      }
+    }
+
+    if (backBuffer->HasInternalBuffer()) {
+      // If our new buffer has an internal buffer, we don't want to keep another
+      // TextureClient around unnecessarily, so discard the back-buffer.
+      aTile.DiscardBackBuffer();
+    }
+
+    // prepare an array of Moz2D tiles that will be painted into in PostValidate
+    gfx::Tile moz2DTile;
+    moz2DTile.mDrawTarget = backBuffer->BorrowDrawTarget();
+    moz2DTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
+    if (!moz2DTile.mDrawTarget) {
+      aTile.DiscardFrontBuffer();
+      return aTile;
+    }
+
+    mMoz2DTiles.push_back(moz2DTile);
     return aTile;
   }
 

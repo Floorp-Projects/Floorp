@@ -949,6 +949,5 @@ class TreeMetadataEmitter(LoggingMixin):
             for tier in sandbox['TIERS']:
                 o.tier_dirs[tier] = sandbox['TIERS'][tier]['regular'] + \
                     sandbox['TIERS'][tier]['external']
-                o.tier_static_dirs[tier] = sandbox['TIERS'][tier]['static']
 
         yield o

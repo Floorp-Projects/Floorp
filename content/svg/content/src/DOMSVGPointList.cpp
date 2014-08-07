@@ -247,8 +247,9 @@ DOMSVGPointList::Initialize(nsISVGPoint& aNewItem, ErrorResult& aError)
   // from happening we have to do the clone here, if necessary.
 
   nsCOMPtr<nsISVGPoint> domItem = &aNewItem;
-  if (domItem->HasOwner() || domItem->IsReadonly()) {
-    domItem = domItem->Clone(); // must do this before changing anything!
+  if (domItem->HasOwner() || domItem->IsReadonly() ||
+      domItem->IsTranslatePoint()) {
+    domItem = domItem->Copy(); // must do this before changing anything!
   }
 
   ErrorResult rv;
@@ -298,8 +299,9 @@ DOMSVGPointList::InsertItemBefore(nsISVGPoint& aNewItem, uint32_t aIndex,
   }
 
   nsCOMPtr<nsISVGPoint> domItem = &aNewItem;
-  if (domItem->HasOwner() || domItem->IsReadonly()) {
-    domItem = domItem->Clone(); // must do this before changing anything!
+  if (domItem->HasOwner() || domItem->IsReadonly() ||
+      domItem->IsTranslatePoint()) {
+    domItem = domItem->Copy(); // must do this before changing anything!
   }
 
   // Ensure we have enough memory so we can avoid complex error handling below:
@@ -341,8 +343,9 @@ DOMSVGPointList::ReplaceItem(nsISVGPoint& aNewItem, uint32_t aIndex,
   }
 
   nsCOMPtr<nsISVGPoint> domItem = &aNewItem;
-  if (domItem->HasOwner() || domItem->IsReadonly()) {
-    domItem = domItem->Clone(); // must do this before changing anything!
+  if (domItem->HasOwner() || domItem->IsReadonly() ||
+      domItem->IsTranslatePoint()) {
+    domItem = domItem->Copy(); // must do this before changing anything!
   }
 
   AutoChangePointListNotifier notifier(this);

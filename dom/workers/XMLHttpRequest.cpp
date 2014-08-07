@@ -1577,6 +1577,8 @@ XMLHttpRequest::XMLHttpRequest(WorkerPrivate* aWorkerPrivate)
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   SetIsDOMBinding();
+
+  mozilla::HoldJSObjects(this);
 }
 
 XMLHttpRequest::~XMLHttpRequest()
@@ -2364,8 +2366,5 @@ XMLHttpRequest::UpdateState(const StateData& aStateData,
   }
   else {
     mStateData = aStateData;
-  }
-  if (mStateData.mResponse.isGCThing()) {
-    mozilla::HoldJSObjects(this);
   }
 }
