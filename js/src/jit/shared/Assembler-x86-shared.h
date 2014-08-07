@@ -467,6 +467,32 @@ class AssemblerX86Shared : public AssemblerShared
     void movss(FloatRegister src, const BaseIndex &dest) {
         masm.movss_rm(src.code(), dest.offset, dest.base.code(), dest.index.code(), dest.scale);
     }
+    void movdqu(const Operand &src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.movdqu_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_SCALE:
+            masm.movdqu_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+    void movdqu(FloatRegister src, const Operand &dest) {
+        JS_ASSERT(HasSSE2());
+        switch (dest.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.movdqu_rm(src.code(), dest.disp(), dest.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.movdqu_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
     void movdqa(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
