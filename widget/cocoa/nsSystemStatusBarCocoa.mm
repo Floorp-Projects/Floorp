@@ -47,6 +47,8 @@ nsSystemStatusBarCocoa::RemoveItem(nsIDOMElement* aDOMElement)
 nsSystemStatusBarCocoa::StatusItem::StatusItem(nsStandaloneNativeMenu* aMenu)
   : mMenu(aMenu)
 {
+  MOZ_COUNT_CTOR(nsSystemStatusBarCocoa::StatusItem);
+
   NSMenu* nativeMenu = nil;
   mMenu->GetNativeMenu(reinterpret_cast<void**>(&nativeMenu));
 
@@ -67,4 +69,6 @@ nsSystemStatusBarCocoa::StatusItem::~StatusItem()
   [[NSStatusBar systemStatusBar] removeStatusItem:mStatusItem];
   [mStatusItem release];
   mStatusItem = nil;
+
+  MOZ_COUNT_DTOR(nsSystemStatusBarCocoa::StatusItem);
 }

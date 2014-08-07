@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Testing composition, text and query content events"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+</body>
+
+<menupopup id="menuContainer">
+  <menu id="menu1" image="data:image/svg+xml,&lt;svg%20xmlns=&quot;http://www.w3.org/2000/svg&quot;%20width=&quot;32&quot;%20height=&quot;32&quot;>&lt;circle%20cx=&quot;16&quot;%20cy=&quot;16&quot;%20r=&quot;16&quot;/>&lt;/svg>">
+    <menupopup>
+      <menuitem label="Item 1 in menu 1"/>
+      <menuitem label="Item 2 in menu 1"/>
+    </menupopup>
+  </menu>
+  <menu id="menu2" image="data:image/svg+xml,&lt;svg%20xmlns=&quot;http://www.w3.org/2000/svg&quot;%20width=&quot;32&quot;%20height=&quot;32&quot;>&lt;path%20d=&quot;M0 16 L 16 0 L 32 16 L 16 32 Z&quot;/>&lt;/svg>">
+    <menupopup>
+      <menuitem label="Item 1 in menu 2"/>
+      <menuitem label="Item 2 in menu 2"/>
+    </menupopup>
+  </menu>
+</menupopup>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+  let Cc = Components.classes;
+  let Ci = Components.interfaces;
+
+  let systemStatusBar = Cc["@mozilla.org/widget/macsystemstatusbar;1"].getService(Ci.nsISystemStatusBar);
+  ok(systemStatusBar, "should have got an nsISystemStatusBar instance");
+
+  let menu1 = document.getElementById("menu1");
+  let menu2 = document.getElementById("menu2");
+
+  // Add and remove the item, just to get basic leak testing coverage.
+  systemStatusBar.addItem(menu1);
+  systemStatusBar.removeItem(menu1);
+
+  // Make sure that calling addItem twice with the same element doesn't leak.
+  systemStatusBar.addItem(menu2);
+  systemStatusBar.addItem(menu2);
+  systemStatusBar.removeItem(menu2);
+
+]]>
+</script>
+</window>
