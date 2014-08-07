@@ -1819,11 +1819,11 @@
           this._setupLink(linkLabel, action.detailsLink);
 
           this._primaryButton.label = gNavigatorBundle.getString(button1.label);
-          this._primaryButton.accesskey = gNavigatorBundle.getString(button1.accesskey);
+          this._primaryButton.accessKey = gNavigatorBundle.getString(button1.accesskey);
           this._primaryButton.setAttribute("action", button1.action);
 
           this._secondaryButton.label = gNavigatorBundle.getString(button2.label);
-          this._secondaryButton.accesskey = gNavigatorBundle.getString(button2.accesskey);
+          this._secondaryButton.accessKey = gNavigatorBundle.getString(button2.accesskey);
           this._secondaryButton.setAttribute("action", button2.action);
           if (button1.default) {
             this._primaryButton.setAttribute("default", "true");

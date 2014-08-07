@@ -30,6 +30,7 @@ class VideoCaptureModule: public RefCountedModule {
   class DeviceInfo {
    public:
     virtual uint32_t NumberOfDevices() = 0;
+    virtual int32_t Refresh() = 0;
 
     // Returns the available capture devices.
     // deviceNumber   - Index of capture device.

@@ -544,10 +544,16 @@ Entry.prototype = {
   },
 
   _mediaToEnclosures: function Entry_mediaToEnclosures(mediaType, contentType) {
-    var content = this.fields.getPropertyAsInterface(mediaType, Ci.nsIArray);
+    var content;
 
-    if (contentType)
-      content = content.getPropertyAsInterface(contentType, Ci.nsIArray);
+    // If a contentType is specified, the mediaType is a simple propertybag,
+    // and the contentType is an array inside it.
+    if (contentType) {
+      var group = this.fields.getPropertyAsInterface(mediaType, Ci.nsIPropertyBag2);
+      content = group.getPropertyAsInterface(contentType, Ci.nsIArray);
+    } else {
+      content = this.fields.getPropertyAsInterface(mediaType, Ci.nsIArray);
+    }
 
     for (var i = 0; i < content.length; ++i) {
       var contentElement = content.queryElementAt(i, Ci.nsIWritablePropertyBag2);

@@ -1483,6 +1483,10 @@ CssRuleView.prototype = {
 
     // Remove context menu
     if (this._contextmenu) {
+      // Destroy the Add Rule menuitem.
+      this.menuitemAddRule.removeEventListener("command", this._onAddRule);
+      this.menuitemAddRule = null;
+
       // Destroy the Select All menuitem.
       this.menuitemSelectAll.removeEventListener("command", this._onSelectAll);
       this.menuitemSelectAll = null;

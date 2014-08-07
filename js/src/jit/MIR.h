@@ -5699,6 +5699,16 @@ class MRegExpTest
     bool possiblyCalls() const {
         return true;
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        // RegExpTest has a side-effect on the regexp object's lastIndex
+        // when sticky or global flags are set.
+        // Return false unless we are sure it's not the case.
+        if (regexp()->isRegExp())
+            return !regexp()->toRegExp()->source()->needUpdateLastIndex();
+        return false;
+    }
 };
 
 template <class Policy1>
@@ -6625,6 +6635,7 @@ class MLoadElement
             return false;
         return congruentIfOperandsEqual(other);
     }
+    MDefinition *foldsTo(TempAllocator &alloc);
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);
     }
@@ -7422,6 +7433,8 @@ class MLoadFixedSlot
             return false;
         return congruentIfOperandsEqual(ins);
     }
+
+    MDefinition *foldsTo(TempAllocator &alloc);
 
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::FixedSlot);
@@ -8314,6 +8327,9 @@ class MLoadSlot
             return false;
         return congruentIfOperandsEqual(ins);
     }
+
+    MDefinition *foldsTo(TempAllocator &alloc);
+
     AliasSet getAliasSet() const {
         JS_ASSERT(slots()->type() == MIRType_Slots);
         return AliasSet::Load(AliasSet::DynamicSlot);
@@ -10591,6 +10607,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
 
     HashNumber valueHash() const;
     bool congruentTo(const MDefinition *ins) const;
+    MDefinition *foldsTo(TempAllocator &alloc);
 
     AliasSet getAliasSet() const {
         return isConstant_ ? AliasSet::None() : AliasSet::Load(AliasSet::AsmJSGlobalVar);
