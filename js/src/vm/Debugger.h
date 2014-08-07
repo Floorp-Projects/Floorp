@@ -14,14 +14,17 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsweakmap.h"
+#include "jswrapper.h"
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
 #include "vm/GlobalObject.h"
+#include "vm/SavedStacks.h"
 
 namespace js {
 
 class Breakpoint;
+class DebuggerMemory;
 
 /*
  * A weakmap that supports the keys being in different compartments to the
@@ -161,6 +164,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     friend class DebuggerMemory;
     friend class mozilla::LinkedListElement<Debugger>;
     friend bool (::JS_DefineDebuggerObject)(JSContext *cx, JS::HandleObject obj);
+    friend bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
 
   public:
     enum Hook {
@@ -190,8 +194,24 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     GlobalObjectSet debuggees;          /* Debuggee globals. Cross-compartment weak references. */
     js::HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
     bool enabled;
-    bool trackingAllocationSites;
     JSCList breakpoints;                /* Circular list of all js::Breakpoints in this debugger */
+
+    struct AllocationSite : public mozilla::LinkedListElement<AllocationSite>
+    {
+        AllocationSite(HandleObject frame) : frame(frame) {
+            JS_ASSERT(UncheckedUnwrap(frame)->is<SavedFrame>());
+        };
+        RelocatablePtrObject frame;
+    };
+    typedef mozilla::LinkedList<AllocationSite> AllocationSiteList;
+
+    bool trackingAllocationSites;
+    AllocationSiteList allocationsLog;
+    size_t allocationsLogLength;
+    size_t maxAllocationsLogLength;
+    static const size_t DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH = 5000;
+    bool appendAllocationSite(JSContext *cx, HandleSavedFrame frame);
+    void emptyAllocationsLog();
 
     /*
      * If this Debugger is enabled, and has a onNewGlobalObject handler, then
@@ -359,6 +379,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void slowPathOnNewScript(JSContext *cx, HandleScript script,
                                     GlobalObject *compileAndGoGlobal);
     static void slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
+    static bool slowPathOnLogAllocationSite(JSContext *cx, HandleSavedFrame frame,
+                                            GlobalObject::DebuggerVector &dbgs);
     static JSTrapStatus dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which);
 
     JSTrapStatus fireDebuggerStatement(JSContext *cx, MutableHandleValue vp);
@@ -408,6 +430,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline Debugger *fromJSObject(JSObject *obj);
     static Debugger *fromChildJSObject(JSObject *obj);
 
+    bool hasMemory() const;
+    DebuggerMemory &memory() const;
+
     /*********************************** Methods for interaction with the GC. */
 
     /*
@@ -441,6 +466,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline void onNewScript(JSContext *cx, HandleScript script,
                                    GlobalObject *compileAndGoGlobal);
     static inline void onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
+    static inline bool onLogAllocationSite(JSContext *cx, HandleSavedFrame frame);
     static JSTrapStatus onTrap(JSContext *cx, MutableHandleValue vp);
     static JSTrapStatus onSingleStep(JSContext *cx, MutableHandleValue vp);
     static bool handleBaselineOsr(JSContext *cx, InterpreterFrame *from, jit::BaselineFrame *to);
@@ -756,6 +782,15 @@ Debugger::onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 #endif
     if (!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers))
         Debugger::slowPathOnNewGlobalObject(cx, global);
+}
+
+bool
+Debugger::onLogAllocationSite(JSContext *cx, HandleSavedFrame frame)
+{
+    GlobalObject::DebuggerVector *dbgs = frame->global().getDebuggers();
+    if (!dbgs || dbgs->empty())
+        return true;
+    return Debugger::slowPathOnLogAllocationSite(cx, frame, *dbgs);
 }
 
 extern bool

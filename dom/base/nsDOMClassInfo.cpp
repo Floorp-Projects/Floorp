@@ -1741,6 +1741,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
                     JS::Handle<JSObject*> obj, const JS::CallArgs &args)
 {
   MOZ_ASSERT(obj);
+  MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
   nsresult rv;
   nsCOMPtr<nsISupports> native;
@@ -1792,9 +1793,6 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       if (!thisObject) {
         return NS_ERROR_UNEXPECTED;
       }
-
-      nsCxPusher pusher;
-      pusher.Push(cx);
 
       JSAutoCompartment ac(cx, thisObject);
 
