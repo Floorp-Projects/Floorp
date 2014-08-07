@@ -1360,16 +1360,20 @@ TokenStream::getTokenInternal(Modifier modifier)
         } else if (JS7_ISDEC(c)) {
             radix = 8;
             numStart = userbuf.addressOfNextRawChar() - 1;  // one past the '0'
-
-            // Octal integer literals are not permitted in strict mode code.
-            if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
-                goto error;
-
             while (JS7_ISDEC(c)) {
-                // Even in sloppy mode, 08 or 09 is a syntax error.
-                if (c >= '8') {
-                    reportError(JSMSG_BAD_OCTAL, c == '8' ? "8" : "9");
+                // Octal integer literals are not permitted in strict mode code.
+                if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
                     goto error;
+
+                // Outside strict mode, we permit 08 and 09 as decimal numbers,
+                // which makes our behaviour a superset of the ECMA numeric
+                // grammar. We might not always be so permissive, so we warn
+                // about it.
+                if (c >= '8') {
+                    if (!reportWarning(JSMSG_BAD_OCTAL, c == '8' ? "08" : "09")) {
+                        goto error;
+                    }
+                    goto decimal;   // use the decimal scanner for the rest of the number
                 }
                 c = getCharIgnoreEOL();
             }
