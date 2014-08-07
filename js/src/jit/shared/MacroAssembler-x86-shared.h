@@ -466,6 +466,16 @@ class MacroAssemblerX86Shared : public Assembler
     void convertDoubleToFloat32(FloatRegister src, FloatRegister dest) {
         cvtsd2ss(src, dest);
     }
+
+    void loadAlignedInt32x4(const Address &src, FloatRegister dest) {
+        movdqa(Operand(src), dest);
+    }
+    void storeAlignedInt32x4(FloatRegister src, const Address &dest) {
+        movdqa(src, Operand(dest));
+    }
+    void moveAlignedInt32x4(FloatRegister src, FloatRegister dest) {
+        movdqa(src, dest);
+    }
     void moveFloatAsDouble(Register src, FloatRegister dest) {
         movd(src, dest);
         cvtss2sd(dest, dest);
