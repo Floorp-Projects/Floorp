@@ -1144,6 +1144,33 @@ TestArray.addTest(
 );
 
 // -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Import raw PBKDF2 key and derive a new key using HMAC-SHA-1 with custom length",
+  function() {
+    var that = this;
+
+    function doDerive(x) {
+      var alg = {
+        name: "PBKDF2",
+        hash: "SHA-1",
+        salt: tv.pbkdf2_sha1.salt,
+        iterations: tv.pbkdf2_sha1.iterations
+      };
+
+      var algDerived = {name: "HMAC", hash: "SHA-1", length: 128};
+      return crypto.subtle.deriveKey(alg, x, algDerived, false, ["sign"]);
+    }
+
+    var password = crypto.getRandomValues(new Uint8Array(8));
+    crypto.subtle.importKey("raw", password, "PBKDF2", false, ["deriveKey"])
+      .then(doDerive)
+      .then(complete(that, function (x) {
+        return hasKeyFields(x) && x.algorithm.length == 128;
+      }), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
 /*TestArray.addTest(
   "Import raw PBKDF2 key and derive bits using HMAC-SHA-256",
   function() {
