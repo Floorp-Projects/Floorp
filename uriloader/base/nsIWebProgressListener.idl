@@ -17,7 +17,7 @@ interface nsIURI;
  * nsIWebProgress instances.  nsIWebProgress.idl describes the parent-child
  * relationship of nsIWebProgress instances.
  */
-[scriptable, uuid(a0cda7e4-c6ca-11e0-b6a5-001320257da5)]
+[scriptable, uuid(a9df523b-efe2-421e-9d8e-3d7f807dda4c)]
 interface nsIWebProgressListener : nsISupports
 {
   /**
@@ -198,6 +198,21 @@ interface nsIWebProgressListener : nsISupports
    */
   const unsigned long STATE_BLOCKED_MIXED_DISPLAY_CONTENT = 0x00000100;
   const unsigned long STATE_LOADED_MIXED_DISPLAY_CONTENT  = 0x00000200;
+
+   /**
+   * Tracking content flags
+   *
+   * May be set in addition to the State security Flags, to indicate that
+   * tracking content has been encountered.
+   *
+   * STATE_BLOCKED_TRACKING_CONTENT
+   *   Tracking content has been blocked from loading.
+   *
+   * STATE_LOADED_TRACKING_CONTENT
+   *   Tracking content has been loaded.
+   */
+  const unsigned long STATE_BLOCKED_TRACKING_CONTENT = 0x00001000;
+  const unsigned long STATE_LOADED_TRACKING_CONTENT  = 0x00002000;
 
   /**
    * Security Strength Flags
