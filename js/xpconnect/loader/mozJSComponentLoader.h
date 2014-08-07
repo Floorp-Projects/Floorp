@@ -21,7 +21,6 @@
 #include "xpcIJSGetFactory.h"
 
 class nsIFile;
-class nsIJSRuntimeService;
 class nsIPrincipal;
 class nsIXPConnectJSObjectHolder;
 class ComponentLoaderInfo;
@@ -82,11 +81,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                         JS::MutableHandleObject vp);
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
-    nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     nsCOMPtr<nsIXPConnectJSObjectHolder> mLoaderGlobal;
-    JSRuntime *mRuntime;
-    JSContext *mContext;
 
     class ModuleEntry : public mozilla::Module
     {
