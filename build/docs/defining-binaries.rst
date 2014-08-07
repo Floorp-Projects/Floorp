@@ -68,7 +68,7 @@ Note that currently, the build system may not create an actual library for
 static libraries. It is an implementation detail that shouldn't need to be
 worried about.
 
-As a special rule, USE_LIBS is allowed to contain references to shared
+As a special rule, ``USE_LIBS`` is allowed to contain references to shared
 libraries. In such cases, programs and shared libraries linking this static
 library will inherit those shared library dependencies.
 
@@ -183,6 +183,27 @@ assign ``LIBS`` variables from ``CONFIG``, such as:
 
 Like ``USE_LIBS``, this variable applies to static and shared libraries, as
 well as programs.
+
+
+Libraries from third party build system
+=======================================
+
+Some libraries in the tree are not built by the moz.build-governed build
+system, and there is no ``LIBRARY_NAME`` corresponding to them.
+
+However, ``USE_LIBS`` allows to reference such libraries by giving a full
+path (like when disambiguating identical ``LIBRARY_NAME``). The same naming
+rules apply as other uses of ``USE_LIBS``, so only the library name without
+prefix and suffix shall be given.
+
+   USE_LIBS += [
+       '/path/from/topsrcdir/to/third-party/bar',
+       '../relative/third-party/baz',
+   ]
+
+Note that ``/path/from/topsrcdir/to/third-party`` and
+``../relative/third-party/baz`` must lead under a subconfigured directory (a
+directory with an AC_OUTPUT_SUBDIRS in configure.in), or ``security/nss``.
 
 
 Building both static and shared libraries

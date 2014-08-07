@@ -565,7 +565,7 @@ everything::
 	$(MAKE) clean
 	$(MAKE) all
 
-STATIC_LIBS_DEPS := $(addsuffix .$(LIBS_DESC_SUFFIX),$(STATIC_LIBS))
+STATIC_LIBS_DEPS := $(wildcard $(addsuffix .$(LIBS_DESC_SUFFIX),$(STATIC_LIBS)))
 
 # Dependencies which, if modified, should cause everything to rebuild
 GLOBAL_DEPS += Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk
