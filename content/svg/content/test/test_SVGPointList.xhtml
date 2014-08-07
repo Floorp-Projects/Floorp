@@ -14,6 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=629200
 <div id="content" style="display:none;">
 <svg id="svg" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
   <polyline id="polyline" points="50,375 150,380"/>
+  <polyline id="polyline2" points="10,20"/>
 </svg>
 </div>
 <pre id="test">
@@ -62,6 +63,60 @@ function run_tests()
   polyline.removeAttribute("points");
   polyline.removeAttributeNS(null, "points");
   eventChecker.finish();
+
+  // Test that the addition of an owned SVGPoint to an SVGPointList creates a
+  // copy of the SVGPoint
+  var polyline2 = document.getElementById("polyline2");
+  var subtests = [
+    function initialize(aItem) {
+      polyline.removeAttribute("points");
+      return points.initialize(aItem);
+    },
+    function insertItemBefore(aItem) {
+      polyline.removeAttribute("points");
+      return points.insertItemBefore(aItem, 0);
+    },
+    function replaceItem(aItem) {
+      polyline.setAttribute("points", "10,20");
+      return points.replaceItem(aItem, 0);
+    },
+    function appendItem(aItem) {
+      polyline.removeAttribute("points");
+      return points.appendItem(aItem);
+    }
+  ];
+  subtests.forEach(function(aFunction) {
+    // -- Adding SVGSVGElement.currentTranslate, which is the only instance
+    //    of an owned, single SVGPoint
+    var svg = document.getElementById("svg");
+    var name = aFunction.name;
+    var existingItem = svg.currentTranslate;
+    var newItem = aFunction(existingItem);
+    is(newItem, points.getItem(0), name + " return value is correct when passed currentTranslate");
+    isnot(newItem, existingItem, name + " made a copy when passed currentTranslate");
+    is(newItem.value, existingItem.value, name + " made a copy with the right values when passed currentTranslate");
+    todo(svg.currentTranslate == existingItem, name + " left the original object alone when passed currentTranslate");
+  });
+  subtests.forEach(function(aFunction) {
+    // -- Adding an SVGPoint that is in a baseVal list
+    var name = aFunction.name;
+    var existingItem = polyline2.points.getItem(0);
+    var newItem = aFunction(existingItem);
+    is(newItem, points.getItem(0), name + " return value is correct when passed a baseVal list item");
+    isnot(newItem, existingItem, name + " made a copy when passed a baseVal list item");
+    is(newItem.value, existingItem.value, name + " made a copy with the right values when passed a baseVal list item");
+    is(polyline2.points.getItem(0), existingItem, name + " left the original object alone when passed a baseVal list item");
+  });
+  subtests.forEach(function(aFunction) {
+    // -- Adding an SVGPoint that is in a animVal list
+    var name = aFunction.name;
+    var existingItem = polyline2.animatedPoints.getItem(0);
+    var newItem = aFunction(existingItem);
+    is(newItem, points.getItem(0), name + " return value is correct when passed a animVal list item");
+    isnot(newItem, existingItem, name + " made a copy when passed a animVal list item");
+    is(newItem.value, existingItem.value, name + " made a copy with the right values when passed a animVal list item");
+    is(polyline2.animatedPoints.getItem(0), existingItem, name + " left the original object alone when passed a animVal list item");
+  });
 
   SimpleTest.finish();
 }
