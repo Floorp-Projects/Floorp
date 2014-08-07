@@ -150,6 +150,7 @@ static const bool StackKeptAligned = true;
 // here such that it is accessible from the entire codebase. Once full support
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
 static const bool SupportsSimd = false;
+static const uint32_t SimdStackAlignment = 8;
 
 static const Scale ScalePointer = TimesFour;
 

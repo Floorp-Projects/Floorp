@@ -30,11 +30,43 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOpti
     cancelBuild_(false),
     maxAsmJSStackArgBytes_(0),
     performsCall_(false),
-    needsInitialStackAlignment_(false),
+    usesSimd_(false),
+    usesSimdCached_(false),
     minAsmJSHeapLength_(AsmJSAllocationGranularity),
     modifiesFrameArguments_(false),
     options(options)
 { }
+
+bool
+MIRGenerator::usesSimd()
+{
+    if (usesSimdCached_)
+        return usesSimd_;
+
+    usesSimdCached_ = true;
+    for (ReversePostorderIterator block = graph_->rpoBegin(),
+                                  end   = graph_->rpoEnd();
+         block != end;
+         block++)
+    {
+        // It's fine to use MInstructionIterator here because we don't have to
+        // worry about Phis, since any reachable phi (or phi cycle) will have at
+        // least one instruction as an input.
+        for (MInstructionIterator inst = block->begin(); inst != block->end(); inst++) {
+            // Instructions that have SIMD inputs but not a SIMD type are fine
+            // to ignore, as their inputs are also reached at some point. By
+            // induction, at least one instruction with a SIMD type is reached
+            // at some point.
+            if (IsSimdType(inst->type())) {
+                JS_ASSERT(SupportsSimd);
+                usesSimd_ = true;
+                return true;
+            }
+        }
+    }
+    usesSimd_ = false;
+    return false;
+}
 
 bool
 MIRGenerator::abortFmt(const char *message, va_list ap)
