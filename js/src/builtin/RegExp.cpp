@@ -560,7 +560,7 @@ js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
             return RegExpRunStatus_Error;
 
         /* Inlined steps 6, 7, 9a with doubles to detect failure case. */
-        if ((re->global() || re->sticky()) && (d < 0 || d > length)) {
+        if (reobj->needUpdateLastIndex() && (d < 0 || d > length)) {
             reobj->zeroLastIndex();
             return RegExpRunStatus_Success_NotFound;
         }
@@ -587,7 +587,7 @@ js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
     /* Steps 9a and 11 (with sticky extension). */
     if (status == RegExpRunStatus_Success_NotFound)
         reobj->zeroLastIndex();
-    else if (re->global() || re->sticky())
+    else if (reobj->needUpdateLastIndex())
         reobj->setLastIndex(lastIndexInt);
 
     return status;
