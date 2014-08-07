@@ -304,6 +304,13 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
   if (docShell->GetHasMixedDisplayContentBlocked())
     *aState |= nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT;
 
+  // Has Tracking Content been Blocked?
+  if (docShell->GetHasTrackingContentBlocked())
+    *aState |= nsIWebProgressListener::STATE_BLOCKED_TRACKING_CONTENT;
+
+  if (docShell->GetHasTrackingContentLoaded())
+    *aState |= nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT;
+
   return NS_OK;
 }
 
