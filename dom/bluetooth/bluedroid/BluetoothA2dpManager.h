@@ -52,7 +52,7 @@ public:
   void UpdatePlayStatus(uint32_t aDuration,
                         uint32_t aPosition,
                         ControlPlayStatus aPlayStatus);
-  void UpdateRegisterNotification(int aEventId, int aParam);
+  void UpdateRegisterNotification(BluetoothAvrcpEvent aEvent, uint32_t aParam);
   void GetAlbum(nsAString& aAlbum);
   uint32_t GetDuration();
   ControlPlayStatus GetPlayStatus();
@@ -105,9 +105,9 @@ private:
    * mPlayPosChangedNotifType represents current RegisterNotification
    * notification type.
    */
-  int mPlayStatusChangedNotifyType;
-  int mTrackChangedNotifyType;
-  int mPlayPosChangedNotifyType;
+  BluetoothAvrcpNotification mPlayStatusChangedNotifyType;
+  BluetoothAvrcpNotification mTrackChangedNotifyType;
+  BluetoothAvrcpNotification mPlayPosChangedNotifyType;
 };
 
 END_BLUETOOTH_NAMESPACE
