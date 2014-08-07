@@ -405,6 +405,9 @@ describe("loop.shared.views", function() {
     var comp, fakeFeedbackApiClient;
 
     beforeEach(function() {
+      sandbox.stub(l10n, "get", function(x) {
+        return x;
+      });
       fakeFeedbackApiClient = {send: sandbox.stub()};
       comp = TestUtils.renderIntoDocument(sharedViews.FeedbackView({
         feedbackApiClient: fakeFeedbackApiClient
@@ -476,7 +479,39 @@ describe("loop.shared.views", function() {
                      .querySelector("form button").disabled).eql(true);
         });
 
-      it("should enable the form submit button once a choice is made",
+      it("should disable the form submit button when the 'other' category is " +
+         "chosen but no description has been entered yet",
+        function() {
+          clickSadFace(comp);
+          fillSadFeedbackForm(comp, "other");
+
+          expect(comp.getDOMNode()
+                     .querySelector("form button").disabled).eql(true);
+        });
+
+      it("should enable the form submit button when the 'other' category is " +
+         "chosen and a description is entered",
+        function() {
+          clickSadFace(comp);
+          fillSadFeedbackForm(comp, "other", "fake");
+
+          expect(comp.getDOMNode()
+                     .querySelector("form button").disabled).eql(false);
+        });
+
+      it("should empty the description field when a predefined category is " +
+         "chosen",
+        function() {
+          clickSadFace(comp);
+
+          fillSadFeedbackForm(comp, "confusing");
+
+          expect(comp.getDOMNode()
+                     .querySelector("form input[type='text']").value).eql("");
+        });
+
+      it("should enable the form submit button once a predefined category is " +
+         "chosen",
         function() {
           clickSadFace(comp);
 
