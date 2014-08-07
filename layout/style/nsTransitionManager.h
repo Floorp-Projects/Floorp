@@ -67,6 +67,7 @@ class nsTransitionManager MOZ_FINAL
 public:
   nsTransitionManager(nsPresContext *aPresContext)
     : mozilla::css::CommonAnimationManager(aPresContext)
+    , mInAnimationOnlyStyleUpdate(false)
   {
   }
 
@@ -116,6 +117,10 @@ public:
     StyleContextChanged(mozilla::dom::Element *aElement,
                         nsStyleContext *aOldStyleContext,
                         nsStyleContext *aNewStyleContext);
+
+  void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
+    mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;
+  }
 
   // nsIStyleRuleProcessor (parts)
   virtual void RulesMatching(ElementRuleProcessorData* aData) MOZ_OVERRIDE;
@@ -184,6 +189,8 @@ private:
                                        nsStyleContext* aParentStyle,
                                        nsStyleChangeList &aChangeList);
   void UpdateAllThrottledStylesInternal();
+
+  bool mInAnimationOnlyStyleUpdate;
 };
 
 #endif /* !defined(nsTransitionManager_h_) */
