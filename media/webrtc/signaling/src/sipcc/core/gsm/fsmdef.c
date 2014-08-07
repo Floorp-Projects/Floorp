@@ -1319,8 +1319,6 @@ fsmdef_init_dcb (fsmdef_dcb_t *dcb, callid_t call_id,
 
     dcb->digest_alg[0] = '\0';
     dcb->digest[0] = '\0';
-
-    sll_lite_init(&dcb->candidate_list);
 }
 
 
@@ -1369,9 +1367,6 @@ fsmdef_free_dcb (fsmdef_dcb_t *dcb)
 
     /* clean media list */
     gsmsdp_clean_media_list(dcb);
-
-    /* clean candidate list */
-    gsmsdp_clean_candidate_list(dcb);
 
     gsmsdp_free(dcb);
 
@@ -3200,9 +3195,6 @@ fsmdef_ev_createoffer (sm_event_t *event) {
         return (SM_RC_END);
     }
 
-    /* clean candidate list, since we are about to return the candidates */
-    gsmsdp_clean_candidate_list(dcb);
-
     dcb->inbound = FALSE;
 
     if (msg->data.session.options) {
@@ -3363,9 +3355,6 @@ fsmdef_ev_createanswer (sm_event_t *event) {
         free(local_sdp);
         return (SM_RC_END);
     }
-
-    /* clean candidate list, since we are about to return the candidates */
-    gsmsdp_clean_candidate_list(dcb);
 
     dcb->inbound = TRUE;
 
@@ -3633,21 +3622,6 @@ fsmdef_ev_setlocaldesc(sm_event_t *event) {
     ui_set_local_description(evSetLocalDescSuccess, fcb->state, msg->line,
         msg->call_id, dcb->caller_id.call_instance_id,
         strlib_malloc(local_sdp,-1), msg->timecard, PC_NO_ERROR, NULL);
-
-    /* If we have pending candidates flush them too */
-    while (TRUE) {
-        /* unlink head and free the media */
-        candidate = (fsmdef_candidate_t *)sll_lite_unlink_head(&dcb->candidate_list);
-        if (candidate) {
-            ui_ice_candidate_found(evFoundIceCandidate, fcb->state, line, call_id,
-                                   dcb->caller_id.call_instance_id, strlib_malloc(local_sdp,-1),
-                                   candidate->candidate, /* Transfer ownership */
-                                   NULL, PC_NO_ERROR, NULL);
-            free(candidate);
-        } else {
-            break;
-        }
-    }
 
     free(local_sdp);
     return (SM_RC_END);
@@ -4234,44 +4208,11 @@ fsmdef_ev_foundcandidate(sm_event_t *event) {
         return (SM_RC_END);
     }
 
-    /* Distinguish between the following three cases:
-
-       1. CreateOffer() has been called but SetLocalDesc() has not.
-       2. We are mid-call.
-       3. We have a remote offer and CreateAnswer() has been called
-          but SetLocalDesc() has not
-
-       The first two of these are in state STABLE but only in
-       the second do pass up trickle candidates. In the other
-       two we buffer them and send them later.
-    */
     /* Smuggle the entire candidate structure in a string */
     PR_snprintf(candidate_tmp, sizeof(candidate_tmp), "%d\t%s\t%s",
                 msg->data.candidate.level,
                 (char *)msg->data.candidate.mid,
                 (char *)msg->data.candidate.candidate);
-
-    if ((fcb->state == FSMDEF_S_STABLE && !dcb->sdp->dest_sdp)
-        || fcb->state == FSMDEF_S_HAVE_REMOTE_OFFER) {
-        fsmdef_candidate_t *buffered_cand = NULL;
-
-        FSM_DEBUG_SM(DEB_F_PREFIX"dcb->sdp->dest_sdp is null."
-                     "assuming CreateOffer called but not SetLocal...\n",
-                     DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
-
-        buffered_cand = (fsmdef_candidate_t *)cpr_malloc(sizeof(fsmdef_candidate_t));
-        if (!buffered_cand)
-            return SM_RC_END;
-
-        buffered_cand->candidate = strlib_malloc(candidate_tmp, -1);
-
-        if (sll_lite_link_head(&dcb->candidate_list,
-                               (sll_lite_node_t *)buffered_cand) != SLL_LITE_RET_SUCCESS)
-            return SM_RC_END;
-
-        /* Don't notify upward */
-        return SM_RC_END;
-    }
 
     ui_ice_candidate_found(evFoundIceCandidate, fcb->state, line, call_id,
         dcb->caller_id.call_instance_id, strlib_malloc(local_sdp,-1),

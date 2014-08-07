@@ -545,6 +545,16 @@ public:
   // is called to start the list over.
   void ClearSdpParseErrorMessages();
 
+  void StartTrickle();
+
+  // Called by VcmSIPCCBinding::vcmRxAllocICE; this is how sipcc tells us about
+  // each m-line it has put in the sdp.
+  void OnNewMline(uint16_t level) {
+    if (level > mNumMlines) {
+      mNumMlines = level;
+    }
+  }
+
   void OnAddIceCandidateError() {
     ++mAddCandidateErrorCount;
   }
@@ -620,6 +630,10 @@ private:
   nsresult IceGatheringStateChange_m(
       mozilla::dom::PCImplIceGatheringState aState);
 
+  void CandidateReady_s(const std::string& candidate, uint16_t level);
+  nsresult CandidateReady_m(const std::string& candidate, uint16_t level);
+  void SendEndOfCandidates();
+
   NS_IMETHOD FingerprintSplitHelper(
       std::string& fingerprint, size_t& spaceIdx) const;
 
@@ -673,6 +687,9 @@ private:
   std::string mLocalSDP;
   std::string mRemoteSDP;
 
+  // Holding tank for trickle candidates that arrive before setLocal is done.
+  std::vector<std::pair<std::string, uint16_t>> mCandidateBuffer;
+
   // DTLS fingerprint
   std::string mFingerprint;
   std::string mRemoteFingerprint;
@@ -723,6 +740,8 @@ private:
   int mNumVideoStreams;
 
   bool mHaveDataStream;
+
+  uint16_t mNumMlines;
 
   // Holder for error messages from parsing SDP
   std::vector<std::string> mSDPParseErrorMessages;
