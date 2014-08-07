@@ -192,8 +192,9 @@ let LEGACY = {
             self.updateThreadByMessageChange(aMessageStore,
                                              aThreadStore,
                                              oldMessageRecord.threadId,
-                                             aMessageRecord.id,
-                                             oldMessageRecord.read);
+                                             [aMessageRecord.id],
+                                             oldMessageRecord.read ? 0 : 1,
+                                             null);
           }
         };
       };
