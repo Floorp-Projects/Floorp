@@ -126,10 +126,6 @@ def separate_debug_file_for(file):
         # type (3), and the name "GNU\0".
         note_header = buildid[0:16]
         buildid = buildid[16:]
-        #print word32(note_header[0:4])
-        #print word32(note_header[4:8])
-        #print len(buildid)
-        #print word32(note_header[8:12])
         if word32(note_header[0:4]) != 4 or \
            word32(note_header[4:8]) != len(buildid) or \
            word32(note_header[8:12]) != 3 or \
@@ -236,10 +232,8 @@ def fixSymbols(line):
         # before allows preservation of balance trees
         # after allows preservation of counts
         (before, file, address, after) = result.groups()
-        #address = int(address, 16)
 
         if os.path.exists(file) and os.path.isfile(file):
-            #address += address_adjustment(file)
             (name, fileline) = addressToSymbol(file, address)
             info = "%s (%s)" % (name, fileline)
 
