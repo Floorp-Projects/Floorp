@@ -224,9 +224,10 @@ struct TileClient
   * internal buffer (and so will always be locked).
   */
   TextureClient* GetBackBuffer(const nsIntRegion& aDirtyRegion,
-                               TextureClientPool *aPool,
+                               gfxContentType aContent, SurfaceMode aMode,
                                bool *aCreatedTextureClient,
-                               bool aCanRerasterizeValidRegion);
+                               bool aCanRerasterizeValidRegion,
+                               RefPtr<TextureClient>* aTextureClientOnWhite);
 
   void DiscardFrontBuffer();
 
@@ -247,7 +248,9 @@ struct TileClient
       PrivateProtector& operator=(const PrivateProtector &);
       RefPtr<TextureClient> mBuffer;
   } mBackBuffer;
+  RefPtr<TextureClient> mBackBufferOnWhite;
   RefPtr<TextureClient> mFrontBuffer;
+  RefPtr<TextureClient> mFrontBufferOnWhite;
   RefPtr<gfxSharedReadLock> mBackLock;
   RefPtr<gfxSharedReadLock> mFrontLock;
   RefPtr<ClientLayerManager> mManager;
@@ -383,7 +386,8 @@ public:
     : mThebesLayer(nullptr)
     , mCompositableClient(nullptr)
     , mManager(nullptr)
-    , mLastPaintOpaque(false)
+    , mLastPaintContentType(gfxContentType::COLOR)
+    , mLastPaintSurfaceMode(SurfaceMode::SURFACE_OPAQUE)
     , mSharedFrameMetricsHelper(nullptr)
   {}
 
@@ -441,14 +445,15 @@ protected:
   TileClient GetPlaceholderTile() const { return TileClient(); }
 
 private:
-  gfxContentType GetContentType() const;
+  gfxContentType GetContentType(SurfaceMode* aMode = nullptr) const;
   ClientTiledThebesLayer* mThebesLayer;
   CompositableClient* mCompositableClient;
   ClientLayerManager* mManager;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
   CSSToParentLayerScale mFrameResolution;
-  bool mLastPaintOpaque;
+  gfxContentType mLastPaintContentType;
+  SurfaceMode mLastPaintSurfaceMode;
 
   // The DrawTarget we use when UseSinglePaintBuffer() above is true.
   RefPtr<gfx::DrawTarget>       mSinglePaintDrawTarget;

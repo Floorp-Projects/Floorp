@@ -3430,7 +3430,6 @@ status_t MPEG4Source::fragmentedRead(
 
         if (mCurrentSampleIndex >= mCurrentSamples.size()) {
             // move to next fragment
-            Sample lastSample = mCurrentSamples[mCurrentSamples.size() - 1];
             off64_t nextMoof = mNextMoofOffset; // lastSample.offset + lastSample.size;
 
             // If we're pointing to a sidx box then we skip it.
