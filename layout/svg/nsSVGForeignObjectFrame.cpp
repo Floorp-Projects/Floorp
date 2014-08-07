@@ -280,7 +280,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
 }
 
 nsIFrame*
-nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
+nsSVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint)
 {
   NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
                (mState & NS_FRAME_IS_NONDISPLAY),
@@ -298,29 +298,18 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
   static_cast<nsSVGElement*>(mContent)->
     GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
-  gfxMatrix tm = GetCanvasTM(FOR_HIT_TESTING);
-  if (!tm.Invert()) {
+  if (!gfxRect(x, y, width, height).Contains(aPoint) ||
+      !nsSVGUtils::HitTestClip(this, aPoint)) {
     return nullptr;
   }
 
-  // Convert aPoint from app units in canvas space to user space:
+  // Convert the point to app units relative to the top-left corner of the
+  // viewport that's established by the foreignObject element:
 
-  gfxPoint pt = gfxPoint(aPoint.x, aPoint.y) / PresContext()->AppUnitsPerCSSPixel();
-  pt = tm.Transform(pt);
-
-  if (!gfxRect(0.0f, 0.0f, width, height).Contains(pt))
-    return nullptr;
-
-  // Convert pt to app units in *local* space:
-
-  pt = pt * nsPresContext::AppUnitsPerCSSPixel();
+  gfxPoint pt = (aPoint + gfxPoint(x, y)) * nsPresContext::AppUnitsPerCSSPixel();
   nsPoint point = nsPoint(NSToIntRound(pt.x), NSToIntRound(pt.y));
 
-  nsIFrame *frame = nsLayoutUtils::GetFrameForPoint(kid, point);
-  if (frame && nsSVGUtils::HitTestClip(this, aPoint))
-    return frame;
-
-  return nullptr;
+  return nsLayoutUtils::GetFrameForPoint(kid, point);
 }
 
 nsRect
@@ -497,9 +486,6 @@ nsSVGForeignObjectFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
   if (!(GetStateBits() & NS_FRAME_IS_NONDISPLAY) && !aTransformRoot) {
     if (aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) {
       return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
-    }
-    if (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled()) {
-      return gfxMatrix();
     }
   }
   if (!mCanvasTM) {
