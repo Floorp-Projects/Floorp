@@ -136,6 +136,11 @@ public:
     AddWatchers(WRITE_WATCHER, false);
   }
 
+  SocketConsumerBase* GetConsumer()
+  {
+    return mConsumer.get();
+  }
+
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
    * directly from main thread. All non-main-thread accesses should happen with
@@ -196,48 +201,6 @@ public:
 
 private:
   T* mInstance;
-};
-
-class OnSocketEventRunnable : public SocketIORunnable<DroidSocketImpl>
-{
-public:
-  enum SocketEvent {
-    CONNECT_SUCCESS,
-    CONNECT_ERROR,
-    DISCONNECT
-  };
-
-  OnSocketEventRunnable(DroidSocketImpl* aImpl, SocketEvent e)
-  : SocketIORunnable<DroidSocketImpl>(aImpl)
-  , mEvent(e)
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-  }
-
-  NS_IMETHOD Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    DroidSocketImpl* impl = GetIO();
-
-    if (impl->IsShutdownOnMainThread()) {
-      NS_WARNING("CloseSocket has already been called!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-    if (mEvent == CONNECT_SUCCESS) {
-      impl->mConsumer->NotifySuccess();
-    } else if (mEvent == CONNECT_ERROR) {
-      impl->mConsumer->NotifyError();
-    } else if (mEvent == DISCONNECT) {
-      impl->mConsumer->NotifyDisconnect();
-    }
-    return NS_OK;
-  }
-
-private:
-  SocketEvent mEvent;
 };
 
 class RequestClosingSocketTask : public SocketIORunnable<DroidSocketImpl>
@@ -483,8 +446,9 @@ DroidSocketImpl::Accept(int aFd)
   SetFd(aFd);
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
-  nsRefPtr<OnSocketEventRunnable> r =
-    new OnSocketEventRunnable(this, OnSocketEventRunnable::CONNECT_SUCCESS);
+  nsRefPtr<nsRunnable> r =
+    new SocketIOEventRunnable<DroidSocketImpl>(
+      this, SocketIOEventRunnable<DroidSocketImpl>::CONNECT_SUCCESS);
   NS_DispatchToMainThread(r);
 
   AddWatchers(READ_WATCHER, true);
@@ -710,8 +674,9 @@ DroidSocketImpl::OnSocketCanConnectWithoutBlocking(int aFd)
 
   mConnectionStatus = SOCKET_IS_CONNECTED;
 
-  nsRefPtr<OnSocketEventRunnable> r =
-    new OnSocketEventRunnable(this, OnSocketEventRunnable::CONNECT_SUCCESS);
+  nsRefPtr<nsRunnable> r =
+    new SocketIOEventRunnable<DroidSocketImpl>(
+      this, SocketIOEventRunnable<DroidSocketImpl>::CONNECT_SUCCESS);
   NS_DispatchToMainThread(r);
 
   AddWatchers(READ_WATCHER, true);
