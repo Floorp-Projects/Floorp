@@ -84,7 +84,7 @@ AsmJSFrameIterator::settle()
       case AsmJSModule::CodeRange::Interrupt:
       case AsmJSModule::CodeRange::Inline:
       case AsmJSModule::CodeRange::Thunk:
-        MOZ_ASSUME_UNREACHABLE("Should not encounter an exit during iteration");
+        MOZ_CRASH("Should not encounter an exit during iteration");
     }
 }
 
@@ -659,7 +659,7 @@ BuiltinToName(AsmJSExit::BuiltinKind builtin)
       case AsmJSExit::Builtin_ATan2D:    return "Math.atan2 (in asm.js)";
       case AsmJSExit::Builtin_Limit:     break;
     }
-    MOZ_ASSUME_UNREACHABLE("Bad builtin kind");
+    MOZ_CRASH("Bad builtin kind");
 }
 
 const char *
@@ -700,6 +700,6 @@ AsmJSProfilingFrameIterator::label() const
       case AsmJSModule::CodeRange::Thunk:     return BuiltinToName(codeRange->thunkTarget());
     }
 
-    MOZ_ASSUME_UNREACHABLE("Bad exit kind");
+    MOZ_CRASH("Bad exit kind");
 }
 
