@@ -219,7 +219,7 @@ button[type="menu"] > .button-box > .button-menu-dropmarker {
   height: 16px;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown.png");
+  list-style-image: url("chrome://browser/skin/in-content/dropdown.png");
 }
 
 .help-button {
@@ -252,14 +252,14 @@ button[type="menu"] > .button-box > .button-menu-dropmarker {
 .help-button > .button-box > .button-icon {
   width: 26px;
   height: 26px;
-  background-image: url("chrome://browser/skin/preferences/in-content/help-glyph.png");
+  background-image: url("chrome://browser/skin/in-content/help-glyph.png");
   background-position: center;
 }
 
 @media (min-resolution: 2dppx) {
   .help-button > .button-box > .button-icon {
     background-size: 26px 26px;
-    background-image: url("chrome://browser/skin/preferences/in-content/help-glyph@2x.png");
+    background-image: url("chrome://browser/skin/in-content/help-glyph@2x.png");
   }
 }
 
@@ -308,21 +308,21 @@ menulist:not([editable="true"]) > .menulist-dropmarker {
   padding: 0;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown.png")
+  list-style-image: url("chrome://browser/skin/in-content/dropdown.png");
 }
 
 menulist[disabled="true"]:not([editable="true"]) > .menulist-dropmarker {
-  list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown-disabled.png")
+  list-style-image: url("chrome://browser/skin/in-content/dropdown-disabled.png")
 }
 
 @media (min-resolution: 2dppx) {
   menulist:not([editable="true"]) > .menulist-dropmarker,
   button[type="menu"] > .button-box > .button-menu-dropmarker {
-    list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown@2x.png");
+    list-style-image: url("chrome://browser/skin/in-content/dropdown@2x.png");
   }
 
   menulist[disabled="true"]:not([editable="true"]) > .menulist-dropmarker {
-    list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown-disabled@2x.png")
+    list-style-image: url("chrome://browser/skin/in-content/dropdown-disabled@2x.png")
   }
 
   menulist:not([editable="true"]) > .menulist-dropmarker > .dropmarker-icon,
@@ -454,7 +454,7 @@ checkbox:not([disabled="true"]):hover > .checkbox-check {
 }
 
 .checkbox-check[checked] {
-  background-image: url("chrome://browser/skin/preferences/in-content/check.png"),
+  background-image: url("chrome://browser/skin/in-content/check.png"),
                     /* !important needed to override toolkit !important rule */
                     linear-gradient(#ffffff, rgba(255,255,255,0.8)) !important;
 }
@@ -471,7 +471,7 @@ checkbox[disabled="true"] > .checkbox-check {
 @media (min-resolution: 2dppx) {
   .checkbox-check[checked] {
     background-size: 12px 12px, auto;
-    background-image: url("chrome://browser/skin/preferences/in-content/check@2x.png"),
+    background-image: url("chrome://browser/skin/in-content/check@2x.png"),
                       linear-gradient(#ffffff, rgba(255,255,255,0.8)) !important;
   }
 }
