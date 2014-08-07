@@ -5,12 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SIMPLE_PROGRAMS = [
-    'TestDllInterceptor',
     'TestXREMakeCommandLineWin',
 ]
 
 SOURCES += [
     '%s.cpp' % s for s in SIMPLE_PROGRAMS
+]
+
+CPP_UNIT_TESTS += [
+    'TestDllInterceptor',
+]
+
+SOURCES += [
+    '%s.cpp' % s for s in CPP_UNIT_TESTS
 ]
 
 DEFINES['NS_NO_XPCOM'] = True

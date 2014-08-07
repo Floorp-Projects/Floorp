@@ -86,8 +86,8 @@ protected:
   virtual nsresult StopAnimation();
   virtual bool     ShouldAnimate();
 
-  void CreateDrawableAndShow(const SVGDrawingParameters& aParams, gfxFloat aOpacity);
-  void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams, gfxFloat aOpacity);
+  void CreateDrawableAndShow(const SVGDrawingParameters& aParams);
+  void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
 private:
   void CancelAllListeners();

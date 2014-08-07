@@ -965,18 +965,18 @@ struct TmpData {
 };
 
 SEGVHandler::SEGVHandler()
-: registeredHandler(false), signalHandlingBroken(false)
-, signalHandlingSlow(false)
+: initialized(false), registeredHandler(false), signalHandlingBroken(true)
+, signalHandlingSlow(true)
 {
   /* Initialize oldStack.ss_flags to an invalid value when used to set
    * an alternative stack, meaning we haven't got information about the
-   * original alternative stack and thus don't mean to restore it */
+   * original alternative stack and thus don't mean to restore it in
+   * the destructor. */
   oldStack.ss_flags = SS_ONSTACK;
-  if (!Divert(sigaction, __wrap_sigaction))
-    return;
 
   /* Get the current segfault signal handler. */
-  sys_sigaction(SIGSEGV, nullptr, &this->action);
+  struct sigaction old_action;
+  sys_sigaction(SIGSEGV, nullptr, &old_action);
 
   /* Some devices don't provide useful information to their SIGSEGV handlers,
    * making it impossible for on-demand decompression to work. To check if
@@ -1005,9 +1005,63 @@ SEGVHandler::SEGVHandler()
   mprotect(stackPtr, stackPtr.GetLength(), PROT_NONE);
   data->crash_int = 123;
   /* Restore the original segfault signal handler. */
-  sys_sigaction(SIGSEGV, &this->action, nullptr);
+  sys_sigaction(SIGSEGV, &old_action, nullptr);
   stackPtr.Assign(MAP_FAILED, 0);
+}
+
+void
+SEGVHandler::FinishInitialization()
+{
+  /* Ideally, we'd need some locking here, but in practice, we're not
+   * going to race with another thread. */
+  initialized = true;
+
   if (signalHandlingBroken || signalHandlingSlow)
+    return;
+
+  typedef int (*sigaction_func)(int, const struct sigaction *,
+                                struct sigaction *);
+
+  sigaction_func libc_sigaction;
+
+#if defined(ANDROID)
+  /* Android > 4.4 comes with a sigaction wrapper in a LD_PRELOADed library
+   * (libsigchain) for ART. That wrapper kind of does the same trick as we
+   * do, so we need extra care in handling it.
+   * - Divert the libc's sigaction, assuming the LD_PRELOADed library uses
+   *   it under the hood (which is more or less true according to the source
+   *   of that library, since it's doing a lookup in RTLD_NEXT)
+   * - With the LD_PRELOADed library in place, all calls to sigaction from
+   *   from system libraries will go to the LD_PRELOADed library.
+   * - The LD_PRELOADed library calls to sigaction go to our __wrap_sigaction.
+   * - The calls to sigaction from libraries faulty.lib loads are sent to
+   *   the LD_PRELOADed library.
+   * In practice, for signal handling, this means:
+   * - The signal handler registered to the kernel is ours.
+   * - Our handler redispatches to the LD_PRELOADed library's if there's a
+   *   segfault we don't handle.
+   * - The LD_PRELOADed library redispatches according to whatever system
+   *   library or faulty.lib-loaded library set with sigaction.
+   *
+   * When there is no sigaction wrapper in place:
+   * - Divert the libc's sigaction.
+   * - Calls to sigaction from system library and faulty.lib-loaded libraries
+   *   all go to the libc's sigaction, which end up in our __wrap_sigaction.
+   * - The signal handler registered to the kernel is ours.
+   * - Our handler redispatches according to whatever system library or
+   *   faulty.lib-loaded library set with sigaction.
+   */
+  void *libc = dlopen("libc.so", RTLD_GLOBAL | RTLD_LAZY);
+  if (libc) {
+    libc_sigaction =
+      reinterpret_cast<sigaction_func>(dlsym(libc, "sigaction"));
+  } else
+#endif
+  {
+    libc_sigaction = sigaction;
+  }
+
+  if (!Divert(libc_sigaction, __wrap_sigaction))
     return;
 
   /* Setup an alternative stack if the already existing one is not big
@@ -1033,7 +1087,7 @@ SEGVHandler::SEGVHandler()
    * SEGVHandler's struct sigaction member */
   action.sa_sigaction = &SEGVHandler::handler;
   action.sa_flags = SA_SIGINFO | SA_NODEFER | SA_ONSTACK;
-  registeredHandler = !sys_sigaction(SIGSEGV, &action, nullptr);
+  registeredHandler = !sys_sigaction(SIGSEGV, &action, &this->action);
 }
 
 SEGVHandler::~SEGVHandler()
@@ -1053,18 +1107,18 @@ SEGVHandler::~SEGVHandler()
 void SEGVHandler::test_handler(int signum, siginfo_t *info, void *context)
 {
   SEGVHandler &that = ElfLoader::Singleton;
-  if (signum != SIGSEGV ||
-      info == nullptr || info->si_addr != that.stackPtr.get())
-    that.signalHandlingBroken = true;
+  if (signum == SIGSEGV && info &&
+      info->si_addr == that.stackPtr.get())
+    that.signalHandlingBroken = false;
   mprotect(that.stackPtr, that.stackPtr.GetLength(), PROT_READ | PROT_WRITE);
   TmpData *data = reinterpret_cast<TmpData*>(that.stackPtr.get());
   uint64_t latency = ProcessTimeStamp_Now() - data->crash_timestamp;
   DEBUG_LOG("SEGVHandler latency: %" PRIu64, latency);
   /* See bug 886736 for timings on different devices, 150 µs is reasonably above
-   * the latency on "working" devices and seems to be reasonably fast to incur
+   * the latency on "working" devices and seems to be short enough to not incur
    * a huge overhead to on-demand decompression. */
-  if (latency > 150000)
-    that.signalHandlingSlow = true;
+  if (latency <= 150000)
+    that.signalHandlingSlow = false;
 }
 
 /* TODO: "properly" handle signal masks and flags */

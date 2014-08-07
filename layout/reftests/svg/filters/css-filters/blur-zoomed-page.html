@@ -1,0 +1,33 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html reftest-zoom="2.0">
+<head>
+  <title>CSS Filters: Blur on a 2x Zoomed Page</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-blur">
+  <link rel="match" href="blur-zoomed-page-ref.html">
+  <meta name="assert"
+        content="The results of the CSS blur filter function should scale up
+                 proportionally when the page is zoomed. At 1x zoom, you should
+                 see a blurred green square. At 2x zoom, you should see a
+                 blurred green square with a blur radius that's twice as
+                 large.">
+  <style type="text/css">
+    body {
+      margin: 1rem;
+    }
+    #target {
+      filter: blur(3px);
+      background-color: #0f0;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div id="target"></div>
+</body>
+</html>

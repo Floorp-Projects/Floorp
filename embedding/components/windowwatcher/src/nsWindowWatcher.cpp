@@ -455,6 +455,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
   *_retval = 0;
 
   if (!nsContentUtils::IsSafeToRunScript()) {
+    nsContentUtils::WarnScriptWasIgnored(nullptr);
     return NS_ERROR_FAILURE;
   }
 

@@ -1594,8 +1594,9 @@ DrawTargetCG::MarkChanged()
 CGContextRef
 BorrowedCGContext::BorrowCGContextFromDrawTarget(DrawTarget *aDT)
 {
-  if (aDT->GetBackendType() == BackendType::COREGRAPHICS ||
-      aDT->GetBackendType() == BackendType::COREGRAPHICS_ACCELERATED) {
+  if ((aDT->GetBackendType() == BackendType::COREGRAPHICS ||
+       aDT->GetBackendType() == BackendType::COREGRAPHICS_ACCELERATED) &&
+      !aDT->IsTiledDrawTarget() && !aDT->IsDualDrawTarget()) {
     DrawTargetCG* cgDT = static_cast<DrawTargetCG*>(aDT);
     cgDT->MarkChanged();
 

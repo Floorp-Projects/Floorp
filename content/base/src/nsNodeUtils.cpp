@@ -311,6 +311,7 @@ nsNodeUtils::CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
                   "cloned nodes.");
 
   if (!nsContentUtils::IsSafeToRunScript()) {
+    nsContentUtils::WarnScriptWasIgnored(aOwnerDocument);
     if (nsContentUtils::IsChromeDoc(aOwnerDocument)) {
       NS_WARNING("Fix the caller! Userdata callback disabled.");
     } else {

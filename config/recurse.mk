@@ -82,7 +82,7 @@ ifeq ($(CURRENT_TIER),compile)
 # https://savannah.gnu.org/bugs/index.php?42833
 .PHONY: $(compile_targets)
 $(compile_targets):
-	$(call SUBMAKE,$(if $(filter $(@D),$(staticdirs)),,$(@F)),$(@D))
+	$(call SUBMAKE,$(@F),$(@D))
 
 else
 
@@ -135,7 +135,6 @@ ifdef TIERS
 libs export tools::
 	$(call BUILDSTATUS,TIER_START $@)
 	$(foreach tier,$(TIERS), $(if $(filter-out libs_precompile tools_precompile,$@_$(tier)), \
-		$(if $(filter libs,$@),$(foreach dir, $(tier_$(tier)_staticdirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),,1))) \
 		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@))))
 	$(call BUILDSTATUS,TIER_FINISH $@)
 

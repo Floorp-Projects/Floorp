@@ -164,6 +164,9 @@ MOZ_BEGIN_ENUM_CLASS(AttributeType)
   Max
 MOZ_END_ENUM_CLASS(AttributeType)
 
+// Limits
+const float kMaxStdDeviation = 500;
+
 // A class that stores values of different types, keyed by an attribute name.
 // The Get*() methods assert that they're called for the same type that the
 // attribute was Set() with.
@@ -444,6 +447,13 @@ public:
   ComputePostFilterExtents(const FilterDescription& aFilter,
                            const nsIntRegion& aSourceGraphicExtents);
 
+  /**
+   * Computes the size of a single FilterPrimitiveDescription's output given a
+   * set of input extents.
+   */
+  static nsIntRegion
+  PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
+                                const nsTArray<nsIntRegion>& aInputExtents);
 };
 
 }
