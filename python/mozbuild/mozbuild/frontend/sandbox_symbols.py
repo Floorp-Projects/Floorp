@@ -902,11 +902,6 @@ FUNCTIONS = {
         and traversed with export, libs, and tools subtiers::
 
            add_tier_dir('base', 'bar', external=True)
-
-        Note there is a temporary ``trigger`` parameter that tells the build
-        system that if it sees the given string in a Makefile, then the compile
-        rules in that directory depend on the directories listed in the
-        add_tier_dir call.
         """),
 
     'export': ('_export', (str,),

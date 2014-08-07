@@ -311,7 +311,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._traversal = RecursiveMakeTraversal()
         self._compile_graph = defaultdict(set)
-        self._triggers = defaultdict(set)
 
         self._may_skip = {
             'export': set(),
@@ -703,12 +702,6 @@ class RecursiveMakeBackend(CommonBackend):
                 self._create_makefile(obj, stub=stub)
                 with open(obj.output_path) as fh:
                     content = fh.read()
-                    for trigger, targets in self._triggers.items():
-                        if trigger.encode('ascii') in content:
-                            for target in targets:
-                                t = '%s/target' % mozpath.relpath(objdir,
-                                    self.environment.topobjdir)
-                                self._compile_graph[t].add(target)
                     # Skip every directory but those with a Makefile
                     # containing a tools target, or XPI_PKGNAME or
                     # INSTALL_EXTENSION_ID.
@@ -814,10 +807,6 @@ class RecursiveMakeBackend(CommonBackend):
                                     dirs=relativize(dirs))
 
             self._traversal.add('', dirs=['subtiers/%s' % tier])
-
-            for d in dirs:
-                if d.trigger:
-                    self._triggers[d.trigger].add('%s/target' % d)
 
         if obj.dirs:
             fh.write('DIRS := %s\n' % ' '.join(obj.dirs))
@@ -1040,11 +1029,6 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_simple_program(self, obj, backend_file):
         if obj.is_unit_test:
             backend_file.write('CPP_UNIT_TESTS += %s\n' % obj.program)
-            # config.mk adds a dependency on NSPR_LIBS for CPP_UNIT_TESTS
-            # Add it here until moz.build land handles this.
-            if 'NSPR_LIBS' in self._triggers:
-                self._compile_graph[self._build_target_for_obj(obj)] |= \
-                    self._triggers['NSPR_LIBS']
         else:
             backend_file.write('SIMPLE_PROGRAMS += %s\n' % obj.program)
 
