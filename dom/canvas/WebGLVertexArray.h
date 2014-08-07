@@ -6,6 +6,7 @@
 #ifndef WEBGLVERTEXARRAY_H_
 #define WEBGLVERTEXARRAY_H_
 
+#include "WebGLBindableName.h"
 #include "WebGLObjectModel.h"
 #include "WebGLBuffer.h"
 #include "WebGLVertexAttribData.h"
@@ -20,6 +21,7 @@ class WebGLVertexArrayFake;
 
 class WebGLVertexArray
     : public nsWrapperCache
+    , public WebGLBindableName
     , public WebGLRefCountedObject<WebGLVertexArray>
     , public LinkedListElement<WebGLVertexArray>
     , public WebGLContextBoundObject
@@ -30,7 +32,9 @@ public:
     static WebGLVertexArray* Create(WebGLContext* context);
 
     void BindVertexArray() {
-        SetHasEverBeenBound(true);
+        /* Bind to dummy value to signal that this vertex array has
+           ever been bound */
+        BindTo(LOCAL_GL_VERTEX_ARRAY_BINDING);
         BindVertexArrayImpl();
     };
 
@@ -58,9 +62,6 @@ public:
     // -------------------------------------------------------------------------
     // MEMBER FUNCTIONS
 
-    bool HasEverBeenBound() { return mHasEverBeenBound; }
-    void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-
     bool EnsureAttrib(GLuint index, const char *info);
     bool HasAttrib(GLuint index) {
         return index < mAttribs.Length();
@@ -82,8 +83,6 @@ protected:
     // -------------------------------------------------------------------------
     // MEMBERS
 
-    GLuint mGLName;
-    bool mHasEverBeenBound;
     nsTArray<WebGLVertexAttribData> mAttribs;
     WebGLRefPtr<WebGLBuffer> mElementArrayBuffer;
 

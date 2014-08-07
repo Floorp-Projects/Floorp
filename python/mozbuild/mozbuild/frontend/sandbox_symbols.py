@@ -898,12 +898,8 @@ FUNCTIONS = {
 
            add_tier_dir('app', ['components', 'base'])
 
-        Register a directory as having static content (no dependencies)::
-
-           add_tier_dir('base', 'foo', static=True)
-
-        Register a directory as having external content (same as static
-        content, but traversed with export, libs, and tools subtiers::
+        Register a directory as having external content (no dependencies,
+        and traversed with export, libs, and tools subtiers::
 
            add_tier_dir('base', 'bar', external=True)
 

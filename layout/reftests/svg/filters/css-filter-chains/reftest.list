@@ -1,0 +1,6 @@
+# These tests verify that CSS filter chains behave properly.
+# e.g. filter: blur(3px) grayscale(0.5) invert(0.2);
+
+default-preferences pref(layout.css.filters.enabled,true)
+
+== same-filter.html same-filter-ref.html

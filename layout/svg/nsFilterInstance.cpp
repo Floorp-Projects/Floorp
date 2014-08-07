@@ -11,6 +11,7 @@
 #include "gfxUtils.h"
 #include "nsISVGChildFrame.h"
 #include "nsRenderingContext.h"
+#include "nsCSSFilterInstance.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGUtils.h"
@@ -124,18 +125,16 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   mTargetBBox = aOverrideBBox ?
     *aOverrideBBox : nsSVGUtils::GetBBox(mTargetFrame);
 
+  // Compute user space to filter space transforms.
   nsresult rv = ComputeUserSpaceToFilterSpaceScale();
   if (NS_FAILED(rv)) {
     return;
   }
 
-  rv = BuildPrimitives();
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (mPrimitiveDescriptions.IsEmpty()) {
-    // Nothing should be rendered.
+  gfxRect targetBBoxInFilterSpace = UserSpaceToFilterSpace(mTargetBBox);
+  targetBBoxInFilterSpace.RoundOut();
+  if (!gfxUtils::GfxRectToIntRect(targetBBoxInFilterSpace, &mTargetBBoxInFilterSpace)) {
+    // The target's bbox is way too big if there is float->int overflow.
     return;
   }
 
@@ -151,8 +150,6 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
               nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_PAINTING);
   }
 
-  // Convert the passed in rects from frame to filter space:
-
   mAppUnitsPerCSSPx = mTargetFrame->PresContext()->AppUnitsPerCSSPixel();
 
   mFilterSpaceToFrameSpaceInCSSPxTransform =
@@ -162,6 +159,18 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
     mFilterSpaceToFrameSpaceInCSSPxTransform;
   mFrameSpaceInCSSPxToFilterSpaceTransform.Invert();
 
+  // Build the filter graph.
+  rv = BuildPrimitives();
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (mPrimitiveDescriptions.IsEmpty()) {
+    // Nothing should be rendered.
+    return;
+  }
+
+  // Convert the passed in rects from frame space to filter space:
   mPostFilterDirtyRegion = FrameSpaceToFilterSpace(aPostFilterDirtyRegion);
   mPreFilterDirtyRegion = FrameSpaceToFilterSpace(aPreFilterDirtyRegion);
   if (aPreFilterVisualOverflowRectOverride) {
@@ -250,8 +259,10 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
     return svgFilterInstance.BuildPrimitives(mPrimitiveDescriptions, mInputImages);
   }
 
-  // Eventually, we will build primitives for CSS filters, too.
-  return NS_ERROR_FAILURE;
+  // Build primitives for a CSS filter.
+  nsCSSFilterInstance cssFilterInstance(aFilter, mTargetBBoxInFilterSpace,
+                                        mFrameSpaceInCSSPxToFilterSpaceTransform);
+  return cssFilterInstance.BuildPrimitives(mPrimitiveDescriptions);
 }
 
 void
@@ -269,15 +280,10 @@ nsFilterInstance::ComputeNeededBoxes()
     filter, mPostFilterDirtyRegion,
     sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
 
-  nsIntRect sourceBoundsInt;
-  gfxRect sourceBounds = UserSpaceToFilterSpace(mTargetBBox);
-  sourceBounds.RoundOut();
-  // Detect possible float->int overflow
-  if (!gfxUtils::GfxRectToIntRect(sourceBounds, &sourceBoundsInt))
-    return;
-  sourceBoundsInt.UnionRect(sourceBoundsInt, mTargetBounds);
+  nsIntRect sourceBounds;
+  sourceBounds.UnionRect(mTargetBBoxInFilterSpace, mTargetBounds);
 
-  sourceGraphicNeededRegion.And(sourceGraphicNeededRegion, sourceBoundsInt);
+  sourceGraphicNeededRegion.And(sourceGraphicNeededRegion, sourceBounds);
 
   mSourceGraphic.mNeededBounds = sourceGraphicNeededRegion.GetBounds();
   mFillPaint.mNeededBounds = fillPaintNeededRegion.GetBounds();
@@ -463,17 +469,12 @@ nsFilterInstance::ComputePostFilterExtents(nsRect* aPostFilterExtents)
 {
   *aPostFilterExtents = nsRect();
 
-  nsIntRect sourceBoundsInt;
-  gfxRect sourceBounds = UserSpaceToFilterSpace(mTargetBBox);
-  sourceBounds.RoundOut();
-  // Detect possible float->int overflow
-  if (!gfxUtils::GfxRectToIntRect(sourceBounds, &sourceBoundsInt))
-    return NS_ERROR_FAILURE;
-  sourceBoundsInt.UnionRect(sourceBoundsInt, mTargetBounds);
+  nsIntRect sourceBounds;
+  sourceBounds.UnionRect(mTargetBBoxInFilterSpace, mTargetBounds);
 
   FilterDescription filter(mPrimitiveDescriptions);
   nsIntRegion postFilterExtents =
-    FilterSupport::ComputePostFilterExtents(filter, sourceBoundsInt);
+    FilterSupport::ComputePostFilterExtents(filter, sourceBounds);
   *aPostFilterExtents = FilterSpaceToFrameSpace(postFilterExtents.GetBounds());
   return NS_OK;
 }

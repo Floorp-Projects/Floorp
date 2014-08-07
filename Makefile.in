@@ -332,7 +332,7 @@ toolkit/library/target: ../ldap/target
 endif
 ifndef MOZ_FOLD_LIBS
 ifndef MOZ_NATIVE_SQLITE
-security/build/target: db/sqlite3/src/target
+config/external/nss/target: db/sqlite3/src/target
 endif
 endif
 ifeq ($(MOZ_REPLACE_MALLOC_LINKAGE),dummy library)

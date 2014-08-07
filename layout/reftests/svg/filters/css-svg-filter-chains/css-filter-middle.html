@@ -1,0 +1,42 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS and SVG Filter Chains: CSS Filter as Middle Filter</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#FilterProperty">
+  <link rel="match" href="css-filter-middle-ref.html">
+  <meta name="assert"
+        content="A filter chain starting with an SVG reference filter, followed
+                 by a CSS filter function, and followed by an SVG reference
+                 filter should render correctly.">
+  <style type="text/css">
+    #target {
+      filter: url(#magenta-to-red) blur(3px) url(#red-to-green);
+      background-color: #f0f;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square.</p>
+  <div id="target"></div>
+  <svg width="0" height="0">
+    <filter id="magenta-to-red" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncR type="identity"/>
+        <feFuncG type="table" tableValues="0 0"/>
+        <feFuncB type="table" tableValues="0 0"/>
+        <feFuncA type="identity"/>
+      </feComponentTransfer>
+    </filter>
+    <filter id="red-to-green" x="-50" y="-50" width="200" height="200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feColorMatrix type="hueRotate" values="90"/>
+    </filter>
+  </svg>
+</body>
+</html>

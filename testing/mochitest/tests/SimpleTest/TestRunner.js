@@ -164,12 +164,6 @@ function StructuredLogger(name) {
             data.extra = extra;
         }
 
-        if (!this.testsStarted.pop(test)) {
-            this.error("Test '" + test + "' was ended more than once or never started. " +
-                       "Ended with this data: " + JSON.stringify(data));
-            return;
-        }
-
         this._logData("test_end", data);
     };
 

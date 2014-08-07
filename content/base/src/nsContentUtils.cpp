@@ -3961,6 +3961,7 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
   // than fire DOMNodeRemoved in all corner cases. We also rely on it for
   // nsAutoScriptBlockerSuppressNodeRemoved.
   if (!IsSafeToRunScript()) {
+    WarnScriptWasIgnored(aOwnerDoc);
     return;
   }
 
@@ -5039,10 +5040,11 @@ nsContentUtils::GetAccessKeyCandidates(WidgetKeyboardEvent* aNativeKeyEvent,
 void
 nsContentUtils::AddScriptBlocker()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!sScriptBlockerCount) {
-    NS_ASSERTION(sRunnersCountAtFirstBlocker == 0,
-                 "Should not already have a count");
-    sRunnersCountAtFirstBlocker = sBlockedScriptRunners->Length();
+    MOZ_ASSERT(sRunnersCountAtFirstBlocker == 0,
+               "Should not already have a count");
+    sRunnersCountAtFirstBlocker = sBlockedScriptRunners ? sBlockedScriptRunners->Length() : 0;
   }
   ++sScriptBlockerCount;
 }
@@ -5055,10 +5057,15 @@ static bool sRemovingScriptBlockers = false;
 void
 nsContentUtils::RemoveScriptBlocker()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sRemovingScriptBlockers);
   NS_ASSERTION(sScriptBlockerCount != 0, "Negative script blockers");
   --sScriptBlockerCount;
   if (sScriptBlockerCount) {
+    return;
+  }
+
+  if (!sBlockedScriptRunners) {
     return;
   }
 
@@ -5089,6 +5096,25 @@ nsContentUtils::RemoveScriptBlocker()
   sRemovingScriptBlockers = true;
 #endif
   sBlockedScriptRunners->RemoveElementsAt(originalFirstBlocker, blockersCount);
+}
+
+/* static */
+void
+nsContentUtils::WarnScriptWasIgnored(nsIDocument* aDocument)
+{
+  nsAutoString msg;
+  if (aDocument) {
+    nsCOMPtr<nsIURI> uri = aDocument->GetDocumentURI();
+    if (uri) {
+      nsCString spec;
+      uri->GetSpec(spec);
+      msg.Append(NS_ConvertUTF8toUTF16(spec));
+      msg.AppendLiteral(" : ");
+    }
+  }
+  msg.AppendLiteral("Unable to run script because scripts are blocked internally.");
+
+  LogSimpleConsoleError(msg, "DOM");
 }
 
 /* static */

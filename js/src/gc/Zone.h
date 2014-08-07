@@ -286,11 +286,6 @@ struct Zone : public JS::shadow::Zone,
 
     bool usedByExclusiveThread;
 
-    // These flags help us to discover if a compartment that shouldn't be alive
-    // manages to outlive a GC.
-    bool scheduledForDestruction;
-    bool maybeAlive;
-
     // True when there are active frames.
     bool active;
 

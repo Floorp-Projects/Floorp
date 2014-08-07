@@ -1,0 +1,32 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS and SVG Filter Chains: Clip Input CSS Filter with Following SVG Filter's Filter Region</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <style type="text/css">
+    #target {
+      filter: url(#blur) url(#clip-and-red-to-green);
+      background-color: #f00;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blurred green square.</p>
+  <div id="target"></div>
+  <svg width="0" height="0">
+    <filter id="blur" x="-50" y="-50" width="200" height="200">
+      <feGaussianBlur stdDeviation="3" color-interpolation-filters="sRGB"/>
+    </filter>
+    <!-- Use a small filter region that clips the blur extents. -->
+    <filter id="clip-and-red-to-green" x="0" y="0" width="100" height="100" filterUnits="userSpaceOnUse">
+      <feColorMatrix type="hueRotate" values="90" color-interpolation-filters="sRGB"/>
+    </filter>
+  </svg>
+</body>
+</html>

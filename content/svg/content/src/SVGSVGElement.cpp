@@ -74,10 +74,10 @@ SVGSVGElement::~SVGSVGElement()
 {
 }
 
-nsISVGPoint*
-DOMSVGTranslatePoint::Clone()
+DOMSVGPoint*
+DOMSVGTranslatePoint::Copy()
 {
-  return new DOMSVGTranslatePoint(this);
+  return new DOMSVGPoint(mPt.GetX(), mPt.GetY());
 }
 
 nsISupports*

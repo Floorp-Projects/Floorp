@@ -358,9 +358,9 @@ class TestTypeconversions(BaseStructuredTest):
             self.logger.add_handler(_handler)
             self.logger.suite_start([])
             self.logger.info("☺")
-            with open(logfile.name) as f:
-                data = f.readlines()
-                self.assertEquals(data[-1], "☺\n")
+            logfile.seek(0)
+            data = logfile.readlines()[-1].strip()
+            self.assertEquals(data, "☺")
             self.logger.suite_end()
 
     def test_arguments(self):
@@ -393,6 +393,15 @@ class TestTypeconversions(BaseStructuredTest):
         self.logger.suite_end()
 
 class TestCommandline(unittest.TestCase):
+
+    def setUp(self):
+        self.logfile = mozfile.NamedTemporaryFile()
+
+    @property
+    def loglines(self):
+        self.logfile.seek(0)
+        return [line.strip() for line in self.logfile.readlines()]
+
     def test_setup_logging(self):
         parser = argparse.ArgumentParser()
         commandline.add_logging_group(parser)
@@ -407,6 +416,53 @@ class TestCommandline(unittest.TestCase):
         logger = commandline.setup_logging("test_optparse", args, {})
         self.assertEqual(len(logger.handlers), 1)
         self.assertIsInstance(logger.handlers[0], handlers.StreamHandler)
+
+    def test_logging_defaultlevel(self):
+        parser = argparse.ArgumentParser()
+        commandline.add_logging_group(parser)
+
+        args = parser.parse_args(["--log-tbpl=%s" % self.logfile.name])
+        logger = commandline.setup_logging("test_fmtopts", args, {})
+        logger.info("INFO message")
+        logger.debug("DEBUG message")
+        logger.error("ERROR message")
+        # The debug level is not logged by default.
+        self.assertEqual(["INFO message",
+                          "ERROR message"],
+                         self.loglines)
+
+    def test_logging_errorlevel(self):
+        parser = argparse.ArgumentParser()
+        commandline.add_logging_group(parser)
+        args = parser.parse_args(["--log-tbpl=%s" % self.logfile.name, "--log-tbpl-level=error"])
+        logger = commandline.setup_logging("test_fmtopts", args, {})
+        logger.info("INFO message")
+        logger.debug("DEBUG message")
+        logger.error("ERROR message")
+
+        # Only the error level and above were requested.
+        self.assertEqual(["ERROR message"],
+                         self.loglines)
+
+    def test_logging_debuglevel(self):
+        parser = argparse.ArgumentParser()
+        commandline.add_logging_group(parser)
+        args = parser.parse_args(["--log-tbpl=%s" % self.logfile.name, "--log-tbpl-level=debug"])
+        logger = commandline.setup_logging("test_fmtopts", args, {})
+        logger.info("INFO message")
+        logger.debug("DEBUG message")
+        logger.error("ERROR message")
+        # Requesting a lower log level than default works as expected.
+        self.assertEqual(["INFO message",
+                          "DEBUG message",
+                          "ERROR message"],
+                         self.loglines)
+
+    def test_unused_options(self):
+        parser = argparse.ArgumentParser()
+        commandline.add_logging_group(parser)
+        args = parser.parse_args(["--log-tbpl-level=error"])
+        self.assertRaises(ValueError, commandline.setup_logging, "test_fmtopts", args, {})
 
 class TestReader(unittest.TestCase):
     def to_file_like(self, obj):
