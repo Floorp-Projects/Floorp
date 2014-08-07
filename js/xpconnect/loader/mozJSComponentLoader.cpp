@@ -660,7 +660,7 @@ class ANSIFileAutoCloser
 #endif
 
 JSObject*
-mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
+mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
                                                nsIFile *aComponentFile,
                                                nsIURI *aURI,
                                                bool aReuseLoaderGlobal,
