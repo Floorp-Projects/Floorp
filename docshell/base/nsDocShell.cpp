@@ -2153,6 +2153,22 @@ nsDocShell::GetHasMixedDisplayContentBlocked(bool* aHasMixedDisplayContentBlocke
 }
 
 NS_IMETHODIMP
+nsDocShell::GetHasTrackingContentBlocked(bool* aHasTrackingContentBlocked)
+{
+    nsCOMPtr<nsIDocument> doc(GetDocument());
+    *aHasTrackingContentBlocked = doc && doc->GetHasTrackingContentBlocked();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetHasTrackingContentLoaded(bool* aHasTrackingContentLoaded)
+{
+    nsCOMPtr<nsIDocument> doc(GetDocument());
+    *aHasTrackingContentLoaded = doc && doc->GetHasTrackingContentLoaded();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetAllowPlugins(bool * aAllowPlugins)
 {
     NS_ENSURE_ARG_POINTER(aAllowPlugins);
@@ -7123,10 +7139,9 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         }
 
         // Handle iframe document not loading error because source was
-        // a tracking URL. (Safebrowsing) We make a note of this iframe
-        // node by including it in a dedicated array of blocked tracking
-        // nodes under its parent document. (document of parent window of
-        // blocked document)
+        // a tracking URL. We make a note of this iframe node by including
+        // it in a dedicated array of blocked tracking nodes under its parent
+        // document. (document of parent window of blocked document)
         if (isTopFrame == false && aStatus == NS_ERROR_TRACKING_URI) {
             // frameElement is our nsIContent to be annotated
             nsCOMPtr<nsIDOMElement> frameElement;
