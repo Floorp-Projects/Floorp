@@ -70,10 +70,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGTranslatePoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-nsISVGPoint*
-DOMSVGTranslatePoint::Clone()
+DOMSVGPoint*
+DOMSVGTranslatePoint::Copy()
 {
-  return new DOMSVGTranslatePoint(this);
+  return new DOMSVGPoint(mPt.GetX(), mPt.GetY());
 }
 
 nsISupports*

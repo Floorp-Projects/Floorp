@@ -47,15 +47,15 @@ class SVGSVGElement;
 class DOMSVGTranslatePoint MOZ_FINAL : public nsISVGPoint {
 public:
   DOMSVGTranslatePoint(SVGPoint* aPt, SVGSVGElement *aElement)
-    : nsISVGPoint(aPt), mElement(aElement) {}
+    : nsISVGPoint(aPt, true), mElement(aElement) {}
 
   DOMSVGTranslatePoint(DOMSVGTranslatePoint* aPt)
-    : nsISVGPoint(&aPt->mPt), mElement(aPt->mElement) {}
+    : nsISVGPoint(&aPt->mPt, true), mElement(aPt->mElement) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMSVGTranslatePoint, nsISVGPoint)
 
-  virtual nsISVGPoint* Clone() MOZ_OVERRIDE;
+  virtual DOMSVGPoint* Copy() MOZ_OVERRIDE;
 
   // WebIDL
   virtual float X() MOZ_OVERRIDE { return mPt.GetX(); }
