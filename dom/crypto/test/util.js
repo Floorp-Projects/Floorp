@@ -43,3 +43,35 @@ var util = {
     return abv;
   },
 };
+
+function exists(x) {
+  return (x !== undefined);
+}
+
+function hasFields(object, fields) {
+  return fields
+          .map(x => exists(object[x]))
+          .reduce((x,y) => (x && y));
+}
+
+function hasKeyFields(x) {
+  return hasFields(x, ["algorithm", "extractable", "type", "usages"]);
+}
+
+function hasBaseJwkFields(x) {
+  return hasFields(x, ["kty", "alg", "ext", "key_ops"]);
+}
+
+function shallowArrayEquals(x, y) {
+  if (x.length != y.length) {
+    return false;
+  }
+
+  for (i in x) {
+    if (x[i] != y[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
