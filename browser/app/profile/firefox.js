@@ -1616,6 +1616,9 @@ pref("browser.translation.ui.show", false);
 pref("experiments.enabled", true);
 pref("experiments.manifest.fetchIntervalSeconds", 86400);
 pref("experiments.manifest.uri", "https://telemetry-experiment.cdn.mozilla.net/manifest/v1/firefox/%VERSION%/%CHANNEL%");
+// Bug 1048793, skip the experiments cert checks as we switched providers and PublicKeyPinningService already provides them.
+pref("experiments.manifest.cert.checkAttributes", false);
+pref("experiments.manifest.cert.requireBuiltin", false);
 pref("experiments.manifest.certs.1.commonName", "*.cdn.mozilla.net");
 pref("experiments.manifest.certs.1.issuerName", "CN=Cybertrust Public SureServer SV CA,O=Cybertrust Inc");
 // Whether experiments are supported by the current application profile.
