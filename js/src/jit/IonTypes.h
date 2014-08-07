@@ -383,6 +383,10 @@ StringFromMIRType(MIRType type)
       return "Pointer";
     case MIRType_ForkJoinContext:
       return "ForkJoinContext";
+    case MIRType_Int32x4:
+      return "Int32x4";
+    case MIRType_Float32x4:
+      return "Float32x4";
     default:
       MOZ_ASSUME_UNREACHABLE("Unknown MIRType.");
   }
