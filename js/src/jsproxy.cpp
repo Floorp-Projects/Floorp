@@ -175,7 +175,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 }
 
 bool
-js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handler,
+js::SetPropertyIgnoringNamedGetter(JSContext *cx, BaseProxyHandler *handler,
                                    HandleObject proxy, HandleObject receiver,
                                    HandleId id, MutableHandle<PropertyDescriptor> desc,
                                    bool descIsOwn, bool strict, MutableHandleValue vp)
