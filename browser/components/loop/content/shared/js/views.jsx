@@ -12,7 +12,6 @@ loop.shared.views = (function(_, OT, l10n) {
   "use strict";
 
   var sharedModels = loop.shared.models;
-  var __ = l10n.get;
   var WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS = 5;
 
   /**
@@ -134,7 +133,7 @@ loop.shared.views = (function(_, OT, l10n) {
       var prefix = this.props.enabled ? "mute" : "unmute";
       var suffix = "button_title";
       var msgId = [prefix, this.props.scope, this.props.type, suffix].join("_");
-      return __(msgId);
+      return l10n.get(msgId);
     },
 
     render: function() {
@@ -184,7 +183,7 @@ loop.shared.views = (function(_, OT, l10n) {
         <ul className="conversation-toolbar">
           <li><button className="btn btn-hangup"
                       onClick={this.handleClickHangup}
-                      title={__("hangup_button_title")}></button></li>
+                      title={l10n.get("hangup_button_title")}></button></li>
           <li><MediaControlButton action={this.handleToggleVideo}
                                   enabled={this.props.video.enabled}
                                   scope="local" type="video" /></li>
@@ -371,7 +370,7 @@ loop.shared.views = (function(_, OT, l10n) {
       if (this.props.reset) {
         backButton = (
           <button className="back" type="button" onClick={this.props.reset}>
-            &laquo;&nbsp;{__("feedback_back_button")}
+            &laquo;&nbsp;{l10n.get("feedback_back_button")}
           </button>
         );
       }
@@ -405,11 +404,11 @@ loop.shared.views = (function(_, OT, l10n) {
 
     _getCategories: function() {
       return {
-        audio_quality: __("feedback_category_audio_quality"),
-        video_quality: __("feedback_category_video_quality"),
-        disconnected : __("feedback_category_was_disconnected"),
-        confusing:     __("feedback_category_confusing"),
-        other:         __("feedback_category_other")
+        audio_quality: l10n.get("feedback_category_audio_quality"),
+        video_quality: l10n.get("feedback_category_video_quality"),
+        disconnected : l10n.get("feedback_category_was_disconnected"),
+        confusing:     l10n.get("feedback_category_confusing"),
+        other:         l10n.get("feedback_category_other")
       };
     },
 
@@ -420,7 +419,8 @@ loop.shared.views = (function(_, OT, l10n) {
           <label key={key}>
             <input type="radio" ref="category" name="category"
                    value={category}
-                   onChange={this.handleCategoryChange} />
+                   onChange={this.handleCategoryChange}
+                   checked={this.state.category === category} />
             {categories[category]}
           </label>
         );
@@ -429,26 +429,41 @@ loop.shared.views = (function(_, OT, l10n) {
 
     /**
      * Checks if the form is ready for submission:
-     * - a category (reason) must be chosen
-     * - no feedback submission should be pending
+     *
+     * - no feedback submission should be pending.
+     * - a category (reason) must be chosen;
+     * - if the "other" category is chosen, a custom description must have been
+     *   entered by the end user;
      *
      * @return {Boolean}
      */
     _isFormReady: function() {
-      return this.state.category !== "" && !this.props.pending;
+      if (this.props.pending || !this.state.category) {
+        return false;
+      }
+      if (this.state.category === "other" && !this.state.description) {
+        return false;
+      }
+      return true;
     },
 
     handleCategoryChange: function(event) {
       var category = event.target.value;
-      if (category !== "other") {
-        // resets description text field
-        this.setState({description: ""});
+      this.setState({
+        category: category,
+        description: category == "other" ? "" : this._getCategories()[category]
+      });
+      if (category == "other") {
+        this.refs.description.getDOMNode().focus();
       }
-      this.setState({category: category});
     },
 
-    handleCustomTextChange: function(event) {
+    handleDescriptionFieldChange: function(event) {
       this.setState({description: event.target.value});
+    },
+
+    handleDescriptionFieldFocus: function(event) {
+      this.setState({category: "other", description: ""});
     },
 
     handleFormSubmit: function(event) {
@@ -461,18 +476,24 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     render: function() {
+      var descriptionDisplayValue = this.state.category === "other" ?
+                                    this.state.description : "";
       return (
-        <FeedbackLayout title={__("feedback_what_makes_you_sad")}
+        <FeedbackLayout title={l10n.get("feedback_what_makes_you_sad")}
                         reset={this.props.reset}>
           <form onSubmit={this.handleFormSubmit}>
             {this._getCategoryFields()}
-            <p><input type="text" ref="description" name="description"
-                      disabled={this.state.category !== "other"}
-                      onChange={this.handleCustomTextChange}
-                      value={this.state.description} /></p>
+            <p>
+              <input type="text" ref="description" name="description"
+                onChange={this.handleDescriptionFieldChange}
+                onFocus={this.handleDescriptionFieldFocus}
+                value={descriptionDisplayValue}
+                placeholder={
+                  l10n.get("feedback_custom_category_text_placeholder")} />
+            </p>
             <button type="submit" className="btn btn-success"
                     disabled={!this._isFormReady()}>
-              {__("feedback_submit_button")}
+              {l10n.get("feedback_submit_button")}
             </button>
           </form>
         </FeedbackLayout>
@@ -506,10 +527,11 @@ loop.shared.views = (function(_, OT, l10n) {
         window.close();
       }
       return (
-        <FeedbackLayout title={__("feedback_thank_you_heading")}>
-          <p className="info thank-you">{__("feedback_window_will_close_in", {
-            countdown: this.state.countdown
-          })}</p>
+        <FeedbackLayout title={l10n.get("feedback_thank_you_heading")}>
+          <p className="info thank-you">{
+            l10n.get("feedback_window_will_close_in", {
+              countdown: this.state.countdown
+            })}</p>
         </FeedbackLayout>
       );
     }
@@ -573,7 +595,8 @@ loop.shared.views = (function(_, OT, l10n) {
                                pending={this.state.pending} />;
         default:
           return (
-            <FeedbackLayout title={__("feedback_call_experience_heading")}>
+            <FeedbackLayout title={
+              l10n.get("feedback_call_experience_heading")}>
               <div className="faces">
                 <button className="face face-happy"
                         onClick={this.handleHappyClick}></button>

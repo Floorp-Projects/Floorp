@@ -6,6 +6,7 @@ const Cu = Components.utils;
 Cu.import('resource:///modules/devtools/gDevTools.jsm');
 const {require} = Cu.import('resource://gre/modules/devtools/Loader.jsm', {}).devtools;
 const {Services} = Cu.import('resource://gre/modules/Services.jsm');
+const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
 const {AppManager} = require('devtools/webide/app-manager');
 const {AppActorFront} = require('devtools/app-actor-front');
 const {Connection} = require('devtools/client/connection-manager');
@@ -45,7 +46,8 @@ let Monitor = {
   front: null,
   socket: null,
   wstimeout: null,
-  loaded: false,
+  b2ginfo: false,
+  b2gtimeout: null,
 
   /**
    * Add new data to the graphs, create a new graph if necessary.
@@ -53,6 +55,12 @@ let Monitor = {
   update: function(data, fallback) {
     if (Array.isArray(data)) {
       data.forEach(d => Monitor.update(d, fallback));
+      return;
+    }
+
+    if (Monitor.b2ginfo && data.graph === 'USS') {
+      // If we're polling b2g-info, ignore USS updates from the device's
+      // USSAgents (see Monitor.pollB2GInfo()).
       return;
     }
 
@@ -84,7 +92,6 @@ let Monitor = {
     AppManager.on('app-manager-update', Monitor.onAppManagerUpdate);
     Monitor.connectToRuntime();
     Monitor.connectToWebSocket();
-    Monitor.loaded = true;
   },
 
   /**
@@ -125,6 +132,7 @@ let Monitor = {
    * Use an AppActorFront on a runtime to watch track its apps.
    */
   connectToRuntime: function() {
+    Monitor.pollB2GInfo();
     let client = AppManager.connection && AppManager.connection.client;
     let resp = AppManager._listTabsResponse;
     if (client && resp && !Monitor.front) {
@@ -137,6 +145,7 @@ let Monitor = {
    * Destroy our AppActorFront.
    */
   disconnectFromRuntime: function() {
+    Monitor.unpollB2GInfo();
     if (Monitor.front) {
       Monitor.front.unwatchApps(Monitor.onRuntimeAppEvent);
       Monitor.front = null;
@@ -206,6 +215,66 @@ let Monitor = {
       fallback.curve = app.manifest.name
     }
     Monitor.update(packet.data, fallback);
+  },
+
+  /**
+   * Bug 1047355: If possible, parsing the output of `b2g-info` has several
+   * benefits over bug 1037465's multi-process USSAgent approach, notably:
+   * - Works for older Firefox OS devices (pre-2.1),
+   * - Doesn't need certified-apps debugging,
+   * - Polling time is synchronized for all processes.
+   * TODO: After bug 1043324 lands, consider removing this hack.
+   */
+  pollB2GInfo: function() {
+    if (AppManager.selectedRuntime) {
+      let id = AppManager.selectedRuntime.id;
+      let device = Devices.getByName(id);
+      if (device && device.shell) {
+        device.shell('b2g-info').then(s => {
+          let lines = s.split('\n');
+          let line = '';
+
+          // Find the header row to locate NAME and USS, looks like:
+          // '      NAME PID NICE  USS  PSS  RSS VSIZE OOM_ADJ USER '.
+          while (line.indexOf('NAME') < 0) {
+            if (lines.length < 1) {
+              // Something is wrong with this output, don't trust b2g-info.
+              Monitor.unpollB2GInfo();
+              return;
+            }
+            line = lines.shift();
+          }
+          let namelength = line.indexOf('NAME') + 'NAME'.length;
+          let ussindex = line.slice(namelength).split(/\s+/).indexOf('USS');
+
+          // Get the NAME and USS in each following line, looks like:
+          // 'Homescreen 375   18 12.6 16.3 27.1  67.8       4 app_375'.
+          while (lines.length > 0 && lines[0].length > namelength) {
+            line = lines.shift();
+            let name = line.slice(0, namelength);
+            let uss = line.slice(namelength).split(/\s+/)[ussindex];
+            Monitor.update({
+              curve: name.trim(),
+              value: 1024 * 1024 * parseFloat(uss) // Convert MB to bytes.
+            }, {
+              // Note: We use the fallback object to set the graph name to 'USS'
+              // so that Monitor.update() can ignore USSAgent updates.
+              graph: 'USS'
+            });
+          }
+        });
+      }
+    }
+    Monitor.b2ginfo = true;
+    Monitor.b2gtimeout = setTimeout(Monitor.pollB2GInfo, 350);
+  },
+
+  /**
+   * Polling b2g-info doesn't work or is no longer needed.
+   */
+  unpollB2GInfo: function() {
+    clearTimeout(Monitor.b2gtimeout);
+    Monitor.b2ginfo = false;
   }
 
 };

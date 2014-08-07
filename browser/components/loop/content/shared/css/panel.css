@@ -86,15 +86,17 @@
   margin-top: 10px;
 }
 
-.share .action .btn:hover {
+.share > .action .btn:hover {
   background-color: #008ACB;
   border: 1px solid #008ACB;
 }
 
-.share .action .btn span {
-  margin-top: 2px;
-  font-size: 12px;
-  display: inline-block;
+.share > .action > .invite > .url-actions {
+  margin: 0 0 5px;
+}
+
+.share > .action > .invite > .url-actions > .btn:first-child {
+  -moz-margin-end: 1em;
 }
 
 /* Specific cases */

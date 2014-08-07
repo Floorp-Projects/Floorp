@@ -4,36 +4,6 @@
 
 %include ../../../shared/incontentprefs/preferences.css
 
-caption {
-  background-color: transparent;
-}
-
-button,
-colorpicker[type="button"],
-menulist {
-  margin: 2px 4px;
-}
-
-menulist:not([editable="true"]) > .menulist-dropmarker {
-  margin-top: 1px;
-  margin-bottom: 1px;
-}
-
-checkbox {
-  -moz-padding-start: 0;
-}
-
-radio {
-  -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
-  -moz-margin-start: 0;
-  -moz-padding-start: 0;
-}
-
-.radio-icon,
-.checkbox-icon {
-  -moz-margin-end: 0;
-}
-
 .actionsMenu > .menulist-label-box > .menulist-icon {
   -moz-margin-end: 9px;
 }

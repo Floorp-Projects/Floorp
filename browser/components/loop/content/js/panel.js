@@ -152,11 +152,17 @@ loop.panel = (function(_, mozL10n) {
   });
 
   var CallUrlResult = React.createClass({displayName: 'CallUrlResult',
+    propTypes: {
+      callUrl:  React.PropTypes.string,
+      notifier: React.PropTypes.object.isRequired,
+      client:   React.PropTypes.object.isRequired
+    },
 
     getInitialState: function() {
       return {
         pending: false,
-        callUrl: ''
+        copied: false,
+        callUrl: this.props.callUrl || ""
       };
     },
 
@@ -184,7 +190,7 @@ loop.panel = (function(_, mozL10n) {
 
       if (err) {
         this.props.notifier.errorL10n("unable_retrieve_url");
-        this.setState({pending: false});
+        this.setState(this.getInitialState());
       } else {
         try {
           var callUrl = new window.URL(callUrlData.callUrl);
@@ -194,20 +200,32 @@ loop.panel = (function(_, mozL10n) {
                       callUrl.pathname.split('/').pop();
 
           navigator.mozLoop.setLoopCharPref('loopToken', token);
-          this.setState({pending: false, callUrl: callUrl.href});
+          this.setState({pending: false, copied: false, callUrl: callUrl.href});
         } catch(e) {
           console.log(e);
           this.props.notifier.errorL10n("unable_retrieve_url");
-          this.setState({pending: false});
+          this.setState(this.getInitialState());
         }
       }
     },
 
-    _generateMailto: function() {
+    _generateMailTo: function() {
       return encodeURI([
         "mailto:?subject=" + __("share_email_subject") + "&",
         "body=" + __("share_email_body", {callUrl: this.state.callUrl})
       ].join(""));
+    },
+
+    handleEmailButtonClick: function(event) {
+      // Note: side effect
+      document.location = event.target.dataset.mailto;
+    },
+
+    handleCopyButtonClick: function(event) {
+      // XXX the mozLoop object should be passed as a prop, to ease testing and
+      //     using a fake implementation in UI components showcase.
+      navigator.mozLoop.copyString(this.state.callUrl);
+      this.setState({copied: true});
     },
 
     render: function() {
@@ -216,21 +234,23 @@ loop.panel = (function(_, mozL10n) {
       // readOnly attr will suppress a warning regarding this issue
       // from the react lib.
       var cx = React.addons.classSet;
-      var inputCSSClass = {
-        "pending": this.state.pending,
-        "callUrl": !this.state.pending
-      };
       return (
         PanelLayout({summary: __("share_link_header_text")}, 
           React.DOM.div({className: "invite"}, 
             React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
-                   className: cx(inputCSSClass)}), 
-          React.DOM.a({className: cx({btn: true, hide: !this.state.callUrl}), 
-             href: this._generateMailto()}, 
-           React.DOM.span(null, 
-            __("share_button")
-           )
-          )
+                   className: cx({pending: this.state.pending})}), 
+            React.DOM.p({className: "button-group url-actions"}, 
+              React.DOM.button({className: "btn btn-email", disabled: !this.state.callUrl, 
+                onClick: this.handleEmailButtonClick, 
+                'data-mailto': this._generateMailTo()}, 
+                __("share_button")
+              ), 
+              React.DOM.button({className: "btn btn-copy", disabled: !this.state.callUrl, 
+                onClick: this.handleCopyButtonClick}, 
+                this.state.copied ? __("copied_url_button") :
+                                     __("copy_url_button")
+              )
+            )
           )
         )
       );
@@ -243,14 +263,17 @@ loop.panel = (function(_, mozL10n) {
   var PanelView = React.createClass({displayName: 'PanelView',
     propTypes: {
       notifier: React.PropTypes.object.isRequired,
-      client: React.PropTypes.object.isRequired
+      client: React.PropTypes.object.isRequired,
+      // Mostly used for UI components showcase and unit tests
+      callUrl: React.PropTypes.string
     },
 
     render: function() {
       return (
         React.DOM.div(null, 
           CallUrlResult({client: this.props.client, 
-                       notifier: this.props.notifier}), 
+                         notifier: this.props.notifier, 
+                         callUrl: this.props.callUrl}), 
           ToSView(null), 
           AvailabilityDropdown(null)
         )
