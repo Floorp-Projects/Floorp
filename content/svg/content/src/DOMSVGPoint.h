@@ -97,7 +97,7 @@ public:
     return mList;
   }
 
-  nsISVGPoint* Clone() {
+  virtual DOMSVGPoint* Copy() MOZ_OVERRIDE {
     return new DOMSVGPoint(this);
   }
 
