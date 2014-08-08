@@ -79,6 +79,8 @@ window.onload = function() {
   // Here, we should have 6 entries (1 css, 3 png, 1 html) since the image was loaded.
   is(window.performance.getEntries().length, 5, "Performance.getEntries() returned wrong number of entries.");
 
+  checkStringify(window.performance.getEntries()[0]);
+
   ok(!!window.performance.getEntriesByType("resource").length,
     "Performance.getEntriesByType() should return some results");
   ok(!!window.performance.getEntriesByName("http://example.com/tests/image/test/mochitest/blue.png").length,
@@ -117,6 +119,17 @@ window.onload = function() {
     "be removed when when clearResourceTimings is being called.");
 
   makeXhr("test-data.json", firstCheck);
+}
+
+function checkStringify(entry) {
+  var object = JSON.parse(JSON.stringify(entry));
+  var keys = ["initiatorType","redirectStart","redirectEnd","fetchStart",
+    "domainLookupStart","domainLookupEnd","connectStart","connectEnd",
+    "secureConnectionStart","requestStart","responseStart","responseEnd",
+    "name","entryType","startTime","duration"];
+  for (var i in keys) {
+    ok(keys[i] in object, "The serialization should contain key: "+keys[i]);
+  }
 }
 
 function checkEntries(anEntryList) {

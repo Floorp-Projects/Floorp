@@ -7243,21 +7243,28 @@ class CGJsonifierMethod(CGSpecializedMethod):
               return false;
             }
             """)
-        for m in self.descriptor.interface.members:
-            if m.isAttr() and not m.isStatic() and m.type.isSerializable():
-                ret += fill(
-                    """
-                    { // scope for "temp"
-                      JS::Rooted<JS::Value> temp(cx);
-                      if (!get_${name}(cx, obj, self, JSJitGetterCallArgs(&temp))) {
-                        return false;
-                      }
-                      if (!JS_DefineProperty(cx, result, "${name}", temp, JSPROP_ENUMERATE)) {
-                        return false;
-                      }
-                    }
-                    """,
-                    name=m.identifier.name)
+
+        interface = self.descriptor.interface
+        while interface:
+            descriptor = self.descriptor.getDescriptor(interface.identifier.name)
+            if descriptor.operations['Jsonifier']:
+                for m in interface.members:
+                    if m.isAttr() and not m.isStatic() and m.type.isSerializable():
+                        ret += fill(
+                            """
+                            { // scope for "temp"
+                              JS::Rooted<JS::Value> temp(cx);
+                              if (!${parentclass}::get_${name}(cx, obj, self, JSJitGetterCallArgs(&temp))) {
+                                return false;
+                              }
+                              if (!JS_DefineProperty(cx, result, "${name}", temp, JSPROP_ENUMERATE)) {
+                                return false;
+                              }
+                            }
+                            """,
+                            parentclass=toBindingNamespace(interface.identifier.name),
+                            name=m.identifier.name)
+            interface = interface.parent
 
         ret += ('args.rval().setObject(*result);\n'
                 'return true;\n')

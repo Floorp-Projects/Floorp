@@ -865,8 +865,6 @@ BrowserGlue.prototype = {
     if (!aQuitType)
       aQuitType = "quit";
 
-    var mostRecentBrowserWindow;
-
     // browser.warnOnQuit is a hidden global boolean to override all quit prompts
     // browser.showQuitWarning specifically covers quitting
     // browser.tabs.warnOnClose is the global "warn when closing multiple tabs" pref
@@ -876,6 +874,8 @@ BrowserGlue.prototype = {
     if (sessionWillBeRestored || !Services.prefs.getBoolPref("browser.warnOnQuit"))
       return;
 
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+
     // On last window close or quit && showQuitWarning, we want to show the
     // quit warning.
     if (!Services.prefs.getBoolPref("browser.showQuitWarning")) {
@@ -884,55 +884,54 @@ BrowserGlue.prototype = {
         // we should show the window closing warning instead. warnAboutClosing
         // tabs checks browser.tabs.warnOnClose and returns if it's ok to close
         // the window. It doesn't actually close the window.
-        mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-        let allTabs = mostRecentBrowserWindow.gBrowser.closingTabsEnum.ALL;
-        aCancelQuit.data = !mostRecentBrowserWindow.gBrowser.warnAboutClosingTabs(allTabs)
+        aCancelQuit.data =
+          !win.gBrowser.warnAboutClosingTabs(win.gBrowser.closingTabsEnum.ALL);
       }
       return;
     }
 
-    // Never show a prompt inside private browsing mode
-    if (allWindowsPrivate)
-      return;
+    let prompt = Services.prompt;
+    let quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
+    let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
 
-    var quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
-    var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
+    let appName = brandBundle.GetStringFromName("brandShortName");
+    let quitDialogTitle = quitBundle.formatStringFromName("quitDialogTitle",
+                                                          [appName], 1);
+    let neverAskText = quitBundle.GetStringFromName("neverAsk2");
+    let neverAsk = {value: false};
 
-    var appName = brandBundle.GetStringFromName("brandShortName");
-    var quitTitleString = "quitDialogTitle";
-    var quitDialogTitle = quitBundle.formatStringFromName(quitTitleString, [appName], 1);
+    let choice;
+    if (allWindowsPrivate) {
+      let text = quitBundle.formatStringFromName("messagePrivate", [appName], 1);
+      let flags = prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0 +
+                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_1 +
+                  prompt.BUTTON_POS_0_DEFAULT;
+      choice = prompt.confirmEx(win, quitDialogTitle, text, flags,
+                                quitBundle.GetStringFromName("quitTitle"),
+                                quitBundle.GetStringFromName("cancelTitle"),
+                                null,
+                                neverAskText, neverAsk);
 
-    var message;
-    if (windowcount == 1)
-      message = quitBundle.formatStringFromName("messageNoWindows",
-                                                [appName], 1);
-    else
-      message = quitBundle.formatStringFromName("message",
-                                                [appName], 1);
+      // The order of the buttons differs between the prompt.confirmEx calls
+      // here so we need to fix this for proper handling below.
+      if (choice == 0) {
+        choice = 2;
+      }
+    } else {
+      let text = quitBundle.formatStringFromName(
+        windowcount == 1 ? "messageNoWindows" : "message", [appName], 1);
+      let flags = prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0 +
+                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_1 +
+                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_2 +
+                  prompt.BUTTON_POS_0_DEFAULT;
+      choice = prompt.confirmEx(win, quitDialogTitle, text, flags,
+                                quitBundle.GetStringFromName("saveTitle"),
+                                quitBundle.GetStringFromName("cancelTitle"),
+                                quitBundle.GetStringFromName("quitTitle"),
+                                neverAskText, neverAsk);
+    }
 
-    var promptService = Services.prompt;
-
-    var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
-                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
-                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 +
-                promptService.BUTTON_POS_0_DEFAULT;
-
-    var neverAsk = {value:false};
-    var button0Title = quitBundle.GetStringFromName("saveTitle");
-    var button1Title = quitBundle.GetStringFromName("cancelTitle");
-    var button2Title = quitBundle.GetStringFromName("quitTitle");
-    var neverAskText = quitBundle.GetStringFromName("neverAsk2");
-
-    // This wouldn't have been set above since we shouldn't be here for
-    // aQuitType == "lastwindow"
-    mostRecentBrowserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-
-    var buttonChoice =
-      promptService.confirmEx(mostRecentBrowserWindow, quitDialogTitle, message,
-                              flags, button0Title, button1Title, button2Title,
-                              neverAskText, neverAsk);
-
-    switch (buttonChoice) {
+    switch (choice) {
     case 2: // Quit
       if (neverAsk.value)
         Services.prefs.setBoolPref("browser.showQuitWarning", false);

@@ -752,8 +752,8 @@ opensl_stream_set_volume(cubeb_stream * stm, float volume)
     return CUBEB_ERROR;
   }
 
-  /* convert to millibels */
-  millibels = lroundf(2000.f * log10f(volume));
+  millibels = SL_MILLIBEL_MIN + (float)(max_level - SL_MILLIBEL_MIN) * volume;
+
   /* clamp to supported range */
   if (millibels > max_level) {
    millibels = max_level;

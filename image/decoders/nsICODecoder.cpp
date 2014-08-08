@@ -549,7 +549,8 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy
             }
             uint32_t* decoded = imageData + mCurLine * GetRealWidth();
             uint32_t* decoded_end = decoded + GetRealWidth();
-            uint8_t* p = mRow, *p_end = mRow + rowSize; 
+            uint8_t* p = mRow;
+            uint8_t* p_end = mRow + rowSize;
             while (p < p_end) {
               uint8_t idx = *p++;
               for (uint8_t bit = 0x80; bit && decoded<decoded_end; bit >>= 1) {
