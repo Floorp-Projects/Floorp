@@ -1821,7 +1821,9 @@ MessageChannel::DumpInterruptStack(const char* const pfx) const
     // print a python-style backtrace, first frame to last
     for (uint32_t i = 0; i < mCxxStackFrames.length(); ++i) {
         int32_t id;
-        const char* dir, *sems, *name;
+        const char* dir;
+        const char* sems;
+        const char* name;
         mCxxStackFrames[i].Describe(&id, &dir, &sems, &name);
 
         printf_stderr("%s[(%u) %s %s %s(actor=%d) ]\n", pfx,
