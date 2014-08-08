@@ -63,14 +63,14 @@ public class SearchWidget extends AppWidgetProvider {
         Log.i(LOGTAG, "Got intent  " + intent.getAction());
         if (intent.getAction().equals(ACTION_LAUNCH_BROWSER)) {
             redirect = buildRedirectIntent(Intent.ACTION_VIEW,
-                                           AppConstants.ANDROID_PACKAGE_NAME,
-                                           AppConstants.BROWSER_INTENT_CLASS_NAME,
-                                           intent);
+                    AppConstants.ANDROID_PACKAGE_NAME,
+                    AppConstants.BROWSER_INTENT_CLASS_NAME,
+                    intent);
         } else if (intent.getAction().equals(ACTION_LAUNCH_SEARCH)) {
             redirect = buildRedirectIntent(Intent.ACTION_VIEW,
-                                           AppConstants.SEARCH_PACKAGE_NAME,
-                                           AppConstants.SEARCH_INTENT_CLASS_NAME,
-                                           intent);
+                    AppConstants.SEARCH_PACKAGE_NAME,
+                    AppConstants.SEARCH_INTENT_CLASS_NAME,
+                    intent);
         } else {
             redirect = null;
         }
