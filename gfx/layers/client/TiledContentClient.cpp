@@ -1392,7 +1392,7 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
   // first, and see if we should just abort this paint. Aborting is usually
   // caused by there being an incoming, more relevant paint.
   ViewTransform viewTransform;
-#if defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_ANDROID_APZ)
   FrameMetrics compositorMetrics = scrollAncestor->GetFrameMetrics();
   bool abortPaint = false;
   // On Android, only the primary scrollable layer is async-scrolled, and the only one
