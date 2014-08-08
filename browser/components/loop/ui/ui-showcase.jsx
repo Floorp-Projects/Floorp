@@ -35,10 +35,10 @@
 
   // Feedback API client configured to send data to the stage input server,
   // which is available at https://input.allizom.org
-  var stageFeedbackApiClient = new loop.FeedbackAPIClient({
-    baseUrl: "https://input.allizom.org/api/v1/feedback",
-    product: "Loop"
-  });
+  var stageFeedbackApiClient = new loop.FeedbackAPIClient(
+    "https://input.allizom.org/api/v1/feedback", {
+      product: "Loop"
+    });
 
   var Example = React.createClass({
     render: function() {
