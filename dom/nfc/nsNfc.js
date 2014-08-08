@@ -212,7 +212,7 @@ mozNfc.prototype = {
       return null;
     }
 
-    if (!this.nfcObject) {
+    if (!this.nfcObject || this.nfcObject.token != sessionToken) {
       let obj = new MozNFCPeer();
       obj.initialize(this._window, sessionToken);
       this.nfcObject = obj;
