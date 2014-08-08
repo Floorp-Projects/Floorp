@@ -771,11 +771,16 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier npid,
                                const NPVariant *value)
 {
   NPP npp = NPPStack::Peek();
-  JSContext *cx = GetJSContext(npp);
 
-  if (!cx) {
+  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalObject(npp);
+  if (NS_WARN_IF(!globalObject)) {
     return false;
   }
+
+  // We're about to run script via JS_CallFunctionValue, so we need an
+  // AutoEntryScript. NPAPI plugins are Gecko-specific and not in any spec.
+  dom::AutoEntryScript aes(globalObject);
+  JSContext *cx = aes.cx();
 
   if (!npobj) {
     ThrowJSException(cx,
@@ -787,8 +792,6 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier npid,
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
   bool ok = false;
 
-  nsCxPusher pusher;
-  pusher.Push(cx);
   AutoJSExceptionReporter reporter(cx);
   JS::Rooted<JSObject*> jsObj(cx, npjsobj->mJSObj);
   JSAutoCompartment ac(cx, jsObj);
