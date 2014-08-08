@@ -195,6 +195,7 @@ class ArenaCellIterImpl
     ArenaCellIterImpl()
       : firstThingOffset(0)     // Squelch
       , thingSize(0)            //   warnings
+      , limit(0)
     {
     }
 
