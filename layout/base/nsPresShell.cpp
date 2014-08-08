@@ -3744,9 +3744,7 @@ public:
 
   NS_IMETHODIMP Notify(nsITimer* aTimer) MOZ_FINAL
   {
-    mShell->SetNextPaintCompressed();
-    mShell->AddInvalidateHiddenPresShellObserver(mShell->GetPresContext()->RefreshDriver());
-    mShell->ScheduleViewManagerFlush();
+    mShell->DelayedPaintTimerFired();
     return NS_OK;
   }
 
@@ -3766,8 +3764,11 @@ PresShell::ScheduleViewManagerFlush(PaintType aType)
     static const uint32_t kPaintDelayPeriod = 1000;
     if (!mDelayedPaintTimer) {
       mDelayedPaintTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    }
+    if (mDelayedPaintTimer && !mDelayedPaintTimerActive) {
       nsRefPtr<PaintTimerCallBack> cb = new PaintTimerCallBack(this);
       mDelayedPaintTimer->InitWithCallback(cb, kPaintDelayPeriod, nsITimer::TYPE_ONE_SHOT);
+      mDelayedPaintTimerActive = true;
     }
     return;
   }
@@ -3775,10 +3776,19 @@ PresShell::ScheduleViewManagerFlush(PaintType aType)
   nsPresContext* presContext = GetPresContext();
   if (presContext) {
     presContext->RefreshDriver()->ScheduleViewManagerFlush();
+    AddInvalidateHiddenPresShellObserver(presContext->RefreshDriver());
   }
   if (mDocument) {
     mDocument->SetNeedLayoutFlush();
   }
+}
+
+void
+PresShell::DelayedPaintTimerFired()
+{
+  mDelayedPaintTimerActive = false;
+  mNextPaintCompressed = true;
+  ScheduleViewManagerFlush();
 }
 
 void
