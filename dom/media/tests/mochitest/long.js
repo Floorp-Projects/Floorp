@@ -59,6 +59,10 @@ function outputPcStats(stats, label) {
 
 
 var _lastStats = {};
+
+const MAX_ERROR_CYCLES = 5;
+var _errorCount = {};
+
 /**
  * Verifies the peer connection stats interval over interval
  *
@@ -81,11 +85,18 @@ function verifyPcStats(stats, label) {
   ];
 
   if (_lastStats[label] !== undefined) {
+    var errorsInCycle = false;
+
     function verifyIncrease(rtpName, statNames) {
       var timestamp = new Date(stats[rtpName].timestamp).toISOString();
 
       statNames.forEach(function (statName) {
-        ok(stats[rtpName][statName] > _lastStats[label][rtpName][statName],
+        var passed = stats[rtpName][statName] >
+            _lastStats[label][rtpName][statName];
+        if (!passed) {
+          errorsInCycle = true;
+        }
+        ok(passed,
            timestamp + '.' + label + '.' + rtpName + '.' + statName,
            label + '.' + rtpName + '.' + statName + ' increased (value=' +
            stats[rtpName][statName] + ')');
@@ -101,8 +112,21 @@ function verifyPcStats(stats, label) {
         }
       }
     }
+
+    if (errorsInCycle) {
+      _errorCount[label] += 1;
+      info(label +": increased error counter to " + _errorCount[label]);
+    } else {
+      // looks like we recovered from a temp glitch
+      if (_errorCount[label] > 0) {
+        info(label + ": reseting error counter to zero");
+      }
+      _errorCount[label] = 0;
+    }
+  } else {
+    _errorCount[label] = 0;
   }
-  
+
   _lastStats[label] = stats;
 }
 
@@ -175,8 +199,16 @@ function generateIntervalCommand(callback, interval, duration, name) {
           callback(test);
         }
 
+        var failed = false;
+        Object.keys(_errorCount).forEach(function (label) {
+          if (_errorCount[label] > MAX_ERROR_CYCLES) {
+            ok(false, "Encountered more then " + MAX_ERROR_CYCLES + " cycles" +
+              " with errors on " + label);
+            failed = true;
+          }
+        });
         var timeElapsed = Date.now() - startTime;
-        if (timeElapsed >= duration) {
+        if ((timeElapsed >= duration) || failed) {
           clearInterval(intervalId);
           test.next();
         }
