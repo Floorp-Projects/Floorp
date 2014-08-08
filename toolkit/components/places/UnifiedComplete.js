@@ -1355,6 +1355,7 @@ UnifiedComplete.prototype = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIAutoCompleteSearch,
     Ci.nsIAutoCompleteSimpleResultListener,
+    Ci.nsIAutoCompleteSearchDescriptor,
     Ci.mozIPlacesAutoComplete,
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference
