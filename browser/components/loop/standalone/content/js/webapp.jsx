@@ -285,7 +285,7 @@ loop.webapp = (function($, _, OT, webL10n) {
         // XXX For now, we assume both audio and video as there is no
         // other option to select (bug 1048333)
         this._client.requestCallInfo(this._conversation.get("loopToken"), "audio-video",
-                                     (err, sessionData) => {
+                                     function(err, sessionData) {
           if (err) {
             switch (err.errno) {
               // loop-server sends 404 + INVALID_TOKEN (errno 105) whenever a token is
@@ -302,7 +302,7 @@ loop.webapp = (function($, _, OT, webL10n) {
             return;
           }
           this._conversation.outgoing(sessionData);
-        });
+        }.bind(this));
       }
     },
 
