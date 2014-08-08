@@ -298,7 +298,7 @@ public:
 
   /**
    * CheckAcquisition This method is called after acquiring |aLast|,
-   * but before trying to acquire |aProposed| from |aCallContext|.
+   * but before trying to acquire |aProposed|.
    * It determines whether actually trying to acquire |aProposed|
    * will create problems.  It is OK if |aLast| is nullptr; this is
    * interpreted as |aProposed| being the thread's first acquisition
@@ -316,11 +316,9 @@ public:
    *
    * @param aLast Last resource acquired by calling thread (or 0).
    * @param aProposed Resource calling thread proposes to acquire.
-   * @param aCallContext Calling context whence acquisiton request came.
    */
   ResourceAcquisitionArray* CheckAcquisition(const T* aLast,
-                                             const T* aProposed,
-                                             const CallStack& aCallContext)
+                                             const T* aProposed)
   {
     if (!aLast) {
       // don't check if |0 < aProposed|; just vamoose

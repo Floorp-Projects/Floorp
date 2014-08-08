@@ -155,21 +155,15 @@ protected:
    * CheckAcquire
    *
    * Thread safe.
-   *
-   * @param aCallContext the client's calling context from which the
-   *        original acquisition request was made.
    **/
-  void CheckAcquire(const CallStack& aCallContext);
+  void CheckAcquire();
 
   /**
    * Acquire
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
-   *
-   * @param aCallContext the client's calling context from which the
-   *        original acquisition request was made.
    **/
-  void Acquire(const CallStack& aCallContext); //NS_NEEDS_RESOURCE(this)
+  void Acquire(); //NS_NEEDS_RESOURCE(this)
 
   /**
    * Release
