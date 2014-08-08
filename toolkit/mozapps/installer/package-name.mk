@@ -145,7 +145,9 @@ MOZ_SOURCE_STAMP = $(firstword $(shell hg -R $(MOZILLA_DIR) parent --template="{
 # bug: 746277 - preserve existing functionality.
 # MOZILLA_DIR="": cd $(SPACE); hg # succeeds if ~/.hg exists
 ###########################################################################
+ifdef MOZILLA_OFFICIAL
 MOZ_SOURCE_REPO = $(call getSourceRepo,$(MOZILLA_DIR)$(NULL) $(NULL))
+endif
 
 MOZ_SOURCESTAMP_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_INFO_BASENAME).txt
 MOZ_BUILDINFO_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_INFO_BASENAME).json
