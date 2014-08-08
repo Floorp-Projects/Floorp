@@ -85,6 +85,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_framebuffer_sRGB",
     "GL_ARB_half_float_pixel",
     "GL_ARB_instanced_arrays",
+    "GL_ARB_map_buffer_range",
     "GL_ARB_occlusion_query2",
     "GL_ARB_pixel_buffer_object",
     "GL_ARB_robustness",
@@ -1083,6 +1084,21 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
                 MarkUnsupported(GLFeature::draw_range_elements);
                 ClearSymbols(coreSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::map_buffer_range)) {
+            SymLoadStruct mapBufferRangeSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fMapBufferRange, { "MapBufferRange", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fFlushMappedBufferRange, { "FlushMappedBufferRange", nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(mapBufferRangeSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports map_buffer_range without supplying its functions.");
+
+                MarkUnsupported(GLFeature::map_buffer_range);
+                ClearSymbols(mapBufferRangeSymbols);
             }
         }
 

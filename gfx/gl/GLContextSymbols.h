@@ -527,6 +527,12 @@ struct GLContextSymbols
     pfnIsFenceT fIsFence;
     typedef void (GLAPIENTRY * pfnGetFenceivT) (GLuint fence, GLenum pname, GLint* params);
     pfnGetFenceivT fGetFenceiv;
+
+    // map_buffer_range
+    typedef void* (GLAPIENTRY * PFNGLMAPBUFFERRANGEPROC) (GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
+    PFNGLMAPBUFFERRANGEPROC fMapBufferRange;
+    typedef void (GLAPIENTRY * PFNGLFLUSHMAPPEDBUFFERRANGEPROC) (GLenum target, GLintptr offset, GLsizeiptr length);
+    PFNGLFLUSHMAPPEDBUFFERRANGEPROC fFlushMappedBufferRange;
 };
 
 }
