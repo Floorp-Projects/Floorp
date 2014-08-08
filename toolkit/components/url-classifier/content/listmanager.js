@@ -61,6 +61,10 @@ function PROT_ListManager() {
                                           BindToObject(this.shutdown_, this),
                                           true /*only once*/);
 
+  // A map of updateUrls to single-use G_Alarms. An entry exists if and only if
+  // there is at least one table with updates enabled for that url. G_Alarms
+  // are reset when enabling/disabling updates or on update callbacks (update
+  // success, update failure, download error).
   this.updateCheckers_ = {};
   this.requestBackoffs_ = {};
   this.dbService_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
@@ -141,16 +145,33 @@ PROT_ListManager.prototype.enableUpdate = function(tableName) {
 }
 
 /**
+ * Returns true if any table associated with the updateUrl requires updates.
+ * @param updateUrl - the updateUrl
+ */
+PROT_ListManager.prototype.updatesNeeded_ = function(updateUrl) {
+  let updatesNeeded = false;
+  for (var tableName in this.needsUpdate_[updateUrl]) {
+    if (this.needsUpdate_[updateUrl][tableName]) {
+      updatesNeeded = true;
+    }
+  }
+  return updatesNeeded;
+}
+
+/**
  * Disables updates for some tables
  * @param tables - an array of table names that no longer need updating
  */
 PROT_ListManager.prototype.disableUpdate = function(tableName) {
-  var changed = false;
   var table = this.tablesData[tableName];
   if (table) {
     log("Disabling table updates for " + tableName);
     this.needsUpdate_[table.updateUrl][tableName] = false;
-    changed = true;
+    if (!this.updatesNeeded_(table.updateUrl) &&
+        this.updateCheckers_[table.updateUrl]) {
+      this.updateCheckers_[table.updateUrl].cancel();
+      this.updateCheckers_[table.updateUrl] = null;
+    }
   }
 }
 
@@ -176,34 +197,21 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
   this.startingUpdate_ = false;
   var initialUpdateDelay = 3000;
 
-  // Check if any table registered for updates has ever been downloaded.
-  var updatingExisting = false;
-  for (var tableName in this.tablesData) {
-    if (this.needsUpdate_[this.tablesData[tableName].updateUrl][tableName]) {
-      if (onDiskTableData.indexOf(tableName) != -1) {
-        updatingExisting = true;
-      }
-    }
-  }
-
   // If the user has never downloaded tables, do the check now.
   log("needsUpdate: " + JSON.stringify(this.needsUpdate_, undefined, 2));
   for (var updateUrl in this.needsUpdate_) {
-    // If the user has tables, add a fuzz of a few minutes.
-    if (updatingExisting) {
-      // Add a fuzz of 0-5 minutes.
-      initialUpdateDelay += Math.floor(Math.random() * (5 * 60 * 1000));
-      log("Waiting " + initialUpdateDelay / 1000 +
-          " for updating existing table from " + updateUrl);
-    }
     // If we haven't already kicked off updates for this updateUrl, set a
     // non-repeating timer for it. The timer delay will be reset either on
     // updateSuccess to this.updateinterval, or backed off on downloadError.
-    if (!this.updateCheckers_[updateUrl]) {
+    // Don't set the updateChecker unless at least one table has updates
+    // enabled.
+    if (this.updatesNeeded_(updateUrl) && !this.updateCheckers_[updateUrl]) {
       log("Initializing update checker for " + updateUrl);
       this.updateCheckers_[updateUrl] =
         new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
                     initialUpdateDelay, false /* repeating */);
+    } else {
+      log("No updates needed or already initialized for " + updateUrl);
     }
   }
 }
@@ -343,6 +351,7 @@ PROT_ListManager.prototype.makeUpdateRequest_ = function(updateUrl, tableData) {
     this.makeUpdateRequestForEntry_(updateUrl, streamerMap.tableList,
                                     streamerMap.request);
   } else {
+    // We were disabled between kicking off getTables and now.
     log("Not sending empty request");
   }
 }
