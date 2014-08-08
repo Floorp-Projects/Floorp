@@ -1630,7 +1630,7 @@ struct FilterAttribute {
   AttributeType Type() const { return mType; }
 
 #define MAKE_CONSTRUCTOR_AND_ACCESSOR_BASIC(type, typeLabel)   \
-  FilterAttribute(type aValue)                                 \
+  explicit FilterAttribute(type aValue)                        \
    : mType(AttributeType::e##typeLabel), m##typeLabel(aValue)  \
   {}                                                           \
   type As##typeLabel() {                                       \
@@ -1639,7 +1639,7 @@ struct FilterAttribute {
   }
 
 #define MAKE_CONSTRUCTOR_AND_ACCESSOR_CLASS(className)         \
-  FilterAttribute(const className& aValue)                     \
+  explicit FilterAttribute(const className& aValue)            \
    : mType(AttributeType::e##className), m##className(new className(aValue)) \
   {}                                                           \
   className As##className() {                                  \

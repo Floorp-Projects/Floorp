@@ -14,7 +14,7 @@ class gfxMacFont;
 
 class gfxCoreTextShaper : public gfxFontShaper {
 public:
-    gfxCoreTextShaper(gfxMacFont *aFont);
+    explicit gfxCoreTextShaper(gfxMacFont *aFont);
 
     virtual ~gfxCoreTextShaper();
 

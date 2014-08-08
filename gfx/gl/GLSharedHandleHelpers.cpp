@@ -21,7 +21,7 @@ enum SharedHandleType {
 class SharedTextureHandleWrapper
 {
 public:
-    SharedTextureHandleWrapper(SharedHandleType aHandleType) : mHandleType(aHandleType)
+    explicit SharedTextureHandleWrapper(SharedHandleType aHandleType) : mHandleType(aHandleType)
     {
     }
 
