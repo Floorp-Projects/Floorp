@@ -496,7 +496,7 @@ nsChromeRegistryChrome::SendRegisteredChrome(
     if (!parents.Length())
       return;
 
-    for (PRUint32 i = 0; i < parents.Length(); i++) {
+    for (uint32_t i = 0; i < parents.Length(); i++) {
       DebugOnly<bool> success =
         parents[i]->SendRegisterChrome(packages, resources, overrides,
                                        mSelectedLocale, true);

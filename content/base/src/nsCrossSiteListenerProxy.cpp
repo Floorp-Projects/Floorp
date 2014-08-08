@@ -47,7 +47,7 @@ LogBlockedRequest(nsIRequest* aRequest)
   nsresult rv = NS_OK;
 
   // Get the innerWindowID associated with the XMLHTTPRequest
-  PRUint64 innerWindowID = 0;
+  uint64_t innerWindowID = 0;
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   aRequest->GetLoadGroup(getter_AddRefs(loadGroup));
