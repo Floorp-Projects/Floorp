@@ -23,6 +23,7 @@
 #include "nsIScrollable.h"
 #include "nsPresContext.h"
 #include "nsServiceManagerUtils.h"
+#include "nsSubDocumentFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -58,6 +59,14 @@ nsGenericHTMLFrameElement::CreateRemoteFrameLoader(nsITabParent* aTabParent)
   EnsureFrameLoader();
   NS_ENSURE_STATE(mFrameLoader);
   mFrameLoader->SetRemoteBrowser(aTabParent);
+
+  if (nsSubDocumentFrame* subdocFrame = do_QueryFrame(GetPrimaryFrame())) {
+    // The reflow for this element already happened while we were waiting
+    // for the iframe creation. Therefore the subdoc frame didn't have a
+    // frameloader when UpdatePositionAndSize was supposed to be called in
+    // ReflowFinished, and we need to do it properly now.
+    mFrameLoader->UpdatePositionAndSize(subdocFrame);
+  }
   return NS_OK;
 }
 
