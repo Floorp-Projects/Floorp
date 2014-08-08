@@ -27,7 +27,7 @@ template<typename DataType>
 class MozMapEntry : public nsStringHashKey
 {
 public:
-  MozMapEntry(const nsAString* aKeyTypePointer)
+  explicit MozMapEntry(const nsAString* aKeyTypePointer)
     : nsStringHashKey(aKeyTypePointer)
   {
   }
