@@ -890,44 +890,48 @@ BrowserGlue.prototype = {
       return;
     }
 
-    // Never show a prompt inside private browsing mode
-    if (allWindowsPrivate)
-      return;
-
+    let prompt = Services.prompt;
     let quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
     let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
 
     let appName = brandBundle.GetStringFromName("brandShortName");
     let quitDialogTitle = quitBundle.formatStringFromName("quitDialogTitle",
                                                           [appName], 1);
+    let neverAskText = quitBundle.GetStringFromName("neverAsk2");
+    let neverAsk = {value: false};
 
-    var message;
-    if (windowcount == 1)
-      message = quitBundle.formatStringFromName("messageNoWindows",
-                                                [appName], 1);
-    else
-      message = quitBundle.formatStringFromName("message",
-                                                [appName], 1);
+    let choice;
+    if (allWindowsPrivate) {
+      let text = quitBundle.formatStringFromName("messagePrivate", [appName], 1);
+      let flags = prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0 +
+                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_1 +
+                  prompt.BUTTON_POS_0_DEFAULT;
+      choice = prompt.confirmEx(win, quitDialogTitle, text, flags,
+                                quitBundle.GetStringFromName("quitTitle"),
+                                quitBundle.GetStringFromName("cancelTitle"),
+                                null,
+                                neverAskText, neverAsk);
 
-    var promptService = Services.prompt;
+      // The order of the buttons differs between the prompt.confirmEx calls
+      // here so we need to fix this for proper handling below.
+      if (choice == 0) {
+        choice = 2;
+      }
+    } else {
+      let text = quitBundle.formatStringFromName(
+        windowcount == 1 ? "messageNoWindows" : "message", [appName], 1);
+      let flags = prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0 +
+                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_1 +
+                  prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_2 +
+                  prompt.BUTTON_POS_0_DEFAULT;
+      choice = prompt.confirmEx(win, quitDialogTitle, text, flags,
+                                quitBundle.GetStringFromName("saveTitle"),
+                                quitBundle.GetStringFromName("cancelTitle"),
+                                quitBundle.GetStringFromName("quitTitle"),
+                                neverAskText, neverAsk);
+    }
 
-    var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
-                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1 +
-                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2 +
-                promptService.BUTTON_POS_0_DEFAULT;
-
-    var neverAsk = {value:false};
-    var button0Title = quitBundle.GetStringFromName("saveTitle");
-    var button1Title = quitBundle.GetStringFromName("cancelTitle");
-    var button2Title = quitBundle.GetStringFromName("quitTitle");
-    var neverAskText = quitBundle.GetStringFromName("neverAsk2");
-
-    var buttonChoice =
-      promptService.confirmEx(win, quitDialogTitle, message,
-                              flags, button0Title, button1Title, button2Title,
-                              neverAskText, neverAsk);
-
-    switch (buttonChoice) {
+    switch (choice) {
     case 2: // Quit
       if (neverAsk.value)
         Services.prefs.setBoolPref("browser.showQuitWarning", false);
