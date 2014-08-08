@@ -15,72 +15,7 @@
 #include "nsClassHashtable.h"
 #include "nsTArray.h"
 
-#ifdef NS_TRACE_MALLOC
-#  include "nsTraceMalloc.h"
-#endif  // ifdef NS_TRACE_MALLOC
-
 namespace mozilla {
-
-
-// FIXME bug 456272: split this off into a convenience API on top of
-// nsStackWalk?
-class NS_COM_GLUE CallStack
-{
-private:
-#ifdef NS_TRACE_MALLOC
-  typedef nsTMStackTraceID callstack_id;
-  // needs to be a macro to avoid disturbing the backtrace
-#   define NS_GET_BACKTRACE() NS_TraceMallocGetStackTrace()
-#   define NS_DEADLOCK_DETECTOR_CONSTEXPR
-#else
-  typedef void* callstack_id;
-#   define NS_GET_BACKTRACE() 0
-#   define NS_DEADLOCK_DETECTOR_CONSTEXPR MOZ_CONSTEXPR
-#endif  // ifdef NS_TRACE_MALLOC
-
-  callstack_id mCallStack;
-
-public:
-  /**
-   * CallStack
-   * *ALWAYS* *ALWAYS* *ALWAYS* call this with no arguments.  This
-   * constructor takes an argument *ONLY* so that |GET_BACKTRACE()|
-   * can be evaluated in the stack frame of the caller, rather than
-   * that of the constructor.
-   *
-   * *BEWARE*: this means that calling this constructor with no
-   * arguments is not the same as a "default, do-nothing"
-   * constructor: it *will* construct a backtrace.  This can cause
-   * unexpected performance issues.
-   */
-  NS_DEADLOCK_DETECTOR_CONSTEXPR
-  explicit CallStack(const callstack_id aCallStack = NS_GET_BACKTRACE())
-    : mCallStack(aCallStack)
-  {
-  }
-  NS_DEADLOCK_DETECTOR_CONSTEXPR
-  CallStack(const CallStack& aFrom)
-    : mCallStack(aFrom.mCallStack)
-  {
-  }
-  CallStack& operator=(const CallStack& aFrom)
-  {
-    mCallStack = aFrom.mCallStack;
-    return *this;
-  }
-  bool operator==(const CallStack& aOther) const
-  {
-    return mCallStack == aOther.mCallStack;
-  }
-  bool operator!=(const CallStack& aOther) const
-  {
-    return mCallStack != aOther.mCallStack;
-  }
-
-  /** The "null" callstack. */
-  static const CallStack kNone;
-};
-
 
 /**
  * DeadlockDetector
