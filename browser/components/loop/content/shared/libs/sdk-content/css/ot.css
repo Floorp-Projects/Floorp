@@ -153,16 +153,16 @@
 
 .OT_dialog-plugin-prompt {
   margin-left: -350px;
-  margin-top: -141px;
+  margin-top: -127px;
   width: 650px;
-  height: 282px;
+  height: 254px;
 }
 
 .OT_dialog-plugin-reinstall {
   margin-left: -271px;
-  margin-top: -117px;
+  margin-top: -107px;
   width: 542px;
-  height: 234px;
+  height: 214px;
 }
 
 .OT_dialog-plugin-upgrading {
@@ -170,6 +170,13 @@
   margin-top: -94px;
   width: 514px;
   height: 188px;
+}
+
+.OT_dialog-plugin-upgraded {
+  margin-left: -300px;
+  margin-top: -100px;
+  width: 600px;
+  height: 200px;
 }
 
 .OT_dialog-allow-deny-chrome-first {
@@ -217,8 +224,8 @@
 
 .OT_closeButton {
   top: 15px;
-right: 15px;
-position: absolute;
+  right: 15px;
+  position: absolute;
   font-size: 18px;
   cursor: pointer;
 }
@@ -234,6 +241,7 @@ position: absolute;
 .OT_dialog-allow-deny-firefox-maybe-denied .OT_dialog-messages {
   top: 45px;
 }
+
 
 .OT_dialog-messages-main {
   font-weight: 300;
@@ -314,6 +322,12 @@ position: absolute;
   text-align: center;
   font-size: 16pt;
   cursor: pointer;
+}
+
+.OT_dialog-button.OT_dialog-button-disabled {
+  background-color: #444444;
+  color: #999999;
+  cursor: not-allowed;
 }
 
 .OT_dialog-button.OT_dialog-button-large {
@@ -449,9 +463,15 @@ position: absolute;
 }
 
 .OT_publisher video,
-.OT_subscriber video {
+.OT_subscriber video,
+.OT_publisher object,
+.OT_subscriber object {
     width: 100%;
     height: 100%;
+}
+
+.OT_publisher object,
+.OT_subscriber object {
 }
 
 /* Styles that are applied when the video element should be mirrored */
@@ -536,7 +556,7 @@ position: absolute;
     bottom: 0;
     right: auto;
     width: 34px;
-    height: 34px;    
+    height: 34px;
 }
 
 .OT_archiving-light {
@@ -722,7 +742,7 @@ position: absolute;
 .OT_bar.OT_mode-mini,
 .OT_bar.OT_mode-mini-auto {
     bottom: 0;
-    height: auto;    
+    height: auto;
 }
 
 .OT_mini .OT_name.OT_mode-off,
@@ -761,7 +781,7 @@ position: absolute;
 
 .OT_publisher .OT_opentok,
 .OT_subscriber .OT_opentok {
-    background: url(../images/rtc/buttons.png) 0 -32px no-repeat;    
+    background: url(../images/rtc/buttons.png) 0 -32px no-repeat;
     cursor: default;
     height: 18px;
     left: 8px;
@@ -951,7 +971,9 @@ position: absolute;
 }
 
 .OT_publisher.OT_loading video,
-.OT_subscriber.OT_loading video {
+.OT_subscriber.OT_loading video,
+.OT_publisher.OT_loading object,
+.OT_subscriber.OT_loading object {
     display: none;
 }
 
@@ -965,7 +987,7 @@ position: absolute;
 }
 
 .OT_publisher .OT_video-poster {
-    background-image: url(../images/rtc/audioonly-publisher.png);    
+    background-image: url(../images/rtc/audioonly-publisher.png);
 }
 
 .OT_subscriber .OT_video-poster  {

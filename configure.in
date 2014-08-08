@@ -6402,6 +6402,9 @@ Linux)
         ;;
     esac
     ;;
+Darwin)
+    MOZ_GMP_SANDBOX=1
+    ;;
 esac
 
 if test -n "$MOZ_GMP_SANDBOX"; then

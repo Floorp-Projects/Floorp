@@ -370,7 +370,7 @@ private:
   nsresult EnsureMessageManager();
 
   // Properly retrieves documentSize of any subdocument type.
-  nsresult GetWindowDimensions(nsRect& aRect);
+  nsresult GetWindowDimensions(nsIntRect& aRect);
 
   // Updates the subdocument position and size. This gets called only
   // when we have our own in-process DocShell.

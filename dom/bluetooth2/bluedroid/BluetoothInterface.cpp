@@ -47,7 +47,7 @@ private:
   void (Obj::*mMethod)();
 };
 
-template <typename Obj, typename Res, typename Arg1>
+template <typename Obj, typename Res, typename Tin1, typename Arg1>
 class BluetoothInterfaceRunnable1 : public nsRunnable
 {
 public:
@@ -70,11 +70,12 @@ public:
 
 private:
   nsRefPtr<Obj> mObj;
-  void (Obj::*mMethod)(Arg1);
-  Arg1 mArg1;
+  Res (Obj::*mMethod)(Arg1);
+  Tin1 mArg1;
 };
 
 template <typename Obj, typename Res,
+          typename Tin1, typename Tin2, typename Tin3,
           typename Arg1, typename Arg2, typename Arg3>
 class BluetoothInterfaceRunnable3 : public nsRunnable
 {
@@ -102,10 +103,10 @@ public:
 
 private:
   nsRefPtr<Obj> mObj;
-  void (Obj::*mMethod)(Arg1, Arg2, Arg3);
-  Arg1 mArg1;
-  Arg2 mArg2;
-  Arg3 mArg3;
+  Res (Obj::*mMethod)(Arg1, Arg2, Arg3);
+  Tin1 mArg1;
+  Tin2 mArg2;
+  Tin3 mArg3;
 };
 
 //
@@ -124,16 +125,18 @@ struct interface_traits<BluetoothSocketInterface>
 };
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void, int>
+  BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void, int, int>
   BluetoothSocketIntResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable3<BluetoothSocketResultHandler,
-                              void, int, const nsAString_internal&, int>
+  BluetoothInterfaceRunnable3<BluetoothSocketResultHandler, void,
+                              int, const nsString, int,
+                              int, const nsAString_internal&, int>
   BluetoothSocketIntStringIntResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void, bt_status_t>
+  BluetoothInterfaceRunnable1<BluetoothSocketResultHandler, void,
+                              bt_status_t, bt_status_t>
   BluetoothSocketErrorRunnable;
 
 static nsresult
@@ -581,7 +584,8 @@ typedef
   BluetoothHandsfreeResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothHandsfreeResultHandler, void, bt_status_t>
+  BluetoothInterfaceRunnable1<BluetoothHandsfreeResultHandler, void,
+                              bt_status_t, bt_status_t>
   BluetoothHandsfreeErrorRunnable;
 
 static nsresult
@@ -852,7 +856,8 @@ typedef
   BluetoothA2dpResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothA2dpResultHandler, void, bt_status_t>
+  BluetoothInterfaceRunnable1<BluetoothA2dpResultHandler, void,
+                              bt_status_t, bt_status_t>
   BluetoothA2dpErrorRunnable;
 
 static nsresult
@@ -956,7 +961,8 @@ typedef
   BluetoothAvrcpResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothAvrcpResultHandler, void, bt_status_t>
+  BluetoothInterfaceRunnable1<BluetoothAvrcpResultHandler, void,
+                              bt_status_t, bt_status_t>
   BluetoothAvrcpErrorRunnable;
 
 static nsresult
@@ -1155,7 +1161,7 @@ typedef
   BluetoothResultRunnable;
 
 typedef
-  BluetoothInterfaceRunnable1<BluetoothResultHandler, void, int>
+  BluetoothInterfaceRunnable1<BluetoothResultHandler, void, int, int>
   BluetoothErrorRunnable;
 
 static nsresult

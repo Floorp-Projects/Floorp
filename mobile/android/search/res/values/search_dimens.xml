@@ -23,6 +23,11 @@
     <dimen name="card_padding_x">38dp</dimen>
     <dimen name="card_padding_y">23dp</dimen>
 
+    <!-- The suggestion card TextView does not need to account for the
+         padding of the background -->
+    <dimen name="suggestion_card_padding_x">23dp</dimen>
+    <dimen name="jump_button_padding_x">15dp</dimen>
+
     <dimen name="search_bar_padding_y">10dp</dimen>
 
     <!-- Widget Buttons -->
