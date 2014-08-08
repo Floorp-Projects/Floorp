@@ -20,8 +20,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
 
 this.Keyboard = {
-  _formMM: null,     // The current web page message manager.
-  _keyboardMM: null, // The keyboard app message manager.
+  _formMM: null,      // The current web page message manager.
+  _keyboardMM: null,  // The keyboard app message manager.
+  _keyboardID: -1,    // The keyboard app's ID number. -1 = invalid
+  _nextKeyboardID: 0, // The ID number counter.
   _systemMessageName: [
     'SetValue', 'RemoveFocus', 'SetSelectedOption', 'SetSelectedOptions'
   ],
@@ -149,6 +151,20 @@ this.Keyboard = {
       }
     }
 
+    // we don't process kb messages (other than register)
+    // if they come from a kb that we're currently not regsitered for.
+    // this decision is made with the kbID kept by us and kb app
+    let kbID = null;
+    if ('kbID' in msg.data) {
+      kbID = msg.data.kbID;
+    }
+
+    if (0 === msg.name.indexOf('Keyboard:') &&
+        ('Keyboard:Register' !== msg.name && this._keyboardID !== kbID)
+       ) {
+      return;
+    }
+
     switch (msg.name) {
       case 'Forms:Input':
         this.handleFocusChange(msg);
@@ -212,9 +228,22 @@ this.Keyboard = {
         break;
       case 'Keyboard:Register':
         this._keyboardMM = mm;
+        if (kbID !== null) {
+          // keyboard identifies itself, use its kbID
+          // this msg would be async, so no need to return
+          this._keyboardID = kbID;
+        }else{
+          // generate the id for the keyboard
+          this._keyboardID = this._nextKeyboardID;
+          this._nextKeyboardID++;
+          // this msg is sync,
+          // and we want to return the id back to inputmethod
+          return this._keyboardID;
+        }
         break;
       case 'Keyboard:Unregister':
         this._keyboardMM = null;
+        this._keyboardID = -1;
         break;
     }
   },

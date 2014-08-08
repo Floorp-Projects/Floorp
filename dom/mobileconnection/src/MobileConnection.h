@@ -41,6 +41,9 @@ public:
   void
   Shutdown();
 
+  virtual void
+  DisconnectFromOwner() MOZ_OVERRIDE;
+
   nsPIDOMWindow*
   GetParentObject() const
   {

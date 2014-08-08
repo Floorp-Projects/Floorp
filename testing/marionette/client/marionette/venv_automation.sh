@@ -29,12 +29,6 @@ else
   python setup_development.py
   cd ..
 
-  # set up mozautolog
-  hg clone http://hg.mozilla.org/automation/mozautolog/
-  cd mozautolog
-  python setup.py develop
-  cd ..
-
   # set up gitpython
   easy_install http://pypi.python.org/packages/source/G/GitPython/GitPython-0.3.2.RC1.tar.gz
 fi
