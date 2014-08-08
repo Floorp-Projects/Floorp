@@ -32,6 +32,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 /**
 * {@code ToolbarEditText} is the text entry used when the toolbar
@@ -107,6 +108,14 @@ public class ToolbarEditText extends CustomEditText
         }
     }
 
+    @Override
+    public void setText(final CharSequence text, final TextView.BufferType type) {
+        super.setText(text, type);
+
+        // Any autocomplete text would have been overwritten, so reset our autocomplete states.
+        resetAutocompleteState();
+    }
+
     /**
      * Mark the start of autocomplete changes so our text change
      * listener does not react to changes in autocomplete text
@@ -136,7 +145,13 @@ public class ToolbarEditText extends CustomEditText
         };
 
         mAutoCompleteResult = "";
-        mAutoCompletePrefixLength = 0;
+
+        // Pretend we already autocompleted the existing text,
+        // so that actions like backspacing don't trigger autocompletion.
+        mAutoCompletePrefixLength = getText().length();
+
+        // Show the cursor.
+        setCursorVisible(true);
     }
 
     /**
