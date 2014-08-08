@@ -16,6 +16,7 @@
 #include "nsPluginLogging.h"
 #include "nsNPAPIPlugin.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/unused.h"
 #include <cctype>
 #include "mozilla/dom/EncodingUtils.h"
 
@@ -337,6 +338,22 @@ NS_IMETHODIMP
 nsPluginTag::GetBlocklisted(bool* aBlocklisted)
 {
   *aBlocklisted = IsBlocklisted();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPluginTag::GetIsEnabledStateLocked(bool* aIsEnabledStateLocked)
+{
+  *aIsEnabledStateLocked = false;
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+
+  if (NS_WARN_IF(!prefs)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  unused << prefs->PrefIsLocked(GetStatePrefNameForPlugin(this).get(),
+                                aIsEnabledStateLocked);
+
   return NS_OK;
 }
 
