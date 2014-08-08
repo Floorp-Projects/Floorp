@@ -37,7 +37,6 @@ add_task(function test_setup() {
                              httpRoot + "manifests/handler");
   Services.prefs.setBoolPref("experiments.logging.dump", true);
   Services.prefs.setCharPref("experiments.logging.level", "Trace");
-  disableCertificateChecks();
 });
 
 add_task(function* test_provider_basic() {

@@ -89,7 +89,7 @@ protected:
   class TimeReferenceElement : public nsReferencedElement
   {
   public:
-    TimeReferenceElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
+    explicit TimeReferenceElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
     void ResetWithElement(Element* aTo) {
       nsRefPtr<Element> from = get();
       Unlink();
@@ -113,7 +113,7 @@ protected:
   {
     ~EventListener() {}
   public:
-    EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
+    explicit EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
     void Disconnect()
     {
       mSpec = nullptr;

@@ -182,14 +182,14 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   // "We have a trust record."
   CERTCertTrust trust;
   if (CERT_GetCertTrust(candidateCert.get(), &trust) == SECSuccess) {
-    PRUint32 flags = SEC_GET_TRUST_FLAGS(&trust, mCertDBTrustType);
+    uint32_t flags = SEC_GET_TRUST_FLAGS(&trust, mCertDBTrustType);
 
     // For DISTRUST, we use the CERTDB_TRUSTED or CERTDB_TRUSTED_CA bit,
     // because we can have active distrust for either type of cert. Note that
     // CERTDB_TERMINAL_RECORD means "stop trying to inherit trust" so if the
     // relevant trust bit isn't set then that means the cert must be considered
     // distrusted.
-    PRUint32 relevantTrustBit =
+    uint32_t relevantTrustBit =
       endEntityOrCA == EndEntityOrCA::MustBeCA ? CERTDB_TRUSTED_CA
                                                : CERTDB_TRUSTED;
     if (((flags & (relevantTrustBit|CERTDB_TERMINAL_RECORD)))

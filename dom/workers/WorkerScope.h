@@ -60,7 +60,7 @@ public:
     return nsRefPtr<WorkerGlobalScope>(this).forget();
   }
 
-  already_AddRefed<Console>
+  Console*
   GetConsole();
 
   already_AddRefed<WorkerLocation>

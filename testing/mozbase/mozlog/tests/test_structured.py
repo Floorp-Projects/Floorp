@@ -324,6 +324,7 @@ class TestStructuredLog(BaseStructuredTest):
                                 "level": "INFO",
                                 "message": "line 4"})
 
+
 class TestTypeconversions(BaseStructuredTest):
     def test_raw(self):
         self.logger.log_raw({"action":"suite_start", "tests":[1], "time": "1234"})
@@ -391,6 +392,89 @@ class TestTypeconversions(BaseStructuredTest):
                           "PASS", "FAIL", "message", "stack", {}, "unexpected")
         self.assertRaises(TypeError, self.logger.test_status, "test1", test="test2")
         self.logger.suite_end()
+
+
+class TestMachFormatter(unittest.TestCase):
+    def setUp(self):
+        self.logger = structuredlog.StructuredLogger("test")
+        self.output_file = StringIO.StringIO()
+        self.handler = handlers.StreamHandler(
+            self.output_file, formatters.MachFormatter(disable_colors=True))
+        self.logger.add_handler(self.handler)
+
+    def test_summary(self):
+        self.logger.suite_start([])
+
+        #Some tests that pass
+        self.logger.test_start("test1")
+        self.logger.test_end("test1", status="PASS", expected="PASS")
+
+        self.logger.test_start("test2")
+        self.logger.test_end("test2", status="PASS", expected="TIMEOUT")
+
+        self.logger.test_start("test3")
+        self.logger.test_end("test3", status="FAIL", expected="PASS")
+
+        position = self.output_file.tell()
+
+        self.logger.suite_end()
+
+        self.output_file.seek(position)
+        lines = self.output_file.read().split("\n")
+
+        self.assertIn("Ran 3 tests", lines)
+        self.assertIn("Expected results: 1", lines)
+        self.assertIn("Unexpected results: 2 (FAIL: 1, PASS: 1)", lines)
+        self.assertNotIn("test1", lines)
+        self.assertIn("PASS expected TIMEOUT test2", lines)
+        self.assertIn("FAIL test3", lines)
+
+    def test_summary_subtests(self):
+        self.logger.suite_start([])
+
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "subtest1", status="PASS")
+        self.logger.test_status("test1", "subtest2", status="FAIL")
+        self.logger.test_end("test1", status="OK", expected="OK")
+
+        self.logger.test_start("test2")
+        self.logger.test_status("test2", "subtest1", status="TIMEOUT", expected="PASS")
+        self.logger.test_end("test2", status="TIMEOUT", expected="OK")
+
+        position = self.output_file.tell()
+
+        self.logger.suite_end()
+
+        self.output_file.seek(position)
+        lines = self.output_file.read().split("\n")
+
+        self.assertIn("Ran 5 tests (2 parents, 3 subtests)", lines)
+        self.assertIn("Expected results: 2", lines)
+        self.assertIn("Unexpected results: 3 (FAIL: 1, TIMEOUT: 2)", lines)
+
+    def test_summary_ok(self):
+        self.logger.suite_start([])
+
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "subtest1", status="PASS")
+        self.logger.test_status("test1", "subtest2", status="PASS")
+        self.logger.test_end("test1", status="OK", expected="OK")
+
+        self.logger.test_start("test2")
+        self.logger.test_status("test2", "subtest1", status="PASS", expected="PASS")
+        self.logger.test_end("test2", status="OK", expected="OK")
+
+        position = self.output_file.tell()
+
+        self.logger.suite_end()
+
+        self.output_file.seek(position)
+        lines = self.output_file.read().split("\n")
+
+        self.assertIn("OK", lines)
+        self.assertIn("Expected results: 5", lines)
+        self.assertIn("Unexpected results: 0", lines)
+
 
 class TestCommandline(unittest.TestCase):
 

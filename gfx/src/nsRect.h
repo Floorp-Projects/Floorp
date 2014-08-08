@@ -244,10 +244,11 @@ nsRect::ScaleToNearestPixels(float aXScale, float aYScale,
   nsIntRect rect;
   rect.x = NSToIntRoundUp(NSAppUnitsToDoublePixels(x, aAppUnitsPerPixel) * aXScale);
   rect.y = NSToIntRoundUp(NSAppUnitsToDoublePixels(y, aAppUnitsPerPixel) * aYScale);
-  rect.width  = NSToIntRoundUp(NSAppUnitsToDoublePixels(XMost(),
-                               aAppUnitsPerPixel) * aXScale) - rect.x;
-  rect.height = NSToIntRoundUp(NSAppUnitsToDoublePixels(YMost(),
-                               aAppUnitsPerPixel) * aYScale) - rect.y;
+  // Avoid negative widths and heights due to overflow
+  rect.width  = std::max(0, NSToIntRoundUp(NSAppUnitsToDoublePixels(XMost(),
+                               aAppUnitsPerPixel) * aXScale) - rect.x);
+  rect.height = std::max(0, NSToIntRoundUp(NSAppUnitsToDoublePixels(YMost(),
+                               aAppUnitsPerPixel) * aYScale) - rect.y);
   return rect;
 }
 
@@ -259,10 +260,11 @@ nsRect::ScaleToOutsidePixels(float aXScale, float aYScale,
   nsIntRect rect;
   rect.x = NSToIntFloor(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)) * aXScale);
   rect.y = NSToIntFloor(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)) * aYScale);
-  rect.width  = NSToIntCeil(NSAppUnitsToFloatPixels(XMost(),
-                            float(aAppUnitsPerPixel)) * aXScale) - rect.x;
-  rect.height = NSToIntCeil(NSAppUnitsToFloatPixels(YMost(),
-                            float(aAppUnitsPerPixel)) * aYScale) - rect.y;
+  // Avoid negative widths and heights due to overflow
+  rect.width  = std::max(0, NSToIntCeil(NSAppUnitsToFloatPixels(XMost(),
+                            float(aAppUnitsPerPixel)) * aXScale) - rect.x);
+  rect.height = std::max(0, NSToIntCeil(NSAppUnitsToFloatPixels(YMost(),
+                            float(aAppUnitsPerPixel)) * aYScale) - rect.y);
   return rect;
 }
 
@@ -274,10 +276,11 @@ nsRect::ScaleToInsidePixels(float aXScale, float aYScale,
   nsIntRect rect;
   rect.x = NSToIntCeil(NSAppUnitsToFloatPixels(x, float(aAppUnitsPerPixel)) * aXScale);
   rect.y = NSToIntCeil(NSAppUnitsToFloatPixels(y, float(aAppUnitsPerPixel)) * aYScale);
-  rect.width  = NSToIntFloor(NSAppUnitsToFloatPixels(XMost(),
-                             float(aAppUnitsPerPixel)) * aXScale) - rect.x;
-  rect.height = NSToIntFloor(NSAppUnitsToFloatPixels(YMost(),
-                             float(aAppUnitsPerPixel)) * aYScale) - rect.y;
+  // Avoid negative widths and heights due to overflow
+  rect.width  = std::max(0, NSToIntFloor(NSAppUnitsToFloatPixels(XMost(),
+                             float(aAppUnitsPerPixel)) * aXScale) - rect.x);
+  rect.height = std::max(0, NSToIntFloor(NSAppUnitsToFloatPixels(YMost(),
+                             float(aAppUnitsPerPixel)) * aYScale) - rect.y);
   return rect;
 }
 

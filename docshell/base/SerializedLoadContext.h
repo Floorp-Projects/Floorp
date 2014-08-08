@@ -31,9 +31,9 @@ public:
     Init(nullptr);
   }
 
-  SerializedLoadContext(nsILoadContext* aLoadContext);
-  SerializedLoadContext(nsIChannel* aChannel);
-  SerializedLoadContext(nsIWebSocketChannel* aChannel);
+  explicit SerializedLoadContext(nsILoadContext* aLoadContext);
+  explicit SerializedLoadContext(nsIChannel* aChannel);
+  explicit SerializedLoadContext(nsIWebSocketChannel* aChannel);
 
   void Init(nsILoadContext* aLoadContext);
 
