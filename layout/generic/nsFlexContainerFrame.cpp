@@ -17,6 +17,7 @@
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsStyleContext.h"
+#include "nsStyleUtil.h"
 #include "prlog.h"
 #include <algorithm>
 #include "mozilla/LinkedList.h"
@@ -571,7 +572,8 @@ protected:
 
   // These are non-const so that we can lazily update them with the item's
   // intrinsic size (obtained via a "measuring" reflow), when necessary.
-  // (e.g. for "flex-basis:auto;height:auto" & "min-height:auto")
+  // (e.g. if we have a vertical flex item with "flex-basis:auto",
+  // "flex-basis:main-size;height:auto", or "min-height:auto")
   nscoord mFlexBaseSize;
   nscoord mMainMinSize;
   nscoord mMainMaxSize;
@@ -1166,10 +1168,10 @@ PartiallyResolveAutoMinSize(const FlexItem& aFlexItem,
                                      // from here, w/ std::min().
 
   // We need the smallest of:
-  // * the used flex-basis, if the computed flex-basis was 'auto':
-  // XXXdholbert ('auto' might be renamed to 'main-size'; see bug 1032922)
-  if (eStyleUnit_Auto ==
-      aItemReflowState.mStylePosition->mFlexBasis.GetUnit() &&
+  // * the used flex-basis, if the computed flex-basis was 'main-size':
+  const nsStyleCoord& flexBasis = aItemReflowState.mStylePosition->mFlexBasis;
+  const bool isHorizontal = IsAxisHorizontal(aAxisTracker.GetMainAxis());
+  if (nsStyleUtil::IsFlexBasisMainSize(flexBasis, isHorizontal) &&
       aFlexItem.GetFlexBaseSize() != NS_AUTOHEIGHT) {
     // NOTE: We skip this if the flex base size depends on content & isn't yet
     // resolved. This is OK, because the caller is responsible for computing
@@ -1223,7 +1225,7 @@ ResolveAutoFlexBasisFromRatio(FlexItem& aFlexItem,
              "Should only be called to resolve an 'auto' flex-basis");
   // If the flex item has ...
   //  - an intrinsic aspect ratio,
-  //  - a [used] flex-basis of 'main-size' [auto?] [We have this, if we're here.]
+  //  - a [used] flex-basis of 'main-size' [We have this, if we're here.]
   //  - a definite cross size
   // then the flex base size is calculated from its inner cross size and the
   // flex item’s intrinsic aspect ratio.
