@@ -10,22 +10,9 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnectionArray)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MobileConnectionArray)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  // Notify our mobile connections that we're going away.
-  tmp->DropConnections();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MobileConnectionArray)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnections)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(MobileConnectionArray)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MobileConnectionArray,
+                                      mWindow,
+                                      mMobileConnections)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MobileConnectionArray)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MobileConnectionArray)
@@ -49,7 +36,6 @@ MobileConnectionArray::MobileConnectionArray(nsPIDOMWindow* aWindow)
 
 MobileConnectionArray::~MobileConnectionArray()
 {
-  DropConnections();
 }
 
 void
@@ -61,18 +47,6 @@ MobileConnectionArray::Init()
     nsRefPtr<MobileConnection> mobileConnection = new MobileConnection(mWindow, id);
     mMobileConnections[id] = mobileConnection;
   }
-}
-
-void
-MobileConnectionArray::DropConnections()
-{
-  if (mInitialized) {
-    for (uint32_t i = 0; i < mMobileConnections.Length(); i++) {
-      mMobileConnections[i]->Shutdown();
-    }
-  }
-
-  mMobileConnections.Clear();
 }
 
 nsPIDOMWindow*

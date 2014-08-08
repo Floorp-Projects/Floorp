@@ -45,9 +45,6 @@ private:
   void
   Init();
 
-  void
-  DropConnections();
-
   bool mInitialized;
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
