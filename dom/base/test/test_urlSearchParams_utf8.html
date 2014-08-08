@@ -1,0 +1,40 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1032511
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1032511</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1032511">Mozilla Bug 1032511</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name="x" id="x"></iframe>
+  <iframe name="y" id="y"></iframe>
+</div>
+<pre id="test">
+</pre>
+<a href="http://www.example.net?a=b&c=d" id="anchor">foobar</a>
+<area href="http://www.example.net?a=b&c=d" id="area">foobar</area>
+<script type="application/javascript">
+
+  /** Test for Bug 1032511 **/
+  var a = new URLSearchParams("%e2");
+  ok(a, "a exists");
+  is(a.toString(), '=', "The value should be here.");
+
+  a = new URLSearchParams("a%e2");
+  // This is a known decoder bug that fails to emit a REPLACEMENT CHARACTER.
+  is(a.toString(), 'a=', "The value should be here.");
+
+  a = new URLSearchParams("a%e2b");
+  is(a.toString(), 'a%EF%BF%BDb=', "The value should be here.");
+
+</script>
+</body>
+</html>

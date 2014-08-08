@@ -13,6 +13,7 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
+#include "nsIUnicodeDecoder.h"
 
 namespace mozilla {
 namespace dom {
@@ -83,7 +84,8 @@ private:
 
   void DeleteAll();
 
-  void DecodeString(const nsACString& aInput, nsACString& aOutput);
+  void DecodeString(const nsACString& aInput, nsAString& aOutput);
+  void ConvertString(const nsACString& aInput, nsAString& aOutput);
 
   void NotifyObservers(URLSearchParamsObserver* aExceptObserver);
 
@@ -98,6 +100,7 @@ private:
   nsClassHashtable<nsStringHashKey, nsTArray<nsString>> mSearchParams;
 
   nsTArray<nsRefPtr<URLSearchParamsObserver>> mObservers;
+  nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 };
 
 } // namespace dom
