@@ -142,11 +142,15 @@ PaymentUI.prototype = {
           },
 
           _getNetworkInfo: function(type) {
-            let jni = new JNI();
-            let cls = jni.findClass("org/mozilla/gecko/GeckoNetworkManager");
-            let method = jni.getStaticMethodID(cls, "get" + type.toUpperCase(), "()I");
-            let val = jni.callStaticIntMethod(cls, method);
-            jni.close();
+            let jenv = JNI.GetForThread();
+            let jMethodName = "get" + type.toUpperCase();
+            let jGeckoNetworkManager = JNI.LoadClass(jenv, "org/mozilla/gecko/GeckoNetworkManager", {
+              static_methods: [
+                { name: jMethodName, sig: "()I" },
+              ],
+            });
+            let val = jGeckoNetworkManager[jMethodName]();
+            JNI.UnloadClasses(jenv);
 
             if (val < 0)
               return null;
