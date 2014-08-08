@@ -14,7 +14,7 @@ namespace gfx {
 class AutoSaveTransform
 {
  public:
-  AutoSaveTransform(DrawTarget *aTarget)
+  explicit AutoSaveTransform(DrawTarget *aTarget)
    : mDrawTarget(aTarget),
      mOldTransform(aTarget->GetTransform())
   {
