@@ -232,5 +232,9 @@ user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 // Enable debug logging in the mozApps implementation.
 user_pref("dom.mozApps.debug", true);
 
+// Don't fetch or send directory tiles data from real servers
+user_pref("browser.newtabpage.directory.source", 'data:application/json,{"testing":1}');
+user_pref("browser.newtabpage.directory.ping", "");
+
 // Enable Loop
 user_pref("loop.enabled", true);
