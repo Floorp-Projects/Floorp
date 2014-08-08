@@ -5,12 +5,14 @@
 #include "TestShellParent.h"
 
 /* This must occur *after* TestShellParent.h to avoid typedefs conflicts. */
+#include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #include "nsAutoPtr.h"
-#include "nsCxPusher.h"
+#include "xpcpublic.h"
 
 using namespace mozilla;
 using mozilla::ipc::TestShellParent;
@@ -57,7 +59,6 @@ TestShellCommandParent::SetCallback(JSContext* aCx,
   }
 
   mCallback = aCallback;
-  mCx = aCx;
 
   return true;
 }
@@ -65,22 +66,22 @@ TestShellCommandParent::SetCallback(JSContext* aCx,
 bool
 TestShellCommandParent::RunCallback(const nsString& aResponse)
 {
-  NS_ENSURE_TRUE(!mCallback.get().isNull() && mCx, false);
-
-  // We're pulling a cx off the heap, so make sure it's stack-top.
-  AutoCxPusher pusher(mCx);
   NS_ENSURE_TRUE(mCallback.ToJSObject(), false);
-  JSAutoCompartment ac(mCx, mCallback.ToJSObject());
-  JS::Rooted<JSObject*> global(mCx, JS::CurrentGlobalOrNull(mCx));
 
-  JSString* str = JS_NewUCStringCopyN(mCx, aResponse.get(), aResponse.Length());
+  // We're about to run script via JS_CallFunctionValue, so we need an
+  // AutoEntryScript. This is just for testing and not in any spec.
+  dom::AutoEntryScript aes(xpc::GetNativeForGlobal(js::GetGlobalForObjectCrossCompartment(mCallback.ToJSObject())));
+  JSContext* cx = aes.cx();
+  JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+
+  JSString* str = JS_NewUCStringCopyN(cx, aResponse.get(), aResponse.Length());
   NS_ENSURE_TRUE(str, false);
 
-  JS::Rooted<JS::Value> strVal(mCx, JS::StringValue(str));
+  JS::Rooted<JS::Value> strVal(cx, JS::StringValue(str));
 
-  JS::Rooted<JS::Value> rval(mCx);
-  JS::Rooted<JS::Value> callback(mCx, mCallback);
-  bool ok = JS_CallFunctionValue(mCx, global, callback, JS::HandleValueArray(strVal), &rval);
+  JS::Rooted<JS::Value> rval(cx);
+  JS::Rooted<JS::Value> callback(cx, mCallback);
+  bool ok = JS_CallFunctionValue(cx, global, callback, JS::HandleValueArray(strVal), &rval);
   NS_ENSURE_TRUE(ok, false);
 
   return true;
