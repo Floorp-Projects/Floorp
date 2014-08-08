@@ -125,7 +125,7 @@ nsDocLoader::nsDocLoader()
   };
 
   PL_DHashTableInit(&mRequestInfoHash, &hash_table_ops, nullptr,
-                    sizeof(nsRequestInfo), 16);
+                    sizeof(nsRequestInfo));
 
   ClearInternalProgress();
 

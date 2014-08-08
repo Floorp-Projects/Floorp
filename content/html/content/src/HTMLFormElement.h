@@ -45,7 +45,7 @@ public:
   HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   enum {
-    FORM_CONTROL_LIST_HASHTABLE_SIZE = 16
+    FORM_CONTROL_LIST_HASHTABLE_LENGTH = 8
   };
 
   // nsISupports

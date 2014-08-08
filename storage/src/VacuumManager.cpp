@@ -109,7 +109,7 @@ class Vacuumer : public BaseCallback
 public:
   NS_DECL_MOZISTORAGESTATEMENTCALLBACK
 
-  Vacuumer(mozIStorageVacuumParticipant *aParticipant);
+  explicit Vacuumer(mozIStorageVacuumParticipant *aParticipant);
 
   bool execute();
   nsresult notifyCompletion(bool aSucceeded);

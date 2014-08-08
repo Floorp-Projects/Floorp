@@ -253,7 +253,7 @@ describe("loop.panel", function() {
           getStrings: function(key) {
             var text;
 
-            if (key === "share_email_subject")
+            if (key === "share_email_subject2")
               text = "email-subject";
             else if (key === "share_email_body")
               text = "{{callUrl}}";

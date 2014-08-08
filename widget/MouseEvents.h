@@ -585,7 +585,7 @@ public:
     UpdateFlags();
   }
 
-  WidgetPointerEvent(const WidgetMouseEvent& aEvent)
+  explicit WidgetPointerEvent(const WidgetMouseEvent& aEvent)
     : WidgetMouseEvent(aEvent)
     , width(0)
     , height(0)

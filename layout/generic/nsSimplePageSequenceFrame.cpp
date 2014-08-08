@@ -201,7 +201,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   // Tile the pages vertically
   nsHTMLReflowMetrics kidSize(aReflowState);
-  for (nsIFrame* kidFrame = mFrames.FirstChild(); nullptr != kidFrame; ) {
+  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+    nsIFrame* kidFrame = e.get();
     // Set the shared data into the page frame before reflow
     nsPageFrame * pf = static_cast<nsPageFrame*>(kidFrame);
     pf->SetSharedPageData(mPageData);
@@ -244,25 +245,21 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
       // Add it to our child list
       mFrames.InsertFrame(nullptr, kidFrame, continuingPage);
     }
-
-    // Get the next page
-    kidFrame = kidFrame->GetNextSibling();
   }
 
   // Get Total Page Count
-  nsIFrame* page;
-  int32_t pageTot = 0;
-  for (page = mFrames.FirstChild(); page; page = page->GetNextSibling()) {
-    pageTot++;
-  }
+  // XXXdholbert technically we could calculate this in the loop above,
+  // instead of needing a separate walk.
+  int32_t pageTot = mFrames.GetLength();
 
   // Set Page Number Info
   int32_t pageNum = 1;
-  for (page = mFrames.FirstChild(); page; page = page->GetNextSibling()) {
-    nsPageFrame * pf = static_cast<nsPageFrame*>(page);
-    if (pf != nullptr) {
-      pf->SetPageNumInfo(pageNum, pageTot);
-    }
+  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+    MOZ_ASSERT(e.get()->GetType() == nsGkAtoms::pageFrame,
+               "only expecting nsPageFrame children. Other children will make "
+               "this static_cast bogus & probably violate other assumptions");
+    nsPageFrame* pf = static_cast<nsPageFrame*>(e.get());
+    pf->SetPageNumInfo(pageNum, pageTot);
     pageNum++;
   }
 
@@ -421,8 +418,8 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*    aPresContext,
     int32_t pageNum = 1;
     nscoord y = 0;//mMargin.top;
 
-    for (nsIFrame* page = mFrames.FirstChild(); page;
-         page = page->GetNextSibling()) {
+    for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+      nsIFrame* page = e.get();
       if (pageNum >= mFromPageNum && pageNum <= mToPageNum) {
         nsRect rect = page->GetRect();
         rect.y = y;

@@ -1213,7 +1213,7 @@ nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
   : mRenegoUnrestrictedSites(nullptr)
   , mTreatUnsafeNegotiationAsBroken(false)
   , mWarnLevelMissingRFC5746(1)
-  , mTLSIntoleranceInfo(16)
+  , mTLSIntoleranceInfo()
   , mFalseStartRequireNPN(true)
   , mFalseStartRequireForwardSecrecy(false)
   , mutex("nsSSLIOLayerHelpers.mutex")
@@ -1518,7 +1518,7 @@ nsSSLIOLayerHelpers::Init()
     nsSSLPlaintextLayerMethods.recv = PlaintextRecv;
   }
 
-  mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>(16);
+  mRenegoUnrestrictedSites = new nsTHashtable<nsCStringHashKey>();
 
   nsCString unrestricted_hosts;
   Preferences::GetCString("security.ssl.renego_unrestricted_hosts", &unrestricted_hosts);

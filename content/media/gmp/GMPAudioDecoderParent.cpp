@@ -200,7 +200,10 @@ GMPAudioDecoderParent::RecvDecoded(const GMPAudioDecodedSampleData& aDecoded)
     return false;
   }
 
-  mCallback->Decoded(aDecoded.mData(), aDecoded.mTimeStamp());
+  mCallback->Decoded(aDecoded.mData(),
+                     aDecoded.mTimeStamp(),
+                     aDecoded.mChannelCount(),
+                     aDecoded.mSamplesPerSecond());
 
   return true;
 }

@@ -956,7 +956,7 @@ formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
 RememberCertErrorsTable::sInstance = nullptr;
 
 RememberCertErrorsTable::RememberCertErrorsTable()
-  : mErrorHosts(16)
+  : mErrorHosts()
   , mMutex("RememberCertErrorsTable::mMutex")
 {
 }

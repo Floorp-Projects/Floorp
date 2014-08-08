@@ -292,7 +292,7 @@ NS_IMPL_ISUPPORTS(GPUAdapterReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mD3D11DeviceInitialized(false)
-  , mPrefFonts(50)
+  , mPrefFonts(32)
 {
     mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
     mUseClearTypeAlways = UNINITIALIZED_VALUE;

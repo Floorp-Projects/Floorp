@@ -745,7 +745,7 @@ Preferences::GetPreference(PrefSetting* aPref)
 void
 Preferences::GetPreferences(InfallibleTArray<PrefSetting>* aPrefs)
 {
-  aPrefs->SetCapacity(PL_DHASH_TABLE_SIZE(&gHashTable));
+  aPrefs->SetCapacity(PL_DHASH_TABLE_CAPACITY(&gHashTable));
   PL_DHashTableEnumerate(&gHashTable, pref_GetPrefs, aPrefs);
 }
 

@@ -271,9 +271,9 @@ nsBoxObject::GetScreenX(int32_t *_retval)
   nsIntPoint position;
   nsresult rv = GetScreenPosition(position);
   if (NS_FAILED(rv)) return rv;
-  
+
   *_retval = position.x;
-  
+
   return NS_OK;
 }
 
@@ -283,9 +283,9 @@ nsBoxObject::GetScreenY(int32_t *_retval)
   nsIntPoint position;
   nsresult rv = GetScreenPosition(position);
   if (NS_FAILED(rv)) return rv;
-  
+
   *_retval = position.y;
-  
+
   return NS_OK;
 }
 
@@ -306,9 +306,9 @@ NS_IMETHODIMP
 nsBoxObject::SetPropertyAsSupports(const char16_t* aPropertyName, nsISupports* aValue)
 {
   NS_ENSURE_ARG(aPropertyName && *aPropertyName);
-  
-  if (!mPropertyTable) {  
-    mPropertyTable = new nsInterfaceHashtable<nsStringHashKey,nsISupports>(8);
+
+  if (!mPropertyTable) {
+    mPropertyTable = new nsInterfaceHashtable<nsStringHashKey,nsISupports>(4);
   }
 
   nsDependentString propertyName(aPropertyName);
@@ -329,9 +329,9 @@ nsBoxObject::GetProperty(const char16_t* aPropertyName, char16_t** aResult)
   }
 
   nsCOMPtr<nsISupportsString> supportsStr = do_QueryInterface(data);
-  if (!supportsStr) 
+  if (!supportsStr)
     return NS_ERROR_FAILURE;
-  
+
   return supportsStr->ToString(aResult);
 }
 
@@ -347,7 +347,7 @@ nsBoxObject::SetProperty(const char16_t* aPropertyName, const char16_t* aPropert
   } else {
     propertyValue.SetIsVoid(true);
   }
-  
+
   nsCOMPtr<nsISupportsString> supportsStr(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
   supportsStr->SetData(propertyValue);

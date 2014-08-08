@@ -1546,7 +1546,9 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
         int16_t hPercent = offsetPointX * 100 / size.width;
         int16_t vPercent = offsetPointY * 100 / size.height;
 
-        nsresult rv = nsCoreUtils::ScrollSubstringTo(frame, range, vPercent, hPercent);
+        nsresult rv = nsCoreUtils::ScrollSubstringTo(frame, range,
+                                                     nsIPresShell::ScrollAxis(vPercent),
+                                                     nsIPresShell::ScrollAxis(hPercent));
         if (NS_FAILED(rv))
           return;
 

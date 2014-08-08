@@ -374,7 +374,7 @@ class Variant : public Variant_base
   }
 
 public:
-  Variant(const typename variant_storage_traits<DataType, Adopting>::ConstructorType aData)
+  explicit Variant(const typename variant_storage_traits<DataType, Adopting>::ConstructorType aData)
   {
     variant_storage_traits<DataType, Adopting>::storage_conversion(aData, &mData);
   }

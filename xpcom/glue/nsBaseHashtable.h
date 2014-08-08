@@ -62,8 +62,8 @@ public:
   using nsTHashtable<EntryType>::Contains;
 
   nsBaseHashtable() {}
-  explicit nsBaseHashtable(uint32_t aInitSize)
-    : nsTHashtable<EntryType>(aInitSize)
+  explicit nsBaseHashtable(uint32_t aInitLength)
+    : nsTHashtable<EntryType>(aInitLength)
   {
   }
 

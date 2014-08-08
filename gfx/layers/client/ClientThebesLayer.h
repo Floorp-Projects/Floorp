@@ -69,9 +69,9 @@ public:
     mValidRegion.Sub(mValidRegion, mInvalidRegion);
   }
 
-  virtual void RenderLayer() { RenderLayer(nullptr); }
+  virtual void RenderLayer() { RenderLayerWithReadback(nullptr); }
 
-  virtual void RenderLayer(ReadbackProcessor *aReadback);
+  virtual void RenderLayerWithReadback(ReadbackProcessor *aReadback) MOZ_OVERRIDE;
 
   virtual void ClearCachedResources()
   {
