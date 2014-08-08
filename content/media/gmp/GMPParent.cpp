@@ -117,14 +117,14 @@ GMPParent::LoadProcess()
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
   MOZ_ASSERT(mState == GMPStateNotLoaded);
 
-  nsAutoString path;
-  if (NS_FAILED(mDirectory->GetPath(path))) {
+  nsAutoCString path;
+  if (NS_FAILED(mDirectory->GetNativePath(path))) {
     return NS_ERROR_FAILURE;
   }
   LOGD(("%s::%s: %p for %s", __CLASS__, __FUNCTION__, this, path.get()));
 
   if (!mProcess) {
-    mProcess = new GMPProcessParent(NS_ConvertUTF16toUTF8(path).get());
+    mProcess = new GMPProcessParent(path.get());
     if (!mProcess->Launch(30 * 1000)) {
       mProcess->Delete();
       mProcess = nullptr;
