@@ -1553,16 +1553,6 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
     // XXX: ERROR_HANDLING bad XPCOM usage
     if (NS_SUCCEEDED(res) && NS_SUCCEEDED(selection->GetAnchorOffset(&offsetForInsert)) && parentSelectedNode)
     {
-#ifdef DEBUG_cmanske
-      {
-      nsAutoString name;
-      parentSelectedNode->GetNodeName(name);
-      printf("InsertElement: Anchor node of selection: ");
-      wprintf(name.get());
-      printf(" Offset: %d\n", offsetForInsert);
-      }
-#endif
-
       // Adjust position based on the node we are going to insert.
       NormalizeEOLInsertPosition(node, address_of(parentSelectedNode), &offsetForInsert);
 
