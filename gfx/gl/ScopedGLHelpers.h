@@ -23,7 +23,7 @@ private:
 protected:
     GLContext* const mGL;
 
-    ScopedGLWrapper(GLContext* gl)
+    explicit ScopedGLWrapper(GLContext* gl)
         : mIsUnwrapped(false)
         , mGL(gl)
     {
@@ -115,7 +115,7 @@ protected:
     GLuint mTexture;
 
 public:
-    ScopedTexture(GLContext* aGL);
+    explicit ScopedTexture(GLContext* aGL);
     GLuint Texture() { return mTexture; }
 
 protected:
@@ -132,7 +132,7 @@ protected:
     GLuint mFB;
 
 public:
-    ScopedFramebuffer(GLContext* aGL);
+    explicit ScopedFramebuffer(GLContext* aGL);
     GLuint FB() { return mFB; }
 
 protected:
@@ -149,7 +149,7 @@ protected:
     GLuint mRB;
 
 public:
-    ScopedRenderbuffer(GLContext* aGL);
+    explicit ScopedRenderbuffer(GLContext* aGL);
     GLuint RB() { return mRB; }
 
 protected:
@@ -307,7 +307,7 @@ protected:
 };
 
 struct ScopedGLDrawState {
-    ScopedGLDrawState(GLContext* gl);
+    explicit ScopedGLDrawState(GLContext* gl);
     ~ScopedGLDrawState();
 
     GLuint boundProgram;

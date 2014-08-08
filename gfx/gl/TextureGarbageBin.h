@@ -31,7 +31,7 @@ private:
     std::stack<GLuint> mGarbageTextures;
 
 public:
-    TextureGarbageBin(GLContext* gl)
+    explicit TextureGarbageBin(GLContext* gl)
         : mGL(gl)
         , mMutex("TextureGarbageBin mutex")
     {}

@@ -511,7 +511,7 @@ gfxPlatformFontList::GetFontList(nsIAtom *aLangGroup,
 }
 
 struct FontFamilyListData {
-    FontFamilyListData(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray) 
+    explicit FontFamilyListData(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray) 
         : mFamilyArray(aFamilyArray)
     {}
 
@@ -968,7 +968,7 @@ gfxPlatformFontList::LoadFontInfo()
 }
 
 struct LookupMissedFaceNamesData {
-    LookupMissedFaceNamesData(gfxPlatformFontList *aFontList)
+    explicit LookupMissedFaceNamesData(gfxPlatformFontList *aFontList)
         : mFontList(aFontList), mFoundName(false) {}
 
     gfxPlatformFontList *mFontList;
@@ -990,7 +990,7 @@ gfxPlatformFontList::LookupMissedFaceNamesProc(nsStringHashKey *aKey,
 }
 
 struct LookupMissedOtherNamesData {
-    LookupMissedOtherNamesData(gfxPlatformFontList *aFontList)
+    explicit LookupMissedOtherNamesData(gfxPlatformFontList *aFontList)
         : mFontList(aFontList), mFoundName(false) {}
 
     gfxPlatformFontList *mFontList;

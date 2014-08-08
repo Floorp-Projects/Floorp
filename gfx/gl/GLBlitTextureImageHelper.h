@@ -31,7 +31,7 @@ class GLBlitTextureImageHelper MOZ_FINAL
 
 public:
 
-    GLBlitTextureImageHelper(GLContext *gl);
+    explicit GLBlitTextureImageHelper(GLContext *gl);
     ~GLBlitTextureImageHelper();
 
     /**
