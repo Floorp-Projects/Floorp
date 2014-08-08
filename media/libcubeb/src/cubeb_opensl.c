@@ -757,8 +757,6 @@ opensl_stream_set_volume(cubeb_stream * stm, float volume)
   /* clamp to supported range */
   if (millibels > max_level) {
    millibels = max_level;
-  } else if (millibels < SL_MILLIBEL_MIN) {
-    millibels = SL_MILLIBEL_MIN;
   }
 
   res = (*stm->volume)->SetVolumeLevel(stm->volume, millibels);
