@@ -3711,44 +3711,6 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   return NS_OK;
 }
 
-#ifdef DEBUG_kin
-void
-nsTextServicesDocument::PrintOffsetTable()
-{
-  OffsetEntry *entry;
-  uint32_t i;
-
-  for (i = 0; i < mOffsetTable.Length(); i++)
-  {
-    entry = mOffsetTable[i];
-    printf("ENTRY %4d: %p  %c  %c  %4d  %4d  %4d\n",
-           i, entry->mNode,  entry->mIsValid ? 'V' : 'N',
-           entry->mIsInsertedText ? 'I' : 'B',
-           entry->mNodeOffset, entry->mStrOffset, entry->mLength);
-  }
-
-  fflush(stdout);
-}
-
-void
-nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
-{
-  nsString tmpStr, str;
-
-  aContent->Tag()->ToString(tmpStr);
-  printf("%s", NS_LossyConvertUTF16toASCII(tmpStr).get());
-
-  if (nsIDOMNode::TEXT_NODE == aContent->NodeType())
-  {
-    aContent->AppendTextTo(str);
-    printf(":  \"%s\"", NS_LossyConvertUTF16toASCII(str).get());
-  }
-
-  printf("\n");
-  fflush(stdout);
-}
-#endif
-
 NS_IMETHODIMP
 nsTextServicesDocument::WillInsertNode(nsIDOMNode *aNode,
                               nsIDOMNode *aParent,

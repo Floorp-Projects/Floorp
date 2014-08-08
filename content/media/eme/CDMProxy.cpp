@@ -302,6 +302,19 @@ CDMProxy::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mKeys.Clear();
+  // Note: This may end up being the last owning reference to the CDMProxy.
+  nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(this, &CDMProxy::gmp_Shutdown));
+  mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
+}
+
+void
+CDMProxy::gmp_Shutdown()
+{
+  MOZ_ASSERT(IsOnGMPThread());
+  if (mCDM) {
+    mCDM->Close();
+    mCDM = nullptr;
+  }
 }
 
 void
@@ -485,10 +498,7 @@ CDMProxy::gmp_Terminated()
 {
   MOZ_ASSERT(IsOnGMPThread());
   EME_LOG("CDM terminated");
-  if (mCDM) {
-    mCDM->Close();
-    mCDM = nullptr;
-  }
+  gmp_Shutdown();
 }
 
 } // namespace mozilla

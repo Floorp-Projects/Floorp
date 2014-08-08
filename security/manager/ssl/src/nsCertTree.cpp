@@ -187,7 +187,7 @@ nsresult nsCertTree::InitCompareHash()
 {
   ClearCompareHash();
   if (!PL_DHashTableInit(&mCompareCache, &gMapOps, nullptr,
-                         sizeof(CompareCacheHashEntryPtr), 128, fallible_t())) {
+                         sizeof(CompareCacheHashEntryPtr), fallible_t(), 64)) {
     mCompareCache.ops = nullptr;
     return NS_ERROR_OUT_OF_MEMORY;
   }

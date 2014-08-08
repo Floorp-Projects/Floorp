@@ -572,7 +572,7 @@ GDIFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
  */
 
 gfxGDIFontList::gfxGDIFontList()
-    : mFontSubstitutes(50)
+    : mFontSubstitutes(32)
 {
 #ifdef MOZ_BUNDLED_FONTS
     ActivateBundledFonts();

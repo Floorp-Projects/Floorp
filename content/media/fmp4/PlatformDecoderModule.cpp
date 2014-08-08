@@ -15,8 +15,10 @@
 #include "AppleDecoderModule.h"
 #endif
 #include "mozilla/Preferences.h"
+#ifdef MOZ_EME
 #include "EMEDecoderModule.h"
 #include "mozilla/CDMProxy.h"
+#endif
 #include "SharedThreadPool.h"
 #include "MediaTaskQueue.h"
 
@@ -70,6 +72,7 @@ CreateTaskQueue()
   return t->mTaskQueue.forget();
 }
 
+#ifdef MOZ_EME
 /* static */
 PlatformDecoderModule*
 PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
@@ -101,6 +104,7 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
                               cdmDecodesVideo,
                               CreateTaskQueue());
 }
+#endif
 
 /* static */
 PlatformDecoderModule*

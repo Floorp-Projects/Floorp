@@ -66,7 +66,7 @@ public:
 class nsRefreshDriver MOZ_FINAL : public mozilla::layers::TransactionIdAllocator,
                                   public nsARefreshObserver {
 public:
-  nsRefreshDriver(nsPresContext *aPresContext);
+  explicit nsRefreshDriver(nsPresContext *aPresContext);
   ~nsRefreshDriver();
 
   static void InitializeStatics();

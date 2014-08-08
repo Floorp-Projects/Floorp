@@ -6013,6 +6013,7 @@ RilObject.prototype[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, option
     return;
   }
 
+  options.mmiServiceCode = MMI_KS_SC_IMEI;
   options.success = (options.rilRequestError === 0);
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   if ((!options.success || this.IMEI == null) && !options.errorMsg) {

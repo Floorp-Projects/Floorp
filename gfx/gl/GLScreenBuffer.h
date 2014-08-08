@@ -269,6 +269,7 @@ public:
 
     // Here `fb` is the actual framebuffer you want bound. Binding 0 will
     // bind the (generally useless) default framebuffer.
+    void BindFB_Internal(GLuint fb);
     void BindDrawFB_Internal(GLuint fb);
     void BindReadFB_Internal(GLuint fb);
 };

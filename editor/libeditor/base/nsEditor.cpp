@@ -2323,9 +2323,6 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
           }
         } else {
           // Do we ever get here?
-#if DEBUG_cmanske
-          printf("Attribute in sourceAttribute has empty value in nsEditor::CloneAttributes()\n");
-#endif
         }
       }
     }

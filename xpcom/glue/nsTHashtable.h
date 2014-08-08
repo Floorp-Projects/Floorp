@@ -83,10 +83,10 @@ class nsTHashtable
   typedef mozilla::fallible_t fallible_t;
 
 public:
-  // Separate constructors instead of default aInitSize parameter since
+  // Separate constructors instead of default aInitLength parameter since
   // otherwise the default no-arg constructor isn't found.
-  nsTHashtable() { Init(PL_DHASH_MIN_SIZE); }
-  explicit nsTHashtable(uint32_t aInitSize) { Init(aInitSize); }
+  nsTHashtable() { Init(PL_DHASH_DEFAULT_INITIAL_LENGTH); }
+  explicit nsTHashtable(uint32_t aInitLength) { Init(aInitLength); }
 
   /**
    * destructor, cleans up and deallocates
@@ -362,9 +362,9 @@ private:
 
   /**
    * Initialize the table.
-   * @param aInitSize the initial number of buckets in the hashtable
+   * @param aInitLength the initial number of buckets in the hashtable
    */
-  void Init(uint32_t aInitSize);
+  void Init(uint32_t aInitLength);
 
   /**
    * An implementation of SizeOfEntryExcludingThisFun that calls SizeOfExcludingThis()
@@ -405,7 +405,7 @@ nsTHashtable<EntryType>::~nsTHashtable()
 
 template<class EntryType>
 void
-nsTHashtable<EntryType>::Init(uint32_t aInitSize)
+nsTHashtable<EntryType>::Init(uint32_t aInitLength)
 {
   static const PLDHashTableOps sOps =
   {
@@ -419,7 +419,7 @@ nsTHashtable<EntryType>::Init(uint32_t aInitSize)
     s_InitEntry
   };
 
-  PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), aInitSize);
+  PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), aInitLength);
 }
 
 // static

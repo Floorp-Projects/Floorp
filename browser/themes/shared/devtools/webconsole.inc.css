@@ -17,24 +17,24 @@ a {
 
 .message {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
   padding: 0 7px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .message > .timestamp {
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
   color: GrayText;
   margin: 4px 6px 0 0;
 }
 
 .message > .indent {
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
 }
 
 .message > .icon {
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
   margin: 3px 6px 0 0;
   padding: 0 4px;
   height: 1em;
@@ -66,7 +66,7 @@ a {
 /* The red bubble that shows the number of times a message is repeated */
 .message-repeats {
   -moz-user-select: none;
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
   margin: 2px 6px;
   padding: 0 6px;
   height: 1.25em;
@@ -84,7 +84,7 @@ a {
 
 .message-location {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
   align-self: flex-start;
   justify-content: flex-end;
   width: 10em;
@@ -106,7 +106,7 @@ a {
 }
 
 .message-location > .line-number {
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
 }
 
 .message-flex-body {
@@ -120,7 +120,7 @@ a {
 
 .message-flex-body > .message-body {
   display: block;
-  flex: 1 1 auto;
+  flex: 1 1 main-size;
   vertical-align: middle;
 }
 
@@ -236,11 +236,11 @@ a {
 }
 
 .message[category=network] .method {
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
 }
 
 .message[category=network]:not(.navigation-marker) .url {
-  flex: 1 1 auto;
+  flex: 1 1 main-size;
   /* Make sure the URL is very small initially, let flex change width as needed. */
   width: 100px;
   min-width: 5em;
@@ -250,7 +250,7 @@ a {
 }
 
 .message[category=network] .status {
-  flex: 0 0 auto;
+  flex: 0 0 main-size;
   -moz-margin-start: 6px;
 }
 
@@ -454,7 +454,7 @@ a {
 
 .stacktrace .function {
   display: block;
-  flex: 1 1 auto;
+  flex: 1 1 main-size;
 }
 
 .cm-s-mozilla a[class] {

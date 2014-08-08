@@ -30,8 +30,8 @@ public:
   typedef nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*> base_type;
 
   nsClassHashtable() {}
-  explicit nsClassHashtable(uint32_t aInitSize)
-    : nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*>(aInitSize)
+  explicit nsClassHashtable(uint32_t aInitLength)
+    : nsBaseHashtable<KeyClass, nsAutoPtr<T>, T*>(aInitLength)
   {
   }
 

@@ -486,7 +486,7 @@ nsContentUtils::Init()
     };
 
     PL_DHashTableInit(&sEventListenerManagersHash, &hash_table_ops,
-                      nullptr, sizeof(EventListenerManagerMapEntry), 16);
+                      nullptr, sizeof(EventListenerManagerMapEntry));
 
     RegisterStrongMemoryReporter(new DOMEventListenerManagersHashReporter());
   }
@@ -637,9 +637,9 @@ nsContentUtils::InitializeEventTable() {
   };
 
   sAtomEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>(
-      int(ArrayLength(eventArray) / 0.75) + 1);
+      ArrayLength(eventArray));
   sStringEventTable = new nsDataHashtable<nsStringHashKey, EventNameMapping>(
-      int(ArrayLength(eventArray) / 0.75) + 1);
+      ArrayLength(eventArray));
   sUserDefinedEvents = new nsCOMArray<nsIAtom>(64);
 
   // Subtract one from the length because of the trailing null

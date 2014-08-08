@@ -77,7 +77,7 @@ SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol)
     } else {
         if (!mHashTable.entryCount) {
             PL_DHashTableInit(&mHashTable, &HashTableOps, nullptr,
-                              sizeof(HashTableEntry), PL_DHASH_MIN_SIZE);
+                              sizeof(HashTableEntry));
         }
         HashTableEntry *entry = static_cast<HashTableEntry*>
                                            (PL_DHashTableOperate(&mHashTable, NS_INT32_TO_PTR(aColSpan),
