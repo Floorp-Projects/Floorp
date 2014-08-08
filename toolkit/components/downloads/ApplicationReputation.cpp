@@ -987,6 +987,8 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
   // DANGEROUS_HOST for now and treat everything else as SAFE.
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
     SERVER_RESPONSE_VALID);
+  Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER_RESPONSE,
+    response.verdict());
   switch(response.verdict()) {
     case safe_browsing::ClientDownloadResponse::DANGEROUS:
     case safe_browsing::ClientDownloadResponse::DANGEROUS_HOST:
