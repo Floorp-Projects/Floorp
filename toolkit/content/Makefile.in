@@ -16,11 +16,13 @@ ifdef MOZ_SOURCE_STAMP
 DEFINES += -DSOURCE_CHANGESET='$(MOZ_SOURCE_STAMP)'
 endif
 
+ifdef MOZILLA_OFFICIAL
 source_repo ?= $(call getSourceRepo)
 ifneq (,$(filter http%,$(source_repo)))
   DEFINES += -DSOURCE_REPO='$(source_repo)'
 else ifneq (,$(strip $(source_repo)))
   DEFINES += -DSOURCE_GIT_COMMIT='$(source_repo)'
+endif
 endif
 
 ifndef BUILD_HOSTNAME
