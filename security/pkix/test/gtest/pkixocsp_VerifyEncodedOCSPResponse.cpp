@@ -204,7 +204,7 @@ protected:
     static const Input EMPTY;
     OCSPResponseContext context(arena.get(),
                                 CertID(EMPTY, EMPTY, EMPTY),
-                                pr_oneDayBeforeNow);
+                                oneDayBeforeNow);
     context.responseStatus = status;
     context.skipResponseBytes = true;
     SECItem* response = CreateEncodedOCSPResponse(context);
@@ -224,7 +224,7 @@ TEST_P(pkixocsp_VerifyEncodedResponse_WithoutResponseBytes, CorrectErrorCode)
 
   bool expired;
   ASSERT_EQ(GetParam().expectedError,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
 }
@@ -263,8 +263,8 @@ public:
                     const CertID& certID,
                     /*optional*/ const char* signerName,
                     const ScopedSECKEYPrivateKey& signerPrivateKey,
-                    PRTime producedAt, PRTime thisUpdate,
-                    /*optional*/ const PRTime* nextUpdate,
+                    time_t producedAt, time_t thisUpdate,
+                    /*optional*/ const time_t* nextUpdate,
                     /*optional*/ SECItem const* const* certs = nullptr)
   {
     OCSPResponseContext context(arena.get(), certID, producedAt);
@@ -296,12 +296,12 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, good_byKey)
 {
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID, byKey,
-                         rootPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow));
+                         rootPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow));
   bool expired;
   ASSERT_EQ(Success,
             VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID,
-                                      now, END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                      Now(), END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
 }
@@ -310,11 +310,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, good_byName)
 {
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID, rootName,
-                         rootPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow));
+                         rootPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow));
   bool expired;
   ASSERT_EQ(Success,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -324,11 +324,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, good_byKey_without_nextUpdate)
 {
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID, byKey,
-                         rootPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, nullptr));
+                         rootPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, nullptr));
   bool expired;
   ASSERT_EQ(Success,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -338,11 +338,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, revoked)
 {
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::revoked, *endEntityCertID, byKey,
-                         rootPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow));
+                         rootPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow));
   bool expired;
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -352,11 +352,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful, unknown)
 {
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::unknown, *endEntityCertID, byKey,
-                         rootPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow));
+                         rootPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_UNKNOWN_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -404,8 +404,7 @@ protected:
     ScopedSECKEYPrivateKey signerPrivateKey;
     SECItem* signerDER(CreateEncodedCertificate(
                           arena.get(), ++rootIssuedCount, rootName,
-                          pr_oneDayBeforeNow, pr_oneDayAfterNow,
-                          certSubjectName,
+                          oneDayBeforeNow, oneDayAfterNow, certSubjectName,
                           signerEKU != SEC_OID_UNKNOWN ? extensions : nullptr,
                           rootPrivateKey.get(), signerPrivateKey));
     EXPECT_TRUE(signerDER);
@@ -422,16 +421,16 @@ protected:
     SECItem const* const certs[] = { signerDER, nullptr };
     return CreateEncodedOCSPSuccessfulResponse(certStatus, *endEntityCertID,
                                                signerName, signerPrivateKey,
-                                               pr_oneDayBeforeNow,
-                                               pr_oneDayBeforeNow,
-                                               &pr_oneDayAfterNow, certs);
+                                               oneDayBeforeNow,
+                                               oneDayBeforeNow,
+                                               &oneDayAfterNow, certs);
   }
 
   static SECItem* CreateEncodedCertificate(PLArenaPool* arena,
                                            uint32_t serialNumber,
                                            const char* issuer,
-                                           PRTime notBefore,
-                                           PRTime notAfter,
+                                           time_t notBefore,
+                                           time_t notAfter,
                                            const char* subject,
                               /*optional*/ SECItem const* const* extensions,
                               /*optional*/ SECKEYPrivateKey* signerKey,
@@ -466,7 +465,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_byKey)
                          byKey));
   bool expired;
   ASSERT_EQ(Success,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -479,7 +478,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_byName)
                          "CN=good_indirect_byName"));
   bool expired;
   ASSERT_EQ(Success,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -494,11 +493,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                                      missingSignerPrivateKey));
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID, byKey,
-                         missingSignerPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, nullptr));
+                         missingSignerPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, nullptr));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -514,10 +513,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID,
                          "CN=missing", missingSignerPrivateKey,
-                         pr_oneDayBeforeNow, pr_oneDayBeforeNow, nullptr));
+                         oneDayBeforeNow, oneDayBeforeNow, nullptr));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -533,11 +532,12 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
                               ExtensionCriticality::NotCritical),
     nullptr
   };
+
   ScopedSECKEYPrivateKey signerPrivateKey;
   SECItem* signerDER(CreateEncodedCertificate(arena.get(), ++rootIssuedCount,
                                               rootName,
-                                              pr_now - (10 * ONE_DAY),
-                                              pr_now - (2 * ONE_DAY),
+                                              now - (10 * Time::ONE_DAY_IN_SECONDS),
+                                              now - (2 * Time::ONE_DAY_IN_SECONDS),
                                               signerName, extensions,
                                               rootPrivateKey.get(),
                                               signerPrivateKey));
@@ -546,11 +546,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
   SECItem const* const certs[] = { signerDER, nullptr };
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID,
-                         signerName, signerPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow, certs));
+                         signerName, signerPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow, certs));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
 }
@@ -565,11 +565,12 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
                               ExtensionCriticality::NotCritical),
     nullptr
   };
+
   ScopedSECKEYPrivateKey signerPrivateKey;
   SECItem* signerDER(CreateEncodedCertificate(arena.get(), ++rootIssuedCount,
                                               rootName,
-                                              pr_now + (2 * ONE_DAY),
-                                              pr_now + (10 * ONE_DAY),
+                                              now + (2 * Time::ONE_DAY_IN_SECONDS),
+                                              now + (10 * Time::ONE_DAY_IN_SECONDS),
                                               signerName, extensions,
                                               rootPrivateKey.get(),
                                               signerPrivateKey));
@@ -578,11 +579,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
   SECItem const* const certs[] = { signerDER, nullptr };
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID,
-                         signerName, signerPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow, certs));
+                         signerName, signerPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow, certs));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -595,7 +596,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_no_eku)
                          OCSPResponseContext::good, byKey, SEC_OID_UNKNOWN));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -610,7 +611,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                         SEC_OID_EXT_KEY_USAGE_SERVER_AUTH));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -639,7 +640,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_tampered_eku)
 
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -664,7 +665,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
   };
   ScopedSECKEYPrivateKey signerPrivateKey;
   SECItem* signerDER(CreateEncodedCertificate(arena.get(), 1,
-                        subCAName, pr_oneDayBeforeNow, pr_oneDayAfterNow,
+                        subCAName, oneDayBeforeNow, oneDayAfterNow,
                         signerName, extensions, unknownPrivateKey.get(),
                         signerPrivateKey));
   ASSERT_TRUE(signerDER);
@@ -673,11 +674,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
   SECItem const* const certs[] = { signerDER, nullptr };
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID,
-                         signerName, signerPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow, certs));
+                         signerName, signerPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow, certs));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -701,7 +702,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   ScopedSECKEYPrivateKey subCAPrivateKey;
   SECItem* subCADER(CreateEncodedCertificate(arena.get(), ++rootIssuedCount,
                                              rootName,
-                                             pr_oneDayBeforeNow, pr_oneDayAfterNow,
+                                             oneDayBeforeNow, oneDayAfterNow,
                                              subCAName, subCAExtensions,
                                              rootPrivateKey.get(),
                                              subCAPrivateKey));
@@ -716,8 +717,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   };
   ScopedSECKEYPrivateKey signerPrivateKey;
   SECItem* signerDER(CreateEncodedCertificate(arena.get(), 1, subCAName,
-                                              pr_oneDayBeforeNow,
-                                              pr_oneDayAfterNow,
+                                              oneDayBeforeNow, oneDayAfterNow,
                                               signerName, extensions,
                                               subCAPrivateKey.get(),
                                               signerPrivateKey));
@@ -728,11 +728,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   SECItem const* const certs[] = { subCADER, signerDER, nullptr };
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID,
-                         signerName, signerPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow, certs));
+                         signerName, signerPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow, certs));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -756,8 +756,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   ScopedSECKEYPrivateKey subCAPrivateKey;
   SECItem* subCADER(CreateEncodedCertificate(arena.get(), ++rootIssuedCount,
                                              rootName,
-                                             pr_oneDayBeforeNow,
-                                             pr_oneDayAfterNow,
+                                             oneDayBeforeNow, oneDayAfterNow,
                                              subCAName, subCAExtensions,
                                              rootPrivateKey.get(),
                                              subCAPrivateKey));
@@ -772,8 +771,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   };
   ScopedSECKEYPrivateKey signerPrivateKey;
   SECItem* signerDER(CreateEncodedCertificate(arena.get(), 1, subCAName,
-                                              pr_oneDayBeforeNow,
-                                              pr_oneDayAfterNow,
+                                              oneDayBeforeNow, oneDayAfterNow,
                                               signerName, extensions,
                                               subCAPrivateKey.get(),
                                               signerPrivateKey));
@@ -784,11 +782,11 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
   SECItem const* const certs[] = { signerDER, subCADER, nullptr };
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID,
-                         signerName, signerPrivateKey, pr_oneDayBeforeNow,
-                         pr_oneDayBeforeNow, &pr_oneDayAfterNow, certs));
+                         signerName, signerPrivateKey, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow, certs));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -857,7 +855,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, InheritTrust)
                                        TrustLevel::InheritsTrust));
   bool expired;
   ASSERT_EQ(Success,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -869,7 +867,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, TrustAnchor)
                                        TrustLevel::TrustAnchor));
   bool expired;
   ASSERT_EQ(Success,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
@@ -881,7 +879,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_GetCertTrust, ActivelyDistrusted)
                                        TrustLevel::ActivelyDistrusted));
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
-            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, now,
+            VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID, Now(),
                                       END_ENTITY_MAX_LIFETIME_IN_DAYS,
                                       response, expired));
   ASSERT_FALSE(expired);
