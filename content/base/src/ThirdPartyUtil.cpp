@@ -32,7 +32,7 @@ ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
                                      nsIURI* aSecondURI,
                                      bool* aResult)
 {
-  NS_ASSERTION(aSecondURI, "null URI!");
+  NS_ENSURE_ARG(aSecondURI);
 
   // Get the base domain for aSecondURI.
   nsCString secondDomain;
@@ -46,18 +46,23 @@ ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
 }
 
 // Get the URI associated with a window.
-already_AddRefed<nsIURI>
-ThirdPartyUtil::GetURIFromWindow(nsIDOMWindow* aWin)
+NS_IMETHODIMP
+ThirdPartyUtil::GetURIFromWindow(nsIDOMWindow* aWin, nsIURI** result)
 {
+  nsresult rv;
   nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrin = do_QueryInterface(aWin);
-  NS_ENSURE_TRUE(scriptObjPrin, nullptr);
+  if (!scriptObjPrin) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   nsIPrincipal* prin = scriptObjPrin->GetPrincipal();
-  NS_ENSURE_TRUE(prin, nullptr);
+  if (!prin) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  nsCOMPtr<nsIURI> result;
-  prin->GetURI(getter_AddRefs(result));
-  return result.forget();
+  nsCOMPtr<nsIURI> uri;
+  rv = prin->GetURI(result);
+  return rv;
 }
 
 // Determine if aFirstURI is third party with respect to aSecondURI. See docs
@@ -92,11 +97,13 @@ ThirdPartyUtil::IsThirdPartyWindow(nsIDOMWindow* aWindow,
   bool result;
 
   // Get the URI of the window, and its base domain.
-  nsCOMPtr<nsIURI> currentURI = GetURIFromWindow(aWindow);
-  NS_ENSURE_TRUE(currentURI, NS_ERROR_INVALID_ARG);
+  nsresult rv;
+  nsCOMPtr<nsIURI> currentURI;
+  rv = GetURIFromWindow(aWindow, getter_AddRefs(currentURI));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString bottomDomain;
-  nsresult rv = GetBaseDomain(currentURI, bottomDomain);
+  rv = GetBaseDomain(currentURI, bottomDomain);
   if (NS_FAILED(rv))
     return rv;
 
@@ -126,8 +133,8 @@ ThirdPartyUtil::IsThirdPartyWindow(nsIDOMWindow* aWindow,
       return NS_OK;
     }
 
-    parentURI = GetURIFromWindow(parent);
-    NS_ENSURE_TRUE(parentURI, NS_ERROR_INVALID_ARG);
+    rv = GetURIFromWindow(parent, getter_AddRefs(parentURI));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = IsThirdPartyInternal(bottomDomain, parentURI, &result);
     if (NS_FAILED(rv))
@@ -245,6 +252,29 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
   // Check the window hierarchy. This covers most cases for an ordinary page
   // load from the location bar.
   return IsThirdPartyWindow(ourWin, channelURI, aResult);
+}
+
+NS_IMETHODIMP
+ThirdPartyUtil::GetTopWindowForChannel(nsIChannel* aChannel, nsIDOMWindow** aWin)
+{
+  NS_ENSURE_ARG(aWin);
+
+  nsresult rv;
+  // Find the associated window and its parent window.
+  nsCOMPtr<nsILoadContext> ctx;
+  NS_QueryNotificationCallbacks(aChannel, ctx);
+  if (!ctx) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIDOMWindow> window;
+  rv = ctx->GetAssociatedWindow(getter_AddRefs(window));
+  if (!window) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  rv = window->GetTop(aWin);
+  return rv;
 }
 
 // Get the base domain for aHostURI; e.g. for "www.bbc.co.uk", this would be
