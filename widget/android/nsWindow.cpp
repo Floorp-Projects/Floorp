@@ -48,6 +48,7 @@ using mozilla::unused;
 #include "GLContextProvider.h"
 #include "ScopedGLHelpers.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "APZCCallbackHandler.h"
 
 #include "nsTArray.h"
 
@@ -2392,7 +2393,7 @@ nsWindow::GetAPZCTreeManager()
             return nullptr;
         }
         uint64_t rootLayerTreeId = compositor->RootLayerTreeId();
-        CompositorParent::SetControllerForLayerTree(rootLayerTreeId, AndroidBridge::Bridge());
+        CompositorParent::SetControllerForLayerTree(rootLayerTreeId, mozilla::widget::android::APZCCallbackHandler::GetInstance());
         sApzcTreeManager = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
     }
     return sApzcTreeManager;
