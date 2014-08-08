@@ -3802,13 +3802,18 @@ var gCSSProperties = {
       "flex-shrink",
       "flex-basis"
     ],
-    initial_values: [ "0 1 auto", "auto 0 1", "0 auto", "auto 0" ],
+    initial_values: [ "0 1 main-size", "main-size 0 1", "0 main-size", "main-size 0" ],
     other_values: [
       "none",
+      "auto",
       "1",
       "0",
       "0 1",
       "0.5",
+      "5px",
+      "15%",
+      "calc(5px)",
+      "main-size",
       "1.2 3.4",
       "0 0 0",
       "0 0 0px",
@@ -3837,13 +3842,15 @@ var gCSSProperties = {
     domProp: "flexBasis",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ " auto" ],
+    initial_values: [ "main-size" ],
         // NOTE: This is cribbed directly from the "width" chunk, since this
         // property takes the exact same values as width (albeit with
         // different semantics on 'auto').
         // XXXdholbert (Maybe these should get separated out into
         // a reusable array defined at the top of this file?)
-    other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+    other_values: [
+      "auto",
+      "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
       // valid calc() values
       "calc(-2px)",
       "calc(2px)",
