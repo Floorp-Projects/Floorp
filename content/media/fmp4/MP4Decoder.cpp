@@ -8,7 +8,9 @@
 #include "MP4Reader.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
+#ifdef MOZ_EME
 #include "mozilla/CDMProxy.h"
+#endif
 #include "prlog.h"
 
 #ifdef XP_WIN
@@ -29,6 +31,7 @@ MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
   return new MediaDecoderStateMachine(this, new MP4Reader(this));
 }
 
+#ifdef MOZ_EME
 nsresult
 MP4Decoder::SetCDMProxy(CDMProxy* aProxy)
 {
@@ -45,6 +48,7 @@ MP4Decoder::SetCDMProxy(CDMProxy* aProxy)
   }
   return NS_OK;
 }
+#endif
 
 bool
 MP4Decoder::GetSupportedCodecs(const nsACString& aType,

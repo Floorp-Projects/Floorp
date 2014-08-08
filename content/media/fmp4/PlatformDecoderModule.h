@@ -66,6 +66,7 @@ public:
   // This is called on the decode task queue.
   static PlatformDecoderModule* Create();
 
+#ifdef MOZ_EME
   // Creates a PlatformDecoderModule that uses a CDMProxy to decrypt or
   // decrypt-and-decode EME encrypted content. If the CDM only decrypts and
   // does not decode, we create a PDM and use that to create MediaDataDecoders
@@ -75,6 +76,7 @@ public:
                                                  bool aHasAudio,
                                                  bool aHasVideo,
                                                  MediaTaskQueue* aTaskQueue);
+#endif
 
   // Called to shutdown the decoder module and cleanup state. The PDM
   // is deleted immediately after Shutdown() is called. Shutdown() is

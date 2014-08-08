@@ -138,11 +138,13 @@ public:
   // when the connection between Rtsp server and client gets lost.
   virtual void ResetConnectionState() = 0;
 
+#ifdef MOZ_EME
   // Dispatches a "needkey" event to the HTMLMediaElement, with the
   // provided init data.
   // Main thread only.
   virtual void DispatchNeedKey(const nsTArray<uint8_t>& aInitData,
                                const nsAString& aInitDataType) = 0;
+#endif
 };
 
 }

@@ -24,7 +24,9 @@ public:
 
   virtual MediaDecoderStateMachine* CreateStateMachine();
 
+#ifdef MOZ_EME
   virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;
+#endif
 
   // Returns true if aType is a MIME type that we can render with the
   // a MP4 platform decoder backend. If aCodecList is non null,
