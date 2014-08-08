@@ -196,6 +196,13 @@ public class AppConstants {
     false;
 #endif
 
+    public static final boolean MOZ_ANDROID_APZ =
+#ifdef MOZ_ANDROID_APZ
+    true;
+#else
+    false;
+#endif
+
     // See this wiki page for more details about channel specific build defines:
     // https://wiki.mozilla.org/Platform/Channel-specific_build_defines
     public static final boolean RELEASE_BUILD =
