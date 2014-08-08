@@ -145,9 +145,10 @@ CompositorThreadHolder::CreateCompositorThread()
      128ms is chosen for transient hangs because 8Hz should be the minimally
      acceptable goal for Compositor responsiveness (normal goal is 60Hz). */
   options.transient_hang_timeout = 128; // milliseconds
-  /* 8192ms is chosen for permanent hangs because it's several seconds longer
-     than the default hang timeout on major platforms (about 5 seconds). */
-  options.permanent_hang_timeout = 8192; // milliseconds
+  /* 2048ms is chosen for permanent hangs because it's longer than most
+   * Compositor hangs seen in the wild, but is short enough to not miss getting
+   * native hang stacks. */
+  options.permanent_hang_timeout = 2048; // milliseconds
 
   if (!compositorThread->StartWithOptions(options)) {
     delete compositorThread;
