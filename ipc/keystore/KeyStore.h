@@ -98,11 +98,12 @@ class KeyStore : public mozilla::ipc::UnixSocketConsumer
 {
 public:
   KeyStore();
-  virtual ~KeyStore() {}
 
   void Shutdown();
 
 private:
+  virtual ~KeyStore();
+
   virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage);
 
   virtual void OnConnectSuccess();

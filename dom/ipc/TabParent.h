@@ -208,7 +208,7 @@ public:
     // message-sending functions under a layer of indirection and
     // eating the return values
     void Show(const nsIntSize& size);
-    void UpdateDimensions(const nsRect& rect, const nsIntSize& size);
+    void UpdateDimensions(const nsIntRect& rect, const nsIntSize& size);
     void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
     void UIResolutionChanged();
     void AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration);
@@ -374,7 +374,7 @@ protected:
     // The number of event series we're currently capturing.
     int32_t mEventCaptureDepth;
 
-    nsRect mRect;
+    nsIntRect mRect;
     nsIntSize mDimensions;
     ScreenOrientation mOrientation;
     float mDPI;
