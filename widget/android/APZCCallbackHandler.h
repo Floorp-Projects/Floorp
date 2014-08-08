@@ -38,6 +38,7 @@ public:
     }
 
     NativePanZoomController* SetNativePanZoomController(jobject obj);
+    void NotifyDefaultPrevented(const mozilla::layers::ScrollableLayerGuid& aGuid, bool aDefaultPrevented);
 
 public: // GeckoContentController methods
     void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;

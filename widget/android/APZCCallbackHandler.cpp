@@ -16,6 +16,7 @@
 #include "AndroidBridge.h"
 
 using mozilla::layers::APZCCallbackHelper;
+using mozilla::layers::APZCTreeManager;
 using mozilla::layers::FrameMetrics;
 using mozilla::layers::ScrollableLayerGuid;
 
@@ -31,6 +32,27 @@ APZCCallbackHandler::SetNativePanZoomController(jobject obj)
     NativePanZoomController* old = mNativePanZoomController;
     mNativePanZoomController = NativePanZoomController::Wrap(obj);
     return old;
+}
+
+void
+APZCCallbackHandler::NotifyDefaultPrevented(const ScrollableLayerGuid& aGuid,
+                                            bool aDefaultPrevented)
+{
+    if (NS_IsMainThread()) {
+        // The notification must reach the APZ on the Java UI thread (aka the
+        // APZ "controller" thread) but we get it from the Gecko thread, so we
+        // have to throw it onto the other thread.
+        AndroidBridge::Bridge()->PostTaskToUiThread(NewRunnableMethod(
+            this, &APZCCallbackHandler::NotifyDefaultPrevented,
+            aGuid, aDefaultPrevented), 0);
+        return;
+    }
+
+    // This should be running on the Java UI thread
+    APZCTreeManager* controller = nsWindow::GetAPZCTreeManager();
+    if (controller) {
+        controller->ContentReceivedTouch(aGuid, aDefaultPrevented);
+    }
 }
 
 nsIDOMWindowUtils*

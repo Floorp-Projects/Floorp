@@ -882,18 +882,28 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv* env, jobject ins
     }
 }
 
-NS_EXPORT void JNICALL
+NS_EXPORT jboolean JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv* env, jobject instance, jobject event)
 {
     APZCTreeManager *controller = nsWindow::GetAPZCTreeManager();
-    if (controller) {
-        AndroidGeckoEvent* wrapper = AndroidGeckoEvent::MakeFromJavaObject(env, event);
-        MultiTouchInput input = wrapper->MakeMultiTouchInput(nsWindow::TopWindow());
-        delete wrapper;
-        if (input.mType >= 0) {
-            controller->ReceiveInputEvent(input, nullptr);
-        }
+    if (!controller) {
+        return false;
     }
+
+    AndroidGeckoEvent* wrapper = AndroidGeckoEvent::MakeFromJavaObject(env, event);
+    MultiTouchInput input = wrapper->MakeMultiTouchInput(nsWindow::TopWindow());
+    delete wrapper;
+
+    if (input.mType < 0 || !nsAppShell::gAppShell) {
+        return false;
+    }
+
+    ScrollableLayerGuid guid;
+    nsEventStatus status = controller->ReceiveInputEvent(input, &guid);
+    if (status != nsEventStatus_eConsumeNoDefault) {
+        nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeApzInputEvent(input, guid));
+    }
+    return true;
 }
 
 NS_EXPORT void JNICALL
@@ -914,16 +924,6 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
         MOZ_ASSERT(false, "Clearing a non-existent NPZC");
     } else {
         delete oldRef;
-    }
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented(JNIEnv* env, jobject instance, jboolean prevented)
-{
-    APZCTreeManager *controller = nsWindow::GetAPZCTreeManager();
-    if (controller) {
-        // TODO: Pass in correct values for presShellId and viewId.
-        controller->ContentReceivedTouch(ScrollableLayerGuid(nsWindow::RootLayerTreeId(), 0, 0), prevented);
     }
 }
 
