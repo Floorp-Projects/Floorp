@@ -406,7 +406,7 @@ child:
 
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 
-    UpdateDimensions(nsRect rect, nsIntSize size, ScreenOrientation orientation) compress;
+    UpdateDimensions(nsIntRect rect, nsIntSize size, ScreenOrientation orientation) compress;
 
     UpdateFrame(FrameMetrics frame);
 
