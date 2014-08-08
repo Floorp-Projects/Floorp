@@ -2808,6 +2808,9 @@ struct CreateGlobalOptions<nsGlobalWindow>
   static bool PostCreateGlobal(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 };
 
+nsresult
+RegisterDOMNames();
+
 template <class T, ProtoGetter GetProto>
 bool
 CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
@@ -2815,6 +2818,11 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
              JSPrincipals* aPrincipal, bool aInitStandardClasses,
              JS::MutableHandle<JSObject*> aGlobal)
 {
+  nsresult rv = RegisterDOMNames();
+  if (NS_FAILED(rv)) {
+    return Throw(aCx, rv);
+  }
+
   aOptions.setTrace(CreateGlobalOptions<T>::TraceGlobal);
 
   aGlobal.set(JS_NewGlobalObject(aCx, aClass, aPrincipal,
