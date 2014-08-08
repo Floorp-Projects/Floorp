@@ -7451,7 +7451,7 @@ CSSParserImpl::ParseFlex()
   // "a unitless zero that is not already preceded by two flex factors must be
   //  interpreted as a flex factor.
   if (!ParseNonNegativeVariant(tmpVal, flexBasisVariantMask | VARIANT_NUMBER,
-                               nsCSSProps::kWidthKTable)) {
+                               nsCSSProps::kFlexBasisKTable)) {
     // First component was not a valid flex-basis or flex-grow value. Fail.
     return false;
   }
@@ -7499,7 +7499,7 @@ CSSParserImpl::ParseFlex()
     // unitless 0 encountered here *must* have been preceded by 2 flex factors.
     if (!wasFirstComponentFlexBasis &&
         ParseNonNegativeVariant(tmpVal, flexBasisVariantMask,
-                                nsCSSProps::kWidthKTable)) {
+                                nsCSSProps::kFlexBasisKTable)) {
       flexBasis = tmpVal;
     }
   }
