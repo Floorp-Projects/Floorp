@@ -140,23 +140,18 @@ public:
   struct ResourceAcquisition
   {
     const T* mResource;
-    CallStack mCallContext;
 
-    explicit ResourceAcquisition(const T* aResource,
-                                 const CallStack aCallContext = CallStack::kNone)
+    explicit ResourceAcquisition(const T* aResource)
       : mResource(aResource)
-      , mCallContext(aCallContext)
     {
     }
     ResourceAcquisition(const ResourceAcquisition& aFrom)
       : mResource(aFrom.mResource)
-      , mCallContext(aFrom.mCallContext)
     {
     }
     ResourceAcquisition& operator=(const ResourceAcquisition& aFrom)
     {
       mResource = aFrom.mResource;
-      mCallContext = aFrom.mCallContext;
       return *this;
     }
   };
@@ -356,10 +351,8 @@ public:
       if (!cycle) {
         NS_RUNTIMEABORT("can't allocate dep. cycle array");
       }
-      cycle->AppendElement(ResourceAcquisition(current->mResource,
-                                               current->mFirstSeen));
-      cycle->AppendElement(ResourceAcquisition(aProposed,
-                                               aCallContext));
+      cycle->AppendElement(ResourceAcquisition(current->mResource));
+      cycle->AppendElement(ResourceAcquisition(aProposed));
       return cycle;
     }
     if (InTransitiveClosure(current, proposed)) {
@@ -374,8 +367,7 @@ public:
       // right conditions.
       ResourceAcquisitionArray* cycle = GetDeductionChain(proposed, current);
       // show how acquiring |aProposed| would complete the cycle
-      cycle->AppendElement(ResourceAcquisition(aProposed,
-                                               aCallContext));
+      cycle->AppendElement(ResourceAcquisition(aProposed));
       return cycle;
     }
     // |aLast|, |aProposed| are unordered according to our
@@ -435,8 +427,7 @@ public:
     if (!chain) {
       NS_RUNTIMEABORT("can't allocate dep. cycle array");
     }
-    chain->AppendElement(ResourceAcquisition(aStart->mResource,
-                                             aStart->mFirstSeen));
+    chain->AppendElement(ResourceAcquisition(aStart->mResource));
 
     NS_ASSERTION(GetDeductionChain_Helper(aStart, aTarget, chain),
                  "GetDeductionChain called when there's no deadlock");
@@ -450,16 +441,14 @@ public:
                                 ResourceAcquisitionArray* aChain)
   {
     if (aStart->mOrderedLT.BinaryIndexOf(aTarget) != NoIndex) {
-      aChain->AppendElement(ResourceAcquisition(aTarget->mResource,
-                                                aTarget->mFirstSeen));
+      aChain->AppendElement(ResourceAcquisition(aTarget->mResource));
       return true;
     }
 
     index_type i = 0;
     size_type len = aStart->mOrderedLT.Length();
     for (const OrderingEntry* const* it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
-      aChain->AppendElement(ResourceAcquisition((*it)->mResource,
-                                                (*it)->mFirstSeen));
+      aChain->AppendElement(ResourceAcquisition((*it)->mResource));
       if (GetDeductionChain_Helper(*it, aTarget, aChain)) {
         return true;
       }
