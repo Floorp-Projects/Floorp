@@ -17,10 +17,6 @@ const RIL_MOBILEMESSAGEDATABASESERVICE_CONTRACTID =
 const RIL_MOBILEMESSAGEDATABASESERVICE_CID =
   Components.ID("{29785f90-6b5b-11e2-9201-3b280170b2ec}");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gDiskSpaceWatcher",
-                                   "@mozilla.org/toolkit/disk-space-watcher;1",
-                                   "nsIDiskSpaceWatcher");
-
 const DB_NAME = "sms";
 
 /**
@@ -33,9 +29,6 @@ function MobileMessageDatabaseService() {
 
   let mmdb = new MMDB.MobileMessageDB();
   mmdb.init(DB_NAME, 0, mmdb.updatePendingTransactionToError.bind(mmdb));
-  mmdb.isDiskFull = function() {
-    return gDiskSpaceWatcher.isDiskFull;
-  };
   this.mmdb = mmdb;
 }
 MobileMessageDatabaseService.prototype = {
