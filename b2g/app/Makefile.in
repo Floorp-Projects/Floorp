@@ -24,11 +24,6 @@ include $(topsrcdir)/config/rules.mk
 
 APP_ICON = b2g
 
-source_repo ?= $(call getSourceRepo,$(srcdir)/..)
-ifneq (,$(filter http%,$(source_repo)))
-  DEFINES += -DMOZ_SOURCE_REPO='$(source_repo)'
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 REDIT_PATH = $(LIBXUL_DIST)/bin
 endif

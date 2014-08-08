@@ -328,7 +328,8 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
   if (pm && pm->HasContextMenu(nullptr))
     return NS_OK;
 
-  nsIContent* aOldMenu = nullptr, *aNewMenu = nullptr;
+  nsIContent* aOldMenu = nullptr;
+  nsIContent* aNewMenu = nullptr;
   
   // Unset the current child.
   bool wasOpen = false;

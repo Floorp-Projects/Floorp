@@ -695,7 +695,8 @@ nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
     // with a higher priority is active, the new match will override it, so
     // content will need to be generated for the new match and removed for
     // this existing active match.
-    nsTemplateMatch* replacedmatch = nullptr, * replacedmatchtodelete = nullptr;
+    nsTemplateMatch* replacedmatch = nullptr;
+    nsTemplateMatch* replacedmatchtodelete = nullptr;
 
     if (aOldResult) {
         nsTemplateMatch* firstmatch;

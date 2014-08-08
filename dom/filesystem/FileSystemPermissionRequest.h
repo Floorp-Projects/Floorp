@@ -7,12 +7,11 @@
 #ifndef mozilla_dom_FileSystemPermissionRequest_h
 #define mozilla_dom_FileSystemPermissionRequest_h
 
-#include "PCOMContentPermissionRequestChild.h"
 #include "nsAutoPtr.h"
-#include "nsContentPermissionHelper.h"
 #include "nsIRunnable.h"
+#include "nsIContentPermissionPrompt.h"
+#include "nsString.h"
 
-class nsCString;
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -23,21 +22,11 @@ class FileSystemTaskBase;
 class FileSystemPermissionRequest MOZ_FINAL
   : public nsIContentPermissionRequest
   , public nsIRunnable
-  , public PCOMContentPermissionRequestChild
 {
 public:
   // Request permission for the given task.
   static void
   RequestForTask(FileSystemTaskBase* aTask);
-
-  // Overrides PCOMContentPermissionRequestChild
-
-  virtual void
-  IPDLRelease() MOZ_OVERRIDE;
-
-  bool
-  Recv__delete__(const bool& aAllow,
-    const InfallibleTArray<PermissionChoice>& aChoices) MOZ_OVERRIDE;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST

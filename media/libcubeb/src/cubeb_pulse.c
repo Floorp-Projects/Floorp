@@ -91,7 +91,10 @@ struct cubeb_stream {
   pa_time_event * drain_timer;
   pa_sample_spec sample_spec;
   int shutdown;
+  float volume;
 };
+
+const float PULSE_NO_GAIN = -1.0;
 
 enum cork_state {
   UNCORK = 0,
@@ -194,6 +197,23 @@ stream_request_callback(pa_stream * s, size_t nbytes, void * u)
       WRAP(pa_stream_cancel_write)(s);
       stm->shutdown = 1;
       return;
+    }
+
+    if (stm->volume != PULSE_NO_GAIN) {
+      uint32_t samples =  size * stm->sample_spec.channels / frame_size ;
+
+      if (stm->sample_spec.format == PA_SAMPLE_S16LE ||
+          stm->sample_spec.format == PA_SAMPLE_S16LE) {
+        short * b = buffer;
+        for (uint32_t i = 0; i < samples; i++) {
+          b[i] *= stm->volume;
+        }
+      } else {
+        float * b = buffer;
+        for (uint32_t i = 0; i < samples; i++) {
+          b[i] *= stm->volume;
+        }
+      }
     }
 
     r = WRAP(pa_stream_write)(s, buffer, got * frame_size, NULL, 0, PA_SEEK_RELATIVE);
@@ -555,6 +575,7 @@ pulse_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   stm->user_ptr = user_ptr;
 
   stm->sample_spec = ss;
+  stm->volume = PULSE_NO_GAIN;
 
   battr.maxlength = -1;
   battr.tlength = WRAP(pa_usec_to_bytes)(latency * PA_USEC_PER_MSEC, &stm->sample_spec);
@@ -698,20 +719,31 @@ pulse_stream_set_volume(cubeb_stream * stm, float volume)
 
   WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
 
-  ss = WRAP(pa_stream_get_sample_spec)(stm->stream);
-
-  vol = WRAP(pa_sw_volume_from_linear)(volume);
-  WRAP(pa_cvolume_set)(&cvol, ss->channels, vol);
-
-  index = WRAP(pa_stream_get_index)(stm->stream);
-
-  op = WRAP(pa_context_set_sink_input_volume)(stm->context->context,
-                                              index, &cvol, volume_success,
-                                              stm);
-  if (op) {
-    operation_wait(stm->context, stm->stream, op);
-    WRAP(pa_operation_unref)(op);
+  while (!stm->context->default_sink_info) {
+    WRAP(pa_threaded_mainloop_wait)(stm->context->mainloop);
   }
+
+  /* if the pulse daemon is configured to use flat volumes,
+   * apply our own gain instead of changing the input volume on the sink. */
+  if (stm->context->default_sink_info->flags & PA_SINK_FLAT_VOLUME) {
+    stm->volume = volume;
+  } else {
+    ss = WRAP(pa_stream_get_sample_spec)(stm->stream);
+
+    vol = WRAP(pa_sw_volume_from_linear)(volume);
+    WRAP(pa_cvolume_set)(&cvol, ss->channels, vol);
+
+    index = WRAP(pa_stream_get_index)(stm->stream);
+
+    op = WRAP(pa_context_set_sink_input_volume)(stm->context->context,
+                                                index, &cvol, volume_success,
+                                                stm);
+    if (op) {
+      operation_wait(stm->context, stm->stream, op);
+      WRAP(pa_operation_unref)(op);
+    }
+  }
+
   WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
 
   return CUBEB_OK;

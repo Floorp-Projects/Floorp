@@ -638,6 +638,14 @@ class BaseMarionetteTestRunner(object):
 
         self.logger.suite_start(self.tests)
 
+        for test in self.manifest_skipped_tests:
+            name = os.path.basename(test['path'])
+            self.logger.test_start(name)
+            self.logger.test_end(name,
+                                 'SKIP',
+                                 message=test['disabled'])
+            self.todo += 1
+
         counter = self.repeat
         while counter >=0:
             round = self.repeat - counter
@@ -743,13 +751,6 @@ class BaseMarionetteTestRunner(object):
                 if test['path'] not in [x['path'] for x in target_tests]:
                     test.setdefault('disabled', 'filtered by type (%s)' % self.type)
                     self.manifest_skipped_tests.append(test)
-
-            for test in self.manifest_skipped_tests:
-                self.logger.test_start(os.path.basename(test['path']))
-                self.logger.test_end(os.path.basename(test['path']),
-                                     'SKIP',
-                                     message=test['disabled'])
-                self.todo += 1
 
             for i in target_tests:
                 if not os.path.exists(i["path"]):

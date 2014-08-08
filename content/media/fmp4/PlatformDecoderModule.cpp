@@ -14,6 +14,10 @@
 #ifdef MOZ_APPLEMEDIA
 #include "AppleDecoderModule.h"
 #endif
+#ifdef MOZ_GONK_MEDIACODEC
+#include "GonkDecoderModule.h"
+#endif
+
 #include "mozilla/Preferences.h"
 #ifdef MOZ_EME
 #include "EMEDecoderModule.h"
@@ -28,6 +32,7 @@ extern PlatformDecoderModule* CreateBlankDecoderModule();
 
 bool PlatformDecoderModule::sUseBlankDecoder = false;
 bool PlatformDecoderModule::sFFmpegDecoderEnabled = false;
+bool PlatformDecoderModule::sGonkDecoderEnabled = false;
 
 /* static */
 void
@@ -44,6 +49,10 @@ PlatformDecoderModule::Init()
                                "media.fragmented-mp4.use-blank-decoder");
   Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
                                "media.fragmented-mp4.ffmpeg.enabled", false);
+#ifdef MOZ_GONK_MEDIACODEC
+  Preferences::AddBoolVarCache(&sGonkDecoderEnabled,
+                               "media.fragmented-mp4.gonk.enabled", false);
+#endif
 #ifdef XP_WIN
   WMFDecoderModule::Init();
 #endif
@@ -131,6 +140,11 @@ PlatformDecoderModule::Create()
   nsAutoPtr<AppleDecoderModule> m(new AppleDecoderModule());
   if (NS_SUCCEEDED(m->Startup())) {
     return m.forget();
+  }
+#endif
+#ifdef MOZ_GONK_MEDIACODEC
+  if (sGonkDecoderEnabled) {
+    return new GonkDecoderModule();
   }
 #endif
   return nullptr;

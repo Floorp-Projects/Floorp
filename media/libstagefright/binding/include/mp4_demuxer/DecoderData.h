@@ -97,6 +97,7 @@ public:
   uint32_t bits_per_sample;
   uint32_t samples_per_second;
   int8_t frequency_index;
+  int8_t aac_profile;
   mozilla::Vector<uint8_t> extra_data;
   mozilla::Vector<uint8_t> audio_specific_config;
   CryptoTrack crypto;
@@ -107,7 +108,6 @@ public:
 
 private:
   friend class MP4Demuxer;
-  int8_t aac_profile;
 };
 
 class VideoDecoderConfig : public TrackConfig
