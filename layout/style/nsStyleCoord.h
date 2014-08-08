@@ -82,7 +82,7 @@ public:
     Calc& operator=(const Calc&) MOZ_DELETE;
   };
 
-  nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null);
+  explicit nsStyleCoord(nsStyleUnit aUnit = eStyleUnit_Null);
   enum CoordConstructorType { CoordConstructor };
   inline nsStyleCoord(nscoord aValue, CoordConstructorType);
   nsStyleCoord(int32_t aValue, nsStyleUnit aUnit);

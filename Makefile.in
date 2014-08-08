@@ -328,7 +328,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk3)
 toolkit/library/target: widget/gtk/mozgtk/gtk3/target
 endif
 ifdef MOZ_LDAP_XPCOM
-toolkit/library/target: ../ldap/target
+ldap/target: config/external/nss/target mozglue/build/target
+toolkit/library/target: ldap/target
 endif
 ifndef MOZ_FOLD_LIBS
 ifndef MOZ_NATIVE_SQLITE

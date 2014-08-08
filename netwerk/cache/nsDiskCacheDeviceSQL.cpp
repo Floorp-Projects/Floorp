@@ -893,8 +893,8 @@ nsOfflineCacheDevice::nsOfflineCacheDevice()
   , mDeltaCounter(0)
   , mAutoShutdown(false)
   , mLock("nsOfflineCacheDevice.lock")
-  , mActiveCaches(5)
-  , mLockedEntries(64)
+  , mActiveCaches(4)
+  , mLockedEntries(32)
 {
 }
 

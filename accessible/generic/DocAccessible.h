@@ -26,7 +26,7 @@ class nsAccessiblePivot;
 
 class nsIScrollableView;
 
-const uint32_t kDefaultCacheSize = 256;
+const uint32_t kDefaultCacheLength = 128;
 
 namespace mozilla {
 namespace a11y {

@@ -49,6 +49,8 @@ GMPAudioDecoderChild::Decoded(GMPAudioSamples* aDecodedSamples)
   samples.mData().AppendElements((int16_t*)aDecodedSamples->Buffer(),
                                  aDecodedSamples->Size() / sizeof(int16_t));
   samples.mTimeStamp() = aDecodedSamples->TimeStamp();
+  samples.mChannelCount() = aDecodedSamples->Channels();
+  samples.mSamplesPerSecond() = aDecodedSamples->Rate();
 
   unused << SendDecoded(samples);
 

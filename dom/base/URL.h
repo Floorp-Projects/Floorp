@@ -121,7 +121,7 @@ public:
   }
 
   // URLSearchParamsObserver
-  void URLSearchParamsUpdated() MOZ_OVERRIDE;
+  void URLSearchParamsUpdated(URLSearchParams* aSearchParams) MOZ_OVERRIDE;
 
 private:
   nsIURI* GetURI() const

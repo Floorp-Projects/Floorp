@@ -26,7 +26,7 @@ class AsyncStatementParams MOZ_FINAL : public mozIStorageStatementParams
                                      , public nsIXPCScriptable
 {
 public:
-  AsyncStatementParams(AsyncStatement *aStatement);
+  explicit AsyncStatementParams(AsyncStatement *aStatement);
 
   // interfaces
   NS_DECL_ISUPPORTS

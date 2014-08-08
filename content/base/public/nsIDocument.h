@@ -133,8 +133,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0xa45ef8f0, 0x7c5b, 0x425d, \
-  { 0xa5, 0xe7, 0x11, 0x41, 0x5c, 0x41, 0x0c, 0x7a } }
+{ 0x613ea294, 0x0288, 0x48b4, \
+  { 0x9e, 0x7b, 0x0f, 0xe9, 0x3f, 0x8c, 0xf8, 0x95 } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -530,6 +530,38 @@ public:
   void SetHasMixedDisplayContentBlocked(bool aHasMixedDisplayContentBlocked)
   {
     mHasMixedDisplayContentBlocked = aHasMixedDisplayContentBlocked;
+  }
+
+  /**
+   * Get tracking content blocked flag for this document.
+   */
+  bool GetHasTrackingContentBlocked()
+  {
+    return mHasTrackingContentBlocked;
+  }
+
+  /**
+   * Set the tracking content blocked flag for this document.
+   */
+  void SetHasTrackingContentBlocked(bool aHasTrackingContentBlocked)
+  {
+    mHasTrackingContentBlocked = aHasTrackingContentBlocked;
+  }
+
+  /**
+   * Get tracking content loaded flag for this document.
+   */
+  bool GetHasTrackingContentLoaded()
+  {
+    return mHasTrackingContentLoaded;
+  }
+
+  /**
+   * Set the tracking content loaded flag for this document.
+   */
+  void SetHasTrackingContentLoaded(bool aHasTrackingContentLoaded)
+  {
+    mHasTrackingContentLoaded = aHasTrackingContentLoaded;
   }
 
   /**
@@ -2530,6 +2562,12 @@ protected:
 
   // True if a document has blocked Mixed Display/Passive Content (see nsMixedContentBlocker.cpp)
   bool mHasMixedDisplayContentBlocked;
+
+  // True if a document has blocked Tracking Content
+  bool mHasTrackingContentBlocked;
+
+  // True if a document has loaded Tracking Content
+  bool mHasTrackingContentLoaded;
 
   // True if DisallowBFCaching has been called on this document.
   bool mBFCacheDisallowed;

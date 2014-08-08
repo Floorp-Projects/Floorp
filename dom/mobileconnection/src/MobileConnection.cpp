@@ -85,6 +85,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
                                                 DOMEventTargetHelper)
+  tmp->Shutdown();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVoice)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mData)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -126,19 +127,28 @@ MobileConnection::MobileConnection(nsPIDOMWindow* aWindow, uint32_t aClientId)
 void
 MobileConnection::Shutdown()
 {
-  if (mProvider && mListener) {
+  if (mListener) {
+    if (mProvider) {
+      mProvider->UnregisterMobileConnectionMsg(mClientId, mListener);
+    }
+
     mListener->Disconnect();
-    mProvider->UnregisterMobileConnectionMsg(mClientId, mListener);
-    mProvider = nullptr;
     mListener = nullptr;
-    mVoice = nullptr;
-    mData = nullptr;
   }
 }
 
 MobileConnection::~MobileConnection()
 {
-  MOZ_ASSERT(!(mProvider || mListener || mVoice || mData));
+  Shutdown();
+}
+
+void
+MobileConnection::DisconnectFromOwner()
+{
+  DOMEventTargetHelper::DisconnectFromOwner();
+  // Event listeners can't be handled anymore, so we can shutdown
+  // the MobileConnection.
+  Shutdown();
 }
 
 JSObject*
@@ -214,20 +224,12 @@ MobileConnection::GetLastKnownHomeNetwork(nsString& aRetVal) const
 MobileConnectionInfo*
 MobileConnection::Voice() const
 {
-  if (!mProvider) {
-    return nullptr;
-  }
-
   return mVoice;
 }
 
 MobileConnectionInfo*
 MobileConnection::Data() const
 {
-  if (!mProvider) {
-    return nullptr;
-  }
-
   return mData;
 }
 

@@ -57,7 +57,7 @@ body {
     min-width: 0;
     color: #000000;
     opacity: 1;
-    flex: 1 1 auto;
+    flex: 1 1 main-size;
 }
 
 #filter-input:-moz-placeholder {
@@ -193,7 +193,7 @@ li {
 
 .pref-value {
     color: rgba(0,0,0,0.5);
-    flex: 1 1 auto;
+    flex: 1 1 main-size;
     border: none;
     -moz-appearance: none;
     background-image: none;
@@ -227,13 +227,13 @@ li {
 }
 
 #new-pref-value-boolean {
-    flex: 1 1 auto;
+    flex: 1 1 main-size;
 }
 
 #new-pref-container .pref-button.toggle {
     display: inline-block;
     opacity: 1;
-    flex: 0 1 auto;
+    flex: 0 1 main-size;
     float: right;
 }
 
@@ -241,7 +241,7 @@ li {
 #new-pref-container .pref-button.create {
     display: inline-block;
     opacity: 1;
-    flex: 1 1 auto;
+    flex: 1 1 main-size;
 }
 
 .pref-item-line {

@@ -562,22 +562,12 @@ function compareSmsMessage(aFrom, aTo) {
 }
 
 /**
- * Flush permission settings and call |finish()|.
+ * Wait for pending emulator transactions and call |finish()|.
  */
 function cleanUp() {
   ok(true, ":: CLEANING UP ::");
 
-  waitFor(function() {
-    SpecialPowers.flushPermissions(function() {
-      ok(true, "permissions flushed");
-
-      SpecialPowers.flushPrefEnv(function() {
-        ok(true, "preferences flushed");
-
-        finish();
-      })
-    });
-  }, function() {
+  waitFor(finish, function() {
     return pendingEmulatorCmdCount === 0;
   });
 }

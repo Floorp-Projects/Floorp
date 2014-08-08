@@ -1743,16 +1743,13 @@ TabChild::RecvShow(const nsIntSize& size)
 }
 
 bool
-TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation)
+TabChild::RecvUpdateDimensions(const nsIntRect& rect, const nsIntSize& size, const ScreenOrientation& orientation)
 {
     if (!mRemoteFrame) {
         return true;
     }
 
-    mOuterRect.x = rect.x;
-    mOuterRect.y = rect.y;
-    mOuterRect.width = rect.width;
-    mOuterRect.height = rect.height;
+    mOuterRect = rect;
 
     bool initialSizing = !HasValidInnerSize()
                       && (size.width != 0 && size.height != 0);

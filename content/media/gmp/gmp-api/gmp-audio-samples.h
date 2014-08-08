@@ -52,6 +52,23 @@ public:
   // Get metadata describing how this frame is encrypted, or nullptr if the
   // buffer is not encrypted.
   virtual const GMPEncryptedBufferMetadata* GetDecryptionData() const = 0;
+
+  virtual uint32_t Channels() const = 0;
+  virtual void SetChannels(uint32_t aChannels) = 0;
+
+  // Rate; the number of frames per second, where a "frame" is one sample for
+  // each channel.
+  //
+  // For IS16 samples, the number of samples should be:
+  //   Size() / (Channels() * sizeof(int16_t)).
+  //
+  // Note: Channels() and Rate() may not be constant across a decoding
+  // session. For example the rate for decoded samples may be different
+  // than the rate advertised by the MP4 container for encoded samples
+  // for HE-AAC streams with SBR/PS, and an EME-GMP may need to downsample
+  // to satisfy DRM requirements.
+  virtual uint32_t Rate() const = 0;
+  virtual void SetRate(uint32_t aRate) = 0;
 };
 
 #endif // GMP_AUDIO_FRAME_h_

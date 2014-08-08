@@ -248,7 +248,7 @@ ImageHalfScaler::HalfImageVertical_SSE2(uint8_t *aSource, int32_t aSourceStride,
 
         *storage++ = avg_sse2_4x2_4x1(a, b);
       }
-    } else if (!(uintptr_t(aSource + (y * aSourceStride)) % 16)) {
+    } else if (!(uintptr_t(aSource + ((y + 1) * aSourceStride)) % 16)) {
       for (; x < (aSourceSize.width - 3); x += 4) {
         uint8_t *upperRow = aSource + (y * aSourceStride + x * 4);
         uint8_t *lowerRow = aSource + ((y + 1) * aSourceStride + x * 4);

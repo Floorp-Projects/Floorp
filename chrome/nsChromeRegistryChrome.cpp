@@ -124,8 +124,7 @@ nsChromeRegistryChrome::Init()
   mSelectedLocale = NS_LITERAL_CSTRING("en-US");
   mSelectedSkin = NS_LITERAL_CSTRING("classic/1.0");
 
-  PL_DHashTableInit(&mPackagesHash, &kTableOps,
-                    nullptr, sizeof(PackageEntry), 16);
+  PL_DHashTableInit(&mPackagesHash, &kTableOps, nullptr, sizeof(PackageEntry));
 
   bool safeMode = false;
   nsCOMPtr<nsIXULRuntime> xulrun (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));

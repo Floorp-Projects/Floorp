@@ -204,7 +204,7 @@ public:
   // XXX width/height/ascent are OUT parameters and so they shouldn't
   // have to be initialized, but there are some bad frame classes that
   // aren't properly setting them when returning from Reflow()...
-  nsHTMLReflowMetrics(mozilla::WritingMode aWritingMode, uint32_t aFlags = 0)
+  explicit nsHTMLReflowMetrics(mozilla::WritingMode aWritingMode, uint32_t aFlags = 0)
     : mISize(0)
     , mBSize(0)
     , mBlockStartAscent(ASK_FOR_BASELINE)
@@ -212,7 +212,7 @@ public:
     , mWritingMode(aWritingMode)
   {}
 
-  nsHTMLReflowMetrics(const nsHTMLReflowState& aState, uint32_t aFlags = 0);
+  explicit nsHTMLReflowMetrics(const nsHTMLReflowState& aState, uint32_t aFlags = 0);
 
   // ISize and BSize are logical-coordinate dimensions:
   // ISize is the size in the writing mode's inline direction (which equates to
