@@ -97,6 +97,7 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     get_query_object_iv,
     instanced_arrays,
     instanced_non_arrays,
+    map_buffer_range,
     occlusion_query,
     occlusion_query_boolean,
     occlusion_query2,
@@ -356,6 +357,7 @@ public:
         ARB_framebuffer_sRGB,
         ARB_half_float_pixel,
         ARB_instanced_arrays,
+        ARB_map_buffer_range,
         ARB_occlusion_query2,
         ARB_pixel_buffer_object,
         ARB_robustness,
@@ -2675,6 +2677,27 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fCopyBufferSubData);
         mSymbols.fCopyBufferSubData(readtarget, writetarget, readoffset, writeoffset, size);
+        AFTER_GL_CALL;
+    }
+
+
+// -----------------------------------------------------------------------------
+// Core GL & Extension ARB_map_buffer_range
+public:
+    void* fMapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length,
+                          GLbitfield access)
+    {
+        ASSERT_SYMBOL_PRESENT(fMapBufferRange);
+        BEFORE_GL_CALL;
+        void* data = mSymbols.fMapBufferRange(target, offset, length, access);
+        AFTER_GL_CALL;
+        return data;
+    }
+
+    void fFlushMappedBufferRange(GLenum target, GLintptr offset, GLsizeiptr length) {
+        ASSERT_SYMBOL_PRESENT(fFlushMappedBufferRange);
+        BEFORE_GL_CALL;
+        mSymbols.fFlushMappedBufferRange(target, offset, length);
         AFTER_GL_CALL;
     }
 

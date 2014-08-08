@@ -260,6 +260,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
+        "map_buffer_range",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::ARB_map_buffer_range,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "occlusion_query",
         200, // OpenGL version
         0,   // OpenGL ES version
