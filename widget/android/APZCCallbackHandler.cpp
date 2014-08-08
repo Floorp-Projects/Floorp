@@ -38,7 +38,7 @@ void
 APZCCallbackHandler::NotifyDefaultPrevented(const ScrollableLayerGuid& aGuid,
                                             bool aDefaultPrevented)
 {
-    if (NS_IsMainThread()) {
+    if (!AndroidBridge::IsJavaUiThread()) {
         // The notification must reach the APZ on the Java UI thread (aka the
         // APZ "controller" thread) but we get it from the Gecko thread, so we
         // have to throw it onto the other thread.
@@ -48,7 +48,7 @@ APZCCallbackHandler::NotifyDefaultPrevented(const ScrollableLayerGuid& aGuid,
         return;
     }
 
-    // This should be running on the Java UI thread
+    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     APZCTreeManager* controller = nsWindow::GetAPZCTreeManager();
     if (controller) {
         controller->ContentReceivedTouch(aGuid, aDefaultPrevented);

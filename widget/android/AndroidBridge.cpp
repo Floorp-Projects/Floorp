@@ -47,6 +47,7 @@ using namespace mozilla::widget::android;
 using namespace mozilla::gfx;
 
 AndroidBridge* AndroidBridge::sBridge;
+pthread_t AndroidBridge::sJavaUiThread = -1;
 static unsigned sJavaEnvThreadIndex = 0;
 static jobject sGlobalContext = nullptr;
 static void JavaThreadDetachFunc(void *arg);
