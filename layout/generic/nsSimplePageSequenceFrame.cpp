@@ -255,10 +255,11 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // Set Page Number Info
   int32_t pageNum = 1;
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    nsPageFrame * pf = static_cast<nsPageFrame*>(e.get());
-    if (pf != nullptr) {
-      pf->SetPageNumInfo(pageNum, pageTot);
-    }
+    MOZ_ASSERT(e.get()->GetType() == nsGkAtoms::pageFrame,
+               "only expecting nsPageFrame children. Other children will make "
+               "this static_cast bogus & probably violate other assumptions");
+    nsPageFrame* pf = static_cast<nsPageFrame*>(e.get());
+    pf->SetPageNumInfo(pageNum, pageTot);
     pageNum++;
   }
 
