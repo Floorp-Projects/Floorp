@@ -19,13 +19,13 @@
 <pre id="test">
 <script type="application/javascript">
   createHTML({
-    bug: "1014328",
-    title: "Basic audio/video (combined) peer connection, long running",
+    bug: "796888",
+    title: "Basic video-only peer connection",
     visible: true
   });
 
   var test;
-  runTest(function (options) {
+  runNetworkTest(function (options) {
     options = options || {};
     options.commands = commandsPeerConnection.slice(0);
     options.commands.push(generateIntervalCommand(verifyConnectionStatus,
@@ -33,12 +33,11 @@
                                                   1000 * 3600 * 3));
 
     test = new PeerConnectionTest(options);
-    test.setMediaConstraints([{audio: true, video: true, fake: false}],
-                             [{audio: true, video: true, fake: false}]);
+    test.setMediaConstraints([{video: true, fake: false}],
+                             [{video: true, fake: false}]);
     test.run();
   });
 </script>
 </pre>
 </body>
 </html>
-
