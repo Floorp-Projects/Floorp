@@ -42,7 +42,6 @@
 #include "xpcprivate.h"
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "WrapperFactory.h"
 
 #include "mozilla/AddonPathService.h"
@@ -240,12 +239,8 @@ public:
 
     void reportErrorAfterPop(char *buf);
 
-    operator JSContext*() const {return mContext;}
-
 private:
-
     JSContext* mContext;
-    nsCxPusher mPusher;
     char*      mBuf;
 
     // prevent copying and assignment
@@ -1289,28 +1284,37 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
     vp.set(mod->obj);
 
     if (targetObj) {
-        JSCLContextHelper cxhelper(mContext);
-        JSAutoCompartment ac(mContext, mod->obj);
+        // cxhelper must be created before jsapi, so that jsapi is detroyed and
+        // pops any context it has pushed before we report to the caller context.
+        JSCLContextHelper cxhelper(callercx);
 
-        RootedValue symbols(mContext);
-        RootedObject modObj(mContext, mod->obj);
-        if (!JS_GetProperty(mContext, modObj,
+        // Even though we are calling JS_SetPropertyById on targetObj, we want
+        // to ensure that we never run script here, so we use an AutoJSAPI and
+        // not an AutoEntryScript.
+        dom::AutoJSAPI jsapi;
+        jsapi.Init();
+        JSContext* cx = jsapi.cx();
+        JSAutoCompartment ac(cx, mod->obj);
+
+        RootedValue symbols(cx);
+        RootedObject modObj(cx, mod->obj);
+        if (!JS_GetProperty(cx, modObj,
                             "EXPORTED_SYMBOLS", &symbols)) {
             return ReportOnCaller(cxhelper, ERROR_NOT_PRESENT,
                                   PromiseFlatCString(aLocation).get());
         }
 
-        if (!JS_IsArrayObject(mContext, symbols)) {
+        if (!JS_IsArrayObject(cx, symbols)) {
             return ReportOnCaller(cxhelper, ERROR_NOT_AN_ARRAY,
                                   PromiseFlatCString(aLocation).get());
         }
 
-        RootedObject symbolsObj(mContext, &symbols.toObject());
+        RootedObject symbolsObj(cx, &symbols.toObject());
 
         // Iterate over symbols array, installing symbols on targetObj:
 
         uint32_t symbolCount = 0;
-        if (!JS_GetArrayLength(mContext, symbolsObj, &symbolCount)) {
+        if (!JS_GetArrayLength(cx, symbolsObj, &symbolCount)) {
             return ReportOnCaller(cxhelper, ERROR_GETTING_ARRAY_LENGTH,
                                   PromiseFlatCString(aLocation).get());
         }
@@ -1319,19 +1323,19 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
         nsAutoCString logBuffer;
 #endif
 
-        RootedValue value(mContext);
-        RootedId symbolId(mContext);
+        RootedValue value(cx);
+        RootedId symbolId(cx);
         for (uint32_t i = 0; i < symbolCount; ++i) {
-            if (!JS_GetElement(mContext, symbolsObj, i, &value) ||
+            if (!JS_GetElement(cx, symbolsObj, i, &value) ||
                 !value.isString() ||
-                !JS_ValueToId(mContext, value, &symbolId)) {
+                !JS_ValueToId(cx, value, &symbolId)) {
                 return ReportOnCaller(cxhelper, ERROR_ARRAY_ELEMENT,
                                       PromiseFlatCString(aLocation).get(), i);
             }
 
-            RootedObject modObj(mContext, mod->obj);
-            if (!JS_GetPropertyById(mContext, modObj, symbolId, &value)) {
-                JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
+            RootedObject modObj(cx, mod->obj);
+            if (!JS_GetPropertyById(cx, modObj, symbolId, &value)) {
+                JSAutoByteString bytes(cx, JSID_TO_STRING(symbolId));
                 if (!bytes)
                     return NS_ERROR_FAILURE;
                 return ReportOnCaller(cxhelper, ERROR_GETTING_SYMBOL,
@@ -1339,11 +1343,11 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
                                       bytes.ptr());
             }
 
-            JSAutoCompartment target_ac(mContext, targetObj);
+            JSAutoCompartment target_ac(cx, targetObj);
 
-            if (!JS_WrapValue(mContext, &value) ||
-                !JS_SetPropertyById(mContext, targetObj, symbolId, value)) {
-                JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
+            if (!JS_WrapValue(cx, &value) ||
+                !JS_SetPropertyById(cx, targetObj, symbolId, value)) {
+                JSAutoByteString bytes(cx, JSID_TO_STRING(symbolId));
                 if (!bytes)
                     return NS_ERROR_FAILURE;
                 return ReportOnCaller(cxhelper, ERROR_SETTING_SYMBOL,
@@ -1354,7 +1358,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
             if (i == 0) {
                 logBuffer.AssignLiteral("Installing symbols [ ");
             }
-            JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
+            JSAutoByteString bytes(cx, JSID_TO_STRING(symbolId));
             if (!!bytes)
                 logBuffer.Append(bytes.ptr());
             logBuffer.Append(' ');
@@ -1441,20 +1445,12 @@ JSCLContextHelper::JSCLContextHelper(JSContext* aCx)
     : mContext(aCx)
     , mBuf(nullptr)
 {
-    mPusher.Push(mContext);
-    JS_BeginRequest(mContext);
 }
 
 JSCLContextHelper::~JSCLContextHelper()
 {
-    JS_EndRequest(mContext);
-    mPusher.Pop();
-    JSContext *restoredCx = nsContentUtils::GetCurrentJSContext();
-    if (restoredCx && mBuf) {
-        JS_ReportError(restoredCx, mBuf);
-    }
-
     if (mBuf) {
+        JS_ReportError(mContext, mBuf);
         JS_smprintf_free(mBuf);
     }
 }
