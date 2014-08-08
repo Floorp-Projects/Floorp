@@ -2388,12 +2388,24 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
 
     scrollParts.AppendElement(kid);
   }
+  if (scrollParts.IsEmpty()) {
+    return;
+  }
 
   mozilla::layers::FrameMetrics::ViewID scrollTargetId = IsScrollingActive()
     ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
     : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
 
   scrollParts.Sort(HoveredStateComparator());
+
+  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+  // Don't let scrollparts extent outside our frame's border-box, if these are
+  // viewport scrollbars. They would create layerization problems. This wouldn't
+  // normally be an issue but themes can add overflow areas to scrollbar parts.
+  if (mIsRoot) {
+    clipState.ClipContentDescendants(
+        mOuter->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(mOuter));
+  }
 
   for (uint32_t i = 0; i < scrollParts.Length(); ++i) {
     uint32_t flags = 0;
