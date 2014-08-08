@@ -174,8 +174,7 @@ private:
   struct OrderingEntry
   {
     OrderingEntry(const T* aResource)
-      : mFirstSeen(CallStack::kNone)
-      , mOrderedLT()        // FIXME bug 456272: set to empirical dep size?
+      : mOrderedLT()        // FIXME bug 456272: set to empirical dep size?
       , mExternalRefs()
       , mResource(aResource)
     {
@@ -194,7 +193,6 @@ private:
       return n;
     }
 
-    CallStack mFirstSeen; // first site from which the resource appeared
     HashEntryArray mOrderedLT; // this <_o Other
     HashEntryArray mExternalRefs; // hash entries that reference this
     const T* mResource;
@@ -324,20 +322,16 @@ public:
                                              const T* aProposed,
                                              const CallStack& aCallContext)
   {
+    if (!aLast) {
+      // don't check if |0 < aProposed|; just vamoose
+      return 0;
+    }
+
     NS_ASSERTION(aProposed, "null resource");
     PRAutoLock _(mLock);
 
     OrderingEntry* proposed = mOrdering.Get(aProposed);
     NS_ASSERTION(proposed, "missing ordering entry");
-
-    if (CallStack::kNone == proposed->mFirstSeen) {
-      proposed->mFirstSeen = aCallContext;
-    }
-
-    if (!aLast) {
-      // don't check if |0 < aProposed|; just vamoose
-      return 0;
-    }
 
     OrderingEntry* current = mOrdering.Get(aLast);
     NS_ASSERTION(current, "missing ordering entry");
