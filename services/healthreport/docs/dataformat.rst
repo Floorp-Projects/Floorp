@@ -1073,6 +1073,37 @@ org.mozilla.crashes.crashes
 
 This measurement contains a historical record of application crashes.
 
+Version 5
+^^^^^^^^^
+
+This version adds support for Gecko media plugin (GMP) crashes.
+
+This measurement will be reported on each day there was a crash or crash
+submission. Records may contain the following fields, whose values indicate
+the number of crashes, hangs, or submissions that occurred on the given day:
+
+* content-crash
+* content-crash-submission-succeeded
+* content-crash-submission-failed
+* content-hang
+* content-hang-submission-succeeded
+* content-hang-submission-failed
+* gmplugin-crash
+* gmplugin-crash-submission-succeeded
+* gmplugin-crash-submission-failed
+* main-crash
+* main-crash-submission-succeeded
+* main-crash-submission-failed
+* main-hang
+* main-hang-submission-succeeded
+* main-hang-submission-failed
+* plugin-crash
+* plugin-crash-submission-succeeded
+* plugin-crash-submission-failed
+* plugin-hang
+* plugin-hang-submission-succeeded
+* plugin-hang-submission-failed
+
 Version 4
 ^^^^^^^^^
 

@@ -17,6 +17,7 @@ const {
   PROCESS_TYPE_MAIN,
   PROCESS_TYPE_CONTENT,
   PROCESS_TYPE_PLUGIN,
+  PROCESS_TYPE_GMPLUGIN,
   PROCESS_TYPE_SUBMISSION,
   CRASH_TYPE_CRASH,
   CRASH_TYPE_HANG,
@@ -276,6 +277,33 @@ add_task(function* test_add_plugin_hang() {
   Assert.equal(crashes.length, 2);
 });
 
+add_task(function* test_add_gmplugin_crash() {
+  let s = yield getStore();
+
+  Assert.ok(
+    s.addCrash(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH, "id1", new Date())
+  );
+  Assert.equal(s.crashesCount, 1);
+
+  let c = s.crashes[0];
+  Assert.ok(c.crashDate);
+  Assert.equal(c.type, PROCESS_TYPE_GMPLUGIN + "-" + CRASH_TYPE_CRASH);
+  Assert.ok(c.isOfType(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH));
+
+  Assert.ok(
+    s.addCrash(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH, "id2", new Date())
+  );
+  Assert.equal(s.crashesCount, 2);
+
+  Assert.ok(
+    s.addCrash(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH, "id1", new Date())
+  );
+  Assert.equal(s.crashesCount, 2);
+
+  let crashes = s.getCrashesOfType(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH);
+  Assert.equal(crashes.length, 2);
+});
+
 add_task(function* test_add_submission() {
   let s = yield getStore();
 
@@ -323,10 +351,11 @@ add_task(function* test_add_mixed_types() {
     s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_CRASH, "ccrash", new Date()) &&
     s.addCrash(PROCESS_TYPE_CONTENT, CRASH_TYPE_HANG, "chang", new Date()) &&
     s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH, "pcrash", new Date()) &&
-    s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "phang", new Date())
+    s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "phang", new Date()) &&
+    s.addCrash(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH, "gmpcrash", new Date())
   );
 
-  Assert.equal(s.crashesCount, 6);
+  Assert.equal(s.crashesCount, 7);
 
   yield s.save();
 
@@ -335,7 +364,7 @@ add_task(function* test_add_mixed_types() {
 
   yield s.load();
 
-  Assert.equal(s.crashesCount, 6);
+  Assert.equal(s.crashesCount, 7);
 
   let crashes = s.getCrashesOfType(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
@@ -348,6 +377,8 @@ add_task(function* test_add_mixed_types() {
   crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
   crashes = s.getCrashesOfType(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG);
+  Assert.equal(crashes.length, 1);
+  crashes = s.getCrashesOfType(PROCESS_TYPE_GMPLUGIN, CRASH_TYPE_CRASH);
   Assert.equal(crashes.length, 1);
 });
 
