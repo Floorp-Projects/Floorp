@@ -21,7 +21,10 @@ function runTests() {
   Services.prefs.setBoolPref(PRELOAD_PREF, false);
 
   function getData(cellNum) {
-    let siteNode = getCell(cellNum).site.node;
+    let cell = getCell(cellNum);
+    if (!cell.site)
+      return null;
+    let siteNode = cell.site.node;
     return {
       type: siteNode.getAttribute("type"),
       enhanced: siteNode.querySelector(".enhanced-content").style.backgroundImage,
@@ -29,7 +32,7 @@ function runTests() {
   }
 
   // Make the page have a directory link followed by a history link
-  yield setLinks("1");
+  yield setLinks("-1");
 
   // Test with enhanced = false
   NewTabUtils.allPages.enhanced = false;
@@ -38,9 +41,7 @@ function runTests() {
   is(type, "organic", "directory link is organic");
   isnot(enhanced, "", "directory link has enhanced image");
 
-  let {type, enhanced} = getData(1);
-  is(type, "history", "history link is history");
-  is(enhanced, "", "history link has no enhanced image");
+  is(getData(1), null, "history link pushed out by directory link");
 
   // Test with enhanced = true
   NewTabUtils.allPages.enhanced = true;
@@ -49,7 +50,14 @@ function runTests() {
   is(type, "organic", "directory link is still organic");
   isnot(enhanced, "", "directory link still has enhanced image");
 
-  let {type, enhanced} = getData(1);
-  is(type, "enhanced", "history link now is enhanced");
-  isnot(enhanced, "", "history link now has enhanced image");
+  is(getData(1), null, "history link still pushed out by directory link");
+
+  // Test with a pinned link
+  setPinnedLinks("-1");
+  yield addNewTabPageTab();
+  let {type, enhanced} = getData(0);
+  is(type, "enhanced", "pinned history link is enhanced");
+  isnot(enhanced, "", "pinned history link has enhanced image");
+
+  is(getData(1), null, "directory link pushed out by pinned history link");
 }

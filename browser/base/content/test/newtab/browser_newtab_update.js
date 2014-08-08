@@ -47,5 +47,5 @@ function runTests() {
 }
 
 function link(id) {
-  return { url: "http://example.com/#" + id, title: "site#" + id };
+  return { url: "http://example" + id + ".com/", title: "site#" + id };
 }

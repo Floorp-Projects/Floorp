@@ -829,8 +829,34 @@ let Links = {
     let pinnedLinks = Array.slice(PinnedLinks.links);
     let links = this._getMergedProviderLinks();
 
-    // Filter blocked and pinned links.
+    function getBaseDomain(url) {
+      let uri;
+      try {
+        uri = Services.io.newURI(url, null, null);
+      } catch (e) {
+        return null;
+      }
+
+      try {
+        return Services.eTLD.getBaseDomain(uri);
+      } catch (e) {
+        return uri.asciiHost;
+      }
+    }
+
+    let baseDomains = new Set();
+    for (let link of pinnedLinks) {
+      if (link)
+        baseDomains.add(getBaseDomain(link.url));
+    }
+
+    // Filter blocked and pinned links and duplicate base domains.
     links = links.filter(function (link) {
+      let baseDomain = getBaseDomain(link.url);
+      if (baseDomain == null || baseDomains.has(baseDomain))
+        return false;
+      baseDomains.add(baseDomain);
+
       return !BlockedLinks.isBlocked(link) && !PinnedLinks.isPinned(link);
     });
 
