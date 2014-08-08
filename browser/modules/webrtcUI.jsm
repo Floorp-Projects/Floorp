@@ -25,12 +25,14 @@ this.webrtcUI = {
     Services.obs.addObserver(handleRequest, "getUserMedia:request", false);
     Services.obs.addObserver(updateIndicators, "recording-device-events", false);
     Services.obs.addObserver(removeBrowserSpecificIndicator, "recording-window-ended", false);
+    Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished", false);
   },
 
   uninit: function () {
     Services.obs.removeObserver(handleRequest, "getUserMedia:request");
     Services.obs.removeObserver(updateIndicators, "recording-device-events");
     Services.obs.removeObserver(removeBrowserSpecificIndicator, "recording-window-ended");
+    Services.obs.removeObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished");
   },
 
   showGlobalIndicator: false,
@@ -46,12 +48,18 @@ this.webrtcUI = {
     for (let i = 0; i < count; i++) {
       let contentWindow = contentWindowSupportsArray.GetElementAt(i);
 
-      let camera = {}, microphone = {}, screen = {}, window = {};
-      MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
-                                                  microphone, screen, window);
-      if (!(aCamera && camera.value ||
-            aMicrophone && microphone.value ||
-            aScreen && (screen.value || window.value)))
+      let info = {
+        Camera: {},
+        Microphone: {},
+        Window: {},
+        Screen: {},
+      };
+      MediaManagerService.mediaCaptureWindowState(contentWindow, info.Camera,
+                                                  info.Microphone, info.Screen,
+                                                  info.Window);
+      if (!(aCamera && info.Camera.value ||
+            aMicrophone && info.Microphone.value ||
+            aScreen && (info.Screen.value || info.Window.value)))
         continue;
 
       let browser = getBrowserForWindow(contentWindow);
@@ -61,7 +69,8 @@ this.webrtcUI = {
       activeStreams.push({
         uri: contentWindow.location.href,
         tab: tab,
-        browser: browser
+        browser: browser,
+        types: info
       });
     }
     return activeStreams;
@@ -552,6 +561,110 @@ function getGlobalIndicator() {
 #endif
 }
 
+function onTabSharingMenuPopupShowing(e) {
+  let streams = webrtcUI.getActiveStreams(true, true, true);
+  for (let streamInfo of streams) {
+    let stringName = "getUserMedia.sharingMenu";
+    // Guarantee sorting order here or bad things will happen if
+    // the not-specced-but-implemented-everywhere object key sorting changes:
+    let types = Object.keys(streamInfo.types).sort();
+    // Then construct a string ID out of these types:
+    for (let type of types) {
+      if (streamInfo.types[type].value) {
+        stringName += type;
+      }
+    }
+
+    let doc = e.target.ownerDocument;
+    let bundle = doc.defaultView.gNavigatorBundle;
+
+    let origin;
+    let uri;
+    let href = streamInfo.uri;
+    try {
+      uri = Services.io.newURI(href, null, null);
+      origin = uri.asciiHost;
+    } catch (ex) {};
+    if (!origin) {
+      if (uri && uri.scheme == "about") {
+        // For about URIs, just use the full spec, without any #hash parts
+        origin = uri.specIgnoringRef;
+      } else {
+        // This is unfortunate, but we should display *something*...
+        origin = bundle.getString("getUserMedia.sharingMenuUnknownHost");
+      }
+    }
+
+    let menuitem = doc.createElement("menuitem");
+    menuitem.setAttribute("label", bundle.getFormattedString(stringName, [origin]));
+    menuitem.stream = streamInfo;
+
+    // We can only open 1 doorhanger at a time. Guessing that users would be
+    // most eager to control screen/window sharing, and only then
+    // camera/microphone sharing, in that (decreasing) order of priority.
+    let doorhangerType;
+    if ((/Screen|Window/).test(stringName)) {
+      doorhangerType = "Screen";
+    } else {
+      doorhangerType = "Devices";
+    }
+    menuitem.setAttribute("doorhangertype", doorhangerType);
+    menuitem.addEventListener("command", onTabSharingMenuPopupCommand);
+    e.target.appendChild(menuitem);
+  }
+}
+
+function onTabSharingMenuPopupHiding(e) {
+  while (this.lastChild)
+    this.lastChild.remove();
+}
+
+function onTabSharingMenuPopupCommand(e) {
+  let type = e.target.getAttribute("doorhangertype");
+  webrtcUI.showSharingDoorhanger(e.target.stream, type);
+}
+
+function showOrCreateMenuForWindow(aWindow) {
+  let document = aWindow.document;
+  let menu = document.getElementById("tabSharingMenu");
+  if (!menu) {
+    let stringBundle = aWindow.gNavigatorBundle;
+    menu = document.createElement("menu");
+    menu.id = "tabSharingMenu";
+    let labelStringId = "getUserMedia.sharingMenu.label";
+    menu.setAttribute("label", stringBundle.getString(labelStringId));
+#ifdef XP_MACOSX
+    let container = document.getElementById("windowPopup");
+    let insertionPoint = document.getElementById("sep-window-list");
+    let separator = document.createElement("menuseparator");
+    separator.id = "tabSharingSeparator";
+    container.insertBefore(separator, insertionPoint);
+#else
+    let accesskeyStringId = "getUserMedia.sharingMenu.accesskey";
+    menu.setAttribute("accesskey", stringBundle.getString(accesskeyStringId));
+    let container = document.getElementById("main-menubar");
+    let insertionPoint = document.getElementById("helpMenu");
+#endif
+    let popup = document.createElement("menupopup");
+    popup.id = "tabSharingMenuPopup";
+    popup.addEventListener("popupshowing", onTabSharingMenuPopupShowing);
+    popup.addEventListener("popuphiding", onTabSharingMenuPopupHiding);
+    menu.appendChild(popup);
+    container.insertBefore(menu, insertionPoint);
+  } else {
+    menu.hidden = false;
+#ifdef XP_MACOSX
+    document.getElementById("tabSharingSeparator").hidden = false;
+#endif
+  }
+}
+
+function maybeAddMenuIndicator(window) {
+  if (webrtcUI.showGlobalIndicator) {
+    showOrCreateMenuForWindow(window);
+  }
+}
+
 var gIndicatorWindow = null;
 
 function updateIndicators() {
@@ -578,6 +691,26 @@ function updateIndicators() {
       webrtcUI.showScreenSharingIndicator = "Window";
 
     showBrowserSpecificIndicator(getBrowserForWindow(contentWindow));
+  }
+
+  let browserWindowEnum = Services.wm.getEnumerator("navigator:browser");
+  while (browserWindowEnum.hasMoreElements()) {
+    let chromeWin = browserWindowEnum.getNext();
+    if (webrtcUI.showGlobalIndicator) {
+      showOrCreateMenuForWindow(chromeWin);
+    } else {
+      let doc = chromeWin.document;
+      let existingMenu = doc.getElementById("tabSharingMenu");
+      if (existingMenu) {
+        existingMenu.hidden = true;
+      }
+#ifdef XP_MACOSX
+      let separator = doc.getElementById("tabSharingSeparator");
+      if (separator) {
+        separator.hidden = true;
+      }
+#endif
+    }
   }
 
   if (webrtcUI.showGlobalIndicator) {
