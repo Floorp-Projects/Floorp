@@ -14,6 +14,7 @@
 #include "mozilla/TimeStamp.h"
 
 template<class E> struct already_AddRefed;
+class nsIWidget;
 
 namespace mozilla {
 
@@ -124,7 +125,7 @@ public:
   {
   }
 
-  already_AddRefed<dom::Touch> ToNewDOMTouch();
+  already_AddRefed<dom::Touch> ToNewDOMTouch() const;
 
   // A unique number assigned to each SingleTouchData within a MultiTouchInput so
   // that they can be easily distinguished when handling a touch start/move/end.
@@ -188,6 +189,7 @@ public:
   }
 
   MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
+  WidgetTouchEvent ToWidgetTouchEvent(nsIWidget* aWidget) const;
 
   // This conversion from WidgetMouseEvent to MultiTouchInput is needed because
   // on the B2G emulator we can only receive mouse events, but we need to be
