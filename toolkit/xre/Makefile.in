@@ -24,11 +24,13 @@ ifdef MOZ_SOURCE_STAMP
 
   INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
 
-  source_repo := $(call getSourceRepo)
+  ifdef MOZILLA_OFFICIAL
+    source_repo := $(call getSourceRepo)
 
-  # extra sanity check for old versions of hg, no showconfig support
-  ifneq (,$(filter http%,$(source_repo)))
-    INIARGS += --sourcerepo=$(source_repo)
+    # extra sanity check for old versions of hg, no showconfig support
+    ifneq (,$(filter http%,$(source_repo)))
+      INIARGS += --sourcerepo=$(source_repo)
+    endif
   endif
 
 endif # MOZ_SOURCE_STAMP

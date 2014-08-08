@@ -33,9 +33,11 @@ ifdef MOZ_SOURCE_STAMP
 DEFINES += -DMOZ_SOURCE_STAMP='$(MOZ_SOURCE_STAMP)'
 endif
 
+ifdef MOZILLA_OFFICIAL
 source_repo ?= $(call getSourceRepo,$(topsrcdir)/$(MOZ_BUILD_APP)/..)
 ifneq (,$(source_repo))
   DEFINES += -DMOZ_SOURCE_REPO='$(source_repo)'
+endif
 endif
 
 endif
