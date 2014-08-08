@@ -89,7 +89,7 @@ BlockingResourceBase::~BlockingResourceBase()
 
 
 void
-BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
+BlockingResourceBase::CheckAcquire()
 {
   if (mDDEntry->mType == eCondVar) {
     NS_NOTYETIMPLEMENTED(
@@ -100,7 +100,7 @@ BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
   BlockingResourceBase* chainFront = ResourceChainFront();
   nsAutoPtr<DDT::ResourceAcquisitionArray> cycle(
     sDeadlockDetector->CheckAcquisition(
-      chainFront ? chainFront->mDDEntry : 0, mDDEntry, aCallContext));
+      chainFront ? chainFront->mDDEntry : 0, mDDEntry));
   if (!cycle) {
     return;
   }
@@ -127,7 +127,7 @@ BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
 
 
 void
-BlockingResourceBase::Acquire(const CallStack& aCallContext)
+BlockingResourceBase::Acquire()
 {
   if (mDDEntry->mType == eCondVar) {
     NS_NOTYETIMPLEMENTED(
@@ -219,11 +219,9 @@ BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
 void
 OffTheBooksMutex::Lock()
 {
-  CallStack callContext = CallStack();
-
-  CheckAcquire(callContext);
+  CheckAcquire();
   PR_Lock(mLock);
-  Acquire(callContext);       // protected by mLock
+  Acquire();       // protected by mLock
 }
 
 void
@@ -251,8 +249,6 @@ ReentrantMonitor::Enter()
     return;
   }
 
-  CallStack callContext = CallStack();
-
   // this is sort of a hack around not recording the thread that
   // owns this monitor
   if (chainFront) {
@@ -266,7 +262,7 @@ ReentrantMonitor::Enter()
           "  [stack trace unavailable]\n");
 
         // show the caller why this is potentially bad
-        CheckAcquire(callContext);
+        CheckAcquire();
 
         PR_EnterMonitor(mReentrantMonitor);
         ++mEntryCount;
@@ -275,10 +271,10 @@ ReentrantMonitor::Enter()
     }
   }
 
-  CheckAcquire(callContext);
+  CheckAcquire();
   PR_EnterMonitor(mReentrantMonitor);
   NS_ASSERTION(mEntryCount == 0, "ReentrantMonitor isn't free!");
-  Acquire(callContext);       // protected by mReentrantMonitor
+  Acquire();       // protected by mReentrantMonitor
   mEntryCount = 1;
 }
 
