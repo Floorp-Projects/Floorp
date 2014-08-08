@@ -37,6 +37,7 @@
 #include "nsDataHashtable.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/UnixSocket.h"
@@ -370,6 +371,7 @@ DispatchToBtThread(nsIRunnable* aRunnable)
     sBluetoothThread = new LazyIdleThread(BT_LAZY_THREAD_TIMEOUT_MS,
                                           NS_LITERAL_CSTRING("BluetoothDBusService"),
                                           LazyIdleThread::ManualShutdown);
+    ClearOnShutdown(&sBluetoothThread);
   }
   return sBluetoothThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }

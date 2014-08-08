@@ -36,7 +36,7 @@
  * about:telemetry.
  *
  * You can view telemetry stats for large groups of Firefox users at
- * metrics.mozilla.com.
+ * telemetry.mozilla.org.
  */
 
 const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
@@ -170,6 +170,11 @@ Telemetry.prototype = {
       userHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS"
     },
+    webide: {
+      histogram: "DEVTOOLS_WEBIDE_OPENED_BOOLEAN",
+      userHistogram: "DEVTOOLS_WEBIDE_OPENED_PER_USER_FLAG",
+      timerHistogram: "DEVTOOLS_WEBIDE_TIME_ACTIVE_SECONDS"
+    },
     custom: {
       histogram: "DEVTOOLS_CUSTOM_OPENED_BOOLEAN",
       userHistogram: "DEVTOOLS_CUSTOM_OPENED_PER_USER_FLAG",
@@ -194,7 +199,7 @@ Telemetry.prototype = {
       this.logOncePerBrowserVersion(charts.userHistogram, true);
     }
     if (charts.timerHistogram) {
-      this._timers.set(charts.timerHistogram, new Date());
+      this.startTimer(charts.timerHistogram);
     }
   },
 
@@ -205,12 +210,31 @@ Telemetry.prototype = {
       return;
     }
 
-    let startTime = this._timers.get(charts.timerHistogram);
+    this.stopTimer(charts.timerHistogram);
+  },
 
+  /**
+   * Record the start time for a timing-based histogram entry.
+   *
+   * @param String histogramId
+   *        Histogram in which the data is to be stored.
+   */
+  startTimer: function(histogramId) {
+    this._timers.set(histogramId, new Date());
+  },
+
+  /**
+   * Stop the timer and log elasped time for a timing-based histogram entry.
+   *
+   * @param String histogramId
+   *        Histogram in which the data is to be stored.
+   */
+  stopTimer: function(histogramId) {
+    let startTime = this._timers.get(histogramId);
     if (startTime) {
       let time = (new Date() - startTime) / 1000;
-      this.log(charts.timerHistogram, time);
-      this._timers.delete(charts.timerHistogram);
+      this.log(histogramId, time);
+      this._timers.delete(histogramId);
     }
   },
 
@@ -258,11 +282,8 @@ Telemetry.prototype = {
   },
 
   destroy: function() {
-    for (let [histogram, time] of this._timers) {
-      time = (new Date() - time) / 1000;
-
-      this.log(histogram, time);
-      this._timers.delete(histogram);
+    for (let histogramId of this._timers.keys()) {
+      this.stopTimer(histogramId);
     }
   }
 };
