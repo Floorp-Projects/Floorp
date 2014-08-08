@@ -2,14 +2,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<?xml-stylesheet type="text/css" href="data:text/css,
-
-%23_box_windowsDefaultTheme:-moz-system-metric(windows-default-theme) {
-  display: none;
-}
-
-" ?>
-
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="reftest-window"
         hidechrome="true"
