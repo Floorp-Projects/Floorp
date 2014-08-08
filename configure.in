@@ -4579,6 +4579,8 @@ fi
 
 if test -f "${_topsrcdir}/$REAL_BRANDING_DIRECTORY/configure.sh"; then
   . "${_topsrcdir}/$REAL_BRANDING_DIRECTORY/configure.sh"
+elif test -f "${EXTERNAL_SOURCE_DIR}/$REAL_BRANDING_DIRECTORY/configure.sh"; then
+  . "${EXTERNAL_SOURCE_DIR}/$REAL_BRANDING_DIRECTORY/configure.sh"
 fi
 
 AC_SUBST(MOZ_BRANDING_DIRECTORY)
