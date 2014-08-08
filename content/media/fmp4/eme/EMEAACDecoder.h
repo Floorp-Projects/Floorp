@@ -38,7 +38,9 @@ public:
 
   // GMPAudioDecoderProxyCallback implementation.
   virtual void Decoded(const nsTArray<int16_t>& aPCM,
-                       uint64_t aTimeStamp) MOZ_OVERRIDE;
+                       uint64_t aTimeStamp,
+                       uint32_t aChannels,
+                       uint32_t aRate) MOZ_OVERRIDE;
   virtual void InputDataExhausted() MOZ_OVERRIDE;
   virtual void DrainComplete() MOZ_OVERRIDE;
   virtual void ResetComplete() MOZ_OVERRIDE;

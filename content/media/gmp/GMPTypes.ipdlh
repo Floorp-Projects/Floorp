@@ -63,12 +63,16 @@ struct GMPAudioEncodedSampleData
   uint8_t[] mData;
   uint64_t mTimeStamp; // microseconds.
   GMPDecryptionData mDecryptionData;
+  uint32_t mChannelCount;
+  uint32_t mSamplesPerSecond;
 };
 
 struct GMPAudioDecodedSampleData
 {
   int16_t[] mData;
   uint64_t mTimeStamp; // microseconds.
+  uint32_t mChannelCount;
+  uint32_t mSamplesPerSecond;
 };
 
 }
