@@ -31,13 +31,13 @@ describe("loop.FeedbackAPIClient", function() {
     it("should require a baseUrl setting", function() {
       expect(function() {
         return new loop.FeedbackAPIClient();
-      }).to.Throw(/required baseUrl/);
+      }).to.Throw(/required 'baseUrl'/);
     });
 
     it("should require a product setting", function() {
       expect(function() {
-        return new loop.FeedbackAPIClient({baseUrl: "http://fake"});
-      }).to.Throw(/required product/);
+        return new loop.FeedbackAPIClient("http://fake", {});
+      }).to.Throw(/required 'product'/);
     });
   });
 
@@ -45,9 +45,9 @@ describe("loop.FeedbackAPIClient", function() {
     var client;
 
     beforeEach(function() {
-      client = new loop.FeedbackAPIClient({
-        baseUrl: "http://fake/feedback",
-        product: "Hello"
+      client = new loop.FeedbackAPIClient("http://fake/feedback", {
+        product: "Hello",
+        version: "42b1"
       });
     });
 
@@ -103,16 +103,57 @@ describe("loop.FeedbackAPIClient", function() {
         expect(parsed.description).eql("it's far too awesome!");
       });
 
+      it("should send product information", function() {
+        client.send({product: "Hello"}, function(){});
+
+        var parsed = JSON.parse(requests[0].requestBody);
+        expect(parsed.product).eql("Hello");
+      });
+
+      it("should send platform information when provided", function() {
+        client.send({platform: "Windows 8"}, function(){});
+
+        var parsed = JSON.parse(requests[0].requestBody);
+        expect(parsed.platform).eql("Windows 8");
+      });
+
+      it("should send channel information when provided", function() {
+        client.send({channel: "beta"}, function(){});
+
+        var parsed = JSON.parse(requests[0].requestBody);
+        expect(parsed.channel).eql("beta");
+      });
+
+      it("should send version information when provided", function() {
+        client.send({version: "42b1"}, function(){});
+
+        var parsed = JSON.parse(requests[0].requestBody);
+        expect(parsed.version).eql("42b1");
+      });
+
+      it("should send user_agent information when provided", function() {
+        client.send({user_agent: "MOZAGENT"}, function(){});
+
+        var parsed = JSON.parse(requests[0].requestBody);
+        expect(parsed.user_agent).eql("MOZAGENT");
+      });
+
       it("should throw on invalid feedback data", function() {
         expect(function() {
           client.send("invalid data", function(){});
         }).to.Throw(/Invalid/);
       });
 
+      it("should throw on unsupported field name", function() {
+        expect(function() {
+          client.send({bleh: "bah"}, function(){});
+        }).to.Throw(/Unsupported/);
+      });
+
       it("should call passed callback on success", function() {
         var cb = sandbox.spy();
         var fakeResponseData = {description: "confusing"};
-        client.send({reason: "confusing"}, cb);
+        client.send({category: "confusing"}, cb);
 
         requests[0].respond(200, {"Content-Type": "application/json"},
                             JSON.stringify(fakeResponseData));
@@ -124,7 +165,7 @@ describe("loop.FeedbackAPIClient", function() {
       it("should call passed callback on error", function() {
         var cb = sandbox.spy();
         var fakeErrorData = {error: true};
-        client.send({reason: "confusing"}, cb);
+        client.send({category: "confusing"}, cb);
 
         requests[0].respond(400, {"Content-Type": "application/json"},
                             JSON.stringify(fakeErrorData));

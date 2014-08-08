@@ -213,6 +213,7 @@ var TextEditor = Class({
         return;
       }
       this.editor.setText(resourceContents);
+      this.editor.clearHistory();
       this.editor.setClean();
       this.emit("load");
     }, console.error);

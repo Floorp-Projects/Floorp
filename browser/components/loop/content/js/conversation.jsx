@@ -248,11 +248,20 @@ loop.conversation = (function(OT, mozL10n) {
     feedback: function() {
       document.title = mozL10n.get("call_has_ended");
 
+      var feebackAPIBaseUrl = navigator.mozLoop.getLoopCharPref(
+        "feedback.baseUrl");
+
+      var appVersionInfo = navigator.mozLoop.appVersionInfo;
+
+      var feedbackClient = new loop.FeedbackAPIClient(feebackAPIBaseUrl, {
+        product: navigator.mozLoop.getLoopCharPref("feedback.product"),
+        platform: appVersionInfo.OS,
+        channel: appVersionInfo.channel,
+        version: appVersionInfo.version
+      });
+
       this.loadReactComponent(sharedViews.FeedbackView({
-        feedbackApiClient: new loop.FeedbackAPIClient({
-          baseUrl: navigator.mozLoop.getLoopCharPref("feedback.baseUrl"),
-          product: navigator.mozLoop.getLoopCharPref("feedback.product")
-        })
+        feedbackApiClient: feedbackClient
       }));
     }
   });
