@@ -372,8 +372,6 @@ public:
 
   virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
 
-  void SetNextPaintCompressed() { mNextPaintCompressed = true; }
-
 protected:
   virtual ~PresShell();
 
@@ -720,6 +718,9 @@ protected:
   virtual void PausePainting() MOZ_OVERRIDE;
   virtual void ResumePainting() MOZ_OVERRIDE;
 
+  friend class PaintTimerCallBack;
+
+  void DelayedPaintTimerFired();
   void UpdateImageVisibility();
   void UpdateActivePointerState(mozilla::WidgetGUIEvent* aEvent);
 
@@ -840,6 +841,7 @@ protected:
   bool                      mImageVisibilityVisited : 1;
 
   bool                      mNextPaintCompressed : 1;
+  bool                      mDelayedPaintTimerActive : 1;
 
   static bool               sDisableNonTestMouseEvents;
 };

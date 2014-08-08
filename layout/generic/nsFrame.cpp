@@ -5020,16 +5020,8 @@ nsIFrame::SchedulePaint(PaintType aType)
                                               nsIPresShell::PAINT_DELAYED_COMPRESS :
                                               nsIPresShell::PAINT_DEFAULT);
 
-  if (aType == PAINT_DELAYED_COMPRESS) {
-    return;
-  }
-
   if (aType == PAINT_DEFAULT) {
     displayRoot->AddStateBits(NS_FRAME_UPDATE_LAYER_TREE);
-  }
-  nsIPresShell* shell = PresContext()->PresShell();
-  if (shell) {
-    shell->AddInvalidateHiddenPresShellObserver(pres->RefreshDriver());
   }
 }
 
