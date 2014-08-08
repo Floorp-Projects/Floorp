@@ -129,6 +129,11 @@ SystemWorkerManager::Shutdown()
   }
   mWifiWorker = nullptr;
 
+  if (mKeyStore) {
+    mKeyStore->CloseSocket();
+    mKeyStore = nullptr;
+  }
+
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, WORKERS_SHUTDOWN_TOPIC);

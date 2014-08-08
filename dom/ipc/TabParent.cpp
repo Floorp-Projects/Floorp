@@ -560,7 +560,7 @@ TabParent::Show(const nsIntSize& size)
 }
 
 void
-TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
+TabParent::UpdateDimensions(const nsIntRect& rect, const nsIntSize& size)
 {
   if (mIsDestroyed) {
     return;

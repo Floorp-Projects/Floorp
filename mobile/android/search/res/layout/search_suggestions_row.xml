@@ -7,8 +7,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/search_card_background"
-    android:paddingLeft="@dimen/card_padding_x"
-    android:paddingRight="@dimen/card_padding_x"
     android:paddingTop="0dp"
     android:paddingBottom="0dp"
     android:descendantFocusability="blocksDescendants"
@@ -18,17 +16,20 @@
         android:id="@+id/auto_complete_row_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingLeft="@dimen/suggestion_card_padding_x"
         android:paddingTop="@dimen/card_padding_y"
         android:paddingBottom="@dimen/card_padding_y"
         android:textSize="@dimen/query_text_size"/>
 
-    <Button
+    <ImageButton
         android:id="@+id/auto_complete_row_jump_button"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_gravity="right|center_vertical"
-        android:text="@string/search_jump_arrow"
-        android:background="@android:color/transparent"
-        android:padding="0dp" />
+        android:paddingLeft="@dimen/jump_button_padding_x"
+        android:paddingRight="@dimen/jump_button_padding_x"
+        android:src="@drawable/search_plus"
+        android:contentDescription="@string/search_plus_content_description"
+        android:background="@android:color/transparent" />
 
 </FrameLayout>

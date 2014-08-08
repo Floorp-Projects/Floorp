@@ -113,6 +113,7 @@ DOMWifiManager.prototype = {
                       "WifiManager:importCert:Return:OK", "WifiManager:importCert:Return:NO",
                       "WifiManager:getImportedCerts:Return:OK", "WifiManager:getImportedCerts:Return:NO",
                       "WifiManager:deleteCert:Return:OK", "WifiManager:deleteCert:Return:NO",
+                      "WifiManager:setWifiEnabled:Return:OK", "WifiManager:setWifiEnabled:Return:NO",
                       "WifiManager:wifiDown", "WifiManager:wifiUp",
                       "WifiManager:onconnecting", "WifiManager:onassociate",
                       "WifiManager:onconnect", "WifiManager:ondisconnect",
@@ -233,6 +234,14 @@ DOMWifiManager.prototype = {
     }
 
     switch (aMessage.name) {
+      case "WifiManager:setWifiEnabled:Return:OK":
+        Services.DOMRequest.fireSuccess(request, msg.data);
+        break;
+
+      case "WifiManager:setWifiEnabled:Return:NO":
+        Services.DOMRequest.fireError(request, "Unable to enable/disable Wifi");
+        break;
+
       case "WifiManager:getNetworks:Return:OK":
         Services.DOMRequest.fireSuccess(request, this._convertWifiNetworks(msg.data));
         break;
@@ -430,6 +439,12 @@ DOMWifiManager.prototype = {
                                                        { station: this._stationNumber}
                                                       );
     this.__DOM_IMPL__.dispatchEvent(evt);
+  },
+
+  setWifiEnabled: function setWifiEnabled(enabled) {
+    var request = this.createRequest();
+    this._sendMessageForRequest("WifiManager:setWifiEnabled", enabled, request);
+    return request;
   },
 
   getNetworks: function getNetworks() {
