@@ -180,20 +180,6 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  rv = nsDOMClassInfo::Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsDOMClassInfo");
-    return rv;
-  }
-
-  // Register new DOM bindings
-  nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
-  if (!nameSpaceManager) {
-    NS_ERROR("Could not initialize nsScriptNameSpaceManager");
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::dom::Register(nameSpaceManager);
-
   rv = nsAttrValue::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsAttrValue");
