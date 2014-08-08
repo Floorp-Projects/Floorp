@@ -192,6 +192,7 @@
 #include "nsIWidget.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/URLSearchParams.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -1931,6 +1932,24 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
     if (mLSHE) {
         mLSHE->GetIsSubFrame(&isSubFrame);
     }
+
+    // nsDocShell owns a URLSearchParams that is used by
+    // window.location.searchParams to be in sync with the current location.
+    if (!mURLSearchParams) {
+      mURLSearchParams = new URLSearchParams();
+    }
+
+    nsAutoCString search;
+
+    nsCOMPtr<nsIURL> url(do_QueryInterface(mCurrentURI));
+    if (url) {
+      nsresult rv = url->GetQuery(search);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to get the query from a nsIURL.");
+      }
+    }
+
+    mURLSearchParams->ParseInput(search, nullptr);
 
     if (!isSubFrame && !isRoot) {
       /* 
@@ -5347,6 +5366,11 @@ nsDocShell::Destroy()
     
     mParentWidget = nullptr;
     mCurrentURI = nullptr;
+
+    if (mURLSearchParams) {
+      mURLSearchParams->RemoveObservers();
+      mURLSearchParams = nullptr;
+    }
 
     if (mScriptGlobal) {
         mScriptGlobal->DetachFromDocShell();
@@ -13186,4 +13210,10 @@ nsDocShell::GetOpenedRemote()
 {
   nsCOMPtr<nsITabParent> openedRemote(do_QueryReferent(mOpenedRemote));
   return openedRemote;
+}
+
+URLSearchParams*
+nsDocShell::GetURLSearchParams()
+{
+  return mURLSearchParams;
 }

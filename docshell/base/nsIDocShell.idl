@@ -11,6 +11,13 @@
 #include "js/TypeDecls.h"
 class nsPresContext;
 class nsIPresShell;
+
+namespace mozilla {
+namespace dom {
+class URLSearchParams;
+}
+}
+
 %}
 
 /**
@@ -19,6 +26,7 @@ class nsIPresShell;
 
 [ptr] native nsPresContext(nsPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
+[ptr] native URLSearchParams(mozilla::dom::URLSearchParams);
 
 interface nsIURI;
 interface nsIChannel;
@@ -46,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(e5fe5c76-e511-4da3-9709-f8294b8dc5ce)]
+[scriptable, builtinclass, uuid(8ccc5a61-e053-4851-ab00-dadab0dffd7f)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -982,4 +990,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript,notxpcom,nostdcall] void setOpenedRemote(in nsITabParent aOpenedRemote);
   [noscript,notxpcom,nostdcall] nsITabParent getOpenedRemote();
+
+  // URLSearchParams for the window.location is owned by the docShell.
+  [noscript,notxpcom] URLSearchParams getURLSearchParams();
 };
