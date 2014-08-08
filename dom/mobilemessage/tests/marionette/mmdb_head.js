@@ -235,6 +235,44 @@ function markMessageRead(aMmdb, aMessageId, aRead) {
 }
 
 /**
+ * A convenient function for calling |mmdb.deleteMessage(...)|.
+ *
+ * Fulfill params: array of deleted flags.
+ * Reject params: Ci.nsIMobileMessageCallback.FOO.
+ *
+ * @return A deferred promise.
+ */
+function deleteMessage(aMmdb, aMessageIds, aLength) {
+  let deferred = Promise.defer();
+
+  aMmdb.deleteMessage(aMessageIds, aLength, {
+    notifyDeleteMessageFailed: function(aRv) {
+      ok(true, "deleteMessage returns a unsuccessful code: " + aRv);
+      deferred.reject(aRv);
+    },
+
+    notifyMessageDeleted: function(aDeleted, aLength) {
+      ok(true, "deleteMessage successfully!");
+      deferred.resolve(aDeleted);
+    }
+  });
+
+  return deferred.promise;
+}
+
+/**
+ * A convenient function for calling |mmdb.saveSmsSegment(...)|.
+ *
+ * Fulfill params: [<Cr.NS_ERROR_FOO>, <completeMessage>].
+ * Reject params: same as fulfill params.
+ *
+ * @return A deferred promise.
+ */
+function saveSmsSegment(aMmdb, aSmsSegment) {
+  return callMmdbMethod(aMmdb, "saveSmsSegment", aSmsSegment);
+}
+
+/**
  * Utility function for calling cursor-based MMDB methods.
  *
  * Resolve when the target method notifies us with |notifyCursorDone|,
