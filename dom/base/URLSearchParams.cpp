@@ -181,30 +181,29 @@ URLSearchParams::ConvertString(const nsACString& aInput, nsAString& aOutput)
     }
   }
 
-  nsACString::const_iterator iter;
-  aInput.BeginReading(iter);
-
   int32_t inputLength = aInput.Length();
   int32_t outputLength = 0;
 
-  nsresult rv = mDecoder->GetMaxLength(iter.get(), inputLength,
+  nsresult rv = mDecoder->GetMaxLength(aInput.BeginReading(), inputLength,
                                        &outputLength);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  const mozilla::fallible_t fallible = mozilla::fallible_t();
-  nsAutoArrayPtr<char16_t> buf(new (fallible) char16_t[outputLength + 1]);
-  if (!buf) {
+  if (!aOutput.SetLength(outputLength, fallible_t())) {
     return;
   }
 
-  rv = mDecoder->Convert(iter.get(), &inputLength, buf, &outputLength);
-  if (NS_SUCCEEDED(rv)) {
-    buf[outputLength] = 0;
-    if (!aOutput.Assign(buf, outputLength, mozilla::fallible_t())) {
-      aOutput.Truncate();
-    }
+  int32_t newOutputLength = outputLength;
+  rv = mDecoder->Convert(aInput.BeginReading(), &inputLength,
+                         aOutput.BeginWriting(), &newOutputLength);
+  if (NS_FAILED(rv)) {
+    aOutput.Truncate();
+    return;
+  }
+
+  if (newOutputLength < outputLength) {
+    aOutput.Truncate(newOutputLength);
   }
 }
 
