@@ -131,6 +131,14 @@ public:
         LAYER_CLIENT_TYPE_GL = 2            // AndroidGeckoGLLayerClient
     };
 
+    static void RegisterJavaUiThread() {
+        sJavaUiThread = pthread_self();
+    }
+
+    static bool IsJavaUiThread() {
+        return pthread_equal(pthread_self(), sJavaUiThread);
+    }
+
     static void ConstructBridge(JNIEnv *jEnv);
 
     static AndroidBridge *Bridge() {
@@ -353,6 +361,7 @@ public:
     static nsresult GetExternalPublicDirectory(const nsAString& aType, nsAString& aPath);
 
 protected:
+    static pthread_t sJavaUiThread;
     static AndroidBridge* sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
 
