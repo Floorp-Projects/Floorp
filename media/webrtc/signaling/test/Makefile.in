@@ -7,6 +7,3 @@ CPPFLAGS += \
   $(STLPORT_CPPFLAGS) \
   $(NULL)
 endif
-
-include $(topsrcdir)/config/config.mk
-include $(topsrcdir)/media/webrtc/webrtc-config.mk
