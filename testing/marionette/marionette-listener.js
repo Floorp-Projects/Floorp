@@ -402,9 +402,16 @@ function createExecuteContentSandbox(aWindow, timeout) {
     }
   });
 
-  XPCOMUtils.defineLazyGetter(sandbox, 'SpecialPowers', function() {
-    return new SpecialPowers(aWindow);
-  });
+  if (aWindow.wrappedJSObject.SpecialPowers != undefined) {
+    XPCOMUtils.defineLazyGetter(sandbox, 'SpecialPowers', function() {
+      return aWindow.wrappedJSObject.SpecialPowers;
+    });
+  }
+  else {
+    XPCOMUtils.defineLazyGetter(sandbox, 'SpecialPowers', function() {
+      return new SpecialPowers(aWindow);
+    });
+  }
 
   sandbox.asyncComplete = function sandbox_asyncComplete(value, status, stack, commandId) {
     if (commandId == asyncTestCommandId) {
