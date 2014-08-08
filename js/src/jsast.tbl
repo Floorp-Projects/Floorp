@@ -73,5 +73,6 @@ ASTDEF(AST_PROP_PATT,             "Property",                       "propertyPat
 ASTDEF(AST_TEMPLATE_LITERAL,      "TemplateLiteral",                "templateLiteral")
 ASTDEF(AST_TAGGED_TEMPLATE,       "TaggedTemplate",                 "taggedTemplate")
 ASTDEF(AST_CALL_SITE_OBJ,         "CallSiteObject",                 "callSiteObject")
+ASTDEF(AST_COMPUTED_NAME,         "ComputedName",                   "computedName")
 
 /* AST_LIMIT = last + 1 */

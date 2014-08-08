@@ -447,6 +447,25 @@ class NodeBuilder
                  const char *childName4, HandleValue child4,
                  const char *childName5, HandleValue child5,
                  const char *childName6, HandleValue child6,
+                 MutableHandleValue dst) {
+        RootedObject node(cx);
+        return newNode(type, pos, &node) &&
+               setProperty(node, childName1, child1) &&
+               setProperty(node, childName2, child2) &&
+               setProperty(node, childName3, child3) &&
+               setProperty(node, childName4, child4) &&
+               setProperty(node, childName5, child5) &&
+               setProperty(node, childName6, child6) &&
+               setResult(node, dst);
+    }
+
+    bool newNode(ASTType type, TokenPos *pos,
+                 const char *childName1, HandleValue child1,
+                 const char *childName2, HandleValue child2,
+                 const char *childName3, HandleValue child3,
+                 const char *childName4, HandleValue child4,
+                 const char *childName5, HandleValue child5,
+                 const char *childName6, HandleValue child6,
                  const char *childName7, HandleValue child7,
                  MutableHandleValue dst) {
         RootedObject node(cx);
@@ -637,6 +656,8 @@ class NodeBuilder
     bool callSiteObj(NodeVector &raw, NodeVector &cooked, TokenPos *pos, MutableHandleValue dst);
 
     bool spreadExpression(HandleValue expr, TokenPos *pos, MutableHandleValue dst);
+
+    bool computedName(HandleValue name, TokenPos *pos, MutableHandleValue dst);
 
     bool objectExpression(NodeVector &elts, TokenPos *pos, MutableHandleValue dst);
 
@@ -1251,6 +1272,14 @@ bool
 NodeBuilder::templateLiteral(NodeVector &elts, TokenPos *pos, MutableHandleValue dst)
 {
     return listNode(AST_TEMPLATE_LITERAL, "elements", elts, pos, dst);
+}
+
+bool
+NodeBuilder::computedName(HandleValue name, TokenPos *pos, MutableHandleValue dst)
+{
+    return newNode(AST_COMPUTED_NAME, pos,
+                   "name", name,
+                   dst);
 }
 
 bool
@@ -2873,6 +2902,13 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
                  builder.spreadExpression(expr, &pn->pn_pos, dst);
       }
 
+      case PNK_COMPUTED_NAME:
+      {
+         RootedValue name(cx);
+         return expression(pn->pn_kid, &name) &&
+                builder.computedName(name, &pn->pn_pos, dst);
+      }
+
       case PNK_OBJECT:
       {
         NodeVector elts(cx);
@@ -2962,6 +2998,8 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
 bool
 ASTSerializer::propertyName(ParseNode *pn, MutableHandleValue dst)
 {
+    if (pn->isKind(PNK_COMPUTED_NAME))
+        return expression(pn, dst);
     if (pn->isKind(PNK_NAME))
         return identifier(pn, dst);
 
