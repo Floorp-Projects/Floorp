@@ -1066,7 +1066,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         // We have to make a copy of the source array here, since
         // there's overlap, and we have to convert types.
-        void *srcbuf = cx->malloc_(byteLength);
+        uint8_t *srcbuf = self->zone()->pod_malloc<uint8_t>(byteLength);
         if (!srcbuf)
             return false;
         js_memcpy(srcbuf, tarray->viewData(), byteLength);

@@ -102,6 +102,16 @@ public:
     return p;
   }
 
+  template <typename T>
+  static T* pod_malloc(size_t aNumElems)
+  {
+    if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+      return nullptr;
+    void* p = gMallocTable->malloc(aNumElems * sizeof(T));
+    ExitOnFailure(p);
+    return (T*)p;
+  }
+
   static void* calloc_(size_t aSize)
   {
     void* p = gMallocTable->calloc(1, aSize);
