@@ -22,7 +22,7 @@ class StatementParams MOZ_FINAL : public mozIStorageStatementParams
                                 , public nsIXPCScriptable
 {
 public:
-  StatementParams(mozIStorageStatement *aStatement);
+  explicit StatementParams(mozIStorageStatement *aStatement);
 
   // interfaces
   NS_DECL_ISUPPORTS

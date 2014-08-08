@@ -86,20 +86,18 @@ static const EntityNode gEntityArray[] = {
 #define NS_HTML_ENTITY_COUNT ((int32_t)ArrayLength(gEntityArray))
 
 nsresult
-nsHTMLEntities::AddRefTable(void) 
+nsHTMLEntities::AddRefTable(void)
 {
   if (!gTableRefCnt) {
     if (!PL_DHashTableInit(&gEntityToUnicode, &EntityToUnicodeOps,
                            nullptr, sizeof(EntityNodeEntry),
-                           uint32_t(NS_HTML_ENTITY_COUNT / 0.75),
-                           fallible_t())) {
+                           fallible_t(), NS_HTML_ENTITY_COUNT)) {
       gEntityToUnicode.ops = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }
     if (!PL_DHashTableInit(&gUnicodeToEntity, &UnicodeToEntityOps,
                            nullptr, sizeof(EntityNodeEntry),
-                           uint32_t(NS_HTML_ENTITY_COUNT / 0.75),
-                           fallible_t())) {
+                           fallible_t(), NS_HTML_ENTITY_COUNT)) {
       PL_DHashTableFinish(&gEntityToUnicode);
       gEntityToUnicode.ops = gUnicodeToEntity.ops = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;

@@ -1135,10 +1135,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
     nsAutoString flavor;
     flavor.AssignWithConversion(bestFlavor);
     nsAutoString stuffToPaste;
-#ifdef DEBUG_clipboard
-    printf("Got flavor [%s]\n", bestFlavor.get());
-#endif
-
     bool isSafe = IsSafeToInsertData(aSourceDoc);
 
     if (0 == nsCRT::strcmp(bestFlavor, kFileMime) ||
@@ -1646,9 +1642,6 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
 
   if (flav && 0 == nsCRT::strcmp(flav, kUnicodeMime))
   {
-#ifdef DEBUG_clipboard
-    printf("Got flavor [%s]\n", flav);
-#endif
     nsCOMPtr<nsISupportsString> textDataObj = do_QueryInterface(genericDataObj);
     if (textDataObj && len > 0)
     {
@@ -1732,11 +1725,6 @@ nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
     // inserting from curHunk to lineStart then returning.
     const nsAString &curHunk = Substring(hunkStart, lineStart);
     nsCOMPtr<nsIDOMNode> dummyNode;
-#ifdef DEBUG_akkana_verbose
-    printf("==== Inserting text as %squoted: ---\n%s---\n",
-           curHunkIsQuoted ? "" : "non-",
-           NS_LossyConvertUTF16toASCII(curHunk).get());
-#endif
     if (curHunkIsQuoted)
       rv = InsertAsPlaintextQuotation(curHunk, false,
                                       getter_AddRefs(dummyNode));

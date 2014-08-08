@@ -504,7 +504,7 @@ private:
 
 template<typename T>
 // FIXME bug 456272: tune based on average workload
-const uint32_t DeadlockDetector<T>::kDefaultNumBuckets = 64;
+const uint32_t DeadlockDetector<T>::kDefaultNumBuckets = 32;
 
 
 } // namespace mozilla

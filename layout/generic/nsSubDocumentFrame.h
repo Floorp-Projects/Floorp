@@ -21,7 +21,7 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsSubDocumentFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsSubDocumentFrame(nsStyleContext* aContext);
+  explicit nsSubDocumentFrame(nsStyleContext* aContext);
 
 #ifdef DEBUG_FRAME_DUMP
   void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const MOZ_OVERRIDE;

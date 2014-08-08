@@ -12,7 +12,6 @@
 #include "PlatformDecoderModule.h"
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "MediaTaskQueue.h"
-#include "mozilla/CDMProxy.h"
 
 #include <deque>
 #include "mozilla/Monitor.h"

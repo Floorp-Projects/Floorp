@@ -1171,7 +1171,7 @@ nsresult nsLoadGroup::Init()
     };
 
     PL_DHashTableInit(&mRequests, &hash_table_ops, nullptr,
-                      sizeof(RequestMapEntry), 16);
+                      sizeof(RequestMapEntry));
 
     mConnectionInfo = new nsLoadGroupConnectionInfo();
 

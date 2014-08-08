@@ -24,8 +24,8 @@ class nsDataHashtable
 {
 public:
   nsDataHashtable() {}
-  explicit nsDataHashtable(uint32_t aInitSize)
-    : nsBaseHashtable<KeyClass, DataType, DataType>(aInitSize)
+  explicit nsDataHashtable(uint32_t aInitLength)
+    : nsBaseHashtable<KeyClass, DataType, DataType>(aInitLength)
   {
   }
 };

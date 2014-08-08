@@ -279,7 +279,7 @@ protected:
 class nsSVGRenderingObserverList {
 public:
   nsSVGRenderingObserverList()
-    : mObservers(5)
+    : mObservers(4)
   {
     MOZ_COUNT_CTOR(nsSVGRenderingObserverList);
   }
