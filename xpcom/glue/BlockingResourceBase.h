@@ -103,9 +103,7 @@ private:
      * acquisition context is printed and true is returned.
      * Otherwise, we print the context from |aFirstSeen|, the
      * first acquisition from which the code calling |Print()|
-     * became interested in us, and return false.  |Print()| can
-     * be forced to print the context from |aFirstSeen| regardless
-     * by passing |aPrintFirstSeenCx=true|.
+     * became interested in us, and return false.
      *
      * *NOT* thread safe.  Reads |mAcquisitionContext| without
      * synchronization, but this will not cause correctness
@@ -116,8 +114,7 @@ private:
      * only some info is written into |aOut|
      */
     bool Print(const DDT::ResourceAcquisition& aFirstSeen,
-               nsACString& aOut,
-               bool aPrintFirstSeenCx = false) const;
+               nsACString& aOut) const;
 
     /**
      * mName

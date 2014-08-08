@@ -77,20 +77,6 @@ public:
     return mCallStack != aOther.mCallStack;
   }
 
-  // FIXME bug 456272: if this is split off,
-  // NS_TraceMallocPrintStackTrace should be modified to print into
-  // an nsACString
-  void Print(FILE* aFile) const
-  {
-#ifdef NS_TRACE_MALLOC
-    if (this != &kNone && mCallStack) {
-      NS_TraceMallocPrintStackTrace(aFile, mCallStack);
-      return;
-    }
-#endif
-    fputs("  [stack trace unavailable]\n", aFile);
-  }
-
   /** The "null" callstack. */
   static const CallStack kNone;
 };

@@ -40,14 +40,10 @@ BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 bool
 BlockingResourceBase::DeadlockDetectorEntry::Print(
     const DDT::ResourceAcquisition& aFirstSeen,
-    nsACString& aOut,
-    bool aPrintFirstSeenCx) const
+    nsACString& aOut) const
 {
   CallStack lastAcquisition = mAcquisitionContext; // RACY, but benign
   bool maybeCurrentlyAcquired = (CallStack::kNone != lastAcquisition);
-  CallStack printAcquisition =
-    (aPrintFirstSeenCx || !maybeCurrentlyAcquired) ?
-      aFirstSeen.mCallContext : lastAcquisition;
 
   fprintf(stderr, "--- %s : %s",
           kResourceTypeName[mType], mName);
@@ -61,7 +57,7 @@ BlockingResourceBase::DeadlockDetectorEntry::Print(
   }
 
   fputs(" calling context\n", stderr);
-  printAcquisition.Print(stderr);
+  fputs("  [stack trace unavailable]\n", stderr);
 
   return maybeCurrentlyAcquired;
 }
@@ -167,7 +163,7 @@ BlockingResourceBase::Release()
   } else {
     // not an error, but makes code hard to reason about.
     NS_WARNING("Resource acquired at calling context\n");
-    mDDEntry->mAcquisitionContext.Print(stderr);
+    NS_WARNING("  [stack trace unavailable]\n");
     NS_WARNING("\nis being released in non-LIFO order; why?");
 
     // remove this resource from wherever it lives in the chain
@@ -215,7 +211,7 @@ BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
 
   fputs("\n=== Cycle completed at\n", stderr);
   aOut += "Cycle completed at\n";
-  it->mResource->Print(*it, aOut, true);
+  it->mResource->Print(*it, aOut);
 
   return maybeImminent;
 }
@@ -269,8 +265,8 @@ ReentrantMonitor::Enter()
       if (br == this) {
         NS_WARNING(
           "Re-entering ReentrantMonitor after acquiring other resources.\n"
-          "At calling context\n");
-        GetAcquisitionContext().Print(stderr);
+          "At calling context\n"
+          "  [stack trace unavailable]\n");
 
         // show the caller why this is potentially bad
         CheckAcquire(callContext);
