@@ -199,7 +199,7 @@ nsCounterList::RecalcAll()
 }
 
 nsCounterManager::nsCounterManager()
-    : mNames(16)
+    : mNames()
 {
 }
 

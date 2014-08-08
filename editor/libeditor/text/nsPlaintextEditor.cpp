@@ -1363,14 +1363,9 @@ nsPlaintextEditor::PasteAsQuotation(int32_t aSelectionType)
                                    &len);
     if (NS_FAILED(rv) || !flav)
     {
-#ifdef DEBUG_akkana
-      printf("PasteAsPlaintextQuotation: GetAnyTransferData failed, %d\n", rv);
-#endif
       return rv;
     }
-#ifdef DEBUG_clipboard
-    printf("Got flavor [%s]\n", flav);
-#endif
+
     if (0 == nsCRT::strcmp(flav, kUnicodeMime) ||
         0 == nsCRT::strcmp(flav, kMozTextInternal))
     {
@@ -1479,10 +1474,6 @@ nsPlaintextEditor::Rewrap(bool aRespectNewlines)
   if (wrapCol <= 0)
     wrapCol = 72;
 
-#ifdef DEBUG_akkana
-  printf("nsPlaintextEditor::Rewrap to %ld columns\n", (long)wrapCol);
-#endif
-
   nsAutoString current;
   bool isCollapsed;
   rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted
@@ -1505,10 +1496,6 @@ nsPlaintextEditor::Rewrap(bool aRespectNewlines)
 NS_IMETHODIMP    
 nsPlaintextEditor::StripCites()
 {
-#ifdef DEBUG_akkana
-  printf("nsPlaintextEditor::StripCites()\n");
-#endif
-
   nsAutoString current;
   bool isCollapsed;
   nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted,

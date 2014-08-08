@@ -111,7 +111,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 :nsLeafBoxFrame(aPresShell, aContext),
  mSlots(nullptr),
- mImageCache(16),
+ mImageCache(),
  mTopRowIndex(0),
  mPageLength(0),
  mHorzPosition(0),

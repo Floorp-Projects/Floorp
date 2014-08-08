@@ -15,6 +15,7 @@
 #include "nsServiceManagerUtils.h"
 #include "prsystem.h"
 #include "gfx2DGlue.h"
+#include "mozilla/EMELog.h"
 
 namespace mozilla {
 
@@ -208,6 +209,7 @@ void
 EMEH264Decoder::Error(GMPErr aErr)
 {
   MOZ_ASSERT(IsOnGMPThread());
+  EME_LOG("EMEH264Decoder::Error");
   mCallback->Error();
   GmpShutdown();
 }

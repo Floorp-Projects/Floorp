@@ -43,7 +43,13 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 3,
-    "description": "Application reputation remote status (0 = OK, 1 = FAIL, 2 = INVALID)"
+    "description": "Application reputation remote status (0=OK, 1=FAIL, 2=INVALID)"
+  },
+  "APPLICATION_REPUTATION_SERVER_RESPONSE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "Application reputation remote response (0=SAFE, 1=DANGEROUS, 2=UNCOMMON, 3=POTENTIALLY_UNWANTED, 4=DANGEROUS_HOST)"
   },
   "APPLICATION_REPUTATION_COUNT": {
     "expires_in_version": "never",

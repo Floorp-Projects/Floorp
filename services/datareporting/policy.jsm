@@ -13,9 +13,9 @@
  * eventually be split into its own type and module.
  */
 
-"use strict";
-
 #ifndef MERGED_COMPARTMENT
+
+"use strict";
 
 this.EXPORTED_SYMBOLS = [
   "DataSubmissionRequest", // For test use only.

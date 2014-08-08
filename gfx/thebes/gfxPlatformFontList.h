@@ -303,7 +303,7 @@ protected:
     bool mFaceNameListsInitialized;
 
     struct ExtraNames {
-      ExtraNames() : mFullnames(100), mPostscriptNames(100) {}
+      ExtraNames() : mFullnames(64), mPostscriptNames(64) {}
       // fullname ==> font entry (unique, one name per font entry)
       nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> mFullnames;
       // Postscript name ==> font entry (unique, one name per font entry)

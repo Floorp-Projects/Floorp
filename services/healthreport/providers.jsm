@@ -12,9 +12,9 @@
  * up.
  */
 
-"use strict";
-
 #ifndef MERGED_COMPARTMENT
+
+"use strict";
 
 this.EXPORTED_SYMBOLS = [
   "AddonsProvider",

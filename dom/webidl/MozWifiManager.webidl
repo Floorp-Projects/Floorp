@@ -125,6 +125,14 @@ dictionary IPConfiguration {
  Func="Navigator::HasWifiManagerSupport"]
 interface MozWifiManager : EventTarget {
   /**
+   * Turn on/off wifi functionality.
+   * @param enable true for enable, false for disable.
+   * onsuccess: Wifi enable/disable successfully, including no status change.
+   * onerror: Wifi enable/disable failed or prohibited.
+   */
+  DOMRequest setWifiEnabled(boolean enabled);
+
+  /**
    * Returns the list of currently available networks.
    * onsuccess: We have obtained the current list of networks. request.value
    *            is an object whose property names are SSIDs and values are

@@ -131,7 +131,7 @@ template <class T, size_t N> class AutoArray
 
 public:
 
-  AutoArray(size_t size)
+  explicit AutoArray(size_t size)
   : mBuffer(size <= N ? mAutoBuffer : new T[size])
   {
   }

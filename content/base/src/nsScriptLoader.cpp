@@ -1411,9 +1411,8 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   if (NS_FAILED(rv)) {
     /*
      * Handle script not loading error because source was a tracking URL.
-     * (Safebrowinsg) We make a note of this script node by including it
-     * in a dedicated array of blocked tracking nodes under its parent
-     * document.
+     * We make a note of this script node by including it in a dedicated
+     * array of blocked tracking nodes under its parent document.
      */
     if (rv == NS_ERROR_TRACKING_URI) {
       nsCOMPtr<nsIContent> cont = do_QueryInterface(request->mElement);
