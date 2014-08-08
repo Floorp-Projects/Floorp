@@ -98,13 +98,6 @@ MobileMessageDB.prototype = {
   lastMessageId: 0,
 
   /**
-   * An optional hook to check if device storage is full.
-   *
-   * @return true if full.
-   */
-  isDiskFull: null,
-
-  /**
    * Prepare the database. This may include opening the database and upgrading
    * it to the latest schema version.
    *
@@ -266,7 +259,7 @@ MobileMessageDB.prototype = {
       update(currentVersion);
     };
     request.onerror = function(event) {
-      //TODO look at event.target.Code and change error constant accordingly
+      // TODO look at event.target.Code and change error constant accordingly.
       if (DEBUG) debug("Error opening database!");
       callback(Cr.NS_ERROR_FAILURE, null);
     };
@@ -294,11 +287,6 @@ MobileMessageDB.prototype = {
     if (DEBUG) debug("Opening transaction for object stores: " + storeNames);
     let self = this;
     this.ensureDB(function(error, db) {
-      if (!error &&
-          txn_type === READ_WRITE &&
-          self.isDiskFull && self.isDiskFull()) {
-        error = Cr.NS_ERROR_FILE_NO_DEVICE_SPACE;
-      }
       if (error) {
         if (DEBUG) debug("Could not open database: " + error);
         callback(error);
@@ -307,13 +295,13 @@ MobileMessageDB.prototype = {
       let txn = db.transaction(storeNames, txn_type);
       if (DEBUG) debug("Started transaction " + txn + " of type " + txn_type);
       if (DEBUG) {
-        txn.oncomplete = function oncomplete(event) {
+        txn.oncomplete = function(event) {
           debug("Transaction " + txn + " completed.");
         };
-        txn.onerror = function onerror(event) {
-          //TODO check event.target.errorCode and show an appropiate error
-          //     message according to it.
-          debug("Error occurred during transaction: " + event.target.errorCode);
+        txn.onerror = function(event) {
+          // TODO check event.target.error.name and show an appropiate error
+          // message according to it.
+          debug("Error occurred during transaction: " + event.target.error.name);
         };
       }
       let stores;
@@ -365,7 +353,7 @@ MobileMessageDB.prototype = {
       // In order to get the highest key value, we open a key cursor in reverse
       // order and get only the first pointed value.
       let request = messageStore.openCursor(null, PREV);
-      request.onsuccess = function onsuccess(event) {
+      request.onsuccess = function(event) {
         let cursor = event.target.result;
         if (!cursor) {
           if (DEBUG) {
@@ -377,10 +365,10 @@ MobileMessageDB.prototype = {
         self.lastMessageId = cursor.key || 0;
         if (DEBUG) debug("Last assigned message ID was " + self.lastMessageId);
       };
-      request.onerror = function onerror(event) {
+      request.onerror = function(event) {
         if (DEBUG) {
           debug("Could not get the last key from mobile message database " +
-                event.target.errorCode);
+                event.target.error.name);
         }
       };
     });
@@ -843,7 +831,7 @@ MobileMessageDB.prototype = {
       let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
       let request = messageStore.mozGetAll(lastMessageId);
 
-      request.onsuccess = function onsuccess() {
+      request.onsuccess = function() {
         let messageRecord = request.result[0];
         if (!messageRecord) {
           if (DEBUG) debug("Message ID " + lastMessageId + " not found");
@@ -861,10 +849,10 @@ MobileMessageDB.prototype = {
         cursor.continue();
       };
 
-      request.onerror = function onerror(event) {
+      request.onerror = function(event) {
         if (DEBUG) {
           if (event.target) {
-            debug("Caught error on transaction", event.target.errorCode);
+            debug("Caught error on transaction", event.target.error.name);
           }
         }
         cursor.continue();
@@ -2068,8 +2056,11 @@ MobileMessageDB.prototype = {
         notifyResult(Cr.NS_OK, capture.messageRecord);
       };
       aTransaction.onabort = function(event) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Cr.NS_ERROR_FILE_NO_DEVICE_SPACE
+                    : Cr.NS_ERROR_FAILURE;
+        notifyResult(error, null);
       };
 
       aFunc(capture, aStores);
@@ -2097,16 +2088,19 @@ MobileMessageDB.prototype = {
 
       let deletedInfo = { messageIds: [], threadIds: [] };
 
-      txn.oncomplete = function oncomplete(event) {
+      txn.oncomplete = function(event) {
         if (aMessageRecord.id > self.lastMessageId) {
           self.lastMessageId = aMessageRecord.id;
         }
         notifyResult(Cr.NS_OK, aMessageRecord);
         self.notifyDeletedInfo(deletedInfo);
       };
-      txn.onabort = function onabort(event) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
+      txn.onabort = function(event) {
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Cr.NS_ERROR_FILE_NO_DEVICE_SPACE
+                    : Cr.NS_ERROR_FAILURE;
+        notifyResult(error, null);
       };
 
       let messageStore = stores[0];
@@ -2162,7 +2156,7 @@ MobileMessageDB.prototype = {
       let participantId = participantRecord.id;
       let range = IDBKeyRange.bound([participantId, 0], [participantId, ""]);
       let request = aMessageStore.index("participantIds").openCursor(range);
-      request.onsuccess = function onsuccess(event) {
+      request.onsuccess = function(event) {
         let cursor = event.target.result;
         if (!cursor) {
           self.realSaveRecord(aTransaction, aMessageStore, aParticipantStore,
@@ -2237,8 +2231,8 @@ MobileMessageDB.prototype = {
             self.updateThreadByMessageChange(aMessageStore,
                                              aThreadStore,
                                              oldMessageRecord.threadId,
-                                             aMessageRecord.id,
-                                             oldMessageRecord.read,
+                                             [aMessageRecord.id],
+                                             oldMessageRecord.read ? 0 : 1,
                                              aDeletedInfo);
           }
         };
@@ -2361,7 +2355,7 @@ MobileMessageDB.prototype = {
         getRequest = aMessageStore.index("envelopeId").get(id);
       }
 
-      getRequest.onsuccess = function onsuccess(event) {
+      getRequest.onsuccess = function(event) {
         let messageRecord = event.target.result;
         if (!messageRecord) {
           if (DEBUG) debug("type = " + id + " is not found");
@@ -2489,18 +2483,23 @@ MobileMessageDB.prototype = {
   },
 
   updateThreadByMessageChange: function(messageStore, threadStore, threadId,
-                                        messageId, messageRead, deletedInfo) {
+                                        removedMsgIds, ignoredUnreadCount, deletedInfo) {
     let self = this;
     threadStore.get(threadId).onsuccess = function(event) {
       // This must exist.
       let threadRecord = event.target.result;
       if (DEBUG) debug("Updating thread record " + JSON.stringify(threadRecord));
 
-      if (!messageRead) {
-        threadRecord.unreadCount--;
+      if (ignoredUnreadCount > 0) {
+        if (DEBUG) {
+          debug("Updating unread count : " + threadRecord.unreadCount +
+                " -> " + (threadRecord.unreadCount - ignoredUnreadCount));
+        }
+        threadRecord.unreadCount -= ignoredUnreadCount;
       }
 
-      if (threadRecord.lastMessageId == messageId) {
+      if (removedMsgIds.indexOf(threadRecord.lastMessageId) >= 0) {
+        if (DEBUG) debug("MRU entry was deleted.");
         // Check most recent sender/receiver.
         let range = IDBKeyRange.bound([threadId, 0], [threadId, ""]);
         let request = messageStore.index("threadId")
@@ -2509,7 +2508,7 @@ MobileMessageDB.prototype = {
           let cursor = event.target.result;
           if (!cursor) {
             if (DEBUG) {
-              debug("Deleting mru entry for thread id " + threadId);
+              debug("All messages were deleted. Delete this thread.");
             }
             threadStore.delete(threadId);
             if (deletedInfo) {
@@ -2534,13 +2533,8 @@ MobileMessageDB.prototype = {
           }
           threadStore.put(threadRecord);
         };
-      } else if (!messageRead) {
-        // Shortcut, just update the unread count.
-        if (DEBUG) {
-          debug("Updating unread count for thread id " + threadId + ": " +
-                (threadRecord.unreadCount + 1) + " -> " +
-                threadRecord.unreadCount);
-        }
+      } else if (ignoredUnreadCount > 0) {
+        if (DEBUG) debug("Shortcut, just update the unread count.");
         threadStore.put(threadRecord);
       }
     };
@@ -2732,7 +2726,7 @@ MobileMessageDB.prototype = {
     let self = this;
     this.newTxnWithCallback(aCallback, function(aCapture, aMessageStore) {
       let getRequest = aMessageStore.index("envelopeId").get(aEnvelopeId);
-      getRequest.onsuccess = function onsuccess(event) {
+      getRequest.onsuccess = function(event) {
         let messageRecord = event.target.result;
         if (!messageRecord) {
           if (DEBUG) debug("envelopeId '" + aEnvelopeId + "' not found");
@@ -2783,7 +2777,7 @@ MobileMessageDB.prototype = {
       }
       let request = messageStore.index("transactionId").get(aTransactionId);
 
-      txn.oncomplete = function oncomplete(event) {
+      txn.oncomplete = function(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         let messageRecord = request.result;
         if (!messageRecord) {
@@ -2796,10 +2790,10 @@ MobileMessageDB.prototype = {
         aCallback.notify(Cr.NS_OK, messageRecord, null);
       };
 
-      txn.onerror = function onerror(event) {
+      txn.onerror = function(event) {
         if (DEBUG) {
           if (event.target) {
-            debug("Caught error on transaction", event.target.errorCode);
+            debug("Caught error on transaction", event.target.error.name);
           }
         }
         aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
@@ -2818,7 +2812,7 @@ MobileMessageDB.prototype = {
       }
       let request = messageStore.mozGetAll(aMessageId);
 
-      txn.oncomplete = function oncomplete() {
+      txn.oncomplete = function() {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         if (request.result.length > 1) {
           if (DEBUG) debug("Got too many results for id " + aMessageId);
@@ -2843,10 +2837,10 @@ MobileMessageDB.prototype = {
         aCallback.notify(Cr.NS_OK, messageRecord, domMessage);
       };
 
-      txn.onerror = function onerror(event) {
+      txn.onerror = function(event) {
         if (DEBUG) {
           if (event.target) {
-            debug("Caught error on transaction", event.target.errorCode);
+            debug("Caught error on transaction", event.target.error.name);
           }
         }
         aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
@@ -2878,7 +2872,7 @@ MobileMessageDB.prototype = {
         return;
       }
 
-      txn.oncomplete = function oncomplete(event) {
+      txn.oncomplete = function(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         if (completeMessage) {
           // Rebuild full body
@@ -2910,9 +2904,12 @@ MobileMessageDB.prototype = {
         aCallback.notify(Cr.NS_OK, completeMessage);
       };
 
-      txn.onabort = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
-        aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
+      txn.onabort = function(event) {
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Cr.NS_ERROR_FILE_NO_DEVICE_SPACE
+                    : Cr.NS_ERROR_FAILURE;
+        aCallback.notify(error, null);
       };
 
       aSmsSegment.hash = aSmsSegment.sender + ":" +
@@ -3025,19 +3022,35 @@ MobileMessageDB.prototype = {
 
       let deletedInfo = { messageIds: [], threadIds: [] };
 
-      txn.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
-        //TODO look at event.target.errorCode, pick appropriate error constant
-        aRequest.notifyDeleteMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      txn.onabort = function(event) {
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Ci.nsIMobileMessageCallback.STORAGE_FULL_ERROR
+                    : Ci.nsIMobileMessageCallback.INTERNAL_ERROR;
+        aRequest.notifyDeleteMessageFailed(error);
       };
 
       const messageStore = stores[0];
       const threadStore = stores[1];
 
-      txn.oncomplete = function oncomplete(event) {
+      txn.oncomplete = function(event) {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         aRequest.notifyMessageDeleted(deleted, length);
         self.notifyDeletedInfo(deletedInfo);
+      };
+
+      let threadsToUpdate = {};
+      let numOfMessagesToDelete = length;
+      let updateThreadInfo = function() {
+        for (let threadId in threadsToUpdate) {
+          let threadInfo = threadsToUpdate[threadId];
+          self.updateThreadByMessageChange(messageStore,
+                                           threadStore,
+                                           threadInfo.threadId,
+                                           threadInfo.removedMsgIds,
+                                           threadInfo.ignoredUnreadCount,
+                                           deletedInfo);
+        }
       };
 
       for (let i = 0; i < length; i++) {
@@ -3052,22 +3065,40 @@ MobileMessageDB.prototype = {
             // First actually delete the message.
             messageStore.delete(messageId).onsuccess = function(event) {
               if (DEBUG) debug("Message id " + messageId + " deleted");
-              if (deletedInfo) {
-                deletedInfo.messageIds.push(messageId);
+
+              numOfMessagesToDelete--;
+              deleted[messageIndex] = true;
+              deletedInfo.messageIds.push(messageId);
+
+              // Cache thread info to be updated.
+              let threadId = messageRecord.threadId;
+              if (!threadsToUpdate[threadId]) {
+                threadsToUpdate[threadId] = {
+                  threadId: threadId,
+                  removedMsgIds: [messageId],
+                  ignoredUnreadCount: (!messageRecord.read) ? 1 : 0
+                };
+              } else {
+                let threadInfo = threadsToUpdate[threadId];
+                threadInfo.removedMsgIds.push(messageId);
+                if (!messageRecord.read) {
+                  threadInfo.ignoredUnreadCount++;
+                }
               }
 
-              deleted[messageIndex] = true;
-
-              // Then update unread count and most recent message.
-              self.updateThreadByMessageChange(messageStore,
-                                               threadStore,
-                                               messageRecord.threadId,
-                                               messageId,
-                                               messageRecord.read,
-                                               deletedInfo);
+              // After all messsages are deleted, update unread count and most
+              // recent message of related threads at once.
+              if (!numOfMessagesToDelete) {
+                updateThreadInfo();
+              }
             };
-          } else if (DEBUG) {
-            debug("Message id " + messageId + " does not exist");
+          } else {
+            if (DEBUG) debug("Message id " + messageId + " does not exist");
+
+            numOfMessagesToDelete--;
+            if (!numOfMessagesToDelete) {
+              updateThreadInfo();
+            }
           }
         }.bind(null, i);
       }
@@ -3109,14 +3140,17 @@ MobileMessageDB.prototype = {
         return;
       }
 
-      txn.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
-        aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+      txn.onabort = function(event) {
+        if (DEBUG) debug("transaction abort due to " + event.target.error.name);
+        let error = (event.target.error.name === 'QuotaExceededError')
+                    ? Ci.nsIMobileMessageCallback.STORAGE_FULL_ERROR
+                    : Ci.nsIMobileMessageCallback.INTERNAL_ERROR;
+        aRequest.notifyMarkMessageReadFailed(error);
       };
 
       let messageStore = stores[0];
       let threadStore = stores[1];
-      messageStore.get(messageId).onsuccess = function onsuccess(event) {
+      messageStore.get(messageId).onsuccess = function(event) {
         let messageRecord = event.target.result;
         if (!messageRecord) {
           if (DEBUG) debug("Message ID " + messageId + " not found");
@@ -3158,7 +3192,7 @@ MobileMessageDB.prototype = {
         }
 
         if (DEBUG) debug("Message.read set to: " + value);
-        messageStore.put(messageRecord).onsuccess = function onsuccess(event) {
+        messageStore.put(messageRecord).onsuccess = function(event) {
           if (DEBUG) {
             debug("Update successfully completed. Message: " +
                   JSON.stringify(event.target.result));
@@ -3201,8 +3235,8 @@ MobileMessageDB.prototype = {
         collector.collect(null, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
         return;
       }
-      txn.onerror = function onerror(event) {
-        if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
+      txn.onerror = function(event) {
+        if (DEBUG) debug("Caught error on transaction ", event.target.error.name);
         collector.collect(null, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
       };
       let request = threadStore.index("lastTimestamp").openKeyCursor(null, PREV);
@@ -3240,7 +3274,7 @@ let FilterSearcherHelper = {
   filterIndex: function(index, range, direction, txn, collect) {
     let messageStore = txn.objectStore(MESSAGE_STORE_NAME);
     let request = messageStore.index(index).openKeyCursor(range, direction);
-    request.onsuccess = function onsuccess(event) {
+    request.onsuccess = function(event) {
       let cursor = event.target.result;
       // Once the cursor has retrieved all keys that matches its key range,
       // the filter search is done.
@@ -3253,8 +3287,8 @@ let FilterSearcherHelper = {
         collect(txn, COLLECT_ID_END, COLLECT_TIMESTAMP_UNUSED);
       }
     };
-    request.onerror = function onerror(event) {
-      if (DEBUG && event) debug("IDBRequest error " + event.target.errorCode);
+    request.onerror = function(event) {
+      if (DEBUG && event) debug("IDBRequest error " + event.target.error.name);
       collect(txn, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
     };
   },
@@ -3306,8 +3340,8 @@ let FilterSearcherHelper = {
    */
   transact: function(mmdb, txn, error, filter, reverse, collect) {
     if (error) {
-      //TODO look at event.target.errorCode, pick appropriate error constant.
-      if (DEBUG) debug("IDBRequest error " + error.target.errorCode);
+      // TODO look at event.target.error.name, pick appropriate error constant.
+      if (DEBUG) debug("IDBRequest error " + event.target.error.name);
       collect(txn, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
       return;
     }
@@ -3745,7 +3779,7 @@ GetMessagesCursor.prototype = {
 
     let getRequest = messageStore.get(messageId);
     let self = this;
-    getRequest.onsuccess = function onsuccess(event) {
+    getRequest.onsuccess = function(event) {
       if (DEBUG) {
         debug("notifyNextMessageInListGot - messageId: " + messageId);
       }
@@ -3753,7 +3787,7 @@ GetMessagesCursor.prototype = {
         self.mmdb.createDomMessageFromRecord(event.target.result);
       self.callback.notifyCursorResult(domMessage);
     };
-    getRequest.onerror = function onerror(event) {
+    getRequest.onerror = function(event) {
       if (DEBUG) {
         debug("notifyCursorError - messageId: " + messageId);
       }
@@ -3819,7 +3853,7 @@ GetThreadsCursor.prototype = {
 
     let getRequest = threadStore.get(threadId);
     let self = this;
-    getRequest.onsuccess = function onsuccess(event) {
+    getRequest.onsuccess = function(event) {
       let threadRecord = event.target.result;
       if (DEBUG) {
         debug("notifyCursorResult: " + JSON.stringify(threadRecord));
@@ -3834,7 +3868,7 @@ GetThreadsCursor.prototype = {
                                            threadRecord.lastMessageType);
       self.callback.notifyCursorResult(thread);
     };
-    getRequest.onerror = function onerror(event) {
+    getRequest.onerror = function(event) {
       if (DEBUG) {
         debug("notifyCursorError - threadId: " + threadId);
       }
