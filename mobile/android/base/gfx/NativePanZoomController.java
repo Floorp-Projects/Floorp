@@ -21,12 +21,10 @@ import android.view.View;
 class NativePanZoomController implements PanZoomController, GeckoEventListener {
     private final PanZoomTarget mTarget;
     private final EventDispatcher mDispatcher;
-    private final CallbackRunnable mCallbackRunnable;
 
     NativePanZoomController(PanZoomTarget target, View view, EventDispatcher dispatcher) {
         mTarget = target;
         mDispatcher = dispatcher;
-        mCallbackRunnable = new CallbackRunnable();
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             init();
         } else {
@@ -75,7 +73,6 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
     private native void init();
     private native void handleTouchEvent(GeckoEvent event);
     private native void handleMotionEvent(GeckoEvent event);
-    private native long runDelayedCallback();
 
     public native void destroy();
     public native void notifyDefaultActionPrevented(boolean prevented);
@@ -86,21 +83,6 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
     @WrapElementForJNI(allowMultithread = true, stubName = "RequestContentRepaintWrapper")
     private void requestContentRepaint(float x, float y, float width, float height, float resolution) {
         mTarget.forceRedraw(new DisplayPortMetrics(x, y, x + width, y + height, resolution));
-    }
-
-    @WrapElementForJNI(allowMultithread = true, stubName = "PostDelayedCallbackWrapper")
-    private void postDelayedCallback(long delay) {
-        mTarget.postDelayed(mCallbackRunnable, delay);
-    }
-
-    class CallbackRunnable implements Runnable {
-        @Override
-        public void run() {
-            long nextDelay = runDelayedCallback();
-            if (nextDelay >= 0) {
-                mTarget.postDelayed(this, nextDelay);
-            }
-        }
     }
 
     public void setOverscrollHandler(final Overscroll listener) {
