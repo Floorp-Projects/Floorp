@@ -7,8 +7,6 @@ onmessage = function(event) {
   // TEST: does console exist?
   postMessage({event: 'console exists', status: !!console, last : false});
 
-  postMessage({event: 'console is the same object', status: console === console, last: false});
-
   postMessage({event: 'trace without function', status: true, last : false});
 
   for (var i = 0; i < 10; ++i) {
