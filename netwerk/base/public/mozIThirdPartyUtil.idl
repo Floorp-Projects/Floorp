@@ -12,7 +12,7 @@ interface nsIChannel;
  * Utility functions for determining whether a given URI, channel, or window
  * hierarchy is third party with respect to a known URI.
  */
-[scriptable, uuid(d994fd1d-d2fe-4372-9ae7-88b08b7d9d90)]
+[scriptable, uuid(b711bd7f-0674-49be-ae77-f221db5f7b6c)]
 interface mozIThirdPartyUtil : nsISupports
 {
   /**
@@ -140,6 +140,21 @@ interface mozIThirdPartyUtil : nsISupports
    * @return the base domain.
    */
   AUTF8String getBaseDomain(in nsIURI aHostURI);
+
+  /**
+   * getURIFromWindow
+   *
+   * Returns the URI associated with the script object principal for the
+   * window.
+   */
+  nsIURI getURIFromWindow(in nsIDOMWindow aWindow);
+
+  /**
+   * getTopWindowForChannel
+   *
+   * Returns the top-level window associated with the given channel.
+   */
+  nsIDOMWindow getTopWindowForChannel(in nsIChannel aChannel);
 };
 
 %{ C++

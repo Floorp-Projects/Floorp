@@ -29,7 +29,7 @@ private:
     void MarkEntryClassified(nsresult status);
     bool HasBeenClassified(nsIChannel *aChannel);
     // Whether or not tracking protection should be enabled on this channel.
-    bool ShouldEnableTrackingProtection(nsIChannel* aChannel);
+    nsresult ShouldEnableTrackingProtection(nsIChannel *aChannel, bool *result);
 };
 
 #endif
