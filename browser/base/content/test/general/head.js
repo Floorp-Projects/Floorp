@@ -545,6 +545,14 @@ function promiseTabLoadEvent(tab, url, eventType="load")
 
 function assertWebRTCIndicatorStatus(expected) {
   let ui = Cu.import("resource:///modules/webrtcUI.jsm", {}).webrtcUI;
-  let msg = "WebRTC indicator " + (expected ? "visible" : "hidden");
+  let expectedState = expected ? "visible" : "hidden";
+  let msg = "WebRTC indicator " + expectedState;
   is(ui.showGlobalIndicator, expected, msg);
+
+  let windows = Services.wm.getEnumerator("navigator:browser");
+  while (windows.hasMoreElements()) {
+    let win = windows.getNext();
+    let menu = win.document.getElementById("tabSharingMenu");
+    is(menu && !menu.hidden, expected, "WebRTC menu should be " + expectedState);
+  }
 }
