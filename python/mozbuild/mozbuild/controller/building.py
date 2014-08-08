@@ -611,6 +611,12 @@ class CCacheStats(object):
 
         return '\n'.join(lines)
 
+    def __nonzero__(self):
+        relative_values = [v for k, v in self._values.items()
+                           if k not in self.ABSOLUTE_KEYS]
+        return (all(v >= 0 for v in relative_values) and
+                any(v > 0 for v in relative_values))
+
     @staticmethod
     def _format_value(v):
         if v > CCacheStats.GiB:
