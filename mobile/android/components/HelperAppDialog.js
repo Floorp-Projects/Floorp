@@ -72,6 +72,10 @@ HelperAppLauncherDialog.prototype = {
       // file to another application.
       let file = url.QueryInterface(Ci.nsIFileURL).file;
 
+      // Normalize the nsILocalFile in-place. This will ensure that paths
+      // can be correctly compared via `contains`, below.
+      file.normalize();
+
       // TODO: pref blacklist?
 
       let appRoot = FileUtils.getFile("XREExeF", []);
