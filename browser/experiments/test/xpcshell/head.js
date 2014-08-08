@@ -120,12 +120,6 @@ function removeCacheFile() {
   return OS.File.remove(path);
 }
 
-function disableCertificateChecks() {
-  let pref = "experiments.manifest.cert.checkAttributes";
-  Services.prefs.setBoolPref(pref, false);
-  do_register_cleanup(() => Services.prefs.clearUserPref(pref));
-}
-
 function patchPolicy(policy, data) {
   for (let key of Object.keys(data)) {
     Object.defineProperty(policy, key, {
