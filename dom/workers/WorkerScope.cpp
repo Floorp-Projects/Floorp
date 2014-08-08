@@ -80,16 +80,17 @@ WorkerGlobalScope::WrapObject(JSContext* aCx)
   MOZ_CRASH("We should never get here!");
 }
 
-Console*
+already_AddRefed<Console>
 WorkerGlobalScope::GetConsole()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   if (!mConsole) {
     mConsole = new Console(nullptr);
+    MOZ_ASSERT(mConsole);
   }
 
-  return mConsole;
+  return mConsole.forget();
 }
 
 already_AddRefed<WorkerLocation>
