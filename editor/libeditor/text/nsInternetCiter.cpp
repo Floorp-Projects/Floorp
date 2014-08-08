@@ -171,20 +171,8 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
   uint32_t citeLevel = 0;
   const nsPromiseFlatString &tString = PromiseFlatString(aInString);
   length = tString.Length();
-#ifdef DEBUG_wrapping
-  int loopcount = 0;
-#endif
   while (posInString < length)
   {
-#ifdef DEBUG_wrapping
-    printf("Outer loop: '%s'\n",
-           NS_LossyConvertUTF16toASCII(Substring(tString, posInString,
-                                                length-posInString)).get());
-    printf("out string is now: '%s'\n",
-           NS_LossyConvertUTF16toASCII(aOutString).get());
-
-#endif
-
     // Get the new cite level here since we're at the beginning of a line
     uint32_t newCiteLevel = 0;
     while (posInString < length && tString[posInString] == gt)
@@ -265,15 +253,6 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
     // over this line of the input string to get all of it:
     while ((int32_t)posInString < nextNewline)
     {
-#ifdef DEBUG_wrapping
-      if (++loopcount > 1000)
-        NS_ASSERTION(false, "possible infinite loop in nsInternetCiter\n");
-
-      printf("Inner loop: '%s'\n",
-             NS_LossyConvertUTF16toASCII(Substring(tString, posInString,
-                                              nextNewline-posInString)).get());
-#endif
-
       // Skip over initial spaces:
       while ((int32_t)posInString < nextNewline
              && nsCRT::IsAsciiSpace(tString[posInString]))
@@ -341,9 +320,6 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
       // breaker.  Just break the line, hard.
       if (NS_FAILED(rv))
       {
-#ifdef DEBUG_akkana
-        printf("nsInternetCiter: LineBreaker not working -- breaking hard\n");
-#endif
         breakPt = eol;
       }
 
@@ -380,17 +356,8 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
         BreakLine(aOutString, outStringCol, citeLevel);
 
     } // end inner loop within one line of aInString
-#ifdef DEBUG_wrapping
-    printf("---------\nEnd inner loop: out string is now '%s'\n-----------\n",
-           NS_LossyConvertUTF16toASCII(aOutString).get());
-#endif
   } // end outer loop over lines of aInString
 
-#ifdef DEBUG_wrapping
-  printf("Final out string is now: '%s'\n",
-         NS_LossyConvertUTF16toASCII(aOutString).get());
-
-#endif
   return NS_OK;
 }
 
