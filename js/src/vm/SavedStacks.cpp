@@ -14,6 +14,7 @@
 
 #include "gc/Marking.h"
 #include "js/Vector.h"
+#include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/StringBuffer.h"
 
@@ -734,7 +735,8 @@ SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata)
     if (!cx->compartment()->savedStacks().saveCurrentStack(cx, &frame))
         return false;
     *pmetadata = frame;
-    return true;
+
+    return Debugger::onLogAllocationSite(cx, frame);
 }
 
 #ifdef JS_CRASH_DIAGNOSTICS

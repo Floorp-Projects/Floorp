@@ -388,7 +388,7 @@ class LDefinition
     //   * Physical registers.
     LAllocation output_;
 
-    static const uint32_t TYPE_BITS = 3;
+    static const uint32_t TYPE_BITS = 4;
     static const uint32_t TYPE_SHIFT = 0;
     static const uint32_t TYPE_MASK = (1 << TYPE_BITS) - 1;
     static const uint32_t POLICY_BITS = 2;
@@ -433,6 +433,8 @@ class LDefinition
         SLOTS,      // Slots/elements pointer that may be moved by minor GCs (GPR).
         FLOAT32,    // 32-bit floating-point value (FPU).
         DOUBLE,     // 64-bit floating-point value (FPU).
+        INT32X4,    // SIMD data containing four 32-bit integers (FPU).
+        FLOAT32X4,  // SIMD data containing four 32-bit floats (FPU).
 #ifdef JS_NUNBOX32
         // A type virtual register must be followed by a payload virtual
         // register, as both will be tracked as a single gcthing.
@@ -446,6 +448,7 @@ class LDefinition
     void set(uint32_t index, Type type, Policy policy) {
         JS_STATIC_ASSERT(MAX_VIRTUAL_REGISTERS <= VREG_MASK);
         bits_ = (index << VREG_SHIFT) | (policy << POLICY_SHIFT) | (type << TYPE_SHIFT);
+        JS_ASSERT_IF(!SupportsSimd, !isSimdType());
     }
 
   public:
@@ -482,6 +485,9 @@ class LDefinition
     Type type() const {
         return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK);
     }
+    bool isSimdType() const {
+        return type() == INT32X4 || type() == FLOAT32X4;
+    }
     bool isCompatibleReg(const AnyRegister &r) const {
         if (isFloatReg() && r.isFloat()) {
 #if defined(JS_CODEGEN_ARM)
@@ -505,7 +511,7 @@ class LDefinition
     }
 
     bool isFloatReg() const {
-        return type() == FLOAT32 || type() == DOUBLE;
+        return type() == FLOAT32 || type() == DOUBLE || isSimdType();
     }
     uint32_t virtualRegister() const {
         return (bits_ >> VREG_SHIFT) & VREG_MASK;
@@ -569,6 +575,10 @@ class LDefinition
             return LDefinition::GENERAL;
           case MIRType_ForkJoinContext:
             return LDefinition::GENERAL;
+          case MIRType_Int32x4:
+            return LDefinition::INT32X4;
+          case MIRType_Float32x4:
+            return LDefinition::FLOAT32X4;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected type");
         }
