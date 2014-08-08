@@ -823,9 +823,9 @@ GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
 
     ScopedGLDrawState autoStates(mGL);
     if (internalFBs) {
-        mGL->Screen()->BindDrawFB_Internal(destFB);
+        mGL->Screen()->BindFB_Internal(destFB);
     } else {
-        mGL->BindDrawFB(destFB);
+        mGL->BindFB(destFB);
     }
 
     // Does destructive things to (only!) what we just saved above.
@@ -862,9 +862,9 @@ GLBlitHelper::BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
 
     ScopedBindFramebuffer boundFB(mGL);
     if (internalFBs) {
-        mGL->Screen()->BindReadFB_Internal(srcFB);
+        mGL->Screen()->BindFB_Internal(srcFB);
     } else {
-        mGL->BindReadFB(srcFB);
+        mGL->BindFB(srcFB);
     }
 
     ScopedGLState scissor(mGL, LOCAL_GL_SCISSOR_TEST, false);

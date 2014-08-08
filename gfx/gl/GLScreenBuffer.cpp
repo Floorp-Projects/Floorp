@@ -147,17 +147,13 @@ GLScreenBuffer::BindFB(GLuint fb)
 void
 GLScreenBuffer::BindDrawFB(GLuint fb)
 {
-    if (!mGL->IsSupported(GLFeature::framebuffer_blit)) {
-        NS_WARNING("DRAW_FRAMEBUFFER requested, but unsupported.");
+    MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
 
-        mGL->raw_fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, fb);
-    } else {
-        GLuint drawFB = DrawFB();
-        mUserDrawFB = fb;
-        mInternalDrawFB = (fb == 0) ? drawFB : fb;
+    GLuint drawFB = DrawFB();
+    mUserDrawFB = fb;
+    mInternalDrawFB = (fb == 0) ? drawFB : fb;
 
-        mGL->raw_fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, mInternalDrawFB);
-    }
+    mGL->raw_fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, mInternalDrawFB);
 
 #ifdef DEBUG
     mInInternalMode_DrawFB = false;
@@ -167,17 +163,13 @@ GLScreenBuffer::BindDrawFB(GLuint fb)
 void
 GLScreenBuffer::BindReadFB(GLuint fb)
 {
-    if (!mGL->IsSupported(GLFeature::framebuffer_blit)) {
-        NS_WARNING("READ_FRAMEBUFFER requested, but unsupported.");
+    MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
 
-        mGL->raw_fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, fb);
-    } else {
-        GLuint readFB = ReadFB();
-        mUserReadFB = fb;
-        mInternalReadFB = (fb == 0) ? readFB : fb;
+    GLuint readFB = ReadFB();
+    mUserReadFB = fb;
+    mInternalReadFB = (fb == 0) ? readFB : fb;
 
-        mGL->raw_fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, mInternalReadFB);
-    }
+    mGL->raw_fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, mInternalReadFB);
 
 #ifdef DEBUG
     mInInternalMode_ReadFB = false;
@@ -185,10 +177,25 @@ GLScreenBuffer::BindReadFB(GLuint fb)
 }
 
 void
+GLScreenBuffer::BindFB_Internal(GLuint fb)
+{
+    mInternalDrawFB = mUserDrawFB = fb;
+    mInternalReadFB = mUserReadFB = fb;
+    mGL->raw_fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mInternalDrawFB);
+
+#ifdef DEBUG
+    mInInternalMode_DrawFB = true;
+    mInInternalMode_ReadFB = true;
+#endif
+}
+
+void
 GLScreenBuffer::BindDrawFB_Internal(GLuint fb)
 {
-  mInternalDrawFB = mUserDrawFB = fb;
-  mGL->raw_fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, mInternalDrawFB);
+    MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
+
+    mInternalDrawFB = mUserDrawFB = fb;
+    mGL->raw_fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, mInternalDrawFB);
 
 #ifdef DEBUG
     mInInternalMode_DrawFB = true;
@@ -198,8 +205,10 @@ GLScreenBuffer::BindDrawFB_Internal(GLuint fb)
 void
 GLScreenBuffer::BindReadFB_Internal(GLuint fb)
 {
-  mInternalReadFB = mUserReadFB = fb;
-  mGL->raw_fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, mInternalReadFB);
+    MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
+
+    mInternalReadFB = mUserReadFB = fb;
+    mGL->raw_fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, mInternalReadFB);
 
 #ifdef DEBUG
     mInInternalMode_ReadFB = true;
