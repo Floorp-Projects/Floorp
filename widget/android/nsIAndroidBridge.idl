@@ -24,8 +24,9 @@ interface nsIUITelemetryObserver : nsISupports {
                 in wstring extras);
 };
 
-[scriptable, uuid(c31331d2-afad-460f-9c66-728b8c838cec)]
+[scriptable, uuid(78ec5811-78ee-4239-a554-3303f823dbbc)]
 interface nsIAndroidBrowserApp : nsISupports {
+  readonly attribute nsIBrowserTab selectedTab;
   nsIBrowserTab getBrowserTab(in int32_t tabId);
   void getPreferences(in int32_t requestId,
                       [array, size_is(count)] in wstring prefNames,
