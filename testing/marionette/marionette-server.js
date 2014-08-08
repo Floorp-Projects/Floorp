@@ -2641,7 +2641,9 @@ BrowserObj.prototype = {
    * Closes current tab
    */
   closeTab: function BO_closeTab() {
-    if (this.tab != null && (appName != "B2G")) {
+    if (this.browser &&
+        this.browser.removeTab &&
+        this.tab != null && (appName != "B2G")) {
       this.browser.removeTab(this.tab);
       this.tab = null;
     }
