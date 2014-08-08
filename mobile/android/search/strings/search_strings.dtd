@@ -2,10 +2,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY search_jump_arrow '&#8598;'>
-
 <!ENTITY search_app_name '&brandShortName; Search'>
 <!ENTITY search_for_something 'Search for something'>
+
+<!--  Localization note (search_plus_content_description): This is the content description
+      for the "+" icon that appears at the end of search suggestions. -->
+<!ENTITY search_plus_content_description 'Add to search bar'>
 
 <!ENTITY search_pref_title 'Settings'>
 <!ENTITY search_pref_clear_history_confirmation 'History cleared'>
