@@ -62,7 +62,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    'CharTokenizer.h',
     'TimeStamp.h',
 ]
 

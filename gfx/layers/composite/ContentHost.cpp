@@ -27,7 +27,6 @@ namespace layers {
 
 ContentHostBase::ContentHostBase(const TextureInfo& aTextureInfo)
   : ContentHost(aTextureInfo)
-  , mPaintWillResample(false)
   , mInitialised(false)
 {}
 
@@ -41,8 +40,7 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
                            const gfx::Matrix4x4& aTransform,
                            const Filter& aFilter,
                            const Rect& aClipRect,
-                           const nsIntRegion* aVisibleRegion,
-                           TiledLayerProperties* aLayerProperties)
+                           const nsIntRegion* aVisibleRegion)
 {
   NS_ASSERTION(aVisibleRegion, "Requires a visible region");
 

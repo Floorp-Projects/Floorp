@@ -15,7 +15,12 @@
 class GMPAudioDecoderProxyCallback : public GMPCallbackBase {
 public:
   virtual ~GMPAudioDecoderProxyCallback() {}
-  virtual void Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp) = 0;
+  // Note: aChannelCount and aSamplesPerSecond may not be consistent from
+  // one invocation to the next.
+  virtual void Decoded(const nsTArray<int16_t>& aPCM,
+                       uint64_t aTimeStamp,
+                       uint32_t aChannelCount,
+                       uint32_t aSamplesPerSecond) = 0;
   virtual void InputDataExhausted() = 0;
   virtual void DrainComplete() = 0;
   virtual void ResetComplete() = 0;

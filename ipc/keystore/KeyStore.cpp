@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set sw=4 ts=8 et ft=cpp: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -359,8 +359,14 @@ KeyStoreConnector::GetSocketAddr(const sockaddr_any& aAddr,
 
 KeyStore::KeyStore()
 {
+  MOZ_COUNT_CTOR(KeyStore);
   ::startKeyStoreService();
   Listen();
+}
+
+KeyStore::~KeyStore()
+{
+  MOZ_COUNT_DTOR(KeyStore);
 }
 
 void

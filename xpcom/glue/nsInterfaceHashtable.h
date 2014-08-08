@@ -29,8 +29,8 @@ public:
   typedef nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*> base_type;
 
   nsInterfaceHashtable() {}
-  explicit nsInterfaceHashtable(uint32_t aInitSize)
-    : nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>(aInitSize)
+  explicit nsInterfaceHashtable(uint32_t aInitLength)
+    : nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>(aInitLength)
   {
   }
 

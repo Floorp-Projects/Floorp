@@ -86,9 +86,9 @@ bool HTMLFormElement::gPasswordManagerInitialized = false;
 HTMLFormElement::HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mControls(new HTMLFormControlsCollection(MOZ_THIS_IN_INITIALIZER_LIST())),
-    mSelectedRadioButtons(4),
-    mRequiredRadioButtonCounts(4),
-    mValueMissingRadioGroups(4),
+    mSelectedRadioButtons(2),
+    mRequiredRadioButtonCounts(2),
+    mValueMissingRadioGroups(2),
     mGeneratingSubmit(false),
     mGeneratingReset(false),
     mIsSubmitting(false),
@@ -102,8 +102,8 @@ HTMLFormElement::HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNode
     mDefaultSubmitElement(nullptr),
     mFirstSubmitInElements(nullptr),
     mFirstSubmitNotInElements(nullptr),
-    mImageNameLookupTable(FORM_CONTROL_LIST_HASHTABLE_SIZE),
-    mPastNameLookupTable(FORM_CONTROL_LIST_HASHTABLE_SIZE),
+    mImageNameLookupTable(FORM_CONTROL_LIST_HASHTABLE_LENGTH),
+    mPastNameLookupTable(FORM_CONTROL_LIST_HASHTABLE_LENGTH),
     mInvalidElementsCount(0),
     mEverTriedInvalidSubmit(false)
 {

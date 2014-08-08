@@ -30,9 +30,9 @@ class JSObject2WrappedJSMap
                         js::SystemAllocPolicy> Map;
 
 public:
-    static JSObject2WrappedJSMap* newMap(int size) {
+    static JSObject2WrappedJSMap* newMap(int length) {
         JSObject2WrappedJSMap* map = new JSObject2WrappedJSMap();
-        if (map && map->mTable.init(size))
+        if (map && map->mTable.init(length))
             return map;
         delete map;
         return nullptr;
@@ -106,7 +106,7 @@ public:
         XPCWrappedNative* value;
     };
 
-    static Native2WrappedNativeMap* newMap(int size);
+    static Native2WrappedNativeMap* newMap(int length);
 
     inline XPCWrappedNative* Find(nsISupports* Obj)
     {
@@ -177,7 +177,7 @@ public:
         static const struct PLDHashTableOps sOps;
     };
 
-    static IID2WrappedJSClassMap* newMap(int size);
+    static IID2WrappedJSClassMap* newMap(int length);
 
     inline nsXPCWrappedJSClass* Find(REFNSIID iid)
     {
@@ -234,7 +234,7 @@ public:
         static const struct PLDHashTableOps sOps;
     };
 
-    static IID2NativeInterfaceMap* newMap(int size);
+    static IID2NativeInterfaceMap* newMap(int length);
 
     inline XPCNativeInterface* Find(REFNSIID iid)
     {
@@ -294,7 +294,7 @@ public:
         XPCNativeSet* value;
     };
 
-    static ClassInfo2NativeSetMap* newMap(int size);
+    static ClassInfo2NativeSetMap* newMap(int length);
 
     inline XPCNativeSet* Find(nsIClassInfo* info)
     {
@@ -354,7 +354,7 @@ public:
         XPCWrappedNativeProto* value;
     };
 
-    static ClassInfo2WrappedNativeProtoMap* newMap(int size);
+    static ClassInfo2WrappedNativeProtoMap* newMap(int length);
 
     inline XPCWrappedNativeProto* Find(nsIClassInfo* info)
     {
@@ -419,7 +419,7 @@ public:
         static const struct PLDHashTableOps sOps;
     };
 
-    static NativeSetMap* newMap(int size);
+    static NativeSetMap* newMap(int length);
 
     inline XPCNativeSet* Find(XPCNativeSetKey* key)
     {
@@ -496,7 +496,7 @@ public:
         static const struct PLDHashTableOps sOps;
     };
 
-    static IID2ThisTranslatorMap* newMap(int size);
+    static IID2ThisTranslatorMap* newMap(int length);
 
     inline nsIXPCFunctionThisTranslator* Find(REFNSIID iid)
     {
@@ -557,7 +557,7 @@ public:
         static const struct PLDHashTableOps sOps;
     };
 
-    static XPCNativeScriptableSharedMap* newMap(int size);
+    static XPCNativeScriptableSharedMap* newMap(int length);
 
     bool GetNewOrUsed(uint32_t flags, char* name, uint32_t interfacesBitmap,
                       XPCNativeScriptableInfo* si);
@@ -579,7 +579,7 @@ private:
 class XPCWrappedNativeProtoMap
 {
 public:
-    static XPCWrappedNativeProtoMap* newMap(int size);
+    static XPCWrappedNativeProtoMap* newMap(int length);
 
     inline XPCWrappedNativeProto* Add(XPCWrappedNativeProto* proto)
     {
@@ -620,9 +620,9 @@ class JSObject2JSObjectMap
                         js::SystemAllocPolicy> Map;
 
 public:
-    static JSObject2JSObjectMap* newMap(int size) {
+    static JSObject2JSObjectMap* newMap(int length) {
         JSObject2JSObjectMap* map = new JSObject2JSObjectMap();
-        if (map && map->mTable.init(size))
+        if (map && map->mTable.init(length))
             return map;
         delete map;
         return nullptr;

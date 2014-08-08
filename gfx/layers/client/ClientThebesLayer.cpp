@@ -105,7 +105,7 @@ ClientThebesLayer::PaintThebes()
 }
 
 void
-ClientThebesLayer::RenderLayer(ReadbackProcessor *aReadback)
+ClientThebesLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
 {
   if (GetMaskLayer()) {
     ToClientLayer(GetMaskLayer())->RenderLayer();

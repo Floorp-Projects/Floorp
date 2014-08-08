@@ -381,8 +381,8 @@ public:
   nsIWidget* GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const;
 
 private:
-  nsView(nsViewManager* aViewManager = nullptr,
-          nsViewVisibility aVisibility = nsViewVisibility_kShow);
+  explicit nsView(nsViewManager* aViewManager = nullptr,
+                  nsViewVisibility aVisibility = nsViewVisibility_kShow);
 
   bool ForcedRepaint() { return mForcedRepaint; }
 

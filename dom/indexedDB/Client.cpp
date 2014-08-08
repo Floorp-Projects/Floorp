@@ -61,7 +61,7 @@ Client::InitOrigin(PersistenceType aPersistenceType, const nsACString& aGroup,
   // and also get the usage.
 
   nsAutoTArray<nsString, 20> subdirsToProcess;
-  nsAutoTArray<nsCOMPtr<nsIFile> , 20> unknownFiles;
+  nsAutoTArray<nsCOMPtr<nsIFile>, 20> unknownFiles;
   nsTHashtable<nsStringHashKey> validSubdirs(20);
 
   nsCOMPtr<nsISimpleEnumerator> entries;

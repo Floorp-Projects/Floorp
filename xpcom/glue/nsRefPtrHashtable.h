@@ -29,8 +29,8 @@ public:
   typedef nsBaseHashtable<KeyClass, nsRefPtr<RefPtr>, RefPtr*> base_type;
 
   nsRefPtrHashtable() {}
-  explicit nsRefPtrHashtable(uint32_t aInitSize)
-    : nsBaseHashtable<KeyClass, nsRefPtr<RefPtr>, RefPtr*>(aInitSize)
+  explicit nsRefPtrHashtable(uint32_t aInitLength)
+    : nsBaseHashtable<KeyClass, nsRefPtr<RefPtr>, RefPtr*>(aInitLength)
   {
   }
 

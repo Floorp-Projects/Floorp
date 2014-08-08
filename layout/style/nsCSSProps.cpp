@@ -115,13 +115,13 @@ static nsCSSProperty gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 };
 
 nsStaticCaseInsensitiveNameTable*
-CreateStaticTable(const char* const aRawTable[], int32_t aSize)
+CreateStaticTable(const char* const aRawTable[], int32_t aLength)
 {
   auto table = new nsStaticCaseInsensitiveNameTable();
   if (table) {
 #ifdef DEBUG
     // let's verify the table...
-    for (int32_t index = 0; index < aSize; ++index) {
+    for (int32_t index = 0; index < aLength; ++index) {
       nsAutoCString temp1(aRawTable[index]);
       nsAutoCString temp2(aRawTable[index]);
       ToLowerCase(temp1);
@@ -131,7 +131,7 @@ CreateStaticTable(const char* const aRawTable[], int32_t aSize)
                         "underscore char in case insensitive name table");
     }
 #endif
-    table->Init(aRawTable, aSize);
+    table->Init(aRawTable, aLength);
   }
   return table;
 }
@@ -1122,6 +1122,15 @@ const KTableValue nsCSSProps::kAlignSelfKTable[] = {
   eCSSKeyword_baseline,   NS_STYLE_ALIGN_ITEMS_BASELINE,
   eCSSKeyword_stretch,    NS_STYLE_ALIGN_ITEMS_STRETCH,
   eCSSKeyword_auto,       NS_STYLE_ALIGN_SELF_AUTO,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kFlexBasisKTable[] = {
+  eCSSKeyword__moz_max_content, NS_STYLE_WIDTH_MAX_CONTENT,
+  eCSSKeyword__moz_min_content, NS_STYLE_WIDTH_MIN_CONTENT,
+  eCSSKeyword__moz_fit_content, NS_STYLE_WIDTH_FIT_CONTENT,
+  eCSSKeyword__moz_available,   NS_STYLE_WIDTH_AVAILABLE,
+  eCSSKeyword_main_size,        NS_STYLE_FLEX_BASIS_MAIN_SIZE,
   eCSSKeyword_UNKNOWN,-1
 };
 

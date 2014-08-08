@@ -129,27 +129,27 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
 
 bool
 nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[],
-                                       int32_t aCount)
+                                       int32_t aLength)
 {
   NS_ASSERTION(!mNameArray, "double Init");
   NS_ASSERTION(!mNameTable.ops, "double Init");
   NS_ASSERTION(aNames, "null name table");
-  NS_ASSERTION(aCount, "0 count");
+  NS_ASSERTION(aLength, "0 length");
 
   mNameArray = (nsDependentCString*)
-    nsMemory::Alloc(aCount * sizeof(nsDependentCString));
+    nsMemory::Alloc(aLength * sizeof(nsDependentCString));
   if (!mNameArray) {
     return false;
   }
 
   if (!PL_DHashTableInit(&mNameTable, &nametable_CaseInsensitiveHashTableOps,
-                         nullptr, sizeof(NameTableEntry), aCount,
-                         fallible_t())) {
+                         nullptr, sizeof(NameTableEntry), fallible_t(),
+                         aLength)) {
     mNameTable.ops = nullptr;
     return false;
   }
 
-  for (int32_t index = 0; index < aCount; ++index) {
+  for (int32_t index = 0; index < aLength; ++index) {
     const char* raw = aNames[index];
 #ifdef DEBUG
     {

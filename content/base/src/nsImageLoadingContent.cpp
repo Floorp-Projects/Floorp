@@ -169,9 +169,8 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
       aRequest->GetImageErrorCode(&errorCode);
 
       /* Handle image not loading error because source was a tracking URL.
-       * (Safebrowinsg) We make a note of this image node by including it
-       * in a dedicated array of blocked tracking nodes under its parent
-       * document.
+       * We make a note of this image node by including it in a dedicated
+       * array of blocked tracking nodes under its parent document.
        */
       if (errorCode == NS_ERROR_TRACKING_URI) {
         nsCOMPtr<nsIContent> thisNode

@@ -66,11 +66,7 @@ public:
         continue;
       }
 
-      if (child->GetType() != TYPE_THEBES) {
-        ToClientLayer(child)->RenderLayer();
-      } else {
-        static_cast<ClientThebesLayer*>(child)->RenderLayer(&readback);
-      }
+      ToClientLayer(child)->RenderLayerWithReadback(&readback);
 
       if (!ClientManager()->GetRepeatTransaction() &&
           !child->GetInvalidRegion().IsEmpty()) {

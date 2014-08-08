@@ -223,8 +223,7 @@ public:
                  const gfx::Matrix4x4& aTransform,
                  const gfx::Filter& aFilter,
                  const gfx::Rect& aClipRect,
-                 const nsIntRegion* aVisibleRegion = nullptr,
-                 TiledLayerProperties* aLayerProperties = nullptr);
+                 const nsIntRegion* aVisibleRegion = nullptr);
 
   virtual CompositableType GetType() { return CompositableType::BUFFER_TILED; }
 

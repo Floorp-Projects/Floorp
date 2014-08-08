@@ -595,7 +595,7 @@ protected:
 public:
   class ThebesLayerItemsEntry : public nsPtrHashKey<ThebesLayer> {
   public:
-    ThebesLayerItemsEntry(const ThebesLayer *key)
+    explicit ThebesLayerItemsEntry(const ThebesLayer *key)
       : nsPtrHashKey<ThebesLayer>(key)
       , mContainerLayerFrame(nullptr)
       , mLastCommonClipCount(0)
