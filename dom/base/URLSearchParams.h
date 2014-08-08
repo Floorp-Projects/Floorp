@@ -18,12 +18,14 @@
 namespace mozilla {
 namespace dom {
 
+class URLSearchParams;
+
 class URLSearchParamsObserver : public nsISupports
 {
 public:
   virtual ~URLSearchParamsObserver() {}
 
-  virtual void URLSearchParamsUpdated() = 0;
+  virtual void URLSearchParamsUpdated(URLSearchParams* aFromThis) = 0;
 };
 
 class URLSearchParams MOZ_FINAL : public nsISupports,
@@ -59,6 +61,7 @@ public:
 
   void AddObserver(URLSearchParamsObserver* aObserver);
   void RemoveObserver(URLSearchParamsObserver* aObserver);
+  void RemoveObservers();
 
   void Serialize(nsAString& aValue) const;
 

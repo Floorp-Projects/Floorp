@@ -15,7 +15,7 @@
 
 [NoInterfaceObject,
  Exposed=(Window, Worker)]
-interface URLUtilsNoSearchParams {
+interface URLUtils {
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute DOMString href;
   [Throws, CrossOriginWritable=Location]
@@ -39,18 +39,13 @@ interface URLUtilsNoSearchParams {
            attribute DOMString pathname;
   [Throws]
            attribute DOMString search;
-  // searchParams should go here once Location implements it.  See bug 1037715.
+
+           attribute URLSearchParams searchParams;
+
   [Throws]
            attribute DOMString hash;
 
   // Bug 824857 should remove this.
   [Throws]
   stringifier;
-};
-
-[NoInterfaceObject,
- Exposed=(Window, Worker)]
-interface URLUtils : URLUtilsNoSearchParams
-{
-           attribute URLSearchParams searchParams;
 };
