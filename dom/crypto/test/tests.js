@@ -1325,6 +1325,35 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Test that RSA-OAEP encrypt/decrypt accepts strings as AlgorithmIdentifiers",
+  function () {
+    var that = this;
+    var alg = {
+      name: "RSA-OAEP",
+      hash: "SHA-256",
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+    };
+
+    var privKey, pubKey, data = crypto.getRandomValues(new Uint8Array(128));
+    function setKey(x) { pubKey = x.publicKey; privKey = x.privateKey; }
+    function doEncrypt() {
+      return crypto.subtle.encrypt("RSA-OAEP", pubKey, data);
+    }
+    function doDecrypt(x) {
+      return crypto.subtle.decrypt("RSA-OAEP", privKey, x);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"])
+      .then(setKey)
+      .then(doEncrypt)
+      .then(doDecrypt)
+      .then(memcmp_complete(that, data), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "Key wrap known answer, using AES-GCM",
   function () {
     var that = this;

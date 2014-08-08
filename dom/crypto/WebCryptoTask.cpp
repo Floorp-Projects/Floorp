@@ -863,15 +863,19 @@ public:
       mStrength = PK11_GetPrivateModulusLen(mPrivKey);
     }
 
-    RootedDictionary<RsaOaepParams> params(aCx);
-    mEarlyRv = Coerce(aCx, params, aAlgorithm);
-    if (NS_FAILED(mEarlyRv)) {
-      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
-      return;
-    }
+    // The algorithm could just be given as a string
+    // in which case there would be no label specified.
+    if (!aAlgorithm.IsString()) {
+      RootedDictionary<RsaOaepParams> params(aCx);
+      mEarlyRv = Coerce(aCx, params, aAlgorithm);
+      if (NS_FAILED(mEarlyRv)) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
+      }
 
-    if (params.mLabel.WasPassed() && !params.mLabel.Value().IsNull()) {
-      ATTEMPT_BUFFER_INIT(mLabel, params.mLabel.Value().Value());
+      if (params.mLabel.WasPassed() && !params.mLabel.Value().IsNull()) {
+        ATTEMPT_BUFFER_INIT(mLabel, params.mLabel.Value().Value());
+      }
     }
     // Otherwise mLabel remains the empty octet string, as intended
 
