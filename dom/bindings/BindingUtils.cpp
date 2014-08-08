@@ -43,6 +43,7 @@
 #include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "WorkerPrivate.h"
+#include "nsDOMClassInfo.h"
 
 namespace mozilla {
 namespace dom {
@@ -2559,6 +2560,34 @@ void
 CreateGlobalOptions<nsGlobalWindow>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
 {
   xpc::TraceXPCGlobal(aTrc, aObj);
+}
+
+static bool sRegisteredDOMNames = false;
+
+nsresult
+RegisterDOMNames()
+{
+  if (sRegisteredDOMNames) {
+    return NS_OK;
+  }
+
+  nsresult rv = nsDOMClassInfo::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsDOMClassInfo");
+    return rv;
+  }
+
+  // Register new DOM bindings
+  nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
+  if (!nameSpaceManager) {
+    NS_ERROR("Could not initialize nsScriptNameSpaceManager");
+    return NS_ERROR_FAILURE;
+  }
+  mozilla::dom::Register(nameSpaceManager);
+
+  sRegisteredDOMNames = true;
+
+  return NS_OK;
 }
 
 /* static */
