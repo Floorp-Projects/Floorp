@@ -73,6 +73,21 @@ class TestCcacheStats(unittest.TestCase):
         stats_diff = stats2 - stats1
         self.assertEqual(stats_diff.hit_rates(), (0.9, 0.05, 0.05))
 
+    def test_stats_contains_data(self):
+        stats0 = CCacheStats(self.STAT0)
+        stats1 = CCacheStats(self.STAT1)
+        stats2 = CCacheStats(self.STAT2)
+        stats_diff_zero = stats1 - stats1
+        stats_diff_negative1 = stats0 - stats1
+        stats_diff_negative2 = stats1 - stats2
+
+        self.assertFalse(stats0)
+        self.assertTrue(stats1)
+        self.assertTrue(stats2)
+        self.assertFalse(stats_diff_zero)
+        self.assertFalse(stats_diff_negative1)
+        self.assertFalse(stats_diff_negative2)
+
 
 if __name__ == '__main__':
     main()
