@@ -1046,14 +1046,14 @@ toolbarpaletteitem[dragover] {
 
 #customization-palette:not([hidden]) {
   display: block;
-  flex: 1 1 auto;
+  flex: 1 1 main-size;
   overflow: auto;
   min-height: 3em;
 }
 
 #customization-footer-spacer,
 #customization-spacer {
-  flex: 1 1 auto;
+  flex: 1 1 main-size;
 }
 
 #customization-footer {

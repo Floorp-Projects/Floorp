@@ -1130,6 +1130,7 @@ const KTableValue nsCSSProps::kFlexBasisKTable[] = {
   eCSSKeyword__moz_min_content, NS_STYLE_WIDTH_MIN_CONTENT,
   eCSSKeyword__moz_fit_content, NS_STYLE_WIDTH_FIT_CONTENT,
   eCSSKeyword__moz_available,   NS_STYLE_WIDTH_AVAILABLE,
+  eCSSKeyword_main_size,        NS_STYLE_FLEX_BASIS_MAIN_SIZE,
   eCSSKeyword_UNKNOWN,-1
 };
 
