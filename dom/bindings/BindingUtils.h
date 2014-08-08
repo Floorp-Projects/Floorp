@@ -2808,6 +2808,9 @@ struct CreateGlobalOptions<nsGlobalWindow>
   static bool PostCreateGlobal(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 };
 
+nsresult
+RegisterDOMNames();
+
 template <class T, ProtoGetter GetProto>
 bool
 CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
