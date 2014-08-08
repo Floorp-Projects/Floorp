@@ -429,6 +429,7 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
 #undef NS_DEFINE_CONSTRUCTOR_FUNC_DATA
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
+nsIScriptSecurityManager *nsDOMClassInfo::sSecMan = nullptr;
 bool nsDOMClassInfo::sIsInitialized = false;
 
 
@@ -779,10 +780,18 @@ nsDOMClassInfo::Init()
   nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  NS_ADDREF(sXPConnect = nsContentUtils::XPConnect());
+  nsresult rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXPCFunctionThisTranslator> elt = new nsEventListenerThisTranslator();
   sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener), elt);
+
+  nsCOMPtr<nsIScriptSecurityManager> sm =
+    do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sSecMan = sm;
+  NS_ADDREF(sSecMan);
 
   AutoSafeJSContext cx;
 
@@ -1033,6 +1042,9 @@ nsDOMClassInfo::Init()
   }
 
   RegisterExternalClasses();
+
+  // Register new DOM bindings
+  mozilla::dom::Register(nameSpaceManager);
 
   sIsInitialized = true;
 
@@ -1506,12 +1518,16 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
 nsIClassInfo *
 NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID)
 {
-  MOZ_ASSERT(nsDOMClassInfo::sIsInitialized);
-
   if (aID >= eDOMClassInfoIDCount) {
     NS_ERROR("Bad ID!");
 
     return nullptr;
+  }
+
+  if (!nsDOMClassInfo::sIsInitialized) {
+    nsresult rv = nsDOMClassInfo::Init();
+
+    NS_ENSURE_SUCCESS(rv, nullptr);
   }
 
   if (!sClassInfoData[aID].mCachedClassInfo) {
@@ -1573,6 +1589,7 @@ nsDOMClassInfo::ShutDown()
   sWrappedJSObject_id = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
+  NS_IF_RELEASE(sSecMan);
   sIsInitialized = false;
 }
 
