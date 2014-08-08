@@ -2524,10 +2524,10 @@ if test "$GNU_CC" -a "$OS_TARGET" != WINNT; then
   *)
     case $GCC_VERSION in
     4.4*|4.6*)
-      VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden_dso_handle.h'
+      VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(MOZILLA_DIR)/config/gcc_hidden_dso_handle.h'
       ;;
     *)
-      VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+      VISIBILITY_FLAGS='-I$(DIST)/system_wrappers -include $(MOZILLA_DIR)/config/gcc_hidden.h'
       ;;
     esac
     WRAP_SYSTEM_INCLUDES=1
@@ -9034,10 +9034,13 @@ unset CONFIG_FILES
 
 # Run all configure scripts specified by a subconfigure
 if test -n "$_subconfigure_subdir"; then
+  _save_srcdir="$srcdir"
+  srcdir="$srcdir/.."
   _save_ac_configure_args="$ac_configure_args"
   ac_configure_args="$_subconfigure_config_args"
   AC_OUTPUT_SUBDIRS("$_subconfigure_subdir")
   ac_configure_args="$_save_ac_configure_args"
+  srcdir="$_save_srcdir"
 fi
 
 # No need to run subconfigures when building with LIBXUL_SDK_DIR

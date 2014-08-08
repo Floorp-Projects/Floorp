@@ -227,8 +227,7 @@ add_tier_dir('t1', 'bat')
         with self.assertRaises(SandboxLoadError) as se:
             sandbox.exec_file('relative.build')
 
-        expected = mozpath.join(test_data_path, 'moz.build')
-        self.assertEqual(se.exception.illegal_path, expected)
+        self.assertEqual(se.exception.illegal_path, '../moz.build')
 
     def test_include_error_stack(self):
         # Ensure the path stack is reported properly in exceptions.
