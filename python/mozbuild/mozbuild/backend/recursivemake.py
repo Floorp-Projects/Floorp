@@ -89,7 +89,8 @@ class BackendMakeFile(object):
     actually change. We use FileAvoidWrite to accomplish this.
     """
 
-    def __init__(self, srcdir, objdir, environment, topobjdir):
+    def __init__(self, srcdir, objdir, environment, topsrcdir, topobjdir):
+        self.topsrcdir = topsrcdir
         self.srcdir = srcdir
         self.objdir = objdir
         self.relobjdir = mozpath.relpath(objdir, topobjdir)
@@ -329,7 +330,7 @@ class RecursiveMakeBackend(CommonBackend):
         if obj.objdir not in self._backend_files:
             self._backend_files[obj.objdir] = \
                 BackendMakeFile(obj.srcdir, obj.objdir, obj.config,
-                    self.environment.topobjdir)
+                    obj.topsrcdir, self.environment.topobjdir)
         backend_file = self._backend_files[obj.objdir]
 
         CommonBackend.consume_object(self, obj)
@@ -696,7 +697,7 @@ class RecursiveMakeBackend(CommonBackend):
                 obj = self.Substitution()
                 obj.output_path = makefile
                 obj.input_path = makefile_in
-                obj.topsrcdir = bf.environment.topsrcdir
+                obj.topsrcdir = backend_file.topsrcdir
                 obj.topobjdir = bf.environment.topobjdir
                 obj.config = bf.environment
                 self._create_makefile(obj, stub=stub)
