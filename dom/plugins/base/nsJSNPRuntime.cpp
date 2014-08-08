@@ -12,6 +12,7 @@
 #include "nsJSNPRuntime.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
+#include "nsIGlobalObject.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
@@ -608,11 +609,16 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
          uint32_t argCount, bool ctorCall, NPVariant *result)
 {
   NPP npp = NPPStack::Peek();
-  JSContext *cx = GetJSContext(npp);
 
-  if (!cx) {
+  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalObject(npp);
+  if (NS_WARN_IF(!globalObject)) {
     return false;
   }
+
+  // We're about to run script via JS_CallFunctionValue, so we need an
+  // AutoEntryScript. NPAPI plugins are Gecko-specific and not in any spec.
+  dom::AutoEntryScript aes(globalObject);
+  JSContext *cx = aes.cx();
 
   if (!npobj || !result) {
     ThrowJSException(cx, "Null npobj, or result in doInvoke!");
@@ -625,8 +631,6 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
 
-  nsCxPusher pusher;
-  pusher.Push(cx);
   JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
   JSAutoCompartment ac(cx, jsobj);
   JS::Rooted<JS::Value> fv(cx);
