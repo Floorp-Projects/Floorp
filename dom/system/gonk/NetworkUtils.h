@@ -34,7 +34,6 @@ public:
     mDomain = aOther.mDomain;
     mGateway = aOther.mGateway;
     mGateways = aOther.mGateways;
-    mHostnames = aOther.mHostnames;
     mId = aOther.mId;
     mIfname = aOther.mIfname;
     mPrefixLength = aOther.mPrefixLength;
@@ -107,7 +106,6 @@ public:
     COPY_OPT_STRING_FIELD(mDomain, EmptyString())
     COPY_OPT_STRING_FIELD(mGateway, EmptyString())
     COPY_SEQUENCE_FIELD(mGateways, nsString)
-    COPY_SEQUENCE_FIELD(mHostnames, nsString)
     COPY_OPT_STRING_FIELD(mIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mIp, EmptyString())
     COPY_OPT_FIELD(mPrefixLength, 0)
@@ -154,7 +152,6 @@ public:
   nsString mDomain;
   nsString mGateway;
   nsTArray<nsString> mGateways;
-  nsTArray<nsString> mHostnames;
   nsString mIfname;
   nsString mIp;
   uint32_t mPrefixLength;
