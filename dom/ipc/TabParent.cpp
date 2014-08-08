@@ -714,7 +714,7 @@ PContentPermissionRequestParent*
 TabParent::AllocPContentPermissionRequestParent(const InfallibleTArray<PermissionRequest>& aRequests,
                                                 const IPC::Principal& aPrincipal)
 {
-  return CreateContentPermissionRequestParent(aRequests, mFrameElement, aPrincipal);
+  return nsContentPermissionUtils::CreateContentPermissionRequestParent(aRequests, mFrameElement, aPrincipal);
 }
 
 bool

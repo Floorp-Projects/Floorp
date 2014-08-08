@@ -35,15 +35,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
                                   "resource://gre/modules/Metrics.jsm");
 
-// CertUtils.jsm doesn't expose a single "CertUtils" object like a normal .jsm
-// would.
-XPCOMUtils.defineLazyGetter(this, "CertUtils",
-  function() {
-    var mod = {};
-    Cu.import("resource://gre/modules/CertUtils.jsm", mod);
-    return mod;
-  });
-
 XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
                                    "@mozilla.org/xre/app-info;1",
                                    "nsICrashReporter");
@@ -63,9 +54,7 @@ const PREF_LOGGING              = "logging";
 const PREF_LOGGING_LEVEL        = PREF_LOGGING + ".level"; // experiments.logging.level
 const PREF_LOGGING_DUMP         = PREF_LOGGING + ".dump"; // experiments.logging.dump
 const PREF_MANIFEST_URI         = "manifest.uri"; // experiments.logging.manifest.uri
-const PREF_MANIFEST_CHECKCERT   = "manifest.cert.checkAttributes"; // experiments.manifest.cert.checkAttributes
-const PREF_MANIFEST_REQUIREBUILTIN = "manifest.cert.requireBuiltin"; // experiments.manifest.cert.requireBuiltin
-const PREF_FORCE_SAMPLE = "force-sample-value"; // experiments.force-sample-value
+const PREF_FORCE_SAMPLE         = "force-sample-value"; // experiments.force-sample-value
 
 const PREF_HEALTHREPORT_ENABLED = "datareporting.healthreport.service.enabled";
 
@@ -961,20 +950,6 @@ Experiments.Experiments.prototype = {
       if (xhr.status !== 200 && xhr.state !== 0) {
         log.error("httpGetRequest::onLoad() - Request to " + url + " returned status " + xhr.status);
         deferred.reject(new Error("Experiments - XHR status for " + url + " is " + xhr.status));
-        return;
-      }
-
-      let certs = null;
-      if (gPrefs.get(PREF_MANIFEST_CHECKCERT, true)) {
-        certs = CertUtils.readCertPrefs(PREF_BRANCH + "manifest.certs.");
-      }
-      try {
-        let allowNonBuiltin = !gPrefs.get(PREF_MANIFEST_REQUIREBUILTIN, true);
-        CertUtils.checkCert(xhr.channel, allowNonBuiltin, certs);
-      }
-      catch (e) {
-        log.error("manifest fetch failed certificate checks", [e]);
-        deferred.reject(new Error("Experiments - manifest fetch failed certificate checks: " + e));
         return;
       }
 

@@ -30,4 +30,6 @@ interface PerformanceResourceTiming : PerformanceEntry
   readonly attribute DOMHighResTimeStamp requestStart;
   readonly attribute DOMHighResTimeStamp responseStart;
   readonly attribute DOMHighResTimeStamp responseEnd;
+
+  jsonifier;
 };
