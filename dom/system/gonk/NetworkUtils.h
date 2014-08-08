@@ -112,7 +112,7 @@ public:
     COPY_OPT_STRING_FIELD(mOldIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mMode, EmptyString())
     COPY_OPT_FIELD(mReport, false)
-    COPY_OPT_FIELD(mIsAsync, true)
+    COPY_OPT_FIELD(mIsAsync, false)
     COPY_OPT_FIELD(mEnabled, false)
     COPY_OPT_STRING_FIELD(mWifictrlinterfacename, EmptyString())
     COPY_OPT_STRING_FIELD(mInternalIfname, EmptyString())
@@ -250,24 +250,24 @@ private:
   /**
    * Commands supported by NetworkUtils.
    */
-  bool setDNS(NetworkParams& aOptions);
-  bool setDefaultRouteAndDNS(NetworkParams& aOptions);
-  bool addHostRoute(NetworkParams& aOptions);
-  bool removeDefaultRoute(NetworkParams& aOptions);
-  bool removeHostRoute(NetworkParams& aOptions);
-  bool removeHostRoutes(NetworkParams& aOptions);
-  bool removeNetworkRoute(NetworkParams& aOptions);
-  bool addSecondaryRoute(NetworkParams& aOptions);
-  bool removeSecondaryRoute(NetworkParams& aOptions);
-  bool setNetworkInterfaceAlarm(NetworkParams& aOptions);
-  bool enableNetworkInterfaceAlarm(NetworkParams& aOptions);
-  bool disableNetworkInterfaceAlarm(NetworkParams& aOptions);
-  bool setWifiOperationMode(NetworkParams& aOptions);
-  bool setDhcpServer(NetworkParams& aOptions);
-  bool setWifiTethering(NetworkParams& aOptions);
-  bool setUSBTethering(NetworkParams& aOptions);
-  bool enableUsbRndis(NetworkParams& aOptions);
-  bool updateUpStream(NetworkParams& aOptions);
+  int32_t setDNS(NetworkParams& aOptions);
+  int32_t setDefaultRouteAndDNS(NetworkParams& aOptions);
+  int32_t addHostRoute(NetworkParams& aOptions);
+  int32_t removeDefaultRoute(NetworkParams& aOptions);
+  int32_t removeHostRoute(NetworkParams& aOptions);
+  int32_t removeHostRoutes(NetworkParams& aOptions);
+  int32_t removeNetworkRoute(NetworkParams& aOptions);
+  int32_t addSecondaryRoute(NetworkParams& aOptions);
+  int32_t removeSecondaryRoute(NetworkParams& aOptions);
+  int32_t setNetworkInterfaceAlarm(NetworkParams& aOptions);
+  int32_t enableNetworkInterfaceAlarm(NetworkParams& aOptions);
+  int32_t disableNetworkInterfaceAlarm(NetworkParams& aOptions);
+  int32_t setWifiOperationMode(NetworkParams& aOptions);
+  int32_t setDhcpServer(NetworkParams& aOptions);
+  int32_t setWifiTethering(NetworkParams& aOptions);
+  int32_t setUSBTethering(NetworkParams& aOptions);
+  int32_t enableUsbRndis(NetworkParams& aOptions);
+  int32_t updateUpStream(NetworkParams& aOptions);
 
   /**
    * function pointer array holds all netd commands should be executed
