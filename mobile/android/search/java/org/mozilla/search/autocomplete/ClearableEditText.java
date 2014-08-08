@@ -94,6 +94,10 @@ public class ClearableEditText extends FrameLayout {
         editText.setSelection(text.length());
     }
 
+    public String getText() {
+        return editText.getText().toString();
+    }
+
     public void setActive(boolean active) {
         if (this.active == active) {
             return;
