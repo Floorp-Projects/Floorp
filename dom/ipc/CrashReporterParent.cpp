@@ -168,21 +168,31 @@ CrashReporterParent::NotifyCrashService()
         return;
     }
 
-    if (mProcessType == GeckoProcessType_Content) {
-        crashService->AddCrash(nsICrashService::PROCESS_TYPE_CONTENT,
-                               nsICrashService::CRASH_TYPE_CRASH,
-                               mChildDumpID);
-    }
-    else if (mProcessType == GeckoProcessType_Plugin) {
-        nsAutoCString val;
-        int32_t crashType = nsICrashService::CRASH_TYPE_CRASH;
-        if (mNotes.Get(NS_LITERAL_CSTRING("PluginHang"), &val) &&
-            val.Equals(NS_LITERAL_CSTRING("1"))) {
-            crashType = nsICrashService::CRASH_TYPE_HANG;
+    int32_t processType;
+    int32_t crashType = nsICrashService::CRASH_TYPE_CRASH;
+
+    switch (mProcessType) {
+        case GeckoProcessType_Content:
+            processType = nsICrashService::PROCESS_TYPE_CONTENT;
+            break;
+        case GeckoProcessType_Plugin: {
+            processType = nsICrashService::PROCESS_TYPE_PLUGIN;
+            nsAutoCString val;
+            if (mNotes.Get(NS_LITERAL_CSTRING("PluginHang"), &val) &&
+                val.Equals(NS_LITERAL_CSTRING("1"))) {
+                crashType = nsICrashService::CRASH_TYPE_HANG;
+            }
+            break;
         }
-        crashService->AddCrash(nsICrashService::PROCESS_TYPE_PLUGIN, crashType,
-                               mChildDumpID);
+        case GeckoProcessType_GMPlugin:
+            processType = nsICrashService::PROCESS_TYPE_GMPLUGIN;
+            break;
+        default:
+            NS_ERROR("unknown process type");
+            return;
     }
+
+    crashService->AddCrash(processType, crashType, mChildDumpID);
 }
 #endif
 
