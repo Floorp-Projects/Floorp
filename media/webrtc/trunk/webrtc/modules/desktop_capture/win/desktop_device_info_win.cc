@@ -21,8 +21,9 @@ DesktopDeviceInfoWin::DesktopDeviceInfoWin() {
 DesktopDeviceInfoWin::~DesktopDeviceInfoWin() {
 }
 
-int32_t DesktopDeviceInfoWin::Init() {
 #if !defined(MULTI_MONITOR_SCREENSHARE)
+int32_t DesktopDeviceInfoWin::MultiMonitorScreenshare()
+{
   DesktopDisplayDevice *pDesktopDeviceInfo = new DesktopDisplayDevice;
   if (pDesktopDeviceInfo) {
     pDesktopDeviceInfo->setScreenId(0);
@@ -31,9 +32,33 @@ int32_t DesktopDeviceInfoWin::Init() {
 
     desktop_display_list_[pDesktopDeviceInfo->getScreenId()] = pDesktopDeviceInfo;
   }
+  return 0;
+}
+#endif
+
+int32_t DesktopDeviceInfoWin::Init() {
+#if !defined(MULTI_MONITOR_SCREENSHARE)
+  MultiMonitorScreenshare();
 #endif
 
   initializeWindowList();
+
+  return 0;
+}
+
+int32_t DesktopDeviceInfoWin::Refresh() {
+#if !defined(MULTI_MONITOR_SCREENSHARE)
+  std::map<intptr_t,DesktopDisplayDevice*>::iterator iterDevice;
+  for (iterDevice=desktop_display_list_.begin(); iterDevice!=desktop_display_list_.end(); iterDevice++){
+    DesktopDisplayDevice * pDesktopDisplayDevice = iterDevice->second;
+    delete pDesktopDisplayDevice;
+    iterDevice->second = NULL;
+  }
+  desktop_display_list_.clear();
+  MultiMonitorScreenshare();
+#endif
+
+  RefreshWindowList();
 
   return 0;
 }

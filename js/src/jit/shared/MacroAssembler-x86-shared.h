@@ -466,6 +466,39 @@ class MacroAssemblerX86Shared : public Assembler
     void convertDoubleToFloat32(FloatRegister src, FloatRegister dest) {
         cvtsd2ss(src, dest);
     }
+
+    void loadAlignedInt32x4(const Address &src, FloatRegister dest) {
+        movdqa(Operand(src), dest);
+    }
+    void storeAlignedInt32x4(FloatRegister src, const Address &dest) {
+        movdqa(src, Operand(dest));
+    }
+    void moveAlignedInt32x4(FloatRegister src, FloatRegister dest) {
+        movdqa(src, dest);
+    }
+    void loadUnalignedInt32x4(const Address &src, FloatRegister dest) {
+        movdqu(Operand(src), dest);
+    }
+    void storeUnalignedInt32x4(FloatRegister src, const Address &dest) {
+        movdqu(src, Operand(dest));
+    }
+
+    void loadAlignedFloat32x4(const Address &src, FloatRegister dest) {
+        movaps(Operand(src), dest);
+    }
+    void storeAlignedFloat32x4(FloatRegister src, const Address &dest) {
+        movaps(src, Operand(dest));
+    }
+    void moveAlignedFloat32x4(FloatRegister src, FloatRegister dest) {
+        movaps(src, dest);
+    }
+    void loadUnalignedFloat32x4(const Address &src, FloatRegister dest) {
+        movups(Operand(src), dest);
+    }
+    void storeUnalignedFloat32x4(FloatRegister src, const Address &dest) {
+        movups(src, Operand(dest));
+    }
+
     void moveFloatAsDouble(Register src, FloatRegister dest) {
         movd(src, dest);
         cvtss2sd(dest, dest);

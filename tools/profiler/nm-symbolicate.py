@@ -4,11 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys, subprocess
+import sys, subprocess, os
 
 def NMSymbolicate(library, addresses):
+  target_tools_prefix = os.environ.get("TARGET_TOOLS_PREFIX", "")
   args = [
-    "nm", "-D", "-S", library
+    target_tools_prefix + "nm", "-D", "-S", library
   ]
   nm_lines = subprocess.check_output(args).split("\n")
   symbol_table = []

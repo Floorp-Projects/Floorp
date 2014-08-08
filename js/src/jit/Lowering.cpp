@@ -2228,7 +2228,7 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck *ins)
 bool
 LIRGenerator::visitAsmJSInterruptCheck(MAsmJSInterruptCheck *ins)
 {
-    gen->setPerformsAsmJSCall();
+    gen->setPerformsCall();
 
     LAsmJSInterruptCheck *lir = new(alloc()) LAsmJSInterruptCheck(temp(),
                                                                   ins->interruptExit(),
@@ -3556,7 +3556,7 @@ LIRGenerator::visitAsmJSPassStackArg(MAsmJSPassStackArg *ins)
 bool
 LIRGenerator::visitAsmJSCall(MAsmJSCall *ins)
 {
-    gen->setPerformsAsmJSCall();
+    gen->setPerformsCall();
 
     LAllocation *args = gen->allocate<LAllocation>(ins->numOperands());
     if (!args)

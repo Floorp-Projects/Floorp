@@ -47,6 +47,8 @@ class MoveEmitterX86
     void emitGeneralMove(const MoveOperand &from, const MoveOperand &to);
     void emitFloat32Move(const MoveOperand &from, const MoveOperand &to);
     void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
+    void emitFloat32X4Move(const MoveOperand &from, const MoveOperand &to);
+    void emitInt32X4Move(const MoveOperand &from, const MoveOperand &to);
     void breakCycle(const MoveOperand &to, MoveOp::Type type);
     void completeCycle(const MoveOperand &to, MoveOp::Type type);
 
