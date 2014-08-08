@@ -1990,7 +1990,8 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
              */
             nscoord subWidth;
             // The position in the text where this run's "left part" begins.
-            const char16_t* visualLeftPart, *visualRightSide;
+            const char16_t* visualLeftPart;
+            const char16_t* visualRightSide;
             if (level & 1) {
               // One day, son, this could all be replaced with mBidiEngine.GetVisualIndex ...
               posResolve->visualIndex = visualStart + (subRunLength - (posResolve->logicalIndex + 1 - start));

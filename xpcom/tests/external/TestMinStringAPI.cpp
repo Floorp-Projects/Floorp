@@ -177,12 +177,12 @@ static void ReplaceSubstring( nsACString& str,
                               const nsACString& matchVal,
                               const nsACString& newVal )
   {
-    const char* sp, *mp, *np;
-    uint32_t sl, ml, nl;
-
-    sl = NS_CStringGetData(str, &sp);
-    ml = NS_CStringGetData(matchVal, &mp);
-    nl = NS_CStringGetData(newVal, &np);
+    const char* sp;
+    const char* mp;
+    const char* np;
+    uint32_t sl = NS_CStringGetData(str, &sp);
+    uint32_t ml = NS_CStringGetData(matchVal, &mp);
+    uint32_t nl = NS_CStringGetData(newVal, &np);
 
     for (const char* iter = sp; iter <= sp + sl - ml; ++iter)
       {
