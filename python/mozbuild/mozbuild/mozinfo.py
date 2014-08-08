@@ -88,6 +88,8 @@ def build_dict(config, env=os.environ):
     d['webm'] = bool(substs.get('MOZ_WEBM'))
     d['wave'] = bool(substs.get('MOZ_WAVE'))
 
+    d['official'] = bool(substs.get('MOZILLA_OFFICIAL'))
+
     return d
 
 

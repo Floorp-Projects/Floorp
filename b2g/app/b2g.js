@@ -309,7 +309,10 @@ pref("dom.indexedDB.warningQuota", 5);
 pref("media.preload.default", 1); // default to preload none
 pref("media.preload.auto", 2);    // preload metadata if preload=auto
 pref("media.cache_size", 4096);    // 4MB media cache
-
+#ifdef MOZ_FMP4
+// Enable/Disable Gonk Decoder Module
+pref("media.fragmented-mp4.gonk.enabled", false);
+#endif
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 3);
@@ -886,6 +889,10 @@ pref("network.sntp.timeout", 30); // In seconds.
 
 // Enable dataStore
 pref("dom.datastore.enabled", true);
+// When an entry is changed, use two timers to fire system messages in a more
+// moderate pattern.
+pref("dom.datastore.sysMsgOnChangeShortTimeoutSec", 10);
+pref("dom.datastore.sysMsgOnChangeLongTimeoutSec", 60);
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", true);
