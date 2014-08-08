@@ -15,6 +15,9 @@ Cu.import("resource://testing-common/CrashManagerTest.jsm", this);
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 DUMMY_DATE.setMilliseconds(0);
 
+const DUMMY_DATE_2 = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000);
+DUMMY_DATE_2.setMilliseconds(0);
+
 function run_test() {
   do_get_profile();
   configureLogging();
@@ -265,8 +268,13 @@ add_task(function* test_addCrash() {
   yield m.addCrash(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_HANG,
                    "plugin-hang", DUMMY_DATE);
 
+  yield m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
+                   "changing-item", DUMMY_DATE);
+  yield m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG,
+                   "changing-item", DUMMY_DATE_2);
+
   crashes = yield m.getCrashes();
-  Assert.equal(crashes.length, 6);
+  Assert.equal(crashes.length, 7);
 
   let map = new Map(crashes.map(crash => [crash.id, crash]));
 
@@ -305,6 +313,12 @@ add_task(function* test_addCrash() {
   Assert.equal(crash.crashDate, DUMMY_DATE);
   Assert.equal(crash.type, m.PROCESS_TYPE_PLUGIN + "-" + m.CRASH_TYPE_HANG);
   Assert.ok(crash.isOfType(m.PROCESS_TYPE_PLUGIN, m.CRASH_TYPE_HANG));
+
+  crash = map.get("changing-item");
+  Assert.ok(!!crash);
+  Assert.equal(crash.crashDate, DUMMY_DATE_2);
+  Assert.equal(crash.type, m.PROCESS_TYPE_CONTENT + "-" + m.CRASH_TYPE_HANG);
+  Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
 });
 
 add_task(function* test_addSubmission() {
