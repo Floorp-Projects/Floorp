@@ -373,7 +373,7 @@ BaselineScript::New(JSContext *cx, uint32_t prologueOffset, uint32_t epilogueOff
         paddedPCMappingSize +
         paddedBytecodeTypesMapSize;
 
-    uint8_t *buffer = (uint8_t *)cx->malloc_(allocBytes);
+    uint8_t *buffer = cx->zone()->pod_malloc<uint8_t>(allocBytes);
     if (!buffer)
         return nullptr;
 

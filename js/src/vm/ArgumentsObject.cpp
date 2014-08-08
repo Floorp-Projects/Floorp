@@ -157,8 +157,8 @@ struct CopyScriptFrameIterArgs
 
 template <typename CopyArgs>
 /* static */ ArgumentsObject *
-ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction callee, unsigned numActuals,
-                        CopyArgs &copy)
+ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction callee,
+                        unsigned numActuals, CopyArgs &copy)
 {
     RootedObject proto(cx, callee->global().getOrCreateObjectPrototype(cx));
     if (!proto)
@@ -188,7 +188,8 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
                         numDeletedWords * sizeof(size_t) +
                         numArgs * sizeof(Value);
 
-    ArgumentsData *data = (ArgumentsData *)cx->malloc_(numBytes);
+    ArgumentsData *data = reinterpret_cast<ArgumentsData *>(
+            cx->zone()->pod_malloc<uint8_t>(numBytes));
     if (!data)
         return nullptr;
 

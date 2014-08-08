@@ -108,14 +108,14 @@ class OrderedHashTable
         MOZ_ASSERT(!hashTable, "init must be called at most once");
 
         uint32_t buckets = initialBuckets();
-        Data **tableAlloc = static_cast<Data **>(alloc.malloc_(buckets * sizeof(Data *)));
+        Data **tableAlloc = alloc.template pod_malloc<Data *>(buckets);
         if (!tableAlloc)
             return false;
         for (uint32_t i = 0; i < buckets; i++)
             tableAlloc[i] = nullptr;
 
         uint32_t capacity = uint32_t(buckets * fillFactor());
-        Data *dataAlloc = static_cast<Data *>(alloc.malloc_(capacity * sizeof(Data)));
+        Data *dataAlloc = alloc.template pod_malloc<Data>(capacity);
         if (!dataAlloc) {
             alloc.free_(tableAlloc);
             return false;
@@ -625,14 +625,14 @@ class OrderedHashTable
         }
 
         size_t newHashBuckets = 1 << (HashNumberSizeBits - newHashShift);
-        Data **newHashTable = static_cast<Data **>(alloc.malloc_(newHashBuckets * sizeof(Data *)));
+        Data **newHashTable = alloc.template pod_malloc<Data *>(newHashBuckets);
         if (!newHashTable)
             return false;
         for (uint32_t i = 0; i < newHashBuckets; i++)
             newHashTable[i] = nullptr;
 
         uint32_t newCapacity = uint32_t(newHashBuckets * fillFactor());
-        Data *newData = static_cast<Data *>(alloc.malloc_(newCapacity * sizeof(Data)));
+        Data *newData = alloc.template pod_malloc<Data>(newCapacity);
         if (!newData) {
             alloc.free_(newHashTable);
             return false;

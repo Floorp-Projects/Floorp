@@ -695,8 +695,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     }
 
     JS_ASSERT(nslots >= 2);
-    size_t nbytes = nslots * sizeof(HeapValue);
-    dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
+    dstHeader = reinterpret_cast<ObjectElements *>(zone->pod_malloc<HeapSlot>(nslots));
     if (!dstHeader)
         CrashAtUnhandlableOOM("Failed to allocate elements while tenuring.");
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
