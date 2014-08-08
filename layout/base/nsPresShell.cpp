@@ -6983,12 +6983,16 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         nsIDocument::UnlockPointer();
       }
 
+      nsWeakFrame weakFrame(frame);
       {  // scope for scriptBlocker.
         nsAutoScriptBlocker scriptBlocker;
         GetRootPresShell()->GetDocument()->
           EnumerateSubDocuments(FlushThrottledStyles, nullptr);
       }
-      frame = GetNearestFrameContainingPresShell(this);
+
+      if (!weakFrame.IsAlive()) {
+        frame = GetNearestFrameContainingPresShell(this);
+      }
     }
 
     NS_WARN_IF_FALSE(frame, "Nothing to handle this event!");
