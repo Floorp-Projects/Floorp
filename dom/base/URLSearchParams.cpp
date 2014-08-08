@@ -238,6 +238,12 @@ URLSearchParams::RemoveObserver(URLSearchParamsObserver* aObserver)
 }
 
 void
+URLSearchParams::RemoveObservers()
+{
+  mObservers.Clear();
+}
+
+void
 URLSearchParams::Get(const nsAString& aName, nsString& aRetval)
 {
   nsTArray<nsString>* array;
@@ -387,7 +393,7 @@ URLSearchParams::NotifyObservers(URLSearchParamsObserver* aExceptObserver)
 {
   for (uint32_t i = 0; i < mObservers.Length(); ++i) {
     if (mObservers[i] != aExceptObserver) {
-      mObservers[i]->URLSearchParamsUpdated();
+      mObservers[i]->URLSearchParamsUpdated(this);
     }
   }
 }

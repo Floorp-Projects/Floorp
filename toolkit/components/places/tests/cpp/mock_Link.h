@@ -118,7 +118,7 @@ Link::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 }
 
 void
-Link::URLSearchParamsUpdated()
+Link::URLSearchParamsUpdated(URLSearchParams* aSearchParams)
 {
   NS_NOTREACHED("Unexpected call to Link::URLSearchParamsUpdated");
 }
