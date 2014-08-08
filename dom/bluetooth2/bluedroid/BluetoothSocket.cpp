@@ -811,10 +811,10 @@ BluetoothSocket::CloseDroidSocket()
   NotifyDisconnect();
 }
 
-class ConnectResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
+class ConnectSocketResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
 {
 public:
-  ConnectResultHandler(DroidSocketImpl* aImpl)
+  ConnectSocketResultHandler(DroidSocketImpl* aImpl)
   : mImpl(aImpl)
   {
     MOZ_ASSERT(mImpl);
@@ -861,7 +861,7 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
                                      aChannel,
                                      (BTSOCK_FLAG_ENCRYPT * mEncrypt) |
                                      (BTSOCK_FLAG_AUTH * mAuth),
-                                     new ConnectResultHandler(mImpl));
+                                     new ConnectSocketResultHandler(mImpl));
   return true;
 }
 
