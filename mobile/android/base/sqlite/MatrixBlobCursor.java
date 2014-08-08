@@ -17,6 +17,9 @@
 
 package org.mozilla.gecko.sqlite;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
@@ -24,29 +27,26 @@ import android.database.AbstractCursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.util.Log;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
-/*
- * Android's AbstractCursor throws on getBlob()
- * and MatrixCursor forgot to override it. This was fixed
- * at some point but old devices are still SOL.
- * Oh, and everything in MatrixCursor is private instead of
- * protected, so we need to entirely duplicate it here,
- * instad of just being able to add the missing method.
- */
 /**
  * A mutable cursor implementation backed by an array of {@code Object}s. Use
  * {@link #newRow()} to add rows. Automatically expands internal capacity
  * as needed.
+ *
+ * This class provides one missing feature from Android's MatrixCursor:
+ * the implementation of getBlob that was inadvertently omitted from API 9 (and
+ * perhaps later; it's present in 14).
+ *
+ * MatrixCursor is all private, so we entirely duplicate it here.
  */
 public class MatrixBlobCursor extends AbstractCursor {
+    private static final String LOGTAG = "GeckoMatrixCursor";
 
     private final String[] columnNames;
-    private Object[] data;
-    private int rowCount;
     private final int columnCount;
-    private static final String LOGTAG = "MatrixBlobCursor";
+
+    private int rowCount;
+
+    /* inner-access */ Object[] data;
 
     /**
      * Constructs a new cursor with the given initial capacity.
@@ -143,17 +143,18 @@ public class MatrixBlobCursor extends AbstractCursor {
      */
     @WrapElementForJNI
     public void addRow(Iterable<?> columnValues) {
-        int start = rowCount * columnCount;
-        int end = start + columnCount;
-        ensureCapacity(end);
+        final int start = rowCount * columnCount;
 
         if (columnValues instanceof ArrayList<?>) {
             addRow((ArrayList<?>) columnValues, start);
             return;
         }
 
+        final int end = start + columnCount;
         int current = start;
-        Object[] localData = data;
+
+        ensureCapacity(end);
+        final Object[] localData = data;
         for (Object columnValue : columnValues) {
             if (current == end) {
                 // TODO: null out row?
@@ -176,39 +177,47 @@ public class MatrixBlobCursor extends AbstractCursor {
     /** Optimization for {@link ArrayList}. */
     @WrapElementForJNI
     private void addRow(ArrayList<?> columnValues, int start) {
-        int size = columnValues.size();
+        final int size = columnValues.size();
         if (size != columnCount) {
             throw new IllegalArgumentException("columnNames.length = "
                     + columnCount + ", columnValues.size() = " + size);
         }
 
-        rowCount++;
-        Object[] localData = data;
+        final int end = start + columnCount;
+        ensureCapacity(end);
+
+        // Take a reference just in case someone calls ensureCapacity
+        // and `data` gets replaced by a new array!
+        final Object[] localData = data;
         for (int i = 0; i < size; i++) {
             localData[start + i] = columnValues.get(i);
         }
+
+        rowCount++;
     }
 
-    /** Ensures that this cursor has enough capacity. */
-    private void ensureCapacity(int size) {
-        if (size > data.length) {
-            Object[] oldData = this.data;
-            int newSize = data.length * 2;
-            if (newSize < size) {
-                newSize = size;
-            }
-            this.data = new Object[newSize];
-            System.arraycopy(oldData, 0, this.data, 0, oldData.length);
+    /**
+     * Ensures that this cursor has enough capacity. If it needs to allocate
+     * a new array, the existing capacity will be at least doubled.
+     */
+    private void ensureCapacity(final int size) {
+        if (size <= data.length) {
+            return;
         }
+
+        final Object[] oldData = this.data;
+        this.data = new Object[Math.max(size, data.length * 2)];
+        System.arraycopy(oldData, 0, this.data, 0, oldData.length);
     }
 
     /**
      * Builds a row, starting from the left-most column and adding one column
      * value at a time. Follows the same ordering as the column names specified
      * at cursor construction time.
+     *
+     * Not thread-safe.
      */
     public class RowBuilder {
-
         private int index;
         private final int endIndex;
 
@@ -224,10 +233,9 @@ public class MatrixBlobCursor extends AbstractCursor {
          *  values
          * @return this builder to support chaining
          */
-        public RowBuilder add(Object columnValue) {
+        public RowBuilder add(final Object columnValue) {
             if (index == endIndex) {
-                throw new CursorIndexOutOfBoundsException(
-                        "No more columns left.");
+                throw new CursorIndexOutOfBoundsException("No more columns left.");
             }
 
             data[index++] = columnValue;
@@ -235,6 +243,9 @@ public class MatrixBlobCursor extends AbstractCursor {
         }
     }
 
+    /**
+     * Not thread safe.
+     */
     public void set(int column, Object value) {
         if (column < 0 || column >= columnCount) {
             throw new CursorIndexOutOfBoundsException("Requested column: "
@@ -269,7 +280,7 @@ public class MatrixBlobCursor extends AbstractCursor {
 
     @Override
     public short getShort(int column) {
-        Object value = get(column);
+        final Object value = get(column);
         if (value == null) return 0;
         if (value instanceof Number) return ((Number) value).shortValue();
         return Short.parseShort(value.toString());
@@ -314,10 +325,11 @@ public class MatrixBlobCursor extends AbstractCursor {
         if (value instanceof byte[]) {
             return (byte[]) value;
         }
+
         if (value instanceof ByteBuffer) {
-            ByteBuffer data = (ByteBuffer)value;
-            byte[] byteArray = new byte[data.remaining()];
-            data.get(byteArray);
+            final ByteBuffer bytes = (ByteBuffer) value;
+            byte[] byteArray = new byte[bytes.remaining()];
+            bytes.get(byteArray);
             return byteArray;
         }
         throw new UnsupportedOperationException("BLOB Object not of known type");
@@ -332,7 +344,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     protected void finalize() {
         if (AppConstants.DEBUG_BUILD) {
             if (!isClosed()) {
-                Log.e(LOGTAG, "Cursor finalized without being closed");
+                Log.e(LOGTAG, "Cursor finalized without being closed", new RuntimeException("stack"));
             }
         }
 
