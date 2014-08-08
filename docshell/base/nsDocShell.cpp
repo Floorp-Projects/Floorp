@@ -4621,6 +4621,13 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                   cc->SendIsSecureURI(type, uri, flags, &isStsHost);
                 }
 
+                if (Preferences::GetBool(
+                        "browser.xul.error_pages.expert_bad_cert", false)) {
+                    cssClass.AssignLiteral("expertBadCert");
+                }
+
+                // HSTS takes precedence over the expert bad cert pref. We
+                // never want to show the "Add Exception" button for HSTS sites.
                 uint32_t bucketId;
                 if (isStsHost) {
                   cssClass.AssignLiteral("badStsCert");
@@ -4629,12 +4636,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
                   bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP_STS;
                 } else {
                   bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP;
-                }
-
-
-                if (Preferences::GetBool(
-                        "browser.xul.error_pages.expert_bad_cert", false)) {
-                    cssClass.AssignLiteral("expertBadCert");
                 }
 
                 // See if an alternate cert error page is registered

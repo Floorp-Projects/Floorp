@@ -136,6 +136,12 @@ IsAppleAvailable()
 }
 
 static bool
+IsGonkMP4DecoderAvailable()
+{
+  return Preferences::GetBool("media.fragmented-mp4.gonk.enabled", false);
+}
+
+static bool
 HavePlatformMPEGDecoders()
 {
   return Preferences::GetBool("media.fragmented-mp4.use-blank-decoder") ||
@@ -145,6 +151,7 @@ HavePlatformMPEGDecoders()
 #endif
          IsFFmpegAvailable() ||
          IsAppleAvailable() ||
+	 IsGonkMP4DecoderAvailable() ||
          // TODO: Other platforms...
          false;
 }

@@ -5,7 +5,6 @@
 #include "nsXULAppAPI.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/TabChild.h"
 #include "mozilla/Telemetry.h"
 
 #include "nsISettingsService.h"
@@ -24,7 +23,6 @@
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "PCOMContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 
 class nsIPrincipal;
@@ -60,7 +58,6 @@ class nsGeolocationRequest
  : public nsIContentPermissionRequest
  , public nsITimerCallback
  , public nsIGeolocationUpdate
- , public PCOMContentPermissionRequestChild
 {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -85,14 +82,10 @@ class nsGeolocationRequest
   void NotifyErrorAndShutdown(uint16_t);
   nsIPrincipal* GetPrincipal();
 
-  virtual bool Recv__delete__(const bool& allow,
-                              const InfallibleTArray<PermissionChoice>& choices) MOZ_OVERRIDE;
-  virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
-
   bool IsWatch() { return mIsWatchPositionRequest; }
   int32_t WatchId() { return mWatchId; }
  private:
-  ~nsGeolocationRequest();
+  virtual ~nsGeolocationRequest();
 
   bool mIsWatchPositionRequest;
 
@@ -169,21 +162,22 @@ NS_IMPL_ISUPPORTS(GeolocationSettingsCallback, nsISettingsServiceCallback)
 class RequestPromptEvent : public nsRunnable
 {
 public:
-  RequestPromptEvent(nsGeolocationRequest* request)
-    : mRequest(request)
+  RequestPromptEvent(nsGeolocationRequest* aRequest, nsWeakPtr aWindow)
+    : mRequest(aRequest)
+    , mWindow(aWindow)
   {
   }
 
-  NS_IMETHOD Run() {
-    nsCOMPtr<nsIContentPermissionPrompt> prompt = do_CreateInstance(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
-    if (prompt) {
-      prompt->Prompt(mRequest);
-    }
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    nsContentPermissionUtils::AskPermission(mRequest, window);
     return NS_OK;
   }
 
 private:
   nsRefPtr<nsGeolocationRequest> mRequest;
+  nsWeakPtr mWindow;
 };
 
 class RequestAllowEvent : public nsRunnable
@@ -384,10 +378,10 @@ NS_IMETHODIMP
 nsGeolocationRequest::GetTypes(nsIArray** aTypes)
 {
   nsTArray<nsString> emptyOptions;
-  return CreatePermissionArray(NS_LITERAL_CSTRING("geolocation"),
-                               NS_LITERAL_CSTRING("unused"),
-                               emptyOptions,
-                               aTypes);
+  return nsContentPermissionUtils::CreatePermissionArray(NS_LITERAL_CSTRING("geolocation"),
+                                                         NS_LITERAL_CSTRING("unused"),
+                                                         emptyOptions,
+                                                         aTypes);
 }
 
 NS_IMETHODIMP
@@ -600,18 +594,6 @@ nsGeolocationRequest::Shutdown()
   }
 }
 
-bool nsGeolocationRequest::Recv__delete__(const bool& allow,
-                                          const InfallibleTArray<PermissionChoice>& choices)
-{
-  MOZ_ASSERT(choices.IsEmpty(), "Geolocation doesn't support permission choice");
-
-  if (allow) {
-    (void) Allow(JS::UndefinedHandleValue);
-  } else {
-    (void) Cancel();
-  }
-  return true;
-}
 ////////////////////////////////////////////////////
 // nsGeolocationService
 ////////////////////////////////////////////////////
@@ -1469,37 +1451,7 @@ Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
     return true;
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
-    if (!window) {
-      return true;
-    }
-
-    // because owner implements nsITabChild, we can assume that it is
-    // the one and only TabChild.
-    TabChild* child = TabChild::GetFrom(window->GetDocShell());
-    if (!child) {
-      return false;
-    }
-
-    nsTArray<PermissionRequest> permArray;
-    nsTArray<nsString> emptyOptions;
-    permArray.AppendElement(PermissionRequest(NS_LITERAL_CSTRING("geolocation"),
-                                              NS_LITERAL_CSTRING("unused"),
-                                              emptyOptions));
-
-    // Retain a reference so the object isn't deleted without IPDL's knowledge.
-    // Corresponding release occurs in DeallocPContentPermissionRequest.
-    request->AddRef();
-    child->SendPContentPermissionRequestConstructor(request,
-                                                    permArray,
-                                                    IPC::Principal(mPrincipal));
-
-    request->Sendprompt();
-    return true;
-  }
-
-  nsCOMPtr<nsIRunnable> ev  = new RequestPromptEvent(request);
+  nsCOMPtr<nsIRunnable> ev  = new RequestPromptEvent(request, mOwner);
   NS_DispatchToMainThread(ev);
   return true;
 }

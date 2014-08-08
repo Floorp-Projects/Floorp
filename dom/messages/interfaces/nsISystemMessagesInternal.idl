@@ -13,10 +13,12 @@ interface nsIDOMWindow;
 interface nsISystemMessagesInternal : nsISupports
 {
   /*
-   * Allow any internal user to broadcast a message of a given type.
+   * Allow any internal user to send a message of a given type to a given page
+   * of an app. The message will be sent to all the registered pages of the app
+   * when |pageURI| is not specified.
    * @param type        The type of the message to be sent.
    * @param message     The message payload.
-   * @param pageURI     The URI of the page that will be opened.
+   * @param pageURI     The URI of the page that will be opened. Nullable.
    * @param manifestURI The webapp's manifest URI.
    * @param extra       Extra opaque information that will be passed around in the observer
    *                    notification to open the page.

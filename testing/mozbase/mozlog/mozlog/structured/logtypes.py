@@ -148,7 +148,7 @@ class Status(DataType):
         return value
 
 class SubStatus(Status):
-    allowed = ["PASS", "FAIL", "ERROR", "TIMEOUT", "CRASH", "ASSERT"]
+    allowed = ["PASS", "FAIL", "ERROR", "TIMEOUT", "ASSERT", "NOTRUN"]
 
 class Dict(DataType):
     def convert(self, data):

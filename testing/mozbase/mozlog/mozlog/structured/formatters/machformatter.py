@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import time
+from collections import defaultdict
 
 try:
     import blessings
@@ -16,6 +17,12 @@ def format_seconds(total):
     minutes, seconds = divmod(total, 60)
     return '%2d:%05.2f' % (minutes, seconds)
 
+class NullTerminal(object):
+    def __getattr__(self, name):
+        return self._id
+
+    def _id(self, value):
+        return value
 
 class MachFormatter(base.BaseFormatter):
     def __init__(self, start_time=None, write_interval=False, write_times=True,
@@ -37,6 +44,13 @@ class MachFormatter(base.BaseFormatter):
         self.last_time = None
         self.terminal = terminal
 
+        self.summary_values = {"tests": 0,
+                               "subtests": 0,
+                               "expected": 0,
+                               "unexpected": defaultdict(int),
+                               "skipped": 0}
+        self.summary_unexpected = []
+
     def __call__(self, data):
         s = base.BaseFormatter.__call__(self, data)
         if s is None:
@@ -46,6 +60,8 @@ class MachFormatter(base.BaseFormatter):
         action = data["action"].upper()
         thread = data["thread"]
 
+        # Not using the NullTerminal here is a small optimisation to cut the number of
+        # function calls
         if self.terminal is not None:
             test = self._get_test_id(data)
 
@@ -73,12 +89,80 @@ class MachFormatter(base.BaseFormatter):
         return test_id
 
     def suite_start(self, data):
+        self.summary_values = {"tests": 0,
+                               "subtests": 0,
+                               "expected": 0,
+                               "unexpected": defaultdict(int),
+                               "skipped": 0}
+        self.summary_unexpected = []
         return "%i" % len(data["tests"])
 
     def suite_end(self, data):
-        return ""
+        term = self.terminal if self.terminal is not None else NullTerminal()
+
+        heading = "Summary"
+        rv = ["", heading, "=" * len(heading), ""]
+
+        has_subtests = self.summary_values["subtests"] > 0
+
+        if has_subtests:
+            rv.append("Ran %i tests (%i parents, %i subtests)" %
+                      (self.summary_values["tests"] + self.summary_values["subtests"],
+                       self.summary_values["tests"],
+                       self.summary_values["subtests"]))
+        else:
+            rv.append("Ran %i tests" % self.summary_values["tests"])
+
+        rv.append("Expected results: %i" % self.summary_values["expected"])
+
+        unexpected_count = sum(self.summary_values["unexpected"].values())
+        if unexpected_count > 0:
+            unexpected_str = " (%s)" % ", ".join("%s: %i" % (key, value) for key, value in
+                                              sorted(self.summary_values["unexpected"].items()))
+        else:
+            unexpected_str = ""
+
+        rv.append("Unexpected results: %i%s" % (unexpected_count, unexpected_str))
+
+        if self.summary_values["skipped"] > 0:
+            rv.append("Skipped: %i" % self.summary_values["skipped"])
+        rv.append("")
+
+        if not self.summary_values["unexpected"]:
+            rv.append(term.green("OK"))
+        else:
+            heading = "Unexpected Results"
+            rv.extend([heading, "=" * len(heading), ""])
+            if has_subtests:
+                for test, results in self.summary_unexpected:
+                    rv.extend([test, "-" * len(test)])
+                    for name, status, expected, message in results:
+                        if name is None:
+                            name = "[Parent]"
+                        rv.append("%s %s" % (self.format_expected(status, expected), name))
+            else:
+                for test, results in self.summary_unexpected:
+                    assert len(results) == 1
+                    name, status, expected, messge = results[0]
+                    assert name is None
+                    rv.append("%s %s" % (self.format_expected(status, expected), test))
+
+        return "\n".join(rv)
+
+    def format_expected(self, status, expected):
+        term = self.terminal if self.terminal is not None else NullTerminal()
+        if status == "ERROR":
+            color = term.red
+        else:
+            color = term.yellow
+
+        if expected in ("PASS", "OK"):
+            return color(status)
+
+        return color("%s expected %s" % (status, expected))
 
     def test_start(self, data):
+        self.summary_values["tests"] += 1
         return "%s" % (self._get_test_id(data),)
 
     def test_end(self, data):
@@ -87,14 +171,19 @@ class MachFormatter(base.BaseFormatter):
         if "expected" in data:
             parent_unexpected = True
             expected_str = ", expected %s" % data["expected"]
-            unexpected.append(("[Parent]", data["status"], data["expected"],
+            unexpected.append((None, data["status"], data["expected"],
                                data.get("message", "")))
         else:
             parent_unexpected = False
             expected_str = ""
 
-        #Reset the counts to 0
         test = self._get_test_id(data)
+
+        if unexpected:
+            self.summary_unexpected.append((test, unexpected))
+        self._update_summary(data)
+
+        #Reset the counts to 0
         self.status_buffer[test] = {"count": 0, "unexpected": [], "pass": 0}
         self.has_unexpected[test] = bool(unexpected)
 
@@ -111,12 +200,16 @@ class MachFormatter(base.BaseFormatter):
                 rv += "%s" % unexpected[0][-1]
             else:
                 for name, status, expected, message in unexpected:
+                    if name is None:
+                        name = "[Parent]"
                     expected_str = "Expected %s, got %s" % (expected, status)
                     rv += "%s\n" % ("\n".join([name, "-" * len(name), expected_str, message]))
                 rv = rv[:-1]
         return rv
 
     def test_status(self, data):
+        self.summary_values["subtests"] += 1
+
         test = self._get_test_id(data)
         if test not in self.status_buffer:
             self.status_buffer[test] = {"count": 0, "unexpected": [], "pass": 0}
@@ -127,13 +220,20 @@ class MachFormatter(base.BaseFormatter):
                                                            data["status"],
                                                            data["expected"],
                                                            data.get("message", "")))
-        if data["status"] == "PASS":
-            self.status_buffer[test]["pass"] += 1
+        self._update_summary(data)
+
+    def _update_summary(self, data):
+        if "expected" in data:
+            self.summary_values["unexpected"][data["status"]] += 1
+        elif data["status"] == "SKIP":
+            self.summary_values["skipped"] += 1
+        else:
+            self.summary_values["expected"] += 1
 
     def process_output(self, data):
         return '"%s" (pid:%s command:%s)' % (data["data"],
                                              data["process"],
-                                             data["command"])
+                                             data.get("command", ""))
 
     def log(self, data):
         level = data.get("level").upper()

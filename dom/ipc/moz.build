@@ -6,7 +6,6 @@
 
 EXPORTS += [
     'nsICachedFileDescriptorListener.h',
-    'PCOMContentPermissionRequestChild.h',
 ]
 
 EXPORTS.mozilla.dom.ipc += [

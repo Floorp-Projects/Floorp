@@ -116,7 +116,7 @@ private:
     virtual void Clear() { mTarget = nullptr; }
     virtual ~Notification() {}
   protected:
-    Notification(nsReferencedElement* aTarget)
+    explicit Notification(nsReferencedElement* aTarget)
       : mTarget(aTarget)
     {
       NS_PRECONDITION(aTarget, "Must have a target");

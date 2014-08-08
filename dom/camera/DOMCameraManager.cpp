@@ -9,16 +9,16 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
 #include "nsContentPermissionHelper.h"
+#include "nsIContentPermissionPrompt.h"
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
+#include "nsIScriptObjectPrincipal.h"
 #include "DOMCameraControl.h"
 #include "nsDOMClassInfo.h"
 #include "CameraCommon.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/CameraManagerBinding.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/TabChild.h"
-#include "PCOMContentPermissionRequestChild.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -122,7 +122,6 @@ nsDOMCameraManager::CreateInstance(nsPIDOMWindow* aWindow)
 }
 
 class CameraPermissionRequest : public nsIContentPermissionRequest
-                              , public PCOMContentPermissionRequestChild
                               , public nsIRunnable
 {
 public:
@@ -147,14 +146,6 @@ public:
     , mOnSuccess(aOnSuccess)
     , mOnError(aOnError)
   {
-  }
-
-  bool Recv__delete__(const bool& aAllow,
-                      const InfallibleTArray<PermissionChoice>& choices);
-
-  void IPDLRelease()
-  {
-    Release();
   }
 
 protected:
@@ -188,48 +179,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(CameraPermissionRequest)
 NS_IMETHODIMP
 CameraPermissionRequest::Run()
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    TabChild* child = TabChild::GetFrom(mWindow->GetDocShell());
-    if (!child) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    // Retain a reference so the object isn't deleted without IPDL's knowledge.
-    // Corresponding release occurs in DeallocPContentPermissionRequest.
-    AddRef();
-
-    nsTArray<PermissionRequest> permArray;
-    nsTArray<nsString> emptyOptions;
-    permArray.AppendElement(PermissionRequest(
-                            NS_LITERAL_CSTRING("camera"),
-                            NS_LITERAL_CSTRING("unused"),
-                            emptyOptions));
-    child->SendPContentPermissionRequestConstructor(this, permArray,
-                                                    IPC::Principal(mPrincipal));
-
-    Sendprompt();
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContentPermissionPrompt> prompt =
-    do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
-  if (prompt) {
-    prompt->Prompt(this);
-  }
-
-  return NS_OK;
-}
-
-bool
-CameraPermissionRequest::Recv__delete__(const bool& aAllow,
-                                        const InfallibleTArray<PermissionChoice>& choices)
-{
-  if (aAllow) {
-    Allow(JS::UndefinedHandleValue);
-  } else {
-    Cancel();
-  }
-  return true;
+  return nsContentPermissionUtils::AskPermission(this, mWindow);
 }
 
 NS_IMETHODIMP
@@ -294,10 +244,10 @@ NS_IMETHODIMP
 CameraPermissionRequest::GetTypes(nsIArray** aTypes)
 {
   nsTArray<nsString> emptyOptions;
-  return CreatePermissionArray(NS_LITERAL_CSTRING("camera"),
-                               NS_LITERAL_CSTRING("unused"),
-                               emptyOptions,
-                               aTypes);
+  return nsContentPermissionUtils::CreatePermissionArray(NS_LITERAL_CSTRING("camera"),
+                                                         NS_LITERAL_CSTRING("unused"),
+                                                         emptyOptions,
+                                                         aTypes);
 }
 
 void

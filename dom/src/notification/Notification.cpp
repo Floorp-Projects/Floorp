@@ -2,13 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "PCOMContentPermissionRequestChild.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Preferences.h"
-#include "TabChild.h"
 #include "nsContentUtils.h"
 #include "nsIAlertsService.h"
 #include "nsIAppsService.h"
@@ -93,7 +91,7 @@ public:
   }
 
 private:
-  ~NotificationStorageCallback()
+  virtual ~NotificationStorageCallback()
   {
     DropData();
   }
@@ -144,7 +142,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NotificationStorageCallback)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 class NotificationPermissionRequest : public nsIContentPermissionRequest,
-                                      public PCOMContentPermissionRequestChild,
                                       public nsIRunnable
 {
 public:
@@ -159,10 +156,6 @@ public:
     : mPrincipal(aPrincipal), mWindow(aWindow),
       mPermission(NotificationPermission::Default),
       mCallback(aCallback) {}
-
-  bool Recv__delete__(const bool& aAllow,
-                      const InfallibleTArray<PermissionChoice>& choices);
-  void IPDLRelease() { Release(); }
 
 protected:
   virtual ~NotificationPermissionRequest() {}
@@ -256,38 +249,7 @@ NotificationPermissionRequest::Run()
     return DispatchCallback();
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // because owner implements nsITabChild, we can assume that it is
-    // the one and only TabChild.
-    TabChild* child = TabChild::GetFrom(mWindow->GetDocShell());
-    if (!child) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    // Retain a reference so the object isn't deleted without IPDL's knowledge.
-    // Corresponding release occurs in DeallocPContentPermissionRequest.
-    AddRef();
-
-    nsTArray<PermissionRequest> permArray;
-    nsTArray<nsString> emptyOptions;
-    permArray.AppendElement(PermissionRequest(
-                            NS_LITERAL_CSTRING("desktop-notification"),
-                            NS_LITERAL_CSTRING("unused"),
-                            emptyOptions));
-    child->SendPContentPermissionRequestConstructor(this, permArray,
-                                                    IPC::Principal(mPrincipal));
-
-    Sendprompt();
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContentPermissionPrompt> prompt =
-    do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
-  if (prompt) {
-    prompt->Prompt(this);
-  }
-
-  return NS_OK;
+  return nsContentPermissionUtils::AskPermission(this, mWindow);
 }
 
 NS_IMETHODIMP
@@ -352,24 +314,10 @@ NS_IMETHODIMP
 NotificationPermissionRequest::GetTypes(nsIArray** aTypes)
 {
   nsTArray<nsString> emptyOptions;
-  return CreatePermissionArray(NS_LITERAL_CSTRING("desktop-notification"),
-                               NS_LITERAL_CSTRING("unused"),
-                               emptyOptions,
-                               aTypes);
-}
-
-bool
-NotificationPermissionRequest::Recv__delete__(const bool& aAllow,
-                                              const InfallibleTArray<PermissionChoice>& choices)
-{
-  MOZ_ASSERT(choices.IsEmpty(), "Notification doesn't support permission choice");
-
-  if (aAllow) {
-    (void) Allow(JS::UndefinedHandleValue);
-  } else {
-    (void) Cancel();
-  }
-  return true;
+  return nsContentPermissionUtils::CreatePermissionArray(NS_LITERAL_CSTRING("desktop-notification"),
+                                                         NS_LITERAL_CSTRING("unused"),
+                                                         emptyOptions,
+                                                         aTypes);
 }
 
 NS_IMPL_ISUPPORTS(NotificationTask, nsIRunnable)
