@@ -248,11 +248,18 @@ loop.conversation = (function(OT, mozL10n) {
     feedback: function() {
       document.title = mozL10n.get("call_has_ended");
 
+      var feebackAPIBaseUrl = navigator.mozLoop.getLoopCharPref(
+        "feedback.baseUrl");
+
+      var feedbackClient = new loop.FeedbackAPIClient(feebackAPIBaseUrl, {
+        product: navigator.mozLoop.getLoopCharPref("feedback.product"),
+        platform: navigator.platform
+        // XXX add "channel" and "version" options as per bug 1048785; these
+        //     could be provided by the mozLoop API.
+      });
+
       this.loadReactComponent(sharedViews.FeedbackView({
-        feedbackApiClient: new loop.FeedbackAPIClient({
-          baseUrl: navigator.mozLoop.getLoopCharPref("feedback.baseUrl"),
-          product: navigator.mozLoop.getLoopCharPref("feedback.product")
-        })
+        feedbackApiClient: feedbackClient
       }));
     }
   });
