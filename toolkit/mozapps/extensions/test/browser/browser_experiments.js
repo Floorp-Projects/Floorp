@@ -98,7 +98,6 @@ add_task(function* initializeState() {
     Services.prefs.clearUserPref("experiments.enabled");
     if (gHttpServer) {
       gHttpServer.stop(() => {});
-      Services.prefs.clearUserPref("experiments.manifest.cert.checkAttributes");
       if (gSavedManifestURI !== undefined) {
         Services.prefs.setCharPref("experments.manifest.uri", gSavedManifestURI);
       }
@@ -287,7 +286,6 @@ add_task(function* testActivateExperiment() {
     response.finish();
   });
 
-  Services.prefs.setBoolPref("experiments.manifest.cert.checkAttributes", false);
   gSavedManifestURI = Services.prefs.getCharPref("experiments.manifest.uri");
   Services.prefs.setCharPref("experiments.manifest.uri", root + "manifest");
 
@@ -629,7 +627,6 @@ add_task(function* testRemoveAndUndo() {
 add_task(function* testCleanup() {
   if (gExperiments) {
     Services.prefs.clearUserPref("experiments.enabled");
-    Services.prefs.clearUserPref("experiments.manifest.cert.checkAttributes");
     Services.prefs.setCharPref("experiments.manifest.uri", gSavedManifestURI);
 
     // We perform the uninit/init cycle to purge any leftover state.
