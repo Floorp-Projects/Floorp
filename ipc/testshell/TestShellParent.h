@@ -40,7 +40,7 @@ public:
 class TestShellCommandParent : public PTestShellCommandParent
 {
 public:
-  TestShellCommandParent() : mCx(nullptr) { }
+  TestShellCommandParent() {}
 
   bool SetCallback(JSContext* aCx, JS::Value aCallback);
 
@@ -58,7 +58,6 @@ protected:
   }
 
 private:
-  JSContext* mCx;
   nsAutoJSValHolder mCallback;
 };
 

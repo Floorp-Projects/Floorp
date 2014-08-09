@@ -132,7 +132,7 @@ class MachCommands(MachCommandBase):
     mozharness_rev = 'production'
 
     @Command('talos-test', category='testing',
-             description='Run talos tests.')
+             description='Run talos tests (performance testing).')
     @CommandArgument('suite', help='Talos test suite to run. Valid suites are '
                                    'chromez, dirtypaint, dromaeojs, other,'
                                    'svgr, rafx, tpn, tp5o, xperf.')

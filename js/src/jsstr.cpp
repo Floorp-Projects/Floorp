@@ -4,17 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * JS string type implementation.
- *
- * In order to avoid unnecessary js_LockGCThing/js_UnlockGCThing calls, these
- * native methods store strings (possibly newborn) converted from their 'this'
- * parameter and arguments on the stack: 'this' conversions at argv[-1], arg
- * conversions at their index (argv[0], argv[1]).  This is a legitimate method
- * of rooting things that might lose their newborn root due to subsequent GC
- * allocations in the same native method.
- */
-
 #include "jsstr.h"
 
 #include "mozilla/Attributes.h"

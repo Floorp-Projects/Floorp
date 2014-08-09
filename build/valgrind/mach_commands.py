@@ -35,7 +35,7 @@ class MachCommands(MachCommandBase):
 
     @Command('valgrind-test', category='testing',
         conditions=[conditions.is_firefox, is_valgrind_build],
-        description='Run the Valgrind test job.')
+        description='Run the Valgrind test job (memory-related errors).')
     @CommandArgument('--suppressions', default=[], action='append',
         metavar='FILENAME',
         help='Specify a suppression file for Valgrind to use. Use '

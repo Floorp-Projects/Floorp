@@ -404,14 +404,14 @@ ChildProcessInit(int argc, char* argv[])
     return FAILURE;
   }
 
-  GeckoProcessType (*fXRE_StringToChildProcessType)(char*);
-  xul_dlsym("XRE_StringToChildProcessType", &fXRE_StringToChildProcessType);
+  void (*fXRE_SetProcessType)(char*);
+  xul_dlsym("XRE_SetProcessType", &fXRE_SetProcessType);
 
-  mozglueresult (*fXRE_InitChildProcess)(int, char**, GeckoProcessType);
+  mozglueresult (*fXRE_InitChildProcess)(int, char**);
   xul_dlsym("XRE_InitChildProcess", &fXRE_InitChildProcess);
 
-  GeckoProcessType proctype = fXRE_StringToChildProcessType(argv[--argc]);
+  fXRE_SetProcessType(argv[--argc]);
 
-  return fXRE_InitChildProcess(argc, argv, proctype);
+  return fXRE_InitChildProcess(argc, argv);
 }
 

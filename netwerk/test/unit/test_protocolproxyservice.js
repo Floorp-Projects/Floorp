@@ -363,7 +363,9 @@ function protocol_handler_test_1(pi)
   run_pac_cancel_test();
 }
 
-function TestResolveCallback() {
+function TestResolveCallback(type, nexttest) {
+  this.type = type;
+  this.nexttest = nexttest;
 }
 TestResolveCallback.prototype = {
   QueryInterface:
@@ -378,17 +380,22 @@ TestResolveCallback.prototype = {
   function TestResolveCallback_onProxyAvailable(req, uri, pi, status) {
     dump("*** uri=" + uri.spec + ", status=" + status + "\n");
 
-    do_check_neq(req, null);
-    do_check_neq(uri, null);
-    do_check_eq(status, 0);
-    do_check_neq(pi, null);
+    if (this.type == null) {
+      do_check_eq(pi, null);
+    } else {
+      do_check_neq(req, null);
+      do_check_neq(uri, null);
+      do_check_eq(status, 0);
+      do_check_neq(pi, null);
+      check_proxy(pi, this.type, "foopy", 8080, 0, -1, true);
+      check_proxy(pi.failoverProxy, "direct", "", -1, -1, -1, false);
+    }
 
-    check_proxy(pi, "http", "foopy", 8080, 0, -1, true);
-    check_proxy(pi.failoverProxy, "direct", "", -1, -1, -1, false);
-
-    run_protocol_handler_test();
+    this.nexttest();
   }
 };
+
+var originalTLSProxy;
 
 function run_pac_test() {
   var pac = 'data:text/plain,' +
@@ -401,8 +408,42 @@ function run_pac_test() {
 
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
+  var req = pps.asyncResolve(uri, 0, new TestResolveCallback("http", run_pac2_test));
+}
 
-  var req = pps.asyncResolve(uri, 0, new TestResolveCallback());
+function run_pac2_test() {
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            '  return "HTTPS foopy:8080; DIRECT";' +
+            '}';
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+
+  // Configure PAC
+  originalTLSProxy = prefs.getBoolPref("network.proxy.proxy_over_tls");
+
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+  prefs.setBoolPref("network.proxy.proxy_over_tls", true);
+
+  var req = pps.asyncResolve(uri, 0, new TestResolveCallback("https", run_pac3_test));
+}
+
+function run_pac3_test() {
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            '  return "HTTPS foopy:8080; DIRECT";' +
+            '}';
+  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+
+  // Configure PAC
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+  prefs.setBoolPref("network.proxy.proxy_over_tls", false);
+
+  var req = pps.asyncResolve(uri, 0, new TestResolveCallback(null, finish_pac_test));
+}
+
+function finish_pac_test() {
+  prefs.setBoolPref("network.proxy.proxy_over_tls", originalTLSProxy);
+  run_protocol_handler_test();
 }
 
 function TestResolveCancelationCallback() {

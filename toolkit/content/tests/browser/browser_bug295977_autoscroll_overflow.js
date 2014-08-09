@@ -112,11 +112,11 @@ function test()
       // autoscrollLoop incrementally scrolls during each animation frame, but
       // due to how its calculations work, when a frame is very close to the
       // previous frame, no scrolling may actually occur during that frame.
-      // After 20ms's worth of frames, timeCompensation will be 1, making it
+      // After 100ms's worth of frames, timeCompensation will be 1, making it
       // more likely that the accumulated scroll in autoscrollLoop will be >= 1,
       // although it also depends on acceleration, which here in this test
       // should be > 1 due to how it synthesizes mouse events below.
-      if (timeCompensation < 1) {
+      if (timeCompensation < 5) {
         window.mozRequestAnimationFrame(checkScroll);
         return;
       }

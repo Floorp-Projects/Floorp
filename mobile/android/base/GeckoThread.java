@@ -166,6 +166,14 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
         String path = initGeckoEnvironment();
 
+        // This can only happen after the call to initGeckoEnvironment
+        // above, because otherwise the JNI code hasn't been loaded yet.
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override public void run() {
+                GeckoAppShell.registerJavaUiThread();
+            }
+        });
+
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
         String args = addCustomProfileArg(mArgs);

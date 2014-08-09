@@ -8,7 +8,6 @@ package org.mozilla.gecko.gfx;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.PrefsHelper;
-import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -20,7 +19,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.MotionEvent;
 import android.view.View;
 
-public class LayerMarginsAnimator implements TouchEventInterceptor {
+public class LayerMarginsAnimator {
     private static final String LOGTAG = "GeckoLayerMarginsAnimator";
     // The duration of the animation in ns
     private static final long MARGIN_ANIMATION_DURATION = 250000000;
@@ -70,9 +69,6 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
                 return true;
             }
         });
-
-        // Listen to touch events, for auto-pinning
-        aView.addTouchInterceptor(this);
     }
 
     public void destroy() {
@@ -247,15 +243,7 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
         return aMetrics.setMargins(newMarginsX[0], newMarginsY[0], newMarginsX[1], newMarginsY[1]).offsetViewportBy(aDx, aDy);
     }
 
-    /** Implementation of TouchEventInterceptor */
-    @Override
-    public boolean onTouch(View view, MotionEvent event) {
-        return false;
-    }
-
-    /** Implementation of TouchEventInterceptor */
-    @Override
-    public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+    boolean onInterceptTouchEvent(MotionEvent event) {
         int action = event.getActionMasked();
         if (action == MotionEvent.ACTION_DOWN && event.getPointerCount() == 1) {
             mTouchTravelDistance.set(0.0f, 0.0f);

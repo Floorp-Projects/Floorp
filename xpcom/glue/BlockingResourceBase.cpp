@@ -40,30 +40,23 @@ BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 bool
 BlockingResourceBase::DeadlockDetectorEntry::Print(
     const DDT::ResourceAcquisition& aFirstSeen,
-    nsACString& aOut,
-    bool aPrintFirstSeenCx) const
+    nsACString& aOut) const
 {
-  CallStack lastAcquisition = mAcquisitionContext; // RACY, but benign
-  bool maybeCurrentlyAcquired = (CallStack::kNone != lastAcquisition);
-  CallStack printAcquisition =
-    (aPrintFirstSeenCx || !maybeCurrentlyAcquired) ?
-      aFirstSeen.mCallContext : lastAcquisition;
-
   fprintf(stderr, "--- %s : %s",
           kResourceTypeName[mType], mName);
   aOut += BlockingResourceBase::kResourceTypeName[mType];
   aOut += " : ";
   aOut += mName;
 
-  if (maybeCurrentlyAcquired) {
+  if (mAcquired) {
     fputs(" (currently acquired)\n", stderr);
     aOut += " (currently acquired)\n";
   }
 
   fputs(" calling context\n", stderr);
-  printAcquisition.Print(stderr);
+  fputs("  [stack trace unavailable]\n", stderr);
 
-  return maybeCurrentlyAcquired;
+  return mAcquired;
 }
 
 
@@ -96,7 +89,7 @@ BlockingResourceBase::~BlockingResourceBase()
 
 
 void
-BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
+BlockingResourceBase::CheckAcquire()
 {
   if (mDDEntry->mType == eCondVar) {
     NS_NOTYETIMPLEMENTED(
@@ -107,7 +100,7 @@ BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
   BlockingResourceBase* chainFront = ResourceChainFront();
   nsAutoPtr<DDT::ResourceAcquisitionArray> cycle(
     sDeadlockDetector->CheckAcquisition(
-      chainFront ? chainFront->mDDEntry : 0, mDDEntry, aCallContext));
+      chainFront ? chainFront->mDDEntry : 0, mDDEntry));
   if (!cycle) {
     return;
   }
@@ -134,18 +127,18 @@ BlockingResourceBase::CheckAcquire(const CallStack& aCallContext)
 
 
 void
-BlockingResourceBase::Acquire(const CallStack& aCallContext)
+BlockingResourceBase::Acquire()
 {
   if (mDDEntry->mType == eCondVar) {
     NS_NOTYETIMPLEMENTED(
       "FIXME bug 456272: annots. to allow Acquire()ing condvars");
     return;
   }
-  NS_ASSERTION(mDDEntry->mAcquisitionContext == CallStack::kNone,
+  NS_ASSERTION(!mDDEntry->mAcquired,
                "reacquiring already acquired resource");
 
   ResourceChainAppend(ResourceChainFront());
-  mDDEntry->mAcquisitionContext = aCallContext;
+  mDDEntry->mAcquired = true;
 }
 
 
@@ -159,7 +152,7 @@ BlockingResourceBase::Release()
   }
 
   BlockingResourceBase* chainFront = ResourceChainFront();
-  NS_ASSERTION(chainFront && mDDEntry->mAcquisitionContext != CallStack::kNone,
+  NS_ASSERTION(chainFront && mDDEntry->mAcquired,
                "Release()ing something that hasn't been Acquire()ed");
 
   if (chainFront == this) {
@@ -167,7 +160,7 @@ BlockingResourceBase::Release()
   } else {
     // not an error, but makes code hard to reason about.
     NS_WARNING("Resource acquired at calling context\n");
-    mDDEntry->mAcquisitionContext.Print(stderr);
+    NS_WARNING("  [stack trace unavailable]\n");
     NS_WARNING("\nis being released in non-LIFO order; why?");
 
     // remove this resource from wherever it lives in the chain
@@ -185,7 +178,7 @@ BlockingResourceBase::Release()
     }
   }
 
-  mDDEntry->mAcquisitionContext = CallStack::kNone;
+  mDDEntry->mAcquired = false;
 }
 
 
@@ -215,7 +208,7 @@ BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
 
   fputs("\n=== Cycle completed at\n", stderr);
   aOut += "Cycle completed at\n";
-  it->mResource->Print(*it, aOut, true);
+  it->mResource->Print(*it, aOut);
 
   return maybeImminent;
 }
@@ -226,11 +219,9 @@ BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
 void
 OffTheBooksMutex::Lock()
 {
-  CallStack callContext = CallStack();
-
-  CheckAcquire(callContext);
+  CheckAcquire();
   PR_Lock(mLock);
-  Acquire(callContext);       // protected by mLock
+  Acquire();       // protected by mLock
 }
 
 void
@@ -258,8 +249,6 @@ ReentrantMonitor::Enter()
     return;
   }
 
-  CallStack callContext = CallStack();
-
   // this is sort of a hack around not recording the thread that
   // owns this monitor
   if (chainFront) {
@@ -269,11 +258,11 @@ ReentrantMonitor::Enter()
       if (br == this) {
         NS_WARNING(
           "Re-entering ReentrantMonitor after acquiring other resources.\n"
-          "At calling context\n");
-        GetAcquisitionContext().Print(stderr);
+          "At calling context\n"
+          "  [stack trace unavailable]\n");
 
         // show the caller why this is potentially bad
-        CheckAcquire(callContext);
+        CheckAcquire();
 
         PR_EnterMonitor(mReentrantMonitor);
         ++mEntryCount;
@@ -282,10 +271,10 @@ ReentrantMonitor::Enter()
     }
   }
 
-  CheckAcquire(callContext);
+  CheckAcquire();
   PR_EnterMonitor(mReentrantMonitor);
   NS_ASSERTION(mEntryCount == 0, "ReentrantMonitor isn't free!");
-  Acquire(callContext);       // protected by mReentrantMonitor
+  Acquire();       // protected by mReentrantMonitor
   mEntryCount = 1;
 }
 
@@ -306,10 +295,10 @@ ReentrantMonitor::Wait(PRIntervalTime aInterval)
 
   // save monitor state and reset it to empty
   int32_t savedEntryCount = mEntryCount;
-  CallStack savedAcquisitionContext = GetAcquisitionContext();
+  bool savedAcquisitionState = GetAcquisitionState();
   BlockingResourceBase* savedChainPrev = mChainPrev;
   mEntryCount = 0;
-  SetAcquisitionContext(CallStack::kNone);
+  SetAcquisitionState(false);
   mChainPrev = 0;
 
   nsresult rv;
@@ -328,7 +317,7 @@ ReentrantMonitor::Wait(PRIntervalTime aInterval)
 
   // restore saved state
   mEntryCount = savedEntryCount;
-  SetAcquisitionContext(savedAcquisitionContext);
+  SetAcquisitionState(savedAcquisitionState);
   mChainPrev = savedChainPrev;
 
   return rv;
@@ -343,9 +332,9 @@ CondVar::Wait(PRIntervalTime aInterval)
   AssertCurrentThreadOwnsMutex();
 
   // save mutex state and reset to empty
-  CallStack savedAcquisitionContext = mLock->GetAcquisitionContext();
+  bool savedAcquisitionState = mLock->GetAcquisitionState();
   BlockingResourceBase* savedChainPrev = mLock->mChainPrev;
-  mLock->SetAcquisitionContext(CallStack::kNone);
+  mLock->SetAcquisitionState(false);
   mLock->mChainPrev = 0;
 
   // give up mutex until we're back from Wait()
@@ -353,7 +342,7 @@ CondVar::Wait(PRIntervalTime aInterval)
     PR_WaitCondVar(mCvar, aInterval) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 
   // restore saved state
-  mLock->SetAcquisitionContext(savedAcquisitionContext);
+  mLock->SetAcquisitionState(savedAcquisitionState);
   mLock->mChainPrev = savedChainPrev;
 
   return rv;

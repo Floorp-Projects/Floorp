@@ -25,7 +25,6 @@ public interface PanZoomTarget {
     public void forceRedraw(DisplayPortMetrics displayPort);
 
     public boolean post(Runnable action);
-    public boolean postDelayed(Runnable action, long delayMillis);
     public void postRenderTask(RenderTask task);
     public void removeRenderTask(RenderTask task);
     public Object getLock();

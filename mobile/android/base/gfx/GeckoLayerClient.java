@@ -939,13 +939,6 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mView.removeRenderTask(task);
     }
 
-
-    /** Implementation of PanZoomTarget */
-    @Override
-    public boolean postDelayed(Runnable action, long delayMillis) {
-        return mView.postDelayed(action, delayMillis);
-    }
-
     /** Implementation of PanZoomTarget */
     @Override
     public Object getLock() {

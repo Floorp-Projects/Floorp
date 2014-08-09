@@ -30,7 +30,7 @@ class WebIDLProvider(MachCommandBase):
             manager.generate_example_files(i)
 
     @Command('webidl-parser-test', category='testing',
-        description='Run WebIDL tests.')
+        description='Run WebIDL tests (Interface Browser parser).')
     @CommandArgument('--verbose', '-v', action='store_true',
         help='Run tests in verbose mode.')
     def webidl_test(self, verbose=False):

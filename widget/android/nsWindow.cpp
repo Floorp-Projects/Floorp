@@ -48,6 +48,7 @@ using mozilla::unused;
 #include "GLContextProvider.h"
 #include "ScopedGLHelpers.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "APZCCallbackHandler.h"
 
 #include "nsTArray.h"
 
@@ -832,6 +833,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
         }
 
+        case AndroidGeckoEvent::APZ_INPUT_EVENT:
         case AndroidGeckoEvent::MOTION_EVENT: {
             win->UserActivity();
             if (!gTopLevelWindows.IsEmpty()) {
@@ -1031,7 +1033,11 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // if this event is a down event, that means it's the start of a new block, and the
         // previous block should not be default-prevented
         bool defaultPrevented = isDownEvent ? false : preventDefaultActions;
-        mozilla::widget::android::GeckoAppShell::NotifyDefaultPrevented(defaultPrevented);
+        if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
+            mozilla::widget::android::APZCCallbackHandler::GetInstance()->NotifyDefaultPrevented(ae->ApzGuid(), defaultPrevented);
+        } else {
+            mozilla::widget::android::GeckoAppShell::NotifyDefaultPrevented(defaultPrevented);
+        }
         sDefaultPreventedNotified = true;
     }
 
@@ -1040,7 +1046,11 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     // for the next event.
     if (isDownEvent) {
         if (preventDefaultActions) {
-            mozilla::widget::android::GeckoAppShell::NotifyDefaultPrevented(true);
+            if (ae->Type() == AndroidGeckoEvent::APZ_INPUT_EVENT) {
+                mozilla::widget::android::APZCCallbackHandler::GetInstance()->NotifyDefaultPrevented(ae->ApzGuid(), true);
+            } else {
+                mozilla::widget::android::GeckoAppShell::NotifyDefaultPrevented(true);
+            }
             sDefaultPreventedNotified = true;
         } else {
             sDefaultPreventedNotified = false;
@@ -2392,7 +2402,7 @@ nsWindow::GetAPZCTreeManager()
             return nullptr;
         }
         uint64_t rootLayerTreeId = compositor->RootLayerTreeId();
-        CompositorParent::SetControllerForLayerTree(rootLayerTreeId, AndroidBridge::Bridge());
+        CompositorParent::SetControllerForLayerTree(rootLayerTreeId, mozilla::widget::android::APZCCallbackHandler::GetInstance());
         sApzcTreeManager = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
     }
     return sApzcTreeManager;

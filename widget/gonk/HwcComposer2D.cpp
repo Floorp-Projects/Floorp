@@ -608,6 +608,7 @@ HwcComposer2D::TryHwComposition()
     Commit();
 
     GetGonkDisplay()->SetFBReleaseFd(mList->hwLayers[idx].releaseFenceFd);
+    mList->hwLayers[idx].releaseFenceFd = -1;
     return true;
 }
 
@@ -648,6 +649,7 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
     Commit();
 
     GetGonkDisplay()->SetFBReleaseFd(mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd);
+    mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd = -1;
     return true;
 }
 
@@ -692,6 +694,7 @@ HwcComposer2D::Commit()
     displays[HWC_DISPLAY_PRIMARY] = mList;
 
     for (uint32_t j=0; j < (mList->numHwLayers - 1); j++) {
+        mList->hwLayers[j].acquireFenceFd = -1;
         if (mHwcLayerMap.IsEmpty() ||
             (mList->hwLayers[j].compositionType == HWC_FRAMEBUFFER)) {
             continue;

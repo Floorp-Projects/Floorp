@@ -112,7 +112,12 @@ BEGIN_TEST(testChromeBuffer)
             const char *bytes = "try {                                  "
                                 "  untrusted();                         "
                                 "} catch (e) {                          "
-                                "  return 'From trusted: ' + e;         "
+                                "  /*                                   "
+                                "   * Careful!  We must not reenter JS  "
+                                "   * that might try to push a frame.   "
+                                "   */                                  "
+                                "  return 'From trusted: ' +            "
+                                "         e.name + ': ' + e.message;    "
                                 "}                                      ";
             JS::HandleObject global = JS::HandleObject::fromMarkedLocation(trusted_glob.unsafeGet());
             JS::CompileOptions options(cx);
