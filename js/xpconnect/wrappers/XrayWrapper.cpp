@@ -451,8 +451,10 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         return true;
 
     // Disallow accessor properties.
-    if (desc.hasGetterOrSetter())
+    if (desc.hasGetterOrSetter()) {
+        JSAutoCompartment ac(cx, wrapper);
         return SilentFailure(cx, id, "Property has accessor");
+    }
 
     // Apply extra scrutiny to objects.
     if (desc.value().isObject()) {
@@ -460,8 +462,10 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         JSAutoCompartment ac(cx, propObj);
 
         // Disallow non-subsumed objects.
-        if (!AccessCheck::subsumes(target, propObj))
+        if (!AccessCheck::subsumes(target, propObj)) {
+            JSAutoCompartment ac(cx, wrapper);
             return SilentFailure(cx, id, "Value not same-origin with target");
+        }
 
         // Disallow non-Xrayable objects.
         if (GetXrayType(propObj) == NotXray) {
@@ -479,13 +483,16 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
                 key != JSProto_Int32Array && key != JSProto_Uint32Array &&
                 key != JSProto_Float32Array && key != JSProto_Float64Array)
             {
+                JSAutoCompartment ac(cx, wrapper);
                 return SilentFailure(cx, id, "Value not Xrayable");
             }
         }
 
         // Disallow callables.
-        if (JS_ObjectIsCallable(cx, propObj))
+        if (JS_ObjectIsCallable(cx, propObj)) {
+            JSAutoCompartment ac(cx, wrapper);
             return SilentFailure(cx, id, "Value is callable");
+        }
     }
 
     // Disallow any property that shadows something on its (Xrayed)
