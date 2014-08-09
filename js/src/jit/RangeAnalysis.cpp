@@ -2297,6 +2297,20 @@ MMod::truncate(TruncateKind kind)
 }
 
 bool
+MFloor::truncate(TruncateKind kind)
+{
+    setTruncateKind(kind);
+
+    if (isFiniteNonNegative_) {
+        setResultType(MIRType_Int32);
+        return true;
+    }
+
+    // No Modifications
+    return false;
+}
+
+bool
 MToDouble::truncate(TruncateKind kind)
 {
     JS_ASSERT(type() == MIRType_Double);
@@ -2378,6 +2392,12 @@ MMul::operandTruncateKind(size_t index) const
 {
     // See the comment in MAdd::operandTruncateKind.
     return Min(truncateKind(), IndirectTruncate);
+}
+
+MDefinition::TruncateKind
+MFloor::operandTruncateKind(size_t index) const
+{
+    return isFiniteNonNegative_ && outputTruncation_ >= IndirectTruncate ? outputTruncation_ : NoTruncate;
 }
 
 MDefinition::TruncateKind
@@ -2776,6 +2796,14 @@ MMod::collectRangeInfoPreTrunc()
     if (!rhsRange.canBeZero())
         canBeDivideByZero_ = false;
 
+}
+
+void
+MFloor::collectRangeInfoPreTrunc()
+{
+    Range inputRange(input());
+    if (inputRange.isFiniteNonNegative())
+        isFiniteNonNegative_ = true;
 }
 
 void
