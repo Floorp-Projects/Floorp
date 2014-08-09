@@ -1138,8 +1138,8 @@ JSScript::initScriptCounts(JSContext *cx)
     for (jsbytecode *pc = code(); pc < codeEnd(); pc += GetBytecodeLength(pc))
         n += PCCounts::numCounts(JSOp(*pc));
 
-    size_t nbytes = (length() * sizeof(PCCounts)) + (n * sizeof(double));
-    uint8_t *base = zone()->pod_calloc<uint8_t>(nbytes);
+    size_t bytes = (length() * sizeof(PCCounts)) + (n * sizeof(double));
+    char *base = (char *) cx->calloc_(bytes);
     if (!base)
         return false;
 
@@ -1155,7 +1155,7 @@ JSScript::initScriptCounts(JSContext *cx)
         compartment()->scriptCountsMap = map;
     }
 
-    uint8_t *cursor = base;
+    char *cursor = base;
 
     ScriptCounts scriptCounts;
     scriptCounts.pcCountsVector = (PCCounts *) cursor;
@@ -1177,7 +1177,7 @@ JSScript::initScriptCounts(JSContext *cx)
     }
     hasScriptCounts_ = true; // safe to set this;  we can't fail after this point
 
-    JS_ASSERT(size_t(cursor - base) == nbytes);
+    JS_ASSERT(size_t(cursor - base) == bytes);
 
     /* Enable interrupts in any interpreter frames running on this script. */
     for (ActivationIterator iter(cx->runtime()); !iter.done(); ++iter) {
@@ -2358,15 +2358,14 @@ JSScript::Create(ExclusiveContext *cx, HandleObject enclosingScope, bool savedCa
 }
 
 static inline uint8_t *
-AllocScriptData(JS::Zone *zone, size_t size)
+AllocScriptData(ExclusiveContext *cx, size_t size)
 {
-    if (!size)
-        return nullptr;
-
-    uint8_t *data = zone->pod_calloc<uint8_t>(JS_ROUNDUP(size, sizeof(Value)));
+    uint8_t *data = static_cast<uint8_t *>(cx->calloc_(JS_ROUNDUP(size, sizeof(Value))));
     if (!data)
         return nullptr;
-    JS_ASSERT(size_t(data) % sizeof(Value) == 0);
+
+    // All script data is optional, so size might be 0. In that case, we don't care about alignment.
+    JS_ASSERT(size == 0 || size_t(data) % sizeof(Value) == 0);
     return data;
 }
 
@@ -2377,9 +2376,13 @@ JSScript::partiallyInit(ExclusiveContext *cx, HandleScript script, uint32_t ncon
 {
     size_t size = ScriptDataSize(script->bindings.count(), nconsts, nobjects, nregexps, ntrynotes,
                                  nblockscopes);
-    script->data = AllocScriptData(script->zone(), size);
-    if (size && !script->data)
-        return false;
+    if (size > 0) {
+        script->data = AllocScriptData(cx, size);
+        if (!script->data)
+            return false;
+    } else {
+        script->data = nullptr;
+    }
     script->dataSize_ = size;
 
     JS_ASSERT(nTypeSets <= UINT16_MAX);
@@ -2887,8 +2890,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     /* Script data */
 
     size_t size = src->dataSize();
-    uint8_t *data = AllocScriptData(cx->zone(), size);
-    if (size && !data)
+    uint8_t *data = AllocScriptData(cx, size);
+    if (!data)
         return nullptr;
 
     /* Bindings */
@@ -3149,7 +3152,7 @@ JSScript::ensureHasDebugScript(JSContext *cx)
         return true;
 
     size_t nbytes = offsetof(DebugScript, breakpoints) + length() * sizeof(BreakpointSite*);
-    DebugScript *debug = (DebugScript *) zone()->pod_calloc<uint8_t>(nbytes);
+    DebugScript *debug = (DebugScript *) cx->calloc_(nbytes);
     if (!debug)
         return false;
 

@@ -61,12 +61,7 @@ private:
   class SystemAllocPolicy {
   public:
     void *malloc_(size_t bytes) { return ::malloc(bytes); }
-
-    template <typename T>
-    T *pod_calloc(size_t numElems) {
-      return static_cast<T *>(::calloc(numElems, sizeof(T)));
-    }
-
+    void *calloc_(size_t bytes) { return ::calloc(bytes, 1); }
     void *realloc_(void *p, size_t bytes) { return ::realloc(p, bytes); }
     void free_(void *p) { ::free(p); }
     void reportAllocOverflow() const {}

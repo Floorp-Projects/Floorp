@@ -103,24 +103,17 @@ class IonAllocPolicy
     void *malloc_(size_t bytes) {
         return alloc_.allocate(bytes);
     }
-    template <typename T>
-    T *pod_calloc(size_t numElems) {
-        if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
-            return nullptr;
-        T *p = (T *)alloc_.allocate(numElems * sizeof(T));
+    void *calloc_(size_t bytes) {
+        void *p = alloc_.allocate(bytes);
         if (p)
-            memset(p, 0, numElems * sizeof(T));
+            memset(p, 0, bytes);
         return p;
     }
-    template <typename T>
-    T *pod_realloc(T *p, size_t oldSize, size_t newSize) {
-        MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
-        if (newSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
-            return nullptr;
-        T *n = (T *)malloc_(newSize * sizeof(T));
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
+        void *n = malloc_(bytes);
         if (!n)
             return n;
-        memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
+        memcpy(n, p, Min(oldBytes, bytes));
         return n;
     }
     void free_(void *p) {
@@ -138,6 +131,19 @@ class OldIonAllocPolicy
     {}
     void *malloc_(size_t bytes) {
         return GetIonContext()->temp->allocate(bytes);
+    }
+    void *calloc_(size_t bytes) {
+        void *p = GetIonContext()->temp->allocate(bytes);
+        if (p)
+            memset(p, 0, bytes);
+        return p;
+    }
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
+        void *n = malloc_(bytes);
+        if (!n)
+            return n;
+        memcpy(n, p, Min(oldBytes, bytes));
+        return n;
     }
     void free_(void *p) {
     }

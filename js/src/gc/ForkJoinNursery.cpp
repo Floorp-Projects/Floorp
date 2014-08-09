@@ -585,13 +585,16 @@ ForkJoinNursery::reallocateSlots(JSObject *obj, HeapSlot *oldSlots,
     if (newCount & mozilla::tl::MulOverflowMask<sizeof(HeapSlot)>::value)
         return nullptr;
 
+    size_t oldSize = oldCount * sizeof(HeapSlot);
+    size_t newSize = newCount * sizeof(HeapSlot);
+
     if (!isInsideNewspace(obj)) {
         JS_ASSERT_IF(oldSlots, !isInsideNewspace(oldSlots));
-        return obj->zone()->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
+        return static_cast<HeapSlot *>(cx_->realloc_(oldSlots, oldSize, newSize));
     }
 
     if (!isInsideNewspace(oldSlots))
-        return reallocateHugeSlots(obj, oldSlots, oldCount, newCount);
+        return reallocateHugeSlots(oldSlots, oldSize, newSize);
 
     // No-op if we're shrinking, we can't make use of the freed portion.
     if (newCount < oldCount)
@@ -601,7 +604,6 @@ ForkJoinNursery::reallocateSlots(JSObject *obj, HeapSlot *oldSlots,
     if (!newSlots)
         return nullptr;
 
-    size_t oldSize = oldCount * sizeof(HeapSlot);
     js_memcpy(newSlots, oldSlots, oldSize);
     return newSlots;
 }
@@ -648,10 +650,9 @@ ForkJoinNursery::allocateHugeSlots(size_t nslots)
 }
 
 HeapSlot *
-ForkJoinNursery::reallocateHugeSlots(JSObject *obj, HeapSlot *oldSlots,
-                                     uint32_t oldCount, uint32_t newCount)
+ForkJoinNursery::reallocateHugeSlots(HeapSlot *oldSlots, uint32_t oldSize, uint32_t newSize)
 {
-    HeapSlot *newSlots = obj->zone()->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
+    HeapSlot *newSlots = static_cast<HeapSlot *>(cx_->realloc_(oldSlots, oldSize, newSize));
     if (!newSlots)
         return newSlots;
 

@@ -28,7 +28,8 @@ ExtractWellSized(ExclusiveContext *cx, Buffer &cb)
     /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
     JS_ASSERT(capacity >= length);
     if (length > Buffer::sMaxInlineStorage && capacity - length > length / 4) {
-        CharT *tmp = cx->zone()->pod_realloc<CharT>(buf, capacity, length + 1);
+        size_t bytes = sizeof(CharT) * (length + 1);
+        CharT *tmp = (CharT *)cx->realloc_(buf, bytes);
         if (!tmp) {
             js_free(buf);
             return nullptr;

@@ -204,7 +204,9 @@ struct VectorImpl<T, N, AP, ThisVector, true>
   {
     MOZ_ASSERT(!aV.usingInlineStorage());
     MOZ_ASSERT(!CapacityHasExcessSpace<T>(aNewCap));
-    T* newbuf = aV.template pod_realloc<T>(aV.mBegin, aV.mCapacity, aNewCap);
+    size_t oldSize = sizeof(T) * aV.mCapacity;
+    size_t newSize = sizeof(T) * aNewCap;
+    T* newbuf = reinterpret_cast<T*>(aV.realloc_(aV.mBegin, oldSize, newSize));
     if (!newbuf) {
       return false;
     }
