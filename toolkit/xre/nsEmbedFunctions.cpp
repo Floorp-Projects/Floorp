@@ -213,6 +213,12 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 void
 XRE_SetProcessType(const char* aProcessTypeString)
 {
+  static bool called = false;
+  if (called) {
+    MOZ_CRASH();
+  }
+  called = true;
+
   sChildProcessType = GeckoProcessType_Invalid;
   for (int i = 0;
        i < (int) ArrayLength(kGeckoProcessTypeString);
