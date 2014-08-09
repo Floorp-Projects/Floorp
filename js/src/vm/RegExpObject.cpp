@@ -7,6 +7,7 @@
 #include "vm/RegExpObject.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PodOperations.h"
 
 #include "jsstr.h"
 
@@ -26,6 +27,7 @@ using namespace js;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+using mozilla::PodCopy;
 using js::frontend::TokenStream;
 
 using JS::AutoCheckCannotGC;
