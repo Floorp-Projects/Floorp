@@ -453,7 +453,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
     // Disallow accessor properties.
     if (desc.hasGetterOrSetter()) {
         JSAutoCompartment ac(cx, wrapper);
-        return SilentFailure(cx, id, "Property has accessor");
+        return SilentFailure(cx, id, "property has accessor");
     }
 
     // Apply extra scrutiny to objects.
@@ -464,7 +464,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         // Disallow non-subsumed objects.
         if (!AccessCheck::subsumes(target, propObj)) {
             JSAutoCompartment ac(cx, wrapper);
-            return SilentFailure(cx, id, "Value not same-origin with target");
+            return SilentFailure(cx, id, "value not same-origin with target");
         }
 
         // Disallow non-Xrayable objects.
@@ -484,14 +484,14 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
                 key != JSProto_Float32Array && key != JSProto_Float64Array)
             {
                 JSAutoCompartment ac(cx, wrapper);
-                return SilentFailure(cx, id, "Value not Xrayable");
+                return SilentFailure(cx, id, "value not Xrayable");
             }
         }
 
         // Disallow callables.
         if (JS_ObjectIsCallable(cx, propObj)) {
             JSAutoCompartment ac(cx, wrapper);
-            return SilentFailure(cx, id, "Value is callable");
+            return SilentFailure(cx, id, "value is callable");
         }
     }
 
@@ -506,7 +506,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         return false;
     }
     if (foundOnProto)
-        return SilentFailure(cx, id, "Value shadows a property on the standard prototype");
+        return SilentFailure(cx, id, "value shadows a property on the standard prototype");
 
     // We made it! Assign over the descriptor, and don't forget to wrap.
     outDesc.assign(desc.get());
