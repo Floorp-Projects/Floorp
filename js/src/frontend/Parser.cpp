@@ -788,16 +788,6 @@ Parser<ParseHandler>::reportBadReturn(Node pn, ParseReportKind kind,
     return report(kind, pc->sc->strict, pn, errnum, name.ptr());
 }
 
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::checkFinalReturn(Node pn)
-{
-    JS_ASSERT(pc->sc->isFunctionBox());
-    return HasFinalReturn(pn) == ENDS_IN_RETURN ||
-           reportBadReturn(pn, ParseExtraWarning,
-                           JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
-}
-
 /*
  * Check that assigning to lhs is permitted.  Assigning to 'eval' or
  * 'arguments' is banned in strict mode and in destructuring assignment.
@@ -1111,10 +1101,6 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         JS_ASSERT(type == StatementListBody);
         break;
     }
-
-    /* Check for falling off the end of a function that returns a value. */
-    if (options().extraWarningsOption && pc->funHasReturnExpr && !checkFinalReturn(pn))
-        return null();
 
     /* Define the 'arguments' binding if necessary. */
     if (!checkFunctionArguments())
@@ -4877,13 +4863,6 @@ Parser<ParseHandler>::returnStatement()
     Node pn = handler.newReturnStatement(exprNode, TokenPos(begin, pos().end));
     if (!pn)
         return null();
-
-    if (options().extraWarningsOption && pc->funHasReturnExpr && pc->funHasReturnVoid &&
-        !reportBadReturn(pn, ParseExtraWarning,
-                         JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE))
-    {
-        return null();
-    }
 
     if (pc->isLegacyGenerator() && exprNode) {
         /* Disallow "return v;" in legacy generators. */
