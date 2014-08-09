@@ -9169,6 +9169,8 @@ class MFloor
     explicit MFloor(MDefinition *num)
       : MUnaryInstruction(num),
         isFiniteNonNegative_(false),
+        canSkipZeroChecks_(false),
+        canSkipNegativeCase_(false),
         outputTruncation_(NoTruncate)
     {
         setResultType(MIRType_Int32);
@@ -9177,6 +9179,8 @@ class MFloor
     }
 
     bool isFiniteNonNegative_;
+    bool canSkipZeroChecks_;
+    bool canSkipNegativeCase_;
     TruncateKind outputTruncation_;
 
   public:
@@ -9214,6 +9218,12 @@ class MFloor
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {
         return true;
+    }
+    bool canSkipZeroChecks() const {
+        return canSkipZeroChecks_;
+    }
+    bool canSkipNegativeCase() const {
+        return canSkipNegativeCase_;
     }
 };
 
