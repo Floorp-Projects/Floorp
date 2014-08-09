@@ -133,18 +133,18 @@
   <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="320b05a5761eb2a4816f7529c91ea49422979b55"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="0f7829661cd7125de9dc2c90eca2fa1dbc68dfbf"/>
-  <project name="platform/frameworks/base" path="frameworks/base" revision="051b29984ff0c23bc6bb31a36495dd1879d036d3"/>
+  <project name="platform/frameworks/base" path="frameworks/base" revision="c1019aa8ff3d7f1aa9e3439d3b26ec5f7ef68205"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="268d569074237b53617db8211400d4e3c947ae73"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="484802559ed106bac4811bd01c024ca64f741e60"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="de4ade568b273781416638fbbce13ff31b636ada"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="5e110615212302c5d798a3c223dcee458817651c"/>
   <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="fa9ffd47948eb24466de227e48fe9c4a7c5e7711"/>
-  <project name="platform/hardware/qcom/gps" path="hardware/qcom/gps" revision="5dc48bd46f9589653f8bf297be5d73676f2e2867"/>
+  <project name="platform/hardware/qcom/gps" path="hardware/qcom/gps" revision="cd76b19aafd4229ccf83853d02faef8c51ca8b34"/>
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="8a0d0b0d9889ef99c4c6317c810db4c09295f15a"/>
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="2208fa3537ace873b8f9ec2355055761c79dfd5f"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="c4e2ac95907a5519a0e09f01a0d8e27fec101af0"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="e1eb226fa3ad3874ea7b63c56a9dc7012d7ff3c2"/>
-  <project name="platform/system/core" path="system/core" revision="b33c9a7b8eefbeaf480f0b8f9af2c6a8a35b0aee"/>
+  <project name="platform/system/core" path="system/core" revision="adc485d8755af6a61641d197de7cfef667722580"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="a7141c4799ac2eb09ac3fe9476bfd066b21285e1"/>
   <project name="platform/system/qcom" path="system/qcom" revision="1cdab258b15258b7f9657da70e6f06ebd5a2fc25"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="4ae5df252123591d5b941191790e7abed1bce5a4"/>
