@@ -85,8 +85,9 @@ content_process_main(int argc, char* argv[])
 {
     // Check for the absolute minimum number of args we need to move
     // forward here. We expect the last arg to be the child process type.
-    if (argc < 1)
+    if (argc < 1) {
       return 3;
+    }
     XRE_SetProcessType(argv[--argc]);
 
     bool isNuwa = false;
