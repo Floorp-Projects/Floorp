@@ -114,6 +114,8 @@ class VCMSessionInfo {
   PacketIterator FindPartitionEnd(PacketIterator it) const;
   static bool InSequence(const PacketIterator& it,
                          const PacketIterator& prev_it);
+  void CopyPacket(uint8_t* dst, const uint8_t* src, size_t len);
+  void CopyWithStartCode(uint8_t* dst, const uint8_t* src, size_t len);
   int InsertBuffer(uint8_t* frame_buffer,
                    PacketIterator packetIterator);
   void ShiftSubsequentPackets(PacketIterator it, int steps_to_shift);
