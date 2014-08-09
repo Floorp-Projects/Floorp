@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1417860884683000);
+const PRTime gPreloadListExpirationTime = INT64_C(1418465227002000);
 
 class nsSTSPreload
 {
@@ -82,12 +82,12 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "docs.google.com", true },
   { "docs.python.org", true },
   { "domains.google.com", true },
-  { "donmez.ws", false },
   { "download.jitsi.org", false },
   { "drive.google.com", true },
   { "ebanking.indovinabank.com.vn", false },
   { "ecosystem.atlassian.net", true },
   { "eff.org", true },
+  { "emailprivacytester.com", true },
   { "encircleapp.com", true },
   { "encrypted.google.com", true },
   { "entropia.de", false },
@@ -167,6 +167,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mnsure.org", true },
   { "mobile.usaa.com", false },
   { "mudcrab.us", true },
+  { "mwe.st", true },
   { "my.onlime.ch", false },
   { "my.xero.com", false },
   { "mylookout.com", false },
@@ -186,9 +187,10 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "passport.yandex.ua", false },
   { "passwd.io", true },
   { "paste.linode.com", false },
+  { "pastebin.linode.com", false },
   { "pay.gigahost.dk", true },
   { "paymill.com", true },
-  { "paymill.de", false },
+  { "paymill.de", true },
   { "pixi.me", true },
   { "play.google.com", false },
   { "plus.google.com", false },
@@ -206,6 +208,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "roundcube.mayfirst.org", false },
   { "sakaki.anime.my", true },
   { "sandbox.mydigipass.com", false },
+  { "schokokeks.org", false },
   { "script.google.com", true },
   { "security.google.com", true },
   { "securityheaders.com", true },
@@ -235,6 +238,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "torproject.org", false },
   { "translate.googleapis.com", true },
   { "twitter.com", false },
+  { "ub3rk1tten.com", true },
   { "ubertt.org", true },
   { "usaa.com", false },
   { "vmoagents.com", false },
@@ -291,6 +295,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.noisebridge.net", false },
   { "www.opsmate.com", true },
   { "www.python.org", true },
+  { "www.schokokeks.org", false },
   { "www.simbolo.co.uk", false },
   { "www.simple.com", false },
   { "www.therapynotes.com", false },
