@@ -26,6 +26,8 @@ const appInfo = Cc["@mozilla.org/xre/app-info;1"].
 const vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
            getService(Ci.nsIVersionComparator);
 
+const Startup = Cu.import("resource://gre/modules/sdk/system/Startup.js", {}).exports;
+
 
 const REASON = [ 'unknown', 'startup', 'shutdown', 'enable', 'disable',
                  'install', 'uninstall', 'upgrade', 'downgrade' ];
