@@ -8,11 +8,9 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 function test() {
   requestLongerTimeout(6);
 
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  loadTab(TEST_URI).then(() => {
+    openConsole().then(consoleOpened);
+  });
 }
 
 function consoleOpened(HUD) {

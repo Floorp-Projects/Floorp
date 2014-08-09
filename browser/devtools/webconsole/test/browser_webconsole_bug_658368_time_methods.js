@@ -6,82 +6,61 @@
 
 // Tests that the Console API implements the time() and timeEnd() methods.
 
-function test() {
-  addTab("http://example.com/browser/browser/devtools/webconsole/" +
-         "test/test-bug-658368-time-methods.html");
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    Task.spawn(runner);
-  }, true);
+const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+         "test/test-bug-658368-time-methods.html";
 
-  function* runner() {
-    let hud1 = yield openConsole();
+const TEST_URI2 = "data:text/html;charset=utf-8,<script>" +
+           "console.timeEnd('bTimer');</script>";
 
-    yield waitForMessages({
-      webconsole: hud1,
-      messages: [{
-        name: "aTimer started",
-        consoleTime: "aTimer",
-      }, {
-        name: "aTimer end",
-        consoleTimeEnd: "aTimer",
-      }],
-    });
-
-    let deferred = promise.defer();
-
-    // The next test makes sure that timers with the same name but in separate
-    // tabs, do not contain the same value.
-    addTab("data:text/html;charset=utf-8,<script>" +
-           "console.timeEnd('bTimer');</script>");
-    browser.addEventListener("load", function onLoad() {
-      browser.removeEventListener("load", onLoad, true);
-      openConsole().then((hud) => {
-        deferred.resolve(hud);
-      });
-    }, true);
-
-    let hud2 = yield deferred.promise;
-
-    testLogEntry(hud2.outputNode, "bTimer: timer started",
-                 "bTimer was not started", false, true);
-
-    // The next test makes sure that timers with the same name but in separate
-    // pages, do not contain the same value.
-    content.location = "data:text/html;charset=utf-8,<script>" +
+const TEST_URI3 = "data:text/html;charset=utf-8,<script>" +
                        "console.time('bTimer');</script>";
 
-    yield waitForMessages({
-      webconsole: hud2,
-      messages: [{
-        name: "bTimer started",
-        consoleTime: "bTimer",
-      }],
-    });
-
-    hud2.jsterm.clearOutput();
-
-    deferred = promise.defer();
-
-    // Now the following console.timeEnd() call shouldn't display anything,
-    // if the timers in different pages are not related.
-    browser.addEventListener("load", function onLoad() {
-      browser.removeEventListener("load", onLoad, true);
-      deferred.resolve(null);
-    }, true);
-
-    content.location = "data:text/html;charset=utf-8," +
+const TEST_URI4 = "data:text/html;charset=utf-8," +
                        "<script>console.timeEnd('bTimer');</script>";
 
-    yield deferred.promise;
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
 
-    testLogEntry(hud2.outputNode, "bTimer: timer started",
-                 "bTimer was not started", false, true);
+  let hud1 = yield openConsole();
 
-    yield closeConsole(gBrowser.selectedTab);
+  yield waitForMessages({
+    webconsole: hud1,
+    messages: [{
+      name: "aTimer started",
+      consoleTime: "aTimer",
+    }, {
+      name: "aTimer end",
+      consoleTimeEnd: "aTimer",
+    }],
+  });
 
-    gBrowser.removeCurrentTab();
+  // The next test makes sure that timers with the same name but in separate
+  // tabs, do not contain the same value.
+  let { browser } = yield loadTab(TEST_URI2);
+  let hud2 = yield openConsole();
 
-    executeSoon(finishTest);
-  }
-}
+  testLogEntry(hud2.outputNode, "bTimer: timer started",
+               "bTimer was not started", false, true);
+
+  // The next test makes sure that timers with the same name but in separate
+  // pages, do not contain the same value.
+  content.location = TEST_URI3;
+
+  yield waitForMessages({
+    webconsole: hud2,
+    messages: [{
+      name: "bTimer started",
+      consoleTime: "bTimer",
+    }],
+  });
+
+  hud2.jsterm.clearOutput();
+
+  // Now the following console.timeEnd() call shouldn't display anything,
+  // if the timers in different pages are not related.
+  content.location = TEST_URI4;
+  yield loadBrowser(browser);
+
+  testLogEntry(hud2.outputNode, "bTimer: timer started",
+               "bTimer was not started", false, true);
+});

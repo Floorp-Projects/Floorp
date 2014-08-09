@@ -8,14 +8,12 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/te
 let jsterm, testDriver;
 
 function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, function(hud) {
+  loadTab(TEST_URI).then(() => {
+    openConsole().then((hud) => {
       testDriver = testJSTerm(hud);
       testDriver.next();
-    });
-  }, true);
+    })
+  });
 }
 
 function nextTest() {
@@ -68,13 +66,11 @@ function testJSTerm(hud)
 
   waitForSuccess({
     name: "clear() worked",
-    validatorFn: function()
+    validator: function()
     {
       return jsterm.outputNode.childNodes.length == 0;
-    },
-    successFn: nextTest,
-    failureFn: nextTest,
-  });
+    }
+  }).then(nextTest);
 
   yield undefined;
 

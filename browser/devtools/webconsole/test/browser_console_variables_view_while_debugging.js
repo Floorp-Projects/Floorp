@@ -14,11 +14,9 @@ let gWebConsole, gJSTerm, gDebuggerWin, gThread, gDebuggerController,
 
 function test()
 {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  loadTab(TEST_URI).then(() => {
+    openConsole().then(consoleOpened);
+  });
 }
 
 function consoleOpened(hud)
@@ -52,7 +50,7 @@ function onFramesAdded()
   info("onFramesAdded");
 
   executeSoon(() =>
-    openConsole(null, () =>
+    openConsole().then(() =>
       gJSTerm.execute("fooObj", onExecuteFooObj)
     )
   );
@@ -95,12 +93,11 @@ function onTestPropFound(aResults)
     property: prop,
     field: "value",
     string: "document.title + foo2 + $('p')",
-    webconsole: gWebConsole,
-    callback: onFooObjFetchAfterUpdate,
-  });
+    webconsole: gWebConsole
+  }).then(onFooObjFetchAfterUpdate);
 }
 
-function onFooObjFetchAfterUpdate(aEvent, aVar)
+function onFooObjFetchAfterUpdate(aVar)
 {
   info("onFooObjFetchAfterUpdate");
   let para = content.wrappedJSObject.document.querySelector("p");

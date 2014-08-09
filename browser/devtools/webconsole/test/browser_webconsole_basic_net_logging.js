@@ -6,39 +6,37 @@
 // Tests that the page's resources are displayed in the console as they're
 // loaded
 
+"use strict";
+
 const TEST_NETWORK_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-network.html" + "?_date=" + Date.now();
 
-function test() {
-  addTab("data:text/html;charset=utf-8,Web Console basic network logging test");
-  browser.addEventListener("load", onLoad, true);
+let test = asyncTest(function* () {
+  yield loadTab("data:text/html;charset=utf-8,Web Console basic network logging test");
+  let hud = yield openConsole();
 
-  function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, function(hud) {
-      content.location = TEST_NETWORK_URI;
-      waitForMessages({
-        webconsole: hud,
-        messages: [{
-          text: "running network console",
-          category: CATEGORY_WEBDEV,
-          severity: SEVERITY_LOG,
-        },
-        {
-          text: "test-network.html",
-          category: CATEGORY_NETWORK,
-          severity: SEVERITY_LOG,
-        },
-        {
-          text: "testscript.js",
-          category: CATEGORY_NETWORK,
-          severity: SEVERITY_LOG,
-        },
-        {
-          text: "test-image.png",
-          category: CATEGORY_NETWORK,
-          severity: SEVERITY_LOG,
-        }],
-      }).then(finishTest);
-    });
-  }
-}
+  content.location = TEST_NETWORK_URI;
+
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "running network console",
+      category: CATEGORY_WEBDEV,
+      severity: SEVERITY_LOG,
+    },
+    {
+      text: "test-network.html",
+      category: CATEGORY_NETWORK,
+      severity: SEVERITY_LOG,
+    },
+    {
+      text: "testscript.js",
+      category: CATEGORY_NETWORK,
+      severity: SEVERITY_LOG,
+    },
+    {
+      text: "test-image.png",
+      category: CATEGORY_NETWORK,
+      severity: SEVERITY_LOG,
+    }],
+  });
+});

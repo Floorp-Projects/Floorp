@@ -12,11 +12,9 @@ let gWebConsole, gJSTerm, gDebuggerWin, gThread, gDebuggerController, gStackfram
 
 function test()
 {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
+  loadTab(TEST_URI).then(() => {
+    openConsole().then(consoleOpened);
+  });
 }
 
 function consoleOpened(hud)
@@ -63,7 +61,7 @@ function debuggerOpened(aResult)
 
   info("openConsole");
   executeSoon(() =>
-    openConsole(null, () =>
+    openConsole().then(() =>
       gJSTerm.execute("foo + foo2", onExecuteFooAndFoo2)
     )
   );
@@ -92,7 +90,7 @@ function onFramesAdded()
 {
   info("onFramesAdded, openConsole() now");
   executeSoon(() =>
-    openConsole(null, () =>
+    openConsole().then(() =>
       gJSTerm.execute("foo + foo2", onExecuteFooAndFoo2InSecondCall)
     )
   );
@@ -114,7 +112,7 @@ function onExecuteFooAndFoo2InSecondCall()
 
       info("openConsole");
       executeSoon(() =>
-        openConsole(null, () =>
+        openConsole().then(() =>
           gJSTerm.execute("foo + foo2 + foo3", onExecuteFoo23InFirstCall)
         )
       );
