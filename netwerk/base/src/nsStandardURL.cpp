@@ -244,7 +244,7 @@ nsSegmentEncoder::InitUnicodeEncoder()
 static PRCList gAllURLs;
 #endif
 
-nsStandardURL::nsStandardURL(bool aSupportsFileURL)
+nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
     : mDefaultPort(-1)
     , mPort(-1)
     , mHostA(nullptr)
@@ -270,7 +270,11 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL)
     mParser = net_GetStdURLParser();
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PR_APPEND_LINK(&mDebugCList, &gAllURLs);
+    if (aTrackURL) {
+        PR_APPEND_LINK(&mDebugCList, &gAllURLs);
+    } else {
+        PR_INIT_CLIST(&mDebugCList);
+    }
 #endif
 }
 
@@ -282,7 +286,9 @@ nsStandardURL::~nsStandardURL()
         free(mHostA);
     }
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PR_REMOVE_LINK(&mDebugCList);
+    if (!PR_CLIST_IS_EMPTY(&mDebugCList)) {
+        PR_REMOVE_LINK(&mDebugCList);
+    }
 #endif
 }
 
@@ -1139,7 +1145,7 @@ nsStandardURL::SetSpec(const nsACString &input)
         return NS_ERROR_MALFORMED_URI;
 
     // Make a backup of the curent URL
-    nsStandardURL prevURL;
+    nsStandardURL prevURL(false,false);
     prevURL.CopyMembers(this, eHonorRef);
     Clear();
 
