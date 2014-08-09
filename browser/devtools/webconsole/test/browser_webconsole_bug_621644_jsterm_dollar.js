@@ -9,32 +9,41 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-621644-jsterm-dollar.html";
 
-function test$(HUD) {
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  yield test$(hud);
+  yield test$$(hud);
+});
+
+
+function* test$(HUD) {
+  let deferred = promise.defer();
+
   HUD.jsterm.clearOutput();
 
   HUD.jsterm.execute("$(document.body)", (msg) => {
     ok(msg.textContent.indexOf("<p>") > -1,
        "jsterm output is correct for $()");
-
-    test$$(HUD);
+    deferred.resolve();
   });
+
+  return deferred.promise;
 }
 
 function test$$(HUD) {
+  let deferred = promise.defer();
+
   HUD.jsterm.clearOutput();
 
   HUD.jsterm.setInputValue();
   HUD.jsterm.execute("$$(document)", (msg) => {
     ok(msg.textContent.indexOf("621644") > -1,
        "jsterm output is correct for $$()");
-    finishTest();
+    deferred.resolve();
   });
-}
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, test$);
-  }, true);
+  return deferred.promise;
 }
