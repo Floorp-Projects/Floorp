@@ -15,6 +15,14 @@
     <div id="main"></div>
     <script src="fake-mozLoop.js"></script>
     <script src="fake-l10n.js"></script>
+    <script>
+      window.OTProperties = {
+        cdnURL: '../content/shared/libs/'
+      };
+      window.OTProperties.assetURL = window.OTProperties.cdnURL + 'sdk-content/';
+      window.OTProperties.configURL = window.OTProperties.assetURL + 'js/dynamic_config.min.js';
+      window.OTProperties.cssURL = window.OTProperties.assetURL + 'css/ot.css';
+    </script>
     <script src="../content/shared/libs/sdk.js"></script>
     <script src="../content/shared/libs/react-0.11.1.js"></script>
     <script src="../content/shared/libs/jquery-2.1.0.js"></script>
