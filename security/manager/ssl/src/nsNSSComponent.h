@@ -44,10 +44,10 @@ MOZ_WARN_UNUSED_RESULT
 //Define an interface that we can use to look up from the
 //callbacks passed to NSS.
 
-#define NS_INSSCOMPONENT_IID_STR "538c5093-7cfe-4f13-bc8e-e767766a2d4d"
+#define NS_INSSCOMPONENT_IID_STR "e60602a8-97a3-4fe7-b5b7-56bc6ce87ab4"
 #define NS_INSSCOMPONENT_IID \
-  { 0x538c5093, 0x7cfe, 0x4f13, \
-    { 0xbc, 0x8e, 0xe7, 0x67, 0x76, 0x6a, 0x2d, 0x4d } }
+  { 0xe60602a8, 0x97a3, 0x4fe7, \
+    { 0xb5, 0xb7, 0x56, 0xbc, 0x6c, 0xe8, 0x7a, 0xb4 } }
 
 enum EnsureNSSOperator
 {
@@ -91,12 +91,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD LaunchSmartCardThread(SECMODModule* module) = 0;
 
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule* module) = 0;
-
-  NS_IMETHOD PostEvent(const nsAString& eventType,
-                       const nsAString& token) = 0;
-
-  NS_IMETHOD DispatchEvent(const nsAString& eventType,
-                           const nsAString& token) = 0;
 #endif
 
   NS_IMETHOD IsNSSInitialized(bool* initialized) = 0;
@@ -149,8 +143,6 @@ public:
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_IMETHOD LaunchSmartCardThread(SECMODModule* module);
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule* module);
-  NS_IMETHOD PostEvent(const nsAString& eventType, const nsAString& token);
-  NS_IMETHOD DispatchEvent(const nsAString& eventType, const nsAString& token);
   void LaunchSmartCardThreads();
   void ShutdownSmartCardThreads();
   nsresult DispatchEventToWindow(nsIDOMWindow* domWin,
@@ -206,7 +198,6 @@ private:
 
   nsNSSHttpInterface mHttpForNSS;
   mozilla::RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
-
 
   static PRStatus IdentityInfoInit(void);
 };

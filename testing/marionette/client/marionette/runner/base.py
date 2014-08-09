@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from datetime import datetime
 from optparse import OptionParser
 
 import json
@@ -614,7 +613,7 @@ class BaseMarionetteTestRunner(object):
 
     def run_tests(self, tests):
         self.reset_test_stats()
-        starttime = datetime.utcnow()
+        self.start_time = time.time()
 
         need_external_ip = True
         if not self.marionette:
@@ -675,7 +674,8 @@ class BaseMarionetteTestRunner(object):
         except:
             traceback.print_exc()
 
-        self.elapsedtime = datetime.utcnow() - starttime
+        self.end_time = time.time()
+        self.elapsedtime = self.end_time - self.start_time
 
         if self.xml_output:
             xml_dir = os.path.dirname(os.path.abspath(self.xml_output))
@@ -909,7 +909,7 @@ class BaseMarionetteTestRunner(object):
 
         testsuite = doc.createElement('testsuite')
         testsuite.setAttribute('name', 'Marionette')
-        testsuite.setAttribute('time', str(self.elapsedtime.total_seconds()))
+        testsuite.setAttribute('time', str(self.elapsedtime))
         testsuite.setAttribute('tests', str(sum([results.testsRun for
                                                  results in results_list])))
 

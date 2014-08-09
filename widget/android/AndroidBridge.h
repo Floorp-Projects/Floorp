@@ -26,7 +26,6 @@
 
 #include "mozilla/Likely.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Types.h"
 
@@ -37,6 +36,7 @@
 class nsWindow;
 class nsIDOMMozSmsMessage;
 class nsIObserver;
+class Task;
 
 /* See the comment in AndroidBridge about this function before using it */
 extern "C" MOZ_EXPORT JNIEnv * GetJNIForThread();
@@ -95,7 +95,7 @@ class DelayedTask {
 public:
     DelayedTask(Task* aTask, int aDelayMs) {
         mTask = aTask;
-        mRunTime = TimeStamp::Now() + TimeDuration::FromMilliseconds(aDelayMs);
+        mRunTime = mozilla::TimeStamp::Now() + mozilla::TimeDuration::FromMilliseconds(aDelayMs);
     }
 
     bool IsEarlierThan(DelayedTask *aOther) {
@@ -103,7 +103,7 @@ public:
     }
 
     int64_t MillisecondsToRunTime() {
-        TimeDuration timeLeft = mRunTime - TimeStamp::Now();
+        mozilla::TimeDuration timeLeft = mRunTime - mozilla::TimeStamp::Now();
         return (int64_t)timeLeft.ToMilliseconds();
     }
 
@@ -113,10 +113,10 @@ public:
 
 private:
     Task* mTask;
-    TimeStamp mRunTime;
+    mozilla::TimeStamp mRunTime;
 };
 
-class AndroidBridge MOZ_FINAL : public mozilla::layers::GeckoContentController
+class AndroidBridge MOZ_FINAL
 {
 public:
     enum {
@@ -131,10 +131,18 @@ public:
         LAYER_CLIENT_TYPE_GL = 2            // AndroidGeckoGLLayerClient
     };
 
+    static void RegisterJavaUiThread() {
+        sJavaUiThread = pthread_self();
+    }
+
+    static bool IsJavaUiThread() {
+        return pthread_equal(pthread_self(), sJavaUiThread);
+    }
+
     static void ConstructBridge(JNIEnv *jEnv);
 
     static AndroidBridge *Bridge() {
-        return sBridge.get();
+        return sBridge;
     }
 
     static JavaVM *GetVM() {
@@ -353,7 +361,8 @@ public:
     static nsresult GetExternalPublicDirectory(const nsAString& aType, nsAString& aPath);
 
 protected:
-    static StaticRefPtr<AndroidBridge> sBridge;
+    static pthread_t sJavaUiThread;
+    static AndroidBridge* sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
 
     // the global JavaVM
@@ -438,35 +447,12 @@ protected:
     void (* Region_set)(void* region, void* rect);
 
 private:
-    mozilla::widget::android::NativePanZoomController* mNativePanZoomController;
-    // This will always be accessed from one thread (the APZC "controller"
-    // thread, which is the Java UI thread), so we don't need to do locking
-    // to touch it
+    // This will always be accessed from one thread (the Java UI thread),
+    // so we don't need to do locking to touch it.
     nsTArray<DelayedTask*> mDelayedTaskQueue;
-
 public:
-    mozilla::widget::android::NativePanZoomController* SetNativePanZoomController(jobject obj);
-    // GeckoContentController methods
-    void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
-    void AcknowledgeScrollUpdate(const mozilla::layers::FrameMetrics::ViewID& aScrollId,
-                                 const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
-    void HandleDoubleTap(const CSSPoint& aPoint,
-                         int32_t aModifiers,
-                         const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    void HandleSingleTap(const CSSPoint& aPoint,
-                         int32_t aModifiers,
-                         const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    void HandleLongTap(const CSSPoint& aPoint,
-                       int32_t aModifiers,
-                       const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    void HandleLongTapUp(const CSSPoint& aPoint,
-                         int32_t aModifiers,
-                         const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    void SendAsyncScrollDOMEvent(bool aIsRoot,
-                                 const CSSRect& aContentRect,
-                                 const CSSSize& aScrollableSize) MOZ_OVERRIDE;
-    void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE;
-    int64_t RunDelayedTasks();
+    void PostTaskToUiThread(Task* aTask, int aDelayMs);
+    int64_t RunDelayedUiThreadTasks();
 };
 
 class AutoJObject {

@@ -607,63 +607,63 @@ def B2GCommand(func):
 class MachCommands(MachCommandBase):
     @Command('mochitest-plain', category='testing',
         conditions=[conditions.is_firefox_or_mulet],
-        description='Run a plain mochitest.')
+        description='Run a plain mochitest (integration test, plain web page).')
     @MochitestCommand
     def run_mochitest_plain(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'plain', **kwargs)
 
     @Command('mochitest-chrome', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a chrome mochitest.')
+        description='Run a chrome mochitest (integration test with some XUL).')
     @MochitestCommand
     def run_mochitest_chrome(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'chrome', **kwargs)
 
     @Command('mochitest-browser', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a mochitest with browser chrome.')
+        description='Run a mochitest with browser chrome (integration test with a standard browser).')
     @MochitestCommand
     def run_mochitest_browser(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'browser', **kwargs)
 
     @Command('mochitest-devtools', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a devtools mochitest with browser chrome.')
+        description='Run a devtools mochitest with browser chrome (integration test with a standard browser with the devtools frame).')
     @MochitestCommand
     def run_mochitest_devtools(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'devtools', **kwargs)
 
     @Command('mochitest-metro', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a mochitest with metro browser chrome.')
+        description='Run a mochitest with metro browser chrome (tests for Windows touch interface).')
     @MochitestCommand
     def run_mochitest_metro(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'metro', **kwargs)
 
     @Command('mochitest-a11y', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run an a11y mochitest.')
+        description='Run an a11y mochitest (accessibility tests).')
     @MochitestCommand
     def run_mochitest_a11y(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'a11y', **kwargs)
 
     @Command('webapprt-test-chrome', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a webapprt chrome mochitest.')
+        description='Run a webapprt chrome mochitest (Web App Runtime with the browser chrome).')
     @MochitestCommand
     def run_mochitest_webapprt_chrome(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'webapprt-chrome', **kwargs)
 
     @Command('webapprt-test-content', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run a webapprt content mochitest.')
+        description='Run a webapprt content mochitest (Content rendering of the Web App Runtime).')
     @MochitestCommand
     def run_mochitest_webapprt_content(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'webapprt-content', **kwargs)
 
     @Command('mochitest', category='testing',
         conditions=[conditions.is_firefox],
-        description='Run any flavor of mochitest.')
+        description='Run any flavor of mochitest (integration test).')
     @MochitestCommand
     @CommandArgument('-f', '--flavor', choices=FLAVORS.keys(),
         help='Only run tests of this flavor.')
@@ -753,7 +753,7 @@ class B2GCommands(MachCommandBase):
             setattr(self, attr, getattr(context, attr, None))
 
     @Command('mochitest-remote', category='testing',
-        description='Run a remote mochitest.',
+        description='Run a remote mochitest (integration test for fennec/android).',
         conditions=[conditions.is_b2g, is_emulator])
     @B2GCommand
     def run_mochitest_remote(self, test_paths, **kwargs):
@@ -784,7 +784,7 @@ class B2GCommands(MachCommandBase):
 
     @Command('mochitest-b2g-desktop', category='testing',
         conditions=[conditions.is_b2g_desktop],
-        description='Run a b2g desktop mochitest.')
+        description='Run a b2g desktop mochitest (same as mochitest-plain but for b2g desktop).')
     @B2GCommand
     def run_mochitest_b2g_desktop(self, test_paths, **kwargs):
         kwargs['profile'] = kwargs.get('profile') or os.environ.get('GAIA_PROFILE')

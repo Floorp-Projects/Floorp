@@ -3242,8 +3242,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
             if (key->isKind(PNK_NUMBER)) {
                 if (!EmitNumberOp(cx, key->pn_dval, bce))
                     return false;
-            } else {
-                MOZ_ASSERT(key->isKind(PNK_STRING) || key->isKind(PNK_NAME));
+            } else if (key->isKind(PNK_NAME) || key->isKind(PNK_STRING)) {
                 PropertyName *name = key->pn_atom->asPropertyName();
 
                 // The parser already checked for atoms representing indexes and
@@ -3258,10 +3257,15 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                         return false;
                     doElemOp = false;
                 }
+            } else {
+                JS_ASSERT(key->isKind(PNK_COMPUTED_NAME));
+                if (!EmitTree(cx, bce, key->pn_kid))
+                    return false;
             }
 
             pn3 = pn2->pn_right;
         }
+
 
         if (doElemOp) {
             /*
@@ -5549,12 +5553,38 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (Emit1(cx, bce, op) < 0)
                 return false;
         }
-    } else if (!pn->isDirectivePrologueMember()) {
-        /* Don't complain about directive prologue members; just don't emit their code. */
-        bce->current->currentLine = bce->parser->tokenStream.srcCoords.lineNum(pn2->pn_pos.begin);
-        bce->current->lastColumn = 0;
-        if (!bce->reportStrictWarning(pn2, JSMSG_USELESS_EXPR))
-            return false;
+    } else if (pn->isDirectivePrologueMember()) {
+        // Don't complain about directive prologue members; just don't emit
+        // their code.
+    } else {
+        if (JSAtom *atom = pn->isStringExprStatement()) {
+            // Warn if encountering a non-directive prologue member string
+            // expression statement, that is inconsistent with the current
+            // directive prologue.  That is, a script *not* starting with
+            // "use strict" should warn for any "use strict" statements seen
+            // later in the script, because such statements are misleading.
+            const char *directive = nullptr;
+            if (atom == cx->names().useStrict) {
+                if (!bce->sc->strict)
+                    directive = js_useStrict_str;
+            } else if (atom == cx->names().useAsm) {
+                if (bce->sc->isFunctionBox()) {
+                    JSFunction *fun = bce->sc->asFunctionBox()->function();
+                    if (fun->isNative() && IsAsmJSModuleNative(fun->native()))
+                        directive = js_useAsm_str;
+                }
+            }
+
+            if (directive) {
+                if (!bce->reportStrictWarning(pn2, JSMSG_CONTRARY_NONDIRECTIVE, directive))
+                    return false;
+            }
+        } else {
+            bce->current->currentLine = bce->parser->tokenStream.srcCoords.lineNum(pn2->pn_pos.begin);
+            bce->current->lastColumn = 0;
+            if (!bce->reportStrictWarning(pn2, JSMSG_USELESS_EXPR))
+                return false;
+        }
     }
 
     return true;
@@ -6053,17 +6083,21 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!EmitNumberOp(cx, pn3->pn_dval, bce))
                 return false;
             isIndex = true;
-        } else {
+        } else if (pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING)) {
             // The parser already checked for atoms representing indexes and
             // used PNK_NUMBER instead, but also watch for ids which TI treats
             // as indexes for simpliciation of downstream analysis.
-            JS_ASSERT(pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING));
             jsid id = NameToId(pn3->pn_atom->asPropertyName());
             if (id != types::IdToTypeId(id)) {
                 if (!EmitTree(cx, bce, pn3))
                     return false;
                 isIndex = true;
             }
+        } else {
+            JS_ASSERT(pn3->isKind(PNK_COMPUTED_NAME));
+            if (!EmitTree(cx, bce, pn3->pn_kid))
+                return false;
+            isIndex = true;
         }
 
         /* Emit code for the property initializer. */

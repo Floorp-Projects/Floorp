@@ -88,11 +88,10 @@ public:
 
     // While SQLite Mutexes may be recursive, in our own code we do not want to
     // treat them as such.
-    CallStack callContext = CallStack();
 
-    CheckAcquire(callContext);
+    CheckAcquire();
     sqlite3_mutex_enter(mMutex);
-    Acquire(callContext); // Call is protected by us holding the mutex.
+    Acquire(); // Call is protected by us holding the mutex.
   }
 
   void unlock()

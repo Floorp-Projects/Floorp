@@ -856,10 +856,6 @@ var BrowserApp = {
     return this._tabs;
   },
 
-  get selectedTab() {
-    return this._selectedTab;
-  },
-
   set selectedTab(aTab) {
     if (this._selectedTab == aTab)
       return;
@@ -1759,6 +1755,11 @@ var BrowserApp = {
     delete this.layersTileHeight;
     let height = Services.prefs.getIntPref("layers.tile-height");
     return this.layersTileHeight = height;
+  },
+
+  // nsIAndroidBrowserApp
+  get selectedTab() {
+    return this._selectedTab;
   },
 
   // nsIAndroidBrowserApp

@@ -1,0 +1,72 @@
+<html>
+<head>
+<title></title>
+
+<script type="text/javascript">
+
+// Modified by evil.js
+var scriptItem;
+
+var scriptItem1 = "untouched";
+var imageItem1 = "untouched";
+var frameItem1 = "untouched";
+var scriptItem2 = "untouched";
+var imageItem2 = "untouched";
+var frameItem2 = "untouched";
+
+function checkLoads() {
+  window.parent.is(scriptItem1, "spoiled", "Should not block tracking js 1");
+  window.parent.is(scriptItem2, "spoiled", "Should not block tracking js 2");
+  window.parent.is(imageItem1, "spoiled", "Should not block tracking img 1");
+  window.parent.is(imageItem2, "spoiled", "Should not block tracking img 2");
+  window.parent.is(frameItem1, "spoiled", "Should not block tracking iframe 1");
+  window.parent.is(frameItem2, "spoiled", "Should not block tracking iframe 2");
+  window.parent.is(window.document.blockedTrackingNodeCount, 0,
+    "No elements should be blocked");
+
+  // End (parent) test.
+  window.parent.clearPermissions();
+  window.parent.SimpleTest.finish();
+}
+
+</script>
+
+</head>
+
+<body onload="checkLoads()">
+
+<!-- Try loading from a tracking script URI (1) -->
+<script id="badscript1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="scriptItem1 = 'spoiled';"></script>
+
+<!-- Try loading from a tracking image URI (1) -->
+<img id="badimage1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg" onload="imageItem1 = 'spoiled';"/>
+
+<!-- Try loading from a tracking frame URI (1) -->
+<iframe id="badframe1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html" onload="frameItem1 = 'spoiled';"></iframe>
+
+<script>
+// Try loading from a tracking script URI (2) - The loader may follow a
+// different path depending on whether the resource is loaded from JS or HTML.
+var newScript = document.createElement("script");
+newScript.id = "badscript2";
+newScript.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js";
+newScript.addEventListener("load", function onload() {scriptItem2 = 'spoiled';});
+document.body.appendChild(newScript);
+
+/// Try loading from a tracking image URI (2)
+var newImage = document.createElement("img");
+newImage.id = "badimage2";
+newImage.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg";
+newImage.addEventListener("load", function onload() {imageItem2 = 'spoiled'});
+document.body.appendChild(newImage);
+
+// Try loading from a tracking iframe URI (2)
+var newFrame = document.createElement("iframe");
+newFrame.id = "badframe2";
+newFrame.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html"
+newFrame.addEventListener("load", function onload() {frameItem2 = 'spoiled'});
+document.body.appendChild(newFrame);
+</script>
+</body>
+</html>
+

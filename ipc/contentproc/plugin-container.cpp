@@ -83,6 +83,13 @@ void StartSandboxCallback()
 int
 content_process_main(int argc, char* argv[])
 {
+    // Check for the absolute minimum number of args we need to move
+    // forward here. We expect the last arg to be the child process type.
+    if (argc < 1) {
+      return 3;
+    }
+    XRE_SetProcessType(argv[--argc]);
+
     bool isNuwa = false;
     for (int i = 1; i < argc; i++) {
         isNuwa |= strcmp(argv[i], "-nuwa") == 0;
@@ -114,17 +121,11 @@ content_process_main(int argc, char* argv[])
 #endif
 #endif
 
-    // Check for the absolute minimum number of args we need to move
-    // forward here. We expect the last arg to be the child process type.
-    if (argc < 1)
-      return 3;
-    GeckoProcessType proctype = XRE_StringToChildProcessType(argv[--argc]);
-
 #ifdef XP_WIN
     // For plugins, this is done in PluginProcessChild::Init, as we need to
     // avoid it for unsupported plugins.  See PluginProcessChild::Init for
     // the details.
-    if (proctype != GeckoProcessType_Plugin) {
+    if (XRE_GetProcessType() != GeckoProcessType_Plugin) {
         mozilla::SanitizeEnvironmentVariables();
         SetDllDirectory(L"");
     }
@@ -144,7 +145,7 @@ content_process_main(int argc, char* argv[])
     }
 #endif
 
-    nsresult rv = XRE_InitChildProcess(argc, argv, proctype);
+    nsresult rv = XRE_InitChildProcess(argc, argv);
     NS_ENSURE_SUCCESS(rv, 1);
 
     return 0;

@@ -8,6 +8,7 @@ FAIL_ON_WARNINGS = True
 
 SIMPLE_PROGRAMS = [
     'BadCertServer',
+    'ClientAuthServer',
     'GenerateOCSPResponse',
     'OCSPStaplingServer',
 ]

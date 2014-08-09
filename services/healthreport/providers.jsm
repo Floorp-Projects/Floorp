@@ -1080,6 +1080,41 @@ DailyCrashesMeasurement4.prototype = Object.freeze({
   },
 });
 
+function DailyCrashesMeasurement5() {
+  Metrics.Measurement.call(this);
+}
+
+DailyCrashesMeasurement5.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "crashes",
+  version: 5,
+
+  fields: {
+    "main-crash": DAILY_LAST_NUMERIC_FIELD,
+    "main-crash-submission-succeeded": DAILY_LAST_NUMERIC_FIELD,
+    "main-crash-submission-failed": DAILY_LAST_NUMERIC_FIELD,
+    "main-hang": DAILY_LAST_NUMERIC_FIELD,
+    "main-hang-submission-succeeded": DAILY_LAST_NUMERIC_FIELD,
+    "main-hang-submission-failed": DAILY_LAST_NUMERIC_FIELD,
+    "content-crash": DAILY_LAST_NUMERIC_FIELD,
+    "content-crash-submission-succeeded": DAILY_LAST_NUMERIC_FIELD,
+    "content-crash-submission-failed": DAILY_LAST_NUMERIC_FIELD,
+    "content-hang": DAILY_LAST_NUMERIC_FIELD,
+    "content-hang-submission-succeeded": DAILY_LAST_NUMERIC_FIELD,
+    "content-hang-submission-failed": DAILY_LAST_NUMERIC_FIELD,
+    "plugin-crash": DAILY_LAST_NUMERIC_FIELD,
+    "plugin-crash-submission-succeeded": DAILY_LAST_NUMERIC_FIELD,
+    "plugin-crash-submission-failed": DAILY_LAST_NUMERIC_FIELD,
+    "plugin-hang": DAILY_LAST_NUMERIC_FIELD,
+    "plugin-hang-submission-succeeded": DAILY_LAST_NUMERIC_FIELD,
+    "plugin-hang-submission-failed": DAILY_LAST_NUMERIC_FIELD,
+    "gmplugin-crash": DAILY_LAST_NUMERIC_FIELD,
+    "gmplugin-crash-submission-succeeded": DAILY_LAST_NUMERIC_FIELD,
+    "gmplugin-crash-submission-failed": DAILY_LAST_NUMERIC_FIELD,
+  },
+});
+
 this.CrashesProvider = function () {
   Metrics.Provider.call(this);
 
@@ -1097,6 +1132,7 @@ CrashesProvider.prototype = Object.freeze({
     DailyCrashesMeasurement2,
     DailyCrashesMeasurement3,
     DailyCrashesMeasurement4,
+    DailyCrashesMeasurement5,
   ],
 
   pullOnly: true,
@@ -1109,8 +1145,8 @@ CrashesProvider.prototype = Object.freeze({
     this._log.info("Grabbing crash counts from crash manager.");
     let crashCounts = yield this._manager.getCrashCountsByDay();
 
-    let m = this.getMeasurement("crashes", 4);
-    let fields = DailyCrashesMeasurement4.prototype.fields;
+    let m = this.getMeasurement("crashes", 5);
+    let fields = DailyCrashesMeasurement5.prototype.fields;
 
     for (let [day, types] of crashCounts) {
       let date = Metrics.daysToDate(day);

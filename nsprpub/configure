@@ -795,6 +795,7 @@ enable_debug_symbols
 enable_win32_target
 enable_symbian_target
 enable_debug_rtl
+enable_static_rtl
 enable_n32
 enable_x32
 enable_64bit
@@ -1455,6 +1456,7 @@ Optional Features:
   --enable-symbian-target=\$t
                           Specify symbian flavor. (WINSCW or GCCE)
   --enable-debug-rtl      Use the MSVC debug runtime library
+  --enable-static-rtl     Use the MSVC static runtime library
   --enable-n32            Enable n32 ABI support (IRIX only)
   --enable-x32            Enable x32 ABI support (x86_64 only)
   --enable-64bit          Enable 64-bit support (on certain platforms)
@@ -2906,6 +2908,14 @@ if test "${enable_debug_rtl+set}" = set; then :
 	    USE_DEBUG_RTL=1
       else
 	    USE_DEBUG_RTL=0
+      fi
+fi
+
+
+# Check whether --enable-static-rtl was given.
+if test "${enable_static_rtl+set}" = set; then :
+  enableval=$enable_static_rtl;  if test "$enableval" = "yes"; then
+	    USE_STATIC_RTL=1
       fi
 fi
 
@@ -7185,9 +7195,17 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
         fi
 
         if test "$USE_DEBUG_RTL" = 1; then
-            CFLAGS="$CFLAGS -MDd"
+            if test -n "$USE_STATIC_RTL"; then
+                CFLAGS="$CFLAGS -MTd"
+            else
+                CFLAGS="$CFLAGS -MDd"
+            fi
         else
-            CFLAGS="$CFLAGS -MD"
+            if test -n "$USE_STATIC_RTL"; then
+                CFLAGS="$CFLAGS -MT"
+            else
+                CFLAGS="$CFLAGS -MD"
+            fi
         fi
 
         if test -n "$MOZ_DEBUG"; then

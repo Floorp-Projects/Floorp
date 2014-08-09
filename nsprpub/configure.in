@@ -390,6 +390,12 @@ AC_ARG_ENABLE(debug-rtl,
 	    USE_DEBUG_RTL=0
       fi ])
 
+AC_ARG_ENABLE(static-rtl,
+    [  --enable-static-rtl     Use the MSVC static runtime library],
+    [ if test "$enableval" = "yes"; then
+	    USE_STATIC_RTL=1
+      fi ])
+
 AC_ARG_ENABLE(n32,
     [  --enable-n32            Enable n32 ABI support (IRIX only)],
     [ if test "$enableval" = "yes"; then
@@ -2004,9 +2010,17 @@ tools are selected during the Xcode/Developer Tools installation.])
         fi
 
         if test "$USE_DEBUG_RTL" = 1; then
-            CFLAGS="$CFLAGS -MDd"
+            if test -n "$USE_STATIC_RTL"; then
+                CFLAGS="$CFLAGS -MTd"
+            else
+                CFLAGS="$CFLAGS -MDd"
+            fi
         else
-            CFLAGS="$CFLAGS -MD"
+            if test -n "$USE_STATIC_RTL"; then
+                CFLAGS="$CFLAGS -MT"
+            else
+                CFLAGS="$CFLAGS -MD"
+            fi
         fi
 
         if test -n "$MOZ_DEBUG"; then

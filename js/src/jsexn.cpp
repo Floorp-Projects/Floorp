@@ -51,14 +51,11 @@ Error(JSContext *cx, unsigned argc, Value *vp);
 static bool
 exn_toSource(JSContext *cx, unsigned argc, Value *vp);
 
-static bool
-exn_toString(JSContext *cx, unsigned argc, Value *vp);
-
 static const JSFunctionSpec exception_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, exn_toSource, 0, 0),
 #endif
-    JS_FN(js_toString_str, exn_toString, 0, 0),
+    JS_SELF_HOSTED_FN(js_toString_str, "ErrorToString", 0,0),
     JS_FS_END
 };
 
@@ -372,82 +369,6 @@ Error(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     args.rval().setObject(*obj);
-    return true;
-}
-
-/* ES5 15.11.4.4 (NB: with subsequent errata). */
-static bool
-exn_toString(JSContext *cx, unsigned argc, Value *vp)
-{
-    JS_CHECK_RECURSION(cx, return false);
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Step 2. */
-    if (!args.thisv().isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_PROTOTYPE, "Error");
-        return false;
-    }
-
-    /* Step 1. */
-    RootedObject obj(cx, &args.thisv().toObject());
-
-    /* Step 3. */
-    RootedValue nameVal(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().name, &nameVal))
-        return false;
-
-    /* Step 4. */
-    RootedString name(cx);
-    if (nameVal.isUndefined()) {
-        name = cx->names().Error;
-    } else {
-        name = ToString<CanGC>(cx, nameVal);
-        if (!name)
-            return false;
-    }
-
-    /* Step 5. */
-    RootedValue msgVal(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().message, &msgVal))
-        return false;
-
-    /* Step 6. */
-    RootedString message(cx);
-    if (msgVal.isUndefined()) {
-        message = cx->runtime()->emptyString;
-    } else {
-        message = ToString<CanGC>(cx, msgVal);
-        if (!message)
-            return false;
-    }
-
-    /* Step 7. */
-    if (name->empty() && message->empty()) {
-        args.rval().setString(cx->names().Error);
-        return true;
-    }
-
-    /* Step 8. */
-    if (name->empty()) {
-        args.rval().setString(message);
-        return true;
-    }
-
-    /* Step 9. */
-    if (message->empty()) {
-        args.rval().setString(name);
-        return true;
-    }
-
-    /* Step 10. */
-    StringBuffer sb(cx);
-    if (!sb.append(name) || !sb.append(": ") || !sb.append(message))
-        return false;
-
-    JSString *str = sb.finishString();
-    if (!str)
-        return false;
-    args.rval().setString(str);
     return true;
 }
 

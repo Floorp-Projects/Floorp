@@ -19,5 +19,6 @@
   clip: auto;
   filter: none;
   -moz-transform: none;
+  will-change: auto;
 }
 

@@ -147,6 +147,38 @@ class TouchCaretTest(MarionetteTestCase):
         el.send_keys(content_to_add)
         assertFunc(non_target_content, sel.content)
 
+    def _test_touch_caret_hides_after_receiving_wheel_event(self, el, assertFunc):
+        sel = SelectionManager(el)
+        content_to_add = '!'
+        non_target_content = content_to_add + sel.content
+
+        # Tap to make touch caret appear. Note: it's strange that when the caret
+        # is at the end, the rect of the caret in <textarea> cannot be obtained.
+        # A bug perhaps.
+        el.tap()
+        sel.move_caret_to_end()
+        sel.move_caret_by_offset(1, backward=True)
+        el.tap(*sel.caret_location())
+
+        # Send an arbitrary scroll-down-10px wheel event to the center of the
+        # input box to hide touch caret. Then pretend to move it to the top-left
+        # corner of the input box.
+        src_x, src_y = sel.touch_caret_location()
+        dest_x, dest_y = 0, 0
+        el_center_x, el_center_y = el.rect['x'], el.rect['y']
+        self.marionette.execute_script(
+            '''var utils = SpecialPowers.getDOMWindowUtils(window);
+            utils.sendWheelEvent(arguments[0], arguments[1],
+                                 0, 10, 0, WheelEvent.DOM_DELTA_PIXEL,
+                                 0, 0, 0, 0);''',
+            script_args=[el_center_x, el_center_y]
+        )
+        self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
+
+        el.send_keys(content_to_add)
+        assertFunc(non_target_content, sel.content)
+
+
     ########################################################################
     # <input> test cases with touch caret enabled
     ########################################################################
@@ -165,6 +197,10 @@ class TouchCaretTest(MarionetteTestCase):
     def test_input_touch_caret_timeout(self):
         self.openTestHtml(enabled=True)
         self._test_touch_caret_timeout_by_dragging_it_to_top_left_corner_after_timout(self._input, self.assertNotEqual)
+
+    def test_input_touch_caret_hides_after_receiving_wheel_event(self):
+        self.openTestHtml(enabled=True, expiration_time=0)
+        self._test_touch_caret_hides_after_receiving_wheel_event(self._input, self.assertNotEqual)
 
     ########################################################################
     # <input> test cases with touch caret disabled
@@ -196,6 +232,10 @@ class TouchCaretTest(MarionetteTestCase):
         self.openTestHtml(enabled=True)
         self._test_touch_caret_timeout_by_dragging_it_to_top_left_corner_after_timout(self._textarea, self.assertNotEqual)
 
+    def test_textarea_touch_caret_hides_after_receiving_wheel_event(self):
+        self.openTestHtml(enabled=True, expiration_time=0)
+        self._test_touch_caret_hides_after_receiving_wheel_event(self._textarea, self.assertNotEqual)
+
     ########################################################################
     # <textarea> test cases with touch caret disabled
     ########################################################################
@@ -225,6 +265,10 @@ class TouchCaretTest(MarionetteTestCase):
     def test_contenteditable_touch_caret_timeout(self):
         self.openTestHtml(enabled=True)
         self._test_touch_caret_timeout_by_dragging_it_to_top_left_corner_after_timout(self._contenteditable, self.assertNotEqual)
+
+    def test_contenteditable_touch_caret_hides_after_receiving_wheel_event(self):
+        self.openTestHtml(enabled=True, expiration_time=0)
+        self._test_touch_caret_hides_after_receiving_wheel_event(self._contenteditable, self.assertNotEqual)
 
     ########################################################################
     # <div> contenteditable test cases with touch caret disabled

@@ -741,16 +741,15 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
             break;
 
         case AndroidGeckoEvent::MOTION_EVENT:
-            if (ae->Action() == AndroidMotionEvent::ACTION_MOVE && mAllowCoalescingTouches) {
+        case AndroidGeckoEvent::APZ_INPUT_EVENT:
+            if (mAllowCoalescingTouches && mEventQueue.Length() > 0) {
                 int len = mEventQueue.Length();
-                if (len > 0) {
-                    AndroidGeckoEvent* event = mEventQueue[len - 1];
-                    if (event->Type() == AndroidGeckoEvent::MOTION_EVENT && event->Action() == AndroidMotionEvent::ACTION_MOVE) {
-                        // consecutive motion-move events; drop the last one before adding the new one
-                        EVLOG("nsAppShell: Dropping old move event at %p in favour of new move event %p", event, ae);
-                        mEventQueue.RemoveElementAt(len - 1);
-                        delete event;
-                    }
+                AndroidGeckoEvent* event = mEventQueue[len - 1];
+                if (ae->CanCoalesceWith(event)) {
+                    // consecutive motion-move events; drop the last one before adding the new one
+                    EVLOG("nsAppShell: Dropping old move event at %p in favour of new move event %p", event, ae);
+                    mEventQueue.RemoveElementAt(len - 1);
+                    delete event;
                 }
             }
             mEventQueue.AppendElement(ae);

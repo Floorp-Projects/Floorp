@@ -23,7 +23,11 @@ public interface PanZoomController {
 
     static class Factory {
         static PanZoomController create(PanZoomTarget target, View view, EventDispatcher dispatcher) {
-            return new JavaPanZoomController(target, view, dispatcher);
+            if (org.mozilla.gecko.AppConstants.MOZ_ANDROID_APZ) {
+                return new NativePanZoomController(target, view, dispatcher);
+            } else {
+                return new JavaPanZoomController(target, view, dispatcher);
+            }
         }
     }
 

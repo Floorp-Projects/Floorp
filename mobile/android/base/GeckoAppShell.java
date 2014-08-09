@@ -183,6 +183,7 @@ public class GeckoAppShell
     /* The Android-side API: API methods that Android calls */
 
     // Initialization methods
+    public static native void registerJavaUiThread();
     public static native void nativeInit();
 
     // helper methods
@@ -518,6 +519,24 @@ public class GeckoAppShell
             sWaitingForEventAck = false;
             sEventAckLock.notifyAll();
         }
+    }
+
+    private static Runnable sCallbackRunnable = new Runnable() {
+        @Override
+        public void run() {
+            ThreadUtils.assertOnUiThread();
+            long nextDelay = runUiThreadCallback();
+            if (nextDelay >= 0) {
+                ThreadUtils.getUiHandler().postDelayed(this, nextDelay);
+            }
+        }
+    };
+
+    private static native long runUiThreadCallback();
+
+    @WrapElementForJNI(allowMultithread = true)
+    private static void requestUiThreadCallback(long delay) {
+        ThreadUtils.getUiHandler().postDelayed(sCallbackRunnable, delay);
     }
 
     private static float getLocationAccuracy(Location location) {

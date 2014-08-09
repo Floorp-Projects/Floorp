@@ -90,6 +90,11 @@ class FullParseHandler
         return new_<NameNode>(PNK_NAME, JSOP_NAME, name, blockid, pos);
     }
 
+    ParseNode *newComputedName(ParseNode *expr, uint32_t begin, uint32_t end) {
+        TokenPos pos(begin, end);
+        return new_<UnaryNode>(PNK_COMPUTED_NAME, JSOP_NOP, pos, expr);
+    }
+
     Definition *newPlaceholder(JSAtom *atom, uint32_t blockid, const TokenPos &pos) {
         Definition *dn =
             (Definition *) new_<NameNode>(PNK_NAME, JSOP_NOP, atom, blockid, pos);

@@ -9,10 +9,10 @@ LIBRARY_NAME = 'icu'
 if CONFIG['MOZ_NATIVE_ICU']:
     OS_LIBS += CONFIG['MOZ_ICU_LIBS']
 else:
-    USE_LIBS += sorted(
-        '%s/intl/icu/target/lib/%s%s' % (
+    # Order needs to be preserved
+    for l in CONFIG['ICU_LIB_NAMES']:
+        USE_LIBS += ['%s/intl/icu/target/lib/%s%s' % (
             'static:' if not CONFIG['MOZ_SHARED_ICU'] else '',
             l,
             CONFIG['MOZ_ICU_DBG_SUFFIX']
-        ) for l in CONFIG['ICU_LIB_NAMES']
-    )
+        )]

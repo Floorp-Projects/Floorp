@@ -618,7 +618,7 @@ class Warnings(MachCommandBase):
 @CommandProvider
 class GTestCommands(MachCommandBase):
     @Command('gtest', category='testing',
-        description='Run GTest unit tests.')
+        description='Run GTest unit tests (C++ tests).')
     @CommandArgument('gtest_filter', default=b"*", nargs='?', metavar='gtest_filter',
         help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
              "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
