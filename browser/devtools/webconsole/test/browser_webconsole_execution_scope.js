@@ -5,22 +5,17 @@
 
 // Tests that commands run by the user are executed in content space.
 
+"use strict";
+
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console.html";
 
-function test() {
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, testExecutionScope);
-  }, true);
-}
+let test = asyncTest(function*() {
+  yield loadTab(TEST_URI);
+  let hud = yield openConsole();
+  hud.jsterm.clearOutput();
+  hud.jsterm.execute("window.location.href;");
 
-function testExecutionScope(hud) {
-  let jsterm = hud.jsterm;
-
-  jsterm.clearOutput();
-  jsterm.execute("window.location.href;");
-  waitForMessages({
+  let [input, output] = yield waitForMessages({
     webconsole: hud,
     messages: [{
       text: "window.location.href;",
@@ -30,12 +25,10 @@ function testExecutionScope(hud) {
       text: TEST_URI,
       category: CATEGORY_OUTPUT,
     }],
-  }).then(([input, output]) => {
-    let inputNode = [...input.matched][0];
-    let outputNode = [...output.matched][0];
-    is(inputNode.getAttribute("category"), "input", "input node category is correct");
-    is(outputNode.getAttribute("category"), "output", "output node category is correct");
-    finishTest();
   });
-}
 
+  let inputNode = [...input.matched][0];
+  let outputNode = [...output.matched][0];
+  is(inputNode.getAttribute("category"), "input", "input node category is correct");
+  is(outputNode.getAttribute("category"), "output", "output node category is correct");
+});

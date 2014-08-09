@@ -8,11 +8,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const INIT_URI = "data:text/plain;charset=utf8,hello world";
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-599725-response-headers.sjs";
 
 let loads = 0;
 function performTest(aRequest, aConsole)
 {
+  let deferred = promise.defer();
+
   loads++;
   ok(aRequest, "page load was logged");
   if (loads != 2) {
@@ -50,27 +53,36 @@ function performTest(aRequest, aConsole)
                       "response headers", headers);
       }
 
-      executeSoon(finishTest);
+      executeSoon(deferred.resolve);
     });
 
   HUDService.lastFinishedRequest.callback = null;
+
+  return deferred.promise;
 }
 
-function test()
-{
-  addTab("data:text/plain;charset=utf8,hello world");
-
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, () => {
-      HUDService.lastFinishedRequest.callback = performTest;
-
-      browser.addEventListener("load", function onReload() {
-        browser.removeEventListener("load", onReload, true);
-        executeSoon(() => content.location.reload());
-      }, true);
-
-      executeSoon(() => content.location = TEST_URI);
-    });
-  }, true);
+function waitForRequest() {
+  let deferred = promise.defer();
+  HUDService.lastFinishedRequest.callback = (req, console) => {
+    performTest(req, console).then(deferred.resolve);
+  };
+  return deferred.promise;
 }
+
+let test = asyncTest(function* () {
+  let { browser } = yield loadTab(INIT_URI);
+
+  let hud = yield openConsole();
+
+  let gotLastRequest = waitForRequest();
+
+  let loaded = loadBrowser(browser);
+  content.location = TEST_URI;
+  yield loaded;
+
+  let reloaded = loadBrowser(browser);
+  content.location.reload();
+  yield reloaded;
+
+  yield gotLastRequest;
+});

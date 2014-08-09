@@ -5,19 +5,28 @@
  */
 
 // Tests that document.body autocompletes in the web console.
+const TEST_URI = "data:text/html;charset=utf-8,Web Console autocompletion bug in document.body";
 
-function test() {
-  addTab("data:text/html;charset=utf-8,Web Console autocompletion bug in document.body");
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
-}
+"use strict";
 
 let gHUD;
 
+let test = asyncTest(function* () {
+  yield loadTab(TEST_URI);
+
+  gHUD = yield openConsole();
+
+  yield consoleOpened();
+  yield autocompletePopupHidden();
+  let view = yield testPropertyPanel();
+  yield onVariablesViewReady(view);
+
+  gHUD = null;
+});
+
 function consoleOpened(aHud) {
-  gHUD = aHud;
+  let deferred = promise.defer();
+
   let jsterm = gHUD.jsterm;
   let popup = jsterm.autocompletePopup;
   let completeNode = jsterm.completeNode;
@@ -38,17 +47,21 @@ function consoleOpened(aHud) {
     isnot(jsterm._autocompleteCache.indexOf("ATTRIBUTE_NODE"), -1,
           "ATTRIBUTE_NODE is in the list of suggestions");
 
-    popup._panel.addEventListener("popuphidden", autocompletePopupHidden, false);
+    popup._panel.addEventListener("popuphidden", deferred.resolve, false);
 
     EventUtils.synthesizeKey("VK_ESCAPE", {});
   }, false);
 
   jsterm.setInputValue("document.body");
   EventUtils.synthesizeKey(".", {});
+
+  return deferred.promise;
 }
 
 function autocompletePopupHidden()
 {
+  let deferred = promise.defer();
+
   let jsterm = gHUD.jsterm;
   let popup = jsterm.autocompletePopup;
   let completeNode = jsterm.completeNode;
@@ -60,34 +73,37 @@ function autocompletePopupHidden()
 
   jsterm.once("autocomplete-updated", function() {
     is(completeNode.value, testStr + "dy", "autocomplete shows document.body");
-    testPropertyPanel();
+    deferred.resolve();
   });
 
   let inputStr = "document.b";
   jsterm.setInputValue(inputStr);
   EventUtils.synthesizeKey("o", {});
   let testStr = inputStr.replace(/./g, " ") + " ";
+
+  return deferred.promise;
 }
 
 function testPropertyPanel()
 {
+  let deferred = promise.defer();
+
   let jsterm = gHUD.jsterm;
   jsterm.clearOutput();
   jsterm.execute("document", (msg) => {
-    jsterm.once("variablesview-fetched", onVariablesViewReady);
+    jsterm.once("variablesview-fetched", (aEvent, aView) => {
+      deferred.resolve(aView);
+    });
     let anchor = msg.querySelector(".message-body a");
     EventUtils.synthesizeMouse(anchor, 2, 2, {}, gHUD.iframeWindow);
   });
+
+  return deferred.promise;
 }
 
-function onVariablesViewReady(aEvent, aView)
+function onVariablesViewReady(aView)
 {
-  findVariableViewProperties(aView, [
+  return findVariableViewProperties(aView, [
     { name: "body", value: "<body>" },
-  ], { webconsole: gHUD }).then(finishUp);
-}
-
-function finishUp() {
-  gHUD = null;
-  finishTest();
+  ], { webconsole: gHUD });
 }

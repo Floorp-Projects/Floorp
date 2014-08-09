@@ -16,38 +16,44 @@ const TEST_FILE = "http://example.com/browser/browser/devtools/webconsole/test/"
 
 let hud = undefined;
 
-function test() {
-  addTab("data:text/html;charset=utf8,Web Console CSP ignoring reflected XSS (bug 1045902)");
-  browser.addEventListener("load", function _onLoad() {
-    browser.removeEventListener("load", _onLoad, true);
-    openConsole(null, loadDocument);
-  }, true);
-}
+let TEST_URI = "data:text/html;charset=utf8,Web Console CSP ignoring reflected XSS (bug 1045902)";
 
-function loadDocument(theHud) {
-  hud = theHud;
+let test = asyncTest(function* () {
+  let { browser } = yield loadTab(TEST_URI);
+
+  hud = yield openConsole();
+
+  yield loadDocument(browser);
+  yield testViolationMessage();
+
+  hud = null;
+});
+
+
+function loadDocument(browser) {
+  let deferred = promise.defer();
+
   hud.jsterm.clearOutput()
-  browser.addEventListener("load", onLoad, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    deferred.resolve();
+  }, true);
   content.location = TEST_FILE;
-}
 
-function onLoad(aEvent) {
-  browser.removeEventListener("load", onLoad, true);
-  testViolationMessage();
+  return deferred.promise;
 }
 
 function testViolationMessage() {
+  let deferred = promise.defer();
   let aOutputNode = hud.outputNode;
 
-  waitForSuccess({
+  return waitForSuccess({
       name: "Confirming that CSP logs messages to the console when 'reflected-xss' directive is used!",
-      validatorFn: function() {
+      validator: function() {
         console.log(hud.outputNode.textContent);
         let success = false;
         success = hud.outputNode.textContent.indexOf(EXPECTED_RESULT) > -1;
         return success;
-      },
-      successFn: finishTest,
-      failureFn: finishTest,
+      }
     });
 }
