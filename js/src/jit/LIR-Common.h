@@ -4844,6 +4844,10 @@ class LFloor : public LInstructionHelper<1, 1, 0>
     explicit LFloor(const LAllocation &num) {
         setOperand(0, num);
     }
+
+    const MFloor *mir() const {
+        return mir_->toFloor();
+    }
 };
 
 // Take the floor of a single precision number. Implements Math.floor().
