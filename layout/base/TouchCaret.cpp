@@ -569,7 +569,7 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
     case NS_TOUCH_END:
       status = HandleTouchUpEvent(aEvent->AsTouchEvent());
       break;
-   case NS_MOUSE_BUTTON_UP:
+    case NS_MOUSE_BUTTON_UP:
       status = HandleMouseUpEvent(aEvent->AsMouseEvent());
       break;
     case NS_TOUCH_MOVE:
@@ -586,9 +586,11 @@ TouchCaret::HandleEvent(WidgetEvent* aEvent)
     case NS_KEY_UP:
     case NS_KEY_DOWN:
     case NS_KEY_PRESS:
-    case NS_WHEEL_EVENT_START:
+    case NS_WHEEL_WHEEL:
+    case NS_WHEEL_START:
+    case NS_WHEEL_STOP:
       // Disable touch caret while key/wheel event is received.
-      TOUCHCARET_LOG("Receive key/wheel event");
+      TOUCHCARET_LOG("Receive key/wheel event %d", aEvent->message);
       SetVisibility(false);
       break;
     default:

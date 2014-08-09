@@ -81,10 +81,17 @@ add_task(function* test_collect() {
   yield manager.addCrash(manager.PROCESS_TYPE_PLUGIN,
                          manager.CRASH_TYPE_HANG,
                          "ph", day2);
+  yield manager.addCrash(manager.PROCESS_TYPE_GMPLUGIN,
+                         manager.CRASH_TYPE_CRASH,
+                         "gmpc", day2);
+  yield manager.addSubmission(manager.PROCESS_TYPE_GMPLUGIN,
+                              manager.CRASH_TYPE_CRASH,
+                              true,
+                              "gmpc", day2)
 
   yield provider.collectDailyData();
 
-  let m = provider.getMeasurement("crashes", 4);
+  let m = provider.getMeasurement("crashes", 5);
   let values = yield m.getValues();
   do_check_eq(values.days.size, 2);
   do_check_true(values.days.hasDay(day1));
@@ -111,6 +118,10 @@ add_task(function* test_collect() {
   do_check_eq(value.get("content-crash-submission-succeeded"), 1);
   do_check_true(value.has("plugin-hang"));
   do_check_eq(value.get("plugin-hang"), 1);
+  do_check_true(value.has("gmplugin-crash"));
+  do_check_eq(value.get("gmplugin-crash"), 1);
+  do_check_true(value.has("gmplugin-crash-submission-succeeded"));
+  do_check_eq(value.get("gmplugin-crash-submission-succeeded"), 1);
 
   // Check that adding a new crash increments counter on next collect.
   yield manager.addCrash(manager.PROCESS_TYPE_MAIN,

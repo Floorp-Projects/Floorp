@@ -61,6 +61,10 @@ class SyntaxParseHandler
         return NodeName;
     }
 
+    Node newComputedName(Node expr, uint32_t start, uint32_t end) {
+        return NodeName;
+    }
+
     DefinitionNode newPlaceholder(JSAtom *atom, uint32_t blockid, const TokenPos &pos) {
         return Definition::PLACEHOLDER;
     }

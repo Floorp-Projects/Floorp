@@ -79,6 +79,7 @@ jmethodID GeckoAppShell::jPerformHapticFeedback = 0;
 jmethodID GeckoAppShell::jPumpMessageLoop = 0;
 jmethodID GeckoAppShell::jRegisterSurfaceTextureFrameListener = 0;
 jmethodID GeckoAppShell::jRemovePluginView = 0;
+jmethodID GeckoAppShell::jRequestUiThreadCallback = 0;
 jmethodID GeckoAppShell::jScanMedia = 0;
 jmethodID GeckoAppShell::jScheduleRestart = 0;
 jmethodID GeckoAppShell::jSendMessageWrapper = 0;
@@ -165,6 +166,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jPumpMessageLoop = getStaticMethod("pumpMessageLoop", "()Z");
     jRegisterSurfaceTextureFrameListener = getStaticMethod("registerSurfaceTextureFrameListener", "(Ljava/lang/Object;I)V");
     jRemovePluginView = getStaticMethod("removePluginView", "(Landroid/view/View;Z)V");
+    jRequestUiThreadCallback = getStaticMethod("requestUiThreadCallback", "(J)V");
     jScanMedia = getStaticMethod("scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
     jScheduleRestart = getStaticMethod("scheduleRestart", "()V");
     jSendMessageWrapper = getStaticMethod("sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
@@ -1106,6 +1108,18 @@ void GeckoAppShell::RemovePluginView(jobject a0, bool a1) {
     env->PopLocalFrame(nullptr);
 }
 
+void GeckoAppShell::RequestUiThreadCallback(int64_t a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (env->PushLocalFrame(0) != 0) {
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_CRASH("Exception should have caused crash.");
+    }
+
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jRequestUiThreadCallback, a0);
+    AndroidBridge::HandleUncaughtException(env);
+    env->PopLocalFrame(nullptr);
+}
+
 void GeckoAppShell::ScanMedia(const nsAString& a0, const nsAString& a1) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (env->PushLocalFrame(2) != 0) {
@@ -1996,13 +2010,11 @@ jobject LayerView::RegisterCompositorWrapper() {
     return ret;
 }
 jclass NativePanZoomController::mNativePanZoomControllerClass = 0;
-jmethodID NativePanZoomController::jPostDelayedCallbackWrapper = 0;
 jmethodID NativePanZoomController::jRequestContentRepaintWrapper = 0;
 void NativePanZoomController::InitStubs(JNIEnv *jEnv) {
     initInit();
 
     mNativePanZoomControllerClass = getClassGlobalRef("org/mozilla/gecko/gfx/NativePanZoomController");
-    jPostDelayedCallbackWrapper = getMethod("postDelayedCallback", "(J)V");
     jRequestContentRepaintWrapper = getMethod("requestContentRepaint", "(FFFFF)V");
 }
 
@@ -2011,18 +2023,6 @@ NativePanZoomController* NativePanZoomController::Wrap(jobject obj) {
     NativePanZoomController* ret = new NativePanZoomController(obj, env);
     env->DeleteLocalRef(obj);
     return ret;
-}
-
-void NativePanZoomController::PostDelayedCallbackWrapper(int64_t a0) {
-    JNIEnv *env = GetJNIForThread();
-    if (env->PushLocalFrame(0) != 0) {
-        AndroidBridge::HandleUncaughtException(env);
-        MOZ_CRASH("Exception should have caused crash.");
-    }
-
-    env->CallVoidMethod(wrapped_obj, jPostDelayedCallbackWrapper, a0);
-    AndroidBridge::HandleUncaughtException(env);
-    env->PopLocalFrame(nullptr);
 }
 
 void NativePanZoomController::RequestContentRepaintWrapper(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4) {

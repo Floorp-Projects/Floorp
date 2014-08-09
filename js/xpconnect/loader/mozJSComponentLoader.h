@@ -21,7 +21,6 @@
 #include "xpcIJSGetFactory.h"
 
 class nsIFile;
-class nsIJSRuntimeService;
 class nsIPrincipal;
 class nsIXPConnectJSObjectHolder;
 class ComponentLoaderInfo;
@@ -33,13 +32,10 @@ class ComponentLoaderInfo;
     { 0xbb, 0xef, 0xf0, 0xcc, 0xb5, 0xfa, 0x64, 0xb6 }}
 #define MOZJSCOMPONENTLOADER_CONTRACTID "@mozilla.org/moz/jsloader;1"
 
-class JSCLContextHelper;
-
 class mozJSComponentLoader : public mozilla::ModuleLoader,
                              public xpcIJSModuleLoader,
                              public nsIObserver
 {
-    friend class JSCLContextHelper;
  public:
     NS_DECL_ISUPPORTS
     NS_DECL_XPCIJSMODULELOADER
@@ -65,7 +61,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsresult ReallyInit();
     void UnloadModules();
 
-    JSObject* PrepareObjectForLocation(JSCLContextHelper& aCx,
+    JSObject* PrepareObjectForLocation(JSContext* aCx,
                                        nsIFile* aComponentFile,
                                        nsIURI *aComponent,
                                        bool aReuseLoaderGlobal,
@@ -85,11 +81,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                         JS::MutableHandleObject vp);
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
-    nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     nsCOMPtr<nsIXPConnectJSObjectHolder> mLoaderGlobal;
-    JSRuntime *mRuntime;
-    JSContext *mContext;
 
     class ModuleEntry : public mozilla::Module
     {

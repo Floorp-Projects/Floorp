@@ -7259,6 +7259,20 @@ Parser<ParseHandler>::objectLiteral()
             propname = newNumber(tokenStream.currentToken());
             break;
 
+          case TOK_LB: {
+              // Computed property name.
+              uint32_t begin = pos().begin;
+              Node assignNode = assignExpr();
+              if (!assignNode)
+                  return null();
+              MUST_MATCH_TOKEN(TOK_RB, JSMSG_COMP_PROP_UNTERM_EXPR);
+              propname = handler.newComputedName(assignNode, begin, pos().end);
+              if (!propname)
+                  return null();
+              handler.setListFlag(literal, PNX_NONCONST);
+              break;
+          }
+
           case TOK_NAME: {
             atom = tokenStream.currentName();
             if (atom == context->names().get) {

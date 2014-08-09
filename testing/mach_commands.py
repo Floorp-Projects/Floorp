@@ -165,7 +165,7 @@ TEST_HELP = TEST_HELP.strip()
 
 @CommandProvider
 class Test(MachCommandBase):
-    @Command('test', category='testing', description='Run tests.')
+    @Command('test', category='testing', description='Run tests (detects the kind of test and runs it).')
     @CommandArgument('what', default=None, nargs='*', help=TEST_HELP)
     def test(self, what):
         from mozbuild.testing import TestResolver
@@ -246,7 +246,7 @@ class Test(MachCommandBase):
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('cppunittest', category='testing',
-        description='Run cpp unit tests.')
+        description='Run cpp unit tests (C++ tests).')
     @CommandArgument('test_files', nargs='*', metavar='N',
         help='Test to run. Can be specified as one or more files or ' \
             'directories, or omitted. If omitted, the entire test suite is ' \
@@ -280,7 +280,7 @@ class MachCommands(MachCommandBase):
 
 @CommandProvider
 class CheckSpiderMonkeyCommand(MachCommandBase):
-    @Command('check-spidermonkey', category='testing', description='Run SpiderMonkey tests.')
+    @Command('check-spidermonkey', category='testing', description='Run SpiderMonkey tests (JavaScript engine).')
     @CommandArgument('--valgrind', action='store_true', help='Run jit-test suite with valgrind flag')
 
     def run_checkspidermonkey(self, **params):

@@ -9,6 +9,7 @@
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "js/OldDebugAPI.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIXPConnect.h"
@@ -29,7 +30,6 @@
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h"
 #include "BackstagePass.h"
-#include "nsCxPusher.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsJSUtils.h"
@@ -1461,11 +1461,9 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
         sScriptedInterruptCallback.construct(rt, UndefinedValue());
         JS_SetInterruptCallback(rt, XPCShellInterruptCallback);
 
-        cx = JS_NewContext(rt, 8192);
-        if (!cx) {
-            printf("JS_NewContext failed!\n");
-            return 1;
-        }
+        dom::AutoJSAPI jsapi;
+        jsapi.Init();
+        cx = jsapi.cx();
 
         argc--;
         argv++;
@@ -1510,9 +1508,6 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
         xpc->SetFunctionThisTranslator(NS_GET_IID(nsITestXPCFunctionCallback), translator);
 #endif
 
-        nsCxPusher pusher;
-        pusher.Push(cx);
-
         nsRefPtr<BackstagePass> backstagePass;
         rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
         if (NS_FAILED(rv)) {
@@ -1552,20 +1547,17 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             JSAutoCompartment ac(cx, glob);
 
             if (!JS_InitReflect(cx, glob)) {
-                JS_EndRequest(cx);
                 return 1;
             }
 
             if (!JS_DefineFunctions(cx, glob, glob_functions) ||
                 !JS_DefineProfilingFunctions(cx, glob)) {
-                JS_EndRequest(cx);
                 return 1;
             }
 
             JS::Rooted<JSObject*> envobj(cx);
             envobj = JS_DefineObject(cx, glob, "environment", &env_class);
             if (!envobj) {
-                JS_EndRequest(cx);
                 return 1;
             }
 
@@ -1578,15 +1570,16 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             JS_DefineProperty(cx, glob, "__LOCATION__", JS::UndefinedHandleValue, 0,
                               GetLocationProperty, nullptr);
 
-            result = ProcessArgs(cx, glob, argv, argc, &dirprovider);
+            // We are almost certainly going to run script here, so we need an
+            // AutoEntryScript. This is Gecko-specific and not in any spec.
+            dom::AutoEntryScript aes(backstagePass);
+            result = ProcessArgs(aes.cx(), glob, argv, argc, &dirprovider);
 
             JS_DropPrincipals(rt, gJSPrincipals);
-            JS_SetAllNonReservedSlotsToUndefined(cx, glob);
+            JS_SetAllNonReservedSlotsToUndefined(aes.cx(), glob);
             JS_GC(rt);
         }
-        pusher.Pop();
         JS_GC(rt);
-        JS_DestroyContext(cx);
     } // this scopes the nsCOMPtrs
 
     if (!XRE_ShutdownTestShell())

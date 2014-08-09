@@ -89,6 +89,7 @@ class UpvarCookie
     F(OBJECT) \
     F(CALL) \
     F(NAME) \
+    F(COMPUTED_NAME) \
     F(NUMBER) \
     F(STRING) \
     F(TEMPLATE_STRING_LIST) \
@@ -393,6 +394,8 @@ enum ParseNodeKind
  *                          pn_left: property id, pn_right: value
  * PNK_SHORTHAND binary     Same fields as PNK_COLON. This is used for object
  *                          literal properties using shorthand ({x}).
+ * PNK_COMPUTED_NAME unary  ES6 ComputedPropertyName.
+ *                          pn_kid: the AssignmentExpression inside the square brackets
  * PNK_NAME,    name        pn_atom: name, string, or object atom
  * PNK_STRING               pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT
  *                          If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR

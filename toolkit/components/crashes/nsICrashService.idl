@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(a1845b69-28f4-43db-be6e-02eb15a45481)]
+[scriptable, uuid(f60d76e5-62c3-4f58-89f6-b726c2b7bc20)]
 interface nsICrashService : nsISupports
 {
   /**
@@ -22,6 +22,7 @@ interface nsICrashService : nsISupports
   const long PROCESS_TYPE_MAIN = 0;
   const long PROCESS_TYPE_CONTENT = 1;
   const long PROCESS_TYPE_PLUGIN = 2;
+  const long PROCESS_TYPE_GMPLUGIN = 3;
 
   const long CRASH_TYPE_CRASH = 0;
   const long CRASH_TYPE_HANG = 1;

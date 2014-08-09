@@ -138,7 +138,11 @@ ThreadStackHelper::ThreadStackHelper()
   mInitialized = !!::DuplicateHandle(
     ::GetCurrentProcess(), ::GetCurrentThread(),
     ::GetCurrentProcess(), &mThreadID,
-    THREAD_SUSPEND_RESUME, FALSE, 0);
+    THREAD_SUSPEND_RESUME
+#ifdef MOZ_THREADSTACKHELPER_NATIVE
+    | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION
+#endif
+    , FALSE, 0);
   MOZ_ASSERT(mInitialized);
 #elif defined(XP_MACOSX)
   mThreadID = mach_thread_self();

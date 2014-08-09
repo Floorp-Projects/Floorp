@@ -21,6 +21,7 @@
 #include "mozilla/EventForwards.h"
 #include "InputData.h"
 #include "Units.h"
+#include "FrameMetrics.h"
 
 //#define FORCE_ALOG 1
 
@@ -481,6 +482,14 @@ public:
         return event;
     }
 
+    static AndroidGeckoEvent* MakeApzInputEvent(const MultiTouchInput& aInput, const mozilla::layers::ScrollableLayerGuid& aGuid) {
+        AndroidGeckoEvent* event = new AndroidGeckoEvent();
+        event->Init(APZ_INPUT_EVENT);
+        event->mApzInput = aInput;
+        event->mApzGuid = aGuid;
+        return event;
+    }
+
     int Action() { return mAction; }
     int Type() { return mType; }
     bool AckNeeded() { return mAckNeeded; }
@@ -537,11 +546,13 @@ public:
     float GamepadButtonValue() { return mGamepadButtonValue; }
     const nsTArray<float>& GamepadValues() { return mGamepadValues; }
     int RequestId() { return mCount; } // for convenience
+    bool CanCoalesceWith(AndroidGeckoEvent* ae);
     WidgetTouchEvent MakeTouchEvent(nsIWidget* widget);
     MultiTouchInput MakeMultiTouchInput(nsIWidget* widget);
     WidgetMouseEvent MakeMouseEvent(nsIWidget* widget);
     void UnionRect(nsIntRect const& aRect);
     nsIObserver *Observer() { return mObserver; }
+    mozilla::layers::ScrollableLayerGuid ApzGuid();
 
 protected:
     int mAction;
@@ -581,6 +592,8 @@ protected:
     nsTArray<float> mGamepadValues;
     nsCOMPtr<nsIObserver> mObserver;
     nsTArray<nsString> mPrefNames;
+    MultiTouchInput mApzInput;
+    mozilla::layers::ScrollableLayerGuid mApzGuid;
 
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
@@ -681,6 +694,7 @@ public:
         LOAD_URI = 12,
         NOOP = 15,
         FORCED_RESIZE = 16, // used internally in nsAppShell/nsWindow
+        APZ_INPUT_EVENT = 17, // used internally in AndroidJNI/nsAppShell/nsWindow
         BROADCAST = 19,
         VIEWPORT = 20,
         VISITED = 21,

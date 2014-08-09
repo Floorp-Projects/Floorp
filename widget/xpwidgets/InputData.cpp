@@ -15,7 +15,7 @@ namespace mozilla {
 
 using namespace dom;
 
-already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch()
+already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch() const
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(),
                     "Can only create dom::Touch instances on main thread");
@@ -48,7 +48,7 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
       mType = MULTITOUCH_CANCEL;
       break;
     default:
-      NS_WARNING("Did not assign a type to a MultiTouchInput");
+      MOZ_ASSERT_UNREACHABLE("Did not assign a type to a MultiTouchInput");
       break;
   }
 
@@ -72,6 +72,47 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
 
     mTouches.AppendElement(data);
   }
+}
+
+WidgetTouchEvent
+MultiTouchInput::ToWidgetTouchEvent(nsIWidget* aWidget) const
+{
+  NS_ABORT_IF_FALSE(NS_IsMainThread(),
+                    "Can only convert To WidgetTouchEvent on main thread");
+
+  uint32_t touchType = NS_EVENT_NULL;
+  switch (mType) {
+  case MULTITOUCH_START:
+    touchType = NS_TOUCH_START;
+    break;
+  case MULTITOUCH_MOVE:
+    touchType = NS_TOUCH_MOVE;
+    break;
+  case MULTITOUCH_END:
+    touchType = NS_TOUCH_END;
+    break;
+  case MULTITOUCH_CANCEL:
+    touchType = NS_TOUCH_CANCEL;
+    break;
+  default:
+    MOZ_ASSERT_UNREACHABLE("Did not assign a type to WidgetTouchEvent in MultiTouchInput");
+    break;
+  }
+
+  WidgetTouchEvent event(true, touchType, aWidget);
+  if (touchType == NS_EVENT_NULL) {
+    return event;
+  }
+
+  event.modifiers = this->modifiers;
+  event.time = this->mTime;
+  event.timeStamp = this->mTimeStamp;
+
+  for (size_t i = 0; i < mTouches.Length(); i++) {
+    *event.touches.AppendElement() = mTouches[i].ToNewDOMTouch();
+  }
+
+  return event;
 }
 
 // This conversion from WidgetMouseEvent to MultiTouchInput is needed because on

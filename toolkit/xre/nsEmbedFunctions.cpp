@@ -204,23 +204,30 @@ XRE_ChildProcessTypeToString(GeckoProcessType aProcessType)
     kGeckoProcessTypeString[aProcessType] : nullptr;
 }
 
-GeckoProcessType
-XRE_StringToChildProcessType(const char* aProcessTypeString)
-{
-  for (int i = 0;
-       i < (int) ArrayLength(kGeckoProcessTypeString);
-       ++i) {
-    if (!strcmp(kGeckoProcessTypeString[i], aProcessTypeString)) {
-      return static_cast<GeckoProcessType>(i);
-    }
-  }
-  return GeckoProcessType_Invalid;
-}
-
 namespace mozilla {
 namespace startup {
 GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 }
+}
+
+void
+XRE_SetProcessType(const char* aProcessTypeString)
+{
+  static bool called = false;
+  if (called) {
+    MOZ_CRASH();
+  }
+  called = true;
+
+  sChildProcessType = GeckoProcessType_Invalid;
+  for (int i = 0;
+       i < (int) ArrayLength(kGeckoProcessTypeString);
+       ++i) {
+    if (!strcmp(kGeckoProcessTypeString[i], aProcessTypeString)) {
+      sChildProcessType = static_cast<GeckoProcessType>(i);
+      return;
+    }
+  }
 }
 
 #if defined(MOZ_CRASHREPORTER)
@@ -276,8 +283,7 @@ SetTaskbarGroupId(const nsString& aId)
 
 nsresult
 XRE_InitChildProcess(int aArgc,
-                     char* aArgv[],
-                     GeckoProcessType aProcess)
+                     char* aArgv[])
 {
   NS_ENSURE_ARG_MIN(aArgc, 2);
   NS_ENSURE_ARG_POINTER(aArgv);
@@ -312,8 +318,6 @@ XRE_InitChildProcess(int aArgc,
 
   PROFILER_LABEL("Startup", "XRE_InitChildProcess",
     js::ProfileEntry::Category::OTHER);
-
-  sChildProcessType = aProcess;
 
   // Complete 'task_t' exchange for Mac OS X. This structure has the same size
   // regardless of architecture so we don't have any cross-arch issues here.
@@ -461,7 +465,7 @@ XRE_InitChildProcess(int aArgc,
   }
 
   MessageLoop::Type uiLoopType;
-  switch (aProcess) {
+  switch (XRE_GetProcessType()) {
   case GeckoProcessType_Content:
       // Content processes need the XPCOM/chromium frankenventloop
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
@@ -486,7 +490,7 @@ XRE_InitChildProcess(int aArgc,
       mozilla::ipc::windows::InitUIThread();
 #endif
 
-      switch (aProcess) {
+      switch (XRE_GetProcessType()) {
       case GeckoProcessType_Default:
         NS_RUNTIMEABORT("This makes no sense");
         break;

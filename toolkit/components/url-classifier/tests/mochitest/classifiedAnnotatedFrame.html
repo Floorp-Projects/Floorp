@@ -6,8 +6,12 @@
 "use strict";
 
 var scriptItem = "untouched";
-var imageItem = "untouched";
-var frameItem = "untouched";
+var scriptItem1 = "untouched";
+var scriptItem2 = "untouched";
+var imageItem1 = "untouched";
+var imageItem2 = "untouched";
+var frameItem1 = "untouched";
+var frameItem2 = "untouched";
 
 var badids = [
   "badscript1",
@@ -15,15 +19,30 @@ var badids = [
   "badimage1",
   "badimage2",
   "badframe1",
-  "badframe2"
+  "badframe2",
+  "badcss"
 ];
 
 function checkLoads() {
-  window.parent.is(scriptItem, "untouched", "Should not load tracking javascript");
+  window.parent.is(
+    scriptItem1, "untouched", "Should not load tracking javascript");
+  window.parent.is(
+    scriptItem2, "untouched", "Should not load tracking javascript (2)");
 
-  window.parent.is(imageItem, "untouched", "Should not load tracking images");
+  window.parent.is(
+    imageItem1, "untouched", "Should not load tracking images");
+  window.parent.is(
+    imageItem2, "untouched", "Should not load tracking images (2)");
 
-  window.parent.is(frameItem, "untouched", "Should not load tracking iframes");
+  window.parent.is(
+    frameItem1, "untouched", "Should not load tracking iframes");
+  window.parent.is(
+    frameItem2, "untouched", "Should not load tracking iframes (2)");
+
+  var elt = document.getElementById("styleCheck");
+  var style = document.defaultView.getComputedStyle(elt, "");
+  window.parent.isnot(
+    style.visibility, "hidden", "Should not load tracking css");
 
   window.parent.is(window.document.blockedTrackingNodeCount, badids.length,
     "Should identify all tracking elements");
@@ -68,40 +87,47 @@ function checkLoads() {
 
 </script>
 
+<!-- Try loading from a tracking CSS URI -->
+<link id="badcss" rel="stylesheet" type="text/css" href="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.css"></link>
+
 </head>
 
 <body onload="checkLoads()">
 
-<!-- Try loading from a tracking script URI (1) -->
-<script id="badscript1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="function() {scriptItem='spoiled';}"></script>
+<!-- Try loading from a tracking script URI (1): evil.js onload will have updated the scriptItem variable -->
+<script id="badscript1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js" onload="scriptItem1 = scriptItem;"></script>
 
 <!-- Try loading from a tracking image URI (1) -->
-<img id="badimage1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg" onload="function() {imageItem='spoiled';}"/>
+<img id="badimage1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?reload=true" onload="imageItem1 = 'spoiled';"/>
 
 <!-- Try loading from a tracking frame URI (1) -->
-<iframe id="badframe1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html" onload="function() {frameItem='spoiled';}"></iframe>
+<iframe id="badframe1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html" onload="frameItem1 = 'spoiled';"></iframe>
 
 <script>
 // Try loading from a tracking script URI (2) - The loader may follow a different path depending on whether the resource is loaded from JS or HTML.
 var newScript = document.createElement("script");
 newScript.id = "badscript2";
 newScript.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/evil.js";
-newScript.addEventListener("load", function() {scriptItem = 'spoiled';});
+newScript.addEventListener("load", function() {scriptItem2 = scriptItem;});
 document.body.appendChild(newScript);
 
 /// Try loading from a tracking image URI (2)
 var newImage = document.createElement("img");
 newImage.id = "badimage2";
-newImage.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg";
-newImage.addEventListener("load", function() {imageItem = 'spoiled'});
+newImage.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg?reload=true";
+newImage.addEventListener("load", function() {imageItem2 = 'spoiled'});
 document.body.appendChild(newImage);
 
 // Try loading from a tracking iframe URI (2)
 var newFrame = document.createElement("iframe");
 newFrame.id = "badframe2";
 newFrame.src = "http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html"
-newFrame.addEventListener("load", function() {frameItem = 'spoiled'});
+newFrame.addEventListener("load", function() {frameItem2 = 'spoiled'});
 document.body.appendChild(newFrame);
 </script>
+
+The following should not be hidden:
+<div id="styleCheck">STYLE TEST</div>
+
 </body>
 </html>

@@ -390,7 +390,7 @@ def B2GCommand(func):
 
 @CommandProvider
 class MachCommands(MachCommandBase):
-    @Command('reftest', category='testing', description='Run reftests.')
+    @Command('reftest', category='testing', description='Run reftests (layout and graphics correctness).')
     @ReftestCommand
     def run_reftest(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='reftest', **kwargs)
@@ -402,19 +402,19 @@ class MachCommands(MachCommandBase):
         return self._run_reftest(test_file, suite='jstestbrowser', **kwargs)
 
     @Command('reftest-ipc', category='testing',
-        description='Run IPC reftests.')
+        description='Run IPC reftests (layout and graphics correctness, separate process).')
     @ReftestCommand
     def run_ipc(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='reftest-ipc', **kwargs)
 
     @Command('crashtest', category='testing',
-        description='Run crashtests.')
+        description='Run crashtests (Check if crashes on a page).')
     @ReftestCommand
     def run_crashtest(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='crashtest', **kwargs)
 
     @Command('crashtest-ipc', category='testing',
-        description='Run IPC crashtests.')
+        description='Run IPC crashtests (Check if crashes on a page, separate process).')
     @ReftestCommand
     def run_crashtest_ipc(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='crashtest-ipc', **kwargs)
@@ -440,21 +440,21 @@ class B2GCommands(MachCommandBase):
             setattr(self, attr, getattr(context, attr, None))
 
     @Command('reftest-remote', category='testing',
-        description='Run a remote reftest.',
+        description='Run a remote reftest (b2g layout and graphics correctness, remote device).',
         conditions=[conditions.is_b2g, is_emulator])
     @B2GCommand
     def run_reftest_remote(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='reftest', **kwargs)
 
     @Command('reftest-b2g-desktop', category='testing',
-        description='Run a b2g desktop reftest.',
+        description='Run a b2g desktop reftest (b2g desktop layout and graphics correctness).',
         conditions=[conditions.is_b2g_desktop])
     @B2GCommand
     def run_reftest_b2g_desktop(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='reftest', **kwargs)
 
     @Command('crashtest-remote', category='testing',
-        description='Run a remote crashtest.',
+        description='Run a remote crashtest (Check if b2g crashes on a page, remote device).',
         conditions=[conditions.is_b2g, is_emulator])
     @B2GCommand
     def run_crashtest_remote(self, test_file, **kwargs):

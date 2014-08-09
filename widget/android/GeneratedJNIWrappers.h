@@ -86,6 +86,7 @@ public:
     static bool PumpMessageLoop();
     static void RegisterSurfaceTextureFrameListener(jobject a0, int32_t a1);
     static void RemovePluginView(jobject a0, bool a1);
+    static void RequestUiThreadCallback(int64_t a0);
     static void ScanMedia(const nsAString& a0, const nsAString& a1);
     static void ScheduleRestart();
     static void SendMessageWrapper(const nsAString& a0, const nsAString& a1, int32_t a2);
@@ -171,6 +172,7 @@ protected:
     static jmethodID jPumpMessageLoop;
     static jmethodID jRegisterSurfaceTextureFrameListener;
     static jmethodID jRemovePluginView;
+    static jmethodID jRequestUiThreadCallback;
     static jmethodID jScanMedia;
     static jmethodID jScheduleRestart;
     static jmethodID jSendMessageWrapper;
@@ -364,12 +366,10 @@ public:
     static void InitStubs(JNIEnv *jEnv);
     static NativePanZoomController* Wrap(jobject obj);
     NativePanZoomController(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
-    void PostDelayedCallbackWrapper(int64_t a0);
     void RequestContentRepaintWrapper(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4);
     NativePanZoomController() : AutoGlobalWrappedJavaObject() {};
 protected:
     static jclass mNativePanZoomControllerClass;
-    static jmethodID jPostDelayedCallbackWrapper;
     static jmethodID jRequestContentRepaintWrapper;
 };
 
