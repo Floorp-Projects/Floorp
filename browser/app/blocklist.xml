@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1406936041000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1407370380000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -45,6 +45,13 @@
                                                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i684" id="{9edd0ea8-2819-47c2-8320-b007d5996f8a}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                                                    <prefs>
+                  <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
       <emItem  blockID="i107" os="WINNT" id="{ABDE892B-13A8-4d1b-88E6-365A6E755758}">
                         <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
                     </versionRange>
@@ -63,7 +70,7 @@
                                                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i640" id="jid0-l9BxpNUhx1UUgRfKigWzSfrZqAc@jetpack">
+      <emItem  blockID="i688" id="firefox-extension@mozilla.org">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                                                     <prefs>
@@ -337,8 +344,8 @@
                                                           <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i67" id="youtube2@youtube2.com">
-                        <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i640" id="jid0-l9BxpNUhx1UUgRfKigWzSfrZqAc@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                                                     <prefs>
               </prefs>
@@ -483,6 +490,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i447" id="{B18B1E5C-4D81-11E1-9C00-AFEB4824019B}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                                                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i668" id="/^(matchersite(pro(srcs?)?)?\@matchersite(pro(srcs?)?)?\.com)|((pro)?sitematcher(_srcs?|pro|site|sitesrc|-generic)?\@(pro)?sitematcher(_srcs?|pro|site|sitesrc|-generic)?\.com)$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                                                     <prefs>
@@ -805,12 +818,6 @@
                                                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i668" id="/^(matchersite(pro(src)?)?\@matchersite(pro(src)?)?\.com)|((pro)?sitematcher(_src|pro|site|sitesrc)?\@(pro)?sitematcher(_src|pro|site|sitesrc)?\.com)$/">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
-                    </versionRange>
-                                                    <prefs>
-              </prefs>
-    </emItem>
       <emItem  blockID="i440" id="{2d069a16-fca1-4e81-81ea-5d5086dcbd0c}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -979,6 +986,12 @@
                                                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i682" id="f6682b47-e12f-400b-9bc0-43b3ccae69d1@39d6f481-b198-4349-9ebe-9a93a86f9267.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                                                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i471" id="firefox@luckyleap.net">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -1107,6 +1120,12 @@
     </emItem>
       <emItem  blockID="i308" id="9518042e-7ad6-4dac-b377-056e28d00c8f@f1cc0a13-4df1-4d66-938f-088db8838882.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                                                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i67" id="youtube2@youtube2.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                                                     <prefs>
               </prefs>
@@ -1764,6 +1783,14 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                                                     <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i686" id="{a7f2cb14-0472-42a1-915a-8adca2280a2c}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                                                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i580" id="{51c77233-c0ad-4220-8388-47c11c18b355}">
