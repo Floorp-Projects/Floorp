@@ -89,7 +89,7 @@ function CheckLockState() {
     // ADB check
     if (AppManager.selectedRuntime instanceof USBRuntime) {
       let device = Devices.getByName(AppManager.selectedRuntime.id);
-      if (device && device.summonRoot) {
+      if (device.summonRoot) {
         device.isRoot().then(isRoot => {
           if (isRoot) {
             adbCheckResult.textContent = sYes;
