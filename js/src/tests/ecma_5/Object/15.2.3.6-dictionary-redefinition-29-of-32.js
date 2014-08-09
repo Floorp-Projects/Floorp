@@ -3,4 +3,4 @@
 // http://creativecommons.org/licenses/publicdomain/
 
 load("ecma_5/Object/defineProperty-setup.js");
-runDictionaryPropertyPresentTestsFraction(5, 8);
+runDictionaryPropertyPresentTestsFraction(29, 32);
