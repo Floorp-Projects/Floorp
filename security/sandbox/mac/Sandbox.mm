@@ -16,7 +16,7 @@ extern "C" void sandbox_free_error(char *errorbuf);
 
 namespace mozilla {
 
-static const char *rules =
+static const char rules[] =
   "(version 1)\n"
   "(deny default)\n"
   "(allow signal (target self))\n"
@@ -39,7 +39,7 @@ static const char *rules =
 
 bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
 {
-  if (!aInfo.type == MacSandboxType_Plugin) {
+  if (aInfo.type != MacSandboxType_Plugin) {
     aErrorMessage.AppendPrintf("Unexpected sandbox type %u", aInfo.type);
     return false;
   }
@@ -60,7 +60,7 @@ bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
     if (errorbuf) {
       aErrorMessage.AppendPrintf("sandbox_init() failed with error \"%s\"",
                                  errorbuf);
-      printf(profile.get());
+      printf("profile: %s\n", profile.get());
       sandbox_free_error(errorbuf);
     }
     return false;
