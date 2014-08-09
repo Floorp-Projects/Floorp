@@ -377,8 +377,8 @@ static_assert(MOZ_ARRAY_LENGTH(kGeckoProcessTypeString) ==
 XRE_API(const char*,
         XRE_ChildProcessTypeToString, (GeckoProcessType aProcessType))
 
-XRE_API(GeckoProcessType,
-        XRE_StringToChildProcessType, (const char* aProcessTypeString))
+XRE_API(void,
+        XRE_SetProcessType, (const char* aProcessTypeString))
 
 #if defined(MOZ_CRASHREPORTER)
 // Used in the "master" parent process hosting the crash server
@@ -393,8 +393,7 @@ XRE_API(bool,
 
 XRE_API(nsresult,
         XRE_InitChildProcess, (int aArgc,
-                               char* aArgv[],
-                               GeckoProcessType aProcess))
+                               char* aArgv[]))
 
 XRE_API(GeckoProcessType,
         XRE_GetProcessType, ())
