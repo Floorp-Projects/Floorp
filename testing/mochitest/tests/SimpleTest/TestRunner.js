@@ -517,9 +517,11 @@ TestRunner.runTests = function (/*url...*/) {
     var singleTestRun = this._urls.length <= 1 && TestRunner.repeat <= 1;
     TestRunner.showTestReport = singleTestRun;
     var frame = $('testframe');
-    frame.src="";
+    frame.src = "";
     if (singleTestRun) {
-        document.body.setAttribute("singletest", singleTestRun);
+        // Can't use document.body because this runs in a XUL doc as well...
+        var body = document.getElementsByTagName("body")[0];
+        body.setAttribute("singletest", "true");
         frame.removeAttribute("scrolling");
     }
     TestRunner._checkForHangs();
