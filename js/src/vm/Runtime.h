@@ -1371,28 +1371,18 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     static const unsigned LARGE_ALLOCATION = 25 * 1024 * 1024;
 
-    template <typename T>
-    T *pod_callocCanGC(size_t numElems) {
-        T *p = pod_calloc<T>(numElems);
+    void *callocCanGC(size_t bytes) {
+        void *p = calloc_(bytes);
         if (MOZ_LIKELY(!!p))
             return p;
-        if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
-            reportAllocationOverflow();
-            return nullptr;
-        }
-        return (T *)onOutOfMemoryCanGC(reinterpret_cast<void *>(1), numElems * sizeof(T));
+        return onOutOfMemoryCanGC(reinterpret_cast<void *>(1), bytes);
     }
 
-    template <typename T>
-    T *pod_reallocCanGC(T *p, size_t oldSize, size_t newSize) {
-        T *p2 = pod_realloc<T>(p, oldSize, newSize);
+    void *reallocCanGC(void *p, size_t bytes) {
+        void *p2 = realloc_(p, bytes);
         if (MOZ_LIKELY(!!p2))
             return p2;
-        if (newSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
-            reportAllocationOverflow();
-            return nullptr;
-        }
-        return (T *)onOutOfMemoryCanGC(p, newSize * sizeof(T));
+        return onOutOfMemoryCanGC(p, bytes);
     }
 };
 
@@ -1662,17 +1652,8 @@ class RuntimeAllocPolicy
   public:
     MOZ_IMPLICIT RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
     void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
-
-    template <typename T>
-    T *pod_calloc(size_t numElems) {
-        return runtime->pod_calloc<T>(numElems);
-    }
-
-    template <typename T>
-    T *pod_realloc(T *p, size_t oldSize, size_t newSize) {
-        return runtime->pod_realloc<T>(p, oldSize, newSize);
-    }
-
+    void *calloc_(size_t bytes) { return runtime->calloc_(bytes); }
+    void *realloc_(void *p, size_t bytes) { return runtime->realloc_(p, bytes); }
     void free_(void *p) { js_free(p); }
     void reportAllocOverflow() const {}
 };

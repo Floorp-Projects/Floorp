@@ -275,22 +275,17 @@ ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
 static void *
 AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = nullptr, size_t oldnbytes = 0)
 {
-    uint8_t *p;
+    void *p;
 
     // if oldptr is given, then we need to do a realloc
     if (oldptr) {
-        uint8_t *prior = static_cast<uint8_t *>(oldptr);
-        p = maybecx
-            ? maybecx->runtime()->pod_reallocCanGC<uint8_t>(prior, oldnbytes, nbytes)
-            : js_pod_realloc<uint8_t>(prior, oldnbytes, nbytes);
+        p = maybecx ? maybecx->runtime()->reallocCanGC(oldptr, nbytes) : js_realloc(oldptr, nbytes);
 
         // if we grew the array, we need to set the new bytes to 0
         if (p && nbytes > oldnbytes)
-            memset(p + oldnbytes, 0, nbytes - oldnbytes);
+            memset(reinterpret_cast<uint8_t *>(p) + oldnbytes, 0, nbytes - oldnbytes);
     } else {
-        p = maybecx
-            ? maybecx->runtime()->pod_callocCanGC<uint8_t>(nbytes)
-            : js_pod_calloc<uint8_t>(nbytes);
+        p = maybecx ? maybecx->runtime()->callocCanGC(nbytes) : js_calloc(nbytes);
     }
 
     if (!p && maybecx)
