@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1042436
+-->
+<window title="Mozilla Bug 1042436"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1042436"
+     target="_blank">Mozilla Bug 1042436</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 1042436 **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  var contentSb = Cu.Sandbox('http://www.example.com');
+
+  SimpleTest.expectConsoleMessages(function() {
+
+      var chromeSb = Cu.Sandbox(this);
+      var contentObjWithGetter = contentSb.eval('({ get getterProp() {return 42;}, valueProp: 42 })');
+      is(contentObjWithGetter.wrappedJSObject.getterProp, 42, "Getter prop set up correctly");
+      is(contentObjWithGetter.getterProp, undefined, "Xrays work right");
+      is(contentObjWithGetter.valueProp, 42, "Getter prop set up correctly");
+      chromeSb.contentObjWithGetter = contentObjWithGetter;
+      Cu.evalInSandbox('contentObjWithGetter.getterProp; contentObjWithGetter.valueProp; contentObjWithGetter.getterProp;',
+                       chromeSb, "1.7", "http://phony.example.com/file.js", 99);
+  },
+  [ { errorMessage: /property getterProp \(reason: property has accessor/, sourceName: /phony/, lineNumber: 99, isWarning: true } ],
+  SimpleTest.finish.bind(SimpleTest));
+
+  ]]>
+  </script>
+</window>
