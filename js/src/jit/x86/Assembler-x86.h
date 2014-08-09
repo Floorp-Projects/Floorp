@@ -248,7 +248,7 @@ class Assembler : public AssemblerX86Shared
             writeDataRelocation(ptr);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void movl(ImmWord imm, Register dest) {
@@ -305,7 +305,7 @@ class Assembler : public AssemblerX86Shared
             masm.fld32_m(dest.disp(), dest.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
 
@@ -315,7 +315,7 @@ class Assembler : public AssemblerX86Shared
             masm.fstp32_m(src.disp(), src.base());
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
 
@@ -347,7 +347,7 @@ class Assembler : public AssemblerX86Shared
             writeDataRelocation(imm);
             break;
           default:
-            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+            MOZ_CRASH("unexpected operand kind");
         }
     }
     void cmpl(AsmJSAbsoluteAddress lhs, Register rhs) {
