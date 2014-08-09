@@ -173,7 +173,7 @@ AllocChars(JSString *str, size_t length, CharT **chars, size_t *capacity)
     *capacity = numChars - 1;
 
     JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(CharT) < UINT32_MAX);
-    *chars = str->zone()->pod_malloc<CharT>(numChars);
+    *chars = str->pod_malloc<CharT>(numChars);
     return *chars != nullptr;
 }
 

@@ -304,6 +304,29 @@ class BarrieredCell : public gc::Cell
     static void writeBarrierPost(T *thing, void *cellp) {}
     static void writeBarrierPostRelocate(T *thing, void *cellp) {}
     static void writeBarrierPostRemove(T *thing, void *cellp) {}
+
+    template <typename S>
+    S *pod_malloc(size_t numElems) {
+        return zone()->template pod_malloc<S>(numElems);
+    }
+    template <typename S>
+    S *pod_calloc(size_t numElems) {
+        return zone()->template pod_calloc<S>(numElems);
+    }
+    template <typename S>
+    S *pod_realloc(S *prior, size_t oldSize, size_t newSize) {
+        return zone()->template pod_realloc<S>(prior, oldSize, newSize);
+    }
+
+    template <typename S, typename U>
+    S *pod_malloc_with_extra(size_t numExtra) {
+        return zone()->template pod_malloc_with_extra<S, U>(numExtra);
+    }
+
+    template <typename S, typename U>
+    S *pod_calloc_with_extra(size_t numExtra) {
+        return zone()->template pod_calloc_with_extra<S, U>(numExtra);
+    }
 };
 
 } // namespace gc

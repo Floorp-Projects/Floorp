@@ -78,6 +78,26 @@ struct MallocProvider
         return nullptr;
     }
 
+    template <class T, class U>
+    T *pod_malloc_with_extra(size_t numExtra) {
+        if (numExtra & mozilla::tl::MulOverflowMask<sizeof(U)>::value) {
+            client()->reportAllocationOverflow();
+            return nullptr;
+        }
+        size_t bytes = sizeof(T) + numExtra * sizeof(U);
+        if (bytes < sizeof(T)) {
+            client()->reportAllocationOverflow();
+            return nullptr;
+        }
+        T *p = (T *)js_pod_malloc<uint8_t>(bytes);
+        if (MOZ_LIKELY(p)) {
+            client()->updateMallocCounter(bytes);
+            return p;
+        }
+        client()->onOutOfMemory(nullptr, bytes);
+        return nullptr;
+    }
+
     template <class T>
     mozilla::UniquePtr<T[], JS::FreePolicy>
     make_pod_array(size_t numElems) {
@@ -109,6 +129,16 @@ struct MallocProvider
         }
         client()->onOutOfMemory(reinterpret_cast<void *>(1), sizeof(T));
         return nullptr;
+    }
+
+    template <class T, class U>
+    T *
+    pod_calloc_with_extra(size_t numExtra) {
+        T *p = pod_malloc_with_extra<T, U>(numExtra);
+        if (MOZ_UNLIKELY(!p))
+            return nullptr;
+        memset(p, 0, sizeof(T) + numExtra * sizeof(U));
+        return p;
     }
 
     template <class T>
