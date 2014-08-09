@@ -2804,6 +2804,10 @@ MFloor::collectRangeInfoPreTrunc()
     Range inputRange(input());
     if (inputRange.isFiniteNonNegative())
         isFiniteNonNegative_ = true;
+    if (!inputRange.canBeZero())
+        canSkipZeroChecks_ = true;
+    if (!inputRange.canBeFiniteNegative())
+        canSkipNegativeCase_ = true;
 }
 
 void
