@@ -131,6 +131,9 @@ this.DOMApplicationRegistry = {
     APPS_IPC_MSG_NAMES.forEach((aMsgName) => {
       this.cpmm.removeMessageListener(aMsgName, this);
     });
+
+    this.cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
+                               APPS_IPC_MSG_NAMES)
   },
 
   receiveMessage: function receiveMessage(aMessage) {
