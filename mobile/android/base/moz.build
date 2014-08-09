@@ -701,3 +701,11 @@ if CONFIG['MOZ_CRASHREPORTER']:
 if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
     main.included_projects += ['../FennecStumbler']
     main.referenced_projects += ['../FennecStumbler']
+
+if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
+    searchactivity = add_android_eclipse_library_project('FennecResourcesSearch')
+    searchactivity.package_name = 'org.mozilla.fennec.resources.search'
+    searchactivity.res = SRCDIR + '/../search/res'
+    searchactivity.included_projects += ['../' + resources.name]
+
+    main.included_projects += ['../' + searchactivity.name]
