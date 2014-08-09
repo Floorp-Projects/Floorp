@@ -337,7 +337,7 @@ class MochitestRunner(MozbuildObject):
             manifest = TestManifest()
             manifest.tests.extend(tests)
 
-            if (len(tests) == 1):
+            if len(tests) == 1:
                 options.closeWhenDone = False
 
             options.manifestFile = manifest
