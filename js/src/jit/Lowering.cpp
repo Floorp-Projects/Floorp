@@ -1197,13 +1197,9 @@ bool
 LIRGenerator::visitFloor(MFloor *ins)
 {
     MIRType type = ins->input()->type();
-    JS_ASSERT(IsNumberType(type));
+    JS_ASSERT(IsFloatingPointType(type));
 
-    // Handle here truncation propagation
-    // If input is truncated to Int32 LFloor actually becomes a no-op
-    if (type == MIRType_Int32)
-        return redefine(ins, ins->input());
-    else if (type == MIRType_Double) {
+    if (type == MIRType_Double) {
         LFloor *lir = new(alloc()) LFloor(useRegister(ins->input()));
         if (!assignSnapshot(lir, Bailout_Round))
             return false;

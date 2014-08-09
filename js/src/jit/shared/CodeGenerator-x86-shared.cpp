@@ -1562,73 +1562,59 @@ CodeGeneratorX86Shared::visitFloor(LFloor *lir)
     FloatRegister input = ToFloatRegister(lir->input());
     FloatRegister scratch = ScratchDoubleReg;
     Register output = ToRegister(lir->output());
-    bool canSkipZeroChecks = lir->mir()->canSkipZeroChecks();
-    bool canSkipNegativeCase = lir->mir()->canSkipNegativeCase();
+
     Label bailout;
 
     if (AssemblerX86Shared::HasSSE41()) {
+        // Bail on negative-zero.
+        masm.branchNegativeZero(input, output, &bailout);
+        if (!bailoutFrom(&bailout, lir->snapshot()))
+            return false;
 
-        if (!canSkipZeroChecks) {
-            // Bail on negative-zero.
-            masm.branchNegativeZero(input, output, &bailout);
-            if (!bailoutFrom(&bailout, lir->snapshot()))
-                return false;
-        }
-
-        if (!canSkipNegativeCase) {
-            // Round toward -Infinity.
-            masm.roundsd(input, scratch, JSC::X86Assembler::RoundDown);
-        }
+        // Round toward -Infinity.
+        masm.roundsd(input, scratch, JSC::X86Assembler::RoundDown);
 
         if (!bailoutCvttsd2si(scratch, output, lir->snapshot()))
             return false;
     } else {
         Label negative, end;
 
-        if (!canSkipZeroChecks) {
-            // Bail on negative-zero.
-            masm.branchNegativeZero(input, output, &bailout);
-            if (!bailoutFrom(&bailout, lir->snapshot()))
-                return false;
-        }
+        // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
+        masm.xorpd(scratch, scratch);
+        masm.branchDouble(Assembler::DoubleLessThan, input, scratch, &negative);
 
-        if (!canSkipNegativeCase) {
-            // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
-            masm.xorpd(scratch, scratch);
-            masm.branchDouble(Assembler::DoubleLessThan, input, scratch, &negative);
-        }
+        // Bail on negative-zero.
+        masm.branchNegativeZero(input, output, &bailout);
+        if (!bailoutFrom(&bailout, lir->snapshot()))
+            return false;
 
         // Input is non-negative, so truncation correctly rounds.
         if (!bailoutCvttsd2si(input, output, lir->snapshot()))
             return false;
 
+        masm.jump(&end);
 
-        if (!canSkipNegativeCase) {
-            masm.jump(&end);
-            // Input is negative, but isn't -0.
-            // Negative values go on a comparatively expensive path, since no
-            // native rounding mode matches JS semantics. Still better than callVM.
-            masm.bind(&negative);
-            {
-                // Truncate and round toward zero.
-                // This is off-by-one for everything but integer-valued inputs.
-                if (!bailoutCvttsd2si(input, output, lir->snapshot()))
-                    return false;
+        // Input is negative, but isn't -0.
+        // Negative values go on a comparatively expensive path, since no
+        // native rounding mode matches JS semantics. Still better than callVM.
+        masm.bind(&negative);
+        {
+            // Truncate and round toward zero.
+            // This is off-by-one for everything but integer-valued inputs.
+            if (!bailoutCvttsd2si(input, output, lir->snapshot()))
+                return false;
 
-                // Test whether the input double was integer-valued.
-                masm.convertInt32ToDouble(output, scratch);
-                masm.branchDouble(Assembler::DoubleEqualOrUnordered,
-                                  input,
-                                  scratch,
-                                  &end);
+            // Test whether the input double was integer-valued.
+            masm.convertInt32ToDouble(output, scratch);
+            masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch, &end);
 
-                // Input is not integer-valued, so we rounded off-by-one in the
-                // wrong direction. Correct by subtraction.
-                masm.subl(Imm32(1), output);
-                // Cannot overflow: output was already checked against INT_MIN.
-            }
-            masm.bind(&end);
+            // Input is not integer-valued, so we rounded off-by-one in the
+            // wrong direction. Correct by subtraction.
+            masm.subl(Imm32(1), output);
+            // Cannot overflow: output was already checked against INT_MIN.
         }
+
+        masm.bind(&end);
     }
     return true;
 }

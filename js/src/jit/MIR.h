@@ -9167,21 +9167,12 @@ class MFloor
     public FloatingPointPolicy<0>
 {
     explicit MFloor(MDefinition *num)
-      : MUnaryInstruction(num),
-        isFiniteNonNegative_(false),
-        canSkipZeroChecks_(false),
-        canSkipNegativeCase_(false),
-        outputTruncation_(NoTruncate)
+      : MUnaryInstruction(num)
     {
         setResultType(MIRType_Int32);
         setPolicyType(MIRType_Double);
         setMovable();
     }
-
-    bool isFiniteNonNegative_;
-    bool canSkipZeroChecks_;
-    bool canSkipNegativeCase_;
-    TruncateKind outputTruncation_;
 
   public:
     INSTRUCTION_HEADER(Floor)
@@ -9209,21 +9200,9 @@ class MFloor
         return congruentIfOperandsEqual(ins);
     }
     void computeRange(TempAllocator &alloc);
-    void setTruncateKind(TruncateKind kind) {
-        outputTruncation_ = kind;
-    }
-    void collectRangeInfoPreTrunc();
-    TruncateKind operandTruncateKind(size_t index) const;
-    bool truncate(TruncateKind kind);
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {
         return true;
-    }
-    bool canSkipZeroChecks() const {
-        return canSkipZeroChecks_;
-    }
-    bool canSkipNegativeCase() const {
-        return canSkipNegativeCase_;
     }
 };
 
