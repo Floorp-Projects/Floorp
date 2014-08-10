@@ -124,6 +124,7 @@ public:
   Animation(nsIDocument* aDocument, const AnimationTiming &aTiming)
     : mDocument(aDocument)
     , mTiming(aTiming)
+    , mIsFinishedTransition(false)
   {
     SetIsDOMBinding();
   }
@@ -181,7 +182,27 @@ public:
   // Return the duration of the active interval for the given timing parameters.
   static TimeDuration ActiveDuration(const AnimationTiming& aTiming);
 
+  // After transitions finish they need to be retained for one throttle-able
+  // cycle (for reasons see explanation in
+  // layout/style/nsTransitionManager.cpp).
+  // In the meantime, however, they should be ignored.
+  bool IsFinishedTransition() const {
+    return mIsFinishedTransition;
+  }
+
+  void SetIsFinishedTransition() {
+    // FIXME: Restore assertion of AsTransition once we make transitions
+    // a subclass of Animations
+    // MOZ_ASSERT(AsTransition(),
+    //           "Calling SetIsFinishedTransition but it's not a transition");
+    mIsFinishedTransition = true;
+  }
+
   bool IsCurrent() const {
+    if (IsFinishedTransition()) {
+      return false;
+    }
+
     ComputedTiming computedTiming = GetComputedTiming();
     return computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
            computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
@@ -204,6 +225,10 @@ protected:
   Nullable<TimeDuration> mParentTime;
 
   AnimationTiming mTiming;
+  // A flag to mark transitions that have finished and are due to
+  // be removed on the next throttle-able cycle.
+  bool mIsFinishedTransition;
+
   InfallibleTArray<AnimationProperty> mProperties;
 };
 
