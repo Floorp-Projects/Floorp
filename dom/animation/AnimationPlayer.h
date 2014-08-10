@@ -146,10 +146,12 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // AnimationPlayer methods
-  Animation* GetSource() const { return nullptr; }
+  Animation* GetSource() const { return mSource; }
   AnimationTimeline* Timeline() const { return mTimeline; }
   double StartTime() const;
   double CurrentTime() const;
+
+  void SetSource(Animation* aSource);
 
   // FIXME: If we succeed in moving transition-specific code to a type of
   // AnimationEffect (as per the Web Animations API) we should remove these
@@ -253,6 +255,7 @@ public:
   InfallibleTArray<AnimationProperty> mProperties;
 
   nsRefPtr<AnimationTimeline> mTimeline;
+  nsRefPtr<Animation> mSource;
 };
 
 } // namespace dom

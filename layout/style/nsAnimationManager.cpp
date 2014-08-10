@@ -24,6 +24,7 @@
 
 using namespace mozilla;
 using namespace mozilla::css;
+using mozilla::dom::Animation;
 using mozilla::dom::AnimationPlayer;
 
 void
@@ -442,6 +443,10 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     dest->mTiming.mIterationCount = src.GetIterationCount();
     dest->mTiming.mDirection = src.GetDirection();
     dest->mTiming.mFillMode = src.GetFillMode();
+
+    nsRefPtr<Animation> destAnim =
+      new Animation(mPresContext->Document());
+    dest->SetSource(destAnim);
 
     dest->mStartTime = now;
     dest->mPlayState = src.GetPlayState();
