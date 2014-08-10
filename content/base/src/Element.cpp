@@ -2878,12 +2878,12 @@ Element::GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aPlayers)
     if (!collection) {
       continue;
     }
-    for (size_t animIdx = 0;
-         animIdx < collection->mAnimations.Length();
-         animIdx++) {
-      AnimationPlayer* anim = collection->mAnimations[animIdx];
-      if (anim->IsCurrent()) {
-        aPlayers.AppendElement(anim);
+    for (size_t playerIdx = 0;
+         playerIdx < collection->mPlayers.Length();
+         playerIdx++) {
+      AnimationPlayer* player = collection->mPlayers[playerIdx];
+      if (player->IsCurrent()) {
+        aPlayers.AppendElement(player);
       }
     }
   }
