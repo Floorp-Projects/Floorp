@@ -472,11 +472,12 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
 
   for (size_t playerIdx = collection->mPlayers.Length(); playerIdx-- != 0; ) {
     AnimationPlayer* player = collection->mPlayers[playerIdx];
-    if (player->IsFinishedTransition()) {
+    if (!player->GetSource() || player->IsFinishedTransition()) {
       continue;
     }
-    for (size_t propIdx = player->mProperties.Length(); propIdx-- != 0; ) {
-      AnimationProperty& prop = player->mProperties[propIdx];
+    dom::Animation* anim = player->GetSource();
+    for (size_t propIdx = anim->Properties().Length(); propIdx-- != 0; ) {
+      AnimationProperty& prop = anim->Properties()[propIdx];
       if (prop.mProperty == eCSSProperty_transform) {
         for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
           AnimationPropertySegment& segment = prop.mSegments[segIdx];

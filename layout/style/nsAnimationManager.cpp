@@ -297,7 +297,11 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // Update the old from the new so we can keep the original object
           // identity (and any expando properties attached to it).
           oldPlayer->mTiming = newPlayer->mTiming;
-          oldPlayer->mProperties = newPlayer->mProperties;
+          if (oldPlayer->GetSource() && newPlayer->GetSource()) {
+            Animation* oldAnim = oldPlayer->GetSource();
+            Animation* newAnim = newPlayer->GetSource();
+            oldAnim->Properties() = newAnim->Properties();
+          }
 
           // Reset compositor state so animation will be re-synchronized.
           oldPlayer->mIsRunningOnCompositor = false;
@@ -544,7 +548,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         lastKey = kf.mKey;
       }
 
-      AnimationProperty &propData = *dest->mProperties.AppendElement();
+      AnimationProperty &propData = *destAnim->Properties().AppendElement();
       propData.mProperty = prop;
 
       KeyframeData *fromKeyframe = nullptr;
@@ -596,7 +600,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       // values (which?) or skip segments, so best to skip the whole
       // thing for now.)
       if (!interpolated) {
-        dest->mProperties.RemoveElementAt(dest->mProperties.Length() - 1);
+        destAnim->Properties().RemoveElementAt(
+          destAnim->Properties().Length() - 1);
       }
     }
   }
