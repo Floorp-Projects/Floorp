@@ -235,7 +235,7 @@ private:
 struct CodeAddressServiceStringAlloc MOZ_FINAL
 {
   static char* copy(const char* aStr) { return strdup(aStr); }
-  static void free(char* aPtr) { free(aPtr); }
+  static void free(char* aPtr) { ::free(aPtr); }
 };
 
 class CodeAddressServiceWriter MOZ_FINAL
