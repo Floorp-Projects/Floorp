@@ -84,7 +84,7 @@ nsTransitionManager::ElementCollectionRemoved()
 
 void
 nsTransitionManager::AddElementCollection(
-  ElementAnimationCollection* aCollection)
+  AnimationPlayerCollection* aCollection)
 {
   if (PR_CLIST_IS_EMPTY(&mElementCollections)) {
     // We need to observe the refresh driver.
@@ -150,7 +150,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     aElement = aElement->GetParent()->AsElement();
   }
 
-  ElementAnimationCollection* collection =
+  AnimationPlayerCollection* collection =
     GetElementTransitions(aElement, pseudoType, false);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
@@ -254,7 +254,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
       }
     }
 
-    ElementAnimationPtrArray& animations = collection->mAnimations;
+    AnimationPlayerPtrArray& animations = collection->mAnimations;
     uint32_t i = animations.Length();
     NS_ABORT_IF_FALSE(i != 0, "empty transitions list?");
     StyleAnimationValue currentValue;
@@ -311,7 +311,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
   nsRefPtr<css::AnimValuesStyleRule> coverRule = new css::AnimValuesStyleRule;
 
-  ElementAnimationPtrArray& animations = collection->mAnimations;
+  AnimationPlayerPtrArray& animations = collection->mAnimations;
   for (uint32_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
     AnimationPlayer* animation = animations[i];
     MOZ_ASSERT(animation->mProperties.Length() == 1,
@@ -335,7 +335,7 @@ nsTransitionManager::ConsiderStartingTransition(
   nsCSSProperty aProperty,
   const StyleTransition& aTransition,
   dom::Element* aElement,
-  ElementAnimationCollection*& aElementTransitions,
+  AnimationPlayerCollection*& aElementTransitions,
   nsStyleContext* aOldStyleContext,
   nsStyleContext* aNewStyleContext,
   bool* aStartedAny,
@@ -385,7 +385,7 @@ nsTransitionManager::ConsiderStartingTransition(
   size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
   const ElementPropertyTransition *oldPT = nullptr;
   if (aElementTransitions) {
-    ElementAnimationPtrArray& animations = aElementTransitions->mAnimations;
+    AnimationPlayerPtrArray& animations = aElementTransitions->mAnimations;
     for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
       MOZ_ASSERT(animations[i]->mProperties.Length() == 1,
                  "Should have one animation property for a transition");
@@ -426,7 +426,7 @@ nsTransitionManager::ConsiderStartingTransition(
       // in-progress value (which is particularly easy to cause when we're
       // currently in the 'transition-delay').  It also might happen because we
       // just got a style change to a value that can't be interpolated.
-      ElementAnimationPtrArray& animations = aElementTransitions->mAnimations;
+      AnimationPlayerPtrArray& animations = aElementTransitions->mAnimations;
       animations.RemoveElementAt(currentIndex);
       aElementTransitions->UpdateAnimationGeneration(mPresContext);
 
@@ -518,7 +518,7 @@ nsTransitionManager::ConsiderStartingTransition(
     }
   }
 
-  ElementAnimationPtrArray &animations = aElementTransitions->mAnimations;
+  AnimationPlayerPtrArray &animations = aElementTransitions->mAnimations;
 #ifdef DEBUG
   for (uint32_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
     NS_ABORT_IF_FALSE(animations[i]->mProperties.Length() == 1,
@@ -543,7 +543,7 @@ nsTransitionManager::ConsiderStartingTransition(
   aWhichStarted->AddProperty(aProperty);
 }
 
-ElementAnimationCollection*
+AnimationPlayerCollection*
 nsTransitionManager::GetElementTransitions(
   dom::Element *aElement,
   nsCSSPseudoElements::Type aPseudoType,
@@ -567,15 +567,15 @@ nsTransitionManager::GetElementTransitions(
                  "other than :before or :after");
     return nullptr;
   }
-  ElementAnimationCollection* collection =
-    static_cast<ElementAnimationCollection*>(aElement->GetProperty(propName));
+  AnimationPlayerCollection* collection =
+    static_cast<AnimationPlayerCollection*>(aElement->GetProperty(propName));
   if (!collection && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
-    collection = new ElementAnimationCollection(aElement, propName, this,
+    collection = new AnimationPlayerCollection(aElement, propName, this,
       mPresContext->RefreshDriver()->MostRecentRefresh());
     nsresult rv =
       aElement->SetProperty(propName, collection,
-                            &ElementAnimationCollection::PropertyDtor, false);
+                            &AnimationPlayerCollection::PropertyDtor, false);
     if (NS_FAILED(rv)) {
       NS_WARNING("SetProperty failed");
       delete collection;
@@ -600,7 +600,7 @@ nsTransitionManager::WalkTransitionRule(
   ElementDependentRuleProcessorData* aData,
   nsCSSPseudoElements::Type aPseudoType)
 {
-  ElementAnimationCollection* collection =
+  AnimationPlayerCollection* collection =
     GetElementTransitions(aData->mElement, aPseudoType, false);
   if (!collection) {
     return;
@@ -739,13 +739,13 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
   {
     PRCList *next = PR_LIST_HEAD(&mElementCollections);
     while (next != &mElementCollections) {
-      ElementAnimationCollection* collection =
-        static_cast<ElementAnimationCollection*>(next);
+      AnimationPlayerCollection* collection =
+        static_cast<AnimationPlayerCollection*>(next);
       next = PR_NEXT_LINK(next);
 
       bool canThrottleTick = aFlags == Can_Throttle &&
         collection->CanPerformOnCompositorThread(
-          ElementAnimationCollection::CanAnimateFlags(0)) &&
+          AnimationPlayerCollection::CanAnimateFlags(0)) &&
         collection->CanThrottleAnimation(now);
 
       NS_ABORT_IF_FALSE(collection->mElement->GetCrossShadowCurrentDoc() ==
