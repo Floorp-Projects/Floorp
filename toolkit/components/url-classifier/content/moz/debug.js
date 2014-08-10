@@ -711,7 +711,7 @@ G_Loggifier.prototype.loggify = function(obj) {
     // they're encountered during execution, so declare this helper
     // before using it.)
 
-    function wrap(meth, objName, methName) {
+    let wrap = function (meth, objName, methName) {
       return function() {
         
         // First output the call along with actual parameters

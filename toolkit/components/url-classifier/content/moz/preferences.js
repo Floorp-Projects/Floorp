@@ -244,7 +244,7 @@ function TEST_G_Preferences() {
     
     // Used to test observing
     var observeCount = 0;
-    function observe(prefChanged) {
+    let observe = function (prefChanged) {
       G_Assert(z, prefChanged == testPref, "observer broken");
       observeCount++;
     };
