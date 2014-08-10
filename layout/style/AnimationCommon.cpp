@@ -443,6 +443,15 @@ AnimationPlayerCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
 }
 
 void
+AnimationPlayerCollection::Tick()
+{
+  for (size_t animIdx = 0, animEnd = mAnimations.Length();
+       animIdx != animEnd; animIdx++) {
+    mAnimations[animIdx]->Tick();
+  }
+}
+
+void
 AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                                               EnsureStyleRuleFlags aFlags)
 {
