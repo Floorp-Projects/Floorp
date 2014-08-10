@@ -746,6 +746,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
         static_cast<AnimationPlayerCollection*>(next);
       next = PR_NEXT_LINK(next);
 
+      collection->Tick();
       bool canThrottleTick = aFlags == Can_Throttle &&
         collection->CanPerformOnCompositorThread(
           AnimationPlayerCollection::CanAnimateFlags(0)) &&
