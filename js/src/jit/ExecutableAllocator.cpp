@@ -29,9 +29,7 @@
 
 #include "js/MemoryMetrics.h"
 
-#if ENABLE_ASSEMBLER
-
-namespace JSC {
+using namespace js::jit;
 
 size_t ExecutableAllocator::pageSize = 0;
 size_t ExecutableAllocator::largeAllocSize = 0;
@@ -90,7 +88,3 @@ ExecutableAllocator::codeContains(char* address)
 
     return false;
 }
-
-}
-
-#endif // HAVE(ASSEMBLER)

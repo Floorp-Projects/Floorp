@@ -2216,7 +2216,7 @@ JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "ForkJoinGetSliceStub");

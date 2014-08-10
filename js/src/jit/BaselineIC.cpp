@@ -612,7 +612,7 @@ ICStubCompiler::getStubCode()
         return nullptr;
     Linker linker(masm);
     AutoFlushICache afc("getStubCode");
-    Rooted<JitCode *> newStubCode(cx, linker.newCode<CanGC>(cx, JSC::BASELINE_CODE));
+    Rooted<JitCode *> newStubCode(cx, linker.newCode<CanGC>(cx, BASELINE_CODE));
     if (!newStubCode)
         return nullptr;
 

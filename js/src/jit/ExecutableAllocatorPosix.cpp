@@ -23,19 +23,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "jit/ExecutableAllocator.h"
-
-#if ENABLE_ASSEMBLER && WTF_OS_UNIX && !WTF_OS_SYMBIAN
-
 #include "mozilla/DebugOnly.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include "jit/ExecutableAllocator.h"
 #include "js/Utility.h"
 
-namespace JSC {
+using namespace js::jit;
 
 size_t ExecutableAllocator::determinePageSize()
 {
@@ -108,7 +105,3 @@ ExecutablePool::toggleAllCodeAsAccessible(bool accessible)
             MOZ_CRASH();
     }
 }
-
-}
-
-#endif // HAVE(ASSEMBLER)
