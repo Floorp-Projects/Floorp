@@ -45,8 +45,12 @@ nsAnimationManager::GetEventsForCurrentTime(AnimationPlayerCollection*
 {
   for (size_t playerIdx = aCollection->mPlayers.Length(); playerIdx-- != 0; ) {
     AnimationPlayer* player = aCollection->mPlayers[playerIdx];
+    Animation* anim = player->GetSource();
+    if (!anim) {
+      continue;
+    }
 
-    ComputedTiming computedTiming = player->GetComputedTiming(player->mTiming);
+    ComputedTiming computedTiming = anim->GetComputedTiming();
 
     switch (computedTiming.mPhase) {
       case ComputedTiming::AnimationPhase_Null:
@@ -71,10 +75,10 @@ nsAnimationManager::GetEventsForCurrentTime(AnimationPlayerCollection*
 
           player->mLastNotification = computedTiming.mCurrentIteration;
           TimeDuration iterationStart =
-            player->mTiming.mIterationDuration *
+            anim->Timing().mIterationDuration *
             computedTiming.mCurrentIteration;
           TimeDuration elapsedTime =
-            std::max(iterationStart, player->InitialAdvance());
+            std::max(iterationStart, anim->InitialAdvance());
           AnimationEventInfo ei(aCollection->mElement, player->mName, message,
                                 elapsedTime, aCollection->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
@@ -91,7 +95,7 @@ nsAnimationManager::GetEventsForCurrentTime(AnimationPlayerCollection*
           // internal consistency.)
           player->mLastNotification = 0;
           TimeDuration elapsedTime =
-            std::min(player->InitialAdvance(), computedTiming.mActiveDuration);
+            std::min(anim->InitialAdvance(), computedTiming.mActiveDuration);
           AnimationEventInfo ei(aCollection->mElement,
                                 player->mName, NS_ANIMATION_START,
                                 elapsedTime, aCollection->PseudoElement());
@@ -296,10 +300,10 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
           // Update the old from the new so we can keep the original object
           // identity (and any expando properties attached to it).
-          oldPlayer->mTiming = newPlayer->mTiming;
           if (oldPlayer->GetSource() && newPlayer->GetSource()) {
             Animation* oldAnim = oldPlayer->GetSource();
             Animation* newAnim = newPlayer->GetSource();
+            oldAnim->Timing() = newAnim->Timing();
             oldAnim->Properties() = newAnim->Properties();
           }
 
@@ -444,15 +448,16 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
     dest->mName = src.GetName();
 
-    dest->mTiming.mIterationDuration =
+    AnimationTiming timing;
+    timing.mIterationDuration =
       TimeDuration::FromMilliseconds(src.GetDuration());
-    dest->mTiming.mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
-    dest->mTiming.mIterationCount = src.GetIterationCount();
-    dest->mTiming.mDirection = src.GetDirection();
-    dest->mTiming.mFillMode = src.GetFillMode();
+    timing.mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
+    timing.mIterationCount = src.GetIterationCount();
+    timing.mDirection = src.GetDirection();
+    timing.mFillMode = src.GetFillMode();
 
     nsRefPtr<Animation> destAnim =
-      new Animation(mPresContext->Document());
+      new Animation(mPresContext->Document(), timing);
     dest->SetSource(destAnim);
 
     dest->mStartTime = now;
