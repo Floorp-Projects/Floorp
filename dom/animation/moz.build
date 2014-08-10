@@ -7,10 +7,12 @@
 MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 EXPORTS.mozilla.dom += [
+    'AnimationPlayer.h',
     'AnimationTimeline.h',
 ]
 
 SOURCES += [
+    'AnimationPlayer.cpp',
     'AnimationTimeline.cpp',
 ]
 

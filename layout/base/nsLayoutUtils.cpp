@@ -471,7 +471,7 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
     return;
 
   for (uint32_t animIdx = collection->mAnimations.Length(); animIdx-- != 0; ) {
-    mozilla::ElementAnimation* anim = collection->mAnimations[animIdx];
+    AnimationPlayer* anim = collection->mAnimations[animIdx];
     if (anim->IsFinishedTransition()) {
       continue;
     }

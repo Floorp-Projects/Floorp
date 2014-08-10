@@ -9,6 +9,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
+#include "mozilla/dom/AnimationPlayer.h"
 
 #include "nsPresContext.h"
 #include "nsRuleProcessorData.h"
@@ -23,6 +24,7 @@
 
 using namespace mozilla;
 using namespace mozilla::css;
+using mozilla::dom::AnimationPlayer;
 
 void
 nsAnimationManager::UpdateStyleAndEvents(ElementAnimationCollection*
@@ -41,7 +43,7 @@ nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
                                             EventArray& aEventsToDispatch)
 {
   for (uint32_t animIdx = aCollection->mAnimations.Length(); animIdx-- != 0; ) {
-    ElementAnimation* anim = aCollection->mAnimations[animIdx];
+    AnimationPlayer* anim = aCollection->mAnimations[animIdx];
 
     ComputedTiming computedTiming = anim->GetComputedTiming(anim->mTiming);
 
@@ -61,7 +63,7 @@ nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
           // immediately in many cases.  It's not clear to me if that's the
           // right thing to do.
           uint32_t message =
-            anim->mLastNotification == ElementAnimation::LAST_NOTIFICATION_NONE
+            anim->mLastNotification == AnimationPlayer::LAST_NOTIFICATION_NONE
               ? NS_ANIMATION_START : NS_ANIMATION_ITERATION;
 
           anim->mLastNotification = computedTiming.mCurrentIteration;
@@ -80,7 +82,7 @@ nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
         // If we skipped the animation interval entirely, dispatch
         // 'animationstart' first
         if (anim->mLastNotification ==
-            ElementAnimation::LAST_NOTIFICATION_NONE) {
+            AnimationPlayer::LAST_NOTIFICATION_NONE) {
           // Notifying for start of 0th iteration.
           // (This is overwritten below but we set it here to maintain
           // internal consistency.)
@@ -94,8 +96,8 @@ nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
         }
         // Dispatch 'animationend' when needed.
         if (anim->mLastNotification !=
-            ElementAnimation::LAST_NOTIFICATION_END) {
-          anim->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
+            AnimationPlayer::LAST_NOTIFICATION_END) {
+          anim->mLastNotification = AnimationPlayer::LAST_NOTIFICATION_END;
           AnimationEventInfo ei(aCollection->mElement,
                                 anim->mName, NS_ANIMATION_END,
                                 computedTiming.mActiveDuration,
@@ -268,7 +270,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       // in the first place).
       if (!collection->mAnimations.IsEmpty()) {
         for (size_t newIdx = newAnimations.Length(); newIdx-- != 0;) {
-          ElementAnimation* newAnim = newAnimations[newIdx];
+          AnimationPlayer* newAnim = newAnimations[newIdx];
 
           // Find the matching animation with this name in the old list
           // of animations.  We iterate through both lists in a backwards
@@ -276,10 +278,10 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // the new list of animations with a given name than in the old
           // list, it will be the animations towards the of the beginning of
           // the list that do not match and are treated as new animations.
-          nsRefPtr<ElementAnimation> oldAnim;
+          nsRefPtr<AnimationPlayer> oldAnim;
           size_t oldIdx = collection->mAnimations.Length();
           while (oldIdx-- != 0) {
-            ElementAnimation* a = collection->mAnimations[oldIdx];
+            AnimationPlayer* a = collection->mAnimations[oldIdx];
             if (a->mName == newAnim->mName) {
               oldAnim = a;
               break;
@@ -419,7 +421,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     // not generate animation events. This includes when the animation-name is
     // "none" which is represented by an empty name in the StyleAnimation.
     // Since such animations neither affect style nor dispatch events, we do
-    // not generate a corresponding ElementAnimation for them.
+    // not generate a corresponding AnimationPlayer for them.
     nsCSSKeyframesRule* rule =
       src.GetName().IsEmpty()
       ? nullptr
@@ -429,8 +431,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    nsRefPtr<ElementAnimation> dest =
-      *aAnimations.AppendElement(new ElementAnimation(aTimeline));
+    nsRefPtr<AnimationPlayer> dest =
+      *aAnimations.AppendElement(new AnimationPlayer(aTimeline));
 
     dest->mName = src.GetName();
 

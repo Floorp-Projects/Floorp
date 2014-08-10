@@ -317,7 +317,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
 }
 
 static TimingFunction
-ToTimingFunction(css::ComputedTimingFunction& aCTF)
+ToTimingFunction(ComputedTimingFunction& aCTF)
 {
   if (aCTF.GetType() == nsTimingFunction::Function) {
     const nsSMILKeySpline* spline = aCTF.GetFunction();
@@ -331,7 +331,7 @@ ToTimingFunction(css::ComputedTimingFunction& aCTF)
 
 static void
 AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                        mozilla::ElementAnimation* ea, Layer* aLayer,
+                        AnimationPlayer* ea, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
   NS_ASSERTION(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
@@ -391,7 +391,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending) {
   for (uint32_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
-    mozilla::ElementAnimation* anim = aAnimations[animIdx];
+    AnimationPlayer* anim = aAnimations[animIdx];
     if (!(anim->HasAnimationOfProperty(aProperty) && anim->IsRunning())) {
       continue;
     }
