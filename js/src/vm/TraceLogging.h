@@ -143,6 +143,7 @@ namespace jit {
     _(UCE)                                            \
     _(LICM)                                           \
     _(RangeAnalysis)                                  \
+    _(LoopUnrolling)                                  \
     _(EffectiveAddressAnalysis)                       \
     _(EliminateDeadCode)                              \
     _(EdgeCaseAnalysis)                               \
