@@ -125,6 +125,7 @@ public:
     : mDocument(aDocument)
     , mTiming(aTiming)
     , mIsFinishedTransition(false)
+    , mLastNotification(LAST_NOTIFICATION_NONE)
   {
     SetIsDOMBinding();
   }
@@ -208,6 +209,15 @@ public:
            computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
   }
 
+  enum {
+    LAST_NOTIFICATION_NONE = uint64_t(-1),
+    LAST_NOTIFICATION_END = uint64_t(-2)
+  };
+  uint64_t LastNotification() const { return mLastNotification; }
+  void SetLastNotification(uint64_t aLastNotification) {
+    mLastNotification = aLastNotification;
+  }
+
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
   const InfallibleTArray<AnimationProperty>& Properties() const {
     return mProperties;
@@ -228,6 +238,9 @@ protected:
   // A flag to mark transitions that have finished and are due to
   // be removed on the next throttle-able cycle.
   bool mIsFinishedTransition;
+  // One of the LAST_NOTIFICATION_* constants, or an integer for the iteration
+  // whose start we last notified on.
+  uint64_t mLastNotification;
 
   InfallibleTArray<AnimationProperty> mProperties;
 };
