@@ -31,6 +31,8 @@
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
+using mozilla::dom::AnimationPlayer;
+using mozilla::dom::Animation;
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -60,12 +62,13 @@ ElementPropertyTransition::CurrentValuePortion() const
 
   MOZ_ASSERT(computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction,
              "Got a null time fraction for a fill mode of 'both'");
-  MOZ_ASSERT(mProperties.Length() == 1,
+  MOZ_ASSERT(GetSource() && GetSource()->Properties().Length() == 1,
              "Should have one animation property for a transition");
-  MOZ_ASSERT(mProperties[0].mSegments.Length() == 1,
+  MOZ_ASSERT(GetSource() &&
+             GetSource()->Properties()[0].mSegments.Length() == 1,
              "Animation property should have one segment for a transition");
-  return mProperties[0].mSegments[0].mTimingFunction
-         .GetValue(computedTiming.mTimeFraction);
+  return GetSource()->Properties()[0].mSegments[0].mTimingFunction
+                      .GetValue(computedTiming.mTimeFraction);
 }
 
 /*****************************************************************************
@@ -261,11 +264,12 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     do {
       --i;
       AnimationPlayer* player = players[i];
-      MOZ_ASSERT(player->mProperties.Length() == 1,
+      dom::Animation* anim = player->GetSource();
+      MOZ_ASSERT(anim && anim->Properties().Length() == 1,
                  "Should have one animation property for a transition");
-      MOZ_ASSERT(player->mProperties[0].mSegments.Length() == 1,
+      MOZ_ASSERT(anim && anim->Properties()[0].mSegments.Length() == 1,
                  "Animation property should have one segment for a transition");
-      const AnimationProperty& prop = player->mProperties[0];
+      const AnimationProperty& prop = anim->Properties()[0];
       const AnimationPropertySegment& segment = prop.mSegments[0];
           // properties no longer in 'transition-property'
       if ((checkProperties &&
@@ -313,12 +317,12 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
   AnimationPlayerPtrArray& players = collection->mPlayers;
   for (size_t i = 0, i_end = players.Length(); i < i_end; ++i) {
-    AnimationPlayer* player = players[i];
-    MOZ_ASSERT(player->mProperties.Length() == 1,
+    dom::Animation* anim = players[i]->GetSource();
+    MOZ_ASSERT(anim && anim->Properties().Length() == 1,
                "Should have one animation property for a transition");
-    MOZ_ASSERT(player->mProperties[0].mSegments.Length() == 1,
+    MOZ_ASSERT(anim && anim->Properties()[0].mSegments.Length() == 1,
                "Animation property should have one segment for a transition");
-    AnimationProperty& prop = player->mProperties[0];
+    AnimationProperty& prop = anim->Properties()[0];
     AnimationPropertySegment& segment = prop.mSegments[0];
     if (whichStarted.HasProperty(prop.mProperty)) {
       coverRule->AddValue(prop.mProperty, segment.mFromValue);
@@ -387,9 +391,10 @@ nsTransitionManager::ConsiderStartingTransition(
   if (aElementTransitions) {
     AnimationPlayerPtrArray& players = aElementTransitions->mPlayers;
     for (size_t i = 0, i_end = players.Length(); i < i_end; ++i) {
-      MOZ_ASSERT(players[i]->mProperties.Length() == 1,
+      MOZ_ASSERT(players[i]->GetSource() &&
+                 players[i]->GetSource()->Properties().Length() == 1,
                  "Should have one animation property for a transition");
-      if (players[i]->mProperties[0].mProperty == aProperty) {
+      if (players[i]->GetSource()->Properties()[0].mProperty == aProperty) {
         haveCurrentTransition = true;
         currentIndex = i;
         oldPT =
@@ -408,10 +413,12 @@ nsTransitionManager::ConsiderStartingTransition(
   // this case, we'll end up with shouldAnimate as false (because
   // there's no value change), but we need to return early here rather
   // than cancel the running transition because shouldAnimate is false!
-  MOZ_ASSERT(!oldPT || oldPT->mProperties[0].mSegments.Length() == 1,
+  MOZ_ASSERT(!oldPT ||
+             (oldPT->GetSource() &&
+              oldPT->GetSource()->Properties()[0].mSegments.Length() == 1),
              "Should have one animation property segment for a transition");
   if (haveCurrentTransition && haveValues &&
-      oldPT->mProperties[0].mSegments[0].mToValue == endValue) {
+      oldPT->GetSource()->Properties()[0].mSegments[0].mToValue == endValue) {
     // WalkTransitionRule already called RestyleForAnimation.
     return;
   }
@@ -485,14 +492,15 @@ nsTransitionManager::ConsiderStartingTransition(
 
     duration *= valuePortion;
 
-    pt->mStartForReversingTest = oldPT->mProperties[0].mSegments[0].mToValue;
+    pt->mStartForReversingTest =
+      oldPT->GetSource()->Properties()[0].mSegments[0].mToValue;
     pt->mReversePortion = valuePortion;
   }
 
   nsRefPtr<dom::Animation> anim = new dom::Animation(aElement->OwnerDoc());
   pt->SetSource(anim);
 
-  AnimationProperty& prop = *pt->mProperties.AppendElement();
+  AnimationProperty& prop = *anim->Properties().AppendElement();
   prop.mProperty = aProperty;
 
   AnimationPropertySegment& segment = *prop.mSegments.AppendElement();
@@ -524,10 +532,13 @@ nsTransitionManager::ConsiderStartingTransition(
   AnimationPlayerPtrArray& players = aElementTransitions->mPlayers;
 #ifdef DEBUG
   for (size_t i = 0, i_end = players.Length(); i < i_end; ++i) {
-    NS_ABORT_IF_FALSE(players[i]->mProperties.Length() == 1,
+    NS_ABORT_IF_FALSE(players[i]->GetSource() &&
+                      players[i]->GetSource()->Properties().Length() == 1,
                       "Should have one animation property for a transition");
     NS_ABORT_IF_FALSE(i == currentIndex ||
-                      players[i]->mProperties[0].mProperty != aProperty,
+                      (players[i]->GetSource() &&
+                       players[i]->GetSource()->Properties()[0].mProperty
+                       != aProperty),
                       "duplicate transitions for property");
   }
 #endif
@@ -776,9 +787,10 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           ComputedTiming computedTiming =
             player->GetComputedTiming(player->mTiming);
           if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
-            MOZ_ASSERT(player->mProperties.Length() == 1,
+            MOZ_ASSERT(player->GetSource() &&
+                       player->GetSource()->Properties().Length() == 1,
                        "Should have one animation property for a transition");
-            nsCSSProperty prop = player->mProperties[0].mProperty;
+            nsCSSProperty prop = player->GetSource()->Properties()[0].mProperty;
             if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
             {
               prop = nsCSSProps::OtherNameFor(prop);

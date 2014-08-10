@@ -26,5 +26,17 @@ Animation::SetParentTime(Nullable<TimeDuration> aParentTime)
   mParentTime = aParentTime;
 }
 
+bool
+Animation::HasAnimationOfProperty(nsCSSProperty aProperty) const
+{
+  for (size_t propIdx = 0, propEnd = mProperties.Length();
+       propIdx != propEnd; ++propIdx) {
+    if (aProperty == mProperties[propIdx].mProperty) {
+      return true;
+    }
+  }
+  return false;
+}
+
 } // namespace dom
 } // namespace mozilla

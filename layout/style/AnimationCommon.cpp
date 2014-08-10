@@ -28,6 +28,7 @@
 
 using mozilla::layers::Layer;
 using mozilla::dom::AnimationPlayer;
+using mozilla::dom::Animation;
 
 namespace mozilla {
 
@@ -355,11 +356,13 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
 
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
     const AnimationPlayer* player = mPlayers[playerIdx];
-    bool isRunning = player->IsRunning();
-    for (size_t propIdx = 0, propEnd = player->mProperties.Length();
+    if (!player->IsRunning() || !player->GetSource()) {
+      continue;
+    }
+    const Animation* anim = player->GetSource();
+    for (size_t propIdx = 0, propEnd = anim->Properties().Length();
          propIdx != propEnd; ++propIdx) {
-      if (IsGeometricProperty(player->mProperties[propIdx].mProperty) &&
-          isRunning) {
+      if (IsGeometricProperty(anim->Properties()[propIdx].mProperty)) {
         aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
         break;
       }
@@ -369,15 +372,16 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
   bool existsProperty = false;
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
     const AnimationPlayer* player = mPlayers[playerIdx];
-    if (!player->IsRunning()) {
+    if (!player->IsRunning() || !player->GetSource()) {
       continue;
     }
 
-    existsProperty = true;
+    const Animation* anim = player->GetSource();
+    existsProperty = existsProperty || anim->Properties().Length() > 0;
 
-    for (size_t propIdx = 0, propEnd = player->mProperties.Length();
+    for (size_t propIdx = 0, propEnd = anim->Properties().Length();
          propIdx != propEnd; ++propIdx) {
-      const AnimationProperty& prop = player->mProperties[propIdx];
+      const AnimationProperty& prop = anim->Properties()[propIdx];
       if (!CanAnimatePropertyOnCompositor(mElement,
                                           prop.mProperty,
                                           aFlags) ||
@@ -401,7 +405,10 @@ AnimationPlayerCollection::HasAnimationOfProperty(
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
     const AnimationPlayer* player = mPlayers[playerIdx];
-    if (player->HasAnimationOfProperty(aProperty) &&
+    const Animation* anim = player->GetSource();
+    // FIXME: Drop the reference to the player once we move
+    // IsFinishedTransition to Animation
+    if (anim && anim->HasAnimationOfProperty(aProperty) &&
         !player->IsFinishedTransition()) {
       return true;
     }
@@ -470,9 +477,11 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
       AnimationPlayer* player = mPlayers[playerIdx];
 
-      // Skip finished transitions or animations whose @keyframes rule
-      // is empty.
-      if (player->IsFinishedTransition() || player->mProperties.IsEmpty()) {
+      // Skip player with no source content, finished transitions, or animations
+      // whose @keyframes rule is empty.
+      if (!player->GetSource() ||
+          player->IsFinishedTransition() ||
+          player->GetSource()->Properties().IsEmpty()) {
         continue;
       }
 
@@ -532,7 +541,9 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
       // If the time fraction is null, we don't have fill data for the current
       // time so we shouldn't animate.
-      if (computedTiming.mTimeFraction == ComputedTiming::kNullTimeFraction) {
+      // Likewise, if the player has no source content.
+      if (computedTiming.mTimeFraction == ComputedTiming::kNullTimeFraction ||
+          !player->GetSource()) {
         continue;
       }
 
@@ -540,10 +551,11 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                         computedTiming.mTimeFraction <= 1.0,
                         "timing fraction should be in [0-1]");
 
-      for (size_t propIdx = 0, propEnd = player->mProperties.Length();
+      const Animation* anim = player->GetSource();
+      for (size_t propIdx = 0, propEnd = anim->Properties().Length();
            propIdx != propEnd; ++propIdx)
       {
-        const AnimationProperty& prop = player->mProperties[propIdx];
+        const AnimationProperty& prop = anim->Properties()[propIdx];
 
         NS_ABORT_IF_FALSE(prop.mSegments[0].mFromKey == 0.0,
                           "incorrect first from key");
