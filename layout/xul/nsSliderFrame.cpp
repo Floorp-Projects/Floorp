@@ -534,6 +534,21 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
     mDragStart = pos - mThumbStart;
   }
+#ifdef MOZ_WIDGET_GTK
+  else if (ShouldScrollForEvent(aEvent) &&
+           aEvent->mClass == eMouseEventClass &&
+           aEvent->AsMouseEvent()->button == WidgetMouseEvent::eRightButton) {
+    // HandlePress and HandleRelease are usually called via
+    // nsFrame::HandleEvent, but only for the left mouse button.
+    if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
+      HandlePress(aPresContext, aEvent, aEventStatus);
+    } else if (aEvent->message == NS_MOUSE_BUTTON_UP) {
+      HandleRelease(aPresContext, aEvent, aEventStatus);
+    }
+
+    return NS_OK;
+  }
+#endif
 
   // XXX hack until handle release is actually called in nsframe.
 //  if (aEvent->message == NS_MOUSE_EXIT_SYNTH || aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
@@ -955,8 +970,14 @@ nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent)
     case NS_MOUSE_BUTTON_DOWN:
     case NS_MOUSE_BUTTON_UP: {
       uint16_t button = aEvent->AsMouseEvent()->button;
+#ifdef MOZ_WIDGET_GTK
+      return (button == WidgetMouseEvent::eLeftButton) ||
+             (button == WidgetMouseEvent::eRightButton && GetScrollToClick()) ||
+             (button == WidgetMouseEvent::eMiddleButton && gMiddlePref && !GetScrollToClick());
+#else
       return (button == WidgetMouseEvent::eLeftButton) ||
              (button == WidgetMouseEvent::eMiddleButton && gMiddlePref);
+#endif
     }
     default:
       return false;
@@ -978,8 +999,8 @@ nsSliderFrame::ShouldScrollToClickForEvent(WidgetGUIEvent* aEvent)
     return false;
   }
 
-#ifdef XP_MACOSX
-  // On Mac, clicking the scrollbar thumb should never scroll to click.
+#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
+  // On Mac and Linux, clicking the scrollbar thumb should never scroll to click.
   if (IsEventOverThumb(aEvent)) {
     return false;
   }
@@ -994,6 +1015,12 @@ nsSliderFrame::ShouldScrollToClickForEvent(WidgetGUIEvent* aEvent)
 #endif
     return GetScrollToClick() != invertPref;
   }
+
+#ifdef MOZ_WIDGET_GTK
+  if (mouseEvent->button == WidgetMouseEvent::eRightButton) {
+    return !GetScrollToClick();
+  }
+#endif
 
   return true;
 }
