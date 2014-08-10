@@ -104,7 +104,21 @@ AnimationPlayer::CurrentTime() const
 void
 AnimationPlayer::SetSource(Animation* aSource)
 {
+  if (mSource) {
+    mSource->SetParentTime(Nullable<TimeDuration>());
+  }
   mSource = aSource;
+  if (mSource) {
+    mSource->SetParentTime(GetLocalTime());
+  }
+}
+
+void
+AnimationPlayer::Tick()
+{
+  if (mSource) {
+    mSource->SetParentTime(GetLocalTime());
+  }
 }
 
 bool

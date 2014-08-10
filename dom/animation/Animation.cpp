@@ -20,5 +20,11 @@ Animation::WrapObject(JSContext* aCx)
   return AnimationBinding::Wrap(aCx, this);
 }
 
+void
+Animation::SetParentTime(Nullable<TimeDuration> aParentTime)
+{
+  mParentTime = aParentTime;
+}
+
 } // namespace dom
 } // namespace mozilla

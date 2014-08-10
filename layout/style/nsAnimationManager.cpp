@@ -335,6 +335,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     }
     collection->mAnimations.SwapElements(newAnimations);
     collection->mNeedsRefreshes = true;
+    collection->Tick();
 
     TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
     UpdateStyleAndEvents(collection, refreshTime,
@@ -745,6 +746,7 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
        l = PR_NEXT_LINK(l)) {
     AnimationPlayerCollection* collection =
       static_cast<AnimationPlayerCollection*>(l);
+    collection->Tick();
     bool canThrottleTick = aFlags == Can_Throttle &&
       collection->CanPerformOnCompositorThread(
         AnimationPlayerCollection::CanAnimateFlags(0)) &&

@@ -152,6 +152,7 @@ public:
   double CurrentTime() const;
 
   void SetSource(Animation* aSource);
+  void Tick();
 
   // FIXME: If we succeed in moving transition-specific code to a type of
   // AnimationEffect (as per the Web Animations API) we should remove these
