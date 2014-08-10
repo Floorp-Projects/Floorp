@@ -41,13 +41,12 @@ using namespace mozilla::css;
 double
 ElementPropertyTransition::CurrentValuePortion() const
 {
-  MOZ_ASSERT(GetSource(), "Transitions should have source content");
   // It would be easy enough to handle finished transitions by using a time
   // fraction of 1 but currently we should not be called for finished
   // transitions.
-  MOZ_ASSERT(!GetSource()->IsFinishedTransition(),
+  MOZ_ASSERT(!IsFinishedTransition(),
              "Getting the value portion of a finished transition");
-  MOZ_ASSERT(!GetCurrentTimeDuration().IsNull(),
+  MOZ_ASSERT(!GetLocalTime().IsNull(),
              "Getting the value portion of an animation that's not being "
              "sampled");
 
@@ -57,19 +56,18 @@ ElementPropertyTransition::CurrentValuePortion() const
   // causing us to get called *after* the animation interval. So, just in
   // case, we override the fill mode to 'both' to ensure the time fraction
   // is never null.
-  AnimationTiming timingToUse = GetSource()->Timing();
+  AnimationTiming timingToUse = mTiming;
   timingToUse.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
-  ComputedTiming computedTiming = GetSource()->GetComputedTiming(&timingToUse);
+  ComputedTiming computedTiming = GetComputedTiming(&timingToUse);
 
   MOZ_ASSERT(computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction,
              "Got a null time fraction for a fill mode of 'both'");
-  MOZ_ASSERT(GetSource() && GetSource()->Properties().Length() == 1,
+  MOZ_ASSERT(mProperties.Length() == 1,
              "Should have one animation property for a transition");
-  MOZ_ASSERT(GetSource() &&
-             GetSource()->Properties()[0].mSegments.Length() == 1,
+  MOZ_ASSERT(mProperties[0].mSegments.Length() == 1,
              "Animation property should have one segment for a transition");
-  return GetSource()->Properties()[0].mSegments[0].mTimingFunction
-                      .GetValue(computedTiming.mTimeFraction);
+  return mProperties[0].mSegments[0].mTimingFunction
+         .GetValue(computedTiming.mTimeFraction);
 }
 
 /*****************************************************************************
@@ -365,8 +363,6 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 
   dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
-  nsRefPtr<ElementPropertyTransition> pt =
-    new ElementPropertyTransition(timeline);
 
   StyleAnimationValue startValue, endValue, dummyValue;
   bool haveValues =
@@ -398,8 +394,7 @@ nsTransitionManager::ConsiderStartingTransition(
       if (players[i]->GetSource()->Properties()[0].mProperty == aProperty) {
         haveCurrentTransition = true;
         currentIndex = i;
-        oldPT =
-          aElementTransitions->mPlayers[currentIndex]->AsTransition();
+        oldPT = players[currentIndex]->GetSource()->AsTransition();
         break;
       }
     }
@@ -414,12 +409,10 @@ nsTransitionManager::ConsiderStartingTransition(
   // this case, we'll end up with shouldAnimate as false (because
   // there's no value change), but we need to return early here rather
   // than cancel the running transition because shouldAnimate is false!
-  MOZ_ASSERT(!oldPT ||
-             (oldPT->GetSource() &&
-              oldPT->GetSource()->Properties()[0].mSegments.Length() == 1),
+  MOZ_ASSERT(!oldPT || oldPT->Properties()[0].mSegments.Length() == 1,
              "Should have one animation property segment for a transition");
   if (haveCurrentTransition && haveValues &&
-      oldPT->GetSource()->Properties()[0].mSegments[0].mToValue == endValue) {
+      oldPT->Properties()[0].mSegments[0].mToValue == endValue) {
     // WalkTransitionRule already called RestyleForAnimation.
     return;
   }
@@ -435,6 +428,7 @@ nsTransitionManager::ConsiderStartingTransition(
       // currently in the 'transition-delay').  It also might happen because we
       // just got a style change to a value that can't be interpolated.
       AnimationPlayerPtrArray& players = aElementTransitions->mPlayers;
+      oldPT = nullptr; // Clear pointer so it doesn't dangle
       players.RemoveElementAt(currentIndex);
       aElementTransitions->UpdateAnimationGeneration(mPresContext);
 
@@ -455,13 +449,14 @@ nsTransitionManager::ConsiderStartingTransition(
     // The spec says a negative duration is treated as zero.
     duration = 0.0;
   }
-  pt->mStartForReversingTest = startValue;
-  pt->mReversePortion = 1.0;
+
+  StyleAnimationValue startForReversingTest = startValue;
+  double reversePortion = 1.0;
 
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
   if (haveCurrentTransition &&
-      !oldPT->GetSource()->IsFinishedTransition() &&
+      !oldPT->IsFinishedTransition() &&
       oldPT->mStartForReversingTest == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
@@ -493,9 +488,8 @@ nsTransitionManager::ConsiderStartingTransition(
 
     duration *= valuePortion;
 
-    pt->mStartForReversingTest =
-      oldPT->GetSource()->Properties()[0].mSegments[0].mToValue;
-    pt->mReversePortion = valuePortion;
+    startForReversingTest = oldPT->Properties()[0].mSegments[0].mToValue;
+    reversePortion = valuePortion;
   }
 
   AnimationTiming timing;
@@ -505,10 +499,12 @@ nsTransitionManager::ConsiderStartingTransition(
   timing.mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
   timing.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
 
-  nsRefPtr<dom::Animation> anim =
-    new dom::Animation(aElement->OwnerDoc(), timing);
+  nsRefPtr<ElementPropertyTransition> pt =
+    new ElementPropertyTransition(aElement->OwnerDoc(), timing);
+  pt->mStartForReversingTest = startForReversingTest;
+  pt->mReversePortion = reversePortion;
 
-  AnimationProperty& prop = *anim->Properties().AppendElement();
+  AnimationProperty& prop = *pt->Properties().AppendElement();
   prop.mProperty = aProperty;
 
   AnimationPropertySegment& segment = *prop.mSegments.AppendElement();
@@ -518,10 +514,11 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mToKey = 1;
   segment.mTimingFunction.Init(tf);
 
-  pt->mStartTime = timeline->GetCurrentTimeStamp();
-  pt->mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
-  pt->mPauseStart = TimeStamp();
-  pt->SetSource(anim);
+  nsRefPtr<dom::AnimationPlayer> player = new dom::AnimationPlayer(timeline);
+  player->mStartTime = timeline->GetCurrentTimeStamp();
+  player->mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
+  player->mPauseStart = TimeStamp();
+  player->SetSource(pt);
 
   if (!aElementTransitions) {
     aElementTransitions =
@@ -547,9 +544,9 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 #endif
   if (haveCurrentTransition) {
-    players[currentIndex] = pt;
+    players[currentIndex] = player;
   } else {
-    if (!players.AppendElement(pt)) {
+    if (!players.AppendElement(player)) {
       NS_WARNING("out of memory");
       return;
     }
