@@ -62,6 +62,9 @@ AccountForCFGChanges(MIRGenerator *mir, MIRGraph &graph, bool updateAliasAnalysi
 bool
 RemoveUnmarkedBlocks(MIRGenerator *mir, MIRGraph &graph, uint32_t numMarkedBlocks);
 
+void
+ClearDominatorTree(MIRGraph &graph);
+
 bool
 BuildDominatorTree(MIRGraph &graph);
 
@@ -129,13 +132,14 @@ class LinearSum
     }
 
     bool multiply(int32_t scale);
-    bool add(const LinearSum &other);
+    bool add(const LinearSum &other, int32_t scale = 1);
     bool add(MDefinition *term, int32_t scale);
     bool add(int32_t constant);
 
     int32_t constant() const { return constant_; }
     size_t numTerms() const { return terms_.length(); }
     LinearTerm term(size_t i) const { return terms_[i]; }
+    void replaceTerm(size_t i, MDefinition *def) { terms_[i].term = def; }
 
     void print(Sprinter &sp) const;
     void dump(FILE *) const;
@@ -145,6 +149,16 @@ class LinearSum
     Vector<LinearTerm, 2, IonAllocPolicy> terms_;
     int32_t constant_;
 };
+
+// Convert all components of a linear sum *except* its constant to a definition,
+// adding any necessary instructions to the end of block.
+MDefinition *
+ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum);
+
+// Convert the test 'sum >= 0' to a comparison, adding any necessary
+// instructions to the end of block.
+MCompare *
+ConvertLinearInequality(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum);
 
 bool
 AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,

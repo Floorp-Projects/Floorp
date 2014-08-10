@@ -32,6 +32,7 @@
 #include "jit/LICM.h"
 #include "jit/LinearScan.h"
 #include "jit/LIR.h"
+#include "jit/LoopUnroller.h"
 #include "jit/Lowering.h"
 #include "jit/ParallelSafetyAnalysis.h"
 #include "jit/PerfSpewer.h"
@@ -1512,6 +1513,16 @@ OptimizeMIR(MIRGenerator *mir)
             if (mir->shouldCancel("Truncate Doubles"))
                 return false;
         }
+
+        if (mir->optimizationInfo().loopUnrollingEnabled()) {
+            AutoTraceLog log(logger, TraceLogger::LoopUnrolling);
+
+            if (!UnrollLoops(graph, r.loopIterationBounds))
+                return false;
+
+            IonSpewPass("Unroll Loops");
+            AssertExtendedGraphCoherency(graph);
+        }
     }
 
     if (mir->optimizationInfo().eaaEnabled()) {
@@ -1537,10 +1548,8 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    // Make loops contiguious. We do this after GVN/UCE and range analysis,
+    // Make loops contiguous. We do this after GVN/UCE and range analysis,
     // which can remove CFG edges, exposing more blocks that can be moved.
-    // We also disable this when profiling, since reordering blocks appears
-    // to make the profiler unhappy.
     {
         AutoTraceLog log(logger, TraceLogger::MakeLoopsContiguous);
         if (!MakeLoopsContiguous(graph))
