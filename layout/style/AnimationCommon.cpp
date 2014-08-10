@@ -486,13 +486,14 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       // FIXME: avoid recalculating every time when paused.
       ComputedTiming computedTiming = player->GetSource()->GetComputedTiming();
 
-      // XXX We shouldn't really be using mLastNotification as a general
+      // XXX We shouldn't really be using LastNotification() as a general
       // indicator that the animation has finished, it should be reserved for
       // events. If we use it differently in the future this use might need
       // changing.
       if (!player->mIsRunningOnCompositor ||
           (computedTiming.mPhase == ComputedTiming::AnimationPhase_After &&
-           player->mLastNotification != AnimationPlayer::LAST_NOTIFICATION_END))
+           player->GetSource()->LastNotification()
+             != Animation::LAST_NOTIFICATION_END))
       {
         aFlags = EnsureStyleRule_IsNotThrottled;
         break;

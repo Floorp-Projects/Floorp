@@ -36,7 +36,6 @@ protected:
 public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
     : mIsRunningOnCompositor(false)
-    , mLastNotification(LAST_NOTIFICATION_NONE)
     , mTimeline(aTimeline)
   {
     SetIsDOMBinding();
@@ -99,14 +98,6 @@ public:
   TimeStamp mPauseStart;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;
-
-  enum {
-    LAST_NOTIFICATION_NONE = uint64_t(-1),
-    LAST_NOTIFICATION_END = uint64_t(-2)
-  };
-  // One of the above constants, or an integer for the iteration
-  // whose start we last notified on.
-  uint64_t mLastNotification;
 
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
