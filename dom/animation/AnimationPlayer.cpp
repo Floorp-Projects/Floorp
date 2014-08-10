@@ -144,18 +144,6 @@ AnimationPlayer::IsCurrent() const
          computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
-bool
-AnimationPlayer::HasAnimationOfProperty(nsCSSProperty aProperty) const
-{
-  for (uint32_t propIdx = 0, propEnd = mProperties.Length();
-       propIdx != propEnd; ++propIdx) {
-    if (aProperty == mProperties[propIdx].mProperty) {
-      return true;
-    }
-  }
-  return false;
-}
-
 ComputedTiming
 AnimationPlayer::GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
                                       const AnimationTiming& aTiming)
