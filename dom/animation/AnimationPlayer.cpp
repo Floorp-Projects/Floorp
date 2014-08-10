@@ -73,7 +73,7 @@ AnimationPlayer::Tick()
 bool
 AnimationPlayer::IsRunning() const
 {
-  if (IsPaused() || !GetSource() || IsFinishedTransition()) {
+  if (IsPaused() || !GetSource() || GetSource()->IsFinishedTransition()) {
     return false;
   }
 
@@ -84,7 +84,7 @@ AnimationPlayer::IsRunning() const
 bool
 AnimationPlayer::IsCurrent() const
 {
-  return GetSource() && !IsFinishedTransition() && GetSource()->IsCurrent();
+  return GetSource() && GetSource()->IsCurrent();
 }
 
 } // namespace dom
