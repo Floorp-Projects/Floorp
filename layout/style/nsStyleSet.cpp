@@ -1375,8 +1375,8 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           // internals of nsAnimationManager.
           nsAnimationManager* animationManager =
             PresContext()->AnimationManager();
-          ElementAnimationCollection* collection = animationManager->GetElementAnimations(
-            aElement, aPseudoType, false);
+          AnimationPlayerCollection* collection =
+            animationManager->GetAnimationPlayers(aElement, aPseudoType, false);
 
           if (collection) {
             animationManager->UpdateStyleAndEvents(
@@ -1393,7 +1393,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           // FileRules does; this feels like too much poking into the
           // internals of nsTransitionManager.
           nsPresContext* presContext = PresContext();
-          ElementAnimationCollection* collection =
+          AnimationPlayerCollection* collection =
             presContext->TransitionManager()->GetElementTransitions(
               aElement, aPseudoType, false);
 

@@ -387,7 +387,7 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
 
 static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                         ElementAnimationPtrArray& aAnimations,
+                         AnimationPlayerPtrArray& aAnimations,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending) {
   for (uint32_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
@@ -428,9 +428,9 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   if (!content) {
     return;
   }
-  ElementAnimationCollection* transitions =
+  AnimationPlayerCollection* transitions =
     nsTransitionManager::GetAnimationsForCompositor(content, aProperty);
-  ElementAnimationCollection* animations =
+  AnimationPlayerCollection* animations =
     nsAnimationManager::GetAnimationsForCompositor(content, aProperty);
 
   if (!animations && !transitions) {
@@ -4697,8 +4697,8 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
   if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
     nsCString message;
     message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for opacity animation");
-    ElementAnimationCollection::LogAsyncAnimationFailure(message,
-                                                         Frame()->GetContent());
+    AnimationPlayerCollection::LogAsyncAnimationFailure(message,
+                                                        Frame()->GetContent());
   }
   return false;
 }
@@ -4730,8 +4730,8 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     if (aLogAnimations) {
       nsCString message;
       message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for transform animation");
-      ElementAnimationCollection::LogAsyncAnimationFailure(message,
-                                                           aFrame->GetContent());
+      AnimationPlayerCollection::LogAsyncAnimationFailure(message,
+                                                          aFrame->GetContent());
     }
     return false;
   }
@@ -4757,8 +4757,8 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     message.AppendLiteral(", ");
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
     message.Append(')');
-    ElementAnimationCollection::LogAsyncAnimationFailure(message,
-                                                         aFrame->GetContent());
+    AnimationPlayerCollection::LogAsyncAnimationFailure(message,
+                                                        aFrame->GetContent());
   }
   return false;
 }
