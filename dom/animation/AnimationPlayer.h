@@ -36,7 +36,6 @@ protected:
 public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
     : mIsRunningOnCompositor(false)
-    , mIsFinishedTransition(false)
     , mLastNotification(LAST_NOTIFICATION_NONE)
     , mTimeline(aTimeline)
   {
@@ -70,18 +69,6 @@ public:
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
   }
 
-  // After transitions finish they need to be retained for one throttle-able
-  // cycle (for reasons see explanation in nsTransitionManager.cpp). In the
-  // meantime, however, they should be ignored.
-  bool IsFinishedTransition() const {
-    return mIsFinishedTransition;
-  }
-  void SetFinishedTransition() {
-    MOZ_ASSERT(AsTransition(),
-               "Calling SetFinishedTransition but it's not a transition");
-    mIsFinishedTransition = true;
-  }
-
   bool IsRunning() const;
   bool IsCurrent() const;
 
@@ -112,9 +99,6 @@ public:
   TimeStamp mPauseStart;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;
-  // A flag to mark transitions that have finished and are due to
-  // be removed on the next throttle-able cycle.
-  bool mIsFinishedTransition;
 
   enum {
     LAST_NOTIFICATION_NONE = uint64_t(-1),

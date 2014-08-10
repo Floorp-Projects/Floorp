@@ -472,7 +472,7 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
 
   for (size_t playerIdx = collection->mPlayers.Length(); playerIdx-- != 0; ) {
     AnimationPlayer* player = collection->mPlayers[playerIdx];
-    if (!player->GetSource() || player->IsFinishedTransition()) {
+    if (!player->GetSource() || player->GetSource()->IsFinishedTransition()) {
       continue;
     }
     dom::Animation* anim = player->GetSource();

@@ -41,10 +41,11 @@ using namespace mozilla::css;
 double
 ElementPropertyTransition::CurrentValuePortion() const
 {
+  MOZ_ASSERT(GetSource(), "Transitions should have source content");
   // It would be easy enough to handle finished transitions by using a time
   // fraction of 1 but currently we should not be called for finished
   // transitions.
-  MOZ_ASSERT(!IsFinishedTransition(),
+  MOZ_ASSERT(!GetSource()->IsFinishedTransition(),
              "Getting the value portion of a finished transition");
   MOZ_ASSERT(!GetCurrentTimeDuration().IsNull(),
              "Getting the value portion of an animation that's not being "
@@ -56,7 +57,6 @@ ElementPropertyTransition::CurrentValuePortion() const
   // causing us to get called *after* the animation interval. So, just in
   // case, we override the fill mode to 'both' to ensure the time fraction
   // is never null.
-  MOZ_ASSERT(GetSource(), "Transitions should have source content");
   AnimationTiming timingToUse = GetSource()->Timing();
   timingToUse.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
   ComputedTiming computedTiming = GetSource()->GetComputedTiming(&timingToUse);
@@ -461,7 +461,7 @@ nsTransitionManager::ConsiderStartingTransition(
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
   if (haveCurrentTransition &&
-      !oldPT->IsFinishedTransition() &&
+      !oldPT->GetSource()->IsFinishedTransition() &&
       oldPT->mStartForReversingTest == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
@@ -778,7 +778,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
       do {
         --i;
         AnimationPlayer* player = collection->mPlayers[i];
-        if (player->IsFinishedTransition()) {
+        if (player->GetSource()->IsFinishedTransition()) {
           // Actually remove transitions one throttle-able cycle after their
           // completion. We only clear on a throttle-able cycle because that
           // means it is a regular restyle tick and thus it is safe to discard
@@ -814,7 +814,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
             // a non-animation style change that would affect it, we need
             // to know not to start a new transition for the transition
             // from the almost-completed value to the final value.
-            player->SetFinishedTransition();
+            player->GetSource()->SetIsFinishedTransition();
             collection->UpdateAnimationGeneration(mPresContext);
             transitionStartedOrEnded = true;
           } else if ((computedTiming.mPhase ==

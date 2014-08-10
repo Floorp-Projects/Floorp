@@ -404,12 +404,9 @@ AnimationPlayerCollection::HasAnimationOfProperty(
   nsCSSProperty aProperty) const
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const AnimationPlayer* player = mPlayers[playerIdx];
-    const Animation* anim = player->GetSource();
-    // FIXME: Drop the reference to the player once we move
-    // IsFinishedTransition to Animation
+    const Animation* anim = mPlayers[playerIdx]->GetSource();
     if (anim && anim->HasAnimationOfProperty(aProperty) &&
-        !player->IsFinishedTransition()) {
+        !anim->IsFinishedTransition()) {
       return true;
     }
   }
@@ -480,7 +477,7 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       // Skip player with no source content, finished transitions, or animations
       // whose @keyframes rule is empty.
       if (!player->GetSource() ||
-          player->IsFinishedTransition() ||
+          player->GetSource()->IsFinishedTransition() ||
           player->GetSource()->Properties().IsEmpty()) {
         continue;
       }
@@ -523,7 +520,7 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
       AnimationPlayer* player = mPlayers[playerIdx];
 
-      if (!player->GetSource() || player->IsFinishedTransition()) {
+      if (!player->GetSource() || player->GetSource()->IsFinishedTransition()) {
         continue;
       }
 
