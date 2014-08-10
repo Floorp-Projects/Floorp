@@ -10,7 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/AnimationPlayer.h"
+#include "mozilla/dom/Animation.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
 
@@ -29,10 +29,11 @@ struct StyleTransition;
 
 namespace mozilla {
 
-struct ElementPropertyTransition : public dom::AnimationPlayer
+struct ElementPropertyTransition : public dom::Animation
 {
-  explicit ElementPropertyTransition(dom::AnimationTimeline* aTimeline)
-    : dom::AnimationPlayer(aTimeline) { }
+  ElementPropertyTransition(nsIDocument* aDocument,
+                            const AnimationTiming &aTiming)
+    : dom::Animation(aDocument, aTiming) { }
 
   virtual ElementPropertyTransition* AsTransition() { return this; }
   virtual const ElementPropertyTransition* AsTransition() const { return this; }
