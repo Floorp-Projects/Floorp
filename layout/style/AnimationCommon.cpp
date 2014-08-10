@@ -73,27 +73,27 @@ void
 CommonAnimationManager::RemoveAllElementCollections()
 {
   while (!PR_CLIST_IS_EMPTY(&mElementCollections)) {
-    ElementAnimationCollection* head =
-      static_cast<ElementAnimationCollection*>(
+    AnimationPlayerCollection* head =
+      static_cast<AnimationPlayerCollection*>(
         PR_LIST_HEAD(&mElementCollections));
     head->Destroy();
   }
 }
 
-ElementAnimationCollection*
+AnimationPlayerCollection*
 CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
                                                    nsIAtom* aElementProperty,
                                                    nsCSSProperty aProperty)
 {
   if (!aContent->MayHaveAnimations())
     return nullptr;
-  ElementAnimationCollection* collection =
-    static_cast<ElementAnimationCollection*>(
+  AnimationPlayerCollection* collection =
+    static_cast<AnimationPlayerCollection*>(
       aContent->GetProperty(aElementProperty));
   if (!collection ||
       !collection->HasAnimationOfProperty(aProperty) ||
       !collection->CanPerformOnCompositorThread(
-        ElementAnimationCollection::CanAnimate_AllowPartial)) {
+        AnimationPlayerCollection::CanAnimate_AllowPartial)) {
     return nullptr;
   }
 
@@ -171,7 +171,8 @@ CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {
   PRCList* next = PR_LIST_HEAD(&mElementCollections);
   while (next != &mElementCollections) {
-    ElementAnimationCollection* collection = static_cast<ElementAnimationCollection*>(next);
+    AnimationPlayerCollection* collection =
+      static_cast<AnimationPlayerCollection*>(next);
     next = PR_NEXT_LINK(next);
 
     if (!collection->IsForElement()) {
@@ -257,7 +258,7 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
 } /* end sub-namespace css */
 
 bool
-ElementAnimationCollection::CanAnimatePropertyOnCompositor(
+AnimationPlayerCollection::CanAnimatePropertyOnCompositor(
   const dom::Element *aElement,
   nsCSSProperty aProperty,
   CanAnimateFlags aFlags)
@@ -323,7 +324,7 @@ ElementAnimationCollection::CanAnimatePropertyOnCompositor(
 }
 
 /* static */ bool
-ElementAnimationCollection::IsCompositorAnimationDisabledForFrame(
+AnimationPlayerCollection::IsCompositorAnimationDisabledForFrame(
   nsIFrame* aFrame)
 {
   void* prop = aFrame->Properties().Get(nsIFrame::RefusedAsyncAnimation());
@@ -331,7 +332,7 @@ ElementAnimationCollection::IsCompositorAnimationDisabledForFrame(
 }
 
 bool
-ElementAnimationCollection::CanPerformOnCompositorThread(
+AnimationPlayerCollection::CanPerformOnCompositorThread(
   CanAnimateFlags aFlags) const
 {
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
@@ -395,7 +396,7 @@ ElementAnimationCollection::CanPerformOnCompositorThread(
 }
 
 bool
-ElementAnimationCollection::HasAnimationOfProperty(
+AnimationPlayerCollection::HasAnimationOfProperty(
   nsCSSProperty aProperty) const
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
@@ -409,7 +410,7 @@ ElementAnimationCollection::HasAnimationOfProperty(
 }
 
 /* static */ void
-ElementAnimationCollection::LogAsyncAnimationFailure(nsCString& aMessage,
+AnimationPlayerCollection::LogAsyncAnimationFailure(nsCString& aMessage,
                                                      const nsIContent* aContent)
 {
   if (aContent) {
@@ -429,11 +430,11 @@ ElementAnimationCollection::LogAsyncAnimationFailure(nsCString& aMessage,
 }
 
 /*static*/ void
-ElementAnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
+AnimationPlayerCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
                                          void *aPropertyValue, void *aData)
 {
-  ElementAnimationCollection* collection =
-    static_cast<ElementAnimationCollection*>(aPropertyValue);
+  AnimationPlayerCollection* collection =
+    static_cast<AnimationPlayerCollection*>(aPropertyValue);
 #ifdef DEBUG
   NS_ABORT_IF_FALSE(!collection->mCalledPropertyDtor, "can't call dtor twice");
   collection->mCalledPropertyDtor = true;
@@ -442,8 +443,8 @@ ElementAnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
 }
 
 void
-ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
-                                               EnsureStyleRuleFlags aFlags)
+AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
+                                              EnsureStyleRuleFlags aFlags)
 {
   if (!mNeedsRefreshes) {
     mStyleRuleRefreshTime = aRefreshTime;
@@ -602,7 +603,7 @@ ElementAnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
 
 bool
-ElementAnimationCollection::CanThrottleTransformChanges(TimeStamp aTime)
+AnimationPlayerCollection::CanThrottleTransformChanges(TimeStamp aTime)
 {
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     return false;
@@ -640,7 +641,7 @@ ElementAnimationCollection::CanThrottleTransformChanges(TimeStamp aTime)
 }
 
 bool
-ElementAnimationCollection::CanThrottleAnimation(TimeStamp aTime)
+AnimationPlayerCollection::CanThrottleAnimation(TimeStamp aTime)
 {
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
   if (!frame) {
@@ -671,7 +672,7 @@ ElementAnimationCollection::CanThrottleAnimation(TimeStamp aTime)
 }
 
 void
-ElementAnimationCollection::UpdateAnimationGeneration(
+AnimationPlayerCollection::UpdateAnimationGeneration(
   nsPresContext* aPresContext)
 {
   mAnimationGeneration =
@@ -679,7 +680,7 @@ ElementAnimationCollection::UpdateAnimationGeneration(
 }
 
 bool
-ElementAnimationCollection::HasCurrentAnimations()
+AnimationPlayerCollection::HasCurrentAnimations()
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     if (mAnimations[animIdx]->IsCurrent()) {

@@ -27,7 +27,7 @@ using namespace mozilla::css;
 using mozilla::dom::AnimationPlayer;
 
 void
-nsAnimationManager::UpdateStyleAndEvents(ElementAnimationCollection*
+nsAnimationManager::UpdateStyleAndEvents(AnimationPlayerCollection*
                                            aCollection,
                                          TimeStamp aRefreshTime,
                                          EnsureStyleRuleFlags aFlags)
@@ -38,7 +38,7 @@ nsAnimationManager::UpdateStyleAndEvents(ElementAnimationCollection*
 }
 
 void
-nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
+nsAnimationManager::GetEventsForCurrentTime(AnimationPlayerCollection*
                                               aCollection,
                                             EventArray& aEventsToDispatch)
 {
@@ -109,10 +109,10 @@ nsAnimationManager::GetEventsForCurrentTime(ElementAnimationCollection*
   }
 }
 
-ElementAnimationCollection*
-nsAnimationManager::GetElementAnimations(dom::Element *aElement,
-                                         nsCSSPseudoElements::Type aPseudoType,
-                                         bool aCreateIfNeeded)
+AnimationPlayerCollection*
+nsAnimationManager::GetAnimationPlayers(dom::Element *aElement,
+                                        nsCSSPseudoElements::Type aPseudoType,
+                                        bool aCreateIfNeeded)
 {
   if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementCollections)) {
     // Early return for the most common case.
@@ -132,16 +132,16 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
                  "other than :before or :after");
     return nullptr;
   }
-  ElementAnimationCollection* collection =
-    static_cast<ElementAnimationCollection*>(aElement->GetProperty(propName));
+  AnimationPlayerCollection* collection =
+    static_cast<AnimationPlayerCollection*>(aElement->GetProperty(propName));
   if (!collection && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
     collection =
-      new ElementAnimationCollection(aElement, propName, this,
+      new AnimationPlayerCollection(aElement, propName, this,
         mPresContext->RefreshDriver()->MostRecentRefresh());
     nsresult rv =
       aElement->SetProperty(propName, collection,
-                            &ElementAnimationCollection::PropertyDtor, false);
+                            &AnimationPlayerCollection::PropertyDtor, false);
     if (NS_FAILED(rv)) {
       NS_WARNING("SetProperty failed");
       delete collection;
@@ -233,8 +233,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     // style change, but also not in an animation restyle.
 
     const nsStyleDisplay* disp = aStyleContext->StyleDisplay();
-    ElementAnimationCollection* collection =
-      GetElementAnimations(aElement, aStyleContext->GetPseudoType(), false);
+    AnimationPlayerCollection* collection =
+      GetAnimationPlayers(aElement, aStyleContext->GetPseudoType(), false);
     if (!collection &&
         disp->mAnimationNameCount == 1 &&
         disp->mAnimations[0].GetName().IsEmpty()) {
@@ -243,7 +243,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
     // build the animations list
     dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
-    ElementAnimationPtrArray newAnimations;
+    AnimationPlayerPtrArray newAnimations;
     BuildAnimations(aStyleContext, timeline, newAnimations);
 
     if (newAnimations.IsEmpty()) {
@@ -330,7 +330,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       }
     } else {
       collection =
-        GetElementAnimations(aElement, aStyleContext->GetPseudoType(), true);
+        GetAnimationPlayers(aElement, aStyleContext->GetPseudoType(), true);
     }
     collection->mAnimations.SwapElements(newAnimations);
     collection->mNeedsRefreshes = true;
@@ -404,7 +404,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                     dom::AnimationTimeline* aTimeline,
-                                    ElementAnimationPtrArray& aAnimations)
+                                    AnimationPlayerPtrArray& aAnimations)
 {
   NS_ABORT_IF_FALSE(aAnimations.IsEmpty(), "expect empty array");
 
@@ -647,8 +647,8 @@ nsAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
     return nullptr;
   }
 
-  ElementAnimationCollection* collection =
-    GetElementAnimations(aElement, aPseudoType, false);
+  AnimationPlayerCollection* collection =
+    GetAnimationPlayers(aElement, aPseudoType, false);
   if (!collection) {
     return nullptr;
   }
@@ -693,11 +693,11 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 
 void
 nsAnimationManager::AddElementCollection(
-  ElementAnimationCollection* aCollection)
+  AnimationPlayerCollection* aCollection)
 {
   if (!mObservingRefreshDriver) {
     NS_ASSERTION(
-      static_cast<ElementAnimationCollection*>(aCollection)->mNeedsRefreshes,
+      static_cast<AnimationPlayerCollection*>(aCollection)->mNeedsRefreshes,
       "Added data which doesn't need refreshing?");
     // We need to observe the refresh driver.
     mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
@@ -713,7 +713,7 @@ nsAnimationManager::CheckNeedsRefresh()
   for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
        l != &mElementCollections;
        l = PR_NEXT_LINK(l)) {
-    if (static_cast<ElementAnimationCollection*>(l)->mNeedsRefreshes) {
+    if (static_cast<AnimationPlayerCollection*>(l)->mNeedsRefreshes) {
       if (!mObservingRefreshDriver) {
         mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
         mObservingRefreshDriver = true;
@@ -738,11 +738,11 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
   for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
        l != &mElementCollections;
        l = PR_NEXT_LINK(l)) {
-    ElementAnimationCollection* collection =
-      static_cast<ElementAnimationCollection*>(l);
+    AnimationPlayerCollection* collection =
+      static_cast<AnimationPlayerCollection*>(l);
     bool canThrottleTick = aFlags == Can_Throttle &&
       collection->CanPerformOnCompositorThread(
-        ElementAnimationCollection::CanAnimateFlags(0)) &&
+        AnimationPlayerCollection::CanAnimateFlags(0)) &&
       collection->CanThrottleAnimation(now);
 
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = collection->mStyleRule;

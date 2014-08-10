@@ -29,7 +29,7 @@ class nsStyleChangeList;
 namespace mozilla {
 
 class RestyleTracker;
-struct ElementAnimationCollection;
+struct AnimationPlayerCollection;
 
 namespace css {
 
@@ -78,16 +78,16 @@ protected:
   virtual ~CommonAnimationManager();
 
   // For ElementCollectionRemoved
-  friend struct mozilla::ElementAnimationCollection;
+  friend struct mozilla::AnimationPlayerCollection;
 
   virtual void
-  AddElementCollection(ElementAnimationCollection* aCollection) = 0;
+  AddElementCollection(AnimationPlayerCollection* aCollection) = 0;
   virtual void ElementCollectionRemoved() = 0;
   void RemoveAllElementCollections();
 
   // When this returns a value other than nullptr, it also,
   // as a side-effect, notifies the ActiveLayerTracker.
-  static ElementAnimationCollection*
+  static AnimationPlayerCollection*
   GetAnimationsForCompositor(nsIContent* aContent,
                              nsIAtom* aElementProperty,
                              nsCSSProperty aProperty);
@@ -140,18 +140,18 @@ private:
 } /* end css sub-namespace */
 
 typedef InfallibleTArray<nsRefPtr<dom::AnimationPlayer> >
-  ElementAnimationPtrArray;
+  AnimationPlayerPtrArray;
 
 enum EnsureStyleRuleFlags {
   EnsureStyleRule_IsThrottled,
   EnsureStyleRule_IsNotThrottled
 };
 
-struct ElementAnimationCollection : public PRCList
+struct AnimationPlayerCollection : public PRCList
 {
-  ElementAnimationCollection(dom::Element *aElement, nsIAtom *aElementProperty,
-                             mozilla::css::CommonAnimationManager *aManager,
-                             TimeStamp aNow)
+  AnimationPlayerCollection(dom::Element *aElement, nsIAtom *aElementProperty,
+                            mozilla::css::CommonAnimationManager *aManager,
+                            TimeStamp aNow)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
     , mManager(aManager)
@@ -161,14 +161,14 @@ struct ElementAnimationCollection : public PRCList
     , mCalledPropertyDtor(false)
 #endif
   {
-    MOZ_COUNT_CTOR(ElementAnimationCollection);
+    MOZ_COUNT_CTOR(AnimationPlayerCollection);
     PR_INIT_CLIST(this);
   }
-  ~ElementAnimationCollection()
+  ~AnimationPlayerCollection()
   {
     NS_ABORT_IF_FALSE(mCalledPropertyDtor,
                       "must call destructor through element property dtor");
-    MOZ_COUNT_DTOR(ElementAnimationCollection);
+    MOZ_COUNT_DTOR(AnimationPlayerCollection);
     PR_REMOVE_LINK(this);
     mManager->ElementCollectionRemoved();
   }
@@ -268,7 +268,7 @@ struct ElementAnimationCollection : public PRCList
 
   mozilla::css::CommonAnimationManager *mManager;
 
-  mozilla::ElementAnimationPtrArray mAnimations;
+  mozilla::AnimationPlayerPtrArray mAnimations;
 
   // This style rule contains the style data for currently animating
   // values.  It only matches when styling with animation.  When we
