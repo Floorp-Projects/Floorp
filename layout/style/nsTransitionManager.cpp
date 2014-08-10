@@ -489,6 +489,9 @@ nsTransitionManager::ConsiderStartingTransition(
     pt->mReversePortion = valuePortion;
   }
 
+  nsRefPtr<dom::Animation> anim = new dom::Animation(aElement->OwnerDoc());
+  pt->SetSource(anim);
+
   AnimationProperty& prop = *pt->mProperties.AppendElement();
   prop.mProperty = aProperty;
 

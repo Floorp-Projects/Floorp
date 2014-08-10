@@ -56,7 +56,7 @@ const double ComputedTiming::kNullTimeFraction = PositiveInfinity<double>();
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationPlayer, mTimeline)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationPlayer, mTimeline, mSource)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AnimationPlayer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AnimationPlayer, Release)
@@ -99,6 +99,12 @@ AnimationPlayer::CurrentTime() const
   }
 
   return currentTime.Value().ToMilliseconds();
+}
+
+void
+AnimationPlayer::SetSource(Animation* aSource)
+{
+  mSource = aSource;
 }
 
 bool
