@@ -175,7 +175,7 @@ Gecko platform symbols">
 <!ENTITY options.sourceeditor.autoclosebrackets.label   "Autoclose brackets">
 <!ENTITY options.sourceeditor.autoclosebrackets.tooltip "Automatically insert closing brackets">
 <!ENTITY options.sourceeditor.expandtab.label           "Indent using spaces">
-<!ENTITY options.sourceeditor.expandtab.tooltip         "Use spaces intead of the tab character">
+<!ENTITY options.sourceeditor.expandtab.tooltip         "Use spaces instead of the tab character">
 <!ENTITY options.sourceeditor.tabsize.label             "Tab size">
 <!ENTITY options.sourceeditor.tabsize.accesskey         "T">
 <!ENTITY options.sourceeditor.keybinding.label          "Keybindings">
