@@ -426,10 +426,6 @@ private:
       return aStatus;
     }
 
-    if (!aStringLen) {
-      return NS_OK;
-    }
-
     NS_ASSERTION(aString, "This should never be null!");
 
     // Make sure we're not seeing the result of a 404 or something by checking
