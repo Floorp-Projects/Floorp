@@ -331,7 +331,7 @@ ToTimingFunction(ComputedTimingFunction& aCTF)
 
 static void
 AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                        AnimationPlayer* ea, Layer* aLayer,
+                        AnimationPlayer* aPlayer, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
   NS_ASSERTION(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
@@ -344,15 +344,17 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     aLayer->AddAnimationForNextTransaction() :
     aLayer->AddAnimation();
 
-  animation->startTime() = ea->mStartTime + ea->mTiming.mDelay;
-  animation->duration() = ea->mTiming.mIterationDuration;
-  animation->iterationCount() = ea->mTiming.mIterationCount;
-  animation->direction() = ea->mTiming.mDirection;
+  animation->startTime() = aPlayer->mStartTime + aPlayer->mTiming.mDelay;
+  animation->duration() = aPlayer->mTiming.mIterationDuration;
+  animation->iterationCount() = aPlayer->mTiming.mIterationCount;
+  animation->direction() = aPlayer->mTiming.mDirection;
   animation->property() = aProperty;
   animation->data() = aData;
 
-  for (uint32_t propIdx = 0; propIdx < ea->mProperties.Length(); propIdx++) {
-    AnimationProperty* property = &ea->mProperties[propIdx];
+  for (size_t propIdx = 0;
+       propIdx < aPlayer->mProperties.Length();
+       propIdx++) {
+    AnimationProperty* property = &aPlayer->mProperties[propIdx];
 
     if (aProperty != property->mProperty) {
       continue;
@@ -387,16 +389,16 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
 
 static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                         AnimationPlayerPtrArray& aAnimations,
+                         AnimationPlayerPtrArray& aPlayers,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending) {
-  for (uint32_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
-    AnimationPlayer* anim = aAnimations[animIdx];
-    if (!(anim->HasAnimationOfProperty(aProperty) && anim->IsRunning())) {
+  for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
+    AnimationPlayer* player = aPlayers[playerIdx];
+    if (!(player->HasAnimationOfProperty(aProperty) && player->IsRunning())) {
       continue;
     }
-    AddAnimationForProperty(aFrame, aProperty, anim, aLayer, aData, aPending);
-    anim->mIsRunningOnCompositor = true;
+    AddAnimationForProperty(aFrame, aProperty, player, aLayer, aData, aPending);
+    player->mIsRunningOnCompositor = true;
   }
 }
 
@@ -489,13 +491,13 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   }
 
   if (transitions) {
-    AddAnimationsForProperty(aFrame, aProperty, transitions->mAnimations,
+    AddAnimationsForProperty(aFrame, aProperty, transitions->mPlayers,
                              aLayer, data, pending);
     aLayer->SetAnimationGeneration(transitions->mAnimationGeneration);
   }
 
   if (animations) {
-    AddAnimationsForProperty(aFrame, aProperty, animations->mAnimations,
+    AddAnimationsForProperty(aFrame, aProperty, animations->mPlayers,
                              aLayer, data, pending);
     aLayer->SetAnimationGeneration(animations->mAnimationGeneration);
   }

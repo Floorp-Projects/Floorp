@@ -353,12 +353,12 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
     return false;
   }
 
-  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const AnimationPlayer* anim = mAnimations[animIdx];
-    bool isRunning = anim->IsRunning();
-    for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    const AnimationPlayer* player = mPlayers[playerIdx];
+    bool isRunning = player->IsRunning();
+    for (size_t propIdx = 0, propEnd = player->mProperties.Length();
          propIdx != propEnd; ++propIdx) {
-      if (IsGeometricProperty(anim->mProperties[propIdx].mProperty) &&
+      if (IsGeometricProperty(player->mProperties[propIdx].mProperty) &&
           isRunning) {
         aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
         break;
@@ -367,17 +367,17 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
   }
 
   bool existsProperty = false;
-  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const AnimationPlayer* anim = mAnimations[animIdx];
-    if (!anim->IsRunning()) {
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    const AnimationPlayer* player = mPlayers[playerIdx];
+    if (!player->IsRunning()) {
       continue;
     }
 
     existsProperty = true;
 
-    for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
+    for (size_t propIdx = 0, propEnd = player->mProperties.Length();
          propIdx != propEnd; ++propIdx) {
-      const AnimationProperty& prop = anim->mProperties[propIdx];
+      const AnimationProperty& prop = player->mProperties[propIdx];
       if (!CanAnimatePropertyOnCompositor(mElement,
                                           prop.mProperty,
                                           aFlags) ||
@@ -399,10 +399,10 @@ bool
 AnimationPlayerCollection::HasAnimationOfProperty(
   nsCSSProperty aProperty) const
 {
-  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const AnimationPlayer* anim = mAnimations[animIdx];
-    if (anim->HasAnimationOfProperty(aProperty) &&
-        !anim->IsFinishedTransition()) {
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    const AnimationPlayer* player = mPlayers[playerIdx];
+    if (player->HasAnimationOfProperty(aProperty) &&
+        !player->IsFinishedTransition()) {
       return true;
     }
   }
@@ -445,9 +445,9 @@ AnimationPlayerCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
 void
 AnimationPlayerCollection::Tick()
 {
-  for (size_t animIdx = 0, animEnd = mAnimations.Length();
-       animIdx != animEnd; animIdx++) {
-    mAnimations[animIdx]->Tick();
+  for (size_t playerIdx = 0, playerEnd = mPlayers.Length();
+       playerIdx != playerEnd; playerIdx++) {
+    mPlayers[playerIdx]->Tick();
   }
 }
 
@@ -467,26 +467,27 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // mode behaviour). This loop checks for any finishing animations and forces
   // the style recalculation if we find any.
   if (aFlags == EnsureStyleRule_IsThrottled) {
-    for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      AnimationPlayer* anim = mAnimations[animIdx];
+    for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+      AnimationPlayer* player = mPlayers[playerIdx];
 
       // Skip finished transitions or animations whose @keyframes rule
       // is empty.
-      if (anim->IsFinishedTransition() || anim->mProperties.IsEmpty()) {
+      if (player->IsFinishedTransition() || player->mProperties.IsEmpty()) {
         continue;
       }
 
-      // The GetLocalTime() call here handles pausing.  But:
+      // The GetComputedTiming() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      ComputedTiming computedTiming = anim->GetComputedTiming(anim->mTiming);
+      ComputedTiming computedTiming =
+        player->GetComputedTiming(player->mTiming);
 
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
       // events. If we use it differently in the future this use might need
       // changing.
-      if (!anim->mIsRunningOnCompositor ||
+      if (!player->mIsRunningOnCompositor ||
           (computedTiming.mPhase == ComputedTiming::AnimationPhase_After &&
-           anim->mLastNotification != AnimationPlayer::LAST_NOTIFICATION_END))
+           player->mLastNotification != AnimationPlayer::LAST_NOTIFICATION_END))
       {
         aFlags = EnsureStyleRule_IsNotThrottled;
         break;
@@ -511,20 +512,21 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     // Therefore, we iterate from last animation to first.
     nsCSSPropertySet properties;
 
-    for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-      AnimationPlayer* anim = mAnimations[animIdx];
+    for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+      AnimationPlayer* player = mPlayers[playerIdx];
 
-      if (anim->IsFinishedTransition()) {
+      if (player->IsFinishedTransition()) {
         continue;
       }
 
-      // The GetLocalTime() call here handles pausing.  But:
+      // The GetComputedTiming() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      ComputedTiming computedTiming = anim->GetComputedTiming(anim->mTiming);
+      ComputedTiming computedTiming =
+        player->GetComputedTiming(player->mTiming);
 
       if ((computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
            computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) &&
-          !anim->IsPaused()) {
+          !player->IsPaused()) {
         mNeedsRefreshes = true;
       }
 
@@ -538,10 +540,10 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                         computedTiming.mTimeFraction <= 1.0,
                         "timing fraction should be in [0-1]");
 
-      for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
+      for (size_t propIdx = 0, propEnd = player->mProperties.Length();
            propIdx != propEnd; ++propIdx)
       {
-        const AnimationProperty &prop = anim->mProperties[propIdx];
+        const AnimationProperty& prop = player->mProperties[propIdx];
 
         NS_ABORT_IF_FALSE(prop.mSegments[0].mFromKey == 0.0,
                           "incorrect first from key");
@@ -691,8 +693,8 @@ AnimationPlayerCollection::UpdateAnimationGeneration(
 bool
 AnimationPlayerCollection::HasCurrentAnimations()
 {
-  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    if (mAnimations[animIdx]->IsCurrent()) {
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    if (mPlayers[playerIdx]->IsCurrent()) {
       return true;
     }
   }

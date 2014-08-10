@@ -270,7 +270,7 @@ struct AnimationPlayerCollection : public PRCList
 
   mozilla::css::CommonAnimationManager *mManager;
 
-  mozilla::AnimationPlayerPtrArray mAnimations;
+  mozilla::AnimationPlayerPtrArray mPlayers;
 
   // This style rule contains the style data for currently animating
   // values.  It only matches when styling with animation.  When we
