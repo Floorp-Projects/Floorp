@@ -14,6 +14,7 @@
 
 #include "AnimationCommon.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/dom/AnimationPlayer.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
@@ -2865,7 +2866,7 @@ Element::MozRequestPointerLock()
 }
 
 void
-Element::GetAnimationPlayers(nsTArray<nsRefPtr<ElementAnimation> >& aPlayers)
+Element::GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aPlayers)
 {
   nsIAtom* properties[] = { nsGkAtoms::transitionsProperty,
                             nsGkAtoms::animationsProperty };
@@ -2880,7 +2881,7 @@ Element::GetAnimationPlayers(nsTArray<nsRefPtr<ElementAnimation> >& aPlayers)
     for (size_t animIdx = 0;
          animIdx < collection->mAnimations.Length();
          animIdx++) {
-      ElementAnimation* anim = collection->mAnimations[animIdx];
+      AnimationPlayer* anim = collection->mAnimations[animIdx];
       if (anim->IsCurrent()) {
         aPlayers.AppendElement(anim);
       }

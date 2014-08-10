@@ -260,7 +260,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     StyleAnimationValue currentValue;
     do {
       --i;
-      ElementAnimation* animation = animations[i];
+      AnimationPlayer* animation = animations[i];
       MOZ_ASSERT(animation->mProperties.Length() == 1,
                  "Should have one animation property for a transition");
       MOZ_ASSERT(animation->mProperties[0].mSegments.Length() == 1,
@@ -313,7 +313,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
 
   ElementAnimationPtrArray& animations = collection->mAnimations;
   for (uint32_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
-    ElementAnimation* animation = animations[i];
+    AnimationPlayer* animation = animations[i];
     MOZ_ASSERT(animation->mProperties.Length() == 1,
                "Should have one animation property for a transition");
     MOZ_ASSERT(animation->mProperties[0].mSegments.Length() == 1,
@@ -758,7 +758,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
       bool transitionStartedOrEnded = false;
       do {
         --i;
-        ElementAnimation* anim = collection->mAnimations[i];
+        AnimationPlayer* anim = collection->mAnimations[i];
         if (anim->IsFinishedTransition()) {
           // Actually remove transitions one throttle-able cycle after their
           // completion. We only clear on a throttle-able cycle because that
