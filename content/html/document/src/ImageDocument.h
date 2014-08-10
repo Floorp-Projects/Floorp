@@ -52,6 +52,9 @@ public:
 
   void DefaultCheckOverflowing() { CheckOverflowing(mResizeImageByDefault); }
 
+  void AddDecodedClass();
+  void RemoveDecodedClass();
+
   // WebIDL API
   virtual JSObject* WrapNode(JSContext* aCx)
     MOZ_OVERRIDE;
