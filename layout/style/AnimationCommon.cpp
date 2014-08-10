@@ -487,8 +487,7 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 
       // The GetComputedTiming() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      ComputedTiming computedTiming =
-        player->GetComputedTiming(player->mTiming);
+      ComputedTiming computedTiming = player->GetSource()->GetComputedTiming();
 
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
@@ -524,14 +523,13 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
       AnimationPlayer* player = mPlayers[playerIdx];
 
-      if (player->IsFinishedTransition()) {
+      if (!player->GetSource() || player->IsFinishedTransition()) {
         continue;
       }
 
       // The GetComputedTiming() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      ComputedTiming computedTiming =
-        player->GetComputedTiming(player->mTiming);
+      ComputedTiming computedTiming = player->GetSource()->GetComputedTiming();
 
       if ((computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
            computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) &&
@@ -542,8 +540,7 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       // If the time fraction is null, we don't have fill data for the current
       // time so we shouldn't animate.
       // Likewise, if the player has no source content.
-      if (computedTiming.mTimeFraction == ComputedTiming::kNullTimeFraction ||
-          !player->GetSource()) {
+      if (computedTiming.mTimeFraction == ComputedTiming::kNullTimeFraction) {
         continue;
       }
 
