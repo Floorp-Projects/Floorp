@@ -1417,13 +1417,13 @@ BrowserGlue.prototype = {
         let currentsetResource = this._rdf.GetResource("currentset");
         let toolbarIsCustomized = !!this._getPersist(toolbarResource,
                                                      currentsetResource);
-        function getToolbarFolderCount() {
+        let getToolbarFolderCount = function () {
           let toolbarFolder =
             PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
           let toolbarChildCount = toolbarFolder.childCount;
           toolbarFolder.containerOpen = false;
           return toolbarChildCount;
-        }
+        };
 
         if (toolbarIsCustomized || getToolbarFolderCount() > 3) {
           this._setPersist(toolbarResource, collapsedResource, "false");
