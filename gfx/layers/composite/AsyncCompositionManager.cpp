@@ -450,7 +450,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     timing.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
 
     ComputedTiming computedTiming =
-      dom::AnimationPlayer::GetComputedTimingAt(
+      dom::Animation::GetComputedTimingAt(
         Nullable<TimeDuration>(elapsedDuration), timing);
 
     NS_ABORT_IF_FALSE(0.0 <= computedTiming.mTimeFraction &&

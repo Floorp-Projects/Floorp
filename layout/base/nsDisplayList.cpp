@@ -347,10 +347,11 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
     aLayer->AddAnimationForNextTransaction() :
     aLayer->AddAnimation();
 
-  animation->startTime() = aPlayer->mStartTime + aPlayer->mTiming.mDelay;
-  animation->duration() = aPlayer->mTiming.mIterationDuration;
-  animation->iterationCount() = aPlayer->mTiming.mIterationCount;
-  animation->direction() = aPlayer->mTiming.mDirection;
+  const AnimationTiming& timing = aPlayer->GetSource()->Timing();
+  animation->startTime() = aPlayer->mStartTime + timing.mDelay;
+  animation->duration() = timing.mIterationDuration;
+  animation->iterationCount() = timing.mIterationCount;
+  animation->direction() = timing.mDirection;
   animation->property() = aProperty;
   animation->data() = aData;
 

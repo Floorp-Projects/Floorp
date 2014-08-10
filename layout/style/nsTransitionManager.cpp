@@ -46,7 +46,7 @@ ElementPropertyTransition::CurrentValuePortion() const
   // transitions.
   MOZ_ASSERT(!IsFinishedTransition(),
              "Getting the value portion of a finished transition");
-  MOZ_ASSERT(!GetLocalTime().IsNull(),
+  MOZ_ASSERT(!GetCurrentTimeDuration().IsNull(),
              "Getting the value portion of an animation that's not being "
              "sampled");
 
@@ -56,9 +56,10 @@ ElementPropertyTransition::CurrentValuePortion() const
   // causing us to get called *after* the animation interval. So, just in
   // case, we override the fill mode to 'both' to ensure the time fraction
   // is never null.
-  AnimationTiming timingToUse = mTiming;
+  MOZ_ASSERT(GetSource(), "Transitions should have source content");
+  AnimationTiming timingToUse = GetSource()->Timing();
   timingToUse.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
-  ComputedTiming computedTiming = GetComputedTiming(timingToUse);
+  ComputedTiming computedTiming = GetSource()->GetComputedTiming(&timingToUse);
 
   MOZ_ASSERT(computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction,
              "Got a null time fraction for a fill mode of 'both'");
@@ -497,8 +498,15 @@ nsTransitionManager::ConsiderStartingTransition(
     pt->mReversePortion = valuePortion;
   }
 
-  nsRefPtr<dom::Animation> anim = new dom::Animation(aElement->OwnerDoc());
-  pt->SetSource(anim);
+  AnimationTiming timing;
+  timing.mIterationDuration = TimeDuration::FromMilliseconds(duration);
+  timing.mDelay = TimeDuration::FromMilliseconds(delay);
+  timing.mIterationCount = 1;
+  timing.mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
+  timing.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
+
+  nsRefPtr<dom::Animation> anim =
+    new dom::Animation(aElement->OwnerDoc(), timing);
 
   AnimationProperty& prop = *anim->Properties().AppendElement();
   prop.mProperty = aProperty;
@@ -511,13 +519,9 @@ nsTransitionManager::ConsiderStartingTransition(
   segment.mTimingFunction.Init(tf);
 
   pt->mStartTime = timeline->GetCurrentTimeStamp();
-  pt->mTiming.mIterationDuration = TimeDuration::FromMilliseconds(duration);
-  pt->mTiming.mDelay = TimeDuration::FromMilliseconds(delay);
-  pt->mTiming.mIterationCount = 1;
-  pt->mTiming.mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
-  pt->mTiming.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
   pt->mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
   pt->mPauseStart = TimeStamp();
+  pt->SetSource(anim);
 
   if (!aElementTransitions) {
     aElementTransitions =
@@ -784,20 +788,23 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
             collection->mPlayers.RemoveElementAt(i);
           }
         } else {
+          MOZ_ASSERT(player->GetSource(),
+                     "Transitions should have source content");
           ComputedTiming computedTiming =
-            player->GetComputedTiming(player->mTiming);
+            player->GetSource()->GetComputedTiming();
           if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
-            MOZ_ASSERT(player->GetSource() &&
-                       player->GetSource()->Properties().Length() == 1,
+            MOZ_ASSERT(player->GetSource()->Properties().Length() == 1,
                        "Should have one animation property for a transition");
             nsCSSProperty prop = player->GetSource()->Properties()[0].mProperty;
             if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
             {
               prop = nsCSSProps::OtherNameFor(prop);
             }
+            TimeDuration duration =
+              player->GetSource()->Timing().mIterationDuration;
             events.AppendElement(
               TransitionEventInfo(collection->mElement, prop,
-                                  player->mTiming.mIterationDuration,
+                                  duration,
                                   collection->PseudoElement()));
 
             // Leave this transition in the list for one more refresh
