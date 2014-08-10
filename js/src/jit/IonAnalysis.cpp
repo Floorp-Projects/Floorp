@@ -1543,6 +1543,13 @@ IntersectDominators(MBasicBlock *block1, MBasicBlock *block2)
     return finger1;
 }
 
+void
+jit::ClearDominatorTree(MIRGraph &graph)
+{
+    for (MBasicBlockIterator iter = graph.begin(); iter != graph.end(); iter++)
+        iter->clearDominatorInfo();
+}
+
 static void
 ComputeImmediateDominators(MIRGraph &graph)
 {
@@ -2347,13 +2354,19 @@ LinearSum::multiply(int32_t scale)
 }
 
 bool
-LinearSum::add(const LinearSum &other)
+LinearSum::add(const LinearSum &other, int32_t scale /* = 1 */)
 {
     for (size_t i = 0; i < other.terms_.length(); i++) {
-        if (!add(other.terms_[i].term, other.terms_[i].scale))
+        int32_t newScale = scale;
+        if (!SafeMul(scale, other.terms_[i].scale, &newScale))
+            return false;
+        if (!add(other.terms_[i].term, newScale))
             return false;
     }
-    return add(other.constant_);
+    int32_t newConstant = scale;
+    if (!SafeMul(scale, other.constant_, &newConstant))
+        return false;
+    return add(newConstant);
 }
 
 bool
@@ -2432,6 +2445,129 @@ void
 LinearSum::dump() const
 {
     dump(stderr);
+}
+
+MDefinition *
+jit::ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum)
+{
+    MDefinition *def = nullptr;
+
+    for (size_t i = 0; i < sum.numTerms(); i++) {
+        LinearTerm term = sum.term(i);
+        JS_ASSERT(!term.term->isConstant());
+        if (term.scale == 1) {
+            if (def) {
+                def = MAdd::New(alloc, def, term.term);
+                def->toAdd()->setInt32();
+                block->insertAtEnd(def->toInstruction());
+                def->computeRange(alloc);
+            } else {
+                def = term.term;
+            }
+        } else if (term.scale == -1) {
+            if (!def) {
+                def = MConstant::New(alloc, Int32Value(0));
+                block->insertAtEnd(def->toInstruction());
+                def->computeRange(alloc);
+            }
+            def = MSub::New(alloc, def, term.term);
+            def->toSub()->setInt32();
+            block->insertAtEnd(def->toInstruction());
+            def->computeRange(alloc);
+        } else {
+            JS_ASSERT(term.scale != 0);
+            MConstant *factor = MConstant::New(alloc, Int32Value(term.scale));
+            block->insertAtEnd(factor);
+            MMul *mul = MMul::New(alloc, term.term, factor);
+            mul->setInt32();
+            block->insertAtEnd(mul);
+            mul->computeRange(alloc);
+            if (def) {
+                def = MAdd::New(alloc, def, mul);
+                def->toAdd()->setInt32();
+                block->insertAtEnd(def->toInstruction());
+                def->computeRange(alloc);
+            } else {
+                def = mul;
+            }
+        }
+    }
+
+    // Note: The constant component of the term is not converted.
+    if (!def) {
+        def = MConstant::New(alloc, Int32Value(0));
+        block->insertAtEnd(def->toInstruction());
+        def->computeRange(alloc);
+    }
+
+    return def;
+}
+
+MCompare *
+jit::ConvertLinearInequality(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum)
+{
+    LinearSum lhs(sum);
+
+    // Look for a term with a -1 scale which we can use for the rhs.
+    MDefinition *rhsDef = nullptr;
+    for (size_t i = 0; i < lhs.numTerms(); i++) {
+        if (lhs.term(i).scale == -1) {
+            rhsDef = lhs.term(i).term;
+            lhs.add(rhsDef, 1);
+            break;
+        }
+    }
+
+    MDefinition *lhsDef = nullptr;
+    JSOp op = JSOP_GE;
+
+    do {
+        if (!lhs.numTerms()) {
+            lhsDef = MConstant::New(alloc, Int32Value(lhs.constant()));
+            block->insertAtEnd(lhsDef->toInstruction());
+            lhsDef->computeRange(alloc);
+            break;
+        }
+
+        lhsDef = ConvertLinearSum(alloc, block, lhs);
+        if (lhs.constant() == 0)
+            break;
+
+        if (lhs.constant() == -1) {
+            op = JSOP_GT;
+            break;
+        }
+
+        if (!rhsDef) {
+            int32_t constant = lhs.constant();
+            if (SafeMul(constant, -1, &constant)) {
+                rhsDef = MConstant::New(alloc, Int32Value(constant));
+                block->insertAtEnd(rhsDef->toInstruction());
+                rhsDef->computeRange(alloc);
+                break;
+            }
+        }
+
+        MDefinition *constant = MConstant::New(alloc, Int32Value(lhs.constant()));
+        block->insertAtEnd(constant->toInstruction());
+        constant->computeRange(alloc);
+        lhsDef = MAdd::New(alloc, lhsDef, constant);
+        lhsDef->toAdd()->setInt32();
+        block->insertAtEnd(lhsDef->toInstruction());
+        lhsDef->computeRange(alloc);
+    } while (false);
+
+    if (!rhsDef) {
+        rhsDef = MConstant::New(alloc, Int32Value(0));
+        block->insertAtEnd(rhsDef->toInstruction());
+        rhsDef->computeRange(alloc);
+    }
+
+    MCompare *compare = MCompare::New(alloc, lhsDef, rhsDef, op);
+    block->insertAtEnd(compare);
+    compare->setCompareType(MCompare::Compare_Int32);
+
+    return compare;
 }
 
 static bool
