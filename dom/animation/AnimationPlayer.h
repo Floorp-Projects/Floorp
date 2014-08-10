@@ -23,12 +23,9 @@
 struct JSContext;
 
 namespace mozilla {
-
-struct ElementPropertyTransition;
-
 namespace dom {
 
-class AnimationPlayer : public nsWrapperCache
+class AnimationPlayer MOZ_FINAL : public nsWrapperCache
 {
 protected:
   virtual ~AnimationPlayer() { }
@@ -55,14 +52,6 @@ public:
 
   void SetSource(Animation* aSource);
   void Tick();
-
-  // FIXME: If we succeed in moving transition-specific code to a type of
-  // AnimationEffect (as per the Web Animations API) we should remove these
-  // virtual methods.
-  virtual ElementPropertyTransition* AsTransition() { return nullptr; }
-  virtual const ElementPropertyTransition* AsTransition() const {
-    return nullptr;
-  }
 
   bool IsPaused() const {
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
