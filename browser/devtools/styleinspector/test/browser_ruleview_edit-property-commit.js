@@ -18,7 +18,7 @@ const originalValue = "#00F";
 // }
 const testData = [
   {value: "red", commitKey: "VK_ESCAPE", modifiers: {}, expected: originalValue},
-  {value: "red", commitKey: "VK_RETURN", modifiers: {}, expected: "#F00"},
+  {value: "red", commitKey: "VK_RETURN", modifiers: {}, expected: "red"},
   {value: "invalid", commitKey: "VK_RETURN", modifiers: {}, expected: "invalid"},
   {value: "blue", commitKey: "VK_TAB", modifiers: {shiftKey: true}, expected: "blue"}
 ];

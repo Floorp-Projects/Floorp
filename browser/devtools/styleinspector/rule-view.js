@@ -633,12 +633,6 @@ Rule.prototype = {
           };
         }
 
-        if (aName && textProp.name == aName) {
-          store.userProperties.setProperty(
-            this.style,
-            textProp.name,
-            textProp.value);
-        }
         textProp.priority = cssProp.priority;
       }
 
@@ -1038,12 +1032,25 @@ TextProperty.prototype = {
     }
   },
 
-  setValue: function(aValue, aPriority) {
+  setValue: function(aValue, aPriority, force=false) {
+    let store = this.rule.elementStyle.store;
+
+    if (aValue !== this.editor.committed.value || force) {
+      store.userProperties.setProperty(this.rule.style, this.name, aValue);
+    }
+
     this.rule.setPropertyValue(this, aValue, aPriority);
     this.updateEditor();
   },
 
   setName: function(aName) {
+    let store = this.rule.elementStyle.store;
+
+    if (aName !== this.name) {
+      store.userProperties.setProperty(this.rule.style, aName,
+                                       this.editor.committed.value);
+    }
+
     this.rule.setPropertyName(this, aName);
     this.updateEditor();
   },
@@ -2294,10 +2301,18 @@ TextPropertyEditor.prototype = {
     this.valueSpan.textProperty = this.prop;
     this.nameSpan.textProperty = this.prop;
 
+    // If the value is a color property we need to put it through the parser
+    // so that colors can be coerced into the default color type. This prevents
+    // us from thinking that when colors are coerced they have been changed by
+    // the user.
+    let outputParser = this.ruleEditor.ruleView._outputParser;
+    let frag = outputParser.parseCssProperty(this.prop.name, this.prop.value);
+    let parsedValue = frag.textContent;
+
     // Save the initial value as the last committed value,
     // for restoring after pressing escape.
     this.committed = { name: this.prop.name,
-                       value: this.prop.value,
+                       value: parsedValue,
                        priority: this.prop.priority };
 
     appendText(propertyContainer, ";");
@@ -2459,12 +2474,13 @@ TextPropertyEditor.prototype = {
 
     // Combine the property's value and priority into one string for
     // the value.
-    let val = this.prop.value;
+    let store = this.prop.rule.elementStyle.store;
+    let val = store.userProperties.getProperty(this.prop.rule.style, name,
+                                               this.prop.value);
     if (this.prop.priority) {
       val += " !" + this.prop.priority;
     }
 
-    let store = this.prop.rule.elementStyle.store;
     let propDirty = store.userProperties.contains(this.prop.rule.style, name);
 
     if (propDirty) {
@@ -2499,7 +2515,7 @@ TextPropertyEditor.prototype = {
         this.ruleEditor.ruleView.tooltips.colorPicker.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
           onCommit: () => this._applyNewValue(this.valueSpan.textContent),
-          onRevert: () => this._applyNewValue(originalValue)
+          onRevert: () => this._applyNewValue(originalValue, false)
         });
       }
     }
@@ -2514,7 +2530,7 @@ TextPropertyEditor.prototype = {
         this.ruleEditor.ruleView.tooltips.cubicBezier.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
           onCommit: () => this._applyNewValue(this.valueSpan.textContent),
-          onRevert: () => this._applyNewValue(originalValue)
+          onRevert: () => this._applyNewValue(originalValue, false)
         });
       }
     }
@@ -2687,6 +2703,7 @@ TextPropertyEditor.prototype = {
 
     // First, set this property value (common case, only modified a property)
     let val = parseSingleValue(firstValue);
+
     this.prop.setValue(val.value, val.priority);
     this.removeOnRevert = false;
     this.committed.value = this.prop.value;
@@ -2755,10 +2772,27 @@ TextPropertyEditor.prototype = {
     };
   },
 
-  _applyNewValue: function(aValue) {
+  /**
+   * Apply a new value.
+   *
+   * @param  {String} aValue
+   *         The value to replace.
+   * @param  {Boolean} markChanged=true
+   *         Set this to false if you need to prevent the property from being
+   *         marked as changed e.g. tooltips do this when <escape> is pressed
+   *         in order to revert the value.
+   */
+  _applyNewValue: function(aValue, markChanged=true) {
     let val = parseSingleValue(aValue);
 
-    this.prop.setValue(val.value, val.priority);
+    if (!markChanged) {
+      let store = this.prop.rule.elementStyle.store;
+      this.prop.editor.committed.value = aValue;
+      store.userProperties.setProperty(this.prop.rule.style,
+                                       this.prop.rule.name, aValue);
+    }
+
+    this.prop.setValue(val.value, val.priority, markChanged);
     this.removeOnRevert = false;
     this.committed.value = this.prop.value;
     this.committed.priority = this.prop.priority;
@@ -2829,8 +2863,7 @@ UserProperties.prototype = {
    * @param {string} aName
    *        The name of the property to get.
    * @param {string} aDefault
-   *        The value to return if the property is has been changed outside of
-   *        the rule view.
+   *        Default value.
    * @return {string}
    *          The property value if it has previously been set by the user, null
    *          otherwise.
@@ -2840,12 +2873,7 @@ UserProperties.prototype = {
     let entry = this.map.get(key, null);
 
     if (entry && aName in entry) {
-      let item = entry[aName];
-      if (item != aDefault) {
-        delete entry[aName];
-        return aDefault;
-      }
-      return item;
+      return entry[aName];
     }
     return aDefault;
   },
@@ -2861,8 +2889,9 @@ UserProperties.prototype = {
    *        The value of the property to set.
    */
   setProperty: function(aStyle, aName, aUserValue) {
-    let key = this.getKey(aStyle);
+    let key = this.getKey(aStyle, aName);
     let entry = this.map.get(key, null);
+
     if (entry) {
       entry[aName] = aUserValue;
     } else {
@@ -2881,13 +2910,17 @@ UserProperties.prototype = {
    *        The name of the property to check.
    */
   contains: function(aStyle, aName) {
-    let key = this.getKey(aStyle);
+    let key = this.getKey(aStyle, aName);
     let entry = this.map.get(key, null);
     return !!entry && aName in entry;
   },
 
-  getKey: function(aStyle) {
-    return aStyle.href + ":" + aStyle.line;
+  getKey: function(aStyle, aName) {
+    return aStyle.actorID + ":" + aName;
+  },
+
+  clear: function() {
+    this.map.clear();
   }
 };
 

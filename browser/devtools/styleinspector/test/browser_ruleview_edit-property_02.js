@@ -26,6 +26,8 @@ let test = asyncTest(function*() {
   yield testEditProperty(inspector, view);
   yield testDisableProperty(inspector, view);
   yield testPropertyStillMarkedDirty(inspector, view);
+
+  gBrowser.removeCurrentTab();
 });
 
 function* testEditProperty(inspector, ruleView) {
@@ -42,7 +44,7 @@ function* testEditProperty(inspector, ruleView) {
   EventUtils.synthesizeMouse(input, 1, 1, {}, ruleView.doc.defaultView);
   input.select();
 
-  info("Entering property name followed by a colon to focus the value");
+  info("Entering property name \"border-color\" followed by a colon to focus the value");
   let onFocus = once(idRuleEditor.element, "focus", true);
   for (let ch of "border-color:") {
     EventUtils.sendChar(ch, ruleView.doc.defaultView);
@@ -69,9 +71,27 @@ function* testEditProperty(inspector, ruleView) {
   is(idRuleEditor.rule.style._rawStyle().getPropertyValue("border-color"), "red",
      "border-color should have been set.");
 
+  info("Entering property name \"color\" followed by a colon to focus the value");
+  let onFocus = once(idRuleEditor.element, "focus", true);
+  for (let ch of "color:") {
+    EventUtils.sendChar(ch, ruleView.doc.defaultView);
+  }
+  yield onFocus;
+
+  info("Verifying that the focused field is the valueSpan");
+  editor = inplaceEditor(ruleView.doc.activeElement);
+
+  info("Entering a value following by a semi-colon to commit it");
+  let onBlur = once(editor.input, "blur");
+  for (let ch of "red;") {
+    EventUtils.sendChar(ch, ruleView.doc.defaultView);
+  }
+  yield onBlur;
+  yield idRuleEditor.rule._applyingModifications;
+
   let props = ruleView.element.querySelectorAll(".ruleview-property");
   for (let i = 0; i < props.length; i++) {
-    is(props[i].hasAttribute("dirty"), i <= 0,
+    is(props[i].hasAttribute("dirty"), i <= 1,
       "props[" + i + "] marked dirty as appropriate");
   }
 }
@@ -102,7 +122,7 @@ function* testPropertyStillMarkedDirty(inspector, ruleView) {
 
   let props = ruleView.element.querySelectorAll(".ruleview-property");
   for (let i = 0; i < props.length; i++) {
-    is(props[i].hasAttribute("dirty"), i <= 0,
+    is(props[i].hasAttribute("dirty"), i <= 1,
       "props[" + i + "] marked dirty as appropriate");
   }
 }

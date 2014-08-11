@@ -377,7 +377,6 @@
    * then we need to take the border of the buttons into account (1px).
    */
   padding: 0 3px;
-  -moz-padding-start: 6px;
   margin: 0;
   min-width: 78px;
   text-align: center;
@@ -388,10 +387,6 @@
   position: static;
   -moz-margin-start: -1px;
   text-shadow: none;
-}
-
-.devtools-sidebar-tabs > tabs > tab:first-of-type {
-  -moz-margin-start: -3px;
 }
 
 .devtools-sidebar-tabs > tabs > tab {
@@ -436,17 +431,10 @@
   background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @solidSeparatorDark@;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] {
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected],
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
   color: #f5f7fa;
   background-image: linear-gradient(#1d4f73, #1d4f73), @solidSeparatorDark@;
-}
-
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover {
-  background-image: linear-gradient(#274f64, #274f64), @solidSeparatorDark@;
-}
-
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
-  background-image: linear-gradient(#1f3e4f, #1f3e4f), @solidSeparatorDark@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab {

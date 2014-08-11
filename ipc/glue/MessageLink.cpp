@@ -16,6 +16,7 @@
 #endif
 
 #include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "nsXULAppAPI.h"
@@ -376,7 +377,12 @@ ProcessLink::OnCloseChannel()
 
     MonitorAutoLock lock(*mChan->mMonitor);
 
-    MOZ_ALWAYS_TRUE(this == mTransport->set_listener(mExistingListener));
+    DebugOnly<IPC::Channel::Listener*> previousListener =
+      mTransport->set_listener(mExistingListener);
+
+    // OnChannelError may have reset the listener already.
+    MOZ_ASSERT(previousListener == this ||
+               previousListener == mExistingListener);
 
     mChan->mChannelState = ChannelClosed;
     mChan->mMonitor->Notify();

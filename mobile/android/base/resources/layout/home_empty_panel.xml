@@ -17,11 +17,11 @@
           android:layout_weight="1"/>
 
     <ImageView android:id="@+id/home_empty_image"
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
+               android:layout_width="90dp"
+               android:layout_height="90dp"
                android:layout_marginBottom="10dp"
                android:gravity="top|center"
-               android:scaleType="center"/>
+               android:scaleType="fitCenter"/>
 
     <TextView android:id="@+id/home_empty_text"
               android:layout_width="match_parent"

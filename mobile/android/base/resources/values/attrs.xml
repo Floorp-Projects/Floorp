@@ -107,6 +107,10 @@
         </attr>
     </declare-styleable>
 
+    <declare-styleable name="TabCounter">
+        <attr name="layout" format="reference"/>
+    </declare-styleable>
+
     <declare-styleable name="TextSelectionHandle">
         <attr name="handleType">
             <flag name="start" value="0x01" />

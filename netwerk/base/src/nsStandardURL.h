@@ -61,7 +61,7 @@ public:
     virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
     virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-    explicit nsStandardURL(bool aSupportsFileURL = false);
+    explicit nsStandardURL(bool aSupportsFileURL = false, bool aTrackURL = true);
 
     static void InitGlobalObjects();
     static void ShutdownGlobalObjects();
@@ -156,6 +156,10 @@ protected:
     // Helper to share code between Clone methods.
     nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
                            nsIURI** aClone);
+    // Helper method that copies member variables from the source StandardURL
+    // if copyCached = true, it will also copy mFile and mHostA
+    nsresult CopyMembers(nsStandardURL * source, RefHandlingEnum mode,
+                         bool copyCached = false);
 
     // Helper for subclass implementation of GetFile().  Subclasses that map
     // URIs to files in a special way should implement this method.  It should
