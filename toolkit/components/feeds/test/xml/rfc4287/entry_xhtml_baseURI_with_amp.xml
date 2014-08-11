@@ -3,7 +3,7 @@
 
 Description: atom entry content xhtml works with a base URI that contains an ampersand.
 Base: http://www.travellerspoint.com/photo_gallery_feed.cfm?tags=Canada&onlyShowFeatured=true
-Expect: var frag = null; var content = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).content; var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser); doc = parser.parseFromString("<div/>", "text/xml"); frag = content.createDocumentFragment(doc.documentElement); (frag != null);
+Expect: var frag = null; var content = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).content; var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser); var doc = parser.parseFromString("<div/>", "text/xml"); frag = content.createDocumentFragment(doc.documentElement); notEqual(frag, null, "frag is not null"); true;
 
 -->
 <feed xmlns="http://www.w3.org/2005/Atom"
