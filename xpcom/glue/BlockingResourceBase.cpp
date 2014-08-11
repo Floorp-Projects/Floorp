@@ -39,7 +39,7 @@ BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
 bool
 BlockingResourceBase::DeadlockDetectorEntry::Print(
-    const DDT::ResourceAcquisition& aFirstSeen,
+    const DeadlockDetectorEntry* aFirstSeen,
     nsACString& aOut) const
 {
   fprintf(stderr, "--- %s : %s",
@@ -193,22 +193,22 @@ BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
   fputs("=== Cyclical dependency starts at\n", stderr);
   aOut += "Cyclical dependency starts at\n";
 
-  const DDT::ResourceAcquisition res = aCycle->ElementAt(0);
-  maybeImminent &= res.mResource->Print(res, aOut);
+  const DeadlockDetectorEntry* res = aCycle->ElementAt(0);
+  maybeImminent &= res->Print(res, aOut);
 
   DDT::ResourceAcquisitionArray::index_type i;
   DDT::ResourceAcquisitionArray::size_type len = aCycle->Length();
-  const DDT::ResourceAcquisition* it = 1 + aCycle->Elements();
+  const DDT::ResourceAcquisitionArray::elem_type* it = 1 + aCycle->Elements();
   for (i = 1; i < len - 1; ++i, ++it) {
     fputs("\n--- Next dependency:\n", stderr);
     aOut += "\nNext dependency:\n";
 
-    maybeImminent &= it->mResource->Print(*it, aOut);
+    maybeImminent &= (*it)->Print(*it, aOut);
   }
 
   fputs("\n=== Cycle completed at\n", stderr);
   aOut += "Cycle completed at\n";
-  it->mResource->Print(*it, aOut);
+  (*it)->Print(*it, aOut);
 
   return maybeImminent;
 }
