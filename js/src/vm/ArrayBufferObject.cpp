@@ -688,6 +688,8 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, void *data /* = nullpt
         obj->initialize(nbytes, data, OwnsData);
         if (mapped)
             obj->setIsMappedArrayBuffer();
+        if (mapped)
+            JS_updateMallocCounter(cx, JS_ROUNDUP(nbytes, js::gc::SystemPageSize()));
     } else {
         void *data = obj->fixedData(reservedSlots);
         memset(data, 0, nbytes);
