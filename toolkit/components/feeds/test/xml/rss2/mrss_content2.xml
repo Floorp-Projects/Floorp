@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: mrss content with a thumbnail
+Expect: var enc = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getPropertyAsInterface('mediacontent', Components.interfaces.nsIArray).queryElementAt(0, Components.interfaces.nsIPropertyBag); Assert.equal(enc.getProperty('fileSize'), '24986239', 'file size is correct'); Assert.equal(enc.getProperty('type'), 'video/mpeg', 'type is correct'); Assert.equal(enc.getProperty('url'), 'http://dallas.example.com/joebob_050689.mpeg', 'url is correct'); Assert.equal(feed.type, 0, 'Feed type is correct'); Assert.equal(feed.enclosureCount,2, 'Enclosure count is correct'); true;
+
+-->
+<rss xmlns:media="http://search.yahoo.com/mrss" version="2.0" >
+<channel>
+<item>
+
+<media:content fileSize="24986239" type="video/mpeg" url="http://dallas.example.com/joebob_050689.mpeg" />
+<media:thumbnail url="http://dallas.example.com/joebob_050689.jpg"  width="75" height="50"/>
+<author>jbb@dallas.example.com (Joe Bob Briggs)</author>
+<comments>http://example.org</comments>
+<title>test</title>
+
+<category domain="foo">bar</category>
+
+<description>I'm headed for France. I wasn't gonna go this year, but then last week &lt;a href="http://www.imdb.com/title/tt0086525/"&gt;Valley Girl&lt;/a&gt; came out and I said to myself, Joe Bob, you gotta get out of the country for a while.</description></item>
+</channel>
+</rss>

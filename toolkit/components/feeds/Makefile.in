@@ -6,14 +6,3 @@
 include $(topsrcdir)/config/rules.mk
 
 ABS_SRCDIR := $(abspath $(srcdir))
-ifeq ($(OS_ARCH),WINNT)
-
-check::
-	cd $(srcdir)/test; $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) shell.js 
-
-else
-
-check::
-	$(RUN_TEST_PROGRAM) $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) $(srcdir)/test/shell.js $(ABS_SRCDIR)/test
-
-endif # WINNT
