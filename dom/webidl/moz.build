@@ -263,6 +263,7 @@ WEBIDL_FILES = [
     'MozNamedAttrMap.webidl',
     'MozPowerManager.webidl',
     'MozSelfSupport.webidl',
+    'MozTetheringManager.webidl',
     'MozTimeManager.webidl',
     'MozWakeLock.webidl',
     'MutationEvent.webidl',
