@@ -7,9 +7,12 @@
 #include "mozilla/BlockingResourceBase.h"
 
 #ifdef DEBUG
+#include "prthread.h"
+
 #include "nsAutoPtr.h"
 
 #include "mozilla/CondVar.h"
+#include "mozilla/DeadlockDetector.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Mutex.h"
 
@@ -131,6 +134,34 @@ BlockingResourceBase::~BlockingResourceBase()
   // stupid mistakes.
   mChainPrev = 0;             // racy only for stupidly buggy client code
   sDeadlockDetector->Remove(this);
+}
+
+
+size_t
+BlockingResourceBase::SizeOfDeadlockDetector(MallocSizeOf aMallocSizeOf)
+{
+  return sDeadlockDetector ?
+      sDeadlockDetector->SizeOfIncludingThis(aMallocSizeOf) : 0;
+}
+
+
+PRStatus
+BlockingResourceBase::InitStatics()
+{
+  PR_NewThreadPrivateIndex(&sResourceAcqnChainFrontTPI, 0);
+  sDeadlockDetector = new DDT();
+  if (!sDeadlockDetector) {
+    NS_RUNTIMEABORT("can't allocate deadlock detector");
+  }
+  return PR_SUCCESS;
+}
+
+
+void
+BlockingResourceBase::Shutdown()
+{
+  delete sDeadlockDetector;
+  sDeadlockDetector = 0;
 }
 
 
