@@ -616,18 +616,12 @@ BrowserElementChild.prototype = {
   },
 
   _selectionChangeHandler: function(e) {
-    let isMouseUp = e.reason & Ci.nsISelectionListener.MOUSEUP_REASON;
-    let isSelectAll = e.reason & Ci.nsISelectionListener.SELECTALL_REASON;
-    // When selectall happened, gecko will first collapse the range then
-    // select all. So we will receive two selection change events with
-    // SELECTALL_REASON. We filter first event by check the length of
-    // selectedText.
-    if (!(isMouseUp || (isSelectAll && e.selectedText.length > 0))) {
+    e.stopPropagation();
+    let boundingClientRect = e.boundingClientRect;
+    if (!boundingClientRect) {
       return;
     }
 
-    e.stopPropagation();
-    let boundingClientRect = e.boundingClientRect;
     let zoomFactor = content.screen.width / content.innerWidth;
 
     let detail = {
@@ -646,6 +640,8 @@ BrowserElementChild.prototype = {
         canPaste: this._isCommandEnabled("paste"),
       },
       zoomFactor: zoomFactor,
+      reasons: e.reasons,
+      isCollapsed: (e.selectedText.length == 0),
     };
 
     // Get correct geometry information if we have nested <iframe mozbrowser>
