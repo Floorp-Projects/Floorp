@@ -508,6 +508,8 @@ protected:
     bool mSelectionReversed;
     // For compositionupdate
     bool mIncomplete;
+    // For compositionstart
+    bool mAdjustSelection;
   };
   // Items of mPendingActions are appended when TSF tells us to need to dispatch
   // DOM composition events.  However, we cannot dispatch while the document is
@@ -538,6 +540,14 @@ protected:
     const PendingAction& lastAction = mPendingActions.LastElement();
     return lastAction.mType == PendingAction::COMPOSITION_UPDATE &&
            lastAction.mIncomplete;
+  }
+
+  void CompleteLastActionIfStillIncomplete()
+  {
+    if (!IsPendingCompositionUpdateIncomplete()) {
+      return;
+    }
+    RecordCompositionUpdateAction();
   }
 
   // When On*Composition() is called without document lock, we need to flush
@@ -602,8 +612,7 @@ protected:
     void ReplaceTextWith(LONG aStart, LONG aLength, const nsAString& aString);
 
     void StartComposition(ITfCompositionView* aCompositionView,
-                          const PendingAction& aCompStart,
-                          bool aPreserveSelection);
+                          const PendingAction& aCompStart);
     void EndComposition(const PendingAction& aCompEnd);
 
     const nsString& Text() const

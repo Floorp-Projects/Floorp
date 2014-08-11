@@ -2054,7 +2054,7 @@ GK_ATOM(az, "az")
 GK_ATOM(ba, "ba")
 GK_ATOM(crh, "crh")
 GK_ATOM(el, "el")
-GK_ATOM(ga_ie, "ga-ie")
+GK_ATOM(ga, "ga")
 GK_ATOM(nl, "nl")
 
 // Names for editor transactions

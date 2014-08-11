@@ -35,7 +35,7 @@ namespace internal {
 Result
 ExpectTagAndGetLength(Reader& input, uint8_t expectedTag, uint16_t& length)
 {
-  PR_ASSERT((expectedTag & 0x1F) != 0x1F); // high tag number form not allowed
+  assert((expectedTag & 0x1F) != 0x1F); // high tag number form not allowed
 
   uint8_t tag;
   Result rv;
@@ -184,6 +184,15 @@ SignatureAlgorithmOIDValue(Reader& algorithmID,
     0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x05
   };
 
+  // NIST Open Systems Environment (OSE) Implementor's Workshop (OIW)
+  // http://www.oiw.org/agreements/stable/12s-9412.txt (no longer works).
+  // http://www.imc.org/ietf-pkix/old-archive-97/msg01166.html
+  // We need to support this this non-PKIX OID for compatibility.
+  // python DottedOIDToCode.py sha1WithRSASignature 1.3.14.3.2.29
+  static const uint8_t sha1WithRSASignature[] = {
+    0x2b, 0x0e, 0x03, 0x02, 0x1d
+  };
+
   // RFC 3279 Section 2.2.2
   // python DottedOIDToCode.py id-dsa-with-sha1 1.2.840.10040.4.3
   static const uint8_t id_dsa_with_sha1[] = {
@@ -227,6 +236,9 @@ SignatureAlgorithmOIDValue(Reader& algorithmID,
     algorithm = SignatureAlgorithm::dsa_with_sha1;
   } else if (algorithmID.MatchRest(id_dsa_with_sha256)) {
     algorithm = SignatureAlgorithm::dsa_with_sha256;
+  } else if (algorithmID.MatchRest(sha1WithRSASignature)) {
+    // XXX(bug 1042479): recognize this old OID for compatibility.
+    algorithm = SignatureAlgorithm::rsa_pkcs1_with_sha1;
   } else {
     // Any MD5-based signature algorithm, or any unknown signature algorithm.
     return Result::ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED;
@@ -406,8 +418,8 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ Time& time)
     }
     yearHi = yearLo >= 50u ? 19u : 20u;
   } else {
-    PR_NOT_REACHED("invalid tag given to TimeChoice");
-    return Result::ERROR_INVALID_TIME;
+    return NotReached("invalid tag given to TimeChoice",
+                      Result::ERROR_INVALID_TIME);
   }
   unsigned int year = (yearHi * 100u) + yearLo;
   if (year < 1970u) {
@@ -462,8 +474,8 @@ TimeChoice(Reader& tagged, uint8_t expectedTag, /*out*/ Time& time)
                                         jul + aug + sep + oct + nov;
              break;
     default:
-      PR_NOT_REACHED("month already bounds-checked by ReadTwoDigits");
-      return Result::FATAL_ERROR_INVALID_STATE;
+      return NotReached("month already bounds-checked by ReadTwoDigits",
+                        Result::FATAL_ERROR_INVALID_STATE);
   }
 
   unsigned int dayOfMonth;

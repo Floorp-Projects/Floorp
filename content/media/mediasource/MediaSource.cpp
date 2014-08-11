@@ -15,6 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/mozalloc.h"
 #include "nsContentTypeParser.h"
 #include "nsDebug.h"
@@ -327,6 +328,42 @@ MediaSource::Detach()
   mActiveSourceBuffers->Clear();
   mSourceBuffers->Clear();
   SetReadyState(MediaSourceReadyState::Closed);
+}
+
+void
+MediaSource::GetBuffered(TimeRanges* aBuffered)
+{
+  if (mActiveSourceBuffers->IsEmpty()) {
+    return;
+  }
+
+  nsTArray<nsRefPtr<TimeRanges>> ranges;
+  for (uint32_t i = 0; i < mActiveSourceBuffers->Length(); ++i) {
+    bool found;
+    SourceBuffer* sourceBuffer = mActiveSourceBuffers->IndexedGetter(i, found);
+
+    ErrorResult dummy;
+    *ranges.AppendElement() = sourceBuffer->GetBuffered(dummy);
+  }
+
+  double highestEndTime = mActiveSourceBuffers->GetHighestBufferedEndTime();
+  if (highestEndTime <= 0) {
+    return;
+  }
+
+  MOZ_ASSERT(aBuffered->Length() == 0);
+  aBuffered->Add(0, highestEndTime);
+
+  for (uint32_t i = 0; i < ranges.Length(); ++i) {
+    if (mReadyState == MediaSourceReadyState::Ended) {
+      ranges[i]->Add(ranges[i]->GetEndTime(), highestEndTime);
+    }
+
+    aBuffered->Intersection(ranges[i]);
+  }
+
+  MSE_DEBUG("MediaSource(%p)::GetBuffered start=%f end=%f length=%u",
+            this, aBuffered->GetStartTime(), aBuffered->GetEndTime(), aBuffered->Length());
 }
 
 MediaSource::MediaSource(nsPIDOMWindow* aWindow)

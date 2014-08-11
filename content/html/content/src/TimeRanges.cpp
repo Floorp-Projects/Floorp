@@ -126,6 +126,35 @@ TimeRanges::Normalize()
   }
 }
 
+void
+TimeRanges::Union(const TimeRanges* aOtherRanges)
+{
+  mRanges.AppendElements(aOtherRanges->mRanges);
+  Normalize();
+}
+
+void
+TimeRanges::Intersection(const TimeRanges* aOtherRanges)
+{
+  nsAutoTArray<TimeRange,4> intersection;
+
+  const nsTArray<TimeRange>& otherRanges = aOtherRanges->mRanges;
+  for (index_type i = 0, j = 0; i < mRanges.Length() && j < otherRanges.Length();) {
+    double start = std::max(mRanges[i].mStart, otherRanges[j].mStart);
+    double end = std::min(mRanges[i].mEnd, otherRanges[j].mEnd);
+    if (start < end) {
+      intersection.AppendElement(TimeRange(start, end));
+    }
+    if (mRanges[i].mEnd < otherRanges[j].mEnd) {
+      i += 1;
+    } else {
+      j += 1;
+    }
+  }
+
+  mRanges = intersection;
+}
+
 TimeRanges::index_type
 TimeRanges::Find(double aTime)
 {

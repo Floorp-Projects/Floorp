@@ -1,5 +1,11 @@
 package org.mozilla.gecko.db;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.TopSites;
+
 import android.content.ContentResolver;
 import android.database.CharArrayBuffer;
 import android.database.ContentObserver;
@@ -9,15 +15,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserContract.TopSites;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
 /**
  * {@TopSitesCursorWrapper} is a cursor wrapper that merges

@@ -963,14 +963,12 @@ nsTextStore::DidLockGranted()
     mNativeCaretIsCreated = false;
   }
   if (IsReadWriteLocked()) {
-    if (IsPendingCompositionUpdateIncomplete()) {
-      // FreeCJ (TIP for Traditional Chinese) calls SetSelection() to set caret
-      // to the start of composition string and insert a full width space for
-      // a placeholder with a call of SetText().  After that, it calls
-      // OnUpdateComposition() without new range.  Therefore, let's record the
-      // composition update information here.
-      RecordCompositionUpdateAction();
-    }
+    // FreeCJ (TIP for Traditional Chinese) calls SetSelection() to set caret
+    // to the start of composition string and insert a full width space for
+    // a placeholder with a call of SetText().  After that, it calls
+    // OnUpdateComposition() without new range.  Therefore, let's record the
+    // composition update information here.
+    CompleteLastActionIfStillIncomplete();
 
     FlushPendingActions();
   }
@@ -1008,18 +1006,20 @@ nsTextStore::FlushPendingActions()
 
         MOZ_ASSERT(mComposition.mLastData.IsEmpty());
 
-        // Select composition range so the new composition replaces the range
-        WidgetSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
-        mWidget->InitEvent(selectionSet);
-        selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
-        selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
-        selectionSet.mReversed = false;
-        mWidget->DispatchWindowEvent(&selectionSet);
-        if (!selectionSet.mSucceeded) {
-          PR_LOG(sTextStoreLog, PR_LOG_ERROR,
-                 ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
-                  "FAILED due to NS_SELECTION_SET failure", this));
-          break;
+        if (action.mAdjustSelection) {
+          // Select composition range so the new composition replaces the range
+          WidgetSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
+          mWidget->InitEvent(selectionSet);
+          selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
+          selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
+          selectionSet.mReversed = false;
+          mWidget->DispatchWindowEvent(&selectionSet);
+          if (!selectionSet.mSucceeded) {
+            PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+                   ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
+                    "FAILED due to NS_SELECTION_SET failure", this));
+            break;
+          }
         }
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
@@ -1787,6 +1787,7 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
     return S_OK;
   }
 
+  CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::SELECTION_SET;
   action->mSelectionStart = pSelection->acpStart;
@@ -2812,12 +2813,28 @@ nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
     return E_FAIL;
   }
 
+  CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::COMPOSITION_START;
   action->mSelectionStart = start;
   action->mSelectionLength = length;
 
-  currentContent.StartComposition(pComposition, *action, aPreserveSelection);
+  if (aPreserveSelection) {
+    action->mAdjustSelection = false;
+  } else {
+    Selection& currentSel = CurrentSelection();
+    if (currentSel.IsDirty()) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction() FAILED "
+              "due to CurrentSelection() failure", this));
+      action->mAdjustSelection = true;
+    } else {
+      action->mAdjustSelection = currentSel.MinOffset() != start ||
+                                 currentSel.MaxOffset() != start + length;
+    }
+  }
+
+  currentContent.StartComposition(pComposition, *action);
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction() succeeded: "
@@ -2842,6 +2859,7 @@ nsTextStore::RecordCompositionEndAction()
 
   MOZ_ASSERT(mComposition.IsComposing());
 
+  CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::COMPOSITION_END;
   action->mData = mComposition.mString;
@@ -4049,8 +4067,7 @@ nsTextStore::Content::ReplaceTextWith(LONG aStart, LONG aLength,
 
 void
 nsTextStore::Content::StartComposition(ITfCompositionView* aCompositionView,
-                                       const PendingAction& aCompStart,
-                                       bool aPreserveSelection)
+                                       const PendingAction& aCompStart)
 {
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(aCompositionView);
@@ -4060,7 +4077,7 @@ nsTextStore::Content::StartComposition(ITfCompositionView* aCompositionView,
   mComposition.Start(aCompositionView, aCompStart.mSelectionStart,
     GetSubstring(static_cast<uint32_t>(aCompStart.mSelectionStart),
                  static_cast<uint32_t>(aCompStart.mSelectionLength)));
-  if (!aPreserveSelection) {
+  if (aCompStart.mAdjustSelection) {
     mSelection.SetSelection(mComposition.mStart, mComposition.mString.Length(),
                             false);
   }

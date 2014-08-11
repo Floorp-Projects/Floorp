@@ -11,10 +11,9 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
-import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
 import android.content.Context;

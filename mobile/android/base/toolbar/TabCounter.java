@@ -11,6 +11,7 @@ import org.mozilla.gecko.animation.Rotate3DAnimation;
 import org.mozilla.gecko.widget.ThemedTextSwitcher;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +33,7 @@ public class TabCounter extends ThemedTextSwitcher
     private final AnimationSet mFlipOutForward;
     private final AnimationSet mFlipOutBackward;
     private final LayoutInflater mInflater;
+    private final int mLayoutId;
 
     private int mCount;
 
@@ -42,6 +44,11 @@ public class TabCounter extends ThemedTextSwitcher
 
     public TabCounter(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabCounter);
+        mLayoutId = a.getResourceId(R.styleable.TabCounter_layout, R.layout.tabs_counter);
+        a.recycle();
+
         mInflater = LayoutInflater.from(context);
 
         mFlipInForward = createAnimation(-90, 0, FadeMode.FADE_IN, -1 * Z_DISTANCE, false);
@@ -126,7 +133,7 @@ public class TabCounter extends ThemedTextSwitcher
 
     @Override
     public View makeView() {
-        return mInflater.inflate(R.layout.tabs_counter, null);
+        return mInflater.inflate(mLayoutId, this, false);
     }
 
 }

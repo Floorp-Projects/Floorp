@@ -5,16 +5,20 @@
 
 #include "WorkerRunnable.h"
 
+#include "nsGlobalWindow.h"
 #include "nsIEventTarget.h"
+#include "nsIGlobalObject.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 
 #include "WorkerPrivate.h"
+#include "WorkerScope.h"
 
 USING_WORKERS_NAMESPACE
 
@@ -258,9 +262,10 @@ WorkerRunnable::Run()
     return NS_OK;
   }
 
-  JSContext* cx;
+  nsCOMPtr<nsIGlobalObject> globalObject;
+  bool isMainThread = !targetIsWorkerThread && !mWorkerPrivate->GetParent();
+  MOZ_ASSERT(isMainThread == NS_IsMainThread());
   nsRefPtr<WorkerPrivate> kungFuDeathGrip;
-  nsCxPusher pusher;
 
   if (targetIsWorkerThread) {
     if (mWorkerPrivate->AllPendingRunnablesShouldBeCanceled() &&
@@ -280,44 +285,51 @@ WorkerRunnable::Run()
       return NS_OK;
     }
 
-    cx = mWorkerPrivate->GetJSContext();
-    MOZ_ASSERT(cx);
+    globalObject = mWorkerPrivate->GlobalScope();
   }
   else {
-    cx = mWorkerPrivate->ParentJSContext();
-    MOZ_ASSERT(cx);
-
     kungFuDeathGrip = mWorkerPrivate;
-
-    if (!mWorkerPrivate->GetParent()) {
-      AssertIsOnMainThread();
-      pusher.Push(cx);
+    if (isMainThread) {
+      globalObject = static_cast<nsGlobalWindow*>(mWorkerPrivate->GetWindow());
+    } else {
+      globalObject = mWorkerPrivate->GetParent()->GlobalScope();
     }
   }
 
-  JSAutoRequest ar(cx);
-
-  JS::Rooted<JSObject*> targetCompartmentObject(cx);
-  if (targetIsWorkerThread) {
-    targetCompartmentObject = JS::CurrentGlobalOrNull(cx);
+  // We might run script as part of WorkerRun, so we need an AutoEntryScript.
+  // This is part of the HTML spec for workers at:
+  // http://www.whatwg.org/specs/web-apps/current-work/#run-a-worker
+  // If we don't have a globalObject we have to use an AutoJSAPI instead, but
+  // this is OK as we won't be running script in these circumstances.
+  // It's important that aes is declared after jsapi, because if WorkerRun
+  // creates a global then we construct aes before PostRun and we need them to
+  // be destroyed in the correct order.
+  mozilla::dom::AutoJSAPI jsapi;
+  Maybe<mozilla::dom::AutoEntryScript> aes;
+  JSContext* cx;
+  if (globalObject) {
+    aes.construct(globalObject, isMainThread, isMainThread ? nullptr :
+                                              GetCurrentThreadJSContext());
+    cx = aes.ref().cx();
   } else {
-    targetCompartmentObject = mWorkerPrivate->GetWrapper();
+    jsapi.Init();
+    cx = jsapi.cx();
   }
 
+  // If we're not on the worker thread we'll either be in our parent's
+  // compartment or the null compartment, so we need to enter our own.
   Maybe<JSAutoCompartment> ac;
-  if (targetCompartmentObject) {
-    ac.construct(cx, targetCompartmentObject);
+  if (!targetIsWorkerThread && mWorkerPrivate->GetWrapper()) {
+    ac.construct(cx, mWorkerPrivate->GetWrapper());
   }
 
   bool result = WorkerRun(cx, mWorkerPrivate);
 
   // In the case of CompileScriptRunnnable, WorkerRun above can cause us to
-  // lazily create a global, in which case we need to be in its compartment
-  // when calling PostRun() below. Maybe<> this time...
-  if (targetIsWorkerThread &&
-      ac.empty() &&
-      js::DefaultObjectForContextOrNull(cx)) {
-    ac.construct(cx, js::DefaultObjectForContextOrNull(cx));
+  // lazily create a global, so we construct aes here before calling PostRun.
+  if (targetIsWorkerThread && aes.empty() && mWorkerPrivate->GlobalScope()) {
+    aes.construct(mWorkerPrivate->GlobalScope(), false, GetCurrentThreadJSContext());
+    cx = aes.ref().cx();
   }
 
   PostRun(cx, mWorkerPrivate, result);
