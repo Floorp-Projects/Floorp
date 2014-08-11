@@ -197,7 +197,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
         urlBarEntryDefaultLayoutParams = (RelativeLayout.LayoutParams) urlBarEntry.getLayoutParams();
         // API level 19 adds a RelativeLayout.LayoutParams copy constructor, so we explicitly cast
         // to ViewGroup.MarginLayoutParams to ensure consistency across platforms.
-        urlBarEntryShrunkenLayoutParams = new RelativeLayout.LayoutParams(urlBarEntryDefaultLayoutParams);
+        urlBarEntryShrunkenLayoutParams =
+                new RelativeLayout.LayoutParams((ViewGroup.MarginLayoutParams) urlBarEntryDefaultLayoutParams);
         // Note: a shrunken phone layout is not displayed on any known devices,
         // and thus shrunken layout params for phone are not maintained.
         if (HardwareUtils.isTablet()) {
