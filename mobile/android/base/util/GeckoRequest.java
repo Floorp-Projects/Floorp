@@ -5,6 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.mozilla.gecko.mozglue.RobocopTarget;
+
 import android.util.Log;
 
 public abstract class GeckoRequest {
@@ -24,6 +26,7 @@ public abstract class GeckoRequest {
      * @param data Data to send with this request, which can be any object serializeable by
      *             {@link JSONObject#put(String, Object)}.
      */
+    @RobocopTarget
     public GeckoRequest(String name, Object data) {
         this.name = name;
         final JSONObject message = new JSONObject();
@@ -68,6 +71,7 @@ public abstract class GeckoRequest {
      *
      * @param nativeJSObject The response data from Gecko
      */
+    @RobocopTarget
     public abstract void onResponse(NativeJSObject nativeJSObject);
 
     /**
@@ -80,6 +84,7 @@ public abstract class GeckoRequest {
      *
      * @throws RuntimeException
      */
+    @RobocopTarget
     public void onError() {
         throw new RuntimeException("Unhandled error for GeckoRequest: " + name);
     }
