@@ -3106,13 +3106,13 @@ var gDetailView = {
 
     let menulist = document.getElementById("detail-state-menulist");
     let addonType = AddonManager.addonTypes[this._addon.type];
-    if (addonType.flags & AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE &&
-        (hasPermission(this._addon, "ask_to_activate") ||
-         hasPermission(this._addon, "enable") ||
-         hasPermission(this._addon, "disable"))) {
+    if (addonType.flags & AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE) {
       let askItem = document.getElementById("detail-ask-to-activate-menuitem");
       let alwaysItem = document.getElementById("detail-always-activate-menuitem");
       let neverItem = document.getElementById("detail-never-activate-menuitem");
+      let hasActivatePermission =
+        ["ask_to_activate", "enable", "disable"].some(perm => hasPermission(this._addon, perm));
+
       if (this._addon.userDisabled === true) {
         menulist.selectedItem = neverItem;
       } else if (this._addon.userDisabled == AddonManager.STATE_ASK_TO_ACTIVATE) {
@@ -3120,7 +3120,10 @@ var gDetailView = {
       } else {
         menulist.selectedItem = alwaysItem;
       }
+
+      menulist.disabled = !hasActivatePermission;
       menulist.hidden = false;
+      menulist.classList.add('no-auto-hide');
     } else {
       menulist.hidden = true;
     }
