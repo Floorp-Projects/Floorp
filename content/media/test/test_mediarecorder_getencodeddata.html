@@ -25,6 +25,9 @@ SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
         ok(onErrorFired, 'onStop after onError');
         ok(ondataavailableFired, 'ondataavailableFired');
 
+        //Apparently, as soon as the document is unloading, mediaRecorder.ondataavailable
+        //fires again, so set it to null to avoid failures
+        mediaRecorder.ondataavailable = null;
         SimpleTest.finish();
       }
       mediaRecorder.ondataavailable = function(evt) {
