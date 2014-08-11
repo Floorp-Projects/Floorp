@@ -67,6 +67,14 @@ function startTest() {
         element.onended = null;
         element.onplaying = null;
         element.onpause = null;
+        //This helps to prevent these events from firing after SimpleTest.finish()
+        //on B2G ICS Emulator, but not sure they have been run at all, then
+        element.audioTracks.onremovetrack = null;
+        element.audioTracks.onaddtrack = null;
+        element.audioTracks.onchange = null;
+        element.videoTracks.onremovetrack = null;
+        element.videoTracks.onaddtrack = null;
+        element.videoTracks.onchange = null;
         SimpleTest.finish();
       }
 
