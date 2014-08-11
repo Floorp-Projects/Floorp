@@ -389,7 +389,7 @@ function eventQueue(aEventType)
 
       var res = this.onFinish();
       if (res != DO_NOT_FINISH_TEST)
-        SimpleTest.executeSoon(SimpleTest.finish);
+        SimpleTest.finish();
 
       return;
     }

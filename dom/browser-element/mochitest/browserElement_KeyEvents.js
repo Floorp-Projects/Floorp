@@ -82,11 +82,6 @@ function eventHandler(e) {
   }
 
   if (nbEvents == 0) {
-    //removeEventListener, otherwise a key event is fired
-    //for some reason, with keyCode 95
-    removeEventListener('keydown', eventHandler);
-    removeEventListener('keypress', eventHandler);
-    removeEventListener('keyup', eventHandler);
     SimpleTest.finish();
     return;
   }
