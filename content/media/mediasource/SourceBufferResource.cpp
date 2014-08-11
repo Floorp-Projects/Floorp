@@ -118,12 +118,7 @@ SourceBufferResource::Seek(int32_t aWhence, int64_t aOffset)
 nsresult
 SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount)
 {
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  nsresult rv = Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return Read(aBuffer, aCount, nullptr);
+  return ReadAt(aOffset, aBuffer, aCount, nullptr);
 }
 
 bool
