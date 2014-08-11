@@ -580,8 +580,8 @@ SourceBuffer::GetBufferedStartEndTime(double* aStart, double* aEnd)
     *aStart = *aEnd = 0.0;
     return;
   }
-  *aStart = ranges->Start(0, dummy);
-  *aEnd = ranges->End(ranges->Length() - 1, dummy);
+  *aStart = ranges->GetStartTime();
+  *aEnd = ranges->GetEndTime();
 }
 
 void

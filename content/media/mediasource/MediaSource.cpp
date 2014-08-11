@@ -265,13 +265,12 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
   SetReadyState(MediaSourceReadyState::Ended);
   mSourceBuffers->Ended();
   if (!aError.WasPassed()) {
+    DurationChange(mSourceBuffers->GetHighestBufferedEndTime(), aRv);
+    if (aRv.Failed()) {
+      return;
+    }
     // TODO:
-    // Run duration change algorithm.
-    // DurationChange(highestDurationOfSourceBuffers, aRv);
-    // if (aRv.Failed()) {
-    //   return;
-    // }
-    // Notify media element that all data is now available.
+    //   Notify media element that all data is now available.
     return;
   }
   switch (aError.Value()) {
