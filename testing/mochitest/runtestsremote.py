@@ -240,6 +240,7 @@ class MochiRemote(Mochitest):
         self.remoteLog = options.remoteLogFile
         self.localLog = options.logFile
         self._automation.deleteANRs()
+        self._automation.deleteTombstones()
         self.certdbNew = True
 
         # structured logging
