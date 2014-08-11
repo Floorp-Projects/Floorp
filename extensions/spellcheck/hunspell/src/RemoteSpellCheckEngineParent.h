@@ -19,9 +19,16 @@ public:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy);
 
-  bool RecvSetDictionary(const nsString& aDictionary, bool* success);
+  bool AnswerSetDictionary(const nsString& aDictionary, bool* success);
 
-  bool RecvCheckForMisspelling( const nsString& aWord, bool* isMisspelled);
+  bool AnswerCheck( const nsString& aWord, bool* aIsMisspelled);
+
+  bool AnswerCheckAndSuggest(
+            const nsString& aWord,
+            bool* aIsMisspelled,
+            InfallibleTArray<nsString>* aSuggestions);
+
+
 
 private:
   nsCOMPtr<mozISpellCheckingEngine> mEngine;
