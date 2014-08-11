@@ -37,11 +37,11 @@ interface MozVoicemailStatus
    * Return call number received for this voicemail status, or null if one
    * wasn't provided.
    */
-  readonly attribute DOMString returnNumber;
+  readonly attribute DOMString? returnNumber;
 
   /**
    * Displayable return call message received for this voicemail status, or null
    * if one wasn't provided.
    */
-  readonly attribute DOMString returnMessage;
+  readonly attribute DOMString? returnMessage;
 };
