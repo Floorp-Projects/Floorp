@@ -388,6 +388,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           expectedBraille: [
             [{"string": "listboxoptionAbbr"}, "Search suggestion"],
             ["Search suggestion", {"string": "listboxoptionAbbr"}]]
+        }, {
+          accOrElmOrID: "listbox-option2",
+          oldAccOrElmOrID: "listbox-option",
+          expectedUtterance: [[{"string": "listboxoption"}, "555-12345"],
+                              ["555-12345", {"string": "listboxoption"}]],
+          expectedBraille: [[{"string": "listboxoptionAbbr"}, "555-12345"],
+                            ["555-12345", {"string": "listboxoptionAbbr"}]]
         }];
 
         // Test all possible utterance order preference values.
@@ -507,6 +514,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <div id="togglebutton_pressed" aria-pressed="true" role="button" tabindex="-1">I am pressed!</div>
       <ul role="listbox" style="list-style-type: none;">
         <li role="option" id="listbox-option">Search suggestion</li>
+        <li role="option" id="listbox-option2">
+          <label aria-hidden="true">
+            <input type="checkbox" />
+          </label>
+          555-12345
+        </li>
       </ul>
     </div>
   </body>

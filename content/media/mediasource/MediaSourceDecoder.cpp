@@ -156,7 +156,6 @@ public:
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
   nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
                 int64_t aCurrentTime) MOZ_OVERRIDE;
-  nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime) MOZ_OVERRIDE;
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
                                                       MediaSourceDecoder* aParentDecoder,
                                                       MediaTaskQueue* aTaskQueue);
@@ -346,7 +345,7 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
     // Return empty range.
   } else if (duration > 0 && mozilla::IsInfinite(duration)) {
     nsRefPtr<dom::TimeRanges> bufferedRanges = new dom::TimeRanges();
-    GetBuffered(bufferedRanges);
+    mMediaSource->GetBuffered(bufferedRanges);
     aSeekable->Add(bufferedRanges->GetStartTime(), bufferedRanges->GetEndTime());
   } else {
     aSeekable->Add(0, duration);
@@ -574,23 +573,6 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
       return rv;
     }
   }
-  return NS_OK;
-}
-
-nsresult
-MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
-{
-  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
-    nsRefPtr<dom::TimeRanges> r = new dom::TimeRanges();
-    mDecoders[i]->GetBuffered(r);
-    MSE_DEBUGV("MediaSourceReader(%p)::GetBuffered i=%u start=%f end=%f%s",
-               this, i, r->GetStartTime(), r->GetEndTime(),
-               mDecoders[i]->IsDiscarded() ? " [discarded]" : "");
-    aBuffered->Add(r->GetStartTime(), r->GetEndTime());
-  }
-  aBuffered->Normalize();
-  MSE_DEBUGV("MediaSourceReader(%p)::GetBuffered start=%f end=%f ranges=%u",
-             this, aBuffered->GetStartTime(), aBuffered->GetEndTime(), aBuffered->Length());
   return NS_OK;
 }
 

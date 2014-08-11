@@ -441,7 +441,7 @@ TEST_F(pkixder_input_tests, MarkAndGetInput)
   ASSERT_TRUE(InputsAreEqual(expected, item));
 }
 
-// Cannot run this test on debug builds because of the PR_NOT_REACHED
+// Cannot run this test on debug builds because of the NotReached
 #ifndef DEBUG
 TEST_F(pkixder_input_tests, MarkAndGetInputDifferentInput)
 {
