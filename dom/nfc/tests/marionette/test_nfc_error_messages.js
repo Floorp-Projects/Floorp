@@ -82,12 +82,22 @@ function testNfcConnectError() {
  */
 function testNoErrorInTechMsg() {
   log('testNoErrorInTechMsg');
+
+  let techDiscoveredHandler = function(msg) {
+    ok('Message handler for nfc-manager-tech-discovered');
+    is(msg.type, 'techDiscovered');
+    is(msg.errorMsg, undefined, 'Should not get error msg in tech discovered');
+
+    setAndFireTechLostHandler()
+    .then(() => toggleNFC(false))
+    .then(endTest)
+    .catch(handleRejectedPromise);
+  };
+
+  sysMsgHelper.waitForTechDiscovered(techDiscoveredHandler);
+
   toggleNFC(true)
   .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
-  .then(setTechDiscoveredHandler)
-  .then(setAndFireTechLostHandler)
-  .then(() => toggleNFC(false))
-  .then(endTest)
   .catch(handleRejectedPromise);
 }
 
@@ -170,23 +180,6 @@ function connectToNFCTagExpectError(sessionToken, tech, errorMsg) {
   return deferred.promise;
 }
 
-function setTechDiscoveredHandler() {
-  let deferred = Promise.defer();
-
-  let techDiscoveredHandler = function(msg) {
-    ok('Message handler for nfc-manager-tech-discovered');
-    is(msg.type, 'techDiscovered');
-    is(msg.errorMsg, undefined, 'Should not get error msg in tech discovered');
-
-    window.navigator.mozSetMessageHandler('nfc-manager-tech-discovered', null);
-    deferred.resolve();
-  };
-
-  window.navigator.mozSetMessageHandler('nfc-manager-tech-discovered',
-                                        techDiscoveredHandler);
-  return deferred.promise;
-}
-
 function setAndFireTechLostHandler() {
   let deferred = Promise.defer();
 
@@ -195,12 +188,10 @@ function setAndFireTechLostHandler() {
     is(msg.type, 'techLost');
     is(msg.errorMsg, undefined, 'Should not get error msg in tech lost');
 
-    window.navigator.mozSetMessageHandler('nfc-manager-tech-lost', null);
     deferred.resolve();
   };
 
-  window.navigator.mozSetMessageHandler('nfc-manager-tech-lost',
-                                        techLostHandler);
+  sysMsgHelper.waitForTechLost(techLostHandler);
 
   // triggers tech-lost
   NCI.deactivate();

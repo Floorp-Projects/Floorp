@@ -60,86 +60,110 @@ function handleTechnologyDiscoveredRE0ForP2PRegFailure(msg) {
     is(request.result, false, "check for P2P registration result");
 
     nfc.onpeerready = null;
-    toggleNFC(false).then(runNextTest);
+    NCI.deactivate().then(() => toggleNFC(false)).then(runNextTest);
   }
 
   request.onerror = function () {
     ok(false, "checkP2PRegistration failed.");
 
     nfc.onpeerready = null;
-    toggleNFC(false).then(runNextTest);
+    NCI.deactivate().then(() => toggleNFC(false)).then(runNextTest);
   }
 }
 
 function testPeerReady() {
-  window.navigator.mozSetMessageHandler(
-    "nfc-manager-tech-discovered", handleTechnologyDiscoveredRE0);
+  sysMsgHelper.waitForTechDiscovered(handleTechnologyDiscoveredRE0);
 
   toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
 function testCheckP2PRegFailure() {
-  window.navigator.mozSetMessageHandler(
-    "nfc-manager-tech-discovered", handleTechnologyDiscoveredRE0ForP2PRegFailure);
+  sysMsgHelper.waitForTechDiscovered(handleTechnologyDiscoveredRE0ForP2PRegFailure);
 
   toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
 function testPeerLostShouldNotBeCalled() {
+  log("testPeerLostShouldNotBeCalled");
   nfc.onpeerlost = function () {
     ok(false, "onpeerlost shouldn't be called");
   };
 
-  toggleNFC(true)
-    .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
-    .then(NCI.deactivate)
-    .then(() => toggleNFC(false));
+  let isDiscovered = false;
+  sysMsgHelper.waitForTechDiscovered(function() {
+    log("testPeerLostShouldNotBeCalled techDiscoverd");
+    isDiscovered = true;
+    NCI.deactivate();
+  });
 
-  nfc.onpeerlost = null;
-  runNextTest();
+  sysMsgHelper.waitForTechLost(function() {
+    log("testPeerLostShouldNotBeCalled techLost");
+    // if isDiscovered is still false, means this techLost is fired from
+    // previous test.
+    ok(isDiscovered, "tech-discovered should be fired first");
+    nfc.onpeerlost = null;
+    toggleNFC(false).then(runNextTest);
+  });
+
+  toggleNFC(true)
+    .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
 function testPeerShouldThrow() {
+  log("testPeerShouldThrow");
   let peer;
   let tnf = NDEF.TNF_WELL_KNOWN;
   let type = new Uint8Array(NfcUtils.fromUTF8("U"));
   let id = new Uint8Array(NfcUtils.fromUTF8(""));
-  let payload = new Uint8Array(NfcUtils.fromUTF8(url));
+  let payload = new Uint8Array(NfcUtils.fromUTF8("http://www.hi.com"));
   let ndef = [new MozNDEFRecord(tnf, type, id, payload)];
 
   nfc.onpeerready = function (evt) {
+    log("testPeerShouldThrow peerready");
     peer = nfc.getNFCPeer(evt.detail);
+    NCI.deactivate();
   };
 
-  let request = nfc.checkP2PRegistration(MANIFEST_URL);
-  request.onsuccess = function (evt) {
-    is(request.result, true, "check for P2P registration result");
-    nfc.notifyUserAcceptedP2P(MANIFEST_URL);
-  }
+  nfc.onpeerlost = function () {
+    log("testPeerShouldThrow peerlost");
+    try {
+      peer.sendNDEF(ndef);
+      ok(false, "sendNDEF should throw error");
+    } catch (e) {
+      ok(true, "Exception expected " + e);
+    }
+
+    try {
+      peer.sendFile(new Blob());
+      ok(false, "sendfile should throw error");
+    } catch (e) {
+      ok(true, "Exception expected" + e);
+    }
+
+    nfc.onpeerready = null;
+    nfc.onpeerlost = null;
+    toggleNFC(false).then(runNextTest);
+  };
+
+  sysMsgHelper.waitForTechDiscovered(function() {
+    log("testPeerShouldThrow techDiscovered");
+    let request = nfc.checkP2PRegistration(MANIFEST_URL);
+    request.onsuccess = function (evt) {
+      nfc.notifyUserAcceptedP2P(MANIFEST_URL);
+    }
+
+    request.onerror = function () {
+      ok(false, "checkP2PRegistration failed.");
+      toggleNFC(false).then(runNextTest);
+    }
+  });
 
   toggleNFC(true)
-    .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
-    .then(NCI.deactivate);
-
-  try {
-    peer.sendNDEF(ndef);
-    ok(false, "sendNDEF should throw error");
-  } catch (e) {
-    ok(true, "Exception expected");
-  }
-
-  try {
-    peer.sendFile(new Blob());
-    ok(false, "sendfile should throw error");
-  } catch (e) {
-    ok(true, "Exception expected");
-  }
-
-  nfc.onpeerready = null;
-  toggleNFC(false).then(runNextTest);
+    .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
 function testPeerInvalidToken() {
+  log("testPeerInvalidToken");
   let peer = nfc.getNFCPeer("fakeSessionToken");
   is(peer, null, "NFCPeer should be null on wrong session token");
 
@@ -151,6 +175,7 @@ function testPeerInvalidToken() {
  * TODO: remove once Bug 963531 lands
  */
 function testTagInvalidToken() {
+  log("testTagInvalidToken");
   let tag = nfc.getNFCTag("fakeSessionToken");
   is(tag, null, "NFCTag should be null on wrong session token");
 
