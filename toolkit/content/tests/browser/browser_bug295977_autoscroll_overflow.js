@@ -197,13 +197,18 @@ function test()
   }
 
   function endTest() {
-    // remove 2 tabs that were opened by middle-click on links
-    gBrowser.removeTab(gBrowser.tabs[gBrowser.visibleTabs.length - 1]);
-    gBrowser.removeTab(gBrowser.tabs[gBrowser.visibleTabs.length - 1]);
+    registerCleanupFunction(function() {
+      // restore the changed prefs
+      if (Services.prefs.prefHasUserValue(kPrefName_AutoScroll))
+        Services.prefs.clearUserPref(kPrefName_AutoScroll);
+      if (Services.prefs.prefHasUserValue("middlemouse.paste"))
+        Services.prefs.clearUserPref("middlemouse.paste");
 
-    // restore the changed prefs
-    if (Services.prefs.prefHasUserValue(kPrefName_AutoScroll))
-      Services.prefs.clearUserPref(kPrefName_AutoScroll);
+      // remove 2 tabs that were opened by middle-click on links
+      while (gBrowser.visibleTabs.length > 1) {
+        gBrowser.removeTab(gBrowser.visibleTabs[gBrowser.visibleTabs.length - 1]);
+      }
+    });
 
     // waitForFocus() fixes a failure in the next test if the latter runs too soon.
     waitForFocus(finish);
