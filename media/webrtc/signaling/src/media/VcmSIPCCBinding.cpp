@@ -2861,8 +2861,11 @@ int vcmGetVideoCodecList(int request_type)
  */
 int vcmGetH264SupportedPacketizationModes()
 {
-  // We support mode 1 packetization only in webrtc currently
+#ifdef MOZ_WEBRTC_OMX
   return VCM_H264_MODE_1;
+#else
+  return VCM_H264_MODE_0|VCM_H264_MODE_1;
+#endif
 }
 
 /**
