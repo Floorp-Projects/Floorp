@@ -113,7 +113,7 @@ private:
      * contexts into strings, all info is written to stderr, but
      * only some info is written into |aOut|
      */
-    bool Print(const DDT::ResourceAcquisition& aFirstSeen,
+    bool Print(const DeadlockDetectorEntry* aFirstSeen,
                nsACString& aOut) const;
 
     /**
