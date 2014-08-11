@@ -66,10 +66,34 @@ per-category counts, whose size depends on the number of categories.
     object of the form:
 
     <pre class='language-js'><code>
+    {
+      "objects": { <i>class</i>: <i>tally</i>, ... },
+      "scripts": <i>tally</i>,
+      "strings": <i>tally</i>,
+      "other": { <i>type name</i>: <i>tally</i>, ... }
+    }
+    </code></pre>
+
+    Each <i>tally</i> has the form:
+
+    <pre class='language-js'><code>
     { "count": <i>count</i> }
     </code></pre>
 
-    where <i>count</i> is the number of nodes found.
+    where <i>count</i> is the number of items in the category.
+
+    The `"objects"` property's value contains the tallies of JavaScript objects,
+    broken down by their ECMAScript `[[Class]]` internal property values. Each
+    <i>class</i> is a string.
+
+    The `"scripts"` property's value tallies the in-memory representation of
+    JavaScript code.
+
+    The `"strings"` property's value tallies the debuggee's strings.
+
+    The `"other"` property's value contains the tallies of other items used
+    internally by SpiderMonkey, broken down by their C++ type name.
+
 
 Memory Use Analysis Exposes Implementation Details
 --------------------------------------------------

@@ -316,7 +316,252 @@ class Tally {
     }
 };
 
-// A ubi::BreadthFirst handler type that conducts a census, using Assorter
+// An assorter that breaks nodes down by their JavaScript type --- 'objects',
+// 'strings', 'scripts', and 'other' --- and then passes the nodes to
+// sub-assorters. The template arguments must themselves be assorter types.
+//
+// Implementation details of scripts like jitted code are counted under
+// 'scripts'.
+template<typename EachObject = Tally,
+         typename EachScript = Tally,
+         typename EachString = Tally,
+         typename EachOther  = Tally>
+class ByJSType {
+    EachObject objects;
+    EachScript scripts;
+    EachString strings;
+    EachOther other;
+
+  public:
+    ByJSType(Census &census)
+      : objects(census),
+        scripts(census),
+        strings(census),
+        other(census)
+    { }
+    ByJSType(ByJSType &&rhs)
+      : objects(Move(rhs.objects)),
+        scripts(move(rhs.scripts)),
+        strings(move(rhs.strings)),
+        other(move(rhs.other))
+    { }
+    ByJSType &operator=(ByJSType &&rhs) {
+        MOZ_ASSERT(&rhs != this);
+        this->~ByJSType();
+        new (this) ByJSType(Move(rhs));
+        return *this;
+    }
+
+    bool init(Census &census) {
+        return objects.init(census) &&
+               scripts.init(census) &&
+               strings.init(census) &&
+               other.init(census);
+    }
+
+    bool count(Census &census, const Node &node) {
+        if (node.is<JSObject>())
+            return objects.count(census, node);
+         if (node.is<JSScript>() || node.is<LazyScript>() || node.is<jit::JitCode>())
+            return scripts.count(census, node);
+        if (node.is<JSString>())
+            return strings.count(census, node);
+        return other.count(census, node);
+    }
+
+    bool report(Census &census, MutableHandleValue report) {
+        JSContext *cx = census.cx;
+
+        RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        if (!obj)
+            return false;
+
+        RootedValue objectsReport(cx);
+        if (!objects.report(census, &objectsReport) ||
+            !JSObject::defineProperty(cx, obj, cx->names().objects, objectsReport))
+            return false;
+
+        RootedValue scriptsReport(cx);
+        if (!scripts.report(census, &scriptsReport) ||
+            !JSObject::defineProperty(cx, obj, cx->names().scripts, scriptsReport))
+            return false;
+
+        RootedValue stringsReport(cx);
+        if (!strings.report(census, &stringsReport) ||
+            !JSObject::defineProperty(cx, obj, cx->names().strings, stringsReport))
+            return false;
+
+        RootedValue otherReport(cx);
+        if (!other.report(census, &otherReport) ||
+            !JSObject::defineProperty(cx, obj, cx->names().other,   otherReport))
+            return false;
+
+        report.setObject(*obj);
+        return true;
+    }
+};
+
+
+// An assorter that categorizes nodes that are JSObjects by their class, and
+// places all other nodes in an 'other' category. The template arguments must be
+// assorter types; each JSObject class gets an EachClass assorter, and the
+// 'other' category gets an EachOther assorter.
+template<typename EachClass = Tally,
+         typename EachOther = Tally>
+class ByObjectClass {
+    // A hash policy that compares js::Classes by name.
+    struct HashPolicy {
+        typedef const js::Class *Lookup;
+        static js::HashNumber hash(Lookup l) { return mozilla::HashString(l->name); }
+        static bool match(const js::Class *key, Lookup lookup) {
+            return strcmp(key->name, lookup->name) == 0;
+        }
+    };
+
+    // A table mapping classes to their counts. Note that this table treats
+    // js::Class instances with the same name as equal keys. If you have several
+    // js::Classes with equal names (and we do; as of this writing there were
+    // six named "Object"), you will get several different Classes being counted
+    // in the same table entry.
+    typedef HashMap<const js::Class *, EachClass, HashPolicy, SystemAllocPolicy> Table;
+    Table table;
+    EachOther other;
+
+  public:
+    ByObjectClass(Census &census) : other(census) { }
+    ByObjectClass(ByObjectClass &&rhs) : table(Move(rhs.table)), other(Move(rhs.other)) { }
+    ByObjectClass &operator=(ByObjectClass &&rhs) {
+        MOZ_ASSERT(&rhs != this);
+        this->~ByObjectClass();
+        new (this) ByObjectClass(Move(rhs));
+        return *this;
+    }
+
+    bool init(Census &census) { return table.init() && other.init(census); }
+
+    bool count(Census &census, const Node &node) {
+        if (!node.is<JSObject>())
+            return other.count(census, node);
+
+        const js::Class *key = node.as<JSObject>()->getClass();
+        typename Table::AddPtr p = table.lookupForAdd(key);
+        if (!p) {
+            if (!table.add(p, key, EachClass(census)))
+                return false;
+            if (!p->value().init(census))
+                return false;
+        }
+        return p->value().count(census, node);
+    }
+
+    bool report(Census &census, MutableHandleValue report) {
+        JSContext *cx = census.cx;
+
+        RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        if (!obj)
+            return false;
+
+        for (typename Table::Range r = table.all(); !r.empty(); r.popFront()) {
+            EachClass &entry = r.front().value();
+            RootedValue entryReport(cx);
+            if (!entry.report(census, &entryReport))
+                return false;
+
+            const char *name = r.front().key()->name;
+            MOZ_ASSERT(name);
+            JSAtom *atom = Atomize(census.cx, name, strlen(name));
+            if (!atom)
+                return false;
+            RootedId entryId(cx, AtomToId(atom));
+
+#ifdef DEBUG
+            // We have multiple js::Classes out there with the same name (for
+            // example, JSObject::class_, Debugger.Object, and CollatorClass are
+            // all "Object"), so let's make sure our hash table treats them all
+            // as equivalent.
+            bool has;
+            if (!JSObject::hasProperty(cx, obj, entryId, &has))
+                return false;
+            if (has) {
+                fprintf(stderr, "already has %s\n", name);
+                MOZ_ASSERT(!has);
+            }
+#endif
+
+            if (!JSObject::defineGeneric(cx, obj, entryId, entryReport))
+                return false;
+        }
+
+        report.setObject(*obj);
+        return true;
+    }
+};
+
+
+// An assorter that categorizes nodes by their ubi::Node::typeName.
+template<typename EachType = Tally>
+class ByUbinodeType {
+    // Note that, because ubi::Node::typeName promises to return a specific
+    // pointer, not just any string whose contents are correct, we can use their
+    // addresses as hash table keys.
+    typedef HashMap<const jschar *, EachType, DefaultHasher<const jschar *>, SystemAllocPolicy> Table;
+    Table table;
+
+  public:
+    ByUbinodeType(Census &census) { }
+    ByUbinodeType(ByUbinodeType &&rhs) : table(Move(rhs.table)) { }
+    ByUbinodeType &operator=(ByUbinodeType &&rhs) {
+        MOZ_ASSERT(&rhs != this);
+        this->~ByUbinodeType();
+        new (this) ByUbinodeType(Move(rhs));
+        return *this;
+    }
+
+    bool init(Census &census) { return table.init(); }
+
+    bool count(Census &census, const Node &node) {
+        const jschar *key = node.typeName();
+        typename Table::AddPtr p = table.lookupForAdd(key);
+        if (!p) {
+            if (!table.add(p, key, EachType(census)))
+                return false;
+            if (!p->value().init(census))
+                return false;
+        }
+        return p->value().count(census, node);
+    }
+
+    bool report(Census &census, MutableHandleValue report) {
+        JSContext *cx = census.cx;
+
+        RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+        if (!obj)
+            return false;
+
+        for (typename Table::Range r = table.all(); !r.empty(); r.popFront()) {
+            EachType &entry = r.front().value();
+            RootedValue entryReport(cx);
+            if (!entry.report(census, &entryReport))
+                return false;
+
+            const jschar *name = r.front().key();
+            MOZ_ASSERT(name);
+            JSAtom *atom = AtomizeChars(cx, name, js_strlen(name));
+            if (!atom)
+                return false;
+            RootedId entryId(cx, AtomToId(atom));
+
+            if (!JSObject::defineGeneric(cx, obj, entryId, entryReport))
+                return false;
+        }
+
+        report.setObject(*obj);
+        return true;
+    }
+};
+
+
+// A BreadthFirst handler type that conducts a census, using Assorter
 // to categorize and count each node.
 template<typename Assorter>
 class CensusHandler {
@@ -366,10 +611,15 @@ class CensusHandler {
     }
 };
 
+// The assorter that Debugger.Memory.prototype.takeCensus uses by default.
+// (Eventually, we hope to add parameters that let you specify dynamically how
+// the census should assort the nodes it finds.) Categorize nodes by JS type,
+// and then objects by object class.
+typedef ByJSType<ByObjectClass<Tally>, Tally, Tally, ByUbinodeType<Tally> > DefaultAssorter;
 
-// A traversal that conducts a trivial census.
-typedef CensusHandler<Tally> TallyingHandler;
-typedef BreadthFirst<TallyingHandler> TallyingTraversal;
+// A traversal that conducts a census using DefaultAssorter.
+typedef CensusHandler<DefaultAssorter> DefaultCensusHandler;
+typedef BreadthFirst<DefaultCensusHandler> DefaultCensusTraversal;
 
 } // namespace dbg
 } // namespace js
@@ -383,14 +633,14 @@ DebuggerMemory::takeCensus(JSContext *cx, unsigned argc, Value *vp)
     dbg::Census census(cx);
     if (!census.init())
         return false;
-    dbg::TallyingHandler handler(census);
+    dbg::DefaultCensusHandler handler(census);
     if (!handler.init(census))
         return false;
 
     {
         JS::AutoCheckCannotGC noGC;
 
-        dbg::TallyingTraversal traversal(cx, handler, noGC);
+        dbg::DefaultCensusTraversal traversal(cx, handler, noGC);
         if (!traversal.init())
             return false;
 
