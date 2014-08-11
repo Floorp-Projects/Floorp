@@ -11,7 +11,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.content.Context;
@@ -91,7 +90,7 @@ public class BookmarksListView extends HomeListView
             adapter.moveToChildFolder(folderId, folderTitle);
         } else {
             // Otherwise, just open the URL
-            final String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
+            final String url = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.URL));
 
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM);
 

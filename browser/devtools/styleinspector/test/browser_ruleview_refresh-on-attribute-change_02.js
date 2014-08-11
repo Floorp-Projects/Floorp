@@ -103,7 +103,7 @@ function* testPropertyChange6(inspector, ruleView, testElement) {
   validateTextProp(rule.textProps[4], true, "background",
                    "url(\"chrome://branding/content/about-logo.png\") repeat scroll 0% 0% red",
                    "shortcut property correctly set",
-                   "url('chrome://branding/content/about-logo.png') repeat scroll 0% 0% #F00");
+                   "url(\"chrome://branding/content/about-logo.png\") repeat scroll 0% 0% #F00");
 }
 
 function* changeElementStyle(testElement, style, inspector) {
