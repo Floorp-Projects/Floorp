@@ -583,7 +583,7 @@ ShadowRoot::IsPooledNode(nsIContent* aContent, nsIContent* aContainer,
     return true;
   }
 
-  if (aContainer->IsHTML(nsGkAtoms::content)) {
+  if (aContainer && aContainer->IsHTML(nsGkAtoms::content)) {
     // Fallback content will end up in pool if its parent is a child of the host.
     HTMLContentElement* content = static_cast<HTMLContentElement*>(aContainer);
     return content->IsInsertionPoint() && content->MatchedNodes().IsEmpty() &&
