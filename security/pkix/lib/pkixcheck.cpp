@@ -362,17 +362,10 @@ CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
     // CA certificates are not trusted as EE certs.
 
     if (isCA) {
-      // TODO(bug 1040446): We use Result::ERROR_CA_CERT_INVALID here so we can
-      // distinguish this error from other errors, given that NSS does not have
-      // a "CA cert used as end-entity" error code since it doesn't have such a
-      // prohibition. We should add such an error code and stop abusing
-      // Result::ERROR_CA_CERT_INVALID this way.
-      //
-      // Note, in particular, that this check prevents a delegated OCSP
-      // response signing certificate with the CA bit from successfully
-      // validating when we check it from pkixocsp.cpp, which is a good thing.
-      //
-      return Result::ERROR_CA_CERT_INVALID;
+      // Note that this check prevents a delegated OCSP response signing
+      // certificate with the CA bit from successfully validating when we check
+      // it from pkixocsp.cpp, which is a good thing.
+      return Result::ERROR_CA_CERT_USED_AS_END_ENTITY;
     }
 
     return Success;
