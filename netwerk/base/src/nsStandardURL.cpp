@@ -244,7 +244,7 @@ nsSegmentEncoder::InitUnicodeEncoder()
 static PRCList gAllURLs;
 #endif
 
-nsStandardURL::nsStandardURL(bool aSupportsFileURL)
+nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
     : mDefaultPort(-1)
     , mPort(-1)
     , mHostA(nullptr)
@@ -270,7 +270,11 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL)
     mParser = net_GetStdURLParser();
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PR_APPEND_LINK(&mDebugCList, &gAllURLs);
+    if (aTrackURL) {
+        PR_APPEND_LINK(&mDebugCList, &gAllURLs);
+    } else {
+        PR_INIT_CLIST(&mDebugCList);
+    }
 #endif
 }
 
@@ -282,7 +286,9 @@ nsStandardURL::~nsStandardURL()
         free(mHostA);
     }
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    PR_REMOVE_LINK(&mDebugCList);
+    if (!PR_CLIST_IS_EMPTY(&mDebugCList)) {
+        PR_REMOVE_LINK(&mDebugCList);
+    }
 #endif
 }
 
@@ -1135,10 +1141,13 @@ nsStandardURL::SetSpec(const nsACString &input)
 
     LOG(("nsStandardURL::SetSpec [spec=%s]\n", spec));
 
-    Clear();
-
     if (!spec || !*spec)
-        return NS_OK;
+        return NS_ERROR_MALFORMED_URI;
+
+    // Make a backup of the curent URL
+    nsStandardURL prevURL(false,false);
+    prevURL.CopyMembers(this, eHonorRef);
+    Clear();
 
     // filter out unexpected chars "\r\n\t" if necessary
     nsAutoCString buf1;
@@ -1157,6 +1166,9 @@ nsStandardURL::SetSpec(const nsACString &input)
 
     if (NS_FAILED(rv)) {
         Clear();
+        // If parsing the spec has failed, restore the old URL
+        // so we don't end up with an empty URL.
+        CopyMembers(&prevURL, eHonorRef);
         return rv;
     }
 
@@ -1835,36 +1847,54 @@ nsStandardURL::CloneInternal(nsStandardURL::RefHandlingEnum refHandlingMode,
     if (!clone)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    clone->mSpec = mSpec;
-    clone->mDefaultPort = mDefaultPort;
-    clone->mPort = mPort;
-    clone->mScheme = mScheme;
-    clone->mAuthority = mAuthority;
-    clone->mUsername = mUsername;
-    clone->mPassword = mPassword;
-    clone->mHost = mHost;
-    clone->mPath = mPath;
-    clone->mFilepath = mFilepath;
-    clone->mDirectory = mDirectory;
-    clone->mBasename = mBasename;
-    clone->mExtension = mExtension;
-    clone->mQuery = mQuery;
-    clone->mRef = mRef;
-    clone->mOriginCharset = mOriginCharset;
-    clone->mURLType = mURLType;
-    clone->mParser = mParser;
-    clone->mFile = mFile;
-    clone->mHostA = mHostA ? strdup(mHostA) : nullptr;
-    clone->mMutable = true;
-    clone->mSupportsFileURL = mSupportsFileURL;
-    clone->mHostEncoding = mHostEncoding;
-    clone->mSpecEncoding = mSpecEncoding;
-
-    if (refHandlingMode == eIgnoreRef) {
-        clone->SetRef(EmptyCString());
-    }
+    // Copy local members into clone.
+    // Also copies the cached members mFile, mHostA
+    clone->CopyMembers(this, refHandlingMode, true);
 
     clone.forget(result);
+    return NS_OK;
+}
+
+nsresult nsStandardURL::CopyMembers(nsStandardURL * source,
+    nsStandardURL::RefHandlingEnum refHandlingMode, bool copyCached)
+{
+    mSpec = source->mSpec;
+    mDefaultPort = source->mDefaultPort;
+    mPort = source->mPort;
+    mScheme = source->mScheme;
+    mAuthority = source->mAuthority;
+    mUsername = source->mUsername;
+    mPassword = source->mPassword;
+    mHost = source->mHost;
+    mPath = source->mPath;
+    mFilepath = source->mFilepath;
+    mDirectory = source->mDirectory;
+    mBasename = source->mBasename;
+    mExtension = source->mExtension;
+    mQuery = source->mQuery;
+    mRef = source->mRef;
+    mOriginCharset = source->mOriginCharset;
+    mURLType = source->mURLType;
+    mParser = source->mParser;
+    mMutable = true;
+    mSupportsFileURL = source->mSupportsFileURL;
+    mHostEncoding = source->mHostEncoding;
+
+    if (copyCached) {
+        mFile = source->mFile;
+        mHostA = source->mHostA ? strdup(source->mHostA) : nullptr;
+        mSpecEncoding = source->mSpecEncoding;
+    } else {
+        // The same state as after calling InvalidateCache()
+        mFile = nullptr;
+        mHostA = nullptr;
+        mSpecEncoding = eEncoding_Unknown;
+    }
+
+    if (refHandlingMode == eIgnoreRef) {
+        SetRef(EmptyCString());
+    }
+
     return NS_OK;
 }
 
