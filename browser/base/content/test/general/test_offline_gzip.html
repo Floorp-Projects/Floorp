@@ -89,7 +89,6 @@ function handleMessageEvents(event) {
       break;
     case 2:    
       is(event.data, "onupdate", "Child was successfully updated.");
-      clearInterval(intervalID);
       finishTest();
       break;
     default:
