@@ -377,7 +377,6 @@
    * then we need to take the border of the buttons into account (1px).
    */
   padding: 0 3px;
-  -moz-padding-start: 6px;
   margin: 0;
   min-width: 78px;
   text-align: center;
@@ -388,10 +387,6 @@
   position: static;
   -moz-margin-start: -1px;
   text-shadow: none;
-}
-
-.devtools-sidebar-tabs > tabs > tab:first-of-type {
-  -moz-margin-start: -3px;
 }
 
 .devtools-sidebar-tabs > tabs > tab {
