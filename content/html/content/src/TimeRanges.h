@@ -44,6 +44,12 @@ public:
   // See http://www.whatwg.org/html/#normalized-timeranges-object
   void Normalize();
 
+  // Mutate this TimeRange to be the union of this and aOtherRanges.
+  void Union(const TimeRanges* aOtherRanges);
+
+  // Mutate this TimeRange to be the intersection of this and aOtherRanges.
+  void Intersection(const TimeRanges* aOtherRanges);
+
   JSObject* WrapObject(JSContext* aCx);
 
   uint32_t Length() const
