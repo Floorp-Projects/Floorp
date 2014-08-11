@@ -436,17 +436,10 @@
   background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @solidSeparatorDark@;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected] {
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected],
+.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
   color: #f5f7fa;
   background-image: linear-gradient(#1d4f73, #1d4f73), @solidSeparatorDark@;
-}
-
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover {
-  background-image: linear-gradient(#274f64, #274f64), @solidSeparatorDark@;
-}
-
-.theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
-  background-image: linear-gradient(#1f3e4f, #1f3e4f), @solidSeparatorDark@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab {
