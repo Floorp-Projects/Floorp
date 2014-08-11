@@ -338,9 +338,16 @@ static const AlgorithmIdentifierTestInfo<SignatureAlgorithm>
     13,
   },
   { SignatureAlgorithm::rsa_pkcs1_with_sha1,
+    // IETF Standard OID
     { 0x30, 0x0b, 0x06, 0x09,
       0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x05 },
     13,
+  },
+  { SignatureAlgorithm::rsa_pkcs1_with_sha1,
+    // Legacy OIW OID (bug 1042479)
+    { 0x30, 0x07, 0x06, 0x05,
+      0x2b, 0x0e, 0x03, 0x02, 0x1d },
+    9,
   },
 
   // DSA

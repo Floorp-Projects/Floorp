@@ -7,94 +7,11 @@
 #include "nsCxPusher.h"
 
 #include "nsIScriptContext.h"
-#include "mozilla/dom/EventTarget.h"
 #include "nsDOMJSUtils.h"
 #include "xpcprivate.h"
 #include "WorkerPrivate.h"
 
-using mozilla::dom::EventTarget;
 using mozilla::DebugOnly;
-
-bool
-nsCxPusher::Push(EventTarget *aCurrentTarget)
-{
-  MOZ_ASSERT(mPusher.empty());
-  NS_ENSURE_TRUE(aCurrentTarget, false);
-  nsresult rv;
-  nsIScriptContext* scx =
-    aCurrentTarget->GetContextForEventHandlers(&rv);
-#ifdef DEBUG_smaug
-  NS_ENSURE_SUCCESS(rv, false);
-#else
-  if(NS_FAILED(rv)) {
-    return false;
-  }
-#endif
-
-  if (!scx) {
-    // The target may have a special JS context for event handlers.
-    JSContext* cx = aCurrentTarget->GetJSContextForEventHandlers();
-    if (cx) {
-      mPusher.construct(cx);
-    }
-
-    // Nothing to do here, I guess.  Have to return true so that event firing
-    // will still work correctly even if there is no associated JSContext
-    return true;
-  }
-
-  mPusher.construct(scx->GetNativeContext());
-  return true;
-}
-
-bool
-nsCxPusher::RePush(EventTarget *aCurrentTarget)
-{
-  if (mPusher.empty()) {
-    return Push(aCurrentTarget);
-  }
-
-  if (aCurrentTarget) {
-    nsresult rv;
-    nsIScriptContext* scx =
-      aCurrentTarget->GetContextForEventHandlers(&rv);
-    if (NS_FAILED(rv)) {
-      mPusher.destroy();
-      return false;
-    }
-
-    // If we have the same script context and native context is still
-    // alive, no need to Pop/Push.
-    if (scx && scx == mPusher.ref().GetScriptContext() &&
-        scx->GetNativeContext()) {
-      return true;
-    }
-  }
-
-  mPusher.destroy();
-  return Push(aCurrentTarget);
-}
-
-void
-nsCxPusher::Push(JSContext *cx)
-{
-  mPusher.construct(cx);
-}
-
-void
-nsCxPusher::PushNull()
-{
-  // Note: The Maybe<> template magic seems to need the static_cast below to
-  // work right on some older compilers.
-  mPusher.construct(static_cast<JSContext*>(nullptr), /* aAllowNull = */ true);
-}
-
-void
-nsCxPusher::Pop()
-{
-  if (!mPusher.empty())
-    mPusher.destroy();
-}
 
 namespace mozilla {
 
