@@ -88,11 +88,11 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
     private final AtomicBoolean orphanChecked = new AtomicBoolean(false);
     private volatile int env = -1;
 
+    /* inner-access */ final EventDispatcher dispatcher;
+    /* inner-access */ final ProfileInformationCache profileCache;
     private ContentProviderClient client;
     private volatile HealthReportDatabaseStorage storage;
-    private final ProfileInformationCache profileCache;
     private final ConfigurationProvider configProvider;
-    private final EventDispatcher dispatcher;
     private final SharedPreferences prefs;
 
     // We track previousSession to avoid order-of-initialization confusion. We
@@ -649,7 +649,7 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
         "bartext",
     })));
 
-    private void initializeSearchProvider() {
+    /* inner-access */ void initializeSearchProvider() {
         this.storage.ensureMeasurementInitialized(
             MEASUREMENT_NAME_SEARCH_COUNTS,
             MEASUREMENT_VERSION_SEARCH_COUNTS,
@@ -784,7 +784,7 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
     public static final String MEASUREMENT_NAME_SESSIONS = "org.mozilla.appSessions";
     public static final int MEASUREMENT_VERSION_SESSIONS = 4;
 
-    private void initializeSessionsProvider() {
+    /* inner-access */ void initializeSessionsProvider() {
         this.storage.ensureMeasurementInitialized(
             MEASUREMENT_NAME_SESSIONS,
             MEASUREMENT_VERSION_SESSIONS,

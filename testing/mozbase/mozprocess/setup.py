@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.20'
+PACKAGE_VERSION = '0.21'
 
 setup(name='mozprocess',
       version=PACKAGE_VERSION,

@@ -26,13 +26,11 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
-import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
-import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserDB.FilterFlags;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
@@ -524,13 +522,11 @@ public class LocalBrowserDB {
         // We also give bookmarks an extra bonus boost by adding 100 points to their frecency score.
         final String sortOrder = BrowserContract.getFrecencySortOrder(true, false);
 
-        Cursor c = cr.query(combinedUriWithLimit(limit),
-                            projection,
-                            selection,
-                            selectionArgs,
-                            sortOrder);
-
-        return new LocalDBCursor(c);
+        return cr.query(combinedUriWithLimit(limit),
+                        projection,
+                        selection,
+                        selectionArgs,
+                        sortOrder);
     }
 
     public int getCount(ContentResolver cr, String database) {
@@ -677,29 +673,25 @@ public class LocalBrowserDB {
 
     @RobocopTarget
     public Cursor getAllVisitedHistory(ContentResolver cr) {
-        Cursor c = cr.query(mHistoryUriWithProfile,
-                            new String[] { History.URL },
-                            History.VISITS + " > 0",
-                            null,
-                            null);
-
-        return new LocalDBCursor(c);
+        return cr.query(mHistoryUriWithProfile,
+                        new String[] { History.URL },
+                        History.VISITS + " > 0",
+                        null,
+                        null);
     }
 
     public Cursor getRecentHistory(ContentResolver cr, int limit) {
-        Cursor c = cr.query(combinedUriWithLimit(limit),
-                            new String[] { Combined._ID,
-                                           Combined.BOOKMARK_ID,
-                                           Combined.HISTORY_ID,
-                                           Combined.URL,
-                                           Combined.TITLE,
-                                           Combined.DATE_LAST_VISITED,
-                                           Combined.VISITS },
-                            History.DATE_LAST_VISITED + " > 0",
-                            null,
-                            History.DATE_LAST_VISITED + " DESC");
-
-        return new LocalDBCursor(c);
+        return cr.query(combinedUriWithLimit(limit),
+                        new String[] { Combined._ID,
+                                       Combined.BOOKMARK_ID,
+                                       Combined.HISTORY_ID,
+                                       Combined.URL,
+                                       Combined.TITLE,
+                                       Combined.DATE_LAST_VISITED,
+                                       Combined.VISITS },
+                        History.DATE_LAST_VISITED + " > 0",
+                        null,
+                        History.DATE_LAST_VISITED + " DESC");
     }
 
     public void expireHistory(ContentResolver cr, ExpirePriority priority) {
@@ -727,8 +719,7 @@ public class LocalBrowserDB {
 
     @RobocopTarget
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
-        Cursor c = null;
-        boolean addDesktopFolder = false;
+        final boolean addDesktopFolder;
 
         // We always want to show mobile bookmarks in the root view.
         if (folderId == Bookmarks.FIXED_ROOT_ID) {
@@ -737,8 +728,11 @@ public class LocalBrowserDB {
             // We'll add a fake "Desktop Bookmarks" folder to the root view if desktop
             // bookmarks exist, so that the user can still access non-mobile bookmarks.
             addDesktopFolder = desktopBookmarksExist(cr);
+        } else {
+            addDesktopFolder = false;
         }
 
+        final Cursor c;
         if (folderId == Bookmarks.FAKE_DESKTOP_FOLDER_ID) {
             // Since the "Desktop Bookmarks" folder doesn't actually exist, we
             // just fake it by querying specifically certain known desktop folders.
@@ -767,10 +761,10 @@ public class LocalBrowserDB {
 
         if (addDesktopFolder) {
             // Wrap cursor to add fake desktop bookmarks and reading list folders
-            c = new SpecialFoldersCursorWrapper(c, addDesktopFolder);
+            return new SpecialFoldersCursorWrapper(c, addDesktopFolder);
         }
 
-        return new LocalDBCursor(c);
+        return c;
     }
 
     public Cursor getReadingList(ContentResolver cr) {
@@ -1481,37 +1475,6 @@ public class LocalBrowserDB {
             return "";
         }
     }
-
-    private static class LocalDBCursor extends CursorWrapper {
-        public LocalDBCursor(Cursor c) {
-            super(c);
-        }
-
-        private String translateColumnName(String columnName) {
-            if (columnName.equals(BrowserDB.URLColumns.URL)) {
-                columnName = URLColumns.URL;
-            } else if (columnName.equals(BrowserDB.URLColumns.TITLE)) {
-                columnName = URLColumns.TITLE;
-            } else if (columnName.equals(BrowserDB.URLColumns.FAVICON)) {
-                columnName = FaviconColumns.FAVICON;
-            } else if (columnName.equals(BrowserDB.URLColumns.DATE_LAST_VISITED)) {
-                columnName = History.DATE_LAST_VISITED;
-            } else if (columnName.equals(BrowserDB.URLColumns.VISITS)) {
-                columnName = History.VISITS;
-            }
-
-            return columnName;
-        }
-
-        public int getColumnIndex(String columnName) {
-            return super.getColumnIndex(translateColumnName(columnName));
-        }
-
-        public int getColumnIndexOrThrow(String columnName) {
-            return super.getColumnIndexOrThrow(translateColumnName(columnName));
-        }
-    }
-
 
     public void pinSite(ContentResolver cr, String url, String title, int position) {
         ContentValues values = new ContentValues();

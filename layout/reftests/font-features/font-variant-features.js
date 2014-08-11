@@ -10,6 +10,31 @@ gPrefix = "";
 // each of these tests evaluate whether a given feature is enabled as required
 // and also whether features that shouldn't be enabled are or not.
 var gPropertyData = [
+  // font-variant-alternates
+  // valid values
+  { prop: "font-variant-alternates", value: "normal", features: {"salt": 0, "swsh": 0} },
+  { prop: "font-variant-alternates", value: "historical-forms", features: {"hist": 1, "hlig": 0} },
+  { prop: "font-variant-alternates", value: "styleset(ok-alt-a, ok-alt-b)", features: {"ss01": 1, "ss02": 0, "ss03": 1, "ss04": 0, "ss05": 1, "ss19": 1, "ss20": 0} },
+  { prop: "font-variant-alternates", value: "character-variant(ok-1)", features: {"cv78": 2, "cv79": 0, "cv77": 0} },
+  { prop: "font-variant-alternates", value: "character-variant(ok-1, ok-3)", features: {"cv78": 2, "cv79": 0, "cv77": 0, "cv23": 1, "cv22": 0, "cv24": 0} },
+  { prop: "font-variant-alternates", value: "annotation(circled)", features: {"nalt": 1} },
+  { prop: "font-variant-alternates", value: "styleset(out-of-bounds1, out-of-bounds2)", features: {"ss00": 0, "ss01": 0, "ss99": 0} }, // out-of-bounds values but not invalid syntax
+  { prop: "font-variant-alternates", value: "styleset(circled)", features: {"nalt": 0, "ss00": 0, "ss01": 0} }, // circled defined for annotation not styleset
+  { prop: "font-variant-alternates", value: "styleset(scope-test1)", features: {"ss23": 1, "ss24": 0} },
+  { prop: "font-variant-alternates", value: "character-variant(scope-test1)", features: {"cv23": 0, "cv24": 1} },
+  { prop: "font-variant-alternates", value: "styleset(scope-test2)", features: {"ss23": 0, "ss24": 1, "ss01": 1} },
+  { prop: "font-variant-alternates", value: "character-variant(scope-test2)", features: {"cv23": 2, "cv24": 0, "cv01": 0} },
+  { prop: "font-variant-alternates", value: "character-variant(overlap1, overlap2)", features: {"cv23": 2} },
+  { prop: "font-variant-alternates", value: "character-variant(overlap2, overlap1)", features: {"cv23": 1} },
+
+  // invalid values
+  { prop: "font-variant-alternates", value: "historical-forms normal", features: {"hist": 0}, invalid: true },
+  { prop: "font-variant-alternates", value: "historical-forms historical-forms", features: {"hist": 0}, invalid: true },
+  { prop: "font-variant-alternates", value: "swash", features: {"swsh": 0}, invalid: true },
+  { prop: "font-variant-alternates", value: "swash(3)", features: {"swsh": 0}, invalid: true },
+  { prop: "font-variant-alternates", value: "annotation(a, b)", features: {"nalt": 0}, invalid: true },
+  { prop: "font-variant-alternates", value: "ornaments(a,b)", features: {"ornm": 0, "nalt": 0}, invalid: true },
+
   // font-variant-caps
   // valid values
   { prop: "font-variant-caps", value: "normal", features: {"smcp": 0} },
