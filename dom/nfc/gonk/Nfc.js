@@ -514,7 +514,7 @@ Nfc.prototype = {
 
         delete this.sessionTokenMap[this._currentSessionId];
         this._currentSessionId = null;
-        this.currentPeerAppId = null;
+        gMessageManager.currentPeerAppId = null;
         break;
      case "ConfigResponse":
         let target = this.targetsByRequestId[message.requestId];
