@@ -28,6 +28,8 @@ function runTest() {
 
 var numMsgReceived = 0;
 function outerIframeLoaded() {
+  // If you're changing the amount of is() calls in injectedScript,
+  // also change the number in waitForMessages accordingly
   var injectedScript =
     "data:,function is(a, b, desc) {                                     \
       if (a == b) {                                                      \
@@ -63,7 +65,8 @@ function outerIframeLoaded() {
 
   mm.loadFrameScript(injectedScript, /* allowDelayedLoad = */ false);
 
-  waitForMessages(6);
+  // 8 is the number of is() calls in injectedScript
+  waitForMessages(8);
 }
 
 function waitForMessages(num) {
