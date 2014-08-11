@@ -3,8 +3,7 @@
             android:launchMode="singleTop"
             android:icon="@drawable/search_launcher"
             android:label="@string/search_app_name"
-            android:theme="@style/AppTheme"
-            android:screenOrientation="portrait">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
