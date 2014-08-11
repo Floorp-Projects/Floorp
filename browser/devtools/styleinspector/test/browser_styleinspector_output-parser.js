@@ -154,7 +154,7 @@ function test() {
       test: fragment => {
         is(countAll(fragment), 1);
         is(getUrl(fragment), "images/arrow.gif");
-        is(fragment.textContent, "url('images/arrow.gif')!important");
+        is(fragment.textContent, "url(\"images/arrow.gif\")!important");
       }
     },
     {

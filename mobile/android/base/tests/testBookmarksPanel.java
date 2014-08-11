@@ -120,6 +120,12 @@ public class testBookmarksPanel extends AboutHomeTest {
                     contextMenuOption + " is present");
         }
 
+        // The use of Solo.searchText is potentially fragile as It will only
+        // scroll the most recently drawn view. Works fine for now though.
+        mAsserter.ok(!mSolo.searchText("Share"),
+                "Checking that the Share option is not present",
+                "Share option is not present");
+
         // Close the menu.
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
     }

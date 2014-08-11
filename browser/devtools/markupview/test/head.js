@@ -12,6 +12,10 @@ let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared
 // All test are asynchronous
 waitForExplicitFinish();
 
+// If a test times out we want to see the complete log and not just the last few
+// lines.
+SimpleTest.requestCompleteLog();
+
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 

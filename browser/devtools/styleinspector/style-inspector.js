@@ -83,6 +83,9 @@ function RuleViewTool(aInspector, aWindow, aIFrame)
 
   this.inspector.selection.on("pseudoclass", this.refresh);
 
+  this._clearUserProperties = this._clearUserProperties.bind(this);
+  this.inspector.target.on("navigate", this._clearUserProperties);
+
   this.onSelect();
 }
 
@@ -112,10 +115,17 @@ RuleViewTool.prototype = {
     this.view.refreshPanel();
   },
 
+  _clearUserProperties: function() {
+    if (this.view && this.view.store && this.view.store.userProperties) {
+      this.view.store.userProperties.clear();
+    }
+  },
+
   destroy: function RVT_destroy() {
     this.inspector.off("layout-change", this.refresh);
     this.inspector.selection.off("pseudoclass", this.refresh);
     this.inspector.selection.off("new-node-front", this._onSelect);
+    this.inspector.target.off("navigate", this._clearUserProperties);
 
     this.view.element.removeEventListener("CssRuleViewCSSLinkClicked",
       this._cssLinkHandler);

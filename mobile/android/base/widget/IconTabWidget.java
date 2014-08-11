@@ -17,7 +17,7 @@ import android.widget.TabWidget;
 import android.widget.TextView;
 
 public class IconTabWidget extends TabWidget {
-    private OnTabChangedListener mListener;
+    /* inner-access */ OnTabChangedListener mListener;
     private final int mButtonLayoutId;
     private final boolean mIsIcon;
 
