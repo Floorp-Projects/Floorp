@@ -30,10 +30,29 @@ struct JSContext;
 class JSObject;
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gMediaSourceLog;
-#define MSE_DEBUG(...) PR_LOG(gMediaSourceLog, PR_LOG_DEBUG, (__VA_ARGS__))
+PRLogModuleInfo* GetMediaSourceLog()
+{
+  static PRLogModuleInfo* sLogModule;
+  if (!sLogModule) {
+    sLogModule = PR_NewLogModule("MediaSource");
+  }
+  return sLogModule;
+}
+
+PRLogModuleInfo* GetMediaSourceAPILog()
+{
+  static PRLogModuleInfo* sLogModule;
+  if (!sLogModule) {
+    sLogModule = PR_NewLogModule("MediaSource");
+  }
+  return sLogModule;
+}
+
+#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define MSE_API(...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, (__VA_ARGS__))
 #else
 #define MSE_DEBUG(...)
+#define MSE_API(...)
 #endif
 
 // Arbitrary limit.
@@ -108,11 +127,14 @@ MediaSource::Constructor(const GlobalObject& aGlobal,
 
 MediaSource::~MediaSource()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("MediaSource(%p)::~MediaSource()", this);
 }
 
 SourceBufferList*
 MediaSource::SourceBuffers()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(mReadyState == MediaSourceReadyState::Closed, mSourceBuffers->IsEmpty());
   return mSourceBuffers;
 }
@@ -120,6 +142,7 @@ MediaSource::SourceBuffers()
 SourceBufferList*
 MediaSource::ActiveSourceBuffers()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(mReadyState == MediaSourceReadyState::Closed, mActiveSourceBuffers->IsEmpty());
   return mActiveSourceBuffers;
 }
@@ -127,12 +150,14 @@ MediaSource::ActiveSourceBuffers()
 MediaSourceReadyState
 MediaSource::ReadyState()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return mReadyState;
 }
 
 double
 MediaSource::Duration()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mReadyState == MediaSourceReadyState::Closed) {
     return UnspecifiedNaN<double>();
   }
@@ -142,6 +167,8 @@ MediaSource::Duration()
 void
 MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("MediaSource(%p)::SetDuration(aDuration=%f)", this, aDuration);
   if (aDuration < 0 || IsNaN(aDuration)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
@@ -157,8 +184,11 @@ MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
 already_AddRefed<SourceBuffer>
 MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = mozilla::IsTypeSupported(aType);
-  MSE_DEBUG("MediaSource::AddSourceBuffer(Type=%s) -> %x", NS_ConvertUTF16toUTF8(aType).get(), rv);
+  MSE_API("MediaSource(%p)::AddSourceBuffer(aType=%s)%s",
+          this, NS_ConvertUTF16toUTF8(aType).get(),
+          rv == NS_OK ? "" : " [not supported]");
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -185,16 +215,16 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
   }
   mSourceBuffers->Append(sourceBuffer);
   mActiveSourceBuffers->Append(sourceBuffer);
-  MSE_DEBUG("%p AddSourceBuffer(Type=%s) -> %p", this,
-            NS_ConvertUTF16toUTF8(mimeType).get(), sourceBuffer.get());
+  MSE_DEBUG("MediaSource(%p)::AddSourceBuffer() sourceBuffer=%p", this, sourceBuffer.get());
   return sourceBuffer.forget();
 }
 
 void
 MediaSource::RemoveSourceBuffer(SourceBuffer& aSourceBuffer, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   SourceBuffer* sourceBuffer = &aSourceBuffer;
-  MSE_DEBUG("%p RemoveSourceBuffer(Buffer=%p)", this, sourceBuffer);
+  MSE_API("MediaSource(%p)::RemoveSourceBuffer(aSourceBuffer=%p)", this, sourceBuffer);
   if (!mSourceBuffers->Contains(sourceBuffer)) {
     aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
     return;
@@ -223,7 +253,9 @@ MediaSource::RemoveSourceBuffer(SourceBuffer& aSourceBuffer, ErrorResult& aRv)
 void
 MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, ErrorResult& aRv)
 {
-  MSE_DEBUG("%p EndOfStream(Error=%u)", this, aError.WasPassed() ? uint32_t(aError.Value()) : 0);
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("MediaSource(%p)::EndOfStream(aError=%d)",
+          this, aError.WasPassed() ? uint32_t(aError.Value()) : 0);
   if (mReadyState != MediaSourceReadyState::Open ||
       mSourceBuffers->AnyUpdating()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -233,13 +265,12 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
   SetReadyState(MediaSourceReadyState::Ended);
   mSourceBuffers->Ended();
   if (!aError.WasPassed()) {
+    DurationChange(mSourceBuffers->GetHighestBufferedEndTime(), aRv);
+    if (aRv.Failed()) {
+      return;
+    }
     // TODO:
-    // Run duration change algorithm.
-    // DurationChange(highestDurationOfSourceBuffers, aRv);
-    // if (aRv.Failed()) {
-    //   return;
-    // }
-    // Notify media element that all data is now available.
+    //   Notify media element that all data is now available.
     return;
   }
   switch (aError.Value()) {
@@ -261,20 +292,18 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
 /* static */ bool
 MediaSource::IsTypeSupported(const GlobalObject&, const nsAString& aType)
 {
-#ifdef PR_LOGGING
-  if (!gMediaSourceLog) {
-    gMediaSourceLog = PR_NewLogModule("MediaSource");
-  }
-#endif
+  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = mozilla::IsTypeSupported(aType);
-  MSE_DEBUG("MediaSource::IsTypeSupported(Type=%s) -> %x", NS_ConvertUTF16toUTF8(aType).get(), rv);
+  MSE_API("MediaSource::IsTypeSupported(aType=%s)%s",
+          NS_ConvertUTF16toUTF8(aType).get(), rv == NS_OK ? "" : " [not supported]");
   return NS_SUCCEEDED(rv);
 }
 
 bool
 MediaSource::Attach(MediaSourceDecoder* aDecoder)
 {
-  MSE_DEBUG("%p Attaching decoder %p owner %p", this, aDecoder, aDecoder->GetOwner());
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("MediaSource(%p)::Attach(aDecoder=%p) owner=%p", this, aDecoder, aDecoder->GetOwner());
   MOZ_ASSERT(aDecoder);
   if (mReadyState != MediaSourceReadyState::Closed) {
     return false;
@@ -288,7 +317,9 @@ MediaSource::Attach(MediaSourceDecoder* aDecoder)
 void
 MediaSource::Detach()
 {
-  MSE_DEBUG("%p Detaching decoder %p owner %p", this, mDecoder.get(), mDecoder->GetOwner());
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("MediaSource(%p)::Detach() mDecoder=%p owner=%p",
+            this, mDecoder.get(), mDecoder->GetOwner());
   MOZ_ASSERT(mDecoder);
   mDecoder->DetachMediaSource();
   mDecoder = nullptr;
@@ -305,21 +336,19 @@ MediaSource::MediaSource(nsPIDOMWindow* aWindow)
   , mReadyState(MediaSourceReadyState::Closed)
   , mWaitForDataMonitor("MediaSource.WaitForData.Monitor")
 {
+  MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers = new SourceBufferList(this);
   mActiveSourceBuffers = new SourceBufferList(this);
-
-#ifdef PR_LOGGING
-  if (!gMediaSourceLog) {
-    gMediaSourceLog = PR_NewLogModule("MediaSource");
-  }
-#endif
+  MSE_API("MediaSource(%p)::MediaSource(aWindow=%p) mSourceBuffers=%p mActiveSourceBuffers=%p",
+          this, aWindow, mSourceBuffers.get(), mActiveSourceBuffers.get());
 }
 
 void
 MediaSource::SetReadyState(MediaSourceReadyState aState)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aState != mReadyState);
-  MSE_DEBUG("%p SetReadyState old=%d new=%d", this, mReadyState, aState);
+  MSE_DEBUG("MediaSource(%p)::SetReadyState(aState=%d) mReadyState=%d", this, aState, mReadyState);
 
   MediaSourceReadyState oldState = mReadyState;
   mReadyState = aState;
@@ -350,14 +379,15 @@ MediaSource::SetReadyState(MediaSourceReadyState aState)
 void
 MediaSource::DispatchSimpleEvent(const char* aName)
 {
-  MSE_DEBUG("%p Dispatching event %s to MediaSource", this, aName);
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("MediaSource(%p) Dispatch event '%s'", this, aName);
   DispatchTrustedEvent(NS_ConvertUTF8toUTF16(aName));
 }
 
 void
 MediaSource::QueueAsyncSimpleEvent(const char* aName)
 {
-  MSE_DEBUG("%p Queuing event %s to MediaSource", this, aName);
+  MSE_DEBUG("MediaSource(%p) Queuing event '%s'", this, aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<MediaSource>(this, aName);
   NS_DispatchToMainThread(event);
 }
@@ -365,6 +395,8 @@ MediaSource::QueueAsyncSimpleEvent(const char* aName)
 void
 MediaSource::DurationChange(double aNewDuration, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("MediaSource(%p)::DurationChange(aNewDuration=%f)", this, aNewDuration);
   if (mDuration == aNewDuration) {
     return;
   }
@@ -380,6 +412,32 @@ MediaSource::DurationChange(double aNewDuration, ErrorResult& aRv)
   // TODO: Update media element's duration and run element's duration change algorithm.
 }
 
+void
+MediaSource::NotifyEvicted(double aStart, double aEnd)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("MediaSource(%p)::NotifyEvicted(aStart=%f, aEnd=%f)", this, aStart, aEnd);
+  // Cycle through all SourceBuffers and tell them to evict data in
+  // the given range.
+  mSourceBuffers->Evict(aStart, aEnd);
+}
+
+void
+MediaSource::WaitForData()
+{
+  MSE_DEBUG("MediaSource(%p)::WaitForData()", this);
+  MonitorAutoLock mon(mWaitForDataMonitor);
+  mon.Wait();
+}
+
+void
+MediaSource::NotifyGotData()
+{
+  MSE_DEBUG("MediaSource(%p)::NotifyGotData()", this);
+  MonitorAutoLock mon(mWaitForDataMonitor);
+  mon.NotifyAll();
+}
+
 nsPIDOMWindow*
 MediaSource::GetParentObject() const
 {
@@ -390,28 +448,6 @@ JSObject*
 MediaSource::WrapObject(JSContext* aCx)
 {
   return MediaSourceBinding::Wrap(aCx, this);
-}
-
-void
-MediaSource::NotifyEvicted(double aStart, double aEnd)
-{
-  // Cycle through all SourceBuffers and tell them to evict data in
-  // the given range.
-  mSourceBuffers->Evict(aStart, aEnd);
-}
-
-void
-MediaSource::WaitForData()
-{
-  MonitorAutoLock lock(mWaitForDataMonitor);
-  lock.Wait();
-}
-
-void
-MediaSource::NotifyGotData()
-{
-  MonitorAutoLock lock(mWaitForDataMonitor);
-  lock.NotifyAll();
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaSource, DOMEventTargetHelper,

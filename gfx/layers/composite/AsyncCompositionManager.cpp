@@ -6,7 +6,6 @@
 
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include <stdint.h>                     // for uint32_t
-#include "AnimationCommon.h"            // for ComputedTimingFunction
 #include "CompositorParent.h"           // for CompositorParent, etc
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "LayerManagerComposite.h"      // for LayerManagerComposite, etc
@@ -15,13 +14,13 @@
 #include "gfxPoint3D.h"                 // for gfxPoint3D
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
 #include "mozilla/WidgetUtils.h"        // for ComputeTransformForRotation
+#include "mozilla/dom/AnimationPlayer.h" // for AnimationPlayer
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
 #include "mozilla/gfx/Point.h"          // for RoundedToInt, PointTyped
 #include "mozilla/gfx/Rect.h"           // for RoundedToInt, RectTyped
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/Compositor.h"  // for Compositor
-#include "nsAnimationManager.h"         // for ElementAnimations
 #include "nsCSSPropList.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels, etc
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
@@ -451,7 +450,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     timing.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
 
     ComputedTiming computedTiming =
-      ElementAnimation::GetComputedTimingAt(
+      dom::Animation::GetComputedTimingAt(
         Nullable<TimeDuration>(elapsedDuration), timing);
 
     NS_ABORT_IF_FALSE(0.0 <= computedTiming.mTimeFraction &&

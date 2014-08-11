@@ -167,8 +167,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MDefinition *pop();
     void popn(uint32_t n);
 
-    // Adds an instruction to this block's instruction list. |ins| may be
-    // nullptr to simplify OOM checking.
+    // Adds an instruction to this block's instruction list.
     void add(MInstruction *ins);
 
     // Marks the last instruction of the block; no further instructions
@@ -236,6 +235,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     void insertBefore(MInstruction *at, MInstruction *ins);
     void insertAfter(MInstruction *at, MInstruction *ins);
+
+    void insertAtEnd(MInstruction *ins);
 
     // Add an instruction to this block, from elsewhere in the graph.
     void addFromElsewhere(MInstruction *ins);
@@ -311,12 +312,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         }
         MOZ_CRASH();
     }
-#ifdef DEBUG
     bool hasLastIns() const {
         return !instructions_.empty() && instructions_.rbegin()->isControlInstruction();
     }
-#endif
     MControlInstruction *lastIns() const {
+        JS_ASSERT(hasLastIns());
         return instructions_.rbegin()->toControlInstruction();
     }
     MPhiIterator phisBegin() const {
@@ -467,6 +467,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MResumePoint *entryResumePoint() const {
         return entryResumePoint_;
     }
+    void setEntryResumePoint(MResumePoint *rp) {
+        entryResumePoint_ = rp;
+    }
     void clearEntryResumePoint() {
         entryResumePoint_ = nullptr;
     }
@@ -615,6 +618,8 @@ class MIRGraph
 
     void addBlock(MBasicBlock *block);
     void insertBlockAfter(MBasicBlock *at, MBasicBlock *block);
+
+    void renumberBlocksAfter(MBasicBlock *at);
 
     void unmarkBlocks();
 

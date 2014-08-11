@@ -224,8 +224,6 @@ js::DumpIonScriptCounts(Sprinter *sp, jit::IonScriptCounts *ionCounts)
     Sprint(sp, "IonScript [%lu blocks]:\n", ionCounts->numBlocks());
     for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
         const jit::IonBlockCounts &block = ionCounts->block(i);
-        if (block.hitCount() < 10)
-            continue;
         Sprint(sp, "BB #%lu [%05u]", block.id(), block.offset());
         for (size_t j = 0; j < block.numSuccessors(); j++)
             Sprint(sp, " -> #%lu", block.successor(j));

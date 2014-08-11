@@ -535,7 +535,7 @@ this.PlacesUtils = {
         return writer.value;
       }
       case this.TYPE_X_MOZ_URL: {
-        function gatherDataUrl(bNode) {
+        let gatherDataUrl = function (bNode) {
           if (isLivemark(bNode)) {
             return gatherLivemarkUrl(bNode) + NEWLINE + bNode.title;
           }
@@ -544,7 +544,7 @@ this.PlacesUtils = {
             return (aOverrideURI || bNode.uri) + NEWLINE + bNode.title;
           // ignore containers and separators - items without valid URIs
           return "";
-        }
+        };
 
         let [node, shouldClose] = convertNode(aNode);
         let dataUrl = gatherDataUrl(node);
@@ -554,15 +554,15 @@ this.PlacesUtils = {
         return dataUrl;
       }
       case this.TYPE_HTML: {
-        function gatherDataHtml(bNode) {
-          function htmlEscape(s) {
+        let gatherDataHtml = function (bNode) {
+          let htmlEscape = function (s) {
             s = s.replace(/&/g, "&amp;");
             s = s.replace(/>/g, "&gt;");
             s = s.replace(/</g, "&lt;");
             s = s.replace(/"/g, "&quot;");
             s = s.replace(/'/g, "&apos;");
             return s;
-          }
+          };
           // escape out potential HTML in the title
           let escapedTitle = bNode.title ? htmlEscape(bNode.title) : "";
 

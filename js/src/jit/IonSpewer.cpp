@@ -248,6 +248,7 @@ jit::CheckLogging()
             "  pools      Literal Pools (ARM only for now)\n"
             "  cacheflush Instruction Cache flushes (ARM only for now)\n"
             "  range      Range Analysis\n"
+            "  unroll     Loop unrolling\n"
             "  logs       C1 and JSON visualization logging\n"
             "  all        Everything\n"
             "\n"
@@ -277,6 +278,8 @@ jit::CheckLogging()
         EnableChannel(IonSpew_GVN);
     if (ContainsFlag(env, "range"))
         EnableChannel(IonSpew_Range);
+    if (ContainsFlag(env, "unroll"))
+        EnableChannel(IonSpew_Unrolling);
     if (ContainsFlag(env, "licm"))
         EnableChannel(IonSpew_LICM);
     if (ContainsFlag(env, "regalloc"))

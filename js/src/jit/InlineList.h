@@ -23,6 +23,8 @@ class InlineForwardListNode
     explicit InlineForwardListNode(InlineForwardListNode<T> *n) : next(n)
     { }
 
+    InlineForwardListNode(const InlineForwardListNode<T> &) MOZ_DELETE;
+
   protected:
     friend class InlineForwardList<T>;
     friend class InlineForwardListIterator<T>;
@@ -217,6 +219,8 @@ class InlineListNode : public InlineForwardListNode<T>
       : InlineForwardListNode<T>(n),
         prev(p)
     { }
+
+    InlineListNode(const InlineListNode<T> &) MOZ_DELETE;
 
   protected:
     friend class InlineList<T>;

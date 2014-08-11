@@ -317,7 +317,7 @@ static void AddTransformFunctions(nsCSSValueList* aList,
 }
 
 static TimingFunction
-ToTimingFunction(css::ComputedTimingFunction& aCTF)
+ToTimingFunction(ComputedTimingFunction& aCTF)
 {
   if (aCTF.GetType() == nsTimingFunction::Function) {
     const nsSMILKeySpline* spline = aCTF.GetFunction();
@@ -331,72 +331,82 @@ ToTimingFunction(css::ComputedTimingFunction& aCTF)
 
 static void
 AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                        mozilla::ElementAnimation* ea, Layer* aLayer,
+                        AnimationPlayer* aPlayer, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
-  NS_ASSERTION(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
+  MOZ_ASSERT(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
+  MOZ_ASSERT(aPlayer->GetSource(),
+             "Should not be adding an animation for a player without"
+             " an animation");
   nsStyleContext* styleContext = aFrame->StyleContext();
   nsPresContext* presContext = aFrame->PresContext();
   nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
 
-  mozilla::layers::Animation* animation =
+  layers::Animation* animation =
     aPending ?
     aLayer->AddAnimationForNextTransaction() :
     aLayer->AddAnimation();
 
-  animation->startTime() = ea->mStartTime + ea->mTiming.mDelay;
-  animation->duration() = ea->mTiming.mIterationDuration;
-  animation->iterationCount() = ea->mTiming.mIterationCount;
-  animation->direction() = ea->mTiming.mDirection;
+  const AnimationTiming& timing = aPlayer->GetSource()->Timing();
+  animation->startTime() = aPlayer->mStartTime + timing.mDelay;
+  animation->duration() = timing.mIterationDuration;
+  animation->iterationCount() = timing.mIterationCount;
+  animation->direction() = timing.mDirection;
   animation->property() = aProperty;
   animation->data() = aData;
 
-  for (uint32_t propIdx = 0; propIdx < ea->mProperties.Length(); propIdx++) {
-    AnimationProperty* property = &ea->mProperties[propIdx];
+  dom::Animation* anim = aPlayer->GetSource();
+  for (size_t propIdx = 0;
+       propIdx < anim->Properties().Length();
+       propIdx++) {
+    AnimationProperty& property = anim->Properties()[propIdx];
 
-    if (aProperty != property->mProperty) {
+    if (aProperty != property.mProperty) {
       continue;
     }
 
-    for (uint32_t segIdx = 0; segIdx < property->mSegments.Length(); segIdx++) {
-      AnimationPropertySegment* segment = &property->mSegments[segIdx];
+    for (uint32_t segIdx = 0; segIdx < property.mSegments.Length(); segIdx++) {
+      AnimationPropertySegment& segment = property.mSegments[segIdx];
 
       AnimationSegment* animSegment = animation->segments().AppendElement();
       if (aProperty == eCSSProperty_transform) {
         animSegment->startState() = InfallibleTArray<TransformFunction>();
         animSegment->endState() = InfallibleTArray<TransformFunction>();
 
-        nsCSSValueSharedList* list = segment->mFromValue.GetCSSValueSharedListValue();
+        nsCSSValueSharedList* list =
+          segment.mFromValue.GetCSSValueSharedListValue();
         AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
                               animSegment->startState().get_ArrayOfTransformFunction());
 
-        list = segment->mToValue.GetCSSValueSharedListValue();
+        list = segment.mToValue.GetCSSValueSharedListValue();
         AddTransformFunctions(list->mHead, styleContext, presContext, bounds,
                               animSegment->endState().get_ArrayOfTransformFunction());
       } else if (aProperty == eCSSProperty_opacity) {
-        animSegment->startState() = segment->mFromValue.GetFloatValue();
-        animSegment->endState() = segment->mToValue.GetFloatValue();
+        animSegment->startState() = segment.mFromValue.GetFloatValue();
+        animSegment->endState() = segment.mToValue.GetFloatValue();
       }
 
-      animSegment->startPortion() = segment->mFromKey;
-      animSegment->endPortion() = segment->mToKey;
-      animSegment->sampleFn() = ToTimingFunction(segment->mTimingFunction);
+      animSegment->startPortion() = segment.mFromKey;
+      animSegment->endPortion() = segment.mToKey;
+      animSegment->sampleFn() = ToTimingFunction(segment.mTimingFunction);
     }
   }
 }
 
 static void
 AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                         ElementAnimationPtrArray& aAnimations,
+                         AnimationPlayerPtrArray& aPlayers,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending) {
-  for (uint32_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
-    mozilla::ElementAnimation* anim = aAnimations[animIdx];
-    if (!(anim->HasAnimationOfProperty(aProperty) && anim->IsRunning())) {
+  for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
+    AnimationPlayer* player = aPlayers[playerIdx];
+    dom::Animation* anim = player->GetSource();
+    if (!(anim && anim->HasAnimationOfProperty(aProperty) &&
+          player->IsRunning())) {
       continue;
     }
-    AddAnimationForProperty(aFrame, aProperty, anim, aLayer, aData, aPending);
-    anim->mIsRunningOnCompositor = true;
+    AddAnimationForProperty(aFrame, aProperty, player, aLayer, aData, aPending);
+    player->mIsRunningOnCompositor = true;
   }
 }
 
@@ -428,9 +438,9 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   if (!content) {
     return;
   }
-  ElementAnimationCollection* transitions =
+  AnimationPlayerCollection* transitions =
     nsTransitionManager::GetAnimationsForCompositor(content, aProperty);
-  ElementAnimationCollection* animations =
+  AnimationPlayerCollection* animations =
     nsAnimationManager::GetAnimationsForCompositor(content, aProperty);
 
   if (!animations && !transitions) {
@@ -489,13 +499,13 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   }
 
   if (transitions) {
-    AddAnimationsForProperty(aFrame, aProperty, transitions->mAnimations,
+    AddAnimationsForProperty(aFrame, aProperty, transitions->mPlayers,
                              aLayer, data, pending);
     aLayer->SetAnimationGeneration(transitions->mAnimationGeneration);
   }
 
   if (animations) {
-    AddAnimationsForProperty(aFrame, aProperty, animations->mAnimations,
+    AddAnimationsForProperty(aFrame, aProperty, animations->mPlayers,
                              aLayer, data, pending);
     aLayer->SetAnimationGeneration(animations->mAnimationGeneration);
   }
@@ -4697,8 +4707,8 @@ nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
   if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
     nsCString message;
     message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for opacity animation");
-    ElementAnimationCollection::LogAsyncAnimationFailure(message,
-                                                         Frame()->GetContent());
+    AnimationPlayerCollection::LogAsyncAnimationFailure(message,
+                                                        Frame()->GetContent());
   }
   return false;
 }
@@ -4730,8 +4740,8 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     if (aLogAnimations) {
       nsCString message;
       message.AppendLiteral("Performance warning: Async animation disabled because frame was not marked active for transform animation");
-      ElementAnimationCollection::LogAsyncAnimationFailure(message,
-                                                           aFrame->GetContent());
+      AnimationPlayerCollection::LogAsyncAnimationFailure(message,
+                                                          aFrame->GetContent());
     }
     return false;
   }
@@ -4757,8 +4767,8 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     message.AppendLiteral(", ");
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
     message.Append(')');
-    ElementAnimationCollection::LogAsyncAnimationFailure(message,
-                                                         aFrame->GetContent());
+    AnimationPlayerCollection::LogAsyncAnimationFailure(message,
+                                                        aFrame->GetContent());
   }
   return false;
 }
