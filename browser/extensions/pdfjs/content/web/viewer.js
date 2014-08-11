@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* globals PDFJS, PDFBug, FirefoxCom, Stats, Cache, PDFFindBar, CustomStyle,
-           PDFFindController, ProgressBar, TextLayerBuilder, DownloadManager,
-           getFileName, scrollIntoView, getPDFFileNameFromURL, PDFHistory,
-           Preferences, SidebarView, ViewHistory, PageView, ThumbnailView, URL,
-           noContextMenuHandler, SecondaryToolbar, PasswordPrompt,
-           PresentationMode, HandTool, Promise, DocumentProperties,
-           DocumentOutlineView, DocumentAttachmentsView, OverlayManager */
+/* globals PDFJS, PDFBug, FirefoxCom, Stats, Cache, ProgressBar,
+           DownloadManager, getFileName, scrollIntoView, getPDFFileNameFromURL,
+           PDFHistory, Preferences, SidebarView, ViewHistory, PageView,
+           ThumbnailView, URL, noContextMenuHandler, SecondaryToolbar,
+           PasswordPrompt, PresentationMode, HandTool, Promise,
+           DocumentProperties, DocumentOutlineView, DocumentAttachmentsView,
+           OverlayManager, PDFFindController, PDFFindBar */
 
 'use strict';
 
@@ -688,40 +688,31 @@ var ViewHistory = (function ViewHistoryClosure() {
 
 
 /**
- * Creates a "search bar" given set of DOM elements
- * that act as controls for searching, or for setting
- * search preferences in the UI. This object also sets
- * up the appropriate events for the controls. Actual
- * searching is done by PDFFindController
+ * Creates a "search bar" given a set of DOM elements that act as controls
+ * for searching or for setting search preferences in the UI. This object
+ * also sets up the appropriate events for the controls. Actual searching
+ * is done by PDFFindController.
  */
-var PDFFindBar = {
-  opened: false,
-  bar: null,
-  toggleButton: null,
-  findField: null,
-  highlightAll: null,
-  caseSensitive: null,
-  findMsg: null,
-  findStatusIcon: null,
-  findPreviousButton: null,
-  findNextButton: null,
+var PDFFindBar = (function PDFFindBarClosure() {
+  function PDFFindBar(options) {
+    this.opened = false;
+    this.bar = options.bar || null;
+    this.toggleButton = options.toggleButton || null;
+    this.findField = options.findField || null;
+    this.highlightAll = options.highlightAllCheckbox || null;
+    this.caseSensitive = options.caseSensitiveCheckbox || null;
+    this.findMsg = options.findMsg || null;
+    this.findStatusIcon = options.findStatusIcon || null;
+    this.findPreviousButton = options.findPreviousButton || null;
+    this.findNextButton = options.findNextButton || null;
+    this.findController = options.findController || null;
 
-  initialize: function(options) {
-    if(typeof PDFFindController === 'undefined' || PDFFindController === null) {
-      throw 'PDFFindBar cannot be initialized ' +
-            'without a PDFFindController instance.';
+    if (this.findController === null) {
+      throw new Error('PDFFindBar cannot be used without a ' +
+                      'PDFFindController instance.');
     }
 
-    this.bar = options.bar;
-    this.toggleButton = options.toggleButton;
-    this.findField = options.findField;
-    this.highlightAll = options.highlightAllCheckbox;
-    this.caseSensitive = options.caseSensitiveCheckbox;
-    this.findMsg = options.findMsg;
-    this.findStatusIcon = options.findStatusIcon;
-    this.findPreviousButton = options.findPreviousButton;
-    this.findNextButton = options.findNextButton;
-
+    // Add event listeners to the DOM elements.
     var self = this;
     this.toggleButton.addEventListener('click', function() {
       self.toggle();
@@ -744,9 +735,9 @@ var PDFFindBar = {
       }
     });
 
-    this.findPreviousButton.addEventListener('click',
-      function() { self.dispatchEvent('again', true); }
-    );
+    this.findPreviousButton.addEventListener('click', function() {
+      self.dispatchEvent('again', true);
+    });
 
     this.findNextButton.addEventListener('click', function() {
       self.dispatchEvent('again', false);
@@ -759,139 +750,132 @@ var PDFFindBar = {
     this.caseSensitive.addEventListener('click', function() {
       self.dispatchEvent('casesensitivitychange');
     });
-  },
-
-  dispatchEvent: function(aType, aFindPrevious) {
-    var event = document.createEvent('CustomEvent');
-    event.initCustomEvent('find' + aType, true, true, {
-      query: this.findField.value,
-      caseSensitive: this.caseSensitive.checked,
-      highlightAll: this.highlightAll.checked,
-      findPrevious: aFindPrevious
-    });
-    return window.dispatchEvent(event);
-  },
-
-  updateUIState: function(state, previous) {
-    var notFound = false;
-    var findMsg = '';
-    var status = '';
-
-    switch (state) {
-      case FindStates.FIND_FOUND:
-        break;
-
-      case FindStates.FIND_PENDING:
-        status = 'pending';
-        break;
-
-      case FindStates.FIND_NOTFOUND:
-        findMsg = mozL10n.get('find_not_found', null, 'Phrase not found');
-        notFound = true;
-        break;
-
-      case FindStates.FIND_WRAPPED:
-        if (previous) {
-          findMsg = mozL10n.get('find_reached_top', null,
-                      'Reached top of document, continued from bottom');
-        } else {
-          findMsg = mozL10n.get('find_reached_bottom', null,
-                                'Reached end of document, continued from top');
-        }
-        break;
-    }
-
-    if (notFound) {
-      this.findField.classList.add('notFound');
-    } else {
-      this.findField.classList.remove('notFound');
-    }
-
-    this.findField.setAttribute('data-status', status);
-    this.findMsg.textContent = findMsg;
-  },
-
-  open: function() {
-    if (!this.opened) {
-      this.opened = true;
-      this.toggleButton.classList.add('toggled');
-      this.bar.classList.remove('hidden');
-    }
-
-    this.findField.select();
-    this.findField.focus();
-  },
-
-  close: function() {
-    if (!this.opened) {
-      return;
-    }
-    this.opened = false;
-    this.toggleButton.classList.remove('toggled');
-    this.bar.classList.add('hidden');
-
-    PDFFindController.active = false;
-  },
-
-  toggle: function() {
-    if (this.opened) {
-      this.close();
-    } else {
-      this.open();
-    }
   }
-};
+
+  PDFFindBar.prototype = {
+    dispatchEvent: function PDFFindBar_dispatchEvent(type, findPrev) {
+      var event = document.createEvent('CustomEvent');
+      event.initCustomEvent('find' + type, true, true, {
+        query: this.findField.value,
+        caseSensitive: this.caseSensitive.checked,
+        highlightAll: this.highlightAll.checked,
+        findPrevious: findPrev
+      });
+      return window.dispatchEvent(event);
+    },
+
+    updateUIState: function PDFFindBar_updateUIState(state, previous) {
+      var notFound = false;
+      var findMsg = '';
+      var status = '';
+
+      switch (state) {
+        case FindStates.FIND_FOUND:
+          break;
+
+        case FindStates.FIND_PENDING:
+          status = 'pending';
+          break;
+
+        case FindStates.FIND_NOTFOUND:
+          findMsg = mozL10n.get('find_not_found', null, 'Phrase not found');
+          notFound = true;
+          break;
+
+        case FindStates.FIND_WRAPPED:
+          if (previous) {
+            findMsg = mozL10n.get('find_reached_top', null,
+              'Reached top of document, continued from bottom');
+          } else {
+            findMsg = mozL10n.get('find_reached_bottom', null,
+              'Reached end of document, continued from top');
+          }
+          break;
+      }
+
+      if (notFound) {
+        this.findField.classList.add('notFound');
+      } else {
+        this.findField.classList.remove('notFound');
+      }
+
+      this.findField.setAttribute('data-status', status);
+      this.findMsg.textContent = findMsg;
+    },
+
+    open: function PDFFindBar_open() {
+      if (!this.opened) {
+        this.opened = true;
+        this.toggleButton.classList.add('toggled');
+        this.bar.classList.remove('hidden');
+      }
+      this.findField.select();
+      this.findField.focus();
+    },
+
+    close: function PDFFindBar_close() {
+      if (!this.opened) {
+        return;
+      }
+      this.opened = false;
+      this.toggleButton.classList.remove('toggled');
+      this.bar.classList.add('hidden');
+      this.findController.active = false;
+    },
+
+    toggle: function PDFFindBar_toggle() {
+      if (this.opened) {
+        this.close();
+      } else {
+        this.open();
+      }
+    }
+  };
+  return PDFFindBar;
+})();
 
 
 
 /**
- * Provides a "search" or "find" functionality for the PDF.
+ * Provides "search" or "find" functionality for the PDF.
  * This object actually performs the search for a given string.
  */
-
-var PDFFindController = {
-  startedTextExtraction: false,
-  extractTextPromises: [],
-  pendingFindMatches: {},
-  active: false, // If active, find results will be highlighted.
-  pageContents: [], // Stores the text for each page.
-  pageMatches: [],
-  selected: { // Currently selected match.
-    pageIdx: -1,
-    matchIdx: -1
-  },
-  offset: { // Where the find algorithm currently is in the document.
-    pageIdx: null,
-    matchIdx: null
-  },
-  resumePageIdx: null,
-  state: null,
-  dirtyMatch: false,
-  findTimeout: null,
-  pdfPageSource: null,
-  integratedFind: false,
-  charactersToNormalize: {
-    '\u2018': '\'', // Left single quotation mark
-    '\u2019': '\'', // Right single quotation mark
-    '\u201A': '\'', // Single low-9 quotation mark
-    '\u201B': '\'', // Single high-reversed-9 quotation mark
-    '\u201C': '"', // Left double quotation mark
-    '\u201D': '"', // Right double quotation mark
-    '\u201E': '"', // Double low-9 quotation mark
-    '\u201F': '"', // Double high-reversed-9 quotation mark
-    '\u00BC': '1/4', // Vulgar fraction one quarter
-    '\u00BD': '1/2', // Vulgar fraction one half
-    '\u00BE': '3/4' // Vulgar fraction three quarters
-  },
-
-  initialize: function(options) {
-    if (typeof PDFFindBar === 'undefined' || PDFFindBar === null) {
-      throw 'PDFFindController cannot be initialized ' +
-            'without a PDFFindBar instance';
-    }
-
-    this.pdfPageSource = options.pdfPageSource;
-    this.integratedFind = options.integratedFind;
+var PDFFindController = (function PDFFindControllerClosure() {
+  function PDFFindController(options) {
+    this.startedTextExtraction = false;
+    this.extractTextPromises = [];
+    this.pendingFindMatches = {};
+    this.active = false; // If active, find results will be highlighted.
+    this.pageContents = []; // Stores the text for each page.
+    this.pageMatches = [];
+    this.selected = { // Currently selected match.
+      pageIdx: -1,
+      matchIdx: -1
+    };
+    this.offset = { // Where the find algorithm currently is in the document.
+      pageIdx: null,
+      matchIdx: null
+    };
+    this.resumePageIdx = null;
+    this.state = null;
+    this.dirtyMatch = false;
+    this.findTimeout = null;
+    this.pdfPageSource = options.pdfPageSource || null;
+    this.integratedFind = options.integratedFind || false;
+    this.charactersToNormalize = {
+      '\u2018': '\'', // Left single quotation mark
+      '\u2019': '\'', // Right single quotation mark
+      '\u201A': '\'', // Single low-9 quotation mark
+      '\u201B': '\'', // Single high-reversed-9 quotation mark
+      '\u201C': '"', // Left double quotation mark
+      '\u201D': '"', // Right double quotation mark
+      '\u201E': '"', // Double low-9 quotation mark
+      '\u201F': '"', // Double high-reversed-9 quotation mark
+      '\u00BC': '1/4', // Vulgar fraction one quarter
+      '\u00BD': '1/2', // Vulgar fraction one half
+      '\u00BE': '3/4' // Vulgar fraction three quarters
+    };
+    this.findBar = options.findBar || null;
 
     // Compile the regular expression for text normalization once
     var replace = Object.keys(this.charactersToNormalize).join('');
@@ -912,279 +896,294 @@ var PDFFindController = {
     for (var i = 0, len = events.length; i < len; i++) {
       window.addEventListener(events[i], this.handleEvent);
     }
-  },
+  }
 
-  reset: function pdfFindControllerReset() {
-    this.startedTextExtraction = false;
-    this.extractTextPromises = [];
-    this.active = false;
-  },
+  PDFFindController.prototype = {
+    setFindBar: function PDFFindController_setFindBar(findBar) {
+      this.findBar = findBar;
+    },
 
-  normalize: function pdfFindControllerNormalize(text) {
-    return text.replace(this.normalizationRegex, function (ch) {
-      return PDFFindController.charactersToNormalize[ch];
-    });
-  },
+    reset: function PDFFindController_reset() {
+      this.startedTextExtraction = false;
+      this.extractTextPromises = [];
+      this.active = false;
+    },
 
-  calcFindMatch: function(pageIndex) {
-    var pageContent = this.normalize(this.pageContents[pageIndex]);
-    var query = this.normalize(this.state.query);
-    var caseSensitive = this.state.caseSensitive;
-    var queryLen = query.length;
-
-    if (queryLen === 0) {
-      // Do nothing: the matches should be wiped out already.
-      return;
-    }
-
-    if (!caseSensitive) {
-      pageContent = pageContent.toLowerCase();
-      query = query.toLowerCase();
-    }
-
-    var matches = [];
-    var matchIdx = -queryLen;
-    while (true) {
-      matchIdx = pageContent.indexOf(query, matchIdx + queryLen);
-      if (matchIdx === -1) {
-        break;
-      }
-      matches.push(matchIdx);
-    }
-    this.pageMatches[pageIndex] = matches;
-    this.updatePage(pageIndex);
-    if (this.resumePageIdx === pageIndex) {
-      this.resumePageIdx = null;
-      this.nextPageMatch();
-    }
-  },
-
-  extractText: function() {
-    if (this.startedTextExtraction) {
-      return;
-    }
-    this.startedTextExtraction = true;
-
-    this.pageContents = [];
-    var extractTextPromisesResolves = [];
-    var numPages = this.pdfPageSource.pdfDocument.numPages;
-    for (var i = 0; i < numPages; i++) {
-      this.extractTextPromises.push(new Promise(function (resolve) {
-        extractTextPromisesResolves.push(resolve);
-      }));
-    }
-
-    var self = this;
-    function extractPageText(pageIndex) {
-      self.pdfPageSource.pages[pageIndex].getTextContent().then(
-        function textContentResolved(textContent) {
-          var textItems = textContent.items;
-          var str = [];
-
-          for (var i = 0, len = textItems.length; i < len; i++) {
-            str.push(textItems[i].str);
-          }
-
-          // Store the pageContent as a string.
-          self.pageContents.push(str.join(''));
-
-          extractTextPromisesResolves[pageIndex](pageIndex);
-          if ((pageIndex + 1) < self.pdfPageSource.pages.length) {
-            extractPageText(pageIndex + 1);
-          }
-        }
-      );
-    }
-    extractPageText(0);
-  },
-
-  handleEvent: function(e) {
-    if (this.state === null || e.type !== 'findagain') {
-      this.dirtyMatch = true;
-    }
-    this.state = e.detail;
-    this.updateUIState(FindStates.FIND_PENDING);
-
-    this.firstPagePromise.then(function() {
-      this.extractText();
-
-      clearTimeout(this.findTimeout);
-      if (e.type === 'find') {
-        // Only trigger the find action after 250ms of silence.
-        this.findTimeout = setTimeout(this.nextMatch.bind(this), 250);
-      } else {
-        this.nextMatch();
-      }
-    }.bind(this));
-  },
-
-  updatePage: function(idx) {
-    var page = this.pdfPageSource.pages[idx];
-
-    if (this.selected.pageIdx === idx) {
-      // If the page is selected, scroll the page into view, which triggers
-      // rendering the page, which adds the textLayer. Once the textLayer is
-      // build, it will scroll onto the selected match.
-      page.scrollIntoView();
-    }
-
-    if (page.textLayer) {
-      page.textLayer.updateMatches();
-    }
-  },
-
-  nextMatch: function() {
-    var previous = this.state.findPrevious;
-    var currentPageIndex = this.pdfPageSource.page - 1;
-    var numPages = this.pdfPageSource.pages.length;
-
-    this.active = true;
-
-    if (this.dirtyMatch) {
-      // Need to recalculate the matches, reset everything.
-      this.dirtyMatch = false;
-      this.selected.pageIdx = this.selected.matchIdx = -1;
-      this.offset.pageIdx = currentPageIndex;
-      this.offset.matchIdx = null;
-      this.hadMatch = false;
-      this.resumePageIdx = null;
-      this.pageMatches = [];
+    normalize: function PDFFindController_normalize(text) {
       var self = this;
+      return text.replace(this.normalizationRegex, function (ch) {
+        return self.charactersToNormalize[ch];
+      });
+    },
 
-      for (var i = 0; i < numPages; i++) {
-        // Wipe out any previous highlighted matches.
-        this.updatePage(i);
+    calcFindMatch: function PDFFindController_calcFindMatch(pageIndex) {
+      var pageContent = this.normalize(this.pageContents[pageIndex]);
+      var query = this.normalize(this.state.query);
+      var caseSensitive = this.state.caseSensitive;
+      var queryLen = query.length;
 
-        // As soon as the text is extracted start finding the matches.
-        if (!(i in this.pendingFindMatches)) {
-          this.pendingFindMatches[i] = true;
-          this.extractTextPromises[i].then(function(pageIdx) {
-            delete self.pendingFindMatches[pageIdx];
-            self.calcFindMatch(pageIdx);
-          });
-        }
+      if (queryLen === 0) {
+        return; // Do nothing: the matches should be wiped out already.
       }
-    }
 
-    // If there's no query there's no point in searching.
-    if (this.state.query === '') {
-      this.updateUIState(FindStates.FIND_FOUND);
-      return;
-    }
+      if (!caseSensitive) {
+        pageContent = pageContent.toLowerCase();
+        query = query.toLowerCase();
+      }
 
-    // If we're waiting on a page, we return since we can't do anything else.
-    if (this.resumePageIdx) {
-      return;
-    }
+      var matches = [];
+      var matchIdx = -queryLen;
+      while (true) {
+        matchIdx = pageContent.indexOf(query, matchIdx + queryLen);
+        if (matchIdx === -1) {
+          break;
+        }
+        matches.push(matchIdx);
+      }
+      this.pageMatches[pageIndex] = matches;
+      this.updatePage(pageIndex);
+      if (this.resumePageIdx === pageIndex) {
+        this.resumePageIdx = null;
+        this.nextPageMatch();
+      }
+    },
 
-    var offset = this.offset;
-    // If there's already a matchIdx that means we are iterating through a
-    // page's matches.
-    if (offset.matchIdx !== null) {
-      var numPageMatches = this.pageMatches[offset.pageIdx].length;
-      if ((!previous && offset.matchIdx + 1 < numPageMatches) ||
-          (previous && offset.matchIdx > 0)) {
-        // The simple case; we just have advance the matchIdx to select
-        // the next match on the page.
-        this.hadMatch = true;
-        offset.matchIdx = (previous ? offset.matchIdx - 1 :
-                                      offset.matchIdx + 1);
-        this.updateMatch(true);
+    extractText: function PDFFindController_extractText() {
+      if (this.startedTextExtraction) {
         return;
       }
-      // We went beyond the current page's matches, so we advance to
-      // the next page.
-      this.advanceOffsetPage(previous);
-    }
-    // Start searching through the page.
-    this.nextPageMatch();
-  },
+      this.startedTextExtraction = true;
 
-  matchesReady: function(matches) {
-    var offset = this.offset;
-    var numMatches = matches.length;
-    var previous = this.state.findPrevious;
-    if (numMatches) {
-      // There were matches for the page, so initialize the matchIdx.
-      this.hadMatch = true;
-      offset.matchIdx = (previous ? numMatches - 1 : 0);
-      this.updateMatch(true);
-      return true;
-    } else {
-      // No matches, so attempt to search the next page.
-      this.advanceOffsetPage(previous);
-      if (offset.wrapped) {
-        offset.matchIdx = null;
-        if (!this.hadMatch) {
-          // No point in wrapping, there were no matches.
-          this.updateMatch(false);
-          // while matches were not found, searching for a page 
-          // with matches should nevertheless halt.
-          return true;
+      this.pageContents = [];
+      var extractTextPromisesResolves = [];
+      var numPages = this.pdfPageSource.pdfDocument.numPages;
+      for (var i = 0; i < numPages; i++) {
+        this.extractTextPromises.push(new Promise(function (resolve) {
+          extractTextPromisesResolves.push(resolve);
+        }));
+      }
+
+      var self = this;
+      function extractPageText(pageIndex) {
+        self.pdfPageSource.pages[pageIndex].getTextContent().then(
+          function textContentResolved(textContent) {
+            var textItems = textContent.items;
+            var str = [];
+
+            for (var i = 0, len = textItems.length; i < len; i++) {
+              str.push(textItems[i].str);
+            }
+
+            // Store the pageContent as a string.
+            self.pageContents.push(str.join(''));
+
+            extractTextPromisesResolves[pageIndex](pageIndex);
+            if ((pageIndex + 1) < self.pdfPageSource.pages.length) {
+              extractPageText(pageIndex + 1);
+            }
+          }
+        );
+      }
+      extractPageText(0);
+    },
+
+    handleEvent: function PDFFindController_handleEvent(e) {
+      if (this.state === null || e.type !== 'findagain') {
+        this.dirtyMatch = true;
+      }
+      this.state = e.detail;
+      this.updateUIState(FindStates.FIND_PENDING);
+
+      this.firstPagePromise.then(function() {
+        this.extractText();
+
+        clearTimeout(this.findTimeout);
+        if (e.type === 'find') {
+          // Only trigger the find action after 250ms of silence.
+          this.findTimeout = setTimeout(this.nextMatch.bind(this), 250);
+        } else {
+          this.nextMatch();
+        }
+      }.bind(this));
+    },
+
+    updatePage: function PDFFindController_updatePage(index) {
+      var page = this.pdfPageSource.pages[index];
+
+      if (this.selected.pageIdx === index) {
+        // If the page is selected, scroll the page into view, which triggers
+        // rendering the page, which adds the textLayer. Once the textLayer is
+        // build, it will scroll onto the selected match.
+        page.scrollIntoView();
+      }
+
+      if (page.textLayer) {
+        page.textLayer.updateMatches();
+      }
+    },
+
+    nextMatch: function PDFFindController_nextMatch() {
+      var previous = this.state.findPrevious;
+      var currentPageIndex = this.pdfPageSource.page - 1;
+      var numPages = this.pdfPageSource.pages.length;
+
+      this.active = true;
+
+      if (this.dirtyMatch) {
+        // Need to recalculate the matches, reset everything.
+        this.dirtyMatch = false;
+        this.selected.pageIdx = this.selected.matchIdx = -1;
+        this.offset.pageIdx = currentPageIndex;
+        this.offset.matchIdx = null;
+        this.hadMatch = false;
+        this.resumePageIdx = null;
+        this.pageMatches = [];
+        var self = this;
+
+        for (var i = 0; i < numPages; i++) {
+          // Wipe out any previous highlighted matches.
+          this.updatePage(i);
+
+          // As soon as the text is extracted start finding the matches.
+          if (!(i in this.pendingFindMatches)) {
+            this.pendingFindMatches[i] = true;
+            this.extractTextPromises[i].then(function(pageIdx) {
+              delete self.pendingFindMatches[pageIdx];
+              self.calcFindMatch(pageIdx);
+            });
+          }
         }
       }
-      // Matches were not found (and searching is not done).
-      return false;
-    }
-  },
 
-  nextPageMatch: function() {
-    if (this.resumePageIdx !== null) {
-      console.error('There can only be one pending page.');
-    }
-    do {
-      var pageIdx = this.offset.pageIdx;
-      var matches = this.pageMatches[pageIdx];
-      if (!matches) {
-        // The matches don't exist yet for processing by "matchesReady",
-        // so set a resume point for when they do exist.
-        this.resumePageIdx = pageIdx;
-        break;
+      // If there's no query there's no point in searching.
+      if (this.state.query === '') {
+        this.updateUIState(FindStates.FIND_FOUND);
+        return;
       }
-    } while (!this.matchesReady(matches));
-  },
 
-  advanceOffsetPage: function(previous) {
-    var offset = this.offset;
-    var numPages = this.extractTextPromises.length;
-    offset.pageIdx = (previous ? offset.pageIdx - 1 : offset.pageIdx + 1);
-    offset.matchIdx = null;
-    if (offset.pageIdx >= numPages || offset.pageIdx < 0) {
-      offset.pageIdx = (previous ? numPages - 1 : 0);
-      offset.wrapped = true;
-      return;
-    }
-  },
-
-  updateMatch: function(found) {
-    var state = FindStates.FIND_NOTFOUND;
-    var wrapped = this.offset.wrapped;
-    this.offset.wrapped = false;
-    if (found) {
-      var previousPage = this.selected.pageIdx;
-      this.selected.pageIdx = this.offset.pageIdx;
-      this.selected.matchIdx = this.offset.matchIdx;
-      state = (wrapped ? FindStates.FIND_WRAPPED : FindStates.FIND_FOUND);
-      // Update the currently selected page to wipe out any selected matches.
-      if (previousPage !== -1 && previousPage !== this.selected.pageIdx) {
-        this.updatePage(previousPage);
+      // If we're waiting on a page, we return since we can't do anything else.
+      if (this.resumePageIdx) {
+        return;
       }
-    }
-    this.updateUIState(state, this.state.findPrevious);
-    if (this.selected.pageIdx !== -1) {
-      this.updatePage(this.selected.pageIdx, true);
-    }
-  },
 
-  updateUIState: function(state, previous) {
-    if (this.integratedFind) {
-      FirefoxCom.request('updateFindControlState',
-                         { result: state, findPrevious: previous });
-      return;
+      var offset = this.offset;
+      // If there's already a matchIdx that means we are iterating through a
+      // page's matches.
+      if (offset.matchIdx !== null) {
+        var numPageMatches = this.pageMatches[offset.pageIdx].length;
+        if ((!previous && offset.matchIdx + 1 < numPageMatches) ||
+            (previous && offset.matchIdx > 0)) {
+          // The simple case; we just have advance the matchIdx to select
+          // the next match on the page.
+          this.hadMatch = true;
+          offset.matchIdx = (previous ? offset.matchIdx - 1 :
+                                        offset.matchIdx + 1);
+          this.updateMatch(true);
+          return;
+        }
+        // We went beyond the current page's matches, so we advance to
+        // the next page.
+        this.advanceOffsetPage(previous);
+      }
+      // Start searching through the page.
+      this.nextPageMatch();
+    },
+
+    matchesReady: function PDFFindController_matchesReady(matches) {
+      var offset = this.offset;
+      var numMatches = matches.length;
+      var previous = this.state.findPrevious;
+
+      if (numMatches) {
+        // There were matches for the page, so initialize the matchIdx.
+        this.hadMatch = true;
+        offset.matchIdx = (previous ? numMatches - 1 : 0);
+        this.updateMatch(true);
+        return true;
+      } else {
+        // No matches, so attempt to search the next page.
+        this.advanceOffsetPage(previous);
+        if (offset.wrapped) {
+          offset.matchIdx = null;
+          if (!this.hadMatch) {
+            // No point in wrapping, there were no matches.
+            this.updateMatch(false);
+            // while matches were not found, searching for a page 
+            // with matches should nevertheless halt.
+            return true;
+          }
+        }
+        // Matches were not found (and searching is not done).
+        return false;
+      }
+    },
+
+    nextPageMatch: function PDFFindController_nextPageMatch() {
+      if (this.resumePageIdx !== null) {
+        console.error('There can only be one pending page.');
+      }
+      do {
+        var pageIdx = this.offset.pageIdx;
+        var matches = this.pageMatches[pageIdx];
+        if (!matches) {
+          // The matches don't exist yet for processing by "matchesReady",
+          // so set a resume point for when they do exist.
+          this.resumePageIdx = pageIdx;
+          break;
+        }
+      } while (!this.matchesReady(matches));
+    },
+
+    advanceOffsetPage: function PDFFindController_advanceOffsetPage(previous) {
+      var offset = this.offset;
+      var numPages = this.extractTextPromises.length;
+      offset.pageIdx = (previous ? offset.pageIdx - 1 : offset.pageIdx + 1);
+      offset.matchIdx = null;
+      
+      if (offset.pageIdx >= numPages || offset.pageIdx < 0) {
+        offset.pageIdx = (previous ? numPages - 1 : 0);
+        offset.wrapped = true;
+        return;
+      }
+    },
+
+    updateMatch: function PDFFindController_updateMatch(found) {
+      var state = FindStates.FIND_NOTFOUND;
+      var wrapped = this.offset.wrapped;
+      this.offset.wrapped = false;
+    
+      if (found) {
+        var previousPage = this.selected.pageIdx;
+        this.selected.pageIdx = this.offset.pageIdx;
+        this.selected.matchIdx = this.offset.matchIdx;
+        state = (wrapped ? FindStates.FIND_WRAPPED : FindStates.FIND_FOUND);
+        // Update the currently selected page to wipe out any selected matches.
+        if (previousPage !== -1 && previousPage !== this.selected.pageIdx) {
+          this.updatePage(previousPage);
+        }
+      }
+    
+      this.updateUIState(state, this.state.findPrevious);
+      if (this.selected.pageIdx !== -1) {
+        this.updatePage(this.selected.pageIdx, true);
+      }
+    },
+
+    updateUIState: function PDFFindController_updateUIState(state, previous) {
+      if (this.integratedFind) {
+        FirefoxCom.request('updateFindControlState',
+                           { result: state, findPrevious: previous });
+        return;
+      }
+      if (this.findBar === null) {
+        throw new Error('PDFFindController is not initialized with a ' +
+                        'PDFFindBar instance.');
+      }
+      this.findBar.updateUIState(state, previous);
     }
-    PDFFindBar.updateUIState(state, previous);
-  }
-};
+  };
+  return PDFFindController;
+})();
 
 
 
@@ -2574,7 +2573,12 @@ var PDFView = {
 
     Preferences.initialize();
 
-    PDFFindBar.initialize({
+    this.findController = new PDFFindController({
+      pdfPageSource: this,
+      integratedFind: this.supportsIntegratedFind
+    });
+
+    this.findBar = new PDFFindBar({
       bar: document.getElementById('findbar'),
       toggleButton: document.getElementById('viewFind'),
       findField: document.getElementById('findInput'),
@@ -2583,13 +2587,11 @@ var PDFView = {
       findMsg: document.getElementById('findMsg'),
       findStatusIcon: document.getElementById('findStatusIcon'),
       findPreviousButton: document.getElementById('findPrevious'),
-      findNextButton: document.getElementById('findNext')
+      findNextButton: document.getElementById('findNext'),
+      findController: this.findController
     });
 
-    PDFFindController.initialize({
-      pdfPageSource: this,
-      integratedFind: this.supportsIntegratedFind
-    });
+    this.findController.setFindBar(this.findBar);
 
     HandTool.initialize({
       container: container,
@@ -3024,10 +3026,6 @@ var PDFView = {
       thumbsView.removeChild(thumbsView.lastChild);
     }
 
-    if ('_loadingInterval' in thumbsView) {
-      clearInterval(thumbsView._loadingInterval);
-    }
-
     var container = document.getElementById('viewer');
     while (container.hasChildNodes()) {
       container.removeChild(container.lastChild);
@@ -3300,7 +3298,7 @@ var PDFView = {
       };
     }
 
-    PDFFindController.reset();
+    PDFView.findController.reset();
 
     this.pdfDocument = pdfDocument;
 
@@ -3389,7 +3387,7 @@ var PDFView = {
 
       PDFView.loadingBar.setWidth(container);
 
-      PDFFindController.resolveFirstPage();
+      PDFView.findController.resolveFirstPage();
 
       // Initialize the browsing history.
       PDFHistory.initialize(self.documentFingerprint);
@@ -4298,7 +4296,7 @@ var PageView = function pageView(container, id, scale,
 
           case 'Find':
             if (!PDFView.supportsIntegratedFind) {
-              PDFFindBar.toggle();
+              PDFView.findBar.toggle();
             }
             break;
 
@@ -4587,7 +4585,8 @@ var PageView = function pageView(container, id, scale,
         pageIndex: this.id - 1,
         lastScrollSource: PDFView,
         viewport: this.viewport,
-        isViewerInPresentationMode: PresentationMode.active
+        isViewerInPresentationMode: PresentationMode.active,
+        findController: PDFView.findController
       }) : null;
     // TODO(mack): use data attributes to store these
     ctx._scaleX = outputScale.sx;
@@ -4994,6 +4993,12 @@ var FIND_SCROLL_OFFSET_LEFT = -400;
 var MAX_TEXT_DIVS_TO_RENDER = 100000;
 var RENDER_DELAY = 200; // ms
 
+var NonWhitespaceRegexp = /\S/;
+
+function isAllWhitespace(str) {
+  return !NonWhitespaceRegexp.test(str);
+}
+
 /**
  * TextLayerBuilder provides text-selection functionality for the PDF.
  * It does this by creating overlay divs over the PDF text. These divs
@@ -5011,7 +5016,7 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
     this.viewport = options.viewport;
     this.isViewerInPresentationMode = options.isViewerInPresentationMode;
     this.textDivs = [];
-    this.findController = window.PDFFindController || null;
+    this.findController = options.findController || null;
   }
 
   TextLayerBuilder.prototype = {
@@ -5028,20 +5033,34 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
         return;
       }
 
+      var lastFontSize;
+      var lastFontFamily;
       for (var i = 0; i < textDivsLength; i++) {
         var textDiv = textDivs[i];
         if (textDiv.dataset.isWhitespace !== undefined) {
           continue;
         }
 
-        ctx.font = textDiv.style.fontSize + ' ' + textDiv.style.fontFamily;
+        var fontSize = textDiv.style.fontSize;
+        var fontFamily = textDiv.style.fontFamily;
+
+        // Only build font string and set to context if different from last.
+        if (fontSize !== lastFontSize || fontFamily !== lastFontFamily) {
+          ctx.font = fontSize + ' ' + fontFamily;
+          lastFontSize = fontSize;
+          lastFontFamily = fontFamily;
+        }
+
         var width = ctx.measureText(textDiv.textContent).width;
         if (width > 0) {
           textLayerFrag.appendChild(textDiv);
+          // Dataset values come of type string.
           var textScale = textDiv.dataset.canvasWidth / width;
           var rotation = textDiv.dataset.angle;
           var transform = 'scale(' + textScale + ', 1)';
-          transform = 'rotate(' + rotation + 'deg) ' + transform;
+          if (rotation) {
+            transform = 'rotate(' + rotation + 'deg) ' + transform;
+          }
           CustomStyle.setProp('transform' , textDiv, transform);
           CustomStyle.setProp('transformOrigin' , textDiv, '0% 0%');
         }
@@ -5076,7 +5095,7 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
       var style = styles[geom.fontName];
       var textDiv = document.createElement('div');
       this.textDivs.push(textDiv);
-      if (!/\S/.test(geom.str)) {
+      if (isAllWhitespace(geom.str)) {
         textDiv.dataset.isWhitespace = true;
         return;
       }
@@ -5086,18 +5105,34 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
         angle += Math.PI / 2;
       }
       var fontHeight = Math.sqrt((tx[2] * tx[2]) + (tx[3] * tx[3]));
-      var fontAscent = (style.ascent ? style.ascent * fontHeight :
-        (style.descent ? (1 + style.descent) * fontHeight : fontHeight));
+      var fontAscent = fontHeight;
+      if (style.ascent) {
+        fontAscent = style.ascent * fontAscent;
+      } else if (style.descent) {
+        fontAscent = (1 + style.descent) * fontAscent;
+      }
 
+      var left;
+      var top;
+      if (angle === 0) {
+        left = tx[4];
+        top = tx[5] - fontAscent;
+      } else {
+        left = tx[4] + (fontAscent * Math.sin(angle));
+        top = tx[5] - (fontAscent * Math.cos(angle));
+      }
       textDiv.style.position = 'absolute';
-      textDiv.style.left = (tx[4] + (fontAscent * Math.sin(angle))) + 'px';
-      textDiv.style.top = (tx[5] - (fontAscent * Math.cos(angle))) + 'px';
+      textDiv.style.left = left + 'px';
+      textDiv.style.top = top + 'px';
       textDiv.style.fontSize = fontHeight + 'px';
       textDiv.style.fontFamily = style.fontFamily;
 
       textDiv.textContent = geom.str;
       textDiv.dataset.fontName = geom.fontName;
-      textDiv.dataset.angle = angle * (180 / Math.PI);
+      // Storing into dataset will convert number into string.
+      if (angle !== 0) {
+        textDiv.dataset.angle = angle * (180 / Math.PI);
+      }
       if (style.vertical) {
         textDiv.dataset.canvasWidth = geom.height * this.viewport.scale;
       } else {
@@ -5221,7 +5256,7 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
         var end = match.end;
         var isSelected = (isSelectedPage && i === selectedMatchIdx);
         var highlightSuffix = (isSelected ? ' selected' : '');
-         
+
         if (isSelected && !this.isViewerInPresentationMode) {
           scrollIntoView(textDivs[begin.divIdx],
                          { top: FIND_SCROLL_OFFSET_TOP,
@@ -5296,7 +5331,6 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
   };
   return TextLayerBuilder;
 })();
-
 
 
 var DocumentOutlineView = function documentOutlineView(outline) {
@@ -5578,6 +5612,7 @@ function webViewerInitialized() {
   PDFView.initPassiveLoading();
   return;
 
+
   if (file) {
     PDFView.open(file, 0);
   }
@@ -5824,13 +5859,13 @@ window.addEventListener('keydown', function keydown(evt) {
     switch (evt.keyCode) {
       case 70: // f
         if (!PDFView.supportsIntegratedFind) {
-          PDFFindBar.open();
+          PDFView.findBar.open();
           handled = true;
         }
         break;
       case 71: // g
         if (!PDFView.supportsIntegratedFind) {
-          PDFFindBar.dispatchEvent('again', cmd === 5 || cmd === 12);
+          PDFView.findBar.dispatchEvent('again', cmd === 5 || cmd === 12);
           handled = true;
         }
         break;
@@ -5920,8 +5955,8 @@ window.addEventListener('keydown', function keydown(evt) {
           SecondaryToolbar.close();
           handled = true;
         }
-        if (!PDFView.supportsIntegratedFind && PDFFindBar.opened) {
-          PDFFindBar.close();
+        if (!PDFView.supportsIntegratedFind && PDFView.findBar.opened) {
+          PDFView.findBar.close();
           handled = true;
         }
         break;
