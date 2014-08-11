@@ -4,8 +4,7 @@
 
 "use strict";
 
-const TEST_URL = "http://example.com/browser/browser/devtools/" +
-                 "markupview/test/doc_markup_events.html";
+const TEST_URL = TEST_URL_ROOT + "doc_markup_events.html";
 
 let test = asyncTest(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
@@ -121,6 +120,8 @@ let test = asyncTest(function*() {
   gBrowser.removeCurrentTab();
 
   // Wait for promises to avoid leaks when running this as a single test.
+  // We need to do this because we have opened a bunch of popups and don't them
+  // to affect other test runs when they are GCd.
   yield promiseNextTick();
 
   function* checkEventsForNode(selector, expected) {
@@ -128,14 +129,13 @@ let test = asyncTest(function*() {
     let evHolder = container.elt.querySelector(".markupview-events");
     let tooltip = inspector.markup.tooltip;
 
-    evHolder.scrollIntoView();
-
-    // Wait for scrollIntoView to complete.
-    yield promiseNextTick();
+    yield selectNode(selector, inspector);
 
     // Click button to show tooltip
+    info("Clicking evHolder");
     EventUtils.synthesizeMouseAtCenter(evHolder, {}, inspector.markup.doc.defaultView);
     yield tooltip.once("shown");
+    info("tooltip shown");
 
     // Check values
     let content = tooltip.content;
@@ -174,6 +174,8 @@ let test = asyncTest(function*() {
       is(out[i].dom0, expected[i].dom0, "dom0 matches for " + cssSelector);
       is(out[i].handler, expected[i].handler, "handlers matches for " + cssSelector);
     }
+
+    tooltip.hide();
   }
 
   function promiseNextTick() {
