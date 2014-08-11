@@ -25,11 +25,13 @@ skip-if(B2G) HTTP(..) == all-title.html all-title-ref.html # bug 773482
 == smtp-title.html smtp-title-ref.html
 == turkish-casing-1.html turkish-casing-1-ref.html
 HTTP(..) != small-caps-turkish-1.html small-caps-turkish-1-notref.html
-== greek-uppercase-1.html greek-uppercase-1-ref.html
+== greek-uppercase-1a.html greek-uppercase-1-ref.html
+== greek-uppercase-1b.html greek-uppercase-1-ref.html
 == greek-uppercase-2.html greek-uppercase-2-ref.html
 HTTP(..) == greek-small-caps-1.html greek-small-caps-1-ref.html
 == irish-uppercase-1.html irish-uppercase-1-ref.html
-== irish-lowercase-1.html irish-lowercase-1-ref.html
+== irish-lowercase-1a.html irish-lowercase-1-ref.html
+== irish-lowercase-1b.html irish-lowercase-1-ref.html
 == fullwidth-1.html fullwidth-1-ref.html
 == fullwidth-2.html fullwidth-2-ref.html
 == fullwidth-all.html fullwidth-all-ref.html
