@@ -415,6 +415,12 @@
 @BINPATH@/components/WifiWorker.manifest
 #endif // MOZ_WIDGET_GONK
 
+; Tethering
+#ifdef MOZ_WIDGET_GONK
+@BINPATH@/components/TetheringManager.js
+@BINPATH@/components/TetheringManager.manifest
+#endif
+
 ; ResourceStats
 #ifdef MOZ_WIDGET_GONK
 @BINPATH@/components/ResourceStats.js

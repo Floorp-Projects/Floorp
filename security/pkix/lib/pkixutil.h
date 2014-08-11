@@ -185,8 +185,8 @@ private:
 inline unsigned int
 DaysBeforeYear(unsigned int year)
 {
-  PR_ASSERT(year >= 1);
-  PR_ASSERT(year <= 9999);
+  assert(year >= 1);
+  assert(year <= 9999);
   return ((year - 1u) * 365u)
        + ((year - 1u) / 4u)    // leap years are every 4 years,
        - ((year - 1u) / 100u)  // except years divisible by 100,

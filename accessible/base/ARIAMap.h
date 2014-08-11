@@ -180,6 +180,7 @@ struct nsRoleMapEntry
   mozilla::a11y::aria::EStateRule attributeMap1;
   mozilla::a11y::aria::EStateRule attributeMap2;
   mozilla::a11y::aria::EStateRule attributeMap3;
+  mozilla::a11y::aria::EStateRule attributeMap4;
 };
 
 
