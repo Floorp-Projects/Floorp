@@ -20,40 +20,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789713
 
 /** Test for Bug 789713 **/
 
-function go() {
-  var pass = true;
-  var doc = document.getElementById('ifr').contentDocument;
-
-  // Tree walkers use nsDOMGenericSH, which has a spineless PreCreate.
-  var walker = doc.createTreeWalker(doc.body);
-  pass = pass && (walker.root === doc.body);
-
-  // Grab a reference to Object.prototype to make sure we test the machinery
-  // with respect to standard prototype remapping.
-  var objProto = ifr.contentWindow.Object.prototype;
-
-  // First, do the document.domain operation. This shouldn't crash.
-  document.domain = "example.org";
-
-  // Now, make sure that we still can't access cross-origin properties despite
-  // the fact that the WN is shared under the hood.
-  try {
-    walker.root;
-    pass = false;
-  } catch (e) { pass = pass && /Permission denied/.exec(e.message); }
-  window.parent.postMessage(pass, '*');
-}
-
 // We can't set document.domain on mochi.test, because it's forbidden to set
 // document.domain to a TLD.
 var ifr = document.getElementById('ifr');
-if (window.location.hostname == "mochi.test") {
-  SimpleTest.waitForExplicitFinish();
-  ifr.src = window.location.toString().replace("mochi.test:8888", "test1.example.org").split('?')[0];
-  window.onmessage = function(message) { ok(message.data, "Test succeeded and didn't crash"); SimpleTest.finish(); };
-} else {
-  ifr.src = "file_empty.html";
-  ifr.onload = go;
+
+SimpleTest.waitForExplicitFinish();
+ifr.src = window.location.toString().replace("mochi.test:8888", "test1.example.org")
+                                    .replace("test_bug789713", "file_bug789713")
+                                    .split('?')[0];
+window.onmessage = function(message) {
+  ok(message.data, "Test succeeded and didn't crash");
+  SimpleTest.finish();
 }
 
 </script>
