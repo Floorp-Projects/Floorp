@@ -155,7 +155,7 @@ var TextEditor = Class({
     if (!this.editor.isAppended()) {
       return true;
     }
-    return this.editor.isClean();
+    return this.editor.getText() === this._savedResourceContents;
   },
 
   initialize: function(document, mode=Editor.modes.text) {
@@ -212,6 +212,7 @@ var TextEditor = Class({
       if (!this.editor) {
         return;
       }
+      this._savedResourceContents = resourceContents;
       this.editor.setText(resourceContents);
       this.editor.clearHistory();
       this.editor.setClean();
@@ -229,8 +230,9 @@ var TextEditor = Class({
    *          saved.
    */
   save: function(resource) {
-    return resource.save(this.editor.getText()).then(() => {
-      this.editor.setClean();
+    let newText = this.editor.getText();
+    return resource.save(newText).then(() => {
+      this._savedResourceContents = newText;
       this.emit("save", resource);
     });
   },
