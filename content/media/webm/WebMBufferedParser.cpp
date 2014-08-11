@@ -32,8 +32,8 @@ VIntLength(unsigned char aFirstByte, uint32_t* aMask)
 }
 
 void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
-                                  nsTArray<WebMTimeDataOffset>& aMapping,
-                                  ReentrantMonitor& aReentrantMonitor)
+                                nsTArray<WebMTimeDataOffset>& aMapping,
+                                ReentrantMonitor& aReentrantMonitor)
 {
   static const unsigned char CLUSTER_ID[] = { 0x1f, 0x43, 0xb6, 0x75 };
   static const unsigned char TIMECODE_ID = 0xe7;
@@ -60,6 +60,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       // and return to CLUSTER_SYNC.
       if (mClusterIDPos == sizeof(CLUSTER_ID)) {
         mClusterIDPos = 0;
+        mClusterOffset = mCurrentOffset + (p - aBuffer) - 1;
         mState = READ_VINT;
         mNextState = TIMECODE_SYNC;
       }
@@ -140,9 +141,14 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
         {
           ReentrantMonitorAutoEnter mon(aReentrantMonitor);
           uint32_t idx = aMapping.IndexOfFirstElementGt(mBlockOffset);
-          if (idx == 0 || !(aMapping[idx-1] == mBlockOffset)) {
-            WebMTimeDataOffset entry(mBlockOffset, mClusterTimecode + mBlockTimecode);
-            aMapping.InsertElementAt(idx, entry);
+          if (idx == 0 || !(aMapping[idx - 1] == mBlockOffset)) {
+            // Don't insert invalid negative timecodes.
+            if (mBlockOffset > 0 || mClusterTimecode > uint16_t(abs(mBlockOffset))) {
+              WebMTimeDataOffset entry(mBlockOffset,
+                                       mClusterTimecode + mBlockTimecode,
+                                       mClusterOffset);
+              aMapping.InsertElementAt(idx, entry);
+            }
           }
         }
 
@@ -177,18 +183,18 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
 }
 
 bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t aEndOffset,
-                                                    uint64_t* aStartTime, uint64_t* aEndTime)
+                                                  uint64_t* aStartTime, uint64_t* aEndTime)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   // Find the first WebMTimeDataOffset at or after aStartOffset.
-  uint32_t start = mTimeMapping.IndexOfFirstElementGt(aStartOffset-1);
+  uint32_t start = mTimeMapping.IndexOfFirstElementGt(aStartOffset - 1);
   if (start == mTimeMapping.Length()) {
     return false;
   }
 
   // Find the first WebMTimeDataOffset at or before aEndOffset.
-  uint32_t end = mTimeMapping.IndexOfFirstElementGt(aEndOffset-1);
+  uint32_t end = mTimeMapping.IndexOfFirstElementGt(aEndOffset - 1);
   if (end > 0) {
     end -= 1;
   }
@@ -216,13 +222,14 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t 
 
   *aStartTime = mTimeMapping[start].mTimecode;
   *aEndTime = mTimeMapping[end].mTimecode;
+  *aEndTime += mTimeMapping[end].mTimecode - mTimeMapping[end - 1].mTimecode;
   return true;
 }
 
 bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  WebMTimeDataOffset result(0,0);
+  WebMTimeDataOffset result(0, 0, 0);
 
   for (uint32_t i = 0; i < mTimeMapping.Length(); ++i) {
     WebMTimeDataOffset o = mTimeMapping[i];
