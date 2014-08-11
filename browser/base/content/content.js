@@ -75,7 +75,7 @@ addEventListener("blur", function(event) {
 
 if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
   addEventListener("contextmenu", function (event) {
-    sendAsyncMessage("contextmenu", {}, { event: event });
+    sendSyncMessage("contextmenu", {}, { event: event });
   }, false);
 } else {
   addEventListener("mozUITour", function(event) {
