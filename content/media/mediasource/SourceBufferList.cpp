@@ -42,6 +42,7 @@ SourceBufferList::~SourceBufferList()
 SourceBuffer*
 SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   aFound = aIndex < mSourceBuffers.Length();
   return aFound ? mSourceBuffers[aIndex] : nullptr;
 }
@@ -49,12 +50,14 @@ SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound)
 uint32_t
 SourceBufferList::Length()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.Length();
 }
 
 void
 SourceBufferList::Append(SourceBuffer* aSourceBuffer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers.AppendElement(aSourceBuffer);
   QueueAsyncSimpleEvent("addsourcebuffer");
 }
@@ -62,6 +65,7 @@ SourceBufferList::Append(SourceBuffer* aSourceBuffer)
 void
 SourceBufferList::Remove(SourceBuffer* aSourceBuffer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ALWAYS_TRUE(mSourceBuffers.RemoveElement(aSourceBuffer));
   aSourceBuffer->Detach();
   QueueAsyncSimpleEvent("removesourcebuffer");
@@ -70,12 +74,14 @@ SourceBufferList::Remove(SourceBuffer* aSourceBuffer)
 bool
 SourceBufferList::Contains(SourceBuffer* aSourceBuffer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.Contains(aSourceBuffer);
 }
 
 void
 SourceBufferList::Clear()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Detach();
   }
@@ -86,12 +92,14 @@ SourceBufferList::Clear()
 bool
 SourceBufferList::IsEmpty()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.IsEmpty();
 }
 
 bool
 SourceBufferList::AnyUpdating()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     if (mSourceBuffers[i]->Updating()) {
       return true;
@@ -103,6 +111,7 @@ SourceBufferList::AnyUpdating()
 void
 SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBufferList(%p)::Remove(aStart=%f, aEnd=%f", this, aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Remove(aStart, aEnd, aRv);
@@ -115,6 +124,7 @@ SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 void
 SourceBufferList::Evict(double aStart, double aEnd)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBufferList(%p)::Evict(aStart=%f, aEnd=%f)", this, aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Evict(aStart, aEnd);
@@ -124,6 +134,7 @@ SourceBufferList::Evict(double aStart, double aEnd)
 bool
 SourceBufferList::AllContainsTime(double aTime)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     if (!mSourceBuffers[i]->ContainsTime(aTime)) {
       return false;
@@ -135,6 +146,7 @@ SourceBufferList::AllContainsTime(double aTime)
 void
 SourceBufferList::Ended()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Ended();
   }
@@ -143,6 +155,7 @@ SourceBufferList::Ended()
 void
 SourceBufferList::DispatchSimpleEvent(const char* aName)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBufferList(%p) Dispatch event '%s'", this, aName);
   DispatchTrustedEvent(NS_ConvertUTF8toUTF16(aName));
 }
