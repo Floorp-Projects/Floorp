@@ -79,7 +79,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
                 // If we're not clicking the user-entered view (the first suggestion item)
                 // and the search matches a URL pattern, go to that URL. Otherwise, do a
                 // search for the term.
-                if (v != mUserEnteredView && !StringUtils.isSearchQuery(suggestion, false)) {
+                if (v != mUserEnteredView && !StringUtils.isSearchQuery(suggestion, true)) {
                     if (mUrlOpenListener != null) {
                         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.SUGGESTION, "url");
 
