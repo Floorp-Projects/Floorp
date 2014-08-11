@@ -376,9 +376,9 @@ public:
             Entry(KeyTypePointer aKey)
                 : mURI(aKey->mURI),
                   mPrincipal(aKey->mPrincipal),
-                  mFontEntry(aKey->mFontEntry),
                   mCRC32(aKey->mCRC32),
                   mLength(aKey->mLength),
+                  mFontEntry(aKey->mFontEntry),
                   mPrivate(aKey->mPrivate),
                   mPersistence(aKey->mPersistence)
             { }
@@ -386,9 +386,9 @@ public:
             Entry(const Entry& aOther)
                 : mURI(aOther.mURI),
                   mPrincipal(aOther.mPrincipal),
-                  mFontEntry(aOther.mFontEntry),
                   mCRC32(aOther.mCRC32),
                   mLength(aOther.mLength),
+                  mFontEntry(aOther.mFontEntry),
                   mPrivate(aOther.mPrivate),
                   mPersistence(aOther.mPersistence)
             { }
