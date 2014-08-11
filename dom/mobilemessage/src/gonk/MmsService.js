@@ -10,9 +10,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 const RIL_MMSSERVICE_CONTRACTID = "@mozilla.org/mms/rilmmsservice;1";
 const RIL_MMSSERVICE_CID = Components.ID("{217ddd76-75db-4210-955d-8806cd8d87f9}");
@@ -54,6 +53,7 @@ const _HTTP_STATUS_USER_CANCELLED              = -1;
 const _HTTP_STATUS_RADIO_DISABLED              = -2;
 const _HTTP_STATUS_NO_SIM_CARD                 = -3;
 const _HTTP_STATUS_ACQUIRE_TIMEOUT             = -4;
+const _HTTP_STATUS_FAILED_TO_ROUTE             = -5;
 
 // Non-standard MMS status for internal use.
 const _MMS_ERROR_MESSAGE_DELETED               = -1;
@@ -63,6 +63,7 @@ const _MMS_ERROR_SIM_CARD_CHANGED              = -4;
 const _MMS_ERROR_SHUTDOWN                      = -5;
 const _MMS_ERROR_USER_CANCELLED_NO_REASON      = -6;
 const _MMS_ERROR_SIM_NOT_MATCHED               = -7;
+const _MMS_ERROR_FAILED_TO_ROUTE               = -8;
 
 const CONFIG_SEND_REPORT_NEVER       = 0;
 const CONFIG_SEND_REPORT_DEFAULT_NO  = 1;
@@ -158,6 +159,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gRil",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
+                                   "@mozilla.org/network/manager;1",
+                                   "nsINetworkManager");
+
 XPCOMUtils.defineLazyGetter(this, "MMS", function() {
   let MMS = {};
   Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
@@ -202,6 +207,7 @@ function MmsConnection(aServiceId) {
   this.serviceId = aServiceId;
   this.radioInterface = gRil.getRadioInterface(aServiceId);
   this.pendingCallbacks = [];
+  this.hostsToRoute = [];
   this.connectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this.disconnectTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 };
@@ -216,7 +222,8 @@ MmsConnection.prototype = {
 
   setApnSetting: function(network) {
     this.mmsc = network.mmsc;
-    this.mmsProxy = network.mmsProxy;
+    // Workaround an xpconnect issue with undefined string objects. See bug 808220.
+    this.mmsProxy = (network === "undefined") ? undefined : network.mmsProxy;
     this.mmsPort = network.mmsPort;
   },
 
@@ -252,6 +259,12 @@ MmsConnection.prototype = {
   /** MMS network connection reference count. */
   refCount: 0,
 
+  // cache of hosts to be accessed when this connection is alive.
+  hostsToRoute: null,
+
+  // cache of the networkInterface acquired during this connection.
+  networkInterface: null,
+
   connectTimer: null,
 
   disconnectTimer: null,
@@ -274,9 +287,29 @@ MmsConnection.prototype = {
    */
   onDisconnectTimerTimeout: function() {
     if (DEBUG) debug("onDisconnectTimerTimeout: deactivate the MMS data call.");
-    if (this.connected) {
-      this.radioInterface.deactivateDataCallByType("mms");
+
+    if (!this.connected) {
+      return;
     }
+
+    let deactivateMmsDataCall = (aError) => {
+      if (aError) debug("Failed to removeHostRoute: " + aError);
+
+      // Clear cache.
+      this.hostsToRoute = [];
+      this.networkInterface = null;
+
+      this.radioInterface.deactivateDataCallByType("mms");
+    };
+
+    let promises =
+      this.hostsToRoute.map(function(aHost) {
+        return gNetworkManager.removeHostRoute(this.networkInterface, aHost);
+      }, this);
+
+    return Promise.all(promises)
+      .then(() => deactivateMmsDataCall(),
+            (aError) => deactivateMmsDataCall(aError));
   },
 
   init: function() {
@@ -393,6 +426,10 @@ MmsConnection.prototype = {
       if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
       this.radioInterface.setupDataCallByType("mms");
 
+      // Clear cache when setup new connection.
+      this.hostsToRoute = [];
+      this.networkInterface = null;
+
       // Set a timer to clear the buffered MMS requests if the
       // MMS network fails to be connected within a time period.
       this.connectTimer.
@@ -427,6 +464,34 @@ MmsConnection.prototype = {
                          PREF_TIME_TO_RELEASE_MMS_CONNECTION,
                          Ci.nsITimer.TYPE_ONE_SHOT);
     }
+  },
+
+  /**
+   * Helper to ensure the routing of each transaction.
+   *
+   * @param url
+   *        Optional url for retrieving mms.
+   *
+   * @return a Promise resolved if added or rejected, otherwise.
+   */
+  ensureRouting: function(url) {
+    let host = this.mmsProxy;
+
+    if (!this.mmsProxy) {
+      host = url;
+    }
+
+    try {
+      let uri = Services.io.newURI(host, null, null);
+      host = uri.host;
+    } catch (e) {}
+
+    return gNetworkManager.addHostRoute(this.networkInterface, host)
+      .then(() => {
+        if (this.hostsToRoute.indexOf(host) < 0) {
+          this.hostsToRoute.push(host);
+        }
+      });
   },
 
   shutdown: function() {
@@ -467,6 +532,8 @@ MmsConnection.prototype = {
 
         this.connected = connected;
         if (!this.connected) {
+          this.hostsToRoute = [];
+          this.networkInterface = null;
           return;
         }
 
@@ -474,10 +541,13 @@ MmsConnection.prototype = {
         // which is going to be used for the HTTP requests later.
         this.setApnSetting(network);
 
+        // Cache connected network.
+        this.networkInterface = network;
+
         if (DEBUG) debug("Got the MMS network connected! Resend the buffered " +
                          "MMS requests: number: " + this.pendingCallbacks.length);
         this.connectTimer.cancel();
-        this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS)
+        this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
         break;
       }
       case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
@@ -646,13 +716,23 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function() {
           url = mmsConnection.mmsc;
         }
 
-        if (DEBUG) debug("sendRequest: register proxy filter to " + url);
-        let proxyFilter = new MmsProxyFilter(mmsConnection, url);
-        gpps.registerFilter(proxyFilter, 0);
+        let startTransaction = function () {
+          if (DEBUG) debug("sendRequest: register proxy filter to " + url);
+          let proxyFilter = new MmsProxyFilter(mmsConnection, url);
+          gpps.registerFilter(proxyFilter, 0);
 
-        cancellable.xhr = this.sendHttpRequest(mmsConnection, method,
-                                               url, istream, proxyFilter,
-                                               cancellable.done.bind(cancellable));
+          cancellable.xhr = this.sendHttpRequest(mmsConnection, method,
+                                                 url, istream, proxyFilter,
+                                                 cancellable.done.bind(cancellable));
+        }.bind(this);
+
+        mmsConnection.ensureRouting(url)
+          .then(() => startTransaction(),
+                (aError) => {
+                  debug("Failed to ensureRouting: " + aError);
+
+                  cancellable.done(_HTTP_STATUS_FAILED_TO_ROUTE);
+                });
       }).bind(this));
 
       return cancellable;
@@ -817,6 +897,8 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function() {
           return _MMS_ERROR_RADIO_DISABLED;
         case _HTTP_STATUS_NO_SIM_CARD:
           return _MMS_ERROR_NO_SIM_CARD;
+        case _HTTP_STATUS_FAILED_TO_ROUTE:
+          return _MMS_ERROR_FAILED_TO_ROUTE;
         case HTTP_STATUS_OK:
           return MMS.MMS_PDU_ERROR_OK;
         default:
