@@ -6,8 +6,14 @@
 
 #include "vm/DebuggerMemory.h"
 
+#include "mozilla/Maybe.h"
+#include "mozilla/Move.h"
+
 #include "jscompartment.h"
+
 #include "gc/Marking.h"
+#include "js/UbiNode.h"
+#include "js/UbiNodeTraverse.h"
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/SavedStacks.h"
@@ -15,6 +21,13 @@
 #include "vm/Debugger-inl.h"
 
 using namespace js;
+
+using JS::ubi::BreadthFirst;
+using JS::ubi::Edge;
+using JS::ubi::Node;
+
+using mozilla::Maybe;
+using mozilla::Move;
 
 /* static */ DebuggerMemory *
 DebuggerMemory::create(JSContext *cx, Debugger *dbg)
@@ -229,6 +242,179 @@ DebuggerMemory::setMaxAllocationsLogLength(JSContext *cx, unsigned argc, Value *
     return true;
 }
 
+
+
+/* Debugger.Memory.prototype.takeCensus */
+
+namespace js {
+namespace dbg {
+
+// Common data for census traversals.
+struct Census {
+    JSContext * const cx;
+    Zone::ZoneSet debuggeeZones;
+    Zone *atomsZone;
+
+    Census(JSContext *cx) : cx(cx), atomsZone(nullptr) { }
+
+    bool init() {
+        AutoLockForExclusiveAccess lock(cx);
+        atomsZone = cx->runtime()->atomsCompartment()->zone();
+        return debuggeeZones.init();
+    }
+};
+
+// An *assorter* class is one with the following constructors, destructor,
+// and member functions:
+//
+//   Assorter(Census &census);
+//   Assorter(Assorter &&)
+//   Assorter &operator=(Assorter &&)
+//   ~Assorter()
+//      Construction given a Census; move construction and assignment, for being
+//      stored in containers; and destruction.
+//
+//   bool init(Census &census);
+//      A fallible initializer.
+//
+//   bool count(Census &census, const Node &node);
+//      Categorize and count |node| as appropriate for this kind of assorter.
+//
+//   bool report(Census &census, MutableHandleValue report);
+//      Construct a JavaScript object reporting the counts this assorter has
+//      seen, and store it in |report|.
+//
+// In each of these, |census| provides ambient information needed for assorting,
+// like a JSContext for reporting errors.
+
+// The simplest assorter: count everything, and return a tally form.
+class Tally {
+    size_t counter;
+
+  public:
+    Tally(Census &census) : counter(0) { }
+    Tally(Tally &&rhs) : counter(rhs.counter) { }
+    Tally &operator=(Tally &&rhs) { counter = rhs.counter; return *this; }
+
+    bool init(Census &census) { return true; }
+
+    bool count(Census &census, const Node &node) {
+        counter++;
+        return true;
+    }
+
+    bool report(Census &census, MutableHandleValue report) {
+        RootedObject obj(census.cx, NewBuiltinClassInstance(census.cx, &JSObject::class_));
+        RootedValue countValue(census.cx, NumberValue(counter));
+        if (!obj ||
+            !JSObject::defineProperty(census.cx, obj, census.cx->names().count, countValue))
+        {
+            return false;
+        }
+        report.setObject(*obj);
+        return true;
+    }
+};
+
+// A ubi::BreadthFirst handler type that conducts a census, using Assorter
+// to categorize and count each node.
+template<typename Assorter>
+class CensusHandler {
+    Census &census;
+    Assorter assorter;
+
+  public:
+    CensusHandler(Census &census) : census(census), assorter(census) { }
+
+    bool init(Census &census) { return assorter.init(census); }
+    bool report(Census &census, MutableHandleValue report) {
+        return assorter.report(census, report);
+    }
+
+    // This class needs to retain no per-node data.
+    class NodeData { };
+
+    bool operator() (BreadthFirst<CensusHandler> &traversal,
+                     Node origin, const Edge &edge,
+                     NodeData *referentData, bool first)
+    {
+        // We're only interested in the first time we reach edge.referent, not
+        // in every edge arriving at that node.
+        if (!first)
+            return true;
+
+        // Don't count nodes outside the debuggee zones. Do count things in the
+        // special atoms zone, but don't traverse their outgoing edges, on the
+        // assumption that they are shared resources that debuggee is using.
+        // Symbols are always allocated in the atoms zone, even if they were
+        // created for exactly one compartment and never shared; this rule will
+        // include such nodes in the count.
+        const Node &referent = edge.referent;
+        Zone *zone = referent.zone();
+
+        if (census.debuggeeZones.has(zone)) {
+            return assorter.count(census, referent);
+        }
+
+        if (zone == census.atomsZone) {
+            traversal.abandonReferent();
+            return assorter.count(census, referent);
+        }
+
+        traversal.abandonReferent();
+        return true;
+    }
+};
+
+
+// A traversal that conducts a trivial census.
+typedef CensusHandler<Tally> TallyingHandler;
+typedef BreadthFirst<TallyingHandler> TallyingTraversal;
+
+} // namespace dbg
+} // namespace js
+
+bool
+DebuggerMemory::takeCensus(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER_MEMORY(cx, argc, vp, "Debugger.Memory.prototype.census", args, memory);
+    Debugger *debugger = memory->getDebugger();
+
+    dbg::Census census(cx);
+    if (!census.init())
+        return false;
+    dbg::TallyingHandler handler(census);
+    if (!handler.init(census))
+        return false;
+
+    {
+        JS::AutoCheckCannotGC noGC;
+
+        dbg::TallyingTraversal traversal(cx, handler, noGC);
+        if (!traversal.init())
+            return false;
+
+        // Walk the debuggee compartments, using it to set the starting points
+        // (the debuggee globals) for the traversal, and to populate
+        // census.debuggeeZones.
+        for (GlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
+            if (!census.debuggeeZones.put(r.front()->zone()) ||
+                !traversal.addStart(static_cast<JSObject *>(r.front())))
+                return false;
+        }
+
+        if (!traversal.traverse())
+            return false;
+    }
+
+    return handler.report(census, args.rval());
+}
+
+
+
+/* Debugger.Memory property and method tables. */
+
+
 /* static */ const JSPropertySpec DebuggerMemory::properties[] = {
     JS_PSGS("trackingAllocationSites", getTrackingAllocationSites, setTrackingAllocationSites, 0),
     JS_PSGS("maxAllocationsLogLength", getMaxAllocationsLogLength, setMaxAllocationsLogLength, 0),
@@ -237,5 +423,6 @@ DebuggerMemory::setMaxAllocationsLogLength(JSContext *cx, unsigned argc, Value *
 
 /* static */ const JSFunctionSpec DebuggerMemory::methods[] = {
     JS_FN("drainAllocationsLog", DebuggerMemory::drainAllocationsLog, 0, 0),
+    JS_FN("takeCensus", takeCensus, 0, 0),
     JS_FS_END
 };

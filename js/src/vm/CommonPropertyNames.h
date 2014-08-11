@@ -41,6 +41,7 @@
     macro(construct, construct, "construct") \
     macro(constructor, constructor, "constructor") \
     macro(ConvertAndCopyTo, ConvertAndCopyTo, "ConvertAndCopyTo") \
+    macro(count, count, "count") \
     macro(currency, currency, "currency") \
     macro(currencyDisplay, currencyDisplay, "currencyDisplay") \
     macro(std_iterator, std_iterator, "@@iterator") \
@@ -140,12 +141,14 @@
     macro(objectNull, objectNull, "[object Null]") \
     macro(objectNumber, objectNumber, "[object Number]") \
     macro(objectObject, objectObject, "[object Object]") \
+    macro(objects, objects, "objects") \
     macro(objectString, objectString, "[object String]") \
     macro(objectUndefined, objectUndefined, "[object Undefined]") \
     macro(objectWindow, objectWindow, "[object Window]") \
     macro(of, of, "of") \
     macro(offset, offset, "offset") \
     macro(optimizedOut, optimizedOut, "optimizedOut") \
+    macro(other, other, "other") \
     macro(outOfMemory, outOfMemory, "out of memory") \
     macro(ownKeys, ownKeys, "ownKeys") \
     macro(parseFloat, parseFloat, "parseFloat") \
@@ -159,12 +162,14 @@
     macro(Reify, Reify, "Reify") \
     macro(return, return_, "return") \
     macro(revoke, revoke, "revoke") \
+    macro(scripts, scripts, "scripts") \
     macro(sensitivity, sensitivity, "sensitivity") \
     macro(set, set, "set") \
     macro(shape, shape, "shape") \
     macro(source, source, "source") \
     macro(stack, stack, "stack") \
     macro(sticky, sticky, "sticky") \
+    macro(strings, strings, "strings") \
     macro(StructType, StructType, "StructType") \
     macro(style, style, "style") \
     macro(test, test, "test") \
