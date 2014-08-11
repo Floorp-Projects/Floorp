@@ -55,6 +55,10 @@ const TEST_DATA = [{
 let test = asyncTest(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
+  // Make sure mutated nodes flash for a very long time so we can more easily
+  // assert they do
+  inspector.markup.CONTAINER_FLASHING_DURATION = 1000 * 60 * 60;
+
   info("Getting the <ul.list> root node to test mutations on");
   let rootNode = getNode(".list");
   let rootNodeFront = yield getNodeFront(".list", inspector);
@@ -88,4 +92,9 @@ function* assertNodeFlashing(nodeFront, inspector) {
   ok(container, "Markup container for node found");
   ok(container.tagState.classList.contains("theme-bg-contrast"),
     "Markup container for node is flashing");
+
+  // Clear the mutation flashing timeout now that we checked the node was flashing
+  let markup = inspector.markup;
+  markup._frame.contentWindow.clearTimeout(container._flashMutationTimer);
+  container._flashMutationTimer = null;
 }
