@@ -21,10 +21,14 @@ struct JSContext;
 class JSObject;
 
 #ifdef PR_LOGGING
-extern PRLogModuleInfo* gMediaSourceLog;
-#define MSE_DEBUG(...) PR_LOG(gMediaSourceLog, PR_LOG_DEBUG, (__VA_ARGS__))
+extern PRLogModuleInfo* GetMediaSourceLog();
+extern PRLogModuleInfo* GetMediaSourceAPILog();
+
+#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define MSE_API(...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, (__VA_ARGS__))
 #else
 #define MSE_DEBUG(...)
+#define MSE_API(...)
 #endif
 
 namespace mozilla {
@@ -99,6 +103,7 @@ SourceBufferList::AnyUpdating()
 void
 SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 {
+  MSE_DEBUG("SourceBufferList(%p)::Remove(aStart=%f, aEnd=%f", this, aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Remove(aStart, aEnd, aRv);
     if (aRv.Failed()) {
@@ -110,6 +115,7 @@ SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 void
 SourceBufferList::Evict(double aStart, double aEnd)
 {
+  MSE_DEBUG("SourceBufferList(%p)::Evict(aStart=%f, aEnd=%f)", this, aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Evict(aStart, aEnd);
   }
@@ -137,14 +143,14 @@ SourceBufferList::Ended()
 void
 SourceBufferList::DispatchSimpleEvent(const char* aName)
 {
-  MSE_DEBUG("%p Dispatching event %s to SourceBufferList", this, aName);
+  MSE_API("SourceBufferList(%p) Dispatch event '%s'", this, aName);
   DispatchTrustedEvent(NS_ConvertUTF8toUTF16(aName));
 }
 
 void
 SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
 {
-  MSE_DEBUG("%p Queuing event %s to SourceBufferList", this, aName);
+  MSE_DEBUG("SourceBufferList(%p) Queuing event '%s'", this, aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBufferList>(this, aName);
   NS_DispatchToMainThread(event);
 }
