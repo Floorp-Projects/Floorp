@@ -52,3 +52,39 @@ BEGIN_TEST(test_ubiNodeZone)
     return true;
 }
 END_TEST(test_ubiNodeZone)
+
+// ubi::Node::compartment works
+BEGIN_TEST(test_ubiNodeCompartment)
+{
+    RootedObject global1(cx, JS::CurrentGlobalOrNull(cx));
+    CHECK(global1);
+    CHECK(JS::ubi::Node(global1).compartment() == cx->compartment());
+
+    RootedObject global2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
+                                                JS::FireOnNewGlobalHook));
+    CHECK(global2);
+    CHECK(global1->compartment() != global2->compartment());
+    CHECK(JS::ubi::Node(global2).compartment() == global2->compartment());
+    CHECK(JS::ubi::Node(global2).compartment() != global1->compartment());
+
+    JS::CompileOptions options(cx);
+
+    // Create a script in the original compartment...
+    RootedScript script1(cx);
+    CHECK(JS::Compile(cx, global1, options, "", 0, &script1));
+
+    {
+        // ... and then enter global2's compartment and create a script
+        // there, too.
+        JSAutoCompartment ac(cx, global2);
+
+        RootedScript script2(cx);
+        CHECK(JS::Compile(cx, global2, options, "", 0, &script2));
+
+        CHECK(JS::ubi::Node(script1).compartment() == global1->compartment());
+        CHECK(JS::ubi::Node(script2).compartment() == global2->compartment());
+    }
+
+    return true;
+}
+END_TEST(test_ubiNodeCompartment)
