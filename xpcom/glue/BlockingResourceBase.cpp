@@ -38,9 +38,7 @@ unsigned BlockingResourceBase::sResourceAcqnChainFrontTPI = (unsigned)-1;
 BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
 bool
-BlockingResourceBase::DeadlockDetectorEntry::Print(
-    const DeadlockDetectorEntry* aFirstSeen,
-    nsACString& aOut) const
+BlockingResourceBase::Print(nsACString& aOut) const
 {
   fprintf(stderr, "--- %s : %s",
           kResourceTypeName[mType], mName);
@@ -63,16 +61,19 @@ BlockingResourceBase::DeadlockDetectorEntry::Print(
 BlockingResourceBase::BlockingResourceBase(
     const char* aName,
     BlockingResourceBase::BlockingResourceType aType)
+  : mName(aName)
+  , mType(aType)
+  , mAcquired(false)
 {
+  NS_ABORT_IF_FALSE(mName, "Name must be nonnull");
   // PR_CallOnce guaranatees that InitStatics is called in a
   // thread-safe way
   if (PR_SUCCESS != PR_CallOnce(&sCallOnce, InitStatics)) {
     NS_RUNTIMEABORT("can't initialize blocking resource static members");
   }
 
-  mDDEntry = new BlockingResourceBase::DeadlockDetectorEntry(aName, aType);
   mChainPrev = 0;
-  sDeadlockDetector->Add(mDDEntry);
+  sDeadlockDetector->Add(this);
 }
 
 
@@ -83,15 +84,14 @@ BlockingResourceBase::~BlockingResourceBase()
   // base class, or its underlying primitive, will check for such
   // stupid mistakes.
   mChainPrev = 0;             // racy only for stupidly buggy client code
-  sDeadlockDetector->Remove(mDDEntry);
-  mDDEntry = 0;               // owned by deadlock detector
+  sDeadlockDetector->Remove(this);
 }
 
 
 void
 BlockingResourceBase::CheckAcquire()
 {
-  if (mDDEntry->mType == eCondVar) {
+  if (mType == eCondVar) {
     NS_NOTYETIMPLEMENTED(
       "FIXME bug 456272: annots. to allow CheckAcquire()ing condvars");
     return;
@@ -100,7 +100,7 @@ BlockingResourceBase::CheckAcquire()
   BlockingResourceBase* chainFront = ResourceChainFront();
   nsAutoPtr<DDT::ResourceAcquisitionArray> cycle(
     sDeadlockDetector->CheckAcquisition(
-      chainFront ? chainFront->mDDEntry : 0, mDDEntry));
+      chainFront ? chainFront : 0, this));
   if (!cycle) {
     return;
   }
@@ -129,30 +129,30 @@ BlockingResourceBase::CheckAcquire()
 void
 BlockingResourceBase::Acquire()
 {
-  if (mDDEntry->mType == eCondVar) {
+  if (mType == eCondVar) {
     NS_NOTYETIMPLEMENTED(
       "FIXME bug 456272: annots. to allow Acquire()ing condvars");
     return;
   }
-  NS_ASSERTION(!mDDEntry->mAcquired,
+  NS_ASSERTION(!mAcquired,
                "reacquiring already acquired resource");
 
   ResourceChainAppend(ResourceChainFront());
-  mDDEntry->mAcquired = true;
+  mAcquired = true;
 }
 
 
 void
 BlockingResourceBase::Release()
 {
-  if (mDDEntry->mType == eCondVar) {
+  if (mType == eCondVar) {
     NS_NOTYETIMPLEMENTED(
       "FIXME bug 456272: annots. to allow Release()ing condvars");
     return;
   }
 
   BlockingResourceBase* chainFront = ResourceChainFront();
-  NS_ASSERTION(chainFront && mDDEntry->mAcquired,
+  NS_ASSERTION(chainFront && mAcquired,
                "Release()ing something that hasn't been Acquire()ed");
 
   if (chainFront == this) {
@@ -178,7 +178,7 @@ BlockingResourceBase::Release()
     }
   }
 
-  mDDEntry->mAcquired = false;
+  mAcquired = false;
 }
 
 
@@ -193,8 +193,8 @@ BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
   fputs("=== Cyclical dependency starts at\n", stderr);
   aOut += "Cyclical dependency starts at\n";
 
-  const DeadlockDetectorEntry* res = aCycle->ElementAt(0);
-  maybeImminent &= res->Print(res, aOut);
+  const DDT::ResourceAcquisitionArray::elem_type res = aCycle->ElementAt(0);
+  maybeImminent &= res->Print(aOut);
 
   DDT::ResourceAcquisitionArray::index_type i;
   DDT::ResourceAcquisitionArray::size_type len = aCycle->Length();
@@ -203,12 +203,12 @@ BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
     fputs("\n--- Next dependency:\n", stderr);
     aOut += "\nNext dependency:\n";
 
-    maybeImminent &= (*it)->Print(*it, aOut);
+    maybeImminent &= (*it)->Print(aOut);
   }
 
   fputs("\n=== Cycle completed at\n", stderr);
   aOut += "Cycle completed at\n";
-  (*it)->Print(*it, aOut);
+  (*it)->Print(aOut);
 
   return maybeImminent;
 }
