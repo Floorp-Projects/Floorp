@@ -88,7 +88,6 @@ public:
     return n;
   }
 
-private:
   // ``DDT'' = ``Deadlock Detector Type''
   typedef DeadlockDetector<BlockingResourceBase> DDT;
 
@@ -132,23 +131,6 @@ protected:
    * *NOT* thread safe.  Requires ownership of underlying resource.
    **/
   void Release();             //NS_NEEDS_RESOURCE(this)
-
-  /**
-   * PrintCycle
-   * Append to |aOut| detailed information about the circular
-   * dependency in |aCycle|.  Returns true if it *appears* that this
-   * cycle may represent an imminent deadlock, but this is merely a
-   * heuristic; the value returned may be a false positive or false
-   * negative.
-   *
-   * *NOT* thread safe.  Calls |Print()|.
-   *
-   * FIXME bug 456272 hack alert: because we can't write call
-   * contexts into strings, all info is written to stderr, but only
-   * some info is written into |aOut|
-   */
-  static bool PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
-                         nsACString& aOut);
 
   /**
    * ResourceChainFront
