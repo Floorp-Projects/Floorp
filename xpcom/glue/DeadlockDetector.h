@@ -176,13 +176,13 @@ public:
    *
    * @param aResource Resource to make deadlock detector aware of.
    */
-  void Add(T* aResource)
+  void Add(const T* aResource)
   {
     PRAutoLock _(mLock);
     mOrdering.Put(aResource, new OrderingEntry(aResource));
   }
 
-  void Remove(T* aResource)
+  void Remove(const T* aResource)
   {
     PRAutoLock _(mLock);
 
