@@ -30,8 +30,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
 
-const kMessages = ["InterAppMessagePort:OnMessage",
-                   "InterAppMessagePort:Shutdown"];
+const kMessages = ["InterAppMessagePort:OnMessage"];
 
 function InterAppMessagePort() {
   if (DEBUG) debug("InterAppMessagePort()");
@@ -150,8 +149,6 @@ InterAppMessagePort.prototype = {
     cpmm.sendAsyncMessage("InterAppMessagePort:Unregister",
                           { messagePortID: this._messagePortID,
                             manifestURL: this._manifestURL });
-
-    this.removeMessageListeners(kMessages);
   },
 
   get onmessage() {
@@ -196,8 +193,7 @@ InterAppMessagePort.prototype = {
     if (message.manifestURL != this._manifestURL ||
         message.pageURL != this._pageURL ||
         message.messagePortID != this._messagePortID) {
-      if (DEBUG) debug("The message doesn't belong to this page. Returning. " +
-                       uneval(message));
+      if (DEBUG) debug("The message doesn't belong to this page. Returning.");
       return;
     }
 
@@ -217,9 +213,6 @@ InterAppMessagePort.prototype = {
         this._dispatchMessage(message.message);
         break;
 
-      case "InterAppMessagePort:Shutdown":
-        this.close();
-        break;
       default:
         if (DEBUG) debug("Error! Shouldn't fall into this case.");
         break;
