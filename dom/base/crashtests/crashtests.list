@@ -43,3 +43,4 @@ load 886213.html
 load 898906.html
 load 852381.html
 load 973401.html
+pref(dom.webcomponents.enabled,true) load 1029710.html
