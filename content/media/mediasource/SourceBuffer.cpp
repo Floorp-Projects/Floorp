@@ -31,9 +31,11 @@ extern PRLogModuleInfo* GetMediaSourceLog();
 extern PRLogModuleInfo* GetMediaSourceAPILog();
 
 #define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define MSE_DEBUGV(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG+1, (__VA_ARGS__))
 #define MSE_API(...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, (__VA_ARGS__))
 #else
 #define MSE_DEBUG(...)
+#define MSE_DEBUGV(...)
 #define MSE_API(...)
 #endif
 
@@ -171,12 +173,17 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
     return nullptr;
   }
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  if (mDecoder) {
-    mDecoder->GetBuffered(ranges);
+  // TODO: Need to adjust mDecoders so it only tracks active decoders.
+  // Once we have an abstraction for track buffers, this needs to report the
+  // intersection of buffered ranges within those track buffers.
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    nsRefPtr<TimeRanges> r = new TimeRanges();
+    mDecoders[i]->GetBuffered(r);
+    ranges->Union(r);
   }
   ranges->Normalize();
-  MSE_DEBUG("SourceBuffer(%p)::GetBuffered startTime=%f endTime=%f",
-            this, ranges->GetStartTime(), ranges->GetEndTime());
+  MSE_DEBUGV("SourceBuffer(%p)::GetBuffered startTime=%f endTime=%f length=%u",
+             this, ranges->GetStartTime(), ranges->GetEndTime(), ranges->Length());
   return ranges.forget();
 }
 
@@ -369,6 +376,7 @@ SourceBuffer::InitNewDecoder()
   }
   mDecoder = decoder;
   mDecoderInitialized = false;
+  mDecoders.AppendElement(mDecoder);
   return true;
 }
 
@@ -467,16 +475,12 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   const uint32_t evict_threshold = 75 * (1 << 20);
   bool evicted = mDecoder->GetResource()->EvictData(evict_threshold);
   if (evicted) {
-    double start = 0.0;
-    double end = 0.0;
-    GetBufferedStartEndTime(&start, &end);
-
-    MSE_DEBUG("SourceBuffer(%p)::AppendBuffer Evict; current start=%f end=%f",
-              this, start, end);
+    MSE_DEBUG("SourceBuffer(%p)::AppendBuffer Evict; current buffered start=%f",
+              this, GetBufferedStart());
 
     // We notify that we've evicted from the time range 0 through to
     // the current start point.
-    mMediaSource->NotifyEvicted(0.0, start);
+    mMediaSource->NotifyEvicted(0.0, GetBufferedStart());
   }
   StopUpdating();
 
@@ -487,18 +491,22 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   mMediaSource->NotifyGotData();
 }
 
-void
-SourceBuffer::GetBufferedStartEndTime(double* aStart, double* aEnd)
+double
+SourceBuffer::GetBufferedStart()
 {
   MOZ_ASSERT(NS_IsMainThread());
   ErrorResult dummy;
   nsRefPtr<TimeRanges> ranges = GetBuffered(dummy);
-  if (!ranges || ranges->Length() == 0) {
-    *aStart = *aEnd = 0.0;
-    return;
-  }
-  *aStart = ranges->GetStartTime();
-  *aEnd = ranges->GetEndTime();
+  return ranges->Length() > 0 ? ranges->GetStartTime() : 0;
+}
+
+double
+SourceBuffer::GetBufferedEnd()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ErrorResult dummy;
+  nsRefPtr<TimeRanges> ranges = GetBuffered(dummy);
+  return ranges->Length() > 0 ? ranges->GetEndTime() : 0;
 }
 
 void
