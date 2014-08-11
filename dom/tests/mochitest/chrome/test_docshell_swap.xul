@@ -46,8 +46,6 @@
 
     let mm1 = flo1.frameLoader.messageManager;
     let mm2 = flo2.frameLoader.messageManager;
-    mm1.addMessageListener("pong", () => { gotPong(true); });
-    mm2.addMessageListener("pong", () => { gotPong(false); });
 
     // Swap docshells. Everything should be identical to before, since there was nothing to
     // distinguish these docshells.
