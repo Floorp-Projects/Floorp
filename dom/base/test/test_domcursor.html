@@ -85,12 +85,6 @@ var tests = [
       next();
     }
     req.continue();
-    try {
-      req.continue();
-      ok(false, "calling continue twice should fail");
-    } catch (e) {
-      ok(true, "calling continue twice should fail");
-    }
   },
   function() {
     // FireDone
