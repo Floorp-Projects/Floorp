@@ -795,7 +795,7 @@ class JitCode;
 }
 namespace types {
 struct TypeObject;
-struct TypeObjectAddendum;
+struct TypeNewScript;
 }
 
 typedef PreBarriered<JSObject*> PreBarrieredObject;
@@ -821,7 +821,7 @@ typedef HeapPtr<Shape*> HeapPtrShape;
 typedef HeapPtr<UnownedBaseShape*> HeapPtrUnownedBaseShape;
 typedef HeapPtr<jit::JitCode*> HeapPtrJitCode;
 typedef HeapPtr<types::TypeObject*> HeapPtrTypeObject;
-typedef HeapPtr<types::TypeObjectAddendum*> HeapPtrTypeObjectAddendum;
+typedef HeapPtr<types::TypeNewScript*> HeapPtrTypeNewScript;
 
 typedef PreBarriered<Value> PreBarrieredValue;
 typedef RelocatablePtr<Value> RelocatableValue;
