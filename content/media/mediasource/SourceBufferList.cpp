@@ -152,6 +152,19 @@ SourceBufferList::Ended()
   }
 }
 
+double
+SourceBufferList::GetHighestBufferedEndTime()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  double highestEnd = 0;
+  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
+    double start, end;
+    mSourceBuffers[i]->GetBufferedStartEndTime(&start, &end);
+    highestEnd = std::max(highestEnd, end);
+  }
+  return highestEnd;
+}
+
 void
 SourceBufferList::DispatchSimpleEvent(const char* aName)
 {

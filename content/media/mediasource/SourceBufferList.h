@@ -79,6 +79,9 @@ public:
   // Returns true if all SourceBuffers in the list contain data for the given time.
   bool AllContainsTime(double aTime);
 
+  // Returns the highest end time of any of the Sourcebuffers.
+  double GetHighestBufferedEndTime();
+
 private:
   ~SourceBufferList();
 
