@@ -133,7 +133,10 @@ SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCo
 {
   SBR_DEBUG("SourceBufferResource(%p)::ReadFromCache(aBuffer=%p, aOffset=%lld, aCount=%u)",
             this, aBuffer, aOffset, aCount);
-  return ReadAt(aOffset, aBuffer, aCount, nullptr);
+  int64_t oldOffset = mOffset;
+  nsresult rv = ReadAt(aOffset, aBuffer, aCount, nullptr);
+  mOffset = oldOffset;
+  return rv;
 }
 
 bool
