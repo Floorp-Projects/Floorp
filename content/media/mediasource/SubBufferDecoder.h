@@ -29,7 +29,7 @@ public:
   // of the caller to manage the memory of the MediaResource object.
   SubBufferDecoder(MediaResource* aResource, MediaSourceDecoder* aParentDecoder)
     : BufferDecoder(aResource), mParentDecoder(aParentDecoder), mReader(nullptr)
-    , mMediaDuration(-1), mMediaStartTime(0), mDiscarded(false)
+    , mMediaDuration(-1), mDiscarded(false)
   {
   }
 
@@ -69,16 +69,6 @@ public:
     return mMediaDuration;
   }
 
-  int64_t GetMediaStartTime()
-  {
-    return mMediaStartTime;
-  }
-
-  void SetMediaStartTime(int64_t aMediaStartTime)
-  {
-    mMediaStartTime = aMediaStartTime;
-  }
-
   bool IsDiscarded()
   {
     return mDiscarded;
@@ -94,7 +84,6 @@ private:
   MediaSourceDecoder* mParentDecoder;
   nsRefPtr<MediaDecoderReader> mReader;
   int64_t mMediaDuration;
-  int64_t mMediaStartTime;
   bool mDiscarded;
 };
 

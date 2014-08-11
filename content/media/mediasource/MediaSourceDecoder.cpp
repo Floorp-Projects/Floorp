@@ -44,12 +44,6 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 
 namespace mozilla {
 
-namespace dom {
-
-class TimeRanges;
-
-} // namespace dom
-
 class MediaSourceReader : public MediaDecoderReader
 {
 public:
@@ -206,17 +200,25 @@ private:
 
     for (uint32_t i = mActiveVideoDecoder + 1; i < mDecoders.Length(); ++i) {
       SubBufferDecoder* decoder = mDecoders[i];
+
+      nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
+      decoder->GetBuffered(ranges);
+
       MSE_DEBUGV("MediaDecoderReader(%p)::SwitchVideoReaders(%d) decoder=%u (%p) discarded=%d"
-                 " hasVideo=%d timeThreshold=%lld startTime=%lld",
+                 " hasVideo=%d timeThreshold=%f startTime=%f endTime=%f length=%u",
                  this, aType, i, decoder, decoder->IsDiscarded(),
                  decoder->GetReader()->GetMediaInfo().HasVideo(),
-                 mTimeThreshold, decoder->GetMediaStartTime());
+                 double(mTimeThreshold) / USECS_PER_S,
+                 ranges->GetStartTime(), ranges->GetEndTime(), ranges->Length());
 
-      if (decoder->IsDiscarded() || !decoder->GetReader()->GetMediaInfo().HasVideo()) {
+      if (decoder->IsDiscarded() ||
+          !decoder->GetReader()->GetMediaInfo().HasVideo() ||
+          ranges->Length() == 0) {
         continue;
       }
 
-      if (aType == SWITCH_FORCED || mTimeThreshold >= decoder->GetMediaStartTime()) {
+      if (aType == SWITCH_FORCED ||
+          ranges->Find(double(mTimeThreshold) / USECS_PER_S) != dom::TimeRanges::NoIndex) {
         GetVideoReader()->SetIdle();
 
         mActiveVideoDecoder = i;
@@ -423,27 +425,22 @@ MediaSourceReader::InitializePendingDecoders()
     MediaInfo mi;
     nsAutoPtr<MetadataTags> tags; // TODO: Handle metadata.
     nsresult rv;
-    int64_t startTime = INT64_MIN;
     {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       rv = reader->ReadMetadata(&mi, getter_Transfers(tags));
-      if (NS_SUCCEEDED(rv)) {
-        reader->FindStartTime(startTime);
-      }
     }
     reader->SetIdle();
-    if (NS_FAILED(rv) || startTime == INT64_MIN) {
+    if (NS_FAILED(rv)) {
       // XXX: Need to signal error back to owning SourceBuffer.
-      MSE_DEBUG("MediaSourceReader(%p): Reader %p failed to initialize rv=%x startTime=%lld",
-                this, reader, rv, startTime);
+      MSE_DEBUG("MediaSourceReader(%p): Reader %p failed to initialize rv=%x",
+                this, reader, rv);
       continue;
     }
-    decoder->SetMediaStartTime(startTime);
 
     bool active = false;
     if (mi.HasVideo() || mi.HasAudio()) {
-      MSE_DEBUG("MediaSourceReader(%p): Reader %p has video=%d audio=%d startTime=%lld",
-                this, reader, mi.HasVideo(), mi.HasAudio(), startTime);
+      MSE_DEBUG("MediaSourceReader(%p): Reader %p has video=%d audio=%d",
+                this, reader, mi.HasVideo(), mi.HasAudio());
       if (mi.HasVideo()) {
         MSE_DEBUG("MediaSourceReader(%p): Reader %p video resolution=%dx%d",
                   this, reader, mi.mVideo.mDisplay.width, mi.mVideo.mDisplay.height);
