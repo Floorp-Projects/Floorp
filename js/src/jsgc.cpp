@@ -4430,7 +4430,7 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
             SweepScriptData(rt);
 
         /* Clear out any small pools that we're hanging on to. */
-        if (JSC::ExecutableAllocator *execAlloc = rt->maybeExecAlloc())
+        if (jit::ExecutableAllocator *execAlloc = rt->maybeExecAlloc())
             execAlloc->purge();
 
         if (rt->jitRuntime() && rt->jitRuntime()->hasIonAlloc()) {

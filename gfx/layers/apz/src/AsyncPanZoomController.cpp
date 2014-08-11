@@ -8,7 +8,6 @@
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include <sys/types.h>                  // for int32_t
 #include <algorithm>                    // for max, min
-#include "AnimationCommon.h"            // for ComputedTimingFunction
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController, etc
 #include "Compositor.h"                 // for Compositor
 #include "CompositorParent.h"           // for CompositorParent
@@ -32,6 +31,7 @@
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitorAutoEnter, etc
 #include "mozilla/StaticPtr.h"          // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
+#include "mozilla/dom/AnimationPlayer.h" // for ComputedTimingFunction
 #include "mozilla/dom/Touch.h"          // for Touch
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
@@ -347,7 +347,7 @@ static const double ALLOWED_DIRECT_PAN_ANGLE = M_PI / 3.0; // 60 degrees
 /**
  * Computed time function used for sampling frames of a zoom to animation.
  */
-StaticAutoPtr<css::ComputedTimingFunction> gComputedTimingFunction;
+StaticAutoPtr<ComputedTimingFunction> gComputedTimingFunction;
 
 /**
  * Maximum zoom amount, always used, even if a page asks for higher.
@@ -700,7 +700,7 @@ AsyncPanZoomController::InitializeGlobalState()
     return;
   sInitialized = true;
 
-  gComputedTimingFunction = new css::ComputedTimingFunction();
+  gComputedTimingFunction = new ComputedTimingFunction();
   gComputedTimingFunction->Init(
     nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
   ClearOnShutdown(&gComputedTimingFunction);

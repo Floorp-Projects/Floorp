@@ -20,7 +20,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
  #include "speex_resampler.h"
  #include "arch.h"
  #else /* OUTSIDE_SPEEX */
-@@ -632,18 +634,18 @@ static int update_filter(SpeexResamplerS
+@@ -633,24 +635,23 @@ static int update_filter(SpeexResamplerS
        if (st->oversample < 1)
           st->oversample = 1;
     } else {
@@ -31,13 +31,22 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
     /* Choose the resampling type that requires the least amount of memory */
 -#ifdef RESAMPLE_FULL_SINC_TABLE
 -   use_direct = 1;
+-   if (INT_MAX/sizeof(spx_word16_t)/st->den_rate < st->filt_len)
+-      goto fail;
++   use_direct =
 +#ifdef RESAMPLE_HUGEMEM
-+   use_direct = st->den_rate <= 16*(st->oversample+8);
++     st->den_rate <= 16*(st->oversample+8)
  #else
-    use_direct = st->filt_len*st->den_rate <= st->filt_len*st->oversample+8;
- #endif
+-   use_direct = st->filt_len*st->den_rate <= st->filt_len*st->oversample+8
++     st->filt_len*st->den_rate <= st->filt_len*st->oversample+8
++#endif
+                 && INT_MAX/sizeof(spx_word16_t)/st->den_rate >= st->filt_len;
+-#endif
     if (use_direct)
     {
        min_sinc_table_length = st->filt_len*st->den_rate;
     } else {
+       if ((INT_MAX/sizeof(spx_word16_t)-8)/st->oversample < st->filt_len)
+          goto fail;
+ 
        min_sinc_table_length = st->filt_len*st->oversample+8;

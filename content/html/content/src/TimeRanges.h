@@ -80,6 +80,12 @@ private:
   };
 
   nsAutoTArray<TimeRange,4> mRanges;
+
+public:
+  typedef nsTArray<TimeRange>::index_type index_type;
+  static const index_type NoIndex = index_type(-1);
+
+  index_type Find(double aTime);
 };
 
 } // namespace dom

@@ -442,7 +442,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
 
     Linker linker(masm);
     AutoFlushICache afc("RegExp");
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::REGEXP_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, REGEXP_CODE);
     if (!code)
         return RegExpCode();
 

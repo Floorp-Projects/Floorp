@@ -34,32 +34,45 @@ namespace webrtc {
 // Packetizer for H264.
 class RtpFormatH264 {
  public:
-  enum {
-    kH264NALU_SLICE             = 1,
-    kH264NALU_IDR               = 5,
-    kH264NALU_SEI               = 6,
-    kH264NALU_SPS               = 7,
-    kH264NALU_PPS               = 8,
-    kh264NALU_PREFIX            = 14,
-    kH264NALU_STAPA             = 24,
-    kH264NALU_FUA               = 28
+
+  // This supports H.264 RTP packetization modes 0/1 from RFC 6184
+  // Single NALU: NAL Header (1 byte), Data...
+  // FU-A   NALU: NAL Header, FU Header (1 byte), Data...
+  // STAP-A NALU: NAL Header, Length1 (2 bytes), Data1, Length2, Data2...
+
+  enum NalHeader { // Network Abstraction Layer Unit Header
+    kNalHeaderOffset = 0, // start of every RTP payload
+    kNalHeaderSize = 1, // 1 byte:
+    kTypeMask = 0x1f, // bits 0-4: NAL Type
+    kNriMask = 0x60, // bits 5-6: Non-Ref Indicator
+    kFBit = 0x80, // bit 7: Forbidden (always 0)
   };
 
-  static const int kH264NALHeaderLengthInBytes = 1;
-  static const int kH264FUAHeaderLengthInBytes = 2;
-
-// bits for FU (A and B) indicators
-  enum H264NalDefs {
-    kH264NAL_FBit = 0x80,
-    kH264NAL_NRIMask = 0x60,
-    kH264NAL_TypeMask = 0x1F
+  enum NalType { // 0-23 from H.264, 24-31 from RFC 6184
+    kIpb = 1, // I/P/B slice
+    kIdr = 5, // IDR slice
+    kSei = 6, // Supplementary Enhancement Info
+    kSeiRecPt = 6, // Recovery Point SEI Payload
+    kSps = 7, // Sequence Parameter Set
+    kPps = 8, // Picture Parameter Set
+    kPrefix = 14, // Prefix
+    kStapA = 24, // Single-Time Aggregation Packet Type A
+    kFuA = 28, // Fragmentation Unit Type A
   };
 
-  enum H264FUDefs {
-    // bits for FU (A and B) headers
-    kH264FU_SBit = 0x80,
-    kH264FU_EBit = 0x40,
-    kH264FU_RBit = 0x20
+  enum FuAHeader {
+    kFuAHeaderOffset = 1, // follows NAL Header
+    kFuAHeaderSize = 1, // 1 byte: bits 0-4: Original NAL Type
+    kFragStartBit = 0x80, // bit 7: Start of Fragment
+    kFragEndBit = 0x40, // bit 6: End of Fragment
+    kReservedBit = 0x20 // bit 5: Reserved
+  };
+  enum StapAHeader {
+    kStapAHeaderOffset = 1, // follows NAL Header
+    kAggUnitLengthSize = 2 // 2-byte length of next NALU including NAL header
+  };
+  enum StartCodePrefix { // H.264 Annex B format {0,0,0,1}
+    kStartCodeSize = 4 // 4 byte prefix before each NAL header
   };
 
   // Initialize with payload from encoder.

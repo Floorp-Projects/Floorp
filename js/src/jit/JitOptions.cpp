@@ -54,6 +54,9 @@ JitOptions::JitOptions()
     // Toggles whether Range Analysis is globally disabled.
     disableRangeAnalysis = false;
 
+    // Toggles whether Loop Unrolling is globally disabled.
+    disableLoopUnrolling = true;
+
     // Toggles whether Unreachable Code Elimination is globally disabled.
     disableUce = false;
 

@@ -15,10 +15,20 @@
 #include "prlog.h"
 
 #ifdef PR_LOGGING
-extern PRLogModuleInfo* gMediaSourceLog;
-#define MSE_DEBUG(...) PR_LOG(gMediaSourceLog, PR_LOG_DEBUG, (__VA_ARGS__))
+PRLogModuleInfo* GetSourceBufferResourceLog()
+{
+  static PRLogModuleInfo* sLogModule;
+  if (!sLogModule) {
+    sLogModule = PR_NewLogModule("SourceBufferResource");
+  }
+  return sLogModule;
+}
+
+#define SBR_DEBUG(...) PR_LOG(GetSourceBufferResourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define SBR_DEBUGV(...) PR_LOG(GetSourceBufferResourceLog(), PR_LOG_DEBUG+1, (__VA_ARGS__))
 #else
-#define MSE_DEBUG(...)
+#define SBR_DEBUG(...)
+#define SBR_DEBUGV(...)
 #endif
 
 namespace mozilla {
@@ -33,7 +43,7 @@ nsresult
 SourceBufferResource::Close()
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
-  MSE_DEBUG("%p SBR::Close", this);
+  SBR_DEBUG("SourceBufferResource(%p)::Close", this);
   //MOZ_ASSERT(!mClosed);
   mClosed = true;
   mon.NotifyAll();
@@ -43,26 +53,24 @@ SourceBufferResource::Close()
 nsresult
 SourceBufferResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
+  SBR_DEBUGV("SourceBufferResource(%p)::Read(aBuffer=%p, aCount=%u, aBytes=%p)",
+             this, aBytes, aCount, aBytes);
   ReentrantMonitorAutoEnter mon(mMonitor);
   bool blockingRead = !!aBytes;
 
   while (blockingRead &&
          !mEnded &&
          mOffset + aCount > static_cast<uint64_t>(GetLength())) {
-    MSE_DEBUG("%p SBR::Read waiting for data", this);
+    SBR_DEBUGV("SourceBufferResource(%p)::Read waiting for data", this);
     mon.Wait();
   }
 
   uint32_t available = GetLength() - mOffset;
   uint32_t count = std::min(aCount, available);
-  if (!PR_GetEnv("MOZ_QUIET")) {
-    MSE_DEBUG("%p SBR::Read aCount=%u length=%u offset=%u "
-              "available=%u count=%u, blocking=%d bufComplete=%d",
-              this, aCount, GetLength(), mOffset, available, count,
-              blockingRead, mEnded);
-  }
+  SBR_DEBUGV("SourceBufferResource(%p)::Read() mOffset=%llu GetLength()=%u available=%u count=%u mEnded=%d",
+             this, mOffset, GetLength(), available, count, mEnded);
   if (available == 0) {
-    MSE_DEBUG("%p SBR::Read EOF", this);
+    SBR_DEBUGV("SourceBufferResource(%p)::Read() reached EOF", this);
     *aBytes = 0;
     return NS_OK;
   }
@@ -76,6 +84,8 @@ SourceBufferResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 nsresult
 SourceBufferResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
+  SBR_DEBUG("SourceBufferResource(%p)::ReadAt(aOffset=%lld, aBuffer=%p, aCount=%u, aBytes=%p)",
+            this, aOffset, aBytes, aCount, aBytes);
   ReentrantMonitorAutoEnter mon(mMonitor);
   nsresult rv = Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
   if (NS_FAILED(rv)) {
@@ -87,6 +97,7 @@ SourceBufferResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, ui
 nsresult
 SourceBufferResource::Seek(int32_t aWhence, int64_t aOffset)
 {
+  SBR_DEBUG("SourceBufferResource(%p)::Seek(aWhence=%d, aOffset=%lld)", this, aWhence, aOffset);
   ReentrantMonitorAutoEnter mon(mMonitor);
   if (mClosed) {
     return NS_ERROR_FAILURE;
@@ -105,6 +116,8 @@ SourceBufferResource::Seek(int32_t aWhence, int64_t aOffset)
     break;
   }
 
+  SBR_DEBUGV("SourceBufferResource(%p)::Seek() newOffset=%lld GetOffset()=%llu GetLength()=%llu)",
+             this, newOffset, mInputBuffer.GetOffset(), GetLength());
   if (newOffset < 0 || uint64_t(newOffset) < mInputBuffer.GetOffset() || newOffset > GetLength()) {
     return NS_ERROR_FAILURE;
   }
@@ -118,17 +131,18 @@ SourceBufferResource::Seek(int32_t aWhence, int64_t aOffset)
 nsresult
 SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount)
 {
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  nsresult rv = Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return Read(aBuffer, aCount, nullptr);
+  SBR_DEBUG("SourceBufferResource(%p)::ReadFromCache(aBuffer=%p, aOffset=%lld, aCount=%u)",
+            this, aBuffer, aOffset, aCount);
+  int64_t oldOffset = mOffset;
+  nsresult rv = ReadAt(aOffset, aBuffer, aCount, nullptr);
+  mOffset = oldOffset;
+  return rv;
 }
 
 bool
 SourceBufferResource::EvictData(uint32_t aThreshold)
 {
+  SBR_DEBUG("SourceBufferResource(%p)::EvictData(aThreshold=%u)", this, aThreshold);
   ReentrantMonitorAutoEnter mon(mMonitor);
   return mInputBuffer.Evict(mOffset, aThreshold);
 }
@@ -136,6 +150,7 @@ SourceBufferResource::EvictData(uint32_t aThreshold)
 void
 SourceBufferResource::EvictBefore(uint64_t aOffset)
 {
+  SBR_DEBUG("SourceBufferResource(%p)::EvictBefore(aOffset=%llu)", this, aOffset);
   ReentrantMonitorAutoEnter mon(mMonitor);
   // If aOffset is past the current playback offset we don't evict.
   if (aOffset < mOffset) {
@@ -146,6 +161,7 @@ SourceBufferResource::EvictBefore(uint64_t aOffset)
 void
 SourceBufferResource::AppendData(const uint8_t* aData, uint32_t aLength)
 {
+  SBR_DEBUG("SourceBufferResource(%p)::AppendData(aData=%p, aLength=%u)", this, aData, aLength);
   ReentrantMonitorAutoEnter mon(mMonitor);
   mInputBuffer.PushBack(new ResourceItem(aData, aLength));
   mon.NotifyAll();
@@ -154,6 +170,7 @@ SourceBufferResource::AppendData(const uint8_t* aData, uint32_t aLength)
 void
 SourceBufferResource::Ended()
 {
+  SBR_DEBUG("SourceBufferResource(%p)::Ended()", this);
   ReentrantMonitorAutoEnter mon(mMonitor);
   mEnded = true;
   mon.NotifyAll();
@@ -161,8 +178,8 @@ SourceBufferResource::Ended()
 
 SourceBufferResource::~SourceBufferResource()
 {
+  SBR_DEBUG("SourceBufferResource(%p)::~SourceBufferResource()", this);
   MOZ_COUNT_DTOR(SourceBufferResource);
-  MSE_DEBUG("%p SBR::~SBR", this);
 }
 
 SourceBufferResource::SourceBufferResource(nsIPrincipal* aPrincipal,
@@ -174,8 +191,9 @@ SourceBufferResource::SourceBufferResource(nsIPrincipal* aPrincipal,
   , mClosed(false)
   , mEnded(false)
 {
+  SBR_DEBUG("SourceBufferResource(%p)::SourceBufferResource(aPrincipal=%p, aType=%s)",
+            this, aPrincipal, nsCString(aType).get());
   MOZ_COUNT_CTOR(SourceBufferResource);
-  MSE_DEBUG("%p SBR::SBR()", this);
 }
 
 } // namespace mozilla

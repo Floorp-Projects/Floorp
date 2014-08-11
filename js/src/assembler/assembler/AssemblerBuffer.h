@@ -158,7 +158,8 @@ namespace JSC {
          * The user must check for a NULL return value, which means
          * no code was generated, or there was an OOM.
          */
-        void* executableAllocAndCopy(ExecutableAllocator* allocator, ExecutablePool** poolp, CodeKind kind)
+        void* executableAllocAndCopy(js::jit::ExecutableAllocator* allocator,
+                                     js::jit::ExecutablePool** poolp, js::jit::CodeKind kind)
         {
             if (m_oom || m_size == 0) {
                 *poolp = NULL;
@@ -174,7 +175,7 @@ namespace JSC {
             }
             JS_ASSERT(*poolp);
 
-            ExecutableAllocator::makeWritable(result, m_size);
+            js::jit::ExecutableAllocator::makeWritable(result, m_size);
 
             return memcpy(result, m_buffer, m_size);
         }

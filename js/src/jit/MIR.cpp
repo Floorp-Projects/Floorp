@@ -2351,6 +2351,20 @@ MResumePoint::New(TempAllocator &alloc, MBasicBlock *block, jsbytecode *pc, MRes
     return resume;
 }
 
+MResumePoint *
+MResumePoint::New(TempAllocator &alloc, MBasicBlock *block, jsbytecode *pc, MResumePoint *parent,
+                  Mode mode, const MDefinitionVector &operands)
+{
+    MResumePoint *resume = new(alloc) MResumePoint(block, pc, parent, mode);
+
+    if (!resume->operands_.init(alloc, operands.length()))
+        return nullptr;
+    for (size_t i = 0; i < operands.length(); i++)
+        resume->initOperand(i, operands[i]);
+
+    return resume;
+}
+
 MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *caller,
                            Mode mode)
   : MNode(block),

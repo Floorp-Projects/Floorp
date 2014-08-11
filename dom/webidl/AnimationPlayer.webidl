@@ -12,6 +12,8 @@
 
 [Pref="dom.animations-api.core.enabled"]
 interface AnimationPlayer {
+  // Bug 1049975: Per spec, this should be a writeable AnimationNode? member
+  [Pure] readonly attribute Animation? source;
   readonly attribute AnimationTimeline timeline;
   [Pure] readonly attribute double startTime;
   readonly attribute double currentTime;
