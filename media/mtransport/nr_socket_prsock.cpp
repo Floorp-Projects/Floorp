@@ -518,7 +518,7 @@ int NrSocket::sendto(const void *msg, size_t len,
     // (see http://tools.ietf.org/html/draft-thomson-mmusic-ice-webrtc)
 
     // Tolerate rate of 8k/sec, for one second.
-    static SimpleTokenBucket burst(8192*1, 8192);
+    static SimpleTokenBucket burst(16384*1, 16384);
     // Tolerate rate of 3.6k/sec over twenty seconds.
     static SimpleTokenBucket sustained(3686*20, 3686);
 
@@ -526,31 +526,36 @@ int NrSocket::sendto(const void *msg, size_t len,
     if (burst.getTokens(UINT32_MAX) < len) {
       r_log(LOG_GENERIC, LOG_ERR,
                  "Short term global rate limit for STUN requests exceeded.");
+#ifdef MOZILLA_INTERNAL_API
+      nr_socket_short_term_violation_time = TimeStamp::Now();
+#endif
+
+// Bug 1013007
+#if !EARLY_BETA_OR_EARLIER
+      ABORT(R_WOULDBLOCK);
+#else
       MOZ_ASSERT(false,
                  "Short term global rate limit for STUN requests exceeded. Go "
                  "bug bcampen@mozilla.com if you weren't intentionally "
                  "spamming ICE candidates, or don't know what that means.");
-#ifdef MOZILLA_INTERNAL_API
-      nr_socket_short_term_violation_time = TimeStamp::Now();
 #endif
-      // TODO(bcampen@mozilla.com): Bug 1013007 Once we have better data on
-      // normal usage, re-enable this.
-      // ABORT(R_WOULDBLOCK);
     }
 
     if (sustained.getTokens(UINT32_MAX) < len) {
       r_log(LOG_GENERIC, LOG_ERR,
                  "Long term global rate limit for STUN requests exceeded.");
+#ifdef MOZILLA_INTERNAL_API
+      nr_socket_long_term_violation_time = TimeStamp::Now();
+#endif
+// Bug 1013007
+#if !EARLY_BETA_OR_EARLIER
+      ABORT(R_WOULDBLOCK);
+#else
       MOZ_ASSERT(false,
                  "Long term global rate limit for STUN requests exceeded. Go "
                  "bug bcampen@mozilla.com if you weren't intentionally "
                  "spamming ICE candidates, or don't know what that means.");
-#ifdef MOZILLA_INTERNAL_API
-      nr_socket_long_term_violation_time = TimeStamp::Now();
 #endif
-      // TODO(bcampen@mozilla.com): Bug 1013007 Once we have better data on
-      // normal usage, re-enable this.
-      // ABORT(R_WOULDBLOCK);
     }
 
     // Take len tokens from both buckets.
