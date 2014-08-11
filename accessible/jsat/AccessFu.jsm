@@ -528,23 +528,7 @@ var Output = {
   },
 
   B2G: function B2G(aDetails) {
-    let details = {
-      type: 'accessfu-output',
-      details: JSON.stringify(aDetails)
-    };
-    let window = Utils.win;
-    if (window.shell) {
-      // On B2G device.
-      window.shell.sendChromeEvent(details);
-    } else {
-      // Dispatch custom event to have support for desktop and screen reader
-      // emulator add-on.
-      window.dispatchEvent(new window.CustomEvent(details.type, {
-        bubbles: true,
-        cancelable: true,
-        detail: details
-      }));
-    }
+    Utils.dispatchChromeEvent('accessfu-output', aDetails);
   },
 
   Visual: function Visual(aDetail, aBrowser) {
@@ -711,15 +695,32 @@ var Input = {
         this.activateCurrent(null, true);
         break;
       case 'swiperight2':
+        if (aGesture.edge) {
+          Utils.dispatchChromeEvent('accessibility-control',
+            'edge-swipe-right');
+          break;
+        }
         this.sendScrollMessage(-1, true);
         break;
       case 'swipedown2':
+        if (aGesture.edge) {
+          Utils.dispatchChromeEvent('accessibility-control', 'edge-swipe-down');
+          break;
+        }
         this.sendScrollMessage(-1);
         break;
       case 'swipeleft2':
+        if (aGesture.edge) {
+          Utils.dispatchChromeEvent('accessibility-control', 'edge-swipe-left');
+          break;
+        }
         this.sendScrollMessage(1, true);
         break;
       case 'swipeup2':
+        if (aGesture.edge) {
+          Utils.dispatchChromeEvent('accessibility-control', 'edge-swipe-up');
+          break;
+        }
         this.sendScrollMessage(1);
         break;
       case 'explore2':
