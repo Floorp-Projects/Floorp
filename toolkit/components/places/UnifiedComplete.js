@@ -1310,6 +1310,8 @@ UnifiedComplete.prototype = {
     if (this._currentSearch) {
       this._currentSearch.cancel();
     }
+    // Don't notify since we are canceling this search.  This also means we
+    // won't fire onSearchComplete for this search.
     this.finishSearch();
   },
 
@@ -1321,14 +1323,24 @@ UnifiedComplete.prototype = {
    *        results or not.
    */
   finishSearch: function (notify=false) {
-    // Notify about results if we are supposed to.
-    if (notify) {
-      this._currentSearch.notifyResults(false);
-    }
-
-    // Clear our state
     TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT);
+    // Clear state now to avoid race conditions, see below.
+    let search = this._currentSearch;
     delete this._currentSearch;
+
+    if (!notify)
+      return;
+
+    // There is a possible race condition here.
+    // When a search completes it calls finishSearch that notifies results
+    // here.  When the controller gets the last result it fires
+    // onSearchComplete.
+    // If onSearchComplete immediately starts a new search it will set a new
+    // _currentSearch, and on return the execution will continue here, after
+    // notifyResults.
+    // Thus, ensure that notifyResults is the last call in this method,
+    // otherwise you might be touching the wrong search.
+    search.notifyResults(false);
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -1355,6 +1367,7 @@ UnifiedComplete.prototype = {
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIAutoCompleteSearch,
     Ci.nsIAutoCompleteSimpleResultListener,
+    Ci.nsIAutoCompleteSearchDescriptor,
     Ci.mozIPlacesAutoComplete,
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference
