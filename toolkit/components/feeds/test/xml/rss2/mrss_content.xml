@@ -2,7 +2,7 @@
 <!--
 
 Description: mrss content works
-Expect: var enc = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getPropertyAsInterface('mediacontent', Components.interfaces.nsIArray).queryElementAt(0, Components.interfaces.nsIPropertyBag); ((enc.getProperty('fileSize') == '24986239') && (enc.getProperty('type') == 'video/mpeg') && (enc.getProperty('url') == 'http://dallas.example.com/joebob_050689.mpeg') && (feed.type == 4) && (feed.enclosureCount == 1));
+Expect: var enc = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntry).fields.getPropertyAsInterface('mediacontent', Components.interfaces.nsIArray).queryElementAt(0, Components.interfaces.nsIPropertyBag); Assert.equal(enc.getProperty('fileSize'), '24986239', 'file size is correct'); Assert.equal(enc.getProperty('type'), 'video/mpeg', 'type is correct'); Assert.equal(enc.getProperty('url'), 'http://dallas.example.com/joebob_050689.mpeg', 'url is correct'); Assert.equal(feed.type, 4, 'Feed type is correct'); Assert.equal(feed.enclosureCount,1, 'Enclosure count is correct'); true;
 
 -->
 <rss xmlns:media="http://search.yahoo.com/mrss" version="2.0" >
@@ -10,7 +10,6 @@ Expect: var enc = feed.items.queryElementAt(0, Components.interfaces.nsIFeedEntr
 <item>
 
 <media:content fileSize="24986239" type="video/mpeg" url="http://dallas.example.com/joebob_050689.mpeg" />
-<media:thumbnail url="http://dallas.example.com/joebob_050689.jpg"  width="75" height="50"/>
 <author>jbb@dallas.example.com (Joe Bob Briggs)</author>
 <comments>http://example.org</comments>
 <title>test</title>
