@@ -587,6 +587,15 @@ struct ZoomConstraints {
     MOZ_COUNT_CTOR(ZoomConstraints);
   }
 
+  ZoomConstraints(const ZoomConstraints& other)
+    : mAllowZoom(other.mAllowZoom)
+    , mAllowDoubleTapZoom(other.mAllowDoubleTapZoom)
+    , mMinZoom(other.mMinZoom)
+    , mMaxZoom(other.mMaxZoom)
+  {
+    MOZ_COUNT_CTOR(ZoomConstraints);
+  }
+
   ~ZoomConstraints()
   {
     MOZ_COUNT_DTOR(ZoomConstraints);
