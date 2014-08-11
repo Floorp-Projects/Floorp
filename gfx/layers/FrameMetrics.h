@@ -402,8 +402,8 @@ public:
   {
     return mScrollId;
   }
-  
-  void SetScrollId(ViewID scrollId) 
+
+  void SetScrollId(ViewID scrollId)
   {
     mScrollId = scrollId;
   }
@@ -535,6 +535,14 @@ struct ScrollableLayerGuid {
     : mLayersId(aLayersId)
     , mPresShellId(aMetrics.GetPresShellId())
     , mScrollId(aMetrics.GetScrollId())
+  {
+    MOZ_COUNT_CTOR(ScrollableLayerGuid);
+  }
+
+  ScrollableLayerGuid(const ScrollableLayerGuid& other)
+    : mLayersId(other.mLayersId)
+    , mPresShellId(other.mPresShellId)
+    , mScrollId(other.mScrollId)
   {
     MOZ_COUNT_CTOR(ScrollableLayerGuid);
   }
