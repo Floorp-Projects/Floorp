@@ -160,12 +160,7 @@ IsTexImageCubemapTarget(GLenum target)
 bool
 WebGLProgram::UpdateInfo()
 {
-    mIdentifierMap = nullptr;
-    mIdentifierReverseMap = nullptr;
-    mUniformInfoMap = nullptr;
-
     mAttribMaxNameLength = 0;
-
     for (size_t i = 0; i < mAttachedShaders.Length(); i++)
         mAttribMaxNameLength = std::max(mAttribMaxNameLength, mAttachedShaders[i]->mAttribMaxNameLength);
 
@@ -199,14 +194,28 @@ WebGLProgram::UpdateInfo()
         }
     }
 
-    if (!mUniformInfoMap) {
-        mUniformInfoMap = new CStringToUniformInfoMap;
-        for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
-            for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
-                const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
-                const WebGLUniformInfo& info = mAttachedShaders[i]->mUniformInfos[j];
-                mUniformInfoMap->Put(uniform.mapped, info);
-            }
+    // nsAutoPtr will delete old version first
+    mIdentifierMap = new CStringMap;
+    mIdentifierReverseMap = new CStringMap;
+    mUniformInfoMap = new CStringToUniformInfoMap;
+    for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
+        // Loop through ATTRIBUTES
+        for (size_t j = 0; j < mAttachedShaders[i]->mAttributes.Length(); j++) {
+            const WebGLMappedIdentifier& attrib = mAttachedShaders[i]->mAttributes[j];
+            mIdentifierMap->Put(attrib.original, attrib.mapped); // FORWARD MAPPING
+            mIdentifierReverseMap->Put(attrib.mapped, attrib.original); // REVERSE MAPPING
+        }
+
+        // Loop through UNIFORMS
+        for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
+            // Add the uniforms name mapping to mIdentifier[Reverse]Map
+            const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
+            mIdentifierMap->Put(uniform.original, uniform.mapped); // FOWARD MAPPING
+            mIdentifierReverseMap->Put(uniform.mapped, uniform.original); // REVERSE MAPPING
+
+            // Add uniform info to mUniformInfoMap
+            const WebGLUniformInfo& info = mAttachedShaders[i]->mUniformInfos[j];
+            mUniformInfoMap->Put(uniform.mapped, info);
         }
     }
 
