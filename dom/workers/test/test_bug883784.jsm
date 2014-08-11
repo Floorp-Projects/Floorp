@@ -4,7 +4,10 @@ this.Test = {
   start: function(ok, is, finish) {
     let worker = new ChromeWorker("jsm_url_worker.js");
     worker.onmessage = function(event) {
-      if (event.data.type == 'status') {
+
+      if (event.data.type == 'finish') {
+        finish();
+      } else if (event.data.type == 'status') {
         ok(event.data.status, event.data.msg);
       } else if (event.data.type == 'url') {
         var xhr = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -13,12 +16,7 @@ this.Test = {
         xhr.onreadystatechange = function() {
           if (xhr.readyState == 4) {
             ok(true, "Blob readable!");
-            finish();
           }
-        }
-        xhr.onerror = function() {
-          ok(true, "Blob unreadable, should not happen!");
-          finish();
         }
         xhr.send();
       }
