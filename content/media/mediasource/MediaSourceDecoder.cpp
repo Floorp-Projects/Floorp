@@ -273,7 +273,8 @@ public:
     if (!mReader) {
       return nullptr;
     }
-    return static_cast<MediaSourceReader*>(mReader.get())->CreateSubDecoder(aType, aParentDecoder, mDecodeTaskQueue);
+    MediaSourceReader* reader = static_cast<MediaSourceReader*>(mReader.get());
+    return reader->CreateSubDecoder(aType, aParentDecoder, mDecodeTaskQueue);
   }
 
   nsresult EnqueueDecoderInitialization() {
@@ -281,8 +282,9 @@ public:
     if (!mReader) {
       return NS_ERROR_FAILURE;
     }
-    return mDecodeTaskQueue->Dispatch(NS_NewRunnableMethod(this,
-                                                           &MediaSourceStateMachine::InitializePendingDecoders));
+    RefPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this, &MediaSourceStateMachine::InitializePendingDecoders);
+    return mDecodeTaskQueue->Dispatch(task);
   }
 
 private:
@@ -290,7 +292,8 @@ private:
     if (!mReader) {
       return;
     }
-    static_cast<MediaSourceReader*>(mReader.get())->InitializePendingDecoders();
+    MediaSourceReader* reader = static_cast<MediaSourceReader*>(mReader.get());
+    reader->InitializePendingDecoders();
   }
 };
 
@@ -377,7 +380,8 @@ MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
   if (!mDecoderStateMachine) {
     return nullptr;
   }
-  return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->CreateSubDecoder(aType, this);
+  MediaSourceStateMachine* sm = static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get());
+  return sm->CreateSubDecoder(aType, this);
 }
 
 nsresult
@@ -386,7 +390,8 @@ MediaSourceDecoder::EnqueueDecoderInitialization()
   if (!mDecoderStateMachine) {
     return NS_ERROR_FAILURE;
   }
-  return static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get())->EnqueueDecoderInitialization();
+  MediaSourceStateMachine* sm = static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get());
+  return sm->EnqueueDecoderInitialization();
 }
 
 class ReleaseDecodersTask : public nsRunnable {
@@ -418,7 +423,7 @@ MediaSourceReader::InitializePendingDecoders()
     MediaInfo mi;
     nsAutoPtr<MetadataTags> tags; // TODO: Handle metadata.
     nsresult rv;
-    int64_t startTime = 0;
+    int64_t startTime = INT64_MIN;
     {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
       rv = reader->ReadMetadata(&mi, getter_Transfers(tags));
@@ -427,9 +432,10 @@ MediaSourceReader::InitializePendingDecoders()
       }
     }
     reader->SetIdle();
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv) || startTime == INT64_MIN) {
       // XXX: Need to signal error back to owning SourceBuffer.
-      MSE_DEBUG("MediaSourceReader(%p): Reader %p failed to initialize, rv=%x", this, reader, rv);
+      MSE_DEBUG("MediaSourceReader(%p): Reader %p failed to initialize rv=%x startTime=%lld",
+                this, reader, rv, startTime);
       continue;
     }
     decoder->SetMediaStartTime(startTime);
@@ -633,7 +639,8 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDecoder->SetMediaDuration(maxDuration);
     nsRefPtr<nsIRunnable> task (
-      NS_NewRunnableMethodWithArg<double>(this, &MediaSourceReader::SetMediaSourceDuration, maxDuration));
+      NS_NewRunnableMethodWithArg<double>(this, &MediaSourceReader::SetMediaSourceDuration,
+                                          static_cast<double>(maxDuration) / USECS_PER_S));
     NS_DispatchToMainThread(task);
   }
 
