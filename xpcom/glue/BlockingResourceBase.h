@@ -17,8 +17,11 @@
 
 #ifdef DEBUG
 #include "prinit.h"
+#include "prthread.h"
 
 #include "nsStringGlue.h"
+
+#include "mozilla/DeadlockDetector.h"
 #include "nsXPCOM.h"
 #endif
 
@@ -28,9 +31,6 @@
 
 namespace mozilla {
 
-#ifdef DEBUG
-template <class T> class DeadlockDetector;
-#endif
 
 /**
  * BlockingResourceBase
@@ -53,39 +53,87 @@ public:
 #ifdef DEBUG
 
   static size_t
-  SizeOfDeadlockDetector(MallocSizeOf aMallocSizeOf);
-
-  /**
-   * Print
-   * Write a description of this blocking resource to |aOut|.  If
-   * the resource appears to be currently acquired, the current
-   * acquisition context is printed and true is returned.
-   * Otherwise, we print the context from |aFirstSeen|, the
-   * first acquisition from which the code calling |Print()|
-   * became interested in us, and return false.
-   *
-   * *NOT* thread safe.  Reads |mAcquisitionContext| without
-   * synchronization, but this will not cause correctness
-   * problems.
-   *
-   * FIXME bug 456272: hack alert: because we can't write call
-   * contexts into strings, all info is written to stderr, but
-   * only some info is written into |aOut|
-   */
-  bool Print(nsACString& aOut) const;
-
-  size_t
-  SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  SizeOfDeadlockDetector(MallocSizeOf aMallocSizeOf)
   {
-    // NB: |mName| is not reported as it's expected to be a static string.
-    //     If we switch to a nsString it should be added to the tally.
-    //     |mChainPrev| is not reported because its memory is not owned.
-    size_t n = aMallocSizeOf(this);
-    return n;
+    return sDeadlockDetector ?
+        sDeadlockDetector->SizeOfIncludingThis(aMallocSizeOf) : 0;
   }
 
+private:
+  // forward declaration for the following typedef
+  struct DeadlockDetectorEntry;
+
   // ``DDT'' = ``Deadlock Detector Type''
-  typedef DeadlockDetector<BlockingResourceBase> DDT;
+  typedef DeadlockDetector<DeadlockDetectorEntry> DDT;
+
+  /**
+   * DeadlockDetectorEntry
+   * We free BlockingResources, but we never free entries in the
+   * deadlock detector.  This struct outlives its BlockingResource
+   * and preserves all the state needed to print subsequent
+   * error messages.
+   *
+   * These objects are owned by the deadlock detector.
+   */
+  struct DeadlockDetectorEntry
+  {
+    DeadlockDetectorEntry(const char* aName,
+                          BlockingResourceType aType)
+      : mName(aName)
+      , mType(aType)
+      , mAcquired(false)
+    {
+      NS_ABORT_IF_FALSE(mName, "Name must be nonnull");
+    }
+
+    size_t
+    SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+    {
+      // NB: |mName| is not reported as it's expected to be a static string.
+      //     If we switch to a nsString it should be added to the tally.
+      //     |mAcquisitionContext| has no measurable heap allocations in it.
+      size_t n = aMallocSizeOf(this);
+      return n;
+    }
+
+    /**
+     * Print
+     * Write a description of this blocking resource to |aOut|.  If
+     * the resource appears to be currently acquired, the current
+     * acquisition context is printed and true is returned.
+     * Otherwise, we print the context from |aFirstSeen|, the
+     * first acquisition from which the code calling |Print()|
+     * became interested in us, and return false.
+     *
+     * *NOT* thread safe.  Reads |mAcquisitionContext| without
+     * synchronization, but this will not cause correctness
+     * problems.
+     *
+     * FIXME bug 456272: hack alert: because we can't write call
+     * contexts into strings, all info is written to stderr, but
+     * only some info is written into |aOut|
+     */
+    bool Print(const DDT::ResourceAcquisition& aFirstSeen,
+               nsACString& aOut) const;
+
+    /**
+     * mName
+     * A descriptive name for this resource.  Used in error
+     * messages etc.
+     */
+    const char* mName;
+    /**
+     * mType
+     * The more specific type of this resource.  Used to implement
+     * special semantics (e.g., reentrancy of monitors).
+     **/
+    BlockingResourceType mType;
+    /**
+     * mAcquired
+     * Indicates if this resource is currently acquired.
+     */
+    bool mAcquired;
+  };
 
 protected:
   /**
@@ -127,6 +175,23 @@ protected:
    * *NOT* thread safe.  Requires ownership of underlying resource.
    **/
   void Release();             //NS_NEEDS_RESOURCE(this)
+
+  /**
+   * PrintCycle
+   * Append to |aOut| detailed information about the circular
+   * dependency in |aCycle|.  Returns true if it *appears* that this
+   * cycle may represent an imminent deadlock, but this is merely a
+   * heuristic; the value returned may be a false positive or false
+   * negative.
+   *
+   * *NOT* thread safe.  Calls |Print()|.
+   *
+   * FIXME bug 456272 hack alert: because we can't write call
+   * contexts into strings, all info is written to stderr, but only
+   * some info is written into |aOut|
+   */
+  static bool PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
+                         nsACString& aOut);
 
   /**
    * ResourceChainFront
@@ -186,7 +251,7 @@ protected:
    */
   bool GetAcquisitionState()
   {
-    return mAcquired;
+    return mDDEntry->mAcquired;
   }
 
   /**
@@ -197,7 +262,7 @@ protected:
    */
   void SetAcquisitionState(bool aAcquisitionState)
   {
-    mAcquired = aAcquisitionState;
+    mDDEntry->mAcquired = aAcquisitionState;
   }
 
   /**
@@ -210,24 +275,10 @@ protected:
 
 private:
   /**
-   * mName
-   * A descriptive name for this resource.  Used in error
-   * messages etc.
+   * mDDEntry
+   * The key for this BlockingResourceBase in the deadlock detector.
    */
-  const char* mName;
-
-  /**
-   * mType
-   * The more specific type of this resource.  Used to implement
-   * special semantics (e.g., reentrancy of monitors).
-   **/
-  BlockingResourceType mType;
-
-  /**
-   * mAcquired
-   * Indicates if this resource is currently acquired.
-   */
-  bool mAcquired;
+  DeadlockDetectorEntry* mDDEntry;
 
   /**
    * sCallOnce
@@ -256,7 +307,15 @@ private:
    *
    * *NOT* thread safe.
    */
-  static PRStatus InitStatics();
+  static PRStatus InitStatics()
+  {
+    PR_NewThreadPrivateIndex(&sResourceAcqnChainFrontTPI, 0);
+    sDeadlockDetector = new DDT();
+    if (!sDeadlockDetector) {
+      NS_RUNTIMEABORT("can't allocate deadlock detector");
+    }
+    return PR_SUCCESS;
+  }
 
   /**
    * Shutdown
@@ -264,7 +323,11 @@ private:
    *
    * *NOT* thread safe.
    */
-  static void Shutdown();
+  static void Shutdown()
+  {
+    delete sDeadlockDetector;
+    sDeadlockDetector = 0;
+  }
 
 #  ifdef MOZILLA_INTERNAL_API
   // so it can call BlockingResourceBase::Shutdown()
