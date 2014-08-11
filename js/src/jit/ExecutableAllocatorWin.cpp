@@ -23,16 +23,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mozilla/WindowsVersion.h"
+
 #include "jit/ExecutableAllocator.h"
 
-#if ENABLE_ASSEMBLER && WTF_OS_WINDOWS
-
 #include "jswin.h"
-#include "mozilla/WindowsVersion.h"
 
 extern uint64_t random_next(uint64_t *, int);
 
-namespace JSC {
+using namespace js::jit;
 
 uint64_t ExecutableAllocator::rngSeed;
 
@@ -57,10 +56,10 @@ void *ExecutableAllocator::computeRandomAllocationAddress()
      * x64: [2GiB, 4TiB), with 25 bits of randomness.
      */
     static const unsigned chunkBits = 16;
-#if WTF_CPU_X86_64
+#ifdef JS_CPU_X64
     static const uintptr_t base = 0x0000000080000000;
     static const uintptr_t mask = 0x000003ffffff0000;
-#elif WTF_CPU_X86
+#elif defined(JS_CPU_X86)
     static const uintptr_t base = 0x04000000;
     static const uintptr_t mask = 0x3fff0000;
 #else
@@ -128,7 +127,3 @@ ExecutablePool::toggleAllCodeAsAccessible(bool accessible)
 #if ENABLE_ASSEMBLER_WX_EXCLUSIVE
 #error "ASSEMBLER_WX_EXCLUSIVE not yet suported on this platform."
 #endif
-
-}
-
-#endif // HAVE(ASSEMBLER)

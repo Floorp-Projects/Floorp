@@ -21,6 +21,7 @@ WEBIDL_FILES = [
     'AlarmsManager.webidl',
     'AnalyserNode.webidl',
     'Animatable.webidl',
+    'Animation.webidl',
     'AnimationEvent.webidl',
     'AnimationPlayer.webidl',
     'AnimationTimeline.webidl',

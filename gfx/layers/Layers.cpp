@@ -7,7 +7,6 @@
 
 #include "Layers.h"
 #include <algorithm>                    // for max, min
-#include "AnimationCommon.h"            // for ComputedTimingFunction
 #include "CompositableHost.h"           // for CompositableHost
 #include "ImageContainer.h"             // for ImageContainer, etc
 #include "ImageLayers.h"                // for ImageLayer
@@ -20,6 +19,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/Telemetry.h"          // for Accumulate
+#include "mozilla/dom/AnimationPlayer.h" // for ComputedTimingFunction
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
@@ -394,12 +394,13 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
   mAnimationData.Clear();
   for (uint32_t i = 0; i < mAnimations.Length(); i++) {
     AnimData* data = mAnimationData.AppendElement();
-    InfallibleTArray<nsAutoPtr<css::ComputedTimingFunction> >& functions = data->mFunctions;
+    InfallibleTArray<nsAutoPtr<ComputedTimingFunction> >& functions =
+      data->mFunctions;
     const InfallibleTArray<AnimationSegment>& segments =
       mAnimations.ElementAt(i).segments();
     for (uint32_t j = 0; j < segments.Length(); j++) {
       TimingFunction tf = segments.ElementAt(j).sampleFn();
-      css::ComputedTimingFunction* ctf = new css::ComputedTimingFunction();
+      ComputedTimingFunction* ctf = new ComputedTimingFunction();
       switch (tf.type()) {
         case TimingFunction::TCubicBezierFunction: {
           CubicBezierFunction cbf = tf.get_CubicBezierFunction();

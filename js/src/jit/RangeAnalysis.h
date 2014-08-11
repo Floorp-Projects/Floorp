@@ -32,20 +32,29 @@ struct LoopIterationBound : public TempObject
     // Loop for which this bound applies.
     MBasicBlock *header;
 
-    // Test from which this bound was derived. Code in the loop body which this
+    // Test from which this bound was derived; after executing exactly 'bound'
+    // times this test will exit the loop. Code in the loop body which this
     // test dominates (will include the backedge) will execute at most 'bound'
     // times. Other code in the loop will execute at most '1 + Max(bound, 0)'
     // times.
     MTest *test;
 
-    // Symbolic bound computed for the number of backedge executions.
-    LinearSum sum;
+    // Symbolic bound computed for the number of backedge executions. The terms
+    // in this bound are all loop invariant.
+    LinearSum boundSum;
 
-    LoopIterationBound(MBasicBlock *header, MTest *test, LinearSum sum)
-      : header(header), test(test), sum(sum)
+    // Linear sum for the number of iterations already executed, at the start
+    // of the loop header. This will use loop invariant terms and header phis.
+    LinearSum currentSum;
+
+    LoopIterationBound(MBasicBlock *header, MTest *test, LinearSum boundSum, LinearSum currentSum)
+      : header(header), test(test),
+        boundSum(boundSum), currentSum(currentSum)
     {
     }
 };
+
+typedef Vector<LoopIterationBound *, 0, SystemAllocPolicy> LoopIterationBoundVector;
 
 // A symbolic upper or lower bound computed for a term.
 struct SymbolicBound : public TempObject
@@ -90,7 +99,7 @@ class RangeAnalysis
     TempAllocator &alloc() const;
 
   public:
-    MOZ_CONSTEXPR RangeAnalysis(MIRGenerator *mir, MIRGraph &graph) :
+    RangeAnalysis(MIRGenerator *mir, MIRGraph &graph) :
         mir(mir), graph_(graph) {}
     bool addBetaNodes();
     bool analyze();
@@ -98,6 +107,9 @@ class RangeAnalysis
     bool removeBetaNodes();
     bool prepareForUCE(bool *shouldRemoveDeadCode);
     bool truncate();
+
+    // Any iteration bounds discovered for loops in the graph.
+    LoopIterationBoundVector loopIterationBounds;
 
   private:
     bool analyzeLoop(MBasicBlock *header);

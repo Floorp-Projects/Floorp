@@ -1,0 +1,54 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads: bug 1036484
+-->
+<head>
+  <title>Test for DOM Worker Threads: bug 1036484</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function test(script) {
+  var worker = new Worker(script);
+
+  worker.onmessage = function(event) {
+    ok(false, "Shouldn't ever get a message!");
+  }
+
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    is(event.message, "Error: Script file not found: " + script);
+    event.preventDefault();
+    runTests();
+  };
+
+  worker.postMessage("dummy");
+}
+
+var tests = [ '404_server.sjs', '404_server.sjs?js' ];
+function runTests() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var script = tests.shift();
+  test(script);
+}
+
+SimpleTest.waitForExplicitFinish();
+runTests();
+
+</script>
+</pre>
+</body>
+</html>
+

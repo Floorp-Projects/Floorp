@@ -16,6 +16,12 @@ namespace gmp {
 static MessageLoop* sMainLoop = nullptr;
 static GMPChild* sChild = nullptr;
 
+static bool
+IsOnChildMainThread()
+{
+  return sMainLoop && sMainLoop == MessageLoop::current();
+}
+
 // We just need a refcounted wrapper for GMPTask objects.
 class Runnable MOZ_FINAL
 {
@@ -64,7 +70,7 @@ public:
     // 1) Nobody should be blocking the main thread.
     // 2) This prevents deadlocks when doing sync calls to main which if the
     //    main thread tries to do a sync call back to the calling thread.
-    MOZ_ASSERT(MessageLoop::current() != sMainLoop);
+    MOZ_ASSERT(!IsOnChildMainThread());
 
     mMessageLoop->PostTask(FROM_HERE, NewRunnableMethod(this, &SyncRunnable::Run));
     MonitorAutoLock lock(mMonitor);
@@ -122,7 +128,7 @@ RunOnMainThread(GMPTask* aTask)
 GMPErr
 SyncRunOnMainThread(GMPTask* aTask)
 {
-  if (!aTask || !sMainLoop || sMainLoop == MessageLoop::current()) {
+  if (!aTask || !sMainLoop || IsOnChildMainThread()) {
     return GMPGenericErr;
   }
 
@@ -148,6 +154,9 @@ CreateMutex(GMPMutex** aMutex)
 GMPErr
 SetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS)
 {
+  if (!aTask || !sMainLoop || !IsOnChildMainThread()) {
+    return GMPGenericErr;
+  }
   GMPTimerChild* timers = sChild->GetGMPTimers();
   NS_ENSURE_TRUE(timers, GMPGenericErr);
   return timers->SetTimer(aTask, aTimeoutMS);

@@ -89,7 +89,7 @@ function TEST_G_Protocol4Parser() {
 
     var p = new G_Protocol4Parser();
     
-    function isEmpty(map) {
+    let isEmpty = function (map) {
       for (var key in map) 
         return false;
       return true;

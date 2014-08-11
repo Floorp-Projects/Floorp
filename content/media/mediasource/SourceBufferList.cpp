@@ -21,10 +21,14 @@ struct JSContext;
 class JSObject;
 
 #ifdef PR_LOGGING
-extern PRLogModuleInfo* gMediaSourceLog;
-#define MSE_DEBUG(...) PR_LOG(gMediaSourceLog, PR_LOG_DEBUG, (__VA_ARGS__))
+extern PRLogModuleInfo* GetMediaSourceLog();
+extern PRLogModuleInfo* GetMediaSourceAPILog();
+
+#define MSE_DEBUG(...) PR_LOG(GetMediaSourceLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define MSE_API(...) PR_LOG(GetMediaSourceAPILog(), PR_LOG_DEBUG, (__VA_ARGS__))
 #else
 #define MSE_DEBUG(...)
+#define MSE_API(...)
 #endif
 
 namespace mozilla {
@@ -38,6 +42,7 @@ SourceBufferList::~SourceBufferList()
 SourceBuffer*
 SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   aFound = aIndex < mSourceBuffers.Length();
   return aFound ? mSourceBuffers[aIndex] : nullptr;
 }
@@ -45,12 +50,14 @@ SourceBufferList::IndexedGetter(uint32_t aIndex, bool& aFound)
 uint32_t
 SourceBufferList::Length()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.Length();
 }
 
 void
 SourceBufferList::Append(SourceBuffer* aSourceBuffer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers.AppendElement(aSourceBuffer);
   QueueAsyncSimpleEvent("addsourcebuffer");
 }
@@ -58,6 +65,7 @@ SourceBufferList::Append(SourceBuffer* aSourceBuffer)
 void
 SourceBufferList::Remove(SourceBuffer* aSourceBuffer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ALWAYS_TRUE(mSourceBuffers.RemoveElement(aSourceBuffer));
   aSourceBuffer->Detach();
   QueueAsyncSimpleEvent("removesourcebuffer");
@@ -66,12 +74,14 @@ SourceBufferList::Remove(SourceBuffer* aSourceBuffer)
 bool
 SourceBufferList::Contains(SourceBuffer* aSourceBuffer)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.Contains(aSourceBuffer);
 }
 
 void
 SourceBufferList::Clear()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Detach();
   }
@@ -82,12 +92,14 @@ SourceBufferList::Clear()
 bool
 SourceBufferList::IsEmpty()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return mSourceBuffers.IsEmpty();
 }
 
 bool
 SourceBufferList::AnyUpdating()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     if (mSourceBuffers[i]->Updating()) {
       return true;
@@ -99,6 +111,8 @@ SourceBufferList::AnyUpdating()
 void
 SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("SourceBufferList(%p)::Remove(aStart=%f, aEnd=%f", this, aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Remove(aStart, aEnd, aRv);
     if (aRv.Failed()) {
@@ -110,6 +124,8 @@ SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 void
 SourceBufferList::Evict(double aStart, double aEnd)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_DEBUG("SourceBufferList(%p)::Evict(aStart=%f, aEnd=%f)", this, aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Evict(aStart, aEnd);
   }
@@ -118,6 +134,7 @@ SourceBufferList::Evict(double aStart, double aEnd)
 bool
 SourceBufferList::AllContainsTime(double aTime)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     if (!mSourceBuffers[i]->ContainsTime(aTime)) {
       return false;
@@ -129,22 +146,37 @@ SourceBufferList::AllContainsTime(double aTime)
 void
 SourceBufferList::Ended()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
     mSourceBuffers[i]->Ended();
   }
 }
 
+double
+SourceBufferList::GetHighestBufferedEndTime()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  double highestEnd = 0;
+  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
+    double start, end;
+    mSourceBuffers[i]->GetBufferedStartEndTime(&start, &end);
+    highestEnd = std::max(highestEnd, end);
+  }
+  return highestEnd;
+}
+
 void
 SourceBufferList::DispatchSimpleEvent(const char* aName)
 {
-  MSE_DEBUG("%p Dispatching event %s to SourceBufferList", this, aName);
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("SourceBufferList(%p) Dispatch event '%s'", this, aName);
   DispatchTrustedEvent(NS_ConvertUTF8toUTF16(aName));
 }
 
 void
 SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
 {
-  MSE_DEBUG("%p Queuing event %s to SourceBufferList", this, aName);
+  MSE_DEBUG("SourceBufferList(%p) Queuing event '%s'", this, aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBufferList>(this, aName);
   NS_DispatchToMainThread(event);
 }

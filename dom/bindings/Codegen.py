@@ -2445,6 +2445,37 @@ class CGNativeProperties(CGList):
     def define(self):
         return CGList.define(self)
 
+class CGJsonifyAttributesMethod(CGAbstractMethod):
+    """
+    Generate the JsonifyAttributes method for an interface descriptor
+    """
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'obj'),
+                Argument('%s*' % descriptor.nativeType, 'self'),
+                Argument('JS::Rooted<JSObject*>&', 'aResult')]
+        CGAbstractMethod.__init__(self, descriptor, 'JsonifyAttributes', 'bool', args)
+
+    def definition_body(self):
+        ret = ''
+        interface = self.descriptor.interface
+        for m in interface.members:
+            if m.isAttr() and not m.isStatic() and m.type.isSerializable():
+                ret += fill(
+                    """
+                    { // scope for "temp"
+                      JS::Rooted<JS::Value> temp(aCx);
+                      if (!get_${name}(aCx, obj, self, JSJitGetterCallArgs(&temp))) {
+                        return false;
+                      }
+                      if (!JS_DefineProperty(aCx, aResult, "${name}", temp, JSPROP_ENUMERATE)) {
+                        return false;
+                      }
+                    }
+                    """,
+                    name=m.identifier.name)
+        ret += 'return true;\n'
+        return ret
 
 class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     """
@@ -7244,28 +7275,24 @@ class CGJsonifierMethod(CGSpecializedMethod):
             }
             """)
 
+        jsonInterfaces = []
         interface = self.descriptor.interface
         while interface:
             descriptor = self.descriptor.getDescriptor(interface.identifier.name)
             if descriptor.operations['Jsonifier']:
-                for m in interface.members:
-                    if m.isAttr() and not m.isStatic() and m.type.isSerializable():
-                        ret += fill(
-                            """
-                            { // scope for "temp"
-                              JS::Rooted<JS::Value> temp(cx);
-                              if (!${parentclass}::get_${name}(cx, obj, self, JSJitGetterCallArgs(&temp))) {
-                                return false;
-                              }
-                              if (!JS_DefineProperty(cx, result, "${name}", temp, JSPROP_ENUMERATE)) {
-                                return false;
-                              }
-                            }
-                            """,
-                            parentclass=toBindingNamespace(interface.identifier.name),
-                            name=m.identifier.name)
+                jsonInterfaces.append(interface)
             interface = interface.parent
 
+        # Iterate the array in reverse: oldest ancestor first
+        for interface in jsonInterfaces[::-1]:
+            ret += fill(
+                """
+                if (!${parentclass}::JsonifyAttributes(cx, obj, self, result)) {
+                  return false;
+                }
+                """,
+                parentclass=toBindingNamespace(interface.identifier.name)
+                )
         ret += ('args.rval().setObject(*result);\n'
                 'return true;\n')
         return ret
@@ -10604,6 +10631,7 @@ class CGDescriptor(CGThing):
             hasLenientSetter = hasLenientSetter or props.isLenientSetter
 
         if jsonifierMethod:
+            cgThings.append(CGJsonifyAttributesMethod(descriptor))
             cgThings.append(CGJsonifierMethod(descriptor, jsonifierMethod))
             cgThings.append(CGMemberJITInfo(descriptor, jsonifierMethod))
         if hasMethod:

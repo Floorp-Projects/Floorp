@@ -32,6 +32,7 @@ OptimizationInfo::initNormalOptimizationInfo()
     licm_ = true;
     uce_ = true;
     rangeAnalysis_ = true;
+    loopUnrolling_ = true;
     autoTruncate_ = true;
     registerAllocator_ = RegisterAllocator_LSRA;
 

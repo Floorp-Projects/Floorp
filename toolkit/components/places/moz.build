@@ -90,6 +90,9 @@ if CONFIG['MOZ_PLACES']:
             'UnifiedComplete.js',
             'UnifiedComplete.manifest',
         ]
+
+    FAIL_ON_WARNINGS = True
+
     FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')

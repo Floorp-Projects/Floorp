@@ -458,25 +458,18 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
     return OnStartContainer(aRequest, image);
   }
 
-  nsDOMTokenList* classList = mImageContent->AsElement()->ClassList();
-  mozilla::ErrorResult rv;
+  // Do these two off a script runner because decode complete notifications often
+  // come during painting and these will trigger invalidation.
   if (aType == imgINotificationObserver::DECODE_COMPLETE) {
-    if (mImageContent && !nsContentUtils::IsChildOfSameType(this)) {
-      // Update the background-color of the image only after the
-      // image has been decoded to prevent flashes of just the
-      // background-color.
-      classList->Add(NS_LITERAL_STRING("decoded"), rv);
-      NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
-    }
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &ImageDocument::AddDecodedClass);
+    nsContentUtils::AddScriptRunner(runnable);
   }
 
   if (aType == imgINotificationObserver::DISCARD) {
-    // mImageContent can be null if the document is already destroyed
-    if (mImageContent && !nsContentUtils::IsChildOfSameType(this)) {
-      // Remove any decoded-related styling when the image is unloaded.
-      classList->Remove(NS_LITERAL_STRING("decoded"), rv);
-      NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
-    }
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &ImageDocument::RemoveDecodedClass);
+    nsContentUtils::AddScriptRunner(runnable);
   }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
@@ -488,6 +481,34 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
   }
 
   return NS_OK;
+}
+
+void
+ImageDocument::AddDecodedClass()
+{
+  if (!mImageContent || nsContentUtils::IsChildOfSameType(this)) {
+    return;
+  }
+
+  nsDOMTokenList* classList = mImageContent->AsElement()->ClassList();
+  mozilla::ErrorResult rv;
+  // Update the background-color of the image only after the
+  // image has been decoded to prevent flashes of just the
+  // background-color.
+  classList->Add(NS_LITERAL_STRING("decoded"), rv);
+}
+
+void
+ImageDocument::RemoveDecodedClass()
+{
+  if (!mImageContent || nsContentUtils::IsChildOfSameType(this)) {
+    return;
+  }
+
+  nsDOMTokenList* classList = mImageContent->AsElement()->ClassList();
+  mozilla::ErrorResult rv;
+  // Remove any decoded-related styling when the image is unloaded.
+  classList->Remove(NS_LITERAL_STRING("decoded"), rv);
 }
 
 void

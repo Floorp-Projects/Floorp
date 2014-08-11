@@ -288,7 +288,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.ret();
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "EnterJIT");
@@ -345,7 +345,7 @@ JitRuntime::generateInvalidator(JSContext *cx)
     masm.jmp(bailoutTail);
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
     IonSpew(IonSpew_Invalidate, "   invalidation thunk created at %p", (void *) code->raw());
 
 #ifdef JS_ION_PERF
@@ -442,7 +442,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     masm.ret();
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "ArgumentsRectifier");
@@ -553,7 +553,7 @@ JitRuntime::generateBailoutTable(JSContext *cx, uint32_t frameClass)
     GenerateBailoutThunk(cx, masm, frameClass);
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "BailoutHandler");
@@ -579,7 +579,7 @@ JitRuntime::generateBailoutHandler(JSContext *cx, ExecutionMode mode)
     }
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "BailoutHandler");
@@ -751,7 +751,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
                     f.extraValuesToPop * sizeof(Value)));
 
     Linker linker(masm);
-    JitCode *wrapper = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *wrapper = linker.newCode<NoGC>(cx, OTHER_CODE);
     if (!wrapper)
         return nullptr;
 
@@ -800,7 +800,7 @@ JitRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     masm.ret();
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "PreBarrier");
@@ -859,7 +859,7 @@ JitRuntime::generateDebugTrapHandler(JSContext *cx)
     masm.ret();
 
     Linker linker(masm);
-    JitCode *codeDbg = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *codeDbg = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(codeDbg, "DebugTrapHandler");
@@ -876,7 +876,7 @@ JitRuntime::generateExceptionTailStub(JSContext *cx)
     masm.handleFailureWithHandlerTail();
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "ExceptionTailStub");
@@ -893,7 +893,7 @@ JitRuntime::generateBailoutTailStub(JSContext *cx)
     masm.generateBailoutTail(edx, ecx);
 
     Linker linker(masm);
-    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "BailoutTailStub");
