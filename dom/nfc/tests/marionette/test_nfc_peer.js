@@ -9,9 +9,7 @@ let INCORRECT_MANIFEST_URL = "app://xyz.gaiamobile.org/manifest.webapp";
 
 function peerReadyCb(evt) {
   log("peerReadyCb called");
-  let peer = nfc.getNFCPeer(evt.detail);
-  let peer1 = nfc.getNFCPeer(evt.detail);
-  ok(peer == peer1, "Should get the same NFCPeer object.");
+  let peer = evt.peer;
   ok(peer instanceof MozNFCPeer, "Should get a NFCPeer object.");
 
   NCI.deactivate();
@@ -77,6 +75,19 @@ function testPeerReady() {
   toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
 }
 
+function testGetNFCPeer() {
+  sysMsgHelper.waitForTechDiscovered(function (msg) {
+    let peer = nfc.getNFCPeer(msg.sessionToken);
+    ok(peer instanceof MozNFCPeer, "Should get a NFCPeer object.");
+    let peer1 = nfc.getNFCPeer(msg.sessionToken);
+    ok(peer == peer1, "Should get the same MozNFCPeer object");
+
+    NCI.deactivate().then(() => toggleNFC(false)).then(runNextTest);
+  });
+
+  toggleNFC(true).then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0));
+}
+
 function testCheckP2PRegFailure() {
   sysMsgHelper.waitForTechDiscovered(handleTechnologyDiscoveredRE0ForP2PRegFailure);
 
@@ -120,7 +131,7 @@ function testPeerShouldThrow() {
 
   nfc.onpeerready = function (evt) {
     log("testPeerShouldThrow peerready");
-    peer = nfc.getNFCPeer(evt.detail);
+    peer = evt.peer;
     NCI.deactivate();
   };
 
@@ -184,6 +195,7 @@ function testTagInvalidToken() {
 
 let tests = [
   testPeerReady,
+  testGetNFCPeer,
   testCheckP2PRegFailure,
   testPeerLostShouldNotBeCalled,
   testPeerShouldThrow,
