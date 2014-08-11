@@ -37,6 +37,52 @@ PRCallOnceType BlockingResourceBase::sCallOnce;
 unsigned BlockingResourceBase::sResourceAcqnChainFrontTPI = (unsigned)-1;
 BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
+
+/**
+ * PrintCycle
+ * Append to |aOut| detailed information about the circular
+ * dependency in |aCycle|.  Returns true if it *appears* that this
+ * cycle may represent an imminent deadlock, but this is merely a
+ * heuristic; the value returned may be a false positive or false
+ * negative.
+ *
+ * *NOT* thread safe.  Calls |Print()|.
+ *
+ * FIXME bug 456272 hack alert: because we can't write call
+ * contexts into strings, all info is written to stderr, but only
+ * some info is written into |aOut|
+ */
+bool
+PrintCycle(const BlockingResourceBase::DDT::ResourceAcquisitionArray* aCycle, nsACString& aOut)
+{
+  NS_ASSERTION(aCycle->Length() > 1, "need > 1 element for cycle!");
+
+  bool maybeImminent = true;
+
+  fputs("=== Cyclical dependency starts at\n", stderr);
+  aOut += "Cyclical dependency starts at\n";
+
+  const BlockingResourceBase::DDT::ResourceAcquisitionArray::elem_type res = aCycle->ElementAt(0);
+  maybeImminent &= res->Print(aOut);
+
+  BlockingResourceBase::DDT::ResourceAcquisitionArray::index_type i;
+  BlockingResourceBase::DDT::ResourceAcquisitionArray::size_type len = aCycle->Length();
+  const BlockingResourceBase::DDT::ResourceAcquisitionArray::elem_type* it = 1 + aCycle->Elements();
+  for (i = 1; i < len - 1; ++i, ++it) {
+    fputs("\n--- Next dependency:\n", stderr);
+    aOut += "\nNext dependency:\n";
+
+    maybeImminent &= (*it)->Print(aOut);
+  }
+
+  fputs("\n=== Cycle completed at\n", stderr);
+  aOut += "Cycle completed at\n";
+  (*it)->Print(aOut);
+
+  return maybeImminent;
+}
+
+
 bool
 BlockingResourceBase::Print(nsACString& aOut) const
 {
@@ -179,38 +225,6 @@ BlockingResourceBase::Release()
   }
 
   mAcquired = false;
-}
-
-
-bool
-BlockingResourceBase::PrintCycle(const DDT::ResourceAcquisitionArray* aCycle,
-                                 nsACString& aOut)
-{
-  NS_ASSERTION(aCycle->Length() > 1, "need > 1 element for cycle!");
-
-  bool maybeImminent = true;
-
-  fputs("=== Cyclical dependency starts at\n", stderr);
-  aOut += "Cyclical dependency starts at\n";
-
-  const DDT::ResourceAcquisitionArray::elem_type res = aCycle->ElementAt(0);
-  maybeImminent &= res->Print(aOut);
-
-  DDT::ResourceAcquisitionArray::index_type i;
-  DDT::ResourceAcquisitionArray::size_type len = aCycle->Length();
-  const DDT::ResourceAcquisitionArray::elem_type* it = 1 + aCycle->Elements();
-  for (i = 1; i < len - 1; ++i, ++it) {
-    fputs("\n--- Next dependency:\n", stderr);
-    aOut += "\nNext dependency:\n";
-
-    maybeImminent &= (*it)->Print(aOut);
-  }
-
-  fputs("\n=== Cycle completed at\n", stderr);
-  aOut += "Cycle completed at\n";
-  (*it)->Print(aOut);
-
-  return maybeImminent;
 }
 
 
