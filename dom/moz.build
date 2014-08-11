@@ -96,6 +96,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DIRS += [
         'speakermanager',
+        'tethering',
         'wifi',
     ]
 

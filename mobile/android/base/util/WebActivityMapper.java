@@ -129,6 +129,13 @@ public final class WebActivityMapper {
             optPutExtra("html_text", Intent.EXTRA_HTML_TEXT, data, intent);
             optPutExtra("stream", Intent.EXTRA_STREAM, data, intent);
         }
+
+        private static void optPutExtra(String key, String extraName, JSONObject data, Intent intent) {
+            final String extraValue = data.optString(key);
+            if (!TextUtils.isEmpty(extraValue)) {
+                intent.putExtra(extraName, extraValue);
+            }
+        }
     }
 
     private static class ViewMapping extends BaseMapping {
@@ -146,13 +153,6 @@ public final class WebActivityMapper {
             } else {
                 return type;
             }
-        }
-    }
-
-    private static void optPutExtra(String key, String extraName, JSONObject data, Intent intent) {
-        final String extraValue = data.optString(key);
-        if (!TextUtils.isEmpty(extraValue)) {
-            intent.putExtra(extraName, extraValue);
         }
     }
 }
