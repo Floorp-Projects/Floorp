@@ -70,9 +70,9 @@ function testParseHTMLAttribute() {
   target.appendChild(frag);
 
   let expected = 'color:<span data-color="#F00"><span class="theme-color">#F00</span></span>; font-size: 12px; ' +
-                 'background-image: url(\'<a href="chrome://branding/content/about-logo.png" ' +
+                 'background-image: url("<a href="chrome://branding/content/about-logo.png" ' +
                  'class="theme-link" ' +
-                 'target="_blank">chrome://branding/content/about-logo.png</a>\')';
+                 'target="_blank">chrome://branding/content/about-logo.png</a>")';
 
   is(target.innerHTML, expected, "HTML Attribute correctly parsed");
   target.innerHTML = "";

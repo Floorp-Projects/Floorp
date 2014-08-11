@@ -41,22 +41,23 @@ def startTestRunner(runner_class, options, tests):
     runner.run_tests(tests)
     return runner
 
+
 def cli(runner_class=MarionetteTestRunner, parser_class=BaseMarionetteOptions):
     parser = parser_class(usage='%prog [options] test_file_or_dir <test_file_or_dir> ...')
     structured.commandline.add_logging_group(parser)
     options, tests = parser.parse_args()
     parser.verify_usage(options, tests)
 
-    logger = structured.commandline.setup_logging(options.logger_name,
-                                                  options,
-                                                  {})
+    logger = structured.commandline.setup_logging(
+        options.logger_name, options, {})
 
     # Only add the tbpl logger if a handler isn't already logging to stdout
     has_stdout_logger = any([h.stream == sys.stdout for h in logger.handlers])
     if not has_stdout_logger:
         formatter = MarionetteTbplFormatter()
         handler = structured.handlers.StreamHandler(sys.stdout, formatter)
-        logger.add_handler(handler)
+        logger.add_handler(structured.handlers.LogLevelFilter(
+            handler, 'info'))
 
     options.logger = logger
 

@@ -8,8 +8,9 @@ package org.mozilla.gecko.home;
 import java.util.EnumSet;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract.History;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserDB.FilterFlags;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.content.Context;

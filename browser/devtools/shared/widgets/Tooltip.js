@@ -887,6 +887,18 @@ SwatchBasedEditorTooltip.prototype = {
   show: function() {
     if (this.activeSwatch) {
       this.tooltip.show(this.activeSwatch, "topcenter bottomleft");
+
+      // When the tooltip is closed by clicking outside the panel we want to
+      // commit any changes. Because the "hidden" event destroys the tooltip we
+      // need to do this before the tooltip is destroyed (in the "hiding" event).
+      this.tooltip.once("hiding", () => {
+        if (!this._reverted && !this.eyedropperOpen) {
+          this.commit();
+        }
+        this._reverted = false;
+      });
+
+      // Once the tooltip is hidden we need to clean up any remaining objects.
       this.tooltip.once("hidden", () => {
         if (!this.eyedropperOpen) {
           this.activeSwatch = null;
@@ -962,6 +974,7 @@ SwatchBasedEditorTooltip.prototype = {
     if (this.activeSwatch) {
       let swatch = this.swatches.get(this.activeSwatch);
       swatch.callbacks.onRevert();
+      this._reverted = true;
     }
   },
 
@@ -1015,7 +1028,6 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     // Then set spectrum's color and listen to color changes to preview them
     if (this.activeSwatch) {
       this.currentSwatchColor = this.activeSwatch.nextSibling;
-      let swatch = this.swatches.get(this.activeSwatch);
       let color = this.activeSwatch.style.backgroundColor;
       this.spectrum.then(spectrum => {
         spectrum.off("changed", this._onSpectrumColorChange);
@@ -1038,8 +1050,14 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     if (this.activeSwatch) {
       this.activeSwatch.style.backgroundColor = color;
       this.activeSwatch.parentNode.dataset.color = color;
+
+      color = this._toDefaultType(color);
       this.currentSwatchColor.textContent = color;
       this.preview(color);
+
+      if (this.eyedropperOpen) {
+        this.commit();
+      }
     }
   },
 
@@ -1082,6 +1100,11 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     color = new colorUtils.CssColor(color);
     let rgba = color._getRGBATuple();
     return [rgba.r, rgba.g, rgba.b, rgba.a];
+  },
+
+  _toDefaultType: function(color) {
+    let colorObj = new colorUtils.CssColor(color);
+    return colorObj.toString();
   },
 
   destroy: function() {
@@ -1204,6 +1227,7 @@ EventTooltip.prototype = {
   _headerClicked: function(event) {
     if (event.target.classList.contains("event-tooltip-debugger-icon")) {
       this._debugClicked(event);
+      event.stopPropagation();
     }
 
     let doc = this._tooltip.doc;
@@ -1331,7 +1355,7 @@ EventTooltip.prototype = {
       node.removeEventListener("click", this._debugClicked);
     }
 
-    this._tooltip = this._eventListenerInfos =  this._toolbox = null;
+    this._eventListenerInfos = this._toolbox = this._tooltip = null;
   }
 };
 

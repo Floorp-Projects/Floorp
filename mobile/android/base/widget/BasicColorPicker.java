@@ -42,8 +42,8 @@ public class BasicColorPicker extends ListView {
                                                                       Color.BLACK);
 
     private static Drawable mCheckDrawable;
-    private int mSelected;
-    final private ColorPickerListAdapter mAdapter;
+    /* inner-access */ int mSelected;
+    /* inner-access */ final ColorPickerListAdapter mAdapter;
 
     public BasicColorPicker(Context context) {
         this(context, null);
@@ -87,7 +87,7 @@ public class BasicColorPicker extends ListView {
         mAdapter.notifyDataSetChanged();
     }
 
-    private Drawable getCheckDrawable() {
+    /* inner-access */ Drawable getCheckDrawable() {
         if (mCheckDrawable == null) {
             Resources res = getContext().getResources();
 
