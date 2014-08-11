@@ -151,6 +151,37 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   }, false);
 }
 
+function promiseWindowClosed(win) {
+  let deferred = Promise.defer();
+  win.addEventListener("unload", function onunload() {
+    win.removeEventListener("unload", onunload);
+    deferred.resolve();
+  });
+  win.close();
+  return deferred.promise;
+}
+
+function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup=false) {
+  let deferred = Promise.defer();
+  let win = OpenBrowserWindow(aOptions);
+  if (aWaitForDelayedStartup) {
+    Services.obs.addObserver(function onDS(aSubject, aTopic, aData) {
+      if (aSubject != win) {
+        return;
+      }
+      Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
+      deferred.resolve(win);
+    }, "browser-delayed-startup-finished", false);
+
+  } else {
+    win.addEventListener("load", function onLoad() {
+      win.removeEventListener("load", onLoad);
+      deferred.resolve(win);
+    });
+  }
+  return deferred.promise;
+}
+
 /**
  * Waits for all pending async statements on the default connection, before
  * proceeding with aCallback.
@@ -337,7 +368,7 @@ function promiseClearHistory() {
  *        The URL of the document that is expected to load.
  * @return promise
  */
-function waitForDocLoadAndStopIt(aExpectedURL) {
+function waitForDocLoadAndStopIt(aExpectedURL, aBrowser=gBrowser) {
   let deferred = Promise.defer();
   let progressListener = {
     onStateChange: function (webProgress, req, flags, status) {
@@ -350,12 +381,12 @@ function waitForDocLoadAndStopIt(aExpectedURL) {
         is(req.originalURI.spec, aExpectedURL,
            "waitForDocLoadAndStopIt: The expected URL was loaded");
         req.cancel(Components.results.NS_ERROR_FAILURE);
-        gBrowser.removeProgressListener(progressListener);
+        aBrowser.removeProgressListener(progressListener);
         deferred.resolve();
       }
     },
   };
-  gBrowser.addProgressListener(progressListener);
+  aBrowser.addProgressListener(progressListener);
   info("waitForDocLoadAndStopIt: Waiting for URL: " + aExpectedURL);
   return deferred.promise;
 }

@@ -11,9 +11,9 @@ registerCleanupFunction(function() {
   }
 });
 
-function promiseNotificationForTab(value, expected, tab=gBrowser.selectedTab) {
+function promiseNotificationForTab(aBrowser, value, expected, tab=aBrowser.selectedTab) {
   let deferred = Promise.defer();
-  let notificationBox = gBrowser.getNotificationBox(tab.linkedBrowser);
+  let notificationBox = aBrowser.getNotificationBox(tab.linkedBrowser);
   if (expected) {
     let checkForNotification = function() {
       if (notificationBox.getNotificationWithValue(value)) {
@@ -36,24 +36,24 @@ function promiseNotificationForTab(value, expected, tab=gBrowser.selectedTab) {
   return deferred.promise;
 }
 
-function* runURLBarSearchTest(valueToOpen, expectSearch, expectNotification) {
-  gURLBar.value = valueToOpen;
+function* runURLBarSearchTest(valueToOpen, expectSearch, expectNotification, aWindow=window) {
+  aWindow.gURLBar.value = valueToOpen;
   let expectedURI;
   if (!expectSearch) {
     expectedURI = "http://" + valueToOpen + "/";
   } else {
     yield new Promise(resolve => {
-      Services.search.init(resolve)
+      Services.search.init(resolve);
     });
     expectedURI = Services.search.defaultEngine.getSubmission(valueToOpen, null, "keyword").uri.spec;
   }
-  gURLBar.focus();
-  let docLoadPromise = waitForDocLoadAndStopIt(expectedURI);
-  EventUtils.synthesizeKey("VK_RETURN", {});
+  aWindow.gURLBar.focus();
+  let docLoadPromise = waitForDocLoadAndStopIt(expectedURI, aWindow.gBrowser);
+  EventUtils.synthesizeKey("VK_RETURN", {}, aWindow);
 
   yield docLoadPromise;
 
-  yield promiseNotificationForTab("keyword-uri-fixup", expectNotification);
+  yield promiseNotificationForTab(aWindow.gBrowser, "keyword-uri-fixup", expectNotification);
 }
 
 add_task(function* test_navigate_full_domain() {
@@ -62,38 +62,48 @@ add_task(function* test_navigate_full_domain() {
   gBrowser.removeTab(tab);
 });
 
-function get_test_function_for_localhost_with_hostname(hostName) {
+function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
   return function* test_navigate_single_host() {
     const pref = "browser.fixup.domainwhitelist.localhost";
-    Services.prefs.setBoolPref(pref, false);
-    let tab = gBrowser.selectedTab = gBrowser.addTab();
-    yield* runURLBarSearchTest(hostName, true, true);
+    let win = isPrivate ? yield promiseOpenAndLoadWindow({private: true}, true) : window;
+    let browser = win.gBrowser;
+    let tab = browser.selectedTab = browser.addTab();
 
-    let notificationBox = gBrowser.getNotificationBox(tab.linkedBrowser);
+    Services.prefs.setBoolPref(pref, false);
+    yield* runURLBarSearchTest(hostName, true, true, win);
+
+    let notificationBox = browser.getNotificationBox(tab.linkedBrowser);
     let notification = notificationBox.getNotificationWithValue("keyword-uri-fixup");
-    let docLoadPromise = waitForDocLoadAndStopIt("http://" + hostName + "/");
+    let docLoadPromise = waitForDocLoadAndStopIt("http://" + hostName + "/", browser);
     notification.querySelector(".notification-button-default").click();
 
     // check pref value
     let prefValue = Services.prefs.getBoolPref(pref);
-    ok(prefValue, "Pref should have been toggled");
+    is(prefValue, !isPrivate, "Pref should have the correct state.");
 
     yield docLoadPromise;
-    gBrowser.removeTab(tab);
+    browser.removeTab(tab);
 
     // Now try again with the pref set.
-    let tab = gBrowser.selectedTab = gBrowser.addTab();
-    yield* runURLBarSearchTest(hostName, false, false);
-    gBrowser.removeTab(tab);
+    let tab = browser.selectedTab = browser.addTab();
+    // In a private window, the notification should appear again.
+    yield* runURLBarSearchTest(hostName, isPrivate, isPrivate, win);
+    browser.removeTab(tab);
+    if (isPrivate) {
+      yield promiseWindowClosed(win);
+      let deferredFocus = Promise.defer();
+      waitForFocus(deferredFocus.resolve, window);
+      yield deferredFocus.promise;
+    }
   }
 }
 
 add_task(get_test_function_for_localhost_with_hostname("localhost"));
 add_task(get_test_function_for_localhost_with_hostname("localhost."));
+add_task(get_test_function_for_localhost_with_hostname("localhost", true));
 
 add_task(function* test_navigate_invalid_url() {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   yield* runURLBarSearchTest("mozilla is awesome", true, false);
   gBrowser.removeTab(tab);
 });
-
