@@ -462,7 +462,9 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // eviction is reported back to the media source. It will then
   // evict data before that range across all SourceBuffers it knows
   // about.
-  const int evict_threshold = 1000000;
+  // TODO: Make the eviction threshold smaller for audio-only streams.
+  // TODO: Drive evictions off memory pressure notifications.
+  const uint32_t evict_threshold = 75 * (1 << 20);
   bool evicted = mDecoder->GetResource()->EvictData(evict_threshold);
   if (evicted) {
     double start = 0.0;
@@ -507,12 +509,17 @@ SourceBuffer::Evict(double aStart, double aEnd)
   if (!mDecoder) {
     return;
   }
-  // Need to map time to byte offset then evict
-  int64_t end = mDecoder->ConvertToByteOffset(aEnd);
-  if (end > 0) {
-    mDecoder->GetResource()->EvictBefore(end);
+  double currentTime = mMediaSource->GetDecoder()->GetCurrentTime();
+  double evictTime = aEnd;
+  const double safety_threshold = 5;
+  if (currentTime + safety_threshold >= evictTime) {
+    evictTime -= safety_threshold;
   }
-  MSE_DEBUG("SourceBuffer(%p)::Evict offset=%lld", this, end);
+  int64_t endOffset = mDecoder->ConvertToByteOffset(evictTime);
+  if (endOffset > 0) {
+    mDecoder->GetResource()->EvictBefore(endOffset);
+  }
+  MSE_DEBUG("SourceBuffer(%p)::Evict offset=%lld", this, endOffset);
 }
 
 bool
