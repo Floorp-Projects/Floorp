@@ -87,12 +87,14 @@ FirefoxProfileMigrator.prototype.getResources = function() {
     [PlacesBackups.profileRelativeFolderPath]);
   let dictionary = getFileResource(types.OTHERDATA, ["persdict.dat"]);
 
+  let sessionCheckpoints = this._getFileObject(sourceProfileDir, "sessionCheckpoints.json");
   let sessionFile = this._getFileObject(sourceProfileDir, "sessionstore.js");
   let session;
   if (sessionFile) {
     session = {
       type: types.SESSION,
       migrate: function(aCallback) {
+        sessionCheckpoints.copyTo(currentProfileDir, "sessionCheckpoints.json");
         let newSessionFile = currentProfileDir.clone();
         newSessionFile.append("sessionstore.js");
         let migrationPromise = SessionMigration.migrate(sessionFile.path, newSessionFile.path);
