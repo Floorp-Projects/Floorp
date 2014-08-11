@@ -193,9 +193,9 @@
       var tree4acc = getAccessible("tree4");
       tree4element.parentNode.removeChild(tree4element);
       waitForEvent(EVENT_REORDER, tree4acc, function() {
-        testGroupAttrs("tree4_ti2", 1, 1, 1); });
-
-      SimpleTest.finish();
+        testGroupAttrs("tree4_ti2", 1, 1, 1);
+        SimpleTest.finish();
+      });
     }
 
     SimpleTest.waitForExplicitFinish();
