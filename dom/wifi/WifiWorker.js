@@ -1765,6 +1765,7 @@ function WifiWorker() {
                     "WifiManager:getImportedCerts",
                     "WifiManager:deleteCert",
                     "WifiManager:setWifiEnabled",
+                    "WifiManager:setWifiTethering",
                     "child-process-shutdown"];
 
   messages.forEach((function(msgName) {
@@ -2751,6 +2752,9 @@ WifiWorker.prototype = {
       case "WifiManager:deleteCert":
         this.deleteCert(msg);
         break;
+      case "WifiManager:setWifiTethering":
+        this.setWifiTethering(msg);
+        break;
       case "WifiManager:getState": {
         let i;
         if ((i = this._domManagers.indexOf(msg.manager)) === -1) {
@@ -2986,6 +2990,60 @@ WifiWorker.prototype = {
   },
 
   getWifiTetheringParameters: function getWifiTetheringParameters(enable) {
+    if (this.useTetheringAPI) {
+      return this.getWifiTetheringConfiguration(enable);
+    } else {
+      return this.getWifiTetheringParametersBySetting(enable);
+    }
+  },
+
+  getWifiTetheringConfiguration: function getWifiTetheringConfiguration(enable) {
+    let config = {};
+    let params = this.tetheringConfig;
+
+    let check = function(field, _default) {
+      config[field] = field in params ? params[field] : _default;
+    };
+
+    check("ssid", DEFAULT_WIFI_SSID);
+    check("security", DEFAULT_WIFI_SECURITY_TYPE);
+    check("key", DEFAULT_WIFI_SECURITY_PASSWORD);
+    check("ip", DEFAULT_WIFI_IP);
+    check("prefix", DEFAULT_WIFI_PREFIX);
+    check("wifiStartIp", DEFAULT_WIFI_DHCPSERVER_STARTIP);
+    check("wifiEndIp", DEFAULT_WIFI_DHCPSERVER_ENDIP);
+    check("usbStartIp", DEFAULT_USB_DHCPSERVER_STARTIP);
+    check("usbEndIp", DEFAULT_USB_DHCPSERVER_ENDIP);
+    check("dns1", DEFAULT_DNS1);
+    check("dns2", DEFAULT_DNS2);
+
+    config.enable = enable;
+    config.mode = enable ? WIFI_FIRMWARE_AP : WIFI_FIRMWARE_STATION;
+    config.link = enable ? NETWORK_INTERFACE_UP : NETWORK_INTERFACE_DOWN;
+
+    // Check the format to prevent netd from crash.
+    if (enable && (!config.ssid || config.ssid == "")) {
+      debug("Invalid SSID value.");
+      return null;
+    }
+
+    if (enable && (config.security != WIFI_SECURITY_TYPE_NONE && !config.key)) {
+      debug("Invalid security password.");
+      return null;
+    }
+
+    // Using the default values here until application supports these settings.
+    if (config.ip == "" || config.prefix == "" ||
+        config.wifiStartIp == "" || config.wifiEndIp == "" ||
+        config.usbStartIp == "" || config.usbEndIp == "") {
+      debug("Invalid subnet information.");
+      return null;
+    }
+
+    return config;
+  },
+
+  getWifiTetheringParametersBySetting: function getWifiTetheringParametersBySetting(enable) {
     let ssid;
     let securityType;
     let securityId;
@@ -3400,6 +3458,35 @@ WifiWorker.prototype = {
     });
   },
 
+  // TODO : These two variables should be removed once GAIA uses tethering API.
+  useTetheringAPI : false,
+  tetheringConfig : {},
+
+  setWifiTethering: function setWifiTethering(msg) {
+    const message = "WifiManager:setWifiTethering:Return";
+    let self = this;
+    let enabled = msg.data.enabled;
+
+    this.useTetheringAPI = true;
+    this.tetheringConfig = msg.data.config;
+
+    if (WifiManager.enabled) {
+      this._sendMessage(message, false, "Wifi is enabled", msg);
+      return;
+    }
+
+    this.setWifiApEnabled(enabled, function() {
+      if ((enabled && WifiManager.tetheringState == "COMPLETED") ||
+          (!enabled && WifiManager.tetheringState == "UNINITIALIZED")) {
+        self._sendMessage(message, true, msg.data, msg);
+      } else {
+        msg.data.reason = enabled ?
+          "Enable WIFI tethering faild" : "Disable WIFI tethering faild";
+        self._sendMessage(message, false, msg.data, msg);
+      }
+    });
+  },
+
   // This is a bit ugly, but works. In particular, this depends on the fact
   // that RadioManager never actually tries to get the worker from us.
   get worker() { throw "Not implemented"; },
@@ -3597,6 +3684,12 @@ WifiWorker.prototype = {
       case SETTINGS_WIFI_DNS2:
       case SETTINGS_USB_DHCPSERVER_STARTIP:
       case SETTINGS_USB_DHCPSERVER_ENDIP:
+        // TODO: code related to wifi-tethering setting should be removed after GAIA
+        //       use tethering API
+        if (this.useTetheringAPI) {
+          break;
+        }
+
         if (aResult !== null) {
           this.tetheringSettings[aName] = aResult;
         }
