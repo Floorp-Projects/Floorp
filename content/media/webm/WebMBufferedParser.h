@@ -21,8 +21,8 @@ class TimeRanges;
 // scale before use.
 struct WebMTimeDataOffset
 {
-  WebMTimeDataOffset(int64_t aOffset, uint64_t aTimecode)
-    : mOffset(aOffset), mTimecode(aTimecode)
+  WebMTimeDataOffset(int64_t aOffset, uint64_t aTimecode, int64_t aSyncOffset)
+    : mOffset(aOffset), mTimecode(aTimecode), mSyncOffset(aSyncOffset)
   {}
 
   bool operator==(int64_t aOffset) const {
@@ -35,6 +35,7 @@ struct WebMTimeDataOffset
 
   int64_t mOffset;
   uint64_t mTimecode;
+  int64_t mSyncOffset;
 };
 
 // A simple WebM parser that produces data offset to timecode pairs as it
@@ -164,6 +165,11 @@ private:
 
   // Cluster-level timecode.
   uint64_t mClusterTimecode;
+
+  // Start offset of the cluster currently being parsed.  Used as the sync
+  // point offset for the offset-to-time mapping as each block timecode is
+  // been parsed.
+  int64_t mClusterOffset;
 
   // Start offset of the block currently being parsed.  Used as the byte
   // offset for the offset-to-time mapping once the block timecode has been
