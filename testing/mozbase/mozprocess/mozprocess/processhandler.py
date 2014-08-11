@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 import select
 import signal
 import subprocess
@@ -838,10 +839,17 @@ falling back to not using job objects for managing child processes"""
         PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
         GetLastError = ctypes.windll.kernel32.GetLastError
 
+        @staticmethod
+        def _normalize_newline(line):
+            # adb on windows returns \r\r\n at the end of each line, to get around
+            # this normalize all newlines to have a unix-style '\n'
+            # http://src.chromium.org/viewvc/chrome/trunk/src/build/android/pylib/android_commands.py#l1944
+            return re.sub(r'\r+\n?$', '\n', line)
+
         def _readWithTimeout(self, f, timeout):
             if timeout is None:
                 # shortcut to allow callers to pass in "None" for no timeout.
-                return (f.readline(), False)
+                return (self._normalize_newline(f.readline()), False)
             x = msvcrt.get_osfhandle(f.fileno())
             l = ctypes.c_long()
             done = time.time() + timeout
@@ -855,7 +863,7 @@ falling back to not using job objects for managing child processes"""
                 if l.value > 0:
                     # we're assuming that the output is line-buffered,
                     # which is not unreasonable
-                    return (f.readline(), False)
+                    return (self._normalize_newline(f.readline()), False)
                 time.sleep(0.01)
             return ('', True)
 

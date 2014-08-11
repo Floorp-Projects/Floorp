@@ -97,8 +97,8 @@ PathBuildingStep::RecordResult(Result newResult, /*out*/ bool& keepGoing)
 
   if (resultWasSet) {
     if (result == Success) {
-      PR_NOT_REACHED("RecordResult called after finding a chain");
-      return Result::FATAL_ERROR_INVALID_STATE;
+      return NotReached("RecordResult called after finding a chain",
+                        Result::FATAL_ERROR_INVALID_STATE);
     }
     // If every potential issuer has the same problem (e.g. expired) and/or if
     // there is only one bad potential issuer, then return a more specific
@@ -240,8 +240,7 @@ BuildForward(TrustDomain& trustDomain,
     for (const BackCert* cert = &subject; cert; cert = cert->childCert) {
       rv = chain.Append(cert->GetDER());
       if (rv != Success) {
-        PR_NOT_REACHED("NonOwningDERArray::SetItem failed.");
-        return rv;
+        return NotReached("NonOwningDERArray::SetItem failed.", rv);
       }
     }
 
@@ -262,7 +261,7 @@ BuildForward(TrustDomain& trustDomain,
     }
     ++subCACount;
   } else {
-    PR_ASSERT(subCACount == 0);
+    assert(subCACount == 0);
   }
 
   // Find a trusted issuer.

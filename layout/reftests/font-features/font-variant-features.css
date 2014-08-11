@@ -33,6 +33,9 @@ td.features {
   @styleset { multi-def2: 3 4 5; }
   @styleset { MULTI-def2: 2 6; }
   @styleset { out-of-bounds1: 0; out-of-bounds2: 100; }
+  @styleset { scope-test1: 23; scope-test2: 24 1 }
+  @character-variant { scope-test1: 24; scope-test2: 23 2 }
+  @character-variant { overlap1: 23 1; overlap2: 23 2 }
 }
 
 @font-feature-values bogus-family {

@@ -48,7 +48,7 @@
         children = acc.children;
       } catch(e) {}
       ok(children, "Could not get children for " + aAccOrElmOrID +"!");
-  
+
       if (children) {
         for (var i = 0; i < children.length; i++) {
           var childAcc = children.queryElementAt(i, nsIAccessible);
@@ -213,7 +213,22 @@
       testStates("aria_main_anchor", STATE_SELECTABLE);
       testStates("aria_navigation_anchor", STATE_SELECTABLE);
 
-      // aria-orientation (applied to scrollbar, separator, slider)
+      // aria-orientation
+      testStates("aria_combobox", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hcombobox", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vcombobox", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_listbox", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hlistbox", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vlistbox", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_menu", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_hmenu", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vmenu", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_menubar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_hmenubar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vmenubar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_radiogroup", 0, 0, 0, EXT_STATE_HORIZONTAL | EXT_STATE_VERTICAL);
+      testStates("aria_hradiogroup", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vradiogroup", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
       testStates("aria_scrollbar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
       testStates("aria_hscrollbar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
       testStates("aria_vscrollbar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
@@ -223,6 +238,18 @@
       testStates("aria_slider", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
       testStates("aria_hslider", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
       testStates("aria_vslider", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_tablist", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_htablist", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vtablist", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_toolbar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_htoolbar", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vtoolbar", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_tree", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_htree", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vtree", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_treegrid", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_htreegrid", 0, EXT_STATE_HORIZONTAL, 0, EXT_STATE_VERTICAL);
+      testStates("aria_vtreegrid", 0, EXT_STATE_VERTICAL, 0, EXT_STATE_HORIZONTAL);
 
       // indeterminate ARIA progressbars (no aria-valuenow or aria-valuetext attribute)
       // should expose mixed state
@@ -498,6 +525,21 @@
   <a id="aria_navigation_anchor" role="navigation" name="nav_anchor">nav</a>
 
   <!-- aria-orientation -->
+  <div id="aria_combobox" role="combobox">combobox</div>
+  <div id="aria_hcombobox" role="combobox" aria-orientation="horizontal">horizontal combobox</div>
+  <div id="aria_vcombobox" role="combobox" aria-orientation="vertical">vertical combobox</div>
+  <div id="aria_listbox" role="listbox">listbox</div>
+  <div id="aria_hlistbox" role="listbox" aria-orientation="horizontal">horizontal listbox</div>
+  <div id="aria_vlistbox" role="listbox" aria-orientation="vertical">vertical listbox</div>
+  <div id="aria_menu" role="menu">menu</div>
+  <div id="aria_hmenu" role="menu" aria-orientation="horizontal">horizontal menu</div>
+  <div id="aria_vmenu" role="menu" aria-orientation="vertical">vertical menu</div>
+  <div id="aria_menubar" role="menubar">menubar</div>
+  <div id="aria_hmenubar" role="menubar" aria-orientation="horizontal">horizontal menubar</div>
+  <div id="aria_vmenubar" role="menubar" aria-orientation="vertical">vertical menubar</div>
+  <div id="aria_radiogroup" role="radiogroup">radiogroup</div>
+  <div id="aria_hradiogroup" role="radiogroup" aria-orientation="horizontal">horizontal radiogroup</div>
+  <div id="aria_vradiogroup" role="radiogroup" aria-orientation="vertical">vertical radiogroup</div>
   <div id="aria_scrollbar" role="scrollbar">scrollbar</div>
   <div id="aria_hscrollbar" role="scrollbar" aria-orientation="horizontal">horizontal scrollbar</div>
   <div id="aria_vscrollbar" role="scrollbar" aria-orientation="vertical">vertical scrollbar</div>
@@ -507,7 +549,20 @@
   <div id="aria_slider" role="slider">slider</div>
   <div id="aria_hslider" role="slider" aria-orientation="horizontal">horizontal slider</div>
   <div id="aria_vslider" role="slider" aria-orientation="vertical">vertical slider</div>
-  
+
+  <div id="aria_tablist" role="tablist">tablist</div>
+  <div id="aria_htablist" role="tablist" aria-orientation="horizontal">horizontal tablist</div>
+  <div id="aria_vtablist" role="tablist" aria-orientation="vertical">vertical tablist</div>
+  <div id="aria_toolbar" role="toolbar">toolbar</div>
+  <div id="aria_htoolbar" role="toolbar" aria-orientation="horizontal">horizontal toolbar</div>
+  <div id="aria_vtoolbar" role="toolbar" aria-orientation="vertical">vertical toolbar</div>
+  <div id="aria_tree" role="tree">tree</div>
+  <div id="aria_htree" role="tree" aria-orientation="horizontal">horizontal tree</div>
+  <div id="aria_vtree" role="tree" aria-orientation="vertical">vertical tree</div>
+  <div id="aria_treegrid" role="treegrid">treegrid</div>
+  <div id="aria_htreegrid" role="treegrid" aria-orientation="horizontal">horizontal treegrid</div>
+  <div id="aria_vtreegrid" role="treegrid" aria-orientation="vertical">vertical treegrid</div>
+
   <!-- indeterminate ARIA progressbars should expose mixed state -->
   <div id="aria_progressbar" role="progressbar"></div>
   <div id="aria_progressbar_valuenow" role="progressbar" aria-valuenow="1"></div>
