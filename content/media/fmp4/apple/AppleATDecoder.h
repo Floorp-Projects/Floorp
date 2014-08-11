@@ -52,6 +52,7 @@ private:
   uint64_t mCurrentAudioFrame;
   int64_t mSamplePosition;
   bool mHaveOutput;
+  AudioStreamBasicDescription mOutputFormat;
 
   void SetupDecoder();
   void SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample);
