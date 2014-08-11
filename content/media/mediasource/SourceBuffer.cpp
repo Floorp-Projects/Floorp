@@ -214,6 +214,7 @@ namespace dom {
 void
 SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::SetMode(aMode=%d)", this, aMode);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -231,6 +232,7 @@ SourceBuffer::SetMode(SourceBufferAppendMode aMode, ErrorResult& aRv)
 void
 SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::SetTimestampOffset(aTimestampOffset=%d)", this, aTimestampOffset);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -248,6 +250,7 @@ SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
 already_AddRefed<TimeRanges>
 SourceBuffer::GetBuffered(ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!IsAttached()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
@@ -265,6 +268,7 @@ SourceBuffer::GetBuffered(ErrorResult& aRv)
 void
 SourceBuffer::SetAppendWindowStart(double aAppendWindowStart, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::SetAppendWindowStart(aAppendWindowStart=%d)", this, aAppendWindowStart);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -280,6 +284,7 @@ SourceBuffer::SetAppendWindowStart(double aAppendWindowStart, ErrorResult& aRv)
 void
 SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::SetAppendWindowEnd(aAppendWindowEnd=%d)", this, aAppendWindowEnd);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -296,6 +301,7 @@ SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv)
 void
 SourceBuffer::AppendBuffer(const ArrayBuffer& aData, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::AppendBuffer(ArrayBuffer)", this);
   aData.ComputeLengthAndData();
   AppendData(aData.Data(), aData.Length(), aRv);
@@ -304,6 +310,7 @@ SourceBuffer::AppendBuffer(const ArrayBuffer& aData, ErrorResult& aRv)
 void
 SourceBuffer::AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::AppendBuffer(ArrayBufferView)", this);
   aData.ComputeLengthAndData();
   AppendData(aData.Data(), aData.Length(), aRv);
@@ -312,6 +319,7 @@ SourceBuffer::AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv)
 void
 SourceBuffer::Abort(ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::Abort()", this);
   if (!IsAttached()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -336,6 +344,7 @@ SourceBuffer::Abort(ErrorResult& aRv)
 void
 SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::Remove(aStart=%f, aEnd=%f)", this, aStart, aEnd);
   if (!IsAttached() || mUpdating ||
       mMediaSource->ReadyState() != MediaSourceReadyState::Open) {
@@ -355,6 +364,7 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
 void
 SourceBuffer::Detach()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::Detach", this);
   Ended();
   DiscardDecoder();
@@ -364,6 +374,7 @@ SourceBuffer::Detach()
 void
 SourceBuffer::Ended()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::Ended", this);
   if (mDecoder) {
     mDecoder->GetResource()->Ended();
@@ -381,6 +392,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mUpdating(false)
   , mDecoderInitialized(false)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aMediaSource);
   mParser = ContainerParser::CreateForMIMEType(aType);
   MSE_DEBUG("SourceBuffer(%p)::SourceBuffer: Creating initial decoder.", this);
@@ -396,6 +408,7 @@ SourceBuffer::Create(MediaSource* aMediaSource, const nsACString& aType)
 
 SourceBuffer::~SourceBuffer()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::~SourceBuffer", this);
   DiscardDecoder();
 }
@@ -415,6 +428,7 @@ SourceBuffer::WrapObject(JSContext* aCx)
 void
 SourceBuffer::DispatchSimpleEvent(const char* aName)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p) Dispatch event '%s'", this, aName);
   DispatchTrustedEvent(NS_ConvertUTF8toUTF16(aName));
 }
@@ -430,6 +444,7 @@ SourceBuffer::QueueAsyncSimpleEvent(const char* aName)
 bool
 SourceBuffer::InitNewDecoder()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::InitNewDecoder", this);
   MOZ_ASSERT(!mDecoder);
   MediaSourceDecoder* parentDecoder = mMediaSource->GetDecoder();
@@ -445,6 +460,7 @@ SourceBuffer::InitNewDecoder()
 void
 SourceBuffer::DiscardDecoder()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::DiscardDecoder mDecoder=%p", this, mDecoder.get());
   if (mDecoder) {
     mDecoder->SetDiscarded();
@@ -456,6 +472,7 @@ SourceBuffer::DiscardDecoder()
 void
 SourceBuffer::StartUpdating()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mUpdating);
   mUpdating = true;
   QueueAsyncSimpleEvent("updatestart");
@@ -464,6 +481,7 @@ SourceBuffer::StartUpdating()
 void
 SourceBuffer::StopUpdating()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mUpdating);
   mUpdating = false;
   QueueAsyncSimpleEvent("update");
@@ -473,6 +491,7 @@ SourceBuffer::StopUpdating()
 void
 SourceBuffer::AbortUpdating()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mUpdating);
   mUpdating = false;
   QueueAsyncSimpleEvent("abort");
@@ -554,6 +573,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
 void
 SourceBuffer::GetBufferedStartEndTime(double* aStart, double* aEnd)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   ErrorResult dummy;
   nsRefPtr<TimeRanges> ranges = GetBuffered(dummy);
   if (!ranges || ranges->Length() == 0) {
@@ -567,6 +587,7 @@ SourceBuffer::GetBufferedStartEndTime(double* aStart, double* aEnd)
 void
 SourceBuffer::Evict(double aStart, double aEnd)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("SourceBuffer(%p)::Evict(aStart=%f, aEnd=%f)", this, aStart, aEnd);
   if (!mDecoder) {
     return;
@@ -582,6 +603,7 @@ SourceBuffer::Evict(double aStart, double aEnd)
 bool
 SourceBuffer::ContainsTime(double aTime)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   ErrorResult dummy;
   nsRefPtr<TimeRanges> ranges = GetBuffered(dummy);
   if (!ranges || ranges->Length() == 0) {
