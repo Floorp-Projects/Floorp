@@ -22,6 +22,7 @@ import android.widget.ListView;
 
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.home.SuggestClient;
 import org.mozilla.search.AcceptsSearchQuery;
 import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 import org.mozilla.search.Constants;
