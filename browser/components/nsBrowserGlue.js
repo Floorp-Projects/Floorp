@@ -81,8 +81,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
- XPCOMUtils.defineLazyModuleGetter(this, "RemotePrompt",
-                                   "resource:///modules/RemotePrompt.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RemotePrompt",
+                                  "resource:///modules/RemotePrompt.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "ContentPrefServiceParent",
+                                  "resource://gre/modules/ContentPrefServiceParent.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
                                   "resource:///modules/sessionstore/SessionStore.jsm");
@@ -507,10 +510,9 @@ BrowserGlue.prototype = {
     BrowserUITelemetry.init();
     ContentSearch.init();
 
-    if (Services.appinfo.browserTabsRemote) {
-      ContentClick.init();
-      RemotePrompt.init();
-    }
+    ContentClick.init();
+    RemotePrompt.init();
+    ContentPrefServiceParent.init();
 
     LoginManagerParent.init();
 
