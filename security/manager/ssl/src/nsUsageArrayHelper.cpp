@@ -6,14 +6,14 @@
 
 #include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
-#include "nsIDateTimeFormat.h"
-#include "nsDateTimeFormatCID.h"
 #include "nsComponentManagerUtils.h"
-#include "nsReadableUtils.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsIDateTimeFormat.h"
 #include "nsNSSCertificate.h"
+#include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
-
 #include "nspr.h"
+#include "pkix/pkixnss.h"
 #include "secerr.h"
 
 using namespace mozilla;
@@ -149,6 +149,7 @@ nsUsageArrayHelper::verifyFailed(uint32_t *_verified, int err)
   case SEC_ERROR_INADEQUATE_KEY_USAGE:
   case SEC_ERROR_INADEQUATE_CERT_TYPE:
   case SEC_ERROR_CA_CERT_INVALID:
+  case mozilla::pkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY:
     *_verified = nsNSSCertificate::USAGE_NOT_ALLOWED; break;
   /* These are the cases that have individual error messages */
   case SEC_ERROR_REVOKED_CERTIFICATE:
