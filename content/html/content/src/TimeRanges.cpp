@@ -126,6 +126,17 @@ TimeRanges::Normalize()
   }
 }
 
+TimeRanges::index_type
+TimeRanges::Find(double aTime)
+{
+  for (index_type i = 0; i < mRanges.Length(); ++i) {
+    if (aTime >= mRanges[i].mStart && aTime < mRanges[i].mEnd) {
+      return i;
+    }
+  }
+  return NoIndex;
+}
+
 JSObject*
 TimeRanges::WrapObject(JSContext* aCx)
 {
