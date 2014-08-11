@@ -317,7 +317,7 @@ nsTableRowFrame::DidResize()
 
   WritingMode wm = GetWritingMode();
   nsHTMLReflowMetrics desiredSize(wm);
-  SetSize(wm, GetLogicalSize(wm));
+  desiredSize.SetSize(wm, GetLogicalSize(wm));
   desiredSize.SetOverflowAreasToDesiredBounds();
 
   while (childFrame) {
