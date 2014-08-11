@@ -963,14 +963,12 @@ nsTextStore::DidLockGranted()
     mNativeCaretIsCreated = false;
   }
   if (IsReadWriteLocked()) {
-    if (IsPendingCompositionUpdateIncomplete()) {
-      // FreeCJ (TIP for Traditional Chinese) calls SetSelection() to set caret
-      // to the start of composition string and insert a full width space for
-      // a placeholder with a call of SetText().  After that, it calls
-      // OnUpdateComposition() without new range.  Therefore, let's record the
-      // composition update information here.
-      RecordCompositionUpdateAction();
-    }
+    // FreeCJ (TIP for Traditional Chinese) calls SetSelection() to set caret
+    // to the start of composition string and insert a full width space for
+    // a placeholder with a call of SetText().  After that, it calls
+    // OnUpdateComposition() without new range.  Therefore, let's record the
+    // composition update information here.
+    CompleteLastActionIfStillIncomplete();
 
     FlushPendingActions();
   }
@@ -1787,6 +1785,7 @@ nsTextStore::SetSelectionInternal(const TS_SELECTION_ACP* pSelection,
     return S_OK;
   }
 
+  CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::SELECTION_SET;
   action->mSelectionStart = pSelection->acpStart;
@@ -2812,6 +2811,7 @@ nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
     return E_FAIL;
   }
 
+  CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::COMPOSITION_START;
   action->mSelectionStart = start;
@@ -2842,6 +2842,7 @@ nsTextStore::RecordCompositionEndAction()
 
   MOZ_ASSERT(mComposition.IsComposing());
 
+  CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::COMPOSITION_END;
   action->mData = mComposition.mString;
