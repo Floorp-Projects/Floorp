@@ -115,8 +115,13 @@ GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
   if (!duration.isValid()) {
     return NS_ERROR_UNEXPECTED;
   }
-  *v = new AudioData(aStreamOffset, timeUs, duration.value(), frames, buffer.forget(),
-		     mAudioChannels);
+  *v = new AudioData(aStreamOffset,
+                     timeUs,
+                     duration.value(),
+                     frames,
+                     buffer.forget(),
+                     mAudioChannels,
+                     mAudioRate);
   ReleaseAudioBuffer();
   return NS_OK;
 }
