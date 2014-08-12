@@ -346,7 +346,7 @@ public:
    * is useful for slow-to-render pages when the display-port starts lagging
    * behind enough that continuing to draw it is wasted effort.
    */
-  bool UpdateFromCompositorFrameMetrics(ContainerLayer* aLayer,
+  bool UpdateFromCompositorFrameMetrics(Layer* aLayer,
                                         bool aHasPendingNewThebesContent,
                                         bool aLowPrecision,
                                         ViewTransform& aViewTransform);

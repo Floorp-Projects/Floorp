@@ -920,7 +920,7 @@ ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
 void
 ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
-  aAttrs = ContainerLayerAttributes(GetFrameMetrics(), mScrollHandoffParentId,
+  aAttrs = ContainerLayerAttributes(mScrollHandoffParentId,
                                     mPreXScale, mPreYScale,
                                     mInheritedXScale, mInheritedYScale,
                                     mBackgroundColor, mContentDescription);
@@ -1440,6 +1440,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (mMaskLayer) {
     aStream << nsPrintfCString(" [mMaskLayer=%p]", mMaskLayer.get()).get();
   }
+  if (!mFrameMetrics.IsDefault()) {
+    AppendToString(aStream, mFrameMetrics, " [metrics=", "]");
+  }
 }
 
 // The static helper function sets the transform matrix into the packet
@@ -1567,9 +1570,6 @@ void
 ContainerLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
-  if (!mFrameMetrics.IsDefault()) {
-    AppendToString(aStream, mFrameMetrics, " [metrics=", "]");
-  }
   if (mScrollHandoffParentId != FrameMetrics::NULL_SCROLL_ID) {
     aStream << nsPrintfCString(" [scrollParent=%llu]", mScrollHandoffParentId).get();
   }
