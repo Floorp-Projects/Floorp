@@ -26,6 +26,9 @@ function finish(evt) {
   var v = evt.target;
   is(v._error, 2, "Should have received 2 error events before loaded");
   v._finished = true;
+  // remove error event handler, because this would otherwise
+  // cause a failure on Windows 7, see bug 1024535
+  v.onerror = null;
   v.parentNode.removeChild(v);
   manager.finished(v.token);
 }
@@ -45,7 +48,7 @@ var extension = {
 function startTest(test, token) {
   var v = document.createElement('video');
   v.preload = "auto";
-  v.addEventListener("error", function(){ok(false,"Error events on source children should not bubble");}, false);
+  v.onerror = function(){ok(false,"Error events on source children should not bubble");}
   v.token = token;
   manager.started(token);
   v._error = 0;
