@@ -430,9 +430,12 @@ GetJSObjectFromArray(JSContext* aCtx,
   return NS_OK;
 }
 
-class VisitedQuery : public AsyncStatementCallback
+class VisitedQuery MOZ_FINAL: public AsyncStatementCallback,
+                              public mozIStorageCompletionCallback
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   static nsresult Start(nsIURI* aURI,
                         mozIVisitedStatusCallback* aCallback=nullptr)
   {
@@ -466,18 +469,27 @@ public:
 
     History* history = History::GetService();
     NS_ENSURE_STATE(history);
-    mozIStorageAsyncStatement* stmt = history->GetIsVisitedStatement();
-    NS_ENSURE_STATE(stmt);
-
-    // Bind by index for performance.
-    nsresult rv = URIBinder::Bind(stmt, 0, aURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsRefPtr<VisitedQuery> callback = new VisitedQuery(aURI, aCallback);
     NS_ENSURE_TRUE(callback, NS_ERROR_OUT_OF_MEMORY);
+    nsresult rv = history->GetIsVisitedStatement(callback);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  // Note: the return value matters here.  We call into this method, it's not
+  // just xpcom boilerplate.
+  NS_IMETHOD Complete(nsresult aResult, nsISupports* aStatement)
+  {
+    NS_ENSURE_SUCCESS(aResult, aResult);
+    nsCOMPtr<mozIStorageAsyncStatement> stmt = do_QueryInterface(aStatement);
+    NS_ENSURE_STATE(stmt);
+    // Bind by index for performance.
+    nsresult rv = URIBinder::Bind(stmt, 0, mURI);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStoragePendingStatement> handle;
-    return stmt->ExecuteAsync(callback, getter_AddRefs(handle));
+    return stmt->ExecuteAsync(this, getter_AddRefs(handle));
   }
 
   NS_IMETHOD HandleResult(mozIStorageResultSet* aResults)
@@ -548,10 +560,20 @@ private:
   {
   }
 
+  ~VisitedQuery()
+  {
+  }
+
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<mozIVisitedStatusCallback> mCallback;
   bool mIsVisited;
 };
+
+NS_IMPL_ISUPPORTS_INHERITED(
+  VisitedQuery
+, AsyncStatementCallback
+, mozIStorageCompletionCallback
+)
 
 /**
  * Notifies observers about a visit.
@@ -2003,31 +2025,95 @@ History::NotifyVisited(nsIURI* aURI)
   return NS_OK;
 }
 
-mozIStorageAsyncStatement*
-History::GetIsVisitedStatement()
+class ConcurrentStatementsHolder MOZ_FINAL : public mozIStorageCompletionCallback {
+public:
+  NS_DECL_ISUPPORTS
+
+  ConcurrentStatementsHolder(mozIStorageConnection* aDBConn)
+  {
+    DebugOnly<nsresult> rv = aDBConn->AsyncClone(true, this);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+
+  NS_IMETHOD Complete(nsresult aStatus, nsISupports* aConnection) {
+    if (NS_FAILED(aStatus))
+      return NS_OK;
+    mReadOnlyDBConn = do_QueryInterface(aConnection);
+
+    // Now we can create our cached statements.
+
+    if (!mIsVisitedStatement) {
+      (void)mReadOnlyDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+        "SELECT 1 FROM moz_places h "
+        "WHERE url = ?1 AND last_visit_date NOTNULL "
+      ),  getter_AddRefs(mIsVisitedStatement));
+      MOZ_ASSERT(mIsVisitedStatement);
+      nsresult result = mIsVisitedStatement ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+      for (int32_t i = 0; i < mIsVisitedCallbacks.Count(); ++i) {
+        DebugOnly<nsresult> rv;
+        rv = mIsVisitedCallbacks[i]->Complete(result, mIsVisitedStatement);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+      }
+      mIsVisitedCallbacks.Clear();
+    }
+
+    return NS_OK;
+  }
+
+  void GetIsVisitedStatement(mozIStorageCompletionCallback* aCallback)
+  {
+    if (mIsVisitedStatement) {
+      DebugOnly<nsresult> rv;
+      rv = aCallback->Complete(NS_OK, mIsVisitedStatement);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    } else {
+      DebugOnly<bool> added = mIsVisitedCallbacks.AppendObject(aCallback);
+      MOZ_ASSERT(added);
+    }
+  }
+
+  void Shutdown() {
+    if (mReadOnlyDBConn) {
+      mIsVisitedCallbacks.Clear();
+      DebugOnly<nsresult> rv;
+      if (mIsVisitedStatement) {
+        rv = mIsVisitedStatement->Finalize();
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+      }
+      rv = mReadOnlyDBConn->AsyncClose(nullptr);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+  }
+
+private:
+  ~ConcurrentStatementsHolder()
+  {
+  }
+
+  nsCOMPtr<mozIStorageAsyncConnection> mReadOnlyDBConn;
+  nsCOMPtr<mozIStorageAsyncStatement> mIsVisitedStatement;
+  nsCOMArray<mozIStorageCompletionCallback> mIsVisitedCallbacks;
+};
+
+NS_IMPL_ISUPPORTS(
+  ConcurrentStatementsHolder
+, mozIStorageCompletionCallback
+)
+
+nsresult
+History::GetIsVisitedStatement(mozIStorageCompletionCallback* aCallback)
 {
-  if (mIsVisitedStatement) {
-    return mIsVisitedStatement;
-  }
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mShuttingDown)
+    return NS_ERROR_NOT_AVAILABLE;
 
-  // If we don't yet have a database connection, go ahead and clone it now.
-  if (!mReadOnlyDBConn) {
+  if (!mConcurrentStatementsHolder) {
     mozIStorageConnection* dbConn = GetDBConn();
-    NS_ENSURE_TRUE(dbConn, nullptr);
-
-    (void)dbConn->Clone(true, getter_AddRefs(mReadOnlyDBConn));
-    NS_ENSURE_TRUE(mReadOnlyDBConn, nullptr);
+    NS_ENSURE_STATE(dbConn);
+    mConcurrentStatementsHolder = new ConcurrentStatementsHolder(dbConn);
   }
-
-  // Now we can create our cached statement.
-  nsresult rv = mReadOnlyDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "SELECT 1 "
-    "FROM moz_places h "
-    "WHERE url = ?1 "
-      "AND last_visit_date NOTNULL "
-  ),  getter_AddRefs(mIsVisitedStatement));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return mIsVisitedStatement;
+  mConcurrentStatementsHolder->GetIsVisitedStatement(aCallback);
+  return NS_OK;
 }
 
 nsresult
@@ -2283,6 +2369,8 @@ History::GetSingleton()
 mozIStorageConnection*
 History::GetDBConn()
 {
+  if (mShuttingDown)
+    return nullptr;
   if (!mDB) {
     mDB = Database::GetDatabase();
     NS_ENSURE_TRUE(mDB, nullptr);
@@ -2302,11 +2390,8 @@ History::Shutdown()
 
   mShuttingDown = true;
 
-  if (mReadOnlyDBConn) {
-    if (mIsVisitedStatement) {
-      (void)mIsVisitedStatement->Finalize();
-    }
-    (void)mReadOnlyDBConn->AsyncClose(nullptr);
+  if (mConcurrentStatementsHolder) {
+    mConcurrentStatementsHolder->Shutdown();
   }
 }
 
