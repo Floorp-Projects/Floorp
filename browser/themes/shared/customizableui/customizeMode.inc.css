@@ -205,12 +205,14 @@ toolbarpaletteitem[notransition][place="panel"] {
 }
 
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
+toolbarpaletteitem > toolbarbutton > .toolbarbutton-badge-container > .toolbarbutton-icon,
 toolbarpaletteitem > toolbaritem.panel-wide-item,
 toolbarpaletteitem > toolbarbutton[type="menu-button"] {
   transition: transform .3s cubic-bezier(.6, 2, .75, 1.5) !important;
 }
 
-toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-icon {
+toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-icon,
+toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-badge-container > .toolbarbutton-icon {
   transform: scale(1.3);
 }
 
