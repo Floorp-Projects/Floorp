@@ -21,27 +21,26 @@ class SkPDFCatalog;
 
     A stream object in a PDF.  Note, all streams must be indirect objects (via
     SkObjRef).
-    TODO(vandebo): SkStream should be replaced by SkStreamRewindable when that
-    is feasible.
 */
 class SkPDFStream : public SkPDFDict {
     SK_DECLARE_INST_COUNT(SkPDFStream)
 public:
     /** Create a PDF stream. A Length entry is automatically added to the
-     *  stream dictionary. The stream may be retained (stream->ref() may be
-     *  called) so its contents must not be changed after calling this.
-     *  @param data  The data part of the stream.
+     *  stream dictionary.
+     *  @param data   The data part of the stream.  Will be ref()ed.
      */
     explicit SkPDFStream(SkData* data);
-    /** Deprecated constructor. */
-    explicit SkPDFStream(SkStream* stream);
-    /** Create a PDF stream with the same content and dictionary entries
-     *  as the passed one.
+
+    /** Create a PDF stream. A Length entry is automatically added to the
+     *  stream dictionary.
+     *  @param stream The data part of the stream.  Will be duplicate()d.
      */
-    explicit SkPDFStream(const SkPDFStream& pdfStream);
+    explicit SkPDFStream(SkStream* stream);
+
     virtual ~SkPDFStream();
 
-    // The SkPDFObject interface.
+    // The SkPDFObject interface.  These two methods use a mutex to
+    // allow multiple threads to call at the same time.
     virtual void emitObject(SkWStream* stream, SkPDFCatalog* catalog,
                             bool indirect);
     virtual size_t getOutputSize(SkPDFCatalog* catalog, bool indirect);
@@ -53,6 +52,11 @@ protected:
                                //   uncompressed form.
         kCompressed_State,     //!< The stream's already been compressed.
     };
+
+    /** Create a PDF stream with the same content and dictionary entries
+     *  as the passed one.
+     */
+    explicit SkPDFStream(const SkPDFStream& pdfStream);
 
     /* Create a PDF stream with no data.  The setData method must be called to
      * set the data.
@@ -67,22 +71,20 @@ protected:
         fSubstitute.reset(stream);
     }
 
-    SkPDFStream* getSubstitute() {
+    SkPDFStream* getSubstitute() const {
         return fSubstitute.get();
     }
 
     void setData(SkData* data);
     void setData(SkStream* stream);
 
-    SkStream* getData() {
-        return fData.get();
-    }
+    size_t dataSize() const;
 
     void setState(State state) {
         fState = state;
     }
 
-    State getState() {
+    State getState() const {
         return fState;
     }
 
@@ -90,8 +92,13 @@ private:
     // Indicates what form (or if) the stream has been requested.
     State fState;
 
-    // TODO(vandebo): Use SkData (after removing deprecated constructor).
-    SkAutoTUnref<SkStream> fData;
+    // Mutex guards fState, fDataStream, and fSubstitute in public interface.
+    SkMutex fMutex;
+
+    SkMemoryStream fMemoryStream;  // Used by fDataStream when
+                                   // fDataStream needs to be backed
+                                   // by SkData.
+    SkAutoTUnref<SkStreamRewindable> fDataStream;
     SkAutoTUnref<SkPDFStream> fSubstitute;
 
     typedef SkPDFDict INHERITED;

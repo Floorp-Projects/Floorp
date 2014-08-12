@@ -16,7 +16,8 @@
 #include "SkShader.h"
 #include "SkValidationUtils.h"
 
-bool SkTileImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src, const SkImageFilter::Context& ctx,
+bool SkTileImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
+                                      const Context& ctx,
                                       SkBitmap* dst, SkIPoint* offset) const {
     SkBitmap source = src;
     SkImageFilter* input = getInput(0);
@@ -59,18 +60,29 @@ bool SkTileImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src, const S
     SkPaint paint;
     paint.setXfermodeMode(SkXfermode::kSrc_Mode);
 
-    SkAutoTUnref<SkShader> shader(SkShader::CreateBitmapShader(subset,
-                                  SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode));
     SkMatrix shaderMatrix;
     shaderMatrix.setTranslate(SkIntToScalar(srcOffset.fX),
                               SkIntToScalar(srcOffset.fY));
-    shader->setLocalMatrix(shaderMatrix);
+    SkAutoTUnref<SkShader> shader(SkShader::CreateBitmapShader(subset,
+                                  SkShader::kRepeat_TileMode, SkShader::kRepeat_TileMode,
+                                  &shaderMatrix));
     paint.setShader(shader);
     canvas.translate(-dstRect.fLeft, -dstRect.fTop);
     canvas.drawRect(dstRect, paint);
     *dst = device->accessBitmap(false);
     offset->fX = dstIRect.fLeft;
     offset->fY = dstIRect.fTop;
+    return true;
+}
+
+bool SkTileImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& ctm,
+                                       SkIRect* dst) const {
+    SkRect srcRect;
+    ctm.mapRect(&srcRect, fSrcRect);
+    SkIRect srcIRect;
+    srcRect.roundOut(&srcIRect);
+    srcIRect.join(src);
+    *dst = srcIRect;
     return true;
 }
 

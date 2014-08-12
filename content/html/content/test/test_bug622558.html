@@ -29,9 +29,9 @@ if (navigator.platform.startsWith("Win")) {
 
 function checkSelectors(aElement)
 {
-  ok(aElement.mozMatchesSelector(":-moz-ui-invalid"),
+  ok(aElement.matches(":-moz-ui-invalid"),
      ":-moz-ui-invalid should match for " + aElement);
-  ok(!aElement.mozMatchesSelector(":-moz-ui-valid"),
+  ok(!aElement.matches(":-moz-ui-valid"),
      ":-moz-ui-valid should not match for " + aElement);
 }
 

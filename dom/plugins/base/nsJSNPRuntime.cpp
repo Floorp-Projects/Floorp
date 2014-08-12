@@ -1538,6 +1538,9 @@ static bool
 NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                         JS::MutableHandle<JSObject*> objp)
 {
+  if (JSID_IS_SYMBOL(id))
+    return true;
+
   NPObject *npobj = GetNPObject(cx, obj);
 
   if (!npobj || !npobj->_class || !npobj->_class->hasProperty ||

@@ -19,12 +19,13 @@
 #include "GrGLVertexArray.h"
 #include "GrGLVertexBuffer.h"
 #include "GrGpu.h"
-#include "GrTHashTable.h"
 #include "SkTypes.h"
 
 #ifdef SK_DEVELOPER
 #define PROGRAM_CACHE_STATS
 #endif
+
+class GrGLNameAllocator;
 
 class GrGpuGL : public GrGpu {
 public:
@@ -40,22 +41,24 @@ public:
     GrGLSLGeneration glslGeneration() const { return fGLContext.glslGeneration(); }
     const GrGLCaps& glCaps() const { return *fGLContext.caps(); }
 
-    // Used by GrGLProgram and GrGLTexGenProgramEffects to configure OpenGL state.
+    virtual void discard(GrRenderTarget*) SK_OVERRIDE;
+
+    // Used by GrGLProgram and GrGLPathTexGenProgramEffects to configure OpenGL
+    // state.
     void bindTexture(int unitIdx, const GrTextureParams& params, GrGLTexture* texture);
     void setProjectionMatrix(const SkMatrix& matrix,
                              const SkISize& renderTargetSize,
                              GrSurfaceOrigin renderTargetOrigin);
-    enum TexGenComponents {
-        kS_TexGenComponents = 1,
-        kST_TexGenComponents = 2,
-        kSTR_TexGenComponents = 3
+    enum PathTexGenComponents {
+        kS_PathTexGenComponents = 1,
+        kST_PathTexGenComponents = 2,
+        kSTR_PathTexGenComponents = 3
     };
-    void enableTexGen(int unitIdx, TexGenComponents, const GrGLfloat* coefficients);
-    void enableTexGen(int unitIdx, TexGenComponents, const SkMatrix& matrix);
-    void flushTexGenSettings(int numUsedTexCoordSets);
+    void enablePathTexGen(int unitIdx, PathTexGenComponents, const GrGLfloat* coefficients);
+    void enablePathTexGen(int unitIdx, PathTexGenComponents, const SkMatrix& matrix);
+    void flushPathTexGenSettings(int numUsedTexCoordSets);
     bool shouldUseFixedFunctionTexturing() const {
-        return this->glCaps().fixedFunctionSupport() &&
-               this->glCaps().pathRenderingSupport();
+        return this->glCaps().pathRenderingSupport();
     }
 
     bool programUnitTest(int maxStages);
@@ -101,8 +104,11 @@ public:
     void notifyIndexBufferDelete(GrGLuint id) {
         fHWGeometryState.notifyIndexBufferDelete(id);
     }
-    void notifyTextureDelete(GrGLTexture* texture);
-    void notifyRenderTargetDelete(GrRenderTarget* renderTarget);
+
+    // These functions should be used to generate and delete GL path names. They have their own
+    // allocator that runs on the client side, so they are much faster than going through GenPaths.
+    GrGLuint createGLPathObject();
+    void deleteGLPathObject(GrGLuint);
 
 protected:
     virtual bool onCopySurface(GrSurface* dst,
@@ -122,9 +128,12 @@ private:
     virtual GrTexture* onCreateTexture(const GrTextureDesc& desc,
                                        const void* srcData,
                                        size_t rowBytes) SK_OVERRIDE;
+    virtual GrTexture* onCreateCompressedTexture(const GrTextureDesc& desc,
+                                                 const void* srcData) SK_OVERRIDE;
     virtual GrVertexBuffer* onCreateVertexBuffer(size_t size, bool dynamic) SK_OVERRIDE;
     virtual GrIndexBuffer* onCreateIndexBuffer(size_t size, bool dynamic) SK_OVERRIDE;
     virtual GrPath* onCreatePath(const SkPath&, const SkStrokeRec&) SK_OVERRIDE;
+    virtual GrPathRange* onCreatePathRange(size_t size, const SkStrokeRec&) SK_OVERRIDE;
     virtual GrTexture* onWrapBackendTexture(const GrBackendTextureDesc&) SK_OVERRIDE;
     virtual GrRenderTarget* onWrapBackendRenderTarget(const GrBackendRenderTargetDesc&) SK_OVERRIDE;
     virtual bool createStencilBufferForRenderTarget(GrRenderTarget* rt,
@@ -135,8 +144,6 @@ private:
         GrRenderTarget* rt) SK_OVERRIDE;
 
     virtual void onClear(const SkIRect* rect, GrColor color, bool canIgnoreRect) SK_OVERRIDE;
-
-    virtual void onForceRenderTargetFlush() SK_OVERRIDE;
 
     virtual bool onReadPixels(GrRenderTarget* target,
                               int left, int top,
@@ -156,6 +163,10 @@ private:
 
     virtual void onGpuStencilPath(const GrPath*, SkPath::FillType) SK_OVERRIDE;
     virtual void onGpuDrawPath(const GrPath*, SkPath::FillType) SK_OVERRIDE;
+    virtual void onGpuDrawPaths(const GrPathRange*,
+                                const uint32_t indices[], int count,
+                                const float transforms[], PathTransformType,
+                                SkPath::FillType) SK_OVERRIDE;
 
     virtual void clearStencil() SK_OVERRIDE;
     virtual void clearStencilClip(const SkIRect& rect,
@@ -163,10 +174,8 @@ private:
     virtual bool flushGraphicsState(DrawType, const GrDeviceCoordTexture* dstCopy) SK_OVERRIDE;
 
     // GrDrawTarget ovverides
-    virtual void onInstantGpuTraceEvent(const char* marker) SK_OVERRIDE;
-    virtual void onPushGpuTraceEvent(const char* marker) SK_OVERRIDE;
-    virtual void onPopGpuTraceEvent() SK_OVERRIDE;
-
+    virtual void didAddGpuTraceMarker() SK_OVERRIDE;
+    virtual void didRemoveGpuTraceMarker() SK_OVERRIDE;
 
     // binds texture unit in GL
     void setTextureUnit(int unitIdx);
@@ -200,7 +209,7 @@ private:
         enum {
             // We may actually have kMaxEntries+1 shaders in the GL context because we create a new
             // shader before evicting from the cache.
-            kMaxEntries = 32,
+            kMaxEntries = 128,
             kHashBits = 6,
         };
 
@@ -263,6 +272,18 @@ private:
                        GrPixelConfig dataConfig,
                        const void* data,
                        size_t rowBytes);
+
+    // helper for onCreateCompressedTexture. If width and height are
+    // set to -1, then this function will use desc.fWidth and desc.fHeight
+    // for the size of the data. The isNewTexture flag should be set to true
+    // whenever a new texture needs to be created. Otherwise, we assume that
+    // the texture is already in GPU memory and that it's going to be updated
+    // with new data.
+    bool uploadCompressedTexData(const GrGLTexture::Desc& desc,
+                                 const void* data,
+                                 bool isNewTexture = true,
+                                 int left = 0, int top = 0,
+                                 int width = -1, int height = -1);
 
     bool createRenderTargetObjects(int width, int height,
                                    GrGLuint texID,
@@ -442,21 +463,23 @@ private:
     GrDrawState::DrawFace       fHWDrawFace;
     TriState                    fHWWriteToColor;
     TriState                    fHWDitherEnabled;
-    GrRenderTarget*             fHWBoundRenderTarget;
-    SkTArray<GrTexture*, true>  fHWBoundTextures;
+    uint32_t                    fHWBoundRenderTargetUniqueID;
+    SkTArray<uint32_t, true>    fHWBoundTextureUniqueIDs;
 
-    struct TexGenData {
+    struct PathTexGenData {
         GrGLenum  fMode;
         GrGLint   fNumComponents;
         GrGLfloat fCoefficients[3 * 3];
     };
-    int                         fHWActiveTexGenSets;
-    SkTArray<TexGenData, true>  fHWTexGenSettings;
+    int                         fHWActivePathTexGenSets;
+    SkTArray<PathTexGenData, true>  fHWPathTexGenSettings;
     ///@}
 
     // we record what stencil format worked last time to hopefully exit early
     // from our loop that tries stencil formats and calls check fb status.
     int fLastSuccessfulStencilFmtIdx;
+
+    SkAutoTDelete<GrGLNameAllocator> fPathNameAllocator;
 
     typedef GrGpu INHERITED;
 };

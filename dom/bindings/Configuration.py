@@ -447,17 +447,27 @@ class Descriptor(DescriptorProvider):
                 if permissionsIndex is not None:
                     self.checkPermissionsIndicesForMembers[m.identifier.name] = permissionsIndex
 
-            self.featureDetectibleThings = set()
-            if self.interface.getExtendedAttribute("FeatureDetectible") is not None:
-                if self.interface.getNavigatorProperty():
-                    self.featureDetectibleThings.add("Navigator.%s" % self.interface.getNavigatorProperty())
-                else:
-                    assert(self.interface.ctor() is not None)
-                    self.featureDetectibleThings.add(self.interface.identifier.name)
+            def isTestInterface(iface):
+                return (iface.identifier.name in ["TestInterface",
+                                                  "TestJSImplInterface",
+                                                  "TestRenamedInterface"])
 
-            for m in self.interface.members:
-                if m.getExtendedAttribute("FeatureDetectible") is not None:
-                    self.featureDetectibleThings.add("%s.%s" % (self.interface.identifier.name, m.identifier.name))
+            self.featureDetectibleThings = set()
+            if not isTestInterface(self.interface):
+                if (self.interface.getExtendedAttribute("CheckPermissions") or
+                    self.interface.getExtendedAttribute("AvailableIn") == "PrivilegedApps"):
+                    if self.interface.getNavigatorProperty():
+                        self.featureDetectibleThings.add("Navigator.%s" % self.interface.getNavigatorProperty())
+                    else:
+                        iface = self.interface.identifier.name
+                        self.featureDetectibleThings.add(iface)
+                        for m in self.interface.members:
+                            self.featureDetectibleThings.add("%s.%s" % (iface, m.identifier.name))
+
+                for m in self.interface.members:
+                    if (m.getExtendedAttribute("CheckPermissions") or
+                        m.getExtendedAttribute("AvailableIn") == "PrivilegedApps"):
+                        self.featureDetectibleThings.add("%s.%s" % (self.interface.identifier.name, m.identifier.name))
 
         # Build the prototype chain.
         self.prototypeChain = []

@@ -876,7 +876,7 @@
                 _showControlsTimeout : 0,
                 SHOW_CONTROLS_TIMEOUT_MS: 500,
                 _showControlsFn : function () {
-                    if (Utils.video.mozMatchesSelector("video:hover")) {
+                    if (Utils.video.matches("video:hover")) {
                         Utils.startFadeIn(Utils.controlBar, false);
                         Utils._showControlsTimeout = 0;
                         Utils._controlsHiddenByTimeout = false;
