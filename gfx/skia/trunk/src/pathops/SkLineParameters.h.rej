@@ -1,0 +1,13 @@
+--- src/pathops/SkLineParameters.h
++++ src/pathops/SkLineParameters.h
+@@ -168,8 +172,10 @@
+         return -a;
+     }
+ 
+ private:
+     double a;
+     double b;
+     double c;
+ };
++
++#endif

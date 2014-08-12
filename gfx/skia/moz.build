@@ -19,12 +19,12 @@ EXPORTS.skia += [
     'trunk/include/config/SkUserConfig.h',
     'trunk/include/core/SkAdvancedTypefaceMetrics.h',
     'trunk/include/core/SkAnnotation.h',
+    'trunk/include/core/SkBBHFactory.h',
     'trunk/include/core/SkBitmap.h',
     'trunk/include/core/SkBitmapDevice.h',
     'trunk/include/core/SkBlitRow.h',
-    'trunk/include/core/SkBounder.h',
+    'trunk/include/core/SkBlurTypes.h',
     'trunk/include/core/SkCanvas.h',
-    'trunk/include/core/SkChecksum.h',
     'trunk/include/core/SkChunkAlloc.h',
     'trunk/include/core/SkClipStack.h',
     'trunk/include/core/SkColor.h',
@@ -43,20 +43,19 @@ EXPORTS.skia += [
     'trunk/include/core/SkDraw.h',
     'trunk/include/core/SkDrawFilter.h',
     'trunk/include/core/SkDrawLooper.h',
+    'trunk/include/core/SkDrawPictureCallback.h',
     'trunk/include/core/SkDynamicAnnotations.h',
-    'trunk/include/core/SkEmptyShader.h',
     'trunk/include/core/SkEndian.h',
     'trunk/include/core/SkError.h',
     'trunk/include/core/SkFixed.h',
-    'trunk/include/core/SkFlate.h',
     'trunk/include/core/SkFlattenable.h',
     'trunk/include/core/SkFlattenableBuffers.h',
     'trunk/include/core/SkFlattenableSerialization.h',
     'trunk/include/core/SkFloatBits.h',
     'trunk/include/core/SkFloatingPoint.h',
+    'trunk/include/core/SkFont.h',
     'trunk/include/core/SkFontHost.h',
     'trunk/include/core/SkFontLCDConfig.h',
-    'trunk/include/core/SkGeometry.h',
     'trunk/include/core/SkGraphics.h',
     'trunk/include/core/SkImage.h',
     'trunk/include/core/SkImageDecoder.h',
@@ -65,7 +64,6 @@ EXPORTS.skia += [
     'trunk/include/core/SkImageGenerator.h',
     'trunk/include/core/SkImageInfo.h',
     'trunk/include/core/SkInstCnt.h',
-    'trunk/include/core/SkLineClipper.h',
     'trunk/include/core/SkMallocPixelRef.h',
     'trunk/include/core/SkMask.h',
     'trunk/include/core/SkMaskFilter.h',
@@ -77,11 +75,13 @@ EXPORTS.skia += [
     'trunk/include/core/SkPackBits.h',
     'trunk/include/core/SkPaint.h',
     'trunk/include/core/SkPaintOptionsAndroid.h',
+    'trunk/include/core/SkPatch.h',
     'trunk/include/core/SkPath.h',
     'trunk/include/core/SkPathEffect.h',
     'trunk/include/core/SkPathMeasure.h',
     'trunk/include/core/SkPathRef.h',
     'trunk/include/core/SkPicture.h',
+    'trunk/include/core/SkPictureRecorder.h',
     'trunk/include/core/SkPixelRef.h',
     'trunk/include/core/SkPoint.h',
     'trunk/include/core/SkPostConfig.h',
@@ -98,7 +98,6 @@ EXPORTS.skia += [
     'trunk/include/core/SkSize.h',
     'trunk/include/core/SkStream.h',
     'trunk/include/core/SkString.h',
-    'trunk/include/core/SkStringUtils.h',
     'trunk/include/core/SkStrokeRec.h',
     'trunk/include/core/SkSurface.h',
     'trunk/include/core/SkTArray.h',
@@ -107,16 +106,13 @@ EXPORTS.skia += [
     'trunk/include/core/SkTDStack.h',
     'trunk/include/core/SkTemplates.h',
     'trunk/include/core/SkThread.h',
-    'trunk/include/core/SkTileGridPicture.h',
     'trunk/include/core/SkTime.h',
     'trunk/include/core/SkTInternalLList.h',
     'trunk/include/core/SkTLazy.h',
-    'trunk/include/core/SkTrace.h',
     'trunk/include/core/SkTRegistry.h',
     'trunk/include/core/SkTSearch.h',
     'trunk/include/core/SkTypeface.h',
     'trunk/include/core/SkTypes.h',
-    'trunk/include/core/SkUnitMapper.h',
     'trunk/include/core/SkUnPreMultiply.h',
     'trunk/include/core/SkUtils.h',
     'trunk/include/core/SkWeakRefCnt.h',
@@ -130,7 +126,6 @@ EXPORTS.skia += [
     'trunk/include/effects/SkAlphaThresholdFilter.h',
     'trunk/include/effects/SkArithmeticMode.h',
     'trunk/include/effects/SkAvoidXfermode.h',
-    'trunk/include/effects/SkBicubicImageFilter.h',
     'trunk/include/effects/SkBitmapSource.h',
     'trunk/include/effects/SkBlurDrawLooper.h',
     'trunk/include/effects/SkBlurImageFilter.h',
@@ -147,7 +142,6 @@ EXPORTS.skia += [
     'trunk/include/effects/SkDropShadowImageFilter.h',
     'trunk/include/effects/SkEmbossMaskFilter.h',
     'trunk/include/effects/SkGradientShader.h',
-    'trunk/include/effects/SkKernel33MaskFilter.h',
     'trunk/include/effects/SkLayerDrawLooper.h',
     'trunk/include/effects/SkLayerRasterizer.h',
     'trunk/include/effects/SkLerpXfermode.h',
@@ -155,6 +149,7 @@ EXPORTS.skia += [
     'trunk/include/effects/SkLumaColorFilter.h',
     'trunk/include/effects/SkMagnifierImageFilter.h',
     'trunk/include/effects/SkMatrixConvolutionImageFilter.h',
+    'trunk/include/effects/SkMatrixImageFilter.h',
     'trunk/include/effects/SkMergeImageFilter.h',
     'trunk/include/effects/SkMorphologyImageFilter.h',
     'trunk/include/effects/SkOffsetImageFilter.h',
@@ -164,7 +159,6 @@ EXPORTS.skia += [
     'trunk/include/effects/SkPixelXorXfermode.h',
     'trunk/include/effects/SkPorterDuff.h',
     'trunk/include/effects/SkRectShaderImageFilter.h',
-    'trunk/include/effects/SkResizeImageFilter.h',
     'trunk/include/effects/SkStippleMaskFilter.h',
     'trunk/include/effects/SkTableColorFilter.h',
     'trunk/include/effects/SkTableMaskFilter.h',
@@ -196,13 +190,11 @@ EXPORTS.skia += [
     'trunk/include/gpu/GrEffectUnitTest.h',
     'trunk/include/gpu/GrFontScaler.h',
     'trunk/include/gpu/GrGlyph.h',
-    'trunk/include/gpu/GrKey.h',
+    'trunk/include/gpu/GrGpuResource.h',
     'trunk/include/gpu/GrPaint.h',
     'trunk/include/gpu/GrPathRendererChain.h',
-    'trunk/include/gpu/GrPoint.h',
     'trunk/include/gpu/GrRect.h',
     'trunk/include/gpu/GrRenderTarget.h',
-    'trunk/include/gpu/GrResource.h',
     'trunk/include/gpu/GrSurface.h',
     'trunk/include/gpu/GrTBackendEffectFactory.h',
     'trunk/include/gpu/GrTexture.h',
@@ -214,10 +206,8 @@ EXPORTS.skia += [
     'trunk/include/gpu/SkGr.h',
     'trunk/include/gpu/SkGrPixelRef.h',
     'trunk/include/gpu/SkGrTexturePixelRef.h',
+    'trunk/include/images/SkDecodingImageGenerator.h',
     'trunk/include/images/SkForceLinking.h',
-    'trunk/include/images/SkImageRef.h',
-    'trunk/include/images/SkImageRef_GlobalPool.h',
-    'trunk/include/images/SkImages.h',
     'trunk/include/images/SkMovie.h',
     'trunk/include/images/SkPageFlipper.h',
     'trunk/include/pathops/SkPathOps.h',
@@ -226,25 +216,25 @@ EXPORTS.skia += [
     'trunk/include/pipe/SkGPipe.h',
     'trunk/include/ports/SkFontConfigInterface.h',
     'trunk/include/ports/SkFontMgr.h',
+    'trunk/include/ports/SkFontMgr_indirect.h',
     'trunk/include/ports/SkFontStyle.h',
-    'trunk/include/ports/SkHarfBuzzFont.h',
+    'trunk/include/ports/SkRemotableFontMgr.h',
     'trunk/include/ports/SkTypeface_android.h',
     'trunk/include/ports/SkTypeface_cairo.h',
     'trunk/include/ports/SkTypeface_mac.h',
     'trunk/include/ports/SkTypeface_win.h',
+    'trunk/include/record/SkRecording.h',
     'trunk/include/svg/SkSVGAttribute.h',
     'trunk/include/svg/SkSVGBase.h',
     'trunk/include/svg/SkSVGPaintState.h',
     'trunk/include/svg/SkSVGParser.h',
     'trunk/include/svg/SkSVGTypes.h',
-    'trunk/include/text/SkTextLayout.h',
     'trunk/include/utils/ios/SkStream_NSData.h',
     'trunk/include/utils/mac/SkCGUtils.h',
     'trunk/include/utils/SkBoundaryPatch.h',
     'trunk/include/utils/SkCamera.h',
     'trunk/include/utils/SkCanvasStateUtils.h',
     'trunk/include/utils/SkCondVar.h',
-    'trunk/include/utils/SkCountdown.h',
     'trunk/include/utils/SkCubicInterval.h',
     'trunk/include/utils/SkCullPoints.h',
     'trunk/include/utils/SkDebugUtils.h',
@@ -253,7 +243,6 @@ EXPORTS.skia += [
     'trunk/include/utils/SkEventTracer.h',
     'trunk/include/utils/SkFrontBufferedStream.h',
     'trunk/include/utils/SkInterpolator.h',
-    'trunk/include/utils/SkJSON.h',
     'trunk/include/utils/SkJSONCPP.h',
     'trunk/include/utils/SkLayer.h',
     'trunk/include/utils/SkLua.h',
@@ -274,7 +263,6 @@ EXPORTS.skia += [
     'trunk/include/utils/SkRTConf.h',
     'trunk/include/utils/SkRunnable.h',
     'trunk/include/utils/SkThreadPool.h',
-    'trunk/include/utils/SkUnitMappers.h',
     'trunk/include/utils/SkWGL.h',
     'trunk/include/utils/win/SkAutoCoInitialize.h',
     'trunk/include/utils/win/SkHRESULT.h',
@@ -315,17 +303,19 @@ EXPORTS.skia += [
     'trunk/include/xml/SkJS.h',
     'trunk/include/xml/SkXMLParser.h',
     'trunk/include/xml/SkXMLWriter.h',
-    'trunk/src/ports/SkAtomics_android.h',
     'trunk/src/ports/SkAtomics_sync.h',
     'trunk/src/ports/SkAtomics_win.h',
+    'trunk/src/ports/SkBarriers_arm.h',
+    'trunk/src/ports/SkBarriers_tsan.h',
+    'trunk/src/ports/SkBarriers_x86.h',
     'trunk/src/ports/SkMutex_pthread.h',
     'trunk/src/ports/SkMutex_win.h',
 ]
 UNIFIED_SOURCES += [
     'trunk/src/core/SkAAClip.cpp',
-    'trunk/src/core/SkAdvancedTypefaceMetrics.cpp',
     'trunk/src/core/SkAlphaRuns.cpp',
     'trunk/src/core/SkAnnotation.cpp',
+    'trunk/src/core/SkBBHFactory.cpp',
     'trunk/src/core/SkBBoxHierarchyRecord.cpp',
     'trunk/src/core/SkBBoxRecord.cpp',
     'trunk/src/core/SkBitmap.cpp',
@@ -372,15 +362,18 @@ UNIFIED_SOURCES += [
     'trunk/src/core/SkFlattenableSerialization.cpp',
     'trunk/src/core/SkFloat.cpp',
     'trunk/src/core/SkFloatBits.cpp',
+    'trunk/src/core/SkFont.cpp',
     'trunk/src/core/SkFontDescriptor.cpp',
     'trunk/src/core/SkFontStream.cpp',
     'trunk/src/core/SkGeometry.cpp',
     'trunk/src/core/SkGlyphCache.cpp',
     'trunk/src/core/SkGraphics.cpp',
     'trunk/src/core/SkImageFilter.cpp',
+    'trunk/src/core/SkImageGenerator.cpp',
     'trunk/src/core/SkImageInfo.cpp',
     'trunk/src/core/SkInstCnt.cpp',
     'trunk/src/core/SkLineClipper.cpp',
+    'trunk/src/core/SkLocalMatrixShader.cpp',
     'trunk/src/core/SkMallocPixelRef.cpp',
     'trunk/src/core/SkMask.cpp',
     'trunk/src/core/SkMaskFilter.cpp',
@@ -394,6 +387,7 @@ UNIFIED_SOURCES += [
     'trunk/src/core/SkPaint.cpp',
     'trunk/src/core/SkPaintOptionsAndroid.cpp',
     'trunk/src/core/SkPaintPriv.cpp',
+    'trunk/src/core/SkPatch.cpp',
     'trunk/src/core/SkPath.cpp',
     'trunk/src/core/SkPathEffect.cpp',
     'trunk/src/core/SkPathHeap.cpp',
@@ -402,7 +396,11 @@ UNIFIED_SOURCES += [
     'trunk/src/core/SkPicture.cpp',
     'trunk/src/core/SkPictureFlat.cpp',
     'trunk/src/core/SkPicturePlayback.cpp',
+    'trunk/src/core/SkPictureRangePlayback.cpp',
     'trunk/src/core/SkPictureRecord.cpp',
+    'trunk/src/core/SkPictureRecorder.cpp',
+    'trunk/src/core/SkPictureReplacementPlayback.cpp',
+    'trunk/src/core/SkPictureShader.cpp',
     'trunk/src/core/SkPictureStateTree.cpp',
     'trunk/src/core/SkPixelRef.cpp',
     'trunk/src/core/SkPoint.cpp',
@@ -410,10 +408,14 @@ UNIFIED_SOURCES += [
     'trunk/src/core/SkPtrRecorder.cpp',
     'trunk/src/core/SkQuadClipper.cpp',
     'trunk/src/core/SkQuadTree.cpp',
-    'trunk/src/core/SkQuadTreePicture.cpp',
     'trunk/src/core/SkRasterClip.cpp',
     'trunk/src/core/SkRasterizer.cpp',
     'trunk/src/core/SkReadBuffer.cpp',
+    'trunk/src/core/SkRecordAnalysis.cpp',
+    'trunk/src/core/SkRecordDraw.cpp',
+    'trunk/src/core/SkRecorder.cpp',
+    'trunk/src/core/SkRecording.cpp',
+    'trunk/src/core/SkRecordOpts.cpp',
     'trunk/src/core/SkRect.cpp',
     'trunk/src/core/SkRefDict.cpp',
     'trunk/src/core/SkRegion.cpp',
@@ -421,7 +423,6 @@ UNIFIED_SOURCES += [
     'trunk/src/core/SkRRect.cpp',
     'trunk/src/core/SkRTree.cpp',
     'trunk/src/core/SkScalar.cpp',
-    'trunk/src/core/SkScaledImageCache.cpp',
     'trunk/src/core/SkScalerContext.cpp',
     'trunk/src/core/SkScan.cpp',
     'trunk/src/core/SkScan_AntiPath.cpp',
@@ -437,7 +438,6 @@ UNIFIED_SOURCES += [
     'trunk/src/core/SkStrokeRec.cpp',
     'trunk/src/core/SkStrokerPriv.cpp',
     'trunk/src/core/SkTileGrid.cpp',
-    'trunk/src/core/SkTileGridPicture.cpp',
     'trunk/src/core/SkTLS.cpp',
     'trunk/src/core/SkTSearch.cpp',
     'trunk/src/core/SkTypeface.cpp',
@@ -445,6 +445,7 @@ UNIFIED_SOURCES += [
     'trunk/src/core/SkUnPreMultiply.cpp',
     'trunk/src/core/SkUtils.cpp',
     'trunk/src/core/SkValidatingReadBuffer.cpp',
+    'trunk/src/core/SkVertState.cpp',
     'trunk/src/core/SkWriteBuffer.cpp',
     'trunk/src/core/SkWriter32.cpp',
     'trunk/src/core/SkXfermode.cpp',
@@ -456,13 +457,13 @@ UNIFIED_SOURCES += [
     'trunk/src/effects/gradients/SkRadialGradient.cpp',
     'trunk/src/effects/gradients/SkSweepGradient.cpp',
     'trunk/src/effects/gradients/SkTwoPointConicalGradient.cpp',
+    'trunk/src/effects/gradients/SkTwoPointConicalGradient_gpu.cpp',
     'trunk/src/effects/gradients/SkTwoPointRadialGradient.cpp',
     'trunk/src/effects/Sk1DPathEffect.cpp',
     'trunk/src/effects/Sk2DPathEffect.cpp',
     'trunk/src/effects/SkAlphaThresholdFilter.cpp',
     'trunk/src/effects/SkArithmeticMode.cpp',
     'trunk/src/effects/SkAvoidXfermode.cpp',
-    'trunk/src/effects/SkBicubicImageFilter.cpp',
     'trunk/src/effects/SkBitmapSource.cpp',
     'trunk/src/effects/SkBlurDrawLooper.cpp',
     'trunk/src/effects/SkBlurImageFilter.cpp',
@@ -481,7 +482,6 @@ UNIFIED_SOURCES += [
     'trunk/src/effects/SkEmbossMask.cpp',
     'trunk/src/effects/SkEmbossMaskFilter.cpp',
     'trunk/src/effects/SkGpuBlurUtils.cpp',
-    'trunk/src/effects/SkKernel33MaskFilter.cpp',
     'trunk/src/effects/SkLayerDrawLooper.cpp',
     'trunk/src/effects/SkLayerRasterizer.cpp',
     'trunk/src/effects/SkLerpXfermode.cpp',
@@ -489,6 +489,7 @@ UNIFIED_SOURCES += [
     'trunk/src/effects/SkLumaColorFilter.cpp',
     'trunk/src/effects/SkMagnifierImageFilter.cpp',
     'trunk/src/effects/SkMatrixConvolutionImageFilter.cpp',
+    'trunk/src/effects/SkMatrixImageFilter.cpp',
     'trunk/src/effects/SkMergeImageFilter.cpp',
     'trunk/src/effects/SkMorphologyImageFilter.cpp',
     'trunk/src/effects/SkOffsetImageFilter.cpp',
@@ -498,7 +499,6 @@ UNIFIED_SOURCES += [
     'trunk/src/effects/SkPixelXorXfermode.cpp',
     'trunk/src/effects/SkPorterDuff.cpp',
     'trunk/src/effects/SkRectShaderImageFilter.cpp',
-    'trunk/src/effects/SkResizeImageFilter.cpp',
     'trunk/src/effects/SkStippleMaskFilter.cpp',
     'trunk/src/effects/SkTableColorFilter.cpp',
     'trunk/src/effects/SkTableMaskFilter.cpp',
@@ -506,19 +506,27 @@ UNIFIED_SOURCES += [
     'trunk/src/effects/SkTileImageFilter.cpp',
     'trunk/src/effects/SkTransparentShader.cpp',
     'trunk/src/effects/SkXfermodeImageFilter.cpp',
+    'trunk/src/fonts/SkFontMgr_indirect.cpp',
     'trunk/src/fonts/SkGScalerContext.cpp',
+    'trunk/src/fonts/SkRemotableFontMgr.cpp',
+    'trunk/src/fonts/SkTestScalerContext.cpp',
     'trunk/src/gpu/effects/GrBezierEffect.cpp',
     'trunk/src/gpu/effects/GrBicubicEffect.cpp',
     'trunk/src/gpu/effects/GrConfigConversionEffect.cpp',
     'trunk/src/gpu/effects/GrConvexPolyEffect.cpp',
     'trunk/src/gpu/effects/GrConvolutionEffect.cpp',
     'trunk/src/gpu/effects/GrCustomCoordsTextureEffect.cpp',
+    'trunk/src/gpu/effects/GrDashingEffect.cpp',
     'trunk/src/gpu/effects/GrDistanceFieldTextureEffect.cpp',
+    'trunk/src/gpu/effects/GrDitherEffect.cpp',
+    'trunk/src/gpu/effects/GrMatrixConvolutionEffect.cpp',
+    'trunk/src/gpu/effects/GrOvalEffect.cpp',
     'trunk/src/gpu/effects/GrRRectEffect.cpp',
     'trunk/src/gpu/effects/GrSimpleTextureEffect.cpp',
     'trunk/src/gpu/effects/GrSingleTextureEffect.cpp',
     'trunk/src/gpu/effects/GrTextureDomain.cpp',
     'trunk/src/gpu/effects/GrTextureStripAtlas.cpp',
+    'trunk/src/gpu/effects/GrYUVtoRGBEffect.cpp',
     'trunk/src/gpu/gl/debug/GrBufferObj.cpp',
     'trunk/src/gpu/gl/debug/GrDebugGL.cpp',
     'trunk/src/gpu/gl/debug/GrFrameBufferObj.cpp',
@@ -528,6 +536,7 @@ UNIFIED_SOURCES += [
     'trunk/src/gpu/gl/debug/GrTextureObj.cpp',
     'trunk/src/gpu/gl/debug/GrTextureUnitObj.cpp',
     'trunk/src/gpu/gl/debug/SkDebugGLContext.cpp',
+    'trunk/src/gpu/gl/GrGLAssembleInterface.cpp',
     'trunk/src/gpu/gl/GrGLBufferImpl.cpp',
     'trunk/src/gpu/gl/GrGLCaps.cpp',
     'trunk/src/gpu/gl/GrGLContext.cpp',
@@ -537,8 +546,10 @@ UNIFIED_SOURCES += [
     'trunk/src/gpu/gl/GrGLExtensions.cpp',
     'trunk/src/gpu/gl/GrGLIndexBuffer.cpp',
     'trunk/src/gpu/gl/GrGLInterface.cpp',
+    'trunk/src/gpu/gl/GrGLNameAllocator.cpp',
     'trunk/src/gpu/gl/GrGLNoOpInterface.cpp',
     'trunk/src/gpu/gl/GrGLPath.cpp',
+    'trunk/src/gpu/gl/GrGLPathRange.cpp',
     'trunk/src/gpu/gl/GrGLProgram.cpp',
     'trunk/src/gpu/gl/GrGLProgramDesc.cpp',
     'trunk/src/gpu/gl/GrGLProgramEffects.cpp',
@@ -572,9 +583,12 @@ UNIFIED_SOURCES += [
     'trunk/src/gpu/GrDrawState.cpp',
     'trunk/src/gpu/GrDrawTarget.cpp',
     'trunk/src/gpu/GrEffect.cpp',
+    'trunk/src/gpu/GrFontScaler.cpp',
     'trunk/src/gpu/GrGpu.cpp',
     'trunk/src/gpu/GrGpuFactory.cpp',
+    'trunk/src/gpu/GrGpuResource.cpp',
     'trunk/src/gpu/GrInOrderDrawBuffer.cpp',
+    'trunk/src/gpu/GrLayerCache.cpp',
     'trunk/src/gpu/GrMemoryPool.cpp',
     'trunk/src/gpu/GrOvalRenderer.cpp',
     'trunk/src/gpu/GrPaint.cpp',
@@ -582,15 +596,16 @@ UNIFIED_SOURCES += [
     'trunk/src/gpu/GrPathRenderer.cpp',
     'trunk/src/gpu/GrPathRendererChain.cpp',
     'trunk/src/gpu/GrPathUtils.cpp',
-    'trunk/src/gpu/GrRectanizer.cpp',
+    'trunk/src/gpu/GrPictureUtils.cpp',
+    'trunk/src/gpu/GrRectanizer_pow2.cpp',
     'trunk/src/gpu/GrRectanizer_skyline.cpp',
     'trunk/src/gpu/GrReducedClip.cpp',
     'trunk/src/gpu/GrRenderTarget.cpp',
-    'trunk/src/gpu/GrResource.cpp',
     'trunk/src/gpu/GrResourceCache.cpp',
     'trunk/src/gpu/GrSoftwarePathRenderer.cpp',
     'trunk/src/gpu/GrStencil.cpp',
     'trunk/src/gpu/GrStencilAndCoverPathRenderer.cpp',
+    'trunk/src/gpu/GrStencilAndCoverTextContext.cpp',
     'trunk/src/gpu/GrStencilBuffer.cpp',
     'trunk/src/gpu/GrSurface.cpp',
     'trunk/src/gpu/GrSWMaskHelper.cpp',
@@ -598,28 +613,22 @@ UNIFIED_SOURCES += [
     'trunk/src/gpu/GrTextStrike.cpp',
     'trunk/src/gpu/GrTexture.cpp',
     'trunk/src/gpu/GrTextureAccess.cpp',
+    'trunk/src/gpu/GrTraceMarker.cpp',
     'trunk/src/gpu/SkGpuDevice.cpp',
     'trunk/src/gpu/SkGr.cpp',
-    'trunk/src/gpu/SkGrFontScaler.cpp',
     'trunk/src/gpu/SkGrPixelRef.cpp',
     'trunk/src/gpu/SkGrTexturePixelRef.cpp',
     'trunk/src/image/SkImage.cpp',
     'trunk/src/image/SkImage_Gpu.cpp',
-    'trunk/src/image/SkImage_Picture.cpp',
     'trunk/src/image/SkImage_Raster.cpp',
     'trunk/src/image/SkImagePriv.cpp',
     'trunk/src/image/SkSurface.cpp',
     'trunk/src/image/SkSurface_Gpu.cpp',
-    'trunk/src/image/SkSurface_Picture.cpp',
     'trunk/src/image/SkSurface_Raster.cpp',
     'trunk/src/images/bmpdecoderhelper.cpp',
     'trunk/src/images/SkDecodingImageGenerator.cpp',
-    'trunk/src/images/SkImageRef.cpp',
-    'trunk/src/images/SkImageRef_GlobalPool.cpp',
-    'trunk/src/images/SkImageRefPool.cpp',
     'trunk/src/images/SkPageFlipper.cpp',
     'trunk/src/images/SkScaledBitmapSampler.cpp',
-    'trunk/src/images/SkStreamHelpers.cpp',
     'trunk/src/lazy/SkCachingPixelRef.cpp',
     'trunk/src/lazy/SkDiscardableMemoryPool.cpp',
     'trunk/src/lazy/SkDiscardablePixelRef.cpp',
@@ -646,6 +655,7 @@ UNIFIED_SOURCES += [
     'trunk/src/pathops/SkPathOpsQuad.cpp',
     'trunk/src/pathops/SkPathOpsRect.cpp',
     'trunk/src/pathops/SkPathOpsSimplify.cpp',
+    'trunk/src/pathops/SkPathOpsTightBounds.cpp',
     'trunk/src/pathops/SkPathOpsTriangle.cpp',
     'trunk/src/pathops/SkPathOpsTypes.cpp',
     'trunk/src/pathops/SkPathWriter.cpp',
@@ -666,9 +676,9 @@ UNIFIED_SOURCES += [
     'trunk/src/utils/SkCamera.cpp',
     'trunk/src/utils/SkCanvasStack.cpp',
     'trunk/src/utils/SkCanvasStateUtils.cpp',
-    'trunk/src/utils/SkCountdown.cpp',
     'trunk/src/utils/SkCubicInterval.cpp',
     'trunk/src/utils/SkCullPoints.cpp',
+    'trunk/src/utils/SkDashPath.cpp',
     'trunk/src/utils/SkDeferredCanvas.cpp',
     'trunk/src/utils/SkDumpCanvas.cpp',
     'trunk/src/utils/SkEventTracer.cpp',
@@ -676,6 +686,7 @@ UNIFIED_SOURCES += [
     'trunk/src/utils/SkGatherPixelRefsAndRects.cpp',
     'trunk/src/utils/SkInterpolator.cpp',
     'trunk/src/utils/SkLayer.cpp',
+    'trunk/src/utils/SkMatrix22.cpp',
     'trunk/src/utils/SkMatrix44.cpp',
     'trunk/src/utils/SkMeshUtils.cpp',
     'trunk/src/utils/SkNinePatch.cpp',
@@ -688,32 +699,34 @@ UNIFIED_SOURCES += [
     'trunk/src/utils/SkPictureUtils.cpp',
     'trunk/src/utils/SkProxyCanvas.cpp',
     'trunk/src/utils/SkRTConf.cpp',
-    'trunk/src/utils/SkUnitMappers.cpp',
+    'trunk/src/utils/SkTextureCompressor.cpp',
+    'trunk/src/utils/SkTextureCompressor_ASTC.cpp',
+    'trunk/src/utils/SkTextureCompressor_LATC.cpp',
+    'trunk/src/utils/SkTextureCompressor_R11EAC.cpp',
 ]
 SOURCES += [
+    'trunk/src/core/SkAdvancedTypefaceMetrics.cpp',
     'trunk/src/core/SkBitmapProcState_matrixProcs.cpp',
     'trunk/src/core/SkBlitter_A8.cpp',
     'trunk/src/core/SkBlitter_ARGB32.cpp',
     'trunk/src/core/SkBlitter_RGB16.cpp',
     'trunk/src/core/SkBlitter_Sprite.cpp',
     'trunk/src/core/SkFontHost.cpp',
+    'trunk/src/core/SkPictureData.cpp',
+    'trunk/src/core/SkScaledImageCache.cpp',
     'trunk/src/core/SkScan_Antihair.cpp',
     'trunk/src/gpu/GrAddPathRenderers_default.cpp',
     'trunk/src/gpu/GrDistanceFieldTextContext.cpp',
-    'trunk/src/utils/SkCondVar.cpp',
     'trunk/src/utils/SkMD5.cpp',
     'trunk/src/utils/SkParse.cpp',
     'trunk/src/utils/SkSHA1.cpp',
 ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     UNIFIED_SOURCES += [
-        'trunk/src/images/SkImageRef_ashmem.cpp',
         'trunk/src/ports/SkDebug_android.cpp',
         'trunk/src/ports/SkOSFile_posix.cpp',
-        'trunk/src/ports/SkPurgeableMemoryBlock_android.cpp',
         'trunk/src/ports/SkTime_Unix.cpp',
         'trunk/src/ports/SkTLS_pthread.cpp',
-        'trunk/src/utils/android/ashmem.cpp',
         'trunk/src/utils/SkThreadUtils_pthread.cpp',
     ]
     SOURCES += [
@@ -726,7 +739,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'trunk/src/ports/SkDebug_stdio.cpp',
         'trunk/src/ports/SkOSFile_posix.cpp',
-        'trunk/src/ports/SkPurgeableMemoryBlock_mac.cpp',
         'trunk/src/ports/SkTime_Unix.cpp',
         'trunk/src/ports/SkTLS_pthread.cpp',
         'trunk/src/utils/mac/SkCreateCGImageRef.cpp',
@@ -763,36 +775,41 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'trunk/src/ports/SkFontHost_FreeType_common.cpp',
     ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'trunk/src/ports/SkDebug_win.cpp',
-        'trunk/src/ports/SkFontMgr_default_gdi.cpp',
+        'trunk/src/ports/SkFontHost_win.cpp',
+        'trunk/src/ports/SkFontMgr_default_dw.cpp',
+        'trunk/src/ports/SkFontMgr_win_dw.cpp',
         'trunk/src/ports/SkOSFile_win.cpp',
+        'trunk/src/ports/SkRemotableFontMgr_win_dw.cpp',
+        'trunk/src/ports/SkScalerContext_win_dw.cpp',
         'trunk/src/ports/SkTime_win.cpp',
         'trunk/src/ports/SkTLS_win.cpp',
+        'trunk/src/ports/SkTypeface_win_dw.cpp',
         'trunk/src/utils/SkThreadUtils_win.cpp',
         'trunk/src/utils/win/SkAutoCoInitialize.cpp',
+        'trunk/src/utils/win/SkDWrite.cpp',
         'trunk/src/utils/win/SkDWriteFontFileStream.cpp',
         'trunk/src/utils/win/SkDWriteGeometrySink.cpp',
         'trunk/src/utils/win/SkHRESULT.cpp',
         'trunk/src/utils/win/SkIStream.cpp',
     ]
-    SOURCES += [
-        'trunk/src/ports/SkFontHost_win.cpp',
-    ]
 if CONFIG['INTEL_ARCHITECTURE']:
     UNIFIED_SOURCES += [
-        'trunk/src/opts/SkXfermode_opts_none.cpp',
+        'trunk/src/opts/SkTextureCompression_opts_none.cpp',
     ]
     SOURCES += [
-        'trunk/src/opts/opts_check_SSE2.cpp',
+        'trunk/src/opts/opts_check_x86.cpp',
         'trunk/src/opts/SkBitmapFilter_opts_SSE2.cpp',
         'trunk/src/opts/SkBitmapProcState_opts_SSE2.cpp',
         'trunk/src/opts/SkBitmapProcState_opts_SSSE3.cpp',
         'trunk/src/opts/SkBlitRect_opts_SSE2.cpp',
         'trunk/src/opts/SkBlitRow_opts_SSE2.cpp',
         'trunk/src/opts/SkBlurImage_opts_SSE2.cpp',
+        'trunk/src/opts/SkBlurImage_opts_SSE4.cpp',
         'trunk/src/opts/SkMorphology_opts_SSE2.cpp',
         'trunk/src/opts/SkUtils_opts_SSE2.cpp',
+        'trunk/src/opts/SkXfermode_opts_SSE2.cpp',
     ]
 elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
     UNIFIED_SOURCES += [
@@ -802,6 +819,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
         'trunk/src/opts/SkBlitRow_opts_arm.cpp',
         'trunk/src/opts/SkBlurImage_opts_arm.cpp',
         'trunk/src/opts/SkMorphology_opts_arm.cpp',
+        'trunk/src/opts/SkTextureCompression_opts_arm.cpp',
         'trunk/src/opts/SkUtils_opts_arm.cpp',
         'trunk/src/opts/SkXfermode_opts_arm.cpp',
     ]
@@ -813,6 +831,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
             'trunk/src/opts/SkBlitRow_opts_arm_neon.cpp',
             'trunk/src/opts/SkBlurImage_opts_neon.cpp',
             'trunk/src/opts/SkMorphology_opts_neon.cpp',
+            'trunk/src/opts/SkTextureCompression_opts_neon.cpp',
             'trunk/src/opts/SkXfermode_opts_arm_neon.cpp',
         ]
         SOURCES['trunk/src/opts/SkBitmapProcState_arm_neon.cpp'].flags += ['-mfpu=neon']
@@ -821,6 +840,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
         SOURCES['trunk/src/opts/SkBlitRow_opts_arm_neon.cpp'].flags += ['-mfpu=neon']
         SOURCES['trunk/src/opts/SkBlurImage_opts_neon.cpp'].flags += ['-mfpu=neon']
         SOURCES['trunk/src/opts/SkMorphology_opts_neon.cpp'].flags += ['-mfpu=neon']
+        SOURCES['trunk/src/opts/SkTextureCompression_opts_neon.cpp'].flags += ['-mfpu=neon']
         SOURCES['trunk/src/opts/SkXfermode_opts_arm_neon.cpp'].flags += ['-mfpu=neon']
 else:
     UNIFIED_SOURCES += [
@@ -829,12 +849,14 @@ else:
         'trunk/src/opts/SkBlitRow_opts_none.cpp',
         'trunk/src/opts/SkBlurImage_opts_none.cpp',
         'trunk/src/opts/SkMorphology_opts_none.cpp',
+        'trunk/src/opts/SkTextureCompression_opts_none.cpp',
         'trunk/src/opts/SkUtils_opts_none.cpp',
         'trunk/src/opts/SkXfermode_opts_none.cpp',
         'trunk/src/ports/SkDiscardableMemory_none.cpp',
-        'trunk/src/ports/SkPurgeableMemoryBlock_none.cpp',
     ]
 
+
+# can we find a better way of dealing with asm sources?
 
 # left out of UNIFIED_SOURCES for now; that's not C++ anyway, nothing else to unify it with
 if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
@@ -845,6 +867,16 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
         SOURCES += [
             'trunk/src/opts/memset16_neon.S',
             'trunk/src/opts/memset32_neon.S',
+        ]
+
+if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['GNU_CC'] or CONFIG['CLANG_CL']):
+    if CONFIG['CPU_ARCH'] == 'x86_64':
+        SOURCES += [
+            'trunk/src/opts/SkBlitRow_opts_SSE4_x64_asm.S',
+        ]
+    else:
+        SOURCES += [
+            'trunk/src/opts/SkBlitRow_opts_SSE4_asm.S',
         ]
 
 MSVC_ENABLE_PGO = True
@@ -895,9 +927,24 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
 if (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android') or    (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa') or    (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk') or    (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt') or    CONFIG['MOZ_WIDGET_GTK']:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
+# We should autogenerate these SSE related flags.
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['SKIA_DLL'] = 1
     DEFINES['GR_DLL'] = 1
+
+    # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
+    # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
+    SOURCES['trunk/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
+    SOURCES['trunk/src/opts/SkBlitRect_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBlurImage_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=41']
+    SOURCES['trunk/src/opts/SkMorphology_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkUtils_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
+    SOURCES['trunk/src/opts/SkXfermode_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
 
 if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['trunk/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -906,8 +953,10 @@ if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['trunk/src/opts/SkBlitRect_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['trunk/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['trunk/src/opts/SkBlurImage_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['trunk/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-msse4.1']
     SOURCES['trunk/src/opts/SkMorphology_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['trunk/src/opts/SkUtils_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['trunk/src/opts/SkXfermode_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON']:
     DEFINES['__ARM_HAVE_OPTIONAL_NEON_SUPPORT'] = 1
     DEFINES['USE_ANDROID_NDK_CPU_FEATURES'] = 0

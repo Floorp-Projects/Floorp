@@ -38,7 +38,7 @@ class GrDrawTarget;
  * The result of this process will be the final mask (on the GPU) in the
  * upper left hand corner of the texture.
  */
-class GrSWMaskHelper : public SkNoncopyable {
+class GrSWMaskHelper : SkNoncopyable {
 public:
     GrSWMaskHelper(GrContext* context)
     : fContext(context) {
@@ -100,6 +100,15 @@ private:
     SkBitmap        fBM;
     SkDraw          fDraw;
     SkRasterClip    fRasterClip;
+
+    // Actually sends the texture data to the GPU. This is called from
+    // toTexture with the data filled in depending on the texture config.
+    void sendTextureData(GrTexture *texture, const GrTextureDesc& desc,
+                         const void *data, int rowbytes);
+
+    // Compresses the bitmap stored in fBM and sends the compressed data
+    // to the GPU to be stored in 'texture' using sendTextureData.
+    void compressTextureData(GrTexture *texture, const GrTextureDesc& desc);
 
     typedef SkNoncopyable INHERITED;
 };

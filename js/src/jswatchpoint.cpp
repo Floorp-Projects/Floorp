@@ -61,7 +61,7 @@ bool
 WatchpointMap::watch(JSContext *cx, HandleObject obj, HandleId id,
                      JSWatchPointHandler handler, HandleObject closure)
 {
-    JS_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id));
+    JS_ASSERT(JSID_IS_STRING(id) || JSID_IS_INT(id) || JSID_IS_SYMBOL(id));
 
     if (!obj->setWatched(cx))
         return false;
@@ -168,7 +168,9 @@ WatchpointMap::markIteratively(JSTracer *trc)
                 marked = true;
             }
 
-            JS_ASSERT(JSID_IS_STRING(priorKeyId) || JSID_IS_INT(priorKeyId));
+            JS_ASSERT(JSID_IS_STRING(priorKeyId) ||
+                      JSID_IS_INT(priorKeyId) ||
+                      JSID_IS_SYMBOL(priorKeyId));
             MarkId(trc, const_cast<PreBarrieredId *>(&entry.key().id), "WatchKey::id");
 
             if (entry.value().closure && !IsObjectMarked(&entry.value().closure)) {
@@ -191,7 +193,7 @@ WatchpointMap::markAll(JSTracer *trc)
         Map::Entry &entry = e.front();
         WatchKey key = entry.key();
         WatchKey prior = key;
-        JS_ASSERT(JSID_IS_STRING(prior.id) || JSID_IS_INT(prior.id));
+        JS_ASSERT(JSID_IS_STRING(prior.id) || JSID_IS_INT(prior.id) || JSID_IS_SYMBOL(prior.id));
 
         MarkObject(trc, const_cast<PreBarrieredObject *>(&key.object),
                    "held Watchpoint object");

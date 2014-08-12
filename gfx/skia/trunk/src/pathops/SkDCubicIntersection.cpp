@@ -134,7 +134,10 @@ static void intersect(const SkDCubic& cubic1, double t1s, double t1e, const SkDC
                         }
                     }
                 } else {
-                    double offset = precisionScale / 16;  // FIME: const is arbitrary: test, refine
+/*for random cubics, 16 below catches 99.997% of the intersections. To test for the remaining 0.003%
+  look for nearly coincident curves. and check each 1/16th section.
+*/
+                    double offset = precisionScale / 16;  // FIXME: const is arbitrary: test, refine
                     double c1Bottom = tIdx == 0 ? 0 :
                             (t1Start + (t1 - t1Start) * locals[0][tIdx - 1] + to1) / 2;
                     double c1Min = SkTMax(c1Bottom, to1 - offset);
@@ -300,13 +303,37 @@ bool SkIntersections::cubicExactEnd(const SkDCubic& cubic1, bool start, const Sk
             continue;
         }
         if (swap) {
-            insert(testT, impTs[0][index], tmpLine[0]);
+            cubicInsert(testT, impTs[0][index], tmpLine[0], cubic2, cubic1);
         } else {
-            insert(impTs[0][index], testT, tmpLine[0]);
+            cubicInsert(impTs[0][index], testT, tmpLine[0], cubic1, cubic2);
         }
         return true;
     }
     return false;
+}
+
+
+void SkIntersections::cubicInsert(double one, double two, const SkDPoint& pt,
+        const SkDCubic& cubic1, const SkDCubic& cubic2) {
+    for (int index = 0; index < fUsed; ++index) {
+        if (fT[0][index] == one) {
+            double oldTwo = fT[1][index];
+            if (oldTwo == two) {
+                return;
+            }
+            SkDPoint mid = cubic2.ptAtT((oldTwo + two) / 2);
+            if (mid.approximatelyEqual(fPt[index])) {
+                return;
+            }
+        }
+        if (fT[1][index] == two) {
+            SkDPoint mid = cubic1.ptAtT((fT[0][index] + two) / 2);
+            if (mid.approximatelyEqual(fPt[index])) {
+                return;
+            }
+        }
+    }
+    insert(one, two, pt);
 }
 
 void SkIntersections::cubicNearEnd(const SkDCubic& cubic1, bool start, const SkDCubic& cubic2,
@@ -368,11 +395,15 @@ void SkIntersections::cubicNearEnd(const SkDCubic& cubic1, bool start, const SkD
         double tMin2 = SkTMax(tVals[tIdx] - LINE_FRACTION, 0.0);
         double tMax2 = SkTMin(tVals[tLast] + LINE_FRACTION, 1.0);
         int lastUsed = used();
-        ::intersect(cubic1, tMin1, tMax1, cubic2, tMin2, tMax2, 1, *this);
+        if (start ? tMax1 < tMin2 : tMax2 < tMin1) {
+            ::intersect(cubic1, tMin1, tMax1, cubic2, tMin2, tMax2, 1, *this);
+        }
         if (lastUsed == used()) {
             tMin2 = SkTMax(tVals[tIdx] - (1.0 / SkDCubic::gPrecisionUnit), 0.0);
             tMax2 = SkTMin(tVals[tLast] + (1.0 / SkDCubic::gPrecisionUnit), 1.0);
-            ::intersect(cubic1, tMin1, tMax1, cubic2, tMin2, tMax2, 1, *this);
+            if (start ? tMax1 < tMin2 : tMax2 < tMin1) {
+                ::intersect(cubic1, tMin1, tMax1, cubic2, tMin2, tMax2, 1, *this);
+            }
         }
         tIdx = tLast + 1;
     } while (tIdx < tVals.count());
@@ -418,6 +449,9 @@ static bool only_end_pts_in_common(const SkDCubic& c1, const SkDCubic& c2) {
             }
             double adj = endPt[oppTest]->fX - origX;
             double opp = endPt[oppTest]->fY - origY;
+            if (adj == 0 && opp == 0) {  // if the other point equals the test point, ignore it
+                continue;
+            }
             double sign = (c1[oddMan].fY - origY) * adj - (c1[oddMan].fX - origX) * opp;
             if (approximately_zero(sign)) {
                 goto tryNextHalfPlane;
@@ -491,7 +525,18 @@ int SkIntersections::intersect(const SkDCubic& c1, const SkDCubic& c2) {
         cubicNearEnd(c1, false, c2, c2Bounds);
     }
     if (!(exactEndBits & 8)) {
+        if (selfIntersect && fUsed) {
+            return fUsed;
+        }
         cubicNearEnd(c1, true, c2, c2Bounds);
+        if (selfIntersect && fUsed && ((approximately_less_than_zero(fT[0][0])
+                    && approximately_less_than_zero(fT[1][0]))
+                    || (approximately_greater_than_one(fT[0][0])
+                    && approximately_greater_than_one(fT[1][0])))) {
+            SkASSERT(fUsed == 1);
+            fUsed = 0;
+            return fUsed;
+        }
     }
     if (!selfIntersect) {
         SkDRect c1Bounds;
@@ -517,7 +562,7 @@ int SkIntersections::intersect(const SkDCubic& c1, const SkDCubic& c2) {
     if (compCount) {
         int exactCount = used();
         if (exactCount == 0) {
-            set(i);
+            *this = i;
         } else {
             // at least one is exact or near, and at least one was computed. Eliminate duplicates
             for (int exIdx = 0; exIdx < exactCount; ++exIdx) {
@@ -636,11 +681,17 @@ int SkIntersections::intersect(const SkDCubic& c) {
     if (c.endsAreExtremaInXOrY()) {
         return false;
     }
+    // OPTIMIZATION: could quick reject if neither end point tangent ray intersected the line
+    // segment formed by the opposite end point to the control point
     (void) intersect(c, c);
     if (used() > 0) {
-        SkASSERT(used() == 1);
-        if (fT[0][0] > fT[1][0]) {
-            swapPts();
+        if (approximately_equal_double(fT[0][0], fT[1][0])) {
+            fUsed = 0;
+        } else {
+            SkASSERT(used() == 1);
+            if (fT[0][0] > fT[1][0]) {
+                swapPts();
+            }
         }
     }
     return used();

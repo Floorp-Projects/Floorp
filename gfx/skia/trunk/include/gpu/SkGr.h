@@ -16,7 +16,6 @@
 // Gr headers
 #include "GrTypes.h"
 #include "GrContext.h"
-#include "GrFontScaler.h"
 
 // skia headers
 #include "SkBitmap.h"
@@ -45,12 +44,19 @@ GR_STATIC_ASSERT((int)kIDA_GrBlendCoeff  == (int)SkXfermode::kIDA_Coeff);
 
 #include "SkColorPriv.h"
 
+#ifdef SK_SUPPORT_LEGACY_BITMAP_CONFIG
 /**
  *  Convert the SkBitmap::Config to the corresponding PixelConfig, or
  *  kUnknown_PixelConfig if the conversion cannot be done.
  */
 GrPixelConfig SkBitmapConfig2GrPixelConfig(SkBitmap::Config);
+#endif
 GrPixelConfig SkImageInfo2GrPixelConfig(SkColorType, SkAlphaType);
+
+static inline GrPixelConfig SkImageInfo2GrPixelConfig(const SkImageInfo& info) {
+    return SkImageInfo2GrPixelConfig(info.colorType(), info.alphaType());
+}
+
 bool GrPixelConfig2ColorType(GrPixelConfig, SkColorType*);
 
 static inline GrColor SkColor2GrColor(SkColor c) {
@@ -62,6 +68,11 @@ static inline GrColor SkColor2GrColor(SkColor c) {
     return GrColorPackRGBA(r, g, b, a);
 }
 
+static inline GrColor SkColor2GrColorJustAlpha(SkColor c) {
+    U8CPU a = SkColorGetA(c);
+    return GrColorPackRGBA(a, a, a, a);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool GrIsBitmapInCache(const GrContext*, const SkBitmap&, const GrTextureParams*);
@@ -71,28 +82,26 @@ GrTexture* GrLockAndRefCachedBitmapTexture(GrContext*, const SkBitmap&, const Gr
 void GrUnlockAndUnrefCachedBitmapTexture(GrTexture*);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// Converts a SkPaint to a GrPaint, ignoring the SkPaint's shader.
+// Sets the color of GrPaint to the value of the parameter paintColor
+// Callers may subsequently modify the GrPaint. Setting constantColor indicates
+// that the final paint will draw the same color at every pixel. This allows
+// an optimization where the the color filter can be applied to the SkPaint's
+// color once while converting to GrPaint and then ignored.
+void SkPaint2GrPaintNoShader(GrContext* context, const SkPaint& skPaint, GrColor paintColor,
+                             bool constantColor, GrPaint* grPaint);
+
+// This function is similar to skPaint2GrPaintNoShader but also converts
+// skPaint's shader to a GrTexture/GrEffectStage if possible.
+// constantColor has the same meaning as in skPaint2GrPaintNoShader.
+void SkPaint2GrPaintShader(GrContext* context, const SkPaint& skPaint,
+                           bool constantColor, GrPaint* grPaint);
+
+////////////////////////////////////////////////////////////////////////////////
 // Classes
 
 class SkGlyphCache;
-
-class SkGrFontScaler : public GrFontScaler {
-public:
-    explicit SkGrFontScaler(SkGlyphCache* strike);
-    virtual ~SkGrFontScaler();
-
-    // overrides
-    virtual const GrKey* getKey();
-    virtual GrMaskFormat getMaskFormat();
-    virtual bool getPackedGlyphBounds(GrGlyph::PackedID, SkIRect* bounds);
-    virtual bool getPackedGlyphImage(GrGlyph::PackedID, int width, int height,
-                                     int rowBytes, void* image);
-    virtual bool getGlyphPath(uint16_t glyphID, SkPath*);
-
-private:
-    SkGlyphCache* fStrike;
-    GrKey*  fKey;
-//    DECLARE_INSTANCE_COUNTER(SkGrFontScaler);
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
