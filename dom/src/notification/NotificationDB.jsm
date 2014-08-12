@@ -331,9 +331,11 @@ let NotificationDB = {
 
     // We might have existing notification with this tag,
     // if so we need to remove it before saving the new one.
-    if (notification.tag && this.byTag[origin][notification.tag]) {
+    if (notification.tag) {
       var oldNotification = this.byTag[origin][notification.tag];
-      delete this.notifications[origin][oldNotification.id];
+      if (oldNotification) {
+        delete this.notifications[origin][oldNotification.id];
+      }
       this.byTag[origin][notification.tag] = notification;
     }
 
