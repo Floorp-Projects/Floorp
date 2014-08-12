@@ -449,6 +449,8 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
 template <typename ParseHandler>
 Parser<ParseHandler>::~Parser()
 {
+    accumulateTelemetry();
+
     alloc.release(tempPoolMark);
 
     /*
@@ -7565,6 +7567,27 @@ Parser<ParseHandler>::exprInParens()
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
     return pn;
+}
+
+template <typename ParseHandler>
+void
+Parser<ParseHandler>::accumulateTelemetry()
+{
+    JSContext* cx = context->maybeJSContext();
+    if (!cx)
+        return;
+    JSAccumulateTelemetryDataCallback cb = cx->runtime()->telemetryCallback;
+    if (!cb)
+        return;
+
+    const char* filename = getFilename();
+    bool isHTTP = strncmp(filename, "http://", 7) == 0 || strncmp(filename, "https://", 8) == 0;
+
+    // Only report telemetry for web content, not add-ons or chrome JS.
+    if (!isHTTP)
+        return;
+
+    // Call back into Firefox's Telemetry reporter.
 }
 
 template class Parser<FullParseHandler>;
