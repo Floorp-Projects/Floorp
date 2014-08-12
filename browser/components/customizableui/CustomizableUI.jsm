@@ -166,7 +166,6 @@ let CustomizableUIInternal = {
       "preferences-button",
       "add-ons-button",
       "developer-button",
-      "social-share-button",
     ];
 
     if (gPalette.has("switch-to-metro-button")) {
@@ -208,6 +207,7 @@ let CustomizableUIInternal = {
         "downloads-button",
         "home-button",
         "loop-call-button",
+        "social-share-button",
       ],
       defaultCollapsed: false,
     }, true);
@@ -4145,7 +4145,7 @@ OverflowableToolbar.prototype = {
       this._hideTimeoutId = null;
     }
     this._hideTimeoutId = window.setTimeout(() => {
-      if (!this._panel.firstChild.mozMatchesSelector(":hover")) {
+      if (!this._panel.firstChild.matches(":hover")) {
         this._panel.hidePopup();
       }
     }, OVERFLOW_PANEL_HIDE_DELAY_MS);

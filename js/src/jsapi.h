@@ -1186,9 +1186,6 @@ ToUint64(JSContext *cx, JS::HandleValue v, uint64_t *out)
 extern JS_PUBLIC_API(JSType)
 JS_TypeOfValue(JSContext *cx, JS::Handle<JS::Value> v);
 
-extern JS_PUBLIC_API(const char *)
-JS_GetTypeName(JSContext *cx, JSType type);
-
 extern JS_PUBLIC_API(bool)
 JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, bool *equal);
 

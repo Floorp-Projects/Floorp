@@ -23,7 +23,7 @@ const GONK_TELEPHONYSERVICE_CONTRACTID =
 const GONK_TELEPHONYSERVICE_CID =
   Components.ID("{67d26434-d063-4d28-9f48-5b3189788155}");
 
-const NS_XPCOM_SHUTDOWN_OBSERVER_ID   = "xpcom-shutdown";
+const NS_XPCOM_SHUTDOWN_OBSERVER_ID = "xpcom-shutdown";
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
@@ -41,6 +41,7 @@ const CDMA_SECOND_CALL_INDEX = 2;
 
 const DIAL_ERROR_INVALID_STATE_ERROR = "InvalidStateError";
 const DIAL_ERROR_OTHER_CONNECTION_IN_USE = "OtherConnectionInUse";
+const DIAL_ERROR_BAD_NUMBER = RIL.GECKO_CALL_ERROR_BAD_NUMBER;
 
 const AUDIO_STATE_NO_CALL  = 0;
 const AUDIO_STATE_INCOMING = 1;
@@ -428,112 +429,119 @@ TelephonyService.prototype = {
     return hasConference ? numCalls + 1 : numCalls;
   },
 
+  _addCdmaChildCall: function(aClientId, aNumber, aParentId) {
+    let childCall = {
+      callIndex: CDMA_SECOND_CALL_INDEX,
+      state: RIL.CALL_STATE_DIALING,
+      number: aNumber,
+      isOutgoing: true,
+      isEmergency: false,
+      isConference: false,
+      isSwitchable: false,
+      isMergeable: true,
+      parentId: aParentId
+    };
+
+    // Manual update call state according to the request response.
+    this.notifyCallStateChanged(aClientId, childCall);
+
+    childCall.state = RIL.CALL_STATE_ACTIVE;
+    this.notifyCallStateChanged(aClientId, childCall);
+
+    let parentCall = this._currentCalls[aClientId][childCall.parentId];
+    parentCall.childId = CDMA_SECOND_CALL_INDEX;
+    parentCall.state = RIL.CALL_STATE_HOLDING;
+    parentCall.isSwitchable = false;
+    parentCall.isMergeable = true;
+    this.notifyCallStateChanged(aClientId, parentCall);
+  },
+
   isDialing: false,
-  dial: function(aClientId, aNumber, aIsEmergency, aTelephonyCallback) {
-    if (DEBUG) debug("Dialing " + (aIsEmergency ? "emergency " : "") + aNumber);
+  dial: function(aClientId, aNumber, aIsDialEmergency, aCallback) {
+    if (DEBUG) debug("Dialing " + (aIsDialEmergency ? "emergency " : "") + aNumber);
 
     if (this.isDialing) {
       if (DEBUG) debug("Error: Already has a dialing call.");
-      aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+      aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
-    }
-
-    // Select a proper clientId for dialEmergency.
-    if (aIsEmergency) {
-      aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
-      if (aClientId === -1) {
-        if (DEBUG) debug("Error: No client is avaialble for emergency call.");
-        aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
-        return;
-      }
     }
 
     // For DSDS, if there is aleady a call on SIM 'aClientId', we cannot place
     // any new call on other SIM.
     if (this._hasCallsOnOtherClient(aClientId)) {
       if (DEBUG) debug("Error: Already has a call on other sim.");
-      aTelephonyCallback.notifyDialError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
+      aCallback.notifyDialError(DIAL_ERROR_OTHER_CONNECTION_IN_USE);
       return;
     }
 
     // We can only have at most two calls on the same line (client).
     if (this._numCallsOnLine(aClientId) >= 2) {
       if (DEBUG) debug("Error: Has more than 2 calls on line.");
-      aTelephonyCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+      aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
     }
 
     // We don't try to be too clever here, as the phone is probably in the
     // locked state. Let's just check if it's a number without normalizing
-    if (!aIsEmergency) {
+    if (!aIsDialEmergency) {
       aNumber = gPhoneNumberUtils.normalize(aNumber);
     }
 
     // Validate the number.
+    // Note: isPlainPhoneNumber also accepts USSD and SS numbers
     if (!gPhoneNumberUtils.isPlainPhoneNumber(aNumber)) {
-      // Note: isPlainPhoneNumber also accepts USSD and SS numbers
-      if (DEBUG) debug("Number '" + aNumber + "' is not viable. Drop.");
-      let errorMsg = RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER];
-      aTelephonyCallback.notifyDialError(errorMsg);
+      if (DEBUG) debug("Error: Number '" + aNumber + "' is not viable. Drop.");
+      aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
       return;
     }
 
-    function onCdmaDialSuccess(aCallIndex) {
-      let indexes = Object.keys(this._currentCalls[aClientId]);
-      if (indexes.length == 0) {
-        aTelephonyCallback.notifyDialSuccess(aCallIndex);
+    if (this._isEmergencyNumber(aNumber)) {
+      // Select a proper clientId for dialEmergency.
+      aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
+
+      if (aClientId === -1) {
+        if (DEBUG) debug("Error: No client is avaialble for emergency call.");
+        aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
         return;
       }
 
-      // RIL doesn't hold the 2nd call. We create one by ourselves.
-      let childCall = {
-        callIndex: CDMA_SECOND_CALL_INDEX,
-        state: RIL.CALL_STATE_DIALING,
-        number: aNumber,
-        isOutgoing: true,
-        isEmergency: false,
-        isConference: false,
-        isSwitchable: false,
-        isMergeable: true,
-        parentId: indexes[0]
-      };
-      aTelephonyCallback.notifyDialSuccess(CDMA_SECOND_CALL_INDEX);
+      this._dialInternal(aClientId, "dialEmergencyNumber", aNumber, aCallback);
+    } else {
+      // Shouldn't dial a non-emergency number by dialEmergency.
+      if (aIsDialEmergency) {
+        if (DEBUG) debug("Error: dialEmergency with a non-emergency number");
+        aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+        return;
+      }
 
-      // Manual update call state according to the request response.
-      this.notifyCallStateChanged(aClientId, childCall);
+      this._dialInternal(aClientId, "dialNonEmergencyNumber", aNumber, aCallback);
+    }
+  },
 
-      childCall.state = RIL.CALL_STATE_ACTIVE;
-      this.notifyCallStateChanged(aClientId, childCall);
-
-      let parentCall = this._currentCalls[aClientId][childCall.parentId];
-      parentCall.childId = CDMA_SECOND_CALL_INDEX;
-      parentCall.state = RIL.CALL_STATE_HOLDING;
-      parentCall.isSwitchable = false;
-      parentCall.isMergeable = true;
-      this.notifyCallStateChanged(aClientId, parentCall);
-    };
-
-    let isEmergencyNumber = this._isEmergencyNumber(aNumber);
-    let msg = isEmergencyNumber ?
-              "dialEmergencyNumber" :
-              "dialNonEmergencyNumber";
+  _dialInternal: function(aClientId, aMsg, aNumber, aCallback) {
     this.isDialing = true;
-    this._getClient(aClientId).sendWorkerMessage(msg, {
-      number: aNumber,
-      isEmergency: isEmergencyNumber,
-      isDialEmergency: aIsEmergency
-    }, (function(response) {
+    this._getClient(aClientId).sendWorkerMessage(aMsg,
+                                                 {number: aNumber},
+                                                 (function(response) {
       this.isDialing = false;
       if (!response.success) {
-        aTelephonyCallback.notifyDialError(response.errorMsg);
+        aCallback.notifyDialError(response.errorMsg);
         return false;
       }
 
-      if (response.isCdma) {
-        onCdmaDialSuccess.call(this, response.callIndex);
+      if (!response.isCdma) {
+        aCallback.notifyDialSuccess(response.callIndex);
       } else {
-        aTelephonyCallback.notifyDialSuccess(response.callIndex);
+        let currentCallId = Object.keys(this._currentCalls[aClientId])[0];
+        if (currentCallId === undefined) {
+          aCallback.notifyDialSuccess(response.callIndex);
+        } else {
+          // RIL doesn't hold the 2nd call. We create one by ourselves.
+          aCallback.notifyDialSuccess(CDMA_SECOND_CALL_INDEX);
+          this._addCdmaChildCall(aClientId, aNumber, currentCallId);
+        }
       }
+
       return false;
     }).bind(this));
   },
@@ -615,7 +623,7 @@ TelephonyService.prototype = {
         this.notifyCallStateChanged(aClientId, call);
       }
       this.notifyConferenceCallStateChanged(RIL.CALL_STATE_ACTIVE);
-    };
+    }
 
     this._getClient(aClientId).sendWorkerMessage("conferenceCall", null,
                                                  (function(response) {
@@ -660,7 +668,7 @@ TelephonyService.prototype = {
 
       let childCall = this._currentCalls[aClientId][childId];
       this.notifyCallDisconnected(aClientId, childCall);
-    };
+    }
 
     this._getClient(aClientId).sendWorkerMessage("separateCall", {
       callIndex: aCallIndex
@@ -825,28 +833,25 @@ TelephonyService.prototype = {
     aCall.clientId = aClientId;
     this._updateActiveCall(aCall);
 
+    function pick(arg, defaultValue) {
+      return typeof arg !== 'undefined' ? arg : defaultValue;
+    }
+
     let call = this._currentCalls[aClientId][aCall.callIndex];
     if (call) {
       call.state = aCall.state;
       call.isConference = aCall.isConference;
-      call.isEmergency = aCall.isEmergency;
-      call.isSwitchable = aCall.isSwitchable != null ?
-                          aCall.isSwitchable : call.isSwitchable;
-      call.isMergeable = aCall.isMergeable != null ?
-                         aCall.isMergeable : call.isMergeable;
+      call.isEmergency = pick(aCall.isEmergency, call.isEmergency);
+      call.isSwitchable = pick(aCall.isSwitchable, call.isSwitchable);
+      call.isMergeable = pick(aCall.isMergeable, call.isMergeable);
     } else {
       call = aCall;
-      call.isSwitchable = aCall.isSwitchable != null ?
-                          aCall.isSwitchable : true;
-      call.isMergeable = aCall.isMergeable != null ?
-                         aCall.isMergeable : true;
-
-      call.numberPresentation = aCall.numberPresentation != null ?
-                                aCall.numberPresentation : nsITelephonyService.CALL_PRESENTATION_ALLOWED;
-      call.name = aCall.name != null ?
-                  aCall.name : "";
-      call.namePresentation = aCall.namePresentation != null ?
-                              aCall.namePresentation : nsITelephonyService.CALL_PRESENTATION_ALLOWED;
+      call.isEmergency = pick(aCall.isEmergency, this._isEmergencyNumber(aCall.number));
+      call.isSwitchable = pick(aCall.isSwitchable, true);
+      call.isMergeable = pick(aCall.isMergeable, true);
+      call.name = pick(aCall.name, "");
+      call.numberPresentaation = pick(aCall.numberPresentation, nsITelephonyService.CALL_PRESENTATION_ALLOWED);
+      call.namePresentaation = pick(aCall.namePresentation, nsITelephonyService.CALL_PRESENTATION_ALLOWED);
 
       this._currentCalls[aClientId][aCall.callIndex] = call;
     }

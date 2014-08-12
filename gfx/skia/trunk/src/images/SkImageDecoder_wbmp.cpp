@@ -111,15 +111,15 @@ bool SkWBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* decodedBitmap,
     int width = head.fWidth;
     int height = head.fHeight;
 
-    decodedBitmap->setConfig(SkBitmap::kIndex8_Config, width, height, 0,
-                             kOpaque_SkAlphaType);
+    decodedBitmap->setInfo(SkImageInfo::Make(width, height,
+                                             kIndex_8_SkColorType, kOpaque_SkAlphaType));
 
     if (SkImageDecoder::kDecodeBounds_Mode == mode) {
         return true;
     }
 
     const SkPMColor colors[] = { SK_ColorBLACK, SK_ColorWHITE };
-    SkColorTable* ct = SkNEW_ARGS(SkColorTable, (colors, 2));
+    SkColorTable* ct = SkNEW_ARGS(SkColorTable, (colors, 2, kOpaque_SkAlphaType));
     SkAutoUnref   aur(ct);
 
     if (!this->allocPixelRef(decodedBitmap, ct)) {

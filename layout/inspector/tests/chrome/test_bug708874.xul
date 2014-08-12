@@ -43,7 +43,7 @@ function testLockEnabled() {
   is(window.getComputedStyle(button).color, defaultColor,
      "color is default color before locking on");
 
-  is(button.mozMatchesSelector(":disabled"), false,
+  is(button.matches(":disabled"), false,
      "doesn't match selector at start");
 
   /* lock */
@@ -55,7 +55,7 @@ function testLockEnabled() {
   is(window.getComputedStyle(button).color, disabledColor,
      ":disabled style applied after adding lock");
 
-  is(button.mozMatchesSelector(":disabled"), true,
+  is(button.matches(":disabled"), true,
      "matches selector after adding lock");
 
   /* change state to disabled */
@@ -64,7 +64,7 @@ function testLockEnabled() {
   is(window.getComputedStyle(button).color, disabledColor,
      ":disabled style still applied after really disabling");
 
-  is(button.mozMatchesSelector(":disabled"), true,
+  is(button.matches(":disabled"), true,
     "matches selector after adding lock");
 
   /* remove lock */
@@ -76,7 +76,7 @@ function testLockEnabled() {
   is(window.getComputedStyle(button).color, disabledColor,
      ":disabled style still applied after removing lock");
 
-  is(button.mozMatchesSelector(":disabled"), true,
+  is(button.matches(":disabled"), true,
      "matches selector after removing lock");
 
   /* change state to enabled */
@@ -85,7 +85,7 @@ function testLockEnabled() {
   is(window.getComputedStyle(button).color, defaultColor,
      "back to default style after un-disabling");
 
-  is(button.mozMatchesSelector(":disabled"), false,
+  is(button.matches(":disabled"), false,
     "doesn't match selector after enabling");
 }
 
@@ -102,7 +102,7 @@ function testLockDisabled() {
   is(window.getComputedStyle(button).color, disabledColor,
      "color is :disabled color before locking");
 
-  is(button.mozMatchesSelector(":disabled"), true,
+  is(button.matches(":disabled"), true,
     "matches selector before locking");
 
   /* lock */
@@ -114,7 +114,7 @@ function testLockDisabled() {
   is(window.getComputedStyle(button).color, disabledColor,
      ":disabled style still applied after adding on lock");
 
-  is(button.mozMatchesSelector(":disabled"), true,
+  is(button.matches(":disabled"), true,
    "matches selector after locking");
 
   /* change state to enabled */
@@ -123,7 +123,7 @@ function testLockDisabled() {
   is(window.getComputedStyle(button).color, disabledColor,
      ":disabled style applied after enabling");
 
-  is(button.mozMatchesSelector(":disabled"), true,
+  is(button.matches(":disabled"), true,
    "matches selector after enabling with lock on");
 
   /* remove lock */
@@ -135,7 +135,7 @@ function testLockDisabled() {
   is(window.getComputedStyle(button).color, defaultColor,
      "default style applied after removing lock");
 
-  is(button.mozMatchesSelector(":disabled"), false,
+  is(button.matches(":disabled"), false,
      "doesn't match selector after unlocking");
 
   /* change state to disabled */
@@ -144,7 +144,7 @@ function testLockDisabled() {
   is(window.getComputedStyle(button).color, disabledColor,
      ":disabled style applied after disabling after unlocking");
 
-  is(button.mozMatchesSelector(":disabled"), true,
+  is(button.matches(":disabled"), true,
     "matches selector again after disabling");
 }
 
@@ -223,7 +223,7 @@ function testMultiple() {
     is(window.getComputedStyle(div).getPropertyValue(style.property),
        style.value, "style for pseudo-class is applied after locking");
 
-    is(div.mozMatchesSelector(pseudo), true,
+    is(div.matches(pseudo), true,
        "matches selector after locking");
   }
 
@@ -236,7 +236,7 @@ function testMultiple() {
     is(window.getComputedStyle(div).getPropertyValue(style.property),
        style.defaultValue, "style is back to default after clearing");
 
-    is(div.mozMatchesSelector(pseudo), false,
+    is(div.matches(pseudo), false,
       "doesn't match selector after unlocking");
   }
 }

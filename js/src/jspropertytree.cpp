@@ -295,18 +295,14 @@ Shape::dump(JSContext *cx, FILE *fp) const
 
     if (JSID_IS_INT(propid)) {
         fprintf(fp, "[%ld]", (long) JSID_TO_INT(propid));
+    } else if (JSID_IS_ATOM(propid)) {
+        if (JSLinearString *str = JSID_TO_ATOM(propid))
+            FileEscapedString(fp, str, '"');
+        else
+            fputs("<error>", fp);
     } else {
-        JSLinearString *str;
-        if (JSID_IS_ATOM(propid)) {
-            str = JSID_TO_ATOM(propid);
-            if (!str)
-                fputs("<error>", fp);
-            else
-                FileEscapedString(fp, str, '"');
-        } else {
-            JS_ASSERT(JSID_IS_SYMBOL(propid));
-            JSID_TO_SYMBOL(propid)->dump(fp);
-        }
+        JS_ASSERT(JSID_IS_SYMBOL(propid));
+        JSID_TO_SYMBOL(propid)->dump(fp);
     }
 
     fprintf(fp, " g/s %p/%p slot %d attrs %x ",
