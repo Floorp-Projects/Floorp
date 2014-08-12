@@ -33,11 +33,14 @@
 # include "jit/PerfSpewer.h"
 #endif
 #include "jit/RegisterSets.h"
+#include "jit/shared/Assembler-shared.h"
 #include "vm/TypedArrayObject.h"
 
 namespace js {
 
 namespace frontend { class TokenStream; }
+
+using JS::GenericNaN;
 
 // These EcmaScript-defined coercions form the basis of the asm.js type system.
 enum AsmJSCoercion
@@ -1042,8 +1045,10 @@ class AsmJSModule
     // are laid out in this order:
     //   0. a pointer to the current AsmJSActivation
     //   1. a pointer to the heap that was linked to the module
-    //   2. global variable state (elements are sizeof(uint64_t))
-    //   3. interleaved function-pointer tables and exits. These are allocated
+    //   2. the double float constant NaN.
+    //   3. the float32 constant NaN, padded to sizeof(double).
+    //   4. global variable state (elements are sizeof(uint64_t))
+    //   5. interleaved function-pointer tables and exits. These are allocated
     //      while type checking function bodies (as exits and uses of
     //      function-pointer tables are encountered).
     size_t offsetOfGlobalData() const {
@@ -1057,6 +1062,8 @@ class AsmJSModule
     size_t globalDataBytes() const {
         return sizeof(void*) +
                sizeof(void*) +
+               sizeof(double) +
+               sizeof(double) +
                pod.numGlobalVars_ * sizeof(uint64_t) +
                pod.funcPtrTableAndExitBytes_;
     }
@@ -1077,9 +1084,26 @@ class AsmJSModule
         JS_ASSERT(isFinished());
         return *(uint8_t**)(globalData() + heapGlobalDataOffset());
     }
+    static unsigned nan64GlobalDataOffset() {
+        static_assert(jit::AsmJSNaN64GlobalDataOffset % sizeof(double) == 0,
+                      "Global data NaN should be aligned");
+        return heapGlobalDataOffset() + sizeof(void*);
+    }
+    static unsigned nan32GlobalDataOffset() {
+        static_assert(jit::AsmJSNaN32GlobalDataOffset % sizeof(double) == 0,
+                      "Global data NaN should be aligned");
+        return nan64GlobalDataOffset() + sizeof(double);
+    }
+    void initGlobalNaN() {
+        MOZ_ASSERT(jit::AsmJSNaN64GlobalDataOffset == nan64GlobalDataOffset());
+        MOZ_ASSERT(jit::AsmJSNaN32GlobalDataOffset == nan32GlobalDataOffset());
+        *(double *)(globalData() + nan64GlobalDataOffset()) = GenericNaN();
+        *(float *)(globalData() + nan32GlobalDataOffset()) = GenericNaN();
+    }
     unsigned globalVariableOffset() const {
-        static_assert((2 * sizeof(void*)) % sizeof(double) == 0, "Global data should be aligned");
-        return 2 * sizeof(void*);
+        static_assert((2 * sizeof(void*) + 2 * sizeof(double)) % sizeof(double) == 0,
+                      "Global data should be aligned");
+        return 2 * sizeof(void*) + 2 * sizeof(double);
     }
     unsigned globalVarIndexToGlobalDataOffset(unsigned i) const {
         JS_ASSERT(isFinishedWithModulePrologue());
