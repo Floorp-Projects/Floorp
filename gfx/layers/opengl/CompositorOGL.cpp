@@ -1059,7 +1059,12 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     maskType = MaskType::MaskNone;
   }
 
-  mPixelsFilled += aRect.width * aRect.height;
+  {
+    // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
+    //      quads. Fix me.
+    const Rect destRect = aTransform.TransformBounds(aRect);
+    mPixelsFilled += destRect.width * destRect.height;
+  }
 
   // Determine the color if this is a color shader and fold the opacity into
   // the color since color shaders don't have an opacity uniform.
