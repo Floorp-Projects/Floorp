@@ -644,6 +644,53 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
                     aResult, uris);
 }
 
+static bool
+MayBindToContent(nsXBLPrototypeBinding* aProtoBinding, nsIContent* aBoundElement,
+                 nsIURI* aURI)
+{
+  // If this binding explicitly allows untrusted content, we're done.
+  if (aProtoBinding->BindToUntrustedContent()) {
+    return true;
+  }
+
+  // We let XUL content and content in XUL documents through, since XUL is
+  // restricted anyway and we want to minimize remote XUL breakage.
+  if (aBoundElement->IsXUL() || aBoundElement->OwnerDoc()->IsXUL()) {
+    return true;
+  }
+
+  // Similarly, we make an exception for anonymous content (which
+  // lives in the XBL scope), because it's already protected from content,
+  // and tends to use a lot of bindings that we wouldn't otherwise need to
+  // whitelist.
+  if (aBoundElement->IsInAnonymousSubtree()) {
+    return true;
+  }
+
+  // Allow if the bound content subsumes the binding.
+  nsCOMPtr<nsIDocument> bindingDoc = aProtoBinding->XBLDocumentInfo()->GetDocument();
+  NS_ENSURE_TRUE(bindingDoc, false);
+  if (aBoundElement->NodePrincipal()->Subsumes(bindingDoc->NodePrincipal())) {
+    return true;
+  }
+
+  // One last special case: we need to watch out for in-document data: URI
+  // bindings from remote-XUL-whitelisted domains (especially tests), because
+  // they end up with a null principal (rather than inheriting the document's
+  // principal), which causes them to fail the check above.
+  if (nsContentUtils::AllowXULXBLForPrincipal(aBoundElement->NodePrincipal())) {
+    bool isDataURI = false;
+    nsresult rv = aURI->SchemeIs("data", &isDataURI);
+    NS_ENSURE_SUCCESS(rv, false);
+    if (isDataURI) {
+      return true;
+    }
+  }
+
+  // Disallow.
+  return false;
+}
+
 nsresult
 nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
                          bool aPeekOnly, nsIPrincipal* aOriginPrincipal,
@@ -689,6 +736,21 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
     NS_WARNING(message.get());
 #endif
     return NS_ERROR_FAILURE;
+  }
+
+  // If the binding isn't whitelisted, refuse to apply it to content that
+  // doesn't subsume it (modulo a few exceptions).
+  if (!MayBindToContent(protoBinding, aBoundElement, aURI)) {
+#ifdef DEBUG
+    nsAutoCString uriSpec;
+    aURI->GetSpec(uriSpec);
+    nsAutoCString message("Permission denied to apply binding ");
+    message += uriSpec;
+    message += " to unprivileged content. Set bindToUntrustedContent=true on "
+               "the binding to override this restriction.";
+    NS_WARNING(message.get());
+#endif
+   return NS_ERROR_FAILURE;
   }
 
   NS_ENSURE_TRUE(aDontExtendURIs.AppendElement(protoBinding->BindingURI()),

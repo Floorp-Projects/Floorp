@@ -35,11 +35,15 @@ class DebuggerMemory : public JSObject {
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
 
+    // Accessor properties of Debugger.Memory.prototype.
     static bool setTrackingAllocationSites(JSContext *cx, unsigned argc, Value *vp);
     static bool getTrackingAllocationSites(JSContext *cx, unsigned argc, Value *vp);
-    static bool drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp);
     static bool setMaxAllocationsLogLength(JSContext*cx, unsigned argc, Value *vp);
     static bool getMaxAllocationsLogLength(JSContext*cx, unsigned argc, Value *vp);
+
+    // Function properties of Debugger.Memory.prototype.
+    static bool takeCensus(JSContext *cx, unsigned argc, Value *vp);
+    static bool drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp);
 };
 
 } /* namespace js */

@@ -111,6 +111,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     typedef typename Base::Enum Enum;
     typedef typename Base::Lookup Lookup;
     typedef typename Base::Range Range;
+    typedef typename Base::Ptr Ptr;
+    typedef typename Base::AddPtr AddPtr;
 
     explicit WeakMap(JSContext *cx, JSObject *memOf = nullptr)
         : Base(cx->runtime()), WeakMapBase(memOf, cx->compartment()) { }
@@ -124,7 +126,34 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         return true;
     }
 
+    // Overwritten to add a read barrier to prevent an incorrectly gray value
+    // from escaping the weak map. See the comment before UnmarkGrayChildren in
+    // gc/Marking.cpp
+    Ptr lookup(const Lookup &l) const {
+        Ptr p = Base::lookup(l);
+        if (p)
+            exposeGCThingToActiveJS(p->value());
+        return p;
+    }
+
+    AddPtr lookupForAdd(const Lookup &l) const {
+        AddPtr p = Base::lookupForAdd(l);
+        if (p)
+            exposeGCThingToActiveJS(p->value());
+        return p;
+    }
+
+    Ptr lookupWithDefault(const Key &k, const Value &defaultValue) {
+        Ptr p = Base::lookupWithDefault(k, defaultValue);
+        if (p)
+            exposeGCThingToActiveJS(p->value());
+        return p;
+    }
+
   private:
+    void exposeGCThingToActiveJS(const JS::Value &v) const { JS::ExposeValueToActiveJS(v); }
+    void exposeGCThingToActiveJS(JSObject *obj) const { JS::ExposeObjectToActiveJS(obj); }
+
     bool markValue(JSTracer *trc, Value *x) {
         if (gc::IsMarked(x))
             return false;

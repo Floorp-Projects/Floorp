@@ -9259,26 +9259,65 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
       // the last thing |iter| would have skipped over.
       ParentType prevParentType = ourParentType;
       do {
-        /* Walk an iterator past any whitespace that we might be able to drop from the list */
+        // Walk an iterator past any whitespace that we might be able to drop
+        // from the list
         FCItemIterator spaceEndIter(endIter);
         if (prevParentType != eTypeBlock &&
             !aParentFrame->IsGeneratedContentFrame() &&
             spaceEndIter.item().IsWhitespace(aState)) {
           bool trailingSpaces = spaceEndIter.SkipWhitespace(aState);
+          int nextDisplay = -1;
+          int prevDisplay = -1;
 
-          // We drop the whitespace if these are not trailing spaces and the next item
-          // does not want a block parent (see case 2 above)
-          // if these are trailing spaces and aParentFrame is a tabular container
-          // according to rule 1.3 of CSS 2.1 Sec 17.2.1. (Being a tabular container
-          // pretty much means ourParentType != eTypeBlock besides the eTypeColGroup case,
-          // which won't reach here.)
-          if ((trailingSpaces && ourParentType != eTypeBlock) ||
-              (!trailingSpaces && spaceEndIter.item().DesiredParentType() !=
-               eTypeBlock)) {
-            //TODO: Add whitespace handling for ruby
+          if (!endIter.AtStart() && IsRubyParentType(ourParentType)) {
+            FCItemIterator prevItemIter(endIter);
+            prevItemIter.Prev();
+            prevDisplay =
+              prevItemIter.item().mStyleContext->StyleDisplay()->mDisplay;
+          }
+
+          // We only need to compute nextDisplay for testing for ruby white
+          // space.
+          if (!spaceEndIter.IsDone() && IsRubyParentType(ourParentType)) {
+            nextDisplay =
+              spaceEndIter.item().mStyleContext->StyleDisplay()->mDisplay;
+          }
+
+          // We drop the whitespace in the following cases:
+          // 1) If these are not trailing spaces and the next item wants a table
+          //    or table-part parent
+          // 2) If these are trailing spaces and aParentFrame is a
+          //    tabular container according to rule 1.3 of CSS 2.1 Sec 17.2.1.
+          //    (Being a tabular container pretty much means
+          //    IsTableParentType(ourParentType) besides the eTypeColGroup case,
+          //    which won't reach here.)
+          // 3) The whitespace is leading or trailing inside a ruby box, ruby
+          //    base container box, or ruby text container box.
+          // 4) The whitespace is classified as inter-level intra-ruby
+          //    whitespace according to the spec for CSS ruby.
+          bool isRubyLeadingTrailingParentType =
+            ourParentType == eTypeRuby ||
+            ourParentType == eTypeRubyBaseContainer ||
+            ourParentType == eTypeRubyTextContainer;
+          bool isRubyLeading =
+            prevDisplay == -1 && isRubyLeadingTrailingParentType;
+          bool isRubyTrailing =
+            nextDisplay == -1 && isRubyLeadingTrailingParentType;
+          // There's an implicit && "IsRubyParentType(ourParentType)" here
+          // because nextDisplay is only set if this is true.
+          bool isRubyInterLevel =
+            (nextDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
+            (nextDisplay == NS_STYLE_DISPLAY_RUBY_TEXT &&
+             prevDisplay != NS_STYLE_DISPLAY_RUBY_TEXT);
+
+          if ((!trailingSpaces &&
+               IsTableParentType(spaceEndIter.item().DesiredParentType())) ||
+              (trailingSpaces && IsTableParentType(ourParentType)) ||
+              isRubyLeading || isRubyTrailing || isRubyInterLevel) {
             bool updateStart = (iter == endIter);
             endIter.DeleteItemsTo(spaceEndIter);
-            NS_ASSERTION(trailingSpaces == endIter.IsDone(), "These should match");
+            NS_ASSERTION(trailingSpaces == endIter.IsDone(),
+                         "These should match");
 
             if (updateStart) {
               iter = endIter;
@@ -9322,11 +9361,20 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
           break;
         }
 
-        // Include the whitespace we didn't drop (if any) in the group, since
-        // this is not the end of the group.  Note that this doesn't change
-        // prevParentType, since if we didn't drop the whitespace then we ended
-        // at something that wants a block parent.
+        // If we have some whitespace that we were not able to drop and there is
+        // an item after the whitespace that is already properly parented, then
+        // make sure to include the spaces in our group but stop the group after
+        // that.
+        if (spaceEndIter != endIter &&
+            !spaceEndIter.IsDone() &&
+            ourParentType == spaceEndIter.item().DesiredParentType()) {
+            endIter = spaceEndIter;
+            break;
+        }
+
+        // Include the whitespace we didn't drop (if any) in the group.
         endIter = spaceEndIter;
+        prevParentType = endIter.item().DesiredParentType();
 
         endIter.Next();
       } while (!endIter.IsDone());
@@ -9686,7 +9734,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
         (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX)
           ? "NeededToWrapXULInlineBox" : "NeededToWrapXUL";
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("FrameConstructor"),
+                                      NS_LITERAL_CSTRING("Layout: FrameConstructor"),
                                       mDocument,
                                       nsContentUtils::eXUL_PROPERTIES,
                                       message,

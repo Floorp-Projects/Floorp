@@ -52,7 +52,7 @@ RematerializedFrame::New(ThreadSafeContext *cx, uint8_t *top, InlineFrameIterato
         (numActualArgs + iter.script()->nfixed()) * sizeof(Value) -
         sizeof(Value); // 1 Value included in sizeof(RematerializedFrame)
 
-    void *buf = cx->calloc_(numBytes);
+    void *buf = cx->pod_calloc<uint8_t>(numBytes);
     if (!buf)
         return nullptr;
 

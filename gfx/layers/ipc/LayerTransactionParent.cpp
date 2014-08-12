@@ -318,6 +318,10 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       }
       layer->SetAnimations(common.animations());
       layer->SetInvalidRegion(common.invalidRegion());
+      layer->SetFrameMetrics(common.metrics());
+      layer->SetScrollHandoffParentId(common.scrollParentId());
+      layer->SetBackgroundColor(common.backgroundColor().value());
+      layer->SetContentDescription(common.contentDescription());
 
       typedef SpecificLayerAttributes Specific;
       const SpecificLayerAttributes& specific = attrs.specific();
@@ -348,12 +352,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         }
         const ContainerLayerAttributes& attrs =
           specific.get_ContainerLayerAttributes();
-        containerLayer->SetFrameMetrics(attrs.metrics());
-        containerLayer->SetScrollHandoffParentId(attrs.scrollParentId());
         containerLayer->SetPreScale(attrs.preXScale(), attrs.preYScale());
         containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
-        containerLayer->SetBackgroundColor(attrs.backgroundColor().value());
-        containerLayer->SetContentDescription(attrs.contentDescription());
         break;
       }
       case Specific::TColorLayerAttributes: {

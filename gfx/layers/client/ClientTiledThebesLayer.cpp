@@ -68,24 +68,23 @@ GetTransformToAncestorsParentLayer(Layer* aStart, Layer* aAncestor)
   gfx::Matrix4x4 transform;
   Layer* ancestorParent = aAncestor->GetParent();
   for (Layer* iter = aStart; iter != ancestorParent; iter = iter->GetParent()) {
-    if (iter->AsContainerLayer()) {
-      // If the layer has a non-transient async transform then we need to apply it here
-      // because it will get applied by the APZ in the compositor as well
-      const FrameMetrics& metrics = iter->AsContainerLayer()->GetFrameMetrics();
-      transform = transform * gfx::Matrix4x4().Scale(metrics.mResolution.scale, metrics.mResolution.scale, 1.f);
-    }
+    // If the layer has a non-transient async transform then we need to apply it here
+    // because it will get applied by the APZ in the compositor as well
+    const FrameMetrics& metrics = iter->GetFrameMetrics();
+    transform = transform * gfx::Matrix4x4().Scale(metrics.mResolution.scale, metrics.mResolution.scale, 1.f);
+
     transform = transform * iter->GetTransform();
   }
   return transform;
 }
 
 void
-ClientTiledThebesLayer::GetAncestorLayers(ContainerLayer** aOutScrollAncestor,
-                                          ContainerLayer** aOutDisplayPortAncestor)
+ClientTiledThebesLayer::GetAncestorLayers(Layer** aOutScrollAncestor,
+                                          Layer** aOutDisplayPortAncestor)
 {
-  ContainerLayer* scrollAncestor = nullptr;
-  ContainerLayer* displayPortAncestor = nullptr;
-  for (ContainerLayer* ancestor = GetParent(); ancestor; ancestor = ancestor->GetParent()) {
+  Layer* scrollAncestor = nullptr;
+  Layer* displayPortAncestor = nullptr;
+  for (Layer* ancestor = this; ancestor; ancestor = ancestor->GetParent()) {
     const FrameMetrics& metrics = ancestor->GetFrameMetrics();
     if (!scrollAncestor && metrics.GetScrollId() != FrameMetrics::NULL_SCROLL_ID) {
       scrollAncestor = ancestor;
@@ -122,8 +121,8 @@ ClientTiledThebesLayer::BeginPaint()
 
   // Get the metrics of the nearest scrollable layer and the nearest layer
   // with a displayport.
-  ContainerLayer* scrollAncestor = nullptr;
-  ContainerLayer* displayPortAncestor = nullptr;
+  Layer* scrollAncestor = nullptr;
+  Layer* displayPortAncestor = nullptr;
   GetAncestorLayers(&scrollAncestor, &displayPortAncestor);
 
   if (!displayPortAncestor || !scrollAncestor) {
