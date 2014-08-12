@@ -1233,8 +1233,6 @@
       <method name="onFindResult">
         <parameter name="aData"/>
         <body><![CDATA[
-          if (aData.storeResult && this._findField.value != this.browser.finder.searchString)
-            this._findField.value = this.browser.finder.searchString;
           this._updateStatusUI(aData.result, aData.findBackwards);
           this._updateStatusUIBar(aData.linkURL);
 
