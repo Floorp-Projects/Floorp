@@ -267,32 +267,11 @@ ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static ArrayBufferObject::BufferContents
-AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes)
+AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes)
 {
-    void *p = maybecx ? maybecx->runtime()->callocCanGC(nbytes) : js_calloc(nbytes);
-    if (!p && maybecx)
-        js_ReportOutOfMemory(maybecx);
-
-    return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(p);
-}
-
-/*
- * Note that some callers are allowed to pass in a nullptr cx, so we allocate
- * with the cx if available and fall back to the runtime.  If oldptr is given,
- * it's expected to be a previously-allocated contents pointer that we then
- * realloc.
- */
-static ArrayBufferObject::BufferContents
-ReallocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr, size_t oldnbytes)
-{
-    void *p = maybecx ? maybecx->runtime()->reallocCanGC(oldptr, nbytes) : js_realloc(oldptr, nbytes);
-
-    // if we grew the array, we need to set the new bytes to 0
-    if (p && nbytes > oldnbytes)
-        memset(reinterpret_cast<uint8_t *>(p) + oldnbytes, 0, nbytes - oldnbytes);
-
-    if (!p && maybecx)
-        js_ReportOutOfMemory(maybecx);
+    void *p = cx->runtime()->callocCanGC(nbytes);
+    if (!p)
+        js_ReportOutOfMemory(cx);
 
     return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(p);
 }
@@ -664,7 +643,13 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, BufferContents content
 
     size_t nslots = reservedSlots;
     bool allocated = false;
-    if (!contents) {
+    if (contents) {
+        // The ABO is taking ownership, so account the bytes against the zone.
+        size_t nAllocated = nbytes;
+        if (contents.kind() & MAPPED_BUFFER)
+            nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
+        cx->zone()->updateMallocCounter(nAllocated);
+    } else {
         size_t usableSlots = JSObject::MAX_FIXED_SLOTS - reservedSlots;
         if (nbytes <= usableSlots * sizeof(Value)) {
             int newSlots = (nbytes - 1) / sizeof(Value) + 1;
@@ -697,8 +682,6 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, BufferContents content
         memset(data, 0, nbytes);
         obj->initialize(nbytes, BufferContents::createUnowned(data), DoesntOwnData);
     } else {
-        if (contents.kind() & MAPPED_BUFFER)
-            JS_updateMallocCounter(cx, JS_ROUNDUP(nbytes, js::gc::SystemPageSize()));
         obj->initialize(nbytes, contents, OwnsData);
     }
 
@@ -1155,18 +1138,6 @@ JS_NewArrayBufferWithContents(JSContext *cx, size_t nbytes, void *data)
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(data);
     return ArrayBufferObject::create(cx, nbytes, contents, TenuredObject);
-}
-
-JS_PUBLIC_API(void *)
-JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes)
-{
-    return AllocateArrayBufferContents(maybecx, nbytes).data();
-}
-
-JS_PUBLIC_API(void *)
-JS_ReallocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldContents, uint32_t oldNbytes)
-{
-    return ReallocateArrayBufferContents(maybecx, nbytes, oldContents, oldNbytes).data();
 }
 
 JS_FRIEND_API(bool)
