@@ -8,7 +8,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="inputFields">
+  <binding id="inputFields" bindToUntrustedContent="true">
     <handlers>
 #include ../input-fields-base.inc
       <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>
@@ -34,7 +34,7 @@
     </handlers>
   </binding>
 
-  <binding id="textAreas">
+  <binding id="textAreas" bindToUntrustedContent="true">
     <handlers>
 #include ../textareas-base.inc
       <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>

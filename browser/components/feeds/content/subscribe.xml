@@ -11,7 +11,7 @@
 <bindings id="feedBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <binding id="feedreaderUI">
+  <binding id="feedreaderUI" bindToUntrustedContent="true">
     <content>
       <xul:vbox>
         <xul:hbox align="center">
