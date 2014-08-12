@@ -9,6 +9,7 @@
 #include "SkCanvas.h"
 #include "SkPicture.h"
 
+#ifdef SK_SUPPORT_LEGACY_BITMAP_CONFIG
 SkBitmap::Config SkColorTypeToBitmapConfig(SkColorType colorType) {
     switch (colorType) {
         case kAlpha_8_SkColorType:
@@ -20,7 +21,7 @@ SkBitmap::Config SkColorTypeToBitmapConfig(SkColorType colorType) {
         case kRGB_565_SkColorType:
             return SkBitmap::kRGB_565_Config;
 
-        case kPMColor_SkColorType:
+        case kN32_SkColorType:
             return SkBitmap::kARGB_8888_Config;
 
         case kIndex_8_SkColorType:
@@ -33,10 +34,6 @@ SkBitmap::Config SkColorTypeToBitmapConfig(SkColorType colorType) {
     return SkBitmap::kNo_Config;
 }
 
-SkBitmap::Config SkImageInfoToBitmapConfig(const SkImageInfo& info) {
-    return SkColorTypeToBitmapConfig(info.fColorType);
-}
-
 SkColorType SkBitmapConfigToColorType(SkBitmap::Config config) {
     static const SkColorType gCT[] = {
         kUnknown_SkColorType,   // kNo_Config
@@ -44,15 +41,16 @@ SkColorType SkBitmapConfigToColorType(SkBitmap::Config config) {
         kIndex_8_SkColorType,   // kIndex8_Config
         kRGB_565_SkColorType,   // kRGB_565_Config
         kARGB_4444_SkColorType, // kARGB_4444_Config
-        kPMColor_SkColorType,   // kARGB_8888_Config
+        kN32_SkColorType,   // kARGB_8888_Config
     };
     SkASSERT((unsigned)config < SK_ARRAY_COUNT(gCT));
     return gCT[config];
 }
+#endif
 
 SkImage* SkNewImageFromBitmap(const SkBitmap& bm, bool canSharePixelRef) {
-    SkImageInfo info;
-    if (!bm.asImageInfo(&info)) {
+    const SkImageInfo info = bm.info();
+    if (kUnknown_SkColorType == info.colorType()) {
         return NULL;
     }
 
@@ -67,61 +65,4 @@ SkImage* SkNewImageFromBitmap(const SkBitmap& bm, bool canSharePixelRef) {
         bm.unlockPixels();
     }
     return image;
-}
-
-static bool needs_layer(const SkPaint& paint) {
-    return  0xFF != paint.getAlpha() ||
-    paint.getColorFilter() ||
-    paint.getImageFilter() ||
-    SkXfermode::IsMode(paint.getXfermode(), SkXfermode::kSrcOver_Mode);
-}
-
-void SkImagePrivDrawPicture(SkCanvas* canvas, SkPicture* picture,
-                            SkScalar x, SkScalar y, const SkPaint* paint) {
-    int saveCount = canvas->getSaveCount();
-
-    if (paint && needs_layer(*paint)) {
-        SkRect bounds;
-        bounds.set(x, y,
-                   x + SkIntToScalar(picture->width()),
-                   y + SkIntToScalar(picture->height()));
-        canvas->saveLayer(&bounds, paint);
-        canvas->translate(x, y);
-    } else if (x || y) {
-        canvas->save();
-        canvas->translate(x, y);
-    }
-
-    canvas->drawPicture(*picture);
-    canvas->restoreToCount(saveCount);
-}
-
-void SkImagePrivDrawPicture(SkCanvas* canvas, SkPicture* picture,
-                            const SkRect* src,  const SkRect& dst, const SkPaint* paint) {
-    int saveCount = canvas->getSaveCount();
-
-    SkMatrix matrix;
-    SkRect   tmpSrc;
-
-    if (NULL != src) {
-        tmpSrc = *src;
-    } else {
-        tmpSrc.set(0, 0,
-                   SkIntToScalar(picture->width()),
-                   SkIntToScalar(picture->height()));
-    }
-
-    matrix.setRectToRect(tmpSrc, dst, SkMatrix::kFill_ScaleToFit);
-    if (paint && needs_layer(*paint)) {
-        canvas->saveLayer(&dst, paint);
-    } else {
-        canvas->save();
-    }
-    canvas->concat(matrix);
-    if (!paint || !needs_layer(*paint)) {
-        canvas->clipRect(tmpSrc);
-    }
-
-    canvas->drawPicture(*picture);
-    canvas->restoreToCount(saveCount);
 }

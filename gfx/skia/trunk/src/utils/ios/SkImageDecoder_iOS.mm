@@ -29,7 +29,7 @@ bool SkImageDecoder_iOS::onDecode(SkStream* stream, SkBitmap* bm, Mode mode) {
     
     const int width = uimage.size.width;
     const int height = uimage.size.height;
-    bm->setConfig(SkBitmap::kARGB_8888_Config, width, height);
+    bm->setInfo(SkImageInfo::MakeN32(width, height, kPremul_SkAlphaType), 0);
     if (SkImageDecoder::kDecodeBounds_Mode == mode) {
         return true;
     }
@@ -62,7 +62,4 @@ SkMovie* SkMovie::DecodeStream(SkStreamRewindable* stream) {
     return NULL;
 }
 
-SkImageEncoder* SkImageEncoder::Create(Type t) {
-    return NULL;
-}
 

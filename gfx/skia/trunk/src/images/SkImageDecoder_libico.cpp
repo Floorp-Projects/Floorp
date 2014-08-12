@@ -8,7 +8,7 @@
 #include "SkColorPriv.h"
 #include "SkImageDecoder.h"
 #include "SkStream.h"
-#include "SkStreamHelpers.h"
+#include "SkStreamPriv.h"
 #include "SkTypes.h"
 
 class SkICOImageDecoder : public SkImageDecoder {
@@ -75,7 +75,7 @@ static int calculateRowBytesFor8888(int w, int bitCount)
 bool SkICOImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode)
 {
     SkAutoMalloc autoMal;
-    const size_t length = CopyStreamToStorage(&autoMal, stream);
+    const size_t length = SkCopyStreamToStorage(&autoMal, stream);
     if (0 == length) {
         return false;
     }
@@ -94,6 +94,7 @@ bool SkICOImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode)
     if (length < (size_t)(6 + count*16))
         return false;
 
+#ifdef SK_SUPPORT_LEGACY_IMAGEDECODER_CHOOSER
     int choice;
     Chooser* chooser = this->getChooser();
     //FIXME:if no chooser, consider providing the largest color image
@@ -138,6 +139,9 @@ bool SkICOImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode)
     //you never know what the chooser is going to supply
     if (choice >= count || choice < 0)
         return false;
+#else
+    const int choice = 0;   // TODO: fold this value into the expressions below
+#endif
 
     //skip ahead to the correct header
     //commented out lines are not used, but if i switch to other read method, need to know how many to skip
@@ -148,10 +152,11 @@ bool SkICOImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode)
     //int reservedToo = readByte(buf, 9 + choice*16);   //0
     //int planes = read2Bytes(buf, 10 + choice*16);       //1 - but often 0
     //int fakeBitCount = read2Bytes(buf, 12 + choice*16); //should be real - usually 0
-    int size = read4Bytes(buf, 14 + choice*16);           //matters?
-    int offset = read4Bytes(buf, 18 + choice*16);
-    if ((size_t)(offset + size) > length)
+    const size_t size = read4Bytes(buf, 14 + choice*16);           //matters?
+    const size_t offset = read4Bytes(buf, 18 + choice*16);
+    if ((offset + size) > length) {
         return false;
+    }
 
     // Check to see if this is a PNG image inside the ICO
     {
@@ -246,7 +251,7 @@ bool SkICOImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode)
     //if the andbitmap (mask) is all zeroes, then we can easily do an index bitmap
     //however, with small images with large colortables, maybe it's better to still do argb_8888
 
-    bm->setConfig(SkBitmap::kARGB_8888_Config, w, h, calculateRowBytesFor8888(w, bitCount));
+    bm->setInfo(SkImageInfo::MakeN32Premul(w, h), calculateRowBytesFor8888(w, bitCount));
 
     if (SkImageDecoder::kDecodeBounds_Mode == mode) {
         delete[] colors;

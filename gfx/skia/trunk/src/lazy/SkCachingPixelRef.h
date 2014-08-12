@@ -48,12 +48,6 @@ protected:
     virtual SkData* onRefEncodedData() SK_OVERRIDE {
         return fImageGenerator->refEncodedData();
     }
-    // No need to flatten this object. When flattening an SkBitmap,
-    // SkWriteBuffer will check the encoded data and write that
-    // instead.
-    // Future implementations of SkWriteBuffer will need to
-    // special case for onRefEncodedData as well.
-    SK_DECLARE_UNFLATTENABLE_OBJECT()
 
 private:
     SkImageGenerator* const fImageGenerator;

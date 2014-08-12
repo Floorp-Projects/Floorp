@@ -19,8 +19,9 @@
 #endif
 #include "json/reader.h"
 #include "json/value.h"
+#include "json/writer.h"
 #ifdef SK_BUILD_FOR_WIN
     #pragma warning(pop)
 #endif
 
-#endif
+#endif // SkJSONCPP_DEFINED

@@ -75,6 +75,8 @@ types::TypeIdStringImpl(jsid id)
         return "(index)";
     if (JSID_IS_EMPTY(id))
         return "(new)";
+    if (JSID_IS_SYMBOL(id))
+        return "(symbol)";
     static char bufs[4][100];
     static unsigned which = 0;
     which = (which + 1) & 3;
@@ -4156,7 +4158,12 @@ TypeCompartment::sweep(FreeOp *fop)
                     if (IsStringAboutToBeFinalized(&str))
                         remove = true;
                     JS_ASSERT(AtomToId((JSAtom *)str) == key.properties[i]);
+                } else if (JSID_IS_SYMBOL(key.properties[i])) {
+                    JS::Symbol *sym = JSID_TO_SYMBOL(key.properties[i]);
+                    if (IsSymbolAboutToBeFinalized(&sym))
+                        remove = true;
                 }
+
                 JS_ASSERT(!entry.types[i].isSingleObject());
                 TypeObject *typeObject = nullptr;
                 if (entry.types[i].isTypeObject()) {

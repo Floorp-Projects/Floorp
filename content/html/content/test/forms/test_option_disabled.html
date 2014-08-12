@@ -111,8 +111,8 @@ testCases.forEach(function(testCase) {
   var option = content.querySelector('option');
   is(option.getAttribute('disabled'), result.attr, "disabled content attribute value should be " + result.attr);
   is(option.disabled, result.idl, "disabled idl attribute value should be " + result.idl);
-  is(option.mozMatchesSelector(":disabled"), result.pseudo, ":disabled state should be " + result.pseudo);
-  is(option.mozMatchesSelector(":enabled"), !result.pseudo, ":enabled state should be " + !result.pseudo);
+  is(option.matches(":disabled"), result.pseudo, ":disabled state should be " + result.pseudo);
+  is(option.matches(":enabled"), !result.pseudo, ":enabled state should be " + !result.pseudo);
 
   content.innerHTML = "";
 });

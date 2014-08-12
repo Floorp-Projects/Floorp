@@ -8,117 +8,71 @@
 #ifndef SkOnce_DEFINED
 #define SkOnce_DEFINED
 
+// Before trying SkOnce, see if SkLazyPtr or SkLazyFnPtr will work for you.
+// They're smaller and faster, if slightly less versatile.
+
+
 // SkOnce.h defines SK_DECLARE_STATIC_ONCE and SkOnce(), which you can use
-// together to create a threadsafe way to call a function just once.  This
-// is particularly useful for lazy singleton initialization. E.g.
+// together to create a threadsafe way to call a function just once.  E.g.
 //
-// static void set_up_my_singleton(Singleton** singleton) {
-//     *singleton = new Singleton(...);
+// static void register_my_stuff(GlobalRegistry* registry) {
+//     registry->register(...);
 // }
 // ...
-// const Singleton& GetSingleton() {
-//     static Singleton* singleton = NULL;
+// void EnsureRegistered() {
 //     SK_DECLARE_STATIC_ONCE(once);
-//     SkOnce(&once, set_up_my_singleton, &singleton);
-//     SkASSERT(NULL != singleton);
-//     return *singleton;
+//     SkOnce(&once, register_my_stuff, GetGlobalRegistry());
 // }
 //
+// No matter how many times you call EnsureRegistered(), register_my_stuff will be called just once.
 // OnceTest.cpp also should serve as a few other simple examples.
-//
-// You may optionally pass SkOnce a second function to be called at exit for cleanup.
 
 #include "SkDynamicAnnotations.h"
 #include "SkThread.h"
 #include "SkTypes.h"
 
-#define SK_ONCE_INIT { false, { 0, SkDEBUGCODE(0) } }
-#define SK_DECLARE_STATIC_ONCE(name) static SkOnceFlag name = SK_ONCE_INIT
+// This must be used in a global or function scope, not as a class member.
+#define SK_DECLARE_STATIC_ONCE(name) static SkOnceFlag name
 
-struct SkOnceFlag;  // If manually created, initialize with SkOnceFlag once = SK_ONCE_INIT
+class SkOnceFlag;
 
-template <typename Func, typename Arg>
-inline void SkOnce(SkOnceFlag* once, Func f, Arg arg, void(*atExit)() = NULL);
+inline void SkOnce(SkOnceFlag* once, void (*f)());
+
+template <typename Arg>
+inline void SkOnce(SkOnceFlag* once, void (*f)(Arg), Arg arg);
 
 // If you've already got a lock and a flag to use, this variant lets you avoid an extra SkOnceFlag.
-template <typename Lock, typename Func, typename Arg>
-inline void SkOnce(bool* done, Lock* lock, Func f, Arg arg, void(*atExit)() = NULL);
+template <typename Lock>
+inline void SkOnce(bool* done, Lock* lock, void (*f)());
+
+template <typename Lock, typename Arg>
+inline void SkOnce(bool* done, Lock* lock, void (*f)(Arg), Arg arg);
 
 //  ----------------------  Implementation details below here. -----------------------------
 
-// This is POD and must be zero-initialized.
-struct SkSpinlock {
+// This class has no constructor and must be zero-initialized (the macro above does this).
+class SkOnceFlag {
+public:
+    bool* mutableDone() { return &fDone; }
+
     void acquire() {
-        SkASSERT(shouldBeZero == 0);
-        // No memory barrier needed, but sk_atomic_cas gives us at least release anyway.
-        while (!sk_atomic_cas(&thisIsPrivate, 0, 1)) {
+        // To act as a mutex, this needs an acquire barrier on success.
+        // sk_atomic_cas doesn't guarantee this ...
+        while (!sk_atomic_cas(&fSpinlock, 0, 1)) {
             // spin
         }
+        // ... so make sure to issue one of our own.
+        SkAssertResult(sk_acquire_load(&fSpinlock));
     }
 
     void release() {
-        SkASSERT(shouldBeZero == 0);
-        // This requires a release memory barrier before storing, which sk_atomic_cas guarantees.
-        SkAssertResult(sk_atomic_cas(&thisIsPrivate, 1, 0));
+        // To act as a mutex, this needs a release barrier.  sk_atomic_cas guarantees this.
+        SkAssertResult(sk_atomic_cas(&fSpinlock, 1, 0));
     }
 
-    int32_t thisIsPrivate;
-    SkDEBUGCODE(int32_t shouldBeZero;)
-};
-
-struct SkOnceFlag {
-    bool done;
-    SkSpinlock lock;
-};
-
-// TODO(bungeman, mtklein): move all these *barrier* functions to SkThread when refactoring lands.
-
-#ifdef SK_BUILD_FOR_WIN
-#  include <intrin.h>
-inline static void compiler_barrier() {
-    _ReadWriteBarrier();
-}
-#else
-inline static void compiler_barrier() {
-    asm volatile("" : : : "memory");
-}
-#endif
-
-inline static void full_barrier_on_arm() {
-#ifdef SK_CPU_ARM
-#  if SK_ARM_ARCH >= 7
-    asm volatile("dmb" : : : "memory");
-#  else
-    asm volatile("mcr p15, 0, %0, c7, c10, 5" : : "r" (0) : "memory");
-#  endif
-#endif
-}
-
-// On every platform, we issue a compiler barrier to prevent it from reordering
-// code.  That's enough for platforms like x86 where release and acquire
-// barriers are no-ops.  On other platforms we may need to be more careful;
-// ARM, in particular, needs real code for both acquire and release.  We use a
-// full barrier, which acts as both, because that the finest precision ARM
-// provides.
-
-inline static void release_barrier() {
-    compiler_barrier();
-    full_barrier_on_arm();
-}
-
-inline static void acquire_barrier() {
-    compiler_barrier();
-    full_barrier_on_arm();
-}
-
-// Works with SkSpinlock or SkMutex.
-template <typename Lock>
-class SkAutoLockAcquire {
-public:
-    explicit SkAutoLockAcquire(Lock* lock) : fLock(lock) { fLock->acquire(); }
-    ~SkAutoLockAcquire() { fLock->release(); }
 private:
-    Lock* fLock;
+    bool fDone;
+    int32_t fSpinlock;
 };
 
 // We've pulled a pretty standard double-checked locking implementation apart
@@ -128,14 +82,11 @@ private:
 // This is the guts of the code, called when we suspect the one-time code hasn't been run yet.
 // This should be rarely called, so we separate it from SkOnce and don't mark it as inline.
 // (We don't mind if this is an actual function call, but odds are it'll be inlined anyway.)
-template <typename Lock, typename Func, typename Arg>
-static void sk_once_slow(bool* done, Lock* lock, Func f, Arg arg, void (*atExit)()) {
-    const SkAutoLockAcquire<Lock> locked(lock);
+template <typename Lock, typename Arg>
+static void sk_once_slow(bool* done, Lock* lock, void (*f)(Arg), Arg arg) {
+    lock->acquire();
     if (!*done) {
         f(arg);
-        if (atExit != NULL) {
-            atexit(atExit);
-        }
         // Also known as a store-store/load-store barrier, this makes sure that the writes
         // done before here---in particular, those done by calling f(arg)---are observable
         // before the writes after the line, *done = true.
@@ -145,35 +96,49 @@ static void sk_once_slow(bool* done, Lock* lock, Func f, Arg arg, void (*atExit)
         //
         // We'll use this in the fast path to make sure f(arg)'s effects are
         // observable whenever we observe *done == true.
-        release_barrier();
-        *done = true;
+        sk_release_store(done, true);
     }
+    lock->release();
 }
 
 // This is our fast path, called all the time.  We do really want it to be inlined.
-template <typename Lock, typename Func, typename Arg>
-inline void SkOnce(bool* done, Lock* lock, Func f, Arg arg, void(*atExit)()) {
+template <typename Lock, typename Arg>
+inline void SkOnce(bool* done, Lock* lock, void (*f)(Arg), Arg arg) {
     if (!SK_ANNOTATE_UNPROTECTED_READ(*done)) {
-        sk_once_slow(done, lock, f, arg, atExit);
+        sk_once_slow(done, lock, f, arg);
     }
     // Also known as a load-load/load-store barrier, this acquire barrier makes
     // sure that anything we read from memory---in particular, memory written by
-    // calling f(arg)---is at least as current as the value we read from once->done.
+    // calling f(arg)---is at least as current as the value we read from done.
     //
     // In version control terms, this is a lot like saying "sync up to the
-    // commit where we wrote once->done = true".
+    // commit where we wrote done = true".
     //
-    // The release barrier in sk_once_slow guaranteed that once->done = true
-    // happens after f(arg), so by syncing to once->done = true here we're
+    // The release barrier in sk_once_slow guaranteed that done = true
+    // happens after f(arg), so by syncing to done = true here we're
     // forcing ourselves to also wait until the effects of f(arg) are readble.
-    acquire_barrier();
+    SkAssertResult(sk_acquire_load(done));
 }
 
-template <typename Func, typename Arg>
-inline void SkOnce(SkOnceFlag* once, Func f, Arg arg, void(*atExit)()) {
-    return SkOnce(&once->done, &once->lock, f, arg, atExit);
+template <typename Arg>
+inline void SkOnce(SkOnceFlag* once, void (*f)(Arg), Arg arg) {
+    return SkOnce(once->mutableDone(), once, f, arg);
 }
 
-#undef SK_ANNOTATE_BENIGN_RACE
+// Calls its argument.
+// This lets us use functions that take no arguments with SkOnce methods above.
+// (We pass _this_ as the function and the no-arg function as its argument.  Cute eh?)
+static void sk_once_no_arg_adaptor(void (*f)()) {
+    f();
+}
+
+inline void SkOnce(SkOnceFlag* once, void (*func)()) {
+    return SkOnce(once, sk_once_no_arg_adaptor, func);
+}
+
+template <typename Lock>
+inline void SkOnce(bool* done, Lock* lock, void (*func)()) {
+    return SkOnce(done, lock, sk_once_no_arg_adaptor, func);
+}
 
 #endif  // SkOnce_DEFINED

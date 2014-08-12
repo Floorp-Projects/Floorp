@@ -160,6 +160,9 @@ static const bool StackKeptAligned = true;
 // here such that it is accessible from the entire codebase. Once full support
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
 static const bool SupportsSimd = false;
+// TODO this is just a filler to prevent a build failure. The MIPS SIMD
+// alignment requirements still need to be explored.
+static const uint32_t SimdStackAlignment = 8;
 
 static const Scale ScalePointer = TimesFour;
 
