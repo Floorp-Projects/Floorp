@@ -403,14 +403,53 @@ pref("media.audio_data.enabled", false);
 // Whether to use async panning and zooming
 pref("layers.async-pan-zoom.enabled", false);
 
+// APZ preferences. For documentation/details on what these prefs do, check 
+// gfx/layers/apz/src/AsyncPanZoomController.cpp.
+pref("apz.allow_checkerboarding", true);
+pref("apz.asyncscroll.throttle", 100);
+pref("apz.asyncscroll.timeout", 300);
+
 // Whether to lock touch scrolling to one axis at a time
 // 0 = FREE (No locking at all)
 // 1 = STANDARD (Once locked, remain locked until scrolling ends)
 // 2 = STICKY (Allow lock to be broken, with hysteresis)
 pref("apz.axis_lock_mode", 0);
 
+pref("apz.content_response_timeout", 300);
+pref("apz.cross_slide.enabled", false);
+pref("apz.danger_zone_x", 50);
+pref("apz.danger_zone_y", 100);
+pref("apz.enlarge_displayport_when_clipped", false);
+pref("apz.fling_accel_base_mult", "1.0");
+pref("apz.fling_accel_interval_ms", 500);
+pref("apz.fling_accel_supplemental_mult", "1.0");
+pref("apz.fling_friction", "0.002");
+pref("apz.fling_stop_on_tap_threshold", "0.05");
+pref("apz.fling_stopped_threshold", "0.01");
+pref("apz.max_velocity_inches_per_ms", "-1.0");
+pref("apz.max_velocity_queue_size", 5);
+pref("apz.min_skate_speed", "1.0");
+pref("apz.num_paint_duration_samples", 3);
+pref("apz.overscroll.enabled", false);
+pref("apz.overscroll.fling_friction", "0.02");
+pref("apz.overscroll.fling_stopped_threshold", "0.4");
+pref("apz.overscroll.clamping", "0.5");
+pref("apz.overscroll.z_effect", "0.2");
+pref("apz.overscroll.snap_back.spring_stiffness", "0.6");
+pref("apz.overscroll.snap_back.spring_friction", "0.1");
+pref("apz.overscroll.snap_back.mass", "1000.0");
+
 // Whether to print the APZC tree for debugging
 pref("apz.printtree", false);
+
+pref("apz.test.logging_enabled", false);
+pref("apz.touch_start_tolerance", "0.2222222");  // 0.2222222 came from 1.0/4.5
+pref("apz.use_paint_duration", true);
+pref("apz.velocity_bias", "1.0");
+pref("apz.velocity_relevance_time_ms", 150);
+pref("apz.x_stationary_size_multiplier", "3.0");
+pref("apz.y_stationary_size_multiplier", "3.5");
+pref("apz.zoom_animation_duration_ms", 250);
 
 #ifdef XP_MACOSX
 // Layerize scrollable subframes to allow async panning
@@ -421,6 +460,10 @@ pref("apz.apz.x_skate_size_multiplier", "2.5");
 pref("apz.apz.y_skate_size_multiplier", "3.5");
 #else
 pref("apz.subframe.enabled", false);
+pref("apz.fling_repaint_interval", 75);
+pref("apz.pan_repaint_interval", 250);
+pref("apz.x_skate_size_multiplier", "1.5");
+pref("apz.y_skate_size_multiplier", "2.5");
 #endif
 
 // APZ testing (bug 961289)
