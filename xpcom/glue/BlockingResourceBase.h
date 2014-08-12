@@ -17,11 +17,8 @@
 
 #ifdef DEBUG
 #include "prinit.h"
-#include "prthread.h"
 
 #include "nsStringGlue.h"
-
-#include "mozilla/DeadlockDetector.h"
 #include "nsXPCOM.h"
 #endif
 
@@ -31,6 +28,9 @@
 
 namespace mozilla {
 
+#ifdef DEBUG
+template <class T> class DeadlockDetector;
+#endif
 
 /**
  * BlockingResourceBase
@@ -53,11 +53,7 @@ public:
 #ifdef DEBUG
 
   static size_t
-  SizeOfDeadlockDetector(MallocSizeOf aMallocSizeOf)
-  {
-    return sDeadlockDetector ?
-        sDeadlockDetector->SizeOfIncludingThis(aMallocSizeOf) : 0;
-  }
+  SizeOfDeadlockDetector(MallocSizeOf aMallocSizeOf);
 
   /**
    * Print
@@ -260,15 +256,7 @@ private:
    *
    * *NOT* thread safe.
    */
-  static PRStatus InitStatics()
-  {
-    PR_NewThreadPrivateIndex(&sResourceAcqnChainFrontTPI, 0);
-    sDeadlockDetector = new DDT();
-    if (!sDeadlockDetector) {
-      NS_RUNTIMEABORT("can't allocate deadlock detector");
-    }
-    return PR_SUCCESS;
-  }
+  static PRStatus InitStatics();
 
   /**
    * Shutdown
@@ -276,11 +264,7 @@ private:
    *
    * *NOT* thread safe.
    */
-  static void Shutdown()
-  {
-    delete sDeadlockDetector;
-    sDeadlockDetector = 0;
-  }
+  static void Shutdown();
 
 #  ifdef MOZILLA_INTERNAL_API
   // so it can call BlockingResourceBase::Shutdown()
