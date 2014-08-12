@@ -280,8 +280,35 @@ public class BrowserApp extends GeckoApp
                     loadFavicon(tab);
                 }
                 break;
+            case BOOKMARK_ADDED:
+                showBookmarkAddedToast();
+                break;
+            case BOOKMARK_REMOVED:
+                showBookmarkRemovedToast();
+                break;
         }
         super.onTabChanged(tab, msg, data);
+    }
+
+    private void showBookmarkAddedToast() {
+        getButtonToast().show(false,
+                getResources().getString(R.string.bookmark_added),
+                ButtonToast.LENGTH_SHORT,
+                getResources().getString(R.string.bookmark_options),
+                null,
+                new ButtonToast.ToastListener() {
+                    @Override
+                    public void onButtonClicked() {
+                        showBookmarkDialog();
+                    }
+
+                    @Override
+                    public void onToastHidden(ButtonToast.ReasonHidden reason) { }
+                });
+    }
+
+    private void showBookmarkRemovedToast() {
+        Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -2621,25 +2648,10 @@ public class BrowserApp extends GeckoApp
                 if (item.isChecked()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.removeBookmark();
-                    Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
                     item.setIcon(R.drawable.ic_menu_bookmark_add);
                 } else {
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.addBookmark();
-                    getButtonToast().show(false,
-                        getResources().getString(R.string.bookmark_added),
-                        ButtonToast.LENGTH_SHORT,
-                        getResources().getString(R.string.bookmark_options),
-                        null,
-                        new ButtonToast.ToastListener() {
-                            @Override
-                            public void onButtonClicked() {
-                                showBookmarkDialog();
-                            }
-
-                            @Override
-                            public void onToastHidden(ButtonToast.ReasonHidden reason) { }
-                        });
                     item.setIcon(R.drawable.ic_menu_bookmark_remove);
                 }
             }
