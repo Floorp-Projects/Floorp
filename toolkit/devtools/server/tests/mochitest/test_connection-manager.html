@@ -22,8 +22,10 @@ window.onload = function() {
   Cu.import("resource://gre/modules/devtools/Loader.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
 
-  DebuggerServer.init(function () { return true; });
-  DebuggerServer.addBrowserActors();
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init(function () { return true; });
+    DebuggerServer.addBrowserActors();
+  }
 
   var {ConnectionManager, Connection} = devtools.require("devtools/client/connection-manager");
 

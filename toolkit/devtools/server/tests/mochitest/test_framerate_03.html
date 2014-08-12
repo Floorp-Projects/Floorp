@@ -37,8 +37,10 @@ window.onload = function() {
   var STOP_TICK = 3000;
   var TOTAL_TIME = 5000;
 
-  DebuggerServer.init(function () { return true; });
-  DebuggerServer.addBrowserActors();
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init(function () { return true; });
+    DebuggerServer.addBrowserActors();
+  }
 
   var client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect(function onConnect() {
