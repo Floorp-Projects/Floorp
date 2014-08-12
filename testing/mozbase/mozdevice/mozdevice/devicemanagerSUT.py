@@ -480,7 +480,7 @@ class DeviceManagerSUT(DeviceManager):
         self._logger.info("FIRE PROC: '%s'" % appname)
 
         if (self.processExist(appname) != None):
-            self._logger.warn("process %s appears to be running already\n" % appname)
+            self._logger.warning("process %s appears to be running already\n" % appname)
             if (failIfRunning):
                 raise DMError("Automation Error: Process is already running")
 
@@ -514,7 +514,7 @@ class DeviceManagerSUT(DeviceManager):
         DEPRECATED: Use shell() or launchApplication() for new code
         """
         if not cmd:
-            self._logger.warn("launchProcess called without command to run")
+            self._logger.warning("launchProcess called without command to run")
             return None
 
         if cmd[0] == 'am' and hasattr(self, '_getExtraAmStartArgs'):
@@ -548,12 +548,12 @@ class DeviceManagerSUT(DeviceManager):
                     self.shellCheckOutput(['kill', '-%d' % sig, str(pid)],
                            root=True)
                 except DMError, err:
-                    self._logger.warn("unable to kill -%d %s (pid %s)" %
+                    self._logger.warning("unable to kill -%d %s (pid %s)" %
                            (sig, appname, str(pid)))
                     self._logger.debug(err)
                     raise err
             else:
-                self._logger.warn("unable to kill -%d %s -- not running?" %
+                self._logger.warning("unable to kill -%d %s -- not running?" %
                        (sig, appname))
         else:
             retries = 0
@@ -564,7 +564,7 @@ class DeviceManagerSUT(DeviceManager):
                     return
                 except DMError, err:
                     retries += 1
-                    self._logger.warn("try %d of %d failed to kill %s" %
+                    self._logger.warning("try %d of %d failed to kill %s" %
                            (retries, self.retryLimit, appname))
                     self._logger.debug(err)
                     if retries >= self.retryLimit:
@@ -926,7 +926,7 @@ class DeviceManagerSUT(DeviceManager):
         supported resolutions: 640x480, 800x600, 1024x768, 1152x864, 1200x1024, 1440x900, 1680x1050, 1920x1080
         """
         if self.getInfo('os')['os'][0].split()[0] != 'harmony-eng':
-            self._logger.warn("unable to adjust screen resolution on non Tegra device")
+            self._logger.warning("unable to adjust screen resolution on non Tegra device")
             return False
 
         results = self.getInfo('screen')
