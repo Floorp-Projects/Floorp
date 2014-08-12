@@ -90,8 +90,10 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     yield* runURLBarSearchTest(hostName, isPrivate, isPrivate, win);
     browser.removeTab(tab);
     if (isPrivate) {
+      info("Waiting for private window to close");
       yield promiseWindowClosed(win);
       let deferredFocus = Promise.defer();
+      info("Waiting for focus");
       waitForFocus(deferredFocus.resolve, window);
       yield deferredFocus.promise;
     }
