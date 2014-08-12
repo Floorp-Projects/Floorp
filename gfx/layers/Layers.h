@@ -1471,6 +1471,12 @@ public:
    */
   void ClearInvalidRect() { mInvalidRegion.SetEmpty(); }
 
+  // These functions allow attaching an AsyncPanZoomController to this layer,
+  // and can be used anytime.
+  // A layer has an APZC only-if GetFrameMetrics().IsScrollable()
+  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
+  AsyncPanZoomController* GetAsyncPanZoomController() const;
+
   void ApplyPendingUpdatesForThisTransaction();
 
 #ifdef DEBUG
@@ -1573,6 +1579,7 @@ protected:
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
   nsIntRegion mInvalidRegion;
+  nsRefPtr<AsyncPanZoomController> mAPZC;
   uint32_t mContentFlags;
   bool mUseClipRect;
   bool mUseTileSourceRect;
@@ -1746,12 +1753,6 @@ public:
    */
   virtual bool RepositionChild(Layer* aChild, Layer* aAfter);
 
-  // These functions allow attaching an AsyncPanZoomController to this layer,
-  // and can be used anytime.
-  // A container layer has an APZC only-if GetFrameMetrics().IsScrollable()
-  void SetAsyncPanZoomController(AsyncPanZoomController *controller);
-  AsyncPanZoomController* GetAsyncPanZoomController() const;
-
   void SetPreScale(float aXScale, float aYScale)
   {
     if (mPreXScale == aXScale && mPreYScale == aYScale) {
@@ -1870,7 +1871,6 @@ protected:
 
   Layer* mFirstChild;
   Layer* mLastChild;
-  nsRefPtr<AsyncPanZoomController> mAPZC;
   float mPreXScale;
   float mPreYScale;
   // The resolution scale inherited from the parent layer. This will already

@@ -539,12 +539,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
       ApplyAsyncContentTransformToTree(aCurrentFrame, child, aWantNextFrame);
   }
 
-  ContainerLayer* container = aLayer->AsContainerLayer();
-  if (!container) {
-    return appliedTransform;
-  }
-
-  if (AsyncPanZoomController* controller = container->GetAsyncPanZoomController()) {
+  if (AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController()) {
     LayerComposite* layerComposite = aLayer->AsLayerComposite();
     Matrix4x4 oldTransform = aLayer->GetTransform();
 
@@ -556,7 +551,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
                                                  scrollOffset,
                                                  &overscrollTransform);
 
-    const FrameMetrics& metrics = container->GetFrameMetrics();
+    const FrameMetrics& metrics = aLayer->GetFrameMetrics();
     CSSToLayerScale paintScale = metrics.LayersPixelsPerCSSPixel();
     CSSRect displayPort(metrics.mCriticalDisplayPort.IsEmpty() ?
                         metrics.mDisplayPort : metrics.mCriticalDisplayPort);
@@ -578,9 +573,11 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     // GetTransform already takes the pre- and post-scale into account.  Since we
     // will apply the pre- and post-scale again when computing the effective
     // transform, we must apply the inverses here.
-    transform.Scale(1.0f/container->GetPreXScale(),
-                    1.0f/container->GetPreYScale(),
-                    1);
+    if (ContainerLayer* container = aLayer->AsContainerLayer()) {
+      transform.Scale(1.0f/container->GetPreXScale(),
+                      1.0f/container->GetPreYScale(),
+                      1);
+    }
     transform = transform * Matrix4x4().Scale(1.0f/aLayer->GetPostXScale(),
                                               1.0f/aLayer->GetPostYScale(),
                                               1);
@@ -605,8 +602,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     appliedTransform = true;
   }
 
-  if (container->GetScrollbarDirection() != Layer::NONE) {
-    ApplyAsyncTransformToScrollbar(aCurrentFrame, container);
+  if (aLayer->AsContainerLayer() && aLayer->GetScrollbarDirection() != Layer::NONE) {
+    ApplyAsyncTransformToScrollbar(aCurrentFrame, aLayer->AsContainerLayer());
   }
   return appliedTransform;
 }
@@ -626,12 +623,9 @@ LayerHasNonContainerDescendants(ContainerLayer* aContainer)
 }
 
 static bool
-LayerIsContainerForScrollbarTarget(Layer* aTarget, ContainerLayer* aScrollbar)
+LayerIsScrollbarTarget(Layer* aTarget, ContainerLayer* aScrollbar)
 {
-  if (!aTarget->AsContainerLayer()) {
-    return false;
-  }
-  AsyncPanZoomController* apzc = aTarget->AsContainerLayer()->GetAsyncPanZoomController();
+  AsyncPanZoomController* apzc = aTarget->GetAsyncPanZoomController();
   if (!apzc) {
     return false;
   }
@@ -646,19 +640,18 @@ static void
 ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer* aScrollbar,
                                          Layer* aContent, bool aScrollbarIsChild)
 {
-  ContainerLayer* content = aContent->AsContainerLayer();
-
   // We only apply the transform if the scroll-target layer has non-container
   // children (i.e. when it has some possibly-visible content). This is to
   // avoid moving scroll-bars in the situation that only a scroll information
   // layer has been built for a scroll frame, as this would result in a
   // disparity between scrollbars and visible content.
-  if (!LayerHasNonContainerDescendants(content)) {
+  if (aContent->AsContainerLayer() &&
+      !LayerHasNonContainerDescendants(aContent->AsContainerLayer())) {
     return;
   }
 
-  const FrameMetrics& metrics = content->GetFrameMetrics();
-  AsyncPanZoomController* apzc = content->GetAsyncPanZoomController();
+  const FrameMetrics& metrics = aContent->GetFrameMetrics();
+  AsyncPanZoomController* apzc = aContent->GetAsyncPanZoomController();
 
   if (aScrollbarIsChild) {
     // Because we try to apply the scrollbar transform before we apply the async transform on
@@ -730,13 +723,17 @@ ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer
 static Layer*
 FindScrolledLayerForScrollbar(ContainerLayer* aLayer, bool* aOutIsAncestor)
 {
+  // XXX: once bug 967844 is implemented there might be multiple scrolled layers
+  // that correspond to the scrollbar's scrollId. Verify that we deal with those
+  // cases correctly.
+
   // Search all siblings of aLayer and of its ancestors.
   for (Layer* ancestor = aLayer; ancestor; ancestor = ancestor->GetParent()) {
     for (Layer* scrollTarget = ancestor;
          scrollTarget;
          scrollTarget = scrollTarget->GetPrevSibling()) {
       if (scrollTarget != aLayer &&
-          LayerIsContainerForScrollbarTarget(scrollTarget, aLayer)) {
+          LayerIsScrollbarTarget(scrollTarget, aLayer)) {
         *aOutIsAncestor = (scrollTarget == ancestor);
         return scrollTarget;
       }
@@ -744,7 +741,7 @@ FindScrolledLayerForScrollbar(ContainerLayer* aLayer, bool* aOutIsAncestor)
     for (Layer* scrollTarget = ancestor->GetNextSibling();
          scrollTarget;
          scrollTarget = scrollTarget->GetNextSibling()) {
-      if (LayerIsContainerForScrollbarTarget(scrollTarget, aLayer)) {
+      if (LayerIsScrollbarTarget(scrollTarget, aLayer)) {
         *aOutIsAncestor = false;
         return scrollTarget;
       }
