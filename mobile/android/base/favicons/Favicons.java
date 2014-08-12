@@ -31,6 +31,8 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
@@ -59,6 +61,9 @@ public class Favicons {
 
     // The density-adjusted maximum Favicon dimensions.
     public static int largestFaviconSize;
+
+    // Executor for long-running Favicon Tasks.
+    public static final ExecutorService longRunningExecutor = Executors.newSingleThreadExecutor();
 
     private static final SparseArray<LoadFaviconTask> loadTasks = new SparseArray<LoadFaviconTask>();
 
@@ -194,10 +199,11 @@ public class Favicons {
      * @param callback Callback to fire with the result.
      * @return The job ID of the spawned async task, if any.
      */
-    public static int getSizedFaviconForPageFromLocal(final String pageURL, final int targetSize, final OnFaviconLoadedListener callback) {
+    public static int getSizedFaviconForPageFromLocal(final String pageURL, final int targetSize,
+                                                      final OnFaviconLoadedListener callback) {
         // Firstly, try extremely hard to cheat.
         // Have we cached this favicon URL? If we did, we can consult the memcache right away.
-        String targetURL = pageURLMappings.get(pageURL);
+        final String targetURL = pageURLMappings.get(pageURL);
         if (targetURL != null) {
             // Check if favicon has failed.
             if (faviconsCache.isFailedFavicon(targetURL)) {
@@ -205,7 +211,7 @@ public class Favicons {
             }
 
             // Do we have a Favicon in the cache for this favicon URL?
-            Bitmap result = getSizedFaviconFromCache(targetURL, targetSize);
+            final Bitmap result = getSizedFaviconFromCache(targetURL, targetSize);
             if (result != null) {
                 // Victory - immediate response!
                 return dispatchResult(pageURL, targetURL, result, callback);
@@ -213,12 +219,14 @@ public class Favicons {
         }
 
         // No joy using in-memory resources. Go to background thread and ask the database.
-        LoadFaviconTask task = new LoadFaviconTask(ThreadUtils.getBackgroundHandler(), pageURL, targetURL, 0, callback, targetSize, true);
-        int taskId = task.getId();
+        final LoadFaviconTask task =
+            new LoadFaviconTask(pageURL, targetURL, 0, callback, targetSize, true);
+        final int taskId = task.getId();
         synchronized(loadTasks) {
             loadTasks.put(taskId, task);
         }
         task.execute();
+
         return taskId;
     }
 
@@ -259,8 +267,8 @@ public class Favicons {
      * Contains logic to prevent the repeated loading of Favicons which have previously failed.
      * There is no support for recovery from transient failures.
      *
-     * @param pageUrl URL of the page for which to load a Favicon. If null, no job is created.
-     * @param faviconUrl The URL of the Favicon to load. If null, an attempt to infer the value from
+     * @param pageURL URL of the page for which to load a Favicon. If null, no job is created.
+     * @param faviconURL The URL of the Favicon to load. If null, an attempt to infer the value from
      *                   the history database will be made, and ultimately an attempt to guess will
      *                   be made.
      * @param flags Flags to be used by the LoadFaviconTask while loading. Currently only one flag
@@ -272,20 +280,20 @@ public class Favicons {
      * @param listener The OnFaviconLoadedListener to invoke with the result of this Favicon load.
      * @return The id of the LoadFaviconTask handling this job.
      */
-    private static int loadUncachedFavicon(String pageUrl, String faviconUrl, int flags, int targetSize, OnFaviconLoadedListener listener) {
+    private static int loadUncachedFavicon(String pageURL, String faviconURL, int flags,
+                                           int targetSize, OnFaviconLoadedListener listener) {
         // Handle the case where we have no page url.
-        if (TextUtils.isEmpty(pageUrl)) {
+        if (TextUtils.isEmpty(pageURL)) {
             dispatchResult(null, null, null, listener);
             return NOT_LOADING;
         }
 
-        LoadFaviconTask task = new LoadFaviconTask(ThreadUtils.getBackgroundHandler(), pageUrl, faviconUrl, flags, listener, targetSize, false);
-
-        int taskId = task.getId();
+        final LoadFaviconTask task =
+            new LoadFaviconTask(pageURL, faviconURL, flags, listener, targetSize, false);
+        final int taskId = task.getId();
         synchronized(loadTasks) {
             loadTasks.put(taskId, task);
         }
-
         task.execute();
 
         return taskId;
@@ -325,22 +333,22 @@ public class Favicons {
             return false;
         }
 
-        boolean cancelled;
         synchronized (loadTasks) {
             if (loadTasks.indexOfKey(taskId) < 0) {
                 return false;
             }
 
             Log.v(LOGTAG, "Cancelling favicon load " + taskId + ".");
-
             LoadFaviconTask task = loadTasks.get(taskId);
-            cancelled = task.cancel(false);
+            return task.cancel();
         }
-        return cancelled;
     }
 
     public static void close() {
         Log.d(LOGTAG, "Closing Favicons database");
+
+        // Close the Executor to new tasks.
+        longRunningExecutor.shutdown();
 
         // Cancel any pending tasks
         synchronized (loadTasks) {
