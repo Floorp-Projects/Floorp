@@ -9,6 +9,10 @@ XPCSHELL_TESTS_MANIFESTS += [
     'tests/unit_cps2/xpcshell.ini',
 ]
 
+MOCHITEST_MANIFESTS += [
+    'tests/mochitest/mochitest.ini'
+]
+
 EXTRA_COMPONENTS += [
     'nsContentPrefService.js',
     'nsContentPrefService.manifest',
@@ -17,6 +21,9 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'ContentPrefInstance.jsm',
     'ContentPrefService2.jsm',
+    'ContentPrefServiceChild.jsm',
+    'ContentPrefServiceParent.jsm',
     'ContentPrefStore.jsm',
+    'ContentPrefUtils.jsm',
 ]
 

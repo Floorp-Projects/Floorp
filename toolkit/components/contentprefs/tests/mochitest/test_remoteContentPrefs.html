@@ -1,0 +1,296 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for nsIContentPrefService2 in child processes</title>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+  <script type="application/javascript;version=1.8">
+    "use strict";
+
+    SimpleTest.waitForExplicitFinish();
+
+    const childFrameURL =
+      "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
+
+    function childFrameScript() {
+      "use strict";
+
+      function Tester(resultArray) {
+        this.results = [];
+      }
+
+      Tester.prototype.is =
+        function(a, b, note) {
+          this.results.push([a === b, note + " (" + a + ", " + b + ")"]);
+        };
+      Tester.prototype.ok =
+        function(b, note) {
+          this.results.push([b != false, note]);
+        };
+
+      var cps = Components.classes["@mozilla.org/content-pref/service;1"]
+                          .getService(Components.interfaces.nsIContentPrefService2);
+
+      let test = null;
+      function* test1(message) {
+        let tester = new Tester();
+
+        tester.ok(cps !== null, "got the content pref service");
+
+        cps.setGlobal("testing", 42, null, {
+          handleCompletion: function(reason) {
+            tester.is(reason, 0, "set a pref?");
+            test.next();
+          }
+        });
+
+        yield;
+
+        let numResults = 0;
+        cps.getGlobal("testing", null, {
+          handleResult: function(pref) {
+            numResults++;
+            tester.is(pref.name, "testing", "pref has the right name");
+            tester.is(pref.value, 42, "pref has the right value");
+          },
+
+          handleCompletion: function(reason) {
+            tester.is(reason, 0, "get a pref?");
+            tester.is(numResults, 1, "got the right number of prefs");
+            tester.is(test.next().done, true, "done with test1");
+            message.target.sendAsyncMessage("testRemoteContentPrefs:test1Finished",
+                                            { results: tester.results });
+          }
+        });
+
+        yield;
+      }
+
+      function* test2(message) {
+        let tester = new Tester();
+
+        let observer;
+        let removed = false;
+        cps.addObserverForName("testName", observer = {
+          onContentPrefSet: function(group, name, value) {
+            if (removed) {
+              message.target.sendAsyncMessage("testRemoteContentPrefs:fail",
+                                              { reason: "unexpected notification" });
+            }
+            tester.is(group, null, "group should be null");
+            tester.is(name, "testName", "should only see testName");
+            tester.is(value, 42, "value should be correct");
+
+            message.target.sendAsyncMessage("testRemoteContentPrefs:test2poke2", {})
+          },
+
+          onContentPrefRemoved: function(group, name) {
+            tester.is(group, null, "group should be null");
+            tester.is(name, "testName");
+            tester.is(test.next().done, true, "should be done with test2");
+
+            cps.removeObserverForName("testName", observer);
+            removed = true;
+
+            message.target.sendAsyncMessage("testRemoteContentPrefs:test2Finished",
+                                            { results: tester.results });
+          }
+        });
+
+        message.target.sendAsyncMessage("testRemoteContentPrefs:test2poke", {});
+        yield;
+      }
+
+      function* test3(message) {
+        let tester = new Tester();
+
+        cps.setGlobal("testName", 42, null, {
+          handleCompletion: function(reason) {
+            tester.is(reason, 0, "set a pref");
+            cps.set("http://mochi.test", "testpref", "str", null, {
+              handleCompletion: function(reason) {
+                tester.is(reason, 0, "set a pref");
+                test.next();
+              }
+            });
+          }
+        });
+
+        yield;
+
+        cps.removeByDomain("http://mochi.test", null, {
+          handleCompletion: function(reason) {
+            tester.is(reason, 0, "remove succeeded");
+            cps.getByDomainAndName("http://mochi.test", "testpref", null, {
+              handleResult: function() {
+                message.target.sendAsyncMessage("testRemoteContentPrefs:fail",
+                                                { reason: "got removed pref in test3" });
+              },
+              handleCompletion: function() {
+                test.next();
+              }
+            });
+          }
+        });
+
+        yield;
+
+        message.target.sendAsyncMessage("testRemoteContentPrefs:test3Finished",
+                                        { results: tester.results });
+      }
+
+      function* test4(message) {
+        let tester = new Tester();
+
+        let prefObserver = {
+          onContentPrefSet: function(group, name, value) {
+            test.next({ group: group, name: name, value: value });
+          },
+          onContentPrefRemoved: function(group, name) {
+            test.next({ group: group, name: name });
+          }
+        };
+
+        addMessageListener("testRemoteContentPrefs:prefResults", (msg) => {
+          test.next(msg.data.results);
+        });
+
+        cps.addObserverForName("test", prefObserver);
+
+        cps.set("http://mochi.test", "test", 42, { usePrivateBrowsing: true });
+        let event = yield;
+        tester.is(event.name, "test");
+
+        message.target.sendAsyncMessage("testRemoteContentPrefs:getPref",
+                                        { group: "http://mochi.test", name: "test" });
+
+        let results = yield;
+        tester.is(results.length, 0, "should not have seen the pb pref");
+
+        message.target.sendAsyncMessage("testRemoteContentPrefs:test4Finished",
+                                        { results: tester.results });
+      }
+
+      addMessageListener("testRemoteContentPrefs:test1", function(message) {
+        test = test1(message);
+        test.next();
+      });
+      addMessageListener("testRemoteContentPrefs:test2", function(message) {
+        test = test2(message);
+        test.next();
+      });
+      addMessageListener("testRemoteContentPrefs:test3", function(message) {
+        test = test3(message);
+        test.next();
+      });
+      addMessageListener("testRemoteContentPrefs:test4", function(message) {
+        test = test4(message);
+        test.next();
+      });
+    }
+
+    function processResults(results) {
+      for (let i of results) {
+        ok(...i);
+      }
+    }
+
+    let test;
+    function* testStructure(mm) {
+      let lastResult;
+
+      function testDone(msg) {
+        test.next(msg.data);
+      }
+
+      mm.addMessageListener("testRemoteContentPrefs:test1Finished", testDone);
+      mm.addMessageListener("testRemoteContentPrefs:test2Finished", testDone);
+      mm.addMessageListener("testRemoteContentPrefs:test3Finished", testDone);
+      mm.addMessageListener("testRemoteContentPrefs:test4Finished", testDone);
+
+      mm.addMessageListener("testRemoteContentPrefs:fail", function(msg) {
+        ok(false, msg.data.reason);
+      });
+
+      mm.sendAsyncMessage("testRemoteContentPrefs:test1", {});
+      lastResult = yield;
+      processResults(lastResult.results);
+
+      var cps = SpecialPowers.Cc["@mozilla.org/content-pref/service;1"]
+                             .getService(SpecialPowers.Ci.nsIContentPrefService2);
+      mm.sendAsyncMessage("testRemoteContentPrefs:test2", {});
+      mm.addMessageListener("testRemoteContentPrefs:test2poke", function() {
+        cps.setGlobal("testName", 42, null);
+      });
+      mm.addMessageListener("testRemoteContentPrefs:test2poke2", function() {
+        cps.removeGlobal("testName", null);
+      });
+
+      lastResult = yield;
+      processResults(lastResult.results);
+
+      mm.sendAsyncMessage("testRemoteContentPrefs:test3", {});
+      lastResult = yield;
+      processResults(lastResult.results);
+
+      mm.addMessageListener("testRemoteContentPrefs:getPref", function(msg) {
+        let results = [];
+        cps.getByDomainAndName(msg.data.group, msg.data.name, null, {
+          handleResult: function(pref) {
+            results.push(pref);
+          },
+          handleCompletion: function(reason) {
+            mm.sendAsyncMessage("testRemoteContentPrefs:prefResults",
+                                { results: results });
+          }
+        });
+      });
+
+      mm.sendAsyncMessage("testRemoteContentPrefs:test4", {});
+      lastResult = yield;
+      processResults(lastResult.results);
+
+      SimpleTest.finish();
+    }
+
+    function runTests() {
+      info("Browser prefs set.");
+
+      let iframe = document.createElement("iframe");
+      SpecialPowers.wrap(iframe).mozbrowser = true;
+      iframe.id = "iframe";
+      iframe.src = childFrameURL;
+
+      iframe.addEventListener("mozbrowserloadend", function() {
+        info("Got iframe load event.");
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+        mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
+                           false);
+
+        test = testStructure(mm);
+        test.next();
+      });
+
+      document.body.appendChild(iframe);
+    }
+
+    addEventListener("load", function() {
+      info("Got load event.");
+
+      SpecialPowers.addPermission("browser", true, document);
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["dom.ipc.browser_frames.oop_by_default", true],
+          ["dom.mozBrowserFramesEnabled", true],
+          ["browser.pagethumbnails.capturing_disabled", true]
+        ]
+      }, runTests);
+    });
+  </script>
+</body>
+</html>

@@ -1784,7 +1784,7 @@ js_NewGenerator(JSContext *cx, const InterpreterRegs &stackRegs)
     JS_ASSERT(nbytes % sizeof(Value) == 0);
     JS_STATIC_ASSERT(sizeof(InterpreterFrame) % sizeof(HeapValue) == 0);
 
-    JSGenerator *gen = (JSGenerator *) cx->calloc_(nbytes);
+    JSGenerator *gen = (JSGenerator *) obj->zone()->pod_calloc<uint8_t>(nbytes);
     if (!gen)
         return nullptr;
 

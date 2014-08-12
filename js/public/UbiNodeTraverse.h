@@ -57,8 +57,15 @@ namespace ubi {
 //      the algorithm knows whether it has just created the entry in
 //      |traversal.visited|, so it passes it along for convenience.
 //
+//      The visitor function may call |traversal.abandonReferent()| if it
+//      doesn't want to traverse the outgoing edges of |edge.referent|. You can
+//      use this to limit the traversal to a given portion of the graph: it will
+//      never visit nodes reachable only through nodes that you have abandoned.
+//      Note that |abandonReferent| must be called the first time the given node
+//      is reached; that is, |first| must be true.
+//
 //      The visitor function may call |traversal.stop()| if it doesn't want
-//      to visit any more nodes.
+//      to visit any more nodes at all.
 //
 //      The visitor function may consult |traversal.visited| for information
 //      about other nodes, but it should not add or remove entries.
@@ -78,7 +85,7 @@ struct BreadthFirst {
     // that encloses our own.
     BreadthFirst(JSContext *cx, Handler &handler, const JS::AutoCheckCannotGC &noGC)
       : cx(cx), visited(cx), handler(handler), pending(cx),
-        traversalBegun(false), stopRequested(false)
+        traversalBegun(false), stopRequested(false), abandonRequested(false)
     { }
 
     // Initialize this traversal object. Return false on OOM.
@@ -120,12 +127,9 @@ struct BreadthFirst {
 
                 if (first) {
                     // This is the first time we've reached |edge.referent|.
-                    // Create an entry for it in |visited|, and arrange to
-                    // traverse its outgoing edges later.
-                    if (!visited.add(a, edge.referent, typename Handler::NodeData()) ||
-                        !pending.append(edge.referent)) {
+                    // Mark it as visited.
+                    if (!visited.add(a, edge.referent, typename Handler::NodeData()))
                         return false;
-                    }
                 }
 
                 MOZ_ASSERT(a);
@@ -136,6 +140,16 @@ struct BreadthFirst {
 
                 if (stopRequested)
                     return true;
+
+                // Arrange to traverse this edge's referent's outgoing edges
+                // later --- unless |handler| asked us not to.
+                if (abandonRequested) {
+                    // Skip the enqueue; reset flag for future iterations.
+                    abandonRequested = false;
+                } else if (first) {
+                    if (!pending.append(edge.referent))
+                        return false;
+                }
             }
         }
 
@@ -148,6 +162,11 @@ struct BreadthFirst {
     // then making |traverse|'s caller disambiguate that result from a real
     // error.
     void stop() { stopRequested = true; }
+
+    // Request that the current edge's referent's outgoing edges not be
+    // traversed. This must be called the first time that referent is reached.
+    // Other edges *to* that referent will still be traversed.
+    void abandonReferent() { abandonRequested = true; }
 
     // The context with which we were constructed.
     JSContext *cx;
@@ -200,6 +219,9 @@ struct BreadthFirst {
 
     // True if we've been asked to stop the traversal.
     bool stopRequested;
+
+    // True if we've been asked to abandon the current edge's referent.
+    bool abandonRequested;
 };
 
 } // namespace ubi

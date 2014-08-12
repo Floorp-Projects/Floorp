@@ -15,7 +15,7 @@
               xmlns="http://www.mozilla.org/xbl"
               xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
               xmlns:html="http://www.w3.org/1999/xhtml">
-<binding id="pluginProblem" inheritstyle="false" chromeOnlyContent="true">
+<binding id="pluginProblem" inheritstyle="false" chromeOnlyContent="true" bindToUntrustedContent="true">
     <resources>
         <stylesheet src="chrome://mozapps/content/plugins/pluginProblemContent.css"/>
         <stylesheet src="chrome://mozapps/skin/plugins/pluginProblem.css"/>

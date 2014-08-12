@@ -7,7 +7,7 @@
 #include "Compositor.h"                 // for Compositor
 #include "CompositorParent.h"           // for CompositorParent, etc
 #include "InputData.h"                  // for InputData, etc
-#include "Layers.h"                     // for ContainerLayer, Layer, etc
+#include "Layers.h"                     // for Layer, etc
 #include "mozilla/dom/Touch.h"          // for Touch
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
@@ -169,154 +169,153 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
   Matrix4x4 transform = aLayer->GetTransform();
 
-  ContainerLayer* container = aLayer->AsContainerLayer();
   AsyncPanZoomController* apzc = nullptr;
   mApzcTreeLog << aLayer->Name() << '\t';
-  if (container) {
-    const FrameMetrics& metrics = container->GetFrameMetrics();
-    if (metrics.IsScrollable()) {
-      const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
-      if (state && state->mController.get()) {
-        // If we get here, aLayer is a scrollable container layer and somebody
-        // has registered a GeckoContentController for it, so we need to ensure
-        // it has an APZC instance to manage its scrolling.
 
-        apzc = container->GetAsyncPanZoomController();
+  const FrameMetrics& metrics = aLayer->GetFrameMetrics();
+  if (metrics.IsScrollable()) {
+    const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
+    if (state && state->mController.get()) {
+      // If we get here, aLayer is a scrollable layer and somebody
+      // has registered a GeckoContentController for it, so we need to ensure
+      // it has an APZC instance to manage its scrolling.
 
-        // If the content represented by the container layer has changed (which may
-        // be possible because of DLBI heuristics) then we don't want to keep using
-        // the same old APZC for the new content. Null it out so we run through the
-        // code to find another one or create one.
-        ScrollableLayerGuid guid(aLayersId, metrics);
-        if (apzc && !apzc->Matches(guid)) {
-          apzc = nullptr;
-        }
+      apzc = aLayer->GetAsyncPanZoomController();
 
-        // If the container doesn't have an APZC already, try to find one of our
-        // pre-existing ones that matches. In particular, if we find an APZC whose
-        // ScrollableLayerGuid is the same, then we know what happened is that the
-        // layout of the page changed causing the layer tree to be rebuilt, but the
-        // underlying content for which the APZC was originally created is still
-        // there. So it makes sense to pick up that APZC instance again and use it here.
-        if (apzc == nullptr) {
-          for (size_t i = 0; i < aApzcsToDestroy->Length(); i++) {
-            if (aApzcsToDestroy->ElementAt(i)->Matches(guid)) {
-              apzc = aApzcsToDestroy->ElementAt(i);
-              break;
-            }
-          }
-        }
+      // If the content represented by the scrollable layer has changed (which may
+      // be possible because of DLBI heuristics) then we don't want to keep using
+      // the same old APZC for the new content. Null it out so we run through the
+      // code to find another one or create one.
+      ScrollableLayerGuid guid(aLayersId, metrics);
+      if (apzc && !apzc->Matches(guid)) {
+        apzc = nullptr;
+      }
 
-        // The APZC we get off the layer may have been destroyed previously if the layer was inactive
-        // or omitted from the layer tree for whatever reason from a layers update. If it later comes
-        // back it will have a reference to a destroyed APZC and so we need to throw that out and make
-        // a new one.
-        bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
-        if (newApzc) {
-          apzc = new AsyncPanZoomController(aLayersId, this, state->mController,
-                                            AsyncPanZoomController::USE_GESTURE_DETECTOR);
-          apzc->SetCompositorParent(aCompositor);
-          if (state->mCrossProcessParent != nullptr) {
-            apzc->ShareFrameMetricsAcrossProcesses();
-          }
-        } else {
-          // If there was already an APZC for the layer clear the tree pointers
-          // so that it doesn't continue pointing to APZCs that should no longer
-          // be in the tree. These pointers will get reset properly as we continue
-          // building the tree. Also remove it from the set of APZCs that are going
-          // to be destroyed, because it's going to remain active.
-          aApzcsToDestroy->RemoveElement(apzc);
-          apzc->SetPrevSibling(nullptr);
-          apzc->SetLastChild(nullptr);
-        }
-        APZCTM_LOG("Using APZC %p for layer %p with identifiers %lld %lld\n", apzc, aLayer, aLayersId, container->GetFrameMetrics().GetScrollId());
-
-        apzc->NotifyLayersUpdated(metrics,
-                                  aIsFirstPaint && (aLayersId == aOriginatingLayersId));
-        apzc->SetScrollHandoffParentId(container->GetScrollHandoffParentId());
-
-        // Use the composition bounds as the hit test region.
-        // Optionally, the GeckoContentController can provide a touch-sensitive
-        // region that constrains all frames associated with the controller.
-        // In this case we intersect the composition bounds with that region.
-        ParentLayerRect visible(metrics.mCompositionBounds);
-        CSSRect touchSensitiveRegion;
-        if (state->mController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
-          // Note: we assume here that touchSensitiveRegion is in the CSS pixels
-          // of our parent layer, which makes this coordinate conversion
-          // correct.
-          visible = visible.Intersect(touchSensitiveRegion
-                                      * metrics.mDevPixelsPerCSSPixel
-                                      * metrics.GetParentResolution());
-        }
-
-        // Not sure what rounding option is the most correct here, but if we ever
-        // figure it out we can change this. For now I'm rounding in to minimize
-        // the chances of getting a complex region.
-        ParentLayerIntRect roundedVisible = RoundedIn(visible);
-        nsIntRegion unobscured;
-        unobscured.Sub(nsIntRect(roundedVisible.x, roundedVisible.y,
-                                 roundedVisible.width, roundedVisible.height),
-                       aObscured);
-
-        apzc->SetLayerHitTestData(unobscured, aTransform, transform);
-        APZCTM_LOG("Setting rect(%f %f %f %f) as visible region for APZC %p\n", visible.x, visible.y,
-                                                                              visible.width, visible.height,
-                                                                              apzc);
-
-        mApzcTreeLog << "APZC " << guid
-                     << "\tcb=" << visible
-                     << "\tsr=" << container->GetFrameMetrics().mScrollableRect
-                     << (aLayer->GetVisibleRegion().IsEmpty() ? "\tscrollinfo" : "")
-                     << (apzc->HasScrollgrab() ? "\tscrollgrab" : "")
-                     << "\t" << container->GetContentDescription();
-
-        // Bind the APZC instance into the tree of APZCs
-        if (aNextSibling) {
-          aNextSibling->SetPrevSibling(apzc);
-        } else if (aParent) {
-          aParent->SetLastChild(apzc);
-        } else {
-          mRootApzc = apzc;
-          apzc->MakeRoot();
-        }
-
-        // For testing, log the parent scroll id of every APZC that has a
-        // parent. This allows test code to reconstruct the APZC tree.
-        // Note that we currently only do this for APZCs in the layer tree
-        // that originated the update, because the only identifying information
-        // we are logging about APZCs is the scroll id, and otherwise we could
-        // confuse APZCs from different layer trees with the same scroll id.
-        if (aLayersId == aOriginatingLayersId && apzc->GetParent()) {
-          aPaintLogger.LogTestData(metrics.GetScrollId(), "parentScrollId",
-              apzc->GetParent()->GetGuid().mScrollId);
-        }
-
-        // Let this apzc be the parent of other controllers when we recurse downwards
-        aParent = apzc;
-
-        if (newApzc) {
-          if (apzc->IsRootForLayersId()) {
-            // If we just created a new apzc that is the root for its layers ID, then
-            // we need to update its zoom constraints which might have arrived before this
-            // was created
-            ZoomConstraints constraints;
-            if (state->mController->GetRootZoomConstraints(&constraints)) {
-              apzc->UpdateZoomConstraints(constraints);
-            }
-          } else {
-            // For an apzc that is not the root for its layers ID, we give it the
-            // same zoom constraints as its parent. This ensures that if e.g.
-            // user-scalable=no was specified, none of the APZCs allow double-tap
-            // to zoom.
-            apzc->UpdateZoomConstraints(apzc->GetParent()->GetZoomConstraints());
+      // If the layer doesn't have an APZC already, try to find one of our
+      // pre-existing ones that matches. In particular, if we find an APZC whose
+      // ScrollableLayerGuid is the same, then we know what happened is that the
+      // layout of the page changed causing the layer tree to be rebuilt, but the
+      // underlying content for which the APZC was originally created is still
+      // there. So it makes sense to pick up that APZC instance again and use it here.
+      if (apzc == nullptr) {
+        for (size_t i = 0; i < aApzcsToDestroy->Length(); i++) {
+          if (aApzcsToDestroy->ElementAt(i)->Matches(guid)) {
+            apzc = aApzcsToDestroy->ElementAt(i);
+            break;
           }
         }
       }
-    }
 
-    container->SetAsyncPanZoomController(apzc);
+      // The APZC we get off the layer may have been destroyed previously if the layer was inactive
+      // or omitted from the layer tree for whatever reason from a layers update. If it later comes
+      // back it will have a reference to a destroyed APZC and so we need to throw that out and make
+      // a new one.
+      bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
+      if (newApzc) {
+        apzc = new AsyncPanZoomController(aLayersId, this, state->mController,
+                                          AsyncPanZoomController::USE_GESTURE_DETECTOR);
+        apzc->SetCompositorParent(aCompositor);
+        if (state->mCrossProcessParent != nullptr) {
+          apzc->ShareFrameMetricsAcrossProcesses();
+        }
+      } else {
+        // If there was already an APZC for the layer clear the tree pointers
+        // so that it doesn't continue pointing to APZCs that should no longer
+        // be in the tree. These pointers will get reset properly as we continue
+        // building the tree. Also remove it from the set of APZCs that are going
+        // to be destroyed, because it's going to remain active.
+        aApzcsToDestroy->RemoveElement(apzc);
+        apzc->SetPrevSibling(nullptr);
+        apzc->SetLastChild(nullptr);
+      }
+      APZCTM_LOG("Using APZC %p for layer %p with identifiers %lld %lld\n", apzc, aLayer, aLayersId, metrics.GetScrollId());
+
+      apzc->NotifyLayersUpdated(metrics,
+                                aIsFirstPaint && (aLayersId == aOriginatingLayersId));
+      apzc->SetScrollHandoffParentId(aLayer->GetScrollHandoffParentId());
+
+      // Use the composition bounds as the hit test region.
+      // Optionally, the GeckoContentController can provide a touch-sensitive
+      // region that constrains all frames associated with the controller.
+      // In this case we intersect the composition bounds with that region.
+      ParentLayerRect visible(metrics.mCompositionBounds);
+      CSSRect touchSensitiveRegion;
+      if (state->mController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
+        // Note: we assume here that touchSensitiveRegion is in the CSS pixels
+        // of our parent layer, which makes this coordinate conversion
+        // correct.
+        visible = visible.Intersect(touchSensitiveRegion
+                                    * metrics.mDevPixelsPerCSSPixel
+                                    * metrics.GetParentResolution());
+      }
+
+      // Not sure what rounding option is the most correct here, but if we ever
+      // figure it out we can change this. For now I'm rounding in to minimize
+      // the chances of getting a complex region.
+      ParentLayerIntRect roundedVisible = RoundedIn(visible);
+      nsIntRegion unobscured;
+      unobscured.Sub(nsIntRect(roundedVisible.x, roundedVisible.y,
+                               roundedVisible.width, roundedVisible.height),
+                     aObscured);
+
+      apzc->SetLayerHitTestData(unobscured, aTransform, transform);
+      APZCTM_LOG("Setting rect(%f %f %f %f) as visible region for APZC %p\n", visible.x, visible.y,
+                                                                            visible.width, visible.height,
+                                                                            apzc);
+
+      mApzcTreeLog << "APZC " << guid
+                   << "\tcb=" << visible
+                   << "\tsr=" << metrics.mScrollableRect
+                   << (aLayer->GetVisibleRegion().IsEmpty() ? "\tscrollinfo" : "")
+                   << (apzc->HasScrollgrab() ? "\tscrollgrab" : "")
+                   << "\t" << aLayer->GetContentDescription();
+
+      // Bind the APZC instance into the tree of APZCs
+      if (aNextSibling) {
+        aNextSibling->SetPrevSibling(apzc);
+      } else if (aParent) {
+        aParent->SetLastChild(apzc);
+      } else {
+        mRootApzc = apzc;
+        apzc->MakeRoot();
+      }
+
+      // For testing, log the parent scroll id of every APZC that has a
+      // parent. This allows test code to reconstruct the APZC tree.
+      // Note that we currently only do this for APZCs in the layer tree
+      // that originated the update, because the only identifying information
+      // we are logging about APZCs is the scroll id, and otherwise we could
+      // confuse APZCs from different layer trees with the same scroll id.
+      if (aLayersId == aOriginatingLayersId && apzc->GetParent()) {
+        aPaintLogger.LogTestData(metrics.GetScrollId(), "parentScrollId",
+            apzc->GetParent()->GetGuid().mScrollId);
+      }
+
+      // Let this apzc be the parent of other controllers when we recurse downwards
+      aParent = apzc;
+
+      if (newApzc) {
+        if (apzc->IsRootForLayersId()) {
+          // If we just created a new apzc that is the root for its layers ID, then
+          // we need to update its zoom constraints which might have arrived before this
+          // was created
+          ZoomConstraints constraints;
+          if (state->mController->GetRootZoomConstraints(&constraints)) {
+            apzc->UpdateZoomConstraints(constraints);
+          }
+        } else {
+          // For an apzc that is not the root for its layers ID, we give it the
+          // same zoom constraints as its parent. This ensures that if e.g.
+          // user-scalable=no was specified, none of the APZCs allow double-tap
+          // to zoom.
+          apzc->UpdateZoomConstraints(apzc->GetParent()->GetZoomConstraints());
+        }
+      }
+    }
   }
+
+  aLayer->SetAsyncPanZoomController(apzc);
+
   mApzcTreeLog << '\n';
 
   // Accumulate the CSS transform between layers that have an APZC, but exclude any

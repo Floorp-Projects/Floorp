@@ -4,7 +4,7 @@
       {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": "tap"
+    "expectedGestures": [{ "type": "tap" }]
   },
   {
     "events": [
@@ -13,7 +13,7 @@
         "points": [{"x": 1.03, "y": 1.03, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.03, "y": 1.03, "identifier": 1}]}
     ],
-    "expectedGestures": "tap"
+    "expectedGestures": [{ "type": "tap" }]
   },
   {
     "events": [
@@ -21,7 +21,7 @@
         "removeDwellThreshold": true},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["dwell", "dwellend"]
+    "expectedGestures": [{ "type": "dwell" }, { "type": "dwellend" }]
   },
   {
     "events": [
@@ -36,7 +36,7 @@
       {"type": "pointerup",
         "points": [{"x": 0.97, "y": 1.01, "identifier": 1}]}
     ],
-    "expectedGestures": ["tap", "doubletap"]
+    "expectedGestures": [{ "type": "tap" }, { "type": "doubletap" }]
   },
   {
     "events": [
@@ -47,7 +47,7 @@
       {"type": "pointerdown", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["tap", "doubletap", "tripletap"]
+    "expectedGestures": [{ "type": "tap" }, { "type": "doubletap" }, { "type": "tripletap" }]
   },
   {
     "events": [
@@ -59,8 +59,8 @@
         "removeDwellThreshold": true},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["tap", "doubletap", "doubletaphold",
-      "doubletapholdend"]
+    "expectedGestures": [{ "type": "tap" }, { "type": "doubletap" },
+      { "type": "doubletaphold" }, { "type": "doubletapholdend" }]
   },
   {
     "events": [
@@ -70,7 +70,8 @@
         "removeDwellThreshold": true},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["tap", "taphold", "tapholdend"]
+    "expectedGestures": [{ "type": "tap" }, { "type": "taphold" },
+      { "type": "tapholdend" }]
   },
   {
     "events": [
@@ -78,7 +79,7 @@
       {"type": "pointermove", "points": [{"x": 1.5, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": "swiperight"
+    "expectedGestures": [{ "type": "swiperight" }]
   },
   {
     "events": [
@@ -87,7 +88,7 @@
       {"type": "pointermove", "points": [{"x": 1.3, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.3, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": "swiperight"
+    "expectedGestures": [{ "type": "swiperight" }]
   },
   {
     "events": [
@@ -95,7 +96,7 @@
       {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": "swipeleft"
+    "expectedGestures": [{ "type": "swipeleft" }]
   },
   {
     "events": [
@@ -103,7 +104,7 @@
       {"type": "pointermove", "points": [{"x": 1, "y": 1.5, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1.5, "identifier": 1}]}
     ],
-    "expectedGestures": "swipedown"
+    "expectedGestures": [{ "type": "swipedown" }]
   },
   {
     "events": [
@@ -111,7 +112,7 @@
       {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": "swipeup"
+    "expectedGestures": [{ "type": "swipeup" }]
   },
   {
     "events": [
@@ -120,7 +121,7 @@
         "points": [{"x": 1.5, "y": 1.1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1.1, "identifier": 1}]}
     ],
-    "expectedGestures": "swiperight"
+    "expectedGestures": [{ "type": "swiperight" }]
   },
   {
     "events": [
@@ -129,7 +130,7 @@
       {"type": "pointermove", "points": [{"x": 1, "y": 0.95, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 0.95, "identifier": 1}]}
     ],
-    "expectedGestures": "swipeleft"
+    "expectedGestures": [{ "type": "swipeleft" }]
   },
   {
     "events": [
@@ -138,7 +139,7 @@
         "points": [{"x": 0.9, "y": 1.5, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 0.9, "y": 1.5, "identifier": 1}]}
     ],
-    "expectedGestures": "swipedown"
+    "expectedGestures": [{ "type": "swipedown" }]
   },
   {
     "events": [
@@ -147,7 +148,7 @@
       {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": "swipeup"
+    "expectedGestures": [{ "type": "swipeup" }]
   },
   {
     "events": [
@@ -158,7 +159,7 @@
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1},
         {"x": 1.5, "y": 1.5, "identifier": 2}]}
     ],
-    "expectedGestures": "swiperight"
+    "expectedGestures": [{ "type": "swiperight" }]
   },
   {
     "events": [
@@ -169,7 +170,7 @@
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1.5, "identifier": 2}]}
     ],
-    "expectedGestures": "swiperight"
+    "expectedGestures": [{ "type": "swiperight" }]
   },
   {
     "events": [
@@ -183,7 +184,7 @@
         {"x": 1.5, "y": 1.5, "identifier": 2},
         {"x": 1.5, "y": 2, "identifier": 3}]}
     ],
-    "expectedGestures": "swiperight"
+    "expectedGestures": [{ "type": "swiperight" }]
   },
   {
     "events": [
@@ -193,7 +194,8 @@
       {"type": "pointermove", "points": [{"x": 1, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["dwell", "explore", "exploreend"]
+    "expectedGestures": [{ "type": "dwell" }, { "type": "explore" },
+      { "type": "exploreend" }]
   },
   {
     "events": [
@@ -204,7 +206,8 @@
       {"type": "pointermove", "points": [{"x": 2, "y": 2, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 2, "y": 2, "identifier": 1}]}
     ],
-    "expectedGestures": ["dwell", "explore", "explore", "exploreend"]
+    "expectedGestures": [{ "type": "dwell" }, { "type": "explore" },
+      { "type": "explore" }, { "type": "exploreend" }]
   },
   {
     "events": [
@@ -214,7 +217,7 @@
         "removeSwipeMaxDuration": true},
       {"type": "pointerup", "points": [{"x": 1, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["explore", "exploreend"]
+    "expectedGestures": [{ "type": "explore" }, { "type": "exploreend" }]
   },
   {
     "events": [
@@ -224,7 +227,8 @@
       {"type": "pointermove", "points": [{"x": 1.5, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1}]}
     ],
-    "expectedGestures": ["explore", "explore", "exploreend"]
+    "expectedGestures": [{ "type": "explore" }, { "type": "explore" },
+      { "type": "exploreend" }]
   },
   {
     "events": [
@@ -244,6 +248,18 @@
         "points": [{"x": 1.75, "y": 1.5, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.75, "y": 1.5, "identifier": 1}]}
     ],
-    "expectedGestures": ["dwell", "explore", "explore", "exploreend"]
+    "expectedGestures": [{ "type": "dwell" }, { "type": "explore" },
+      { "type": "explore" }, { "type": "exploreend" }]
+  },
+  {
+    "events": [
+      {"type": "pointerdown", "points": [{"x": 0.075, "y": 1, "identifier": 1},
+        {"x": 1, "y": 1.5, "identifier": 2}]},
+      {"type": "pointermove", "points": [{"x": 1.5, "y": 1, "identifier": 1},
+        {"x": 1.5, "y": 1.5, "identifier": 2}]},
+      {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1},
+        {"x": 1.5, "y": 1.5, "identifier": 2}]}
+    ],
+    "expectedGestures": [{ "type": "swiperight", "edge": true }]
   }
 ]
