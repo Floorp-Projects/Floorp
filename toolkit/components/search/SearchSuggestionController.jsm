@@ -17,6 +17,16 @@ const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
 const DEFAULT_FORM_HISTORY_PARAM      = "searchbar-history";
 const HTTP_OK            = 200;
 const REMOTE_TIMEOUT     = 500; // maximum time (ms) to wait before giving up on a remote suggestions
+const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
+
+/**
+ * Remote search suggestions will be shown if gRemoteSuggestionsEnabled
+ * is true. Global because only one pref observer is needed for all instances.
+ */
+let gRemoteSuggestionsEnabled = Services.prefs.getBoolPref(BROWSER_SUGGEST_PREF);
+Services.prefs.addObserver(BROWSER_SUGGEST_PREF, function(aSubject, aTopic, aData) {
+  gRemoteSuggestionsEnabled = Services.prefs.getBoolPref(BROWSER_SUGGEST_PREF);
+}, false);
 
 /**
  * SearchSuggestionController.jsm exists as a helper module to allow multiple consumers to request and display
@@ -124,7 +134,7 @@ this.SearchSuggestionController.prototype = {
     this._searchString = searchTerm;
 
     // Remote results
-    if (searchTerm && this.maxRemoteResults &&
+    if (searchTerm && gRemoteSuggestionsEnabled && this.maxRemoteResults &&
         engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON)) {
       this._deferredRemoteResult = this._fetchRemote(searchTerm, engine, privateMode);
       promises.push(this._deferredRemoteResult.promise);
