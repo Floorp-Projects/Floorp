@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=562169
 /** Test for Bug 562169 **/
 /** Test that a newly created element has ltr directionality **/
 
-ok(document.createElement("div").mozMatchesSelector(":-moz-dir(ltr)"),
+ok(document.createElement("div").matches(":-moz-dir(ltr)"),
    "Element should be ltr on creation");
 
 </script>

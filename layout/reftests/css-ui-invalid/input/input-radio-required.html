@@ -5,8 +5,8 @@
              pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('i1').checked = false;
-                if (!document.getElementById('i1').mozMatchesSelector(':-moz-ui-invalid') ||
-                    !document.getElementById('i2').mozMatchesSelector(':-moz-ui-invalid')) {
+                if (!document.getElementById('i1').matches(':-moz-ui-invalid') ||
+                    !document.getElementById('i2').matches(':-moz-ui-invalid')) {
                   document.body.textContent='FAIL';
                 } else {
                   document.body.textContent='SUCCESS';

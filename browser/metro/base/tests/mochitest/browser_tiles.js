@@ -587,7 +587,7 @@ gTests.push({
       handleStub.restore();
     }
 
-    ok(!firstItem.mozMatchesSelector("richgriditem[value]"), "Released slot doesn't match binding selector");
+    ok(!firstItem.matches("richgriditem[value]"), "Released slot doesn't match binding selector");
     ok(isNotBoundByRichGrid_Item(firstItem), "Released slot is no longer bound");
 
     waitForCondition(() => isNotBoundByRichGrid_Item(firstItem));

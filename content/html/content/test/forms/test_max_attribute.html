@@ -76,19 +76,19 @@ function checkValidity(aElement, aValidity, aApply, aRangeApply)
   is(aElement.validationMessage,
      aValidity ? "" : overflowMsg, "Checking range overflow validation message");
 
-  is(aElement.mozMatchesSelector(":valid"), aElement.willValidate && aValidity,
+  is(aElement.matches(":valid"), aElement.willValidate && aValidity,
      (aElement.willValidate && aValidity) ? ":valid should apply" : "valid shouldn't apply");
-  is(aElement.mozMatchesSelector(":invalid"), aElement.willValidate && !aValidity,
+  is(aElement.matches(":invalid"), aElement.willValidate && !aValidity,
      (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
 
   if (!aRangeApply) {
-    ok(!aElement.mozMatchesSelector(":in-range"), ":in-range should not match");
-    ok(!aElement.mozMatchesSelector(":out-of-range"),
+    ok(!aElement.matches(":in-range"), ":in-range should not match");
+    ok(!aElement.matches(":out-of-range"),
        ":out-of-range should not match");
   } else {
-    is(aElement.mozMatchesSelector(":in-range"), aValidity,
+    is(aElement.matches(":in-range"), aValidity,
        ":in-range matches status should be " + aValidity);
-    is(aElement.mozMatchesSelector(":out-of-range"), !aValidity,
+    is(aElement.matches(":out-of-range"), !aValidity,
        ":out-of-range matches status should be " + !aValidity);
   }
 }

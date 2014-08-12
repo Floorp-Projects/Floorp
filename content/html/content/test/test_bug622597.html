@@ -33,10 +33,10 @@ var button = form.elements[3];
 
 function checkPseudoClasses(aElement, aValid, aInvalid)
 {
-  is(aElement.mozMatchesSelector(":-moz-ui-valid"), aValid,
+  is(aElement.matches(":-moz-ui-valid"), aValid,
      aValid ? aElement + " should match :-moz-ui-valid"
             : aElement + " should not match :-moz-ui-valid");
-  is(aElement.mozMatchesSelector(":-moz-ui-invalid"), aInvalid,
+  is(aElement.matches(":-moz-ui-invalid"), aInvalid,
      aInvalid ? aElement + " should match :-moz-ui-invalid"
               : aElement + " should not match :-moz-ui-invalid");
   if (aValid && aInvalid) {

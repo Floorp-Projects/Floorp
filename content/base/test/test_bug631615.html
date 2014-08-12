@@ -19,11 +19,9 @@ function doTest() {
   var monitor = document.getElementById("monitor");
   var html = document.documentElement;
   var results;
-  var matches = html.matchesSelector || html.mozMatchesSelector;
 
   try {
-    results = "return: " +
-      matches.call(html, "[test!='']:sizzle") + "\n";
+    results = "return: " + html.matches("[test!='']:sizzle") + "\n";
   } catch (e) {
     results = "throws: " + e + "\n";
   }
