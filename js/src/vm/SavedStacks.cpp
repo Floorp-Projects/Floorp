@@ -452,8 +452,8 @@ SavedStacks::sweep(JSRuntime *rt)
 
     sweepPCLocationMap();
 
-    if (savedFrameProto && IsObjectAboutToBeFinalized(&savedFrameProto)) {
-        savedFrameProto = nullptr;
+    if (savedFrameProto && IsObjectAboutToBeFinalized(savedFrameProto.unsafeGet())) {
+        savedFrameProto.set(nullptr);
     }
 }
 
@@ -593,9 +593,11 @@ SavedStacks::getOrCreateSavedFramePrototype(JSContext *cx)
         || !JS_DefineProperties(cx, proto, SavedFrame::properties)
         || !JS_DefineFunctions(cx, proto, SavedFrame::methods)
         || !JSObject::freeze(cx, proto))
+    {
         return nullptr;
+    }
 
-    savedFrameProto = proto;
+    savedFrameProto.set(proto);
     // The only object with the SavedFrame::class_ that doesn't have a source
     // should be the prototype.
     savedFrameProto->setReservedSlot(SavedFrame::JSSLOT_SOURCE, NullValue());

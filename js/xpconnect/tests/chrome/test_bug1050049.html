@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1050049
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1050049</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1050049 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var regularBindingURI = window.location.toString().replace("test_bug1050049.html", "file_bug1050049.xml") + "#regularChromeBinding";
+  var whitelistedBindingURI = window.location.toString().replace("test_bug1050049.html", "file_bug1050049.xml") + "#whitelistedChromeBinding";
+
+  function testApplyBinding(doc, bindingURI, expectBind) {
+    var d = doc.createElement('div');
+    doc.body.appendChild(d);
+    d.style.MozBinding = "url(" + bindingURI + ")";
+
+    return new Promise(function(resolve, reject) {
+      // Wait two ticks of the refresh driver for the binding to be applied.
+      function onceBindingWouldBeApplied() {
+        is(!!doc.getAnonymousNodes(d), expectBind, "Binding " + (expectBind ? "should" : "shouldn't") +
+                                                   " be applied: " + bindingURI + ", " + doc.location);
+        resolve();
+      }
+      window.requestAnimationFrame(function() { window.requestAnimationFrame(onceBindingWouldBeApplied); });
+    });
+  }
+
+  function go() {
+    testApplyBinding(document, regularBindingURI, true)
+      .then(testApplyBinding.bind(null, window[0].document, regularBindingURI, false))
+      .then(testApplyBinding.bind(null, document, whitelistedBindingURI, true))
+      .then(testApplyBinding.bind(null, window[0].document, whitelistedBindingURI, true))
+      .then(SimpleTest.finish.bind(SimpleTest));
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1050049">Mozilla Bug 1050049</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+</body>
+</html>

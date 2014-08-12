@@ -215,20 +215,20 @@ struct CommonLayerAttributes {
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;
   nsIntRegion invalidRegion;
+  FrameMetrics metrics;
+  ViewID scrollParentId;
+  LayerColor backgroundColor;
+  string contentDescription;
 };
 
 struct ThebesLayerAttributes {
   nsIntRegion validRegion;
 };
 struct ContainerLayerAttributes {
-  FrameMetrics metrics;
-  ViewID scrollParentId;
   float preXScale;
   float preYScale;
   float inheritedXScale;
   float inheritedYScale;
-  LayerColor backgroundColor;
-  string contentDescription;
 };
 struct ColorLayerAttributes     { LayerColor color; nsIntRect bounds; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };

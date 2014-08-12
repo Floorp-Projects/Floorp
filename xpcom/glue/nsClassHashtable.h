@@ -36,6 +36,13 @@ public:
   }
 
   /**
+   * Looks up aKey in the hash table. If it doesn't exist a new object of
+   * KeyClass will be created (using its default constructor) and then
+   * returned.
+   */
+  UserDataType LookupOrAdd(KeyType aKey);
+
+  /**
    * @copydoc nsBaseHashtable::Get
    * @param aData if the key doesn't exist, pData will be set to nullptr.
    */
@@ -64,6 +71,17 @@ public:
 //
 // nsClassHashtable definitions
 //
+
+template<class KeyClass, class T>
+T*
+nsClassHashtable<KeyClass, T>::LookupOrAdd(KeyType aKey)
+{
+  typename base_type::EntryType* ent = this->PutEntry(aKey);
+  if (!ent->mData) {
+    ent->mData = new T();
+  }
+  return ent->mData;
+}
 
 template<class KeyClass, class T>
 bool

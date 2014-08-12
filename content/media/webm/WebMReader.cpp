@@ -991,7 +991,7 @@ WebMReader::PushVideoPacket(NesteggPacketHolder* aItem)
 }
 
 nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
-                            int64_t aCurrentTime)
+                          int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -1009,7 +1009,8 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   if (r != 0) {
     // Try seeking directly based on cluster information in memory.
     int64_t offset = 0;
-    bool rv = mBufferedState->GetOffsetForTime((aTarget - aStartTime)/NS_PER_USEC, &offset);
+    bool rv = mBufferedState->GetOffsetForTime((aTarget - aStartTime)/NS_PER_USEC, &offset,
+                                               WebMBufferedState::CLUSTER_START);
     if (!rv) {
       return NS_ERROR_FAILURE;
     }
@@ -1079,6 +1080,17 @@ nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 void WebMReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   mBufferedState->NotifyDataArrived(aBuffer, aLength, aOffset);
+}
+
+int64_t WebMReader::GetEvictionOffset(double aTime)
+{
+  int64_t offset;
+  if (!mBufferedState->GetOffsetForTime(aTime / NS_PER_USEC, &offset,
+                                        WebMBufferedState::CLUSTER_START)) {
+    return -1;
+  }
+
+  return offset;
 }
 
 } // namespace mozilla

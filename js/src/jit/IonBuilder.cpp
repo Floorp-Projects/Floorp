@@ -4867,7 +4867,7 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
     // calling Ion code will be invalidated, but any baseline template object
     // may be stale. Update to the correct template object in this case.
     types::TypeObject *templateType = templateObject->type();
-    if (templateType->hasNewScript()) {
+    if (templateType->newScript()) {
         templateObject = templateType->newScript()->templateObject;
         JS_ASSERT(templateObject->type() == templateType);
 

@@ -32,6 +32,7 @@ const jschar *Concrete<void>::typeName() const      { MOZ_CRASH("null ubi::Node"
 size_t Concrete<void>::size() const                 { MOZ_CRASH("null ubi::Node"); }
 EdgeRange *Concrete<void>::edges(JSContext *) const { MOZ_CRASH("null ubi::Node"); }
 JS::Zone *Concrete<void>::zone() const              { MOZ_CRASH("null ubi::Node"); }
+JSCompartment *Concrete<void>::compartment() const  { MOZ_CRASH("null ubi::Node"); }
 
 Node::Node(JSGCTraceKind kind, void *ptr)
 {

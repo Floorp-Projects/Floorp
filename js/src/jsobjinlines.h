@@ -664,7 +664,13 @@ JSObject::global() const
     while (JSObject *parent = obj->getParent())
         obj = parent;
 #endif
-    return *compartment()->maybeGlobal();
+    /*
+     * The global is read-barriered so that it is kept live by access through
+     * the JSCompartment. When accessed through a JSObject, however, the global
+     * will be already be kept live by the black JSObject's parent pointer, so
+     * does not need to be read-barriered.
+     */
+    return *compartment()->unsafeUnbarrieredMaybeGlobal();
 }
 
 inline bool

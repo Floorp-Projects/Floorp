@@ -257,6 +257,7 @@ public:
                              nsIContent* aTemplChild);
 
   bool ChromeOnlyContent() { return mChromeOnlyContent; }
+  bool BindToUntrustedContent() { return mBindToUntrustedContent; }
 
   typedef nsClassHashtable<nsISupportsHashKey, nsXBLAttributeEntry> InnerAttributeTable;
 
@@ -291,6 +292,7 @@ protected:
   bool mCheckedBaseProto;
   bool mKeyHandlersRegistered;
   bool mChromeOnlyContent;
+  bool mBindToUntrustedContent;
 
   nsAutoPtr<nsXBLPrototypeResources> mResources; // If we have any resources, this will be non-null.
 
