@@ -187,7 +187,8 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mScrollbarTargetId(FrameMetrics::NULL_SCROLL_ID),
   mScrollbarDirection(ScrollDirection::NONE),
   mDebugColorIndex(0),
-  mAnimationGeneration(0)
+  mAnimationGeneration(0),
+  mBackgroundColor(0, 0, 0, 0)
 {}
 
 Layer::~Layer()
@@ -763,7 +764,6 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
     mPreYScale(1.0f),
     mInheritedXScale(1.0f),
     mInheritedYScale(1.0f),
-    mBackgroundColor(0, 0, 0, 0),
     mUseIntermediateSurface(false),
     mSupportsComponentAlphaChildren(false),
     mMayHaveReadbackChild(false)
@@ -921,8 +921,7 @@ void
 ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
   aAttrs = ContainerLayerAttributes(mPreXScale, mPreYScale,
-                                    mInheritedXScale, mInheritedYScale,
-                                    mBackgroundColor, mContentDescription);
+                                    mInheritedXScale, mInheritedYScale);
 }
 
 bool

@@ -217,6 +217,8 @@ struct CommonLayerAttributes {
   nsIntRegion invalidRegion;
   FrameMetrics metrics;
   ViewID scrollParentId;
+  LayerColor backgroundColor;
+  string contentDescription;
 };
 
 struct ThebesLayerAttributes {
@@ -227,8 +229,6 @@ struct ContainerLayerAttributes {
   float preYScale;
   float inheritedXScale;
   float inheritedYScale;
-  LayerColor backgroundColor;
-  string contentDescription;
 };
 struct ColorLayerAttributes     { LayerColor color; nsIntRect bounds; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };
