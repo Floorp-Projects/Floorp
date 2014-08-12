@@ -38,8 +38,7 @@ protected:
     virtual void generateMetrics(SkGlyph* glyph) SK_OVERRIDE;
     virtual void generateImage(const SkGlyph& glyph) SK_OVERRIDE;
     virtual void generatePath(const SkGlyph& glyph, SkPath* path) SK_OVERRIDE;
-    virtual void generateFontMetrics(SkPaint::FontMetrics* mx,
-                                     SkPaint::FontMetrics* my) SK_OVERRIDE;
+    virtual void generateFontMetrics(SkPaint::FontMetrics* metrics) SK_OVERRIDE;
     virtual SkUnichar generateGlyphToChar(uint16_t glyph) SK_OVERRIDE;
 private:
     cairo_scaled_font_t* fScaledFont;
@@ -357,8 +356,7 @@ void SkScalerContext_CairoFT::generatePath(const SkGlyph& glyph, SkPath* path)
     generateGlyphPath(face, path);
 }
 
-void SkScalerContext_CairoFT::generateFontMetrics(SkPaint::FontMetrics* mx,
-                                                  SkPaint::FontMetrics* my)
+void SkScalerContext_CairoFT::generateFontMetrics(SkPaint::FontMetrics* metrics)
 {
     SkDEBUGCODE(SkDebugf("SkScalerContext_CairoFT::generateFontMetrics unimplemented\n"));
 }

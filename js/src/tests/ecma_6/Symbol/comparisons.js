@@ -13,12 +13,20 @@ var values = [
     {}, []
 ];
 
-for (var comparator of ["==", "!=", "===", "!==", "<", "<=", ">", ">="]) {
+for (var comparator of ["==", "!=", "===", "!=="]) {
     var f = Function("a, b", "return a " + comparator + " b;");
     var expected = (comparator[0] == '!');
     for (var a of symbols) {
         for (var b of values)
             assertEq(f(a, b), expected);
+    }
+}
+
+for (var comparator of ["<", "<=", ">", ">="]) {
+    var f = Function("a, b", "return a " + comparator + " b;");
+    for (var a of symbols) {
+        for (var b of values)
+            assertThrowsInstanceOf(() => f(a, b), TypeError);
     }
 }
 

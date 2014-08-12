@@ -10,7 +10,7 @@
 
 #include "GrGLEffect.h"
 #include "GrDrawState.h"
-#include "GrGLShaderBuilder.h"
+#include "GrGpu.h"
 
 class GrGpuGL;
 
@@ -24,18 +24,15 @@ class GrGpuGL;
 
 
 /** This class describes a program to generate. It also serves as a program cache key. Very little
-    of this is GL-specific. There is the generation of GrGLEffect::EffectKeys and the dst-read part
-    of the key set by GrGLShaderBuilder. If the interfaces that set those portions were abstracted
-    to be API-neutral then so could this class. */
+    of this is GL-specific. The GL-specific parts could be factored out into a subclass. */
 class GrGLProgramDesc {
 public:
-    GrGLProgramDesc() : fInitialized(false) {}
+    GrGLProgramDesc() {}
     GrGLProgramDesc(const GrGLProgramDesc& desc) { *this = desc; }
 
     // Returns this as a uint32_t array to be used as a key in the program cache.
     const uint32_t* asKey() const {
-        SkASSERT(fInitialized);
-        return reinterpret_cast<const uint32_t*>(fKey.get());
+        return reinterpret_cast<const uint32_t*>(fKey.begin());
     }
 
     // Gets the number of bytes in asKey(). It will be a 4-byte aligned value. When comparing two
@@ -47,7 +44,7 @@ public:
     uint32_t getChecksum() const { return *this->atOffset<uint32_t, kChecksumOffset>(); }
 
     // For unit testing.
-    void setRandom(SkRandom*,
+    bool setRandom(SkRandom*,
                    const GrGpuGL* gpu,
                    const GrRenderTarget* dummyDstRenderTarget,
                    const GrTexture* dummyDstCopyTexture,
@@ -63,8 +60,8 @@ public:
      * not contain all stages from the draw state and coverage stages from the drawState may
      * be treated as color stages in the output.
      */
-    static void Build(const GrDrawState&,
-                      bool isPoints,
+    static bool Build(const GrDrawState&,
+                      GrGpu::DrawType drawType,
                       GrDrawState::BlendOptFlags,
                       GrBlendCoeff srcCoeff,
                       GrBlendCoeff dstCoeff,
@@ -75,12 +72,10 @@ public:
                       GrGLProgramDesc* outDesc);
 
     int numColorEffects() const {
-        SkASSERT(fInitialized);
         return this->getHeader().fColorEffectCnt;
     }
 
     int numCoverageEffects() const {
-        SkASSERT(fInitialized);
         return this->getHeader().fCoverageEffectCnt;
     }
 
@@ -89,7 +84,6 @@ public:
     GrGLProgramDesc& operator= (const GrGLProgramDesc& other);
 
     bool operator== (const GrGLProgramDesc& other) const {
-        SkASSERT(fInitialized && other.fInitialized);
         // The length is masked as a hint to the compiler that the address will be 4 byte aligned.
         return 0 == memcmp(this->asKey(), other.asKey(), this->keyLength() & ~0x3);
     }
@@ -106,7 +100,6 @@ private:
     // Specifies where the initial color comes from before the stages are applied.
     enum ColorInput {
         kSolidWhite_ColorInput,
-        kTransBlack_ColorInput,
         kAttribute_ColorInput,
         kUniform_ColorInput,
 
@@ -144,13 +137,12 @@ private:
     }
 
     struct KeyHeader {
-        GrGLShaderBuilder::DstReadKey fDstReadKey;      // set by GrGLShaderBuilder if there
+        uint8_t                     fDstReadKey;        // set by GrGLShaderBuilder if there
                                                         // are effects that must read the dst.
                                                         // Otherwise, 0.
-        GrGLShaderBuilder::FragPosKey fFragPosKey;      // set by GrGLShaderBuilder if there are
+        uint8_t                     fFragPosKey;        // set by GrGLShaderBuilder if there are
                                                         // effects that read the fragment position.
                                                         // Otherwise, 0.
-
         ColorInput                  fColorInput : 8;
         ColorInput                  fCoverageInput : 8;
         CoverageOutput              fCoverageOutput : 8;
@@ -173,48 +165,92 @@ private:
         int8_t                      fCoverageEffectCnt;
     };
 
-    // The key is 1 uint32_t for the length, followed another for the checksum, the header, and then
-    // the effect keys. Everything is fixed length except the effect key array.
+    // The key, stored in fKey, is composed of five parts:
+    // 1. uint32_t for total key length.
+    // 2. uint32_t for a checksum.
+    // 3. Header struct defined above.
+    // 4. An array of offsets to effect keys and their sizes (see 5). uint16_t for each
+    //    offset and size.
+    // 5. per-effect keys. Each effect's key is a variable length array of uint32_t.
     enum {
+        // Part 1.
         kLengthOffset = 0,
+        // Part 2.
         kChecksumOffset = kLengthOffset + sizeof(uint32_t),
+        // Part 3.
         kHeaderOffset = kChecksumOffset + sizeof(uint32_t),
         kHeaderSize = SkAlign4(sizeof(KeyHeader)),
-        kEffectKeyOffset = kHeaderOffset + kHeaderSize,
+        // Part 4.
+        // This is the offset in the overall key to the array of per-effect offset,length pairs.
+        kEffectKeyOffsetsAndLengthOffset = kHeaderOffset + kHeaderSize,
     };
 
     template<typename T, size_t OFFSET> T* atOffset() {
-        return reinterpret_cast<T*>(reinterpret_cast<intptr_t>(fKey.get()) + OFFSET);
+        return reinterpret_cast<T*>(reinterpret_cast<intptr_t>(fKey.begin()) + OFFSET);
     }
 
     template<typename T, size_t OFFSET> const T* atOffset() const {
-        return reinterpret_cast<const T*>(reinterpret_cast<intptr_t>(fKey.get()) + OFFSET);
+        return reinterpret_cast<const T*>(reinterpret_cast<intptr_t>(fKey.begin()) + OFFSET);
     }
 
-    typedef GrGLEffect::EffectKey EffectKey;
-
-    uint32_t* checksum() { return this->atOffset<uint32_t, kChecksumOffset>(); }
     KeyHeader* header() { return this->atOffset<KeyHeader, kHeaderOffset>(); }
-    EffectKey* effectKeys() { return this->atOffset<EffectKey, kEffectKeyOffset>(); }
+
+    // Shared code between setRandom() and Build().
+    static bool GetEffectKeyAndUpdateStats(const GrEffectStage& stage,
+                                           const GrGLCaps& caps,
+                                           bool useExplicitLocalCoords,
+                                           GrEffectKeyBuilder* b,
+                                           uint16_t* effectKeySize,
+                                           bool* setTrueIfReadsDst,
+                                           bool* setTrueIfReadsPos,
+                                           bool* setTrueIfHasVertexCode);
+
+    void finalize();
 
     const KeyHeader& getHeader() const { return *this->atOffset<KeyHeader, kHeaderOffset>(); }
-    const EffectKey* getEffectKeys() const { return this->atOffset<EffectKey, kEffectKeyOffset>(); }
 
-    static size_t KeyLength(int effectCnt) {
-        GR_STATIC_ASSERT(!(sizeof(EffectKey) & 0x3));
-        return kEffectKeyOffset + effectCnt * sizeof(EffectKey);
-    }
+    /** Used to provide effects' keys to their emitCode() function. */
+    class EffectKeyProvider {
+    public:
+        enum EffectType {
+            kColor_EffectType,
+            kCoverage_EffectType,
+        };
 
-    enum {
-        kMaxPreallocEffects = 16,
-        kPreAllocSize = kEffectKeyOffset +  kMaxPreallocEffects * sizeof(EffectKey),
+        EffectKeyProvider(const GrGLProgramDesc* desc, EffectType type) : fDesc(desc) {
+            // Coverage effect key offsets begin immediately after those of the color effects.
+            fBaseIndex = kColor_EffectType == type ? 0 : desc->numColorEffects();
+        }
+
+        GrEffectKey get(int index) const {
+            const uint16_t* offsetsAndLengths = reinterpret_cast<const uint16_t*>(
+                fDesc->fKey.begin() + kEffectKeyOffsetsAndLengthOffset);
+            // We store two uint16_ts per effect, one for the offset to the effect's key and one for
+            // its length. Here we just need the offset.
+            uint16_t offset = offsetsAndLengths[2 * (fBaseIndex + index) + 0];
+            uint16_t length = offsetsAndLengths[2 * (fBaseIndex + index) + 1];
+            // Currently effects must add to the key in units of uint32_t.
+            SkASSERT(0 == (length % sizeof(uint32_t)));
+            return GrEffectKey(reinterpret_cast<const uint32_t*>(fDesc->fKey.begin() + offset),
+                               length / sizeof(uint32_t));
+        }
+    private:
+        const GrGLProgramDesc*  fDesc;
+        int                     fBaseIndex;
     };
 
-    SkAutoSMalloc<kPreAllocSize> fKey;
-    bool fInitialized;
+    enum {
+        kMaxPreallocEffects = 8,
+        kIntsPerEffect      = 4,    // This is an overestimate of the average effect key size.
+        kPreAllocSize = kEffectKeyOffsetsAndLengthOffset +
+                        kMaxPreallocEffects * sizeof(uint32_t) * kIntsPerEffect,
+    };
 
-    // GrGLProgram and GrGLShaderBuilder read the private fields to generate code. TODO: Move all
-    // code generation to GrGLShaderBuilder (and maybe add getters rather than friending).
+    SkSTArray<kPreAllocSize, uint8_t, true> fKey;
+
+    // GrGLProgram and GrGLShaderBuilder read the private fields to generate code. TODO: Split out
+    // part of GrGLShaderBuilder that is used by effects so that this header doesn't need to be
+    // visible to GrGLEffects. Then make public accessors as necessary and remove friends.
     friend class GrGLProgram;
     friend class GrGLShaderBuilder;
     friend class GrGLFullShaderBuilder;

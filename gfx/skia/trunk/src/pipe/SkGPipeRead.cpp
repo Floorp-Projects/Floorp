@@ -230,15 +230,13 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-template <typename T> const T* skip(SkReader32* reader, int count = 1) {
-    SkASSERT(count >= 0);
+template <typename T> const T* skip(SkReader32* reader, size_t count = 1) {
     size_t size = sizeof(T) * count;
     SkASSERT(SkAlign4(size) == size);
     return reinterpret_cast<const T*>(reader->skip(size));
 }
 
-template <typename T> const T* skipAlign(SkReader32* reader, int count = 1) {
-    SkASSERT(count >= 0);
+template <typename T> const T* skipAlign(SkReader32* reader, size_t count = 1) {
     size_t size = SkAlign4(sizeof(T) * count);
     return reinterpret_cast<const T*>(reader->skip(size));
 }
@@ -319,7 +317,7 @@ static void translate_rp(SkCanvas* canvas, SkReader32* reader, uint32_t op32,
 
 static void save_rp(SkCanvas* canvas, SkReader32* reader, uint32_t op32,
                     SkGPipeState* state) {
-    canvas->save((SkCanvas::SaveFlags)DrawOp_unpackData(op32));
+    canvas->save();
 }
 
 static void saveLayer_rp(SkCanvas* canvas, SkReader32* reader, uint32_t op32,
@@ -662,6 +660,7 @@ static void paintOp_rp(SkCanvas*, SkReader32* reader, uint32_t op32,
             case kReset_PaintOp: p->reset(); break;
             case kFlags_PaintOp: p->setFlags(data); break;
             case kColor_PaintOp: p->setColor(reader->readU32()); break;
+            case kFilterLevel_PaintOp: p->setFilterLevel((SkPaint::FilterLevel)data); break;
             case kStyle_PaintOp: p->setStyle((SkPaint::Style)data); break;
             case kJoin_PaintOp: p->setStrokeJoin((SkPaint::Join)data); break;
             case kCap_PaintOp: p->setStrokeCap((SkPaint::Cap)data); break;

@@ -187,7 +187,7 @@ function checkIndeterminatePseudoClass()
       aElement.removeAttribute('max');
     }
 
-    is(aElement.mozMatchesSelector("progress:indeterminate"), aIndeterminate,
+    is(aElement.matches("progress:indeterminate"), aIndeterminate,
        "<progress> indeterminate state should be " + aIndeterminate);
   }
 

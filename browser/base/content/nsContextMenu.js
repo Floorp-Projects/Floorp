@@ -650,7 +650,7 @@ nsContextMenu.prototype = {
       else if ((this.target instanceof HTMLEmbedElement ||
                 this.target instanceof HTMLObjectElement ||
                 this.target instanceof HTMLAppletElement) &&
-               this.target.mozMatchesSelector(":-moz-handler-clicktoplay")) {
+               this.target.matches(":-moz-handler-clicktoplay")) {
         this.onCTPPlugin = true;
       }
 

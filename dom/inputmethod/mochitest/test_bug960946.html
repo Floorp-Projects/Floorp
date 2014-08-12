@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=960946
 // The input context.
 var gContext = null;
 var gCounter = 0;
+var gBackSpaceCounter = 0;
 var result = ["keydown", "keypress", "keydown","keypress",
               "keydown", "keypress", "keyup"
              ];
@@ -26,11 +27,12 @@ inputmethod_setup(function() {
   runTest();
 });
 
+var input;
 // The frame script running in file_test_backspace_event.html.
 function appFrameScript() {
   let input = content.document.getElementById('test-input');
   input.onkeydown = input.onkeypress = input.onkeyup = function(event) {
-    dump('key event was fired in file_test_backspace_event.html.\n');
+    dump('key event was fired in file_test_backspace_event.html: ' + event.type +'\n');
     sendAsyncMessage('test:KeyBoard:keyEvent', {'type':event.type});
   };
 }
@@ -67,9 +69,6 @@ function runTest() {
       ok(true, 'Keyboard input was received.');
       is(SpecialPowers.wrap(event).json.type, result[gCounter], "expected event");
       gCounter++;
-      if (gCounter == 7) {
-        inputmethod_cleanup();
-      }
     });
   });
 }
@@ -93,6 +92,10 @@ function test_sendBackspace(repeat) {
   // Send backspace
   gContext.sendKey(KeyEvent.DOM_VK_BACK_SPACE, 0, 0, repeat).then(function() {
     ok(true, 'sendKey success');
+    gBackSpaceCounter++;
+    if (gBackSpaceCounter == 3) {
+      inputmethod_cleanup();
+    }
   }, function(e) {
     ok(false, 'sendKey failed:' + e.name);
     inputmethod_cleanup();

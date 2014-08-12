@@ -278,6 +278,49 @@ add_task(function* one_of_each() {
   do_check_eq(result.remote[0], "letter B");
 });
 
+add_task(function* local_result_returned_remote_result_disabled() {
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
+  let controller = new SearchSuggestionController();
+  controller.maxLocalResults = 1;
+  controller.maxRemoteResults = 1;
+  let result = yield controller.fetch("letter ", false, getEngine);
+  do_check_eq(result.term, "letter ");
+  do_check_eq(result.local.length, 1);
+  do_check_eq(result.local[0], "letter A");
+  do_check_eq(result.remote.length, 0);
+  Services.prefs.clearUserPref("browser.search.suggest.enabled");
+});
+
+add_task(function* local_result_returned_remote_result_disabled_after_creation_of_controller() {
+  let controller = new SearchSuggestionController();
+  controller.maxLocalResults = 1;
+  controller.maxRemoteResults = 1;
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
+  let result = yield controller.fetch("letter ", false, getEngine);
+  do_check_eq(result.term, "letter ");
+  do_check_eq(result.local.length, 1);
+  do_check_eq(result.local[0], "letter A");
+  do_check_eq(result.remote.length, 0);
+});
+
+add_task(function* one_of_each_disabled_before_creation_enabled_after_creation_of_controller() {
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
+  let controller = new SearchSuggestionController();
+  controller.maxLocalResults = 1;
+  controller.maxRemoteResults = 1;
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
+  let result = yield controller.fetch("letter ", false, getEngine);
+  do_check_eq(result.term, "letter ");
+  do_check_eq(result.local.length, 1);
+  do_check_eq(result.local[0], "letter A");
+  do_check_eq(result.remote.length, 1);
+  do_check_eq(result.remote[0], "letter B");
+});
+
+add_task(function* clear_suggestions_pref() {
+  Services.prefs.clearUserPref("browser.search.suggest.enabled");
+});
+
 add_task(function* one_local_zero_remote() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 1;
