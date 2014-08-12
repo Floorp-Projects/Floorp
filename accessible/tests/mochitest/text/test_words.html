@@ -92,6 +92,8 @@
       testWordAt("div17", 3, "you", kOk);
       testWordAt("div17", 4, "here", kTodo);
 
+      testWords("input_1", ["foo", "bar"]);
+
       SimpleTest.finish();
     }
 
@@ -125,5 +127,7 @@
   <div id="div16">3+4*5=23</div>
   <div id="div17">Hello. Friend, are you here?!</div>
   </pre>
+  <input id="input_1" type="text" value="foo bar" placeholder="something or other">
+
 </body>
 </html>

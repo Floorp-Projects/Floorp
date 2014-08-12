@@ -8,6 +8,8 @@
 
 #include "mozilla/Attributes.h"
 #include <stdint.h>
+#include "mozilla/dom/ChildIterator.h"
+#include "nsCOMPtr.h"
 
 class nsIContent;
 
@@ -16,8 +18,6 @@ namespace a11y {
 
 class Accessible;
 class DocAccessible;
-
-struct WalkState;
 
 /**
  * This class is used to walk the DOM tree to create accessible tree.
@@ -50,10 +50,7 @@ public:
    *       rejected during tree creation then the caller should be unbind it
    *       from the document.
    */
-  Accessible* NextChild()
-  {
-    return NextChildInternal(false);
-  }
+  Accessible* NextChild();
 
 private:
   TreeWalker();
@@ -61,32 +58,28 @@ private:
   TreeWalker& operator =(const TreeWalker&);
 
   /**
-   * Return the next child accessible.
-   *
-   * @param  aNoWalkUp  [in] specifies the walk direction, true means we
-   *                     shouldn't go up through the tree if we failed find
-   *                     accessible children.
-   */
-  Accessible* NextChildInternal(bool aNoWalkUp);
-
-  /**
    * Create new state for the given node and push it on top of stack.
    *
    * @note State stack is used to navigate up/down the DOM subtree during
    *        accessible children search.
    */
-  void PushState(nsIContent* aNode);
+  dom::AllChildrenIterator* PushState(nsIContent* aContent)
+  {
+    return mStateStack.AppendElement(dom::AllChildrenIterator(aContent,
+                                                              mChildFilter));
+  }
 
   /**
    * Pop state from stack.
    */
-  void PopState();
+  dom::AllChildrenIterator* PopState();
 
   DocAccessible* mDoc;
   Accessible* mContext;
+  nsIContent* mAnchorNode;
+  nsAutoTArray<dom::AllChildrenIterator, 20> mStateStack;
   int32_t mChildFilter;
   uint32_t mFlags;
-  WalkState* mState;
 };
 
 } // namespace a11y
