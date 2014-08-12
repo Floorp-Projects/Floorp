@@ -57,8 +57,12 @@ class TestList(unittest.TestCase):
         test = List([1, 2, 3])
 
         test += [4, 5, 6]
-
+        self.assertIsInstance(test, List)
         self.assertEqual(test, [1, 2, 3, 4, 5, 6])
+
+        test = test + [7, 8]
+        self.assertIsInstance(test, List)
+        self.assertEqual(test, [1, 2, 3, 4, 5, 6, 7, 8])
 
     def test_add_string(self):
         test = List([1, 2, 3])
@@ -66,6 +70,23 @@ class TestList(unittest.TestCase):
         with self.assertRaises(ValueError):
             test += 'string'
 
+    def test_none(self):
+        """As a special exception, we allow None to be treated as an empty
+        list."""
+        test = List([1, 2, 3])
+
+        test += None
+        self.assertEqual(test, [1, 2, 3])
+
+        test = test + None
+        self.assertIsInstance(test, List)
+        self.assertEqual(test, [1, 2, 3])
+
+        with self.assertRaises(ValueError):
+            test += False
+
+        with self.assertRaises(ValueError):
+            test = test + False
 
 if __name__ == '__main__':
     main()
