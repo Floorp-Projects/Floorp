@@ -722,8 +722,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   FrameMetrics childMetrics = metrics;
   childMetrics.SetScrollId(FrameMetrics::START_SCROLL_ID + 1);
 
-  layers[0]->AsContainerLayer()->SetFrameMetrics(metrics);
-  layers[1]->AsContainerLayer()->SetFrameMetrics(childMetrics);
+  layers[0]->SetFrameMetrics(metrics);
+  layers[1]->SetFrameMetrics(childMetrics);
 
   ScreenPoint pointOut;
   ViewTransform viewTransformOut;
@@ -1461,7 +1461,6 @@ SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
                           // HitTesting1 doesn't care about it.
                           CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1))
 {
-  ContainerLayer* container = aLayer->AsContainerLayer();
   FrameMetrics metrics;
   metrics.SetScrollId(aScrollId);
   nsIntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
@@ -1469,7 +1468,7 @@ SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
                                                layerBound.width, layerBound.height);
   metrics.mScrollableRect = aScrollableRect;
   metrics.SetScrollOffset(CSSPoint(0, 0));
-  container->SetFrameMetrics(metrics);
+  aLayer->SetFrameMetrics(metrics);
 }
 
 static already_AddRefed<AsyncPanZoomController>

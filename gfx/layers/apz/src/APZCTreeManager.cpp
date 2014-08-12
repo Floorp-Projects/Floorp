@@ -173,7 +173,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   AsyncPanZoomController* apzc = nullptr;
   mApzcTreeLog << aLayer->Name() << '\t';
   if (container) {
-    const FrameMetrics& metrics = container->GetFrameMetrics();
+    const FrameMetrics& metrics = aLayer->GetFrameMetrics();
     if (metrics.IsScrollable()) {
       const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
       if (state && state->mController.get()) {
@@ -229,7 +229,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
           apzc->SetPrevSibling(nullptr);
           apzc->SetLastChild(nullptr);
         }
-        APZCTM_LOG("Using APZC %p for layer %p with identifiers %lld %lld\n", apzc, aLayer, aLayersId, container->GetFrameMetrics().GetScrollId());
+        APZCTM_LOG("Using APZC %p for layer %p with identifiers %lld %lld\n", apzc, aLayer, aLayersId, metrics.GetScrollId());
 
         apzc->NotifyLayersUpdated(metrics,
                                   aIsFirstPaint && (aLayersId == aOriginatingLayersId));
@@ -266,7 +266,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
         mApzcTreeLog << "APZC " << guid
                      << "\tcb=" << visible
-                     << "\tsr=" << container->GetFrameMetrics().mScrollableRect
+                     << "\tsr=" << metrics.mScrollableRect
                      << (aLayer->GetVisibleRegion().IsEmpty() ? "\tscrollinfo" : "")
                      << (apzc->HasScrollgrab() ? "\tscrollgrab" : "")
                      << "\t" << container->GetContentDescription();
