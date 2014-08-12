@@ -81,9 +81,8 @@ function removeAllProjects() {
   return Task.spawn(function* () {
     yield AppProjects.load();
     let projects = AppProjects.store.object.projects;
-    // AppProjects.remove mutates the projects array in-place
-    while (projects.length > 0) {
-      yield AppProjects.remove(projects[0].location);
+    for (let i = 0; i < projects.length; i++) {
+      yield AppProjects.remove(projects[i].location);
     }
   });
 }
@@ -94,14 +93,6 @@ function nextTick() {
     deferred.resolve();
   });
 
-  return deferred.promise;
-}
-
-function waitForTime(time) {
-  let deferred = promise.defer();
-  setTimeout(() => {
-    deferred.resolve();
-  }, time);
   return deferred.promise;
 }
 
