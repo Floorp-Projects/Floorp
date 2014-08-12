@@ -383,12 +383,6 @@ private:
 
       NS_IMETHODIMP Run()
       {
-        // If it's not safe to run scripts right now, schedule this to run later
-        if (!nsContentUtils::IsSafeToRunScript()) {
-          nsContentUtils::AddScriptRunner(this);
-          return NS_OK;
-        }
-
         nsRefPtr<ScriptProcessorNode> node;
         {
           // No need to keep holding the lock for the whole duration of this
