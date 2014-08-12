@@ -20,7 +20,7 @@ var elmt = document.createElement("div");
 
 var caught = false;
 try {
-  elmt.mozMatchesSelector("!!");
+  elmt.matches("!!");
 } catch(e) {
   ok(e.name == "SyntaxError", "Error should be SyntaxError");
   ok(e.code == DOMException.SYNTAX_ERR, "Error code should be SYNTAX_ERR");

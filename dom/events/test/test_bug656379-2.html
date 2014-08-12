@@ -33,33 +33,33 @@ SimpleTest.waitForExplicitFinish();
 function tests() {
   synthesizeMouseAtCenter($("label1"), { type: "mousemove" });
   yield undefined;
-  is($("button1").mozMatchesSelector(":hover"), true,
+  is($("button1").matches(":hover"), true,
      "Button 1 should be hovered after mousemove over label1");
-  is($("label1").mozMatchesSelector(":hover"), true,
+  is($("label1").matches(":hover"), true,
      "Label 1 should be hovered after mousemove over label1");
-  is($("button2").mozMatchesSelector(":hover"), false,
+  is($("button2").matches(":hover"), false,
      "Button 2 should not be hovered after mousemove over label1");
-  is($("label2").mozMatchesSelector(":hover"), false,
+  is($("label2").matches(":hover"), false,
      "Label 2 should not be hovered after mousemove over label1");
   synthesizeMouseAtCenter($("button2"), { type: "mousemove" });
   yield undefined;
-  is($("button1").mozMatchesSelector(":hover"), false,
+  is($("button1").matches(":hover"), false,
      "Button 1 should not be hovered after mousemove over button2");
-  is($("label1").mozMatchesSelector(":hover"), false,
+  is($("label1").matches(":hover"), false,
      "Label 1 should not be hovered after mousemove over button2");
-  is($("button2").mozMatchesSelector(":hover"), true,
+  is($("button2").matches(":hover"), true,
      "Button 2 should be hovered after mousemove over button2");
-  is($("label2").mozMatchesSelector(":hover"), false,
+  is($("label2").matches(":hover"), false,
      "Label 2 should not be hovered after mousemove over label2");
   synthesizeMouseAtCenter($("label2"), { type: "mousemove" });
   yield undefined;
-  is($("button1").mozMatchesSelector(":hover"), false,
+  is($("button1").matches(":hover"), false,
      "Button 1 should not be hovered after mousemove over label2");
-  is($("label1").mozMatchesSelector(":hover"), false,
+  is($("label1").matches(":hover"), false,
      "Label 1 should not be hovered after mousemove over label2");
-  is($("button2").mozMatchesSelector(":hover"), true,
+  is($("button2").matches(":hover"), true,
      "Button 2 should be hovered after mousemove over label2");
-  is($("label2").mozMatchesSelector(":hover"), true,
+  is($("label2").matches(":hover"), true,
      "Label 2 should be hovered after mousemove over label2");
   SimpleTest.finish();
 }

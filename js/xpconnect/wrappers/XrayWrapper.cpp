@@ -859,8 +859,9 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
     if (js::StandardClassIsDependent(protoKey))
         return true;
 
-    // Compute the property name we're looking for. We'll handle indexed
-    // properties when we start supporting arrays.
+    // Compute the property name we're looking for. Indexed array properties
+    // are handled above. We'll handle well-known symbols when we start
+    // supporting Symbol.iterator in bug 918828.
     if (!JSID_IS_STRING(id))
         return true;
     Rooted<JSFlatString*> str(cx, JSID_TO_FLAT_STRING(id));
@@ -1630,10 +1631,10 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
     RootedObject target(cx, getTargetObject(wrapper));
     XPCCallContext ccx(JS_CALLER, cx, target, NullPtr(), id);
 
-    // There are no native numeric properties, so we can shortcut here. We will
-    // not find the property. However we want to support non shadowing dom
-    // specific collection properties like window.frames, so we still have to
-    // check for those.
+    // There are no native numeric (or symbol-keyed) properties, so we can
+    // shortcut here. We will not find the property. However we want to support
+    // non shadowing dom specific collection properties like window.frames, so
+    // we still have to check for those.
     if (!JSID_IS_STRING(id)) {
         /* Not found */
         return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc);

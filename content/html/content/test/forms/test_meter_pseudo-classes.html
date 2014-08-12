@@ -25,7 +25,7 @@ function checkOptimum(aElement, aValue, aOptimum, expectedResult)
 
   aElement.setAttribute('value', aValue);
   aElement.setAttribute('optimum', aOptimum);
-  is(aElement.mozMatchesSelector(":-moz-meter-optimum"),
+  is(aElement.matches(":-moz-meter-optimum"),
     expectedResult, errorString);
 }
 
@@ -37,7 +37,7 @@ function checkSubOptimum(aElement, aValue, aOptimum, expectedResult)
   }
   aElement.setAttribute('value', aValue);
   aElement.setAttribute('optimum', aOptimum);
-  is(aElement.mozMatchesSelector(":-moz-meter-sub-optimum"),
+  is(aElement.matches(":-moz-meter-sub-optimum"),
     expectedResult, errorString);
 }
 
@@ -49,7 +49,7 @@ function checkSubSubOptimum(aElement, aValue, aOptimum, expectedResult)
   }
   aElement.setAttribute('value', aValue);
   aElement.setAttribute('optimum', aOptimum);
-  is(aElement.mozMatchesSelector(":-moz-meter-sub-sub-optimum"),
+  is(aElement.matches(":-moz-meter-sub-sub-optimum"),
     expectedResult, errorString);
 }
 

@@ -10,6 +10,10 @@
 #include "SkOpSegment.h"
 #include "SkTArray.h"
 
+#if defined(SK_DEBUG) || !FORCE_RELEASE
+#include "SkThread.h"
+#endif
+
 class SkIntersections;
 class SkOpContour;
 class SkPathWriter;
@@ -18,15 +22,16 @@ struct SkCoincidence {
     SkOpContour* fOther;
     int fSegments[2];
     double fTs[2][2];
-    SkPoint fPts[2];
+    SkPoint fPts[2][2];
+    int fNearly[2];
 };
 
 class SkOpContour {
 public:
     SkOpContour() {
         reset();
-#ifdef SK_DEBUG
-        fID = ++SkPathOpsDebug::gContourID;
+#if defined(SK_DEBUG) || !FORCE_RELEASE
+        fID = sk_atomic_inc(&SkPathOpsDebug::gContourID);
 #endif
     }
 
@@ -77,17 +82,50 @@ public:
         return fSegments[segIndex].addT(&other->fSegments[otherIndex], pt, newT);
     }
 
-    int addSelfT(int segIndex, SkOpContour* other, int otherIndex, const SkPoint& pt, double newT) {
+    int addSelfT(int segIndex, const SkPoint& pt, double newT) {
         setContainsIntercepts();
-        return fSegments[segIndex].addSelfT(&other->fSegments[otherIndex], pt, newT);
+        return fSegments[segIndex].addSelfT(pt, newT);
     }
+
+    void align(const SkOpSegment::AlignedSpan& aligned, bool swap, SkCoincidence* coincidence);
+    void alignCoincidence(const SkOpSegment::AlignedSpan& aligned,
+            SkTArray<SkCoincidence, true>* coincidences);
+
+    void alignCoincidence(const SkOpSegment::AlignedSpan& aligned) {
+        alignCoincidence(aligned, &fCoincidences);
+        alignCoincidence(aligned, &fPartialCoincidences);
+    }
+
+    void alignMultiples(SkTDArray<SkOpSegment::AlignedSpan>* aligned) {
+        int segmentCount = fSegments.count();
+        for (int sIndex = 0; sIndex < segmentCount; ++sIndex) {
+            SkOpSegment& segment = fSegments[sIndex];
+            if (segment.hasMultiples()) {
+                segment.alignMultiples(aligned);
+            }
+        }
+    }
+
+    void alignTPt(int segmentIndex, const SkOpContour* other, int otherIndex,
+                  bool swap, int tIndex, SkIntersections* ts, SkPoint* point) const;
 
     const SkPathOpsBounds& bounds() const {
         return fBounds;
     }
 
+    bool calcAngles();
     void calcCoincidentWinding();
     void calcPartialCoincidentWinding();
+
+    void checkDuplicates() {
+        int segmentCount = fSegments.count();
+        for (int sIndex = 0; sIndex < segmentCount; ++sIndex) {
+            SkOpSegment& segment = fSegments[sIndex];
+            if (segment.count() > 2) {
+                segment.checkDuplicates();
+            }
+        }
+    }
 
     void checkEnds() {
         if (!fContainsCurves) {
@@ -106,6 +144,28 @@ public:
         }
     }
 
+    void checkMultiples() {
+        int segmentCount = fSegments.count();
+        for (int sIndex = 0; sIndex < segmentCount; ++sIndex) {
+            SkOpSegment& segment = fSegments[sIndex];
+            if (segment.count() > 2) {
+                segment.checkMultiples();
+                fMultiples |= segment.hasMultiples();
+            }
+        }
+    }
+
+    void checkSmall() {
+        int segmentCount = fSegments.count();
+        for (int sIndex = 0; sIndex < segmentCount; ++sIndex) {
+            SkOpSegment& segment = fSegments[sIndex];
+            // OPTIMIZATION : skip segments that are done?
+            if (segment.hasSmall()) {
+                segment.checkSmall();
+            }
+        }
+    }
+
     // if same point has different T values, choose a common T
     void checkTiny() {
         int segmentCount = fSegments.count();
@@ -113,7 +173,10 @@ public:
             return;
         }
         for (int sIndex = 0; sIndex < segmentCount; ++sIndex) {
-            fSegments[sIndex].checkTiny();
+            SkOpSegment& segment = fSegments[sIndex];
+            if (segment.hasTiny()) {
+                segment.checkTiny();
+            }
         }
     }
 
@@ -151,6 +214,10 @@ public:
         }
     }
 
+    bool hasMultiples() const {
+        return fMultiples;
+    }
+
     void joinCoincidence() {
         joinCoincidence(fCoincidences, false);
         joinCoincidence(fPartialCoincidences, true);
@@ -165,8 +232,10 @@ public:
     void reset() {
         fSegments.reset();
         fBounds.set(SK_ScalarMax, SK_ScalarMax, SK_ScalarMax, SK_ScalarMax);
-        fContainsCurves = fContainsCubics = fContainsIntercepts = fDone = false;
+        fContainsCurves = fContainsCubics = fContainsIntercepts = fDone = fMultiples = false;
     }
+
+    void resolveNearCoincidence();
 
     SkTArray<SkOpSegment>& segments() {
         return fSegments;
@@ -192,6 +261,7 @@ public:
         fXor = isXor;
     }
 
+    void sortAngles();
     void sortSegments();
 
     const SkPoint& start() const {
@@ -242,8 +312,22 @@ public:
     static void debugShowWindingValues(const SkTArray<SkOpContour*, true>& contourList);
 #endif
 
+    // available to test routines only
+    void dump() const;
+    void dumpAngles() const;
+    void dumpCoincidence(const SkCoincidence& ) const;
+    void dumpCoincidences() const;
+    void dumpPt(int ) const;
+    void dumpPts() const;
+    void dumpSpan(int ) const;
+    void dumpSpans() const;
+
 private:
+    void alignPt(int index, SkPoint* point, int zeroPt) const;
+    int alignT(bool swap, int tIndex, SkIntersections* ts) const;
     void calcCommonCoincidentWinding(const SkCoincidence& );
+    void checkCoincidentPair(const SkCoincidence& oneCoin, int oneIdx,
+                             const SkCoincidence& twoCoin, int twoIdx, bool partial);
     void joinCoincidence(const SkTArray<SkCoincidence, true>& , bool partial);
     void setBounds();
 
@@ -258,11 +342,15 @@ private:
     bool fContainsCubics;
     bool fContainsCurves;
     bool fDone;
+    bool fMultiples;  // set if some segment has multiple identical intersections with other curves
     bool fOperand;  // true for the second argument to a binary operator
     bool fXor;
     bool fOppXor;
-#ifdef SK_DEBUG
+#if defined(SK_DEBUG) || !FORCE_RELEASE
+    int debugID() const { return fID; }
     int fID;
+#else
+    int debugID() const { return -1; }
 #endif
 };
 

@@ -45,6 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
       // Protect against calling SimpleTest.finish() more than once.
       if (!done) {
 	w.close();
+        window.onmessage = null;
 	SimpleTest.finish();
 	done = true;
       }

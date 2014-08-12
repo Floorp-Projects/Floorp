@@ -16,6 +16,7 @@
 
 SkDebugCanvas::SkDebugCanvas(int width, int height)
         : INHERITED(width, height)
+        , fPicture(NULL)
         , fWidth(width)
         , fHeight(height)
         , fFilter(false)
@@ -55,12 +56,13 @@ SkDebugCanvas::~SkDebugCanvas() {
 }
 
 void SkDebugCanvas::addDrawCommand(SkDrawCommand* command) {
+    command->setOffset(this->getOpID());
     fCommandVector.push(command);
 }
 
 void SkDebugCanvas::draw(SkCanvas* canvas) {
     if (!fCommandVector.isEmpty()) {
-        drawTo(canvas, fCommandVector.count() - 1);
+        this->drawTo(canvas, fCommandVector.count() - 1);
     }
 }
 
@@ -90,37 +92,43 @@ int SkDebugCanvas::getCommandAtPoint(int x, int y, int index) {
     return layer;
 }
 
-static SkPMColor OverdrawXferModeProc(SkPMColor src, SkPMColor dst) {
-    // This table encodes the color progression of the overdraw visualization
-    static const SkPMColor gTable[] = {
-        SkPackARGB32(0x00, 0x00, 0x00, 0x00),
-        SkPackARGB32(0xFF, 128, 158, 255),
-        SkPackARGB32(0xFF, 170, 185, 212),
-        SkPackARGB32(0xFF, 213, 195, 170),
-        SkPackARGB32(0xFF, 255, 192, 127),
-        SkPackARGB32(0xFF, 255, 185, 85),
-        SkPackARGB32(0xFF, 255, 165, 42),
-        SkPackARGB32(0xFF, 255, 135, 0),
-        SkPackARGB32(0xFF, 255,  95, 0),
-        SkPackARGB32(0xFF, 255,  50, 0),
-        SkPackARGB32(0xFF, 255,  0, 0)
-    };
+class OverdrawXfermode : public SkXfermode {
+public:
+    virtual SkPMColor xferColor(SkPMColor src, SkPMColor dst) const SK_OVERRIDE {
+        // This table encodes the color progression of the overdraw visualization
+        static const SkPMColor gTable[] = {
+            SkPackARGB32(0x00, 0x00, 0x00, 0x00),
+            SkPackARGB32(0xFF, 128, 158, 255),
+            SkPackARGB32(0xFF, 170, 185, 212),
+            SkPackARGB32(0xFF, 213, 195, 170),
+            SkPackARGB32(0xFF, 255, 192, 127),
+            SkPackARGB32(0xFF, 255, 185, 85),
+            SkPackARGB32(0xFF, 255, 165, 42),
+            SkPackARGB32(0xFF, 255, 135, 0),
+            SkPackARGB32(0xFF, 255,  95, 0),
+            SkPackARGB32(0xFF, 255,  50, 0),
+            SkPackARGB32(0xFF, 255,  0, 0)
+        };
 
-    for (size_t i = 0; i < SK_ARRAY_COUNT(gTable)-1; ++i) {
-        if (gTable[i] == dst) {
-            return gTable[i+1];
+        for (size_t i = 0; i < SK_ARRAY_COUNT(gTable)-1; ++i) {
+            if (gTable[i] == dst) {
+                return gTable[i+1];
+            }
         }
+
+        return gTable[SK_ARRAY_COUNT(gTable)-1];
     }
 
-    return gTable[SK_ARRAY_COUNT(gTable)-1];
-}
+    virtual Factory getFactory() const SK_OVERRIDE { return NULL; }
+#ifndef SK_IGNORE_TO_STRING
+    virtual void toString(SkString* str) const { str->set("OverdrawXfermode"); }
+#endif
+};
 
-// The OverdrawFilter modifies every paint to use an SkProcXfermode which
-// in turn invokes OverdrawXferModeProc
 class SkOverdrawFilter : public SkDrawFilter {
 public:
     SkOverdrawFilter() {
-        fXferMode = SkProcXfermode::Create(OverdrawXferModeProc);
+        fXferMode = SkNEW(OverdrawXfermode);
     }
 
     virtual ~SkOverdrawFilter() {
@@ -232,12 +240,14 @@ void SkDebugCanvas::drawTo(SkCanvas* canvas, int index) {
     SkASSERT(index < fCommandVector.count());
     int i = 0;
 
+    bool pathOpsMode = getAllowSimplifyClip();
+    canvas->setAllowSimplifyClip(pathOpsMode);
     // This only works assuming the canvas and device are the same ones that
     // were previously drawn into because they need to preserve all saves
     // and restores.
     // The visibility filter also requires a full re-draw - otherwise we can
     // end up drawing the filter repeatedly.
-    if (fIndex < index && !fFilter && !fMegaVizMode) {
+    if (fIndex < index && !fFilter && !fMegaVizMode && !pathOpsMode) {
         i = fIndex + 1;
     } else {
         for (int j = 0; j < fOutstandingSaveCount; j++) {
@@ -327,6 +337,28 @@ void SkDebugCanvas::drawTo(SkCanvas* canvas, int index) {
 
         canvas->restore();
     }
+    if (pathOpsMode) {
+        this->resetClipStackData();
+        const SkClipStack* clipStack = canvas->getClipStack();
+        SkClipStack::Iter iter(*clipStack, SkClipStack::Iter::kBottom_IterStart);
+        const SkClipStack::Element* element;
+        SkPath devPath;
+        while ((element = iter.next())) {
+            SkClipStack::Element::Type type = element->getType();
+            SkPath operand;
+            if (type != SkClipStack::Element::kEmpty_Type) {
+               element->asPath(&operand);
+            }
+            SkRegion::Op elementOp = element->getOp();
+            this->addClipStackData(devPath, operand, elementOp);
+            if (elementOp == SkRegion::kReplace_Op) {
+                devPath = operand;
+            } else {
+                Op(devPath, operand, (SkPathOp) elementOp, &devPath);
+            }
+        }
+        this->lastClipStackData(devPath);
+    }
     fMatrix = canvas->getTotalMatrix();
     if (!canvas->getClipDeviceBounds(&fClip)) {
         fClip.setEmpty();
@@ -380,6 +412,16 @@ SkTArray<SkString>* SkDebugCanvas::getDrawCommandsAsStrings() const {
     return commandString;
 }
 
+SkTDArray<size_t>* SkDebugCanvas::getDrawCommandOffsets() const {
+    SkTDArray<size_t>* commandOffsets = new SkTDArray<size_t>;
+    if (!fCommandVector.isEmpty()) {
+        for (int i = 0; i < fCommandVector.count(); i ++) {
+            *commandOffsets->push() = fCommandVector[i]->offset();
+        }
+    }
+    return commandOffsets;
+}
+
 void SkDebugCanvas::overrideTexFiltering(bool overrideTexFiltering, SkPaint::FilterLevel level) {
     if (NULL == fTexOverrideFilter) {
         fTexOverrideFilter = new SkTexOverrideFilter;
@@ -390,7 +432,7 @@ void SkDebugCanvas::overrideTexFiltering(bool overrideTexFiltering, SkPaint::Fil
 }
 
 void SkDebugCanvas::clear(SkColor color) {
-    addDrawCommand(new SkClearCommand(color));
+    this->addDrawCommand(new SkClearCommand(color));
 }
 
 void SkDebugCanvas::onClipPath(const SkPath& path, SkRegion::Op op, ClipEdgeStyle edgeStyle) {
@@ -410,77 +452,90 @@ void SkDebugCanvas::onClipRegion(const SkRegion& region, SkRegion::Op op) {
 }
 
 void SkDebugCanvas::didConcat(const SkMatrix& matrix) {
-    addDrawCommand(new SkConcatCommand(matrix));
+    switch (matrix.getType()) {
+        case SkMatrix::kTranslate_Mask:
+            this->addDrawCommand(new SkTranslateCommand(matrix.getTranslateX(),
+                                                        matrix.getTranslateY()));
+            break;
+        case SkMatrix::kScale_Mask:
+            this->addDrawCommand(new SkScaleCommand(matrix.getScaleX(),
+                                                    matrix.getScaleY()));
+            break;
+        default:
+            this->addDrawCommand(new SkConcatCommand(matrix));
+            break;
+    }
+
     this->INHERITED::didConcat(matrix);
 }
 
 void SkDebugCanvas::drawBitmap(const SkBitmap& bitmap, SkScalar left,
                                SkScalar top, const SkPaint* paint = NULL) {
-    addDrawCommand(new SkDrawBitmapCommand(bitmap, left, top, paint));
+    this->addDrawCommand(new SkDrawBitmapCommand(bitmap, left, top, paint));
 }
 
 void SkDebugCanvas::drawBitmapRectToRect(const SkBitmap& bitmap,
                                          const SkRect* src, const SkRect& dst,
                                          const SkPaint* paint,
                                          SkCanvas::DrawBitmapRectFlags flags) {
-    addDrawCommand(new SkDrawBitmapRectCommand(bitmap, src, dst, paint, flags));
+    this->addDrawCommand(new SkDrawBitmapRectCommand(bitmap, src, dst, paint, flags));
 }
 
 void SkDebugCanvas::drawBitmapMatrix(const SkBitmap& bitmap,
                                      const SkMatrix& matrix, const SkPaint* paint) {
-    addDrawCommand(new SkDrawBitmapMatrixCommand(bitmap, matrix, paint));
+    this->addDrawCommand(new SkDrawBitmapMatrixCommand(bitmap, matrix, paint));
 }
 
 void SkDebugCanvas::drawBitmapNine(const SkBitmap& bitmap,
         const SkIRect& center, const SkRect& dst, const SkPaint* paint) {
-    addDrawCommand(new SkDrawBitmapNineCommand(bitmap, center, dst, paint));
+    this->addDrawCommand(new SkDrawBitmapNineCommand(bitmap, center, dst, paint));
 }
 
 void SkDebugCanvas::drawData(const void* data, size_t length) {
-    addDrawCommand(new SkDrawDataCommand(data, length));
+    this->addDrawCommand(new SkDrawDataCommand(data, length));
 }
 
 void SkDebugCanvas::beginCommentGroup(const char* description) {
-    addDrawCommand(new SkBeginCommentGroupCommand(description));
+    this->addDrawCommand(new SkBeginCommentGroupCommand(description));
 }
 
 void SkDebugCanvas::addComment(const char* kywd, const char* value) {
-    addDrawCommand(new SkCommentCommand(kywd, value));
+    this->addDrawCommand(new SkCommentCommand(kywd, value));
 }
 
 void SkDebugCanvas::endCommentGroup() {
-    addDrawCommand(new SkEndCommentGroupCommand());
+    this->addDrawCommand(new SkEndCommentGroupCommand());
 }
 
 void SkDebugCanvas::drawOval(const SkRect& oval, const SkPaint& paint) {
-    addDrawCommand(new SkDrawOvalCommand(oval, paint));
+    this->addDrawCommand(new SkDrawOvalCommand(oval, paint));
 }
 
 void SkDebugCanvas::drawPaint(const SkPaint& paint) {
-    addDrawCommand(new SkDrawPaintCommand(paint));
+    this->addDrawCommand(new SkDrawPaintCommand(paint));
 }
 
 void SkDebugCanvas::drawPath(const SkPath& path, const SkPaint& paint) {
-    addDrawCommand(new SkDrawPathCommand(path, paint));
+    this->addDrawCommand(new SkDrawPathCommand(path, paint));
 }
 
-void SkDebugCanvas::drawPicture(SkPicture& picture) {
-    addDrawCommand(new SkDrawPictureCommand(picture));
+void SkDebugCanvas::onDrawPicture(const SkPicture* picture) {
+    this->addDrawCommand(new SkDrawPictureCommand(picture));
 }
 
 void SkDebugCanvas::drawPoints(PointMode mode, size_t count,
                                const SkPoint pts[], const SkPaint& paint) {
-    addDrawCommand(new SkDrawPointsCommand(mode, count, pts, paint));
+    this->addDrawCommand(new SkDrawPointsCommand(mode, count, pts, paint));
 }
 
-void SkDebugCanvas::drawPosText(const void* text, size_t byteLength,
-        const SkPoint pos[], const SkPaint& paint) {
-    addDrawCommand(new SkDrawPosTextCommand(text, byteLength, pos, paint));
+void SkDebugCanvas::onDrawPosText(const void* text, size_t byteLength, const SkPoint pos[],
+                                  const SkPaint& paint) {
+    this->addDrawCommand(new SkDrawPosTextCommand(text, byteLength, pos, paint));
 }
 
-void SkDebugCanvas::drawPosTextH(const void* text, size_t byteLength,
-        const SkScalar xpos[], SkScalar constY, const SkPaint& paint) {
-    addDrawCommand(
+void SkDebugCanvas::onDrawPosTextH(const void* text, size_t byteLength, const SkScalar xpos[],
+                                   SkScalar constY, const SkPaint& paint) {
+    this->addDrawCommand(
         new SkDrawPosTextHCommand(text, byteLength, xpos, constY, paint));
 }
 
@@ -490,7 +545,7 @@ void SkDebugCanvas::drawRect(const SkRect& rect, const SkPaint& paint) {
 }
 
 void SkDebugCanvas::drawRRect(const SkRRect& rrect, const SkPaint& paint) {
-    addDrawCommand(new SkDrawRRectCommand(rrect, paint));
+    this->addDrawCommand(new SkDrawRRectCommand(rrect, paint));
 }
 
 void SkDebugCanvas::onDrawDRRect(const SkRRect& outer, const SkRRect& inner,
@@ -500,17 +555,17 @@ void SkDebugCanvas::onDrawDRRect(const SkRRect& outer, const SkRRect& inner,
 
 void SkDebugCanvas::drawSprite(const SkBitmap& bitmap, int left, int top,
                                const SkPaint* paint = NULL) {
-    addDrawCommand(new SkDrawSpriteCommand(bitmap, left, top, paint));
+    this->addDrawCommand(new SkDrawSpriteCommand(bitmap, left, top, paint));
 }
 
-void SkDebugCanvas::drawText(const void* text, size_t byteLength, SkScalar x,
-        SkScalar y, const SkPaint& paint) {
-    addDrawCommand(new SkDrawTextCommand(text, byteLength, x, y, paint));
+void SkDebugCanvas::onDrawText(const void* text, size_t byteLength, SkScalar x, SkScalar y,
+                               const SkPaint& paint) {
+    this->addDrawCommand(new SkDrawTextCommand(text, byteLength, x, y, paint));
 }
 
-void SkDebugCanvas::drawTextOnPath(const void* text, size_t byteLength,
-        const SkPath& path, const SkMatrix* matrix, const SkPaint& paint) {
-    addDrawCommand(
+void SkDebugCanvas::onDrawTextOnPath(const void* text, size_t byteLength, const SkPath& path,
+                                     const SkMatrix* matrix, const SkPaint& paint) {
+    this->addDrawCommand(
         new SkDrawTextOnPathCommand(text, byteLength, path, matrix, paint));
 }
 
@@ -518,8 +573,8 @@ void SkDebugCanvas::drawVertices(VertexMode vmode, int vertexCount,
         const SkPoint vertices[], const SkPoint texs[], const SkColor colors[],
         SkXfermode*, const uint16_t indices[], int indexCount,
         const SkPaint& paint) {
-    addDrawCommand(new SkDrawVerticesCommand(vmode, vertexCount, vertices,
-                   texs, colors, NULL, indices, indexCount, paint));
+    this->addDrawCommand(new SkDrawVerticesCommand(vmode, vertexCount, vertices,
+                         texs, colors, NULL, indices, indexCount, paint));
 }
 
 void SkDebugCanvas::onPushCull(const SkRect& cullRect) {
@@ -535,14 +590,9 @@ void SkDebugCanvas::willRestore() {
     this->INHERITED::willRestore();
 }
 
-void SkDebugCanvas::didRotate(SkScalar degrees) {
-    addDrawCommand(new SkRotateCommand(degrees));
-    this->INHERITED::didRotate(degrees);
-}
-
-void SkDebugCanvas::willSave(SaveFlags flags) {
-    this->addDrawCommand(new SkSaveCommand(flags));
-    this->INHERITED::willSave(flags);
+void SkDebugCanvas::willSave() {
+    this->addDrawCommand(new SkSaveCommand());
+    this->INHERITED::willSave();
 }
 
 SkCanvas::SaveLayerStrategy SkDebugCanvas::willSaveLayer(const SkRect* bounds, const SkPaint* paint,
@@ -553,27 +603,137 @@ SkCanvas::SaveLayerStrategy SkDebugCanvas::willSaveLayer(const SkRect* bounds, c
     return kNoLayer_SaveLayerStrategy;
 }
 
-void SkDebugCanvas::didScale(SkScalar sx, SkScalar sy) {
-    addDrawCommand(new SkScaleCommand(sx, sy));
-    this->INHERITED::didScale(sx, sy);
-}
-
 void SkDebugCanvas::didSetMatrix(const SkMatrix& matrix) {
-    addDrawCommand(new SkSetMatrixCommand(matrix));
+    this->addDrawCommand(new SkSetMatrixCommand(matrix));
     this->INHERITED::didSetMatrix(matrix);
-}
-
-void SkDebugCanvas::didSkew(SkScalar sx, SkScalar sy) {
-    addDrawCommand(new SkSkewCommand(sx, sy));
-    this->INHERITED::didSkew(sx, sy);
-}
-
-void SkDebugCanvas::didTranslate(SkScalar dx, SkScalar dy) {
-    addDrawCommand(new SkTranslateCommand(dx, dy));
-    this->INHERITED::didTranslate(dx, dy);
 }
 
 void SkDebugCanvas::toggleCommand(int index, bool toggle) {
     SkASSERT(index < fCommandVector.count());
     fCommandVector[index]->setVisible(toggle);
+}
+
+static const char* gFillTypeStrs[] = {
+    "kWinding_FillType",
+    "kEvenOdd_FillType",
+    "kInverseWinding_FillType",
+    "kInverseEvenOdd_FillType"
+};
+
+static const char* gOpStrs[] = {
+    "kDifference_PathOp",
+    "kIntersect_PathOp",
+    "kUnion_PathOp",
+    "kXor_PathOp",
+    "kReverseDifference_PathOp",
+};
+
+static const char kHTML4SpaceIndent[] = "&nbsp;&nbsp;&nbsp;&nbsp;";
+
+void SkDebugCanvas::outputScalar(SkScalar num) {
+    if (num == (int) num) {
+        fClipStackData.appendf("%d", (int) num);
+    } else {
+        SkString str;
+        str.printf("%1.9g", num);
+        int width = (int) str.size();
+        const char* cStr = str.c_str();
+        while (cStr[width - 1] == '0') {
+            --width;
+        }
+        str.resize(width);
+        fClipStackData.appendf("%sf", str.c_str());
+    }
+}
+
+void SkDebugCanvas::outputPointsCommon(const SkPoint* pts, int count) {
+    for (int index = 0; index < count; ++index) {
+        this->outputScalar(pts[index].fX);
+        fClipStackData.appendf(", ");
+        this->outputScalar(pts[index].fY);
+        if (index + 1 < count) {
+            fClipStackData.appendf(", ");
+        }
+    }
+}
+
+void SkDebugCanvas::outputPoints(const SkPoint* pts, int count) {
+    this->outputPointsCommon(pts, count);
+    fClipStackData.appendf(");<br>");
+}
+
+void SkDebugCanvas::outputConicPoints(const SkPoint* pts, SkScalar weight) {
+    this->outputPointsCommon(pts, 2);
+    fClipStackData.appendf(", ");
+    this->outputScalar(weight);
+    fClipStackData.appendf(");<br>");
+}
+
+void SkDebugCanvas::addPathData(const SkPath& path, const char* pathName) {
+    SkPath::RawIter iter(path);
+    SkPath::FillType fillType = path.getFillType();
+    fClipStackData.appendf("%sSkPath %s;<br>", kHTML4SpaceIndent, pathName);
+    fClipStackData.appendf("%s%s.setFillType(SkPath::%s);<br>", kHTML4SpaceIndent, pathName,
+            gFillTypeStrs[fillType]);
+    iter.setPath(path);
+    uint8_t verb;
+    SkPoint pts[4];
+    while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
+        switch (verb) {
+            case SkPath::kMove_Verb:
+                fClipStackData.appendf("%s%s.moveTo(", kHTML4SpaceIndent, pathName);
+                this->outputPoints(&pts[0], 1);
+                continue;
+            case SkPath::kLine_Verb:
+                fClipStackData.appendf("%s%s.lineTo(", kHTML4SpaceIndent, pathName);
+                this->outputPoints(&pts[1], 1);
+                break;
+            case SkPath::kQuad_Verb:
+                fClipStackData.appendf("%s%s.quadTo(", kHTML4SpaceIndent, pathName);
+                this->outputPoints(&pts[1], 2);
+                break;
+            case SkPath::kConic_Verb:
+                fClipStackData.appendf("%s%s.conicTo(", kHTML4SpaceIndent, pathName);
+                this->outputConicPoints(&pts[1], iter.conicWeight());
+                break;
+            case SkPath::kCubic_Verb:
+                fClipStackData.appendf("%s%s.cubicTo(", kHTML4SpaceIndent, pathName);
+                this->outputPoints(&pts[1], 3);
+                break;
+            case SkPath::kClose_Verb:
+                fClipStackData.appendf("%s%s.close();<br>", kHTML4SpaceIndent, pathName);
+                break;
+            default:
+                SkDEBUGFAIL("bad verb");
+                return;
+        }
+    }
+}
+
+void SkDebugCanvas::addClipStackData(const SkPath& devPath, const SkPath& operand,
+                                     SkRegion::Op elementOp) {
+    if (elementOp == SkRegion::kReplace_Op) {
+        if (!lastClipStackData(devPath)) {
+            fSaveDevPath = operand;
+        }
+        fCalledAddStackData = false;
+    } else {
+        fClipStackData.appendf("<br>static void test(skiatest::Reporter* reporter,"
+            " const char* filename) {<br>");
+        addPathData(fCalledAddStackData ? devPath : fSaveDevPath, "path");
+        addPathData(operand, "pathB");
+        fClipStackData.appendf("%stestPathOp(reporter, path, pathB, %s, filename);<br>",
+            kHTML4SpaceIndent, gOpStrs[elementOp]);
+        fClipStackData.appendf("}<br>");
+        fCalledAddStackData = true;
+    }
+}
+
+bool SkDebugCanvas::lastClipStackData(const SkPath& devPath) {
+    if (fCalledAddStackData) {
+        fClipStackData.appendf("<br>");
+        addPathData(devPath, "pathOut");
+        return true;
+    }
+    return false;
 }

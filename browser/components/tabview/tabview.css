@@ -65,6 +65,13 @@ body {
   position: absolute;
 }
 
+/* Apply crisp rendering for favicons at exactly 2dppx resolution */
+@media (resolution: 2dppx) {
+  .favicon > img {
+    image-rendering: -moz-crisp-edges;
+  }
+}
+
 .close {
   position: absolute;
   cursor: pointer;

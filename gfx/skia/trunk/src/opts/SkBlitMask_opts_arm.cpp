@@ -1,3 +1,9 @@
+/*
+ * Copyright 2014 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #include "SkColor.h"
 #include "SkColorPriv.h"
@@ -5,7 +11,7 @@
 #include "SkUtilsArm.h"
 #include "SkBlitMask_opts_arm_neon.h"
 
-SkBlitMask::ColorProc SkBlitMask::PlatformColorProcs(SkBitmap::Config dstConfig,
+SkBlitMask::ColorProc SkBlitMask::PlatformColorProcs(SkColorType dstCT,
                                                      SkMask::Format maskFormat,
                                                      SkColor color) {
 #if SK_ARM_NEON_IS_NONE
@@ -18,7 +24,7 @@ SkBlitMask::ColorProc SkBlitMask::PlatformColorProcs(SkBitmap::Config dstConfig,
         return NULL;
     }
 #endif
-    if ((SkBitmap::kARGB_8888_Config == dstConfig) &&
+    if ((kN32_SkColorType == dstCT) &&
         (SkMask::kA8_Format == maskFormat)) {
             return D32_A8_Factory_neon(color);
     }
@@ -39,7 +45,7 @@ SkBlitMask::BlitLCD16RowProc SkBlitMask::PlatformBlitRowProcs16(bool isOpaque) {
     }
 }
 
-SkBlitMask::RowProc SkBlitMask::PlatformRowProcs(SkBitmap::Config dstConfig,
+SkBlitMask::RowProc SkBlitMask::PlatformRowProcs(SkColorType dstCT,
                                                  SkMask::Format maskFormat,
                                                  RowFlags flags) {
     return NULL;

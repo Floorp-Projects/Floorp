@@ -12,6 +12,7 @@
 
 #if SK_SUPPORT_GPU
 #include "gl/GrGLEffect.h"
+#include "gl/GrGLShaderBuilder.h"
 #include "GrContext.h"
 #include "GrTBackendEffectFactory.h"
 #endif
@@ -60,9 +61,9 @@ void SkLumaColorFilter::toString(SkString* str) const {
 #if SK_SUPPORT_GPU
 class LumaColorFilterEffect : public GrEffect {
 public:
-    static GrEffectRef* Create() {
-        AutoEffectUnref effect(SkNEW(LumaColorFilterEffect));
-        return CreateEffectRef(effect);
+    static GrEffect* Create() {
+        GR_CREATE_STATIC_EFFECT(gLumaEffect, LumaColorFilterEffect, ());
+        return SkRef(gLumaEffect);
     }
 
     static const char* Name() { return "Luminance-to-Alpha"; }
@@ -85,14 +86,11 @@ public:
         : INHERITED(factory) {
         }
 
-        static EffectKey GenKey(const GrDrawEffect&, const GrGLCaps&) {
-            // this class always generates the same code.
-            return 0;
-        }
+        static void GenKey(const GrDrawEffect&, const GrGLCaps&, GrEffectKeyBuilder* b) {}
 
         virtual void emitCode(GrGLShaderBuilder* builder,
                               const GrDrawEffect&,
-                              EffectKey,
+                              const GrEffectKey&,
                               const char* outputColor,
                               const char* inputColor,
                               const TransformedCoordsArray&,
@@ -121,7 +119,7 @@ private:
     }
 };
 
-GrEffectRef* SkLumaColorFilter::asNewEffect(GrContext*) const {
+GrEffect* SkLumaColorFilter::asNewEffect(GrContext*) const {
     return LumaColorFilterEffect::Create();
 }
 #endif

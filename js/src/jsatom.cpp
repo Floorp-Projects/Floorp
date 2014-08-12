@@ -45,16 +45,6 @@ js::AtomToPrintableString(ExclusiveContext *cx, JSAtom *atom, JSAutoByteString *
     return bytes->encodeLatin1(cx, str);
 }
 
-const char * const js::TypeStrings[] = {
-    js_undefined_str,
-    js_object_str,
-    js_function_str,
-    js_string_str,
-    js_number_str,
-    js_boolean_str,
-    js_null_str,
-};
-
 #define DEFINE_PROTO_STRING(name,code,init,clasp) const char js_##name##_str[] = #name;
 JS_FOR_EACH_PROTOTYPE(DEFINE_PROTO_STRING)
 #undef DEFINE_PROTO_STRING
