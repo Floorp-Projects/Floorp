@@ -74,7 +74,6 @@ private:
 BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
                                  const BluetoothValue& aValue)
   : DOMEventTargetHelper(aWindow)
-  , mPaired(false)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
