@@ -598,6 +598,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     common.animations() = mutant->GetAnimations();
     common.invalidRegion() = mutant->GetInvalidRegion();
     common.metrics() = mutant->GetFrameMetrics();
+    common.scrollParentId() = mutant->GetScrollHandoffParentId();
     attrs.specific() = null_t();
     mutant->FillSpecificAttributes(attrs.specific());
 
