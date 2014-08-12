@@ -179,7 +179,7 @@
 #define XPC_JS_MAP_LENGTH                       32
 #define XPC_JS_CLASS_MAP_LENGTH                 32
 
-#define XPC_NATIVE_MAP_LENGTH                   32
+#define XPC_NATIVE_MAP_LENGTH                    8
 #define XPC_NATIVE_PROTO_MAP_LENGTH              8
 #define XPC_DYING_NATIVE_PROTO_MAP_LENGTH        8
 #define XPC_DETACHED_NATIVE_PROTO_MAP_LENGTH    16
