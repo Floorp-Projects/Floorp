@@ -6530,7 +6530,7 @@
     "description": "Certificate pinning results by host for Mozilla operational sites"
   },
   "CERT_PINNING_MOZ_TEST_RESULTS_BY_HOST": {
-    "alert_emails": ["pinning@mozilla.com"],
+    "alert_emails": ["pinning@mozilla.org"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 512,
