@@ -11,7 +11,7 @@
   
   <binding id="thumb" extends="xul:button" />
 
-  <binding id="scrollbar-base">
+  <binding id="scrollbar-base" bindToUntrustedContent="true">
     <handlers>
       <handler event="contextmenu" preventdefault="true" action="event.stopPropagation();"/>
       <handler event="click" preventdefault="true" action="event.stopPropagation();"/>
@@ -20,7 +20,7 @@
     </handlers>
   </binding>
 
-  <binding id="scrollbar" extends="chrome://global/content/bindings/scrollbar.xml#scrollbar-base">
+  <binding id="scrollbar" bindToUntrustedContent="true" extends="chrome://global/content/bindings/scrollbar.xml#scrollbar-base">
     <content clickthrough="always">
       <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" xbl:inherits="curpos,maxpos,disabled,sborient=orient"/>
       <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" xbl:inherits="curpos,maxpos,disabled,sborient=orient"/>
