@@ -110,7 +110,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **o
         JSBool ok, found;
         JSFunction *fun;
 
-        if (!id.isString())
+        if (!JSVAL_IS_STRING(id))
             return JS_TRUE;
         path = getenv("PATH");
         if (!path)
@@ -118,7 +118,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **o
         path = JS_strdup(cx, path);
         if (!path)
             return JS_FALSE;
-        name = JS_GetStringBytes(id.toString());
+        name = JS_GetStringBytes(JSVAL_TO_STRING(id));
         ok = JS_TRUE;
         for (comp = strtok(path, ":"); comp; comp = strtok(NULL, ":")) {
             if (*comp != '\0') {

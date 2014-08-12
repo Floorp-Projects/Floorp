@@ -16,6 +16,7 @@
 #include "SkGlyph.h"
 #include "SkHRESULT.h"
 #include "SkMaskGamma.h"
+#include "SkMatrix22.h"
 #include "SkOTTable_maxp.h"
 #include "SkOTTable_name.h"
 #include "SkOTUtils.h"
@@ -284,15 +285,6 @@ protected:
 class FontMemResourceTypeface : public LogFontTypeface {
 public:
     /**
-     *  Takes ownership of fontMemResource.
-     */
-    FontMemResourceTypeface(SkTypeface::Style style, SkFontID fontID, const LOGFONT& lf, HANDLE fontMemResource) :
-        LogFontTypeface(style, fontID, lf, true), fFontMemResource(fontMemResource) {
-    }
-
-    HANDLE fFontMemResource;
-
-    /**
      *  The created FontMemResourceTypeface takes ownership of fontMemResource.
      */
     static FontMemResourceTypeface* Create(const LOGFONT& lf, HANDLE fontMemResource) {
@@ -309,6 +301,15 @@ protected:
     }
 
 private:
+    /**
+     *  Takes ownership of fontMemResource.
+     */
+    FontMemResourceTypeface(SkTypeface::Style style, SkFontID fontID, const LOGFONT& lf, HANDLE fontMemResource) :
+        LogFontTypeface(style, fontID, lf, true), fFontMemResource(fontMemResource) {
+    }
+
+    HANDLE fFontMemResource;
+
     typedef LogFontTypeface INHERITED;
 };
 
@@ -558,8 +559,7 @@ protected:
     virtual void generateMetrics(SkGlyph* glyph) SK_OVERRIDE;
     virtual void generateImage(const SkGlyph& glyph) SK_OVERRIDE;
     virtual void generatePath(const SkGlyph& glyph, SkPath* path) SK_OVERRIDE;
-    virtual void generateFontMetrics(SkPaint::FontMetrics* mX,
-                                     SkPaint::FontMetrics* mY) SK_OVERRIDE;
+    virtual void generateFontMetrics(SkPaint::FontMetrics*) SK_OVERRIDE;
 
 private:
     DWORD getGDIGlyphPath(const SkGlyph& glyph, UINT flags,
@@ -636,41 +636,16 @@ SkScalerContext_GDI::SkScalerContext_GDI(SkTypeface* rawTypeface,
     fRec.getSingleMatrix(&A);
     A.mapPoints(&h, 1);
 
-    // Find the Given's matrix [[c, -s],[s, c]] which rotates the baseline vector h
-    // (where the baseline is mapped to) to the positive horizontal axis.
-    const SkScalar& a = h.fX;
-    const SkScalar& b = h.fY;
-    SkScalar c, s;
-    if (0 == b) {
-        c = SkDoubleToScalar(_copysign(SK_Scalar1, a));
-        s = 0;
-    } else if (0 == a) {
-        c = 0;
-        s = SkDoubleToScalar(-_copysign(SK_Scalar1, b));
-    } else if (SkScalarAbs(b) > SkScalarAbs(a)) {
-        SkScalar t = a / b;
-        SkScalar u = SkDoubleToScalar(_copysign(SkScalarSqrt(SK_Scalar1 + t*t), b));
-        s = -1 / u;
-        c = -s * t;
-    } else {
-        SkScalar t = b / a;
-        SkScalar u = SkDoubleToScalar(_copysign(SkScalarSqrt(SK_Scalar1 + t*t), a));
-        c = 1 / u;
-        s = -c * t;
-    }
-
-    // G is the Given's Matrix for A (rotational matrix such that GA[0][1] == 0).
+    // G is the Givens Matrix for A (rotational matrix where GA[0][1] == 0).
     SkMatrix G;
-    G.setAll(c, -s, 0,
-             s,  c, 0,
-             0,  0, SkScalarToPersp(SK_Scalar1));
+    SkComputeGivensRotation(h, &G);
 
     // GA is the matrix A with rotation removed.
     SkMatrix GA(G);
     GA.preConcat(A);
 
     // realTextSize is the actual device size we want (as opposed to the size the user requested).
-    // gdiTextSide is the size we request from GDI.
+    // gdiTextSize is the size we request from GDI.
     // If the scale is negative, this means the matrix will do the flip anyway.
     SkScalar realTextSize = SkScalarAbs(GA.get(SkMatrix::kMScaleY));
     SkScalar gdiTextSize = SkScalarRoundToScalar(realTextSize);
@@ -1002,43 +977,27 @@ void SkScalerContext_GDI::generateMetrics(SkGlyph* glyph) {
 }
 
 static const MAT2 gMat2Identity = {{0, 1}, {0, 0}, {0, 0}, {0, 1}};
-void SkScalerContext_GDI::generateFontMetrics(SkPaint::FontMetrics* mx, SkPaint::FontMetrics* my) {
-    if (!(mx || my)) {
-      return;
+void SkScalerContext_GDI::generateFontMetrics(SkPaint::FontMetrics* metrics) {
+    if (NULL == metrics) {
+        return;
     }
-
-    if (mx) {
-        sk_bzero(mx, sizeof(*mx));
-    }
-    if (my) {
-        sk_bzero(my, sizeof(*my));
-    }
+    sk_bzero(metrics, sizeof(*metrics));
 
     SkASSERT(fDDC);
 
 #ifndef SK_GDI_ALWAYS_USE_TEXTMETRICS_FOR_FONT_METRICS
     if (fType == SkScalerContext_GDI::kBitmap_Type || fType == SkScalerContext_GDI::kLine_Type) {
 #endif
-        if (mx) {
-            mx->fTop = SkIntToScalar(-fTM.tmAscent);
-            mx->fAscent = SkIntToScalar(-fTM.tmAscent);
-            mx->fDescent = SkIntToScalar(fTM.tmDescent);
-            mx->fBottom = SkIntToScalar(fTM.tmDescent);
-            mx->fLeading = SkIntToScalar(fTM.tmExternalLeading);
-        }
-
-        if (my) {
-            my->fTop = SkIntToScalar(-fTM.tmAscent);
-            my->fAscent = SkIntToScalar(-fTM.tmAscent);
-            my->fDescent = SkIntToScalar(fTM.tmDescent);
-            my->fBottom = SkIntToScalar(fTM.tmDescent);
-            my->fLeading = SkIntToScalar(fTM.tmExternalLeading);
-            my->fAvgCharWidth = SkIntToScalar(fTM.tmAveCharWidth);
-            my->fMaxCharWidth = SkIntToScalar(fTM.tmMaxCharWidth);
-            my->fXMin = 0;
-            my->fXMax = my->fMaxCharWidth;
-            //my->fXHeight = 0;
-        }
+        metrics->fTop = SkIntToScalar(-fTM.tmAscent);
+        metrics->fAscent = SkIntToScalar(-fTM.tmAscent);
+        metrics->fDescent = SkIntToScalar(fTM.tmDescent);
+        metrics->fBottom = SkIntToScalar(fTM.tmDescent);
+        metrics->fLeading = SkIntToScalar(fTM.tmExternalLeading);
+        metrics->fAvgCharWidth = SkIntToScalar(fTM.tmAveCharWidth);
+        metrics->fMaxCharWidth = SkIntToScalar(fTM.tmMaxCharWidth);
+        metrics->fXMin = 0;
+        metrics->fXMax = metrics->fMaxCharWidth;
+        //metrics->fXHeight = 0;
 #ifndef SK_GDI_ALWAYS_USE_TEXTMETRICS_FOR_FONT_METRICS
         return;
     }
@@ -1055,44 +1014,29 @@ void SkScalerContext_GDI::generateFontMetrics(SkPaint::FontMetrics* mx, SkPaint:
         return;
     }
 
-    if (mx) {
-        mx->fTop = SkIntToScalar(-otm.otmrcFontBox.left);
-        mx->fAscent = SkIntToScalar(-otm.otmAscent);
-        mx->fDescent = SkIntToScalar(-otm.otmDescent);
-        mx->fBottom = SkIntToScalar(otm.otmrcFontBox.right);
-        mx->fLeading = SkIntToScalar(otm.otmLineGap);
-        mx->fUnderlineThickness = SkIntToScalar(otm.otmsUnderscoreSize);
-        mx->fUnderlinePosition = -SkIntToScalar(otm.otmsUnderscorePosition);
-
-        mx->fFlags |= SkPaint::FontMetrics::kUnderlineThinknessIsValid_Flag;
-        mx->fFlags |= SkPaint::FontMetrics::kUnderlinePositionIsValid_Flag;
-    }
-
-    if (my) {
 #ifndef SK_GDI_ALWAYS_USE_TEXTMETRICS_FOR_FONT_METRICS
-        my->fTop = SkIntToScalar(-otm.otmrcFontBox.top);
-        my->fAscent = SkIntToScalar(-otm.otmAscent);
-        my->fDescent = SkIntToScalar(-otm.otmDescent);
-        my->fBottom = SkIntToScalar(-otm.otmrcFontBox.bottom);
-        my->fLeading = SkIntToScalar(otm.otmLineGap);
-        my->fAvgCharWidth = SkIntToScalar(otm.otmTextMetrics.tmAveCharWidth);
-        my->fMaxCharWidth = SkIntToScalar(otm.otmTextMetrics.tmMaxCharWidth);
-        my->fXMin = SkIntToScalar(otm.otmrcFontBox.left);
-        my->fXMax = SkIntToScalar(otm.otmrcFontBox.right);
-        my->fUnderlineThickness = SkIntToScalar(otm.otmsUnderscoreSize);
-        my->fUnderlinePosition = -SkIntToScalar(otm.otmsUnderscorePosition);
-
-        my->fFlags |= SkPaint::FontMetrics::kUnderlineThinknessIsValid_Flag;
-        my->fFlags |= SkPaint::FontMetrics::kUnderlinePositionIsValid_Flag;
+    metrics->fTop = SkIntToScalar(-otm.otmrcFontBox.top);
+    metrics->fAscent = SkIntToScalar(-otm.otmAscent);
+    metrics->fDescent = SkIntToScalar(-otm.otmDescent);
+    metrics->fBottom = SkIntToScalar(-otm.otmrcFontBox.bottom);
+    metrics->fLeading = SkIntToScalar(otm.otmLineGap);
+    metrics->fAvgCharWidth = SkIntToScalar(otm.otmTextMetrics.tmAveCharWidth);
+    metrics->fMaxCharWidth = SkIntToScalar(otm.otmTextMetrics.tmMaxCharWidth);
+    metrics->fXMin = SkIntToScalar(otm.otmrcFontBox.left);
+    metrics->fXMax = SkIntToScalar(otm.otmrcFontBox.right);
 #endif
-        my->fXHeight = SkIntToScalar(otm.otmsXHeight);
+    metrics->fUnderlineThickness = SkIntToScalar(otm.otmsUnderscoreSize);
+    metrics->fUnderlinePosition = -SkIntToScalar(otm.otmsUnderscorePosition);
 
-        GLYPHMETRICS gm;
-        sk_bzero(&gm, sizeof(gm));
-        DWORD len = GetGlyphOutlineW(fDDC, 'x', GGO_METRICS, &gm, 0, 0, &gMat2Identity);
-        if (len != GDI_ERROR && gm.gmBlackBoxY > 0) {
-            my->fXHeight = SkIntToScalar(gm.gmBlackBoxY);
-        }
+    metrics->fFlags |= SkPaint::FontMetrics::kUnderlineThinknessIsValid_Flag;
+    metrics->fFlags |= SkPaint::FontMetrics::kUnderlinePositionIsValid_Flag;
+
+    metrics->fXHeight = SkIntToScalar(otm.otmsXHeight);
+    GLYPHMETRICS gm;
+    sk_bzero(&gm, sizeof(gm));
+    DWORD len = GetGlyphOutlineW(fDDC, 'x', GGO_METRICS, &gm, 0, 0, &gMat2Identity);
+    if (len != GDI_ERROR && gm.gmBlackBoxY > 0) {
+        metrics->fXHeight = SkIntToScalar(gm.gmBlackBoxY);
     }
 }
 
@@ -1729,7 +1673,8 @@ DWORD SkScalerContext_GDI::getGDIGlyphPath(const SkGlyph& glyph, UINT flags,
             LogFontTypeface::EnsureAccessible(this->getTypeface());
             total_size = GetGlyphOutlineW(fDDC, glyph.fID, flags, &gm, 0, NULL, &fMat22);
             if (GDI_ERROR == total_size) {
-                SkASSERT(false);
+                // GetGlyphOutlineW is known to fail for some characters, such as spaces.
+                // In these cases, just return that the glyph does not have a shape.
                 return 0;
             }
         }
@@ -1890,10 +1835,18 @@ SkAdvancedTypefaceMetrics* LogFontTypeface::onGetAdvancedTypefaceMetrics(
 
     info = new SkAdvancedTypefaceMetrics;
     info->fEmSize = otm.otmEMSquare;
-    info->fMultiMaster = false;
     info->fLastGlyphID = SkToU16(glyphCount - 1);
     info->fStyle = 0;
     tchar_to_skstring(lf.lfFaceName, &info->fFontName);
+    info->fFlags = SkAdvancedTypefaceMetrics::kEmpty_FontFlag;
+    // If bit 1 is set, the font may not be embedded in a document.
+    // If bit 1 is clear, the font can be embedded.
+    // If bit 2 is set, the embedding is read-only.
+    if (otm.otmfsType & 0x1) {
+        info->fFlags = SkTBitOr<SkAdvancedTypefaceMetrics::FontFlags>(
+                info->fFlags,
+                SkAdvancedTypefaceMetrics::kNotEmbeddable_FontFlag);
+    }
 
     if (perGlyphInfo & SkAdvancedTypefaceMetrics::kToUnicode_PerGlyphInfo) {
         populate_glyph_to_unicode(hdc, glyphCount, &(info->fGlyphToUnicode));
@@ -1954,13 +1907,7 @@ SkAdvancedTypefaceMetrics* LogFontTypeface::onGetAdvancedTypefaceMetrics(
         }
     }
 
-    // If bit 1 is set, the font may not be embedded in a document.
-    // If bit 1 is clear, the font can be embedded.
-    // If bit 2 is set, the embedding is read-only.
-    if (otm.otmfsType & 0x1) {
-        info->fType = SkAdvancedTypefaceMetrics::kNotEmbeddable_Font;
-    } else if (perGlyphInfo &
-               SkAdvancedTypefaceMetrics::kHAdvance_PerGlyphInfo) {
+    if (perGlyphInfo & SkAdvancedTypefaceMetrics::kHAdvance_PerGlyphInfo) {
         if (info->fStyle & SkAdvancedTypefaceMetrics::kFixedPitch_Style) {
             appendRange(&info->fGlyphWidths, 0);
             info->fGlyphWidths->fAdvance.append(1, &min_width);
@@ -2429,7 +2376,8 @@ void LogFontTypeface::onFilterRec(SkScalerContextRec* rec) const {
         rec->fFlags |= SkScalerContext::kGenA8FromLCD_Flag;
     }
 
-    unsigned flagsWeDontSupport = SkScalerContext::kDevKernText_Flag |
+    unsigned flagsWeDontSupport = SkScalerContext::kVertical_Flag |
+                                  SkScalerContext::kDevKernText_Flag |
                                   SkScalerContext::kForceAutohinting_Flag |
                                   SkScalerContext::kEmbeddedBitmapText_Flag |
                                   SkScalerContext::kEmbolden_Flag |

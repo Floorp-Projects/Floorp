@@ -13,7 +13,7 @@
 #include "SkFlattenable.h"
 #include "SkColor.h"
 
-class GrEffectRef;
+class GrEffect;
 class GrTexture;
 class SkString;
 
@@ -198,7 +198,7 @@ public:
         fragment shader. If NULL, the effect should request access to destination color
         (setWillReadDstColor()), and use that in the fragment shader (builder->dstColor()).
      */
-    virtual bool asNewEffect(GrEffectRef** effect, GrTexture* background = NULL) const;
+    virtual bool asNewEffect(GrEffect** effect, GrTexture* background = NULL) const;
 
     /** Returns true if the xfermode can be expressed as coeffs (src, dst), or as an effect
         (effect). This helper calls the asCoeff() and asNewEffect() virtuals. If the xfermode is
@@ -206,7 +206,7 @@ public:
         simply test the return value.  effect, src, and dst must all be NULL or all non-NULL.
      */
     static bool AsNewEffectOrCoeff(SkXfermode*,
-                                   GrEffectRef** effect,
+                                   GrEffect** effect,
                                    Coeff* src,
                                    Coeff* dst,
                                    GrTexture* background = NULL);
@@ -216,7 +216,8 @@ public:
     SK_DEFINE_FLATTENABLE_TYPE(SkXfermode)
 
 protected:
-    SkXfermode(SkReadBuffer& rb) : SkFlattenable(rb) {}
+    SkXfermode() {}
+    explicit SkXfermode(SkReadBuffer& rb) : SkFlattenable(rb) {}
 
     /** The default implementation of xfer32/xfer16/xferA8 in turn call this
         method, 1 color at a time (upscaled to a SkPMColor). The default
@@ -228,68 +229,12 @@ protected:
     */
     virtual SkPMColor xferColor(SkPMColor src, SkPMColor dst) const;
 
-#ifdef SK_SUPPORT_LEGACY_PUBLICEFFECTCONSTRUCTORS
-public:
-#endif
-    SkXfermode() {}
-
 private:
     enum {
         kModeCount = kLastMode + 1
     };
 
-    friend class SkGraphics;
-    static void Term();
-
     typedef SkFlattenable INHERITED;
-};
-
-///////////////////////////////////////////////////////////////////////////////
-
-/** \class SkProcXfermode
-
-    SkProcXfermode is a xfermode that applies the specified proc to its colors.
-    This class is not exported to java.
-*/
-class SkProcXfermode : public SkXfermode {
-public:
-    static SkProcXfermode* Create(SkXfermodeProc proc) {
-        return SkNEW_ARGS(SkProcXfermode, (proc));
-    }
-
-    // overrides from SkXfermode
-    virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count,
-                        const SkAlpha aa[]) const SK_OVERRIDE;
-    virtual void xfer16(uint16_t dst[], const SkPMColor src[], int count,
-                        const SkAlpha aa[]) const SK_OVERRIDE;
-    virtual void xferA8(SkAlpha dst[], const SkPMColor src[], int count,
-                        const SkAlpha aa[]) const SK_OVERRIDE;
-
-    SK_TO_STRING_OVERRIDE()
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkProcXfermode)
-
-protected:
-    SkProcXfermode(SkReadBuffer&);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
-
-    // allow subclasses to update this after we unflatten
-    void setProc(SkXfermodeProc proc) {
-        fProc = proc;
-    }
-
-    SkXfermodeProc getProc() const {
-        return fProc;
-    }
-
-#ifdef SK_SUPPORT_LEGACY_PUBLICEFFECTCONSTRUCTORS
-public:
-#endif
-    SkProcXfermode(SkXfermodeProc proc) : fProc(proc) {}
-
-private:
-    SkXfermodeProc  fProc;
-
-    typedef SkXfermode INHERITED;
 };
 
 #endif

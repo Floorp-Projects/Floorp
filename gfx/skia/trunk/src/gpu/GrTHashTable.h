@@ -61,7 +61,12 @@ private:
         kHashCount = 1 << kHashBits,
         kHashMask  = kHashCount - 1
     };
-    static unsigned hash2Index(uint32_t hash) {
+    static unsigned hash2Index(intptr_t hash) {
+#if 0
+        if (sizeof(hash) == 8) {
+            hash ^= hash >> 32;
+        }
+#endif
         hash ^= hash >> 16;
         if (kHashBits <= 8) {
             hash ^= hash >> 8;

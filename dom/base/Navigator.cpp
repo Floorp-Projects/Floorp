@@ -1542,9 +1542,82 @@ Navigator::GetFeature(const nsAString& aName, ErrorResult& aRv)
     }
   }
 
+  p->MaybeResolve(JS::UndefinedHandleValue);
+  return p.forget();
+}
+
+already_AddRefed<Promise>
+Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  nsRefPtr<Promise> p = Promise::Create(go, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   NS_NAMED_LITERAL_STRING(apiWindowPrefix, "api.window.");
   if (StringBeginsWith(aName, apiWindowPrefix)) {
     const nsAString& featureName = Substring(aName, apiWindowPrefix.Length());
+
+    // Temporary hardcoded entry points due to technical constraints
+    if (featureName.EqualsLiteral("Navigator.mozTCPSocket")) {
+      p->MaybeResolve(Preferences::GetBool("dom.mozTCPSocket.enabled"));
+      return p.forget();
+    }
+
+    if (featureName.EqualsLiteral("Navigator.mozMobileConnections") ||
+        featureName.EqualsLiteral("MozMobileNetworkInfo")) {
+      p->MaybeResolve(Preferences::GetBool("dom.mobileconnection.enabled"));
+      return p.forget();
+    }
+
+    if (featureName.EqualsLiteral("Navigator.mozInputMethod")) {
+      p->MaybeResolve(Preferences::GetBool("dom.mozInputMethod.enabled"));
+      return p.forget();
+    }
+
+    if (featureName.EqualsLiteral("Navigator.mozContacts")) {
+      p->MaybeResolve(true);
+      return p.forget();
+    }
+
+    if (featureName.EqualsLiteral("Navigator.getDeviceStorage")) {
+      p->MaybeResolve(Preferences::GetBool("device.storage.enabled"));
+      return p.forget();
+    }
+
+    if (featureName.EqualsLiteral("Navigator.mozNetworkStats")) {
+      p->MaybeResolve(Preferences::GetBool("dom.mozNetworkStats.enabled"));
+      return p.forget();
+    }
+
+    if (featureName.EqualsLiteral("Navigator.push")) {
+      p->MaybeResolve(Preferences::GetBool("services.push.enabled"));
+      return p.forget();
+    }
+
+    if (featureName.EqualsLiteral("Navigator.mozAlarms")) {
+      p->MaybeResolve(Preferences::GetBool("dom.mozAlarms.enabled"));
+      return p.forget();
+    }
+
+    if (featureName.EqualsLiteral("Navigator.mozCameras")) {
+      p->MaybeResolve(true);
+      return p.forget();
+    }
+
+#ifdef MOZ_B2G
+    if (featureName.EqualsLiteral("Navigator.getMobileIdAssertion")) {
+      p->MaybeResolve(true);
+      return p.forget();
+    }
+#endif 
+
+    if (featureName.EqualsLiteral("XMLHttpRequest.mozSystem")) {
+      p->MaybeResolve(true);
+      return p.forget();
+    }
+
     if (IsFeatureDetectible(featureName)) {
       p->MaybeResolve(true);
     } else {
@@ -1558,7 +1631,6 @@ Navigator::GetFeature(const nsAString& aName, ErrorResult& aRv)
 
   return p.forget();
 }
-
 
 PowerManager*
 Navigator::GetMozPower(ErrorResult& aRv)
@@ -2371,7 +2443,8 @@ Navigator::HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal)
 
   uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
   permMgr->TestPermissionFromPrincipal(principal, "mobileid", &permission);
-  return permission != nsIPermissionManager::UNKNOWN_ACTION;
+  return permission == nsIPermissionManager::PROMPT_ACTION ||
+         permission == nsIPermissionManager::ALLOW_ACTION;
 }
 #endif
 

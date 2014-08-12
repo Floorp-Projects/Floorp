@@ -715,10 +715,12 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
     if (!ToPrimitive(cx, &rvalue))
         return false;
 
-    if (lvalue.get().isString() && rvalue.get().isString()) {
-        JSString *l = lvalue.get().toString();
-        JSString *r = rvalue.get().toString();
-        return EqualStrings(cx, l, r, result);
+    if (SameType(lvalue, rvalue))
+        return EqualGivenSameType(cx, lvalue, rvalue, result);
+
+    if (lvalue.isSymbol() || rvalue.isSymbol()) {
+        *result = false;
+        return true;
     }
 
     double l, r;

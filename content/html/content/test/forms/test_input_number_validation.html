@@ -78,7 +78,7 @@ function checkIsValid(element, infoStr)
   ok(!gInvalid, "The invalid event should not have been thrown for " + infoStr);
   is(element.validationMessage, '',
      "Validation message should be the empty string for " + infoStr);
-  ok(element.mozMatchesSelector(":valid"), ":valid pseudo-class should apply for " + infoStr);
+  ok(element.matches(":valid"), ":valid pseudo-class should apply for " + infoStr);
 }
 
 function checkIsInvalid(element, infoStr)
@@ -90,7 +90,7 @@ function checkIsInvalid(element, infoStr)
   ok(gInvalid, "The invalid event should have been thrown for " + infoStr);
   is(element.validationMessage, "Please enter a number.",
      "Validation message is not the expected message for " + infoStr);
-  ok(element.mozMatchesSelector(":invalid"), ":invalid pseudo-class should apply for " + infoStr);
+  ok(element.matches(":invalid"), ":invalid pseudo-class should apply for " + infoStr);
 }
 
 </script>

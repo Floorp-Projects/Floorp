@@ -168,6 +168,7 @@ public:
         GLPtr<GrGLColorMaskProc> fColorMask;
         GLPtr<GrGLCompileShaderProc> fCompileShader;
         GLPtr<GrGLCompressedTexImage2DProc> fCompressedTexImage2D;
+        GLPtr<GrGLCompressedTexSubImage2DProc> fCompressedTexSubImage2D;
         GLPtr<GrGLCopyTexSubImage2DProc> fCopyTexSubImage2D;
         GLPtr<GrGLCreateProgramProc> fCreateProgram;
         GLPtr<GrGLCreateShaderProc> fCreateShader;
@@ -192,6 +193,7 @@ public:
         GLPtr<GrGLEndQueryProc> fEndQuery;
         GLPtr<GrGLFinishProc> fFinish;
         GLPtr<GrGLFlushProc> fFlush;
+        GLPtr<GrGLFlushMappedBufferRangeProc> fFlushMappedBufferRange;
         GLPtr<GrGLFramebufferRenderbufferProc> fFramebufferRenderbuffer;
         GLPtr<GrGLFramebufferTexture2DProc> fFramebufferTexture2D;
         GLPtr<GrGLFramebufferTexture2DMultisampleProc> fFramebufferTexture2DMultisample;
@@ -222,12 +224,20 @@ public:
         GLPtr<GrGLGetTexLevelParameterivProc> fGetTexLevelParameteriv;
         GLPtr<GrGLGetUniformLocationProc> fGetUniformLocation;
         GLPtr<GrGLInsertEventMarkerProc> fInsertEventMarker;
+        GLPtr<GrGLInvalidateBufferDataProc> fInvalidateBufferData;
+        GLPtr<GrGLInvalidateBufferSubDataProc> fInvalidateBufferSubData;
+        GLPtr<GrGLInvalidateFramebufferProc> fInvalidateFramebuffer;
+        GLPtr<GrGLInvalidateSubFramebufferProc> fInvalidateSubFramebuffer;
+        GLPtr<GrGLInvalidateTexImageProc> fInvalidateTexImage;
+        GLPtr<GrGLInvalidateTexSubImageProc> fInvalidateTexSubImage;
         GLPtr<GrGLLineWidthProc> fLineWidth;
         GLPtr<GrGLLinkProgramProc> fLinkProgram;
-        GLPtr<GrGLLoadIdentityProc> fLoadIdentity;
-        GLPtr<GrGLLoadMatrixfProc> fLoadMatrixf;
         GLPtr<GrGLMapBufferProc> fMapBuffer;
-        GLPtr<GrGLMatrixModeProc> fMatrixMode;
+        GLPtr<GrGLMapBufferRangeProc> fMapBufferRange;
+        GLPtr<GrGLMapBufferSubDataProc> fMapBufferSubData;
+        GLPtr<GrGLMapTexSubImage2DProc> fMapTexSubImage2D;
+        GLPtr<GrGLMatrixLoadfProc> fMatrixLoadf;
+        GLPtr<GrGLMatrixLoadIdentityProc> fMatrixLoadIdentity;
         GLPtr<GrGLPixelStoreiProc> fPixelStorei;
         GLPtr<GrGLPopGroupMarkerProc> fPopGroupMarker;
         GLPtr<GrGLPushGroupMarkerProc> fPushGroupMarker;
@@ -271,8 +281,6 @@ public:
         GLPtr<GrGLStencilMaskSeparateProc> fStencilMaskSeparate;
         GLPtr<GrGLStencilOpProc> fStencilOp;
         GLPtr<GrGLStencilOpSeparateProc> fStencilOpSeparate;
-        GLPtr<GrGLTexGenfvProc> fTexGenfv;
-        GLPtr<GrGLTexGeniProc> fTexGeni;
         GLPtr<GrGLTexImage2DProc> fTexImage2D;
         GLPtr<GrGLTexParameteriProc> fTexParameteri;
         GLPtr<GrGLTexParameterivProc> fTexParameteriv;
@@ -299,6 +307,8 @@ public:
         GLPtr<GrGLUniformMatrix3fvProc> fUniformMatrix3fv;
         GLPtr<GrGLUniformMatrix4fvProc> fUniformMatrix4fv;
         GLPtr<GrGLUnmapBufferProc> fUnmapBuffer;
+        GLPtr<GrGLUnmapBufferSubDataProc> fUnmapBufferSubData;
+        GLPtr<GrGLUnmapTexSubImage2DProc> fUnmapTexSubImage2D;
         GLPtr<GrGLUseProgramProc> fUseProgram;
         GLPtr<GrGLVertexAttrib4fvProc> fVertexAttrib4fv;
         GLPtr<GrGLVertexAttribPointerProc> fVertexAttribPointer;
@@ -307,55 +317,25 @@ public:
         // Experimental: Functions for GL_NV_path_rendering. These will be
         // alphabetized with the above functions once this is fully supported
         // (and functions we are unlikely to use will possibly be omitted).
+        GLPtr<GrGLGetProgramResourceLocationProc> fGetProgramResourceLocation;
         GLPtr<GrGLPathCommandsProc> fPathCommands;
         GLPtr<GrGLPathCoordsProc> fPathCoords;
-        GLPtr<GrGLPathSubCommandsProc> fPathSubCommands;
-        GLPtr<GrGLPathSubCoordsProc> fPathSubCoords;
-        GLPtr<GrGLPathStringProc> fPathString;
-        GLPtr<GrGLPathGlyphsProc> fPathGlyphs;
-        GLPtr<GrGLPathGlyphRangeProc> fPathGlyphRange;
-        GLPtr<GrGLWeightPathsProc> fWeightPaths;
-        GLPtr<GrGLCopyPathProc> fCopyPath;
-        GLPtr<GrGLInterpolatePathsProc> fInterpolatePaths;
-        GLPtr<GrGLTransformPathProc> fTransformPath;
-        GLPtr<GrGLPathParameterivProc> fPathParameteriv;
         GLPtr<GrGLPathParameteriProc> fPathParameteri;
-        GLPtr<GrGLPathParameterfvProc> fPathParameterfv;
         GLPtr<GrGLPathParameterfProc> fPathParameterf;
-        GLPtr<GrGLPathDashArrayProc> fPathDashArray;
         GLPtr<GrGLGenPathsProc> fGenPaths;
         GLPtr<GrGLDeletePathsProc> fDeletePaths;
         GLPtr<GrGLIsPathProc> fIsPath;
         GLPtr<GrGLPathStencilFuncProc> fPathStencilFunc;
-        GLPtr<GrGLPathStencilDepthOffsetProc> fPathStencilDepthOffset;
         GLPtr<GrGLStencilFillPathProc> fStencilFillPath;
         GLPtr<GrGLStencilStrokePathProc> fStencilStrokePath;
         GLPtr<GrGLStencilFillPathInstancedProc> fStencilFillPathInstanced;
         GLPtr<GrGLStencilStrokePathInstancedProc> fStencilStrokePathInstanced;
-        GLPtr<GrGLPathCoverDepthFuncProc> fPathCoverDepthFunc;
-        GLPtr<GrGLPathColorGenProc> fPathColorGen;
         GLPtr<GrGLPathTexGenProc> fPathTexGen;
-        GLPtr<GrGLPathFogGenProc> fPathFogGen;
         GLPtr<GrGLCoverFillPathProc> fCoverFillPath;
         GLPtr<GrGLCoverStrokePathProc> fCoverStrokePath;
         GLPtr<GrGLCoverFillPathInstancedProc> fCoverFillPathInstanced;
         GLPtr<GrGLCoverStrokePathInstancedProc> fCoverStrokePathInstanced;
-        GLPtr<GrGLGetPathParameterivProc> fGetPathParameteriv;
-        GLPtr<GrGLGetPathParameterfvProc> fGetPathParameterfv;
-        GLPtr<GrGLGetPathCommandsProc> fGetPathCommands;
-        GLPtr<GrGLGetPathCoordsProc> fGetPathCoords;
-        GLPtr<GrGLGetPathDashArrayProc> fGetPathDashArray;
-        GLPtr<GrGLGetPathMetricsProc> fGetPathMetrics;
-        GLPtr<GrGLGetPathMetricRangeProc> fGetPathMetricRange;
-        GLPtr<GrGLGetPathSpacingProc> fGetPathSpacing;
-        GLPtr<GrGLGetPathColorGenivProc> fGetPathColorGeniv;
-        GLPtr<GrGLGetPathColorGenfvProc> fGetPathColorGenfv;
-        GLPtr<GrGLGetPathTexGenivProc> fGetPathTexGeniv;
-        GLPtr<GrGLGetPathTexGenfvProc> fGetPathTexGenfv;
-        GLPtr<GrGLIsPointInFillPathProc> fIsPointInFillPath;
-        GLPtr<GrGLIsPointInStrokePathProc> fIsPointInStrokePath;
-        GLPtr<GrGLGetPathLengthProc> fGetPathLength;
-        GLPtr<GrGLPointAlongPathProc> fPointAlongPath;
+        GLPtr<GrGLProgramPathFragmentInputGenProc> fProgramPathFragmentInputGen;
     } fFunctions;
 
     // Per-GL func callback

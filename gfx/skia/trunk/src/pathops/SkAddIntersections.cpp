@@ -397,6 +397,7 @@ bool AddIntersectTs(SkOpContour* test, SkOpContour* next) {
                 SkASSERT(ts[0][pt] >= 0 && ts[0][pt] <= 1);
                 SkASSERT(ts[1][pt] >= 0 && ts[1][pt] <= 1);
                 SkPoint point = ts.pt(pt).asSkPoint();
+                wt.alignTPt(wn, swap, pt, &ts, &point);
                 int testTAt = wt.addT(wn, point, ts[swap][pt]);
                 int nextTAt = wn.addT(wt, point, ts[!swap][pt]);
                 wt.addOtherT(testTAt, ts[!swap][pt], nextTAt);
@@ -424,8 +425,8 @@ void AddSelfIntersectTs(SkOpContour* test) {
         SkASSERT(ts[0][0] >= 0 && ts[0][0] <= 1);
         SkASSERT(ts[1][0] >= 0 && ts[1][0] <= 1);
         SkPoint point = ts.pt(0).asSkPoint();
-        int testTAt = wt.addSelfT(wt, point, ts[0][0]);
-        int nextTAt = wt.addT(wt, point, ts[1][0]);
+        int testTAt = wt.addSelfT(point, ts[0][0]);
+        int nextTAt = wt.addSelfT(point, ts[1][0]);
         wt.addOtherT(testTAt, ts[1][0], nextTAt);
         wt.addOtherT(nextTAt, ts[0][0], testTAt);
     } while (wt.advance());
@@ -435,6 +436,10 @@ void AddSelfIntersectTs(SkOpContour* test) {
 // see if coincidence is formed by clipping non-concident segments
 void CoincidenceCheck(SkTArray<SkOpContour*, true>* contourList, int total) {
     int contourCount = (*contourList).count();
+    for (int cIndex = 0; cIndex < contourCount; ++cIndex) {
+        SkOpContour* contour = (*contourList)[cIndex];
+        contour->resolveNearCoincidence();
+    }
     for (int cIndex = 0; cIndex < contourCount; ++cIndex) {
         SkOpContour* contour = (*contourList)[cIndex];
         contour->addCoincidentPoints();
