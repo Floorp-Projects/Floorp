@@ -762,14 +762,11 @@ BondStateChangedCallback(bt_status_t aStatus, bt_bdaddr_t* aRemoteBdAddress,
 
   props.Clear();
 
-  // Append signal properties and notify adapter.
-  BT_APPEND_NAMED_VALUE(props, "Address", remoteBdAddress);
-  BT_APPEND_NAMED_VALUE(props, "Paired", bonded);
+  // Update bonding status to BluetoothAdapter
+  BT_APPEND_NAMED_VALUE(props, "address", remoteBdAddress);
+  BT_APPEND_NAMED_VALUE(props, "status", bonded);
 
-  nsString signalName = bonded ? NS_LITERAL_STRING(DEVICE_PAIRED_ID)
-                               : NS_LITERAL_STRING(DEVICE_UNPAIRED_ID);
-
-  BluetoothSignal adapterSignal(signalName,
+  BluetoothSignal adapterSignal(NS_LITERAL_STRING(PAIRED_STATUS_CHANGED_ID),
                                 NS_LITERAL_STRING(KEY_ADAPTER),
                                 BluetoothValue(props));
   NS_DispatchToMainThread(new DistributeBluetoothSignalTask(adapterSignal));
