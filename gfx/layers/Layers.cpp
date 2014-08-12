@@ -451,13 +451,13 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
 }
 
 void
-ContainerLayer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
+Layer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
 {
   mAPZC = controller;
 }
 
 AsyncPanZoomController*
-ContainerLayer::GetAsyncPanZoomController() const
+Layer::GetAsyncPanZoomController() const
 {
 #ifdef DEBUG
   if (mAPZC) {
