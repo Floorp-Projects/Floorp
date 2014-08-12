@@ -8,7 +8,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="inputFields">
+  <binding id="inputFields" bindToUntrustedContent="true">
     <handlers>
       <handler event="keypress" key="c" modifiers="accel" command="cmd_copy"/>
       <handler event="keypress" key="x" modifiers="accel" command="cmd_cut"/>
@@ -19,7 +19,7 @@
     </handlers>
   </binding>
 
-  <binding id="textAreas">
+  <binding id="textAreas" bindToUntrustedContent="true">
     <handlers>
       <handler event="keypress" key="c" modifiers="accel" command="cmd_copy"/>
       <handler event="keypress" key="x" modifiers="accel" command="cmd_cut"/>

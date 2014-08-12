@@ -10,7 +10,7 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
 
-  <binding id="marquee">
+  <binding id="marquee" bindToUntrustedContent="true">
 
     <resources>
       <stylesheet src="chrome://xbl-marquee/content/xbl-marquee.css"/>
@@ -623,7 +623,7 @@
 
   </binding>
 
-  <binding id="marquee-horizontal"
+  <binding id="marquee-horizontal" bindToUntrustedContent="true"
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
            inheritstyle="false">
 
@@ -643,7 +643,7 @@
 
   </binding>
 
-  <binding id="marquee-vertical"
+  <binding id="marquee-vertical" bindToUntrustedContent="true"
            extends="chrome://xbl-marquee/content/xbl-marquee.xml#marquee"
            inheritstyle="false">
 
@@ -659,7 +659,7 @@
 
   </binding>
 
-  <binding id="marquee-horizontal-editable"
+  <binding id="marquee-horizontal-editable" bindToUntrustedContent="true"
            inheritstyle="false">
 
     <!-- White-space isn't allowed because a marquee could be 
@@ -672,7 +672,7 @@
 
   </binding>
 
-  <binding id="marquee-vertical-editable"
+  <binding id="marquee-vertical-editable" bindToUntrustedContent="true"
            inheritstyle="false">
 
     <!-- White-space isn't allowed because a marquee could be 
