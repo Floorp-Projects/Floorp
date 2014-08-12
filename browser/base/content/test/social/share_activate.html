@@ -1,0 +1,36 @@
+<html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+ - License, v. 2.0. If a copy of the MPL was not distributed with this
+ - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<head>
+  <title>Activation test</title>
+</head>
+<script>
+
+var data = {
+  // currently required
+  "name": "Demo Social Service",
+  // browser_share.js serves this page from "https://example.com"
+  "origin": "https://example.com",
+  "iconURL": "chrome://branding/content/icon16.png",
+  "icon32URL": "chrome://branding/content/favicon32.png",
+  "icon64URL": "chrome://branding/content/icon64.png",
+  "workerURL": "/browser/browser/base/content/test/social/social_worker.js",
+  "shareURL": "/browser/browser/base/content/test/social/share.html"
+}
+
+function activate(node) {
+  node.setAttribute("data-service", JSON.stringify(data));
+  var event = new CustomEvent("ActivateSocialFeature");
+  node.dispatchEvent(event);
+}
+
+</script>
+<body>
+
+nothing to see here
+
+<button id="activation" onclick="activate(this, true)">Activate the share provider</button>
+
+</body>
+</html>
