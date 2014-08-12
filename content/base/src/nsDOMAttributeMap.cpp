@@ -242,9 +242,9 @@ nsDOMAttributeMap::GetNamedItem(const nsAString& aAttrName,
 }
 
 NS_IMETHODIMP
-nsDOMAttributeMap::SetNamedItem(nsIDOMAttr* aDOMAttr, nsIDOMAttr** aReturn)
+nsDOMAttributeMap::SetNamedItem(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
 {
-  Attr* attribute = Attr::FromDOMAttr(aDOMAttr);
+  Attr* attribute = static_cast<Attr*>(aAttr);
   NS_ENSURE_ARG(attribute);
 
   ErrorResult rv;
@@ -253,9 +253,9 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMAttr* aDOMAttr, nsIDOMAttr** aReturn)
 }
 
 NS_IMETHODIMP
-nsDOMAttributeMap::SetNamedItemNS(nsIDOMAttr* aDOMAttr, nsIDOMAttr** aReturn)
+nsDOMAttributeMap::SetNamedItemNS(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
 {
-  Attr* attribute = Attr::FromDOMAttr(aDOMAttr);
+  Attr* attribute = static_cast<Attr*>(aAttr);
   NS_ENSURE_ARG(attribute);
 
   ErrorResult rv;
