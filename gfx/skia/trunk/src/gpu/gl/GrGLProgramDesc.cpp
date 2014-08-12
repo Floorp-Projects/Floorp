@@ -14,30 +14,40 @@
 
 #include "SkChecksum.h"
 
-namespace {
-inline GrGLEffect::EffectKey get_key_and_update_stats(const GrEffectStage& stage,
-                                                      const GrGLCaps& caps,
-                                                      bool useExplicitLocalCoords,
-                                                      bool* setTrueIfReadsDst,
-                                                      bool* setTrueIfReadsPos,
-                                                      bool* setTrueIfHasVertexCode) {
-    const GrEffectRef& effect = *stage.getEffect();
-    const GrBackendEffectFactory& factory = effect->getFactory();
+bool GrGLProgramDesc::GetEffectKeyAndUpdateStats(const GrEffectStage& stage,
+                                                 const GrGLCaps& caps,
+                                                 bool useExplicitLocalCoords,
+                                                 GrEffectKeyBuilder* b,
+                                                 uint16_t* effectKeySize,
+                                                 bool* setTrueIfReadsDst,
+                                                 bool* setTrueIfReadsPos,
+                                                 bool* setTrueIfHasVertexCode) {
+    const GrBackendEffectFactory& factory = stage.getEffect()->getFactory();
     GrDrawEffect drawEffect(stage, useExplicitLocalCoords);
-    if (effect->willReadDstColor()) {
+    if (stage.getEffect()->willReadDstColor()) {
         *setTrueIfReadsDst = true;
     }
-    if (effect->willReadFragmentPosition()) {
+    if (stage.getEffect()->willReadFragmentPosition()) {
         *setTrueIfReadsPos = true;
     }
-    if (effect->hasVertexCode()) {
+    if (stage.getEffect()->hasVertexCode()) {
         *setTrueIfHasVertexCode = true;
     }
-    return factory.glEffectKey(drawEffect, caps);
+    factory.getGLEffectKey(drawEffect, caps, b);
+    size_t size = b->size();
+    if (size > SK_MaxU16) {
+        *effectKeySize = 0; // suppresses a warning.
+        return false;
+    }
+    *effectKeySize = SkToU16(size);
+    if (!GrGLProgramEffects::GenEffectMetaKey(drawEffect, caps, b)) {
+        return false;
+    }
+    return true;
 }
-}
-void GrGLProgramDesc::Build(const GrDrawState& drawState,
-                            bool isPoints,
+
+bool GrGLProgramDesc::Build(const GrDrawState& drawState,
+                            GrGpu::DrawType drawType,
                             GrDrawState::BlendOptFlags blendOpts,
                             GrBlendCoeff srcCoeff,
                             GrBlendCoeff dstCoeff,
@@ -56,13 +66,14 @@ void GrGLProgramDesc::Build(const GrDrawState& drawState,
 
     bool skipColor = SkToBool(blendOpts & (GrDrawState::kEmitTransBlack_BlendOptFlag |
                                            GrDrawState::kEmitCoverage_BlendOptFlag));
+
     int firstEffectiveColorStage = 0;
     bool inputColorIsUsed = true;
     if (!skipColor) {
         firstEffectiveColorStage = drawState.numColorStages();
         while (firstEffectiveColorStage > 0 && inputColorIsUsed) {
             --firstEffectiveColorStage;
-            const GrEffect* effect = drawState.getColorStage(firstEffectiveColorStage).getEffect()->get();
+            const GrEffect* effect = drawState.getColorStage(firstEffectiveColorStage).getEffect();
             inputColorIsUsed = effect->willUseInputColor();
         }
     }
@@ -73,7 +84,7 @@ void GrGLProgramDesc::Build(const GrDrawState& drawState,
         firstEffectiveCoverageStage = drawState.numCoverageStages();
         while (firstEffectiveCoverageStage > 0 && inputCoverageIsUsed) {
             --firstEffectiveCoverageStage;
-            const GrEffect* effect = drawState.getCoverageStage(firstEffectiveCoverageStage).getEffect()->get();
+            const GrEffect* effect = drawState.getCoverageStage(firstEffectiveCoverageStage).getEffect();
             inputCoverageIsUsed = effect->willUseInputColor();
         }
     }
@@ -89,50 +100,82 @@ void GrGLProgramDesc::Build(const GrDrawState& drawState,
     bool requiresLocalCoordAttrib = !(skipCoverage  && skipColor) &&
                                     drawState.hasLocalCoordAttribute();
 
-    bool colorIsTransBlack = SkToBool(blendOpts & GrDrawState::kEmitTransBlack_BlendOptFlag);
-    bool colorIsSolidWhite = (blendOpts & GrDrawState::kEmitCoverage_BlendOptFlag) ||
-                             (!requiresColorAttrib && 0xffffffff == drawState.getColor()) ||
-                             (!inputColorIsUsed);
-
-    int numEffects = (skipColor ? 0 : (drawState.numColorStages() - firstEffectiveColorStage)) +
-                     (skipCoverage ? 0 : (drawState.numCoverageStages() - firstEffectiveCoverageStage));
-
-    size_t newKeyLength = KeyLength(numEffects);
-    bool allocChanged;
-    desc->fKey.reset(newKeyLength, SkAutoMalloc::kAlloc_OnShrink, &allocChanged);
-    if (allocChanged || !desc->fInitialized) {
-        // make sure any padding in the header is zero if we we haven't used this allocation before.
-        memset(desc->header(), 0, kHeaderSize);
-    }
-    // write the key length
-    *desc->atOffset<uint32_t, kLengthOffset>() = SkToU32(newKeyLength);
-
-    KeyHeader* header = desc->header();
-    EffectKey* effectKeys = desc->effectKeys();
-
-    int currEffectKey = 0;
     bool readsDst = false;
     bool readFragPosition = false;
-    bool hasVertexCode = false;
+    // We use vertexshader-less shader programs only when drawing paths.
+    bool hasVertexCode = !(GrGpu::kDrawPath_DrawType == drawType ||
+                           GrGpu::kDrawPaths_DrawType == drawType);
+    int numStages = 0;
+    if (!skipColor) {
+        numStages += drawState.numColorStages() - firstEffectiveColorStage;
+    }
+    if (!skipCoverage) {
+        numStages += drawState.numCoverageStages() - firstEffectiveCoverageStage;
+    }
+    GR_STATIC_ASSERT(0 == kEffectKeyOffsetsAndLengthOffset % sizeof(uint32_t));
+    // Make room for everything up to and including the array of offsets to effect keys.
+    desc->fKey.reset();
+    desc->fKey.push_back_n(kEffectKeyOffsetsAndLengthOffset + 2 * sizeof(uint16_t) * numStages);
+
+    int offsetAndSizeIndex = 0;
+
+    bool effectKeySuccess = true;
     if (!skipColor) {
         for (int s = firstEffectiveColorStage; s < drawState.numColorStages(); ++s) {
-            effectKeys[currEffectKey++] =
-                get_key_and_update_stats(drawState.getColorStage(s), gpu->glCaps(),
-                                         requiresLocalCoordAttrib, &readsDst, &readFragPosition,
-                                         &hasVertexCode);
+            uint16_t* offsetAndSize =
+                reinterpret_cast<uint16_t*>(desc->fKey.begin() + kEffectKeyOffsetsAndLengthOffset +
+                                            offsetAndSizeIndex * 2 * sizeof(uint16_t));
+
+            GrEffectKeyBuilder b(&desc->fKey);
+            uint16_t effectKeySize;
+            uint32_t effectOffset = desc->fKey.count();
+            effectKeySuccess |= GetEffectKeyAndUpdateStats(
+                                    drawState.getColorStage(s), gpu->glCaps(),
+                                    requiresLocalCoordAttrib, &b,
+                                    &effectKeySize, &readsDst,
+                                    &readFragPosition, &hasVertexCode);
+            effectKeySuccess |= (effectOffset <= SK_MaxU16);
+
+            offsetAndSize[0] = SkToU16(effectOffset);
+            offsetAndSize[1] = effectKeySize;
+            ++offsetAndSizeIndex;
         }
     }
     if (!skipCoverage) {
         for (int s = firstEffectiveCoverageStage; s < drawState.numCoverageStages(); ++s) {
-            effectKeys[currEffectKey++] =
-                get_key_and_update_stats(drawState.getCoverageStage(s), gpu->glCaps(),
-                                         requiresLocalCoordAttrib, &readsDst, &readFragPosition,
-                                         &hasVertexCode);
+            uint16_t* offsetAndSize =
+                reinterpret_cast<uint16_t*>(desc->fKey.begin() + kEffectKeyOffsetsAndLengthOffset +
+                                            offsetAndSizeIndex * 2 * sizeof(uint16_t));
+
+            GrEffectKeyBuilder b(&desc->fKey);
+            uint16_t effectKeySize;
+            uint32_t effectOffset = desc->fKey.count();
+            effectKeySuccess |= GetEffectKeyAndUpdateStats(
+                                    drawState.getCoverageStage(s), gpu->glCaps(),
+                                    requiresLocalCoordAttrib, &b,
+                                    &effectKeySize, &readsDst,
+                                    &readFragPosition, &hasVertexCode);
+            effectKeySuccess |= (effectOffset <= SK_MaxU16);
+
+            offsetAndSize[0] = SkToU16(effectOffset);
+            offsetAndSize[1] = effectKeySize;
+            ++offsetAndSizeIndex;
         }
     }
+    if (!effectKeySuccess) {
+        desc->fKey.reset();
+        return false;
+    }
+
+    KeyHeader* header = desc->header();
+    // make sure any padding in the header is zeroed.
+    memset(desc->header(), 0, kHeaderSize);
+
+    // Because header is a pointer into the dynamic array, we can't push any new data into the key
+    // below here.
 
     header->fHasVertexCode = hasVertexCode || requiresLocalCoordAttrib;
-    header->fEmitsPointSize = isPoints;
+    header->fEmitsPointSize = GrGpu::kDrawPoints_DrawType == drawType;
 
     // Currently the experimental GS will only work with triangle prims (and it doesn't do anything
     // other than pass through values from the VS to the FS anyway).
@@ -145,11 +188,7 @@ void GrGLProgramDesc::Build(const GrDrawState& drawState,
 #endif
     bool defaultToUniformInputs = GR_GL_NO_CONSTANT_ATTRIBUTES || gpu->caps()->pathRenderingSupport();
 
-    if (colorIsTransBlack) {
-        header->fColorInput = kTransBlack_ColorInput;
-    } else if (colorIsSolidWhite) {
-        header->fColorInput = kSolidWhite_ColorInput;
-    } else if (defaultToUniformInputs && !requiresColorAttrib) {
+    if (defaultToUniformInputs && !requiresColorAttrib && inputColorIsUsed) {
         header->fColorInput = kUniform_ColorInput;
     } else {
         header->fColorInput = kAttribute_ColorInput;
@@ -158,11 +197,9 @@ void GrGLProgramDesc::Build(const GrDrawState& drawState,
 
     bool covIsSolidWhite = !requiresCoverageAttrib && 0xffffffff == drawState.getCoverageColor();
 
-    if (skipCoverage) {
-        header->fCoverageInput = kTransBlack_ColorInput;
-    } else if (covIsSolidWhite || !inputCoverageIsUsed) {
+    if ((covIsSolidWhite || !inputCoverageIsUsed) && !skipCoverage) {
         header->fCoverageInput = kSolidWhite_ColorInput;
-    } else if (defaultToUniformInputs && !requiresCoverageAttrib) {
+    } else if (defaultToUniformInputs && !requiresCoverageAttrib && inputCoverageIsUsed) {
         header->fCoverageInput = kUniform_ColorInput;
     } else {
         header->fCoverageInput = kAttribute_ColorInput;
@@ -265,18 +302,23 @@ void GrGLProgramDesc::Build(const GrDrawState& drawState,
     header->fColorEffectCnt = colorStages->count();
     header->fCoverageEffectCnt = coverageStages->count();
 
-    *desc->checksum() = 0;
-    *desc->checksum() = SkChecksum::Compute(reinterpret_cast<uint32_t*>(desc->fKey.get()),
-                                            newKeyLength);
-    desc->fInitialized = true;
+    desc->finalize();
+    return true;
+}
+
+void GrGLProgramDesc::finalize() {
+    int keyLength = fKey.count();
+    SkASSERT(0 == (keyLength % 4));
+    *this->atOffset<uint32_t, kLengthOffset>() = SkToU32(keyLength);
+
+    uint32_t* checksum = this->atOffset<uint32_t, kChecksumOffset>();
+    *checksum = 0;
+    *checksum = SkChecksum::Compute(reinterpret_cast<uint32_t*>(fKey.begin()), keyLength);
 }
 
 GrGLProgramDesc& GrGLProgramDesc::operator= (const GrGLProgramDesc& other) {
-    fInitialized = other.fInitialized;
-    if (fInitialized) {
-        size_t keyLength = other.keyLength();
-        fKey.reset(keyLength);
-        memcpy(fKey.get(), other.fKey.get(), keyLength);
-    }
+    size_t keyLength = other.keyLength();
+    fKey.reset(keyLength);
+    memcpy(fKey.begin(), other.fKey.begin(), keyLength);
     return *this;
 }

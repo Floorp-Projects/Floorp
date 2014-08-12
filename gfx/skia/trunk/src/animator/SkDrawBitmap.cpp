@@ -56,7 +56,7 @@ const SkMemberInfo SkDrawBitmap::fInfo[] = {
 
 DEFINE_GET_MEMBER(SkDrawBitmap);
 
-SkDrawBitmap::SkDrawBitmap() : format((SkBitmap::Config) -1), height(-1),
+SkDrawBitmap::SkDrawBitmap() : format((SkColorType) -1), height(-1),
     rowBytes(0),    width(-1), fColor(0), fColorSet(false) {
 }
 
@@ -88,8 +88,9 @@ void SkDrawBitmap::onEndElement(SkAnimateMaker&) {
     SkASSERT(width != -1);
     SkASSERT(height != -1);
     SkASSERT(rowBytes >= 0);
-    fBitmap.setConfig((SkBitmap::Config) format, width, height, rowBytes);
-    fBitmap.allocPixels();
+    SkColorType colorType = SkColorType(format);
+    fBitmap.allocPixels(SkImageInfo::Make(width, height, colorType, kPremul_SkAlphaType),
+                        rowBytes);
     if (fColorSet)
         fBitmap.eraseColor(fColor);
 }

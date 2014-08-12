@@ -2094,8 +2094,8 @@ var NativeWindow = {
     SelectorContext: function(aSelector) {
       return {
         matches: function(aElt) {
-          if (aElt.mozMatchesSelector)
-            return aElt.mozMatchesSelector(aSelector);
+          if (aElt.matches)
+            return aElt.matches(aSelector);
           return false;
         }
       };
@@ -5120,7 +5120,7 @@ var BrowserEventHandler = {
       if (checkElem) {
         if ((elem.scrollTopMax > 0 || elem.scrollLeftMax > 0) &&
             (this._hasScrollableOverflow(elem) ||
-             elem.mozMatchesSelector("textarea")) ||
+             elem.matches("textarea")) ||
             (elem instanceof HTMLInputElement && elem.mozIsTextField(false)) ||
             (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
@@ -5255,14 +5255,14 @@ const ElementTouchHelper = {
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
       let current = nodes[i];
-      if (!current.mozMatchesSelector || !this.isElementClickable(current, unclickableCache, true))
+      if (!current.matches || !this.isElementClickable(current, unclickableCache, true))
         continue;
 
       let rect = current.getBoundingClientRect();
       let distance = this._computeDistanceFromRect(aX, aY, rect);
 
       // increase a little bit the weight for already visited items
-      if (current && current.mozMatchesSelector("*:visited"))
+      if (current && current.matches("*:visited"))
         distance *= (this.weight.visited / 100);
 
       if (distance < threshold) {
@@ -5286,7 +5286,7 @@ const ElementTouchHelper = {
         continue;
       if (this._hasMouseListener(elem))
         return true;
-      if (elem.mozMatchesSelector && elem.mozMatchesSelector(selector))
+      if (elem.matches && elem.matches(selector))
         return true;
       if (elem instanceof HTMLLabelElement && elem.control != null)
         return true;

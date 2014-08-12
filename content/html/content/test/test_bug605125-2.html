@@ -31,8 +31,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605125
 
 function checkPseudoClass(aElement, aExpected)
 {
-  is(aElement.mozMatchesSelector(":-moz-ui-valid"), aExpected,
-     "mozMatchesSelector(':-moz-ui-valid') should return " + aExpected + " for " + aElement);
+  is(aElement.matches(":-moz-ui-valid"), aExpected,
+     "matches(':-moz-ui-valid') should return " + aExpected + " for " + aElement);
 }
 
 function checkElement(aElement)

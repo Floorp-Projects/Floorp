@@ -43,6 +43,7 @@ DEF_MTNAME(SkMatrix)
 DEF_MTNAME(SkRRect)
 DEF_MTNAME(SkPath)
 DEF_MTNAME(SkPaint)
+DEF_MTNAME(SkPathEffect)
 DEF_MTNAME(SkShader)
 DEF_MTNAME(SkTypeface)
 
@@ -155,6 +156,10 @@ static void setarray_number(lua_State* L, int index, double value) {
     lua_rawseti(L, -2, index);
 }
 
+static void setarray_scalar(lua_State* L, int index, SkScalar value) {
+    setarray_number(L, index, SkScalarToLua(value));
+}
+
 void SkLua::pushBool(bool value, const char key[]) {
     lua_pushboolean(fL, value);
     CHECK_SETFIELD(key);
@@ -205,6 +210,27 @@ void SkLua::pushArrayU16(const uint16_t array[], int count, const char key[]) {
     CHECK_SETFIELD(key);
 }
 
+void SkLua::pushArrayPoint(const SkPoint array[], int count, const char key[]) {
+    lua_newtable(fL);
+    for (int i = 0; i < count; ++i) {
+        // make it base-1 to match lua convention
+        lua_newtable(fL);
+        this->pushScalar(array[i].fX, "x");
+        this->pushScalar(array[i].fY, "y");
+        lua_rawseti(fL, -2, i + 1);
+    }
+    CHECK_SETFIELD(key);
+}
+
+void SkLua::pushArrayScalar(const SkScalar array[], int count, const char key[]) {
+    lua_newtable(fL);
+    for (int i = 0; i < count; ++i) {
+        // make it base-1 to match lua convention
+        setarray_scalar(fL, i + 1, array[i]);
+    }
+    CHECK_SETFIELD(key);
+}
+
 void SkLua::pushRect(const SkRect& r, const char key[]) {
     lua_newtable(fL);
     setfield_scalar(fL, "left", r.fLeft);
@@ -218,6 +244,14 @@ void SkLua::pushRRect(const SkRRect& rr, const char key[]) {
     push_obj(fL, rr);
     CHECK_SETFIELD(key);
 }
+
+void SkLua::pushDash(const SkPathEffect::DashInfo& info, const char key[]) {
+    lua_newtable(fL);
+    setfield_scalar(fL, "phase", info.fPhase);
+    this->pushArrayScalar(info.fIntervals, info.fCount, "intervals");
+    CHECK_SETFIELD(key);
+}
+
 
 void SkLua::pushMatrix(const SkMatrix& matrix, const char key[]) {
     push_obj(fL, matrix);
@@ -845,6 +879,16 @@ static int lpaint_getShader(lua_State* L) {
     return 0;
 }
 
+static int lpaint_getPathEffect(lua_State* L) {
+    const SkPaint* paint = get_obj<SkPaint>(L, 1);
+    SkPathEffect* pe = paint->getPathEffect();
+    if (pe) {
+        push_ref(L, pe);
+        return 1;
+    }
+    return 0;
+}
+
 static int lpaint_gc(lua_State* L) {
     get_obj<SkPaint>(L, 1)->~SkPaint();
     return 0;
@@ -888,6 +932,7 @@ static const struct luaL_Reg gSkPaint_Methods[] = {
     { "getFontMetrics", lpaint_getFontMetrics },
     { "getEffects", lpaint_getEffects },
     { "getShader", lpaint_getShader },
+    { "getPathEffect", lpaint_getPathEffect },
     { "__gc", lpaint_gc },
     { NULL, NULL }
 };
@@ -976,6 +1021,35 @@ static const struct luaL_Reg gSkShader_Methods[] = {
     { "asABitmap",      lshader_asABitmap },
     { "asAGradient",    lshader_asAGradient },
     { "__gc",           lshader_gc },
+    { NULL, NULL }
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+static int lpatheffect_asADash(lua_State* L) {
+    SkPathEffect* pe = get_ref<SkPathEffect>(L, 1);
+    if (pe) {
+        SkPathEffect::DashInfo info;
+        SkPathEffect::DashType dashType = pe->asADash(&info);
+        if (SkPathEffect::kDash_DashType == dashType) {
+            SkAutoTArray<SkScalar> intervals(info.fCount);
+            info.fIntervals = intervals.get();
+            pe->asADash(&info);
+            SkLua(L).pushDash(info);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int lpatheffect_gc(lua_State* L) {
+    get_ref<SkPathEffect>(L, 1)->unref();
+    return 0;
+}
+
+static const struct luaL_Reg gSkPathEffect_Methods[] = {
+    { "asADash",        lpatheffect_asADash },
+    { "__gc",           lpatheffect_gc },
     { NULL, NULL }
 };
 
@@ -1208,6 +1282,7 @@ static const char* rrect_type(const SkRRect& rr) {
         case SkRRect::kRect_Type: return "rect";
         case SkRRect::kOval_Type: return "oval";
         case SkRRect::kSimple_Type: return "simple";
+        case SkRRect::kNinePatch_Type: return "nine-patch";
         case SkRRect::kComplex_Type: return "complex";
     }
     SkDEBUGFAIL("never get here");
@@ -1418,8 +1493,9 @@ void SkLua::Load(lua_State* L) {
     REG_CLASS(L, SkCanvas);
     REG_CLASS(L, SkDocument);
     REG_CLASS(L, SkImage);
-    REG_CLASS(L, SkPath);
     REG_CLASS(L, SkPaint);
+    REG_CLASS(L, SkPath);
+    REG_CLASS(L, SkPathEffect);
     REG_CLASS(L, SkRRect);
     REG_CLASS(L, SkShader);
     REG_CLASS(L, SkTypeface);

@@ -89,11 +89,11 @@ inline void operator delete(void* p) {
 #define SK_INIT_TO_AVOID_WARNING    = 0
 
 #ifndef SkDebugf
-    void SkDebugf(const char format[], ...);
+    SK_API void SkDebugf(const char format[], ...);
 #endif
 
 #ifdef SK_DEBUG
-    #define SkASSERT(cond)              SK_DEBUGBREAK(cond)
+    #define SkASSERT(cond)              SK_ALWAYSBREAK(cond)
     #define SkDEBUGFAIL(message)        SkASSERT(false && message)
     #define SkDEBUGCODE(code)           code
     #define SkDECLAREPARAM(type, var)   , type var
@@ -112,6 +112,13 @@ inline void operator delete(void* p) {
     // unlike SkASSERT, this guy executes its condition in the non-debug build
     #define SkAssertResult(cond)        cond
 #endif
+
+#define SkFAIL(message)                 SK_ALWAYSBREAK(false && message)
+
+// We want to evaluate cond only once, and inside the SkASSERT somewhere so we see its string form.
+// So we use the comma operator to make an SkDebugf that always returns false: we'll evaluate cond,
+// and if it's true the assert passes; if it's false, we'll print the message and the assert fails.
+#define SkASSERTF(cond, fmt, ...)       SkASSERT((cond) || (SkDebugf(fmt"\n", __VA_ARGS__), false))
 
 #ifdef SK_DEVELOPER
     #define SkDEVCODE(code)             code
@@ -315,6 +322,13 @@ typedef uint32_t SkMSec;
 */
 #define SkMSec_LE(a, b)     ((int32_t)(a) - (int32_t)(b) <= 0)
 
+/** The generation IDs in Skia reserve 0 has an invalid marker.
+ */
+#define SK_InvalidGenID     0
+/** The unique IDs in Skia reserve 0 has an invalid marker.
+ */
+#define SK_InvalidUniqueID  0
+
 /****************************************************************************
     The rest of these only build with C++
 */
@@ -486,7 +500,7 @@ private:
  *  the lifetime of the block, so the caller must not call sk_free() or delete
  *  on the block, unless detach() was called.
  */
-class SkAutoMalloc : public SkNoncopyable {
+class SkAutoMalloc : SkNoncopyable {
 public:
     explicit SkAutoMalloc(size_t size = 0) {
         fPtr = size ? sk_malloc_throw(size) : NULL;

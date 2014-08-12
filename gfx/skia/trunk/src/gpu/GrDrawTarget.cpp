@@ -89,7 +89,7 @@ void GrDrawTarget::DrawInfo::adjustStartIndex(int indexOffset) {
 GrDrawTarget::GrDrawTarget(GrContext* context)
     : fClip(NULL)
     , fContext(context)
-    , fPushGpuTraceCount(0) {
+    , fGpuTraceMarkerCount(0) {
     SkASSERT(NULL != context);
 
     fDrawState = &fDefaultDrawState;
@@ -244,7 +244,7 @@ void GrDrawTarget::releasePreviousVertexSource() {
 #endif
             break;
         default:
-            GrCrash("Unknown Vertex Source Type.");
+            SkFAIL("Unknown Vertex Source Type.");
             break;
     }
 }
@@ -267,7 +267,7 @@ void GrDrawTarget::releasePreviousIndexSource() {
 #endif
             break;
         default:
-            GrCrash("Unknown Index Source Type.");
+            SkFAIL("Unknown Index Source Type.");
             break;
     }
 }
@@ -355,41 +355,41 @@ bool GrDrawTarget::checkDraw(GrPrimitiveType type, int startVertex,
     int maxValidVertex;
     switch (geoSrc.fVertexSrc) {
         case kNone_GeometrySrcType:
-            GrCrash("Attempting to draw without vertex src.");
+            SkFAIL("Attempting to draw without vertex src.");
         case kReserved_GeometrySrcType: // fallthrough
         case kArray_GeometrySrcType:
             maxValidVertex = geoSrc.fVertexCount;
             break;
         case kBuffer_GeometrySrcType:
-            maxValidVertex = static_cast<int>(geoSrc.fVertexBuffer->sizeInBytes() / geoSrc.fVertexSize);
+            maxValidVertex = static_cast<int>(geoSrc.fVertexBuffer->gpuMemorySize() / geoSrc.fVertexSize);
             break;
     }
     if (maxVertex > maxValidVertex) {
-        GrCrash("Drawing outside valid vertex range.");
+        SkFAIL("Drawing outside valid vertex range.");
     }
     if (indexCount > 0) {
         int maxIndex = startIndex + indexCount;
         int maxValidIndex;
         switch (geoSrc.fIndexSrc) {
             case kNone_GeometrySrcType:
-                GrCrash("Attempting to draw indexed geom without index src.");
+                SkFAIL("Attempting to draw indexed geom without index src.");
             case kReserved_GeometrySrcType: // fallthrough
             case kArray_GeometrySrcType:
                 maxValidIndex = geoSrc.fIndexCount;
                 break;
             case kBuffer_GeometrySrcType:
-                maxValidIndex = static_cast<int>(geoSrc.fIndexBuffer->sizeInBytes() / sizeof(uint16_t));
+                maxValidIndex = static_cast<int>(geoSrc.fIndexBuffer->gpuMemorySize() / sizeof(uint16_t));
                 break;
         }
         if (maxIndex > maxValidIndex) {
-            GrCrash("Index reads outside valid index range.");
+            SkFAIL("Index reads outside valid index range.");
         }
     }
 
     SkASSERT(NULL != drawState.getRenderTarget());
 
     for (int s = 0; s < drawState.numColorStages(); ++s) {
-        const GrEffectRef& effect = *drawState.getColorStage(s).getEffect();
+        const GrEffect* effect = drawState.getColorStage(s).getEffect();
         int numTextures = effect->numTextures();
         for (int t = 0; t < numTextures; ++t) {
             GrTexture* texture = effect->texture(t);
@@ -397,7 +397,7 @@ bool GrDrawTarget::checkDraw(GrPrimitiveType type, int startVertex,
         }
     }
     for (int s = 0; s < drawState.numCoverageStages(); ++s) {
-        const GrEffectRef& effect = *drawState.getCoverageStage(s).getEffect();
+        const GrEffect* effect = drawState.getCoverageStage(s).getEffect();
         int numTextures = effect->numTextures();
         for (int t = 0; t < numTextures; ++t) {
             GrTexture* texture = effect->texture(t);
@@ -548,25 +548,66 @@ void GrDrawTarget::drawPath(const GrPath* path, SkPath::FillType fill) {
     this->onDrawPath(path, fill, dstCopy.texture() ? &dstCopy : NULL);
 }
 
-void GrDrawTarget::instantGpuTraceEvent(const char* marker) {
+void GrDrawTarget::drawPaths(const GrPathRange* pathRange,
+                             const uint32_t indices[], int count,
+                             const float transforms[], PathTransformType transformsType,
+                             SkPath::FillType fill) {
+    SkASSERT(this->caps()->pathRenderingSupport());
+    SkASSERT(NULL != pathRange);
+    SkASSERT(NULL != indices);
+    SkASSERT(NULL != transforms);
+
+    // Don't compute a bounding box for setupDstReadIfNecessary(), we'll opt
+    // instead for it to just copy the entire dst. Realistically this is a moot
+    // point, because any context that supports NV_path_rendering will also
+    // support NV_blend_equation_advanced.
+    GrDeviceCoordTexture dstCopy;
+    if (!this->setupDstReadIfNecessary(&dstCopy, NULL)) {
+        return;
+    }
+
+    this->onDrawPaths(pathRange, indices, count, transforms, transformsType, fill,
+                      dstCopy.texture() ? &dstCopy : NULL);
+}
+
+typedef GrTraceMarkerSet::Iter TMIter;
+void GrDrawTarget::saveActiveTraceMarkers() {
     if (this->caps()->gpuTracingSupport()) {
-        this->onInstantGpuTraceEvent(marker);
+        SkASSERT(0 == fStoredTraceMarkers.count());
+        fStoredTraceMarkers.addSet(fActiveTraceMarkers);
+        for (TMIter iter = fStoredTraceMarkers.begin(); iter != fStoredTraceMarkers.end(); ++iter) {
+            this->removeGpuTraceMarker(&(*iter));
+        }
     }
 }
 
-void GrDrawTarget::pushGpuTraceEvent(const char* marker) {
-    SkASSERT(fPushGpuTraceCount >= 0);
+void GrDrawTarget::restoreActiveTraceMarkers() {
     if (this->caps()->gpuTracingSupport()) {
-        this->onPushGpuTraceEvent(marker);
-        ++fPushGpuTraceCount;
+        SkASSERT(0 == fActiveTraceMarkers.count());
+        for (TMIter iter = fStoredTraceMarkers.begin(); iter != fStoredTraceMarkers.end(); ++iter) {
+            this->addGpuTraceMarker(&(*iter));
+        }
+        for (TMIter iter = fActiveTraceMarkers.begin(); iter != fActiveTraceMarkers.end(); ++iter) {
+            this->fStoredTraceMarkers.remove(*iter);
+        }
     }
 }
 
-void GrDrawTarget::popGpuTraceEvent() {
-    SkASSERT(fPushGpuTraceCount >= 1);
+void GrDrawTarget::addGpuTraceMarker(const GrGpuTraceMarker* marker) {
     if (this->caps()->gpuTracingSupport()) {
-        this->onPopGpuTraceEvent();
-        --fPushGpuTraceCount;
+        SkASSERT(fGpuTraceMarkerCount >= 0);
+        this->fActiveTraceMarkers.add(*marker);
+        this->didAddGpuTraceMarker();
+        ++fGpuTraceMarkerCount;
+    }
+}
+
+void GrDrawTarget::removeGpuTraceMarker(const GrGpuTraceMarker* marker) {
+    if (this->caps()->gpuTracingSupport()) {
+        SkASSERT(fGpuTraceMarkerCount >= 1);
+        this->fActiveTraceMarkers.remove(*marker);
+        this->didRemoveGpuTraceMarker();
+        --fGpuTraceMarkerCount;
     }
 }
 
@@ -625,7 +666,7 @@ void GrDrawTarget::drawIndexedInstances(GrPrimitiveType type,
     }
 
     while (instanceCount) {
-        info.fInstanceCount = GrMin(instanceCount, maxInstancesPerDraw);
+        info.fInstanceCount = SkTMin(instanceCount, maxInstancesPerDraw);
         info.fVertexCount = info.fInstanceCount * verticesPerInstance;
         info.fIndexCount = info.fInstanceCount * indicesPerInstance;
 
@@ -648,7 +689,7 @@ namespace {
 // position + (optional) texture coord
 extern const GrVertexAttrib gBWRectPosUVAttribs[] = {
     {kVec2f_GrVertexAttribType, 0,               kPosition_GrVertexAttribBinding},
-    {kVec2f_GrVertexAttribType, sizeof(GrPoint), kLocalCoord_GrVertexAttribBinding}
+    {kVec2f_GrVertexAttribType, sizeof(SkPoint), kLocalCoord_GrVertexAttribBinding}
 };
 
 void set_vertex_attributes(GrDrawState* drawState, bool hasUVs) {
@@ -682,8 +723,8 @@ void GrDrawTarget::onDrawRect(const SkRect& rect,
     size_t vsize = this->drawState()->getVertexSize();
     geo.positions()->setRectFan(rect.fLeft, rect.fTop, rect.fRight, rect.fBottom, vsize);
     if (NULL != localRect) {
-        GrPoint* coords = GrTCast<GrPoint*>(GrTCast<intptr_t>(geo.vertices()) +
-                                            sizeof(GrPoint));
+        SkPoint* coords = GrTCast<SkPoint*>(GrTCast<intptr_t>(geo.vertices()) +
+                                            sizeof(SkPoint));
         coords->setRectFan(localRect->fLeft, localRect->fTop,
                            localRect->fRight, localRect->fBottom,
                            vsize);
@@ -981,7 +1022,6 @@ void GrDrawTarget::initCopySurfaceDstDesc(const GrSurface* src, GrTextureDesc* d
 ///////////////////////////////////////////////////////////////////////////////
 
 void GrDrawTargetCaps::reset() {
-    f8BitPaletteSupport = false;
     fMipMapSupport = false;
     fNPOTTextureTileSupport = false;
     fTwoSidedStencilSupport = false;
@@ -990,21 +1030,23 @@ void GrDrawTargetCaps::reset() {
     fShaderDerivativeSupport = false;
     fGeometryShaderSupport = false;
     fDualSourceBlendingSupport = false;
-    fBufferLockSupport = false;
     fPathRenderingSupport = false;
     fDstReadInShaderSupport = false;
+    fDiscardRenderTargetSupport = false;
     fReuseScratchTextures = true;
     fGpuTracingSupport = false;
+
+    fMapBufferFlags = kNone_MapFlags;
 
     fMaxRenderTargetSize = 0;
     fMaxTextureSize = 0;
     fMaxSampleCount = 0;
 
     memset(fConfigRenderSupport, 0, sizeof(fConfigRenderSupport));
+    memset(fConfigTextureSupport, 0, sizeof(fConfigTextureSupport));
 }
 
 GrDrawTargetCaps& GrDrawTargetCaps::operator=(const GrDrawTargetCaps& other) {
-    f8BitPaletteSupport = other.f8BitPaletteSupport;
     fMipMapSupport = other.fMipMapSupport;
     fNPOTTextureTileSupport = other.fNPOTTextureTileSupport;
     fTwoSidedStencilSupport = other.fTwoSidedStencilSupport;
@@ -1013,41 +1055,65 @@ GrDrawTargetCaps& GrDrawTargetCaps::operator=(const GrDrawTargetCaps& other) {
     fShaderDerivativeSupport = other.fShaderDerivativeSupport;
     fGeometryShaderSupport = other.fGeometryShaderSupport;
     fDualSourceBlendingSupport = other.fDualSourceBlendingSupport;
-    fBufferLockSupport = other.fBufferLockSupport;
     fPathRenderingSupport = other.fPathRenderingSupport;
     fDstReadInShaderSupport = other.fDstReadInShaderSupport;
+    fDiscardRenderTargetSupport = other.fDiscardRenderTargetSupport;
     fReuseScratchTextures = other.fReuseScratchTextures;
     fGpuTracingSupport = other.fGpuTracingSupport;
+
+    fMapBufferFlags = other.fMapBufferFlags;
 
     fMaxRenderTargetSize = other.fMaxRenderTargetSize;
     fMaxTextureSize = other.fMaxTextureSize;
     fMaxSampleCount = other.fMaxSampleCount;
 
     memcpy(fConfigRenderSupport, other.fConfigRenderSupport, sizeof(fConfigRenderSupport));
+    memcpy(fConfigTextureSupport, other.fConfigTextureSupport, sizeof(fConfigTextureSupport));
 
     return *this;
+}
+
+static SkString map_flags_to_string(uint32_t flags) {
+    SkString str;
+    if (GrDrawTargetCaps::kNone_MapFlags == flags) {
+        str = "none";
+    } else {
+        SkASSERT(GrDrawTargetCaps::kCanMap_MapFlag & flags);
+        SkDEBUGCODE(flags &= ~GrDrawTargetCaps::kCanMap_MapFlag);
+        str = "can_map";
+
+        if (GrDrawTargetCaps::kSubset_MapFlag & flags) {
+            str.append(" partial");
+        } else {
+            str.append(" full");
+        }
+        SkDEBUGCODE(flags &= ~GrDrawTargetCaps::kSubset_MapFlag);
+    }
+    SkASSERT(0 == flags); // Make sure we handled all the flags.
+    return str;
 }
 
 SkString GrDrawTargetCaps::dump() const {
     SkString r;
     static const char* gNY[] = {"NO", "YES"};
-    r.appendf("8 Bit Palette Support       : %s\n", gNY[f8BitPaletteSupport]);
-    r.appendf("MIP Map Support             : %s\n", gNY[fMipMapSupport]);
-    r.appendf("NPOT Texture Tile Support   : %s\n", gNY[fNPOTTextureTileSupport]);
-    r.appendf("Two Sided Stencil Support   : %s\n", gNY[fTwoSidedStencilSupport]);
-    r.appendf("Stencil Wrap Ops  Support   : %s\n", gNY[fStencilWrapOpsSupport]);
-    r.appendf("HW AA Lines Support         : %s\n", gNY[fHWAALineSupport]);
-    r.appendf("Shader Derivative Support   : %s\n", gNY[fShaderDerivativeSupport]);
-    r.appendf("Geometry Shader Support     : %s\n", gNY[fGeometryShaderSupport]);
-    r.appendf("Dual Source Blending Support: %s\n", gNY[fDualSourceBlendingSupport]);
-    r.appendf("Buffer Lock Support         : %s\n", gNY[fBufferLockSupport]);
-    r.appendf("Path Rendering Support      : %s\n", gNY[fPathRenderingSupport]);
-    r.appendf("Dst Read In Shader Support  : %s\n", gNY[fDstReadInShaderSupport]);
-    r.appendf("Reuse Scratch Textures      : %s\n", gNY[fReuseScratchTextures]);
-    r.appendf("Gpu Tracing Support         : %s\n", gNY[fGpuTracingSupport]);
-    r.appendf("Max Texture Size            : %d\n", fMaxTextureSize);
-    r.appendf("Max Render Target Size      : %d\n", fMaxRenderTargetSize);
-    r.appendf("Max Sample Count            : %d\n", fMaxSampleCount);
+    r.appendf("MIP Map Support              : %s\n", gNY[fMipMapSupport]);
+    r.appendf("NPOT Texture Tile Support    : %s\n", gNY[fNPOTTextureTileSupport]);
+    r.appendf("Two Sided Stencil Support    : %s\n", gNY[fTwoSidedStencilSupport]);
+    r.appendf("Stencil Wrap Ops  Support    : %s\n", gNY[fStencilWrapOpsSupport]);
+    r.appendf("HW AA Lines Support          : %s\n", gNY[fHWAALineSupport]);
+    r.appendf("Shader Derivative Support    : %s\n", gNY[fShaderDerivativeSupport]);
+    r.appendf("Geometry Shader Support      : %s\n", gNY[fGeometryShaderSupport]);
+    r.appendf("Dual Source Blending Support : %s\n", gNY[fDualSourceBlendingSupport]);
+    r.appendf("Path Rendering Support       : %s\n", gNY[fPathRenderingSupport]);
+    r.appendf("Dst Read In Shader Support   : %s\n", gNY[fDstReadInShaderSupport]);
+    r.appendf("Discard Render Target Support: %s\n", gNY[fDiscardRenderTargetSupport]);
+    r.appendf("Reuse Scratch Textures       : %s\n", gNY[fReuseScratchTextures]);
+    r.appendf("Gpu Tracing Support          : %s\n", gNY[fGpuTracingSupport]);
+    r.appendf("Max Texture Size             : %d\n", fMaxTextureSize);
+    r.appendf("Max Render Target Size       : %d\n", fMaxRenderTargetSize);
+    r.appendf("Max Sample Count             : %d\n", fMaxSampleCount);
+
+    r.appendf("Map Buffer Support           : %s\n", map_flags_to_string(fMapBufferFlags).c_str());
 
     static const char* kConfigNames[] = {
         "Unknown",  // kUnknown_GrPixelConfig
@@ -1057,25 +1123,43 @@ SkString GrDrawTargetCaps::dump() const {
         "RGBA444",  // kRGBA_4444_GrPixelConfig,
         "RGBA8888", // kRGBA_8888_GrPixelConfig,
         "BGRA8888", // kBGRA_8888_GrPixelConfig,
+        "ETC1",     // kETC1_GrPixelConfig,
+        "LATC",     // kLATC_GrPixelConfig,
+        "R11EAC",   // kR11_EAC_GrPixelConfig,
+        "ASTC12x12",// kASTC_12x12_GrPixelConfig,
+        "RGBAFloat",  // kRGBA_float_GrPixelConfig
     };
-    GR_STATIC_ASSERT(0 == kUnknown_GrPixelConfig);
-    GR_STATIC_ASSERT(1 == kAlpha_8_GrPixelConfig);
-    GR_STATIC_ASSERT(2 == kIndex_8_GrPixelConfig);
-    GR_STATIC_ASSERT(3 == kRGB_565_GrPixelConfig);
-    GR_STATIC_ASSERT(4 == kRGBA_4444_GrPixelConfig);
-    GR_STATIC_ASSERT(5 == kRGBA_8888_GrPixelConfig);
-    GR_STATIC_ASSERT(6 == kBGRA_8888_GrPixelConfig);
+    GR_STATIC_ASSERT(0  == kUnknown_GrPixelConfig);
+    GR_STATIC_ASSERT(1  == kAlpha_8_GrPixelConfig);
+    GR_STATIC_ASSERT(2  == kIndex_8_GrPixelConfig);
+    GR_STATIC_ASSERT(3  == kRGB_565_GrPixelConfig);
+    GR_STATIC_ASSERT(4  == kRGBA_4444_GrPixelConfig);
+    GR_STATIC_ASSERT(5  == kRGBA_8888_GrPixelConfig);
+    GR_STATIC_ASSERT(6  == kBGRA_8888_GrPixelConfig);
+    GR_STATIC_ASSERT(7  == kETC1_GrPixelConfig);
+    GR_STATIC_ASSERT(8  == kLATC_GrPixelConfig);
+    GR_STATIC_ASSERT(9  == kR11_EAC_GrPixelConfig);
+    GR_STATIC_ASSERT(10 == kASTC_12x12_GrPixelConfig);
+    GR_STATIC_ASSERT(11 == kRGBA_float_GrPixelConfig);
     GR_STATIC_ASSERT(SK_ARRAY_COUNT(kConfigNames) == kGrPixelConfigCnt);
 
     SkASSERT(!fConfigRenderSupport[kUnknown_GrPixelConfig][0]);
     SkASSERT(!fConfigRenderSupport[kUnknown_GrPixelConfig][1]);
-    for (size_t i = 0; i < SK_ARRAY_COUNT(kConfigNames); ++i)  {
-        if (i != kUnknown_GrPixelConfig) {
-            r.appendf("%s is renderable: %s, with MSAA: %s\n",
-                     kConfigNames[i],
-                     gNY[fConfigRenderSupport[i][0]],
-                     gNY[fConfigRenderSupport[i][1]]);
-        }
+
+    for (size_t i = 1; i < SK_ARRAY_COUNT(kConfigNames); ++i)  {
+        r.appendf("%s is renderable: %s, with MSAA: %s\n",
+                  kConfigNames[i],
+                  gNY[fConfigRenderSupport[i][0]],
+                  gNY[fConfigRenderSupport[i][1]]);
     }
+
+    SkASSERT(!fConfigTextureSupport[kUnknown_GrPixelConfig]);
+
+    for (size_t i = 1; i < SK_ARRAY_COUNT(kConfigNames); ++i)  {
+        r.appendf("%s is uploadable to a texture: %s\n",
+                  kConfigNames[i],
+                  gNY[fConfigTextureSupport[i]]);
+    }
+
     return r;
 }
