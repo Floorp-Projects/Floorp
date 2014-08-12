@@ -5985,11 +5985,9 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
     JS_ASSERT(masm.framePushed() == FramePushedAfterSave);
 
     // ARM and MIPS have a globally-pinned GlobalReg (x64 uses RIP-relative
-    // addressing, x86 uses immediates in effective addresses) and NaN register
-    // (used as part of the out-of-bounds handling in heap loads/stores).
+    // addressing, x86 uses immediates in effective addresses).
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     masm.movePtr(IntArgReg1, GlobalReg);
-    masm.loadConstantDouble(GenericNaN(), NANReg);
 #endif
 
     // ARM, MIPS and x64 have a globally-pinned HeapReg (x86 uses immediates in
