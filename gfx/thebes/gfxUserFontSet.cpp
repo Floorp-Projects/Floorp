@@ -12,8 +12,10 @@
 #include "gfxPlatform.h"
 #include "nsUnicharUtils.h"
 #include "nsNetUtil.h"
+#include "nsIJARChannel.h"
 #include "nsIProtocolHandler.h"
 #include "nsIPrincipal.h"
+#include "nsIZipReader.h"
 #include "gfxFontConstants.h"
 #include "mozilla/Services.h"
 #include "mozilla/gfx/2D.h"
@@ -945,25 +947,34 @@ IgnorePrincipal(nsIURI *aURI)
 bool
 gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 {
-    bool result;
-    if (NS_FAILED(mURI->Equals(aKey->mURI, &result)) || !result) {
-        return false;
-    }
+    const gfxFontEntry *fe = aKey->mFontEntry;
+    // CRC32 checking mode
+    if (mLength || aKey->mLength) {
+        if (aKey->mLength != mLength ||
+            aKey->mCRC32 != mCRC32) {
+            return false;
+        }
+    } else {
+        bool result;
+        if (NS_FAILED(mURI->Equals(aKey->mURI, &result)) || !result) {
+            return false;
+        }
 
-    // For data: URIs, we don't care about the principal; otherwise, check it.
-    if (!IgnorePrincipal(mURI)) {
-        NS_ASSERTION(mPrincipal && aKey->mPrincipal,
-                     "only data: URIs are allowed to omit the principal");
-        if (NS_FAILED(mPrincipal->Equals(aKey->mPrincipal, &result)) || !result) {
+        // For data: URIs, we don't care about the principal; otherwise, check it.
+        if (!IgnorePrincipal(mURI)) {
+            NS_ASSERTION(mPrincipal && aKey->mPrincipal,
+                         "only data: URIs are allowed to omit the principal");
+            if (NS_FAILED(mPrincipal->Equals(aKey->mPrincipal, &result)) ||
+                !result) {
+                return false;
+            }
+        }
+
+        if (mPrivate != aKey->mPrivate) {
             return false;
         }
     }
 
-    if (mPrivate != aKey->mPrivate) {
-        return false;
-    }
-
-    const gfxFontEntry *fe = aKey->mFontEntry;
     if (mFontEntry->mItalic           != fe->mItalic          ||
         mFontEntry->mWeight           != fe->mWeight          ||
         mFontEntry->mStretch          != fe->mStretch         ||
@@ -997,17 +1008,25 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry,
     }
 
     gfxUserFontData *data = aFontEntry->mUserFontData;
-    // For data: URIs, the principal is ignored; anyone who has the same
-    // data: URI is able to load it and get an equivalent font.
-    // Otherwise, the principal is used as part of the cache key.
-    nsIPrincipal *principal;
-    if (IgnorePrincipal(data->mURI)) {
-        principal = nullptr;
+    if (data->mLength) {
+        MOZ_ASSERT(aPersistence == kPersistent);
+        MOZ_ASSERT(!data->mPrivate);
+        sUserFonts->PutEntry(Key(data->mCRC32, data->mLength, aFontEntry,
+                                 data->mPrivate, aPersistence));
     } else {
-        principal = data->mPrincipal;
+        MOZ_ASSERT(aPersistence == kDiscardable);
+        // For data: URIs, the principal is ignored; anyone who has the same
+        // data: URI is able to load it and get an equivalent font.
+        // Otherwise, the principal is used as part of the cache key.
+        nsIPrincipal *principal;
+        if (IgnorePrincipal(data->mURI)) {
+            principal = nullptr;
+        } else {
+            principal = data->mPrincipal;
+        }
+        sUserFonts->PutEntry(Key(data->mURI, principal, aFontEntry,
+                                 data->mPrivate, aPersistence));
     }
-    sUserFonts->PutEntry(Key(data->mURI, principal, aFontEntry,
-                             data->mPrivate, aPersistence));
 
 #ifdef DEBUG_USERFONT_CACHE
     printf("userfontcache added fontentry: %p\n", aFontEntry);
@@ -1056,6 +1075,30 @@ gfxUserFontSet::UserFontCache::GetFont(nsIURI            *aSrcURI,
 
     Entry* entry = sUserFonts->GetEntry(Key(aSrcURI, principal, aProxy,
                                             aPrivate));
+    if (entry) {
+        return entry->GetFontEntry();
+    }
+
+    nsCOMPtr<nsIChannel> chan;
+    if (NS_FAILED(NS_NewChannel(getter_AddRefs(chan), aSrcURI))) {
+        return nullptr;
+    }
+
+    nsCOMPtr<nsIJARChannel> jarchan = do_QueryInterface(chan);
+    if (!jarchan) {
+        return nullptr;
+    }
+
+    nsCOMPtr<nsIZipEntry> zipentry;
+    if (NS_FAILED(jarchan->GetZipEntry(getter_AddRefs(zipentry)))) {
+        return nullptr;
+    }
+
+    uint32_t crc32, length;
+    zipentry->GetCRC32(&crc32);
+    zipentry->GetRealSize(&length);
+
+    entry = sUserFonts->GetEntry(Key(crc32, length, aProxy, aPrivate));
     if (entry) {
         return entry->GetFontEntry();
     }
