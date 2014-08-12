@@ -131,18 +131,6 @@ SourceBufferList::Evict(double aStart, double aEnd)
   }
 }
 
-bool
-SourceBufferList::AllContainsTime(double aTime)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
-    if (!mSourceBuffers[i]->ContainsTime(aTime)) {
-      return false;
-    }
-  }
-  return mSourceBuffers.Length() > 0;
-}
-
 void
 SourceBufferList::Ended()
 {
