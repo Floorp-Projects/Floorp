@@ -588,56 +588,70 @@ BluetoothAdapter::GetConnectedDevices(uint16_t aServiceUuid, ErrorResult& aRv)
   return request.forget();
 }
 
-already_AddRefed<DOMRequest>
-BluetoothAdapter::GetPairedDevices(ErrorResult& aRv)
+void
+BluetoothAdapter::GetPairedDevices(nsTArray<nsRefPtr<BluetoothDevice> >& aDevices)
 {
-  // This method will be implemented later in Bug 1036233.
-  return nullptr;
+  for (uint32_t i = 0; i < mDevices.Length(); ++i) {
+    if (mDevices[i]->Paired()) {
+      aDevices.AppendElement(mDevices[i]);
+    }
+  }
 }
 
-already_AddRefed<DOMRequest>
+already_AddRefed<Promise>
 BluetoothAdapter::PairUnpair(bool aPair, const nsAString& aDeviceAddress,
                              ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  if (!global) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<BluetoothVoidReplyRunnable> results =
-    new BluetoothVoidReplyRunnable(request);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  /**
+   * Ensure
+   * - device address is not empty,
+   * - adapter is already enabled, and
+   * - BluetoothService is available.
+   */
+  BT_ENSURE_TRUE_REJECT(!aDeviceAddress.IsEmpty(),
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
+  BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
   BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
   nsresult rv;
   if (aPair) {
+    nsRefPtr<BluetoothReplyRunnable> result =
+      new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
+                                     promise,
+                                     NS_LITERAL_STRING("Pair"));
     rv = bs->CreatePairedDeviceInternal(aDeviceAddress,
                                         kCreatePairedDeviceTimeout,
-                                        results);
+                                        result);
   } else {
-    rv = bs->RemoveDeviceInternal(aDeviceAddress, results);
+    nsRefPtr<BluetoothReplyRunnable> result =
+      new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
+                                     promise,
+                                     NS_LITERAL_STRING("Unpair"));
+    rv = bs->RemoveDeviceInternal(aDeviceAddress, result);
   }
-  if (NS_FAILED(rv)) {
-    BT_WARNING("Pair/Unpair failed!");
-    aRv.Throw(rv);
-    return nullptr;
-  }
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), NS_ERROR_DOM_OPERATION_ERR);
 
-  return request.forget();
+  return promise.forget();
 }
 
-already_AddRefed<DOMRequest>
+already_AddRefed<Promise>
 BluetoothAdapter::Pair(const nsAString& aDeviceAddress, ErrorResult& aRv)
 {
   return PairUnpair(true, aDeviceAddress, aRv);
 }
 
-already_AddRefed<DOMRequest>
+already_AddRefed<Promise>
 BluetoothAdapter::Unpair(const nsAString& aDeviceAddress, ErrorResult& aRv)
 {
   return PairUnpair(false, aDeviceAddress, aRv);
