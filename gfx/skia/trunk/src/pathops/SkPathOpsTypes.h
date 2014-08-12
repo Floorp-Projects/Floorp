@@ -30,9 +30,7 @@ inline bool AlmostEqualUlps(double a, double b) {
 
 // Use Almost Dequal when comparing should not special case denormalized values.
 bool AlmostDequalUlps(float a, float b);
-inline bool AlmostDequalUlps(double a, double b) {
-    return AlmostDequalUlps(SkDoubleToScalar(a), SkDoubleToScalar(b));
-}
+bool AlmostDequalUlps(double a, double b);
 
 bool NotAlmostEqualUlps(float a, float b);
 inline bool NotAlmostEqualUlps(double a, double b) {
@@ -85,6 +83,7 @@ inline int UlpsDistance(double a, double b) {
 const double FLT_EPSILON_CUBED = FLT_EPSILON * FLT_EPSILON * FLT_EPSILON;
 const double FLT_EPSILON_HALF = FLT_EPSILON / 2;
 const double FLT_EPSILON_DOUBLE = FLT_EPSILON * 2;
+const double FLT_EPSILON_ORDERABLE_ERR = FLT_EPSILON * 16;
 const double FLT_EPSILON_SQUARED = FLT_EPSILON * FLT_EPSILON;
 const double FLT_EPSILON_SQRT = sqrt(FLT_EPSILON);
 const double FLT_EPSILON_INVERSE = 1 / FLT_EPSILON;
@@ -92,6 +91,11 @@ const double DBL_EPSILON_ERR = DBL_EPSILON * 4;  // FIXME: tune -- allow a few b
 const double DBL_EPSILON_SUBDIVIDE_ERR = DBL_EPSILON * 16;
 const double ROUGH_EPSILON = FLT_EPSILON * 64;
 const double MORE_ROUGH_EPSILON = FLT_EPSILON * 256;
+const double WAY_ROUGH_EPSILON = FLT_EPSILON * 2048;
+
+inline bool zero_or_one(double x) {
+    return x == 0 || x == 1;
+}
 
 inline bool approximately_zero(double x) {
     return fabs(x) < FLT_EPSILON;
@@ -121,6 +125,10 @@ inline bool approximately_zero_double(double x) {
     return fabs(x) < FLT_EPSILON_DOUBLE;
 }
 
+inline bool approximately_zero_orderable(double x) {
+    return fabs(x) < FLT_EPSILON_ORDERABLE_ERR;
+}
+
 inline bool approximately_zero_squared(double x) {
     return fabs(x) < FLT_EPSILON_SQUARED;
 }
@@ -139,7 +147,7 @@ inline bool approximately_zero_inverse(double x) {
 
 // OPTIMIZATION: if called multiple times with the same denom, we want to pass 1/y instead
 inline bool approximately_zero_when_compared_to(double x, double y) {
-    return x == 0 || fabs(x / y) < FLT_EPSILON;
+    return x == 0 || fabs(x) < fabs(y * FLT_EPSILON);
 }
 
 // Use this for comparing Ts in the range of 0 to 1. For general numbers (larger and smaller) use
@@ -164,6 +172,10 @@ inline bool approximately_equal_double(double x, double y) {
     return approximately_zero_double(x - y);
 }
 
+inline bool approximately_equal_orderable(double x, double y) {
+    return approximately_zero_orderable(x - y);
+}
+
 inline bool approximately_equal_squared(double x, double y) {
     return approximately_equal(x, y);
 }
@@ -172,16 +184,48 @@ inline bool approximately_greater(double x, double y) {
     return x - FLT_EPSILON >= y;
 }
 
+inline bool approximately_greater_double(double x, double y) {
+    return x - FLT_EPSILON_DOUBLE >= y;
+}
+
+inline bool approximately_greater_orderable(double x, double y) {
+    return x - FLT_EPSILON_ORDERABLE_ERR >= y;
+}
+
 inline bool approximately_greater_or_equal(double x, double y) {
     return x + FLT_EPSILON > y;
+}
+
+inline bool approximately_greater_or_equal_double(double x, double y) {
+    return x + FLT_EPSILON_DOUBLE > y;
+}
+
+inline bool approximately_greater_or_equal_orderable(double x, double y) {
+    return x + FLT_EPSILON_ORDERABLE_ERR > y;
 }
 
 inline bool approximately_lesser(double x, double y) {
     return x + FLT_EPSILON <= y;
 }
 
+inline bool approximately_lesser_double(double x, double y) {
+    return x + FLT_EPSILON_DOUBLE <= y;
+}
+
+inline bool approximately_lesser_orderable(double x, double y) {
+    return x + FLT_EPSILON_ORDERABLE_ERR <= y;
+}
+
 inline bool approximately_lesser_or_equal(double x, double y) {
     return x - FLT_EPSILON < y;
+}
+
+inline bool approximately_lesser_or_equal_double(double x, double y) {
+    return x - FLT_EPSILON_DOUBLE < y;
+}
+
+inline bool approximately_lesser_or_equal_orderable(double x, double y) {
+    return x - FLT_EPSILON_ORDERABLE_ERR < y;
 }
 
 inline bool approximately_greater_than_one(double x) {
@@ -204,12 +248,20 @@ inline bool approximately_negative(double x) {
     return x < FLT_EPSILON;
 }
 
+inline bool approximately_negative_orderable(double x) {
+    return x < FLT_EPSILON_ORDERABLE_ERR;
+}
+
 inline bool precisely_negative(double x) {
     return x < DBL_EPSILON_ERR;
 }
 
 inline bool approximately_one_or_less(double x) {
     return x < 1 + FLT_EPSILON;
+}
+
+inline bool approximately_one_or_less_double(double x) {
+    return x < 1 + FLT_EPSILON_DOUBLE;
 }
 
 inline bool approximately_positive(double x) {
@@ -222,6 +274,16 @@ inline bool approximately_positive_squared(double x) {
 
 inline bool approximately_zero_or_more(double x) {
     return x > -FLT_EPSILON;
+}
+
+inline bool approximately_zero_or_more_double(double x) {
+    return x > -FLT_EPSILON_DOUBLE;
+}
+
+inline bool approximately_between_orderable(double a, double b, double c) {
+    return a <= c
+            ? approximately_negative_orderable(a - b) && approximately_negative_orderable(b - c)
+            : approximately_negative_orderable(b - a) && approximately_negative_orderable(c - b);
 }
 
 inline bool approximately_between(double a, double b, double c) {
@@ -240,12 +302,16 @@ inline bool between(double a, double b, double c) {
     return (a - b) * (c - b) <= 0;
 }
 
+inline bool roughly_equal(double x, double y) {
+    return fabs(x - y) < ROUGH_EPSILON;
+}
+
 inline bool more_roughly_equal(double x, double y) {
     return fabs(x - y) < MORE_ROUGH_EPSILON;
 }
 
-inline bool roughly_equal(double x, double y) {
-    return fabs(x - y) < ROUGH_EPSILON;
+inline bool way_roughly_equal(double x, double y) {
+    return fabs(x - y) < WAY_ROUGH_EPSILON;
 }
 
 struct SkDPoint;
@@ -310,23 +376,5 @@ inline int SkDSideBit(double x) {
 inline double SkPinT(double t) {
     return precisely_less_than_zero(t) ? 0 : precisely_greater_than_one(t) ? 1 : t;
 }
-
-#ifdef SK_DEBUG
-inline void DebugDumpDouble(double x) {
-    if (x == floor(x)) {
-        SkDebugf("%.0f", x);
-    } else {
-        SkDebugf("%1.17g", x);
-    }
-}
-
-inline void DebugDumpFloat(float x) {
-    if (x == floorf(x)) {
-        SkDebugf("%.0f", x);
-    } else {
-        SkDebugf("%1.9gf", x);
-    }
-}
-#endif
 
 #endif

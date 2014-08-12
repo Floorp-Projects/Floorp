@@ -12,29 +12,6 @@
 
 #include "SkTypes.h"
 
-/**
- *  Computes numer1 * numer2 / denom in full 64 intermediate precision.
- *  It is an error for denom to be 0. There is no special handling if
- *  the result overflows 32bits.
- */
-int32_t SkMulDiv(int32_t numer1, int32_t numer2, int32_t denom);
-
-/**
- *  Computes (numer1 << shift) / denom in full 64 intermediate precision.
- *  It is an error for denom to be 0. There is no special handling if
- *  the result overflows 32bits.
- */
-int32_t SkDivBits(int32_t numer, int32_t denom, int shift);
-
-/**
- *  Return the integer square root of value, with a bias of bitBias
- */
-int32_t SkSqrtBits(int32_t value, int bitBias);
-
-/** Return the integer square root of n, treated as a SkFixed (16.16)
- */
-#define SkSqrt32(n)         SkSqrtBits(n, 15)
-
 // 64bit -> 32bit utilities
 
 /**
@@ -63,6 +40,34 @@ static inline int64_t sk_64_mul(int64_t a, int64_t b) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ *  Computes numer1 * numer2 / denom in full 64 intermediate precision.
+ *  It is an error for denom to be 0. There is no special handling if
+ *  the result overflows 32bits.
+ */
+static inline int32_t SkMulDiv(int32_t numer1, int32_t numer2, int32_t denom) {
+    SkASSERT(denom);
+
+    int64_t tmp = sk_64_mul(numer1, numer2) / denom;
+    return sk_64_asS32(tmp);
+}
+
+/**
+ *  Computes (numer1 << shift) / denom in full 64 intermediate precision.
+ *  It is an error for denom to be 0. There is no special handling if
+ *  the result overflows 32bits.
+ */
+int32_t SkDivBits(int32_t numer, int32_t denom, int shift);
+
+/**
+ *  Return the integer square root of value, with a bias of bitBias
+ */
+int32_t SkSqrtBits(int32_t value, int bitBias);
+
+/** Return the integer square root of n, treated as a SkFixed (16.16)
+ */
+#define SkSqrt32(n)         SkSqrtBits(n, 15)
+
 //! Returns the number of leading zero bits (0...32)
 int SkCLZ_portable(uint32_t);
 
@@ -79,7 +84,7 @@ int SkCLZ_portable(uint32_t);
                 return 32;
             }
         }
-    #elif defined(SK_CPU_ARM) || defined(__GNUC__) || defined(__clang__)
+    #elif defined(SK_CPU_ARM32) || defined(__GNUC__) || defined(__clang__)
         static inline int SkCLZ(uint32_t mask) {
             // __builtin_clz(0) is undefined, so we have to detect that case.
             return mask ? __builtin_clz(mask) : 32;
@@ -204,7 +209,7 @@ static inline U8CPU SkMulDiv255Round(U16CPU a, U16CPU b) {
  */
 template <typename In, typename Out>
 inline void SkTDivMod(In numer, In denom, Out* div, Out* mod) {
-#ifdef SK_CPU_ARM
+#ifdef SK_CPU_ARM32
     // If we wrote this as in the else branch, GCC won't fuse the two into one
     // divmod call, but rather a div call followed by a divmod.  Silly!  This
     // version is just as fast as calling __aeabi_[u]idivmod manually, but with
@@ -218,7 +223,7 @@ inline void SkTDivMod(In numer, In denom, Out* div, Out* mod) {
     // On x86 this will just be a single idiv.
     *div = static_cast<Out>(numer/denom);
     *mod = static_cast<Out>(numer%denom);
-#endif  // SK_CPU_ARM
+#endif
 }
 
 #endif

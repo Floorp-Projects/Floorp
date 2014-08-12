@@ -12,78 +12,132 @@
 #include "SkTemplates.h"
 #include "SkThread.h"
 #include "SkTypes.h"
+#include "SkTArray.h"
 
-/** Given a GrEffect of a particular type, creates the corresponding graphics-backend-specific
-    effect object. Also tracks equivalence of shaders generated via a key. Each factory instance
-    is assigned a generation ID at construction. The ID of the return of GrEffect::getFactory()
-    is used as a type identifier. Thus a GrEffect subclass must return a singleton from
-    getFactory(). GrEffect subclasses should use the derived class GrTBackendEffectFactory that is
-    templated on the GrEffect subclass as their factory object. It requires that the GrEffect
-    subclass has a nested class (or typedef) GLEffect which is its GL implementation and a subclass
-    of GrGLEffect.
- */
-
-class GrEffectRef;
 class GrGLEffect;
 class GrGLCaps;
 class GrDrawEffect;
 
-class GrBackendEffectFactory : public SkNoncopyable {
+/**
+ * Used by effects to build their keys. It incorporates each per-effect key into a larger shader key.
+ */
+class GrEffectKeyBuilder {
 public:
-    typedef uint32_t EffectKey;
-    enum {
-        kNoEffectKey = 0,
-        kEffectKeyBits = 10,
-        /**
-         * The framework automatically includes coord transforms and texture accesses in their
-         * effect's EffectKey, so effects don't need to account for them in GenKey().
-         */
-        kTextureKeyBits = 4,
-        kTransformKeyBits = 6,
-        kAttribKeyBits = 6,
-        kClassIDBits = 6
-    };
+    GrEffectKeyBuilder(SkTArray<unsigned char, true>* data) : fData(data), fCount(0) {
+        SkASSERT(0 == fData->count() % sizeof(uint32_t));
+    }
 
-    virtual EffectKey glEffectKey(const GrDrawEffect&, const GrGLCaps&) const = 0;
+    void add32(uint32_t v) {
+        ++fCount;
+        fData->push_back_n(4, reinterpret_cast<uint8_t*>(&v));
+    }
+
+    /** Inserts count uint32_ts into the key. The returned pointer is only valid until the next
+        add*() call. */
+    uint32_t* SK_WARN_UNUSED_RESULT add32n(int count) {
+        SkASSERT(count > 0);
+        fCount += count;
+        return reinterpret_cast<uint32_t*>(fData->push_back_n(4 * count));
+    }
+
+    size_t size() const { return sizeof(uint32_t) * fCount; }
+
+private:
+    SkTArray<uint8_t, true>* fData; // unowned ptr to the larger key.
+    int fCount;                     // number of uint32_ts added to fData by the effect.
+};
+
+/**
+ * This class is used to pass the key that was created for a GrGLEffect back to it
+ * when it emits code. It may allow the emit step to skip calculations that were
+ * performed when computing the key.
+ */
+class GrEffectKey {
+public:
+    GrEffectKey(const uint32_t* key, int count) : fKey(key), fCount(count) {
+        SkASSERT(0 == reinterpret_cast<intptr_t>(key) % sizeof(uint32_t));
+    }
+
+    /** Gets the uint32_t values that the effect inserted into the key. */
+    uint32_t get32(int index) const {
+        SkASSERT(index >=0 && index < fCount);
+        return fKey[index];
+    }
+
+    /** Gets the number of uint32_t values that the effect inserted into the key. */
+    int count32() const { return fCount; }
+
+private:
+    const uint32_t* fKey;           // unowned ptr into the larger key.
+    int             fCount;         // number of uint32_ts inserted by the effect into its key.
+};
+
+/**
+ * Given a GrEffect of a particular type, creates the corresponding graphics-backend-specific
+ * effect object. It also tracks equivalence of shaders generated via a key. The factory for an
+ * effect is accessed via GrEffect::getFactory(). Each factory instance is assigned an ID at
+ * construction. The ID of GrEffect::getFactory() is used as a type identifier. Thus, a GrEffect
+ * subclass must always return the same object from getFactory() and that factory object must be
+ * unique to the GrEffect subclass (and unique from any further derived subclasses).
+ *
+ * Rather than subclassing this class themselves, it is recommended that GrEffect authors use 
+ * the templated subclass GrTBackendEffectFactory by writing their getFactory() method as:
+ *
+ * const GrBackendEffectFactory& MyEffect::getFactory() const {
+ *     return GrTBackendEffectFactory<MyEffect>::getInstance();
+ * }
+ *
+ * Using GrTBackendEffectFactory places a few constraints on the effect. See that class's comments.
+ */
+class GrBackendEffectFactory : SkNoncopyable {
+public:
+    /** 
+     * Generates an effect's key. The key is based on the aspects of the GrEffect object's
+     * configuration that affect GLSL code generation. Two GrEffect instances that would cause
+     * this->createGLInstance()->emitCode() to produce different code must produce different keys.
+     */
+    virtual void getGLEffectKey(const GrDrawEffect&, const GrGLCaps&, GrEffectKeyBuilder*) const = 0;
+
+    /**
+     * Creates a GrGLEffect instance that is used both to generate code for the GrEffect in a GLSL
+     * program and to manage updating uniforms for the program when it is used.
+     */
     virtual GrGLEffect* createGLInstance(const GrDrawEffect&) const = 0;
 
-    bool operator ==(const GrBackendEffectFactory& b) const {
-        return fEffectClassID == b.fEffectClassID;
-    }
-    bool operator !=(const GrBackendEffectFactory& b) const {
-        return !(*this == b);
-    }
-
+    /**
+     * Produces a human-reable name for the effect.
+     */
     virtual const char* name() const = 0;
 
-    static EffectKey GetTransformKey(EffectKey key) {
-        return key >> (kEffectKeyBits + kTextureKeyBits) & ((1U << kTransformKeyBits) - 1);
-    }
+    /**
+     * A unique value for every instance of this factory. It is automatically incorporated into the
+     * effect's key. This allows keys generated by getGLEffectKey() to only be unique within a
+     * GrEffect subclass and not necessarily across subclasses.
+     */
+    uint32_t effectClassID() const { return fEffectClassID; }
 
 protected:
+    GrBackendEffectFactory() : fEffectClassID(GenID()) {}
+    virtual ~GrBackendEffectFactory() {}
+
+private:
     enum {
         kIllegalEffectClassID = 0,
     };
 
-    GrBackendEffectFactory() {
-        fEffectClassID = kIllegalEffectClassID;
-    }
-    virtual ~GrBackendEffectFactory() {}
-
-    static EffectKey GenID() {
-        SkDEBUGCODE(static const int32_t kClassIDBits = 8 * sizeof(EffectKey) -
-                           kTextureKeyBits - kEffectKeyBits - kAttribKeyBits);
+    static uint32_t GenID() {
         // fCurrEffectClassID has been initialized to kIllegalEffectClassID. The
         // atomic inc returns the old value not the incremented value. So we add
         // 1 to the returned value.
-        int32_t id = sk_atomic_inc(&fCurrEffectClassID) + 1;
-        SkASSERT(id < (1 << kClassIDBits));
-        return static_cast<EffectKey>(id);
+        uint32_t id = static_cast<uint32_t>(sk_atomic_inc(&fCurrEffectClassID)) + 1;
+        if (!id) {
+            SkFAIL("This should never wrap as it should only be called once for each GrEffect "
+                   "subclass.");
+        }
+        return id;
     }
 
-    EffectKey fEffectClassID;
-
-private:
+    const uint32_t fEffectClassID;
     static int32_t fCurrEffectClassID;
 };
 

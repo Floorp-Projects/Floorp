@@ -9,6 +9,7 @@
 #include "GrSimpleTextureEffect.h"
 #include "GrTBackendEffectFactory.h"
 #include "gl/GrGLEffect.h"
+#include "gl/GrGLShaderBuilder.h"
 #include "SkFloatingPoint.h"
 
 
@@ -16,7 +17,7 @@ GrTextureDomain::GrTextureDomain(const SkRect& domain, Mode mode, int index)
     : fIndex(index) {
 
     static const SkRect kFullRect = {0, 0, SK_Scalar1, SK_Scalar1};
-    if (domain.contains(kFullRect)) {
+    if (domain.contains(kFullRect) && kClamp_Mode == mode) {
         fMode = kIgnore_Mode;
     } else {
         fMode = mode;
@@ -146,7 +147,7 @@ public:
 
     virtual void emitCode(GrGLShaderBuilder*,
                           const GrDrawEffect&,
-                          EffectKey,
+                          const GrEffectKey&,
                           const char* outputColor,
                           const char* inputColor,
                           const TransformedCoordsArray&,
@@ -154,7 +155,7 @@ public:
 
     virtual void setData(const GrGLUniformManager&, const GrDrawEffect&) SK_OVERRIDE;
 
-    static inline EffectKey GenKey(const GrDrawEffect&, const GrGLCaps&);
+    static inline void GenKey(const GrDrawEffect&, const GrGLCaps&, GrEffectKeyBuilder*);
 
 private:
     GrTextureDomain::GLDomain         fGLDomain;
@@ -168,7 +169,7 @@ GrGLTextureDomainEffect::GrGLTextureDomainEffect(const GrBackendEffectFactory& f
 
 void GrGLTextureDomainEffect::emitCode(GrGLShaderBuilder* builder,
                                        const GrDrawEffect& drawEffect,
-                                       EffectKey key,
+                                       const GrEffectKey& key,
                                        const char* outputColor,
                                        const char* inputColor,
                                        const TransformedCoordsArray& coords,
@@ -187,16 +188,16 @@ void GrGLTextureDomainEffect::setData(const GrGLUniformManager& uman,
     fGLDomain.setData(uman, domain, effect.texture(0)->origin());
 }
 
-GrGLEffect::EffectKey GrGLTextureDomainEffect::GenKey(const GrDrawEffect& drawEffect,
-                                                      const GrGLCaps&) {
+void GrGLTextureDomainEffect::GenKey(const GrDrawEffect& drawEffect, const GrGLCaps&,
+                                     GrEffectKeyBuilder* b) {
     const GrTextureDomain& domain = drawEffect.castEffect<GrTextureDomainEffect>().textureDomain();
-    return GrTextureDomain::GLDomain::DomainKey(domain);
+    b->add32(GrTextureDomain::GLDomain::DomainKey(domain));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrEffectRef* GrTextureDomainEffect::Create(GrTexture* texture,
+GrEffect* GrTextureDomainEffect::Create(GrTexture* texture,
                                            const SkMatrix& matrix,
                                            const SkRect& domain,
                                            GrTextureDomain::Mode mode,
@@ -208,14 +209,12 @@ GrEffectRef* GrTextureDomainEffect::Create(GrTexture* texture,
         return GrSimpleTextureEffect::Create(texture, matrix, filterMode);
     } else {
 
-        AutoEffectUnref effect(SkNEW_ARGS(GrTextureDomainEffect, (texture,
-                                                                  matrix,
-                                                                  domain,
-                                                                  mode,
-                                                                  filterMode,
-                                                                  coordSet)));
-        return CreateEffectRef(effect);
-
+        return SkNEW_ARGS(GrTextureDomainEffect, (texture,
+                                                  matrix,
+                                                  domain,
+                                                  mode,
+                                                  filterMode,
+                                                  coordSet));
     }
 }
 
@@ -255,10 +254,10 @@ void GrTextureDomainEffect::getConstantColorComponents(GrColor* color, uint32_t*
 
 GR_DEFINE_EFFECT_TEST(GrTextureDomainEffect);
 
-GrEffectRef* GrTextureDomainEffect::TestCreate(SkRandom* random,
-                                               GrContext*,
-                                               const GrDrawTargetCaps&,
-                                               GrTexture* textures[]) {
+GrEffect* GrTextureDomainEffect::TestCreate(SkRandom* random,
+                                            GrContext*,
+                                            const GrDrawTargetCaps&,
+                                            GrTexture* textures[]) {
     int texIdx = random->nextBool() ? GrEffectUnitTest::kSkiaPMTextureIdx :
                                       GrEffectUnitTest::kAlphaTextureIdx;
     SkRect domain;

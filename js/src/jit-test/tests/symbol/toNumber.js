@@ -1,35 +1,36 @@
 load(libdir + "asserts.js");
 
-function add() {
-    assertEq(Symbol() + 2, NaN);
+var sym = Symbol();
+
+function add2(x) {
+    return x + 2;
 }
 for (var i = 0; i < 9; i++)
-    add();
+    assertThrowsInstanceOf(() => add2(sym), TypeError);
 
-function mul() {
-    assertEq(Symbol() * Symbol(), NaN);
+function sqr(x) {
+    return x * x;
 }
 for (var i = 0; i < 9; i++)
-    mul();
+    assertThrowsInstanceOf(() => sqr(sym), TypeError);
 
-function bit_or() {
-    assertEq(Symbol() | Symbol(), 0);
+function bit_or(x) {
+    return x | x;
 }
 for (var i = 0; i < 9; i++)
-    bit_or();
+    assertThrowsInstanceOf(() => bit_or(sym), TypeError);
 
-function bit_not() {
-    assertEq(~Symbol(), -1);
+function bit_not(x) {
+    return ~x;
 }
 for (var i = 0; i < 9; i++)
-    bit_not();
+    assertThrowsInstanceOf(() => bit_not(sym), TypeError);
 
-function plus() {
-    assertEq(+Symbol(), NaN);
+function plus(x) {
+    return +x;
 }
 for (var i = 0; i < 9; i++)
-    plus();
-
+    assertThrowsInstanceOf(() => plus(sym), TypeError);
 
 function f(a, b) {
     return a + b;
@@ -38,11 +39,11 @@ function f(a, b) {
 function testPoly() {
     assertEq(f(20, 30), 50);
     assertEq(f("one", "two"), "onetwo");
-    assertEq(f(Symbol("one"), Symbol("two")), NaN);
-    assertEq(f(Symbol("14"), 14), NaN);
-    assertEq(f(Symbol("14"), 13.719), NaN);
-    assertEq(f(14, Symbol("14")), NaN);
-    assertEq(f(13.719, Symbol("14")), NaN);
+    assertThrowsInstanceOf(() => f(Symbol("one"), Symbol("two")), TypeError);
+    assertThrowsInstanceOf(() => f(Symbol("14"), 14), TypeError);
+    assertThrowsInstanceOf(() => f(Symbol("14"), 13.719), TypeError);
+    assertThrowsInstanceOf(() => f(14, Symbol("14")), TypeError);
+    assertThrowsInstanceOf(() => f(13.719, Symbol("14")), TypeError);
 }
 
 for (var i = 0; i < 9; i++)

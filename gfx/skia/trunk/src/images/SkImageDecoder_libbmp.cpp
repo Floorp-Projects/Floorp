@@ -12,7 +12,7 @@
 #include "SkImageDecoder.h"
 #include "SkScaledBitmapSampler.h"
 #include "SkStream.h"
-#include "SkStreamHelpers.h"
+#include "SkStreamPriv.h"
 #include "SkTDArray.h"
 
 class SkBMPImageDecoder : public SkImageDecoder {
@@ -99,7 +99,7 @@ bool SkBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode) {
     // Allocated space used to hold the data.
     SkAutoMalloc storage;
     // Byte length of all of the data.
-    const size_t length = CopyStreamToStorage(&storage, stream);
+    const size_t length = SkCopyStreamToStorage(&storage, stream);
     if (0 == length) {
         return 0;
     }
@@ -123,18 +123,17 @@ bool SkBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode) {
 
     int width = callback.width();
     int height = callback.height();
-    SkBitmap::Config config = this->getPrefConfig(k32Bit_SrcDepth, false);
+    SkColorType colorType = this->getPrefColorType(k32Bit_SrcDepth, false);
 
     // only accept prefConfig if it makes sense for us
-    if (SkBitmap::kARGB_4444_Config != config &&
-            SkBitmap::kRGB_565_Config != config) {
-        config = SkBitmap::kARGB_8888_Config;
+    if (kARGB_4444_SkColorType != colorType && kRGB_565_SkColorType != colorType) {
+        colorType = kN32_SkColorType;
     }
 
     SkScaledBitmapSampler sampler(width, height, getSampleSize());
 
-    bm->setConfig(config, sampler.scaledWidth(), sampler.scaledHeight(), 0,
-                  kOpaque_SkAlphaType);
+    bm->setInfo(SkImageInfo::Make(sampler.scaledWidth(), sampler.scaledHeight(),
+                                  colorType, kOpaque_SkAlphaType));
 
     if (justBounds) {
         return true;

@@ -29,6 +29,7 @@
 #include "SkRect.h"
 #include "SkRRect.h"
 #include "SkString.h"
+#include "SkSurface.h"
 #include "SkTextFormatParams.h"
 #include "SkTemplates.h"
 #include "SkTypefacePriv.h"
@@ -131,12 +132,12 @@ static int max_glyphid_for_typeface(SkTypeface* typeface) {
 
 typedef SkAutoSTMalloc<128, uint16_t> SkGlyphStorage;
 
-static size_t force_glyph_encoding(const SkPaint& paint, const void* text,
-                                   size_t len, SkGlyphStorage* storage,
-                                   uint16_t** glyphIDs) {
+static int force_glyph_encoding(const SkPaint& paint, const void* text,
+                                size_t len, SkGlyphStorage* storage,
+                                uint16_t** glyphIDs) {
     // Make sure we have a glyph id encoding.
     if (paint.getTextEncoding() != SkPaint::kGlyphID_TextEncoding) {
-        size_t numGlyphs = paint.textToGlyphs(text, len, NULL);
+        int numGlyphs = paint.textToGlyphs(text, len, NULL);
         storage->reset(numGlyphs);
         paint.textToGlyphs(text, len, storage->get());
         *glyphIDs = storage->get();
@@ -145,12 +146,12 @@ static size_t force_glyph_encoding(const SkPaint& paint, const void* text,
 
     // For user supplied glyph ids we need to validate them.
     SkASSERT((len & 1) == 0);
-    size_t numGlyphs = len / 2;
+    int numGlyphs = SkToInt(len / 2);
     const uint16_t* input =
         reinterpret_cast<uint16_t*>(const_cast<void*>((text)));
 
     int maxGlyphID = max_glyphid_for_typeface(paint.getTypeface());
-    size_t validated;
+    int validated;
     for (validated = 0; validated < numGlyphs; ++validated) {
         if (input[validated] > maxGlyphID) {
             break;
@@ -167,7 +168,7 @@ static size_t force_glyph_encoding(const SkPaint& paint, const void* text,
         memcpy(storage->get(), input, validated * sizeof(uint16_t));
     }
 
-    for (size_t i = validated; i < numGlyphs; ++i) {
+    for (int i = validated; i < numGlyphs; ++i) {
         storage->get()[i] = input[i];
         if (input[i] > maxGlyphID) {
             storage->get()[i] = 0;
@@ -702,8 +703,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline SkBitmap makeContentBitmap(const SkISize& contentSize,
-                                         const SkMatrix* initialTransform) {
+static inline SkImageInfo make_content_info(const SkISize& contentSize,
+                                            const SkMatrix* initialTransform) {
     SkImageInfo info;
     if (initialTransform) {
         // Compute the size of the drawing area.
@@ -723,24 +724,22 @@ static inline SkBitmap makeContentBitmap(const SkISize& contentSize,
         info = SkImageInfo::MakeUnknown(abs(contentSize.fWidth),
                                         abs(contentSize.fHeight));
     }
-
-    SkBitmap bitmap;
-    bitmap.setConfig(info);
-    return bitmap;
+    return info;
 }
 
 // TODO(vandebo) change pageSize to SkSize.
-// TODO: inherit from SkBaseDevice instead of SkBitmapDevice
 SkPDFDevice::SkPDFDevice(const SkISize& pageSize, const SkISize& contentSize,
                          const SkMatrix& initialTransform)
-    : SkBitmapDevice(makeContentBitmap(contentSize, &initialTransform)),
-      fPageSize(pageSize),
-      fContentSize(contentSize),
-      fLastContentEntry(NULL),
-      fLastMarginContentEntry(NULL),
-      fClipStack(NULL),
-      fEncoder(NULL),
-      fRasterDpi(72.0f) {
+    : fPageSize(pageSize)
+    , fContentSize(contentSize)
+    , fLastContentEntry(NULL)
+    , fLastMarginContentEntry(NULL)
+    , fClipStack(NULL)
+    , fEncoder(NULL)
+    , fRasterDpi(72.0f)
+{
+    const SkImageInfo info = make_content_info(contentSize, &initialTransform);
+
     // Just report that PDF does not supports perspective in the
     // initial transform.
     NOT_IMPLEMENTED(initialTransform.hasPerspective(), true);
@@ -751,10 +750,10 @@ SkPDFDevice::SkPDFDevice(const SkISize& pageSize, const SkISize& contentSize,
     fInitialTransform.setTranslate(0, SkIntToScalar(pageSize.fHeight));
     fInitialTransform.preScale(SK_Scalar1, -SK_Scalar1);
     fInitialTransform.preConcat(initialTransform);
+    fLegacyBitmap.setInfo(info);
 
-    SkIRect existingClip = SkIRect::MakeWH(this->width(), this->height());
+    SkIRect existingClip = SkIRect::MakeWH(info.width(), info.height());
     fExistingClipRegion.setRect(existingClip);
-
     this->init();
 }
 
@@ -762,17 +761,19 @@ SkPDFDevice::SkPDFDevice(const SkISize& pageSize, const SkISize& contentSize,
 SkPDFDevice::SkPDFDevice(const SkISize& layerSize,
                          const SkClipStack& existingClipStack,
                          const SkRegion& existingClipRegion)
-    : SkBitmapDevice(makeContentBitmap(layerSize, NULL)),
-      fPageSize(layerSize),
-      fContentSize(layerSize),
-      fExistingClipStack(existingClipStack),
-      fExistingClipRegion(existingClipRegion),
-      fLastContentEntry(NULL),
-      fLastMarginContentEntry(NULL),
-      fClipStack(NULL),
-      fEncoder(NULL),
-      fRasterDpi(72.0f) {
+    : fPageSize(layerSize)
+    , fContentSize(layerSize)
+    , fExistingClipStack(existingClipStack)
+    , fExistingClipRegion(existingClipRegion)
+    , fLastContentEntry(NULL)
+    , fLastMarginContentEntry(NULL)
+    , fClipStack(NULL)
+    , fEncoder(NULL)
+    , fRasterDpi(72.0f)
+{
     fInitialTransform.reset();
+    fLegacyBitmap.setInfo(make_content_info(layerSize, NULL));
+
     this->init();
 }
 
@@ -961,10 +962,15 @@ void SkPDFDevice::drawRect(const SkDraw& d, const SkRect& rect,
                           &content.entry()->fContent);
 }
 
-void SkPDFDevice::drawRRect(const SkDraw& draw, const SkRRect& rrect,
-                            const SkPaint& paint) {
+void SkPDFDevice::drawRRect(const SkDraw& draw, const SkRRect& rrect, const SkPaint& paint) {
     SkPath  path;
     path.addRRect(rrect);
+    this->drawPath(draw, path, paint, NULL, true);
+}
+
+void SkPDFDevice::drawOval(const SkDraw& draw, const SkRect& oval, const SkPaint& paint) {
+    SkPath  path;
+    path.addOval(oval);
     this->drawPath(draw, path, paint, NULL, true);
 }
 
@@ -983,10 +989,7 @@ void SkPDFDevice::drawPath(const SkDraw& d, const SkPath& origPath,
             }
             origPath.transform(*prePathMatrix, pathPtr);
         } else {
-            if (!matrix.preConcat(*prePathMatrix)) {
-                // TODO(edisonn): report somehow why we failed?
-                return;
-            }
+            matrix.preConcat(*prePathMatrix);
         }
     }
 
@@ -1129,8 +1132,7 @@ void SkPDFDevice::drawText(const SkDraw& d, const void* text, size_t len,
 
     SkGlyphStorage storage(0);
     uint16_t* glyphIDs = NULL;
-    size_t numGlyphs = force_glyph_encoding(paint, text, len, &storage,
-                                            &glyphIDs);
+    int numGlyphs = force_glyph_encoding(paint, text, len, &storage, &glyphIDs);
     textPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
     SkDrawCacheProc glyphCacheProc = textPaint.getDrawCacheProc();
@@ -1138,11 +1140,11 @@ void SkPDFDevice::drawText(const SkDraw& d, const void* text, size_t len,
     content.entry()->fContent.writeText("BT\n");
     set_text_transform(x, y, textPaint.getTextSkewX(),
                        &content.entry()->fContent);
-    size_t consumedGlyphCount = 0;
+    int consumedGlyphCount = 0;
     while (numGlyphs > consumedGlyphCount) {
         updateFont(textPaint, glyphIDs[consumedGlyphCount], content.entry());
         SkPDFFont* font = content.entry()->fState.fFont;
-        size_t availableGlyphs =
+        int availableGlyphs =
             font->glyphsToPDFFontEncoding(glyphIDs + consumedGlyphCount,
                                           numGlyphs - consumedGlyphCount);
         fFontGlyphUsage->noteGlyphUsage(font, glyphIDs + consumedGlyphCount,
@@ -1368,6 +1370,10 @@ void SkPDFDevice::drawDevice(const SkDraw& d, SkBaseDevice* device,
     fFontGlyphUsage->merge(pdfDevice->getFontGlyphUsage());
 }
 
+SkImageInfo SkPDFDevice::imageInfo() const {
+    return fLegacyBitmap.info();
+}
+
 void SkPDFDevice::onAttachToCanvas(SkCanvas* canvas) {
     INHERITED::onAttachToCanvas(canvas);
 
@@ -1379,6 +1385,10 @@ void SkPDFDevice::onDetachFromCanvas() {
     INHERITED::onDetachFromCanvas();
 
     fClipStack = NULL;
+}
+
+SkSurface* SkPDFDevice::newSurface(const SkImageInfo& info) {
+    return SkSurface::NewRaster(info);
 }
 
 ContentEntry* SkPDFDevice::getLastContentEntry() {
@@ -2032,8 +2042,7 @@ void SkPDFDevice::populateGraphicStateEntryFromPaint(
         const SkPaint& paint,
         bool hasText,
         GraphicStateEntry* entry) {
-    SkASSERT(paint.getPathEffect() == NULL);
-
+    NOT_IMPLEMENTED(paint.getPathEffect() != NULL, false);
     NOT_IMPLEMENTED(paint.getMaskFilter() != NULL, false);
     NOT_IMPLEMENTED(paint.getColorFilter() != NULL, false);
 
@@ -2242,8 +2251,7 @@ void SkPDFDevice::internalDrawBitmap(const SkMatrix& origMatrix,
         }
         perspectiveBitmap.eraseColor(SK_ColorTRANSPARENT);
 
-        SkBitmapDevice device(perspectiveBitmap);
-        SkCanvas canvas(&device);
+        SkCanvas canvas(perspectiveBitmap);
 
         SkScalar deltaX = bounds.left();
         SkScalar deltaY = bounds.top();
@@ -2310,11 +2318,3 @@ void SkPDFDevice::internalDrawBitmap(const SkMatrix& origMatrix,
                                 &content.entry()->fContent);
 }
 
-bool SkPDFDevice::onReadPixels(const SkBitmap& bitmap, int x, int y,
-                               SkCanvas::Config8888) {
-    return false;
-}
-
-bool SkPDFDevice::allowImageFilter(const SkImageFilter*) {
-    return false;
-}

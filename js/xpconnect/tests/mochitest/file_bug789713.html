@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=789713
+-->
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+
+<script type="application/javascript">
+
+/** Test for Bug 789713 **/
+
+function go() {
+  var ifr = document.getElementById('ifr');
+  var pass = true;
+  var doc = ifr.contentDocument;
+
+  // Tree walkers use nsDOMGenericSH, which has a spineless PreCreate.
+  var walker = doc.createTreeWalker(doc.body);
+  pass = pass && (walker.root === doc.body);
+
+  // Grab a reference to Object.prototype to make sure we test the machinery
+  // with respect to standard prototype remapping.
+  var objProto = ifr.contentWindow.Object.prototype;
+
+  // First, do the document.domain operation. This shouldn't crash.
+  document.domain = "example.org";
+
+  // Now, make sure that we still can't access cross-origin properties despite
+  // the fact that the WN is shared under the hood.
+  try {
+    walker.root;
+    pass = false;
+  } catch (e) { pass = pass && /Permission denied/.exec(e.message); }
+  window.parent.postMessage(pass, '*');
+}
+
+</script>
+<iframe id="ifr" src="file_empty.html" onload="go()"></iframe>
+</pre>
+</body>
+</html>

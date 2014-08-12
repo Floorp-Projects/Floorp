@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
+#include "SkData.h"
 #include "SkPDFFormXObject.h"
 #include "SkPDFGraphicState.h"
 #include "SkPDFUtils.h"
-#include "SkStream.h"
 #include "SkTypes.h"
 
 static const char* blend_mode_from_xfermode(SkXfermode::Mode mode) {
@@ -82,24 +82,20 @@ size_t SkPDFGraphicState::getOutputSize(SkPDFCatalog* catalog, bool indirect) {
 }
 
 // static
-SkTDArray<SkPDFGraphicState::GSCanonicalEntry>&
-SkPDFGraphicState::CanonicalPaints() {
-    // This initialization is only thread safe with gcc.
+SkTDArray<SkPDFGraphicState::GSCanonicalEntry>& SkPDFGraphicState::CanonicalPaints() {
+    CanonicalPaintsMutex().assertHeld();
     static SkTDArray<SkPDFGraphicState::GSCanonicalEntry> gCanonicalPaints;
     return gCanonicalPaints;
 }
 
+SK_DECLARE_STATIC_MUTEX(gCanonicalPaintsMutex);
 // static
 SkBaseMutex& SkPDFGraphicState::CanonicalPaintsMutex() {
-    // This initialization is only thread safe with gcc or when
-    // POD-style mutex initialization is used.
-    SK_DECLARE_STATIC_MUTEX(gCanonicalPaintsMutex);
     return gCanonicalPaintsMutex;
 }
 
 // static
-SkPDFGraphicState* SkPDFGraphicState::GetGraphicStateForPaint(
-        const SkPaint& paint) {
+SkPDFGraphicState* SkPDFGraphicState::GetGraphicStateForPaint(const SkPaint& paint) {
     SkAutoMutexAcquire lock(CanonicalPaintsMutex());
     int index = Find(paint);
     if (index >= 0) {
@@ -114,6 +110,7 @@ SkPDFGraphicState* SkPDFGraphicState::GetGraphicStateForPaint(
 // static
 SkPDFObject* SkPDFGraphicState::GetInvertFunction() {
     // This assumes that canonicalPaintsMutex is held.
+    CanonicalPaintsMutex().assertHeld();
     static SkPDFStream* invertFunction = NULL;
     if (!invertFunction) {
         // Acrobat crashes if we use a type 0 function, kpdf crashes if we use
@@ -124,8 +121,9 @@ SkPDFObject* SkPDFGraphicState::GetInvertFunction() {
         domainAndRange->appendInt(1);
 
         static const char psInvert[] = "{1 exch sub}";
-        SkAutoTUnref<SkMemoryStream> psInvertStream(
-            new SkMemoryStream(&psInvert, strlen(psInvert), true));
+        // Do not copy the trailing '\0' into the SkData.
+        SkAutoTUnref<SkData> psInvertStream(
+                SkData::NewWithCopy(psInvert, strlen(psInvert)));
 
         invertFunction = new SkPDFStream(psInvertStream.get());
         invertFunction->insertInt("FunctionType", 4);
@@ -185,6 +183,7 @@ SkPDFGraphicState* SkPDFGraphicState::GetNoSMaskGraphicState() {
 
 // static
 int SkPDFGraphicState::Find(const SkPaint& paint) {
+    CanonicalPaintsMutex().assertHeld();
     GSCanonicalEntry search(&paint);
     return CanonicalPaints().find(search);
 }
