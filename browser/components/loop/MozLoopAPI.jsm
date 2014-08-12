@@ -9,6 +9,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/loop/MozLoopService.jsm");
+Cu.import("resource:///modules/loop/LoopContacts.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
                                         "resource://gre/modules/MozSocialAPI.jsm");
@@ -23,6 +24,62 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
 this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
 
 /**
+ * Trying to clone an Error object into a different container will yield an error.
+ * We can work around this by copying the properties we care about onto a regular
+ * object.
+ *
+ * @param {Error}        error        Error object to copy
+ * @param {nsIDOMWindow} targetWindow The content window to attach the API
+ */
+const cloneErrorObject = function(error, targetWindow) {
+  let obj = new targetWindow.Error();
+  for (let prop of Object.getOwnPropertyNames(error)) {
+    obj[prop] = String(error[prop]);
+  }
+  return obj;
+};
+
+/**
+ * Inject any API containing _only_ function properties into the given window.
+ *
+ * @param {Object}       api          Object containing functions that need to
+ *                                    be exposed to content
+ * @param {nsIDOMWindow} targetWindow The content window to attach the API
+ */
+const injectObjectAPI = function(api, targetWindow) {
+  let injectedAPI = {};
+  // Wrap all the methods in `api` to help results passed to callbacks get
+  // through the priv => unpriv barrier with `Cu.cloneInto()`.
+  Object.keys(api).forEach(func => {
+    injectedAPI[func] = function(...params) {
+      let callback = params.pop();
+      api[func](...params, function(...results) {
+        results = results.map(result => {
+          if (result && typeof result == "object") {
+            // Inspect for an error this way, because the Error object is special.
+            if (result.constructor.name == "Error") {
+              return cloneErrorObject(result.message)
+            }
+            return Cu.cloneInto(result, targetWindow);
+          }
+          return result;
+        });
+        callback(...results);
+      });
+    };
+  });
+
+  let contentObj = Cu.cloneInto(injectedAPI, targetWindow, {cloneFunctions: true});
+  // Since we deny preventExtensions on XrayWrappers, because Xray semantics make
+  // it difficult to act like an object has actually been frozen, we try to seal
+  // the `contentObj` without Xrays.
+  try {
+    Object.seal(Cu.waiveXrays(contentObj));
+  } catch (ex) {}
+  return contentObj;
+};
+
+/**
  * Inject the loop API into the given window.  The caller must be sure the
  * window is a loop content window (eg, a panel, chatwindow, or similar).
  *
@@ -34,6 +91,7 @@ function injectLoopAPI(targetWindow) {
   let ringer;
   let ringerStopper;
   let appVersionInfo;
+  let contactsAPI;
 
   let api = {
     /**
@@ -58,6 +116,21 @@ function injectLoopAPI(targetWindow) {
       enumerable: true,
       get: function() {
         return MozLoopService.locale;
+      }
+    },
+
+    /**
+     * Returns the contacts API.
+     *
+     * @returns {Object} The contacts API object
+     */
+    contacts: {
+      enumerable: true,
+      get: function() {
+        if (contactsAPI) {
+          return contactsAPI;
+        }
+        return contactsAPI = injectObjectAPI(LoopContacts, targetWindow);
       }
     },
 
