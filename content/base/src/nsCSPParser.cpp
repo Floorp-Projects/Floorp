@@ -30,18 +30,21 @@ GetCspParserLog()
 
 #define CSPPARSERLOG(args) PR_LOG(GetCspParserLog(), 4, args)
 
-static const char16_t COLON       = ':';
-static const char16_t SEMICOLON   = ';';
-static const char16_t SLASH       = '/';
-static const char16_t PLUS        = '+';
-static const char16_t DASH        = '-';
-static const char16_t DOT         = '.';
-static const char16_t UNDERLINE   = '_';
-static const char16_t WILDCARD    = '*';
-static const char16_t WHITESPACE  = ' ';
-static const char16_t SINGLEQUOTE = '\'';
-static const char16_t OPEN_CURL   = '{';
-static const char16_t CLOSE_CURL  = '}';
+static const char16_t COLON        = ':';
+static const char16_t SEMICOLON    = ';';
+static const char16_t SLASH        = '/';
+static const char16_t PLUS         = '+';
+static const char16_t DASH         = '-';
+static const char16_t DOT          = '.';
+static const char16_t UNDERLINE    = '_';
+static const char16_t TILDE        = '~';
+static const char16_t WILDCARD     = '*';
+static const char16_t WHITESPACE   = ' ';
+static const char16_t SINGLEQUOTE  = '\'';
+static const char16_t OPEN_CURL    = '{';
+static const char16_t CLOSE_CURL   = '}';
+static const char16_t NUMBER_SIGN  = '#';
+static const char16_t QUESTIONMARK = '?';
 
 static uint32_t kSubHostPathCharacterCutoff = 512;
 
@@ -145,6 +148,23 @@ nsCSPParser::resetCurChar(const nsAString& aToken)
   resetCurValue();
 }
 
+// The path is terminated by the first question mark ("?") or
+// number sign ("#") character, or by the end of the URI.
+// http://tools.ietf.org/html/rfc3986#section-3.3
+bool
+nsCSPParser::atEndOfPath()
+{
+  return (atEnd() || peek(QUESTIONMARK) || peek(NUMBER_SIGN));
+}
+
+bool
+nsCSPParser::atValidPathChar()
+{
+  return (peek(isCharacterToken) || peek(isNumberToken) ||
+          peek(DASH) || peek(DOT) ||
+          peek(UNDERLINE) || peek(TILDE));
+}
+
 void
 nsCSPParser::logWarningErrorToConsole(uint32_t aSeverityFlag,
                                       const char* aProperty,
@@ -187,25 +207,6 @@ nsCSPParser::schemeChar()
          accept(PLUS) ||
          accept(DASH) ||
          accept(DOT);
-}
-
-bool
-nsCSPParser::fileAndArguments()
-{
-  CSPPARSERLOG(("nsCSPParser::fileAndArguments, mCurToken: %s, mCurValue: %s",
-               NS_ConvertUTF16toUTF8(mCurToken).get(),
-               NS_ConvertUTF16toUTF8(mCurValue).get()));
-
-  // Possibly we already parsed part of the file in path(), therefore accepting "."
-  if (accept(DOT) && !accept(isCharacterToken)) {
-    return false;
-  }
-
-  // From now on, accept pretty much anything to avoid unnecessary errors
-  while (!atEnd()) {
-    advance();
-  }
-  return true;
 }
 
 // port = ":" ( 1*DIGIT / "*" )
@@ -253,24 +254,23 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
   // in case we are parsing unrecognized characters in the following loop.
   uint32_t charCounter = 0;
 
-  while (!atEnd() && !peek(DOT)) {
-    ++charCounter;
-    while (hostChar() || accept(UNDERLINE)) {
-      /* consume */
-      ++charCounter;
-    }
-    if (accept(SLASH)) {
-      ++charCounter;
+  while (!atEndOfPath()) {
+    if (peek(SLASH)) {
       aCspHost->appendPath(mCurValue);
       // Resetting current value since we are appending parts of the path
       // to aCspHost, e.g; "http://www.example.com/path1/path2" then the
       // first part is "/path1", second part "/path2"
       resetCurValue();
     }
-    if (atEnd()) {
-      return true;
+    else if (!atValidPathChar()) {
+      const char16_t* params[] = { mCurToken.get() };
+      logWarningErrorToConsole(nsIScriptError::warningFlag,
+                               "couldntParseInvalidSource",
+                               params, ArrayLength(params));
+      return false;
     }
-    if (charCounter > kSubHostPathCharacterCutoff) {
+    advance();
+    if (++charCounter > kSubHostPathCharacterCutoff) {
       return false;
     }
   }
@@ -298,7 +298,10 @@ nsCSPParser::path(nsCSPHostSrc* aCspHost)
                              params, ArrayLength(params));
     return false;
   }
-  if (atEnd()) {
+  if (atEndOfPath()) {
+    // one slash right after host [port] is also considered a path, e.g.
+    // www.example.com/ should result in www.example.com/
+    aCspHost->appendPath(mCurValue);
     return true;
   }
   // path can begin with "/" but not "//"
@@ -324,7 +327,7 @@ nsCSPParser::subHost()
   // in case we are parsing unrecognized characters in the following loop.
   uint32_t charCounter = 0;
 
-  while (!atEnd() && !peek(COLON) && !peek(SLASH)) {
+  while (!atEndOfPath() && !peek(COLON) && !peek(SLASH)) {
     ++charCounter;
     while (hostChar()) {
       /* consume */
@@ -468,7 +471,7 @@ nsCSPParser::hostSource()
     cspHost->setPort(mCurValue);
   }
 
-  if (atEnd()) {
+  if (atEndOfPath()) {
     return cspHost;
   }
 
@@ -482,14 +485,6 @@ nsCSPParser::hostSource()
     delete cspHost;
     return nullptr;
   }
-
-  // Calling fileAndArguments to see if there are any files to parse;
-  // if an error occurs, fileAndArguments() reports the error; if
-  // fileAndArguments returns true, we have a valid file, so we add it.
-  if (fileAndArguments()) {
-    cspHost->setFileAndArguments(mCurValue);
-  }
-
   return cspHost;
 }
 
