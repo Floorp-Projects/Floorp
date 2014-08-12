@@ -606,6 +606,8 @@ class ShutdownLeaks(object):
           self._logWindow(line)
         elif line[2:10] == "DOCSHELL":
           self._logDocShell(line)
+        elif line.startswith("TEST-START | Shutdown"):
+          self.seenShutdown = True
     elif message['action'] == 'test_start':
       fileName = message['test'].replace("chrome://mochitests/content/browser/", "")
       self.currentTest = {"fileName": fileName, "windows": set(), "docShells": set()}
@@ -614,10 +616,11 @@ class ShutdownLeaks(object):
       if self.currentTest and (self.currentTest["windows"] or self.currentTest["docShells"]):
         self.tests.append(self.currentTest)
       self.currentTest = None
-    elif message['action'] == 'suite_end':
-      self.seenShutdown = True
 
   def process(self):
+    if not self.seenShutdown:
+      self.logger("TEST-UNEXPECTED-FAIL | ShutdownLeaks | process() called before end of test suite")
+
     for test in self._parseLeakingTests():
       for url, count in self._zipLeakedWindows(test["leakedWindows"]):
         self.logger("TEST-UNEXPECTED-FAIL | %s | leaked %d window(s) until shutdown [url = %s]" % (test["fileName"], count, url))
