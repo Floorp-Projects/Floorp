@@ -90,6 +90,19 @@
 #define MAPVK_VK_TO_VSC_EX                4
 #endif
 
+#ifndef WM_DWMCOMPOSITIONCHANGED
+#define WM_DWMCOMPOSITIONCHANGED          0x031E
+#endif
+#ifndef WM_DWMNCRENDERINGCHANGED
+#define WM_DWMNCRENDERINGCHANGED          0x031F
+#endif
+#ifndef WM_DWMCOLORIZATIONCOLORCHANGED
+#define WM_DWMCOLORIZATIONCOLORCHANGED    0x0320
+#endif
+#ifndef WM_DWMWINDOWMAXIMIZEDCHANGE
+#define WM_DWMWINDOWMAXIMIZEDCHANGE       0x0321
+#endif
+
 // ConstrainPosition window positioning slop value
 #define kWindowPositionSlop               20
 
