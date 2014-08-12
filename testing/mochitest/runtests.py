@@ -1332,7 +1332,7 @@ class Mochitest(MochitestUtilsMixin):
              symbolsPath=None,
              timeout=-1,
              onLaunch=None,
-             webapprtChrome=False,
+             detectShutdownLeaks=False,
              screenshotOnFail=False,
              testPath=None,
              bisectChunk=None,
@@ -1383,7 +1383,7 @@ class Mochitest(MochitestUtilsMixin):
           testUrl = testUrl.replace("&", "\\&")
         args.append(testUrl)
 
-      if mozinfo.info["debug"] and not webapprtChrome:
+      if detectShutdownLeaks:
         shutdownLeaks = ShutdownLeaks(log.info)
       else:
         shutdownLeaks = None
@@ -1743,6 +1743,9 @@ class Mochitest(MochitestUtilsMixin):
       if options.vmwareRecording:
         self.startVMwareRecording(options);
 
+      # detect shutdown leaks for m-bc runs
+      detectShutdownLeaks = mozinfo.info["debug"] and options.browserChrome and not options.webapprtChrome
+
       log.info("runtests.py | Running tests: start.\n")
       try:
         status = self.runApp(testURL,
@@ -1755,7 +1758,7 @@ class Mochitest(MochitestUtilsMixin):
                              symbolsPath=options.symbolsPath,
                              timeout=timeout,
                              onLaunch=onLaunch,
-                             webapprtChrome=options.webapprtChrome,
+                             detectShutdownLeaks=detectShutdownLeaks,
                              screenshotOnFail=options.screenshotOnFail,
                              testPath=options.testPath,
                              bisectChunk=options.bisectChunk,
