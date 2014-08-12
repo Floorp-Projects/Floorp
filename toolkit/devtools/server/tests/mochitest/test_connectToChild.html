@@ -67,12 +67,8 @@ function runTests() {
   }, false);
 
   // Instantiate a minimal server
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init(function () { return true; });
-  }
-  if (!DebuggerServer.createRootActor) {
-    DebuggerServer.addBrowserActors();
-  }
+  DebuggerServer.init(function () { return true; });
+  DebuggerServer.addBrowserActors();
 
   function firstClient() {
     // Fake a first connection to an iframe
