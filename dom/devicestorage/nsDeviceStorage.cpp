@@ -4161,13 +4161,19 @@ nsDOMDeviceStorage::DispatchStatusChangeEvent(nsAString& aStatus)
 }
 
 void
-nsDOMDeviceStorage::DispatchStorageStatusChangeEvent(nsAString& aVolumeStatus)
+nsDOMDeviceStorage::DispatchStorageStatusChangeEvent(nsAString& aStorageStatus)
 {
+  if (aStorageStatus == mLastStorageStatus) {
+     // We've already sent this status, don't bother sending it again.
+    return;
+  }
+  mLastStorageStatus = aStorageStatus;
+
   DeviceStorageChangeEventInit init;
   init.mBubbles = true;
   init.mCancelable = false;
   init.mPath = mStorageName;
-  init.mReason = aVolumeStatus;
+  init.mReason = aStorageStatus;
 
   nsRefPtr<DeviceStorageChangeEvent> event =
     DeviceStorageChangeEvent::Constructor(this, NS_LITERAL_STRING("storage-state-change"),

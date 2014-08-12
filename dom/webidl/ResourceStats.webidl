@@ -7,7 +7,6 @@
 [CheckPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  AvailableIn="CertifiedApps",
-// FeatureDetectible, // This should be specified after Bug 1009645 is resolved.
  JSImplementation="@mozilla.org/networkStatsData;1"]
 interface NetworkStatsData
 {
@@ -19,7 +18,6 @@ interface NetworkStatsData
 [CheckPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  AvailableIn="CertifiedApps",
-// FeatureDetectible, // This should be specified after Bug 1009645 is resolved.
  JSImplementation="@mozilla.org/powerStatsData;1"]
 interface PowerStatsData
 {
@@ -30,7 +28,6 @@ interface PowerStatsData
 [CheckPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  AvailableIn="CertifiedApps",
-// FeatureDetectible, // This should be specified after Bug 1009645 is resolved.
  JSImplementation="@mozilla.org/resourceStats;1"]
 interface ResourceStats
 {

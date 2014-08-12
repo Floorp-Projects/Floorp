@@ -448,13 +448,11 @@ let Option = Class({
   },
 
   write: function(arg, ctx, name) {
-    if (!arg) {
+    // Ignore if arg is undefined or null; allow other falsy values
+    if (arg == undefined || arg[name] == undefined) {
       return undefined;
     }
-    let v = arg[name] || undefined;
-    if (v === undefined) {
-      return undefined;
-    }
+    let v = arg[name];
     return this.type.write(v, ctx);
   },
   read: function(v, ctx, outArgs, name) {

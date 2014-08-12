@@ -11,6 +11,7 @@ toolkit.jar:
 *  content/global/xul.css                     (xul.css)
    content/global/textbox.css                 (textbox.css)
    content/global/menulist.css                (menulist.css)
+   content/global/autocomplete.css            (autocomplete.css)
    content/global/about.js                    (about.js)
    content/global/about.xhtml                 (about.xhtml)
    content/global/aboutAbout.js               (aboutAbout.js)
