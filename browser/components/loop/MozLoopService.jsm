@@ -287,7 +287,9 @@ let MozLoopServiceInternal = {
       return;
     }
 
-    this.openChatWindow(null, "LooP", "about:loopconversation#incoming/" + version);
+    this.openChatWindow(null,
+                        this.localizedStrings["incoming_call_title"].textContent,
+                        "about:loopconversation#incoming/" + version);
   },
 
   /**
