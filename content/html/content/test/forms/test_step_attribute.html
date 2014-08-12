@@ -81,9 +81,9 @@ function checkValidity(aElement, aValidity, aApply, aData)
     }
   }
 
-  is(aElement.mozMatchesSelector(":valid"), aElement.willValidate && aValidity,
+  is(aElement.matches(":valid"), aElement.willValidate && aValidity,
      (aElement.willValidate && aValidity) ? ":valid should apply" : "valid shouldn't apply");
-  is(aElement.mozMatchesSelector(":invalid"), aElement.willValidate && !aValidity,
+  is(aElement.matches(":invalid"), aElement.willValidate && !aValidity,
      (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
 }
 

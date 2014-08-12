@@ -3,8 +3,8 @@
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('i1').checked = false;
                 document.getElementById('i1').setCustomValidity('foo');
-                if (document.getElementById('i1').mozMatchesSelector(':-moz-ui-valid') ||
-                    !document.getElementById('i2').mozMatchesSelector(':-moz-ui-valid')) {
+                if (document.getElementById('i1').matches(':-moz-ui-valid') ||
+                    !document.getElementById('i2').matches(':-moz-ui-valid')) {
                   document.body.textContent='FAIL';
                 } else {
                   document.body.textContent='SUCCESS';

@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
 
-  <iframe src="http://example.org/tests/js/xpconnect/tests/mochitest/file_mozMatchesSelector.html"
+  <iframe src="http://example.org/tests/js/xpconnect/tests/mochitest/file_matches.html"
           onload="runTest(this)">
   </iframe>
   </body>
@@ -26,22 +26,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         var doc = ifr.contentDocument;
         var docElem = doc.documentElement;
         
-        var res = doc.createElement('div').mozMatchesSelector('div');
-        is(res, true, "mozMatchesSelector call through xray, regular case");
+        var res = doc.createElement('div').matches('div');
+        is(res, true, "matches call through xray, regular case");
         
-        res = docElem.mozMatchesSelector.call(
+        res = docElem.matches.call(
           doc.createElement('div'), 'div');
-        is(res, true, "mozMatchesSelector call through xray, with .call");
+        is(res, true, "matches call through xray, with .call");
                         
         var sb = new Components.utils.Sandbox(ifr.contentWindow);
         sb.doc = doc;
-        var str = "doc.documentElement.mozMatchesSelector.call(doc.createElement( 'div' ),'div')";
+        var str = "doc.documentElement.matches.call(doc.createElement( 'div' ),'div')";
         res = Components.utils.evalInSandbox(str, sb);
-        is(res, true, "mozMatchesSelector call through xray (same origin), with .call");
+        is(res, true, "matches call through xray (same origin), with .call");
         
-        docElem.mozMatchesSelector = function(){return false};
-        res = docElem.mozMatchesSelector.call(doc.createElement( 'div' ),'div');
-        is(res, false, "shadowing mozMatchesSelector with an expando on the xray wrapper");
+        docElem.matches = function(){return false};
+        res = docElem.matches.call(doc.createElement( 'div' ),'div');
+        is(res, false, "shadowing matches with an expando on the xray wrapper");
         
         SimpleTest.finish();
       }

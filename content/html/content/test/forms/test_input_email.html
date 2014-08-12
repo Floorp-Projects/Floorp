@@ -43,7 +43,7 @@ function checkValidEmailAddress(element)
   ok(!gInvalid, "The invalid event should not have been thrown");
   is(element.validationMessage, '',
      "Validation message should be the empty string");
-  ok(element.mozMatchesSelector(":valid"), ":valid pseudo-class should apply");
+  ok(element.matches(":valid"), ":valid pseudo-class should apply");
 }
 
 function checkInvalidEmailAddress(element)
@@ -56,7 +56,7 @@ function checkInvalidEmailAddress(element)
   ok(gInvalid, "The invalid event should have been thrown");
   is(element.validationMessage, "Please enter an email address.",
      "Validation message is not valid");
-  ok(element.mozMatchesSelector(":invalid"), ":invalid pseudo-class should apply");
+  ok(element.matches(":invalid"), ":invalid pseudo-class should apply");
 }
 
 function testEmailAddress(aElement, aValue, aMultiple, aValidity)

@@ -4,7 +4,7 @@
              it should be affected by :-moz-ui-valid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('i').checked = false;
-                if (!document.getElementById('i').mozMatchesSelector(':-moz-ui-valid')) {
+                if (!document.getElementById('i').matches(':-moz-ui-valid')) {
                   document.body.textContent='FAIL';
                 } else {
                   document.body.textContent='SUCCESS';

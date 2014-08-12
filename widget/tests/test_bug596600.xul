@@ -105,7 +105,7 @@ function test2() {
   box.style.backgroundColor = "green";
   doc.body.appendChild(box);
 
-  ok(!box.mozMatchesSelector(":hover"), "Box shouldn't be hovered (since the mouse isn't over it and since it's in a non-clickthrough iframe in a background window)");
+  ok(!box.matches(":hover"), "Box shouldn't be hovered (since the mouse isn't over it and since it's in a non-clickthrough iframe in a background window)");
 
   // A function to waitForFocus and then wait for synthetic mouse
   // events to happen.  Note that those happen off the refresh driver,
@@ -134,25 +134,25 @@ function test2() {
 
   // Move the mouse over the box.
   moveMouseTo(100, 150, function () {
-    ok(!box.mozMatchesSelector(":hover"), "Box shouldn't be hovered (since it's in a non-clickthrough iframe in a background window)");
+    ok(!box.matches(":hover"), "Box shouldn't be hovered (since it's in a non-clickthrough iframe in a background window)");
     // Activate the left window.
     changeFocusAndAwaitSyntheticMouse(function () {
-      ok(gIFrame.mozMatchesSelector(":hover"), "iframe should be hovered");
-      ok(box.mozMatchesSelector(":hover"), "Box should be hovered");
+      ok(gIFrame.matches(":hover"), "iframe should be hovered");
+      ok(box.matches(":hover"), "Box should be hovered");
       // De-activate the window (by activating the right window).
       changeFocusAndAwaitSyntheticMouse(function () {
-        ok(!gIFrame.mozMatchesSelector(":hover"), "iframe shouldn't be hovered");
-        ok(!box.mozMatchesSelector(":hover"), "Box shouldn't be hovered");
+        ok(!gIFrame.matches(":hover"), "iframe shouldn't be hovered");
+        ok(!box.matches(":hover"), "Box shouldn't be hovered");
         // Re-activate it.
         changeFocusAndAwaitSyntheticMouse(function () {
-          ok(gIFrame.mozMatchesSelector(":hover"), "iframe should be hovered");
-          ok(box.mozMatchesSelector(":hover"), "Box should be hovered");
+          ok(gIFrame.matches(":hover"), "iframe should be hovered");
+          ok(box.matches(":hover"), "Box should be hovered");
           // Unhover box and iframe by moving the mouse outside the window.
           moveMouseTo(0, 150, function () {
             const isOSXSnowLeopard = navigator.userAgent.indexOf("Mac OS X 10.6") != -1;
             if (!isOSXSnowLeopard) {
-              ok(!gIFrame.mozMatchesSelector(":hover"), "iframe shouldn't be hovered");
-              ok(!box.mozMatchesSelector(":hover"), "box shouldn't be hovered");
+              ok(!gIFrame.matches(":hover"), "iframe shouldn't be hovered");
+              ok(!box.matches(":hover"), "box shouldn't be hovered");
             }
             finalize();
           });

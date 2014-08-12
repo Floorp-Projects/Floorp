@@ -29,15 +29,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=610687
 function checkPseudoClasses(aElement, aValid, aValidUI, aInvalidUI)
 {
   if (aValid) {
-    ok(aElement.mozMatchesSelector(":valid"), ":valid should apply");
+    ok(aElement.matches(":valid"), ":valid should apply");
   } else {
-    ok(aElement.mozMatchesSelector(":invalid"), ":invalid should apply");
+    ok(aElement.matches(":invalid"), ":invalid should apply");
   }
 
-  is(aElement.mozMatchesSelector(":-moz-ui-valid"), aValidUI,
+  is(aElement.matches(":-moz-ui-valid"), aValidUI,
      aValid ? ":-moz-ui-valid should apply" : ":-moz-ui-valid should not apply");
 
-  is(aElement.mozMatchesSelector(":-moz-ui-invalid"), aInvalidUI,
+  is(aElement.matches(":-moz-ui-invalid"), aInvalidUI,
      aInvalidUI ? ":-moz-ui-invalid should apply" : ":-moz-ui-invalid should not apply");
 
   if (aInvalidUI && (aValid || aValidUI)) {

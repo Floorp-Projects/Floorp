@@ -236,7 +236,7 @@ function run() {
     {
         try {
           // Test that it is also unparseable when followed by EOF.
-          ifdoc.body.mozMatchesSelector(selector);
+          ifdoc.body.matches(selector);
           ok(false, "selector '" + selector + "' plus EOF is parse error");
         } catch(ex) {
           is(ex.name, "SyntaxError",
@@ -251,7 +251,7 @@ function run() {
         var threw = false;
         try {
           // Test that a selector is parseable when followed by EOF.
-          ifdoc.body.mozMatchesSelector(selector);
+          ifdoc.body.matches(selector);
         } catch(ex) {
           threw = true;
         }
@@ -924,7 +924,7 @@ function run() {
     test_parseable(":-moz-locale-dir(rtl)");
     test_parseable(":-moz-locale-dir(rTl)");
     test_parseable(":-moz-locale-dir(LTR)");
-    if (document.body.mozMatchesSelector(":-moz-locale-dir(ltr)")) {
+    if (document.body.matches(":-moz-locale-dir(ltr)")) {
         test_selector_in_html("a:-moz-locale-dir(LTr)", single_a,
                               set_single, empty_set);
         test_selector_in_html("a:-moz-locale-dir(ltR)", single_a,
@@ -958,7 +958,7 @@ function run() {
     test_parseable(":-moz-dir(rtl)");
     test_parseable(":-moz-dir(rTl)");
     test_parseable(":-moz-dir(LTR)");
-    if (document.body.mozMatchesSelector(":-moz-dir(ltr)")) {
+    if (document.body.matches(":-moz-dir(ltr)")) {
         test_selector_in_html("a:-moz-dir(LTr)", single_a,
                               set_single, empty_set);
         test_selector_in_html("a:-moz-dir(ltR)", single_a,

@@ -25,19 +25,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=598833
 
 /** Test for Bug 598833 **/
 var s = $("s");
-is(s.mozMatchesSelector(":invalid"), false, "Disabled select should not be invalid");
-is(s.mozMatchesSelector(":valid"), false, "Disabled select should not be valid");
+is(s.matches(":invalid"), false, "Disabled select should not be invalid");
+is(s.matches(":valid"), false, "Disabled select should not be valid");
 var p = s.parentNode;
 p.removeChild(s);
-is(s.mozMatchesSelector(":invalid"), true,
+is(s.matches(":invalid"), true,
    "Required valueless select not in tree should be invalid");
-is(s.mozMatchesSelector(":valid"), false,
+is(s.matches(":valid"), false,
    "Required valueless select not in tree should not be valid");
 p.appendChild(s);
 p.disabled = false;
-is(s.mozMatchesSelector(":invalid"), true,
+is(s.matches(":invalid"), true,
    "Required valueless select should be invalid");
-is(s.mozMatchesSelector(":valid"), false,
+is(s.matches(":valid"), false,
    "Required valueless select should not be valid");
 </script>
 </pre>
