@@ -462,10 +462,6 @@ SettingsListener.observe("lockscreen.enabled", false,
       dump("Error while initializing USB devtools: "
            + e + "\n" + e.stack + "\n");
     }
-
-#ifdef MOZ_WIDGET_GONK
-    AdbController.setRemoteDebuggerState(value);
-#endif
   });
 
   SettingsListener.observe('debugger.remote-mode', 'disabled', function(value) {

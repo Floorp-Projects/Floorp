@@ -530,24 +530,6 @@ SourceBuffer::Evict(double aStart, double aEnd)
   MSE_DEBUG("SourceBuffer(%p)::Evict offset=%lld", this, endOffset);
 }
 
-bool
-SourceBuffer::ContainsTime(double aTime)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  ErrorResult dummy;
-  nsRefPtr<TimeRanges> ranges = GetBuffered(dummy);
-  if (!ranges || ranges->Length() == 0) {
-    return false;
-  }
-  for (uint32_t i = 0; i < ranges->Length(); ++i) {
-    if (aTime >= ranges->Start(i, dummy) &&
-        aTime <= ranges->End(i, dummy)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SourceBuffer, DOMEventTargetHelper,
                                    mMediaSource)
 

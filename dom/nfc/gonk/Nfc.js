@@ -267,7 +267,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     isPeerReadyCalled: function isPeerReadyCalled(appId) {
       let targetInfo = this.peerTargetsMap[appId];
-      return targetInfo.IsPeerReadyCalled;
+      return !!targetInfo.IsPeerReadyCalled;
     },
 
     notifyPeerEvent: function notifyPeerEvent(appId, event) {

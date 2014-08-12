@@ -1406,7 +1406,7 @@ PreloadAsUserFontFaces(nsStringHashKey::KeyType aKey,
 
         // XXX Should we move the i/o here off the main thread?
 
-        // Map the font data in fe->mFilename, so we can generate a data: URI.
+        // Map the font data in fe->mFilename, so we can calculate its CRC32.
         int fd = open(fe->mFilename.get(), O_RDONLY);
         if (fd < 0) {
             continue;
@@ -1423,36 +1423,22 @@ PreloadAsUserFontFaces(nsStringHashKey::KeyType aKey,
             continue;
         }
 
-        // First byte is sufficient to distinguish WOFF from uncompressed
-        // OpenType (either TrueType or CFF).
-        bool isWoff = (data[0] == 'w');
-
-        // Generate a corresponding data: URI that apps could use.
-        nsCString encodedData;
-        nsresult rv = Base64Encode(Substring(data, buf.st_size), encodedData);
+        // Calculate CRC32
+        uint32_t crc = crc32(0, nullptr, 0);
+        crc = crc32(crc, (Bytef*)data, buf.st_size);
         munmap(data, buf.st_size);
-        if (NS_FAILED(rv)) {
-            continue;
-        }
-        nsCString spec("data:font/");
-        spec.Append(isWoff ? "woff" : "opentype");
-        spec.Append(";base64,");
-        spec.Append(encodedData);
+
 #if 0
-        ALOG("\n**** Preloading family [%s] face [%s]:\n%s\n\n",
+        ALOG("\n**** Preloading family [%s] face [%s] CRC32 [0x%08x]",
              NS_ConvertUTF16toUTF8(family->Name()).get(),
              fe->mFilename.get(),
-             spec.get());
+             crc);
 #endif
 
-        // Record the URI in gfxUserFontData on the entry.
-        nsCOMPtr<nsIURI> uri;
-        if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), spec))) {
-            continue;
-        }
         fe->mUserFontData = new gfxUserFontData;
-        fe->mUserFontData->mURI = uri;
         fe->mUserFontData->mRealName = fe->Name();
+        fe->mUserFontData->mCRC32 = crc;
+        fe->mUserFontData->mLength = buf.st_size;
 
         // Stash it persistently in the user-font cache.
         gfxUserFontSet::UserFontCache::CacheFont(

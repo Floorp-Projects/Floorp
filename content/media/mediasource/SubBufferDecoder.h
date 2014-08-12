@@ -80,6 +80,9 @@ public:
     mDiscarded = true;
   }
 
+  // Returns true if the data buffered by this decoder contains the given time.
+  bool ContainsTime(double aTime);
+
 private:
   MediaSourceDecoder* mParentDecoder;
   nsRefPtr<MediaDecoderReader> mReader;

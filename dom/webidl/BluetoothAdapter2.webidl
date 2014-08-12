@@ -61,9 +61,6 @@ interface BluetoothAdapter : EventTarget {
   [AvailableIn=CertifiedApps]
   readonly attribute BluetoothPairingListener pairingReqs;
 
-  // Fired when pairing process is completed
-           attribute EventHandler   onpairedstatuschanged;
-
   // Fired when a2dp connection status changed
            attribute EventHandler   ona2dpstatuschanged;
 
@@ -78,6 +75,12 @@ interface BluetoothAdapter : EventTarget {
 
   // Fired when attributes of BluetoothAdapter changed
            attribute EventHandler   onattributechanged;
+
+  // Fired when a remote device gets paired with the adapter.
+           attribute EventHandler   ondevicepaired;
+
+  // Fired when a remote device gets unpaired from the adapter.
+           attribute EventHandler   ondeviceunpaired;
 
   /**
    * Enable/Disable a local bluetooth adapter by asynchronus methods and return
@@ -103,11 +106,12 @@ interface BluetoothAdapter : EventTarget {
   Promise<void> stopDiscovery();
 
   [NewObject, Throws]
-  DOMRequest pair(DOMString deviceAddress);
+  Promise<void> pair(DOMString deviceAddress);
   [NewObject, Throws]
-  DOMRequest unpair(DOMString deviceAddress);
-  [NewObject, Throws]
-  DOMRequest getPairedDevices();
+  Promise<void> unpair(DOMString deviceAddress);
+
+  sequence<BluetoothDevice> getPairedDevices();
+
   [NewObject, Throws]
   DOMRequest getConnectedDevices(unsigned short serviceUuid);
 

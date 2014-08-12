@@ -226,7 +226,7 @@ bool WebMBufferedState::CalculateBufferedForRange(int64_t aStartOffset, int64_t 
   return true;
 }
 
-bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset)
+bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset, enum OffsetType aType)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   WebMTimeDataOffset result(0, 0, 0);
@@ -238,7 +238,7 @@ bool WebMBufferedState::GetOffsetForTime(uint64_t aTime, int64_t* aOffset)
     }
   }
 
-  *aOffset = result.mOffset;
+  *aOffset = aType == CLUSTER_START ? result.mSyncOffset : result.mOffset;
   return true;
 }
 

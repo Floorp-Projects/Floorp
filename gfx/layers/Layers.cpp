@@ -172,6 +172,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mPrevSibling(nullptr),
   mImplData(aImplData),
   mMaskLayer(nullptr),
+  mScrollHandoffParentId(FrameMetrics::NULL_SCROLL_ID),
   mPostXScale(1.0f),
   mPostYScale(1.0f),
   mOpacity(1.0),
@@ -186,7 +187,8 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mScrollbarTargetId(FrameMetrics::NULL_SCROLL_ID),
   mScrollbarDirection(ScrollDirection::NONE),
   mDebugColorIndex(0),
-  mAnimationGeneration(0)
+  mAnimationGeneration(0),
+  mBackgroundColor(0, 0, 0, 0)
 {}
 
 Layer::~Layer()
@@ -449,13 +451,13 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
 }
 
 void
-ContainerLayer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
+Layer::SetAsyncPanZoomController(AsyncPanZoomController *controller)
 {
   mAPZC = controller;
 }
 
 AsyncPanZoomController*
-ContainerLayer::GetAsyncPanZoomController() const
+Layer::GetAsyncPanZoomController() const
 {
 #ifdef DEBUG
   if (mAPZC) {
@@ -758,12 +760,10 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
   : Layer(aManager, aImplData),
     mFirstChild(nullptr),
     mLastChild(nullptr),
-    mScrollHandoffParentId(FrameMetrics::NULL_SCROLL_ID),
     mPreXScale(1.0f),
     mPreYScale(1.0f),
     mInheritedXScale(1.0f),
     mInheritedYScale(1.0f),
-    mBackgroundColor(0, 0, 0, 0),
     mUseIntermediateSurface(false),
     mSupportsComponentAlphaChildren(false),
     mMayHaveReadbackChild(false)
@@ -920,10 +920,8 @@ ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
 void
 ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
-  aAttrs = ContainerLayerAttributes(GetFrameMetrics(), mScrollHandoffParentId,
-                                    mPreXScale, mPreYScale,
-                                    mInheritedXScale, mInheritedYScale,
-                                    mBackgroundColor, mContentDescription);
+  aAttrs = ContainerLayerAttributes(mPreXScale, mPreYScale,
+                                    mInheritedXScale, mInheritedYScale);
 }
 
 bool
@@ -1440,6 +1438,12 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (mMaskLayer) {
     aStream << nsPrintfCString(" [mMaskLayer=%p]", mMaskLayer.get()).get();
   }
+  if (!mFrameMetrics.IsDefault()) {
+    AppendToString(aStream, mFrameMetrics, " [metrics=", "]");
+  }
+  if (mScrollHandoffParentId != FrameMetrics::NULL_SCROLL_ID) {
+    aStream << nsPrintfCString(" [scrollParent=%llu]", mScrollHandoffParentId).get();
+  }
 }
 
 // The static helper function sets the transform matrix into the packet
@@ -1567,12 +1571,6 @@ void
 ContainerLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
-  if (!mFrameMetrics.IsDefault()) {
-    AppendToString(aStream, mFrameMetrics, " [metrics=", "]");
-  }
-  if (mScrollHandoffParentId != FrameMetrics::NULL_SCROLL_ID) {
-    aStream << nsPrintfCString(" [scrollParent=%llu]", mScrollHandoffParentId).get();
-  }
   if (UseIntermediateSurface()) {
     aStream << " [usesTmpSurf]";
   }

@@ -77,8 +77,8 @@ public:
    * scroll and have a displayport. The parameters are out-params
    * which hold the return values; the values passed in may be null.
    */
-  void GetAncestorLayers(ContainerLayer** aOutScrollAncestor,
-                         ContainerLayer** aOutDisplayPortAncestor);
+  void GetAncestorLayers(Layer** aOutScrollAncestor,
+                         Layer** aOutDisplayPortAncestor);
 
 private:
   ClientLayerManager* ClientManager()
