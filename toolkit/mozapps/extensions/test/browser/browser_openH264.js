@@ -262,6 +262,7 @@ add_task(function* testUpdateButton() {
   yield gInstallDeferred.promise;
 
   Assert.equal(gInstalledAddonId, OPENH264_PLUGIN_ID);
+  delete OpenH264Scope.GMPInstallManager;
 });
 
 add_task(function* test_cleanup() {
