@@ -13,10 +13,6 @@ void SkOpEdgeBuilder::init() {
     fOperand = false;
     fXorMask[0] = fXorMask[1] = (fPath->getFillType() & 1) ? kEvenOdd_PathOpsMask
             : kWinding_PathOpsMask;
-#ifdef SK_DEBUG
-    SkPathOpsDebug::gContourID = 0;
-    SkPathOpsDebug::gSegmentID = 0;
-#endif
     fUnparseable = false;
     fSecondHalf = preFetch();
 }

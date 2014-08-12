@@ -23,3 +23,11 @@
 listitem.offlineapp {
   -moz-binding: url("chrome://browser/content/preferences/handlers.xml#offlineapp");
 }
+
+/* Apply crisp rendering for favicons at exactly 2dppx resolution */
+@media (resolution: 2dppx) {
+  #handlersView > richlistitem,
+  .actionsMenu > menupopup > menuitem > .menu-iconic-left {
+    image-rendering: -moz-crisp-edges;
+  }
+}

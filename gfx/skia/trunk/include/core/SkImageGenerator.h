@@ -8,8 +8,8 @@
 #ifndef SkImageGenerator_DEFINED
 #define SkImageGenerator_DEFINED
 
-#include "SkDiscardableMemory.h"
 #include "SkImageInfo.h"
+#include "SkColor.h"
 
 class SkBitmap;
 class SkData;
@@ -31,15 +31,15 @@ class SkImageGenerator;
  *  @param destination Upon success, this bitmap will be
  *  configured and have a pixelref installed.
  *
- *  @param factory If not NULL, this object will be used as a
- *  source of discardable memory when decoding.  If NULL, then
- *  SkDiscardableMemory::Create() will be called.
- *
  *  @return true iff successful.
  */
-SK_API bool SkInstallDiscardablePixelRef(SkImageGenerator* generator,
-                                         SkBitmap* destination,
-                                         SkDiscardableMemory::Factory* factory = NULL);
+SK_API bool SkInstallDiscardablePixelRef(SkImageGenerator*, SkBitmap* destination);
+
+/**
+ *  Purges all unlocked discardable memory in Skia's global
+ *  discardable memory pool.
+ */
+SK_API void SkPurgeGlobalDiscardableMemoryPool();
 
 
 /**
@@ -54,6 +54,13 @@ public:
      */
     virtual ~SkImageGenerator() { }
 
+#ifdef SK_SUPPORT_LEGACY_IMAGEGENERATORAPI
+    virtual SkData* refEncodedData() { return this->onRefEncodedData(); }
+    virtual bool getInfo(SkImageInfo* info) { return this->onGetInfo(info); }
+    virtual bool getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes) {
+        return this->onGetPixels(info, pixels, rowBytes, NULL, NULL);
+    }
+#else
     /**
      *  Return a ref to the encoded (i.e. compressed) representation,
      *  of this data.
@@ -61,7 +68,7 @@ public:
      *  If non-NULL is returned, the caller is responsible for calling
      *  unref() on the data when it is finished.
      */
-    virtual SkData* refEncodedData() { return NULL; }
+    SkData* refEncodedData() { return this->onRefEncodedData(); }
 
     /**
      *  Return some information about the image, allowing the owner of
@@ -72,7 +79,7 @@ public:
      *
      *  @return false if anything goes wrong.
      */
-    virtual bool getInfo(SkImageInfo* info) = 0;
+    bool getInfo(SkImageInfo* info);
 
     /**
      *  Decode into the given pixels, a block of memory of size at
@@ -90,12 +97,45 @@ public:
      *         different output-configs, which the implementation can
      *         decide to support or not.
      *
+     *  If info is kIndex8_SkColorType, then the caller must provide storage for up to 256
+     *  SkPMColor values in ctable. On success the generator must copy N colors into that storage,
+     *  (where N is the logical number of table entries) and set ctableCount to N.
+     *
+     *  If info is not kIndex8_SkColorType, then the last two parameters may be NULL. If ctableCount
+     *  is not null, it will be set to 0.
+     *
      *  @return false if anything goes wrong or if the image info is
      *          unsupported.
      */
-    virtual bool getPixels(const SkImageInfo& info,
-                           void* pixels,
-                           size_t rowBytes) = 0;
+    bool getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes,
+                   SkPMColor ctable[], int* ctableCount);
+
+    /**
+     *  Simplified version of getPixels() that asserts that info is NOT kIndex8_SkColorType.
+     */
+    bool getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes);
+#endif
+
+    /**
+     *  If planes or rowBytes is NULL or if any entry in planes is NULL or if any entry in rowBytes
+     *  is 0, this imagegenerator should output the sizes and return true if it can efficiently
+     *  return YUV planar data. If it cannot, it should return false. Note that either planes and
+     *  rowBytes are both fully defined and non NULL/non 0 or they are both NULL or have NULL or 0
+     *  entries only. Having only partial planes/rowBytes information is not supported.
+     *
+     *  If all planes and rowBytes entries are non NULL or non 0, then it should copy the
+     *  associated YUV data into those planes of memory supplied by the caller. It should validate
+     *  that the sizes match what it expected. If the sizes do not match, it should return false.
+     */
+    bool getYUV8Planes(SkISize sizes[3], void* planes[3], size_t rowBytes[3]);
+
+protected:
+    virtual SkData* onRefEncodedData();
+    virtual bool onGetInfo(SkImageInfo* info);
+    virtual bool onGetPixels(const SkImageInfo& info,
+                             void* pixels, size_t rowBytes,
+                             SkPMColor ctable[], int* ctableCount);
+    virtual bool onGetYUV8Planes(SkISize sizes[3], void* planes[3], size_t rowBytes[3]);
 };
 
 #endif  // SkImageGenerator_DEFINED

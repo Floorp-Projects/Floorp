@@ -14,3 +14,12 @@ tree[type="places"] {
 menupopup[placespopup="true"] {
   -moz-binding: url("chrome://browser/content/places/menu.xml#places-popup-base");
 }
+
+/* Apply crisp rendering for favicons at exactly 2dppx resolution */
+@media (resolution: 2dppx) {
+  #bookmarksChildren,
+  .sidebar-placesTreechildren,
+  .placesTree > treechildren {
+    image-rendering: -moz-crisp-edges;
+  }
+}

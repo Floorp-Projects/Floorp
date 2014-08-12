@@ -487,7 +487,7 @@ function checkContextMenu(aContextMenu, aExpectedEntries, aWindow=window) {
       }
 
       let selector = aExpectedEntries[i][0];
-      ok(menuitem.mozMatchesSelector(selector), "menuitem should match " + selector + " selector");
+      ok(menuitem.matches(selector), "menuitem should match " + selector + " selector");
       let commandValue = menuitem.getAttribute("command");
       let relatedCommand = commandValue ? aWindow.document.getElementById(commandValue) : null;
       let menuItemDisabled = relatedCommand ?

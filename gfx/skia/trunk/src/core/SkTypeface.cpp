@@ -6,9 +6,11 @@
  */
 
 #include "SkAdvancedTypefaceMetrics.h"
+#include "SkEndian.h"
 #include "SkFontDescriptor.h"
 #include "SkFontHost.h"
-#include "SkOnce.h"
+#include "SkLazyPtr.h"
+#include "SkOTTable_OS_2.h"
 #include "SkStream.h"
 #include "SkTypeface.h"
 
@@ -37,8 +39,12 @@ SkTypeface::~SkTypeface() {
 
 class SkEmptyTypeface : public SkTypeface {
 public:
-    SkEmptyTypeface() : SkTypeface(SkTypeface::kNormal, 0, true) { }
+    static SkEmptyTypeface* Create() {
+        return SkNEW(SkEmptyTypeface);
+    }
 protected:
+    SkEmptyTypeface() : SkTypeface(SkTypeface::kNormal, 0, true) { }
+
     virtual SkStream* onOpenStream(int* ttcIndex) const SK_OVERRIDE { return NULL; }
     virtual SkScalerContext* onCreateScalerContext(const SkDescriptor*) const SK_OVERRIDE {
         return NULL;
@@ -70,33 +76,30 @@ protected:
     }
 };
 
-static SkTypeface* gDefaultTypefaces[] = { NULL, NULL, NULL, NULL };
-static const size_t FONT_STYLE_COUNT = SK_ARRAY_COUNT(gDefaultTypefaces);
-static SkOnceFlag gDefaultTypefaceOnce[FONT_STYLE_COUNT] = {
-    SK_ONCE_INIT, SK_ONCE_INIT, SK_ONCE_INIT, SK_ONCE_INIT
-};
-template <uintmax_t N> struct SkTIsPow2 {
-    static const bool value = (N & (N - 1)) == 0;
-};
-SK_COMPILE_ASSERT(SkTIsPow2<FONT_STYLE_COUNT>::value, FONT_STYLE_COUNT_not_power_of_2);
+SK_DECLARE_STATIC_MUTEX(gCreateDefaultMutex);
+SkTypeface* SkTypeface::CreateDefault(int style) {
+    // If backed by fontconfig, it's not safe to call SkFontHost::CreateTypeface concurrently.
+    // To be safe, we serialize here with a mutex so only one call to
+    // CreateTypeface is happening at any given time.
+    // TODO(bungeman, mtklein): This is sad.  Make our fontconfig code safe?
+    SkAutoMutexAcquire lock(&gCreateDefaultMutex);
 
-void SkTypeface::create_default_typeface(Style style) {
-    if (NULL == gDefaultTypefaces[style]) {
-        gDefaultTypefaces[style] = SkFontHost::CreateTypeface(NULL, NULL, style);
-    }
-    if (NULL == gDefaultTypefaces[style]) {
-        gDefaultTypefaces[style] = SkNEW(SkEmptyTypeface);
-    }
+    SkTypeface* t = SkFontHost::CreateTypeface(NULL, NULL, (Style)style);
+    return t ? t : SkEmptyTypeface::Create();
+}
+
+void SkTypeface::DeleteDefault(SkTypeface* t) {
+    // The SkTypeface returned by SkFontHost::CreateTypeface may _itself_ be a
+    // cleverly-shared singleton.  This is less than ideal.  This means we
+    // cannot just assert our ownership and SkDELETE(t) like we'd want to.
+    SkSafeUnref(t);
 }
 
 SkTypeface* SkTypeface::GetDefaultTypeface(Style style) {
-    SkASSERT((size_t)style < FONT_STYLE_COUNT);
+    SK_DECLARE_STATIC_LAZY_PTR_ARRAY(SkTypeface, defaults, 4, CreateDefault, DeleteDefault);
 
-    // mask off any other bits to avoid a crash in SK_RELEASE
-    style = (Style)(style & (FONT_STYLE_COUNT - 1));
-
-    SkOnce(&gDefaultTypefaceOnce[style], SkTypeface::create_default_typeface, style);
-    return gDefaultTypefaces[style];
+    SkASSERT((int)style < 4);
+    return defaults[style];
 }
 
 SkTypeface* SkTypeface::RefDefault(Style style) {
@@ -268,7 +271,28 @@ SkAdvancedTypefaceMetrics* SkTypeface::getAdvancedTypefaceMetrics(
                                 SkAdvancedTypefaceMetrics::PerGlyphInfo info,
                                 const uint32_t* glyphIDs,
                                 uint32_t glyphIDsCount) const {
-    return this->onGetAdvancedTypefaceMetrics(info, glyphIDs, glyphIDsCount);
+    SkAdvancedTypefaceMetrics* result =
+            this->onGetAdvancedTypefaceMetrics(info, glyphIDs, glyphIDsCount);
+    if (result && result->fType == SkAdvancedTypefaceMetrics::kTrueType_Font) {
+        struct SkOTTableOS2 os2table;
+        if (this->getTableData(SkTEndian_SwapBE32(SkOTTableOS2::TAG), 0,
+                               sizeof(os2table), &os2table) > 0) {
+            if (os2table.version.v2.fsType.field.Bitmap ||
+                (os2table.version.v2.fsType.field.Restricted &&
+                 !(os2table.version.v2.fsType.field.PreviewPrint ||
+                   os2table.version.v2.fsType.field.Editable))) {
+                result->fFlags = SkTBitOr<SkAdvancedTypefaceMetrics::FontFlags>(
+                        result->fFlags,
+                        SkAdvancedTypefaceMetrics::kNotEmbeddable_FontFlag);
+            }
+            if (os2table.version.v2.fsType.field.NoSubsetting) {
+                result->fFlags = SkTBitOr<SkAdvancedTypefaceMetrics::FontFlags>(
+                        result->fFlags,
+                        SkAdvancedTypefaceMetrics::kNotSubsettable_FontFlag);
+            }
+        }
+    }
+    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

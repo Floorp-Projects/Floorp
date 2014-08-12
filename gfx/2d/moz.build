@@ -75,6 +75,9 @@ if CONFIG['MOZ_ENABLE_SKIA']:
     SOURCES += [
         'image_operations.cpp', # Uses _USE_MATH_DEFINES
     ]
+    EXPORTS.mozilla.gfx += [
+        'HelpersSkia.h',
+    ]
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
 if CONFIG['INTEL_ARCHITECTURE']:

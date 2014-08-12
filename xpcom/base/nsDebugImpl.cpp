@@ -254,17 +254,7 @@ GetAssertBehavior()
     return gAssertBehavior;
   }
 
-#if defined(XP_WIN) && defined(MOZ_METRO)
-  if (IsRunningInWindowsMetro()) {
-    gAssertBehavior = NS_ASSERT_WARN;
-  } else {
-    gAssertBehavior = NS_ASSERT_TRAP;
-  }
-#elif defined(XP_WIN)
-  gAssertBehavior = NS_ASSERT_TRAP;
-#else
   gAssertBehavior = NS_ASSERT_WARN;
-#endif
 
   const char* assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
   if (!assertString || !*assertString) {

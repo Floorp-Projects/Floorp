@@ -20,20 +20,20 @@ class GrGpu;
  *
  * The pool allows a client to make space for geometry and then put back excess
  * space if it over allocated. When a client is ready to draw from the pool
- * it calls unlock on the pool ensure buffers are ready for drawing. The pool
+ * it calls unmap on the pool ensure buffers are ready for drawing. The pool
  * can be reset after drawing is completed to recycle space.
  *
  * At creation time a minimum per-buffer size can be specified. Additionally,
  * a number of buffers to preallocate can be specified. These will
  * be allocated at the min size and kept around until the pool is destroyed.
  */
-class GrBufferAllocPool : public SkNoncopyable {
+class GrBufferAllocPool : SkNoncopyable {
 public:
     /**
-     * Ensures all buffers are unlocked and have all data written to them.
+     * Ensures all buffers are unmapped and have all data written to them.
      * Call before drawing using buffers from the pool.
      */
-    void unlock();
+    void unmap();
 
     /**
      *  Invalidates all the data in the pool, unrefs non-preallocated buffers.
@@ -77,7 +77,7 @@ protected:
      * @param gpu                   The GrGpu used to create the buffers.
      * @param bufferType            The type of buffers to create.
      * @param frequentResetHint     A hint that indicates that the pool
-     *                              should expect frequent unlock() calls
+     *                              should expect frequent unmap() calls
      *                              (as opposed to many makeSpace / acquires
      *                              between resets).
      * @param bufferSize            The minimum size of created buffers.
@@ -109,11 +109,11 @@ protected:
      * data is given to the caller. The buffer may or may not be locked. The
      * returned ptr remains valid until any of the following:
      *      *makeSpace is called again.
-     *      *unlock is called.
+     *      *unmap is called.
      *      *reset is called.
      *      *this object is destroyed.
      *
-     * Once unlock on the pool is called the data is guaranteed to be in the
+     * Once unmap on the pool is called the data is guaranteed to be in the
      * buffer at the offset indicated by offset. Until that time it may be
      * in temporary storage and/or the buffer may be locked.
      *
@@ -155,7 +155,7 @@ private:
 
     bool createBlock(size_t requestSize);
     void destroyBlock();
-    void flushCpuData(GrGeometryBuffer* buffer, size_t flushSize);
+    void flushCpuData(const BufferBlock& block, size_t flushSize);
 #ifdef SK_DEBUG
     void validate(bool unusedBlockAllowed = false) const;
 #endif
@@ -190,7 +190,7 @@ public:
      *
      * @param gpu                   The GrGpu used to create the vertex buffers.
      * @param frequentResetHint     A hint that indicates that the pool
-     *                              should expect frequent unlock() calls
+     *                              should expect frequent unmap() calls
      *                              (as opposed to many makeSpace / acquires
      *                              between resets).
      * @param bufferSize            The minimum size of created VBs This value
@@ -209,11 +209,11 @@ public:
      * the vertices given to the caller. The buffer may or may not be locked.
      * The returned ptr remains valid until any of the following:
      *      *makeSpace is called again.
-     *      *unlock is called.
+     *      *unmap is called.
      *      *reset is called.
      *      *this object is destroyed.
      *
-     * Once unlock on the pool is called the vertices are guaranteed to be in
+     * Once unmap on the pool is called the vertices are guaranteed to be in
      * the buffer at the offset indicated by startVertex. Until that time they
      * may be in temporary storage and/or the buffer may be locked.
      *
@@ -278,7 +278,7 @@ public:
      *
      * @param gpu                   The GrGpu used to create the index buffers.
      * @param frequentResetHint     A hint that indicates that the pool
-     *                              should expect frequent unlock() calls
+     *                              should expect frequent unmap() calls
      *                              (as opposed to many makeSpace / acquires
      *                              between resets).
      * @param bufferSize            The minimum size of created IBs This value
@@ -297,11 +297,11 @@ public:
      * the indices is given to the caller. The buffer may or may not be locked.
      * The returned ptr remains valid until any of the following:
      *      *makeSpace is called again.
-     *      *unlock is called.
+     *      *unmap is called.
      *      *reset is called.
      *      *this object is destroyed.
      *
-     * Once unlock on the pool is called the indices are guaranteed to be in the
+     * Once unmap on the pool is called the indices are guaranteed to be in the
      * buffer at the offset indicated by startIndex. Until that time they may be
      * in temporary storage and/or the buffer may be locked.
      *

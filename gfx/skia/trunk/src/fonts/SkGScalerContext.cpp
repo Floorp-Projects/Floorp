@@ -22,8 +22,7 @@ protected:
     virtual void generateMetrics(SkGlyph*) SK_OVERRIDE;
     virtual void generateImage(const SkGlyph&) SK_OVERRIDE;
     virtual void generatePath(const SkGlyph&, SkPath*) SK_OVERRIDE;
-    virtual void generateFontMetrics(SkPaint::FontMetrics* mX,
-                                     SkPaint::FontMetrics* mY) SK_OVERRIDE;
+    virtual void generateFontMetrics(SkPaint::FontMetrics*) SK_OVERRIDE;
 
 private:
     SkGTypeface*     fFace;
@@ -119,9 +118,8 @@ void SkGScalerContext::generateImage(const SkGlyph& glyph) {
         fProxy->getPath(glyph, &path);
 
         SkBitmap bm;
-        bm.setConfig(SkBitmap::kARGB_8888_Config, glyph.fWidth, glyph.fHeight,
-                     glyph.rowBytes());
-        bm.setPixels(glyph.fImage);
+        bm.installPixels(SkImageInfo::MakeN32Premul(glyph.fWidth, glyph.fHeight),
+                         glyph.fImage, glyph.rowBytes());
         bm.eraseColor(0);
 
         SkCanvas canvas(bm);
@@ -139,8 +137,7 @@ void SkGScalerContext::generatePath(const SkGlyph& glyph, SkPath* path) {
     path->transform(fMatrix);
 }
 
-void SkGScalerContext::generateFontMetrics(SkPaint::FontMetrics*,
-                                           SkPaint::FontMetrics* metrics) {
+void SkGScalerContext::generateFontMetrics(SkPaint::FontMetrics* metrics) {
     fProxy->getFontMetrics(metrics);
     if (metrics) {
         SkScalar scale = fMatrix.getScaleY();

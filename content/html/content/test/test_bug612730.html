@@ -34,9 +34,9 @@ function runTest()
 
     isnot(select.selectedIndex, -1, "Something should have been selected");
 
-    ok(!select.mozMatchesSelector(":-moz-ui-valid"),
+    ok(!select.matches(":-moz-ui-valid"),
        ":-moz-ui-valid should not apply");
-    todo(!select.mozMatchesSelector(":-moz-ui-invalid"),
+    todo(!select.matches(":-moz-ui-invalid"),
          ":-moz-ui-invalid should not apply");
 
     SimpleTest.finish();

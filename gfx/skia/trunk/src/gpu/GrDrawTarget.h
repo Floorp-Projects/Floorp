@@ -9,12 +9,15 @@
 #define GrDrawTarget_DEFINED
 
 #include "GrClipData.h"
+#include "GrContext.h"
 #include "GrDrawState.h"
 #include "GrIndexBuffer.h"
+#include "GrTraceMarker.h"
 
 #include "SkClipStack.h"
 #include "SkMatrix.h"
 #include "SkPath.h"
+#include "SkStrokeRec.h"
 #include "SkTArray.h"
 #include "SkTLazy.h"
 #include "SkTypes.h"
@@ -23,8 +26,8 @@
 class GrClipData;
 class GrDrawTargetCaps;
 class GrPath;
+class GrPathRange;
 class GrVertexBuffer;
-class SkStrokeRec;
 
 class GrDrawTarget : public SkRefCnt {
 protected:
@@ -344,6 +347,50 @@ public:
     void drawPath(const GrPath*, SkPath::FillType fill);
 
     /**
+     * Draws many paths. It will respect the HW
+     * antialias flag on the draw state (if possible in the 3D API).
+     *
+     * @param pathRange       Source of paths to draw from
+     * @param indices         Array of indices into the the pathRange
+     * @param count           Number of paths to draw (length of indices array)
+     * @param transforms      Array of individual transforms, one for each path
+     * @param transformsType  Type of transformations in the array. Array contains
+                              PathTransformSize(transformsType) × count elements
+     * @param fill            Fill type for drawing all the paths
+     */
+    enum PathTransformType {
+        kNone_PathTransformType,        //!< []
+        kTranslateX_PathTransformType,  //!< [kMTransX]
+        kTranslateY_PathTransformType,  //!< [kMTransY]
+        kTranslate_PathTransformType,   //!< [kMTransX, kMTransY]
+        kAffine_PathTransformType,      //!< [kMScaleX, kMSkewX, kMTransX, kMSkewY, kMScaleY, kMTransY]
+
+        kLast_PathTransformType = kAffine_PathTransformType
+    };
+    void drawPaths(const GrPathRange* pathRange,
+                   const uint32_t indices[], int count,
+                   const float transforms[], PathTransformType transformsType,
+                   SkPath::FillType fill);
+
+    static inline int PathTransformSize(PathTransformType type) {
+        switch (type) {
+            case kNone_PathTransformType:
+                return 0;
+            case kTranslateX_PathTransformType:
+            case kTranslateY_PathTransformType:
+                return 1;
+            case kTranslate_PathTransformType:
+                return 2;
+            case kAffine_PathTransformType:
+                return 6;
+
+            default:
+                SkFAIL("Unknown path transform type");
+                return 0;
+        }
+    }
+
+    /**
      * Helper function for drawing rects. It performs a geometry src push and pop
      * and thus will finalize any reserved geometry.
      *
@@ -423,18 +470,29 @@ public:
                        GrRenderTarget* renderTarget = NULL) = 0;
 
     /**
-     * instantGpuTraceEvent places a single "sign post" type marker into command stream. The
-     * argument marker will be the name of the annotation that is added.
-     */
-    void instantGpuTraceEvent(const char* marker);
+     * Discards the contents render target. NULL indicates that the current render target should
+     * be discarded.
+     **/
+    virtual void discard(GrRenderTarget* = NULL) = 0;
+
     /**
-     * The following two functions are used for marking groups of commands. Use pushGpuTraceEvent
-     * to set the beginning of a command set, and popGpuTraceEvent is be called at end of the
-     * command set. The argument marker is the name for the annotation that is added. The push and
-     * pops can be used hierarchically, but every push must have a match pop.
+     * Called at start and end of gpu trace marking
+     * GR_CREATE_GPU_TRACE_MARKER(marker_str, target) will automatically call these at the start
+     * and end of a code block respectively
      */
-    void pushGpuTraceEvent(const char* marker);
-    void popGpuTraceEvent();
+    void addGpuTraceMarker(const GrGpuTraceMarker* marker);
+    void removeGpuTraceMarker(const GrGpuTraceMarker* marker);
+
+    /**
+     * Takes the current active set of markers and stores them for later use. Any current marker
+     * in the active set is removed from the active set and the targets remove function is called.
+     * These functions do not work as a stack so you cannot call save a second time before calling
+     * restore. Also, it is assumed that when restore is called the current active set of markers
+     * is empty. When the stored markers are added back into the active set, the targets add marker
+     * is called.
+     */
+    void saveActiveTraceMarkers();
+    void restoreActiveTraceMarkers();
 
     /**
      * Copies a pixel rectangle from one surface to another. This call may finalize
@@ -485,6 +543,21 @@ public:
     void executeDrawPath(const GrPath* path, SkPath::FillType fill,
                          const GrDeviceCoordTexture* dstCopy) {
         this->onDrawPath(path, fill, dstCopy);
+    }
+
+    /**
+     * For subclass internal use to invoke a call to onDrawPaths().
+     */
+    void executeDrawPaths(const GrPathRange* pathRange,
+                          const uint32_t indices[], int count,
+                          const float transforms[], PathTransformType transformsType,
+                          SkPath::FillType fill,
+                          const GrDeviceCoordTexture* dstCopy) {
+        this->onDrawPaths(pathRange, indices, count, transforms, transformsType, fill, dstCopy);
+    }
+
+    inline bool isGpuTracingEnabled() const {
+        return this->getContext()->isGpuTracingEnabled();
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -578,8 +651,8 @@ public:
         bool succeeded() const { return NULL != fTarget; }
         void* vertices() const { SkASSERT(this->succeeded()); return fVertices; }
         void* indices() const { SkASSERT(this->succeeded()); return fIndices; }
-        GrPoint* positions() const {
-            return static_cast<GrPoint*>(this->vertices());
+        SkPoint* positions() const {
+            return static_cast<SkPoint*>(this->vertices());
         }
 
     private:
@@ -713,9 +786,9 @@ protected:
             case kArray_GeometrySrcType:
                 return src.fIndexCount;
             case kBuffer_GeometrySrcType:
-                return static_cast<int>(src.fIndexBuffer->sizeInBytes() / sizeof(uint16_t));
+                return static_cast<int>(src.fIndexBuffer->gpuMemorySize() / sizeof(uint16_t));
             default:
-                GrCrash("Unexpected Index Source.");
+                SkFAIL("Unexpected Index Source.");
                 return 0;
         }
     }
@@ -762,6 +835,8 @@ protected:
 
     // Subclass must initialize this in its constructor.
     SkAutoTUnref<const GrDrawTargetCaps> fCaps;
+
+    const GrTraceMarkerSet& getActiveTraceMarkers() { return fActiveTraceMarkers; }
 
     /**
      * Used to communicate draws to subclass's onDraw function.
@@ -867,10 +942,13 @@ private:
     virtual void onStencilPath(const GrPath*, SkPath::FillType) = 0;
     virtual void onDrawPath(const GrPath*, SkPath::FillType,
                             const GrDeviceCoordTexture* dstCopy) = 0;
+    virtual void onDrawPaths(const GrPathRange*,
+                             const uint32_t indices[], int count,
+                             const float transforms[], PathTransformType,
+                             SkPath::FillType, const GrDeviceCoordTexture*) = 0;
 
-    virtual void onInstantGpuTraceEvent(const char* marker) = 0;
-    virtual void onPushGpuTraceEvent(const char* marker) = 0;
-    virtual void onPopGpuTraceEvent() = 0;
+    virtual void didAddGpuTraceMarker() = 0;
+    virtual void didRemoveGpuTraceMarker() = 0;
 
     // helpers for reserving vertex and index space.
     bool reserveVertexSpace(size_t vertexSize,
@@ -906,8 +984,10 @@ private:
     GrDrawState                                                     fDefaultDrawState;
     // The context owns us, not vice-versa, so this ptr is not ref'ed by DrawTarget.
     GrContext*                                                      fContext;
-    // To keep track that we always have at least as many debug marker pushes as pops
-    int                                                             fPushGpuTraceCount;
+    // To keep track that we always have at least as many debug marker adds as removes
+    int                                                             fGpuTraceMarkerCount;
+    GrTraceMarkerSet                                                fActiveTraceMarkers;
+    GrTraceMarkerSet                                                fStoredTraceMarkers;
 
     typedef SkRefCnt INHERITED;
 };

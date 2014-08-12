@@ -1,10 +1,11 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
+#include "SkCanvas.h"
 #include "SkClipStack.h"
 #include "SkPath.h"
 #include "SkThread.h"
@@ -63,6 +64,25 @@ bool SkClipStack::Element::operator== (const Element& element) const {
         default:
             SkDEBUGFAIL("Unexpected type.");
             return false;
+    }
+}
+
+void SkClipStack::Element::replay(SkCanvasClipVisitor* visitor) const {
+    static const SkRect kEmptyRect = { 0, 0, 0, 0 };
+
+    switch (fType) {
+        case kPath_Type:
+            visitor->clipPath(this->getPath(), this->getOp(), this->isAA());
+            break;
+        case kRRect_Type:
+            visitor->clipRRect(this->getRRect(), this->getOp(), this->isAA());
+            break;
+        case kRect_Type:
+            visitor->clipRect(this->getRect(), this->getOp(), this->isAA());
+            break;
+        case kEmpty_Type:
+            visitor->clipRect(kEmptyRect, SkRegion::kIntersect_Op, false);
+            break;
     }
 }
 
@@ -825,3 +845,63 @@ int32_t SkClipStack::getTopmostGenID() const {
 
     return back->getGenID();
 }
+
+#ifdef SK_DEVELOPER
+void SkClipStack::Element::dump() const {
+    static const char* kTypeStrings[] = {
+        "empty",
+        "rect",
+        "rrect",
+        "path"
+    };
+    SK_COMPILE_ASSERT(0 == kEmpty_Type, type_str);
+    SK_COMPILE_ASSERT(1 == kRect_Type, type_str);
+    SK_COMPILE_ASSERT(2 == kRRect_Type, type_str);
+    SK_COMPILE_ASSERT(3 == kPath_Type, type_str);
+    SK_COMPILE_ASSERT(SK_ARRAY_COUNT(kTypeStrings) == kTypeCnt, type_str);
+
+    static const char* kOpStrings[] = {
+        "difference",
+        "intersect",
+        "union",
+        "xor",
+        "reverse-difference",
+        "replace",
+    };
+    SK_COMPILE_ASSERT(0 == SkRegion::kDifference_Op, op_str);
+    SK_COMPILE_ASSERT(1 == SkRegion::kIntersect_Op, op_str);
+    SK_COMPILE_ASSERT(2 == SkRegion::kUnion_Op, op_str);
+    SK_COMPILE_ASSERT(3 == SkRegion::kXOR_Op, op_str);
+    SK_COMPILE_ASSERT(4 == SkRegion::kReverseDifference_Op, op_str);
+    SK_COMPILE_ASSERT(5 == SkRegion::kReplace_Op, op_str);
+    SK_COMPILE_ASSERT(SK_ARRAY_COUNT(kOpStrings) == SkRegion::kOpCnt, op_str);
+
+    SkDebugf("Type: %s, Op: %s, AA: %s, Save Count: %d\n", kTypeStrings[fType],
+             kOpStrings[fOp], (fDoAA ? "yes" : "no"), fSaveCount);
+    switch (fType) {
+        case kEmpty_Type:
+            SkDebugf("\n");
+            break;
+        case kRect_Type:
+            this->getRect().dump();
+            SkDebugf("\n");
+            break;
+        case kRRect_Type:
+            this->getRRect().dump();
+            SkDebugf("\n");
+            break;
+        case kPath_Type:
+            this->getPath().dump(NULL, true);
+            break;
+    }
+}
+
+void SkClipStack::dump() const {
+    B2TIter iter(*this);
+    const Element* e;
+    while ((e = iter.next())) {
+        e->dump();
+        SkDebugf("\n");
+    }
+}
+#endif

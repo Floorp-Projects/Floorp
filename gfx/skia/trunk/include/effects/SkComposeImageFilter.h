@@ -15,22 +15,19 @@ public:
     virtual ~SkComposeImageFilter();
 
     static SkComposeImageFilter* Create(SkImageFilter* outer, SkImageFilter* inner) {
-        return SkNEW_ARGS(SkComposeImageFilter, (outer, inner));
+        SkImageFilter* inputs[2] = { outer, inner };
+        return SkNEW_ARGS(SkComposeImageFilter, (inputs));
     }
 
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkComposeImageFilter)
 
 protected:
+    explicit SkComposeImageFilter(SkImageFilter* inputs[2]) : INHERITED(2, inputs) {}
     explicit SkComposeImageFilter(SkReadBuffer& buffer);
 
     virtual bool onFilterImage(Proxy*, const SkBitmap& src, const Context&,
                                SkBitmap* result, SkIPoint* loc) const SK_OVERRIDE;
     virtual bool onFilterBounds(const SkIRect&, const SkMatrix&, SkIRect*) const SK_OVERRIDE;
-
-#ifdef SK_SUPPORT_LEGACY_PUBLICEFFECTCONSTRUCTORS
-public:
-#endif
-    SkComposeImageFilter(SkImageFilter* outer, SkImageFilter* inner) : INHERITED(outer, inner) {}
 
 private:
     typedef SkImageFilter INHERITED;

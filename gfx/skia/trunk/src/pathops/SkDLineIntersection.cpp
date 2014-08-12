@@ -76,6 +76,12 @@ int SkIntersections::intersectRay(const SkDLine& a, const SkDLine& b) {
     SkDVector ab0 = a[0] - b[0];
     double numerA = ab0.fY * bLen.fX - bLen.fY * ab0.fX;
     double numerB = ab0.fY * aLen.fX - aLen.fY * ab0.fX;
+#if 0
+    if (!between(0, numerA, denom) || !between(0, numerB, denom)) {
+        fUsed = 0;
+        return 0;
+    }
+#endif
     numerA /= denom;
     numerB /= denom;
     int used;
@@ -148,15 +154,55 @@ int SkIntersections::intersect(const SkDLine& a, const SkDLine& b) {
             computePoints(a, 1);
         }
     }
+/* Allow tracking that both sets of end points are near each other -- the lines are entirely 
+   coincident -- even when the end points are not exactly the same.
+   Mark this as a 'wild card' for the end points, so that either point is considered totally
+   coincident. Then, avoid folding the lines over each other, but allow either end to mate 
+   to the next set of lines.
+ */
     if (fAllowNear || !unparallel) {
-        for (int iA = 0; iA < 2; ++iA) {
-            if ((t = b.nearPoint(a[iA])) >= 0) {
-                insert(iA, t, a[iA]);
-            }
+        double aNearB[2];
+        double bNearA[2];
+        bool aNotB[2] = {false, false};
+        bool bNotA[2] = {false, false};
+        int nearCount = 0;
+        for (int index = 0; index < 2; ++index) {
+            aNearB[index] = t = b.nearPoint(a[index], &aNotB[index]);
+            nearCount += t >= 0;
+            bNearA[index] = t = a.nearPoint(b[index], &bNotA[index]);
+            nearCount += t >= 0;
         }
-        for (int iB = 0; iB < 2; ++iB) {
-            if ((t = a.nearPoint(b[iB])) >= 0) {
-                insert(t, iB, b[iB]);
+        if (nearCount > 0) {
+            // Skip if each segment contributes to one end point.
+            if (nearCount != 2 || aNotB[0] == aNotB[1]) {
+                for (int iA = 0; iA < 2; ++iA) {
+                    if (!aNotB[iA]) {
+                        continue;
+                    }
+                    int nearer = aNearB[iA] > 0.5;
+                    if (!bNotA[nearer]) {
+                        continue;
+                    }
+                    SkASSERT(a[iA] != b[nearer]);
+                    SkASSERT(iA == (bNearA[nearer] > 0.5));
+                    fNearlySame[iA] = true;
+                    insertNear(iA, nearer, a[iA], b[nearer]);
+                    aNearB[iA] = -1;
+                    bNearA[nearer] = -1;
+                    nearCount -= 2;
+                }
+            }
+            if (nearCount > 0) {
+                for (int iA = 0; iA < 2; ++iA) {
+                    if (aNearB[iA] >= 0) {
+                        insert(iA, aNearB[iA], a[iA]);
+                    }
+                }
+                for (int iB = 0; iB < 2; ++iB) {
+                    if (bNearA[iB] >= 0) {
+                        insert(bNearA[iB], iB, b[iB]);
+                    }
+                }
             }
         }
     }
@@ -198,7 +244,7 @@ int SkIntersections::horizontal(const SkDLine& line, double y) {
 
 int SkIntersections::horizontal(const SkDLine& line, double left, double right,
                                 double y, bool flipped) {
-    fMax = 2;
+    fMax = 3;  // clean up parallel at the end will limit the result to 2 at the most
     // see if end points intersect the opposite line
     double t;
     const SkDPoint leftPt = { left, y };
@@ -234,12 +280,12 @@ int SkIntersections::horizontal(const SkDLine& line, double left, double right,
         }
     }
     if (fAllowNear || result == 2) {
-        if ((t = line.nearPoint(leftPt)) >= 0) {
+        if ((t = line.nearPoint(leftPt, NULL)) >= 0) {
             insert(t, (double) flipped, leftPt);
         }
         if (left != right) {
             const SkDPoint rightPt = { right, y };
-            if ((t = line.nearPoint(rightPt)) >= 0) {
+            if ((t = line.nearPoint(rightPt, NULL)) >= 0) {
                 insert(t, (double) !flipped, rightPt);
             }
             for (int index = 0; index < 2; ++index) {
@@ -286,7 +332,7 @@ int SkIntersections::vertical(const SkDLine& line, double x) {
 
 int SkIntersections::vertical(const SkDLine& line, double top, double bottom,
                               double x, bool flipped) {
-    fMax = 2;
+    fMax = 3;  // cleanup parallel lines will bring this back line
     // see if end points intersect the opposite line
     double t;
     SkDPoint topPt = { x, top };
@@ -322,12 +368,12 @@ int SkIntersections::vertical(const SkDLine& line, double top, double bottom,
         }
     }
     if (fAllowNear || result == 2) {
-        if ((t = line.nearPoint(topPt)) >= 0) {
+        if ((t = line.nearPoint(topPt, NULL)) >= 0) {
             insert(t, (double) flipped, topPt);
         }
         if (top != bottom) {
             SkDPoint bottomPt = { x, bottom };
-            if ((t = line.nearPoint(bottomPt)) >= 0) {
+            if ((t = line.nearPoint(bottomPt, NULL)) >= 0) {
                 insert(t, (double) !flipped, bottomPt);
             }
             for (int index = 0; index < 2; ++index) {
@@ -338,6 +384,7 @@ int SkIntersections::vertical(const SkDLine& line, double top, double bottom,
         }
     }
     cleanUpParallelLines(result == 2);
+    SkASSERT(fUsed <= 2);
     return fUsed;
 }
 
