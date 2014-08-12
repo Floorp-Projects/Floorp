@@ -358,7 +358,6 @@ private:
     // Add the delay caused by the main thread
     playbackTick += mSharedBuffers->DelaySoFar();
     // Compute the playback time in the coordinate system of the destination
-    // FIXME: bug 970773
     double playbackTime =
       mSource->DestinationTimeFromTicks(mDestination, playbackTick);
 
@@ -385,7 +384,11 @@ private:
       {
         nsRefPtr<ScriptProcessorNode> node = static_cast<ScriptProcessorNode*>
           (mStream->Engine()->NodeMainThread());
-        if (!node || !node->Context()) {
+        if (!node) {
+          return NS_OK;
+        }
+        AudioContext* context = node->Context();
+        if (!context) {
           return NS_OK;
         }
 
@@ -400,9 +403,9 @@ private:
         if (!mNullInput) {
           ErrorResult rv;
           inputBuffer =
-            AudioBuffer::Create(node->Context(), mInputChannels.Length(),
+            AudioBuffer::Create(context, mInputChannels.Length(),
                                 node->BufferSize(),
-                                node->Context()->SampleRate(), cx, rv);
+                                context->SampleRate(), cx, rv);
           if (rv.Failed()) {
             return NS_OK;
           }
@@ -420,7 +423,7 @@ private:
         nsRefPtr<AudioProcessingEvent> event = new AudioProcessingEvent(node, nullptr, nullptr);
         event->InitEvent(inputBuffer,
                          mInputChannels.Length(),
-                         mPlaybackTime);
+                         context->StreamTimeToDOMTime(mPlaybackTime));
         node->DispatchTrustedEvent(event);
 
         // Steal the output buffers if they have been set.
