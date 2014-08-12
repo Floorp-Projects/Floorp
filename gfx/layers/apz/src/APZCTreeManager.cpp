@@ -233,7 +233,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
         apzc->NotifyLayersUpdated(metrics,
                                   aIsFirstPaint && (aLayersId == aOriginatingLayersId));
-        apzc->SetScrollHandoffParentId(container->GetScrollHandoffParentId());
+        apzc->SetScrollHandoffParentId(aLayer->GetScrollHandoffParentId());
 
         // Use the composition bounds as the hit test region.
         // Optionally, the GeckoContentController can provide a touch-sensitive

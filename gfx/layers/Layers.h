@@ -828,6 +828,22 @@ public:
     }
   }
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the ViewID of the ContainerLayer to which overscroll should be handed
+   * off. A value of NULL_SCROLL_ID means that the default handoff-parent-finding
+   * behaviour should be used (i.e. walk up the layer tree to find the next
+   * scrollable ancestor layer).
+   */
+  void SetScrollHandoffParentId(FrameMetrics::ViewID aScrollParentId)
+  {
+    if (mScrollHandoffParentId != aScrollParentId) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollHandoffParentId", this));
+      mScrollHandoffParentId = aScrollParentId;
+      Mutated();
+    }
+  }
+
   /*
    * Compositor event handling
    * =========================
@@ -1135,6 +1151,7 @@ public:
   uint32_t GetContentFlags() { return mContentFlags; }
   const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
   const FrameMetrics& GetFrameMetrics() const { return mFrameMetrics; }
+  FrameMetrics::ViewID GetScrollHandoffParentId() const { return mScrollHandoffParentId; }
   const EventRegions& GetEventRegions() const { return mEventRegions; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() { return mNextSibling; }
@@ -1511,6 +1528,7 @@ protected:
   gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
   FrameMetrics mFrameMetrics;
+  FrameMetrics::ViewID mScrollHandoffParentId;
   EventRegions mEventRegions;
   gfx::Matrix4x4 mTransform;
   // A mutation of |mTransform| that we've queued to be applied at the
@@ -1703,22 +1721,6 @@ public:
   void SetAsyncPanZoomController(AsyncPanZoomController *controller);
   AsyncPanZoomController* GetAsyncPanZoomController() const;
 
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * Set the ViewID of the ContainerLayer to which overscroll should be handed
-   * off. A value of NULL_SCROLL_ID means that the default handoff-parent-finding
-   * behaviour should be used (i.e. walk up the layer tree to find the next
-   * scrollable ancestor layer).
-   */
-  void SetScrollHandoffParentId(FrameMetrics::ViewID aScrollParentId)
-  {
-    if (mScrollHandoffParentId != aScrollParentId) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollHandoffParentId", this));
-      mScrollHandoffParentId = aScrollParentId;
-      Mutated();
-    }
-  }
-
   void SetPreScale(float aXScale, float aYScale)
   {
     if (mPreXScale == aXScale && mPreYScale == aYScale) {
@@ -1776,7 +1778,6 @@ public:
 
   virtual Layer* GetFirstChild() const { return mFirstChild; }
   virtual Layer* GetLastChild() const { return mLastChild; }
-  FrameMetrics::ViewID GetScrollHandoffParentId() const { return mScrollHandoffParentId; }
   float GetPreXScale() const { return mPreXScale; }
   float GetPreYScale() const { return mPreYScale; }
   float GetInheritedXScale() const { return mInheritedXScale; }
@@ -1864,7 +1865,6 @@ protected:
   Layer* mFirstChild;
   Layer* mLastChild;
   nsRefPtr<AsyncPanZoomController> mAPZC;
-  FrameMetrics::ViewID mScrollHandoffParentId;
   float mPreXScale;
   float mPreYScale;
   // The resolution scale inherited from the parent layer. This will already
