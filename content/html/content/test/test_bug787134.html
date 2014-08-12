@@ -19,10 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=787134
     var div = document.createElement('div');
     div.innerHTML = '<a href=#></a>';
     var a = div.firstChild;
-    ok(a.mozMatchesSelector(':link'), "Should match a link not in a document");
+    ok(a.matches(':link'), "Should match a link not in a document");
     is(div.querySelector(':link'), a, "Should find a link not in a document");
     a = document.querySelector('#link-test1');
-    ok(a.mozMatchesSelector(':link'), "Should match a link in a document with an invalid URL");
+    ok(a.matches(':link'), "Should match a link in a document with an invalid URL");
 </script>
 </pre>
 </body>

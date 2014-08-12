@@ -31,13 +31,13 @@ is(emptyList.length, 0, "Unexpected empty list length");
 is(document.querySelectorAll("div > ::after").length, 0,
    "Pseudo-element matched something?");
 
-is(document.body.mozMatchesSelector("::first-line"), false,
+is(document.body.matches("::first-line"), false,
    "body shouldn't match ::first-line");
 
-is(document.body.mozMatchesSelector("::first-line, body"), true,
+is(document.body.matches("::first-line, body"), true,
    "body should match 'body'");
 
-is(document.body.mozMatchesSelector("::first-line, body, ::first-letter"), true,
+is(document.body.matches("::first-line, body, ::first-letter"), true,
    "body should match 'body' here too");
 
 </script>

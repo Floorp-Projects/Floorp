@@ -37,8 +37,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=605124
 
 function checkPseudoClass(aElement, aExpected)
 {
-  is(aElement.mozMatchesSelector(":-moz-ui-invalid"), aExpected,
-     "mozMatchesSelector(':-moz-ui-invalid') should return " + aExpected + " for " + aElement);
+  is(aElement.matches(":-moz-ui-invalid"), aExpected,
+     "matches(':-moz-ui-invalid') should return " + aExpected + " for " + aElement);
 }
 
 var os = SpecialPowers.Cc['@mozilla.org/observer-service;1']

@@ -62,7 +62,7 @@ function enter1(event) {
   ok(document.mozFullScreen, "1. Should be in full-screen mode (first time)");
   is(event.target, document, "2. Event target should be full-screen document #1");
   is(document.mozFullScreenElement, fullScreenElement(), "3. Full-screen element should be div element.");
-  ok(document.mozFullScreenElement.mozMatchesSelector(":-moz-full-screen"), "4. FSE should match :-moz-full-screen");
+  ok(document.mozFullScreenElement.matches(":-moz-full-screen"), "4. FSE should match :-moz-full-screen");
   var fse = fullScreenElement();
   addFullscreenChangeContinuation("exit", exit1);
   fse.parentNode.removeChild(fse);
@@ -158,9 +158,9 @@ function enter4(event) {
 
   var n = container;
   do {
-    ok(n.mozMatchesSelector(":-moz-full-screen-ancestor"), "Ancestor " + n + " should match :-moz-full-screen-ancestor")
+    ok(n.matches(":-moz-full-screen-ancestor"), "Ancestor " + n + " should match :-moz-full-screen-ancestor")
     n = n.parentNode;
-  } while (n && n.mozMatchesSelector);
+  } while (n && n.matches);
     
   // Remove full-screen ancestor element from document, verify it stops being reported as current FSE.
   addFullscreenChangeContinuation("exit", exit4);
