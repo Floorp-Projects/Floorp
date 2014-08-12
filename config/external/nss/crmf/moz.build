@@ -8,7 +8,7 @@ LIBRARY_NAME = 'crmf'
 
 if CONFIG['MOZ_NATIVE_NSS']:
     OS_LIBS += [l for l in CONFIG['NSS_LIBS'] if l.startswith('-L')]
-    OS_LIBS += '-lcrmf'
+    OS_LIBS += ['-lcrmf']
 else:
     USE_LIBS += [
         # The dependency on nss is not real, but is required to force the
