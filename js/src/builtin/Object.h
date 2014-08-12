@@ -22,6 +22,9 @@ extern const JSFunctionSpec object_static_selfhosted_methods[];
 bool
 obj_construct(JSContext *cx, unsigned argc, JS::Value *vp);
 
+// Exposed so SelfHosting.cpp can use it in the OwnPropertyKeys intrinsic
+bool GetOwnPropertyKeys(JSContext *cx, const CallArgs &args, unsigned flags);
+
 /*
  * Like IdToValue, but convert int jsids to strings. This is used when
  * exposing a jsid to script for Object.getOwnProperty{Names,Symbols}
