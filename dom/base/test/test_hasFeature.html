@@ -36,7 +36,7 @@ function testAPIs() {
     { name: "Navigator.addIdleObserver", enabled: true },
     { name: "Navigator.mozNetworkStats", enabled: pref("dom.mozNetworkStats.enabled") },
     { name: "Navigator.push", enabled: pref("services.push.enabled") },
-    { name: "Navigator.mozTime", enabled: b2gOnly },
+    // { name: "Navigator.mozTime", enabled: b2gOnly }, // conditional on MOZ_TIME_MANAGER, tricky to test
     // { name: "Navigator.mozFMRadio", enabled: b2gOnly }, // conditional on MOZ_B2G_FM, tricky to test
     { name: "Navigator.mozCameras", enabled: true },
     { name: "Navigator.mozAlarms", enabled: pref("dom.mozAlarms.enabled") },
