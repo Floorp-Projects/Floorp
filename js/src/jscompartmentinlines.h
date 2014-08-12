@@ -28,6 +28,12 @@ JSCompartment::maybeGlobal() const
     return global_;
 }
 
+js::GlobalObject *
+JSCompartment::unsafeUnbarrieredMaybeGlobal() const
+{
+    return *global_.unsafeGet();
+}
+
 js::AutoCompartment::AutoCompartment(ExclusiveContext *cx, JSObject *target)
   : cx_(cx),
     origin_(cx->compartment_)

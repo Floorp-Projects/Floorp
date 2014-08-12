@@ -6,7 +6,7 @@
 <bindings xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <binding id="prettyprint">
+  <binding id="prettyprint" bindToUntrustedContent="true">
 
     <content><html:div id='top'/>
       <html:span style="display: none;"><children/></html:span>

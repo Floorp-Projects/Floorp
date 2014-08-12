@@ -4171,15 +4171,15 @@ GCRuntime::beginSweepingZoneGroup()
             // overapproximates the possible types in the zone), but the
             // constraints might not have been triggered on the deoptimization
             // or even copied over completely. In this case, destroy all JIT
-            // code and new script addendums in the zone, the only things whose
-            // correctness depends on the type constraints.
+            // code and new script information in the zone, the only things
+            // whose correctness depends on the type constraints.
             bool oom = false;
             zone->sweep(&fop, releaseTypes && !zone->isPreservingCode(), &oom);
 
             if (oom) {
                 zone->setPreservingCode(false);
                 zone->discardJitCode(&fop);
-                zone->types.clearAllNewScriptAddendumsOnOOM();
+                zone->types.clearAllNewScriptsOnOOM();
             }
         }
     }
@@ -4520,7 +4520,7 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
 
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             if (e.front().key().kind != CrossCompartmentKey::StringWrapper)
-                AssertNotOnGrayList(&e.front().value().get().toObject());
+                AssertNotOnGrayList(&e.front().value().unbarrieredGet().toObject());
         }
     }
 #endif

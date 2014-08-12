@@ -45,10 +45,10 @@ ShapeTable::init(ThreadSafeContext *cx, Shape *lastProp)
         sizeLog2 = MIN_SIZE_LOG2;
 
     /*
-     * Use rt->calloc_ for memory accounting and overpressure handling
+     * Use rt->calloc for memory accounting and overpressure handling
      * without OOM reporting. See ShapeTable::change.
      */
-    entries = (Shape **) cx->calloc_(sizeOfEntries(JS_BIT(sizeLog2)));
+    entries = cx->pod_calloc<Shape *>(JS_BIT(sizeLog2));
     if (!entries)
         return false;
 
@@ -260,7 +260,7 @@ ShapeTable::change(int log2Delta, ThreadSafeContext *cx)
     int newlog2 = oldlog2 + log2Delta;
     uint32_t oldsize = JS_BIT(oldlog2);
     uint32_t newsize = JS_BIT(newlog2);
-    Shape **newTable = (Shape **) cx->calloc_(sizeOfEntries(newsize));
+    Shape **newTable = cx->pod_calloc<Shape *>(newsize);
     if (!newTable)
         return false;
 
@@ -1528,7 +1528,7 @@ JSCompartment::sweepBaseShapeTable()
 
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
-            UnownedBaseShape *base = e.front();
+            UnownedBaseShape *base = e.front().unbarrieredGet();
             if (IsBaseShapeAboutToBeFinalized(&base))
                 e.removeFront();
         }
@@ -1816,7 +1816,7 @@ JSCompartment::sweepInitialShapeTable()
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
             const InitialShapeEntry &entry = e.front();
-            Shape *shape = entry.shape;
+            Shape *shape = entry.shape.unbarrieredGet();
             JSObject *proto = entry.proto.raw();
             if (IsShapeAboutToBeFinalized(&shape) || (entry.proto.isObject() && IsObjectAboutToBeFinalized(&proto))) {
                 e.removeFront();
@@ -1826,7 +1826,7 @@ JSCompartment::sweepInitialShapeTable()
                 JS_ASSERT(!parent || !IsObjectAboutToBeFinalized(&parent));
                 JS_ASSERT(parent == shape->getObjectParent());
 #endif
-                if (shape != entry.shape || proto != entry.proto.raw()) {
+                if (shape != entry.shape.unbarrieredGet() || proto != entry.proto.raw()) {
                     ReadBarrieredShape readBarrieredShape(shape);
                     InitialShapeEntry newKey(readBarrieredShape, TaggedProto(proto));
                     e.rekeyFront(newKey.getLookup(), newKey);

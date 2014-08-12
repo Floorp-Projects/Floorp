@@ -60,19 +60,33 @@ let sysMsgHelper = (function() {
     }
   }
 
-  let mDiscovered = [], mLost = [];
+  function sendFile(msg) {
+    log("system message nfc-manager-send-file");
+    let send = mSendFile.shift();
+    if (send) {
+      send(msg);
+    }
+  }
+
+  let mDiscovered = [], mLost = [], mSendFile = [];
   window.navigator.mozSetMessageHandler("nfc-manager-tech-discovered",
                                         techDiscovered);
   window.navigator.mozSetMessageHandler("nfc-manager-tech-lost", techLost);
+  window.navigator.mozSetMessageHandler("nfc-manager-send-file", sendFile);
 
   return {
-    waitForTechDiscovered: function (discovered) {
+    waitForTechDiscovered: function(discovered) {
       mDiscovered.push(discovered);
     },
 
-    waitForTechLost: function (lost) {
+    waitForTechLost: function(lost) {
       mLost.push(lost);
     },
+
+    waitForSendFile: function(sendFile) {
+      mSendFile.push(sendFile);
+    },
+
   };
 }());
 
