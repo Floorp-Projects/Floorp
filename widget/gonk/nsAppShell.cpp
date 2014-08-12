@@ -731,11 +731,12 @@ GeckoInputDispatcher::dispatchOnce()
         int32_t action = data.action & AMOTION_EVENT_ACTION_MASK;
         int32_t index = data.action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK;
         index >>= AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+        int32_t id = data.motion.touches[index].id;
         switch (action) {
         case AMOTION_EVENT_ACTION_DOWN:
         case AMOTION_EVENT_ACTION_POINTER_DOWN:
-            if (!mTouchDown.hasBit(index)) {
-                mTouchDown.markBit(index);
+            if (!mTouchDown.hasBit(id)) {
+                mTouchDown.markBit(id);
                 mTouchDownCount++;
             }
             break;
@@ -747,8 +748,8 @@ GeckoInputDispatcher::dispatchOnce()
         case AMOTION_EVENT_ACTION_POINTER_UP:
         case AMOTION_EVENT_ACTION_OUTSIDE:
         case AMOTION_EVENT_ACTION_CANCEL:
-            if (mTouchDown.hasBit(index)) {
-                mTouchDown.clearBit(index);
+            if (mTouchDown.hasBit(id)) {
+                mTouchDown.clearBit(id);
                 mTouchDownCount--;
             }
             break;
