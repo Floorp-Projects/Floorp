@@ -10,6 +10,7 @@
 #include "nsChromeRegistry.h"
 #include "nsTArray.h"
 #include "mozilla/Move.h"
+#include "nsClassHashtable.h"
 
 namespace mozilla {
 namespace dom {
@@ -53,13 +54,14 @@ class nsChromeRegistryChrome : public nsChromeRegistry
 
  private:
   struct PackageEntry;
-  static void ChromePackageFromPackageEntry(PackageEntry* aPackage,
+  static void ChromePackageFromPackageEntry(const nsACString& aPackageName,
+                                            PackageEntry* aPackage,
                                             ChromePackage* aChromePackage,
                                             const nsCString& aSelectedLocale,
                                             const nsCString& aSelectedSkin);
-  static PLDHashOperator CollectPackages(PLDHashTable *table,
-                                         PLDHashEntryHdr *entry,
-                                         uint32_t number, void *arg);
+  static PLDHashOperator CollectPackages(const nsACString &aKey,
+                                         PackageEntry *package,
+                                         void *arg);
 
   nsresult OverrideLocalePackage(const nsACString& aPackage,
                                  nsACString& aOverride);
@@ -70,14 +72,6 @@ class nsChromeRegistryChrome : public nsChromeRegistry
                                  const nsCString& aPath) MOZ_OVERRIDE;
   nsresult GetFlagsFromPackage(const nsCString& aPackage,
                                uint32_t* aFlags) MOZ_OVERRIDE;
-
-  static const PLDHashTableOps kTableOps;
-  static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
-  static bool          MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                                const void *key);
-  static void          ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
-  static bool          InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                                 const void *key);
 
   struct ProviderEntry
   {
@@ -117,11 +111,10 @@ class nsChromeRegistryChrome : public nsChromeRegistry
 
   struct PackageEntry : public PLDHashEntryHdr
   {
-    PackageEntry(const nsACString& package)
-    : package(package), flags(0) { }
+    PackageEntry()
+    : flags(0) { }
     ~PackageEntry() { }
 
-    nsCString        package;
     nsCOMPtr<nsIURI> baseURI;
     uint32_t         flags;
     nsProviderArray  locales;
@@ -170,7 +163,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   nsCString mSelectedSkin;
 
   // Hash of package names ("global") to PackageEntry objects
-  PLDHashTable mPackagesHash;
+  nsClassHashtable<nsCStringHashKey, PackageEntry> mPackagesHash;
 
   virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
                                char *const * argv, bool platform,

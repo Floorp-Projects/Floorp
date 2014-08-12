@@ -158,7 +158,7 @@ ComputeViewTransform(const FrameMetrics& aContentMetrics, const FrameMetrics& aC
 
 bool
 SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
-    ContainerLayer* aLayer,
+    Layer* aLayer,
     bool aHasPendingNewThebesContent,
     bool aLowPrecision,
     ViewTransform& aViewTransform)
@@ -166,8 +166,8 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   MOZ_ASSERT(aLayer);
 
   CompositorChild* compositor = nullptr;
-  if(aLayer->Manager() &&
-     aLayer->Manager()->AsClientLayerManager()) {
+  if (aLayer->Manager() &&
+      aLayer->Manager()->AsClientLayerManager()) {
     compositor = aLayer->Manager()->AsClientLayerManager()->GetCompositorChild();
   }
 
@@ -1328,7 +1328,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
  * for the compositor state.
  */
 static LayerRect
-GetCompositorSideCompositionBounds(ContainerLayer* aScrollAncestor,
+GetCompositorSideCompositionBounds(Layer* aScrollAncestor,
                                    const Matrix4x4& aTransformToCompBounds,
                                    const ViewTransform& aAPZTransform)
 {
@@ -1385,7 +1385,7 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
 
   TILING_LOG("TILING %p: Progressive update stale region %s\n", mThebesLayer, Stringify(staleRegion).c_str());
 
-  ContainerLayer* scrollAncestor = nullptr;
+  Layer* scrollAncestor = nullptr;
   mThebesLayer->GetAncestorLayers(&scrollAncestor, nullptr);
 
   // Find out the current view transform to determine which tiles to draw

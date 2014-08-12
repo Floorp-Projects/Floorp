@@ -1686,7 +1686,7 @@ static inline JSObject *
 CreateThisForFunctionWithType(JSContext *cx, HandleTypeObject type, JSObject *parent,
                               NewObjectKind newKind)
 {
-    if (type->hasNewScript()) {
+    if (type->newScript()) {
         /*
          * Make an object with the type's associated finalize kind and shape,
          * which reflects any properties that will definitely be added to the
@@ -2009,18 +2009,14 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKin
         clone->setSlot(i, v);
     }
 
-    if (obj->getClass() == &ArrayObject::class_)
+    if (obj->hasSingletonType()) {
+        if (!JSObject::setSingletonType(cx, clone))
+            return nullptr;
+    } else if (obj->getClass() == &ArrayObject::class_) {
         FixArrayType(cx, clone);
-    else
+    } else {
         FixObjectType(cx, clone);
-
-#ifdef DEBUG
-    Rooted<TypeObject*> typeObj(cx, obj->getType(cx));
-    Rooted<TypeObject*> cloneTypeObj(cx, clone->getType(cx));
-    if (!typeObj || !cloneTypeObj)
-        return nullptr;
-    JS_ASSERT(typeObj == cloneTypeObj);
-#endif
+    }
 
     return clone;
 }
@@ -2203,11 +2199,22 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
         JS_ASSERT_IF(mode == XDR_DECODE, !obj->inDictionaryMode());
     }
 
+    // Fix up types, distinguishing singleton-typed objects.
+    uint32_t isSingletonTyped;
+    if (mode == XDR_ENCODE)
+        isSingletonTyped = obj->hasSingletonType() ? 1 : 0;
+    if (!xdr->codeUint32(&isSingletonTyped))
+        return false;
+
     if (mode == XDR_DECODE) {
-        if (isArray)
+        if (isSingletonTyped) {
+            if (!JSObject::setSingletonType(cx, obj))
+                return false;
+        } else if (isArray) {
             FixArrayType(cx, obj);
-        else
+        } else {
             FixObjectType(cx, obj);
+        }
     }
 
     {
@@ -2905,7 +2912,7 @@ JSObject::growSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount, 
      * type to give these objects a larger number of fixed slots when future
      * objects are constructed.
      */
-    if (!obj->hasLazyType() && !oldCount && obj->type()->hasNewScript()) {
+    if (!obj->hasLazyType() && !oldCount && obj->type()->newScript()) {
         JSObject *oldTemplate = obj->type()->newScript()->templateObject;
         gc::AllocKind kind = gc::GetGCObjectFixedSlotsKind(oldTemplate->numFixedSlots());
         uint32_t newScriptSlots = gc::GetGCKindSlots(kind);

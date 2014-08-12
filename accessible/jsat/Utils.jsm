@@ -422,6 +422,28 @@ this.Utils = { // jshint ignore:line
 
     return parent.role === Roles.LISTITEM && parent.childCount > 1 &&
       aStaticText.indexInParent === 0;
+  },
+
+  dispatchChromeEvent: function dispatchChromeEvent(aType, aDetails) {
+    let details = {
+      type: aType,
+      details: JSON.stringify(
+        typeof aDetails === 'string' ? { eventType : aDetails } : aDetails)
+    };
+    let window = this.win;
+    if (window.shell) {
+      // On B2G device.
+      window.shell.sendChromeEvent(details);
+    } else {
+      // Dispatch custom event to have support for desktop and screen reader
+      // emulator add-on.
+      window.dispatchEvent(new window.CustomEvent(aType, {
+        bubbles: true,
+        cancelable: true,
+        detail: details
+      }));
+    }
+
   }
 };
 

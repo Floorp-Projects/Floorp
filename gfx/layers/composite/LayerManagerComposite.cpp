@@ -679,7 +679,7 @@ LayerManagerComposite::ComputeRenderIntegrity()
     return 1.f;
   }
 
-  const FrameMetrics& rootMetrics = root->AsContainerLayer()->GetFrameMetrics();
+  const FrameMetrics& rootMetrics = root->GetFrameMetrics();
   ParentLayerIntRect bounds = RoundedToInt(rootMetrics.mCompositionBounds);
   nsIntRect screenRect(bounds.x,
                        bounds.y,
@@ -696,7 +696,7 @@ LayerManagerComposite::ComputeRenderIntegrity()
   if (primaryScrollable) {
     // This is derived from the code in
     // AsyncCompositionManager::TransformScrollableLayer
-    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
+    const FrameMetrics& metrics = primaryScrollable->GetFrameMetrics();
     Matrix4x4 transform = primaryScrollable->GetEffectiveTransform();
     transform.ScalePost(metrics.mResolution.scale, metrics.mResolution.scale, 1);
 
