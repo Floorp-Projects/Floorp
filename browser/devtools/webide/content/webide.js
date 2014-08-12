@@ -100,13 +100,6 @@ let UI = {
     window.removeEventListener("message", this.onMessage);
   },
 
-  canWindowClose: function() {
-    if (this.projecteditor) {
-      return this.projecteditor.confirmUnsaved();
-    }
-    return true;
-  },
-
   onfocus: function() {
     // Because we can't track the activity in the folder project,
     // we need to validate the project regularly. Let's assume that
@@ -672,9 +665,7 @@ let UI = {
 
 let Cmds = {
   quit: function() {
-    if (UI.canWindowClose()) {
-      window.close();
-    }
+    window.close();
   },
 
   /**
