@@ -1,1 +1,11 @@
+conformance/more/conformance/quickCheckAPI-A.html
+conformance/more/conformance/quickCheckAPI-B1.html
 conformance/more/conformance/quickCheckAPI-B2.html
+conformance/more/conformance/quickCheckAPI-B3.html
+conformance/more/conformance/quickCheckAPI-B4.html
+conformance/more/conformance/quickCheckAPIBadArgs.html
+conformance/more/conformance/quickCheckAPI-C.html
+conformance/more/conformance/quickCheckAPI-D_G.html
+conformance/more/conformance/quickCheckAPI-G_I.html
+conformance/more/conformance/quickCheckAPI-L_S.html
+conformance/more/conformance/quickCheckAPI-S_V.html
