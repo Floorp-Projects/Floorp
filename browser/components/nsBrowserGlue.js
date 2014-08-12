@@ -104,6 +104,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "SignInToWebsiteUX",
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
                                   "resource:///modules/ContentSearch.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "ShellService", function() {
+  try {
+    return Cc["@mozilla.org/browser/shell-service;1"].
+           getService(Ci.nsIShellService);
+  }
+  catch(ex) {
+    return null;
+  }
+});
+
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -748,16 +758,11 @@ BrowserGlue.prototype = {
     }
 
     // Perform default browser checking.
-    var shell;
-    try {
-      shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-        .getService(Components.interfaces.nsIShellService);
-    } catch (e) { }
-    if (shell) {
+    if (ShellService) {
 #ifdef DEBUG
       let shouldCheck = false;
 #else
-      let shouldCheck = shell.shouldCheckDefaultBrowser;
+      let shouldCheck = ShellService.shouldCheckDefaultBrowser;
 #endif
       let willRecoverSession = false;
       try {
@@ -768,7 +773,8 @@ BrowserGlue.prototype = {
       }
       catch (ex) { /* never mind; suppose SessionStore is broken */ }
 
-      let isDefault = shell.isDefaultBrowser(true, false); // startup check, check all assoc
+      // startup check, check all assoc
+      let isDefault = ShellService.isDefaultBrowser(true, false);
       try {
         // Report default browser status on startup to telemetry
         // so we can track whether we are the default.
@@ -779,38 +785,7 @@ BrowserGlue.prototype = {
 
       if (shouldCheck && !isDefault && !willRecoverSession) {
         Services.tm.mainThread.dispatch(function() {
-          var win = this.getMostRecentBrowserWindow();
-          var brandBundle = win.document.getElementById("bundle_brand");
-          var shellBundle = win.document.getElementById("bundle_shell");
-
-          var brandShortName = brandBundle.getString("brandShortName");
-          var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
-          var promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage",
-                                                             [brandShortName]);
-          var checkboxLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
-                                                             [brandShortName]);
-          var checkEveryTime = { value: shouldCheck };
-          var ps = Services.prompt;
-          var rv = ps.confirmEx(win, promptTitle, promptMessage,
-                                ps.STD_YES_NO_BUTTONS,
-                                null, null, null, checkboxLabel, checkEveryTime);
-          if (rv == 0) {
-            var claimAllTypes = true;
-#ifdef XP_WIN
-            try {
-              // In Windows 8, the UI for selecting default protocol is much
-              // nicer than the UI for setting file type associations. So we
-              // only show the protocol association screen on Windows 8.
-              // Windows 8 is version 6.2.
-              let version = Cc["@mozilla.org/system-info;1"]
-                              .getService(Ci.nsIPropertyBag2)
-                              .getProperty("version");
-              claimAllTypes = (parseFloat(version) < 6.2);
-            } catch (ex) { }
-#endif
-            shell.setDefaultBrowser(claimAllTypes, false);
-          }
-          shell.shouldCheckDefaultBrowser = checkEveryTime.value;
+          DefaultBrowserCheck.prompt(this.getMostRecentBrowserWindow());
         }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       }
     }
@@ -2212,6 +2187,122 @@ ContentPermissionPrompt.prototype = {
     }
   },
 
+};
+
+let DefaultBrowserCheck = {
+  get OPTIONPOPUP() { return "defaultBrowserNotificationPopup" },
+
+  closePrompt: function(aNode) {
+    if (this._notification) {
+      this._notification.close();
+    }
+  },
+
+  setAsDefault: function() {
+    let claimAllTypes = true;
+#ifdef XP_WIN
+    try {
+      // In Windows 8, the UI for selecting default protocol is much
+      // nicer than the UI for setting file type associations. So we
+      // only show the protocol association screen on Windows 8.
+      // Windows 8 is version 6.2.
+      let version = Services.sysinfo.getProperty("version");
+      claimAllTypes = (parseFloat(version) < 6.2);
+    } catch (ex) { }
+#endif
+    ShellService.setDefaultBrowser(claimAllTypes, false);
+    this.closePrompt();
+  },
+
+  _createPopup: function(win, bundle) {
+    let doc = win.document;
+    let popup = doc.createElement("menupopup");
+    popup.id = this.OPTIONPOPUP;
+
+    let notNowItem = doc.createElement("menuitem");
+    notNowItem.id = "defaultBrowserNotNow";
+    let label = bundle.getString("setDefaultBrowserNotNow.label");
+    notNowItem.setAttribute("label", label);
+    let accesskey = bundle.getString("setDefaultBrowserNotNow.accesskey");
+    notNowItem.setAttribute("accesskey", accesskey);
+    popup.appendChild(notNowItem);
+
+    let neverItem = doc.createElement("menuitem");
+    neverItem.id = "defaultBrowserNever";
+    let label = bundle.getString("setDefaultBrowserNever.label");
+    neverItem.setAttribute("label", label);
+    let accesskey = bundle.getString("setDefaultBrowserNever.accesskey");
+    neverItem.setAttribute("accesskey", accesskey);
+    popup.appendChild(neverItem);
+
+    popup.addEventListener("command", this);
+
+    let popupset = doc.getElementById("mainPopupSet");
+    popupset.appendChild(popup);
+  },
+
+  handleEvent: function(event) {
+    if (event.type == "command") {
+      if (event.target.id == "defaultBrowserNever") {
+        ShellService.shouldCheckDefaultBrowser = false;
+      }
+      this.closePrompt();
+    }
+  },
+
+  prompt: function(win) {
+    let brandBundle = win.document.getElementById("bundle_brand");
+    let shellBundle = win.document.getElementById("bundle_shell");
+
+    let brandShortName = brandBundle.getString("brandShortName");
+    let promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage2",
+                                                       [brandShortName]);
+
+    let confirmMessage = shellBundle.getFormattedString("setDefaultBrowserConfirm.label",
+                                                        [brandShortName]);
+    let confirmKey = shellBundle.getString("setDefaultBrowserConfirm.accesskey");
+
+    let optionsMessage = shellBundle.getString("setDefaultBrowserOptions.label");
+    let optionsKey = shellBundle.getString("setDefaultBrowserOptions.accesskey");
+
+    let selectedBrowser = win.gBrowser.selectedBrowser;
+    let notificationBox = win.document.getElementById("high-priority-global-notificationbox");
+
+    this._createPopup(win, shellBundle);
+
+    let buttons = [
+      {
+        label: confirmMessage,
+        accessKey: confirmKey,
+        callback: this.setAsDefault.bind(this)
+      },
+      {
+        label: optionsMessage,
+        accessKey: optionsKey,
+        popup: this.OPTIONPOPUP
+      }
+    ];
+
+
+    let iconPixels = win.devicePixelRatio > 1 ? "32" : "16";
+    let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
+    const priority = notificationBox.PRIORITY_INFO_HIGH;
+    let callback = this._onNotificationEvent.bind(this);
+    this._notification = notificationBox.appendNotification(promptMessage, "default-browser",
+                                                            iconURL, priority, buttons,
+                                                            callback);
+    this._notification.persistence = -1;
+  },
+
+  _onNotificationEvent: function(eventType) {
+    if (eventType == "removed") {
+      let doc = this._notification.ownerDocument;
+      let popup = doc.getElementById(this.OPTIONPOPUP);
+      popup.removeEventListener("command", this);
+      popup.remove();
+      delete this._notification;
+    }
+  },
 };
 
 var components = [BrowserGlue, ContentPermissionPrompt];
