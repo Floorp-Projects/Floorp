@@ -65,32 +65,7 @@ template<typename T>
 class DeadlockDetector
 {
 public:
-  /**
-   * ResourceAcquisition
-   * Consists simply of a resource and the calling context from
-   * which it was acquired.  We pack this information together so
-   * that it can be returned back to the caller when a potential
-   * deadlock has been found.
-   */
-  struct ResourceAcquisition
-  {
-    const T* mResource;
-
-    explicit ResourceAcquisition(const T* aResource)
-      : mResource(aResource)
-    {
-    }
-    ResourceAcquisition(const ResourceAcquisition& aFrom)
-      : mResource(aFrom.mResource)
-    {
-    }
-    ResourceAcquisition& operator=(const ResourceAcquisition& aFrom)
-    {
-      mResource = aFrom.mResource;
-      return *this;
-    }
-  };
-  typedef nsTArray<ResourceAcquisition> ResourceAcquisitionArray;
+  typedef nsTArray<const T*> ResourceAcquisitionArray;
 
 private:
   struct OrderingEntry;
@@ -278,8 +253,8 @@ public:
       if (!cycle) {
         NS_RUNTIMEABORT("can't allocate dep. cycle array");
       }
-      cycle->AppendElement(ResourceAcquisition(current->mResource));
-      cycle->AppendElement(ResourceAcquisition(aProposed));
+      cycle->AppendElement(current->mResource);
+      cycle->AppendElement(aProposed);
       return cycle;
     }
     if (InTransitiveClosure(current, proposed)) {
@@ -294,7 +269,7 @@ public:
       // right conditions.
       ResourceAcquisitionArray* cycle = GetDeductionChain(proposed, current);
       // show how acquiring |aProposed| would complete the cycle
-      cycle->AppendElement(ResourceAcquisition(aProposed));
+      cycle->AppendElement(aProposed);
       return cycle;
     }
     // |aLast|, |aProposed| are unordered according to our
@@ -354,7 +329,7 @@ public:
     if (!chain) {
       NS_RUNTIMEABORT("can't allocate dep. cycle array");
     }
-    chain->AppendElement(ResourceAcquisition(aStart->mResource));
+    chain->AppendElement(aStart->mResource);
 
     NS_ASSERTION(GetDeductionChain_Helper(aStart, aTarget, chain),
                  "GetDeductionChain called when there's no deadlock");
@@ -368,14 +343,14 @@ public:
                                 ResourceAcquisitionArray* aChain)
   {
     if (aStart->mOrderedLT.BinaryIndexOf(aTarget) != NoIndex) {
-      aChain->AppendElement(ResourceAcquisition(aTarget->mResource));
+      aChain->AppendElement(aTarget->mResource);
       return true;
     }
 
     index_type i = 0;
     size_type len = aStart->mOrderedLT.Length();
     for (const OrderingEntry* const* it = aStart->mOrderedLT.Elements(); i < len; ++i, ++it) {
-      aChain->AppendElement(ResourceAcquisition((*it)->mResource));
+      aChain->AppendElement((*it)->mResource);
       if (GetDeductionChain_Helper(*it, aTarget, aChain)) {
         return true;
       }
