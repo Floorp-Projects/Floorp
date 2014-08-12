@@ -430,21 +430,21 @@ nsCaret::SetCaretPosition(nsIDOMNode* aNode, int32_t aOffset)
 void
 nsCaret::CheckSelectionLanguageChange()
 {
-  // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
+  if (!IsBidiUI()) {
+    return;
+  }
+
   bool isKeyboardRTL = false;
   nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
-  // if bidiKeyboard->IsLangRTL() fails, there is no way to tell the
-  // keyboard direction, or the user has no right-to-left keyboard
-  // installed, so we never draw the hook.
-  if (bidiKeyboard && NS_SUCCEEDED(bidiKeyboard->IsLangRTL(&isKeyboardRTL)) &&
-      IsBidiUI()) {
-    // Call SelectionLanguageChange on every paint. Mostly it will be a noop
-    // but it should be fast anyway. This guarantees we never paint the caret
-    // at the wrong place.
-    Selection* selection = GetSelectionInternal();
-    if (selection) {
-      selection->SelectionLanguageChange(isKeyboardRTL);
-    }
+  if (bidiKeyboard) {
+    bidiKeyboard->IsLangRTL(&isKeyboardRTL);
+  }
+  // Call SelectionLanguageChange on every paint. Mostly it will be a noop
+  // but it should be fast anyway. This guarantees we never paint the caret
+  // at the wrong place.
+  Selection* selection = GetSelectionInternal();
+  if (selection) {
+    selection->SelectionLanguageChange(isKeyboardRTL);
   }
 }
 
@@ -831,12 +831,18 @@ nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
     aCaretRect->x -= aCaretRect->width;
   }
 
+  // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
   aHookRect->SetEmpty();
+  if (!IsBidiUI()) {
+    return;
+  }
 
   bool isCaretRTL;
   nsIBidiKeyboard* bidiKeyboard = nsContentUtils::GetBidiKeyboard();
-  if (bidiKeyboard && NS_SUCCEEDED(bidiKeyboard->IsLangRTL(&isCaretRTL)) &&
-      IsBidiUI()) {
+  // if bidiKeyboard->IsLangRTL() fails, there is no way to tell the
+  // keyboard direction, or the user has no right-to-left keyboard
+  // installed, so we never draw the hook.
+  if (bidiKeyboard && NS_SUCCEEDED(bidiKeyboard->IsLangRTL(&isCaretRTL))) {
     // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
     // The height of the hook rectangle is the same as the width of the caret
     // rectangle.
