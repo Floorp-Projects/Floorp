@@ -20,8 +20,11 @@ Bug 901520 - [app manager] data store for device
     <script type="application/javascript;version=1.8">
       const Cu = Components.utils;
       Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-      DebuggerServer.init(function () { return true; });
-      DebuggerServer.addBrowserActors();
+
+      if (!DebuggerServer.initialized) {
+        DebuggerServer.init(function () { return true; });
+        DebuggerServer.addBrowserActors();
+      }
 
       function compare(o1, o2, msg) {
         is(JSON.stringify(o1), JSON.stringify(o2), msg);
