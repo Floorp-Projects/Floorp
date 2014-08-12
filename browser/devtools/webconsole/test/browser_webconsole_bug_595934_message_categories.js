@@ -17,7 +17,7 @@ const TESTS = [
   },
   { // #1
     file: "test-bug-595934-imagemap.html",
-    category: "ImageMap",
+    category: "Layout: ImageMap",
     matchString: "shape=\"rect\"",
   },
   { // #2
