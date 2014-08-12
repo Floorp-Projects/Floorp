@@ -216,13 +216,13 @@ struct CommonLayerAttributes {
   Animation[] animations;
   nsIntRegion invalidRegion;
   FrameMetrics metrics;
+  ViewID scrollParentId;
 };
 
 struct ThebesLayerAttributes {
   nsIntRegion validRegion;
 };
 struct ContainerLayerAttributes {
-  ViewID scrollParentId;
   float preXScale;
   float preYScale;
   float inheritedXScale;
