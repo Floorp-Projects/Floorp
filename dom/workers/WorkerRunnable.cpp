@@ -262,29 +262,29 @@ WorkerRunnable::Run()
     return NS_OK;
   }
 
+  if (targetIsWorkerThread &&
+      mWorkerPrivate->AllPendingRunnablesShouldBeCanceled() &&
+      !IsCanceled() && !mCallingCancelWithinRun) {
+
+    // Prevent recursion.
+    mCallingCancelWithinRun = true;
+
+    Cancel();
+
+    MOZ_ASSERT(mCallingCancelWithinRun);
+    mCallingCancelWithinRun = false;
+
+    MOZ_ASSERT(IsCanceled(), "Subclass Cancel() didn't set IsCanceled()!");
+
+    return NS_OK;
+ }
+
+  // Track down the appropriate global to use for the AutoJSAPI/AutoEntryScript.
   nsCOMPtr<nsIGlobalObject> globalObject;
   bool isMainThread = !targetIsWorkerThread && !mWorkerPrivate->GetParent();
   MOZ_ASSERT(isMainThread == NS_IsMainThread());
   nsRefPtr<WorkerPrivate> kungFuDeathGrip;
-
   if (targetIsWorkerThread) {
-    if (mWorkerPrivate->AllPendingRunnablesShouldBeCanceled() &&
-        !IsCanceled() &&
-        !mCallingCancelWithinRun) {
-
-      // Prevent recursion.
-      mCallingCancelWithinRun = true;
-
-      Cancel();
-
-      MOZ_ASSERT(mCallingCancelWithinRun);
-      mCallingCancelWithinRun = false;
-
-      MOZ_ASSERT(IsCanceled(), "Subclass Cancel() didn't set IsCanceled()!");
-
-      return NS_OK;
-    }
-
     globalObject = mWorkerPrivate->GlobalScope();
   }
   else {
