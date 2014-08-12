@@ -103,12 +103,11 @@ interface BluetoothAdapter : EventTarget {
   Promise<void> stopDiscovery();
 
   [NewObject, Throws]
-  Promise<void> pair(DOMString deviceAddress);
+  DOMRequest pair(DOMString deviceAddress);
   [NewObject, Throws]
-  Promise<void> unpair(DOMString deviceAddress);
-
-  sequence<BluetoothDevice> getPairedDevices();
-
+  DOMRequest unpair(DOMString deviceAddress);
+  [NewObject, Throws]
+  DOMRequest getPairedDevices();
   [NewObject, Throws]
   DOMRequest getConnectedDevices(unsigned short serviceUuid);
 

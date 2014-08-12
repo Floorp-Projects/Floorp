@@ -99,17 +99,12 @@ public:
   already_AddRefed<Promise> StartDiscovery(ErrorResult& aRv);
   already_AddRefed<Promise> StopDiscovery(ErrorResult& aRv);
 
-  already_AddRefed<Promise>
+  already_AddRefed<DOMRequest>
     Pair(const nsAString& aDeviceAddress, ErrorResult& aRv);
-  already_AddRefed<Promise>
+  already_AddRefed<DOMRequest>
     Unpair(const nsAString& aDeviceAddress, ErrorResult& aRv);
-
-  /**
-   * Get a list of paired bluetooth devices.
-   *
-   * @param aDevices [out] Devices array to return
-   */
-  void GetPairedDevices(nsTArray<nsRefPtr<BluetoothDevice> >& aDevices);
+  already_AddRefed<DOMRequest>
+    GetPairedDevices(ErrorResult& aRv);
 
   already_AddRefed<Promise> EnableDisable(bool aEnable, ErrorResult& aRv);
   already_AddRefed<Promise> Enable(ErrorResult& aRv);
@@ -166,7 +161,7 @@ private:
   BluetoothAdapter(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
   ~BluetoothAdapter();
 
-  already_AddRefed<Promise>
+  already_AddRefed<mozilla::dom::DOMRequest>
     PairUnpair(bool aPair, const nsAString& aDeviceAddress, ErrorResult& aRv);
 
   bool IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
