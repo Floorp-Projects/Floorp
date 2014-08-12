@@ -334,6 +334,12 @@
     "kind": "flag",
     "description": "Has seen location error"
   },
+  "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Use of SpiderMonkey's deprecated language extensions in web content"
+  },
   "TELEMETRY_PING": {
     "expires_in_version": "never",
     "kind": "exponential",
