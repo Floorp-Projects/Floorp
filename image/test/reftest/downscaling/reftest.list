@@ -4,6 +4,14 @@
 # as long as it's barely noticable visually. When necessary, this can be
 # explicitly allowed via 'fuzzy'/'fuzzy-if' annotations.
 #
+# Many of these tests check primarily that we don't lose rows or columns of
+# pixels when downscaling by making sure that the result isn't too similar to
+# about:blank. A small amount of fuzziness is used to ensure that the tests
+# don't pass because of very slight deviations; passing tests should be
+# substantially different from about:blank. This fuzziness should *not* be
+# removed as doing so would make the tests pass in situations where they
+# shouldn't.
+#
 # IMPORTANT: For robustness, each test should be listed *twice* in this
 # manifest -- once with the high quality downscaling pref disabled, and once
 # with this pref enabled. The pref is set via "default-preferences", so
@@ -19,6 +27,61 @@ default-preferences pref(image.high_quality_downscaling.enabled,false)
 
 fuzzy-if(cocoaWidget,106,31) == downscale-1.html downscale-1-ref.html
 
+fuzzy(5,999) random != downscale-2a.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2b.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2c.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2d.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2e.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2f.html?203,52,left about:blank
+
+fuzzy(5,999) random != downscale-2a.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2b.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2c.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2d.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2e.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2f.html?205,53,left about:blank
+
+fuzzy(5,999) random != downscale-2a.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2b.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2c.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2d.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2e.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2f.html?203,52,right about:blank
+
+fuzzy(5,999) random != downscale-2a.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2b.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2c.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2d.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2e.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2f.html?205,53,right about:blank
+
+fuzzy(5,999) random != downscale-2a.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2b.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2c.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2d.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2e.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2f.html?203,52,top about:blank
+
+fuzzy(5,999) random != downscale-2a.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2b.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2c.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2d.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2e.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2f.html?205,53,top about:blank
+
+fuzzy(5,999) random != downscale-2a.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2b.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2c.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2d.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2e.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2f.html?203,52,bottom about:blank
+
+fuzzy(5,999) random != downscale-2a.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2b.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2c.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2d.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2e.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2f.html?205,53,bottom about:blank
 
 # RUN TESTS WITH HIGH QUALITY DOWNSCALING ENABLED:
 # ================================================
@@ -26,3 +89,59 @@ fuzzy-if(cocoaWidget,106,31) == downscale-1.html downscale-1-ref.html
 default-preferences pref(image.high_quality_downscaling.enabled,true)
 
 fuzzy(31,127) == downscale-1.html downscale-1-ref.html
+
+fuzzy(5,999) random != downscale-2a.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2b.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2c.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2d.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2e.html?203,52,left about:blank
+fuzzy(5,999) random != downscale-2f.html?203,52,left about:blank
+
+fuzzy(5,999) random != downscale-2a.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2b.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2c.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2d.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2e.html?205,53,left about:blank
+fuzzy(5,999) random != downscale-2f.html?205,53,left about:blank
+
+fuzzy(5,999) random != downscale-2a.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2b.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2c.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2d.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2e.html?203,52,right about:blank
+fuzzy(5,999) random != downscale-2f.html?203,52,right about:blank
+
+fuzzy(5,999) random != downscale-2a.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2b.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2c.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2d.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2e.html?205,53,right about:blank
+fuzzy(5,999) random != downscale-2f.html?205,53,right about:blank
+
+fuzzy(5,999) random != downscale-2a.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2b.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2c.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2d.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2e.html?203,52,top about:blank
+fuzzy(5,999) random != downscale-2f.html?203,52,top about:blank
+
+fuzzy(5,999) random != downscale-2a.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2b.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2c.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2d.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2e.html?205,53,top about:blank
+fuzzy(5,999) random != downscale-2f.html?205,53,top about:blank
+
+fuzzy(5,999) random != downscale-2a.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2b.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2c.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2d.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2e.html?203,52,bottom about:blank
+fuzzy(5,999) random != downscale-2f.html?203,52,bottom about:blank
+
+fuzzy(5,999) random != downscale-2a.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2b.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2c.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2d.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2e.html?205,53,bottom about:blank
+fuzzy(5,999) random != downscale-2f.html?205,53,bottom about:blank
