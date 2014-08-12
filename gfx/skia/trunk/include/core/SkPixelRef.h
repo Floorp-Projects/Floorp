@@ -9,10 +9,11 @@
 #define SkPixelRef_DEFINED
 
 #include "SkBitmap.h"
+#include "SkDynamicAnnotations.h"
 #include "SkRefCnt.h"
 #include "SkString.h"
-#include "SkFlattenable.h"
 #include "SkImageInfo.h"
+#include "SkSize.h"
 #include "SkTDArray.h"
 
 //#define xed
@@ -46,7 +47,7 @@ class GrTexture;
 
     This class can be shared/accessed between multiple threads.
 */
-class SK_API SkPixelRef : public SkFlattenable {
+class SK_API SkPixelRef : public SkRefCnt {
 public:
     SK_DECLARE_INST_COUNT(SkPixelRef)
 
@@ -219,18 +220,30 @@ public:
      */
     virtual GrTexture* getTexture() { return NULL; }
 
+    /**
+     *  If any planes or rowBytes is NULL, this should output the sizes and return true
+     *  if it can efficiently return YUV planar data. If it cannot, it should return false.
+     *
+     *  If all planes and rowBytes are not NULL, then it should copy the associated Y,U,V data
+     *  into those planes of memory supplied by the caller. It should validate that the sizes
+     *  match what it expected. If the sizes do not match, it should return false.
+     */
+    bool getYUV8Planes(SkISize sizes[3], void* planes[3], size_t rowBytes[3]) {
+        return this->onGetYUV8Planes(sizes, planes, rowBytes);
+    }
+
     bool readPixels(SkBitmap* dst, const SkIRect* subset = NULL);
 
     /**
      *  Makes a deep copy of this PixelRef, respecting the requested config.
-     *  @param config Desired config.
+     *  @param colorType Desired colortype.
      *  @param subset Subset of this PixelRef to copy. Must be fully contained within the bounds of
      *         of this PixelRef.
      *  @return A new SkPixelRef, or NULL if either there is an error (e.g. the destination could
      *          not be created with the given config), or this PixelRef does not support deep
      *          copies.
      */
-    virtual SkPixelRef* deepCopy(SkBitmap::Config config, const SkIRect* subset = NULL) {
+    virtual SkPixelRef* deepCopy(SkColorType colortype, const SkIRect* subset) {
         return NULL;
     }
 
@@ -249,8 +262,6 @@ public:
      */
     virtual void globalUnref();
 #endif
-
-    SK_DEFINE_FLATTENABLE_TYPE(SkPixelRef)
 
     // Register a listener that may be called the next time our generation ID changes.
     //
@@ -307,6 +318,9 @@ protected:
     // default impl returns NULL.
     virtual SkData* onRefEncodedData();
 
+    // default impl returns false.
+    virtual bool onGetYUV8Planes(SkISize sizes[3], void* planes[3], size_t rowBytes[3]);
+
     /**
      *  Returns the size (in bytes) of the internally allocated memory.
      *  This should be implemented in all serializable SkPixelRef derived classes.
@@ -321,10 +335,6 @@ protected:
         in the constructor, and cannot change during the lifetime of the object.
     */
     SkBaseMutex* mutex() const { return fMutex; }
-
-    // serialization
-    SkPixelRef(SkReadBuffer&, SkBaseMutex*);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
 
     // only call from constructor. Flags this to always be locked, removing
     // the need to grab the mutex and call onLockPixels/onUnlockPixels.
@@ -341,8 +351,8 @@ private:
     LockRec         fRec;
     int             fLockCount;
 
-    mutable uint32_t fGenerationID;
-    mutable bool     fUniqueGenerationID;
+    mutable SkTRacy<uint32_t> fGenerationID;
+    mutable SkTRacy<bool>     fUniqueGenerationID;
 
     SkTDArray<GenIDChangeListener*> fGenIDChangeListeners;  // pointers are owned
 
@@ -363,7 +373,7 @@ private:
     friend class SkBitmap;  // only for cloneGenID
     void cloneGenID(const SkPixelRef&);
 
-    typedef SkFlattenable INHERITED;
+    typedef SkRefCnt INHERITED;
 };
 
 class SkPixelRefFactory : public SkRefCnt {
@@ -374,7 +384,7 @@ public:
      *  the pixelref will ref() the colortable.
      *  On failure return NULL.
      */
-    virtual SkPixelRef* create(const SkImageInfo&, SkColorTable*) = 0;
+    virtual SkPixelRef* create(const SkImageInfo&, size_t rowBytes, SkColorTable*) = 0;
 };
 
 #endif

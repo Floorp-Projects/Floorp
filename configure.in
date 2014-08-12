@@ -4141,7 +4141,6 @@ case "$MOZ_WIDGET_TOOLKIT" in
 
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
-    MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     if test -n "$GNU_CC"; then
@@ -4154,7 +4153,6 @@ cairo-gtk3)
     MOZ_ENABLE_GTK=1
     MOZ_ENABLE_GTK3=1
     MOZ_ENABLE_XREMOTE=1
-    MOZ_WEBGL=1
     MOZ_GL_DEFAULT_PROVIDER=GLX
 
     AC_DEFINE(MOZ_X11)
@@ -4174,7 +4172,6 @@ cairo-gtk2|cairo-gtk2-x11)
     MOZ_ENABLE_GTK=1
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
-    MOZ_WEBGL=1
     MOZ_GL_DEFAULT_PROVIDER=GLX
 
     AC_DEFINE(MOZ_X11)
@@ -4201,7 +4198,6 @@ cairo-qt)
       XT_LIBS=
     fi
 
-    MOZ_WEBGL=1
     USE_FC_FREETYPE=1
     TK_CFLAGS='$(MOZ_QT_CFLAGS)'
     TK_LIBS='$(MOZ_QT_LIBS)'
@@ -4222,7 +4218,6 @@ cairo-cocoa)
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
-    MOZ_WEBGL=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
 
@@ -4243,7 +4238,6 @@ cairo-android)
     MOZ_WIDGET_TOOLKIT=android
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS) $(MOZ_PIXMAN_LIBS)'
-    MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
@@ -4254,7 +4248,6 @@ cairo-gonk)
     MOZ_WIDGET_TOOLKIT=gonk
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS) $(MOZ_PIXMAN_LIBS)'
-    MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
     MOZ_TOUCH=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
@@ -5672,25 +5665,14 @@ x86_64)
   ;;
 esac
 
-MOZ_ARG_DISABLE_BOOL(webgl,
-[  --disable-webgl     Disable building of the WebGL implementation],
-    MOZ_WEBGL_DISABLED=1,
-    MOZ_WEBGL_DISABLED=)
-
 MOZ_ARG_ENABLE_BOOL(require-all-d3dc-versions,
 [  --enable-require-all-d3dc-versions Require all versions of the D3D compiler needed for supported Windows systems.],
     MOZ_REQUIRE_ALL_D3DCS=1,
     MOZ_REQUIRE_ALL_D3DCS=)
 
-if test -n "$MOZ_WEBGL_DISABLED"; then
-  MOZ_WEBGL=
-  MOZ_ANGLE_RENDERER=
-fi
-
-if test -n "$MOZ_WEBGL"; then
-  AC_DEFINE(MOZ_WEBGL)
-fi
-
+# This is potentially set in external mozconfig files; if it's set,
+# then the build exposes the "webgl" context name, which is reserved
+# for conformant implementations.
 if test -n "$MOZ_WEBGL_CONFORMANT"; then
   AC_DEFINE(MOZ_WEBGL_CONFORMANT)
 fi
@@ -8392,7 +8374,6 @@ AC_SUBST(MOZ_SOCIAL)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
-AC_SUBST(MOZ_WEBGL)
 AC_SUBST(MOZ_HELP_VIEWER)
 AC_SUBST(TOOLCHAIN_PREFIX)
 

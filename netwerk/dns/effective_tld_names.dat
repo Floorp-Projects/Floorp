@@ -818,7 +818,14 @@ gob.es
 edu.es
 
 // et : http://en.wikipedia.org/wiki/.et
-*.et
+et
+com.et
+gov.et
+org.et
+edu.et
+biz.et
+name.et
+info.et
 
 // eu : http://en.wikipedia.org/wiki/.eu
 eu
@@ -7673,8 +7680,8 @@ pictures
 // gripe : 2014-03-07 Corn Sunset, LLC
 gripe
 
-// engineering : 2014-03-07 United TLD Holdco Ltd.
-engineering
+// engineer : 2014-03-07 United TLD Holdco Ltd.
+engineer
 
 // associates : 2014-03-07 Baxter Hill, LLC
 associates

@@ -239,7 +239,7 @@ MSG_DEF(JSMSG_CANT_REPORT_AS_NON_EXTENSIBLE, 185, 0, JSEXN_TYPEERR, "proxy can't
 MSG_DEF(JSMSG_SYMBOL_TO_STRING,       186, 0, JSEXN_TYPEERR, "can't convert symbol to string")
 MSG_DEF(JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET, 187, 0, JSEXN_ERR, "Cannot track object allocation, because other tools are already doing so")
 MSG_DEF(JSMSG_INCOMPATIBLE_METHOD,    188, 3, JSEXN_TYPEERR, "{0} {1} called on incompatible {2}")
-MSG_DEF(JSMSG_SYMBOL_TO_PRIMITIVE,    189, 0, JSEXN_TYPEERR, "can't convert symbol object to primitive")
+MSG_DEF(JSMSG_SYMBOL_TO_NUMBER,       189, 0, JSEXN_TYPEERR, "can't convert symbol to number")
 MSG_DEF(JSMSG_NOT_TRACKING_ALLOCATIONS, 190, 1, JSEXN_ERR, "Cannot call {0} without setting trackingAllocationSites to true")
 MSG_DEF(JSMSG_BAD_INDEX,              191, 0, JSEXN_RANGEERR, "invalid or out-of-range index")
 MSG_DEF(JSMSG_SELFHOSTED_TOP_LEVEL_LET,192,0, JSEXN_SYNTAXERR, "self-hosted code cannot contain top-level 'let' declarations")

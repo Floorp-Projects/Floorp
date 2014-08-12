@@ -68,7 +68,7 @@ SkColorFilterImageFilter* SkColorFilterImageFilter::Create(SkColorFilter* cf,
         SkAutoUnref autoUnref(inputColorFilter);
         if (inputColorFilter->asColorMatrix(inputMatrix) && !matrix_needs_clamping(inputMatrix)) {
             SkScalar combinedMatrix[20];
-            mult_color_matrix(inputMatrix, colorMatrix, combinedMatrix);
+            mult_color_matrix(colorMatrix, inputMatrix, combinedMatrix);
             SkAutoTUnref<SkColorFilter> newCF(SkColorMatrixFilter::Create(combinedMatrix));
             return SkNEW_ARGS(SkColorFilterImageFilter, (newCF, input->getInput(0), cropRect));
         }
@@ -78,7 +78,7 @@ SkColorFilterImageFilter* SkColorFilterImageFilter::Create(SkColorFilter* cf,
 
 SkColorFilterImageFilter::SkColorFilterImageFilter(SkColorFilter* cf,
         SkImageFilter* input, const CropRect* cropRect)
-    : INHERITED(input, cropRect), fColorFilter(cf) {
+    : INHERITED(1, &input, cropRect), fColorFilter(cf) {
     SkASSERT(cf);
     SkSafeRef(cf);
 }
