@@ -342,8 +342,9 @@ private:
 
 #ifdef MOZ_WIDGET_GONK
   nsString mLastStatus;
+  nsString mLastStorageStatus;
   void DispatchStatusChangeEvent(nsAString& aStatus);
-  void DispatchStorageStatusChangeEvent(nsAString& aVolumeStatus);
+  void DispatchStorageStatusChangeEvent(nsAString& aStorageStatus);
 #endif
 
   // nsIDOMDeviceStorage.type

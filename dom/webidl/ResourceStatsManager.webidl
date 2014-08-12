@@ -73,7 +73,6 @@ dictionary ResourceStatsAlarmOptions
 [CheckPermissions="resourcestats-manage",
  Pref="dom.resource_stats.enabled",
  AvailableIn="CertifiedApps",
-// FeatureDetectible, // This should be specified after Bug 1009645 is resolved.
  JSImplementation="@mozilla.org/resourceStatsAlarm;1"]
 interface ResourceStatsAlarm
 {
@@ -117,7 +116,6 @@ interface ResourceStatsAlarm
  Pref="dom.resource_stats.enabled",
  Constructor(ResourceType type),
  AvailableIn="CertifiedApps",
-// FeatureDetectible, // This should be specified after Bug 1009645 is resolved.
  JSImplementation="@mozilla.org/resourceStatsManager;1"]
 interface ResourceStatsManager
 {

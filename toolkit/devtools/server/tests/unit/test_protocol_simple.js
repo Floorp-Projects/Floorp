@@ -132,8 +132,18 @@ let RootActor = protocol.ActorClass({
     oneway: true
   }),
 
+  emitFalsyOptions: method(function() {
+    events.emit(this, "falsyOptions", { zero: 0, farce: false });
+  }, {
+    oneway: true
+  }),
+
   events: {
-    "oneway": { a: Arg(0) }
+    "oneway": { a: Arg(0) },
+    "falsyOptions": {
+      zero: Option(0),
+      farce: Option(0)
+    }
   }
 });
 
@@ -223,7 +233,7 @@ function run_test()
       trace.expectReceive({"from":"<actorid>"});
       do_check_true(typeof(ret.option1) === "undefined");
       do_check_true(typeof(ret.option2) === "undefined");
-    }).then(ret => {
+    }).then(() => {
       // Explicitly call an optional argument...
       return rootClient.optionalArgs(5, 10);
     }).then(ret => {
@@ -267,6 +277,18 @@ function run_test()
         deferred.resolve();
       });
       do_check_true(typeof(rootClient.testOneWay("hello")) === "undefined");
+      return deferred.promise;
+    }).then(() => {
+      let deferred = promise.defer();
+      rootClient.on("falsyOptions", res => {
+        trace.expectSend({"type":"emitFalsyOptions", "to":"<actorid>"});
+        trace.expectReceive({"type":"falsyOptions", "farce":false, "zero": 0, "from":"<actorid>"});
+
+        do_check_true(res.zero === 0);
+        do_check_true(res.farce === false);
+        deferred.resolve();
+      });
+      rootClient.emitFalsyOptions();
       return deferred.promise;
     }).then(() => {
       client.close(() => {
