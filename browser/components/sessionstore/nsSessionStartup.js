@@ -115,7 +115,7 @@ SessionStartup.prototype = {
    * @param source The Session State string read from disk.
    * @param parsed The object obtained by parsing |source| as JSON.
    */
-  _onSessionFileRead: function ({source, parsed}) {
+  _onSessionFileRead: function ({source, parsed, noFilesFound}) {
     this._initialized = true;
 
     // Let observers modify the state before it is used
@@ -161,16 +161,16 @@ SessionStartup.prototype = {
         // If the previous session finished writing the final state, we'll
         // assume there was no crash.
         this._previousSessionCrashed = !checkpoints["sessionstore-final-state-write-complete"];
+
       } else {
         // If the Crash Monitor could not load a checkpoints file it will
         // provide null. This could occur on the first run after updating to
         // a version including the Crash Monitor, or if the checkpoints file
         // was removed, or on first startup with this profile, or after Firefox Reset.
 
-        if (!this._initialState) {
-          // We have neither sessionstore.js nor a checkpoints file,
-          // assume that this is a first startup with the profile or after
-          // Firefox Reset.
+        if (noFilesFound) {
+          // There was no checkpoints file and no sessionstore.js or its backups
+          // so we will assume that this was a fresh profile.
           this._previousSessionCrashed = false;
 
         } else {
