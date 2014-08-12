@@ -359,7 +359,7 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
   if (aOpacity == 1.0f && gfxPrefs::LowPrecisionOpacity() < 1.0f) {
     // Background colors are only stored on scrollable layers. Grab
     // the one from the nearest scrollable ancestor layer.
-    for (ContainerLayer* ancestor = GetLayer()->GetParent(); ancestor; ancestor = ancestor->GetParent()) {
+    for (Layer* ancestor = GetLayer(); ancestor; ancestor = ancestor->GetParent()) {
       if (ancestor->GetFrameMetrics().IsScrollable()) {
         backgroundColor = ancestor->GetBackgroundColor();
         break;

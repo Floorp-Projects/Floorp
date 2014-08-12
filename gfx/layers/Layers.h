@@ -1144,6 +1144,28 @@ public:
     }
   }
 
+  void SetBackgroundColor(const gfxRGBA& aColor)
+  {
+    if (mBackgroundColor == aColor) {
+      return;
+    }
+
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) BackgroundColor", this));
+    mBackgroundColor = aColor;
+    Mutated();
+  }
+
+  void SetContentDescription(const std::string& aContentDescription)
+  {
+    if (mContentDescription == aContentDescription) {
+      return;
+    }
+
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ContentDescription", this));
+    mContentDescription = aContentDescription;
+    Mutated();
+  }
+
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
@@ -1174,6 +1196,9 @@ public:
   FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mScrollbarTargetId; }
   ScrollDirection GetScrollbarDirection() { return mScrollbarDirection; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
+  gfxRGBA GetBackgroundColor() const { return mBackgroundColor; }
+  const std::string& GetContentDescription() const { return mContentDescription; }
+
 
   // Note that all lengths in animation data are either in CSS pixels or app
   // units and must be converted to device pixels by the compositor.
@@ -1566,6 +1591,12 @@ protected:
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
   uint64_t mAnimationGeneration;
+  // This is currently set and used only for scrollable container layers.
+  gfxRGBA mBackgroundColor;
+  // A description of the content element corresponding to this frame.
+  // This is empty unless this is a scrollable ContainerLayer and the
+  // apz.printtree pref is turned on.
+  std::string mContentDescription;
 };
 
 /**
@@ -1745,28 +1776,6 @@ public:
     Mutated();
   }
 
-  void SetBackgroundColor(const gfxRGBA& aColor)
-  {
-    if (mBackgroundColor == aColor) {
-      return;
-    }
-
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) BackgroundColor", this));
-    mBackgroundColor = aColor;
-    Mutated();
-  }
-
-  void SetContentDescription(const std::string& aContentDescription)
-  {
-    if (mContentDescription == aContentDescription) {
-      return;
-    }
-
-    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ContentDescription", this));
-    mContentDescription = aContentDescription;
-    Mutated();
-  }
-
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs);
 
   void SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray);
@@ -1782,9 +1791,6 @@ public:
   float GetPreYScale() const { return mPreYScale; }
   float GetInheritedXScale() const { return mInheritedXScale; }
   float GetInheritedYScale() const { return mInheritedYScale; }
-
-  gfxRGBA GetBackgroundColor() const { return mBackgroundColor; }
-  const std::string& GetContentDescription() const { return mContentDescription; }
 
   MOZ_LAYER_DECL_NAME("ContainerLayer", TYPE_CONTAINER)
 
@@ -1871,14 +1877,6 @@ protected:
   // be part of mTransform.
   float mInheritedXScale;
   float mInheritedYScale;
-  // This is currently set and used only for scrollable container layers.
-  // When multi-layer-apz (bug 967844) is implemented, this is likely to move
-  // elsewhere (e.g. to Layer).
-  gfxRGBA mBackgroundColor;
-  // A description of the content element corresponding to this frame.
-  // This is empty unless this ContainerLayer is scrollable and the
-  // apz.printtree pref is turned on.
-  std::string mContentDescription;
   bool mUseIntermediateSurface;
   bool mSupportsComponentAlphaChildren;
   bool mMayHaveReadbackChild;
