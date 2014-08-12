@@ -141,14 +141,24 @@ try {
 
 // OOL conversion paths
 var INT32_MAX = Math.pow(2, 31) - 1;
-function ffiOOLConvertInt(n) { if (n == 40) return INT32_MAX + 1; return 42; }
+function ffiOOLConvertInt(n) { if (n == 40) return valueToConvert; return 42; }
 var f = asmLink(asmCompile('glob', 'imp', USE_ASM + 'var ffi=imp.ffi; function f(i) { i=i|0; return ffi(i >> 0) | 0; } return f'), null, {ffi:ffiOOLConvertInt});
 for (var i = 0; i < 40; i++)
     assertEq(f(i), 42);
+valueToConvert = INT32_MAX + 1;
 assertEq(f(40), INT32_MAX + 1 | 0);
+function testBadConversions(f) {
+    valueToConvert = {valueOf: function () { throw "FAIL"; }};
+    assertThrowsValue(() => f(40), "FAIL");
+    valueToConvert = Symbol();
+    assertThrowsInstanceOf(() => f(40), TypeError);
+}
+testBadConversions(f);
 
-function ffiOOLConvertDouble(n) { if (n == 40) return {valueOf: function() { return 13.37 }}; return 42.5; }
+function ffiOOLConvertDouble(n) { if (n == 40) return valueToConvert; return 42.5; }
 var f = asmLink(asmCompile('glob', 'imp', USE_ASM + 'var ffi=imp.ffi; function f(i) { i=i|0; return +ffi(i >> 0); } return f'), null, {ffi:ffiOOLConvertDouble});
 for (var i = 0; i < 40; i++)
     assertEq(f(i), 42.5);
+valueToConvert = {valueOf: function() { return 13.37 }};
 assertEq(f(40), 13.37);
+testBadConversions(f);

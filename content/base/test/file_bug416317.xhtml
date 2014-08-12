@@ -521,7 +521,7 @@
         var key = +new Date + ":" + Math.random();
 
         function report(item, shouldMatch) {
-          assert( item.mozMatchesSelector(q) === shouldMatch,
+          assert( item.matches(q) === shouldMatch,
                   item + (shouldMatch ? "does not match" : "matches")
                        + " selector '" + q + "'" );
         }

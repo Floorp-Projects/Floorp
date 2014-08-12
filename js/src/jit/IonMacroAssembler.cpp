@@ -1774,7 +1774,7 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition *maybeInput,
         jump(fail);
     }
 
-    // The value is null, undefined, or a symbol in truncation contexts - just emit 0.
+    // The value is null or undefined in truncation contexts - just emit 0.
     if (isNull.used())
         bind(&isNull);
     mov(ImmWord(0), output);

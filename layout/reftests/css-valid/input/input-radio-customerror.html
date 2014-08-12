@@ -2,8 +2,8 @@
 <html class="reftest-wait">
   <link rel='stylesheet' type='text/css' href='style.css'>
   <body onload="document.getElementById('i1').setCustomValidity('foo');
-                if (document.getElementById('i1').mozMatchesSelector(':valid') ||
-                    !document.getElementById('i2').mozMatchesSelector(':valid')) {
+                if (document.getElementById('i1').matches(':valid') ||
+                    !document.getElementById('i2').matches(':valid')) {
                   document.body.textContent='FAIL';
                 } else {
                   document.body.textContent='SUCCESS';

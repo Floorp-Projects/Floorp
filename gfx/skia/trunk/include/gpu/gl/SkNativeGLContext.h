@@ -21,6 +21,7 @@
 #elif defined(SK_BUILD_FOR_WIN32)
     #include <windows.h>
     #include <GL/GL.h>
+    #include "SkWGL.h"
 #endif
 
 class SkNativeGLContext : public SkGLContextHelper {
@@ -58,7 +59,7 @@ public:
     };
 
 protected:
-    virtual const GrGLInterface* createGLContext() SK_OVERRIDE;
+    virtual const GrGLInterface* createGLContext(GrGLStandard forcedGpuAPI) SK_OVERRIDE;
     virtual void destroyGLContext() SK_OVERRIDE;
 
 private:
@@ -78,6 +79,7 @@ private:
     HDC fDeviceContext;
     HGLRC fGlRenderContext;
     static ATOM gWC;
+    SkWGLPbufferContext* fPbufferContext;
 #elif defined(SK_BUILD_FOR_IOS)
     void* fEAGLContext;
 #endif

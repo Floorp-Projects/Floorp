@@ -192,7 +192,7 @@ static bool skip_src_rows(GifFileType* gif, uint8_t* dst, int width, int rowsToS
  *  fixes it.  This makes the output image consistantly deterministic.
  */
 static void sanitize_indexed_bitmap(SkBitmap* bm) {
-    if ((SkBitmap::kIndex8_Config == bm->config()) && !(bm->empty())) {
+    if ((kIndex_8_SkColorType == bm->colorType()) && !(bm->empty())) {
         SkAutoLockPixels alp(*bm);
         if (NULL != bm->getPixels()) {
             SkColorTable* ct = bm->getColorTable();  // Index8 must have it.
@@ -309,15 +309,17 @@ bool SkGIFImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* bm, Mode mode) {
                 imageTop = 0;
             }
 
+#ifdef SK_SUPPORT_LEGACY_IMAGEDECODER_CHOOSER
             // FIXME: We could give the caller a choice of images or configs.
-            if (!this->chooseFromOneChoice(SkBitmap::kIndex8_Config, width, height)) {
+            if (!this->chooseFromOneChoice(kIndex_8_SkColorType, width, height)) {
                 return error_return(*bm, "chooseFromOneChoice");
             }
+#endif
 
             SkScaledBitmapSampler sampler(width, height, this->getSampleSize());
 
-            bm->setConfig(SkBitmap::kIndex8_Config, sampler.scaledWidth(),
-                          sampler.scaledHeight());
+            bm->setInfo(SkImageInfo::Make(sampler.scaledWidth(), sampler.scaledHeight(),
+                                          kIndex_8_SkColorType, kPremul_SkAlphaType));
 
             if (SkImageDecoder::kDecodeBounds_Mode == mode) {
                 return true;

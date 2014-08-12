@@ -11,7 +11,6 @@
 #define SkTemplates_DEFINED
 
 #include "SkTypes.h"
-#include <limits>
 #include <limits.h>
 #include <new>
 
@@ -65,15 +64,6 @@ template <typename D, typename S> static D* SkTAddOffset(S* ptr, size_t byteOffs
         reinterpret_cast<typename SkTConstType<char, SkTIsConst<D>::value>::type*>(ptr) + byteOffset
     );
 }
-
-/** SkTSetBit<N, T>::value is a T with the Nth bit set. */
-template<unsigned N, typename T = uintmax_t> struct SkTSetBit {
-    static const T value = static_cast<T>(1) << N;
-    SK_COMPILE_ASSERT(sizeof(T)*CHAR_BIT > N, SkTSetBit_N_too_large);
-    SK_COMPILE_ASSERT(std::numeric_limits<T>::is_integer, SkTSetBit_T_must_be_integer);
-    SK_COMPILE_ASSERT(!std::numeric_limits<T>::is_signed, SkTSetBit_T_must_be_unsigned);
-    SK_COMPILE_ASSERT(std::numeric_limits<T>::radix == 2, SkTSetBit_T_radix_must_be_2);
-};
 
 /** \class SkAutoTCallVProc
 
@@ -340,7 +330,7 @@ public:
 
     /** Allocates space for 'count' Ts. */
     explicit SkAutoTMalloc(size_t count) {
-        fPtr = (T*)sk_malloc_flags(count * sizeof(T), SK_MALLOC_THROW | SK_MALLOC_TEMP);
+        fPtr = (T*)sk_malloc_flags(count * sizeof(T), SK_MALLOC_THROW);
     }
 
     ~SkAutoTMalloc() {
@@ -355,7 +345,7 @@ public:
     /** Resize the memory area pointed to by the current ptr without preserving contents. */
     void reset(size_t count) {
         sk_free(fPtr);
-        fPtr = (T*)sk_malloc_flags(count * sizeof(T), SK_MALLOC_THROW | SK_MALLOC_TEMP);
+        fPtr = (T*)sk_malloc_flags(count * sizeof(T), SK_MALLOC_THROW);
     }
 
     T* get() const { return fPtr; }
