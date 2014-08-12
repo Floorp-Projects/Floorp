@@ -85,14 +85,14 @@ class DeviceManager(object):
 
     @property
     def debug(self):
-        self._logger.warn("dm.debug is deprecated. Use logLevel.")
+        self._logger.warning("dm.debug is deprecated. Use logLevel.")
         levels = {mozlog.DEBUG: 5, mozlog.INFO: 3, mozlog.WARNING: 2,
                   mozlog.ERROR: 1, mozlog.CRITICAL: 0}
         return levels[self.logLevel]
 
     @debug.setter
     def debug_setter(self, newDebug):
-        self._logger.warn("dm.debug is deprecated. Use logLevel.")
+        self._logger.warning("dm.debug is deprecated. Use logLevel.")
         newDebug = 5 if newDebug > 5 else newDebug # truncate >=5 to 5
         levels = {5: mozlog.DEBUG, 3: mozlog.INFO, 2: mozlog.WARNING,
                   1: mozlog.ERROR, 0: mozlog.CRITICAL}
