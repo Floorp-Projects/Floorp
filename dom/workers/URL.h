@@ -13,6 +13,8 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/URLSearchParams.h"
 
+class nsIPrincipal;
+
 namespace mozilla {
 namespace dom {
 struct objectURLOptions;
@@ -66,6 +68,10 @@ public:
 
   static void
   RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl);
+
+  static nsIPrincipal* GetPrincipalFromURL(const GlobalObject& aGlobal,
+                                           const nsAString& aURL,
+                                           ErrorResult& aError);
 
   void GetHref(nsString& aHref, ErrorResult& aRv) const;
 

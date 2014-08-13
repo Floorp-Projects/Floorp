@@ -51,7 +51,7 @@ h1 .info {
   padding-right: 4px;
   color: #000;
   white-space: nowrap;
-  text-align: right;
+  text-align: end;
   vertical-align: top;
   width: 10%;
 }

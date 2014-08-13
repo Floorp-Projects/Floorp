@@ -306,8 +306,10 @@ ProfilerActor.prototype.requestTypes = {
 
 exports.register = function(handle) {
   handle.addGlobalActor(ProfilerActor, "profilerActor");
+  handle.addTabActor(ProfilerActor, "profilerActor");
 };
 
 exports.unregister = function(handle) {
   handle.removeGlobalActor(ProfilerActor, "profilerActor");
+  handle.removeTabActor(ProfilerActor, "profilerActor");
 };
