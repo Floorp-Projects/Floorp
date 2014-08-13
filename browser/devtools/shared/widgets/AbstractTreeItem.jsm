@@ -427,7 +427,12 @@ AbstractTreeItem.prototype = {
    * Handler for the "dblclick" event on the element displaying this tree item.
    */
   _onDoubleClick: function(e) {
-    this._onArrowClick(e);
+    // Ignore dblclick on the arrow as it has already recived and handled two
+    // click events.
+    if (!e.target.classList.contains("arrow")) {
+      this._onArrowClick(e);
+    }
+
     this.focus();
   },
 
