@@ -4752,21 +4752,24 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
   nsStyleSet *styleSet = mPresShell->StyleSet();
   aContent->OwnerDoc()->FlushPendingLinkUpdates();
 
+  nsRefPtr<nsStyleContext> result;
   if (aContent->IsElement()) {
     if (aState) {
-      return styleSet->ResolveStyleFor(aContent->AsElement(),
-                                       aParentStyleContext,
-                                       aState->mTreeMatchContext);
+      result = styleSet->ResolveStyleFor(aContent->AsElement(),
+                                         aParentStyleContext,
+                                         aState->mTreeMatchContext);
+    } else {
+      result = styleSet->ResolveStyleFor(aContent->AsElement(),
+                                         aParentStyleContext);
     }
-    return styleSet->ResolveStyleFor(aContent->AsElement(), aParentStyleContext);
-
+  } else {
+    NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
+                 "shouldn't waste time creating style contexts for "
+                 "comments and processing instructions");
+    result = styleSet->ResolveStyleForNonElement(aParentStyleContext);
   }
 
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
-               "shouldn't waste time creating style contexts for "
-               "comments and processing instructions");
-
-  return styleSet->ResolveStyleForNonElement(aParentStyleContext);
+  return result.forget();
 }
 
 // MathML Mod - RBS
