@@ -95,7 +95,9 @@ BlockingResourceBase::Print(nsACString& aOut) const
   aOut += " : ";
   aOut += mName;
 
-  if (mAcquired) {
+  bool acquired = IsAcquired();
+
+  if (acquired) {
     fputs(" (currently acquired)\n", stderr);
     aOut += " (currently acquired)\n";
   }
@@ -103,7 +105,7 @@ BlockingResourceBase::Print(nsACString& aOut) const
   fputs(" calling context\n", stderr);
   fputs("  [stack trace unavailable]\n", stderr);
 
-  return mAcquired;
+  return acquired;
 }
 
 
@@ -112,7 +114,11 @@ BlockingResourceBase::BlockingResourceBase(
     BlockingResourceBase::BlockingResourceType aType)
   : mName(aName)
   , mType(aType)
+#ifdef MOZ_CALLSTACK_DISABLED
   , mAcquired(false)
+#else
+  , mAcquired()
+#endif
 {
   NS_ABORT_IF_FALSE(mName, "Name must be nonnull");
   // PR_CallOnce guaranatees that InitStatics is called in a
@@ -211,11 +217,16 @@ BlockingResourceBase::Acquire()
       "FIXME bug 456272: annots. to allow Acquire()ing condvars");
     return;
   }
-  NS_ASSERTION(!mAcquired,
+  NS_ASSERTION(!IsAcquired(),
                "reacquiring already acquired resource");
 
   ResourceChainAppend(ResourceChainFront());
+
+#ifdef MOZ_CALLSTACK_DISABLED
   mAcquired = true;
+#else
+  // TODO(ER): take stack snapshot
+#endif
 }
 
 
@@ -229,7 +240,7 @@ BlockingResourceBase::Release()
   }
 
   BlockingResourceBase* chainFront = ResourceChainFront();
-  NS_ASSERTION(chainFront && mAcquired,
+  NS_ASSERTION(chainFront && IsAcquired(),
                "Release()ing something that hasn't been Acquire()ed");
 
   if (chainFront == this) {
@@ -255,7 +266,7 @@ BlockingResourceBase::Release()
     }
   }
 
-  mAcquired = false;
+  ClearAcquisitionState();
 }
 
 
