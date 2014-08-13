@@ -2,6 +2,7 @@
 // separate process and then load it again in this process, which should be a
 // cache hit.
 
+setCachingEnabled(true);
 if (!isAsmJSCompilationAvailable())
     quit();
 
@@ -9,7 +10,7 @@ if (!isAsmJSCompilationAvailable())
 // bullet.js and not the nestedShell() call, so try first commenting out
 // nestedShell() (and the loadedFromCache assertion) to see if the error
 // reproduces.
-var code = "setIonCheckGraphCoherency(false); load('" + libdir + "bullet.js'); runBullet()";
+var code = "setIonCheckGraphCoherency(false); setCachingEnabled(true); load('" + libdir + "bullet.js'); runBullet()";
 nestedShell("--js-cache", "--no-js-cache-per-process", "--execute=" + code);
 setIonCheckGraphCoherency(false);
 load(libdir + 'bullet.js');
