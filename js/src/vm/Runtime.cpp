@@ -178,6 +178,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     debugMode(false),
     spsProfiler(thisFromCtor()),
     profilingScripts(false),
+    suppressProfilerSampling(false),
     hadOutOfMemory(false),
     haveCreatedContext(false),
     data(nullptr),

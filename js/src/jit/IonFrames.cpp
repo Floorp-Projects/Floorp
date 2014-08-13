@@ -2250,6 +2250,10 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
     if (!rt)
         return true;
 
+    // Don't verify if sampling is being suppressed.
+    if (!rt->isProfilerSamplingEnabled())
+        return true;
+
     if (rt->isHeapMinorCollecting())
         return true;
 
@@ -2257,7 +2261,8 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
 
     // Look up and print bytecode info for the native address.
     JitcodeGlobalEntry entry;
-    jitrt->getJitcodeGlobalTable()->lookupInfallible(returnAddressToFp_, &entry);
+    if (!jitrt->getJitcodeGlobalTable()->lookup(returnAddressToFp_, &entry))
+        return true;
 
     IonSpew(IonSpew_Profiling, "Found nativeToBytecode entry for %p: %p - %p",
             returnAddressToFp_, entry.nativeStartAddr(), entry.nativeEndAddr());
