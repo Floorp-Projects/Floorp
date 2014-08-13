@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsICellBroadcastService.idl"
+
+[scriptable, uuid(f72ced60-21f9-11e4-8896-6fdff2f5c909)]
+interface nsIGonkCellBroadcastService : nsICellBroadcastService
+{
+  /**
+   * Called when a cellbroadcast message has been received by the network.
+   */
+  void notifyMessageReceived(in unsigned long aServiceId,
+                             in DOMString aGsmGeographicalScope,
+                             in unsigned short aMessageCode,
+                             in unsigned short aMessageId,
+                             in DOMString aLanguage,
+                             in DOMString aBody,
+                             in DOMString aMessageClass,
+                             in DOMTimeStamp aTimestamp,
+                             in unsigned long aCdmaServiceCategory,
+                             in boolean aHasEtwsInfo,
+                             in DOMString aEtwsWarningType,
+                             in boolean aEtwsEmergencyUserAlert,
+                             in boolean aEtwsPopup);
+};
