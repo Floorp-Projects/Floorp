@@ -165,3 +165,7 @@ class List(DataType):
 class Int(DataType):
     def convert(self, data):
         return int(data)
+
+class Any(DataType):
+    def convert(self, data):
+        return data
