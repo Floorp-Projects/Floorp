@@ -164,7 +164,7 @@ struct Int32x4 {
 };
 
 template<typename V>
-JSObject *Create(JSContext *cx, typename V::Elem *data);
+JSObject *CreateSimd(JSContext *cx, typename V::Elem *data);
 
 #define DECLARE_SIMD_FLOAT32X4_FUNCTION(Name, Func, Operands, Flags, MIRId)                                       \
 extern bool                                                                                                       \
