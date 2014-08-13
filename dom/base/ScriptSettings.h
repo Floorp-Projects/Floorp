@@ -201,6 +201,8 @@ public:
                   // Note: aCx is mandatory off-main-thread.
                   JSContext* aCx = nullptr);
 
+  ~AutoEntryScript();
+
   void SetWebIDLCallerPrincipal(nsIPrincipal *aPrincipal) {
     mWebIDLCallerPrincipal = aPrincipal;
   }
