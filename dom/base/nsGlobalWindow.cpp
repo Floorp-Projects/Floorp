@@ -2677,13 +2677,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   if (!aState) {
     if (reUseInnerWindow) {
 
-      // The storage objects contain the URL of the window. We have to recreate
-      // them when the innerWindow is reused.
-      newInnerWindow->mLocalStorage = nullptr;
-      newInnerWindow->mSessionStorage = nullptr;
-
       if (newInnerWindow->mDoc != aDocument) {
         newInnerWindow->mDoc = aDocument;
+
+        // The storage objects contain the URL of the window. We have to
+        // recreate them when the innerWindow is reused.
+        newInnerWindow->mLocalStorage = nullptr;
+        newInnerWindow->mSessionStorage = nullptr;
 
         if (newInnerWindow->IsDOMBinding()) {
           WindowBinding::ClearCachedDocumentValue(cx, newInnerWindow);
