@@ -287,6 +287,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     SAFE_OP(NewCallObjectPar)
     SAFE_OP(LambdaPar)
     UNSAFE_OP(ArrayConcat)
+    UNSAFE_OP(ArrayJoin)
     UNSAFE_OP(GetDOMProperty)
     UNSAFE_OP(GetDOMMember)
     UNSAFE_OP(SetDOMProperty)

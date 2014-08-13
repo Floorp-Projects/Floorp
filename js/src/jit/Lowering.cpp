@@ -2759,6 +2759,18 @@ LIRGenerator::visitArrayConcat(MArrayConcat *ins)
 }
 
 bool
+LIRGenerator::visitArrayJoin(MArrayJoin *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_String);
+    JS_ASSERT(ins->array()->type() == MIRType_Object);
+    JS_ASSERT(ins->sep()->type() == MIRType_String);
+
+    LArrayJoin *lir = new(alloc()) LArrayJoin(useRegisterAtStart(ins->array()),
+                                              useRegisterAtStart(ins->sep()));
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitStringSplit(MStringSplit *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Object);
