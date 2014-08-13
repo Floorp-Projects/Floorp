@@ -28,67 +28,67 @@ using namespace js::gc;
 using mozilla::DebugOnly;
 
 JS_PUBLIC_API(void)
-JS_CallValueTracer(JSTracer *trc, Value *valuep, const char *name)
+JS_CallUnbarrieredValueTracer(JSTracer *trc, Value *valuep, const char *name)
 {
     MarkValueUnbarriered(trc, valuep, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallIdTracer(JSTracer *trc, jsid *idp, const char *name)
+JS_CallUnbarrieredIdTracer(JSTracer *trc, jsid *idp, const char *name)
 {
     MarkIdUnbarriered(trc, idp, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallObjectTracer(JSTracer *trc, JSObject **objp, const char *name)
+JS_CallUnbarrieredObjectTracer(JSTracer *trc, JSObject **objp, const char *name)
 {
     MarkObjectUnbarriered(trc, objp, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallStringTracer(JSTracer *trc, JSString **strp, const char *name)
+JS_CallUnbarrieredStringTracer(JSTracer *trc, JSString **strp, const char *name)
 {
     MarkStringUnbarriered(trc, strp, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name)
+JS_CallUnbarrieredScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name)
 {
     MarkScriptUnbarriered(trc, scriptp, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallHeapValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name)
+JS_CallValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name)
 {
     MarkValueUnbarriered(trc, valuep->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallHeapIdTracer(JSTracer *trc, JS::Heap<jsid> *idp, const char *name)
+JS_CallIdTracer(JSTracer *trc, JS::Heap<jsid> *idp, const char *name)
 {
     MarkIdUnbarriered(trc, idp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallHeapObjectTracer(JSTracer *trc, JS::Heap<JSObject *> *objp, const char *name)
+JS_CallObjectTracer(JSTracer *trc, JS::Heap<JSObject *> *objp, const char *name)
 {
     MarkObjectUnbarriered(trc, objp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallHeapStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *name)
+JS_CallStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *name)
 {
     MarkStringUnbarriered(trc, strp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallHeapScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name)
+JS_CallScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name)
 {
     MarkScriptUnbarriered(trc, scriptp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallHeapFunctionTracer(JSTracer *trc, JS::Heap<JSFunction *> *funp, const char *name)
+JS_CallFunctionTracer(JSTracer *trc, JS::Heap<JSFunction *> *funp, const char *name)
 {
     MarkObjectUnbarriered(trc, funp->unsafeGet(), name);
 }

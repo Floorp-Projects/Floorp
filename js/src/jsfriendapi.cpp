@@ -1022,7 +1022,7 @@ JS::ObjectPtr::isAboutToBeFinalized()
 void
 JS::ObjectPtr::trace(JSTracer *trc, const char *name)
 {
-    JS_CallHeapObjectTracer(trc, &value, name);
+    JS_CallObjectTracer(trc, &value, name);
 }
 
 JS_FRIEND_API(JSObject *)

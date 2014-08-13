@@ -800,17 +800,17 @@ struct JsGcTracer : public TraceCallbacks
   virtual void Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
                      void* aClosure) const MOZ_OVERRIDE
   {
-    JS_CallHeapValueTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
+    JS_CallValueTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
   }
   virtual void Trace(JS::Heap<jsid>* aPtr, const char* aName,
                      void* aClosure) const MOZ_OVERRIDE
   {
-    JS_CallHeapIdTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
+    JS_CallIdTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
   }
   virtual void Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
                      void* aClosure) const MOZ_OVERRIDE
   {
-    JS_CallHeapObjectTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
+    JS_CallObjectTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
   }
   virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
                      void* aClosure) const MOZ_OVERRIDE
@@ -820,17 +820,17 @@ struct JsGcTracer : public TraceCallbacks
   virtual void Trace(JS::Heap<JSString*>* aPtr, const char* aName,
                      void* aClosure) const MOZ_OVERRIDE
   {
-    JS_CallHeapStringTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
+    JS_CallStringTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
   }
   virtual void Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
                      void* aClosure) const MOZ_OVERRIDE
   {
-    JS_CallHeapScriptTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
+    JS_CallScriptTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
   }
   virtual void Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
                      void* aClosure) const MOZ_OVERRIDE
   {
-    JS_CallHeapFunctionTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
+    JS_CallFunctionTracer(static_cast<JSTracer*>(aClosure), aPtr, aName);
   }
 };
 

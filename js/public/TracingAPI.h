@@ -155,37 +155,40 @@ class JS_PUBLIC_API(JSTracer)
 // and re-inserted with the correct hash.
 //
 extern JS_PUBLIC_API(void)
-JS_CallValueTracer(JSTracer *trc, JS::Value *valuep, const char *name);
+JS_CallValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallIdTracer(JSTracer *trc, jsid *idp, const char *name);
+JS_CallIdTracer(JSTracer *trc, JS::Heap<jsid> *idp, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallObjectTracer(JSTracer *trc, JSObject **objp, const char *name);
+JS_CallObjectTracer(JSTracer *trc, JS::Heap<JSObject *> *objp, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallStringTracer(JSTracer *trc, JSString **strp, const char *name);
+JS_CallStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name);
+JS_CallScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallHeapValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name);
+JS_CallFunctionTracer(JSTracer *trc, JS::Heap<JSFunction *> *funp, const char *name);
+
+// The following JS_CallUnbarriered*Tracer functions should only be called where
+// you know for sure that a heap post barrier is not required.  Use with extreme
+// caution!
+extern JS_PUBLIC_API(void)
+JS_CallUnbarrieredValueTracer(JSTracer *trc, JS::Value *valuep, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallHeapIdTracer(JSTracer *trc, JS::Heap<jsid> *idp, const char *name);
+JS_CallUnbarrieredIdTracer(JSTracer *trc, jsid *idp, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallHeapObjectTracer(JSTracer *trc, JS::Heap<JSObject *> *objp, const char *name);
+JS_CallUnbarrieredObjectTracer(JSTracer *trc, JSObject **objp, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallHeapStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *name);
+JS_CallUnbarrieredStringTracer(JSTracer *trc, JSString **strp, const char *name);
 
 extern JS_PUBLIC_API(void)
-JS_CallHeapScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name);
-
-extern JS_PUBLIC_API(void)
-JS_CallHeapFunctionTracer(JSTracer *trc, JS::Heap<JSFunction *> *funp, const char *name);
+JS_CallUnbarrieredScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name);
 
 template <typename HashSetEnum>
 inline void
@@ -193,7 +196,7 @@ JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *const &key, 
 {
     JSObject *updated = key;
     trc->setTracingLocation(reinterpret_cast<void *>(&const_cast<JSObject *&>(key)));
-    JS_CallObjectTracer(trc, &updated, name);
+    JS_CallUnbarrieredObjectTracer(trc, &updated, name);
     if (updated != key)
         e.rekeyFront(key, updated);
 }
