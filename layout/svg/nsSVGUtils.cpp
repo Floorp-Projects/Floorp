@@ -609,7 +609,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
    */
   if (clipPathFrame && isTrivialClip) {
     gfx->Save();
-    clipPathFrame->ClipPaint(aContext, aFrame, matrix);
+    clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, matrix);
   }
 
   /* Paint the child */
@@ -661,7 +661,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
   if (clipPathFrame && !isTrivialClip) {
     gfx->PushGroup(gfxContentType::COLOR_ALPHA);
 
-    nsresult rv = clipPathFrame->ClipPaint(aContext, aFrame, matrix);
+    nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, matrix);
     clipMaskSurface = gfx->PopGroup();
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {

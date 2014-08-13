@@ -34,6 +34,8 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOpti
     usesSimdCached_(false),
     minAsmJSHeapLength_(AsmJSAllocationGranularity),
     modifiesFrameArguments_(false),
+    instrumentedProfiling_(false),
+    instrumentedProfilingIsCached_(false),
     options(options)
 { }
 
