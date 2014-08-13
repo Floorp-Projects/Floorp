@@ -522,8 +522,8 @@ var shell = {
         // based on tab's coordinate. So get the actual offsets between shell and evt.target.
         let elt = evt.target;
         let win = elt.ownerDocument.defaultView;
-        let offsetX = win.mozInnerScreenX;
-        let offsetY = win.mozInnerScreenY;
+        let offsetX = win.mozInnerScreenX - window.mozInnerScreenX;
+        let offsetY = win.mozInnerScreenY - window.mozInnerScreenY;
 
         let rect = elt.getBoundingClientRect();
         offsetX += rect.left;
