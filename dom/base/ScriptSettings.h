@@ -122,7 +122,7 @@ private:
  * fail. This prevents system code from accidentally triggering script
  * execution at inopportune moments via surreptitious getters and proxies.
  */
-class AutoJSAPI {
+class MOZ_STACK_CLASS AutoJSAPI {
 public:
   // Trivial constructor. One of the Init functions must be called before
   // accessing the JSContext through cx().
