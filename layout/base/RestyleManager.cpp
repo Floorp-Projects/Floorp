@@ -719,6 +719,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       // the style resolution we will do for the frame construction
       // happens async when we're not in an animation restyle already,
       // problems could arise.
+      // We could also have problems with triggering of CSS transitions
+      // on elements whose frames are reconstructed, since we depend on
+      // the reconstruction happening synchronously.
       FrameConstructor()->RecreateFramesForContent(content, false);
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
