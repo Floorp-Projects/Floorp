@@ -17,6 +17,7 @@
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 #include "nsRefPtrHashtable.h"
+#include "nsCSSPseudoElements.h"
 
 class nsIFrame;
 class nsStyleChangeList;
@@ -161,6 +162,24 @@ public:
         MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentafter);
         mAfterPseudoContexts.Put(aContent->GetParent(), aStyleContext);
       }
+    }
+
+    nsStyleContext* Get(nsIContent* aContent,
+                        nsCSSPseudoElements::Type aPseudoType) {
+      MOZ_ASSERT(aContent);
+      if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+        return mElementContexts.GetWeak(aContent);
+      }
+      if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
+        MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentbefore);
+        return mBeforePseudoContexts.GetWeak(aContent->GetParent());
+      }
+      if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+        MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentafter);
+        return mAfterPseudoContexts.GetWeak(aContent->GetParent());
+      }
+      MOZ_ASSERT(false, "unexpected aPseudoType");
+      return nullptr;
     }
   private:
     ReframingStyleContextTable mElementContexts;
