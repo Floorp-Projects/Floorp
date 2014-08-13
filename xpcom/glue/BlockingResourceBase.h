@@ -88,6 +88,8 @@ public:
   typedef DeadlockDetector<BlockingResourceBase> DDT;
 
 protected:
+  typedef bool AcquisitionState;
+
   /**
    * BlockingResourceBase
    * Initialize this blocking resource.  Also hooks the resource into
@@ -184,7 +186,7 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  bool GetAcquisitionState()
+  AcquisitionState GetAcquisitionState()
   {
     return mAcquired;
   }
@@ -195,7 +197,7 @@ protected:
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  void SetAcquisitionState(bool aAcquisitionState)
+  void SetAcquisitionState(const AcquisitionState& aAcquisitionState)
   {
     mAcquired = aAcquisitionState;
   }
@@ -227,7 +229,7 @@ private:
    * mAcquired
    * Indicates if this resource is currently acquired.
    */
-  bool mAcquired;
+  AcquisitionState mAcquired;
 
   /**
    * sCallOnce
