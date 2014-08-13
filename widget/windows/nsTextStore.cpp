@@ -23,6 +23,7 @@
 #include "mozilla/WindowsVersion.h"
 
 #define INPUTSCOPE_INIT_GUID
+#define TEXTATTRS_INIT_GUID
 #include "nsTextStore.h"
 
 using namespace mozilla;
@@ -255,6 +256,105 @@ GetGUIDNameStr(REFGUID aGUID)
   }
 
   return NS_ConvertUTF16toUTF8(str);
+}
+
+static nsCString
+GetGUIDNameStrWithTable(REFGUID aGUID)
+{
+#define RETURN_GUID_NAME(aNamedGUID) \
+  if (IsEqualGUID(aGUID, aNamedGUID)) { \
+    return NS_LITERAL_CSTRING(#aNamedGUID); \
+  }
+
+  RETURN_GUID_NAME(GUID_PROP_INPUTSCOPE)
+  RETURN_GUID_NAME(TSATTRID_OTHERS)
+  RETURN_GUID_NAME(TSATTRID_Font)
+  RETURN_GUID_NAME(TSATTRID_Font_FaceName)
+  RETURN_GUID_NAME(TSATTRID_Font_SizePts)
+  RETURN_GUID_NAME(TSATTRID_Font_Style)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Bold)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Italic)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_SmallCaps)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Capitalize)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Uppercase)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Lowercase)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation_LasVegasLights)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation_BlinkingBackground)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation_SparkleText)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation_MarchingBlackAnts)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation_MarchingRedAnts)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation_Shimmer)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation_WipeDown)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Animation_WipeRight)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Emboss)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Engrave)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Hidden)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Kerning)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Outlined)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Position)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Protected)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Shadow)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Spacing)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Weight)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Height)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Underline)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Underline_Single)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Underline_Double)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Strikethrough)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Strikethrough_Single)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Strikethrough_Double)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Overline)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Overline_Single)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Overline_Double)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Blink)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Subscript)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Superscript)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_Color)
+  RETURN_GUID_NAME(TSATTRID_Font_Style_BackgroundColor)
+  RETURN_GUID_NAME(TSATTRID_Text)
+  RETURN_GUID_NAME(TSATTRID_Text_VerticalWriting)
+  RETURN_GUID_NAME(TSATTRID_Text_RightToLeft)
+  RETURN_GUID_NAME(TSATTRID_Text_Orientation)
+  RETURN_GUID_NAME(TSATTRID_Text_Language)
+  RETURN_GUID_NAME(TSATTRID_Text_ReadOnly)
+  RETURN_GUID_NAME(TSATTRID_Text_EmbeddedObject)
+  RETURN_GUID_NAME(TSATTRID_Text_Alignment)
+  RETURN_GUID_NAME(TSATTRID_Text_Alignment_Left)
+  RETURN_GUID_NAME(TSATTRID_Text_Alignment_Right)
+  RETURN_GUID_NAME(TSATTRID_Text_Alignment_Center)
+  RETURN_GUID_NAME(TSATTRID_Text_Alignment_Justify)
+  RETURN_GUID_NAME(TSATTRID_Text_Link)
+  RETURN_GUID_NAME(TSATTRID_Text_Hyphenation)
+  RETURN_GUID_NAME(TSATTRID_Text_Para)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_FirstLineIndent)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_LeftIndent)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_RightIndent)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_SpaceAfter)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_SpaceBefore)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_LineSpacing)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_LineSpacing_Single)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_LineSpacing_OnePtFive)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_LineSpacing_Double)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_LineSpacing_AtLeast)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_LineSpacing_Exactly)
+  RETURN_GUID_NAME(TSATTRID_Text_Para_LineSpacing_Multiple)
+  RETURN_GUID_NAME(TSATTRID_List)
+  RETURN_GUID_NAME(TSATTRID_List_LevelIndel)
+  RETURN_GUID_NAME(TSATTRID_List_Type)
+  RETURN_GUID_NAME(TSATTRID_List_Type_Bullet)
+  RETURN_GUID_NAME(TSATTRID_List_Type_Arabic)
+  RETURN_GUID_NAME(TSATTRID_List_Type_LowerLetter)
+  RETURN_GUID_NAME(TSATTRID_List_Type_UpperLetter)
+  RETURN_GUID_NAME(TSATTRID_List_Type_LowerRoman)
+  RETURN_GUID_NAME(TSATTRID_List_Type_UpperRoman)
+  RETURN_GUID_NAME(TSATTRID_App)
+  RETURN_GUID_NAME(TSATTRID_App_IncorrectSpelling)
+  RETURN_GUID_NAME(TSATTRID_App_IncorrectGrammar)
+
+#undef RETURN_GUID_NAME
+
+  GetGUIDNameStr(aGUID);
 }
 
 static nsCString
@@ -504,22 +604,25 @@ GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE &aDispAttr)
 #endif // #ifdef PR_LOGGING
 
 nsTextStore::nsTextStore()
- : mContent(mComposition, mSelection)
+  : mContent(mComposition, mSelection)
+  , mEditCookie(0)
+  , mIPProfileCookie(TF_INVALID_COOKIE)
+  , mLangProfileCookie(TF_INVALID_COOKIE)
+  , mSinkMask(0)
+  , mLock(0)
+  , mLockQueued(0)
+  , mRequestedAttrValues(false)
+  , mIsRecordingActionsWithoutLock(false)
+  , mPendingOnSelectionChange(false)
+  , mPendingOnLayoutChange(false)
+  , mNativeCaretIsCreated(false)
+  , mIsIMM_IME(false)
+  , mOnActivatedCalled(false)
 {
-  mEditCookie = 0;
-  mIPProfileCookie = TF_INVALID_COOKIE;
-  mLangProfileCookie = TF_INVALID_COOKIE;
-  mSinkMask = 0;
-  mLock = 0;
-  mLockQueued = 0;
-  mInputScopeDetected = false;
-  mInputScopeRequested = false;
-  mIsRecordingActionsWithoutLock = false;
-  mPendingOnSelectionChange = false;
-  mPendingOnLayoutChange = false;
-  mNativeCaretIsCreated = false;
-  mIsIMM_IME = false;
-  mOnActivatedCalled = false;
+  for (int32_t i = 0; i < NUM_OF_SUPPORTED_ATTRS; i++) {
+    mRequestedAttrs[i] = false;
+  }
+
   // We hope that 5 or more actions don't occur at once.
   mPendingActions.SetCapacity(5);
 
@@ -2100,15 +2203,41 @@ nsTextStore::SetInputScope(const nsString& aHTMLInputType)
   }
 }
 
+int32_t
+nsTextStore::GetRequestedAttrIndex(const TS_ATTRID& aAttrID)
+{
+  if (IsEqualGUID(aAttrID, GUID_PROP_INPUTSCOPE)) {
+    return eInputScope;
+  }
+  if (IsEqualGUID(aAttrID, TSATTRID_Text_VerticalWriting)) {
+    return eTextVerticalWriting;
+  }
+  return eNotSupported;
+}
+
+TS_ATTRID
+nsTextStore::GetAttrID(int32_t aIndex)
+{
+  switch (aIndex) {
+    case eInputScope:
+      return GUID_PROP_INPUTSCOPE;
+    case eTextVerticalWriting:
+      return TSATTRID_Text_VerticalWriting;
+    default:
+      MOZ_CRASH("Invalid index? Or not implemented yet?");
+      return GUID_NULL;
+  }
+}
+
 HRESULT
-nsTextStore::ProcessScopeRequest(DWORD dwFlags,
-                                 ULONG cFilterAttrs,
-                                 const TS_ATTRID *paFilterAttrs)
+nsTextStore::HandleRequestAttrs(DWORD aFlags,
+                                ULONG aFilterCount,
+                                const TS_ATTRID* aFilterAttrs)
 {
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p nsTextStore::ProcessScopeRequest(dwFlags=%s, "
-          "cFilterAttrs=%ld",
-          this, GetFindFlagName(dwFlags).get(), cFilterAttrs));
+         ("TSF: 0x%p nsTextStore::HandleRequestAttrs(aFlags=%s, "
+          "aFilterCount=%u)",
+          this, GetFindFlagName(aFlags).get(), aFilterCount));
 
   // This is a little weird! RequestSupportedAttrs gives us advanced notice
   // of a support query via RetrieveRequestedAttrs for a specific attribute.
@@ -2116,26 +2245,19 @@ nsTextStore::ProcessScopeRequest(DWORD dwFlags,
   // support, but the text service will only want the input scope object
   // returned in RetrieveRequestedAttrs if the dwFlags passed in here contains
   // TS_ATTR_FIND_WANT_VALUE.
-  mInputScopeDetected = mInputScopeRequested = false;
+  for (int32_t i = 0; i < NUM_OF_SUPPORTED_ATTRS; i++) {
+    mRequestedAttrs[i] = false;
+  }
+  mRequestedAttrValues = !!(aFlags & TS_ATTR_FIND_WANT_VALUE);
 
-  // Currently we only support GUID_PROP_INPUTSCOPE
-  for (uint32_t idx = 0; idx < cFilterAttrs; ++idx) {
+  for (uint32_t i = 0; i < aFilterCount; i++) {
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::ProcessScopeRequest() "
+           ("TSF: 0x%p   nsTextStore::HandleRequestAttrs(), "
             "requested attr=%s",
-            this, GetCLSIDNameStr(paFilterAttrs[idx]).get()));
-    if (IsEqualGUID(paFilterAttrs[idx], GUID_PROP_INPUTSCOPE)) {
-      PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-             ("TSF: 0x%p   nsTextStore::ProcessScopeRequest() "
-              "GUID_PROP_INPUTSCOPE queried", this));
-      mInputScopeDetected = true;
-      if (dwFlags & TS_ATTR_FIND_WANT_VALUE) {
-        PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-               ("TSF: 0x%p   nsTextStore::ProcessScopeRequest() "
-                "TS_ATTR_FIND_WANT_VALUE specified", this));
-        mInputScopeRequested = true;
-      }
-      break;
+            this, GetGUIDNameStrWithTable(aFilterAttrs[i]).get()));
+    int32_t index = GetRequestedAttrIndex(aFilterAttrs[i]);
+    if (index != eNotSupported) {
+      mRequestedAttrs[index] = true;
     }
   }
   return S_OK;
@@ -2151,7 +2273,7 @@ nsTextStore::RequestSupportedAttrs(DWORD dwFlags,
           "cFilterAttrs=%lu)",
           this, GetFindFlagName(dwFlags).get(), cFilterAttrs));
 
-  return ProcessScopeRequest(dwFlags, cFilterAttrs, paFilterAttrs);
+  return HandleRequestAttrs(dwFlags, cFilterAttrs, paFilterAttrs);
 }
 
 STDMETHODIMP
@@ -2165,8 +2287,8 @@ nsTextStore::RequestAttrsAtPosition(LONG acpPos,
           "cFilterAttrs=%lu, dwFlags=%s)",
           this, acpPos, cFilterAttrs, GetFindFlagName(dwFlags).get()));
 
-  return ProcessScopeRequest(dwFlags | TS_ATTR_FIND_WANT_VALUE,
-                             cFilterAttrs, paFilterAttrs);
+  return HandleRequestAttrs(dwFlags | TS_ATTR_FIND_WANT_VALUE,
+                            cFilterAttrs, paFilterAttrs);
 }
 
 STDMETHODIMP
@@ -2217,38 +2339,76 @@ nsTextStore::RetrieveRequestedAttrs(ULONG ulCount,
                                     TS_ATTRVAL *paAttrVals,
                                     ULONG *pcFetched)
 {
-  if (!pcFetched || !ulCount || !paAttrVals) {
+  if (!pcFetched || !paAttrVals) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p nsTextStore::RetrieveRequestedAttrs() FAILED due to "
             "null argument", this));
     return E_INVALIDARG;
   }
 
-  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p   nsTextStore::RetrieveRequestedAttrs() called "
-          "ulCount=%d", this, ulCount));
-
-  if (mInputScopeDetected || mInputScopeRequested) {
-    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-           ("TSF: 0x%p   nsTextStore::RetrieveRequestedAttrs() for "
-            "GUID_PROP_INPUTSCOPE: "
-            "mInputScopeDetected=%s mInputScopeRequested=%s",
-            this, GetBoolName(mInputScopeDetected),
-            GetBoolName(mInputScopeRequested)));
-
-    paAttrVals->idAttr = GUID_PROP_INPUTSCOPE;
-    paAttrVals->dwOverlapId = 0;
-    paAttrVals->varValue.vt = VT_EMPTY;
-    *pcFetched = 1;
-
-    if (mInputScopeRequested) {
-      paAttrVals->varValue.vt = VT_UNKNOWN;
-      nsRefPtr<IUnknown> inputScope = new InputScopeImpl(mInputScopes);
-      paAttrVals->varValue.punkVal = inputScope.forget().take();
+  ULONG expectedCount = 0;
+  for (int32_t i = 0; i < NUM_OF_SUPPORTED_ATTRS; i++) {
+    if (mRequestedAttrs[i]) {
+      expectedCount++;
     }
+  }
+  if (ulCount < expectedCount) {
+    PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+           ("TSF: 0x%p nsTextStore::RetrieveRequestedAttrs() FAILED due to "
+            "not enough count ulCount=%u, expectedCount=%u",
+            this, ulCount, expectedCount));
+    return E_INVALIDARG;
+  }
 
-    mInputScopeDetected = mInputScopeRequested = false;
-    return S_OK;
+  PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+         ("TSF: 0x%p nsTextStore::RetrieveRequestedAttrs() called "
+          "ulCount=%d, mRequestedAttrValues=%s",
+          this, ulCount, GetBoolName(mRequestedAttrValues)));
+
+  int32_t count = 0;
+  for (int32_t i = 0; i < NUM_OF_SUPPORTED_ATTRS; i++) {
+    if (!mRequestedAttrs[i]) {
+      continue;
+    }
+    mRequestedAttrs[i] = false;
+
+    TS_ATTRID attrID = GetAttrID(i);
+
+    PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
+           ("TSF: 0x%p   nsTextStore::RetrieveRequestedAttrs() for %s",
+            this, GetGUIDNameStrWithTable(attrID).get()));
+
+    paAttrVals[count].idAttr = attrID;
+    paAttrVals[count].dwOverlapId = 0;
+
+    if (!mRequestedAttrValues) {
+      paAttrVals[count].varValue.vt = VT_EMPTY;
+    } else {
+      switch (i) {
+        case eInputScope: {
+          paAttrVals[count].varValue.vt = VT_UNKNOWN;
+          nsRefPtr<IUnknown> inputScope = new InputScopeImpl(mInputScopes);
+          paAttrVals[count].varValue.punkVal = inputScope.forget().take();
+          break;
+        }
+        case eTextVerticalWriting:
+          // Currently, we don't support vertical writing mode.
+          paAttrVals[count].varValue.vt = VT_BOOL;
+          paAttrVals[count].varValue.boolVal = VARIANT_FALSE;
+          break;
+        default:
+          MOZ_CRASH("Invalid index? Or not implemented yet?");
+          break;
+      }
+    }
+    count++;
+  }
+
+  mRequestedAttrValues = false;
+
+  if (count) {
+    *pcFetched = count;
+    return NS_OK;
   }
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
