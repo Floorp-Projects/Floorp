@@ -83,6 +83,9 @@ class InlineScriptTree {
     bool isOutermostCaller() const {
         return caller_ == nullptr;
     }
+    bool hasCaller() const {
+        return caller_ != nullptr;
+    }
     InlineScriptTree *outermostCaller() {
         if (isOutermostCaller())
             return this;
@@ -97,11 +100,26 @@ class InlineScriptTree {
         return script_;
     }
 
-    InlineScriptTree *children() const {
+    bool hasChildren() const {
+        return children_ != nullptr;
+    }
+    InlineScriptTree *firstChild() const {
+        JS_ASSERT(hasChildren());
         return children_;
     }
+
+    bool hasNextCallee() const {
+        return nextCallee_ != nullptr;
+    }
     InlineScriptTree *nextCallee() const {
+        JS_ASSERT(hasNextCallee());
         return nextCallee_;
+    }
+
+    unsigned depth() const {
+        if (isOutermostCaller())
+            return 1;
+        return 1 + caller_->depth();
     }
 };
 
