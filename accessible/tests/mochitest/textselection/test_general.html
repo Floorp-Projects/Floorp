@@ -111,7 +111,7 @@
 
     function changeDOMSelection(aID, aNodeID1, aNodeOffset1,
                                 aNodeID2, aNodeOffset2,
-                                aStartOffset, aEndOffset)
+                                aTests)
     {
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
@@ -130,15 +130,18 @@
 
       this.finalCheck = function changeDOMSelection_finalCheck()
       {
-        is(this.hyperText.selectionCount, 1,
-           "setSelectionBounds: Wrong selection count for " + aID);
-        var startOffset = {}, endOffset = {};
-        this.hyperText.getSelectionBounds(0, startOffset, endOffset);
+        for (var i = 0; i < aTests.length; i++) {
+          var text = getAccessible(aTests[i][0], nsIAccessibleText);
+          is(text.selectionCount, 1,
+             "setSelectionBounds: Wrong selection count for " + aID);
+          var startOffset = {}, endOffset = {};
+          text.getSelectionBounds(0, startOffset, endOffset);
 
-        is(startOffset.value, aStartOffset,
-           "setSelectionBounds: Wrong start offset for " + aID);
-        is(endOffset.value, aEndOffset,
-           "setSelectionBounds: Wrong end offset for " + aID);
+          is(startOffset.value, aTests[i][1],
+             "setSelectionBounds: Wrong start offset for " + aID);
+          is(endOffset.value, aTests[i][2],
+             "setSelectionBounds: Wrong end offset for " + aID);
+        }
       }
 
       this.getID = function changeDOMSelection_getID()
@@ -179,7 +182,10 @@
       gQueue.push(new synthFocus("textarea", onfocusEventSeq("textarea")));
       gQueue.push(new changeSelection("textarea", 1, 3));
 
-      gQueue.push(new changeDOMSelection("c1", "c1_span1", 0, "c1_span2", 0, 2, 2));
+      gQueue.push(new changeDOMSelection("c1", "c1_span1", 0, "c1_span2", 0,
+                                         [["c1", 2, 2]]));
+      gQueue.push(new changeDOMSelection("c2", "c2", 0, "c2_div2", 1,
+                                         [["c2", 0, 3], ["c2_div2", 0, 2]]));
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -209,6 +215,7 @@
   <input id="textbox" value="hello"/>
   <textarea id="textarea">hello</textarea>
   <div id="c1">hi<span id="c1_span1"></span><span id="c1_span2"></span>hi</div>
+  <div id="c2">hi<div id="c2_div2">hi</div></div>
 
 </body>
 </html>
