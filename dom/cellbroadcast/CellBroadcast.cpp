@@ -9,7 +9,7 @@
 #include "nsIDOMMozCellBroadcastMessage.h"
 #include "nsServiceManagerUtils.h"
 
-#define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
+#define NS_CELLBROADCASTSERVICE_CONTRACTID "@mozilla.org/cellbroadcast/gonkservice;1"
 
 using namespace mozilla::dom;
 
@@ -58,34 +58,39 @@ CellBroadcast::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsInnerWindow());
 
-  nsCOMPtr<nsICellBroadcastProvider> provider =
-    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-  if (!provider) {
+  nsCOMPtr<nsICellBroadcastService> service =
+    do_GetService(NS_CELLBROADCASTSERVICE_CONTRACTID);
+  if (!service) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  nsRefPtr<CellBroadcast> cb = new CellBroadcast(aWindow, provider);
+  nsRefPtr<CellBroadcast> cb = new CellBroadcast(aWindow, service);
   return cb.forget();
 }
 
 CellBroadcast::CellBroadcast(nsPIDOMWindow *aWindow,
-                             nsICellBroadcastProvider *aProvider)
+                             nsICellBroadcastService *aService)
   : DOMEventTargetHelper(aWindow)
-  , mProvider(aProvider)
 {
   mListener = new Listener(this);
-  DebugOnly<nsresult> rv = mProvider->RegisterCellBroadcastMsg(mListener);
+  DebugOnly<nsresult> rv = aService->RegisterListener(mListener);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Failed registering Cell Broadcast callback with provider");
+                   "Failed registering Cell Broadcast callback");
 }
 
 CellBroadcast::~CellBroadcast()
 {
-  MOZ_ASSERT(mProvider && mListener);
+  MOZ_ASSERT(mListener);
 
   mListener->Disconnect();
-  mProvider->UnregisterCellBroadcastMsg(mListener);
+  nsCOMPtr<nsICellBroadcastService> service =
+    do_GetService(NS_CELLBROADCASTSERVICE_CONTRACTID);
+  if (service) {
+    service->UnregisterListener(mListener);
+  }
+
+  mListener = nullptr;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(CellBroadcast, DOMEventTargetHelper)
