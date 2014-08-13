@@ -34,11 +34,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=625289
   }
   .o { overflow: hidden }
   .n { display: none }
+
+  #fline { color: blue; font-size: 20px; width: 800px; }
+  #fline::first-line { color: yellow }
+  #fline.narrow { width: 50px }
+  #fline i { transition: color linear 1s }
   </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625289">Mozilla Bug 625289</a>
 <div id="container"></div>
+<div id="fline">
+  This text has an <i>i element</i> in it.
+</div>
 <pre id="test">
 <script>
 "use strict";
@@ -200,6 +208,56 @@ var tests = [
 
 for (var testidx in tests) {
   do_test(tests[testidx]);
+}
+
+var fline = document.getElementById("fline");
+var fline_i_cs = getComputedStyle(fline.firstElementChild, "");
+// Note that the color in the ::first-line is never used in the test
+// since we avoid reporting ::first-line data in getComputedStyle.
+// However, if we were to start a transition (incorectly), that would
+// show up in getComputedStyle.
+var COLOR_IN_LATER_LINES = "rgb(0, 0, 255)";
+
+function do_firstline_test(test) {
+  if (test.widening) {
+    fline.classList.add("narrow");
+    is (fline_i_cs.color, COLOR_IN_LATER_LINES, "initial color");
+  } else {
+    is (fline_i_cs.color, COLOR_IN_LATER_LINES, "initial color");
+  }
+
+  if (test.widening) {
+    fline.classList.remove("narrow");
+  } else {
+    fline.classList.add("narrow");
+  }
+
+  if (test.set_overflow) {
+    fline.classList.add("o");
+  }
+
+  advance_clock(100);
+
+  if (test.widening) {
+    is (fline_i_cs.color, COLOR_IN_LATER_LINES,
+        "::first-line changes don't trigger transitions");
+  } else {
+    is (fline_i_cs.color, COLOR_IN_LATER_LINES,
+        "::first-line changes don't trigger transitions");
+  }
+
+  fline.removeAttribute("class");
+}
+
+var firstline_tests = [
+  { widening: true, set_overflow: false },
+  { widening: false, set_overflow: false },
+  { widening: true, set_overflow: true },
+  { widening: false, set_overflow: true },
+];
+
+for (var firstline_test_idx in firstline_tests) {
+  do_firstline_test(firstline_tests[firstline_test_idx]);
 }
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
