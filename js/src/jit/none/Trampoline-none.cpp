@@ -35,9 +35,9 @@ uint32_t FrameSizeClass::frameSize() const { MOZ_CRASH(); }
 
 void DispatchIonCache::initializeAddCacheState(LInstruction *, AddCacheState *) { MOZ_CRASH(); }
 
-void MacroAssembler::PushRegsInMask(RegisterSet) { MOZ_CRASH(); }
+void MacroAssembler::PushRegsInMask(RegisterSet, FloatRegisterSet) { MOZ_CRASH(); }
 void MacroAssembler::clampDoubleToUint8(FloatRegister, Register) { MOZ_CRASH(); }
-void MacroAssembler::PopRegsInMaskIgnore(RegisterSet, RegisterSet) { MOZ_CRASH(); }
+void MacroAssembler::PopRegsInMaskIgnore(RegisterSet, RegisterSet, FloatRegisterSet) { MOZ_CRASH(); }
 void MacroAssembler::alignFrameForICArguments(AfterICSaveLive &) { MOZ_CRASH(); }
 void MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive &) { MOZ_CRASH(); }
 
