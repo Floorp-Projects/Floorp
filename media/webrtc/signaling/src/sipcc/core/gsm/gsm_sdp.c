@@ -3485,6 +3485,27 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                             payload_info->audio.bitrate = 32000;
                             break;
 
+                        case RTP_G722:
+                            /* RFC 3551
+
+   G722 is specified in ITU-T Recommendation G.722, "7 kHz audio-coding
+   within 64 kbit/s".  The G.722 encoder produces a stream of octets,
+   each of which SHALL be octet-aligned in an RTP packet.  The first bit
+   transmitted in the G.722 octet, which is the most significant bit of
+   the higher sub-band sample, SHALL correspond to the most significant
+   bit of the octet in the RTP packet.
+
+   Even though the actual sampling rate for G.722 audio is 16,000 Hz,
+   the RTP clock rate for the G722 payload format is 8,000 Hz because
+   that value was erroneously assigned in RFC 1890 and must remain
+   unchanged for backward compatibility.  The octet rate or sample-pair
+   rate is 8,000 Hz.
+                            */
+                            payload_info->audio.frequency = 16000;
+                            payload_info->audio.packet_size = 320;
+                            payload_info->audio.bitrate = 64000;
+                            break;
+
                         case RTP_ILBC:
                             payload_info->ilbc.mode =
                               (uint16_t)sdp_attr_get_fmtp_mode_for_payload_type(
@@ -3511,6 +3532,7 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
                                   dcb_p->call_id, fname), codec);
                             payload_info->audio.packet_size = -1;
                             payload_info->audio.bitrate = -1;
+                            MOZ_ASSERT(0);
                         } /* end switch */
 
 

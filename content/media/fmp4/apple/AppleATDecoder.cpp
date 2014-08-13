@@ -240,7 +240,7 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
 
     AudioBufferList decBuffer;
     decBuffer.mNumberBuffers = 1;
-    decBuffer.mBuffers[0].mNumberChannels = mConfig.channel_count;
+    decBuffer.mBuffers[0].mNumberChannels = mOutputFormat.mChannelsPerFrame;
     decBuffer.mBuffers[0].mDataByteSize = decodedSize;
     decBuffer.mBuffers[0].mData = decoded.get();
 
@@ -271,7 +271,9 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
       break;
     }
 
-    const int rate = mConfig.samples_per_second;
+    const int rate = mOutputFormat.mSampleRate;
+    const int channels = mOutputFormat.mChannelsPerFrame;
+
     int64_t time = FramesToUsecs(mCurrentAudioFrame, rate).value();
     int64_t duration = FramesToUsecs(numFrames, rate).value();
 
@@ -281,7 +283,7 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
     AudioData *audio = new AudioData(mSamplePosition,
                                      time, duration, numFrames,
                                      reinterpret_cast<AudioDataValue *>(decoded.forget()),
-                                     rate);
+                                     channels, rate);
     mCallback->Output(audio);
     mHaveOutput = true;
 
@@ -299,30 +301,30 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
 void
 AppleATDecoder::SetupDecoder()
 {
-  AudioStreamBasicDescription inputFormat, outputFormat;
+  AudioStreamBasicDescription inputFormat;
   // Fill in the input format description from the stream.
   AppleUtils::GetProperty(mStream,
       kAudioFileStreamProperty_DataFormat, &inputFormat);
 
   // Fill in the output format manually.
-  PodZero(&outputFormat);
-  outputFormat.mFormatID = kAudioFormatLinearPCM;
-  outputFormat.mSampleRate = inputFormat.mSampleRate;
-  outputFormat.mChannelsPerFrame = inputFormat.mChannelsPerFrame;
+  PodZero(&mOutputFormat);
+  mOutputFormat.mFormatID = kAudioFormatLinearPCM;
+  mOutputFormat.mSampleRate = inputFormat.mSampleRate;
+  mOutputFormat.mChannelsPerFrame = inputFormat.mChannelsPerFrame;
 #if defined(MOZ_SAMPLE_TYPE_FLOAT32)
-  outputFormat.mBitsPerChannel = 32;
-  outputFormat.mFormatFlags =
+  mOutputFormat.mBitsPerChannel = 32;
+  mOutputFormat.mFormatFlags =
     kLinearPCMFormatFlagIsFloat |
     0;
 #else
 # error Unknown audio sample type
 #endif
   // Set up the decoder so it gives us one sample per frame
-  outputFormat.mFramesPerPacket = 1;
-  outputFormat.mBytesPerPacket = outputFormat.mBytesPerFrame
-        = outputFormat.mChannelsPerFrame * outputFormat.mBitsPerChannel / 8;
+  mOutputFormat.mFramesPerPacket = 1;
+  mOutputFormat.mBytesPerPacket = mOutputFormat.mBytesPerFrame
+        = mOutputFormat.mChannelsPerFrame * mOutputFormat.mBitsPerChannel / 8;
 
-  OSStatus rv = AudioConverterNew(&inputFormat, &outputFormat, &mConverter);
+  OSStatus rv = AudioConverterNew(&inputFormat, &mOutputFormat, &mConverter);
   if (rv) {
     LOG("Error %d constructing AudioConverter", rv);
     mConverter = nullptr;

@@ -1004,6 +1004,21 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* If true, new scripts must be created with PC counter information. */
     bool                profilingScripts;
 
+    /* Whether sampling should be enabled or not. */
+  private:
+    bool                suppressProfilerSampling;
+
+  public:
+    bool isProfilerSamplingEnabled() const {
+        return !suppressProfilerSampling;
+    }
+    void disableProfilerSampling() {
+        suppressProfilerSampling = true;
+    }
+    void enableProfilerSampling() {
+        suppressProfilerSampling = false;
+    }
+
     /* Had an out-of-memory error which did not populate an exception. */
     bool                hadOutOfMemory;
 
