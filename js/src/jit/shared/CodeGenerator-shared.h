@@ -97,6 +97,14 @@ class CodeGeneratorShared : public LInstructionVisitor
     js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> patchableTLScripts_;
 #endif
 
+    struct NativeToBytecode {
+        CodeOffsetLabel nativeOffset;
+        InlineScriptTree *tree;
+        jsbytecode *pc;
+    };
+
+    js::Vector<NativeToBytecode, 0, SystemAllocPolicy> nativeToBytecodeList_;
+
     // When profiling is enabled, this is the instrumentation manager which
     // maintains state of what script is currently being generated (for inline
     // scripts) and when instrumentation needs to be emitted or skipped.
@@ -223,6 +231,10 @@ class CodeGeneratorShared : public LInstructionVisitor
     void verifyOsiPointRegs(LSafepoint *safepoint);
 #endif
 
+    bool addNativeToBytecodeEntry(const BytecodeSite &site);
+    void dumpNativeToBytecodeEntries();
+    void dumpNativeToBytecodeEntry(uint32_t idx);
+
   public:
     MIRGenerator &mirGen() const {
         return *gen;
@@ -307,9 +319,9 @@ class CodeGeneratorShared : public LInstructionVisitor
     //      an invalidation marker.
     void ensureOsiSpace();
 
-    OutOfLineCode *oolTruncateDouble(FloatRegister src, Register dest);
-    bool emitTruncateDouble(FloatRegister src, Register dest);
-    bool emitTruncateFloat32(FloatRegister src, Register dest);
+    OutOfLineCode *oolTruncateDouble(FloatRegister src, Register dest, MInstruction *mir);
+    bool emitTruncateDouble(FloatRegister src, Register dest, MInstruction *mir);
+    bool emitTruncateFloat32(FloatRegister src, Register dest, MInstruction *mir);
 
     void emitPreBarrier(Register base, const LAllocation *index, MIRType type);
     void emitPreBarrier(Address address, MIRType type);
@@ -438,7 +450,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     ReciprocalMulConstants computeDivisionConstants(int d);
 
   protected:
-    bool addOutOfLineCode(OutOfLineCode *code);
+    bool addOutOfLineCode(OutOfLineCode *code, const MInstruction *mir);
+    bool addOutOfLineCode(OutOfLineCode *code, const BytecodeSite &site);
     bool hasOutOfLineCode() { return !outOfLineCode_.empty(); }
     bool generateOutOfLineCode();
 
@@ -498,14 +511,12 @@ class OutOfLineCode : public TempObject
     Label entry_;
     Label rejoin_;
     uint32_t framePushed_;
-    jsbytecode *pc_;
-    JSScript *script_;
+    BytecodeSite site_;
 
   public:
     OutOfLineCode()
       : framePushed_(0),
-        pc_(nullptr),
-        script_(nullptr)
+        site_()
     { }
 
     virtual bool generate(CodeGeneratorShared *codegen) = 0;
@@ -525,15 +536,17 @@ class OutOfLineCode : public TempObject
     uint32_t framePushed() const {
         return framePushed_;
     }
-    void setSource(JSScript *script, jsbytecode *pc) {
-        script_ = script;
-        pc_ = pc;
+    void setBytecodeSite(const BytecodeSite &site) {
+        site_ = site;
     }
-    jsbytecode *pc() {
-        return pc_;
+    const BytecodeSite &bytecodeSite() const {
+        return site_;
     }
-    JSScript *script() {
-        return script_;
+    jsbytecode *pc() const {
+        return site_.pc();
+    }
+    JSScript *script() const {
+        return site_.script();
     }
 };
 
@@ -729,8 +742,11 @@ inline OutOfLineCode *
 CodeGeneratorShared::oolCallVM(const VMFunction &fun, LInstruction *lir, const ArgSeq &args,
                                const StoreOutputTo &out)
 {
+    JS_ASSERT(lir->mirRaw());
+    JS_ASSERT(lir->mirRaw()->isInstruction());
+
     OutOfLineCode *ool = new(alloc()) OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
-    if (!addOutOfLineCode(ool))
+    if (!addOutOfLineCode(ool, lir->mirRaw()->toInstruction()))
         return nullptr;
     return ool;
 }
