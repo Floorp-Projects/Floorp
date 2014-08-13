@@ -164,6 +164,8 @@ private:
    * to indicate the first binding in a document.
    * XBLBinding_Serialize_ChromeOnlyContent indicates that
    * nsXBLPrototypeBinding::mChromeOnlyContent should be true.
+   * XBLBinding_Serialize_BindToUntrustedContent indicates that
+   * nsXBLPrototypeBinding::mBindToUntrustedContent should be true.
    */
 public:
   static nsresult ReadNewBinding(nsIObjectInputStream* aStream,
