@@ -404,7 +404,7 @@ mil.bo
 tv.bo
 
 // br : http://registro.br/dominio/categoria.html
-// Submitted by registry <fneves@registro.br> 2014-03-04
+// Submitted by registry <fneves@registro.br> 2014-08-11
 br
 adm.br
 adv.br
@@ -452,7 +452,7 @@ mil.br
 mp.br
 mus.br
 net.br
-nom.br
+*.nom.br
 not.br
 ntr.br
 odo.br
