@@ -691,7 +691,7 @@ AllocateObjectForCacheHit(JSContext *cx, AllocKind kind, InitialHeap heap)
 
     JSObject *obj = AllocateObject<NoGC>(cx, kind, 0, heap);
     if (!obj && allowGC) {
-        MaybeGC(cx);
+        cx->runtime()->gc.maybeGC(cx->zone());
         return nullptr;
     }
 

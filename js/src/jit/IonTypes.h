@@ -7,6 +7,7 @@
 #ifndef jit_IonTypes_h
 #define jit_IonTypes_h
 
+#include "mozilla/HashFunctions.h"
 #include "mozilla/TypedEnum.h"
 
 #include "jstypes.h"
@@ -231,6 +232,111 @@ static const uint32_t ELEMENT_TYPE_MASK = (1 << ELEMENT_TYPE_BITS) - 1;
 static const uint32_t VECTOR_SCALE_BITS = 2;
 static const uint32_t VECTOR_SCALE_SHIFT = ELEMENT_TYPE_BITS + ELEMENT_TYPE_SHIFT;
 static const uint32_t VECTOR_SCALE_MASK = (1 << VECTOR_SCALE_BITS) - 1;
+
+class SimdConstant {
+  public:
+    enum Type {
+        Int32x4,
+        Float32x4,
+        Undefined = -1
+    };
+
+  private:
+    Type type_;
+    union {
+        int32_t i32x4[4];
+        float f32x4[4];
+    } u;
+
+    bool defined() const {
+        return type_ != Undefined;
+    }
+
+    void fillInt32x4(int32_t x, int32_t y, int32_t z, int32_t w)
+    {
+        type_ = Int32x4;
+        u.i32x4[0] = x;
+        u.i32x4[1] = y;
+        u.i32x4[2] = z;
+        u.i32x4[3] = w;
+    }
+
+    void fillFloat32x4(float x, float y, float z, float w)
+    {
+        type_ = Float32x4;
+        u.f32x4[0] = x;
+        u.f32x4[1] = y;
+        u.f32x4[2] = z;
+        u.f32x4[3] = w;
+    }
+
+  public:
+    // Doesn't have a default constructor, as it would prevent it from being
+    // included in unions.
+
+    static SimdConstant CreateX4(int32_t x, int32_t y, int32_t z, int32_t w) {
+        SimdConstant cst;
+        cst.fillInt32x4(x, y, z, w);
+        return cst;
+    }
+    static SimdConstant CreateX4(int32_t *array) {
+        SimdConstant cst;
+        cst.fillInt32x4(array[0], array[1], array[2], array[3]);
+        return cst;
+    }
+    static SimdConstant CreateX4(float x, float y, float z, float w) {
+        SimdConstant cst;
+        cst.fillFloat32x4(x, y, z, w);
+        return cst;
+    }
+    static SimdConstant CreateX4(float *array) {
+        SimdConstant cst;
+        cst.fillFloat32x4(array[0], array[1], array[2], array[3]);
+        return cst;
+    }
+
+    uint32_t length() const {
+        JS_ASSERT(defined());
+        switch(type_) {
+          case Int32x4:
+          case Float32x4:
+            return 4;
+          case Undefined:
+            break;
+        }
+        MOZ_CRASH("Unexpected SIMD kind");
+    }
+
+    Type type() const {
+        JS_ASSERT(defined());
+        return type_;
+    }
+
+    const int32_t *asInt32x4() const {
+        JS_ASSERT(defined() && type_ == Int32x4);
+        return u.i32x4;
+    }
+    const float *asFloat32x4() const {
+        JS_ASSERT(defined() && type_ == Float32x4);
+        return u.f32x4;
+    }
+
+    bool operator==(const SimdConstant &rhs) const {
+        JS_ASSERT(defined() && rhs.defined());
+        if (type() != rhs.type())
+            return false;
+        return memcmp(&u, &rhs.u, sizeof(u)) == 0;
+    }
+
+    // SimdConstant is a HashPolicy
+    typedef SimdConstant Lookup;
+    static HashNumber hash(const SimdConstant &val) {
+        return mozilla::HashBytes(&val.u, sizeof(SimdConstant));
+    }
+    static bool match(const SimdConstant &lhs, const SimdConstant &rhs) {
+        return lhs == rhs;
+    }
+};
 
 // The ordering of this enumeration is important: Anything < Value is a
 // specialized type. Furthermore, anything < String has trivial conversion to

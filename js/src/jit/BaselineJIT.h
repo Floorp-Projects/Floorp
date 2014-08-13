@@ -315,9 +315,17 @@ struct BaselineScript
 
     void copyPCMappingEntries(const CompactBufferWriter &entries);
     uint8_t *nativeCodeForPC(JSScript *script, jsbytecode *pc, PCMappingSlotInfo *slotInfo = nullptr);
+
     jsbytecode *pcForReturnOffset(JSScript *script, uint32_t nativeOffset);
     jsbytecode *pcForReturnAddress(JSScript *script, uint8_t *nativeAddress);
 
+    jsbytecode *pcForNativeAddress(JSScript *script, uint8_t *nativeAddress);
+    jsbytecode *pcForNativeOffset(JSScript *script, uint32_t nativeOffset);
+
+  private:
+    jsbytecode *pcForNativeOffset(JSScript *script, uint32_t nativeOffset, bool isReturn);
+
+  public:
     // Toggle debug traps (used for breakpoints and step mode) in the script.
     // If |pc| is nullptr, toggle traps for all ops in the script. Else, only
     // toggle traps at |pc|.

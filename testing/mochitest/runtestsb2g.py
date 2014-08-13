@@ -167,9 +167,9 @@ class B2GMochitest(MochitestUtilsMixin):
             # empty env.
             self.browserEnv = self.buildBrowserEnv(options, env={})
 
-            # XXXkhuey MOZ_DISABLE_NONLOCAL_CONNECTIONS is busted on b2g, so make
-            # sure we don't pass it through (bug 1039019).
-            if 'MOZ_DISABLE_NONLOCAL_CONNECTIONS' in self.browserEnv:
+            # B2G emulator debug tests still make external connections, so don't
+            # pass MOZ_DISABLE_NONLOCAL_CONNECTIONS to them for now (bug 1039019).
+            if mozinfo.info['debug'] and 'MOZ_DISABLE_NONLOCAL_CONNECTIONS' in self.browserEnv:
                 del self.browserEnv['MOZ_DISABLE_NONLOCAL_CONNECTIONS']
             self.runner.env.update(self.browserEnv)
 

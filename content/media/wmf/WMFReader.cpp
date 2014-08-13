@@ -650,7 +650,8 @@ WMFReader::DecodeAudioData()
                                  duration,
                                  numFrames,
                                  pcmSamples.forget(),
-                                 mAudioChannels));
+                                 mAudioChannels,
+                                 mAudioRate));
 
   #ifdef LOG_SAMPLE_DECODE
   DECODER_LOG("Decoded audio sample! timestamp=%lld duration=%lld currentLength=%u",
