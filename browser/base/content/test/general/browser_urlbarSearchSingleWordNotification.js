@@ -62,6 +62,12 @@ add_task(function* test_navigate_full_domain() {
   gBrowser.removeTab(tab);
 });
 
+add_task(function* test_navigate_numbers() {
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  yield* runURLBarSearchTest("1234", true, false);
+  gBrowser.removeTab(tab);
+});
+
 function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
   return function* test_navigate_single_host() {
     const pref = "browser.fixup.domainwhitelist.localhost";
