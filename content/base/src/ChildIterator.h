@@ -7,6 +7,8 @@
 #ifndef ChildIterator_h
 #define ChildIterator_h
 
+#include "nsIContent.h"
+
 /**
  * Iterates over the children on a node. If a child is an insertion point,
  * iterates over the children inserted there instead, or the default content
@@ -107,14 +109,71 @@ protected:
 class FlattenedChildIterator : public ExplicitChildIterator
 {
 public:
-  FlattenedChildIterator(nsIContent* aParent);
+  FlattenedChildIterator(nsIContent* aParent)
+    : ExplicitChildIterator(aParent), mXBLInvolved(false)
+  {
+    Init(false);
+  }
 
   bool XBLInvolved() { return mXBLInvolved; }
 
-private:
+protected:
+  /**
+   * This constructor is a hack to help AllChildrenIterator which sometimes
+   * doesn't want to consider XBL.
+   */
+  FlattenedChildIterator(nsIContent* aParent, bool aIgnoreXBL)
+  : ExplicitChildIterator(aParent), mXBLInvolved(false)
+  {
+    Init(aIgnoreXBL);
+  }
+
+  void Init(bool aIgnoreXBL);
+
   // For certain optimizations, nsCSSFrameConstructor needs to know if the
   // child list of the element that we're iterating matches its .childNodes.
   bool mXBLInvolved;
+};
+
+/**
+ * AllChildrenIterator returns the children of a element including before /
+ * after content and optionally XBL children.  It assumes that no mutation of
+ * the DOM or frame tree takes place during iteration, and will break horribly
+ * if that is not true.
+ */
+class AllChildrenIterator : private FlattenedChildIterator
+{
+public:
+  AllChildrenIterator(nsIContent* aNode, uint32_t aFlags) :
+    FlattenedChildIterator(aNode, (aFlags & nsIContent::eAllButXBL)),
+    mOriginalContent(aNode), mFlags(aFlags),
+    mPhase(eNeedBeforeKid) {}
+
+#ifdef DEBUG
+  ~AllChildrenIterator() { MOZ_ASSERT(!mMutationGuard.Mutated(0)); }
+#endif
+
+  nsIContent* GetNextChild();
+
+private:
+  enum IteratorPhase
+  {
+    eNeedBeforeKid,
+    eNeedExplicitKids,
+    eNeedAnonKids,
+    eNeedAfterKid,
+    eDone
+  };
+
+  nsIContent* mOriginalContent;
+  nsTArray<nsIContent*> mAnonKids;
+  uint32_t mFlags;
+  IteratorPhase mPhase;
+#ifdef DEBUG
+  // XXX we should really assert there are no frame tree changes as well, but
+  // there's no easy way to do that.
+  nsMutationGuard mMutationGuard;
+#endif
 };
 
 } // namespace dom

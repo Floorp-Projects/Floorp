@@ -142,6 +142,7 @@ if CONFIG['GNU_CXX']:
     CXXFLAGS += [
         '-Wno-overloaded-virtual',
         '-Wno-unused-function',
+        '-fomit-frame-pointer',
     ]
     if not CONFIG['CLANG_CXX']:
         CXXFLAGS += ['-Wno-logical-op']

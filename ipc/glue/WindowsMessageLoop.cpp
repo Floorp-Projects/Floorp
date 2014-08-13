@@ -14,6 +14,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsIXULAppInfo.h"
+#include "WinUtils.h"
 
 #include "mozilla/PaintTracker.h"
 
@@ -169,10 +170,31 @@ static void
 DumpNeuteredMessage(HWND hwnd, UINT uMsg)
 {
 #ifdef DEBUG
-  nsAutoCString log("Received \"nonqueued\" message ");
-  log.AppendInt(uMsg);
+  nsAutoCString log("Received \"nonqueued\" ");
+  // classify messages
+  if (uMsg < WM_USER) {
+    int idx = 0;
+    while (mozilla::widget::gAllEvents[idx].mId != (long)uMsg &&
+           mozilla::widget::gAllEvents[idx].mStr != nullptr) {
+      idx++;
+    }
+    if (mozilla::widget::gAllEvents[idx].mStr) {
+      log.AppendPrintf("ui message \"%s\"", mozilla::widget::gAllEvents[idx].mStr);
+    } else {
+      log.AppendPrintf("ui message (0x%X)", uMsg);
+    }
+  } else if (uMsg >= WM_USER && uMsg < WM_APP) {
+    log.AppendPrintf("WM_USER message (0x%X)", uMsg);
+  } else if (uMsg >= WM_APP && uMsg < 0xC000) {
+    log.AppendPrintf("WM_APP message (0x%X)", uMsg);
+  } else if (uMsg >= 0xC000 && uMsg < 0x10000) {
+    log.AppendPrintf("registered windows message (0x%X)", uMsg);
+  } else {
+    log.AppendPrintf("system message (0x%X)", uMsg);
+  }
+
   log.AppendLiteral(" during a synchronous IPC message for window ");
-  log.AppendInt((int64_t)hwnd);
+  log.AppendPrintf("0x%X", hwnd);
 
   wchar_t className[256] = { 0 };
   if (GetClassNameW(hwnd, className, sizeof(className) - 1) > 0) {
@@ -296,7 +318,8 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_GETTEXT:
     case WM_NCHITTEST:
     case WM_STYLECHANGING:  // Intentional fall-through.
-    case WM_WINDOWPOSCHANGING: { 
+    case WM_WINDOWPOSCHANGING:
+    case WM_GETTEXTLENGTH: {
       return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 

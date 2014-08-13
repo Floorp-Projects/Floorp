@@ -58,6 +58,40 @@ static int gMediaPluginFileDesc = -1;
 static const char *gMediaPluginFilePath;
 #endif
 
+struct SandboxFlags {
+  bool isSupported;
+#ifdef MOZ_CONTENT_SANDBOX
+  bool isDisabledForContent;
+#endif
+#ifdef MOZ_GMP_SANDBOX
+  bool isDisabledForGMP;
+#endif
+
+  SandboxFlags() {
+    // Allow simulating the absence of seccomp-bpf support, for testing.
+    if (getenv("MOZ_FAKE_NO_SANDBOX")) {
+      isSupported = false;
+    } else {
+      // Determine whether seccomp-bpf is supported by trying to
+      // enable it with an invalid pointer for the filter.  This will
+      // fail with EFAULT if supported and EINVAL if not, without
+      // changing the process's state.
+      if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr) != -1) {
+        MOZ_CRASH("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, nullptr) didn't fail");
+      }
+      isSupported = errno == EFAULT;
+    }
+#ifdef MOZ_CONTENT_SANDBOX
+    isDisabledForContent = getenv("MOZ_DISABLE_CONTENT_SANDBOX");
+#endif
+#ifdef MOZ_GMP_SANDBOX
+    isDisabledForGMP = getenv("MOZ_DISABLE_GMP_SANDBOX");
+#endif
+  }
+};
+
+static const SandboxFlags gSandboxFlags;
+
 /**
  * Log JS stack info in the same place as the sandbox violation
  * message.  Useful in case the responsible code is JS and all we have
@@ -224,20 +258,23 @@ InstallSyscallReporter(void)
  * to pass a bpf program (in our case, it contains a syscall
  * whitelist).
  *
- * @return 0 on success, 1 on failure.
+ * Reports failure by crashing.
+ *
  * @see sock_fprog (the seccomp_prog).
  */
-static int
+static void
 InstallSyscallFilter(const sock_fprog *prog)
 {
   if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
-    return 1;
+    LOG_ERROR("prctl(PR_SET_NO_NEW_PRIVS) failed: %s", strerror(errno));
+    MOZ_CRASH("prctl(PR_SET_NO_NEW_PRIVS)");
   }
 
   if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, (unsigned long)prog, 0, 0)) {
-    return 1;
+    LOG_ERROR("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER) failed: %s",
+              strerror(errno));
+    MOZ_CRASH("prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER)");
   }
-  return 0;
 }
 
 // Use signals for permissions that need to be set per-thread.
@@ -268,22 +305,16 @@ FindFreeSignalNumber()
   return 0;
 }
 
+// Returns true if sandboxing was enabled, or false if sandboxing
+// already was enabled.  Crashes if sandboxing could not be enabled.
 static bool
 SetThreadSandbox()
 {
-  bool didAnything = false;
-
   if (prctl(PR_GET_SECCOMP, 0, 0, 0, 0) == 0) {
-    if (InstallSyscallFilter(sSetSandboxFilter) == 0) {
-      didAnything = true;
-    }
-    /*
-     * Bug 880797: when all B2G devices are required to support
-     * seccomp-bpf, this should exit/crash if InstallSyscallFilter
-     * returns nonzero (ifdef MOZ_WIDGET_GONK).
-     */
+    InstallSyscallFilter(sSetSandboxFilter);
+    return true;
   }
-  return didAnything;
+  return false;
 }
 
 static void
@@ -435,14 +466,6 @@ BroadcastSetThreadSandbox(SandboxType aType)
   SetThreadSandbox();
 }
 
-// This function can overapproximate (i.e., return true even if
-// sandboxing isn't supported, but not the reverse).  See bug 993145.
-static bool
-IsSandboxingSupported(void)
-{
-  return prctl(PR_GET_SECCOMP) != -1;
-}
-
 // Common code for sandbox startup.
 static void
 SetCurrentProcessSandbox(SandboxType aType)
@@ -451,9 +474,7 @@ SetCurrentProcessSandbox(SandboxType aType)
     LOG_ERROR("install_syscall_reporter() failed\n");
   }
 
-  if (IsSandboxingSupported()) {
-    BroadcastSetThreadSandbox(aType);
-  }
+  BroadcastSetThreadSandbox(aType);
 }
 
 #ifdef MOZ_CONTENT_SANDBOX
@@ -466,11 +487,17 @@ SetCurrentProcessSandbox(SandboxType aType)
 void
 SetContentProcessSandbox()
 {
-  if (PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX")) {
+  if (gSandboxFlags.isDisabledForContent) {
     return;
   }
 
   SetCurrentProcessSandbox(kSandboxContentProcess);
+}
+
+bool
+CanSandboxContentProcess()
+{
+  return gSandboxFlags.isSupported || gSandboxFlags.isDisabledForContent;
 }
 #endif // MOZ_CONTENT_SANDBOX
 
@@ -489,7 +516,7 @@ SetContentProcessSandbox()
 void
 SetMediaPluginSandbox(const char *aFilePath)
 {
-  if (PR_GetEnv("MOZ_DISABLE_GMP_SANDBOX")) {
+  if (gSandboxFlags.isDisabledForGMP) {
     return;
   }
 
@@ -503,6 +530,12 @@ SetMediaPluginSandbox(const char *aFilePath)
   }
   // Finally, start the sandbox.
   SetCurrentProcessSandbox(kSandboxMediaPlugin);
+}
+
+bool
+CanSandboxMediaPlugin()
+{
+  return gSandboxFlags.isSupported || gSandboxFlags.isDisabledForGMP;
 }
 #endif // MOZ_GMP_SANDBOX
 

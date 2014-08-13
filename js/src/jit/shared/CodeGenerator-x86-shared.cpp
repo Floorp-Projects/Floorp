@@ -2054,6 +2054,45 @@ CodeGeneratorX86Shared::visitNegF(LNegF *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdExtractElementI(LSimdExtractElementI *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    SimdLane lane = ins->lane();
+    if (lane == LaneX) {
+        // The value we want to extract is in the low double-word
+        masm.moveLowInt32(input, output);
+    } else {
+        uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
+        masm.shuffleInt32(mask, input, ScratchSimdReg);
+        masm.moveLowInt32(ScratchSimdReg, output);
+    }
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    SimdLane lane = ins->lane();
+    if (lane == LaneX) {
+        // The value we want to extract is in the low double-word
+        if (input != output)
+            masm.moveFloat32(input, output);
+    } else if (lane == LaneZ) {
+        masm.moveHighPairToLowPairFloat32(input, output);
+    } else {
+        uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
+        masm.shuffleFloat32(mask, input, output);
+    }
+    masm.canonicalizeFloat(output);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
 {
     MOZ_ASSERT(gen->info().executionMode() == ParallelExecution);

@@ -325,7 +325,7 @@ class ProtoAndIfaceCache
     void Trace(JSTracer* aTracer) {
       for (size_t i = 0; i < ArrayLength(*this); ++i) {
         if ((*this)[i]) {
-          JS_CallHeapObjectTracer(aTracer, &(*this)[i], "protoAndIfaceCache[i]");
+          JS_CallObjectTracer(aTracer, &(*this)[i], "protoAndIfaceCache[i]");
         }
       }
     }
@@ -386,7 +386,7 @@ class ProtoAndIfaceCache
         if (p) {
           for (size_t j = 0; j < ArrayLength(*p); ++j) {
             if ((*p)[j]) {
-              JS_CallHeapObjectTracer(trc, &(*p)[j], "protoAndIfaceCache[i]");
+              JS_CallObjectTracer(trc, &(*p)[j], "protoAndIfaceCache[i]");
             }
           }
         }
@@ -1975,7 +1975,7 @@ class SequenceTracer<JSObject*, false, false, false>
 public:
   static void TraceSequence(JSTracer* trc, JSObject** objp, JSObject** end) {
     for (; objp != end; ++objp) {
-      JS_CallObjectTracer(trc, objp, "sequence<object>");
+      JS_CallUnbarrieredObjectTracer(trc, objp, "sequence<object>");
     }
   }
 };
@@ -1989,7 +1989,7 @@ class SequenceTracer<JS::Value, false, false, false>
 public:
   static void TraceSequence(JSTracer* trc, JS::Value* valp, JS::Value* end) {
     for (; valp != end; ++valp) {
-      JS_CallValueTracer(trc, valp, "sequence<any>");
+      JS_CallUnbarrieredValueTracer(trc, valp, "sequence<any>");
     }
   }
 };

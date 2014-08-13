@@ -9,6 +9,7 @@
 #include "nsAccessibilityService.h"
 #include "DocAccessible.h"
 
+#include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla::a11y;
@@ -22,13 +23,12 @@ namespace a11y {
 
 struct WalkState
 {
-  WalkState(nsIContent *aContent) :
-    content(aContent), childIdx(0), prevState(nullptr) {}
+  WalkState(nsIContent *aContent, uint32_t aFilter) :
+    content(aContent), prevState(nullptr), iter(aContent, aFilter) {}
 
   nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsINodeList> childList;
-  uint32_t childIdx;
   WalkState *prevState;
+  dom::AllChildrenIterator iter;
 };
 
 } // namespace a11y
@@ -45,13 +45,12 @@ TreeWalker::
 {
   NS_ASSERTION(aContent, "No node for the accessible tree walker!");
 
-  if (aContent)
-    mState = new WalkState(aContent);
-
   mChildFilter = mContext->CanHaveAnonChildren() ?
     nsIContent::eAllChildren : nsIContent::eAllButXBL;
-
   mChildFilter |= nsIContent::eSkipPlaceholderContent;
+
+  if (aContent)
+    mState = new WalkState(aContent, mChildFilter);
 
   MOZ_COUNT_CTOR(TreeWalker);
 }
@@ -74,17 +73,7 @@ TreeWalker::NextChildInternal(bool aNoWalkUp)
   if (!mState || !mState->content)
     return nullptr;
 
-  if (!mState->childList)
-    mState->childList = mState->content->GetChildren(mChildFilter);
-
-  uint32_t length = 0;
-  if (mState->childList)
-    mState->childList->GetLength(&length);
-
-  while (mState->childIdx < length) {
-    nsIContent* childNode = mState->childList->Item(mState->childIdx);
-    mState->childIdx++;
-
+  while (nsIContent* childNode = mState->iter.GetNextChild()) {
     bool isSubtreeHidden = false;
     Accessible* accessible = mFlags & eWalkCache ?
       mDoc->GetAccessible(childNode) :
@@ -95,7 +84,7 @@ TreeWalker::NextChildInternal(bool aNoWalkUp)
       return accessible;
 
     // Walk down into subtree to find accessibles.
-    if (!isSubtreeHidden) {
+    if (!isSubtreeHidden && childNode->IsElement()) {
       PushState(childNode);
       accessible = NextChildInternal(true);
       if (accessible)
@@ -123,14 +112,7 @@ TreeWalker::NextChildInternal(bool aNoWalkUp)
       return nullptr;
 
     PushState(parentNode->AsElement());
-    mState->childList = mState->content->GetChildren(mChildFilter);
-    length = 0;
-    if (mState->childList)
-      mState->childList->GetLength(&length);
-
-    while (mState->childIdx < length) {
-      nsIContent* childNode = mState->childList->Item(mState->childIdx);
-      mState->childIdx++;
+    while (nsIContent* childNode = mState->iter.GetNextChild()) {
       if (childNode == anchorNode)
         return NextChildInternal(false);
     }
@@ -153,7 +135,7 @@ TreeWalker::PopState()
 void
 TreeWalker::PushState(nsIContent* aContent)
 {
-  WalkState* nextToLastState = new WalkState(aContent);
+  WalkState* nextToLastState = new WalkState(aContent, mChildFilter);
   nextToLastState->prevState = mState;
   mState = nextToLastState;
 }
