@@ -1772,6 +1772,10 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                                   nsCSSPseudoElements::Type aPseudoElement,
                                                   FrameConstructionItemList& aItems)
 {
+  MOZ_ASSERT(aPseudoElement == nsCSSPseudoElements::ePseudo_before ||
+             aPseudoElement == nsCSSPseudoElements::ePseudo_after,
+             "unexpected aPseudoElement");
+
   // XXXbz is this ever true?
   if (!aParentContent->IsElement()) {
     NS_ERROR("Bogus generated content parent");
@@ -1789,10 +1793,13 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                       aState.mTreeMatchContext);
   if (!pseudoStyleContext)
     return;
+
+  bool isBefore = aPseudoElement == nsCSSPseudoElements::ePseudo_before;
+
   // |ProbePseudoStyleFor| checked the 'display' property and the
   // |ContentCount()| of the 'content' property for us.
   nsRefPtr<NodeInfo> nodeInfo;
-  nsIAtom* elemName = aPseudoElement == nsCSSPseudoElements::ePseudo_before ?
+  nsIAtom* elemName = isBefore ?
     nsGkAtoms::mozgeneratedcontentbefore : nsGkAtoms::mozgeneratedcontentafter;
   nodeInfo = mDocument->NodeInfoManager()->GetNodeInfo(elemName, nullptr,
                                                        kNameSpaceID_None,
@@ -1812,6 +1819,18 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   if (NS_FAILED(rv)) {
     container->UnbindFromTree();
     return;
+  }
+
+  RestyleManager::ReframingStyleContexts* rsc =
+    RestyleManager()->GetReframingStyleContexts();
+  if (rsc) {
+    nsStyleContext* oldStyleContext = rsc->Get(container, aPseudoElement);
+    if (oldStyleContext) {
+      RestyleManager::TryStartingTransition(aState.mPresContext,
+                                            container,
+                                            oldStyleContext,
+                                            &pseudoStyleContext);
+    }
   }
 
   uint32_t contentCount = pseudoStyleContext->StyleContent()->ContentCount();
@@ -4767,6 +4786,18 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
                  "shouldn't waste time creating style contexts for "
                  "comments and processing instructions");
     result = styleSet->ResolveStyleForNonElement(aParentStyleContext);
+  }
+
+  RestyleManager::ReframingStyleContexts* rsc =
+    RestyleManager()->GetReframingStyleContexts();
+  if (rsc) {
+    nsStyleContext* oldStyleContext =
+      rsc->Get(aContent, nsCSSPseudoElements::ePseudo_NotPseudoElement);
+    if (oldStyleContext) {
+      RestyleManager::TryStartingTransition(mPresShell->GetPresContext(),
+                                            aContent,
+                                            oldStyleContext, &result);
+    }
   }
 
   return result.forget();
