@@ -28,9 +28,9 @@ NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGClipPathFrame)
 
 nsresult
-nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
-                              nsIFrame* aParent,
-                              const gfxMatrix &aMatrix)
+nsSVGClipPathFrame::ApplyClipOrPaintClipMask(nsRenderingContext* aContext,
+                                             nsIFrame* aClippedFrame,
+                                             const gfxMatrix& aMatrix)
 {
   // If the flag is set when we get here, it means this clipPath frame
   // has already been used painting the current clip, and the document
@@ -41,7 +41,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
   }
   AutoClipPathReferencer clipRef(this);
 
-  mMatrixForChildren = GetClipPathTransform(aParent) * aMatrix;
+  mMatrixForChildren = GetClipPathTransform(aClippedFrame) * aMatrix;
 
   gfxContext *gfx = aContext->ThebesContext();
 
@@ -78,7 +78,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
     referencedClipIsTrivial = clipPathFrame->IsTrivial();
     gfx->Save();
     if (referencedClipIsTrivial) {
-      clipPathFrame->ClipPaint(aContext, aParent, aMatrix);
+      clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
     } else {
       gfx->PushGroup(gfxContentType::ALPHA);
     }
@@ -104,7 +104,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
         isTrivial = clipPathFrame->IsTrivial();
         gfx->Save();
         if (isTrivial) {
-          clipPathFrame->ClipPaint(aContext, aParent, aMatrix);
+          clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
         } else {
           gfx->PushGroup(gfxContentType::ALPHA);
         }
@@ -119,7 +119,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
           nsRefPtr<gfxPattern> clipMaskSurface;
           gfx->PushGroup(gfxContentType::ALPHA);
 
-          clipPathFrame->ClipPaint(aContext, aParent, aMatrix);
+          clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
           clipMaskSurface = gfx->PopGroup();
 
           if (clipMaskSurface) {
@@ -138,7 +138,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
       nsRefPtr<gfxPattern> clipMaskSurface;
       gfx->PushGroup(gfxContentType::ALPHA);
 
-      clipPathFrame->ClipPaint(aContext, aParent, aMatrix);
+      clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
       clipMaskSurface = gfx->PopGroup();
 
       if (clipMaskSurface) {
