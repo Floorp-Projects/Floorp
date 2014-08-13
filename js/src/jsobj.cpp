@@ -3237,45 +3237,19 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
 // Having the second class means that for bigger arrays the constant factor is
 // higher, but we waste less space.
 //
-// There are two exceptions to the above rules. Both exceptions optimize for
-// cases where the requested capacity is near the array's length.
-//
-// - If |reqAllocated| would give us a capacity equal to |length|, it's
-//   probably due to code like this:
-//
-//      var a = new Array(1024);
-//
-//   1024 is smaller than |EagerAllocationMaxLength|, so the array elements
-//   are allocated immediately. This is likely to be the final size of the
-//   array, so we just allocate the exact length immediately. In this case, the
-//   capacity is 1024 and |goodAllocated| is 1026.
-//
-// - If the |goodAllocated| value we compute gives a capacity slightly smaller
-//   than |length|, we nudge |goodAllocated| up so that the capacity equals the
-//   length. Consider the following code, which is very much like some code
-//   that appears in the Kraken benchmark suite:
-//
-//     var a = new Array(8192);
-//     for (var i = 0; i < 8192; i++) { a[i] = i; }
-//
-//   8192 is larger than |EagerAllocationMaxLength|, so the elements will be
-//   resized up to the final size rather than allocated immediately. Without
-//   this exception, it would be repeatedly resized and |goodAllocated| would
-//   reach 8192, which gives a capacity of 8190, which isn't quite enough, so
-//   it would then be have to be resized one more time to 16382 elements,
-//   wasting time and memory. But with the exception, the final resizing is
-//   nudged, resulting in a capacity of 8192 and |goodAllocated| value of 8194.
+// There is one exception to the above rule: for the power-of-two cases, if the
+// chosen capacity would be 2/3 or more of the array's length, the chosen
+// capacity is adjusted (up or down) to be equal to the array's length
+// (assuming length is at least as large as the required capacity). This avoids
+// the allocation of excess elements which are unlikely to be needed, either in
+// this resizing or a subsequent one. The 2/3 factor is chosen so that
+// exceptional resizings will at most triple the capacity, as opposed to the
+// usual doubling.
 //
 /* static */ uint32_t
 JSObject::goodAllocated(uint32_t reqAllocated, uint32_t length = 0)
 {
     static const uint32_t Mebi = 1024 * 1024;
-
-    uint32_t reqCapacity = reqAllocated - ObjectElements::VALUES_PER_HEADER;
-    if (reqCapacity == length && reqAllocated >= JSObject::SLOT_CAPACITY_MIN) {
-        // This is the first exception mentioned above.
-        return length + ObjectElements::VALUES_PER_HEADER;
-    }
 
     // This table was generated with this JavaScript code and a small amount
     // subsequent reformatting:
@@ -3303,8 +3277,16 @@ JSObject::goodAllocated(uint32_t reqAllocated, uint32_t length = 0)
     uint32_t goodAllocated = reqAllocated;
     if (goodAllocated < Mebi) {
         goodAllocated = RoundUpPow2(goodAllocated);
+
+        // Look for the abovementioned exception.
+        uint32_t goodCapacity = goodAllocated - ObjectElements::VALUES_PER_HEADER;
+        uint32_t reqCapacity = reqAllocated - ObjectElements::VALUES_PER_HEADER;
+        if (length >= reqCapacity && goodCapacity > (length / 3) * 2)
+            goodAllocated = length + ObjectElements::VALUES_PER_HEADER;
+
         if (goodAllocated < JSObject::SLOT_CAPACITY_MIN)
             goodAllocated = JSObject::SLOT_CAPACITY_MIN;
+
     } else {
         uint32_t i = 0;
         while (true) {
@@ -3320,12 +3302,6 @@ JSObject::goodAllocated(uint32_t reqAllocated, uint32_t length = 0)
                 break;
             }
         }
-    }
-
-    uint32_t goodCapacity = goodAllocated - ObjectElements::VALUES_PER_HEADER;
-    if (length > goodCapacity && (length - goodCapacity) < 16) {
-        // This is the second exception mentioned above.
-        return length + ObjectElements::VALUES_PER_HEADER;
     }
 
     return goodAllocated;

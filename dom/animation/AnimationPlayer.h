@@ -32,7 +32,8 @@ protected:
 
 public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
-    : mIsRunningOnCompositor(false)
+    : mPlayState(NS_STYLE_ANIMATION_PLAY_STATE_RUNNING)
+    , mIsRunningOnCompositor(false)
     , mTimeline(aTimeline)
   {
     SetIsDOMBinding();
