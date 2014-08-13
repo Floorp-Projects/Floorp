@@ -672,7 +672,7 @@ class BuildReader(object):
         """
         path = mozpath.join(self.topsrcdir, 'moz.build')
         return self.read_mozbuild(path, self.config, read_tiers=True,
-            filesystem_absolute=True, metadata={'tier': None})
+            filesystem_absolute=True)
 
     def walk_topsrcdir(self):
         """Read all moz.build files in the source tree.
@@ -845,9 +845,7 @@ class BuildReader(object):
                         'Directory (%s) registered multiple times in %s' % (
                             d, var), sandbox)
 
-                recurse_info[d] = {'tier': metadata.get('tier', None),
-                                   'parent': sandbox['RELATIVEDIR'],
-                                   'var': var}
+                recurse_info[d] = {}
                 if 'exports' in sandbox.metadata:
                     sandbox.recompute_exports()
                     recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
@@ -866,10 +864,7 @@ class BuildReader(object):
                         raise SandboxValidationError(
                             'Tier directory (%s) registered multiple '
                             'times in %s' % (d, tier), sandbox)
-                    recurse_info[d] = {'tier': tier,
-                                       'parent': sandbox['RELATIVEDIR'],
-                                       'check_external': True,
-                                       'var': 'DIRS'}
+                    recurse_info[d] = {'check_external': True}
 
         for relpath, child_metadata in recurse_info.items():
             if 'check_external' in child_metadata:
