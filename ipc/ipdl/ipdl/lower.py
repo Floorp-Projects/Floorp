@@ -332,7 +332,7 @@ def _refptrTake(expr):
     return ExprCall(ExprSelect(expr, '.', 'take'))
 
 def _cxxArrayType(basetype, const=0, ref=0):
-    return Type('InfallibleTArray', T=basetype, const=const, ref=ref)
+    return Type('nsTArray', T=basetype, const=const, ref=ref)
 
 def _cxxFallibleArrayType(basetype, const=0, ref=0):
     return Type('FallibleTArray', T=basetype, const=const, ref=ref)
