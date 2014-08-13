@@ -200,6 +200,7 @@
     _(ArrayPushV)                   \
     _(ArrayPushT)                   \
     _(ArrayConcat)                  \
+    _(ArrayJoin)                    \
     _(StoreElementHoleV)            \
     _(StoreElementHoleT)            \
     _(LoadTypedArrayElement)        \

@@ -7166,6 +7166,38 @@ class MArrayConcat
     }
 };
 
+class MArrayJoin
+    : public MBinaryInstruction,
+      public MixPolicy<ObjectPolicy<0>, StringPolicy<1> >
+{
+    MArrayJoin(MDefinition *array, MDefinition *sep)
+        : MBinaryInstruction(array, sep)
+    {
+        setResultType(MIRType_String);
+    }
+  public:
+    INSTRUCTION_HEADER(ArrayJoin)
+    static MArrayJoin *New(TempAllocator &alloc, MDefinition *array, MDefinition *sep)
+    {
+        return new (alloc) MArrayJoin(array, sep);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *array() const {
+        return getOperand(0);
+    }
+    MDefinition *sep() const {
+        return getOperand(1);
+    }
+    bool possiblyCalls() const {
+        return true;
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Element | AliasSet::ObjectFields);
+    }
+};
+
 class MLoadTypedArrayElement
   : public MBinaryInstruction
 {

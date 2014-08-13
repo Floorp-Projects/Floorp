@@ -4267,6 +4267,27 @@ class LArrayConcat : public LCallInstructionHelper<1, 2, 2>
     }
 };
 
+class LArrayJoin : public LCallInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(ArrayJoin)
+
+    LArrayJoin(const LAllocation &array, const LAllocation &sep) {
+        setOperand(0, array);
+        setOperand(1, sep);
+    }
+
+    const MArrayJoin *mir() const {
+        return mir_->toArrayJoin();
+    }
+    const LAllocation *array() {
+        return getOperand(0);
+    }
+    const LAllocation *separator() {
+        return getOperand(1);
+    }
+};
+
 // Load a typed value from a typed array's elements vector.
 class LLoadTypedArrayElement : public LInstructionHelper<1, 2, 1>
 {
