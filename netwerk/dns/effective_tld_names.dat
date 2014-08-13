@@ -6316,7 +6316,6 @@ k12.wa.us
 k12.wi.us
 // k12.wv.us  Bug 947705 - Removed at request of Verne Britton <verne@wvnet.edu>
 k12.wy.us
-
 cc.ak.us
 cc.al.us
 cc.ar.us
@@ -6372,7 +6371,6 @@ cc.wa.us
 cc.wi.us
 cc.wv.us
 cc.wy.us
-
 lib.ak.us
 lib.al.us
 lib.ar.us
@@ -6428,7 +6426,6 @@ lib.wa.us
 lib.wi.us
 // lib.wv.us  Bug 941670 - Removed at request of Larry W Arnold <arnold@wvlc.lib.wv.us>
 lib.wy.us
-
 // k12.ma.us contains school districts in Massachusetts. The 4LDs are
 //  managed indepedently except for private (PVT), charter (CHTR) and
 //  parochial (PAROCH) schools.  Those are delegated dorectly to the
