@@ -35,7 +35,6 @@
 #include "nsAttrValue.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/WindowBinding.h"
 #include "Units.h"
 
 class nsIDOMEventListener;
@@ -721,8 +720,11 @@ public:
   already_AddRefed<ShadowRoot> CreateShadowRoot(ErrorResult& aError);
   already_AddRefed<DestinationInsertionPointList> GetDestinationInsertionPoints();
 
-  void ScrollIntoView();
-  void ScrollIntoView(bool aTop, const ScrollOptions &aOptions);
+  void ScrollIntoView()
+  {
+    ScrollIntoView(true);
+  }
+  void ScrollIntoView(bool aTop);
   int32_t ScrollTop()
   {
     nsIScrollableFrame* sf = GetScrollFrame();
