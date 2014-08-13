@@ -758,12 +758,14 @@ void
 MP4Reader::UpdateIndex()
 {
   nsTArray<MediaByteRange> ranges;
-  if (NS_FAILED(mDecoder->GetResource()->GetCachedRanges(ranges))) {
-    return;
-  }
-
   nsTArray<Interval<Microseconds>> timeRanges;
-  mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
+
+  MediaResource* resource = mDecoder->GetResource();
+  resource->Pin();
+  if (NS_SUCCEEDED(resource->GetCachedRanges(ranges))) {
+    mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
+  }
+  resource->Unpin();
 
   MonitorAutoLock mon(mTimeRangesMonitor);
   mTimeRanges = timeRanges;
