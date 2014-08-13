@@ -78,7 +78,7 @@ public:
     uint32_t sum = 0;
     uint32_t bytesRead = 0;
     do {
-      uint32_t offset = aOffset + sum;
+      uint64_t offset = aOffset + sum;
       char* buffer = reinterpret_cast<char*>(aBuffer) + sum;
       uint32_t toRead = aCount - sum;
       nsresult rv = mResource->ReadAt(offset, buffer, toRead, &bytesRead);
