@@ -176,10 +176,13 @@ NfcMessageHandler::GetDetailsNDEFResponse(const Parcel& aParcel, EventOptions& a
   aOptions.mType = NS_ConvertUTF8toUTF16(kGetDetailsNDEFResponse);
   aOptions.mStatus = aParcel.readInt32();
   aOptions.mSessionId = aParcel.readInt32();
-  int readOnly = aParcel.readInt32();
-  aOptions.mIsReadOnly = readOnly & 0xff;
-  aOptions.mCanBeMadeReadOnly = (readOnly >> 8) & 0xff;
-  aOptions.mMaxSupportedLength = aParcel.readInt32();
+
+  if (aOptions.mStatus == NfcErrorCode::Success) {
+    int readOnly = aParcel.readInt32();
+    aOptions.mIsReadOnly = readOnly & 0xff;
+    aOptions.mCanBeMadeReadOnly = (readOnly >> 8) & 0xff;
+    aOptions.mMaxSupportedLength = aParcel.readInt32();
+  }
 
   NS_ENSURE_TRUE(!mRequestIdQueue.IsEmpty(), false);
   aOptions.mRequestId = mRequestIdQueue[0];
@@ -206,7 +209,11 @@ NfcMessageHandler::ReadNDEFResponse(const Parcel& aParcel, EventOptions& aOption
   NS_ENSURE_TRUE(!mRequestIdQueue.IsEmpty(), false);
   aOptions.mRequestId = mRequestIdQueue[0];
   mRequestIdQueue.RemoveElementAt(0);
-  ReadNDEFMessage(aParcel, aOptions);
+
+  if (aOptions.mStatus == NfcErrorCode::Success) {
+    ReadNDEFMessage(aParcel, aOptions);
+  }
+
   return true;
 }
 
