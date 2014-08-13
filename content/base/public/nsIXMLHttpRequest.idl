@@ -16,12 +16,12 @@ interface nsIGlobalObject;
 interface nsIInputStream;
 interface nsIDOMBlob;
 
-[builtinclass, uuid(5ced7e7a-e2c3-4563-a57d-31b97ce64dc5)]
+[builtinclass, uuid(88e7d2a0-2e5b-4f65-9624-a61e607a9948)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
 };
 
-[builtinclass, uuid(df3796fa-d98a-4185-9dda-d2f2b56a5d38)]
+[builtinclass, uuid(d74c4dc4-bc8c-4f5d-b7f1-121a48750abe)]
 interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
   // for future use
 };
