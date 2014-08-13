@@ -6,6 +6,9 @@
 #include "nsISupports.idl"
 
 interface nsIUTF8StringEnumerator;
+interface nsIStreamListener;
+interface nsISupports;
+
 /**
  * A channel interface which allows special handling of encoded content
  */
@@ -41,4 +44,12 @@ interface nsIEncodedChannel : nsISupports
      * TRUE by default.
      */
     attribute boolean applyConversion;
+
+    /**
+     * This function will start converters if they are available.
+     * aNewNextListener will be nullptr if no converter is available.
+     */
+    void doApplyContentConversions(in nsIStreamListener aNextListener,
+                                   out nsIStreamListener aNewNextListener,
+                                   in nsISupports aCtxt);
 };
