@@ -89,17 +89,12 @@ def is_read_allowed(path, config):
     path = mozpath.normpath(path)
     topsrcdir = mozpath.normpath(config.topsrcdir)
 
-    if path.startswith(topsrcdir):
+    if mozpath.basedir(path, [topsrcdir]):
         return True
 
-    external_dirs = config.substs.get('EXTERNAL_SOURCE_DIR', '').split()
-    for external in external_dirs:
-        if not os.path.isabs(external):
-            external = mozpath.join(config.topsrcdir, external)
-        external = mozpath.normpath(external)
-
-        if path.startswith(external):
-            return True
+    if config.external_source_dir and \
+            mozpath.basedir(path, [config.external_source_dir]):
+        return True
 
     return False
 
@@ -132,30 +127,13 @@ class MozbuildSandbox(Sandbox):
         self.config = config
         self.metadata = dict(metadata)
 
-        topobjdir = mozpath.abspath(config.topobjdir)
+        topobjdir = config.topobjdir
         topsrcdir = config.topsrcdir
-        norm_topsrcdir = mozpath.normpath(topsrcdir)
 
-        self.external_source_dirs = []
-        external_dirs = config.substs.get('EXTERNAL_SOURCE_DIR', '').split()
-        for external in external_dirs:
-            external = mozpath.normpath(external)
-
-            if not os.path.isabs(external):
-                external = mozpath.join(config.topsrcdir, external)
-
-            external = mozpath.normpath(external)
-            self.external_source_dirs.append(external)
-
-
-        if not path.startswith(norm_topsrcdir):
-            for external in self.external_source_dirs:
-                if not path.startswith(external):
-                    continue
-
-                topsrcdir = external
-
-                break
+        if not mozpath.basedir(path, [topsrcdir]):
+            if config.external_source_dir and \
+                    mozpath.basedir(path, [config.external_source_dir]):
+                topsrcdir = config.external_source_dir
 
         self.topsrcdir = topsrcdir
 
@@ -202,7 +180,10 @@ class MozbuildSandbox(Sandbox):
         if os.path.isabs(path):
             if filesystem_absolute:
                 return path
-            for root in [self.topsrcdir] + self.external_source_dirs:
+            roots = [self.topsrcdir]
+            if self.config.external_source_dir:
+                roots.append(self.config.external_source_dir)
+            for root in roots:
                 # mozpath.join would ignore the self.topsrcdir argument if we
                 # passed in the absolute path, so omit the leading /
                 p = mozpath.normpath(mozpath.join(root, path[1:]))
