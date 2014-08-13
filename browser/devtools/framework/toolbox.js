@@ -292,7 +292,7 @@ Toolbox.prototype = {
       });
 
       return deferred.promise;
-    });
+    }).then(null, console.error.bind(console));
   },
 
   /**
