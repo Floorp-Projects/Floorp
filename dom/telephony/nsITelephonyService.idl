@@ -176,7 +176,7 @@ interface nsITelephonyListener : nsISupports
                              in AString message);
 };
 
-[scriptable, uuid(b80a2349-a0d9-4029-8c71-b61fbeb24267)]
+[scriptable, uuid(b3b2b0b0-357f-4efb-bc9f-ca2b2d5686a1)]
 interface nsITelephonyCallback : nsISupports
 {
   /**
@@ -189,7 +189,7 @@ interface nsITelephonyCallback : nsISupports
   /**
    * Called when a dial request succeeds.
    */
-  void notifyDialSuccess(in unsigned long callIndex);
+  void notifyDialSuccess(in unsigned long callIndex, in AString number);
 };
 
 %{C++
