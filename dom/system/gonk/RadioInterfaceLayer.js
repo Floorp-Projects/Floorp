@@ -127,10 +127,6 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:MatchMvno"
 ];
 
-const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
-  "RIL:RegisterCellBroadcastMsg"
-];
-
 // set to true in ril_consts.js to see debug messages
 var DEBUG = RIL.DEBUG_RIL;
 
@@ -198,6 +194,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
                                    "@mozilla.org/mobileconnection/mobileconnectionservice;1",
                                    "nsIGonkMobileConnectionService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gCellBroadcastService",
+                                   "@mozilla.org/cellbroadcast/gonkservice;1",
+                                   "nsIGonkCellBroadcastService");
+
 XPCOMUtils.defineLazyGetter(this, "WAP", function() {
   let wap = {};
   Cu.import("resource://gre/modules/WapPushManager.js", wap);
@@ -245,18 +245,12 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
         ppmm.addMessageListener(msgName, this);
       }
-      for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
-        ppmm.addMessageListener(msgname, this);
-      }
     },
 
     _unregisterMessageListeners: function() {
       ppmm.removeMessageListener("child-process-shutdown", this);
       for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
         ppmm.removeMessageListener(msgName, this);
-      }
-      for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
-        ppmm.removeMessageListener(msgname, this);
       }
       ppmm = null;
     },
@@ -373,14 +367,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
           }
           return null;
         }
-      } else if (RIL_IPC_CELLBROADCAST_MSG_NAMES.indexOf(msg.name) != -1) {
-        if (!msg.target.assertPermission("cellbroadcast")) {
-          if (DEBUG) {
-            debug("Cell Broadcast message " + msg.name +
-                  " from a content process with no 'cellbroadcast' privileges.");
-          }
-          return null;
-        }
       } else {
         if (DEBUG) debug("Ignoring unknown message type: " + msg.name);
         return null;
@@ -389,9 +375,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       switch (msg.name) {
         case "RIL:RegisterIccMsg":
           this._registerMessageTarget("icc", msg.target);
-          return null;
-        case "RIL:RegisterCellBroadcastMsg":
-          this._registerMessageTarget("cellbroadcast", msg.target);
           return null;
       }
 
@@ -423,13 +406,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
 
     sendMobileConnectionMessage: function(message, clientId, data) {
       this._sendTargetMessage("mobileconnection", message, {
-        clientId: clientId,
-        data: data
-      });
-    },
-
-    sendCellBroadcastMessage: function(message, clientId, data) {
-      this._sendTargetMessage("cellbroadcast", message, {
         clientId: clientId,
         data: data
       });
@@ -2130,8 +2106,7 @@ RadioInterface.prototype = {
       case "cellbroadcast-received":
         message.timestamp = Date.now();
         this.broadcastCbsSystemMessage(message);
-        gMessageManager.sendCellBroadcastMessage("RIL:CellBroadcastReceived",
-                                                 this.clientId, message);
+        this.handleCellbroadcastMessageReceived(message);
         break;
       case "nitzTime":
         this.handleNitzTime(message);
@@ -2661,8 +2636,7 @@ RadioInterface.prototype = {
     if (DEBUG) this.debug("handleSmsReceived: " + JSON.stringify(message));
 
     if (message.messageType == RIL.PDU_CDMA_MSG_TYPE_BROADCAST) {
-      gMessageManager.sendCellBroadcastMessage("RIL:CellBroadcastReceived",
-                                               this.clientId, message);
+      this.handleCellbroadcastMessageReceived(message);
       return true;
     }
 
@@ -3011,6 +2985,31 @@ RadioInterface.prototype = {
                                          command: message});
     }
     gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
+  },
+
+  handleCellbroadcastMessageReceived: function(aMessage) {
+    let etwsInfo = aMessage.etws;
+    let hasEtwsInfo = etwsInfo != null;
+    let serviceCategory = (aMessage.serviceCategory)
+      ? aMessage.serviceCategory
+      : Ci.nsICellBroadcastService.CDMA_SERVICE_CATEGORY_INVALID;
+
+    gCellBroadcastService
+      .notifyMessageReceived(this.clientId,
+                             RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[aMessage.geographicalScope],
+                             aMessage.messageCode,
+                             aMessage.messageId,
+                             aMessage.language,
+                             aMessage.fullBody,
+                             aMessage.messageClass,
+                             aMessage.timestamp,
+                             serviceCategory,
+                             hasEtwsInfo,
+                             (hasEtwsInfo && etwsInfo.warningType != null)
+                               ? RIL.CB_ETWS_WARNING_TYPE_NAMES[etwsInfo.warningType]
+                               : null,
+                             hasEtwsInfo ? etwsInfo.emergencyUserAlert : false,
+                             hasEtwsInfo ? etwsInfo.popup : false);
   },
 
   // nsIObserver
