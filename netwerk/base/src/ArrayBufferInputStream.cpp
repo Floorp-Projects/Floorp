@@ -34,7 +34,7 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
     return NS_ERROR_FAILURE;
   }
 
-  mArrayBuffer.construct(aCx, aBuffer);
+  mArrayBuffer.emplace(aCx, aBuffer);
 
   uint32_t buflen = JS_GetArrayBufferByteLength(arrayBuffer);
   mOffset = std::min(buflen, aByteOffset);
@@ -81,8 +81,8 @@ ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
   }
 
   uint32_t remaining = mBufferLength - mPos;
-  if (!mArrayBuffer.empty()) {
-    JSObject* buf = &mArrayBuffer.ref().get().toObject();
+  if (mArrayBuffer) {
+    JSObject* buf = &mArrayBuffer->get().toObject();
     uint32_t byteLength = JS_GetArrayBufferByteLength(buf);
     if (byteLength == 0 && remaining != 0) {
       mClosed = true;
