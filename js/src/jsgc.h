@@ -972,9 +972,6 @@ extern bool
 TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
 
 extern void
-MaybeGC(JSContext *cx);
-
-extern void
 ReleaseAllJITCode(FreeOp *op);
 
 /*
