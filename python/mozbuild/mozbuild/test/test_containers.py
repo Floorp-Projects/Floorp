@@ -27,6 +27,26 @@ class TestReadOnlyDict(unittest.TestCase):
         with self.assertRaises(Exception):
             test['baz'] = True
 
+    def test_update(self):
+        original = {'foo': 1, 'bar': 2}
+
+        test = ReadOnlyDict(original)
+
+        with self.assertRaises(Exception):
+            test.update(foo=2)
+
+        self.assertEqual(original, test)
+
+    def test_del(self):
+        original = {'foo': 1, 'bar': 2}
+
+        test = ReadOnlyDict(original)
+
+        with self.assertRaises(Exception):
+            del test['foo']
+
+        self.assertEqual(original, test)
+
 
 class TestReadOnlyDefaultDict(unittest.TestCase):
     def test_simple(self):
