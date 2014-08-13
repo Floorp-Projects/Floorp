@@ -7196,6 +7196,7 @@ class MArrayJoin
     virtual AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element | AliasSet::ObjectFields);
     }
+    MDefinition *foldsTo(TempAllocator &alloc);
 };
 
 class MLoadTypedArrayElement

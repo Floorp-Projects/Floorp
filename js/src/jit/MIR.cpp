@@ -3421,6 +3421,32 @@ MBoundsCheck::foldsTo(TempAllocator &alloc)
     return this;
 }
 
+MDefinition *
+MArrayJoin::foldsTo(TempAllocator &alloc) {
+    MDefinition *arr = array();
+
+    if (!arr->isStringSplit())
+        return this;
+
+    this->setRecoveredOnBailout();
+    if (arr->hasLiveDefUses()) {
+        this->setNotRecoveredOnBailout();
+        return this;
+    }
+
+    // We're replacing foo.split(bar).join(baz) by
+    // foo.replace(bar, baz).  MStringSplit could be recovered by
+    // a bailout.  As we are removing its last use, and its result
+    // could be captured by a resume point, this MStringSplit will
+    // be executed on the bailout path.
+    MDefinition *string = arr->toStringSplit()->string();
+    MDefinition *pattern = arr->toStringSplit()->separator();
+    MDefinition *replacement = sep();
+
+    setNotRecoveredOnBailout();
+    return MStringReplace::New(alloc, string, pattern, replacement);
+}
+
 bool
 jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
 {
