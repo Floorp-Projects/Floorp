@@ -437,6 +437,8 @@
 
 ; RIL
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+@BINPATH@/components/CellBroadcastService.js
+@BINPATH@/components/CellBroadcastService.manifest
 @BINPATH@/components/MmsService.js
 @BINPATH@/components/MmsService.manifest
 @BINPATH@/components/MobileConnectionService.js
