@@ -87,7 +87,7 @@ SourceBufferResource::ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, ui
   SBR_DEBUG("SourceBufferResource(%p)::ReadAt(aOffset=%lld, aBuffer=%p, aCount=%u, aBytes=%p)",
             this, aOffset, aBytes, aCount, aBytes);
   ReentrantMonitorAutoEnter mon(mMonitor);
-  nsresult rv = Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+  nsresult rv = SeekInternal(aOffset);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -99,9 +99,6 @@ SourceBufferResource::Seek(int32_t aWhence, int64_t aOffset)
 {
   SBR_DEBUG("SourceBufferResource(%p)::Seek(aWhence=%d, aOffset=%lld)", this, aWhence, aOffset);
   ReentrantMonitorAutoEnter mon(mMonitor);
-  if (mClosed) {
-    return NS_ERROR_FAILURE;
-  }
 
   int64_t newOffset = mOffset;
   switch (aWhence) {
@@ -118,13 +115,24 @@ SourceBufferResource::Seek(int32_t aWhence, int64_t aOffset)
 
   SBR_DEBUGV("SourceBufferResource(%p)::Seek() newOffset=%lld GetOffset()=%llu GetLength()=%llu)",
              this, newOffset, mInputBuffer.GetOffset(), GetLength());
-  if (newOffset < 0 || uint64_t(newOffset) < mInputBuffer.GetOffset() || newOffset > GetLength()) {
+  nsresult rv = SeekInternal(newOffset);
+  mon.NotifyAll();
+  return rv;
+}
+
+nsresult
+SourceBufferResource::SeekInternal(int64_t aOffset)
+{
+  mMonitor.AssertCurrentThreadIn();
+
+  if (mClosed ||
+      aOffset < 0 ||
+      uint64_t(aOffset) < mInputBuffer.GetOffset() ||
+      aOffset > GetLength()) {
     return NS_ERROR_FAILURE;
   }
 
-  mOffset = newOffset;
-  mon.NotifyAll();
-
+  mOffset = aOffset;
   return NS_OK;
 }
 
@@ -133,6 +141,7 @@ SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCo
 {
   SBR_DEBUG("SourceBufferResource(%p)::ReadFromCache(aBuffer=%p, aOffset=%lld, aCount=%u)",
             this, aBuffer, aOffset, aCount);
+  ReentrantMonitorAutoEnter mon(mMonitor);
   int64_t oldOffset = mOffset;
   nsresult rv = ReadAt(aOffset, aBuffer, aCount, nullptr);
   mOffset = oldOffset;
