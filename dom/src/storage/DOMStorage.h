@@ -126,6 +126,12 @@ public:
   bool IsPrivate() const { return mIsPrivate; }
   bool IsSessionOnly() const { return mIsSessionOnly; }
 
+  bool IsForkOf(const DOMStorage* aOther) const
+  {
+    MOZ_ASSERT(aOther);
+    return mCache == aOther->mCache;
+  }
+
 private:
   ~DOMStorage();
 
