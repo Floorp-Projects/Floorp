@@ -220,7 +220,7 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('resources')
         objs = self.read_topsrcdir(reader)
 
-        expected_defines = reader.config.defines
+        expected_defines = dict(reader.config.defines)
         expected_defines.update({
             'FOO': True,
             'BAR': 'BAZ',
