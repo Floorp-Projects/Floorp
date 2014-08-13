@@ -26,6 +26,7 @@
 #include "jit/IonLinker.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitcodeMap.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
@@ -6697,6 +6698,33 @@ CodeGenerator::generate()
     return !masm.oom();
 }
 
+struct AutoDiscardIonCode
+{
+    JSContext *cx;
+    types::RecompileInfo *recompileInfo;
+    IonScript *ionScript;
+    bool keep;
+
+    AutoDiscardIonCode(JSContext *cx, types::RecompileInfo *recompileInfo)
+      : cx(cx), recompileInfo(recompileInfo), ionScript(nullptr), keep(false) {}
+
+    ~AutoDiscardIonCode() {
+        if (keep)
+            return;
+
+        // Use js_free instead of IonScript::Destroy: the cache list and
+        // backedge list are still uninitialized.
+        if (ionScript)
+            js_free(ionScript);
+
+        recompileInfo->compilerOutput(cx->zone()->types)->invalidate();
+    }
+
+    void keepIonCode() {
+        keep = true;
+    }
+};
+
 bool
 CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 {
@@ -6741,6 +6769,8 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     if (executionMode == ParallelExecution)
         AddPossibleCallees(cx, graph.mir(), callTargets);
 
+    AutoDiscardIonCode discardIonCode(cx, &recompileInfo);
+
     IonScript *ionScript =
       IonScript::New(cx, recompileInfo,
                      graph.totalSlotCount(), scriptFrameSize,
@@ -6750,10 +6780,9 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                      cacheList_.length(), runtimeData_.length(),
                      safepoints_.size(), callTargets.length(),
                      patchableBackedges_.length(), optimizationLevel);
-    if (!ionScript) {
-        recompileInfo.compilerOutput(cx->zone()->types)->invalidate();
+    if (!ionScript)
         return false;
-    }
+    discardIonCode.ionScript = ionScript;
 
     // Lock the runtime against interrupt callbacks during the link.
     // We don't want an interrupt request to protect the code for the script
@@ -6777,28 +6806,34 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     JitCode *code = (executionMode == SequentialExecution)
                     ? linker.newCodeForIonScript(cx)
                     : linker.newCode<CanGC>(cx, ION_CODE);
-    if (!code) {
-        // Use js_free instead of IonScript::Destroy: the cache list and
-        // backedge list are still uninitialized.
-        js_free(ionScript);
-        recompileInfo.compilerOutput(cx->zone()->types)->invalidate();
+    if (!code)
         return false;
-    }
 
     // Encode native to bytecode map if profiling is enabled.
-    if (cx->runtime()->spsProfiler.enabled()) {
+    if (isNativeToBytecodeMapEnabled()) {
+        // Generate native-to-bytecode main table.
         if (!generateCompactNativeToBytecodeMap(cx, code))
             return false;
+
+        uint8_t *mainTableAddr = ((uint8_t *) nativeToBytecodeMap_) + nativeToBytecodeTableOffset_;
+        JitcodeMainTable *mainTable = (JitcodeMainTable *) mainTableAddr;
+
+        // Construct the MainEntry that will go into the global table.
+        JitcodeGlobalEntry::MainEntry entry;
+        if (!mainTable->makeMainEntry(cx, code, nativeToBytecodeScriptListLength_,
+                                      nativeToBytecodeScriptList_, entry))
+        {
+            return false;
+        }
+
+        // Add entry to the global table.
+        JitcodeGlobalTable *globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
+        if (!globalTable->addEntry(entry)) {
+            // Memory may have been allocated for the entry.
+            entry.destroy();
+            return false;
+        }
     }
-
-    ionScript->setMethod(code);
-    ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());
-
-    // If SPS is enabled, mark IonScript as having been instrumented with SPS
-    if (sps_.enabled())
-        ionScript->setHasSPSInstrumentation();
-
-    SetIonScript(script, executionMode, ionScript);
 
     if (cx->runtime()->spsProfiler.enabled()) {
         const char *filename = script->filename();
@@ -6812,6 +6847,15 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         cx->runtime()->spsProfiler.markEvent(buf);
         js_free(buf);
     }
+
+    ionScript->setMethod(code);
+    ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());
+
+    // If SPS is enabled, mark IonScript as having been instrumented with SPS
+    if (sps_.enabled())
+        ionScript->setHasSPSInstrumentation();
+
+    SetIonScript(script, executionMode, ionScript);
 
     // In parallel execution mode, when we first compile a script, we
     // don't know that its potential callees are compiled, so set a
@@ -6912,6 +6956,9 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     // Attach any generated script counts to the script.
     if (IonScriptCounts *counts = extractScriptCounts())
         script->addIonCounts(counts);
+
+    // Make sure that AutoDiscardIonCode does not free the relevant info.
+    discardIonCode.keepIonCode();
 
     return true;
 }

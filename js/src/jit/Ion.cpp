@@ -166,7 +166,8 @@ JitRuntime::JitRuntime()
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
     ionCodeProtected_(false),
-    ionReturnOverride_(MagicValue(JS_ARG_POISON))
+    ionReturnOverride_(MagicValue(JS_ARG_POISON)),
+    jitcodeGlobalTable_(nullptr)
 {
 }
 
@@ -178,6 +179,10 @@ JitRuntime::~JitRuntime()
     // Note: The interrupt lock is not taken here, as JitRuntime is only
     // destroyed along with its containing JSRuntime.
     js_delete(ionAlloc_);
+
+    // By this point, the jitcode global table should be empty.
+    JS_ASSERT_IF(jitcodeGlobalTable_, jitcodeGlobalTable_->empty());
+    js_delete(jitcodeGlobalTable_);
 }
 
 bool
@@ -289,6 +294,10 @@ JitRuntime::initialize(JSContext *cx)
         if (!generateVMWrapper(cx, *fun))
             return false;
     }
+
+    jitcodeGlobalTable_ = cx->new_<JitcodeGlobalTable>();
+    if (!jitcodeGlobalTable_)
+        return false;
 
     return true;
 }
@@ -1173,6 +1182,17 @@ IonScript::Trace(JSTracer *trc, IonScript *script)
 void
 IonScript::Destroy(FreeOp *fop, IonScript *script)
 {
+    // By this point, the jitocde in |script| cannot be on stack.  Remove its entry from
+    // the native => bytecode mapping table, if needed.
+    JSRuntime *runtime = js::TlsPerThreadData.get()->runtimeFromMainThread();
+    JS_ASSERT(runtime);
+    JS_ASSERT(runtime->hasJitRuntime());
+    JitRuntime *jitrt = runtime->jitRuntime();
+    if (jitrt->hasJitcodeGlobalTable()) {
+        JitcodeGlobalTable *table = jitrt->getJitcodeGlobalTable();
+        table->removeEntry(script->method()->raw());
+    }
+
     script->destroyCaches();
     script->unlinkFromRuntime(fop);
     fop->free_(script);

@@ -115,6 +115,13 @@ JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry &entry)
     return tree_.insert(entry);
 }
 
+void
+JitcodeGlobalTable::removeEntry(void *startAddr)
+{
+    JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(startAddr);
+    tree_.remove(query);
+}
+
 /* static */ void
 JitcodeRegionEntry::WriteHead(CompactBufferWriter &writer,
                               uint32_t nativeOffset, uint8_t scriptDepth)
@@ -487,6 +494,34 @@ JitcodeRegionEntry::findPcOffset(uint32_t queryNativeOffset, uint32_t startPcOff
         curPcOffset += pcDelta;
     }
     return curPcOffset;
+}
+
+bool
+JitcodeMainTable::makeMainEntry(JSContext *cx, JitCode *code,
+                                uint32_t numScripts, JSScript **scripts,
+                                JitcodeGlobalEntry::MainEntry &out)
+{
+    typedef JitcodeGlobalEntry::MainEntry::SizedScriptList SizedScriptList;
+
+    JS_ASSERT(numScripts > 0);
+
+    if (numScripts == 1) {
+        out.init(code->raw(), code->raw() + code->instructionsSize(), scripts[0], this);
+        return true;
+    }
+
+    if (numScripts < uint32_t(JitcodeGlobalEntry::MainEntry::Multi)) {
+        out.init(code->raw(), code->raw() + code->instructionsSize(), numScripts, scripts, this);
+        return true;
+    }
+
+    // Create SizedScriptList
+    void *mem = cx->malloc_(SizedScriptList::AllocSizeFor(numScripts));
+    if (!mem)
+        return false;
+    SizedScriptList *scriptList = new (mem) SizedScriptList(numScripts, scripts);
+    out.init(code->raw(), code->raw() + code->instructionsSize(), scriptList, this);
+    return true;
 }
 
 uint32_t

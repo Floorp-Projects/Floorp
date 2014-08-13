@@ -119,6 +119,10 @@ class CodeGeneratorShared : public LInstructionVisitor
     // scripts) and when instrumentation needs to be emitted or skipped.
     IonInstrumentation sps_;
 
+    bool isNativeToBytecodeMapEnabled() {
+        return gen->isNativeToBytecodeMapEnabled();
+    }
+
   protected:
     // The offset of the first instruction of the OSR entry block from the
     // beginning of the code buffer.
