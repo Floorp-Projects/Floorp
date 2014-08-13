@@ -12,7 +12,10 @@
 #include "nsAutoPtr.h"
 
 #ifndef MOZ_CALLSTACK_DISABLED
+#include "CodeAddressService.h"
+#include "nsHashKeys.h"
 #include "nsStackWalk.h"
+#include "nsTHashtable.h"
 #endif
 
 #include "mozilla/CondVar.h"
@@ -58,6 +61,7 @@ void
 BlockingResourceBase::GetStackTrace(AcquisitionState& aState)
 {
 #ifndef MOZ_CALLSTACK_DISABLED
+  // Skip this function and the calling function.
   const uint32_t kSkipFrames = 2;
 
   aState.Clear();
@@ -113,6 +117,70 @@ PrintCycle(const BlockingResourceBase::DDT::ResourceAcquisitionArray* aCycle, ns
   return maybeImminent;
 }
 
+#ifndef MOZ_CALLSTACK_DISABLED
+class CodeAddressServiceWriter MOZ_FINAL
+{
+public:
+  explicit CodeAddressServiceWriter(nsACString& aOut) : mOut(aOut) {}
+
+  void Write(const char* aFmt, ...) const
+  {
+    va_list ap;
+    va_start(ap, aFmt);
+
+    const size_t kMaxLength = 4096;
+    char buffer[kMaxLength];
+
+    vsnprintf(buffer, kMaxLength, aFmt, ap);
+    mOut += buffer;
+    fprintf(stderr, "%s", buffer);
+
+    va_end(ap);
+  }
+
+private:
+  nsACString& mOut;
+};
+
+struct CodeAddressServiceLock MOZ_FINAL
+{
+  static void Unlock() { }
+  static void Lock() { }
+  static bool IsLocked() { return true; }
+};
+
+struct CodeAddressServiceStringAlloc MOZ_FINAL
+{
+  static char* copy(const char* aString) { return ::strdup(aString); }
+  static void free(char* aString) { ::free(aString); }
+};
+
+class CodeAddressServiceStringTable MOZ_FINAL
+{
+public:
+  CodeAddressServiceStringTable() : mSet(32) {}
+
+  const char* Intern(const char* aString)
+  {
+    nsCharPtrHashKey* e = mSet.PutEntry(aString);
+    return e->GetKey();
+  }
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return mSet.SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+private:
+  typedef nsTHashtable<nsCharPtrHashKey> StringSet;
+  StringSet mSet;
+};
+
+typedef CodeAddressService<CodeAddressServiceStringTable,
+                           CodeAddressServiceStringAlloc,
+                           CodeAddressServiceWriter,
+                           CodeAddressServiceLock> WalkTheStackCodeAddressService;
+#endif
 
 bool
 BlockingResourceBase::Print(nsACString& aOut) const
@@ -131,7 +199,18 @@ BlockingResourceBase::Print(nsACString& aOut) const
   }
 
   fputs(" calling context\n", stderr);
+#ifdef MOZ_CALLSTACK_DISABLED
   fputs("  [stack trace unavailable]\n", stderr);
+#else
+  const AcquisitionState& state = acquired ? mAcquired : mFirstSeen;
+
+  WalkTheStackCodeAddressService addressService;
+  CodeAddressServiceWriter writer(aOut);
+  for (uint32_t i = 0; i < state.Length(); i++) {
+    addressService.WriteLocation(writer, state[i]);
+  }
+
+#endif
 
   return acquired;
 }
