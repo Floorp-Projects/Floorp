@@ -286,7 +286,7 @@ nsXPCWrappedJS::TraceJS(JSTracer* trc)
 {
     MOZ_ASSERT(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
     trc->setTracingDetails(GetTraceName, this, 0);
-    JS_CallHeapObjectTracer(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
+    JS_CallObjectTracer(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
 }
 
 // static

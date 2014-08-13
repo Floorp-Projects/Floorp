@@ -402,8 +402,8 @@ public:
   {
     return mScrollId;
   }
-  
-  void SetScrollId(ViewID scrollId) 
+
+  void SetScrollId(ViewID scrollId)
   {
     mScrollId = scrollId;
   }
@@ -539,6 +539,14 @@ struct ScrollableLayerGuid {
     MOZ_COUNT_CTOR(ScrollableLayerGuid);
   }
 
+  ScrollableLayerGuid(const ScrollableLayerGuid& other)
+    : mLayersId(other.mLayersId)
+    , mPresShellId(other.mPresShellId)
+    , mScrollId(other.mScrollId)
+  {
+    MOZ_COUNT_CTOR(ScrollableLayerGuid);
+  }
+
   ~ScrollableLayerGuid()
   {
     MOZ_COUNT_DTOR(ScrollableLayerGuid);
@@ -583,6 +591,15 @@ struct ZoomConstraints {
     , mAllowDoubleTapZoom(aAllowDoubleTapZoom)
     , mMinZoom(aMinZoom)
     , mMaxZoom(aMaxZoom)
+  {
+    MOZ_COUNT_CTOR(ZoomConstraints);
+  }
+
+  ZoomConstraints(const ZoomConstraints& other)
+    : mAllowZoom(other.mAllowZoom)
+    , mAllowDoubleTapZoom(other.mAllowDoubleTapZoom)
+    , mMinZoom(other.mMinZoom)
+    , mMaxZoom(other.mMaxZoom)
   {
     MOZ_COUNT_CTOR(ZoomConstraints);
   }

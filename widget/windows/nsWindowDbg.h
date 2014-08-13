@@ -34,9 +34,7 @@
 #define SHOW_MOUSEMOVE_EVENTS   false
 #endif // defined(EVENT_DEBUG_OUTPUT)
 
-#if defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT) || 1
 void PrintEvent(UINT msg, bool aShowAllEvents, bool aShowMouseMoves);
-#endif // defined(POPUP_ROLLUP_DEBUG_OUTPUT) || defined(EVENT_DEBUG_OUTPUT)
 
 #if defined(POPUP_ROLLUP_DEBUG_OUTPUT)
 typedef struct {

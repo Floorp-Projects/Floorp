@@ -264,7 +264,7 @@ public:
     void TraceScriptObject(JSTracer* aTrc)
     {
         if (mScriptObject) {
-            JS_CallHeapScriptTracer(aTrc, &mScriptObject, "active window XUL prototype script");
+            JS_CallScriptTracer(aTrc, &mScriptObject, "active window XUL prototype script");
         }
     }
 

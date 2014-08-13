@@ -204,6 +204,10 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitNegD(LNegD *lir);
     bool visitNegF(LNegF *lir);
 
+    // SIMD operators
+    bool visitSimdExtractElementI(LSimdExtractElementI *lir);
+    bool visitSimdExtractElementF(LSimdExtractElementF *lir);
+
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
     bool visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation *ool);

@@ -16,9 +16,6 @@
 
 namespace {
 
-// We send a byte across a pipe to wakeup the event loop.
-const char kWorkScheduled = '\0';
-
 // Return a timeout suitable for the glib loop, -1 to block forever,
 // 0 to return right away, or a timeout in milliseconds from now.
 int GetTimeIntervalMilliseconds(const base::TimeTicks& from) {

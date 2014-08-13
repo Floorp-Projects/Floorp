@@ -137,15 +137,43 @@ WMFAudioMFTManager::Input(mp4_demuxer::MP4Sample* aSample)
 }
 
 HRESULT
+WMFAudioMFTManager::UpdateOutputType()
+{
+  HRESULT hr;
+
+  RefPtr<IMFMediaType> type;
+  hr = mDecoder->GetOutputMediaType(type);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = type->GetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, &mAudioRate);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = type->GetUINT32(MF_MT_AUDIO_NUM_CHANNELS, &mAudioChannels);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  return S_OK;
+}
+
+HRESULT
 WMFAudioMFTManager::Output(int64_t aStreamOffset,
                            nsAutoPtr<MediaData>& aOutData)
 {
   aOutData = nullptr;
   RefPtr<IMFSample> sample;
-  HRESULT hr = mDecoder->Output(&sample);
-  if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    return MF_E_TRANSFORM_NEED_MORE_INPUT;
+  HRESULT hr;
+  while (true) {
+    hr = mDecoder->Output(&sample);
+    if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+      return hr;
+    }
+    if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
+      hr = UpdateOutputType();
+      NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+      continue;
+    }
+    break;
   }
+
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   RefPtr<IMFMediaBuffer> buffer;
