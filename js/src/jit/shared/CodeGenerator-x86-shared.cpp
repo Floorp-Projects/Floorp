@@ -2054,6 +2054,41 @@ CodeGeneratorX86Shared::visitNegF(LNegF *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdValueX4(LSimdValueX4 *ins)
+{
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    MSimdValueX4 *mir = ins->mir();
+    JS_ASSERT(IsSimdType(mir->type()));
+    JS_STATIC_ASSERT(sizeof(float) == sizeof(int32_t));
+
+    masm.reserveStack(Simd128DataSize);
+    // TODO see bug 1051860 for possible optimizations.
+    switch (mir->type()) {
+      case MIRType_Int32x4: {
+        for (size_t i = 0; i < 4; ++i) {
+            Register r = ToRegister(ins->getOperand(i));
+            masm.store32(r, Address(StackPointer, i * sizeof(int32_t)));
+        }
+        masm.loadAlignedInt32x4(Address(StackPointer, 0), output);
+        break;
+      }
+      case MIRType_Float32x4: {
+        for (size_t i = 0; i < 4; ++i) {
+            FloatRegister r = ToFloatRegister(ins->getOperand(i));
+            masm.storeFloat32(r, Address(StackPointer, i * sizeof(float)));
+        }
+        masm.loadAlignedFloat32x4(Address(StackPointer, 0), output);
+        break;
+      }
+      default: MOZ_ASSUME_UNREACHABLE("Unknown SIMD kind");
+    }
+
+    masm.freeStack(Simd128DataSize);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdExtractElementI(LSimdExtractElementI *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
