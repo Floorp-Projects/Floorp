@@ -150,7 +150,7 @@ void
 SourceBuffer::SetTimestampOffset(double aTimestampOffset, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("SourceBuffer(%p)::SetTimestampOffset(aTimestampOffset=%d)", this, aTimestampOffset);
+  MSE_API("SourceBuffer(%p)::SetTimestampOffset(aTimestampOffset=%f)", this, aTimestampOffset);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -191,7 +191,7 @@ void
 SourceBuffer::SetAppendWindowStart(double aAppendWindowStart, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("SourceBuffer(%p)::SetAppendWindowStart(aAppendWindowStart=%d)", this, aAppendWindowStart);
+  MSE_API("SourceBuffer(%p)::SetAppendWindowStart(aAppendWindowStart=%f)", this, aAppendWindowStart);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -207,7 +207,7 @@ void
 SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("SourceBuffer(%p)::SetAppendWindowEnd(aAppendWindowEnd=%d)", this, aAppendWindowEnd);
+  MSE_API("SourceBuffer(%p)::SetAppendWindowEnd(aAppendWindowEnd=%f)", this, aAppendWindowEnd);
   if (!IsAttached() || mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -268,14 +268,15 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("SourceBuffer(%p)::Remove(aStart=%f, aEnd=%f)", this, aStart, aEnd);
+  if (IsNaN(mMediaSource->Duration()) ||
+      aStart < 0 || aStart > mMediaSource->Duration() ||
+      aEnd <= aStart || IsNaN(aEnd)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
   if (!IsAttached() || mUpdating ||
       mMediaSource->ReadyState() != MediaSourceReadyState::Open) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-  if (aStart < 0 || aStart > mMediaSource->Duration() ||
-      aEnd <= aStart) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
   StartUpdating();
