@@ -176,6 +176,19 @@ public:
     return mReframingStyleContexts;
   }
 
+  /**
+   * Try starting a transition for an element or a ::before or ::after
+   * pseudo-element, given an old and new style context.  This may
+   * change the new style context if a transition is started.
+   *
+   * For the pseudo-elements, aContent must be the anonymous content
+   * that we're creating for that pseudo-element, not the real element.
+   */
+  static void
+  TryStartingTransition(nsPresContext* aPresContext, nsIContent* aContent,
+                        nsStyleContext* aOldStyleContext,
+                        nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */);
+
 private:
   void RestyleForEmptyChange(Element* aContainer);
 

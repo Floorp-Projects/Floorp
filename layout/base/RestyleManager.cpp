@@ -1821,10 +1821,12 @@ RestyleManager::DebugVerifyStyleTree(nsIFrame* aFrame)
 
 // aContent must be the content for the frame in question, which may be
 // :before/:after content
-static void
-TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
-                      nsStyleContext *aOldStyleContext,
-                      nsRefPtr<nsStyleContext> *aNewStyleContext /* inout */)
+/* static */ void
+RestyleManager::TryStartingTransition(nsPresContext* aPresContext,
+                                      nsIContent* aContent,
+                                      nsStyleContext* aOldStyleContext,
+                                      nsRefPtr<nsStyleContext>*
+                                        aNewStyleContext /* inout */)
 {
   if (!aContent || !aContent->IsElement()) {
     return;
@@ -2608,8 +2610,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
 
   if (newContext != oldContext) {
     if (!copyFromContinuation) {
-      TryStartingTransition(mPresContext, aSelf->GetContent(),
-                            oldContext, &newContext);
+      RestyleManager::TryStartingTransition(mPresContext, aSelf->GetContent(),
+                                            oldContext, &newContext);
 
       CaptureChange(oldContext, newContext, assumeDifferenceHint);
     }
