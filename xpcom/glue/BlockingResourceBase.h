@@ -319,6 +319,9 @@ private:
    */
   static void Shutdown();
 
+  static void StackWalkCallback(void* aPc, void* aSp, void* aClosure);
+  static void GetStackTrace(AcquisitionState& aState);
+
 #  ifdef MOZILLA_INTERNAL_API
   // so it can call BlockingResourceBase::Shutdown()
   friend void LogTerm();

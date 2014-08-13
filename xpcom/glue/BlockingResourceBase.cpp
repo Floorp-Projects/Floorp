@@ -11,6 +11,10 @@
 
 #include "nsAutoPtr.h"
 
+#ifndef MOZ_CALLSTACK_DISABLED
+#include "nsStackWalk.h"
+#endif
+
 #include "mozilla/CondVar.h"
 #include "mozilla/DeadlockDetector.h"
 #include "mozilla/ReentrantMonitor.h"
@@ -40,6 +44,30 @@ PRCallOnceType BlockingResourceBase::sCallOnce;
 unsigned BlockingResourceBase::sResourceAcqnChainFrontTPI = (unsigned)-1;
 BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
+
+void
+BlockingResourceBase::StackWalkCallback(void* aPc, void* aSp, void* aClosure)
+{
+#ifndef MOZ_CALLSTACK_DISABLED
+  AcquisitionState* state = (AcquisitionState*)aClosure;
+  state->AppendElement(aPc);
+#endif
+}
+
+void
+BlockingResourceBase::GetStackTrace(AcquisitionState& aState)
+{
+#ifndef MOZ_CALLSTACK_DISABLED
+  const uint32_t kSkipFrames = 2;
+
+  aState.Clear();
+
+  // NB: Ignore the return value, there's nothing useful we can do if this
+  //     this fails.
+  NS_StackWalk(StackWalkCallback, kSkipFrames,
+               24, &aState, 0, nullptr);
+#endif
+}
 
 /**
  * PrintCycle
@@ -188,6 +216,11 @@ BlockingResourceBase::CheckAcquire()
     return;
   }
 
+#ifndef MOZ_CALLSTACK_DISABLED
+  // Update the current stack before printing.
+  GetStackTrace(mAcquired);
+#endif
+
   fputs("###!!! ERROR: Potential deadlock detected:\n", stderr);
   nsAutoCString out("Potential deadlock detected:\n");
   bool maybeImminent = PrintCycle(cycle, out);
@@ -225,7 +258,11 @@ BlockingResourceBase::Acquire()
 #ifdef MOZ_CALLSTACK_DISABLED
   mAcquired = true;
 #else
-  // TODO(ER): take stack snapshot
+  // Take a stack snapshot.
+  GetStackTrace(mAcquired);
+  if (mFirstSeen.IsEmpty()) {
+    mFirstSeen = mAcquired;
+  }
 #endif
 }
 
