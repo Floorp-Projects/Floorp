@@ -157,6 +157,7 @@ GMPChild::LoadPluginLibrary(const std::string& aPluginPath)
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
   // Enable sandboxing here -- we know the plugin file's path, but
   // this process's execution hasn't been affected by its content yet.
+  MOZ_ASSERT(mozilla::CanSandboxMediaPlugin());
   mozilla::SetMediaPluginSandbox(nativePath.get());
 #endif
 
