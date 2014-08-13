@@ -73,6 +73,9 @@ endif
 ifdef USE_DEBUG_RTL
 NSPR_CONFIGURE_OPTS += --enable-debug-rtl
 endif
+ifdef USE_STATIC_RTL
+NSPR_CONFIGURE_OPTS += --enable-static-rtl
+endif
 ifdef NS_USE_GCC
 NSPR_COMPILERS = CC=gcc CXX=g++
 endif

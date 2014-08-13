@@ -26,7 +26,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>pp -t type [-a] [-i input] [-o output]</command>
+      <command>pp -t type [-a] [-i input] [-o output] [-u] [-w]</command>
     </cmdsynopsis>
   </refsynopsisdiv>
   
@@ -73,9 +73,23 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>-u </option> <replaceable>outputfile</replaceable></term>
+        <term><option>-o </option> <replaceable>outputfile</replaceable></term>
         <listitem>
           <simpara>Define an output file to use (default is stdout)</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-u </option> </term>
+        <listitem>
+          <simpara>Use UTF-8 (default is to show non-ascii as .)</simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-w </option> </term>
+        <listitem>
+          <simpara>Don't wrap long output lines</simpara>
         </listitem>
       </varlistentry>
 
