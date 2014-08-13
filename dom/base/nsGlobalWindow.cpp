@@ -7221,20 +7221,6 @@ nsGlobalWindow::GetTopWindowRoot()
   return window.forget();
 }
 
-void
-nsGlobalWindow::Scroll(int32_t aXScroll, int32_t aYScroll,
-                       const ScrollOptions& aOptions)
-{
-  ScrollTo(CSSIntPoint(aXScroll, aYScroll));
-}
-
-void
-nsGlobalWindow::ScrollTo(int32_t aXScroll, int32_t aYScroll,
-                         const ScrollOptions& aOptions)
-{
-  ScrollTo(CSSIntPoint(aXScroll, aYScroll));
-}
-
 NS_IMETHODIMP
 nsGlobalWindow::Scroll(int32_t aXScroll, int32_t aYScroll)
 {
@@ -7289,27 +7275,6 @@ nsGlobalWindow::MozRequestOverfill(OverfillCallback& aCallback,
   }
 
   aError.Throw(NS_ERROR_NOT_AVAILABLE);
-}
-
-void
-nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif,
-                         const ScrollOptions& aOptions)
-{
-  ScrollBy(aXScrollDif, aYScrollDif);
-}
-
-void
-nsGlobalWindow::ScrollByLines(int32_t numLines,
-                              const ScrollOptions& aOptions)
-{
-  ScrollByLines(numLines);
-}
-
-void
-nsGlobalWindow::ScrollByPages(int32_t numPages,
-                              const ScrollOptions& aOptions)
-{
-  ScrollByPages(numPages);
 }
 
 NS_IMETHODIMP
