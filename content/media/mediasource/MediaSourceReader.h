@@ -71,8 +71,7 @@ public:
   nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
                 int64_t aCurrentTime) MOZ_OVERRIDE;
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
-                                                      MediaSourceDecoder* aParentDecoder,
-                                                      MediaTaskQueue* aTaskQueue);
+                                                      MediaSourceDecoder* aParentDecoder);
 
   void Shutdown();
 
@@ -108,6 +107,8 @@ private:
 
   nsTArray<nsRefPtr<SubBufferDecoder>> mPendingDecoders;
   nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
+
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
 
   int32_t mActiveVideoDecoder;
   int32_t mActiveAudioDecoder;
