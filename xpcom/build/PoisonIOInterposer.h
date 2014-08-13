@@ -13,16 +13,16 @@
 MOZ_BEGIN_EXTERN_C
 
 /** Register file descriptor to be ignored by poisoning IO interposer */
-void MozillaRegisterDebugFD(int fd);
+void MozillaRegisterDebugFD(int aFd);
 
 /** Register file to be ignored by poisoning IO interposer */
-void MozillaRegisterDebugFILE(FILE *f);
+void MozillaRegisterDebugFILE(FILE* aFile);
 
 /** Unregister file descriptor from being ignored by poisoning IO interposer */
-void MozillaUnRegisterDebugFD(int fd);
+void MozillaUnRegisterDebugFD(int aFd);
 
 /** Unregister file from being ignored by poisoning IO interposer */
-void MozillaUnRegisterDebugFILE(FILE *f);
+void MozillaUnRegisterDebugFILE(FILE* aFile);
 
 MOZ_END_EXTERN_C
 
@@ -67,11 +67,11 @@ void ClearPoisonIOInterposer();
 
 #ifdef __cplusplus
 namespace mozilla {
-inline bool IsDebugFile(intptr_t aFileID){ return true; }
-inline void InitPoisonIOInterposer(){}
-inline void ClearPoisonIOInterposer(){}
+inline bool IsDebugFile(intptr_t aFileID) { return true; }
+inline void InitPoisonIOInterposer() {}
+inline void ClearPoisonIOInterposer() {}
 #ifdef XP_MACOSX
-inline void OnlyReportDirtyWrites(){}
+inline void OnlyReportDirtyWrites() {}
 #endif /* XP_MACOSX */
 } // namespace mozilla
 #endif /* __cplusplus */

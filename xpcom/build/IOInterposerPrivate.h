@@ -71,7 +71,7 @@ private:
 class MonitorAutoLock
 {
 public:
-  explicit MonitorAutoLock(Monitor &aMonitor)
+  explicit MonitorAutoLock(Monitor& aMonitor)
     : mMonitor(aMonitor)
   {
     mMonitor.Lock();
@@ -99,7 +99,7 @@ private:
 class MonitorAutoUnlock
 {
 public:
-  explicit MonitorAutoUnlock(Monitor &aMonitor)
+  explicit MonitorAutoUnlock(Monitor& aMonitor)
     : mMonitor(aMonitor)
   {
     mMonitor.Unlock();
