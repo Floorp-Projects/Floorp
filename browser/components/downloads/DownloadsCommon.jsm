@@ -398,7 +398,7 @@ this.DownloadsCommon = {
   {
     // We apply an algorithm similar to the DownloadUtils.getTimeLeft function,
     // though tailored to a single time estimation for all downloads.  We never
-    // apply sommothing if the new value is less than half the previous value.
+    // apply something if the new value is less than half the previous value.
     let shouldApplySmoothing = aLastSeconds >= 0 &&
                                aSeconds > aLastSeconds / 2;
     if (shouldApplySmoothing) {
@@ -482,7 +482,7 @@ this.DownloadsCommon = {
   },
 
   /**
-   * Show a donwloaded file in the system file manager.
+   * Show a downloaded file in the system file manager.
    * If you have a dataItem, use dataItem.showLocalFile.
    *
    * @param aFile
