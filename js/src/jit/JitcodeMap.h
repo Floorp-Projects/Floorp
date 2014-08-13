@@ -31,6 +31,7 @@ namespace jit {
  */
 
 class JitcodeMainTable;
+class JitcodeRegionEntry;
 
 class JitcodeGlobalEntry
 {
@@ -42,6 +43,13 @@ class JitcodeGlobalEntry
         LIMIT
     };
     JS_STATIC_ASSERT(LIMIT <= 8);
+
+    struct BytecodeLocation {
+        JSScript *script;
+        jsbytecode *pc;
+        BytecodeLocation(JSScript *script, jsbytecode *pc) : script(script), pc(pc) {}
+    };
+    typedef Vector<BytecodeLocation, 0, SystemAllocPolicy> BytecodeLocationVector;
 
     struct BaseEntry
     {
@@ -207,6 +215,8 @@ class JitcodeGlobalEntry
             }
             return -1;
         }
+
+        bool callStackAtAddr(void *ptr, BytecodeLocationVector &results, uint32_t *depth) const;
     };
 
     // QueryEntry is never stored in the table, just used for queries
@@ -326,6 +336,21 @@ class JitcodeGlobalEntry
     const QueryEntry &queryEntry() const {
         JS_ASSERT(isQuery());
         return query_;
+    }
+
+    // Read the inline call stack at a given point in the native code and append into
+    // the given vector.  Innermost (script,pc) pair will be appended first, and
+    // outermost appended last.
+    //
+    // Returns false on memory failure.
+    bool callStackAtAddr(void *ptr, BytecodeLocationVector &results, uint32_t *depth) const {
+        switch (kind()) {
+          case Main:
+            return mainEntry().callStackAtAddr(ptr, results, depth);
+          default:
+            MOZ_ASSUME_UNREACHABLE("Invalid JitcodeGlobalEntry kind.");
+        }
+        return false;
     }
 
     // Figure out the number of the (JSScript *, jsbytecode *) pairs that are active
@@ -648,6 +673,8 @@ class JitcodeRegionEntry
     DeltaIterator deltaIterator() const {
         return DeltaIterator(deltaRun_, end_);
     }
+
+    uint32_t findPcOffset(uint32_t queryNativeOffset, uint32_t startPcOffset) const;
 };
 
 class JitcodeMainTable
@@ -685,6 +712,21 @@ class JitcodeMainTable
             regionEnd -= regionOffset(regionIndex + 1);
         return JitcodeRegionEntry(regionStart, regionEnd);
     }
+
+    bool regionContainsOffset(uint32_t regionIndex, uint32_t nativeOffset) {
+        JS_ASSERT(regionIndex < numRegions());
+
+        JitcodeRegionEntry ent = regionEntry(regionIndex);
+        if (nativeOffset < ent.nativeOffset())
+            return false;
+
+        if (regionIndex == numRegions_ - 1)
+            return true;
+
+        return nativeOffset < regionEntry(regionIndex + 1).nativeOffset();
+    }
+
+    uint32_t findRegionEntry(uint32_t offset) const;
 
     const uint8_t *payloadStart() const {
         // The beginning of the payload the beginning of the first region are the same.
