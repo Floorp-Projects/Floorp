@@ -266,6 +266,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitRecompileCheck(MRecompileCheck *ins);
     bool visitSimdExtractElement(MSimdExtractElement *ins);
     bool visitSimdValueX4(MSimdValueX4 *ins);
+    bool visitSimdConstant(MSimdConstant *ins);
 };
 
 } // namespace jit
