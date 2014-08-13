@@ -20,6 +20,8 @@ class Index
 public:
   Index(const stagefright::Vector<stagefright::MediaSource::Indice>& aIndex,
         Stream* aSource, uint32_t aTrackId);
+  ~Index();
+
   void ConvertByteRangesToTimeRanges(
     const nsTArray<mozilla::MediaByteRange>& aByteRanges,
     nsTArray<Interval<Microseconds>>* aTimeRanges);
