@@ -343,7 +343,7 @@ ReentrantMonitor::Wait(PRIntervalTime aInterval)
   AcquisitionState savedAcquisitionState = GetAcquisitionState();
   BlockingResourceBase* savedChainPrev = mChainPrev;
   mEntryCount = 0;
-  SetAcquisitionState(false);
+  ClearAcquisitionState();
   mChainPrev = 0;
 
   nsresult rv;
@@ -379,7 +379,7 @@ CondVar::Wait(PRIntervalTime aInterval)
   // save mutex state and reset to empty
   AcquisitionState savedAcquisitionState = mLock->GetAcquisitionState();
   BlockingResourceBase* savedChainPrev = mLock->mChainPrev;
-  mLock->SetAcquisitionState(false);
+  mLock->ClearAcquisitionState();
   mLock->mChainPrev = 0;
 
   // give up mutex until we're back from Wait()
