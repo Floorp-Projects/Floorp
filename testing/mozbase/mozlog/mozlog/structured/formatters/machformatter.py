@@ -247,14 +247,9 @@ class MachFormatter(base.BaseFormatter):
                 level = self.terminal.blue(level)
 
         if data.get('component'):
-            rv = " ".join([data["component"], level, data["message"]])
-        else:
-            rv = "%s %s" % (level, message)
+            return " ".join([data["component"], level, data["message"]])
 
-        if "stack" in data:
-            rv += "\n%s" % data["stack"]
-
-        return rv
+        return "%s %s" % (level, data["message"])
 
     def _get_subtest_data(self, data):
         test = self._get_test_id(data)
