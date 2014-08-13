@@ -29,45 +29,6 @@ namespace mozilla {
 
 class SubBufferDecoder;
 
-class MediaSourceStateMachine : public MediaDecoderStateMachine
-{
-public:
-  MediaSourceStateMachine(MediaDecoder* aDecoder,
-                          MediaDecoderReader* aReader,
-                          bool aRealTime = false)
-    : MediaDecoderStateMachine(aDecoder, aReader, aRealTime)
-  {
-  }
-
-  already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
-                                                      MediaSourceDecoder* aParentDecoder) {
-    if (!mReader) {
-      return nullptr;
-    }
-    MediaSourceReader* reader = static_cast<MediaSourceReader*>(mReader.get());
-    return reader->CreateSubDecoder(aType, aParentDecoder, mDecodeTaskQueue);
-  }
-
-  nsresult EnqueueDecoderInitialization() {
-    AssertCurrentThreadInMonitor();
-    if (!mReader) {
-      return NS_ERROR_FAILURE;
-    }
-    RefPtr<nsIRunnable> task =
-      NS_NewRunnableMethod(this, &MediaSourceStateMachine::InitializePendingDecoders);
-    return mDecodeTaskQueue->Dispatch(task);
-  }
-
-private:
-  void InitializePendingDecoders() {
-    if (!mReader) {
-      return;
-    }
-    MediaSourceReader* reader = static_cast<MediaSourceReader*>(mReader.get());
-    reader->InitializePendingDecoders();
-  }
-};
-
 MediaSourceDecoder::MediaSourceDecoder(dom::HTMLMediaElement* aElement)
   : mMediaSource(nullptr)
 {
@@ -84,7 +45,8 @@ MediaSourceDecoder::Clone()
 MediaDecoderStateMachine*
 MediaSourceDecoder::CreateStateMachine()
 {
-  return new MediaSourceStateMachine(this, new MediaSourceReader(this, mMediaSource));
+  mReader = new MediaSourceReader(this, mMediaSource);
+  return new MediaDecoderStateMachine(this, mReader);
 }
 
 nsresult
@@ -148,21 +110,7 @@ MediaSourceDecoder::DetachMediaSource()
 already_AddRefed<SubBufferDecoder>
 MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
 {
-  if (!mDecoderStateMachine) {
-    return nullptr;
-  }
-  MediaSourceStateMachine* sm = static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get());
-  return sm->CreateSubDecoder(aType, this);
-}
-
-nsresult
-MediaSourceDecoder::EnqueueDecoderInitialization()
-{
-  if (!mDecoderStateMachine) {
-    return NS_ERROR_FAILURE;
-  }
-  MediaSourceStateMachine* sm = static_cast<MediaSourceStateMachine*>(mDecoderStateMachine.get());
-  return sm->EnqueueDecoderInitialization();
+  return mReader->CreateSubDecoder(aType, this);
 }
 
 } // namespace mozilla
