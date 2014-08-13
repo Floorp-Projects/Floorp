@@ -55,6 +55,7 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
                                         MostRecentRefresh())
   , mAnimationGeneration(0)
+  , mReframingStyleContexts(nullptr)
   , mPendingRestyles(ELEMENT_HAS_PENDING_RESTYLE |
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
   , mPendingAnimationRestyles(ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
