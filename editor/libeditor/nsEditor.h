@@ -208,7 +208,7 @@ public:
                                int32_t *aInOutOffset,
                                nsIDOMDocument *aDoc);
   nsresult InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
-                                      nsINode* aTextNode,
+                                      mozilla::dom::Text* aTextNode,
                                       int32_t aOffset,
                                       bool aSuppressIME = false);
   nsresult InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert, 
