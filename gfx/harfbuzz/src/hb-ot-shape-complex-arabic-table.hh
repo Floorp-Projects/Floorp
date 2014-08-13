@@ -70,7 +70,7 @@ static const uint8_t joining_table[] =
 
   /* Mandaic */
 
-  /* 0840 */ R,D,D,D,D,D,R,D,D,R,D,D,D,D,D,R,D,D,D,D,R,D,U,U,U,X,X,X,X,X,X,X,
+  /* 0840 */ R,D,D,D,D,D,R,R,D,R,D,D,D,D,D,D,D,D,D,D,R,D,U,U,U,X,X,X,X,X,X,X,
   /* 0860 */ X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
   /* 0880 */ X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
 
