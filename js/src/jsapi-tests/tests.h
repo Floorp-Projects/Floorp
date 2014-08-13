@@ -67,28 +67,14 @@ class JSAPITest
         list = this;
     }
 
-    virtual ~JSAPITest() { uninit(); }
+    virtual ~JSAPITest() {
+        JS_ASSERT(!rt);
+        JS_ASSERT(!cx);
+        JS_ASSERT(!global);
+    }
 
     virtual bool init();
-
-    virtual void uninit() {
-        if (oldCompartment) {
-            JS_LeaveCompartment(cx, oldCompartment);
-            oldCompartment = nullptr;
-        }
-        global = nullptr;
-        if (cx) {
-            JS::RemoveObjectRoot(cx, &global);
-            JS_LeaveCompartment(cx, nullptr);
-            JS_EndRequest(cx);
-            JS_DestroyContext(cx);
-            cx = nullptr;
-        }
-        if (rt) {
-            destroyRuntime();
-            rt = nullptr;
-        }
-    }
+    virtual void uninit();
 
     virtual const char * name() = 0;
     virtual bool run(JS::HandleObject global) = 0;
