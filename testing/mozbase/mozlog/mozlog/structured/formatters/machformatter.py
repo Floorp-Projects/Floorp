@@ -220,6 +220,9 @@ class MachFormatter(base.BaseFormatter):
                                                            data["status"],
                                                            data["expected"],
                                                            data.get("message", "")))
+        if data["status"] == "PASS":
+            self.status_buffer[test]["pass"] += 1
+
         self._update_summary(data)
 
     def _update_summary(self, data):
