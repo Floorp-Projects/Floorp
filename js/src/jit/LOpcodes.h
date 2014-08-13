@@ -21,6 +21,8 @@
     _(Float32x4)                    \
     _(SimdExtractElementI)          \
     _(SimdExtractElementF)          \
+    _(SimdBinaryArithIx4)           \
+    _(SimdBinaryArithFx4)           \
     _(Value)                        \
     _(CloneLiteral)                 \
     _(Parameter)                    \
