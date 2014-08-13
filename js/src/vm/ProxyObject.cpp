@@ -42,11 +42,9 @@ ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue pri
     NewObjectKind newKind = options.singleton() ? SingletonObject : GenericObject;
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
 
-#if 0
-    // Background finalization of proxies temporarily disabled. See bug 1008791
     if (handler->finalizeInBackground(priv))
         allocKind = GetBackgroundAllocKind(allocKind);
-#endif
+
     RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
     if (!obj)
         return nullptr;
