@@ -3697,6 +3697,25 @@ LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
     return false;
 }
 
+bool
+LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith *ins)
+{
+    JS_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->type() == MIRType_Int32x4) {
+        LSimdBinaryArithIx4 *add = new(alloc()) LSimdBinaryArithIx4();
+        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+    }
+
+    if (ins->type() == MIRType_Float32x4) {
+        LSimdBinaryArithFx4 *add = new(alloc()) LSimdBinaryArithFx4();
+        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Unknown SIMD kind when adding values");
+    return false;
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {

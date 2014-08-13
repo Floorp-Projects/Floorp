@@ -298,6 +298,7 @@ private:
         OP2_UCOMISD_VsdWsd  = 0x2E,
         OP2_MOVMSKPD_EdVd   = 0x50,
         OP2_ADDSD_VsdWsd    = 0x58,
+        OP2_ADDPS_VpsWps    = 0x58,
         OP2_MULSD_VsdWsd    = 0x59,
         OP2_CVTSS2SD_VsdEd  = 0x5A,
         OP2_CVTSD2SS_VsdEd  = 0x5A,
@@ -330,6 +331,7 @@ private:
         OP2_PEXTRW_GdUdIb   = 0xC5,
         OP2_SHUFPS_VpsWpsIb = 0xC6,
         OP2_PXORDQ_VdqWdq   = 0xEF,
+        OP2_PADDD_VdqWdq    = 0xFE
     } TwoByteOpcodeID;
 
     typedef enum {
@@ -660,6 +662,46 @@ public:
             nameIReg(base), nameIReg(index), 1<<scale);
         m_formatter.oneByteOp(PRE_LOCK);
         m_formatter.twoByteOp(OP2_XADD_EvGv, srcdest, base, index, scale, offset);
+    }
+
+    void paddd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("paddd      %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, (RegisterID)src);
+    }
+    void paddd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("paddd      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, base, offset);
+    }
+    void paddd_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("paddd      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, address);
+    }
+
+    void addps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("addps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void addps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("addps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void addps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("addps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, address);
     }
 
     void andl_rr(RegisterID src, RegisterID dst)

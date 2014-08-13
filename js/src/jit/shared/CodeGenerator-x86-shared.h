@@ -210,6 +210,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitFloat32x4(LFloat32x4 *ins);
     bool visitSimdExtractElementI(LSimdExtractElementI *lir);
     bool visitSimdExtractElementF(LSimdExtractElementF *lir);
+    bool visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *lir);
+    bool visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *lir);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);

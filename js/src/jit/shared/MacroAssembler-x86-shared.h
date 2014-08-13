@@ -482,6 +482,9 @@ class MacroAssemblerX86Shared : public Assembler
     void storeUnalignedInt32x4(FloatRegister src, const Address &dest) {
         movdqu(src, Operand(dest));
     }
+    void packedAddInt32(const Operand &src, FloatRegister dest) {
+        paddd(src, dest);
+    }
 
     void loadAlignedFloat32x4(const Address &src, FloatRegister dest) {
         movaps(Operand(src), dest);
@@ -497,6 +500,9 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void storeUnalignedFloat32x4(FloatRegister src, const Address &dest) {
         movups(src, Operand(dest));
+    }
+    void packedAddFloat32(const Operand &src, FloatRegister dest) {
+        addps(src, dest);
     }
 
     static uint32_t ComputeShuffleMask(SimdLane x, SimdLane y = LaneX,

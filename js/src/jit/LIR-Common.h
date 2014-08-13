@@ -185,6 +185,42 @@ class LSimdExtractElementF : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Binary SIMD arithmetic operation between two SIMD operands
+class LSimdBinaryArith : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LSimdBinaryArith() {}
+
+    const LAllocation *lhs() {
+        return getOperand(0);
+    }
+    const LAllocation *rhs() {
+        return getOperand(1);
+    }
+    MSimdBinaryArith::Operation operation() const {
+        return mir_->toSimdBinaryArith()->operation();
+    }
+    const char *extraName() const {
+        return MSimdBinaryArith::OperationName(operation());
+    }
+};
+
+// Binary SIMD arithmetic operation between two Int32x4 operands
+class LSimdBinaryArithIx4 : public LSimdBinaryArith
+{
+  public:
+    LIR_HEADER(SimdBinaryArithIx4);
+    LSimdBinaryArithIx4() : LSimdBinaryArith() {}
+};
+
+// Binary SIMD arithmetic operation between two Float32x4 operands
+class LSimdBinaryArithFx4 : public LSimdBinaryArith
+{
+  public:
+    LIR_HEADER(SimdBinaryArithFx4);
+    LSimdBinaryArithFx4() : LSimdBinaryArith() {}
+};
+
 // Constant 32-bit integer.
 class LInteger : public LInstructionHelper<1, 0, 0>
 {
