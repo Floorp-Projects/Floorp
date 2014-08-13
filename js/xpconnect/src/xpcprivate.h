@@ -3370,6 +3370,7 @@ struct GlobalProperties {
     bool TextDecoder : 1;
     bool TextEncoder : 1;
     bool URL : 1;
+    bool URLSearchParams : 1;
     bool atob : 1;
     bool btoa : 1;
 };
