@@ -37,26 +37,26 @@ struct nsXREAppData
    * mixed-case, e.g. "Mozilla". Optional (may be null), but highly
    * recommended. Must not be the empty string.
    */
-  const char *vendor;
+  const char* vendor;
 
   /**
    * The name of the application. This must be ASCII, and is normally
    * mixed-case, e.g. "Firefox". Required (must not be null or an empty
    * string).
    */
-  const char *name;
+  const char* name;
 
   /**
    * The major version, e.g. "0.8.0+". Optional (may be null), but
    * required for advanced application features such as the extension
    * manager and update service. Must not be the empty string.
    */
-  const char *version;
+  const char* version;
 
   /**
    * The application's build identifier, e.g. "2004051604"
    */
-  const char *buildID;
+  const char* buildID;
 
   /**
    * The application's UUID. Used by the extension manager to determine
@@ -68,13 +68,13 @@ struct nsXREAppData
    * a more readable form is encouraged: "appname@vendor.tld". Only
    * the following characters are allowed: a-z A-Z 0-9 - . @ _ { } *
    */
-  const char *ID;
+  const char* ID;
 
   /**
    * The copyright information to print for the -h commandline flag,
    * e.g. "Copyright (c) 2003 mozilla.org".
    */
-  const char *copyright;
+  const char* copyright;
 
   /**
    * Combination of NS_XRE_ prefixed flags (defined below).
@@ -90,13 +90,13 @@ struct nsXREAppData
   /**
    * The minimum/maximum compatible XRE version.
    */
-  const char *minVersion;
-  const char *maxVersion;
+  const char* minVersion;
+  const char* maxVersion;
 
   /**
    * The server URL to send crash reports to.
    */
-  const char *crashReporterURL;
+  const char* crashReporterURL;
 
   /**
    * The profile directory that will be used. Optional (may be null). Must not
@@ -113,12 +113,12 @@ struct nsXREAppData
    *
    *   UAppData = $HOME/$profile
    */
-  const char *profile;
+  const char* profile;
 
   /**
    * The application name to use in the User Agent string.
    */
-  const char *UAName;
+  const char* UAName;
 };
 
 /**
