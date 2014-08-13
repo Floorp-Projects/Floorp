@@ -296,7 +296,8 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_GETTEXT:
     case WM_NCHITTEST:
     case WM_STYLECHANGING:  // Intentional fall-through.
-    case WM_WINDOWPOSCHANGING: { 
+    case WM_WINDOWPOSCHANGING:
+    case WM_GETTEXTLENGTH: {
       return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
