@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1041808
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1041808</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1041808 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var dialogsOpened = 0;
+var dialogsClosed = 0;
+function dismissDialog(aSubject, aTopic, aData)
+{
+  if (aTopic == "domwindowopened") {
+    var win = SpecialPowers.wrap(aSubject);
+    win.addEventListener("pageshow", function() {
+      win.removeEventListener("pageshow", arguments.callee, false);
+      sendKey("RETURN", aSubject);
+    }, false);
+    ++dialogsOpened;
+  } else if (aTopic == "domwindowclosed") {
+    ++dialogsClosed;
+  }
+}
+
+function runTest()
+{
+  SpecialPowers.Services.ww.registerNotification(dismissDialog);
+  document.cookie = "test1=testValue";
+  document.cookie = "test2=testValue";
+  document.cookie = "test3=testValue";
+  SpecialPowers.Services.ww.unregisterNotification(dismissDialog);
+  is(dialogsOpened, 3, "Setting a cookie should have asked for permission");
+  is(dialogsOpened - dialogsClosed, 0,
+     "Setting a cookie shouldn't have left any additional windows open");
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv({"set": [["network.cookie.lifetimePolicy", 1]]},
+                          runTest);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1041808">Mozilla Bug 1041808</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
