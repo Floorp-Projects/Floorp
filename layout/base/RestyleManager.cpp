@@ -905,10 +905,8 @@ RestyleManager::RestyleElement(Element*        aElement,
   if (aMinHint & nsChangeHint_ReconstructFrame) {
     FrameConstructor()->RecreateFramesForContent(aElement, false);
   } else if (aPrimaryFrame) {
-    nsStyleChangeList changeList;
-    ComputeStyleChangeFor(aPrimaryFrame, &changeList, aMinHint,
-                          aRestyleTracker, aRestyleHint);
-    ProcessRestyledFrames(changeList);
+    ComputeAndProcessStyleChange(aPrimaryFrame, aMinHint, aRestyleTracker,
+                                 aRestyleHint);
   } else if (aRestyleHint & ~eRestyle_LaterSiblings) {
     // We're restyling an element with no frame, so we should try to
     // make one if its new style says it should have one.  But in order
@@ -1464,16 +1462,12 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
   // XXX This could be made faster by not rerunning rule matching
   // (but note that nsPresShell::SetPreferenceStyleRules currently depends
   // on us re-running rule matching here
-  nsStyleChangeList changeList;
   // XXX Does it matter that we're passing aExtraHint to the real root
   // frame and not the root node's primary frame?  (We could do
   // roughly what we do for aRestyleHint above.)
   // Note: The restyle tracker we pass in here doesn't matter.
-  ComputeStyleChangeFor(mPresContext->PresShell()->GetRootFrame(),
-                        &changeList, aExtraHint,
-                        aRestyleTracker, aRestyleHint);
-  // Process the required changes
-  ProcessRestyledFrames(changeList);
+  ComputeAndProcessStyleChange(mPresContext->PresShell()->GetRootFrame(),
+                               aExtraHint, aRestyleTracker, aRestyleHint);
   FlushOverflowChangedTracker();
 
   // Tell the style set it's safe to destroy the old rule tree.  We
@@ -3073,6 +3067,18 @@ GetNextBlockInInlineSibling(FramePropertyTable* aPropTable, nsIFrame* aFrame)
 
   return static_cast<nsIFrame*>
     (aPropTable->Get(aFrame, nsIFrame::IBSplitSibling()));
+}
+
+void
+RestyleManager::ComputeAndProcessStyleChange(nsIFrame*          aFrame,
+                                             nsChangeHint       aMinChange,
+                                             RestyleTracker&    aRestyleTracker,
+                                             nsRestyleHint      aRestyleHint)
+{
+  nsStyleChangeList changeList;
+  ComputeStyleChangeFor(aFrame, &changeList, aMinChange,
+                        aRestyleTracker, aRestyleHint);
+  ProcessRestyledFrames(changeList);
 }
 
 void
