@@ -44,12 +44,12 @@ function check_ok_ca(cert) {
 }
 
 function check_fail(cert) {
-  return check_cert_err(cert, SEC_ERROR_INVALID_KEY);
+  return check_cert_err(cert, MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE);
 }
 
 function check_fail_ca(cert) {
   return check_cert_err_generic(cert,
-                                SEC_ERROR_INVALID_KEY,
+                                MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE,
                                 certificateUsageSSLCA);
 }
 
