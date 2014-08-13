@@ -203,6 +203,17 @@ protected:
   }
 
   /**
+   * ClearAcquisitionState
+   * Indicate this resource is not acquired.
+   *
+   * *NOT* thread safe.  Requires ownership of underlying resource.
+   */
+  void ClearAcquisitionState()
+  {
+    mAcquired = false;
+  }
+
+  /**
    * mChainPrev
    * A series of resource acquisitions creates a chain of orders.  This
    * chain is implemented as a linked list; |mChainPrev| points to the
