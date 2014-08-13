@@ -269,6 +269,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
 
           aState->curpos = CheckIntAttr(tmpFrame, nsGkAtoms::curpos, 0);
           aState->maxpos = CheckIntAttr(tmpFrame, nsGkAtoms::maxpos, 100);
+
+          if (CheckBooleanAttr(aFrame, nsGkAtoms::active)) {
+            aState->active = TRUE;
+          }
         }
 
         if (aWidgetType == NS_THEME_SCROLLBAR_BUTTON_UP ||
@@ -1303,6 +1307,13 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
       aWidgetType == NS_THEME_WINDOW ||
       aWidgetType == NS_THEME_DIALOG) {
     *aShouldRepaint = false;
+    return NS_OK;
+  }
+
+  if ((aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL ||
+       aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) &&
+       aAttribute == nsGkAtoms::active) {
+    *aShouldRepaint = true;
     return NS_OK;
   }
 
