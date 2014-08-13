@@ -17,6 +17,7 @@ EXTRA_JS_MODULES += [
     'LightweightThemeConsumer.jsm',
     'MediaPlayerApp.jsm',
     'Messaging.jsm',
+    'NetErrorHelper.jsm',
     'Notifications.jsm',
     'OrderedBroadcast.jsm',
     'Prompt.jsm',
