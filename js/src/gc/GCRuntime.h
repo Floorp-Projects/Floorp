@@ -274,7 +274,8 @@ class GCRuntime
 
     bool triggerGC(JS::gcreason::Reason reason);
     bool triggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
-    void maybeGC(Zone *zone);
+    bool maybeGC(Zone *zone);
+    void maybePeriodicFullGC();
     void minorGC(JS::gcreason::Reason reason);
     void minorGC(JSContext *cx, JS::gcreason::Reason reason);
     void gcIfNeeded(JSContext *cx);
@@ -487,7 +488,7 @@ class GCRuntime
     void getNextZoneGroup();
     void endMarkingZoneGroup();
     void beginSweepingZoneGroup();
-    bool releaseObservedTypes();
+    bool shouldReleaseObservedTypes();
     void endSweepingZoneGroup();
     bool sweepPhase(SliceBudget &sliceBudget);
     void endSweepPhase(JSGCInvocationKind gckind, bool lastGC);
@@ -567,7 +568,6 @@ class GCRuntime
     bool                  chunkAllocationSinceLastGC;
     int64_t               nextFullGCTime;
     int64_t               lastGCTime;
-    int64_t               jitReleaseTime;
 
     JSGCMode              mode;
 
@@ -588,6 +588,12 @@ class GCRuntime
      * full GC.
      */
     volatile uintptr_t    isNeeded;
+
+    /* Incremented at the start of every major GC. */
+    uint64_t              majorGCNumber;
+
+    /* The major GC number at which to release observed type information. */
+    uint64_t              jitReleaseNumber;
 
     /* Incremented on every GC slice. */
     uint64_t              number;
@@ -623,6 +629,9 @@ class GCRuntime
 
     /* Whether any sweeping will take place in the separate GC helper thread. */
     bool                  sweepOnBackgroundThread;
+
+    /* Whether observed type information is being released in the current GC. */
+    bool                  releaseObservedTypes;
 
     /* Whether any black->gray edges were found during marking. */
     bool                  foundBlackGrayEdges;
