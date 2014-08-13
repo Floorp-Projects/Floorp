@@ -10,7 +10,7 @@ interface nsIDOMWindow;
 interface nsIDOMDOMCursor;
 interface nsICursorContinueCallback;
 
-[builtinclass, uuid(d4c7372a-661c-4798-9a13-af48128609e9)]
+[builtinclass, uuid(e39da69e-2232-4e49-9856-b8a4a6210336)]
 interface nsIDOMDOMRequest : nsIDOMEventTarget
 {
   readonly attribute DOMString readyState; // "pending" or "done"
