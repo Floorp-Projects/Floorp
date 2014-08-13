@@ -313,7 +313,7 @@ def print_command(out, args):
             print >>out, "".join(["    " + l for l in file.readlines()])
     out.flush()
 
-def main():
+def main(args, proc_callback=None):
     parser = OptionParser()
     parser.add_option("--depend", dest="depend", metavar="FILE",
         help="generate dependencies for the given execution and store it in the given file")
@@ -328,7 +328,7 @@ def main():
     parser.add_option("--symbol-order", dest="symbol_order", metavar="FILE",
         help="use the given list of symbols to order symbols in the resulting binary when using with a linker")
 
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args(args)
 
     if not options.target:
         options.depend = False
@@ -351,6 +351,8 @@ def main():
             print_command(sys.stderr, args)
         try:
             proc = subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+            if proc_callback:
+                proc_callback(proc)
         except Exception, e:
             print >>sys.stderr, 'error: Launching', args, ':', e
             raise e
@@ -360,9 +362,9 @@ def main():
         sys.stderr.write(stdout)
         sys.stderr.flush()
         if proc.returncode:
-            exit(proc.returncode)
+            return proc.returncode
     if not options.depend:
-        return
+        return 0
     ensureParentDir(options.depend)
     mk = Makefile()
     deps = [dep for dep in deps if os.path.isfile(dep) and dep != options.target
@@ -374,6 +376,7 @@ def main():
 
     with open(options.depend, 'w') as depfile:
         mk.dump(depfile, removal_guard=True)
+    return 0
 
 if __name__ == '__main__':
-    main()
+    exit(main(sys.argv[1:]))
