@@ -255,10 +255,9 @@ public:
 
   /* Method to replace certain CreateElementNS() calls. 
      Arguments:
-      nsString& aTag          - tag you want
+      nsIAtom* aTag          - tag you want
   */
-  already_AddRefed<mozilla::dom::Element>
-    CreateHTMLContent(const nsAString& aTag, mozilla::ErrorResult& rv);
+  already_AddRefed<mozilla::dom::Element> CreateHTMLContent(nsIAtom* aTag);
 
   // IME event handlers
   virtual nsresult BeginIMEComposition(mozilla::WidgetCompositionEvent* aEvent);
