@@ -578,6 +578,16 @@ class BuildReaderError(Exception):
                 verb = 'read'
             elif inner.args[1] == 'set_unknown':
                 verb = 'write'
+            elif inner.args[1] == 'reassign':
+                s.write('The underlying problem is an attempt to reassign ')
+                s.write('a reserved UPPERCASE variable.\n')
+                s.write('\n')
+                s.write('The reassigned variable causing the error is:\n')
+                s.write('\n')
+                s.write('    %s\n' % inner.args[2])
+                s.write('\n')
+                s.write('Maybe you meant "+=" instead of "="?\n')
+                return
             else:
                 raise AssertionError('Unhandled global_ns: %s' % inner.args[1])
 
