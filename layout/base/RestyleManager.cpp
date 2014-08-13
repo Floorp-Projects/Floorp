@@ -3076,6 +3076,13 @@ RestyleManager::ComputeAndProcessStyleChange(nsIFrame*          aFrame,
                                              RestyleTracker&    aRestyleTracker,
                                              nsRestyleHint      aRestyleHint)
 {
+  // Create a ReframingStyleContexts struct on the stack and put it in
+  // our mReframingStyleContexts for the scope of this function.
+  MOZ_ASSERT(!mReframingStyleContexts, "shouldn't call recursively");
+  AutoRestore<ReframingStyleContexts*> ar(mReframingStyleContexts);
+  ReframingStyleContexts reframingStyleContexts;
+  mReframingStyleContexts = &reframingStyleContexts;
+
   nsStyleChangeList changeList;
   ComputeStyleChangeFor(aFrame, &changeList, aMinChange,
                         aRestyleTracker, aRestyleHint);
