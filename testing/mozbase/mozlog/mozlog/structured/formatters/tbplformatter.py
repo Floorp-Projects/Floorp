@@ -18,14 +18,9 @@ class TbplFormatter(BaseFormatter):
 
     def log(self, data):
         if data.get('component'):
-            message = "%s %s" % (data["component"], data["message"])
-        else:
-            message = data["message"]
+            return "%s %s\n" % (data["component"], data["message"])
 
-        if "stack" in data:
-            message += "\n%s" % data["stack"]
-
-        return "%s\n" % message
+        return "%s\n" % (data["message"])
 
     def process_output(self, data):
         return "PROCESS | %(process)s | %(data)s\n" % data
