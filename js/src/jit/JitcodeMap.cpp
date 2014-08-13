@@ -13,6 +13,41 @@
 
 namespace js {
 namespace jit {
+ 
+bool
+JitcodeGlobalEntry::MainEntry::callStackAtAddr(void *ptr, BytecodeLocationVector &results,
+                                               uint32_t *depth) const
+{
+    JS_ASSERT(containsPointer(ptr));
+    uint32_t ptrOffset = reinterpret_cast<uint8_t *>(ptr) -
+                         reinterpret_cast<uint8_t *>(nativeStartAddr());
+
+    uint32_t regionIdx = regionTable()->findRegionEntry(ptrOffset);
+    JS_ASSERT(regionIdx < regionTable()->numRegions());
+
+    JitcodeRegionEntry region = regionTable()->regionEntry(regionIdx);
+    *depth = region.scriptDepth();
+
+    JitcodeRegionEntry::ScriptPcIterator locationIter = region.scriptPcIterator();
+    JS_ASSERT(locationIter.hasMore());
+    bool first = true;
+    while (locationIter.hasMore()) {
+        uint32_t scriptIdx, pcOffset;
+        locationIter.readNext(&scriptIdx, &pcOffset);
+        // For the first entry pushed (innermost frame), the pcOffset is obtained
+        // from the delta-run encodings.
+        if (first) {
+            pcOffset = region.findPcOffset(ptrOffset, pcOffset);
+            first = false;
+        }
+        JSScript *script = getScript(scriptIdx);
+        jsbytecode *pc = script->offsetToPC(pcOffset);
+        if (!results.append(BytecodeLocation(script, pc)))
+            return false;
+    }
+
+    return true;
+}
 
 void
 JitcodeGlobalEntry::MainEntry::destroy()
@@ -430,6 +465,82 @@ JitcodeRegionEntry::unpack()
     }
 
     deltaRun_ = reader.currentPosition();
+}
+
+uint32_t
+JitcodeRegionEntry::findPcOffset(uint32_t queryNativeOffset, uint32_t startPcOffset) const
+{
+    DeltaIterator iter = deltaIterator();
+    uint32_t curNativeOffset = nativeOffset();
+    uint32_t curPcOffset = startPcOffset;
+    while (iter.hasMore()) {
+        uint32_t nativeDelta;
+        int32_t pcDelta;
+        iter.readNext(&nativeDelta, &pcDelta);
+
+        // The start address of the next delta-run entry is counted towards
+        // the current delta-run entry, because return addresses should
+        // associate with the bytecode op prior (the call) not the op after.
+        if (queryNativeOffset <= curNativeOffset + nativeDelta)
+            break;
+        curNativeOffset += nativeDelta;
+        curPcOffset += pcDelta;
+    }
+    return curPcOffset;
+}
+
+uint32_t
+JitcodeMainTable::findRegionEntry(uint32_t nativeOffset) const
+{
+    static const uint32_t LINEAR_SEARCH_THRESHOLD = 8;
+    uint32_t regions = numRegions();
+    JS_ASSERT(regions > 0);
+
+    // For small region lists, just search linearly.
+    if (regions <= LINEAR_SEARCH_THRESHOLD) {
+        JitcodeRegionEntry previousEntry = regionEntry(0);
+        for (uint32_t i = 1; i < regions; i++) {
+            JitcodeRegionEntry nextEntry = regionEntry(i);
+            JS_ASSERT(nextEntry.nativeOffset() >= previousEntry.nativeOffset());
+
+            // See note in binary-search code below about why we use '<=' here instead of
+            // '<'.  Short explanation: regions are closed at their ending addresses,
+            // and open at their starting addresses.
+            if (nativeOffset <= nextEntry.nativeOffset())
+                return i-1;
+
+            previousEntry = nextEntry;
+        }
+        // If nothing found, assume it falls within last region.
+        return regions - 1;
+    }
+
+    // For larger ones, binary search the region table.
+    uint32_t idx = 0;
+    uint32_t count = regions;
+    while (count > 1) {
+        uint32_t step = count/2;
+        uint32_t mid = idx + step;
+        JitcodeRegionEntry midEntry = regionEntry(mid);
+
+        // A region memory range is closed at its ending address, not starting
+        // address.  This is because the return address for calls must associate
+        // with the call's bytecode PC, not the PC of the bytecode operator after
+        // the call.
+        //
+        // So a query is < an entry if the query nativeOffset is <= the start address
+        // of the entry, and a query is >= an entry if the query nativeOffset is > the
+        // start address of an entry.
+        if (nativeOffset <= midEntry.nativeOffset()) {
+            // Target entry is below midEntry.
+            count = step;
+        } else { // if (nativeOffset > midEntry.nativeOffset())
+            // Target entry is at midEntry or above.
+            idx = mid;
+            count -= step;
+        }
+    }
+    return idx;
 }
 
 /* static */ bool
