@@ -224,18 +224,13 @@ public:
   nsresult DeleteNode(nsINode* aNode);
   nsresult InsertNode(nsIContent* aContent, nsINode* aParent,
                       int32_t aPosition);
-  nsresult ReplaceContainer(nsINode* inNode,
-                            mozilla::dom::Element** outNode,
-                            const nsAString& aNodeType,
-                            const nsAString* aAttribute = nullptr,
+  enum ECloneAttributes { eDontCloneAttributes, eCloneAttributes };
+  already_AddRefed<mozilla::dom::Element> ReplaceContainer(
+                            mozilla::dom::Element* aOldContainer,
+                            nsIAtom* aNodeType,
+                            nsIAtom* aAttribute = nullptr,
                             const nsAString* aValue = nullptr,
-                            bool aCloneAttributes = false);
-  nsresult ReplaceContainer(nsIDOMNode *inNode, 
-                            nsCOMPtr<nsIDOMNode> *outNode, 
-                            const nsAString &aNodeType,
-                            const nsAString *aAttribute = nullptr,
-                            const nsAString *aValue = nullptr,
-                            bool aCloneAttributes = false);
+                            ECloneAttributes aCloneAttributes = eDontCloneAttributes);
 
   nsresult RemoveContainer(nsINode* aNode);
   nsresult RemoveContainer(nsIDOMNode *inNode);
