@@ -341,11 +341,11 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
         return mScriptChannel->GetURI(getter_AddRefs(mResolvedURI));
     }
 
-    nsAutoCString& Key() { return mKey.ref(); }
+    nsAutoCString& Key() { return *mKey; }
     nsresult EnsureKey() {
         ENSURE_DEPS(ResolvedURI);
-        mKey.construct();
-        return mResolvedURI->GetSpec(mKey.ref());
+        mKey.emplace();
+        return mResolvedURI->GetSpec(*mKey);
     }
 
   private:
@@ -1113,7 +1113,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
 
     Maybe<JSAutoCompartment> ac;
     if (targetObject) {
-        ac.construct(cx, targetObject);
+        ac.emplace(cx, targetObject);
     }
 
     RootedObject global(cx);

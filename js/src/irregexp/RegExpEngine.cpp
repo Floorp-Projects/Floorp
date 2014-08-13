@@ -1661,12 +1661,12 @@ irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData 
             is_ascii ? NativeRegExpMacroAssembler::ASCII
                      : NativeRegExpMacroAssembler::JSCHAR;
 
-        ctx.construct(cx, (jit::TempAllocator *) nullptr);
-        native_assembler.construct(&alloc, shared, cx->runtime(), mode, (data->capture_count + 1) * 2);
-        assembler = native_assembler.addr();
+        ctx.emplace(cx, (jit::TempAllocator *) nullptr);
+        native_assembler.emplace(&alloc, shared, cx->runtime(), mode, (data->capture_count + 1) * 2);
+        assembler = native_assembler.ptr();
     } else {
-        interpreted_assembler.construct(&alloc, shared, (data->capture_count + 1) * 2);
-        assembler = interpreted_assembler.addr();
+        interpreted_assembler.emplace(&alloc, shared, (data->capture_count + 1) * 2);
+        assembler = interpreted_assembler.ptr();
     }
 
     // Inserted here, instead of in Assembler, because it depends on information

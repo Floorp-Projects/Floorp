@@ -396,9 +396,9 @@ public:
     StringType* Create()
     {
         for (uint32_t i = 0; i < ArrayLength(mStrings); ++i) {
-            if (mStrings[i].empty()) {
-                mStrings[i].construct();
-                return mStrings[i].addr();
+            if (!mStrings[i]) {
+                mStrings[i].emplace();
+                return mStrings[i].ptr();
             }
         }
 
@@ -409,11 +409,10 @@ public:
     void Destroy(StringType *string)
     {
         for (uint32_t i = 0; i < ArrayLength(mStrings); ++i) {
-            if (!mStrings[i].empty() &&
-                mStrings[i].addr() == string) {
+            if (mStrings[i] && mStrings[i].ptr() == string) {
                 // One of our internal strings is no longer in use, mark
                 // it as such and free its data.
-                mStrings[i].destroy();
+                mStrings[i].reset();
                 return;
             }
         }
@@ -427,7 +426,7 @@ public:
     {
 #ifdef DEBUG
         for (uint32_t i = 0; i < ArrayLength(mStrings); ++i) {
-            MOZ_ASSERT(mStrings[i].empty(), "Short lived string still in use");
+            MOZ_ASSERT(!mStrings[i], "Short lived string still in use");
         }
 #endif
     }
