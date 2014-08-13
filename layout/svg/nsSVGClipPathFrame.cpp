@@ -41,12 +41,7 @@ nsSVGClipPathFrame::ClipPaint(nsRenderingContext* aContext,
   }
   AutoClipPathReferencer clipRef(this);
 
-  mClipParent = aParent;
-  if (mClipParentMatrix) {
-    *mClipParentMatrix = aMatrix;
-  } else {
-    mClipParentMatrix = new gfxMatrix(aMatrix);
-  }
+  mMatrixForChildren = GetClipPathTransform(aParent) * aMatrix;
 
   gfxContext *gfx = aContext->ThebesContext();
 
@@ -325,15 +320,7 @@ nsSVGClipPathFrame::GetType() const
 gfxMatrix
 nsSVGClipPathFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
-  SVGClipPathElement *content = static_cast<SVGClipPathElement*>(mContent);
-
-  gfxMatrix tm =
-    content->PrependLocalTransformsTo(mClipParentMatrix ?
-                                      *mClipParentMatrix : gfxMatrix());
-
-  return nsSVGUtils::AdjustMatrixForUnits(tm,
-                                          &content->mEnumAttributes[SVGClipPathElement::CLIPPATHUNITS],
-                                          mClipParent);
+  return mMatrixForChildren;
 }
 
 gfxMatrix
