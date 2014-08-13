@@ -33,6 +33,7 @@
 #include <stdarg.h>
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
+#include "RestyleManager.h"
 
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
@@ -651,11 +652,21 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     }
   }
 
-  // This needs to happen before shell->NotifyDestroyingFrame because that
-  // clears our Properties() table.
   bool isPrimaryFrame = (mContent && mContent->GetPrimaryFrame() == this);
   if (isPrimaryFrame) {
+    // This needs to happen before shell->NotifyDestroyingFrame because
+    // that clears our Properties() table.
     ActiveLayerTracker::TransferActivityToContent(this, mContent);
+
+    // Unfortunately, we need to do this for all frames being reframed
+    // and not only those whose current style involves CSS transitions,
+    // because what matters is whether the new style (not the old)
+    // specifies CSS transitions.
+    RestyleManager::ReframingStyleContexts* rsc =
+      presContext->RestyleManager()->GetReframingStyleContexts();
+    if (rsc) {
+      rsc->Put(mContent, mStyleContext);
+    }
   }
 
   shell->NotifyDestroyingFrame(this);
