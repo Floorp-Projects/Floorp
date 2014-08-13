@@ -4921,7 +4921,7 @@ static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
     gGotError = PrintError(cx, gErrFile, message, report, reportWarnings);
-    if (!JSREPORT_IS_WARNING(report->flags)) {
+    if (report->exnType != JSEXN_NONE && !JSREPORT_IS_WARNING(report->flags)) {
         if (report->errorNumber == JSMSG_OUT_OF_MEMORY) {
             gExitCode = EXITCODE_OUT_OF_MEMORY;
         } else {
