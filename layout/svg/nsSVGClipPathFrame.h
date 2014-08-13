@@ -37,9 +37,21 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
 
   // nsSVGClipPathFrame methods:
-  nsresult ClipPaint(nsRenderingContext* aContext,
-                     nsIFrame* aParent,
-                     const gfxMatrix &aMatrix);
+
+  /**
+   * If the SVG clipPath is simple (as determined by the IsTrivial() method),
+   * calling this method simply pushes a clip path onto the DrawTarget.  If the
+   * SVG clipPath is not simple then calling this method will paint the
+   * clipPath's contents (geometry being filled only, with opaque black) to the
+   * DrawTarget.  In this latter case callers are expected to first push a
+   * group before calling this method, then pop the group after calling and use
+   * it as a mask to mask the clipped frame.
+   *
+   * XXXjwatt Maybe split this into two methods.
+   */
+  nsresult ApplyClipOrPaintClipMask(nsRenderingContext* aContext,
+                                    nsIFrame* aClippedFrame,
+                                    const gfxMatrix &aMatrix);
 
   /**
    * aPoint is expected to be in aClippedFrame's SVG user space.
@@ -110,8 +122,7 @@ public:
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
-  nsIFrame *mClipParent;
-  nsAutoPtr<gfxMatrix> mClipParentMatrix;
+  gfxMatrix mMatrixForChildren;
   // recursion prevention flag
   bool mInUse;
 

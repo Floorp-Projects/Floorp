@@ -104,6 +104,12 @@ user_pref("extensions.getAddons.search.browseURL", "http://%(server)s/extensions
 user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy/repositorySearchURL");
 // Make sure that opening the plugins check page won't hit the network
 user_pref("plugins.update.url", "http://%(server)s/plugins-dummy/updateCheckURL");
+// Make sure SNTP requests don't hit the network
+user_pref("network.sntp.pools", "%(server)s");
+// We know the SNTP request will fail, since localhost isn't listening on
+// port 135. The default number of retries (10) is excessive, but retrying
+// at least once will mean that codepath is still tested in automation.
+user_pref("network.sntp.maxRetryCount", 1);
 
 // Existing tests don't wait for the notification button security delay
 user_pref("security.notification_enable_delay", 0);

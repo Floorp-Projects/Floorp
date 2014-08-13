@@ -66,6 +66,17 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     typedef HashMap<float, size_t, DefaultHasher<float>, SystemAllocPolicy> FloatMap;
     FloatMap floatMap_;
 
+    struct SimdData {
+        SimdConstant value;
+        NonAssertingLabel uses;
+
+        SimdData(const SimdConstant &v) : value(v) {}
+        SimdConstant::Type type() { return value.type(); }
+    };
+    Vector<SimdData, 0, SystemAllocPolicy> simds_;
+    typedef HashMap<SimdConstant, size_t, SimdConstant, SystemAllocPolicy> SimdMap;
+    SimdMap simdMap_;
+
     void setupABICall(uint32_t arg);
 
   protected:
@@ -1199,6 +1210,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     void loadConstantDouble(double d, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
+  private:
+    SimdData *getSimdData(const SimdConstant &v);
+  public:
+    void loadConstantInt32x4(const SimdConstant &v, FloatRegister dest);
+    void loadConstantFloat32x4(const SimdConstant &v, FloatRegister dest);
 
     void branchTruncateDouble(FloatRegister src, Register dest, Label *fail) {
         cvttsd2sq(src, dest);

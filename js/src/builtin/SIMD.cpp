@@ -417,7 +417,7 @@ TypedObjectMemory(HandleValue v)
 
 template<typename V>
 JSObject *
-js::Create(JSContext *cx, typename V::Elem *data)
+js::CreateSimd(JSContext *cx, typename V::Elem *data)
 {
     typedef typename V::Elem Elem;
     Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
@@ -433,8 +433,8 @@ js::Create(JSContext *cx, typename V::Elem *data)
     return result;
 }
 
-template JSObject *js::Create<Float32x4>(JSContext *cx, Float32x4::Elem *data);
-template JSObject *js::Create<Int32x4>(JSContext *cx, Int32x4::Elem *data);
+template JSObject *js::CreateSimd<Float32x4>(JSContext *cx, Float32x4::Elem *data);
+template JSObject *js::CreateSimd<Int32x4>(JSContext *cx, Int32x4::Elem *data);
 
 namespace js {
 template<typename T>
@@ -608,7 +608,7 @@ CoercedFunc(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RetElem *coercedResult = reinterpret_cast<RetElem *>(result);
-    RootedObject obj(cx, Create<Out>(cx, coercedResult));
+    RootedObject obj(cx, CreateSimd<Out>(cx, coercedResult));
     if (!obj)
         return false;
 
@@ -653,7 +653,7 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
             result[i] = OpWith<Elem>::apply(i, withAsBool, val[i]);
     }
 
-    RootedObject obj(cx, Create<V>(cx, result));
+    RootedObject obj(cx, CreateSimd<V>(cx, result));
     if (!obj)
         return false;
 
@@ -712,7 +712,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
             result[i] = val2[(maskArg >> (i * SELECT_SHIFT)) & SELECT_MASK];
     }
 
-    RootedObject obj(cx, Create<V>(cx, result));
+    RootedObject obj(cx, CreateSimd<V>(cx, result));
     if (!obj)
         return false;
 
@@ -740,7 +740,7 @@ Int32x4BinaryScalar(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < 4; i++)
         result[i] = Op::apply(val[i], bits);
 
-    RootedObject obj(cx, Create<Int32x4>(cx, result));
+    RootedObject obj(cx, CreateSimd<Int32x4>(cx, result));
     if (!obj)
         return false;
 
@@ -764,7 +764,7 @@ FuncConvert(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < Vret::lanes; i++)
         result[i] = RetElem(val[i]);
 
-    RootedObject obj(cx, Create<Vret>(cx, result));
+    RootedObject obj(cx, CreateSimd<Vret>(cx, result));
     if (!obj)
         return false;
 
@@ -783,7 +783,7 @@ FuncConvertBits(JSContext *cx, unsigned argc, Value *vp)
         return ErrorBadArgs(cx);
 
     RetElem *val = TypedObjectMemory<RetElem *>(args[0]);
-    RootedObject obj(cx, Create<Vret>(cx, val));
+    RootedObject obj(cx, CreateSimd<Vret>(cx, val));
     if (!obj)
         return false;
 
@@ -805,7 +805,7 @@ FuncZero(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < Vret::lanes; i++)
         result[i] = RetElem(0);
 
-    RootedObject obj(cx, Create<Vret>(cx, result));
+    RootedObject obj(cx, CreateSimd<Vret>(cx, result));
     if (!obj)
         return false;
 
@@ -831,7 +831,7 @@ FuncSplat(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < Vret::lanes; i++)
         result[i] = arg;
 
-    RootedObject obj(cx, Create<Vret>(cx, result));
+    RootedObject obj(cx, CreateSimd<Vret>(cx, result));
     if (!obj)
         return false;
 
@@ -854,7 +854,7 @@ Int32x4Bool(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned i = 0; i < Int32x4::lanes; i++)
         result[i] = args[i].toBoolean() ? 0xFFFFFFFF : 0x0;
 
-    RootedObject obj(cx, Create<Int32x4>(cx, result));
+    RootedObject obj(cx, CreateSimd<Int32x4>(cx, result));
     if (!obj)
         return false;
 
@@ -882,7 +882,7 @@ Float32x4Clamp(JSContext *cx, unsigned argc, Value *vp)
         result[i] = result[i] > upperLimit[i] ? upperLimit[i] : result[i];
     }
 
-    RootedObject obj(cx, Create<Float32x4>(cx, result));
+    RootedObject obj(cx, CreateSimd<Float32x4>(cx, result));
     if (!obj)
         return false;
 
@@ -917,7 +917,7 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
         orInt[i] = Or<int32_t>::apply(tr[i], fr[i]);
 
     float *result = reinterpret_cast<float *>(orInt);
-    RootedObject obj(cx, Create<Float32x4>(cx, result));
+    RootedObject obj(cx, CreateSimd<Float32x4>(cx, result));
     if (!obj)
         return false;
 

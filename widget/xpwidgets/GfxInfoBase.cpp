@@ -705,9 +705,30 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
     }
   }
 
+#if defined(XP_WIN)
+  // As a very special case, we block D2D on machines with an NVidia 310M GPU
+  // as either the primary or secondary adapter.  D2D is also blocked when the
+  // NV 310M is the primary adapter (using the standard blocklisting mechanism).
+  // If the primary GPU already matched something in the blocklist then we
+  // ignore this special rule.  See bug 1008759.
+  if (status == nsIGfxInfo::FEATURE_STATUS_UNKNOWN &&
+    (aFeature == nsIGfxInfo::FEATURE_DIRECT2D)) {
+    nsAutoString adapterVendorID2;
+    nsAutoString adapterDeviceID2;
+    if ((!NS_FAILED(GetAdapterVendorID2(adapterVendorID2))) &&
+      (!NS_FAILED(GetAdapterDeviceID2(adapterDeviceID2))))
+    {
+      nsAString &nvVendorID = (nsAString &)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA);
+      const nsString nv310mDeviceId = NS_LITERAL_STRING("0x0A70");
+      if (nvVendorID.Equals(adapterVendorID2, nsCaseInsensitiveStringComparator()) &&
+        nv310mDeviceId.Equals(adapterDeviceID2, nsCaseInsensitiveStringComparator())) {
+        status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      }
+    }
+  }
+
   // Depends on Windows driver versioning. We don't pass a GfxDriverInfo object
   // back to the Windows handler, so we must handle this here.
-#if defined(XP_WIN)
   if (status == FEATURE_BLOCKED_DRIVER_VERSION) {
     if (info[i].mSuggestedVersion) {
         aSuggestedVersion.AppendPrintf("%s", info[i].mSuggestedVersion);

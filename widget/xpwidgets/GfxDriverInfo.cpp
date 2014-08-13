@@ -211,6 +211,9 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
     case Geforce7300GT:
       APPEND_DEVICE(0x0393);
       break;
+    case Nvidia310M:
+      APPEND_DEVICE(0x0A70);
+      break;
     // This should never happen, but we get a warning if we don't handle this.
     case DeviceFamilyMax:
       NS_WARNING("Invalid DeviceFamily id");

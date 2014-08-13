@@ -374,3 +374,31 @@ js::ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip)
 {
     return rt->spsProfiler.ipToPC(script, size_t(ip));
 }
+
+
+
+AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext *cx
+                                                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : rt_(cx->runtime()),
+    previouslyEnabled_(rt_->isProfilerSamplingEnabled())
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (previouslyEnabled_)
+        rt_->disableProfilerSampling();
+}
+
+AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSRuntime *rt
+                                                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : rt_(rt),
+    previouslyEnabled_(rt_->isProfilerSamplingEnabled())
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (previouslyEnabled_)
+        rt_->disableProfilerSampling();
+}
+
+AutoSuppressProfilerSampling::~AutoSuppressProfilerSampling()
+{
+        if (previouslyEnabled_)
+            rt_->enableProfilerSampling();
+}

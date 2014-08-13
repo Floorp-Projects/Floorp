@@ -62,10 +62,9 @@ public:
     AMR_AUDIO_FRAME,
     UNKNOWN           // FrameType not set
   };
-  nsresult SwapInFrameData(nsTArray<uint8_t>& aData)
+  void SwapInFrameData(nsTArray<uint8_t>& aData)
   {
     mFrameData.SwapElements(aData);
-    return NS_OK;
   }
   nsresult SwapOutFrameData(nsTArray<uint8_t>& aData)
   {

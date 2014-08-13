@@ -16,6 +16,7 @@ Implement HTML5 sandbox attribute for IFRAMEs - general tests
 
 SimpleTest.expectAssertions(0, 1);
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestCompleteLog();
 
 // a postMessage handler that is used by sandboxed iframes without
 // 'allow-same-origin' to communicate pass/fail back to this main page.
