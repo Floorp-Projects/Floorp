@@ -13,6 +13,10 @@ this.checkFromJSM = function checkFromJSM(ok, is) {
   var url = URL.createObjectURL(blob);
   ok(url, "URL is created!");
 
+  var p = URL.getPrincipalFromURL(url);
+  ok(p, "Principal exists.");
+  ok(p instanceof Components.interfaces.nsIPrincipal, "Principal is a nsIPrincipal");
+
   URL.revokeObjectURL(url);
   ok(true, "URL is revoked");
 }

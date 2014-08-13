@@ -203,6 +203,16 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL)
   }
 }
 
+nsIPrincipal*
+URL::GetPrincipalFromURL(const GlobalObject& aGlobal, const nsAString& aURL,
+                         ErrorResult& aRv)
+{
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+  NS_LossyConvertUTF16toASCII asciiurl(aURL);
+  return nsHostObjectProtocolHandler::GetDataEntryPrincipal(asciiurl);
+}
+
 void
 URL::GetHref(nsString& aHref, ErrorResult& aRv) const
 {
