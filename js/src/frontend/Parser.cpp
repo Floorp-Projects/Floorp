@@ -56,14 +56,13 @@ typedef Rooted<NestedScopeObject*> RootedNestedScopeObject;
 typedef Handle<NestedScopeObject*> HandleNestedScopeObject;
 
 
-/*
- * Insist that the next token be of type tt, or report errno and return null.
- * NB: this macro uses cx and ts from its lexical environment.
- */
+/* Read a token. Report an error and return null() if that token isn't of type tt. */
 #define MUST_MATCH_TOKEN(tt, errno)                                                         \
     JS_BEGIN_MACRO                                                                          \
-        if (tokenStream.getToken() != tt) {                                                 \
-            report(ParseError, false, null(), errno);                                       \
+        TokenKind token = tokenStream.getToken();                                           \
+        if (token != tt) {                                                                  \
+            if (token != TOK_ERROR)                                                         \
+                report(ParseError, false, null(), errno);                                   \
             return null();                                                                  \
         }                                                                                   \
     JS_END_MACRO
