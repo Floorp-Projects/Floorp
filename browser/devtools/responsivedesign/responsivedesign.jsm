@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource:///modules/devtools/FloatingScrollbars.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
+XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
+                                  "resource://gre/modules/SystemAppProxy.jsm");
 
 var require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 let Telemetry = require("devtools/shared/telemetry");
@@ -293,9 +295,15 @@ ResponsiveUI.prototype = {
 
     // Removed elements.
     this.container.removeChild(this.toolbar);
+    if (this.bottomToolbar) {
+      this.bottomToolbar.remove();
+      delete this.bottomToolbar;
+    }
     this.stack.removeChild(this.resizer);
     this.stack.removeChild(this.resizeBarV);
     this.stack.removeChild(this.resizeBarH);
+
+    this.stack.classList.remove("fxos-mode");
 
     // Unset the responsive mode.
     this.container.removeAttribute("responsivemode");
@@ -357,7 +365,16 @@ ResponsiveUI.prototype = {
    *    <box class="devtools-responsiveui-resizehandle" bottom="0" right="0"/>
    *    <box class="devtools-responsiveui-resizebarV" top="0" right="0"/>
    *    <box class="devtools-responsiveui-resizebarH" bottom="0" left="0"/>
+   *    // Additional button in FxOS mode:
+   *    <button class="devtools-responsiveui-sleep-button" />
+   *    <vbox class="devtools-responsiveui-volume-buttons">
+   *      <button class="devtools-responsiveui-volume-up-button" />
+   *      <button class="devtools-responsiveui-volume-down-button" />
+   *    </vbox>
    *  </stack>
+   *  <toolbar class="devtools-responsiveui-hardware-button">
+   *    <toolbarbutton class="devtools-responsiveui-home-button" />
+   *  </toolbar>
    * </vbox>
    */
   buildUI: function RUI_buildUI() {
@@ -447,6 +464,67 @@ ResponsiveUI.prototype = {
     this.stack.appendChild(this.resizer);
     this.stack.appendChild(this.resizeBarV);
     this.stack.appendChild(this.resizeBarH);
+  },
+
+  // FxOS custom controls
+  buildPhoneUI: function () {
+    this.stack.classList.add("fxos-mode");
+
+    let sleepButton = this.chromeDoc.createElement("button");
+    sleepButton.className = "devtools-responsiveui-sleep-button";
+    sleepButton.setAttribute("top", 0);
+    sleepButton.setAttribute("right", 0);
+    sleepButton.addEventListener("mousedown", function() {
+      SystemAppProxy.dispatchEvent({type: "sleep-button-press"});
+    });
+    sleepButton.addEventListener("mouseup", function() {
+      SystemAppProxy.dispatchEvent({type: "sleep-button-release"});
+    });
+    this.stack.appendChild(sleepButton);
+
+    let volumeButtons = this.chromeDoc.createElement("vbox");
+    volumeButtons.className = "devtools-responsiveui-volume-buttons";
+    volumeButtons.setAttribute("top", 0);
+    volumeButtons.setAttribute("left", 0);
+
+    let volumeUp = this.chromeDoc.createElement("button");
+    volumeUp.className = "devtools-responsiveui-volume-up-button";
+    volumeUp.addEventListener("mousedown", function() {
+      SystemAppProxy.dispatchEvent({type: "volume-up-button-press"});
+    });
+    volumeUp.addEventListener("mouseup", function() {
+      SystemAppProxy.dispatchEvent({type: "volume-up-button-release"});
+    });
+
+    let volumeDown = this.chromeDoc.createElement("button");
+    volumeDown.className = "devtools-responsiveui-volume-down-button";
+    volumeDown.addEventListener("mousedown", function() {
+      SystemAppProxy.dispatchEvent({type: "volume-down-button-press"});
+    });
+    volumeDown.addEventListener("mouseup", function() {
+      SystemAppProxy.dispatchEvent({type: "volume-down-button-release"});
+    });
+
+    volumeButtons.appendChild(volumeUp);
+    volumeButtons.appendChild(volumeDown);
+    this.stack.appendChild(volumeButtons);
+
+    let bottomToolbar = this.chromeDoc.createElement("toolbar");
+    bottomToolbar.className = "devtools-responsiveui-hardware-buttons";
+    bottomToolbar.setAttribute("align", "center");
+    bottomToolbar.setAttribute("pack", "center");
+
+    let homeButton = this.chromeDoc.createElement("toolbarbutton");
+    homeButton.className = "devtools-responsiveui-toolbarbutton devtools-responsiveui-home-button";
+    homeButton.addEventListener("mousedown", function() {
+      SystemAppProxy.dispatchEvent({type: "home-button-press"});
+    });
+    homeButton.addEventListener("mouseup", function() {
+      SystemAppProxy.dispatchEvent({type: "home-button-release"});
+    });
+    bottomToolbar.appendChild(homeButton);
+    this.bottomToolbar = bottomToolbar;
+    this.container.appendChild(bottomToolbar);
   },
 
   /**

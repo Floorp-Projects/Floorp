@@ -8,7 +8,7 @@
 
 .ruleview-rule-source {
   -moz-padding-start: 5px;
-  text-align: right;
+  text-align: end;
   float: right;
   -moz-user-select: none;
 }
