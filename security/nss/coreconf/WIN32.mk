@@ -129,8 +129,26 @@ else # !NS_USE_GCC
     ifdef USE_DYNAMICBASE
 	OS_DLLFLAGS += -DYNAMICBASE
     endif
+    #
+    # Define USE_DEBUG_RTL if you want to use the debug runtime library
+    # (RTL) in the debug build.
+    # Define USE_STATIC_RTL if you want to use the static RTL.
+    #
+    ifdef USE_DEBUG_RTL
+	ifdef USE_STATIC_RTL
+		OS_CFLAGS += -MTd
+	else
+		OS_CFLAGS += -MDd
+	endif
+	OS_CFLAGS += -D_CRTDBG_MAP_ALLOC
+    else
+	ifdef USE_STATIC_RTL
+		OS_CFLAGS += -MT
+	else
+		OS_CFLAGS += -MD
+	endif
+    endif
     ifdef BUILD_OPT
-	OS_CFLAGS  += -MD
 	ifeq (11,$(ALLOW_OPT_CODE_SIZE)$(OPT_CODE_SIZE))
 		OPTIMIZER += -O1
 	else
@@ -148,15 +166,6 @@ else # !NS_USE_GCC
 		LDFLAGS += -DEBUG -OPT:REF
 	endif
     else
-	#
-	# Define USE_DEBUG_RTL if you want to use the debug runtime library
-	# (RTL) in the debug build
-	#
-	ifdef USE_DEBUG_RTL
-		OS_CFLAGS += -MDd -D_CRTDBG_MAP_ALLOC
-	else
-		OS_CFLAGS += -MD
-	endif
 	OPTIMIZER += -Zi -Fd$(OBJDIR)/ -Od
 	NULLSTRING :=
 	SPACE      := $(NULLSTRING) # end of the line
@@ -179,11 +188,6 @@ ifneq ($(_MSC_VER),$(_MSC_VER_6))
      -we4015 -we4028 -we4033 -we4035 -we4045 -we4047 -we4053 -we4054 -we4063 \
      -we4064 -we4078 -we4087 -we4090 -we4098 -we4390 -we4551 -we4553 -we4715
 
-    # VS2012 defaults to -arch:SSE2. Use -arch:IA32 to avoid requiring SSE2.
-    ifeq ($(_MSC_VER_GE_11),1)
-	OS_CFLAGS += -arch:IA32
-    endif
-
     ifeq ($(_MSC_VER_GE_12),1)
 	OS_CFLAGS += -FS
     endif
@@ -201,6 +205,11 @@ ifdef USE_64
 	DEFINES += -D_AMD64_
 else
 	DEFINES += -D_X86_
+	# VS2012 defaults to -arch:SSE2. Use -arch:IA32 to avoid requiring
+	# SSE2.
+	ifeq ($(_MSC_VER_GE_11),1)
+		OS_CFLAGS += -arch:IA32
+	endif
 endif
 endif
 ifeq ($(CPU_ARCH), ALPHA)

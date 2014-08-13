@@ -597,7 +597,7 @@ CRMF_CertReqMsgGetPOPKeyEncipherment(CRMFCertReqMsg   *inCertReqMsg,
         return SECFailure;
     }
     *destKey = PORT_ZNew(CRMFPOPOPrivKey);
-    if (destKey == NULL) {
+    if (*destKey == NULL) {
        return SECFailure;
     }
     return crmf_copy_popoprivkey(NULL,

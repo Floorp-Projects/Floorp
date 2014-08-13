@@ -2,12 +2,12 @@
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date:  5 June 2014
+.\"      Date: 29 July 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "29 July 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -250,6 +250,11 @@ If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE
 is the default\&.
 .RE
 .PP
+\-\-dump\-ext\-val OID
+.RS 4
+For single cert, print binary DER encoding of extension OID\&.
+.RE
+.PP
 \-e
 .RS 4
 Check a certificate\*(Aqs signature during the process of validating a certificate\&.
@@ -258,6 +263,44 @@ Check a certificate\*(Aqs signature during the process of validating a certifica
 \-\-email email\-address
 .RS 4
 Specify the email address of a certificate to list\&. Used with the \-L command option\&.
+.RE
+.PP
+\-\-extGeneric OID:critical\-flag:filename[,OID:critical\-flag:filename]\&.\&.\&.
+.RS 4
+Add one or multiple extensions that certutil cannot encode yet, by loading their encodings from external files\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+OID (example): 1\&.2\&.3\&.4
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+critical\-flag: critical or not\-critical
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+filename: full path to a file containing an encoded extension
+.RE
 .RE
 .PP
 \-f password\-file
@@ -451,6 +494,42 @@ The contexts are the following:
 .\}
 \fBV\fR
 (as an SSL server)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBL\fR
+(as an SSL CA)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBA\fR
+(as Any CA)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBY\fR
+(Verify CA)
 .RE
 .sp
 .RS 4
@@ -912,6 +991,13 @@ Add the Subject Key ID extension to the certificate\&. X\&.509 certificate exten
 \-\-extNC
 .RS 4
 Add a Name Constraint extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-extSAN type:name[,type:name]\&.\&.\&.
+.RS 4
+Create a Subject Alt Name extension with one or multiple names\&.
+.sp
+\-type: directory, dn, dns, edi, ediparty, email, ip, ipaddr, other, registerid, rfc822, uri, x400, x400addr
 .RE
 .PP
 \-\-empty\-password
