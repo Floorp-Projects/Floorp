@@ -83,7 +83,8 @@ protected:
   RecvNotifyDialError(const nsString& aError) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyDialSuccess(const uint32_t& aCallIndex) MOZ_OVERRIDE;
+  RecvNotifyDialSuccess(const uint32_t& aCallIndex,
+                        const nsString& aNumber) MOZ_OVERRIDE;
 
 private:
   nsCOMPtr<nsITelephonyListener> mListener;
