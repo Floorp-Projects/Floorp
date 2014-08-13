@@ -42,6 +42,8 @@ private:
   // Private destructor, to discourage deletion outside of Release():
   ~RestyleManager()
   {
+    MOZ_ASSERT(!mReframingStyleContexts,
+               "temporary member should be nulled out before destruction");
   }
 
 public:
@@ -149,6 +151,14 @@ public:
     ReframingStyleContextTable mBeforePseudoContexts;
     ReframingStyleContextTable mAfterPseudoContexts;
   };
+
+  /**
+   * Return the current ReframingStyleContexts struct, or null if we're
+   * not currently in a restyling operation.
+   */
+  ReframingStyleContexts* GetReframingStyleContexts() {
+    return mReframingStyleContexts;
+  }
 
 private:
   void RestyleForEmptyChange(Element* aContainer);
@@ -330,6 +340,8 @@ private:
   // The total number of animation flushes by this frame constructor.
   // Used to keep the layer and animation manager in sync.
   uint64_t mAnimationGeneration;
+
+  ReframingStyleContexts* mReframingStyleContexts;
 
   RestyleTracker mPendingRestyles;
   RestyleTracker mPendingAnimationRestyles;
