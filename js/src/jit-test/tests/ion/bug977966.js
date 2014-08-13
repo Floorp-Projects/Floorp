@@ -31,8 +31,53 @@ function join(i) {
     return i;
 }
 
+function split_join(i) {
+    var x = (i + "-" + i).split("-").join("->");
+    assertEq(x, i + "->" + i);
+    return i;
+}
+
+function split_join_2(i) {
+    var x = (i + "-" + i).split("-");
+    x.push("" + i);
+    var res = x.join("->");
+    assertEq(res, i + "->" + i + "->" + i);
+    return i;
+}
+
+function resumeHere() { bailout(); }
+
+function split_join_3(i) {
+    var x = (i + "-" + i).split("-");
+    resumeHere();
+    var res = x.join("->");
+    assertEq(res, i + "->" + i);
+    return i;
+}
+
+function trip(i) {
+    if (i == 99)
+        assertEq(myjoin.arguments[1][0], "" + i)
+}
+
+function myjoin(i, x) {
+    trip(i);
+    return x.join("->");
+}
+
+function split_join_4(i) {
+    var x = (i + "-" + i).split("-");
+    var res = myjoin(i, x);
+    assertEq(res, i + "->" + i);
+    return i;
+}
+
 for (var i = 0; i < 100; ++i) {
     join_check(i);
     split(i);
     join(i);
+    split_join(i);
+    split_join_2(i);
+    split_join_3(i);
+    split_join_4(i);
 }
