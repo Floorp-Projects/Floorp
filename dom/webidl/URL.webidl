@@ -38,3 +38,9 @@ partial interface URL {
   [Throws]
   static DOMString? createObjectURL(MediaSource source, optional objectURLOptions options);
 };
+
+// mozilla extensions
+partial interface URL {
+  [Throws, ChromeOnly]
+  static Principal getPrincipalFromURL(DOMString blobURL);
+};

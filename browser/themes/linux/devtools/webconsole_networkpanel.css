@@ -50,7 +50,7 @@ h1 .info {
   font-weight: bold;
   color: #000;
   white-space: nowrap;
-  text-align: right;
+  text-align: end;
   vertical-align: top;
   width: 10%;
 }

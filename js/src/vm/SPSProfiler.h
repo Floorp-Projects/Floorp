@@ -220,6 +220,24 @@ class AutoSPSLock
     PRLock *lock_;
 };
 
+/*
+ * This class is used to suppress profiler sampling during
+ * critical sections where stack state is not valid.
+ */
+class AutoSuppressProfilerSampling
+{
+  public:
+    explicit AutoSuppressProfilerSampling(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    explicit AutoSuppressProfilerSampling(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+    ~AutoSuppressProfilerSampling();
+
+  private:
+    JSRuntime *rt_;
+    bool previouslyEnabled_;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 inline size_t
 SPSProfiler::stringsCount()
 {
