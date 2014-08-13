@@ -51,15 +51,6 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
 
 AutoCxPusher::~AutoCxPusher()
 {
-  // GC when we pop a script entry point. This is a useful heuristic that helps
-  // us out on certain (flawed) benchmarks like sunspider, because it lets us
-  // avoid GCing during the timing loop.
-  //
-  // NB: We need to take care to only do this if we're in a compartment,
-  // otherwise JS_MaybeGC will segfault.
-  if (mScx && !mAutoCompartment.empty())
-    JS_MaybeGC(nsXPConnect::XPConnect()->GetCurrentJSContext());
-
   // Leave the compartment and request before popping.
   mAutoCompartment.destroyIfConstructed();
   mAutoRequest.destroyIfConstructed();
