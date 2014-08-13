@@ -1350,12 +1350,18 @@ class MSimdBinaryArith : public MBinaryInstruction
 {
   public:
     enum Operation {
-        Add
+        Add,
+        Sub,
+        Mul,
+        Div
     };
 
     static const char* OperationName(Operation op) {
         switch (op) {
           case Add: return "Add";
+          case Sub: return "Sub";
+          case Mul: return "Mul";
+          case Div: return "Div";
         }
         MOZ_ASSUME_UNREACHABLE("unexpected operation");
     }
@@ -1366,13 +1372,13 @@ class MSimdBinaryArith : public MBinaryInstruction
     MSimdBinaryArith(MDefinition *left, MDefinition *right, Operation op, MIRType type)
       : MBinaryInstruction(left, right), operation_(op)
     {
-        JS_ASSERT(op == Add); // TODO remove in following patches
+        JS_ASSERT_IF(type == MIRType_Int32x4, op == Add || op == Sub);
         JS_ASSERT(IsSimdType(type));
         JS_ASSERT(left->type() == right->type());
         JS_ASSERT(left->type() == type);
         setResultType(type);
         setMovable();
-        if (op == Add)
+        if (op == Add || op == Mul)
             setCommutative();
     }
 
