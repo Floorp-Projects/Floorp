@@ -27,6 +27,7 @@
 #include "jit/IonBuilder.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitcodeMap.h"
 #include "jit/JitCommon.h"
 #include "jit/JitCompartment.h"
 #include "jit/LICM.h"
@@ -165,7 +166,8 @@ JitRuntime::JitRuntime()
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
     ionCodeProtected_(false),
-    ionReturnOverride_(MagicValue(JS_ARG_POISON))
+    ionReturnOverride_(MagicValue(JS_ARG_POISON)),
+    jitcodeGlobalTable_(nullptr)
 {
 }
 
@@ -177,6 +179,10 @@ JitRuntime::~JitRuntime()
     // Note: The interrupt lock is not taken here, as JitRuntime is only
     // destroyed along with its containing JSRuntime.
     js_delete(ionAlloc_);
+
+    // By this point, the jitcode global table should be empty.
+    JS_ASSERT_IF(jitcodeGlobalTable_, jitcodeGlobalTable_->empty());
+    js_delete(jitcodeGlobalTable_);
 }
 
 bool
@@ -288,6 +294,10 @@ JitRuntime::initialize(JSContext *cx)
         if (!generateVMWrapper(cx, *fun))
             return false;
     }
+
+    jitcodeGlobalTable_ = cx->new_<JitcodeGlobalTable>();
+    if (!jitcodeGlobalTable_)
+        return false;
 
     return true;
 }
@@ -760,6 +770,12 @@ JitCode::finalize(FreeOp *fop)
     // Make sure this can't race with an interrupting thread, which may try
     // to read the contents of the pool we are releasing references in.
     JS_ASSERT(fop->runtime()->currentThreadOwnsInterruptLock());
+
+    // If this jitcode has a bytecode map, de-register it.
+    if (hasBytecodeMap_) {
+        JS_ASSERT(fop->runtime()->jitRuntime()->hasJitcodeGlobalTable());
+        fop->runtime()->jitRuntime()->getJitcodeGlobalTable()->removeEntry(raw());
+    }
 
     // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
     // Don't do this if the Ion code is protected, as the signal handler will

@@ -16,28 +16,98 @@
 #include "jit/arm/Assembler-arm.h"
 #include "jit/RegisterSets.h"
 
-#define HWCAP_USE_HARDFP_ABI (1 << 27)
-
-#if !(defined(ANDROID) || defined(MOZ_B2G)) && !defined(JS_ARM_SIMULATOR)
-#define HWCAP_ARMv7 (1 << 28)
-#include <asm/hwcap.h>
+#if defined(ANDROID) || defined(MOZ_B2G) || defined(JS_ARM_SIMULATOR)
+// The Android NDK does not include the hwcap.h kernel header, and it is not
+// defined when building the simulator, so inline the header defines we need.
+# define HWCAP_VFP        (1 << 6)
+# define HWCAP_NEON       (1 << 12)
+# define HWCAP_VFPv3      (1 << 13)
+# define HWCAP_VFPv3D16   (1 << 14) /* also set for VFPv4-D16 */
+# define HWCAP_VFPv4      (1 << 16)
+# define HWCAP_IDIVA      (1 << 17)
+# define HWCAP_IDIVT      (1 << 18)
+# define HWCAP_VFPD32     (1 << 19) /* set if VFP has 32 regs (not 16) */
+# define AT_HWCAP 16
 #else
-#define HWCAP_VFP      (1<<0)
-#define HWCAP_VFPv3    (1<<1)
-#define HWCAP_VFPv3D16 (1<<2)
-#define HWCAP_VFPv4    (1<<3)
-#define HWCAP_IDIVA    (1<<4)
-#define HWCAP_IDIVT    (1<<5)
-#define HWCAP_NEON     (1<<6)
-#define HWCAP_ARMv7    (1<<7)
+# include <asm/hwcap.h>
+# if !defined(HWCAP_IDIVA)
+#  define HWCAP_IDIVA     (1 << 17)
+# endif
+# if !defined(HWCAP_VFPD32)
+#  define HWCAP_VFPD32    (1 << 19) /* set if VFP has 32 regs (not 16) */
+# endif
 #endif
+
+// Not part of the HWCAP flag, but we need to know this, and this bit is not
+// used so we are using it.
+#define HWCAP_ARMv7 (1 << 28)
+
+// Also take a bit to flag the use of the hardfp ABI.
+#define HWCAP_USE_HARDFP_ABI (1 << 27)
 
 namespace js {
 namespace jit {
 
+
+// Parse the Linux kernel cpuinfo features. This is also used to parse the
+// override features which has some extensions: 'armv7' and 'hardfp'.
+uint32_t
+ParseARMCpuFeatures(const char *features, bool override = false)
+{
+    uint32_t flags = 0;
+
+    for (;;) {
+        char  ch = *features;
+        if (!ch) {
+            // End of string.
+            break;
+        }
+        if (ch == ' ' || ch == ',') {
+            // Skip separator characters.
+            features++;
+            continue;
+        }
+        // Find the end of the token.
+        const char *end = features + 1;
+        for (; ; end++) {
+            ch = *end;
+            if (!ch || ch == ' ' || ch == ',')
+                break;
+        }
+        size_t count = end - features;
+        if (count == 3 && strncmp(features, "vfp", 3) == 0)
+            flags |= HWCAP_VFP;
+        else if (count == 4 && strncmp(features, "neon", 4) == 0)
+            flags |= HWCAP_NEON;
+        else if (count == 5 && strncmp(features, "vfpv3", 5) == 0)
+            flags |= HWCAP_VFPv3;
+        else if (count == 8 && strncmp(features, "vfpv3d16", 8) == 0)
+            flags |= HWCAP_VFPv3D16;
+        else if (count == 5 && strncmp(features, "vfpv4", 5) == 0)
+            flags |= HWCAP_VFPv4;
+        else if (count == 5 && strncmp(features, "idiva", 5) == 0)
+            flags |= HWCAP_IDIVA;
+        else if (count == 5 && strncmp(features, "idivt", 5) == 0)
+            flags |= HWCAP_IDIVT;
+        else if (count == 6 && strncmp(features, "vfpd32", 6) == 0)
+            flags |= HWCAP_VFPD32;
+        else if (count == 5 && strncmp(features, "armv7", 5) == 0)
+            flags |= HWCAP_ARMv7;
+#if defined(JS_ARM_SIMULATOR)
+        else if (count == 6 && strncmp(features, "hardfp", 6) == 0)
+            flags |= HWCAP_USE_HARDFP_ABI;
+#endif
+        else if (override)
+            fprintf(stderr, "Warning: unexpected ARM feature at: %s\n", features);
+        features = end;
+    }
+    IonSpew(IonSpew_Codegen, "ARM features: '%s'\n   flags: 0x%x\n", features, flags);
+    return flags;
+}
+
 // The override flags parsed from the ARMHWCAP environment variable or from the
 // --arm-hwcap js shell argument.
-static uint32_t armHwCapFlags = 0;
+volatile static uint32_t armHwCapFlags = 0;
 
 bool
 ParseARMHwCapFlags(const char *armHwCap)
@@ -65,6 +135,7 @@ ParseARMHwCapFlags(const char *armHwCap)
                "  vfpv4    \n"
                "  idiva    \n"
                "  idivt    \n"
+               "  vfpd32   \n"
 #if defined(JS_ARM_SIMULATOR)
                "  hardfp   \n"
 #endif
@@ -74,168 +145,108 @@ ParseARMHwCapFlags(const char *armHwCap)
         /*NOTREACHED*/
     }
 
-    // Canonicalize each token to have a leading and trailing space.
-    const char *start = armHwCap;  // Token start.
-    for (;;) {
-        char  ch = *start;
-        if (!ch) {
-            // End of string.
-            break;
-        }
-        if (ch == ' ' || ch == ',') {
-            // Skip separator characters.
-            start++;
-            continue;
-        }
-        // Find the end of the token.
-        const char *end = start + 1;
-        for (; ; end++) {
-            ch = *end;
-            if (!ch || ch == ' ' || ch == ',')
-                break;
-        }
-        size_t count = end - start;
-        if (count == 3 && strncmp(start, "vfp", 3) == 0)
-            flags |= HWCAP_VFP;
-        else if (count == 5 && strncmp(start, "vfpv3", 5) == 0)
-            flags |= HWCAP_VFPv3;
-        else if (count == 8 && strncmp(start, "vfpv3d16", 8) == 0)
-            flags |= HWCAP_VFPv3D16;
-        else if (count == 5 && strncmp(start, "vfpv4", 5) == 0)
-            flags |= HWCAP_VFPv4;
-        else if (count == 5 && strncmp(start, "idiva", 5) == 0)
-            flags |= HWCAP_IDIVA;
-        else if (count == 5 && strncmp(start, "idivt", 5) == 0)
-            flags |= HWCAP_IDIVT;
-        else if (count == 4 && strncmp(start, "neon", 4) == 0)
-            flags |= HWCAP_NEON;
-        else if (count == 5 && strncmp(start, "armv7", 5) == 0)
-            flags |= HWCAP_ARMv7;
-#if defined(JS_ARM_SIMULATOR)
-        else if (count == 6 && strncmp(start, "hardfp", 6) == 0)
-            flags |= HWCAP_USE_HARDFP_ABI;
-#endif
-        else
-            fprintf(stderr, "Warning: unexpected ARMHWCAP flag at: %s\n", start);
-        start = end;
-    }
-#ifdef DEBUG
-    IonSpew(IonSpew_Codegen, "ARMHWCAP: '%s'\n   flags: 0x%x\n", armHwCap, flags);
-#endif
-    armHwCapFlags = flags;
+    armHwCapFlags = ParseARMCpuFeatures(armHwCap, /* override = */ true);
     return true;
 }
 
 uint32_t GetARMFlags()
 {
-    static bool isSet = false;
-    static uint32_t flags = 0;
+    volatile static bool isSet = false;
+    volatile static uint32_t flags = 0;
     if (isSet)
         return flags;
 
     const char *env = getenv("ARMHWCAP");
     if (ParseARMHwCapFlags(env) || armHwCapFlags) {
-        isSet = true;
         flags = armHwCapFlags;
+        isSet = true;
         return flags;
     }
 
-#ifdef JS_CODEGEN_ARM_HARDFP
-    flags |= HWCAP_USE_HARDFP_ABI;
-#endif
-
 #ifdef JS_ARM_SIMULATOR
-    isSet = true;
     flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv3 | HWCAP_VFPv4 | HWCAP_NEON;
-    return flags;
 #else
 
-#if WTF_OS_LINUX
+#if defined(WTF_OS_LINUX) || defined(WTF_OS_ANDROID) || defined(MOZ_B2G)
+    bool readAuxv = false;
     int fd = open("/proc/self/auxv", O_RDONLY);
     if (fd > 0) {
-        Elf32_auxv_t aux;
-        while (read(fd, &aux, sizeof(Elf32_auxv_t))) {
+        struct { uint32_t a_type; uint32_t a_val; } aux;
+        while (read(fd, &aux, sizeof(aux))) {
             if (aux.a_type == AT_HWCAP) {
-                close(fd);
-                flags = aux.a_un.a_val;
-                isSet = true;
-#if defined(__ARM_ARCH_7__) || defined (__ARM_ARCH_7A__)
-                // This should really be detected at runtime, but /proc/*/auxv
-                // doesn't seem to carry the ISA. We could look in /proc/cpuinfo
-                // as well, but the chances that it will be different from this
-                // are low.
-                flags |= HWCAP_ARMv7;
-#endif
-                return flags;
+                flags = aux.a_val;
+                readAuxv = true;
+                break;
             }
         }
         close(fd);
     }
 
-#if defined(__ARM_ARCH_7__) || defined (__ARM_ARCH_7A__)
-    flags = HWCAP_ARMv7;
-#endif
-    isSet = true;
-    return flags;
-
-#elif defined(WTF_OS_ANDROID) || defined(MOZ_B2G)
-    FILE *fp = fopen("/proc/cpuinfo", "r");
-    if (!fp)
-        return false;
-
-    char buf[1024];
-    memset(buf, 0, sizeof(buf));
-    size_t len = fread(buf, sizeof(char), sizeof(buf) - 2, fp);
-    fclose(fp);
-    // Canonicalize each token to have a leading and trailing space.
-    buf[len] = ' ';
-    buf[len + 1] = '\0';
-    for (size_t i = 0; i < len; i++) {
-        char  ch = buf[i];
-        if (!ch)
-            break;
-        else if (ch == '\n')
-            buf[i] = 0x20;
-        else
-            buf[i] = ch;
+    if (!readAuxv) {
+        // Read the Features if the auxv is not available.
+        FILE *fp = fopen("/proc/cpuinfo", "r");
+        if (fp) {
+            char buf[1024];
+            memset(buf, 0, sizeof(buf));
+            size_t len = fread(buf, sizeof(char), sizeof(buf) - 1, fp);
+            fclose(fp);
+            buf[len] = '\0';
+            char *featureList = strstr(buf, "Features");
+            if (featureList) {
+                if (char *featuresEnd = strstr(featureList, "\n"))
+                    *featuresEnd = '\0';
+                flags = ParseARMCpuFeatures(featureList + 8);
+            }
+            if (strstr(buf, "ARMv7"))
+                flags |= HWCAP_ARMv7;
+        }
     }
+#endif
 
-    if (strstr(buf, " vfp "))
-        flags |= HWCAP_VFP;
+    // If compiled to use specialized features then these features can be
+    // assumed to be present otherwise the compiler would fail to run.
 
-    if (strstr(buf, " vfpv3 "))
+#ifdef JS_CODEGEN_ARM_HARDFP
+    // Compiled to use the hardfp ABI.
+    flags |= HWCAP_USE_HARDFP_ABI;
+#endif
+
+#if defined(__VFP_FP__) && !defined(__SOFTFP__)
+    // Compiled to use VFP instructions so assume VFP support.
+    flags |= HWCAP_VFP;
+#endif
+
+#if defined(__ARM_ARCH_7__) || defined (__ARM_ARCH_7A__)
+    // Compiled to use ARMv7 instructions so assume the ARMv7 arch.
+    flags |= HWCAP_ARMv7;
+#endif
+
+#endif // JS_ARM_SIMULATOR
+
+    // Canonicalize the flags. These rules are also applied to the features
+    // supplied for simulation.
+
+    // The VFPv3 feature is expected when the VFPv3D16 is reported, but add it
+    // just in case of a kernel difference in feature reporting.
+    if (flags & HWCAP_VFPv3D16)
         flags |= HWCAP_VFPv3;
 
-    if (strstr(buf, " vfpv3d16 "))
-        flags |= HWCAP_VFPv3D16;
-
-    if (strstr(buf, " vfpv4 "))
-        flags |= HWCAP_VFPv4;
-
-    if (strstr(buf, " idiva "))
-        flags |= HWCAP_IDIVA;
-
-    if (strstr(buf, " idivt "))
-        flags |= HWCAP_IDIVT;
-
-    if (strstr(buf, " neon "))
-        flags |= HWCAP_NEON;
-
-    // Not part of the HWCAP flag, but we need to know this, and we're not using
-    // that bit, so... we are using it.
-    if (strstr(buf, "ARMv7"))
+    // If VFPv3 or Neon is supported then this must be an ARMv7.
+    if (flags & (HWCAP_VFPv3 | HWCAP_NEON))
         flags |= HWCAP_ARMv7;
 
-#ifdef DEBUG
-    IonSpew(IonSpew_Codegen, "ARMHWCAP: '%s'\n   flags: 0x%x\n", buf, flags);
-#endif
+    // Some old kernels report VFP and not VFPv3, but if ARMv7 then it must be
+    // VFPv3.
+    if (flags & HWCAP_VFP && flags & HWCAP_ARMv7)
+        flags |= HWCAP_VFPv3;
 
+    // Older kernels do not implement the HWCAP_VFPD32 flag.
+    if ((flags & HWCAP_VFPv3) && !(flags & HWCAP_VFPv3D16))
+        flags |= HWCAP_VFPD32;
+
+    IonSpew(IonSpew_Codegen, "ARM HWCAP: 0x%x\n", flags);
     isSet = true;
     return flags;
-#endif
-
-    return 0;
-#endif // JS_ARM_SIMULATOR
 }
 
 bool HasMOVWT()
@@ -253,20 +264,12 @@ bool HasVFP()
 
 bool Has32DP()
 {
-    return (GetARMFlags() & HWCAP_VFPv3) && !(GetARMFlags() & HWCAP_VFPv3D16);
-}
-bool UseConvReg()
-{
-    return Has32DP();
+    return GetARMFlags() & HWCAP_VFPD32;
 }
 
 bool HasIDIV()
 {
-#if defined HWCAP_IDIVA
     return GetARMFlags() & HWCAP_IDIVA;
-#else
-    return false;
-#endif
 }
 
 // This is defined in the header and inlined when not using the simulator.
