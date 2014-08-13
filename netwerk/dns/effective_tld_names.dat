@@ -6012,11 +6012,35 @@ mil.to
 // Submitted by Ryan Sleevi <ryan.sleevi@gmail.com> 2014-01-03
 tp
 
-// tr : http://en.wikipedia.org/wiki/.tr
-*.tr
-!nic.tr
-// Used by government in the TRNC
-// http://en.wikipedia.org/wiki/.nc.tr
+// subTLDs: https://www.nic.tr/forms/eng/policies.pdf
+//     and: https://www.nic.tr/forms/politikalar.pdf
+// Submitted by <mehmetgurevin@gmail.com> 2014-07-19
+tr
+com.tr
+info.tr
+biz.tr
+net.tr
+org.tr
+web.tr
+gen.tr
+tv.tr
+av.tr
+dr.tr
+bbs.tr
+name.tr
+tel.tr
+gov.tr
+bel.tr
+pol.tr
+mil.tr
+k12.tr
+edu.tr
+kep.tr
+
+// Used by Northern Cyprus
+nc.tr
+
+// Used by government agencies of Northern Cyprus
 gov.nc.tr
 
 // travel : http://en.wikipedia.org/wiki/.travel
