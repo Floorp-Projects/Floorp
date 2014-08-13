@@ -517,6 +517,9 @@ class MacroAssemblerX86Shared : public Assembler
         movd(src, dest);
     }
 
+    void moveHighPairToLowPairFloat32(FloatRegister src, FloatRegister dest) {
+        movhlps(src, dest);
+    }
     void shuffleFloat32(uint32_t mask, FloatRegister src, FloatRegister dest) {
         // The shuffle instruction on x86 is such that it moves 2 words from
         // the dest and 2 words from the src operands. To simplify things, just

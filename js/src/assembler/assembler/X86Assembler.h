@@ -288,6 +288,7 @@ private:
         OP2_MOVPS_VpsWps    = 0x10,
         OP2_MOVSD_WsdVsd    = 0x11,
         OP2_MOVPS_WpsVps    = 0x11,
+        OP2_MOVHLPS_VqUq    = 0x12,
         OP2_UNPCKLPS_VsdWsd = 0x14,
         OP2_MOVAPD_VsdWsd   = 0x28,
         OP2_MOVAPS_VsdWsd   = 0x28,
@@ -2606,6 +2607,13 @@ public:
              mask, nameFPReg(src), nameFPReg(dst));
         m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(uint8_t(mask));
+    }
+
+    void movhlps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("movhlps     %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVHLPS_VqUq, (RegisterID)dst, (RegisterID)src);
     }
 
     void psrldq_ir(int shift, XMMRegisterID dest)
