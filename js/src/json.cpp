@@ -329,10 +329,10 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
         props = &scx->propertyList;
     } else {
         JS_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
-        ids.construct(cx);
-        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, ids.addr()))
+        ids.emplace(cx);
+        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, ids.ptr()))
             return false;
-        props = ids.addr();
+        props = ids.ptr();
     }
 
     /* My kingdom for not-quite-initialized-from-the-start references. */

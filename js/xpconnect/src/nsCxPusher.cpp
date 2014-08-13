@@ -39,21 +39,21 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
   // Enter a request and a compartment for the duration that the cx is on the
   // stack if non-null.
   if (cx) {
-    mAutoRequest.construct(cx);
+    mAutoRequest.emplace(cx);
 
     // DOM JSContexts don't store their default compartment object on the cx.
     JSObject *compartmentObject = mScx ? mScx->GetWindowProxy()
                                        : js::DefaultObjectForContextOrNull(cx);
     if (compartmentObject)
-      mAutoCompartment.construct(cx, compartmentObject);
+      mAutoCompartment.emplace(cx, compartmentObject);
   }
 }
 
 AutoCxPusher::~AutoCxPusher()
 {
   // Leave the compartment and request before popping.
-  mAutoCompartment.destroyIfConstructed();
-  mAutoRequest.destroyIfConstructed();
+  mAutoCompartment.reset();
+  mAutoRequest.reset();
 
   // When we push a context, we may save the frame chain and pretend like we
   // haven't entered any compartment. This gets restored on Pop(), but we can
@@ -103,7 +103,7 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 
   if (!mCx) {
     mCx = xpc->GetSafeJSContext();
-    mPusher.construct(mCx);
+    mPusher.emplace(mCx);
   }
 }
 
@@ -118,10 +118,10 @@ ThreadsafeAutoJSContext::ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_
 
   if (NS_IsMainThread()) {
     mCx = nullptr;
-    mAutoJSContext.construct();
+    mAutoJSContext.emplace();
   } else {
     mCx = mozilla::dom::workers::GetCurrentThreadJSContext();
-    mRequest.construct(mCx);
+    mRequest.emplace(mCx);
   }
 }
 
@@ -130,7 +130,7 @@ ThreadsafeAutoJSContext::operator JSContext*() const
   if (mCx) {
     return mCx;
   } else {
-    return mAutoJSContext.ref();
+    return *mAutoJSContext;
   }
 }
 
@@ -146,10 +146,10 @@ ThreadsafeAutoSafeJSContext::ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFI
 
   if (NS_IsMainThread()) {
     mCx = nullptr;
-    mAutoSafeJSContext.construct();
+    mAutoSafeJSContext.emplace();
   } else {
     mCx = mozilla::dom::workers::GetCurrentThreadJSContext();
-    mRequest.construct(mCx);
+    mRequest.emplace(mCx);
   }
 }
 
@@ -158,7 +158,7 @@ ThreadsafeAutoSafeJSContext::operator JSContext*() const
   if (mCx) {
     return mCx;
   } else {
-    return mAutoSafeJSContext.ref();
+    return *mAutoSafeJSContext;
   }
 }
 
