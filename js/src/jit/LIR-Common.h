@@ -272,6 +272,26 @@ class LFloat32 : public LInstructionHelper<1, 0, 0>
     }
 };
 
+// Constant SIMD int32x4
+class LInt32x4 : public LInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(Int32x4);
+
+    explicit LInt32x4() {}
+    const SimdConstant &getValue() const { return mir_->toSimdConstant()->value(); }
+};
+
+// Constant SIMD float32x4
+class LFloat32x4 : public LInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(Float32x4);
+
+    explicit LFloat32x4() {}
+    const SimdConstant &getValue() const { return mir_->toSimdConstant()->value(); }
+};
+
 // A constant Value.
 class LValue : public LInstructionHelper<BOX_PIECES, 0, 0>
 {

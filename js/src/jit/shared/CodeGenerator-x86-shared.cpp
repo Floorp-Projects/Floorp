@@ -2054,6 +2054,22 @@ CodeGeneratorX86Shared::visitNegF(LNegF *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitInt32x4(LInt32x4 *ins)
+{
+    const LDefinition *out = ins->getDef(0);
+    masm.loadConstantInt32x4(ins->getValue(), ToFloatRegister(out));
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitFloat32x4(LFloat32x4 *ins)
+{
+    const LDefinition *out = ins->getDef(0);
+    masm.loadConstantFloat32x4(ins->getValue(), ToFloatRegister(out));
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdValueX4(LSimdValueX4 *ins)
 {
     FloatRegister output = ToFloatRegister(ins->output());

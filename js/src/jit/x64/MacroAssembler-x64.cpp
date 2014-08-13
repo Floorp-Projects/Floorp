@@ -79,6 +79,66 @@ MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
     masm.setNextJump(j, prev);
 }
 
+MacroAssemblerX64::SimdData *
+MacroAssemblerX64::getSimdData(const SimdConstant &v)
+{
+    if (!simdMap_.initialized()) {
+        enoughMemory_ &= simdMap_.init();
+        if (!enoughMemory_)
+            return nullptr;
+    }
+
+    size_t index;
+    if (SimdMap::AddPtr p = simdMap_.lookupForAdd(v)) {
+        index = p->value();
+    } else {
+        index = simds_.length();
+        enoughMemory_ &= simds_.append(SimdData(v));
+        enoughMemory_ &= simdMap_.add(p, v, index);
+        if (!enoughMemory_)
+            return nullptr;
+    }
+    return &simds_[index];
+}
+
+void
+MacroAssemblerX64::loadConstantInt32x4(const SimdConstant &v, FloatRegister dest)
+{
+    JS_ASSERT(v.type() == SimdConstant::Int32x4);
+    if (maybeInlineInt32x4(v, dest))
+        return;
+
+    SimdData *val = getSimdData(v);
+    if (!val)
+        return;
+
+    JS_ASSERT(!val->uses.bound());
+    JS_ASSERT(val->type() == SimdConstant::Int32x4);
+
+    JmpSrc j = masm.movdqa_ripr(dest.code());
+    JmpSrc prev = JmpSrc(val->uses.use(j.offset()));
+    masm.setNextJump(j, prev);
+}
+
+void
+MacroAssemblerX64::loadConstantFloat32x4(const SimdConstant&v, FloatRegister dest)
+{
+    JS_ASSERT(v.type() == SimdConstant::Float32x4);
+    if (maybeInlineFloat32x4(v, dest))
+        return;
+
+    SimdData *val = getSimdData(v);
+    if (!val)
+        return;
+
+    JS_ASSERT(!val->uses.bound());
+    JS_ASSERT(val->type() == SimdConstant::Float32x4);
+
+    JmpSrc j = masm.movaps_ripr(dest.code());
+    JmpSrc prev = JmpSrc(val->uses.use(j.offset()));
+    masm.setNextJump(j, prev);
+}
+
 void
 MacroAssemblerX64::finish()
 {
@@ -96,6 +156,19 @@ MacroAssemblerX64::finish()
         Float &flt = floats_[i];
         bind(&flt.uses);
         masm.floatConstant(flt.value);
+    }
+
+    // SIMD memory values must be suitably aligned.
+    if (!simds_.empty())
+        masm.align(SimdStackAlignment);
+    for (size_t i = 0; i < simds_.length(); i++) {
+        SimdData &v = simds_[i];
+        bind(&v.uses);
+        switch(v.type()) {
+          case SimdConstant::Int32x4:   masm.int32x4Constant(v.value.asInt32x4());     break;
+          case SimdConstant::Float32x4: masm.float32x4Constant(v.value.asFloat32x4()); break;
+          default: MOZ_ASSUME_UNREACHABLE("unexpected SimdConstant type");
+        }
     }
 
     MacroAssemblerX86Shared::finish();
