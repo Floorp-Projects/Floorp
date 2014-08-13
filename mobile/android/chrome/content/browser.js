@@ -4202,6 +4202,20 @@ Tab.prototype = {
       fixedURI = URIFixup.createExposableURI(aLocationURI);
     } catch (ex) { }
 
+    // In guest sessions, we refuse to let you open any file urls.
+    if (BrowserApp.isGuest) {
+      let bannedSchemes = ["file", "chrome", "resource", "jar"];
+
+      if (bannedSchemes.indexOf(fixedURI.scheme) > -1) {
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
+
+        aRequest = this.browser.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, fixedURI, null);
+        if (aRequest) {
+          fixedURI = aRequest.URI;
+        }
+      }
+    }
+
     let contentType = contentWin.document.contentType;
 
     // If fixedURI matches browser.lastURI, we assume this isn't a real location
