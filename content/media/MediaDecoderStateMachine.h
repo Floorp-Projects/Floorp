@@ -829,14 +829,6 @@ protected:
   bool mIsAudioPrerolling;
   bool mIsVideoPrerolling;
 
-  // True when we have an audio stream that we're decoding, and we have not
-  // yet decoded to end of stream.
-  bool mIsAudioDecoding;
-
-  // True when we have a video stream that we're decoding, and we have not
-  // yet decoded to end of stream.
-  bool mIsVideoDecoding;
-
   // True when we have dispatched a task to the decode task queue to request
   // decoded audio/video, and/or we are waiting for the requested sample to be
   // returned by callback from the Reader.
