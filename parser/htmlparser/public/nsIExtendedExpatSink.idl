@@ -8,7 +8,7 @@
 /**
  * This interface provides notification of syntax-level events.
  */
-[scriptable, uuid(146E194B-333D-4283-8CF6-4BC3EE9B5DFF)]
+[scriptable, uuid(5e3e4f0c-7b77-47ca-a7c5-a3d87f2a9c82)]
 interface nsIExtendedExpatSink : nsIExpatSink
 {
   /**
