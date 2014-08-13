@@ -6815,13 +6815,13 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         if (!generateCompactNativeToBytecodeMap(cx, code))
             return false;
 
-        uint8_t *mainTableAddr = ((uint8_t *) nativeToBytecodeMap_) + nativeToBytecodeTableOffset_;
-        JitcodeMainTable *mainTable = (JitcodeMainTable *) mainTableAddr;
+        uint8_t *ionTableAddr = ((uint8_t *) nativeToBytecodeMap_) + nativeToBytecodeTableOffset_;
+        JitcodeIonTable *ionTable = (JitcodeIonTable *) ionTableAddr;
 
-        // Construct the MainEntry that will go into the global table.
-        JitcodeGlobalEntry::MainEntry entry;
-        if (!mainTable->makeMainEntry(cx, code, nativeToBytecodeScriptListLength_,
-                                      nativeToBytecodeScriptList_, entry))
+        // Construct the IonEntry that will go into the global table.
+        JitcodeGlobalEntry::IonEntry entry;
+        if (!ionTable->makeIonEntry(cx, code, nativeToBytecodeScriptListLength_,
+                                    nativeToBytecodeScriptList_, entry))
         {
             return false;
         }
@@ -6833,6 +6833,9 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
             entry.destroy();
             return false;
         }
+
+        // Mark the jitcode as having a bytecode map.
+        code->setHasBytecodeMap();
     }
 
     if (cx->runtime()->spsProfiler.enabled()) {

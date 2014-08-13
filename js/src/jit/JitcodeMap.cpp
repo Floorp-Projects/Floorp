@@ -7,6 +7,7 @@
 #include "jit/JitcodeMap.h"
 
 #include "mozilla/DebugOnly.h"
+#include "jit/BaselineJIT.h"
 #include "jit/IonSpewer.h"
 
 #include "js/Vector.h"
@@ -15,8 +16,9 @@ namespace js {
 namespace jit {
  
 bool
-JitcodeGlobalEntry::MainEntry::callStackAtAddr(void *ptr, BytecodeLocationVector &results,
-                                               uint32_t *depth) const
+JitcodeGlobalEntry::IonEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
+                                              BytecodeLocationVector &results,
+                                              uint32_t *depth) const
 {
     JS_ASSERT(containsPointer(ptr));
     uint32_t ptrOffset = reinterpret_cast<uint8_t *>(ptr) -
@@ -50,7 +52,7 @@ JitcodeGlobalEntry::MainEntry::callStackAtAddr(void *ptr, BytecodeLocationVector
 }
 
 void
-JitcodeGlobalEntry::MainEntry::destroy()
+JitcodeGlobalEntry::IonEntry::destroy()
 {
     // The region table is stored at the tail of the compacted data,
     // which means the start of the region table is a pointer to
@@ -67,6 +69,40 @@ JitcodeGlobalEntry::MainEntry::destroy()
         js_free(scriptListPointer());
     scriptList_ = 0;
 }
+
+bool
+JitcodeGlobalEntry::BaselineEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
+                                                   BytecodeLocationVector &results,
+                                                   uint32_t *depth) const
+{
+    JS_ASSERT(containsPointer(ptr));
+    JS_ASSERT(script_->hasBaselineScript());
+
+    jsbytecode *pc = script_->baselineScript()->pcForNativeAddress(script_, (uint8_t*) ptr);
+    if (!results.append(BytecodeLocation(script_, pc)))
+        return false;
+
+    *depth = 1;
+
+    return true;
+}
+
+bool
+JitcodeGlobalEntry::IonCacheEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
+                                                   BytecodeLocationVector &results,
+                                                   uint32_t *depth) const
+{
+    JS_ASSERT(containsPointer(ptr));
+
+    // There must exist an entry for the rejoin addr if this entry exists.
+    JitRuntime *jitrt = rt->jitRuntime();
+    JitcodeGlobalEntry entry;
+    jitrt->getJitcodeGlobalTable()->lookupInfallible(rejoinAddr(), &entry);
+    JS_ASSERT(entry.isIon());
+
+    return entry.callStackAtAddr(rt, rejoinAddr(), results, depth);
+}
+
 
 static int ComparePointers(const void *a, const void *b) {
     const uint8_t *a_ptr = reinterpret_cast<const uint8_t *>(a);
@@ -111,7 +147,7 @@ bool
 JitcodeGlobalTable::addEntry(const JitcodeGlobalEntry &entry)
 {
     // Should only add Main entries for now.
-    JS_ASSERT(entry.isMain());
+    JS_ASSERT(entry.isIon() || entry.isBaseline() || entry.isIonCache());
     return tree_.insert(entry);
 }
 
@@ -497,11 +533,11 @@ JitcodeRegionEntry::findPcOffset(uint32_t queryNativeOffset, uint32_t startPcOff
 }
 
 bool
-JitcodeMainTable::makeMainEntry(JSContext *cx, JitCode *code,
-                                uint32_t numScripts, JSScript **scripts,
-                                JitcodeGlobalEntry::MainEntry &out)
+JitcodeIonTable::makeIonEntry(JSContext *cx, JitCode *code,
+                              uint32_t numScripts, JSScript **scripts,
+                              JitcodeGlobalEntry::IonEntry &out)
 {
-    typedef JitcodeGlobalEntry::MainEntry::SizedScriptList SizedScriptList;
+    typedef JitcodeGlobalEntry::IonEntry::SizedScriptList SizedScriptList;
 
     JS_ASSERT(numScripts > 0);
 
@@ -510,7 +546,7 @@ JitcodeMainTable::makeMainEntry(JSContext *cx, JitCode *code,
         return true;
     }
 
-    if (numScripts < uint32_t(JitcodeGlobalEntry::MainEntry::Multi)) {
+    if (numScripts < uint32_t(JitcodeGlobalEntry::IonEntry::Multi)) {
         out.init(code->raw(), code->raw() + code->instructionsSize(), numScripts, scripts, this);
         return true;
     }
@@ -525,7 +561,7 @@ JitcodeMainTable::makeMainEntry(JSContext *cx, JitCode *code,
 }
 
 uint32_t
-JitcodeMainTable::findRegionEntry(uint32_t nativeOffset) const
+JitcodeIonTable::findRegionEntry(uint32_t nativeOffset) const
 {
     static const uint32_t LINEAR_SEARCH_THRESHOLD = 8;
     uint32_t regions = numRegions();
@@ -579,11 +615,11 @@ JitcodeMainTable::findRegionEntry(uint32_t nativeOffset) const
 }
 
 /* static */ bool
-JitcodeMainTable::WriteMainTable(CompactBufferWriter &writer,
-                                 JSScript **scriptList, uint32_t scriptListSize,
-                                 const CodeGeneratorShared::NativeToBytecode *start,
-                                 const CodeGeneratorShared::NativeToBytecode *end,
-                                 uint32_t *tableOffsetOut, uint32_t *numRegionsOut)
+JitcodeIonTable::WriteIonTable(CompactBufferWriter &writer,
+                               JSScript **scriptList, uint32_t scriptListSize,
+                               const CodeGeneratorShared::NativeToBytecode *start,
+                               const CodeGeneratorShared::NativeToBytecode *end,
+                               uint32_t *tableOffsetOut, uint32_t *numRegionsOut)
 {
     JS_ASSERT(tableOffsetOut != nullptr);
     JS_ASSERT(numRegionsOut != nullptr);

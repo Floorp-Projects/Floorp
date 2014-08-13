@@ -629,7 +629,7 @@ CodeGeneratorShared::generateCompactNativeToBytecodeMap(JSContext *cx, JitCode *
     uint32_t tableOffset = 0;
     uint32_t numRegions = 0;
 
-    if (!JitcodeMainTable::WriteMainTable(
+    if (!JitcodeIonTable::WriteIonTable(
             writer, nativeToBytecodeScriptList_, nativeToBytecodeScriptListLength_,
             &nativeToBytecodeList_[0],
             &nativeToBytecodeList_[0] + nativeToBytecodeList_.length(),
@@ -676,25 +676,25 @@ CodeGeneratorShared::verifyCompactNativeToBytecodeMap(JitCode *code)
     JS_ASSERT(uintptr_t(tablePtr) % sizeof(uint32_t) == 0);
 
     // Verify that numRegions was encoded correctly.
-    const JitcodeMainTable *mainTable = reinterpret_cast<const JitcodeMainTable *>(tablePtr);
-    JS_ASSERT(mainTable->numRegions() == nativeToBytecodeNumRegions_);
+    const JitcodeIonTable *ionTable = reinterpret_cast<const JitcodeIonTable *>(tablePtr);
+    JS_ASSERT(ionTable->numRegions() == nativeToBytecodeNumRegions_);
 
     // Region offset for first region should be at the start of the payload region.
     // Since the offsets are backward from the start of the table, the first entry
     // backoffset should be equal to the forward table offset from the start of the
     // allocated data.
-    JS_ASSERT(mainTable->regionOffset(0) == nativeToBytecodeTableOffset_);
+    JS_ASSERT(ionTable->regionOffset(0) == nativeToBytecodeTableOffset_);
 
     // Verify each region.
-    for (uint32_t i = 0; i < mainTable->numRegions(); i++) {
+    for (uint32_t i = 0; i < ionTable->numRegions(); i++) {
         // Back-offset must point into the payload region preceding the table, not before it.
-        JS_ASSERT(mainTable->regionOffset(i) <= nativeToBytecodeTableOffset_);
+        JS_ASSERT(ionTable->regionOffset(i) <= nativeToBytecodeTableOffset_);
 
         // Back-offset must point to a later area in the payload region than previous
         // back-offset.  This means that back-offsets decrease monotonically.
-        JS_ASSERT_IF(i > 0, mainTable->regionOffset(i) < mainTable->regionOffset(i - 1));
+        JS_ASSERT_IF(i > 0, ionTable->regionOffset(i) < ionTable->regionOffset(i - 1));
 
-        JitcodeRegionEntry entry = mainTable->regionEntry(i);
+        JitcodeRegionEntry entry = ionTable->regionEntry(i);
 
         // Ensure native code offset for region falls within jitcode.
         JS_ASSERT(entry.nativeOffset() <= code->instructionsSize());
