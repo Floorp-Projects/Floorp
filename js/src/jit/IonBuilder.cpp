@@ -1277,7 +1277,7 @@ IonBuilder::traverseBytecode()
         }
 #endif
 
-        if (instrumentedProfiling())
+        if (isNativeToBytecodeMapEnabled())
             current->add(MPcOffset::New(alloc()));
 
         // Nothing in inspectOpcode() is allowed to advance the pc.
