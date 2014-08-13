@@ -3785,7 +3785,7 @@ MOZ_WMF=
 if test -n "$MOZ_FMP4"; then
   MOZ_FMP4=1
 else
-  MOZ_FMP4 =
+  MOZ_FMP4=
 fi
 MOZ_EME=1
 MOZ_FFMPEG=
