@@ -130,7 +130,7 @@ static bool enableDisassemblyDumps = false;
 static bool printTiming = false;
 static const char *jsCacheDir = nullptr;
 static const char *jsCacheAsmJSPath = nullptr;
-static bool jsCachingEnabled = true;
+static bool jsCachingEnabled = false;
 mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool
