@@ -164,7 +164,7 @@ class GlobalNamespace(dict):
         if name in self._allow_one_mutation:
             self._allow_one_mutation.remove(name)
         elif name in self and dict.__getitem__(self, name) is not value:
-            raise Exception('Reassigning %s is forbidden' % name)
+            raise KeyError('global_ns', 'reassign', name)
 
         # We don't need to check for name.isupper() here because LocalNamespace
         # only sends variables our way if isupper() is True.
