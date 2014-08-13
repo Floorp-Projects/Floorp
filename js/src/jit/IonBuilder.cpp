@@ -1277,6 +1277,9 @@ IonBuilder::traverseBytecode()
         }
 #endif
 
+        if (isNativeToBytecodeMapEnabled())
+            current->add(MPcOffset::New(alloc()));
+
         // Nothing in inspectOpcode() is allowed to advance the pc.
         JSOp op = JSOp(*pc);
         if (!inspectOpcode(op))

@@ -36,9 +36,6 @@ FFmpegAACDecoder<LIBAV_VER>::Init()
 static AudioDataValue*
 CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumSamples)
 {
-  // These are the only two valid AAC packet sizes.
-  NS_ASSERTION(aNumSamples == 960 || aNumSamples == 1024,
-               "Should have exactly one AAC audio packet.");
   MOZ_ASSERT(aNumChannels <= MAX_CHANNELS);
 
   nsAutoArrayPtr<AudioDataValue> audio(
@@ -93,13 +90,14 @@ FFmpegAACDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
                "Only one audio packet should be received at a time.");
 
   uint32_t numChannels = mCodecContext->channels;
+  uint32_t samplingRate = mCodecContext->sample_rate;
 
   nsAutoArrayPtr<AudioDataValue> audio(
     CopyAndPackAudio(mFrame, numChannels, mFrame->nb_samples));
 
   nsAutoPtr<AudioData> data(
     new AudioData(packet.pos, aSample->composition_timestamp, aSample->duration,
-                  mFrame->nb_samples, audio.forget(), numChannels));
+                  mFrame->nb_samples, audio.forget(), numChannels, samplingRate));
 
   mCallback->Output(data.forget());
 

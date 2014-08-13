@@ -298,12 +298,16 @@ private:
         OP2_UCOMISD_VsdWsd  = 0x2E,
         OP2_MOVMSKPD_EdVd   = 0x50,
         OP2_ADDSD_VsdWsd    = 0x58,
+        OP2_ADDPS_VpsWps    = 0x58,
         OP2_MULSD_VsdWsd    = 0x59,
+        OP2_MULPS_VpsWps    = 0x59,
         OP2_CVTSS2SD_VsdEd  = 0x5A,
         OP2_CVTSD2SS_VsdEd  = 0x5A,
         OP2_SUBSD_VsdWsd    = 0x5C,
+        OP2_SUBPS_VpsWps    = 0x5C,
         OP2_MINSD_VsdWsd    = 0x5D,
         OP2_DIVSD_VsdWsd    = 0x5E,
+        OP2_DIVPS_VpsWps    = 0x5E,
         OP2_MAXSD_VsdWsd    = 0x5F,
         OP2_SQRTSD_VsdWsd   = 0x51,
         OP2_SQRTSS_VssWss   = 0x51,
@@ -328,7 +332,10 @@ private:
         OP2_MOVZX_GvEw      = 0xB7,
         OP2_XADD_EvGv       = 0xC1,
         OP2_PEXTRW_GdUdIb   = 0xC5,
-        OP2_SHUFPS_VpsWpsIb = 0xC6
+        OP2_SHUFPS_VpsWpsIb = 0xC6,
+        OP2_PXORDQ_VdqWdq   = 0xEF,
+        OP2_PSUBD_VdqWdq    = 0xFA,
+        OP2_PADDD_VdqWdq    = 0xFE
     } TwoByteOpcodeID;
 
     typedef enum {
@@ -659,6 +666,124 @@ public:
             nameIReg(base), nameIReg(index), 1<<scale);
         m_formatter.oneByteOp(PRE_LOCK);
         m_formatter.twoByteOp(OP2_XADD_EvGv, srcdest, base, index, scale, offset);
+    }
+
+    void paddd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("paddd      %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, (RegisterID)src);
+    }
+    void paddd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("paddd      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, base, offset);
+    }
+    void paddd_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("paddd      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, address);
+    }
+
+    void psubd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("psubd      %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, (RegisterID)src);
+    }
+    void psubd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("psubd      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, base, offset);
+    }
+    void psubd_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("psubd      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, address);
+    }
+
+    void addps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("addps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void addps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("addps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void addps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("addps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void subps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("subps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void subps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("subps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void subps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("subps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void mulps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("mulps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void mulps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("mulps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void mulps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("mulps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void divps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("divps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void divps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("divps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void divps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("divps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, address);
     }
 
     void andl_rr(RegisterID src, RegisterID dst)
@@ -2590,6 +2715,14 @@ public:
         m_formatter.twoByteOp(OP2_MOVD_VdEd, (RegisterID)dst, src);
     }
 
+    void pxor_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("pxor       %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PXORDQ_VdqWdq, (RegisterID)dst, (RegisterID)src);
+    }
+
     void pshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
     {
         JS_ASSERT(mask < 256);
@@ -2931,6 +3064,40 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_MOVAPD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
+
+#ifdef WTF_CPU_X86_64
+    JmpSrc movaps_ripr(XMMRegisterID dst)
+    {
+        spew("movaps     ?(%%rip), %s",
+             nameFPReg(dst));
+        m_formatter.twoByteRipOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, 0);
+        return JmpSrc(m_formatter.size());
+    }
+
+    JmpSrc movdqa_ripr(XMMRegisterID dst)
+    {
+        spew("movdqa     ?(%%rip), %s",
+             nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteRipOp(OP2_MOVDQ_VdqWdq, (RegisterID)dst, 0);
+        return JmpSrc(m_formatter.size());
+    }
+#else
+    void movaps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("movaps     %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, address);
+    }
+
+    void movdqa_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("movdqa     %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, (RegisterID)dst, address);
+    }
+#endif // WTF_CPU_X86_64
 
     void movdqu_rm(XMMRegisterID src, int offset, RegisterID base)
     {
@@ -3344,6 +3511,19 @@ public:
     {
         spew(".float %.20f", f);
         m_formatter.floatConstant(f);
+    }
+
+    void int32x4Constant(const int32_t s[4])
+    {
+        spew(".int32x4 (%d %d %d %d)", s[0], s[1], s[2], s[3]);
+        MOZ_ASSERT(m_formatter.isAligned(16));
+        m_formatter.int32x4Constant(s);
+    }
+    void float32x4Constant(const float f[4])
+    {
+        spew(".float32x4 (%f %f %f %f)", f[0], f[1], f[2], f[3]);
+        MOZ_ASSERT(m_formatter.isAligned(16));
+        m_formatter.float32x4Constant(f);
     }
 
     void int64Constant(int64_t i)
@@ -4030,10 +4210,28 @@ private:
             m_buffer.putIntUnchecked(u.u32);
         }
 
+        void int32x4Constant(const int32_t s[4])
+        {
+            for (size_t i = 0; i < 4; ++i)
+                int32Constant(s[i]);
+        }
+
+        void float32x4Constant(const float s[4])
+        {
+            for (size_t i = 0; i < 4; ++i)
+                floatConstant(s[i]);
+        }
+
         void int64Constant(int64_t i)
         {
             m_buffer.ensureSpace(sizeof(int64_t));
             m_buffer.putInt64Unchecked(i);
+        }
+
+        void int32Constant(int32_t i)
+        {
+            m_buffer.ensureSpace(sizeof(int32_t));
+            m_buffer.putIntUnchecked(i);
         }
 
         // Administrative methods:

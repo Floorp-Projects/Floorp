@@ -141,6 +141,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitFromCharCode(MFromCharCode *ins);
     bool visitStringSplit(MStringSplit *ins);
     bool visitStart(MStart *start);
+    bool visitPcOffset(MPcOffset *pcOffset);
     bool visitOsrEntry(MOsrEntry *entry);
     bool visitNop(MNop *nop);
     bool visitLimitedTruncate(MLimitedTruncate *nop);
@@ -199,6 +200,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitArrayPopShift(MArrayPopShift *ins);
     bool visitArrayPush(MArrayPush *ins);
     bool visitArrayConcat(MArrayConcat *ins);
+    bool visitArrayJoin(MArrayJoin *ins);
     bool visitLoadTypedArrayElement(MLoadTypedArrayElement *ins);
     bool visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole *ins);
     bool visitLoadTypedArrayElementStatic(MLoadTypedArrayElementStatic *ins);
@@ -264,6 +266,9 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitGetDOMMember(MGetDOMMember *ins);
     bool visitRecompileCheck(MRecompileCheck *ins);
     bool visitSimdExtractElement(MSimdExtractElement *ins);
+    bool visitSimdBinaryArith(MSimdBinaryArith *ins);
+    bool visitSimdValueX4(MSimdValueX4 *ins);
+    bool visitSimdConstant(MSimdConstant *ins);
 };
 
 } // namespace jit

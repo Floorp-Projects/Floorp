@@ -250,6 +250,7 @@ jit::CheckLogging()
             "  range      Range Analysis\n"
             "  unroll     Loop unrolling\n"
             "  logs       C1 and JSON visualization logging\n"
+            "  profiling  Profiling-related information\n"
             "  all        Everything\n"
             "\n"
             "  bl-aborts  Baseline compiler abort messages\n"
@@ -304,6 +305,8 @@ jit::CheckLogging()
         EnableChannel(IonSpew_CacheFlush);
     if (ContainsFlag(env, "logs"))
         EnableIonDebugLogging();
+    if (ContainsFlag(env, "profiling"))
+        EnableChannel(IonSpew_Profiling);
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32_t(-1);
 

@@ -213,6 +213,9 @@ class IonCache
         profilerLeavePc_ = pc;
     }
 
+    // Get the address at which IC rejoins the mainline jitcode.
+    virtual void *rejoinAddress() = 0;
+
     virtual void emitInitialJump(MacroAssembler &masm, AddCacheState &addState) = 0;
     virtual void bindInitialJump(MacroAssembler &masm, AddCacheState &addState) = 0;
     virtual void updateBaseAddress(JitCode *code, MacroAssembler &masm);
@@ -398,6 +401,10 @@ class RepatchIonCache : public IonCache
 
     // Update the labels once the code is finalized.
     void updateBaseAddress(JitCode *code, MacroAssembler &masm);
+
+    virtual void *rejoinAddress() MOZ_OVERRIDE {
+        return rejoinLabel().raw();
+    }
 };
 
 //
@@ -496,6 +503,10 @@ class DispatchIonCache : public IonCache
 
     // Fix up the first stub pointer once the code is finalized.
     void updateBaseAddress(JitCode *code, MacroAssembler &masm);
+
+    virtual void *rejoinAddress() MOZ_OVERRIDE {
+        return rejoinLabel_.raw();
+    }
 };
 
 // Define the cache kind and pre-declare data structures used for calling inline
