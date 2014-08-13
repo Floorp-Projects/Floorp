@@ -122,7 +122,7 @@ pkix_pl_CrlDp_Create(
         if (!rdnArena) {
             PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
         }
-        issuerNameCopy = (CERTName *)PORT_ArenaZNew(rdnArena, CERTName*);
+        issuerNameCopy = (CERTName *)PORT_ArenaZNew(rdnArena, CERTName);
         if (!issuerNameCopy) {
             PKIX_ERROR(PKIX_ALLOCERROR);
         }
