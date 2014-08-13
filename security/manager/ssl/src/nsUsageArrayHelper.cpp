@@ -150,6 +150,7 @@ nsUsageArrayHelper::verifyFailed(uint32_t *_verified, int err)
   case SEC_ERROR_INADEQUATE_CERT_TYPE:
   case SEC_ERROR_CA_CERT_INVALID:
   case mozilla::pkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY:
+  case mozilla::pkix::MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE:
     *_verified = nsNSSCertificate::USAGE_NOT_ALLOWED; break;
   /* These are the cases that have individual error messages */
   case SEC_ERROR_REVOKED_CERTIFICATE:
