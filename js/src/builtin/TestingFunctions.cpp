@@ -829,7 +829,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     if (startValue.isUndefined()) {
         JS_TraceRuntime(&countTracer.base);
     } else {
-        JS_CallValueTracer(&countTracer.base, startValue.address(), "root");
+        JS_CallUnbarrieredValueTracer(&countTracer.base, startValue.address(), "root");
     }
 
     JSCountHeapNode *node;

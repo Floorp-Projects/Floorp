@@ -1949,7 +1949,7 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
   }
   if (JSObject* global = js::DefaultObjectForContextOrNull(cx)) {
     JS::AssertGCThingMustBeTenured(global);
-    JS_CallObjectTracer(aTrc, &global, "safe context");
+    JS_CallUnbarrieredObjectTracer(aTrc, &global, "safe context");
     MOZ_ASSERT(global == js::DefaultObjectForContextOrNull(cx));
   }
 }
