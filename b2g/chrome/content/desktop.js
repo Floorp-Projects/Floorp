@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+let isMulet = "ResponsiveUI" in browserWindow;
+
 // Enable touch event shim on desktop that translates mouse events
 // into touch ones
 function enableTouch() {
@@ -72,8 +75,68 @@ function checkDebuggerPort() {
   }
 }
 
+
+function initResponsiveDesign() {
+  Cu.import('resource:///modules/devtools/responsivedesign.jsm');
+  ResponsiveUIManager.on('on', function(event, {tab:tab}) {
+    let responsive = tab.__responsiveUI;
+    let document = tab.ownerDocument;
+
+    // Only tweak reponsive mode for shell.html tabs.
+    if (tab.linkedBrowser.contentWindow != window) {
+      return;
+    }
+
+    responsive.buildPhoneUI();
+
+    responsive.rotatebutton.addEventListener('command', function (evt) {
+      GlobalSimulatorScreen.flipScreen();
+      evt.stopImmediatePropagation();
+      evt.preventDefault();
+    }, true);
+
+    // Enable touch events
+    browserWindow.gBrowser.selectedTab.__responsiveUI.enableTouch();
+  });
+
+  // Automatically toggle responsive design mode
+  let width = 320, height = 480;
+  // We have to take into account padding and border introduced with the
+  // device look'n feel:
+  width += 15*2; // Horizontal padding
+  width += 1*2; // Vertical border
+  height += 60; // Top Padding
+  height += 1; // Top border
+  let args = {'width': width, 'height': height};
+  let mgr = browserWindow.ResponsiveUI.ResponsiveUIManager;
+  mgr.toggle(browserWindow, browserWindow.gBrowser.selectedTab);
+  let responsive = browserWindow.gBrowser.selectedTab.__responsiveUI;
+  responsive.setSize(width, height);
+
+}
+
+function openDevtools() {
+  // Open devtool panel while maximizing its size according to screen size
+  Services.prefs.setIntPref('devtools.toolbox.sidebar.width',
+                            browserWindow.outerWidth - 550);
+  Services.prefs.setCharPref('devtools.toolbox.host', 'side');
+  let {gDevTools} = Cu.import('resource:///modules/devtools/gDevTools.jsm', {});
+  let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  let target = devtools.TargetFactory.forTab(browserWindow.gBrowser.selectedTab);
+  gDevTools.showToolbox(target);
+}
+
 window.addEventListener('ContentStart', function() {
-  enableTouch();
+  // On Firefox Mulet, touch events are enabled within the responsive mode
+  if (!isMulet) {
+    enableTouch();
+  }
   setupButtons();
   checkDebuggerPort();
+  // On Firefox mulet, we automagically enable the responsive mode
+  // and show the devtools
+  if (isMulet) {
+    initResponsiveDesign(browserWindow);
+    openDevtools();
+  }
 });

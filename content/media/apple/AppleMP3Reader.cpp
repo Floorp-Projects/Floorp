@@ -260,7 +260,7 @@ AppleMP3Reader::AudioSampleCallback(UInt32 aNumBytes,
     AudioData *audio = new AudioData(mDecoder->GetResource()->Tell(),
                                      time, duration, numFrames,
                                      reinterpret_cast<AudioDataValue *>(decoded.forget()),
-                                     mAudioChannels);
+                                     mAudioChannels, mAudioSampleRate);
     mAudioQueue.Push(audio);
 
     mCurrentAudioFrame += numFrames;

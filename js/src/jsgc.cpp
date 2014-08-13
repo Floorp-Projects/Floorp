@@ -1112,12 +1112,13 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     chunkAllocationSinceLastGC(false),
     nextFullGCTime(0),
     lastGCTime(0),
-    jitReleaseTime(0),
     mode(JSGC_MODE_INCREMENTAL),
     decommitThreshold(32 * 1024 * 1024),
     cleanUpEverything(false),
     grayBitsValid(false),
     isNeeded(0),
+    majorGCNumber(0),
+    jitReleaseNumber(0),
     number(0),
     startNumber(0),
     isFull(false),
@@ -1248,8 +1249,11 @@ GCRuntime::initZeal()
 
 #endif
 
-/* Lifetime for type sets attached to scripts containing observed types. */
-static const int64_t JIT_SCRIPT_RELEASE_TYPES_INTERVAL = 60 * 1000 * 1000;
+/*
+ * Lifetime in number of major GCs for type sets attached to scripts containing
+ * observed types.
+ */
+static const uint64_t JIT_SCRIPT_RELEASE_TYPES_PERIOD = 20;
 
 bool
 GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
@@ -1276,9 +1280,7 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     tunables.setParameter(JSGC_MAX_BYTES, maxbytes);
     setMaxMallocBytes(maxbytes);
 
-#ifndef JS_MORE_DETERMINISTIC
-    jitReleaseTime = PRMJ_Now() + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
-#endif
+    jitReleaseNumber = majorGCNumber + JIT_SCRIPT_RELEASE_TYPES_PERIOD;
 
 #ifdef JSGC_GENERATIONAL
     if (!nursery.init(maxNurseryBytes))
@@ -2415,13 +2417,7 @@ GCRuntime::triggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
     return true;
 }
 
-void
-js::MaybeGC(JSContext *cx)
-{
-    cx->runtime()->gc.maybeGC(cx->zone());
-}
-
-void
+bool
 GCRuntime::maybeGC(Zone *zone)
 {
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
@@ -2430,13 +2426,13 @@ GCRuntime::maybeGC(Zone *zone)
     if (zealMode == ZealAllocValue || zealMode == ZealPokeValue) {
         JS::PrepareForFullGC(rt);
         GC(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
-        return;
+        return true;
     }
 #endif
 
     if (isNeeded) {
         GCSlice(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
-        return;
+        return true;
     }
 
     double factor = schedulingState.inHighFrequencyGCMode() ? 0.85 : 0.9;
@@ -2447,15 +2443,25 @@ GCRuntime::maybeGC(Zone *zone)
     {
         PrepareZoneForGC(zone);
         GCSlice(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
-        return;
+        return true;
     }
 
-#ifndef JS_MORE_DETERMINISTIC
+    return false;
+}
+
+void
+GCRuntime::maybePeriodicFullGC()
+{
     /*
+     * Trigger a periodic full GC.
+     *
+     * This is a source of non-determinism, but is not called from the shell.
+     *
      * Access to the counters and, on 32 bit, setting gcNextFullGCTime below
      * is not atomic and a race condition could trigger or suppress the GC. We
      * tolerate this.
      */
+#ifndef JS_MORE_DETERMINISTIC
     int64_t now = PRMJ_Now();
     if (nextFullGCTime && nextFullGCTime <= now) {
         if (chunkAllocationSinceLastGC ||
@@ -2881,7 +2887,7 @@ GCHelperState::onBackgroundThread()
 }
 
 bool
-GCRuntime::releaseObservedTypes()
+GCRuntime::shouldReleaseObservedTypes()
 {
     bool releaseTypes = false;
 
@@ -2890,13 +2896,12 @@ GCRuntime::releaseObservedTypes()
         releaseTypes = true;
 #endif
 
-#ifndef JS_MORE_DETERMINISTIC
-    int64_t now = PRMJ_Now();
-    if (now >= jitReleaseTime)
+    /* We may miss the exact target GC due to resets. */
+    if (majorGCNumber >= jitReleaseNumber)
         releaseTypes = true;
+
     if (releaseTypes)
-        jitReleaseTime = now + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
-#endif
+        jitReleaseNumber = majorGCNumber + JIT_SCRIPT_RELEASE_TYPES_PERIOD;
 
     return releaseTypes;
 }
@@ -4157,10 +4162,9 @@ GCRuntime::beginSweepingZoneGroup()
             zone->discardJitCode(&fop);
         }
 
-        bool releaseTypes = releaseObservedTypes();
         for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             gcstats::AutoSCC scc(stats, zoneGroupIndex);
-            c->sweep(&fop, releaseTypes && !c->zone()->isPreservingCode());
+            c->sweep(&fop, releaseObservedTypes && !c->zone()->isPreservingCode());
         }
 
         for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
@@ -4174,7 +4178,7 @@ GCRuntime::beginSweepingZoneGroup()
             // code and new script information in the zone, the only things
             // whose correctness depends on the type constraints.
             bool oom = false;
-            zone->sweep(&fop, releaseTypes && !zone->isPreservingCode(), &oom);
+            zone->sweep(&fop, releaseObservedTypes && !zone->isPreservingCode(), &oom);
 
             if (oom) {
                 zone->setPreservingCode(false);
@@ -4263,6 +4267,8 @@ GCRuntime::beginSweepPhase(bool lastGC)
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
 
     sweepOnBackgroundThread = !lastGC && !TraceEnabled() && CanUseExtraThreads();
+
+    releaseObservedTypes = shouldReleaseObservedTypes();
 
 #ifdef DEBUG
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
@@ -4986,6 +4992,8 @@ GCRuntime::gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
     interFrameGC = true;
 
     number++;
+    if (incrementalState == NO_INCREMENTAL)
+        majorGCNumber++;
 
     // It's ok if threads other than the main thread have suppressGC set, as
     // they are operating on zones which will not be collected from here.

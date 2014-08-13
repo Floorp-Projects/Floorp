@@ -594,6 +594,7 @@ NS_IMETHODIMP CleaupCacheDirectoriesRunnable::Run()
   }
 #if defined(MOZ_WIDGET_ANDROID)
   if (mCache2Profileless) {
+    nsDeleteDir::RemoveOldTrashes(mCache2Profileless);
     // Always delete the profileless cache on Android
     nsDeleteDir::DeleteDir(mCache2Profileless, true, 30000);
   }

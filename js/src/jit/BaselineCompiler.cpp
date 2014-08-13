@@ -13,6 +13,7 @@
 #include "jit/IonAnalysis.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitcodeMap.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
@@ -243,6 +244,21 @@ BaselineCompiler::compile()
 
     if (script->compartment()->debugMode())
         baselineScript->setDebugMode();
+
+    // Register a native => bytecode mapping entry for this script if needed.
+    if (cx->runtime()->jitRuntime()->isNativeToBytecodeMapEnabled(cx->runtime())) {
+        IonSpew(IonSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%d (%p)",
+                    script->filename(), script->lineno(), baselineScript);
+        JitcodeGlobalEntry::BaselineEntry entry;
+        entry.init(code->raw(), code->raw() + code->instructionsSize(), script);
+
+        JitcodeGlobalTable *globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
+        if (!globalTable->addEntry(entry))
+            return Method_Error;
+
+        // Mark the jitcode as having a bytecode map.
+        code->setHasBytecodeMap();
+    }
 
     script->setBaselineScript(cx, baselineScript);
 
