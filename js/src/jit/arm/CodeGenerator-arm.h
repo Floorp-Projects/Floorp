@@ -224,6 +224,11 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitUDiv(LUDiv *ins);
     bool visitUMod(LUMod *ins);
     bool visitSoftUDivOrMod(LSoftUDivOrMod *ins);
+
+  public:
+    // Unimplemented SIMD instructions
+    bool visitSimdExtractElementI(LSimdExtractElementI *ins) { MOZ_ASSUME_UNREACHABLE("NYI"); }
+    bool visitSimdExtractElementF(LSimdExtractElementF *ins) { MOZ_ASSUME_UNREACHABLE("NYI"); }
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;

@@ -1463,6 +1463,14 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());
     }
+    void pshufd(uint32_t mask, FloatRegister src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        masm.pshufd_irr(mask, src.code(), dest.code());
+    }
+    void shufps(uint32_t mask, FloatRegister src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        masm.shufps_irr(mask, src.code(), dest.code());
+    }
     void addsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.addsd_rr(src.code(), dest.code());
