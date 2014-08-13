@@ -102,7 +102,7 @@ WorkerRunnable::Dispatch(JSContext* aCx)
 
   Maybe<JSAutoCompartment> ac;
   if (global) {
-    ac.construct(aCx, global);
+    ac.emplace(aCx, global);
   }
 
   ok = PreDispatch(aCx, mWorkerPrivate);
@@ -308,9 +308,9 @@ WorkerRunnable::Run()
   Maybe<mozilla::dom::AutoEntryScript> aes;
   JSContext* cx;
   if (globalObject) {
-    aes.construct(globalObject, isMainThread, isMainThread ? nullptr :
-                                              GetCurrentThreadJSContext());
-    cx = aes.ref().cx();
+    aes.emplace(globalObject, isMainThread, isMainThread ? nullptr :
+                                            GetCurrentThreadJSContext());
+    cx = aes->cx();
   } else {
     jsapi.Init();
     cx = jsapi.cx();
@@ -320,16 +320,16 @@ WorkerRunnable::Run()
   // compartment or the null compartment, so we need to enter our own.
   Maybe<JSAutoCompartment> ac;
   if (!targetIsWorkerThread && mWorkerPrivate->GetWrapper()) {
-    ac.construct(cx, mWorkerPrivate->GetWrapper());
+    ac.emplace(cx, mWorkerPrivate->GetWrapper());
   }
 
   bool result = WorkerRun(cx, mWorkerPrivate);
 
   // In the case of CompileScriptRunnnable, WorkerRun above can cause us to
   // lazily create a global, so we construct aes here before calling PostRun.
-  if (targetIsWorkerThread && aes.empty() && mWorkerPrivate->GlobalScope()) {
-    aes.construct(mWorkerPrivate->GlobalScope(), false, GetCurrentThreadJSContext());
-    cx = aes.ref().cx();
+  if (targetIsWorkerThread && !aes && mWorkerPrivate->GlobalScope()) {
+    aes.emplace(mWorkerPrivate->GlobalScope(), false, GetCurrentThreadJSContext());
+    cx = aes->cx();
   }
 
   PostRun(cx, mWorkerPrivate, result);
