@@ -88,7 +88,7 @@ private:
     static void KeyMarkCallback(JSTracer *trc, JSObject *key, void *data) {
         JSObject2WrappedJSMap* self = static_cast<JSObject2WrappedJSMap*>(data);
         JSObject *prior = key;
-        JS_CallObjectTracer(trc, &key, "XPCJSRuntime::mWrappedJSMap key");
+        JS_CallUnbarrieredObjectTracer(trc, &key, "XPCJSRuntime::mWrappedJSMap key");
         self->mTable.rekeyIfMoved(prior, key);
     }
 
@@ -704,7 +704,7 @@ private:
         UnbarrieredMap &table = reinterpret_cast<UnbarrieredMap &>(self->mTable);
 
         JSObject *prior = key;
-        JS_CallObjectTracer(trc, &key, "XPCWrappedNativeScope::mWaiverWrapperMap key");
+        JS_CallUnbarrieredObjectTracer(trc, &key, "XPCWrappedNativeScope::mWaiverWrapperMap key");
         table.rekeyIfMoved(prior, key);
     }
 

@@ -499,6 +499,38 @@ class MacroAssemblerX86Shared : public Assembler
         movups(src, Operand(dest));
     }
 
+    static uint32_t ComputeShuffleMask(SimdLane x, SimdLane y = LaneX,
+                                       SimdLane z = LaneX, SimdLane w = LaneX)
+    {
+        uint32_t r = (uint32_t(w) << 6) |
+                     (uint32_t(z) << 4) |
+                     (uint32_t(y) << 2) |
+                     uint32_t(x);
+        JS_ASSERT(r < 256);
+        return r;
+    }
+
+    void shuffleInt32(uint32_t mask, FloatRegister src, FloatRegister dest) {
+        pshufd(mask, src, dest);
+    }
+    void moveLowInt32(FloatRegister src, Register dest) {
+        movd(src, dest);
+    }
+
+    void moveHighPairToLowPairFloat32(FloatRegister src, FloatRegister dest) {
+        movhlps(src, dest);
+    }
+    void shuffleFloat32(uint32_t mask, FloatRegister src, FloatRegister dest) {
+        // The shuffle instruction on x86 is such that it moves 2 words from
+        // the dest and 2 words from the src operands. To simplify things, just
+        // clobber the output with the input and apply the instruction
+        // afterwards.
+        // Note: this is useAtStart-safe because src isn't read afterwards.
+        if (src != dest)
+            moveAlignedFloat32x4(src, dest);
+        shufps(mask, dest, dest);
+    }
+
     void moveFloatAsDouble(Register src, FloatRegister dest) {
         movd(src, dest);
         cvtss2sd(dest, dest);

@@ -2684,6 +2684,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
   if (aBGClipRect) {
     clipState.mBGClipArea = *aBGClipRect;
     clipState.mCustomClip = true;
+    clipState.mHasRoundedCorners = false;
     SetupDirtyRects(clipState.mBGClipArea, aDirtyRect, appUnitsPerPixel,
                     &clipState.mDirtyRect, &clipState.mDirtyRectGfx);
   } else {
