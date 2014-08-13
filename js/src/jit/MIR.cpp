@@ -30,6 +30,7 @@ using namespace js::jit;
 using mozilla::NumbersAreIdentical;
 using mozilla::IsFloat32Representable;
 using mozilla::Maybe;
+using mozilla::DebugOnly;
 
 #ifdef DEBUG
 size_t MUse::index() const
