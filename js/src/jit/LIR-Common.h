@@ -128,6 +128,44 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
     }
 };
 
+// Extracts an element from a given SIMD int32x4 lane.
+class LSimdExtractElementI : public LInstructionHelper<1, 1, 0>
+{
+    SimdLane lane_;
+
+  public:
+    LIR_HEADER(SimdExtractElementI);
+
+    LSimdExtractElementI(const LAllocation &base, SimdLane lane) : lane_(lane) {
+        setOperand(0, base);
+    }
+    const LAllocation *getBase() {
+        return getOperand(0);
+    }
+    SimdLane lane() const {
+        return lane_;
+    }
+};
+
+// Extracts an element from a given SIMD float32x4 lane.
+class LSimdExtractElementF : public LInstructionHelper<1, 1, 0>
+{
+    SimdLane lane_;
+
+  public:
+    LIR_HEADER(SimdExtractElementF);
+
+    LSimdExtractElementF(const LAllocation &base, SimdLane lane) : lane_(lane) {
+        setOperand(0, base);
+    }
+    const LAllocation *getBase() {
+        return getOperand(0);
+    }
+    SimdLane lane() const {
+        return lane_;
+    }
+};
+
 // Constant 32-bit integer.
 class LInteger : public LInstructionHelper<1, 0, 0>
 {
