@@ -46,7 +46,7 @@ public:
   {}
   ~DOMString()
   {
-    MOZ_ASSERT(mString.empty() || !mStringBuffer,
+    MOZ_ASSERT(!mString || !mStringBuffer,
                "Shouldn't have both present!");
   }
 
@@ -59,18 +59,18 @@ public:
   {
     MOZ_ASSERT(!mStringBuffer, "We already have a stringbuffer?");
     MOZ_ASSERT(!mIsNull, "We're already set as null");
-    if (mString.empty()) {
-      mString.construct();
+    if (!mString) {
+      mString.emplace();
     }
-    return mString.ref();
+    return *mString;
   }
 
   bool HasStringBuffer() const
   {
-    MOZ_ASSERT(mString.empty() || !mStringBuffer,
+    MOZ_ASSERT(!mString || !mStringBuffer,
                "Shouldn't have both present!");
     MOZ_ASSERT(!mIsNull, "Caller should have checked IsNull() first");
-    return mString.empty();
+    return !mString;
   }
 
   // Get the stringbuffer.  This can only be called if HasStringBuffer()
@@ -97,7 +97,7 @@ public:
 
   void SetStringBuffer(nsStringBuffer* aStringBuffer, uint32_t aLength)
   {
-    MOZ_ASSERT(mString.empty(), "We already have a string?");
+    MOZ_ASSERT(mString.isNothing(), "We already have a string?");
     MOZ_ASSERT(!mIsNull, "We're already set as null");
     MOZ_ASSERT(!mStringBuffer, "Setting stringbuffer twice?");
     MOZ_ASSERT(aStringBuffer, "Why are we getting null?");
@@ -107,7 +107,7 @@ public:
 
   void SetOwnedString(const nsAString& aString)
   {
-    MOZ_ASSERT(mString.empty(), "We already have a string?");
+    MOZ_ASSERT(mString.isNothing(), "We already have a string?");
     MOZ_ASSERT(!mIsNull, "We're already set as null");
     MOZ_ASSERT(!mStringBuffer, "Setting stringbuffer twice?");
     nsStringBuffer* buf = nsStringBuffer::FromString(aString);
@@ -129,7 +129,7 @@ public:
 
   void SetOwnedAtom(nsIAtom* aAtom, NullHandling aNullHandling)
   {
-    MOZ_ASSERT(mString.empty(), "We already have a string?");
+    MOZ_ASSERT(mString.isNothing(), "We already have a string?");
     MOZ_ASSERT(!mIsNull, "We're already set as null");
     MOZ_ASSERT(!mStringBuffer, "Setting stringbuffer twice?");
     MOZ_ASSERT(aAtom || aNullHandling != eNullNotExpected);
@@ -143,15 +143,15 @@ public:
   void SetNull()
   {
     MOZ_ASSERT(!mStringBuffer, "Should have no stringbuffer if null");
-    MOZ_ASSERT(mString.empty(), "Should have no string if null");
+    MOZ_ASSERT(mString.isNothing(), "Should have no string if null");
     mIsNull = true;
   }
 
   bool IsNull() const
   {
-    MOZ_ASSERT(!mStringBuffer || mString.empty(),
+    MOZ_ASSERT(!mStringBuffer || mString.isNothing(),
                "How could we have a stringbuffer and a nonempty string?");
-    return mIsNull || (!mString.empty() && mString.ref().IsVoid());
+    return mIsNull || (mString && mString->IsVoid());
   }
 
   void ToString(nsAString& aString)

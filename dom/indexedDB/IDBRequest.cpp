@@ -195,7 +195,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
     // If we have a script owner we want the SafeJSContext and then to enter
     // the script owner's compartment.
     jsapi.Init();
-    ac.construct(jsapi.cx(), GetScriptOwner());
+    ac.emplace(jsapi.cx(), GetScriptOwner());
   } else {
     // Otherwise our owner is a window and we use that to initialize.
     if (!jsapi.InitWithLegacyErrorReporting(GetOwner())) {

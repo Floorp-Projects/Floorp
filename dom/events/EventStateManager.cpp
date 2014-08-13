@@ -3854,8 +3854,8 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   
   Maybe<EnterLeaveDispatcher> enterDispatcher;
   if (dispatch) {
-    enterDispatcher.construct(this, aContent, lastOverElement, aMouseEvent,
-                              isPointer ? NS_POINTER_ENTER : NS_MOUSEENTER);
+    enterDispatcher.emplace(this, aContent, lastOverElement, aMouseEvent,
+                            isPointer ? NS_POINTER_ENTER : NS_MOUSEENTER);
   }
 
   NotifyMouseOut(aMouseEvent, aContent);
