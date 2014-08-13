@@ -206,7 +206,7 @@ CaptureInputPin::CheckMediaType ( IN const MediaType * pMediaType)
         }
 
         WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _moduleId,
-                     "CheckMediaType width:%d height:%d Compression:0x%x\n",
+                     "CheckMediaType width:%d height:%d Compression:0x%x",
                      pvi->bmiHeader.biWidth,pvi->bmiHeader.biHeight,
                      pvi->bmiHeader.biCompression);
 
@@ -259,7 +259,7 @@ CaptureInputPin::CheckMediaType ( IN const MediaType * pMediaType)
         }
 
         WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _moduleId,
-                     "CheckMediaType width:%d height:%d Compression:0x%x\n",
+                     "CheckMediaType width:%d height:%d Compression:0x%x",
                      pvi->bmiHeader.biWidth,pvi->bmiHeader.biHeight,
                      pvi->bmiHeader.biCompression);
 
