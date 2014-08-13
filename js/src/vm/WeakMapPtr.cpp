@@ -99,7 +99,7 @@ JS::WeakMapPtr<K, V>::keyMarkCallback(JSTracer *trc, K key, void *data)
 {
     auto map = static_cast< JS::WeakMapPtr<K, V>* >(data);
     K prior = key;
-    JS_CallObjectTracer(trc, &key, "WeakMapPtr key");
+    JS_CallUnbarrieredObjectTracer(trc, &key, "WeakMapPtr key");
     return Utils<K, V>::cast(map->ptr)->rekeyIfMoved(prior, key);
 }
 
