@@ -28,6 +28,28 @@ bool JSAPITest::init()
     return true;
 }
 
+void JSAPITest::uninit()
+{
+    if (oldCompartment) {
+        JS_LeaveCompartment(cx, oldCompartment);
+        oldCompartment = nullptr;
+    }
+    if (global) {
+        JS_LeaveCompartment(cx, nullptr);
+        JS::RemoveObjectRoot(cx, &global);
+        global = nullptr;
+    }
+    if (cx) {
+        JS_EndRequest(cx);
+        JS_DestroyContext(cx);
+        cx = nullptr;
+    }
+    if (rt) {
+        destroyRuntime();
+        rt = nullptr;
+    }
+}
+
 bool JSAPITest::exec(const char *bytes, const char *filename, int lineno)
 {
     JS::RootedValue v(cx);
@@ -64,8 +86,11 @@ JSObject * JSAPITest::createGlobal(JSPrincipals *principals)
 
     /* Populate the global object with the standard globals, like Object and
        Array. */
-    if (!JS_InitStandardClasses(cx, globalHandle))
-        return nullptr;
+    if (!JS_InitStandardClasses(cx, globalHandle)) {
+        global = nullptr;
+        JS::RemoveObjectRoot(cx, &global);
+    }
+
     return global;
 }
 
@@ -91,6 +116,7 @@ int main(int argc, char *argv[])
         if (!test->init()) {
             printf("TEST-UNEXPECTED-FAIL | %s | Failed to initialize.\n", name);
             failures++;
+            test->uninit();
             continue;
         }
 

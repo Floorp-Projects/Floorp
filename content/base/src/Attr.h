@@ -80,14 +80,6 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
-  // This method should not do anything interesting, except possibly in the case of
-  // external binary components.
-  static Attr* FromDOMAttr(nsIDOMAttr* aDOMAttr)
-  {
-    nsCOMPtr<nsIAttribute> iattr = do_QueryInterface(aDOMAttr);
-    return static_cast<mozilla::dom::Attr*>(iattr.get());
-  }
-
   // WebIDL
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
