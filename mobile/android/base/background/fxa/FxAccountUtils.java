@@ -185,6 +185,6 @@ public class FxAccountUtils {
    */
   public static String getAudienceForURL(String serverURI) throws URISyntaxException {
     URI uri = new URI(serverURI);
-    return new URI(uri.getScheme(), uri.getHost(), null, null).toString();
+    return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), null, null, null).toString();
   }
 }
