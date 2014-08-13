@@ -850,7 +850,7 @@ IPDL union type."""
 
     def defaultValue(self):
         if self.ipdltype.isIPDL() and self.ipdltype.isActor():
-            return ExprCast(ExprLiteral.NULL, self.bareType(), static=1)
+            return ExprLiteral.NULL
         # XXX sneaky here, maybe need ExprCtor()?
         return ExprCall(self.bareType())
 
