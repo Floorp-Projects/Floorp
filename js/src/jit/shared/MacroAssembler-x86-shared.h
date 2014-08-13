@@ -482,6 +482,12 @@ class MacroAssemblerX86Shared : public Assembler
     void storeUnalignedInt32x4(FloatRegister src, const Address &dest) {
         movdqu(src, Operand(dest));
     }
+    void packedAddInt32(const Operand &src, FloatRegister dest) {
+        paddd(src, dest);
+    }
+    void packedSubInt32(const Operand &src, FloatRegister dest) {
+        psubd(src, dest);
+    }
 
     void loadAlignedFloat32x4(const Address &src, FloatRegister dest) {
         movaps(Operand(src), dest);
@@ -497,6 +503,18 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void storeUnalignedFloat32x4(FloatRegister src, const Address &dest) {
         movups(src, Operand(dest));
+    }
+    void packedAddFloat32(const Operand &src, FloatRegister dest) {
+        addps(src, dest);
+    }
+    void packedSubFloat32(const Operand &src, FloatRegister dest) {
+        subps(src, dest);
+    }
+    void packedMulFloat32(const Operand &src, FloatRegister dest) {
+        mulps(src, dest);
+    }
+    void packedDivFloat32(const Operand &src, FloatRegister dest) {
+        divps(src, dest);
     }
 
     static uint32_t ComputeShuffleMask(SimdLane x, SimdLane y = LaneX,
@@ -659,6 +677,30 @@ class MacroAssemblerX86Shared : public Assembler
 
         // See comment above
         if (u == 0) {
+            xorps(dest, dest);
+            return true;
+        }
+        return false;
+    }
+
+    bool maybeInlineInt32x4(const SimdConstant &v, const FloatRegister &dest) {
+        static const SimdConstant zero = SimdConstant::CreateX4(0, 0, 0, 0);
+        static const SimdConstant minusOne = SimdConstant::CreateX4(-1, -1, -1, -1);
+        if (v == zero) {
+            pxor(dest, dest);
+            return true;
+        }
+        if (v == minusOne) {
+            pcmpeqw(dest, dest);
+            return true;
+        }
+        return false;
+    }
+    bool maybeInlineFloat32x4(const SimdConstant &v, const FloatRegister &dest) {
+        static const SimdConstant zero = SimdConstant::CreateX4(0.f, 0.f, 0.f, 0.f);
+        if (v == zero) {
+            // This won't get inlined if the SimdConstant v contains -0 in any
+            // lane, as operator== here does a memcmp.
             xorps(dest, dest);
             return true;
         }
