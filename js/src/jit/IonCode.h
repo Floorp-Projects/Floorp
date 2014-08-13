@@ -92,6 +92,9 @@ class JitCode : public gc::BarrieredCell<JitCode>
     uint8_t *raw() const {
         return code_;
     }
+    uint8_t *rawEnd() const {
+        return code_ + insnSize_;
+    }
     size_t instructionsSize() const {
         return insnSize_;
     }
