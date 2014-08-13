@@ -1566,9 +1566,9 @@ nsEditor::ReplaceContainer(nsINode* aNode,
   int32_t offset = parent->IndexOf(aNode);
 
   // create new container
-  ErrorResult rv;
-  *outNode = CreateHTMLContent(aNodeType, rv).take();
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  *outNode =
+    CreateHTMLContent(nsCOMPtr<nsIAtom>(do_GetAtom(aNodeType))).take();
+  NS_ENSURE_STATE(*outNode);
 
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(*outNode);
   
@@ -1690,9 +1690,9 @@ nsEditor::InsertContainerAbove(nsIContent* aNode,
   int32_t offset = parent->IndexOf(aNode);
 
   // create new container
-  ErrorResult rv;
-  nsCOMPtr<Element> newContent = CreateHTMLContent(aNodeType, rv);
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+  nsCOMPtr<Element> newContent =
+    CreateHTMLContent(nsCOMPtr<nsIAtom>(do_GetAtom(aNodeType)));
+  NS_ENSURE_STATE(newContent);
 
   // set attribute if needed
   nsresult res;
@@ -4767,29 +4767,27 @@ nsresult nsEditor::ClearSelection()
 }
 
 already_AddRefed<Element>
-nsEditor::CreateHTMLContent(const nsAString& aTag, ErrorResult& rv)
+nsEditor::CreateHTMLContent(nsIAtom* aTag)
 {
+  MOZ_ASSERT(aTag);
+
   nsCOMPtr<nsIDocument> doc = GetDocument();
   if (!doc) {
-    rv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   // XXX Wallpaper over editor bug (editor tries to create elements with an
   //     empty nodename).
-  if (aTag.IsEmpty()) {
+  if (aTag == nsGkAtoms::_empty) {
     NS_ERROR("Don't pass an empty tag to nsEditor::CreateHTMLContent, "
              "check caller.");
-    rv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   nsCOMPtr<nsIContent> ret;
-  nsresult res = doc->CreateElem(aTag, nullptr, kNameSpaceID_XHTML,
-                                 getter_AddRefs(ret));
-  if (NS_FAILED(res)) {
-    rv.Throw(res);
-  }
+  nsresult res = doc->CreateElem(nsDependentAtomString(aTag), nullptr,
+                                 kNameSpaceID_XHTML, getter_AddRefs(ret));
+  NS_ENSURE_SUCCESS(res, nullptr);
   return dont_AddRef(ret.forget().take()->AsElement());
 }
 
