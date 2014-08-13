@@ -2237,7 +2237,7 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
             mozilla::Maybe<AutoLockHelperThreadState> lock;
             JSRuntime *rt = zone->runtimeFromAnyThread();
             if (rt->exclusiveThreadsPresent()) {
-                lock.construct();
+                lock.emplace();
                 while (rt->isHeapBusy())
                     HelperThreadState().wait(GlobalHelperThreadState::PRODUCER);
             }
@@ -2529,7 +2529,7 @@ GCRuntime::decommitArenasFromAvailableList(Chunk **availableListHeadp)
                  */
                 Maybe<AutoUnlockGC> maybeUnlock;
                 if (!isHeapBusy())
-                    maybeUnlock.construct(rt);
+                    maybeUnlock.emplace(rt);
                 ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
             }
 

@@ -33,8 +33,8 @@ CodeGeneratorShared::ensureMasm(MacroAssembler *masmArg)
 {
     if (masmArg)
         return *masmArg;
-    maybeMasm_.construct();
-    return maybeMasm_.ref();
+    maybeMasm_.emplace();
+    return *maybeMasm_;
 }
 
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masmArg)

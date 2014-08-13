@@ -1959,7 +1959,7 @@ class FunctionCompiler
         JS_ASSERT(locals_.count() == argTypes.length() + varInitializers_.length());
 
         alloc_  = lifo_.new_<TempAllocator>(&lifo_);
-        ionContext_.construct(m_.cx(), alloc_);
+        ionContext_.emplace(m_.cx(), alloc_);
 
         graph_  = lifo_.new_<MIRGraph>(alloc_);
         info_   = lifo_.new_<CompileInfo>(locals_.count(), SequentialExecution);
@@ -1995,15 +1995,15 @@ class FunctionCompiler
     /******************************* For consistency of returns in a function */
 
     bool hasAlreadyReturned() const {
-        return !alreadyReturned_.empty();
+        return alreadyReturned_.isSome();
     }
 
     RetType returnedType() const {
-        return alreadyReturned_.ref();
+        return *alreadyReturned_;
     }
 
     void setReturnedType(RetType retType) {
-        alreadyReturned_.construct(retType);
+        alreadyReturned_.emplace(retType);
     }
 
     /************************* Read-only interface (after local scope setup) */

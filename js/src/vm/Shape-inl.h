@@ -202,7 +202,7 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t at
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
-        inner.construct(cx, attrs, pgetter, psetter);
+        inner.emplace(cx, attrs, pgetter, psetter);
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
