@@ -16,6 +16,7 @@
 #include "RestyleTracker.h"
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
+#include "nsRefPtrHashtable.h"
 
 class nsIFrame;
 class nsStyleChangeList;
@@ -130,6 +131,24 @@ public:
   // If the caller wants that to happen synchronously, it needs to handle that
   // itself.
   nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray);
+
+  /**
+   * In order to start CSS transitions on elements that are being
+   * reframed, we need to stash their style contexts somewhere during
+   * the reframing process.
+   *
+   * In all cases, the content node in the hash table is the real
+   * content node, not the anonymous content node we create for ::before
+   * or ::after.
+   */
+  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsIContent>, nsStyleContext>
+            ReframingStyleContextTable;
+  class ReframingStyleContexts {
+  private:
+    ReframingStyleContextTable mElementContexts;
+    ReframingStyleContextTable mBeforePseudoContexts;
+    ReframingStyleContextTable mAfterPseudoContexts;
+  };
 
 private:
   void RestyleForEmptyChange(Element* aContainer);
