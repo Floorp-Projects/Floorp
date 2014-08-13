@@ -1879,9 +1879,7 @@ JS_GC(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx)
 {
-    GCRuntime &gc = cx->runtime()->gc;
-    if (!gc.maybeGC(cx->zone()))
-        gc.maybePeriodicFullGC();
+    MaybeGC(cx);
 }
 
 JS_PUBLIC_API(void)
