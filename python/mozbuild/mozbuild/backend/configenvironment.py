@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 import sys
 
 from collections import Iterable
@@ -106,8 +107,8 @@ class ConfigEnvironment(object):
         self.source = source
         self.defines = ReadOnlyDict(defines)
         self.substs = dict(substs)
-        self.topsrcdir = mozpath.normsep(topsrcdir)
-        self.topobjdir = mozpath.normsep(topobjdir)
+        self.topsrcdir = mozpath.abspath(topsrcdir)
+        self.topobjdir = mozpath.abspath(topobjdir)
         self.lib_prefix = self.substs.get('LIB_PREFIX', '')
         if 'LIB_SUFFIX' in self.substs:
             self.lib_suffix = '.%s' % self.substs['LIB_SUFFIX']
@@ -138,6 +139,14 @@ class ConfigEnvironment(object):
             self.defines[name]) for name in global_defines]))
 
         self.substs = ReadOnlyDict(self.substs)
+
+        self.external_source_dir = None
+        external = self.substs.get('EXTERNAL_SOURCE_DIR', '')
+        if external:
+            external = mozpath.normpath(external)
+            if not os.path.isabs(external):
+                external = mozpath.join(self.topsrcdir, external)
+            self.external_source_dir = mozpath.normpath(external)
 
         # Populate a Unicode version of substs. This is an optimization to make
         # moz.build reading faster, since each sandbox needs a Unicode version
