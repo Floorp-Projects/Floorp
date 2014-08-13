@@ -96,6 +96,12 @@ class JitcodeGlobalEntry
     struct MainEntry : public BaseEntry
     {
         uintptr_t scriptList_;
+
+        // regionTable_ points to the start of the region table within the
+        // packed map for compile represented by this entry.  Since the
+        // region table occurs at the tail of the memory region, this pointer
+        // points somewhere inside the region memory space, and not to the start
+        // of the memory space.
         JitcodeMainTable *regionTable_;
 
         static const unsigned LowBits = 3;
@@ -112,6 +118,10 @@ class JitcodeGlobalEntry
             SizedScriptList(uint32_t sz, JSScript **scr) : size(sz) {
                 for (uint32_t i = 0; i < size; i++)
                     scripts[i] = scr[i];
+            }
+
+            static uint32_t AllocSizeFor(uint32_t nscripts) {
+                return sizeof(SizedScriptList) + (nscripts * sizeof(JSScript *));
             }
         };
 
@@ -381,12 +391,18 @@ class JitcodeGlobalTable
     JitcodeGlobalTable() : treeAlloc_(LIFO_CHUNK_SIZE), tree_(&treeAlloc_), entries_() {}
     ~JitcodeGlobalTable() {}
 
+    bool empty() const {
+        return tree_.empty();
+    }
+
     bool lookup(void *ptr, JitcodeGlobalEntry *result);
     void lookupInfallible(void *ptr, JitcodeGlobalEntry *result);
 
     bool addEntry(const JitcodeGlobalEntry::MainEntry &entry) {
         return addEntry(JitcodeGlobalEntry(entry));
     }
+
+    void removeEntry(void *startAddr);
 
   private:
     bool addEntry(const JitcodeGlobalEntry &entry);
@@ -695,6 +711,9 @@ class JitcodeMainTable
         for (uint32_t i = 0; i < numRegions; i++)
             regionOffsets_[i] = 0;
     }
+
+    bool makeMainEntry(JSContext *cx, JitCode *code, uint32_t numScripts, JSScript **scripts,
+                       JitcodeGlobalEntry::MainEntry &out);
 
     uint32_t numRegions() const {
         return numRegions_;
