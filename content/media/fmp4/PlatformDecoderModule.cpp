@@ -133,7 +133,10 @@ PlatformDecoderModule::Create()
 #endif
 #ifdef MOZ_FFMPEG
   if (sFFmpegDecoderEnabled) {
-    return FFmpegRuntimeLinker::CreateDecoderModule();
+    nsAutoPtr<PlatformDecoderModule> m(FFmpegRuntimeLinker::CreateDecoderModule());
+    if (m) {
+      return m.forget();
+    }
   }
 #endif
 #ifdef MOZ_APPLEMEDIA

@@ -42,6 +42,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineArrayPush(callInfo);
     if (native == js::array_concat)
         return inlineArrayConcat(callInfo);
+    if (native == js::array_join)
+        return inlineArrayJoin(callInfo);
     if (native == js::array_splice)
         return inlineArraySplice(callInfo);
 
@@ -474,6 +476,29 @@ IonBuilder::inlineArraySplice(CallInfo &callInfo)
 
     if (!resumeAfter(ins))
         return InliningStatus_Error;
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineArrayJoin(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_Error;
+
+    if (getInlineReturnType() != MIRType_String)
+        return InliningStatus_Error;
+    if (callInfo.thisArg()->type() != MIRType_Object)
+        return InliningStatus_Error;
+    if (callInfo.getArg(0)->type() != MIRType_String)
+        return InliningStatus_Error;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MArrayJoin *ins = MArrayJoin::New(alloc(), callInfo.thisArg(), callInfo.getArg(0));
+
+    current->add(ins);
+    current->push(ins);
+
     return InliningStatus_Inlined;
 }
 

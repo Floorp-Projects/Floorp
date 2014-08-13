@@ -1675,6 +1675,13 @@ LIRGenerator::visitStart(MStart *start)
 }
 
 bool
+LIRGenerator::visitPcOffset(MPcOffset *pcOffset)
+{
+    LPcOffset *lir = new(alloc()) LPcOffset;
+    return add(lir, pcOffset);
+}
+
+bool
 LIRGenerator::visitNop(MNop *nop)
 {
     return true;
@@ -2759,6 +2766,18 @@ LIRGenerator::visitArrayConcat(MArrayConcat *ins)
 }
 
 bool
+LIRGenerator::visitArrayJoin(MArrayJoin *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_String);
+    JS_ASSERT(ins->array()->type() == MIRType_Object);
+    JS_ASSERT(ins->sep()->type() == MIRType_String);
+
+    LArrayJoin *lir = new(alloc()) LArrayJoin(useRegisterAtStart(ins->array()),
+                                              useRegisterAtStart(ins->sep()));
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitStringSplit(MStringSplit *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Object);
@@ -3639,6 +3658,31 @@ LIRGenerator::visitRecompileCheck(MRecompileCheck *ins)
 }
 
 bool
+LIRGenerator::visitSimdValueX4(MSimdValueX4 *ins)
+{
+    LAllocation x = useRegisterAtStart(ins->getOperand(0));
+    LAllocation y = useRegisterAtStart(ins->getOperand(1));
+    LAllocation z = useRegisterAtStart(ins->getOperand(2));
+    LAllocation w = useRegisterAtStart(ins->getOperand(3));
+
+    return define(new(alloc()) LSimdValueX4(x, y, z, w), ins);
+}
+
+bool
+LIRGenerator::visitSimdConstant(MSimdConstant *ins)
+{
+    JS_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->type() == MIRType_Int32x4)
+        return define(new(alloc()) LInt32x4(), ins);
+    if (ins->type() == MIRType_Float32x4)
+        return define(new(alloc()) LFloat32x4(), ins);
+
+    MOZ_ASSUME_UNREACHABLE("Unknown SIMD kind when generating constant");
+    return false;
+}
+
+bool
 LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
 {
     JS_ASSERT(IsSimdType(ins->input()->type()));
@@ -3657,6 +3701,25 @@ LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
     }
 
     MOZ_ASSUME_UNREACHABLE("Unknown SIMD kind when extracting element");
+    return false;
+}
+
+bool
+LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith *ins)
+{
+    JS_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->type() == MIRType_Int32x4) {
+        LSimdBinaryArithIx4 *add = new(alloc()) LSimdBinaryArithIx4();
+        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+    }
+
+    if (ins->type() == MIRType_Float32x4) {
+        LSimdBinaryArithFx4 *add = new(alloc()) LSimdBinaryArithFx4();
+        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Unknown SIMD kind when adding values");
     return false;
 }
 

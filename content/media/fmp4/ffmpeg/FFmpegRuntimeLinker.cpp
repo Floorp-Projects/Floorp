@@ -99,6 +99,9 @@ FFmpegRuntimeLinker::Bind(const char* aLibName, uint32_t Version)
 /* static */ PlatformDecoderModule*
 FFmpegRuntimeLinker::CreateDecoderModule()
 {
+  if (!Link()) {
+    return nullptr;
+  }
   PlatformDecoderModule* module = sLib->Factory();
   return module;
 }
