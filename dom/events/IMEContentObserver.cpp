@@ -7,6 +7,7 @@
 #include "ContentEventHandler.h"
 #include "IMEContentObserver.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/TextComposition.h"
@@ -87,6 +88,7 @@ IMEContentObserver::IMEContentObserver()
   , mIsSelectionChangeEventPending(false)
   , mSelectionChangeCausedOnlyByComposition(false)
   , mIsPositionChangeEventPending(false)
+  , mIsFlushingPendingNotifications(false)
 {
 #ifdef DEBUG
   TestMergingTextChangeData();
@@ -429,12 +431,14 @@ class TextChangeEvent : public nsRunnable
 {
 public:
   TextChangeEvent(IMEContentObserver* aDispatcher,
-                  const IMEContentObserver::TextChangeData& aData)
+                  IMEContentObserver::TextChangeData& aData)
     : mDispatcher(aDispatcher)
     , mData(aData)
   {
     MOZ_ASSERT(mDispatcher);
     MOZ_ASSERT(mData.mStored);
+    // Reset mStored because this now consumes the data.
+    aData.mStored = false;
   }
 
   NS_IMETHOD Run()
@@ -962,27 +966,73 @@ IMEContentObserver::MaybeNotifyIMEOfPositionChange()
   FlushMergeableNotifications();
 }
 
+class AsyncMergeableNotificationsFlusher : public nsRunnable
+{
+public:
+  AsyncMergeableNotificationsFlusher(IMEContentObserver* aIMEContentObserver)
+    : mIMEContentObserver(aIMEContentObserver)
+  {
+    MOZ_ASSERT(mIMEContentObserver);
+  }
+
+  NS_IMETHOD Run()
+  {
+    mIMEContentObserver->FlushMergeableNotifications();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<IMEContentObserver> mIMEContentObserver;
+};
+
 void
 IMEContentObserver::FlushMergeableNotifications()
 {
+  // If we're in handling an edit action, this method will be called later.
+  // If this is already detached from the widget, this doesn't need to notify
+  // anything.
   if (mIsEditorInTransaction || !mWidget) {
     return;
   }
 
+  // Notifying something may cause nested call of this method.  For example,
+  // when somebody notified one of the notifications may dispatch query content
+  // event. Then, it causes flushing layout which may cause another layout
+  // change notification.
+
+  if (mIsFlushingPendingNotifications) {
+    // So, if this is already called, this should do nothing.
+    return;
+  }
+
+  AutoRestore<bool> flusing(mIsFlushingPendingNotifications);
+  mIsFlushingPendingNotifications = true;
+
+  // NOTE: Reset each pending flag because sending notification may cause
+  //       another change.
+
   if (mTextChangeData.mStored) {
     nsContentUtils::AddScriptRunner(new TextChangeEvent(this, mTextChangeData));
-    mTextChangeData.mStored = false;
   }
 
   if (mIsSelectionChangeEventPending) {
+    mIsSelectionChangeEventPending = false;
     nsContentUtils::AddScriptRunner(
       new SelectionChangeEvent(this, mSelectionChangeCausedOnlyByComposition));
-    mIsSelectionChangeEventPending = false;
   }
 
   if (mIsPositionChangeEventPending) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
     mIsPositionChangeEventPending = false;
+    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
+  }
+
+  // If notifications may cause new change, we should notify them now.
+  if (mTextChangeData.mStored ||
+      mIsSelectionChangeEventPending ||
+      mIsPositionChangeEventPending) {
+    nsRefPtr<AsyncMergeableNotificationsFlusher> asyncFlusher =
+      new AsyncMergeableNotificationsFlusher(this);
+    NS_DispatchToCurrentThread(asyncFlusher);
   }
 }
 
