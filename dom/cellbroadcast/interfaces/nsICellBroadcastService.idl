@@ -5,7 +5,18 @@
 #include "nsISupports.idl"
 
 interface nsIDOMMozCellBroadcastMessage;
-interface nsICellBroadcastListener;
+
+[scriptable, uuid(e70bb4cc-2297-11e4-aecd-9f8fb3d2b646)]
+interface nsICellBroadcastListener : nsISupports
+{
+  /**
+   * Called when a Cell Broadcast message has been received by the network.
+   *
+   * @param message
+   *        The received Cell Broadcast Message.
+   */
+  void notifyMessageReceived(in nsIDOMMozCellBroadcastMessage message);
+};
 
 /**
  * XPCOM component that provides the cell broadcast information.
