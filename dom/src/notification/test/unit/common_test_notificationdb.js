@@ -9,27 +9,24 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
-let systemNotification = {
-  origin: "app://system.gaiamobile.org/manifest.webapp",
-  id: "{2bc883bf-2809-4432-b0f4-f54e10372764}",
-  title: "SystemNotification:" + Date.now(),
-  dir: "auto",
-  lang: "",
-  body: "System notification body",
-  tag: "",
-  icon: "icon.png"
-};
+function getNotificationObject(app, id, tag) {
+  return {
+    origin: "app://" + app + ".gaiamobile.org/manifest.webapp",
+    id: id,
+    title: app + "Notification:" + Date.now(),
+    dir: "auto",
+    lang: "",
+    body: app + " notification body",
+    tag: tag || "",
+    icon: "icon.png"
+  };
+}
 
-let calendarNotification = {
-  origin: "app://calendar.gaiamobile.org/manifest.webapp",
-  id: "{d8d11299-a58e-429b-9a9a-57c562982fbf}",
-  title: "CalendarNotification:" + Date.now(),
-  dir: "auto",
-  lang: "",
-  body: "Calendar notification body",
-  tag: "",
-  icon: "icon.png"
-};
+let systemNotification =
+  getNotificationObject("system", "{2bc883bf-2809-4432-b0f4-f54e10372764}");
+
+let calendarNotification =
+  getNotificationObject("calendar", "{d8d11299-a58e-429b-9a9a-57c562982fbf}");
 
 // Helper to start the NotificationDB
 function startNotificationDB() {

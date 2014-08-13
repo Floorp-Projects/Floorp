@@ -36,7 +36,7 @@ child:
 
   NotifyDialError(nsString aError);
 
-  NotifyDialSuccess(uint32_t aCallIndex);
+  NotifyDialSuccess(uint32_t aCallIndex, nsString aNumber);
 
   /**
    * Sent when the asynchronous request has completed.
