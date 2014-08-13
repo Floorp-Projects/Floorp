@@ -917,7 +917,7 @@ namespace js {
 
 /* ES6 draft rev 25 (2014 May 22) 19.1.2.8.1 */
 bool
-GetOwnPropertyKeys(JSContext *cx, const CallArgs &args, unsigned flags)
+GetOwnPropertyKeys(JSContext *cx, const JS::CallArgs &args, unsigned flags)
 {
     // steps 1-2
     RootedObject obj(cx, ToObject(cx, args.get(0)));

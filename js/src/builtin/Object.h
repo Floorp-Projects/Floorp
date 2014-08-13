@@ -9,7 +9,10 @@
 
 #include "jsapi.h"
 
-namespace JS { class Value; }
+namespace JS {
+class CallArgs;
+class Value;
+}
 
 namespace js {
 
@@ -23,7 +26,7 @@ bool
 obj_construct(JSContext *cx, unsigned argc, JS::Value *vp);
 
 // Exposed so SelfHosting.cpp can use it in the OwnPropertyKeys intrinsic
-bool GetOwnPropertyKeys(JSContext *cx, const CallArgs &args, unsigned flags);
+bool GetOwnPropertyKeys(JSContext *cx, const JS::CallArgs &args, unsigned flags);
 
 /*
  * Like IdToValue, but convert int jsids to strings. This is used when
