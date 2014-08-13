@@ -47,42 +47,43 @@ using namespace mozilla;
 class SHA1Stream
 {
 public:
-    explicit SHA1Stream(FILE *stream)
-      : mFile(stream)
-    {
-      MozillaRegisterDebugFILE(mFile);
-    }
+  explicit SHA1Stream(FILE* aStream)
+    : mFile(aStream)
+  {
+    MozillaRegisterDebugFILE(mFile);
+  }
 
-    void Printf(const char *aFormat, ...)
-    {
-        MOZ_ASSERT(mFile);
-        va_list list;
-        va_start(list, aFormat);
-        nsAutoCString str;
-        str.AppendPrintf(aFormat, list);
-        va_end(list);
-        mSHA1.update(str.get(), str.Length());
-        fwrite(str.get(), 1, str.Length(), mFile);
-    }
-    void Finish(SHA1Sum::Hash &aHash)
-    {
-        int fd = fileno(mFile);
-        fflush(mFile);
-        MozillaUnRegisterDebugFD(fd);
-        fclose(mFile);
-        mSHA1.finish(aHash);
-        mFile = nullptr;
-    }
+  void Printf(const char* aFormat, ...)
+  {
+    MOZ_ASSERT(mFile);
+    va_list list;
+    va_start(list, aFormat);
+    nsAutoCString str;
+    str.AppendPrintf(aFormat, list);
+    va_end(list);
+    mSHA1.update(str.get(), str.Length());
+    fwrite(str.get(), 1, str.Length(), mFile);
+  }
+  void Finish(SHA1Sum::Hash& aHash)
+  {
+    int fd = fileno(mFile);
+    fflush(mFile);
+    MozillaUnRegisterDebugFD(fd);
+    fclose(mFile);
+    mSHA1.finish(aHash);
+    mFile = nullptr;
+  }
 private:
-    FILE *mFile;
-    SHA1Sum mSHA1;
+  FILE* mFile;
+  SHA1Sum mSHA1;
 };
 
-static void RecordStackWalker(void *aPC, void *aSP, void *aClosure)
+static void
+RecordStackWalker(void* aPC, void* aSP, void* aClosure)
 {
-    std::vector<uintptr_t> *stack =
-        static_cast<std::vector<uintptr_t>*>(aClosure);
-    stack->push_back(reinterpret_cast<uintptr_t>(aPC));
+  std::vector<uintptr_t>* stack =
+    static_cast<std::vector<uintptr_t>*>(aClosure);
+  stack->push_back(reinterpret_cast<uintptr_t>(aPC));
 }
 
 /**************************** Late-Write Observer  ****************************/
@@ -98,7 +99,8 @@ public:
     : mProfileDirectory(PL_strdup(aProfileDirectory))
   {
   }
-  ~LateWriteObserver() {
+  ~LateWriteObserver()
+  {
     PL_strfree(mProfileDirectory);
     mProfileDirectory = nullptr;
   }
@@ -108,7 +110,8 @@ private:
   char* mProfileDirectory;
 };
 
-void LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
+void
+LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
 {
 #ifdef OBSERVE_LATE_WRITES
   // Crash if that is the shutdown check mode
@@ -131,12 +134,12 @@ void LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
 
   nsPrintfCString nameAux("%s%s%s", mProfileDirectory,
                           NS_SLASH, "Telemetry.LateWriteTmpXXXXXX");
-  char *name;
+  char* name;
   nameAux.GetMutableData(&name);
 
   // We want the sha1 of the entire file, so please don't write to fd
   // directly; use sha1Stream.
-  FILE *stream;
+  FILE* stream;
 #ifdef XP_WIN
   HANDLE hFile;
   do {
@@ -175,8 +178,7 @@ void LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
   size_t numFrames = stack.GetStackSize();
   sha1Stream.Printf("%u\n", (unsigned)numFrames);
   for (size_t i = 0; i < numFrames; ++i) {
-    const Telemetry::ProcessedStack::Frame &frame =
-        stack.GetFrame(i);
+    const Telemetry::ProcessedStack::Frame& frame = stack.GetFrame(i);
     // NOTE: We write the offsets, while the atos tool expects a value with
     // the virtual address added. For example, running otool -l on the the firefox
     // binary shows
@@ -213,9 +215,10 @@ void LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
 
 static StaticAutoPtr<LateWriteObserver> sLateWriteObserver;
 
-namespace mozilla{
+namespace mozilla {
 
-void InitLateWriteChecks()
+void
+InitLateWriteChecks()
 {
   nsCOMPtr<nsIFile> mozFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mozFile));
@@ -228,7 +231,8 @@ void InitLateWriteChecks()
   }
 }
 
-void BeginLateWriteChecks()
+void
+BeginLateWriteChecks()
 {
   if (sLateWriteObserver) {
     IOInterposer::Register(
@@ -238,7 +242,8 @@ void BeginLateWriteChecks()
   }
 }
 
-void StopLateWriteChecks()
+void
+StopLateWriteChecks()
 {
   if (sLateWriteObserver) {
     IOInterposer::Unregister(
