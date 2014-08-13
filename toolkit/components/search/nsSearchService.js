@@ -37,9 +37,6 @@ XPCOMUtils.defineLazyGetter(this, "gEncoder",
                               return new TextEncoder();
                             });
 
-const PERMS_FILE      = 0644;
-const PERMS_DIRECTORY = 0755;
-
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
 const MODE_CREATE   = 0x08;
@@ -661,7 +658,7 @@ function getSanitizedFile(aName) {
   var fileName = sanitizeName(aName) + ".xml";
   var file = getDir(NS_APP_USER_SEARCH_DIR);
   file.append(fileName);
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   return file;
 }
 
@@ -1144,7 +1141,7 @@ Engine.prototype = {
     var fileInStream = Cc["@mozilla.org/network/file-input-stream;1"].
                        createInstance(Ci.nsIFileInputStream);
 
-    fileInStream.init(this._file, MODE_RDONLY, PERMS_FILE, false);
+    fileInStream.init(this._file, MODE_RDONLY, FileUtils.PERMS_FILE, false);
 
     if (this._dataType == SEARCH_DATA_XML) {
       var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
@@ -2339,7 +2336,7 @@ Engine.prototype = {
     // if this somehow fails.
     var doc = this._serializeToElement();
 
-    fos.init(file, (MODE_WRONLY | MODE_TRUNCATE), PERMS_FILE, 0);
+    fos.init(file, (MODE_WRONLY | MODE_TRUNCATE), FileUtils.PERMS_FILE, 0);
 
     try {
       var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
@@ -3283,7 +3280,7 @@ SearchService.prototype = {
     let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
 
     try {
-      stream.init(aFile, MODE_RDONLY, PERMS_FILE, 0);
+      stream.init(aFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
       return json.decodeFromStream(stream, stream.available());
     } catch (ex) {
       LOG("_readCacheFile: Error reading cache file: " + ex);
