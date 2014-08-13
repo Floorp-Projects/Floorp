@@ -68,19 +68,6 @@ class TestBuildReader(unittest.TestCase):
         sandboxes = list(reader.read_topsrcdir())
         self.assertEqual(len(sandboxes), 3)
 
-    def test_tiers_traversal(self):
-        reader = self.reader('traversal-tier-simple')
-
-        sandboxes = list(reader.read_topsrcdir())
-        self.assertEqual(len(sandboxes), 6)
-
-        for sandbox in sandboxes:
-            self.assertIsInstance(sandbox.metadata, dict)
-            self.assertIn('tier', sandbox.metadata)
-
-            if sandbox['RELATIVEDIR'].startswith('foo'):
-                self.assertEqual(sandbox.metadata['tier'], 't1')
-
     def test_tier_subdir(self):
         # add_tier_dir() should fail when not in the top directory.
         reader = self.reader('traversal-tier-fails-in-subdir')
