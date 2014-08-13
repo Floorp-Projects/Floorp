@@ -2575,13 +2575,14 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName)
   // the transaction system
 
   // New call to use instead to get proper HTML element, bug 39919
-  ErrorResult rv;
-  nsCOMPtr<dom::Element> newElement = CreateHTMLContent(realTagName, rv);
-  if (rv.Failed() || !newElement) {
+  nsCOMPtr<Element> newElement =
+    CreateHTMLContent(nsCOMPtr<nsIAtom>(do_GetAtom(realTagName)));
+  if (!newElement) {
     return nullptr;
   }
 
   // Mark the new element dirty, so it will be formatted
+  ErrorResult rv;
   newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), EmptyString(), rv);
 
   // Set default values for new elements

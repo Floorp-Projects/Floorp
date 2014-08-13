@@ -312,10 +312,9 @@ nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
   // "text-decoration: underline", which decomposes into four different text-*
   // properties.  So for now, we just create a span, add the desired style, and
   // see if it matches.
-  ErrorResult rv;
-  nsCOMPtr<Element> newSpan = CreateHTMLContent(NS_LITERAL_STRING("span"), rv);
-  NS_ASSERTION(!rv.Failed(), "CreateHTMLContent failed");
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), false);
+  nsCOMPtr<Element> newSpan = CreateHTMLContent(nsGkAtoms::span);
+  NS_ASSERTION(newSpan, "CreateHTMLContent failed");
+  NS_ENSURE_TRUE(newSpan, false);
   mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(newSpan, aProperty,
                                              aAttribute, aValue,
                                              /*suppress transaction*/ true);
