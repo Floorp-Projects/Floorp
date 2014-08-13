@@ -512,15 +512,12 @@ nsEditor::GetIsSelectionEditable(bool *aIsSelectionEditable)
   NS_ENSURE_ARG_POINTER(aIsSelectionEditable);
 
   // get current selection
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // XXX we just check that the anchor node is editable at the moment
   //     we should check that all nodes in the selection are editable
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  selection->GetAnchorNode(getter_AddRefs(anchorNode));
+  nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
   *aIsSelectionEditable = anchorNode && IsEditable(anchorNode);
 
   return NS_OK;
@@ -530,7 +527,7 @@ NS_IMETHODIMP
 nsEditor::GetIsDocumentEditable(bool *aIsDocumentEditable)
 {
   NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
-  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   *aIsDocumentEditable = !!doc;
 
   return NS_OK;
@@ -555,8 +552,7 @@ nsEditor::GetDOMDocument()
 NS_IMETHODIMP 
 nsEditor::GetDocument(nsIDOMDocument **aDoc)
 {
-  nsCOMPtr<nsIDOMDocument> doc = GetDOMDocument();
-  doc.forget(aDoc);
+  *aDoc = GetDOMDocument().take();
   return *aDoc ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 }
 
@@ -1527,87 +1523,62 @@ nsEditor::DeleteNode(nsINode* aNode)
 //                   to be of type aNodeType.  Put inNodes children into outNode.
 //                   Callers responsibility to make sure inNode's children can 
 //                   go in outNode.
-nsresult
-nsEditor::ReplaceContainer(nsIDOMNode *inNode, 
-                           nsCOMPtr<nsIDOMNode> *outNode, 
-                           const nsAString &aNodeType,
-                           const nsAString *aAttribute,
-                           const nsAString *aValue,
-                           bool aCloneAttributes)
-{
-  NS_ENSURE_TRUE(inNode && outNode, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(inNode);
-  NS_ENSURE_STATE(node);
-
-  nsCOMPtr<dom::Element> element;
-  nsresult rv = ReplaceContainer(node, getter_AddRefs(element), aNodeType,
-                                 aAttribute, aValue, aCloneAttributes);
-  *outNode = element ? element->AsDOMNode() : nullptr;
-  return rv;
-}
-
-nsresult
-nsEditor::ReplaceContainer(nsINode* aNode,
-                           dom::Element** outNode,
-                           const nsAString& aNodeType,
-                           const nsAString* aAttribute,
+already_AddRefed<Element>
+nsEditor::ReplaceContainer(Element* aOldContainer,
+                           nsIAtom* aNodeType,
+                           nsIAtom* aAttribute,
                            const nsAString* aValue,
-                           bool aCloneAttributes)
+                           ECloneAttributes aCloneAttributes)
 {
-  MOZ_ASSERT(aNode);
-  MOZ_ASSERT(outNode);
+  MOZ_ASSERT(aOldContainer && aNodeType);
 
-  *outNode = nullptr;
+  nsCOMPtr<nsIContent> parent = aOldContainer->GetParent();
+  NS_ENSURE_TRUE(parent, nullptr);
 
-  nsCOMPtr<nsIContent> parent = aNode->GetParent();
-  NS_ENSURE_STATE(parent);
-
-  int32_t offset = parent->IndexOf(aNode);
+  int32_t offset = parent->IndexOf(aOldContainer);
 
   // create new container
-  *outNode =
-    CreateHTMLContent(nsCOMPtr<nsIAtom>(do_GetAtom(aNodeType))).take();
-  NS_ENSURE_STATE(*outNode);
-
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(*outNode);
-  
-  nsIDOMNode* inNode = aNode->AsDOMNode();
+  nsCOMPtr<Element> ret = CreateHTMLContent(aNodeType);
+  NS_ENSURE_TRUE(ret, nullptr);
 
   // set attribute if needed
   nsresult res;
-  if (aAttribute && aValue && !aAttribute->IsEmpty()) {
-    res = elem->SetAttribute(*aAttribute, *aValue);
-    NS_ENSURE_SUCCESS(res, res);
+  if (aAttribute && aValue && aAttribute != nsGkAtoms::_empty) {
+    res = ret->SetAttr(kNameSpaceID_None, aAttribute, *aValue, true);
+    NS_ENSURE_SUCCESS(res, nullptr);
   }
-  if (aCloneAttributes) {
-    res = CloneAttributes(elem, inNode);
-    NS_ENSURE_SUCCESS(res, res);
+  if (aCloneAttributes == eCloneAttributes) {
+    res = CloneAttributes(ret->AsDOMNode(), aOldContainer->AsDOMNode());
+    NS_ENSURE_SUCCESS(res, nullptr);
   }
   
   // notify our internal selection state listener
   // (Note: A nsAutoSelectionReset object must be created
   //  before calling this to initialize mRangeUpdater)
-  nsAutoReplaceContainerSelNotify selStateNotify(mRangeUpdater, inNode, elem);
+  nsAutoReplaceContainerSelNotify selStateNotify(mRangeUpdater,
+      aOldContainer->AsDOMNode(), ret->AsDOMNode());
   {
     nsAutoTxnsConserveSelection conserveSelection(this);
-    while (aNode->HasChildren()) {
-      nsCOMPtr<nsIDOMNode> child = aNode->GetFirstChild()->AsDOMNode();
+    while (aOldContainer->HasChildren()) {
+      nsCOMPtr<nsIContent> child = aOldContainer->GetFirstChild();
 
       res = DeleteNode(child);
-      NS_ENSURE_SUCCESS(res, res);
+      NS_ENSURE_SUCCESS(res, nullptr);
 
-      res = InsertNode(child, elem, -1);
-      NS_ENSURE_SUCCESS(res, res);
+      res = InsertNode(child, ret, -1);
+      NS_ENSURE_SUCCESS(res, nullptr);
     }
   }
 
   // insert new container into tree
-  res = InsertNode(elem, parent->AsDOMNode(), offset);
-  NS_ENSURE_SUCCESS(res, res);
+  res = InsertNode(ret, parent, offset);
+  NS_ENSURE_SUCCESS(res, nullptr);
   
   // delete old container
-  return DeleteNode(inNode);
+  res = DeleteNode(aOldContainer);
+  NS_ENSURE_SUCCESS(res, nullptr);
+
+  return ret.forget();
 }
 
 ///////////////////////////////////////////////////////////////////////////

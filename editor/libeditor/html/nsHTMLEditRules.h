@@ -231,7 +231,7 @@ protected:
                            nsCOMPtr<nsIDOMNode>* outList,
                            nsIAtom* aListType,
                            nsIAtom* aItemType);
-  nsresult ConvertListType(nsINode* aList,
+  nsresult ConvertListType(mozilla::dom::Element* aList,
                            mozilla::dom::Element** aOutList,
                            nsIAtom* aListType,
                            nsIAtom* aItemType);
