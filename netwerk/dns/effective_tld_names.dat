@@ -6291,7 +6291,7 @@ k12.mo.us
 k12.ms.us
 k12.mt.us
 k12.nc.us
-k12.nd.us
+// k12.nd.us  Bug 1028347 - Removed at request of Travis Rosso <trossow@nd.gov>
 k12.ne.us
 k12.nh.us
 k12.nj.us
