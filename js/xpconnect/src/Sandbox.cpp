@@ -37,6 +37,7 @@
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/URLBinding.h"
+#include "mozilla/dom/URLSearchParamsBinding.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -743,6 +744,8 @@ xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
             TextDecoder = true;
         } else if (!strcmp(name.ptr(), "URL")) {
             URL = true;
+        } else if (!strcmp(name.ptr(), "URLSearchParams")) {
+            URLSearchParams = true;
         } else if (!strcmp(name.ptr(), "atob")) {
             atob = true;
         } else if (!strcmp(name.ptr(), "btoa")) {
@@ -782,6 +785,10 @@ xpc::GlobalProperties::Define(JSContext *cx, JS::HandleObject obj)
 
     if (URL &&
         !dom::URLBinding::GetConstructorObject(cx, obj))
+        return false;
+
+    if (URLSearchParams &&
+        !dom::URLSearchParamsBinding::GetConstructorObject(cx, obj))
         return false;
 
     if (atob &&
