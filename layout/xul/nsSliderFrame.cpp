@@ -526,6 +526,12 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     NS_ENSURE_TRUE(weakFrame.IsAlive(), NS_OK);
 
     DragThumb(true);
+
+#ifdef MOZ_WIDGET_GTK
+    nsCOMPtr<nsIContent> thumb = thumbFrame->GetContent();
+    thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), true);
+#endif
+
     if (aEvent->mClass == eTouchEventClass) {
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
     }
@@ -880,6 +886,11 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
+#ifdef MOZ_WIDGET_GTK
+  nsCOMPtr<nsIContent> thumb = thumbFrame->GetContent();
+  thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, NS_LITERAL_STRING("true"), true);
+#endif
+
   if (isHorizontal)
     mThumbStart = thumbFrame->GetPosition().x;
   else
@@ -899,6 +910,15 @@ nsSliderFrame::StopDrag()
 {
   AddListener();
   DragThumb(false);
+
+#ifdef MOZ_WIDGET_GTK
+  nsIFrame* thumbFrame = mFrames.FirstChild();
+  if (thumbFrame) {
+    nsCOMPtr<nsIContent> thumb = thumbFrame->GetContent();
+    thumb->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
+  }
+#endif
+
   if (mChange) {
     StopRepeat();
     mChange = 0;
