@@ -342,6 +342,7 @@ browser.jar:
   skin/classic/browser/devtools/computedview.css            (../shared/devtools/computedview.css)
   skin/classic/browser/devtools/arrow-e.png                 (../shared/devtools/images/arrow-e.png)
   skin/classic/browser/devtools/arrow-e@2x.png              (../shared/devtools/images/arrow-e@2x.png)
+  skin/classic/browser/devtools/responsiveui-home.png       (../shared/devtools/responsiveui-home.png)
   skin/classic/browser/devtools/projecteditor/projecteditor.css         (../shared/devtools/projecteditor/projecteditor.css)
   skin/classic/browser/devtools/projecteditor/file-icons-sheet@2x.png       (../shared/devtools/projecteditor/file-icons-sheet@2x.png)
   skin/classic/browser/devtools/app-manager/connection-footer.css     (../shared/devtools/app-manager/connection-footer.css)
