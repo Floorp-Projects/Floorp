@@ -141,11 +141,27 @@ public:
    *
    * In all cases, the content node in the hash table is the real
    * content node, not the anonymous content node we create for ::before
-   * or ::after.
+   * or ::after.  The content node passed to the Get and Put methods is,
+   * however, the content node to be associate with the frame's style
+   * context.
    */
   typedef nsRefPtrHashtable<nsRefPtrHashKey<nsIContent>, nsStyleContext>
             ReframingStyleContextTable;
   class ReframingStyleContexts {
+  public:
+    void Put(nsIContent* aContent, nsStyleContext* aStyleContext) {
+      MOZ_ASSERT(aContent);
+      nsCSSPseudoElements::Type pseudoType = aStyleContext->GetPseudoType();
+      if (pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+        mElementContexts.Put(aContent, aStyleContext);
+      } else if (pseudoType == nsCSSPseudoElements::ePseudo_before) {
+        MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentbefore);
+        mBeforePseudoContexts.Put(aContent->GetParent(), aStyleContext);
+      } else if (pseudoType == nsCSSPseudoElements::ePseudo_after) {
+        MOZ_ASSERT(aContent->Tag() == nsGkAtoms::mozgeneratedcontentafter);
+        mAfterPseudoContexts.Put(aContent->GetParent(), aStyleContext);
+      }
+    }
   private:
     ReframingStyleContextTable mElementContexts;
     ReframingStyleContextTable mBeforePseudoContexts;
