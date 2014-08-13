@@ -332,7 +332,7 @@ def _refptrTake(expr):
     return ExprCall(ExprSelect(expr, '.', 'take'))
 
 def _cxxArrayType(basetype, const=0, ref=0):
-    return Type('nsTArray', T=basetype, const=const, ref=ref)
+    return Type('nsTArray', T=basetype, const=const, ref=ref, hasimplicitcopyctor=False)
 
 def _cxxFallibleArrayType(basetype, const=0, ref=0):
     return Type('FallibleTArray', T=basetype, const=const, ref=ref)
@@ -849,6 +849,11 @@ IPDL union type."""
         return t
 
     def defaultValue(self):
+        # Use the default constructor for any class that does not have an
+        # implicit copy constructor.
+        if not self.bareType().hasimplicitcopyctor:
+            return None
+
         if self.ipdltype.isIPDL() and self.ipdltype.isActor():
             return ExprLiteral.NULL
         # XXX sneaky here, maybe need ExprCtor()?
@@ -4692,8 +4697,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 tmpvar = ExprVar('tmp')
                 ct = c.bareType()
                 readcase.addstmts([
-                    StmtDecl(Decl(ct, tmpvar.name),
-                      init=c.defaultValue() if ct.ptr else None),
+                    StmtDecl(Decl(ct, tmpvar.name), init=c.defaultValue()),
                     StmtExpr(ExprAssn(ExprDeref(var), tmpvar)),
                     StmtReturn(self.read(
                         c.ipdltype,
