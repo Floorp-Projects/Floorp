@@ -167,6 +167,7 @@ UNIFIED_SOURCES += [
     'jit/IonMacroAssembler.cpp',
     'jit/IonOptimizationLevels.cpp',
     'jit/IonSpewer.cpp',
+    'jit/JitcodeMap.cpp',
     'jit/JitOptions.cpp',
     'jit/JSONSpewer.cpp',
     'jit/LICM.cpp',

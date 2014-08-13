@@ -27,6 +27,7 @@
 #include "jit/IonBuilder.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitcodeMap.h"
 #include "jit/JitCommon.h"
 #include "jit/JitCompartment.h"
 #include "jit/LICM.h"
