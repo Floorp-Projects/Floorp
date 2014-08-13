@@ -60,7 +60,7 @@ else
     ac_add_options "--with-compiler-wrapper=python2.7 $topsrcdir/sccache/sccache.py"
     mk_add_options MOZ_PREFLIGHT_ALL+=build/sccache.mk
     mk_add_options MOZ_POSTFLIGHT_ALL+=build/sccache.mk
-    UPLOAD_EXTRA_FILES="$UPLOAD_EXTRA_FILES sccache.log.gz"
+    mk_add_options "export UPLOAD_EXTRA_FILES+=sccache.log.gz"
     case "$platform" in
     win*)
         # sccache supports a special flag to create depfiles.
