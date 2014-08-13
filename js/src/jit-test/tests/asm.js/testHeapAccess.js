@@ -15,6 +15,8 @@ var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i
 var f = asmLink(code, this, null, new ArrayBuffer(4096));
 assertEq(f(0), 0);
 
+setCachingEnabled(true);
+
 var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return i8[0]|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(4096));
 assertEq(f(0),0);
@@ -48,6 +50,8 @@ assertEq(f(0x100),0);
     var signalHandlersAfter = jco["signals.enable"];
     assertEq(signalHandlersBefore, signalHandlersAfter);
 })();
+
+setCachingEnabled(false);
 
 var code = asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; i32[0] = i; return u8[0]|0}; return f');
 var f = asmLink(code, this, null, new ArrayBuffer(4096));
