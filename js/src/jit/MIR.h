@@ -1268,6 +1268,8 @@ class MSimdValueX4 : public MQuaternaryInstruction
     bool congruentTo(const MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);
     }
+
+    MDefinition *foldsTo(TempAllocator &alloc);
 };
 
 // A constant SIMD value.
