@@ -2082,6 +2082,8 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF *ins)
         // The value we want to extract is in the low double-word
         if (input != output)
             masm.moveFloat32(input, output);
+    } else if (lane == LaneZ) {
+        masm.moveHighPairToLowPairFloat32(input, output);
     } else {
         uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
         masm.shuffleFloat32(mask, input, output);
