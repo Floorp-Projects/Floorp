@@ -56,6 +56,8 @@ namespace jit {
     _(Safepoints)                           \
     /* Debug info about Pools*/             \
     _(Pools)                                \
+    /* Profiling-related information */     \
+    _(Profiling)                            \
     /* Debug info about the I$ */           \
     _(CacheFlush)                           \
                                             \

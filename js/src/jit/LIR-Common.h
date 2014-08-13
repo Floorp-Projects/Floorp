@@ -800,6 +800,10 @@ class LCheckOverRecursed : public LInstructionHelper<0, 0, 0>
 
     LCheckOverRecursed()
     { }
+
+    MCheckOverRecursed *mir() const {
+        return mir_->toCheckOverRecursed();
+    }
 };
 
 class LCheckOverRecursedPar : public LInstructionHelper<0, 1, 1>
@@ -818,6 +822,10 @@ class LCheckOverRecursedPar : public LInstructionHelper<0, 1, 1>
 
     const LDefinition *getTempReg() {
         return getTemp(0);
+    }
+
+    MCheckOverRecursedPar *mir() const {
+        return mir_->toCheckOverRecursedPar();
     }
 };
 
@@ -879,6 +887,9 @@ class LInterruptCheckImplicit : public LInstructionHelper<0, 0, 0>
     void setOolEntry(Label *oolEntry) {
         oolEntry_ = oolEntry;
     }
+    MInterruptCheck *mir() const {
+        return mir_->toInterruptCheck();
+    }
 };
 
 class LInterruptCheckPar : public LInstructionHelper<0, 1, 1>
@@ -897,6 +908,9 @@ class LInterruptCheckPar : public LInstructionHelper<0, 1, 1>
 
     const LDefinition *getTempReg() {
         return getTemp(0);
+    }
+    MInterruptCheckPar *mir() const {
+        return mir_->toInterruptCheckPar();
     }
 };
 
@@ -2842,6 +2856,10 @@ class LAddI : public LBinaryMath<0>
     void setRecoversInput() {
         recoversInput_ = true;
     }
+
+    MAdd *mir() const {
+        return mir_->toAdd();
+    }
 };
 
 // Subtracts two integers, returning an integer value.
@@ -2865,6 +2883,9 @@ class LSubI : public LBinaryMath<0>
     }
     void setRecoversInput() {
         recoversInput_ = true;
+    }
+    MSub *mir() const {
+        return mir_->toSub();
     }
 };
 
@@ -3208,6 +3229,9 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2>
         JS_ASSERT(mode_ == TRUNCATE);
         return mir_->toTruncateToInt32();
     }
+    MInstruction *mir() const {
+        return mir_->toInstruction();
+    }
 };
 
 // Convert a double to an int32.
@@ -3262,6 +3286,10 @@ class LTruncateDToInt32 : public LInstructionHelper<1, 1, 1>
     const LDefinition *tempFloat() {
         return getTemp(0);
     }
+
+    MTruncateToInt32 *mir() const {
+        return mir_->toTruncateToInt32();
+    }
 };
 
 // Convert a float32 to a truncated int32.
@@ -3279,6 +3307,10 @@ class LTruncateFToInt32 : public LInstructionHelper<1, 1, 1>
 
     const LDefinition *tempFloat() {
         return getTemp(0);
+    }
+
+    MTruncateToInt32 *mir() const {
+        return mir_->toTruncateToInt32();
     }
 };
 
@@ -3360,6 +3392,17 @@ class LStart : public LInstructionHelper<0, 0, 0>
 {
   public:
     LIR_HEADER(Start)
+};
+
+// No-op instruction that prints nativeOffset, script, pcOffset during codegen.
+class LPcOffset : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(PcOffset)
+
+    const MPcOffset *mir() const {
+        return mir_->toPcOffset();
+    }
 };
 
 // Passed the BaselineFrame address in the OsrFrameReg by SideCannon().

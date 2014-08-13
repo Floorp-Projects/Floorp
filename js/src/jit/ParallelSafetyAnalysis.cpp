@@ -199,6 +199,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     UNSAFE_OP(InitProp)
     UNSAFE_OP(InitPropGetterSetter)
     SAFE_OP(Start)
+    SAFE_OP(PcOffset)
     UNSAFE_OP(OsrEntry)
     SAFE_OP(Nop)
     SAFE_OP(LimitedTruncate)

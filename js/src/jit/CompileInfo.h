@@ -119,7 +119,14 @@ class BytecodeSite {
 
     BytecodeSite(InlineScriptTree *tree, jsbytecode *pc)
       : tree_(tree), pc_(pc)
-    {}
+    {
+        JS_ASSERT(tree_ != nullptr);
+        JS_ASSERT(pc_ != nullptr);
+    }
+
+    bool hasTree() const {
+        return tree_ != nullptr;
+    }
 
     InlineScriptTree *tree() const {
         return tree_;
@@ -127,6 +134,10 @@ class BytecodeSite {
 
     jsbytecode *pc() const {
         return pc_;
+    }
+
+    JSScript *script() const {
+        return tree_ ? tree_->script() : nullptr;
     }
 };
 

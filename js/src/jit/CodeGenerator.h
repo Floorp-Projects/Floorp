@@ -68,6 +68,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitParameter(LParameter *lir);
     bool visitCallee(LCallee *lir);
     bool visitStart(LStart *lir);
+    bool visitPcOffset(LPcOffset *lir);
     bool visitReturn(LReturn *ret);
     bool visitDefVar(LDefVar *lir);
     bool visitDefFun(LDefFun *lir);
