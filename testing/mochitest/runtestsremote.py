@@ -242,6 +242,9 @@ class MochiRemote(Mochitest):
         self._automation.deleteANRs()
         self._automation.deleteTombstones()
         self.certdbNew = True
+        self.remoteNSPR = os.path.join(options.remoteTestRoot, "nspr")
+        self._dm.removeDir(self.remoteNSPR);
+        self._dm.mkDir(self.remoteNSPR);
 
         # structured logging
         self.message_logger = message_logger or MessageLogger(logger=log)
@@ -253,6 +256,7 @@ class MochiRemote(Mochitest):
         else:
             log.warning("Unable to retrieve log file (%s) from remote device" % self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
+        self._dm.getDirectory(self.remoteNSPR, os.environ["MOZ_UPLOAD_DIR"])
         Mochitest.cleanup(self, options)
 
     def findPath(self, paths, filename = None):
@@ -558,6 +562,9 @@ class MochiRemote(Mochitest):
 
     def buildBrowserEnv(self, options, debugger=False):
         browserEnv = Mochitest.buildBrowserEnv(self, options, debugger=debugger)
+        # override nsprLogs to avoid processing in Mochitest base class
+        self.nsprLogs = None
+        browserEnv["NSPR_LOG_FILE"] = os.path.join(self.remoteNSPR, self.nsprLogName)
         self.buildRobotiumConfig(options, browserEnv)
         return browserEnv
 
@@ -705,6 +712,7 @@ def main():
             options.browserArgs = ["instrument", "-w", "-e", "deviceroot", deviceRoot, "-e", "class"]
             options.browserArgs.append("org.mozilla.gecko.tests.%s" % test['name'])
             options.browserArgs.append("org.mozilla.roboexample.test/org.mozilla.gecko.FennecInstrumentationTestRunner")
+            mochitest.nsprLogName = "nspr-%s.log" % test['name']
 
             # If the test is for checking the import from bookmarks then make sure there is data to import
             if test['name'] == "testImportFromAndroid":
@@ -775,6 +783,7 @@ def main():
             if retVal == 0:
                 retVal = overallResult
     else:
+        mochitest.nsprLogName = "nspr.log"
         try:
             dm.recordLogcat()
             retVal = mochitest.runTests(options)
