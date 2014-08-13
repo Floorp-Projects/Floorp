@@ -16,6 +16,7 @@
     _(Pointer)                      \
     _(Double)                       \
     _(Float32)                      \
+    _(SimdValueX4)                  \
     _(SimdExtractElementI)          \
     _(SimdExtractElementF)          \
     _(Value)                        \

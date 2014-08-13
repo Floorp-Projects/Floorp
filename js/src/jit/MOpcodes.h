@@ -12,6 +12,7 @@ namespace jit {
 
 #define MIR_OPCODE_LIST(_)                                                  \
     _(Constant)                                                             \
+    _(SimdValueX4)                                                          \
     _(SimdExtractElement)                                                   \
     _(CloneLiteral)                                                         \
     _(Parameter)                                                            \

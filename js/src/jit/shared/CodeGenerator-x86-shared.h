@@ -205,6 +205,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitNegF(LNegF *lir);
 
     // SIMD operators
+    bool visitSimdValueX4(LSimdValueX4 *lir);
     bool visitSimdExtractElementI(LSimdExtractElementI *lir);
     bool visitSimdExtractElementF(LSimdExtractElementF *lir);
 
