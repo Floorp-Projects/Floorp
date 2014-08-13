@@ -41,7 +41,7 @@ class AddonWrapper : public Base {
                                 JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp) const MOZ_OVERRIDE;
 
-    static AddonWrapper singleton;
+    static const AddonWrapper singleton;
 };
 
 } // namespace xpc

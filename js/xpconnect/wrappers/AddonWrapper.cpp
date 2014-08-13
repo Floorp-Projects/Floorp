@@ -190,9 +190,9 @@ AddonWrapper<Base>::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bo
 #define AddonWrapperXrayXPCWN AddonWrapper<PermissiveXrayXPCWN>
 #define AddonWrapperXrayDOM AddonWrapper<PermissiveXrayDOM>
 
-template<> AddonWrapperCC AddonWrapperCC::singleton(0);
-template<> AddonWrapperXrayXPCWN AddonWrapperXrayXPCWN::singleton(0);
-template<> AddonWrapperXrayDOM AddonWrapperXrayDOM::singleton(0);
+template<> const AddonWrapperCC AddonWrapperCC::singleton(0);
+template<> const AddonWrapperXrayXPCWN AddonWrapperXrayXPCWN::singleton(0);
+template<> const AddonWrapperXrayDOM AddonWrapperXrayDOM::singleton(0);
 
 template class AddonWrapperCC;
 template class AddonWrapperXrayXPCWN;
