@@ -251,6 +251,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitArrayPushV(LArrayPushV *lir);
     bool visitArrayPushT(LArrayPushT *lir);
     bool visitArrayConcat(LArrayConcat *lir);
+    bool visitArrayJoin(LArrayJoin *lir);
     bool visitLoadTypedArrayElement(LLoadTypedArrayElement *lir);
     bool visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir);
     bool visitStoreTypedArrayElement(LStoreTypedArrayElement *lir);

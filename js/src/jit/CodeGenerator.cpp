@@ -2749,7 +2749,6 @@ CodeGenerator::visitArraySplice(LArraySplice *lir)
     return callVM(ArraySpliceDenseInfo, lir);
 }
 
-
 bool
 CodeGenerator::visitBail(LBail *lir)
 {
@@ -6108,6 +6107,18 @@ CodeGenerator::visitArrayConcat(LArrayConcat *lir)
     pushArg(ToRegister(lir->rhs()));
     pushArg(ToRegister(lir->lhs()));
     return callVM(ArrayConcatDenseInfo, lir);
+}
+
+typedef JSString *(*ArrayJoinFn)(JSContext *, HandleObject, HandleString);
+static const VMFunction ArrayJoinInfo = FunctionInfo<ArrayJoinFn>(jit::ArrayJoin);
+
+bool
+CodeGenerator::visitArrayJoin(LArrayJoin *lir)
+{
+    pushArg(ToRegister(lir->separator()));
+    pushArg(ToRegister(lir->array()));
+
+    return callVM(ArrayJoinInfo, lir);
 }
 
 typedef JSObject *(*GetIteratorObjectFn)(JSContext *, HandleObject, uint32_t);
