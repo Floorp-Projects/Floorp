@@ -85,9 +85,9 @@ public abstract class FxAccountSetupTask<T> extends AsyncTask<Void, Void, InnerR
 
   protected static class InnerRequestDelegate<T> implements RequestDelegate<T> {
     protected final CountDownLatch latch;
-    public T response;
-    public Exception exception;
-    public FxAccountClientRemoteException failure;
+    public T response = null;
+    public Exception exception = null;
+    public FxAccountClientRemoteException failure = null;
 
     protected InnerRequestDelegate(CountDownLatch latch) {
       this.latch = latch;
