@@ -300,11 +300,14 @@ private:
         OP2_ADDSD_VsdWsd    = 0x58,
         OP2_ADDPS_VpsWps    = 0x58,
         OP2_MULSD_VsdWsd    = 0x59,
+        OP2_MULPS_VpsWps    = 0x59,
         OP2_CVTSS2SD_VsdEd  = 0x5A,
         OP2_CVTSD2SS_VsdEd  = 0x5A,
         OP2_SUBSD_VsdWsd    = 0x5C,
+        OP2_SUBPS_VpsWps    = 0x5C,
         OP2_MINSD_VsdWsd    = 0x5D,
         OP2_DIVSD_VsdWsd    = 0x5E,
+        OP2_DIVPS_VpsWps    = 0x5E,
         OP2_MAXSD_VsdWsd    = 0x5F,
         OP2_SQRTSD_VsdWsd   = 0x51,
         OP2_SQRTSS_VssWss   = 0x51,
@@ -331,6 +334,7 @@ private:
         OP2_PEXTRW_GdUdIb   = 0xC5,
         OP2_SHUFPS_VpsWpsIb = 0xC6,
         OP2_PXORDQ_VdqWdq   = 0xEF,
+        OP2_PSUBD_VdqWdq    = 0xFA,
         OP2_PADDD_VdqWdq    = 0xFE
     } TwoByteOpcodeID;
 
@@ -685,6 +689,27 @@ public:
         m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, address);
     }
 
+    void psubd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("psubd      %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, (RegisterID)src);
+    }
+    void psubd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("psubd      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, base, offset);
+    }
+    void psubd_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("psubd      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, address);
+    }
+
     void addps_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         spew("addps      %s, %s",
@@ -702,6 +727,63 @@ public:
         spew("addps      %p, %s",
              address, nameFPReg(dst));
         m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void subps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("subps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void subps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("subps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void subps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("subps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void mulps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("mulps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void mulps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("mulps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void mulps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("mulps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void divps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("divps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void divps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("divps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void divps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("divps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, address);
     }
 
     void andl_rr(RegisterID src, RegisterID dst)
