@@ -771,6 +771,12 @@ JitCode::finalize(FreeOp *fop)
     // to read the contents of the pool we are releasing references in.
     JS_ASSERT(fop->runtime()->currentThreadOwnsInterruptLock());
 
+    // If this jitcode has a bytecode map, de-register it.
+    if (hasBytecodeMap_) {
+        JS_ASSERT(fop->runtime()->jitRuntime()->hasJitcodeGlobalTable());
+        fop->runtime()->jitRuntime()->getJitcodeGlobalTable()->removeEntry(raw());
+    }
+
     // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
     // Don't do this if the Ion code is protected, as the signal handler will
     // deadlock trying to reacquire the interrupt lock.
@@ -1182,17 +1188,6 @@ IonScript::Trace(JSTracer *trc, IonScript *script)
 void
 IonScript::Destroy(FreeOp *fop, IonScript *script)
 {
-    // By this point, the jitocde in |script| cannot be on stack.  Remove its entry from
-    // the native => bytecode mapping table, if needed.
-    JSRuntime *runtime = js::TlsPerThreadData.get()->runtimeFromMainThread();
-    JS_ASSERT(runtime);
-    JS_ASSERT(runtime->hasJitRuntime());
-    JitRuntime *jitrt = runtime->jitRuntime();
-    if (jitrt->hasJitcodeGlobalTable()) {
-        JitcodeGlobalTable *table = jitrt->getJitcodeGlobalTable();
-        table->removeEntry(script->method()->raw());
-    }
-
     script->destroyCaches();
     script->unlinkFromRuntime(fop);
     fop->free_(script);

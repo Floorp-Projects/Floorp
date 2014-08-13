@@ -2241,7 +2241,7 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
     JS_ASSERT(returnAddressToFp_ != nullptr);
 
     // Only handle Ion frames for now.
-    if (type_ != JitFrame_IonJS)
+    if (type_ != JitFrame_IonJS && type_ != JitFrame_BaselineJS)
         return true;
 
     JSRuntime *rt = js::TlsPerThreadData.get()->runtimeIfOnOwnerThread();
@@ -2264,7 +2264,7 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
 
     JitcodeGlobalEntry::BytecodeLocationVector location;
     uint32_t depth = UINT32_MAX;
-    if (!entry.callStackAtAddr(returnAddressToFp_, location, &depth))
+    if (!entry.callStackAtAddr(rt, returnAddressToFp_, location, &depth))
         return false;
     JS_ASSERT(depth > 0 && depth != UINT32_MAX);
     JS_ASSERT(location.length() == depth);
@@ -2276,25 +2276,27 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
                 (int) (location[i].pc - location[i].script->code()));
     }
 
-    // Create an InlineFrameIterator here and verify the mapped info against the iterator info.
-    InlineFrameIterator inlineFrames(GetJSContextFromJitCode(), this);
-    for (size_t idx = 0; idx < location.length(); idx++) {
-        JS_ASSERT(idx < location.length());
-        JS_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
+    if (type_ == JitFrame_IonJS) {
+        // Create an InlineFrameIterator here and verify the mapped info against the iterator info.
+        InlineFrameIterator inlineFrames(GetJSContextFromJitCode(), this);
+        for (size_t idx = 0; idx < location.length(); idx++) {
+            JS_ASSERT(idx < location.length());
+            JS_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
 
-        IonSpew(IonSpew_Profiling, "Match %d: ION %s:%d(%d) vs N2B %s:%d(%d)",
-                (int)idx,
-                inlineFrames.script()->filename(),
-                inlineFrames.script()->lineno(),
-                inlineFrames.pc() - inlineFrames.script()->code(),
-                location[idx].script->filename(),
-                location[idx].script->lineno(),
-                location[idx].pc - location[idx].script->code());
+            IonSpew(IonSpew_Profiling, "Match %d: ION %s:%d(%d) vs N2B %s:%d(%d)",
+                    (int)idx,
+                    inlineFrames.script()->filename(),
+                    inlineFrames.script()->lineno(),
+                    inlineFrames.pc() - inlineFrames.script()->code(),
+                    location[idx].script->filename(),
+                    location[idx].script->lineno(),
+                    location[idx].pc - location[idx].script->code());
 
-        JS_ASSERT(inlineFrames.script() == location[idx].script);
+            JS_ASSERT(inlineFrames.script() == location[idx].script);
 
-        if (inlineFrames.more())
-            ++inlineFrames;
+            if (inlineFrames.more())
+                ++inlineFrames;
+        }
     }
 
     return true;
