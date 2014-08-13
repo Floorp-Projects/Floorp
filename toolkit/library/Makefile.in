@@ -6,7 +6,7 @@ include $(topsrcdir)/toolkit/library/libxul.mk
 
 ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
 # Wrap linker to measure peak virtual memory usage.
-LD := $(PYTHON) $(topsrcdir)/build/link.py linker-vsize $(LD)
+LD := $(PYTHON) $(topsrcdir)/config/link.py linker-vsize $(LD)
 endif
 
 include $(topsrcdir)/config/rules.mk
