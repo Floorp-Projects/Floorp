@@ -340,6 +340,14 @@ class AssemblerX86Shared : public AssemblerShared
         label->bind(masm.size());
         masm.floatConstant(f);
     }
+    void writeInt32x4Constant(const SimdConstant &v, Label *label) {
+        label->bind(masm.size());
+        masm.int32x4Constant(v.asInt32x4());
+    }
+    void writeFloat32x4Constant(const SimdConstant &v, Label *label) {
+        label->bind(masm.size());
+        masm.float32x4Constant(v.asFloat32x4());
+    }
     void movl(Imm32 imm32, Register dest) {
         masm.movl_i32r(imm32.value, dest.code());
     }
@@ -1462,6 +1470,10 @@ class AssemblerX86Shared : public AssemblerShared
     void movd(FloatRegister src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());
+    }
+    void pxor(FloatRegister src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        masm.pxor_rr(src.code(), dest.code());
     }
     void pshufd(uint32_t mask, FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());

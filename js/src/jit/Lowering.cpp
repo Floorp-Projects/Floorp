@@ -3662,6 +3662,20 @@ LIRGenerator::visitSimdValueX4(MSimdValueX4 *ins)
 }
 
 bool
+LIRGenerator::visitSimdConstant(MSimdConstant *ins)
+{
+    JS_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->type() == MIRType_Int32x4)
+        return define(new(alloc()) LInt32x4(), ins);
+    if (ins->type() == MIRType_Float32x4)
+        return define(new(alloc()) LFloat32x4(), ins);
+
+    MOZ_ASSUME_UNREACHABLE("Unknown SIMD kind when generating constant");
+    return false;
+}
+
+bool
 LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
 {
     JS_ASSERT(IsSimdType(ins->input()->type()));
