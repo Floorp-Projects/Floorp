@@ -1346,6 +1346,57 @@ class MSimdExtractElement : public MUnaryInstruction
     }
 };
 
+class MSimdBinaryArith : public MBinaryInstruction
+{
+  public:
+    enum Operation {
+        Add
+    };
+
+    static const char* OperationName(Operation op) {
+        switch (op) {
+          case Add: return "Add";
+        }
+        MOZ_ASSUME_UNREACHABLE("unexpected operation");
+    }
+
+  private:
+    Operation operation_;
+
+    MSimdBinaryArith(MDefinition *left, MDefinition *right, Operation op, MIRType type)
+      : MBinaryInstruction(left, right), operation_(op)
+    {
+        JS_ASSERT(op == Add); // TODO remove in following patches
+        JS_ASSERT(IsSimdType(type));
+        JS_ASSERT(left->type() == right->type());
+        JS_ASSERT(left->type() == type);
+        setResultType(type);
+        setMovable();
+        if (op == Add)
+            setCommutative();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdBinaryArith);
+    static MSimdBinaryArith *NewAsmJS(TempAllocator &alloc, MDefinition *left, MDefinition *right,
+                                      Operation op, MIRType t)
+    {
+        return new(alloc) MSimdBinaryArith(left, right, op, t);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    Operation operation() const { return operation_; }
+
+    bool congruentTo(const MDefinition *ins) const {
+        if (!binaryCongruentTo(ins))
+            return false;
+        return operation_ == ins->toSimdBinaryArith()->operation();
+    }
+};
+
 // Deep clone a constant JSObject.
 class MCloneLiteral
   : public MUnaryInstruction,
