@@ -485,6 +485,9 @@ class MacroAssemblerX86Shared : public Assembler
     void packedAddInt32(const Operand &src, FloatRegister dest) {
         paddd(src, dest);
     }
+    void packedSubInt32(const Operand &src, FloatRegister dest) {
+        psubd(src, dest);
+    }
 
     void loadAlignedFloat32x4(const Address &src, FloatRegister dest) {
         movaps(Operand(src), dest);
@@ -503,6 +506,15 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void packedAddFloat32(const Operand &src, FloatRegister dest) {
         addps(src, dest);
+    }
+    void packedSubFloat32(const Operand &src, FloatRegister dest) {
+        subps(src, dest);
+    }
+    void packedMulFloat32(const Operand &src, FloatRegister dest) {
+        mulps(src, dest);
+    }
+    void packedDivFloat32(const Operand &src, FloatRegister dest) {
+        divps(src, dest);
     }
 
     static uint32_t ComputeShuffleMask(SimdLane x, SimdLane y = LaneX,

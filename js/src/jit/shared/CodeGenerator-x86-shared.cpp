@@ -2155,6 +2155,15 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *ins)
       case MSimdBinaryArith::Add:
         masm.packedAddInt32(rhs, lhs);
         return true;
+      case MSimdBinaryArith::Sub:
+        masm.packedSubInt32(rhs, lhs);
+        return true;
+      case MSimdBinaryArith::Mul:
+        // we can do mul with a single instruction only if we have SSE4.1
+        // using the PMULLD instruction.
+      case MSimdBinaryArith::Div:
+        // x86 doesn't have SIMD i32 div.
+        break;
     }
     MOZ_ASSUME_UNREACHABLE("unexpected SIMD op");
 }
@@ -2170,6 +2179,15 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
     switch (op) {
       case MSimdBinaryArith::Add:
         masm.packedAddFloat32(rhs, lhs);
+        return true;
+      case MSimdBinaryArith::Sub:
+        masm.packedSubFloat32(rhs, lhs);
+        return true;
+      case MSimdBinaryArith::Mul:
+        masm.packedMulFloat32(rhs, lhs);
+        return true;
+      case MSimdBinaryArith::Div:
+        masm.packedDivFloat32(rhs, lhs);
         return true;
     }
     MOZ_ASSUME_UNREACHABLE("unexpected SIMD op");
