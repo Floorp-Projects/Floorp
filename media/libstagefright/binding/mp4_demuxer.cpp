@@ -24,11 +24,11 @@ struct StageFrightPrivate
 
   sp<MediaSource> mAudio;
   MediaSource::ReadOptions mAudioOptions;
-  nsAutoPtr<Index> mAudioIndex;
 
   sp<MediaSource> mVideo;
   MediaSource::ReadOptions mVideoOptions;
-  nsAutoPtr<Index> mVideoIndex;
+
+  nsTArray<nsAutoPtr<Index>> mIndexes;
 };
 
 class DataSourceAdapter : public DataSource
@@ -101,14 +101,14 @@ MP4Demuxer::Init()
       mPrivate->mAudio = e->getTrack(i);
       mPrivate->mAudio->start();
       mAudioConfig.Update(metaData, mimeType);
-      auto index = mPrivate->mAudio->exportIndex();
-      mPrivate->mAudioIndex = new Index(index, mSource, mAudioConfig.mTrackId);
+      mPrivate->mIndexes.AppendElement(new Index(
+        mPrivate->mAudio->exportIndex(), mSource, mAudioConfig.mTrackId));
     } else if (!mPrivate->mVideo.get() && !strncmp(mimeType, "video/", 6)) {
       mPrivate->mVideo = e->getTrack(i);
       mPrivate->mVideo->start();
       mVideoConfig.Update(metaData, mimeType);
-      auto index = mPrivate->mVideo->exportIndex();
-      mPrivate->mVideoIndex = new Index(index, mSource, mVideoConfig.mTrackId);
+      mPrivate->mIndexes.AppendElement(new Index(
+        mPrivate->mVideo->exportIndex(), mSource, mVideoConfig.mTrackId));
     }
   }
   sp<MetaData> metaData = e->getMetaData();
@@ -199,33 +199,20 @@ MP4Demuxer::ConvertByteRangesToTime(
   const nsTArray<mozilla::MediaByteRange>& aByteRanges,
   nsTArray<Interval<Microseconds>>* aIntervals)
 {
-  if (!HasValidVideo() && !HasValidAudio()) {
+  if (mPrivate->mIndexes.IsEmpty()) {
     return;
   }
 
-  nsTArray<Interval<Microseconds>> video;
-  if (HasValidVideo()) {
-    nsTArray<Interval<Microseconds>> ranges;
-    if (!HasValidAudio()) {
-      mPrivate->mVideoIndex->ConvertByteRangesToTimeRanges(aByteRanges,
-                                                           aIntervals);
-      return;
-    }
-    mPrivate->mVideoIndex->ConvertByteRangesToTimeRanges(aByteRanges, &video);
-  }
+  mPrivate->mIndexes[0]->ConvertByteRangesToTimeRanges(aByteRanges, aIntervals);
 
-  nsTArray<Interval<Microseconds>> audio;
-  if (HasValidAudio()) {
+  for (int i = 1; i < mPrivate->mIndexes.Length(); i++) {
     nsTArray<Interval<Microseconds>> ranges;
-    if (!HasValidVideo()) {
-      mPrivate->mAudioIndex->ConvertByteRangesToTimeRanges(aByteRanges,
-                                                           aIntervals);
-      return;
-    }
-    mPrivate->mAudioIndex->ConvertByteRangesToTimeRanges(aByteRanges, &audio);
-  }
+    mPrivate->mIndexes[i]->ConvertByteRangesToTimeRanges(aByteRanges, &ranges);
 
-  Interval<Microseconds>::Intersection(audio, video, aIntervals);
+    nsTArray<Interval<Microseconds>> intersection;
+    Interval<Microseconds>::Intersection(*aIntervals, ranges, &intersection);
+    *aIntervals = intersection;
+  }
 }
 
 } // namespace mp4_demuxer
