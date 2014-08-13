@@ -273,6 +273,8 @@ public:
   void EvictBefore(uint64_t aOffset);
 
 private:
+  nsresult SeekInternal(int64_t aOffset);
+
   nsCOMPtr<nsIPrincipal> mPrincipal;
   const nsCString mType;
 
