@@ -41,6 +41,17 @@ struct Interval
   T start;
   T end;
 
+  static void SemiNormalAppend(nsTArray<Interval<T>>& aIntervals,
+                               Interval<T> aInterval)
+  {
+    if (!aIntervals.IsEmpty() &&
+        aIntervals.LastElement().end == aInterval.start) {
+      aIntervals.LastElement().end = aInterval.end;
+    } else {
+      aIntervals.AppendElement(aInterval);
+    }
+  }
+
   static void Normalize(const nsTArray<Interval<T>>& aIntervals,
                         nsTArray<Interval<T>>* aNormalized)
   {
