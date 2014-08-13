@@ -17,6 +17,8 @@ function dumpStack()
     stack = new Error().stack
 }
 
+setCachingEnabled(true);
+
 var callFFI = asmCompile('global', 'ffis', USE_ASM + "var ffi=ffis.ffi; function f() { return ffi()|0 } return f");
 
 var f = asmLink(callFFI, null, {ffi:dumpStack});
