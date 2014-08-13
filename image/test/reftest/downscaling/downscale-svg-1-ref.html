@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<body style="margin: 0px">
+  <embed src="black-border-rect.svg" style="display: block">
+  <script>
+    var width = location.search.substring(1).split("&");
+    var embedElem = document.getElementsByTagName('embed')[0];
+    embedElem.style.width = width + 'px';
+  </script>
+</body>
+</html>

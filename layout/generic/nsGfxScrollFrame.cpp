@@ -104,7 +104,7 @@ nsHTMLScrollFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 }
 
 void
-nsHTMLScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+nsHTMLScrollFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                             uint32_t aFilter)
 {
   mHelper.AppendAnonymousContentTo(aElements, aFilter);
@@ -1048,7 +1048,7 @@ nsXULScrollFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 }
 
 void
-nsXULScrollFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+nsXULScrollFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                            uint32_t aFilter)
 {
   mHelper.AppendAnonymousContentTo(aElements, aFilter);
@@ -3546,13 +3546,24 @@ ScrollFrameHelper::CreateAnonymousContent(
 }
 
 void
-ScrollFrameHelper::AppendAnonymousContentTo(nsBaseContentList& aElements,
+ScrollFrameHelper::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                                 uint32_t aFilter)
 {
-  aElements.MaybeAppendElement(mHScrollbarContent);
-  aElements.MaybeAppendElement(mVScrollbarContent);
-  aElements.MaybeAppendElement(mScrollCornerContent);
-  aElements.MaybeAppendElement(mResizerContent);
+  if (mHScrollbarContent) {
+    aElements.AppendElement(mHScrollbarContent);
+  }
+
+  if (mVScrollbarContent) {
+    aElements.AppendElement(mVScrollbarContent);
+  }
+
+  if (mScrollCornerContent) {
+    aElements.AppendElement(mScrollCornerContent);
+  }
+
+  if (mResizerContent) {
+    aElements.AppendElement(mResizerContent);
+  }
 }
 
 void

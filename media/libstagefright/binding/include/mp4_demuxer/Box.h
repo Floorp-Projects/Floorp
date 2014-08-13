@@ -39,6 +39,9 @@ public:
   bool IsAvailable() const { return !mRange.IsNull(); }
   uint64_t Offset() const { return mRange.mStart; }
   uint64_t Length() const { return mRange.mEnd - mRange.mStart; }
+  uint64_t NextOffset() const { return mRange.mEnd; }
+  const MediaByteRange& Range() const { return mRange; }
+
   const Box* Parent() const { return mParent; }
 
   bool IsType(const char* aType) const

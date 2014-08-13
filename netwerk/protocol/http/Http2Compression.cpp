@@ -1194,7 +1194,7 @@ void
 Http2Compressor::EncodeTableSizeChange(uint32_t newMaxSize)
 {
   uint32_t offset = mOutput->Length();
-  EncodeInteger(4, newMaxSize);
+  EncodeInteger(5, newMaxSize);
   uint8_t *startByte = reinterpret_cast<uint8_t *>(mOutput->BeginWriting()) + offset;
   *startByte = *startByte | 0x20;
 }

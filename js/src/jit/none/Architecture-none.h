@@ -12,6 +12,9 @@
 namespace js {
 namespace jit {
 
+static const bool SupportsSimd = false;
+static const uint32_t SimdStackAlignment = 0;
+
 class Registers
 {
   public:

@@ -20,6 +20,9 @@
 #include "GMPDecryptorParent.h"
 #include "GMPAudioDecoderParent.h"
 #include "runnable_utils.h"
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#include "mozilla/Sandbox.h"
+#endif
 
 namespace mozilla {
 
@@ -453,6 +456,11 @@ NS_IMETHODIMP
 GeckoMediaPluginService::AddPluginDirectory(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_IsMainThread());
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+  if (!mozilla::CanSandboxMediaPlugin()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+#endif
   nsCOMPtr<nsIThread> thread;
   nsresult rv = GetThread(getter_AddRefs(thread));
   if (NS_FAILED(rv)) {

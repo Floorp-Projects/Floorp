@@ -516,8 +516,6 @@ nsTransitionManager::ConsiderStartingTransition(
 
   nsRefPtr<dom::AnimationPlayer> player = new dom::AnimationPlayer(timeline);
   player->mStartTime = timeline->GetCurrentTimeStamp();
-  player->mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
-  player->mPauseStart = TimeStamp();
   player->SetSource(pt);
 
   if (!aElementTransitions) {

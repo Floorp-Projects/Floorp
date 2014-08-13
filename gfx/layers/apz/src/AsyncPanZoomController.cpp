@@ -137,7 +137,7 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * The following prefs are used to control the behaviour of the APZC.
  * The default values are provided in gfxPrefs.h.
  *
- * "apz.allow-checkerboarding"
+ * "apz.allow_checkerboarding"
  * Pref that allows or disallows checkerboarding
  *
  * "apz.asyncscroll.throttle"

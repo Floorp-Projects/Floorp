@@ -16,6 +16,8 @@
     _(Pointer)                      \
     _(Double)                       \
     _(Float32)                      \
+    _(SimdExtractElementI)          \
+    _(SimdExtractElementF)          \
     _(Value)                        \
     _(CloneLiteral)                 \
     _(Parameter)                    \

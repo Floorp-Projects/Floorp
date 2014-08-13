@@ -661,48 +661,9 @@ already_AddRefed<nsINodeList>
 FragmentOrElement::GetChildren(uint32_t aFilter)
 {
   nsRefPtr<nsSimpleContentList> list = new nsSimpleContentList(this);
-  if (!list) {
-    return nullptr;
-  }
-
-  nsIFrame *frame = GetPrimaryFrame();
-
-  // Append :before generated content.
-  if (frame) {
-    nsIFrame *beforeFrame = nsLayoutUtils::GetBeforeFrame(frame);
-    if (beforeFrame) {
-      list->AppendElement(beforeFrame->GetContent());
-    }
-  }
-
-  // If XBL is bound to this node then append XBL anonymous content including
-  // explict content altered by insertion point if we were requested for XBL
-  // anonymous content, otherwise append explicit content with respect to
-  // insertion point if any.
-  if (!(aFilter & eAllButXBL)) {
-    FlattenedChildIterator iter(this);
-    for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-      list->AppendElement(child);
-    }
-  } else {
-    ExplicitChildIterator iter(this);
-    for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
-      list->AppendElement(child);
-    }
-  }
-
-  if (frame) {
-    // Append native anonymous content to the end.
-    nsIAnonymousContentCreator* creator = do_QueryFrame(frame);
-    if (creator) {
-      creator->AppendAnonymousContentTo(*list, aFilter);
-    }
-
-    // Append :after generated content.
-    nsIFrame *afterFrame = nsLayoutUtils::GetAfterFrame(frame);
-    if (afterFrame) {
-      list->AppendElement(afterFrame->GetContent());
-    }
+  AllChildrenIterator iter(this, aFilter);
+  while (nsIContent* kid = iter.GetNextChild()) {
+    list->AppendElement(kid);
   }
 
   return list.forget();

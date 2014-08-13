@@ -76,10 +76,12 @@ nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 }
 
 void
-nsProgressFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
+nsProgressFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                           uint32_t aFilter)
 {
-  aElements.MaybeAppendElement(mBarDiv);
+  if (mBarDiv) {
+    aElements.AppendElement(mBarDiv);
+  }
 }
 
 NS_QUERYFRAME_HEAD(nsProgressFrame)

@@ -288,6 +288,7 @@ private:
         OP2_MOVPS_VpsWps    = 0x10,
         OP2_MOVSD_WsdVsd    = 0x11,
         OP2_MOVPS_WpsVps    = 0x11,
+        OP2_MOVHLPS_VqUq    = 0x12,
         OP2_UNPCKLPS_VsdWsd = 0x14,
         OP2_MOVAPD_VsdWsd   = 0x28,
         OP2_MOVAPS_VsdWsd   = 0x28,
@@ -312,6 +313,7 @@ private:
         OP2_MOVD_VdEd       = 0x6E,
         OP2_MOVDQ_VsdWsd    = 0x6F,
         OP2_MOVDQ_VdqWdq    = 0x6F,
+        OP2_PSHUFD_VdqWdqIb = 0x70,
         OP2_PSRLDQ_Vd       = 0x73,
         OP2_PCMPEQW         = 0x75,
         OP2_MOVD_EdVd       = 0x7E,
@@ -325,7 +327,8 @@ private:
         OP2_MOVZX_GvEb      = 0xB6,
         OP2_MOVZX_GvEw      = 0xB7,
         OP2_XADD_EvGv       = 0xC1,
-        OP2_PEXTRW_GdUdIb   = 0xC5
+        OP2_PEXTRW_GdUdIb   = 0xC5,
+        OP2_SHUFPS_VpsWpsIb = 0xC6
     } TwoByteOpcodeID;
 
     typedef enum {
@@ -2585,6 +2588,32 @@ public:
              nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_MOVD_VdEd, (RegisterID)dst, src);
+    }
+
+    void pshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
+    {
+        JS_ASSERT(mask < 256);
+        spew("pshufd      0x%x, %s, %s",
+             mask, nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSHUFD_VdqWdqIb, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(uint8_t(mask));
+    }
+
+    void shufps_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
+    {
+        JS_ASSERT(mask < 256);
+        spew("shufps     0x%x, %s, %s",
+             mask, nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(uint8_t(mask));
+    }
+
+    void movhlps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("movhlps     %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVHLPS_VqUq, (RegisterID)dst, (RegisterID)src);
     }
 
     void psrldq_ir(int shift, XMMRegisterID dest)
