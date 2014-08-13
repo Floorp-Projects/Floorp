@@ -628,8 +628,7 @@ nsWSRunObject::GetWSNodes()
   nsCOMPtr<nsINode> wsBoundingParent = GetWSBoundingParent();
 
   // first look backwards to find preceding ws nodes
-  if (mNode->IsNodeOfType(nsINode::eTEXT)) {
-    nsRefPtr<Text> textNode(static_cast<Text*>(mNode.get()));
+  if (nsRefPtr<Text> textNode = mNode->GetAsText()) {
     const nsTextFragment* textFrag = textNode->GetText();
     
     mNodeArray.InsertElementAt(0, textNode);
@@ -675,8 +674,7 @@ nsWSRunObject::GetWSNodes()
         mStartOffset = start.offset;
         mStartReason = WSType::otherBlock;
         mStartReasonNode = priorNode;
-      } else if (priorNode->IsNodeOfType(nsINode::eTEXT)) {
-        nsRefPtr<Text> textNode(static_cast<Text*>(priorNode.get()));
+      } else if (nsRefPtr<Text> textNode = priorNode->GetAsText()) {
         mNodeArray.InsertElementAt(0, textNode);
         const nsTextFragment *textFrag;
         if (!textNode || !(textFrag = textNode->GetText())) {
@@ -738,9 +736,8 @@ nsWSRunObject::GetWSNodes()
   }
   
   // then look ahead to find following ws nodes
-  if (mNode->IsNodeOfType(nsINode::eTEXT)) {
+  if (nsRefPtr<Text> textNode = mNode->GetAsText()) {
     // don't need to put it on list. it already is from code above
-    nsRefPtr<Text> textNode(static_cast<Text*>(mNode.get()));
     const nsTextFragment *textFrag = textNode->GetText();
 
     uint32_t len = textNode->TextLength();
@@ -786,8 +783,7 @@ nsWSRunObject::GetWSNodes()
         mEndOffset = end.offset;
         mEndReason = WSType::otherBlock;
         mEndReasonNode = nextNode;
-      } else if (nextNode->IsNodeOfType(nsINode::eTEXT)) {
-        nsRefPtr<Text> textNode(static_cast<Text*>(nextNode.get()));
+      } else if (nsRefPtr<Text> textNode = nextNode->GetAsText()) {
         mNodeArray.AppendElement(textNode);
         const nsTextFragment *textFrag;
         if (!textNode || !(textFrag = textNode->GetText())) {
@@ -1342,8 +1338,8 @@ nsWSRunObject::DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
     idx = 0;
   }
 
-  if (aStartNode == aEndNode && aStartNode->IsNodeOfType(nsINode::eTEXT)) {
-    return mHTMLEditor->DeleteText(static_cast<Text*>(aStartNode),
+  if (aStartNode == aEndNode && aStartNode->GetAsText()) {
+    return mHTMLEditor->DeleteText(aStartNode->GetAsText(),
         (uint32_t)aStartOffset, (uint32_t)(aEndOffset - aStartOffset));
   }
 
