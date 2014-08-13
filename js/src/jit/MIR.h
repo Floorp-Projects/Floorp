@@ -13,6 +13,7 @@
 #define jit_MIR_h
 
 #include "mozilla/Array.h"
+#include "mozilla/DebugOnly.h"
 
 #include "jit/CompilerRoot.h"
 #include "jit/FixedList.h"
@@ -1231,6 +1232,42 @@ class MConstant : public MNullaryInstruction
     bool canProduceFloat32() const;
 
     ALLOW_CLONE(MConstant)
+};
+
+// Generic constructor of SIMD valuesX4.
+class MSimdValueX4 : public MQuaternaryInstruction
+{
+  protected:
+    MSimdValueX4(MIRType type, MDefinition *x, MDefinition *y, MDefinition *z, MDefinition *w)
+      : MQuaternaryInstruction(x, y, z, w)
+    {
+        JS_ASSERT(IsSimdType(type));
+        mozilla::DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type);
+        JS_ASSERT(scalarType == x->type());
+        JS_ASSERT(scalarType == y->type());
+        JS_ASSERT(scalarType == z->type());
+        JS_ASSERT(scalarType == w->type());
+
+        setMovable();
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdValueX4)
+
+    static MSimdValueX4 *New(TempAllocator &alloc, MIRType type, MDefinition *x,
+                             MDefinition *y, MDefinition *z, MDefinition *w)
+    {
+        return new(alloc) MSimdValueX4(type, x, y, z, w);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
 };
 
 // Extracts a lane element from a given vector type, given by its lane symbol.

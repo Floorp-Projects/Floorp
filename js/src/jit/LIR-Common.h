@@ -128,6 +128,25 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
     }
 };
 
+// Constructs a SIMD value with 4 components (e.g. int32x4, float32x4).
+class LSimdValueX4 : public LInstructionHelper<1, 4, 0>
+{
+  public:
+    LIR_HEADER(SimdValueX4)
+    LSimdValueX4(const LAllocation &x, const LAllocation &y,
+                 const LAllocation &z, const LAllocation &w)
+    {
+        setOperand(0, x);
+        setOperand(1, y);
+        setOperand(2, z);
+        setOperand(3, w);
+    }
+
+    MSimdValueX4 *mir() const {
+        return mir_->toSimdValueX4();
+    }
+};
+
 // Extracts an element from a given SIMD int32x4 lane.
 class LSimdExtractElementI : public LInstructionHelper<1, 1, 0>
 {

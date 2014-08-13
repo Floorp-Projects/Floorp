@@ -227,6 +227,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
   public:
     // Unimplemented SIMD instructions
+    bool visitSimdValueX4(LSimdValueX4 *lir) { MOZ_ASSUME_UNREACHABLE("NYI"); }
     bool visitSimdExtractElementI(LSimdExtractElementI *ins) { MOZ_ASSUME_UNREACHABLE("NYI"); }
     bool visitSimdExtractElementF(LSimdExtractElementF *ins) { MOZ_ASSUME_UNREACHABLE("NYI"); }
 };
