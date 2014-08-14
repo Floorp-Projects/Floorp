@@ -4,6 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+                                  "resource://gre/modules/PageActions.jsm");
+
 // Define service targets. We should consider moving these to their respective
 // JSM files, but we left them here to allow for better lazy JSM loading.
 var rokuTarget = {
@@ -404,7 +407,7 @@ var CastingApps = {
     // Remove any exising pageaction first, in case state changes or we don't have
     // a castable video
     if (this.pageAction.id) {
-      NativeWindow.pageactions.remove(this.pageAction.id);
+      PageActions.remove(this.pageAction.id);
       delete this.pageAction.id;
     }
 
@@ -425,14 +428,14 @@ var CastingApps = {
     // 2. The video is allowed to be cast and is currently playing
     // Both states have the same action: Show the cast page action
     if (aVideo.mozIsCasting) {
-      this.pageAction.id = NativeWindow.pageactions.add({
+      this.pageAction.id = PageActions.add({
         title: Strings.browser.GetStringFromName("contextmenu.castToScreen"),
         icon: "drawable://casting_active",
         clickCallback: this.pageAction.click,
         important: true
       });
     } else if (aVideo.mozAllowCasting) {
-      this.pageAction.id = NativeWindow.pageactions.add({
+      this.pageAction.id = PageActions.add({
         title: Strings.browser.GetStringFromName("contextmenu.castToScreen"),
         icon: "drawable://casting",
         clickCallback: this.pageAction.click,
