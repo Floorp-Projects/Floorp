@@ -2220,6 +2220,26 @@ ArenaLists::relocateArenas(ArenaHeader *relocatedList)
     return relocatedList;
 }
 
+ArenaHeader *
+GCRuntime::relocateArenas()
+{
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_MOVE);
+
+    ArenaHeader *relocatedList = nullptr;
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        JS_ASSERT(zone->isGCFinished());
+        JS_ASSERT(!zone->isPreservingCode());
+
+        // We cannot move atoms as we depend on their addresses being constant.
+        if (!rt->isAtomsZone(zone)) {
+            zone->setGCState(Zone::Compact);
+            relocatedList = zone->allocator.arenas.relocateArenas(relocatedList);
+        }
+    }
+
+    return relocatedList;
+}
+
 struct MovingTracer : JSTracer {
     MovingTracer(JSRuntime *rt) : JSTracer(rt, Visit, TraceWeakMapValues) {}
 
@@ -2254,8 +2274,6 @@ MovingTracer::Sweep(JSTracer *jstrc)
 
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         if (zone->isCollecting()) {
-            gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-
             bool oom = false;
             zone->sweep(fop, false, &oom);
             JS_ASSERT(!oom);
@@ -2301,60 +2319,54 @@ void
 GCRuntime::updatePointersToRelocatedCells()
 {
     JS_ASSERT(rt->currentThreadHasExclusiveAccess());
+
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT_UPDATE);
     MovingTracer trc(rt);
 
-    {
-        // TODO: Maybe give compaction its own set of phases.
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK);
+    // TODO: We may need to fix up other weak pointers here.
 
-        // TODO: We may need to fix up other weak pointers here.
+    // Fixup compartment global pointers as these get accessed during marking.
+    for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
+        comp->fixupAfterMovingGC();
 
-        // Fixup compartment global pointers as these get accessed during marking.
-        for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
-            comp->fixupAfterMovingGC();
+    // Fixup cross compartment wrappers as we assert the existence of wrappers in the map.
+    for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next())
+        comp->fixupCrossCompartmentWrappers(&trc);
 
-        // Fixup cross compartment wrappers as we assert the existence of wrappers in the map.
-        for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next())
-            comp->fixupCrossCompartmentWrappers(&trc);
+    // Fixup generators as these are not normally traced.
+    for (ContextIter i(rt); !i.done(); i.next()) {
+        for (JSGenerator *gen = i.get()->innermostGenerator(); gen; gen = gen->prevGenerator)
+            gen->obj = MaybeForwarded(gen->obj.get());
+    }
 
-        // Fixup generators as these are not normally traced.
-        for (ContextIter i(rt); !i.done(); i.next()) {
-            for (JSGenerator *gen = i.get()->innermostGenerator(); gen; gen = gen->prevGenerator)
-                gen->obj = MaybeForwarded(gen->obj.get());
-        }
-
-        // Iterate through all allocated cells to update internal pointers.
-        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-            ArenaLists &al = zone->allocator.arenas;
-            for (unsigned i = 0; i < FINALIZE_LIMIT; ++i) {
-                AllocKind thingKind = static_cast<AllocKind>(i);
-                JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
-                for (ArenaHeader *arena = al.getFirstArena(thingKind); arena; arena = arena->next) {
-                    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-                        UpdateCellPointers(&trc, i.getCell(), traceKind);
-                    }
+    // Iterate through all allocated cells to update internal pointers.
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        ArenaLists &al = zone->allocator.arenas;
+        for (unsigned i = 0; i < FINALIZE_LIMIT; ++i) {
+            AllocKind thingKind = static_cast<AllocKind>(i);
+            JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
+            for (ArenaHeader *arena = al.getFirstArena(thingKind); arena; arena = arena->next) {
+                for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+                    UpdateCellPointers(&trc, i.getCell(), traceKind);
                 }
             }
         }
-
-        // Mark roots to update them.
-        markRuntime(&trc, MarkRuntime);
-        Debugger::markAll(&trc);
-        Debugger::markCrossCompartmentDebuggerObjectReferents(&trc);
-
-        for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-            if (c->watchpointMap)
-                c->watchpointMap->markAll(&trc);
-        }
     }
 
-    {
-        gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_SWEEP);
+    // Mark roots to update them.
+    markRuntime(&trc, MarkRuntime);
+    Debugger::markAll(&trc);
+    Debugger::markCrossCompartmentDebuggerObjectReferents(&trc);
 
-        markAllGrayReferences();
-
-        MovingTracer::Sweep(&trc);
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->watchpointMap)
+            c->watchpointMap->markAll(&trc);
     }
+
+    markAllGrayReferences(gcstats::PHASE_COMPACT_UPDATE_GRAY);
+    markAllWeakReferences(gcstats::PHASE_COMPACT_UPDATE_GRAY);
+
+    MovingTracer::Sweep(&trc);
 }
 
 void
@@ -3742,7 +3754,6 @@ GCRuntime::markWeakReferences(gcstats::Phase phase)
 {
     JS_ASSERT(marker.isDrained());
 
-    gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_MARK);
     gcstats::AutoPhase ap1(stats, phase);
 
     for (;;) {
@@ -3770,35 +3781,25 @@ GCRuntime::markWeakReferencesInCurrentGroup(gcstats::Phase phase)
 
 template <class ZoneIterT, class CompartmentIterT>
 void
-GCRuntime::markGrayReferences()
+GCRuntime::markGrayReferences(gcstats::Phase phase)
 {
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_MARK);
-        gcstats::AutoPhase ap1(stats, gcstats::PHASE_SWEEP_MARK_GRAY);
-        marker.setMarkColorGray();
-        if (marker.hasBufferedGrayRoots()) {
-            for (ZoneIterT zone(rt); !zone.done(); zone.next())
-                marker.markBufferedGrayRoots(zone);
-        } else {
-            JS_ASSERT(!isIncremental);
-            if (JSTraceDataOp op = grayRootTracer.op)
-                (*op)(&marker, grayRootTracer.data);
-        }
-        SliceBudget budget;
-        marker.drainMarkStack(budget);
+    gcstats::AutoPhase ap(stats, phase);
+    if (marker.hasBufferedGrayRoots()) {
+        for (ZoneIterT zone(rt); !zone.done(); zone.next())
+            marker.markBufferedGrayRoots(zone);
+    } else {
+        JS_ASSERT(!isIncremental);
+        if (JSTraceDataOp op = grayRootTracer.op)
+            (*op)(&marker, grayRootTracer.data);
     }
-
-    markWeakReferences<CompartmentIterT>(gcstats::PHASE_SWEEP_MARK_GRAY_WEAK);
-
-    JS_ASSERT(marker.isDrained());
-
-    marker.setMarkColorBlack();
+    SliceBudget budget;
+    marker.drainMarkStack(budget);
 }
 
 void
-GCRuntime::markGrayReferencesInCurrentGroup()
+GCRuntime::markGrayReferencesInCurrentGroup(gcstats::Phase phase)
 {
-    markGrayReferences<GCZoneGroupIter, GCCompartmentGroupIter>();
+    markGrayReferences<GCZoneGroupIter, GCCompartmentGroupIter>(phase);
 }
 
 void
@@ -3808,9 +3809,9 @@ GCRuntime::markAllWeakReferences(gcstats::Phase phase)
 }
 
 void
-GCRuntime::markAllGrayReferences()
+GCRuntime::markAllGrayReferences(gcstats::Phase phase)
 {
-    markGrayReferences<GCZonesIter, GCCompartmentsIter>();
+    markGrayReferences<GCZonesIter, GCCompartmentsIter>(phase);
 }
 
 #ifdef DEBUG
@@ -3931,7 +3932,8 @@ js::gc::MarkingValidator::nonIncrementalMark()
 
     gc->incrementalState = SWEEP;
     {
-        gcstats::AutoPhase ap(gc->stats, gcstats::PHASE_SWEEP);
+        gcstats::AutoPhase ap1(gc->stats, gcstats::PHASE_SWEEP);
+        gcstats::AutoPhase ap2(gc->stats, gcstats::PHASE_SWEEP_MARK);
         gc->markAllWeakReferences(gcstats::PHASE_SWEEP_MARK_WEAK);
 
         /* Update zone state for gray marking. */
@@ -3939,14 +3941,18 @@ js::gc::MarkingValidator::nonIncrementalMark()
             JS_ASSERT(zone->isGCMarkingBlack());
             zone->setGCState(Zone::MarkGray);
         }
+        gc->marker.setMarkColorGray();
 
-        gc->markAllGrayReferences();
+        gc->markAllGrayReferences(gcstats::PHASE_SWEEP_MARK_GRAY);
+        gc->markAllWeakReferences(gcstats::PHASE_SWEEP_MARK_GRAY_WEAK);
 
         /* Restore zone state. */
         for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
             JS_ASSERT(zone->isGCMarkingGray());
             zone->setGCState(Zone::Mark);
         }
+        JS_ASSERT(gc->marker.isDrained());
+        gc->marker.setMarkColorBlack();
     }
 
     /* Take a copy of the non-incremental mark state and restore the original. */
@@ -4347,7 +4353,6 @@ MarkIncomingCrossCompartmentPointers(JSRuntime *rt, const uint32_t color)
 {
     JS_ASSERT(color == BLACK || color == GRAY);
 
-    gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_SWEEP_MARK);
     static const gcstats::Phase statsPhases[] = {
         gcstats::PHASE_SWEEP_MARK_INCOMING_BLACK,
         gcstats::PHASE_SWEEP_MARK_INCOMING_GRAY
@@ -4472,6 +4477,8 @@ js::NotifyGCPostSwap(JSObject *a, JSObject *b, unsigned removedFlags)
 void
 GCRuntime::endMarkingZoneGroup()
 {
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_MARK);
+
     /*
      * Mark any incoming black pointers from previously swept compartments
      * whose referents are not marked. This can occur when gray cells become
@@ -4491,22 +4498,22 @@ GCRuntime::endMarkingZoneGroup()
         JS_ASSERT(zone->isGCMarkingBlack());
         zone->setGCState(Zone::MarkGray);
     }
+    marker.setMarkColorGray();
 
     /* Mark incoming gray pointers from previously swept compartments. */
-    marker.setMarkColorGray();
     MarkIncomingCrossCompartmentPointers(rt, GRAY);
-    marker.setMarkColorBlack();
 
     /* Mark gray roots and mark transitively inside the current compartment group. */
-    markGrayReferencesInCurrentGroup();
+    markGrayReferencesInCurrentGroup(gcstats::PHASE_SWEEP_MARK_GRAY);
+    markWeakReferencesInCurrentGroup(gcstats::PHASE_SWEEP_MARK_GRAY_WEAK);
 
     /* Restore marking state. */
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         JS_ASSERT(zone->isGCMarkingGray());
         zone->setGCState(Zone::Mark);
     }
-
-    JS_ASSERT(marker.isDrained());
+    MOZ_ASSERT(marker.isDrained());
+    marker.setMarkColorBlack();
 }
 
 void
@@ -4579,6 +4586,8 @@ GCRuntime::beginSweepingZoneGroup()
 
         for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             gcstats::AutoSCC scc(stats, zoneGroupIndex);
+            gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_TABLES);
+
             c->sweep(&fop, releaseObservedTypes && !c->zone()->isPreservingCode());
         }
 
@@ -4940,18 +4949,9 @@ GCRuntime::compactPhase()
     JS_ASSERT(rt->gc.nursery.isEmpty());
     JS_ASSERT(!sweepOnBackgroundThread);
 
-    ArenaHeader *relocatedList = nullptr;
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        JS_ASSERT(zone->isGCFinished());
-        JS_ASSERT(!zone->isPreservingCode());
+    gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
 
-        // We cannot move atoms as we depend on their addresses being constant.
-        if (!rt->isAtomsZone(zone)) {
-            zone->setGCState(Zone::Compact);
-            relocatedList = zone->allocator.arenas.relocateArenas(relocatedList);
-        }
-    }
-
+    ArenaHeader *relocatedList = relocateArenas();
     updatePointersToRelocatedCells();
     releaseRelocatedArenas(relocatedList);
 
