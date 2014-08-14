@@ -111,7 +111,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     CHECK(map->zone()->lastZoneGroupIndex() == delegate->zone()->lastZoneGroupIndex());
 #endif
 
-    /* Check that when the delegate becomes unreachable the entry is removed. */
+    /* Check that when the delegate becomes unreacable the entry is removed. */
     delegate = nullptr;
     JS_GC(rt);
     CHECK(checkSize(map, 0));
