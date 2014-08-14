@@ -9,6 +9,7 @@
 #include "xpcprivate.h"
 #include "jsprf.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsCxPusher.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "JavaScriptParent.h"

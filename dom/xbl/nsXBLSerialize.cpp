@@ -10,6 +10,7 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 
 using namespace mozilla;
 

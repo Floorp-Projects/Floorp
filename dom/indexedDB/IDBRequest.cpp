@@ -18,6 +18,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMJSUtils.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"

@@ -12,6 +12,7 @@
 #include "nsContentUtils.h"
 #include "xpcprivate.h"
 #include "jsfriendapi.h"
+#include "nsCxPusher.h"
 #include "AccessCheck.h"
 
 using namespace JS;

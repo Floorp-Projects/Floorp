@@ -6,9 +6,8 @@
 
 #include "MobileConnectionInfo.h"
 
-#include "mozilla/dom/ScriptSettings.h"
-
 #include "jsapi.h"
+#include "nsCxPusher.h"
 
 #define CONVERT_STRING_TO_NULLABLE_ENUM(_string, _enumType, _enum)      \
 {                                                                       \

@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsIObserverService.h"
+#include "nsCxPusher.h"
 #include "nsISettingsService.h"
 #include "nsJSUtils.h"
 #include "nsPrintfCString.h"
@@ -18,7 +19,6 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "xpcpublic.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Attributes.h"
 
 #undef LOG
