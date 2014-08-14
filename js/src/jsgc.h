@@ -12,7 +12,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/TypeTraits.h"
 
 #include "jslock.h"
 #include "jsobj.h"
@@ -1206,78 +1205,6 @@ namespace gc {
  */
 void
 MergeCompartments(JSCompartment *source, JSCompartment *target);
-
-#ifdef JSGC_COMPACTING
-
-/* Functions for checking and updating things that might be moved by compacting GC. */
-
-#ifdef JS_PUNBOX64
-const uintptr_t ForwardedCellMagicValue = 0xf1f1f1f1f1f1f1f1;
-#else
-const uintptr_t ForwardedCellMagicValue = 0xf1f1f1f1;
-#endif
-
-template <typename T>
-inline bool
-IsForwarded(T *t)
-{
-    static_assert(mozilla::IsBaseOf<Cell, T>::value, "T must be a subclass of Cell");
-    uintptr_t *ptr = reinterpret_cast<uintptr_t *>(t);
-    return ptr[1] == ForwardedCellMagicValue;
-}
-
-inline bool
-IsForwarded(const JS::Value &value)
-{
-    if (value.isObject())
-        return IsForwarded(&value.toObject());
-
-    if (value.isString())
-        return IsForwarded(value.toString());
-
-    if (value.isSymbol())
-        return IsForwarded(value.toSymbol());
-
-    JS_ASSERT(!value.isGCThing());
-    return false;
-}
-
-template <typename T>
-inline T *
-Forwarded(T *t)
-{
-    JS_ASSERT(IsForwarded(t));
-    uintptr_t *ptr = reinterpret_cast<uintptr_t *>(t);
-    return reinterpret_cast<T *>(ptr[0]);
-}
-
-inline Value
-Forwarded(const JS::Value &value)
-{
-    if (value.isObject())
-        return ObjectValue(*Forwarded(&value.toObject()));
-    else if (value.isString())
-        return StringValue(Forwarded(value.toString()));
-    else if (value.isSymbol())
-        return SymbolValue(Forwarded(value.toSymbol()));
-
-    JS_ASSERT(!value.isGCThing());
-    return value;
-}
-
-template <typename T>
-inline T
-MaybeForwarded(T t)
-{
-    return IsForwarded(t) ? Forwarded(t) : t;
-}
-
-#else
-
-template <typename T> inline bool IsForwarded(T t) { return false; }
-template <typename T> inline T MaybeForwarded(T t) { return t; }
-
-#endif // JSGC_COMPACTING
 
 const int ZealPokeValue = 1;
 const int ZealAllocValue = 2;
