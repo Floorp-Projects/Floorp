@@ -231,3 +231,6 @@ user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 
 // Enable debug logging in the mozApps implementation.
 user_pref("dom.mozApps.debug", true);
+
+// Enable Loop
+user_pref("loop.enabled", true);
