@@ -38,6 +38,11 @@ public:
 
   void AudioOffloadTearDown();
 
+  virtual MediaDecoderStateMachine* CreateStateMachine();
+
+  virtual MediaOmxCommonReader* CreateReader() = 0;
+  virtual MediaDecoderStateMachine* CreateStateMachine(MediaOmxCommonReader* aReader) = 0;
+
 protected:
   void PauseStateMachine();
   void ResumeStateMachine();

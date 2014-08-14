@@ -251,4 +251,14 @@ MediaOmxCommonDecoder::SetVolume(double aVolume)
   mAudioOffloadPlayer->SetVolume(aVolume);
 }
 
+MediaDecoderStateMachine*
+MediaOmxCommonDecoder::CreateStateMachine()
+{
+  mReader = CreateReader();
+  if (mReader != nullptr) {
+    mReader->SetAudioChannel(GetAudioChannel());
+  }
+  return CreateStateMachine(mReader);
+}
+
 } // namespace mozilla
