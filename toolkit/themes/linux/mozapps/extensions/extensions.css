@@ -884,10 +884,6 @@ setting[type="radio"] > radiogroup {
   display: none;
 }
 
-.addon-control.no-auto-hide {
-  display: block;
-}
-
 .addon-control.enable {
   list-style-image: url("moz-icon://stock/gtk-yes?size=button");
 }
