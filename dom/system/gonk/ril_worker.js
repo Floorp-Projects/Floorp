@@ -1611,6 +1611,61 @@ RilObject.prototype = {
   /**
    * Dial a non-emergency number.
    *
+   * @param isDialEmergency
+   *        Whether it is called by dialEmergency.
+   * @param isEmergency
+   *        Whether the number is an emergency number.
+   * @param number
+   *        String containing the number to dial.
+   * @param clirMode
+   *        Integer for showing/hidding the caller Id to the called party.
+   * @param uusInfo
+   *        Integer doing something XXX TODO
+   */
+  dial: function(options) {
+    let onerror = (function onerror(options, errorMsg) {
+      options.success = false;
+      options.errorMsg = errorMsg;
+      this.sendChromeMessage(options);
+    }).bind(this, options);
+
+    let isRadioOff = (this.radioState === GECKO_RADIOSTATE_OFF);
+
+    if (options.isEmergency) {
+      if (isRadioOff) {
+        if (DEBUG) {
+          this.context.debug("Automatically enable radio for an emergency call.");
+        }
+
+        this.cachedDialRequest = {
+          callback: this.dialEmergencyNumber.bind(this, options),
+          onerror: onerror
+        };
+        this.setRadioEnabled({enabled: true});
+        return;
+      }
+
+      this.dialEmergencyNumber(options);
+    } else {
+      // Notify error in establishing the call without radio.
+      if (isRadioOff) {
+        onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
+        return;
+      }
+
+      // Shouldn't dial a non-emergency number by dialEmergency.
+      if (options.isDialEmergency || this.voiceRegistrationState.emergencyCallsOnly) {
+        onerror(GECKO_CALL_ERROR_BAD_NUMBER);
+        return;
+      }
+
+      this.dialNonEmergencyNumber(options);
+    }
+  },
+
+  /**
+   * Dial a non-emergency number.
+   *
    * @param number
    *        String containing the number to dial.
    * @param clirMode
@@ -1619,23 +1674,6 @@ RilObject.prototype = {
    *        Integer doing something XXX TODO
    */
   dialNonEmergencyNumber: function(options) {
-    let onerror = (function onerror(options, errorMsg) {
-      options.success = false;
-      options.errorMsg = errorMsg;
-      this.sendChromeMessage(options);
-    }).bind(this, options);
-
-    if (this.radioState == GECKO_RADIOSTATE_OFF) {
-      // Notify error in establishing the call without radio.
-      onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return;
-    }
-
-    if (this.voiceRegistrationState.emergencyCallsOnly) {
-      onerror(RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[CALL_FAIL_UNOBTAINABLE_NUMBER]);
-      return;
-    }
-
     // Exit emergency callback mode when user dial a non-emergency call.
     if (this._isInEmergencyCbMode) {
       this.exitEmergencyCbMode();
@@ -1656,7 +1694,6 @@ RilObject.prototype = {
     }
 
     options.request = REQUEST_DIAL;
-    options.isEmergency = false;
     this.sendDialRequest(options);
   },
 
@@ -1671,30 +1708,8 @@ RilObject.prototype = {
    *        Integer doing something XXX TODO
    */
   dialEmergencyNumber: function(options) {
-    let onerror = (function onerror(options, errorMsg) {
-      options.success = false;
-      options.errorMsg = errorMsg;
-      this.sendChromeMessage(options);
-    }).bind(this, options);
-
     options.request = RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL ?
                       REQUEST_DIAL_EMERGENCY_CALL : REQUEST_DIAL;
-    options.isEmergency = true;
-
-    if (this.radioState == GECKO_RADIOSTATE_OFF) {
-      if (DEBUG) {
-        this.context.debug("Automatically enable radio for an emergency call.");
-      }
-
-      if (!this.cachedDialRequest) {
-        this.cachedDialRequest = {};
-      }
-      this.cachedDialRequest.onerror = onerror;
-      this.cachedDialRequest.callback = this.sendDialRequest.bind(this, options);
-      this.setRadioEnabled({enabled: true});
-      return;
-    }
-
     this.sendDialRequest(options);
   },
 
@@ -8703,7 +8718,7 @@ GsmPDUHelperObject.prototype = {
         }
       }
       return text;
-    }
+    };
 
     let totalLength = 0, length, pageLengths = [];
     for (let i = 0; i < numOfPages; i++) {
