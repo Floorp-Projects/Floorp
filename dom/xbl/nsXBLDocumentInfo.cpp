@@ -23,6 +23,7 @@
 #include "nsJSPrincipals.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsDOMJSUtils.h"
 #include "mozilla/Services.h"
 #include "xpcpublic.h"

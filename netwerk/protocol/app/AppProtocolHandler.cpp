@@ -10,9 +10,8 @@
 #include "nsNetCID.h"
 #include "nsIAppsService.h"
 #include "nsILoadInfo.h"
+#include "nsCxPusher.h"
 #include "nsXULAppAPI.h"
-
-#include "mozilla/dom/ScriptSettings.h"
 
 /**
   * This dummy channel implementation only provides enough functionality

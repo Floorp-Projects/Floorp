@@ -33,6 +33,7 @@
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 
+#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsThreadUtils.h"

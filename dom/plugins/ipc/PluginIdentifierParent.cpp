@@ -9,6 +9,7 @@
 #include "nsNPAPIPlugin.h"
 #include "nsServiceManagerUtils.h"
 #include "PluginScriptableObjectUtils.h"
+#include "nsCxPusher.h"
 #include "mozilla/unused.h"
 
 using namespace mozilla::plugins::parent;

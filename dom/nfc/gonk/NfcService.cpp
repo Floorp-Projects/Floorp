@@ -9,6 +9,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "nsAutoPtr.h"
+#include "nsCxPusher.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
 #include "NfcOptions.h"

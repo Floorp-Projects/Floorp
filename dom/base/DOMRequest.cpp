@@ -7,6 +7,7 @@
 #include "DOMRequest.h"
 
 #include "DOMError.h"
+#include "nsCxPusher.h"
 #include "nsThreadUtils.h"
 #include "DOMCursor.h"
 #include "nsIDOMEvent.h"

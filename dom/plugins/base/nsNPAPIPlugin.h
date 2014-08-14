@@ -10,7 +10,8 @@
 #include "npfunctions.h"
 #include "nsPluginHost.h"
 
-#include "mozilla/dom/ScriptSettings.h"
+#include "nsCxPusher.h"
+
 #include "mozilla/PluginLibrary.h"
 
 #if defined(XP_WIN)
