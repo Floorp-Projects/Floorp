@@ -11798,7 +11798,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         // so that whatever popup blocker UI the app has will be visible.
         if (mContext == GetScriptContextFromJSContext(aJSCallerContext)) {
           mBlockScriptedClosingFlag = true;
-          closeUnblocker.construct(this);
+          closeUnblocker.emplace(this);
         }
       }
 
@@ -11847,7 +11847,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       // arguments. That whole setup just really needs to be rewritten. :-(
       Maybe<AutoNoJSAPI> nojsapi;
       if (!aContentModal) {
-        nojsapi.construct();
+        nojsapi.emplace();
       }
 
 

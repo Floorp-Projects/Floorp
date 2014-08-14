@@ -26,7 +26,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPrivate)
-  DrawEventRecorderPrivate(std::ostream *aStream);
+  explicit DrawEventRecorderPrivate(std::ostream *aStream);
   virtual ~DrawEventRecorderPrivate() { }
 
   void RecordEvent(const RecordedEvent &aEvent);
@@ -66,7 +66,7 @@ class DrawEventRecorderFile : public DrawEventRecorderPrivate
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderFile)
-  DrawEventRecorderFile(const char *aFilename);
+  explicit DrawEventRecorderFile(const char *aFilename);
   ~DrawEventRecorderFile();
 
 private:

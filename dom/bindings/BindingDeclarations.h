@@ -106,63 +106,61 @@ public:
 
   explicit Optional_base(const T& aValue)
   {
-    mImpl.construct(aValue);
+    mImpl.emplace(aValue);
   }
 
   template<typename T1, typename T2>
   explicit Optional_base(const T1& aValue1, const T2& aValue2)
   {
-    mImpl.construct(aValue1, aValue2);
+    mImpl.emplace(aValue1, aValue2);
   }
 
   bool WasPassed() const
   {
-    return !mImpl.empty();
+    return mImpl.isSome();
   }
 
   // Return InternalType here so we can work with it usefully.
   InternalType& Construct()
   {
-    mImpl.construct();
-    return mImpl.ref();
+    mImpl.emplace();
+    return *mImpl;
   }
 
   template <class T1>
   InternalType& Construct(const T1 &t1)
   {
-    mImpl.construct(t1);
-    return mImpl.ref();
+    mImpl.emplace(t1);
+    return *mImpl;
   }
 
   template <class T1, class T2>
   InternalType& Construct(const T1 &t1, const T2 &t2)
   {
-    mImpl.construct(t1, t2);
-    return mImpl.ref();
+    mImpl.emplace(t1, t2);
+    return *mImpl;
   }
 
   void Reset()
   {
-    if (WasPassed()) {
-      mImpl.destroy();
-    }
+    mImpl.reset();
   }
 
   const T& Value() const
   {
-    return mImpl.ref();
+    return *mImpl;
   }
 
   // Return InternalType here so we can work with it usefully.
   InternalType& Value()
   {
-    return mImpl.ref();
+    return *mImpl;
   }
 
   // And an explicit way to get the InternalType even if we're const.
   const InternalType& InternalValue() const
   {
-    return mImpl.ref();
+    return *mImpl;
   }
 
   // If we ever decide to add conversion operators for optional arrays
@@ -214,14 +212,14 @@ public:
   // returning references to temporaries.
   JS::Handle<T> Value() const
   {
-    return this->mImpl.ref();
+    return *this->mImpl;
   }
 
   // And we have to override the non-const one too, since we're
   // shadowing the one on the superclass.
   JS::Rooted<T>& Value()
   {
-    return this->mImpl.ref();
+    return *this->mImpl;
   }
 };
 
@@ -277,14 +275,14 @@ public:
   // types...
   T& Value() const
   {
-    return *this->mImpl.ref().get();
+    return *this->mImpl->get();
   }
 
   // And we have to override the non-const one too, since we're
   // shadowing the one on the superclass.
   NonNull<T>& Value()
   {
-    return this->mImpl.ref();
+    return *this->mImpl;
   }
 };
 
@@ -299,14 +297,14 @@ public:
   // types...
   T& Value() const
   {
-    return *this->mImpl.ref().get();
+    return *this->mImpl->get();
   }
 
   // And we have to override the non-const one too, since we're
   // shadowing the one on the superclass.
   OwningNonNull<T>& Value()
   {
-    return this->mImpl.ref();
+    return *this->mImpl;
   }
 };
 

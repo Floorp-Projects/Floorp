@@ -29,7 +29,7 @@ struct GradientCacheKey : public PLDHashEntryHdr {
     : mStops(aStops), mExtend(aExtend), mBackendType(aBackendType)
   { }
 
-  GradientCacheKey(const GradientCacheKey* aOther)
+  explicit GradientCacheKey(const GradientCacheKey* aOther)
     : mStops(aOther->mStops), mExtend(aOther->mExtend), mBackendType(aOther->mBackendType)
   { }
 

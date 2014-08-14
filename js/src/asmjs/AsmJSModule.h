@@ -527,7 +527,7 @@ class AsmJSModule
         RelativeLink()
         { }
 
-        RelativeLink(Kind kind)
+        explicit RelativeLink(Kind kind)
         {
 #if defined(JS_CODEGEN_MIPS)
             kind_ = kind;

@@ -571,7 +571,6 @@ function StorageOfTypedObject(obj) {
   }
 
   ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  return null; // pacify silly "always returns a value" lint
 }
 
 // This is the `objectType()` function defined in the spec.
@@ -617,9 +616,9 @@ function TypedObjectArrayTypeBuild(a,b,c) {
     else if (typeof a === "number" && typeof b === "function")
       return BuildTypedSeqImpl(this, this.length, a, b);
     else if (typeof a === "number")
-      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+      ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
     else
-      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+      ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
     var len = a;
     if (typeof b === "function")
@@ -627,11 +626,11 @@ function TypedObjectArrayTypeBuild(a,b,c) {
     else if (typeof b === "number" && typeof c === "function")
       return BuildTypedSeqImpl(this, len, b, c);
     else if (typeof b === "number")
-      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+      ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
     else
-      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+      ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   default:
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 }
 
@@ -656,7 +655,7 @@ function TypedObjectArrayTypeFrom(a, b, c) {
     else if (IsCallable(b))
       return MapUntypedSeqImpl(a, this, b);
     else
-      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+      ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   } else {
     var explicitDepth = (typeof b === "number");
     if (explicitDepth && IsCallable(c))
@@ -664,26 +663,26 @@ function TypedObjectArrayTypeFrom(a, b, c) {
     else if (IsCallable(b))
       return MapTypedSeqImpl(a, 1, this, b);
     else if (explicitDepth)
-      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+      ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
     else
-      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+      ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 }
 
 // Warning: user exposed!
 function TypedArrayMap(a, b) {
   if (!IsObject(this) || !ObjectIsTypedObject(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = TypedObjectTypeDescr(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   // Arguments: [depth], func
   if (typeof a === "number" && typeof b === "function")
     return MapTypedSeqImpl(this, a, thisType, b);
   else if (typeof a === "function")
     return MapTypedSeqImpl(this, 1, thisType, a);
-  return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+  ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 }
 
 // Warning: user exposed!
@@ -709,13 +708,13 @@ function TypedArrayMapPar(a, b) {
 function TypedArrayReduce(a, b) {
   // Arguments: func, [initial]
   if (!IsObject(this) || !ObjectIsTypedObject(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = TypedObjectTypeDescr(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (a !== undefined && typeof a !== "function")
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   var outputType = thisType.elementType;
   return ReduceTypedSeqImpl(this, outputType, a, b);
@@ -725,16 +724,16 @@ function TypedArrayReduce(a, b) {
 function TypedArrayScatter(a, b, c, d) {
   // Arguments: outputArrayType, indices, defaultValue, conflictFunction
   if (!IsObject(this) || !ObjectIsTypedObject(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = TypedObjectTypeDescr(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (!IsObject(a) || !ObjectIsTypeDescr(a) || !TypeDescrIsSizedArrayType(a))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (d !== undefined && typeof d !== "function")
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   return ScatterTypedSeqImpl(this, a, b, c, d);
 }
@@ -743,13 +742,13 @@ function TypedArrayScatter(a, b, c, d) {
 function TypedArrayFilter(func) {
   // Arguments: predicate
   if (!IsObject(this) || !ObjectIsTypedObject(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = TypedObjectTypeDescr(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (typeof func !== "function")
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   return FilterTypedSeqImpl(this, func);
 }

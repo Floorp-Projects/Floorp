@@ -41,7 +41,7 @@ UserDataKey gfxContext::sDontUseAsSourceKey;
 class GeneralPattern
 {
 public:    
-  GeneralPattern(gfxContext *aContext) : mContext(aContext), mPattern(nullptr) {}
+  explicit GeneralPattern(gfxContext *aContext) : mContext(aContext), mPattern(nullptr) {}
   ~GeneralPattern() { if (mPattern) { mPattern->~Pattern(); } }
 
   operator mozilla::gfx::Pattern&()

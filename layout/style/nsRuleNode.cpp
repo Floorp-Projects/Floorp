@@ -2595,8 +2595,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     if (parentContext) {                                                      \
       parentdata_ = parentContext->Style##type_();                            \
     } else {                                                                  \
-      maybeFakeParentData.construct ctorargs_;                                \
-      parentdata_ = maybeFakeParentData.addr();                               \
+      maybeFakeParentData.emplace ctorargs_;                                  \
+      parentdata_ = maybeFakeParentData.ptr();                                \
     }                                                                         \
   }                                                                           \
   if (aStartStruct)                                                           \
@@ -2608,7 +2608,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {     \
       /* No question. We will have to inherit. Go ahead and init */           \
       /* with inherited vals from parent. */                                  \
-      canStoreInRuleTree = false;                                          \
+      canStoreInRuleTree = false;                                             \
       if (parentdata_)                                                        \
         data_ = new (mPresContext) nsStyle##type_(*parentdata_);              \
       else                                                                    \
@@ -2663,8 +2663,8 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     if (parentContext) {                                                      \
       parentdata_ = parentContext->Style##type_();                            \
     } else {                                                                  \
-      maybeFakeParentData.construct ctorargs_;                                \
-      parentdata_ = maybeFakeParentData.addr();                               \
+      maybeFakeParentData.emplace ctorargs_;                                  \
+      parentdata_ = maybeFakeParentData.ptr();                                \
     }                                                                         \
   }                                                                           \
   bool canStoreInRuleTree = aCanStoreInRuleTree;

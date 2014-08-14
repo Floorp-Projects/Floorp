@@ -186,11 +186,9 @@ LoginManager.prototype = {
                     log("Oops! Pref not handled, change ignored.");
                 }
             } else if (topic == "xpcom-shutdown") {
-                for (let i in this._pwmgr) {
-                  try {
-                    this._pwmgr[i] = null;
-                  } catch(ex) {}
-                }
+                delete this._pwmgr.__formFillService;
+                delete this._pwmgr._storage;
+                delete this._pwmgr._prefBranch;
                 this._pwmgr = null;
             } else if (topic == "passwordmgr-storage-replace") {
                 Task.spawn(function () {
