@@ -20,7 +20,6 @@
 #include "gc/Marking.h"
 #include "jit/JitCompartment.h"
 #include "js/RootingAPI.h"
-#include "vm/Debugger.h"
 #include "vm/StopIterationObject.h"
 #include "vm/WrapperObject.h"
 
