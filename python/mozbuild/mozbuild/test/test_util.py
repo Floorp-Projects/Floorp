@@ -370,6 +370,13 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
         with self.assertRaises(AttributeError):
             l['b'].baz = False
 
+        l['b'].update(foo=False, bar=12)
+        self.assertEqual(l['b'].foo, False)
+        self.assertEqual(l['b'].bar, 12)
+
+        with self.assertRaises(AttributeError):
+            l['b'].update(xyz=1)
+
 
 class TestHierarchicalStringListWithFlagsFactory(unittest.TestCase):
     def test_hierarchical_string_list_with_flags_factory(self):
