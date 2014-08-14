@@ -8,6 +8,9 @@
 let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Toast",
+                                  "resource://gre/modules/Toast.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications",
                                   "resource://gre/modules/Notifications.jsm");
 
@@ -258,10 +261,11 @@ AlertDownloadProgressListener.prototype = {
       case Ci.nsIDownloadManager.DOWNLOAD_QUEUED: {
         if (BrowserApp.isGuest) {
           aDownload.cancel();
-          NativeWindow.toast.show(Strings.browser.GetStringFromName("downloads.disabledInGuest"), "long");
+          Toast.show(Strings.browser.GetStringFromName("downloads.disabledInGuest"), Toast.LONG);
           return;
         }
-        NativeWindow.toast.show(Strings.browser.GetStringFromName("alertDownloadsToast"), "long");
+
+        Toast.show(Strings.browser.GetStringFromName("alertDownloadsToast"), Toast.LONG);
         Downloads.createNotification(aDownload, new DownloadNotifOptions(aDownload,
                                                                          Strings.browser.GetStringFromName("alertDownloadsStart2"),
                                                                          aDownload.displayName));
