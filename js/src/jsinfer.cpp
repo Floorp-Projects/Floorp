@@ -4390,7 +4390,8 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     }
 
     {
-        gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_DISCARD_TI);
+        gcstats::MaybeAutoPhase ap2(rt->gc.stats, !rt->isHeapCompacting(),
+                                    gcstats::PHASE_DISCARD_TI);
 
         for (ZoneCellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
@@ -4421,7 +4422,8 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     }
 
     {
-        gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_SWEEP_TYPES);
+        gcstats::MaybeAutoPhase ap2(rt->gc.stats, !rt->isHeapCompacting(),
+                                    gcstats::PHASE_SWEEP_TYPES);
 
         for (gc::ZoneCellIterUnderGC iter(zone(), gc::FINALIZE_TYPE_OBJECT);
              !iter.done(); iter.next())
@@ -4449,7 +4451,8 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     }
 
     {
-        gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_FREE_TI_ARENA);
+        gcstats::MaybeAutoPhase ap2(rt->gc.stats, !rt->isHeapCompacting(),
+                                    gcstats::PHASE_FREE_TI_ARENA);
         rt->freeLifoAlloc.transferFrom(&oldAlloc);
     }
 }
