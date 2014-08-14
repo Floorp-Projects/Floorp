@@ -881,7 +881,6 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 .urlbar-icon {
-  cursor: pointer;
   padding: 0 3px;
 }
 
@@ -1524,7 +1523,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #urlbar > toolbarbutton {
   -moz-appearance: none;
   padding: 0 2px;
-  cursor: pointer;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
 }
 
