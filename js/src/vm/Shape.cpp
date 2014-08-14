@@ -1542,8 +1542,9 @@ BaseShape::assertConsistency()
 void
 JSCompartment::sweepBaseShapeTable()
 {
-    gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
-                          gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
+    GCRuntime &gc = runtimeFromMainThread()->gc;
+    gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
+                               gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
 
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
@@ -1839,8 +1840,9 @@ EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleOb
 void
 JSCompartment::sweepInitialShapeTable()
 {
-    gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
-                          gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
+    GCRuntime &gc = runtimeFromMainThread()->gc;
+    gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
+                               gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
 
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
