@@ -4388,7 +4388,7 @@ GCRuntime::sweepPhase(SliceBudget &sliceBudget)
 }
 
 void
-GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
+GCRuntime::endSweepPhase(bool lastGC)
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
     FreeOp fop(rt);
@@ -4460,7 +4460,7 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
              * Expire needs to unlock it for other callers.
              */
             AutoLockGC lock(rt);
-            expireChunksAndArenas(gckind == GC_SHRINK);
+            expireChunksAndArenas(invocationKind == GC_SHRINK);
         }
     }
 
@@ -4502,7 +4502,8 @@ GCRuntime::endSweepPhase(JSGCInvocationKind gckind, bool lastGC)
     schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->threshold.updateAfterGC(zone->usage.gcBytes(), gckind, tunables, schedulingState);
+        zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
+                                      schedulingState);
         if (zone->isCollecting()) {
             JS_ASSERT(zone->isGCFinished());
             zone->setGCState(Zone::NoGC);
@@ -4653,7 +4654,7 @@ GCRuntime::resetIncrementalGC(const char *reason)
 
         /* Finish sweeping the current zone group, then abort. */
         abortSweepAfterCurrentGroup = true;
-        incrementalCollectSlice(SliceBudget::Unlimited, JS::gcreason::RESET, GC_NORMAL);
+        incrementalCollectSlice(SliceBudget::Unlimited, JS::gcreason::RESET);
 
         {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
@@ -4751,8 +4752,7 @@ GCRuntime::pushZealSelectedObjects()
 
 void
 GCRuntime::incrementalCollectSlice(int64_t budget,
-                                   JS::gcreason::Reason reason,
-                                   JSGCInvocationKind gckind)
+                                   JS::gcreason::Reason reason)
 {
     JS_ASSERT(rt->currentThreadHasExclusiveAccess());
 
@@ -4865,10 +4865,10 @@ GCRuntime::incrementalCollectSlice(int64_t budget,
         if (!finished)
             break;
 
-        endSweepPhase(gckind, lastGC);
+        endSweepPhase(lastGC);
 
         if (sweepOnBackgroundThread)
-            helperState.startBackgroundSweep(gckind == GC_SHRINK);
+            helperState.startBackgroundSweep(invocationKind == GC_SHRINK);
 
         incrementalState = NO_INCREMENTAL;
         break;
@@ -5031,7 +5031,11 @@ GCRuntime::gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
 
     TraceMajorGCStart();
 
-    incrementalCollectSlice(budget, reason, gckind);
+    /* Set the invocation kind in the first slice. */
+    if (incrementalState == NO_INCREMENTAL)
+        invocationKind = gckind;
+
+    incrementalCollectSlice(budget, reason);
 
 #ifndef JS_MORE_DETERMINISTIC
     nextFullGCTime = PRMJ_Now() + GC_IDLE_FULL_SPAN;
