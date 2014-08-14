@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Drop Shadow Default Color</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-drop-shadow">
+  <link rel="help" href="http://www.w3.org/TR/css3-background/#the-box-shadow">
+  <link rel="match" href="drop-shadow-default-color-ref.html">
+  <meta name="assert"
+        content="If the color is unspecified in a CSS drop-shadow filter
+                 function, it should default to the value of the CSS color
+                 property.">
+  <style type="text/css">
+    #target {
+      filter: drop-shadow(10px 10px 3px);
+      color: #0f0;
+      background-color: #00f;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blue square with a green drop shadow.</p>
+  <div id="target"></div>
+</body>
+</html>
