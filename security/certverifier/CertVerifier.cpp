@@ -372,8 +372,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
     case certificateUsageVerifyCA:
     case certificateUsageStatusResponder: {
       // XXX This is a pretty useless way to verify a certificate. It is used
-      // by the implementation of window.crypto.importCertificates and in the
-      // certificate viewer UI. Because we don't know what trust bit is
+      // by the certificate viewer UI. Because we don't know what trust bit is
       // interesting, we just try them all.
       mozilla::pkix::EndEntityOrCA endEntityOrCA;
       mozilla::pkix::KeyUsage keyUsage;

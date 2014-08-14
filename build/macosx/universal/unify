@@ -1395,7 +1395,7 @@ sub readZipCRCs($) {
     if ($$this{'magicInit'}) {
       if (defined($$this{'magicErrno'})) {
         if (defined($$this{'magicErrMsg'})) {
-          complain(1, 'FileAttrCache::magic: '.$$this{'magicErrMsg'}.' for:',
+          main::complain(1, 'FileAttrCache::magic: '.$$this{'magicErrMsg'}.' for:',
                    $$this{'path'});
         }
         $! = $$this{'magicErrno'};
@@ -1409,7 +1409,7 @@ sub readZipCRCs($) {
     if (!sysopen($fh, $$this{'path'}, O_RDONLY)) {
       $$this{'magicErrno'} = $!;
       $$this{'magicErrMsg'} = 'open "'.$$this{'path'}.'": '.$!;
-      complain(1, 'FileAttrCache::magic: '.$$this{'magicErrMsg'}.' for:',
+      main::complain(1, 'FileAttrCache::magic: '.$$this{'magicErrMsg'}.' for:',
                $$this{'path'});
       return undef;
     }
@@ -1419,7 +1419,7 @@ sub readZipCRCs($) {
     if (!defined($bytes = sysread($fh, $magic, 4))) {
       $$this{'magicErrno'} = $!;
       $$this{'magicErrMsg'} = 'read "'.$$this{'path'}.'": '.$!;
-      complain(1, 'FileAttrCache::magic: '.$$this{'magicErrMsg'}.' for:',
+      main::complain(1, 'FileAttrCache::magic: '.$$this{'magicErrMsg'}.' for:',
                $$this{'path'});
       close($fh);
       return undef;

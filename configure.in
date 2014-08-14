@@ -1992,7 +1992,10 @@ ia64*-hpux*)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions"
+    MOZ_OPTIMIZE_FLAGS="-Os -fno-reorder-functions"
+    if test -z "$CLANG_CC"; then
+       MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+    fi
     ;;
 
 *-*linux*)
@@ -2009,7 +2012,10 @@ ia64*-hpux*)
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-Os $MOZ_OPTIMIZE_SIZE_TWEAK"
+        if test -z "$CLANG_CC"; then
+           MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+        fi
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -3779,7 +3785,7 @@ MOZ_WMF=
 if test -n "$MOZ_FMP4"; then
   MOZ_FMP4=1
 else
-  MOZ_FMP4 =
+  MOZ_FMP4=
 fi
 MOZ_EME=1
 MOZ_FFMPEG=
@@ -3826,7 +3832,7 @@ MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
 MOZ_PDF_PRINTING=
-MOZ_DISABLE_CRYPTOLEGACY=
+MOZ_NO_SMART_CARDS=
 NSS_DISABLE_DBM=
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about app data file ftp http res viewsource websocket wyciwyg device"
@@ -6342,12 +6348,12 @@ fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
 
 dnl ========================================================
-dnl = Disable DOMCrypto
+dnl = Disable smartcard support
 dnl ========================================================
-if test -n "$MOZ_DISABLE_CRYPTOLEGACY"; then
-    AC_DEFINE(MOZ_DISABLE_CRYPTOLEGACY)
+if test -n "$MOZ_NO_SMART_CARDS"; then
+    AC_DEFINE(MOZ_NO_SMART_CARDS)
 fi
-AC_SUBST(MOZ_DISABLE_CRYPTOLEGACY)
+AC_SUBST(MOZ_NO_SMART_CARDS)
 
 dnl ========================================================
 dnl = Disable EV certificate verification
