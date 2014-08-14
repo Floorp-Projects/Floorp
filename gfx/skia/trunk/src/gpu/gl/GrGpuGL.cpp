@@ -567,7 +567,7 @@ bool GrGpuGL::uploadTexData(const GrGLTexture::Desc& desc,
     size_t trimRowBytes = width * bpp;
 
     // in case we need a temporary, trimmed copy of the src pixels
-    SkAutoSMalloc<128 * 128> tempStorage;
+    GrAutoMalloc<128 * 128> tempStorage;
 
     // paletted textures cannot be partially updated
     // We currently lazily create MIPMAPs when the we see a draw with
@@ -1674,7 +1674,7 @@ bool GrGpuGL::onReadPixels(GrRenderTarget* target,
 
     // determine if GL can read using the passed rowBytes or if we need
     // a scratch buffer.
-    SkAutoSMalloc<32 * sizeof(GrColor)> scratch;
+    GrAutoMalloc<32 * sizeof(GrColor)> scratch;
     if (rowBytes != tightRowBytes) {
         if (this->glCaps().packRowLengthSupport()) {
             SkASSERT(!(rowBytes % sizeof(GrColor)));

@@ -29,7 +29,7 @@ public:
     , mDT(nullptr)
   { }
 
-  BorrowedCairoContext(DrawTarget *aDT)
+  explicit BorrowedCairoContext(DrawTarget *aDT)
     : mDT(aDT)
   {
     mCairo = BorrowCairoContextFromDrawTarget(aDT);
@@ -84,7 +84,7 @@ public:
     , mDT(nullptr)
   { }
 
-  BorrowedCGContext(DrawTarget *aDT)
+  explicit BorrowedCGContext(DrawTarget *aDT)
     : mDT(aDT)
   {
     cg = BorrowCGContextFromDrawTarget(aDT);

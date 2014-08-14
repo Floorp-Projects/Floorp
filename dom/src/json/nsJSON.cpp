@@ -181,7 +181,7 @@ nsJSON::EncodeFromJSVal(JS::Value *value, JSContext *cx, nsAString &result)
   mozilla::Maybe<JSAutoCompartment> ac;
   if (value->isObject()) {
     JS::Rooted<JSObject*> obj(cx, &value->toObject());
-    ac.construct(cx, obj);
+    ac.emplace(cx, obj);
   }
 
   nsJSONWriter writer;

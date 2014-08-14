@@ -108,7 +108,7 @@ public:
   static bool SetUpTestCaseInner()
   {
     ScopedSECKEYPublicKey rootPublicKey;
-    if (GenerateKeyPair(rootPublicKey, rootPrivateKey) != SECSuccess) {
+    if (GenerateKeyPair(rootPublicKey, rootPrivateKey) != Success) {
       return false;
     }
     rootSPKI = SECKEY_EncodeDERSubjectPublicKeyInfo(rootPublicKey.get());
@@ -490,8 +490,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
 {
   ScopedSECKEYPublicKey missingSignerPublicKey;
   ScopedSECKEYPrivateKey missingSignerPrivateKey;
-  ASSERT_SECSuccess(GenerateKeyPair(missingSignerPublicKey,
-                                    missingSignerPrivateKey));
+  ASSERT_EQ(Success, GenerateKeyPair(missingSignerPublicKey,
+                                     missingSignerPrivateKey));
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID, byKey,
                          missingSignerPrivateKey, pr_oneDayBeforeNow,
@@ -509,8 +509,8 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
 {
   ScopedSECKEYPublicKey missingSignerPublicKey;
   ScopedSECKEYPrivateKey missingSignerPrivateKey;
-  ASSERT_SECSuccess(GenerateKeyPair(missingSignerPublicKey,
-                                    missingSignerPrivateKey));
+  ASSERT_EQ(Success, GenerateKeyPair(missingSignerPublicKey,
+                                     missingSignerPrivateKey));
   Input response(CreateEncodedOCSPSuccessfulResponse(
                          OCSPResponseContext::good, *endEntityCertID,
                          "CN=missing", missingSignerPrivateKey,
@@ -632,9 +632,10 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_tampered_eku)
   static const uint8_t EKU_OCSP_SIGNER[] = { EKU_PREFIX, 0x09 }; // OCSPSigning
 #undef EKU_PREFIX
   SECItem responseSECItem = UnsafeMapInputToSECItem(response);
-  ASSERT_SECSuccess(TamperOnce(responseSECItem,
-                               EKU_SERVER_AUTH, PR_ARRAY_SIZE(EKU_SERVER_AUTH),
-                               EKU_OCSP_SIGNER, PR_ARRAY_SIZE(EKU_OCSP_SIGNER)));
+  ASSERT_EQ(Success,
+            TamperOnce(responseSECItem,
+                       EKU_SERVER_AUTH, PR_ARRAY_SIZE(EKU_SERVER_AUTH),
+                       EKU_OCSP_SIGNER, PR_ARRAY_SIZE(EKU_OCSP_SIGNER)));
 
   bool expired;
   ASSERT_EQ(Result::ERROR_OCSP_INVALID_SIGNING_CERT,
@@ -652,7 +653,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
   // unknown issuer
   ScopedSECKEYPublicKey unknownPublicKey;
   ScopedSECKEYPrivateKey unknownPrivateKey;
-  ASSERT_SECSuccess(GenerateKeyPair(unknownPublicKey, unknownPrivateKey));
+  ASSERT_EQ(Success, GenerateKeyPair(unknownPublicKey, unknownPrivateKey));
 
   // Delegated responder cert signed by unknown issuer
   static const SECOidTag signerEKU = SEC_OID_OCSP_RESPONDER;
