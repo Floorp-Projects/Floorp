@@ -592,7 +592,9 @@ static const uint32_t EnabledCiphers[] = {
   TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
 };
 
-// Disalbe all NSS suites modes without PFS or with old and rusty ciphersuites.
+// Don't remove suites; TODO(mt@mozilla.com) restore; bug 1052610
+#if 0
+// Disable all NSS suites modes without PFS or with old and rusty ciphersuites.
 // Anything outside this list is governed by the usual combination of policy
 // and user preferences.
 static const uint32_t DisabledCiphers[] = {
@@ -647,6 +649,7 @@ static const uint32_t DisabledCiphers[] = {
   TLS_RSA_WITH_NULL_SHA256,
   TLS_RSA_WITH_NULL_MD5,
 };
+#endif // bug 1052610
 
 bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
   SECStatus rv;
