@@ -84,7 +84,7 @@ struct BreadthFirst {
     // We do nothing with noGC, other than require it to exist, with a lifetime
     // that encloses our own.
     BreadthFirst(JSContext *cx, Handler &handler, const JS::AutoCheckCannotGC &noGC)
-      : cx(cx), visited(cx), handler(handler), pending(cx),
+      : wantNames(true), cx(cx), visited(cx), handler(handler), pending(cx),
         traversalBegun(false), stopRequested(false), abandonRequested(false)
     { }
 
@@ -94,6 +94,10 @@ struct BreadthFirst {
     // Add |node| as a starting point for the traversal. You may add
     // as many starting points as you like. Return false on OOM.
     bool addStart(Node node) { return pending.append(node); }
+
+    // True if the handler wants us to compute edge names; doing so can be
+    // expensive in time and memory. True by default.
+    bool wantNames;
 
     // Traverse the graph in breadth-first order, starting at the given
     // start nodes, applying |handler::operator()| for each edge traversed
@@ -113,7 +117,7 @@ struct BreadthFirst {
             pending.popFront();
 
             // Get a range containing all origin's outgoing edges.
-            js::ScopedJSDeletePtr<EdgeRange> range(origin.edges(cx));
+            js::ScopedJSDeletePtr<EdgeRange> range(origin.edges(cx, wantNames));
             if (!range)
                 return false;
 
