@@ -9,38 +9,12 @@
 
 #include "jsapi.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsCOMPtr.h"
 
 class nsIScriptContext;
 
 namespace mozilla {
-
-/**
- * Fundamental cx pushing class. All other cx pushing classes are implemented
- * in terms of this class.
- */
-class MOZ_STACK_CLASS AutoCxPusher
-{
-public:
-  explicit AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
-  ~AutoCxPusher();
-
-  nsIScriptContext* GetScriptContext() { return mScx; }
-
-  // Returns true if this AutoCxPusher performed the push that is currently at
-  // the top of the cx stack.
-  bool IsStackTop() const;
-
-private:
-  mozilla::Maybe<JSAutoRequest> mAutoRequest;
-  mozilla::Maybe<JSAutoCompartment> mAutoCompartment;
-  nsCOMPtr<nsIScriptContext> mScx;
-  uint32_t mStackDepthAfterPush;
-#ifdef DEBUG
-  JSContext* mPushedContext;
-  unsigned mCompartmentDepthOnEntry;
-#endif
-};
 
 /**
  * Use AutoJSContext when you need a JS context on the stack but don't have one
@@ -61,7 +35,7 @@ protected:
   void Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
   JSContext* mCx;
-  Maybe<AutoCxPusher> mPusher;
+  Maybe<mozilla::dom::danger::AutoCxPusher> mPusher;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
