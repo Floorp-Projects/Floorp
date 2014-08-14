@@ -218,3 +218,6 @@ user_pref("browser.translation.bing.translateArrayURL", "http://%(server)s/brows
 
 // Enable debug logging in the mozApps implementation.
 user_pref("dom.mozApps.debug", true);
+
+// Enable Loop
+user_pref("loop.enabled", true);
