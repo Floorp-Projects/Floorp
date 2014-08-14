@@ -1031,7 +1031,7 @@ class js::gc::AutoMaybeStartBackgroundAllocation
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
-    AutoMaybeStartBackgroundAllocation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+    explicit AutoMaybeStartBackgroundAllocation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
       : runtime(nullptr)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -2237,7 +2237,7 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
             mozilla::Maybe<AutoLockHelperThreadState> lock;
             JSRuntime *rt = zone->runtimeFromAnyThread();
             if (rt->exclusiveThreadsPresent()) {
-                lock.construct();
+                lock.emplace();
                 while (rt->isHeapBusy())
                     HelperThreadState().wait(GlobalHelperThreadState::PRODUCER);
             }
@@ -2529,7 +2529,7 @@ GCRuntime::decommitArenasFromAvailableList(Chunk **availableListHeadp)
                  */
                 Maybe<AutoUnlockGC> maybeUnlock;
                 if (!isHeapBusy())
-                    maybeUnlock.construct(rt);
+                    maybeUnlock.emplace(rt);
                 ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
             }
 

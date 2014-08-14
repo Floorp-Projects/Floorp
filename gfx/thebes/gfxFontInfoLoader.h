@@ -192,7 +192,7 @@ protected:
         NS_DECL_ISUPPORTS
         NS_DECL_NSIOBSERVER
 
-        ShutdownObserver(gfxFontInfoLoader *aLoader)
+        explicit ShutdownObserver(gfxFontInfoLoader *aLoader)
             : mLoader(aLoader)
         { }
 

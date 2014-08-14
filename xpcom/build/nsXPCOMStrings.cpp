@@ -12,10 +12,10 @@
 /* ------------------------------------------------------------------------- */
 
 XPCOM_API(nsresult)
-NS_StringContainerInit(nsStringContainer &aContainer)
+NS_StringContainerInit(nsStringContainer& aContainer)
 {
   NS_ASSERTION(sizeof(nsStringContainer_base) >= sizeof(nsString),
-      "nsStringContainer is not large enough");
+               "nsStringContainer is not large enough");
 
   // use placement new to avoid heap allocating nsString object
   new (&aContainer) nsString();
@@ -24,44 +24,40 @@ NS_StringContainerInit(nsStringContainer &aContainer)
 }
 
 XPCOM_API(nsresult)
-NS_StringContainerInit2(nsStringContainer &aContainer,
-                        const char16_t   *aData,
-                        uint32_t           aDataLength,
-                        uint32_t           aFlags)
+NS_StringContainerInit2(nsStringContainer& aContainer,
+                        const char16_t* aData,
+                        uint32_t aDataLength,
+                        uint32_t aFlags)
 {
   NS_ASSERTION(sizeof(nsStringContainer_base) >= sizeof(nsString),
-      "nsStringContainer is not large enough");
+               "nsStringContainer is not large enough");
 
-  if (!aData)
-  {
+  if (!aData) {
     new (&aContainer) nsString();
-  }
-  else
-  {
-    if (aDataLength == UINT32_MAX)
-    {
-      if (NS_WARN_IF(aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING))
-	return NS_ERROR_INVALID_ARG;
+  } else {
+    if (aDataLength == UINT32_MAX) {
+      if (NS_WARN_IF(aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING)) {
+        return NS_ERROR_INVALID_ARG;
+      }
       aDataLength = nsCharTraits<char16_t>::length(aData);
     }
 
     if (aFlags & (NS_STRING_CONTAINER_INIT_DEPEND |
-                  NS_STRING_CONTAINER_INIT_ADOPT))
-    {
+                  NS_STRING_CONTAINER_INIT_ADOPT)) {
       uint32_t flags;
-      if (aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING)
+      if (aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING) {
         flags = nsSubstring::F_NONE;
-      else
+      } else {
         flags = nsSubstring::F_TERMINATED;
+      }
 
-      if (aFlags & NS_STRING_CONTAINER_INIT_ADOPT)
+      if (aFlags & NS_STRING_CONTAINER_INIT_ADOPT) {
         flags |= nsSubstring::F_OWNED;
+      }
 
-      new (&aContainer) nsSubstring(const_cast<char16_t *>(aData),
+      new (&aContainer) nsSubstring(const_cast<char16_t*>(aData),
                                     aDataLength, flags);
-    }
-    else
-    {
+    } else {
       new (&aContainer) nsString(aData, aDataLength);
     }
   }
@@ -70,20 +66,21 @@ NS_StringContainerInit2(nsStringContainer &aContainer,
 }
 
 XPCOM_API(void)
-NS_StringContainerFinish(nsStringContainer &aContainer)
+NS_StringContainerFinish(nsStringContainer& aContainer)
 {
   // call the nsString dtor
-  reinterpret_cast<nsString *>(&aContainer)->~nsString();
+  reinterpret_cast<nsString*>(&aContainer)->~nsString();
 }
 
 /* ------------------------------------------------------------------------- */
 
 XPCOM_API(uint32_t)
-NS_StringGetData(const nsAString &aStr, const char16_t **aData,
-                 bool *aTerminated)
+NS_StringGetData(const nsAString& aStr, const char16_t** aData,
+                 bool* aTerminated)
 {
-  if (aTerminated)
+  if (aTerminated) {
     *aTerminated = aStr.IsTerminated();
+  }
 
   nsAString::const_iterator begin;
   aStr.BeginReading(begin);
@@ -92,8 +89,8 @@ NS_StringGetData(const nsAString &aStr, const char16_t **aData,
 }
 
 XPCOM_API(uint32_t)
-NS_StringGetMutableData(nsAString &aStr, uint32_t aDataLength,
-                        char16_t **aData)
+NS_StringGetMutableData(nsAString& aStr, uint32_t aDataLength,
+                        char16_t** aData)
 {
   if (aDataLength != UINT32_MAX) {
     aStr.SetLength(aDataLength);
@@ -109,63 +106,64 @@ NS_StringGetMutableData(nsAString &aStr, uint32_t aDataLength,
   return begin.size_forward();
 }
 
-XPCOM_API(char16_t *)
-NS_StringCloneData(const nsAString &aStr)
+XPCOM_API(char16_t*)
+NS_StringCloneData(const nsAString& aStr)
 {
   return ToNewUnicode(aStr);
 }
 
 XPCOM_API(nsresult)
-NS_StringSetData(nsAString &aStr, const char16_t *aData, uint32_t aDataLength)
+NS_StringSetData(nsAString& aStr, const char16_t* aData, uint32_t aDataLength)
 {
   aStr.Assign(aData, aDataLength);
   return NS_OK; // XXX report errors
 }
 
 XPCOM_API(nsresult)
-NS_StringSetDataRange(nsAString &aStr,
+NS_StringSetDataRange(nsAString& aStr,
                       uint32_t aCutOffset, uint32_t aCutLength,
-                      const char16_t *aData, uint32_t aDataLength)
+                      const char16_t* aData, uint32_t aDataLength)
 {
-  if (aCutOffset == UINT32_MAX)
-  {
+  if (aCutOffset == UINT32_MAX) {
     // append case
-    if (aData)
+    if (aData) {
       aStr.Append(aData, aDataLength);
+    }
     return NS_OK; // XXX report errors
   }
 
-  if (aCutLength == UINT32_MAX)
+  if (aCutLength == UINT32_MAX) {
     aCutLength = aStr.Length() - aCutOffset;
-
-  if (aData)
-  {
-    if (aDataLength == UINT32_MAX)
-      aStr.Replace(aCutOffset, aCutLength, nsDependentString(aData));
-    else
-      aStr.Replace(aCutOffset, aCutLength, Substring(aData, aDataLength));
   }
-  else
+
+  if (aData) {
+    if (aDataLength == UINT32_MAX) {
+      aStr.Replace(aCutOffset, aCutLength, nsDependentString(aData));
+    } else {
+      aStr.Replace(aCutOffset, aCutLength, Substring(aData, aDataLength));
+    }
+  } else {
     aStr.Cut(aCutOffset, aCutLength);
+  }
 
   return NS_OK; // XXX report errors
 }
 
 XPCOM_API(nsresult)
-NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
+NS_StringCopy(nsAString& aDest, const nsAString& aSrc)
 {
   aDest.Assign(aSrc);
   return NS_OK; // XXX report errors
 }
 
 XPCOM_API(void)
-NS_StringSetIsVoid(nsAString &aStr, const bool aIsVoid)
+NS_StringSetIsVoid(nsAString& aStr, const bool aIsVoid)
 {
   aStr.SetIsVoid(aIsVoid);
 }
 
 XPCOM_API(bool)
-NS_StringGetIsVoid(const nsAString &aStr)
+NS_StringGetIsVoid(const nsAString& aStr)
 {
   return aStr.IsVoid();
 }
@@ -173,10 +171,10 @@ NS_StringGetIsVoid(const nsAString &aStr)
 /* ------------------------------------------------------------------------- */
 
 XPCOM_API(nsresult)
-NS_CStringContainerInit(nsCStringContainer &aContainer)
+NS_CStringContainerInit(nsCStringContainer& aContainer)
 {
   NS_ASSERTION(sizeof(nsStringContainer_base) >= sizeof(nsCString),
-      "nsCStringContainer is not large enough");
+               "nsCStringContainer is not large enough");
 
   // use placement new to avoid heap allocating nsCString object
   new (&aContainer) nsCString();
@@ -185,44 +183,40 @@ NS_CStringContainerInit(nsCStringContainer &aContainer)
 }
 
 XPCOM_API(nsresult)
-NS_CStringContainerInit2(nsCStringContainer &aContainer,
-                         const char         *aData,
-                         uint32_t            aDataLength,
-                         uint32_t            aFlags)
+NS_CStringContainerInit2(nsCStringContainer& aContainer,
+                         const char* aData,
+                         uint32_t aDataLength,
+                         uint32_t aFlags)
 {
   NS_ASSERTION(sizeof(nsStringContainer_base) >= sizeof(nsCString),
-      "nsStringContainer is not large enough");
+               "nsStringContainer is not large enough");
 
-  if (!aData)
-  {
+  if (!aData) {
     new (&aContainer) nsCString();
-  }
-  else
-  {
-    if (aDataLength == UINT32_MAX)
-    {
-      if (NS_WARN_IF(aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING))
-	return NS_ERROR_INVALID_ARG;
+  } else {
+    if (aDataLength == UINT32_MAX) {
+      if (NS_WARN_IF(aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING)) {
+        return NS_ERROR_INVALID_ARG;
+      }
       aDataLength = nsCharTraits<char>::length(aData);
     }
 
     if (aFlags & (NS_CSTRING_CONTAINER_INIT_DEPEND |
-                  NS_CSTRING_CONTAINER_INIT_ADOPT))
-    {
+                  NS_CSTRING_CONTAINER_INIT_ADOPT)) {
       uint32_t flags;
-      if (aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING)
+      if (aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING) {
         flags = nsCSubstring::F_NONE;
-      else
+      } else {
         flags = nsCSubstring::F_TERMINATED;
+      }
 
-      if (aFlags & NS_CSTRING_CONTAINER_INIT_ADOPT)
+      if (aFlags & NS_CSTRING_CONTAINER_INIT_ADOPT) {
         flags |= nsCSubstring::F_OWNED;
+      }
 
-      new (&aContainer) nsCSubstring(const_cast<char *>(aData),
+      new (&aContainer) nsCSubstring(const_cast<char*>(aData),
                                      aDataLength, flags);
-    }
-    else
-    {
+    } else {
       new (&aContainer) nsCString(aData, aDataLength);
     }
   }
@@ -231,20 +225,21 @@ NS_CStringContainerInit2(nsCStringContainer &aContainer,
 }
 
 XPCOM_API(void)
-NS_CStringContainerFinish(nsCStringContainer &aContainer)
+NS_CStringContainerFinish(nsCStringContainer& aContainer)
 {
   // call the nsCString dtor
-  reinterpret_cast<nsCString *>(&aContainer)->~nsCString();
+  reinterpret_cast<nsCString*>(&aContainer)->~nsCString();
 }
 
 /* ------------------------------------------------------------------------- */
 
 XPCOM_API(uint32_t)
-NS_CStringGetData(const nsACString &aStr, const char **aData,
-                  bool *aTerminated)
+NS_CStringGetData(const nsACString& aStr, const char** aData,
+                  bool* aTerminated)
 {
-  if (aTerminated)
+  if (aTerminated) {
     *aTerminated = aStr.IsTerminated();
+  }
 
   nsACString::const_iterator begin;
   aStr.BeginReading(begin);
@@ -253,7 +248,7 @@ NS_CStringGetData(const nsACString &aStr, const char **aData,
 }
 
 XPCOM_API(uint32_t)
-NS_CStringGetMutableData(nsACString &aStr, uint32_t aDataLength, char **aData)
+NS_CStringGetMutableData(nsACString& aStr, uint32_t aDataLength, char** aData)
 {
   if (aDataLength != UINT32_MAX) {
     aStr.SetLength(aDataLength);
@@ -269,63 +264,64 @@ NS_CStringGetMutableData(nsACString &aStr, uint32_t aDataLength, char **aData)
   return begin.size_forward();
 }
 
-XPCOM_API(char *)
-NS_CStringCloneData(const nsACString &aStr)
+XPCOM_API(char*)
+NS_CStringCloneData(const nsACString& aStr)
 {
   return ToNewCString(aStr);
 }
 
 XPCOM_API(nsresult)
-NS_CStringSetData(nsACString &aStr, const char *aData, uint32_t aDataLength)
+NS_CStringSetData(nsACString& aStr, const char* aData, uint32_t aDataLength)
 {
   aStr.Assign(aData, aDataLength);
   return NS_OK; // XXX report errors
 }
 
 XPCOM_API(nsresult)
-NS_CStringSetDataRange(nsACString &aStr,
+NS_CStringSetDataRange(nsACString& aStr,
                        uint32_t aCutOffset, uint32_t aCutLength,
-                       const char *aData, uint32_t aDataLength)
+                       const char* aData, uint32_t aDataLength)
 {
-  if (aCutOffset == UINT32_MAX)
-  {
+  if (aCutOffset == UINT32_MAX) {
     // append case
-    if (aData)
+    if (aData) {
       aStr.Append(aData, aDataLength);
+    }
     return NS_OK; // XXX report errors
   }
 
-  if (aCutLength == UINT32_MAX)
+  if (aCutLength == UINT32_MAX) {
     aCutLength = aStr.Length() - aCutOffset;
-
-  if (aData)
-  {
-    if (aDataLength == UINT32_MAX)
-      aStr.Replace(aCutOffset, aCutLength, nsDependentCString(aData));
-    else
-      aStr.Replace(aCutOffset, aCutLength, Substring(aData, aDataLength));
   }
-  else
+
+  if (aData) {
+    if (aDataLength == UINT32_MAX) {
+      aStr.Replace(aCutOffset, aCutLength, nsDependentCString(aData));
+    } else {
+      aStr.Replace(aCutOffset, aCutLength, Substring(aData, aDataLength));
+    }
+  } else {
     aStr.Cut(aCutOffset, aCutLength);
+  }
 
   return NS_OK; // XXX report errors
 }
 
 XPCOM_API(nsresult)
-NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
+NS_CStringCopy(nsACString& aDest, const nsACString& aSrc)
 {
   aDest.Assign(aSrc);
   return NS_OK; // XXX report errors
 }
 
 XPCOM_API(void)
-NS_CStringSetIsVoid(nsACString &aStr, const bool aIsVoid)
+NS_CStringSetIsVoid(nsACString& aStr, const bool aIsVoid)
 {
   aStr.SetIsVoid(aIsVoid);
 }
 
 XPCOM_API(bool)
-NS_CStringGetIsVoid(const nsACString &aStr)
+NS_CStringGetIsVoid(const nsACString& aStr)
 {
   return aStr.IsVoid();
 }
@@ -333,12 +329,11 @@ NS_CStringGetIsVoid(const nsACString &aStr)
 /* ------------------------------------------------------------------------- */
 
 XPCOM_API(nsresult)
-NS_CStringToUTF16(const nsACString &aSrc,
+NS_CStringToUTF16(const nsACString& aSrc,
                   nsCStringEncoding aSrcEncoding,
-                  nsAString &aDest)
+                  nsAString& aDest)
 {
-  switch (aSrcEncoding)
-  {
+  switch (aSrcEncoding) {
     case NS_CSTRING_ENCODING_ASCII:
       CopyASCIItoUTF16(aSrc, aDest);
       break;
@@ -356,12 +351,11 @@ NS_CStringToUTF16(const nsACString &aSrc,
 }
 
 XPCOM_API(nsresult)
-NS_UTF16ToCString(const nsAString &aSrc,
+NS_UTF16ToCString(const nsAString& aSrc,
                   nsCStringEncoding aDestEncoding,
-                  nsACString &aDest)
+                  nsACString& aDest)
 {
-  switch (aDestEncoding)
-  {
+  switch (aDestEncoding) {
     case NS_CSTRING_ENCODING_ASCII:
       LossyCopyUTF16toASCII(aSrc, aDest);
       break;

@@ -555,7 +555,7 @@ gfxFontEntry::TryGetColorGlyphs()
 class gfxFontEntry::FontTableBlobData {
 public:
     // Adopts the content of aBuffer.
-    FontTableBlobData(FallibleTArray<uint8_t>& aBuffer)
+    explicit FontTableBlobData(FallibleTArray<uint8_t>& aBuffer)
         : mHashtable(nullptr), mHashKey(0)
     {
         MOZ_COUNT_CTOR(FontTableBlobData);
@@ -6132,7 +6132,7 @@ gfxFontGroup::UpdateFontList()
 }
 
 struct PrefFontCallbackData {
-    PrefFontCallbackData(nsTArray<nsRefPtr<gfxFontFamily> >& aFamiliesArray)
+    explicit PrefFontCallbackData(nsTArray<nsRefPtr<gfxFontFamily> >& aFamiliesArray)
         : mPrefFamilies(aFamiliesArray)
     {}
 
@@ -7009,7 +7009,7 @@ HasNonOpaqueColor(gfxContext *aContext, gfxRGBA& aCurrentColor)
 
 // helper class for double-buffering drawing with non-opaque color
 struct BufferAlphaColor {
-    BufferAlphaColor(gfxContext *aContext)
+    explicit BufferAlphaColor(gfxContext *aContext)
         : mContext(aContext)
     {
 

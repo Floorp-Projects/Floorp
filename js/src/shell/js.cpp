@@ -130,7 +130,7 @@ static bool enableDisassemblyDumps = false;
 static bool printTiming = false;
 static const char *jsCacheDir = nullptr;
 static const char *jsCacheAsmJSPath = nullptr;
-static bool jsCachingEnabled = true;
+static bool jsCachingEnabled = false;
 mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool
@@ -350,7 +350,7 @@ ShellInterruptCallback(JSContext *cx)
         return true;
 
     bool result;
-    RootedValue interruptFunc(cx, gInterruptFunc.ref());
+    RootedValue interruptFunc(cx, *gInterruptFunc);
     if (!interruptFunc.isNull()) {
         JS::AutoSaveExceptionState savedExc(cx);
         JSAutoCompartment ac(cx, &interruptFunc.toObject());
@@ -960,8 +960,8 @@ class AutoNewContext
         JS::ContextOptionsRef(newcx).setDontReportUncaught(true);
         js::SetDefaultObjectForContext(newcx, JS::CurrentGlobalOrNull(cx));
 
-        newRequest.construct(newcx);
-        newCompartment.construct(newcx, JS::CurrentGlobalOrNull(cx));
+        newRequest.emplace(newcx);
+        newCompartment.emplace(newcx, JS::CurrentGlobalOrNull(cx));
         return true;
     }
 
@@ -973,8 +973,8 @@ class AutoNewContext
             bool throwing = JS_IsExceptionPending(newcx);
             if (throwing)
                 JS_GetPendingException(newcx, &exc);
-            newCompartment.destroy();
-            newRequest.destroy();
+            newCompartment.reset();
+            newRequest.reset();
             if (throwing)
                 JS_SetPendingException(oldcx, exc);
             DestroyContext(newcx, false);
@@ -2426,7 +2426,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
 
         if (obj && obj->is<CrossCompartmentWrapperObject>()) {
             obj = UncheckedUnwrap(obj);
-            ac.construct(cx, obj);
+            ac.emplace(cx, obj);
             args[0].setObject(*obj);
         }
         if (obj && obj->is<JSFunction>()) {
@@ -2608,7 +2608,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
         JSObject *unwrapped = UncheckedUnwrap(sobj, true, &flags);
         if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
-            ac.construct(cx, sobj);
+            ac.emplace(cx, sobj);
         }
 
         sobj = GetInnerObject(sobj);
@@ -2666,7 +2666,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (saveCurrent) {
         if (!sfc.save())
             return false;
-        ac.construct(cx, DefaultObjectForContextOrNull(cx));
+        ac.emplace(cx, DefaultObjectForContextOrNull(cx));
     }
 
     AutoStableStringChars stableChars(cx);
@@ -3110,7 +3110,7 @@ CancelExecution(JSRuntime *rt)
     gServiceInterrupt = true;
     JS_RequestInterruptCallback(rt);
 
-    if (!gInterruptFunc.ref().get().isNull()) {
+    if (!gInterruptFunc->get().isNull()) {
         static const char msg[] = "Script runs for too long, terminating.\n";
         fputs(msg, stderr);
     }
@@ -3157,7 +3157,7 @@ Timeout(JSContext *cx, unsigned argc, Value *vp)
             JS_ReportError(cx, "Second argument must be a timeout function");
             return false;
         }
-        gInterruptFunc.ref() = value;
+        *gInterruptFunc = value;
     }
 
     args.rval().setUndefined();
@@ -3228,7 +3228,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, Value *vp)
         JS_ReportError(cx, "Argument must be a function");
         return false;
     }
-    gInterruptFunc.ref() = value;
+    *gInterruptFunc = value;
 
     args.rval().setUndefined();
     return true;
@@ -4921,7 +4921,7 @@ static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
     gGotError = PrintError(cx, gErrFile, message, report, reportWarnings);
-    if (!JSREPORT_IS_WARNING(report->flags)) {
+    if (report->exnType != JSEXN_NONE && !JSREPORT_IS_WARNING(report->flags)) {
         if (report->errorNumber == JSMSG_OUT_OF_MEMORY) {
             gExitCode = EXITCODE_OUT_OF_MEMORY;
         } else {
@@ -6213,13 +6213,13 @@ main(int argc, char **argv, char **envp)
     if (!SetRuntimeOptions(rt, op))
         return 1;
 
-    gInterruptFunc.construct(rt, NullValue());
+    gInterruptFunc.emplace(rt, NullValue());
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 #ifdef JSGC_GENERATIONAL
     Maybe<JS::AutoDisableGenerationalGC> noggc;
     if (op.getBoolOption("no-ggc"))
-        noggc.construct(rt);
+        noggc.emplace(rt);
 #endif
 
     size_t availMem = op.getIntOption("available-memory");
@@ -6261,15 +6261,14 @@ main(int argc, char **argv, char **envp)
 
     KillWatchdog();
 
-    gInterruptFunc.destroy();
+    gInterruptFunc.reset();
 
     MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
     for (size_t i = 0; i < workerThreads.length(); i++)
         PR_JoinThread(workerThreads[i]);
 
 #ifdef JSGC_GENERATIONAL
-    if (!noggc.empty())
-        noggc.destroy();
+    noggc.reset();
 #endif
 
     JS_DestroyRuntime(rt);
