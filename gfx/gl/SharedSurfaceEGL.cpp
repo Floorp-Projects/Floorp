@@ -86,7 +86,6 @@ SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl,
 SharedSurface_EGLImage::~SharedSurface_EGLImage()
 {
     mEGL->fDestroyImage(Display(), mImage);
-    mImage = 0;
 
     mGL->MakeCurrent();
     mGL->fDeleteTextures(1, &mProdTex);
