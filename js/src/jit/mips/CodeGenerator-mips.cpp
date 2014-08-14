@@ -197,8 +197,9 @@ CodeGeneratorMIPS::bailoutFrom(Label *label, LSnapshot *snapshot)
                   frameClass_.frameSize() == masm.framePushed());
 
     // We don't use table bailouts because retargeting is easier this way.
+    InlineScriptTree *tree = snapshot->mir()->block()->trackedTree();
     OutOfLineBailout *ool = new(alloc()) OutOfLineBailout(snapshot, masm.framePushed());
-    if (!addOutOfLineCode(ool)) {
+    if (!addOutOfLineCode(ool, BytecodeSite(tree, tree->script()->code()))) {
         return false;
     }
 
@@ -1018,7 +1019,7 @@ CodeGeneratorMIPS::emitTableSwitchDispatch(MTableSwitch *mir, Register index,
     // generate the case entries (we don't yet know their offsets in the
     // instruction stream).
     OutOfLineTableSwitch *ool = new(alloc()) OutOfLineTableSwitch(mir);
-    if (!addOutOfLineCode(ool))
+    if (!addOutOfLineCode(ool, mir))
         return false;
 
     // Compute the position where a pointer to the right case stands.
