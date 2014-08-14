@@ -180,7 +180,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
 
     	# --with-cross-build requires absolute path
     	ICU_HOST_PATH=`cd $_objdir/intl/icu/host && pwd`
-    	ICU_CROSS_BUILD_OPT="--with-cross-build=$ICU_HOST_PATH"
+    	ICU_CROSS_BUILD_OPT="--with-cross-build=$ICU_HOST_PATH --disable-tools"
     	ICU_TARGET_OPT="--build=$build --host=$target"
         else
     	# CROSS_COMPILE isn't set build and target are i386 and x86-64.
