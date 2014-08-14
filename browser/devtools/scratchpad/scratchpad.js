@@ -1614,8 +1614,11 @@ var Scratchpad = {
       var lines = initialText.split("\n");
 
       this.editor.on("change", this._onChanged);
+      let okstring = this.strings.GetStringFromName("selfxss.okstring");
+      let msg = this.strings.formatStringFromName("selfxss.msg", [okstring], 1);
       this._onPaste = WebConsoleUtils.pasteHandlerGen(this.editor.container.contentDocument.body,
-                                                      document.querySelector('#scratchpad-notificationbox'));
+                                                      document.querySelector('#scratchpad-notificationbox'),
+                                                      msg, okstring);
       editorElement.addEventListener("paste", this._onPaste);
       editorElement.addEventListener("drop", this._onPaste);
       this.editor.on("save", () => this.saveFile());
