@@ -169,6 +169,13 @@ void LossyConvertUTF8toUTF16(const char* aInput, uint32_t aLength, nsAString& aO
   uint32_t j = 0;
   for (uint32_t i = 0; i < srclen; i++, j++) {
     uint32_t v = uint32_t(src[i]);
+    if (v == uint32_t('\0') && i < srclen - 1) {
+      // If the leading byte is '\0' and it's not the last byte,
+      // just ignore it to prevent from being truncated. This could
+      // be caused by |convertToBytes| (e.g. \x00 would be converted to '\0')
+      j--;
+      continue;
+    }
     if (!(v & 0x80)) {
       // ASCII code unit.  Simple copy.
       dst[j] = char16_t(v);
