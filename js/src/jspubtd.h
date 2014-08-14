@@ -25,11 +25,6 @@
 # define JSGC_TRACK_EXACT_ROOTS
 #endif
 
-#if (defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)) || \
-    (defined(JSGC_COMPACTING) && defined(DEBUG))
-# define JSGC_HASH_TABLE_CHECKS
-#endif
-
 namespace JS {
 
 class AutoIdVector;

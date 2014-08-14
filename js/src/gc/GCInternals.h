@@ -131,12 +131,6 @@ struct AutoStopVerifyingBarriers
 };
 #endif /* JS_GC_ZEAL */
 
-#ifdef JSGC_HASH_TABLE_CHECKS
-void
-CheckHashTablesAfterMovingGC(JSRuntime *rt);
-#endif
-
-
 } /* namespace gc */
 } /* namespace js */
 

@@ -1652,10 +1652,7 @@ class InitialShapeSetRef : public BufferableRef
     }
 };
 
-#endif // JSGC_GENERATIONAL
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-
+#ifdef JS_GC_ZEAL
 void
 JSCompartment::checkInitialShapesTableAfterMovingGC()
 {
@@ -1672,12 +1669,9 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
         TaggedProto proto = entry.proto;
         Shape *shape = entry.shape.get();
 
-        if (proto.isObject())
-            CheckGCThingAfterMovingGC(proto.toObject());
-        if (shape->getObjectParent())
-            CheckGCThingAfterMovingGC(shape->getObjectParent());
-        if (shape->getObjectMetadata())
-            CheckGCThingAfterMovingGC(shape->getObjectMetadata());
+        JS_ASSERT_IF(proto.isObject(), !IsInsideNursery(proto.toObject()));
+        JS_ASSERT_IF(shape->getObjectParent(), !IsInsideNursery(shape->getObjectParent()));
+        JS_ASSERT_IF(shape->getObjectMetadata(), !IsInsideNursery(shape->getObjectMetadata()));
 
         InitialShapeEntry::Lookup lookup(shape->getObjectClass(),
                                          proto,
@@ -1689,8 +1683,9 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
         JS_ASSERT(ptr.found() && &*ptr == &e.front());
     }
 }
+#endif
 
-#endif // JSGC_HASH_TABLE_CHECKS
+#endif
 
 /* static */ Shape *
 EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
