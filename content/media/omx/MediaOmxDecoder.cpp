@@ -12,16 +12,22 @@ using namespace android;
 
 namespace mozilla {
 
-MediaDecoder* MediaOmxDecoder::Clone()
+MediaDecoder*
+MediaOmxDecoder::Clone()
 {
   return new MediaOmxDecoder();
 }
 
-MediaDecoderStateMachine* MediaOmxDecoder::CreateStateMachine()
+MediaOmxCommonReader*
+MediaOmxDecoder::CreateReader()
 {
-  mReader = new MediaOmxReader(this);
-  mReader->SetAudioChannel(GetAudioChannel());
-  return new MediaDecoderStateMachine(this, mReader);
+  return new MediaOmxReader(this);
+}
+
+MediaDecoderStateMachine*
+MediaOmxDecoder::CreateStateMachine(MediaOmxCommonReader* aReader)
+{
+  return new MediaDecoderStateMachine(this, aReader);
 }
 
 } // namespace mozilla

@@ -14,7 +14,8 @@ class MediaOmxDecoder : public MediaOmxCommonDecoder
 {
 public:
   virtual MediaDecoder* Clone();
-  virtual MediaDecoderStateMachine* CreateStateMachine();
+  virtual MediaOmxCommonReader* CreateReader();
+  virtual MediaDecoderStateMachine* CreateStateMachine(MediaOmxCommonReader* aReader);
 };
 
 } // namespace mozilla
