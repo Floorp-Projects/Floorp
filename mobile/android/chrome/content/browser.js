@@ -89,6 +89,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
 XPCOMUtils.defineLazyModuleGetter(this, "NetErrorHelper",
                                   "resource://gre/modules/NetErrorHelper.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Toast",
+                                  "resource://gre/modules/Toast.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+                                  "resource://gre/modules/PageActions.jsm");
+
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
@@ -361,7 +367,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
     function showFullScreenWarning() {
-      NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
+      Toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), Toast.SHORT);
     }
 
     window.addEventListener("fullscreen", function() {
@@ -511,7 +517,7 @@ var BrowserApp = {
         let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
         let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-        NativeWindow.toast.show(label, "long", {
+        Toast.show(label, Toast.LONG, {
           button: {
             icon: "drawable://switch_button_icon",
             label: buttonLabel,
@@ -533,7 +539,7 @@ var BrowserApp = {
         let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
         let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-        NativeWindow.toast.show(label, "long", {
+        Toast.show(label, Toast.LONG, {
           button: {
             icon: "drawable://switch_button_icon",
             label: buttonLabel,
@@ -1046,7 +1052,7 @@ var BrowserApp = {
         message = Strings.browser.GetStringFromName("undoCloseToast.messageDefault");
       }
 
-      NativeWindow.toast.show(message, "short", {
+      Toast.show(message, Toast.SHORT, {
         button: {
           icon: "drawable://undo_button_icon",
           label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
@@ -2667,9 +2673,6 @@ var NativeWindow = {
     }
   }
 };
-
-XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
-                                  "resource://gre/modules/PageActions.jsm");
 
 // These alias to the old, deprecated NativeWindow interfaces
 [
@@ -5990,7 +5993,7 @@ var XPInstallObserver = {
   observe: function xpi_observer(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "addon-install-started":
-        NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsDownloading"), "short");
+        Toast.show(Strings.browser.GetStringFromName("alertAddonsDownloading"), Toast.SHORT);
         break;
       case "addon-install-blocked":
         let installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
@@ -6075,13 +6078,13 @@ var XPInstallObserver = {
       // Display completion message for new installs or updates not done Automatically
       if (!aInstall.existingAddon || !AddonManager.shouldAutoUpdate(aInstall.existingAddon)) {
         let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
-        NativeWindow.toast.show(message, "short");
+        Toast.show(message, Toast.SHORT);
       }
     }
   },
 
   onInstallFailed: function(aInstall) {
-    NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsFail"), "short");
+    Toast.show(Strings.browser.GetStringFromName("alertAddonsFail"), Toast.SHORT);
   },
 
   onDownloadProgress: function xpidm_onDownloadProgress(aInstall) {},
@@ -6113,7 +6116,7 @@ var XPInstallObserver = {
     msg = msg.replace("#3", Strings.brand.GetStringFromName("brandShortName"));
     msg = msg.replace("#4", Services.appinfo.version);
 
-    NativeWindow.toast.show(msg, "short");
+    Toast.show(msg, Toast.SHORT);
   },
 
   showRestartPrompt: function() {
@@ -7043,7 +7046,7 @@ var SearchEngines = {
     Services.search.addEngine(engine.url, Ci.nsISearchEngine.DATA_XML, engine.iconURL, false, {
       onSuccess: function() {
         // Display a toast confirming addition of new search engine.
-        NativeWindow.toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title], 1), "long");
+        Toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title], 1), Toast.LONG);
       },
 
       onError: function(aCode) {
@@ -7057,7 +7060,7 @@ var SearchEngines = {
           errorMessage = "alertSearchEngineErrorToast";
         }
 
-        NativeWindow.toast.show(Strings.browser.formatStringFromName(errorMessage, [engine.title], 1), "long");
+        Toast.show(Strings.browser.formatStringFromName(errorMessage, [engine.title], 1), Toast.LONG);
       }
     });
   },
@@ -7138,7 +7141,7 @@ var SearchEngines = {
             name = title.value + " " + i;
 
           Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
-          NativeWindow.toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [name], 1), "long");
+          Toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [name], 1), Toast.LONG);
           let engine = Services.search.getEngineByName(name);
           engine.wrappedJSObject._queryCharset = charset;
           for (let i = 0; i < formData.length; ++i) {

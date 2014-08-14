@@ -29,6 +29,9 @@ function resolveGeckoURI(uri) {
 }
 
 var Toast = {
+  LONG: "long",
+  SHORT: "short",
+
   show: function(message, duration, options) {
     let msg = {
       type: "Toast:Show",
