@@ -610,8 +610,7 @@ public abstract class GeckoApp
             if (button != null) {
                 final String label = button.optString("label", "");
                 final String icon = button.optString("icon", "");
-                final String id = button.optString("id", "");
-                showButtonToast(msg, duration, label, icon, id);
+                showButtonToast(msg, duration, label, icon, callback);
             } else {
                 showNormalToast(msg, duration);
             }
@@ -790,21 +789,21 @@ public abstract class GeckoApp
 
     void showButtonToast(final String message, final String duration,
                          final String buttonText, final String buttonIcon,
-                         final String buttonId) {
+                         final EventCallback callback) {
         BitmapUtils.getDrawable(GeckoApp.this, buttonIcon, new BitmapUtils.BitmapLoader() {
             @Override
             public void onBitmapFound(final Drawable d) {
                 final int toastDuration = duration.equals("long") ? ButtonToast.LENGTH_LONG : ButtonToast.LENGTH_SHORT;
-                getButtonToast().show(false, message, toastDuration ,buttonText, d, new ButtonToast.ToastListener() {
+                getButtonToast().show(false, message, toastDuration, buttonText, d, new ButtonToast.ToastListener() {
                     @Override
                     public void onButtonClicked() {
-                        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Click", buttonId));
+                        callback.sendSuccess(null);
                     }
 
                     @Override
                     public void onToastHidden(ButtonToast.ReasonHidden reason) {
                         if (reason == ButtonToast.ReasonHidden.TIMEOUT) {
-                            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Hidden", buttonId));
+                            callback.sendCancel();
                         }
                     }
                 });
