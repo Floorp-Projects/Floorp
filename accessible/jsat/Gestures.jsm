@@ -228,7 +228,7 @@ this.GestureTracker = { // jshint ignore:line
    * @param  {Number} aTimeStamp A new pointer event timeStamp.
    */
   handle: function GestureTracker_handle(aDetail, aTimeStamp) {
-    Logger.debug(() => {
+    Logger.gesture(() => {
       return ['Pointer event', aDetail.type, 'at:', aTimeStamp,
         JSON.stringify(aDetail.points)];
     });
@@ -332,7 +332,7 @@ function compileDetail(aType, aPoints, keyMap = {x: 'startX', y: 'startY'}) {
  */
 function Gesture(aTimeStamp, aPoints = {}, aLastEvent = undefined) {
   this.startTime = Date.now();
-  Logger.debug('Creating', this.id, 'gesture.');
+  Logger.gesture('Creating', this.id, 'gesture.');
   this.points = aPoints;
   this.lastEvent = aLastEvent;
   this._deferred = Promise.defer();
@@ -509,7 +509,7 @@ Gesture.prototype = {
     if (this.isComplete) {
       return;
     }
-    Logger.debug('Resolving', this.id, 'gesture.');
+    Logger.gesture('Resolving', this.id, 'gesture.');
     this.isComplete = true;
     let detail = this.compile();
     if (detail) {
@@ -533,7 +533,7 @@ Gesture.prototype = {
     if (this.isComplete) {
       return;
     }
-    Logger.debug('Rejecting', this.id, 'gesture.');
+    Logger.gesture('Rejecting', this.id, 'gesture.');
     this.isComplete = true;
     return {
       id: this.id,
