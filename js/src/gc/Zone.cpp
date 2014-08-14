@@ -113,21 +113,13 @@ Zone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     if (active)
         releaseTypes = false;
 
-    GCRuntime &gc = fop->runtime()->gc;
-
     {
-        gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
-                                   gcstats::PHASE_DISCARD_ANALYSIS);
+        gcstats::AutoPhase ap(fop->runtime()->gc.stats, gcstats::PHASE_DISCARD_ANALYSIS);
         types.sweep(fop, releaseTypes, oom);
     }
 
-    if (!fop->runtime()->debuggerList.isEmpty()) {
-        gcstats::MaybeAutoPhase ap1(gc.stats, !gc.isHeapCompacting(),
-                                    gcstats::PHASE_SWEEP_TABLES);
-        gcstats::MaybeAutoPhase ap2(gc.stats, !gc.isHeapCompacting(),
-                                    gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
+    if (!fop->runtime()->debuggerList.isEmpty())
         sweepBreakpoints(fop);
-    }
 }
 
 void
@@ -137,6 +129,9 @@ Zone::sweepBreakpoints(FreeOp *fop)
      * Sweep all compartments in a zone at the same time, since there is no way
      * to iterate over the scripts belonging to a single compartment in a zone.
      */
+
+    gcstats::AutoPhase ap1(fop->runtime()->gc.stats, gcstats::PHASE_SWEEP_TABLES);
+    gcstats::AutoPhase ap2(fop->runtime()->gc.stats, gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
 
     JS_ASSERT(isGCSweepingOrCompacting());
     for (ZoneCellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {

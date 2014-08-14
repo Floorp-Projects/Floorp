@@ -58,10 +58,6 @@ enum Phase {
     PHASE_SWEEP_SCRIPT,
     PHASE_SWEEP_SHAPE,
     PHASE_SWEEP_JITCODE,
-    PHASE_COMPACT,
-    PHASE_COMPACT_MOVE,
-    PHASE_COMPACT_UPDATE,
-    PHASE_COMPACT_UPDATE_GRAY,
     PHASE_FINALIZE_END,
     PHASE_DESTROY,
     PHASE_GC_END,
@@ -231,16 +227,17 @@ struct AutoPhase
 
 struct MaybeAutoPhase
 {
-    explicit MaybeAutoPhase(Statistics &statsArg, bool condition, Phase phaseArg
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit MaybeAutoPhase(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
       : stats(nullptr)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        if (condition) {
-            stats = &statsArg;
-            phase = phaseArg;
-            stats->beginPhase(phase);
-        }
+    }
+    void construct(Statistics &statsArg, Phase phaseArg)
+    {
+        JS_ASSERT(!stats);
+        stats = &statsArg;
+        phase = phaseArg;
+        stats->beginPhase(phase);
     }
     ~MaybeAutoPhase() {
         if (stats)

@@ -572,53 +572,54 @@ void
 JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 {
     JS_ASSERT(!activeAnalysis);
+
+    /* This function includes itself in PHASE_SWEEP_TABLES. */
+    sweepCrossCompartmentWrappers();
+
     JSRuntime *rt = runtimeFromMainThread();
 
     {
-        gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
-                                   gcstats::PHASE_SWEEP_TABLES_WRAPPER);
-        sweepCrossCompartmentWrappers();
+        gcstats::AutoPhase ap(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES);
+
+        /* Remove dead references held weakly by the compartment. */
+
+        sweepBaseShapeTable();
+        sweepInitialShapeTable();
+        {
+            gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
+                                  gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
+            sweepNewTypeObjectTable(newTypeObjects);
+            sweepNewTypeObjectTable(lazyTypeObjects);
+        }
+        sweepCallsiteClones();
+        savedStacks_.sweep(rt);
+
+        if (global_ && IsObjectAboutToBeFinalized(global_.unsafeGet()))
+            global_.set(nullptr);
+
+        if (selfHostingScriptSource &&
+            IsObjectAboutToBeFinalized((JSObject **) selfHostingScriptSource.unsafeGet()))
+        {
+            selfHostingScriptSource.set(nullptr);
+        }
+
+        if (jitCompartment_)
+            jitCompartment_->sweep(fop, this);
+
+        /*
+         * JIT code increments activeUseCount for any RegExpShared used by jit
+         * code for the lifetime of the JIT script. Thus, we must perform
+         * sweeping after clearing jit code.
+         */
+        regExps.sweep(rt);
+
+        if (debugScopes)
+            debugScopes->sweep(rt);
+
+        /* Finalize unreachable (key,value) pairs in all weak maps. */
+        WeakMapBase::sweepCompartment(this);
     }
 
-    /* Remove dead references held weakly by the compartment. */
-
-    sweepBaseShapeTable();
-    sweepInitialShapeTable();
-    {
-        gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
-                                   gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
-        sweepNewTypeObjectTable(newTypeObjects);
-        sweepNewTypeObjectTable(lazyTypeObjects);
-    }
-    sweepCallsiteClones();
-    savedStacks_.sweep(rt);
-
-    if (global_ && IsObjectAboutToBeFinalized(global_.unsafeGet()))
-        global_.set(nullptr);
-
-    if (selfHostingScriptSource &&
-        IsObjectAboutToBeFinalized((JSObject **) selfHostingScriptSource.unsafeGet()))
-    {
-        selfHostingScriptSource.set(nullptr);
-    }
-
-    if (jitCompartment_)
-        jitCompartment_->sweep(fop, this);
-
-    /*
-     * JIT code increments activeUseCount for any RegExpShared used by jit
-     * code for the lifetime of the JIT script. Thus, we must perform
-     * sweeping after clearing jit code.
-     */
-    regExps.sweep(rt);
-
-    if (debugScopes)
-        debugScopes->sweep(rt);
-
-    /* Finalize unreachable (key,value) pairs in all weak maps. */
-    WeakMapBase::sweepCompartment(this);
-
-    /* Sweep list of native iterators. */
     NativeIterator *ni = enumerators->next();
     while (ni != enumerators) {
         JSObject *iterObj = ni->iterObj();
@@ -637,6 +638,11 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
+    JSRuntime *rt = runtimeFromMainThread();
+
+    gcstats::AutoPhase ap1(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES);
+    gcstats::AutoPhase ap2(rt->gc.stats, gcstats::PHASE_SWEEP_TABLES_WRAPPER);
+
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey key = e.front().key();
