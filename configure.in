@@ -3832,7 +3832,7 @@ MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
 MOZ_PDF_PRINTING=
-MOZ_DISABLE_CRYPTOLEGACY=
+MOZ_NO_SMART_CARDS=
 NSS_DISABLE_DBM=
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about app data file ftp http res viewsource websocket wyciwyg device"
@@ -6348,12 +6348,12 @@ fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
 
 dnl ========================================================
-dnl = Disable DOMCrypto
+dnl = Disable smartcard support
 dnl ========================================================
-if test -n "$MOZ_DISABLE_CRYPTOLEGACY"; then
-    AC_DEFINE(MOZ_DISABLE_CRYPTOLEGACY)
+if test -n "$MOZ_NO_SMART_CARDS"; then
+    AC_DEFINE(MOZ_NO_SMART_CARDS)
 fi
-AC_SUBST(MOZ_DISABLE_CRYPTOLEGACY)
+AC_SUBST(MOZ_NO_SMART_CARDS)
 
 dnl ========================================================
 dnl = Disable EV certificate verification
