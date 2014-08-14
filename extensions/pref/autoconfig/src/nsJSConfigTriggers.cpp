@@ -19,6 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsJSPrincipals.h"
 #include "jswrapper.h"

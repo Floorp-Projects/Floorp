@@ -6,6 +6,7 @@
 
 EXPORTS += [
     'BackstagePass.h',
+    'nsCxPusher.h',
     'qsObjectHelper.h',
     'XPCJSMemoryReporter.h',
     'xpcObjectHelper.h',
@@ -14,6 +15,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'ExportHelpers.cpp',
+    'nsCxPusher.cpp',
     'nsScriptError.cpp',
     'nsXPConnect.cpp',
     'Sandbox.cpp',
