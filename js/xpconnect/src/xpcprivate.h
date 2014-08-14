@@ -2863,7 +2863,7 @@ public:
     { return &mStack; }
 
 private:
-    friend class mozilla::AutoCxPusher;
+    friend class mozilla::dom::danger::AutoCxPusher;
     friend bool xpc::PushJSContextNoScriptContext(JSContext *aCx);;
     friend void xpc::PopJSContextNoScriptContext();
 
