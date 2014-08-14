@@ -1801,7 +1801,7 @@ DebugScopes::sweep(JSRuntime *rt)
     }
 }
 
-#ifdef JSGC_HASH_TABLE_CHECKS
+#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
 void
 DebugScopes::checkHashTablesAfterMovingGC(JSRuntime *runtime)
 {
@@ -1811,18 +1811,18 @@ DebugScopes::checkHashTablesAfterMovingGC(JSRuntime *runtime)
      * pointing into the nursery.
      */
     for (ObjectWeakMap::Range r = proxiedScopes.all(); !r.empty(); r.popFront()) {
-        CheckGCThingAfterMovingGC(r.front().key().get());
-        CheckGCThingAfterMovingGC(r.front().value().get());
+        JS_ASSERT(!IsInsideNursery(r.front().key().get()));
+        JS_ASSERT(!IsInsideNursery(r.front().value().get()));
     }
     for (MissingScopeMap::Range r = missingScopes.all(); !r.empty(); r.popFront()) {
-        CheckGCThingAfterMovingGC(r.front().key().cur());
-        CheckGCThingAfterMovingGC(r.front().key().staticScope());
-        CheckGCThingAfterMovingGC(r.front().value().get());
+        JS_ASSERT(!IsInsideNursery(r.front().key().cur()));
+        JS_ASSERT(!IsInsideNursery(r.front().key().staticScope()));
+        JS_ASSERT(!IsInsideNursery(r.front().value().get()));
     }
     for (LiveScopeMap::Range r = liveScopes.all(); !r.empty(); r.popFront()) {
-        CheckGCThingAfterMovingGC(r.front().key());
-        CheckGCThingAfterMovingGC(r.front().value().cur_.get());
-        CheckGCThingAfterMovingGC(r.front().value().staticScope_.get());
+        JS_ASSERT(!IsInsideNursery(r.front().key()));
+        JS_ASSERT(!IsInsideNursery(r.front().value().cur_.get()));
+        JS_ASSERT(!IsInsideNursery(r.front().value().staticScope_.get()));
     }
 }
 #endif
