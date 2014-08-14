@@ -210,7 +210,7 @@ class WrapperMapRef : public BufferableRef
     }
 };
 
-#ifdef JS_GC_ZEAL
+#ifdef JSGC_HASH_TABLE_CHECKS
 void
 JSCompartment::checkWrapperMapAfterMovingGC()
 {
@@ -221,9 +221,9 @@ JSCompartment::checkWrapperMapAfterMovingGC()
      */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey key = e.front().key();
-        JS_ASSERT(!IsInsideNursery(key.debugger));
-        JS_ASSERT(!IsInsideNursery(key.wrapped));
-        JS_ASSERT(!IsInsideNursery(static_cast<Cell *>(e.front().value().get().toGCThing())));
+        CheckGCThingAfterMovingGC(key.debugger);
+        CheckGCThingAfterMovingGC(key.wrapped);
+        CheckGCThingAfterMovingGC(static_cast<Cell *>(e.front().value().get().toGCThing()));
 
         WrapperMap::Ptr ptr = crossCompartmentWrappers.lookup(key);
         JS_ASSERT(ptr.found() && &*ptr == &e.front());
