@@ -1079,11 +1079,13 @@ public class BrowserApp extends GeckoApp
         }
 
         // Make sure the toolbar is fully hidden or fully shown when the user
-        // lifts their finger. If the page is shorter than the viewport, the
-        // toolbar is always shown.
+        // lifts their finger. If the page is shorter than the viewport or if
+        // the user has reached the end of the page, the toolbar is always
+        // shown.
         ImmutableViewportMetrics metrics = mLayerView.getViewportMetrics();
         if (metrics.getPageHeight() < metrics.getHeight()
-              || metrics.marginTop >= mToolbarHeight / 2) {
+              || metrics.marginTop >= mToolbarHeight / 2
+              || metrics.pageRectBottom == metrics.viewportRectBottom) {
             mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
         } else {
             mDynamicToolbar.setVisible(false, VisibilityTransition.ANIMATE);
@@ -2893,8 +2895,13 @@ public class BrowserApp extends GeckoApp
     // BrowserSearch.OnSearchListener
     @Override
     public void onSearch(SearchEngine engine, String text) {
+        // Don't store searches that happen in private tabs. This assumes the user can only
+        // perform a search inside the currently selected tab, which is true for searches
+        // that come from SearchEngineRow.
+        if (!Tabs.getInstance().getSelectedTab().isPrivate()) {
+            storeSearchQuery(text);
+        }
         recordSearch(engine, "barsuggest");
-        storeSearchQuery(text);
         openUrlAndStopEditing(text, engine.name);
     }
 
