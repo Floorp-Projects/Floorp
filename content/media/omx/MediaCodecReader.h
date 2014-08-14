@@ -85,6 +85,8 @@ public:
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 
+  virtual android::sp<android::MediaSource> GetAudioOffloadTrack();
+
 protected:
   struct TrackInputCopier
   {

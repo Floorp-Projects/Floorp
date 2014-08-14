@@ -524,6 +524,13 @@ MediaCodecReader::IsMediaSeekable()
   return (mExtractor != nullptr) && (mExtractor->flags() & MediaExtractor::CAN_SEEK);
 }
 
+android::sp<android::MediaSource>
+MediaCodecReader::GetAudioOffloadTrack()
+{
+  // TODO: return real track
+  return nullptr;
+}
+
 bool
 MediaCodecReader::ReallocateResources()
 {
