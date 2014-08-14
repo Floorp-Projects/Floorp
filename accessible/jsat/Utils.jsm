@@ -473,11 +473,12 @@ State.prototype = {
 };
 
 this.Logger = { // jshint ignore:line
+  GESTURE: -1,
   DEBUG: 0,
   INFO: 1,
   WARNING: 2,
   ERROR: 3,
-  _LEVEL_NAMES: ['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+  _LEVEL_NAMES: ['GESTURE', 'DEBUG', 'INFO', 'WARNING', 'ERROR'],
 
   logLevel: 1, // INFO;
 
@@ -490,7 +491,7 @@ this.Logger = { // jshint ignore:line
 
     let args = Array.prototype.slice.call(arguments, 1);
     let message = (typeof(args[0]) === 'function' ? args[0]() : args).join(' ');
-    message = '[' + Utils.ScriptName + '] ' + this._LEVEL_NAMES[aLogLevel] +
+    message = '[' + Utils.ScriptName + '] ' + this._LEVEL_NAMES[aLogLevel + 1] +
       ' ' + message + '\n';
     dump(message);
     // Note: used for testing purposes. If |this.test| is true, also log to
@@ -507,6 +508,11 @@ this.Logger = { // jshint ignore:line
   info: function info() {
     this.log.apply(
       this, [this.INFO].concat(Array.prototype.slice.call(arguments)));
+  },
+
+  gesture: function gesture() {
+    this.log.apply(
+      this, [this.GESTURE].concat(Array.prototype.slice.call(arguments)));
   },
 
   debug: function debug() {
@@ -552,14 +558,16 @@ this.Logger = { // jshint ignore:line
   },
 
   accessibleToString: function accessibleToString(aAccessible) {
-    let str = '[ defunct ]';
-    try {
-      str = '[ ' + Utils.AccRetrieval.getStringRole(aAccessible.role) +
-        ' | ' + aAccessible.name + ' ]';
-    } catch (x) {
+    if (!aAccessible) {
+      return '[ null ]';
     }
 
-    return str;
+    try {
+      return'[ ' + Utils.AccRetrieval.getStringRole(aAccessible.role) +
+        ' | ' + aAccessible.name + ' ]';
+    } catch (x) {
+      return '[ defunct ]';
+    }
   },
 
   eventToString: function eventToString(aEvent) {
