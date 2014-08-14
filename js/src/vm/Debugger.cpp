@@ -1707,7 +1707,7 @@ Debugger::trace(JSTracer *trc)
      */
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
         RelocatablePtrObject &frameobj = r.front().value();
-        JS_ASSERT(MaybeForwarded(frameobj.get())->getPrivate());
+        JS_ASSERT(frameobj->getPrivate());
         MarkObject(trc, &frameobj, "live Debugger.Frame");
     }
 
@@ -1759,9 +1759,9 @@ Debugger::sweepAll(FreeOp *fop)
             if (IsObjectAboutToBeFinalized(&global)) {
                 // See infallibility note above.
                 detachAllDebuggersFromGlobal(fop, global, &e);
-            } else if (global != e.front()) {
-                e.rekeyFront(global);
             }
+            else if (global != e.front())
+                e.rekeyFront(global);
         }
     }
 }

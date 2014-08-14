@@ -220,15 +220,6 @@ GetShapeAttributes(JSObject *obj, Shape *shape)
     return shape->attributes();
 }
 
-#ifdef JSGC_COMPACTING
-inline void
-BaseShape::fixupAfterMovingGC()
-{
-    if (hasTable())
-        table().fixupAfterMovingGC();
-}
-#endif
-
 } /* namespace js */
 
 #endif /* vm_Shape_inl_h */

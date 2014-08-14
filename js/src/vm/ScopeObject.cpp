@@ -24,7 +24,6 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using namespace js::gc;
 using namespace js::types;
 
 using mozilla::PodZero;
@@ -1785,19 +1784,6 @@ DebugScopes::sweep(JSRuntime *rt)
              */
             liveScopes.remove(&(*debugScope)->scope());
             e.removeFront();
-        } else {
-            ScopeIterKey key = e.front().key();
-            bool needsUpdate = false;
-            if (IsForwarded(key.cur())) {
-                key.updateCur(js::gc::Forwarded(key.cur()));
-                needsUpdate = true;
-            }
-            if (IsForwarded(key.staticScope())) {
-                key.updateStaticScope(Forwarded(key.staticScope()));
-                needsUpdate = true;
-            }
-            if (needsUpdate)
-                e.rekeyFront(key);
         }
     }
 
@@ -1808,10 +1794,10 @@ DebugScopes::sweep(JSRuntime *rt)
          * Scopes can be finalized when a debugger-synthesized ScopeObject is
          * no longer reachable via its DebugScopeObject.
          */
-        if (IsObjectAboutToBeFinalized(&scope))
+        if (IsObjectAboutToBeFinalized(&scope)) {
             e.removeFront();
-        else if (scope != e.front().key())
-            e.rekeyFront(scope);
+            continue;
+        }
     }
 }
 

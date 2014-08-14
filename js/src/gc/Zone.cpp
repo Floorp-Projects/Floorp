@@ -135,10 +135,10 @@ Zone::sweepBreakpoints(FreeOp *fop)
     gcstats::AutoPhase ap1(fop->runtime()->gc.stats, gcstats::PHASE_SWEEP_TABLES);
     gcstats::AutoPhase ap2(fop->runtime()->gc.stats, gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
 
-    JS_ASSERT(isGCSweepingOrCompacting());
+    JS_ASSERT(isGCSweeping());
     for (ZoneCellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        JS_ASSERT_IF(isGCSweeping(), script->zone()->isGCSweeping());
+        JS_ASSERT(script->zone()->isGCSweeping());
         if (!script->hasAnyBreakpointsOrStepMode())
             continue;
 
@@ -153,8 +153,7 @@ Zone::sweepBreakpoints(FreeOp *fop)
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
                 HeapPtrObject &dbgobj = bp->debugger->toJSObjectRef();
-                JS_ASSERT_IF(isGCSweeping() && dbgobj->zone()->isCollecting(),
-                             dbgobj->zone()->isGCSweeping());
+                JS_ASSERT_IF(dbgobj->zone()->isCollecting(), dbgobj->zone()->isGCSweeping());
                 bool dying = scriptGone || IsObjectAboutToBeFinalized(&dbgobj);
                 JS_ASSERT_IF(!dying, !IsAboutToBeFinalized(&bp->getHandlerRef()));
                 if (dying)
