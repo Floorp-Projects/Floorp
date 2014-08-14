@@ -1707,7 +1707,9 @@ public:
 
         NS_ASSERTION(database->IsClosed(),
                    "AbortCloseStoragesForWindow should have closed database");
-        ownerDoc->DisallowBFCaching();
+        if (ownerDoc) {
+          ownerDoc->DisallowBFCaching();
+        }
         continue;
       }
 

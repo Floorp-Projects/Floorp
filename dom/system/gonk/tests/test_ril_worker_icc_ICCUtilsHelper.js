@@ -161,12 +161,12 @@ add_test(function test_get_network_name_from_icc() {
   }
 
   // Before EF_OPL and EF_PNN have been loaded.
-  testGetNetworkNameFromICC({mcc: 123, mnc: 456, lac: 0x1000}, null);
-  testGetNetworkNameFromICC({mcc: 321, mnc: 654, lac: 0x2000}, null);
+  testGetNetworkNameFromICC({mcc: "123", mnc: "456", lac: 0x1000}, null);
+  testGetNetworkNameFromICC({mcc: "321", mnc: "654", lac: 0x2000}, null);
 
   // Set HPLMN
-  RIL.iccInfo.mcc = 123;
-  RIL.iccInfo.mnc = 456;
+  RIL.iccInfo.mcc = "123";
+  RIL.iccInfo.mnc = "456";
 
   RIL.voiceRegistrationState = {
     cell: {
@@ -181,56 +181,108 @@ add_test(function test_get_network_name_from_icc() {
       {"fullName": "PNN1Long", "shortName": "PNN1Short"},
       {"fullName": "PNN2Long", "shortName": "PNN2Short"},
       {"fullName": "PNN3Long", "shortName": "PNN3Short"},
-      {"fullName": "PNN4Long", "shortName": "PNN4Short"}
+      {"fullName": "PNN4Long", "shortName": "PNN4Short"},
+      {"fullName": "PNN5Long", "shortName": "PNN5Short"},
+      {"fullName": "PNN6Long", "shortName": "PNN6Short"},
+      {"fullName": "PNN7Long", "shortName": "PNN7Short"},
+      {"fullName": "PNN8Long", "shortName": "PNN8Short"}
     ]
   };
 
   // EF_OPL isn't available and current isn't in HPLMN,
-  testGetNetworkNameFromICC({mcc: 321, mnc: 654, lac: 0x1000}, null);
+  testGetNetworkNameFromICC({mcc: "321", mnc: "654", lac: 0x1000}, null);
 
   // EF_OPL isn't available and current is in HPLMN,
   // the first record of PNN should be returned.
-  testGetNetworkNameFromICC({mcc: 123, mnc: 456, lac: 0x1000},
+  testGetNetworkNameFromICC({mcc: "123", mnc: "456", lac: 0x1000},
                             {longName: "PNN1Long", shortName: "PNN1Short"});
 
   // Set EF_OPL
   RIL.iccInfoPrivate.OPL = [
     {
-      "mcc": 123,
-      "mnc": 456,
+      "mcc": "123",
+      "mnc": "456",
       "lacTacStart": 0,
       "lacTacEnd": 0xFFFE,
       "pnnRecordId": 4
     },
     {
-      "mcc": 321,
-      "mnc": 654,
+      "mcc": "321",
+      "mnc": "654",
       "lacTacStart": 0,
       "lacTacEnd": 0x0010,
       "pnnRecordId": 3
     },
     {
-      "mcc": 321,
-      "mnc": 654,
+      "mcc": "321",
+      "mnc": "654",
       "lacTacStart": 0x0100,
       "lacTacEnd": 0x1010,
       "pnnRecordId": 2
+    },
+    {
+      "mcc": ";;;",
+      "mnc": "01",
+      "lacTacStart": 0,
+      "lacTacEnd": 0xFFFE,
+      "pnnRecordId": 5
+    },
+    {
+      "mcc": "00;",
+      "mnc": "02",
+      "lacTacStart": 0,
+      "lacTacEnd": 0xFFFE,
+      "pnnRecordId": 6
+    },
+    {
+      "mcc": "001",
+      "mnc": ";;",
+      "lacTacStart": 0,
+      "lacTacEnd": 0xFFFE,
+      "pnnRecordId": 7
+    },
+    {
+      "mcc": "002",
+      "mnc": "0;",
+      "lacTacStart": 0,
+      "lacTacEnd": 0xFFFE,
+      "pnnRecordId": 8
     }
   ];
 
   // Both EF_PNN and EF_OPL are presented, and current PLMN is HPLMN,
-  testGetNetworkNameFromICC({mcc: 123, mnc: 456, lac: 0x1000},
+  testGetNetworkNameFromICC({mcc: "123", mnc: "456", lac: 0x1000},
                             {longName: "PNN4Long", shortName: "PNN4Short"});
 
   // Current PLMN is not HPLMN, and according to LAC, we should get
   // the second PNN record.
-  testGetNetworkNameFromICC({mcc: 321, mnc: 654, lac: 0x1000},
+  testGetNetworkNameFromICC({mcc: "321", mnc: "654", lac: 0x1000},
                             {longName: "PNN2Long", shortName: "PNN2Short"});
 
   // Current PLMN is not HPLMN, and according to LAC, we should get
   // the thrid PNN record.
-  testGetNetworkNameFromICC({mcc: 321, mnc: 654, lac: 0x0001},
+  testGetNetworkNameFromICC({mcc: "321", mnc: "654", lac: 0x0001},
                             {longName: "PNN3Long", shortName: "PNN3Short"});
+
+  // Current PLMN is not HPLMN, and according to LAC, we should get
+  // the 5th PNN record after wild char (ie: ';') handling.
+  testGetNetworkNameFromICC({mcc: "001", mnc: "01", lac: 0x0001},
+                            {longName: "PNN5Long", shortName: "PNN5Short"});
+
+  // Current PLMN is not HPLMN, and according to LAC, we should get
+  // the 6th PNN record after wild char (ie: ';') handling.
+  testGetNetworkNameFromICC({mcc: "001", mnc: "02", lac: 0x0001},
+                            {longName: "PNN6Long", shortName: "PNN6Short"});
+
+  // Current PLMN is not HPLMN, and according to LAC, we should get
+  // the 7th PNN record after wild char (ie: ';') handling.
+  testGetNetworkNameFromICC({mcc: "001", mnc: "03", lac: 0x0001},
+                            {longName: "PNN7Long", shortName: "PNN7Short"});
+
+  // Current PLMN is not HPLMN, and according to LAC, we should get
+  // the 8th PNN record after wild char (ie: ';') handling.
+  testGetNetworkNameFromICC({mcc: "002", mnc: "03", lac: 0x0001},
+                            {longName: "PNN8Long", shortName: "PNN8Short"});
 
   run_next_test();
 });
