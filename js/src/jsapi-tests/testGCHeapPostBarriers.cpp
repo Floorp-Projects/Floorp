@@ -51,7 +51,7 @@ TestHeapPostBarriers(T initialObj)
     uintptr_t initialObjAsInt = uintptr_t(initialObj);
 
     /* Perform minor GC and check heap wrapper is udated with new pointer. */
-    js::MinorGC(cx, JS::gcreason::API);
+    cx->minorGC(JS::gcreason::API);
     CHECK(uintptr_t(heapData->get()) != initialObjAsInt);
     CHECK(!js::gc::IsInsideNursery(heapData->get()));
 

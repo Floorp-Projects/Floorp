@@ -939,7 +939,7 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
 
     if (zone->usage.gcBytes() >= zone->threshold.gcTriggerBytes()) {
         AutoUnlockGC unlock(rt);
-        TriggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
+        rt->gc.triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
     }
 
     return aheader;
@@ -1186,7 +1186,7 @@ GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
 
 #ifdef JSGC_GENERATIONAL
     if (zealMode == ZealGenerationalGCValue) {
-        minorGC(JS::gcreason::DEBUG_GC);
+        evictNursery(JS::gcreason::DEBUG_GC);
         nursery.leaveZealMode();
     }
 
@@ -2169,7 +2169,7 @@ RunLastDitchGC(JSContext *cx, JS::Zone *zone, AllocKind thingKind)
 
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keepAtoms(cx->perThreadData);
-    GC(rt, GC_NORMAL, JS::gcreason::LAST_DITCH);
+    rt->gc.gc(GC_NORMAL, JS::gcreason::LAST_DITCH);
 
     /*
      * The JSGC_END callback can legitimately allocate new GC
@@ -2271,12 +2271,6 @@ ArenaLists::refillFreeList<NoGC>(ThreadSafeContext *cx, AllocKind thingKind);
 template void *
 ArenaLists::refillFreeList<CanGC>(ThreadSafeContext *cx, AllocKind thingKind);
 
-JSGCTraceKind
-js_GetGCThingTraceKind(void *thing)
-{
-    return GetGCThingTraceKind(thing);
-}
-
 /* static */ int64_t
 SliceBudget::TimeBudget(int64_t millis)
 {
@@ -2335,12 +2329,6 @@ GCRuntime::requestInterrupt(JS::gcreason::Reason reason)
 }
 
 bool
-js::TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason)
-{
-    return rt->gc.triggerGC(reason);
-}
-
-bool
 GCRuntime::triggerGC(JS::gcreason::Reason reason)
 {
     /* Wait till end of parallel section to trigger GC. */
@@ -2370,12 +2358,6 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
 }
 
 bool
-js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
-{
-    return zone->runtimeFromAnyThread()->gc.triggerZoneGC(zone, reason);
-}
-
-bool
 GCRuntime::triggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 {
     /*
@@ -2401,14 +2383,14 @@ GCRuntime::triggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 
 #ifdef JS_GC_ZEAL
     if (zealMode == ZealAllocValue) {
-        TriggerGC(rt, reason);
+        triggerGC(reason);
         return true;
     }
 #endif
 
     if (rt->isAtomsZone(zone)) {
         /* We can't do a zone GC of the atoms compartment. */
-        TriggerGC(rt, reason);
+        triggerGC(reason);
         return true;
     }
 
@@ -2425,13 +2407,13 @@ GCRuntime::maybeGC(Zone *zone)
 #ifdef JS_GC_ZEAL
     if (zealMode == ZealAllocValue || zealMode == ZealPokeValue) {
         JS::PrepareForFullGC(rt);
-        GC(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
+        gc(GC_NORMAL, JS::gcreason::MAYBEGC);
         return true;
     }
 #endif
 
     if (isNeeded) {
-        GCSlice(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
+        gcSlice(GC_NORMAL, JS::gcreason::MAYBEGC);
         return true;
     }
 
@@ -2442,7 +2424,7 @@ GCRuntime::maybeGC(Zone *zone)
         !isBackgroundSweeping())
     {
         PrepareZoneForGC(zone);
-        GCSlice(rt, GC_NORMAL, JS::gcreason::MAYBEGC);
+        gcSlice(GC_NORMAL, JS::gcreason::MAYBEGC);
         return true;
     }
 
@@ -2468,7 +2450,7 @@ GCRuntime::maybePeriodicFullGC()
             numArenasFreeCommitted > decommitThreshold)
         {
             JS::PrepareForFullGC(rt);
-            GCSlice(rt, GC_SHRINK, JS::gcreason::MAYBEGC);
+            gcSlice(GC_SHRINK, JS::gcreason::MAYBEGC);
         } else {
             nextFullGCTime = now + GC_IDLE_FULL_SPAN;
         }
@@ -4767,7 +4749,7 @@ GCRuntime::incrementalCollectSlice(int64_t budget,
     if (reason == JS::gcreason::DEBUG_GC && budget != SliceBudget::Unlimited) {
         /*
          * Do the incremental collection type specified by zeal mode if the
-         * collection was triggered by RunDebugGC() and incremental GC has not
+         * collection was triggered by runDebugGC() and incremental GC has not
          * been cancelled by resetIncrementalGC().
          */
         zeal = zealMode;
@@ -5200,15 +5182,9 @@ GCRuntime::collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
 }
 
 void
-js::GC(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason)
+GCRuntime::gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
-    rt->gc.collect(false, SliceBudget::Unlimited, gckind, reason);
-}
-
-void
-js::GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis)
-{
-    rt->gc.gcSlice(gckind, reason, millis);
+    collect(false, SliceBudget::Unlimited, gckind, reason);
 }
 
 void
@@ -5226,9 +5202,9 @@ GCRuntime::gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64
 }
 
 void
-js::GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason)
+GCRuntime::gcFinalSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
-    rt->gc.collect(true, SliceBudget::Unlimited, gckind, reason);
+    collect(true, SliceBudget::Unlimited, gckind, reason);
 }
 
 void
@@ -5271,7 +5247,7 @@ ZonesSelected(JSRuntime *rt)
 }
 
 void
-js::GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
+GCRuntime::gcDebugSlice(bool limit, int64_t objCount)
 {
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
     if (!ZonesSelected(rt)) {
@@ -5280,7 +5256,7 @@ js::GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
         else
             JS::PrepareForFullGC(rt);
     }
-    rt->gc.collect(true, budget, GC_NORMAL, JS::gcreason::DEBUG_GC);
+    collect(true, budget, GC_NORMAL, JS::gcreason::DEBUG_GC);
 }
 
 /* Schedule a full GC unless a zone will already be collected. */
@@ -5311,12 +5287,6 @@ GCRuntime::shrinkBuffers()
 }
 
 void
-js::MinorGC(JSRuntime *rt, JS::gcreason::Reason reason)
-{
-    rt->gc.minorGC(reason);
-}
-
-void
 GCRuntime::minorGC(JS::gcreason::Reason reason)
 {
 #ifdef JSGC_GENERATIONAL
@@ -5328,16 +5298,10 @@ GCRuntime::minorGC(JS::gcreason::Reason reason)
 }
 
 void
-js::MinorGC(JSContext *cx, JS::gcreason::Reason reason)
+GCRuntime::minorGC(JSContext *cx, JS::gcreason::Reason reason)
 {
     // Alternate to the runtime-taking form above which allows marking type
     // objects as needing pretenuring.
-    cx->runtime()->gc.minorGC(cx, reason);
-}
-
-void
-GCRuntime::minorGC(JSContext *cx, JS::gcreason::Reason reason)
-{
 #ifdef JSGC_GENERATIONAL
     TraceLogger *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger::MinorGC);
@@ -5378,12 +5342,6 @@ GCRuntime::enableGenerationalGC()
 }
 
 void
-js::gc::GCIfNeeded(JSContext *cx)
-{
-    cx->runtime()->gc.gcIfNeeded(cx);
-}
-
-void
 GCRuntime::gcIfNeeded(JSContext *cx)
 {
 #ifdef JSGC_GENERATIONAL
@@ -5399,12 +5357,6 @@ GCRuntime::gcIfNeeded(JSContext *cx)
         gcSlice(GC_NORMAL, rt->gc.triggerReason, 0);
 }
 
-void
-js::gc::FinishBackgroundFinalize(JSRuntime *rt)
-{
-    rt->gc.waitBackgroundSweepEnd();
-}
-
 AutoFinishGC::AutoFinishGC(JSRuntime *rt)
 {
     if (JS::IsIncrementalGCInProgress(rt)) {
@@ -5412,7 +5364,7 @@ AutoFinishGC::AutoFinishGC(JSRuntime *rt)
         JS::FinishIncrementalGC(rt, JS::gcreason::API);
     }
 
-    gc::FinishBackgroundFinalize(rt);
+    rt->gc.waitBackgroundSweepEnd();
 }
 
 AutoPrepareForTracing::AutoPrepareForTracing(JSRuntime *rt, ZoneSelector selector)
@@ -5521,12 +5473,6 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
 }
 
 void
-gc::RunDebugGC(JSContext *cx)
-{
-    cx->runtime()->gc.runDebugGC();
-}
-
-void
 GCRuntime::runDebugGC()
 {
 #ifdef JS_GC_ZEAL
@@ -5536,7 +5482,7 @@ GCRuntime::runDebugGC()
         return;
 
     if (type == js::gc::ZealGenerationalGCValue)
-        return MinorGC(rt, JS::gcreason::DEBUG_GC);
+        return minorGC(JS::gcreason::DEBUG_GC);
 
     PrepareForDebugGC(rt);
 
@@ -5634,7 +5580,7 @@ js::ReleaseAllJITCode(FreeOp *fop)
      * Scripts can entrain nursery things, inserting references to the script
      * into the store buffer. Clear the store buffer before discarding scripts.
      */
-    MinorGC(fop->runtime(), JS::gcreason::EVICT_NURSERY);
+    fop->runtime()->gc.evictNursery();
 #endif
 
     for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
