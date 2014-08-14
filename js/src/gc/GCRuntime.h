@@ -293,7 +293,17 @@ class GCRuntime
     void runDebugGC();
     inline void poke();
 
-    void markRuntime(JSTracer *trc, bool useSavedRoots = false);
+    enum TraceOrMarkRuntime {
+        TraceRuntime,
+        MarkRuntime
+    };
+    enum TraceRootsOrUsedSaved {
+        TraceRoots,
+        UseSavedRoots
+    };
+    void markRuntime(JSTracer *trc,
+                     TraceOrMarkRuntime traceOrMark = TraceRuntime,
+                     TraceRootsOrUsedSaved rootsSource = TraceRoots);
 
     void notifyDidPaint();
     void shrinkBuffers();
@@ -491,6 +501,9 @@ class GCRuntime
     void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
     template <class ZoneIterT, class CompartmentIterT> void markGrayReferences();
     void markGrayReferencesInCurrentGroup();
+    void markAllWeakReferences(gcstats::Phase phase);
+    void markAllGrayReferences();
+
     void beginSweepPhase(bool lastGC);
     void findZoneGroups();
     bool findZoneEdgesForWeakMaps();
@@ -507,6 +520,13 @@ class GCRuntime
     void expireChunksAndArenas(bool shouldShrink);
     void sweepBackgroundThings(bool onBackgroundThread);
     void assertBackgroundSweepingFinished();
+    bool shouldCompact();
+#ifdef JSGC_COMPACTING
+    void compactPhase();
+    void updatePointersToRelocatedCells();
+    void releaseRelocatedArenas(ArenaHeader *relocatedList);
+#endif
+    void finishCollection();
 
     void computeNonIncrementalMarkingForValidation();
     void validateIncrementalMarking();
@@ -516,8 +536,6 @@ class GCRuntime
 
 #ifdef DEBUG
     void checkForCompartmentMismatches();
-    void markAllWeakReferences(gcstats::Phase phase);
-    void markAllGrayReferences();
 #endif
 
   public:
@@ -839,7 +857,8 @@ GCRuntime::needZealousGC() {
         if (zealMode == ZealAllocValue ||
             zealMode == ZealGenerationalGCValue ||
             (zealMode >= ZealIncrementalRootsThenFinish &&
-             zealMode <= ZealIncrementalMultipleSlices))
+             zealMode <= ZealIncrementalMultipleSlices) ||
+            zealMode == ZealCompactValue)
         {
             nextScheduled = zealFrequency;
         }
