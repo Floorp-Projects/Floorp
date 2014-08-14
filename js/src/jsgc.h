@@ -1427,6 +1427,20 @@ struct AutoDisableProxyCheck
 };
 #endif
 
+struct AutoDisableCompactingGC
+{
+#ifdef JSGC_COMPACTING
+    explicit AutoDisableCompactingGC(JSRuntime *rt);
+    ~AutoDisableCompactingGC();
+
+  private:
+    gc::GCRuntime &gc;
+#else
+    explicit AutoDisableCompactingGC(JSRuntime *rt) {}
+    ~AutoDisableCompactingGC() {}
+#endif
+};
+
 void
 PurgeJITCaches(JS::Zone *zone);
 

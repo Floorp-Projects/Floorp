@@ -637,10 +637,7 @@ GCMarker::markBufferedGrayRoots(JS::Zone *zone)
 #ifdef DEBUG
         setTracingDetails(elem->debugPrinter, elem->debugPrintArg, elem->debugPrintIndex);
 #endif
-        void *tmp = elem->thing;
-        setTracingLocation((void *)&elem->thing);
-        MarkKind(this, &tmp, elem->kind);
-        JS_ASSERT(tmp == elem->thing);
+        MarkKind(this, &elem->thing, elem->kind);
     }
 }
 
