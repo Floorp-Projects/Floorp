@@ -17,7 +17,7 @@ namespace js {
 class Shape;
 struct StackShape;
 
-struct ShapeHasher : public DefaultHasher<Shape *> {
+struct ShapeHasher {
     typedef Shape *Key;
     typedef StackShape Lookup;
 

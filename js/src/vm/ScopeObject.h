@@ -704,9 +704,6 @@ class ScopeIterKey
     JSObject *enclosingScope() const { return cur_; }
     JSObject *&enclosingScope() { return cur_; }
 
-    void updateCur(JSObject *obj) { cur_ = obj; }
-    void updateStaticScope(NestedScopeObject *obj) { staticScope_ = obj; }
-
     /* For use as hash policy */
     typedef ScopeIterKey Lookup;
     static HashNumber hash(ScopeIterKey si);

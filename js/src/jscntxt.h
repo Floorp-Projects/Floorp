@@ -49,14 +49,6 @@ struct CallsiteCloneKey {
 
     CallsiteCloneKey(JSFunction *f, JSScript *s, uint32_t o) : original(f), script(s), offset(o) {}
 
-    bool operator==(const CallsiteCloneKey& other) {
-        return original == other.original && script == other.script && offset == other.offset;
-    }
-
-    bool operator!=(const CallsiteCloneKey& other) {
-        return !(*this == other);
-    }
-
     typedef CallsiteCloneKey Lookup;
 
     static inline uint32_t hash(CallsiteCloneKey key) {
@@ -65,12 +57,6 @@ struct CallsiteCloneKey {
 
     static inline bool match(const CallsiteCloneKey &a, const CallsiteCloneKey &b) {
         return a.script == b.script && a.offset == b.offset && a.original == b.original;
-    }
-
-    static void rekey(CallsiteCloneKey &k, const CallsiteCloneKey &newKey) {
-        k.original = newKey.original;
-        k.script = newKey.script;
-        k.offset = newKey.offset;
     }
 };
 

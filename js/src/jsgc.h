@@ -47,9 +47,7 @@ enum State {
     MARK_ROOTS,
     MARK,
     SWEEP,
-#ifdef JSGC_COMPACTING
-    COMPACT
-#endif
+    INVALID
 };
 
 static inline JSGCTraceKind
@@ -1277,7 +1275,6 @@ MaybeForwarded(T t)
 #else
 
 template <typename T> inline bool IsForwarded(T t) { return false; }
-template <typename T> inline T Forwarded(T t) { return t; }
 template <typename T> inline T MaybeForwarded(T t) { return t; }
 
 #endif // JSGC_COMPACTING
