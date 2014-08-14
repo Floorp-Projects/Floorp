@@ -375,6 +375,10 @@ def FlagsFactory(flags):
         __slots__ = flags.keys()
         _flags = flags
 
+        def update(self, **kwargs):
+            for k, v in kwargs.iteritems():
+                setattr(self, k, v)
+
         def __getattr__(self, name):
             if name not in self.__slots__:
                 raise AttributeError("'%s' object has no attribute '%s'" %
