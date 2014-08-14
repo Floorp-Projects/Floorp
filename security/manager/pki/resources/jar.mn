@@ -47,5 +47,3 @@ pippki.jar:
     content/pippki/createCertInfo.js         (content/createCertInfo.js)
     content/pippki/protectedAuth.xul         (content/protectedAuth.xul)
     content/pippki/protectedAuth.js          (content/protectedAuth.js)
-    content/pippki/formsigning.xul           (content/formsigning.xul)
-    content/pippki/formsigning.js            (content/formsigning.js)

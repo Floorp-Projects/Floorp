@@ -16,18 +16,31 @@ const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 const nsIPKCS11 = Components.interfaces.nsIPKCS11;
 const nsPKCS11ContractID = "@mozilla.org/security/pkcs11;1";
 
+let { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
+
 var bundle;
 var secmoddb;
 var skip_enable_buttons = false;
+
+var smartCardObserver = {
+  observe: function() {
+    onSmartCardChange();
+  }
+};
+
+function DeregisterSmartCardObservers()
+{
+  Services.obs.removeObserver(smartCardObserver, "smartcard-insert");
+  Services.obs.removeObserver(smartCardObserver, "smartcard-remove");
+}
 
 /* Do the initial load of all PKCS# modules and list them. */
 function LoadModules()
 {
   bundle = document.getElementById("pippki_bundle");
   secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
-  window.crypto.enableSmartCardEvents = true;
-  document.addEventListener("smartcard-insert", onSmartCardChange, false);
-  document.addEventListener("smartcard-remove", onSmartCardChange, false);
+  Services.obs.addObserver(smartCardObserver, "smartcard-insert", false);
+  Services.obs.addObserver(smartCardObserver, "smartcard-remove", false);
 
   RefreshDeviceList();
 }
