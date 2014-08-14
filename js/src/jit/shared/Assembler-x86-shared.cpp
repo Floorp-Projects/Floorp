@@ -54,7 +54,7 @@ TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader
             layout.asBits = *word;
             Value v = IMPL_TO_JSVAL(layout);
             gc::MarkValueUnbarriered(trc, &v, "ion-masm-value");
-            JS_ASSERT(*word == JSVAL_TO_IMPL(v).asBits);
+            *word = JSVAL_TO_IMPL(v).asBits;
             continue;
         }
 #endif
