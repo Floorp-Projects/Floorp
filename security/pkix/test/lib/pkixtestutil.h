@@ -222,10 +222,7 @@ public:
 };
 
 // The return value, if non-null, is owned by the arena in the context
-// and MUST NOT be freed.
-// This function does its best to respect the NSPR error code convention
-// (that is, if it returns null, calling PR_GetError() will return the
-// error of the failed operation). However, this is not guaranteed.
+// and MUST NOT be freed. A null return value indicates an error occurred.
 SECItem* CreateEncodedOCSPResponse(OCSPResponseContext& context);
 
 } } } // namespace mozilla::pkix::test
