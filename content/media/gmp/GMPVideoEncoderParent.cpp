@@ -12,6 +12,7 @@
 #include "nsAutoRef.h"
 #include "GMPParent.h"
 #include "mozilla/gmp/GMPTypes.h"
+#include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "runnable_utils.h"
 
@@ -72,7 +73,9 @@ GMPVideoEncoderParent::GMPVideoEncoderParent(GMPParent *aPlugin)
 
 GMPVideoEncoderParent::~GMPVideoEncoderParent()
 {
-  mEncodedThread->Shutdown();
+  if (mEncodedThread) {
+    mEncodedThread->Shutdown();
+  }
 }
 
 GMPVideoHostImpl&
@@ -238,6 +241,12 @@ GMPVideoEncoderParent::Shutdown()
   }
 }
 
+static void
+ShutdownEncodedThread(nsCOMPtr<nsIThread>& aThread)
+{
+  aThread->Shutdown();
+}
+
 // Note: Keep this sync'd up with Shutdown
 void
 GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
@@ -248,6 +257,15 @@ GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
     // May call Close() (and Shutdown()) immediately or with a delay
     mCallback->Terminated();
     mCallback = nullptr;
+  }
+  // Must be shut down before VideoEncoderDestroyed(), since this can recurse
+  // the GMPThread event loop.  See bug 1049501
+  if (mEncodedThread) {
+    // Can't get it to allow me to use WrapRunnable with a nsCOMPtr<nsIThread>()
+    NS_DispatchToMainThread(
+      WrapRunnableNM<typeof &ShutdownEncodedThread,
+                     nsCOMPtr<nsIThread> >(&ShutdownEncodedThread, mEncodedThread));
+    mEncodedThread = nullptr;
   }
   if (mPlugin) {
     // Ignore any return code. It is OK for this to fail without killing the process.
