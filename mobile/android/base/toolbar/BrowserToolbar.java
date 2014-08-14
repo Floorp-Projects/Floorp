@@ -284,6 +284,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
         prefs = new ToolbarPrefs();
         urlDisplayLayout.setToolbarPrefs(prefs);
+        urlEditLayout.setToolbarPrefs(prefs);
     }
 
     public ArrayList<View> populateTabletViews() {
