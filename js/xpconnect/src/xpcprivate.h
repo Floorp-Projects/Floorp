@@ -85,6 +85,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 
+#include "mozilla/dom/ScriptSettings.h"
+
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -157,7 +159,6 @@
 
 #include "SandboxPrivate.h"
 #include "BackstagePass.h"
-#include "nsCxPusher.h"
 #include "nsAXPCNativeCallContext.h"
 
 #ifdef XP_WIN
@@ -2832,6 +2833,14 @@ bool PushJSContextNoScriptContext(JSContext *aCx);
 void PopJSContextNoScriptContext();
 
 } /* namespace xpc */
+
+namespace mozilla {
+namespace dom {
+namespace danger {
+class AutoCxPusher;
+}
+}
+}
 
 class XPCJSContextStack
 {

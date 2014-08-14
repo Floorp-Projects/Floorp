@@ -6,7 +6,6 @@
 #include "MobileMessageCallback.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIDOMMozMmsMessage.h"
 #include "nsIScriptGlobalObject.h"

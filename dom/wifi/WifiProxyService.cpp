@@ -9,7 +9,6 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "nsXULAppAPI.h"
 #include "WifiUtils.h"
-#include "nsCxPusher.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
