@@ -72,9 +72,7 @@ GMPVideoEncoderParent::GMPVideoEncoderParent(GMPParent *aPlugin)
 
 GMPVideoEncoderParent::~GMPVideoEncoderParent()
 {
-  if (mEncodedThread) {
-    mEncodedThread->Shutdown();
-  }
+  mEncodedThread->Shutdown();
 }
 
 GMPVideoHostImpl&
@@ -250,12 +248,6 @@ GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
     // May call Close() (and Shutdown()) immediately or with a delay
     mCallback->Terminated();
     mCallback = nullptr;
-  }
-  // Must be shut down before VideoEncoderDestroyed(), since this can recurse
-  // the GMPThread event loop.  See bug 1049501
-  if (mEncodedThread) {
-    mEncodedThread->Shutdown();
-    mEncodedThread = nullptr;
   }
   if (mPlugin) {
     // Ignore any return code. It is OK for this to fail without killing the process.
