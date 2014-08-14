@@ -17,24 +17,24 @@ a {
 
 .message {
   display: flex;
-  flex: 0 0 main-size;
+  flex: none;
   padding: 0 7px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .message > .timestamp {
-  flex: 0 0 main-size;
+  flex: none;
   color: GrayText;
   margin: 4px 6px 0 0;
 }
 
 .message > .indent {
-  flex: 0 0 main-size;
+  flex: none;
 }
 
 .message > .icon {
-  flex: 0 0 main-size;
+  flex: none;
   margin: 3px 6px 0 0;
   padding: 0 4px;
   height: 1em;
@@ -66,7 +66,7 @@ a {
 /* The red bubble that shows the number of times a message is repeated */
 .message-repeats {
   -moz-user-select: none;
-  flex: 0 0 main-size;
+  flex: none;
   margin: 2px 6px;
   padding: 0 6px;
   height: 1.25em;
@@ -84,7 +84,7 @@ a {
 
 .message-location {
   display: flex;
-  flex: 0 0 main-size;
+  flex: none;
   align-self: flex-start;
   justify-content: flex-end;
   width: 10em;
@@ -106,7 +106,7 @@ a {
 }
 
 .message-location > .line-number {
-  flex: 0 0 main-size;
+  flex: none;
 }
 
 .message-flex-body {
@@ -236,7 +236,7 @@ a {
 }
 
 .message[category=network] .method {
-  flex: 0 0 main-size;
+  flex: none;
 }
 
 .message[category=network]:not(.navigation-marker) .url {
@@ -250,7 +250,7 @@ a {
 }
 
 .message[category=network] .status {
-  flex: 0 0 main-size;
+  flex: none;
   -moz-margin-start: 6px;
 }
 
