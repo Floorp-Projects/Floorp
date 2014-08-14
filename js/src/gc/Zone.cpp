@@ -120,8 +120,6 @@ Zone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
 
     if (!fop->runtime()->debuggerList.isEmpty())
         sweepBreakpoints(fop);
-
-    active = false;
 }
 
 void
