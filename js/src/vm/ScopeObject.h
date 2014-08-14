@@ -733,8 +733,6 @@ class ScopeIterVal
     ScopeIter::Type type_;
     bool hasScopeObject_;
 
-    void sweep();
-
     static void staticAsserts();
 
   public:

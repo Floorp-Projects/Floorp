@@ -396,11 +396,6 @@ class GCRuntime
     void disableGenerationalGC();
     void enableGenerationalGC();
 
-#ifdef JSGC_COMPACTING
-    void disableCompactingGC();
-    void enableCompactingGC();
-#endif
-
     void setGrayRootsTracer(JSTraceDataOp traceOp, void *data);
     bool addBlackRootsTracer(JSTraceDataOp traceOp, void *data);
     void removeBlackRootsTracer(JSTraceDataOp traceOp, void *data);
@@ -717,15 +712,6 @@ class GCRuntime
      * GGC can be enabled from the command line while testing.
      */
     unsigned              generationalDisabled;
-
-#ifdef JSGC_COMPACTING
-    /*
-     * Some code cannot tolerate compacting GC so it can be disabled with this
-     * counter.  This can happen from code executing in a ThreadSafeContext so
-     * we make it atomic.
-     */
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> compactingDisabled;
-#endif
 
     /*
      * This is true if we are in the middle of a brain transplant (e.g.,
