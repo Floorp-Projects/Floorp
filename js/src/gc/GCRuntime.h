@@ -499,10 +499,10 @@ class GCRuntime
     bool drainMarkStack(SliceBudget &sliceBudget, gcstats::Phase phase);
     template <class CompartmentIterT> void markWeakReferences(gcstats::Phase phase);
     void markWeakReferencesInCurrentGroup(gcstats::Phase phase);
-    template <class ZoneIterT, class CompartmentIterT> void markGrayReferences(gcstats::Phase phase);
-    void markGrayReferencesInCurrentGroup(gcstats::Phase phase);
+    template <class ZoneIterT, class CompartmentIterT> void markGrayReferences();
+    void markGrayReferencesInCurrentGroup();
     void markAllWeakReferences(gcstats::Phase phase);
-    void markAllGrayReferences(gcstats::Phase phase);
+    void markAllGrayReferences();
 
     void beginSweepPhase(bool lastGC);
     void findZoneGroups();
@@ -523,7 +523,6 @@ class GCRuntime
     bool shouldCompact();
 #ifdef JSGC_COMPACTING
     void compactPhase();
-    ArenaHeader *relocateArenas();
     void updatePointersToRelocatedCells();
     void releaseRelocatedArenas(ArenaHeader *relocatedList);
 #endif
