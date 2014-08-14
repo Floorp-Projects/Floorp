@@ -278,13 +278,10 @@ class GCRuntime
     void maybePeriodicFullGC();
     void minorGC(JS::gcreason::Reason reason);
     void minorGC(JSContext *cx, JS::gcreason::Reason reason);
-    void evictNursery(JS::gcreason::Reason reason = JS::gcreason::EVICT_NURSERY) { minorGC(reason); }
     void gcIfNeeded(JSContext *cx);
-    void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
+    void collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
+                 JS::gcreason::Reason reason);
     void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
-    void gcFinalSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
-    void gcDebugSlice(bool limit, int64_t objCount);
-
     void runDebugGC();
     inline void poke();
 
@@ -468,8 +465,6 @@ class GCRuntime
 
     bool initZeal();
     void requestInterrupt(JS::gcreason::Reason reason);
-    void collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
-                 JS::gcreason::Reason reason);
     bool gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
                  JS::gcreason::Reason reason);
     gcstats::ZoneGCStats scanZonesBeforeGC();

@@ -415,7 +415,7 @@ struct AutoGCIfNeeded
 {
     JSContext *cx_;
     explicit AutoGCIfNeeded(JSContext *cx) : cx_(cx) {}
-    ~AutoGCIfNeeded() { cx_->gcIfNeeded(); }
+    ~AutoGCIfNeeded() { js::gc::GCIfNeeded(cx_); }
 };
 
 /*

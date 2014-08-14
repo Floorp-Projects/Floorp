@@ -97,10 +97,8 @@ Zone::setGCMaxMallocBytes(size_t value)
 void
 Zone::onTooMuchMalloc()
 {
-    if (!gcMallocGCTriggered) {
-        GCRuntime &gc = runtimeFromAnyThread()->gc;
-        gcMallocGCTriggered = gc.triggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC);
-    }
+    if (!gcMallocGCTriggered)
+        gcMallocGCTriggered = TriggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC);
 }
 
 void

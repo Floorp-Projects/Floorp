@@ -355,7 +355,7 @@ ForkJoinActivation::ForkJoinActivation(JSContext *cx)
         JS::FinishIncrementalGC(cx->runtime(), JS::gcreason::API);
     }
 
-    cx->runtime()->gc.evictNursery();
+    MinorGC(cx->runtime(), JS::gcreason::API);
 
     cx->runtime()->gc.waitBackgroundSweepEnd();
 
@@ -1492,11 +1492,10 @@ ForkJoinShared::transferArenasToCompartmentAndProcessGCRequests()
 
     if (gcRequested_) {
         Spew(SpewGC, "Triggering garbage collection in SpiderMonkey heap");
-        gc::GCRuntime &gc = cx_->runtime()->gc;
         if (!gcZone_)
-            gc.triggerGC(gcReason_);
+            TriggerGC(cx_->runtime(), gcReason_);
         else
-            gc.triggerZoneGC(gcZone_, gcReason_);
+            TriggerZoneGC(gcZone_, gcReason_);
         gcRequested_ = false;
         gcZone_ = nullptr;
     }
