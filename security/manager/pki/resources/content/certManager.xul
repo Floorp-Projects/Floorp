@@ -18,6 +18,7 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&certmgr.title;"
         onload="LoadCerts();"
+        onunload="DeregisterSmartCardObservers();"
         buttons="accept"
         style="width: 48em; height: 32em;"
         persist="screenX screenY width height">

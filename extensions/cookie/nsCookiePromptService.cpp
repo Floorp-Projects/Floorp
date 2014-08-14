@@ -13,6 +13,7 @@
 #include "nsString.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIMutableArray.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 /****************************************************************
  ************************ nsCookiePromptService *****************
@@ -70,6 +71,11 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
       privateParent = privateParent->GetPrivateRoot();
     parent = do_QueryInterface(privateParent);
   }
+
+  // We're opening a chrome window and passing in a nsIDialogParamBlock. Setting
+  // the nsIDialogParamBlock as the .arguments property on the chrome window
+  // requires system principals on the stack, so we use an AutoNoJSAPI for that.
+  mozilla::dom::AutoNoJSAPI nojsapi;
 
   // The cookie dialog will be modal for the root chrome window rather than the
   // tab containing the permission-requesting page.  This removes confusion

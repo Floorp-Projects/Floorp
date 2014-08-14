@@ -81,6 +81,9 @@ function xfail_compute(property, value)
   return false;
 }
 
+// constructed to map longhands ==> list of containing shorthands
+var gPropertyShorthands = {};
+
 var gElement = document.getElementById("testnode");
 var gDeclaration = gElement.style;
 var gComputedStyle = window.getComputedStyle(gElement, "");
@@ -103,6 +106,17 @@ function test_property(property)
     var errstr = "when setting property " + property + " to " + value;
     is(gDeclaration.length, 0, "unremovable properties " + errstr);
     is(gDeclaration.cssText, "", "non-empty serialization after removing all properties " + errstr);
+  }
+
+  function test_other_shorthands_empty(value, subprop) {
+    if (!(subprop in gPropertyShorthands)) return;
+    var shorthands = gPropertyShorthands[subprop];
+    for (idx in shorthands) {
+      var sh = shorthands[idx];
+      if (sh.replace("-moz-","") == property.replace("-moz-","")) continue;
+      is(gDeclaration.getPropertyValue(sh), "",
+         "setting '" + value + "' on '" + property + "' (for shorthand '" + sh + "')");
+    }
   }
 
   function test_value(value, resolved_value) {
@@ -134,6 +148,7 @@ function test_property(property)
             (!info.alias_for || info.type == CSS_TYPE_TRUE_SHORTHAND)) {
           is(gDeclaration.getPropertyValue(subprop), "",
              "setting '" + value + "' on '" + property + "' (for '" + subprop + "')");
+          test_other_shorthands_empty(value, subprop);
         } else {
           isnot(gDeclaration.getPropertyValue(subprop), "",
                 "setting '" + value + "' on '" + property + "' (for '" + subprop + "')");
@@ -273,8 +288,19 @@ function runTest() {
   // property at a time.
   ok(SpecialPowers.getBoolPref("layout.css.variables.enabled"), "pref not set #1");
   var props = [];
-  for (var prop in gCSSProperties)
+  for (var prop in gCSSProperties) {
+    var info = gCSSProperties[prop];
+    if ("subproperties" in info) {
+      for (var idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
+        if (!(subprop in gPropertyShorthands)) {
+          gPropertyShorthands[subprop] = [];
+        }
+        gPropertyShorthands[subprop].push(prop);
+      }
+    }
     props.push(prop);
+  }
   props = props.reverse();
   function do_one() {
     if (props.length == 0) {

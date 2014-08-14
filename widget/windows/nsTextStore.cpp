@@ -3274,25 +3274,25 @@ nsTextStore::OnActivated(DWORD dwProfileType,
 nsresult
 nsTextStore::OnFocusChange(bool aGotFocus,
                            nsWindowBase* aFocusedWidget,
-                           IMEState::Enabled aIMEEnabled)
+                           const IMEState& aIMEState)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF:   nsTextStore::OnFocusChange(aGotFocus=%s, "
-          "aFocusedWidget=0x%p, aIMEEnabled=%s), sTsfThreadMgr=0x%p, "
-          "sTsfTextStore=0x%p",
+          "aFocusedWidget=0x%p, aIMEState={ mEnabled=%s }), "
+          "sTsfThreadMgr=0x%p, sTsfTextStore=0x%p",
           GetBoolName(aGotFocus), aFocusedWidget,
-          GetIMEEnabledName(aIMEEnabled), sTsfThreadMgr, sTsfTextStore));
+          GetIMEEnabledName(aIMEState.mEnabled),
+          sTsfThreadMgr, sTsfTextStore));
 
   // no change notifications if TSF is disabled
   NS_ENSURE_TRUE(sTsfThreadMgr && sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<ITfDocumentMgr> prevFocusedDocumentMgr;
-  if (aGotFocus && (aIMEEnabled == IMEState::ENABLED ||
-                    aIMEEnabled == IMEState::PASSWORD)) {
+  if (aGotFocus && aIMEState.IsEditable()) {
     bool bRet = sTsfTextStore->Create(aFocusedWidget);
     NS_ENSURE_TRUE(bRet, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(sTsfTextStore->mDocumentMgr, NS_ERROR_FAILURE);
-    if (aIMEEnabled == IMEState::PASSWORD) {
+    if (aIMEState.mEnabled == IMEState::PASSWORD) {
       MarkContextAsKeyboardDisabled(sTsfTextStore->mContext);
       nsRefPtr<ITfContext> topContext;
       sTsfTextStore->mDocumentMgr->GetTop(getter_AddRefs(topContext));
@@ -3762,12 +3762,10 @@ nsTextStore::SetInputContext(nsWindowBase* aWidget,
 
   // If focus isn't actually changed but the enabled state is changed,
   // emulate the focus move.
-  if (!ThinksHavingFocus() &&
-      aContext.mIMEState.mEnabled == IMEState::ENABLED) {
-    OnFocusChange(true, aWidget, aContext.mIMEState.mEnabled);
-  } else if (ThinksHavingFocus() &&
-             aContext.mIMEState.mEnabled != IMEState::ENABLED) {
-    OnFocusChange(false, aWidget, aContext.mIMEState.mEnabled);
+  if (!ThinksHavingFocus() && aContext.mIMEState.IsEditable()) {
+    OnFocusChange(true, aWidget, aContext.mIMEState);
+  } else if (ThinksHavingFocus() && !aContext.mIMEState.IsEditable()) {
+    OnFocusChange(false, aWidget, aContext.mIMEState);
   }
 }
 

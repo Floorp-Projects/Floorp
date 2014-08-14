@@ -136,8 +136,8 @@
             speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
           }],
           [ContentMessages.focusSelector('button#home', false), {
-            speak: ['Home button']
-          }]
+            speak: ['Home', {'string': 'pushbutton'}]
+          }],
 
           // Blur button and reset cursor
           [ContentMessages.focusSelector('button#home', true), null],
@@ -152,13 +152,13 @@
             speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [doc.defaultView.showAlert, {
-            speak: ['This is an alert! heading level 1 dialog']
+            speak: ['This is an alert!',
+                    {'string': 'headingLevel', 'args': [1]},
+                    {'string': 'dialog'}]
           }],
 
-          [function() {
-            doc.defaultView.hideAlert()
-          }, {
-            speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
+          [doc.defaultView.hideAlert, {
+            speak: ["wow", {"string": "headingLevel","args": [1]}, "such app"],
           }],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
@@ -171,12 +171,14 @@
             speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app']
           }],
           [doc.defaultView.showAlert, {
-            speak: ['This is an alert! heading level 1 dialog']
+            speak: ['This is an alert!',
+                    {'string': 'headingLevel', 'args': [1]},
+                    {'string': 'dialog'}]
           }],
 
           // XXX: Place cursor back where it was.
           [doc.defaultView.hideAlert, {
-            speak: ['many option not checked check button such app']
+            speak: ['wow', {'string': 'headingLevel', 'args': [1]}, 'such app'],
           }],
 
           [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
@@ -186,7 +188,9 @@
             speak: ['Phone status bar', 'Traversal Rule test document']
           }],
           [doc.defaultView.showAlert, {
-            speak: ['This is an alert! heading level 1 dialog']
+            speak: ['This is an alert!',
+                    {'string': 'headingLevel', 'args': [1]},
+                    {'string': 'dialog'}]
           }],
 
           [function() {

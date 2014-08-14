@@ -574,14 +574,16 @@ pref("accessibility.browsewithcaret_shortcut.enabled", true);
 // unless accessibility.tabfocus is set by the user.
 pref("accessibility.tabfocus", 7);
 pref("accessibility.tabfocus_applies_to_xul", false);
-
-// On OS X, we follow the "Click in the scrollbar to:" system preference
-// unless this preference was set manually
-pref("ui.scrollToClick", 0);
-
 #else
 // Only on mac tabfocus is expected to handle UI widgets as well as web content
 pref("accessibility.tabfocus_applies_to_xul", true);
+#endif
+
+// We follow the "Click in the scrollbar to:" system preference on OS X and
+// "gtk-primary-button-warps-slider" property with GTK (since 2.24 / 3.6),
+// unless this preference is explicitly set.
+#if !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GTK)
+pref("ui.scrollToClick", 0);
 #endif
 
 // provide ability to turn on support for canvas focus rings
