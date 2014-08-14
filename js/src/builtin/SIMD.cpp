@@ -38,29 +38,47 @@ extern const JSFunctionSpec Int32x4Methods[];
 
 static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"};
 
+template<typename V>
+static bool
+IsVectorObject(HandleValue v)
+{
+    if (!v.isObject())
+        return false;
+
+    JSObject &obj = v.toObject();
+    if (!obj.is<TypedObject>())
+        return false;
+
+    TypeDescr &typeRepr = obj.as<TypedObject>().typeDescr();
+    if (typeRepr.kind() != type::X4)
+        return false;
+
+    return typeRepr.as<X4TypeDescr>().type() == V::type;
+}
+
+template<typename Elem>
+static Elem
+TypedObjectMemory(HandleValue v)
+{
+    TypedObject &obj = v.toObject().as<TypedObject>();
+    MOZ_ASSERT(!obj.owner().isNeutered());
+    return reinterpret_cast<Elem>(obj.typedMem());
+}
+
 template<typename Type32x4, int lane>
-static bool GetX4Lane(JSContext *cx, unsigned argc, Value *vp) {
+static bool GetX4Lane(JSContext *cx, unsigned argc, Value *vp)
+{
     typedef typename Type32x4::Elem Elem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {
+    if (!IsVectorObject<Type32x4>(args.thisv())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              X4TypeDescr::class_.name, laneNames[lane],
                              InformalValueTypeName(args.thisv()));
         return false;
     }
 
-    TypedObject &typedObj = args.thisv().toObject().as<TypedObject>();
-    TypeDescr &descr = typedObj.typeDescr();
-    if (descr.kind() != type::X4 || descr.as<X4TypeDescr>().type() != Type32x4::type) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             X4TypeDescr::class_.name, laneNames[lane],
-                             InformalValueTypeName(args.thisv()));
-        return false;
-    }
-
-    MOZ_ASSERT(!typedObj.owner().isNeutered());
-    Elem *data = reinterpret_cast<Elem *>(typedObj.typedMem());
+    Elem *data = TypedObjectMemory<Elem *>(args.thisv());
     Type32x4::setReturn(args, data[lane]);
     return true;
 }
@@ -82,7 +100,8 @@ static bool type##Lane##lane(JSContext *cx, unsigned argc, Value *vp) { \
 #undef LANE_ACCESSOR
 
 template<typename Type32x4>
-static bool SignMask(JSContext *cx, unsigned argc, Value *vp) {
+static bool SignMask(JSContext *cx, unsigned argc, Value *vp)
+{
     typedef typename Type32x4::Elem Elem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -386,33 +405,6 @@ js_InitSIMDClass(JSContext *cx, HandleObject obj)
     JS_ASSERT(obj->is<GlobalObject>());
     Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
     return SIMDObject::initClass(cx, global);
-}
-
-template<typename V>
-static bool
-IsVectorObject(HandleValue v)
-{
-    if (!v.isObject())
-        return false;
-
-    JSObject &obj = v.toObject();
-    if (!obj.is<TypedObject>())
-        return false;
-
-    TypeDescr &typeRepr = obj.as<TypedObject>().typeDescr();
-    if (typeRepr.kind() != type::X4)
-        return false;
-
-    return typeRepr.as<X4TypeDescr>().type() == V::type;
-}
-
-template<typename Elem>
-static Elem
-TypedObjectMemory(HandleValue v)
-{
-    TypedObject &obj = v.toObject().as<TypedObject>();
-    MOZ_ASSERT(!obj.owner().isNeutered());
-    return reinterpret_cast<Elem>(obj.typedMem());
 }
 
 template<typename V>
