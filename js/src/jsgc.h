@@ -1138,7 +1138,7 @@ struct GCChunkHasher {
 typedef HashSet<js::gc::Chunk *, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
 
 struct GrayRoot {
-    void **thingp;
+    void *thing;
     JSGCTraceKind kind;
 #ifdef DEBUG
     JSTraceNamePrinter debugPrinter;
@@ -1146,8 +1146,8 @@ struct GrayRoot {
     size_t debugPrintIndex;
 #endif
 
-    GrayRoot(void **thingp, JSGCTraceKind kind)
-        : thingp(thingp), kind(kind) {}
+    GrayRoot(void *thing, JSGCTraceKind kind)
+        : thing(thing), kind(kind) {}
 };
 
 void
@@ -1426,20 +1426,6 @@ struct AutoDisableProxyCheck
     explicit AutoDisableProxyCheck(JSRuntime *rt) {}
 };
 #endif
-
-struct AutoDisableCompactingGC
-{
-#ifdef JSGC_COMPACTING
-    explicit AutoDisableCompactingGC(JSRuntime *rt);
-    ~AutoDisableCompactingGC();
-
-  private:
-    gc::GCRuntime &gc;
-#else
-    explicit AutoDisableCompactingGC(JSRuntime *rt) {}
-    ~AutoDisableCompactingGC() {}
-#endif
-};
 
 void
 PurgeJITCaches(JS::Zone *zone);

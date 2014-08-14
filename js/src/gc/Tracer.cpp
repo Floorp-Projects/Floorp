@@ -637,26 +637,28 @@ GCMarker::markBufferedGrayRoots(JS::Zone *zone)
 #ifdef DEBUG
         setTracingDetails(elem->debugPrinter, elem->debugPrintArg, elem->debugPrintIndex);
 #endif
-        MarkKind(this, elem->thingp, elem->kind);
+        void *tmp = elem->thing;
+        setTracingLocation((void *)&elem->thing);
+        MarkKind(this, &tmp, elem->kind);
+        JS_ASSERT(tmp == elem->thing);
     }
 }
 
 void
-GCMarker::appendGrayRoot(void **thingp, JSGCTraceKind kind)
+GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
 {
     JS_ASSERT(started);
 
     if (grayBufferState == GRAY_BUFFER_FAILED)
         return;
 
-    GrayRoot root(thingp, kind);
+    GrayRoot root(thing, kind);
 #ifdef DEBUG
     root.debugPrinter = debugPrinter();
     root.debugPrintArg = debugPrintArg();
     root.debugPrintIndex = debugPrintIndex();
 #endif
 
-    void *thing = *thingp;
     Zone *zone = static_cast<Cell *>(thing)->tenuredZone();
     if (zone->isCollecting()) {
         // See the comment on SetMaybeAliveFlag to see why we only do this for
@@ -686,7 +688,7 @@ GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
-    gcmarker->appendGrayRoot(thingp, kind);
+    gcmarker->appendGrayRoot(*thingp, kind);
 }
 
 size_t
