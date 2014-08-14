@@ -1117,6 +1117,48 @@ RilObject.prototype = {
   },
 
   /**
+   * Check if operator name needs to be overriden by current voiceRegistrationState
+   * , EFOPL and EFPNN. See 3GPP TS 31.102 clause 4.2.58 EFPNN and 4.2.59 EFOPL
+   *  for detail.
+   *
+   * @return true if operator name is overridden, false otherwise.
+   */
+  overrideICCNetworkName: function() {
+    if (!this.operator) {
+      return false;
+    }
+
+    // We won't get network name using PNN and OPL if voice registration isn't
+    // ready.
+    if (!this.voiceRegistrationState.cell ||
+        this.voiceRegistrationState.cell.gsmLocationAreaCode == -1) {
+      return false;
+    }
+
+    let ICCUtilsHelper = this.context.ICCUtilsHelper;
+    let networkName = ICCUtilsHelper.getNetworkNameFromICC(
+      this.operator.mcc,
+      this.operator.mnc,
+      this.voiceRegistrationState.cell.gsmLocationAreaCode);
+
+    if (!networkName) {
+      return false;
+    }
+
+    if (DEBUG) {
+      this.context.debug("Operator names will be overriden: " +
+                         "longName = " + networkName.fullName + ", " +
+                         "shortName = " + networkName.shortName);
+    }
+
+    this.operator.longName = networkName.fullName;
+    this.operator.shortName = networkName.shortName;
+
+    this._sendNetworkInfoMessage(NETWORK_INFO_OPERATOR, this.operator);
+    return true;
+  },
+
+  /**
    * Request the phone's radio to be enabled or disabled.
    *
    * @param enabled
@@ -1569,6 +1611,61 @@ RilObject.prototype = {
   /**
    * Dial a non-emergency number.
    *
+   * @param isDialEmergency
+   *        Whether it is called by dialEmergency.
+   * @param isEmergency
+   *        Whether the number is an emergency number.
+   * @param number
+   *        String containing the number to dial.
+   * @param clirMode
+   *        Integer for showing/hidding the caller Id to the called party.
+   * @param uusInfo
+   *        Integer doing something XXX TODO
+   */
+  dial: function(options) {
+    let onerror = (function onerror(options, errorMsg) {
+      options.success = false;
+      options.errorMsg = errorMsg;
+      this.sendChromeMessage(options);
+    }).bind(this, options);
+
+    let isRadioOff = (this.radioState === GECKO_RADIOSTATE_OFF);
+
+    if (options.isEmergency) {
+      if (isRadioOff) {
+        if (DEBUG) {
+          this.context.debug("Automatically enable radio for an emergency call.");
+        }
+
+        this.cachedDialRequest = {
+          callback: this.dialEmergencyNumber.bind(this, options),
+          onerror: onerror
+        };
+        this.setRadioEnabled({enabled: true});
+        return;
+      }
+
+      this.dialEmergencyNumber(options);
+    } else {
+      // Notify error in establishing the call without radio.
+      if (isRadioOff) {
+        onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
+        return;
+      }
+
+      // Shouldn't dial a non-emergency number by dialEmergency.
+      if (options.isDialEmergency || this.voiceRegistrationState.emergencyCallsOnly) {
+        onerror(GECKO_CALL_ERROR_BAD_NUMBER);
+        return;
+      }
+
+      this.dialNonEmergencyNumber(options);
+    }
+  },
+
+  /**
+   * Dial a non-emergency number.
+   *
    * @param number
    *        String containing the number to dial.
    * @param clirMode
@@ -1577,23 +1674,6 @@ RilObject.prototype = {
    *        Integer doing something XXX TODO
    */
   dialNonEmergencyNumber: function(options) {
-    let onerror = (function onerror(options, errorMsg) {
-      options.success = false;
-      options.errorMsg = errorMsg;
-      this.sendChromeMessage(options);
-    }).bind(this, options);
-
-    if (this.radioState == GECKO_RADIOSTATE_OFF) {
-      // Notify error in establishing the call without radio.
-      onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      return;
-    }
-
-    if (this.voiceRegistrationState.emergencyCallsOnly) {
-      onerror(RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[CALL_FAIL_UNOBTAINABLE_NUMBER]);
-      return;
-    }
-
     // Exit emergency callback mode when user dial a non-emergency call.
     if (this._isInEmergencyCbMode) {
       this.exitEmergencyCbMode();
@@ -1614,7 +1694,6 @@ RilObject.prototype = {
     }
 
     options.request = REQUEST_DIAL;
-    options.isEmergency = false;
     this.sendDialRequest(options);
   },
 
@@ -1629,30 +1708,8 @@ RilObject.prototype = {
    *        Integer doing something XXX TODO
    */
   dialEmergencyNumber: function(options) {
-    let onerror = (function onerror(options, errorMsg) {
-      options.success = false;
-      options.errorMsg = errorMsg;
-      this.sendChromeMessage(options);
-    }).bind(this, options);
-
     options.request = RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL ?
                       REQUEST_DIAL_EMERGENCY_CALL : REQUEST_DIAL;
-    options.isEmergency = true;
-
-    if (this.radioState == GECKO_RADIOSTATE_OFF) {
-      if (DEBUG) {
-        this.context.debug("Automatically enable radio for an emergency call.");
-      }
-
-      if (!this.cachedDialRequest) {
-        this.cachedDialRequest = {};
-      }
-      this.cachedDialRequest.onerror = onerror;
-      this.cachedDialRequest.callback = this.sendDialRequest.bind(this, options);
-      this.setRadioEnabled({enabled: true});
-      return;
-    }
-
     this.sendDialRequest(options);
   },
 
@@ -3903,35 +3960,20 @@ RilObject.prototype = {
         }
       }
 
+      this.operator.longName = longName;
+      this.operator.shortName = shortName;
+
       let ICCUtilsHelper = this.context.ICCUtilsHelper;
-      let networkName;
-      // We won't get network name using PNN and OPL if voice registration isn't ready
-      if (this.voiceRegistrationState.cell &&
-          this.voiceRegistrationState.cell.gsmLocationAreaCode != -1) {
-        networkName = ICCUtilsHelper.getNetworkNameFromICC(
-          this.operator.mcc,
-          this.operator.mnc,
-          this.voiceRegistrationState.cell.gsmLocationAreaCode);
-      }
-
-      if (networkName) {
-        if (DEBUG) {
-          this.context.debug("Operator names will be overriden: " +
-                             "longName = " + networkName.fullName + ", " +
-                             "shortName = " + networkName.shortName);
-        }
-
-        this.operator.longName = networkName.fullName;
-        this.operator.shortName = networkName.shortName;
-      } else {
-        this.operator.longName = longName;
-        this.operator.shortName = shortName;
-      }
-
       if (ICCUtilsHelper.updateDisplayCondition()) {
         ICCUtilsHelper.handleICCInfoChange();
       }
-      this._sendNetworkInfoMessage(NETWORK_INFO_OPERATOR, this.operator);
+
+      // NETWORK_INFO_OPERATOR message will be sent out by overrideICCNetworkName
+      // itself if operator name is overridden after checking, or we have to
+      // do it by ourself.
+      if (!this.overrideICCNetworkName()) {
+        this._sendNetworkInfoMessage(NETWORK_INFO_OPERATOR, this.operator);
+      }
     }
   },
 
@@ -8676,7 +8718,7 @@ GsmPDUHelperObject.prototype = {
         }
       }
       return text;
-    }
+    };
 
     let totalLength = 0, length, pageLengths = [];
     for (let i = 0; i < numOfPages; i++) {
@@ -13695,11 +13737,14 @@ SimRecordHelperObject.prototype = {
       }
       Buf.readStringDelimiter(strLen);
 
+      let RIL = this.context.RIL;
       if (options.p1 < options.totalRecords) {
         ICCIOHelper.loadNextRecord(options);
       } else {
-        this.context.RIL.iccInfoPrivate.OPL = opl;
+        RIL.iccInfoPrivate.OPL = opl;
       }
+
+      RIL.overrideICCNetworkName();
     }
 
     ICCIOHelper.loadLinearFixedEF({fileId: ICC_EF_OPL,
@@ -13757,6 +13802,7 @@ SimRecordHelperObject.prototype = {
         pnn.push(pnnElement);
       }
 
+      let RIL = this.context.RIL;
       // Will ignore remaining records when got the contents of a record are all 0xff.
       if (pnnElement && options.p1 < options.totalRecords) {
         ICCIOHelper.loadNextRecord(options);
@@ -13766,8 +13812,10 @@ SimRecordHelperObject.prototype = {
             this.context.debug("PNN: [" + i + "]: " + JSON.stringify(pnn[i]));
           }
         }
-        this.context.RIL.iccInfoPrivate.PNN = pnn;
+        RIL.iccInfoPrivate.PNN = pnn;
       }
+
+      RIL.overrideICCNetworkName();
     }
 
     let pnn = [];
@@ -14204,17 +14252,55 @@ ICCUtilsHelperObject.prototype = {
         pnnEntry = iccInfoPriv.PNN[0];
       }
     } else {
+      let GsmPDUHelper = this.context.GsmPDUHelper;
+      let wildChar = GsmPDUHelper.bcdChars.charAt(0x0d);
       // According to 3GPP TS 31.102 Sec. 4.2.59 and 3GPP TS 51.011 Sec. 10.3.42,
       // the ME shall use this EF_OPL in association with the EF_PNN in place
       // of any network name stored within the ME's internal list and any network
       // name received when registered to the PLMN.
       let length = iccInfoPriv.OPL ? iccInfoPriv.OPL.length : 0;
       for (let i = 0; i < length; i++) {
+        let unmatch = false;
         let opl = iccInfoPriv.OPL[i];
-        // Try to match the MCC/MNC.
-        if (mcc != opl.mcc || mnc != opl.mnc) {
+        // Try to match the MCC/MNC. Besides, A BCD value of 'D' in any of the
+        // MCC and/or MNC digits shall be used to indicate a "wild" value for
+        // that corresponding MCC/MNC digit.
+        if (opl.mcc.indexOf(wildChar) !== -1) {
+          for (let j = 0; j < opl.mcc.length; j++) {
+            if (opl.mcc[j] !== wildChar && opl.mcc[j] !== mcc[j]) {
+              unmatch = true;
+              break;
+            }
+          }
+          if (unmatch) {
+            continue;
+          }
+        } else {
+          if (mcc !== opl.mcc) {
+            continue;
+          }
+        }
+
+        if (mnc.length !== opl.mnc.length) {
           continue;
         }
+
+        if (opl.mnc.indexOf(wildChar) !== -1) {
+          for (let j = 0; j < opl.mnc.length; j++) {
+            if (opl.mnc[j] !== wildChar && opl.mnc[j] !== mnc[j]) {
+              unmatch = true;
+              break;
+            }
+          }
+          if (unmatch) {
+            continue;
+          }
+        } else {
+          if (mnc !== opl.mnc) {
+            continue;
+          }
+        }
+
         // Try to match the location area code. If current local area code is
         // covered by lac range that specified in the OPL entry, use the PNN
         // that specified in the OPL entry.

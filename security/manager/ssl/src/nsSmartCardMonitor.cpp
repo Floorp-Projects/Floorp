@@ -3,22 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nspr.h"
 
-#include "mozilla/dom/SmartCardEvent.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
-#include "nsIDOMCryptoLegacy.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMWindowCollection.h"
 #include "nsIObserverService.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIWindowWatcher.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSmartCardMonitor.h"
+#include "nsThreadUtils.h"
 #include "pk11func.h"
 
 using namespace mozilla;
-using namespace mozilla::dom;
 
 //
 // The SmartCard monitoring thread should start up for each module we load
@@ -50,7 +43,6 @@ public:
 
 private:
   virtual ~nsTokenEventRunnable() {}
-  nsresult DispatchEventToWindow(nsIDOMWindow* domWin);
 
   nsString mType;
   nsString mTokenName;
@@ -71,121 +63,8 @@ nsTokenEventRunnable::Run()
   // This conversion is safe because mType can only be "smartcard-insert"
   // or "smartcard-remove".
   NS_ConvertUTF16toUTF8 eventTypeUTF8(mType);
-  nsresult rv = observerService->NotifyObservers(nullptr, eventTypeUTF8.get(),
-                                                 mTokenName.get());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // 'Dispatch' the event to all the windows. 'DispatchEventToWindow()' will
-  // first check to see if a given window has requested crypto events.
-  nsCOMPtr<nsIWindowWatcher> windowWatcher =
-    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  rv = windowWatcher->GetWindowEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  for (;;) {
-    bool hasMoreWindows;
-    rv = enumerator->HasMoreElements(&hasMoreWindows);
-    if (NS_FAILED(rv) || !hasMoreWindows) {
-      return rv;
-    }
-    nsCOMPtr<nsISupports> supports;
-    enumerator->GetNext(getter_AddRefs(supports));
-    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(supports));
-    if (domWin) {
-      rv = DispatchEventToWindow(domWin);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
-  return rv;
-}
-
-nsresult
-nsTokenEventRunnable::DispatchEventToWindow(nsIDOMWindow* domWin)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(domWin);
-
-  // first walk the children and dispatch their events
-  nsCOMPtr<nsIDOMWindowCollection> frames;
-  nsresult rv = domWin->GetFrames(getter_AddRefs(frames));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  uint32_t length;
-  rv = frames->GetLength(&length);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  for (uint32_t i = 0; i < length; i++) {
-    nsCOMPtr<nsIDOMWindow> childWin;
-    rv = frames->Item(i, getter_AddRefs(childWin));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (domWin) {
-      rv = DispatchEventToWindow(childWin);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
-
-  // check if we've enabled smart card events on this window
-  // NOTE: it's not an error to say that we aren't going to dispatch
-  // the event.
-  nsCOMPtr<nsIDOMCrypto> crypto;
-  rv = domWin->GetCrypto(getter_AddRefs(crypto));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!crypto) {
-    return NS_OK; // nope, it doesn't have a crypto property
-  }
-
-  bool boolrv;
-  rv = crypto->GetEnableSmartCardEvents(&boolrv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!boolrv) {
-    return NS_OK; // nope, it's not enabled.
-  }
-
-  // dispatch the event ...
-
-  // find the document
-  nsCOMPtr<nsIDOMDocument> doc;
-  rv = domWin->GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<EventTarget> d = do_QueryInterface(doc);
-
-  SmartCardEventInit init;
-  init.mBubbles = false;
-  init.mCancelable = true;
-  init.mTokenName = mTokenName;
-
-  nsRefPtr<SmartCardEvent> event(SmartCardEvent::Constructor(d, mType, init));
-  event->SetTrusted(true);
-
-  return d->DispatchEvent(event, &boolrv);
+  return observerService->NotifyObservers(nullptr, eventTypeUTF8.get(),
+                                          mTokenName.get());
 }
 
 // self linking and removing double linked entry
