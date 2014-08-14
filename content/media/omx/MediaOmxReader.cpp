@@ -19,12 +19,6 @@
 #include "gfx2DGlue.h"
 #include "MediaStreamSource.h"
 
-#ifdef MOZ_AUDIO_OFFLOAD
-#include <stagefright/Utils.h>
-#include <cutils/properties.h>
-#include <stagefright/MetaData.h>
-#endif
-
 #define MAX_DROPPED_FRAMES 25
 // Try not to spend more than this much time in a single call to DecodeVideoFrame.
 #define MAX_VIDEO_DECODE_SECONDS 0.1
@@ -42,7 +36,7 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #endif
 
 MediaOmxReader::MediaOmxReader(AbstractMediaDecoder *aDecoder)
-  : MediaDecoderReader(aDecoder)
+  : MediaOmxCommonReader(aDecoder)
   , mHasVideo(false)
   , mHasAudio(false)
   , mVideoSeekTimeUs(-1)
@@ -425,41 +419,12 @@ void MediaOmxReader::EnsureActive() {
   NS_ASSERTION(result == NS_OK, "OmxDecoder should be in play state to continue decoding");
 }
 
-#ifdef MOZ_AUDIO_OFFLOAD
-void MediaOmxReader::CheckAudioOffload()
+android::sp<android::MediaSource> MediaOmxReader::GetAudioOffloadTrack()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-
-  char offloadProp[128];
-  property_get("audio.offload.disable", offloadProp, "0");
-  bool offloadDisable =  atoi(offloadProp) != 0;
-  if (offloadDisable) {
-    return;
+  if (!mOmxDecoder.get()) {
+    return nullptr;
   }
-
-  mAudioOffloadTrack = mOmxDecoder->GetAudioOffloadTrack();
-  sp<MetaData> meta = (mAudioOffloadTrack.get()) ?
-      mAudioOffloadTrack->getFormat() : nullptr;
-
-  // Supporting audio offload only when there is no video, no streaming
-  bool hasNoVideo = !mOmxDecoder->HasVideo();
-  bool isNotStreaming
-      = mDecoder->GetResource()->IsDataCachedToEndOfResource(0);
-
-  // Not much benefit in trying to offload other channel types. Most of them
-  // aren't supported and also duration would be less than a minute
-  bool isTypeMusic = mAudioChannel == dom::AudioChannel::Content;
-
-  DECODER_LOG(PR_LOG_DEBUG, ("%s meta %p, no video %d, no streaming %d,"
-      " channel type %d", __FUNCTION__, meta.get(), hasNoVideo,
-      isNotStreaming, mAudioChannel));
-
-  if ((meta.get()) && hasNoVideo && isNotStreaming && isTypeMusic &&
-      canOffloadStream(meta, false, false, AUDIO_STREAM_MUSIC)) {
-    DECODER_LOG(PR_LOG_DEBUG, ("Can offload this audio stream"));
-    mDecoder->SetCanOffloadAudio(true);
-  }
+  return mOmxDecoder->GetAudioOffloadTrack();
 }
-#endif
 
 } // namespace mozilla
