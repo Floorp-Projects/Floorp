@@ -429,30 +429,33 @@ template JSObject *js::CreateSimd<Float32x4>(JSContext *cx, Float32x4::Elem *dat
 template JSObject *js::CreateSimd<Int32x4>(JSContext *cx, Int32x4::Elem *data);
 
 namespace js {
+// Unary SIMD operators
 template<typename T>
 struct Abs {
-    static inline T apply(T x, T zero) { return x < 0 ? -1 * x : x; }
+    static inline T apply(T x) { return x < 0 ? -1 * x : x; }
 };
 template<typename T>
 struct Neg {
-    static inline T apply(T x, T zero) { return -1 * x; }
+    static inline T apply(T x) { return -1 * x; }
 };
 template<typename T>
 struct Not {
-    static inline T apply(T x, T zero) { return ~x; }
+    static inline T apply(T x) { return ~x; }
 };
 template<typename T>
 struct Rec {
-    static inline T apply(T x, T zero) { return 1 / x; }
+    static inline T apply(T x) { return 1 / x; }
 };
 template<typename T>
 struct RecSqrt {
-    static inline T apply(T x, T zero) { return 1 / sqrt(x); }
+    static inline T apply(T x) { return 1 / sqrt(x); }
 };
 template<typename T>
 struct Sqrt {
-    static inline T apply(T x, T zero) { return sqrt(x); }
+    static inline T apply(T x) { return sqrt(x); }
 };
+
+// Binary SIMD operators
 template<typename T>
 struct Add {
     static inline T apply(T l, T r) { return l + r; }
@@ -582,43 +585,56 @@ StoreResult(JSContext *cx, CallArgs &args, typename Out::Elem *result)
 // and converts the result to the type Out.
 template<typename In, typename Coercion, template<typename C> class Op, typename Out>
 static bool
-CoercedFunc(JSContext *cx, unsigned argc, Value *vp)
+CoercedUnaryFunc(JSContext *cx, unsigned argc, Value *vp)
 {
     typedef typename Coercion::Elem CoercionElem;
     typedef typename Out::Elem RetElem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1 && args.length() != 2)
+    if (args.length() != 1 || !IsVectorObject<In>(args[0]))
         return ErrorBadArgs(cx);
 
     CoercionElem result[Coercion::lanes];
-    if (args.length() == 1) {
-        if (!IsVectorObject<In>(args[0]))
-            return ErrorBadArgs(cx);
-
-        CoercionElem *val = TypedObjectMemory<CoercionElem *>(args[0]);
-        for (unsigned i = 0; i < Coercion::lanes; i++)
-            result[i] = Op<CoercionElem>::apply(val[i], 0);
-    } else {
-        JS_ASSERT(args.length() == 2);
-        if (!IsVectorObject<In>(args[0]) || !IsVectorObject<In>(args[1]))
-            return ErrorBadArgs(cx);
-
-        CoercionElem *left = TypedObjectMemory<CoercionElem *>(args[0]);
-        CoercionElem *right = TypedObjectMemory<CoercionElem *>(args[1]);
-        for (unsigned i = 0; i < Coercion::lanes; i++)
-            result[i] = Op<CoercionElem>::apply(left[i], right[i]);
-    }
-
+    CoercionElem *val = TypedObjectMemory<CoercionElem *>(args[0]);
+    for (unsigned i = 0; i < Coercion::lanes; i++)
+        result[i] = Op<CoercionElem>::apply(val[i]);
     return StoreResult<Out>(cx, args, (RetElem*) result);
 }
 
-// Same as above, with Coercion == Out
+// Coerces the inputs of type In to the type Coercion, apply the operator Op
+// and converts the result to the type Out.
+template<typename In, typename Coercion, template<typename C> class Op, typename Out>
+static bool
+CoercedBinaryFunc(JSContext *cx, unsigned argc, Value *vp)
+{
+    typedef typename Coercion::Elem CoercionElem;
+    typedef typename Out::Elem RetElem;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 2 || !IsVectorObject<In>(args[0]) || !IsVectorObject<In>(args[1]))
+        return ErrorBadArgs(cx);
+
+    CoercionElem result[Coercion::lanes];
+    CoercionElem *left = TypedObjectMemory<CoercionElem *>(args[0]);
+    CoercionElem *right = TypedObjectMemory<CoercionElem *>(args[1]);
+    for (unsigned i = 0; i < Coercion::lanes; i++)
+        result[i] = Op<CoercionElem>::apply(left[i], right[i]);
+    return StoreResult<Out>(cx, args, (RetElem *) result);
+}
+
+// Same as above, with no coercion, i.e. Coercion == In.
 template<typename In, template<typename C> class Op, typename Out>
 static bool
-Func(JSContext *cx, unsigned argc, Value *vp)
+UnaryFunc(JSContext *cx, unsigned argc, Value *vp)
 {
-    return CoercedFunc<In, Out, Op, Out>(cx, argc, vp);
+    return CoercedUnaryFunc<In, Out, Op, Out>(cx, argc, vp);
+}
+
+template<typename In, template<typename C> class Op, typename Out>
+static bool
+BinaryFunc(JSContext *cx, unsigned argc, Value *vp)
+{
+    return CoercedBinaryFunc<In, Out, Op, Out>(cx, argc, vp);
 }
 
 template<typename V, template<typename T> class OpWith>
@@ -856,7 +872,7 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
 
     int32_t fr[Int32x4::lanes];
     for (unsigned i = 0; i < Int32x4::lanes; i++)
-        fr[i] = And<int32_t>::apply(Not<int32_t>::apply(val[i], 0), fv[i]);
+        fr[i] = And<int32_t>::apply(Not<int32_t>::apply(val[i]), fv[i]);
 
     int32_t orInt[Int32x4::lanes];
     for (unsigned i = 0; i < Int32x4::lanes; i++)
