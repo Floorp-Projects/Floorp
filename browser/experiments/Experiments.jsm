@@ -75,6 +75,8 @@ const PREF_TELEMETRY_ENABLED    = "enabled";
 const URI_EXTENSION_STRINGS     = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME          = "type.%ID%.name";
 
+const CACHE_WRITE_RETRY_DELAY_SEC = 60 * 3;
+
 const TELEMETRY_LOG = {
   // log(key, [kind, experimentId, details])
   ACTIVATION_KEY: "EXPERIMENT_ACTIVATION",
@@ -342,9 +344,18 @@ function AlreadyShutdownError(message="already shut down") {
   this.message = message;
   this.stack = error.stack;
 }
-
 AlreadyShutdownError.prototype = Object.create(Error.prototype);
 AlreadyShutdownError.prototype.constructor = AlreadyShutdownError;
+
+function CacheWriteError(message="Error writing cache file") {
+  Error.call(this, message);
+  let error = new Error();
+  this.name = "CacheWriteError";
+  this.message = message;
+  this.stack = error.stack;
+}
+CacheWriteError.prototype = Object.create(Error.prototype);
+CacheWriteError.prototype.constructor = CacheWriteError;
 
 /**
  * Manages the experiments and provides an interface to control them.
@@ -701,6 +712,7 @@ Experiments.Experiments.prototype = {
       throw new Error("Experiment not found");
     }
     e.branch = String(branchstr);
+    this._log.trace("setExperimentBranch(" + id + ", " + e.branch + ") _dirty=" + this._dirty);
     this._dirty = true;
     Services.obs.notifyObservers(null, EXPERIMENTS_CHANGED_TOPIC, null);
     yield this._run();
@@ -777,6 +789,8 @@ Experiments.Experiments.prototype = {
       this._mainTask = Task.spawn(function*() {
         try {
           yield this._main();
+	} catch (e if e instanceof CacheWriteError) {
+	  // In this case we want to reschedule
         } catch (e) {
           this._log.error("_main caught error: " + e);
           return;
@@ -812,7 +826,7 @@ Experiments.Experiments.prototype = {
       // If somebody called .updateManifest() or disableExperiment()
       // while we were running, go again right now.
     }
-    while (this._refresh || this._terminateReason);
+    while (this._refresh || this._terminateReason || this._dirty);
   },
 
   _loadManifest: function*() {
@@ -1017,7 +1031,7 @@ Experiments.Experiments.prototype = {
       // We failed to write the cache, it's still dirty.
       this._dirty = true;
       this._log.error("_saveToCache failed and caught error: " + e);
-      return;
+      throw new CacheWriteError();
     }
 
     this._log.debug("_saveToCache saved to " + path);
@@ -1332,6 +1346,10 @@ Experiments.Experiments.prototype = {
 
     let time = null;
     let now = this._policy.now().getTime();
+    if (this._dirty) {
+      // If we failed to write the cache, we should try again periodically
+      time = now + 1000 * CACHE_WRITE_RETRY_DELAY_SEC;
+    }
 
     for (let [id, experiment] of this._experiments) {
       let scheduleTime = experiment.getScheduleTime();
