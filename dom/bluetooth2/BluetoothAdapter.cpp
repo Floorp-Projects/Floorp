@@ -921,7 +921,7 @@ BluetoothAdapter::HandleDevicePaired(const BluetoothValue& aValue)
 
   // Notify application of paired device
   BluetoothDeviceEventInit init;
-  init.mDevice = pairedDevice.
+  init.mDevice = pairedDevice;
   DispatchDeviceEvent(NS_LITERAL_STRING("devicepaired"), init);
 }
 
