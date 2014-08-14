@@ -14,7 +14,7 @@ public class FxAccountAuthenticatorService extends Service {
   public static final String LOG_TAG = FxAccountAuthenticatorService.class.getSimpleName();
 
   // Lazily initialized by <code>getAuthenticator</code>.
-  protected FxAccountAuthenticator accountAuthenticator;
+  protected FxAccountAuthenticator accountAuthenticator = null;
 
   protected synchronized FxAccountAuthenticator getAuthenticator() {
     if (accountAuthenticator == null) {
