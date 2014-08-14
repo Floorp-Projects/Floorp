@@ -285,6 +285,17 @@ public:
       CSFLogInfo(logTag, "Returning success for OnAddStream()");
       // We are running on main thread here so we shouldn't have a race
       // on this callback
+
+      nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+      aStream->GetTracks(tracks);
+      for (uint32_t i = 0; i < tracks.Length(); i++) {
+        JSErrorResult rv;
+        mObserver->OnAddTrack(*tracks[i], rv);
+        if (rv.Failed()) {
+          CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %d", i,
+                      rv.ErrorCode());
+        }
+      }
       JSErrorResult rv;
       mObserver->OnAddStream(*aStream, rv);
       if (rv.Failed()) {
@@ -1465,7 +1476,7 @@ PeerConnectionImpl::AddStream(DOMMediaStream &aMediaStream)
   }
 
   uint32_t stream_id;
-  nsresult res = mMedia->AddStream(&aMediaStream, &stream_id);
+  nsresult res = mMedia->AddStream(&aMediaStream, hints, &stream_id);
   if (NS_FAILED(res)) {
     return res;
   }
@@ -1490,15 +1501,141 @@ NS_IMETHODIMP
 PeerConnectionImpl::RemoveStream(DOMMediaStream& aMediaStream) {
   PC_AUTO_ENTER_API_CALL(true);
 
+  uint32_t hints = aMediaStream.GetHintContents();
+
   uint32_t stream_id;
-  nsresult res = mMedia->RemoveStream(&aMediaStream, &stream_id);
+  nsresult res = mMedia->RemoveStream(&aMediaStream, hints, &stream_id);
 
   if (NS_FAILED(res))
     return res;
 
   aMediaStream.RemovePrincipalChangeObserver(this);
 
+  if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
+    mInternal->mCall->removeStream(stream_id, 0, AUDIO);
+    MOZ_ASSERT(mNumAudioStreams > 0);
+    mNumAudioStreams--;
+  }
+
+  if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
+    mInternal->mCall->removeStream(stream_id, 1, VIDEO);
+    MOZ_ASSERT(mNumVideoStreams > 0);
+    mNumVideoStreams--;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
+                             const Sequence<OwningNonNull<DOMMediaStream>>& aStreams)
+{
+  PC_AUTO_ENTER_API_CALL(true);
+
+  if (!aStreams.Length()) {
+    CSFLogError(logTag, "%s: At least one stream arg required", __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+  DOMMediaStream& aMediaStream = aStreams[0];
+#ifdef MOZILLA_INTERNAL_API
+  if (!aMediaStream.HasTrack(aTrack)) {
+    CSFLogError(logTag, "%s: Track is not in stream", __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+  uint32_t hints = aMediaStream.GetHintContents() &
+      ((aTrack.AsAudioStreamTrack()? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
+       (aTrack.AsVideoStreamTrack()? DOMMediaStream::HINT_CONTENTS_VIDEO : 0));
+#else
   uint32_t hints = aMediaStream.GetHintContents();
+#endif
+
+  // XXX Remove this check once addStream has an error callback
+  // available and/or we have plumbing to handle multiple
+  // local audio streams.
+  if ((hints & DOMMediaStream::HINT_CONTENTS_AUDIO) &&
+      mNumAudioStreams > 0) {
+    CSFLogError(logTag, "%s: Only one local audio stream is supported for now",
+                __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+
+  // XXX Remove this check once addStream has an error callback
+  // available and/or we have plumbing to handle multiple
+  // local video streams.
+  if ((hints & DOMMediaStream::HINT_CONTENTS_VIDEO) &&
+      mNumVideoStreams > 0) {
+    CSFLogError(logTag, "%s: Only one local video stream is supported for now",
+                __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t num = mMedia->LocalStreamsLength();
+
+  uint32_t stream_id;
+  nsresult res = mMedia->AddStream(&aMediaStream, hints, &stream_id);
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  if (num != mMedia->LocalStreamsLength()) {
+    aMediaStream.AddPrincipalChangeObserver(this);
+  }
+
+  // TODO(ekr@rtfm.com): these integers should be the track IDs
+  if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
+    mInternal->mCall->addStream(stream_id, 0, AUDIO);
+    mNumAudioStreams++;
+  }
+
+  if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
+    mInternal->mCall->addStream(stream_id, 1, VIDEO);
+    mNumVideoStreams++;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
+  PC_AUTO_ENTER_API_CALL(true);
+
+  DOMMediaStream *stream = nullptr;
+#ifdef MOZILLA_INTERNAL_API
+  for (uint32_t i = 0; i < mMedia->LocalStreamsLength(); ++i) {
+    auto* candidate = mMedia->GetLocalStream(i)->GetMediaStream();
+    if (candidate->HasTrack(aTrack)) {
+      stream = candidate;
+      break;
+    }
+  }
+#endif
+  if (!stream) {
+    CSFLogError(logTag, "%s: Track not found", __FUNCTION__);
+    return NS_OK;
+  }
+
+  DOMMediaStream& aMediaStream = *stream;
+
+#ifdef MOZILLA_INTERNAL_API
+  uint32_t hints = aMediaStream.GetHintContents() &
+      ((aTrack.AsAudioStreamTrack()? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
+       (aTrack.AsVideoStreamTrack()? DOMMediaStream::HINT_CONTENTS_VIDEO : 0));
+#else
+  uint32_t hints = aMediaStream.GetHintContents();
+#endif
+
+  uint32_t num = mMedia->LocalStreamsLength();
+
+  uint32_t stream_id;
+  nsresult res = mMedia->RemoveStream(&aMediaStream, hints, &stream_id);
+
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  if (num != mMedia->LocalStreamsLength()) {
+    aMediaStream.RemovePrincipalChangeObserver(this);
+  }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
     mInternal->mCall->removeStream(stream_id, 0, AUDIO);

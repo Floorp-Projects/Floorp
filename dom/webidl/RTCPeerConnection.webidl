@@ -107,10 +107,12 @@ interface mozRTCPeerConnection : EventTarget  {
   void removeStream (MediaStream stream);
 
   // replaces addStream; fails if already added
-  // because a track can be part of multiple streams, the id parameter
-  // indicates which particular stream should be referenced in signaling
+  // because a track can be part of multiple streams, stream parameters
+  // indicate which particular streams should be referenced in signaling
 
-  RTCRtpSender addTrack(MediaStreamTrack track, DOMString streamId);
+  RTCRtpSender addTrack(MediaStreamTrack track,
+                        MediaStream stream,
+                        MediaStream... moreStreams);
   void removeTrack(RTCRtpSender sender);
 
   sequence<RTCRtpSender> getSenders();

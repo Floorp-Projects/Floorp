@@ -2535,6 +2535,10 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
   ENSURE_PC(pc, VCM_ERROR);
   nsRefPtr<sipcc::LocalSourceStreamInfo> stream =
     pc.impl()->media()->GetLocalStream(pc_stream_id);
+  if (!stream) {
+    CSFLogError(logTag, "Stream not found");
+    return VCM_ERROR;
+  }
 
   // Create the transport flows
   mozilla::RefPtr<TransportFlow> rtp_flow =
