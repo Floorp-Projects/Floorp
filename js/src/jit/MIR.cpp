@@ -222,16 +222,6 @@ MDefinition::foldsTo(TempAllocator &alloc)
     return this;
 }
 
-void
-MDefinition::analyzeEdgeCasesForward()
-{
-}
-
-void
-MDefinition::analyzeEdgeCasesBackward()
-{
-}
-
 static bool
 MaybeEmulatesUndefined(MDefinition *op)
 {
@@ -1404,109 +1394,6 @@ MUrsh::infer(BaselineInspector *inspector, jsbytecode *pc)
     setResultType(MIRType_Int32);
 }
 
-static inline bool
-NeedNegativeZeroCheck(MDefinition *def)
-{
-    // Test if all uses have the same semantics for -0 and 0
-    for (MUseIterator use = def->usesBegin(); use != def->usesEnd(); use++) {
-        if (use->consumer()->isResumePoint())
-            continue;
-
-        MDefinition *use_def = use->consumer()->toDefinition();
-        switch (use_def->op()) {
-          case MDefinition::Op_Add: {
-            // If add is truncating -0 and 0 are observed as the same.
-            if (use_def->toAdd()->isTruncated())
-                break;
-
-            // x + y gives -0, when both x and y are -0
-
-            // Figure out the order in which the addition's operands will
-            // execute. EdgeCaseAnalysis::analyzeLate has renumbered the MIR
-            // definitions for us so that this just requires comparing ids.
-            MDefinition *first = use_def->toAdd()->getOperand(0);
-            MDefinition *second = use_def->toAdd()->getOperand(1);
-            if (first->id() > second->id()) {
-                MDefinition *temp = first;
-                first = second;
-                second = temp;
-            }
-
-            if (def == first) {
-                // Negative zero checks can be removed on the first executed
-                // operand only if it is guaranteed the second executed operand
-                // will produce a value other than -0. While the second is
-                // typed as an int32, a bailout taken between execution of the
-                // operands may change that type and cause a -0 to flow to the
-                // second.
-                //
-                // There is no way to test whether there are any bailouts
-                // between execution of the operands, so remove negative
-                // zero checks from the first only if the second's type is
-                // independent from type changes that may occur after bailing.
-                switch (second->op()) {
-                  case MDefinition::Op_Constant:
-                  case MDefinition::Op_BitAnd:
-                  case MDefinition::Op_BitOr:
-                  case MDefinition::Op_BitXor:
-                  case MDefinition::Op_BitNot:
-                  case MDefinition::Op_Lsh:
-                  case MDefinition::Op_Rsh:
-                    break;
-                  default:
-                    return true;
-                }
-            }
-
-            // The negative zero check can always be removed on the second
-            // executed operand; by the time this executes the first will have
-            // been evaluated as int32 and the addition's result cannot be -0.
-            break;
-          }
-          case MDefinition::Op_Sub:
-            // If sub is truncating -0 and 0 are observed as the same
-            if (use_def->toSub()->isTruncated())
-                break;
-            /* Fall through...  */
-          case MDefinition::Op_StoreElement:
-          case MDefinition::Op_StoreElementHole:
-          case MDefinition::Op_LoadElement:
-          case MDefinition::Op_LoadElementHole:
-          case MDefinition::Op_LoadTypedArrayElement:
-          case MDefinition::Op_LoadTypedArrayElementHole:
-          case MDefinition::Op_CharCodeAt:
-          case MDefinition::Op_Mod:
-            // Only allowed to remove check when definition is the second operand
-            if (use_def->getOperand(0) == def)
-                return true;
-            for (size_t i = 2, e = use_def->numOperands(); i < e; i++) {
-                if (use_def->getOperand(i) == def)
-                    return true;
-            }
-            break;
-          case MDefinition::Op_BoundsCheck:
-            // Only allowed to remove check when definition is the first operand
-            if (use_def->toBoundsCheck()->getOperand(1) == def)
-                return true;
-            break;
-          case MDefinition::Op_ToString:
-          case MDefinition::Op_FromCharCode:
-          case MDefinition::Op_TableSwitch:
-          case MDefinition::Op_Compare:
-          case MDefinition::Op_BitAnd:
-          case MDefinition::Op_BitOr:
-          case MDefinition::Op_BitXor:
-          case MDefinition::Op_Abs:
-          case MDefinition::Op_TruncateToInt32:
-            // Always allowed to remove check. No matter which operand.
-            break;
-          default:
-            return true;
-        }
-    }
-    return false;
-}
-
 MDefinition *
 MBinaryArithInstruction::foldsTo(TempAllocator &alloc)
 {
@@ -1620,45 +1507,6 @@ MDiv::foldsTo(TempAllocator &alloc)
     return this;
 }
 
-void
-MDiv::analyzeEdgeCasesForward()
-{
-    // This is only meaningful when doing integer division.
-    if (specialization_ != MIRType_Int32)
-        return;
-
-    // Try removing divide by zero check
-    if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(0))
-        canBeDivideByZero_ = false;
-
-    // If lhs is a constant int != INT32_MIN, then
-    // negative overflow check can be skipped.
-    if (lhs()->isConstant() && !lhs()->toConstant()->value().isInt32(INT32_MIN))
-        canBeNegativeOverflow_ = false;
-
-    // If rhs is a constant int != -1, likewise.
-    if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(-1))
-        canBeNegativeOverflow_ = false;
-
-    // If lhs is != 0, then negative zero check can be skipped.
-    if (lhs()->isConstant() && !lhs()->toConstant()->value().isInt32(0))
-        setCanBeNegativeZero(false);
-
-    // If rhs is >= 0, likewise.
-    if (rhs()->isConstant()) {
-        const js::Value &val = rhs()->toConstant()->value();
-        if (val.isInt32() && val.toInt32() >= 0)
-            setCanBeNegativeZero(false);
-    }
-}
-
-void
-MDiv::analyzeEdgeCasesBackward()
-{
-    if (canBeNegativeZero() && !NeedNegativeZeroCheck(this))
-        setCanBeNegativeZero(false);
-}
-
 bool
 MDiv::fallible() const
 {
@@ -1675,23 +1523,6 @@ MMod::foldsTo(TempAllocator &alloc)
         return folded;
 
     return this;
-}
-
-void
-MMod::analyzeEdgeCasesForward()
-{
-    // These optimizations make sense only for integer division
-    if (specialization_ != MIRType_Int32)
-        return;
-
-    if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(0))
-        canBeDivideByZero_ = false;
-
-    if (rhs()->isConstant()) {
-        int32_t n = rhs()->toConstant()->value().toInt32();
-        if (n > 0 && !IsPowerOfTwo(n))
-            canBePowerOfTwoDivisor_ = false;
-    }
 }
 
 bool
@@ -1751,36 +1582,6 @@ MMul::foldsTo(TempAllocator &alloc)
         setCanBeNegativeZero(false);
 
     return this;
-}
-
-void
-MMul::analyzeEdgeCasesForward()
-{
-    // Try to remove the check for negative zero
-    // This only makes sense when using the integer multiplication
-    if (specialization() != MIRType_Int32)
-        return;
-
-    // If lhs is > 0, no need for negative zero check.
-    if (lhs()->isConstant()) {
-        const js::Value &val = lhs()->toConstant()->value();
-        if (val.isInt32() && val.toInt32() > 0)
-            setCanBeNegativeZero(false);
-    }
-
-    // If rhs is > 0, likewise.
-    if (rhs()->isConstant()) {
-        const js::Value &val = rhs()->toConstant()->value();
-        if (val.isInt32() && val.toInt32() > 0)
-            setCanBeNegativeZero(false);
-    }
-}
-
-void
-MMul::analyzeEdgeCasesBackward()
-{
-    if (canBeNegativeZero() && !NeedNegativeZeroCheck(this))
-        setCanBeNegativeZero(false);
 }
 
 bool
@@ -2481,13 +2282,6 @@ MToInt32::foldsTo(TempAllocator &alloc)
     if (input->type() == MIRType_Int32)
         return input;
     return this;
-}
-
-void
-MToInt32::analyzeEdgeCasesBackward()
-{
-    if (!NeedNegativeZeroCheck(this))
-        setCanBeNegativeZero(false);
 }
 
 MDefinition *

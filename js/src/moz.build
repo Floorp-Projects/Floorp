@@ -156,7 +156,6 @@ UNIFIED_SOURCES += [
     'jit/C1Spewer.cpp',
     'jit/CodeGenerator.cpp',
     'jit/CompileWrappers.cpp',
-    'jit/EdgeCaseAnalysis.cpp',
     'jit/EffectiveAddressAnalysis.cpp',
     'jit/ExecutableAllocator.cpp',
     'jit/Ion.cpp',
