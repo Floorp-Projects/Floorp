@@ -1,4 +1,5 @@
 load(libdir + "asm.js");
+load(libdir + "asserts.js");
 
 assertAsmTypeFail(USE_ASM + "var i; function f(){} return f");
 assertAsmTypeFail(USE_ASM + "const i; function f(){} return f");
@@ -117,6 +118,44 @@ assertEq(asmLink(asmCompile('global', 'imp', USE_ASM + "const i=+imp.i; function
 assertEq(asmLink(asmCompile('global', 'imp', USE_ASM + "var i=+imp.i; function f() { return +i } return f")(this, {i:1.4})), 1.4);
 assertEq(asmLink(asmCompile('global', 'imp', USE_ASM + "const i=+imp.i; function f() { return +i } return f")(this, {i:1.4})), 1.4);
 assertEq(asmLink(asmCompile(USE_ASM + "var g=0; function f() { var i=42; while (1) { break; } g = i; return g|0 } return f"))(), 42);
+assertAsmLinkFail(asmCompile('glob','foreign', USE_ASM + 'var i = +foreign.x; function f() {} return f'), null, {x:{valueOf:function() { return 42 }}});
+assertAsmLinkFail(asmCompile('glob','foreign', USE_ASM + 'var i = foreign.x|0; function f() {} return f'), null, {x:{valueOf:function() { return 42 }}});
+assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var i = foreign.x|0; function f() { return i|0} return f'), null, {x:"blah"})(), 0);
+assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var i = +foreign.x; function f() { return +i} return f'), null, {x:"blah"})(), NaN);
+assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var tof = glob.Math.fround; var i = tof(foreign.x); function f() { return +i} return f'), this, {x:"blah"})(), NaN);
+assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var i = foreign.x|0; function f() { return i|0} return f')(null, {x:Symbol("blah")}), TypeError);
+assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var i = +foreign.x; function f() { return +i} return f')(null, {x:Symbol("blah")}), TypeError);
+assertThrowsInstanceOf(() => asmCompile('glob','foreign',USE_ASM + 'var tof = glob.Math.fround; var i = tof(foreign.x); function f() { return +i} return f')(this, {x:Symbol("blah")}), TypeError);
+
+// Temporary workaround; this test can be removed when Emscripten is fixed and
+// the fix has propagated out to most apps:
+assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var i = foreign.i|0; function f() { return i|0} return f'), null, {i:function(){}})(), 0);
+assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var i = +foreign.i; function f() { return +i} return f'), null, {i:function(){}})(), NaN);
+assertEq(asmLink(asmCompile('glob','foreign', USE_ASM + 'var tof = glob.Math.fround; var i = tof(foreign.i); function f() { return +i} return f'), this, {i:function(){}})(), NaN);
+var module = asmCompile('glob','foreign', USE_ASM + 'var i = foreign.i|0; function f() { return i|0} return f');
+var fun = function() {}
+fun.valueOf = function() {}
+assertAsmLinkFail(module, null, {i:fun});
+var fun = function() {}
+fun.toString = function() {}
+assertAsmLinkFail(module, null, {i:fun});
+var fun = function() {}
+var origFunToString = Function.prototype.toString;
+Function.prototype.toString = function() {}
+assertAsmLinkFail(module, null, {i:fun});
+Function.prototype.toString = origFunToString;
+assertEq(asmLink(module, null, {i:fun})(), 0);
+Function.prototype.valueOf = function() {}
+assertAsmLinkFail(module, null, {i:fun});
+delete Function.prototype.valueOf;
+assertEq(asmLink(module, null, {i:fun})(), 0);
+var origObjValueOf = Object.prototype.valueOf;
+Object.prototype.valueOf = function() {}
+assertAsmLinkFail(module, null, {i:fun});
+Object.prototype.valueOf = origObjValueOf;
+assertEq(asmLink(module, null, {i:fun})(), 0);
+Object.prototype.toString = function() {}
+assertEq(asmLink(module, null, {i:fun})(), 0);
 
 var f1 = asmCompile('global', 'foreign', 'heap', USE_ASM + 'var i32 = new global.Int32Array(heap); function g() { return i32[4]|0 } return g');
 var global = this;
