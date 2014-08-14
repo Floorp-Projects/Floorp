@@ -632,7 +632,7 @@ void
 GCMarker::markBufferedGrayRoots(JS::Zone *zone)
 {
     JS_ASSERT(grayBufferState == GRAY_BUFFER_OK);
-    JS_ASSERT(zone->isGCMarkingGray() || zone->isGCCompacting());
+    JS_ASSERT(zone->isGCMarkingGray());
 
     for (GrayRoot *elem = zone->gcGrayRoots.begin(); elem != zone->gcGrayRoots.end(); elem++) {
 #ifdef DEBUG
