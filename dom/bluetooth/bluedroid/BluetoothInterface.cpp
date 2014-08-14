@@ -647,6 +647,451 @@ private:
 };
 
 //
+// Notification handling
+//
+
+template <typename ObjectWrapper, typename Res,
+          typename Tin1, typename Arg1=Tin1>
+class BluetoothNotificationRunnable1 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationRunnable1<ObjectWrapper, Res,
+                                         Tin1, Arg1> SelfType;
+
+  template <typename T1>
+  static already_AddRefed<SelfType> Create(
+    Res (ObjectType::*aMethod)(Arg1), const T1& aIn1)
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    if (NS_FAILED(runnable->ConvertAndSet(aIn1))) {
+      return nullptr;
+    }
+    return runnable.forget();
+  }
+
+  template <typename T1>
+  static void
+  Dispatch(Res (ObjectType::*aMethod)(Arg1), const T1& aIn1)
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod, aIn1);
+
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationRunnable1::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)(mArg1);
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationRunnable1(Res (ObjectType::*aMethod)(Arg1))
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  template<typename T1>
+  nsresult
+  ConvertAndSet(const T1& aIn1)
+  {
+    nsresult rv = Convert(aIn1, mArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  Res (ObjectType::*mMethod)(Arg1);
+  Tin1 mArg1;
+};
+
+template <typename ObjectWrapper, typename Res,
+          typename Tin1, typename Tin2,
+          typename Arg1=Tin1, typename Arg2=Tin2>
+class BluetoothNotificationRunnable2 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationRunnable2<ObjectWrapper, Res,
+                                         Tin1, Tin2, Arg1, Arg2> SelfType;
+
+  template <typename T1, typename T2>
+  static already_AddRefed<SelfType> Create(
+    Res (ObjectType::*aMethod)(Arg1, Arg2), const T1& aIn1, const T2& aIn2)
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    if (NS_FAILED(runnable->ConvertAndSet(aIn1, aIn2))) {
+      return nullptr;
+    }
+    return runnable.forget();
+  }
+
+  template <typename T1, typename T2>
+  static void
+  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2),
+           const T1& aIn1, const T2& aIn2)
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod, aIn1, aIn2);
+
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationRunnable2::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)(mArg1, mArg2);
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationRunnable2(Res (ObjectType::*aMethod)(Arg1, Arg2))
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  template<typename T1, typename T2>
+  nsresult
+  ConvertAndSet(const T1& aIn1, const T2& aIn2)
+  {
+    nsresult rv = Convert(aIn1, mArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn2, mArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  Res (ObjectType::*mMethod)(Arg1, Arg2);
+  Tin1 mArg1;
+  Tin2 mArg2;
+};
+
+template <typename ObjectWrapper, typename Res,
+          typename Tin1, typename Tin2, typename Tin3,
+          typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3>
+class BluetoothNotificationRunnable3 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationRunnable3<ObjectWrapper, Res,
+                                         Tin1, Tin2, Tin3,
+                                         Arg1, Arg2, Arg3> SelfType;
+
+  template <typename T1, typename T2, typename T3>
+  static already_AddRefed<SelfType> Create(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3),
+    const T1& aIn1, const T2& aIn2, const T3& aIn3)
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    if (NS_FAILED(runnable->ConvertAndSet(aIn1, aIn2, aIn3))) {
+      return nullptr;
+    }
+    return runnable.forget();
+  }
+
+  template <typename T1, typename T2, typename T3>
+  static void
+  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3),
+           const T1& aIn1, const T2& aIn2, const T3& aIn3)
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod, aIn1, aIn2, aIn3);
+
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationRunnable3::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)(mArg1, mArg2, mArg3);
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationRunnable3(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3))
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  template<typename T1, typename T2, typename T3>
+  nsresult
+  ConvertAndSet(const T1& aIn1, const T2& aIn2, const T3& aIn3)
+  {
+    nsresult rv = Convert(aIn1, mArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn2, mArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn3, mArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3);
+  Tin1 mArg1;
+  Tin2 mArg2;
+  Tin3 mArg3;
+};
+
+template <typename ObjectWrapper, typename Res,
+          typename Tin1, typename Tin2, typename Tin3, typename Tin4,
+          typename Arg1=Tin1, typename Arg2=Tin2,
+          typename Arg3=Tin3, typename Arg4=Tin4>
+class BluetoothNotificationRunnable4 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationRunnable4<ObjectWrapper, Res,
+    Tin1, Tin2, Tin3, Tin4, Arg1, Arg2, Arg3, Arg4> SelfType;
+
+  template <typename T1, typename T2, typename T3, typename T4>
+  static already_AddRefed<SelfType> Create(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4),
+    const T1& aIn1, const T2& aIn2, const T3& aIn3, const T4& aIn4)
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    if (NS_FAILED(runnable->ConvertAndSet(aIn1, aIn2, aIn3, aIn4))) {
+      return nullptr;
+    }
+    return runnable.forget();
+  }
+
+  template <typename T1, typename T2, typename T3, typename T4>
+  static void
+  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4),
+           const T1& aIn1, const T2& aIn2, const T3& aIn3, const T4& aIn4)
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod, aIn1, aIn2, aIn3, aIn4);
+
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationRunnable4::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4);
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationRunnable4(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4))
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  template<typename T1,typename T2, typename T3, typename T4>
+  nsresult
+  ConvertAndSet(const T1& aIn1, const T2& aIn2,
+                const T3& aIn3, const T4& aIn4)
+  {
+    nsresult rv = Convert(aIn1, mArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn2, mArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn3, mArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn4, mArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3, Arg4);
+  Tin1 mArg1;
+  Tin2 mArg2;
+  Tin3 mArg3;
+  Tin4 mArg4;
+};
+
+template <typename ObjectWrapper, typename Res,
+          typename Tin1, typename Tin2, typename Tin3,
+          typename Tin4, typename Tin5,
+          typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
+          typename Arg4=Tin4, typename Arg5=Tin5>
+class BluetoothNotificationRunnable5 : public nsRunnable
+{
+public:
+  typedef typename ObjectWrapper::ObjectType  ObjectType;
+  typedef BluetoothNotificationRunnable5<ObjectWrapper, Res,
+    Tin1, Tin2, Tin3, Tin4, Tin5, Arg1, Arg2, Arg3, Arg4, Arg5> SelfType;
+
+  template <typename T1, typename T2, typename T3, typename T4, typename T5>
+  static already_AddRefed<SelfType> Create(
+    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5),
+    const T1& aIn1, const T2& aIn2, const T3& aIn3,
+    const T4& aIn4, const T5& aIn5)
+  {
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
+
+    if (NS_FAILED(runnable->ConvertAndSet(aIn1, aIn2, aIn3, aIn4, aIn5))) {
+      return nullptr;
+    }
+    return runnable.forget();
+  }
+
+  template <typename T1, typename T2, typename T3, typename T4, typename T5>
+  static void
+  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5),
+           const T1& aIn1, const T2& aIn2, const T3& aIn3,
+           const T4& aIn4, const T5& aIn5)
+  {
+    nsRefPtr<SelfType> runnable = Create(aMethod,
+                                         aIn1, aIn2, aIn3, aIn4, aIn5);
+    if (!runnable) {
+      BT_WARNING("BluetoothNotificationRunnable5::Create failed");
+      return;
+    }
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+    }
+  }
+
+  NS_METHOD
+  Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    ObjectType* obj = ObjectWrapper::GetInstance();
+
+    if (!obj) {
+      BT_WARNING("Notification handler not initialized");
+    } else {
+      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4, mArg5);
+    }
+    return NS_OK;
+  }
+
+private:
+  BluetoothNotificationRunnable5(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3,
+                                                            Arg4, Arg5))
+  : mMethod(aMethod)
+  {
+    MOZ_ASSERT(mMethod);
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5>
+  nsresult
+  ConvertAndSet(const T1& aIn1, const T2& aIn2, const T3& aIn3,
+                const T4& aIn4, const T5& aIn5)
+  {
+    nsresult rv = Convert(aIn1, mArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn2, mArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn3, mArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn4, mArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = Convert(aIn5, mArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3, Arg4, Arg5);
+  Tin1 mArg1;
+  Tin2 mArg2;
+  Tin3 mArg3;
+  Tin4 mArg4;
+  Tin5 mArg5;
+};
+
+//
 // Socket Interface
 //
 
