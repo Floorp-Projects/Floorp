@@ -165,6 +165,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private static final int FORWARD_ANIMATION_DURATION = 450;
 
     private final LightweightTheme theme;
+    private final ToolbarPrefs prefs;
 
     public BrowserToolbar(Context context) {
         this(context, null);
@@ -280,6 +281,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
                 updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
             }
         };
+
+        prefs = new ToolbarPrefs();
+        urlDisplayLayout.setToolbarPrefs(prefs);
     }
 
     public ArrayList<View> populateTabletViews() {
@@ -313,6 +317,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
+
+        prefs.open();
 
         setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -462,6 +468,13 @@ public class BrowserToolbar extends ThemedRelativeLayout
                 }
             });
         }
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        prefs.close();
     }
 
     public void setProgressBar(ToolbarProgressView progressBar) {
