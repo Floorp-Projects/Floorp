@@ -7149,17 +7149,6 @@ if test -n "$JSGC_GENERATIONAL"; then
 fi
 
 dnl ========================================================
-dnl = Use compacting GC
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gccompacting,
-[  --enable-gccompacting   Compact the JS heap by moving GC things],
-    JS_GCCOMPACTING=1,
-    JS_GCCOMPACTING= )
-if test -n "$JS_GCCOMPACTING"; then
-    AC_DEFINE(JS_GCCOMPACTING)
-fi
-
-dnl ========================================================
 dnl = Use a smaller chunk size for GC chunks
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(small-chunk-size,
@@ -9119,9 +9108,6 @@ if test -z "$JSGC_USE_EXACT_ROOTING" ; then
 fi
 if test -z "$JSGC_GENERATIONAL" ; then
     ac_configure_args="$ac_configure_args --disable-gcgenerational"
-fi
-if test -n "$JS_GCCOMPACTING" ; then
-    ac_configure_args="$ac_configure_args --enable-gccompacting"
 fi
 if test -n "$JS_GC_SMALL_CHUNK_SIZE" ; then
     ac_configure_args="$ac_configure_args --enable-small-chunk-size"
