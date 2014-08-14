@@ -10,9 +10,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Toast",
-                                  "resource://gre/modules/Toast.jsm");
-
 function ContentDispatchChooser() {}
 
 ContentDispatchChooser.prototype =
@@ -52,23 +49,26 @@ ContentDispatchChooser.prototype =
     if (aHandler.possibleApplicationHandlers.length > 1) {
       aHandler.launchWithURI(aURI, aWindowContext);
     } else {
-      let bundle = Services.strings.createBundle("chrome://browser/locale/handling.properties");
-      let failedText = bundle.GetStringFromName("protocol.failed");
-      let searchText = bundle.GetStringFromName("protocol.toast.search");
+      let win = this._getChromeWin();
+      if (win && win.NativeWindow) {
+        let bundle = Services.strings.createBundle("chrome://browser/locale/handling.properties");
+        let failedText = bundle.GetStringFromName("protocol.failed");
+        let searchText = bundle.GetStringFromName("protocol.toast.search");
 
-      Toast.show(failedText, Toast.LONG, {
-        button: {
-          label: searchText,
-          callback: function() {
-            let message = {
-              type: "Intent:Open",
-              url: "market://search?q=" + aURI.scheme,
-            };
+        win.NativeWindow.toast.show(failedText, "long", {
+          button: {
+            label: searchText,
+            callback: function() {
+              let message = {
+                type: "Intent:Open",
+                url: "market://search?q=" + aURI.scheme,
+              };
 
-            sendMessageToJava(message);
+              sendMessageToJava(message);
+            }
           }
-        }
-      });
+        });
+      }
     }
   },
 };
