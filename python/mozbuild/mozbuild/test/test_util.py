@@ -203,31 +203,31 @@ class TestHierarchicalStringList(unittest.TestCase):
         self.EXPORTS = HierarchicalStringList()
 
     def test_exports_append(self):
-        self.assertEqual(self.EXPORTS.get_strings(), [])
+        self.assertEqual(self.EXPORTS._strings, [])
         self.EXPORTS += ["foo.h"]
-        self.assertEqual(self.EXPORTS.get_strings(), ["foo.h"])
+        self.assertEqual(self.EXPORTS._strings, ["foo.h"])
         self.EXPORTS += ["bar.h"]
-        self.assertEqual(self.EXPORTS.get_strings(), ["foo.h", "bar.h"])
+        self.assertEqual(self.EXPORTS._strings, ["foo.h", "bar.h"])
 
     def test_exports_subdir(self):
-        self.assertEqual(self.EXPORTS.get_children(), {})
+        self.assertEqual(self.EXPORTS._children, {})
         self.EXPORTS.foo += ["foo.h"]
-        self.assertItemsEqual(self.EXPORTS.get_children(), {"foo" : True})
-        self.assertEqual(self.EXPORTS.foo.get_strings(), ["foo.h"])
+        self.assertItemsEqual(self.EXPORTS._children, {"foo" : True})
+        self.assertEqual(self.EXPORTS.foo._strings, ["foo.h"])
         self.EXPORTS.bar += ["bar.h"]
-        self.assertItemsEqual(self.EXPORTS.get_children(),
+        self.assertItemsEqual(self.EXPORTS._children,
                               {"foo" : True, "bar" : True})
-        self.assertEqual(self.EXPORTS.foo.get_strings(), ["foo.h"])
-        self.assertEqual(self.EXPORTS.bar.get_strings(), ["bar.h"])
+        self.assertEqual(self.EXPORTS.foo._strings, ["foo.h"])
+        self.assertEqual(self.EXPORTS.bar._strings, ["bar.h"])
 
     def test_exports_multiple_subdir(self):
         self.EXPORTS.foo.bar = ["foobar.h"]
-        self.assertItemsEqual(self.EXPORTS.get_children(), {"foo" : True})
-        self.assertItemsEqual(self.EXPORTS.foo.get_children(), {"bar" : True})
-        self.assertItemsEqual(self.EXPORTS.foo.bar.get_children(), {})
-        self.assertEqual(self.EXPORTS.get_strings(), [])
-        self.assertEqual(self.EXPORTS.foo.get_strings(), [])
-        self.assertEqual(self.EXPORTS.foo.bar.get_strings(), ["foobar.h"])
+        self.assertItemsEqual(self.EXPORTS._children, {"foo" : True})
+        self.assertItemsEqual(self.EXPORTS.foo._children, {"bar" : True})
+        self.assertItemsEqual(self.EXPORTS.foo.bar._children, {})
+        self.assertEqual(self.EXPORTS._strings, [])
+        self.assertEqual(self.EXPORTS.foo._strings, [])
+        self.assertEqual(self.EXPORTS.foo.bar._strings, ["foobar.h"])
 
     def test_invalid_exports_append(self):
         with self.assertRaises(ValueError) as ve:
@@ -265,6 +265,25 @@ class TestHierarchicalStringList(unittest.TestCase):
     def test_unsorted_appends(self):
         with self.assertRaises(UnsortedError) as ee:
             self.EXPORTS += ['foo.h', 'bar.h']
+
+    def test_walk(self):
+        l = HierarchicalStringList()
+        l += ['root1', 'root2', 'root3']
+        l.child1 += ['child11', 'child12', 'child13']
+        l.child1.grandchild1 += ['grandchild111', 'grandchild112']
+        l.child1.grandchild2 += ['grandchild121', 'grandchild122']
+        l.child2.grandchild1 += ['grandchild211', 'grandchild212']
+        l.child2.grandchild1 += ['grandchild213', 'grandchild214']
+
+        els = list((path, list(seq)) for path, seq in l.walk())
+        self.assertEqual(els, [
+            ('', ['root1', 'root2', 'root3']),
+            ('child1', ['child11', 'child12', 'child13']),
+            ('child1/grandchild1', ['grandchild111', 'grandchild112']),
+            ('child1/grandchild2', ['grandchild121', 'grandchild122']),
+            ('child2/grandchild1', ['grandchild211', 'grandchild212',
+                                    'grandchild213', 'grandchild214']),
+        ])
 
 
 class TestStrictOrderingOnAppendList(unittest.TestCase):
