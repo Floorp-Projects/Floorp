@@ -722,6 +722,23 @@ js::Nursery::MinorGCCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
         *thingp = trc->nursery->moveToTenured(trc, static_cast<JSObject *>(*thingp));
 }
 
+static void
+CheckHashTablesAfterMovingGC(JSRuntime *rt)
+{
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal() == ZealCheckHashTablesOnMinorGC) {
+        /* Check that internal hash tables no longer have any pointers into the nursery. */
+        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+            c->checkNewTypeObjectTableAfterMovingGC();
+            c->checkInitialShapesTableAfterMovingGC();
+            c->checkWrapperMapAfterMovingGC();
+            if (c->debugScopes)
+                c->debugScopes->checkHashTablesAfterMovingGC(rt);
+        }
+    }
+#endif
+}
+
 #ifdef PROFILE_NURSERY
 #define TIME_START(name) int64_t timstampStart_##name = PRMJ_Now()
 #define TIME_END(name) int64_t timstampEnd_##name = PRMJ_Now()
@@ -793,10 +810,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     TIME_END(markGenericEntries);
 
     TIME_START(checkHashTables);
-#ifdef JS_GC_ZEAL
-    if (rt->gcZeal() == ZealCheckHashTablesOnMinorGC)
-        CheckHashTablesAfterMovingGC(rt);
-#endif
+    CheckHashTablesAfterMovingGC(rt);
     TIME_END(checkHashTables);
 
     TIME_START(markRuntime);

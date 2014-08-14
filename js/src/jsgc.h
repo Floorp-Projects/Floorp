@@ -1279,31 +1279,6 @@ template <typename T> inline T MaybeForwarded(T t) { return t; }
 
 #endif // JSGC_COMPACTING
 
-#ifdef JSGC_HASH_TABLE_CHECKS
-
-template <typename T>
-inline void
-CheckGCThingAfterMovingGC(T *t)
-{
-    JS_ASSERT_IF(t, !IsInsideNursery(t));
-#ifdef JSGC_COMPACTING
-    JS_ASSERT_IF(t, !IsForwarded(t));
-#endif
-}
-
-inline void
-CheckValueAfterMovingGC(const JS::Value& value)
-{
-    if (value.isObject())
-        return CheckGCThingAfterMovingGC(&value.toObject());
-    else if (value.isString())
-        return CheckGCThingAfterMovingGC(value.toString());
-    else if (value.isSymbol())
-        return CheckGCThingAfterMovingGC(value.toSymbol());
-}
-
-#endif // JSGC_HASH_TABLE_CHECKS
-
 const int ZealPokeValue = 1;
 const int ZealAllocValue = 2;
 const int ZealFrameGCValue = 3;

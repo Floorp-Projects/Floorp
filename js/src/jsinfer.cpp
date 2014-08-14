@@ -3887,6 +3887,28 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
     return type;
 }
 
+#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
+void
+JSCompartment::checkNewTypeObjectTableAfterMovingGC()
+{
+    /*
+     * Assert that the postbarriers have worked and that nothing is left in
+     * newTypeObjects that points into the nursery, and that the hash table
+     * entries are discoverable.
+     */
+    for (TypeObjectWithNewScriptSet::Enum e(newTypeObjects); !e.empty(); e.popFront()) {
+        TypeObjectWithNewScriptEntry entry = e.front();
+        JS_ASSERT(!IsInsideNursery(entry.newFunction));
+        TaggedProto proto = entry.object->proto();
+        JS_ASSERT_IF(proto.isObject(), !IsInsideNursery(proto.toObject()));
+        TypeObjectWithNewScriptEntry::Lookup
+            lookup(entry.object->clasp(), proto, entry.newFunction);
+        TypeObjectWithNewScriptSet::Ptr ptr = newTypeObjects.lookup(lookup);
+        JS_ASSERT(ptr.found() && &*ptr == &e.front());
+    }
+}
+#endif
+
 TypeObject *
 ExclusiveContext::getSingletonType(const Class *clasp, TaggedProto proto)
 {
@@ -4197,42 +4219,6 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
         }
     }
 }
-
-#ifdef JSGC_HASH_TABLE_CHECKS
-
-void
-JSCompartment::checkNewTypeObjectTablesAfterMovingGC()
-{
-    checkNewTypeObjectTableAfterMovingGC(newTypeObjects);
-    checkNewTypeObjectTableAfterMovingGC(lazyTypeObjects);
-}
-
-void
-JSCompartment::checkNewTypeObjectTableAfterMovingGC(TypeObjectWithNewScriptSet &table)
-{
-    /*
-     * Assert that nothing points into the nursery or needs to be relocated, and
-     * that the hash table entries are discoverable.
-     */
-    if (!table.initialized())
-        return;
-
-    for (TypeObjectWithNewScriptSet::Enum e(table); !e.empty(); e.popFront()) {
-        TypeObjectWithNewScriptEntry entry = e.front();
-        CheckGCThingAfterMovingGC(entry.object.get());
-        TaggedProto proto = entry.object->proto();
-        if (proto.isObject())
-            CheckGCThingAfterMovingGC(proto.toObject());
-        CheckGCThingAfterMovingGC(entry.newFunction);
-
-        TypeObjectWithNewScriptEntry::Lookup
-            lookup(entry.object->clasp(), proto, entry.newFunction);
-        TypeObjectWithNewScriptSet::Ptr ptr = table.lookup(lookup);
-        JS_ASSERT(ptr.found() && &*ptr == &e.front());
-    }
-}
-
-#endif // JSGC_HASH_TABLE_CHECKS
 
 TypeCompartment::~TypeCompartment()
 {
