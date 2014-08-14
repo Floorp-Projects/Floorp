@@ -291,6 +291,7 @@ class Type(Node):
     def __init__(self, name, const=0,
                  ptr=0, ptrconst=0, ptrptr=0, ptrconstptr=0,
                  ref=0,
+                 hasimplicitcopyctor=True,
                  T=None):
         """
 To avoid getting fancy with recursive types, we limit the kinds
@@ -315,6 +316,7 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
         self.ptrptr = ptrptr
         self.ptrconstptr = ptrconstptr
         self.ref = ref
+        self.hasimplicitcopyctor = hasimplicitcopyctor
         self.T = T
         # XXX could get serious here with recursive types, but shouldn't 
         # need that for this codegen

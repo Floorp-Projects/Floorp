@@ -189,7 +189,7 @@ struct BreadthFirst {
         js::Vector<T, 0> head, tail;
         size_t frontIndex;
       public:
-        Queue(JSContext *cx) : head(cx), tail(cx), frontIndex(0) { }
+        explicit Queue(JSContext *cx) : head(cx), tail(cx), frontIndex(0) { }
         bool empty() { return frontIndex >= head.length(); }
         T &front() {
             MOZ_ASSERT(!empty());

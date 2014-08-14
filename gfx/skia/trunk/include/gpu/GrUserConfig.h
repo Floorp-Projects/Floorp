@@ -36,5 +36,5 @@
  * that our context is set correctly
  */
 #define GR_GL_PER_GL_FUNC_CALLBACK  1
-
+#define GR_ALWAYS_ALLOCATE_ON_HEAP  1
 #endif

@@ -13,6 +13,11 @@
   <script type="application/javascript">
     function doTest()
     {
+      testTextAtOffset("line_test_1", BOUNDARY_LINE_START,
+                       [[0, 6, "Line 1 ", 0, 7],
+                        [7, 7, "", 7, 7],
+                        [8, 15, "Line 3 ", 8, 15]]);
+
       //////////////////////////////////////////////////////////////////////////
       // __h__e__l__l__o__ __m__y__ __f__r__i__e__n__d__
       //  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
@@ -250,6 +255,11 @@ two words
       <p>seciofarus</p>
     </div>
   </div>
-
+  <div id="line_test_1">
+    Line 1
+    <center><input type="TEXT"><input value="Button" type="SUBMIT"></center>
+    Line 3
+  </div>
+  </body>
 </body>
 </html>

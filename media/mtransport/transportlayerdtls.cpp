@@ -501,7 +501,7 @@ bool TransportLayerDtls::Setup() {
   // 1.0 for stream modes.
   SSLVersionRange version_range = {
     SSL_LIBRARY_VERSION_TLS_1_1,
-    SSL_LIBRARY_VERSION_TLS_1_2
+    SSL_LIBRARY_VERSION_TLS_1_1 // version intolerance; bug 1052610
   };
 
   rv = SSL_VersionRangeSet(ssl_fd, &version_range);
@@ -672,6 +672,8 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
     }
   }
 
+// Don't remove suites; TODO(mt@mozilla.com) restore; bug 1052610
+#if 0
   for (size_t i = 0; i < PR_ARRAY_SIZE(DisabledCiphers); ++i) {
     MOZ_MTLOG(ML_INFO, LAYER_INFO << "Disabling: " << DisabledCiphers[i]);
 
@@ -691,6 +693,7 @@ bool TransportLayerDtls::SetupCipherSuites(PRFileDesc* ssl_fd) const {
       }
     }
   }
+#endif
   return true;
 }
 

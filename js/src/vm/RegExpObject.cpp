@@ -304,11 +304,11 @@ RegExpObject::createNoStatics(ExclusiveContext *cx, HandleAtom source, RegExpFla
     Maybe<CompileOptions> dummyOptions;
     Maybe<TokenStream> dummyTokenStream;
     if (!tokenStream) {
-        dummyOptions.construct(cx->asJSContext());
-        dummyTokenStream.construct(cx, dummyOptions.ref(),
+        dummyOptions.emplace(cx->asJSContext());
+        dummyTokenStream.emplace(cx, *dummyOptions,
                                    (const jschar *) nullptr, 0,
                                    (frontend::StrictModeGetter *) nullptr);
-        tokenStream = dummyTokenStream.addr();
+        tokenStream = dummyTokenStream.ptr();
     }
 
     if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source))

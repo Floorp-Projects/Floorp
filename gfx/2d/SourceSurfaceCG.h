@@ -29,7 +29,7 @@ class SourceSurfaceCG : public SourceSurface
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCG)
   SourceSurfaceCG() {}
-  SourceSurfaceCG(CGImageRef aImage) : mImage(aImage) {}
+  explicit SourceSurfaceCG(CGImageRef aImage) : mImage(aImage) {}
   ~SourceSurfaceCG();
 
   virtual SurfaceType GetType() const { return SurfaceType::COREGRAPHICS_IMAGE; }
@@ -58,7 +58,7 @@ class DataSourceSurfaceCG : public DataSourceSurface
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCG)
   DataSourceSurfaceCG() {}
-  DataSourceSurfaceCG(CGImageRef aImage);
+  explicit DataSourceSurfaceCG(CGImageRef aImage);
   ~DataSourceSurfaceCG();
 
   virtual SurfaceType GetType() const { return SurfaceType::DATA; }
@@ -100,7 +100,7 @@ class SourceSurfaceCGBitmapContext : public SourceSurfaceCGContext
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCGBitmapContext)
-  SourceSurfaceCGBitmapContext(DrawTargetCG *);
+  explicit SourceSurfaceCGBitmapContext(DrawTargetCG *);
   ~SourceSurfaceCGBitmapContext();
 
   virtual SurfaceType GetType() const { return SurfaceType::COREGRAPHICS_CGCONTEXT; }
@@ -156,7 +156,7 @@ class SourceSurfaceCGIOSurfaceContext : public SourceSurfaceCGContext
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCGIOSurfaceContext)
-  SourceSurfaceCGIOSurfaceContext(DrawTargetCG *);
+  explicit SourceSurfaceCGIOSurfaceContext(DrawTargetCG *);
   ~SourceSurfaceCGIOSurfaceContext();
 
   virtual SurfaceType GetType() const { return SurfaceType::COREGRAPHICS_CGCONTEXT; }

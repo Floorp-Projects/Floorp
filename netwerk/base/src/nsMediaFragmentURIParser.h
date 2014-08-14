@@ -39,40 +39,40 @@ public:
   explicit nsMediaFragmentURIParser(nsCString& aRef);
 
   // True if a valid temporal media fragment indicated a start time.
-  bool HasStartTime() const { return !mStart.empty(); }
+  bool HasStartTime() const { return mStart.isSome(); }
 
   // If a valid temporal media fragment indicated a start time, returns
   // it in units of seconds. If not, defaults to 0.
-  double GetStartTime() const { return mStart.ref(); }
+  double GetStartTime() const { return *mStart; }
 
   // True if a valid temporal media fragment indicated an end time.
-  bool HasEndTime() const { return !mEnd.empty(); }
+  bool HasEndTime() const { return mEnd.isSome(); }
 
   // If a valid temporal media fragment indicated an end time, returns
   // it in units of seconds. If not, defaults to -1.
-  double GetEndTime() const { return mEnd.ref(); }
+  double GetEndTime() const { return *mEnd; }
 
   // True if a valid spatial media fragment indicated a clipping region.
-  bool HasClip() const { return !mClip.empty(); }
+  bool HasClip() const { return mClip.isSome(); }
 
   // True if a valid spatial media fragment indicated a resolution.
-  bool HasResolution() const { return !mResolution.empty(); }
+  bool HasResolution() const { return mResolution.isSome(); }
 
   // True if a valid spatial media fragment indicated a resolution.
-  nsIntSize GetResolution() const { return mResolution.ref(); }
+  nsIntSize GetResolution() const { return *mResolution; }
 
   // If a valid spatial media fragment indicated a clipping region,
   // returns the region. If not, returns an empty region. The unit
   // used depends on the value returned by GetClipUnit().
-  nsIntRect GetClip() const { return mClip.ref(); }
+  nsIntRect GetClip() const { return *mClip; }
 
   // If a valid spatial media fragment indicated a clipping region,
   // returns the unit used.
   ClipUnit GetClipUnit() const { return mClipUnit; }
 
-  bool HasSampleSize() const { return !mSampleSize.empty(); }
+  bool HasSampleSize() const { return mSampleSize.isSome(); }
 
-  int GetSampleSize() const { return mSampleSize.ref(); }
+  int GetSampleSize() const { return *mSampleSize; }
 
 private:
   // Parse the URI ref provided, looking for media fragments. This is

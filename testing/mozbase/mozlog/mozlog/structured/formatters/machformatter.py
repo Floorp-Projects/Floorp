@@ -220,6 +220,9 @@ class MachFormatter(base.BaseFormatter):
                                                            data["status"],
                                                            data["expected"],
                                                            data.get("message", "")))
+        if data["status"] == "PASS":
+            self.status_buffer[test]["pass"] += 1
+
         self._update_summary(data)
 
     def _update_summary(self, data):
@@ -247,9 +250,14 @@ class MachFormatter(base.BaseFormatter):
                 level = self.terminal.blue(level)
 
         if data.get('component'):
-            return " ".join([data["component"], level, data["message"]])
+            rv = " ".join([data["component"], level, data["message"]])
+        else:
+            rv = "%s %s" % (level, data["message"])
 
-        return "%s %s" % (level, data["message"])
+        if "stack" in data:
+            rv += "\n%s" % data["stack"]
+
+        return rv
 
     def _get_subtest_data(self, data):
         test = self._get_test_id(data)
