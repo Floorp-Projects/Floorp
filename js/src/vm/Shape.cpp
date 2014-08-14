@@ -445,7 +445,7 @@ js::ObjectImpl::toDictionaryMode(ThreadSafeContext *cx)
 
 #ifdef JSGC_COMPACTING
     // TODO: This crashes if we run a compacting GC here.
-    js::gc::AutoSuppressGC nogc(zone()->runtimeFromAnyThread());
+    js::AutoDisableCompactingGC nogc(zone()->runtimeFromAnyThread());
 #endif
 
     /* We allocate the shapes from cx->compartment(), so make sure it's right. */

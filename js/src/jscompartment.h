@@ -423,8 +423,8 @@ struct JSCompartment
 
   public:
     js::GlobalObjectSet &getDebuggees() { return debuggees; }
-    bool addDebuggee(JSContext *cx, js::GlobalObject *global);
-    bool addDebuggee(JSContext *cx, js::GlobalObject *global,
+    bool addDebuggee(JSContext *cx, JS::Handle<js::GlobalObject *> global);
+    bool addDebuggee(JSContext *cx, JS::Handle<js::GlobalObject *> global,
                      js::AutoDebugModeInvalidation &invalidate);
     bool removeDebuggee(JSContext *cx, js::GlobalObject *global,
                         js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
