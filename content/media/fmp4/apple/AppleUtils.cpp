@@ -26,12 +26,12 @@ namespace mozilla {
 nsresult
 AppleUtils::GetProperty(AudioFileStreamID aAudioFileStream,
                         AudioFileStreamPropertyID aPropertyID,
-                        void *aData)
+                        void* aData)
 {
   UInt32 size;
   Boolean writeable;
   OSStatus rv = AudioFileStreamGetPropertyInfo(aAudioFileStream, aPropertyID,
-                                                             &size, &writeable);
+                                               &size, &writeable);
 
   if (rv) {
     WARN("Couldn't get property " PROPERTY_ID_FORMAT "\n",
