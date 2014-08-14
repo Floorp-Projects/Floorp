@@ -255,7 +255,7 @@ AccessFuContentTest.prototype = {
     this.currentPair = this.queue.shift();
 
     if (this.currentPair) {
-      if (this.currentPair[0] instanceof Function) {
+      if (typeof this.currentPair[0] === 'function') {
         this.currentPair[0](this.mms[0]);
       } else if (this.currentPair[0]) {
         this.mms[0].sendAsyncMessage(this.currentPair[0].name,
@@ -290,7 +290,11 @@ AccessFuContentTest.prototype = {
       if (expected.speak) {
         var checkFunc = SimpleTest[expected.speak_checkFunc] || isDeeply;
         checkFunc.apply(SimpleTest, [speech, expected.speak,
-          '"' + JSON.stringify(speech) + '" spoken']);
+          'spoken: ' + JSON.stringify(speech) +
+          ' expected: ' + JSON.stringify(expected.speak) +
+          ' after: ' + (typeof this.currentPair[0] === 'function' ?
+            this.currentPair[0].toString() :
+            JSON.stringify(this.currentPair[0]))]);
       }
 
       if (expected.android) {
