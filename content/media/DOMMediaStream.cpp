@@ -196,6 +196,18 @@ DOMMediaStream::GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks)
   }
 }
 
+void
+DOMMediaStream::GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks)
+{
+  aTracks.AppendElements(mTracks);
+}
+
+bool
+DOMMediaStream::HasTrack(const MediaStreamTrack& aTrack) const
+{
+  return mTracks.Contains(&aTrack);
+}
+
 bool
 DOMMediaStream::IsFinished()
 {

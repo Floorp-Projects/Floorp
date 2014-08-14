@@ -375,6 +375,18 @@ public:
     rv = RemoveStream(aMediaStream);
   }
 
+  NS_IMETHODIMP_TO_ERRORRESULT(AddTrack, ErrorResult &rv,
+      mozilla::dom::MediaStreamTrack& aTrack,
+      const mozilla::dom::Sequence<mozilla::dom::OwningNonNull<DOMMediaStream>>& aStreams)
+  {
+    rv = AddTrack(aTrack, aStreams);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(RemoveTrack, ErrorResult &rv,
+                               mozilla::dom::MediaStreamTrack& aTrack)
+  {
+    rv = RemoveTrack(aTrack);
+  }
 
   nsresult GetPeerIdentity(nsAString& peerIdentity)
   {

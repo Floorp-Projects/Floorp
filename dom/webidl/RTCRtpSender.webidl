@@ -8,8 +8,7 @@
  */
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtpsender;1",
- Constructor (MediaStreamTrack track)]
+ JSImplementation="@mozilla.org/dom/rtpsender;1"]
 interface RTCRtpSender {
   readonly attribute MediaStreamTrack track;
 };
