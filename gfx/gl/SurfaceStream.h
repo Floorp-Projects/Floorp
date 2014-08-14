@@ -136,7 +136,7 @@ protected:
 
 public:
     MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SurfaceStream_SingleBuffer)
-    SurfaceStream_SingleBuffer(SurfaceStream* prevStream);
+    explicit SurfaceStream_SingleBuffer(SurfaceStream* prevStream);
     virtual ~SurfaceStream_SingleBuffer();
 
     /* Since we're non-OMTC, we know the order of execution here:
@@ -161,7 +161,7 @@ protected:
 
 public:
     MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SurfaceStream_TripleBuffer_Copy)
-    SurfaceStream_TripleBuffer_Copy(SurfaceStream* prevStream);
+    explicit SurfaceStream_TripleBuffer_Copy(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer_Copy();
 
     virtual SharedSurface* SwapProducer(SurfaceFactory* factory,
@@ -188,7 +188,7 @@ protected:
 
 public:
     MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SurfaceStream_TripleBuffer)
-    SurfaceStream_TripleBuffer(SurfaceStream* prevStream);
+    explicit SurfaceStream_TripleBuffer(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer();
     virtual bool CopySurfaceToProducer(SharedSurface* src, SurfaceFactory* factory);
 
@@ -213,7 +213,7 @@ protected:
     virtual void WaitForCompositor() MOZ_OVERRIDE;
 
 public:
-    SurfaceStream_TripleBuffer_Async(SurfaceStream* prevStream);
+    explicit SurfaceStream_TripleBuffer_Async(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer_Async();
 };
 

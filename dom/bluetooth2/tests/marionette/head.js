@@ -581,7 +581,7 @@ function waitForDevicesFound(aDiscoveryHandle, aExpectedNumberOfDevices) {
   let deferred = Promise.defer();
 
   ok(aDiscoveryHandle instanceof BluetoothDiscoveryHandle,
-    "discoveryHandle should be a BluetoothDiscoveryHandle");
+    "aDiscoveryHandle should be a BluetoothDiscoveryHandle");
 
   let devicesArray = [];
   aDiscoveryHandle.ondevicefound = function onDeviceFound(aEvent) {
@@ -596,6 +596,192 @@ function waitForDevicesFound(aDiscoveryHandle, aExpectedNumberOfDevices) {
   };
 
   return deferred.promise;
+}
+
+/**
+ * Wait for 'devicefound' events of specified devices.
+ *
+ * Resolve if every specified device has been found. Never reject.
+ *
+ * Fulfill params: an array which contains the BluetoothDeviceEvents that we
+ *                 expected to receive from the BluetoothDiscoveryHandle.
+ *
+ * @param aDiscoveryHandle
+ *        A BluetoothDiscoveryHandle which is used to notify application of
+ *        discovered remote bluetooth devices.
+ * @param aRemoteAddresses
+ *        An array which contains addresses of remote devices.
+ *
+ * @return A deferred promise.
+ */
+function waitForSpecifiedDevicesFound(aDiscoveryHandle, aRemoteAddresses) {
+  let deferred = Promise.defer();
+
+  ok(aDiscoveryHandle instanceof BluetoothDiscoveryHandle,
+    "aDiscoveryHandle should be a BluetoothDiscoveryHandle");
+
+  let devicesArray = [];
+  aDiscoveryHandle.ondevicefound = function onDeviceFound(aEvent) {
+    ok(aEvent instanceof BluetoothDeviceEvent,
+      "aEvent should be a BluetoothDeviceEvent");
+
+    if (aRemoteAddresses.indexOf(aEvent.device.address) != -1) {
+      devicesArray.push(aEvent);
+    }
+    if (devicesArray.length == aRemoteAddresses.length) {
+      aDiscoveryHandle.ondevicefound = null;
+      ok(true, "BluetoothAdapter has found all remote devices.");
+      deferred.resolve(devicesArray);
+    }
+  };
+
+  return deferred.promise;
+}
+
+/**
+ * Verify the correctness of 'devicepaired' or 'deviceunpaired' events.
+ *
+ * Use BluetoothAdapter.getPairedDevices() to get current device array.
+ * Resolve if the device of from 'devicepaired' event exists in device array or
+ * the device of address from 'deviceunpaired' event has been removed from
+ * device array.
+ * Otherwise, reject the promise.
+ *
+ * Fulfill params: the device event from 'devicepaired' or 'deviceunpaired'.
+ *
+ * @param aAdapter
+ *        The BluetoothAdapter you want to use.
+ * @param aDeviceEvent
+ *        The device event from "devicepaired" or "deviceunpaired".
+ *
+ * @return A deferred promise.
+ */
+function verifyDevicePairedUnpairedEvent(aAdapter, aDeviceEvent) {
+  let deferred = Promise.defer();
+
+  let devices = aAdapter.getPairedDevices();
+  let isPromisePending = true;
+  if (aDeviceEvent.device) {
+    log("  - Verify 'devicepaired' event");
+    for (let i in devices) {
+      if (devices[i].address == aDeviceEvent.device.address) {
+        deferred.resolve(aDeviceEvent);
+        isPromisePending = false;
+      }
+    }
+    if (isPromisePending) {
+      deferred.reject(aDeviceEvent);
+      isPromisePending = false;
+    }
+  } else if (aDeviceEvent.address) {
+    log("  - Verify 'deviceunpaired' event");
+    for (let i in devices) {
+      if (devices[i].address == aDeviceEvent.address) {
+        deferred.reject(aDeviceEvent);
+        isPromisePending = false;
+      }
+    }
+    if (isPromisePending) {
+      deferred.resolve(aDeviceEvent);
+      isPromisePending = false;
+    }
+  } else {
+    log("  - Exception occurs. Unexpected aDeviceEvent properties.");
+    deferred.reject(aDeviceEvent);
+    isPromisePending = false;
+  }
+
+  return deferred.promise;
+}
+
+/**
+ * Add event handlers for pairing request listener.
+ *
+ * @param aAdapter
+ *        The BluetoothAdapter you want to use.
+ * @param aSpecifiedBdAddress (optional)
+ *        Bluetooth address of the specified remote device which adapter wants
+ *        to pair with. If aSpecifiedBdAddress is an empty string, 'null' or
+ *        'undefined', this function accepts every pairing request.
+ */
+function addEventHandlerForPairingRequest(aAdapter, aSpecifiedBdAddress) {
+  log("  - Add event handlers for pairing requests.");
+
+  aAdapter.pairingReqs.ondisplaypasskeyreq = function onDisplayPasskeyReq(evt) {
+    let passkey = evt.handle.passkey; // passkey to display
+    ok(typeof passkey === 'string', "type checking for passkey.");
+    log("  - Received 'ondisplaypasskeyreq' event with passkey: " + passkey);
+
+    let device = evt.device;
+    if (!aSpecifiedBdAddress || device.address == aSpecifiedBdAddress) {
+      cleanupPairingListener(aAdapter.pairingReqs);
+    }
+  };
+
+  aAdapter.pairingReqs.onenterpincodereq = function onEnterPinCodeReq(evt) {
+    log("  - Received 'onenterpincodereq' event.");
+
+    let device = evt.device;
+    if (!aSpecifiedBdAddress || device.address == aSpecifiedBdAddress) {
+      // TODO: Allow user to enter pincode.
+      let UserEnteredPinCode = "0000";
+      let pinCode = UserEnteredPinCode;
+
+      evt.handle.setPinCode(pinCode).then(
+        function onResolve() {
+          log("  - 'setPinCode' resolve.");
+          cleanupPairingListener(aAdapter.pairingReqs);
+        },
+        function onReject() {
+          log("  - 'setPinCode' reject.");
+          cleanupPairingListener(aAdapter.pairingReqs);
+        });
+    }
+  };
+
+  aAdapter.pairingReqs.onpairingconfirmationreq
+    = function onPairingConfirmationReq(evt) {
+    let passkey = evt.handle.passkey; // passkey for user to confirm
+    ok(typeof passkey === 'string', "type checking for passkey.");
+    log("  - Received 'onpairingconfirmationreq' event with passkey: " + passkey);
+
+    let device = evt.device;
+    if (!aSpecifiedBdAddress || device.address == aSpecifiedBdAddress) {
+      let confirm = true;
+
+      evt.handle.setPairingConfirmation(confirm).then(
+        function onResolve() {
+          log("  - 'setPairingConfirmation' resolve.");
+          cleanupPairingListener(aAdapter.pairingReqs);
+        },
+        function onReject() {
+          log("  - 'setPairingConfirmation' reject.");
+          cleanupPairingListener(aAdapter.pairingReqs);
+        });
+    }
+  };
+
+  aAdapter.pairingReqs.onpairingconsentreq = function onPairingConsentReq(evt) {
+    log("  - Received 'onpairingconsentreq' event.");
+
+    let device = evt.device;
+    if (!aSpecifiedBdAddress || device.address == aSpecifiedBdAddress) {
+      cleanupPairingListener(aAdapter.pairingReqs);
+    }
+  };
+}
+
+/**
+ * Clean up event handlers for pairing listener.
+ *
+ * @param aPairingReqs
+ *        A BluetoothPairingListener with event handlers.
+ */
+function cleanupPairingListener(aPairingReqs) {
+  aPairingReqs.ondisplaypasskeyreq = null;
+  aPairingReqs.onenterpasskeyreq = null;
+  aPairingReqs.onpairingconfirmationreq = null;
+  aPairingReqs.onpairingconsentreq = null;
 }
 
 /**

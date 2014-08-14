@@ -3844,20 +3844,20 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
         // potentially be removed.
         property.freeze(constraints);
 
-        if (aggregateProperty.empty()) {
-            aggregateProperty.construct(property);
+        if (!aggregateProperty) {
+            aggregateProperty.emplace(property);
         } else {
-            if (!aggregateProperty.ref().maybeTypes()->isSubset(property.maybeTypes()) ||
-                !property.maybeTypes()->isSubset(aggregateProperty.ref().maybeTypes()))
+            if (!aggregateProperty->maybeTypes()->isSubset(property.maybeTypes()) ||
+                !property.maybeTypes()->isSubset(aggregateProperty->maybeTypes()))
             {
                 return false;
             }
         }
     }
 
-    JS_ASSERT(!aggregateProperty.empty());
+    JS_ASSERT(aggregateProperty);
 
-    MIRType propertyType = aggregateProperty.ref().knownMIRType(constraints);
+    MIRType propertyType = aggregateProperty->knownMIRType(constraints);
     switch (propertyType) {
       case MIRType_Boolean:
       case MIRType_Int32:
@@ -3883,7 +3883,7 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
     if ((*pvalue)->type() != MIRType_Value)
         return false;
 
-    types::TemporaryTypeSet *types = aggregateProperty.ref().maybeTypes()->clone(alloc.lifoAlloc());
+    types::TemporaryTypeSet *types = aggregateProperty->maybeTypes()->clone(alloc.lifoAlloc());
     if (!types)
         return false;
 

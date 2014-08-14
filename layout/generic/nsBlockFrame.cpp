@@ -1049,9 +1049,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
     if (effectiveComputedBSize + blockDirExtras.BStartEnd(wm) <=
         aReflowState.AvailableBSize()) {
-      mutableReflowState.construct(aReflowState);
-      mutableReflowState.ref().AvailableBSize() = NS_UNCONSTRAINEDSIZE;
-      reflowState = mutableReflowState.addr();
+      mutableReflowState.emplace(aReflowState);
+      mutableReflowState->AvailableBSize() = NS_UNCONSTRAINEDSIZE;
+      reflowState = mutableReflowState.ptr();
     }
   }
 

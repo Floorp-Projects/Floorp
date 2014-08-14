@@ -316,6 +316,8 @@ HyperTextAccessible::DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
         TreeWalker walker(container, findNode->AsContent(),
                           TreeWalker::eWalkContextTree);
         descendant = walker.NextChild();
+        if (!descendant)
+          descendant = container;
       }
     }
   }
@@ -439,9 +441,14 @@ HyperTextAccessible::FindOffset(uint32_t aOffset, nsDirection aDirection,
 
   do {
     int32_t childIdx = text->GetChildIndexAtOffset(innerOffset);
-    NS_ASSERTION(childIdx != -1, "Bad in offset!");
-    if (childIdx == -1)
-      return 0;
+
+    // We can have an empty text leaf as our only child. Since empty text
+    // leaves are not accessible we then have no children, but 0 is a valid
+    // innerOffset.
+    if (childIdx == -1) {
+      NS_ASSERTION(innerOffset == 0 && !text->ChildCount(), "No childIdx?");
+      return DOMPointToOffset(text->GetNode(), 0, aDirection == eDirNext);
+    }
 
     child = text->GetChildAt(childIdx);
 

@@ -162,7 +162,7 @@ public:
     JS::Rooted<JSObject*> creatorWrapper(cx);
     Maybe<JSAutoCompartment> ac;
     if (creator && (creatorWrapper = creator->GetWrapperPreserveColor())) {
-      ac.construct(cx, creatorWrapper);
+      ac.emplace(cx, creatorWrapper);
     }
 
     return CreateCommon(cx, length, data);

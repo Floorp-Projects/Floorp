@@ -196,8 +196,34 @@ UserInputData::DOMModifiers() const
 }
 
 static void
-sendMouseEvent(uint32_t msg, UserInputData& data, bool forwardToChildren)
+sendMouseEvent(UserInputData& data, nsEventStatus status)
 {
+    int32_t action = data.action & AMOTION_EVENT_ACTION_MASK;
+    uint32_t msg;
+    switch (action) {
+    case AMOTION_EVENT_ACTION_DOWN:
+        msg = NS_MOUSE_BUTTON_DOWN;
+        break;
+    case AMOTION_EVENT_ACTION_POINTER_DOWN:
+    case AMOTION_EVENT_ACTION_POINTER_UP:
+    case AMOTION_EVENT_ACTION_MOVE:
+    case AMOTION_EVENT_ACTION_HOVER_MOVE:
+        msg = NS_MOUSE_MOVE;
+        break;
+    case AMOTION_EVENT_ACTION_OUTSIDE:
+    case AMOTION_EVENT_ACTION_CANCEL:
+    case AMOTION_EVENT_ACTION_UP:
+        msg = NS_MOUSE_BUTTON_UP;
+        break;
+    default:
+        msg = NS_EVENT_NULL;
+        break;
+    }
+
+    if (msg == NS_EVENT_NULL) {
+        return;
+    }
+
     WidgetMouseEvent event(true, msg, nullptr,
                            WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
 
@@ -210,7 +236,7 @@ sendMouseEvent(uint32_t msg, UserInputData& data, bool forwardToChildren)
         event.clickCount = 1;
     event.modifiers = data.DOMModifiers();
 
-    event.mFlags.mNoCrossProcessBoundaryForwarding = !forwardToChildren;
+    event.mFlags.mNoCrossProcessBoundaryForwarding = status == nsEventStatus_eConsumeNoDefault;
 
     nsWindow::DispatchInputEvent(event);
 }
@@ -768,35 +794,30 @@ GeckoInputDispatcher::dispatchOnce()
             if (mEnabledUniformityInfo) {
                 printUniformityInfo(data);
             }
-            if (captured) {
-                return;
+            if (!captured) {
+                sendMouseEvent(data, status);
             }
         }
 
-        uint32_t msg;
-        switch (action) {
-        case AMOTION_EVENT_ACTION_DOWN:
-            msg = NS_MOUSE_BUTTON_DOWN;
-            break;
-        case AMOTION_EVENT_ACTION_POINTER_DOWN:
-        case AMOTION_EVENT_ACTION_POINTER_UP:
-        case AMOTION_EVENT_ACTION_MOVE:
-        case AMOTION_EVENT_ACTION_HOVER_MOVE:
-            msg = NS_MOUSE_MOVE;
-            break;
-        case AMOTION_EVENT_ACTION_OUTSIDE:
-        case AMOTION_EVENT_ACTION_CANCEL:
-        case AMOTION_EVENT_ACTION_UP:
-            msg = NS_MOUSE_BUTTON_UP;
-            break;
-        default:
-            msg = NS_EVENT_NULL;
-            break;
+        if (action == AMOTION_EVENT_ACTION_DOWN ||
+            action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
+            // Bug 1037066: Simulate a touchmove/mousemove event pair at the
+            // same spot as the touchstart/mousedown pair, but immediately after
+            // it. This allows content to preventDefault the first touchmove in
+            // a timely manner, even if the user keeps their finger stationary
+            // after the touchstart. The ultimate end goal here is to allow APZ
+            // to receive a prevent-default=yes|no message ASAP.
+            UserInputData simulatedMoveEvent(data);
+            simulatedMoveEvent.action &= ~AMOTION_EVENT_ACTION_MASK;
+            simulatedMoveEvent.action |= AMOTION_EVENT_ACTION_MOVE;
+
+            bool captured;
+            status = sendTouchEvent(simulatedMoveEvent, &captured);
+            if (!captured) {
+                sendMouseEvent(simulatedMoveEvent, status);
+            }
         }
-        if (msg != NS_EVENT_NULL) {
-            sendMouseEvent(msg, data, 
-                           status != nsEventStatus_eConsumeNoDefault);
-        }
+
         break;
     }
     case UserInputData::KEY_DATA: {

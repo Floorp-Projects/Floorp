@@ -367,10 +367,12 @@ def B2GCommand(func):
     func = marionette(func)
 
     totalChunks = CommandArgument('--total-chunks', dest='totalChunks',
+        type = int,
         help = 'How many chunks to split the tests up into.')
     func = totalChunks(func)
 
     thisChunk = CommandArgument('--this-chunk', dest='thisChunk',
+        type = int,
         help = 'Which chunk to run between 1 and --total-chunks.')
     func = thisChunk(func)
 

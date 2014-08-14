@@ -1559,7 +1559,7 @@ HasPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
   Maybe<JSAutoCompartment> ac;
   if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
     obj = js::UncheckedUnwrap(obj);
-    ac.construct(cx, obj);
+    ac.emplace(cx, obj);
   }
 
   bool found;
