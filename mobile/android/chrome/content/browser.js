@@ -1609,12 +1609,16 @@ var BrowserApp = {
         // perform a keyword search on the selected tab.
         this.selectedTab.userSearch = aData;
 
+        // Don't store queries in private browsing mode.
+        let isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.selectedTab.browser.contentWindow);
+        let query = isPrivate ? "" : aData;
+
         let engine = aSubject.QueryInterface(Ci.nsISearchEngine);
         sendMessageToJava({
           type: "Search:Keyword",
           identifier: engine.identifier,
           name: engine.name,
-          query: aData
+          query: query
         });
         break;
 
