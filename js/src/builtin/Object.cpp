@@ -380,8 +380,8 @@ obj_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     return obj->callMethod(cx, id, 0, nullptr, args.rval());
 }
 
-static bool
-obj_valueOf(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::obj_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, ToObject(cx, args.thisv()));
