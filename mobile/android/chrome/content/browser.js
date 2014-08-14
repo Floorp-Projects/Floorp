@@ -1844,16 +1844,12 @@ var NativeWindow = {
   init: function() {
     Services.obs.addObserver(this, "Menu:Clicked", false);
     Services.obs.addObserver(this, "Doorhanger:Reply", false);
-    Services.obs.addObserver(this, "Toast:Click", false);
-    Services.obs.addObserver(this, "Toast:Hidden", false);
     this.contextmenus.init();
   },
 
   uninit: function() {
     Services.obs.removeObserver(this, "Menu:Clicked");
     Services.obs.removeObserver(this, "Doorhanger:Reply");
-    Services.obs.removeObserver(this, "Toast:Click", false);
-    Services.obs.removeObserver(this, "Toast:Hidden", false);
     this.contextmenus.uninit();
   },
 
@@ -1870,38 +1866,6 @@ var NativeWindow = {
       type: "Dex:Unload",
       zipfile: zipFile
     });
-  },
-
-  toast: {
-    _callbacks: {},
-    show: function(aMessage, aDuration, aOptions) {
-      let msg = {
-        type: "Toast:Show",
-        message: aMessage,
-        duration: aDuration
-      };
-
-      if (aOptions && aOptions.button) {
-        msg.button = {
-          id: uuidgen.generateUUID().toString(),
-        };
-
-        // null is badly handled by the receiver, so try to avoid including nulls.
-        if (aOptions.button.label) {
-          msg.button.label = aOptions.button.label;
-        }
-
-        if (aOptions.button.icon) {
-          // If the caller specified a button, make sure we convert any chrome urls
-          // to jar:jar urls so that the frontend can show them
-          msg.button.icon = resolveGeckoURI(aOptions.button.icon);
-        };
-
-        this._callbacks[msg.button.id] = aOptions.button.callback;
-      }
-
-      sendMessageToJava(msg);
-    }
   },
 
   menu: {
@@ -2005,14 +1969,6 @@ var NativeWindow = {
     if (aTopic == "Menu:Clicked") {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
-    } else if (aTopic == "Toast:Click") {
-      if (this.toast._callbacks[aData]) {
-        this.toast._callbacks[aData]();
-        delete this.toast._callbacks[aData];
-      }
-    } else if (aTopic == "Toast:Hidden") {
-      if (this.toast._callbacks[aData])
-        delete this.toast._callbacks[aData];
     } else if (aTopic == "Doorhanger:Reply") {
       let data = JSON.parse(aData);
       let reply_id = data["callback"];
@@ -2717,7 +2673,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
 
 // These alias to the old, deprecated NativeWindow interfaces
 [
-  ["pageactions", "resource://gre/modules/PageActions.jsm", "PageActions"]
+  ["pageactions", "resource://gre/modules/PageActions.jsm", "PageActions"],
+  ["toast", "resource://gre/modules/Toast.jsm", "Toast"],
 ].forEach(item => {
   let [name, script, exprt] = item;
 
