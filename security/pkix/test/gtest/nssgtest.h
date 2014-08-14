@@ -29,7 +29,6 @@
 #include "gtest/gtest.h"
 #include "pkix/pkixtypes.h"
 #include "pkixtestutil.h"
-#include "prerror.h"
 #include "prtime.h"
 #include "seccomon.h"
 
