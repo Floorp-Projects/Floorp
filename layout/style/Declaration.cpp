@@ -199,7 +199,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
   const nsCSSValue* tokenStream = nullptr;
   uint32_t totalCount = 0, importantCount = 0,
            initialCount = 0, inheritCount = 0, unsetCount = 0,
-           matchingTokenStreamCount = 0;
+           matchingTokenStreamCount = 0, nonMatchingTokenStreamCount = 0;
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
     if (*p == eCSSProperty__x_system_font ||
          nsCSSProps::PropHasFlags(*p, CSS_PROPERTY_DIRECTIONAL_SOURCE)) {
@@ -224,10 +224,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       ++initialCount;
     } else if (val->GetUnit() == eCSSUnit_Unset) {
       ++unsetCount;
-    } else if (val->GetUnit() == eCSSUnit_TokenStream &&
-               val->GetTokenStreamValue()->mShorthandPropertyID == aProperty) {
-      tokenStream = val;
-      ++matchingTokenStreamCount;
+    } else if (val->GetUnit() == eCSSUnit_TokenStream) {
+      if (val->GetTokenStreamValue()->mShorthandPropertyID == aProperty) {
+        tokenStream = val;
+        ++matchingTokenStreamCount;
+      } else {
+        ++nonMatchingTokenStreamCount;
+      }
     }
   }
   if (importantCount != 0 && importantCount != totalCount) {
@@ -252,8 +255,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
                                               nsCSSValue::eNormalized);
     return;
   }
-  if (initialCount != 0 || inheritCount != 0 || unsetCount != 0) {
-    // Case (2): partially initial, inherit or unset.
+  if (initialCount != 0 || inheritCount != 0 ||
+      unsetCount != 0 || nonMatchingTokenStreamCount != 0) {
+    // Case (2): partially initial, inherit, unset or token stream.
     return;
   }
   if (tokenStream) {
