@@ -452,7 +452,7 @@ let WebAudioInspectorView = {
    */
   _setTitle: function () {
     let node = this._currentNode;
-    let title = node.type.replace(/Node$/, "");
+    let title = node.type + " (" + node.id + ")";
     $("#web-audio-inspector-title").setAttribute("value", title);
   },
 
