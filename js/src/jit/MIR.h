@@ -482,6 +482,8 @@ class MDefinition : public MNode
     }
     bool congruentIfOperandsEqual(const MDefinition *ins) const;
     virtual MDefinition *foldsTo(TempAllocator &alloc);
+    virtual void analyzeEdgeCasesForward();
+    virtual void analyzeEdgeCasesBackward();
 
     // When a floating-point value is used by nodes which would prefer to
     // recieve integer inputs, we may be able to help by computing our result
@@ -3802,6 +3804,9 @@ class MToInt32
 
     MDefinition *foldsTo(TempAllocator &alloc);
 
+    // this only has backwards information flow.
+    void analyzeEdgeCasesBackward();
+
     bool canBeNegativeZero() const {
         return canBeNegativeZero_;
     }
@@ -4946,6 +4951,8 @@ class MMul : public MBinaryArithInstruction
     }
 
     MDefinition *foldsTo(TempAllocator &alloc);
+    void analyzeEdgeCasesForward();
+    void analyzeEdgeCasesBackward();
     void collectRangeInfoPreTrunc();
 
     double getIdentity() {
@@ -5041,6 +5048,8 @@ class MDiv : public MBinaryArithInstruction
     }
 
     MDefinition *foldsTo(TempAllocator &alloc);
+    void analyzeEdgeCasesForward();
+    void analyzeEdgeCasesBackward();
 
     double getIdentity() {
         MOZ_ASSUME_UNREACHABLE("not used");
@@ -5156,6 +5165,8 @@ class MMod : public MBinaryArithInstruction
         JS_ASSERT(specialization_ == MIRType_Int32);
         return canBePowerOfTwoDivisor_;
     }
+
+    void analyzeEdgeCasesForward();
 
     bool isUnsigned() const {
         return unsigned_;
