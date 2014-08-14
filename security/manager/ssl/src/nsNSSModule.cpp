@@ -188,9 +188,6 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsNSSCertList)
 #ifdef MOZ_XUL
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertTree)
 #endif
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCrypto)
-#endif
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsPkcs11)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertPicker)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsNTLMAuthModule, InitTest)
@@ -225,9 +222,6 @@ NS_DEFINE_NAMED_CID(NS_FORMPROCESSOR_CID);
 NS_DEFINE_NAMED_CID(NS_CERTTREE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_PKCS11_CID);
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-NS_DEFINE_NAMED_CID(NS_CRYPTO_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HASH_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HMAC_CID);
 NS_DEFINE_NAMED_CID(NS_CERT_PICKER_CID);
@@ -260,9 +254,6 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_CERTTREE_CID, false, nullptr, nsCertTreeConstructor },
 #endif
   { &kNS_PKCS11_CID, false, nullptr, nsPkcs11Constructor },
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-  { &kNS_CRYPTO_CID, false, nullptr, nsCryptoConstructor },
-#endif
   { &kNS_CRYPTO_HASH_CID, false, nullptr, nsCryptoHashConstructor },
   { &kNS_CRYPTO_HMAC_CID, false, nullptr, nsCryptoHMACConstructor },
   { &kNS_CERT_PICKER_CID, false, nullptr, nsCertPickerConstructor },
@@ -298,9 +289,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_CERTTREE_CONTRACTID, &kNS_CERTTREE_CID },
 #endif
   { NS_PKCS11_CONTRACTID, &kNS_PKCS11_CID },
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-  { NS_CRYPTO_CONTRACTID, &kNS_CRYPTO_CID },
-#endif
   { NS_CRYPTO_HASH_CONTRACTID, &kNS_CRYPTO_HASH_CID },
   { NS_CRYPTO_HMAC_CONTRACTID, &kNS_CRYPTO_HMAC_CID },
   { NS_CERT_PICKER_CONTRACTID, &kNS_CERT_PICKER_CID },

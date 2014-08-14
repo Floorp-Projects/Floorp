@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/services-common/utils.js");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
@@ -148,15 +149,13 @@ InspectedHealthReporter.prototype = {
     return HealthReporter.prototype._onStorageCreated.call(this, storage);
   },
 
-  _initializeProviderManager: function () {
-    for (let result of HealthReporter.prototype._initializeProviderManager.call(this)) {
-      yield result;
-    }
+  _initializeProviderManager: Task.async(function* () {
+    yield HealthReporter.prototype._initializeProviderManager.call(this);
 
     if (this.onInitializeProviderManagerFinished) {
       this.onInitializeProviderManagerFinished();
     }
-  },
+  }),
 
   _onProviderManagerInitialized: function () {
     if (this.onProviderManagerInitialized) {

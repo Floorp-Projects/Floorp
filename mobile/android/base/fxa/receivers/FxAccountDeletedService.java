@@ -7,6 +7,7 @@ package org.mozilla.gecko.fxa.receivers;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.sync.config.AccountPickler;
+import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 
 import android.app.IntentService;
 import android.content.Context;
@@ -58,6 +59,10 @@ public class FxAccountDeletedService extends IntentService {
     Logger.info(LOG_TAG, "Firefox account named " + accountName + " being removed; " +
         "deleting saved pickle file '" + FxAccountConstants.ACCOUNT_PICKLE_FILENAME + "'.");
     deletePickle(context);
+
+    // Delete client database and non-local tabs.
+    Logger.info(LOG_TAG, "Deleting the entire clients database and non-local tabs");
+    FennecTabsRepository.deleteNonLocalClientsAndTabs(context);
   }
 
   public static void deletePickle(final Context context) {
