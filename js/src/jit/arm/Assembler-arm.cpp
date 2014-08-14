@@ -795,49 +795,36 @@ Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReade
     }
 }
 
-template <class Iter>
 static void
-TraceOneDataRelocation(JSTracer *trc, Iter *iter, MacroAssemblerARM *masm)
-{
-    Instruction *ins = iter->cur();
-    Register dest;
-    Assembler::RelocStyle rs;
-    const void *prior = Assembler::GetPtr32Target(iter, &dest, &rs);
-    void *ptr = const_cast<void *>(prior);
-
-    // No barrier needed since these are constants.
-    gc::MarkGCThingUnbarriered(trc, &ptr, "ion-masm-ptr");
-
-    if (ptr != prior)
-        masm->ma_movPatchable(Imm32(int32_t(ptr)), dest, Assembler::Always, rs, ins);
-}
-
-static void
-TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader,
-                     MacroAssemblerARM *masm)
+TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         InstructionIterator iter((Instruction*)(buffer + offset));
-        TraceOneDataRelocation(trc, &iter, masm);
+        void *ptr = const_cast<uint32_t *>(Assembler::GetPtr32Target(&iter));
+        // No barrier needed since these are constants.
+        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
     }
-}
 
+}
 static void
 TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer,
-                     Vector<BufferOffset, 0, SystemAllocPolicy> *locs, MacroAssemblerARM *masm)
+                     Vector<BufferOffset, 0, SystemAllocPolicy> *locs)
 {
     for (unsigned int idx = 0; idx < locs->length(); idx++) {
         BufferOffset bo = (*locs)[idx];
         ARMBuffer::AssemblerBufferInstIterator iter(bo, buffer);
-        TraceOneDataRelocation(trc, &iter, masm);
-    }
-}
+        void *ptr = const_cast<uint32_t *>(Assembler::GetPtr32Target(&iter));
 
+        // No barrier needed since these are constants.
+        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
+    }
+
+}
 void
 Assembler::TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader)
 {
-    ::TraceDataRelocations(trc, code->raw(), reader, static_cast<MacroAssemblerARM *>(Dummy));
+    ::TraceDataRelocations(trc, code->raw(), reader);
 }
 
 void
@@ -873,10 +860,8 @@ Assembler::trace(JSTracer *trc)
         }
     }
 
-    if (tmpDataRelocations_.length()) {
-        ::TraceDataRelocations(trc, &m_buffer, &tmpDataRelocations_,
-                               static_cast<MacroAssemblerARM *>(this));
-    }
+    if (tmpDataRelocations_.length())
+        ::TraceDataRelocations(trc, &m_buffer, &tmpDataRelocations_);
 }
 
 void
