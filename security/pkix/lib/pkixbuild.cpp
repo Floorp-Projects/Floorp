@@ -51,7 +51,7 @@ public:
                    PRTime time, KeyPurposeId requiredEKUIfPresent,
                    const CertPolicyId& requiredPolicy,
                    /*optional*/ const SECItem* stapledOCSPResponse,
-                   unsigned int subCACount)
+                   unsigned int subCACount, Result deferredSubjectError)
     : trustDomain(trustDomain)
     , subject(subject)
     , time(time)
@@ -59,6 +59,7 @@ public:
     , requiredPolicy(requiredPolicy)
     , stapledOCSPResponse(stapledOCSPResponse)
     , subCACount(subCACount)
+    , deferredSubjectError(deferredSubjectError)
     , result(Result::FATAL_ERROR_LIBRARY_FAILURE)
     , resultWasSet(false)
   {
@@ -78,6 +79,7 @@ private:
   const CertPolicyId& requiredPolicy;
   /*optional*/ SECItem const* const stapledOCSPResponse;
   const unsigned int subCACount;
+  const Result deferredSubjectError;
 
   Result RecordResult(Result currentResult, /*out*/ bool& keepGoing);
   Result result;
@@ -185,13 +187,19 @@ PathBuildingStep::Check(const SECItem& potentialIssuerDER,
     return RecordResult(rv, keepGoing);
   }
 
-  CertID certID(subject.GetIssuer(), potentialIssuer.GetSubjectPublicKeyInfo(),
-                subject.GetSerialNumber());
-  rv = trustDomain.CheckRevocation(subject.endEntityOrCA, certID, time,
-                                   stapledOCSPResponse,
-                                   subject.GetAuthorityInfoAccess());
-  if (rv != Success) {
-    return RecordResult(rv, keepGoing);
+  // We avoid doing revocation checking for expired certificates because OCSP
+  // responders are allowed to forget about expired certificates, and many OCSP
+  // responders return an error when asked for the status of an expired
+  // certificate.
+  if (deferredSubjectError != Result::ERROR_EXPIRED_CERTIFICATE) {
+    CertID certID(subject.GetIssuer(), potentialIssuer.GetSubjectPublicKeyInfo(),
+                  subject.GetSerialNumber());
+    rv = trustDomain.CheckRevocation(subject.endEntityOrCA, certID, time,
+                                     stapledOCSPResponse,
+                                     subject.GetAuthorityInfoAccess());
+    if (rv != Success) {
+      return RecordResult(rv, keepGoing);
+    }
   }
 
   return RecordResult(Success, keepGoing);
@@ -269,7 +277,8 @@ BuildForward(TrustDomain& trustDomain,
 
   PathBuildingStep pathBuilder(trustDomain, subject, time,
                                requiredEKUIfPresent, requiredPolicy,
-                               stapledOCSPResponse, subCACount);
+                               stapledOCSPResponse, subCACount,
+                               deferredEndEntityError);
 
   // TODO(bug 965136): Add SKI/AKI matching optimizations
   rv = trustDomain.FindIssuer(subject.GetIssuer(), pathBuilder, time);
