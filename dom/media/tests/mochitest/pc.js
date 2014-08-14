@@ -1543,7 +1543,9 @@ PeerConnectionWrapper.prototype = {
     this.streams.push(stream);
 
     if (side === 'local') {
-      this._pc.addStream(stream);
+      stream.getTracks().forEach(function(track) {
+        this._pc.addTrack(track, stream);
+      }.bind(this));
     }
 
     var element = createMediaElement(type, this.label + '_' + side);

@@ -8,8 +8,7 @@
  */
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtpreceiver;1",
- Constructor (MediaStreamTrack track)]
+ JSImplementation="@mozilla.org/dom/rtpreceiver;1"]
 interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack track;
 };

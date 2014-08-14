@@ -81,6 +81,8 @@ public:
 
   void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
   void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
+  void GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks);
+  bool HasTrack(const MediaStreamTrack& aTrack) const;
 
   MediaStream* GetStream() const { return mStream; }
 
