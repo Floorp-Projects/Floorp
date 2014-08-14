@@ -268,7 +268,7 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     if (args.get(0) == BooleanValue(true))
         cx->runtime()->gc.storeBuffer.setAboutToOverflow();
 
-    cx->minorGC(gcreason::API);
+    MinorGC(cx, gcreason::API);
 #endif
     args.rval().setUndefined();
     return true;
@@ -519,7 +519,7 @@ SelectForGC(JSContext *cx, unsigned argc, Value *vp)
      * to be in the set, so evict the nursery before adding items.
      */
     JSRuntime *rt = cx->runtime();
-    rt->gc.evictNursery();
+    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
 
     for (unsigned i = 0; i < args.length(); i++) {
         if (args[i].isObject()) {
@@ -628,7 +628,7 @@ GCSlice(JSContext *cx, unsigned argc, Value *vp)
         limit = false;
     }
 
-    cx->runtime()->gc.gcDebugSlice(limit, budget);
+    GCDebugSlice(cx->runtime(), limit, budget);
     args.rval().setUndefined();
     return true;
 }

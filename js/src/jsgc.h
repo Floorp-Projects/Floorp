@@ -963,6 +963,14 @@ MarkCompartmentActive(js::InterpreterFrame *fp);
 extern void
 TraceRuntime(JSTracer *trc);
 
+/* Must be called with GC lock taken. */
+extern bool
+TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason);
+
+/* Must be called with GC lock taken. */
+extern bool
+TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
+
 extern void
 ReleaseAllJITCode(FreeOp *op);
 
@@ -978,7 +986,25 @@ typedef enum JSGCInvocationKind {
 } JSGCInvocationKind;
 
 extern void
+GC(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason);
+
+extern void
+GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
+
+extern void
+GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, JS::gcreason::Reason reason);
+
+extern void
+GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount);
+
+extern void
 PrepareForDebugGC(JSRuntime *rt);
+
+extern void
+MinorGC(JSRuntime *rt, JS::gcreason::Reason reason);
+
+extern void
+MinorGC(JSContext *cx, JS::gcreason::Reason reason);
 
 /* Functions for managing cross compartment gray pointers. */
 
@@ -1198,6 +1224,17 @@ NewCompartment(JSContext *cx, JS::Zone *zone, JSPrincipals *principals,
                const JS::CompartmentOptions &options);
 
 namespace gc {
+
+extern void
+GCIfNeeded(JSContext *cx);
+
+/* Tries to run a GC no matter what (used for GC zeal). */
+void
+RunDebugGC(JSContext *cx);
+
+/* Wait for the background thread to finish sweeping if it is running. */
+void
+FinishBackgroundFinalize(JSRuntime *rt);
 
 /*
  * Merge all contents of source into target. This can only be used if source is

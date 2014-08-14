@@ -197,25 +197,25 @@ JS::SkipZoneForGC(Zone *zone)
 JS_FRIEND_API(void)
 JS::GCForReason(JSRuntime *rt, gcreason::Reason reason)
 {
-    rt->gc.gc(GC_NORMAL, reason);
+    GC(rt, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
 JS::ShrinkingGC(JSRuntime *rt, gcreason::Reason reason)
 {
-    rt->gc.gc(GC_SHRINK, reason);
+    GC(rt, GC_SHRINK, reason);
 }
 
 JS_FRIEND_API(void)
 JS::IncrementalGC(JSRuntime *rt, gcreason::Reason reason, int64_t millis)
 {
-    rt->gc.gcSlice(GC_NORMAL, reason, millis);
+    GCSlice(rt, GC_NORMAL, reason, millis);
 }
 
 JS_FRIEND_API(void)
 JS::FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason)
 {
-    rt->gc.gcFinalSlice(GC_NORMAL, reason);
+    GCFinalSlice(rt, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(JSPrincipals *)
@@ -810,7 +810,7 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp, js::DumpHeapNurseryBehaviour nurse
 {
 #ifdef JSGC_GENERATIONAL
     if (nurseryBehaviour == js::CollectNurseryBeforeDump)
-        rt->gc.evictNursery(JS::gcreason::API);
+        MinorGC(rt, JS::gcreason::API);
 #endif
 
     DumpHeapTracer dtrc(fp, rt, DumpHeapVisitRoot, TraceWeakMapKeysValues);

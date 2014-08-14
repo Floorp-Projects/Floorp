@@ -368,13 +368,14 @@ class ZoneCellIter : public ZoneCellIterImpl
         if (IsBackgroundFinalized(kind) &&
             zone->allocator.arenas.needBackgroundFinalizeWait(kind))
         {
-            zone->runtimeFromMainThread()->gc.waitBackgroundSweepEnd();
+            gc::FinishBackgroundFinalize(zone->runtimeFromMainThread());
         }
 
 #ifdef JSGC_GENERATIONAL
         /* Evict the nursery before iterating so we can see all things. */
         JSRuntime *rt = zone->runtimeFromMainThread();
-        rt->gc.evictNursery();
+        if (!rt->gc.nursery.isEmpty())
+            MinorGC(rt, JS::gcreason::EVICT_NURSERY);
 #endif
 
         if (lists->isSynchronizedFreeList(kind)) {
@@ -472,7 +473,7 @@ TryNewNurseryObject(JSContext *cx, size_t thingSize, size_t nDynamicSlots)
     if (obj)
         return obj;
     if (allowGC && !rt->mainThread.suppressGC) {
-        cx->minorGC(JS::gcreason::OUT_OF_NURSERY);
+        MinorGC(cx, JS::gcreason::OUT_OF_NURSERY);
 
         /* Exceeding gcMaxBytes while tenuring can disable the Nursery. */
         if (nursery.isEnabled()) {
@@ -546,13 +547,13 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
     if (allowGC) {
 #ifdef JS_GC_ZEAL
         if (rt->gc.needZealousGC())
-            rt->gc.runDebugGC();
+            js::gc::RunDebugGC(ncx);
 #endif
 
         if (rt->interrupt) {
             // Invoking the interrupt callback can fail and we can't usefully
             // handle that here. Just check in case we need to collect instead.
-            ncx->gcIfNeeded();
+            js::gc::GCIfNeeded(ncx);
         }
     }
 
@@ -681,7 +682,7 @@ AllocateObjectForCacheHit(JSContext *cx, AllocKind kind, InitialHeap heap)
 
         JSObject *obj = TryNewNurseryObject<NoGC>(cx, thingSize, 0);
         if (!obj && allowGC) {
-            cx->minorGC(JS::gcreason::OUT_OF_NURSERY);
+            MinorGC(cx, JS::gcreason::OUT_OF_NURSERY);
             return nullptr;
         }
         return obj;
