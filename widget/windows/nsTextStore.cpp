@@ -365,7 +365,7 @@ GetGUIDNameStrWithTable(REFGUID aGUID)
 
 #undef RETURN_GUID_NAME
 
-  GetGUIDNameStr(aGUID);
+  return GetGUIDNameStr(aGUID);
 }
 
 static nsCString
