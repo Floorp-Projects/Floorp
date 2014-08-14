@@ -753,7 +753,7 @@ BondStateChangedCallback(bt_status_t aStatus, bt_bdaddr_t* aRemoteBdAddress,
 
   // Update attribute BluetoothDevice.paired
   InfallibleTArray<BluetoothNamedValue> props;
-  BT_APPEND_NAMED_VALUE(props, "paired", bonded);
+  BT_APPEND_NAMED_VALUE(props, "Paired", bonded);
 
   BluetoothSignal deviceSignal(NS_LITERAL_STRING("PropertyChanged"),
                                remoteBdAddress,
