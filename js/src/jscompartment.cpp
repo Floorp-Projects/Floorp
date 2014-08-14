@@ -585,12 +585,8 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 
         sweepBaseShapeTable();
         sweepInitialShapeTable();
-        {
-            gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
-                                  gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
-            sweepNewTypeObjectTable(newTypeObjects);
-            sweepNewTypeObjectTable(lazyTypeObjects);
-        }
+        sweepNewTypeObjectTable(newTypeObjects);
+        sweepNewTypeObjectTable(lazyTypeObjects);
         sweepCallsiteClones();
         savedStacks_.sweep(rt);
 
@@ -659,59 +655,6 @@ JSCompartment::sweepCrossCompartmentWrappers()
         }
     }
 }
-
-#ifdef JSGC_COMPACTING
-
-/*
- * Fixup wrappers with moved keys or values.
- */
-void
-JSCompartment::fixupCrossCompartmentWrappers(JSTracer *trc)
-{
-    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        Value val = e.front().value();
-        if (IsForwarded(val)) {
-            val = Forwarded(val);
-            e.front().value().set(val);
-        }
-
-        // CrossCompartmentKey's hash does not depend on the debugger object,
-        // so update it but do not rekey if it changes
-        CrossCompartmentKey key = e.front().key();
-        if (key.debugger)
-            key.debugger = MaybeForwarded(key.debugger);
-        if (key.wrapped && IsForwarded(key.wrapped)) {
-            key.wrapped = Forwarded(key.wrapped);
-            e.rekeyFront(key, key);
-        }
-
-        if (!zone()->isCollecting() && val.isObject()) {
-            // Call the trace hook to update any pointers to relocated things.
-            JSObject *obj = &val.toObject();
-            const Class *clasp = obj->getClass();
-            if (clasp->trace)
-                clasp->trace(trc, obj);
-        }
-    }
-}
-
-void JSCompartment::fixupAfterMovingGC()
-{
-    fixupGlobal();
-    fixupNewTypeObjectTable(newTypeObjects);
-    fixupNewTypeObjectTable(lazyTypeObjects);
-    fixupInitialShapeTable();
-}
-
-void
-JSCompartment::fixupGlobal()
-{
-    GlobalObject *global = *global_.unsafeGet();
-    if (global)
-        global_.set(MaybeForwarded(global));
-}
-
-#endif // JSGC_COMPACTING
 
 void
 JSCompartment::purge()

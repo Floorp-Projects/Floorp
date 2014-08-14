@@ -169,10 +169,6 @@ class TypedProto : public JSObject
         return getReservedSlot(JS_TYPROTO_SLOT_DESCR).toObject().as<TypeDescr>();
     }
 
-    TypeDescr &maybeForwardedTypeDescr() const {
-        return MaybeForwarded(&getReservedSlot(JS_TYPROTO_SLOT_DESCR).toObject())->as<TypeDescr>();
-    }
-
     inline type::Kind kind() const;
 };
 
@@ -457,11 +453,6 @@ class SizedArrayTypeDescr : public ComplexTypeDescr
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
     }
 
-    SizedTypeDescr &maybeForwardedElementType() const {
-        JSObject *elemType = &getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject();
-        return MaybeForwarded(elemType)->as<SizedTypeDescr>();
-    }
-
     int32_t length() const {
         return getReservedSlot(JS_DESCR_SLOT_SIZED_ARRAY_LENGTH).toInt32();
     }
@@ -501,7 +492,6 @@ class StructTypeDescr : public ComplexTypeDescr
 
     // Returns the number of fields defined in this struct.
     size_t fieldCount() const;
-    size_t maybeForwardedFieldCount() const;
 
     // Set `*out` to the index of the field named `id` and returns true,
     // or return false if no such field exists.
@@ -512,11 +502,9 @@ class StructTypeDescr : public ComplexTypeDescr
 
     // Return the type descr of the field at index `index`.
     SizedTypeDescr &fieldDescr(size_t index) const;
-    SizedTypeDescr &maybeForwardedFieldDescr(size_t index) const;
 
     // Return the offset of the field at index `index`.
     size_t fieldOffset(size_t index) const;
-    size_t maybeForwardedFieldOffset(size_t index) const;
 };
 
 typedef Handle<StructTypeDescr*> HandleStructTypeDescr;
@@ -690,16 +678,8 @@ class TypedObject : public ArrayBufferViewObject
         return getProto()->as<TypedProto>();
     }
 
-    TypedProto &maybeForwardedTypedProto() const {
-        return MaybeForwarded(getProto())->as<TypedProto>();
-    }
-
     TypeDescr &typeDescr() const {
         return typedProto().typeDescr();
-    }
-
-    TypeDescr &maybeForwardedTypeDescr() const {
-        return maybeForwardedTypedProto().maybeForwardedTypeDescr();
     }
 
     uint8_t *typedMem() const {
