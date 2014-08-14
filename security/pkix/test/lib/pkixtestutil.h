@@ -36,6 +36,21 @@
 
 namespace mozilla { namespace pkix { namespace test {
 
+// XXX: Ideally, we should define this instead:
+//
+//   template <typename T, std::size_t N>
+//   constexpr inline std::size_t
+//   ArrayLength(T (&)[N])
+//   {
+//     return N;
+//   }
+//
+// However, we don't because not all supported compilers support constexpr,
+// and we need to calculate array lengths in static_assert sometimes.
+//
+// XXX: Evaluates its argument twice
+#define MOZILLA_PKIX_ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
+
 class TestInput : public Input
 {
 public:
