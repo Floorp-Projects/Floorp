@@ -51,6 +51,8 @@ public class ToolbarEditText extends CustomEditText
     private OnDismissListener mDismissListener;
     private OnFilterListener mFilterListener;
 
+    private ToolbarPrefs mPrefs;
+
     // The previous autocomplete result returned to us
     private String mAutoCompleteResult = "";
     // Length of the user-typed portion of the result
@@ -114,6 +116,10 @@ public class ToolbarEditText extends CustomEditText
 
         // Any autocomplete text would have been overwritten, so reset our autocomplete states.
         resetAutocompleteState();
+    }
+
+    void setToolbarPrefs(final ToolbarPrefs prefs) {
+        mPrefs = prefs;
     }
 
     /**
@@ -462,7 +468,7 @@ public class ToolbarEditText extends CustomEditText
 
             final String text = getNonAutocompleteText(editable);
             final int textLength = text.length();
-            boolean doAutocomplete = true;
+            boolean doAutocomplete = mPrefs.shouldAutocomplete();
 
             if (StringUtils.isSearchQuery(text, false)) {
                 doAutocomplete = false;

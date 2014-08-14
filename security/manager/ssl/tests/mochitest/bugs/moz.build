@@ -5,10 +5,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']
-# test_generateCRMFRequest.html tests crypto.generateCRMFRequest, which isn't
-# available if legacy crypto has been disabled.
-if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
-    MOCHITEST_MANIFESTS += ['mochitest-legacy.ini']
-
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 

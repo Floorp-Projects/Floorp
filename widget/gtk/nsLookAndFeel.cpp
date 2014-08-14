@@ -555,6 +555,26 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             g_object_unref(entry);
         }
         break;
+    case eIntID_ScrollToClick:
+        {
+            GtkSettings *settings;
+            gboolean warps_slider = FALSE;
+
+            settings = gtk_settings_get_default ();
+            if (g_object_class_find_property (G_OBJECT_GET_CLASS(settings),
+                                              "gtk-primary-button-warps-slider")) {
+                g_object_get (settings,
+                              "gtk-primary-button-warps-slider",
+                              &warps_slider,
+                              nullptr);
+            }
+
+            if (warps_slider)
+                aResult = 1;
+            else
+                aResult = 0;
+        }
+        break;
     case eIntID_SubmenuDelay:
         {
             GtkSettings *settings;
