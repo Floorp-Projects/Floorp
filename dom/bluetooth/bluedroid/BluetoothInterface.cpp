@@ -3031,10 +3031,28 @@ BluetoothInterface::~BluetoothInterface()
 { }
 
 void
-BluetoothInterface::Init(bt_callbacks_t* aCallbacks,
+BluetoothInterface::Init(BluetoothNotificationHandler* aNotificationHandler,
                          BluetoothResultHandler* aRes)
 {
-  int status = mInterface->init(aCallbacks);
+  static bt_callbacks_t sBluetoothCallbacks = {
+    sizeof(sBluetoothCallbacks),
+    .adapter_state_changed_cb = BluetoothCallback::AdapterStateChanged,
+    .adapter_properties_cb = BluetoothCallback::AdapterProperties,
+    .remote_device_properties_cb = BluetoothCallback::RemoteDeviceProperties,
+    .device_found_cb = BluetoothCallback::DeviceFound,
+    .discovery_state_changed_cb= BluetoothCallback::DiscoveryStateChanged,
+    .pin_request_cb = BluetoothCallback::PinRequest,
+    .ssp_request_cb = BluetoothCallback::SspRequest,
+    .bond_state_changed_cb = BluetoothCallback::BondStateChanged,
+    .acl_state_changed_cb = BluetoothCallback::AclStateChanged,
+    .thread_evt_cb = BluetoothCallback::ThreadEvt,
+    .dut_mode_recv_cb = BluetoothCallback::DutModeRecv,
+    .le_test_mode_cb = BluetoothCallback::LeTestMode
+  };
+
+  sNotificationHandler = aNotificationHandler;
+
+  int status = mInterface->init(&sBluetoothCallbacks);
 
   if (aRes) {
     DispatchBluetoothResult(aRes, &BluetoothResultHandler::Init,
@@ -3051,6 +3069,8 @@ BluetoothInterface::Cleanup(BluetoothResultHandler* aRes)
     DispatchBluetoothResult(aRes, &BluetoothResultHandler::Cleanup,
                             STATUS_SUCCESS);
   }
+
+  sNotificationHandler = nullptr;
 }
 
 void
