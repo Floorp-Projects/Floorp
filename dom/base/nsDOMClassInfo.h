@@ -96,7 +96,6 @@ public:
 
   static nsIClassInfo* GetClassInfoInstance(nsDOMClassInfoData* aData);
 
-  static nsresult Init();
   static void ShutDown();
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -128,6 +127,10 @@ public:
   {
     return sXPConnect;
   }
+  static nsIScriptSecurityManager *ScriptSecurityManager()
+  {
+    return sSecMan;
+  }
 
 protected:
   friend nsIClassInfo* NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
@@ -143,12 +146,14 @@ protected:
     return mData->mInterfacesBitmap;
   }
 
+  static nsresult Init();
   static nsresult RegisterClassProtos(int32_t aDOMClassInfoID);
   static nsresult RegisterExternalClasses();
   nsresult ResolveConstructor(JSContext *cx, JSObject *obj,
                               JSObject **objp);
 
   static nsIXPConnect *sXPConnect;
+  static nsIScriptSecurityManager *sSecMan;
 
   // nsIXPCScriptable code
   static nsresult DefineStaticJSVals(JSContext *cx);
