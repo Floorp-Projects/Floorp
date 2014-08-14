@@ -469,6 +469,16 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
         // EnsureWaiting isn't blocked by it.
         mProcessingCallbacks = false;
 
+        // We must break the loop when we're switching event delivery to another
+        // thread and the input stream pump is suspended, otherwise
+        // OnStateStop() might be called off the main thread. See bug 1026951
+        // comment #107 for the exact scenario.
+        if (mSuspendCount && mRetargeting) {
+            mState = nextState;
+            mWaitingForInputStreamReady = false;
+            break;
+        }
+
         // Wait asynchronously if there is still data to transfer, or we're
         // switching event delivery to another thread.
         if (!mSuspendCount && (stillTransferring || mRetargeting)) {
