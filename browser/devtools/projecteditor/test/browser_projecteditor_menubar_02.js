@@ -81,9 +81,16 @@ let test = asyncTest(function*() {
   yield selectFile(projecteditor, resource);
   let editor = projecteditor.currentEditor;
 
+  let onChange = promise.defer();
+
+  projecteditor.on("onEditorChange", () => {
+    info ("onEditorChange has been detected");
+    onChange.resolve();
+  });
   editor.editor.focus();
   EventUtils.synthesizeKey("f", { }, projecteditor.window);
 
+  yield onChange;
   yield openAndCloseMenu(fileMenu);
   yield openAndCloseMenu(editMenu);
 

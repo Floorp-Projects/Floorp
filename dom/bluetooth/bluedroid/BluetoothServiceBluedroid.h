@@ -8,11 +8,13 @@
 #define mozilla_dom_bluetooth_bluetoothservicebluedroid_h__
 
 #include "BluetoothCommon.h"
+#include "BluetoothInterface.h"
 #include "BluetoothService.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothServiceBluedroid : public BluetoothService
+                                , public BluetoothNotificationHandler
 {
 public:
   BluetoothServiceBluedroid();
@@ -153,6 +155,46 @@ public:
   virtual nsresult
   SendInputMessage(const nsAString& aDeviceAddresses,
                    const nsAString& aMessage) MOZ_OVERRIDE;
+
+  //
+  // Bluetooth notifications
+  //
+
+  virtual void AdapterStateChangedNotification(bool aState) MOZ_OVERRIDE;
+  virtual void AdapterPropertiesNotification(
+    BluetoothStatus aStatus, int aNumProperties,
+    const BluetoothProperty* aProperties) MOZ_OVERRIDE;
+
+  virtual void RemoteDevicePropertiesNotification(
+    BluetoothStatus aStatus, const nsAString& aBdAddr,
+    int aNumProperties, const BluetoothProperty* aProperties) MOZ_OVERRIDE;
+
+  virtual void DeviceFoundNotification(
+    int aNumProperties, const BluetoothProperty* aProperties) MOZ_OVERRIDE;
+
+  virtual void DiscoveryStateChangedNotification(bool aState) MOZ_OVERRIDE;
+
+  virtual void PinRequestNotification(const nsAString& aRemoteBdAddr,
+                                      const nsAString& aBdName,
+                                      uint32_t aCod) MOZ_OVERRIDE;
+  virtual void SspRequestNotification(const nsAString& aRemoteBdAddr,
+                                      const nsAString& aBdName,
+                                      uint32_t aCod,
+                                      const nsAString& aPairingaVariant,
+                                      uint32_t aPassKey) MOZ_OVERRIDE;
+
+  virtual void BondStateChangedNotification(
+    BluetoothStatus aStatus, const nsAString& aRemoteBdAddr,
+    BluetoothBondState aState) MOZ_OVERRIDE;
+  virtual void AclStateChangedNotification(BluetoothStatus aStatus,
+                                           const nsAString& aRemoteBdAddr,
+                                           bool aState) MOZ_OVERRIDE;
+
+  virtual void DutModeRecvNotification(uint16_t aOpcode,
+                                       const uint8_t* aBuf,
+                                       uint8_t aLen) MOZ_OVERRIDE;
+  virtual void LeTestModeNotification(BluetoothStatus aStatus,
+                                      uint16_t aNumPackets) MOZ_OVERRIDE;
 };
 
 END_BLUETOOTH_NAMESPACE
