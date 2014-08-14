@@ -2895,8 +2895,13 @@ public class BrowserApp extends GeckoApp
     // BrowserSearch.OnSearchListener
     @Override
     public void onSearch(SearchEngine engine, String text) {
+        // Don't store searches that happen in private tabs. This assumes the user can only
+        // perform a search inside the currently selected tab, which is true for searches
+        // that come from SearchEngineRow.
+        if (!Tabs.getInstance().getSelectedTab().isPrivate()) {
+            storeSearchQuery(text);
+        }
         recordSearch(engine, "barsuggest");
-        storeSearchQuery(text);
         openUrlAndStopEditing(text, engine.name);
     }
 
