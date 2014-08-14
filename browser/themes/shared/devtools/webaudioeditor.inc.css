@@ -99,6 +99,10 @@ text {
  * Inspector Styles
  */
 
+#web-audio-inspector-title {
+  margin: 6px;
+}
+
 .web-audio-inspector .error {
   background-image: url(alerticon-warning.png);
   background-size: 13px 12px;
