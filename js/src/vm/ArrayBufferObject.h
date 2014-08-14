@@ -95,6 +95,8 @@ class ArrayBufferObject : public JSObject
 
     static void sweep(JSCompartment *rt);
 
+    static void fixupDataPointerAfterMovingGC(const ArrayBufferObject &src, ArrayBufferObject &dst);
+
     static void resetArrayBufferList(JSCompartment *rt);
     static bool saveArrayBufferList(JSCompartment *c, ArrayBufferVector &vector);
     static void restoreArrayBufferLists(ArrayBufferVector &vector);

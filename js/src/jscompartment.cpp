@@ -20,6 +20,7 @@
 #include "gc/Marking.h"
 #include "jit/JitCompartment.h"
 #include "js/RootingAPI.h"
+#include "vm/Debugger.h"
 #include "vm/StopIterationObject.h"
 #include "vm/WrapperObject.h"
 
@@ -627,6 +628,17 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             ni->unlink();
         ni = next;
     }
+
+    /* For each debuggee being GC'd, detach it from all its debuggers. */
+    for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
+        GlobalObject *global = e.front();
+        if (IsObjectAboutToBeFinalized(&global)) {
+            // See infallibility note above.
+            Debugger::detachAllDebuggersFromGlobal(fop, global, &e);
+        } else if (global != e.front()) {
+            e.rekeyFront(global);
+        }
+    }
 }
 
 /*
@@ -881,7 +893,7 @@ JSCompartment::updateJITForDebugMode(JSContext *maybecx, AutoDebugModeInvalidati
 }
 
 bool
-JSCompartment::addDebuggee(JSContext *cx, js::GlobalObject *global)
+JSCompartment::addDebuggee(JSContext *cx, JS::Handle<js::GlobalObject *> global)
 {
     AutoDebugModeInvalidation invalidate(this);
     return addDebuggee(cx, global, invalidate);
@@ -889,11 +901,9 @@ JSCompartment::addDebuggee(JSContext *cx, js::GlobalObject *global)
 
 bool
 JSCompartment::addDebuggee(JSContext *cx,
-                           GlobalObject *globalArg,
+                           JS::Handle<GlobalObject *> global,
                            AutoDebugModeInvalidation &invalidate)
 {
-    Rooted<GlobalObject*> global(cx, globalArg);
-
     bool wasEnabled = debugMode();
     if (!debuggees.put(global)) {
         js_ReportOutOfMemory(cx);
