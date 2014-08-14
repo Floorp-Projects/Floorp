@@ -22,6 +22,8 @@ const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 const PC_IDENTITY_CONTRACT = "@mozilla.org/dom/rtcidentityassertion;1";
 const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
+const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
+const PC_RECEIVER_CONTRACT = "@mozilla.org/dom/rtpreceiver;1";
 
 const PC_CID = Components.ID("{00e0e20d-1494-4776-8e0e-0f0acbea3c79}");
 const PC_OBS_CID = Components.ID("{d1748d4c-7f6a-4dc5-add6-d55b7678537e}");
@@ -31,6 +33,8 @@ const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 const PC_STATS_CID = Components.ID("{7fe6e18b-0da3-4056-bf3b-440ef3809e06}");
 const PC_IDENTITY_CID = Components.ID("{1abc7499-3c54-43e0-bd60-686e2703f072}");
 const PC_STATIC_CID = Components.ID("{0fb47c47-a205-4583-a9fc-cbadf8c95880}");
+const PC_SENDER_CID = Components.ID("{4fff5d46-d827-4cd4-a970-8fd53977440e}");
+const PC_RECEIVER_CID = Components.ID("{d974b814-8fde-411c-8c45-b86791b81030}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -1275,12 +1279,44 @@ RTCPeerConnectionStatic.prototype = {
   },
 };
 
+function RTCRtpSender() {}
+RTCRtpSender.prototype = {
+  classDescription: "RTCRtpSender",
+  classID: PC_SENDER_CID,
+  contractID: PC_SENDER_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
+
+  init: function(win) { this._win = win; },
+
+  __init: function(track) {
+    this.track = track;
+  }
+};
+
+function RTCRtpReceiver() {}
+RTCRtpReceiver.prototype = {
+  classDescription: "RTCRtpReceiver",
+  classID: PC_RECEIVER_CID,
+  contractID: PC_RECEIVER_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
+
+  init: function(win) { this._win = win; },
+
+  __init: function(track) {
+    this.track = track;
+  }
+};
+
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
   [GlobalPCList,
    RTCIceCandidate,
    RTCSessionDescription,
    RTCPeerConnection,
    RTCPeerConnectionStatic,
+   RTCRtpReceiver,
+   RTCRtpSender,
    RTCStatsReport,
    RTCIdentityAssertion,
    PeerConnectionObserver]
