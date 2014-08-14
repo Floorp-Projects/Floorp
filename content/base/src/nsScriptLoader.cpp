@@ -1162,8 +1162,8 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
       // execution currentScript of the master should refer to this
       // script. So let's update the mCurrentScript of the ScriptLoader
       // of the master document too.
-      masterScriptUpdater.construct(master->ScriptLoader(),
-                                    aRequest->mElement);
+      masterScriptUpdater.emplace(master->ScriptLoader(),
+                                  aRequest->mElement);
     }
 
     JS::CompileOptions options(entryScript.cx());

@@ -28,7 +28,7 @@ namespace {
 struct ObservationWithStack
 {
   ObservationWithStack(mozilla::IOInterposeObserver::Observation& aObs,
-                       ProfilerBacktrace *aStack)
+                       ProfilerBacktrace* aStack)
     : mObservation(aObs)
     , mStack(aStack)
   {
@@ -37,7 +37,7 @@ struct ObservationWithStack
       mFilename = filename;
     }
   }
- 
+
   mozilla::IOInterposeObserver::Observation mObservation;
   ProfilerBacktrace*                        mStack;
   nsString                                  mFilename;
@@ -83,7 +83,8 @@ MainThreadIOLoggerImpl::~MainThreadIOLoggerImpl()
   if (!mIOThread) {
     return;
   }
-  { // Scope for lock
+  {
+    // Scope for lock
     IOInterposer::MonitorAutoLock lock(mMonitor);
     mShutdownRequired = true;
     lock.Notify();
@@ -133,7 +134,8 @@ MainThreadIOLoggerImpl::IOThreadFunc()
     return;
   }
   mLogStartTime = TimeStamp::Now();
-  { // Scope for lock
+  {
+    // Scope for lock
     IOInterposer::MonitorAutoLock lock(mMonitor);
     while (true) {
       while (!mShutdownRequired && mObservations.empty()) {
@@ -145,13 +147,12 @@ MainThreadIOLoggerImpl::IOThreadFunc()
       // Pull events off the shared array onto a local one
       std::vector<ObservationWithStack> observationsToWrite;
       observationsToWrite.swap(mObservations);
- 
+
       // Release the lock so that we're not holding anybody up during I/O
       IOInterposer::MonitorAutoUnlock unlock(mMonitor);
 
       // Now write the events.
-      for (std::vector<ObservationWithStack>::iterator
-             i = observationsToWrite.begin(), e = observationsToWrite.end();
+      for (auto i = observationsToWrite.begin(), e = observationsToWrite.end();
            i != e; ++i) {
         if (i->mObservation.ObservedOperation() == OpNextStage) {
           PR_fprintf(fd, "%f,NEXT-STAGE\n",

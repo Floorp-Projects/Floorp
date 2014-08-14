@@ -50,7 +50,7 @@ bool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring aString)
   ParseNPTTime(aString, start);
 
   if (aString.Length() == 0) {
-    mStart.construct(start);
+    mStart.emplace(start);
     return true;
   }
 
@@ -73,8 +73,8 @@ bool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring aString)
     return false;
   }
 
-  mStart.construct(start);
-  mEnd.construct(end);
+  mStart.emplace(start);
+  mEnd.emplace(end);
   return true;
 }
 
@@ -327,7 +327,7 @@ bool nsMediaFragmentURIParser::ParseXYWH(nsDependentSubstring aString)
       return false;
     }
 
-    mClip.construct(x, y, w, h);
+    mClip.emplace(x, y, w, h);
     mClipUnit = clipUnit;
     return true;
   }
@@ -344,7 +344,7 @@ bool nsMediaFragmentURIParser::ParseMozResolution(nsDependentSubstring aString)
       ParseCommaSeparator(aString)       &&
       ParseInteger(aString, h) && h >= 0 &&
       aString.Length() == 0) {
-    mResolution.construct(w,h);
+    mResolution.emplace(w,h);
     return true;
   }
 
@@ -357,7 +357,7 @@ bool nsMediaFragmentURIParser::ParseMozSampleSize(nsDependentSubstring aString)
 
   // Read and validate coordinates.
   if (ParseInteger(aString, sampleSize) && sampleSize > 0) {
-    mSampleSize.construct(sampleSize);
+    mSampleSize.emplace(sampleSize);
     return true;
   }
 

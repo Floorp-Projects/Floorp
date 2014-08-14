@@ -57,7 +57,7 @@ class ChunkPool
 
     class Enum {
       public:
-        Enum(ChunkPool &pool) : pool(pool), chunkp(&pool.emptyChunkListHead) {}
+        explicit Enum(ChunkPool &pool) : pool(pool), chunkp(&pool.emptyChunkListHead) {}
         bool empty() { return !*chunkp; }
         Chunk *front();
         inline void popFront();

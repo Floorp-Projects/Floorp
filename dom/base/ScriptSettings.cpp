@@ -237,10 +237,10 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
     // nsIPrincipal.Equals. Once that is removed, the Rooted<> will no longer
     // be necessary.
     JS::Rooted<JSObject*> global(JS_GetRuntime(aCx), aGlobal);
-    mCxPusher.construct(mCx);
-    mAutoNullableCompartment.construct(mCx, global);
+    mCxPusher.emplace(mCx);
+    mAutoNullableCompartment.emplace(mCx, global);
   } else {
-    mAutoNullableCompartment.construct(mCx, aGlobal);
+    mAutoNullableCompartment.emplace(mCx, aGlobal);
   }
 }
 
@@ -348,6 +348,14 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == FindJSContext(aGlobalObject));
 }
 
+AutoEntryScript::~AutoEntryScript()
+{
+  // GC when we pop a script entry point. This is a useful heuristic that helps
+  // us out on certain (flawed) benchmarks like sunspider, because it lets us
+  // avoid GCing during the timing loop.
+  JS_MaybeGC(cx());
+}
+
 AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
   : ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ false)
   , mCallerOverride(nsContentUtils::GetCurrentJSContextForThread())
@@ -360,8 +368,8 @@ AutoNoJSAPI::AutoNoJSAPI(bool aIsMainThread)
   MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContextForThread(),
                 !JS_IsExceptionPending(nsContentUtils::GetCurrentJSContextForThread()));
   if (aIsMainThread) {
-    mCxPusher.construct(static_cast<JSContext*>(nullptr),
-                        /* aAllowNull = */ true);
+    mCxPusher.emplace(static_cast<JSContext*>(nullptr),
+                      /* aAllowNull = */ true);
   }
 }
 

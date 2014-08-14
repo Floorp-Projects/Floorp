@@ -574,18 +574,18 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
   Maybe<RelationType> relationType;
   for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
     if (wcscmp(aType, sRelationTypePairs[idx].second) == 0) {
-      relationType.construct(sRelationTypePairs[idx].first);
+      relationType.emplace(sRelationTypePairs[idx].first);
       break;
     }
   }
-  if (relationType.empty())
+  if (!relationType)
     return E_INVALIDARG;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  Relation rel = acc->RelationByType(relationType.ref());
+  Relation rel = acc->RelationByType(*relationType);
 
   nsTArray<Accessible*> targets;
   Accessible* target = nullptr;

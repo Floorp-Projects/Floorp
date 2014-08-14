@@ -8,7 +8,7 @@
 interface nsIDOMEventListener;
 interface nsIDOMBlob;
 
-[builtinclass, uuid(39ea2c73-7711-4cea-9f73-3166c24dfa69)]
+[builtinclass, uuid(2f34c719-bc14-4546-9fb9-2bab75e56e45)]
 interface nsIDOMFileReader : nsIDOMEventTarget
 {
   [implicit_jscontext]

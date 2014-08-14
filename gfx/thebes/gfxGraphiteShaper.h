@@ -14,7 +14,7 @@ struct gr_segment;
 
 class gfxGraphiteShaper : public gfxFontShaper {
 public:
-    gfxGraphiteShaper(gfxFont *aFont);
+    explicit gfxGraphiteShaper(gfxFont *aFont);
     virtual ~gfxGraphiteShaper();
 
     virtual bool ShapeText(gfxContext      *aContext,

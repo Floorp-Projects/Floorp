@@ -24,7 +24,7 @@ class gfxPattern;
 class gfxDrawable {
     NS_INLINE_DECL_REFCOUNTING(gfxDrawable)
 public:
-    gfxDrawable(const gfxIntSize aSize)
+    explicit gfxDrawable(const gfxIntSize aSize)
      : mSize(aSize) {}
 
     /**

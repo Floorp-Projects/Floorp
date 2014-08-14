@@ -122,7 +122,7 @@ private:
  * fail. This prevents system code from accidentally triggering script
  * execution at inopportune moments via surreptitious getters and proxies.
  */
-class AutoJSAPI {
+class MOZ_STACK_CLASS AutoJSAPI {
 public:
   // Trivial constructor. One of the Init functions must be called before
   // accessing the JSContext through cx().
@@ -172,7 +172,7 @@ public:
     return mCx;
   }
 
-  bool CxPusherIsStackTop() const { return mCxPusher.ref().IsStackTop(); }
+  bool CxPusherIsStackTop() const { return mCxPusher->IsStackTop(); }
 
 protected:
   // Protected constructor, allowing subclasses to specify a particular cx to
@@ -200,6 +200,8 @@ public:
                   bool aIsMainThread = NS_IsMainThread(),
                   // Note: aCx is mandatory off-main-thread.
                   JSContext* aCx = nullptr);
+
+  ~AutoEntryScript();
 
   void SetWebIDLCallerPrincipal(nsIPrincipal *aPrincipal) {
     mWebIDLCallerPrincipal = aPrincipal;
