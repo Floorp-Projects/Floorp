@@ -23,6 +23,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
                                   "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
                                   "resource://gre/modules/GMPInstallManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
+                                  "resource:///modules/ContentSearch.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
+                                  "resource:///modules/AboutHome.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
@@ -3095,8 +3099,17 @@ const BrowserSearch = {
     }
 #endif
     let openSearchPageIfFieldIsNotActive = function(aSearchBar) {
-      if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField)
+      let doc = gBrowser.selectedBrowser.contentDocument;
+      let url = doc.documentURI.toLowerCase();
+      let mm = gBrowser.selectedBrowser.messageManager;
+
+      if (url === "about:home") {
+        AboutHome.focusInput(mm);
+      } else if (url === "about:newtab") {
+        ContentSearch.focusInput(mm);
+      } else if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField) {
         openUILinkIn("about:home", "current");
+      }
     };
 
     let searchBar = this.searchBar;
