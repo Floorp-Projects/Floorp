@@ -34,7 +34,6 @@
 #include "mozilla/unused.h"
 #include "mozIApplication.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsEmbedCID.h"
 #include <algorithm>
 #ifdef MOZ_CRASHREPORTER

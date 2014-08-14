@@ -48,7 +48,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"

@@ -10,7 +10,6 @@
 #include "mozilla/JSEventHandler.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMArray.h"
-#include "nsCxPusher.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"

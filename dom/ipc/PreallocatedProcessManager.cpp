@@ -11,7 +11,6 @@
 #include "nsIPropertyBag2.h"
 #include "ProcessPriorityManager.h"
 #include "nsServiceManagerUtils.h"
-#include "nsCxPusher.h"
 
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"

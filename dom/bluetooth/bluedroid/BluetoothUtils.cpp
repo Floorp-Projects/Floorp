@@ -14,7 +14,6 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsIScriptContext.h"
 #include "nsISystemMessagesInternal.h"
 #include "nsString.h"
