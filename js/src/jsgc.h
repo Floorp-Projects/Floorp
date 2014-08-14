@@ -523,6 +523,11 @@ class ArenaList {
         check();
         return *this;
     }
+
+#ifdef JSGC_COMPACTING
+    ArenaHeader *pickArenasToRelocate();
+    ArenaHeader *relocateArenas(ArenaHeader *toRelocate, ArenaHeader *relocated);
+#endif
 };
 
 /*
@@ -799,7 +804,6 @@ class ArenaLists
             clearFreeListInArena(AllocKind(i));
     }
 
-
     void clearFreeListInArena(AllocKind kind) {
         FreeList *freeList = &freeLists[kind];
         if (!freeList->isEmpty()) {
@@ -845,6 +849,8 @@ class ArenaLists
     template <AllowGC allowGC>
     static void *refillFreeList(ThreadSafeContext *cx, AllocKind thingKind);
 
+    static void *refillFreeListInGC(Zone *zone, AllocKind thingKind);
+
     /*
      * Moves all arenas from |fromArenaLists| into |this|.  In
      * parallel blocks, we temporarily create one ArenaLists per
@@ -867,6 +873,10 @@ class ArenaLists
     void checkEmptyFreeList(AllocKind kind) {
         JS_ASSERT(freeLists[kind].isEmpty());
     }
+
+#ifdef JSGC_COMPACTING
+    ArenaHeader *relocateArenas(ArenaHeader *relocatedList);
+#endif
 
     void queueObjectsForSweep(FreeOp *fop);
     void queueStringsAndSymbolsForSweep(FreeOp *fop);
@@ -1320,7 +1330,8 @@ const int ZealIncrementalMultipleSlices = 10;
 const int ZealVerifierPostValue = 11;
 const int ZealFrameVerifierPostValue = 12;
 const int ZealCheckHashTablesOnMinorGC = 13;
-const int ZealLimit = 13;
+const int ZealCompactValue = 14;
+const int ZealLimit = 14;
 
 enum VerifierType {
     PreBarrierVerifier,
