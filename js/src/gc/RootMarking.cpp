@@ -707,17 +707,13 @@ js::gc::MarkForkJoinStack(ForkJoinNurseryCollectionTracer *trc)
 #endif  // JSGC_FJGENERATIONAL
 
 void
-js::gc::GCRuntime::markRuntime(JSTracer *trc,
-                               TraceOrMarkRuntime traceOrMark,
-                               TraceRootsOrUsedSaved rootsSource)
+js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
 {
     JS_ASSERT(trc->callback != GCMarker::GrayCallback);
-    JS_ASSERT(traceOrMark == TraceRuntime || traceOrMark == MarkRuntime);
-    JS_ASSERT(rootsSource == TraceRoots || rootsSource == UseSavedRoots);
 
     JS_ASSERT(!rt->mainThread.suppressGC);
 
-    if (traceOrMark == MarkRuntime) {
+    if (IS_GC_MARKING_TRACER(trc)) {
         for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
             if (!c->zone()->isCollecting())
                 c->markCrossCompartmentWrappers(trc);
@@ -731,7 +727,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 #ifdef JSGC_USE_EXACT_ROOTING
         MarkExactStackRoots(rt, trc);
 #else
-        markConservativeStackRoots(trc, rootsSource == UseSavedRoots);
+        markConservativeStackRoots(trc, useSavedRoots);
 #endif
         rt->markSelfHostingGlobal(trc);
     }
@@ -764,7 +760,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
     }
 
     if (!rt->isBeingDestroyed() && !trc->runtime()->isHeapMinorCollecting()) {
-        if (traceOrMark == TraceRuntime || rt->atomsCompartment()->zone()->isCollecting()) {
+        if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment()->zone()->isCollecting()) {
             MarkPermanentAtoms(trc);
             MarkAtoms(trc);
             MarkWellKnownSymbols(trc);
@@ -776,7 +772,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
         acx->mark(trc);
 
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        if (traceOrMark == MarkRuntime && !zone->isCollecting())
+        if (IS_GC_MARKING_TRACER(trc) && !zone->isCollecting())
             continue;
 
         /* Do not discard scripts with counts while profiling. */
@@ -796,11 +792,11 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
         if (trc->runtime()->isHeapMinorCollecting())
             c->globalWriteBarriered = false;
 
-        if (traceOrMark == MarkRuntime && !c->zone()->isCollecting())
+        if (IS_GC_MARKING_TRACER(trc) && !c->zone()->isCollecting())
             continue;
 
         /* During a GC, these are treated as weak pointers. */
-        if (traceOrMark == TraceRuntime) {
+        if (!IS_GC_MARKING_TRACER(trc)) {
             if (c->watchpointMap)
                 c->watchpointMap->markAll(trc);
         }
@@ -816,9 +812,9 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 
     if (!isHeapMinorCollecting()) {
         /*
-         * All JSCompartment::markRoots() does is mark the globals for
-         * compartments which have been entered. Globals aren't nursery
-         * allocated so there's no need to do this for minor GCs.
+         * All JSCompartment::mark does is mark the globals for compartments
+         * which have been entered. Globals aren't nursery allocated so there's
+         * no need to do this for minor GCs.
          */
         for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
             c->markRoots(trc);
@@ -837,7 +833,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 
         /* During GC, we don't mark gray roots at this stage. */
         if (JSTraceDataOp op = grayRootTracer.op) {
-            if (traceOrMark == TraceRuntime)
+            if (!IS_GC_MARKING_TRACER(trc))
                 (*op)(trc, grayRootTracer.data);
         }
     }
