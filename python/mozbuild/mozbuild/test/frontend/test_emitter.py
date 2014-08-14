@@ -188,34 +188,19 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 1)
         self.assertIsInstance(objs[0], Exports)
 
-        exports = objs[0].exports
-        self.assertEqual(exports.get_strings(), ['foo.h', 'bar.h', 'baz.h'])
-
-        self.assertIn('mozilla', exports._children)
-        mozilla = exports._children['mozilla']
-        self.assertEqual(mozilla.get_strings(), ['mozilla1.h', 'mozilla2.h'])
-
-        self.assertIn('dom', mozilla._children)
-        dom = mozilla._children['dom']
-        self.assertEqual(dom.get_strings(), ['dom1.h', 'dom2.h', 'dom3.h'])
-
-        self.assertIn('gfx', mozilla._children)
-        gfx = mozilla._children['gfx']
-        self.assertEqual(gfx.get_strings(), ['gfx.h'])
-
-        self.assertIn('vpx', exports._children)
-        vpx = exports._children['vpx']
-        self.assertEqual(vpx.get_strings(), ['mem.h', 'mem2.h'])
-
-        self.assertIn('nspr', exports._children)
-        nspr = exports._children['nspr']
-        self.assertIn('private', nspr._children)
-        private = nspr._children['private']
-        self.assertEqual(private.get_strings(), ['pprio.h', 'pprthred.h'])
-
-        self.assertIn('overwrite', exports._children)
-        overwrite = exports._children['overwrite']
-        self.assertEqual(overwrite.get_strings(), ['new.h'])
+        expected = [
+            ('', ['foo.h', 'bar.h', 'baz.h']),
+            ('mozilla', ['mozilla1.h', 'mozilla2.h']),
+            ('mozilla/dom', ['dom1.h', 'dom2.h', 'dom3.h']),
+            ('mozilla/gfx', ['gfx.h']),
+            ('nspr/private', ['pprio.h', 'pprthred.h']),
+            ('overwrite', ['new.h']),
+            ('vpx', ['mem.h', 'mem2.h']),
+        ]
+        for (expect_path, expect_headers), (actual_path, actual_headers) in \
+                zip(expected, [(path, list(seq)) for path, seq in objs[0].exports.walk()]):
+            self.assertEqual(expect_path, actual_path)
+            self.assertEqual(expect_headers, actual_headers)
 
     def test_resources(self):
         reader = self.reader('resources')
@@ -234,8 +219,8 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(objs[1].defines, expected_defines)
 
         resources = objs[1].resources
-        self.assertEqual(resources.get_strings(), ['foo.res', 'bar.res', 'baz.res',
-                                                   'foo_p.res.in', 'bar_p.res.in', 'baz_p.res.in'])
+        self.assertEqual(resources._strings, ['foo.res', 'bar.res', 'baz.res',
+                                              'foo_p.res.in', 'bar_p.res.in', 'baz_p.res.in'])
         self.assertFalse(resources['foo.res'].preprocess)
         self.assertFalse(resources['bar.res'].preprocess)
         self.assertFalse(resources['baz.res'].preprocess)
@@ -245,8 +230,8 @@ class TestEmitterBasic(unittest.TestCase):
 
         self.assertIn('mozilla', resources._children)
         mozilla = resources._children['mozilla']
-        self.assertEqual(mozilla.get_strings(), ['mozilla1.res', 'mozilla2.res',
-                                                 'mozilla1_p.res.in', 'mozilla2_p.res.in'])
+        self.assertEqual(mozilla._strings, ['mozilla1.res', 'mozilla2.res',
+                                            'mozilla1_p.res.in', 'mozilla2_p.res.in'])
         self.assertFalse(mozilla['mozilla1.res'].preprocess)
         self.assertFalse(mozilla['mozilla2.res'].preprocess)
         self.assertTrue(mozilla['mozilla1_p.res.in'].preprocess)
@@ -254,25 +239,25 @@ class TestEmitterBasic(unittest.TestCase):
 
         self.assertIn('dom', mozilla._children)
         dom = mozilla._children['dom']
-        self.assertEqual(dom.get_strings(), ['dom1.res', 'dom2.res', 'dom3.res'])
+        self.assertEqual(dom._strings, ['dom1.res', 'dom2.res', 'dom3.res'])
 
         self.assertIn('gfx', mozilla._children)
         gfx = mozilla._children['gfx']
-        self.assertEqual(gfx.get_strings(), ['gfx.res'])
+        self.assertEqual(gfx._strings, ['gfx.res'])
 
         self.assertIn('vpx', resources._children)
         vpx = resources._children['vpx']
-        self.assertEqual(vpx.get_strings(), ['mem.res', 'mem2.res'])
+        self.assertEqual(vpx._strings, ['mem.res', 'mem2.res'])
 
         self.assertIn('nspr', resources._children)
         nspr = resources._children['nspr']
         self.assertIn('private', nspr._children)
         private = nspr._children['private']
-        self.assertEqual(private.get_strings(), ['pprio.res', 'pprthred.res'])
+        self.assertEqual(private._strings, ['pprio.res', 'pprthred.res'])
 
         self.assertIn('overwrite', resources._children)
         overwrite = resources._children['overwrite']
-        self.assertEqual(overwrite.get_strings(), ['new.res'])
+        self.assertEqual(overwrite._strings, ['new.res'])
 
     def test_program(self):
         reader = self.reader('program')
