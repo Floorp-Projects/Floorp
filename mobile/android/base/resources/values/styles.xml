@@ -378,6 +378,16 @@
         <item name="android:textColor">?android:attr/textColorHint</item>
     </style>
 
+    <style name="TextAppearance.Widget.DoorHanger.Medium" parent="TextAppearance.Medium">
+        <item name="android:textColor">@color/doorhanger_text</item>
+        <item name="android:textColorLink">@color/doorhanger_link</item>
+    </style>
+
+    <style name="TextAppearance.Widget.DoorHanger.Small" parent="TextAppearance.Small">
+        <item name="android:textColor">@color/doorhanger_text</item>
+        <item name="android:textColorLink">@color/doorhanger_link</item>
+    </style>
+
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
         <item name="android:layout_width">match_parent</item>
