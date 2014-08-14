@@ -1992,7 +1992,10 @@ ia64*-hpux*)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions"
+    MOZ_OPTIMIZE_FLAGS="-Os -fno-reorder-functions"
+    if test -z "$CLANG_CC"; then
+       MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+    fi
     ;;
 
 *-*linux*)
@@ -2009,7 +2012,10 @@ ia64*-hpux*)
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-Os $MOZ_OPTIMIZE_SIZE_TWEAK"
+        if test -z "$CLANG_CC"; then
+           MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+        fi
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
