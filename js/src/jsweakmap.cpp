@@ -68,6 +68,13 @@ WeakMapBase::unmarkCompartment(JSCompartment *c)
         m->marked = false;
 }
 
+void
+WeakMapBase::markAll(JSCompartment *c, JSTracer *tracer)
+{
+    for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next)
+        m->markIteratively(tracer);
+}
+
 bool
 WeakMapBase::markCompartmentIteratively(JSCompartment *c, JSTracer *tracer)
 {

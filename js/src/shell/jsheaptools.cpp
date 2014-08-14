@@ -157,6 +157,7 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
       : JSTracer(cx->runtime(), traverseEdgeWithThis),
         JS::CustomAutoRooter(cx),
         noggc(JS_GetRuntime(cx)),
+        nocgc(JS_GetRuntime(cx)),
         runtime(JS_GetRuntime(cx)),
         parent(nullptr)
     {
@@ -169,6 +170,7 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
 
   private:
     JS::AutoDisableGenerationalGC noggc;
+    js::AutoDisableCompactingGC nocgc;
 
     /* A runtime pointer for use by the destructor. */
     JSRuntime *runtime;
