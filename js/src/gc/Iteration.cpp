@@ -23,7 +23,7 @@ js::TraceRuntime(JSTracer *trc)
     JS_ASSERT(!IS_GC_MARKING_TRACER(trc));
 
     JSRuntime *rt = trc->runtime();
-    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+    rt->gc.evictNursery();
     AutoPrepareForTracing prep(rt, WithAtoms);
     rt->gc.markRuntime(trc);
 }
@@ -93,7 +93,7 @@ void
 js::IterateScripts(JSRuntime *rt, JSCompartment *compartment,
                    void *data, IterateScriptCallback scriptCallback)
 {
-    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+    rt->gc.evictNursery();
     AutoPrepareForTracing prep(rt, SkipAtoms);
 
     if (compartment) {
@@ -113,7 +113,7 @@ js::IterateScripts(JSRuntime *rt, JSCompartment *compartment,
 void
 js::IterateGrayObjects(Zone *zone, GCThingCallback cellCallback, void *data)
 {
-    MinorGC(zone->runtimeFromMainThread(), JS::gcreason::EVICT_NURSERY);
+    zone->runtimeFromMainThread()->gc.evictNursery();
     AutoPrepareForTracing prep(zone->runtimeFromMainThread(), SkipAtoms);
 
     for (size_t finalizeKind = 0; finalizeKind <= FINALIZE_OBJECT_LAST; finalizeKind++) {

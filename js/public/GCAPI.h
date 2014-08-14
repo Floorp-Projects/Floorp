@@ -90,7 +90,7 @@ namespace JS {
     D(REFRESH_FRAME)                            \
     D(FULL_GC_TIMER)                            \
     D(SHUTDOWN_CC)                              \
-    D(FINISH_LARGE_EVALUTE)
+    D(FINISH_LARGE_EVALUATE)
 
 namespace gcreason {
 
