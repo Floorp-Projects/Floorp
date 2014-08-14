@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES += [
     'nsASN1Tree.cpp',
-    'nsFormSigningDialog.cpp',
     'nsNSSDialogHelper.cpp',
     'nsNSSDialogs.cpp',
     'nsPKIModule.cpp',

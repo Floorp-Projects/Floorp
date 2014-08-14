@@ -748,29 +748,6 @@ is(e.requestingWindow, window);
 is(e.popupWindowFeatures, "features");
 is(e.popupWindowName, "name");
 
-
-// SmartCardEvent
-
-try {
-  e = new SmartCardEvent();
-} catch(exp) {
-  ex = true;
-}
-ok(ex, "SmartCardEvent: First parameter is required!");
-ex = false;
-
-e = new SmartCardEvent("hello");
-is(e.type, "hello", "SmartCardEvent: Wrong event type!");
-ok(!e.isTrusted, "SmartCardEvent: Event shouldn't be trusted!");
-ok(!e.bubbles, "SmartCardEvent: Event shouldn't bubble!");
-ok(!e.cancelable, "SmartCardEvent: Event shouldn't be cancelable!");
-is(e.tokenName, "");
-document.dispatchEvent(e);
-is(receivedEvent, e, "SmartCardEvent: Wrong event!");
-
-e = new SmartCardEvent("hello", { tokenName: "foo" });
-is(e.tokenName, "foo");
-
 // WheelEvent
 
 try {
