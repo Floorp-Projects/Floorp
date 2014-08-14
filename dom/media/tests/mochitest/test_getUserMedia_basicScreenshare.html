@@ -23,8 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=983504
    * Run a test to verify that we can complete a start and stop media playback
    * cycle for an screenshare LocalMediaStream on a video HTMLMediaElement.
    */
-  SimpleTest.expectAssertions(0, 3); // Bug 1047842
-
   runTest(function () {
     const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
     if (IsMacOSX10_6orOlder() || isWinXP) {
