@@ -34,7 +34,6 @@
 #include "pkix/pkixnss.h"
 #include "pkixder.h"
 #include "pkixutil.h"
-#include "prerror.h"
 #include "prinit.h"
 #include "prprf.h"
 #include "secder.h"
@@ -67,7 +66,6 @@ OpenFile(const char* dir, const char* filename, const char* mode)
   ScopedPtr<char, deleteCharArray>
     path(new (nothrow) char[strlen(dir) + 1 + strlen(filename) + 1]);
   if (!path) {
-    PR_SetError(SEC_ERROR_NO_MEMORY, 0);
     return nullptr;
   }
   strcpy(path.get(), dir);
@@ -81,17 +79,12 @@ OpenFile(const char* dir, const char* filename, const char* mode)
     errno_t error = fopen_s(&rawFile, path.get(), mode);
     if (error) {
       // TODO: map error to NSPR error code
-      PR_SetError(PR_FILE_NOT_FOUND_ERROR, error);
       rawFile = nullptr;
     }
     file = rawFile;
   }
 #else
   file = fopen(path.get(), mode);
-  if (!file) {
-    // TODO: map errno to NSPR error code
-    PR_SetError(PR_FILE_NOT_FOUND_ERROR, errno);
-  }
 #endif
   return file.release();
 }
@@ -385,7 +378,6 @@ Integer(PLArenaPool* arena, long value)
 {
   if (value < 0 || value > 127) {
     // TODO: add encoding of larger values
-    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return nullptr;
   }
 
@@ -428,7 +420,6 @@ PRTimeToEncodedTime(PLArenaPool* arena, PRTime time, TimeEncoding encoding)
 
   if (encoding == UTCTime &&
       (exploded.tm_year < 1950 || exploded.tm_year >= 2050)) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return nullptr;
   }
 
@@ -515,7 +506,6 @@ SignedData(PLArenaPool* arena, const SECItem* tbsData,
   assert(tbsData);
   assert(privKey);
   if (!arena || !tbsData || !privKey) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return nullptr;
   }
 
@@ -596,7 +586,6 @@ Extension(PLArenaPool* arena, SECOidTag extnIDTag,
 {
   assert(arena);
   if (!arena) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return nullptr;
   }
 
@@ -734,7 +723,6 @@ CreateEncodedCertificate(PLArenaPool* arena, long version,
   assert(issuerNameDER);
   assert(subjectNameDER);
   if (!arena || !issuerNameDER || !subjectNameDER) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return nullptr;
   }
 
@@ -795,7 +783,6 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
   assert(subject);
   assert(subjectPublicKey);
   if (!arena || !issuer || !subject || !subjectPublicKey) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return nullptr;
   }
 
@@ -931,7 +918,6 @@ CreateEncodedBasicConstraints(PLArenaPool* arena, bool isCA,
 {
   assert(arena);
   if (!arena) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return nullptr;
   }
 
@@ -965,7 +951,6 @@ CreateEncodedEKUExtension(PLArenaPool* arena, SECOidTag const* ekus,
   assert(arena);
   assert(ekus);
   if (!arena || (!ekus && ekusCount != 0)) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return nullptr;
   }
 
@@ -990,13 +975,11 @@ SECItem*
 CreateEncodedOCSPResponse(OCSPResponseContext& context)
 {
   if (!context.arena) {
-    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return nullptr;
   }
 
   if (!context.skipResponseBytes) {
     if (!context.signerPrivateKey) {
-      PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
       return nullptr;
     }
   }
