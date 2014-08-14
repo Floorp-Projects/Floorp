@@ -16,7 +16,7 @@ struct AppleUtils {
   // Helper to retrieve properties from AudioFileStream objects.
   static nsresult GetProperty(AudioFileStreamID aAudioFileStream,
                               AudioFileStreamPropertyID aPropertyID,
-                              void *aData);
+                              void* aData);
 
   // Helper to set a string, string pair on a CFMutableDictionaryRef.
   static void SetCFDict(CFMutableDictionaryRef dict,
