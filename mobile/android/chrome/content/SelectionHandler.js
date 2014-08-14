@@ -4,9 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "Toast",
-                                  "resource://gre/modules/Toast.jsm");
-
 // Define elements that bound phone number containers.
 const PHONE_NUMBER_CONTAINERS = "td,div";
 
@@ -924,7 +921,7 @@ var SelectionHandler = {
     if (selectedText.length) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
       clipboard.copyString(selectedText, this._contentWindow.document);
-      Toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), Toast.SHORT);
+      NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
     }
     this._closeSelection();
   },

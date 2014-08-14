@@ -27,7 +27,6 @@ EXTRA_JS_MODULES += [
     'SimpleServiceDiscovery.jsm',
     'SSLExceptions.jsm',
     'TabMirror.jsm',
-    'Toast.jsm',
     'WebappManagerWorker.js',
 ]
 

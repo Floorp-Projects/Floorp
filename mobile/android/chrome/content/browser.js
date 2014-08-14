@@ -89,12 +89,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
 XPCOMUtils.defineLazyModuleGetter(this, "NetErrorHelper",
                                   "resource://gre/modules/NetErrorHelper.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Toast",
-                                  "resource://gre/modules/Toast.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
-                                  "resource://gre/modules/PageActions.jsm");
-
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
@@ -367,7 +361,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
     function showFullScreenWarning() {
-      Toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), Toast.SHORT);
+      NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
     }
 
     window.addEventListener("fullscreen", function() {
@@ -517,7 +511,7 @@ var BrowserApp = {
         let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
         let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-        Toast.show(label, Toast.LONG, {
+        NativeWindow.toast.show(label, "long", {
           button: {
             icon: "drawable://switch_button_icon",
             label: buttonLabel,
@@ -539,7 +533,7 @@ var BrowserApp = {
         let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
         let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-        Toast.show(label, Toast.LONG, {
+        NativeWindow.toast.show(label, "long", {
           button: {
             icon: "drawable://switch_button_icon",
             label: buttonLabel,
@@ -1052,7 +1046,7 @@ var BrowserApp = {
         message = Strings.browser.GetStringFromName("undoCloseToast.messageDefault");
       }
 
-      Toast.show(message, Toast.SHORT, {
+      NativeWindow.toast.show(message, "short", {
         button: {
           icon: "drawable://undo_button_icon",
           label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
@@ -1850,12 +1844,16 @@ var NativeWindow = {
   init: function() {
     Services.obs.addObserver(this, "Menu:Clicked", false);
     Services.obs.addObserver(this, "Doorhanger:Reply", false);
+    Services.obs.addObserver(this, "Toast:Click", false);
+    Services.obs.addObserver(this, "Toast:Hidden", false);
     this.contextmenus.init();
   },
 
   uninit: function() {
     Services.obs.removeObserver(this, "Menu:Clicked");
     Services.obs.removeObserver(this, "Doorhanger:Reply");
+    Services.obs.removeObserver(this, "Toast:Click", false);
+    Services.obs.removeObserver(this, "Toast:Hidden", false);
     this.contextmenus.uninit();
   },
 
@@ -1872,6 +1870,38 @@ var NativeWindow = {
       type: "Dex:Unload",
       zipfile: zipFile
     });
+  },
+
+  toast: {
+    _callbacks: {},
+    show: function(aMessage, aDuration, aOptions) {
+      let msg = {
+        type: "Toast:Show",
+        message: aMessage,
+        duration: aDuration
+      };
+
+      if (aOptions && aOptions.button) {
+        msg.button = {
+          id: uuidgen.generateUUID().toString(),
+        };
+
+        // null is badly handled by the receiver, so try to avoid including nulls.
+        if (aOptions.button.label) {
+          msg.button.label = aOptions.button.label;
+        }
+
+        if (aOptions.button.icon) {
+          // If the caller specified a button, make sure we convert any chrome urls
+          // to jar:jar urls so that the frontend can show them
+          msg.button.icon = resolveGeckoURI(aOptions.button.icon);
+        };
+
+        this._callbacks[msg.button.id] = aOptions.button.callback;
+      }
+
+      sendMessageToJava(msg);
+    }
   },
 
   menu: {
@@ -1975,6 +2005,14 @@ var NativeWindow = {
     if (aTopic == "Menu:Clicked") {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
+    } else if (aTopic == "Toast:Click") {
+      if (this.toast._callbacks[aData]) {
+        this.toast._callbacks[aData]();
+        delete this.toast._callbacks[aData];
+      }
+    } else if (aTopic == "Toast:Hidden") {
+      if (this.toast._callbacks[aData])
+        delete this.toast._callbacks[aData];
     } else if (aTopic == "Doorhanger:Reply") {
       let data = JSON.parse(aData);
       let reply_id = data["callback"];
@@ -2674,10 +2712,12 @@ var NativeWindow = {
   }
 };
 
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+                                  "resource://gre/modules/PageActions.jsm");
+
 // These alias to the old, deprecated NativeWindow interfaces
 [
-  ["pageactions", "resource://gre/modules/PageActions.jsm", "PageActions"],
-  ["toast", "resource://gre/modules/Toast.jsm", "Toast"],
+  ["pageactions", "resource://gre/modules/PageActions.jsm", "PageActions"]
 ].forEach(item => {
   let [name, script, exprt] = item;
 
@@ -5993,7 +6033,7 @@ var XPInstallObserver = {
   observe: function xpi_observer(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "addon-install-started":
-        Toast.show(Strings.browser.GetStringFromName("alertAddonsDownloading"), Toast.SHORT);
+        NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsDownloading"), "short");
         break;
       case "addon-install-blocked":
         let installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
@@ -6078,13 +6118,13 @@ var XPInstallObserver = {
       // Display completion message for new installs or updates not done Automatically
       if (!aInstall.existingAddon || !AddonManager.shouldAutoUpdate(aInstall.existingAddon)) {
         let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart");
-        Toast.show(message, Toast.SHORT);
+        NativeWindow.toast.show(message, "short");
       }
     }
   },
 
   onInstallFailed: function(aInstall) {
-    Toast.show(Strings.browser.GetStringFromName("alertAddonsFail"), Toast.SHORT);
+    NativeWindow.toast.show(Strings.browser.GetStringFromName("alertAddonsFail"), "short");
   },
 
   onDownloadProgress: function xpidm_onDownloadProgress(aInstall) {},
@@ -6116,7 +6156,7 @@ var XPInstallObserver = {
     msg = msg.replace("#3", Strings.brand.GetStringFromName("brandShortName"));
     msg = msg.replace("#4", Services.appinfo.version);
 
-    Toast.show(msg, Toast.SHORT);
+    NativeWindow.toast.show(msg, "short");
   },
 
   showRestartPrompt: function() {
@@ -7046,7 +7086,7 @@ var SearchEngines = {
     Services.search.addEngine(engine.url, Ci.nsISearchEngine.DATA_XML, engine.iconURL, false, {
       onSuccess: function() {
         // Display a toast confirming addition of new search engine.
-        Toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title], 1), Toast.LONG);
+        NativeWindow.toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title], 1), "long");
       },
 
       onError: function(aCode) {
@@ -7060,7 +7100,7 @@ var SearchEngines = {
           errorMessage = "alertSearchEngineErrorToast";
         }
 
-        Toast.show(Strings.browser.formatStringFromName(errorMessage, [engine.title], 1), Toast.LONG);
+        NativeWindow.toast.show(Strings.browser.formatStringFromName(errorMessage, [engine.title], 1), "long");
       }
     });
   },
@@ -7141,7 +7181,7 @@ var SearchEngines = {
             name = title.value + " " + i;
 
           Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
-          Toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [name], 1), Toast.LONG);
+          NativeWindow.toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [name], 1), "long");
           let engine = Services.search.getEngineByName(name);
           engine.wrappedJSObject._queryCharset = charset;
           for (let i = 0; i < formData.length; ++i) {

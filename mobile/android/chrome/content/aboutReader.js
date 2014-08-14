@@ -10,9 +10,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
                                   "resource://gre/modules/UITelemetry.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Toast",
-                                  "resource://gre/modules/Toast.jsm");
-
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function ()
   window.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIWebNavigation)
@@ -514,7 +511,7 @@ AboutReader.prototype = {
     if (!visible && !this._hasUsedToolbar) {
       this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
       if (!this._hasUsedToolbar) {
-        Toast.show(gStrings.GetStringFromName("aboutReader.toolbarTip"), Toast.SHORT);
+        gChromeWin.NativeWindow.toast.show(gStrings.GetStringFromName("aboutReader.toolbarTip"), "short");
 
         Services.prefs.setBoolPref("reader.has_used_toolbar", true);
         this._hasUsedToolbar = true;

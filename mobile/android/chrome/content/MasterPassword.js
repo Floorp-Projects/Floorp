@@ -3,9 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetter(this, "Toast",
-                                  "resource://gre/modules/Toast.jsm");
-
 var MasterPassword = {
   pref: "privacy.masterpassword.enabled",
   _tokenName: "",
@@ -64,7 +61,7 @@ var MasterPassword = {
     } catch(e) {
       dump("MasterPassword.removePassword: " + e + "\n");
     }
-    Toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), Toast.SHORT);
+    NativeWindow.toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), "short");
     return false;
   }
 };
