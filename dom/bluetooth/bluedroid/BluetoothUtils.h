@@ -19,15 +19,8 @@ class BluetoothValue;
 class BluetoothReplyRunnable;
 
 void
-StringToBdAddressType(const nsAString& aBdAddress,
-                      bt_bdaddr_t *aRetBdAddressType);
-
-void
 BdAddressTypeToString(bt_bdaddr_t* aBdAddressType,
                       nsAString& aRetBdAddress);
-
-uint16_t
-UuidToServiceClassInt(bt_uuid_t* p_uuid);
 
 uint16_t
 UuidToServiceClassInt(const BluetoothUuid& mUuid);
