@@ -23,6 +23,8 @@
   out_
 #endif
 
+#define MAX_UUID_SIZE 16
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 template<class T>
@@ -84,6 +86,23 @@ Convert(bool aIn, bt_scan_mode_t& aOut)
   static const bt_scan_mode_t sScanMode[] = {
     CONVERT(false, BT_SCAN_MODE_CONNECTABLE),
     CONVERT(true, BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sScanMode)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sScanMode[aIn];
+  return NS_OK;
+}
+
+
+static nsresult
+Convert(bt_scan_mode_t aIn, BluetoothScanMode& aOut)
+{
+  static const BluetoothScanMode sScanMode[] = {
+    CONVERT(BT_SCAN_MODE_NONE, SCAN_MODE_NONE),
+    CONVERT(BT_SCAN_MODE_CONNECTABLE, SCAN_MODE_CONNECTABLE),
+    CONVERT(BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE,
+      SCAN_MODE_CONNECTABLE_DISCOVERABLE)
   };
   if (aIn >= MOZ_ARRAY_LENGTH(sScanMode)) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -174,6 +193,22 @@ Convert(const nsAString& aIn, bt_ssp_variant_t& aOut)
 }
 
 static nsresult
+Convert(const bt_ssp_variant_t& aIn, nsAString& aOut)
+{
+  static const char * const sSspVariant[] = {
+    CONVERT(BT_SSP_VARIANT_PASSKEY_CONFIRMATION, "PasskeyConfirmation"),
+    CONVERT(BT_SSP_VARIANT_PASSKEY_ENTRY, "PasskeyEntry"),
+    CONVERT(BT_SSP_VARIANT_CONSENT, "Consent"),
+    CONVERT(BT_SSP_VARIANT_PASSKEY_NOTIFICATION, "PasskeyNotification")
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sSspVariant)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = NS_ConvertUTF8toUTF16(sSspVariant[aIn]);
+  return NS_OK;
+}
+
+static nsresult
 Convert(const bool& aIn, uint8_t& aOut)
 {
   // casting converts true/false to either 1 or 0
@@ -189,6 +224,18 @@ Convert(const uint8_t aIn[16], bt_uuid_t& aOut)
   }
 
   memcpy(aOut.uu, aIn, sizeof(aOut.uu));
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bt_uuid_t& aIn, BluetoothUuid& aOut)
+{
+  if (sizeof(aIn.uu) != sizeof(aOut.mUuid)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  memcpy(aOut.mUuid, aIn.uu, sizeof(aOut.mUuid));
 
   return NS_OK;
 }
@@ -237,6 +284,166 @@ Convert(const bt_bdaddr_t& aIn, nsAString& aOut)
   }
 
   aOut = NS_ConvertUTF8toUTF16(str);
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bt_bdaddr_t* aIn, nsAString& aOut)
+{
+  if (!aIn) {
+    aOut.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
+    return NS_OK;
+  }
+  return Convert(*aIn, aOut);
+}
+
+static nsresult
+Convert(bt_state_t aIn, bool& aOut)
+{
+  static const bool sState[] = {
+    CONVERT(BT_STATE_OFF, false),
+    CONVERT(BT_STATE_ON, true)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bt_property_type_t aIn, BluetoothPropertyType& aOut)
+{
+  static const BluetoothPropertyType sPropertyType[] = {
+    CONVERT(0, static_cast<BluetoothPropertyType>(0)), // invalid, required by gcc
+    CONVERT(BT_PROPERTY_BDNAME, PROPERTY_BDNAME),
+    CONVERT(BT_PROPERTY_BDADDR, PROPERTY_BDADDR),
+    CONVERT(BT_PROPERTY_UUIDS, PROPERTY_UUIDS),
+    CONVERT(BT_PROPERTY_CLASS_OF_DEVICE, PROPERTY_CLASS_OF_DEVICE),
+    CONVERT(BT_PROPERTY_TYPE_OF_DEVICE, PROPERTY_TYPE_OF_DEVICE),
+    CONVERT(BT_PROPERTY_SERVICE_RECORD, PROPERTY_SERVICE_RECORD),
+    CONVERT(BT_PROPERTY_ADAPTER_SCAN_MODE, PROPERTY_ADAPTER_SCAN_MODE),
+    CONVERT(BT_PROPERTY_ADAPTER_BONDED_DEVICES,
+      PROPERTY_ADAPTER_BONDED_DEVICES),
+    CONVERT(BT_PROPERTY_ADAPTER_DISCOVERY_TIMEOUT,
+      PROPERTY_ADAPTER_DISCOVERY_TIMEOUT),
+    CONVERT(BT_PROPERTY_REMOTE_FRIENDLY_NAME, PROPERTY_REMOTE_FRIENDLY_NAME),
+    CONVERT(BT_PROPERTY_REMOTE_RSSI, PROPERTY_REMOTE_RSSI),
+    CONVERT(BT_PROPERTY_REMOTE_VERSION_INFO,PROPERTY_REMOTE_VERSION_INFO)
+  };
+  if (aIn == BT_PROPERTY_REMOTE_DEVICE_TIMESTAMP) {
+    /* This case is handled separately to not populate
+     * |sPropertyType| with empty entries. */
+    aOut = PROPERTY_REMOTE_DEVICE_TIMESTAMP;
+    return NS_OK;
+  }
+  if (!aIn || aIn >= MOZ_ARRAY_LENGTH(sPropertyType)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sPropertyType[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bt_discovery_state_t aIn, bool& aOut)
+{
+  static const bool sDiscoveryState[] = {
+    CONVERT(BT_DISCOVERY_STOPPED, false),
+    CONVERT(BT_DISCOVERY_STARTED, true)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sDiscoveryState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sDiscoveryState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bt_bdname_t& aIn, nsAString& aOut)
+{
+  aOut = NS_ConvertUTF8toUTF16(reinterpret_cast<const char*>(aIn.name));
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bt_bdname_t* aIn, nsAString& aOut)
+{
+  if (!aIn) {
+    aOut.Truncate();
+    return NS_OK;
+  }
+  return Convert(*aIn, aOut);
+}
+
+static nsresult
+Convert(bt_bond_state_t aIn, BluetoothBondState& aOut)
+{
+  static const BluetoothBondState sBondState[] = {
+    CONVERT(BT_BOND_STATE_NONE, BOND_STATE_NONE),
+    CONVERT(BT_BOND_STATE_BONDING, BOND_STATE_BONDING),
+    CONVERT(BT_BOND_STATE_BONDED, BOND_STATE_BONDED)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sBondState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sBondState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bt_acl_state_t aIn, bool& aOut)
+{
+  static const bool sAclState[] = {
+    CONVERT(BT_ACL_STATE_CONNECTED, true),
+    CONVERT(BT_ACL_STATE_DISCONNECTED, false)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sAclState)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sAclState[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(bt_device_type_t aIn, BluetoothDeviceType& aOut)
+{
+  static const BluetoothDeviceType sDeviceType[] = {
+    CONVERT(0, static_cast<BluetoothDeviceType>(0)), // invalid, required by gcc
+    CONVERT(BT_DEVICE_DEVTYPE_BREDR, DEVICE_TYPE_BREDR),
+    CONVERT(BT_DEVICE_DEVTYPE_BLE, DEVICE_TYPE_BLE),
+    CONVERT(BT_DEVICE_DEVTYPE_DUAL, DEVICE_TYPE_DUAL)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sDeviceType)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sDeviceType[aIn];
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bt_remote_version_t& aIn, BluetoothRemoteInfo& aOut)
+{
+  aOut.mVerMajor = aIn.version;
+  aOut.mVerMinor = aIn.sub_ver;
+  aOut.mManufacturer = aIn.manufacturer;
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bt_service_record_t& aIn, BluetoothServiceRecord& aOut)
+{
+  nsresult rv = Convert(aIn.uuid, aOut.mUuid);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  aOut.mChannel = aIn.channel;
+
+  MOZ_ASSERT(sizeof(aIn.name) == sizeof(aOut.mName));
+  memcpy(aOut.mName, aIn.name, sizeof(aOut.mName));
 
   return NS_OK;
 }
@@ -554,6 +761,101 @@ ConvertDefault(const Tin& aIn, const Tout& aDefault)
     return aDefault;
   }
   return out;
+}
+
+/* This implementation of |Convert| is a helper for copying the
+ * input value into the output value. It handles all cases that
+ * need no conversion.
+ */
+template<typename T>
+static nsresult
+Convert(const T& aIn, T& aOut)
+{
+  aOut = aIn;
+
+  return NS_OK;
+}
+
+static nsresult
+Convert(const bt_property_t& aIn, BluetoothProperty& aOut)
+{
+  /* type conversion */
+
+  nsresult rv = Convert(aIn.type, aOut.mType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* value conversion */
+
+  switch (aOut.mType) {
+    case PROPERTY_BDNAME:
+      /* fall through */
+    case PROPERTY_REMOTE_FRIENDLY_NAME:
+      {
+        // We construct an nsCString here because bdname
+        // returned from Bluedroid is not 0-terminated.
+        aOut.mString = NS_ConvertUTF8toUTF16(
+          nsCString(static_cast<char*>(aIn.val), aIn.len));
+      }
+      break;
+    case PROPERTY_BDADDR:
+      rv = Convert(*static_cast<bt_bdaddr_t*>(aIn.val), aOut.mString);
+      break;
+    case PROPERTY_UUIDS:
+      {
+        size_t numUuids = aIn.len / MAX_UUID_SIZE;
+        ConvertArray<bt_uuid_t> array(
+          static_cast<bt_uuid_t*>(aIn.val), numUuids);
+        aOut.mUuidArray.SetLength(numUuids);
+        rv = Convert(array, aOut.mUuidArray);
+      }
+      break;
+    case PROPERTY_CLASS_OF_DEVICE:
+      /* fall through */
+    case PROPERTY_ADAPTER_DISCOVERY_TIMEOUT:
+      aOut.mUint32 = *static_cast<uint32_t*>(aIn.val);
+      break;
+    case PROPERTY_TYPE_OF_DEVICE:
+      rv = Convert(*static_cast<bt_device_type_t*>(aIn.val),
+                   aOut.mDeviceType);
+      break;
+    case PROPERTY_SERVICE_RECORD:
+      rv = Convert(*static_cast<bt_service_record_t*>(aIn.val),
+                   aOut.mServiceRecord);
+      break;
+    case PROPERTY_ADAPTER_SCAN_MODE:
+      rv = Convert(*static_cast<bt_scan_mode_t*>(aIn.val),
+                   aOut.mScanMode);
+      break;
+    case PROPERTY_ADAPTER_BONDED_DEVICES:
+      {
+        size_t numAddresses = aIn.len / BLUETOOTH_ADDRESS_BYTES;
+        ConvertArray<bt_bdaddr_t> array(
+          static_cast<bt_bdaddr_t*>(aIn.val), numAddresses);
+        aOut.mStringArray.SetLength(numAddresses);
+        rv = Convert(array, aOut.mStringArray);
+      }
+      break;
+    case PROPERTY_REMOTE_RSSI:
+      aOut.mInt32 = *static_cast<int32_t*>(aIn.val);
+      break;
+    case PROPERTY_REMOTE_VERSION_INFO:
+      rv = Convert(*static_cast<bt_remote_version_t*>(aIn.val),
+                   aOut.mRemoteInfo);
+      break;
+    case PROPERTY_REMOTE_DEVICE_TIMESTAMP:
+      /* nothing to do */
+      break;
+    default:
+      /* mismatch with type conversion */
+      NS_NOTREACHED("Unhandled property type");
+      break;
+  }
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 //
@@ -2429,6 +2731,233 @@ DispatchBluetoothResult(BluetoothResultHandler* aRes,
   }
   return rv;
 }
+
+// Notification handling
+//
+
+BluetoothNotificationHandler::~BluetoothNotificationHandler()
+{ }
+
+static BluetoothNotificationHandler* sNotificationHandler;
+
+struct BluetoothCallback
+{
+  class NotificationHandlerWrapper
+  {
+  public:
+    typedef BluetoothNotificationHandler  ObjectType;
+
+    static ObjectType* GetInstance()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      return sNotificationHandler;
+    }
+  };
+
+  // Notifications
+
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+                                         bool>
+    AdapterStateChangedNotification;
+
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         BluetoothStatus, int,
+                                         const BluetoothProperty*>
+    AdapterPropertiesNotification;
+
+  typedef BluetoothNotificationRunnable4<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString, int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         BluetoothStatus, const nsAString&,
+                                         int, const BluetoothProperty*>
+    RemoteDevicePropertiesNotification;
+
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+                                         int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         int, const BluetoothProperty*>
+    DeviceFoundNotification;
+
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+                                         bool>
+    DiscoveryStateChangedNotification;
+
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         nsString, nsString, uint32_t,
+                                         const nsAString&, const nsAString&>
+    PinRequestNotification;
+
+  typedef BluetoothNotificationRunnable5<NotificationHandlerWrapper, void,
+                                         nsString, nsString, uint32_t,
+                                         nsString, uint32_t,
+                                         const nsAString&, const nsAString&,
+                                         uint32_t, const nsAString&>
+    SspRequestNotification;
+
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString,
+                                         BluetoothBondState,
+                                         BluetoothStatus, const nsAString&>
+    BondStateChangedNotification;
+
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString, bool,
+                                         BluetoothStatus, const nsAString&>
+    AclStateChangedNotification;
+
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         uint16_t, nsAutoArrayPtr<uint8_t>,
+                                         uint8_t, uint16_t, const uint8_t*>
+    DutModeRecvNotification;
+
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, uint16_t>
+    LeTestModeNotification;
+
+  // Bluedroid callbacks
+
+  static const bt_property_t*
+  AlignedProperties(bt_property_t* aProperties, size_t aNumProperties,
+                    nsAutoArrayPtr<bt_property_t>& aPropertiesArray)
+  {
+    // See Bug 989976: consider aProperties address is not aligned. If
+    // it is aligned, we return the pointer directly; otherwise we make
+    // an aligned copy. The argument |aPropertiesArray| keeps track of
+    // the memory buffer.
+    if (!(reinterpret_cast<uintptr_t>(aProperties) % sizeof(void*))) {
+      return aProperties;
+    }
+
+    bt_property_t* properties = new bt_property_t[aNumProperties];
+    memcpy(properties, aProperties, aNumProperties * sizeof(*properties));
+    aPropertiesArray = properties;
+
+    return properties;
+  }
+
+  static void
+  AdapterStateChanged(bt_state_t aStatus)
+  {
+    AdapterStateChangedNotification::Dispatch(
+      &BluetoothNotificationHandler::AdapterStateChangedNotification,
+      aStatus);
+  }
+
+  static void
+  AdapterProperties(bt_status_t aStatus, int aNumProperties,
+                    bt_property_t* aProperties)
+  {
+    nsAutoArrayPtr<bt_property_t> propertiesArray;
+
+    AdapterPropertiesNotification::Dispatch(
+      &BluetoothNotificationHandler::AdapterPropertiesNotification,
+      ConvertDefault(aStatus, STATUS_FAIL), aNumProperties,
+      ConvertArray<bt_property_t>(
+        AlignedProperties(aProperties, aNumProperties, propertiesArray),
+      aNumProperties));
+  }
+
+  static void
+  RemoteDeviceProperties(bt_status_t aStatus, bt_bdaddr_t* aBdAddress,
+                         int aNumProperties, bt_property_t* aProperties)
+  {
+    nsAutoArrayPtr<bt_property_t> propertiesArray;
+
+    RemoteDevicePropertiesNotification::Dispatch(
+      &BluetoothNotificationHandler::RemoteDevicePropertiesNotification,
+      ConvertDefault(aStatus, STATUS_FAIL), aBdAddress, aNumProperties,
+      ConvertArray<bt_property_t>(
+        AlignedProperties(aProperties, aNumProperties, propertiesArray),
+      aNumProperties));
+  }
+
+  static void
+  DeviceFound(int aNumProperties, bt_property_t* aProperties)
+  {
+    nsAutoArrayPtr<bt_property_t> propertiesArray;
+
+    DeviceFoundNotification::Dispatch(
+      &BluetoothNotificationHandler::DeviceFoundNotification,
+      aNumProperties,
+      ConvertArray<bt_property_t>(
+        AlignedProperties(aProperties, aNumProperties, propertiesArray),
+      aNumProperties));
+  }
+
+  static void
+  DiscoveryStateChanged(bt_discovery_state_t aState)
+  {
+    DiscoveryStateChangedNotification::Dispatch(
+      &BluetoothNotificationHandler::DiscoveryStateChangedNotification,
+      aState);
+  }
+
+  static void
+  PinRequest(bt_bdaddr_t* aRemoteBdAddress,
+             bt_bdname_t* aRemoteBdName, uint32_t aRemoteClass)
+  {
+    PinRequestNotification::Dispatch(
+      &BluetoothNotificationHandler::PinRequestNotification,
+      aRemoteBdAddress, aRemoteBdName, aRemoteClass);
+  }
+
+  static void
+  SspRequest(bt_bdaddr_t* aRemoteBdAddress, bt_bdname_t* aRemoteBdName,
+             uint32_t aRemoteClass, bt_ssp_variant_t aPairingVariant,
+             uint32_t aPasskey)
+  {
+    SspRequestNotification::Dispatch(
+      &BluetoothNotificationHandler::SspRequestNotification,
+      aRemoteBdAddress, aRemoteBdName, aRemoteClass,
+      aPairingVariant, aPasskey);
+  }
+
+  static void
+  BondStateChanged(bt_status_t aStatus, bt_bdaddr_t* aRemoteBdAddress,
+                   bt_bond_state_t aState)
+  {
+    BondStateChangedNotification::Dispatch(
+      &BluetoothNotificationHandler::BondStateChangedNotification,
+      aStatus, aRemoteBdAddress, aState);
+  }
+
+  static void
+  AclStateChanged(bt_status_t aStatus, bt_bdaddr_t* aRemoteBdAddress,
+                  bt_acl_state_t aState)
+  {
+    AclStateChangedNotification::Dispatch(
+      &BluetoothNotificationHandler::AclStateChangedNotification,
+      aStatus, aRemoteBdAddress, aState);
+  }
+
+  static void
+  ThreadEvt(bt_cb_thread_evt evt)
+  {
+    // This callback maintains internal state and is not exported.
+  }
+
+  static void
+  DutModeRecv(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen)
+  {
+    DutModeRecvNotification::Dispatch(
+      &BluetoothNotificationHandler::DutModeRecvNotification,
+      aOpcode, ConvertArray<uint8_t>(aBuf, aLen), aLen);
+  }
+
+  static void
+  LeTestMode(bt_status_t aStatus, uint16_t aNumPackets)
+  {
+    LeTestModeNotification::Dispatch(
+      &BluetoothNotificationHandler::LeTestModeNotification,
+      aStatus, aNumPackets);
+  }
+};
+
+// Interface
+//
 
 /* returns the container structure of a variable; _t is the container's
  * type, _v the name of the variable, and _m is _v's field within _t
