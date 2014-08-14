@@ -87,6 +87,19 @@ this.webrtcUI = {
     let PopupNotifications = browserWindow.PopupNotifications;
     let notif = PopupNotifications.getNotification("webRTC-sharing" + aType,
                                                    aActiveStream.browser);
+#ifdef XP_MACOSX
+    if (!Services.focus.activeWindow) {
+      browserWindow.addEventListener("activate", function onActivate() {
+        browserWindow.removeEventListener("activate", onActivate);
+        Services.tm.mainThread.dispatch(function() {
+          notif.reshow();
+        }, Ci.nsIThread.DISPATCH_NORMAL);
+      });
+      Cc["@mozilla.org/widget/macdocksupport;1"].getService(Ci.nsIMacDockSupport)
+        .activateApplication(true);
+      return;
+    }
+#endif
     notif.reshow();
   },
 
