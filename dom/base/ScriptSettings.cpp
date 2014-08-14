@@ -465,8 +465,8 @@ AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   }
 
   if (!mCx) {
-    mCx = xpc->GetSafeJSContext();
-    mPusher.emplace(mCx);
+    mJSAPI.Init();
+    mCx = mJSAPI.cx();
   }
 }
 
