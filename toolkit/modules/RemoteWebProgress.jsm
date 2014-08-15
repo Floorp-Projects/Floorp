@@ -173,6 +173,7 @@ RemoteWebProgressManager.prototype = {
         this._browser._characterSet = json.charset;
         this._browser._documentURI = newURI(json.documentURI);
         this._browser._imageDocument = null;
+        this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;
       }
 
       this._callProgressListeners("onLocationChange", webProgress, request, location, flags);

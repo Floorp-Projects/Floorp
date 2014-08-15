@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include libeditor/html/crashtests/crashtests.list
-include libeditor/base/crashtests/crashtests.list
+include libeditor/crashtests/crashtests.list
 include libeditor/text/crashtests/crashtests.list
 include composer/crashtests/crashtests.list
 include txmgr/tests/crashtests/crashtests.list

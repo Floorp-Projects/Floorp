@@ -495,7 +495,7 @@ setReq.onerror = function() {
                             'expected timeout not triggered')
 
             if 'fail' in self.jsFile:
-                self.assertTrue(results['failed'] > 0,
+                self.assertTrue(len(results['failures']) > 0,
                                 "expected test failures didn't occur")
             else:
                 logger = get_default_logger()
@@ -504,10 +504,27 @@ setReq.onerror = function() {
                     name = "got false, expected true" if failure.get('name') is None else failure['name']
                     logger.test_status(self.test_name, name, 'FAIL',
                                        message=diag)
-                self.assertEqual(0, results['failed'],
-                                 '%d tests failed' % (results['failed']))
+                for failure in results['expectedFailures']:
+                    diag = "" if failure.get('diag') is None else failure['diag']
+                    name = "got false, expected false" if failure.get('name') is None else failure['name']
+                    logger.test_status(self.test_name, name, 'FAIL',
+                                       expected='FAIL', message=diag)
+                for failure in results['unexpectedSuccesses']:
+                    diag = "" if failure.get('diag') is None else failure['diag']
+                    name = "got true, expected false" if failure.get('name') is None else failure['name']
+                    logger.test_status(self.test_name, name, 'PASS',
+                                       expected='FAIL', message=diag)
+                self.assertEqual(0, len(results['failures']),
+                                 '%d tests failed' % len(results['failures']))
+                if len(results['unexpectedSuccesses']) > 0:
+                    raise _UnexpectedSuccess('')
+                if len(results['expectedFailures']) > 0:
+                    raise _ExpectedFailure((AssertionError, AssertionError(''), None))
 
-            self.assertTrue(results['passed'] + results['failed'] > 0,
+            self.assertTrue(results['passed']
+                            + len(results['failures'])
+                            + len(results['expectedFailures'])
+                            + len(results['unexpectedSuccesses']) > 0,
                             'no tests run')
 
         except ScriptTimeoutException:
