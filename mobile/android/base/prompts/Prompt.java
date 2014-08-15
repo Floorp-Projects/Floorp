@@ -12,6 +12,8 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -39,7 +41,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class Prompt implements OnClickListener, OnCancelListener, OnItemClickListener,
-                               PromptInput.OnChangeListener {
+                               PromptInput.OnChangeListener, Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "GeckoPromptService";
 
     private String[] mButtons;
@@ -54,6 +56,8 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
     private static boolean mInitialized;
     private static int mInputPaddingSize;
+
+    private int mTabId = Tabs.INVALID_TAB_ID;
 
     public Prompt(Context context, PromptCallback callback) {
         this(context);
@@ -75,7 +79,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         // Don't add padding to color picker views
         if (input.canApplyInputStyle()) {
             view.setPadding(mInputPaddingSize, 0, mInputPaddingSize, 0);
-	}
+        }
         return view;
     }
 
@@ -105,6 +109,10 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             choiceMode = ListView.CHOICE_MODE_MULTIPLE;
         }
 
+        if (message.has("tabId")) {
+            mTabId = message.optInt("tabId", Tabs.INVALID_TAB_ID);
+        }
+
         show(title, text, menuitems, choiceMode);
     }
 
@@ -118,7 +126,38 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             return;
         }
 
-        mDialog.show();
+        if (mTabId != Tabs.INVALID_TAB_ID) {
+            Tabs.registerOnTabsChangedListener(this);
+
+            final Tab tab = Tabs.getInstance().getTab(mTabId);
+            if (Tabs.getInstance().getSelectedTab() == tab) {
+                mDialog.show();
+            }
+        } else {
+            mDialog.show();
+        }
+    }
+
+    @Override
+    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final Object data) {
+        if (tab != Tabs.getInstance().getTab(mTabId)) {
+            return;
+        }
+
+        switch(msg) {
+            case SELECTED:
+                Log.i(LOGTAG, "Selected");
+                mDialog.show();
+                break;
+            case UNSELECTED:
+                Log.i(LOGTAG, "Unselected");
+                mDialog.hide();
+                break;
+            case LOCATION_CHANGE:
+                Log.i(LOGTAG, "Location change");
+                mDialog.cancel();
+                break;
+        }
     }
 
     private void create(String title, String text, PromptListItem[] listItems, int choiceMode)
@@ -140,8 +179,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         if (listItems != null && listItems.length > 0) {
             addListItems(builder, listItems, choiceMode);
         } else if (!addInputs(builder)) {
-            // If we failed to add any requested input elements, don't show the dialog
-            return;
+            throw new IllegalStateException("Could not add inputs to dialog");
         }
 
         int length = mButtons == null ? 0 : mButtons.length;
@@ -451,6 +489,10 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         try {
             aReturn.put("guid", mGuid);
         } catch(JSONException ex) { }
+
+        if (mTabId != Tabs.INVALID_TAB_ID) {
+            Tabs.unregisterOnTabsChangedListener(this);
+        }
 
         // poke the Gecko thread in case it's waiting for new events
         GeckoAppShell.sendEventToGecko(GeckoEvent.createNoOpEvent());
