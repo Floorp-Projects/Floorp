@@ -119,7 +119,7 @@ nr_stun_encode_htonl(UINT4 data, int buflen, UCHAR *buf, int *offset)
 int
 nr_stun_encode_htonll(UINT8 data, int buflen, UCHAR *buf, int *offset)
 {
-   UINT8 d = htonll(data);
+   UINT8 d = nr_htonll(data);
 
    if (*offset + sizeof(d) > buflen) {
       r_log(NR_LOG_STUN, LOG_WARNING, "Attempted buffer overrun: %d + %zd > %d", *offset, sizeof(d), buflen);
@@ -193,7 +193,7 @@ nr_stun_decode_htonll(UCHAR *buf, int buflen, int *offset, UINT8 *data)
 
    memcpy(&d, &buf[*offset], sizeof(d));
    *offset += sizeof(d);
-   *data = htonll(d);
+   *data = nr_htonll(d);
 
    return 0;
 }

@@ -260,7 +260,8 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
   }
 
   // Build primitives for a CSS filter.
-  nsCSSFilterInstance cssFilterInstance(aFilter, mTargetBBoxInFilterSpace,
+  nsCSSFilterInstance cssFilterInstance(aFilter, mTargetFrame,
+                                        mTargetBBoxInFilterSpace,
                                         mFrameSpaceInCSSPxToFilterSpaceTransform);
   return cssFilterInstance.BuildPrimitives(mPrimitiveDescriptions);
 }

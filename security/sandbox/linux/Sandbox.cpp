@@ -47,7 +47,7 @@ namespace mozilla {
 #if defined(ANDROID)
 #define LOG_ERROR(args...) __android_log_print(ANDROID_LOG_ERROR, "Sandbox", ## args)
 #else
-#define LOG_ERROR(fmt, args...) fprintf(stderr, "Sandbox: " fmt, ## args)
+#define LOG_ERROR(fmt, args...) fprintf(stderr, "Sandbox: " fmt "\n", ## args)
 #endif
 
 #ifdef MOZ_GMP_SANDBOX

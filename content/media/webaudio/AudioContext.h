@@ -233,6 +233,11 @@ public:
     return aTime - ExtraCurrentTime();
   }
 
+  double StreamTimeToDOMTime(double aTime) const
+  {
+    return aTime + ExtraCurrentTime();
+  }
+
   IMPL_EVENT_HANDLER(mozinterruptbegin)
   IMPL_EVENT_HANDLER(mozinterruptend)
 

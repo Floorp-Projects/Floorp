@@ -14,6 +14,7 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,16 +27,18 @@ import org.mozilla.search.AcceptsSearchQuery;
 import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 import org.mozilla.search.Constants;
 import org.mozilla.search.R;
+import org.mozilla.search.providers.SearchEngine;
+import org.mozilla.search.providers.SearchEngineManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * A fragment to show search suggestions.
- * <p/>
- * TODO: Add more search providers (other than the dictionary)
  */
-public class SuggestionsFragment extends Fragment {
+public class SuggestionsFragment extends Fragment implements SearchEngineManager.SearchEngineCallback {
+
+    private static final String LOG_TAG = "SuggestionsFragment";
 
     private static final int LOADER_ID_SUGGESTION = 0;
     private static final String KEY_SEARCH_TERM = "search_term";
@@ -46,7 +49,14 @@ public class SuggestionsFragment extends Fragment {
     // Color of search term match in search suggestion
     private static final int SUGGESTION_HIGHLIGHT_COLOR = 0xFF999999;
 
+    public static final String GECKO_SEARCH_TERMS_URL_PARAM = "__searchTerms__";
+
     private AcceptsSearchQuery searchListener;
+
+    private SearchEngineManager searchEngineManager;
+
+    // Suggest client gets setup outside of the normal fragment lifecycle, therefore
+    // clients should ensure that this isn't null before using it.
     private SuggestClient suggestClient;
     private SuggestionLoaderCallbacks suggestionLoaderCallbacks;
 
@@ -68,14 +78,20 @@ public class SuggestionsFragment extends Fragment {
             throw new ClassCastException(activity.toString() + " must implement AcceptsSearchQuery.");
         }
 
-        // TODO: Don't hard-code this template string (bug 1039758)
-        final String template = "https://search.yahoo.com/sugg/ff?" +
-                "output=fxjson&appid=ffm&command=__searchTerms__&nresults=" + Constants.SUGGESTION_MAX;
-
-        suggestClient = new SuggestClient(activity, template, SUGGESTION_TIMEOUT, Constants.SUGGESTION_MAX);
         suggestionLoaderCallbacks = new SuggestionLoaderCallbacks();
-
         autoCompleteAdapter = new AutoCompleteAdapter(activity);
+        searchEngineManager = new SearchEngineManager(activity);
+        searchEngineManager.setChangeCallback(this);
+
+        // Initialize the suggest client. This may happen asynchronously, so any clients should
+        // still perform a null check.
+        searchEngineManager.getEngine(new SearchEngineManager.SearchEngineCallback() {
+            @Override
+            public void execute(SearchEngine engine) {
+                suggestClient = new SuggestClient(getActivity(), engine.getSuggestionTemplate(GECKO_SEARCH_TERMS_URL_PARAM),
+                        SUGGESTION_TIMEOUT, Constants.SUGGESTION_MAX);
+            }
+        });
     }
 
     @Override
@@ -83,9 +99,11 @@ public class SuggestionsFragment extends Fragment {
         super.onDetach();
 
         searchListener = null;
-        suggestClient = null;
         suggestionLoaderCallbacks = null;
         autoCompleteAdapter = null;
+        searchEngineManager.destroy();
+        searchEngineManager = null;
+        suggestClient = null;
     }
 
     @Override
@@ -129,10 +147,25 @@ public class SuggestionsFragment extends Fragment {
         }
     }
 
+    @Override
+    public void execute(SearchEngine engine) {
+        suggestClient = new SuggestClient(getActivity(), engine.getSuggestionTemplate(GECKO_SEARCH_TERMS_URL_PARAM),
+                SUGGESTION_TIMEOUT, Constants.SUGGESTION_MAX);
+    }
+
     public void loadSuggestions(String query) {
         final Bundle args = new Bundle();
         args.putString(KEY_SEARCH_TERM, query);
-        getLoaderManager().restartLoader(LOADER_ID_SUGGESTION, args, suggestionLoaderCallbacks);
+        final LoaderManager loaderManager = getLoaderManager();
+
+        // Ensure that we don't try to restart a loader that doesn't exist. This becomes
+        // an issue because SuggestionLoaderCallbacks.onCreateLoader can return null
+        // as a loader if we don't have a suggestClient available yet.
+        if (loaderManager.getLoader(LOADER_ID_SUGGESTION) == null) {
+            loaderManager.initLoader(LOADER_ID_SUGGESTION, args, suggestionLoaderCallbacks);
+        } else {
+            loaderManager.restartLoader(LOADER_ID_SUGGESTION, args, suggestionLoaderCallbacks);
+        }
     }
 
     public static class Suggestion {
@@ -159,7 +192,13 @@ public class SuggestionsFragment extends Fragment {
     private class SuggestionLoaderCallbacks implements LoaderManager.LoaderCallbacks<List<Suggestion>> {
         @Override
         public Loader<List<Suggestion>> onCreateLoader(int id, Bundle args) {
-            return new SuggestionAsyncLoader(getActivity(), suggestClient, args.getString(KEY_SEARCH_TERM));
+            // We drop the user's search if suggestclient isn't ready. This happens if the
+            // user is really fast and starts typing before we can read shared prefs.
+            if (suggestClient != null) {
+                return new SuggestionAsyncLoader(getActivity(), suggestClient, args.getString(KEY_SEARCH_TERM));
+            }
+            Log.e(LOG_TAG, "Autocomplete setup failed; suggestClient not ready yet.");
+            return null;
         }
 
         @Override
