@@ -5606,6 +5606,11 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
 class ICCall_Scripted : public ICMonitoredStub
 {
     friend class ICStubSpace;
+  public:
+    // The maximum number of inlineable spread call arguments. Keep this small
+    // to avoid controllable stack overflows by attackers passing large arrays
+    // to spread call. This value is shared with ICCall_Native.
+    static const uint32_t MAX_ARGS_SPREAD_LENGTH = 16;
 
   protected:
     HeapPtrScript calleeScript_;
