@@ -11,6 +11,7 @@
 
 #include "mozilla/dom/Promise.h"
 
+using mozilla::ErrorResult;
 using namespace mozilla::dom;
 USING_WORKERS_NAMESPACE
 
@@ -44,6 +45,17 @@ ServiceWorker::WrapObject(JSContext* aCx)
   AssertIsOnMainThread();
 
   return ServiceWorkerBinding::Wrap(aCx, this);
+}
+
+void
+ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                           const Optional<Sequence<JS::Value>>& aTransferable,
+                           ErrorResult& aRv)
+{
+  WorkerPrivate* workerPrivate = GetWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  workerPrivate->PostMessage(aCx, aMessage, aTransferable, aRv);
 }
 
 WorkerPrivate*
