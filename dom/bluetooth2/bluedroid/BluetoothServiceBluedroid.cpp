@@ -119,7 +119,7 @@ public:
   : public BluetoothResultHandler
   {
   public:
-    void OnError(int aStatus) MOZ_OVERRIDE
+    void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
     {
       BT_LOGR("Fail to set: BT_SCAN_MODE_CONNECTABLE");
     }
@@ -816,7 +816,7 @@ EnsureBluetoothHalLoad()
 class EnableResultHandler MOZ_FINAL : public BluetoothResultHandler
 {
 public:
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -889,7 +889,7 @@ public:
     }
   }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -931,7 +931,7 @@ StartGonkBluetooth()
 class DisableResultHandler MOZ_FINAL : public BluetoothResultHandler
 {
 public:
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -970,7 +970,7 @@ StopGonkBluetooth()
 
 static void
 ReplyStatusError(BluetoothReplyRunnable* aBluetoothReplyRunnable,
-                 int aStatusCode, const nsAString& aCustomMsg)
+                 BluetoothStatus aStatusCode, const nsAString& aCustomMsg)
 {
   MOZ_ASSERT(aBluetoothReplyRunnable, "Reply runnable is nullptr");
 
@@ -979,17 +979,17 @@ ReplyStatusError(BluetoothReplyRunnable* aBluetoothReplyRunnable,
   nsAutoString replyError;
   replyError.Assign(aCustomMsg);
 
-  if (aStatusCode == BT_STATUS_BUSY) {
+  if (aStatusCode == STATUS_BUSY) {
     replyError.AppendLiteral(":BT_STATUS_BUSY");
-  } else if (aStatusCode == BT_STATUS_NOT_READY) {
+  } else if (aStatusCode == STATUS_NOT_READY) {
     replyError.AppendLiteral(":BT_STATUS_NOT_READY");
-  } else if (aStatusCode == BT_STATUS_DONE) {
+  } else if (aStatusCode == STATUS_DONE) {
     replyError.AppendLiteral(":BT_STATUS_DONE");
-  } else if (aStatusCode == BT_STATUS_AUTH_FAILURE) {
+  } else if (aStatusCode == STATUS_AUTH_FAILURE) {
     replyError.AppendLiteral(":BT_STATUS_AUTH_FAILURE");
-  } else if (aStatusCode == BT_STATUS_RMT_DEV_DOWN) {
+  } else if (aStatusCode == STATUS_RMT_DEV_DOWN) {
     replyError.AppendLiteral(":BT_STATUS_RMT_DEV_DOWN");
-  } else if (aStatusCode == BT_STATUS_FAIL) {
+  } else if (aStatusCode == STATUS_FAIL) {
     replyError.AppendLiteral(":BT_STATUS_FAIL");
   }
 
@@ -1126,7 +1126,7 @@ public:
   : mDeviceAddress(aDeviceAddress)
   { }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1224,7 +1224,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     sChangeDiscoveryRunnableArray.RemoveElement(mRunnable);
@@ -1256,7 +1256,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     sChangeDiscoveryRunnableArray.RemoveElement(mRunnable);
@@ -1288,7 +1288,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     sFetchUuidsRunnableArray.RemoveElement(mRunnable);
@@ -1330,7 +1330,7 @@ public:
   : mRunnable(aRunnable)
   { }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     sSetPropertyRunnableArray.RemoveElement(mRunnable);
@@ -1383,7 +1383,7 @@ public:
     MOZ_ASSERT(mRunnable);
   }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     sBondingRunnableArray.RemoveElement(mRunnable);
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("CreatedPairedDevice"));
@@ -1418,7 +1418,7 @@ public:
     MOZ_ASSERT(mRunnable);
   }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     sUnbondingRunnableArray.RemoveElement(mRunnable);
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("RemoveDevice"));
@@ -1456,7 +1456,7 @@ public:
     DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
   }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     ReplyStatusError(mRunnable, aStatus, NS_LITERAL_STRING("SetPinCode"));
   }
@@ -1498,7 +1498,7 @@ public:
     DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
   }
 
-  void OnError(int aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
   {
     ReplyStatusError(mRunnable, aStatus,
                      NS_LITERAL_STRING("SetPairingConfirmation"));

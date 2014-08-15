@@ -32,7 +32,7 @@ public:
 
   virtual ~BluetoothSocketResultHandler() { }
 
-  virtual void OnError(bt_status_t aStatus)
+  virtual void OnError(BluetoothStatus aStatus)
   {
     BT_WARNING("Received error code %d", (int)aStatus);
   }
@@ -84,7 +84,7 @@ public:
 
   virtual ~BluetoothHandsfreeResultHandler() { }
 
-  virtual void OnError(bt_status_t aStatus)
+  virtual void OnError(BluetoothStatus aStatus)
   {
     BT_WARNING("Received error code %d", (int)aStatus);
   }
@@ -196,9 +196,9 @@ public:
 
   virtual ~BluetoothA2dpResultHandler() { }
 
-  virtual void OnError(bt_status_t aStatus)
+  virtual void OnError(BluetoothStatus aStatus)
   {
-    BT_WARNING("received error code %d", (int)aStatus);
+    BT_WARNING("Received error code %d", (int)aStatus);
   }
 
   virtual void Init() { }
@@ -240,9 +240,9 @@ public:
 
   virtual ~BluetoothAvrcpResultHandler() { }
 
-  virtual void OnError(bt_status_t aStatus)
+  virtual void OnError(BluetoothStatus aStatus)
   {
-    BT_WARNING("received error code %d", (int)aStatus);
+    BT_WARNING("Received error code %d", (int)aStatus);
   }
 
   virtual void Init() { }
@@ -333,7 +333,7 @@ public:
 
   virtual ~BluetoothResultHandler() { }
 
-  virtual void OnError(int aStatus)
+  virtual void OnError(BluetoothStatus aStatus)
   {
     BT_LOGR("Received error code %d", aStatus);
   }
