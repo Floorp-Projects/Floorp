@@ -229,9 +229,9 @@ public:
 
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
-  CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                   MediaTaskQueue* aAudioTaskQueue,
-                   MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
+  CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                     MediaTaskQueue* aAudioTaskQueue,
+                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE {
     BlankAudioDataCreator* creator = new BlankAudioDataCreator(
       aConfig.channel_count, aConfig.samples_per_second);
 
@@ -241,6 +241,13 @@ public:
                                                        aCallback);
     return decoder.forget();
   }
+
+  virtual bool
+  SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE
+  {
+    return true;
+  }
+
 };
 
 PlatformDecoderModule* CreateBlankDecoderModule()
