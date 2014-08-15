@@ -108,7 +108,17 @@
       <field name="_characterSet">""</field>
 
       <property name="characterSet"
-                onget="return this._characterSet"
+                onget="return this._characterSet">
+        <setter><![CDATA[
+          this.messageManager.sendAsyncMessage("UpdateCharacterSet", {value: val});
+          this._characterSet = val;
+        ]]></setter>
+      </property>
+
+      <field name="_mayEnableCharacterEncodingMenu">null</field>
+
+      <property name="mayEnableCharacterEncodingMenu"
+                onget="return this._mayEnableCharacterEncodingMenu;"
                 readonly="true"/>
 
       <field name="_contentWindow">null</field>

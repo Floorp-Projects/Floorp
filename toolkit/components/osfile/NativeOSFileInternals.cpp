@@ -114,7 +114,7 @@ struct ScopedArrayBufferContents: public Scoped<ScopedArrayBufferContentsTraits>
   bool Allocate(uint32_t length) {
     dispose();
     ArrayBufferContents& value = rwget();
-    void *ptr = JS_AllocateArrayBufferContents(/*no context available*/nullptr, length);
+    void *ptr = calloc(1, length);
     if (ptr) {
       value.data = (uint8_t *) ptr;
       value.nbytes = length;

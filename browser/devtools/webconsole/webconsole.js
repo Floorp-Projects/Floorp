@@ -3137,7 +3137,11 @@ JSTerm.prototype = {
       inputContainer.style.display = "none";
     }
     else {
-      this._onPaste = WebConsoleUtils.pasteHandlerGen(this.inputNode, doc.getElementById("webconsole-notificationbox"));
+      let okstring = l10n.getStr("selfxss.okstring");
+      let msg = l10n.getFormatStr("selfxss.msg", [okstring]);
+      this._onPaste = WebConsoleUtils.pasteHandlerGen(this.inputNode,
+                                                      doc.getElementById("webconsole-notificationbox"),
+                                                      msg, okstring);
       this.inputNode.addEventListener("keypress", this._keyPress, false);
       this.inputNode.addEventListener("paste", this._onPaste);
       this.inputNode.addEventListener("drop", this._onPaste);

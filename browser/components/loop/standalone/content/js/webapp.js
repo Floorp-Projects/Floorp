@@ -144,7 +144,8 @@ loop.webapp = (function($, _, OT, webL10n) {
     getInitialState: function() {
       return {
         urlCreationDateString: '',
-        disableCallButton: false
+        disableCallButton: false,
+        showCallOptionsMenu: false
       };
     },
 
@@ -157,6 +158,8 @@ loop.webapp = (function($, _, OT, webL10n) {
     },
 
     componentDidMount: function() {
+      // Listen for events & hide dropdown menu if user clicks away
+      window.addEventListener("click", this.clickHandler);
       this.props.model.listenTo(this.props.model, "session:error",
                                 this._onSessionError);
       this.props.client.requestCallUrlInfo(this.props.model.get("loopToken"),
@@ -173,10 +176,18 @@ loop.webapp = (function($, _, OT, webL10n) {
 
     /**
      * Initiates the call.
+     * Takes in a call type parameter "audio" or "audio-video" and returns
+     * a function that initiates the call. React click handler requires a function
+     * to be called when that event happenes.
+     *
+     * @param {string} User call type choice "audio" or "audio-video"
      */
-    _initiateOutgoingCall: function() {
-      this.setState({disableCallButton: true});
-      this.props.model.setupOutgoingCall();
+    _initiateOutgoingCall: function(callType) {
+      return function() {
+        this.props.model.set("selectedCallType", callType);
+        this.setState({disableCallButton: true});
+        this.props.model.setupOutgoingCall();
+      }.bind(this);
     },
 
     _setConversationTimestamp: function(err, callUrlInfo) {
@@ -191,6 +202,22 @@ loop.webapp = (function($, _, OT, webL10n) {
       }
     },
 
+    componentWillUnmount: function() {
+      window.removeEventListener("click", this.clickHandler);
+    },
+
+    clickHandler: function(e) {
+      if (!e.target.classList.contains('btn-chevron') &&
+          this.state.showCallOptionsMenu) {
+            this._toggleCallOptionsMenu();
+      }
+    },
+
+    _toggleCallOptionsMenu: function() {
+      var state = this.state.showCallOptionsMenu;
+      this.setState({showCallOptionsMenu: !state});
+    },
+
     render: function() {
       var tos_link_name = __("terms_of_use_link_text");
       var privacy_notice_name = __("privacy_notice_link_text");
@@ -202,8 +229,14 @@ loop.webapp = (function($, _, OT, webL10n) {
           "https://www.mozilla.org/privacy/'>" + privacy_notice_name + "</a>"
       });
 
-      var callButtonClasses = "btn btn-success btn-large " +
+      var btnClassStartCall = "btn btn-large btn-success " +
+                              "start-audio-video-call " +
                               loop.shared.utils.getTargetPlatform();
+      var dropdownMenuClasses = React.addons.classSet({
+        "native-dropdown-large-parent": true,
+        "standalone-dropdown-menu": true,
+        "visually-hidden": !this.state.showCallOptionsMenu
+      });
 
       return (
         /* jshint ignore:start */
@@ -221,11 +254,37 @@ loop.webapp = (function($, _, OT, webL10n) {
 
             React.DOM.div({className: "button-group"}, 
               React.DOM.div({className: "flex-padding-1"}), 
-              React.DOM.button({ref: "submitButton", onClick: this._initiateOutgoingCall, 
-                className: callButtonClasses, 
-                disabled: this.state.disableCallButton}, 
-                __("initiate_call_button"), 
-                React.DOM.i({className: "icon icon-video"})
+              React.DOM.div({className: "button-chevron-menu-group"}, 
+                React.DOM.div({className: "button-group-chevron"}, 
+                  React.DOM.div({className: "button-group"}, 
+
+                    React.DOM.button({className: btnClassStartCall, 
+                            onClick: this._initiateOutgoingCall("audio-video"), 
+                            disabled: this.state.disableCallButton, 
+                            title: __("initiate_audio_video_call_tooltip")}, 
+                      __("initiate_audio_video_call_button")
+                    ), 
+
+                    React.DOM.div({className: "btn-chevron", 
+                      onClick: this._toggleCallOptionsMenu}
+                    )
+
+                  ), 
+
+                  React.DOM.ul({className: dropdownMenuClasses}, 
+                    React.DOM.li(null, 
+                      /*
+                       Button required for disabled state.
+                       */
+                      React.DOM.button({className: "start-audio-only-call", 
+                              onClick: this._initiateOutgoingCall("audio"), 
+                              disabled: this.state.disableCallButton}, 
+                        __("initiate_audio_call_button")
+                      )
+                    )
+                  )
+
+                )
               ), 
               React.DOM.div({className: "flex-padding-1"})
             ), 
@@ -280,12 +339,12 @@ loop.webapp = (function($, _, OT, webL10n) {
         this._notifier.errorL10n("missing_conversation_info");
         this.navigate("home", {trigger: true});
       } else {
+        var callType = this._conversation.get("selectedCallType");
+
         this._conversation.once("call:outgoing", this.startCall, this);
 
-        // XXX For now, we assume both audio and video as there is no
-        // other option to select (bug 1048333)
-        this._client.requestCallInfo(this._conversation.get("loopToken"), "audio-video",
-                                     function(err, sessionData) {
+        this._client.requestCallInfo(this._conversation.get("loopToken"),
+                                     callType, function(err, sessionData) {
           if (err) {
             switch (err.errno) {
               // loop-server sends 404 + INVALID_TOKEN (errno 105) whenever a token is
@@ -389,7 +448,8 @@ loop.webapp = (function($, _, OT, webL10n) {
       }
       this.loadReactComponent(sharedViews.ConversationView({
         sdk: OT,
-        model: this._conversation
+        model: this._conversation,
+        video: {enabled: this._conversation.hasVideoStream("outgoing")}
       }));
     }
   });

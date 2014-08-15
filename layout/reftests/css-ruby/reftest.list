@@ -1,0 +1,6 @@
+default-preferences pref(layout.css.ruby.enabled,true)
+
+fails asserts(3-7) == ruby-whitespace-1.html ruby-whitespace-1-ref.html # bug 1052924
+== ruby-whitespace-2.html ruby-whitespace-2-ref.html
+asserts(0-1) != ruby-reflow-1-opaqueruby.html ruby-reflow-1-noruby.html # bug 1052924
+asserts(0-1) == ruby-reflow-1-transparentruby.html ruby-reflow-1-noruby.html # bug 1052924

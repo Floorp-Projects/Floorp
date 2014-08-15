@@ -3216,8 +3216,9 @@ JS_PUBLIC_API(void)
 JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg);
 
 /*
- * Create a new array buffer with the given contents. On success, the ownership
- * is transferred to the new array buffer.
+ * Create a new array buffer with the given contents. It must be legal to pass
+ * these contents to free(). On success, the ownership is transferred to the
+ * new array buffer.
  */
 extern JS_PUBLIC_API(JSObject *)
 JS_NewArrayBufferWithContents(JSContext *cx, size_t nbytes, void *contents);
@@ -3232,25 +3233,9 @@ extern JS_PUBLIC_API(void *)
 JS_StealArrayBufferContents(JSContext *cx, JS::HandleObject obj);
 
 /*
- * Allocate memory that may be eventually passed to
- * JS_NewArrayBufferWithContents. |maybecx| is optional; if a non-nullptr cx is
- * given, it will be used for memory accounting and OOM reporting. |nbytes| is
- * the number of payload bytes required.
- */
-extern JS_PUBLIC_API(void *)
-JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes);
-
-/*
- * Reallocate memory allocated by JS_AllocateArrayBufferContents, growing or
- * shrinking it as appropriate. If oldContents is null then this behaves like
- * JS_AllocateArrayBufferContents.
- */
-extern JS_PUBLIC_API(void *)
-JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void *oldContents, uint32_t oldNbytes);
-
-/*
- * Create a new mapped array buffer with the given memory mapped contents. On success,
- * the ownership is transferred to the new mapped array buffer.
+ * Create a new mapped array buffer with the given memory mapped contents. It
+ * must be legal to free the contents pointer by unmapping it. On success,
+ * ownership is transferred to the new mapped array buffer.
  */
 extern JS_PUBLIC_API(JSObject *)
 JS_NewMappedArrayBufferWithContents(JSContext *cx, size_t nbytes, void *contents);

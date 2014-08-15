@@ -200,8 +200,8 @@ ASSERT_OK(bool ok)
 
 // for JS error reporting
 enum ErrorNum {
-#define MSG_DEF(name, number, count, exception, format) \
-  name = number,
+#define MSG_DEF(name, count, exception, format) \
+  name,
 #include "ctypes/ctypes.msg"
 #undef MSG_DEF
   CTYPESERR_LIMIT
