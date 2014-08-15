@@ -39,8 +39,8 @@
                android:layout_toRightOf="@id/tabs"
                android:layout_toLeftOf="@id/menu_items"
                android:layout_marginLeft="-18dp"
-               android:layout_marginTop="8dp"
-               android:layout_marginBottom="8dp"
+               android:layout_marginTop="7dp"
+               android:layout_marginBottom="7dp"
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
@@ -74,9 +74,7 @@
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button.Container"
                   android:layout_toRightOf="@id/back"
-                  android:layout_toLeftOf="@id/menu_items"
-                  android:paddingLeft="8dip"
-                  android:paddingRight="8dip"/>
+                  android:layout_toLeftOf="@id/menu_items"/>
 
     <LinearLayout android:id="@+id/menu_items"
                   android:layout_width="wrap_content"
@@ -116,7 +114,6 @@
             style="@style/UrlBar.ImageButton.Icon"
             android:layout_alignParentRight="true"
             android:src="@drawable/close_edit_mode_selector"
-            android:background="@drawable/action_bar_button"
             android:paddingLeft="2dp"
             android:paddingRight="2dp"
             android:contentDescription="@string/edit_mode_cancel"
