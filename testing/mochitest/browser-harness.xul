@@ -150,7 +150,7 @@
         }
 
         this.dumper.structuredLogger.testStatus(this.path,
-                                                result.msg,
+                                                result.name,
                                                 result.status,
                                                 result.expected,
                                                 result.msg);

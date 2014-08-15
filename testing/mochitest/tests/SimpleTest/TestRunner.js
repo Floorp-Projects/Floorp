@@ -141,7 +141,7 @@ function StructuredLogger(name) {
     this.testStatus = function(test, subtest, status, expected="PASS", message=null) {
         var data = {test: test, subtest: subtest, status: status};
 
-        if (message !== null) {
+        if (message) {
             data.message = String(message);
         }
         if (expected != status && status != 'SKIP') {

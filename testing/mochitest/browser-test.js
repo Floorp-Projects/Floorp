@@ -684,7 +684,7 @@ Tester.prototype = {
           return;
         }
 
-        self.currentTest.addResult(new testResult(false, "Test timed out", "", false));
+        self.currentTest.addResult(new testResult(false, "Test timed out", null, false));
         self.currentTest.timedOut = true;
         self.currentTest.scope.__waitTimer = null;
         self.nextTest();
@@ -702,7 +702,8 @@ Tester.prototype = {
 };
 
 function testResult(aCondition, aName, aDiag, aIsTodo, aStack) {
-  this.msg = aName || "";
+  this.name = aName;
+  this.msg = "";
 
   this.info = false;
   this.pass = !!aCondition;
@@ -721,9 +722,9 @@ function testResult(aCondition, aName, aDiag, aIsTodo, aStack) {
     if (aDiag) {
       if (typeof aDiag == "object" && "fileName" in aDiag) {
         // we have an exception - print filename and linenumber information
-        this.msg += " at " + aDiag.fileName + ":" + aDiag.lineNumber;
+        this.msg += "at " + aDiag.fileName + ":" + aDiag.lineNumber + " - ";
       }
-      this.msg += " - " + aDiag;
+      this.msg += String(aDiag);
     }
     if (aStack) {
       this.msg += "\nStack trace:\n";
