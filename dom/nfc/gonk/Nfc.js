@@ -270,11 +270,11 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       return !!targetInfo.IsPeerReadyCalled;
     },
 
-    notifyPeerEvent: function notifyPeerEvent(appId, event) {
+    notifyPeerEvent: function notifyPeerEvent(appId, event, sessionToken) {
       let targetInfo = this.peerTargetsMap[appId];
       targetInfo.target.sendAsyncMessage("NFC:PeerEvent", {
         event: event,
-        sessionToken: this.nfc.sessionTokenMap[this.nfc._currentSessionId]
+        sessionToken: sessionToken
       });
     },
 
@@ -292,6 +292,16 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
       // Notify the content process immediately of the status
       msg.target.sendAsyncMessage(msg.name + "Response", respMsg);
+    },
+
+    onPeerLost: function onPeerLost(sessionToken) {
+      let appId = this.currentPeerAppId;
+      // For peerlost, the message is delievered to the target which
+      // registered onpeerready and onpeerready has been called before.
+      if (this.isPeerReadyTarget(appId) && this.isPeerReadyCalled(appId)) {
+        this.notifyPeerEvent(appId, NFC.NFC_PEER_EVENT_LOST, sessionToken);
+        this.currentPeerAppId = null;
+      }
     },
 
     /**
@@ -362,7 +372,8 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
           let targetInfo = this.peerTargetsMap[msg.json.appId];
           targetInfo.IsPeerReadyCalled = true;
-          this.notifyPeerEvent(msg.json.appId, NFC.NFC_PEER_EVENT_READY);
+          let sessionToken = this.nfc.sessionTokenMap[this.nfc._currentSessionId];
+          this.notifyPeerEvent(msg.json.appId, NFC.NFC_PEER_EVENT_READY, sessionToken);
           return null;
         case "NFC:NotifySendFileStatus":
           // Upon receiving the status of sendFile operation, send the response
@@ -503,18 +514,11 @@ Nfc.prototype = {
         delete message.sessionId;
 
         gSystemMessenger.broadcastMessage("nfc-manager-tech-lost", message);
-
-        let appId = gMessageManager.currentPeerAppId;
-
-        // For peerlost, the message is delievered to the target which
-        // registered onpeerready and onpeerready has been called before.
-        if (gMessageManager.isPeerReadyTarget(appId) && gMessageManager.isPeerReadyCalled(appId)) {
-          gMessageManager.notifyPeerEvent(appId, NFC.NFC_PEER_EVENT_LOST);
-        }
+        gMessageManager.onPeerLost(this.sessionTokenMap[this._currentSessionId]);
 
         delete this.sessionTokenMap[this._currentSessionId];
         this._currentSessionId = null;
-        gMessageManager.currentPeerAppId = null;
+
         break;
      case "ConfigResponse":
         let target = this.targetsByRequestId[message.requestId];
