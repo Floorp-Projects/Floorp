@@ -101,7 +101,7 @@ nsAccessiblePivot::SetPosition(nsIAccessible* aPosition)
   int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
   mStartOffset = mEndOffset = -1;
   NotifyOfPivotChange(secondPosition, oldStart, oldEnd,
-                      nsIAccessiblePivot::REASON_NONE);
+                      nsIAccessiblePivot::REASON_NONE, false);
 
   return NS_OK;
 }
@@ -154,7 +154,8 @@ nsAccessiblePivot::GetEndOffset(int32_t* aEndOffset)
 
 NS_IMETHODIMP
 nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
-                                int32_t aStartOffset, int32_t aEndOffset)
+                                int32_t aStartOffset, int32_t aEndOffset,
+                                bool aIsFromUserInput, uint8_t aArgc)
 {
   NS_ENSURE_ARG(aTextAccessible);
 
@@ -186,7 +187,8 @@ nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
   mPosition = newPosition;
 
   NotifyOfPivotChange(oldPosition, oldStart, oldEnd,
-                      nsIAccessiblePivot::REASON_TEXT);
+                      nsIAccessiblePivot::REASON_TEXT,
+                      (aArgc > 0) ? aIsFromUserInput : true);
 
   return NS_OK;
 }
@@ -196,7 +198,7 @@ nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
 NS_IMETHODIMP
 nsAccessiblePivot::MoveNext(nsIAccessibleTraversalRule* aRule,
                             nsIAccessible* aAnchor, bool aIncludeStart,
-                            uint8_t aArgc, bool* aResult)
+                            bool aIsFromUserInput, uint8_t aArgc, bool* aResult)
 {
   NS_ENSURE_ARG(aResult);
   NS_ENSURE_ARG(aRule);
@@ -215,7 +217,8 @@ nsAccessiblePivot::MoveNext(nsIAccessibleTraversalRule* aRule,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (accessible)
-    *aResult = MovePivotInternal(accessible, nsIAccessiblePivot::REASON_NEXT);
+    *aResult = MovePivotInternal(accessible, nsIAccessiblePivot::REASON_NEXT,
+                                 (aArgc > 2) ? aIsFromUserInput : true);
 
   return NS_OK;
 }
@@ -223,7 +226,7 @@ nsAccessiblePivot::MoveNext(nsIAccessibleTraversalRule* aRule,
 NS_IMETHODIMP
 nsAccessiblePivot::MovePrevious(nsIAccessibleTraversalRule* aRule,
                                 nsIAccessible* aAnchor,
-                                bool aIncludeStart,
+                                bool aIncludeStart, bool aIsFromUserInput,
                                 uint8_t aArgc, bool* aResult)
 {
   NS_ENSURE_ARG(aResult);
@@ -243,13 +246,16 @@ nsAccessiblePivot::MovePrevious(nsIAccessibleTraversalRule* aRule,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (accessible)
-    *aResult = MovePivotInternal(accessible, nsIAccessiblePivot::REASON_PREV);
+    *aResult = MovePivotInternal(accessible, nsIAccessiblePivot::REASON_PREV,
+                                 (aArgc > 2) ? aIsFromUserInput : true);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAccessiblePivot::MoveFirst(nsIAccessibleTraversalRule* aRule, bool* aResult)
+nsAccessiblePivot::MoveFirst(nsIAccessibleTraversalRule* aRule,
+                             bool aIsFromUserInput,
+                             uint8_t aArgc, bool* aResult)
 {
   NS_ENSURE_ARG(aResult);
   NS_ENSURE_ARG(aRule);
@@ -262,14 +268,16 @@ nsAccessiblePivot::MoveFirst(nsIAccessibleTraversalRule* aRule, bool* aResult)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (accessible)
-    *aResult = MovePivotInternal(accessible, nsIAccessiblePivot::REASON_FIRST);
+    *aResult = MovePivotInternal(accessible, nsIAccessiblePivot::REASON_FIRST,
+                                 (aArgc > 0) ? aIsFromUserInput : true);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAccessiblePivot::MoveLast(nsIAccessibleTraversalRule* aRule,
-                            bool* aResult)
+                            bool aIsFromUserInput,
+                            uint8_t aArgc, bool* aResult)
 {
   NS_ENSURE_ARG(aResult);
   NS_ENSURE_ARG(aRule);
@@ -291,13 +299,16 @@ nsAccessiblePivot::MoveLast(nsIAccessibleTraversalRule* aRule,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (accessible)
-    *aResult = MovePivotInternal(accessible, nsAccessiblePivot::REASON_LAST);
+    *aResult = MovePivotInternal(accessible, nsAccessiblePivot::REASON_LAST,
+                                 (aArgc > 0) ? aIsFromUserInput : true);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
+nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary,
+                                  bool aIsFromUserInput, uint8_t aArgc,
+                                  bool* aResult)
 {
   NS_ENSURE_ARG(aResult);
 
@@ -407,13 +418,16 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
     mStartOffset = tempStart;
     mEndOffset = tempEnd;
     NotifyOfPivotChange(startPosition, oldStart, oldEnd,
-                        nsIAccessiblePivot::REASON_TEXT);
+                        nsIAccessiblePivot::REASON_TEXT,
+                        (aArgc > 0) ? aIsFromUserInput : true);
     return NS_OK;
   }
 }
 
 NS_IMETHODIMP
-nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
+nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary,
+                                      bool aIsFromUserInput, uint8_t aArgc,
+                                      bool* aResult)
 {
   NS_ENSURE_ARG(aResult);
 
@@ -536,7 +550,8 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
     mEndOffset = tempEnd;
 
     NotifyOfPivotChange(startPosition, oldStart, oldEnd,
-                        nsIAccessiblePivot::REASON_TEXT);
+                        nsIAccessiblePivot::REASON_TEXT,
+                        (aArgc > 0) ? aIsFromUserInput : true);
     return NS_OK;
   }
 }
@@ -544,6 +559,7 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
 NS_IMETHODIMP
 nsAccessiblePivot::MoveToPoint(nsIAccessibleTraversalRule* aRule,
                                int32_t aX, int32_t aY, bool aIgnoreNoMatch,
+                               bool aIsFromUserInput, uint8_t aArgc,
                                bool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -581,7 +597,8 @@ nsAccessiblePivot::MoveToPoint(nsIAccessibleTraversalRule* aRule,
   }
 
   if (match || !aIgnoreNoMatch)
-    *aResult = MovePivotInternal(match, nsIAccessiblePivot::REASON_POINT);
+    *aResult = MovePivotInternal(match, nsIAccessiblePivot::REASON_POINT,
+                                 (aArgc > 0) ? aIsFromUserInput : true);
 
   return NS_OK;
 }
@@ -626,14 +643,16 @@ nsAccessiblePivot::IsDescendantOf(Accessible* aAccessible, Accessible* aAncestor
 
 bool
 nsAccessiblePivot::MovePivotInternal(Accessible* aPosition,
-                                     PivotMoveReason aReason)
+                                     PivotMoveReason aReason,
+                                     bool aIsFromUserInput)
 {
   nsRefPtr<Accessible> oldPosition = mPosition.forget();
   mPosition = aPosition;
   int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
   mStartOffset = mEndOffset = -1;
 
-  return NotifyOfPivotChange(oldPosition, oldStart, oldEnd, aReason);
+  return NotifyOfPivotChange(oldPosition, oldStart, oldEnd, aReason,
+                             aIsFromUserInput);
 }
 
 Accessible*
@@ -824,7 +843,7 @@ nsAccessiblePivot::SearchForText(Accessible* aAccessible, bool aBackward)
 bool
 nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
                                        int32_t aOldStart, int32_t aOldEnd,
-                                       int16_t aReason)
+                                       int16_t aReason, bool aIsFromUserInput)
 {
   if (aOldPosition == mPosition &&
       aOldStart == mStartOffset && aOldEnd == mEndOffset)
@@ -833,7 +852,8 @@ nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,
   nsTObserverArray<nsCOMPtr<nsIAccessiblePivotObserver> >::ForwardIterator iter(mObservers);
   while (iter.HasMore()) {
     nsIAccessiblePivotObserver* obs = iter.GetNext();
-    obs->OnPivotChanged(this, aOldPosition, aOldStart, aOldEnd, aReason);
+    obs->OnPivotChanged(this, aOldPosition, aOldStart, aOldEnd, aReason,
+                        aIsFromUserInput);
   }
 
   return true;
