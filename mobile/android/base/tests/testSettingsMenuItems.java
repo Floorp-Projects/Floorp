@@ -159,6 +159,10 @@ public class testSettingsMenuItems extends PixelTest {
             String[] textReflowUi = { StringHelper.TEXT_REFLOW_LABEL };
             settingsMap.get(PATH_DISPLAY).add(textReflowUi);
 
+            // New tablet UI can only be enabled in non-release build
+            String[] newTabletUi = { StringHelper.NEW_TABLET_UI };
+            settingsMap.get(PATH_DISPLAY).add(newTabletUi);
+
             // Anonymous cell tower/wifi collection - only built if *not* release build
             String[] networkReportingUi = { "Mozilla Location Service", "Receives Wi-Fi and cellular location data when running in the background and shares it with Mozilla to improve our geolocation service" };
             settingsMap.get(PATH_MOZILLA).add(networkReportingUi);
