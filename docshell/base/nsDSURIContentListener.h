@@ -34,6 +34,8 @@ protected:
 
     void DropDocShellreference() {
         mDocShell = nullptr;
+        mExistingJPEGRequest = nullptr;
+        mExistingJPEGStreamListener = nullptr;
     }
 
     // Determine if X-Frame-Options allows content to be framed
@@ -53,6 +55,9 @@ protected:
                             XFOHeader aHeader);
 protected:
     nsDocShell*                      mDocShell;
+    // Hack to handle multipart images without creating a new viewer
+    nsCOMPtr<nsIStreamListener>      mExistingJPEGStreamListener;
+    nsCOMPtr<nsIChannel>             mExistingJPEGRequest;
 
     // Store the parent listener in either of these depending on
     // if supports weak references or not. Proper weak refs are

@@ -1518,17 +1518,16 @@ MediaDecoderStateMachine::EnqueueDecodeMetadataTask()
       mDispatchedDecodeMetadataTask) {
     return NS_OK;
   }
+
+  mDispatchedDecodeMetadataTask = true;
   RefPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::CallDecodeMetadata));
   nsresult rv = mDecodeTaskQueue->Dispatch(task);
-  if (NS_SUCCEEDED(rv)) {
-    mDispatchedDecodeMetadataTask = true;
-  } else {
+  if (NS_FAILED(rv)) {
     NS_WARNING("Dispatch ReadMetadata task failed.");
-    return rv;
+    mDispatchedDecodeMetadataTask = false;
   }
-
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -1842,7 +1841,6 @@ void
 MediaDecoderStateMachine::CallDecodeMetadata()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  AutoSetOnScopeExit<bool> unsetOnExit(mDispatchedDecodeMetadataTask, false);
   if (mState != DECODER_STATE_DECODING_METADATA) {
     return;
   }
@@ -1874,6 +1872,7 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
       // change state to DECODER_STATE_WAIT_FOR_RESOURCES
       StartWaitForResources();
       // affect values only if ReadMetadata succeeds
+      mDispatchedDecodeMetadataTask = false;
       return NS_OK;
     }
   }
@@ -1996,6 +1995,7 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
     StartPlayback();
   }
 
+  mDispatchedDecodeMetadataTask = false;
   return NS_OK;
 }
 
@@ -2443,23 +2443,23 @@ MediaDecoderStateMachine::FlushDecoding()
                "Should be on state machine or decode thread.");
   mDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
 
-  // Put a task in the decode queue to abort any decoding operations.
-  // The reader is not supposed to put any tasks to deliver samples into
-  // the queue after we call this (unless we request another sample from it).
-  RefPtr<nsIRunnable> task;
-  task = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
-  mDecodeTaskQueue->Dispatch(task);
-
   {
-    // Wait for the thread decoding to abort decoding operations and run
-    // any pending callbacks. This is important, as we don't want any
-    // pending tasks posted to the task queue by the reader to deliver
-    // any samples after we've posted the reader Shutdown() task below,
-    // as the sample-delivery tasks will keep video frames alive until
-    // after we've called Reader::Shutdown(), and shutdown on B2G will
-    // fail as there are outstanding video frames alive.
+    // Put a task in the decode queue to abort any decoding operations.
+    // The reader is not supposed to put any tasks to deliver samples into
+    // the queue after this runs (unless we request another sample from it).
+    RefPtr<nsIRunnable> task;
+    task = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
+
+    // Wait for the ResetDecode to run and for the decoder to abort
+    // decoding operations and run any pending callbacks. This is
+    // important, as we don't want any pending tasks posted to the task
+    // queue by the reader to deliver any samples after we've posted the
+    // reader Shutdown() task below, as the sample-delivery tasks will
+    // keep video frames alive until after we've called Reader::Shutdown(),
+    // and shutdown on B2G will fail as there are outstanding video frames
+    // alive.
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    mDecodeTaskQueue->Flush();
+    mDecodeTaskQueue->FlushAndDispatch(task);
   }
 
   // We must reset playback so that all references to frames queued

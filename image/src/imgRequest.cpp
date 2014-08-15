@@ -603,6 +603,8 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   if (mpchan) {
     mIsMultiPartChannel = true;
     statusTracker->SetIsMultipart();
+  } else {
+    NS_ABORT_IF_FALSE(!mIsMultiPartChannel, "Something went wrong");
   }
 
   // If we're not multipart, we shouldn't have an image yet

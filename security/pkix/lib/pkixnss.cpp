@@ -64,8 +64,7 @@ CheckPublicKeySize(Input subjectPublicKeyInfo,
     case rsaKey:
       // TODO(bug 622859): Enforce a minimum of 2048 bits for EV certs.
       if (SECKEY_PublicKeyStrengthInBits(publicKey.get()) < MINIMUM_NON_ECC_BITS) {
-        // TODO(bug 1031946): Create a new error code.
-        return Result::ERROR_INVALID_KEY;
+        return Result::ERROR_INADEQUATE_KEY_SIZE;
       }
       break;
     case nullKey:
@@ -232,6 +231,7 @@ DigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
     MAP(Result::ERROR_UNSUPPORTED_KEYALG, SEC_ERROR_UNSUPPORTED_KEYALG) \
     MAP(Result::ERROR_EXPIRED_ISSUER_CERTIFICATE, SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE) \
     MAP(Result::ERROR_CA_CERT_USED_AS_END_ENTITY, MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY) \
+    MAP(Result::ERROR_INADEQUATE_KEY_SIZE, MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE) \
     MAP(Result::FATAL_ERROR_INVALID_ARGS, SEC_ERROR_INVALID_ARGS) \
     MAP(Result::FATAL_ERROR_INVALID_STATE, PR_INVALID_STATE_ERROR) \
     MAP(Result::FATAL_ERROR_LIBRARY_FAILURE, SEC_ERROR_LIBRARY_FAILURE) \
@@ -302,7 +302,10 @@ RegisterErrorTable()
     { "MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY",
       "The server uses a certificate with a basic constraints extension "
       "identifying it as a certificate authority. For a properly-issued "
-      "certificate, this should not be the case." }
+      "certificate, this should not be the case." },
+    { "MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE",
+      "The server presented a certificate with a key size that is too small "
+      "to establish a secure connection." }
   };
 
   static const struct PRErrorTable ErrorTable = {

@@ -212,7 +212,7 @@ SharedArrayBufferObject::New(JSContext *cx, SharedArrayRawBuffer *buffer)
 
     JS_ASSERT(obj->getClass() == &class_);
 
-    obj->initialize(buffer->byteLength(), nullptr, DoesntOwnData);
+    obj->initialize(buffer->byteLength(), BufferContents::createUnowned(nullptr), DoesntOwnData);
 
     obj->acceptRawBuffer(buffer);
     obj->setIsSharedArrayBuffer();
