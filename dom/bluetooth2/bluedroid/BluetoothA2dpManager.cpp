@@ -844,10 +844,7 @@ BluetoothA2dpManager::Connect(const nsAString& aDeviceAddress,
     return;
   }
 
-  bt_bdaddr_t remoteAddress;
-  StringToBdAddressType(aDeviceAddress, &remoteAddress);
-
-  sBtA2dpInterface->Connect(&remoteAddress, new ConnectResultHandler());
+  sBtA2dpInterface->Connect(aDeviceAddress, new ConnectResultHandler());
 }
 
 void
@@ -901,10 +898,7 @@ BluetoothA2dpManager::Disconnect(BluetoothProfileController* aController)
     return;
   }
 
-  bt_bdaddr_t remoteAddress;
-  StringToBdAddressType(mDeviceAddress, &remoteAddress);
-
-  sBtA2dpInterface->Disconnect(&remoteAddress, new DisconnectResultHandler());
+  sBtA2dpInterface->Disconnect(mDeviceAddress, new DisconnectResultHandler());
 }
 
 void
