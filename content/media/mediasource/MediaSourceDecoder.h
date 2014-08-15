@@ -7,18 +7,24 @@
 #ifndef MOZILLA_MEDIASOURCEDECODER_H_
 #define MOZILLA_MEDIASOURCEDECODER_H_
 
+#include "MediaCache.h"
+#include "MediaDecoder.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
-#include "MediaDecoder.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
 
 class nsIStreamListener;
 
 namespace mozilla {
 
 class MediaResource;
+class MediaDecoderReader;
 class MediaDecoderStateMachine;
 class SubBufferDecoder;
+class MediaSourceReader;
 
 namespace dom {
 
