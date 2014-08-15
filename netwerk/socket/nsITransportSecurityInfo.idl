@@ -8,7 +8,7 @@
 
 interface nsIX509CertList;
 
-[scriptable, uuid(154898ce-e14f-4981-bfc5-00a41722f44b)]
+[scriptable, uuid(c754ef58-853f-4870-abf7-98be325d2b97)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long    securityState;
     readonly attribute wstring          errorMessage;
