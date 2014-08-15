@@ -44,10 +44,6 @@ interface PeerConnectionImpl  {
   [Throws]
   void removeTrack(MediaStreamTrack track);
   [Throws]
-  void addStream(MediaStream stream);
-  [Throws]
-  void removeStream(MediaStream stream);
-  [Throws]
   void closeStreams();
 
   sequence<MediaStream> getLocalStreams();
