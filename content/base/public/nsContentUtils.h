@@ -24,6 +24,7 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
 #include "nsContentListDeclarations.h"
+#include "nsCxPusher.h"
 #include "nsMathUtils.h"
 #include "nsTArrayForwardDeclare.h"
 #include "Units.h"
