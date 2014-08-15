@@ -76,13 +76,10 @@ class ReadOnlyDefaultDict(ReadOnlyDict):
         ReadOnlyDict.__init__(self, *args, **kwargs)
         self._default_factory = default_factory
 
-    def __getitem__(self, key):
-        try:
-            return ReadOnlyDict.__getitem__(self, key)
-        except KeyError:
-            value = self._default_factory()
-            dict.__setitem__(self, key, value)
-            return value
+    def __missing__(self, key):
+        value = self._default_factory()
+        dict.__setitem__(self, key, value)
+        return value
 
 
 def ensureParentDir(path):
@@ -715,12 +712,26 @@ class OrderedDefaultDict(OrderedDict):
         OrderedDict.__init__(self, *args, **kwargs)
         self._default_factory = default_factory
 
-    def __getitem__(self, key):
-        try:
-            return OrderedDict.__getitem__(self, key)
-        except KeyError:
-            value = self[key] = self._default_factory()
-            return value
+    def __missing__(self, key):
+        value = self[key] = self._default_factory()
+        return value
+
+
+class KeyedDefaultDict(dict):
+    '''Like a defaultdict, but the default_factory function takes the key as
+    argument'''
+    def __init__(self, default_factory, *args, **kwargs):
+        dict.__init__(self, *args, **kwargs)
+        self._default_factory = default_factory
+
+    def __missing__(self, key):
+        value = self._default_factory(key)
+        dict.__setitem__(self, key, value)
+        return value
+
+
+class ReadOnlyKeyedDefaultDict(KeyedDefaultDict, ReadOnlyDict):
+    '''Like KeyedDefaultDict, but read-only.'''
 
 
 class memoize(dict):
