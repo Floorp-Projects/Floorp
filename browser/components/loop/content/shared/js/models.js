@@ -25,6 +25,11 @@ loop.shared.models = (function() {
       sessionId:    undefined,     // OT session id
       sessionToken: undefined,     // OT session token
       apiKey:       undefined,     // OT api key
+      callId:       undefined,     // The callId on the server
+      progressURL:  undefined,     // The websocket url to use for progress
+      websocketToken: undefined,   // The token to use for websocket auth, this is
+                                   // stored as a hex string which is what the server
+                                   // requires.
       callType:     undefined,     // The type of incoming call selected by
                                    // other peer ("audio" or "audio-video")
       selectedCallType: undefined  // The selected type for the call that was
@@ -140,9 +145,12 @@ loop.shared.models = (function() {
     setOutgoingSessionData: function(sessionData) {
       // Explicit property assignment to prevent later "surprises"
       this.set({
-        sessionId:    sessionData.sessionId,
-        sessionToken: sessionData.sessionToken,
-        apiKey:       sessionData.apiKey
+        sessionId:      sessionData.sessionId,
+        sessionToken:   sessionData.sessionToken,
+        apiKey:         sessionData.apiKey,
+        callId:         sessionData.callId,
+        progressURL:    sessionData.progressURL,
+        websocketToken: sessionData.websocketToken.toString(16)
       });
     },
 
@@ -154,10 +162,13 @@ loop.shared.models = (function() {
     setIncomingSessionData: function(sessionData) {
       // Explicit property assignment to prevent later "surprises"
       this.set({
-        sessionId:    sessionData.sessionId,
-        sessionToken: sessionData.sessionToken,
-        apiKey:       sessionData.apiKey,
-        callType:     sessionData.callType || "audio-video"
+        sessionId:      sessionData.sessionId,
+        sessionToken:   sessionData.sessionToken,
+        apiKey:         sessionData.apiKey,
+        callId:         sessionData.callId,
+        progressURL:    sessionData.progressURL,
+        websocketToken: sessionData.websocketToken.toString(16),
+        callType:       sessionData.callType || "audio-video"
       });
     },
 
