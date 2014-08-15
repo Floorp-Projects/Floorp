@@ -119,7 +119,8 @@ describe("loop.conversation", function() {
         pendingCallTimeout: 1000,
       });
       sandbox.stub(client, "requestCallsInfo");
-      sandbox.stub(conversation, "setSessionData");
+      sandbox.stub(conversation, "setIncomingSessionData");
+      sandbox.stub(conversation, "setOutgoingSessionData");
     });
 
     describe("Routes", function() {
@@ -192,7 +193,8 @@ describe("loop.conversation", function() {
             fakeSessionData  = {
               sessionId:    "sessionId",
               sessionToken: "sessionToken",
-              apiKey:       "apiKey"
+              apiKey:       "apiKey",
+              callType:     "callType"
             };
 
             client.requestCallsInfo.callsArgWith(1, null, [fakeSessionData]);
@@ -201,17 +203,31 @@ describe("loop.conversation", function() {
           it("should store the session data", function() {
             router.incoming(42);
 
-            sinon.assert.calledOnce(conversation.setSessionData);
-            sinon.assert.calledWithExactly(conversation.setSessionData,
+            sinon.assert.calledOnce(conversation.setIncomingSessionData);
+            sinon.assert.calledWithExactly(conversation.setIncomingSessionData,
                                            fakeSessionData);
           });
 
+          it("should call the view with video.enabled=false", function() {
+            sandbox.stub(conversation, "get").withArgs("callType").returns("audio");
+            router.incoming("fakeVersion");
+
+            sinon.assert.calledOnce(conversation.get);
+            sinon.assert.calledOnce(loop.conversation.IncomingCallView);
+            sinon.assert.calledWithExactly(loop.conversation.IncomingCallView,
+                                           {model: conversation,
+                                           video: {enabled: false}});
+          });
+
           it("should display the incoming call view", function() {
+            sandbox.stub(conversation, "get").withArgs("callType")
+                                                      .returns("audio-video");
             router.incoming("fakeVersion");
 
             sinon.assert.calledOnce(loop.conversation.IncomingCallView);
             sinon.assert.calledWithExactly(loop.conversation.IncomingCallView,
-                                           {model: conversation});
+                                           {model: conversation,
+                                           video: {enabled: true}});
             sinon.assert.calledOnce(router.loadReactComponent);
             sinon.assert.calledWith(router.loadReactComponent,
               sinon.match(function(value) {
@@ -439,9 +455,32 @@ describe("loop.conversation", function() {
 
         TestUtils.Simulate.click(buttonAccept);
 
-        sinon.assert.calledOnce(model.trigger);
+        /* Setting a model property triggers 2 events */
+        sinon.assert.calledThrice(model.trigger);
         sinon.assert.calledWith(model.trigger, "accept");
-        });
+        sinon.assert.calledWith(model.trigger, "change:selectedCallType");
+        sinon.assert.calledWith(model.trigger, "change");
+      });
+
+      it("should set selectedCallType to audio-video", function() {
+        var buttonAccept = view.getDOMNode().querySelector(".call-audio-video");
+        sandbox.stub(model, "set");
+
+        TestUtils.Simulate.click(buttonAccept);
+
+        sinon.assert.calledOnce(model.set);
+        sinon.assert.calledWithExactly(model.set, "selectedCallType", "audio-video");
+      });
+
+      it("should set selectedCallType to audio", function() {
+        var buttonAccept = view.getDOMNode().querySelector(".call-audio-only");
+        sandbox.stub(model, "set");
+
+        TestUtils.Simulate.click(buttonAccept);
+
+        sinon.assert.calledOnce(model.set);
+        sinon.assert.calledWithExactly(model.set, "selectedCallType", "audio");
+      });
     });
 
     describe("click event on .btn-decline", function() {
