@@ -161,6 +161,27 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Return any preference under "loop." that's coercible to a boolean
+     * preference.
+     *
+     * @param {String} prefName The name of the pref without the preceding
+     * "loop."
+     *
+     * Any errors thrown by the Mozilla pref API are logged to the console
+     * and cause null to be returned. This includes the case of the preference
+     * not being found.
+     *
+     * @return {String} on success, null on error
+     */
+    getLoopBoolPref: {
+      enumerable: true,
+      writable: true,
+      value: function(prefName) {
+        return MozLoopService.getLoopBoolPref(prefName);
+      }
+    },
+
+    /**
      * Starts alerting the user about an incoming call
      */
     startAlerting: {
