@@ -663,6 +663,12 @@ OnSharedPreferenceChangeListener
                     preferences.removePreference(pref);
                     i--;
                     continue;
+                } else if (AppConstants.RELEASE_BUILD &&
+                           PREFS_NEW_TABLET_UI.equals(key)) {
+                    // Remove toggle for new tablet UI on release builds.
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
                 } else if (!AppConstants.MOZ_TELEMETRY_REPORTING &&
                            PREFS_TELEMETRY_ENABLED.equals(key)) {
                     preferences.removePreference(pref);
@@ -977,6 +983,8 @@ OnSharedPreferenceChangeListener
                              sharedPreferences.getString(key, null));
         } else if (PREFS_SUGGESTED_SITES.equals(key)) {
             refreshSuggestedSites();
+        } else if (PREFS_NEW_TABLET_UI.equals(key)) {
+            Toast.makeText(this, "Restart the browser for the changes to take effect", Toast.LENGTH_SHORT).show();
         }
     }
 
