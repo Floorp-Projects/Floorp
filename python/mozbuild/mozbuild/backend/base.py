@@ -153,11 +153,6 @@ class BuildBackend(LoggingMixin):
             l = open(self._backend_output_list_file).read().split('\n')
             self._backend_output_list.update(mozpath.normsep(p) for p in l)
 
-        # Pull in all loaded Python as dependencies so any Python changes that
-        # could influence our output result in a rescan.
-        self.backend_input_files |= set(iter_modules_in_path(environment.topsrcdir))
-        self.backend_input_files |= set(iter_modules_in_path(environment.topobjdir))
-
         self._environments = {}
         self._environments[environment.topobjdir] = environment
 
@@ -196,6 +191,11 @@ class BuildBackend(LoggingMixin):
                 self.summary.mozbuild_count = obj.total_file_count
                 self.summary.mozbuild_execution_time = obj.total_sandbox_execution_time
                 self.summary.emitter_execution_time = obj.total_emitter_execution_time
+
+        # Pull in all loaded Python as dependencies so any Python changes that
+        # could influence our output result in a rescan.
+        self.backend_input_files |= set(iter_modules_in_path(
+            self.environment.topsrcdir, self.environment.topobjdir))
 
         finished_start = time.time()
         self.consume_finished()
