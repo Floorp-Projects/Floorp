@@ -32,85 +32,6 @@ function debug(s) {
   dump("CellBroadcastService: " + s);
 }
 
-function CellBroadcastMessage(aServiceId,
-                              aGsmGeographicalScope,
-                              aMessageCode,
-                              aMessageId,
-                              aLanguage,
-                              aBody,
-                              aMessageClass,
-                              aTimestamp,
-                              aCdmaServiceCategory,
-                              aHasEtwsInfo,
-                              aEtwsWarningType,
-                              aEtwsEmergencyUserAlert,
-                              aEtwsPopup) {
-  this.serviceId = aServiceId;
-  this.gsmGeographicalScope = aGsmGeographicalScope;
-  this.messageCode = aMessageCode;
-  this.messageId = aMessageId;
-  this.language = aLanguage;
-  this.body = aBody;
-  this.messageClass = aMessageClass;
-  this.timestamp = aTimestamp;
-
-  this.cdmaServiceCategory = aCdmaServiceCategory;
-
-  if (aHasEtwsInfo) {
-    this.etws = new CellBroadcastEtwsInfo(aEtwsWarningType,
-                                          aEtwsEmergencyUserAlert,
-                                          aEtwsPopup);
-  }
-}
-CellBroadcastMessage.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozCellBroadcastMessage]),
-  classID:        CELLBROADCASTMESSAGE_CID,
-  classInfo:      XPCOMUtils.generateCI({
-    classID:          CELLBROADCASTMESSAGE_CID,
-    classDescription: "CellBroadcastMessage",
-    flags:            Ci.nsIClassInfo.DOM_OBJECT,
-    interfaces:       [Ci.nsIDOMMozCellBroadcastMessage]
-  }),
-
-  // nsIDOMMozCellBroadcastMessage
-  serviceId: -1,
-
-  gsmGeographicalScope: null,
-  messageCode: null,
-  messageId: null,
-  language: null,
-  body: null,
-  messageClass: null,
-  timestamp: null,
-
-  etws: null,
-  cdmaServiceCategory: null
-};
-
-function CellBroadcastEtwsInfo(aEtwsWarningType,
-                               aEtwsEmergencyUserAlert,
-                               aEtwsPopup) {
-  this.warningType = aEtwsWarningType;
-  this.emergencyUserAlert = aEtwsEmergencyUserAlert;
-  this.popup = aEtwsPopup;
-}
-CellBroadcastEtwsInfo.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozCellBroadcastEtwsInfo]),
-  classID:        CELLBROADCASTETWSINFO_CID,
-  classInfo:      XPCOMUtils.generateCI({
-    classID:          CELLBROADCASTETWSINFO_CID,
-    classDescription: "CellBroadcastEtwsInfo",
-    flags:            Ci.nsIClassInfo.DOM_OBJECT,
-    interfaces:       [Ci.nsIDOMMozCellBroadcastEtwsInfo]
-  }),
-
-  // nsIDOMMozCellBroadcastEtwsInfo
-
-  warningType: null,
-  emergencyUserAlert: null,
-  popup: null
-};
-
 function CellBroadcastService() {
   this._listeners = [];
 
@@ -179,26 +100,21 @@ CellBroadcastService.prototype = {
                                   aEtwsWarningType,
                                   aEtwsEmergencyUserAlert,
                                   aEtwsPopup) {
-    let message = new CellBroadcastMessage(aServiceId,
-                                           aGsmGeographicalScope,
-                                           aMessageCode,
-                                           aMessageId,
-                                           aLanguage,
-                                           aBody,
-                                           aMessageClass,
-                                           aTimestamp,
-                                           aCdmaServiceCategory,
-                                           aHasEtwsInfo,
-                                           aEtwsWarningType,
-                                           aEtwsEmergencyUserAlert,
-                                           aEtwsPopup);
-
     for (let listener of this._listeners) {
       try {
-        // TODO:
-        // Deflate 'message' object to multiple parameters by redefining
-        // nsICellBroadcastListener for IPC implementation.
-        listener.notifyMessageReceived(message);
+        listener.notifyMessageReceived(aServiceId,
+                                       aGsmGeographicalScope,
+                                       aMessageCode,
+                                       aMessageId,
+                                       aLanguage,
+                                       aBody,
+                                       aMessageClass,
+                                       aTimestamp,
+                                       aCdmaServiceCategory,
+                                       aHasEtwsInfo,
+                                       aEtwsWarningType,
+                                       aEtwsEmergencyUserAlert,
+                                       aEtwsPopup);
       } catch (e) {
         debug("listener threw an exception: " + e);
       }

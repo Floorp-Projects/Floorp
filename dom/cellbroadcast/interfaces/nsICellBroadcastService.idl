@@ -2,20 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "domstubs.idl"
 #include "nsISupports.idl"
 
-interface nsIDOMMozCellBroadcastMessage;
-
-[scriptable, uuid(e70bb4cc-2297-11e4-aecd-9f8fb3d2b646)]
+[scriptable, uuid(fd1f9efa-3d6c-11e4-a7be-e3b99e7f903b)]
 interface nsICellBroadcastListener : nsISupports
 {
   /**
    * Called when a Cell Broadcast message has been received by the network.
-   *
-   * @param message
-   *        The received Cell Broadcast Message.
    */
-  void notifyMessageReceived(in nsIDOMMozCellBroadcastMessage message);
+  void notifyMessageReceived(in unsigned long aServiceId,
+                             in DOMString aGsmGeographicalScope,
+                             in unsigned short aMessageCode,
+                             in unsigned short aMessageId,
+                             in DOMString aLanguage,
+                             in DOMString aBody,
+                             in DOMString aMessageClass,
+                             in DOMTimeStamp aTimestamp,
+                             in unsigned long aCdmaServiceCategory,
+                             in boolean aHasEtwsInfo,
+                             in DOMString aEtwsWarningType,
+                             in boolean aEtwsEmergencyUserAlert,
+                             in boolean aEtwsPopup);
 };
 
 /**
