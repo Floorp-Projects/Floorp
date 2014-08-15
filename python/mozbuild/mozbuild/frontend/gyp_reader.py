@@ -123,8 +123,7 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
         sandbox.config = config
 
         with sandbox.allow_all_writes() as d:
-            topsrcdir = d['TOPSRCDIR'] = config.topsrcdir
-            d['TOPOBJDIR'] = config.topobjdir
+            topsrcdir = config.topsrcdir
             relsrcdir = d['RELATIVEDIR'] = mozpath.relpath(mozpath.dirname(build_file), config.topsrcdir)
             d['SRCDIR'] = mozpath.join(topsrcdir, relsrcdir)
 

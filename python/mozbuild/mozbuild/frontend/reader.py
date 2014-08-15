@@ -124,18 +124,19 @@ class MozbuildSandbox(Sandbox):
 
         self._log = logging.getLogger(__name__)
 
-        self.config = config
         self.metadata = dict(metadata)
 
         topobjdir = config.topobjdir
+
+        if not mozpath.basedir(path, [config.topsrcdir]):
+            external = config.external_source_dir
+            if external and mozpath.basedir(path, [external]):
+                config = ConfigEnvironment.from_config_status(
+                    mozpath.join(topobjdir, 'config.status'))
+                config.topsrcdir = external
+                config.external_source_dir = None
+
         topsrcdir = config.topsrcdir
-
-        if not mozpath.basedir(path, [topsrcdir]):
-            if config.external_source_dir and \
-                    mozpath.basedir(path, [config.external_source_dir]):
-                topsrcdir = config.external_source_dir
-
-        self.topsrcdir = topsrcdir
 
         relpath = mozpath.relpath(path, topsrcdir)
         reldir = mozpath.dirname(relpath)
@@ -145,7 +146,9 @@ class MozbuildSandbox(Sandbox):
             config = ConfigEnvironment.from_config_status(
                 mozpath.join(topobjdir, reldir, 'config.status'))
             config.topobjdir = topobjdir
-            self.config = config
+            config.external_source_dir = None
+
+        self.config = config
 
         with self._globals.allow_all_writes() as d:
             d['TOPSRCDIR'] = topsrcdir
@@ -180,25 +183,26 @@ class MozbuildSandbox(Sandbox):
         if os.path.isabs(path):
             if filesystem_absolute:
                 return path
-            roots = [self.topsrcdir]
+            roots = [self.config.topsrcdir]
             if self.config.external_source_dir:
                 roots.append(self.config.external_source_dir)
             for root in roots:
-                # mozpath.join would ignore the self.topsrcdir argument if we
-                # passed in the absolute path, so omit the leading /
+                # mozpath.join would ignore the self.config.topsrcdir argument
+                # if we passed in the absolute path, so omit the leading /
                 p = mozpath.normpath(mozpath.join(root, path[1:]))
                 if os.path.exists(p):
                     return p
-            # mozpath.join would ignore the self.topsrcdir argument if we passed
-            # in the absolute path, so omit the leading /
-            return mozpath.normpath(mozpath.join(self.topsrcdir, path[1:]))
+            # mozpath.join would ignore the self.condig.topsrcdir argument if
+            # we passed in the absolute path, so omit the leading /
+            return mozpath.normpath(
+                mozpath.join(self.config.topsrcdir, path[1:]))
         elif srcdir:
             return mozpath.normpath(mozpath.join(srcdir, path))
         elif len(self._execution_stack):
             return mozpath.normpath(mozpath.join(
                 mozpath.dirname(self._execution_stack[-1]), path))
         else:
-            return mozpath.normpath(mozpath.join(self.topsrcdir, path))
+            return mozpath.normpath(mozpath.join(self.config.topsrcdir, path))
 
     def exec_file(self, path, filesystem_absolute=False):
         """Override exec_file to normalize paths and restrict file loading.
@@ -653,8 +657,6 @@ class BuildReader(object):
 
     def __init__(self, config, sandbox_post_eval_cb=None):
         self.config = config
-        self.topsrcdir = config.topsrcdir
-        self.topobjdir = config.topobjdir
 
         self._sandbox_post_eval_cb = sandbox_post_eval_cb
         self._log = logging.getLogger(__name__)
@@ -670,7 +672,7 @@ class BuildReader(object):
         This is a generator of Sandbox instances. As each moz.build file is
         read, a new Sandbox is created and emitted.
         """
-        path = mozpath.join(self.topsrcdir, 'moz.build')
+        path = mozpath.join(self.config.topsrcdir, 'moz.build')
         return self.read_mozbuild(path, self.config, read_tiers=True,
             filesystem_absolute=True)
 
@@ -694,11 +696,11 @@ class BuildReader(object):
             'obj*',
         }
 
-        finder = FileFinder(self.topsrcdir, find_executables=False,
+        finder = FileFinder(self.config.topsrcdir, find_executables=False,
             ignore=ignore)
 
         for path, f in finder.find('**/moz.build'):
-            path = os.path.join(self.topsrcdir, path)
+            path = os.path.join(self.config.topsrcdir, path)
             for s in self.read_mozbuild(path, self.config, descend=False,
                 filesystem_absolute=True, read_tiers=True):
                 yield s
