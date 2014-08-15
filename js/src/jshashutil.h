@@ -13,7 +13,7 @@ namespace js {
 
 /*
  * Used to add entries to a js::HashMap or HashSet where the key depends on a GC
- * thing that may be moved by generational collection between the call to
+ * thing that may be moved by generational or compacting GC between the call to
  * lookupForAdd() and relookupOrAdd().
  */
 template <class T>

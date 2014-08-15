@@ -80,6 +80,9 @@ class TypedArrayObject : public ArrayBufferViewObject
     ensureHasBuffer(JSContext *cx, Handle<TypedArrayObject *> tarray);
 
     ArrayBufferObject *sharedBuffer() const;
+    bool hasBuffer() const {
+        return bufferValue(const_cast<TypedArrayObject*>(this)).isObject();
+    }
     ArrayBufferObject *buffer() const {
         JSObject *obj = bufferValue(const_cast<TypedArrayObject*>(this)).toObjectOrNull();
         if (!obj)

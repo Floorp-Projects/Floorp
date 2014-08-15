@@ -53,8 +53,10 @@
                   getAccessible(doc.getElementById('paragraph-1'), nsIAccessibleText)));
       gQueue.push(new setVCTextInvoker(docAcc, 'movePreviousByText', WORD_BOUNDARY, [0,3],
                   getAccessible(doc.getElementById('p1-link-1'), nsIAccessibleText)));
+      // set user input to false, and see if it works
       gQueue.push(new setVCTextInvoker(docAcc, 'movePreviousByText', WORD_BOUNDARY, [5,7],
-                  getAccessible(doc.getElementById('paragraph-1'), nsIAccessibleText)));
+                  getAccessible(doc.getElementById('paragraph-1'), nsIAccessibleText)),
+                  false);
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById('section-1'))));
@@ -62,8 +64,10 @@
                   getAccessible(doc.getElementById('section-1'), nsIAccessibleText)));
       gQueue.push(new setVCTextInvoker(docAcc, 'moveNextByText', WORD_BOUNDARY, [0,9],
                   getAccessible(doc.getElementById('s1-link-1'), nsIAccessibleText)));
+      // set user input to false, and see if it works
       gQueue.push(new setVCTextInvoker(docAcc, 'moveNextByText', WORD_BOUNDARY, [10,14],
-                  getAccessible(doc.getElementById('s1-link-1'), nsIAccessibleText)));
+                  getAccessible(doc.getElementById('s1-link-1'), nsIAccessibleText),
+                  false));
       gQueue.push(new setVCTextInvoker(docAcc, 'moveNextByText', WORD_BOUNDARY, [4,6],
                   getAccessible(doc.getElementById('section-1'), nsIAccessibleText)));
       gQueue.push(new setVCTextInvoker(docAcc, 'moveNextByText', WORD_BOUNDARY, [7,12],

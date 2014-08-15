@@ -4,8 +4,6 @@
 
 from __future__ import unicode_literals
 
-import os
-
 from mach.logging import LoggingManager
 
 from mozbuild.util import ReadOnlyDict
@@ -37,6 +35,3 @@ class MockConfig(object):
         self.defines = self.substs
 
         self.external_source_dir = None
-
-    def child_path(self, p):
-        return os.path.join(self.topsrcdir, p)

@@ -29,7 +29,6 @@
 #include "mozilla/Services.h"
 
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsScriptLoader.h"

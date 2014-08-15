@@ -31,7 +31,6 @@
 #include "nsITimer.h"
 #include "nsIAtom.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "mozilla/EventDispatcher.h"
 #include "nsIContent.h"
 #include "nsCycleCollector.h"

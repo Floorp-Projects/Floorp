@@ -16,7 +16,6 @@ const NDEF_MESSAGE = [new MozNDEFRecord(0x01,
                                         new Uint8Array(0x20))];
 
 let nfcPeers = [];
-let sessionTokens = [];
 
 /**
  * Enables nfc and RE0 then registers onpeerready callback and once
@@ -58,24 +57,6 @@ function testNfcBadSessionIdError() {
 }
 
 /**
- * Eables nfc and RE0, register onpeerready callback, once it's fired
- * it stores sessionToken. Using sessionToken cretes mozNFCTag and fires
- * mozNFCTag.connect('NDEF') which should result in NfcConnectError.
- */
-function testNfcConnectError() {
-  log('testNfcConnectError');
-  toggleNFC(true)
-  .then(() => NCI.activateRE(emulator.P2P_RE_INDEX_0))
-  .then(registerAndFireOnpeerready)
-  .then(() => connectToNFCTagExpectError(sessionTokens[0],
-                                         'NDEF',
-                                         'NfcConnectError'))
-  .then(() => toggleNFC(false))
-  .then(endTest)
-  .catch(handleRejectedPromise);
-}
-
-/**
  * Enables nfc and RE0, registers tech-discovered msg handler, once it's
  * fired set tech-lost handler and disables nfc. In both handlers checks
  * if error message is not present.
@@ -103,7 +84,6 @@ function testNoErrorInTechMsg() {
 
 function endTest() {
   nfcPeers = [];
-  sessionTokens = [];
   runNextTest();
 }
 
@@ -116,8 +96,7 @@ function registerAndFireOnpeerready() {
   let deferred = Promise.defer();
 
   nfc.onpeerready = function(event) {
-    sessionTokens.push(event.detail);
-    nfcPeers.push(nfc.getNFCPeer(event.detail));
+    nfcPeers.push(event.peer);
     nfc.onpeerready = null;
     deferred.resolve();
   };
@@ -161,25 +140,6 @@ function sendNDEFExpectError(peer, errorMsg) {
   return deferred.promise;
 }
 
-function connectToNFCTagExpectError(sessionToken, tech, errorMsg) {
-  let deferred = Promise.defer();
-
-  let nfcTag = nfc.getNFCTag(sessionTokens[0]);
-  let req = nfcTag.connect(tech);
-  req.onsuccess = function() {
-    ok(false, 'we should not be able to connect to the tag');
-    deferred.reject();
-  };
-
-  req.onerror = function() {
-    ok(true, 'we should get an error');
-    is(req.error.name, errorMsg, 'Should have proper error name');
-    deferred.resolve();
-  };
-
-  return deferred.promise;
-}
-
 function setAndFireTechLostHandler() {
   let deferred = Promise.defer();
 
@@ -201,7 +161,6 @@ function setAndFireTechLostHandler() {
 let tests = [
   testNfcNotEnabledError,
   testNfcBadSessionIdError,
-  testNfcConnectError,
   testNoErrorInTechMsg
 ];
 

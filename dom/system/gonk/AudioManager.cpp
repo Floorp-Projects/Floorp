@@ -30,13 +30,13 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "base/message_loop.h"
 
 #include "BluetoothCommon.h"
 #include "BluetoothHfpManagerBase.h"
 
 #include "nsJSUtils.h"
-#include "nsCxPusher.h"
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"

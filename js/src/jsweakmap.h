@@ -49,6 +49,9 @@ class WeakMapBase {
     // Unmark all weak maps in a compartment.
     static void unmarkCompartment(JSCompartment *c);
 
+    // Mark all the weakmaps in a compartment.
+    static void markAll(JSCompartment *c, JSTracer *tracer);
+
     // Check all weak maps in a compartment that have been marked as live in this garbage
     // collection, and mark the values of all entries that have become strong references
     // to them. Return true if we marked any new values, indicating that we need to make

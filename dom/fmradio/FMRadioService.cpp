@@ -12,10 +12,10 @@
 #include "nsDOMClassInfo.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioChild.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
 #include "nsJSUtils.h"
-#include "nsCxPusher.h"
 
 #define BAND_87500_108000_kHz 1
 #define BAND_76000_108000_kHz 2

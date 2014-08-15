@@ -9,7 +9,6 @@
 #include "nsIURI.h"
 #include "nsXULAppAPI.h"
 #include "jsapi.h"
-#include "nsCxPusher.h"
 #include "nsServiceManagerUtils.h"
 #include "nsLiteralString.h"
 #include "nsThreadUtils.h"
@@ -19,6 +18,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsIJARURI.h"
 #include "nsJSUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/AddonPathService.h"
 #include "mozilla/Omnijar.h"
 
