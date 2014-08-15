@@ -1,0 +1,4 @@
+default-preferences pref(layout.css.ruby.enabled,true)
+
+asserts(1) == ruby-whitespace-1.html ruby-whitespace-1-ref.html # bug 1052145
+== ruby-whitespace-2.html ruby-whitespace-2-ref.html

@@ -90,6 +90,9 @@ include css-parsing/reftest.list
 # css placeholder
 include css-placeholder/reftest.list
 
+# css ruby
+include css-ruby/reftest.list
+
 # css required
 include css-required/reftest.list
 
