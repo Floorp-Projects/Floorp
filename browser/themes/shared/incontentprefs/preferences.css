@@ -167,7 +167,7 @@ prefpane {
 #typeColumn > .treecol-sortdirection[sortDirection=descending],
 #actionColumn > .treecol-sortdirection[sortDirection=descending] {
   -moz-appearance: none;
-  list-style-image: url("chrome://browser/skin/in-content/sorter.png");
+  list-style-image: url("chrome://global/skin/in-content/sorter.png");
 }
 
 #typeColumn > .treecol-sortdirection[sortDirection=descending],
@@ -182,7 +182,7 @@ prefpane {
   #actionColumn > .treecol-sortdirection[sortDirection=descending] {
     width: 12px;
     height: 8px;
-    list-style-image: url("chrome://browser/skin/in-content/sorter@2x.png");
+    list-style-image: url("chrome://global/skin/in-content/sorter@2x.png");
   }
 }
 
