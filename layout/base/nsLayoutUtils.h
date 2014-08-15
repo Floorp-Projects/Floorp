@@ -27,6 +27,7 @@
 #include "mozilla/gfx/2D.h"
 #include "Units.h"
 #include "mozilla/ToString.h"
+#include "nsHTMLReflowMetrics.h"
 
 #include <limits>
 #include <algorithm>
@@ -2268,6 +2269,13 @@ public:
                                           nsRect* aOutDisplayport);
 
   static bool IsOutlineStyleAutoEnabled();
+
+  static void SetBSizeFromFontMetrics(const nsIFrame* aFrame,
+                                      nsHTMLReflowMetrics& aMetrics,
+                                      const nsHTMLReflowState& aReflowState,
+                                      mozilla::LogicalMargin aFramePadding, 
+                                      mozilla::WritingMode aLineWM,
+                                      mozilla::WritingMode aFrameWM);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;
