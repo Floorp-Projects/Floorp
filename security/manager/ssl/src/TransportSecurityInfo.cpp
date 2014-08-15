@@ -289,8 +289,8 @@ TransportSecurityInfo::GetInterface(const nsIID & uuid, void * *result)
 // of the previous value. This is so when older versions attempt to
 // read a newer serialized TransportSecurityInfo, they will actually
 // fail and return NS_ERROR_FAILURE instead of silently failing.
-#define TRANSPORTSECURITYINFOMAGIC { 0xa9863a23, 0x28ea, 0x45d2, \
-  { 0xa2, 0x5a, 0x35, 0x7c, 0xae, 0xfa, 0x7f, 0x82 } }
+#define TRANSPORTSECURITYINFOMAGIC { 0xa9863a23, 0xf40a, 0x4060, \
+    { 0xb2, 0xe1, 0x62, 0xab, 0x2b, 0x85, 0x26, 0xa9 } }
 static NS_DEFINE_CID(kTransportSecurityInfoMagic, TRANSPORTSECURITYINFOMAGIC);
 
 NS_IMETHODIMP
@@ -331,6 +331,15 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* stream)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  rv = NS_WriteOptionalCompoundObject(stream,
+                                      mFailedCertChain,
+                                      NS_GET_IID(nsIX509CertList),
+                                      true);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -386,6 +395,14 @@ TransportSecurityInfo::Read(nsIObjectInputStream* stream)
   if (!mSSLStatus) {
     return NS_ERROR_FAILURE;
   }
+
+  nsCOMPtr<nsISupports> failedCertChainSupports;
+  rv = NS_ReadOptionalObject(stream, true, getter_AddRefs(failedCertChainSupports));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  mFailedCertChain = do_QueryInterface(failedCertChainSupports);
+
   return NS_OK;
 }
 
@@ -1070,6 +1087,32 @@ TransportSecurityInfo::SetStatusErrorBits(nsIX509Cert & cert,
   RememberCertErrorsTable::GetInstance().RememberCertHasError(this,
                                                               mSSLStatus,
                                                               SECFailure);
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetFailedCertChain(nsIX509CertList** _result)
+{
+  NS_ASSERTION(_result, "non-NULL destination required");
+
+  *_result = mFailedCertChain;
+  NS_IF_ADDREF(*_result);
+
+  return NS_OK;
+}
+
+nsresult
+TransportSecurityInfo::SetFailedCertChain(ScopedCERTCertList& certList)
+{
+  nsNSSShutDownPreventionLock lock;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsIX509CertList> comCertList;
+  // nsNSSCertList takes ownership of certList
+  mFailedCertChain = new nsNSSCertList(certList, lock);
+
+  return NS_OK;
 }
 
 } } // namespace mozilla::psm
