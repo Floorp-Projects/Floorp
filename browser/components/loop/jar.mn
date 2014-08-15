@@ -37,9 +37,10 @@ browser.jar:
   content/browser/loop/shared/img/video-inverse-14x14@2x.png    (content/shared/img/video-inverse-14x14@2x.png)
 
   # Shared scripts
-  content/browser/loop/shared/js/models.js  (content/shared/js/models.js)
-  content/browser/loop/shared/js/router.js  (content/shared/js/router.js)
-  content/browser/loop/shared/js/views.js   (content/shared/js/views.js)
+  content/browser/loop/shared/js/models.js    (content/shared/js/models.js)
+  content/browser/loop/shared/js/router.js    (content/shared/js/router.js)
+  content/browser/loop/shared/js/views.js     (content/shared/js/views.js)
+  content/browser/loop/shared/js/websocket.js (content/shared/js/websocket.js)
 
   # Shared libs
   content/browser/loop/shared/libs/react-0.10.0.js    (content/shared/libs/react-0.10.0.js)
