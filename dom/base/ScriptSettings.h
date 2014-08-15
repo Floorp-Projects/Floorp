@@ -71,12 +71,13 @@ class ScriptSettingsStackEntry {
   friend class ScriptSettingsStack;
 
 public:
-  ScriptSettingsStackEntry(nsIGlobalObject *aGlobal, bool aCandidate);
   ~ScriptSettingsStackEntry();
 
   bool NoJSAPI() { return !mGlobalObject; }
 
 protected:
+  ScriptSettingsStackEntry(nsIGlobalObject *aGlobal, bool aCandidate);
+
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
   bool mIsCandidateEntryPoint;
 
