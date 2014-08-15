@@ -15,9 +15,10 @@
     <ImageView android:id="@+id/logo_button"
         android:layout_width="0dp"
         android:layout_weight="1"
+        android:padding="@dimen/widget_padding"
         android:background="@drawable/widget_button_left"
         android:layout_height="match_parent"
-        android:src="@drawable/icon"/>
+        android:src="@drawable/widget_icon"/>
 
     <LinearLayout android:id="@+id/search_button"
         android:layout_width="0dp"
@@ -32,11 +33,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:drawableLeft="@drawable/ic_widget_search"
-            android:drawablePadding="@dimen/widget_drawable_padding"
+            android:drawablePadding="@dimen/widget_padding"
             android:text="@string/search_widget_button_label"
             android:gravity="center"
+            android:fontFamily="sans-serif"
             android:textSize="@dimen/widget_text_size"
-            android:textColor="@color/text_color_secondary"/>
+            android:textColor="@color/widget_text_color"/>
 
     </LinearLayout>
 
@@ -54,11 +56,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:drawableLeft="@drawable/ic_widget_new_tab"
-            android:drawablePadding="@dimen/widget_drawable_padding"
+            android:drawablePadding="@dimen/widget_padding"
             android:gravity="center"
             android:text="@string/new_tab"
+            android:fontFamily="sans-serif"
             android:textSize="@dimen/widget_text_size"
-            android:textColor="@color/text_color_secondary"/>
+            android:textColor="@color/widget_text_color"/>
 
     </LinearLayout>
 

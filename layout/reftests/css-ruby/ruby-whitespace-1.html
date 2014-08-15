@@ -1,0 +1,28 @@
+<html>
+<meta charset="UTF-8">
+<head>
+<style>
+ruby { display: ruby; }
+rb   { display: ruby-base; white-space: nowrap; }
+rp   { display: none; }
+rt   { display: ruby-text; white-space: nowrap; font-size: 50%; }
+rbc  { display: ruby-base-container; }
+rtc  { display: ruby-text-container; }
+ruby, rb, rt, rbc, rtc { unicode-bidi: isolate; }
+</style>
+</head>
+<body>
+
+<ruby>
+  <rbc>       <rb>   </rb>    <rb>Base three</rb>   </rbc> 
+      <rtc>    <rt>   </rt>   <rt>Text two</rt>   </rtc>    <rtc><rt></rt></rtc>
+        <rbc><rb>Segment two</rb></rbc><rtc><rt></rt></rtc>
+</ruby>
+
+<rbc>   <rb>  </rb>    <rb>Base two</rb>  </rbc>   <rtc><rt>  </rt>     <rt
+  >Text two</rt></rtc>
+
+<rb></rb>   <rb>Base two</rb>   <rt> </rt>
+
+</body>
+</html>

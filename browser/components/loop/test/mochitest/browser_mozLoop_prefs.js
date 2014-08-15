@@ -24,3 +24,17 @@ add_task(function* test_mozLoop_charPref() {
   Assert.equal(gMozLoopAPI.getLoopCharPref("test"), "foo",
                "should get loop pref value correctly");
 });
+
+add_task(function* test_mozLoop_boolPref() {
+  registerCleanupFunction(function () {
+    Services.prefs.clearUserPref("loop.testBool");
+  });
+
+  Assert.ok(gMozLoopAPI, "mozLoop should exist");
+
+  Services.prefs.setBoolPref("loop.testBool", true);
+
+  // Test getLoopCharPref
+  Assert.equal(gMozLoopAPI.getLoopBoolPref("testBool"), true,
+               "should get loop pref value correctly");
+});

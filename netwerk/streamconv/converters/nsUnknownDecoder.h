@@ -47,6 +47,26 @@ protected:
   virtual void DetermineContentType(nsIRequest* aRequest);
   nsresult FireListenerNotifications(nsIRequest* request, nsISupports *aCtxt);
 
+  class ConvertedStreamListener: public nsIStreamListener
+  {
+  public:
+    ConvertedStreamListener(nsUnknownDecoder *aDecoder);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+
+  private:
+    virtual ~ConvertedStreamListener();
+    static NS_METHOD AppendDataToString(nsIInputStream* inputStream,
+                                        void* closure,
+                                        const char* rawSegment,
+                                        uint32_t toOffset,
+                                        uint32_t count,
+                                        uint32_t* writeCount);
+    nsUnknownDecoder *mDecoder;
+  };
+
 protected:
   nsCOMPtr<nsIStreamListener> mNextListener;
 
@@ -106,6 +126,10 @@ protected:
 
   nsCString mContentType;
 
+protected:
+  nsresult ConvertEncodedData(nsIRequest* request, const char* data,
+                              uint32_t length);
+  nsCString mDecodedData; // If data are encoded this will be uncompress data.
 };
 
 #define NS_BINARYDETECTOR_CID                        \

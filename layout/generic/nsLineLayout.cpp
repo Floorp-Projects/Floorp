@@ -2734,3 +2734,21 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflo
   }
   aOverflowAreas = overflowAreas;
 }
+
+void
+nsLineLayout::AdvanceICoord(nscoord aAmount)
+{
+  mCurrentSpan->mICoord += aAmount;
+}
+
+WritingMode
+nsLineLayout::GetWritingMode()
+{
+  return mRootSpan->mWritingMode;
+}
+
+nscoord
+nsLineLayout::GetCurrentICoord()
+{
+  return mCurrentSpan->mICoord;
+}
