@@ -6,9 +6,18 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(8813d03b-e76c-4240-9691-d327d9b91e88)]
+interface nsIX509CertList;
+
+[scriptable, uuid(154898ce-e14f-4981-bfc5-00a41722f44b)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long    securityState;
     readonly attribute wstring          errorMessage;
+
+    /**
+     * If certificate verification failed, this will be the peer certificate
+     * chain provided in the handshake, so it can be used for error reporting.
+     * If verification succeeded, this will be null.
+     */
+    readonly attribute nsIX509CertList failedCertChain;
 };
 
