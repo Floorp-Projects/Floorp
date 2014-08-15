@@ -618,6 +618,13 @@ nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce) const
 }
 
 bool
+nsCSPDirective::permits(nsIURI* aUri) const
+{
+  nsString dummyNonce;
+  return permits(aUri, dummyNonce);
+}
+
+bool
 nsCSPDirective::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
 {
   CSPUTILSLOG(("nsCSPDirective::allows, aKeyWord: %s, a HashOrNonce: %s",
@@ -801,6 +808,30 @@ nsCSPPolicy::permits(nsContentPolicyType aContentType,
 }
 
 bool
+nsCSPPolicy::permitsBaseURI(nsIURI* aUri) const
+{
+#ifdef PR_LOGGING
+  {
+    nsAutoCString spec;
+    aUri->GetSpec(spec);
+    CSPUTILSLOG(("nsCSPPolicy::permitsBaseURI, aUri: %s", spec.get()));
+  }
+#endif
+
+  // Try to find a base-uri directive
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->equals(CSP_BASE_URI)) {
+      return mDirectives[i]->permits(aUri);
+    }
+  }
+
+  // base-uri is only enforced if explicitly defined in the
+  // policy - do *not* consult default-src, see:
+  // http://www.w3.org/TR/CSP11/#directive-default-src
+  return true;
+}
+
+bool
 nsCSPPolicy::allows(nsContentPolicyType aContentType,
                     enum CSPKeyword aKeyword,
                     const nsAString& aHashOrNonce) const
@@ -878,6 +909,17 @@ nsCSPPolicy::getDirectiveStringForContentType(nsContentPolicyType aContentType,
 {
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->restrictsContentType(aContentType)) {
+      mDirectives[i]->toString(outDirective);
+      return;
+    }
+  }
+}
+
+void
+nsCSPPolicy::getDirectiveStringForBaseURI(nsAString& outDirective) const
+{
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->equals(CSP_BASE_URI)) {
       mDirectives[i]->toString(outDirective);
       return;
     }
