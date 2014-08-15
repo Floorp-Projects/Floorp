@@ -74,8 +74,8 @@ class SandboxDerived(TreeMetadata):
         self.sandbox_all_paths = sandbox.all_paths
 
         # Basic directory state.
-        self.topsrcdir = sandbox['TOPSRCDIR']
-        self.topobjdir = sandbox['TOPOBJDIR']
+        self.topsrcdir = sandbox.config.topsrcdir
+        self.topobjdir = sandbox.config.topobjdir
 
         self.relativedir = sandbox['RELATIVEDIR']
         self.srcdir = sandbox['SRCDIR']

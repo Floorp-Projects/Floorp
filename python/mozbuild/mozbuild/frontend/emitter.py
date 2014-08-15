@@ -355,8 +355,6 @@ class TreeMetadataEmitter(LoggingMixin):
         sandbox.main_path = dir
         sandbox.all_paths = set([dir])
         with sandbox.allow_all_writes() as s:
-            s['TOPSRCDIR'] = self.config.topsrcdir
-            s['TOPOBJDIR'] = self.config.topobjdir
             s['RELATIVEDIR'] = dir
             s['SRCDIR'] = mozpath.join(self.config.topsrcdir, dir)
             s['OBJDIR'] = mozpath.join(self.config.topobjdir, dir)
@@ -817,7 +815,7 @@ class TreeMetadataEmitter(LoggingMixin):
         path = mozpath.normpath(mozpath.join(sandbox['SRCDIR'], manifest_path))
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
-            sandbox['TOPSRCDIR']))
+            sandbox.config.topsrcdir))
         install_prefix = mozpath.join(install_root, install_subdir)
 
         try:
@@ -959,7 +957,7 @@ class TreeMetadataEmitter(LoggingMixin):
         manifest_full_path = mozpath.normpath(mozpath.join(
             sandbox['SRCDIR'], manifest_path))
         manifest_reldir = mozpath.dirname(mozpath.relpath(manifest_full_path,
-            sandbox['TOPSRCDIR']))
+            sandbox.config.topsrcdir))
 
         manifest = reftest.ReftestManifest()
         manifest.load(manifest_full_path)

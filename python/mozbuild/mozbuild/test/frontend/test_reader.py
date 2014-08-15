@@ -54,7 +54,7 @@ class TestBuildReader(unittest.TestCase):
     def test_dirs_traversal_no_descend(self):
         reader = self.reader('traversal-simple')
 
-        path = mozpath.join(reader.topsrcdir, 'moz.build')
+        path = mozpath.join(reader.config.topsrcdir, 'moz.build')
         self.assertTrue(os.path.exists(path))
 
         sandboxes = list(reader.read_mozbuild(path, reader.config,
