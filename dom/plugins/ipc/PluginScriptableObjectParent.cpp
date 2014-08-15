@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/plugins/PluginIdentifierParent.h"
 #include "mozilla/unused.h"
-#include "nsCxPusher.h"
 #include "nsNPAPIPlugin.h"
 #include "PluginScriptableObjectUtils.h"
 

@@ -12,7 +12,6 @@
 #include "nsContentUtils.h"
 #include "xpcprivate.h"
 #include "jsfriendapi.h"
-#include "nsCxPusher.h"
 
 using namespace JS;
 using namespace mozilla;

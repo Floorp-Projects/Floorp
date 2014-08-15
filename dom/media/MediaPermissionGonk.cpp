@@ -6,7 +6,6 @@
 #include "MediaPermissionGonk.h"
 
 #include "nsCOMPtr.h"
-#include "nsCxPusher.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsIDocument.h"
 #include "nsIDOMNavigatorUserMedia.h"

@@ -17,7 +17,6 @@
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/unused.h"
-#include "nsCxPusher.h"
 
 #include "AsyncConnectionHelper.h"
 #include "DatabaseInfo.h"

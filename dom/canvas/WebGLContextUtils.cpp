@@ -10,7 +10,6 @@
 #include "GLContext.h"
 #include "jsapi.h"
 #include "mozilla/Preferences.h"
-#include "nsCxPusher.h"
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIScriptSecurityManager.h"
@@ -23,6 +22,8 @@
 #include "WebGLProgram.h"
 #include "WebGLTexture.h"
 #include "WebGLVertexArray.h"
+
+#include "mozilla/dom/ScriptSettings.h"
 
 namespace mozilla {
 
