@@ -43,7 +43,7 @@ class TestSandbox(unittest.TestCase):
         else:
             config = MockConfig()
 
-        return MozbuildSandbox(config, config.child_path(relpath))
+        return MozbuildSandbox(config, mozpath.dirname(relpath))
 
     def test_default_state(self):
         sandbox = self.sandbox()
