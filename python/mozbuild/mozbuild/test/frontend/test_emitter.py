@@ -23,12 +23,14 @@ from mozbuild.frontend.data import (
     Resources,
     SimpleProgram,
     StaticLibrary,
+    TestHarnessFiles,
     TestManifest,
     VariablePassthru,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import (
     BuildReader,
+    BuildReaderError,
     SandboxValidationError,
 )
 
@@ -201,6 +203,29 @@ class TestEmitterBasic(unittest.TestCase):
                 zip(expected, [(path, list(seq)) for path, seq in objs[0].exports.walk()]):
             self.assertEqual(expect_path, actual_path)
             self.assertEqual(expect_headers, actual_headers)
+
+    def test_test_harness_files(self):
+        reader = self.reader('test-harness-files')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 1)
+        self.assertIsInstance(objs[0], TestHarnessFiles)
+
+        expected = {
+            'mochitest': ['runtests.py', 'utils.py'],
+            'testing/mochitest': ['mochitest.py', 'mochitest.ini'],
+        }
+
+        for path, strings in objs[0].srcdir_files.iteritems():
+            self.assertTrue(path in expected)
+            basenames = sorted(mozpath.basename(s) for s in strings)
+            self.assertEqual(sorted(expected[path]), basenames)
+
+    def test_test_harness_files_root(self):
+        reader = self.reader('test-harness-files-root')
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'Cannot install files to the root of TEST_HARNESS_FILES'):
+            objs = self.read_topsrcdir(reader)
 
     def test_resources(self):
         reader = self.reader('resources')

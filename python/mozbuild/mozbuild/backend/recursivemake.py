@@ -53,6 +53,7 @@ from ..frontend.data import (
     SharedLibrary,
     SimpleProgram,
     StaticLibrary,
+    TestHarnessFiles,
     TestManifest,
     VariablePassthru,
     XPIDLFile,
@@ -408,6 +409,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
+
+        elif isinstance(obj, TestHarnessFiles):
+            self._process_test_harness_files(obj, backend_file)
 
         elif isinstance(obj, Resources):
             self._process_resources(obj, obj.resources, backend_file)
@@ -860,6 +864,22 @@ class RecursiveMakeBackend(CommonBackend):
 
             if not os.path.exists(source):
                 raise Exception('File listed in EXPORTS does not exist: %s' % source)
+
+    def _process_test_harness_files(self, obj, backend_file):
+        for path, files in obj.srcdir_files.iteritems():
+            for source in files:
+                dest = '%s/%s' % (path, mozpath.basename(source))
+                self._install_manifests['tests'].add_symlink(source, dest)
+
+        for path, files in obj.objdir_files.iteritems():
+            prefix = 'TEST_HARNESS_%s' % path.replace('/', '_')
+            backend_file.write("""
+%(prefix)s_FILES := %(files)s
+%(prefix)s_DEST := %(dest)s
+INSTALL_TARGETS += %(prefix)s
+""" % { 'prefix': prefix,
+        'dest': '$(DEPTH)/_tests/%s' % path,
+        'files': ' '.join(files) })
 
     def _process_resources(self, obj, resources, backend_file):
         dep_path = mozpath.join(self.environment.topobjdir, '_build_manifests', '.deps', 'install')
