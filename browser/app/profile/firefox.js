@@ -1588,6 +1588,15 @@ pref("services.push.serverURL", "wss://push.services.mozilla.com/");
 
 pref("social.sidebar.unload_timeout_ms", 10000);
 
+// activation from inside of share panel is possible if activationPanelEnabled
+// is true. Pref'd off for release while usage testing is done through beta.
+#ifdef RELEASE_BUILD
+pref("social.share.activationPanelEnabled", false);
+#else
+pref("social.share.activationPanelEnabled", true);
+#endif
+pref("social.shareDirectory", "https://activations.cdn.mozilla.net/en-US/sharePanel.html");
+
 pref("dom.identity.enabled", false);
 
 // Block insecure active content on https pages
