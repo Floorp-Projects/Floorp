@@ -156,7 +156,11 @@ let WebAudioGraphView = {
 
     AudioNodes.forEach(node => {
       // Add node to graph
-      graph.addNode(node.id, { label: node.type, id: node.id });
+      graph.addNode(node.id, {
+        type: node.type,                        // Just for storing type data
+        label: node.type.replace(/Node$/, ""),  // Displayed in SVG node
+        id: node.id                             // Identification
+      });
 
       // Add all of the connections from this node to the edge array to be added
       // after all the nodes are added, otherwise edges will attempted to be created
@@ -177,7 +181,7 @@ let WebAudioGraphView = {
       let svgNodes = oldDrawNodes(graph, root);
       svgNodes.attr("class", (n) => {
         let node = graph.node(n);
-        return "audionode type-" + node.label;
+        return "audionode type-" + node.type;
       });
       svgNodes.attr("data-id", (n) => {
         let node = graph.node(n);
@@ -452,7 +456,7 @@ let WebAudioInspectorView = {
    */
   _setTitle: function () {
     let node = this._currentNode;
-    let title = node.type + " (" + node.id + ")";
+    let title = node.type.replace(/Node$/, "");
     $("#web-audio-inspector-title").setAttribute("value", title);
   },
 

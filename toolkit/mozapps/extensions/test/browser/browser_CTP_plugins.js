@@ -200,7 +200,7 @@ function part12(aWindow) {
   let pluginEl = get_addon_element(gManagerWindow, gTestPluginId);
   pluginEl.parentNode.ensureElementIsVisible(pluginEl);
   let menu = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "state-menulist");
-  is_element_hidden(menu, "part12: state menu should be hidden");
+  is(menu.disabled, true, "part12: state menu should be disabled");
 
   let details = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
   EventUtils.synthesizeMouseAtCenter(details, {}, gManagerWindow);
@@ -209,7 +209,7 @@ function part12(aWindow) {
 
 function part13() {
   let menu = gManagerWindow.document.getElementById("detail-state-menulist");
-  is_element_hidden(menu, "part13: detail state menu should be hidden");
+  is(menu.disabled, true, "part13: detail state menu should be disabled");
 
   setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", function() {
     run_next_test();

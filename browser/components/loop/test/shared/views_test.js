@@ -212,9 +212,25 @@ describe("loop.shared.views", function() {
       it("should start a session", function() {
         sandbox.stub(model, "startSession");
 
-        mountTestComponent({sdk: fakeSDK, model: model});
+        mountTestComponent({
+          sdk: fakeSDK,
+          model: model,
+          video: {enabled: true}
+        });
 
         sinon.assert.calledOnce(model.startSession);
+      });
+
+      it("should set the correct stream publish options", function() {
+
+        var component = mountTestComponent({
+          sdk: fakeSDK,
+          model: model,
+          video: {enabled: false}
+        });
+
+        expect(component.publisherConfig.publishVideo).to.eql(false);
+
       });
     });
 
@@ -222,7 +238,11 @@ describe("loop.shared.views", function() {
       var comp;
 
       beforeEach(function() {
-        comp = mountTestComponent({sdk: fakeSDK, model: model});
+        comp = mountTestComponent({
+          sdk: fakeSDK,
+          model: model,
+          video: {enabled: false}
+        });
       });
 
       describe("#hangup", function() {
@@ -293,7 +313,11 @@ describe("loop.shared.views", function() {
         var comp;
 
         beforeEach(function() {
-          comp = mountTestComponent({sdk: fakeSDK, model: model});
+          comp = mountTestComponent({
+            sdk: fakeSDK,
+            model: model,
+            video: {enabled: false}
+          });
           comp.startPublishing();
         });
 
