@@ -391,13 +391,13 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
 
 void
 nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
-                                       nsIContent* aContainer,
                                        nsIContent* aChild)
 {
+  nsIContent* container = aChild->GetFlattenedTreeParent();
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eTree)) {
     logging::MsgBegin("TREE", "content removed");
-    logging::Node("container", aContainer);
+    logging::Node("container", container);
     logging::Node("content", aChild);
     logging::MsgEnd();
     logging::Stack();
@@ -406,7 +406,7 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
 
   DocAccessible* docAccessible = GetDocAccessible(aPresShell);
   if (docAccessible)
-    docAccessible->ContentRemoved(aContainer, aChild);
+    docAccessible->ContentRemoved(container, aChild);
 }
 
 void

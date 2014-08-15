@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Adopt DOM node from anonymous subtree</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="../common.js"></script>
+
+  <script type="application/javascript">
+    SimpleTest.expectAssertions(0, 1);
+    function doTest()
+    {
+      document.body.appendChild(document.getElementById("mw_a"));
+      setTimeout(function() { ok(true, "no crash and assertions"); SimpleTest.finish(); } , 0);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1040735"
+     title="Bug 1040735 - DOM node reinsertion under anonymous content may trigger a11y child adoption">
+    Bug 1040735</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <marquee>
+    <div id="mw_a" style="visibility: hidden;">
+      <div style="visibility: visible;" id="mw_inside"></div>
+    </div>
+  </marquee>
+</body>
+</html>
