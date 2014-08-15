@@ -49,7 +49,7 @@ FPSCounter::Init()
 bool
 FPSCounter::CapturedFullInterval(TimeStamp aTimestamp) {
   TimeDuration duration = aTimestamp - mLastInterval;
-  return duration.ToSecondsSigDigits() >= kFpsDumpInterval;
+  return duration.ToSeconds() >= kFpsDumpInterval;
 }
 
 void
