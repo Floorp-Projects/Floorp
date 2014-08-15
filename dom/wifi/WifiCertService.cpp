@@ -16,7 +16,6 @@
 #include "cert.h"
 #include "certdb.h"
 #include "CryptoTask.h"
-#include "nsCxPusher.h"
 #include "nsIDOMFile.h"
 #include "nsIWifiService.h"
 #include "nsNetUtil.h"

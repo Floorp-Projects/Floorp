@@ -376,7 +376,7 @@ JSRuntime::~JSRuntime()
         profilingScripts = false;
 
         JS::PrepareForFullGC(this);
-        GC(this, GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
+        gc.gc(GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
     }
 
     /*

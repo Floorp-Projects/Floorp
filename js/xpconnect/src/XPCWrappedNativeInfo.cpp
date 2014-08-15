@@ -8,7 +8,6 @@
 
 #include "xpcprivate.h"
 #include "jswrapper.h"
-#include "nsCxPusher.h"
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/XPTInterfaceInfoManager.h"

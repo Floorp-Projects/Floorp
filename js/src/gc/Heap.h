@@ -102,6 +102,7 @@ struct Cell
     MOZ_ALWAYS_INLINE bool isMarked(uint32_t color = BLACK) const;
     MOZ_ALWAYS_INLINE bool markIfUnmarked(uint32_t color = BLACK) const;
     MOZ_ALWAYS_INLINE void unmark(uint32_t color) const;
+    MOZ_ALWAYS_INLINE void copyMarkBitsFrom(const Cell *src);
 
     inline JSRuntime *runtimeFromMainThread() const;
     inline JS::shadow::Runtime *shadowRuntimeFromMainThread() const;
@@ -761,6 +762,12 @@ struct ChunkBitmap
         *word &= ~mask;
     }
 
+    MOZ_ALWAYS_INLINE void copyMarkBit(Cell *dst, const Cell *src, uint32_t color) {
+        uintptr_t *word, mask;
+        getMarkWordAndMask(dst, color, &word, &mask);
+        *word = (*word & ~mask) | (src->isMarked(color) ? mask : 0);
+    }
+
     void clear() {
         memset((void *)bitmap, 0, sizeof(bitmap));
     }
@@ -1110,6 +1117,16 @@ Cell::unmark(uint32_t color) const
     JS_ASSERT(color != BLACK);
     AssertValidColor(this, color);
     chunk()->bitmap.unmark(this, color);
+}
+
+void
+Cell::copyMarkBitsFrom(const Cell *src)
+{
+    JS_ASSERT(isTenured());
+    JS_ASSERT(src->isTenured());
+    ChunkBitmap &bitmap = chunk()->bitmap;
+    bitmap.copyMarkBit(this, src, BLACK);
+    bitmap.copyMarkBit(this, src, GRAY);
 }
 
 JS::Zone *
