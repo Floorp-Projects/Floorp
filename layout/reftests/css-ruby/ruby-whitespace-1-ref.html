@@ -1,0 +1,35 @@
+<html>
+<meta charset="UTF-8">
+<head>
+<style>
+ruby { display: ruby; }
+rb   { display: ruby-base; white-space: nowrap; }
+rp   { display: none; }
+rt   { display: ruby-text; white-space: nowrap; font-size: 50%; }
+rbc  { display: ruby-base-container; }
+rtc  { display: ruby-text-container; }
+ruby, rb, rt, rbc, rtc { unicode-bidi: isolate; }
+</style>
+</head>
+<body>
+
+<!-- It's unclear what should happen to the whitespace between the </rtc> and
+     the <rbc>. A literal application of the spec suggests: it gets converted to
+     its own ruby segment, since it is "inter-segment" white space. But then
+     it's a segment containing only trailing whitespace, which gets removed.
+     This results in an empty segment with no whitespace, which doesn't seem
+     correct. //-->
+<ruby><rbc><rb><span>   </span></rb><rb><span>    </span></rb><rb
+  >Base three</rb></rbc><rtc><rt></rt><rt>Text two</rt></rtc><rtc
+  ><rt></rt></rtc><rbc><span>        </span></rbc><rbc><rb
+  >Segment two</rb></rbc><rtc><rt></rt></rtc></ruby>
+
+<ruby><rbc><rb><span>  </span></rb>Base two<rb><span>    </span></rb><rb></rb
+  ></rbc><rtc><rt><span>  </span></rt>Text two<rt><span>     </span></rt><rt
+  ></rt></rtc></ruby>
+
+<ruby><rbc><rb><span>   </span></rb><rb>Base two</rb></rbc><rtc><rt> </rt></rtc
+  ></ruby>
+
+</body>
+</html>
