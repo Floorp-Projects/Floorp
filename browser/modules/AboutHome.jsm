@@ -251,4 +251,13 @@ let AboutHome = {
       Cu.reportError("Error in AboutHome.sendAboutHomeData: " + x);
     });
   },
+
+  /**
+   * Focuses the search input in the page with the given message manager.
+   * @param  messageManager
+   *         The MessageManager object of the selected browser.
+   */
+  focusInput: function (messageManager) {
+    messageManager.sendAsyncMessage("AboutHome:FocusInput");
+  }
 };
