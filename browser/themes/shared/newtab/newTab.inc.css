@@ -74,12 +74,12 @@
 /* CELLS */
 .newtab-cell {
   background-color: rgba(255,255,255,.2);
-  border-radius: 12px;
+  border-radius: 8px;
 }
 
 .newtab-cell:empty {
   outline: 2px dashed #c1c1c1;
-  -moz-outline-radius: 12px;
+  -moz-outline-radius: 8px;
 }
 
 /* SITES */
@@ -93,7 +93,7 @@
 .newtab-cell:not([ignorehover]) > .newtab-site:hover,
 .newtab-site[dragged] {
   border: 2px solid #4a90e2;
-  box-shadow: 0 0 10px 3px #4cb1ff;
+  box-shadow: 0 0 6px 2px #4cb1ff;
   margin: -2px;
 }
 
@@ -104,7 +104,7 @@
 
 /* LINKS */
 .newtab-link {
-  border-radius: 10px;
+  border-radius: 6px;
 }
 
 /* THUMBNAILS */
