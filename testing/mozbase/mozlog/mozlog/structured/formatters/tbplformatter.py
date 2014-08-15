@@ -41,6 +41,8 @@ class TbplFormatter(BaseFormatter):
 
     def test_status(self, data):
         message = "- " + data["message"] if "message" in data else ""
+        if "stack" in data:
+            message += "\n%s" % data["stack"]
         if "expected" in data:
             failure_line = "TEST-UNEXPECTED-%s | %s | %s %s" % (
                 data["status"], self.id_str(data["test"]), data["subtest"],

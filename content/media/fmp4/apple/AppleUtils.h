@@ -16,7 +16,7 @@ struct AppleUtils {
   // Helper to retrieve properties from AudioFileStream objects.
   static nsresult GetProperty(AudioFileStreamID aAudioFileStream,
                               AudioFileStreamPropertyID aPropertyID,
-                              void *aData);
+                              void* aData);
 
   // Helper to set a string, string pair on a CFMutableDictionaryRef.
   static void SetCFDict(CFMutableDictionaryRef dict,
@@ -30,6 +30,12 @@ struct AppleUtils {
   static void SetCFDict(CFMutableDictionaryRef dict,
                         const char* key,
                         bool value);
+
+  // Helper to retrieve the best audio format available in the given
+  // audio stream.
+  // The basic format will be returned by default should an error occur.
+  static nsresult GetRichestDecodableFormat(
+    AudioFileStreamID aAudioFileStream, AudioStreamBasicDescription& aFormat);
 };
 
 // Wrapper class to call CFRelease on reference types

@@ -16,25 +16,29 @@ this.Marionette = function Marionette(scope, window, context, logObj, timeout,
   this.heartbeatCallback = heartbeatCallback;
   this.testName = testName;
   this.TEST_UNEXPECTED_FAIL = "TEST-UNEXPECTED-FAIL";
+  this.TEST_UNEXPECTED_PASS = "TEST-UNEXPECTED-PASS";
   this.TEST_PASS = "TEST-PASS";
   this.TEST_KNOWN_FAIL = "TEST-KNOWN-FAIL";
 }
 
 Marionette.prototype = {
-  exports: ['ok', 'is', 'isnot', 'log', 'getLogs', 'generate_results', 'waitFor',
+  exports: ['ok', 'is', 'isnot', 'todo', 'log', 'getLogs', 'generate_results', 'waitFor',
             'runEmulatorCmd', 'runEmulatorShell', 'TEST_PASS', 'TEST_KNOWN_FAIL',
-            'TEST_UNEXPECTED_FAIL'],
+            'TEST_UNEXPECTED_FAIL', 'TEST_UNEXPECTED_PASS'],
 
-  ok: function Marionette__ok(condition, name, passString, failString, diag) {
-    this.heartbeatCallback();
-    if (typeof(diag) == "undefined") {
-      diag = this.repr(condition) + " was " + !!condition + ", expected true";
-    }
-    let test = {'result': !!condition, 'name': name, 'diag': diag};
+  addTest: function Marionette__addTest(condition, name, passString, failString, diag, state) {
+
+    let test = {'result': !!condition, 'name': name, 'diag': diag, 'state': state};
     this.logResult(test,
                    typeof(passString) == "undefined" ? this.TEST_PASS : passString,
                    typeof(failString) == "undefined" ? this.TEST_UNEXPECTED_FAIL : failString);
     this.tests.push(test);
+  },
+
+  ok: function Marionette__ok(condition, name, passString, failString) {
+    this.heartbeatCallback();
+    let diag = this.repr(condition) + " was " + !!condition + ", expected true";
+    this.addTest(condition, name, passString, failString, diag);
   },
 
   is: function Marionette__is(a, b, name, passString, failString) {
@@ -42,7 +46,7 @@ Marionette.prototype = {
     let pass = (a == b);
     let diag = pass ? this.repr(a) + " should equal " + this.repr(b)
                     : "got " + this.repr(a) + ", expected " + this.repr(b);
-    this.ok(pass, name, passString, failString, diag);
+    this.addTest(pass, name, passString, failString, diag);
   },
 
   isnot: function Marionette__isnot (a, b, name, passString, failString) {
@@ -50,7 +54,18 @@ Marionette.prototype = {
     let pass = (a != b);
     let diag = pass ? this.repr(a) + " should not equal " + this.repr(b)
                     : "didn't expect " + this.repr(a) + ", but got it";
-    this.ok(pass, name, passString, failString, diag);
+    this.addTest(pass, name, passString, failString, diag);
+  },
+
+  todo: function Marionette__todo(condition, name, passString, failString) {
+    this.heartbeatCallback();
+    let diag = this.repr(condition) + " was expected false";
+    this.addTest(!condition,
+                 name,
+                 typeof(passString) == "undefined" ? this.TEST_KNOWN_FAIL : passString,
+                 typeof(failString) == "undefined" ? this.TEST_UNEXPECTED_FAIL : failString,
+                 diag,
+                 "todo");
   },
 
   log: function Marionette__log(msg, level) {
@@ -71,21 +86,32 @@ Marionette.prototype = {
   generate_results: function Marionette__generate_results() {
     this.heartbeatCallback();
     let passed = 0;
-    let failed = 0;
     let failures = [];
+    let expectedFailures = [];
+    let unexpectedSuccesses = [];
     for (let i in this.tests) {
+      let isTodo = (this.tests[i].state == "todo");
       if(this.tests[i].result) {
-        passed++;
+        if (isTodo) {
+          expectedFailures.push({'name': this.tests[i].name, 'diag': this.tests[i].diag});
+        }
+        else {
+          passed++;
+        }
       }
       else {
-        failed++;
-        failures.push({'name': this.tests[i].name,
-                       'diag': this.tests[i].diag});
+        if (isTodo) {
+          unexpectedSuccesses.push({'name': this.tests[i].name, 'diag': this.tests[i].diag});
+        }
+        else {
+          failures.push({'name': this.tests[i].name, 'diag': this.tests[i].diag});
+        }
       }
     }
     // Reset state in case this object is reused for more tests.
     this.tests = [];
-    return {"passed": passed, "failed": failed, "failures": failures};
+    return {"passed": passed, "failures": failures, "expectedFailures": expectedFailures,
+            "unexpectedSuccesses": unexpectedSuccesses};
   },
 
   logToFile: function Marionette__logToFile(file) {

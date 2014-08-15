@@ -54,10 +54,10 @@ AppleATDecoder::~AppleATDecoder()
 }
 
 static void
-_MetadataCallback(void *aDecoder,
+_MetadataCallback(void* aDecoder,
                   AudioFileStreamID aStream,
                   AudioFileStreamPropertyID aProperty,
-                  UInt32 *aFlags)
+                  UInt32* aFlags)
 {
   LOG("AppleATDecoder metadata callback");
   AppleATDecoder* decoder = static_cast<AppleATDecoder*>(aDecoder);
@@ -65,10 +65,11 @@ _MetadataCallback(void *aDecoder,
 }
 
 static void
-_SampleCallback(void *aDecoder,
-                UInt32 aNumBytes, UInt32 aNumPackets,
-                const void *aData,
-                AudioStreamPacketDescription *aPackets)
+_SampleCallback(void* aDecoder,
+                UInt32 aNumBytes,
+                UInt32 aNumPackets,
+                const void* aData,
+                AudioStreamPacketDescription* aPackets)
 {
   LOG("AppleATDecoder sample callback %u bytes %u packets",
       aNumBytes, aNumPackets);
@@ -170,8 +171,8 @@ struct PassthroughUserData {
   AppleATDecoder* mDecoder;
   UInt32 mNumPackets;
   UInt32 mDataSize;
-  const void *mData;
-  AudioStreamPacketDescription *mPacketDesc;
+  const void* mData;
+  AudioStreamPacketDescription* mPacketDesc;
   bool mDone;
 };
 
@@ -181,12 +182,12 @@ const uint32_t kNeedMoreData = 'MOAR';
 
 static OSStatus
 _PassthroughInputDataCallback(AudioConverterRef aAudioConverter,
-                              UInt32 *aNumDataPackets /* in/out */,
-                              AudioBufferList *aData /* in/out */,
-                              AudioStreamPacketDescription **aPacketDesc,
-                              void *aUserData)
+                              UInt32* aNumDataPackets /* in/out */,
+                              AudioBufferList* aData /* in/out */,
+                              AudioStreamPacketDescription** aPacketDesc,
+                              void* aUserData)
 {
-  PassthroughUserData *userData = (PassthroughUserData *)aUserData;
+  PassthroughUserData* userData = (PassthroughUserData*)aUserData;
   if (userData->mDone) {
     // We make sure this callback is run _once_, with all the data we received
     // from |AudioFileStreamParseBytes|. When we return an error, the decoder
@@ -207,7 +208,7 @@ _PassthroughInputDataCallback(AudioConverterRef aAudioConverter,
 
   aData->mBuffers[0].mNumberChannels = userData->mDecoder->mConfig.channel_count;
   aData->mBuffers[0].mDataByteSize = userData->mDataSize;
-  aData->mBuffers[0].mData = const_cast<void *>(userData->mData);
+  aData->mBuffers[0].mData = const_cast<void*>(userData->mData);
 
   return noErr;
 }
@@ -280,9 +281,9 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
     LOG("pushed audio at time %lfs; duration %lfs\n",
         (double)time / USECS_PER_S, (double)duration / USECS_PER_S);
 
-    AudioData *audio = new AudioData(mSamplePosition,
+    AudioData* audio = new AudioData(mSamplePosition,
                                      time, duration, numFrames,
-                                     reinterpret_cast<AudioDataValue *>(decoded.forget()),
+                                     reinterpret_cast<AudioDataValue*>(decoded.forget()),
                                      channels, rate);
     mCallback->Output(audio);
     mHaveOutput = true;
@@ -302,9 +303,14 @@ void
 AppleATDecoder::SetupDecoder()
 {
   AudioStreamBasicDescription inputFormat;
-  // Fill in the input format description from the stream.
-  AppleUtils::GetProperty(mStream,
-      kAudioFileStreamProperty_DataFormat, &inputFormat);
+
+  mHaveOutput = false;
+
+  nsresult rv = AppleUtils::GetRichestDecodableFormat(mStream, inputFormat);
+  if (NS_FAILED(rv)) {
+    mCallback->Error();
+    return;
+  }
 
   // Fill in the output format manually.
   PodZero(&mOutputFormat);
@@ -324,13 +330,13 @@ AppleATDecoder::SetupDecoder()
   mOutputFormat.mBytesPerPacket = mOutputFormat.mBytesPerFrame
         = mOutputFormat.mChannelsPerFrame * mOutputFormat.mBitsPerChannel / 8;
 
-  OSStatus rv = AudioConverterNew(&inputFormat, &mOutputFormat, &mConverter);
-  if (rv) {
+  OSStatus status =
+    AudioConverterNew(&inputFormat, &mOutputFormat, &mConverter);
+  if (status) {
     LOG("Error %d constructing AudioConverter", rv);
     mConverter = nullptr;
     mCallback->Error();
   }
-  mHaveOutput = false;
 }
 
 void
