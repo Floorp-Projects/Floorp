@@ -16,18 +16,18 @@
 
 namespace mozilla {
 
-class EMEAACDecoder : public MediaDataDecoder
-                    , public GMPAudioDecoderProxyCallback
+class EMEAudioDecoder : public MediaDataDecoder
+                      , public GMPAudioDecoderProxyCallback
 {
   typedef mp4_demuxer::MP4Sample MP4Sample;
   typedef mp4_demuxer::AudioDecoderConfig AudioDecoderConfig;
 public:
-  EMEAACDecoder(CDMProxy* aProxy,
-                const AudioDecoderConfig& aConfig,
-                MediaTaskQueue* aTaskQueue,
-                MediaDataDecoderCallback* aCallback);
+  EMEAudioDecoder(CDMProxy* aProxy,
+                  const AudioDecoderConfig& aConfig,
+                  MediaTaskQueue* aTaskQueue,
+                  MediaDataDecoderCallback* aCallback);
 
-  ~EMEAACDecoder();
+  ~EMEAudioDecoder();
 
   // MediaDataDecoder implementation.
   virtual nsresult Init() MOZ_OVERRIDE;
@@ -51,7 +51,7 @@ private:
 
   class DeliverSample : public nsRunnable {
   public:
-    DeliverSample(EMEAACDecoder* aDecoder,
+    DeliverSample(EMEAudioDecoder* aDecoder,
                   mp4_demuxer::MP4Sample* aSample)
       : mDecoder(aDecoder)
       , mSample(aSample)
@@ -62,13 +62,13 @@ private:
       return NS_OK;
     }
   private:
-    nsRefPtr<EMEAACDecoder> mDecoder;
+    nsRefPtr<EMEAudioDecoder> mDecoder;
     nsAutoPtr<mp4_demuxer::MP4Sample> mSample;
   };
 
   class InitTask : public nsRunnable {
   public:
-    InitTask(EMEAACDecoder* aDecoder)
+    InitTask(EMEAudioDecoder* aDecoder)
       : mDecoder(aDecoder)
     {}
     NS_IMETHOD Run() {
@@ -76,7 +76,7 @@ private:
       return NS_OK;
     }
     nsresult mResult;
-    EMEAACDecoder* mDecoder;
+    EMEAudioDecoder* mDecoder;
   };
 
   nsresult GmpInit();
