@@ -299,7 +299,7 @@ class FullParseHandler
         return true;
     }
 
-    bool addAccessorPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *fn, JSOp op)
+    bool addMethodDefinition(ParseNode *literal, ParseNode *name, ParseNode *fn, JSOp op)
     {
         JS_ASSERT(literal->isArity(PN_LIST));
         literal->pn_xflags |= PNX_NONCONST;
