@@ -5,8 +5,8 @@ import java.util.HashMap;
 
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.SuggestClient;
 import org.mozilla.gecko.home.BrowserSearch;
-import org.mozilla.gecko.home.SuggestClient;
 
 import android.app.Activity;
 import android.support.v4.app.Fragment;
