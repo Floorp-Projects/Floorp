@@ -1975,8 +1975,6 @@ class Mochitest(MochitestUtilsMixin):
       """record last test on harness"""
       if message['action'] == 'test_start':
         self.harness.lastTestSeen = message['test']
-      elif message['action'] == 'log' and 'TEST-START' in message['message'] and '|' in message['message']:
-        self.harness.lastTestSeen = message['message'].split("|")[1].strip()
       return message
 
     def dumpScreenOnTimeout(self, message):
@@ -1986,18 +1984,10 @@ class Mochitest(MochitestUtilsMixin):
           and 'message' in message
           and "Test timed out" in message['message']):
         self.harness.dumpScreen(self.utilityPath)
-      elif (not self.dump_screen_on_fail
-            and self.dump_screen_on_timeout
-            and message['action'] == 'log'
-            and 'TEST-UNEXPECTED-FAIL' in message['message']
-            and 'Test timed out' in message['message']):
-        self.harness.dumpScreen(self.utilityPath)
       return message
 
     def dumpScreenOnFail(self, message):
       if self.dump_screen_on_fail and 'expected' in message and message['status'] == 'FAIL':
-        self.harness.dumpScreen(self.utilityPath)
-      elif self.dump_screen_on_fail and message['action'] == 'log' and 'TEST-UNEXPECTED-FAIL' in message['message']:
         self.harness.dumpScreen(self.utilityPath)
       return message
 
