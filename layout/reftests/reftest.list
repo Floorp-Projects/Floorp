@@ -91,7 +91,8 @@ include css-parsing/reftest.list
 include css-placeholder/reftest.list
 
 # css ruby
-include css-ruby/reftest.list
+# (Skipping on B2G because of timeouts there; see bug 1054383)
+skip-if(B2G) include css-ruby/reftest.list
 
 # css required
 include css-required/reftest.list
