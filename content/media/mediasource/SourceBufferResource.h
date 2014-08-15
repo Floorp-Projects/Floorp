@@ -65,8 +65,8 @@ private:
   };
 
   class ResourceQueueDeallocator : public nsDequeFunctor {
-    virtual void* operator() (void* aObject) {
-      delete static_cast<ResourceItem*>(aObject);
+    virtual void* operator() (void* anObject) {
+      delete static_cast<ResourceItem*>(anObject);
       return nullptr;
     }
   };
