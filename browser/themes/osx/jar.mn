@@ -43,17 +43,6 @@ browser.jar:
   skin/classic/browser/identity-icons-https-mixed-display.png
   skin/classic/browser/identity-icons-https-mixed-display@2x.png
   skin/classic/browser/Info.png
-* skin/classic/browser/in-content/common.css                (in-content/common.css)
-  skin/classic/browser/in-content/check.png                 (../shared/in-content/check.png)
-  skin/classic/browser/in-content/check@2x.png              (../shared/in-content/check@2x.png)
-  skin/classic/browser/in-content/dropdown.png              (../shared/in-content/dropdown.png)
-  skin/classic/browser/in-content/dropdown@2x.png           (../shared/in-content/dropdown@2x.png)
-  skin/classic/browser/in-content/dropdown-disabled.png     (../shared/in-content/dropdown-disabled.png)
-  skin/classic/browser/in-content/dropdown-disabled@2x.png  (../shared/in-content/dropdown-disabled@2x.png)
-  skin/classic/browser/in-content/help-glyph.png            (../shared/in-content/help-glyph.png)
-  skin/classic/browser/in-content/help-glyph@2x.png         (../shared/in-content/help-glyph@2x.png)
-  skin/classic/browser/in-content/sorter.png                (../shared/in-content/sorter.png)
-  skin/classic/browser/in-content/sorter@2x.png             (../shared/in-content/sorter@2x.png)
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/keyhole-circle@2x.png
   skin/classic/browser/KUI-background.png

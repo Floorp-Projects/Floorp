@@ -614,6 +614,29 @@ this.MozLoopService = {
   },
 
   /**
+   * Return any preference under "loop." that's coercible to a character
+   * preference.
+   *
+   * @param {String} prefName The name of the pref without the preceding
+   * "loop."
+   *
+   * Any errors thrown by the Mozilla pref API are logged to the console
+   * and cause null to be returned. This includes the case of the preference
+   * not being found.
+   *
+   * @return {String} on success, null on error
+   */
+  getLoopBoolPref: function(prefName) {
+    try {
+      return Services.prefs.getBoolPref("loop." + prefName);
+    } catch (ex) {
+      console.log("getLoopBoolPref had trouble getting " + prefName +
+        "; exception: " + ex);
+      return null;
+    }
+  },
+
+  /**
    * Performs a hawk based request to the loop server.
    *
    * @param {String} path The path to make the request to.

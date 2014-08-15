@@ -58,7 +58,7 @@ function spawnTest() {
     "Empty message hides even when loading node while open.");
   ok(isVisible($("#web-audio-editor-tabs")),
     "Switches to tab view when loading node while open.");
-  is($("#web-audio-inspector-title").value, "OscillatorNode (" + nodeIds[1] + ")",
+  is($("#web-audio-inspector-title").value, "Oscillator",
     "Inspector title updates when loading node while open.");
 
   yield teardown(panel);
