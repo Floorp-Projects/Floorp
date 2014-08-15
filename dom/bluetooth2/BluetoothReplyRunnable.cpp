@@ -7,6 +7,7 @@
 #include "base/basictypes.h"
 #include "BluetoothReplyRunnable.h"
 #include "DOMRequest.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/Promise.h"
 #include "nsServiceManagerUtils.h"

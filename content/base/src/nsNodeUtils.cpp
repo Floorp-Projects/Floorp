@@ -6,7 +6,6 @@
 
 #include "nsNodeUtils.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsINode.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"

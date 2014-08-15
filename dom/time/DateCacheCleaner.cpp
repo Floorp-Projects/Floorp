@@ -6,10 +6,10 @@
 #include "DateCacheCleaner.h"
 
 #include "jsapi.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Hal.h"
 #include "mozilla/StaticPtr.h"
-#include "nsCxPusher.h"
 
 using namespace mozilla::hal;
 

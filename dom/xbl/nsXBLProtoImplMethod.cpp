@@ -14,7 +14,6 @@
 #include "nsXBLProtoImplMethod.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "xpcpublic.h"
