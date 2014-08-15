@@ -7,9 +7,9 @@
 #include <nsThreadUtils.h>
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsXULAppAPI.h"
-#include "nsCxPusher.h"
 
 #define NS_NETWORKWORKER_CID \
   { 0x6df093e1, 0x8127, 0x4fa7, {0x90, 0x13, 0xa3, 0xaa, 0xa7, 0x79, 0xbb, 0xdd} }

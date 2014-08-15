@@ -18,7 +18,6 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsTArray.h"

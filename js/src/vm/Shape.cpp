@@ -248,6 +248,20 @@ ShapeTable::search(jsid id, bool adding)
     return nullptr;
 }
 
+#ifdef JSGC_COMPACTING
+void
+ShapeTable::fixupAfterMovingGC()
+{
+    int log2 = HASH_BITS - hashShift;
+    uint32_t size = JS_BIT(log2);
+    for (HashNumber i = 0; i < size; i++) {
+        Shape *shape = SHAPE_FETCH(&entries[i]);
+        if (shape && IsForwarded(shape))
+            SHAPE_STORE_PRESERVING_COLLISION(&entries[i], Forwarded(shape));
+    }
+}
+#endif
+
 bool
 ShapeTable::change(int log2Delta, ThreadSafeContext *cx)
 {
@@ -428,6 +442,11 @@ bool
 js::ObjectImpl::toDictionaryMode(ThreadSafeContext *cx)
 {
     JS_ASSERT(!inDictionaryMode());
+
+#ifdef JSGC_COMPACTING
+    // TODO: This crashes if we run a compacting GC here.
+    js::AutoDisableCompactingGC nogc(zone()->runtimeFromAnyThread());
+#endif
 
     /* We allocate the shapes from cx->compartment(), so make sure it's right. */
     JS_ASSERT(cx->isInsideCurrentCompartment(this));
@@ -1523,14 +1542,20 @@ BaseShape::assertConsistency()
 void
 JSCompartment::sweepBaseShapeTable()
 {
-    gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
-                          gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
+    GCRuntime &gc = runtimeFromMainThread()->gc;
+    gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
+                               gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
 
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
             UnownedBaseShape *base = e.front().unbarrieredGet();
-            if (IsBaseShapeAboutToBeFinalized(&base))
+            if (IsBaseShapeAboutToBeFinalized(&base)) {
                 e.removeFront();
+            } else if (base != e.front()) {
+                StackBaseShape sbase(base);
+                ReadBarriered<UnownedBaseShape *> b(base);
+                e.rekeyFront(&sbase, b);
+            }
         }
     }
 }
@@ -1652,7 +1677,10 @@ class InitialShapeSetRef : public BufferableRef
     }
 };
 
-#ifdef JS_GC_ZEAL
+#endif // JSGC_GENERATIONAL
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+
 void
 JSCompartment::checkInitialShapesTableAfterMovingGC()
 {
@@ -1669,9 +1697,12 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
         TaggedProto proto = entry.proto;
         Shape *shape = entry.shape.get();
 
-        JS_ASSERT_IF(proto.isObject(), !IsInsideNursery(proto.toObject()));
-        JS_ASSERT_IF(shape->getObjectParent(), !IsInsideNursery(shape->getObjectParent()));
-        JS_ASSERT_IF(shape->getObjectMetadata(), !IsInsideNursery(shape->getObjectMetadata()));
+        if (proto.isObject())
+            CheckGCThingAfterMovingGC(proto.toObject());
+        if (shape->getObjectParent())
+            CheckGCThingAfterMovingGC(shape->getObjectParent());
+        if (shape->getObjectMetadata())
+            CheckGCThingAfterMovingGC(shape->getObjectMetadata());
 
         InitialShapeEntry::Lookup lookup(shape->getObjectClass(),
                                          proto,
@@ -1683,9 +1714,8 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
         JS_ASSERT(ptr.found() && &*ptr == &e.front());
     }
 }
-#endif
 
-#endif
+#endif // JSGC_HASH_TABLE_CHECKS
 
 /* static */ Shape *
 EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
@@ -1810,15 +1840,18 @@ EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleOb
 void
 JSCompartment::sweepInitialShapeTable()
 {
-    gcstats::AutoPhase ap(runtimeFromMainThread()->gc.stats,
-                          gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
+    GCRuntime &gc = runtimeFromMainThread()->gc;
+    gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
+                               gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
 
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
             const InitialShapeEntry &entry = e.front();
             Shape *shape = entry.shape.unbarrieredGet();
             JSObject *proto = entry.proto.raw();
-            if (IsShapeAboutToBeFinalized(&shape) || (entry.proto.isObject() && IsObjectAboutToBeFinalized(&proto))) {
+            if (IsShapeAboutToBeFinalized(&shape) ||
+                (entry.proto.isObject() && IsObjectAboutToBeFinalized(&proto)))
+            {
                 e.removeFront();
             } else {
 #ifdef DEBUG
@@ -1835,6 +1868,47 @@ JSCompartment::sweepInitialShapeTable()
         }
     }
 }
+
+#ifdef JSGC_COMPACTING
+void
+JSCompartment::fixupInitialShapeTable()
+{
+    if (!initialShapes.initialized())
+        return;
+
+    for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
+        InitialShapeEntry entry = e.front();
+        bool needRekey = false;
+        if (IsForwarded(entry.shape.get())) {
+            entry.shape.set(Forwarded(entry.shape.get()));
+            needRekey = true;
+        }
+        if (entry.proto.isObject() && IsForwarded(entry.proto.toObject())) {
+            entry.proto = TaggedProto(Forwarded(entry.proto.toObject()));
+            needRekey = true;
+        }
+        JSObject *parent = entry.shape->getObjectParent();
+        if (parent) {
+            parent = MaybeForwarded(parent);
+            needRekey = true;
+        }
+        JSObject *metadata = entry.shape->getObjectMetadata();
+        if (metadata) {
+            metadata = MaybeForwarded(metadata);
+            needRekey = true;
+        }
+        if (needRekey) {
+            InitialShapeEntry::Lookup relookup(entry.shape->getObjectClass(),
+                                               entry.proto,
+                                               parent,
+                                               metadata,
+                                               entry.shape->numFixedSlots(),
+                                               entry.shape->getObjectFlags());
+            e.rekeyFront(relookup, entry);
+        }
+    }
+}
+#endif // JSGC_COMPACTING
 
 void
 AutoRooterGetterSetter::Inner::trace(JSTracer *trc)

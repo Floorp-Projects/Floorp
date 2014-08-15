@@ -4,15 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "assembler/wtf/Platform.h"
-
-/* SSE checks only make sense on Intel platforms. */
-#if WTF_CPU_X86 || WTF_CPU_X86_64
-
 #include "assembler/assembler/MacroAssemblerX86Common.h"
 
-#if WTF_COMPILER_MSVC
-#if WTF_CPU_X86_64
+#include "assembler/wtf/Platform.h"
+
+#ifdef _MSC_VER
+#ifdef JS_CODEGEN_X64
 /* for __cpuid */
 #include <intrin.h>
 #endif
@@ -33,8 +30,8 @@ void MacroAssemblerX86Common::setSSECheckState()
     // not MSVC or GCC we will read this as SSE2 not present.
     int flags_edx = 0;
     int flags_ecx = 0;
-#if WTF_COMPILER_MSVC
-#if WTF_CPU_X86_64
+#ifdef _MSC_VER
+#ifdef JS_CODEGEN_X64
     int cpuinfo[4];
 
     __cpuid(cpuinfo, 1);
@@ -48,8 +45,8 @@ void MacroAssemblerX86Common::setSSECheckState()
         mov flags_edx, edx;
     }
 #endif
-#elif WTF_COMPILER_GCC
-#if WTF_CPU_X86_64
+#elif defined(__GNUC__)
+#ifdef JS_CODEGEN_X64
     asm (
          "movl $0x1, %%eax;"
          "cpuid;"
@@ -67,32 +64,6 @@ void MacroAssemblerX86Common::setSSECheckState()
          : "=c" (flags_ecx), "=d" (flags_edx)
          :
          : "%eax"
-         );
-#endif
-#elif WTF_COMPILER_SUNCC
-#if WTF_CPU_X86_64
-    asm (
-         "movl $0x1, %%eax;"
-         "pushq %%rbx;"
-         "cpuid;"
-         "popq %%rbx;"
-         "movl %%ecx, (%rsi);"
-         "movl %%edx, (%rdi);"
-         :
-         : "S" (&flags_ecx), "D" (&flags_edx)
-         : "%eax", "%ecx", "%edx"
-         );
-#else
-    asm (
-         "movl $0x1, %eax;"
-         "pushl %ebx;"
-         "cpuid;"
-         "popl %ebx;"
-         "movl %ecx, (%esi);"
-         "movl %edx, (%edi);"
-         :
-         : "S" (&flags_ecx), "D" (&flags_edx)
-         : "%eax", "%ecx", "%edx"
          );
 #endif
 #endif
@@ -133,6 +104,3 @@ void MacroAssemblerX86Common::setSSECheckState()
         s_sseCheckState = HasSSE2;
 #endif
 }
-
-#endif /* WTF_CPU_X86 || WTF_CPU_X86_64 */
-
