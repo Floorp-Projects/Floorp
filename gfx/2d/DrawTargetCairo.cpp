@@ -68,7 +68,14 @@ public:
     MOZ_ASSERT(cairo_status(mCtx) || dt->GetTransform() == GetTransform());
   }
 
-  ~AutoPrepareForDrawing() { cairo_restore(mCtx); }
+  ~AutoPrepareForDrawing()
+  {
+    cairo_restore(mCtx);
+    cairo_status_t status = cairo_status(mCtx);
+    if (status) {
+      gfxWarning() << "DrawTargetCairo context in error state: " << cairo_status_to_string(status) << "(" << status << ")";
+    }
+  }
 
 private:
 #ifdef DEBUG
@@ -1289,6 +1296,13 @@ DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize&
   mSurface = aSurface;
   mSize = aSize;
   mFormat = aFormat ? *aFormat : CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
+
+  // Cairo image surface have a bug where they will allocate a mask surface (for clipping)
+  // the size of the clip extents, and don't take the surface extents into account.
+  // Add a manual clip to the surface extents to prevent this.
+  cairo_new_path(mContext);
+  cairo_rectangle(mContext, 0, 0, mSize.width, mSize.height);
+  cairo_clip(mContext);
 
   if (mFormat == SurfaceFormat::B8G8R8A8 ||
       mFormat == SurfaceFormat::R8G8B8A8) {
