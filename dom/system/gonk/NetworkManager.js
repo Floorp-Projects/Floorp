@@ -463,6 +463,41 @@ NetworkManager.prototype = {
     return Promise.all(promises);
   },
 
+  isValidatedNetwork: function(network) {
+    let isValid = false;
+    try {
+      isValid = (this.getNetworkId(network) in this.networkInterfaces);
+    } catch (e) {
+      debug("Invalid network interface: " + e);
+    }
+
+    return isValid;
+  },
+
+  addHostRoute: function(network, host) {
+    if (!this.isValidatedNetwork(network)) {
+      return Promise.reject("Invalid network interface.");
+    }
+
+    return this.resolveHostname(host)
+      .then((ipAddresses) => this._updateRoutes(true,
+                                                ipAddresses,
+                                                network.name,
+                                                network.getGateways()));
+  },
+
+  removeHostRoute: function(network, host) {
+    if (!this.isValidatedNetwork(network)) {
+      return Promise.reject("Invalid network interface.");
+    }
+
+    return this.resolveHostname(host)
+      .then((ipAddresses) => this._updateRoutes(false,
+                                                ipAddresses,
+                                                network.name,
+                                                network.getGateways()));
+  },
+
 #ifdef MOZ_B2G_RIL
   isNetworkTypeSecondaryMobile: function(type) {
     return (type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
