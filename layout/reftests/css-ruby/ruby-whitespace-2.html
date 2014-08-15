@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<head>
+<style>
+ruby { display: ruby; }
+rb   { display: ruby-base; white-space: nowrap; }
+rp   { display: none; }
+rt   { display: ruby-text; white-space: nowrap; font-size: 50%; }
+rbc  { display: ruby-base-container; }
+rtc  { display: ruby-text-container; }
+ruby, rb, rt, rbc, rtc { unicode-bidi: isolate; }
+</style>
+</head>
+
+<body>
+
+abcd<rbc> BASE</rbc><rt>TEXT</rt>
+
+abcd<rbc> <span>BASE</span></rbc><rt>TEXT</rt>
+
+abcd<rbc><span> BASE</span></rbc><rt>TEXT</rt>
+
+<rbc> </rbc>
+
+</body>
+</html>
