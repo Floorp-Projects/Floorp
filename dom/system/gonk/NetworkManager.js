@@ -522,6 +522,7 @@ NetworkManager.prototype = {
 
     return this._updateRoutes(false, hosts, network.name, network.getGateways());
   },
+#endif
 
   selectGateway: function(gateways, host) {
     for (let i = 0; i < gateways.length; i++) {
@@ -534,6 +535,7 @@ NetworkManager.prototype = {
     return null;
   },
 
+#ifdef MOZ_B2G_RIL
   setSecondaryDefaultRoute: function(network) {
     let gateways = network.getGateways();
     for (let i = 0; i < gateways.length; i++) {
@@ -654,7 +656,6 @@ NetworkManager.prototype = {
     }
   },
 
-#ifdef MOZ_B2G_RIL
   resolveHostname: function(hostname) {
     // Sanity check for null, undefined and empty string... etc.
     if (!hostname) {
@@ -695,7 +696,6 @@ NetworkManager.prototype = {
 
     return deferred.promise;
   },
-#endif
 
   convertConnectionType: function(network) {
     // If there is internal interface change (e.g., MOBILE_MMS, MOBILE_SUPL),
