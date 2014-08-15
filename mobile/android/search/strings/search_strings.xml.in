@@ -4,10 +4,17 @@
     <string name="search_for_something">&search_for_something;</string>
 
     <string name="search_pref_title">&search_pref_title;</string>
-    <string name="search_pref_clear_history_confirmation">&search_pref_clear_history_confirmation;</string>
-    <string name="search_pref_clear_history_dialog_message">&search_pref_clear_history_dialog_message;</string>
-    <string name="search_pref_clear_history_title">&search_pref_clear_history_title;</string>
     <string name="search_pref_button_content_description">&search_pref_button_content_description;</string>
+
+    <string name="pref_clearHistory_confirmation">&pref_clearHistory_confirmation;</string>
+    <string name="pref_clearHistory_dialogMessage">&pref_clearHistory_dialogMessage;</string>
+    <string name="pref_clearHistory_title">&pref_clearHistory_title;</string>
+
+    <string name="pref_searchProvider_title">&pref_searchProvider_title;</string>
+
+    <string name="pref_searchProvider_bing">&pref_searchProvider_bing;</string>
+    <string name="pref_searchProvider_google">&pref_searchProvider_google;</string>
+    <string name="pref_searchProvider_yahoo">&pref_searchProvider_yahoo;</string>
 
     <string name="search_widget_name">&search_app_name;</string>
     <string name="search_widget_button_label">&search_widget_button_label;</string>

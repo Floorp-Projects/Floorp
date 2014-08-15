@@ -4,10 +4,7 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
-        android:state_focused="true"
-        android:drawable="@drawable/edit_text_focused"/>
-
-    <item android:drawable="@android:color/transparent"/>
+    <item android:state_focused="true" android:drawable="@drawable/edit_text_focused"/>
+    <item android:drawable="@drawable/edit_text_default"/>
 
 </selector>
