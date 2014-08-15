@@ -336,9 +336,14 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   if (mResponseHead)
     SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
-  rv = ApplyContentConversions();
-  if (NS_FAILED(rv))
+  nsCOMPtr<nsIStreamListener> listener;
+  rv = DoApplyContentConversions(mListener, getter_AddRefs(listener),
+                                 mListenerContext);
+  if (NS_FAILED(rv)) {
     Cancel(rv);
+  } else if (listener) {
+    mListener = listener;
+  }
 
   mSelfAddr = selfAddr;
   mPeerAddr = peerAddr;

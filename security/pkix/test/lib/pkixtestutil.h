@@ -26,7 +26,6 @@
 #define mozilla_pkix_test__pkixtestutils_h
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include "cert.h"
 #include "keyhi.h"
@@ -36,6 +35,21 @@
 #include "seccomon.h"
 
 namespace mozilla { namespace pkix { namespace test {
+
+// XXX: Ideally, we should define this instead:
+//
+//   template <typename T, std::size_t N>
+//   constexpr inline std::size_t
+//   ArrayLength(T (&)[N])
+//   {
+//     return N;
+//   }
+//
+// However, we don't because not all supported compilers support constexpr,
+// and we need to calculate array lengths in static_assert sometimes.
+//
+// XXX: Evaluates its argument twice
+#define MOZILLA_PKIX_ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 
 class TestInput : public Input
 {
@@ -50,11 +64,6 @@ public:
 namespace {
 
 inline void
-fclose_void(FILE* file) {
-  (void) fclose(file);
-}
-
-inline void
 SECITEM_FreeItem_true(SECItem* item)
 {
   SECITEM_FreeItem(item, true);
@@ -64,14 +73,11 @@ SECITEM_FreeItem_true(SECItem* item)
 
 typedef ScopedPtr<CERTCertificate, CERT_DestroyCertificate> ScopedCERTCertificate;
 typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
-typedef mozilla::pkix::ScopedPtr<FILE, fclose_void> ScopedFILE;
 typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
 typedef mozilla::pkix::ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
   ScopedSECKEYPublicKey;
 typedef mozilla::pkix::ScopedPtr<SECKEYPrivateKey, SECKEY_DestroyPrivateKey>
   ScopedSECKEYPrivateKey;
-
-FILE* OpenFile(const char* dir, const char* filename, const char* mode);
 
 extern const PRTime ONE_DAY;
 
@@ -222,10 +228,7 @@ public:
 };
 
 // The return value, if non-null, is owned by the arena in the context
-// and MUST NOT be freed.
-// This function does its best to respect the NSPR error code convention
-// (that is, if it returns null, calling PR_GetError() will return the
-// error of the failed operation). However, this is not guaranteed.
+// and MUST NOT be freed. A null return value indicates an error occurred.
 SECItem* CreateEncodedOCSPResponse(OCSPResponseContext& context);
 
 } } } // namespace mozilla::pkix::test

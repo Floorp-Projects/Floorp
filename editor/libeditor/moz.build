@@ -4,4 +4,43 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['base', 'text', 'html']
+DIRS += ['text', 'html']
+
+TEST_DIRS += ['tests']
+
+UNIFIED_SOURCES += [
+    'ChangeAttributeTxn.cpp',
+    'ChangeCSSInlineStyleTxn.cpp',
+    'CreateElementTxn.cpp',
+    'DeleteNodeTxn.cpp',
+    'DeleteRangeTxn.cpp',
+    'DeleteTextTxn.cpp',
+    'EditAggregateTxn.cpp',
+    'EditTxn.cpp',
+    'IMETextTxn.cpp',
+    'InsertElementTxn.cpp',
+    'InsertTextTxn.cpp',
+    'JoinElementTxn.cpp',
+    'nsEditor.cpp',
+    'nsEditorCommands.cpp',
+    'nsEditorController.cpp',
+    'nsEditorEventListener.cpp',
+    'nsEditorUtils.cpp',
+    'nsSelectionState.cpp',
+    'nsStyleSheetTxns.cpp',
+    'PlaceholderTxn.cpp',
+    'SetDocTitleTxn.cpp',
+    'SplitElementTxn.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/editor/txmgr',
+    '/extensions/spellcheck/src',
+    '/layout/style',
+    'text',
+]
+
+FINAL_LIBRARY = 'xul'
