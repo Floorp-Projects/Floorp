@@ -81,9 +81,9 @@ WMFDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConf
 }
 
 already_AddRefed<MediaDataDecoder>
-WMFDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                                     MediaTaskQueue* aAudioTaskQueue,
-                                     MediaDataDecoderCallback* aCallback)
+WMFDecoderModule::CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                                   MediaTaskQueue* aAudioTaskQueue,
+                                   MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder =
     new WMFMediaDataDecoder(new WMFAudioMFTManager(aConfig),

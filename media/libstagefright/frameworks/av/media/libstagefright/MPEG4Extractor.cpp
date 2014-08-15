@@ -2293,7 +2293,10 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
 
     if (objectTypeIndication  == 0x6b) {
         // The media subtype is MP3 audio
-        mLastTrack->meta->setCString(kKeyMIMEType, MEDIA_MIMETYPE_AUDIO_MPEG);
+        // Our software MP3 audio decoder may not be able to handle
+        // packetized MP3 audio; for now, lets just return ERROR_UNSUPPORTED
+        ALOGE("MP3 track in MP4/3GPP file is not supported");
+        return ERROR_UNSUPPORTED;
     }
 
     const uint8_t *csd;

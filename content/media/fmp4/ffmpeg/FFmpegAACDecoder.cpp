@@ -7,7 +7,7 @@
 #include "MediaTaskQueue.h"
 #include "FFmpegRuntimeLinker.h"
 
-#include "FFmpegAudioDecoder.h"
+#include "FFmpegAACDecoder.h"
 
 #define MAX_CHANNELS 16
 
@@ -16,17 +16,16 @@ typedef mp4_demuxer::MP4Sample MP4Sample;
 namespace mozilla
 {
 
-FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
+FFmpegAACDecoder<LIBAV_VER>::FFmpegAACDecoder(
   MediaTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const mp4_demuxer::AudioDecoderConfig& aConfig)
-  : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mime_type))
-  , mCallback(aCallback)
+  : FFmpegDataDecoder(aTaskQueue, AV_CODEC_ID_AAC), mCallback(aCallback)
 {
-  MOZ_COUNT_CTOR(FFmpegAudioDecoder);
+  MOZ_COUNT_CTOR(FFmpegAACDecoder);
 }
 
 nsresult
-FFmpegAudioDecoder<LIBAV_VER>::Init()
+FFmpegAACDecoder<LIBAV_VER>::Init()
 {
   nsresult rv = FFmpegDataDecoder::Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -35,44 +34,24 @@ FFmpegAudioDecoder<LIBAV_VER>::Init()
 }
 
 static AudioDataValue*
-CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
+CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumSamples)
 {
   MOZ_ASSERT(aNumChannels <= MAX_CHANNELS);
 
   nsAutoArrayPtr<AudioDataValue> audio(
-    new AudioDataValue[aNumChannels * aNumAFrames]);
+    new AudioDataValue[aNumChannels * aNumSamples]);
+
+  AudioDataValue** data = reinterpret_cast<AudioDataValue**>(aFrame->data);
 
   if (aFrame->format == AV_SAMPLE_FMT_FLT) {
     // Audio data already packed. No need to do anything other than copy it
     // into a buffer we own.
-    memcpy(audio, aFrame->data[0],
-           aNumChannels * aNumAFrames * sizeof(AudioDataValue));
+    memcpy(audio, data[0], aNumChannels * aNumSamples * sizeof(AudioDataValue));
   } else if (aFrame->format == AV_SAMPLE_FMT_FLTP) {
     // Planar audio data. Pack it into something we can understand.
-    AudioDataValue* tmp = audio;
-    AudioDataValue** data = reinterpret_cast<AudioDataValue**>(aFrame->data);
-    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
-      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = data[channel][frame];
-      }
-    }
-  } else if (aFrame->format == AV_SAMPLE_FMT_S16) {
-    // Audio data already packed. Need to convert from S16 to 32 bits Float
-    AudioDataValue* tmp = audio;
-    int16_t* data = reinterpret_cast<int16_t**>(aFrame->data)[0];
-    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
-      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = AudioSampleToFloat(*data++);
-      }
-    }
-  } else if (aFrame->format == AV_SAMPLE_FMT_S16P) {
-    // Planar audio data. Convert it from S16 to 32 bits float
-    // and pack it into something we can understand.
-    AudioDataValue* tmp = audio;
-    int16_t** data = reinterpret_cast<int16_t**>(aFrame->data);
-    for (uint32_t frame = 0; frame < aNumAFrames; frame++) {
-      for (uint32_t channel = 0; channel < aNumChannels; channel++) {
-        *tmp++ = AudioSampleToFloat(data[channel][frame]);
+    for (uint32_t channel = 0; channel < aNumChannels; channel++) {
+      for (uint32_t sample = 0; sample < aNumSamples; sample++) {
+        audio[sample * aNumChannels + channel] = data[channel][sample];
       }
     }
   }
@@ -81,7 +60,7 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
 }
 
 void
-FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
+FFmpegAACDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
 {
   AVPacket packet;
   av_init_packet(&packet);
@@ -128,38 +107,24 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
 }
 
 nsresult
-FFmpegAudioDecoder<LIBAV_VER>::Input(MP4Sample* aSample)
+FFmpegAACDecoder<LIBAV_VER>::Input(MP4Sample* aSample)
 {
   mTaskQueue->Dispatch(NS_NewRunnableMethodWithArg<nsAutoPtr<MP4Sample> >(
-    this, &FFmpegAudioDecoder::DecodePacket, nsAutoPtr<MP4Sample>(aSample)));
+    this, &FFmpegAACDecoder::DecodePacket, nsAutoPtr<MP4Sample>(aSample)));
 
   return NS_OK;
 }
 
 nsresult
-FFmpegAudioDecoder<LIBAV_VER>::Drain()
+FFmpegAACDecoder<LIBAV_VER>::Drain()
 {
   mCallback->DrainComplete();
   return NS_OK;
 }
 
-AVCodecID
-FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const char* aMimeType)
+FFmpegAACDecoder<LIBAV_VER>::~FFmpegAACDecoder()
 {
-  if (!strcmp(aMimeType, "audio/mpeg")) {
-    return AV_CODEC_ID_MP3;
-  }
-
-  if (!strcmp(aMimeType, "audio/mp4a-latm")) {
-    return AV_CODEC_ID_AAC;
-  }
-
-  return AV_CODEC_ID_NONE;
-}
-
-FFmpegAudioDecoder<LIBAV_VER>::~FFmpegAudioDecoder()
-{
-  MOZ_COUNT_DTOR(FFmpegAudioDecoder);
+  MOZ_COUNT_DTOR(FFmpegAACDecoder);
 }
 
 } // namespace mozilla

@@ -8,7 +8,6 @@
 #include "mp4_demuxer/DecoderData.h"
 #include "media/stagefright/MetaData.h"
 #include "media/stagefright/MediaBuffer.h"
-#include "media/stagefright/MediaDefs.h"
 #include "media/stagefright/Utils.h"
 #include "mozilla/ArrayUtils.h"
 #include "include/ESDS.h"
@@ -160,7 +159,7 @@ bool
 AudioDecoderConfig::IsValid()
 {
   return channel_count > 0 && samples_per_second > 0 && frequency_index > 0 &&
-         (mime_type != MEDIA_MIMETYPE_AUDIO_AAC || aac_profile > 0);
+         aac_profile > 0;
 }
 
 void
