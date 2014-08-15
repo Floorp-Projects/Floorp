@@ -30,6 +30,33 @@ class TbplFormatter(BaseFormatter):
     def process_output(self, data):
         return "PROCESS | %(process)s | %(data)s\n" % data
 
+    def crash(self, data):
+        id = self.id_str(data["test"]) if "test" in data else "pid: " % data["process"]
+
+        rv = ["PROCESS-CRASH | %s | application crashed [%s]" % (id,
+                                                                 data["signature"])]
+        if data.get("minidump_path"):
+            rv.append("Crash dump filename: %s" % data["minidump_path"])
+
+        if data.get("stackwalk_stderr"):
+            rv.append("stderr from minidump_stackwalk:")
+            rv.append(data["stackwalk_stderr"])
+        elif data.get("stackwalk_stdout"):
+            rv.append(data["stackwalk_stdout"])
+
+        if data.get("stackwalk_returncode", 0) != 0:
+            rv.append("minidump_stackwalk exited with return code %d" %
+                      data["stackwalk_returncode"])
+
+        if data.get("stackwalk_errors"):
+            rv.extend(data.get("stackwalk_errors"))
+
+        rv = "\n".join(rv)
+        if not rv[-1] == "\n":
+            rv += "\n"
+
+        return rv
+
     def suite_start(self, data):
         self.suite_start_time = data["time"]
         return "SUITE-START | Running %i tests\n" % len(data["tests"])
