@@ -153,4 +153,10 @@ PlatformDecoderModule::Create()
   return nullptr;
 }
 
+bool
+PlatformDecoderModule::SupportsAudioMimeType(const char* aMimeType)
+{
+  return !strcmp(aMimeType, "audio/mp4a-latm");
+}
+
 } // namespace mozilla
