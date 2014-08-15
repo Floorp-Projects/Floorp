@@ -215,11 +215,17 @@ class MachFormatter(base.BaseFormatter):
             self.status_buffer[test] = {"count": 0, "unexpected": [], "pass": 0}
         self.status_buffer[test]["count"] += 1
 
+        message = data.get("message", "")
+        if "stack" in data:
+            if message:
+                message += "\n"
+            message += data["stack"]
+
         if "expected" in data:
             self.status_buffer[test]["unexpected"].append((data["subtest"],
                                                            data["status"],
                                                            data["expected"],
-                                                           data.get("message", "")))
+                                                           message))
         if data["status"] == "PASS":
             self.status_buffer[test]["pass"] += 1
 
