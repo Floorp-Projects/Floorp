@@ -142,6 +142,8 @@ Reporter(int nr, siginfo_t *info, void *void_context)
             args[0], args[1], args[2], args[3], args[4], args[5]);
 
 #ifdef MOZ_CRASHREPORTER
+  // Bug 1017393: record syscall number somewhere useful.
+  info->si_addr = reinterpret_cast<void*>(syscall_nr);
   bool dumped = CrashReporter::WriteMinidumpForSigInfo(nr, info, void_context);
   if (!dumped) {
     LOG_ERROR("Failed to write minidump");
