@@ -7095,9 +7095,17 @@ Parser<ParseHandler>::objectLiteral()
         if (ltok == TOK_RC)
             break;
 
+        bool isGenerator = false;
+        if (ltok == TOK_MUL) {
+            isGenerator = true;
+            ltok = tokenStream.getToken(TokenStream::KeywordIsName);
+        }
+
         JSOp op = JSOP_INITPROP;
         Node propname;
         switch (ltok) {
+          case TOK_ERROR:
+            return null();
           case TOK_NUMBER:
             atom = DoubleToAtom(context, tokenStream.currentToken().number());
             if (!atom)
@@ -7122,8 +7130,16 @@ Parser<ParseHandler>::objectLiteral()
           case TOK_NAME: {
             atom = tokenStream.currentName();
             if (atom == context->names().get) {
+                if (isGenerator) {
+                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                    return null();
+                }
                 op = JSOP_INITPROP_GETTER;
             } else if (atom == context->names().set) {
+                if (isGenerator) {
+                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                    return null();
+                }
                 op = JSOP_INITPROP_SETTER;
             } else {
                 propname = handler.newIdentifier(atom, pos());
@@ -7201,6 +7217,10 @@ Parser<ParseHandler>::objectLiteral()
             TokenKind tt = tokenStream.getToken();
             Node propexpr;
             if (tt == TOK_COLON) {
+                if (isGenerator) {
+                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                    return null();
+                }
                 propexpr = assignExpr();
                 if (!propexpr)
                     return null();
@@ -7223,6 +7243,10 @@ Parser<ParseHandler>::objectLiteral()
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                  */
+                if (isGenerator) {
+                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                    return null();
+                }
                 if (!abortIfSyntaxParser())
                     return null();
                 tokenStream.ungetToken();
@@ -7236,21 +7260,22 @@ Parser<ParseHandler>::objectLiteral()
                 Node ident = identifierName();
                 if (!handler.addPropertyDefinition(literal, propname, ident, true))
                     return null();
+            } else if (tt == TOK_LP) {
+                tokenStream.ungetToken();
+                if (!methodDefinition(literal, propname, Normal, Method,
+                                      isGenerator ? StarGenerator : NotGenerator, op)) {
+                    return null();
+                }
             } else {
                 report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
                 return null();
             }
         } else {
             /* NB: Getter function in { get x(){} } is unnamed. */
-            Rooted<PropertyName*> funName(context, nullptr);
-            TokenStream::Position start(keepAtoms);
-            tokenStream.tell(&start);
-            Node accessor = functionDef(funName, start, op == JSOP_INITPROP_GETTER ? Getter : Setter,
-                                        Expression, NotGenerator);
-            if (!accessor)
+            if (!methodDefinition(literal, propname, op == JSOP_INITPROP_GETTER ? Getter : Setter,
+                                  Expression, NotGenerator, op)) {
                 return null();
-            if (!handler.addAccessorPropertyDefinition(literal, propname, accessor, op))
-                return null();
+            }
         }
 
         /*
@@ -7307,6 +7332,28 @@ Parser<ParseHandler>::objectLiteral()
 
     handler.setEndPosition(literal, pos().end);
     return literal;
+}
+
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::methodDefinition(Node literal, Node propname, FunctionType type,
+                                       FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                                       JSOp op)
+{
+    RootedPropertyName funName(context);
+    if (kind == Method && tokenStream.isCurrentTokenType(TOK_NAME))
+        funName = tokenStream.currentName();
+    else
+        funName = nullptr;
+
+    TokenStream::Position start(keepAtoms);
+    tokenStream.tell(&start);
+    Node fn = functionDef(funName, start, type, kind, generatorKind);
+    if (!fn)
+        return false;
+    if (!handler.addMethodDefinition(literal, propname, fn, op))
+        return false;
+    return true;
 }
 
 template <typename ParseHandler>
