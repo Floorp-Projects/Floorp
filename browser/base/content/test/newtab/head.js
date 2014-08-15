@@ -497,6 +497,8 @@ function createExternalDropIframe() {
   iframe.setAttribute("src", url);
   iframe.style.width = "50px";
   iframe.style.height = "50px";
+  iframe.style.position = "absolute";
+  iframe.style.zIndex = 50;
 
   let margin = doc.getElementById("newtab-margin-top");
   margin.appendChild(iframe);
