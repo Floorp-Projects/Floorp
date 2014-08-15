@@ -1,0 +1,28 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CSS Filters: Drop Shadow on HTML Element</title>
+  <link rel="author" title="Max Vujovic" href="mailto:mvujovic@adobe.com">
+  <link rel="help" href="http://www.w3.org/TR/filter-effects-1/#funcdef-drop-shadow">
+  <link rel="match" href="drop-shadow-ref.html">
+  <meta name="assert"
+        content="The CSS drop-shadow filter function should add a drop shadow to
+                 an HTML element.">
+  <style type="text/css">
+    #target {
+      filter: drop-shadow(10px 10px 3px #0f0);
+      background-color: #00f;
+      width: 100px;
+      height: 100px;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a blue square with a green drop shadow.</p>
+  <div id="target"></div>
+</body>
+</html>
