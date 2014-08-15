@@ -7,10 +7,16 @@ import unittest
 from mozunit import main
 
 from mozbuild.util import (
+    KeyedDefaultDict,
     List,
+    OrderedDefaultDict,
     ReadOnlyDefaultDict,
     ReadOnlyDict,
+    ReadOnlyKeyedDefaultDict,
 )
+
+from collections import OrderedDict
+
 
 class TestReadOnlyDict(unittest.TestCase):
     def test_basic(self):
@@ -107,6 +113,84 @@ class TestList(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             test = test + False
+
+class TestOrderedDefaultDict(unittest.TestCase):
+    def test_simple(self):
+        original = OrderedDict(foo=1, bar=2)
+
+        test = OrderedDefaultDict(bool, original)
+
+        self.assertEqual(original, test)
+
+        self.assertEqual(test['foo'], 1)
+
+        self.assertEqual(test.keys(), ['foo', 'bar' ])
+
+    def test_defaults(self):
+        test = OrderedDefaultDict(bool, {'foo': 1 })
+
+        self.assertEqual(test['foo'], 1)
+
+        self.assertEqual(test['qux'], False)
+
+        self.assertEqual(test.keys(), ['foo', 'qux' ])
+
+
+class TestKeyedDefaultDict(unittest.TestCase):
+    def test_simple(self):
+        original = {'foo': 1, 'bar': 2 }
+
+        test = KeyedDefaultDict(lambda x: x, original)
+
+        self.assertEqual(original, test)
+
+        self.assertEqual(test['foo'], 1)
+
+    def test_defaults(self):
+        test = KeyedDefaultDict(lambda x: x, {'foo': 1 })
+
+        self.assertEqual(test['foo'], 1)
+
+        self.assertEqual(test['qux'], 'qux')
+
+        self.assertEqual(test['bar'], 'bar')
+
+        test['foo'] = 2
+        test['qux'] = None
+        test['baz'] = 'foo'
+
+        self.assertEqual(test['foo'], 2)
+
+        self.assertEqual(test['qux'], None)
+
+        self.assertEqual(test['baz'], 'foo')
+
+
+class TestReadOnlyKeyedDefaultDict(unittest.TestCase):
+    def test_defaults(self):
+        test = ReadOnlyKeyedDefaultDict(lambda x: x, {'foo': 1 })
+
+        self.assertEqual(test['foo'], 1)
+
+        self.assertEqual(test['qux'], 'qux')
+
+        self.assertEqual(test['bar'], 'bar')
+
+        copy = dict(test)
+
+        with self.assertRaises(Exception):
+            test['foo'] = 2
+
+        with self.assertRaises(Exception):
+            test['qux'] = None
+
+        with self.assertRaises(Exception):
+            test['baz'] = 'foo'
+
+        self.assertEqual(test, copy)
+
+        self.assertEqual(len(test), 3)
+
 
 if __name__ == '__main__':
     main()

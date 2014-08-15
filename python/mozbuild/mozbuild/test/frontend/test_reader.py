@@ -47,26 +47,26 @@ class TestBuildReader(unittest.TestCase):
     def test_dirs_traversal_simple(self):
         reader = self.reader('traversal-simple')
 
-        sandboxes = list(reader.read_topsrcdir())
+        contexts = list(reader.read_topsrcdir())
 
-        self.assertEqual(len(sandboxes), 4)
+        self.assertEqual(len(contexts), 4)
 
     def test_dirs_traversal_no_descend(self):
         reader = self.reader('traversal-simple')
 
-        path = mozpath.join(reader.topsrcdir, 'moz.build')
+        path = mozpath.join(reader.config.topsrcdir, 'moz.build')
         self.assertTrue(os.path.exists(path))
 
-        sandboxes = list(reader.read_mozbuild(path, reader.config,
+        contexts = list(reader.read_mozbuild(path, reader.config,
             filesystem_absolute=True, descend=False))
 
-        self.assertEqual(len(sandboxes), 1)
+        self.assertEqual(len(contexts), 1)
 
     def test_dirs_traversal_all_variables(self):
         reader = self.reader('traversal-all-vars', enable_tests=True)
 
-        sandboxes = list(reader.read_topsrcdir())
-        self.assertEqual(len(sandboxes), 3)
+        contexts = list(reader.read_topsrcdir())
+        self.assertEqual(len(contexts), 3)
 
     def test_tier_subdir(self):
         # add_tier_dir() should fail when not in the top directory.
@@ -79,15 +79,15 @@ class TestBuildReader(unittest.TestCase):
         # Ensure relative directories are traversed.
         reader = self.reader('traversal-relative-dirs')
 
-        sandboxes = list(reader.read_topsrcdir())
-        self.assertEqual(len(sandboxes), 3)
+        contexts = list(reader.read_topsrcdir())
+        self.assertEqual(len(contexts), 3)
 
     def test_repeated_dirs_ignored(self):
         # Ensure repeated directories are ignored.
         reader = self.reader('traversal-repeated-dirs')
 
-        sandboxes = list(reader.read_topsrcdir())
-        self.assertEqual(len(sandboxes), 3)
+        contexts = list(reader.read_topsrcdir())
+        self.assertEqual(len(contexts), 3)
 
     def test_outside_topsrcdir(self):
         # References to directories outside the topsrcdir should fail.
@@ -236,17 +236,17 @@ class TestBuildReader(unittest.TestCase):
     def test_inheriting_variables(self):
         reader = self.reader('inheriting-variables')
 
-        sandboxes = list(reader.read_topsrcdir())
+        contexts = list(reader.read_topsrcdir())
 
-        self.assertEqual(len(sandboxes), 4)
-        self.assertEqual([sandbox['RELATIVEDIR'] for sandbox in sandboxes],
+        self.assertEqual(len(contexts), 4)
+        self.assertEqual([context.relsrcdir for context in contexts],
             ['', 'foo', 'foo/baz', 'bar'])
-        self.assertEqual([sandbox['XPIDL_MODULE'] for sandbox in sandboxes],
-            ['foobar', 'foobar', 'foobar', 'foobar'])
+        self.assertEqual([context['XPIDL_MODULE'] for context in contexts],
+            ['foobar', 'foobar', 'baz', 'foobar'])
 
     def test_process_eval_callback(self):
-        def strip_dirs(sandbox):
-            sandbox['DIRS'][:] = []
+        def strip_dirs(context):
+            context['DIRS'][:] = []
             count[0] += 1
 
         reader = self.reader('traversal-simple',
@@ -254,9 +254,9 @@ class TestBuildReader(unittest.TestCase):
 
         count = [0]
 
-        sandboxes = list(reader.read_topsrcdir())
+        contexts = list(reader.read_topsrcdir())
 
-        self.assertEqual(len(sandboxes), 1)
+        self.assertEqual(len(contexts), 1)
         self.assertEqual(len(count), 1)
 
 

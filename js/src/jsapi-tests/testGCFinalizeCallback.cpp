@@ -88,12 +88,12 @@ BEGIN_TEST(testGCFinalizeCallback)
     FinalizeCalls = 0;
     JS_SetGCZeal(cx, 9, 1000000);
     JS::PrepareForFullGC(rt);
-    js::GCDebugSlice(rt, true, 1);
+    rt->gc.gcDebugSlice(true, 1);
     CHECK(rt->gc.state() == js::gc::MARK);
     CHECK(rt->gc.isFullGc());
 
     JS::RootedObject global4(cx, createGlobal());
-    js::GCDebugSlice(rt, true, 1);
+    rt->gc.gcDebugSlice(true, 1);
     CHECK(rt->gc.state() == js::gc::NO_INCREMENTAL);
     CHECK(!rt->gc.isFullGc());
     CHECK(checkMultipleGroups());

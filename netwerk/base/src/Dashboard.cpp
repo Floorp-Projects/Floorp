@@ -6,7 +6,6 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/net/Dashboard.h"
 #include "mozilla/net/HttpInfo.h"
-#include "nsCxPusher.h"
 #include "nsHttp.h"
 #include "nsICancelable.h"
 #include "nsIDNSService.h"
