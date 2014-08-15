@@ -55,6 +55,41 @@ add_task(function* delete_setup_params() {
   is(Object.keys(request.response).length, 0, "Params should have been deleted");
 });
 
+// Begin /fxa-oauth/token tests
+
+add_task(function* token_request() {
+  let params = {
+    client_id: "my_client_id",
+    content_uri: "https://example.com/content/",
+    oauth_uri: "https://example.com/oauth/",
+    profile_uri: "https://example.com/profile/",
+    state: "my_state",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+  let request = yield promiseToken("my_code", params.state);
+  ise(request.status, 200, "Check token response status");
+  ise(request.response.access_token, "my_code_access_token", "Check access_token");
+  ise(request.response.scopes, "", "Check scopes");
+  ise(request.response.token_type, "bearer", "Check token_type");
+});
+
+add_task(function* token_request_invalid_state() {
+  let params = {
+    client_id: "my_client_id",
+    content_uri: "https://example.com/content/",
+    oauth_uri: "https://example.com/oauth/",
+    profile_uri: "https://example.com/profile/",
+    state: "my_invalid_state",
+  };
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+  let request = yield promiseToken("my_code", "my_state");
+  ise(request.status, 400, "Check token response status");
+  ise(request.response, null, "Check token response body");
+});
+
+
+// Helper methods
+
 function promiseParams() {
   let deferred = Promise.defer();
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
@@ -65,8 +100,28 @@ function promiseParams() {
     info("/fxa-oauth/params response:\n" + JSON.stringify(xhr.response, null, 4));
     deferred.resolve(xhr);
   });
-  xhr.addEventListener("error", error => deferred.reject(error));
+  xhr.addEventListener("error", deferred.reject);
   xhr.send();
+
+  return deferred.promise;
+}
+
+function promiseToken(code, state) {
+  let deferred = Promise.defer();
+  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+              createInstance(Ci.nsIXMLHttpRequest);
+  xhr.open("POST", BASE_URL + "/fxa-oauth/token", true);
+  xhr.responseType = "json";
+  xhr.addEventListener("load", () => {
+    info("/fxa-oauth/token response:\n" + JSON.stringify(xhr.response, null, 4));
+    deferred.resolve(xhr);
+  });
+  xhr.addEventListener("error", deferred.reject);
+  let payload = {
+    code: code,
+    state: state,
+  };
+  xhr.send(JSON.stringify(payload, null, 4));
 
   return deferred.promise;
 }
