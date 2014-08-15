@@ -448,6 +448,21 @@ NetworkManager.prototype = {
     this.setAndConfigureActive();
   },
 
+  _updateRoutes: function(doAdd, ipAddresses, networkName, gateways) {
+    let promises = [];
+
+    ipAddresses.forEach((aIpAddress) => {
+      let gateway = this.selectGateway(gateways, aIpAddress);
+      if (gateway) {
+        promises.push((doAdd)
+          ? gNetworkService.addHostRoute(networkName, gateway, aIpAddress)
+          : gNetworkService.removeHostRoute(networkName, gateway, aIpAddress));
+      }
+    });
+
+    return Promise.all(promises);
+  },
+
 #ifdef MOZ_B2G_RIL
   isNetworkTypeSecondaryMobile: function(type) {
     return (type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
@@ -463,34 +478,14 @@ NetworkManager.prototype = {
 
   setHostRoutes: function(network) {
     let hosts = network.getDnses().concat(network.httpProxyHost);
-    let gateways = network.getGateways();
-    let promises = [];
 
-    for (let i = 0; i < hosts.length; i++) {
-      let host = hosts[i];
-      let gateway = this.selectGateway(gateways, host);
-      if (gateway && host) {
-        promises.push(gNetworkService.addHostRoute(network.name, gateway, host));
-      }
-    }
-
-    return Promise.all(promises);
+    return this._updateRoutes(true, hosts, network.name, network.getGateways());
   },
 
   removeHostRoutes: function(network) {
     let hosts = network.getDnses().concat(network.httpProxyHost);
-    let gateways = network.getGateways();
-    let promises = [];
 
-    for (let i = 0; i < hosts.length; i++) {
-      let host = hosts[i];
-      let gateway = this.selectGateway(gateways, host);
-      if (gateway && host) {
-        promises.push(gNetworkService.removeHostRoute(network.name, gateway, host));
-      }
-    }
-
-    return Promise.all(promises);
+    return this._updateRoutes(false, hosts, network.name, network.getGateways());
   },
 
   selectGateway: function(gateways, host) {
