@@ -300,7 +300,7 @@ protected:
   void Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
   JSContext* mCx;
-  Maybe<dom::danger::AutoCxPusher> mPusher;
+  dom::AutoJSAPI mJSAPI;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
