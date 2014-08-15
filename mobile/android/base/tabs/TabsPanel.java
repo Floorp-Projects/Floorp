@@ -32,6 +32,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -113,7 +114,7 @@ public class TabsPanel extends LinearLayout
             public void onResume() {
                 if (mPanel == mPanelRemote) {
                     // Refresh the remote panel.
-                    mPanelRemote.show();
+                    getRemotePanelView().show();
                 }
             }
 
@@ -127,7 +128,23 @@ public class TabsPanel extends LinearLayout
         };
     }
 
+    /**
+     * Initializes views in tabs_panel layout
+     *
+     * @throws IllegalStateException
+     *             mCurrentPanel must have a non-null value
+     */
     private void initialize() {
+        if (mCurrentPanel == null) {
+            throw new IllegalStateException(
+                    "mCurrentPanel cannot be null in order for RemotePanelView to be initialized");
+        }
+
+        if (mCurrentPanel == Panel.REMOTE_TABS) {
+            // Initializes mPanelRemote
+            getRemotePanelView();
+        }
+
         mHeader = (RelativeLayout) findViewById(R.id.tabs_panel_header);
         mTabsContainer = (TabsListContainer) findViewById(R.id.tabs_container);
 
@@ -136,9 +153,6 @@ public class TabsPanel extends LinearLayout
 
         mPanelPrivate = (PanelView) findViewById(R.id.private_tabs_panel);
         mPanelPrivate.setTabsPanel(this);
-
-        mPanelRemote = (PanelView) findViewById(R.id.remote_tabs);
-        mPanelRemote.setTabsPanel(this);
 
         mFooter = (RelativeLayout) findViewById(R.id.tabs_panel_footer);
 
@@ -416,7 +430,7 @@ public class TabsPanel extends LinearLayout
                 mPanel = mPanelPrivate;
                 break;
             case REMOTE_TABS:
-                mPanel = mPanelRemote;
+                mPanel = getRemotePanelView();
                 break;
 
             default:
@@ -472,6 +486,9 @@ public class TabsPanel extends LinearLayout
     public void refresh() {
         removeAllViews();
 
+        // The View that mPanelRemote points to is invalidated because the layout is invalidated.
+        // mPanelRemote must be null in order to properly initialize RemotePanelView.
+        mPanelRemote = null;
         LayoutInflater.from(mContext).inflate(R.layout.tabs_panel, this);
         initialize();
 
@@ -569,5 +586,19 @@ public class TabsPanel extends LinearLayout
 
     public void setIconDrawable(Panel panel, int resource) {
         mTabWidget.setIconDrawable(panel.ordinal(), resource);
+    }
+
+    /**
+     * Initializes mPanelRemote if necessary and provides getter because you
+     * should probably not access mPanelRemote directly
+     *
+     * @return PanelView
+     */
+    private PanelView getRemotePanelView() {
+        if (mPanelRemote == null) {
+            mPanelRemote = (PanelView) ((ViewStub) findViewById(R.id.remote_tabs_panel_stub)).inflate();
+            mPanelRemote.setTabsPanel(TabsPanel.this);
+        }
+        return mPanelRemote;
     }
 }
