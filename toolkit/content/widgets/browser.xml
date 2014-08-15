@@ -427,7 +427,15 @@
                 readonly="true"/>
 
       <property name="characterSet"
-                onget="return this.contentDocument.characterSet;"
+                onget="return this.docShell.charset;">
+        <setter><![CDATA[
+          this.docShell.charset = val;
+          this.docShell.gatherCharsetMenuTelemetry();
+        ]]></setter>
+      </property>
+
+      <property name="mayEnableCharacterEncodingMenu"
+                onget="return this.docShell.mayEnableCharacterEncodingMenu;"
                 readonly="true"/>
 
       <property name="contentPrincipal"

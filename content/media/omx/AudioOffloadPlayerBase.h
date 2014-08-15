@@ -20,12 +20,10 @@
 #ifndef AUDIO_OFFLOAD_PLAYER_BASE_H_
 #define AUDIO_OFFLOAD_PLAYER_BASE_H_
 
+#include "MediaDecoder.h"
 #include "MediaDecoderOwner.h"
-#include "MediaOmxDecoder.h"
 
 namespace mozilla {
-
-class MediaOmxDecoder;
 
 /**
  * AudioOffloadPlayer interface class which has funtions used by MediaOmxDecoder

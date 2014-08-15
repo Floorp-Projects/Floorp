@@ -15,7 +15,7 @@
 
 #include "I420ColorConverterHelper.h"
 #include "MediaCodecProxy.h"
-#include "MediaDecoderReader.h"
+#include "MediaOmxCommonReader.h"
 
 namespace android {
 struct ALooper;
@@ -29,7 +29,7 @@ struct MediaCodec;
 
 namespace mozilla {
 
-class MediaCodecReader : public MediaDecoderReader
+class MediaCodecReader : public MediaOmxCommonReader
 {
 public:
   MediaCodecReader(AbstractMediaDecoder* aDecoder);
@@ -84,6 +84,8 @@ public:
                         int64_t aCurrentTime);
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+
+  virtual android::sp<android::MediaSource> GetAudioOffloadTrack();
 
 protected:
   struct TrackInputCopier
@@ -249,9 +251,10 @@ private:
   android::sp<android::ALooper> mLooper;
   android::sp<android::MediaExtractor> mExtractor;
 
-  // media elements
+  // media tracks
   AudioTrack mAudioTrack;
   VideoTrack mVideoTrack;
+  AudioTrack mAudioOffloadTrack; // only Track::mSource is valid
 
   // color converter
   android::I420ColorConverterHelper mColorConverter;
