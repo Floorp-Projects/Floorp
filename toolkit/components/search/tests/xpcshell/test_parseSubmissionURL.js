@@ -84,6 +84,12 @@ add_task(function* test_parseSubmissionURL() {
   do_check_eq(result.engine, engine1);
   do_check_eq(result.terms, "caff\u00E8");
 
+  // Decoding search terms with multiple spaces should work.
+  let result = Services.search.parseSubmissionURL(
+                               "http://www.google.com/search?q=+with++spaces+");
+  do_check_eq(result.engine, engine1);
+  do_check_eq(result.terms, " with  spaces ");
+
   // An empty query parameter should work the same.
   let result = Services.search.parseSubmissionURL(
                                "http://www.google.com/search?q=");
