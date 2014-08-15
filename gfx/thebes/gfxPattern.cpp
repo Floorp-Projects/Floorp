@@ -58,7 +58,7 @@ gfxPattern::gfxPattern(SourceSurface *aSurface, const Matrix &aTransform)
   , mSourceSurface(aSurface)
   , mTransform(aTransform)
   , mExtend(EXTEND_NONE)
-  , mFilter(Filter::GOOD)
+  , mFilter(mozilla::gfx::Filter::GOOD)
 {
 }
 
