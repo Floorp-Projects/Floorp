@@ -52,6 +52,11 @@ public:
     aURL = mURL;
   }
 
+  void
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+              const Optional<Sequence<JS::Value>>& aTransferable,
+              ErrorResult& aRv);
+
   WorkerPrivate*
   GetWorkerPrivate() const;
 
