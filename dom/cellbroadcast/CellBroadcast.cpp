@@ -3,15 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CellBroadcast.h"
+#include "mozilla/dom/CellBroadcast.h"
+#include "mozilla/dom/CellBroadcastMessage.h"
 #include "mozilla/dom/MozCellBroadcastBinding.h"
 #include "mozilla/dom/MozCellBroadcastEvent.h"
-#include "nsIDOMMozCellBroadcastMessage.h"
 #include "nsServiceManagerUtils.h"
 
 #define NS_CELLBROADCASTSERVICE_CONTRACTID "@mozilla.org/cellbroadcast/gonkservice;1"
 
 using namespace mozilla::dom;
+using mozilla::ErrorResult;
 
 /**
  * CellBroadcast::Listener Implementation.
@@ -104,12 +105,36 @@ CellBroadcast::WrapObject(JSContext* aCx)
 // Forwarded nsICellBroadcastListener methods
 
 NS_IMETHODIMP
-CellBroadcast::NotifyMessageReceived(nsIDOMMozCellBroadcastMessage* aMessage)
-{
+CellBroadcast::NotifyMessageReceived(uint32_t aServiceId,
+                                     const nsAString& aGsmGeographicalScope,
+                                     uint16_t aMessageCode,
+                                     uint16_t aMessageId,
+                                     const nsAString& aLanguage,
+                                     const nsAString& aBody,
+                                     const nsAString& aMessageClass,
+                                     DOMTimeStamp aTimestamp,
+                                     uint32_t aCdmaServiceCategory,
+                                     bool aHasEtwsInfo,
+                                     const nsAString& aEtwsWarningType,
+                                     bool aEtwsEmergencyUserAlert,
+                                     bool aEtwsPopup) {
   MozCellBroadcastEventInit init;
   init.mBubbles = true;
   init.mCancelable = false;
-  init.mMessage = aMessage;
+  init.mMessage = new CellBroadcastMessage(GetOwner(),
+                                           aServiceId,
+                                           aGsmGeographicalScope,
+                                           aMessageCode,
+                                           aMessageId,
+                                           aLanguage,
+                                           aBody,
+                                           aMessageClass,
+                                           aTimestamp,
+                                           aCdmaServiceCategory,
+                                           aHasEtwsInfo,
+                                           aEtwsWarningType,
+                                           aEtwsEmergencyUserAlert,
+                                           aEtwsPopup);
 
   nsRefPtr<MozCellBroadcastEvent> event =
     MozCellBroadcastEvent::Constructor(this, NS_LITERAL_STRING("received"), init);
