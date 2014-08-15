@@ -28,6 +28,12 @@ Accessible::IsARIARole(nsIAtom* aARIARole) const
   return mRoleMapEntry && mRoleMapEntry->Is(aARIARole);
 }
 
+inline bool
+Accessible::HasStrongARIARole() const
+{
+  return mRoleMapEntry && mRoleMapEntry->roleRule == kUseMapRole;
+}
+
 inline mozilla::a11y::role
 Accessible::ARIARole()
 {

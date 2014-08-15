@@ -219,6 +219,7 @@ public:
    */
   bool HasARIARole() const { return mRoleMapEntry; }
   bool IsARIARole(nsIAtom* aARIARole) const;
+  bool HasStrongARIARole() const;
 
   /**
    * Retrun ARIA role map if any.
