@@ -4,15 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'ucvja',
-    'ucvcn',
-    'ucvlatin',
-    'ucvtw',
-    'ucvko',
-    'ucvibm',
-]
-
 TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
@@ -31,6 +22,13 @@ EXPORTS += [
     'nsUConvCID.h',
     'nsUCSupport.h',
     'uconvutil.h',
+    'ucvcn/nsUCvCnCID.h',
+    'ucvibm/nsUCvIBMCID.h',
+    'ucvja/nsUCVJA2CID.h',
+    'ucvja/nsUCVJACID.h',
+    'ucvko/nsUCvKOCID.h',
+    'ucvlatin/nsUCvLatinCID.h',
+    'ucvtw/nsUCvTWCID.h',
 ]
 
 UNIFIED_SOURCES += [

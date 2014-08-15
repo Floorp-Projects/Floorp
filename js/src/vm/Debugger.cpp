@@ -18,6 +18,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
+#include "js/DebugAPI.h"
 #include "js/GCAPI.h"
 #include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
@@ -35,6 +36,7 @@
 
 using namespace js;
 
+using JS::dbg::Builder;
 using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
 using mozilla::Maybe;
@@ -6275,6 +6277,81 @@ static const JSFunctionSpec DebuggerEnv_methods[] = {
     JS_FS_END
 };
 
+
+
+/*** JS::dbg::Builder ****************************************************************************/
+
+Builder::Builder(JSContext *cx, js::Debugger *debugger)
+  : debuggerObject(cx, debugger->toJSObject().get()),
+    debugger(debugger)
+{ }
+
+
+#if DEBUG
+void
+Builder::assertBuilt(JSObject *obj)
+{
+    // We can't use assertSameCompartment here, because that is always keyed to
+    // some JSContext's current compartment, whereas BuiltThings can be
+    // constructed and assigned to without respect to any particular context;
+    // the only constraint is that they should be in their debugger's compartment.
+    MOZ_ASSERT_IF(obj, debuggerObject->compartment() == obj->compartment());
+}
+#endif
+
+bool
+Builder::Object::definePropertyToTrusted(JSContext *cx, const char *name,
+                                         JS::MutableHandleValue trusted)
+{
+    // We should have checked for false Objects before calling this.
+    MOZ_ASSERT(value);
+
+    JSAtom *atom = Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+
+    return JSObject::defineGeneric(cx, value, id, trusted);
+}
+
+bool
+Builder::Object::defineProperty(JSContext *cx, const char *name, JS::HandleValue propval_)
+{
+    AutoCompartment ac(cx, debuggerObject());
+
+    RootedValue propval(cx, propval_);
+    if (!debugger()->wrapDebuggeeValue(cx, &propval))
+        return false;
+
+    return definePropertyToTrusted(cx, name, &propval);
+}
+
+bool
+Builder::Object::defineProperty(JSContext *cx, const char *name, JS::HandleObject propval_)
+{
+    RootedValue propval(cx, ObjectOrNullValue(propval_));
+    return defineProperty(cx, name, propval);
+}
+
+bool
+Builder::Object::defineProperty(JSContext *cx, const char *name, Builder::Object &propval_)
+{
+    AutoCompartment ac(cx, debuggerObject());
+
+    RootedValue propval(cx, ObjectOrNullValue(propval_.value));
+    return definePropertyToTrusted(cx, name, &propval);
+}
+
+Builder::Object
+Builder::newObject(JSContext *cx)
+{
+    AutoCompartment ac(cx, debuggerObject);
+
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+
+    // If the allocation failed, this will return a false Object, as the spec promises.
+    return Object(cx, *this, obj);
+}
 
 
 /*** Glue ****************************************************************************************/

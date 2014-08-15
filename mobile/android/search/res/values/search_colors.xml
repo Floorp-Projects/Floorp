@@ -8,6 +8,8 @@
 
     <color name="highlight_orange">#FF9500</color>
 
+    <color name="edit_text_default">#AFB1B3</color>
+
     <!-- card colors -->
     <color name="card_background">#ffffff</color>
     <color name="card_background_pressed">#DCDCE1</color>

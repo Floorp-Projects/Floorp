@@ -4,6 +4,13 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <Preference
-        android:key="clear_search_history_button"
-        android:title="@string/search_pref_clear_history_title"/>
+        android:key="search.not_a_preference.clear_history"
+        android:title="@string/pref_clearHistory_title"/>
+
+    <ListPreference
+        android:key="search.engines.default"
+        android:title="@string/pref_searchProvider_title"
+        android:dialogTitle="@string/pref_searchProvider_title"
+        android:entries="@array/pref_searchProvider_entries"
+        android:entryValues="@array/pref_searchProvider_values" />
 </PreferenceScreen>
