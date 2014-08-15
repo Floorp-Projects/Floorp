@@ -37,7 +37,7 @@ class MacroAssemblerMIPS {
 public:
     static bool supportsFloatingPoint()
     {
-#if WTF_MIPS_DOUBLE_FLOAT
+#if (defined(__mips_hard_float) && !defined(__mips_single_float)) || defined(JS_MIPS_SIMULATOR)
         return true;
 #else
         return false;
