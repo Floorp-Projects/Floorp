@@ -208,6 +208,21 @@ class Exports(ContextDerived):
         self.exports = exports
         self.dist_install = dist_install
 
+class TestHarnessFiles(ContextDerived):
+    """Sandbox container object for TEST_HARNESS_FILES,
+    which is a HierarchicalStringList.
+
+    We need an object derived from ContextDerived for use in the backend, so
+    this object fills that role. It just has a reference to the underlying
+    HierarchicalStringList, which is created when parsing TEST_HARNESS_FILES.
+    """
+    __slots__ = ('srcdir_files', 'objdir_files')
+
+    def __init__(self, context, srcdir_files, objdir_files):
+        ContextDerived.__init__(self, context)
+        self.srcdir_files = srcdir_files
+        self.objdir_files = objdir_files
+
 class Resources(ContextDerived):
     """Context derived container object for RESOURCE_FILES, which is a
     HierarchicalStringList, with an extra ``.preprocess`` property on each
