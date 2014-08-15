@@ -1045,6 +1045,48 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCSPContext::PermitsBaseURI(nsIURI* aURI, bool* outPermitsBaseURI)
+{
+  // Can't perform check without aURI
+  if (aURI == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *outPermitsBaseURI = true;
+
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    if (!mPolicies[i]->permitsBaseURI(aURI)) {
+      // policy is violated, report to caller if not report-only
+      if (!mPolicies[i]->getReportOnlyFlag()) {
+        *outPermitsBaseURI = false;
+      }
+      nsAutoString violatedDirective;
+      mPolicies[i]->getDirectiveStringForBaseURI(violatedDirective);
+      this->AsyncReportViolation(aURI,
+                                 mSelfURI,
+                                 violatedDirective,
+                                 i,             /* policy index        */
+                                 EmptyString(), /* no observer subject */
+                                 EmptyString(), /* no source file      */
+                                 EmptyString(), /* no script sample    */
+                                 0);            /* no line number      */
+    }
+  }
+
+#ifdef PR_LOGGING
+  {
+    nsAutoCString spec;
+    aURI->GetSpec(spec);
+    CSPCONTEXTLOG(("nsCSPContext::PermitsBaseURI, aUri: %s, isAllowed: %s",
+                  spec.get(),
+                  *outPermitsBaseURI ? "allow" : "deny"));
+  }
+#endif
+
+  return NS_OK;
+}
+
 /* ========== CSPViolationReportListener implementation ========== */
 
 NS_IMPL_ISUPPORTS(CSPViolationReportListener, nsIStreamListener, nsIRequestObserver, nsISupports);
