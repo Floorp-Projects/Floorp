@@ -124,3 +124,39 @@ header {
   font-weight: normal;
 }
 
+.start-audio-only-call,
+.start-audio-video-call {
+  background-color: none;
+  background-image: url("../shared/img/audio-default-16x16@1.5x.png");
+  background-position: 80% center;
+  background-size: 10px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.start-audio-only-call {
+  border: none;
+  width: 100%;
+}
+
+.start-audio-only-call:hover {
+  background-image: url("../shared/img/audio-inverse-14x14.png");
+}
+
+.start-audio-video-call {
+  background-size: 20px;
+  background-image: url("../shared/img/video-inverse-14x14.png");
+}
+
+@media (min-resolution: 2dppx) {
+  .start-audio-only-call {
+    background-image: url("../shared/img/audio-default-16x16@2x.png");
+  }
+  .start-audio-only-call:hover {
+    background-image: url("../shared/img/audio-inverse-14x14@2x.png");
+  }
+  .start-audio-video-call {
+    background-image: url("../shared/img/video-inverse-14x14@2x.png");
+  }
+}
+

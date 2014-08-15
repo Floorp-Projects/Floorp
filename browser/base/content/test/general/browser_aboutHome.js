@@ -419,6 +419,22 @@ let gTests = [
     });
   }
 },
+{
+  desc: "Cmd+k should focus the search bar element",
+  setup: function () {},
+  run: Task.async(function* () {
+    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
+    let logo = doc.getElementById("brandLogo");
+    let searchInput = doc.getElementById("searchText");
+
+    EventUtils.synthesizeMouseAtCenter(logo, {});
+    isnot(searchInput, doc.activeElement, "Search input should not be the active element.");
+
+    EventUtils.synthesizeKey("k", { accelKey: true });
+    yield promiseWaitForCondition(() => doc.activeElement === searchInput);
+    is(searchInput, doc.activeElement, "Search input should be the active element.");
+  })
+},
 
 ];
 

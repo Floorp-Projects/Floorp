@@ -15,8 +15,9 @@
     <color name="card_background_pressed">#DCDCE1</color>
     <color name="card_border">#BFBFBF</color>
 
-    <color name="widget_logo_highlight">#11000000</color>
+    <color name="widget_logo_default">#EBEBF0</color>
     <color name="widget_button_pressed">#33000000</color>
+    <color name="widget_text_color">#5F6368</color>
 
     <!-- Search suggestion highlight color is defined in SearchFragment.java -->
 </resources>
