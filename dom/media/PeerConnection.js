@@ -781,16 +781,7 @@ RTCPeerConnection.prototype = {
   },
 
   addStream: function(stream) {
-    if (stream.currentTime === undefined) {
-      throw new this._win.DOMError("", "Invalid stream passed to addStream!");
-    }
-    this._queueOrRun({ func: this._addStream,
-                       args: [stream],
-                       wait: false });
-  },
-
-  _addStream: function(stream) {
-    this._impl.addStream(stream);
+    stream.getTracks().forEach(track => this.addTrack(track, stream));
   },
 
   removeStream: function(stream) {

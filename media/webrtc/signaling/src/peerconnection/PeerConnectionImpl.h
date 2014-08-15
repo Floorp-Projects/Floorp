@@ -50,6 +50,7 @@ class AFakePCObserver;
 
 #ifdef USE_FAKE_MEDIA_STREAMS
 class Fake_DOMMediaStream;
+class Fake_MediaStreamTrack;
 #endif
 
 class nsGlobalWindow;
@@ -74,7 +75,11 @@ class DOMMediaStream;
 namespace dom {
 struct RTCConfiguration;
 struct RTCOfferOptions;
+#ifdef USE_FAKE_MEDIA_STREAMS
+typedef Fake_MediaStreamTrack MediaStreamTrack;
+#else
 class MediaStreamTrack;
+#endif
 
 #ifdef USE_FAKE_PCOBSERVER
 typedef test::AFakePCObserver PeerConnectionObserver;
@@ -363,18 +368,6 @@ public:
     rv = CloseStreams();
   }
 
-  NS_IMETHODIMP_TO_ERRORRESULT(AddStream, ErrorResult &rv,
-                               DOMMediaStream& aMediaStream)
-  {
-    rv = AddStream(aMediaStream);
-  }
-
-  NS_IMETHODIMP_TO_ERRORRESULT(RemoveStream, ErrorResult &rv,
-                               DOMMediaStream& aMediaStream)
-  {
-    rv = RemoveStream(aMediaStream);
-  }
-
   NS_IMETHODIMP_TO_ERRORRESULT(AddTrack, ErrorResult &rv,
       mozilla::dom::MediaStreamTrack& aTrack,
       const mozilla::dom::Sequence<mozilla::dom::OwningNonNull<DOMMediaStream>>& aStreams)
@@ -387,6 +380,9 @@ public:
   {
     rv = RemoveTrack(aTrack);
   }
+
+  nsresult
+  AddTrack(mozilla::dom::MediaStreamTrack& aTrack, DOMMediaStream& aStream);
 
   nsresult GetPeerIdentity(nsAString& peerIdentity)
   {
