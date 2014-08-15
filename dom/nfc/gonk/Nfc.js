@@ -485,64 +485,59 @@ Nfc.prototype = {
   receiveMessage: function receiveMessage(message) {
     debug("Received '" + JSON.stringify(message) + "' message from content process");
 
-    // Handle messages without sessionToken.
-    if (message.name == "NFC:StartPoll") {
-      this.targetsByRequestId[message.json.requestId] = message.target;
-      this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_ENABLED,
-                      requestId: message.json.requestId});
-      return null;
-    } else if (message.name == "NFC:StopPoll") {
-      this.targetsByRequestId[message.json.requestId] = message.target;
-      this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_LOW,
-                      requestId: message.json.requestId});
-      return null;
-    } else if (message.name == "NFC:PowerOff") {
-      this.targetsByRequestId[message.json.requestId] = message.target;
-      this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_DISABLED,
-                      requestId: message.json.requestId});
-      return null;
-    }
+    let isPowerAPI = message.name == "NFC:StartPoll" ||
+                     message.name == "NFC:StopPoll"  ||
+                     message.name == "NFC:PowerOff";
 
-    if (this.powerLevel != NFC.NFC_POWER_LEVEL_ENABLED) {
-      debug("NFC is not enabled. current powerLevel:" + this.powerLevel);
-      this.sendNfcErrorResponse(message, NFC.NFC_GECKO_ERROR_NOT_ENABLED);
-      return null;
+    if (!isPowerAPI) {
+      if (this.powerLevel != NFC.NFC_POWER_LEVEL_ENABLED) {
+        debug("NFC is not enabled. current powerLevel:" + this.powerLevel);
+        this.sendNfcErrorResponse(message, NFC.NFC_GECKO_ERROR_NOT_ENABLED);
+        return null;
+      }
+
+      // Update the current sessionId before sending to the NFC service.
+      message.json.sessionId = this._currentSessionId;
     }
 
     // Sanity check on sessionId
-    if (message.json.sessionToken !== this.sessionTokenMap[this._currentSessionId]) {
+    let sessionToken = this.sessionTokenMap[this._currentSessionId];
+    if (message.json.sessionToken && (message.json.sessionToken !== sessionToken)) {
       debug("Invalid Session Token: " + message.json.sessionToken +
-            " Expected Session Token: " + this.sessionTokenMap[this._currentSessionId]);
+            " Expected Session Token: " + sessionToken);
       this.sendNfcErrorResponse(message, NFC.NFC_ERROR_BAD_SESSION_ID);
       return null;
     }
 
-    // Update the current sessionId before sending to the worker
-    message.json.sessionId = this._currentSessionId;
-
     switch (message.name) {
+      case "NFC:StartPoll":
+        this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_ENABLED,
+                        requestId: message.json.requestId});
+        break;
+      case "NFC:StopPoll":
+        this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_LOW,
+                        requestId: message.json.requestId});
+        break;
+      case "NFC:PowerOff":
+        this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_DISABLED,
+                        requestId: message.json.requestId});
+        break;
       case "NFC:GetDetailsNDEF":
-        this.targetsByRequestId[message.json.requestId] = message.target;
         this.sendToNfcService("getDetailsNDEF", message.json);
         break;
       case "NFC:ReadNDEF":
-        this.targetsByRequestId[message.json.requestId] = message.target;
         this.sendToNfcService("readNDEF", message.json);
         break;
       case "NFC:WriteNDEF":
-        this.targetsByRequestId[message.json.requestId] = message.target;
         this.sendToNfcService("writeNDEF", message.json);
         break;
       case "NFC:MakeReadOnlyNDEF":
-        this.targetsByRequestId[message.json.requestId] = message.target;
         this.sendToNfcService("makeReadOnlyNDEF", message.json);
         break;
       case "NFC:Connect":
-        this.targetsByRequestId[message.json.requestId] = message.target;
         this.sendToNfcService("connect", message.json);
         break;
       case "NFC:Close":
-        this.targetsByRequestId[message.json.requestId] = message.target;
         this.sendToNfcService("close", message.json);
         break;
       case "NFC:SendFile":
@@ -551,7 +546,6 @@ Nfc.prototype = {
         // and system app that handles the system message :
         // 'nfc-manager-send-file'. System app subsequently handover's
         // the data to alternate carrier's (BT / WiFi) 'sendFile' interface.
-        this.targetsByRequestId[message.json.requestId] = message.target;
 
         // Notify system app to initiate BT send file operation
         gSystemMessenger.broadcastMessage("nfc-manager-send-file",
@@ -561,6 +555,7 @@ Nfc.prototype = {
         debug("UnSupported : Message Name " + message.name);
         return null;
     }
+    this.targetsByRequestId[message.json.requestId] = message.target;
 
     return null;
   },
