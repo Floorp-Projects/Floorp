@@ -37,20 +37,13 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
   , mHaveOutput(false)
 {
   MOZ_COUNT_CTOR(AppleATDecoder);
-  LOG("Creating Apple AudioToolbox Audio decoder");
+  LOG("Creating Apple AudioToolbox AAC decoder");
   LOG("Audio Decoder configuration: %s %d Hz %d channels %d bits per channel",
       mConfig.mime_type,
       mConfig.samples_per_second,
       mConfig.channel_count,
       mConfig.bits_per_sample);
-
-  if (!strcmp(aConfig.mime_type, "audio/mpeg")) {
-    mFileType = kAudioFileMP3Type;
-  } else if (!strcmp(aConfig.mime_type, "audio/mp4a-latm")) {
-    mFileType = kAudioFileAAC_ADTSType;
-  } else {
-    mFileType = 0;
-  }
+  // TODO: Verify aConfig.mime_type.
 }
 
 AppleATDecoder::~AppleATDecoder()
@@ -87,15 +80,12 @@ _SampleCallback(void* aDecoder,
 nsresult
 AppleATDecoder::Init()
 {
-  if (!mFileType) {
-    NS_ERROR("Non recognised format");
-    return NS_ERROR_FAILURE;
-  }
-  LOG("Initializing Apple AudioToolbox Audio decoder");
+  LOG("Initializing Apple AudioToolbox AAC decoder");
+  AudioFileTypeID fileType = kAudioFileAAC_ADTSType;
   OSStatus rv = AudioFileStreamOpen(this,
                                     _MetadataCallback,
                                     _SampleCallback,
-                                    mFileType,
+                                    fileType,
                                     &mStream);
   if (rv) {
     NS_ERROR("Couldn't open AudioFileStream");

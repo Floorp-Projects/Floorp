@@ -13,23 +13,22 @@
 namespace mozilla
 {
 
-template <int V> class FFmpegAudioDecoder
+template <int V> class FFmpegAACDecoder
 {
 };
 
 template <>
-class FFmpegAudioDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
+class FFmpegAACDecoder<LIBAV_VER> : public FFmpegDataDecoder<LIBAV_VER>
 {
 public:
-  FFmpegAudioDecoder(MediaTaskQueue* aTaskQueue,
-                     MediaDataDecoderCallback* aCallback,
-                     const mp4_demuxer::AudioDecoderConfig& aConfig);
-  virtual ~FFmpegAudioDecoder();
+  FFmpegAACDecoder(MediaTaskQueue* aTaskQueue,
+                   MediaDataDecoderCallback* aCallback,
+                   const mp4_demuxer::AudioDecoderConfig& aConfig);
+  virtual ~FFmpegAACDecoder();
 
   virtual nsresult Init() MOZ_OVERRIDE;
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
   virtual nsresult Drain() MOZ_OVERRIDE;
-  static AVCodecID GetCodecId(const char* aMimeType);
 
 private:
   void DecodePacket(mp4_demuxer::MP4Sample* aSample);

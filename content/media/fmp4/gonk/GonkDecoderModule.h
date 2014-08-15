@@ -29,9 +29,9 @@ public:
 
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                     MediaTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+  CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                   MediaTaskQueue* aAudioTaskQueue,
+                   MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
   static void Init();
 };

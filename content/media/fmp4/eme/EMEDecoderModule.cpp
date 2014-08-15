@@ -19,7 +19,7 @@
 #include "SharedThreadPool.h"
 #include "mozilla/EMELog.h"
 #include "EMEH264Decoder.h"
-#include "EMEAudioDecoder.h"
+#include "EMEAACDecoder.h"
 #include <string>
 
 namespace mozilla {
@@ -227,21 +227,21 @@ EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
 }
 
 already_AddRefed<MediaDataDecoder>
-EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
-                                     MediaTaskQueue* aAudioTaskQueue,
-                                     MediaDataDecoderCallback* aCallback)
+EMEDecoderModule::CreateAACDecoder(const AudioDecoderConfig& aConfig,
+                                   MediaTaskQueue* aAudioTaskQueue,
+                                   MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesAudio) {
-    nsRefPtr<MediaDataDecoder> decoder(new EMEAudioDecoder(mProxy,
-                                                           aConfig,
-                                                           aAudioTaskQueue,
-                                                           aCallback));
+    nsRefPtr<MediaDataDecoder> decoder(new EMEAACDecoder(mProxy,
+                                                         aConfig,
+                                                         aAudioTaskQueue,
+                                                         aCallback));
     return decoder.forget();
   }
 
-  nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAudioDecoder(aConfig,
-                                                              aAudioTaskQueue,
-                                                              aCallback));
+  nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAACDecoder(aConfig,
+                                                            aAudioTaskQueue,
+                                                            aCallback));
   if (!decoder) {
     return nullptr;
   }
