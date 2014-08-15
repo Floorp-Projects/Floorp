@@ -15,7 +15,7 @@
       /* Glyph Styles */
 
       .glyphShape-style {
-        fill: #7a7a7a;
+        fill: #737373;
       }
 
       .glyphShape-style-hover-gear {
