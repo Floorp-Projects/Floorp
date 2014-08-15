@@ -76,6 +76,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._highlighterHidden = this._highlighterHidden.bind(this);
   this._prefChanged = this._prefChanged.bind(this);
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
+  this._onFocus = this._onFocus.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -253,7 +254,7 @@ Toolbox.prototype = {
         this._applyCacheSettings();
         this._addKeysToWindow();
         this._addReloadKeys();
-        this._addToolSwitchingKeys();
+        this._addHostListeners();
         this._addZoomKeys();
         this._loadInitialZoom();
 
@@ -345,7 +346,7 @@ Toolbox.prototype = {
     });
   },
 
-  _addToolSwitchingKeys: function() {
+  _addHostListeners: function() {
     let nextKey = this.doc.getElementById("toolbox-next-tool-key");
     nextKey.addEventListener("command", this.selectNextTool.bind(this), true);
     let prevKey = this.doc.getElementById("toolbox-previous-tool-key");
@@ -354,6 +355,8 @@ Toolbox.prototype = {
     // Split console uses keypress instead of command so the event can be
     // cancelled with stopPropagation on the keypress, and not preventDefault.
     this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
+
+    this.doc.addEventListener("focus", this._onFocus, true);
   },
 
   _saveSplitConsoleHeight: function() {
@@ -983,6 +986,23 @@ Toolbox.prototype = {
   },
 
   /**
+   * If the console is split and we are focusing an element outside
+   * of the console, then store the newly focused element, so that
+   * it can be restored once the split console closes.
+   */
+  _onFocus: function({originalTarget}) {
+    // Ignore any non element nodes, or any elements contained
+    // within the webconsole frame.
+    let webconsoleURL = gDevTools.getToolDefinition("webconsole").url;
+    if (originalTarget.nodeType !== 1 ||
+        originalTarget.baseURI === webconsoleURL) {
+      return;
+    }
+
+    this._lastFocusedElement = originalTarget;
+  },
+
+  /**
    * Opens the split console.
    *
    * @returns {Promise} a promise that resolves once the tool has been
@@ -993,6 +1013,7 @@ Toolbox.prototype = {
     Services.prefs.setBoolPref(SPLITCONSOLE_ENABLED_PREF, true);
     this._refreshConsoleDisplay();
     this.emit("split-console");
+
     return this.loadTool("webconsole").then(() => {
       this.focusConsoleInput();
     });
@@ -1009,6 +1030,10 @@ Toolbox.prototype = {
     Services.prefs.setBoolPref(SPLITCONSOLE_ENABLED_PREF, false);
     this._refreshConsoleDisplay();
     this.emit("split-console");
+
+    if (this._lastFocusedElement) {
+      this._lastFocusedElement.focus();
+    }
     return promise.resolve();
   },
 
@@ -1312,6 +1337,7 @@ Toolbox.prototype = {
   destroyHost: function() {
     this.doc.removeEventListener("keypress",
       this._splitConsoleOnKeypress, false);
+    this.doc.removeEventListener("focus", this._onFocus, true);
     return this._host.destroy();
   },
 
@@ -1334,6 +1360,7 @@ Toolbox.prototype = {
 
     gDevTools.off("pref-changed", this._prefChanged);
 
+    this._lastFocusedElement = null;
     this._saveSplitConsoleHeight();
     this.webconsolePanel.removeEventListener("resize",
       this._saveSplitConsoleHeight);
