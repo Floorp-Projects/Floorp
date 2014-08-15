@@ -39,16 +39,23 @@ nsCSSFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
       result = SetAttributesForBlur(descr);
       break;
     case NS_STYLE_FILTER_BRIGHTNESS:
+      return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_CONTRAST:
+      return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_DROP_SHADOW:
       descr = CreatePrimitiveDescription(PrimitiveType::DropShadow, aPrimitiveDescrs);
       result = SetAttributesForDropShadow(descr);
       break;
     case NS_STYLE_FILTER_GRAYSCALE:
+      return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_HUE_ROTATE:
+      return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_INVERT:
+      return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_OPACITY:
+      return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_SATURATE:
+      return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_SEPIA:
       return NS_ERROR_NOT_IMPLEMENTED;
     default:
