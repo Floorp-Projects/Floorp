@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import itertools
 import json
 import logging
 import os
@@ -11,7 +12,7 @@ import traceback
 import sys
 import time
 
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 from mach.mixin.logging import LoggingMixin
 from mozbuild.util import (
     memoize,
@@ -56,6 +57,7 @@ from .data import (
     SharedLibrary,
     SimpleProgram,
     StaticLibrary,
+    TestHarnessFiles,
     TestWebIDLFile,
     TestManifest,
     VariablePassthru,
@@ -485,6 +487,31 @@ class TreeMetadataEmitter(LoggingMixin):
         if exports:
             yield Exports(context, exports,
                 dist_install=not context.get('NO_DIST_INSTALL', False))
+
+        test_harness_files = context.get('TEST_HARNESS_FILES')
+        if test_harness_files:
+            srcdir_files = defaultdict(list)
+            objdir_files = defaultdict(list)
+
+            for path, strings in test_harness_files.walk():
+                if not path and strings:
+                    raise SandboxValidationError(
+                        'Cannot install files to the root of TEST_HARNESS_FILES', context)
+
+                for s in strings:
+                    if context.is_objdir_path(s):
+                        if s.startswith('!/'):
+                            raise SandboxValidationError(
+                                'Topobjdir-relative file not allowed in TEST_HARNESS_FILES: %s' % s, context)
+                        objdir_files[path].append(s[1:])
+                    else:
+                        resolved = context.resolve_path(s)
+                        if not os.path.exists(resolved):
+                            raise SandboxValidationError(
+                                'File listed in TEST_HARNESS_FILES does not exist: %s' % s, context)
+                        srcdir_files[path].append(resolved)
+
+            yield TestHarnessFiles(context, srcdir_files, objdir_files)
 
         defines = context.get('DEFINES')
         if defines:
