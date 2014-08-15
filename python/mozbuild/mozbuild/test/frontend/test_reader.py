@@ -242,7 +242,7 @@ class TestBuildReader(unittest.TestCase):
         self.assertEqual([sandbox['RELATIVEDIR'] for sandbox in sandboxes],
             ['', 'foo', 'foo/baz', 'bar'])
         self.assertEqual([sandbox['XPIDL_MODULE'] for sandbox in sandboxes],
-            ['foobar', 'foobar', 'foobar', 'foobar'])
+            ['foobar', 'foobar', 'baz', 'foobar'])
 
     def test_process_eval_callback(self):
         def strip_dirs(sandbox):

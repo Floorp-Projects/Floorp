@@ -180,6 +180,28 @@ class TestSandbox(unittest.TestCase):
         self.assertEqual(e.args[1], 'reassign')
         self.assertEqual(e.args[2], 'DIRS')
 
+    def test_exec_source_reassign_exported(self):
+        config = MockConfig()
+
+        exports = {'DIST_SUBDIR': 'browser'}
+
+        sandbox = MozbuildSandbox(config, '', metadata={'exports': exports})
+
+        self.assertEqual(sandbox['DIST_SUBDIR'], 'browser')
+
+        sandbox.exec_source('DIST_SUBDIR = "foo"', 'foo.py')
+        with self.assertRaises(SandboxExecutionError) as se:
+          sandbox.exec_source('DIST_SUBDIR = "bar"', 'foo.py')
+
+        self.assertEqual(sandbox['DIST_SUBDIR'], 'foo')
+        e = se.exception
+        self.assertIsInstance(e.exc_value, KeyError)
+
+        e = se.exception.exc_value
+        self.assertEqual(e.args[0], 'global_ns')
+        self.assertEqual(e.args[1], 'reassign')
+        self.assertEqual(e.args[2], 'DIST_SUBDIR')
+
     def test_add_tier_dir_regular_str(self):
         sandbox = self.sandbox()
 
