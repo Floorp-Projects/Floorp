@@ -102,7 +102,7 @@ SandboxFilterImpl::Build() {
    * How are those syscalls found?
    * 1) via strace -p <child pid> or/and
    * 2) the child will report which system call has been denied by seccomp-bpf,
-   *    just before exiting, via NSPR or Android logging.
+   *    just before exiting
    * System call number to name mapping is found in:
    * bionic/libc/kernel/arch-arm/asm/unistd.h
    * or your libc's unistd.h/kernel headers.
