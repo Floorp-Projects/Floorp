@@ -113,12 +113,13 @@ class MozbuildSandbox(Sandbox):
     We expose a few useful functions and expose the set of variables defining
     Mozilla's build system.
     """
-    def __init__(self, config, path, metadata={}):
+    def __init__(self, config, reldir, metadata={}):
         """Create an empty mozbuild Sandbox.
 
-        config is a ConfigStatus instance (the output of configure). path is
-        the path of the main mozbuild file that is being executed. It is used
-        to compute encountered relative paths.
+        config is a ConfigStatus instance (the output of configure). reldir is
+        the path of the directory containing the main mozbuild file that is
+        being executed, relative to the topsrcdir. It is used to compute
+        encountered relative paths.
         """
         Sandbox.__init__(self, allowed_variables=VARIABLES)
 
@@ -126,29 +127,9 @@ class MozbuildSandbox(Sandbox):
 
         self.metadata = dict(metadata)
 
-        topobjdir = config.topobjdir
-
-        if not mozpath.basedir(path, [config.topsrcdir]):
-            external = config.external_source_dir
-            if external and mozpath.basedir(path, [external]):
-                config = ConfigEnvironment.from_config_status(
-                    mozpath.join(topobjdir, 'config.status'))
-                config.topsrcdir = external
-                config.external_source_dir = None
-
-        topsrcdir = config.topsrcdir
-
-        relpath = mozpath.relpath(path, topsrcdir)
-        reldir = mozpath.dirname(relpath)
-
-        if mozpath.dirname(relpath) == 'js/src' and \
-                not config.substs.get('JS_STANDALONE'):
-            config = ConfigEnvironment.from_config_status(
-                mozpath.join(topobjdir, reldir, 'config.status'))
-            config.topobjdir = topobjdir
-            config.external_source_dir = None
-
         self.config = config
+        topobjdir = config.topobjdir
+        topsrcdir = config.topsrcdir
 
         with self._globals.allow_all_writes() as d:
             d['TOPSRCDIR'] = topsrcdir
@@ -776,7 +757,28 @@ class BuildReader(object):
         self._read_files.add(path)
 
         time_start = time.time()
-        sandbox = MozbuildSandbox(config, path, metadata=metadata)
+
+        topobjdir = config.topobjdir
+
+        if not mozpath.basedir(path, [config.topsrcdir]):
+            external = config.external_source_dir
+            if external and mozpath.basedir(path, [external]):
+                config = ConfigEnvironment.from_config_status(
+                    mozpath.join(topobjdir, 'config.status'))
+                config.topsrcdir = external
+                config.external_source_dir = None
+
+        relpath = mozpath.relpath(path, config.topsrcdir)
+        reldir = mozpath.dirname(relpath)
+
+        if mozpath.dirname(relpath) == 'js/src' and \
+                not config.substs.get('JS_STANDALONE'):
+            config = ConfigEnvironment.from_config_status(
+                mozpath.join(topobjdir, reldir, 'config.status'))
+            config.topobjdir = topobjdir
+            config.external_source_dir = None
+
+        sandbox = MozbuildSandbox(config, reldir, metadata=metadata)
         sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
         sandbox.execution_time = time.time() - time_start
 
