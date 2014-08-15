@@ -4,14 +4,12 @@
 
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Make sure the border only appears at the bottom of the background -->
     <item
         android:top="-2dp"
         android:right="-2dp"
         android:left="-2dp">
         <shape>
-            <padding
-                android:top="10dp"
-                android:bottom="10dp"/>
             <solid android:color="@android:color/transparent"/>
             <stroke android:width="2dp" android:color="@color/highlight_orange"/>
         </shape>

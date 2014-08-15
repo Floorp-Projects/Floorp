@@ -3,7 +3,7 @@
 
 fuzzy(110,1802) == additive-1.svg additive-1-ref.svg # bug 981344
 == animate-width-1.svg lime.svg
-fuzzy-if(cocoaWidget,1,32) fuzzy-if(winWidget,1,1) == paced-1.svg paced-1-ref.svg # bug 981640
+fuzzy-if(cocoaWidget,1,32) fuzzy-if(winWidget,15,4) == paced-1.svg paced-1-ref.svg # bug 981640
 == rotate-angle-1.svg rotate-angle-ref.svg
 == rotate-angle-2.svg rotate-angle-ref.svg
 == rotate-angle-3.svg rotate-angle-ref.svg

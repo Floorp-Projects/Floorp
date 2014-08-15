@@ -643,6 +643,7 @@ DebuggerMemory::takeCensus(JSContext *cx, unsigned argc, Value *vp)
         dbg::DefaultCensusTraversal traversal(cx, handler, noGC);
         if (!traversal.init())
             return false;
+        traversal.wantNames = false;
 
         // Walk the debuggee compartments, using it to set the starting points
         // (the debuggee globals) for the traversal, and to populate

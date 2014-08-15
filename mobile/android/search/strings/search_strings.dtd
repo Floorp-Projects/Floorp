@@ -10,10 +10,17 @@
 <!ENTITY search_plus_content_description 'Add to search bar'>
 
 <!ENTITY search_pref_title 'Settings'>
-<!ENTITY search_pref_clear_history_confirmation 'History cleared'>
-<!ENTITY search_pref_clear_history_dialog_message 'Delete all search history from this device?'>
-<!ENTITY search_pref_clear_history_title 'Clear search history'>
 <!ENTITY search_pref_button_content_description 'Settings'>
+
+<!ENTITY pref_clearHistory_confirmation 'History cleared'>
+<!ENTITY pref_clearHistory_dialogMessage 'Delete all search history from this device?'>
+<!ENTITY pref_clearHistory_title 'Clear search history'>
+
+<!ENTITY pref_searchProvider_title 'Search engine'>
+
+<!ENTITY pref_searchProvider_bing 'Bing'>
+<!ENTITY pref_searchProvider_google 'Google'>
+<!ENTITY pref_searchProvider_yahoo 'Yahoo'>
 
 <!ENTITY search_widget_button_label 'Search'>
 
