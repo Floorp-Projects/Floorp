@@ -6,39 +6,192 @@
 # DO NOT UPDATE THIS FILE WITHOUT SIGN-OFF FROM A BUILD MODULE PEER. #
 ######################################################################
 
-r"""Defines the global config variables.
+r"""This module contains the data structure (context) holding the configuration
+from a moz.build. The data emitted by the frontend derives from those contexts.
 
-This module contains data structures defining the global symbols that have
-special meaning in the frontend files for the build system.
-
-If you are looking for the absolute authority on what the global namespace in
-the Sandbox consists of, you've come to the right place.
+It also defines the set of variables and functions available in moz.build.
+If you are looking for the absolute authority on what moz.build files can
+contain, you've come to the right place.
 """
 
 from __future__ import unicode_literals
 
+import os
+
 from collections import OrderedDict
+from contextlib import contextmanager
 from mozbuild.util import (
     HierarchicalStringList,
     HierarchicalStringListWithFlagsFactory,
+    KeyedDefaultDict,
     List,
+    memoized_property,
+    ReadOnlyKeyedDefaultDict,
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithFlagsFactory,
 )
-from .sandbox import SandboxDerivedValue
+import mozpack.path as mozpath
 from types import StringTypes
 
+import itertools
 
-class FinalTargetValue(SandboxDerivedValue, unicode):
-    def __new__(cls, sandbox, value=""):
+
+class ContextDerivedValue(object):
+    """Classes deriving from this one receive a special treatment in a
+    Context. See Context documentation.
+    """
+
+
+class Context(KeyedDefaultDict):
+    """Represents a moz.build configuration context.
+
+    Instances of this class are filled by the execution of sandboxes.
+    At the core, a Context is a dict, with a defined set of possible keys we'll
+    call variables. Each variable is associated with a type.
+
+    When reading a value for a given key, we first try to read the existing
+    value. If a value is not found and it is defined in the allowed variables
+    set, we return a new instance of the class for that variable. We don't
+    assign default instances until they are accessed because this makes
+    debugging the end-result much simpler. Instead of a data structure with
+    lots of empty/default values, you have a data structure with only the
+    values that were read or touched.
+
+    Instances of variables classes are created by invoking class_name(),
+    except when class_name derives from ContextDerivedValue, in which
+    case class_name(instance_of_the_context) is invoked.
+    A value is added to those calls when instances are created during
+    assignment (setitem).
+
+    allowed_variables is a dict of the variables that can be set and read in
+    this context instance. Keys in this dict are the strings representing keys
+    in this context which are valid. Values are tuples of stored type,
+    assigned type, default value, a docstring describing the purpose of the
+    variable, and a tier indicator (see comment above the VARIABLES declaration
+    in this module).
+
+    config is the ConfigEnvironment for this context.
+    """
+    def __init__(self, allowed_variables={}, config=None):
+        self._allowed_variables = allowed_variables
+        self.main_path = None
+        self.all_paths = set()
+        self.config = config
+        self.executed_time = 0
+        KeyedDefaultDict.__init__(self, self._factory)
+
+    def add_source(self, path):
+        """Adds the given path as source of the data from this context."""
+        assert os.path.isabs(path)
+
+        if not self.main_path:
+            self.main_path = path
+        self.all_paths.add(path)
+
+    @memoized_property
+    def objdir(self):
+        return mozpath.join(self.config.topobjdir, self.relobjdir).rstrip('/')
+
+    @memoized_property
+    def srcdir(self):
+        return mozpath.join(self.config.topsrcdir, self.relsrcdir).rstrip('/')
+
+    @memoized_property
+    def relsrcdir(self):
+        assert self.main_path
+        return mozpath.relpath(mozpath.dirname(self.main_path),
+            self.config.topsrcdir)
+
+    @memoized_property
+    def relobjdir(self):
+        return self.relsrcdir
+
+    def _factory(self, key):
+        """Function called when requesting a missing key."""
+
+        defaults = self._allowed_variables.get(key)
+        if not defaults:
+            raise KeyError('global_ns', 'get_unknown', key)
+
+        # If the default is specifically a lambda (or, rather, any function
+        # --but not a class that can be called), then it is actually a rule to
+        # generate the default that should be used.
+        default = defaults[0]
+        if issubclass(default, ContextDerivedValue):
+            return default(self)
+        else:
+            return default()
+
+    def _validate(self, key, value):
+        """Validates whether the key is allowed and if the value's type
+        matches.
+        """
+        stored_type, input_type, docs, tier = \
+            self._allowed_variables.get(key, (None, None, None, None))
+
+        if stored_type is None:
+            raise KeyError('global_ns', 'set_unknown', key, value)
+
+        # If the incoming value is not the type we store, we try to convert
+        # it to that type. This relies on proper coercion rules existing. This
+        # is the responsibility of whoever defined the symbols: a type should
+        # not be in the allowed set if the constructor function for the stored
+        # type does not accept an instance of that type.
+        if not isinstance(value, (stored_type, input_type)):
+            raise ValueError('global_ns', 'set_type', key, value, input_type)
+
+        return stored_type
+
+    def __setitem__(self, key, value):
+        stored_type = self._validate(key, value)
+
+        if not isinstance(value, stored_type):
+            if issubclass(stored_type, ContextDerivedValue):
+                value = stored_type(self, value)
+            else:
+                value = stored_type(value)
+
+        return KeyedDefaultDict.__setitem__(self, key, value)
+
+    def update(self, iterable={}, **kwargs):
+        """Like dict.update(), but using the context's setitem.
+
+        This function is transactional: if setitem fails for one of the values,
+        the context is not updated at all."""
+        if isinstance(iterable, dict):
+            iterable = iterable.items()
+
+        update = {}
+        for key, value in itertools.chain(iterable, kwargs.items()):
+            stored_type = self._validate(key, value)
+            # Don't create an instance of stored_type if coercion is needed,
+            # until all values are validated.
+            update[key] = (value, stored_type)
+        for key, (value, stored_type) in update.items():
+            if not isinstance(value, stored_type):
+                update[key] = stored_type(value)
+            else:
+                update[key] = value
+        KeyedDefaultDict.update(self, update)
+
+    def get_affected_tiers(self):
+        """Returns the list of tiers affected by the variables set in the
+        context.
+        """
+        tiers = (VARIABLES[key][3] for key in self if key in VARIABLES)
+        return set(tier for tier in tiers if tier)
+
+
+class FinalTargetValue(ContextDerivedValue, unicode):
+    def __new__(cls, context, value=""):
         if not value:
             value = 'dist/'
-            if sandbox['XPI_NAME']:
-                value += 'xpi-stage/' + sandbox['XPI_NAME']
+            if context['XPI_NAME']:
+                value += 'xpi-stage/' + context['XPI_NAME']
             else:
                 value += 'bin'
-            if sandbox['DIST_SUBDIR']:
-                value += '/' + sandbox['DIST_SUBDIR']
+            if context['DIST_SUBDIR']:
+                value += '/' + context['DIST_SUBDIR']
         return unicode.__new__(cls, value)
 
 
@@ -947,8 +1100,13 @@ FUNCTIONS = {
 }
 
 # Special variables. These complement VARIABLES.
+#
+# Each entry is a tuple of:
+#
+#  (function returning the corresponding value from a given context, type, docs)
+#
 SPECIAL_VARIABLES = {
-    'TOPSRCDIR': (str,
+    'TOPSRCDIR': (lambda context: context.config.topsrcdir, str,
         """Constant defining the top source directory.
 
         The top source directory is the parent directory containing the source
@@ -956,7 +1114,7 @@ SPECIAL_VARIABLES = {
         cloned repository.
         """),
 
-    'TOPOBJDIR': (str,
+    'TOPOBJDIR': (lambda context: context.config.topobjdir, str,
         """Constant defining the top object directory.
 
         The top object directory is the parent directory which will contain
@@ -964,7 +1122,7 @@ SPECIAL_VARIABLES = {
         directory."
         """),
 
-    'RELATIVEDIR': (str,
+    'RELATIVEDIR': (lambda context: context.relsrcdir, str,
         """Constant defining the relative path of this file.
 
         The relative path is from ``TOPSRCDIR``. This is defined as relative
@@ -972,20 +1130,21 @@ SPECIAL_VARIABLES = {
         files have been included using ``include()``.
         """),
 
-    'SRCDIR': (str,
+    'SRCDIR': (lambda context: context.srcdir, str,
         """Constant defining the source directory of this file.
 
         This is the path inside ``TOPSRCDIR`` where this file is located. It
         is the same as ``TOPSRCDIR + RELATIVEDIR``.
         """),
 
-    'OBJDIR': (str,
+    'OBJDIR': (lambda context: context.objdir, str,
         """The path to the object directory for this file.
 
         Is is the same as ``TOPOBJDIR + RELATIVEDIR``.
         """),
 
-    'CONFIG': (dict,
+    'CONFIG': (lambda context: ReadOnlyKeyedDefaultDict(
+            lambda key: context.config.substs_unicode.get(key)), dict,
         """Dictionary containing the current configuration variables.
 
         All the variables defined by the configuration system are available
@@ -995,16 +1154,6 @@ SPECIAL_VARIABLES = {
         will result in a run-time error.
 
         Access to an unknown variable will return None.
-        """),
-
-    '__builtins__': (dict,
-        """Exposes Python built-in types.
-
-        The set of exposed Python built-ins is currently:
-
-        - True
-        - False
-        - None
         """),
 }
 
