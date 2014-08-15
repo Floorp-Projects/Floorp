@@ -39,8 +39,8 @@
                android:layout_toRightOf="@id/tabs"
                android:layout_toLeftOf="@id/menu_items"
                android:layout_marginLeft="-18dp"
-               android:layout_marginTop="7dp"
-               android:layout_marginBottom="7dp"
+               android:layout_marginTop="8dp"
+               android:layout_marginBottom="8dp"
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
@@ -74,7 +74,9 @@
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button.Container"
                   android:layout_toRightOf="@id/back"
-                  android:layout_toLeftOf="@id/menu_items"/>
+                  android:layout_toLeftOf="@id/menu_items"
+                  android:paddingLeft="8dip"
+                  android:paddingRight="8dip"/>
 
     <LinearLayout android:id="@+id/menu_items"
                   android:layout_width="wrap_content"
