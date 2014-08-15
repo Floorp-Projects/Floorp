@@ -1545,7 +1545,9 @@ ConstructCERTCertListFromReversedDERArray(
 
 } // namespace mozilla
 
-NS_IMPL_ISUPPORTS(nsNSSCertList, nsIX509CertList)
+NS_IMPL_ISUPPORTS(nsNSSCertList,
+                  nsIX509CertList,
+                  nsISerializable)
 
 nsNSSCertList::nsNSSCertList(ScopedCERTCertList& certList,
                              const nsNSSShutDownPreventionLock& proofOfLock)
@@ -1665,6 +1667,84 @@ nsNSSCertList::GetRawCertList()
   // This function should only be called after adquiring a
   // nsNSSShutDownPreventionLock
   return mCertList.get();
+}
+
+NS_IMETHODIMP
+nsNSSCertList::Write(nsIObjectOutputStream* aStream)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_ENSURE_STATE(mCertList);
+  nsresult rv = NS_OK;
+
+  // First, enumerate the certs to get the length of the list
+  uint32_t certListLen = 0;
+  CERTCertListNode* node = nullptr;
+  for (node = CERT_LIST_HEAD(mCertList);
+       !CERT_LIST_END(node, mCertList);
+       node = CERT_LIST_NEXT(node), ++certListLen) {
+  }
+
+  // Write the length of the list
+  rv = aStream->Write32(certListLen);
+
+  // Repeat the loop, and serialize each certificate
+  node = nullptr;
+  for (node = CERT_LIST_HEAD(mCertList);
+       !CERT_LIST_END(node, mCertList);
+       node = CERT_LIST_NEXT(node))
+  {
+    nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(node->cert);
+    if (!cert) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      break;
+    }
+
+    nsCOMPtr<nsISerializable> serializableCert = do_QueryInterface(cert);
+    rv = aStream->WriteCompoundObject(serializableCert, NS_GET_IID(nsIX509Cert), true);
+    if (NS_FAILED(rv)) {
+      break;
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsNSSCertList::Read(nsIObjectInputStream* aStream)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_ENSURE_STATE(mCertList);
+  nsresult rv = NS_OK;
+
+  uint32_t certListLen;
+  rv = aStream->Read32(&certListLen);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  for(uint32_t i = 0; i < certListLen; ++i) {
+    nsCOMPtr<nsISupports> certSupports;
+    rv = aStream->ReadObject(true, getter_AddRefs(certSupports));
+    if (NS_FAILED(rv)) {
+      break;
+    }
+
+    nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certSupports);
+    rv = AddCert(cert);
+    if (NS_FAILED(rv)) {
+      break;
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
