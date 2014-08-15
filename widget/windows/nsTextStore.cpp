@@ -135,6 +135,17 @@ DWORD         nsTextStore::sTsfClientId  = 0;
 nsTextStore*  nsTextStore::sTsfTextStore = nullptr;
 
 bool nsTextStore::sCreateNativeCaretForATOK = false;
+bool nsTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
+bool nsTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
+
+#define TIP_NAME_BEGINS_WITH_ATOK \
+  (NS_LITERAL_STRING("ATOK "))
+// NOTE: Free ChangJie 2010 missspells its name...
+#define TIP_NAME_FREE_CHANG_JIE_2010 \
+  (NS_LITERAL_STRING("Free CangJie IME 10"))
+#define TIP_NAME_EASY_CHANGJEI \
+  (NS_LITERAL_STRING( \
+     "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"))
 
 UINT nsTextStore::sFlushTIPInputMessage  = 0;
 
@@ -2550,6 +2561,25 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
     return TS_E_INVALIDPOS;
   }
 
+  // Free ChangJie 2010 and Easy Changjei 1.0.12.0 doesn't handle
+  // ITfContextView::GetTextExt() properly.  Prehaps, it's due to a bug of TSF.
+  // TSF (at least on Win 8.1) doesn't return TS_E_NOLAYOUT to the caller
+  // even if we return it.  It's converted to just E_FAIL.
+  // TODO: On Win 9, we need to check this hack is still necessary.
+  if ((sDoNotReturnNoLayoutErrorToFreeChangJie &&
+       mActiveTIPKeyboardDescription.Equals(TIP_NAME_FREE_CHANG_JIE_2010)) ||
+      (sDoNotReturnNoLayoutErrorToEasyChangjei &&
+       mActiveTIPKeyboardDescription.Equals(TIP_NAME_EASY_CHANGJEI)) &&
+      mComposition.IsComposing() &&
+      mContent.IsLayoutChangedAfter(acpEnd) &&
+      mComposition.mStart < acpEnd) {
+    acpEnd = mComposition.mStart;
+    acpStart = std::min(acpStart, acpEnd);
+    PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+           ("TSF: 0x%p   nsTextStore::GetTextExt() hacked the offsets for TIP "
+            "acpStart=%d, acpEnd=%d", this, acpStart, acpEnd));
+  }
+
   if (mContent.IsLayoutChangedAfter(acpEnd)) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::GetTextExt() FAILED due to "
@@ -2615,7 +2645,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   // for hacking the bug.
   if (sCreateNativeCaretForATOK &&
       StringBeginsWith(
-        mActiveTIPKeyboardDescription, NS_LITERAL_STRING("ATOK ")) &&
+        mActiveTIPKeyboardDescription, TIP_NAME_BEGINS_WITH_ATOK) &&
       mComposition.IsComposing() &&
       mComposition.mStart <= acpStart && mComposition.EndOffset() >= acpStart &&
       mComposition.mStart <= acpEnd && mComposition.EndOffset() >= acpEnd) {
@@ -4034,6 +4064,12 @@ nsTextStore::Initialize()
 
   sCreateNativeCaretForATOK =
     Preferences::GetBool("intl.tsf.hack.atok.create_native_caret", true);
+  sDoNotReturnNoLayoutErrorToFreeChangJie =
+    Preferences::GetBool(
+      "intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
+  sDoNotReturnNoLayoutErrorToEasyChangjei =
+    Preferences::GetBool(
+      "intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
 
   MOZ_ASSERT(!sFlushTIPInputMessage);
   sFlushTIPInputMessage = ::RegisterWindowMessageW(L"Flush TIP Input Message");
@@ -4042,10 +4078,14 @@ nsTextStore::Initialize()
     ("TSF:   nsTextStore::Initialize(), sTsfThreadMgr=0x%p, "
      "sTsfClientId=0x%08X, sTsfTextStore=0x%p, sDisplayAttrMgr=0x%p, "
      "sCategoryMgr=0x%p, sTsfDisabledDocumentMgr=0x%p, sTsfDisabledContext=%p, "
-     "sCreateNativeCaretForATOK=%s",
+     "sCreateNativeCaretForATOK=%s, "
+     "sDoNotReturnNoLayoutErrorToFreeChangJie=%s, "
+     "sDoNotReturnNoLayoutErrorToEasyChangjei=%s",
      sTsfThreadMgr, sTsfClientId, sTsfTextStore, sDisplayAttrMgr, sCategoryMgr,
      sTsfDisabledDocumentMgr, sTsfDisabledContext,
-     GetBoolName(sCreateNativeCaretForATOK)));
+     GetBoolName(sCreateNativeCaretForATOK),
+     GetBoolName(sDoNotReturnNoLayoutErrorToFreeChangJie),
+     GetBoolName(sDoNotReturnNoLayoutErrorToEasyChangjei)));
 }
 
 // static
