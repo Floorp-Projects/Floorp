@@ -87,19 +87,13 @@ AppleDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aCo
 }
 
 already_AddRefed<MediaDataDecoder>
-AppleDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                                       MediaTaskQueue* aAudioTaskQueue,
-                                       MediaDataDecoderCallback* aCallback)
+AppleDecoderModule::CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                                     MediaTaskQueue* aAudioTaskQueue,
+                                     MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder =
     new AppleATDecoder(aConfig, aAudioTaskQueue, aCallback);
   return decoder.forget();
-}
-
-bool
-AppleDecoderModule::SupportsAudioMimeType(const char* aMimeType)
-{
-  return !strcmp(aMimeType, "audio/mp4a-latm") || !strcmp(aMimeType, "audio/mpeg");
 }
 
 } // namespace mozilla

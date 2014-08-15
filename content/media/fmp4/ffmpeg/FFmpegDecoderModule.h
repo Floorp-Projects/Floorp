@@ -8,7 +8,7 @@
 #define __FFmpegDecoderModule_h__
 
 #include "PlatformDecoderModule.h"
-#include "FFmpegAudioDecoder.h"
+#include "FFmpegAACDecoder.h"
 #include "FFmpegH264Decoder.h"
 
 namespace mozilla
@@ -39,18 +39,13 @@ public:
   }
 
   virtual already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                     MediaTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE
+  CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                   MediaTaskQueue* aAudioTaskQueue,
+                   MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE
   {
     nsRefPtr<MediaDataDecoder> decoder =
-      new FFmpegAudioDecoder<V>(aAudioTaskQueue, aCallback, aConfig);
+      new FFmpegAACDecoder<V>(aAudioTaskQueue, aCallback, aConfig);
     return decoder.forget();
-  }
-
-  virtual bool SupportsAudioMimeType(const char* aMimeType) MOZ_OVERRIDE
-  {
-    return FFmpegAudioDecoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }
 };
 
