@@ -42,8 +42,8 @@ class ServiceWorkerClientPostMessageRunnable MOZ_FINAL : public nsRunnable
 
 public:
   ServiceWorkerClientPostMessageRunnable(uint64_t aId,
-                              JSAutoStructuredCloneBuffer&& aData,
-                              nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
+                                         JSAutoStructuredCloneBuffer&& aData,
+                                         nsTArray<nsCOMPtr<nsISupports>>& aClonedObjects)
     : mId(aId),
       mBuffer(Move(aData))
   {
