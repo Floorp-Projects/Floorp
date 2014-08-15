@@ -303,6 +303,9 @@ function RTCPeerConnection() {
   this._onCreateAnswerFailure = null;
   this._onGetStatsSuccess = null;
   this._onGetStatsFailure = null;
+  this._onReplaceTrackSender = null;
+  this._onReplaceTrackSuccess = null;
+  this._onReplaceTrackFailure = null;
 
   this._pendingType = null;
   this._localType = null;
@@ -812,7 +815,8 @@ RTCPeerConnection.prototype = {
     this._checkClosed();
     this._impl.addTrack(track, stream);
     let sender = this._win.RTCRtpSender._create(this._win,
-                                                new RTCRtpSender(this, track));
+                                                new RTCRtpSender(this, track,
+                                                                 stream));
     this._senders.push({ sender: sender, stream: stream });
     return sender;
   },
@@ -820,6 +824,24 @@ RTCPeerConnection.prototype = {
   removeTrack: function(sender) {
      // Bug 844295: Not implementing this functionality.
      throw new this._win.DOMError("", "removeTrack not yet implemented");
+  },
+
+  _replaceTrack: function(sender, withTrack, onSuccess, onError) {
+    // TODO: Do a (sender._stream.getTracks().indexOf(track) == -1) check
+    //       on both track args someday.
+    //
+    // The proposed API will be that both tracks must already be in the same
+    // stream. However, since our MediaStreams currently are limited to one
+    // track per type, we allow replacement with an outside track not already
+    // in the same stream.
+    //
+    // Since a track may be replaced more than once, the track being replaced
+    // may not be in the stream either, so we check neither arg right now.
+
+    this._onReplaceTrackSender = sender;
+    this._onReplaceTrackSuccess = onSuccess;
+    this._onReplaceTrackFailure = onError;
+    this._impl.replaceTrack(sender.track, withTrack, sender._stream);
   },
 
   close: function() {
@@ -1306,6 +1328,15 @@ PeerConnectionObserver.prototype = {
                                                                   { track: track }));
   },
 
+  onReplaceTrackSuccess: function() {
+    this._dompc.callCB(this._dompc._onReplaceTrackSuccess);
+  },
+
+  onReplaceTrackError: function(code, message) {
+    this._dompc.callCB(this._dompc._onReplaceTrackError,
+                       new RTCError(code, message));
+  },
+
   foundIceCandidate: function(cand) {
     this.dispatchEvent(new this._dompc._win.RTCPeerConnectionIceEvent("icecandidate",
                                                                       { candidate: cand } ));
@@ -1337,15 +1368,25 @@ RTCPeerConnectionStatic.prototype = {
   },
 };
 
-function RTCRtpSender(pc, track) {
-  this.pc = pc;
+function RTCRtpSender(pc, track, stream) {
+  this._pc = pc;
   this.track = track;
+  this._stream = stream;
 }
 RTCRtpSender.prototype = {
   classDescription: "RTCRtpSender",
   classID: PC_SENDER_CID,
   contractID: PC_SENDER_CONTRACT,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
+
+  replaceTrack: function(withTrack, onSuccess, onError) {
+    this._pc._checkClosed();
+    this._pc._queueOrRun({
+      func: this._pc._replaceTrack,
+      args: [this, withTrack, onSuccess, onError],
+      wait: false
+    });
+  }
 };
 
 function RTCRtpReceiver(pc, track) {
