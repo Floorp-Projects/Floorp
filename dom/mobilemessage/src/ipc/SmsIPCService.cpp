@@ -10,7 +10,6 @@
 #include "SmsMessage.h"
 #include "SmsFilter.h"
 #include "nsJSUtils.h"
-#include "nsCxPusher.h"
 #include "mozilla/dom/MozMobileMessageManagerBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Preferences.h"

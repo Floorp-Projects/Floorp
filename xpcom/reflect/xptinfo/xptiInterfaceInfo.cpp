@@ -6,10 +6,10 @@
 /* Implementation of xptiInterfaceEntry and xptiInterfaceInfo. */
 
 #include "xptiprivate.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "mozilla/PodOperations.h"
-#include "nsCxPusher.h"
 #include "jsapi.h"
 
 using namespace mozilla;
