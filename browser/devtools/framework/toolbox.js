@@ -264,16 +264,19 @@ Toolbox.prototype = {
         this.webconsolePanel.addEventListener("resize",
           this._saveSplitConsoleHeight);
 
-        let splitConsolePromise = promise.resolve();
-        if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
-          splitConsolePromise = this.openSplitConsole();
-        }
-
         let buttonsPromise = this._buildButtons();
 
         this._telemetry.toolOpened("toolbox");
 
         this.selectTool(this._defaultToolId).then(panel => {
+
+          // Wait until the original tool is selected so that the split
+          // console input will receive focus.
+          let splitConsolePromise = promise.resolve();
+          if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
+            splitConsolePromise = this.openSplitConsole();
+          }
+
           promise.all([
             splitConsolePromise,
             buttonsPromise
@@ -979,9 +982,9 @@ Toolbox.prototype = {
    * Focus split console's input line
    */
   focusConsoleInput: function() {
-    let hud = this.getPanel("webconsole").hud;
-    if (hud && hud.jsterm) {
-      hud.jsterm.inputNode.focus();
+    let consolePanel = this.getPanel("webconsole");
+    if (consolePanel) {
+      consolePanel.focusInput();
     }
   },
 
