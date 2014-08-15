@@ -153,7 +153,7 @@ function ToLength(v) {
         return 0;
 
     // Math.pow(2, 53) - 1 = 0x1fffffffffffff
-    return std_Math_min(v, 0x1fffffffffffff);
+    return v < 0x1fffffffffffff ? v : 0x1fffffffffffff;
 }
 
 /********** Testing code **********/

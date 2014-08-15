@@ -9,13 +9,8 @@ r"""Read build frontend files into data structures.
 
 In terms of code architecture, the main interface is BuildReader. BuildReader
 starts with a root mozbuild file. It creates a new execution environment for
-this file, which is represented by the Sandbox class. The Sandbox class is what
-defines what is allowed to execute in an individual mozbuild file. The Sandbox
-consists of a local and global namespace, which are modeled by the
-LocalNamespace and GlobalNamespace classes, respectively. The global namespace
-contains all of the takeaway information from the execution. The local
-namespace is for throwaway local variables and its contents are discarded after
-execution.
+this file, which is represented by the Sandbox class. The Sandbox class is used
+to fill a Context, representing the output of an individual mozbuild file. The
 
 The BuildReader contains basic logic for traversing a tree of mozbuild files.
 It does this by examining specific variables populated during execution.
@@ -55,10 +50,12 @@ from .sandbox import (
     Sandbox,
 )
 
-from .sandbox_symbols import (
+from .context import (
+    Context,
     FUNCTIONS,
     VARIABLES,
     DEPRECATION_HINTS,
+    SPECIAL_VARIABLES,
 )
 
 if sys.version_info.major == 2:
@@ -112,58 +109,39 @@ class MozbuildSandbox(Sandbox):
 
     We expose a few useful functions and expose the set of variables defining
     Mozilla's build system.
-    """
-    def __init__(self, config, path, metadata={}):
-        """Create an empty mozbuild Sandbox.
 
-        config is a ConfigStatus instance (the output of configure). path is
-        the path of the main mozbuild file that is being executed. It is used
-        to compute encountered relative paths.
-        """
-        Sandbox.__init__(self, allowed_variables=VARIABLES)
+    context is a Context instance.
+
+    metadata is a dict of metadata that can be used during the sandbox
+    evaluation.
+    """
+    def __init__(self, context, metadata={}):
+        assert isinstance(context, Context)
+
+        Sandbox.__init__(self, context)
 
         self._log = logging.getLogger(__name__)
 
-        self.config = config
         self.metadata = dict(metadata)
+        exports = self.metadata.get('exports', {})
+        self.exports = set(exports.keys())
+        context.update(exports)
 
-        topobjdir = config.topobjdir
-        topsrcdir = config.topsrcdir
+    def __getitem__(self, key):
+        if key in SPECIAL_VARIABLES:
+            return SPECIAL_VARIABLES[key][0](self._context)
+        if key in FUNCTIONS:
+            return getattr(self, FUNCTIONS[key][0])
+        return Sandbox.__getitem__(self, key)
 
-        if not mozpath.basedir(path, [topsrcdir]):
-            if config.external_source_dir and \
-                    mozpath.basedir(path, [config.external_source_dir]):
-                topsrcdir = config.external_source_dir
-
-        self.topsrcdir = topsrcdir
-
-        relpath = mozpath.relpath(path, topsrcdir)
-        reldir = mozpath.dirname(relpath)
-
-        if mozpath.dirname(relpath) == 'js/src' and \
-                not config.substs.get('JS_STANDALONE'):
-            config = ConfigEnvironment.from_config_status(
-                mozpath.join(topobjdir, reldir, 'config.status'))
-            config.topobjdir = topobjdir
-            self.config = config
-
-        with self._globals.allow_all_writes() as d:
-            d['TOPSRCDIR'] = topsrcdir
-            d['TOPOBJDIR'] = topobjdir
-            d['RELATIVEDIR'] = reldir
-            d['SRCDIR'] = mozpath.join(topsrcdir, reldir).rstrip('/')
-            d['OBJDIR'] = mozpath.join(topobjdir, reldir).rstrip('/')
-
-            d['CONFIG'] = ReadOnlyDefaultDict(lambda: None,
-                self.config.substs_unicode)
-
-            # Register functions.
-            for name, func in FUNCTIONS.items():
-                d[name] = getattr(self, func[0])
-
-            # Initialize the exports that we need in the global.
-            extra_vars = self.metadata.get('exports', dict())
-            self._globals.update(extra_vars)
+    def __setitem__(self, key, value):
+        if key in SPECIAL_VARIABLES or key in FUNCTIONS:
+            raise KeyError()
+        if key in self.exports:
+            self._context[key] = value
+            self.exports.remove(key)
+            return
+        Sandbox.__setitem__(self, key, value)
 
     def normalize_path(self, path, filesystem_absolute=False, srcdir=None):
         """Normalizes paths.
@@ -180,25 +158,28 @@ class MozbuildSandbox(Sandbox):
         if os.path.isabs(path):
             if filesystem_absolute:
                 return path
-            roots = [self.topsrcdir]
-            if self.config.external_source_dir:
-                roots.append(self.config.external_source_dir)
+            roots = [self._context.config.topsrcdir]
+            if self._context.config.external_source_dir:
+                roots.append(self._context.config.external_source_dir)
             for root in roots:
-                # mozpath.join would ignore the self.topsrcdir argument if we
-                # passed in the absolute path, so omit the leading /
+                # mozpath.join would ignore the self._context.config.topsrcdir
+                # argument if we passed in the absolute path, so omit the
+                # leading /
                 p = mozpath.normpath(mozpath.join(root, path[1:]))
                 if os.path.exists(p):
                     return p
-            # mozpath.join would ignore the self.topsrcdir argument if we passed
-            # in the absolute path, so omit the leading /
-            return mozpath.normpath(mozpath.join(self.topsrcdir, path[1:]))
+            # mozpath.join would ignore the self.condig.topsrcdir argument if
+            # we passed in the absolute path, so omit the leading /
+            return mozpath.normpath(
+                mozpath.join(self._context.config.topsrcdir, path[1:]))
         elif srcdir:
             return mozpath.normpath(mozpath.join(srcdir, path))
         elif len(self._execution_stack):
             return mozpath.normpath(mozpath.join(
                 mozpath.dirname(self._execution_stack[-1]), path))
         else:
-            return mozpath.normpath(mozpath.join(self.topsrcdir, path))
+            return mozpath.normpath(
+                mozpath.join(self._context.config.topsrcdir, path))
 
     def exec_file(self, path, filesystem_absolute=False):
         """Override exec_file to normalize paths and restrict file loading.
@@ -211,7 +192,7 @@ class MozbuildSandbox(Sandbox):
         # protection, so it is omitted.
         normalized_path = self.normalize_path(path,
             filesystem_absolute=filesystem_absolute)
-        if not is_read_allowed(normalized_path, self.config):
+        if not is_read_allowed(normalized_path, self._context.config):
             raise SandboxLoadError(list(self._execution_stack),
                 sys.exc_info()[2], illegal_path=path)
 
@@ -288,10 +269,10 @@ class MozbuildSandbox(Sandbox):
             raise Exception('Variable has already been exported: %s' % varname)
 
         try:
-            # Doing a regular self._globals[varname] causes a set as a side
+            # Doing a regular self._context[varname] causes a set as a side
             # effect. By calling the dict method instead, we don't have any
             # side effects.
-            exports[varname] = dict.__getitem__(self._globals, varname)
+            exports[varname] = dict.__getitem__(self._context, varname)
         except KeyError:
             self.last_name_error = KeyError('global_ns', 'get_unknown', varname)
             raise self.last_name_error
@@ -320,9 +301,9 @@ class MozbuildSandbox(Sandbox):
 
 class SandboxValidationError(Exception):
     """Represents an error encountered when validating sandbox results."""
-    def __init__(self, message, sandbox):
+    def __init__(self, message, context):
         Exception.__init__(self, message)
-        self.sandbox = sandbox
+        self.context = context
 
     def __str__(self):
         s = StringIO()
@@ -333,7 +314,7 @@ class SandboxValidationError(Exception):
         s.write('The error occurred while processing the following file or ')
         s.write('one of the files it includes:\n')
         s.write('\n')
-        s.write('    %s/moz.build\n' % self.sandbox['SRCDIR'])
+        s.write('    %s/moz.build\n' % self.context.srcdir)
         s.write('\n')
 
         s.write('The error occurred when validating the result of ')
@@ -646,15 +627,13 @@ class BuildReader(object):
 
     The reader can optionally call a callable after each sandbox is evaluated
     but before its evaluated content is processed. This gives callers the
-    opportunity to modify sandboxes before side-effects occur from their
-    content. This callback receives the ``Sandbox`` that was evaluated. The
-    return value is ignored.
+    opportunity to modify contexts before side-effects occur from their
+    content. This callback receives the ``Context`` containing the result of
+    each sandbox evaluation. Its return value is ignored.
     """
 
     def __init__(self, config, sandbox_post_eval_cb=None):
         self.config = config
-        self.topsrcdir = config.topsrcdir
-        self.topobjdir = config.topobjdir
 
         self._sandbox_post_eval_cb = sandbox_post_eval_cb
         self._log = logging.getLogger(__name__)
@@ -667,10 +646,10 @@ class BuildReader(object):
         This starts with the tree's top-most moz.build file and descends into
         all linked moz.build files until all relevant files have been evaluated.
 
-        This is a generator of Sandbox instances. As each moz.build file is
-        read, a new Sandbox is created and emitted.
+        This is a generator of Context instances. As each moz.build file is
+        read, a new Context is created and emitted.
         """
-        path = mozpath.join(self.topsrcdir, 'moz.build')
+        path = mozpath.join(self.config.topsrcdir, 'moz.build')
         return self.read_mozbuild(path, self.config, read_tiers=True,
             filesystem_absolute=True)
 
@@ -681,7 +660,7 @@ class BuildReader(object):
         filesystem walk to discover every moz.build file rather than relying on
         data from executed moz.build files to drive traversal.
 
-        This is a generator of Sandbox instances.
+        This is a generator of Context instances.
         """
         # In the future, we may traverse moz.build files by looking
         # for DIRS references in the AST, even if a directory is added behind
@@ -694,11 +673,11 @@ class BuildReader(object):
             'obj*',
         }
 
-        finder = FileFinder(self.topsrcdir, find_executables=False,
+        finder = FileFinder(self.config.topsrcdir, find_executables=False,
             ignore=ignore)
 
         for path, f in finder.find('**/moz.build'):
-            path = os.path.join(self.topsrcdir, path)
+            path = os.path.join(self.config.topsrcdir, path)
             for s in self.read_mozbuild(path, self.config, descend=False,
                 filesystem_absolute=True, read_tiers=True):
                 yield s
@@ -723,10 +702,9 @@ class BuildReader(object):
         directories and files per variable values.
 
         Arbitrary metadata in the form of a dict can be passed into this
-        function. This metadata will be attached to the emitted output. This
-        feature is intended to facilitate the build reader injecting state and
-        annotations into moz.build files that is independent of the sandbox's
-        execution context.
+        function. This feature is intended to facilitate the build reader
+        injecting state and annotations into moz.build files that is
+        independent of the sandbox's execution context.
 
         Traversal is performed depth first (for no particular reason).
         """
@@ -774,35 +752,57 @@ class BuildReader(object):
         self._read_files.add(path)
 
         time_start = time.time()
-        sandbox = MozbuildSandbox(config, path, metadata=metadata)
+
+        topobjdir = config.topobjdir
+
+        if not mozpath.basedir(path, [config.topsrcdir]):
+            external = config.external_source_dir
+            if external and mozpath.basedir(path, [external]):
+                config = ConfigEnvironment.from_config_status(
+                    mozpath.join(topobjdir, 'config.status'))
+                config.topsrcdir = external
+                config.external_source_dir = None
+
+        relpath = mozpath.relpath(path, config.topsrcdir)
+        reldir = mozpath.dirname(relpath)
+
+        if mozpath.dirname(relpath) == 'js/src' and \
+                not config.substs.get('JS_STANDALONE'):
+            config = ConfigEnvironment.from_config_status(
+                mozpath.join(topobjdir, reldir, 'config.status'))
+            config.topobjdir = topobjdir
+            config.external_source_dir = None
+
+        context = Context(VARIABLES, config)
+        sandbox = MozbuildSandbox(context, metadata=metadata)
         sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
-        sandbox.execution_time = time.time() - time_start
+        context.execution_time = time.time() - time_start
 
         if self._sandbox_post_eval_cb:
-            self._sandbox_post_eval_cb(sandbox)
+            self._sandbox_post_eval_cb(context)
 
         # We first collect directories populated in variables.
         dir_vars = ['DIRS']
 
-        if sandbox.config.substs.get('ENABLE_TESTS', False) == '1':
+        if context.config.substs.get('ENABLE_TESTS', False) == '1':
             dir_vars.append('TEST_DIRS')
 
-        dirs = [(v, sandbox[v]) for v in dir_vars if v in sandbox]
+        dirs = [(v, context[v]) for v in dir_vars if v in context]
 
         curdir = mozpath.dirname(path)
 
-        gyp_sandboxes = []
-        for target_dir in sandbox['GYP_DIRS']:
-            gyp_dir = sandbox['GYP_DIRS'][target_dir]
+        gyp_contexts = []
+        for target_dir in context['GYP_DIRS']:
+            gyp_dir = context['GYP_DIRS'][target_dir]
             for v in ('input', 'variables'):
                 if not getattr(gyp_dir, v):
                     raise SandboxValidationError('Missing value for '
-                        'GYP_DIRS["%s"].%s' % (target_dir, v), sandbox)
+                        'GYP_DIRS["%s"].%s' % (target_dir, v), context)
 
-            # The make backend assumes sandboxes for sub-directories are
-            # emitted after their parent, so accumulate the gyp sandboxes.
-            # We could emit the parent sandbox before processing gyp
-            # configuration, but we need to add the gyp objdirs to that sandbox
+            # The make backend assumes contexts for sub-directories are
+            # emitted after their parent, so accumulate the gyp contexts.
+            # We could emit the parent context before processing gyp
+            # configuration, but we need to add the gyp objdirs to that context
             # first.
             from .gyp_reader import read_from_gyp
             non_unified_sources = set()
@@ -810,27 +810,27 @@ class BuildReader(object):
                 source = mozpath.normpath(mozpath.join(curdir, s))
                 if not os.path.exists(source):
                     raise SandboxValidationError('Cannot find %s.' % source,
-                        sandbox)
+                        context)
                 non_unified_sources.add(source)
-            for gyp_sandbox in read_from_gyp(sandbox.config,
+            for gyp_context in read_from_gyp(context.config,
                                              mozpath.join(curdir, gyp_dir.input),
-                                             mozpath.join(sandbox['OBJDIR'],
+                                             mozpath.join(context.objdir,
                                                           target_dir),
                                              gyp_dir.variables,
                                              non_unified_sources = non_unified_sources):
-                gyp_sandbox.update(gyp_dir.sandbox_vars)
-                gyp_sandboxes.append(gyp_sandbox)
+                gyp_context.update(gyp_dir.sandbox_vars)
+                gyp_contexts.append(gyp_context)
 
-        for gyp_sandbox in gyp_sandboxes:
+        for gyp_context in gyp_contexts:
             if self._sandbox_post_eval_cb:
-                self._sandbox_post_eval_cb(gyp_sandbox)
+                self._sandbox_post_eval_cb(gyp_context)
 
-            sandbox['DIRS'].append(mozpath.relpath(gyp_sandbox['OBJDIR'], sandbox['OBJDIR']))
+            context['DIRS'].append(mozpath.relpath(gyp_context.objdir, context.objdir))
 
-        yield sandbox
+        yield context
 
-        for gyp_sandbox in gyp_sandboxes:
-            yield gyp_sandbox
+        for gyp_context in gyp_contexts:
+            yield gyp_context
 
         # Traverse into referenced files.
 
@@ -843,7 +843,7 @@ class BuildReader(object):
                 if d in recurse_info:
                     raise SandboxValidationError(
                         'Directory (%s) registered multiple times in %s' % (
-                            d, var), sandbox)
+                            d, var), context)
 
                 recurse_info[d] = {}
                 if 'exports' in sandbox.metadata:
@@ -851,19 +851,19 @@ class BuildReader(object):
                     recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
 
         # We also have tiers whose members are directories.
-        if 'TIERS' in sandbox:
+        if 'TIERS' in context:
             if not read_tiers:
                 raise SandboxValidationError(
-                    'TIERS defined but it should not be', sandbox)
+                    'TIERS defined but it should not be', context)
 
-            for tier, values in sandbox['TIERS'].items():
+            for tier, values in context['TIERS'].items():
                 # We don't descend into external directories because external by
                 # definition is external to the build system.
                 for d in values['regular']:
                     if d in recurse_info:
                         raise SandboxValidationError(
                             'Tier directory (%s) registered multiple '
-                            'times in %s' % (d, tier), sandbox)
+                            'times in %s' % (d, tier), context)
                     recurse_info[d] = {'check_external': True}
 
         for relpath, child_metadata in recurse_info.items():
@@ -876,15 +876,15 @@ class BuildReader(object):
             # because it isn't necessary. If there are symlinks in the srcdir,
             # that's not our problem. We're not a hosted application: we don't
             # need to worry about security too much.
-            if not is_read_allowed(child_path, sandbox.config):
+            if not is_read_allowed(child_path, context.config):
                 raise SandboxValidationError(
                     'Attempting to process file outside of allowed paths: %s' %
-                        child_path, sandbox)
+                        child_path, context)
 
             if not descend:
                 continue
 
-            for res in self.read_mozbuild(child_path, sandbox.config,
+            for res in self.read_mozbuild(child_path, context.config,
                 read_tiers=False, filesystem_absolute=True,
                 metadata=child_metadata):
                 yield res

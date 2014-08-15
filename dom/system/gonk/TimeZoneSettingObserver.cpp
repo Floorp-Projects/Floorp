@@ -4,6 +4,7 @@
 
 #include "base/message_loop.h"
 #include "jsapi.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Hal.h"
@@ -20,7 +21,6 @@
 #include "TimeZoneSettingObserver.h"
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsPrintfCString.h"
 
 #undef LOG

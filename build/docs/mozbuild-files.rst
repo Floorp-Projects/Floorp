@@ -53,16 +53,15 @@ side-effects. Previously, when the build configuration was defined in
 unnoticed. ``moz.build`` files fix this problem by eliminating the
 potential for false promises.
 
-In the sandbox, all ``UPPERCASE`` variables are globals and all
-non-``UPPERCASE`` variables are locals. After a ``moz.build`` file has
-completed execution, only the globals are used to retrieve state.
+After a ``moz.build`` file has completed execution, only the
+``UPPERCASE`` variables are used to retrieve state.
 
 The set of variables and functions available to the Python sandbox is
-defined by the :py:mod:`mozbuild.frontend.sandbox_symbols` module. The
+defined by the :py:mod:`mozbuild.frontend.context` module. The
 data structures in this module are consumed by the
 :py:class:`mozbuild.frontend.reader.MozbuildSandbox` class to construct
 the sandbox. There are tests to ensure that the set of symbols exposed
-to an empty sandbox are all defined in the ``sandbox_symbols`` module.
+to an empty sandbox are all defined in the ``context`` module.
 This module also contains documentation for each symbol, so nothing can
 sneak into the sandbox without being explicitly defined and documented.
 
@@ -81,13 +80,14 @@ of all the special ``UPPERCASE`` variables populated during its
 execution.
 
 The code for reading ``moz.build`` files lives in
-:py:mod:`mozbuild.frontend.reader`. The evaluated Python sandboxes are
-passed into :py:mod:`mozbuild.frontend.emitter`, which converts them to
-classes defined in :py:mod:`mozbuild.frontend.data`. Each class in this
-module define a domain-specific component of tree metdata. e.g. there
-will be separate classes that represent a JavaScript file vs a compiled
-C++ file or test manifests. This means downstream consumers of this data
-can filter on class types to only consume what they are interested in.
+:py:mod:`mozbuild.frontend.reader`. The Python sandboxes evaluation results
+(:py:class:`mozbuild.frontend.context.Context`) are passed into
+:py:mod:`mozbuild.frontend.emitter`, which converts them to classes defined
+in :py:mod:`mozbuild.frontend.data`. Each class in this module defines a
+domain-specific component of tree metdata. e.g. there will be separate
+classes that represent a JavaScript file vs a compiled C++ file or test
+manifests. This means downstream consumers of this data can filter on class
+types to only consume what they are interested in.
 
 There is no well-defined mapping between ``moz.build`` file instances
 and the number of :py:mod:`mozbuild.frontend.data` classes derived from
@@ -98,7 +98,7 @@ The purpose of the ``emitter`` layer between low-level sandbox execution
 and metadata representation is to facilitate a unified normalization and
 verification step. There are multiple downstream consumers of the
 ``moz.build``-derived data and many will perform the same actions. This
-logic can be complicated, so we a component dedicated to it.
+logic can be complicated, so we have a component dedicated to it.
 
 Other Notes
 ===========

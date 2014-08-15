@@ -97,8 +97,10 @@ Zone::setGCMaxMallocBytes(size_t value)
 void
 Zone::onTooMuchMalloc()
 {
-    if (!gcMallocGCTriggered)
-        gcMallocGCTriggered = TriggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC);
+    if (!gcMallocGCTriggered) {
+        GCRuntime &gc = runtimeFromAnyThread()->gc;
+        gcMallocGCTriggered = gc.triggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC);
+    }
 }
 
 void
@@ -111,15 +113,21 @@ Zone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     if (active)
         releaseTypes = false;
 
+    GCRuntime &gc = fop->runtime()->gc;
+
     {
-        gcstats::AutoPhase ap(fop->runtime()->gc.stats, gcstats::PHASE_DISCARD_ANALYSIS);
+        gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
+                                   gcstats::PHASE_DISCARD_ANALYSIS);
         types.sweep(fop, releaseTypes, oom);
     }
 
-    if (!fop->runtime()->debuggerList.isEmpty())
+    if (!fop->runtime()->debuggerList.isEmpty()) {
+        gcstats::MaybeAutoPhase ap1(gc.stats, !gc.isHeapCompacting(),
+                                    gcstats::PHASE_SWEEP_TABLES);
+        gcstats::MaybeAutoPhase ap2(gc.stats, !gc.isHeapCompacting(),
+                                    gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
         sweepBreakpoints(fop);
-
-    active = false;
+    }
 }
 
 void
@@ -130,13 +138,10 @@ Zone::sweepBreakpoints(FreeOp *fop)
      * to iterate over the scripts belonging to a single compartment in a zone.
      */
 
-    gcstats::AutoPhase ap1(fop->runtime()->gc.stats, gcstats::PHASE_SWEEP_TABLES);
-    gcstats::AutoPhase ap2(fop->runtime()->gc.stats, gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
-
-    JS_ASSERT(isGCSweeping());
+    JS_ASSERT(isGCSweepingOrCompacting());
     for (ZoneCellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        JS_ASSERT(script->zone()->isGCSweeping());
+        JS_ASSERT_IF(isGCSweeping(), script->zone()->isGCSweeping());
         if (!script->hasAnyBreakpointsOrStepMode())
             continue;
 
@@ -151,7 +156,8 @@ Zone::sweepBreakpoints(FreeOp *fop)
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
                 nextbp = bp->nextInSite();
                 HeapPtrObject &dbgobj = bp->debugger->toJSObjectRef();
-                JS_ASSERT_IF(dbgobj->zone()->isCollecting(), dbgobj->zone()->isGCSweeping());
+                JS_ASSERT_IF(isGCSweeping() && dbgobj->zone()->isCollecting(),
+                             dbgobj->zone()->isGCSweeping());
                 bool dying = scriptGone || IsObjectAboutToBeFinalized(&dbgobj);
                 JS_ASSERT_IF(!dying, !IsAboutToBeFinalized(&bp->getHandlerRef()));
                 if (dying)

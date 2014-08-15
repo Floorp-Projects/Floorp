@@ -19,7 +19,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsVariant.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
-#include "nsCxPusher.h"
 #include "mozilla/dom/CustomEvent.h"
 
 using namespace mozilla;

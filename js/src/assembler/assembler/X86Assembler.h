@@ -34,8 +34,6 @@
 
 #include "assembler/wtf/Platform.h"
 
-#if ENABLE_ASSEMBLER && (WTF_CPU_X86 || WTF_CPU_X86_64)
-
 #include "assembler/assembler/AssemblerBuffer.h"
 #include "js/Vector.h"
 
@@ -57,7 +55,7 @@ namespace X86Registers {
         esi,
         edi
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
        ,r8,
         r9,
         r10,
@@ -79,7 +77,7 @@ namespace X86Registers {
         xmm5,
         xmm6,
         xmm7
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
        ,xmm8,
         xmm9,
         xmm10,
@@ -129,7 +127,7 @@ namespace X86Registers {
 
     static const char* nameIReg(RegisterID reg)
     {
-#       if WTF_CPU_X86_64
+#       ifdef JS_CODEGEN_X64
         return nameIReg(8, reg);
 #       else
         return nameIReg(4, reg);
@@ -138,7 +136,7 @@ namespace X86Registers {
 
     inline bool hasSubregL(RegisterID reg)
     {
-#       if WTF_CPU_X86_64
+#       ifdef JS_CODEGEN_X64
         // In 64-bit mode, all registers have an 8-bit lo subreg.
         return true;
 #       else
@@ -226,16 +224,16 @@ private:
         OP_CMP_EvGv                     = 0x39,
         OP_CMP_GvEv                     = 0x3B,
         OP_CMP_EAXIv                    = 0x3D,
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         PRE_REX                         = 0x40,
 #endif
         OP_PUSH_EAX                     = 0x50,
         OP_POP_EAX                      = 0x58,
-#if WTF_CPU_X86
+#ifdef JS_CODEGEN_X86
         OP_PUSHA                        = 0x60,
         OP_POPA                         = 0x61,
 #endif
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         OP_MOVSXD_GvEv                  = 0x63,
 #endif
         PRE_OPERAND_SIZE                = 0x66,
@@ -520,7 +518,7 @@ public:
 
     // Arithmetic operations:
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void adcl_im(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
@@ -580,7 +578,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void addq_rr(RegisterID src, RegisterID dst)
     {
         spew("addq       %s, %s",
@@ -832,7 +830,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void andq_rr(RegisterID src, RegisterID dst)
     {
         spew("andq       %s, %s",
@@ -997,7 +995,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void negq_r(RegisterID dst)
     {
         spew("negq       %s", nameIReg(8,dst));
@@ -1088,7 +1086,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void subq_rr(RegisterID src, RegisterID dst)
     {
         spew("subq       %s, %s",
@@ -1189,7 +1187,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void xorq_rr(RegisterID src, RegisterID dst)
     {
         spew("xorq       %s, %s",
@@ -1262,7 +1260,7 @@ public:
         m_formatter.oneByteOp(OP_GROUP2_EvCL, GROUP2_OP_SHL, dst);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void sarq_CLr(RegisterID dst)
     {
         FIXME_INSN_PRINTING;
@@ -1467,7 +1465,7 @@ public:
         m_formatter.immediate32(imm);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void cmpq_rr(RegisterID src, RegisterID dst)
     {
         spew("cmpq       %s, %s",
@@ -1674,7 +1672,7 @@ public:
         m_formatter.immediate32(imm);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void testq_rr(RegisterID src, RegisterID dst)
     {
         spew("testq      %s, %s",
@@ -1779,7 +1777,7 @@ public:
         m_formatter.oneByteOp(OP_XCHG_EvGv, src, dst);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void xchgq_rr(RegisterID src, RegisterID dst)
     {
         spew("xchgq      %s, %s",
@@ -1819,7 +1817,7 @@ public:
         m_formatter.oneByteOp(OP_MOV_EvGv, src, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movw_rm(RegisterID src, const void* addr)
     {
         spew("movw       %s, %p",
@@ -1854,7 +1852,7 @@ public:
     {
         spew("movl       %p, %%eax", addr);
         m_formatter.oneByteOp(OP_MOV_EAXOv);
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
 #else
         m_formatter.immediate32(reinterpret_cast<int>(addr));
@@ -1965,14 +1963,14 @@ public:
     {
         spew("movl       %%eax, %p", addr);
         m_formatter.oneByteOp(OP_MOV_OvEAX);
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
 #else
         m_formatter.immediate32(reinterpret_cast<int>(addr));
 #endif
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void movq_rr(RegisterID src, RegisterID dst)
     {
         spew("movq       %s, %s",
@@ -2179,7 +2177,7 @@ public:
         m_formatter.oneByteOp8(OP_MOV_EbGv, src, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movb_rm(RegisterID src, const void* addr)
     {
         spew("movb       %s, %p",
@@ -2209,7 +2207,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movzbl_mr(const void* addr, RegisterID dst)
     {
         spew("movzbl     %p, %s",
@@ -2239,7 +2237,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVSX_GvEb, dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movsbl_mr(const void* addr, RegisterID dst)
     {
         spew("movsbl     %p, %s",
@@ -2276,7 +2274,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVZX_GvEw, dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movzwl_mr(const void* addr, RegisterID dst)
     {
         spew("movzwl     %p, %s",
@@ -2306,7 +2304,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movswl_mr(const void* addr, RegisterID dst)
     {
         spew("movswl     %p, %s",
@@ -2335,7 +2333,7 @@ public:
              PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_LEA, dst, base, offset);
     }
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void leaq_mr(int offset, RegisterID base, RegisterID dst)
     {
         spew("leaq       %s0x%x(%s), %s",
@@ -2420,7 +2418,7 @@ public:
         m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_JMPN, base, index, scale, offset);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void jmp_rip(int ripOffset) {
         // rip-relative addressing.
         spew("jmp        *%d(%%rip)", ripOffset);
@@ -2607,7 +2605,7 @@ public:
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void cvtsq2sd_rr(RegisterID src, XMMRegisterID dst)
     {
         spew("cvtsq2sd   %s, %s",
@@ -2656,7 +2654,7 @@ public:
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void cvtsi2sd_mr(const void* address, XMMRegisterID dst)
     {
         spew("cvtsi2sd   %p, %s",
@@ -2682,7 +2680,7 @@ public:
         m_formatter.twoByteOp(OP2_CVTTSD2SI_GdWsd, dst, (RegisterID)src);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void cvttsd2sq_rr(XMMRegisterID src, RegisterID dst)
     {
         spew("cvttsd2si  %s, %s",
@@ -2806,7 +2804,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVD_EdVd, (RegisterID)src, dst);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void movq_rr(XMMRegisterID src, RegisterID dst)
     {
         spew("movq       %s, %s",
@@ -2941,7 +2939,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movsd_mr(const void* address, XMMRegisterID dst)
     {
         spew("movsd      %p, %s",
@@ -3065,7 +3063,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVAPD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
-#ifdef WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     JmpSrc movaps_ripr(XMMRegisterID dst)
     {
         spew("movaps     ?(%%rip), %s",
@@ -3097,7 +3095,7 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, (RegisterID)dst, address);
     }
-#endif // WTF_CPU_X86_64
+#endif // JS_CODEGEN_X64
 
     void movdqu_rm(XMMRegisterID src, int offset, RegisterID base)
     {
@@ -3455,7 +3453,7 @@ public:
         m_formatter.prefix(PRE_PREDICT_BRANCH_NOT_TAKEN);
     }
 
-#if WTF_CPU_X86
+#ifdef JS_CODEGEN_X86
     void pusha()
     {
         spew("pusha");
@@ -3648,7 +3646,7 @@ public:
         staticSpew("##repatchLoadPtrToLEA ((where=%p))",
                    where);
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         // On x86-64 pointer memory accesses require a 64-bit operand, and as such a REX prefix.
         // Skip over the prefix byte.
         where = reinterpret_cast<char*>(where) + 1;
@@ -3660,7 +3658,7 @@ public:
     {
         staticSpew("##repatchLEAToLoadPtr ((where=%p))",
                    where);
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         // On x86-64 pointer memory accesses require a 64-bit operand, and as such a REX prefix.
         // Skip over the prefix byte.
         where = reinterpret_cast<char*>(where) + 1;
@@ -3762,7 +3760,7 @@ public:
     // a no-op on x86, but on x64 it asserts that the address is actually
     // a valid address immediate.
     static int32_t addressImmediate(const void *address) {
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         // x64's 64-bit addresses don't all fit in the 32-bit immediate.
         MOZ_ASSERT(isAddressImmediate(address));
 #endif
@@ -3876,7 +3874,7 @@ private:
             m_buffer.putByteUnchecked(opcode);
             memoryModRM_disp32(reg, address);
         }
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         void oneByteRipOp(OneByteOpcodeID opcode, int reg, int ripOffset)
         {
             m_buffer.ensureSpace(maxInstructionSize);
@@ -3977,7 +3975,7 @@ private:
             memoryModRM(reg, base, offset);
         }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         // Quad-word-sized operands:
         //
         // Used to format 64-bit operantions, planting a REX.w prefix.
@@ -4063,7 +4061,7 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, GroupOpcodeID groupOp, RegisterID rm)
         {
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
             MOZ_ASSERT(!byteRegRequiresRex(rm));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
@@ -4083,7 +4081,7 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
         {
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
             MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
@@ -4094,7 +4092,7 @@ private:
 
         void oneByteOp8_disp32(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
         {
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
             MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
@@ -4105,7 +4103,7 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, RegisterID index, int scale, int offset)
         {
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
             MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
@@ -4181,7 +4179,7 @@ private:
         void jumpTablePointer(uintptr_t ptr)
         {
             m_buffer.ensureSpace(sizeof(uintptr_t));
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             m_buffer.putInt64Unchecked(ptr);
 #else
             m_buffer.putIntUnchecked(ptr);
@@ -4260,7 +4258,7 @@ private:
         static const RegisterID noBase = X86Registers::ebp;
         static const RegisterID hasSib = X86Registers::esp;
         static const RegisterID noIndex = X86Registers::esp;
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         static const RegisterID noBase2 = X86Registers::r13;
         static const RegisterID hasSib2 = X86Registers::r12;
 
@@ -4334,7 +4332,7 @@ private:
         void memoryModRM(int reg, RegisterID base, int offset)
         {
             // A base of esp or r12 would be interpreted as a sib, so force a sib with no index & put the base in there.
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             if ((base == hasSib) || (base == hasSib2))
 #else
             if (base == hasSib)
@@ -4350,7 +4348,7 @@ private:
                     m_buffer.putIntUnchecked(offset);
                 }
             } else {
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
                 if (!offset && (base != noBase) && (base != noBase2))
 #else
                 if (!offset && (base != noBase))
@@ -4369,7 +4367,7 @@ private:
         void memoryModRM_disp32(int reg, RegisterID base, int offset)
         {
             // A base of esp or r12 would be interpreted as a sib, so force a sib with no index & put the base in there.
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             if ((base == hasSib) || (base == hasSib2))
 #else
             if (base == hasSib)
@@ -4387,7 +4385,7 @@ private:
         {
             MOZ_ASSERT(index != noIndex);
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             if (!offset && (base != noBase) && (base != noBase2))
 #else
             if (!offset && (base != noBase))
@@ -4428,7 +4426,7 @@ private:
         {
             int32_t disp = addressImmediate(address);
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             // On x64-64, non-RIP-relative absolute mode requires a SIB.
             putModRmSib(ModRmMemoryNoDisp, reg, noBase, noIndex, 0);
 #else
@@ -4448,7 +4446,5 @@ private:
 };
 
 } // namespace JSC
-
-#endif // ENABLE(ASSEMBLER) && CPU(X86)
 
 #endif /* assembler_assembler_X86Assembler_h */

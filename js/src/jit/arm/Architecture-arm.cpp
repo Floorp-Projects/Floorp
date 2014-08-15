@@ -167,7 +167,7 @@ uint32_t GetARMFlags()
     flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv3 | HWCAP_VFPv4 | HWCAP_NEON;
 #else
 
-#if defined(WTF_OS_LINUX) || defined(WTF_OS_ANDROID) || defined(MOZ_B2G)
+#if defined(__linux__) || defined(ANDROID) || defined(MOZ_B2G)
     bool readAuxv = false;
     int fd = open("/proc/self/auxv", O_RDONLY);
     if (fd > 0) {

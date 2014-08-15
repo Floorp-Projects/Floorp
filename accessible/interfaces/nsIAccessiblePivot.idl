@@ -20,7 +20,7 @@ interface nsIAccessiblePivotObserver;
  * provides traversal methods to move the pivot to next/prev state that complies 
  * to a given rule.
  */
-[scriptable, uuid(c2938033-e240-4fe5-9cb6-e7ad649ccd10)]
+[scriptable, uuid(81fe5144-059b-42db-bd3a-f6ce3158d5e9)]
 interface nsIAccessiblePivot : nsISupports
 {
   const TextBoundaryType CHAR_BOUNDARY = 0;
@@ -64,91 +64,114 @@ interface nsIAccessiblePivot : nsISupports
   /**
    * Set the pivot's text range in a text accessible.
    *
-   * @param aTextAccessible [in] the text accessible that contains the desired
-   *                        range.
-   * @param aStartOffset    [in] the start offset to set.
-   * @param aEndOffset      [in] the end offset to set.
+   * @param aTextAccessible  [in] the text accessible that contains the desired
+   *                           range.
+   * @param aStartOffset     [in] the start offset to set.
+   * @param aEndOffset       [in] the end offset to set.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    * @throws NS_ERROR_INVALID_ARG when the offset exceeds the accessible's
    *   character count.
    */
-  void setTextRange(in nsIAccessibleText aTextAccessible,
-                    in long aStartOffset, in long aEndOffset);
+  [optional_argc] void setTextRange(in nsIAccessibleText aTextAccessible,
+                                    in long aStartOffset, in long aEndOffset,
+                                    [optional] in boolean aIsFromUserInput);
 
   /**
    * Move pivot to next object, from current position or given anchor,
    * complying to given traversal rule.
    *
-   * @param aRule         [in] traversal rule to use.
-   * @param aAnchor       [in] accessible to start search from, if not provided,
+   * @param aRule            [in] traversal rule to use.
+   * @param aAnchor          [in] accessible to start search from, if not provided,
    *                           current position will be used.
-   * @param aIncludeStart [in] include anchor accessible in search.
+   * @param aIncludeStart    [in] include anchor accessible in search.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    * @return true on success, false if there are no new nodes to traverse to.
    */
   [optional_argc] boolean moveNext(in nsIAccessibleTraversalRule aRule,
                                    [optional] in nsIAccessible aAnchor,
-                                   [optional] in boolean aIncludeStart);
+                                   [optional] in boolean aIncludeStart,
+                                   [optional] in boolean aIsFromUserInput);
 
   /**
    * Move pivot to previous object, from current position or given anchor,
    * complying to given traversal rule.
    *
-   * @param aRule         [in] traversal rule to use.
-   * @param aAnchor       [in] accessible to start search from, if not provided,
+   * @param aRule            [in] traversal rule to use.
+   * @param aAnchor          [in] accessible to start search from, if not provided,
    *                           current position will be used.
-   * @param aIncludeStart [in] include anchor accessible in search.
+   * @param aIncludeStart    [in] include anchor accessible in search.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    * @return true on success, false if there are no new nodes to traverse to.
    */
   [optional_argc] boolean movePrevious(in nsIAccessibleTraversalRule aRule,
                                        [optional] in nsIAccessible aAnchor,
-                                       [optional] in boolean aIncludeStart);
+                                       [optional] in boolean aIncludeStart,
+                                       [optional] in boolean aIsFromUserInput);
 
   /**
    * Move pivot to first object in subtree complying to given traversal rule.
    *
-   * @param aRule [in] traversal rule to use.
+   * @param aRule            [in] traversal rule to use.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    * @return true on success, false if there are no new nodes to traverse to.
    */
-  boolean moveFirst(in nsIAccessibleTraversalRule aRule);
+  [optional_argc] boolean moveFirst(in nsIAccessibleTraversalRule aRule,
+                                    [optional] in boolean aIsFromUserInput);
 
   /**
    * Move pivot to last object in subtree complying to given traversal rule.
    *
-   * @param aRule [in] traversal rule to use.
-   * @return true on success, false if there are no new nodes to traverse to.
+   * @param aRule            [in] traversal rule to use.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    */
-  boolean moveLast(in nsIAccessibleTraversalRule aRule);
+  [optional_argc] boolean moveLast(in nsIAccessibleTraversalRule aRule,
+                                   [optional] in boolean aIsFromUserInput);
 
   /**
    * Move pivot to next text range.
    *
-   * @param aBoundary [in] type of boundary for next text range, character, word,
-   *                  etc.
+   * @param aBoundary        [in] type of boundary for next text range,
+   *                           character, word, etc.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    * @return true on success, false if there are is no more text.
    */
-  boolean moveNextByText(in TextBoundaryType aBoundary);
-  
+  [optional_argc] boolean moveNextByText(in TextBoundaryType aBoundary,
+                                         [optional] in boolean aIsFromUserInput);
+
   /**
    * Move pivot to previous text range.
    *
-   * @param aBoundary [in] type of boundary for previous text range, character,
-   *                  word, etc.
+   * @param aBoundary        [in] type of boundary for next text range,
+   *                           character, word, etc.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    * @return true on success, false if there are is no more text.
    */
-  boolean movePreviousByText(in TextBoundaryType aBoundary);
+  [optional_argc] boolean movePreviousByText(in TextBoundaryType aBoundary,
+                                             [optional] in boolean aIsFromUserInput);
 
   /**
    * Move pivot to given coordinate in screen pixels.
    *
-   * @param aRule          [in]  raversal rule to use.
-   * @param aX             [in]  screen's x coordinate
-   * @param aY             [in]  screen's y coordinate
-   * @param aIgnoreNoMatch [in]  don't unset position if no object was found at
-   *                       point.
+   * @param aRule            [in]  raversal rule to use.
+   * @param aX               [in]  screen's x coordinate
+   * @param aY               [in]  screen's y coordinate
+   * @param aIgnoreNoMatch   [in]  don't unset position if no object was found
+   *                           at point.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    * @return true on success, false if the pivot has not been moved.
    */
-  boolean moveToPoint(in nsIAccessibleTraversalRule aRule,
-                      in long aX, in long aY,
-                      in boolean aIgnoreNoMatch);
+  [optional_argc] boolean moveToPoint(in nsIAccessibleTraversalRule aRule,
+                                      in long aX, in long aY,
+                                      in boolean aIgnoreNoMatch,
+                                      [optional] in boolean aIsFromUserInput);
 
   /**
    * Add an observer for pivot changes.
@@ -174,19 +197,23 @@ interface nsIAccessiblePivotObserver : nsISupports
   /**
    * Called when the pivot changes.
    *
-   * @param aPivot         [in] the pivot that has changed.
-   * @param aOldAccessible [in] the old pivot position before the change, or null.
-   * @param aOldStart      [in] the old start offset, or -1.
-   * @param aOldEnd        [in] the old end offset, or -1.
-   * @param aReason        [in] the reason for the pivot change.
+   * @param aPivot           [in] the pivot that has changed.
+   * @param aOldAccessible   [in] the old pivot position before the change,
+   *                           or null.
+   * @param aOldStart        [in] the old start offset, or -1.
+   * @param aOldEnd          [in] the old end offset, or -1.
+   * @param aReason          [in] the reason for the pivot change.
+   * @param aIsFromUserInput [in] the pivot changed because of direct user input
+   *                           (default is true).
    */
   void onPivotChanged(in nsIAccessiblePivot aPivot,
                       in nsIAccessible aOldAccessible,
                       in long aOldStart, in long aOldEnd,
-                      in PivotMoveReason aReason);
+                      in PivotMoveReason aReason,
+                      in boolean aIsFromUserInput);
 };
 
-[scriptable, uuid(4d9c4352-20f5-4c54-9580-0c77bb6b1115)]
+[scriptable, uuid(e197460d-1eff-4247-b4bb-a43be1840dae)]
 interface nsIAccessibleTraversalRule : nsISupports
 {
   /* Ignore this accessible object */

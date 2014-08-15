@@ -11831,7 +11831,6 @@ class CGBindingRoot(CGThing):
         bindingHeaders["nsThreadUtils.h"] = hasWorkerStuff
 
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
-        bindingHeaders["nsCxPusher.h"] = dictionaries
         hasNonEmptyDictionaries = any(
             len(dict.members) > 0 for dict in dictionaries)
         mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
