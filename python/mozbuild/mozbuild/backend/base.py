@@ -22,8 +22,8 @@ from ..preprocessor import Preprocessor
 from ..pythonutil import iter_modules_in_path
 from ..util import FileAvoidWrite
 from ..frontend.data import (
+    ContextDerived,
     ReaderSummary,
-    SandboxDerived,
 )
 from .configenvironment import ConfigEnvironment
 import mozpack.path as mozpath
@@ -184,8 +184,8 @@ class BuildBackend(LoggingMixin):
             self.consume_object(obj)
             backend_time += time.time() - obj_start
 
-            if isinstance(obj, SandboxDerived):
-                self.backend_input_files |= obj.sandbox_all_paths
+            if isinstance(obj, ContextDerived):
+                self.backend_input_files |= obj.context_all_paths
 
             if isinstance(obj, ReaderSummary):
                 self.summary.mozbuild_count = obj.total_file_count

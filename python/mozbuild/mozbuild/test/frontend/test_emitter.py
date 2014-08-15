@@ -89,8 +89,8 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertIsInstance(o, DirectoryTraversal)
             self.assertEqual(o.test_dirs, [])
             self.assertEqual(len(o.tier_dirs), 0)
-            self.assertTrue(os.path.isabs(o.sandbox_main_path))
-            self.assertEqual(len(o.sandbox_all_paths), 1)
+            self.assertTrue(os.path.isabs(o.context_main_path))
+            self.assertEqual(len(o.context_all_paths), 1)
 
         reldirs = [o.relativedir for o in objs]
         self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'bar'])

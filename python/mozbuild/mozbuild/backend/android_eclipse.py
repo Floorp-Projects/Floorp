@@ -19,8 +19,8 @@ import mozpack.path as mozpath
 from .common import CommonBackend
 from ..frontend.data import (
     AndroidEclipseProjectData,
-    SandboxDerived,
-    SandboxWrapped,
+    ContextDerived,
+    ContextWrapped,
 )
 from ..makeutil import Makefile
 from ..util import ensureParentDir
@@ -58,7 +58,7 @@ class AndroidEclipseBackend(CommonBackend):
     def consume_object(self, obj):
         """Write out Android Eclipse project files."""
 
-        if not isinstance(obj, SandboxDerived):
+        if not isinstance(obj, ContextDerived):
             return
 
         CommonBackend.consume_object(self, obj)
@@ -71,7 +71,7 @@ class AndroidEclipseBackend(CommonBackend):
         obj.ack()
 
         # ... and handle the one case we care about specially.
-        if isinstance(obj, SandboxWrapped) and isinstance(obj.wrapped, AndroidEclipseProjectData):
+        if isinstance(obj, ContextWrapped) and isinstance(obj.wrapped, AndroidEclipseProjectData):
             self._process_android_eclipse_project_data(obj.wrapped, obj.srcdir, obj.objdir)
 
     def consume_finished(self):
