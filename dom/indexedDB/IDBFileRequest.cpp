@@ -16,7 +16,6 @@
 #include "mozilla/dom/ProgressEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "nsCOMPtr.h"
-#include "nsCxPusher.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIDOMEvent.h"

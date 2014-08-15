@@ -28,6 +28,7 @@
 #include "nsTArrayForwardDeclare.h"
 #include "Units.h"
 #include "mozilla/dom/AutocompleteInfoBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.

@@ -75,7 +75,7 @@ def variable_reference(v, st_type, in_type, doc, tier):
     return lines
 
 
-def special_reference(v, typ, doc):
+def special_reference(v, func, typ, doc):
     lines = [
         v,
         '-' * len(v),
