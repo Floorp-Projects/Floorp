@@ -6,6 +6,6 @@ running automated tests or scripts on a device (e.g. an Android- or
 FirefoxOS-based phone) connected to a workstation.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    mozdevice
