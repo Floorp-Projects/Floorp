@@ -15,6 +15,7 @@
 
 // #includes from MediaStream.h
 #include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
 #include "AudioSegment.h"
 #include "MediaSegment.h"
 #include "StreamBuffer.h"
@@ -209,6 +210,21 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
   nsCOMPtr<nsITimer> mTimer;
 };
 
+class Fake_MediaStreamTrack : public mozilla::RefCounted<Fake_MediaStreamTrack>
+{
+public:
+  Fake_MediaStreamTrack(bool aIsVideo) : mIsVideo (aIsVideo) {}
+  const Fake_MediaStreamTrack* AsVideoStreamTrack() const
+  {
+    return mIsVideo? this : nullptr;
+  }
+  const Fake_MediaStreamTrack* AsAudioStreamTrack() const
+  {
+    return mIsVideo? nullptr : this;
+  }
+private:
+  const bool mIsVideo;
+};
 
 class Fake_DOMMediaStream : public nsIDOMMediaStream
 {
@@ -219,9 +235,10 @@ protected:
   }
 
 public:
-  Fake_DOMMediaStream() : mMediaStream(new Fake_MediaStream()) {}
-  Fake_DOMMediaStream(Fake_MediaStream *stream) :
-      mMediaStream(stream) {}
+  Fake_DOMMediaStream(Fake_MediaStream *stream = nullptr)
+    : mMediaStream(stream? stream : new Fake_MediaStream())
+    , mVideoTrack(new Fake_MediaStreamTrack(true))
+    , mAudioTrack(new Fake_MediaStreamTrack(false)) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -252,6 +269,35 @@ public:
   uint32_t GetHintContents() const { return mHintContents; }
   void SetHintContents(uint32_t aHintContents) { mHintContents = aHintContents; }
 
+  void
+  GetTracks(nsTArray<nsRefPtr<Fake_MediaStreamTrack> >& aTracks)
+  {
+    GetAudioTracks(aTracks);
+    GetVideoTracks(aTracks);
+  }
+
+  void GetAudioTracks(nsTArray<nsRefPtr<Fake_MediaStreamTrack> >& aTracks)
+  {
+    if (mHintContents & HINT_CONTENTS_AUDIO) {
+      aTracks.AppendElement(mAudioTrack);
+    }
+  }
+
+  void
+  GetVideoTracks(nsTArray<nsRefPtr<Fake_MediaStreamTrack> >& aTracks)
+  {
+    if (mHintContents & HINT_CONTENTS_VIDEO) {
+      aTracks.AppendElement(mVideoTrack);
+    }
+  }
+
+  bool
+  HasTrack(const Fake_MediaStreamTrack& aTrack) const
+  {
+    return ((mHintContents & HINT_CONTENTS_AUDIO) && aTrack.AsAudioStreamTrack()) ||
+           ((mHintContents & HINT_CONTENTS_VIDEO) && aTrack.AsVideoStreamTrack());
+  }
+
   void SetTrackEnabled(mozilla::TrackID aTrackID, bool aEnabled) {}
 
   class PrincipalChangeObserver
@@ -268,6 +314,8 @@ private:
   // tells the SDP generator about whether this
   // MediaStream probably has audio and/or video
   uint32_t mHintContents;
+  nsRefPtr<Fake_MediaStreamTrack> mVideoTrack;
+  nsRefPtr<Fake_MediaStreamTrack> mAudioTrack;
 };
 
 class Fake_MediaStreamGraph
