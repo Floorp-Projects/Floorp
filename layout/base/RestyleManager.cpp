@@ -3041,7 +3041,7 @@ ElementRestyler::SendAccessibilityNotifications()
     if (accService) {
       nsIPresShell* presShell = mFrame->PresContext()->GetPresShell();
       nsIContent* content = mFrame->GetContent();
-      accService->ContentRemoved(presShell, content);
+      accService->ContentRemoved(presShell, content->GetParent(), content);
 
       // Process children staying shown.
       uint32_t visibleContentCount = mVisibleKidsOfHiddenElement.Length();

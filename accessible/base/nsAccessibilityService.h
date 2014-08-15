@@ -90,7 +90,8 @@ public:
   /**
    * Notification used to update the accessible tree when content is removed.
    */
-  void ContentRemoved(nsIPresShell* aPresShell, nsIContent* aChild);
+  void ContentRemoved(nsIPresShell* aPresShell, nsIContent* aContainer,
+                      nsIContent* aChild);
 
   virtual void UpdateText(nsIPresShell* aPresShell, nsIContent* aContent);
 
