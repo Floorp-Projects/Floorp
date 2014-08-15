@@ -570,7 +570,7 @@ let WebConsoleUtils = {
    * @param nsIDOMElement notificationBox
    * @returns A function to be added as a handler to 'paste' and 'drop' events on the input field
    */
-  pasteHandlerGen: function WCU_pasteHandlerGen(inputField, notificationBox){
+  pasteHandlerGen: function WCU_pasteHandlerGen(inputField, notificationBox, msg, okstring) {
     let handler = function WCU_pasteHandler(aEvent) {
       if (WebConsoleUtils.usageCount >= CONSOLE_ENTRY_THRESHOLD) {
         inputField.removeEventListener("paste", handler);
@@ -582,9 +582,7 @@ let WebConsoleUtils = {
         aEvent.stopPropagation();
         return false;
       }
-      let l10n = new WebConsoleUtils.l10n("chrome://browser/locale/devtools/webconsole.properties");
-      let okstring = l10n.getStr("selfxss.okstring");
-      let msg = l10n.getFormatStr("selfxss.msg", [okstring]);
+
 
       let notification = notificationBox.appendNotification(msg,
         "selfxss-notification", null, notificationBox.PRIORITY_WARNING_HIGH, null,

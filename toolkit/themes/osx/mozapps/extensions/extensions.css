@@ -1108,6 +1108,10 @@ setting[type="radio"] > radiogroup {
   display: none;
 }
 
+.addon-control.no-auto-hide {
+  display: block;
+}
+
 button.button-link {
   -moz-appearance: none;
   background: transparent;

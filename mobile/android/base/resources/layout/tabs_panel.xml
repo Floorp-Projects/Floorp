@@ -45,11 +45,10 @@
                 android:layout_height="match_parent"
                 android:visibility="gone"/>
 
-        <org.mozilla.gecko.tabs.RemoteTabsPanel
-                android:id="@+id/remote_tabs"
-                android:layout_height="match_parent"
-                android:layout_width="match_parent"
-                android:visibility="gone"/>
+        <ViewStub android:id="@+id/remote_tabs_panel_stub"
+                  android:layout="@layout/remote_tabs_panel_view"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"/>
 
     </view>
 
