@@ -7,7 +7,7 @@
 /**
  * Define various fixed dimensions
  */
-const GRID_BOTTOM_EXTRA = 4; // title's line-height extends 4px past the margin
+const GRID_BOTTOM_EXTRA = 7; // title's line-height extends 7px past the margin
 const GRID_WIDTH_EXTRA = 1; // provide 1px buffer to allow for rounding error
 
 /**
@@ -203,7 +203,6 @@ let gGrid = {
     }
 
     let availSpace = document.documentElement.clientHeight - this._cellMargin -
-                     document.querySelector("#newtab-margin-undo-container").offsetHeight -
                      document.querySelector("#newtab-search-container").offsetHeight;
     let visibleRows = Math.floor(availSpace / this._cellHeight);
     this._node.style.height = this._computeHeight() + "px";
