@@ -6,7 +6,7 @@
 // 0 arguments --
 template<typename M> class runnable_args_nm_0 : public detail::runnable_args_base<detail::NoResult> {
  public:
-  runnable_args_nm_0(M m) :
+  explicit runnable_args_nm_0(M m) :
     m_(m)  {}
 
   NS_IMETHOD Run() {
