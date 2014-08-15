@@ -75,9 +75,6 @@ nsRubyTextFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 nsRubyTextFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                                    nsIFrame::InlineMinISizeData *aData)
 {
-  // FIXME: See the fixme in AddInlinePrefISize.
-  aData->lineContainer = this;
-
   for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
     e.get()->AddInlineMinISize(aRenderingContext, aData);
   }
@@ -87,13 +84,6 @@ nsRubyTextFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
 nsRubyTextFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                     nsIFrame::InlinePrefISizeData *aData)
 {
-  // FIXME: We shouldn't need to set this, but it prevents us from tripping an
-  // assertion in nsTextFrame.cpp because FindLineContainer on a child frame will
-  // return the ruby text box (us) instead of the ruby text container (our
-  // parent). A fix would need to be made to FindLineContainer and/or
-  // CanContinueTextRun so that this line can be removed.
-  aData->lineContainer = this;
-
   for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
     e.get()->AddInlinePrefISize(aRenderingContext, aData);
   }

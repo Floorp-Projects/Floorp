@@ -52,6 +52,12 @@ nsRubyBaseContainerFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
+/* virtual */ bool 
+nsRubyBaseContainerFrame::IsFrameOfType(uint32_t aFlags) const 
+{
+  return nsContainerFrame::IsFrameOfType(aFlags & 
+         ~(nsIFrame::eLineParticipant));
+}
 
 void nsRubyBaseContainerFrame::AppendTextContainer(nsIFrame* aFrame)
 {
@@ -63,6 +69,12 @@ void nsRubyBaseContainerFrame::AppendTextContainer(nsIFrame* aFrame)
 
 void nsRubyBaseContainerFrame::ClearTextContainers() {
   mTextContainers.Clear();
+}
+
+/* virtual */ bool
+nsRubyBaseContainerFrame::CanContinueTextRun() const
+{
+  return true;
 }
 
 /* virtual */ void

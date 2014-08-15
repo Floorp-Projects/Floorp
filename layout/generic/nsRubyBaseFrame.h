@@ -40,6 +40,7 @@ public:
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode)
     const MOZ_OVERRIDE;
+  virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;

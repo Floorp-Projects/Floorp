@@ -1026,7 +1026,8 @@ private:
 static nsIFrame*
 FindLineContainer(nsIFrame* aFrame)
 {
-  while (aFrame && aFrame->CanContinueTextRun()) {
+  while (aFrame && (aFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
+                    aFrame->CanContinueTextRun())) {
     aFrame = aFrame->GetParent();
   }
   return aFrame;
@@ -1131,7 +1132,8 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
       result.mScanSiblings = true;
       result.mTextRunCanCrossFrameBoundary = true;
       result.mLineBreakerCanCrossFrameBoundary = true;
-    } else if (aFrame->GetType() == nsGkAtoms::rubyTextFrame) {
+    } else if (aFrame->GetType() == nsGkAtoms::rubyTextFrame ||
+               aFrame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
       result.mFrameToScan = aFrame->GetFirstPrincipalChild();
       result.mOverflowFrameToScan =
         aFrame->GetFirstChild(nsIFrame::kOverflowList);
