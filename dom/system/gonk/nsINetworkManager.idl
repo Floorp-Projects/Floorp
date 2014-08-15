@@ -97,7 +97,7 @@ interface nsINetworkInterface : nsISupports
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(f3193805-c070-4d23-bd5c-a439eb8610c3)]
+[scriptable, uuid(19822018-2454-11e4-baa7-2b5894f0af6f)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -196,4 +196,34 @@ interface nsINetworkManager : nsISupports
                         in nsINetworkInterface networkInterface,
                         in jsval config,
                         in nsIWifiTetheringCallback callback);
+
+  /**
+   * Add host route to the specified network into routing table.
+   *
+   * @param network
+   *        The network interface where the host to be routed to.
+   * @param host
+   *        The host to be added.
+   *        The host will be resolved in advance if it's not an ip-address.
+   *
+   * @return a Promise
+   *         resolved if added; rejected, otherwise.
+   */
+  jsval addHostRoute(in nsINetworkInterface network,
+                     in DOMString host);
+
+  /**
+   * Remove host route to the specified network from routing table.
+   *
+   * @param network
+   *        The network interface where the routing to be removed from.
+   * @param host
+   *        The host routed to the network.
+   *        The host will be resolved in advance if it's not an ip-address.
+   *
+   * @return a Promise
+   *         resolved if removed; rejected, otherwise.
+   */
+  jsval removeHostRoute(in nsINetworkInterface network,
+                        in DOMString host);
 };
