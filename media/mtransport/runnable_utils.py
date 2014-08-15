@@ -7,6 +7,11 @@ boilerplate = "/* This Source Code Form is subject to the terms of the Mozilla P
  * License, v. 2.0. If a copy of the MPL was not distributed with this\n\
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */\n"
 
+def get_args_count(args, member):
+    if member:
+        return args + 2
+    return args + 1
+
 def gen_args_type(args, member):
     if member:
         ret = ["C o"]
@@ -98,7 +103,10 @@ def generate_class_template(args, ret = False, member = True):
     print " public:"
 
     if not ret:
-        print "  %s(" % class_name + gen_args_type(args, member) + ") :"
+        explicit = ""
+        if get_args_count(args, member) == 1:
+            explicit = "explicit "
+        print "  %s%s(" % (explicit, class_name) + gen_args_type(args, member) + ") :"
         print "    " + gen_init(args, False, member) + "  {}"
     else:
         print "  %s(" % class_name + gen_args_type(args, member) + ", R *r) :"

@@ -307,7 +307,7 @@ namespace sigslot {
 	public:
 		mt_policy *m_mutex;
 
-		lock_block(mt_policy *mtx)
+		explicit lock_block(mt_policy *mtx)
 			: m_mutex(mtx)
 		{
 			m_mutex->lock();

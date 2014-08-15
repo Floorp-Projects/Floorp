@@ -202,7 +202,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETINTERNAL
 
-  NrSocketIpc(const nsCOMPtr<nsIEventTarget> &main_thread);
+  explicit NrSocketIpc(const nsCOMPtr<nsIEventTarget> &main_thread);
 
   // Implementations of the NrSocketBase APIs
   virtual int create(nr_transport_addr *addr);

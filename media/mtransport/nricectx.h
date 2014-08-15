@@ -93,7 +93,7 @@ extern const char kNrIceTransportTcp[];
 
 class NrIceStunServer {
  public:
-  NrIceStunServer(const PRNetAddr& addr) : has_addr_(true) {
+  explicit NrIceStunServer(const PRNetAddr& addr) : has_addr_(true) {
     memcpy(&addr_, &addr, sizeof(addr));
   }
 
