@@ -29,7 +29,7 @@ uint32_t GetMIPSFlags()
     return flags;
 #else
 
-#if WTF_OS_LINUX
+#ifdef __linux__
     FILE *fp = fopen("/proc/cpuinfo", "r");
     if (!fp)
         return false;

@@ -70,7 +70,7 @@ private:
     static void setSSECheckState();
 
   public:
-#if WTF_CPU_X86
+#ifdef JS_CODEGEN_X86
     static bool isSSEPresent()
     {
 #if defined(__SSE__) && !defined(DEBUG)

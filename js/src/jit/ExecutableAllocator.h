@@ -402,7 +402,7 @@ public:
 #elif defined(JS_CODEGEN_MIPS)
     static void cacheFlush(void* code, size_t size)
     {
-#if WTF_COMPILER_GCC && (GCC_VERSION >= 40300)
+#if defined(__GNUC__) && (GCC_VERSION >= 40300)
 #if WTF_MIPS_ISA_REV(2) && (GCC_VERSION < 40403)
         int lineSize;
         asm("rdhwr %0, $1" : "=r" (lineSize));
@@ -425,9 +425,7 @@ public:
         _flush_cache(reinterpret_cast<char*>(code), size, BCACHE);
 #endif
     }
-#elif WTF_CPU_ARM_TRADITIONAL && WTF_OS_LINUX && WTF_COMPILER_RVCT
-    static __asm void cacheFlush(void* code, size_t size);
-#elif WTF_CPU_ARM_TRADITIONAL && (WTF_OS_LINUX || WTF_OS_ANDROID) && WTF_COMPILER_GCC
+#elif WTF_CPU_ARM_TRADITIONAL && (defined(__linux__) || defined(ANDROID)) && defined(__GNUC__)
     static void cacheFlush(void* code, size_t size)
     {
         asm volatile (
