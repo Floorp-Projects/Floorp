@@ -2824,6 +2824,13 @@ pref("intl.tsf.support_imm", true);
 
 // Whether creates native caret for ATOK or not.
 pref("intl.tsf.hack.atok.create_native_caret", true);
+// Whether use composition start position for the result of
+// ITfContextView::GetTextExt() if the specified range is larger than
+// composition start offset.
+// For Free ChangJie 2010
+pref("intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
+// For Easy Changjei
+pref("intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
 #endif
 
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.

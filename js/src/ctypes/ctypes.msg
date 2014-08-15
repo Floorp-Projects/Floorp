@@ -9,6 +9,6 @@
  * For syntax details, see js/src/js.msg.
  */
 
-MSG_DEF(CTYPESMSG_PLACEHOLDER_0, 0, 0, JSEXN_NONE, NULL)
-MSG_DEF(CTYPESMSG_TYPE_ERROR,    1, 2, JSEXN_TYPEERR, "expected type {0}, got {1}")
+MSG_DEF(CTYPESMSG_PLACEHOLDER_0, 0, JSEXN_NONE, NULL)
+MSG_DEF(CTYPESMSG_TYPE_ERROR,    2, JSEXN_TYPEERR, "expected type {0}, got {1}")
 

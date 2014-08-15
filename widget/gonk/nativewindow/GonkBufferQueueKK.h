@@ -187,6 +187,16 @@ public:
     // will usually be the one obtained from dequeueBuffer.
     virtual void cancelBuffer(int buf, const sp<Fence>& fence);
 
+    // setSynchronousMode sets whether dequeueBuffer is synchronous or
+    // asynchronous. In synchronous mode, dequeueBuffer blocks until
+    // a buffer is available, the currently bound buffer can be dequeued and
+    // queued buffers will be acquired in order.  In asynchronous mode,
+    // a queued buffer may be replaced by a subsequently queued buffer.
+    //
+    // The default mode is synchronous.
+    // This should be called only during initialization.
+    virtual status_t setSynchronousMode(bool enabled);
+
     // connect attempts to connect a producer API to the GonkBufferQueue.  This
     // must be called before any other IGraphicBufferProducer methods are
     // called except for getAllocator.  A consumer must already be connected.
@@ -498,6 +508,9 @@ private:
     // asynchronous events that it may wish to react to.  It is initially set
     // to NULL and is written by consumerConnect and consumerDisconnect.
     sp<IConsumerListener> mConsumerListener;
+
+    // mSynchronousMode whether we're in synchronous mode or not
+    bool mSynchronousMode;
 
     // mConsumerControlledByApp whether the connected consumer is controlled by the
     // application.

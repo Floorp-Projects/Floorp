@@ -240,7 +240,9 @@ protected:
   // drop reference to listener, its callbacks, and the progress sink
   void ReleaseListeners();
 
-  nsresult ApplyContentConversions();
+  NS_IMETHOD DoApplyContentConversions(nsIStreamListener *aNextListener,
+                                     nsIStreamListener **aNewNextListener,
+                                     nsISupports *aCtxt);
 
   void AddCookiesToRequest();
   virtual nsresult SetupReplacementChannel(nsIURI *,

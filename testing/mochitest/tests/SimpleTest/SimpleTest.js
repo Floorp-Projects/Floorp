@@ -243,6 +243,9 @@ SimpleTest._cleanupFunctions = [];
  * Something like assert.
 **/
 SimpleTest.ok = function (condition, name, diag) {
+    if (name === null || name === undefined) {
+        name = "undefined assertion name";
+    }
     var test = {'result': !!condition, 'name': name, 'diag': diag};
     var successInfo = {status:"PASS", expected:"PASS", message:"TEST-PASS"};
     var failureInfo = {status:"FAIL", expected:"PASS", message:"TEST-UNEXPECTED-FAIL"};
