@@ -540,8 +540,8 @@ double
 AudioContext::CurrentTime() const
 {
   MediaStream* stream = Destination()->Stream();
-  return stream->StreamTimeToSeconds(stream->GetCurrentTime()) +
-      ExtraCurrentTime();
+  return StreamTimeToDOMTime(stream->
+                             StreamTimeToSeconds(stream->GetCurrentTime()));
 }
 
 void

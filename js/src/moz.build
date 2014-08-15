@@ -71,6 +71,7 @@ EXPORTS.js += [
     '../public/CharacterEncoding.h',
     '../public/Class.h',
     '../public/Date.h',
+    '../public/DebugAPI.h',
     '../public/GCAPI.h',
     '../public/HashTable.h',
     '../public/HeapAPI.h',
