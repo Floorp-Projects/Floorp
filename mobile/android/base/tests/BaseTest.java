@@ -563,6 +563,10 @@ abstract class BaseTest extends BaseRobocopTest {
             try {
                 JSONObject data = new JSONObject(pageShowExpecter.blockForEventData());
                 int tabID = data.getInt("tabID");
+                if (tabID == 0) {
+                    mAsserter.dumpLog("addTab ignoring PageShow for tab 0");
+                    continue;
+                }
                 if (!mKnownTabIDs.contains(tabID)) {
                     mKnownTabIDs.add(tabID);
                     break;
