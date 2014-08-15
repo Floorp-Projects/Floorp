@@ -82,6 +82,12 @@ function waitForCondition(condition, nextTest, errorMsg) {
   var moveOn = function() { clearInterval(interval); nextTest(); };
 }
 
+function promiseWaitForCondition(aConditionFn) {
+  let deferred = Promise.defer();
+  waitForCondition(aConditionFn, deferred.resolve, "Condition didn't pass.");
+  return deferred.promise;
+}
+
 function getTestPlugin(aName) {
   var pluginName = aName || "Test Plug-in";
   var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);

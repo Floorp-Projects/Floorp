@@ -35,6 +35,12 @@ function test() {
     ok(toolbox.splitConsole, "Split console is visible by default.");
     is(getHeightPrefValue(), 200, "Height is set based on panel height after closing");
 
+    // Use the binding element since jsterm.inputNode is a XUL textarea element.
+    let activeElement = getActiveElement(toolbox.doc);
+    activeElement = activeElement.ownerDocument.getBindingParent(activeElement);
+    let inputNode = toolbox.getPanel("webconsole").hud.jsterm.inputNode;
+    is(activeElement, inputNode, "Split console input is focused by default");
+
     toolbox.webconsolePanel.height = 1;
     ok (toolbox.webconsolePanel.clientHeight > 1,
         "The actual height of the console is bound with a min height");
@@ -61,6 +67,14 @@ function test() {
     ok(!getVisiblePrefValue(), "Visibility pref is false");
 
     yield toolbox.destroy();
+  }
+
+  function getActiveElement(doc) {
+    let activeElement = doc.activeElement;
+    while (activeElement && activeElement.contentDocument) {
+      activeElement = activeElement.contentDocument.activeElement;
+    }
+    return activeElement;
   }
 
   function getVisiblePrefValue() {

@@ -309,6 +309,8 @@ function openLinkIn(url, where, params) {
   // result in a new frontmost window (e.g. "javascript:window.open('');").
   w.focus();
 
+  let newTab;
+
   switch (where) {
   case "current":
     let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -332,22 +334,29 @@ function openLinkIn(url, where, params) {
     // fall through
   case "tab":
     let browser = w.gBrowser;
-    browser.loadOneTab(url, {
-                       referrerURI: aReferrerURI,
-                       charset: aCharset,
-                       postData: aPostData,
-                       inBackground: loadInBackground,
-                       allowThirdPartyFixup: aAllowThirdPartyFixup,
-                       relatedToCurrent: aRelatedToCurrent,
-                       skipAnimation: aSkipTabAnimation,
-                       allowMixedContent: aAllowMixedContent });
+    newTab = browser.loadOneTab(url, {
+                                referrerURI: aReferrerURI,
+                                charset: aCharset,
+                                postData: aPostData,
+                                inBackground: loadInBackground,
+                                allowThirdPartyFixup: aAllowThirdPartyFixup,
+                                relatedToCurrent: aRelatedToCurrent,
+                                skipAnimation: aSkipTabAnimation,
+                                allowMixedContent: aAllowMixedContent });
     break;
   }
 
   w.gBrowser.selectedBrowser.focus();
 
-  if (!loadInBackground && w.isBlankPageURL(url))
+  if (!loadInBackground && w.isBlankPageURL(url)) {
+    if (newTab) {
+      // Remote tab content does not focus synchronously, so we set the flag
+      // on this tab to skip focusing the content if we want to focus the URL
+      // bar instead.
+      newTab._urlbarFocused = true;
+    }
     w.focusAndSelectUrlBar();
+  }
 }
 
 // Used as an onclick handler for UI elements with link-like behavior.

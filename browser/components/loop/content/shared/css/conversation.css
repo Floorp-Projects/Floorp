@@ -194,6 +194,41 @@
   font-weight: normal;
 }
 
+.call-audio-only {
+  width: 26px;
+  height: 26px;
+  border-left: 1px solid rgba(255,255,255,.4);
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+  background-color: #74BF43;
+  background-image: url("../img/audio-inverse-14x14.png");
+  background-size: 1rem;
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+  .call-audio-only:hover {
+    background-color: #6cb23e;
+  }
+
+
+.call-audio-video {
+  background-image: url("../img/video-inverse-14x14.png");
+  background-position: 96% center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+}
+
+@media (min-resolution: 2dppx) {
+  .call-audio-only {
+    background-image: url("../img/audio-inverse-14x14@2x.png");
+  }
+  .call-audio-video {
+    background-image: url("../img/video-inverse-14x14@2x.png");
+  }
+}
+
 /* Expired call url page */
 
 .expired-url-info {
@@ -212,9 +247,16 @@
   font-weight: 300;
 }
 
-/* Block incoming call */
+/*
+ * Dropdown menu hidden behind a chevron
+ *
+ * .native-dropdown-menu[-large-parent] Generic class, contains common styles
+ * .standalone-dropdown-menu Initiate call dropdown menu
+ * .conversation-window-dropdown Dropdown menu for answer/decline/block options
+ */
 
-.native-dropdown-menu {
+.native-dropdown-menu,
+.native-dropdown-large-parent {
   /* Should match a native select menu */
   padding: 0;
   position: absolute; /* element can be wider than the parent */
@@ -226,18 +268,34 @@
   border-color: #aaa #111 #111 #aaa;
 }
 
-.decline-block-menu li {
-  padding: 0 10px 0 5px;
-  list-style: none;
-  font-size: .9em;
-  color: #000;
-  cursor: pointer;
-}
-
-  .decline-block-menu li:hover {
-    color: #FFF;
-    background: #111;
+  /*
+   * If the component is smaller than the parent
+   * we need it to display block to occupy full width
+   * Same as above but overrides apropriate styles
+   */
+  .native-dropdown-large-parent {
+    position: relative;
+    display: block;
   }
+
+  .native-dropdown-menu li,
+  .native-dropdown-large-parent li {
+    list-style: none;
+    cursor: pointer;
+    color: #000;
+  }
+
+  .native-dropdown-menu li:hover,
+  .native-dropdown-large-parent li:hover,
+  .native-dropdown-large-parent li:hover button {
+    color: #fff;
+    background-color: #111;
+  }
+
+.conversation-window-dropdown li {
+  padding: 0 10px 0 5px;
+  font-size: .9em;
+}
 
 /* Expired call url page */
 

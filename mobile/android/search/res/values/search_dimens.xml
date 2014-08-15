@@ -34,7 +34,9 @@
     <dimen name="widget_header_height">70dp</dimen>
     <dimen name="widget_button_offset">-50dp</dimen>
     <dimen name="widget_button_padding">45dp</dimen>
-    <dimen name="widget_text_size">13sp</dimen>
-    <dimen name="widget_drawable_padding">4dp</dimen>
+    <dimen name="widget_text_size">14sp</dimen>
+    <dimen name="widget_padding">7dp</dimen>
+    <dimen name="widget_drawable_corner_radius">4dp</dimen>
+    <dimen name="widget_bg_border_offset">3dp</dimen>
 
 </resources>

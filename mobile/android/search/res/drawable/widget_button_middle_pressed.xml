@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- These drawables have to be wrapped in a layer-list in order to produce padding at
+     the bottom of the drawable. That padding ensures the drawable doesn't block the
+     orange strip in widget_bg.9.png -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:bottom="@dimen/widget_bg_border_offset">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/widget_button_pressed"/>
+        </shape>
+    </item>
+</layer-list>

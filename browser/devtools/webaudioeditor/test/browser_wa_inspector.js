@@ -43,7 +43,7 @@ function spawnTest() {
   ok(isVisible($("#web-audio-editor-tabs")),
     "InspectorView tabs view visible when node selected.");
 
-  is($("#web-audio-inspector-title").value, "OscillatorNode (" + nodeIds[1] + ")",
+  is($("#web-audio-inspector-title").value, "Oscillator",
     "Inspector should have the node title when a node is selected.");
 
   is($("#web-audio-editor-tabs").selectedIndex, 0,
@@ -52,7 +52,7 @@ function spawnTest() {
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
   yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
 
-  is($("#web-audio-inspector-title").value, "GainNode (" + nodeIds[2] + ")",
+  is($("#web-audio-inspector-title").value, "Gain",
     "Inspector title updates when a new node is selected.");
 
   yield teardown(panel);
