@@ -236,9 +236,16 @@ SystemMessageInternal.prototype = {
 
     debug("Broadcasting " + aType + " " + JSON.stringify(aMessage) +
       '; extra = ' + JSON.stringify(aExtra));
+
+    let shouldDispatchFunc = this._getMessageConfigurator(aType).shouldDispatch;
+
     // Find pages that registered an handler for this type.
     this._pages.forEach(function(aPage) {
-      if (aPage.type == aType) {
+      if (aPage.type !== aType) {
+        return;
+      }
+
+      let doDispatch = () => {
         let result = this._sendMessageCommon(aType,
                                              aMessage,
                                              messageID,
@@ -258,7 +265,22 @@ SystemMessageInternal.prototype = {
         this._queueMessage(aPage, aMessage, messageID);
 
         this._openAppPage(aPage, aMessage, aExtra, result);
+      };
+
+      if ('function' !== typeof shouldDispatchFunc) {
+        // If the configurator has no 'shouldDispatch' defined,
+        // always dispatch this message.
+        doDispatch();
+        return;
       }
+
+      shouldDispatchFunc(aPage.manifestURL, aPage.pageURL, aType, aMessage, aExtra)
+        .then(aShouldDispatch => {
+          if (aShouldDispatch) {
+            doDispatch();
+          }
+        });
+
     }, this);
   },
 
