@@ -273,6 +273,8 @@ public:
   NS_IMETHODIMP OnRemoveStream(ER&);
   NS_IMETHODIMP OnAddTrack(ER&);
   NS_IMETHODIMP OnRemoveTrack(ER&);
+  NS_IMETHODIMP OnReplaceTrackSuccess(ER&);
+  NS_IMETHODIMP OnReplaceTrackError(uint32_t code, const char *msg, ER&);
   NS_IMETHODIMP OnAddIceCandidateSuccess(ER&);
   NS_IMETHODIMP OnAddIceCandidateError(uint32_t code, const char *msg, ER&);
   NS_IMETHODIMP OnIceCandidate(uint16_t level, const char *mid, const char *cand, ER&);
@@ -469,6 +471,18 @@ NS_IMETHODIMP
 TestObserver::OnRemoveTrack(ER&)
 {
   state = stateSuccess;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TestObserver::OnReplaceTrackSuccess(ER&)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TestObserver::OnReplaceTrackError(uint32_t code, const char *message, ER&)
+{
   return NS_OK;
 }
 
