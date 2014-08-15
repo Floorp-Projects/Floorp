@@ -15,6 +15,7 @@ describe("loop.conversation", function() {
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
+    sandbox.useFakeTimers();
     notifier = {
       notify: sandbox.spy(),
       warn: sandbox.spy(),
@@ -111,7 +112,6 @@ describe("loop.conversation", function() {
         pendingCallTimeout: 1000,
       });
       sandbox.stub(client, "requestCallsInfo");
-      sandbox.stub(conversation, "setSessionData");
     });
 
     describe("Routes", function() {
@@ -178,38 +178,124 @@ describe("loop.conversation", function() {
           });
 
         describe("requestCallsInfo successful", function() {
-          var fakeSessionData;
+          var fakeSessionData, resolvePromise, rejectPromise;
 
           beforeEach(function() {
             fakeSessionData  = {
-              sessionId:    "sessionId",
-              sessionToken: "sessionToken",
-              apiKey:       "apiKey"
+              sessionId:      "sessionId",
+              sessionToken:   "sessionToken",
+              apiKey:         "apiKey",
+              callId:         "Hello",
+              progressURL:    "http://progress.example.com",
+              websocketToken: 123
             };
+
+            sandbox.stub(router, "_setupWebSocketAndCallView");
+            sandbox.stub(conversation, "setSessionData");
 
             client.requestCallsInfo.callsArgWith(1, null, [fakeSessionData]);
           });
 
           it("should store the session data", function() {
-            router.incoming(42);
+            router.incoming("fakeVersion");
 
             sinon.assert.calledOnce(conversation.setSessionData);
             sinon.assert.calledWithExactly(conversation.setSessionData,
                                            fakeSessionData);
           });
 
-          it("should display the incoming call view", function() {
+          it("should call #_setupWebSocketAndCallView", function() {
             router.incoming("fakeVersion");
 
-            sinon.assert.calledOnce(loop.conversation.IncomingCallView);
-            sinon.assert.calledWithExactly(loop.conversation.IncomingCallView,
-                                           {model: conversation});
-            sinon.assert.calledOnce(router.loadReactComponent);
-            sinon.assert.calledWith(router.loadReactComponent,
+            sinon.assert.calledOnce(router._setupWebSocketAndCallView);
+            sinon.assert.calledWithExactly(router._setupWebSocketAndCallView);
+          });
+        });
+
+        describe("#_setupWebSocketAndCallView", function() {
+          beforeEach(function() {
+            conversation.setSessionData({
+              sessionId:      "sessionId",
+              sessionToken:   "sessionToken",
+              apiKey:         "apiKey",
+              callId:         "Hello",
+              progressURL:    "http://progress.example.com",
+              websocketToken: 123
+            });
+          });
+
+          describe("Websocket connection successful", function() {
+            var promise;
+
+            beforeEach(function() {
+              sandbox.stub(loop, "CallConnectionWebSocket").returns({
+                promiseConnect: function() {
+                  promise = new Promise(function(resolve, reject) {
+                    resolve();
+                  });
+                  return promise;
+                }
+              });
+            });
+
+            it("should create a CallConnectionWebSocket", function(done) {
+              router._setupWebSocketAndCallView();
+
+              promise.then(function () {
+                sinon.assert.calledOnce(loop.CallConnectionWebSocket);
+                sinon.assert.calledWithExactly(loop.CallConnectionWebSocket, {
+                  callId: "Hello",
+                  url: "http://progress.example.com",
+                  // The websocket token is converted to a hex string.
+                  websocketToken: "7b"
+                });
+                done();
+              });
+            });
+
+            it("should display the incoming call view", function(done) {
+              router._setupWebSocketAndCallView();
+
+              promise.then(function () {
+              sinon.assert.calledOnce(loop.conversation.IncomingCallView);
+              sinon.assert.calledWithExactly(loop.conversation.IncomingCallView,
+                                            {model: conversation});
+              sinon.assert.calledOnce(router.loadReactComponent);
+              sinon.assert.calledWith(router.loadReactComponent,
               sinon.match(function(value) {
                 return TestUtils.isComponentOfType(value,
                   loop.conversation.IncomingCallView);
               }));
+              done();
+            });
+            });
+          });
+
+          describe("Websocket connection failed", function() {
+            var promise;
+
+            beforeEach(function() {
+              sandbox.stub(loop, "CallConnectionWebSocket").returns({
+                promiseConnect: function() {
+                  promise = new Promise(function(resolve, reject) {
+                    reject();
+                  });
+                  return promise;
+                }
+              });
+            });
+
+            it("should display an error", function(done) {
+              router._setupWebSocketAndCallView();
+
+              promise.then(function() {
+              }, function () {
+                sinon.assert.calledOnce(router._notifier.errorL10n);
+                sinon.assert.calledWithExactly(router._notifier.errorL10n,
+                  "cannot_start_call_session_not_ready");
+                done();
+              });
+            });
           });
         });
       });
@@ -267,10 +353,14 @@ describe("loop.conversation", function() {
       describe("#decline", function() {
         beforeEach(function() {
           sandbox.stub(window, "close");
+          router._websocket = {
+            decline: sandbox.spy()
+          };
         });
 
         it("should close the window", function() {
           router.decline();
+          sandbox.clock.tick(1);
 
           sinon.assert.calledOnce(window.close);
         });

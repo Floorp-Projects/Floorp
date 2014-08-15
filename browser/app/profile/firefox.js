@@ -1574,6 +1574,7 @@ pref("loop.do_not_disturb", false);
 pref("loop.ringtone", "chrome://browser/content/loop/shared/sounds/Firefox-Long.ogg");
 pref("loop.retry_delay.start", 60000);
 pref("loop.retry_delay.limit", 300000);
+pref("loop.debug.websocket", false);
 
 // serverURL to be assigned by services team
 pref("services.push.serverURL", "wss://push.services.mozilla.com/");
