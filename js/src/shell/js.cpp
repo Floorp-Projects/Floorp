@@ -175,8 +175,8 @@ static bool OOM_printAllocationCount = false;
 #endif
 
 enum JSShellErrNum {
-#define MSG_DEF(name, number, count, exception, format) \
-    name = number,
+#define MSG_DEF(name, count, exception, format) \
+    name,
 #include "jsshell.msg"
 #undef MSG_DEF
     JSShellErr_Limit
@@ -4902,7 +4902,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
-#define MSG_DEF(name, number, count, exception, format) \
+#define MSG_DEF(name, count, exception, format) \
     { format, count, JSEXN_ERR } ,
 #include "jsshell.msg"
 #undef MSG_DEF
@@ -5058,8 +5058,12 @@ env_enumerate(JSContext *cx, HandleObject obj)
 static bool
 env_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
-    RootedValue idvalue(cx, IdToValue(id));
-    RootedString idstring(cx, ToString(cx, idvalue));
+    if (JSID_IS_SYMBOL(id))
+        return true;
+
+    RootedString idstring(cx, IdToString(cx, id));
+    if (!idstring)
+        return false;
     JSAutoByteString idstr;
     if (!idstr.encodeLatin1(cx, idstring))
         return false;

@@ -4,9 +4,9 @@
 
 // Utility functions to help with Apple API calls.
 
-#include <AudioToolbox/AudioToolbox.h>
 #include "AppleUtils.h"
 #include "prlog.h"
+#include "nsAutoPtr.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetDemuxerLog();
@@ -26,12 +26,12 @@ namespace mozilla {
 nsresult
 AppleUtils::GetProperty(AudioFileStreamID aAudioFileStream,
                         AudioFileStreamPropertyID aPropertyID,
-                        void *aData)
+                        void* aData)
 {
   UInt32 size;
   Boolean writeable;
   OSStatus rv = AudioFileStreamGetPropertyInfo(aAudioFileStream, aPropertyID,
-                                                             &size, &writeable);
+                                               &size, &writeable);
 
   if (rv) {
     WARN("Couldn't get property " PROPERTY_ID_FORMAT "\n",
@@ -80,5 +80,52 @@ AppleUtils::SetCFDict(CFMutableDictionaryRef dict,
   CFDictionarySetValue(dict, keyRef, value ? kCFBooleanTrue : kCFBooleanFalse);
 }
 
+nsresult
+AppleUtils::GetRichestDecodableFormat(AudioFileStreamID aAudioFileStream,
+                                      AudioStreamBasicDescription& aFormat)
+{
+  // Fill in the default format description from the stream.
+  nsresult rv = GetProperty(aAudioFileStream,
+                            kAudioFileStreamProperty_DataFormat, &aFormat);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  UInt32 propertySize;
+  OSStatus status = AudioFileStreamGetPropertyInfo(
+    aAudioFileStream, kAudioFileStreamProperty_FormatList, &propertySize, NULL);
+  if (NS_WARN_IF(status)) {
+    // Return the default format description.
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(propertySize % sizeof(AudioFormatListItem) == 0);
+  uint32_t sizeList = propertySize / sizeof(AudioFormatListItem);
+  nsAutoArrayPtr<AudioFormatListItem> formatListPtr(
+    new AudioFormatListItem[sizeList]);
+
+  rv = GetProperty(aAudioFileStream, kAudioFileStreamProperty_FormatList,
+                   formatListPtr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Return the default format description.
+    return NS_OK;
+  }
+
+  // Get the index number of the first playable format.
+  // This index number will be for the highest quality layer the platform
+  // is capable of playing.
+  UInt32 itemIndex;
+  UInt32 indexSize = sizeof(itemIndex);
+  status =
+    AudioFormatGetProperty(kAudioFormatProperty_FirstPlayableFormatFromList,
+                           propertySize, formatListPtr, &indexSize, &itemIndex);
+  if (NS_WARN_IF(status)) {
+    // Return the default format description.
+    return NS_OK;
+  }
+  aFormat = formatListPtr[itemIndex].mASBD;
+
+  return NS_OK;
+}
 
 } // namespace mozilla

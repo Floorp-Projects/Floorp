@@ -89,6 +89,7 @@ let WebProgressListener = {
       json.canGoForward = docShell.canGoForward;
       json.documentURI = content.document.documentURIObject.spec;
       json.charset = content.document.characterSet;
+      json.mayEnableCharacterEncodingMenu = docShell.mayEnableCharacterEncodingMenu;
     }
 
     sendAsyncMessage("Content:LocationChange", json, objects);
@@ -352,6 +353,11 @@ addEventListener("TextZoomChange", function (aEvent) {
     sendAsyncMessage("TextZoomChange", { value:  ZoomManager.textZoom});
   }
 }, false);
+
+addMessageListener("UpdateCharacterSet", function (aMessage) {
+  docShell.charset = aMessage.data.value;
+  docShell.gatherCharsetMenuTelemetry();
+});
 
 // The AddonsChild needs to be rooted so that it stays alive as long as
 // the tab.

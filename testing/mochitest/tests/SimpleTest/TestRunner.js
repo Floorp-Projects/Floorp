@@ -261,6 +261,11 @@ function StructuredLogger(name) {
         } else {
             dump('\n' + str + '\n');
         }
+
+        // Checking for error messages
+        if (message.expected || message.level === "ERROR") {
+            TestRunner.failureHandler();
+        }
     };
 
     /* Message validation. Only checking the action for now */
@@ -425,8 +430,11 @@ TestRunner.error = function(msg) {
         TestRunner.structuredLogger.error(msg);
     } else {
         dump(msg + "\n");
+        TestRunner.failureHandler();
     }
+};
 
+TestRunner.failureHandler = function() {
     if (TestRunner.runUntilFailure) {
       TestRunner._haltTests = true;
     }
@@ -469,7 +477,7 @@ TestRunner._makeIframe = function (url, retry) {
             return;
         }
 
-        TestRunner.structuredLogger.error("Unable to restore focus, expect failures and timeouts.");
+        TestRunner.structuredLogger.info("Error: Unable to restore focus, expect failures and timeouts.");
     }
     window.scrollTo(0, $('indicator').offsetTop);
     iframe.src = url;

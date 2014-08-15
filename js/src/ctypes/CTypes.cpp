@@ -870,7 +870,7 @@ GetABICode(JSObject* obj)
 }
 
 static const JSErrorFormatString ErrorFormatString[CTYPESERR_LIMIT] = {
-#define MSG_DEF(name, number, count, exception, format) \
+#define MSG_DEF(name, count, exception, format) \
   { format, count, exception } ,
 #include "ctypes/ctypes.msg"
 #undef MSG_DEF
