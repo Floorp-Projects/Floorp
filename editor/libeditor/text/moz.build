@@ -16,7 +16,7 @@ UNIFIED_SOURCES += [
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
-    '../base',
+    '..',
     '/content/base/src',
     '/editor/txmgr',
 ]
