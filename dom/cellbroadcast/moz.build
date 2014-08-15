@@ -8,10 +8,12 @@ DIRS += ['interfaces']
 
 EXPORTS.mozilla.dom += [
     'CellBroadcast.h',
+    'CellBroadcastMessage.h',
 ]
 
 SOURCES += [
     'CellBroadcast.cpp',
+    'CellBroadcastMessage.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
