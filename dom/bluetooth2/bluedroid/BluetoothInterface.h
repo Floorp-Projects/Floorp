@@ -123,13 +123,13 @@ public:
 
   /* Connect / Disconnect */
 
-  void Connect(bt_bdaddr_t* aBdAddr,
+  void Connect(const nsAString& aBdAddr,
                BluetoothHandsfreeResultHandler* aRes);
-  void Disconnect(bt_bdaddr_t* aBdAddr,
+  void Disconnect(const nsAString& aBdAddr,
                   BluetoothHandsfreeResultHandler* aRes);
-  void ConnectAudio(bt_bdaddr_t* aBdAddr,
+  void ConnectAudio(const nsAString& aBdAddr,
                     BluetoothHandsfreeResultHandler* aRes);
-  void DisconnectAudio(bt_bdaddr_t* aBdAddr,
+  void DisconnectAudio(const nsAString& aBdAddr,
                        BluetoothHandsfreeResultHandler* aRes);
 
   /* Voice Recognition */
@@ -139,13 +139,13 @@ public:
 
   /* Volume */
 
-  void VolumeControl(bthf_volume_type_t aType, int aVolume,
+  void VolumeControl(BluetoothHandsfreeVolumeType aType, int aVolume,
                      BluetoothHandsfreeResultHandler* aRes);
 
   /* Device status */
 
-  void DeviceStatusNotification(bthf_network_state_t aNtkState,
-                                bthf_service_type_t aSvcType,
+  void DeviceStatusNotification(BluetoothHandsfreeNetworkState aNtkState,
+                                BluetoothHandsfreeServiceType aSvcType,
                                 int aSignal, int aBattChg,
                                 BluetoothHandsfreeResultHandler* aRes);
 
@@ -154,24 +154,27 @@ public:
   void CopsResponse(const char* aCops,
                     BluetoothHandsfreeResultHandler* aRes);
   void CindResponse(int aSvc, int aNumActive, int aNumHeld,
-                    bthf_call_state_t aCallSetupState, int aSignal,
+                    BluetoothHandsfreeCallState aCallSetupState, int aSignal,
                     int aRoam, int aBattChg,
                     BluetoothHandsfreeResultHandler* aRes);
   void FormattedAtResponse(const char* aRsp,
                            BluetoothHandsfreeResultHandler* aRes);
-  void AtResponse(bthf_at_response_t aResponseCode, int aErrorCode,
+  void AtResponse(BluetoothHandsfreeAtResponse aResponseCode, int aErrorCode,
                   BluetoothHandsfreeResultHandler* aRes);
-  void ClccResponse(int aIndex, bthf_call_direction_t aDir,
-                    bthf_call_state_t aState, bthf_call_mode_t aMode,
-                    bthf_call_mpty_type_t aMpty, const char* aNumber,
-                    bthf_call_addrtype_t aType,
+  void ClccResponse(int aIndex, BluetoothHandsfreeCallDirection aDir,
+                    BluetoothHandsfreeCallState aState,
+                    BluetoothHandsfreeCallMode aMode,
+                    BluetoothHandsfreeCallMptyType aMpty,
+                    const nsAString& aNumber,
+                    BluetoothHandsfreeCallAddressType aType,
                     BluetoothHandsfreeResultHandler* aRes);
 
   /* Phone State */
 
   void PhoneStateChange(int aNumActive, int aNumHeld,
-                        bthf_call_state_t aCallSetupState,
-                        const char* aNumber, bthf_call_addrtype_t aType,
+                        BluetoothHandsfreeCallState aCallSetupState,
+                        const nsAString& aNumber,
+                        BluetoothHandsfreeCallAddressType aType,
                         BluetoothHandsfreeResultHandler* aRes);
 
 protected:
