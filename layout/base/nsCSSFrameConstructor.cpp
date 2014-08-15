@@ -4577,7 +4577,8 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
                   FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRubyBaseContainer),
                   NS_NewRubyBaseFrame) },
     { NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER,
-      FCDATA_DECL(FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
+      FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
+                  FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
                   NS_NewRubyBaseContainerFrame) },
     { NS_STYLE_DISPLAY_RUBY_TEXT,
       FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT |
@@ -9105,7 +9106,8 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
     &nsCSSAnonBoxes::rubyBase
   },
   { // Ruby Base Container
-    FCDATA_DECL(FCDATA_USE_CHILD_ITEMS | 
+    FCDATA_DECL(FCDATA_USE_CHILD_ITEMS |
+                FCDATA_IS_LINE_PARTICIPANT |
                 FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby) |
                 FCDATA_SKIP_FRAMESET,
                 NS_NewRubyBaseContainerFrame),
