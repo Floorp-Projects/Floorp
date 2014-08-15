@@ -162,6 +162,18 @@
         };
       testAccessibleTree("table5", accTree);
 
+      /////////////////////////////////////////////////////////////////////////
+      // log table
+      accTree =
+        { TABLE: [
+          { ROW: [
+            { CELL: [
+              { TEXT_LEAF: [ ] }
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("logtable", accTree);
+
       SimpleTest.finish();
     }
 
@@ -264,5 +276,7 @@
       </tr>
     </tbody>
   </table>
+
+  <table id="logtable" role="log"><tr><td>blah</td></tr></table>
 </body>
 </html>
