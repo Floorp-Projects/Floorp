@@ -439,6 +439,7 @@ _moz_cairo_set_source_rgba
 _moz_cairo_set_source_surface
 _moz_cairo_show_glyphs
 _moz_cairo_status
+_moz_cairo_status_to_string
 _moz_cairo_stroke
 _moz_cairo_stroke_extents
 _moz_cairo_stroke_preserve
