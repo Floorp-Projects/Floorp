@@ -9,6 +9,8 @@
 
 const REQUIRED_PARAMS = ["client_id", "content_uri", "oauth_uri", "profile_uri", "state"];
 
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+
 /**
  * Entry point for HTTP requests.
  */
@@ -19,6 +21,9 @@ function handleRequest(request, response) {
       return;
     case "/fxa-oauth/params":
       params(request, response);
+      return;
+    case "/fxa-oauth/token":
+      token(request, response);
       return;
   }
   response.setStatusLine(request.httpVersion, 404, "Not Found");
@@ -82,4 +87,32 @@ function params(request, response) {
   setSharedState("/fxa-oauth/params", JSON.stringify(params));
   response.setHeader("Content-Type", "application/json; charset=utf-8", false);
   response.write(JSON.stringify(params, null, 2));
+}
+
+/**
+ * POST /fxa-oauth/token
+ *
+ * Validate the state parameter with the server session state and if it matches, exchange the code
+ * for an OAuth Token.
+ * Parameters: code & state as JSON in the POST body.
+ * Response: JSON containing an object of OAuth token information.
+ */
+function token(request, response) {
+  let params = JSON.parse(getSharedState("/fxa-oauth/params") || "{}");
+  let body = NetUtil.readInputStreamToString(request.bodyInputStream,
+                                             request.bodyInputStream.available());
+  let payload = JSON.parse(body);
+  if (!params.state || params.state !== payload.state) {
+    response.setStatusLine(request.httpVersion, 400, "State mismatch");
+    response.write("State mismatch");
+    return;
+  }
+
+  let tokenData = {
+    access_token: payload.code + "_access_token",
+    scopes: "",
+    token_type: "bearer",
+  };
+  response.setHeader("Content-Type", "application/json; charset=utf-8", false);
+  response.write(JSON.stringify(tokenData, null, 2));
 }
