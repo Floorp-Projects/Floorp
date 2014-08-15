@@ -34,7 +34,7 @@ class MozbuildFileCommands(MachCommandBase):
             variable_reference,
         )
 
-        import mozbuild.frontend.sandbox_symbols as m
+        import mozbuild.frontend.context as m
 
         if name_only:
             for s in sorted(m.VARIABLES.keys()):
