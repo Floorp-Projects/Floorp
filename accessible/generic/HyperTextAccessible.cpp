@@ -1269,7 +1269,7 @@ HyperTextAccessible::CaretLineNumber()
 
   int32_t returnOffsetUnused;
   uint32_t caretOffset = domSel->FocusOffset();
-  nsFrameSelection::HINT hint = frameSelection->GetHint();
+  CaretAssociationHint hint = frameSelection->GetHint();
   nsIFrame *caretFrame = frameSelection->GetFrameForNodeOffset(caretContent, caretOffset,
                                                                hint, &returnOffsetUnused);
   NS_ENSURE_TRUE(caretFrame, -1);
@@ -1322,16 +1322,12 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
   nsRefPtr<nsCaret> caret = mDoc->PresShell()->GetCaret();
   NS_ENSURE_TRUE(caret, nsIntRect());
 
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
-  NS_ENSURE_TRUE(caretSelection, nsIntRect());
-
-  bool isVisible = false;
-  caret->GetCaretVisible(&isVisible);
+  bool isVisible = caret->IsVisible();
   if (!isVisible)
     return nsIntRect();
 
   nsRect rect;
-  nsIFrame* frame = caret->GetGeometry(caretSelection, &rect);
+  nsIFrame* frame = caret->GetGeometry(&rect);
   if (!frame || rect.IsEmpty())
     return nsIntRect();
 

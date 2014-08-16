@@ -12,6 +12,9 @@
 #ifndef mozilla_AllocPolicy_h
 #define mozilla_AllocPolicy_h
 
+#include "mozilla/NullPtr.h"
+#include "mozilla/TemplateLib.h"
+
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -24,7 +27,7 @@ namespace mozilla {
  * mechanism when OOM occurs.  The concept modeled here is as follows:
  *
  *  - public copy constructor, assignment, destructor
- *  - void* malloc_(size_t)
+ *  - template <typename T> T* pod_malloc(size_t)
  *      Responsible for OOM reporting when null is returned.
  *  - template <typename T> T* pod_calloc(size_t)
  *      Responsible for OOM reporting when null is returned.
@@ -50,9 +53,12 @@ namespace mozilla {
 class MallocAllocPolicy
 {
 public:
-  void* malloc_(size_t aBytes)
+  template <typename T>
+  T* pod_malloc(size_t aNumElems)
   {
-    return malloc(aBytes);
+    if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+        return nullptr;
+    return static_cast<T*>(malloc(aNumElems * sizeof(T)));
   }
 
   template <typename T>

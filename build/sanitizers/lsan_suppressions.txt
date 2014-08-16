@@ -59,9 +59,6 @@ leak:event_base_once
 # Bug 1021854 - nsFileStreamBase::DoOpen() leaking fds. bc1, oth
 leak:nsLocalFile::OpenNSPRFileDesc
 
-# Bug 1023585 - Leak of array buffer in JSStructuredCloneWriter::transferOwnership(). m1
-leak:AllocateArrayBufferContents
-
 # Bug 1022010 - Small leak under _render_glyph_outline. bc1
 leak:_render_glyph_outline
 

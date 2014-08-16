@@ -211,6 +211,10 @@ const kEventConstructors = {
                                                          return new MediaStreamEvent(aName, aProps);
                                                        },
                                              },
+  MediaStreamTrackEvent:                     { create: function (aName, aProps) {
+                                                         return new MediaStreamTrackEvent(aName, aProps);
+                                                       },
+                                             },
   MessageEvent:                              { create: function (aName, aProps) {
                                                          var e = new MessageEvent("messageevent", { bubbles: aProps.bubbles,
                                                              cancelable: aProps.cancelable, data: aProps.data, origin: aProps.origin,

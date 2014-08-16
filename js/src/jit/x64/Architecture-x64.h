@@ -7,7 +7,7 @@
 #ifndef jit_x64_Architecture_x64_h
 #define jit_x64_Architecture_x64_h
 
-#include "assembler/assembler/MacroAssembler.h"
+#include "assembler/assembler/X86Assembler.h"
 
 namespace js {
 namespace jit {

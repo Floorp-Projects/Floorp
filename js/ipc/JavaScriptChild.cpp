@@ -20,17 +20,6 @@ using namespace mozilla::jsipc;
 
 using mozilla::AutoSafeJSContext;
 
-#ifdef NIGHTLY_BUILD
-static void
-UrgentMessageCheck(JSContext *cx, HandleScript script)
-{
-    // We're only allowed to enter chrome JS code while processing urgent
-    // messages.
-    if (ipc::ProcessingUrgentMessages())
-        MOZ_RELEASE_ASSERT(xpc::AccessCheck::isChrome(js::GetContextCompartment(cx)));
-}
-#endif
-
 static void
 FinalizeChild(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartment, void *data)
 {
@@ -43,9 +32,6 @@ JavaScriptChild::JavaScriptChild(JSRuntime *rt)
   : JavaScriptShared(rt),
     JavaScriptBase<PJavaScriptChild>(rt)
 {
-#ifdef NIGHTLY_BUILD
-    js::SetAssertOnScriptEntryHook(rt, UrgentMessageCheck);
-#endif
 }
 
 JavaScriptChild::~JavaScriptChild()

@@ -56,14 +56,13 @@ typedef Rooted<NestedScopeObject*> RootedNestedScopeObject;
 typedef Handle<NestedScopeObject*> HandleNestedScopeObject;
 
 
-/*
- * Insist that the next token be of type tt, or report errno and return null.
- * NB: this macro uses cx and ts from its lexical environment.
- */
+/* Read a token. Report an error and return null() if that token isn't of type tt. */
 #define MUST_MATCH_TOKEN(tt, errno)                                                         \
     JS_BEGIN_MACRO                                                                          \
-        if (tokenStream.getToken() != tt) {                                                 \
-            report(ParseError, false, null(), errno);                                       \
+        TokenKind token = tokenStream.getToken();                                           \
+        if (token != tt) {                                                                  \
+            if (token != TOK_ERROR)                                                         \
+                report(ParseError, false, null(), errno);                                   \
             return null();                                                                  \
         }                                                                                   \
     JS_END_MACRO
@@ -637,139 +636,6 @@ Parser<ParseHandler>::parse(JSObject *chain)
         }
     }
     return pn;
-}
-
-/*
- * Insist on a final return before control flows out of pn.  Try to be a bit
- * smart about loops: do {...; return e2;} while(0) at the end of a function
- * that contains an early return e1 will get a strict warning.  Similarly for
- * iloops: while (true){...} is treated as though ... returns.
- */
-enum {
-    ENDS_IN_OTHER = 0,
-    ENDS_IN_RETURN = 1,
-    ENDS_IN_BREAK = 2
-};
-
-static int
-HasFinalReturn(ParseNode *pn)
-{
-    ParseNode *pn2, *pn3;
-    unsigned rv, rv2, hasDefault;
-
-    switch (pn->getKind()) {
-      case PNK_STATEMENTLIST:
-        if (!pn->pn_head)
-            return ENDS_IN_OTHER;
-        return HasFinalReturn(pn->last());
-
-      case PNK_IF:
-        if (!pn->pn_kid3)
-            return ENDS_IN_OTHER;
-        return HasFinalReturn(pn->pn_kid2) & HasFinalReturn(pn->pn_kid3);
-
-      case PNK_WHILE:
-        pn2 = pn->pn_left;
-        if (pn2->isKind(PNK_TRUE))
-            return ENDS_IN_RETURN;
-        if (pn2->isKind(PNK_NUMBER) && pn2->pn_dval)
-            return ENDS_IN_RETURN;
-        return ENDS_IN_OTHER;
-
-      case PNK_DOWHILE:
-        pn2 = pn->pn_right;
-        if (pn2->isKind(PNK_FALSE))
-            return HasFinalReturn(pn->pn_left);
-        if (pn2->isKind(PNK_TRUE))
-            return ENDS_IN_RETURN;
-        if (pn2->isKind(PNK_NUMBER)) {
-            if (pn2->pn_dval == 0)
-                return HasFinalReturn(pn->pn_left);
-            return ENDS_IN_RETURN;
-        }
-        return ENDS_IN_OTHER;
-
-      case PNK_FOR:
-        pn2 = pn->pn_left;
-        if (pn2->isArity(PN_TERNARY) && !pn2->pn_kid2)
-            return ENDS_IN_RETURN;
-        return ENDS_IN_OTHER;
-
-      case PNK_SWITCH:
-        rv = ENDS_IN_RETURN;
-        hasDefault = ENDS_IN_OTHER;
-        pn2 = pn->pn_right;
-        if (pn2->isKind(PNK_LEXICALSCOPE))
-            pn2 = pn2->expr();
-        for (pn2 = pn2->pn_head; rv && pn2; pn2 = pn2->pn_next) {
-            if (pn2->isKind(PNK_DEFAULT))
-                hasDefault = ENDS_IN_RETURN;
-            pn3 = pn2->pn_right;
-            JS_ASSERT(pn3->isKind(PNK_STATEMENTLIST));
-            if (pn3->pn_head) {
-                rv2 = HasFinalReturn(pn3->last());
-                if (rv2 == ENDS_IN_OTHER && pn2->pn_next)
-                    /* Falling through to next case or default. */;
-                else
-                    rv &= rv2;
-            }
-        }
-        /* If a final switch has no default case, we judge it harshly. */
-        rv &= hasDefault;
-        return rv;
-
-      case PNK_BREAK:
-        return ENDS_IN_BREAK;
-
-      case PNK_WITH:
-        return HasFinalReturn(pn->pn_right);
-
-      case PNK_RETURN:
-        return ENDS_IN_RETURN;
-
-      case PNK_LABEL:
-      case PNK_LEXICALSCOPE:
-        return HasFinalReturn(pn->expr());
-
-      case PNK_THROW:
-        return ENDS_IN_RETURN;
-
-      case PNK_TRY:
-        /* If we have a finally block that returns, we are done. */
-        if (pn->pn_kid3) {
-            rv = HasFinalReturn(pn->pn_kid3);
-            if (rv == ENDS_IN_RETURN)
-                return rv;
-        }
-
-        /* Else check the try block and any and all catch statements. */
-        rv = HasFinalReturn(pn->pn_kid1);
-        if (pn->pn_kid2) {
-            JS_ASSERT(pn->pn_kid2->isArity(PN_LIST));
-            for (pn2 = pn->pn_kid2->pn_head; pn2; pn2 = pn2->pn_next)
-                rv &= HasFinalReturn(pn2);
-        }
-        return rv;
-
-      case PNK_CATCH:
-        /* Check this catch block's body. */
-        return HasFinalReturn(pn->pn_kid3);
-
-      case PNK_LET:
-        /* Non-binary let statements are let declarations. */
-        if (!pn->isArity(PN_BINARY))
-            return ENDS_IN_OTHER;
-        return HasFinalReturn(pn->pn_right);
-
-      default:
-        return ENDS_IN_OTHER;
-    }
-}
-
-static int
-HasFinalReturn(SyntaxParseHandler::Node pn)
-{
-    return ENDS_IN_RETURN;
 }
 
 template <typename ParseHandler>
@@ -7228,9 +7094,17 @@ Parser<ParseHandler>::objectLiteral()
         if (ltok == TOK_RC)
             break;
 
+        bool isGenerator = false;
+        if (ltok == TOK_MUL) {
+            isGenerator = true;
+            ltok = tokenStream.getToken(TokenStream::KeywordIsName);
+        }
+
         JSOp op = JSOP_INITPROP;
         Node propname;
         switch (ltok) {
+          case TOK_ERROR:
+            return null();
           case TOK_NUMBER:
             atom = DoubleToAtom(context, tokenStream.currentToken().number());
             if (!atom)
@@ -7255,8 +7129,16 @@ Parser<ParseHandler>::objectLiteral()
           case TOK_NAME: {
             atom = tokenStream.currentName();
             if (atom == context->names().get) {
+                if (isGenerator) {
+                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                    return null();
+                }
                 op = JSOP_INITPROP_GETTER;
             } else if (atom == context->names().set) {
+                if (isGenerator) {
+                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                    return null();
+                }
                 op = JSOP_INITPROP_SETTER;
             } else {
                 propname = handler.newIdentifier(atom, pos());
@@ -7334,6 +7216,10 @@ Parser<ParseHandler>::objectLiteral()
             TokenKind tt = tokenStream.getToken();
             Node propexpr;
             if (tt == TOK_COLON) {
+                if (isGenerator) {
+                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                    return null();
+                }
                 propexpr = assignExpr();
                 if (!propexpr)
                     return null();
@@ -7356,6 +7242,10 @@ Parser<ParseHandler>::objectLiteral()
                  * Support, e.g., |var {x, y} = o| as destructuring shorthand
                  * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
                  */
+                if (isGenerator) {
+                    report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
+                    return null();
+                }
                 if (!abortIfSyntaxParser())
                     return null();
                 tokenStream.ungetToken();
@@ -7369,21 +7259,22 @@ Parser<ParseHandler>::objectLiteral()
                 Node ident = identifierName();
                 if (!handler.addPropertyDefinition(literal, propname, ident, true))
                     return null();
+            } else if (tt == TOK_LP) {
+                tokenStream.ungetToken();
+                if (!methodDefinition(literal, propname, Normal, Method,
+                                      isGenerator ? StarGenerator : NotGenerator, op)) {
+                    return null();
+                }
             } else {
                 report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
                 return null();
             }
         } else {
             /* NB: Getter function in { get x(){} } is unnamed. */
-            Rooted<PropertyName*> funName(context, nullptr);
-            TokenStream::Position start(keepAtoms);
-            tokenStream.tell(&start);
-            Node accessor = functionDef(funName, start, op == JSOP_INITPROP_GETTER ? Getter : Setter,
-                                        Expression, NotGenerator);
-            if (!accessor)
+            if (!methodDefinition(literal, propname, op == JSOP_INITPROP_GETTER ? Getter : Setter,
+                                  Expression, NotGenerator, op)) {
                 return null();
-            if (!handler.addAccessorPropertyDefinition(literal, propname, accessor, op))
-                return null();
+            }
         }
 
         /*
@@ -7440,6 +7331,28 @@ Parser<ParseHandler>::objectLiteral()
 
     handler.setEndPosition(literal, pos().end);
     return literal;
+}
+
+template <typename ParseHandler>
+bool
+Parser<ParseHandler>::methodDefinition(Node literal, Node propname, FunctionType type,
+                                       FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                                       JSOp op)
+{
+    RootedPropertyName funName(context);
+    if (kind == Method && tokenStream.isCurrentTokenType(TOK_NAME))
+        funName = tokenStream.currentName();
+    else
+        funName = nullptr;
+
+    TokenStream::Position start(keepAtoms);
+    tokenStream.tell(&start);
+    Node fn = functionDef(funName, start, type, kind, generatorKind);
+    if (!fn)
+        return false;
+    if (!handler.addMethodDefinition(literal, propname, fn, op))
+        return false;
+    return true;
 }
 
 template <typename ParseHandler>

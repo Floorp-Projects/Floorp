@@ -1980,9 +1980,8 @@ class Mochitest(MochitestUtilsMixin):
     def dumpScreenOnTimeout(self, message):
       if (not self.dump_screen_on_fail
           and self.dump_screen_on_timeout
-          and 'expected' in message and message['status'] == 'FAIL'
-          and 'message' in message
-          and "Test timed out" in message['message']):
+          and message['action'] == 'test_status' and 'expected' in message
+          and "Test timed out" in message['subtest']):
         self.harness.dumpScreen(self.utilityPath)
       return message
 

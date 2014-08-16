@@ -525,10 +525,10 @@ LiveRangeAllocator<VREG, forLSRA>::init()
         for (LInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
             for (size_t j = 0; j < ins->numDefs(); j++) {
                 LDefinition *def = ins->getDef(j);
-                if (def->policy() != LDefinition::PASSTHROUGH) {
-                    if (!vregs[def].init(alloc(), block, *ins, def, /* isTemp */ false))
-                        return false;
-                }
+                if (def->isBogusTemp())
+                    continue;
+                if (!vregs[def].init(alloc(), block, *ins, def, /* isTemp */ false))
+                    return false;
             }
 
             for (size_t j = 0; j < ins->numTemps(); j++) {
@@ -665,50 +665,50 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
             }
 
             for (size_t i = 0; i < ins->numDefs(); i++) {
-                if (ins->getDef(i)->policy() != LDefinition::PASSTHROUGH) {
-                    LDefinition *def = ins->getDef(i);
+                LDefinition *def = ins->getDef(i);
+                if (def->isBogusTemp())
+                    continue;
 
-                    CodePosition from;
-                    if (def->policy() == LDefinition::FIXED && def->output()->isRegister() && forLSRA) {
-                        // The fixed range covers the current instruction so the
-                        // interval for the virtual register starts at the next
-                        // instruction. If the next instruction has a fixed use,
-                        // this can lead to unnecessary register moves. To avoid
-                        // special handling for this, assert the next instruction
-                        // has no fixed uses. defineFixed guarantees this by inserting
-                        // an LNop.
-                        JS_ASSERT(!NextInstructionHasFixedUses(block, *ins));
-                        AnyRegister reg = def->output()->toRegister();
-                        if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins).next()))
-                            return false;
-                        from = outputOf(*ins).next();
-                    } else {
-                        from = forLSRA ? inputOf(*ins) : outputOf(*ins);
-                    }
-
-                    if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
-                        // MUST_REUSE_INPUT is implemented by allocating an output
-                        // register and moving the input to it. Register hints are
-                        // used to avoid unnecessary moves. We give the input an
-                        // LUse::ANY policy to avoid allocating a register for the
-                        // input.
-                        LUse *inputUse = ins->getOperand(def->getReusedInput())->toUse();
-                        JS_ASSERT(inputUse->policy() == LUse::REGISTER);
-                        JS_ASSERT(inputUse->usedAtStart());
-                        *inputUse = LUse(inputUse->virtualRegister(), LUse::ANY, /* usedAtStart = */ true);
-                    }
-
-                    LiveInterval *interval = vregs[def].getInterval(0);
-                    interval->setFrom(from);
-
-                    // Ensure that if there aren't any uses, there's at least
-                    // some interval for the output to go into.
-                    if (interval->numRanges() == 0) {
-                        if (!interval->addRangeAtHead(from, from.next()))
-                            return false;
-                    }
-                    live->remove(def->virtualRegister());
+                CodePosition from;
+                if (def->policy() == LDefinition::FIXED && def->output()->isRegister() && forLSRA) {
+                    // The fixed range covers the current instruction so the
+                    // interval for the virtual register starts at the next
+                    // instruction. If the next instruction has a fixed use,
+                    // this can lead to unnecessary register moves. To avoid
+                    // special handling for this, assert the next instruction
+                    // has no fixed uses. defineFixed guarantees this by inserting
+                    // an LNop.
+                    JS_ASSERT(!NextInstructionHasFixedUses(block, *ins));
+                    AnyRegister reg = def->output()->toRegister();
+                    if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins).next()))
+                        return false;
+                    from = outputOf(*ins).next();
+                } else {
+                    from = forLSRA ? inputOf(*ins) : outputOf(*ins);
                 }
+
+                if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
+                    // MUST_REUSE_INPUT is implemented by allocating an output
+                    // register and moving the input to it. Register hints are
+                    // used to avoid unnecessary moves. We give the input an
+                    // LUse::ANY policy to avoid allocating a register for the
+                    // input.
+                    LUse *inputUse = ins->getOperand(def->getReusedInput())->toUse();
+                    JS_ASSERT(inputUse->policy() == LUse::REGISTER);
+                    JS_ASSERT(inputUse->usedAtStart());
+                    *inputUse = LUse(inputUse->virtualRegister(), LUse::ANY, /* usedAtStart = */ true);
+                }
+
+                LiveInterval *interval = vregs[def].getInterval(0);
+                interval->setFrom(from);
+
+                // Ensure that if there aren't any uses, there's at least
+                // some interval for the output to go into.
+                if (interval->numRanges() == 0) {
+                    if (!interval->addRangeAtHead(from, from.next()))
+                        return false;
+                }
+                live->remove(def->virtualRegister());
             }
 
             for (size_t i = 0; i < ins->numTemps(); i++) {
@@ -1080,7 +1080,7 @@ LiveInterval::toString() const
         cursor += n;
     }
 
-    if (alloc_.kind() != LAllocation::USE) {
+    if (!alloc_.isBogus()) {
         n = JS_snprintf(cursor, end - cursor, " has(%s)", alloc_.toString());
         if (n < 0) return "???";
         cursor += n;

@@ -1649,7 +1649,7 @@ SetValueRangeToNull(Value *vec, size_t len)
 }
 
 /*
- * Allocation policy that uses JSRuntime::malloc_ and friends, so that
+ * Allocation policy that uses JSRuntime::pod_malloc and friends, so that
  * memory pressure is properly accounted for. This is suitable for
  * long-lived objects owned by the JSRuntime.
  *
@@ -1665,7 +1665,11 @@ class RuntimeAllocPolicy
 
   public:
     MOZ_IMPLICIT RuntimeAllocPolicy(JSRuntime *rt) : runtime(rt) {}
-    void *malloc_(size_t bytes) { return runtime->malloc_(bytes); }
+
+    template <typename T>
+    T *pod_malloc(size_t numElems) {
+        return runtime->pod_malloc<T>(numElems);
+    }
 
     template <typename T>
     T *pod_calloc(size_t numElems) {

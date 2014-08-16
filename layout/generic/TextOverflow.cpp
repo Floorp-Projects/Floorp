@@ -22,6 +22,7 @@
 #include "nsIFrameInlines.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
+#include "nsISelection.h"
 
 namespace mozilla {
 namespace css {
@@ -689,9 +690,8 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
 
   // Inhibit the markers if a descendant content owns the caret.
   nsRefPtr<nsCaret> caret = aBlockFrame->PresContext()->PresShell()->GetCaret();
-  bool visible = false;
-  if (caret && NS_SUCCEEDED(caret->GetCaretVisible(&visible)) && visible) {
-    nsCOMPtr<nsISelection> domSelection = caret->GetCaretDOMSelection();
+  if (caret && caret->IsVisible()) {
+    nsCOMPtr<nsISelection> domSelection = caret->GetSelection();
     if (domSelection) {
       nsCOMPtr<nsIDOMNode> node;
       domSelection->GetFocusNode(getter_AddRefs(node));

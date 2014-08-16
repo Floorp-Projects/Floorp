@@ -1555,7 +1555,7 @@ int vcmRxStart(cc_mcapid_t mcap_id,
     case CC_AUDIO_1:
         if ( VcmSIPCCBinding::getAudioTermination() != nullptr )
             return VcmSIPCCBinding::getAudioTermination()->rxStart(
-                group_id, stream_id, payload->remote_rtp_pt,
+                group_id, stream_id, payload->local_rtp_pt,
                 attrs->audio.packetization_period, port,
                 attrs->audio.avt_payload_type, map_algorithmID(algorithmID),
                 key, key_len, salt, salt_len, attrs->audio.mixing_mode,
@@ -1565,7 +1565,7 @@ int vcmRxStart(cc_mcapid_t mcap_id,
     case CC_VIDEO_1:
         if ( VcmSIPCCBinding::getVideoTermination() != nullptr )
             return VcmSIPCCBinding::getVideoTermination()->rxStart(
-                group_id, stream_id, payload->remote_rtp_pt,
+                group_id, stream_id, payload->local_rtp_pt,
                 0, port, 0, map_algorithmID(algorithmID), key, key_len,
                 salt, salt_len, 0, 0);
         break;
@@ -1740,7 +1740,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     for(int i=0; i <num_payloads ; i++)
     {
       config_raw = new mozilla::AudioCodecConfig(
-        payloads[i].remote_rtp_pt,
+        payloads[i].local_rtp_pt,
         ccsdpCodecName(payloads[i].codec_type),
         payloads[i].audio.frequency,
         payloads[i].audio.packet_size,
@@ -1800,7 +1800,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     for(int i=0; i <num_payloads; i++)
     {
       config_raw = new mozilla::VideoCodecConfig(
-        payloads[i].remote_rtp_pt,
+        payloads[i].local_rtp_pt,
         ccsdpCodecName(payloads[i].codec_type),
         payloads[i].video.rtcp_fb_types);
       if (vcmEnsureExternalCodec(conduit, config_raw, false)) {
@@ -2535,6 +2535,10 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
   ENSURE_PC(pc, VCM_ERROR);
   nsRefPtr<sipcc::LocalSourceStreamInfo> stream =
     pc.impl()->media()->GetLocalStream(pc_stream_id);
+  if (!stream) {
+    CSFLogError(logTag, "Stream not found");
+    return VCM_ERROR;
+  }
 
   // Create the transport flows
   mozilla::RefPtr<TransportFlow> rtp_flow =
