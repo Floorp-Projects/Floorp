@@ -82,7 +82,7 @@ class BacktrackingVirtualRegister : public VirtualRegister
         canonicalSpill_ = alloc;
     }
     const LAllocation *canonicalSpill() const {
-        return canonicalSpill_.isUse() ? nullptr : &canonicalSpill_;
+        return canonicalSpill_.isBogus() ? nullptr : &canonicalSpill_;
     }
 
     void setCanonicalSpillExclude(CodePosition pos) {

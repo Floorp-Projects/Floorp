@@ -21,7 +21,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "asmjs/AsmJSModule.h"
-#include "assembler/assembler/MacroAssembler.h"
 #include "vm/Runtime.h"
 
 using namespace js;

@@ -60,6 +60,9 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     sps_(&GetIonContext()->runtime->spsProfiler(), &lastNotInlinedPC_),
     osrEntryOffset_(0),
     skipArgCheckEntryOffset_(0),
+#ifdef CHECK_OSIPOINT_REGISTERS
+    checkOsiPointRegisters(js_JitOptions.checkOsiPointRegisters),
+#endif
     frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()),
     frameInitialAdjustment_(0)
 {
@@ -588,7 +591,7 @@ CodeGeneratorShared::createNativeToBytecodeScriptList(JSContext *cx)
     }
 
     // Allocate array for list.
-    JSScript **data = (JSScript **) cx->malloc_(scriptList.length() * sizeof(JSScript **));
+    JSScript **data = cx->runtime()->pod_malloc<JSScript *>(scriptList.length());
     if (!data)
         return false;
 
@@ -642,7 +645,7 @@ CodeGeneratorShared::generateCompactNativeToBytecodeMap(JSContext *cx, JitCode *
     JS_ASSERT(numRegions > 0);
 
     // Writer is done, copy it to sized buffer.
-    uint8_t *data = (uint8_t *) cx->malloc_(writer.length());
+    uint8_t *data = cx->runtime()->pod_malloc<uint8_t>(writer.length());
     if (!data)
         return false;
 
@@ -965,7 +968,7 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
 bool
 CodeGeneratorShared::shouldVerifyOsiPointRegs(LSafepoint *safepoint)
 {
-    if (!js_JitOptions.checkOsiPointRegisters)
+    if (!checkOsiPointRegisters)
         return false;
 
     if (gen->info().executionMode() != SequentialExecution)

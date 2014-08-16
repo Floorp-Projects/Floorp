@@ -4470,7 +4470,7 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsContainerFrame* aScrollFrame,
  *                  If this is not null, we'll just use it
  * @param aScrolledContentStyle the style that was resolved for the scrolled frame. (returned)
  */
-nsresult
+void
 nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
                                         nsIContent*              aContent,
                                         nsStyleContext*          aContentStyle,
@@ -4478,16 +4478,15 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
                                         nsContainerFrame*        aParentFrame,
                                         nsContainerFrame*&       aNewFrame)
 {
-    nsRefPtr<nsStyleContext> scrolledContentStyle =
-      BeginBuildingScrollFrame(aState, aContent, aContentStyle, aParentFrame,
-                               nsCSSAnonBoxes::scrolledContent,
-                               false, aNewFrame);
+  nsRefPtr<nsStyleContext> scrolledContentStyle =
+    BeginBuildingScrollFrame(aState, aContent, aContentStyle, aParentFrame,
+                             nsCSSAnonBoxes::scrolledContent,
+                             false, aNewFrame);
 
-    aScrolledFrame->SetStyleContextWithoutNotification(scrolledContentStyle);
-    InitAndRestoreFrame(aState, aContent, aNewFrame, aScrolledFrame);
+  aScrolledFrame->SetStyleContextWithoutNotification(scrolledContentStyle);
+  InitAndRestoreFrame(aState, aContent, aNewFrame, aScrolledFrame);
 
-    FinishBuildingScrollFrame(aNewFrame, aScrolledFrame);
-    return NS_OK;
+  FinishBuildingScrollFrame(aNewFrame, aScrolledFrame);
 }
 
 const nsCSSFrameConstructor::FrameConstructionData*

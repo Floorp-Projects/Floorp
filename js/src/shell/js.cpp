@@ -499,7 +499,7 @@ ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, 
          * coincides with the end of a line.
          */
         int startline = lineno;
-        typedef Vector<char, 32, ContextAllocPolicy> CharBuffer;
+        typedef Vector<char, 32> CharBuffer;
         CharBuffer buffer(cx);
         do {
             ScheduleWatchdog(cx->runtime(), -1);
@@ -6176,16 +6176,16 @@ main(int argc, char **argv, char **envp)
 
 #ifdef JS_CODEGEN_X86
     if (op.getBoolOption("no-fpu"))
-        JSC::MacroAssembler::SetFloatingPointDisabled();
+        JSC::MacroAssemblerX86Common::SetFloatingPointDisabled();
 #endif
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     if (op.getBoolOption("no-sse3")) {
-        JSC::MacroAssembler::SetSSE3Disabled();
+        JSC::MacroAssemblerX86Common::SetSSE3Disabled();
         PropagateFlagToNestedShells("--no-sse3");
     }
     if (op.getBoolOption("no-sse4")) {
-        JSC::MacroAssembler::SetSSE4Disabled();
+        JSC::MacroAssemblerX86Common::SetSSE4Disabled();
         PropagateFlagToNestedShells("--no-sse4");
     }
 #endif

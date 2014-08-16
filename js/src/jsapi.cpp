@@ -1411,7 +1411,7 @@ JS_malloc(JSContext *cx, size_t nbytes)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return cx->malloc_(nbytes);
+    return static_cast<void *>(cx->runtime()->pod_malloc<uint8_t>(nbytes));
 }
 
 JS_PUBLIC_API(void *)
@@ -1458,7 +1458,7 @@ JS_strdup(JSRuntime *rt, const char *s)
 {
     AssertHeapIsIdle(rt);
     size_t n = strlen(s) + 1;
-    void *p = rt->malloc_(n);
+    char *p = rt->pod_malloc<char>(n);
     if (!p)
         return nullptr;
     return static_cast<char*>(js_memcpy(p, s, n));

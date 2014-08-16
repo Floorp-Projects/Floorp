@@ -29,6 +29,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
 #include "TouchCaret.h"
+#include "nsFrameSelection.h"
 
 using namespace mozilla;
 
@@ -322,7 +323,7 @@ FindFirstNodeWithFrame(nsIDocument* aDocument,
 
   nsCOMPtr<nsIContent> startContent = do_QueryInterface(startNode);
   nsCOMPtr<nsIContent> endContent = do_QueryInterface(endNode);
-  nsFrameSelection::HINT hintStart =
+  CaretAssociationHint hintStart =
     nsFrameSelection::GetHintForPosition(startContent, offset);
   nsIFrame* startFrame = aFrameSelection->GetFrameForNodeOffset(startContent,
                                                                 offset,
@@ -546,20 +547,20 @@ CompareRangeWithContentOffset(nsRange* aRange,
   MOZ_ASSERT(aDragMode != SelectionCarets::NONE);
   nsINode* node = nullptr;
   int32_t nodeOffset = 0;
-  nsFrameSelection::HINT hint = nsFrameSelection::HINTLEFT;
+  CaretAssociationHint hint;
   nsDirection dir;
 
   if (aDragMode == SelectionCarets::START_FRAME) {
     // Check previous character of end node offset
     node = aRange->GetEndParent();
     nodeOffset = aRange->EndOffset();
-    hint = nsFrameSelection::HINTLEFT;
+    hint = CARET_ASSOCIATE_BEFORE;
     dir = eDirPrevious;
   } else {
     // Check next character of start node offset
     node = aRange->GetStartParent();
     nodeOffset = aRange->StartOffset();
-    hint = nsFrameSelection::HINTRIGHT;
+    hint =  CARET_ASSOCIATE_AFTER;
     dir = eDirNext;
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
@@ -649,7 +650,7 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
                   offsets.EndOffset(),
                   true,
                   false,
-                  offsets.associateWithNext);
+                  offsets.associate);
   if (!weakScrollable.IsAlive()) {
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -693,7 +694,7 @@ SelectionCarets::GetCaretYCenterPosition()
   }
 
   int32_t offset;
-  nsFrameSelection::HINT hint =
+  CaretAssociationHint hint =
     nsFrameSelection::GetHintForPosition(node, nodeOffset);
   nsIFrame* theFrame =
     fs->GetFrameForNodeOffset(node, nodeOffset, hint, &offset);
@@ -794,9 +795,8 @@ SelectionCarets::GetCaretFocusFrame()
   nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
   NS_ENSURE_TRUE(caret, nullptr);
 
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  return caret->GetGeometry(caretSelection, &focusRect);
+  return caret->GetGeometry(&focusRect);
 }
 
 bool
@@ -806,16 +806,14 @@ SelectionCarets::GetCaretVisible()
   nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
   NS_ENSURE_TRUE(caret, false);
 
-  bool caretVisible = false;
-  caret->GetCaretVisible(&caretVisible);
-  return caretVisible;
+  return caret->IsVisible();
 }
 
 nsISelection*
 SelectionCarets::GetSelection()
 {
   nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
-  return caret->GetCaretDOMSelection();
+  return caret->GetSelection();
 }
 
 nsresult

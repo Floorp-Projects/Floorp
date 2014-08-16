@@ -76,6 +76,8 @@ class MachFormatter(base.BaseFormatter):
                     color = self.terminal.red
             elif data["action"] in ("suite_start", "suite_end", "test_start"):
                 color = self.terminal.yellow
+            elif data["action"] == "crash":
+                color = self.terminal.red
 
             if color is not None:
                 action = color(action)
@@ -243,6 +245,41 @@ class MachFormatter(base.BaseFormatter):
         return '"%s" (pid:%s command:%s)' % (data["data"],
                                              data["process"],
                                              data.get("command", ""))
+
+    def crash(self, data):
+        test = self._get_test_id(data)
+
+        if data.get("stackwalk_returncode", 0) != 0 and not data.get("stackwalk_stderr"):
+            success = True
+        else:
+            success = False
+
+        rv = ["pid:%s. Test:%s. Minidump anaylsed:%s. Signature:[%s]" %
+              (data.get("pid", None), test, success, data["signature"])]
+
+        if data.get("minidump_path"):
+            rv.append("Crash dump filename: %s" % data["minidump_path"])
+
+        if data.get("stackwalk_returncode", 0) != 0:
+            rv.append("minidump_stackwalk exited with return code %d" %
+                      data["stackwalk_returncode"])
+
+        if data.get("stackwalk_stderr"):
+            rv.append("stderr from minidump_stackwalk:")
+            rv.append(data["stackwalk_stderr"])
+        elif data.get("stackwalk_stdout"):
+            rv.append(data["stackwalk_stdout"])
+
+        if data.get("stackwalk_errors"):
+            rv.extend(data.get("stackwalk_errors"))
+
+        rv = "\n".join(rv)
+        if not rv[-1] == "\n":
+            rv += "\n"
+
+        return rv
+
+
 
     def log(self, data):
         level = data.get("level").upper()

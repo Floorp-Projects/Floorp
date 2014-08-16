@@ -143,6 +143,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DiagnosticFlags)
 MOZ_BEGIN_ENUM_CLASS(EffectTypes, uint8_t)
   MASK,
   BLEND_MODE,
+  COLOR_MATRIX,
   MAX_SECONDARY, // sentinel for the count of secondary effect types
   RGB,
   YCBCR,

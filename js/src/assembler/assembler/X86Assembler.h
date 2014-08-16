@@ -32,8 +32,6 @@
 
 #include <stdarg.h>
 
-#include "assembler/wtf/Platform.h"
-
 #include "assembler/assembler/AssemblerBuffer.h"
 #include "js/Vector.h"
 

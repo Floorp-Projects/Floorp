@@ -6,7 +6,6 @@
 
 #include "jscompartment.h"
 
-#include "assembler/assembler/MacroAssembler.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineJIT.h"
 #include "jit/IonFrames.h"

@@ -17,10 +17,12 @@ XPIDL_MODULE = 'layout_base'
 
 EXPORTS += [
     'ActiveLayerTracker.h',
+    'CaretAssociationHint.h',
     'DisplayItemClip.h',
     'DisplayListClipState.h',
     'FrameLayerBuilder.h',
     'FramePropertyTable.h',
+    'LayerState.h',
     'nsArenaMemoryStats.h',
     'nsBidi.h',
     'nsBidiPresUtils.h',
@@ -51,6 +53,7 @@ EXPORTS += [
     'StackArena.h',
     'Units.h',
     'UnitTransforms.h',
+    'WordMovementType.h',
 ]
 
 EXPORTS.mozilla += [

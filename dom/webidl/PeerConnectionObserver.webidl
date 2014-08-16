@@ -34,9 +34,9 @@ interface PeerConnectionObserver
   /* Notification of one of several types of state changed */
   void onStateChange(PCObserverStateType state);
 
-  /* Changes to MediaStreams */
+  /* Changes to MediaStreamTracks */
   void onAddStream(MediaStream stream);
   void onRemoveStream();
-  void onAddTrack();
+  void onAddTrack(MediaStreamTrack track);
   void onRemoveTrack();
 };

@@ -196,8 +196,10 @@ static void
 LogDocParent(nsIDocument* aDocumentNode)
 {
   nsIDocument* parentDoc = aDocumentNode->GetParentDocument();
-  printf("parent id: %p", static_cast<void*>(parentDoc));
+  printf("parent DOM document: %p", static_cast<void*>(parentDoc));
   if (parentDoc) {
+    printf(", parent acc document: %p",
+           static_cast<void*>(GetExistingDocAccessible(parentDoc)));
     printf("\n    parent ");
     LogDocURI(parentDoc);
     printf("\n");

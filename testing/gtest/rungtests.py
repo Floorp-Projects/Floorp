@@ -86,6 +86,19 @@ class GTests(object):
                 env[pathvar] = "%s%s%s" % (self.xre_path, os.pathsep, env[pathvar])
             else:
                 env[pathvar] = self.xre_path
+
+        # ASan specific environment stuff
+        # mozinfo is not set up properly to detect if ASan is enabled, so just always set these.
+        if mozinfo.isLinux or mozinfo.isMac:
+            # Symbolizer support
+            llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
+            if os.path.isfile(llvmsym):
+                env["ASAN_SYMBOLIZER_PATH"] = llvmsym
+                log.info("gtest | ASan using symbolizer at %s", llvmsym)
+            else:
+                # This should be |testFail| instead of |info|. See bug 1050891.
+                log.info("gtest | Failed to find ASan symbolizer at %s", llvmsym)
+
         return env
 
 class gtestOptions(OptionParser):

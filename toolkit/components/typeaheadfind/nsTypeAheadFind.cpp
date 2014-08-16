@@ -51,6 +51,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Link.h"
 #include "nsRange.h"
+#include "nsXBLBinding.h"
 
 #include "nsTypeAheadFind.h"
 
@@ -746,19 +747,36 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   if (!rootNode)
     return NS_ERROR_FAILURE;
 
-  uint32_t childCount = rootContent->GetChildCount();
-
   if (!mSearchRange) {
-    mSearchRange = new nsRange(rootContent);
+    mSearchRange = new nsRange(doc);
   }
+  nsCOMPtr<nsIDOMNode> searchRootNode = rootNode;
+
+  // Hack for XMLPrettyPrinter. nsFind can't handle complex anonymous content.
+  // If the root node has an XBL binding then there's not much we can do in
+  // in general, but we can try searching the binding's first child, which
+  // in the case of XMLPrettyPrinter contains the visible pretty-printed
+  // content.
+  nsXBLBinding* binding = rootContent->GetXBLBinding();
+  if (binding) {
+    nsIContent* child = binding->GetAnonymousContent()->GetFirstChild();
+    if (child) {
+      searchRootNode = do_QueryInterface(child);
+    }
+  }
+  mSearchRange->SelectNodeContents(searchRootNode);
+
+  if (!mStartPointRange) {
+    mStartPointRange = new nsRange(doc);
+  }
+  mStartPointRange->SetStart(searchRootNode, 0);
+  mStartPointRange->Collapse(true); // collapse to start
 
   if (!mEndPointRange) {
-    mEndPointRange = new nsRange(rootContent);
+    mEndPointRange = new nsRange(doc);
   }
-
-  mSearchRange->SelectNodeContents(rootNode);
-
-  mEndPointRange->SetEnd(rootNode, childCount);
+  nsCOMPtr<nsINode> searchRootTmp = do_QueryInterface(searchRootNode);
+  mEndPointRange->SetEnd(searchRootNode, searchRootTmp->Length());
   mEndPointRange->Collapse(false); // collapse to end
 
   // Consider current selection as null if
@@ -771,10 +789,6 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
       nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
     if (selection)
       selection->GetRangeAt(0, getter_AddRefs(currentSelectionRange));
-  }
-
-  if (!mStartPointRange) {
-    mStartPointRange = new nsRange(doc);
   }
 
   if (!currentSelectionRange) {

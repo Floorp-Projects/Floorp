@@ -106,6 +106,31 @@ static void printRange(nsRange *aDomRange);
 
 //#define DEBUG_TABLE_SELECTION 1
 
+nsPeekOffsetStruct::nsPeekOffsetStruct(nsSelectionAmount aAmount,
+                                       nsDirection aDirection,
+                                       int32_t aStartOffset,
+                                       nscoord aDesiredX,
+                                       bool aJumpLines,
+                                       bool aScrollViewStop,
+                                       bool aIsKeyboardSelect,
+                                       bool aVisual,
+                                       EWordMovementType aWordMovementType)
+  : mAmount(aAmount)
+  , mDirection(aDirection)
+  , mStartOffset(aStartOffset)
+  , mDesiredX(aDesiredX)
+  , mWordMovementType(aWordMovementType)
+  , mJumpLines(aJumpLines)
+  , mScrollViewStop(aScrollViewStop)
+  , mIsKeyboardSelect(aIsKeyboardSelect)
+  , mVisual(aVisual)
+  , mResultContent()
+  , mResultFrame(nullptr)
+  , mContentOffset(0)
+  , mAttach(CARET_ASSOCIATE_BEFORE)
+{
+}
+
 struct CachedOffsetForFrame {
   CachedOffsetForFrame()
   : mCachedFrameOffset(0, 0) // nsPoint ctor
@@ -333,7 +358,7 @@ nsFrameSelection::nsFrameSelection()
   
   mMouseDoubleDownState = false;
   
-  mHint = HINTLEFT;
+  mHint = CARET_ASSOCIATE_BEFORE;
   mCaretBidiLevel = BIDI_LEVEL_UNDEFINED;
   mDragSelectingCells = false;
   mSelectingTableCellMode = 0;
@@ -364,6 +389,9 @@ nsFrameSelection::nsFrameSelection()
   mDelayedMouseEventClickCount = 0;
 }
 
+nsFrameSelection::~nsFrameSelection()
+{
+}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameSelection)
 
@@ -429,12 +457,10 @@ nsFrameSelection::FetchDesiredX(nscoord &aDesiredX) //the x position requested b
     return NS_ERROR_NULL_POINTER;
 
   int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-  nsresult result = caret->SetCaretDOMSelection(mDomSelections[index]);
-  if (NS_FAILED(result))
-    return result;
+  caret->SetSelection(mDomSelections[index]);
 
   nsRect coord;
-  nsIFrame* caretFrame = caret->GetGeometry(mDomSelections[index], &coord);
+  nsIFrame* caretFrame = caret->GetGeometry(&coord);
   if (!caretFrame)
     return NS_ERROR_FAILURE;
   nsPoint viewOffset(0, 0);
@@ -688,17 +714,17 @@ GetCellParent(nsINode *aDomNode)
     return nullptr;
 }
 
-nsFrameSelection::HINT
+CaretAssociationHint
 nsFrameSelection::GetHintForPosition(nsIContent* aContent, int32_t aOffset)
 {
-  HINT hint = HINTLEFT;
+  CaretAssociateHint hint = CARET_ASSOCIATE_BEFORE;
   if (!aContent || aOffset < 1) {
     return hint;
   }
   const nsTextFragment* text = aContent->GetText();
   if (text && text->CharAt(aOffset - 1) == '\n') {
     // Attach the caret to the next line if needed
-    hint = HINTRIGHT;
+    hint = CARET_ASSOCIATE_AFTER;
   }
   return hint;
 }
@@ -821,7 +847,7 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
             sel->Collapse(anchorFocusRange->GetStartParent(),
                           anchorFocusRange->StartOffset());
           }
-          mHint = HINTRIGHT;
+          mHint = CARET_ASSOCIATE_AFTER;
           sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
                               nsIPresShell::ScrollAxis(),
                               nsIPresShell::ScrollAxis(), scrollFlags);
@@ -837,7 +863,7 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
             sel->Collapse(anchorFocusRange->GetEndParent(),
                           anchorFocusRange->EndOffset());
           }
-          mHint = HINTLEFT;
+          mHint = CARET_ASSOCIATE_BEFORE;
           sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
                               nsIPresShell::ScrollAxis(),
                               nsIPresShell::ScrollAxis(), scrollFlags);
@@ -861,7 +887,7 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
 
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
   
-  HINT tHint(mHint); //temporary variable so we dont set mHint until it is necessary
+  CaretAssociateHint tHint(mHint); //temporary variable so we dont set mHint until it is necessary
   switch (aKeycode){
     case nsIDOMKeyEvent::DOM_VK_RIGHT : 
         InvalidateDesiredX();
@@ -907,19 +933,19 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
     {
       // For left/right, PeekOffset() sets pos.mResultFrame correctly, but does not set pos.mAttachForward,
       // so determine the hint here based on the result frame and offset:
-      // If we're at the end of a text frame, set the hint to HINTLEFT to indicate that we
+      // If we're at the end of a text frame, set the hint to ASSOCIATE_BEFORE to indicate that we
       // want the caret displayed at the end of this frame, not at the beginning of the next one.
       theFrame = pos.mResultFrame;
       theFrame->GetOffsets(frameStart, frameEnd);
       currentOffset = pos.mContentOffset;
       if (frameEnd == currentOffset && !(frameStart == 0 && frameEnd == 0))
-        tHint = HINTLEFT;
+        tHint = CARET_ASSOCIATE_BEFORE;
       else
-        tHint = HINTRIGHT;
+        tHint = CARET_ASSOCIATE_AFTER;
     } else {
       // For up/down and home/end, pos.mResultFrame might not be set correctly, or not at all.
       // In these cases, get the frame based on the content and hint returned by PeekOffset().
-      tHint = (HINT)pos.mAttachForward;
+      tHint = pos.mAttach;
       theFrame = GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset,
                                        tHint, &currentOffset);
       if (!theFrame)
@@ -958,7 +984,7 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
     sel->Collapse(sel->GetFocusNode(), sel->FocusOffset());
     // Note: 'frame' might be dead here.
     if (!isBRFrame) {
-      mHint = HINTLEFT; // We're now at the end of the frame to the left.
+      mHint = CARET_ASSOCIATE_BEFORE; // We're now at the end of the frame to the left.
     }
     result = NS_OK;
   }
@@ -1081,12 +1107,7 @@ Selection::SetInterlinePosition(bool aHintRight, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_NOT_INITIALIZED); // Can't do selection
     return;
   }
-  nsFrameSelection::HINT hint;
-  if (aHintRight)
-    hint = nsFrameSelection::HINTRIGHT;
-  else
-    hint = nsFrameSelection::HINTLEFT;
-  mFrameSelection->SetHint(hint);
+  mFrameSelection->SetHint(aHintRight ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE);
 }
 
 NS_IMETHODIMP
@@ -1107,7 +1128,7 @@ Selection::GetInterlinePosition(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_NOT_INITIALIZED); // Can't do selection
     return false;
   }
-  return (mFrameSelection->GetHint() == nsFrameSelection::HINTRIGHT);
+  return mFrameSelection->GetHint() == CARET_ASSOCIATE_AFTER;
 }
 
 nsPrevNextBidiLevels
@@ -1119,10 +1140,10 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent *aNode,
 }
 
 nsPrevNextBidiLevels
-nsFrameSelection::GetPrevNextBidiLevels(nsIContent *aNode,
-                                        uint32_t    aContentOffset,
-                                        HINT        aHint,
-                                        bool        aJumpLines) const
+nsFrameSelection::GetPrevNextBidiLevels(nsIContent*        aNode,
+                                        uint32_t           aContentOffset,
+                                        CaretAssociateHint aHint,
+                                        bool               aJumpLines) const
 {
   // Get the level of the frames on each side
   nsIFrame    *currentFrame;
@@ -1269,11 +1290,11 @@ nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount)
  * @param aKeycode is the keyboard event that moved the caret to the new position
  * @param aHint is the hint indicating in what logical direction the caret moved
  */
-void nsFrameSelection::BidiLevelFromMove(nsIPresShell* aPresShell,
-                                         nsIContent   *aNode,
-                                         uint32_t      aContentOffset,
-                                         uint32_t      aKeycode,
-                                         HINT          aHint)
+void nsFrameSelection::BidiLevelFromMove(nsIPresShell*      aPresShell,
+                                         nsIContent*        aNode,
+                                         uint32_t           aContentOffset,
+                                         uint32_t           aKeycode,
+                                         CaretAssociateHint aHint)
 {
   switch (aKeycode) {
 
@@ -1284,10 +1305,8 @@ void nsFrameSelection::BidiLevelFromMove(nsIPresShell* aPresShell,
       nsPrevNextBidiLevels levels = GetPrevNextBidiLevels(aNode, aContentOffset,
                                                           aHint, false);
 
-      if (HINTLEFT == aHint)
-        SetCaretBidiLevel(levels.mLevelBefore);
-      else
-        SetCaretBidiLevel(levels.mLevelAfter);
+      SetCaretBidiLevel(aHint == CARET_ASSOCIATE_BEFORE ?
+          levels.mLevelBefore : levels.mLevelAfter);
       break;
     }
       /*
@@ -1373,12 +1392,12 @@ nsFrameSelection::AdjustForMaintainedSelection(nsIContent *aContent,
 
 
 nsresult
-nsFrameSelection::HandleClick(nsIContent *aNewFocus,
-                              uint32_t    aContentOffset,
-                              uint32_t    aContentEndOffset,
-                              bool        aContinueSelection, 
-                              bool        aMultipleSelection,
-                              bool        aHint) 
+nsFrameSelection::HandleClick(nsIContent*        aNewFocus,
+                              uint32_t           aContentOffset,
+                              uint32_t           aContentEndOffset,
+                              bool               aContinueSelection,
+                              bool               aMultipleSelection,
+                              CaretAssociateHint aHint)
 {
   if (!aNewFocus)
     return NS_ERROR_INVALID_ARG;
@@ -1401,7 +1420,7 @@ nsFrameSelection::HandleClick(nsIContent *aNewFocus,
         AdjustForMaintainedSelection(aNewFocus, aContentOffset))
       return NS_OK; //shift clicked to maintained selection. rejected.
 
-    return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, HINT(aHint),
+    return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aHint,
                      aContinueSelection, aMultipleSelection);
   }
   
@@ -1449,7 +1468,8 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
       amount = eSelectEndLine;
 
     int32_t offset;
-    nsIFrame* frame = GetFrameForNodeOffset(offsets.content, offsets.offset, HINTRIGHT, &offset);
+    nsIFrame* frame = GetFrameForNodeOffset(offsets.content, offsets.offset,
+        CARET_ASSOCIATE_AFTER, &offset);
 
     if (frame && amount == eSelectWord && direction == eDirPrevious) {
       // To avoid selecting the previous word when at start of word,
@@ -1472,7 +1492,7 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
   }
   
   HandleClick(offsets.content, offsets.offset, offsets.offset,
-              true, false, offsets.associateWithNext);
+              true, false, offsets.associate);
 }
 
 nsresult
@@ -1501,12 +1521,12 @@ nsFrameSelection::StopAutoScrollTimer()
 hard to go from nodes to frames, easy the other way!
  */
 nsresult
-nsFrameSelection::TakeFocus(nsIContent *aNewFocus,
-                            uint32_t    aContentOffset,
-                            uint32_t    aContentEndOffset,
-                            HINT        aHint,
-                            bool        aContinueSelection,
-                            bool        aMultipleSelection)
+nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
+                            uint32_t           aContentOffset,
+                            uint32_t           aContentEndOffset,
+                            CaretAssociateHint aHint,
+                            bool               aContinueSelection,
+                            bool               aMultipleSelection)
 {
   if (!aNewFocus)
     return NS_ERROR_NULL_POINTER;
@@ -1725,10 +1745,10 @@ nsFrameSelection::RepaintSelection(SelectionType aType) const
 }
  
 nsIFrame*
-nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
-                                        int32_t     aOffset,
-                                        HINT        aHint,
-                                        int32_t    *aReturnOffset) const
+nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
+                                        int32_t            aOffset,
+                                        CaretAssociateHint aHint,
+                                        int32_t*           aReturnOffset) const
 {
   if (!aNode || !aReturnOffset || !mShell)
     return nullptr;
@@ -1745,15 +1765,16 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
     int32_t childIndex  = 0;
     int32_t numChildren = theNode->GetChildCount();
 
-    if (aHint == HINTLEFT)
+    if (aHint == CARET_ASSOCIATE_BEFORE)
     {
       if (aOffset > 0)
         childIndex = aOffset - 1;
       else
         childIndex = aOffset;
     }
-    else // HINTRIGHT
+    else
     {
+      NS_ASSERTION(aHint == CARET_ASSOCIATE_AFTER, "unknown direction");
       if (aOffset >= numChildren)
       {
         if (numChildren > 0)
@@ -1844,7 +1865,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
     return nullptr;
 
   // find the child frame containing the offset we want
-  returnFrame->GetChildFrameContainingOffset(*aReturnOffset, aHint == HINTRIGHT,
+  returnFrame->GetChildFrameContainingOffset(*aReturnOffset, aHint == CARET_ASSOCIATE_AFTER,
                                              &aOffset, &returnFrame);
   return returnFrame;
 }
@@ -1869,10 +1890,8 @@ nsFrameSelection::CommonPageMove(bool aForward,
   if (!domSel) 
     return;
 
-  nsRefPtr<nsCaret> caret = mShell->GetCaret();
-
   nsRect caretPos;
-  nsIFrame* caretFrame = caret->GetGeometry(domSel, &caretPos);
+  nsIFrame* caretFrame = nsCaret::GetGeometry(domSel, &caretPos);
   if (!caretFrame) 
     return;
   
@@ -1903,7 +1922,7 @@ nsFrameSelection::CommonPageMove(bool aForward,
 
   // place the caret
   HandleClick(offsets.content, offsets.offset,
-              offsets.offset, aExtend, false, true);
+              offsets.offset, aExtend, false, CARET_ASSOCIATE_AFTER);
 }
 
 nsresult
@@ -1986,7 +2005,7 @@ nsFrameSelection::SelectAll()
   }
   int32_t numChildren = rootContent->GetChildCount();
   PostReason(nsISelectionListener::NO_REASON);
-  return TakeFocus(rootContent, 0, numChildren, HINTLEFT, false, false);
+  return TakeFocus(rootContent, 0, numChildren, CARET_ASSOCIATE_BEFORE, false, false);
 }
 
 //////////END FRAMESELECTION
@@ -2979,7 +2998,7 @@ nsFrameSelection::SetAncestorLimiter(nsIContent *aLimiter)
       ClearNormalSelection();
       if (mAncestorLimiter) {
         PostReason(nsISelectionListener::NO_REASON);
-        TakeFocus(mAncestorLimiter, 0, 0, HINTLEFT, false, false);
+        TakeFocus(mAncestorLimiter, 0, 0, CARET_ASSOCIATE_BEFORE, false, false);
       }
     }
   }
@@ -3920,21 +3939,13 @@ Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
   if (!aOffsetUsed)
     aOffsetUsed = &frameOffset;
     
-  nsFrameSelection::HINT hint = mFrameSelection->GetHint();
+  CaretAssociationHint hint = mFrameSelection->GetHint();
 
   if (aVisual) {
-    nsIPresShell *presShell = mFrameSelection->GetShell();
-    if (!presShell)
-      return NS_ERROR_FAILURE;
-
-    nsRefPtr<nsCaret> caret = presShell->GetCaret();
-    if (!caret)
-      return NS_ERROR_FAILURE;
-    
     uint8_t caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
 
-    return caret->GetCaretFrameForNodeOffset(content, FocusOffset(),
-      hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
+    return nsCaret::GetCaretFrameForNodeOffset(mFrameSelection,
+      content, FocusOffset(), hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
   }
   
   *aReturnFrame = mFrameSelection->
@@ -5384,7 +5395,7 @@ Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion, nsRect* aRect)
   // Return the rect relative to the frame, with zero width.
   if (isText) {
     aRect->x = pt.x;
-  } else if (mFrameSelection->GetHint() == nsFrameSelection::HINTLEFT) {
+  } else if (mFrameSelection->GetHint() == CARET_ASSOCIATE_BEFORE) {
     // It's the frame's right edge we're interested in.
     aRect->x = frame->GetRect().width;
   }
@@ -5811,18 +5822,6 @@ Selection::SelectionLanguageChange(bool aLangRTL)
     // the cursor is at a frame boundary, so use GetPrevNextBidiLevels to find the level of the characters
     //  before and after the cursor
     nsCOMPtr<nsIContent> focusContent = do_QueryInterface(GetFocusNode());
-    /*
-    nsFrameSelection::HINT hint;
-
-    if ((focusOffset == frameStart && level)        // beginning of an RTL frame
-        || (focusOffset == frameEnd && !level)) {   // end of an LTR frame
-      hint = nsFrameSelection::HINTRIGHT;
-    }
-    else {                                          // end of an RTL frame or beginning of an LTR frame
-      hint = nsFrameSelection::HINTLEFT;
-    }
-    mFrameSelection->SetHint(hint);
-    */
     nsPrevNextBidiLevels levels = mFrameSelection->
       GetPrevNextBidiLevels(focusContent, focusOffset, false);
       

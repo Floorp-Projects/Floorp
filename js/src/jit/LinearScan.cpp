@@ -84,7 +84,7 @@ LinearScanAllocator::allocateRegisters()
     // Iterate through all intervals in ascending start order.
     CodePosition prevPosition = CodePosition::MIN;
     while ((current = unhandled.dequeue()) != nullptr) {
-        JS_ASSERT(current->getAllocation()->isUse());
+        JS_ASSERT(current->getAllocation()->isBogus());
         JS_ASSERT(current->numRanges() > 0);
 
         if (mir->shouldCancel("LSRA Allocate Registers (main loop)"))

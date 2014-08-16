@@ -119,6 +119,7 @@
 #include "nsSVGEffects.h"
 #include "SVGFragmentIdentifier.h"
 #include "nsArenaMemoryStats.h"
+#include "nsFrameSelection.h"
 
 #include "nsPerformance.h"
 #include "nsRefreshDriver.h"
@@ -1834,9 +1835,6 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
   }
 #endif
 
-  if (mCaret)
-    mCaret->EraseCaret();
-
   // XXX Do a full invalidate at the beginning so that invalidates along
   // the way don't have region accumulation issues?
 
@@ -2209,13 +2207,6 @@ already_AddRefed<SelectionCarets> PresShell::GetSelectionCarets() const
   return selectionCaret.forget();
 }
 
-void PresShell::MaybeInvalidateCaretPosition()
-{
-  if (mCaret) {
-    mCaret->InvalidateOutsideCaret();
-  }
-}
-
 void PresShell::SetCaret(nsCaret *aNewCaret)
 {
   mCaret = aNewCaret;
@@ -2242,7 +2233,7 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(bool aInEnable)
 
     MOZ_ASSERT(mCaret || mTouchCaret);
     if (mCaret) {
-      mCaret->SetCaretVisible(mCaretEnabled);
+      mCaret->SetVisible(mCaretEnabled);
     }
     if (mTouchCaret) {
       mTouchCaret->SyncVisibilityWithCaret();
@@ -2277,8 +2268,7 @@ NS_IMETHODIMP PresShell::GetCaretVisible(bool *aOutIsVisible)
 {
   *aOutIsVisible = false;
   if (mCaret) {
-    nsresult rv = mCaret->GetCaretVisible(aOutIsVisible);
-    NS_ENSURE_SUCCESS(rv,rv);
+    *aOutIsVisible = mCaret->IsVisible();
   }
   return NS_OK;
 }
@@ -2440,7 +2430,8 @@ PresShell::CompleteMove(bool aForward, bool aExtend)
   nsIFrame::CaretPosition pos =
     frame->GetExtremeCaretPosition(!aForward);
   mSelection->HandleClick(pos.mResultContent, pos.mContentOffset,
-                          pos.mContentOffset, aExtend, false, aForward);
+                          pos.mContentOffset, aExtend, false,
+                          aForward ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE);
   if (limiter) {
     // HandleClick resets ancestorLimiter, so set it again.
     mSelection->SetAncestorLimiter(limiter);
@@ -2660,6 +2651,19 @@ PresShell::RestoreRootScrollPosition()
   nsIScrollableFrame* scrollableFrame = GetRootScrollFrameAsScrollable();
   if (scrollableFrame) {
     scrollableFrame->ScrollToRestoredPosition();
+  }
+}
+
+void
+PresShell::MaybeReleaseCapturingContent()
+{
+  nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
+  if (frameSelection) {
+    frameSelection->SetDragState(false);
+  }
+  if (gCaptureInfo.mContent &&
+      gCaptureInfo.mContent->OwnerDoc() == mDocument) {
+    SetCapturingContent(nullptr, 0);
   }
 }
 
@@ -3929,9 +3933,6 @@ PresShell::UnsuppressAndInvalidate()
     // let's assume that outline on a root frame is not supported
     rootFrame->InvalidateFrame();
 
-    if (mCaretEnabled && mCaret) {
-      mCaret->CheckCaretDrawingState();
-    }
     if (mTouchCaret) {
       mTouchCaret->UpdatePositionIfNeeded();
     }
@@ -4288,29 +4289,6 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 }
 
 void
-PresShell::CharacterDataWillChange(nsIDocument *aDocument,
-                                   nsIContent*  aContent,
-                                   CharacterDataChangeInfo* aInfo)
-{
-  NS_PRECONDITION(!mIsDocumentGone, "Unexpected CharacterDataChanged");
-  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-
-  if (mCaret) {
-    // Invalidate the caret's current location before we call into the frame
-    // constructor. It is important to do this now, and not wait until the
-    // resulting reflow, because this call causes continuation frames of the
-    // text frame the caret is in to forget what part of the content they
-    // refer to, making it hard for them to return the correct continuation
-    // frame to the caret.
-    //
-    // It's also important to do this before the content actually changes, since
-    // in bidi text the caret needs to look at the content to determine its
-    // position and shape.
-    mCaret->InvalidateOutsideCaret();
-  }
-}
-
-void
 PresShell::CharacterDataChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,
                                 CharacterDataChangeInfo* aInfo)
@@ -4503,11 +4481,6 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
-
-  // Make sure that the caret doesn't leave a turd where the child used to be.
-  if (mCaret) {
-    mCaret->InvalidateOutsideCaret();
-  }
 
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
@@ -8096,14 +8069,13 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   nsRefPtr<nsCaret> caret = GetCaret();
   NS_ENSURE_TRUE(caret, false);
 
-  bool caretVisible = false;
-  rv = caret->GetCaretVisible(&caretVisible);
-  if (NS_FAILED(rv) || ! caretVisible)
+  bool caretVisible = caret->IsVisible();
+  if (!caretVisible)
     return false;
 
   // caret selection, this is a temporary weak reference, so no refcounting is
   // needed
-  nsISelection* domSelection = caret->GetCaretDOMSelection();
+  nsISelection* domSelection = caret->GetSelection();
   NS_ENSURE_TRUE(domSelection, false);
 
   // since the match could be an anonymous textnode inside a
@@ -8170,7 +8142,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
 
   // get caret position relative to the closest view
   nsRect caretCoords;
-  nsIFrame* caretFrame = caret->GetGeometry(domSelection, &caretCoords);
+  nsIFrame* caretFrame = caret->GetGeometry(&caretCoords);
   if (!caretFrame)
     return false;
   nsPoint viewOffset;
@@ -8633,12 +8605,6 @@ PresShell::DidCauseReflow()
 void
 PresShell::WillDoReflow()
 {
-  // We just reflowed, tell the caret that its frame might have moved.
-  // XXXbz that comment makes no sense
-  if (mCaret) {
-    mCaret->InvalidateOutsideCaret();
-  }
-
   mPresContext->FlushUserFontSet();
 
   mPresContext->FlushCounterStyles();
@@ -8663,13 +8629,6 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
 
   if (sSynthMouseMove) {
     SynthesizeMouseMove(false);
-  }
-
-  if (mCaret) {
-    // Update the caret's position now to account for any changes created by
-    // the reflow.
-    mCaret->InvalidateOutsideCaret();
-    mCaret->UpdateCaretPosition();
   }
 
   if (mTouchCaret) {
