@@ -22,6 +22,9 @@ MSVC_ENABLE_PGO = True
 # it contains first in Windows PGO builds.
 SOURCES['StaticXULComponentsStart.cpp'].no_pgo = True
 
+# Don't let LTO reorder this.
+SOURCES['StaticXULComponentsStart.cpp'].flags += ['-fno-lto']
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'nsDllMain.cpp',
