@@ -6,7 +6,6 @@ SOURCES += [
     'StaticXULComponentsEnd.cpp',
 ]
 
-SOURCES['StaticXULComponentsEnd.cpp'].flags += ['-fno-lto']
 LIBRARY_NAME = 'StaticXULComponentsEnd'
 
 DEFINES['MOZILLA_INTERNAL_API'] = True
