@@ -1437,10 +1437,11 @@ TracerView.prototype = Heritage.extend(WidgetMethods, {
    *         The network request view.
    */
   _createView: function(aTrace) {
-    let { type, name, location, depth, frameId } = aTrace;
+    let { type, name, location, blackBoxed, depth, frameId } = aTrace;
     let { parameterNames, returnVal, arguments: args } = aTrace;
     let fragment = document.createDocumentFragment();
 
+    this._templateItem.classList.toggle("black-boxed", blackBoxed);
     this._templateItem.setAttribute("tooltiptext", SourceUtils.trimUrl(location.url));
     this._templateItem.style.MozPaddingStart = depth + "em";
 

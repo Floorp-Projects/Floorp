@@ -63,8 +63,8 @@ function TestTabActor(aConnection, aGlobal)
   this.conn = aConnection;
   this._global = aGlobal;
   this._global.wrappedJSObject = aGlobal;
-  this._threadActor = new ThreadActor(this, this._global);
-  this.conn.addActor(this._threadActor);
+  this.threadActor = new ThreadActor(this, this._global);
+  this.conn.addActor(this.threadActor);
   this._attached = false;
   this._extraActors = {};
   this.makeDebugger = makeDebugger.bind(null, {
@@ -107,7 +107,7 @@ TestTabActor.prototype = {
   onAttach: function(aRequest) {
     this._attached = true;
 
-    let response = { type: "tabAttached", threadActor: this._threadActor.actorID };
+    let response = { type: "tabAttached", threadActor: this.threadActor.actorID };
     this._appendExtraActors(response);
 
     return response;

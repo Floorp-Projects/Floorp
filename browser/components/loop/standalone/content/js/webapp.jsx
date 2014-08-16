@@ -374,10 +374,65 @@ loop.webapp = (function($, _, OT, webL10n) {
         this._notifier.errorL10n("missing_conversation_info");
         this.navigate("home", {trigger: true});
       } else {
+        this._setupWebSocketAndCallView(loopToken);
+      }
+    },
+
+    /**
+     * Used to set up the web socket connection and navigate to the
+     * call view if appropriate.
+     *
+     * @param {string} loopToken The session token to use.
+     */
+    _setupWebSocketAndCallView: function(loopToken) {
+      this._websocket = new loop.CallConnectionWebSocket({
+        url: this._conversation.get("progressURL"),
+        websocketToken: this._conversation.get("websocketToken"),
+        callId: this._conversation.get("callId"),
+      });
+      this._websocket.promiseConnect().then(function() {
         this.navigate("call/ongoing/" + loopToken, {
           trigger: true
         });
+      }.bind(this), function() {
+        // XXX Not the ideal response, but bug 1047410 will be replacing
+        // this by better "call failed" UI.
+        this._notifier.errorL10n("cannot_start_call_session_not_ready");
+        return;
+      }.bind(this));
+
+      this._websocket.on("progress", this._handleWebSocketProgress, this);
+    },
+
+    /**
+     * Used to receive websocket progress and to determine how to handle
+     * it if appropraite.
+     */
+    _handleWebSocketProgress: function(progressData) {
+      if (progressData.state === "terminated") {
+        // XXX Before adding more states here, the basic protocol messages to the
+        // server need implementing on both the standalone and desktop side.
+        // These are covered by bug 1045643, but also check the dependencies on
+        // bug 1034041.
+        //
+        // Failure to do this will break desktop - standalone call setup. We're
+        // ok to handle reject, as that is a specific message from the destkop via
+        // the server.
+        switch (progressData.reason) {
+          case "reject":
+            this._handleCallRejected();
+        }
       }
+    },
+
+    /**
+     * Handles call rejection.
+     * XXX This should really display the call failed view - bug 1046959
+     * will implement this.
+     */
+    _handleCallRejected: function() {
+      this.endCall();
+      this._notifier.errorL10n("call_timeout_notification_text");
     },
 
     /**
