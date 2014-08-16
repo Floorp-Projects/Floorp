@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/GenericRefCounted.h"
+#include "mozilla/UniquePtr.h"
 #include "SurfaceTypes.h"
 #include "SharedSurface.h"
 

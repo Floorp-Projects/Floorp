@@ -22,6 +22,7 @@
 #include "GLDefs.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "SurfaceTypes.h"
 

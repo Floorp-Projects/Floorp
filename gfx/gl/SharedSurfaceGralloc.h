@@ -86,10 +86,13 @@ public:
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;
-        if (!mAllocator) {
-            return nullptr;
+
+        UniquePtr<SharedSurface> ret;
+        if (mAllocator) {
+            ret = SharedSurface_Gralloc::Create(mGL, mFormats, size,
+                                                hasAlpha, mAllocator);
         }
-        return SharedSurface_Gralloc::Create(mGL, mFormats, size, hasAlpha, mAllocator);
+        return Move(ret);
     }
 };
 
