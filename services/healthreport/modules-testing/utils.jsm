@@ -25,6 +25,7 @@ Cu.import("resource://gre/modules/services-common/utils.js");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
+Cu.import("resource://testing-common/services/datareporting/mocks.jsm");
 
 
 let APP_INFO = {
@@ -190,18 +191,16 @@ this.getHealthReporter = function (name, uri=DUMMY_URI, inspected=false) {
   let reporter;
 
   let policyPrefs = new Preferences(branch + "policy.");
-  let policy = new DataReportingPolicy(policyPrefs, prefs, {
-    onRequestDataUpload: function (request) {
-      reporter.requestDataUpload(request);
-    },
-
-    onNotifyDataPolicy: function (request) { },
-
-    onRequestRemoteDelete: function (request) {
-      reporter.deleteRemoteData(request);
-    },
-  });
-
+  let listener = new MockPolicyListener();
+  listener.onRequestDataUpload = function (request) {
+    reporter.requestDataUpload(request);
+    MockPolicyListener.prototype.onRequestDataUpload.call(this, request);
+  }
+  listener.onRequestRemoteDelete = function (request) {
+    reporter.deleteRemoteData(request);
+    MockPolicyListener.prototype.onRequestRemoteDelete.call(this, request);
+  }
+  let policy = new DataReportingPolicy(policyPrefs, prefs, listener);
   let type = inspected ? InspectedHealthReporter : HealthReporter;
   reporter = new type(branch + "healthreport.", policy, null,
                       "state-" + name + ".json");

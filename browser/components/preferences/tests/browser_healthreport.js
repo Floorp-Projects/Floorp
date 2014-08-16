@@ -13,6 +13,8 @@ function runPaneTest(fn) {
                                    .policy;
     ok(policy, "Policy object defined");
 
+    resetPreferences();
+
     fn(win, policy);
   }
 
@@ -21,10 +23,29 @@ function runPaneTest(fn) {
              "chrome,titlebar,toolbar,centerscreen,dialog=no", "paneAdvanced");
 }
 
+let logDetails = {
+  dumpAppender: null,
+  rootLogger: null,
+};
+
 function test() {
   waitForExplicitFinish();
   resetPreferences();
   registerCleanupFunction(resetPreferences);
+
+  let ld = logDetails;
+  registerCleanupFunction(() => {
+    ld.rootLogger.removeAppender(ld.dumpAppender);
+    delete ld.dumpAppender;
+    delete ld.rootLogger;
+  });
+
+  let ns = {};
+  Cu.import("resource://gre/modules/Log.jsm", ns);
+  ld.rootLogger = ns.Log.repository.rootLogger;
+  ld.dumpAppender = new ns.Log.DumpAppender();
+  ld.dumpAppender.level = ns.Log.Level.All;
+  ld.rootLogger.addAppender(ld.dumpAppender);
 
   Services.prefs.lockPref("datareporting.healthreport.uploadEnabled");
   runPaneTest(testUploadDisabled);
@@ -43,7 +64,8 @@ function testUploadDisabled(win, policy) {
 function testBasic(win, policy) {
   let doc = win.document;
 
-  is(policy.dataSubmissionPolicyAccepted, false, "Data submission policy not accepted.");
+  resetPreferences();
+
   is(policy.healthReportUploadEnabled, true, "Health Report upload enabled on app first run.");
 
   let checkbox = doc.getElementById("submitHealthReportBox");
@@ -63,6 +85,10 @@ function testBasic(win, policy) {
 }
 
 function resetPreferences() {
-  Services.prefs.clearUserPref("datareporting.healthreport.uploadEnabled");
+  let service = Cc["@mozilla.org/datareporting/service;1"]
+                  .getService(Ci.nsISupports)
+                  .wrappedJSObject;
+  service.policy._prefs.resetBranch("datareporting.policy.");
+  service.policy.dataSubmissionPolicyBypassNotification = true;
 }
 

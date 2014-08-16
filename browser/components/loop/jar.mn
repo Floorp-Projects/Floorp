@@ -46,6 +46,7 @@ browser.jar:
   content/browser/loop/shared/js/router.js            (content/shared/js/router.js)
   content/browser/loop/shared/js/views.js             (content/shared/js/views.js)
   content/browser/loop/shared/js/utils.js             (content/shared/js/utils.js)
+  content/browser/loop/shared/js/websocket.js         (content/shared/js/websocket.js)
 
   # Shared libs
   content/browser/loop/shared/libs/react-0.11.1.js    (content/shared/libs/react-0.11.1.js)

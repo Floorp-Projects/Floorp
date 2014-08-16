@@ -3,14 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This file is in transition. It was originally conceived to fulfill the
- * needs of only Firefox Health Report. It is slowly being morphed into
- * fulfilling the needs of all data reporting facilities in Gecko applications.
- * As a result, some things feel a bit weird.
- *
- * DataReportingPolicy is both a driver for data reporting notification
- * (a true policy) and the driver for FHR data submission. The latter should
- * eventually be split into its own type and module.
+ * This file is in transition. Most of its content needs to be moved under
+ * /services/healthreport.
  */
 
 #ifndef MERGED_COMPARTMENT
@@ -20,6 +14,7 @@
 this.EXPORTED_SYMBOLS = [
   "DataSubmissionRequest", // For test use only.
   "DataReportingPolicy",
+  "DATAREPORTING_POLICY_VERSION",
 ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
@@ -32,6 +27,11 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/UpdateChannel.jsm");
 
+// The current policy version number. If the version number stored in the prefs
+// is smaller than this, data upload will be disabled until the user is re-notified
+// about the policy changes.
+const DATAREPORTING_POLICY_VERSION = 1;
+
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 // Used as a sanity lower bound for dates stored in prefs. This module was
@@ -41,33 +41,15 @@ const OLDEST_ALLOWED_YEAR = 2012;
 /**
  * Represents a request to display data policy.
  *
- * Instances of this are created when the policy is requesting the user's
- * approval to agree to the data submission policy.
- *
  * Receivers of these instances are expected to call one or more of the on*
  * functions when events occur.
  *
  * When one of these requests is received, the first thing a callee should do
  * is present notification to the user of the data policy. When the notice
  * is displayed to the user, the callee should call `onUserNotifyComplete`.
- * This begins a countdown timer that upon completion will signal implicit
- * acceptance of the policy. If for whatever reason the callee could not
- * display a notice, it should call `onUserNotifyFailed`.
  *
- * Once the user is notified of the policy, the callee has the option of
- * signaling explicit user acceptance or rejection of the policy. They do this
- * by calling `onUserAccept` or `onUserReject`, respectively. These functions
- * are essentially proxies to
- * DataReportingPolicy.{recordUserAcceptance,recordUserRejection}.
- *
- * If the user never explicitly accepts or rejects the policy, it will be
- * implicitly accepted after a specified duration of time. The notice is
- * expected to remain displayed even after implicit acceptance (in case the
- * user is away from the device). So, no event signaling implicit acceptance
- * is exposed.
- *
- * Receivers of instances of this type should treat it as a black box with
- * the exception of the on* functions.
+ * If for whatever reason the callee could not display a notice,
+ * it should call `onUserNotifyFailed`.
  *
  * @param policy
  *        (DataReportingPolicy) The policy instance this request came from.
@@ -78,17 +60,13 @@ function NotifyPolicyRequest(policy, deferred) {
   this.policy = policy;
   this.deferred = deferred;
 }
-NotifyPolicyRequest.prototype = {
+NotifyPolicyRequest.prototype = Object.freeze({
   /**
    * Called when the user is notified of the policy.
-   *
-   * This starts a countdown timer that will eventually signify implicit
-   * acceptance of the data policy.
    */
-  onUserNotifyComplete: function onUserNotified() {
-    this.deferred.resolve();
-    return this.deferred.promise;
-  },
+  onUserNotifyComplete: function () {
+    return this.deferred.resolve();
+   },
 
   /**
    * Called when there was an error notifying the user about the policy.
@@ -96,32 +74,10 @@ NotifyPolicyRequest.prototype = {
    * @param error
    *        (Error) Explains what went wrong.
    */
-  onUserNotifyFailed: function onUserNotifyFailed(error) {
-    this.deferred.reject(error);
+  onUserNotifyFailed: function (error) {
+    return this.deferred.reject(error);
   },
-
-  /**
-   * Called when the user agreed to the data policy.
-   *
-   * @param reason
-   *        (string) How the user agreed to the policy.
-   */
-  onUserAccept: function onUserAccept(reason) {
-    this.policy.recordUserAcceptance(reason);
-  },
-
-  /**
-   * Called when the user rejected the data policy.
-   *
-   * @param reason
-   *        (string) How the user rejected the policy.
-   */
-  onUserReject: function onUserReject(reason) {
-    this.policy.recordUserRejection(reason);
-  },
-};
-
-Object.freeze(NotifyPolicyRequest.prototype);
+});
 
 /**
  * Represents a request to submit data.
@@ -238,9 +194,7 @@ this.DataSubmissionRequest.prototype = Object.freeze({
  *     data collection practices.
  *  5. User should have opportunity to react to this notification before
  *     data submission.
- *  6. Display of notification without any explicit user action constitutes
- *     implicit consent after a certain duration of time.
- *  7. If data submission fails, try at most 2 additional times before giving
+ *  6. If data submission fails, try at most 2 additional times before giving
  *     up on that day's submission.
  *
  * The listener passed into the instance must have the following properties
@@ -289,19 +243,11 @@ this.DataReportingPolicy = function (prefs, healthReportPrefs, listener) {
   this._prefs = prefs;
   this._healthReportPrefs = healthReportPrefs;
   this._listener = listener;
+  this._userNotifyPromise = null;
 
-  // If the policy version has changed, reset all preferences, so that
-  // the notification reappears.
-  let acceptedVersion = this._prefs.get("dataSubmissionPolicyAcceptedVersion");
-  if (typeof(acceptedVersion) == "number" &&
-      acceptedVersion < this.minimumPolicyVersion) {
-    this._log.info("policy version has changed - resetting all prefs");
-    // We don't want to delay the notification in this case.
-    let firstRunToRestore = this.firstRunDate;
-    this._prefs.resetBranch();
-    this.firstRunDate = firstRunToRestore.getTime() ?
-                        firstRunToRestore : this.now();
-  } else if (!this.firstRunDate.getTime()) {
+  this._migratePrefs();
+
+  if (!this.firstRunDate.getTime()) {
     // If we've never run before, record the current time.
     this.firstRunDate = this.now();
   }
@@ -329,30 +275,12 @@ this.DataReportingPolicy = function (prefs, healthReportPrefs, listener) {
     this.nextDataSubmissionDate = this._futureDate(MILLISECONDS_PER_DAY);
   }
 
-  // Date at which we performed user notification of acceptance.
-  // This is an instance variable because implicit acceptance should only
-  // carry forward through a single application instance.
-  this._dataSubmissionPolicyNotifiedDate = null;
-
   // Record when we last requested for submitted data to be sent. This is
   // to avoid having multiple outstanding requests.
   this._inProgressSubmissionRequest = null;
 };
 
 this.DataReportingPolicy.prototype = Object.freeze({
-  /**
-   * How long after first run we should notify about data submission.
-   */
-  SUBMISSION_NOTIFY_INTERVAL_MSEC: 12 * 60 * 60 * 1000,
-
-  /**
-   * Time that must elapse with no user action for implicit acceptance.
-   *
-   * THERE ARE POTENTIAL LEGAL IMPLICATIONS OF CHANGING THIS VALUE. Check with
-   * Privacy and/or Legal before modifying.
-   */
-  IMPLICIT_ACCEPTANCE_INTERVAL_MSEC: 8 * 60 * 60 * 1000,
-
   /**
    *  How often to poll to see if we need to do something.
    *
@@ -393,13 +321,6 @@ this.DataReportingPolicy.prototype = Object.freeze({
     60 * 60 * 1000,
   ],
 
-  /**
-   * State of user notification of data submission.
-   */
-  STATE_NOTIFY_UNNOTIFIED: "not-notified",
-  STATE_NOTIFY_WAIT: "waiting",
-  STATE_NOTIFY_COMPLETE: "ok",
-
   REQUIRED_LISTENERS: [
     "onRequestDataUpload",
     "onRequestRemoteDelete",
@@ -422,22 +343,6 @@ this.DataReportingPolicy.prototype = Object.freeze({
                             OLDEST_ALLOWED_YEAR);
   },
 
-  /**
-   * Short circuit policy checking and always assume acceptance.
-   *
-   * This shuld never be set by the user. Instead, it is a per-application or
-   * per-deployment default pref.
-   */
-  get dataSubmissionPolicyBypassAcceptance() {
-    return this._prefs.get("dataSubmissionPolicyBypassAcceptance", false);
-  },
-
-  /**
-   * When the user was notified that data submission could occur.
-   *
-   * This is used for logging purposes. this._dataSubmissionPolicyNotifiedDate
-   * is what's used internally.
-   */
   get dataSubmissionPolicyNotifiedDate() {
     return CommonUtils.getDatePref(this._prefs,
                                    "dataSubmissionPolicyNotifiedTime", 0,
@@ -450,46 +355,12 @@ this.DataReportingPolicy.prototype = Object.freeze({
                             value, OLDEST_ALLOWED_YEAR);
   },
 
-  /**
-   * When the user accepted or rejected the data submission policy.
-   *
-   * If there was implicit acceptance, this will be set to the time of that.
-   */
-  get dataSubmissionPolicyResponseDate() {
-    return CommonUtils.getDatePref(this._prefs,
-                                   "dataSubmissionPolicyResponseTime",
-                                   0, this._log, OLDEST_ALLOWED_YEAR);
+  get dataSubmissionPolicyBypassNotification() {
+    return this._prefs.get("dataSubmissionPolicyBypassNotification", false);
   },
 
-  set dataSubmissionPolicyResponseDate(value) {
-    this._log.debug("Setting user notified reaction date: " + value);
-    CommonUtils.setDatePref(this._prefs,
-                            "dataSubmissionPolicyResponseTime",
-                            value, OLDEST_ALLOWED_YEAR);
-  },
-
-  /**
-   * Records the result of user notification of data submission policy.
-   *
-   * This is used for logging and diagnostics purposes. It can answer the
-   * question "how was data submission agreed to on this profile?"
-   *
-   * Not all values are defined by this type and can come from other systems.
-   *
-   * The value must be a string and should be something machine readable. e.g.
-   * "accept-user-clicked-ok-button-in-info-bar"
-   */
-  get dataSubmissionPolicyResponseType() {
-    return this._prefs.get("dataSubmissionPolicyResponseType",
-                           "none-recorded");
-  },
-
-  set dataSubmissionPolicyResponseType(value) {
-    if (typeof(value) != "string") {
-      throw new Error("Value must be a string. Got " + typeof(value));
-    }
-
-    this._prefs.set("dataSubmissionPolicyResponseType", value);
+  set dataSubmissionPolicyBypassNotification(value) {
+    return this._prefs.set("dataSubmissionPolicyBypassNotification", !!value);
   },
 
   /**
@@ -507,6 +378,10 @@ this.DataReportingPolicy.prototype = Object.freeze({
     this._prefs.set("dataSubmissionEnabled", !!value);
   },
 
+  get currentPolicyVersion() {
+    return this._prefs.get("currentPolicyVersion", DATAREPORTING_POLICY_VERSION);
+  },
+
   /**
    * The minimum policy version which for dataSubmissionPolicyAccepted to
    * to be valid.
@@ -519,48 +394,21 @@ this.DataReportingPolicy.prototype = Object.freeze({
            channelPref : this._prefs.get("minimumPolicyVersion", 1);
   },
 
-  /**
-   * Whether the user has accepted that data submission can occur.
-   *
-   * This overrides dataSubmissionEnabled.
-   */
-  get dataSubmissionPolicyAccepted() {
-    // Be conservative and default to false.
-    return this._prefs.get("dataSubmissionPolicyAccepted", false);
+  get dataSubmissionPolicyAcceptedVersion() {
+    return this._prefs.get("dataSubmissionPolicyAcceptedVersion", 0);
   },
 
-  set dataSubmissionPolicyAccepted(value) {
-    this._prefs.set("dataSubmissionPolicyAccepted", !!value);
-    if (!!value) {
-      let currentPolicyVersion = this._prefs.get("currentPolicyVersion", 1);
-      this._prefs.set("dataSubmissionPolicyAcceptedVersion", currentPolicyVersion);
-    } else {
-      this._prefs.reset("dataSubmissionPolicyAcceptedVersion");
-    }
+  set dataSubmissionPolicyAcceptedVersion(value) {
+    this._prefs.set("dataSubmissionPolicyAcceptedVersion", value);
   },
 
   /**
-   * The state of user notification of the data policy.
-   *
-   * This must be DataReportingPolicy.STATE_NOTIFY_COMPLETE before data
-   * submission can occur.
-   *
-   * @return DataReportingPolicy.STATE_NOTIFY_* constant.
+   * Checks to see if the user has been notified about data submission
+   * @return {bool}
    */
-  get notifyState() {
-    if (this.dataSubmissionPolicyResponseDate.getTime()) {
-      return this.STATE_NOTIFY_COMPLETE;
-    }
-
-    // We get the local state - not the state from prefs - because we don't want
-    // a value from a previous application run to interfere. This prevents
-    // a scenario where notification occurs just before application shutdown and
-    // notification is displayed for shorter than the policy requires.
-    if (!this._dataSubmissionPolicyNotifiedDate) {
-      return this.STATE_NOTIFY_UNNOTIFIED;
-    }
-
-    return this.STATE_NOTIFY_WAIT;
+  get userNotifiedOfCurrentPolicy() {
+    return  this.dataSubmissionPolicyNotifiedDate.getTime() > 0 &&
+            this.dataSubmissionPolicyAcceptedVersion >= this.currentPolicyVersion;
   },
 
   /**
@@ -691,43 +539,6 @@ this.DataReportingPolicy.prototype = Object.freeze({
    */
   get healthReportUploadLocked() {
     return this._healthReportPrefs.locked("uploadEnabled");
-  },
-
-  /**
-   * Record user acceptance of data submission policy.
-   *
-   * Data submission will not be allowed to occur until this is called.
-   *
-   * This is typically called through the `onUserAccept` property attached to
-   * the promise passed to `onUserNotify` in the policy listener. But, it can
-   * be called through other interfaces at any time and the call will have
-   * an impact on future data submissions.
-   *
-   * @param reason
-   *        (string) How the user accepted the data submission policy.
-   */
-  recordUserAcceptance: function recordUserAcceptance(reason="no-reason") {
-    this._log.info("User accepted data submission policy: " + reason);
-    this.dataSubmissionPolicyResponseDate = this.now();
-    this.dataSubmissionPolicyResponseType = "accepted-" + reason;
-    this.dataSubmissionPolicyAccepted = true;
-  },
-
-  /**
-   * Record user rejection of submission policy.
-   *
-   * Data submission will not be allowed to occur if this is called.
-   *
-   * This is typically called through the `onUserReject` property attached to
-   * the promise passed to `onUserNotify` in the policy listener. But, it can
-   * be called through other interfaces at any time and the call will have an
-   * impact on future data submissions.
-   */
-  recordUserRejection: function recordUserRejection(reason="no-reason") {
-    this._log.info("User rejected data submission policy: " + reason);
-    this.dataSubmissionPolicyResponseDate = this.now();
-    this.dataSubmissionPolicyResponseType = "rejected-" + reason;
-    this.dataSubmissionPolicyAccepted = false;
   },
 
   /**
@@ -882,19 +693,13 @@ this.DataReportingPolicy.prototype = Object.freeze({
       return;
     }
 
-    // If the user hasn't responded to the data policy, don't do anything.
-    if (!this.ensureNotifyResponse(now)) {
+    if (!this.ensureUserNotified()) {
+      this._log.warn("The user has not been notified about the data submission " +
+                     "policy. Not attempting upload.");
       return;
     }
 
-    // User has opted out of data submission.
-    if (!this.dataSubmissionPolicyAccepted && !this.dataSubmissionPolicyBypassAcceptance) {
-      this._log.debug("Data submission has been disabled per user request.");
-      return;
-    }
-
-    // User has responded to data policy and data submission is enabled. Now
-    // comes the scheduling part.
+    // Data submission is allowed to occur. Now comes the scheduling part.
 
     if (nowT < nextSubmissionDate.getTime()) {
       this._log.debug("Next data submission is scheduled in the future: " +
@@ -906,82 +711,62 @@ this.DataReportingPolicy.prototype = Object.freeze({
   },
 
   /**
-   * Ensure user has responded to data submission policy.
+   * Ensure that the data policy notification has been displayed.
    *
    * This must be called before data submission. If the policy has not been
-   * responded to, data submission must not occur.
+   * displayed, data submission must not occur.
    *
-   * @return bool Whether user has responded to data policy.
+   * @return bool Whether the notification has been displayed.
    */
-  ensureNotifyResponse: function ensureNotifyResponse(now) {
-    if (this.dataSubmissionPolicyBypassAcceptance) {
+  ensureUserNotified: function () {
+    if (this.userNotifiedOfCurrentPolicy || this.dataSubmissionPolicyBypassNotification) {
       return true;
     }
 
-    let notifyState = this.notifyState;
-
-    if (notifyState == this.STATE_NOTIFY_UNNOTIFIED) {
-      let notifyAt = new Date(this.firstRunDate.getTime() +
-                              this.SUBMISSION_NOTIFY_INTERVAL_MSEC);
-
-      if (now.getTime() < notifyAt.getTime()) {
-        this._log.debug("Don't have to notify about data submission yet.");
-        return false;
-      }
-
-      let onComplete = function onComplete() {
-        this._log.info("Data submission notification presented.");
-        let now = this.now();
-
-        this._dataSubmissionPolicyNotifiedDate = now;
-        this.dataSubmissionPolicyNotifiedDate = now;
-      }.bind(this);
-
-      let deferred = Promise.defer();
-
-      deferred.promise.then(onComplete, (error) => {
-        this._log.warn("Data policy notification presentation failed: " +
-                       CommonUtils.exceptionStr(error));
-      });
-
-      this._log.info("Requesting display of data policy.");
-      let request = new NotifyPolicyRequest(this, deferred);
-
-      try {
-        this._listener.onNotifyDataPolicy(request);
-      } catch (ex) {
-        this._log.warn("Exception when calling onNotifyDataPolicy: " +
-                       CommonUtils.exceptionStr(ex));
-      }
+    // The user has not been notified yet, but is in the process of being notified.
+    if (this._userNotifyPromise) {
       return false;
     }
 
-    // We're waiting for user action or implicit acceptance after display.
-    if (notifyState == this.STATE_NOTIFY_WAIT) {
-      // Check for implicit acceptance.
-      let implicitAcceptance =
-        this._dataSubmissionPolicyNotifiedDate.getTime() +
-        this.IMPLICIT_ACCEPTANCE_INTERVAL_MSEC;
+    let deferred = Promise.defer();
+    deferred.promise.then((function onSuccess() {
+      this._recordDataPolicyNotification(this.now(), this.currentPolicyVersion);
+      this._userNotifyPromise = null;
+    }).bind(this), ((error) => {
+      this._log.warn("Data policy notification presentation failed: " +
+                     CommonUtils.exceptionStr(error));
+      this._userNotifyPromise = null;
+    }).bind(this));
 
-      this._log.debug("Now: " + now.getTime());
-      this._log.debug("Will accept: " + implicitAcceptance);
-      if (now.getTime() < implicitAcceptance) {
-        this._log.debug("Still waiting for reaction or implicit acceptance. " +
-                        "Now: " + now.getTime() + " < " +
-                        "Accept: " + implicitAcceptance);
-        return false;
-      }
-
-      this.recordUserAcceptance("implicit-time-elapsed");
-      return true;
+    this._log.info("Requesting display of data policy.");
+    let request = new NotifyPolicyRequest(this, deferred);
+    try {
+      this._listener.onNotifyDataPolicy(request);
+    } catch (ex) {
+      this._log.warn("Exception when calling onNotifyDataPolicy: " +
+                     CommonUtils.exceptionStr(ex));
     }
 
-    // If this happens, we have a coding error in this file.
-    if (notifyState != this.STATE_NOTIFY_COMPLETE) {
-      throw new Error("Unknown notification state: " + notifyState);
-    }
+    this._userNotifyPromise = deferred.promise;
 
-    return true;
+    return false;
+  },
+
+  _recordDataPolicyNotification: function (date, version) {
+    this._log.debug("Recording data policy notification to version " + version +
+                  " on date " + date);
+    this.dataSubmissionPolicyNotifiedDate = date;
+    this.dataSubmissionPolicyAcceptedVersion = version;
+  },
+
+  _migratePrefs: function () {
+    // Current prefs are mostly the same than the old ones, except for some deprecated ones.
+    this._prefs.reset([
+      "dataSubmissionPolicyAccepted",
+      "dataSubmissionPolicyBypassAcceptance",
+      "dataSubmissionPolicyResponseType",
+      "dataSubmissionPolicyResponseTime"
+    ]);
   },
 
   _processInProgressSubmission: function _processInProgressSubmission() {
