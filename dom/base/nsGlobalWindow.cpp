@@ -2347,6 +2347,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     return NS_ERROR_UNEXPECTED;
   }
 
+  NS_ENSURE_TRUE(GetContextInternal(), NS_ERROR_NOT_INITIALIZED);
+
   nsCOMPtr<nsIDocument> oldDoc = mDoc;
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
