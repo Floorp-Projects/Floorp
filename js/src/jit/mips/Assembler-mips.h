@@ -996,6 +996,14 @@ class Assembler : public AssemblerShared
     static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
     static void TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
 
+    static bool SupportsFloatingPoint() {
+#if (defined(__mips_hard_float) && !defined(__mips_single_float)) || defined(JS_MIPS_SIMULATOR)
+        return true;
+#else
+        return false;
+#endif
+    }
+
   protected:
     InstImm invertBranch(InstImm branch, BOffImm16 skipOffset);
     void bind(InstImm *inst, uint32_t branch, uint32_t target);

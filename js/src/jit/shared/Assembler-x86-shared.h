@@ -9,6 +9,7 @@
 
 #include <cstddef>
 
+#include "assembler/assembler/MacroAssemblerX86Common.h"
 #include "assembler/assembler/X86Assembler.h"
 #include "jit/shared/Assembler-shared.h"
 
@@ -871,14 +872,14 @@ class AssemblerX86Shared : public AssemblerShared
 
 #ifdef DEBUG
     static bool HasSSE2() {
-        return JSC::MacroAssembler::isSSE2Present();
+        return JSC::MacroAssemblerX86Common::isSSE2Present();
     }
 #endif
     static bool HasSSE3() {
-        return JSC::MacroAssembler::isSSE3Present();
+        return JSC::MacroAssemblerX86Common::isSSE3Present();
     }
     static bool HasSSE41() {
-        return JSC::MacroAssembler::isSSE41Present();
+        return JSC::MacroAssemblerX86Common::isSSE41Present();
     }
 
     // The below cmpl methods switch the lhs and rhs when it invokes the
