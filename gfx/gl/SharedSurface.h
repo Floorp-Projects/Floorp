@@ -114,6 +114,38 @@ public:
     }
 };
 
+template<typename T>
+class UniquePtrQueue
+{
+    std::queue<T*> mQueue;
+
+public:
+    ~UniquePtrQueue() {
+        MOZ_ASSERT(Empty());
+    }
+    
+    bool Empty() const {
+        return mQueue.empty();
+    }
+
+    void Push(UniquePtr<T> up) {
+        T* p = up.release();
+        mQueue.push(p);
+    }
+
+    UniquePtr<T> Pop() {
+        UniquePtr<T> ret;
+        if (mQueue.empty())
+            return Move(ret);
+
+        T* p = mQueue.front();
+        mQueue.pop();
+
+        ret.reset(p);
+        return Move(ret);
+    }
+};
+
 class SurfaceFactory
 {
 public:
@@ -144,7 +176,7 @@ public:
 protected:
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) = 0;
 
-    std::queue< UniquePtr<SharedSurface> > mScraps;
+    UniquePtrQueue<SharedSurface> mScraps;
 
 public:
     UniquePtr<SharedSurface> NewSharedSurface(const gfx::IntSize& size);
