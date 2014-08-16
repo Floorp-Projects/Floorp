@@ -57,15 +57,15 @@ class LAllocation : public TempObject
 {
     uintptr_t bits_;
 
-    static const uintptr_t TAG_BIT = 1;
-    static const uintptr_t TAG_SHIFT = 0;
-    static const uintptr_t TAG_MASK = 1 << TAG_SHIFT;
+    // 3 bits gives us enough for an interesting set of Kinds and also fits
+    // within the alignment bits of pointers to Value, which are always
+    // 8-byte aligned.
     static const uintptr_t KIND_BITS = 3;
-    static const uintptr_t KIND_SHIFT = TAG_SHIFT + TAG_BIT;
+    static const uintptr_t KIND_SHIFT = 0;
     static const uintptr_t KIND_MASK = (1 << KIND_BITS) - 1;
 
   protected:
-    static const uintptr_t DATA_BITS = (sizeof(uint32_t) * 8) - KIND_BITS - TAG_BIT;
+    static const uintptr_t DATA_BITS = (sizeof(uint32_t) * 8) - KIND_BITS;
     static const uintptr_t DATA_SHIFT = KIND_SHIFT + KIND_BITS;
     static const uintptr_t DATA_MASK = (1 << DATA_BITS) - 1;
 
@@ -81,10 +81,6 @@ class LAllocation : public TempObject
     };
 
   protected:
-    bool isTagged() const {
-        return !!(bits_ & TAG_MASK);
-    }
-
     int32_t data() const {
         return int32_t(bits_) >> DATA_SHIFT;
     }
@@ -117,17 +113,15 @@ class LAllocation : public TempObject
         return new(alloc) LAllocation(other);
     }
 
-    // The value pointer must be rooted in MIR and have its low bit cleared.
+    // The value pointer must be rooted in MIR and have its low bits cleared.
     explicit LAllocation(const Value *vp) {
         bits_ = uintptr_t(vp);
-        JS_ASSERT(!isTagged());
-        bits_ |= TAG_MASK;
+        JS_ASSERT((bits_ & (KIND_MASK << KIND_SHIFT)) == 0);
+        bits_ |= CONSTANT_VALUE << KIND_SHIFT;
     }
     inline explicit LAllocation(AnyRegister reg);
 
     Kind kind() const {
-        if (isTagged())
-            return CONSTANT_VALUE;
         return (Kind)((bits_ >> KIND_SHIFT) & KIND_MASK);
     }
 
@@ -175,7 +169,7 @@ class LAllocation : public TempObject
 
     const Value *toConstant() const {
         JS_ASSERT(isConstantValue());
-        return reinterpret_cast<const Value *>(bits_ & ~TAG_MASK);
+        return reinterpret_cast<const Value *>(bits_ & ~(KIND_MASK << KIND_SHIFT));
     }
 
     bool operator ==(const LAllocation &other) const {
