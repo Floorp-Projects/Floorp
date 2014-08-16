@@ -652,7 +652,7 @@ ReadBuffer::Create(GLContext* gl,
     UniquePtr<ReadBuffer> ret( new ReadBuffer(gl, fb, depthRB,
                                               stencilRB, surf) );
     if (!gl->IsFramebufferComplete(fb)) {
-      ret = nullptr;
+        ret = nullptr;
     }
 
     return Move(ret);
