@@ -2051,7 +2051,7 @@ void ccp_handler(void* msg, int type) {
             cc_uint32_t major_ver=0, minor_ver=0,addtnl_ver=0;
             char name[CC_MAX_LEN_REQ_SUPP_PARAM_CISCO_SISTAG]={0};
             platGetSISProtocolVer( &major_ver, &minor_ver, &addtnl_ver, name);
-            CCAPP_DEBUG(DEB_F_PREFIX"The SIS verion is: %s, sis ver: %d.%d.%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), name, major_ver, minor_ver, addtnl_ver);
+            CCAPP_DEBUG(DEB_F_PREFIX"The SIS version is: %s, sis ver: %d.%d.%d", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), name, major_ver, minor_ver, addtnl_ver);
             if(!strncmp(name, REQ_SUPP_PARAM_CISCO_CME_SISTAG, strlen(REQ_SUPP_PARAM_CISCO_CME_SISTAG))){
                 CCAPP_DEBUG(DEB_F_PREFIX"This is CUCME mode.", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
             } else if(!strncmp(name, REQ_SUPP_PARAM_CISCO_SISTAG, strlen(REQ_SUPP_PARAM_CISCO_SISTAG))){
