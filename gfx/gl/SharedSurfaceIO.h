@@ -17,7 +17,9 @@ namespace gl {
 class SharedSurface_IOSurface : public SharedSurface
 {
 public:
-    static SharedSurface_IOSurface* Create(MacIOSurface* surface, GLContext* gl, bool hasAlpha);
+    static UniquePtr<SharedSurface_IOSurface> Create(MacIOSurface* surface,
+                                                     GLContext* gl,
+                                                     bool hasAlpha);
 
     ~SharedSurface_IOSurface();
 
@@ -55,9 +57,10 @@ public:
     }
 
 private:
-    SharedSurface_IOSurface(MacIOSurface* surface, GLContext* gl, const gfx::IntSize& size, bool hasAlpha);
+    SharedSurface_IOSurface(MacIOSurface* ioSurf, GLContext* gl,
+                            const gfx::IntSize& size, bool hasAlpha);
 
-    RefPtr<MacIOSurface> mSurface;
+    RefPtr<MacIOSurface> mIOSurf;
     GLuint mProdTex;
     const GLContext* mCurConsGL;
     GLuint mConsTex;
@@ -67,8 +70,8 @@ class SurfaceFactory_IOSurface : public SurfaceFactory
 {
 public:
     // Infallible.
-    static SurfaceFactory_IOSurface* Create(GLContext* gl,
-                                            const SurfaceCaps& caps);
+    static UniquePtr<SurfaceFactory_IOSurface> Create(GLContext* gl,
+                                                      const SurfaceCaps& caps);
 protected:
     const gfx::IntSize mMaxDims;
 
@@ -80,7 +83,7 @@ protected:
     {
     }
 
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE;
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE;
 };
 
 } /* namespace gfx */

@@ -22,11 +22,11 @@ class SharedSurface_EGLImage
     : public SharedSurface
 {
 public:
-    static SharedSurface_EGLImage* Create(GLContext* prodGL,
-                                          const GLFormats& formats,
-                                          const gfx::IntSize& size,
-                                          bool hasAlpha,
-                                          EGLContext context);
+    static UniquePtr<SharedSurface_EGLImage> Create(GLContext* prodGL,
+                                                    const GLFormats& formats,
+                                                    const gfx::IntSize& size,
+                                                    bool hasAlpha,
+                                                    EGLContext context);
 
     static SharedSurface_EGLImage* Cast(SharedSurface* surf) {
         MOZ_ASSERT(surf->mType == SharedSurfaceType::EGLImageShare);
@@ -84,8 +84,8 @@ class SurfaceFactory_EGLImage
 {
 public:
     // Fallible:
-    static SurfaceFactory_EGLImage* Create(GLContext* prodGL,
-                                           const SurfaceCaps& caps);
+    static UniquePtr<SurfaceFactory_EGLImage> Create(GLContext* prodGL,
+                                                     const SurfaceCaps& caps);
 
 protected:
     const EGLContext mContext;
@@ -98,7 +98,7 @@ protected:
     {}
 
 public:
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_EGLImage::Create(mGL, mFormats, size, hasAlpha, mContext);
     }

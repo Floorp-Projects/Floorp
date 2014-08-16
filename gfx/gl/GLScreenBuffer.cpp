@@ -37,7 +37,7 @@ GLScreenBuffer::Create(GLContext* gl,
         return nullptr;
     }
 
-    SurfaceFactory* factory = nullptr;
+    UniquePtr<SurfaceFactory> factory;
 
 #ifdef MOZ_WIDGET_GONK
     /* On B2G, we want a Gralloc factory, and we want one right at the start */
@@ -45,7 +45,7 @@ GLScreenBuffer::Create(GLContext* gl,
         caps.surfaceAllocator &&
         XRE_GetProcessType() != GeckoProcessType_Default)
     {
-        factory = new SurfaceFactory_Gralloc(gl, caps);
+        factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps);
     }
 #endif
 #ifdef XP_MACOSX
@@ -55,8 +55,9 @@ GLScreenBuffer::Create(GLContext* gl,
     }
 #endif
 
-    if (!factory)
-        factory = new SurfaceFactory_Basic(gl, caps);
+    if (!factory) {
+        factory = MakeUnique<SurfaceFactory_Basic>(gl, caps);
+    }
 
     auto streamType = SurfaceStream::ChooseGLStreamType(SurfaceStream::MainThread,
                                                         caps.preserve);
@@ -80,7 +81,7 @@ GLScreenBuffer::~GLScreenBuffer()
     // buffers, but that Allocator may be kept alive by the Factory,
     // as it currently the case in SurfaceFactory_Gralloc holding a nsRefPtr
     // to the Allocator!
-    delete mFactory;
+    mFactory = nullptr;
 }
 
 
@@ -374,13 +375,13 @@ GLScreenBuffer::AssureBlitted()
 }
 
 void
-GLScreenBuffer::Morph(SurfaceFactory* newFactory, SurfaceStreamType streamType)
+GLScreenBuffer::Morph(UniquePtr<SurfaceFactory> newFactory,
+                      SurfaceStreamType streamType)
 {
     MOZ_ASSERT(mStream);
 
     if (newFactory) {
-        delete mFactory;
-        mFactory = newFactory;
+        mFactory = Move(newFactory);
     }
 
     if (mStream->mType == streamType)
@@ -437,7 +438,7 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
 bool
 GLScreenBuffer::Swap(const gfx::IntSize& size)
 {
-    SharedSurface* nextSurf = mStream->SwapProducer(mFactory, size);
+    SharedSurface* nextSurf = mStream->SwapProducer(mFactory.get(), size);
     if (!nextSurf) {
         SurfaceFactory_Basic basicFactory(mGL, mFactory->mCaps);
         nextSurf = mStream->SwapProducer(&basicFactory, size);
@@ -463,11 +464,11 @@ GLScreenBuffer::PublishFrame(const gfx::IntSize& size)
 bool
 GLScreenBuffer::Resize(const gfx::IntSize& size)
 {
-    SharedSurface* surface = mStream->Resize(mFactory, size);
-    if (!surface)
+    SharedSurface* surf = mStream->Resize(mFactory.get(), size);
+    if (!surf)
         return false;
 
-    return Attach(surface, size);
+    return Attach(surf, size);
 }
 
 bool

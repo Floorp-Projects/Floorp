@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace gl {
 
-SharedSurface_EGLImage*
+/*static*/ UniquePtr<SharedSurface_EGLImage>
 SharedSurface_EGLImage::Create(GLContext* prodGL,
                                const GLFormats& formats,
                                const gfx::IntSize& size,
@@ -46,11 +46,10 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
         return nullptr;
     }
 
-    return new SharedSurface_EGLImage(prodGL, egl,
-                                      size, hasAlpha,
-                                      formats, prodTex, image);
+    typedef SharedSurface_EGLImage ptrT;
+    return UniquePtr<ptrT>( new ptrT(prodGL, egl, size, hasAlpha,
+                                     formats, prodTex, image) );
 }
-
 
 bool
 SharedSurface_EGLImage::HasExtensions(GLLibraryEGL* egl, GLContext* gl)
@@ -216,9 +215,9 @@ SharedSurface_EGLImage::AcquireConsumerTexture(GLContext* consGL, GLuint* out_te
 }
 
 
-SurfaceFactory_EGLImage*
+/*static*/ UniquePtr<SurfaceFactory_EGLImage>
 SurfaceFactory_EGLImage::Create(GLContext* prodGL,
-                                        const SurfaceCaps& caps)
+                                const SurfaceCaps& caps)
 {
     EGLContext context = GLContextEGL::Cast(prodGL)->GetEGLContext();
 
@@ -227,7 +226,8 @@ SurfaceFactory_EGLImage::Create(GLContext* prodGL,
         return nullptr;
     }
 
-    return new SurfaceFactory_EGLImage(prodGL, context, caps);
+    typedef SurfaceFactory_EGLImage ptrT;
+    return UniquePtr<ptrT>( new ptrT(prodGL, context, caps) );
 }
 
 } /* namespace gfx */
