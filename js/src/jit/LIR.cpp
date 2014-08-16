@@ -371,8 +371,6 @@ PrintDefinition(char *buf, size_t size, const LDefinition &def)
         cursor += JS_snprintf(cursor, end - cursor, ":%s", def.output()->toString());
     else if (def.policy() == LDefinition::MUST_REUSE_INPUT)
         cursor += JS_snprintf(cursor, end - cursor, ":tied(%u)", def.getReusedInput());
-    else if (def.policy() == LDefinition::PASSTHROUGH)
-        cursor += JS_snprintf(cursor, end - cursor, ":-");
 }
 
 const char *

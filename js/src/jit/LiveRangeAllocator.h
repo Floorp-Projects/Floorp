@@ -185,8 +185,6 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
         if (!alloc.isRegister() || !ins->numOperands())
             return false;
         return alloc == *ins->getOperand(def->getReusedInput());
-      case LDefinition::PASSTHROUGH:
-        return true;
       default:
         MOZ_ASSUME_UNREACHABLE("Unknown definition policy");
     }
@@ -490,6 +488,7 @@ class VirtualRegister
     }
     bool addInterval(LiveInterval *interval) {
         JS_ASSERT(interval->numRanges());
+        JS_ASSERT(interval->vreg() != 0);
 
         // Preserve ascending order for faster lookups.
         LiveInterval **found = nullptr;
