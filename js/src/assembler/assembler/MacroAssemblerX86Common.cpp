@@ -6,8 +6,6 @@
 
 #include "assembler/assembler/MacroAssemblerX86Common.h"
 
-#include "assembler/wtf/Platform.h"
-
 #ifdef _MSC_VER
 #ifdef JS_CODEGEN_X64
 /* for __cpuid */
