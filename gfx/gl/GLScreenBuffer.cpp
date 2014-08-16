@@ -26,7 +26,7 @@ namespace gl {
 
 using gfx::SurfaceFormat;
 
-GLScreenBuffer*
+UniquePtr<GLScreenBuffer>
 GLScreenBuffer::Create(GLContext* gl,
                        const gfx::IntSize& size,
                        const SurfaceCaps& caps)
@@ -64,13 +64,16 @@ GLScreenBuffer::Create(GLContext* gl,
         gl,
         nullptr);
 
-    return new GLScreenBuffer(gl, caps, factory, stream);
+    UniquePtr<GLScreenBuffer> ret( new GLScreenBuffer(gl, caps,
+                                                      Move(factory),
+                                                      stream) );
+    return Move(ret);
 }
 
 GLScreenBuffer::~GLScreenBuffer()
 {
-    delete mDraw;
-    delete mRead;
+    mDraw = nullptr;
+    mRead = nullptr;
 
     // bug 914823: it is crucial to destroy the Factory _after_ we destroy
     // the SharedSurfaces around here! Reason: the shared surfaces will want
@@ -408,26 +411,20 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
         mRead->Attach(surf);
     } else {
         // Else something changed, so resize:
-        DrawBuffer* draw = nullptr;
+        UniquePtr<DrawBuffer> draw;
         bool drawOk = CreateDraw(size, &draw);  // Can be null.
 
-        ReadBuffer* read = CreateRead(surf);
+        UniquePtr<ReadBuffer> read = CreateRead(surf);
         bool readOk = !!read;
 
         if (!drawOk || !readOk) {
-            delete draw;
-            delete read;
-
             surf->UnlockProd();
 
             return false;
         }
 
-        delete mDraw;
-        delete mRead;
-
-        mDraw = draw;
-        mRead = read;
+        mDraw = Move(draw);
+        mRead = Move(read);
     }
 
     // Check that we're all set up.
@@ -477,7 +474,8 @@ GLScreenBuffer::Resize(const gfx::IntSize& size)
 }
 
 bool
-GLScreenBuffer::CreateDraw(const gfx::IntSize& size, DrawBuffer** out_buffer)
+GLScreenBuffer::CreateDraw(const gfx::IntSize& size,
+                           UniquePtr<DrawBuffer>* out_buffer)
 {
     GLContext* gl = mFactory->mGL;
     const GLFormats& formats = mFactory->mFormats;
@@ -486,7 +484,7 @@ GLScreenBuffer::CreateDraw(const gfx::IntSize& size, DrawBuffer** out_buffer)
     return DrawBuffer::Create(gl, caps, formats, size, out_buffer);
 }
 
-ReadBuffer*
+UniquePtr<ReadBuffer>
 GLScreenBuffer::CreateRead(SharedSurface* surf)
 {
     GLContext* gl = mFactory->mGL;
@@ -512,13 +510,14 @@ GLScreenBuffer::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
       src->LockProd();
   }
 
-  ReadBuffer* buffer = CreateRead(src);
-  MOZ_ASSERT(buffer);
 
-  ScopedBindFramebuffer autoFB(mGL, buffer->mFB);
-  ReadPixelsIntoDataSurface(mGL, dest);
+  {
+      UniquePtr<ReadBuffer> buffer = CreateRead(src);
+      MOZ_ASSERT(buffer);
 
-  delete buffer;
+      ScopedBindFramebuffer autoFB(mGL, buffer->mFB);
+      ReadPixelsIntoDataSurface(mGL, dest);
+  }
 
   if (needsSwap) {
       src->UnlockProd();
@@ -534,7 +533,7 @@ DrawBuffer::Create(GLContext* const gl,
                    const SurfaceCaps& caps,
                    const GLFormats& formats,
                    const gfx::IntSize& size,
-                   DrawBuffer** out_buffer)
+                   UniquePtr<DrawBuffer>* out_buffer)
 {
     MOZ_ASSERT(out_buffer);
     *out_buffer = nullptr;
@@ -578,13 +577,13 @@ DrawBuffer::Create(GLContext* const gl,
     gl->fGenFramebuffers(1, &fb);
     gl->AttachBuffersToFB(0, colorMSRB, depthRB, stencilRB, fb);
 
-    ScopedDeletePtr<DrawBuffer> buffer;
-    buffer = new DrawBuffer(gl, size, fb, colorMSRB, depthRB, stencilRB);
+    UniquePtr<DrawBuffer> ret( new DrawBuffer(gl, size, fb, colorMSRB,
+                                              depthRB, stencilRB) );
 
     if (!gl->IsFramebufferComplete(fb))
         return false;
 
-    *out_buffer = buffer.forget();
+    *out_buffer = Move(ret);
     return true;
 }
 
@@ -606,7 +605,7 @@ DrawBuffer::~DrawBuffer()
 ////////////////////////////////////////////////////////////////////////
 // ReadBuffer
 
-ReadBuffer*
+UniquePtr<ReadBuffer>
 ReadBuffer::Create(GLContext* gl,
                    const SurfaceCaps& caps,
                    const GLFormats& formats,
@@ -617,9 +616,8 @@ ReadBuffer::Create(GLContext* gl,
     if (surf->mAttachType == AttachmentType::Screen) {
         // Don't need anything. Our read buffer will be the 'screen'.
 
-        return new ReadBuffer(gl,
-                              0, 0, 0,
-                              surf);
+        return UniquePtr<ReadBuffer>( new ReadBuffer(gl, 0, 0, 0,
+                                                     surf) );
     }
 
     GLuint depthRB = 0;
@@ -653,15 +651,12 @@ ReadBuffer::Create(GLContext* gl,
     gl->AttachBuffersToFB(colorTex, colorRB, depthRB, stencilRB, fb, target);
     gl->mFBOMapping[fb] = surf;
 
-
-    ScopedDeletePtr<ReadBuffer> buffer;
-    buffer = new ReadBuffer(gl,
-                            fb, depthRB, stencilRB,
-                            surf);
+    UniquePtr<ReadBuffer> ret( new ReadBuffer(gl, fb, depthRB,
+                                              stencilRB, surf) );
     if (!gl->IsFramebufferComplete(fb))
         return nullptr;
 
-    return buffer.forget();
+    return Move(ret);
 }
 
 ReadBuffer::~ReadBuffer()
