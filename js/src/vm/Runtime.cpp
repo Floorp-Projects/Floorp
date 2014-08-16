@@ -30,7 +30,6 @@
 #include "jswrapper.h"
 
 #include "asmjs/AsmJSSignalHandlers.h"
-#include "assembler/assembler/MacroAssembler.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/JitCompartment.h"
 #include "jit/mips/Simulator-mips.h"
@@ -234,20 +233,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
 }
 
 static bool
-JitSupportsFloatingPoint()
-{
-#if defined(JS_CODEGEN_ARM)
-    if (!js::jit::HasVFP())
-        return false;
-#else
-    if (!JSC::MacroAssembler::supportsFloatingPoint())
-        return false;
-#endif
-
-    return true;
-}
-
-static bool
 SignalBasedTriggersDisabled()
 {
   // Don't bother trying to cache the getenv lookup; this should be called
@@ -328,7 +313,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 
     nativeStackBase = GetNativeStackBase();
 
-    jitSupportsFloatingPoint = JitSupportsFloatingPoint();
+    jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
 
     signalHandlersInstalled_ = EnsureAsmJSSignalHandlersInstalled(this);
     canUseSignalHandlers_ = signalHandlersInstalled_ && !SignalBasedTriggersDisabled();
