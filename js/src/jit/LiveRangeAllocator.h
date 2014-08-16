@@ -52,7 +52,7 @@ class Requirement
       : kind_(FIXED),
         allocation_(fixed)
     {
-        JS_ASSERT(fixed == LAllocation() || !fixed.isUse());
+        JS_ASSERT(!fixed.isBogus() && !fixed.isUse());
     }
 
     // Only useful as a hint, encodes where the fixed requirement is used to
@@ -62,7 +62,7 @@ class Requirement
         allocation_(fixed),
         position_(at)
     {
-        JS_ASSERT(fixed == LAllocation() || !fixed.isUse());
+        JS_ASSERT(!fixed.isBogus() && !fixed.isUse());
     }
 
     Requirement(uint32_t vreg, CodePosition at)
@@ -76,7 +76,7 @@ class Requirement
     }
 
     LAllocation allocation() const {
-        JS_ASSERT(!allocation_.isUse());
+        JS_ASSERT(!allocation_.isBogus() && !allocation_.isUse());
         return allocation_;
     }
 

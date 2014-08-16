@@ -362,9 +362,7 @@ PrintDefinition(char *buf, size_t size, const LDefinition &def)
     char *cursor = buf;
     char *end = buf + size;
 
-    if (def.virtualRegister())
-        cursor += JS_snprintf(cursor, end - cursor, "v%u", def.virtualRegister());
-
+    cursor += JS_snprintf(cursor, end - cursor, "v%u", def.virtualRegister());
     cursor += JS_snprintf(cursor, end - cursor, "<%s>", TypeChars[def.type()]);
 
     if (def.policy() == LDefinition::FIXED)
@@ -378,6 +376,10 @@ LDefinition::toString() const
 {
     // Not reentrant!
     static char buf[40];
+
+    if (isBogusTemp())
+        return "bogus";
+
     PrintDefinition(buf, sizeof(buf), *this);
     return buf;
 }
@@ -415,6 +417,9 @@ LAllocation::toString() const
 {
     // Not reentrant!
     static char buf[40];
+
+    if (isBogus())
+        return "bogus";
 
     switch (kind()) {
       case LAllocation::CONSTANT_VALUE:
