@@ -22,6 +22,7 @@
 #include "GLDefs.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/WeakPtr.h"
 #include "SurfaceTypes.h"
 
 namespace mozilla {
@@ -140,15 +141,15 @@ public:
     }
 
 protected:
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) = 0;
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) = 0;
 
-    std::queue<SharedSurface*> mScraps;
+    std::queue< UniquePtr<SharedSurface> > mScraps;
 
 public:
-    SharedSurface* NewSharedSurface(const gfx::IntSize& size);
+    UniquePtr<SharedSurface> NewSharedSurface(const gfx::IntSize& size);
 
     // Auto-deletes surfs of the wrong type.
-    void Recycle(SharedSurface*& surf);
+    void Recycle(UniquePtr<SharedSurface> surf);
 };
 
 } // namespace gl

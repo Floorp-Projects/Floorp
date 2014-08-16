@@ -9,6 +9,7 @@
 #include "SharedSurface.h"
 #include "SharedSurfaceGL.h"
 #include "GeckoProfiler.h"
+#include "mozilla/Move.h"
 
 namespace mozilla {
 namespace gl {
@@ -61,7 +62,7 @@ bool
 SurfaceStream_TripleBuffer::CopySurfaceToProducer(SharedSurface* src, SurfaceFactory* factory)
 {
     if (!mProducer) {
-        New(factory, src->mSize, mProducer);
+        New(factory, src->mSize, &mProducer);
         if (!mProducer) {
             return false;
         }
@@ -69,14 +70,17 @@ SurfaceStream_TripleBuffer::CopySurfaceToProducer(SharedSurface* src, SurfaceFac
 
     MOZ_ASSERT(src->mSize == mProducer->mSize, "Size mismatch");
 
-    SharedSurface::ProdCopy(src, mProducer, factory);
+    SharedSurface::ProdCopy(src, mProducer.get(), factory);
     return true;
 }
 
 void
 SurfaceStream::New(SurfaceFactory* factory, const gfx::IntSize& size,
-                   SharedSurface*& surf)
+                   UniquePtr<SharedSurface>* surfSlot)
 {
+    MOZ_ASSERT(surfSlot);
+    UniquePtr<SharedSurface>& surf = *surfSlot;
+
     MOZ_ASSERT(!surf);
     surf = factory->NewSharedSurface(size);
 
@@ -84,91 +88,145 @@ SurfaceStream::New(SurfaceFactory* factory, const gfx::IntSize& size,
         // Before next use, wait until SharedSurface's buffer
         // is no longer being used.
         surf->WaitForBufferOwnership();
-        mSurfaces.insert(surf);
+#ifdef DEBUG
+        mSurfaces.insert(surf.get());
+#endif
     }
 }
 
 void
-SurfaceStream::Recycle(SurfaceFactory* factory, SharedSurface*& surf)
+SurfaceStream::MoveTo(UniquePtr<SharedSurface>* slotFrom,
+                      UniquePtr<SharedSurface>* slotTo)
 {
-    if (surf) {
-        mSurfaces.erase(surf);
-        factory->Recycle(surf);
-    }
-    MOZ_ASSERT(!surf);
+    MOZ_ASSERT(slotFrom);
+    UniquePtr<SharedSurface>& from = *slotFrom;
+
+    MOZ_ASSERT(slotTo);
+    UniquePtr<SharedSurface>& to = *slotTo;
+
+    MOZ_ASSERT(!to);
+    to = Move(from);
+    from = nullptr;
 }
 
 void
-SurfaceStream::Delete(SharedSurface*& surf)
+SurfaceStream::Recycle(SurfaceFactory* factory, UniquePtr<SharedSurface>* surfSlot)
 {
+    MOZ_ASSERT(surfSlot);
+    UniquePtr<SharedSurface>& surf = *surfSlot;
+
     if (surf) {
-        mSurfaces.erase(surf);
-        delete surf;
+#ifdef DEBUG
+        mSurfaces.erase(surf.get());
+#endif
+        factory->Recycle(Move(surf));
         surf = nullptr;
     }
     MOZ_ASSERT(!surf);
 }
 
-SharedSurface*
-SurfaceStream::Surrender(SharedSurface*& surf)
+void
+SurfaceStream::Delete(UniquePtr<SharedSurface>* surfSlot)
 {
-    SharedSurface* ret = surf;
+    MOZ_ASSERT(surfSlot);
+    UniquePtr<SharedSurface>& surf = *surfSlot;
 
     if (surf) {
-        mSurfaces.erase(surf);
+#ifdef DEBUG
+        mSurfaces.erase(surf.get());
+#endif
         surf = nullptr;
     }
     MOZ_ASSERT(!surf);
-
-    return ret;
 }
 
-SharedSurface*
-SurfaceStream::Absorb(SharedSurface*& surf)
+UniquePtr<SharedSurface>
+SurfaceStream::Surrender(UniquePtr<SharedSurface>* surfSlot)
 {
-    SharedSurface* ret = surf;
+    MOZ_ASSERT(surfSlot);
+    UniquePtr<SharedSurface>& surf = *surfSlot;
 
+#ifdef DEBUG
     if (surf) {
-        mSurfaces.insert(surf);
-        surf = nullptr;
+        mSurfaces.erase(surf.get());
     }
-    MOZ_ASSERT(!surf);
+#endif
 
-    return ret;
+    UniquePtr<SharedSurface> ret = Move(surf);
+    surf = nullptr;
+
+    return Move(ret);
+}
+
+// Move `surfSlot` to `return`, but record that the surf is now part of
+// this stream.
+UniquePtr<SharedSurface>
+SurfaceStream::Absorb(UniquePtr<SharedSurface>* surfSlot)
+{
+    MOZ_ASSERT(surfSlot);
+    UniquePtr<SharedSurface>& surf = *surfSlot;
+
+#ifdef DEBUG
+    if (surf) {
+        mSurfaces.insert(surf.get());
+    }
+#endif
+
+    UniquePtr<SharedSurface> ret = Move(surf);
+    surf = nullptr;
+
+    return Move(ret);
 }
 
 void
-SurfaceStream::Scrap(SharedSurface*& scrap)
+SurfaceStream::Scrap(UniquePtr<SharedSurface>* surfSlot)
 {
-    if (scrap) {
-        mScraps.push(scrap);
-        scrap = nullptr;
+    MOZ_ASSERT(surfSlot);
+    UniquePtr<SharedSurface>& surf = *surfSlot;
+
+    if (surf) {
+        mScraps.push(Move(surf));
+        surf = nullptr;
     }
-    MOZ_ASSERT(!scrap);
+    MOZ_ASSERT(!surf);
+
 }
 
 void
 SurfaceStream::RecycleScraps(SurfaceFactory* factory)
 {
     while (!mScraps.empty()) {
-        SharedSurface* cur = mScraps.top();
+        UniquePtr<SharedSurface> cur = Move(mScraps.top());
         mScraps.pop();
 
-        Recycle(factory, cur);
+        Recycle(factory, &cur);
     }
 }
 
+////////////////////////////////////////////////////////////////////////
+// SurfaceStream
 
+SurfaceStream::SurfaceStream(SurfaceStreamType type,
+                             SurfaceStream* prevStream)
+    : mType(type)
+    , mProducer(nullptr)
+    , mMonitor("SurfaceStream monitor")
+    , mIsAlive(true)
+{
+    MOZ_ASSERT(!prevStream || mType != prevStream->mType,
+               "We should not need to create a SurfaceStream from another "
+               "of the same type.");
+}
 
 SurfaceStream::~SurfaceStream()
 {
-    Delete(mProducer);
+    Delete(&mProducer);
 
     while (!mScraps.empty()) {
-        SharedSurface* cur = mScraps.top();
+        UniquePtr<SharedSurface> cur = Move(mScraps.top());
         mScraps.pop();
 
-        Delete(cur);
+        Delete(&cur);
     }
 
     MOZ_ASSERT(mSurfaces.empty());
@@ -196,12 +254,15 @@ SurfaceStream::Resize(SurfaceFactory* factory, const gfx::IntSize& size)
     MonitorAutoLock lock(mMonitor);
 
     if (mProducer) {
-        Scrap(mProducer);
+        Scrap(&mProducer);
     }
 
-    New(factory, size, mProducer);
-    return mProducer;
+    New(factory, size, &mProducer);
+    return mProducer.get();
 }
+
+////////////////////////////////////////////////////////////////////////
+// SurfaceStream_SingleBuffer
 
 SurfaceStream_SingleBuffer::SurfaceStream_SingleBuffer(SurfaceStream* prevStream)
     : SurfaceStream(SurfaceStreamType::SingleBuffer, prevStream)
@@ -210,33 +271,30 @@ SurfaceStream_SingleBuffer::SurfaceStream_SingleBuffer(SurfaceStream* prevStream
     if (!prevStream)
         return;
 
-    SharedSurface* prevProducer = nullptr;
-    SharedSurface* prevConsumer = nullptr;
-    prevStream->SurrenderSurfaces(prevProducer, prevConsumer);
+    UniquePtr<SharedSurface> prevProducer;
+    UniquePtr<SharedSurface> prevConsumer;
+    prevStream->SurrenderSurfaces(&prevProducer, &prevConsumer);
 
-    if (prevConsumer == prevProducer)
-        prevConsumer = nullptr;
-
-    mProducer = Absorb(prevProducer);
-    mConsumer = Absorb(prevConsumer);
+    mProducer = Absorb(&prevProducer);
+    mConsumer = Absorb(&prevConsumer);
 }
 
 SurfaceStream_SingleBuffer::~SurfaceStream_SingleBuffer()
 {
-    Delete(mConsumer);
+    Delete(&mConsumer);
 }
 
 void
-SurfaceStream_SingleBuffer::SurrenderSurfaces(SharedSurface*& producer,
-                                              SharedSurface*& consumer)
+SurfaceStream_SingleBuffer::SurrenderSurfaces(UniquePtr<SharedSurface>* out_producer,
+                                              UniquePtr<SharedSurface>* out_consumer)
 {
+    MOZ_ASSERT(out_producer);
+    MOZ_ASSERT(out_consumer);
+
     mIsAlive = false;
 
-    producer = Surrender(mProducer);
-    consumer = Surrender(mConsumer);
-
-    if (!consumer)
-        consumer = producer;
+    *out_producer = Surrender(&mProducer);
+    *out_consumer = Surrender(&mConsumer);
 }
 
 SharedSurface*
@@ -245,7 +303,7 @@ SurfaceStream_SingleBuffer::SwapProducer(SurfaceFactory* factory,
 {
     MonitorAutoLock lock(mMonitor);
     if (mConsumer) {
-        Recycle(factory, mConsumer);
+        Recycle(factory, &mConsumer);
     }
 
     if (mProducer) {
@@ -265,17 +323,17 @@ SurfaceStream_SingleBuffer::SwapProducer(SurfaceFactory* factory,
         }
 
         if (needsNewBuffer) {
-            Move(mProducer, mConsumer);
+            MoveTo(&mProducer, &mConsumer);
         }
     }
 
     // The old Prod (if there every was one) was invalid,
     // so we need a new one.
     if (!mProducer) {
-        New(factory, size, mProducer);
+        New(factory, size, &mProducer);
     }
 
-    return mProducer;
+    return mProducer.get();
 }
 
 SharedSurface*
@@ -285,14 +343,15 @@ SurfaceStream_SingleBuffer::SwapConsumer_NoWait()
 
     // Use Cons, if present.
     // Otherwise, just use Prod directly.
-    SharedSurface* toConsume = mConsumer;
+    SharedSurface* toConsume = mConsumer.get();
     if (!toConsume)
-        toConsume = mProducer;
+        toConsume = mProducer.get();
 
     return toConsume;
 }
 
-
+////////////////////////////////////////////////////////////////////////
+// SurfaceStream_TripleBuffer_Copy
 
 SurfaceStream_TripleBuffer_Copy::SurfaceStream_TripleBuffer_Copy(SurfaceStream* prevStream)
     : SurfaceStream(SurfaceStreamType::TripleBuffer_Copy, prevStream)
@@ -302,34 +361,34 @@ SurfaceStream_TripleBuffer_Copy::SurfaceStream_TripleBuffer_Copy(SurfaceStream* 
     if (!prevStream)
         return;
 
-    SharedSurface* prevProducer = nullptr;
-    SharedSurface* prevConsumer = nullptr;
-    prevStream->SurrenderSurfaces(prevProducer, prevConsumer);
+    UniquePtr<SharedSurface> prevProducer;
+    UniquePtr<SharedSurface> prevConsumer;
+    prevStream->SurrenderSurfaces(&prevProducer, &prevConsumer);
 
-    if (prevConsumer == prevProducer)
-      prevConsumer = nullptr;
-
-    mProducer = Absorb(prevProducer);
-    mConsumer = Absorb(prevConsumer);
+    mProducer = Absorb(&prevProducer);
+    mConsumer = Absorb(&prevConsumer);
 }
 
 SurfaceStream_TripleBuffer_Copy::~SurfaceStream_TripleBuffer_Copy()
 {
-    Delete(mStaging);
-    Delete(mConsumer);
+    Delete(&mStaging);
+    Delete(&mConsumer);
 }
 
 void
-SurfaceStream_TripleBuffer_Copy::SurrenderSurfaces(SharedSurface*& producer,
-                                                   SharedSurface*& consumer)
+SurfaceStream_TripleBuffer_Copy::SurrenderSurfaces(UniquePtr<SharedSurface>* out_producer,
+                                                   UniquePtr<SharedSurface>* out_consumer)
 {
+    MOZ_ASSERT(out_producer);
+    MOZ_ASSERT(out_consumer);
+
     mIsAlive = false;
 
-    producer = Surrender(mProducer);
-    consumer = Surrender(mConsumer);
+    *out_producer = Surrender(&mProducer);
+    *out_consumer = Surrender(&mConsumer);
 
-    if (!consumer)
-        consumer = Surrender(mStaging);
+    if (!*out_consumer)
+        *out_consumer = Surrender(&mStaging);
 }
 
 SharedSurface*
@@ -343,23 +402,25 @@ SurfaceStream_TripleBuffer_Copy::SwapProducer(SurfaceFactory* factory,
         if (mStaging) {
             // We'll re-use this for a new mProducer later on if
             // the size remains the same
-            Recycle(factory, mStaging);
+            Recycle(factory, &mStaging);
         }
 
-        Move(mProducer, mStaging);
+        MoveTo(&mProducer, &mStaging);
         mStaging->Fence();
 
-        New(factory, size, mProducer);
+        New(factory, size, &mProducer);
 
-        if (mProducer && mStaging->mSize == mProducer->mSize)
-            SharedSurface::ProdCopy(mStaging, mProducer, factory);
+        if (mProducer &&
+            mStaging->mSize == mProducer->mSize)
+        {
+            SharedSurface::ProdCopy(mStaging.get(), mProducer.get(), factory);
+        }
     } else {
-        New(factory, size, mProducer);
+        New(factory, size, &mProducer);
     }
 
-    return mProducer;
+    return mProducer.get();
 }
-
 
 SharedSurface*
 SurfaceStream_TripleBuffer_Copy::SwapConsumer_NoWait()
@@ -367,31 +428,31 @@ SurfaceStream_TripleBuffer_Copy::SwapConsumer_NoWait()
     MonitorAutoLock lock(mMonitor);
 
     if (mStaging) {
-        Scrap(mConsumer);
-        Move(mStaging, mConsumer);
+        Scrap(&mConsumer);
+        MoveTo(&mStaging, &mConsumer);
     }
 
-    return mConsumer;
+    return mConsumer.get();
 }
+
+////////////////////////////////////////////////////////////////////////
+// SurfaceStream_TripleBuffer
 
 void SurfaceStream_TripleBuffer::Init(SurfaceStream* prevStream)
 {
     if (!prevStream)
         return;
 
-    SharedSurface* prevProducer = nullptr;
-    SharedSurface* prevConsumer = nullptr;
-    prevStream->SurrenderSurfaces(prevProducer, prevConsumer);
+    UniquePtr<SharedSurface> prevProducer;
+    UniquePtr<SharedSurface> prevConsumer;
+    prevStream->SurrenderSurfaces(&prevProducer, &prevConsumer);
 
-    if (prevConsumer == prevProducer)
-        prevConsumer = nullptr;
-
-    mProducer = Absorb(prevProducer);
-    mConsumer = Absorb(prevConsumer);
+    mProducer = Absorb(&prevProducer);
+    mConsumer = Absorb(&prevConsumer);
 }
 
-
-SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStreamType type, SurfaceStream* prevStream)
+SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStreamType type,
+                                                       SurfaceStream* prevStream)
     : SurfaceStream(type, prevStream)
     , mStaging(nullptr)
     , mConsumer(nullptr)
@@ -409,21 +470,24 @@ SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStream* prevStream
 
 SurfaceStream_TripleBuffer::~SurfaceStream_TripleBuffer()
 {
-    Delete(mStaging);
-    Delete(mConsumer);
+    Delete(&mStaging);
+    Delete(&mConsumer);
 }
 
 void
-SurfaceStream_TripleBuffer::SurrenderSurfaces(SharedSurface*& producer,
-                                              SharedSurface*& consumer)
+SurfaceStream_TripleBuffer::SurrenderSurfaces(UniquePtr<SharedSurface>* out_producer,
+                                              UniquePtr<SharedSurface>* out_consumer)
 {
+    MOZ_ASSERT(out_producer);
+    MOZ_ASSERT(out_consumer);
+
     mIsAlive = false;
 
-    producer = Surrender(mProducer);
-    consumer = Surrender(mConsumer);
+    *out_producer = Surrender(&mProducer);
+    *out_consumer = Surrender(&mConsumer);
 
-    if (!consumer)
-        consumer = Surrender(mStaging);
+    if (!*out_consumer)
+        *out_consumer = Surrender(&mStaging);
 }
 
 SharedSurface*
@@ -431,7 +495,7 @@ SurfaceStream_TripleBuffer::SwapProducer(SurfaceFactory* factory,
                                          const gfx::IntSize& size)
 {
     PROFILER_LABEL("SurfaceStream_TripleBuffer", "SwapProducer",
-        js::ProfileEntry::Category::GRAPHICS);
+                   js::ProfileEntry::Category::GRAPHICS);
 
     MonitorAutoLock lock(mMonitor);
     if (mProducer) {
@@ -443,17 +507,17 @@ SurfaceStream_TripleBuffer::SwapProducer(SurfaceFactory* factory,
             WaitForCompositor();
         }
         if (mStaging) {
-            Scrap(mStaging);
+            Scrap(&mStaging);
         }
 
-        Move(mProducer, mStaging);
+        MoveTo(&mProducer, &mStaging);
         mStaging->Fence();
     }
 
     MOZ_ASSERT(!mProducer);
-    New(factory, size, mProducer);
+    New(factory, size, &mProducer);
 
-    return mProducer;
+    return mProducer.get();
 }
 
 SharedSurface*
@@ -461,16 +525,20 @@ SurfaceStream_TripleBuffer::SwapConsumer_NoWait()
 {
     MonitorAutoLock lock(mMonitor);
     if (mStaging) {
-        Scrap(mConsumer);
-        Move(mStaging, mConsumer);
+        Scrap(&mConsumer);
+        MoveTo(&mStaging, &mConsumer);
         mMonitor.NotifyAll();
     }
 
-    return mConsumer;
+    return mConsumer.get();
 }
 
+////////////////////////////////////////////////////////////////////////
+// SurfaceStream_TripleBuffer_Async
+
 SurfaceStream_TripleBuffer_Async::SurfaceStream_TripleBuffer_Async(SurfaceStream* prevStream)
-    : SurfaceStream_TripleBuffer(SurfaceStreamType::TripleBuffer_Async, prevStream)
+    : SurfaceStream_TripleBuffer(SurfaceStreamType::TripleBuffer_Async,
+                                 prevStream)
 {
 }
 
@@ -481,8 +549,9 @@ SurfaceStream_TripleBuffer_Async::~SurfaceStream_TripleBuffer_Async()
 void
 SurfaceStream_TripleBuffer_Async::WaitForCompositor()
 {
-    PROFILER_LABEL("SurfaceStream_TripleBuffer_Async", "WaitForCompositor",
-        js::ProfileEntry::Category::GRAPHICS);
+    PROFILER_LABEL("SurfaceStream_TripleBuffer_Async",
+                   "WaitForCompositor",
+                   js::ProfileEntry::Category::GRAPHICS);
 
     // If we haven't be notified within 100ms, then
     // something must have happened and it will never arrive.

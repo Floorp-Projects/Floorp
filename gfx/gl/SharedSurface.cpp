@@ -29,15 +29,15 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
         dest->mAttachType == AttachmentType::Screen)
     {
         // Here, we actually need to blit through a temp surface, so let's make one.
-        nsAutoPtr<SharedSurface_GLTexture> tempSurf;
+        UniquePtr<SharedSurface_GLTexture> tempSurf;
         tempSurf = SharedSurface_GLTexture::Create(gl,
                                                    gl,
                                                    factory->mFormats,
                                                    src->mSize,
                                                    factory->mCaps.alpha);
 
-        ProdCopy(src, tempSurf, factory);
-        ProdCopy(tempSurf, dest, factory);
+        ProdCopy(src, tempSurf.get(), factory);
+        ProdCopy(tempSurf.get(), dest, factory);
         return;
     }
 
@@ -269,46 +269,38 @@ SurfaceFactory::SurfaceFactory(GLContext* gl,
 SurfaceFactory::~SurfaceFactory()
 {
     while (!mScraps.empty()) {
-        SharedSurface* cur = mScraps.front();
+        UniquePtr<SharedSurface> cur = Move(mScraps.front());
         mScraps.pop();
-
-        delete cur;
     }
 }
 
-SharedSurface*
+UniquePtr<SharedSurface>
 SurfaceFactory::NewSharedSurface(const gfx::IntSize& size)
 {
     // Attempt to reuse an old surface.
     while (!mScraps.empty()) {
-        SharedSurface* cur = mScraps.front();
+        UniquePtr<SharedSurface> cur = Move(mScraps.front());
         mScraps.pop();
-        if (cur->mSize == size)
-            return cur;
 
-        // Destroy old surfaces of the wrong size.
-        delete cur;
+        if (cur->mSize == size)
+            return Move(cur);
+
+        // Let `cur` be destroyed as it falls out of scope, if it wasn't
+        // moved.
     }
 
-    SharedSurface* ret = CreateShared(size);
-
-    return ret;
+    return CreateShared(size);
 }
 
 // Auto-deletes surfs of the wrong type.
 void
-SurfaceFactory::Recycle(SharedSurface*& surf)
+SurfaceFactory::Recycle(UniquePtr<SharedSurface> surf)
 {
-    if (!surf)
-        return;
+    MOZ_ASSERT(surf);
 
     if (surf->mType == mType) {
-        mScraps.push(surf);
-    } else {
-        delete surf;
+        mScraps.push(Move(surf));
     }
-
-    surf = nullptr;
 }
 
 } /* namespace gfx */

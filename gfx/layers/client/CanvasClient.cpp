@@ -157,8 +157,10 @@ CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
     // Copy our current surface to the current producer surface in our stream, then
     // call SwapProducer to make a new buffer ready.
-    stream->CopySurfaceToProducer(aLayer->mTextureSurface, aLayer->mFactory);
-    stream->SwapProducer(aLayer->mFactory, gfx::IntSize(aSize.width, aSize.height));
+    stream->CopySurfaceToProducer(aLayer->mTextureSurface.get(),
+                                  aLayer->mFactory.get());
+    stream->SwapProducer(aLayer->mFactory.get(),
+                         gfx::IntSize(aSize.width, aSize.height));
   } else {
     stream = screen->Stream();
   }

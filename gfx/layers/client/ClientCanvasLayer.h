@@ -101,8 +101,8 @@ protected:
 
   RefPtr<CanvasClient> mCanvasClient;
 
-  gl::SharedSurface* mTextureSurface;
-  gl::SurfaceFactory* mFactory;
+  UniquePtr<gl::SharedSurface> mTextureSurface;
+  UniquePtr<gl::SurfaceFactory> mFactory;
 
   friend class DeprecatedCanvasClient2D;
   friend class CanvasClient2D;
