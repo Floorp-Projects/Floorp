@@ -49,7 +49,7 @@ SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL,
     mAllocator = allocator;
 }
 
-SharedSurface_Gralloc*
+/*static*/ UniquePtr<SharedSurface_Gralloc>
 SharedSurface_Gralloc::Create(GLContext* prodGL,
                               const GLFormats& formats,
                               const gfx::IntSize& size,
@@ -110,11 +110,14 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
 
     egl->fDestroyImage(display, image);
 
-    SharedSurface_Gralloc *surf = new SharedSurface_Gralloc(prodGL, size, hasAlpha, egl, allocator, grallocTC, prodTex);
+
+    typedef SharedSurface_Gralloc ptrT;
+    UniquePtr<ptrT> surf( new ptrT(prodGL, size, hasAlpha, egl,
+                                   allocator, grallocTC, prodTex) );
 
     DEBUG_PRINT("SharedSurface_Gralloc::Create: success -- surface %p, GraphicBuffer %p.\n", surf, buffer.get());
 
-    return surf;
+    return Move(surf);
 }
 
 
