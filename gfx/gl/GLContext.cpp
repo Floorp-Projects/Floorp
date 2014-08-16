@@ -2035,12 +2035,11 @@ GLContext::OffscreenSize() const
 bool
 GLContext::CreateScreenBufferImpl(const IntSize& size, const SurfaceCaps& caps)
 {
-    GLScreenBuffer* newScreen = GLScreenBuffer::Create(this, size, caps);
+    UniquePtr<GLScreenBuffer> newScreen = GLScreenBuffer::Create(this, size, caps);
     if (!newScreen)
         return false;
 
     if (!newScreen->Resize(size)) {
-        delete newScreen;
         return false;
     }
 
@@ -2050,7 +2049,7 @@ GLContext::CreateScreenBufferImpl(const IntSize& size, const SurfaceCaps& caps)
     // it falls out of scope.
     ScopedBindFramebuffer autoFB(this);
 
-    mScreen = newScreen;
+    mScreen = Move(newScreen);
 
     return true;
 }
@@ -2068,7 +2067,6 @@ GLContext::ResizeScreenBuffer(const IntSize& size)
 void
 GLContext::DestroyScreenBuffer()
 {
-    delete mScreen;
     mScreen = nullptr;
 }
 
