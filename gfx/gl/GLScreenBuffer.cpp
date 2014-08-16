@@ -58,11 +58,10 @@ GLScreenBuffer::Create(GLContext* gl,
     if (!factory)
         factory = new SurfaceFactory_Basic(gl, caps);
 
-    SurfaceStream* stream = SurfaceStream::CreateForType(
-        SurfaceStream::ChooseGLStreamType(SurfaceStream::MainThread,
-                                          caps.preserve),
-        gl,
-        nullptr);
+    auto streamType = SurfaceStream::ChooseGLStreamType(SurfaceStream::MainThread,
+                                                        caps.preserve);
+    RefPtr<SurfaceStream> stream;
+    stream = SurfaceStream::CreateForType(streamType, gl, nullptr);
 
     UniquePtr<GLScreenBuffer> ret( new GLScreenBuffer(gl, caps,
                                                       Move(factory),
@@ -387,10 +386,8 @@ GLScreenBuffer::Morph(SurfaceFactory* newFactory, SurfaceStreamType streamType)
     if (mStream->mType == streamType)
         return;
 
-    SurfaceStream* newStream = SurfaceStream::CreateForType(streamType, mGL, mStream);
-    MOZ_ASSERT(newStream);
-
-    mStream = newStream;
+    mStream = SurfaceStream::CreateForType(streamType, mGL, mStream);
+    MOZ_ASSERT(mStream);
 }
 
 bool

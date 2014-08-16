@@ -149,7 +149,7 @@ protected:
     GLScreenBuffer(GLContext* gl,
                    const SurfaceCaps& caps,
                    SurfaceFactory* factory,
-                   SurfaceStream* stream)
+                   const RefPtr<SurfaceStream>& stream)
         : mGL(gl)
         , mCaps(caps)
         , mFactory(factory)
