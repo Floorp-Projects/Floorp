@@ -60,6 +60,9 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     sps_(&GetIonContext()->runtime->spsProfiler(), &lastNotInlinedPC_),
     osrEntryOffset_(0),
     skipArgCheckEntryOffset_(0),
+#ifdef CHECK_OSIPOINT_REGISTERS
+    checkOsiPointRegisters(js_JitOptions.checkOsiPointRegisters),
+#endif
     frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize()),
     frameInitialAdjustment_(0)
 {
@@ -965,7 +968,7 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
 bool
 CodeGeneratorShared::shouldVerifyOsiPointRegs(LSafepoint *safepoint)
 {
-    if (!js_JitOptions.checkOsiPointRegisters)
+    if (!checkOsiPointRegisters)
         return false;
 
     if (gen->info().executionMode() != SequentialExecution)

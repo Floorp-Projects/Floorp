@@ -158,6 +158,13 @@ class CodeGeneratorShared : public LInstructionVisitor
     void dropArguments(unsigned argc);
 
   protected:
+#ifdef CHECK_OSIPOINT_REGISTERS
+    // See js_JitOptions.checkOsiPointRegisters. We set this here to avoid
+    // races when enableOsiPointRegisterChecks is called while we're generating
+    // code off-thread.
+    bool checkOsiPointRegisters;
+#endif
+
     // The initial size of the frame in bytes. These are bytes beyond the
     // constant header present for every Ion frame, used for pre-determined
     // spills.
