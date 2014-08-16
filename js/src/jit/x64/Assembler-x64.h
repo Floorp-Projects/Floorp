@@ -265,6 +265,8 @@ class Assembler : public AssemblerX86Shared
 
     static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
 
+    static bool SupportsFloatingPoint() { return true; }
+
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
     void finish();

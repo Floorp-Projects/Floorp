@@ -900,7 +900,7 @@ IonScript::New(JSContext *cx, types::RecompileInfo recompileInfo,
                    paddedSafepointSize +
                    paddedCallTargetSize +
                    paddedBackedgeSize;
-    uint8_t *buffer = (uint8_t *)cx->malloc_(sizeof(IonScript) + bytes);
+    uint8_t *buffer = cx->zone()->pod_malloc<uint8_t>(sizeof(IonScript) + bytes);
     if (!buffer)
         return nullptr;
 
@@ -3213,4 +3213,10 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
             script->baselineScript()->resetActive();
         }
     }
+}
+
+bool
+jit::JitSupportsFloatingPoint()
+{
+    return js::jit::MacroAssembler::SupportsFloatingPoint();
 }

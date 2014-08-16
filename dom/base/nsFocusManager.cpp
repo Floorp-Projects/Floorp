@@ -2145,8 +2145,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
   if (!caret)
     return NS_OK;
 
-  bool caretVisible = false;
-  caret->GetCaretVisible(&caretVisible);
+  bool caretVisible = caret->IsVisible();
   if (!aVisible && !caretVisible)
     return NS_OK;
 
@@ -2176,7 +2175,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
       // Caret must blink on non-editable elements
       caret->SetIgnoreUserModify(true);
       // Tell the caret which selection to use
-      caret->SetCaretDOMSelection(domSelection);
+      caret->SetSelection(domSelection);
 
       // In content, we need to set the caret. The only special case is edit
       // fields, which have a different frame selection from the document.
@@ -2295,9 +2294,8 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
           if (newCaretFrame && newCaretContent) {
             // If the caret is exactly at the same position of the new frame,
             // then we can use the newCaretFrame and newCaretContent for our position
-            nsRefPtr<nsCaret> caret = aPresShell->GetCaret();
             nsRect caretRect;
-            nsIFrame *frame = caret->GetGeometry(domSelection, &caretRect);
+            nsIFrame *frame = nsCaret::GetGeometry(domSelection, &caretRect);
             if (frame) {
               nsPoint caretWidgetOffset;
               nsIWidget *widget = frame->GetNearestWidget(caretWidgetOffset);

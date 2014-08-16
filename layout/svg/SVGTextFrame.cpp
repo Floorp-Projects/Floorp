@@ -39,6 +39,7 @@
 #include "SVGPathElement.h"
 #include "SVGTextPathElement.h"
 #include "nsLayoutUtils.h"
+#include "nsFrameSelection.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -3527,7 +3528,7 @@ SVGTextFrame::NotifySVGChanged(uint32_t aFlags)
 static int32_t
 GetCaretOffset(nsCaret* aCaret)
 {
-  nsCOMPtr<nsISelection> selection = aCaret->GetCaretDOMSelection();
+  nsCOMPtr<nsISelection> selection = aCaret->GetSelection();
   if (!selection) {
     return -1;
   }
@@ -3639,7 +3640,8 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
   gfxMatrix currentMatrix = gfx->CurrentMatrix();
 
   nsRefPtr<nsCaret> caret = presContext->PresShell()->GetCaret();
-  nsIFrame* caretFrame = caret->GetCaretFrame();
+  nsRect caretRect;
+  nsIFrame* caretFrame = caret->GetPaintGeometry(&caretRect);
 
   TextRenderedRunIterator it(this, TextRenderedRunIterator::eVisibleFrames);
   TextRenderedRun run = it.Current();
@@ -4050,7 +4052,7 @@ SVGTextFrame::SelectSubString(nsIContent* aContent,
   nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
 
   frameSelection->HandleClick(content, charnum, charnum + nchars,
-                              false, false, false);
+                              false, false, CARET_ASSOCIATE_BEFORE);
   return NS_OK;
 }
 

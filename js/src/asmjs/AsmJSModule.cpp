@@ -1803,12 +1803,12 @@ GetCPUID(uint32_t *cpuId)
     };
 
 #if defined(JS_CODEGEN_X86)
-    JS_ASSERT(uint32_t(JSC::MacroAssembler::getSSEState()) <= (UINT32_MAX >> ARCH_BITS));
-    *cpuId = X86 | (JSC::MacroAssembler::getSSEState() << ARCH_BITS);
+    JS_ASSERT(uint32_t(JSC::MacroAssemblerX86Common::getSSEState()) <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = X86 | (JSC::MacroAssemblerX86Common::getSSEState() << ARCH_BITS);
     return true;
 #elif defined(JS_CODEGEN_X64)
-    JS_ASSERT(uint32_t(JSC::MacroAssembler::getSSEState()) <= (UINT32_MAX >> ARCH_BITS));
-    *cpuId = X64 | (JSC::MacroAssembler::getSSEState() << ARCH_BITS);
+    JS_ASSERT(uint32_t(JSC::MacroAssemblerX86Common::getSSEState()) <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = X64 | (JSC::MacroAssemblerX86Common::getSSEState() << ARCH_BITS);
     return true;
 #elif defined(JS_CODEGEN_ARM)
     JS_ASSERT(GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));

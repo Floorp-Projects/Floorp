@@ -47,6 +47,8 @@ AddUniforms(ProgramProfileOGL& aProfile)
         "uRenderColor",
         "uTexCoordMultiplier",
         "uTexturePass2",
+        "uColorMatrix",
+        "uColorMatrixVector",
         nullptr
     };
 

@@ -89,7 +89,7 @@ static const char kDigiCert_High_Assurance_EV_Root_CAFingerprint[] =
 
 /* End Entity Test Cert */
 static const char kEnd_Entity_Test_CertFingerprint[] =
-  "w3a2zMuMdmP9ed7H9HLExM+i+/0UxqHlKszZ5GQpHYM=";
+  "pVVgLk2kFI2WWRPwDMIX6YmzFhEW4DXQV/U5gP+feGA=";
 
 /* Entrust Root Certification Authority */
 static const char kEntrust_Root_Certification_AuthorityFingerprint[] =

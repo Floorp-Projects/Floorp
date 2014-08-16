@@ -88,6 +88,12 @@ FinishStringFlat(ExclusiveContext *cx, StringBuffer &sb, Buffer &cb)
     if (!str)
         return nullptr;
 
+    /*
+     * The allocation was made on a TempAllocPolicy, so account for the string
+     * data on the string's zone.
+     */
+    str->zone()->updateMallocCounter(sizeof(CharT) * len);
+
     buf.forget();
     return str;
 }

@@ -552,7 +552,7 @@ JitcodeIonTable::makeIonEntry(JSContext *cx, JitCode *code,
     }
 
     // Create SizedScriptList
-    void *mem = cx->malloc_(SizedScriptList::AllocSizeFor(numScripts));
+    void *mem = (void *)cx->pod_malloc<uint8_t>(SizedScriptList::AllocSizeFor(numScripts));
     if (!mem)
         return false;
     SizedScriptList *scriptList = new (mem) SizedScriptList(numScripts, scripts);

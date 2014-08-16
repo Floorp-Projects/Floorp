@@ -141,7 +141,7 @@ function StructuredLogger(name) {
     this.testStatus = function(test, subtest, status, expected="PASS", message=null) {
         var data = {test: test, subtest: subtest, status: status};
 
-        if (message !== null) {
+        if (message) {
             data.message = String(message);
         }
         if (expected != status && status != 'SKIP') {
@@ -698,8 +698,8 @@ TestRunner.testFinished = function(tests) {
         if (TestRunner.currentTestURL != TestRunner.getLoadedTestURL()) {
             TestRunner.structuredLogger.testStatus(TestRunner.currentTestURL,
                                                    TestRunner.getLoadedTestURL(),
-                                                   "ERROR",
-                                                   "OK",
+                                                   "FAIL",
+                                                   "PASS",
                                                    "finished in a non-clean fashion, probably" +
                                                    " because it didn't call SimpleTest.finish()",
                                                    {loaded_test_url: TestRunner.getLoadedTestURL()});

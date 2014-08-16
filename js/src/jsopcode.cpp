@@ -2080,7 +2080,7 @@ js::GetPCCountScriptSummary(JSContext *cx, size_t index)
 
     /*
      * OOM on buffer appends here will not be caught immediately, but since
-     * StringBuffer uses a ContextAllocPolicy will trigger an exception on the
+     * StringBuffer uses a TempAllocPolicy will trigger an exception on the
      * context if they occur, which we'll catch before returning.
      */
     StringBuffer buf(cx);

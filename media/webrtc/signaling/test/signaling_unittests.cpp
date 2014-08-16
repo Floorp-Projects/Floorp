@@ -806,29 +806,31 @@ class PCDispatchWrapper : public nsSupportsWeakReference
     return rv;
   }
 
-  NS_IMETHODIMP AddStream(DOMMediaStream *aMediaStream) {
+  NS_IMETHODIMP AddTrack(MediaStreamTrack *aTrack,
+                         DOMMediaStream *aMediaStream)
+  {
     nsresult rv;
 
     if (NS_IsMainThread()) {
-      rv = pc_->AddStream(*aMediaStream);
+      rv = pc_->AddTrack(*aTrack, *aMediaStream);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::AddStream, aMediaStream, &rv),
+        WrapRunnableRet(this, &PCDispatchWrapper::AddTrack, aTrack,
+                        aMediaStream, &rv),
         NS_DISPATCH_SYNC);
     }
 
     return rv;
   }
 
-  NS_IMETHODIMP RemoveStream(DOMMediaStream *aMediaStream) {
+  NS_IMETHODIMP RemoveTrack(MediaStreamTrack *aTrack) {
     nsresult rv;
 
     if (NS_IsMainThread()) {
-      rv = pc_->RemoveStream(*aMediaStream);
+      rv = pc_->RemoveTrack(*aTrack);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::RemoveStream,
-          aMediaStream, &rv),
+        WrapRunnableRet(this, &PCDispatchWrapper::RemoveTrack, aTrack, &rv),
         NS_DISPATCH_SYNC);
     }
 
@@ -1082,24 +1084,26 @@ class SignalingAgent {
          DOMMediaStream::HINT_CONTENTS_VIDEO,
        MediaStream *stream = nullptr) {
 
-    nsRefPtr<DOMMediaStream> domMediaStream;
-    if (stream) {
-      domMediaStream = new DOMMediaStream(stream);
-    } else {
-      domMediaStream = new DOMMediaStream();
-    }
-
+    nsRefPtr<DOMMediaStream> domMediaStream = new DOMMediaStream(stream);
     domMediaStream->SetHintContents(hint);
-    ASSERT_EQ(pc->AddStream(domMediaStream), NS_OK);
+
+    nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+    domMediaStream->GetTracks(tracks);
+    for (uint32_t i = 0; i < tracks.Length(); i++) {
+      ASSERT_EQ(pc->AddTrack(tracks[i], domMediaStream), NS_OK);
+    }
     domMediaStream_ = domMediaStream;
   }
-
 
   // Removes a stream from the PeerConnection. If the stream
   // parameter is absent, removes the stream that was most
   // recently added to the PeerConnection.
   void RemoveLastStreamAdded() {
-    ASSERT_EQ(pc->RemoveStream(domMediaStream_), NS_OK);
+    nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+    domMediaStream_->GetTracks(tracks);
+    for (uint32_t i = 0; i < tracks.Length(); i++) {
+      ASSERT_EQ(pc->RemoveTrack(tracks[i]), NS_OK);
+    }
   }
 
   void CreateOffer(sipcc::OfferOptions& options,
@@ -1182,7 +1186,7 @@ void CreateAnswer(std::string offer,
     // hints as were passed in.
     // When complete RemoveStream will remove and entire stream and its tracks
     // not just disable a track as this is currently doing
-    ASSERT_EQ(pc->RemoveStream(domMediaStream_), NS_OK);
+    RemoveLastStreamAdded();
 
     // Now call CreateOffer as JS would
     pObserver->state = TestObserver::stateNoResponse;

@@ -762,12 +762,6 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  // Batching the selection and moving nodes out from under the caret causes
-  // caret turds. Ask the shell to invalidate the caret now to avoid the turds.
-  nsCOMPtr<nsIPresShell> shell = GetPresShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_NOT_INITIALIZED);
-  shell->MaybeInvalidateCaretPosition();
-
   nsTextRulesInfo ruleInfo(EditAction::insertBreak);
   ruleInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
@@ -878,7 +872,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
     rv = InsertText(widgetTextEvent->theText);
 
     if (caretP) {
-      caretP->SetCaretDOMSelection(selection);
+      caretP->SetSelection(selection);
     }
   }
 

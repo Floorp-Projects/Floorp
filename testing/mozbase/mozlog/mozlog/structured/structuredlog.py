@@ -11,7 +11,8 @@ import sys
 import time
 import traceback
 
-from logtypes import Unicode, TestId, Status, SubStatus, Dict, List, Any, log_action, convertor_registry
+from logtypes import Unicode, TestId, Status, SubStatus, Dict, List, Int, Any
+from logtypes import log_action, convertor_registry
 
 """Structured Logging for recording test results.
 
@@ -93,6 +94,7 @@ class LoggerState(object):
         self.handlers = []
         self.running_tests = set()
         self.suite_started = False
+
 
 class StructuredLogger(object):
     _lock = Lock()
@@ -297,6 +299,20 @@ class StructuredLogger(object):
         """
         self._log_data("process_output", data)
 
+    @log_action(Unicode("process", default=None),
+                Unicode("signature", default="[Unknown]"),
+                TestId("test", default=None, optional=True),
+                Unicode("minidump_path", default=None, optional=True),
+                Unicode("minidump_extra", default=None, optional=True),
+                Int("stackwalk_retcode", default=None, optional=True),
+                Unicode("stackwalk_stdout", default=None, optional=True),
+                Unicode("stackwalk_stderr", default=None, optional=True),
+                List("stackwalk_errors", Unicode, default=None))
+    def crash(self, data):
+        if data["stackwalk_errors"] is None:
+            data["stackwalk_errors"] = []
+
+        self._log_data("crash", data)
 
 def _log_func(level_name):
     @log_action(Unicode("message"),

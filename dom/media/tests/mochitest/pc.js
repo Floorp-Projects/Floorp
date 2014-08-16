@@ -1543,7 +1543,15 @@ PeerConnectionWrapper.prototype = {
     this.streams.push(stream);
 
     if (side === 'local') {
-      this._pc.addStream(stream);
+      // In order to test both the addStream and addTrack APIs, we do video one
+      // way and audio + audiovideo the other.
+      if (type == "video") {
+        this._pc.addStream(stream);
+      } else {
+        stream.getTracks().forEach(function(track) {
+          this._pc.addTrack(track, stream);
+        }.bind(this));
+      }
     }
 
     var element = createMediaElement(type, this.label + '_' + side);
