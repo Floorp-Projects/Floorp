@@ -161,7 +161,8 @@ this.EventManager.prototype = {
         }
         this.present(
           Presentation.pivotChanged(position, oldAccessible, reason,
-                                    pivot.startOffset, pivot.endOffset));
+                                    pivot.startOffset, pivot.endOffset,
+                                    aEvent.isFromUserInput));
 
         break;
       }
