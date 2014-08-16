@@ -575,8 +575,10 @@ RegisterAllocator::dumpInstructions()
                     fprintf(stderr, " [temp %s]", temp->toString());
             }
 
-            for (LInstruction::InputIterator alloc(*ins); alloc.more(); alloc.next())
-                fprintf(stderr, " [use %s]", alloc->toString());
+            for (LInstruction::InputIterator alloc(*ins); alloc.more(); alloc.next()) {
+                if (!alloc->isBogus())
+                    fprintf(stderr, " [use %s]", alloc->toString());
+            }
 
             fprintf(stderr, "\n");
         }

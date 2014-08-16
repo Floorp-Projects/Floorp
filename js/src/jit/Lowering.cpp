@@ -2581,8 +2581,6 @@ LIRGenerator::visitInArray(MInArray *ins)
     LAllocation object;
     if (ins->needsNegativeIntCheck())
         object = useRegister(ins->object());
-    else
-        object = LConstantIndex::Bogus();
 
     LInArray *lir = new(alloc()) LInArray(useRegister(ins->elements()),
                                           useRegisterOrConstant(ins->index()),
