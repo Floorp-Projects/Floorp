@@ -1080,7 +1080,7 @@ LiveInterval::toString() const
         cursor += n;
     }
 
-    if (alloc_.kind() != LAllocation::USE) {
+    if (!alloc_.isBogus()) {
         n = JS_snprintf(cursor, end - cursor, " has(%s)", alloc_.toString());
         if (n < 0) return "???";
         cursor += n;
