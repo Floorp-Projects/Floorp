@@ -279,6 +279,7 @@ class LUse : public LAllocation
     }
     uint32_t virtualRegister() const {
         uint32_t index = (data() >> VREG_SHIFT) & VREG_MASK;
+        JS_ASSERT(index != 0);
         return index;
     }
     uint32_t registerCode() const {
@@ -411,13 +412,7 @@ class LDefinition
 
         // One definition per instruction must re-use the first input
         // allocation, which (for now) must be a register.
-        MUST_REUSE_INPUT,
-
-        // This definition's virtual register is the same as another; this is
-        // for instructions which consume a register and silently define it as
-        // the same register. It is not legal to use this if doing so would
-        // change the type of the virtual register.
-        PASSTHROUGH
+        MUST_REUSE_INPUT
     };
 
     enum Type {
@@ -508,7 +503,9 @@ class LDefinition
         return type() == FLOAT32 || type() == DOUBLE || isSimdType();
     }
     uint32_t virtualRegister() const {
-        return (bits_ >> VREG_SHIFT) & VREG_MASK;
+        uint32_t index = (bits_ >> VREG_SHIFT) & VREG_MASK;
+        JS_ASSERT(index != 0);
+        return index;
     }
     LAllocation *output() {
         return &output_;
