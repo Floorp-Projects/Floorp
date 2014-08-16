@@ -3214,3 +3214,9 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
         }
     }
 }
+
+bool
+jit::JitSupportsFloatingPoint()
+{
+    return js::jit::MacroAssembler::SupportsFloatingPoint();
+}

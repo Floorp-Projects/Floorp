@@ -203,6 +203,8 @@ bool RematerializeAllFrames(JSContext *cx, JSCompartment *comp);
 bool UpdateForDebugMode(JSContext *maybecx, JSCompartment *comp,
                         AutoDebugModeInvalidation &invalidate);
 
+bool JitSupportsFloatingPoint();
+
 } // namespace jit
 } // namespace js
 

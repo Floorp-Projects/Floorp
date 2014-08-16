@@ -152,6 +152,8 @@ class MacroAssemblerNone : public Assembler
     static void TraceJumpRelocations(JSTracer *, JitCode *, CompactBufferReader &) { MOZ_CRASH(); }
     static void TraceDataRelocations(JSTracer *, JitCode *, CompactBufferReader &) { MOZ_CRASH(); }
 
+    static bool SupportsFloatingPoint() { return false; }
+
     void executableCopy(void *) { MOZ_CRASH(); }
     void copyJumpRelocationTable(uint8_t *) { MOZ_CRASH(); }
     void copyDataRelocationTable(uint8_t *) { MOZ_CRASH(); }
