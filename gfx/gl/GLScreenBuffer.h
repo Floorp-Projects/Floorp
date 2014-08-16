@@ -21,6 +21,7 @@
 #include "GLDefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace gl {

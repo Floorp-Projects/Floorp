@@ -192,8 +192,9 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl,
     }
 
     typedef SharedSurface_ANGLEShareHandle ptrT;
-    return UniquePtr<ptrT>( new ptrT(gl, egl, size, hasAlpha, context,
-                                     pbuffer, shareHandle) );
+    UniquePtr<ptrT> ret( new ptrT(gl, egl, size, hasAlpha, context,
+                                  pbuffer, shareHandle) );
+    return Move(ret);
 }
 
 /*static*/ UniquePtr<SurfaceFactory_ANGLEShareHandle>
@@ -204,14 +205,15 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl,
     if (!egl)
         return nullptr;
 
-    if (!egl->IsExtensionSupported(
-            GLLibraryEGL::ANGLE_surface_d3d_texture_2d_share_handle))
+    auto ext = GLLibraryEGL::ANGLE_surface_d3d_texture_2d_share_handle;
+    if (!egl->IsExtensionSupported(ext))
     {
         return nullptr;
     }
 
     typedef SurfaceFactory_ANGLEShareHandle ptrT;
-    return UniquePtr<ptrT>( new ptrT(gl, egl, caps) );
+    UniquePtr<ptrT> ret( new ptrT(gl, egl, caps) );
+    return Move(ret);
 }
 
 SurfaceFactory_ANGLEShareHandle::SurfaceFactory_ANGLEShareHandle(GLContext* gl,
