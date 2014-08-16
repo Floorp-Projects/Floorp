@@ -2241,7 +2241,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
             return ReportObjectRequired(cx);
         JSObject *argobj = &arg.toObject();
         if (!argobj->is<CrossCompartmentWrapperObject>()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CCW_REQUIRED,
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_CCW_REQUIRED,
                                  "Debugger");
             return false;
         }
