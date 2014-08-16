@@ -89,6 +89,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for text");
         // Context menu for plain text
         plainTextItems = ["context-navigation", null,
                               ["context-back",         false,
@@ -96,6 +97,7 @@ function runTest(testNum) {
                                "context-reload",       true,
                                "context-bookmarkpage", true], null,
                           "---",                  null,
+                          "context-sharepage",    true,
                           "context-savepage",     true,
                           "---",                  null,
                           "context-viewbgimage",  false,
@@ -110,6 +112,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for text link");
         // Context menu for text link
         if (perWindowPrivateBrowsing) {
           checkContextMenu(["context-openlinkintab", true,
@@ -117,6 +120,7 @@ function runTest(testNum) {
                             "context-openlinkprivate", true,
                             "---",                   null,
                             "context-bookmarklink",  true,
+                            "context-sharelink",     true,
                             "context-savelink",      true,
                             "context-copylink",      true,
                             "context-searchselect",  true
@@ -126,6 +130,7 @@ function runTest(testNum) {
                             "context-openlink",      true,
                             "---",                   null,
                             "context-bookmarklink",  true,
+                            "context-sharelink",     true,
                             "context-savelink",      true,
                             "context-copylink",      true,
                             "context-searchselect",  true
@@ -136,6 +141,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for mailto link");
         // Context menu for text mailto-link
         checkContextMenu(["context-copyemail", true,
                           "context-searchselect", true
@@ -145,12 +151,14 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for image");
         // Context menu for an image
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
                           "context-copyimage",            true,
                           "---",                          null,
                           "context-saveimage",            true,
+                          "context-shareimage",           true,
                           "context-sendimage",            true,
                           "context-setDesktopBackground", true,
                           "context-viewimageinfo",        true
@@ -160,6 +168,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for canvas");
         // Context menu for a canvas
         checkContextMenu(["context-viewimage",    true,
                           "context-saveimage",    true,
@@ -170,6 +179,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for video_ok");
         // Context menu for a video (with a VALID media source)
         checkContextMenu(["context-media-play",         true,
                           "context-media-mute",         true,
@@ -186,6 +196,7 @@ function runTest(testNum) {
                           "context-copyvideourl",       true,
                           "---",                        null,
                           "context-savevideo",          true,
+                          "context-sharevideo",         true,
                           "context-video-saveimage",    true,
                           "context-sendvideo",          true
                          ].concat(inspectItems));
@@ -194,6 +205,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for audio_in_video");
         // Context menu for a video (with an audio-only file)
           checkContextMenu(["context-media-play",         true,
                             "context-media-mute",         true,
@@ -214,6 +226,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for video_bad");
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
@@ -230,6 +243,7 @@ function runTest(testNum) {
                           "context-copyvideourl",       true,
                           "---",                        null,
                           "context-savevideo",          true,
+                          "context-sharevideo",         true,
                           "context-video-saveimage",    false,
                           "context-sendvideo",          true
                          ].concat(inspectItems));
@@ -238,6 +252,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for video_bad2");
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
@@ -254,6 +269,7 @@ function runTest(testNum) {
                           "context-copyvideourl",       false,
                           "---",                        null,
                           "context-savevideo",          false,
+                          "context-sharevideo",         false,
                           "context-video-saveimage",    false,
                           "context-sendvideo",          false
                          ].concat(inspectItems));
@@ -262,6 +278,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for iframe");
         // Context menu for an iframe
         checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
@@ -269,6 +286,7 @@ function runTest(testNum) {
                                "context-reload",       true,
                                "context-bookmarkpage", true], null,
                           "---",                  null,
+                          "context-sharepage",    true,
                           "context-savepage",     true,
                           "---",                  null,
                           "context-viewbgimage",  false,
@@ -296,6 +314,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for video_in_iframe");
         // Context menu for a video in an iframe
         checkContextMenu(["context-media-play",         true,
                           "context-media-mute",         true,
@@ -312,6 +331,7 @@ function runTest(testNum) {
                           "context-copyvideourl",       true,
                           "---",                        null,
                           "context-savevideo",          true,
+                          "context-sharevideo",         true,
                           "context-video-saveimage",    true,
                           "context-sendvideo",          true,
                           "frame",                null,
@@ -332,12 +352,14 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for image_in_iframe");
         // Context menu for an image in an iframe
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
                           "context-copyimage",            true,
                           "---",                          null,
                           "context-saveimage",            true,
+                          "context-shareimage",           true,
                           "context-sendimage",            true,
                           "context-setDesktopBackground", true,
                           "context-viewimageinfo",        true,
@@ -359,6 +381,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for textarea");
         // Context menu for textarea before spell check initialization finishes
         checkContextMenu(["context-undo",                false,
                           "---",                         null,
@@ -376,6 +399,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for textarea, wait for spell check");
         // Context menu for textarea after spell check initialization finishes
         checkContextMenu(["*chubbiness",         true, // spelling suggestion
                           "spell-add-to-dictionary", true,
@@ -401,6 +425,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for text");
         // Re-check context menu for plain text to make sure it hasn't changed
         checkContextMenu(plainTextItems);
         closeContextMenu();
@@ -408,6 +433,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for textarea after word added");
         // Context menu for textarea after a word has been added
         // to the dictionary
         checkContextMenu(["spell-undo-add-to-dictionary", true,
@@ -433,6 +459,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for contenteditable");
         // Context menu for contenteditable
         checkContextMenu(["spell-no-suggestions", false,
                           "spell-add-to-dictionary", true,
@@ -458,12 +485,14 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for link");
         executeCopyCommand("cmd_copyLink", "http://mozilla.com/");
         closeContextMenu();
         openContextMenuFor(pagemenu); // Invoke context menu for next test.
     },
 
     function () {
+        info("context menu for pagemenu");
         // Context menu for element with assigned content context menu
         checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
@@ -491,6 +520,7 @@ function runTest(testNum) {
                                "---",                 null,
                                "+Checkbox",           {type: "checkbox", icon: "", checked: false, disabled: false}], null,
                           "---",                  null,
+                          "context-sharepage",    true,
                           "context-savepage",     true,
                           "---",                  null,
                           "context-viewbgimage",  false,
@@ -516,6 +546,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for fullscreen mode");
         // Context menu for DOM Fullscreen mode (NOTE: this is *NOT* on an img)
         checkContextMenu(["context-navigation", null,
                               ["context-back",            false,
@@ -525,6 +556,7 @@ function runTest(testNum) {
                           "---",                          null,
                           "context-leave-dom-fullscreen", true,
                           "---",                          null,
+                          "context-sharepage",            true,
                           "context-savepage",             true,
                           "---",                          null,
                           "context-viewbgimage",          false,
@@ -546,6 +578,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for element with assigned content context menu");
         // Context menu for element with assigned content context menu
         // The shift key should bypass content context menu processing
         checkContextMenu(["context-navigation", null,
@@ -554,6 +587,7 @@ function runTest(testNum) {
                                "context-reload",       true,
                                "context-bookmarkpage", true], null,
                           "---",                  null,
+                          "context-sharepage",    true,
                           "context-savepage",     true,
                           "---",                  null,
                           "context-viewbgimage",  false,
@@ -568,6 +602,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for text selection");
         // Context menu for selected text
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -575,6 +610,7 @@ function runTest(testNum) {
                             "context-selectall",                   true,
                             "---",                                 null,
                             "context-searchselect",                true,
+                            "context-shareselect",                 true,
                             "context-viewpartialsource-selection", true
                            ].concat(inspectItems));
         }
@@ -584,6 +620,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for text selection with url pattern");
         // Context menu for selected text which matches valid URL pattern
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -594,11 +631,13 @@ function runTest(testNum) {
                               "context-openlinkprivate",             true,
                               "---",                                 null,
                               "context-bookmarklink",                true,
+                              "context-sharelink",                   true,
                               "context-savelink",                    true,
                               "context-copy",                        true,
                               "context-selectall",                   true,
                               "---",                                 null,
                               "context-searchselect",                true,
+                              "context-shareselect",                 true,
                               "context-viewpartialsource-selection", true
                              ].concat(inspectItems));
           } else {
@@ -607,11 +646,13 @@ function runTest(testNum) {
                               "context-openlink",                    true,
                               "---",                                 null,
                               "context-bookmarklink",                true,
+                              "context-sharelink",                   true,
                               "context-savelink",                    true,
                               "context-copy",                        true,
                               "context-selectall",                   true,
                               "---",                                 null,
                               "context-searchselect",                true,
+                              "context-shareselect",                 true,
                               "context-viewpartialsource-selection", true
                              ].concat(inspectItems));
           }
@@ -624,6 +665,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for imagelink");
         // Context menu for image link
         if (perWindowPrivateBrowsing) {
           checkContextMenu(["context-openlinkintab", true,
@@ -631,6 +673,7 @@ function runTest(testNum) {
                             "context-openlinkprivate", true,
                             "---",                   null,
                             "context-bookmarklink",  true,
+                            "context-sharelink",     true,
                             "context-savelink",      true,
                             "context-copylink",      true,
                             "---",                   null,
@@ -639,6 +682,7 @@ function runTest(testNum) {
                             "context-copyimage",            true,
                             "---",                          null,
                             "context-saveimage",            true,
+                            "context-shareimage",           true,
                             "context-sendimage",            true,
                             "context-setDesktopBackground", true,
                             "context-viewimageinfo",        true
@@ -648,6 +692,7 @@ function runTest(testNum) {
                             "context-openlink",      true,
                             "---",                   null,
                             "context-bookmarklink",  true,
+                            "context-sharelink",     true,
                             "context-savelink",      true,
                             "context-copylink",      true,
                             "---",                   null,
@@ -656,6 +701,7 @@ function runTest(testNum) {
                             "context-copyimage",            true,
                             "---",                          null,
                             "context-saveimage",            true,
+                            "context-shareimage",           true,
                             "context-sendimage",            true,
                             "context-setDesktopBackground", true,
                             "context-viewimageinfo",        true
@@ -667,6 +713,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for select_inputtext");
         // Context menu for selected text in input
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -686,6 +733,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for selected text in input[type='password']");
         // Context menu for selected text in input[type="password"]
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -709,6 +757,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for click-to-play blocked plugin");
         // Context menu for click-to-play blocked plugin
         checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
@@ -719,6 +768,7 @@ function runTest(testNum) {
                           "context-ctp-play",     true,
                           "context-ctp-hide",     true,
                           "---",                  null,
+                          "context-sharepage",    true,
                           "context-savepage",     true,
                           "---",                  null,
                           "context-viewbgimage",  false,
@@ -734,12 +784,14 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for image with longdesc");
         // Context menu for an image with longdesc
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
                           "context-copyimage",            true,
                           "---",                          null,
                           "context-saveimage",            true,
+                          "context-shareimage",           true,
                           "context-sendimage",            true,
                           "context-setDesktopBackground", true,
                           "context-viewimageinfo",        true,
@@ -750,6 +802,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for iframe with srcdoc attribute set");
         // Context menu for an iframe with srcdoc attribute set
         checkContextMenu(["context-navigation", null,
                               ["context-back",         false,
@@ -757,6 +810,7 @@ function runTest(testNum) {
                                "context-reload",       true,
                                "context-bookmarkpage", true], null,
                           "---",                  null,
+                          "context-sharepage",    true,
                           "context-savepage",     true,
                           "---",                  null,
                           "context-viewbgimage",  false,
@@ -779,6 +833,7 @@ function runTest(testNum) {
     },
 
     function () {
+        info("context menu for text input field with spellcheck=false");
         // Context menu for text input field with spellcheck=false
         checkContextMenu(["context-undo",        false,
                           "---",                 null,

@@ -175,6 +175,7 @@ DataReportingService.prototype = Object.freeze({
             // The instance installs its own shutdown observers. So, we just
             // fire and forget: it will clean itself up.
             let reporter = this.healthReporter;
+            this.policy.ensureUserNotified();
           }.bind(this),
         }, delayInterval, this.timer.TYPE_ONE_SHOT);
 
