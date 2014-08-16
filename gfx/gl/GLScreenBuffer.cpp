@@ -20,6 +20,7 @@
 #endif
 #include "ScopedGLHelpers.h"
 #include "gfx2DGlue.h"
+#include "../layers/ipc/ShadowLayers.h"
 
 namespace mozilla {
 namespace gl {
@@ -31,10 +32,11 @@ GLScreenBuffer::Create(GLContext* gl,
                        const gfx::IntSize& size,
                        const SurfaceCaps& caps)
 {
+    UniquePtr<GLScreenBuffer> ret;
     if (caps.antialias &&
         !gl->IsSupported(GLFeature::framebuffer_multisample))
     {
-        return nullptr;
+        return Move(ret);
     }
 
     UniquePtr<SurfaceFactory> factory;
@@ -64,9 +66,7 @@ GLScreenBuffer::Create(GLContext* gl,
     RefPtr<SurfaceStream> stream;
     stream = SurfaceStream::CreateForType(streamType, gl, nullptr);
 
-    UniquePtr<GLScreenBuffer> ret( new GLScreenBuffer(gl, caps,
-                                                      Move(factory),
-                                                      stream) );
+    ret.reset( new GLScreenBuffer(gl, caps, Move(factory), stream) );
     return Move(ret);
 }
 
@@ -651,8 +651,9 @@ ReadBuffer::Create(GLContext* gl,
 
     UniquePtr<ReadBuffer> ret( new ReadBuffer(gl, fb, depthRB,
                                               stencilRB, surf) );
-    if (!gl->IsFramebufferComplete(fb))
-        return nullptr;
+    if (!gl->IsFramebufferComplete(fb)) {
+      ret = nullptr;
+    }
 
     return Move(ret);
 }

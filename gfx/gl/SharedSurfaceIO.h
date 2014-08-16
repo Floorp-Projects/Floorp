@@ -17,7 +17,7 @@ namespace gl {
 class SharedSurface_IOSurface : public SharedSurface
 {
 public:
-    static UniquePtr<SharedSurface_IOSurface> Create(MacIOSurface* surface,
+    static UniquePtr<SharedSurface_IOSurface> Create(const RefPtr<MacIOSurface>& ioSurf,
                                                      GLContext* gl,
                                                      bool hasAlpha);
 
@@ -53,12 +53,13 @@ public:
     }
 
     MacIOSurface* GetIOSurface() const {
-        return mSurface;
+        return mIOSurf;
     }
 
 private:
-    SharedSurface_IOSurface(MacIOSurface* ioSurf, GLContext* gl,
-                            const gfx::IntSize& size, bool hasAlpha);
+    SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioSurf,
+                            GLContext* gl, const gfx::IntSize& size,
+                            bool hasAlpha);
 
     RefPtr<MacIOSurface> mIOSurf;
     GLuint mProdTex;

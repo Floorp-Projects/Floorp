@@ -73,7 +73,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
     SurfaceStreamType streamType =
         SurfaceStream::ChooseGLStreamType(SurfaceStream::OffMainThread,
                                           screen->PreserveBuffer());
-    UniquePtr<SurfaceFactory> factory = nullptr;
+    UniquePtr<SurfaceFactory> factory;
 
     if (!gfxPrefs::WebGLForceLayersReadback()) {
       switch (ClientManager()->AsShadowForwarder()->GetCompositorBackendType()) {
