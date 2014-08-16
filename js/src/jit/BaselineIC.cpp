@@ -3316,8 +3316,10 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
     shape.set(nullptr);
     holder.set(nullptr);
 
-    if (checkDOMProxy)
+    if (checkDOMProxy) {
         *checkDOMProxy = false;
+        *shadowsResult = ShadowCheckFailed;
+    }
 
     // Check for list base if asked to.
     RootedObject checkObj(cx, obj);
