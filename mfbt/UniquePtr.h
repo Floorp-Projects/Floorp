@@ -662,7 +662,7 @@ struct UniqueSelector<T[N]>
  */
 
 // We don't have variadic template support everywhere, so just hard-code arities
-// 0-5 for now.  If you need more arguments, feel free to add the extra
+// 0-8 for now.  If you need more arguments, feel free to add the extra
 // overloads (and deletions for the T = E[N] case).
 //
 // Beware!  Due to lack of true nullptr support in gcc 4.4 and 4.5, passing
@@ -716,6 +716,39 @@ MakeUnique(A1&& aA1, A2&& aA2, A3&& aA3, A4&& aA4, A5&& aA5)
                             Forward<A5>(aA5)));
 }
 
+template<typename T, typename A1, typename A2, typename A3, typename A4,
+         typename A5, typename A6>
+typename detail::UniqueSelector<T>::SingleObject
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6)
+{
+  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2),
+                            Forward<A3>(a3), Forward<A4>(a4),
+                            Forward<A5>(a5), Forward<A6>(a6)));
+}
+
+template<typename T, typename A1, typename A2, typename A3, typename A4,
+         typename A5, typename A6, typename A7>
+typename detail::UniqueSelector<T>::SingleObject
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6, A7&& a7)
+{
+  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2),
+                            Forward<A3>(a3), Forward<A4>(a4),
+                            Forward<A5>(a5), Forward<A6>(a6),
+                            Forward<A7>(a7)));
+}
+
+template<typename T, typename A1, typename A2, typename A3, typename A4,
+         typename A5, typename A6, typename A7, typename A8>
+typename detail::UniqueSelector<T>::SingleObject
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6, A7&& a7,
+           A8&& a8)
+{
+  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2),
+                            Forward<A3>(a3), Forward<A4>(a4),
+                            Forward<A5>(a5), Forward<A6>(a6),
+                            Forward<A7>(a7), Forward<A8>(a8)));
+}
+
 template<typename T>
 typename detail::UniqueSelector<T>::UnknownBound
 MakeUnique(decltype(sizeof(int)) aN)
@@ -748,6 +781,24 @@ template<typename T, typename A1, typename A2, typename A3, typename A4,
          typename A5>
 typename detail::UniqueSelector<T>::KnownBound
 MakeUnique(A1&& aA1, A2&& aA2, A3&& aA3, A4&& aA4, A5&& aA5) MOZ_DELETE;
+
+template<typename T, typename A1, typename A2, typename A3, typename A4,
+         typename A5, typename A6>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5,
+           A6&& a6) MOZ_DELETE;
+
+template<typename T, typename A1, typename A2, typename A3, typename A4,
+         typename A5, typename A6, typename A7>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6,
+           A7&& a7) MOZ_DELETE;
+
+template<typename T, typename A1, typename A2, typename A3, typename A4,
+         typename A5, typename A6, typename A7, typename A8>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4, A5&& a5, A6&& a6,
+           A7&& a7, A8&& a8) MOZ_DELETE;
 
 } // namespace mozilla
 
