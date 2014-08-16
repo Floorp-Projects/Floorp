@@ -81,16 +81,16 @@ class LAllocation : public TempObject
     };
 
   protected:
-    int32_t data() const {
-        return int32_t(bits_) >> DATA_SHIFT;
+    uint32_t data() const {
+        return uint32_t(bits_) >> DATA_SHIFT;
     }
-    void setData(int32_t data) {
-        JS_ASSERT(int32_t(data) <= int32_t(DATA_MASK));
+    void setData(uint32_t data) {
+        JS_ASSERT(data <= DATA_MASK);
         bits_ &= ~(DATA_MASK << DATA_SHIFT);
         bits_ |= (data << DATA_SHIFT);
     }
     void setKindAndData(Kind kind, uint32_t data) {
-        JS_ASSERT(int32_t(data) <= int32_t(DATA_MASK));
+        JS_ASSERT(data <= DATA_MASK);
         bits_ = (uint32_t(kind) << KIND_SHIFT) | data << DATA_SHIFT;
     }
 
