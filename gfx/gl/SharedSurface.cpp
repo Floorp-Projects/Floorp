@@ -269,7 +269,7 @@ SurfaceFactory::SurfaceFactory(GLContext* gl,
 SurfaceFactory::~SurfaceFactory()
 {
     while (!mScraps.Empty()) {
-        UniquePtr<SharedSurface> cur = mScraps.Pop();
+        mScraps.Pop();
     }
 }
 
