@@ -205,6 +205,10 @@ GMPParent::CloseActive(bool aDieWhenUnloaded)
     mAudioDecoders[i - 1]->Shutdown();
   }
 
+  for (uint32_t i = mTimers.Length(); i > 0; i--) {
+    mTimers[i - 1]->Shutdown();
+  }
+
   // Note: the shutdown of the codecs is async!  don't kill
   // the plugin-container until they're all safely shut down via
   // CloseIfUnused();
