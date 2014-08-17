@@ -1320,7 +1320,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no
 bool
 NativeRegExpMacroAssembler::CanReadUnaligned()
 {
-#if defined(JS_CODEGEN_MIPS)
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     return false;
 #else
     return true;
