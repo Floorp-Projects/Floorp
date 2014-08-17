@@ -1675,13 +1675,6 @@ LIRGenerator::visitStart(MStart *start)
 }
 
 bool
-LIRGenerator::visitPcOffset(MPcOffset *pcOffset)
-{
-    LPcOffset *lir = new(alloc()) LPcOffset;
-    return add(lir, pcOffset);
-}
-
-bool
 LIRGenerator::visitNop(MNop *nop)
 {
     return true;
