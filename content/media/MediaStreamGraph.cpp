@@ -2471,6 +2471,32 @@ SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
   }
 }
 
+// These handle notifying all the listeners of an event
+void
+SourceMediaStream::NotifyListenersEventImpl(MediaStreamListener::MediaStreamGraphEvent aEvent)
+{
+  for (uint32_t j = 0; j < mListeners.Length(); ++j) {
+    MediaStreamListener* l = mListeners[j];
+    l->NotifyEvent(GraphImpl(), aEvent);
+  }
+}
+
+void
+SourceMediaStream::NotifyListenersEvent(MediaStreamListener::MediaStreamGraphEvent aNewEvent)
+{
+  class Message : public ControlMessage {
+  public:
+    Message(SourceMediaStream* aStream, MediaStreamListener::MediaStreamGraphEvent aEvent) :
+      ControlMessage(aStream), mEvent(aEvent) {}
+    virtual void Run()
+      {
+        mStream->AsSourceStream()->NotifyListenersEventImpl(mEvent);
+      }
+    MediaStreamListener::MediaStreamGraphEvent mEvent;
+  };
+  GraphImpl()->AppendMessage(new Message(this, aNewEvent));
+}
+
 void
 SourceMediaStream::AddDirectListener(MediaStreamDirectListener* aListener)
 {
@@ -2482,10 +2508,8 @@ SourceMediaStream::AddDirectListener(MediaStreamDirectListener* aListener)
   }
 
   if (wasEmpty) {
-    for (uint32_t j = 0; j < mListeners.Length(); ++j) {
-      MediaStreamListener* l = mListeners[j];
-      l->NotifyEvent(GraphImpl(), MediaStreamListener::EVENT_HAS_DIRECT_LISTENERS);
-    }
+    // Async
+    NotifyListenersEvent(MediaStreamListener::EVENT_HAS_DIRECT_LISTENERS);
   }
 }
 
@@ -2500,10 +2524,8 @@ SourceMediaStream::RemoveDirectListener(MediaStreamDirectListener* aListener)
   }
 
   if (isEmpty) {
-    for (uint32_t j = 0; j < mListeners.Length(); ++j) {
-      MediaStreamListener* l = mListeners[j];
-      l->NotifyEvent(GraphImpl(), MediaStreamListener::EVENT_HAS_NO_DIRECT_LISTENERS);
-    }
+    // Async
+    NotifyListenersEvent(MediaStreamListener::EVENT_HAS_NO_DIRECT_LISTENERS);
   }
 }
 
