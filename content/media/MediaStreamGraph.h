@@ -716,6 +716,13 @@ public:
    */
   void SetPullEnabled(bool aEnabled);
 
+  /**
+   * These add/remove DirectListeners, which allow bypassing the graph and any
+   * synchronization delays for e.g. PeerConnection, which wants the data ASAP
+   * and lets the far-end handle sync and playout timing.
+   */
+  void NotifyListenersEventImpl(MediaStreamListener::MediaStreamGraphEvent aEvent);
+  void NotifyListenersEvent(MediaStreamListener::MediaStreamGraphEvent aEvent);
   void AddDirectListener(MediaStreamDirectListener* aListener);
   void RemoveDirectListener(MediaStreamDirectListener* aListener);
 
