@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function runTests() {
-  yield setLinks("0");
+  yield setLinks("-1");
   yield addNewTabPageTab();
 
   // Remember if the click handler was triggered
