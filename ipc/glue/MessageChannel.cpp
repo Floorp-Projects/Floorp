@@ -234,7 +234,8 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mRemoteStackDepthGuess(false),
     mSawInterruptOutMsg(false),
     mAbortOnError(false),
-    mBlockScripts(false)
+    mBlockScripts(false),
+    mFlags(REQUIRE_DEFAULT)
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
 
