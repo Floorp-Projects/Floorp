@@ -103,6 +103,8 @@ public:
 
   nsresult GetOrigin(nsString& aOutOrigin);
 
+  void Shutdown();
+
 private:
 
   // Removes promise from mPromises, and returns it.
