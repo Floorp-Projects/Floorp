@@ -108,6 +108,13 @@ function test() {
       expectedLabelContents: "A partial link " + ellipsis,
     });
 
+    testElement({
+      id: "surrogatePair",
+      isSelected: true,
+      shouldBeShown: true,
+      expectedLabelContents: "This character\uD83D\uDD25" + ellipsis,
+    });
+
     // cleanup
     document.popupNode = null;
     gBrowser.removeCurrentTab();
