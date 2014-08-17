@@ -299,8 +299,7 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
 
 already_AddRefed<SubBufferDecoder>
 MediaSourceReader::CreateSubDecoder(const nsACString& aType,
-                                    MediaSourceDecoder* aParentDecoder,
-                                    MediaTaskQueue* aTaskQueue)
+                                    MediaSourceDecoder* aParentDecoder)
 {
   // XXX: Why/when is mDecoder null here, since it should be equal to aParentDecoder?!
   nsRefPtr<SubBufferDecoder> decoder =
@@ -313,16 +312,18 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType,
   // This reader will then forward them onto the state machine via this
   // reader's callback.
   RefPtr<MediaDataDecodedListener<MediaSourceReader>> callback =
-    new MediaDataDecodedListener<MediaSourceReader>(this, aTaskQueue);
+    new MediaDataDecodedListener<MediaSourceReader>(this, GetTaskQueue());
   reader->SetCallback(callback);
-  reader->SetTaskQueue(aTaskQueue);
+  reader->SetTaskQueue(GetTaskQueue());
   reader->Init(nullptr);
   ReentrantMonitorAutoEnter mon(aParentDecoder->GetReentrantMonitor());
   MSE_DEBUG("MediaSourceReader(%p)::CreateSubDecoder subdecoder %p subreader %p",
             this, decoder.get(), reader.get());
   decoder->SetReader(reader);
   mPendingDecoders.AppendElement(decoder);
-  if (NS_FAILED(static_cast<MediaSourceDecoder*>(mDecoder)->EnqueueDecoderInitialization())) {
+  RefPtr<nsIRunnable> task =
+    NS_NewRunnableMethod(this, &MediaSourceReader::InitializePendingDecoders);
+  if (NS_FAILED(GetTaskQueue()->Dispatch(task))) {
     MSE_DEBUG("MediaSourceReader(%p): Failed to enqueue decoder initialization task", this);
     return nullptr;
   }
