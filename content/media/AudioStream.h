@@ -283,6 +283,7 @@ private:
   // So we can call it asynchronously from AudioInitTask
   nsresult OpenCubeb(cubeb_stream_params &aParams,
                      LatencyRequest aLatencyRequest);
+  void AudioInitTaskFinished();
 
   void CheckForStart();
 
@@ -397,6 +398,10 @@ private:
   StreamState mState;
   bool mNeedsStart; // needed in case Start() is called before cubeb is open
   bool mIsFirst;
+
+  // True if there is a pending AudioInitTask. Shutdown() will wait until the
+  // pending AudioInitTask is finished.
+  bool mPendingAudioInitTask;
 
   // This mutex protects the static members below.
   static StaticMutex sMutex;
