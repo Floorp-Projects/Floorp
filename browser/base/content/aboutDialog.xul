@@ -65,7 +65,7 @@
               </hbox>
               <hbox id="apply" align="center">
                 <button id="updateButton" align="start"
-                        label="&update.updateButton.label;"
+                        label="&update.updateButton.label2;"
                         accesskey="&update.updateButton.accesskey;"
                         oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
                 <spacer flex="1"/>
