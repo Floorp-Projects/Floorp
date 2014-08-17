@@ -3394,17 +3394,6 @@ class LStart : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(Start)
 };
 
-// No-op instruction that prints nativeOffset, script, pcOffset during codegen.
-class LPcOffset : public LInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(PcOffset)
-
-    const MPcOffset *mir() const {
-        return mir_->toPcOffset();
-    }
-};
-
 // Passed the BaselineFrame address in the OsrFrameReg by SideCannon().
 // Forwards this object to the LOsrValues for Value materialization.
 class LOsrEntry : public LInstructionHelper<1, 0, 0>
