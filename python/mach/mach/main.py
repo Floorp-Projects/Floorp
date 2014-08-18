@@ -595,9 +595,6 @@ To see more help for a specific command, run:
             action='store_true', default=False,
             help='Do not prefix log lines with times. By default, mach will '
                 'prefix each output line with the time since command start.')
-        global_group.add_argument('--show-disabled', dest='show_disabled',
-            action='store_true', default=False,
-            help='Hide the display of disabled options.')
         global_group.add_argument('-h', '--help', dest='help',
             action='store_true', default=False,
             help='Show this help message.')
