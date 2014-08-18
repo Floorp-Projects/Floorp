@@ -388,6 +388,10 @@
         <item name="android:textColorLink">@color/doorhanger_link</item>
     </style>
 
+    <style name="TextAppearance.UrlBar.Title" parent="TextAppearance.Small">
+        <item name="android:textSize">15sp</item>
+    </style>
+
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
         <item name="android:layout_width">match_parent</item>
@@ -412,12 +416,27 @@
     <!-- URL bar - Button -->
     <style name="UrlBar.Button">
         <item name="android:layout_height">match_parent</item>
-        <item name="android:textSize">16sp</item>
         <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <!-- URL bar - Button -->
+    <style name="UrlBar.Title" parent="UrlBar.Button">
+        <item name="android:textAppearance">@style/TextAppearance.UrlBar.Title</item>
+        <item name="android:textColor">@color/url_bar_title</item>
+        <item name="android:textColorHint">@color/url_bar_title_hint</item>
+        <item name="android:textColorHighlight">@color/url_bar_text_highlight</item>
+        <item name="android:textSelectHandle">@drawable/handle_middle</item>
+        <item name="android:textSelectHandleLeft">@drawable/handle_start</item>
+        <item name="android:textSelectHandleRight">@drawable/handle_end</item>
+        <item name="android:textCursorDrawable">@null</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:gravity">center_vertical|left</item>
+        <item name="android:hint">@string/url_bar_default_text</item>
     </style>
 
     <!-- URL bar - Image Button -->
     <style name="UrlBar.ImageButton" parent="UrlBar.Button">
+        <item name="android:layout_width">@dimen/browser_toolbar_height</item>
         <item name="android:scaleType">center</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:background">@android:color/transparent</item>

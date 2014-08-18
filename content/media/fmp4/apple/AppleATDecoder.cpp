@@ -25,10 +25,10 @@ PRLogModuleInfo* GetDemuxerLog();
 namespace mozilla {
 
 AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                               MediaTaskQueue* anAudioTaskQueue,
+                               MediaTaskQueue* aAudioTaskQueue,
                                MediaDataDecoderCallback* aCallback)
   : mConfig(aConfig)
-  , mTaskQueue(anAudioTaskQueue)
+  , mTaskQueue(aAudioTaskQueue)
   , mCallback(aCallback)
   , mConverter(nullptr)
   , mStream(nullptr)

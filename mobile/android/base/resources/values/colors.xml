@@ -4,8 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-  <color name="background_light">#FFECF0F3</color>
-  <color name="background_normal">#FFCED7DE</color>
+  <color name="background_light">#FFF5F5F5</color>
+  <color name="background_normal">#FFEBEBF0</color>
   <color name="background_private">#FF292C29</color>
   <color name="background_tabs">#FF363B40</color>
   <color name="highlight">#33000000</color>

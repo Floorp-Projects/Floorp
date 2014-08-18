@@ -831,7 +831,7 @@ public class Tabs implements GeckoEventListener {
         }
 
         // TODO: surely we could just fetch *any* cached icon?
-        if (AboutPages.isDefaultIconPage(url)) {
+        if (AboutPages.isBuiltinIconPage(url)) {
             Log.d(LOGTAG, "Setting about: tab favicon inline.");
             added.updateFavicon(getAboutPageFavicon(url));
         }
