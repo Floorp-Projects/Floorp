@@ -5096,7 +5096,7 @@ static const JSClass env_class = {
  * setter and method with attached JitInfo. This object can be used to test
  * IonMonkey DOM optimizations in the shell.
  */
-static uint32_t DOM_OBJECT_SLOT = 0;
+static const uint32_t DOM_OBJECT_SLOT = 0;
 
 static bool
 dom_genericGetter(JSContext* cx, unsigned argc, JS::Value *vp);
@@ -5554,7 +5554,7 @@ ShellBuildId(JS::BuildIdCharVector *buildId)
     return buildId->append(buildid, sizeof(buildid));
 }
 
-static JS::AsmJSCacheOps asmJSCacheOps = {
+static const JS::AsmJSCacheOps asmJSCacheOps = {
     ShellOpenAsmJSCacheEntryForRead,
     ShellCloseAsmJSCacheEntryForRead,
     ShellOpenAsmJSCacheEntryForWrite,

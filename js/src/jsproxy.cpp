@@ -796,7 +796,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
  * eventually moving towards eliminating one of those slots, and so we don't
  * want to add a dependency here.
  */
-static Class CallConstructHolder = {
+static const Class CallConstructHolder = {
     "CallConstructHolder",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS
 };
