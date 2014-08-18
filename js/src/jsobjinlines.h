@@ -9,6 +9,7 @@
 
 #include "jsobj.h"
 
+#include "builtin/MapObject.h"
 #include "builtin/TypedObject.h"
 #include "vm/ArrayObject.h"
 #include "vm/DateObject.h"
@@ -1033,6 +1034,8 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_ArrayBuffer:
         return obj->is<ArrayBufferObject>() || obj->is<SharedArrayBufferObject>();
       case ESClass_Date: return obj->is<DateObject>();
+      case ESClass_Set: return obj->is<SetObject>();
+      case ESClass_Map: return obj->is<MapObject>();
     }
     MOZ_CRASH("bad classValue");
 }
