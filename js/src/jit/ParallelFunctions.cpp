@@ -123,8 +123,8 @@ jit::IsInTargetRegion(ForkJoinContext *cx, TypedObject *typedObj)
 {
     JS_ASSERT(typedObj->is<TypedObject>()); // in case JIT supplies something bogus
     uint8_t *typedMem = typedObj->typedMem();
-    return (typedMem >= cx->targetRegionStart &&
-            typedMem <  cx->targetRegionEnd);
+    return typedMem >= cx->targetRegionStart &&
+           typedMem <  cx->targetRegionEnd;
 }
 
 bool

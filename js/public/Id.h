@@ -150,13 +150,13 @@ JSID_IS_VOID(const jsid id)
 {
     MOZ_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
                  JSID_BITS(id) == JSID_TYPE_VOID);
-    return ((size_t)JSID_BITS(id) == JSID_TYPE_VOID);
+    return (size_t)JSID_BITS(id) == JSID_TYPE_VOID;
 }
 
 static MOZ_ALWAYS_INLINE bool
 JSID_IS_EMPTY(const jsid id)
 {
-    return ((size_t)JSID_BITS(id) == JSID_TYPE_SYMBOL);
+    return (size_t)JSID_BITS(id) == JSID_TYPE_SYMBOL;
 }
 
 extern JS_PUBLIC_DATA(const jsid) JSID_VOID;
