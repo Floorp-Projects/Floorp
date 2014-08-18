@@ -104,9 +104,6 @@ protected:
 
 
   HashEntry*          GetNamedEntry(const char * name);
-  HashEntry*          GetIndexedEntry(int32_t index);
-  uint32_t            GetNumEntries();
-
   HashEntry*          GetOrMakeEntry(const char * name, uint8_t entryType);
 
 protected:
@@ -124,10 +121,6 @@ protected:
                                   
 protected:
   
-  enum {
-    eNumEntriesUnknown      = -1
-  };
-
   // this is going to have to use a pldhash, because we need to
   // be able to iterate through entries, passing names back
   // to the caller, which means that we need to store the names
@@ -135,10 +128,6 @@ protected:
   
   PLDHashTable    mValuesHash;
   
-  // enumerator data
-  int32_t         mCurEntry;
-  int32_t         mNumEntries;      // number of entries at start of enumeration (-1 indicates not known)
-    
   static const PLDHashTableOps    sHashOps;
 };
 
