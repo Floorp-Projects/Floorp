@@ -231,6 +231,8 @@ public:
                             nsIAtom* aAttribute = nullptr,
                             const nsAString* aValue = nullptr,
                             ECloneAttributes aCloneAttributes = eDontCloneAttributes);
+  void CloneAttributes(mozilla::dom::Element* aDest,
+                       mozilla::dom::Element* aSource);
 
   nsresult RemoveContainer(nsINode* aNode);
   nsresult RemoveContainer(nsIDOMNode *inNode);
