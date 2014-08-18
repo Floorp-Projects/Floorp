@@ -49,6 +49,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
       // Add observer notifications before the service is initialized
       Services.obs.addObserver(this, "loop-status-changed", false);
 
+      // If we're throttled, check to see if it's our turn to be unthrottled
+      if (Services.prefs.getBoolPref("loop.throttled")) {
+        this.toolbarButton.node.hidden = true;
+        MozLoopService.checkSoftStart(this.toolbarButton.node);
+        return;
+      }
 
       MozLoopService.initialize();
       this.updateToolbarState();
