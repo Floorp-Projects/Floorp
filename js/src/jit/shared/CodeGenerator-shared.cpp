@@ -1252,7 +1252,7 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock *mir)
         // Note: the backedge is initially a jump to the next instruction.
         // It will be patched to the target block's label during link().
         RepatchLabel rejoin;
-        CodeOffsetJump backedge = masm.jumpWithPatch(&rejoin);
+        CodeOffsetJump backedge = masm.backedgeJump(&rejoin);
         masm.bind(&rejoin);
 
         masm.propagateOOM(patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)));
