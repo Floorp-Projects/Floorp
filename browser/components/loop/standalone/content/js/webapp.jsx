@@ -197,7 +197,6 @@ loop.webapp = (function($, _, OT, webL10n) {
         var date = (new Date(callUrlInfo.urlCreationDate * 1000));
         var options = {year: "numeric", month: "long", day: "numeric"};
         var timestamp = date.toLocaleDateString(navigator.language, options);
-
         this.setState({urlCreationDateString: timestamp});
       }
     },
