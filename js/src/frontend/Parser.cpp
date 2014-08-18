@@ -432,6 +432,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     isUnexpectedEOF_(false),
     sawDeprecatedForEach(false),
     sawDeprecatedDestructuringForIn(false),
+    sawDeprecatedLegacyGenerator(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
     {
@@ -4810,6 +4811,7 @@ Parser<ParseHandler>::yieldExpression()
         }
 
         pc->sc->asFunctionBox()->setGeneratorKind(LegacyGenerator);
+        sawDeprecatedLegacyGenerator = true;
 
         if (pc->funHasReturnExpr) {
             /* As in Python (see PEP-255), disallow return v; in generators. */
@@ -7597,6 +7599,7 @@ Parser<ParseHandler>::accumulateTelemetry()
     enum DeprecatedLanguageExtensions {
         DeprecatedForEach = 0,            // JS 1.6+
         DeprecatedDestructuringForIn = 1, // JS 1.7 only
+        DeprecatedLegacyGenerator = 2,    // JS 1.7+
     };
 
     // TODO: Call back into Firefox's Telemetry reporter.
@@ -7604,6 +7607,8 @@ Parser<ParseHandler>::accumulateTelemetry()
         (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedForEach);
     if (sawDeprecatedDestructuringForIn)
         (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedDestructuringForIn);
+    if (sawDeprecatedLegacyGenerator)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedLegacyGenerator);
 }
 
 template class Parser<FullParseHandler>;
