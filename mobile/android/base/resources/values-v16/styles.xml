@@ -17,4 +17,9 @@
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
 
+    <style name="TextAppearance.UrlBar.Title" parent="TextAppearance.Small">
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
 </resources>
