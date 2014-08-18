@@ -441,7 +441,8 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_WMF
-  if (IsWMFSupportedType(nsDependentCString(aMIMEType))) {
+  if (!Preferences::GetBool("media.fragmented-mp4.exposed", false) &&
+      IsWMFSupportedType(nsDependentCString(aMIMEType))) {
     if (!aHaveRequestedCodecs) {
       return CANPLAY_MAYBE;
     }

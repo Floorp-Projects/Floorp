@@ -85,7 +85,7 @@ class CommandAction(argparse.Action):
         """
         if namespace.help:
             # -h or --help is in the global arguments.
-            self._handle_main_help(parser)
+            self._handle_main_help(parser, namespace.verbose)
             sys.exit(0)
         elif values:
             command = values[0].lower()
@@ -96,7 +96,7 @@ class CommandAction(argparse.Action):
                     # Make sure args[0] is indeed a command.
                     self._handle_subcommand_help(parser, args[0])
                 else:
-                    self._handle_main_help(parser)
+                    self._handle_main_help(parser, namespace.verbose)
                 sys.exit(0)
             elif '-h' in args or '--help' in args:
                 # -h or --help is in the command arguments.
@@ -146,11 +146,10 @@ class CommandAction(argparse.Action):
 
         command_namespace, extra = subparser.parse_known_args(args)
         setattr(namespace, 'command_args', command_namespace)
-
         if extra:
             raise UnrecognizedArgumentError(command, extra)
 
-    def _handle_main_help(self, parser):
+    def _handle_main_help(self, parser, verbose):
         # Since we don't need full sub-parser support for the main help output,
         # we create groups in the ArgumentParser and populate each group with
         # arguments corresponding to command names. This has the side-effect
@@ -197,9 +196,10 @@ class CommandAction(argparse.Action):
         if disabled_commands and 'disabled' in r.categories:
             title, description, _priority = r.categories['disabled']
             group = parser.add_argument_group(title, description)
-            for c in disabled_commands:
-                group.add_argument(c['command'], help=c['description'],
-                    action='store_true')
+            if verbose == True:
+                for c in disabled_commands:
+                    group.add_argument(c['command'], help=c['description'],
+                                       action='store_true')
 
         parser.print_help()
 
