@@ -88,7 +88,6 @@
 
     <org.mozilla.gecko.widget.ThemedImageButton android:id="@+id/menu"
                                                 style="@style/UrlBar.ImageButton"
-                                                android:layout_width="56dip"
                                                 android:layout_alignParentRight="true"
                                                 android:contentDescription="@string/menu"
                                                 android:background="@drawable/action_bar_button"
@@ -113,7 +112,7 @@
          which is thus drawn on top, may be pressed. -->
     <org.mozilla.gecko.widget.ThemedImageView
             android:id="@+id/edit_cancel"
-            style="@style/UrlBar.ImageButton.Icon"
+            style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
             android:src="@drawable/close_edit_mode_selector"
             android:background="@drawable/action_bar_button"

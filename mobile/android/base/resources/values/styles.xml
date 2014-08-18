@@ -436,6 +436,7 @@
 
     <!-- URL bar - Image Button -->
     <style name="UrlBar.ImageButton" parent="UrlBar.Button">
+        <item name="android:layout_width">@dimen/browser_toolbar_height</item>
         <item name="android:scaleType">center</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:background">@android:color/transparent</item>
