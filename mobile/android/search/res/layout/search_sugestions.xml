@@ -5,8 +5,9 @@
 <ListView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@color/global_background_color"
     android:divider="@null"
     android:dividerHeight="0dp"
-    android:listSelector="@android:color/transparent"/>
+    android:listSelector="@android:color/transparent"
+    android:visibility="invisible"/>

@@ -36,6 +36,7 @@ public class ClearableEditText extends FrameLayout {
     public interface TextListener {
         public void onChange(String text);
         public void onSubmit(String text);
+        public void onFocusChange(boolean hasFocus);
     }
 
     public ClearableEditText(Context context, AttributeSet attrs) {
@@ -65,7 +66,6 @@ public class ClearableEditText extends FrameLayout {
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-
                 if (listener != null && actionId == EditorInfo.IME_ACTION_SEARCH) {
                     // The user searched without using search engine suggestions.
                     Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.ACTIONBAR, "text");
@@ -73,6 +73,15 @@ public class ClearableEditText extends FrameLayout {
                     return true;
                 }
                 return false;
+            }
+        });
+
+        editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (listener != null) {
+                    listener.onFocusChange(hasFocus);
+                }
             }
         });
 
