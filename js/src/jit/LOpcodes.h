@@ -156,7 +156,6 @@
     _(DoubleToString)               \
     _(ValueToString)                \
     _(Start)                        \
-    _(PcOffset)                     \
     _(OsrEntry)                     \
     _(OsrValue)                     \
     _(OsrScopeChain)                \
