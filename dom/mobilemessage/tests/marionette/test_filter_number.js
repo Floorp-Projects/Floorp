@@ -28,8 +28,7 @@ function genFailingMms(aReceivers) {
 function checkMessage(aNeedle, aValidNumbers) {
   log("  Verifying " + aNeedle);
 
-  let filter = new MozSmsFilter();
-  filter.numbers = [aNeedle];
+  let filter = { numbers: [aNeedle] };
   return getMessages(filter)
     .then(function(messages) {
       // Check the messages are sent to/received from aValidNumbers.
