@@ -7,6 +7,7 @@
 #define GreekCasing_h_
 
 #include <stdint.h>
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 
@@ -45,7 +46,7 @@ public:
     {
     }
 
-    State(const GreekStates& aState)
+    MOZ_IMPLICIT State(const GreekStates& aState)
       : mState(aState)
     {
     }

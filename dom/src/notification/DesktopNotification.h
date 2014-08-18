@@ -17,7 +17,6 @@
 #include "nsIScriptObjectPrincipal.h"
 
 #include "nsIDOMEvent.h"
-#include "nsIDocument.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"

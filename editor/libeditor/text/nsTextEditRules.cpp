@@ -1171,10 +1171,8 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
   }
 
   // Create a br.
-  ErrorResult res;
-  nsCOMPtr<Element> newContent =
-    mEditor->CreateHTMLContent(NS_LITERAL_STRING("br"), res);
-  NS_ENSURE_SUCCESS(res.ErrorCode(), res.ErrorCode());
+  nsCOMPtr<Element> newContent = mEditor->CreateHTMLContent(nsGkAtoms::br);
+  NS_ENSURE_STATE(newContent);
 
   // set mBogusNode to be the newly created <br>
   mBogusNode = do_QueryInterface(newContent);
