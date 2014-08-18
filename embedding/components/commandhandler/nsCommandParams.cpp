@@ -28,8 +28,6 @@ const PLDHashTableOps nsCommandParams::sHashOps =
 NS_IMPL_ISUPPORTS(nsCommandParams, nsICommandParams)
 
 nsCommandParams::nsCommandParams()
-: mCurEntry(0)
-, mNumEntries(eNumEntriesUnknown)
 {
   // init the hash table later
 }
@@ -238,8 +236,6 @@ nsCommandParams::RemoveValue(const char * name)
   // NS_OK unconditionally.
   (void)PL_DHashTableOperate(&mValuesHash, (void *)name, PL_DHASH_REMOVE);
 
-  // inval the number of entries
-  mNumEntries = eNumEntriesUnknown;
   return NS_OK;
 }
 
@@ -256,43 +252,6 @@ nsCommandParams::GetNamedEntry(const char * name)
     return foundEntry;
    
   return nullptr;
-}
-
-
-nsCommandParams::HashEntry*
-nsCommandParams::GetIndexedEntry(int32_t index)
-{
-  HashEntry*  entry = reinterpret_cast<HashEntry*>(mValuesHash.entryStore);
-  HashEntry*  limit = entry + PL_DHASH_TABLE_CAPACITY(&mValuesHash);
-  uint32_t    entryCount = 0;
-
-  do {
-    if (!PL_DHASH_ENTRY_IS_LIVE(entry))
-      continue;
-
-    if ((int32_t)entryCount == index)
-      return entry;
-
-    entryCount ++;
-  } while (++entry < limit);
-
-  return nullptr;
-}
-
-
-uint32_t
-nsCommandParams::GetNumEntries()
-{
-  HashEntry*  entry = reinterpret_cast<HashEntry*>(mValuesHash.entryStore);
-  HashEntry*  limit = entry + PL_DHASH_TABLE_CAPACITY(&mValuesHash);
-  uint32_t    entryCount = 0;
-
-  do {
-    if (PL_DHASH_ENTRY_IS_LIVE(entry))
-      entryCount ++;
-  } while (++entry < limit);
-
-  return entryCount;
 }
 
 nsCommandParams::HashEntry*
@@ -357,36 +316,3 @@ nsCommandParams::HashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 #pragma mark -
 #endif
 
-/* boolean hasMoreElements (); */
-NS_IMETHODIMP
-nsCommandParams::HasMoreElements(bool *_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  if (mNumEntries == eNumEntriesUnknown)
-    mNumEntries = GetNumEntries();
-  
-  *_retval = mCurEntry < mNumEntries;
-  return NS_OK;
-}
-
-/* void first (); */
-NS_IMETHODIMP
-nsCommandParams::First()
-{
-  mCurEntry = 0;
-  return NS_OK;
-}
-
-/* AString getNext (); */
-NS_IMETHODIMP
-nsCommandParams::GetNext(char **_retval)
-{
-  HashEntry*    thisEntry = GetIndexedEntry(mCurEntry);
-  if (!thisEntry)
-    return NS_ERROR_FAILURE;
-  
-  *_retval = ToNewCString(thisEntry->mEntryName);
-  mCurEntry++;
-  return NS_OK;
-}
