@@ -771,13 +771,7 @@ JSStructuredCloneWriter::parseTransferable()
 
         if (!v.isObject())
             return reportErrorTransferable();
-
-        RootedObject tObj(context(), CheckedUnwrap(&v.toObject()));
-
-        if (!tObj) {
-            JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
-            return false;
-        }
+        RootedObject tObj(context(), &v.toObject());
 
         // No duplicates allowed
         if (std::find(transferableObjects.begin(), transferableObjects.end(), tObj) != transferableObjects.end()) {
@@ -1012,16 +1006,6 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
         return out.writePair(SCTAG_UNDEFINED, 0);
     } else if (v.isObject()) {
         RootedObject obj(context(), &v.toObject());
-
-        // The object might be a security wrapper. See if we can clone what's
-        // behind it. If we can, unwrap the object.
-        obj = CheckedUnwrap(obj);
-        if (!obj) {
-            JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
-            return false;
-        }
-
-        AutoCompartment ac(context(), obj);
 
         bool backref;
         if (!startObject(obj, &backref))
