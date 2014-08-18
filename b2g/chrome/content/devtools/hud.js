@@ -4,6 +4,8 @@
 
 'use strict';
 
+// settings.js loads this file when the HUD setting is enabled.
+
 const DEVELOPER_HUD_LOG_PREFIX = 'DeveloperHUD';
 
 XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
