@@ -3558,6 +3558,8 @@ XPCJSRuntime::GetJunkScope()
         AutoSafeJSContext cx;
         SandboxOptions options;
         options.sandboxName.AssignLiteral("XPConnect Junk Compartment");
+        options.invisibleToDebugger = true;
+        options.wantComponents = false;
         RootedValue v(cx);
         nsresult rv = CreateSandboxObject(cx, &v, nsContentUtils::GetSystemPrincipal(), options);
         NS_ENSURE_SUCCESS(rv, nullptr);
