@@ -1017,7 +1017,7 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
                 return false;
             return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags()) &&
                    writeString(SCTAG_STRING, re->getSource());
-        } else if (obj->is<DateObject>()) {
+        } else if (ObjectClassIs(obj, ESClass_Date, context())) {
             double d = js_DateGetMsecSinceEpoch(obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
         } else if (obj->is<TypedArrayObject>()) {
