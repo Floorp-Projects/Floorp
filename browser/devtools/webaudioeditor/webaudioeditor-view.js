@@ -144,14 +144,18 @@ let WebAudioGraphView = {
 
   /**
    * `draw` renders the ViewNodes currently available in `AudioNodes` with `AudioNodeConnections`,
-   * and is throttled to be called at most every `GRAPH_DEBOUNCE_TIMER` milliseconds. Is called
-   * whenever the audio context routing changes, after being debounced.
+   * and `AudioParamConnections` and is throttled to be called at most every
+   * `GRAPH_DEBOUNCE_TIMER` milliseconds. Is called whenever the audio context routing changes,
+   * after being debounced.
    */
   draw: function () {
     // Clear out previous SVG information
     this.clearGraph();
 
     let graph = new dagreD3.Digraph();
+    // An array of duples/tuples of pairs [sourceNode, destNode, param].
+    // `param` is optional, indicating a connection to an AudioParam, rather than
+    // an other AudioNode.
     let edges = [];
 
     AudioNodes.forEach(node => {
@@ -166,12 +170,30 @@ let WebAudioGraphView = {
       // after all the nodes are added, otherwise edges will attempted to be created
       // for nodes that have not yet been added
       AudioNodeConnections.get(node, new Set()).forEach(dest => edges.push([node, dest]));
+      let paramConnections = AudioParamConnections.get(node, {});
+      Object.keys(paramConnections).forEach(destId => {
+        let dest = getViewNodeById(destId);
+        let connections = paramConnections[destId] || [];
+        connections.forEach(param => edges.push([node, dest, param]));
+      });
     });
 
-    edges.forEach(([node, dest]) => graph.addEdge(null, node.id, dest.id, {
-      source: node.id,
-      target: dest.id
-    }));
+    edges.forEach(([node, dest, param]) => {
+      let options = {
+        source: node.id,
+        target: dest.id
+      };
+
+      // Only add `label` if `param` specified, as this is an AudioParam connection then.
+      // `label` adds the magic to render with dagre-d3, and `param` is just more explicitly
+      // the param, ignoring implementation details.
+      if (param) {
+        options.label = param;
+        options.param = param;
+      }
+
+      graph.addEdge(null, node.id, dest.id, options);
+    });
 
     let renderer = new dagreD3.Renderer();
 
@@ -191,18 +213,33 @@ let WebAudioGraphView = {
     });
 
     // Post-render manipulation of edges
+    // TODO do all of this more efficiently, rather than
+    // using the direct D3 helper utilities to loop over each
+    // edge several times
     let oldDrawEdgePaths = renderer.drawEdgePaths();
     renderer.drawEdgePaths(function(graph, root) {
-      let svgNodes = oldDrawEdgePaths(graph, root);
-      svgNodes.attr("data-source", (n) => {
+      let svgEdges = oldDrawEdgePaths(graph, root);
+      svgEdges.attr("data-source", (n) => {
         let edge = graph.edge(n);
         return edge.source;
       });
-      svgNodes.attr("data-target", (n) => {
+      svgEdges.attr("data-target", (n) => {
         let edge = graph.edge(n);
         return edge.target;
       });
-      return svgNodes;
+      svgEdges.attr("data-param", (n) => {
+        let edge = graph.edge(n);
+        return edge.param ? edge.param : null;
+      });
+      // We have to manually specify the default classes on the edges
+      // as to not overwrite them
+      let defaultClasses = "edgePath enter";
+      svgEdges.attr("class", (n) => {
+        let edge = graph.edge(n);
+        return defaultClasses + (edge.param ? (" param-connection " + edge.param) : "");
+      });
+
+      return svgEdges;
     });
 
     // Override Dagre-d3's post render function by passing in our own.
@@ -240,7 +277,8 @@ let WebAudioGraphView = {
       }
 
       // Fire an event upon completed rendering
-      window.emit(EVENTS.UI_GRAPH_RENDERED, AudioNodes.length, edges.length);
+      let paramEdgeCount = edges.filter(p => !!p[2]).length;
+      window.emit(EVENTS.UI_GRAPH_RENDERED, AudioNodes.length, edges.length - paramEdgeCount, paramEdgeCount);
     });
 
     let layout = dagreD3.layout().rankDir("LR");
