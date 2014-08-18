@@ -1113,7 +1113,7 @@ Console::ProcessCallData(ConsoleCallData* aData)
   // mStorage, but that's a bit fragile.  Instead, we just use the junk scope,
   // with explicit permission from the XPConnect module owner.  If you're
   // tempted to do that anywhere else, talk to said module owner first.
-  JSAutoCompartment ac2(cx, xpc::GetJunkScope());
+  JSAutoCompartment ac2(cx, xpc::PrivilegedJunkScope());
 
   JS::Rooted<JS::Value> eventValue(cx);
   if (!ToJSValue(cx, event, &eventValue)) {
