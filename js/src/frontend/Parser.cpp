@@ -431,6 +431,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     abortedSyntaxParse(false),
     isUnexpectedEOF_(false),
     sawDeprecatedForEach(false),
+    sawDeprecatedDestructuringForIn(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
     {
@@ -4304,8 +4305,10 @@ Parser<FullParseHandler>::forStatement()
                  * Destructuring for-in requires [key, value] enumeration
                  * in JS1.7.
                  */
-                if (!isForEach && headKind == PNK_FORIN)
+                if (!isForEach && headKind == PNK_FORIN) {
                     iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
+                    sawDeprecatedDestructuringForIn = true;
+                }
             }
             break;
 
@@ -7593,11 +7596,14 @@ Parser<ParseHandler>::accumulateTelemetry()
 
     enum DeprecatedLanguageExtensions {
         DeprecatedForEach = 0,            // JS 1.6+
+        DeprecatedDestructuringForIn = 1, // JS 1.7 only
     };
 
     // TODO: Call back into Firefox's Telemetry reporter.
     if (sawDeprecatedForEach)
         (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedForEach);
+    if (sawDeprecatedDestructuringForIn)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedDestructuringForIn);
 }
 
 template class Parser<FullParseHandler>;
