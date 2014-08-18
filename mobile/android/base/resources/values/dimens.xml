@@ -13,6 +13,7 @@
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
     <dimen name="browser_toolbar_lock_width">20dp</dimen>
     <dimen name="browser_toolbar_favicon_size">25.33dip</dimen>
+    <dimen name="browser_toolbar_shadow_size">2dp</dimen>
 
     <!-- Dimensions used by Favicons and FaviconView -->
     <dimen name="favicon_size_small">16dp</dimen>

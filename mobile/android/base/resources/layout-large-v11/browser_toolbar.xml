@@ -101,13 +101,6 @@
                                               android:src="@drawable/menu_level"
                                               android:visibility="gone"/>
 
-    <ImageView android:id="@+id/shadow"
-               android:layout_width="match_parent"
-               android:layout_height="2dp"
-               android:layout_alignParentBottom="true"
-               android:background="@color/url_bar_shadow"
-               android:contentDescription="@null"/>
-
     <!-- We draw after the menu items so when they are hidden, the cancel button,
          which is thus drawn on top, may be pressed. -->
     <org.mozilla.gecko.widget.ThemedImageView
