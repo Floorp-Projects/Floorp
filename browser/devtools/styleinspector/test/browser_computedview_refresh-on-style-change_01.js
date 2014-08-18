@@ -13,19 +13,16 @@ const TESTCASE_URI = 'data:text/html;charset=utf-8,' +
 let test = asyncTest(function*() {
   yield addTab(TESTCASE_URI);
 
-  info("Getting the test node");
-  let div = getNode("#testdiv");
-
   info("Opening the computed view and selecting the test node");
   let {toolbox, inspector, view} = yield openComputedView();
-  yield selectNode(div, inspector);
+  yield selectNode("#testdiv", inspector);
 
   let fontSize = getComputedViewPropertyValue(view, "font-size");
   is(fontSize, "10px", "The computed view shows the right font-size");
 
   info("Changing the node's style and waiting for the update");
   let onUpdated = inspector.once("computed-view-refreshed");
-  div.style.cssText = "font-size: 15px; color: red;";
+  getNode("#testdiv").style.cssText = "font-size: 15px; color: red;";
   yield onUpdated;
 
   fontSize = getComputedViewPropertyValue(view, "font-size");

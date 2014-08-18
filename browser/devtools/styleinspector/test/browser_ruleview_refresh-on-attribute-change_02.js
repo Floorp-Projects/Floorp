@@ -14,7 +14,7 @@ let test = asyncTest(function*() {
   testElement.setAttribute("style", "margin-top: 1px; padding-top: 5px;");
 
   let {toolbox, inspector, view} = yield openRuleView();
-  yield selectNode(testElement, inspector);
+  yield selectNode("#testid", inspector);
 
   yield testPropertyChanges(inspector, view, testElement);
   yield testPropertyChange0(inspector, view, testElement);
