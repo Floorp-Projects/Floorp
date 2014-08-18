@@ -1111,24 +1111,6 @@ class MStart : public MNullaryInstruction
     }
 };
 
-class MPcOffset : public MNullaryInstruction
-{
-  private:
-    MPcOffset() {
-        setGuard();
-    }
-
-  public:
-    INSTRUCTION_HEADER(PcOffset)
-    static MPcOffset *New(TempAllocator &alloc) {
-        return new(alloc) MPcOffset();
-    }
-
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
 // Instruction marking on entrypoint for on-stack replacement.
 // OSR may occur at loop headers (at JSOP_TRACE).
 // There is at most one MOsrEntry per MIRGraph.
