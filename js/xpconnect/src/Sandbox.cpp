@@ -933,8 +933,10 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
             return NS_ERROR_XPC_UNEXPECTED;
     }
 
+    // We handle the case where the context isn't in a compartment for the
+    // benefit of InitSingletonScopes.
     vp.setObject(*sandbox);
-    if (!JS_WrapValue(cx, vp))
+    if (js::GetContextCompartment(cx) && !JS_WrapValue(cx, vp))
         return NS_ERROR_UNEXPECTED;
 
     // Set the location information for the new global, so that tools like
