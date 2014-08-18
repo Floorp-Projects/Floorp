@@ -1,0 +1,113 @@
+<html>
+  <head>
+    <title>NativeWindow test page</title>
+    <meta name="viewport" content="initial-scale=1.0"/>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script type="application/javascript">
+Components.utils.import("resource://gre/modules/Messaging.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+const TOAST_TEXT = "TOAST!";
+const MENU_TEXT1 = "MENU-A";
+const MENU_TEXT2 = "MENU-B";
+const DOORHANGER_TEXT = "DOORHANGER";
+const DOORHANGER_BUTTON1 = "BUTTON1";
+const DOORHANGER_BUTTON2 = "BUTTON2";
+const DOORHANGER_CHECK = "CHECKBOX";
+
+// Entry point for the roboextender style tests. Called from <body onload>
+function start() {
+  // Grad the name of the test from the hash/anchor
+  var test = location.hash.substring(1);
+  window[test]();
+}
+
+// Show a toast and expect Java to watch for it to appear
+function showToast() {
+  // Signal Java that we are ready so Java can start looking for the toast text
+  sendMessageToJava({ type: "TestNativeWindow:ShowToast" });
+
+  // Show the toast
+  var chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  chromeWin.NativeWindow.toast.show(TOAST_TEXT, "short");
+}
+
+// Add a menu and expect Java to find it and click it
+function addMenu() {
+  // Add the menu
+  var chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  var menuID = chromeWin.NativeWindow.menu.add({
+    name: MENU_TEXT1,
+    icon: null,
+    callback: function() {
+      sendMessageToJava({ type: "TestNativeWindow:FireMenu" });
+    }
+  });
+
+  // Save the menuID for the next tests
+  Services.prefs.setIntPref("test.nativewindow.menuID", menuID);
+
+  // Signal Java that we are ready. We signal last so there is no race.
+  sendMessageToJava({ type: "TestNativeWindow:AddMenu" });
+}
+
+// Update the menu text and expect Java to find it and click it
+function updateMenu() {
+  // Get the menu's ID from storage
+  menuID = Services.prefs.getIntPref("test.nativewindow.menuID");
+
+  var chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  chromeWin.NativeWindow.menu.update(menuID, {
+    name: MENU_TEXT2,
+  });
+
+  // Signal Java that we are ready. We signal last so there is no race.
+  sendMessageToJava({ type: "TestNativeWindow:UpdateMenu" });
+}
+
+// Remove the menu and expect Java to not find it
+function removeMenu() {
+  // Get the menu's ID from storage
+  menuID = Services.prefs.getIntPref("test.nativewindow.menuID");
+
+  // Remove the menu
+  var chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  chromeWin.NativeWindow.menu.remove(menuID);
+
+  // Signal Java that we are ready. We signal last so there is no race.
+  sendMessageToJava({ type: "TestNativeWindow:RemoveMenu" });
+}
+
+// Add a doorhanger
+function addDoorhanger() {
+  var buttons = [
+    {
+      label: DOORHANGER_BUTTON1,
+      callback: function(aChecked) {
+        // If the user checked "Don't ask again", make a permanent exception
+        if (aChecked)
+          sendMessageToJava({ type: "TestNativeWindow:FireDoorhangerChecked" });
+        else
+          sendMessageToJava({ type: "TestNativeWindow:FireDoorhanger" });
+      }
+    },
+    {
+      label: DOORHANGER_BUTTON2,
+      callback: function(aChecked) {
+        // Do nothing
+      }
+    }
+  ];
+
+  // Show the doorhanger
+  var chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+  chromeWin.NativeWindow.doorhanger.show(DOORHANGER_TEXT, "test-nativewindow", buttons, null, { checkbox: DOORHANGER_CHECK });
+
+  // Signal Java that we are ready. We signal last so there is no race.
+  sendMessageToJava({ type: "TestNativeWindow:AddDoorhanger" });
+}
+    </script>
+  </head>
+  <body onload="start();">
+  </body>
+</html>
