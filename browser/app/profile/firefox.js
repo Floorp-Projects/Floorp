@@ -1582,8 +1582,12 @@ pref("image.mem.max_decoded_image_kb", 256000);
 // Enable by default on nightly and aurora.
 #ifndef RELEASE_BUILD
 pref("loop.enabled", true);
+pref("loop.throttled", false);
 #else
-pref("loop.enabled", false);
+pref("loop.enabled", true);
+pref("loop.throttled", true);
+pref("loop.soft_start_ticket_number", -1);
+pref("loop.soft_start_hostname", "soft-start.loop-dev.stage.mozaws.net");
 #endif
 
 pref("loop.server", "https://loop.services.mozilla.com");

@@ -36,8 +36,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
      * delayedStartup.
      */
     initialize: function() {
+      let buttonNode = CustomizableUI.getWidget("loop-call-button").forWindow(window).node;
+
       if (!Services.prefs.getBoolPref("loop.enabled")) {
-        CustomizableUI.getWidget("loop-call-button").forWindow(window).node.hidden = true;
+        buttonNode.hidden = true;
+        return;
+      }
+
+      if (Services.prefs.getBoolPref("loop.throttled")) {
+        buttonNode.hidden = true;
+        MozLoopService.checkSoftStart(buttonNode);
         return;
       }
 
