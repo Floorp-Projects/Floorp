@@ -592,7 +592,7 @@ NetworkManager.prototype = {
       // The override was just set, so reconfigure the network.
       if (this.active != this._overriddenActive) {
         this.active = this._overriddenActive;
-        gNetworkService.setDefaultRouteAndDNS(this.active, oldActive);
+        this._setDefaultRouteAndDNS(this.active, oldActive);
         Services.obs.notifyObservers(this.active, TOPIC_ACTIVE_CHANGED, null);
       }
       return;
@@ -603,7 +603,7 @@ NetworkManager.prototype = {
         this.active.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED &&
         this.active.type == this._preferredNetworkType) {
       debug("Active network is already our preferred type.");
-      gNetworkService.setDefaultRouteAndDNS(this.active, oldActive);
+      this._setDefaultRouteAndDNS(this.active, oldActive);
       return;
     }
 
@@ -642,7 +642,7 @@ NetworkManager.prototype = {
         gNetworkService.setDNS(this.active);
       } else {
 #endif // MOZ_B2G_RIL
-        gNetworkService.setDefaultRouteAndDNS(this.active, oldActive);
+        this._setDefaultRouteAndDNS(this.active, oldActive);
 #ifdef MOZ_B2G_RIL
       }
 #endif
@@ -1249,7 +1249,15 @@ NetworkManager.prototype = {
     this.wantConnectionEvent = null;
 
     callback.call(this);
-  }
+  },
+
+  _setDefaultRouteAndDNS: function(network, oldInterface) {
+    gNetworkService.setDefaultRoute(network, oldInterface, function(success) {
+      gNetworkService.setDNS(network, function(result) {
+        gNetworkService.setNetworkProxy(network);
+      });
+    });
+  },
 };
 
 let CaptivePortalDetectionHelper = (function() {
