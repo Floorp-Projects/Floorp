@@ -234,11 +234,17 @@ loop.panel = (function(_, mozL10n) {
       // readOnly attr will suppress a warning regarding this issue
       // from the react lib.
       var cx = React.addons.classSet;
+      var inputCSSClass = cx({
+        "pending": this.state.pending,
+        // Used in functional testing, signals that
+        // call url was received from loop server
+         "callUrl": !this.state.pending
+      });
       return (
         PanelLayout({summary: __("share_link_header_text")}, 
           React.DOM.div({className: "invite"}, 
             React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
-                   className: cx({pending: this.state.pending})}), 
+                   className: inputCSSClass}), 
             React.DOM.p({className: "button-group url-actions"}, 
               React.DOM.button({className: "btn btn-email", disabled: !this.state.callUrl, 
                 onClick: this.handleEmailButtonClick, 
