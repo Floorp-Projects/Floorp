@@ -53,7 +53,6 @@
 
     <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/menu"
                                             style="@style/UrlBar.ImageButton"
-                                            android:layout_width="48dip"
                                             android:layout_alignParentRight="true"
                                             android:contentDescription="@string/menu"
                                             android:background="@drawable/shaped_button"
@@ -93,7 +92,7 @@
          depending on their location can properly layout. -->
     <org.mozilla.gecko.widget.ThemedImageView
             android:id="@+id/edit_cancel"
-            style="@style/UrlBar.ImageButton.Icon"
+            style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
             android:src="@drawable/close_edit_mode_selector"
             android:contentDescription="@string/edit_mode_cancel"

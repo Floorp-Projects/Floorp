@@ -9,7 +9,6 @@
     <ImageButton android:id="@+id/favicon"
                  style="@style/UrlBar.ImageButton"
                  android:layout_width="@dimen/browser_toolbar_favicon_size"
-                 android:layout_height="match_parent"
                  android:scaleType="fitCenter"
                  android:paddingLeft="4dip"
                  android:paddingRight="4dip"
