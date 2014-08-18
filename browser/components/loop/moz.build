@@ -15,6 +15,9 @@ BROWSER_CHROME_MANIFESTS += [
 EXTRA_JS_MODULES.loop += [
     'MozLoopAPI.jsm',
     'MozLoopPushHandler.jsm',
-    'MozLoopService.jsm',
     'MozLoopWorker.js',
+]
+
+EXTRA_PP_JS_MODULES.loop += [
+    'MozLoopService.jsm',
 ]
