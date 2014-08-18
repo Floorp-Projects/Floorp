@@ -72,7 +72,7 @@ let test = asyncTest(function*() {
     "The highlighter was shown once, after several mousemove");
 
   info("Checking that the right NodeFront reference is passed");
-  yield selectNode(content.document.documentElement, inspector);
+  yield selectNode("html", inspector);
   let {valueSpan} = getRuleViewProperty(rView, "html", "transform");
   rView.highlighters._onMouseMove({target: valueSpan});
   is(HighlighterFront.nodeFront.tagName, "HTML",

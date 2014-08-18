@@ -53,6 +53,7 @@ private:
   int64_t mSamplePosition;
   bool mHaveOutput;
   AudioStreamBasicDescription mOutputFormat;
+  AudioFileTypeID mFileType;
 
   void SetupDecoder();
   void SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample);

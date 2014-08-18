@@ -7,6 +7,7 @@
 #define IrishCasing_h_
 
 #include <stdint.h>
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 
@@ -62,7 +63,7 @@ public:
     {
     }
 
-    State(const IrishStates& aState)
+    MOZ_IMPLICIT State(const IrishStates& aState)
       : mState(aState)
     {
     }
@@ -78,7 +79,7 @@ public:
     }
 
   private:
-    State(uint8_t aState)
+    explicit State(uint8_t aState)
       : mState(IrishStates(aState))
     {
     }

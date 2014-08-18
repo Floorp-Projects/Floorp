@@ -113,11 +113,13 @@ class IonAllocPolicy
             memset(p, 0, numElems * sizeof(T));
         return p;
     }
-    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
-        void *n = static_cast<void *>(pod_malloc<uint8_t>(bytes));
+    template <typename T>
+    T *pod_realloc(T *p, size_t oldSize, size_t newSize) {
+        T *n = pod_malloc<T>(newSize);
         if (!n)
             return n;
-        memcpy(n, p, Min(oldBytes, bytes));
+        MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
+        memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
         return n;
     }
     void free_(void *p) {

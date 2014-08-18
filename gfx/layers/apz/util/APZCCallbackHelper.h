@@ -7,9 +7,11 @@
 #define mozilla_layers_APZCCallbackHelper_h
 
 #include "FrameMetrics.h"
-#include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsIDOMWindowUtils.h"
+
+class nsIContent;
+class nsIDocument;
+template<class T> struct already_AddRefed;
 
 namespace mozilla {
 namespace layers {

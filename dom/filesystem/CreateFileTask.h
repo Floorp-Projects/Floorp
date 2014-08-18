@@ -66,7 +66,10 @@ private:
   static uint32_t sOutputBufferSize;
   nsRefPtr<Promise> mPromise;
   nsString mTargetRealPath;
+
+  // Not thread-safe and should be released on main thread.
   nsCOMPtr<nsIDOMBlob> mBlobData;
+
   nsCOMPtr<nsIInputStream> mBlobStream;
   InfallibleTArray<uint8_t> mArrayData;
   bool mReplace;
