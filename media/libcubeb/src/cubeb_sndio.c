@@ -342,9 +342,10 @@ sndio_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 }
 
 int
-sndio_stream_set_volume(cubeb_stream * stm, float panning)
+sndio_stream_set_panning(cubeb_stream * stm, float panning)
 {
-  assert(0 && "not implemented");
+  assert(false && "not implemented");
+  return CUBEB_OK;
 }
 
 static struct cubeb_ops const sndio_ops = {
