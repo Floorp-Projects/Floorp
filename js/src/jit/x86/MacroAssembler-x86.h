@@ -658,6 +658,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return CodeOffsetJump(size());
     }
 
+    CodeOffsetJump backedgeJump(RepatchLabel *label) {
+        return jumpWithPatch(label);
+    }
+
     template <typename S, typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, RepatchLabel *label) {
         branchPtr(cond, lhs, ptr, label);

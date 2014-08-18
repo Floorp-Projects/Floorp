@@ -88,7 +88,7 @@ CodeGeneratorMIPS::branchToBlock(Assembler::FloatFormat fmt, FloatRegister lhs, 
         else
             masm.ma_bc1s(lhs, rhs, &skip, Assembler::InvertCondition(cond), ShortJump);
 
-        backedge = masm.jumpWithPatch(&rejoin);
+        backedge = masm.backedgeJump(&rejoin);
         masm.bind(&rejoin);
         masm.bind(&skip);
 

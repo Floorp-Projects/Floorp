@@ -757,6 +757,7 @@ protected:
 public:
     void moveValue(const Value &val, Register type, Register data);
 
+    CodeOffsetJump backedgeJump(RepatchLabel *label);
     CodeOffsetJump jumpWithPatch(RepatchLabel *label);
 
     template <typename T>
