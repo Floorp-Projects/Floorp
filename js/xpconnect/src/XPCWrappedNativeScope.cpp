@@ -58,7 +58,9 @@ RemoteXULForbidsXBLScope(nsIPrincipal *aPrincipal, HandleObject aGlobal)
   // end up calling into AllowXULXBLForPrincipal, which depends on all kinds
   // of persistent storage and permission machinery that may or not be running.
   // We know the answer to the question here, so just short-circuit.
-  if (JS_GetClass(aGlobal) == &SafeJSContextGlobalClass)
+  //
+  // We do the same for sandboxes, for similar reasons.
+  if (JS_GetClass(aGlobal) == &SafeJSContextGlobalClass || IsSandbox(aGlobal))
       return false;
 
   // AllowXULXBLForPrincipal will return true for system principal, but we
