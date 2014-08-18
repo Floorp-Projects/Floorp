@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'EMEAACDecoder.h',
+    'EMEAudioDecoder.h',
     'EMEDecoderModule.h',
     'EMEH264Decoder.h',
 ]
 
 UNIFIED_SOURCES += [
-    'EMEAACDecoder.cpp',
+    'EMEAudioDecoder.cpp',
     'EMEDecoderModule.cpp',
     'EMEH264Decoder.cpp',
 ]
