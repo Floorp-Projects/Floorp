@@ -22,6 +22,8 @@ function test_getStrings() {
 
 function run_test()
 {
+  setupFakeLoopServer();
+
   test_locale();
   test_getStrings();
 }
