@@ -50,7 +50,6 @@ function checkInterface(aInterface) {
 function test() {
   checkInterface("SmsMessage");
   checkInterface("SmsEvent");
-  checkInterface("SmsFilter");
 
   // If sms is disabled and permission is removed, sms is disabled.
   SpecialPowers.pushPrefEnv({"set": [["dom.sms.enabled", false]]}, function() {

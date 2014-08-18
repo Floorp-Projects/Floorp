@@ -20,9 +20,8 @@ function verifyInitialState() {
 
 function deleteAllMsgs(nextFunction) {
   let msgList = new Array();
-  let filter = new MozSmsFilter;
 
-  let cursor = manager.getMessages(filter, false);
+  let cursor = manager.getMessages();
   ok(cursor instanceof DOMCursor,
       "cursor is instanceof " + cursor.constructor);
 
@@ -174,11 +173,10 @@ function sendSms() {
 }
 
 function getMsgs() {
-  var filter = new MozSmsFilter();
   let foundSmsList = new Array();
 
   // Set filter for received messages
-  filter.delivery = "received";
+  let filter = { delivery: "received" };
 
   log("Getting the received SMS messages.");
   let cursor = manager.getMessages(filter, false);
