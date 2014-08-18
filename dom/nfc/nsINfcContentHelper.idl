@@ -27,13 +27,13 @@ interface nsINfcPeerEventListener : nsISupports
    void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(5bea28d3-67ee-4916-8c8e-4f35e3666e61)]
+[scriptable, uuid(9a41d969-3375-4933-814e-2da781c8f691)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
   const long NFC_EVENT_PEER_LOST  = 0x02;
 
-  boolean setSessionToken(in DOMString sessionToken);
+  boolean checkSessionToken(in DOMString sessionToken);
 
   nsIDOMDOMRequest getDetailsNDEF(in nsIDOMWindow window, in DOMString sessionToken);
   nsIDOMDOMRequest readNDEF(in nsIDOMWindow window, in DOMString sessionToken);
