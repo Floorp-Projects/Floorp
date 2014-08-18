@@ -53,6 +53,12 @@ label.small {
   margin: 6px;
 }
 
+/* General Pane */
+
+#isNotDefaultLabel {
+  font-weight: bold;
+}
+
 /* Content Pane */
 #translationAttributionImage {
   width: 70px;
