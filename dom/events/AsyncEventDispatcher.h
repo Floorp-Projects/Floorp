@@ -10,9 +10,10 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
-#include "nsINode.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+
+class nsINode;
 
 namespace mozilla {
 

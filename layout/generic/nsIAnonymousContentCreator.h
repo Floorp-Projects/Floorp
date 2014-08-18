@@ -12,11 +12,11 @@
 #define nsIAnonymousContentCreator_h___
 
 #include "nsQueryFrame.h"
-#include "nsIContent.h"
 #include "nsStyleContext.h"
 #include "nsTArrayForwardDeclare.h"
 
 class nsBaseContentList;
+class nsIContent;
 class nsIFrame;
 
 /**
