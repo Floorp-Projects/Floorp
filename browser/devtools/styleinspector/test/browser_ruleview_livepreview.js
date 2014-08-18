@@ -31,7 +31,7 @@ let test = asyncTest(function*() {
   let testElement = getNode("#testid");
 
   let {toolbox, inspector, view} = yield openRuleView();
-  yield selectNode(testElement, inspector);
+  yield selectNode("#testid", inspector);
 
   for (let data of TEST_DATA) {
     yield testLivePreviewData(data, view, testElement);
