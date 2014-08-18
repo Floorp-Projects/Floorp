@@ -429,9 +429,9 @@ public:
     // boost the velocity to be the sum of the two. Check separate axes separately
     // because we could have two vertical flings with small horizontal components
     // on the opposite side of zero, and we still want the y-fling to get accelerated.
-    // Note that the acceleration code is only applied on the APZC that receives the
-    // actual touch event; the accelerated velocities are then handed off using the
-    // normal HandOffFling codepath.
+    // Note that the acceleration code is only applied on the APZC that initiates
+    // the fling; the accelerated velocities are then handed off using the
+    // normal DispatchFling codepath.
     if (aApplyAcceleration && !mApzc.mLastFlingTime.IsNull()
         && (now - mApzc.mLastFlingTime).ToMilliseconds() < gfxPrefs::APZFlingAccelInterval()) {
       if (SameDirection(velocity.x, mApzc.mLastFlingVelocity.x)) {
@@ -1147,17 +1147,31 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
   case PANNING:
   case PANNING_LOCKED_X:
   case PANNING_LOCKED_Y:
+  {
     CurrentTouchBlock()->GetOverscrollHandoffChain()->FlushRepaints();
     mX.EndTouch(aEvent.mTime);
     mY.EndTouch(aEvent.mTime);
-    SetState(FLING);
+    ScreenPoint flingVelocity(mX.GetVelocity(), mY.GetVelocity());
+    // Clear our velocities; if DispatchFling() gives the fling to us,
+    // the fling velocity gets *added* to our existing velocity in
+    // AcceptFling().
+    mX.SetVelocity(0);
+    mY.SetVelocity(0);
+    // Clear our state so that we don't stay in the PANNING state
+    // if DispatchFling() gives the fling to somone else.
+    SetState(NOTHING);
     APZC_LOG("%p starting a fling animation\n", this);
-    StartAnimation(new FlingAnimation(*this,
+    // Make a local copy of the tree manager pointer and check that it's not
+    // null before calling DispatchFling(). This is necessary because Destroy(),
+    // which nulls out mTreeManager, could be called concurrently.
+    if (APZCTreeManager* treeManagerLocal = mTreeManager) {
+      treeManagerLocal->DispatchFling(this,
+                                      flingVelocity,
                                       CurrentTouchBlock()->GetOverscrollHandoffChain(),
-                                      true  /* apply acceleration */,
-                                      false /* allow overscroll */));
+                                      false /* not handoff */);
+    }
     return nsEventStatus_eConsumeNoDefault;
-
+  }
   case PINCHING:
     SetState(NOTHING);
     // Scale gesture listener should have handled this.
@@ -1765,6 +1779,7 @@ nsRefPtr<const OverscrollHandoffChain> AsyncPanZoomController::BuildOverscrollHa
 
 void AsyncPanZoomController::AcceptFling(const ScreenPoint& aVelocity,
                                          const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                                         bool aHandoff,
                                          bool aAllowOverscroll) {
   // We may have a pre-existing velocity for whatever reason (for example,
   // a previously handed off fling). We don't want to clobber that.
@@ -1772,16 +1787,20 @@ void AsyncPanZoomController::AcceptFling(const ScreenPoint& aVelocity,
   mY.SetVelocity(mY.GetVelocity() + aVelocity.y);
   SetState(FLING);
   StartAnimation(new FlingAnimation(*this,
-                                    aOverscrollHandoffChain,
-                                    false /* no acceleration */,
-                                    aAllowOverscroll));
+      aOverscrollHandoffChain,
+      !aHandoff,  // only apply acceleration if this is an initial fling
+      aAllowOverscroll));
 }
 
-bool AsyncPanZoomController::TakeOverFling(ScreenPoint aVelocity,
-                                           const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain) {
+bool AsyncPanZoomController::AttemptFling(ScreenPoint aVelocity,
+                                          const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                                          bool aHandoff) {
   // If we are pannable, take over the fling ourselves.
   if (IsPannable()) {
-    AcceptFling(aVelocity, aOverscrollHandoffChain, false /* do not allow overscroll */);
+    AcceptFling(aVelocity,
+                aOverscrollHandoffChain,
+                aHandoff,
+                false /* do not allow overscroll */);
     return true;
   }
 
@@ -1792,16 +1811,25 @@ bool AsyncPanZoomController::TakeOverFling(ScreenPoint aVelocity,
   // an overscroll fling if nothing further in the chain wants the fling.
   APZCTreeManager* treeManagerLocal = mTreeManager;
   return treeManagerLocal
-      && treeManagerLocal->HandOffFling(this, aVelocity, aOverscrollHandoffChain);
+      && treeManagerLocal->DispatchFling(this,
+                                         aVelocity,
+                                         aOverscrollHandoffChain,
+                                         true /* handoff */);
 }
 
 void AsyncPanZoomController::HandleFlingOverscroll(const ScreenPoint& aVelocity,
                                                    const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain) {
   APZCTreeManager* treeManagerLocal = mTreeManager;
-  if (!(treeManagerLocal && treeManagerLocal->HandOffFling(this, aVelocity, aOverscrollHandoffChain))) {
+  if (!(treeManagerLocal && treeManagerLocal->DispatchFling(this,
+                                                            aVelocity,
+                                                            aOverscrollHandoffChain,
+                                                            true /* handoff */))) {
     // No one wanted the fling, so we enter into an overscroll fling ourselves.
     if (IsPannable()) {
-      AcceptFling(aVelocity, aOverscrollHandoffChain, true /* allow overscroll */);
+      AcceptFling(aVelocity,
+                  aOverscrollHandoffChain,
+                  true /* handoff */,
+                  true /* allow overscroll */);
     }
   }
 }

@@ -81,6 +81,8 @@ public:
    */
   uint32_t Length() const { return mChain.size(); }
   const nsRefPtr<AsyncPanZoomController>& GetApzcAtIndex(uint32_t aIndex) const;
+  // Returns Length() if |aApzc| is not on this chain.
+  uint32_t IndexOf(const AsyncPanZoomController* aApzc) const;
 
   /*
    * Convenience methods for performing operations on APZCs in the chain.
