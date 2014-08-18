@@ -260,33 +260,26 @@ CacheFileMetadata::WriteMetadata(uint32_t aOffset,
   NetworkEndian::writeUint32(p, aOffset);
   p += sizeof(uint32_t);
 
-  char * writeBuffer;
+  char * writeBuffer = mWriteBuf;
   if (aListener) {
     mListener = aListener;
-    writeBuffer = mWriteBuf;
   } else {
-    // We are not going to pass |this| as callback to CacheFileIOManager::Write
-    // so we must allocate a new buffer that will be released automatically when
-    // write is finished.  This is actually better than to let
-    // CacheFileMetadata::OnDataWritten do the job, since when dispatching the
-    // result from some reason fails during shutdown, we would unnecessarily leak
-    // both this object and the buffer.
-    writeBuffer = static_cast<char *>(moz_xmalloc(p - mWriteBuf));
-    memcpy(writeBuffer, mWriteBuf, p - mWriteBuf);
+    // We are not going to pass |this| as a callback so the buffer will be
+    // released by CacheFileIOManager. Just null out mWriteBuf here.
+    mWriteBuf = nullptr;
   }
 
-  rv = CacheFileIOManager::Write(mHandle, aOffset, writeBuffer, p - mWriteBuf,
+  rv = CacheFileIOManager::Write(mHandle, aOffset, writeBuffer, p - writeBuffer,
                                  true, aListener ? this : nullptr);
   if (NS_FAILED(rv)) {
     LOG(("CacheFileMetadata::WriteMetadata() - CacheFileIOManager::Write() "
          "failed synchronously. [this=%p, rv=0x%08x]", this, rv));
 
     mListener = nullptr;
-    if (writeBuffer != mWriteBuf) {
-      free(writeBuffer);
+    if (mWriteBuf) {
+      free(mWriteBuf);
+      mWriteBuf = nullptr;
     }
-    free(mWriteBuf);
-    mWriteBuf = nullptr;
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
