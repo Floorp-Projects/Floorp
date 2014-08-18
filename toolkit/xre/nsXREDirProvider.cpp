@@ -882,19 +882,6 @@ nsXREDirProvider::DoShutdown()
       obsSvc->NotifyObservers(nullptr, "profile-change-net-teardown", kShutdownPersist);
       obsSvc->NotifyObservers(nullptr, "profile-change-teardown", kShutdownPersist);
 
-      // Phase 2c: Now that things are torn down, force JS GC so that things which depend on
-      // resources which are about to go away in "profile-before-change" are destroyed first.
-
-      nsCOMPtr<nsIJSRuntimeService> rtsvc
-        (do_GetService("@mozilla.org/js/xpc/RuntimeService;1"));
-      if (rtsvc)
-      {
-        JSRuntime *rt = nullptr;
-        rtsvc->GetRuntime(&rt);
-        if (rt)
-          ::JS_GC(rt);
-      }
-
       // Phase 3: Notify observers of a profile change
       obsSvc->NotifyObservers(nullptr, "profile-before-change", kShutdownPersist);
       obsSvc->NotifyObservers(nullptr, "profile-before-change2", kShutdownPersist);
