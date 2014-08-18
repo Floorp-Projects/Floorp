@@ -55,6 +55,8 @@ public:
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength,
                                  int64_t aOffset) MOZ_OVERRIDE;
 
+  virtual int64_t GetEvictionOffset(double aTime) MOZ_OVERRIDE;
+
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
                                int64_t aStartTime) MOZ_OVERRIDE;
 
@@ -180,8 +182,6 @@ private:
   layers::LayersBackend mLayersBackendType;
 
   nsTArray<nsTArray<uint8_t>> mInitDataEncountered;
-  Monitor mTimeRangesMonitor;
-  nsTArray<mp4_demuxer::Interval<Microseconds>> mTimeRanges;
 
   // True if we've read the streams' metadata.
   bool mDemuxerInitialized;
