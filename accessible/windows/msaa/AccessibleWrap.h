@@ -219,7 +219,6 @@ protected:
 #undef GetClassName
 #undef GetBinaryType
 #undef RemoveDirectory
-#undef SetProp
 #endif
 
 #endif
