@@ -5275,6 +5275,7 @@ IonBuilder::makeCallHelper(JSFunction *target, CallInfo &callInfo, bool cloneAtC
         // MCall accordingly.
         types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
         if (thisTypes &&
+            thisTypes->getKnownMIRType() == MIRType_Object &&
             thisTypes->isDOMClass() &&
             testShouldDOMCall(thisTypes, target, JSJitInfo::Method))
         {
