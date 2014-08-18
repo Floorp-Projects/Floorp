@@ -565,7 +565,7 @@ GetJunkScope()
 {
     XPCJSRuntime *self = nsXPConnect::GetRuntimeInstance();
     NS_ENSURE_TRUE(self, nullptr);
-    return self->GetJunkScope();
+    return self->JunkScope();
 }
 
 nsIGlobalObject *
@@ -584,7 +584,7 @@ GetCompilationScope()
 {
     XPCJSRuntime *self = nsXPConnect::GetRuntimeInstance();
     NS_ENSURE_TRUE(self, nullptr);
-    return self->GetCompilationScope();
+    return self->CompilationScope();
 }
 
 JSObject *
@@ -3551,42 +3551,33 @@ XPCJSRuntime::RemoveContextCallback(xpcContextCallback cb)
     }
 }
 
-JSObject *
-XPCJSRuntime::GetJunkScope()
+void
+XPCJSRuntime::InitSingletonScopes()
 {
-    if (!mJunkScope) {
-        AutoSafeJSContext cx;
-        SandboxOptions options;
-        options.sandboxName.AssignLiteral("XPConnect Junk Compartment");
-        options.invisibleToDebugger = true;
-        options.wantComponents = false;
-        RootedValue v(cx);
-        nsresult rv = CreateSandboxObject(cx, &v, nsContentUtils::GetSystemPrincipal(), options);
-        NS_ENSURE_SUCCESS(rv, nullptr);
+    // This all happens very early, so we don't bother with cx pushing.
+    JSContext *cx = GetJSContextStack()->GetSafeJSContext();
+    JSAutoRequest ar(cx);
+    RootedValue v(cx);
+    nsresult rv;
 
-        mJunkScope = js::UncheckedUnwrap(&v.toObject());
-    }
-    return mJunkScope;
+    // Create the Junk Scope.
+    SandboxOptions junkScopeOptions;
+    junkScopeOptions.sandboxName.AssignLiteral("XPConnect Junk Compartment");
+    junkScopeOptions.invisibleToDebugger = true;
+    junkScopeOptions.wantComponents = false;
+    rv = CreateSandboxObject(cx, &v, nsXPConnect::SystemPrincipal(), junkScopeOptions);
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    mJunkScope = js::UncheckedUnwrap(&v.toObject());
+
+    // Create the Compilation Scope.
+    SandboxOptions compilationScopeOptions;
+    compilationScopeOptions.sandboxName.AssignLiteral("XPConnect Compilation Compartment");
+    compilationScopeOptions.invisibleToDebugger = true;
+    compilationScopeOptions.discardSource = ShouldDiscardSystemSource();
+    rv = CreateSandboxObject(cx, &v, /* principal = */ nullptr, compilationScopeOptions);
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    mCompilationScope = js::UncheckedUnwrap(&v.toObject());
 }
-
-JSObject *
-XPCJSRuntime::GetCompilationScope()
-{
-    if (!mCompilationScope) {
-        AutoSafeJSContext cx;
-        SandboxOptions options;
-        options.sandboxName.AssignLiteral("XPConnect Compilation Compartment");
-        options.invisibleToDebugger = true;
-        options.discardSource = ShouldDiscardSystemSource();
-        RootedValue v(cx);
-        nsresult rv = CreateSandboxObject(cx, &v, /* principal = */ nullptr, options);
-        NS_ENSURE_SUCCESS(rv, nullptr);
-
-        mCompilationScope = js::UncheckedUnwrap(&v.toObject());
-    }
-    return mCompilationScope;
-}
-
 
 void
 XPCJSRuntime::DeleteSingletonScopes()
