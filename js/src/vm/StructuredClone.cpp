@@ -1028,13 +1028,21 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             return writeArrayBuffer(obj);
         } else if (obj->is<JSObject>() || obj->is<ArrayObject>()) {
             return traverseObject(obj);
-        } else if (obj->is<BooleanObject>()) {
-            return out.writePair(SCTAG_BOOLEAN_OBJECT, obj->as<BooleanObject>().unbox());
-        } else if (obj->is<NumberObject>()) {
-            return out.writePair(SCTAG_NUMBER_OBJECT, 0) &&
-                   out.writeDouble(obj->as<NumberObject>().unbox());
-        } else if (obj->is<StringObject>()) {
-            return writeString(SCTAG_STRING_OBJECT, obj->as<StringObject>().unbox());
+        } else if (ObjectClassIs(obj, ESClass_Boolean, context())) {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return out.writePair(SCTAG_BOOLEAN_OBJECT, unboxed.toBoolean());
+        } else if (ObjectClassIs(obj, ESClass_Number, context())) {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return out.writePair(SCTAG_NUMBER_OBJECT, 0) && out.writeDouble(unboxed.toNumber());
+        } else if (ObjectClassIs(obj, ESClass_String, context())) {
+            RootedValue unboxed(context());
+            if (!Unbox(context(), obj, &unboxed))
+                return false;
+            return writeString(SCTAG_STRING_OBJECT, unboxed.toString());
         } else if (obj->is<MapObject>()) {
             return traverseMap(obj);
         } else if (obj->is<SetObject>()) {
