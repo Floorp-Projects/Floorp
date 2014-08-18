@@ -34,22 +34,13 @@
         android:layout_marginTop="@dimen/search_bar_height"
         android:layout_gravity="top"/>
 
-    <LinearLayout
-        android:id="@+id/suggestions_container"
+    <fragment
+        android:id="@+id/suggestions"
+        android:name="org.mozilla.search.autocomplete.SuggestionsFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:layout_marginTop="@dimen/search_bar_height"
-        android:visibility="invisible"
-        android:layout_gravity="top">
-
-        <fragment
-            android:id="@+id/suggestions"
-            android:name="org.mozilla.search.autocomplete.SuggestionsFragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-    </LinearLayout>
+        android:layout_gravity="top"/>
 
     <View
         android:id="@+id/animation_card"
