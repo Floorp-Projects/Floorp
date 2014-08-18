@@ -125,4 +125,8 @@
         <item name="android:layout_gravity">center</item>
     </style>
 
+    <style name="TextAppearance.UrlBar.Title" parent="TextAppearance.Medium">
+        <item name="android:textSize">16sp</item>
+    </style>
+
 </resources>
