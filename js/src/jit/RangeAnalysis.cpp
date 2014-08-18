@@ -2274,7 +2274,8 @@ MToDouble::truncate(TruncateKind kind)
 bool
 MLoadTypedArrayElementStatic::truncate(TruncateKind kind)
 {
-    setInfallible();
+    if (kind >= IndirectTruncate)
+        setInfallible();
     return false;
 }
 
