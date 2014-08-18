@@ -1,0 +1,32 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Web Audio Editor test page</title>
+  </head>
+
+  <body>
+
+    <script type="text/javascript;version=1.8">
+      "use strict";
+
+      let ctx = new AudioContext();
+      let carrier = ctx.createOscillator();
+      let gain = ctx.createGain();
+      let modulator = ctx.createOscillator();
+      let modulator2 = ctx.createOscillator();
+      carrier.connect(gain);
+      gain.connect(ctx.destination);
+      modulator.connect(gain.gain);
+      modulator2.connect(carrier.frequency);
+      modulator2.connect(carrier.detune);
+      modulator.start(0);
+      modulator2.start(0);
+      carrier.start(0);
+    </script>
+  </body>
+
+</html>
