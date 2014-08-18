@@ -1730,6 +1730,17 @@ extern JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj);
 
 /*
+ * Return true if the arrayBuffer contains any data. This will return false for
+ * ArrayBuffer.prototype and neutered ArrayBuffers.
+ *
+ * |obj| must have passed a JS_IsArrayBufferObject test, or somehow be known
+ * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
+ * ArrayBuffer, and the unwrapping will succeed.
+ */
+extern JS_FRIEND_API(bool)
+JS_ArrayBufferHasData(JSObject *obj);
+
+/*
  * Check whether the obj is ArrayBufferObject and memory mapped. Note that this
  * may return false if a security wrapper is encountered that denies the
  * unwrapping.

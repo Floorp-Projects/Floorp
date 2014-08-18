@@ -856,7 +856,8 @@ JSStructuredCloneWriter::checkStack()
 bool
 JSStructuredCloneWriter::writeTypedArray(HandleObject obj)
 {
-    Rooted<TypedArrayObject*> tarr(context(), &obj->as<TypedArrayObject>());
+    Rooted<TypedArrayObject*> tarr(context(), &CheckedUnwrap(obj)->as<TypedArrayObject>());
+    JSAutoCompartment ac(context(), tarr);
 
     if (!TypedArrayObject::ensureHasBuffer(context(), tarr))
         return false;
@@ -878,7 +879,8 @@ JSStructuredCloneWriter::writeTypedArray(HandleObject obj)
 bool
 JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 {
-    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
+    ArrayBufferObject &buffer = CheckedUnwrap(obj)->as<ArrayBufferObject>();
+    JSAutoCompartment ac(context(), &buffer);
 
     return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer.byteLength()) &&
            out.writeBytes(buffer.dataPointer(), buffer.byteLength());
@@ -1020,9 +1022,9 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
         } else if (ObjectClassIs(obj, ESClass_Date, context())) {
             double d = js_DateGetMsecSinceEpoch(obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
-        } else if (obj->is<TypedArrayObject>()) {
+        } else if (JS_IsTypedArrayObject(obj)) {
             return writeTypedArray(obj);
-        } else if (obj->is<ArrayBufferObject>() && obj->as<ArrayBufferObject>().hasData()) {
+        } else if (JS_IsArrayBufferObject(obj) && JS_ArrayBufferHasData(obj)) {
             return writeArrayBuffer(obj);
         } else if (obj->is<JSObject>() || obj->is<ArrayObject>()) {
             return traverseObject(obj);
@@ -1108,29 +1110,34 @@ JSStructuredCloneWriter::transferOwnership()
         MOZ_ASSERT(ownership == JS::SCTAG_TMO_UNFILLED);
 #endif
 
-        if (obj->is<ArrayBufferObject>()) {
-            bool isMapped = obj->as<ArrayBufferObject>().isMappedArrayBuffer();
-            size_t nbytes = obj->as<ArrayBufferObject>().byteLength();
-            content = JS_StealArrayBufferContents(context(), obj);
-            if (!content)
-                return false; // Destructor will clean up the already-transferred data
-            tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
-            if (isMapped)
-                ownership = JS::SCTAG_TMO_MAPPED_DATA;
-            else
-                ownership = JS::SCTAG_TMO_ALLOC_DATA;
-            extraData = nbytes;
-        } else if (obj->is<SharedArrayBufferObject>()) {
-            SharedArrayRawBuffer *rawbuf = obj->as<SharedArrayBufferObject>().rawBufferObject();
+        if (ObjectClassIs(obj, ESClass_ArrayBuffer, context())) {
+            // The current setup of the array buffer inheritance hierarchy doesn't
+            // lend itself well to generic manipulation via proxies.
+            Rooted<ArrayBufferObject*> arrayBuffer(context(), &CheckedUnwrap(obj)->as<ArrayBufferObject>());
+            if (arrayBuffer->isSharedArrayBuffer()) {
+                SharedArrayRawBuffer *rawbuf = arrayBuffer->as<SharedArrayBufferObject>().rawBufferObject();
 
-            // Avoids a race condition where the parent thread frees the buffer
-            // before the child has accepted the transferable.
-            rawbuf->addReference();
+                // Avoids a race condition where the parent thread frees the buffer
+                // before the child has accepted the transferable.
+                rawbuf->addReference();
 
-            tag = SCTAG_TRANSFER_MAP_SHARED_BUFFER;
-            ownership = JS::SCTAG_TMO_SHARED_BUFFER;
-            content = rawbuf;
-            extraData = 0;
+                tag = SCTAG_TRANSFER_MAP_SHARED_BUFFER;
+                ownership = JS::SCTAG_TMO_SHARED_BUFFER;
+                content = rawbuf;
+                extraData = 0;
+            } else {
+                bool isMapped = arrayBuffer->isMappedArrayBuffer();
+                size_t nbytes = arrayBuffer->byteLength();
+                content = JS_StealArrayBufferContents(context(), arrayBuffer);
+                if (!content)
+                    return false; // Destructor will clean up the already-transferred data
+                tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
+                if (isMapped)
+                    ownership = JS::SCTAG_TMO_MAPPED_DATA;
+                else
+                    ownership = JS::SCTAG_TMO_ALLOC_DATA;
+                extraData = nbytes;
+            }
         } else {
             if (!callbacks || !callbacks->writeTransfer)
                 return reportErrorTransferable();
@@ -2010,14 +2017,5 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, HandleValue v)
     JS_ASSERT(v.isObject());
     assertSameCompartment(w->context(), v);
     RootedObject obj(w->context(), &v.toObject());
-
-    // If the object is a security wrapper, see if we're allowed to unwrap it.
-    // If we aren't, throw.
-    if (obj->is<WrapperObject>())
-        obj = CheckedUnwrap(obj);
-    if (!obj) {
-        JS_ReportErrorNumber(w->context(), js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
-        return false;
-    }
     return w->writeTypedArray(obj);
 }
