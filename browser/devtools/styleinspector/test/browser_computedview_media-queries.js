@@ -19,30 +19,9 @@ let test = asyncTest(function*() {
   info("Selecting the test element");
   yield selectNode("div", inspector);
 
-  info("Checking CSSLogic");
-  checkCssLogic();
-
   info("Checking property view");
   yield checkPropertyView(view);
 });
-
-function checkCssLogic() {
-  let cssLogic = new CssLogic();
-  cssLogic.highlight(getNode("div"));
-  cssLogic.processMatchedSelectors();
-
-  let _strings = Services.strings
-    .createBundle("chrome://global/locale/devtools/styleinspector.properties");
-
-  let inline = _strings.GetStringFromName("rule.sourceInline");
-
-  let source1 = inline + ":8";
-  let source2 = inline + ":15 @media screen and (min-width: 1px)";
-  is(cssLogic._matchedRules[0][0].source, source1,
-    "rule.source gives correct output for rule 1");
-  is(cssLogic._matchedRules[1][0].source, source2,
-    "rule.source gives correct output for rule 2");
-}
 
 function checkPropertyView(view) {
   let propertyView = new PropertyView(view, "width");

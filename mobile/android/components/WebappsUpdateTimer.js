@@ -12,17 +12,42 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/JNI.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/WebappManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function log(message) {
-  // We use *dump* instead of Services.console.logStringMessage so the messages
-  // have the INFO level of severity instead of the ERROR level.  And we don't
-  // append a newline character to the end of the message because *dump* spills
-  // into the Android native logging system, which strips newlines from messages
-  // and breaks messages into lines automatically at display time (i.e. logcat).
-  dump(message);
+const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("WebappsUpdateTimer");
+
+function getContextClassName() {
+  let jenv = null;
+  try {
+    jenv = JNI.GetForThread();
+
+    let GeckoAppShell = JNI.LoadClass(jenv, "org.mozilla.gecko.GeckoAppShell", {
+      static_methods: [
+        { name: "getContext", sig: "()Landroid/content/Context;" }
+      ],
+    });
+
+    JNI.LoadClass(jenv, "android.content.Context", {
+      methods: [
+        { name: "getClass", sig: "()Ljava/lang/Class;" },
+      ],
+    });
+
+    JNI.LoadClass(jenv, "java.lang.Class", {
+      methods: [
+        { name: "getName", sig: "()Ljava/lang/String;" },
+      ],
+    });
+
+    return JNI.ReadString(jenv, GeckoAppShell.getContext().getClass().getName());
+  } finally {
+    if (jenv) {
+      JNI.UnloadClasses(jenv);
+    }
+  }
 }
 
 function WebappsUpdateTimer() {}
@@ -33,20 +58,22 @@ WebappsUpdateTimer.prototype = {
   classID: Components.ID("{8f7002cb-e959-4f0a-a2e8-563232564385}"),
 
   notify: function(aTimer) {
-    if (Services.prefs.getIntPref("browser.webapps.checkForUpdates") == 0) {
-      // Do nothing, because updates are disabled.
-      log("Webapps update timer invoked in webapp process; ignoring.");
+    // Ignore the timer if automatic update checks are disabled or if this
+    // is a webapp process (since we only want to bug people about updates
+    // from the browser process).
+    if (Services.prefs.getIntPref("browser.webapps.checkForUpdates") == 0 ||
+        getContextClassName().startsWith("org.mozilla.gecko.webapp")) {
       return;
     }
 
     // If we are offline, wait to be online to start the update check.
     if (Services.io.offline) {
-      log("network offline for webapp update check; waiting");
+      Log.i("network offline for webapp update check; waiting");
       Services.obs.addObserver(this, "network:offline-status-changed", true);
       return;
     }
 
-    log("periodic check for webapp updates");
+    Log.i("periodic check for webapp updates");
     WebappManager.checkForUpdates();
   },
 
@@ -55,7 +82,7 @@ WebappsUpdateTimer.prototype = {
       return;
     }
 
-    log("network back online for webapp update check; commencing");
+    Log.i("network back online for webapp update check; commencing");
     Services.obs.removeObserver(this, "network:offline-status-changed");
     WebappManager.checkForUpdates();
   }

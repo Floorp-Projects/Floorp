@@ -15,20 +15,19 @@ let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 let {editableField, getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
 let {console} = Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
 
-// All test are asynchronous
+// All tests are asynchronous
 waitForExplicitFinish();
 
 const TEST_URL_ROOT = "http://example.com/browser/browser/devtools/styleinspector/test/";
 const TEST_URL_ROOT_SSL = "https://example.com/browser/browser/devtools/styleinspector/test/";
+const ROOT_TEST_DIR = getRootDirectory(gTestPath);
+const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 
 // Auto clean-up when a test ends
-registerCleanupFunction(() => {
-  try {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.closeToolbox(target);
-  } catch (ex) {
-    dump(ex);
-  }
+registerCleanupFunction(function*() {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  yield gDevTools.closeToolbox(target);
+
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
@@ -101,17 +100,32 @@ function asyncTest(generator) {
  * @return a promise that resolves to the tab object when the url is loaded
  */
 function addTab(url) {
+  info("Adding a new tab with URL: '" + url + "'");
   let def = promise.defer();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    info("URL " + url + " loading complete into new test tab");
-    waitForFocus(() => {
-      def.resolve(tab);
-    }, content);
+  window.focus();
+
+  let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
+  let browser = tab.linkedBrowser;
+
+  info("Loading the helper frame script " + FRAME_SCRIPT_URL);
+  // Bug 687194 - Mochitest registers its chrome URLs after browser
+  // initialization, so the content processes don't pick them up. That
+  // means we can't load our frame script from its chrome URI, because
+  // the content process won't be able to find it.
+  // Instead, we resolve the chrome URI for the script to a file URI, which
+  // we can then pass to the content process, which it is able to find.
+  let registry = Cc['@mozilla.org/chrome/chrome-registry;1']
+    .getService(Ci.nsIChromeRegistry);
+  let fileURI = registry.convertChromeURL(Services.io.newURI(FRAME_SCRIPT_URL, null, null)).spec;
+  browser.messageManager.loadFrameScript(fileURI, false);
+
+  browser.addEventListener("load", function onload() {
+    browser.removeEventListener("load", onload, true);
+    info("URL '" + url + "' loading complete");
+
+    def.resolve(tab);
   }, true);
-  content.location = url;
 
   return def.promise;
 }
@@ -120,53 +134,61 @@ function addTab(url) {
  * Simple DOM node accesor function that takes either a node or a string css
  * selector as argument and returns the corresponding node
  * @param {String|DOMNode} nodeOrSelector
- * @return {DOMNode}
+ * @return {DOMNode|CPOW} Note that in e10s mode a CPOW object is returned which
+ * doesn't implement *all* of the DOMNode's properties
  */
 function getNode(nodeOrSelector) {
+  info("Getting the node for '" + nodeOrSelector + "'");
   return typeof nodeOrSelector === "string" ?
     content.document.querySelector(nodeOrSelector) :
     nodeOrSelector;
 }
 
 /**
- * Highlight a node and set the inspector's current selection to the node or
- * the first match of the given css selector.
- * @param {String|DOMNode} nodeOrSelector
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @return a promise that resolves when the inspector is updated with the new
- * node
+ * Get the NodeFront for a given css selector, via the protocol
+ * @param {String} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return {Promise} Resolves to the NodeFront instance
  */
-function selectAndHighlightNode(nodeOrSelector, inspector) {
-  info("Highlighting and selecting the node " + nodeOrSelector);
-
-  let node = getNode(nodeOrSelector);
-  let updated = inspector.toolbox.once("highlighter-ready");
-  inspector.selection.setNode(node, "test-highlight");
-  return updated;
-
+function getNodeFront(selector, {walker}) {
+  return walker.querySelector(walker.rootNode, selector);
 }
 
 /**
- * Set the inspector's current selection to a node or to the first match of the
- * given css selector.
- * @param {String|DOMNode} nodeOrSelector
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @param {String} reason
- *        Defaults to "test" which instructs the inspector not to highlight the
- *        node upon selection
- * @return a promise that resolves when the inspector is updated with the new
- * node
+ * Highlight a node that matches the given css selector and set the inspector's
+ * current selection to this node.
+ * @param {String} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return {Promise} Resolves when the inspector is updated with the new node
  */
-function selectNode(nodeOrSelector, inspector, reason="test") {
-  info("Selecting the node " + nodeOrSelector);
+let selectAndHighlightNode = Task.async(function*(selector, inspector) {
+  info("Highlighting and selecting the node for " + selector);
 
-  let node = getNode(nodeOrSelector);
+  let nodeFront = yield getNodeFront(selector, inspector);
+  let updated = inspector.toolbox.once("highlighter-ready");
+  inspector.selection.setNodeFront(nodeFront, "test-highlight");
+  yield updated;
+});
+
+/**
+ * Set the inspector's current selection to a node that matches the given css
+ * selector.
+ * @param {String} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @param {String} reason Defaults to "test" which instructs the inspector not
+ * to highlight the node upon selection
+ * @return {Promise} Resolves when the inspector is updated with the new node
+ */
+let selectNode = Task.async(function*(selector, inspector, reason="test") {
+  info("Selecting the node for '" + selector + "'");
+  let nodeFront = yield getNodeFront(selector, inspector);
   let updated = inspector.once("inspector-updated");
-  inspector.selection.setNode(node, reason);
-  return updated;
-}
+  inspector.selection.setNodeFront(nodeFront, reason);
+  yield updated;
+});
 
 /**
  * Set the inspector's current selection to null so that no node is selected
@@ -177,7 +199,7 @@ function selectNode(nodeOrSelector, inspector, reason="test") {
 function clearCurrentNodeSelection(inspector) {
   info("Clearing the current selection");
   let updated = inspector.once("inspector-updated");
-  inspector.selection.setNode(null);
+  inspector.selection.setNodeFront(null);
   return updated;
 }
 
@@ -317,6 +339,50 @@ function wait(ms) {
   let def = promise.defer();
   content.setTimeout(def.resolve, ms);
   return def.promise;
+}
+
+/**
+ * Wait for a content -> chrome message on the message manager (the window
+ * messagemanager is used).
+ * @param {String} name The message name
+ * @return {Promise} A promise that resolves to the response data when the
+ * message has been received
+ */
+function waitForContentMessage(name) {
+  info("Expecting message " + name + " from content");
+
+  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+
+  let def = promise.defer();
+  mm.addMessageListener(name, function onMessage(msg) {
+    mm.removeMessageListener(name, onMessage);
+    def.resolve(msg.data);
+  });
+  return def.promise;
+}
+
+/**
+ * Send an async message to the frame script (chrome -> content) and wait for a
+ * response message with the same name (content -> chrome).
+ * @param {String} name The message name. Should be one of the messages defined
+ * in doc_frame_script.js
+ * @param {Object} data Optional data to send along
+ * @param {Object} objects Optional CPOW objects to send along
+ * @param {Boolean} expectResponse If set to false, don't wait for a response
+ * with the same name from the content script. Defaults to true.
+ * @return {Promise} Resolves to the response data if a response is expected,
+ * immediately resolves otherwise
+ */
+function executeInContent(name, data={}, objects={}, expectResponse=true) {
+  info("Sending message " + name + " to content");
+  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+
+  mm.sendAsyncMessage(name, data, objects);
+  if (expectResponse) {
+    return waitForContentMessage(name);
+  } else {
+    return promise.resolve();
+  }
 }
 
 /**

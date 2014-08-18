@@ -17,6 +17,16 @@
                 name="browser.startup.homepage"
                 type="wstring"/>
 
+#ifdef HAVE_SHELL_SERVICE
+    <preference id="browser.shell.checkDefaultBrowser"
+                name="browser.shell.checkDefaultBrowser"
+                type="bool"/>
+
+    <preference id="pref.general.disable_button.default_browser"
+                name="pref.general.disable_button.default_browser"
+                type="bool"/>
+#endif
+
     <preference id="pref.browser.homepage.disable_button.current_page"
                 name="pref.browser.homepage.disable_button.current_page"
                 type="bool"/>
@@ -100,6 +110,27 @@
           hidden="true">
   <caption><label>&startup.label;</label></caption>
 
+#ifdef HAVE_SHELL_SERVICE
+  <vbox id="defaultBrowserBox">
+    <hbox align="center">
+      <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
+                label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
+    </hbox>
+    <deck id="setDefaultPane">
+      <hbox align="center" class="indent">
+        <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
+        <button id="setDefaultButton"
+                label="&setAsMyDefaultBrowser.label;" accesskey="&setAsMyDefaultBrowser.accesskey;"
+                oncommand="gMainPane.setDefaultBrowser();"
+                preference="pref.general.disable_button.default_browser"/>
+      </hbox>
+      <hbox align="center" class="indent">
+        <label id="isDefaultLabel" flex="1">&isDefault.label;</label>
+      </hbox>
+    </deck>
+    <separator class="thin"/>
+  </vbox>
+#endif
   <hbox align="center">
     <label accesskey="&startupPage.accesskey;"
            control="browserStartupPage">&startupPage.label;</label>
