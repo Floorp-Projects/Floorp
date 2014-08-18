@@ -230,7 +230,7 @@ function convertTextPropsToString(textProps) {
 
 function* testNode(selector, inspector, view) {
   let element = getNode(selector);
-  yield selectNode(element, inspector);
+  yield selectNode(selector, inspector);
   let elementStyle = view._elementStyle;
   return {element: element, elementStyle: elementStyle};
 }
