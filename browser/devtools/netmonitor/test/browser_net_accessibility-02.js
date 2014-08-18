@@ -25,6 +25,11 @@ function test() {
       EventUtils.sendKey("UP", window);
       check(0, true);
 
+      EventUtils.sendKey("RIGHT", window);
+      check(0, false);
+      EventUtils.sendKey("LEFT", window);
+      check(0, true);
+
       EventUtils.sendKey("PAGE_DOWN", window);
       check(1, true);
       EventUtils.sendKey("PAGE_UP", window);
@@ -52,16 +57,24 @@ function test() {
       check(4, true);
       EventUtils.sendKey("PAGE_DOWN", window);
       check(8, true);
+      EventUtils.sendKey("RIGHT", window);
+      check(8, false);
       EventUtils.sendKey("PAGE_UP", window);
+      check(4, false);
+      EventUtils.sendKey("LEFT", window);
       check(4, true);
       EventUtils.sendKey("PAGE_UP", window);
       check(0, true);
 
       EventUtils.sendKey("HOME", window);
       check(0, true);
+      EventUtils.sendKey("RIGHT", window);
+      check(0, false);
       EventUtils.sendKey("HOME", window);
-      check(0, true);
+      check(0, false);
       EventUtils.sendKey("PAGE_UP", window);
+      check(0, false);
+      EventUtils.sendKey("RETURN", window);
       check(0, true);
       EventUtils.sendKey("HOME", window);
       check(0, true);
@@ -102,7 +115,7 @@ function test() {
       check(19, true);
 
       EventUtils.sendMouseEvent({ type: "mousedown" }, $("#details-pane-toggle"));
-      check(-1, false);
+      check(19, false);
 
       EventUtils.sendMouseEvent({ type: "mousedown" }, $(".side-menu-widget-item"));
       check(0, true);
