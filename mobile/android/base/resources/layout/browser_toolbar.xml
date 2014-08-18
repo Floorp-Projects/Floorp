@@ -117,11 +117,4 @@
                   android:paddingLeft="4dip"
                   android:paddingRight="4dip"/>
 
-    <ImageView android:id="@+id/shadow"
-               android:layout_width="match_parent"
-               android:layout_height="2dp"
-               android:layout_alignParentBottom="true"
-               android:background="@color/url_bar_shadow"
-               android:contentDescription="@null"/>
-
 </merge>

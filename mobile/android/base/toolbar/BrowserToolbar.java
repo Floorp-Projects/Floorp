@@ -166,6 +166,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private Path roundCornerShape;
     private Paint roundCornerPaint;
 
+    private final Paint shadowPaint;
+    private final int shadowSize;
+
     private static final Interpolator buttonsInterpolator = new AccelerateInterpolator();
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
@@ -265,6 +268,12 @@ public class BrowserToolbar extends ThemedRelativeLayout
             roundCornerPaint.setColor(res.getColor(R.color.background_tabs));
             roundCornerPaint.setStrokeWidth(0.0f);
         }
+
+        shadowSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_shadow_size);
+
+        shadowPaint = new Paint();
+        shadowPaint.setColor(res.getColor(R.color.url_bar_shadow));
+        shadowPaint.setStrokeWidth(0.0f);
 
         setUIMode(UIMode.DISPLAY);
 
@@ -506,6 +515,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
         if (!HardwareUtils.isTablet() && uiMode == UIMode.DISPLAY) {
             canvas.drawPath(roundCornerShape, roundCornerPaint);
         }
+
+        final int height = getHeight();
+        canvas.drawRect(0, height - shadowSize, getWidth(), height, shadowPaint);
     }
 
     public void setProgressBar(ToolbarProgressView progressBar) {
