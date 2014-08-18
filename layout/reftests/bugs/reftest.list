@@ -1161,10 +1161,10 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 skip-if(B2G) fails-if(Android) == 446100-1b.html about:blank
 skip-if(B2G) fails-if(Android) == 446100-1c.html about:blank
 == 446100-1d.html about:blank
-skip-if(B2G&&browserIsRemote) == 446100-1e.html about:blank
-skip-if(B2G&&browserIsRemote) == 446100-1f.html about:blank
+== 446100-1e.html about:blank
+== 446100-1f.html about:blank
 skip-if(B2G) fails-if(Android) == 446100-1g.html about:blank
-skip-if(B2G&&browserIsRemote) == 446100-1h.html about:blank
+== 446100-1h.html about:blank
 skip-if(B2G) == 447749-1.html 447749-1-ref.html
 fuzzy(127,2) == 448193.html 448193-ref.html
 != 449149-1a.html about:blank
@@ -1633,8 +1633,8 @@ fails-if(Android&&AndroidVersion!=10&&AndroidVersion!=17) == 617242-1.html 61724
 != 618071.html 618071-notref.html
 == 619117-1.html 619117-1-ref.html
 HTTP(..) == 619511-1.html 619511-1-ref.html
-skip-if(Android||(B2G&&browserIsRemote)) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
-skip-if(Android||(B2G&&browserIsRemote)) == 621253-1-internalFilter.html 621253-1-ref.html
+skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
+skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html
 HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 == 621253-2-internalFilter.html 621253-2-ref.html
 skip-if(B2G) random-if(winWidget) fuzzy-if(OSX==10.8,19,17) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
