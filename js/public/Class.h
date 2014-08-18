@@ -535,6 +535,10 @@ ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx);
 inline bool
 IsObjectWithClass(const JS::Value &v, ESClassValue classValue, JSContext *cx);
 
+/* Fills |vp| with the unboxed value for boxed types, or undefined otherwise. */
+inline bool
+Unbox(JSContext *cx, JS::HandleObject obj, JS::MutableHandleValue vp);
+
 }  /* namespace js */
 
 #endif  /* js_Class_h */

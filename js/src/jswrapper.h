@@ -144,6 +144,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual JSString *fun_toString(JSContext *cx, HandleObject wrapper,
                                    unsigned indent) const MOZ_OVERRIDE;
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) const MOZ_OVERRIDE;
+    virtual bool boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, HandleObject wrapper, JSType hint,
                               MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
@@ -181,6 +182,7 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,
                                JSContext *cx) const MOZ_OVERRIDE;
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) const MOZ_OVERRIDE;
+    virtual bool boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                 MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
 
