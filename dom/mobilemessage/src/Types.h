@@ -48,7 +48,16 @@ enum ReadStatus {
   eReadStatus_EndGuard
 };
 
-// For {Mms,Sms}MessageData.messageClass.
+// For {Mms,Sms}FilterData.read.
+enum ReadState {
+  eReadState_Unknown = -1,
+  eReadState_Unread,
+  eReadState_Read,
+  // This state should stay at the end.
+  eReadState_EndGuard
+};
+
+// For {Mms,Sms}FilterData.messageClass.
 enum MessageClass {
   eMessageClass_Normal = 0,
   eMessageClass_Class0,
@@ -104,6 +113,17 @@ struct ParamTraits<mozilla::dom::mobilemessage::ReadStatus>
              mozilla::dom::mobilemessage::ReadStatus,
              mozilla::dom::mobilemessage::eReadStatus_NotApplicable,
              mozilla::dom::mobilemessage::eReadStatus_EndGuard>
+{};
+
+/**
+ * Read state serializer.
+ */
+template <>
+struct ParamTraits<mozilla::dom::mobilemessage::ReadState>
+  : public ContiguousEnumSerializer<
+             mozilla::dom::mobilemessage::ReadState,
+             mozilla::dom::mobilemessage::eReadState_Unknown,
+             mozilla::dom::mobilemessage::eReadState_EndGuard>
 {};
 
 /**
