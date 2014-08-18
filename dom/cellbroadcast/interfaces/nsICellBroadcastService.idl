@@ -26,6 +26,13 @@ interface nsICellBroadcastListener : nsISupports
                              in boolean aEtwsPopup);
 };
 
+%{C++
+#define CELLBROADCAST_SERVICE_CID \
+  { 0xc870bdca, 0x277c, 0x11e4, { 0xac, 0xa3, 0x33, 0x73, 0xa1, 0xef, 0x48, 0xf8 } }
+#define CELLBROADCAST_SERVICE_CONTRACTID \
+  "@mozilla.org/cellbroadcast/cellbroadcastservice;1"
+%}
+
 /**
  * XPCOM component that provides the cell broadcast information.
  */
@@ -46,3 +53,10 @@ interface nsICellBroadcastService : nsISupports
   void registerListener(in nsICellBroadcastListener listener);
   void unregisterListener(in nsICellBroadcastListener listener);
 };
+
+%{C++
+template<typename T> struct already_AddRefed;
+
+already_AddRefed<nsICellBroadcastService>
+NS_CreateCellBroadcastService();
+%}

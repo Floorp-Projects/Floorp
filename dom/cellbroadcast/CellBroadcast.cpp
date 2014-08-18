@@ -9,7 +9,12 @@
 #include "mozilla/dom/MozCellBroadcastEvent.h"
 #include "nsServiceManagerUtils.h"
 
-#define NS_CELLBROADCASTSERVICE_CONTRACTID "@mozilla.org/cellbroadcast/gonkservice;1"
+// Service instantiation
+#include "ipc/CellBroadcastIPCService.h"
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+#include "nsIGonkCellBroadcastService.h"
+#endif
+#include "nsXULAppAPI.h" // For XRE_GetProcessType()
 
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
@@ -60,7 +65,7 @@ CellBroadcast::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
   MOZ_ASSERT(aWindow->IsInnerWindow());
 
   nsCOMPtr<nsICellBroadcastService> service =
-    do_GetService(NS_CELLBROADCASTSERVICE_CONTRACTID);
+    do_GetService(CELLBROADCAST_SERVICE_CONTRACTID);
   if (!service) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -86,7 +91,7 @@ CellBroadcast::~CellBroadcast()
 
   mListener->Disconnect();
   nsCOMPtr<nsICellBroadcastService> service =
-    do_GetService(NS_CELLBROADCASTSERVICE_CONTRACTID);
+    do_GetService(CELLBROADCAST_SERVICE_CONTRACTID);
   if (service) {
     service->UnregisterListener(mListener);
   }
@@ -139,4 +144,20 @@ CellBroadcast::NotifyMessageReceived(uint32_t aServiceId,
   nsRefPtr<MozCellBroadcastEvent> event =
     MozCellBroadcastEvent::Constructor(this, NS_LITERAL_STRING("received"), init);
   return DispatchTrustedEvent(event);
+}
+
+already_AddRefed<nsICellBroadcastService>
+NS_CreateCellBroadcastService()
+{
+  nsCOMPtr<nsICellBroadcastService> service;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    service = new mozilla::dom::cellbroadcast::CellBroadcastIPCService();
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+  } else {
+    service = do_GetService(GONK_CELLBROADCAST_SERVICE_CONTRACTID);
+#endif
+  }
+
+  return service.forget();
 }

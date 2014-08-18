@@ -126,6 +126,7 @@
 #include "ipc/Nuwa.h"
 #endif
 
+#include "mozilla/dom/cellbroadcast/CellBroadcastIPCService.h"
 #include "mozilla/dom/indexedDB/PIndexedDBChild.h"
 #include "mozilla/dom/mobileconnection/MobileConnectionChild.h"
 #include "mozilla/dom/mobilemessage/SmsChild.h"
@@ -161,6 +162,7 @@ using namespace base;
 using namespace mozilla;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::bluetooth;
+using namespace mozilla::dom::cellbroadcast;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::dom::mobileconnection;
@@ -388,7 +390,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
 {
     if (!mChild)
         return NS_OK;
-    
+
     nsCOMPtr<nsIScriptError> scriptError = do_QueryInterface(aMessage);
     if (scriptError) {
         nsString msg, sourceName, sourceLine;
@@ -1389,6 +1391,30 @@ ContentChild::DeallocPExternalHelperAppChild(PExternalHelperAppChild* aService)
 {
     ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
     child->Release();
+    return true;
+}
+
+PCellBroadcastChild*
+ContentChild::AllocPCellBroadcastChild()
+{
+    MOZ_CRASH("No one should be allocating PCellBroadcastChild actors");
+}
+
+PCellBroadcastChild*
+ContentChild::SendPCellBroadcastConstructor(PCellBroadcastChild* aActor)
+{
+    aActor = PContentChild::SendPCellBroadcastConstructor(aActor);
+    if (aActor) {
+        static_cast<CellBroadcastIPCService*>(aActor)->AddRef();
+    }
+
+    return aActor;
+}
+
+bool
+ContentChild::DeallocPCellBroadcastChild(PCellBroadcastChild* aActor)
+{
+    static_cast<CellBroadcastIPCService*>(aActor)->Release();
     return true;
 }
 
