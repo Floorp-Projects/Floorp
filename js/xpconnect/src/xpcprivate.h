@@ -2743,7 +2743,7 @@ public:
     bool InitWithName(const nsID& id, const char *nameString);
     bool SetName(const char* name);
     void   SetNameToNoString()
-        {MOZ_ASSERT(!mName, "name already set"); mName = gNoString;}
+        {MOZ_ASSERT(!mName, "name already set"); mName = const_cast<char *>(gNoString);}
     bool NameIsSet() const {return nullptr != mName;}
     const nsID& ID() const {return mID;}
     bool IsValid() const {return !mID.Equals(GetInvalidIID());}
@@ -2758,7 +2758,7 @@ public:
 
 protected:
     virtual ~nsJSID();
-    static char gNoString[];
+    static const char gNoString[];
     nsID    mID;
     char*   mNumber;
     char*   mName;
