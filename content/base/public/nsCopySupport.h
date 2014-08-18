@@ -7,8 +7,8 @@
 #define nsCopySupport_h__
 
 #include "nscore.h"
-#include "nsINode.h"
 
+class nsINode;
 class nsISelection;
 class nsIDocument;
 class nsIImageLoadingContent;

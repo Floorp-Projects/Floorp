@@ -20,9 +20,9 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "nsISMILAttr.h"
-#include "nsIDocument.h"
 #include "mozilla/dom/ShadowRoot.h"
 
+class nsIDocument;
 class nsIDOMAttr;
 class nsIDOMEventListener;
 class nsIDOMNodeList;

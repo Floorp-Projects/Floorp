@@ -19,7 +19,8 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStubMutationObserver.h"
-#include "nsIDocument.h"
+
+class nsIDocument;
 
 namespace mozilla {
 class EventChainPreVisitor;

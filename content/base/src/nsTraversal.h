@@ -12,7 +12,7 @@
 #define nsTraversal_h___
 
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
+#include "nsIDocument.h" // for NodeFilterHolder
 #include "mozilla/dom/CallbackObject.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/NodeFilterBinding.h"
