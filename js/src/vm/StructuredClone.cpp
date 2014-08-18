@@ -1011,10 +1011,12 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
         if (backref)
             return true;
 
-        if (obj->is<RegExpObject>()) {
-            RegExpObject &reobj = obj->as<RegExpObject>();
-            return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
-                   writeString(SCTAG_STRING, reobj.getSource());
+        if (ObjectClassIs(obj, ESClass_RegExp, context())) {
+            RegExpGuard re(context());
+            if (!RegExpToShared(context(), obj, &re))
+                return false;
+            return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags()) &&
+                   writeString(SCTAG_STRING, re->getSource());
         } else if (obj->is<DateObject>()) {
             double d = js_DateGetMsecSinceEpoch(obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);
