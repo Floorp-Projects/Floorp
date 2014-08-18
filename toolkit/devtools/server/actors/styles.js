@@ -1004,19 +1004,6 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
         this._originalLocation = location;
         return location;
       })
-  },
-
-  // Only used for testing, please keep it that way.
-  _rawStyle: function() {
-    if (!this.conn._transport._serverConnection) {
-      console.warn("Tried to use rawNode on a remote connection.");
-      return null;
-    }
-    let actor = this.conn._transport._serverConnection.getActor(this.actorID);
-    if (!actor) {
-      return null;
-    }
-    return actor.rawStyle;
   }
 });
 

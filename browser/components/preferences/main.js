@@ -17,6 +17,43 @@ var gMainPane = {
   {
     this._pane = document.getElementById("paneMain");
 
+#ifdef HAVE_SHELL_SERVICE
+    this.updateSetDefaultBrowser();
+#ifdef XP_WIN
+    // In Windows 8 we launch the control panel since it's the only
+    // way to get all file type association prefs. So we don't know
+    // when the user will select the default.  We refresh here periodically
+    // in case the default changes.  On other Windows OS's defaults can also
+    // be set while the prefs are open.
+    window.setInterval(this.updateSetDefaultBrowser, 1000);
+
+#ifdef MOZ_METRO
+    // Pre Windows 8, we should hide the update related settings
+    // for the Metro browser
+    let version = Components.classes["@mozilla.org/system-info;1"].
+                  getService(Components.interfaces.nsIPropertyBag2).
+                  getProperty("version");
+    let preWin8 = parseFloat(version) < 6.2;
+    this._showingWin8Prefs = !preWin8;
+    if (preWin8) {
+      ["autoMetro", "autoMetroIndent"].forEach(
+        function(id) document.getElementById(id).collapsed = true
+      );
+    } else {
+      let brandShortName =
+        document.getElementById("bundleBrand").getString("brandShortName");
+      let bundlePrefs = document.getElementById("bundlePreferences");
+      let autoDesktop = document.getElementById("autoDesktop");
+      autoDesktop.label =
+        bundlePrefs.getFormattedString("updateAutoDesktop.label",
+                                       [brandShortName]);
+      autoDesktop.accessKey =
+        bundlePrefs.getString("updateAutoDesktop.accessKey");
+    }
+#endif
+#endif
+#endif
+
     // set up the "use current page" label-changing listener
     this._updateUseCurrentButton();
     window.addEventListener("focus", this._updateUseCurrentButton.bind(this), false);
@@ -427,4 +464,46 @@ var gMainPane = {
       startupPref.updateElements(); // select the correct index in the startup menulist
     }
   }
+
+#ifdef HAVE_SHELL_SERVICE
+  ,
+  /*
+   * Preferences:
+   *
+   * browser.shell.checkDefault
+   * - true if a default-browser check (and prompt to make it so if necessary)
+   *   occurs at startup, false otherwise
+   */
+
+  /**
+   * Show button for setting browser as default browser or information that
+   * browser is already the default browser.
+   */
+  updateSetDefaultBrowser: function()
+  {
+    let shellSvc = getShellService();
+    let defaultBrowserBox = document.getElementById("defaultBrowserBox");
+    if (!shellSvc) {
+      defaultBrowserBox.hidden = true;
+      return;
+    }
+    let setDefaultPane = document.getElementById("setDefaultPane");
+    let selectedIndex = shellSvc.isDefaultBrowser(false, true) ? 1 : 0;
+    setDefaultPane.selectedIndex = selectedIndex;
+  },
+
+  /**
+   * Set browser as the operating system default browser.
+   */
+  setDefaultBrowser: function()
+  {
+    let shellSvc = getShellService();
+    if (!shellSvc)
+      return;
+    shellSvc.setDefaultBrowser(true, false);
+    let selectedIndex =
+      shellSvc.isDefaultBrowser(false, true) ? 1 : 0;
+    document.getElementById("setDefaultPane").selectedIndex = selectedIndex;
+  }
+#endif
 };
