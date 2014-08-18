@@ -8,6 +8,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "SmsMessage.h"
+#include "SmsFilter.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/MozMobileMessageManagerBinding.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -219,40 +220,13 @@ SmsIPCService::DeleteMessage(int32_t *aMessageIds, uint32_t aSize,
 }
 
 NS_IMETHODIMP
-SmsIPCService::CreateMessageCursor(bool aHasStartDate,
-                                   uint64_t aStartDate,
-                                   bool aHasEndDate,
-                                   uint64_t aEndDate,
-                                   const char16_t** aNumbers,
-                                   uint32_t aNumbersCount,
-                                   const nsAString& aDelivery,
-                                   bool aHasRead,
-                                   bool aRead,
-                                   uint64_t aThreadId,
+SmsIPCService::CreateMessageCursor(nsIDOMMozSmsFilter* aFilter,
                                    bool aReverse,
                                    nsIMobileMessageCursorCallback* aCursorCallback,
                                    nsICursorContinueCallback** aResult)
 {
-  SmsFilterData data;
-
-  data.hasStartDate() = aHasStartDate;
-  data.startDate() = aStartDate;
-  data.hasEndDate() = aHasEndDate;
-  data.startDate() = aEndDate;
-
-  if (aNumbersCount && aNumbers) {
-    nsTArray<nsString>& numbers = data.numbers();
-    uint32_t index;
-
-    for (index = 0; index < aNumbersCount; index++) {
-      numbers.AppendElement(aNumbers[index]);
-    }
-  }
-
-  data.delivery() = aDelivery;
-  data.hasRead() = aHasRead;
-  data.read() = aRead;
-  data.threadId() = aThreadId;
+  const SmsFilterData& data =
+    SmsFilterData(static_cast<SmsFilter*>(aFilter)->GetData());
 
   return SendCursorRequest(CreateMessageCursorRequest(data, aReverse),
                            aCursorCallback, aResult);

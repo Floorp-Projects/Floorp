@@ -3105,47 +3105,25 @@ MobileMessageDB.prototype = {
     }, [MESSAGE_STORE_NAME, THREAD_STORE_NAME]);
   },
 
-  createMessageCursor: function(aHasStartDate, aStartDate, aHasEndDate,
-                                aEndDate, aNumbers, aNumbersCount, aDelivery,
-                                aHasRead, aRead, aThreadId, aReverse, aCallback) {
+  createMessageCursor: function(filter, reverse, callback) {
     if (DEBUG) {
       debug("Creating a message cursor. Filters:" +
-            " startDate: " + (aHasStartDate ? aStartDate : "(null)") +
-            " endDate: " + (aHasEndDate ? aEndDate : "(null)") +
-            " delivery: " + aDelivery +
-            " numbers: " + (aNumbersCount ? aNumbers : "(null)") +
-            " read: " + (aHasRead ? aRead : "(null)") +
-            " threadId: " + aThreadId +
-            " reverse: " + aReverse);
+            " startDate: " + filter.startDate +
+            " endDate: " + filter.endDate +
+            " delivery: " + filter.delivery +
+            " numbers: " + filter.numbers +
+            " read: " + filter.read +
+            " threadId: " + filter.threadId +
+            " reverse: " + reverse);
     }
 
-    let filter = {};
-    if (aHasStartDate) {
-      filter.startDate = aStartDate;
-    }
-    if (aHasEndDate) {
-      filter.endDate = aEndDate;
-    }
-    if (aNumbersCount) {
-      filter.numbers = aNumbers.slice();
-    }
-    if (aDelivery !== null) {
-      filter.delivery = aDelivery;
-    }
-    if (aHasRead) {
-      filter.read = aRead;
-    }
-    if (aThreadId) {
-      filter.threadId = aThreadId;
-    }
-
-    let cursor = new GetMessagesCursor(this, aCallback);
+    let cursor = new GetMessagesCursor(this, callback);
 
     let self = this;
     self.newTxn(READ_ONLY, function(error, txn, stores) {
       let collector = cursor.collector;
       let collect = collector.collect.bind(collector);
-      FilterSearcherHelper.transact(self, txn, error, filter, aReverse, collect);
+      FilterSearcherHelper.transact(self, txn, error, filter, reverse, collect);
     }, [MESSAGE_STORE_NAME, PARTICIPANT_STORE_NAME]);
 
     return cursor;
@@ -3333,11 +3311,11 @@ let FilterSearcherHelper = {
   filterTimestamp: function(startDate, endDate, direction, txn, collect) {
     let range = null;
     if (startDate != null && endDate != null) {
-      range = IDBKeyRange.bound(startDate, endDate);
+      range = IDBKeyRange.bound(startDate.getTime(), endDate.getTime());
     } else if (startDate != null) {
-      range = IDBKeyRange.lowerBound(startDate);
+      range = IDBKeyRange.lowerBound(startDate.getTime());
     } else if (endDate != null) {
-      range = IDBKeyRange.upperBound(endDate);
+      range = IDBKeyRange.upperBound(endDate.getTime());
     }
     this.filterIndex("timestamp", range, direction, txn, collect);
   },
@@ -3352,7 +3330,7 @@ let FilterSearcherHelper = {
    * @param error
    *        Previous error while creating the transaction.
    * @param filter
-   *        A MobileMessageFilter dictionary.
+   *        A SmsFilter object.
    * @param reverse
    *        A boolean value indicating whether we should filter message in
    *        reversed order.
@@ -3390,10 +3368,10 @@ let FilterSearcherHelper = {
     // than all numeric values.
     let startDate = 0, endDate = "";
     if (filter.startDate != null) {
-      startDate = filter.startDate;
+      startDate = filter.startDate.getTime();
     }
     if (filter.endDate != null) {
-      endDate = filter.endDate;
+      endDate = filter.endDate.getTime();
     }
 
     let single, intersectionCollector;
