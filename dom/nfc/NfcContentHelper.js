@@ -104,9 +104,9 @@ NfcContentHelper.prototype = {
       let record = records[i];
       encodedRecords.push({
         tnf: record.tnf,
-        type: record.type,
-        id: record.id,
-        payload: record.payload,
+        type: record.type || undefined,
+        id: record.id || undefined,
+        payload: record.payload || undefined,
       });
     }
     return encodedRecords;
