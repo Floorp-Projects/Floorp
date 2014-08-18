@@ -448,14 +448,7 @@ UnwrapReflectorToISupports(JSObject *reflector);
  * using this compartment. If you don't, bholley will hunt you down.
  */
 JSObject *
-GetJunkScope();
-
-/**
- * Returns the native global of the junk scope. See comment of GetJunkScope
- * about the conditions of using it.
- */
-nsIGlobalObject *
-GetJunkScopeGlobal();
+PrivilegedJunkScope();
 
 /**
  * Shared compilation scope for XUL prototype documents and XBL
@@ -463,7 +456,7 @@ GetJunkScopeGlobal();
  * it is invisible to the debugger.
  */
 JSObject *
-GetCompilationScope();
+CompilationScope();
 
 /**
  * If |aObj| is a window, returns the associated nsGlobalWindow.

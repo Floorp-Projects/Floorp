@@ -561,30 +561,15 @@ EnableUniversalXPConnect(JSContext *cx)
 }
 
 JSObject *
-GetJunkScope()
+PrivilegedJunkScope()
 {
-    XPCJSRuntime *self = nsXPConnect::GetRuntimeInstance();
-    NS_ENSURE_TRUE(self, nullptr);
-    return self->JunkScope();
-}
-
-nsIGlobalObject *
-GetJunkScopeGlobal()
-{
-    JSObject *junkScope = GetJunkScope();
-    // GetJunkScope would ideally never fail, currently it is not yet the case
-    // unfortunately...(see Bug 874158)
-    if (!junkScope)
-        return nullptr;
-    return GetNativeForGlobal(junkScope);
+    return XPCJSRuntime::Get()->PrivilegedJunkScope();
 }
 
 JSObject *
-GetCompilationScope()
+CompilationScope()
 {
-    XPCJSRuntime *self = nsXPConnect::GetRuntimeInstance();
-    NS_ENSURE_TRUE(self, nullptr);
-    return self->CompilationScope();
+    return XPCJSRuntime::Get()->CompilationScope();
 }
 
 JSObject *
@@ -3130,7 +3115,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWrappedJSRoots(nullptr),
    mObjectHolderRoots(nullptr),
    mWatchdogManager(new WatchdogManager(MOZ_THIS_IN_INITIALIZER_LIST())),
-   mJunkScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
+   mPrivilegedJunkScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
    mCompilationScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
@@ -3561,13 +3546,13 @@ XPCJSRuntime::InitSingletonScopes()
     nsresult rv;
 
     // Create the Junk Scope.
-    SandboxOptions junkScopeOptions;
-    junkScopeOptions.sandboxName.AssignLiteral("XPConnect Junk Compartment");
-    junkScopeOptions.invisibleToDebugger = true;
-    junkScopeOptions.wantComponents = false;
-    rv = CreateSandboxObject(cx, &v, nsXPConnect::SystemPrincipal(), junkScopeOptions);
+    SandboxOptions privilegedJunkScopeOptions;
+    privilegedJunkScopeOptions.sandboxName.AssignLiteral("XPConnect Privileged Junk Compartment");
+    privilegedJunkScopeOptions.invisibleToDebugger = true;
+    privilegedJunkScopeOptions.wantComponents = false;
+    rv = CreateSandboxObject(cx, &v, nsXPConnect::SystemPrincipal(), privilegedJunkScopeOptions);
     MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    mJunkScope = js::UncheckedUnwrap(&v.toObject());
+    mPrivilegedJunkScope = js::UncheckedUnwrap(&v.toObject());
 
     // Create the Compilation Scope.
     SandboxOptions compilationScopeOptions;
@@ -3582,6 +3567,6 @@ XPCJSRuntime::InitSingletonScopes()
 void
 XPCJSRuntime::DeleteSingletonScopes()
 {
-    mJunkScope = nullptr;
+    mPrivilegedJunkScope = nullptr;
     mCompilationScope = nullptr;
 }

@@ -619,7 +619,7 @@ public:
 
     AutoMarkingPtr**  GetAutoRootsAdr() {return &mAutoRoots;}
 
-    JSObject* JunkScope() { return mJunkScope; }
+    JSObject* PrivilegedJunkScope() { return mPrivilegedJunkScope; }
     JSObject* CompilationScope() { return mCompilationScope; }
 
     void InitSingletonScopes();
@@ -663,7 +663,7 @@ private:
     nsTArray<xpcContextCallback> extraContextCallbacks;
     nsRefPtr<WatchdogManager> mWatchdogManager;
     JS::GCSliceCallback mPrevGCSliceCallback;
-    JS::PersistentRootedObject mJunkScope;
+    JS::PersistentRootedObject mPrivilegedJunkScope;
     JS::PersistentRootedObject mCompilationScope;
     nsRefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
 
