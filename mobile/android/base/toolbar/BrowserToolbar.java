@@ -1392,6 +1392,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         tabsButton.setPrivateMode(isPrivate);
         menuButton.setPrivateMode(isPrivate);
         menuIcon.setPrivateMode(isPrivate);
+        editCancel.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
 
         if (backButton instanceof BackButton) {
