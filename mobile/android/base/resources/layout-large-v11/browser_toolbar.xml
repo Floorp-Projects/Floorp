@@ -39,8 +39,8 @@
                android:layout_toRightOf="@id/tabs"
                android:layout_toLeftOf="@id/menu_items"
                android:layout_marginLeft="-18dp"
-               android:layout_marginTop="7dp"
-               android:layout_marginBottom="7dp"
+               android:layout_marginTop="8dp"
+               android:layout_marginBottom="8dp"
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
@@ -74,7 +74,9 @@
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button.Container"
                   android:layout_toRightOf="@id/back"
-                  android:layout_toLeftOf="@id/menu_items"/>
+                  android:layout_toLeftOf="@id/menu_items"
+                  android:paddingLeft="8dip"
+                  android:paddingRight="8dip"/>
 
     <LinearLayout android:id="@+id/menu_items"
                   android:layout_width="wrap_content"
@@ -86,7 +88,6 @@
 
     <org.mozilla.gecko.widget.ThemedImageButton android:id="@+id/menu"
                                                 style="@style/UrlBar.ImageButton"
-                                                android:layout_width="56dip"
                                                 android:layout_alignParentRight="true"
                                                 android:contentDescription="@string/menu"
                                                 android:background="@drawable/action_bar_button"
@@ -100,20 +101,14 @@
                                               android:src="@drawable/menu_level"
                                               android:visibility="gone"/>
 
-    <ImageView android:id="@+id/shadow"
-               android:layout_width="match_parent"
-               android:layout_height="2dp"
-               android:layout_alignParentBottom="true"
-               android:background="@color/url_bar_shadow"
-               android:contentDescription="@null"/>
-
     <!-- We draw after the menu items so when they are hidden, the cancel button,
          which is thus drawn on top, may be pressed. -->
     <org.mozilla.gecko.widget.ThemedImageView
             android:id="@+id/edit_cancel"
-            style="@style/UrlBar.ImageButton.Icon"
+            style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
             android:src="@drawable/close_edit_mode_selector"
+            android:background="@drawable/action_bar_button"
             android:paddingLeft="2dp"
             android:paddingRight="2dp"
             android:contentDescription="@string/edit_mode_cancel"

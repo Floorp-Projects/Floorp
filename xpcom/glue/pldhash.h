@@ -31,7 +31,7 @@
  */
 #define PL_DHASH_MAX_CAPACITY           ((uint32_t)1 << 26)
 
-#define PL_DHASH_MIN_CAPACITY           16
+#define PL_DHASH_MIN_CAPACITY           8
 
 /*
  * Making this half of the max capacity ensures it'll fit. Nobody should need
@@ -39,8 +39,8 @@
  */
 #define PL_DHASH_MAX_INITIAL_LENGTH     (PL_DHASH_MAX_CAPACITY / 2)
 
-/* This gives a default initial capacity of 16. */
-#define PL_DHASH_DEFAULT_INITIAL_LENGTH 8
+/* This gives a default initial capacity of 8. */
+#define PL_DHASH_DEFAULT_INITIAL_LENGTH 4
 
 /*
  * Multiplicative hash uses an unsigned 32 bit integer and the golden ratio,

@@ -19,7 +19,7 @@
  *        user to retrives the node and at the same time access to
  *        the data associated with the node.
  *
- *     4) Lite verion is higher risk because the caller also has
+ *     4) Lite version is higher risk because the caller also has
  *        the defition of the list and node structures. Use it
  *        at your own risk.
  *
