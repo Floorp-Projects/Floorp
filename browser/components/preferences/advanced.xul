@@ -40,16 +40,6 @@
 #endif
       <preference id="layout.spellcheckDefault"        name="layout.spellcheckDefault"        type="int"/>
 
-#ifdef HAVE_SHELL_SERVICE
-      <preference id="browser.shell.checkDefaultBrowser"
-                  name="browser.shell.checkDefaultBrowser"
-                  type="bool"/>
-
-      <preference id="pref.general.disable_button.default_browser"
-                  name="pref.general.disable_button.default_browser"
-                  type="bool"/>
-#endif
-
       <!-- Data Choices tab -->
 
 #ifdef MOZ_TELEMETRY_REPORTING
@@ -172,26 +162,6 @@
                       onsynctopreference="return gAdvancedPane.writeCheckSpelling();"
                       preference="layout.spellcheckDefault"/>
           </groupbox>
-
-#ifdef HAVE_SHELL_SERVICE
-          <!-- System Defaults -->
-          <groupbox id="systemDefaultsGroup" orient="vertical">
-            <caption label="&systemDefaults.label;"/>
-
-            <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                      label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
-                      flex="1"/>
-            <hbox class="indent">
-              <deck id="setDefaultPane">
-                <button id="setDefaultButton"
-                        label="&setDefault.label;" accesskey="&setDefault.accesskey;"
-                        oncommand="gAdvancedPane.setDefaultBrowser();"
-                        preference="pref.general.disable_button.default_browser"/>
-                <description>&isDefault.label;</description>
-              </deck>
-            </hbox>
-          </groupbox>
-#endif
         </tabpanel>
 
 #ifdef MOZ_DATA_REPORTING
