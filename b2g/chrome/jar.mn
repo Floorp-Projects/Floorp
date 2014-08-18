@@ -13,7 +13,11 @@ chrome.jar:
 * content/shell.html                    (content/shell.html)
 * content/shell.js                      (content/shell.js)
   content/shell.css                     (content/shell.css)
-  content/devtools.js                   (content/devtools.js)
+#ifdef MOZ_WIDGET_GONK
+  content/devtools/adb.js               (content/devtools/adb.js)
+#endif
+* content/devtools/debugger.js          (content/devtools/debugger.js)
+  content/devtools/hud.js               (content/devtools/hud.js)
 #ifdef FXOS_SIMULATOR
   content/desktop.css                   (content/desktop.css)
   content/images/desktop/home-black.png (content/images/desktop/home-black.png)
