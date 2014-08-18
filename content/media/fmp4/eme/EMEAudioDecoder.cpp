@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "EMEAACDecoder.h"
+#include "EMEAudioDecoder.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "mozilla/EMELog.h"
 #include "gmp-audio-host.h"
@@ -18,10 +18,10 @@
 
 namespace mozilla {
 
-EMEAACDecoder::EMEAACDecoder(CDMProxy* aProxy,
-                             const AudioDecoderConfig& aConfig,
-                             MediaTaskQueue* aTaskQueue,
-                             MediaDataDecoderCallback* aCallback)
+EMEAudioDecoder::EMEAudioDecoder(CDMProxy* aProxy,
+                                 const AudioDecoderConfig& aConfig,
+                                 MediaTaskQueue* aTaskQueue,
+                                 MediaDataDecoderCallback* aCallback)
   : mAudioRate(0)
   , mAudioBytesPerSample(0)
   , mAudioChannels(0)
@@ -34,17 +34,17 @@ EMEAACDecoder::EMEAACDecoder(CDMProxy* aProxy,
   , mConfig(aConfig)
   , mTaskQueue(aTaskQueue)
   , mCallback(aCallback)
-  , mMonitor("EMEAACDecoder")
+  , mMonitor("EMEAudioDecoder")
   , mFlushComplete(false)
 {
 }
 
-EMEAACDecoder::~EMEAACDecoder()
+EMEAudioDecoder::~EMEAudioDecoder()
 {
 }
 
 nsresult
-EMEAACDecoder::Init()
+EMEAudioDecoder::Init()
 {
   // Note: this runs on the decode task queue.
 
@@ -65,7 +65,7 @@ EMEAACDecoder::Init()
 }
 
 nsresult
-EMEAACDecoder::Input(MP4Sample* aSample)
+EMEAudioDecoder::Input(MP4Sample* aSample)
 {
   MOZ_ASSERT(!IsOnGMPThread()); // Runs on the decode task queue.
 
@@ -77,7 +77,7 @@ EMEAACDecoder::Input(MP4Sample* aSample)
 }
 
 nsresult
-EMEAACDecoder::Flush()
+EMEAudioDecoder::Flush()
 {
   MOZ_ASSERT(!IsOnGMPThread()); // Runs on the decode task queue.
 
@@ -87,7 +87,7 @@ EMEAACDecoder::Flush()
   }
 
   nsRefPtr<nsIRunnable> task;
-  task = NS_NewRunnableMethod(this, &EMEAACDecoder::GmpFlush);
+  task = NS_NewRunnableMethod(this, &EMEAudioDecoder::GmpFlush);
   nsresult rv = mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -102,34 +102,34 @@ EMEAACDecoder::Flush()
 }
 
 nsresult
-EMEAACDecoder::Drain()
+EMEAudioDecoder::Drain()
 {
   MOZ_ASSERT(!IsOnGMPThread()); // Runs on the decode task queue.
 
   nsRefPtr<nsIRunnable> task;
-  task = NS_NewRunnableMethod(this, &EMEAACDecoder::GmpDrain);
+  task = NS_NewRunnableMethod(this, &EMEAudioDecoder::GmpDrain);
   nsresult rv = mGMPThread->Dispatch(task, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
 nsresult
-EMEAACDecoder::Shutdown()
+EMEAudioDecoder::Shutdown()
 {
   MOZ_ASSERT(!IsOnGMPThread()); // Runs on the decode task queue.
 
   nsRefPtr<nsIRunnable> task;
-  task = NS_NewRunnableMethod(this, &EMEAACDecoder::GmpShutdown);
+  task = NS_NewRunnableMethod(this, &EMEAudioDecoder::GmpShutdown);
   nsresult rv = mGMPThread->Dispatch(task, NS_DISPATCH_SYNC);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
 void
-EMEAACDecoder::Decoded(const nsTArray<int16_t>& aPCM,
-                       uint64_t aTimeStamp,
-                       uint32_t aChannels,
-                       uint32_t aRate)
+EMEAudioDecoder::Decoded(const nsTArray<int16_t>& aPCM,
+                         uint64_t aTimeStamp,
+                         uint32_t aChannels,
+                         uint32_t aRate)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
@@ -192,21 +192,21 @@ EMEAACDecoder::Decoded(const nsTArray<int16_t>& aPCM,
 }
 
 void
-EMEAACDecoder::InputDataExhausted()
+EMEAudioDecoder::InputDataExhausted()
 {
   MOZ_ASSERT(IsOnGMPThread());
   mCallback->InputExhausted();
 }
 
 void
-EMEAACDecoder::DrainComplete()
+EMEAudioDecoder::DrainComplete()
 {
   MOZ_ASSERT(IsOnGMPThread());
   mCallback->DrainComplete();
 }
 
 void
-EMEAACDecoder::ResetComplete()
+EMEAudioDecoder::ResetComplete()
 {
   MOZ_ASSERT(IsOnGMPThread());
   mMustRecaptureAudioPosition = true;
@@ -218,23 +218,23 @@ EMEAACDecoder::ResetComplete()
 }
 
 void
-EMEAACDecoder::Error(GMPErr aErr)
+EMEAudioDecoder::Error(GMPErr aErr)
 {
   MOZ_ASSERT(IsOnGMPThread());
-  EME_LOG("EMEAACDecoder::Error");
+  EME_LOG("EMEAudioDecoder::Error");
   mCallback->Error();
   GmpShutdown();
 }
 
 void
-EMEAACDecoder::Terminated()
+EMEAudioDecoder::Terminated()
 {
   MOZ_ASSERT(IsOnGMPThread());
   GmpShutdown();
 }
 
 nsresult
-EMEAACDecoder::GmpInit()
+EMEAudioDecoder::GmpInit()
 {
   MOZ_ASSERT(IsOnGMPThread());
 
@@ -266,7 +266,7 @@ EMEAACDecoder::GmpInit()
 }
 
 nsresult
-EMEAACDecoder::GmpInput(MP4Sample* aSample)
+EMEAudioDecoder::GmpInput(MP4Sample* aSample)
 {
   MOZ_ASSERT(IsOnGMPThread());
   nsAutoPtr<MP4Sample> sample(aSample);
@@ -296,7 +296,7 @@ EMEAACDecoder::GmpInput(MP4Sample* aSample)
 }
 
 void
-EMEAACDecoder::GmpFlush()
+EMEAudioDecoder::GmpFlush()
 {
   MOZ_ASSERT(IsOnGMPThread());
   if (!mGMP || NS_FAILED(mGMP->Reset())) {
@@ -308,7 +308,7 @@ EMEAACDecoder::GmpFlush()
 }
 
 void
-EMEAACDecoder::GmpDrain()
+EMEAudioDecoder::GmpDrain()
 {
   MOZ_ASSERT(IsOnGMPThread());
   if (!mGMP || NS_FAILED(mGMP->Drain())) {
@@ -317,7 +317,7 @@ EMEAACDecoder::GmpDrain()
 }
 
 void
-EMEAACDecoder::GmpShutdown()
+EMEAudioDecoder::GmpShutdown()
 {
   MOZ_ASSERT(IsOnGMPThread());
   if (!mGMP) {

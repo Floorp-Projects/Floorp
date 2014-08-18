@@ -1579,16 +1579,16 @@ public:
    * @return NS_OK on success, or NS_ERROR_OUT_OF_MEMORY if making the string
    * writable needs to allocate memory and that allocation fails.
    */
-  static nsresult ASCIIToLower(nsAString& aStr);
-  static nsresult ASCIIToLower(const nsAString& aSource, nsAString& aDest);
+  static void ASCIIToLower(nsAString& aStr);
+  static void ASCIIToLower(const nsAString& aSource, nsAString& aDest);
 
   /**
    * Convert ASCII a-z to A-Z.
    * @return NS_OK on success, or NS_ERROR_OUT_OF_MEMORY if making the string
    * writable needs to allocate memory and that allocation fails.
    */
-  static nsresult ASCIIToUpper(nsAString& aStr);
-  static nsresult ASCIIToUpper(const nsAString& aSource, nsAString& aDest);
+  static void ASCIIToUpper(nsAString& aStr);
+  static void ASCIIToUpper(const nsAString& aSource, nsAString& aDest);
 
   /**
    * Return whether aStr contains an ASCII uppercase character.

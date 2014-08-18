@@ -136,9 +136,12 @@ public:
   }
 
   // This realloc_ is required for this to be a JS container AllocPolicy.
-  static void* realloc_(void* aPtr, size_t aOldSize, size_t aNewSize)
+  template <typename T>
+  static T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
   {
-    return InfallibleAllocPolicy::realloc_(aPtr, aNewSize);
+    if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+      return nullptr;
+    return (T*)InfallibleAllocPolicy::realloc_((void *)aPtr, aNewSize * sizeof(T));
   }
 
   static void* memalign_(size_t aAlignment, size_t aSize)

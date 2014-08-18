@@ -7,7 +7,7 @@
 #define nsCoreUtils_h_
 
 #include "nsIContent.h"
-#include "nsIDocument.h"
+#include "nsIDocument.h" // for GetShell()
 #include "nsIPresShell.h"
 
 #include "nsPoint.h"
