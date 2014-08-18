@@ -619,6 +619,7 @@ public:
 
     AutoMarkingPtr**  GetAutoRootsAdr() {return &mAutoRoots;}
 
+    JSObject* UnprivilegedJunkScope() { return mUnprivilegedJunkScope; }
     JSObject* PrivilegedJunkScope() { return mPrivilegedJunkScope; }
     JSObject* CompilationScope() { return mCompilationScope; }
 
@@ -663,6 +664,7 @@ private:
     nsTArray<xpcContextCallback> extraContextCallbacks;
     nsRefPtr<WatchdogManager> mWatchdogManager;
     JS::GCSliceCallback mPrevGCSliceCallback;
+    JS::PersistentRootedObject mUnprivilegedJunkScope;
     JS::PersistentRootedObject mPrivilegedJunkScope;
     JS::PersistentRootedObject mCompilationScope;
     nsRefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
@@ -2857,7 +2859,6 @@ public:
     explicit XPCJSContextStack(XPCJSRuntime *aRuntime)
       : mRuntime(aRuntime)
       , mSafeJSContext(nullptr)
-      , mSafeJSContextGlobal(aRuntime->Runtime(), nullptr)
     { }
 
     virtual ~XPCJSContextStack();
@@ -2874,7 +2875,6 @@ public:
 
     JSContext *InitSafeJSContext();
     JSContext *GetSafeJSContext();
-    JSObject *GetSafeJSContextGlobal();
     bool HasJSContext(JSContext *cx);
 
     const InfallibleTArray<XPCJSContextInfo>* GetStack()
@@ -2893,7 +2893,6 @@ private:
     AutoInfallibleTArray<XPCJSContextInfo, 16> mStack;
     XPCJSRuntime* mRuntime;
     JSContext*  mSafeJSContext;
-    JS::PersistentRootedObject mSafeJSContextGlobal;
 };
 
 /***************************************************************************/
@@ -3729,8 +3728,6 @@ ObjectScope(JSObject *obj)
 {
     return CompartmentPrivate::Get(obj)->scope;
 }
-
-extern const JSClass SafeJSContextGlobalClass;
 
 JSObject* NewOutObject(JSContext* cx, JSObject* scope);
 bool IsOutObject(JSContext* cx, JSObject* obj);

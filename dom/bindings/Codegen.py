@@ -11104,7 +11104,7 @@ class CGDictionary(CGThing):
                 AutoJSAPI jsapi;
                 jsapi.Init();
                 JSContext *cx = jsapi.cx();
-                JSAutoCompartment ac(cx, xpc::GetSafeJSContextGlobal()); // Usage approved by bholley
+                JSAutoCompartment ac(cx, xpc::UnprivilegedJunkScope()); // Usage approved by bholley
                 JS::Rooted<JS::Value> obj(cx);
                 return ToObjectInternal(cx, &obj) && StringifyToJSON(cx, &obj, aJSON);
             """))
@@ -11892,7 +11892,7 @@ class CGBindingRoot(CGThing):
         bindingHeaders["WrapperFactory.h"] = descriptors
         bindingHeaders["mozilla/dom/DOMJSClass.h"] = descriptors
         bindingHeaders["mozilla/dom/ScriptSettings.h"] = dictionaries # AutoJSAPI
-        bindingHeaders["xpcpublic.h"] = dictionaries ## xpc::GetSafeJSContextGlobal
+        bindingHeaders["xpcpublic.h"] = dictionaries ## xpc::UnprivilegedJunkScope
 
         # Do codegen for all the dictionaries.  We have to be a bit careful
         # here, because we have to generate these in order from least derived
