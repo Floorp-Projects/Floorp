@@ -40,7 +40,6 @@ EXPORTS.mozilla.dom += [
     'DOMMobileMessageError.h',
     'MmsMessage.h',
     'MobileMessageManager.h',
-    'SmsFilter.h',
     'SmsMessage.h',
 ]
 
@@ -57,7 +56,6 @@ UNIFIED_SOURCES += [
     'MobileMessageManager.cpp',
     'MobileMessageService.cpp',
     'MobileMessageThread.cpp',
-    'SmsFilter.cpp',
     'SmsMessage.cpp',
     'SmsServicesFactory.cpp',
 ]
