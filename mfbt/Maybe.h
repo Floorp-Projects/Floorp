@@ -93,7 +93,7 @@ public:
   Maybe() : mIsSome(false) { }
   ~Maybe() { reset(); }
 
-  Maybe(Nothing) : mIsSome(false) { }
+  explicit Maybe(Nothing) : mIsSome(false) { }
 
   Maybe(const Maybe& aOther)
     : mIsSome(false)
