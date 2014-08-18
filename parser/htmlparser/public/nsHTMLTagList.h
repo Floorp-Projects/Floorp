@@ -30,7 +30,7 @@
 
   Entries *must* use only lowercase characters.
 
-  Don't forget to update /editor/libeditor/html/nsHTMLEditUtils.cpp as well.
+  Don't forget to update /editor/libeditor/nsHTMLEditUtils.cpp as well.
 
   ** Break these invariants and bad things will happen. **
 
