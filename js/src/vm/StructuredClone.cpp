@@ -937,7 +937,15 @@ bool
 JSStructuredCloneWriter::traverseMap(HandleObject obj)
 {
     AutoValueVector newEntries(context());
-    if (!MapObject::entries(context(), obj, &newEntries))
+    {
+        // If there is no wrapper, the compartment munging is a no-op.
+        RootedObject unwrapped(context(), CheckedUnwrap(obj));
+        MOZ_ASSERT(unwrapped);
+        JSAutoCompartment ac(context(), unwrapped);
+        if (!MapObject::entries(context(), unwrapped, &newEntries))
+            return false;
+    }
+    if (!context()->compartment()->wrap(context(), newEntries))
         return false;
 
     for (size_t i = newEntries.length(); i > 0; --i) {
@@ -959,7 +967,15 @@ bool
 JSStructuredCloneWriter::traverseSet(HandleObject obj)
 {
     AutoValueVector keys(context());
-    if (!SetObject::keys(context(), obj, &keys))
+    {
+        // If there is no wrapper, the compartment munging is a no-op.
+        RootedObject unwrapped(context(), CheckedUnwrap(obj));
+        MOZ_ASSERT(unwrapped);
+        JSAutoCompartment ac(context(), unwrapped);
+        if (!SetObject::keys(context(), obj, &keys))
+            return false;
+    }
+    if (!context()->compartment()->wrap(context(), keys))
         return false;
 
     for (size_t i = keys.length(); i > 0; --i) {
@@ -1043,9 +1059,9 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             if (!Unbox(context(), obj, &unboxed))
                 return false;
             return writeString(SCTAG_STRING_OBJECT, unboxed.toString());
-        } else if (obj->is<MapObject>()) {
+        } else if (ObjectClassIs(obj, ESClass_Map, context())) {
             return traverseMap(obj);
-        } else if (obj->is<SetObject>()) {
+        } else if (ObjectClassIs(obj, ESClass_Set, context())) {
             return traverseSet(obj);
         }
 
