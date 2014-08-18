@@ -10,6 +10,22 @@ EXTRA_COMPONENTS += [
     'servicesComponents.manifest',
 ]
 
+EXTRA_JS_MODULES['services-common'] += [
+    'hawkclient.js',
+    'hawkrequest.js',
+    'storageservice.js',
+    'stringbundle.js',
+    'tokenserverclient.js',
+    'utils.js',
+]
+
+EXTRA_PP_JS_MODULES['services-common'] += [
+    'async.js',
+    'bagheeraclient.js',
+    'observers.js',
+    'rest.js',
+]
+
 TESTING_JS_MODULES.services.common += [
     'modules-testing/bagheeraserver.js',
     'modules-testing/logging.js',

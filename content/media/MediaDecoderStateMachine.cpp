@@ -255,7 +255,9 @@ bool MediaDecoderStateMachine::HasFutureAudio() {
   //    we've completely decoded all audio (but not finished playing it yet
   //    as per 1).
   return !mAudioCompleted &&
-         (AudioDecodedUsecs() > LOW_AUDIO_USECS * mPlaybackRate || AudioQueue().IsFinished());
+         (AudioDecodedUsecs() >
+            mLowAudioThresholdUsecs * mPlaybackRate ||
+          AudioQueue().IsFinished());
 }
 
 bool MediaDecoderStateMachine::HaveNextFrameData() {

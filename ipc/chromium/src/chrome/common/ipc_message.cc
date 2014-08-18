@@ -159,6 +159,10 @@ void Message::EnsureFileDescriptorSet() {
     file_descriptor_set_ = new FileDescriptorSet;
 }
 
+uint32_t Message::num_fds() const {
+  return file_descriptor_set() ? file_descriptor_set()->size() : 0;
+}
+
 #endif
 
 }  // namespace IPC
