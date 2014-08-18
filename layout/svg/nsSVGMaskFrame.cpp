@@ -229,12 +229,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   tmpCtx->Init(this->PresContext()->DeviceContext(), maskDT);
   tmpCtx->ThebesContext()->SetMatrix(maskSurfaceMatrix);
 
-  mMaskParent = aMaskedFrame;
-  if (mMaskParentMatrix) {
-    *mMaskParentMatrix = aMatrix;
-  } else {
-    mMaskParentMatrix = new gfxMatrix(aMatrix);
-  }
+  mMatrixForChildren = GetMaskTransform(aMaskedFrame) * aMatrix;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -319,13 +314,17 @@ nsSVGMaskFrame::GetType() const
 gfxMatrix
 nsSVGMaskFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
-  NS_ASSERTION(mMaskParentMatrix, "null parent matrix");
-
-  SVGMaskElement *mask = static_cast<SVGMaskElement*>(mContent);
-
-  return nsSVGUtils::AdjustMatrixForUnits(
-    mMaskParentMatrix ? *mMaskParentMatrix : gfxMatrix(),
-    &mask->mEnumAttributes[SVGMaskElement::MASKCONTENTUNITS],
-    mMaskParent);
+  return mMatrixForChildren;
 }
 
+gfxMatrix
+nsSVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame)
+{
+  SVGMaskElement *content = static_cast<SVGMaskElement*>(mContent);
+
+  nsSVGEnum* maskContentUnits =
+    &content->mEnumAttributes[SVGMaskElement::MASKCONTENTUNITS];
+
+  return nsSVGUtils::AdjustMatrixForUnits(gfxMatrix(), maskContentUnits,
+                                          aMaskedFrame);
+}
