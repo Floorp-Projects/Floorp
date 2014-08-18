@@ -4,25 +4,33 @@ function run_test()
 
   var storage = getCacheStorage("disk");
   var mc = new MultipleCallbacks(4, function() {
-    syncWithCacheIOThread(function() {
+    // Method asyncVisitStorage() gets the data from index on Cache I/O thread
+    // with INDEX priority, so it is ensured that index contains information
+    // about all pending writes. However, OpenCallback emulates network latency
+    // by postponing the writes using do_execute_soon. We must do the same here
+    // to make sure that all writes are posted to Cache I/O thread before we
+    // visit the storage.
+    do_execute_soon(function() {
+      syncWithCacheIOThread(function() {
 
-      var expectedConsumption = newCacheBackEndUsed()
-        ? 4096
-        : 48;
+        var expectedConsumption = newCacheBackEndUsed()
+          ? 4096
+          : 48;
 
-      storage.asyncVisitStorage(
-        // Test should store 4 entries
-        new VisitCallback(4, expectedConsumption, ["http://a/", "http://b/", "http://c/", "http://d/"], function() {
-          storage.asyncVisitStorage(
-            // Still 4 entries expected, now don't walk them
-            new VisitCallback(4, expectedConsumption, null, function() {
-              finish_cache2_test();
-            }),
-            false
-          );
-        }),
-        true
-      );
+        storage.asyncVisitStorage(
+          // Test should store 4 entries
+          new VisitCallback(4, expectedConsumption, ["http://a/", "http://b/", "http://c/", "http://d/"], function() {
+            storage.asyncVisitStorage(
+              // Still 4 entries expected, now don't walk them
+              new VisitCallback(4, expectedConsumption, null, function() {
+                finish_cache2_test();
+              }),
+              false
+            );
+          }),
+          true
+        );
+      });
     });
   }, !newCacheBackEndUsed());
 

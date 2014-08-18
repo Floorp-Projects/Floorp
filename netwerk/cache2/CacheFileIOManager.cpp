@@ -562,22 +562,13 @@ protected:
 
 class OpenFileEvent : public nsRunnable {
 public:
-  OpenFileEvent(const nsACString &aKey,
-                uint32_t aFlags, bool aResultOnAnyThread,
+  OpenFileEvent(const nsACString &aKey, uint32_t aFlags,
                 CacheFileIOListener *aCallback)
     : mFlags(aFlags)
-    , mResultOnAnyThread(aResultOnAnyThread)
     , mCallback(aCallback)
-    , mRV(NS_ERROR_FAILURE)
     , mKey(aKey)
   {
     MOZ_COUNT_CTOR(OpenFileEvent);
-
-    if (!aResultOnAnyThread) {
-      mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
-      MOZ_ASSERT(mTarget);
-    }
-
     mIOMan = CacheFileIOManager::gInstance;
 
     MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aKey.BeginReading());
@@ -593,53 +584,38 @@ protected:
 public:
   NS_IMETHOD Run()
   {
-    if (mResultOnAnyThread || mTarget) {
-      mRV = NS_OK;
+    nsresult rv = NS_OK;
 
-      if (!(mFlags & CacheFileIOManager::SPECIAL_FILE)) {
-        SHA1Sum sum;
-        sum.update(mKey.BeginReading(), mKey.Length());
-        sum.finish(mHash);
+    if (!(mFlags & CacheFileIOManager::SPECIAL_FILE)) {
+      SHA1Sum sum;
+      sum.update(mKey.BeginReading(), mKey.Length());
+      sum.finish(mHash);
+    }
+
+    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::open-background");
+    if (!mIOMan) {
+      rv = NS_ERROR_NOT_INITIALIZED;
+    } else {
+      if (mFlags & CacheFileIOManager::SPECIAL_FILE) {
+        rv = mIOMan->OpenSpecialFileInternal(mKey, mFlags,
+                                             getter_AddRefs(mHandle));
+      } else {
+        rv = mIOMan->OpenFileInternal(&mHash, mKey, mFlags,
+                                      getter_AddRefs(mHandle));
       }
-
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this),
-                            "net::cache::open-background");
-      if (NS_SUCCEEDED(mRV)) {
-        if (!mIOMan) {
-          mRV = NS_ERROR_NOT_INITIALIZED;
-        } else {
-          if (mFlags & CacheFileIOManager::SPECIAL_FILE) {
-            mRV = mIOMan->OpenSpecialFileInternal(mKey, mFlags,
-                                                  getter_AddRefs(mHandle));
-          } else {
-            mRV = mIOMan->OpenFileInternal(&mHash, mKey, mFlags,
-                                           getter_AddRefs(mHandle));
-          }
-          mIOMan = nullptr;
-          if (mHandle) {
-            MOZ_EVENT_TRACER_NAME_OBJECT(mHandle.get(), mKey.get());
-            if (mHandle->Key().IsEmpty()) {
-              mHandle->Key() = mKey;
-            }
-          }
+      mIOMan = nullptr;
+      if (mHandle) {
+        MOZ_EVENT_TRACER_NAME_OBJECT(mHandle.get(), mKey.get());
+        if (mHandle->Key().IsEmpty()) {
+          mHandle->Key() = mKey;
         }
       }
-      MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::open-background");
-
-      MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::open-result");
-
-      if (mTarget) {
-        nsCOMPtr<nsIEventTarget> target;
-        mTarget.swap(target);
-        return target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
-      }
     }
+    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::open-background");
 
-    if (!mTarget) {
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::open-result");
-      mCallback->OnFileOpened(mHandle, mRV);
-      MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::open-result");
-    }
+    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::open-result");
+    mCallback->OnFileOpened(mHandle, rv);
+    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::open-result");
 
     return NS_OK;
   }
@@ -647,32 +623,23 @@ public:
 protected:
   SHA1Sum::Hash                 mHash;
   uint32_t                      mFlags;
-  bool                          mResultOnAnyThread;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  nsCOMPtr<nsIEventTarget>      mTarget;
   nsRefPtr<CacheFileIOManager>  mIOMan;
   nsRefPtr<CacheFileHandle>     mHandle;
-  nsresult                      mRV;
   nsCString                     mKey;
 };
 
 class ReadEvent : public nsRunnable {
 public:
   ReadEvent(CacheFileHandle *aHandle, int64_t aOffset, char *aBuf,
-            int32_t aCount, bool aResultOnAnyThread, CacheFileIOListener *aCallback)
+            int32_t aCount, CacheFileIOListener *aCallback)
     : mHandle(aHandle)
     , mOffset(aOffset)
     , mBuf(aBuf)
     , mCount(aCount)
-    , mResultOnAnyThread(aResultOnAnyThread)
     , mCallback(aCallback)
-    , mRV(NS_ERROR_FAILURE)
   {
     MOZ_COUNT_CTOR(ReadEvent);
-
-    if (!aResultOnAnyThread) {
-      mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
-    }
 
     MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aHandle->Key().get());
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::read-background");
@@ -687,30 +654,20 @@ protected:
 public:
   NS_IMETHOD Run()
   {
-    if (mResultOnAnyThread || mTarget) {
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-background");
-      if (mHandle->IsClosed()) {
-        mRV = NS_ERROR_NOT_INITIALIZED;
-      } else {
-        mRV = CacheFileIOManager::gInstance->ReadInternal(
-          mHandle, mOffset, mBuf, mCount);
-      }
-      MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::read-background");
+    nsresult rv;
 
-      MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::read-result");
-
-      if (mTarget) {
-        nsCOMPtr<nsIEventTarget> target;
-        mTarget.swap(target);
-        return target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
-      }
+    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-background");
+    if (mHandle->IsClosed()) {
+      rv = NS_ERROR_NOT_INITIALIZED;
+    } else {
+      rv = CacheFileIOManager::gInstance->ReadInternal(
+        mHandle, mOffset, mBuf, mCount);
     }
+    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::read-background");
 
-    if (!mTarget && mCallback) {
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-result");
-      mCallback->OnDataRead(mHandle, mBuf, mRV);
-      MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::read-result");
-    }
+    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::read-result");
+    mCallback->OnDataRead(mHandle, mBuf, rv);
+    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::read-result");
 
     return NS_OK;
   }
@@ -720,10 +677,7 @@ protected:
   int64_t                       mOffset;
   char                         *mBuf;
   int32_t                       mCount;
-  bool                          mResultOnAnyThread;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  nsCOMPtr<nsIEventTarget>      mTarget;
-  nsresult                      mRV;
 };
 
 class WriteEvent : public nsRunnable {
@@ -736,10 +690,8 @@ public:
     , mCount(aCount)
     , mValidate(aValidate)
     , mCallback(aCallback)
-    , mRV(NS_ERROR_FAILURE)
   {
     MOZ_COUNT_CTOR(WriteEvent);
-    mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
 
     MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aHandle->Key().get());
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::write-background");
@@ -758,30 +710,26 @@ protected:
 public:
   NS_IMETHOD Run()
   {
-    if (mTarget) {
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::write-background");
-      if (mHandle->IsClosed()) {
-        mRV = NS_ERROR_NOT_INITIALIZED;
-      } else {
-        mRV = CacheFileIOManager::gInstance->WriteInternal(
-          mHandle, mOffset, mBuf, mCount, mValidate);
-      }
-      MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::write-background");
+    nsresult rv;
 
-      MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::write-result");
-      nsCOMPtr<nsIEventTarget> target;
-      mTarget.swap(target);
-      target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::write-background");
+    if (mHandle->IsClosed()) {
+      rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::write-result");
-      if (mCallback) {
-        mCallback->OnDataWritten(mHandle, mBuf, mRV);
-      } else {
-        free(const_cast<char *>(mBuf));
-        mBuf = nullptr;
-      }
-      MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::write-result");
+      rv = CacheFileIOManager::gInstance->WriteInternal(
+          mHandle, mOffset, mBuf, mCount, mValidate);
     }
+    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::write-background");
+
+    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::write-result");
+    if (mCallback) {
+      mCallback->OnDataWritten(mHandle, mBuf, rv);
+    } else {
+      free(const_cast<char *>(mBuf));
+      mBuf = nullptr;
+    }
+    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::write-result");
+
     return NS_OK;
   }
 
@@ -792,8 +740,6 @@ protected:
   int32_t                       mCount;
   bool                          mValidate;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  nsCOMPtr<nsIEventTarget>      mTarget;
-  nsresult                      mRV;
 };
 
 class DoomFileEvent : public nsRunnable {
@@ -802,10 +748,8 @@ public:
                 CacheFileIOListener *aCallback)
     : mCallback(aCallback)
     , mHandle(aHandle)
-    , mRV(NS_ERROR_FAILURE)
   {
     MOZ_COUNT_CTOR(DoomFileEvent);
-    mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
 
     MOZ_EVENT_TRACER_NAME_OBJECT(static_cast<nsIRunnable*>(this), aHandle->Key().get());
     MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
@@ -820,26 +764,22 @@ protected:
 public:
   NS_IMETHOD Run()
   {
-    if (mTarget) {
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
-      if (mHandle->IsClosed()) {
-        mRV = NS_ERROR_NOT_INITIALIZED;
-      } else {
-        mRV = CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
-      }
-      MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
+    nsresult rv;
 
-      MOZ_EVENT_TRACER_WAIT(static_cast<nsIRunnable*>(this), "net::cache::doom-result");
-      nsCOMPtr<nsIEventTarget> target;
-      mTarget.swap(target);
-      target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
+    if (mHandle->IsClosed()) {
+      rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::doom-result");
-      if (mCallback) {
-        mCallback->OnFileDoomed(mHandle, mRV);
-      }
-      MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::doom-result");
+      rv = CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
     }
+    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::doom-background");
+
+    MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::doom-result");
+    if (mCallback) {
+      mCallback->OnFileDoomed(mHandle, rv);
+    }
+    MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::doom-result");
+
     return NS_OK;
   }
 
@@ -847,7 +787,6 @@ protected:
   nsCOMPtr<CacheFileIOListener> mCallback;
   nsCOMPtr<nsIEventTarget>      mTarget;
   nsRefPtr<CacheFileHandle>     mHandle;
-  nsresult                      mRV;
 };
 
 class DoomFileByKeyEvent : public nsRunnable {
@@ -855,7 +794,6 @@ public:
   DoomFileByKeyEvent(const nsACString &aKey,
                      CacheFileIOListener *aCallback)
     : mCallback(aCallback)
-    , mRV(NS_ERROR_FAILURE)
   {
     MOZ_COUNT_CTOR(DoomFileByKeyEvent);
 
@@ -863,9 +801,7 @@ public:
     sum.update(aKey.BeginReading(), aKey.Length());
     sum.finish(mHash);
 
-    mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
     mIOMan = CacheFileIOManager::gInstance;
-    MOZ_ASSERT(mTarget);
   }
 
 protected:
@@ -877,31 +813,26 @@ protected:
 public:
   NS_IMETHOD Run()
   {
-    if (mTarget) {
-      if (!mIOMan) {
-        mRV = NS_ERROR_NOT_INITIALIZED;
-      } else {
-        mRV = mIOMan->DoomFileByKeyInternal(&mHash, false);
-        mIOMan = nullptr;
-      }
+    nsresult rv;
 
-      nsCOMPtr<nsIEventTarget> target;
-      mTarget.swap(target);
-      target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+    if (!mIOMan) {
+      rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      if (mCallback) {
-        mCallback->OnFileDoomed(nullptr, mRV);
-      }
+      rv = mIOMan->DoomFileByKeyInternal(&mHash, false);
+      mIOMan = nullptr;
     }
+
+    if (mCallback) {
+      mCallback->OnFileDoomed(nullptr, rv);
+    }
+
     return NS_OK;
   }
 
 protected:
   SHA1Sum::Hash                 mHash;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  nsCOMPtr<nsIEventTarget>      mTarget;
   nsRefPtr<CacheFileIOManager>  mIOMan;
-  nsresult                      mRV;
 };
 
 class ReleaseNSPRHandleEvent : public nsRunnable {
@@ -940,10 +871,8 @@ public:
     , mTruncatePos(aTruncatePos)
     , mEOFPos(aEOFPos)
     , mCallback(aCallback)
-    , mRV(NS_ERROR_FAILURE)
   {
     MOZ_COUNT_CTOR(TruncateSeekSetEOFEvent);
-    mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
   }
 
 protected:
@@ -955,22 +884,19 @@ protected:
 public:
   NS_IMETHOD Run()
   {
-    if (mTarget) {
-      if (mHandle->IsClosed()) {
-        mRV = NS_ERROR_NOT_INITIALIZED;
-      } else {
-        mRV = CacheFileIOManager::gInstance->TruncateSeekSetEOFInternal(
-          mHandle, mTruncatePos, mEOFPos);
-      }
+    nsresult rv;
 
-      nsCOMPtr<nsIEventTarget> target;
-      mTarget.swap(target);
-      target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+    if (mHandle->IsClosed()) {
+      rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      if (mCallback) {
-        mCallback->OnEOFSet(mHandle, mRV);
-      }
+      rv = CacheFileIOManager::gInstance->TruncateSeekSetEOFInternal(
+        mHandle, mTruncatePos, mEOFPos);
     }
+
+    if (mCallback) {
+      mCallback->OnEOFSet(mHandle, rv);
+    }
+
     return NS_OK;
   }
 
@@ -979,8 +905,6 @@ protected:
   int64_t                       mTruncatePos;
   int64_t                       mEOFPos;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  nsCOMPtr<nsIEventTarget>      mTarget;
-  nsresult                      mRV;
 };
 
 class RenameFileEvent : public nsRunnable {
@@ -990,10 +914,8 @@ public:
     : mHandle(aHandle)
     , mNewName(aNewName)
     , mCallback(aCallback)
-    , mRV(NS_ERROR_FAILURE)
   {
     MOZ_COUNT_CTOR(RenameFileEvent);
-    mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
   }
 
 protected:
@@ -1005,22 +927,19 @@ protected:
 public:
   NS_IMETHOD Run()
   {
-    if (mTarget) {
-      if (mHandle->IsClosed()) {
-        mRV = NS_ERROR_NOT_INITIALIZED;
-      } else {
-        mRV = CacheFileIOManager::gInstance->RenameFileInternal(mHandle,
-                                                                mNewName);
-      }
+    nsresult rv;
 
-      nsCOMPtr<nsIEventTarget> target;
-      mTarget.swap(target);
-      target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
+    if (mHandle->IsClosed()) {
+      rv = NS_ERROR_NOT_INITIALIZED;
     } else {
-      if (mCallback) {
-        mCallback->OnFileRenamed(mHandle, mRV);
-      }
+      rv = CacheFileIOManager::gInstance->RenameFileInternal(mHandle,
+                                                             mNewName);
     }
+
+    if (mCallback) {
+      mCallback->OnFileRenamed(mHandle, rv);
+    }
+
     return NS_OK;
   }
 
@@ -1028,8 +947,6 @@ protected:
   nsRefPtr<CacheFileHandle>     mHandle;
   nsCString                     mNewName;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  nsCOMPtr<nsIEventTarget>      mTarget;
-  nsresult                      mRV;
 };
 
 class InitIndexEntryEvent : public nsRunnable {
@@ -1616,8 +1533,7 @@ CacheFileIOManager::Notify(nsITimer * aTimer)
 // static
 nsresult
 CacheFileIOManager::OpenFile(const nsACString &aKey,
-                             uint32_t aFlags, bool aResultOnAnyThread,
-                             CacheFileIOListener *aCallback)
+                             uint32_t aFlags, CacheFileIOListener *aCallback)
 {
   LOG(("CacheFileIOManager::OpenFile() [key=%s, flags=%d, listener=%p]",
        PromiseFlatCString(aKey).get(), aFlags, aCallback));
@@ -1630,7 +1546,7 @@ CacheFileIOManager::OpenFile(const nsACString &aKey,
   }
 
   bool priority = aFlags & CacheFileIOManager::PRIORITY;
-  nsRefPtr<OpenFileEvent> ev = new OpenFileEvent(aKey, aFlags, aResultOnAnyThread, aCallback);
+  nsRefPtr<OpenFileEvent> ev = new OpenFileEvent(aKey, aFlags, aCallback);
   rv = ioMan->mIOThread->Dispatch(ev, priority
     ? CacheIOThread::OPEN_PRIORITY
     : CacheIOThread::OPEN);
@@ -1886,7 +1802,7 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
 // static
 nsresult
 CacheFileIOManager::Read(CacheFileHandle *aHandle, int64_t aOffset,
-                         char *aBuf, int32_t aCount, bool aResultOnAnyThread,
+                         char *aBuf, int32_t aCount,
                          CacheFileIOListener *aCallback)
 {
   LOG(("CacheFileIOManager::Read() [handle=%p, offset=%lld, count=%d, "
@@ -1900,7 +1816,7 @@ CacheFileIOManager::Read(CacheFileHandle *aHandle, int64_t aOffset,
   }
 
   nsRefPtr<ReadEvent> ev = new ReadEvent(aHandle, aOffset, aBuf, aCount,
-                                         aResultOnAnyThread, aCallback);
+                                         aCallback);
   rv = ioMan->mIOThread->Dispatch(ev, aHandle->IsPriority()
     ? CacheIOThread::READ_PRIORITY
     : CacheIOThread::READ);

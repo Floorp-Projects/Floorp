@@ -1506,7 +1506,6 @@ CacheIndex::WriteIndexToDisk()
   rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kTempIndexName),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::CREATE,
-                                    true,
                                     mIndexFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::WriteIndexToDisk() - Can't open file [rv=0x%08x]", rv));
@@ -1952,7 +1951,6 @@ CacheIndex::ReadIndexFromDisk()
   rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kIndexName),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
-                                    true,
                                     mIndexFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
@@ -1965,7 +1963,6 @@ CacheIndex::ReadIndexFromDisk()
   rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kJournalName),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
-                                    true,
                                     mJournalFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
@@ -1977,7 +1974,6 @@ CacheIndex::ReadIndexFromDisk()
   rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kTempIndexName),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
-                                    true,
                                     mTmpFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
@@ -2018,7 +2014,7 @@ CacheIndex::StartReadingIndex()
   mRWBufPos = std::min(mRWBufSize,
                        static_cast<uint32_t>(mIndexHandle->FileSize()));
 
-  rv = CacheFileIOManager::Read(mIndexHandle, 0, mRWBuf, mRWBufPos, true, this);
+  rv = CacheFileIOManager::Read(mIndexHandle, 0, mRWBuf, mRWBufPos, this);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::StartReadingIndex() - CacheFileIOManager::Read() failed "
          "synchronously [rv=0x%08x]", rv));
@@ -2143,7 +2139,7 @@ CacheIndex::ParseRecords()
   mRWBufPos = pos + toRead;
 
   rv = CacheFileIOManager::Read(mIndexHandle, fileOffset, mRWBuf + pos, toRead,
-                                true, this);
+                                this);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ParseRecords() - CacheFileIOManager::Read() failed "
          "synchronously [rv=0x%08x]", rv));
@@ -2181,7 +2177,7 @@ CacheIndex::StartReadingJournal()
   mRWBufPos = std::min(mRWBufSize,
                        static_cast<uint32_t>(mJournalHandle->FileSize()));
 
-  rv = CacheFileIOManager::Read(mJournalHandle, 0, mRWBuf, mRWBufPos, true, this);
+  rv = CacheFileIOManager::Read(mJournalHandle, 0, mRWBuf, mRWBufPos, this);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::StartReadingJournal() - CacheFileIOManager::Read() failed"
          " synchronously [rv=0x%08x]", rv));
@@ -2256,7 +2252,7 @@ CacheIndex::ParseJournal()
   mRWBufPos = pos + toRead;
 
   rv = CacheFileIOManager::Read(mJournalHandle, fileOffset, mRWBuf + pos,
-                                toRead, true, this);
+                                toRead, this);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ParseJournal() - CacheFileIOManager::Read() failed "
          "synchronously [rv=0x%08x]", rv));
