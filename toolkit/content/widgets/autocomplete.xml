@@ -1080,6 +1080,21 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </body>
       </method>
 
+      <method name="_getImageURLForResolution">
+        <parameter name="aWin"/>
+        <parameter name="aURL"/>
+        <parameter name="aWidth"/>
+        <parameter name="aHeight"/>
+        <body>
+          <![CDATA[
+          let width  = Math.round(aWidth * aWin.devicePixelRatio);
+          let height = Math.round(aHeight * aWin.devicePixelRatio);
+          return aURL + (aURL.contains("#") ? "&" : "#") +
+                 "-moz-resolution=" + width + "," + height;
+          ]]>
+        </body>
+      </method>
+
       <method name="_appendCurrentResult">
         <body>
           <![CDATA[
@@ -1124,7 +1139,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             // set these attributes before we set the class
             // so that we can use them from the constructor
-            item.setAttribute("image", controller.getImageAt(this._currentIndex));
+            let iconURI = this._getImageURLForResolution(window, controller.getImageAt(this._currentIndex), 16, 16);
+            item.setAttribute("image", iconURI);
             item.setAttribute("url", url);
             item.setAttribute("title", controller.getCommentAt(this._currentIndex));
             item.setAttribute("type", controller.getStyleAt(this._currentIndex));
