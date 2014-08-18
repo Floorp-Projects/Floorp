@@ -430,6 +430,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     foldConstants(foldConstants),
     abortedSyntaxParse(false),
     isUnexpectedEOF_(false),
+    sawDeprecatedForEach(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
     {
@@ -4085,6 +4086,7 @@ Parser<FullParseHandler>::forStatement()
     if (allowsForEachIn() && tokenStream.matchContextualKeyword(context->names().each)) {
         iflags = JSITER_FOREACH;
         isForEach = true;
+        sawDeprecatedForEach = true;
     }
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
@@ -7589,7 +7591,13 @@ Parser<ParseHandler>::accumulateTelemetry()
     if (!isHTTP)
         return;
 
+    enum DeprecatedLanguageExtensions {
+        DeprecatedForEach = 0,            // JS 1.6+
+    };
+
     // TODO: Call back into Firefox's Telemetry reporter.
+    if (sawDeprecatedForEach)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedForEach);
 }
 
 template class Parser<FullParseHandler>;
