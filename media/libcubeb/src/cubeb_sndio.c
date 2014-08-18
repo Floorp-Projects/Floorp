@@ -67,7 +67,7 @@ sndio_mainloop(void *arg)
 #define MAXFDS 8
   struct pollfd pfds[MAXFDS];
   cubeb_stream *s = arg;
-  int n, nfds, revents, state;
+  int n, nfds, revents, state = CUBEB_STATE_STARTED;
   size_t start = 0, end = 0;
   long nfr;
 
@@ -271,7 +271,7 @@ static int
 sndio_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
 {
   // XXX Not yet implemented.
-  latency_ms = 40;
+  *latency_ms = 40;
 
   return CUBEB_OK;
 }
