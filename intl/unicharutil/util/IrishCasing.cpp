@@ -241,7 +241,7 @@ IrishCasing::UpperCase(uint32_t aCh, State& aState,
   uint8_t stateEntry = sUppercaseStateTable[cls][aState];
   aMarkPos = !!(stateEntry & kMarkPositionFlag);
   aAction = (stateEntry & kActionMask) >> kActionShift;
-  aState = (stateEntry & kNextStateMask);
+  aState = State(stateEntry & kNextStateMask);
 
   return ToUpperCase(aCh);
 }
