@@ -31,15 +31,18 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
                                ErrorResult& aRv)
   : FileSystemTaskBase(aFileSystem)
   , mTargetRealPath(aPath)
-  , mBlobData(aBlobData)
   , mReplace(replace)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
   GetOutputBufferSize();
-  if (mBlobData) {
-    nsresult rv = mBlobData->GetInternalStream(getter_AddRefs(mBlobStream));
-    NS_WARN_IF(NS_FAILED(rv));
+  if (aBlobData) {
+    if (FileSystemUtils::IsParentProcess()) {
+      nsresult rv = aBlobData->GetInternalStream(getter_AddRefs(mBlobStream));
+      NS_WARN_IF(NS_FAILED(rv));
+    } else {
+      mBlobData = aBlobData;
+    }
   }
   mArrayData.SwapElements(aArrayData);
   nsCOMPtr<nsIGlobalObject> globalObject =
@@ -74,16 +77,17 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   }
 
   BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(data));
-  mBlobData = bp->GetBlob();
-  MOZ_ASSERT(mBlobData, "mBlobData should not be null.");
-  nsresult rv = mBlobData->GetInternalStream(getter_AddRefs(mBlobStream));
+  nsCOMPtr<nsIDOMBlob> blobData = bp->GetBlob();
+  MOZ_ASSERT(blobData, "blobData should not be null.");
+  nsresult rv = blobData->GetInternalStream(getter_AddRefs(mBlobStream));
   NS_WARN_IF(NS_FAILED(rv));
 }
 
 CreateFileTask::~CreateFileTask()
 {
-  MOZ_ASSERT(!mPromise || NS_IsMainThread(),
-             "mPromise should be released on main thread!");
+  MOZ_ASSERT((!mPromise && !mBlobData) || NS_IsMainThread(),
+             "mPromise and mBlobData should be released on main thread!");
+
   if (mBlobStream) {
     mBlobStream->Close();
   }
@@ -283,6 +287,7 @@ CreateFileTask::HandlerCallback()
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   if (mFileSystem->IsShutdown()) {
     mPromise = nullptr;
+    mBlobData = nullptr;
     return;
   }
 
@@ -291,12 +296,14 @@ CreateFileTask::HandlerCallback()
       mErrorValue);
     mPromise->MaybeRejectBrokenly(domError);
     mPromise = nullptr;
+    mBlobData = nullptr;
     return;
   }
 
   nsCOMPtr<nsIDOMFile> file = new DOMFile(mTargetFileImpl);
   mPromise->MaybeResolve(file);
   mPromise = nullptr;
+  mBlobData = nullptr;
 }
 
 void
