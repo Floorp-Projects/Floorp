@@ -12,6 +12,7 @@
 #include "assembler/assembler/X86Assembler.h"
 #include "jit/CompactBuffer.h"
 #include "jit/IonCode.h"
+#include "jit/JitCompartment.h"
 #include "jit/shared/Assembler-shared.h"
 
 namespace js {
@@ -160,6 +161,11 @@ PatchJump(CodeLocationJump jump, CodeLocationLabel label)
               (*x == 0xE9));
 #endif
     JSC::X86Assembler::setRel32(jump.raw(), label.raw());
+}
+static inline void
+PatchBackedge(CodeLocationJump &jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
+{
+    PatchJump(jump_, label);
 }
 
 // Return operand from a JS -> JS call.
