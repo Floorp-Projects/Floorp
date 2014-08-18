@@ -890,21 +890,29 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev,
 }
 
 bool
-APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVelocity,
-                              nsRefPtr<const OverscrollHandoffChain> aOverscrollHandoffChain)
+APZCTreeManager::DispatchFling(AsyncPanZoomController* aPrev,
+                               ScreenPoint aVelocity,
+                               nsRefPtr<const OverscrollHandoffChain> aOverscrollHandoffChain,
+                               bool aHandoff)
 {
-  // Find |aPrev| in the handoff chain.
-  uint32_t i;
-  for (i = 0; i < aOverscrollHandoffChain->Length(); ++i) {
-    if (aOverscrollHandoffChain->GetApzcAtIndex(i) == aPrev) {
-      break;
-    }
-  }
-
-  // Get the next APZC in the handoff chain, if any.
   nsRefPtr<AsyncPanZoomController> next;
-  if (i + 1 < aOverscrollHandoffChain->Length()) {
-    next = aOverscrollHandoffChain->GetApzcAtIndex(i + 1);
+
+  // If the fling is being handed off, give it to the next APZC in the
+  // handoff chain after |aPrev|.
+  if (aHandoff) {
+    // Find |aPrev| in the handoff chain.
+    uint32_t i = aOverscrollHandoffChain->IndexOf(aPrev);
+
+    // Get the next APZC in the handoff chain, if any.
+    if (i + 1 < aOverscrollHandoffChain->Length()) {
+      next = aOverscrollHandoffChain->GetApzcAtIndex(i + 1);
+    }
+  // If the fling is being started, give it to the first APZC in the
+  // handoff chain.
+  } else {
+    if (aOverscrollHandoffChain->Length() != 0) {
+      next = aOverscrollHandoffChain->GetApzcAtIndex(0);
+    }
   }
 
   // Nothing to hand off fling to.
@@ -921,11 +929,13 @@ APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVeloci
   // rather than (0, 0).
   ScreenPoint startPoint;  // (0, 0)
   ScreenPoint endPoint = startPoint + aVelocity;
-  TransformDisplacement(this, aPrev, next, startPoint, endPoint);
+  if (aPrev != next) {
+    TransformDisplacement(this, aPrev, next, startPoint, endPoint);
+  }
   ScreenPoint transformedVelocity = endPoint - startPoint;
 
   // Tell |next| to start a fling with the transformed velocity.
-  return next->TakeOverFling(transformedVelocity, aOverscrollHandoffChain);
+  return next->AttemptFling(transformedVelocity, aOverscrollHandoffChain, aHandoff);
 }
 
 bool
