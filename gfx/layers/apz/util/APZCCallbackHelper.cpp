@@ -10,6 +10,9 @@
 #include "nsLayoutUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIDOMWindow.h"
 
 namespace mozilla {
 namespace layers {
