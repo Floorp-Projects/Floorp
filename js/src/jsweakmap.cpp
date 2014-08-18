@@ -368,7 +368,7 @@ WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *weakMap, JSObject *key)
 #endif
 }
 
-MOZ_ALWAYS_INLINE bool
+static MOZ_ALWAYS_INLINE bool
 SetWeakMapEntryInternal(JSContext *cx, Handle<WeakMapObject*> mapObj,
                         HandleObject key, HandleValue value)
 {
