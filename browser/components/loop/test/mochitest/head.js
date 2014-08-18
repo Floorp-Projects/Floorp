@@ -57,9 +57,17 @@ function loadLoopPanel() {
   Services.prefs.setCharPref("services.push.serverURL", "ws://localhost/");
   Services.prefs.setCharPref("loop.server", "http://localhost/");
 
+  // Turn off the network for loop tests, so that we don't
+  // try to access the remote servers. If we want to turn this
+  // back on in future, be careful to check for intermittent
+  // failures.
+  let wasOffline = Services.io.offline;
+  Services.io.offline = true;
+
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("services.push.serverURL");
     Services.prefs.clearUserPref("loop.server");
+    Services.io.offline = wasOffline;
   });
 
   // Turn off animations to make tests quicker.
