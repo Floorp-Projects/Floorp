@@ -8,7 +8,6 @@
 #include <cutils/properties.h>
 #include "prinit.h"
 #include "js/CharacterEncoding.h"
-#include "mozilla/dom/network/NetUtils.h"
 
 using namespace mozilla::dom;
 
@@ -380,14 +379,17 @@ public:
 // Concrete class to use to access the wpa supplicant.
 WpaSupplicant::WpaSupplicant()
 {
-  if (NetUtils::SdkVersion() < 16) {
+  char propVersion[PROPERTY_VALUE_MAX];
+  property_get("ro.build.version.sdk", propVersion, "0");
+  mSdkVersion = strtol(propVersion, nullptr, 10);
+
+  if (mSdkVersion < 16) {
     mImpl = new ICSWpaSupplicantImpl();
-  } else if (NetUtils::SdkVersion() < 19) {
+  } else if (mSdkVersion < 19) {
     mImpl = new JBWpaSupplicantImpl();
   } else {
     mImpl = new KKWpaSupplicantImpl();
   }
-  mNetUtils = new NetUtils();
   mWifiHotspotUtils = new WifiHotspotUtils();
 };
 
@@ -418,9 +420,6 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
                                    const nsCString& aInterface)
 {
   CHECK_HWLIB(false)
-  if (!mNetUtils->GetSharedLibrary()) {
-    return false;
-  }
 
   if (!mWifiHotspotUtils->GetSharedLibrary()) {
     return false;
@@ -455,81 +454,6 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
     aResult.mStatus = mImpl->do_wifi_stop_supplicant(0);
   } else if (aOptions.mCmd.EqualsLiteral("connect_to_supplicant")) {
     aResult.mStatus = mImpl->do_wifi_connect_to_supplicant(aInterface.get());
-  } else if (aOptions.mCmd.EqualsLiteral("ifc_enable")) {
-    aResult.mStatus = mNetUtils->do_ifc_enable(GET_CHAR(mIfname));
-  } else if (aOptions.mCmd.EqualsLiteral("ifc_disable")) {
-    aResult.mStatus = mNetUtils->do_ifc_disable(GET_CHAR(mIfname));
-  } else if (aOptions.mCmd.EqualsLiteral("ifc_configure")) {
-    aResult.mStatus = mNetUtils->do_ifc_configure(
-      GET_CHAR(mIfname), aOptions.mIpaddr, aOptions.mMask,
-      aOptions.mGateway, aOptions.mDns1, aOptions.mDns2
-    );
-  } else if (aOptions.mCmd.EqualsLiteral("ifc_reset_connections")) {
-    aResult.mStatus = mNetUtils->do_ifc_reset_connections(
-      GET_CHAR(mIfname), RESET_ALL_ADDRESSES
-    );
-  } else if (aOptions.mCmd.EqualsLiteral("dhcp_stop")) {
-    aResult.mStatus = mNetUtils->do_dhcp_stop(GET_CHAR(mIfname));
-  } else if (aOptions.mCmd.EqualsLiteral("dhcp_do_request")) {
-    char ipaddr[PROPERTY_VALUE_MAX];
-    char gateway[PROPERTY_VALUE_MAX];
-    uint32_t prefixLength;
-    char dns1[PROPERTY_VALUE_MAX];
-    char dns2[PROPERTY_VALUE_MAX];
-    char server[PROPERTY_VALUE_MAX];
-    uint32_t lease;
-    char vendorinfo[PROPERTY_VALUE_MAX];
-    aResult.mStatus =
-      mNetUtils->do_dhcp_do_request(GET_CHAR(mIfname),
-                                    ipaddr,
-                                    gateway,
-                                    &prefixLength,
-                                    dns1,
-                                    dns2,
-                                    server,
-                                    &lease,
-                                    vendorinfo);
-
-    if (aResult.mStatus == -1) {
-      // Early return since we failed.
-      return true;
-    }
-
-    aResult.mIpaddr_str = NS_ConvertUTF8toUTF16(ipaddr);
-    aResult.mGateway_str = NS_ConvertUTF8toUTF16(gateway);
-    aResult.mDns1_str = NS_ConvertUTF8toUTF16(dns1);
-    aResult.mDns2_str = NS_ConvertUTF8toUTF16(dns2);
-    aResult.mServer_str = NS_ConvertUTF8toUTF16(server);
-    aResult.mVendor_str = NS_ConvertUTF8toUTF16(vendorinfo);
-    aResult.mLease = lease;
-    aResult.mMask = MakeMask(prefixLength);
-
-    uint32_t inet4; // only support IPv4 for now.
-
-#define INET_PTON(var, field)                                                 \
-  PR_BEGIN_MACRO                                                              \
-    inet_pton(AF_INET, var, &inet4);                                          \
-    aResult.field = inet4;                                                    \
-  PR_END_MACRO
-
-    INET_PTON(ipaddr, mIpaddr);
-    INET_PTON(gateway, mGateway);
-
-    if (dns1[0] != '\0') {
-      INET_PTON(dns1, mDns1);
-    }
-
-    if (dns2[0] != '\0') {
-      INET_PTON(dns2, mDns2);
-    }
-
-    INET_PTON(server, mServer);
-
-    //aResult.mask_str = netHelpers.ipToString(obj.mask);
-    char inet_str[64];
-    if (inet_ntop(AF_INET, &aResult.mMask, inet_str, sizeof(inet_str))) {
-      aResult.mMask_str = NS_ConvertUTF8toUTF16(inet_str);
-    }
   } else if (aOptions.mCmd.EqualsLiteral("hostapd_command")) {
     size_t len = BUFFER_SIZE - 1;
     char buffer[BUFFER_SIZE];
@@ -595,7 +519,7 @@ WpaSupplicant::CheckBuffer(char* buffer, int32_t length,
     return;
   }
 
-  if (NetUtils::SdkVersion() < 18) {
+  if (mSdkVersion < 18) {
     buffer[length] = 0;
     LossyConvertUTF8toUTF16(buffer, length, aEvent);
     return;
