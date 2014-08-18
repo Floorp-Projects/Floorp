@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that css-logic handles inherited properties correctly
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test css-logic inheritance</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div style="margin-left:10px; font-size: 5px">
+    <div id="innerdiv">Inner div</div>
+  </div>
+  <script type="application/javascript;version=1.8">
+
+  window.onload = function() {
+    var Cu = Components.utils;
+
+    Cu.import("resource://gre/modules/devtools/Loader.jsm");
+    Cu.import("resource://gre/modules/Services.jsm");
+    const {CssLogic} = devtools.require("devtools/styleinspector/css-logic");
+
+    SimpleTest.waitForExplicitFinish();
+
+    let cssLogic = new CssLogic();
+    cssLogic.highlight(document.getElementById("innerdiv"));
+
+    let marginProp = cssLogic.getPropertyInfo("margin-left");
+    is(marginProp.matchedRuleCount, 0,
+      "margin-left should not be included in matched selectors.");
+
+    let fontSizeProp = cssLogic.getPropertyInfo("font-size");
+    is(fontSizeProp.matchedRuleCount, 1,
+      "font-size should be included in matched selectors.");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</body>
+</html>

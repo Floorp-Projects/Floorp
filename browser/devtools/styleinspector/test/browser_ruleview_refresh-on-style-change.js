@@ -20,7 +20,7 @@ let test = asyncTest(function*() {
 
   info("Opening the rule view and selecting the test node");
   let {toolbox, inspector, view} = yield openRuleView();
-  yield selectNode(div, inspector);
+  yield selectNode("#testdiv", inspector);
 
   let fontSize = getRuleViewPropertyValue(view, "element", "font-size");
   is(fontSize, "10px", "The rule view shows the right font-size");

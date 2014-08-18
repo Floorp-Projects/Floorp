@@ -19,19 +19,19 @@ let test = asyncTest(function*() {
 
   yield selectNode("#id1", inspector);
   yield modifyRuleViewWidth("300px", view, inspector);
-  assertRuleAndMarkupViewWidth("id1", "300px", view, inspector);
+  yield assertRuleAndMarkupViewWidth("id1", "300px", view, inspector);
 
   yield selectNode("#id2", inspector);
-  assertRuleAndMarkupViewWidth("id2", "100px", view, inspector);
+  yield assertRuleAndMarkupViewWidth("id2", "100px", view, inspector);
   yield modifyRuleViewWidth("50px", view, inspector);
-  assertRuleAndMarkupViewWidth("id2", "50px", view, inspector);
+  yield assertRuleAndMarkupViewWidth("id2", "50px", view, inspector);
 
   yield reloadPage(inspector);
 
   yield selectNode("#id1", inspector);
-  assertRuleAndMarkupViewWidth("id1", "200px", view, inspector);
+  yield assertRuleAndMarkupViewWidth("id1", "200px", view, inspector);
   yield selectNode("#id2", inspector);
-  assertRuleAndMarkupViewWidth("id2", "100px", view, inspector);
+  yield assertRuleAndMarkupViewWidth("id2", "100px", view, inspector);
 });
 
 function getStyleRule(ruleView) {
@@ -62,8 +62,8 @@ function* modifyRuleViewWidth(value, ruleView, inspector) {
   yield onNewFieldBlur;
 }
 
-function getContainerStyleAttrValue(id, {markup}) {
-  let front = markup.walker.frontForRawNode(content.document.getElementById(id));
+function* getContainerStyleAttrValue(id, {walker, markup}) {
+  let front = yield walker.querySelector(walker.rootNode, "#" + id);
   let container = markup.getContainer(front);
 
   let attrIndex = 0;
@@ -75,11 +75,11 @@ function getContainerStyleAttrValue(id, {markup}) {
   }
 }
 
-function assertRuleAndMarkupViewWidth(id, value, ruleView, inspector) {
+function* assertRuleAndMarkupViewWidth(id, value, ruleView, inspector) {
   let valueSpan = getStyleRule(ruleView).querySelector(".ruleview-propertyvalue");
   is(valueSpan.textContent, value, "Rule-view style width is " + value + " as expected");
 
-  let attr = getContainerStyleAttrValue(id, inspector);
+  let attr = yield getContainerStyleAttrValue(id, inspector);
   is(attr.textContent.replace(/\s/g, ""), "width:" + value + ";", "Markup-view style attribute width is " + value);
 }
 
