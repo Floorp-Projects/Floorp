@@ -3421,9 +3421,9 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
       if (mMediaKeys) {
         mMediaKeys->Shutdown();
         mMediaKeys = nullptr;
-      }
-      if (mDecoder) {
-        ShutdownDecoder();
+        if (mDecoder) {
+          ShutdownDecoder();
+        }
       }
 #endif
       if (mDecoder) {
