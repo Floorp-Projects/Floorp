@@ -17,11 +17,33 @@ let gTests = [
     run: function* () {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
-        let properUrl = "http://example.com/browser/browser/base/content/test/general/browser_fxa_oauth.html?" +
-          "webChannelId=oauth_client_id&scope=&client_id=client_id&action=signin&state=state";
+        let properUrl = "http://example.com/browser/browser/base/content/test/general/browser_fxa_oauth.html";
+        let queryStrings = [
+          "action=signin",
+          "client_id=client_id",
+          "scope=",
+          "state=state",
+          "webChannelId=oauth_client_id"
+        ];
+        queryStrings.sort();
+
         waitForTab(function (tab) {
           Assert.ok("Tab successfully opened");
-          Assert.equal(gBrowser.currentURI.spec, properUrl);
+
+          // The order of the queries is unpredictable, so allow for that.
+          let a1 = gBrowser.currentURI.spec.split('?');
+          let a2 = a1[1].split('&');
+          a2.sort();
+          let match = a1.length == 2 &&
+                      a1[0] == properUrl &&
+                      a2.length == queryStrings.length;
+          for (let i = 0; i < queryStrings.length; i++) {
+            if (a2[i] !== queryStrings[i]) {
+              match = false;
+            }
+          }
+          Assert.ok(match);
+
           tabOpened = true;
         });
 

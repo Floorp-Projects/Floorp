@@ -106,7 +106,6 @@ namespace jit {
     _(InitProp)                                                             \
     _(InitPropGetterSetter)                                                 \
     _(Start)                                                                \
-    _(PcOffset)                                                             \
     _(OsrEntry)                                                             \
     _(Nop)                                                                  \
     _(LimitedTruncate)                                                      \

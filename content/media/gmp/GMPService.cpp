@@ -19,6 +19,8 @@
 #include "mozilla/unused.h"
 #include "GMPDecryptorParent.h"
 #include "GMPAudioDecoderParent.h"
+#include "nsComponentManagerUtils.h"
+#include "mozilla/Preferences.h"
 #include "runnable_utils.h"
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
 #include "mozilla/Sandbox.h"
@@ -127,17 +129,29 @@ GeckoMediaPluginService::GetGeckoMediaPluginService()
 
 NS_IMPL_ISUPPORTS(GeckoMediaPluginService, mozIGeckoMediaPluginService, nsIObserver)
 
+#define GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT 3000
+static int32_t sMaxAsyncShutdownWaitMs = 0;
+
 GeckoMediaPluginService::GeckoMediaPluginService()
   : mMutex("GeckoMediaPluginService::mMutex")
   , mShuttingDown(false)
   , mShuttingDownOnGMPThread(false)
+  , mWaitingForPluginsAsyncShutdown(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  static bool setTimeoutPrefCache = false;
+  if (!setTimeoutPrefCache) {
+    setTimeoutPrefCache = true;
+    Preferences::AddIntVarCache(&sMaxAsyncShutdownWaitMs,
+                                "media.gmp.async-shutdown-timeout",
+                                GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT);
+  }
 }
 
 GeckoMediaPluginService::~GeckoMediaPluginService()
 {
   MOZ_ASSERT(mPlugins.IsEmpty());
+  MOZ_ASSERT(mAsyncShutdownPlugins.IsEmpty());
 }
 
 void
@@ -147,7 +161,7 @@ GeckoMediaPluginService::Init()
 
   nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
   MOZ_ASSERT(obsService);
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, "profile-change-teardown", false)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, false)));
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -160,11 +174,22 @@ GeckoMediaPluginService::Init()
   unused << GetThread(getter_AddRefs(thread));
 }
 
+void
+AbortWaitingForGMPAsyncShutdown(nsITimer* aTimer, void* aClosure)
+{
+  NS_WARNING("Timed out waiting for GMP async shutdown!");
+  nsRefPtr<GeckoMediaPluginService> service = sSingletonService.get();
+  if (service) {
+    service->AbortAsyncShutdown();
+  }
+}
+
 NS_IMETHODIMP
 GeckoMediaPluginService::Observe(nsISupports* aSubject,
                                  const char* aTopic,
                                  const char16_t* aSomeData)
 {
+  LOGD(("%s::%s: %s", __CLASS__, __FUNCTION__, aTopic));
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> branch( do_QueryInterface(aSubject) );
     if (branch) {
@@ -184,7 +209,50 @@ GeckoMediaPluginService::Observe(nsISupports* aSubject,
         }
       }
     }
-  } else if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
+  } else if (!strcmp("profile-change-teardown", aTopic)) {
+
+    // How shutdown works:
+    //
+    // Some GMPs require time to do bookkeeping upon shutdown. These GMPs
+    // need to be given time to access storage during shutdown. To signal
+    // that time to shutdown is required, those GMPs implement the
+    // GMPAsyncShutdown interface.
+    //
+    // When we startup the child process, we query the GMP for the
+    // GMPAsyncShutdown interface, and if it's present, we send a message
+    // back to the GMPParent, which then registers the GMPParent by calling
+    // GMPService::AsyncShutdownNeeded().
+    //
+    // On shutdown, we set mWaitingForPluginsAsyncShutdown to true, and then
+    // call UnloadPlugins on the GMPThread, and process events on the main
+    // thread until an event sets mWaitingForPluginsAsyncShutdown=false on
+    // the main thread.
+    //
+    // UnloadPlugins() sends close messages for all plugins' API objects to
+    // the GMP interfaces in the child process, and then sends the async
+    // shutdown notifications to child GMPs. When a GMP has completed its
+    // shutdown, it calls GMPAsyncShutdownHost::ShutdownComplete(), which
+    // sends a message back to the parent, which calls
+    // GMPService::AsyncShutdownComplete(). If all plugins requiring async
+    // shutdown have called AsyncShutdownComplete() we stick an event on the
+    // main thread to set mWaitingForPluginsAsyncShutdown=false. We must use
+    // an event to do this, as we must ensure the main thread processes an
+    // event to run its loop. This will unblock the main thread, and shutdown
+    // of other components will proceed.
+    //
+    // We set a timer in UnloadPlugins(), and abort waiting for async
+    // shutdown if the GMPs are taking too long to shutdown.
+    //
+    // We shutdown in "profile-change-teardown", as the profile dir is
+    // still writable then, and it's required for GMPStorage. We block the
+    // shutdown process by spinning the main thread event loop until all GMPs
+    // have shutdown, or timeout has occurred.
+    //
+    // GMPStorage needs to work up until the shutdown-complete notification
+    // arrives from the GMP process.
+
+    mWaitingForPluginsAsyncShutdown = true;
+
     nsCOMPtr<nsIThread> gmpThread;
     {
       MutexAutoLock lock(mMutex);
@@ -194,11 +262,18 @@ GeckoMediaPluginService::Observe(nsISupports* aSubject,
     }
 
     if (gmpThread) {
-      gmpThread->Dispatch(NS_NewRunnableMethod(this, &GeckoMediaPluginService::UnloadPlugins),
-                           NS_DISPATCH_SYNC);
+      gmpThread->Dispatch(
+        NS_NewRunnableMethod(this, &GeckoMediaPluginService::UnloadPlugins),
+        NS_DISPATCH_NORMAL);
     } else {
       MOZ_ASSERT(mPlugins.IsEmpty());
     }
+
+    // Wait for plugins to do async shutdown...
+    while (mWaitingForPluginsAsyncShutdown) {
+      NS_ProcessNextEvent(NS_GetCurrentThread(), true);
+    }
+
   } else if (!strcmp(NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID, aTopic)) {
     nsCOMPtr<nsIThread> gmpThread;
     {
@@ -384,25 +459,116 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
 }
 
 void
+GeckoMediaPluginService::AsyncShutdownNeeded(GMPParent* aParent)
+{
+  LOGD(("%s::%s %p", __CLASS__, __FUNCTION__, aParent));
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+
+  mAsyncShutdownPlugins.AppendElement(aParent);
+}
+
+void
+GeckoMediaPluginService::AsyncShutdownComplete(GMPParent* aParent)
+{
+  LOGD(("%s::%s %p", __CLASS__, __FUNCTION__, aParent));
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+
+  mAsyncShutdownPlugins.RemoveElement(aParent);
+  if (mAsyncShutdownPlugins.IsEmpty() && mShuttingDownOnGMPThread) {
+    // The main thread is waiting for async shutdown of plugins,
+    // which has completed. Break the main thread out of its waiting loop.
+    AbortAsyncShutdown();
+  }
+}
+
+void
+GeckoMediaPluginService::SetAsyncShutdownComplete()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mWaitingForPluginsAsyncShutdown = false;
+}
+
+void
+GeckoMediaPluginService::AbortAsyncShutdown()
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  for (size_t i = 0; i < mAsyncShutdownPlugins.Length(); i++) {
+    mAsyncShutdownPlugins[i]->AbortAsyncShutdown();
+  }
+  mAsyncShutdownPlugins.Clear();
+  if (mAsyncShutdownTimeout) {
+    mAsyncShutdownTimeout->Cancel();
+    mAsyncShutdownTimeout = nullptr;
+  }
+  nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(
+    this, &GeckoMediaPluginService::SetAsyncShutdownComplete));
+  NS_DispatchToMainThread(task);
+}
+
+nsresult
+GeckoMediaPluginService::SetAsyncShutdownTimeout()
+{
+  MOZ_ASSERT(!mAsyncShutdownTimeout);
+
+  nsresult rv;
+  mAsyncShutdownTimeout = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to create timer for async GMP shutdown");
+    return NS_OK;
+  }
+
+  // Set timer to abort waiting for plugins to shutdown if they take
+  // too long.
+  rv = mAsyncShutdownTimeout->SetTarget(mGMPThread);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+   return rv;
+  }
+
+  return mAsyncShutdownTimeout->InitWithFuncCallback(
+    &AbortWaitingForGMPAsyncShutdown, nullptr, sMaxAsyncShutdownWaitMs,
+    nsITimer::TYPE_ONE_SHOT);
+}
+
+void
 GeckoMediaPluginService::UnloadPlugins()
 {
+  LOGD(("%s::%s async_shutdown=%d", __CLASS__, __FUNCTION__,
+        mAsyncShutdownPlugins.Length()));
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
   MOZ_ASSERT(!mShuttingDownOnGMPThread);
   mShuttingDownOnGMPThread = true;
 
-  MutexAutoLock lock(mMutex);
-  // Note: CloseActive is async; it will actually finish
-  // shutting down when all the plugins have unloaded.
-  for (uint32_t i = 0; i < mPlugins.Length(); i++) {
-    mPlugins[i]->CloseActive(true);
+  {
+    MutexAutoLock lock(mMutex);
+    // Note: CloseActive is async; it will actually finish
+    // shutting down when all the plugins have unloaded.
+    for (uint32_t i = 0; i < mPlugins.Length(); i++) {
+      mPlugins[i]->CloseActive(true);
+    }
+    mPlugins.Clear();
   }
-  mPlugins.Clear();
+
+  if (!mAsyncShutdownPlugins.IsEmpty()) {
+    // We have plugins that require async shutdown. Set a timer to abort
+    // waiting if they take too long to shutdown.
+    if (NS_FAILED(SetAsyncShutdownTimeout())) {
+      mAsyncShutdownPlugins.Clear();
+    }
+  }
+
+  if (mAsyncShutdownPlugins.IsEmpty()) {
+    mAsyncShutdownPlugins.Clear();
+    nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(
+      this, &GeckoMediaPluginService::SetAsyncShutdownComplete));
+    NS_DispatchToMainThread(task);
+  }
 }
 
 void
 GeckoMediaPluginService::CrashPlugins()
 {
+  LOGD(("%s::%s", __CLASS__, __FUNCTION__));
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
   MutexAutoLock lock(mMutex);
@@ -645,7 +811,11 @@ GeckoMediaPluginService::ReAddOnGMPThread(nsRefPtr<GMPParent>& aOld)
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, (void*) aOld));
 
-  nsRefPtr<GMPParent> gmp = ClonePlugin(aOld);
+  nsRefPtr<GMPParent> gmp;
+  if (!mShuttingDownOnGMPThread) {
+    // Don't re-add plugin if we're shutting down. Let the old plugin die.
+    gmp = ClonePlugin(aOld);
+  }
   // Note: both are now in the list
   // Until we give up the GMPThread, we're safe even if we unlock temporarily
   // since off-main-thread users just test for existance; they don't modify the list.
