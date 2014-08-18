@@ -75,6 +75,7 @@ let NetMonitorView = {
     this.RequestsMenu.initialize();
     this.NetworkDetails.initialize();
     this.CustomRequest.initialize();
+    this.arrowClosed = false;
   },
 
   /**
@@ -308,12 +309,16 @@ ToolbarView.prototype = {
     let requestsMenu = NetMonitorView.RequestsMenu;
     let selectedIndex = requestsMenu.selectedIndex;
 
+    // Allow opening the sidebar if it was previously closed with an arrow key.
+    requestsMenu.arrowClosed = false;
+
     // Make sure there's a selection if the button is pressed, to avoid
     // showing an empty network details pane.
+    // If there is a selection, toggle the sidebar.
     if (selectedIndex == -1 && requestsMenu.itemCount) {
       requestsMenu.selectedIndex = 0;
     } else {
-      requestsMenu.selectedIndex = -1;
+      NetMonitorView.Sidebar.toggle(NetMonitorView.detailsPaneHidden);
     }
   },
 
@@ -384,6 +389,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#request-menu-context-newtab").addEventListener("command", this._onContextNewTabCommand, false);
     $("#request-menu-context-copy-url").addEventListener("command", this._onContextCopyUrlCommand, false);
     $("#request-menu-context-copy-image-as-data-uri").addEventListener("command", this._onContextCopyImageAsDataUriCommand, false);
+
+    this.ignoreLeftRight = true;
+    this.widget.on("keyPress", this._handleKeyPress.bind(this));
 
     window.once("connected", this._onConnect.bind(this));
   },
@@ -730,6 +738,29 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     // Check if 'all' was selected before. If so, disable it.
     if (aType !== "all" && this._activeFilters.indexOf("all") !== -1) {
       this._disableFilter("all");
+    }
+  },
+
+  /**
+   * Handler to allow keyboard controls to close the Sidebar.
+   * Left|Return: open
+   * Right: close
+   *
+   * @param string aName
+   *        Name of the Event
+   * @param nsIDOMEvent aEvent
+   */
+  _handleKeyPress: function(aName, aEvent) {
+    switch (aEvent.keyCode) {
+      case aEvent.DOM_VK_RETURN:
+      case aEvent.DOM_VK_LEFT:
+        NetMonitorView.Sidebar.toggle(true);
+        this.arrowClosed = false;
+        return;
+      case aEvent.DOM_VK_RIGHT:
+        NetMonitorView.Sidebar.toggle(false);
+        this.arrowClosed = true;
+        return;
     }
   },
 
@@ -1546,6 +1577,10 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * The selection listener for this container.
    */
   _onSelect: function({ detail: item }) {
+    if (this.arrowClosed) {
+      return;
+    }
+
     if (item) {
       NetMonitorView.Sidebar.populate(item.attachment);
       NetMonitorView.Sidebar.toggle(true);

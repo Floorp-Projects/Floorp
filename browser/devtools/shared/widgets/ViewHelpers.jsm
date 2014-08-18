@@ -1182,6 +1182,13 @@ this.WidgetMethods = {
   autoFocusOnInput: true,
 
   /**
+   * Ignore Left and Right keypresses.
+   *
+   * If this flag is set to true, Widgets should implement their own handler.
+   */
+  ignoreLeftRight: false,
+
+  /**
    * When focusing on input, allow right clicks?
    * @see WidgetMethods.autoFocusOnInput
    */
@@ -1634,12 +1641,16 @@ this.WidgetMethods = {
 
     switch (aEvent.keyCode) {
       case aEvent.DOM_VK_UP:
-      case aEvent.DOM_VK_LEFT:
         this.focusPrevItem();
         return;
       case aEvent.DOM_VK_DOWN:
-      case aEvent.DOM_VK_RIGHT:
         this.focusNextItem();
+        return;
+      case aEvent.DOM_VK_LEFT:
+        if (!this.ignoreLeftRight) this.focusPrevItem();
+        return;
+      case aEvent.DOM_VK_RIGHT:
+        if (!this.ignoreLeftRight) this.focusNextItem();
         return;
       case aEvent.DOM_VK_PAGE_UP:
         this.focusItemAtDelta(-(this.pageSize || (this.itemCount / PAGE_SIZE_ITEM_COUNT_RATIO)));
