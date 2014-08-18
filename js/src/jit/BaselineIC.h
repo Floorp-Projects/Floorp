@@ -2255,8 +2255,8 @@ class ICCompare_Int32WithBoolean : public ICStub
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
-            return (static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
-                    (static_cast<int32_t>(lhsIsInt32_) << 24));
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
+                   (static_cast<int32_t>(lhsIsInt32_) << 24);
         }
 
       public:
@@ -2568,8 +2568,8 @@ class ICBinaryArith_Int32 : public ICStub
 
         // Stub keys shift-stubs need to encode the kind, the JSOp and if we allow doubles.
         virtual int32_t getKey() const {
-            return (static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
-                    (static_cast<int32_t>(allowDouble_) << 24));
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(op_) << 16) |
+                   (static_cast<int32_t>(allowDouble_) << 24);
         }
 
       public:

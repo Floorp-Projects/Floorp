@@ -1945,9 +1945,9 @@ DOUBLE_TO_JSVAL(double d)
 static inline JS_VALUE_CONSTEXPR jsval
 UINT_TO_JSVAL(uint32_t i)
 {
-    return (i <= JSVAL_INT_MAX
-            ? INT_TO_JSVAL((int32_t)i)
-            : DOUBLE_TO_JSVAL((double)i));
+    return i <= JSVAL_INT_MAX
+           ? INT_TO_JSVAL((int32_t)i)
+           : DOUBLE_TO_JSVAL((double)i);
 }
 
 static inline jsval
