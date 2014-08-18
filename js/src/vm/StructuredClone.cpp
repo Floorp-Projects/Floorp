@@ -930,7 +930,7 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
     checkStack();
 
     /* Write the header for obj. */
-    return out.writePair(obj->is<ArrayObject>() ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
+    return out.writePair(ObjectClassIs(obj, ESClass_Array, context()) ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
 }
 
 bool
@@ -1042,7 +1042,9 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             return writeTypedArray(obj);
         } else if (JS_IsArrayBufferObject(obj) && JS_ArrayBufferHasData(obj)) {
             return writeArrayBuffer(obj);
-        } else if (obj->is<JSObject>() || obj->is<ArrayObject>()) {
+        } else if (ObjectClassIs(obj, ESClass_Object, context())) {
+            return traverseObject(obj);
+        } else if (ObjectClassIs(obj, ESClass_Array, context())) {
             return traverseObject(obj);
         } else if (ObjectClassIs(obj, ESClass_Boolean, context())) {
             RootedValue unboxed(context());
