@@ -11,10 +11,9 @@
  *
  */
 
-[scriptable, uuid(83f892cf-7ed3-490e-967a-62640f3158e1)]
+[scriptable, uuid(b1fdf3c4-74e3-4f7d-a14d-2b76bcf53482)]
 interface nsICommandParams : nsISupports
 {
-
   /*
    * List of primitive types for parameter values.
    */
@@ -28,18 +27,18 @@ interface nsICommandParams : nsISupports
 
   /*
    * getValueType
-   * 
+   *
    * Get the type of a specified parameter
    */
   short       getValueType(in string name);
 
   /*
    * get_Value
-   * 
+   *
    * Get the value of a specified parameter. Will return
    * an error if the parameter does not exist, or if the value
    * is of the wrong type (no coercion is performed for you).
-   * 
+   *
    * nsISupports values can contain any XPCOM interface,
    * as documented for the command. It is permissible
    * for it to contain nsICommandParams, but not *this*
@@ -51,13 +50,13 @@ interface nsICommandParams : nsISupports
   AString     getStringValue(in string name);
   string      getCStringValue(in string name);
   nsISupports getISupportsValue(in string name);
-  
+
   /*
    * set_Value
-   * 
+   *
    * Set the value of a specified parameter (thus creating
    * an entry for it).
-   * 
+   *
    * nsISupports values can contain any XPCOM interface,
    * as documented for the command. It is permissible
    * for it to contain nsICommandParams, but not *this*
@@ -69,33 +68,13 @@ interface nsICommandParams : nsISupports
   void        setStringValue(in string name, in AString value);
   void        setCStringValue(in string name, in string value);
   void        setISupportsValue(in string name, in nsISupports value);
-  
+
   /*
    * removeValue
-   * 
+   *
    * Remove the specified parameter from the list.
    */
   void        removeValue(in string name);
-  
-  /*
-   * Enumeration methods
-   * 
-   * Use these to enumerate over the contents of a parameter
-   * list. For each name that getNext() returns, use 
-   * getValueType() and then getMumbleValue to get its
-   * value.
-   */
-  boolean     hasMoreElements();
-  void        first();
-
-  /**
-   * GetNext()
-   * 
-   * @return string pointer that will be allocated and is up 
-   *         to the caller to free
-   */
-  string      getNext();
-
 };
 
 // {f7fa4581-238e-11d5-a73c-ab64fb68f2bc}
