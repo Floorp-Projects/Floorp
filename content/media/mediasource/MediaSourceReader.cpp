@@ -11,7 +11,6 @@
 #include "MediaDecoderOwner.h"
 #include "MediaSource.h"
 #include "MediaSourceDecoder.h"
-#include "SharedThreadPool.h"
 #include "SubBufferDecoder.h"
 
 #ifdef MOZ_FMP4
@@ -42,7 +41,6 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder, dom::MediaSou
   , mActiveAudioDecoder(-1)
   , mMediaSource(aSource)
 {
-  mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
 }
 
 bool
@@ -137,7 +135,6 @@ MediaSourceReader::Shutdown()
   for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
     mDecoders[i]->GetReader()->Shutdown();
   }
-  mTaskQueue->Shutdown();
 }
 
 void
@@ -302,7 +299,8 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
 
 already_AddRefed<SubBufferDecoder>
 MediaSourceReader::CreateSubDecoder(const nsACString& aType,
-                                    MediaSourceDecoder* aParentDecoder)
+                                    MediaSourceDecoder* aParentDecoder,
+                                    MediaTaskQueue* aTaskQueue)
 {
   // XXX: Why/when is mDecoder null here, since it should be equal to aParentDecoder?!
   nsRefPtr<SubBufferDecoder> decoder =
@@ -315,18 +313,16 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType,
   // This reader will then forward them onto the state machine via this
   // reader's callback.
   RefPtr<MediaDataDecodedListener<MediaSourceReader>> callback =
-    new MediaDataDecodedListener<MediaSourceReader>(this, mTaskQueue);
+    new MediaDataDecodedListener<MediaSourceReader>(this, aTaskQueue);
   reader->SetCallback(callback);
-  reader->SetTaskQueue(mTaskQueue);
+  reader->SetTaskQueue(aTaskQueue);
   reader->Init(nullptr);
   ReentrantMonitorAutoEnter mon(aParentDecoder->GetReentrantMonitor());
   MSE_DEBUG("MediaSourceReader(%p)::CreateSubDecoder subdecoder %p subreader %p",
             this, decoder.get(), reader.get());
   decoder->SetReader(reader);
   mPendingDecoders.AppendElement(decoder);
-  RefPtr<nsIRunnable> task =
-    NS_NewRunnableMethod(this, &MediaSourceReader::InitializePendingDecoders);
-  if (NS_FAILED(mTaskQueue->Dispatch(task))) {
+  if (NS_FAILED(static_cast<MediaSourceDecoder*>(mDecoder)->EnqueueDecoderInitialization())) {
     MSE_DEBUG("MediaSourceReader(%p): Failed to enqueue decoder initialization task", this);
     return nullptr;
   }
