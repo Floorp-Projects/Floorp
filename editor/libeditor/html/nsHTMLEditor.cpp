@@ -1368,7 +1368,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
       CreateElementWithDefaults(NS_LITERAL_STRING("div"));
     NS_ENSURE_TRUE(divElement, NS_ERROR_FAILURE);
 
-    CloneAttributes(bodyElement->AsDOMNode(), divElement->AsDOMNode());
+    CloneAttributes(bodyElement, divElement);
 
     return BeginningOfDocument();
   }
@@ -1404,11 +1404,10 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   NS_ENSURE_TRUE(docfrag, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIContent> child = docfrag->GetFirstChild();
-  NS_ENSURE_TRUE(child, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(child && child->IsElement(), NS_ERROR_NULL_POINTER);
   
   // Copy all attributes from the div child to current body element
-  res = CloneAttributes(bodyElement->AsDOMNode(), child->AsDOMNode());
-  NS_ENSURE_SUCCESS(res, res);
+  CloneAttributes(bodyElement, child->AsElement());
   
   // place selection at first editable content
   return BeginningOfDocument();

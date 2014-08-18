@@ -1548,8 +1548,7 @@ nsEditor::ReplaceContainer(Element* aOldContainer,
     NS_ENSURE_SUCCESS(res, nullptr);
   }
   if (aCloneAttributes == eCloneAttributes) {
-    res = CloneAttributes(ret->AsDOMNode(), aOldContainer->AsDOMNode());
-    NS_ENSURE_SUCCESS(res, nullptr);
+    CloneAttributes(ret, aOldContainer);
   }
   
   // notify our internal selection state listener
@@ -2218,87 +2217,60 @@ nsEditor::CloneAttribute(const nsAString & aAttribute,
 
 // Objects must be DOM elements
 NS_IMETHODIMP
-nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
+nsEditor::CloneAttributes(nsIDOMNode* aDest, nsIDOMNode* aSource)
 {
-  NS_ENSURE_TRUE(aDestNode && aSourceNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aDest && aSource, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMElement> destElement = do_QueryInterface(aDestNode);
-  nsCOMPtr<nsIDOMElement> sourceElement = do_QueryInterface(aSourceNode);
-  NS_ENSURE_TRUE(destElement && sourceElement, NS_ERROR_NO_INTERFACE);
+  nsCOMPtr<Element> dest = do_QueryInterface(aDest);
+  nsCOMPtr<Element> source = do_QueryInterface(aSource);
+  NS_ENSURE_TRUE(dest && source, NS_ERROR_NO_INTERFACE);
 
-  nsCOMPtr<nsIDOMMozNamedAttrMap> sourceAttributes;
-  sourceElement->GetAttributes(getter_AddRefs(sourceAttributes));
-  nsCOMPtr<nsIDOMMozNamedAttrMap> destAttributes;
-  destElement->GetAttributes(getter_AddRefs(destAttributes));
-  NS_ENSURE_TRUE(sourceAttributes && destAttributes, NS_ERROR_FAILURE);
+  CloneAttributes(dest, source);
+
+  return NS_OK;
+}
+
+void
+nsEditor::CloneAttributes(Element* aDest, Element* aSource)
+{
+  MOZ_ASSERT(aDest && aSource);
 
   nsAutoEditBatch beginBatching(this);
 
-  // Use transaction system for undo only if destination
-  //   is already in the document
-  nsCOMPtr<nsIDOMNode> p = aDestNode;
-  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(GetRoot());
-  NS_ENSURE_TRUE(rootNode, NS_ERROR_NULL_POINTER);
-  bool destInBody = true;
-  while (p && p != rootNode)
-  {
-    nsCOMPtr<nsIDOMNode> tmp;
-    if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp)
-    {
-      destInBody = false;
-      break;
-    }
-    p = tmp;
-  }
-
-  uint32_t sourceCount;
-  sourceAttributes->GetLength(&sourceCount);
-  uint32_t destCount;
-  destAttributes->GetLength(&destCount);
-  nsCOMPtr<nsIDOMAttr> attr;
+  // Use transaction system for undo only if destination is already in the
+  // document
+  NS_ENSURE_TRUE(GetRoot(), );
+  bool destInBody = GetRoot()->Contains(aDest);
 
   // Clear existing attributes
-  for (uint32_t i = 0; i < destCount; i++) {
-    // always remove item number 0 (first item in list)
-    if (NS_SUCCEEDED(destAttributes->Item(0, getter_AddRefs(attr))) && attr) {
-      nsString str;
-      if (NS_SUCCEEDED(attr->GetName(str))) {
-        if (destInBody) {
-          RemoveAttribute(destElement, str);
-        } else {
-          destElement->RemoveAttribute(str);
-        }
-      }
+  nsRefPtr<nsDOMAttributeMap> destAttributes = aDest->Attributes();
+  while (nsRefPtr<Attr> attr = destAttributes->Item(0)) {
+    if (destInBody) {
+      RemoveAttribute(static_cast<nsIDOMElement*>(GetAsDOMNode(aDest)),
+                      attr->NodeName());
+    } else {
+      ErrorResult ignored;
+      aDest->RemoveAttribute(attr->NodeName(), ignored);
     }
   }
-
-  nsresult result = NS_OK;
 
   // Set just the attributes that the source element has
-  for (uint32_t i = 0; i < sourceCount; i++)
-  {
-    if (NS_SUCCEEDED(sourceAttributes->Item(i, getter_AddRefs(attr))) && attr) {
-      nsString sourceAttrName;
-      if (NS_SUCCEEDED(attr->GetName(sourceAttrName))) {
-        nsString sourceAttrValue;
-        /* Presence of an attribute in the named node map indicates that it was
-         * set on the element even if it has no value.
-         */
-        if (NS_SUCCEEDED(attr->GetValue(sourceAttrValue))) {
-          if (destInBody) {
-            result = SetAttributeOrEquivalent(destElement, sourceAttrName, sourceAttrValue, false);
-          } else {
-            // the element is not inserted in the document yet, we don't want to put a
-            // transaction on the UndoStack
-            result = SetAttributeOrEquivalent(destElement, sourceAttrName, sourceAttrValue, true);
-          }
-        } else {
-          // Do we ever get here?
-        }
-      }
+  nsRefPtr<nsDOMAttributeMap> sourceAttributes = aSource->Attributes();
+  uint32_t sourceCount = sourceAttributes->Length();
+  for (uint32_t i = 0; i < sourceCount; i++) {
+    nsRefPtr<Attr> attr = sourceAttributes->Item(i);
+    nsAutoString value;
+    attr->GetValue(value);
+    if (destInBody) {
+      SetAttributeOrEquivalent(static_cast<nsIDOMElement*>(GetAsDOMNode(aDest)),
+                               attr->NodeName(), value, false);
+    } else {
+      // The element is not inserted in the document yet, we don't want to put
+      // a transaction on the UndoStack
+      SetAttributeOrEquivalent(static_cast<nsIDOMElement*>(GetAsDOMNode(aDest)),
+                               attr->NodeName(), value, true);
     }
   }
-  return result;
 }
 
 
