@@ -283,7 +283,15 @@ public:
     static nsIScriptSecurityManager* SecurityManager()
     {
         MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(gScriptSecurityManager);
         return gScriptSecurityManager;
+    }
+
+    static nsIPrincipal* SystemPrincipal()
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(gSystemPrincipal);
+        return gSystemPrincipal;
     }
 
     // This returns an AddRef'd pointer. It does not do this with an 'out' param
@@ -339,6 +347,7 @@ private:
 
 public:
     static nsIScriptSecurityManager *gScriptSecurityManager;
+    static nsIPrincipal *gSystemPrincipal;
 };
 
 /***************************************************************************/
