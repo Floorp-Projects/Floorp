@@ -1,18 +1,23 @@
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
- http://creativecommons.org/publicdomain/zero/1.0/ */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-// Test the inplace-editor behavior.
-// This test doesn't open the devtools, it just exercises the inplace-editor
-// on test elements in the page
+let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+let {editableField, getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
 
-let test = asyncTest(function*() {
-  yield addTab("data:text/html;charset=utf-8,inline editor tests");
+// Test the inplace-editor behavior.
+
+let test = Task.async(function*() {
+  yield promiseTab("data:text/html;charset=utf-8,inline editor tests");
+
   yield testReturnCommit();
   yield testBlurCommit();
   yield testAdvanceCharCommit();
+
+  gBrowser.removeCurrentTab();
+  finish();
 });
 
 function testReturnCommit() {

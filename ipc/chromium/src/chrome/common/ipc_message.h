@@ -204,6 +204,10 @@ class Message : public Pickle {
     name_ = name;
   }
 
+#if defined(OS_POSIX)
+  uint32_t num_fds() const;
+#endif
+
   template<class T>
   static bool Dispatch(const Message* msg, T* obj, void (T::*func)()) {
     (obj->*func)();

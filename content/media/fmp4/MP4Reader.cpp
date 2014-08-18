@@ -288,6 +288,14 @@ MP4Reader::ExtractCryptoInitData(nsTArray<uint8_t>& aInitData)
   }
 }
 
+bool
+MP4Reader::IsSupportedAudioMimeType(const char* aMimeType)
+{
+  return (!strcmp(aMimeType, "audio/mpeg") ||
+          !strcmp(aMimeType, "audio/mp4a-latm")) &&
+         mPlatform->SupportsAudioMimeType(aMimeType);
+}
+
 nsresult
 MP4Reader::ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags)
@@ -295,13 +303,6 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   if (!mDemuxerInitialized) {
     bool ok = mDemuxer->Init();
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-    mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasValidAudio();
-    const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
-    // If we have audio, we *only* allow AAC to be decoded.
-    if (mInfo.mAudio.mHasAudio && strcmp(audio.mime_type, "audio/mp4a-latm")) {
-      return NS_ERROR_FAILURE;
-    }
 
     mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo();
     const VideoDecoderConfig& video = mDemuxer->VideoConfig();
@@ -370,14 +371,18 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
   }
 
-  if (HasAudio()) {
+  if (mDemuxer->HasValidAudio()) {
     const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
+    mInfo.mAudio.mHasAudio = mAudio.mActive = true;
+    if (mInfo.mAudio.mHasAudio && !IsSupportedAudioMimeType(audio.mime_type)) {
+      return NS_ERROR_FAILURE;
+    }
     mInfo.mAudio.mRate = audio.samples_per_second;
     mInfo.mAudio.mChannels = audio.channel_count;
     mAudio.mCallback = new DecoderCallback(this, kAudio);
-    mAudio.mDecoder = mPlatform->CreateAACDecoder(audio,
-                                                  mAudio.mTaskQueue,
-                                                  mAudio.mCallback);
+    mAudio.mDecoder = mPlatform->CreateAudioDecoder(audio,
+                                                    mAudio.mTaskQueue,
+                                                    mAudio.mCallback);
     NS_ENSURE_TRUE(mAudio.mDecoder != nullptr, NS_ERROR_FAILURE);
     nsresult rv = mAudio.mDecoder->Init();
     NS_ENSURE_SUCCESS(rv, rv);

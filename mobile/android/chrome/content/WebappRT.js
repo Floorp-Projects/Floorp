@@ -22,8 +22,6 @@ function pref(name, value) {
 }
 
 let WebappRT = {
-  DEFAULT_PREFS_FILENAME: "default-prefs.js",
-
   prefs: [
     // Disable all add-on locations other than the profile (which can't be disabled this way)
     pref("extensions.enabledScopes", 1),
@@ -36,8 +34,6 @@ let WebappRT = {
     pref("toolkit.telemetry.notifiedOptOut", 999),
     pref("media.useAudioChannelService", true),
     pref("dom.mozTCPSocket.enabled", true),
-    // Don't check for updates in webapp processes to avoid duplicate notifications.
-    pref("browser.webapps.checkForUpdates", 0),
 
     // Enabled system messages for web activity support
     pref("dom.sysmsg.enabled", true),
@@ -49,7 +45,7 @@ let WebappRT = {
 
     // on first run, update any prefs
     if (aStatus == "new") {
-      this.getDefaultPrefs().forEach(this.addPref);
+      this.prefs.forEach(this.addPref);
 
       // update the blocklist url to use a different app id
       let blocklist = Services.prefs.getCharPref("extensions.blocklist.url");
@@ -74,7 +70,19 @@ let WebappRT = {
       }
     });
 
-    this.findManifestUrlFor(aUrl, aCallback);
+    this.findManifestUrlFor(aUrl, (function(aLaunchUrl) {
+      if (aStatus == "new") {
+        if (BrowserApp.manifest && BrowserApp.manifest.orientation) {
+          let orientation = BrowserApp.manifest.orientation;
+          if (Array.isArray(orientation)) {
+            orientation = orientation.join(",");
+          }
+          this.addPref(pref("app.orientation.default", orientation));
+        }
+      }
+
+      aCallback(aLaunchUrl);
+    }).bind(this));
   },
 
   getManifestFor: function (aUrl, aCallback) {
@@ -115,31 +123,6 @@ let WebappRT = {
 
       aCallback(aManifest.fullLaunchPath());
     });
-  },
-
-  getDefaultPrefs: function() {
-    // read default prefs from the disk
-    try {
-      let defaultPrefs = [];
-      try {
-          defaultPrefs = this.readDefaultPrefs(FileUtils.getFile("ProfD", [this.DEFAULT_PREFS_FILENAME]));
-      } catch(ex) {
-          // this can throw if the defaultprefs.js file doesn't exist
-      }
-      for (let i = 0; i < defaultPrefs.length; i++) {
-        this.prefs.push(defaultPrefs[i]);
-      }
-    } catch(ex) {
-      console.log("Error reading defaultPrefs file: " + ex);
-    }
-    return this.prefs;
-  },
-
-  readDefaultPrefs: function webapps_readDefaultPrefs(aFile) {
-    let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
-    fstream.init(aFile, -1, 0, 0);
-    let prefsString = NetUtil.readInputStreamToString(fstream, fstream.available(), {});
-    return JSON.parse(prefsString);
   },
 
   addPref: function(aPref) {

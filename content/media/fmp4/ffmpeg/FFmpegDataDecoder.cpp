@@ -108,8 +108,10 @@ FFmpegDataDecoder<LIBAV_VER>::Init()
 
   if (mCodecContext->codec_type == AVMEDIA_TYPE_AUDIO &&
       mCodecContext->sample_fmt != AV_SAMPLE_FMT_FLT &&
-      mCodecContext->sample_fmt != AV_SAMPLE_FMT_FLTP) {
-    NS_WARNING("FFmpeg AAC decoder outputs unsupported audio format.");
+      mCodecContext->sample_fmt != AV_SAMPLE_FMT_FLTP &&
+      mCodecContext->sample_fmt != AV_SAMPLE_FMT_S16 &&
+      mCodecContext->sample_fmt != AV_SAMPLE_FMT_S16P) {
+    NS_WARNING("FFmpeg audio decoder outputs unsupported audio format.");
     return NS_ERROR_FAILURE;
   }
 

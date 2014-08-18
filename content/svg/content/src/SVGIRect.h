@@ -11,8 +11,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
-#include "nsIContent.h"
 
+class nsIContent;
 class nsSVGElement;
 
 namespace mozilla {
