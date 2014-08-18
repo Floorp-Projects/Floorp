@@ -947,7 +947,7 @@ template <typename CharT>
 struct CharSeparatorOp
 {
     const CharT sep;
-    explicit CharSeparatorOp(CharT sep) : sep(sep) {};
+    explicit CharSeparatorOp(CharT sep) : sep(sep) {}
     bool operator()(JSContext *, StringBuffer &sb) { return sb.append(sep); }
 };
 

@@ -2882,7 +2882,7 @@ public:
 
 private:
     friend class mozilla::dom::danger::AutoCxPusher;
-    friend bool xpc::PushJSContextNoScriptContext(JSContext *aCx);;
+    friend bool xpc::PushJSContextNoScriptContext(JSContext *aCx);
     friend void xpc::PopJSContextNoScriptContext();
 
     // We make these private so that stack manipulation can only happen
@@ -3466,7 +3466,7 @@ public:
         , defineAs(cx, JSID_VOID)
     { }
 
-    virtual bool Parse() { return ParseId("defineAs", &defineAs); };
+    virtual bool Parse() { return ParseId("defineAs", &defineAs); }
 
     JS::RootedId defineAs;
 };
@@ -3481,7 +3481,7 @@ public:
 
     virtual bool Parse() {
         return ParseId("defineAs", &defineAs);
-    };
+    }
 
     JS::RootedId defineAs;
 };
@@ -3498,7 +3498,7 @@ public:
     virtual bool Parse() {
         return ParseBoolean("wrapReflectors", &wrapReflectors) &&
                ParseBoolean("cloneFunctions", &cloneFunctions);
-    };
+    }
 
     // When a reflector is encountered, wrap it rather than aborting the clone.
     bool wrapReflectors;

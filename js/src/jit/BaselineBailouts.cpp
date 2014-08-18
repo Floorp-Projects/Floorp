@@ -79,7 +79,7 @@ struct BaselineStackBuilder
 
     static size_t HeaderSize() {
         return AlignBytes(sizeof(BaselineBailoutInfo), sizeof(void *));
-    };
+    }
     size_t bufferTotal_;
     size_t bufferAvail_;
     size_t bufferUsed_;

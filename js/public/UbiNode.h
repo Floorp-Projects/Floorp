@@ -406,7 +406,7 @@ class EdgeRange {
     EdgeRange() : front_(nullptr) { }
 
   public:
-    virtual ~EdgeRange() { };
+    virtual ~EdgeRange() { }
 
     // True if there are no more edges in this range.
     bool empty() const { return !front_; }
@@ -444,7 +444,7 @@ class TracerConcrete : public Base {
 
   public:
     static const jschar concreteTypeName[];
-    static void construct(void *storage, Referent *ptr) { new (storage) TracerConcrete(ptr); };
+    static void construct(void *storage, Referent *ptr) { new (storage) TracerConcrete(ptr); }
 };
 
 // For JS_TraceChildren-based types that have a 'compartment' method.
@@ -460,7 +460,7 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
   public:
     static void construct(void *storage, Referent *ptr) {
         new (storage) TracerConcreteWithCompartment(ptr);
-    };
+    }
 };
 
 template<> struct Concrete<JSObject> : TracerConcreteWithCompartment<JSObject> { };
