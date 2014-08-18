@@ -87,10 +87,10 @@ struct DebugModeOSREntry
     }
 
     bool needsRecompileInfo() const {
-        return (frameKind == ICEntry::Kind_CallVM ||
-                frameKind == ICEntry::Kind_DebugTrap ||
-                frameKind == ICEntry::Kind_DebugPrologue ||
-                frameKind == ICEntry::Kind_DebugEpilogue);
+        return frameKind == ICEntry::Kind_CallVM ||
+               frameKind == ICEntry::Kind_DebugTrap ||
+               frameKind == ICEntry::Kind_DebugPrologue ||
+               frameKind == ICEntry::Kind_DebugEpilogue;
     }
 
     bool recompiled() const {
@@ -805,9 +805,9 @@ JitRuntime::getBaselineDebugModeOSRHandlerAddress(JSContext *cx, bool popFrameRe
 {
     if (!getBaselineDebugModeOSRHandler(cx))
         return nullptr;
-    return (popFrameReg
-            ? baselineDebugModeOSRHandler_->raw()
-            : baselineDebugModeOSRHandlerNoFrameRegPopAddr_);
+    return popFrameReg
+           ? baselineDebugModeOSRHandler_->raw()
+           : baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
 }
 
 JitCode *

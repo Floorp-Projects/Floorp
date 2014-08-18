@@ -568,8 +568,8 @@ static inline bool
 IsNunbox(VirtualRegister *vreg)
 {
 #ifdef JS_NUNBOX32
-    return (vreg->type() == LDefinition::TYPE ||
-            vreg->type() == LDefinition::PAYLOAD);
+    return vreg->type() == LDefinition::TYPE ||
+           vreg->type() == LDefinition::PAYLOAD;
 #else
     return false;
 #endif
