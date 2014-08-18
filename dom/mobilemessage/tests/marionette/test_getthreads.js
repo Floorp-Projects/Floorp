@@ -56,6 +56,9 @@ let tasks = {
 };
 
 function getAllMessages(callback, filter, reverse) {
+  if (!filter) {
+    filter = new MozSmsFilter;
+  }
   let messages = [];
   let request = manager.getMessages(filter, reverse || false);
   request.onsuccess = function(event) {
@@ -151,7 +154,8 @@ function checkThread(bodies, lastBody, unreadCount, participants,
   }
 
   // Check whether the thread does contain all the messages it supposed to have.
-  let filter = { threadId: thread.id };
+  let filter = new MozSmsFilter;
+  filter.threadId = thread.id;
   getAllMessages(function(messages) {
     is(messages.length, bodies.length, "messages.length and bodies.length");
 

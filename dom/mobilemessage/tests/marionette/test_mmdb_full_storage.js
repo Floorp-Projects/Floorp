@@ -165,7 +165,7 @@ function testCreateMessageCursor(aMmdb) {
   log("testCreateMessageCursor()");
 
   setStorageFull(true);
-  return createMessageCursor(aMmdb)
+  return createMessageCursor(aMmdb, {}, false)
     .then(() => setStorageFull(false));
 }
 
