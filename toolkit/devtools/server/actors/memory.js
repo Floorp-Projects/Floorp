@@ -6,7 +6,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 let protocol = require("devtools/server/protocol");
-let { method, RetVal } = protocol;
+let { method, RetVal, Arg } = protocol;
 const { reportException } = require("devtools/toolkit/DevToolsUtils");
 
 /**
@@ -74,7 +74,6 @@ let MemoryActor = protocol.ActorClass({
    */
   attach: method(expectState("detached", function() {
     this.dbg.addDebuggees();
-    this.dbg.enabled = true;
     this.state = "attached";
   }), {
     request: {},
@@ -97,6 +96,116 @@ let MemoryActor = protocol.ActorClass({
       type: "detached"
     }
   }),
+
+  /**
+   * Enable or disable the recording of allocation sites.
+   *
+   * @param Boolean shouldRecord
+   *        True to enable recording, false to disable it.
+   */
+  recordAllocations: method(expectState("attached", function(shouldRecord) {
+    this.dbg.memory.trackingAllocationSites = shouldRecord;
+  }), {
+    request: {
+      shouldRecord: Arg(0, "boolean")
+    },
+    response: {}
+  }),
+
+  /**
+   * Get a list of the most recent allocations since the last time we got
+   * allocations
+   *
+   * @returns Object
+   *          An object of the form:
+   *
+   *            {
+   *              allocations: [<index into "frames" below> ...],
+   *              frames: [
+   *                {
+   *                  line: <line number for this frame>,
+   *                  column: <column number for this frame>,
+   *                  source: <filename string for this frame>,
+   *                  functionDisplayName: <this frame's inferred function name function or null>,
+   *                  parent: <index into "frames">
+   *                }
+   *                ...
+   *              ]
+   *            }
+   *
+   *          We use the indices into the "frames" array to avoid repeating the
+   *          description of duplicate stack frames both when listing
+   *          allocations, and when many stacks share the same tail of older
+   *          frames. There shouldn't be any duplicates in the "frames" array,
+   *          as that would defeat the purpose of this compression trick.
+   *
+   *          In the future, we might want to split out a frame's "source" and
+   *          "functionDisplayName" properties out the same way we have split
+   *          frames out with the "frames" array. While this would further
+   *          compress the size of the response packet, it would increase CPU
+   *          usage to build the packet, and it should, of course, be guided by
+   *          profiling and done only when necessary.
+   */
+  getAllocations: method(expectState("attached", function() {
+    const packet = {
+      frames: [],
+      allocations: []
+    };
+
+    const framesToIndices = new Map();
+
+    for (let stack of this.dbg.memory.flushAllocationsLog()) {
+      packet.allocations.push(this._insertStackInAllocationsPacket(stack,
+                                                                   packet,
+                                                                   framesToIndices));
+    }
+
+    return packet;
+  }), {
+    request: {},
+    response: RetVal("json")
+  }),
+
+  /**
+   * Inserts each frame in the stack into the given RDP allocations packet.
+   *
+   * @param SavedFrame frame
+   *        A frame to insert into the packet.
+   *
+   * @param Object packet
+   *        The allocations packet being created. See the @returns for
+   *        |getAllocations|
+   *
+   * @param Map framesToIndices
+   *        A map from a SavedFrame instance to an index into the packet's
+   *        "frames" list.
+   *
+   * @returns Number
+   *          The index into the "frames" list where the given frame was
+   *          inserted.
+   */
+  _insertStackInAllocationsPacket: function(frame, packet, framesToIndices) {
+    if (framesToIndices.has(frame)) {
+      return framesToIndices.get(frame);
+    }
+
+    let frameForm = {
+      line: frame.line,
+      column: frame.column,
+      source: frame.source,
+      functionDisplayName: frame.functionDisplayName
+    };
+
+    if (frame.parent) {
+      frameForm.parent = this._insertStackInAllocationsPacket(frame.parent,
+                                                              packet,
+                                                              framesToIndices);
+    }
+
+    let idx = packet.frames.length;
+    packet.frames.push(frameForm);
+    return idx;
+  },
 
   /**
    * A method that returns a detailed breakdown of the memory consumption of the
