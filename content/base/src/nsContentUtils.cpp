@@ -2632,6 +2632,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 nsIPrincipal*
 nsContentUtils::SubjectPrincipal()
 {
+  MOZ_ASSERT(IsInitialized());
   JSContext* cx = GetCurrentJSContext();
   if (!cx) {
     return GetSystemPrincipal();
@@ -4697,6 +4698,7 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
 bool
 nsContentUtils::IsSystemPrincipal(nsIPrincipal* aPrincipal)
 {
+  MOZ_ASSERT(IsInitialized());
   return aPrincipal == sSystemPrincipal;
 }
 
@@ -4710,6 +4712,7 @@ nsContentUtils::IsExpandedPrincipal(nsIPrincipal* aPrincipal)
 nsIPrincipal*
 nsContentUtils::GetSystemPrincipal()
 {
+  MOZ_ASSERT(IsInitialized());
   return sSystemPrincipal;
 }
 
@@ -5521,6 +5524,7 @@ JSContext *
 nsContentUtils::GetCurrentJSContext()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInitialized());
   return sXPConnect->GetCurrentJSContext();
 }
 
@@ -5529,6 +5533,7 @@ JSContext *
 nsContentUtils::GetSafeJSContext()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInitialized());
   return sXPConnect->GetSafeJSContext();
 }
 
@@ -5536,6 +5541,7 @@ nsContentUtils::GetSafeJSContext()
 JSContext *
 nsContentUtils::GetDefaultJSContextForThread()
 {
+  MOZ_ASSERT(IsInitialized());
   if (MOZ_LIKELY(NS_IsMainThread())) {
     return GetSafeJSContext();
   } else {
@@ -5547,6 +5553,7 @@ nsContentUtils::GetDefaultJSContextForThread()
 JSContext *
 nsContentUtils::GetCurrentJSContextForThread()
 {
+  MOZ_ASSERT(IsInitialized());
   if (MOZ_LIKELY(NS_IsMainThread())) {
     return GetCurrentJSContext();
   } else {
