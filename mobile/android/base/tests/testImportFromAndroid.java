@@ -130,7 +130,7 @@ public class testImportFromAndroid extends AboutHomeTest {
     }
 
     private void importDataFromAndroid() {
-        waitForText("Enter Search or Address");
+        waitForText(StringHelper.TITLE_PLACE_HOLDER);
         selectSettingsItem(StringHelper.CUSTOMIZE_SECTION_LABEL, StringHelper.IMPORT_FROM_ANDROID_LABEL);
 
         // Wait for the Import form Android pop-up to be opened. It has the same title as the option so waiting for the "Cancel" button
@@ -155,7 +155,7 @@ public class testImportFromAndroid extends AboutHomeTest {
         waitForText("Privacy"); // Settings is a header for the settings menu page. Waiting for Privacy ensures we are back in the top Settings view
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit Settings
         // Make sure the settings menu has been closed.
-        mAsserter.ok(mSolo.waitForText("Enter Search or Address"), "Waiting for search bar", "Search bar found");
+        mAsserter.ok(mSolo.waitForText(StringHelper.TITLE_PLACE_HOLDER), "Waiting for search bar", "Search bar found");
 
     }
 
