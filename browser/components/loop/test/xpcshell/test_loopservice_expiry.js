@@ -7,6 +7,8 @@ function expiryTimePref() {
 
 function run_test()
 {
+  setupFakeLoopServer();
+
   Services.prefs.setIntPref("loop.urlsExpiryTimeSeconds", 0);
 
   MozLoopService.noteCallUrlExpiry(1000);
