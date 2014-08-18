@@ -367,6 +367,11 @@ function testTrickyObject(trickyObject) {
     is(Object.getOwnPropertyNames(trickyObject).sort().toSource(),
        expectedNames.sort().toSource(), "getOwnPropertyNames should be filtered correctly");
 
+    // Test that cloning uses the Xray view.
+    var cloned = Cu.cloneInto(trickyObject, this);
+    is(Object.getOwnPropertyNames(cloned).sort().toSource(),
+       expectedNames.sort().toSource(), "structured clone should use the Xray view");
+
     // Test iteration and in-place modification. Beware of 'expando', which is the property
     // we placed on the xray proto.
     var propCount = 0;
