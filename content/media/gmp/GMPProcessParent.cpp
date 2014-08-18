@@ -30,10 +30,12 @@ GMPProcessParent::GMPProcessParent(const std::string& aGMPPath)
 : GeckoChildProcessHost(GeckoProcessType_GMPlugin),
   mGMPPath(aGMPPath)
 {
+  MOZ_COUNT_CTOR(GMPProcessParent);
 }
 
 GMPProcessParent::~GMPProcessParent()
 {
+  MOZ_COUNT_DTOR(GMPProcessParent);
 }
 
 bool

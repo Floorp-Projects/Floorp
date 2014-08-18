@@ -40,6 +40,9 @@ public class Favicons {
     // A magic URL representing the app's own favicon, used for about: pages.
     private static final String BUILT_IN_FAVICON_URL = "about:favicon";
 
+    // A magic URL representing the app's search favicon, used for about:home.
+    private static final String BUILT_IN_SEARCH_URL = "about:search";
+
     // Size of the favicon bitmap cache, in bytes (Counting payload only).
     public static final int FAVICON_CACHE_SIZE_BYTES = 512 * 1024;
 
@@ -407,6 +410,10 @@ public class Favicons {
                                               loadBrandingBitmap(context, "favicon32.png"));
 
         putFaviconsInMemCache(BUILT_IN_FAVICON_URL, toInsert.iterator(), true);
+
+        pageURLMappings.putWithoutEviction(AboutPages.HOME, BUILT_IN_SEARCH_URL);
+        List<Bitmap> searchIcons = Arrays.asList(BitmapFactory.decodeResource(res, R.drawable.ab_search));
+        putFaviconsInMemCache(BUILT_IN_SEARCH_URL, searchIcons.iterator(), true);
     }
 
     /**

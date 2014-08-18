@@ -39,6 +39,7 @@ void
 CDMProxy::Init(PromiseId aPromiseId)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_TRUE_VOID(!mKeys.IsNull());
 
   nsresult rv = mKeys->GetOrigin(mOrigin);
   if (NS_FAILED(rv)) {
@@ -103,11 +104,10 @@ void
 CDMProxy::OnCDMCreated(uint32_t aPromiseId)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mKeys.IsNull()) {
-    mKeys->OnCDMCreated(aPromiseId);
-  } else {
-    NS_WARNING("CDMProxy unable to reject promise!");
+  if (mKeys.IsNull()) {
+    return;
   }
+  mKeys->OnCDMCreated(aPromiseId);
 }
 
 void
@@ -323,8 +323,6 @@ CDMProxy::RejectPromise(PromiseId aId, nsresult aCode)
   if (NS_IsMainThread()) {
     if (!mKeys.IsNull()) {
       mKeys->RejectPromise(aId, aCode);
-    } else {
-      NS_WARNING("CDMProxy unable to reject promise!");
     }
   } else {
     nsRefPtr<nsIRunnable> task(new RejectPromiseTask(this, aId, aCode));
@@ -361,6 +359,9 @@ CDMProxy::OnResolveNewSessionPromise(uint32_t aPromiseId,
                                      const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
   mKeys->OnSessionCreated(aPromiseId, aSessionId);
 }
 
@@ -370,6 +371,9 @@ CDMProxy::OnSessionMessage(const nsAString& aSessionId,
                            const nsAString& aDestinationURL)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
   nsRefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
   if (session) {
     session->DispatchKeyMessage(aMessage, aDestinationURL);
@@ -411,6 +415,9 @@ CDMProxy::OnSessionError(const nsAString& aSessionId,
                          const nsAString& aMsg)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
   nsRefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
   if (session) {
     session->DispatchKeyError(aSystemCode);

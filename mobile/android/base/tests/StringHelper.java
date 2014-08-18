@@ -58,7 +58,7 @@ public class StringHelper {
         "Add to Home Screen"
     };
 
-    public static final String TITLE_PLACE_HOLDER = "Enter Search or Address";
+    public static final String TITLE_PLACE_HOLDER = "Search or enter address";
 
     // Robocop page urls
     // Note: please use getAbsoluteUrl(String url) on each robocop url to get the correct url
