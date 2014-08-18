@@ -322,7 +322,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
-    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach"
+    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach, DestructuringForIn"
   },
   "TELEMETRY_PING": {
     "expires_in_version": "never",
