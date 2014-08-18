@@ -501,7 +501,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
         : context(nullptr)
         , enteredAction(BaseProxyHandler::NONE)
 #endif
-        {};
+        {}
     void reportErrorIfExceptionIsNotPending(JSContext *cx, jsid id);
     bool allow;
     bool rv;
@@ -553,7 +553,7 @@ assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id,
 #else
 inline void assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id,
                                 BaseProxyHandler::Action act)
-{};
+{}
 #endif
 
 } /* namespace js */

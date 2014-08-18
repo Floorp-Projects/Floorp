@@ -1289,7 +1289,7 @@ class MOZ_STACK_CLASS AutoStableStringChars
   public:
     explicit AutoStableStringChars(JSContext *cx)
       : s_(cx), state_(Uninitialized), ownsChars_(false)
-    {};
+    {}
     ~AutoStableStringChars();
 
     bool init(JSContext *cx, JSString *s);
@@ -2379,7 +2379,7 @@ JS_FRIEND_API(void)
 Debug_SetActiveJSContext(JSRuntime *rt, JSContext *cx);
 #else
 inline void
-Debug_SetActiveJSContext(JSRuntime *rt, JSContext *cx) {};
+Debug_SetActiveJSContext(JSRuntime *rt, JSContext *cx) {}
 #endif
 
 

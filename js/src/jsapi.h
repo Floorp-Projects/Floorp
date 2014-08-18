@@ -1320,8 +1320,8 @@ class JSAutoRequest
 
 #if 0
   private:
-    static void *operator new(size_t) CPP_THROW_NEW { return 0; };
-    static void operator delete(void *, size_t) { };
+    static void *operator new(size_t) CPP_THROW_NEW { return 0; }
+    static void operator delete(void *, size_t) { }
 #endif
 };
 
@@ -2518,11 +2518,11 @@ class JS_PUBLIC_API(CompartmentOptions)
             if (mode_ == Default)
                 return defaultValue;
             return mode_ == ForceTrue;
-        };
+        }
 
         void set(bool overrideValue) {
             mode_ = overrideValue ? ForceTrue : ForceFalse;
-        };
+        }
 
         void reset() {
             mode_ = Default;
@@ -2610,7 +2610,7 @@ class JS_PUBLIC_API(CompartmentOptions)
     }
     bool getSingletonsAsTemplates() const {
         return singletonsAsTemplates_;
-    };
+    }
 
     // A null add-on ID means that the compartment is not associated with an
     // add-on.

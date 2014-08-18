@@ -1866,7 +1866,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
         return false;
 
     // step 9
-    bool success = ToBoolean(trapResult);;
+    bool success = ToBoolean(trapResult);
 
     // step 11
     if (!success) {
