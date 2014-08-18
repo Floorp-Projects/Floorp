@@ -1963,6 +1963,11 @@ CacheFileIOManager::Write(CacheFileHandle *aHandle, int64_t aOffset,
   nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan) {
+    if (!aCallback) {
+      // When no callback is provided, CacheFileIOManager is responsible for
+      // releasing the buffer. We must release it even in case of failure.
+      free(const_cast<char *>(aBuf));
+    }
     return NS_ERROR_NOT_INITIALIZED;
   }
 
