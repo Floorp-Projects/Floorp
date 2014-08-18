@@ -206,7 +206,7 @@ CacheFileMetadata::ReadMetadata(CacheFileMetadataListener *aListener)
        "offset=%lld, filesize=%lld [this=%p]", offset, size, this));
 
   mListener = aListener;
-  rv = CacheFileIOManager::Read(mHandle, offset, mBuf, mBufSize, true, this);
+  rv = CacheFileIOManager::Read(mHandle, offset, mBuf, mBufSize, this);
   if (NS_FAILED(rv)) {
     LOG(("CacheFileMetadata::ReadMetadata() - CacheFileIOManager::Read() failed"
          " synchronously, creating empty metadata. [this=%p, rv=0x%08x]",
@@ -661,7 +661,7 @@ CacheFileMetadata::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     LOG(("CacheFileMetadata::OnDataRead() - We need to read %d more bytes to "
          "have full metadata. [this=%p]", missing, this));
 
-    rv = CacheFileIOManager::Read(mHandle, realOffset, mBuf, missing, true, this);
+    rv = CacheFileIOManager::Read(mHandle, realOffset, mBuf, missing, this);
     if (NS_FAILED(rv)) {
       LOG(("CacheFileMetadata::OnDataRead() - CacheFileIOManager::Read() "
            "failed synchronously, creating empty metadata. [this=%p, "
