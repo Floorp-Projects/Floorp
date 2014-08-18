@@ -16,6 +16,7 @@
 #include "prsystem.h"
 #include "gfx2DGlue.h"
 #include "mozilla/EMELog.h"
+#include "mozilla/Move.h"
 
 namespace mozilla {
 
@@ -297,7 +298,7 @@ EMEH264Decoder::GmpInput(MP4Sample* aSample)
     return NS_ERROR_FAILURE;
   }
 
-  gmp::GMPVideoEncodedFrameImpl* frame = static_cast<gmp::GMPVideoEncodedFrameImpl*>(ftmp);
+  UniquePtr<gmp::GMPVideoEncodedFrameImpl> frame(static_cast<gmp::GMPVideoEncodedFrameImpl*>(ftmp));
   err = frame->CreateEmptyFrame(sample->size);
   if (GMP_FAILED(err)) {
     mCallback->Error();
@@ -318,7 +319,7 @@ EMEH264Decoder::GmpInput(MP4Sample* aSample)
   frame->SetBufferType(GMP_BufferLength32);
 
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
-  nsresult rv = mGMP->Decode(frame, false, info, 0);
+  nsresult rv = mGMP->Decode(UniquePtr<GMPVideoEncodedFrame>(frame.release()), false, info, 0);
   if (NS_FAILED(rv)) {
     mCallback->Error();
     return rv;
