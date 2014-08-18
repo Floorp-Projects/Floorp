@@ -28,11 +28,9 @@ const EXPECTED_COLOR = "rgb(255, 255, 85)"; // #ff5
 let test = asyncTest(function*() {
   yield addTab("data:text/html;charset=utf-8,rule view eyedropper test");
   content.document.body.innerHTML = PAGE_CONTENT;
-  let {toolbox, inspector, view} = yield openRuleView();
 
-  let element = content.document.querySelector("div");
-  inspector.selection.setNode(element, "test");
-  yield inspector.once("inspector-updated");
+  let {toolbox, inspector, view} = yield openRuleView();
+  yield selectNode("div", inspector);
 
   let property = getRuleViewProperty(view, "div", "background-color");
   let swatch = property.valueSpan.querySelector(".ruleview-colorswatch");
@@ -52,7 +50,6 @@ let test = asyncTest(function*() {
 
   yield testSelect(swatch, dropper);
 });
-
 
 function testESC(swatch, dropper) {
   let deferred = promise.defer();

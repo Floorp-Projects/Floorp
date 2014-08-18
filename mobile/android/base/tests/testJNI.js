@@ -14,7 +14,8 @@ add_task(function test_JNI() {
     // Test a simple static method.
     var geckoAppShell = JNI.LoadClass(jenv, "org.mozilla.gecko.GeckoAppShell", {
       static_methods: [
-        { name: "getPreferredIconSize", sig: "()I" }
+        { name: "getPreferredIconSize", sig: "()I" },
+        { name: "getContext", sig: "()Landroid/content/Context;" },
       ],
     });
 
@@ -33,6 +34,20 @@ add_task(function test_JNI() {
     });
     do_check_eq(typeof jGeckoNetworkManager.getMNC(), "number");
     do_check_eq(typeof jGeckoNetworkManager.getMCC(), "number");
+
+    // Test retrieving the context's class's name, which tests dynamic method
+    // invocation as well as converting a Java string to JavaScript.
+    JNI.LoadClass(jenv, "android.content.Context", {
+      methods: [
+        { name: "getClass", sig: "()Ljava/lang/Class;" },
+      ],
+    });
+    JNI.LoadClass(jenv, "java.lang.Class", {
+      methods: [
+        { name: "getName", sig: "()Ljava/lang/String;" },
+      ],
+    });
+    do_check_eq("org.mozilla.gecko.BrowserApp", JNI.ReadString(jenv, geckoAppShell.getContext().getClass().getName()));
   } finally {
     if (jenv) {
       JNI.UnloadClasses(jenv);

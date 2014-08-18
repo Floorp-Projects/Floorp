@@ -397,14 +397,14 @@ var WifiManager = (function() {
 
       // Add additional information to static ip configuration
       // It is used to compatiable with information dhcp callback.
-      info.ipaddr = stringToIp(info.ipaddr_str);
-      info.gateway = stringToIp(info.gateway_str);
-      info.mask_str = makeMask(info.maskLength);
+      info.ipaddr = netHelpers.stringToIP(info.ipaddr_str);
+      info.gateway = netHelpers.stringToIP(info.gateway_str);
+      info.mask_str = netHelpers.ipToString(netHelpers.makeMask(info.maskLength));
 
       // Optional
-      info.dns1 = stringToIp("dns1_str" in info ? info.dns1_str : "");
-      info.dns2 = stringToIp("dns2_str" in info ? info.dns2_str : "");
-      info.proxy = stringToIp("proxy_str" in info ? info.proxy_str : "");
+      info.dns1 = netHelpers.stringToIP(info.dns1_str);
+      info.dns2 = netHelpers.stringToIP(info.dns2_str);
+      info.proxy = netHelpers.stringToIP(info.proxy_str);
 
       staticIpConfig[setNetworkKey] = info;
 
@@ -1274,43 +1274,6 @@ var WifiManager = (function() {
   }
   manager.removeNetwork = function(netId, callback) {
     wifiCommand.removeNetwork(netId, callback);
-  }
-
-  function stringToIp(string) {
-    let ip = 0;
-    let start, end = -1;
-    for (let i = 0; i < 4; i++) {
-      start = end + 1;
-      end = string.indexOf(".", start);
-      if (end == -1) {
-        end = string.length;
-      }
-      let num = parseInt(string.slice(start, end), 10);
-      if (isNaN(num)) {
-        return 0;
-      }
-      ip |= num << (i * 8);
-    }
-    return ip;
-  }
-
-  function swap32(n) {
-    return (((n >> 24) & 0xFF) <<  0) |
-           (((n >> 16) & 0xFF) <<  8) |
-           (((n >>  8) & 0xFF) << 16) |
-           (((n >>  0) & 0xFF) << 24);
-  }
-
-  function ntohl(n) {
-    return swap32(n);
-  }
-
-  function makeMask(len) {
-    let mask = 0;
-    for (let i = 0; i < len; ++i) {
-      mask |= (0x80000000 >> i);
-    }
-    return ntohl(mask);
   }
 
   manager.saveConfig = function(callback) {

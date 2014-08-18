@@ -24,7 +24,7 @@ let test = asyncTest(function*() {
   testElement.setAttribute("style", elementStyle);
 
   let {toolbox, inspector, view} = yield openRuleView();
-  yield selectNode(testElement, inspector);
+  yield selectNode("#testid", inspector);
 
   info("Checking that the rule-view has the element, #testid and .testclass selectors");
   checkRuleViewContent(view, ["element", "#testid", ".testclass"]);
