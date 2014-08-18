@@ -265,7 +265,7 @@ protected:
                                 bool aDontTouchContent=false);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMArray<nsIDOMNode>& outArrayOfNodes);
-  nsresult GetNodesFromPoint(DOMPoint point,
+  nsresult GetNodesFromPoint(::DOMPoint point,
                              EditAction operation,
                              nsCOMArray<nsIDOMNode>& arrayOfNodes,
                              bool dontTouchContent);

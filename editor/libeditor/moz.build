@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['text', 'html']
+DIRS += ['text']
 
 TEST_DIRS += ['tests']
 
@@ -26,11 +26,28 @@ UNIFIED_SOURCES += [
     'nsEditorController.cpp',
     'nsEditorEventListener.cpp',
     'nsEditorUtils.cpp',
+    'nsEditProperty.cpp',
+    'nsHTMLAbsPosition.cpp',
+    'nsHTMLAnonymousUtils.cpp',
+    'nsHTMLCSSUtils.cpp',
+    'nsHTMLDataTransfer.cpp',
+    'nsHTMLEditor.cpp',
+    'nsHTMLEditorEventListener.cpp',
+    'nsHTMLEditorStyle.cpp',
+    'nsHTMLEditRules.cpp',
+    'nsHTMLEditUtils.cpp',
+    'nsHTMLInlineTableEditor.cpp',
+    'nsHTMLObjectResizer.cpp',
+    'nsHTMLURIRefObject.cpp',
     'nsSelectionState.cpp',
     'nsStyleSheetTxns.cpp',
+    'nsTableEditor.cpp',
+    'nsWSRunObject.cpp',
     'PlaceholderTxn.cpp',
     'SetDocTitleTxn.cpp',
     'SplitElementTxn.cpp',
+    'TextEditorTest.cpp',
+    'TypeInState.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
@@ -39,7 +56,10 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/editor/txmgr',
     '/extensions/spellcheck/src',
+    '/layout/generic',
     '/layout/style',
+    '/layout/tables',
+    '/layout/xul',
     'text',
 ]
 
