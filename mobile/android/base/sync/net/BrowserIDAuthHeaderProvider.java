@@ -4,12 +4,6 @@
 
 package org.mozilla.gecko.sync.net;
 
-import ch.boye.httpclientandroidlib.Header;
-import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
-import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
-import ch.boye.httpclientandroidlib.message.BasicHeader;
-import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
-
 /**
  * An <code>AuthHeaderProvider</code> that returns an Authorization header for
  * BrowserID assertions in the format expected by a Mozilla Services Token
@@ -17,21 +11,13 @@ import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
  * <p>
  * See <a href="http://docs.services.mozilla.com/token/apis.html">http://docs.services.mozilla.com/token/apis.html</a>.
  */
-public class BrowserIDAuthHeaderProvider implements AuthHeaderProvider {
-  protected final String assertion;
-
+public class BrowserIDAuthHeaderProvider extends AbstractBearerTokenAuthHeaderProvider {
   public BrowserIDAuthHeaderProvider(String assertion) {
-    if (assertion == null) {
-      throw new IllegalArgumentException("assertion must not be null.");
-    }
-
-    this.assertion = assertion;
+    super(assertion);
   }
 
   @Override
-  public Header getAuthHeader(HttpRequestBase request, BasicHttpContext context, DefaultHttpClient client) {
-    Header header = new BasicHeader("Authorization", "BrowserID " + assertion);
-
-    return header;
+  protected String getPrefix() {
+    return "BrowserID";
   }
 }
