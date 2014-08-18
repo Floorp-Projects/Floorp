@@ -286,8 +286,7 @@ CssHtmlTree.prototype = {
   /**
    * Update the highlighted element. The CssHtmlTree panel will show the style
    * information for the given element.
-   * @param {nsIDOMElement} aElement The highlighted node to get styles for.
-   *
+   * @param {NodeFront} aElement The highlighted node to get styles for.
    * @returns a promise that will be resolved when highlighting is complete.
    */
   highlight: function(aElement) {
@@ -408,6 +407,10 @@ CssHtmlTree.prototype = {
       return promise.resolve();
     }
 
+    // Capture the current viewed element to return from the promise handler
+    // early if it changed
+    let viewedElement = this.viewedElement;
+
     return promise.all([
       this._createPropertyViews(),
       this.pageStyle.getComputed(this.viewedElement, {
@@ -416,6 +419,10 @@ CssHtmlTree.prototype = {
         markMatched: true
       })
     ]).then(([createViews, computed]) => {
+      if (viewedElement !== this.viewedElement) {
+        return;
+      }
+
       this._matchedProperties = new Set;
       for (let name in computed) {
         if (computed[name].matched) {
