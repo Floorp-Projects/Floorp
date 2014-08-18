@@ -801,14 +801,17 @@ private:
    */
 public:
   /**
-   * Take over a fling with the given velocity from another APZC. Used for
-   * during overscroll handoff for a fling. If we are not pannable, calls
-   * mTreeManager->HandOffFling() to hand the fling off further.
-   * Returns true iff. any APZC (whether this one or one further in the handoff
-   * chain accepted the fling).
+   * Attempt a fling with the given velocity. If we are not pannable, tehe fling
+   * is handed off to the next APZC in the handoff chain via
+   * mTreeManager->DspatchFling(). Returns true iff. any APZC (whether this
+   * one or one further in the handoff chain) accepted the fling.
+   * |aHandoff| should be true iff. the fling was handed off from a previous
+   *            APZC, and determines whether acceleration is applied to the
+   *            fling.
    */
-  bool TakeOverFling(ScreenPoint aVelocity,
-                     const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
+  bool AttemptFling(ScreenPoint aVelocity,
+                    const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                    bool aHandoff);
 
 private:
   friend class FlingAnimation;
@@ -829,6 +832,7 @@ private:
   // Helper function used by TakeOverFling() and HandleFlingOverscroll().
   void AcceptFling(const ScreenPoint& aVelocity,
                    const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                   bool aHandoff,
                    bool aAllowOverscroll);
 
   // Start a snap-back animation to relieve overscroll.
