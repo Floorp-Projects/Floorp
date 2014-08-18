@@ -352,6 +352,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     /* Used for collecting telemetry on SpiderMonkey's deprecated language extensions. */
     bool sawDeprecatedForEach:1;
+    bool sawDeprecatedDestructuringForIn:1;
 
     typedef typename ParseHandler::Node Node;
     typedef typename ParseHandler::DefinitionNode DefinitionNode;
