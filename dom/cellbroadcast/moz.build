@@ -14,6 +14,8 @@ EXPORTS.mozilla.dom += [
 SOURCES += [
     'CellBroadcast.cpp',
     'CellBroadcastMessage.cpp',
+    'ipc/CellBroadcastIPCService.cpp',
+    'ipc/CellBroadcastParent.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
@@ -21,6 +23,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
         'gonk/CellBroadcastService.js',
         'gonk/CellBroadcastService.manifest',
     ]
+
+EXPORTS.mozilla.dom.cellbroadcast += [
+    'ipc/CellBroadcastIPCService.h',
+    'ipc/CellBroadcastParent.h',
+]
+
+IPDL_SOURCES += [
+    'ipc/PCellBroadcast.ipdl',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FAIL_ON_WARNINGS = True
 

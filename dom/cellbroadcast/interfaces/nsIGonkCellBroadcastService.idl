@@ -4,6 +4,11 @@
 
 #include "nsICellBroadcastService.idl"
 
+%{C++
+#define GONK_CELLBROADCAST_SERVICE_CONTRACTID \
+        "@mozilla.org/cellbroadcast/gonkservice;1"
+%}
+
 [scriptable, uuid(f72ced60-21f9-11e4-8896-6fdff2f5c909)]
 interface nsIGonkCellBroadcastService : nsICellBroadcastService
 {
