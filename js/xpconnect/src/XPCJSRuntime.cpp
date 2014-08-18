@@ -561,6 +561,12 @@ EnableUniversalXPConnect(JSContext *cx)
 }
 
 JSObject *
+UnprivilegedJunkScope()
+{
+    return XPCJSRuntime::Get()->UnprivilegedJunkScope();
+}
+
+JSObject *
 PrivilegedJunkScope()
 {
     return XPCJSRuntime::Get()->PrivilegedJunkScope();
@@ -570,12 +576,6 @@ JSObject *
 CompilationScope()
 {
     return XPCJSRuntime::Get()->CompilationScope();
-}
-
-JSObject *
-GetSafeJSContextGlobal()
-{
-    return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContextGlobal();
 }
 
 nsGlobalWindow*
@@ -3115,6 +3115,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWrappedJSRoots(nullptr),
    mObjectHolderRoots(nullptr),
    mWatchdogManager(new WatchdogManager(MOZ_THIS_IN_INITIALIZER_LIST())),
+   mUnprivilegedJunkScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
    mPrivilegedJunkScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
    mCompilationScope(MOZ_THIS_IN_INITIALIZER_LIST()->Runtime(), nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
@@ -3545,7 +3546,15 @@ XPCJSRuntime::InitSingletonScopes()
     RootedValue v(cx);
     nsresult rv;
 
-    // Create the Junk Scope.
+    // Create the Unprivileged Junk Scope.
+    SandboxOptions unprivilegedJunkScopeOptions;
+    unprivilegedJunkScopeOptions.sandboxName.AssignLiteral("XPConnect Junk Compartment");
+    unprivilegedJunkScopeOptions.invisibleToDebugger = true;
+    rv = CreateSandboxObject(cx, &v, nullptr, unprivilegedJunkScopeOptions);
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    mUnprivilegedJunkScope = js::UncheckedUnwrap(&v.toObject());
+
+    // Create the Privileged Junk Scope.
     SandboxOptions privilegedJunkScopeOptions;
     privilegedJunkScopeOptions.sandboxName.AssignLiteral("XPConnect Privileged Junk Compartment");
     privilegedJunkScopeOptions.invisibleToDebugger = true;
@@ -3567,6 +3576,7 @@ XPCJSRuntime::InitSingletonScopes()
 void
 XPCJSRuntime::DeleteSingletonScopes()
 {
+    mUnprivilegedJunkScope = nullptr;
     mPrivilegedJunkScope = nullptr;
     mCompilationScope = nullptr;
 }
