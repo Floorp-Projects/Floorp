@@ -359,7 +359,6 @@ void
 AssertInCompilationScope()
 {
   AutoJSContext cx;
-  // Note - Inverting the order of these operands is a rooting hazard.
-  MOZ_ASSERT(xpc::GetCompilationScope() == JS::CurrentGlobalOrNull(cx));
+  MOZ_ASSERT(xpc::CompilationScope() == JS::CurrentGlobalOrNull(cx));
 }
 #endif
