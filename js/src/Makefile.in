@@ -324,6 +324,7 @@ selfhosting_srcs := \
   $(srcdir)/builtin/String.js \
   $(srcdir)/builtin/Set.js \
   $(srcdir)/builtin/TypedObject.js \
+  $(srcdir)/builtin/WeakSet.js \
   $(NULL)
 
 selfhosted_out_h_deps := \
