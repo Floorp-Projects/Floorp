@@ -647,6 +647,7 @@ gfxMacPlatformFontList::InitFontList()
 
     // reset font lists
     gfxPlatformFontList::InitFontList();
+    mSystemFontFamilies.Clear();
     
     // iterate over available families
 
@@ -662,10 +663,14 @@ gfxMacPlatformFontList::InitFontList()
         // CTFontManager includes weird internal family names and
         // LastResort, skip over those
         if (!family ||
-            ::CFStringHasPrefix(family, CFSTR(".")) ||
             CFStringCompare(family, CFSTR("LastResort"),
                             kCFCompareCaseInsensitive) == kCFCompareEqualTo) {
             continue;
+        }
+
+        bool hiddenSystemFont = false;
+        if (::CFStringHasPrefix(family, CFSTR("."))) {
+            hiddenSystemFont = true;
         }
 
         nsAutoTArray<UniChar, 1024> buffer;
@@ -682,7 +687,11 @@ gfxMacPlatformFontList::InitFontList()
 
         // add the family entry to the hash table
         ToLowerCase(familyName);
-        mFontFamilies.Put(familyName, familyEntry);
+        if (!hiddenSystemFont) {
+            mFontFamilies.Put(familyName, familyEntry);
+        } else {
+            mSystemFontFamilies.Put(familyName, familyEntry);
+        }
 
         // check the bad underline blacklist
         if (mBadUnderlineFamilyNames.Contains(familyName))

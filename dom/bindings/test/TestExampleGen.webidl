@@ -491,15 +491,15 @@ interface TestExampleInterface {
   // XXXbz no move constructor on some unions
   // void passMozMapOfUnions2(MozMap<(object or long)> arg);
 
-  //(CanvasPattern or CanvasGradient) receiveUnion();
-  //(object or long) receiveUnion2();
-  //(CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
-  //(CanvasPattern or CanvasGradient)? receiveNullableUnion();
-  //(object or long)? receiveNullableUnion2();
+  (CanvasPattern or CanvasGradient) receiveUnion();
+  (object or long) receiveUnion2();
+  (CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
+  (CanvasPattern or CanvasGradient)? receiveNullableUnion();
+  (object or long)? receiveNullableUnion2();
 
-  //attribute (CanvasPattern or CanvasGradient) writableUnion;
-  //attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
-  //attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
+  attribute (CanvasPattern or CanvasGradient) writableUnion;
+  attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
+  attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
 
   // Date types
   void passDate(Date arg);
