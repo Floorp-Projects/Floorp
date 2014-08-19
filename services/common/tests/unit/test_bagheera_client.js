@@ -69,6 +69,30 @@ add_test(function test_post_json_bad_data() {
   });
 });
 
+add_task(function* test_unicode_payload() {
+  let [client, server] = getClientAndServer();
+  server.createNamespace("foo");
+
+  const EXPECTED = "πόλλ' οἶδ' ἀλώπηξ, ἀλλ' ἐχῖνος ἓν μέγα";
+
+  let result = yield client.uploadJSON("foo", "bar", {test: EXPECTED});
+  Assert.ok(result.transportSuccess);
+  Assert.ok(result.serverSuccess);
+
+  let p = server.getDocument("foo", "bar");
+  Assert.equal(p.test, EXPECTED);
+
+  result = yield client.uploadJSON("foo", "baz", JSON.stringify({test: EXPECTED}));
+  Assert.ok(result.transportSuccess);
+  Assert.ok(result.serverSuccess);
+  p = server.getDocument("foo", "baz");
+  Assert.equal(p.test, EXPECTED);
+
+  let deferred = Promise.defer();
+  server.stop(() => deferred.resolve());
+  yield deferred.promise;
+});
+
 add_task(function test_post_delete_multiple_obsolete_documents () {
   let [client, server] = getClientAndServer();
   let namespace = "foo";
