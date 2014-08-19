@@ -1953,19 +1953,6 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
   }
 }
 
-nsPIDOMWindow *
-nsContentUtils::GetWindowFromCaller()
-{
-  JSContext *cx = GetCurrentJSContext();
-  if (cx) {
-    nsCOMPtr<nsPIDOMWindow> win =
-      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
-    return win;
-  }
-
-  return nullptr;
-}
-
 nsIDocument*
 nsContentUtils::GetDocumentFromCaller()
 {

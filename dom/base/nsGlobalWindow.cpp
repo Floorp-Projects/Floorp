@@ -6558,7 +6558,7 @@ nsGlobalWindow::Focus(ErrorResult& aError)
     return;
   }
 
-  nsIDOMWindow *caller = nsContentUtils::GetWindowFromCaller();
+  nsCOMPtr<nsIDOMWindow> caller = do_QueryInterface(GetEntryGlobal());
   nsCOMPtr<nsIDOMWindow> opener;
   GetOpener(getter_AddRefs(opener));
 
