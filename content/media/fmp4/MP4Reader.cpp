@@ -111,6 +111,8 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
   , mDemuxerInitialized(false)
   , mIsEncrypted(false)
+  , mIndexReady(false)
+  , mIndexMonitor("MP4 index")
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(MP4Reader);
@@ -303,6 +305,11 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     bool ok = mDemuxer->Init();
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
+    {
+      MonitorAutoLock mon(mIndexMonitor);
+      mIndexReady = true;
+    }
+
     mInfo.mVideo.mHasVideo = mVideo.mActive = mDemuxer->HasValidVideo();
     const VideoDecoderConfig& video = mDemuxer->VideoConfig();
     // If we have video, we *only* allow H.264 to be decoded.
@@ -415,6 +422,8 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
 
   *aInfo = mInfo;
   *aTags = nullptr;
+
+  UpdateIndex();
 
   return NS_OK;
 }
@@ -773,6 +782,11 @@ MP4Reader::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
 void
 MP4Reader::UpdateIndex()
 {
+  MonitorAutoLock mon(mIndexMonitor);
+  if (!mIndexReady) {
+    return;
+  }
+
   MediaResource* resource = mDecoder->GetResource();
   resource->Pin();
   nsTArray<MediaByteRange> ranges;
@@ -785,16 +799,29 @@ MP4Reader::UpdateIndex()
 int64_t
 MP4Reader::GetEvictionOffset(double aTime)
 {
+  MonitorAutoLock mon(mIndexMonitor);
+  if (!mIndexReady) {
+    return 0;
+  }
+
   return mDemuxer->GetEvictionOffset(aTime * 1000000.0);
 }
 
 nsresult
 MP4Reader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
+  MonitorAutoLock mon(mIndexMonitor);
+  if (!mIndexReady) {
+    return NS_OK;
+  }
+
   MediaResource* resource = mDecoder->GetResource();
-  resource->Pin();
   nsTArray<MediaByteRange> ranges;
-  if (NS_SUCCEEDED(resource->GetCachedRanges(ranges))) {
+  resource->Pin();
+  nsresult rv = resource->GetCachedRanges(ranges);
+  resource->Unpin();
+
+  if (NS_SUCCEEDED(rv)) {
     nsTArray<Interval<Microseconds>> timeRanges;
     mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
     for (size_t i = 0; i < timeRanges.Length(); i++) {
@@ -802,7 +829,6 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
                      (timeRanges[i].end - aStartTime) / 1000000.0);
     }
   }
-  resource->Unpin();
 
   return NS_OK;
 }

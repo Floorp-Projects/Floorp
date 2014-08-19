@@ -77,7 +77,6 @@ RangeFinder::Contains(MediaByteRange aByteRange)
 
 Index::Index(const stagefright::Vector<MediaSource::Indice>& aIndex,
              Stream* aSource, uint32_t aTrackId)
-  : mMonitor("mp4_demuxer::Index")
 {
   if (aIndex.isEmpty()) {
     mMoofParser = new MoofParser(aSource, aTrackId);
@@ -95,7 +94,6 @@ Index::UpdateMoofIndex(const nsTArray<MediaByteRange>& aByteRanges)
     return;
   }
 
-  MonitorAutoLock mon(mMonitor);
   mMoofParser->RebuildFragmentedIndex(aByteRanges);
 }
 
@@ -104,8 +102,6 @@ Index::ConvertByteRangesToTimeRanges(
   const nsTArray<MediaByteRange>& aByteRanges,
   nsTArray<Interval<Microseconds>>* aTimeRanges)
 {
-  MonitorAutoLock mon(mMonitor);
-
   RangeFinder rangeFinder(aByteRanges);
   nsTArray<Interval<Microseconds>> timeRanges;
 
