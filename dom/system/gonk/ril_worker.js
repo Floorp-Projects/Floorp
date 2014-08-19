@@ -1679,20 +1679,6 @@ RilObject.prototype = {
       this.exitEmergencyCbMode();
     }
 
-    if (!this._isCdma) {
-      // TODO: Both dial() and sendMMI() functions should be unified at some
-      // point in the future. In the mean time we handle temporary CLIR MMI
-      // commands through the dial() function. Please see bug 889737.
-      let mmi = this._parseMMI(options.number);
-      if (mmi && this._isTemporaryModeCLIR(mmi)) {
-        options.number = mmi.dialNumber;
-        // In temporary mode, MMI_PROCEDURE_ACTIVATION means allowing CLI
-        // presentation, i.e. CLIR_SUPPRESSION. See TS 22.030, Annex B.
-        options.clirMode = mmi.procedure == MMI_PROCEDURE_ACTIVATION ?
-          CLIR_SUPPRESSION : CLIR_INVOCATION;
-      }
-    }
-
     options.request = REQUEST_DIAL;
     this.sendDialRequest(options);
   },
@@ -2388,6 +2374,20 @@ RilObject.prototype = {
   getFailCauseCode: function(callback) {
     this.context.Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE,
                                    {callback: callback});
+  },
+
+  /**
+   * Parse the dial number to extract its mmi code part.
+   *
+   * @param number
+   *        Phone number to be parsed
+   */
+  parseMMIFromDialNumber: function(options) {
+    // We don't have to parse mmi in cdma.
+    if (!this._isCdma) {
+      options.mmi = this._parseMMI(options.number);
+    }
+    this.sendChromeMessage(options);
   },
 
   /**
@@ -3402,20 +3402,6 @@ RilObject.prototype = {
 
     Buf.writeInt32(0);
     Buf.sendParcel();
-  },
-
-  /**
-   * Checks whether to temporarily suppress caller id for the call.
-   *
-   * @param mmi
-   *        MMI full object.
-   */
-  _isTemporaryModeCLIR: function(mmi) {
-    return (mmi &&
-            mmi.serviceCode == MMI_SC_CLIR &&
-            mmi.dialNumber &&
-            (mmi.procedure == MMI_PROCEDURE_ACTIVATION ||
-             mmi.procedure == MMI_PROCEDURE_DEACTIVATION));
   },
 
   /**
