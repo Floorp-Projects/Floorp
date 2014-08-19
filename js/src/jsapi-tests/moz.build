@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     'testDeepFreeze.cpp',
     'testDefineGetterSetterNonEnumerable.cpp',
     'testDefineProperty.cpp',
+    'testDefinePropertyIgnoredAttributes.cpp',
     'testEnclosingFunction.cpp',
     'testErrorCopying.cpp',
     'testException.cpp',
