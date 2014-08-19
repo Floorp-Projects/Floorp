@@ -64,7 +64,8 @@ const EVENTS = {
 
   // When the Audio Context graph finishes rendering.
   // Is called with two arguments, first representing number of nodes
-  // rendered, second being the number of edges rendered.
+  // rendered, second being the number of edge connections rendering (not counting
+  // param edges), followed by the count of the param edges rendered.
   UI_GRAPH_RENDERED: "WebAudioEditor:UIGraphRendered"
 };
 
@@ -77,8 +78,8 @@ let gToolbox, gTarget, gFront;
  * Track an array of audio nodes
  */
 let AudioNodes = [];
-let AudioNodeConnections = new WeakMap();
-
+let AudioNodeConnections = new WeakMap(); // <AudioNodeView, Set<AudioNodeView>>
+let AudioParamConnections = new WeakMap(); // <AudioNodeView, Object>
 
 // Light representation wrapping an AudioNode actor with additional properties
 function AudioNodeView (actor) {
@@ -109,9 +110,27 @@ AudioNodeView.prototype.connect = function (destination) {
   return false;
 };
 
+// Helper method to create connections in the AudioNodeConnections
+// WeakMap for rendering. Returns a boolean indicating
+// if the connection was successfully created. Will return `false`
+// when the connection was previously made.
+AudioNodeView.prototype.connectParam = function (destination, param) {
+  let connections = AudioParamConnections.get(this) || {};
+  AudioParamConnections.set(this, connections);
+
+  let params = connections[destination.id] = connections[destination.id] || [];
+
+  if (!~params.indexOf(param)) {
+    params.push(param);
+    return true;
+  }
+  return false;
+};
+
 // Helper method to remove audio connections from the current AudioNodeView
 AudioNodeView.prototype.disconnect = function () {
   AudioNodeConnections.set(this, new Set());
+  AudioParamConnections.set(this, {});
 };
 
 // Returns a promise that resolves to an array of objects containing
@@ -159,6 +178,7 @@ let WebAudioEditorController = {
     gFront.on("start-context", this._onStartContext);
     gFront.on("create-node", this._onCreateNode);
     gFront.on("connect-node", this._onConnectNode);
+    gFront.on("connect-param", this._onConnectParam);
     gFront.on("disconnect-node", this._onDisconnectNode);
     gFront.on("change-param", this._onChangeParam);
     gFront.on("destroy-node", this._onDestroyNode);
@@ -173,6 +193,7 @@ let WebAudioEditorController = {
     window.on(EVENTS.CONNECT_NODE, this._onUpdatedContext);
     window.on(EVENTS.DISCONNECT_NODE, this._onUpdatedContext);
     window.on(EVENTS.DESTROY_NODE, this._onUpdatedContext);
+    window.on(EVENTS.CONNECT_PARAM, this._onUpdatedContext);
   },
 
   /**
@@ -185,6 +206,7 @@ let WebAudioEditorController = {
     gFront.off("start-context", this._onStartContext);
     gFront.off("create-node", this._onCreateNode);
     gFront.off("connect-node", this._onConnectNode);
+    gFront.off("connect-param", this._onConnectParam);
     gFront.off("disconnect-node", this._onDisconnectNode);
     gFront.off("change-param", this._onChangeParam);
     gFront.off("destroy-node", this._onDestroyNode);
@@ -192,6 +214,7 @@ let WebAudioEditorController = {
     window.off(EVENTS.CONNECT_NODE, this._onUpdatedContext);
     window.off(EVENTS.DISCONNECT_NODE, this._onUpdatedContext);
     window.off(EVENTS.DESTROY_NODE, this._onUpdatedContext);
+    window.off(EVENTS.CONNECT_PARAM, this._onUpdatedContext);
     gDevTools.off("pref-changed", this._onThemeChange);
   },
 
@@ -291,38 +314,22 @@ let WebAudioEditorController = {
    * Called when a node is connected to another node.
    */
   _onConnectNode: Task.async(function* ({ source: sourceActor, dest: destActor }) {
-    // Since node create and connect are probably executed back to back,
-    // and the controller's `_onCreateNode` needs to look up type,
-    // the edge creation could be called before the graph node is actually
-    // created. This way, we can check and listen for the event before
-    // adding an edge.
     let [source, dest] = yield waitForNodeCreation(sourceActor, destActor);
 
     // Connect nodes, and only emit if it's a new connection.
     if (source.connect(dest)) {
       window.emit(EVENTS.CONNECT_NODE, source.id, dest.id);
     }
+  }),
 
-    function waitForNodeCreation (sourceActor, destActor) {
-      let deferred = defer();
-      let source = getViewNodeByActor(sourceActor);
-      let dest = getViewNodeByActor(destActor);
+  /**
+   * Called when a node is conneceted to another node's AudioParam.
+   */
+  _onConnectParam: Task.async(function* ({ source: sourceActor, dest: destActor, param }) {
+    let [source, dest] = yield waitForNodeCreation(sourceActor, destActor);
 
-      if (!source || !dest)
-        window.on(EVENTS.CREATE_NODE, function createNodeListener (_, id) {
-          let createdNode = getViewNodeById(id);
-          if (equalActors(sourceActor, createdNode.actor))
-            source = createdNode;
-          if (equalActors(destActor, createdNode.actor))
-            dest = createdNode;
-          if (source && dest) {
-            window.off(EVENTS.CREATE_NODE, createNodeListener);
-            deferred.resolve([source, dest]);
-          }
-        });
-      else
-        deferred.resolve([source, dest]);
-      return deferred.promise;
+    if (source.connectParam(dest, param)) {
+      window.emit(EVENTS.CONNECT_PARAM, source.id, dest.id, param);
     }
   }),
 
@@ -378,4 +385,32 @@ function getViewNodeByActor (actor) {
  */
 function getViewNodeById (id) {
   return getViewNodeByActor({ actorID: id });
+}
+
+// Since node create and connect are probably executed back to back,
+// and the controller's `_onCreateNode` needs to look up type,
+// the edge creation could be called before the graph node is actually
+// created. This way, we can check and listen for the event before
+// adding an edge.
+function waitForNodeCreation (sourceActor, destActor) {
+  let deferred = defer();
+  let eventName = EVENTS.CREATE_NODE;
+  let source = getViewNodeByActor(sourceActor);
+  let dest = getViewNodeByActor(destActor);
+
+  if (!source || !dest)
+    window.on(eventName, function createNodeListener (_, id) {
+      let createdNode = getViewNodeById(id);
+      if (equalActors(sourceActor, createdNode.actor))
+        source = createdNode;
+      if (equalActors(destActor, createdNode.actor))
+        dest = createdNode;
+      if (source && dest) {
+        window.off(eventName, createNodeListener);
+        deferred.resolve([source, dest]);
+      }
+    });
+  else
+    deferred.resolve([source, dest]);
+  return deferred.promise;
 }

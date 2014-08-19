@@ -8,7 +8,6 @@ XPIDL_SOURCES += [
     'mozIApplication.idl',
     'mozIApplicationClearPrivateDataParams.idl',
     'nsIAppsService.idl',
-    'nsIDOMApplicationRegistry.idl',
     'nsIInterAppCommService.idl',
     'nsIInterAppCommUIGlue.idl'
 ]
