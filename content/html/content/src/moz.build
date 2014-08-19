@@ -179,7 +179,6 @@ LOCAL_INCLUDES += [
     '/dom/canvas',
     '/dom/xbl',
     '/editor/libeditor',
-    '/editor/libeditor/text',
     '/editor/txmgr',
     '/layout/forms',
     '/layout/generic',
