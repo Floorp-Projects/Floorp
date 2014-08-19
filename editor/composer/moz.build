@@ -59,7 +59,4 @@ RESOURCE_FILES += [
     'res/text_caret_tilt_right@1.5x.png',
     'res/text_caret_tilt_right@2.25x.png',
     'res/text_caret_tilt_right@2x.png',
-    'res/text_selection_handle.png',
-    'res/text_selection_handle@1.5.png',
-    'res/text_selection_handle@2.png',
 ]
