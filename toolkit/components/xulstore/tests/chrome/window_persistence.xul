@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Persistence Tests"
+        onload="opened()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        persist="screenX screenY width height">
+
+<button id="button1" label="Button1" persist="value"/>
+<button id="button2" label="Button2" value="Normal" persist="value"/>
+
+<tree id="tree" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/all-animals" 
+       flags="dont-build-content" width="200" height="200">
+  <treecols orient="horizontal" id="treecols">
+    <treecol id="treecol" primary="true" label="Name" flex="1"/>
+  </treecols>
+  <template id="template">
+    <treechildren>
+      <treeitem uri="rdf:*">
+        <treerow>
+          <treecell label="rdf:http://www.some-fictitious-zoo.com/rdf#name"/>
+          <treecell/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </template>
+</tree>
+
+<script>
+<![CDATA[
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+let XULStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+let URI = "chrome://mochitests/content/chrome/toolkit/components/xulstore/tests/chrome/window_persistence.xul";
+
+function opened()
+{
+  // If the data in the tree has not been loaded yet, wait a bit and try again.
+  var treeView = document.getElementById("tree").view;
+  if (treeView.rowCount != 6 && treeView.rowCount != 17) {
+    setTimeout(opened, 50);
+    return;
+  }
+
+  runTest(treeView);
+}
+
+function runTest(treeView)
+{
+  var firstRun = window.arguments[0];
+  if (firstRun) {
+    document.getElementById("button1").setAttribute("value", "Pressed");
+    document.getElementById("button2").removeAttribute("value");
+
+    document.getElementById("button2").setAttribute("foo", "bar");
+    document.persist("button2", "foo");
+    is(XULStore.getValue(URI, "button2", "foo"), "bar", "attribute persisted")
+    document.getElementById("button2").removeAttribute("foo");
+    document.persist("button2", "foo");
+    is(XULStore.hasValue(URI, "button2", "foo"), false, "attribute removed")
+
+    is(treeView.rowCount, 6, "tree rows are closed");
+    treeView.toggleOpenState(1);
+    treeView.toggleOpenState(7);
+
+    window.close();
+    window.opener.windowOpened();
+  }
+  else {
+    is(document.getElementById("button1").getAttribute("value"), "Pressed",
+       "Attribute set");
+    is(document.getElementById("button2").hasAttribute("value"), true,
+       "Attribute cleared");
+    is(document.getElementById("button2").getAttribute("value"), "",
+       "Attribute cleared");
+    is(document.getElementById("button2").hasAttribute("foo"), false,
+       "Attribute cleared");
+    is(document.getElementById("button2").getAttribute("foo"), "",
+       "Attribute cleared");
+
+    is(treeView.rowCount, 17, "tree rows are open");
+    is(treeView.isContainerOpen(0), false, "first closed row");
+    is(treeView.isContainerOpen(1), true, "first open row");
+    is(treeView.isContainerOpen(7), true, "second open row");
+
+    window.close();
+    window.opener.testDone();
+  }
+}
+
+function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
+
+]]></script>
+
+</window>
