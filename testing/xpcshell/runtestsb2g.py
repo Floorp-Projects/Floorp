@@ -53,18 +53,6 @@ class B2GXPCShellRemote(XPCShellRemote):
         print >>sys.stderr, "\nCleaning files from previous run.."
         self.device.removeDir(self.options.remoteTestRoot)
 
-    # Overriden
-    def setupTestDir(self):
-        if self.device._useZip:
-            return XPCShellRemote.setupTestDir(self)
-
-        for root, dirs, files in os.walk(self.xpcDir):
-            for filename in files:
-                rel_path = os.path.relpath(os.path.join(root, filename), self.xpcDir)
-                test_file = os.path.join(self.remoteScriptsDir, rel_path)
-                print 'pushing %s' % test_file
-                self.device.pushFile(os.path.join(root, filename), test_file, retryLimit=10)
-
     # Overridden
     def pushLibs(self):
         if not self.options.use_device_libs:
