@@ -1013,22 +1013,20 @@ nsLocation::ValueOf(nsIDOMLocation** aReturn)
 nsresult
 nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
 {
-
   *sourceURL = nullptr;
-  nsCOMPtr<nsIScriptGlobalObject> sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
-  // If this JS context doesn't have an associated DOM window, we effectively
-  // have no script entry point stack. This doesn't generally happen with the DOM,
+  nsIDocument* doc = GetEntryDocument();
+  // If there's no entry document, we either have no Script Entry Point or one
+  // that isn't a DOM Window.  This doesn't generally happen with the DOM,
   // but can sometimes happen with extension code in certain IPC configurations.
   // If this happens, try falling back on the current document associated with
   // the docshell. If that fails, just return null and hope that the caller passed
   // an absolute URI.
-  if (!sgo && GetDocShell()) {
-    sgo = GetDocShell()->GetScriptGlobalObject();
+  if (!doc && GetDocShell()) {
+    nsCOMPtr<nsPIDOMWindow> docShellWin = do_QueryInterface(GetDocShell()->GetScriptGlobalObject());
+    if (docShellWin) {
+      doc = docShellWin->GetDoc();
+    }
   }
-  NS_ENSURE_TRUE(sgo, NS_OK);
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
-  NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
-  nsIDocument* doc = window->GetDoc();
   NS_ENSURE_TRUE(doc, NS_OK);
   *sourceURL = doc->GetBaseURI().take();
   return NS_OK;
