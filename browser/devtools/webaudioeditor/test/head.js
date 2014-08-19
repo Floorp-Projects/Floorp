@@ -29,6 +29,7 @@ const BUFFER_AND_ARRAY_URL = EXAMPLE_URL + "doc_buffer-and-array.html";
 const DESTROY_NODES_URL = EXAMPLE_URL + "doc_destroy-nodes.html";
 const CONNECT_TOGGLE_URL = EXAMPLE_URL + "doc_connect-toggle.html";
 const CONNECT_PARAM_URL = EXAMPLE_URL + "doc_connect-param.html";
+const CONNECT_MULTI_PARAM_URL = EXAMPLE_URL + "doc_connect-multi-param.html";
 
 // All tests are asynchronous.
 waitForExplicitFinish();
@@ -204,11 +205,15 @@ function getNSpread (front, eventName, count) { return getN(front, eventName, co
  * resolves when the graph was rendered with the correct count of
  * nodes and edges.
  */
-function waitForGraphRendered (front, nodeCount, edgeCount) {
+function waitForGraphRendered (front, nodeCount, edgeCount, paramEdgeCount) {
   let deferred = Promise.defer();
   let eventName = front.EVENTS.UI_GRAPH_RENDERED;
-  front.on(eventName, function onGraphRendered (_, nodes, edges) {
-    if (nodes === nodeCount && edges === edgeCount) {
+  front.on(eventName, function onGraphRendered (_, nodes, edges, pEdges) {
+    info(nodes);
+    info(edges)
+    info(pEdges);
+    let paramEdgesDone = paramEdgeCount ? paramEdgeCount === pEdges : true;
+    if (nodes === nodeCount && edges === edgeCount && paramEdgesDone) {
       front.off(eventName, onGraphRendered);
       deferred.resolve();
     }
@@ -290,8 +295,11 @@ function modifyVariableView (win, view, index, prop, value) {
   return deferred.promise;
 }
 
-function findGraphEdge (win, source, target) {
+function findGraphEdge (win, source, target, param) {
   let selector = ".edgePaths .edgePath[data-source='" + source + "'][data-target='" + target + "']";
+  if (param) {
+    selector += "[data-param='" + param + "']";
+  }
   return win.document.querySelector(selector);
 }
 
