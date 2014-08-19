@@ -64,6 +64,15 @@ public interface TelemetryContract {
         // Saving a resource (reader, bookmark, etc) for viewing later.
         SAVE("save.1"),
 
+        // Remove a search engine.
+        SEARCH_REMOVE("search.remove.1"),
+
+        // Restore default search engines.
+        SEARCH_RESTORE_DEFAULTS("search.restoredefaults.1"),
+
+        // Set default search engine.
+        SEARCH_SET_DEFAULT("search.setdefault.1"),
+
         // Sharing content.
         SHARE("share.1"),
 
