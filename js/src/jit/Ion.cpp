@@ -2036,12 +2036,6 @@ CheckScriptSize(JSContext *cx, JSScript* script)
     if (!js_JitOptions.limitScriptSize)
         return Method_Compiled;
 
-    if (script->length() > MAX_OFF_THREAD_SCRIPT_SIZE) {
-        // Some scripts are so large we never try to Ion compile them.
-        IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length());
-        return Method_CantCompile;
-    }
-
     uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
 
     if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE ||
