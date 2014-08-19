@@ -113,7 +113,6 @@ JitFrameIterator::JitFrameIterator(IonJSFrameLayout *fp, ExecutionMode mode)
     mode_(mode),
     kind_(Kind_FrameIterator)
 {
-    verifyReturnAddressUsingNativeToBytecodeMap();
 }
 
 IonBailoutIterator *
@@ -331,7 +330,6 @@ JitFrameIterator::operator++()
     returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
 
-    verifyReturnAddressUsingNativeToBytecodeMap();
 
     return *this;
 }
