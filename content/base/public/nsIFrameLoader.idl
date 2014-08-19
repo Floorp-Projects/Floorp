@@ -288,7 +288,6 @@ interface nsIFrameLoader : nsISupports
 
   /**
    * Find out whether the owner content really is a browser or app frame
-   * Especially, a widget frame is regarded as an app frame.
    */
   readonly attribute boolean ownerIsBrowserOrAppFrame;
 };
