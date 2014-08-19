@@ -8336,10 +8336,6 @@ if test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC" -o "$MOZ_DMD"; then
     MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 fi
 
-if test "$MOZ_APP_COMPONENT_INCLUDE"; then
-  AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_INCLUDE, "$MOZ_APP_COMPONENT_INCLUDE")
-fi
-
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1048659
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1048659</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for returning unions from JS-implemented WebIDL. **/
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+
+  function go() {
+    var t = new TestInterfaceJS();
+    var t2 = new TestInterfaceJS();
+
+    is(t.pingPongUnion(t2), t2, "ping pong union for left case should be identity");
+    is(t.pingPongUnion(12), 12, "ping pong union for right case should be identity");
+
+    is(t.pingPongUnionContainingNull("this is not a string"), "this is not a string",
+      "ping pong union containing union for left case should be identity");
+    is(t.pingPongUnionContainingNull(null), null,
+      "ping pong union containing null for right case null should be identity");
+    is(t.pingPongUnionContainingNull(t2), t2,
+      "ping pong union containing null for right case should be identity");
+
+    is(t.pingPongNullableUnion(t2), t2, "ping pong nullable union for left case should be identity");
+    is(t.pingPongNullableUnion(12), 12, "ping pong nullable union for right case should be identity");
+    is(t.pingPongNullableUnion(null), null, "ping pong nullable union for null case should be identity");
+
+    var rejectedBadUnion = false;
+    var result = null;
+    try {
+      result = t.returnBadUnion();
+    } catch (e) {
+      rejectedBadUnion = true;
+    }
+    is(result, null, "bad union should not set a value for result");
+    ok(rejectedBadUnion, "bad union should throw an exception");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1048659">Mozilla Bug 1048659</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

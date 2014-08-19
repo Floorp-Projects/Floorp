@@ -370,14 +370,6 @@ ClientLayerManager::RunOverfillCallback(const uint32_t aOverfill)
   mOverfillCallbacks.Clear();
 }
 
-static nsIntRect
-ToOutsideIntRect(const gfxRect &aRect)
-{
-  gfxRect r = aRect;
-  r.RoundOut();
-  return nsIntRect(r.X(), r.Y(), r.Width(), r.Height());
-}
-
 void
 ClientLayerManager::MakeSnapshotIfRequired()
 {

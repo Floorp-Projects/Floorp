@@ -47,7 +47,12 @@ TestInterfaceJS.prototype = {
 
   getCallerPrincipal: function() { return Cu.getWebIDLCallerPrincipal().origin; },
 
-  convertSVS: function(svs) { return svs; }
+  convertSVS: function(svs) { return svs; },
+
+  pingPongUnion: function(x) { return x; },
+  pingPongUnionContainingNull: function(x) { return x; },
+  pingPongNullableUnion: function(x) { return x; },
+  returnBadUnion: function(x) { return 3; }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS])

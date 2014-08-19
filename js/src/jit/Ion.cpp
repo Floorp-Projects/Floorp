@@ -431,9 +431,10 @@ JitRuntime::patchIonBackedges(JSRuntime *rt, BackedgeTarget target)
          iter++)
     {
         PatchableBackedge *patchableBackedge = *iter;
-        PatchJump(patchableBackedge->backedge, target == BackedgeLoopHeader
-                                               ? patchableBackedge->loopHeader
-                                               : patchableBackedge->interruptCheck);
+        if (target == BackedgeLoopHeader)
+            PatchBackedge(patchableBackedge->backedge, patchableBackedge->loopHeader, target);
+        else
+            PatchBackedge(patchableBackedge->backedge, patchableBackedge->interruptCheck, target);
     }
 }
 
@@ -1060,7 +1061,10 @@ IonScript::copyPatchableBackedges(JSContext *cx, JitCode *code,
         // whether an interrupt is currently desired, matching the targets
         // established by ensureIonCodeAccessible() above. We don't handle the
         // interrupt immediately as the interrupt lock is held here.
-        PatchJump(backedge, cx->runtime()->interrupt ? interruptCheck : loopHeader);
+        if (cx->runtime()->interrupt)
+            PatchBackedge(backedge, interruptCheck, JitRuntime::BackedgeInterruptCheck);
+        else
+            PatchBackedge(backedge, loopHeader, JitRuntime::BackedgeLoopHeader);
 
         cx->runtime()->jitRuntime()->addPatchableBackedge(patchableBackedge);
     }
@@ -2031,12 +2035,6 @@ CheckScriptSize(JSContext *cx, JSScript* script)
 {
     if (!js_JitOptions.limitScriptSize)
         return Method_Compiled;
-
-    if (script->length() > MAX_OFF_THREAD_SCRIPT_SIZE) {
-        // Some scripts are so large we never try to Ion compile them.
-        IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length());
-        return Method_CantCompile;
-    }
 
     uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
 

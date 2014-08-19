@@ -1,0 +1,231 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - basic operation on a readonly db</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  var gWidgetManifestURL = 'http://test/tests/dom/apps/tests/file_app.sjs?apptype=widget&getmanifest=true';
+  var gInvalidWidgetManifestURL = 'http://test/tests/dom/apps/tests/file_app.sjs?apptype=invalidWidget&getmanifest=true';
+  var gApp;
+
+  function onError() {
+    ok(false, "Error callback invoked");
+    finish();
+  }
+
+  function installApp(path) {
+    var request = navigator.mozApps.install(path);
+    request.onerror = onError;
+    request.onsuccess = function() {
+      gApp = request.result;
+
+      runTest();
+    }
+  }
+
+  function uninstallApp() {
+    // Uninstall the app.
+    var request = navigator.mozApps.mgmt.uninstall(gApp);
+    request.onerror = onError;
+    request.onsuccess = function() {
+      // All done.
+      info("All done");
+
+      runTest();
+    }
+  }
+
+  function testApp(isValidWidget) {
+    info("Test widget feature. IsValidWidget: " + isValidWidget);
+
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('mozbrowser', 'true');
+    ifr.setAttribute('mozwidget', gApp.manifestURL);
+    ifr.setAttribute('src', gApp.origin+gApp.manifest.launch_path);
+
+    var domParent = document.getElementById('container');
+    domParent.appendChild(ifr);
+
+    var mm = SpecialPowers.getBrowserFrameMessageManager(ifr);
+    mm.addMessageListener('OK', function(msg) {
+      ok(isValidWidget, "Message from widget: " + SpecialPowers.wrap(msg).json);
+    });
+    mm.addMessageListener('KO', function(msg) {
+      ok(!isValidWidget, "Message from widget: " + SpecialPowers.wrap(msg).json);
+    });
+    mm.addMessageListener('DONE', function(msg) {
+      ok(true, "Message from widget complete: "+SpecialPowers.wrap(msg).json);
+      domParent.removeChild(ifr);
+      runTest();
+    });
+
+    ifr.addEventListener('mozbrowserloadend', function() {
+      ok(true, "receive mozbrowserloadend");
+
+      // Test limited browser API feature only for valid widget case
+      if (isValidWidget) {
+        testLimitedBrowserAPI(ifr);
+      }
+      SimpleTest.executeSoon(()=>loadFrameScript(mm));
+    }, false);
+
+    // Test limited browser API feature only for valid widget case
+    if (!isValidWidget) {
+      return;
+    }
+
+    [
+      'mozbrowsertitlechange',
+      'mozbrowseropenwindow',
+      'mozbrowserscroll',
+      'mozbrowserasyncscroll'
+    ].forEach( function(topic) {
+      ifr.addEventListener(topic, function() {
+        ok(false, topic + " should be hidden");
+      }, false);
+    });
+  }
+
+  function testLimitedBrowserAPI(ifr) {
+    var securitySensitiveCalls = [
+      'sendMouseEvent',
+      'sendTouchEvent',
+      'goBack',
+      'goForward',
+      'reload',
+      'stop',
+      'download',
+      'purgeHistory',
+      'getScreenshot',
+      'zoom',
+      'getCanGoBack',
+      'getCanGoForward'
+    ];
+    securitySensitiveCalls.forEach( function(call) {
+      is(typeof ifr[call], "undefined", call + " should be hidden for widget");
+    });
+  }
+
+  function loadFrameScript(mm) {
+    var script = 'data:,\
+      function ok(p, msg) { \
+        if (p) { \
+          sendAsyncMessage("OK", msg); \
+        } else { \
+          sendAsyncMessage("KO", msg); \
+        } \
+      } \
+      \
+      function is(a, b, msg) { \
+        if (a == b) { \
+          sendAsyncMessage("OK", a + " == " + b + " - " + msg); \
+        } else { \
+          sendAsyncMessage("KO", a + " != " + b + " - " + msg); \
+        } \
+      } \
+      \
+      function finish() { \
+          sendAsyncMessage("DONE",""); \
+      } \
+      \
+      function onError() { \
+        ok(false, "Error callback invoked"); \
+        finish(); \
+      } \
+      \
+      function checkWidget(widget) { \
+        /*For invalid widget case, ignore the following check*/\
+        if (widget) { \
+          var widgetName = "Really Rapid Release (APPTYPETOKEN)"; \
+          is(widget.origin, "http://test", "Widget origin should be correct"); \
+          is(widget.installOrigin, "http://mochi.test:8888", "Install origin should be correct"); \
+        } \
+        finish(); \
+      } \
+      \
+      var request = content.window.navigator.mozApps.getSelf(); \
+      request.onsuccess = function() { \
+        var widget = request.result; \
+        ok(widget,"Should be a widget"); \
+        checkWidget(widget); \
+      }; \
+      request.onerror = onError; \
+      content.window.open("about:blank"); /*test mozbrowseropenwindow*/ \
+      content.window.scrollTo(4000, 4000); /*test mozbrowser(async)scroll*/ \
+      ';
+    mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
+  }
+
+  var tests = [
+    // Permissions
+    function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "browser", "allow": 1, "context": document },
+         { "type": "embed-widgets", "allow": 1, "context": document },
+         { "type": "webapps-manage", "allow": 1, "context": document }], runTest);
+    },
+
+    // Preferences
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.mozBrowserFramesEnabled", true],
+                                         ["dom.enable_widgets", true]]}, runTest);
+    },
+
+    function() {
+      SpecialPowers.setAllAppsLaunchable(true);
+      runTest();
+    },
+
+    // No confirmation needed when an app is installed
+    function() {
+      SpecialPowers.autoConfirmAppInstall(runTest);
+    },
+
+    // Installing the app
+    ()=>installApp(gWidgetManifestURL),
+
+    // Run tests in app
+    ()=>testApp(true),
+
+    // Uninstall the app
+    uninstallApp,
+
+    // Installing the app for invalid widget case
+    ()=>installApp(gInvalidWidgetManifestURL),
+
+    // Run tests in app for invalid widget case
+    ()=>testApp(false),
+
+    // Uninstall the app
+    uninstallApp
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  function finish() {
+    SimpleTest.finish();
+  }
+
+  if (SpecialPowers.isMainProcess()) {
+    SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTest();
+  </script>
+</body>
+</html>

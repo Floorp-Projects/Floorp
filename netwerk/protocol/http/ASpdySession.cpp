@@ -64,6 +64,10 @@ ASpdySession::NewSpdySession(uint32_t version,
 
   return nullptr;
 }
+static bool SpdySessionTrue(nsISupports *securityInfo)
+{
+  return true;
+}
 
 SpdyInformation::SpdyInformation()
 {
@@ -71,16 +75,19 @@ SpdyInformation::SpdyInformation()
   // most preferred for ALPN negotiaton
   Version[0] = SPDY_VERSION_3;
   VersionString[0] = NS_LITERAL_CSTRING("spdy/3");
+  ALPNCallbacks[0] = SpdySessionTrue;
 
   Version[1] = SPDY_VERSION_31;
   VersionString[1] = NS_LITERAL_CSTRING("spdy/3.1");
+  ALPNCallbacks[1] = SpdySessionTrue;
 
   Version[2] = NS_HTTP2_DRAFT_VERSION;
   VersionString[2] = NS_LITERAL_CSTRING(NS_HTTP2_DRAFT_TOKEN);
+  ALPNCallbacks[2] = Http2Session::ALPNCallback;
 }
 
 bool
-SpdyInformation::ProtocolEnabled(uint32_t index)
+SpdyInformation::ProtocolEnabled(uint32_t index) const
 {
   MOZ_ASSERT(index < kCount, "index out of range");
 
@@ -96,15 +103,15 @@ SpdyInformation::ProtocolEnabled(uint32_t index)
 }
 
 nsresult
-SpdyInformation::GetNPNVersionIndex(const nsACString &npnString,
-                                    uint8_t *result)
+SpdyInformation::GetNPNIndex(const nsACString &npnString,
+                             uint32_t *result) const
 {
   if (npnString.IsEmpty())
     return NS_ERROR_FAILURE;
 
   for (uint32_t index = 0; index < kCount; ++index) {
     if (npnString.Equals(VersionString[index])) {
-      *result = Version[index];
+      *result = index;
       return NS_OK;
     }
   }
