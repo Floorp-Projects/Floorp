@@ -21,7 +21,7 @@ public class MockMyIDTokenFactory {
   public static final BigInteger MOCKMYID_g = new BigInteger("c52a4a0ff3b7e61fdf1867ce84138369a6154f4afa92966e3c827e25cfa6cf508b90e5de419e1337e07a2e9e2a3cd5dea704d175f8ebf6af397d69e110b96afb17c7a03259329e4829b0d03bbc7896b15b4ade53e130858cc34d96269aa89041f409136c7242a38895c9d5bccad4f389af1d7a4bd1398bd072dffa896233397a", 16);
 
   // Computed lazily by static <code>getMockMyIDPrivateKey</code>.
-  protected static SigningPrivateKey cachedMockMyIDPrivateKey = null;
+  protected static SigningPrivateKey cachedMockMyIDPrivateKey;
 
   public static SigningPrivateKey getMockMyIDPrivateKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
     if (cachedMockMyIDPrivateKey == null) {
