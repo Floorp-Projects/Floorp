@@ -27,12 +27,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef assembler_assembler_AssemblerBuffer_h
-#define assembler_assembler_AssemblerBuffer_h
+#ifndef jit_shared_AssemblerBuffer_x86_shared_h
+#define jit_shared_AssemblerBuffer_x86_shared_h
 
-#include <string.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "jsfriendapi.h"
 #include "jsopcode.h"
@@ -50,7 +50,8 @@
              __FILE__, __LINE__);                           \
     } while (0)
 
-namespace JSC {
+namespace js {
+namespace jit {
 
     class AssemblerBuffer {
         static const size_t inlineCapacity = 256;
@@ -323,6 +324,7 @@ namespace JSC {
         }
     };
 
-} // namespace JSC
+} // namespace jit
+} // namespace js
 
-#endif /* assembler_assembler_AssemblerBuffer_h */
+#endif /* jit_shared_AssemblerBuffer_x86_shared_h */
