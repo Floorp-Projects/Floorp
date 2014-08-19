@@ -32,8 +32,6 @@ public:
 
   static nsIScriptContext *GetStaticScriptContext(JSObject* aObj);
 
-  static nsIScriptGlobalObject *GetDynamicScriptGlobal(JSContext *aContext);
-
   static nsIScriptContext *GetDynamicScriptContext(JSContext *aContext);
 
   /**
