@@ -575,9 +575,9 @@ nsHtml5ElementName::initializeStatics()
   ELT_OL = new nsHtml5ElementName(nsHtml5Atoms::ol, nsHtml5Atoms::ol, NS_HTML5TREE_BUILDER_UL_OR_OL_OR_DL | NS_HTML5ELEMENT_NAME_SPECIAL);
   ELT_OR = new nsHtml5ElementName(nsHtml5Atoms::or_, nsHtml5Atoms::or_, NS_HTML5TREE_BUILDER_OTHER);
   ELT_PI = new nsHtml5ElementName(nsHtml5Atoms::pi, nsHtml5Atoms::pi, NS_HTML5TREE_BUILDER_OTHER);
-  ELT_RB = new nsHtml5ElementName(nsHtml5Atoms::rb, nsHtml5Atoms::rb, NS_HTML5TREE_BUILDER_RB_OR_RP_OR_RTC | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_RP = new nsHtml5ElementName(nsHtml5Atoms::rp, nsHtml5Atoms::rp, NS_HTML5TREE_BUILDER_RB_OR_RP_OR_RTC | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
-  ELT_RT = new nsHtml5ElementName(nsHtml5Atoms::rt, nsHtml5Atoms::rt, NS_HTML5TREE_BUILDER_RT | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+  ELT_RB = new nsHtml5ElementName(nsHtml5Atoms::rb, nsHtml5Atoms::rb, NS_HTML5TREE_BUILDER_RB_OR_RTC | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+  ELT_RP = new nsHtml5ElementName(nsHtml5Atoms::rp, nsHtml5Atoms::rp, NS_HTML5TREE_BUILDER_RT_OR_RP | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+  ELT_RT = new nsHtml5ElementName(nsHtml5Atoms::rt, nsHtml5Atoms::rt, NS_HTML5TREE_BUILDER_RT_OR_RP | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
   ELT_TD = new nsHtml5ElementName(nsHtml5Atoms::td, nsHtml5Atoms::td, NS_HTML5TREE_BUILDER_TD_OR_TH | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
   ELT_TH = new nsHtml5ElementName(nsHtml5Atoms::th, nsHtml5Atoms::th, NS_HTML5TREE_BUILDER_TD_OR_TH | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
   ELT_TR = new nsHtml5ElementName(nsHtml5Atoms::tr, nsHtml5Atoms::tr, NS_HTML5TREE_BUILDER_TR | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_FOSTER_PARENTING | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
@@ -615,7 +615,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_NOT = new nsHtml5ElementName(nsHtml5Atoms::not_, nsHtml5Atoms::not_, NS_HTML5TREE_BUILDER_OTHER);
   ELT_NAV = new nsHtml5ElementName(nsHtml5Atoms::nav, nsHtml5Atoms::nav, NS_HTML5TREE_BUILDER_ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | NS_HTML5ELEMENT_NAME_SPECIAL);
   ELT_PRE = new nsHtml5ElementName(nsHtml5Atoms::pre, nsHtml5Atoms::pre, NS_HTML5TREE_BUILDER_PRE_OR_LISTING | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_RTC = new nsHtml5ElementName(nsHtml5Atoms::rtc, nsHtml5Atoms::rtc, NS_HTML5TREE_BUILDER_RB_OR_RP_OR_RTC | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
+  ELT_RTC = new nsHtml5ElementName(nsHtml5Atoms::rtc, nsHtml5Atoms::rtc, NS_HTML5TREE_BUILDER_RB_OR_RTC | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
   ELT_REM = new nsHtml5ElementName(nsHtml5Atoms::rem, nsHtml5Atoms::rem, NS_HTML5TREE_BUILDER_OTHER);
   ELT_SUB = new nsHtml5ElementName(nsHtml5Atoms::sub, nsHtml5Atoms::sub, NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
   ELT_SEC = new nsHtml5ElementName(nsHtml5Atoms::sec, nsHtml5Atoms::sec, NS_HTML5TREE_BUILDER_OTHER);
