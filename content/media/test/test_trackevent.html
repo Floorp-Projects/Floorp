@@ -14,58 +14,55 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    var video = document.createElement("video");
-    isnot(video.textTracks, undefined, "HTMLMediaElement::TextTrack() property should be available.")
-    ok(typeof video.addTextTrack == "function", "HTMLMediaElement::AddTextTrack() function should be available.")
 
-    var trackList = video.textTracks;
-    is(trackList.length, 0, "Length should be 0.");
+var video = document.createElement("video");
+isnot(video.textTracks, undefined, "HTMLMediaElement::TextTrack() property should be available.")
+ok(typeof video.addTextTrack == "function", "HTMLMediaElement::AddTextTrack() function should be available.")
 
-    var evtTextTrack, numOfCalls = 0, tt;
-    trackList.onaddtrack = function(event) {
-      ok(event instanceof TrackEvent, "Fired event from onaddtrack should be a TrackEvent");
-      is(event.type, "addtrack", "Event type should be addtrack");
-      ok(event.isTrusted, "Event should be trusted!");
-      ok(!event.bubbles, "Event shouldn't bubble!");
-      ok(!event.cancelable, "Event shouldn't be cancelable!");
-      
-      evtTextTrack = event.track;
-      tt = textTrack[numOfCalls].track || textTrack[numOfCalls];
+var trackList = video.textTracks;
+is(trackList.length, 0, "Length should be 0.");
 
-      ok(tt === evtTextTrack, "Text tracks should be the same");
-      is(evtTextTrack.label, label[numOfCalls], "Label should be set to "+ label[numOfCalls]);
-      is(evtTextTrack.language, language[numOfCalls], "Language should be " + language[numOfCalls]);
-      is(evtTextTrack.kind, kind[numOfCalls], "Kind should be " + kind[numOfCalls]);
+var evtTextTrack, numOfCalls = 0, tt;
+trackList.onaddtrack = function(event) {
+  ok(event instanceof TrackEvent, "Fired event from onaddtrack should be a TrackEvent");
+  is(event.type, "addtrack", "Event type should be addtrack");
+  ok(event.isTrusted, "Event should be trusted!");
+  ok(!event.bubbles, "Event shouldn't bubble!");
+  ok(!event.cancelable, "Event shouldn't be cancelable!");
 
-      if (++numOfCalls == 4) {
-        SimpleTest.finish();
-      }
-    };
+  evtTextTrack = event.track;
+  tt = textTrack[numOfCalls].track || textTrack[numOfCalls];
 
-    var label = ["Oasis", "Coldplay", "t.A.T.u", ""];
-    language = ["en-CA", "en-GB", "ru", ""];
-    kind = ["subtitles", "captions", "chapters", "subtitles"];
+  ok(tt === evtTextTrack, "Text tracks should be the same");
+  is(evtTextTrack.label, label[numOfCalls], "Label should be set to "+ label[numOfCalls]);
+  is(evtTextTrack.language, language[numOfCalls], "Language should be " + language[numOfCalls]);
+  is(evtTextTrack.kind, kind[numOfCalls], "Kind should be " + kind[numOfCalls]);
 
-    var textTrack = new Array(4);
-    for (var i = 0; i < 3; ++i) {
-      textTrack[i] = video.addTextTrack(kind[i], label[i], language[i]);
-      is(trackList.length, i + 1, "Length should be " + (i+1));
-    }
-
-    video.src = "seek.webm";
-    video.preload = "auto";
-    var trackElement = document.createElement("track");
-    trackElement.src = "basic.vtt";
-    textTrack[3] = trackElement;
-
-    document.getElementById("content").appendChild(video);
-    video.appendChild(trackElement);
-
-    //TODO: Tests for removetrack event to be added along with bug 882677
+  if (++numOfCalls == 4) {
+    SimpleTest.finish();
   }
-);
+};
+
+var label = ["Oasis", "Coldplay", "t.A.T.u", ""];
+language = ["en-CA", "en-GB", "ru", ""];
+kind = ["subtitles", "captions", "chapters", "subtitles"];
+
+var textTrack = new Array(4);
+for (var i = 0; i < 3; ++i) {
+  textTrack[i] = video.addTextTrack(kind[i], label[i], language[i]);
+  is(trackList.length, i + 1, "Length should be " + (i+1));
+}
+
+video.src = "seek.webm";
+video.preload = "auto";
+var trackElement = document.createElement("track");
+trackElement.src = "basic.vtt";
+textTrack[3] = trackElement;
+
+document.getElementById("content").appendChild(video);
+video.appendChild(trackElement);
+
+//TODO: Tests for removetrack event to be added along with bug 882677
 </script>
 </pre>
 </body>

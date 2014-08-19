@@ -61,6 +61,8 @@ public:
   }
 };
 
+typedef bool (*ALPNCallback) (nsISupports *); // nsISSLSocketControl is typical
+
 // this is essentially a single instantiation as a member of nsHttpHandler.
 // It could be all static except using static ctors of XPCOM objects is a
 // bad idea.
@@ -72,15 +74,22 @@ public:
 
   static const uint32_t kCount = 3;
 
-  // determine if a version of the protocol is enabled for index <= kCount
-  bool ProtocolEnabled(uint32_t index);
+  // determine the index (0..kCount-1) of the spdy information that
+  // correlates to the npn string. NS_FAILED() if no match is found.
+  nsresult GetNPNIndex(const nsACString &npnString, uint32_t *result) const;
 
-  // lookup a version enum based on an npn string. returns NS_OK if
-  // string was known.
-  nsresult GetNPNVersionIndex(const nsACString &npnString, uint8_t *result);
+  // determine if a version of the protocol is enabled for index < kCount
+  bool ProtocolEnabled(uint32_t index) const;
 
-  uint8_t   Version[kCount];
-  nsCString VersionString[kCount];
+  uint8_t   Version[kCount]; // telemetry enum e.g. SPDY_VERSION_31
+  nsCString VersionString[kCount]; // npn string e.g. "spdy/3.1"
+
+  // the ALPNCallback function allows the protocol stack to decide whether or
+  // not to offer a particular protocol based on the known TLS information
+  // that we will offer in the client hello (such as version). There has
+  // not been a Server Hello received yet, so not much else can be considered.
+  // Stacks without restrictions can just use SpdySessionTrue()
+  ALPNCallback ALPNCallbacks[kCount];
 };
 
 }} // namespace mozilla::net
