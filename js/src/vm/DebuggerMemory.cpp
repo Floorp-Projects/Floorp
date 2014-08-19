@@ -8,6 +8,9 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
+#include "mozilla/Vector.h"
+
+#include <stdlib.h>
 
 #include "jscompartment.h"
 
@@ -410,7 +413,6 @@ class ByJSType {
     }
 };
 
-
 // An assorter that categorizes nodes that are JSObjects by their class, and
 // places all other nodes in an 'other' category. The template arguments must be
 // assorter types; each JSObject class gets an EachClass assorter, and the
@@ -435,8 +437,23 @@ class ByObjectClass {
     // six named "Object"), you will get several different Classes being counted
     // in the same table entry.
     typedef HashMap<const js::Class *, EachClass, HashPolicy, SystemAllocPolicy> Table;
+    typedef typename Table::Entry Entry;
     Table table;
     EachOther other;
+
+    static int compareEntries(const void *lhsVoid, const void *rhsVoid) {
+        size_t lhs = (*static_cast<const Entry * const *>(lhsVoid))->value().total();
+        size_t rhs = (*static_cast<const Entry * const *>(rhsVoid))->value().total();
+
+        // qsort sorts in "ascending" order, so we should describe entries with
+        // smaller counts as being "greater than" entries with larger counts. We
+        // don't want to just subtract the counts, as they're unsigned.
+        if (lhs < rhs)
+            return 1;
+        if (lhs > rhs)
+            return -1;
+        return 0;
+    }
 
   public:
     ByObjectClass(Census &census) : total_(0), other(census) { }
@@ -473,17 +490,28 @@ class ByObjectClass {
     bool report(Census &census, MutableHandleValue report) {
         JSContext *cx = census.cx;
 
+        // Build a vector of pointers to entries; sort by total; and then use
+        // that to build the result object. This makes the ordering of entries
+        // more interesting, and a little less non-deterministic.
+        mozilla::Vector<Entry *> entries;
+        if (!entries.reserve(table.count()))
+            return false;
+        for (typename Table::Range r = table.all(); !r.empty(); r.popFront())
+            entries.infallibleAppend(&r.front());
+        qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries);
+
+        // Now build the result by iterating over the vector, not the hash table.
         RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
         if (!obj)
             return false;
-
-        for (typename Table::Range r = table.all(); !r.empty(); r.popFront()) {
-            EachClass &entry = r.front().value();
-            RootedValue entryReport(cx);
-            if (!entry.report(census, &entryReport))
+        for (Entry **entryPtr = entries.begin(); entryPtr < entries.end(); entryPtr++) {
+            Entry &entry = **entryPtr;
+            EachClass &assorter = entry.value();
+            RootedValue assorterReport(cx);
+            if (!assorter.report(census, &assorterReport))
                 return false;
 
-            const char *name = r.front().key()->name;
+            const char *name = entry.key()->name;
             MOZ_ASSERT(name);
             JSAtom *atom = Atomize(census.cx, name, strlen(name));
             if (!atom)
@@ -504,7 +532,7 @@ class ByObjectClass {
             }
 #endif
 
-            if (!JSObject::defineGeneric(cx, obj, entryId, entryReport))
+            if (!JSObject::defineGeneric(cx, obj, entryId, assorterReport))
                 return false;
         }
 
