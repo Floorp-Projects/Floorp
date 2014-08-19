@@ -70,7 +70,6 @@ class ChromeCast implements GeckoMediaPlayer {
             // TODO: Do we want to shutdown when there are errors?
             if (mediaStatus.getPlayerState() == MediaStatus.PLAYER_STATE_IDLE &&
                 mediaStatus.getIdleReason() == MediaStatus.IDLE_REASON_FINISHED) {
-                stop(null);
 
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Casting:Stop", null));
             }
