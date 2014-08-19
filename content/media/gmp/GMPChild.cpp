@@ -399,32 +399,6 @@ GMPChild::GetGMPTimers()
   return mTimerChild;
 }
 
-PGMPStorageChild*
-GMPChild::AllocPGMPStorageChild()
-{
-  return new GMPStorageChild(this);
-}
-
-bool
-GMPChild::DeallocPGMPStorageChild(PGMPStorageChild* aActor)
-{
-  mStorage = nullptr;
-  return true;
-}
-
-GMPStorageChild*
-GMPChild::GetGMPStorage()
-{
-  if (!mStorage) {
-    PGMPStorageChild* sc = SendPGMPStorageConstructor();
-    if (!sc) {
-      return nullptr;
-    }
-    mStorage = static_cast<GMPStorageChild*>(sc);
-  }
-  return mStorage;
-}
-
 bool
 GMPChild::RecvCrashPluginNow()
 {

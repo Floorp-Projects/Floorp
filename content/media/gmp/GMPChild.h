@@ -9,7 +9,6 @@
 #include "mozilla/gmp/PGMPChild.h"
 #include "GMPSharedMemManager.h"
 #include "GMPTimerChild.h"
-#include "GMPStorageChild.h"
 #include "gmp-async-shutdown.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
@@ -38,7 +37,6 @@ public:
 
   // Main thread only.
   GMPTimerChild* GetGMPTimers();
-  GMPStorageChild* GetGMPStorage();
 
   // GMPSharedMem
   virtual void CheckThread() MOZ_OVERRIDE;
@@ -69,9 +67,6 @@ private:
   virtual PGMPTimerChild* AllocPGMPTimerChild() MOZ_OVERRIDE;
   virtual bool DeallocPGMPTimerChild(PGMPTimerChild* aActor) MOZ_OVERRIDE;
 
-  virtual PGMPStorageChild* AllocPGMPStorageChild() MOZ_OVERRIDE;
-  virtual bool DeallocPGMPStorageChild(PGMPStorageChild* aActor) MOZ_OVERRIDE;
-
   virtual bool RecvCrashPluginNow() MOZ_OVERRIDE;
   virtual bool RecvBeginAsyncShutdown() MOZ_OVERRIDE;
 
@@ -80,7 +75,6 @@ private:
 
   GMPAsyncShutdown* mAsyncShutdown;
   nsRefPtr<GMPTimerChild> mTimerChild;
-  nsRefPtr<GMPStorageChild> mStorage;
 
   PRLibrary* mLib;
   GMPGetAPIFunc mGetAPIFunc;
