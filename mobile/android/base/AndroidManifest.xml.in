@@ -354,11 +354,6 @@
                   android:configChanges="orientation|screenSize|locale|layoutDirection"
                   android:excludeFromRecents="true"/>
 
-        <activity android:name="org.mozilla.gecko.home.HomePanelPicker"
-                  android:theme="@style/Gecko.TitleDialog"
-                  android:label="@string/home_add_panel_title"
-                  android:excludeFromRecents="true" />
-
         <provider android:name="org.mozilla.gecko.db.BrowserProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER">
