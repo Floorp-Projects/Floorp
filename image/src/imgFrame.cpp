@@ -181,6 +181,11 @@ nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
       if (!mVBuf) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
+      if (mVBuf->OnHeap()) {
+        int32_t stride = VolatileSurfaceStride(mSize, mFormat);
+        VolatileBufferPtr<uint8_t> ptr(mVBuf);
+        memset(ptr, 0, stride * mSize.height);
+      }
       mImageSurface = CreateLockedSurface(mVBuf, mSize, mFormat);
     }
 
