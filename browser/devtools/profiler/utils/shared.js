@@ -88,6 +88,12 @@ ProfilerConnection.prototype = {
     if (this._target.chrome) {
       this._profiler = this._target.form.profilerActor;
     }
+    // Or when we are debugging content processes, we already have the tab
+    // specific one. Use it immediately.
+    else if (this._target.form && this._target.form.profilerActor) {
+      this._profiler = this._target.form.profilerActor;
+      yield this._registerEventNotifications();
+    }
     // Check if we already have a grip to the `listTabs` response object
     // and, if we do, use it to get to the profiler actor.
     else if (this._target.root) {

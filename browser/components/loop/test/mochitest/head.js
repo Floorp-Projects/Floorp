@@ -69,3 +69,28 @@ function loadLoopPanel() {
   // Now get the actual API.
   yield promiseGetMozLoopAPI();
 }
+
+function promiseOAuthParamsSetup(baseURL, params) {
+  let deferred = Promise.defer();
+  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+              createInstance(Ci.nsIXMLHttpRequest);
+  xhr.open("POST", baseURL + "/setup_params", true);
+  xhr.setRequestHeader("X-Params", JSON.stringify(params));
+  xhr.addEventListener("load", () => deferred.resolve(xhr));
+  xhr.addEventListener("error", error => deferred.reject(error));
+  xhr.send();
+
+  return deferred.promise;
+}
+
+function promiseDeletedOAuthParams(baseURL) {
+  let deferred = Promise.defer();
+  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+              createInstance(Ci.nsIXMLHttpRequest);
+  xhr.open("DELETE", baseURL + "/setup_params", true);
+  xhr.addEventListener("load", () => deferred.resolve(xhr));
+  xhr.addEventListener("error", error => deferred.reject(error));
+  xhr.send();
+
+  return deferred.promise;
+}

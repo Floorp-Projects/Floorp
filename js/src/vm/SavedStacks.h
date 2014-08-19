@@ -155,7 +155,7 @@ class SavedStacks {
     class MOZ_STACK_CLASS AutoLocationValueRooter : public JS::CustomAutoRooter
     {
       public:
-        AutoLocationValueRooter(JSContext *cx)
+        explicit AutoLocationValueRooter(JSContext *cx)
             : JS::CustomAutoRooter(cx),
               value() {}
 
@@ -208,7 +208,7 @@ class SavedStacks {
     struct FrameState
     {
         FrameState() : principals(nullptr), name(nullptr), location() { }
-        FrameState(const FrameIter &iter);
+        explicit FrameState(const FrameIter &iter);
         FrameState(const FrameState &fs);
 
         ~FrameState();
@@ -222,7 +222,7 @@ class SavedStacks {
 
     class MOZ_STACK_CLASS AutoFrameStateVector : public JS::CustomAutoRooter {
       public:
-        AutoFrameStateVector(JSContext *cx)
+        explicit AutoFrameStateVector(JSContext *cx)
           : JS::CustomAutoRooter(cx),
             frames(cx)
         { }

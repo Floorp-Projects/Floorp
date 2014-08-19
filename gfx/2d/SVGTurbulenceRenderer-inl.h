@@ -55,7 +55,7 @@ namespace {
 
 struct RandomNumberSource
 {
-  RandomNumberSource(int32_t aSeed) : mLast(SetupSeed(aSeed)) {}
+  explicit RandomNumberSource(int32_t aSeed) : mLast(SetupSeed(aSeed)) {}
   int32_t Next() { mLast = Random(mLast); return mLast; }
 
 private:

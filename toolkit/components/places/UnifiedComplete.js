@@ -621,13 +621,13 @@ Search.prototype = {
       this._sleepDeferred.resolve();
       this._sleepDeferred = null;
     }
-    delete this._pendingQuery;
+    this.pending = false;
   },
 
   /**
-   * Whether this search is running.
+   * Whether this search is active.
    */
-  get pending() !!this._pendingQuery,
+  pending: true,
 
   /**
    * Execute the search and populate results.
@@ -635,7 +635,10 @@ Search.prototype = {
    *        The Sqlite connection.
    */
   execute: Task.async(function* (conn) {
-    this._pendingQuery = true;
+    // A search might be canceled before it starts.
+    if (!this.pending)
+      return;
+
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT);
 
     // Since we call the synchronous parseSubmissionURL function later, we must
@@ -658,14 +661,17 @@ Search.prototype = {
                     this._switchToTabQuery,
                     this._searchQuery ];
 
+    let hasKeyword = false;
     if (this._searchTokens.length > 0 &&
         PlacesUtils.bookmarks.getURIForKeyword(this._searchTokens[0])) {
       queries.unshift(this._keywordQuery);
-    } else if (this._searchTokens.length == 1) {
-      yield this._matchSearchEngineUrl();
+      hasKeyword = true;
     }
 
     if (this._shouldAutofill) {
+      if (this._searchTokens.length == 1 && !hasKeyword)
+        yield this._matchSearchEngineUrl();
+
       // Hosts have no "/" in them.
       let lastSlashIndex = this._searchString.lastIndexOf("/");
       // Search only URLs if there's a slash in the search string...
@@ -791,6 +797,11 @@ Search.prototype = {
   },
 
   _addMatch: function (match) {
+    // A search could be canceled between a query start and its completion,
+    // in such a case ensure we won't notify any result for it.
+    if (!this.pending)
+      return;
+
     let notifyResults = false;
 
     if (this._frecencyMatches) {

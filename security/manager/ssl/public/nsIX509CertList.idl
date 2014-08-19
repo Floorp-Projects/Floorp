@@ -18,6 +18,14 @@ interface nsIX509CertList : nsISupports {
     */
    [notxpcom, noscript] voidPtr getRawCertList();
 
+   /**
+    * Test whether two certificate list instances represent the same
+    * certificate list.
+    *
+    * @return Whether the certificate lists are equal
+    */
+   boolean equals(in nsIX509CertList other);
+
 };
 
 %{C++

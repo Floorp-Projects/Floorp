@@ -806,29 +806,31 @@ class PCDispatchWrapper : public nsSupportsWeakReference
     return rv;
   }
 
-  NS_IMETHODIMP AddStream(DOMMediaStream *aMediaStream) {
+  NS_IMETHODIMP AddTrack(MediaStreamTrack *aTrack,
+                         DOMMediaStream *aMediaStream)
+  {
     nsresult rv;
 
     if (NS_IsMainThread()) {
-      rv = pc_->AddStream(*aMediaStream);
+      rv = pc_->AddTrack(*aTrack, *aMediaStream);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::AddStream, aMediaStream, &rv),
+        WrapRunnableRet(this, &PCDispatchWrapper::AddTrack, aTrack,
+                        aMediaStream, &rv),
         NS_DISPATCH_SYNC);
     }
 
     return rv;
   }
 
-  NS_IMETHODIMP RemoveStream(DOMMediaStream *aMediaStream) {
+  NS_IMETHODIMP RemoveTrack(MediaStreamTrack *aTrack) {
     nsresult rv;
 
     if (NS_IsMainThread()) {
-      rv = pc_->RemoveStream(*aMediaStream);
+      rv = pc_->RemoveTrack(*aTrack);
     } else {
       gMainThread->Dispatch(
-        WrapRunnableRet(this, &PCDispatchWrapper::RemoveStream,
-          aMediaStream, &rv),
+        WrapRunnableRet(this, &PCDispatchWrapper::RemoveTrack, aTrack, &rv),
         NS_DISPATCH_SYNC);
     }
 
@@ -1082,24 +1084,26 @@ class SignalingAgent {
          DOMMediaStream::HINT_CONTENTS_VIDEO,
        MediaStream *stream = nullptr) {
 
-    nsRefPtr<DOMMediaStream> domMediaStream;
-    if (stream) {
-      domMediaStream = new DOMMediaStream(stream);
-    } else {
-      domMediaStream = new DOMMediaStream();
-    }
-
+    nsRefPtr<DOMMediaStream> domMediaStream = new DOMMediaStream(stream);
     domMediaStream->SetHintContents(hint);
-    ASSERT_EQ(pc->AddStream(domMediaStream), NS_OK);
+
+    nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+    domMediaStream->GetTracks(tracks);
+    for (uint32_t i = 0; i < tracks.Length(); i++) {
+      ASSERT_EQ(pc->AddTrack(tracks[i], domMediaStream), NS_OK);
+    }
     domMediaStream_ = domMediaStream;
   }
-
 
   // Removes a stream from the PeerConnection. If the stream
   // parameter is absent, removes the stream that was most
   // recently added to the PeerConnection.
   void RemoveLastStreamAdded() {
-    ASSERT_EQ(pc->RemoveStream(domMediaStream_), NS_OK);
+    nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+    domMediaStream_->GetTracks(tracks);
+    for (uint32_t i = 0; i < tracks.Length(); i++) {
+      ASSERT_EQ(pc->RemoveTrack(tracks[i]), NS_OK);
+    }
   }
 
   void CreateOffer(sipcc::OfferOptions& options,
@@ -1182,7 +1186,7 @@ void CreateAnswer(std::string offer,
     // hints as were passed in.
     // When complete RemoveStream will remove and entire stream and its tracks
     // not just disable a track as this is currently doing
-    ASSERT_EQ(pc->RemoveStream(domMediaStream_), NS_OK);
+    RemoveLastStreamAdded();
 
     // Now call CreateOffer as JS would
     pObserver->state = TestObserver::stateNoResponse;
@@ -1445,6 +1449,7 @@ private:
       case SHOULD_CHECK_AUDIO:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             if (offer) {
+              ASSERT_NE(sdp.find("a=rtpmap:9 G722/8000"), std::string::npos);
               ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
             }
         break;
@@ -1452,6 +1457,7 @@ private:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             ASSERT_NE(sdp.find(" 0-15\r\na=sendonly"), std::string::npos);
             if (offer) {
+              ASSERT_NE(sdp.find("a=rtpmap:9 G722/8000"), std::string::npos);
               ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
             }
         break;
@@ -1459,6 +1465,7 @@ private:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             ASSERT_NE(sdp.find(" 0-15\r\na=recvonly"), std::string::npos);
             if (offer) {
+              ASSERT_NE(sdp.find("a=rtpmap:9 G722/8000"), std::string::npos);
               ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
             }
         break;
@@ -1466,6 +1473,7 @@ private:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             ASSERT_NE(sdp.find(" 0-15\r\na=sendrecv"), std::string::npos);
             if (offer) {
+              ASSERT_NE(sdp.find("a=rtpmap:9 G722/8000"), std::string::npos);
               ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
             }
         break;
@@ -2051,6 +2059,17 @@ TEST_F(SignalingTest, OfferAnswerNothingDisabled)
   sipcc::OfferOptions options;
   OfferAnswer(options, OFFER_AV | ANSWER_AV, false,
               SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
+}
+
+TEST_F(SignalingTest, OfferAnswerNothingDisabledFullCycle)
+{
+  sipcc::OfferOptions options;
+  OfferAnswer(options, OFFER_AV | ANSWER_AV, true,
+              SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AV);
+  // verify the default codec priorities
+  ASSERT_NE(a1_->getLocalDescription().find("RTP/SAVPF 109 9 0 8 101\r"), std::string::npos);
+  // verify that opus got selected
+  ASSERT_NE(a2_->getLocalDescription().find("RTP/SAVPF 109 101\r"), std::string::npos);
 }
 
 // XXX reject streams has changed. Re-enable when we can stop() received stream
@@ -3199,6 +3218,97 @@ TEST_F(SignalingTest, AudioOnlyCalleeNoRtcpMux)
 
   // The first Remote pipeline gets stored at 1
   a2_->CheckMediaPipeline(0, 1, 0);
+}
+
+
+
+TEST_F(SignalingTest, AudioOnlyG722Only)
+{
+  EnsureInit();
+
+  sipcc::OfferOptions options;
+
+  a1_->CreateOffer(options, OFFER_AUDIO, SHOULD_SENDRECV_AUDIO);
+  a1_->SetLocal(TestObserver::OFFER, a1_->offer(), false);
+  ParsedSDP sdpWrapper(a1_->offer());
+  sdpWrapper.ReplaceLine("m=audio",
+                         "m=audio 65375 RTP/SAVPF 9\r\n");
+  std::cout << "Modified SDP " << std::endl
+            << indent(sdpWrapper.getSdp()) << std::endl;
+  a2_->SetRemote(TestObserver::OFFER, sdpWrapper.getSdp(), false);
+  a2_->CreateAnswer(sdpWrapper.getSdp(),
+    OFFER_AUDIO | ANSWER_AUDIO);
+  a2_->SetLocal(TestObserver::ANSWER, a2_->answer(), false);
+  a1_->SetRemote(TestObserver::ANSWER, a2_->answer(), false);
+  ASSERT_NE(a2_->getLocalDescription().find("RTP/SAVPF 9\r"), std::string::npos);
+  ASSERT_NE(a2_->getLocalDescription().find("a=rtpmap:9 G722/8000"), std::string::npos);
+
+  ASSERT_TRUE_WAIT(a1_->IceCompleted() == true, kDefaultTimeout);
+  ASSERT_TRUE_WAIT(a2_->IceCompleted() == true, kDefaultTimeout);
+
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_->GetPacketsSent(0) >= 40 &&
+                   a2_->GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
+
+  a1_->CloseSendStreams();
+  a2_->CloseReceiveStreams();
+
+  ASSERT_GE(a1_->GetPacketsSent(0), 40);
+  ASSERT_GE(a2_->GetPacketsReceived(0), 40);
+}
+
+TEST_F(SignalingTest, AudioOnlyG722MostPreferred)
+{
+  EnsureInit();
+
+  sipcc::OfferOptions options;
+
+  a1_->CreateOffer(options, OFFER_AUDIO, SHOULD_SENDRECV_AUDIO);
+  a1_->SetLocal(TestObserver::OFFER, a1_->offer(), false);
+  ParsedSDP sdpWrapper(a1_->offer());
+  sdpWrapper.ReplaceLine("m=audio",
+                         "m=audio 65375 RTP/SAVPF 9 0 8 109 101\r\n");
+  std::cout << "Modified SDP " << std::endl
+            << indent(sdpWrapper.getSdp()) << std::endl;
+  a2_->SetRemote(TestObserver::OFFER, sdpWrapper.getSdp(), false);
+  a2_->CreateAnswer(sdpWrapper.getSdp(),
+    OFFER_AUDIO | ANSWER_AUDIO);
+  a2_->SetLocal(TestObserver::ANSWER, a2_->answer(), false);
+  a1_->SetRemote(TestObserver::ANSWER, a2_->answer(), false);
+  ASSERT_NE(a2_->getLocalDescription().find("RTP/SAVPF 9 101\r"), std::string::npos);
+  ASSERT_NE(a2_->getLocalDescription().find("a=rtpmap:9 G722/8000"), std::string::npos);
+
+  a1_->CloseSendStreams();
+  a2_->CloseReceiveStreams();
+}
+
+TEST_F(SignalingTest, AudioOnlyG722Rejected)
+{
+  EnsureInit();
+
+  sipcc::OfferOptions options;
+
+  a1_->CreateOffer(options, OFFER_AUDIO, SHOULD_SENDRECV_AUDIO);
+  // creating different SDPs as a workaround for rejecting codecs
+  // this way the answerer should pick a codec with lower priority
+  a1_->SetLocal(TestObserver::OFFER, a1_->offer(), false);
+  ParsedSDP sdpWrapper(a1_->offer());
+  sdpWrapper.ReplaceLine("m=audio",
+                         "m=audio 65375 RTP/SAVPF 0 8 101\r\n");
+  std::cout << "Modified SDP offer " << std::endl
+            << indent(sdpWrapper.getSdp()) << std::endl;
+  a2_->SetRemote(TestObserver::OFFER, sdpWrapper.getSdp(), false);
+  a2_->CreateAnswer(sdpWrapper.getSdp(),
+    OFFER_AUDIO | ANSWER_AUDIO);
+  a2_->SetLocal(TestObserver::ANSWER, a2_->answer(), false);
+  a1_->SetRemote(TestObserver::ANSWER, a2_->answer(), false);
+  ASSERT_NE(a2_->getLocalDescription().find("RTP/SAVPF 0 101\r"), std::string::npos);
+  ASSERT_NE(a2_->getLocalDescription().find("a=rtpmap:0 PCMU/8000"), std::string::npos);
+  ASSERT_EQ(a2_->getLocalDescription().find("a=rtpmap:109 opus/48000/2"), std::string::npos);
+  ASSERT_EQ(a2_->getLocalDescription().find("a=rtpmap:9 G722/8000"), std::string::npos);
+
+  a1_->CloseSendStreams();
+  a2_->CloseReceiveStreams();
 }
 
 TEST_F(SignalingTest, FullCallAudioNoMuxVideoMux)

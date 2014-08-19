@@ -17,8 +17,8 @@ function runTests() {
   // Expected length of grid
   let expectedValues = [1, 1, 1, 1, 8, 10];
 
-   // Values before setting new pref values (9 is the default value -> 3 x 3)
-  let previousValues = [9, 1, 1, 1, 1, 8];
+   // Values before setting new pref values (24 is the default value -> 8 x 3)
+  let previousValues = [24, 1, 1, 1, 1, 8];
 
   let existingTab, existingTabGridLength, newTab, newTabGridLength;
   yield addNewTabPageTab();

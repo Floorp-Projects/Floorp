@@ -18,7 +18,16 @@ function log(msg) {
 
 function Prompt(aOptions) {
   this.window = "window" in aOptions ? aOptions.window : null;
+
   this.msg = { async: true };
+
+  if (this.window) {
+    let window = Services.wm.getMostRecentWindow("navigator:browser");
+    var tab = window.BrowserApp.getTabForWindow(this.window);
+    if (tab) {
+      this.msg.tabId = tab.id;
+    }
+  }
 
   if (aOptions.priority === 1)
     this.msg.type = "Prompt:ShowTop"
@@ -36,8 +45,6 @@ function Prompt(aOptions) {
 
   if ("hint" in aOptions && aOptions.hint != null)
     this.msg.hint = aOptions.hint;
-
-  let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 }
 
 Prompt.prototype = {

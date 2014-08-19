@@ -154,7 +154,7 @@ class TestManager(object):
             topsrcdir = mozpath.normpath(topsrcdir)
 
         path = mozpath.normpath(t['path'])
-        assert path.startswith(topsrcdir)
+        assert mozpath.basedir(path, [topsrcdir])
 
         key = path[len(topsrcdir)+1:]
         t['file_relpath'] = key

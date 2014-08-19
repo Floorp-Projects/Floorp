@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<head>
+<style>
+ruby { display: ruby; }
+rb   { display: ruby-base; white-space: nowrap; }
+rp   { display: none; }
+rt   { display: ruby-text; white-space: nowrap; font-size: 50%; }
+rbc  { display: ruby-base-container; }
+rtc  { display: ruby-text-container; }
+ruby, rb, rt, rbc, rtc { unicode-bidi: isolate; }
+</style>
+</head>
+
+<body>
+
+<!-- Unclear how this should render. See http://lists.w3.org/Archives/Public/www-style/2014Jul/0620.html //-->
+abcd<ruby><rbc><rb><span> BASE</span></rb></rbc><rtc><rt>TEXT</rt></rtc></ruby>
+
+abcd<ruby><rbc><rb><span>BASE</span></rb></rbc><rtc><rt>TEXT</rt></rtc></ruby>
+
+abcd<ruby><rbc><rb><span> BASE</span></rb></rbc><rtc><rt>TEXT</rt></rtc></ruby>
+
+<ruby><rbc></rbc></ruby>
+
+</body>
+</html>

@@ -8,8 +8,8 @@
 
 #include "HyperTextAccessible.h"
 #include "TextRange.h"
-
- #include "nsIMutableArray.h"
+#include "nsIMutableArray.h"
+#include "nsComponentManagerUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

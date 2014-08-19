@@ -130,7 +130,7 @@ static bool enableDisassemblyDumps = false;
 static bool printTiming = false;
 static const char *jsCacheDir = nullptr;
 static const char *jsCacheAsmJSPath = nullptr;
-static bool jsCachingEnabled = true;
+static bool jsCachingEnabled = false;
 mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool
@@ -175,8 +175,8 @@ static bool OOM_printAllocationCount = false;
 #endif
 
 enum JSShellErrNum {
-#define MSG_DEF(name, number, count, exception, format) \
-    name = number,
+#define MSG_DEF(name, count, exception, format) \
+    name,
 #include "jsshell.msg"
 #undef MSG_DEF
     JSShellErr_Limit
@@ -350,7 +350,7 @@ ShellInterruptCallback(JSContext *cx)
         return true;
 
     bool result;
-    RootedValue interruptFunc(cx, gInterruptFunc.ref());
+    RootedValue interruptFunc(cx, *gInterruptFunc);
     if (!interruptFunc.isNull()) {
         JS::AutoSaveExceptionState savedExc(cx);
         JSAutoCompartment ac(cx, &interruptFunc.toObject());
@@ -499,7 +499,7 @@ ReadEvalPrintLoop(JSContext *cx, Handle<JSObject*> global, FILE *in, FILE *out, 
          * coincides with the end of a line.
          */
         int startline = lineno;
-        typedef Vector<char, 32, ContextAllocPolicy> CharBuffer;
+        typedef Vector<char, 32> CharBuffer;
         CharBuffer buffer(cx);
         do {
             ScheduleWatchdog(cx->runtime(), -1);
@@ -960,8 +960,8 @@ class AutoNewContext
         JS::ContextOptionsRef(newcx).setDontReportUncaught(true);
         js::SetDefaultObjectForContext(newcx, JS::CurrentGlobalOrNull(cx));
 
-        newRequest.construct(newcx);
-        newCompartment.construct(newcx, JS::CurrentGlobalOrNull(cx));
+        newRequest.emplace(newcx);
+        newCompartment.emplace(newcx, JS::CurrentGlobalOrNull(cx));
         return true;
     }
 
@@ -973,8 +973,8 @@ class AutoNewContext
             bool throwing = JS_IsExceptionPending(newcx);
             if (throwing)
                 JS_GetPendingException(newcx, &exc);
-            newCompartment.destroy();
-            newRequest.destroy();
+            newCompartment.reset();
+            newRequest.reset();
             if (throwing)
                 JS_SetPendingException(oldcx, exc);
             DestroyContext(newcx, false);
@@ -1056,7 +1056,9 @@ static bool
 CacheEntry_setBytecode(JSContext *cx, HandleObject cache, uint8_t *buffer, uint32_t length)
 {
     JS_ASSERT(CacheEntry_isCacheEntry(cache));
-    Rooted<ArrayBufferObject*> arrayBuffer(cx, ArrayBufferObject::create(cx, length, buffer));
+    ArrayBufferObject::BufferContents contents =
+        ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(buffer);
+    Rooted<ArrayBufferObject*> arrayBuffer(cx, ArrayBufferObject::create(cx, length, contents));
 
     if (!arrayBuffer || !ArrayBufferObject::ensureNonInline(cx, arrayBuffer))
         return false;
@@ -1507,7 +1509,7 @@ ReadLine(JSContext *cx, unsigned argc, jsval *vp)
         char *tmp;
         bufsize *= 2;
         if (bufsize > buflength) {
-            tmp = (char *) JS_realloc(cx, buf, bufsize);
+            tmp = static_cast<char *>(JS_realloc(cx, buf, bufsize / 2, bufsize));
         } else {
             JS_ReportOutOfMemory(cx);
             tmp = nullptr;
@@ -1529,7 +1531,7 @@ ReadLine(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     /* Shrink the buffer to the real size. */
-    char *tmp = static_cast<char*>(JS_realloc(cx, buf, buflength));
+    char *tmp = static_cast<char *>(JS_realloc(cx, buf, bufsize, buflength));
     if (!tmp) {
         JS_free(cx, buf);
         return false;
@@ -2426,7 +2428,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
 
         if (obj && obj->is<CrossCompartmentWrapperObject>()) {
             obj = UncheckedUnwrap(obj);
-            ac.construct(cx, obj);
+            ac.emplace(cx, obj);
             args[0].setObject(*obj);
         }
         if (obj && obj->is<JSFunction>()) {
@@ -2608,7 +2610,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
         JSObject *unwrapped = UncheckedUnwrap(sobj, true, &flags);
         if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
-            ac.construct(cx, sobj);
+            ac.emplace(cx, sobj);
         }
 
         sobj = GetInnerObject(sobj);
@@ -2666,7 +2668,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (saveCurrent) {
         if (!sfc.save())
             return false;
-        ac.construct(cx, DefaultObjectForContextOrNull(cx));
+        ac.emplace(cx, DefaultObjectForContextOrNull(cx));
     }
 
     AutoStableStringChars stableChars(cx);
@@ -3110,7 +3112,7 @@ CancelExecution(JSRuntime *rt)
     gServiceInterrupt = true;
     JS_RequestInterruptCallback(rt);
 
-    if (!gInterruptFunc.ref().get().isNull()) {
+    if (!gInterruptFunc->get().isNull()) {
         static const char msg[] = "Script runs for too long, terminating.\n";
         fputs(msg, stderr);
     }
@@ -3157,7 +3159,7 @@ Timeout(JSContext *cx, unsigned argc, Value *vp)
             JS_ReportError(cx, "Second argument must be a timeout function");
             return false;
         }
-        gInterruptFunc.ref() = value;
+        *gInterruptFunc = value;
     }
 
     args.rval().setUndefined();
@@ -3228,7 +3230,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, Value *vp)
         JS_ReportError(cx, "Argument must be a function");
         return false;
     }
-    gInterruptFunc.ref() = value;
+    *gInterruptFunc = value;
 
     args.rval().setUndefined();
     return true;
@@ -4902,7 +4904,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
-#define MSG_DEF(name, number, count, exception, format) \
+#define MSG_DEF(name, count, exception, format) \
     { format, count, JSEXN_ERR } ,
 #include "jsshell.msg"
 #undef MSG_DEF
@@ -4921,7 +4923,7 @@ static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
     gGotError = PrintError(cx, gErrFile, message, report, reportWarnings);
-    if (!JSREPORT_IS_WARNING(report->flags)) {
+    if (report->exnType != JSEXN_NONE && !JSREPORT_IS_WARNING(report->flags)) {
         if (report->errorNumber == JSMSG_OUT_OF_MEMORY) {
             gExitCode = EXITCODE_OUT_OF_MEMORY;
         } else {
@@ -5058,8 +5060,12 @@ env_enumerate(JSContext *cx, HandleObject obj)
 static bool
 env_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
 {
-    RootedValue idvalue(cx, IdToValue(id));
-    RootedString idstring(cx, ToString(cx, idvalue));
+    if (JSID_IS_SYMBOL(id))
+        return true;
+
+    RootedString idstring(cx, IdToString(cx, id));
+    if (!idstring)
+        return false;
     JSAutoByteString idstr;
     if (!idstr.encodeLatin1(cx, idstring))
         return false;
@@ -6170,16 +6176,16 @@ main(int argc, char **argv, char **envp)
 
 #ifdef JS_CODEGEN_X86
     if (op.getBoolOption("no-fpu"))
-        JSC::MacroAssembler::SetFloatingPointDisabled();
+        JSC::MacroAssemblerX86Common::SetFloatingPointDisabled();
 #endif
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     if (op.getBoolOption("no-sse3")) {
-        JSC::MacroAssembler::SetSSE3Disabled();
+        JSC::MacroAssemblerX86Common::SetSSE3Disabled();
         PropagateFlagToNestedShells("--no-sse3");
     }
     if (op.getBoolOption("no-sse4")) {
-        JSC::MacroAssembler::SetSSE4Disabled();
+        JSC::MacroAssemblerX86Common::SetSSE4Disabled();
         PropagateFlagToNestedShells("--no-sse4");
     }
 #endif
@@ -6213,13 +6219,13 @@ main(int argc, char **argv, char **envp)
     if (!SetRuntimeOptions(rt, op))
         return 1;
 
-    gInterruptFunc.construct(rt, NullValue());
+    gInterruptFunc.emplace(rt, NullValue());
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 #ifdef JSGC_GENERATIONAL
     Maybe<JS::AutoDisableGenerationalGC> noggc;
     if (op.getBoolOption("no-ggc"))
-        noggc.construct(rt);
+        noggc.emplace(rt);
 #endif
 
     size_t availMem = op.getIntOption("available-memory");
@@ -6261,15 +6267,14 @@ main(int argc, char **argv, char **envp)
 
     KillWatchdog();
 
-    gInterruptFunc.destroy();
+    gInterruptFunc.reset();
 
     MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
     for (size_t i = 0; i < workerThreads.length(); i++)
         PR_JoinThread(workerThreads[i]);
 
 #ifdef JSGC_GENERATIONAL
-    if (!noggc.empty())
-        noggc.destroy();
+    noggc.reset();
 #endif
 
     JS_DestroyRuntime(rt);

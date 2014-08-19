@@ -6,5 +6,5 @@
 
 DIRS += ['tlsserver']
 
-if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
+if not CONFIG['MOZ_NO_SMART_CARDS']:
     DIRS += ['pkcs11testmodule']

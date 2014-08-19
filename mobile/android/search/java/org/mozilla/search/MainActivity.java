@@ -144,6 +144,10 @@ public class MainActivity extends FragmentActivity implements AcceptsSearchQuery
                 ((PostSearchFragment) getSupportFragmentManager().findFragmentById(R.id.postsearch))
                         .startSearch(query);
             }
+        } else {
+            // If there isn't a state to restore, the activity will start in the presearch state,
+            // and we should enter editing mode to bring up the keyboard.
+            setEditState(EditState.EDITING);
         }
     }
 
@@ -177,8 +181,9 @@ public class MainActivity extends FragmentActivity implements AcceptsSearchQuery
         // Reset the activity in the presearch state if it was launched from a new intent.
         setSearchState(SearchState.PRESEARCH);
 
-        // Also clear any existing search term.
+        // Also clear any existing search term and enter editing mode.
         editText.setText("");
+        setEditState(EditState.EDITING);
     }
 
     @Override

@@ -9,9 +9,7 @@
     <ImageButton android:id="@+id/favicon"
                  style="@style/UrlBar.ImageButton"
                  android:layout_width="@dimen/browser_toolbar_favicon_size"
-                 android:layout_height="match_parent"
                  android:scaleType="fitCenter"
-                 android:layout_marginLeft="8dip"
                  android:paddingLeft="4dip"
                  android:paddingRight="4dip"
                  android:layout_gravity="center_vertical"/>
@@ -26,30 +24,24 @@
                  android:visibility="gone"/>
 
     <org.mozilla.gecko.widget.ThemedTextView android:id="@+id/url_bar_title"
-                                             style="@style/UrlBar.Button"
+                                             style="@style/UrlBar.Title"
                                              android:layout_width="match_parent"
                                              android:layout_height="match_parent"
                                              android:layout_weight="1.0"
-                                             android:singleLine="true"
-                                             android:paddingRight="8dp"
-                                             android:textColor="@color/url_bar_title"
-                                             android:textColorHint="@color/url_bar_title_hint"
-                                             android:gravity="center_vertical|left"
-                                             android:hint="@string/url_bar_default_text"
-                                             android:layout_gravity="center_vertical"
                                              gecko:autoUpdateTheme="false"/>
 
     <org.mozilla.gecko.toolbar.PageActionLayout android:id="@+id/page_action_layout"
                                                 android:layout_width="wrap_content"
                                                 android:layout_height="match_parent"
-                                                android:layout_marginRight="@dimen/browser_toolbar_button_padding"
                                                 android:visibility="gone"
                                                 android:orientation="horizontal"/>
 
     <ImageButton android:id="@+id/stop"
-                 style="@style/UrlBar.ImageButton.Icon"
+                 android:layout_width="@dimen/page_action_button_width"
+                 android:layout_height="match_parent"
                  android:src="@drawable/urlbar_stop"
                  android:contentDescription="@string/stop"
+                 android:background="#00ffffff"
                  android:visibility="gone"/>
 
 </merge>

@@ -202,7 +202,7 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t at
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
-        inner.construct(cx, attrs, pgetter, psetter);
+        inner.emplace(cx, attrs, pgetter, psetter);
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
@@ -219,6 +219,15 @@ GetShapeAttributes(JSObject *obj, Shape *shape)
 
     return shape->attributes();
 }
+
+#ifdef JSGC_COMPACTING
+inline void
+BaseShape::fixupAfterMovingGC()
+{
+    if (hasTable())
+        table().fixupAfterMovingGC();
+}
+#endif
 
 } /* namespace js */
 

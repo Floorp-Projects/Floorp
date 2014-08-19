@@ -196,7 +196,7 @@ const DownloadsPanel = {
   get panel()
   {
     // If the downloads panel overlay hasn't loaded yet, just return null
-    // without reseting this.panel.
+    // without resetting this.panel.
     let downloadsPanel = document.getElementById("downloadsPanel");
     if (!downloadsPanel)
       return null;
@@ -556,7 +556,7 @@ const DownloadsPanel = {
 
       // At this point, if the window is minimized, opening the panel could fail
       // without any notification, and there would be no way to either open or
-      // close the panel anymore.  To prevent this, check if the window is
+      // close the panel any more.  To prevent this, check if the window is
       // minimized and in that case force the panel to the closed state.
       if (window.windowState == Ci.nsIDOMChromeWindow.STATE_MINIMIZED) {
         DownloadsButton.releaseAnchor();

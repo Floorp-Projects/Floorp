@@ -28,8 +28,7 @@ ExtractWellSized(ExclusiveContext *cx, Buffer &cb)
     /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
     JS_ASSERT(capacity >= length);
     if (length > Buffer::sMaxInlineStorage && capacity - length > length / 4) {
-        size_t bytes = sizeof(CharT) * (length + 1);
-        CharT *tmp = (CharT *)cx->realloc_(buf, bytes);
+        CharT *tmp = cx->zone()->pod_realloc<CharT>(buf, capacity, length + 1);
         if (!tmp) {
             js_free(buf);
             return nullptr;
@@ -87,6 +86,12 @@ FinishStringFlat(ExclusiveContext *cx, StringBuffer &sb, Buffer &cb)
     JSFlatString *str = NewStringDontDeflate<CanGC>(cx, buf.get(), len);
     if (!str)
         return nullptr;
+
+    /*
+     * The allocation was made on a TempAllocPolicy, so account for the string
+     * data on the string's zone.
+     */
+    str->zone()->updateMallocCounter(sizeof(CharT) * len);
 
     buf.forget();
     return str;

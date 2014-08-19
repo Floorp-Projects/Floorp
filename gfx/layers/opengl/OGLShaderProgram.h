@@ -68,6 +68,8 @@ public:
     RenderColor,
     TexCoordMultiplier,
     TexturePass2,
+    ColorMatrix,
+    ColorMatrixVector,
 
     KnownUniformCount
   };
@@ -369,6 +371,12 @@ public:
     SetUniform(KnownUniform::RenderColor, aColor);
   }
 
+  void SetColorMatrix(const gfx::Matrix5x4& aColorMatrix)
+  {
+    SetMatrixUniform(KnownUniform::ColorMatrix, &aColorMatrix._11);
+    SetUniform(KnownUniform::ColorMatrixVector, 4, &aColorMatrix._51);
+  }
+
   void SetTexCoordMultiplier(float aWidth, float aHeight) {
     float f[] = {aWidth, aHeight};
     SetUniform(KnownUniform::TexCoordMultiplier, 2, f);
@@ -432,7 +440,7 @@ protected:
     }
   }
 
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, float *aFloatValues)
+  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, int aLength, const float *aFloatValues)
   {
     ASSERT_THIS_PROGRAM;
     NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");

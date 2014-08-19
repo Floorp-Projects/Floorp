@@ -401,7 +401,7 @@ nsresult PeerConnectionCtx::Initialize() {
   codecMask |= VCM_CODEC_RESOURCE_G711;
   codecMask |= VCM_CODEC_RESOURCE_OPUS;
   //codecMask |= VCM_CODEC_RESOURCE_LINEAR;
-  //codecMask |= VCM_CODEC_RESOURCE_G722;
+  codecMask |= VCM_CODEC_RESOURCE_G722;
   //codecMask |= VCM_CODEC_RESOURCE_iLBC;
   //codecMask |= VCM_CODEC_RESOURCE_iSAC;
   mCCM->setAudioCodecs(codecMask);

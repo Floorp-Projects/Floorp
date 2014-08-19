@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 import copy
 import difflib
 import errno
+import functools
 import hashlib
 import os
 import stat
@@ -20,7 +21,6 @@ from collections import (
     defaultdict,
     OrderedDict,
 )
-from functools import wraps
 from StringIO import StringIO
 
 
@@ -53,8 +53,14 @@ class ReadOnlyDict(dict):
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
 
-    def __setitem__(self, name, value):
+    def __delitem__(self, key):
+        raise Exception('Object does not support deletion.')
+
+    def __setitem__(self, key, value):
         raise Exception('Object does not support assignment.')
+
+    def update(self, *args, **kwargs):
+        raise Exception('Object does not support update.')
 
 
 class undefined_default(object):
@@ -70,13 +76,10 @@ class ReadOnlyDefaultDict(ReadOnlyDict):
         ReadOnlyDict.__init__(self, *args, **kwargs)
         self._default_factory = default_factory
 
-    def __getitem__(self, key):
-        try:
-            return ReadOnlyDict.__getitem__(self, key)
-        except KeyError:
-            value = self._default_factory()
-            dict.__setitem__(self, key, value)
-            return value
+    def __missing__(self, key):
+        value = self._default_factory()
+        dict.__setitem__(self, key, value)
+        return value
 
 
 def ensureParentDir(path):
@@ -368,6 +371,10 @@ def FlagsFactory(flags):
     class Flags(object):
         __slots__ = flags.keys()
         _flags = flags
+
+        def update(self, **kwargs):
+            for k, v in kwargs.iteritems():
+                setattr(self, k, v)
 
         def __getattr__(self, name):
             if name not in self.__slots__:
@@ -705,20 +712,66 @@ class OrderedDefaultDict(OrderedDict):
         OrderedDict.__init__(self, *args, **kwargs)
         self._default_factory = default_factory
 
-    def __getitem__(self, key):
-        try:
-            return OrderedDict.__getitem__(self, key)
-        except KeyError:
-            value = self[key] = self._default_factory()
-            return value
+    def __missing__(self, key):
+        value = self[key] = self._default_factory()
+        return value
 
 
-def memoize(func):
-    cache = {}
+class KeyedDefaultDict(dict):
+    '''Like a defaultdict, but the default_factory function takes the key as
+    argument'''
+    def __init__(self, default_factory, *args, **kwargs):
+        dict.__init__(self, *args, **kwargs)
+        self._default_factory = default_factory
 
-    @wraps(func)
-    def wrapper(*args):
+    def __missing__(self, key):
+        value = self._default_factory(key)
+        dict.__setitem__(self, key, value)
+        return value
+
+
+class ReadOnlyKeyedDefaultDict(KeyedDefaultDict, ReadOnlyDict):
+    '''Like KeyedDefaultDict, but read-only.'''
+
+
+class memoize(dict):
+    '''A decorator to memoize the results of function calls depending
+    on its arguments.
+    Both functions and instance methods are handled, although in the
+    instance method case, the results are cache in the instance itself.
+    '''
+    def __init__(self, func):
+        self.func = func
+        functools.update_wrapper(self, func)
+
+    def __call__(self, *args):
+        if args not in self:
+            self[args] = self.func(*args)
+        return self[args]
+
+    def method_call(self, instance, *args):
+        name = '_%s' % self.func.__name__
+        if not hasattr(instance, name):
+            setattr(instance, name, {})
+        cache = getattr(instance, name)
         if args not in cache:
-            cache[args] = func(*args)
+            cache[args] = self.func(instance, *args)
         return cache[args]
-    return wrapper
+
+    def __get__(self, instance, cls):
+        return functools.update_wrapper(
+            functools.partial(self.method_call, instance), self.func)
+
+
+class memoized_property(object):
+    '''A specialized version of the memoize decorator that works for
+    class instance properties.
+    '''
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, cls):
+        name = '_%s' % self.func.__name__
+        if not hasattr(instance, name):
+            setattr(instance, name, self.func(instance))
+        return getattr(instance, name)

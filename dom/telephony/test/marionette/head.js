@@ -495,6 +495,36 @@ let emulator = (function() {
   }
 
   /**
+   * Make an outgoing emergency call.
+   *
+   * @param number
+   *        A string.
+   * @return A deferred promise.
+   */
+  function dialEmergency(number) {
+    log("Make an outgoing emergency call: " + number);
+
+    let deferred = Promise.defer();
+
+    telephony.dialEmergency(number).then(call => {
+      ok(call);
+      is(call.id.number, number);
+      is(call.state, "dialing");
+
+      call.onalerting = function onalerting(event) {
+        call.onalerting = null;
+        log("Received 'onalerting' call event.");
+        checkEventCallState(event, call, "alerting");
+        deferred.resolve(call);
+      };
+    }, cause => {
+      deferred.reject(cause);
+    });
+
+    return deferred.promise;
+  }
+
+  /**
    * Answer an incoming call.
    *
    * @param call
@@ -1160,6 +1190,7 @@ let emulator = (function() {
   this.gCheckState = checkState;
   this.gCheckAll = checkAll;
   this.gDial = dial;
+  this.gDialEmergency = dialEmergency;
   this.gAnswer = answer;
   this.gHangUp = hangUp;
   this.gHold = hold;

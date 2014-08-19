@@ -48,9 +48,9 @@ GonkDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aCon
 }
 
 already_AddRefed<MediaDataDecoder>
-GonkDecoderModule::CreateAACDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
-                                   MediaTaskQueue* aAudioTaskQueue,
-                                   MediaDataDecoderCallback* aCallback)
+GonkDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
+                                      MediaTaskQueue* aAudioTaskQueue,
+                                      MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder =
   new GonkMediaDataDecoder(new GonkAudioDecoderManager(aConfig), aAudioTaskQueue,

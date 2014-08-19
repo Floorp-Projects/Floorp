@@ -19,9 +19,9 @@
 #include "nsIClassInfoImpl.h"
 #include "nsError.h"
 #include "nsIContentSecurityPolicy.h"
-#include "nsCxPusher.h"
 #include "jswrapper.h"
 
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
 

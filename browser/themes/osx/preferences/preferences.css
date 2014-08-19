@@ -167,6 +167,12 @@ caption {
   font: message-box !important;
 }
 
+/* General Pane */
+
+#isNotDefaultLabel {
+  font-weight: bold;
+}
+
 /**
  * Privacy Pane
  */

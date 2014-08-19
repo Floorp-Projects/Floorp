@@ -100,23 +100,26 @@ class IonAllocPolicy
     MOZ_IMPLICIT IonAllocPolicy(TempAllocator &alloc)
       : alloc_(alloc)
     {}
-    void *malloc_(size_t bytes) {
-        return alloc_.allocate(bytes);
+    template <typename T>
+    T *pod_malloc(size_t numElems) {
+        if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+            return nullptr;
+        return static_cast<T *>(alloc_.allocate(numElems * sizeof(T)));
     }
     template <typename T>
     T *pod_calloc(size_t numElems) {
-        if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
-            return nullptr;
-        T *p = (T *)alloc_.allocate(numElems * sizeof(T));
+        T *p = pod_malloc<T>(numElems);
         if (p)
             memset(p, 0, numElems * sizeof(T));
         return p;
     }
-    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
-        void *n = malloc_(bytes);
+    template <typename T>
+    T *pod_realloc(T *p, size_t oldSize, size_t newSize) {
+        T *n = pod_malloc<T>(newSize);
         if (!n)
             return n;
-        memcpy(n, p, Min(oldBytes, bytes));
+        MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
+        memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
         return n;
     }
     void free_(void *p) {
@@ -125,22 +128,16 @@ class IonAllocPolicy
     }
 };
 
-// Deprecated. Don't use this. Will be removed after everything has been
-// converted to IonAllocPolicy.
 class OldIonAllocPolicy
 {
   public:
     OldIonAllocPolicy()
     {}
-    void *malloc_(size_t bytes) {
-        return GetIonContext()->temp->allocate(bytes);
-    }
-    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
-        void *n = malloc_(bytes);
-        if (!n)
-            return n;
-        memcpy(n, p, Min(oldBytes, bytes));
-        return n;
+    template <typename T>
+    T *pod_malloc(size_t numElems) {
+        if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+            return nullptr;
+        return static_cast<T *>(GetIonContext()->temp->allocate(numElems * sizeof(T)));
     }
     void free_(void *p) {
     }

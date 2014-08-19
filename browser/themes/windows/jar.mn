@@ -37,17 +37,6 @@ browser.jar:
         skin/classic/browser/identity-icons-https-ev.png
         skin/classic/browser/identity-icons-https-mixed-active.png
         skin/classic/browser/identity-icons-https-mixed-display.png
-*       skin/classic/browser/in-content/common.css                  (in-content/common.css)
-        skin/classic/browser/in-content/check.png                   (../shared/in-content/check.png)
-        skin/classic/browser/in-content/check@2x.png                (../shared/in-content/check@2x.png)
-        skin/classic/browser/in-content/dropdown.png                (../shared/in-content/dropdown.png)
-        skin/classic/browser/in-content/dropdown@2x.png             (../shared/in-content/dropdown@2x.png)
-        skin/classic/browser/in-content/dropdown-disabled.png       (../shared/in-content/dropdown-disabled.png)
-        skin/classic/browser/in-content/dropdown-disabled@2x.png    (../shared/in-content/dropdown-disabled@2x.png)
-        skin/classic/browser/in-content/help-glyph.png              (../shared/in-content/help-glyph.png)
-        skin/classic/browser/in-content/help-glyph@2x.png           (../shared/in-content/help-glyph@2x.png)
-        skin/classic/browser/in-content/sorter.png                  (../shared/in-content/sorter.png)
-        skin/classic/browser/in-content/sorter@2x.png               (../shared/in-content/sorter@2x.png)
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/livemark-folder.png
@@ -155,7 +144,6 @@ browser.jar:
         skin/classic/browser/newtab/controls.png                     (../shared/newtab/controls.png)
         skin/classic/browser/newtab/controls@2x.png                  (../shared/newtab/controls@2x.png)
         skin/classic/browser/newtab/controls.svg                     (../shared/newtab/controls.svg)
-        skin/classic/browser/newtab/texture.png                      (../shared/newtab/texture.png)
         skin/classic/browser/places/places.css                       (places/places.css)
 *       skin/classic/browser/places/organizer.css                    (places/organizer.css)
         skin/classic/browser/places/bookmark.png                     (places/bookmark.png)
@@ -377,6 +365,7 @@ browser.jar:
         skin/classic/browser/devtools/computedview.css              (../shared/devtools/computedview.css)
         skin/classic/browser/devtools/arrow-e.png                   (../shared/devtools/images/arrow-e.png)
         skin/classic/browser/devtools/arrow-e@2x.png                (../shared/devtools/images/arrow-e@2x.png)
+        skin/classic/browser/devtools/responsiveui-home.png         (../shared/devtools/responsiveui-home.png)
         skin/classic/browser/devtools/projecteditor/projecteditor.css           (../shared/devtools/projecteditor/projecteditor.css)
         skin/classic/browser/devtools/projecteditor/file-icons-sheet@2x.png       (../shared/devtools/projecteditor/file-icons-sheet@2x.png)
         skin/classic/browser/devtools/app-manager/connection-footer.css     (../shared/devtools/app-manager/connection-footer.css)
@@ -457,17 +446,6 @@ browser.jar:
         skin/classic/aero/browser/identity-icons-https-ev.png
         skin/classic/aero/browser/identity-icons-https-mixed-active.png
         skin/classic/aero/browser/identity-icons-https-mixed-display.png
-*       skin/classic/aero/browser/in-content/common.css               (in-content/common.css)
-        skin/classic/aero/browser/in-content/check.png                (../shared/in-content/check.png)
-        skin/classic/aero/browser/in-content/check@2x.png             (../shared/in-content/check@2x.png)
-        skin/classic/aero/browser/in-content/dropdown.png             (../shared/in-content/dropdown.png)
-        skin/classic/aero/browser/in-content/dropdown@2x.png          (../shared/in-content/dropdown@2x.png)
-        skin/classic/aero/browser/in-content/dropdown-disabled.png    (../shared/in-content/dropdown-disabled.png)
-        skin/classic/aero/browser/in-content/dropdown-disabled@2x.png (../shared/in-content/dropdown-disabled@2x.png)
-        skin/classic/aero/browser/in-content/help-glyph.png           (../shared/in-content/help-glyph.png)
-        skin/classic/aero/browser/in-content/help-glyph@2x.png        (../shared/in-content/help-glyph@2x.png)
-        skin/classic/aero/browser/in-content/sorter.png               (../shared/in-content/sorter.png)
-        skin/classic/aero/browser/in-content/sorter@2x.png            (../shared/in-content/sorter@2x.png)
         skin/classic/aero/browser/keyhole-forward-mask.svg
         skin/classic/aero/browser/KUI-background.png
         skin/classic/aero/browser/livemark-folder.png                (livemark-folder-aero.png)
@@ -581,7 +559,6 @@ browser.jar:
         skin/classic/aero/browser/newtab/controls.png                (../shared/newtab/controls.png)
         skin/classic/aero/browser/newtab/controls@2x.png             (../shared/newtab/controls@2x.png)
         skin/classic/aero/browser/newtab/controls.svg                (../shared/newtab/controls.svg)
-        skin/classic/aero/browser/newtab/texture.png                 (../shared/newtab/texture.png)
 *       skin/classic/aero/browser/places/places.css                  (places/places-aero.css)
 *       skin/classic/aero/browser/places/organizer.css               (places/organizer-aero.css)
         skin/classic/aero/browser/places/bookmark.png                (places/bookmark-aero.png)
@@ -802,6 +779,7 @@ browser.jar:
         skin/classic/aero/browser/devtools/computedview.css          (../shared/devtools/computedview.css)
         skin/classic/aero/browser/devtools/arrow-e.png               (../shared/devtools/images/arrow-e.png)
         skin/classic/aero/browser/devtools/arrow-e@2x.png               (../shared/devtools/images/arrow-e@2x.png)
+        skin/classic/browser/devtools/responsiveui-home.png          (../shared/devtools/responsiveui-home.png)
         skin/classic/aero/browser/devtools/projecteditor/projecteditor.css       (../shared/devtools/projecteditor/projecteditor.css)
         skin/classic/aero/browser/devtools/projecteditor/file-icons-sheet@2x.png       (../shared/devtools/projecteditor/file-icons-sheet@2x.png)
         skin/classic/aero/browser/devtools/app-manager/connection-footer.css     (../shared/devtools/app-manager/connection-footer.css)

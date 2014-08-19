@@ -396,7 +396,7 @@ this.ContentControl.prototype = {
           this._contentScope.get().sendAsyncMessage(
             'AccessFu:Present', Presentation.pivotChanged(
               vc.position, null, Ci.nsIAccessiblePivot.REASON_NONE,
-              vc.startOffset, vc.endOffset));
+              vc.startOffset, vc.endOffset, false));
         }
       };
 
@@ -416,16 +416,22 @@ this.ContentControl.prototype = {
       let moveFirstOrLast = moveMethod in ['moveFirst', 'moveLast'];
       if (!moveFirstOrLast || acc) {
         // We either need next/previous or there is an anchor we need to use.
-        moved = vc[moveFirstOrLast ? 'moveNext' : moveMethod](rule, acc, true);
+        moved = vc[moveFirstOrLast ? 'moveNext' : moveMethod](rule, acc, true,
+                                                              false);
       }
       if (moveFirstOrLast && !moved) {
         // We move to first/last after no anchor move happened or succeeded.
-        moved = vc[moveMethod](rule);
+        moved = vc[moveMethod](rule, false);
       }
 
       let sentToChild = this.sendToChild(vc, {
         name: 'AccessFu:AutoMove',
-        json: aOptions
+        json: {
+          moveMethod: aOptions.moveMethod,
+          moveToFocused: aOptions.moveToFocused,
+          noOpIfOnScreen: true,
+          forcePresent: true
+        }
       });
 
       if (!moved && !sentToChild) {

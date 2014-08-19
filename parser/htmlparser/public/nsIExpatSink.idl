@@ -12,7 +12,7 @@ interface nsIScriptError;
  * by any sink that handles some sort of XML dialect.
  */
 
-[scriptable, uuid(f61c56b5-ea5b-42b4-ad3c-17416e72e238)]
+[scriptable, uuid(01f681af-0f22-4725-a914-0d396114daf0)]
 interface nsIExpatSink : nsISupports 
 {
   /**

@@ -12,11 +12,12 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
-#include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIHttpChannel.h"
+
+class nsIContent;
+class nsIDocument;
 
 namespace mozilla {
 namespace dom {

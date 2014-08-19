@@ -226,6 +226,8 @@ public:
 
   void ExpectAudio(const mozilla::TrackID);
   void ExpectVideo(const mozilla::TrackID);
+  void RemoveAudio(const mozilla::TrackID);
+  void RemoveVideo(const mozilla::TrackID);
   unsigned AudioTrackCount();
   unsigned VideoTrackCount();
   void DetachTransport_s();
@@ -301,10 +303,13 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   }
 
   // Add a stream (main thread only)
-  nsresult AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream_id);
+  nsresult AddStream(nsIDOMMediaStream* aMediaStream, uint32_t hints,
+                     uint32_t *stream_id);
 
   // Remove a stream (main thread only)
-  nsresult RemoveStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream_id);
+  nsresult RemoveStream(nsIDOMMediaStream* aMediaStream,
+                        uint32_t hints,
+                        uint32_t *stream_id);
 
   // Get a specific local stream
   uint32_t LocalStreamsLength()

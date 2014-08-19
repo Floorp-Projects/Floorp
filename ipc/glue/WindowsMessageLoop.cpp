@@ -657,6 +657,7 @@ InitUIThread()
 } // namespace ipc
 } // namespace mozilla
 
+// See SpinInternalEventLoop below
 MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool interrupt)
   : mInterrupt(interrupt)
   , mSpinNestedEvents(false)
@@ -665,8 +666,9 @@ MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool int
   , mPrev(mChannel->mTopFrame)
   , mStaticPrev(sStaticTopFrame)
 {
-  // Only track stack frames when we are on the gui thread.
-  if (GetCurrentThreadId() != gUIThreadId) {
+  // Only track stack frames when Windows message deferral behavior
+  // is request for the channel.
+  if (!(mChannel->GetChannelFlags() & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
     return;
   }
 
@@ -682,7 +684,7 @@ MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool int
 
 MessageChannel::SyncStackFrame::~SyncStackFrame()
 {
-  if (GetCurrentThreadId() != gUIThreadId) {
+  if (!(mChannel->GetChannelFlags() & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
     return;
   }
 
@@ -809,11 +811,9 @@ MessageChannel::WaitForSyncNotify()
 
   MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
 
-  // We jump through a lot of unique hoops in dealing with Windows message
-  // trapping to prevent re-entrancy when we are blocked waiting on a sync
-  // reply or new rpc in-call. However none of this overhead is needed when
-  // we aren't on the main (gui) thread. 
-  if (GetCurrentThreadId() != gUIThreadId) {
+  // Use a blocking wait if this channel does not require
+  // Windows message deferral behavior.
+  if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
     PRIntervalTime timeout = (kNoTimeout == mTimeoutMs) ?
                              PR_INTERVAL_NO_TIMEOUT :
                              PR_MillisecondsToInterval(mTimeoutMs);
@@ -837,9 +837,8 @@ MessageChannel::WaitForSyncNotify()
                         false : IsTimeoutExpired(waitStart, timeout));
   }
 
-  NS_ASSERTION(GetCurrentThreadId() == gUIThreadId,
-               "Shouldn't be on a non-main thread in here!");
-
+  NS_ASSERTION(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION,
+               "Shouldn't be here for channels that don't use message deferral!");
   NS_ASSERTION(mTopFrame && !mTopFrame->mInterrupt,
                "Top frame is not a sync frame!");
 
@@ -961,21 +960,19 @@ MessageChannel::WaitForInterruptNotify()
 
   MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
 
-  // Re-use sync notification wait code when we aren't on the
-  // gui thread, which bypasses the gui thread hoops we jump
-  // through in dealing with Windows messaging.
-  if (GetCurrentThreadId() != gUIThreadId) {
+  // Re-use sync notification wait code if this channel does not require
+  // Windows message deferral behavior. 
+  if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
     return WaitForSyncNotify();
   }
-
-  NS_ASSERTION(GetCurrentThreadId() == gUIThreadId,
-               "Shouldn't be on a non-main thread in here!");
 
   if (!InterruptStackDepth()) {
     // There is currently no way to recover from this condition.
     NS_RUNTIMEABORT("StackDepth() is 0 in call to MessageChannel::WaitForNotify!");
   }
 
+  NS_ASSERTION(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION,
+               "Shouldn't be here for channels that don't use message deferral!");
   NS_ASSERTION(mTopFrame && mTopFrame->mInterrupt,
                "Top frame is not a sync frame!");
 

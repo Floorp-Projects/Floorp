@@ -14,6 +14,11 @@ EXTRA_PP_COMPONENTS += [
     'DataReportingService.js',
 ]
 
+EXTRA_PP_JS_MODULES.services.datareporting += [
+    'policy.jsm',
+    'sessions.jsm',
+]
+
 TESTING_JS_MODULES.services.datareporting += [
     'modules-testing/mocks.jsm',
 ]

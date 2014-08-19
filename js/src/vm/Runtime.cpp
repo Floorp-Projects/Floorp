@@ -30,7 +30,6 @@
 #include "jswrapper.h"
 
 #include "asmjs/AsmJSSignalHandlers.h"
-#include "assembler/assembler/MacroAssembler.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/JitCompartment.h"
 #include "jit/mips/Simulator-mips.h"
@@ -178,6 +177,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     debugMode(false),
     spsProfiler(thisFromCtor()),
     profilingScripts(false),
+    suppressProfilerSampling(false),
     hadOutOfMemory(false),
     haveCreatedContext(false),
     data(nullptr),
@@ -230,20 +230,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
 
     PodArrayZero(nativeStackQuota);
     PodZero(&asmJSCacheOps);
-}
-
-static bool
-JitSupportsFloatingPoint()
-{
-    if (!JSC::MacroAssembler::supportsFloatingPoint())
-        return false;
-
-#if WTF_ARM_ARCH_VERSION == 6
-    if (!js::jit::HasVFP())
-        return false;
-#endif
-
-    return true;
 }
 
 static bool
@@ -327,7 +313,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 
     nativeStackBase = GetNativeStackBase();
 
-    jitSupportsFloatingPoint = JitSupportsFloatingPoint();
+    jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
 
     signalHandlersInstalled_ = EnsureAsmJSSignalHandlersInstalled(this);
     canUseSignalHandlers_ = signalHandlersInstalled_ && !SignalBasedTriggersDisabled();
@@ -375,7 +361,7 @@ JSRuntime::~JSRuntime()
         profilingScripts = false;
 
         JS::PrepareForFullGC(this);
-        GC(this, GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
+        gc.gc(GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
     }
 
     /*

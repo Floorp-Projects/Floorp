@@ -107,7 +107,7 @@ class TransportLayerLoopback : public TransportLayer {
   // Fires every 100 ms
   class Deliverer : public nsITimerCallback {
    public:
-    Deliverer(TransportLayerLoopback *layer) :
+    explicit Deliverer(TransportLayerLoopback *layer) :
         layer_(layer) {}
     void Detach() {
       layer_ = nullptr;

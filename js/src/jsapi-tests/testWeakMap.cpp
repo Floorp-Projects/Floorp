@@ -87,7 +87,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
      * zone to finish marking before the delegate zone.
      */
     CHECK(newCCW(map, delegate));
-    GCDebugSlice(rt, true, 1000000);
+    rt->gc.gcDebugSlice(true, 1000000);
 #ifdef DEBUG
     CHECK(map->zone()->lastZoneGroupIndex() < delegate->zone()->lastZoneGroupIndex());
 #endif
@@ -100,7 +100,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     /* Check the delegate keeps the entry alive even if the key is not reachable. */
     key = nullptr;
     CHECK(newCCW(map, delegate));
-    GCDebugSlice(rt, true, 100000);
+    rt->gc.gcDebugSlice(true, 100000);
     CHECK(checkSize(map, 1));
 
     /*
@@ -111,7 +111,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     CHECK(map->zone()->lastZoneGroupIndex() == delegate->zone()->lastZoneGroupIndex());
 #endif
 
-    /* Check that when the delegate becomes unreacable the entry is removed. */
+    /* Check that when the delegate becomes unreachable the entry is removed. */
     delegate = nullptr;
     JS_GC(rt);
     CHECK(checkSize(map, 0));

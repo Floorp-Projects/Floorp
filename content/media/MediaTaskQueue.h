@@ -35,6 +35,8 @@ public:
 
   nsresult SyncDispatch(TemporaryRef<nsIRunnable> aRunnable);
 
+  nsresult FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable);
+
   // Removes all pending tasks from the task queue, and blocks until
   // the currently running task (if any) finishes.
   void Flush();
@@ -59,6 +61,11 @@ private:
   // mQueueMonitor must be held.
   void AwaitIdleLocked();
 
+  enum DispatchMode { AbortIfFlushing, IgnoreFlushing };
+
+  nsresult DispatchLocked(TemporaryRef<nsIRunnable> aRunnable,
+                          DispatchMode aMode);
+
   RefPtr<SharedThreadPool> mPool;
 
   // Monitor that protects the queue and mIsRunning;
@@ -78,6 +85,27 @@ private:
 
   // True if we've started our shutdown process.
   bool mIsShutdown;
+
+  class MOZ_STACK_CLASS AutoSetFlushing
+  {
+  public:
+    AutoSetFlushing(MediaTaskQueue* aTaskQueue) : mTaskQueue(aTaskQueue)
+    {
+      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
+      mTaskQueue->mIsFlushing = true;
+    }
+    ~AutoSetFlushing()
+    {
+      mTaskQueue->mQueueMonitor.AssertCurrentThreadOwns();
+      mTaskQueue->mIsFlushing = false;
+    }
+
+  private:
+    MediaTaskQueue* mTaskQueue;
+  };
+
+  // True if we're flushing; we reject new tasks if we're flushing.
+  bool mIsFlushing;
 
   class Runner : public nsRunnable {
   public:

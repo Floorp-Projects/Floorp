@@ -1026,7 +1026,8 @@ private:
 static nsIFrame*
 FindLineContainer(nsIFrame* aFrame)
 {
-  while (aFrame && aFrame->CanContinueTextRun()) {
+  while (aFrame && (aFrame->IsFrameOfType(nsIFrame::eLineParticipant) ||
+                    aFrame->CanContinueTextRun())) {
     aFrame = aFrame->GetParent();
   }
   return aFrame;
@@ -1131,6 +1132,16 @@ CanTextCrossFrameBoundary(nsIFrame* aFrame, nsIAtom* aType)
       result.mScanSiblings = true;
       result.mTextRunCanCrossFrameBoundary = true;
       result.mLineBreakerCanCrossFrameBoundary = true;
+    } else if (aFrame->GetType() == nsGkAtoms::rubyTextFrame ||
+               aFrame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
+      result.mFrameToScan = aFrame->GetFirstPrincipalChild();
+      result.mOverflowFrameToScan =
+        aFrame->GetFirstChild(nsIFrame::kOverflowList);
+      NS_WARN_IF_FALSE(!result.mOverflowFrameToScan,
+                       "Scanning overflow inline frames is something we should avoid");
+      result.mScanSiblings = true;
+      result.mTextRunCanCrossFrameBoundary = false;
+      result.mLineBreakerCanCrossFrameBoundary = false;
     } else {
       result.mFrameToScan = nullptr;
       result.mOverflowFrameToScan = nullptr;
@@ -1244,6 +1255,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   } else {
     NS_ASSERTION(!aForFrame ||
                  (aLineContainer == FindLineContainer(aForFrame) ||
+                  aLineContainer->GetType() == nsGkAtoms::rubyTextContainerFrame ||
                   (aLineContainer->GetType() == nsGkAtoms::letterFrame &&
                    aLineContainer->IsFloating())),
                  "Wrong line container hint");
@@ -6282,7 +6294,8 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
 
   offsets.content = GetContent();
   offsets.offset = offsets.secondaryOffset = selectedOffset;
-  offsets.associateWithNext = mContentOffset == offsets.offset;
+  offsets.associate =
+    mContentOffset == offsets.offset ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE;
   return offsets;
 }
 

@@ -28,7 +28,6 @@ input[type=button] {
 #newtab-undo-container {
   transition: opacity 100ms ease-out;
   display: -moz-box;
-  margin-bottom: 26px; /* 32 - 6 search form top "padding" */
   -moz-box-align: center;
   -moz-box-pack: center;
 }
@@ -60,7 +59,15 @@ input[type=button] {
 
 #newtab-margin-undo-container {
   display: -moz-box;
-  -moz-box-pack: center;
+  left: 6px;
+  position: absolute;
+  top: 6px;
+  z-index: 1;
+}
+
+#newtab-margin-undo-container:-moz-locale-dir(rtl) {
+  left: auto;
+  right: 6px;
 }
 
 #newtab-horizontal-margin {
@@ -109,7 +116,7 @@ input[type=button] {
 .newtab-cell {
   display: -moz-box;
   height: 180px;
-  margin: 16px 10px;
+  margin: 20px 10px;
   width: 290px;
 }
 
@@ -143,7 +150,7 @@ input[type=button] {
 
 /* TITLES */
 .newtab-title {
-  bottom: -21px;
+  bottom: -26px;
   font-size: 13px;
   left: 0;
   overflow: hidden;
@@ -249,7 +256,7 @@ input[type=button] {
   -moz-box-orient: horizontal;
   -moz-box-align: center;
   height: 44px; /* 32 + 6 logo top "padding" + 6 logo bottom "padding" */
-  margin: 0 20px 10px; /* bottom: 32 - 16 tiles top margin - 6 logo bottom "padding" */
+  margin: 26px 20px 10px; /* top: 32 - 6 search form top "padding", bottom: 32 - 16 tiles top margin - 6 logo bottom "padding" */
   max-width: 600px; /* 2 * (290 cell width + 10 cell margin) */
 }
 

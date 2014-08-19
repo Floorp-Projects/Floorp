@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test ScriptProcessorNode playbackTime for bug 970773</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(
+  function() {
+    const delay = 0.1;
+    var context = new AudioContext();
+    SimpleTest.executeSoon( // to ensure that AudioContext has started
+      function() {
+        setTimeout( // wait for |delay|
+          function() {
+            var sp = context.createScriptProcessor(256);
+            sp.connect(context.destination);
+            sp.onaudioprocess =
+              function(e) {
+                var minimum =
+                  (delay + e.inputBuffer.length/context.sampleRate) *
+                  (1.0 - 1.0/Math.pow(2.0,52.0)); // double precision
+                ok(e.playbackTime >= minimum,
+                   "playbackTime " + e.playbackTime +
+                   " beyond expected minimum " + minimum);
+                sp.onaudioprocess = null;
+                SimpleTest.finish();
+              };
+          }, 1000 * delay);
+      });
+  });
+
+</script>
+</pre>
+</body>
+</html>

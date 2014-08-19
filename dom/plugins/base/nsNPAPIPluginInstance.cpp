@@ -39,8 +39,10 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 #include "nsILoadContext.h"
+#include "mozilla/dom/HTMLObjectElementBinding.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "ANPBase.h"
@@ -196,6 +198,9 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
   , mOnScreen(true)
 #endif
   , mHaveJavaC2PJSObjectQuirk(false)
+  , mCachedParamLength(0)
+  , mCachedParamNames(nullptr)
+  , mCachedParamValues(nullptr)
 {
   mNPP.pdata = nullptr;
   mNPP.ndata = this;
@@ -219,6 +224,28 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
     PR_Free((void *)mMIMEType);
     mMIMEType = nullptr;
   }
+
+  if (!mCachedParamValues || !mCachedParamNames) {
+    return;
+  }
+  MOZ_ASSERT(mCachedParamValues && mCachedParamNames);
+
+  for (uint32_t i = 0; i < mCachedParamLength; i++) {
+    if (mCachedParamNames[i]) {
+      NS_Free(mCachedParamNames[i]);
+      mCachedParamNames[i] = nullptr;
+    }
+    if (mCachedParamValues[i]) {
+      NS_Free(mCachedParamValues[i]);
+      mCachedParamValues[i] = nullptr;
+    }
+  }
+
+  NS_Free(mCachedParamNames);
+  mCachedParamNames = nullptr;
+
+  NS_Free(mCachedParamValues);
+  mCachedParamValues = nullptr;
 }
 
 uint32_t nsNPAPIPluginInstance::gInUnsafePluginCalls = 0;
@@ -378,28 +405,6 @@ nsNPAPIPluginInstance::GetTagType(nsPluginTagType *result)
 }
 
 nsresult
-nsNPAPIPluginInstance::GetAttributes(uint16_t& n, const char*const*& names,
-                                     const char*const*& values)
-{
-  if (!mOwner) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mOwner->GetAttributes(n, names, values);
-}
-
-nsresult
-nsNPAPIPluginInstance::GetParameters(uint16_t& n, const char*const*& names,
-                                     const char*const*& values)
-{
-  if (!mOwner) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mOwner->GetParameters(n, names, values);
-}
-
-nsresult
 nsNPAPIPluginInstance::GetMode(int32_t *result)
 {
   if (mOwner)
@@ -427,39 +432,53 @@ nsNPAPIPluginInstance::Start()
     return NS_OK;
   }
 
+  if (!mOwner) {
+    MOZ_ASSERT(false, "Should not be calling Start() on unowned plugin.");
+    return NS_ERROR_FAILURE;
+  }
+
   PluginDestructionGuard guard(this);
 
-  uint16_t count = 0;
-  const char* const* names = nullptr;
-  const char* const* values = nullptr;
+  nsTArray<MozPluginParameter> attributes;
+  nsTArray<MozPluginParameter> params;
+
   nsPluginTagType tagtype;
   nsresult rv = GetTagType(&tagtype);
   if (NS_SUCCEEDED(rv)) {
-    // Note: If we failed to get the tag type, we may be a full page plugin, so no arguments
-    rv = GetAttributes(count, names, values);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mOwner->GetAttributes(attributes);
+    mOwner->GetParameters(params);
+  } else {
+    MOZ_ASSERT(false, "Failed to get tag type.");
+  }
 
-    // nsPluginTagType_Object or Applet may also have PARAM tags
-    // Note: The arrays handed back by GetParameters() are
-    // crafted specially to be directly behind the arrays from GetAttributes()
-    // with a null entry as a separator. This is for 4.x backwards compatibility!
-    // see bug 111008 for details
-    if (tagtype != nsPluginTagType_Embed) {
-      uint16_t pcount = 0;
-      const char* const* pnames = nullptr;
-      const char* const* pvalues = nullptr;
-      if (NS_SUCCEEDED(GetParameters(pcount, pnames, pvalues))) {
-        // Android expects an empty string as the separator instead of null
-#ifdef MOZ_WIDGET_ANDROID
-        NS_ASSERTION(PL_strcmp(values[count], "") == 0, "attribute/parameter array not setup correctly for Android NPAPI plugins");
-#else
-        NS_ASSERTION(!values[count], "attribute/parameter array not setup correctly for NPAPI plugins");
-#endif
-        if (pcount)
-          count += ++pcount; // if it's all setup correctly, then all we need is to
-                             // change the count (attrs + PARAM/blank + params)
-      }
-    }
+  mCachedParamLength = attributes.Length() + 1 + params.Length();
+
+  // We add an extra entry "PARAM" as a separator between the attribute
+  // and param values, but we don't count it if there are no <param> entries.
+  // Legacy behavior quirk.
+  uint32_t quirkParamLength = params.Length() ?
+                                mCachedParamLength : attributes.Length();
+
+  mCachedParamNames = (char**)NS_Alloc(sizeof(char*) * mCachedParamLength);
+  mCachedParamValues = (char**)NS_Alloc(sizeof(char*) * mCachedParamLength);
+
+  for (uint32_t i = 0; i < attributes.Length(); i++) {
+    mCachedParamNames[i] = ToNewUTF8String(attributes[i].mName);
+    mCachedParamValues[i] = ToNewUTF8String(attributes[i].mValue);
+  }
+
+  // Android expects and empty string instead of null.
+  mCachedParamNames[attributes.Length()] = ToNewUTF8String(NS_LITERAL_STRING("PARAM"));
+  #ifdef MOZ_WIDGET_ANDROID
+    mCachedParamValues[attributes.Length()] = ToNewUTF8String(NS_LITERAL_STRING(""));
+  #else
+    mCachedParamValues[attributes.Length()] = nullptr;
+  #endif
+
+  for (uint32_t i = 0, pos = attributes.Length() + 1; i < params.Length(); i ++) {
+    mCachedParamNames[pos] = ToNewUTF8String(params[i].mName);
+    mCachedParamValues[pos] = ToNewUTF8String(params[i].mValue);
+    pos++;
   }
 
   int32_t       mode;
@@ -469,57 +488,7 @@ nsNPAPIPluginInstance::Start()
   GetMode(&mode);
   GetMIMEType(&mimetype);
 
-  CheckJavaC2PJSObjectQuirk(count, names, values);
-
-  // Some older versions of Flash have a bug in them
-  // that causes the stack to become currupt if we
-  // pass swliveconnect=1 in the NPP_NewProc arrays.
-  // See bug 149336 (UNIX), bug 186287 (Mac)
-  //
-  // The code below disables the attribute unless
-  // the environment variable:
-  // MOZILLA_PLUGIN_DISABLE_FLASH_SWLIVECONNECT_HACK
-  // is set.
-  //
-  // It is okay to disable this attribute because
-  // back in 4.x, scripting required liveconnect to
-  // start Java which was slow. Scripting no longer
-  // requires starting Java and is quick plus controled
-  // from the browser, so Flash now ignores this attribute.
-  //
-  // This code can not be put at the time of creating
-  // the array because we may need to examine the
-  // stream header to determine we want Flash.
-
-  static const char flashMimeType[] = "application/x-shockwave-flash";
-  static const char blockedParam[] = "swliveconnect";
-  if (count && !PL_strcasecmp(mimetype, flashMimeType)) {
-    static int cachedDisableHack = 0;
-    if (!cachedDisableHack) {
-       if (PR_GetEnv("MOZILLA_PLUGIN_DISABLE_FLASH_SWLIVECONNECT_HACK"))
-         cachedDisableHack = -1;
-       else
-         cachedDisableHack = 1;
-    }
-    if (cachedDisableHack > 0) {
-      for (uint16_t i=0; i<count; i++) {
-        if (!PL_strcasecmp(names[i], blockedParam)) {
-          // BIG FAT WARNIG:
-          // I'm ugly casting |const char*| to |char*| and altering it
-          // because I know we do malloc it values in
-          // http://bonsai.mozilla.org/cvsblame.cgi?file=mozilla/layout/html/base/src/nsObjectFrame.cpp&rev=1.349&root=/cvsroot#3020
-          // and free it at line #2096, so it couldn't be a const ptr to string literal
-          char *val = (char*) values[i];
-          if (val && *val) {
-            // we cannot just *val=0, it won't be free properly in such case
-            val[0] = '0';
-            val[1] = 0;
-          }
-          break;
-        }
-      }
-    }
-  }
+  CheckJavaC2PJSObjectQuirk(quirkParamLength, mCachedParamNames, mCachedParamValues);
 
   bool oldVal = mInPluginInitCall;
   mInPluginInitCall = true;
@@ -541,13 +510,13 @@ nsNPAPIPluginInstance::Start()
   mRunning = RUNNING;
 
   nsresult newResult = library->NPP_New((char*)mimetype, &mNPP, (uint16_t)mode,
-                                        count, (char**)names, (char**)values,
-                                        nullptr, &error);
+                                        quirkParamLength, mCachedParamNames,
+                                        mCachedParamValues, nullptr, &error);
   mInPluginInitCall = oldVal;
 
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPP New called: this=%p, npp=%p, mime=%s, mode=%d, argc=%d, return=%d\n",
-  this, &mNPP, mimetype, mode, count, error));
+  this, &mNPP, mimetype, mode, quirkParamLength, error));
 
   if (NS_FAILED(newResult) || error != NPERR_NO_ERROR) {
     mRunning = DESTROYED;

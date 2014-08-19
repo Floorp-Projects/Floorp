@@ -22,6 +22,8 @@
 #include "GLDefs.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 #include "SurfaceTypes.h"
 
 namespace mozilla {
@@ -112,6 +114,37 @@ public:
     }
 };
 
+template<typename T>
+class UniquePtrQueue
+{
+    std::queue<T*> mQueue;
+
+public:
+    ~UniquePtrQueue() {
+        MOZ_ASSERT(Empty());
+    }
+
+    bool Empty() const {
+        return mQueue.empty();
+    }
+
+    void Push(UniquePtr<T> up) {
+        T* p = up.release();
+        mQueue.push(p);
+    }
+
+    UniquePtr<T> Pop() {
+        UniquePtr<T> ret;
+
+        if (!mQueue.empty()) {
+            ret.reset(mQueue.front());
+            mQueue.pop();
+        }
+
+        return Move(ret);
+    }
+};
+
 class SurfaceFactory
 {
 public:
@@ -140,15 +173,15 @@ public:
     }
 
 protected:
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) = 0;
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) = 0;
 
-    std::queue<SharedSurface*> mScraps;
+    UniquePtrQueue<SharedSurface> mScraps;
 
 public:
-    SharedSurface* NewSharedSurface(const gfx::IntSize& size);
+    UniquePtr<SharedSurface> NewSharedSurface(const gfx::IntSize& size);
 
     // Auto-deletes surfs of the wrong type.
-    void Recycle(SharedSurface*& surf);
+    void Recycle(UniquePtr<SharedSurface> surf);
 };
 
 } // namespace gl

@@ -13,7 +13,7 @@
 
 interface nsIVariant;
 
-[builtinclass, uuid(af7077ac-0f9f-44e1-815f-9b1a94618531)]
+[builtinclass, uuid(b00a4ca7-312e-4926-84f6-8ebb43e53d83)]
 interface nsIDOMDataChannel : nsIDOMEventTarget
 {
   readonly attribute DOMString label;

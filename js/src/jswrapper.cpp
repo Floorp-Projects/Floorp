@@ -47,9 +47,9 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *hand
     RootedValue priv(cx, ObjectValue(*obj));
     mozilla::Maybe<WrapperOptions> opts;
     if (!options) {
-        opts.construct();
-        opts.ref().selectDefaultClass(obj->isCallable());
-        options = opts.addr();
+        opts.emplace();
+        opts->selectDefaultClass(obj->isCallable());
+        options = opts.ptr();
     }
     return NewProxyObject(cx, handler, priv, options->proto(), parent, *options);
 }
@@ -88,6 +88,11 @@ js::UncheckedUnwrap(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
         }
         flags |= Wrapper::wrapperHandler(wrapped)->flags();
         wrapped = wrapped->as<ProxyObject>().private_().toObjectOrNull();
+
+        // This can be called from DirectProxyHandler::weakmapKeyDelegate() on a
+        // wrapper whose referent has been moved while it is still unmarked.
+        if (wrapped)
+            wrapped = MaybeForwarded(wrapped);
     }
     if (flagsp)
         *flagsp = flags;
@@ -152,12 +157,12 @@ js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject 
 
 ErrorCopier::~ErrorCopier()
 {
-    JSContext *cx = ac.ref().context()->asJSContext();
-    if (ac.ref().origin() != cx->compartment() && cx->isExceptionPending()) {
+    JSContext *cx = ac->context()->asJSContext();
+    if (ac->origin() != cx->compartment() && cx->isExceptionPending()) {
         RootedValue exc(cx);
         if (cx->getPendingException(&exc) && exc.isObject() && exc.toObject().is<ErrorObject>()) {
             cx->clearPendingException();
-            ac.destroy();
+            ac.reset();
             Rooted<ErrorObject*> errObj(cx, &exc.toObject().as<ErrorObject>());
             JSObject *copyobj = js_CopyErrorObject(cx, errObj);
             if (copyobj)

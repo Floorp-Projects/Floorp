@@ -1,0 +1,268 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=625289
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 625289</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  :root,
+  #e1, #e2 > div,
+  #b1::before, #b2 > div::before,
+  #a1::after, #a2 > div::after {
+    margin-left: 0;
+  }
+  :root.t,
+  #e1.t, #e2.t > div,
+  #b1.t::before, #b2.t > div::before,
+  #a1.t::after, #a2.t > div::after {
+    transition: margin-left linear 1s;
+  }
+  #b1::before, #b2 > div::before,
+  #a1::after, #a2 > div::after {
+    content: "x";
+    display: block;
+  }
+  :root.m,
+  #e1.m, #e2.m > div,
+  #b1.m::before, #b2.m > div::before,
+  #a1.m::after, #a2.m > div::after {
+    margin-left: 100px;
+  }
+  .o { overflow: hidden }
+  .n { display: none }
+
+  #fline { color: blue; font-size: 20px; width: 800px; }
+  #fline::first-line { color: yellow }
+  #fline.narrow { width: 50px }
+  #fline i { transition: color linear 1s }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625289">Mozilla Bug 625289</a>
+<div id="container"></div>
+<div id="fline">
+  This text has an <i>i element</i> in it.
+</div>
+<pre id="test">
+<script>
+"use strict";
+
+function advance_clock(milliseconds) {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
+}
+
+var container = document.getElementById("container");
+
+function make_elements(idName, child) {
+  var e = document.createElement("div");
+  e.setAttribute("id", idName);
+  if (child) {
+    e.appendChild(document.createElement("div"));
+  }
+  container.appendChild(e);
+  return e;
+}
+
+function assert_margin_at_quarter(element, pseudo, passes)
+{
+  var desc;
+  var useParent = false;
+  if (element == document.documentElement) {
+    desc = "root element";
+  } else if (element.id) {
+    desc = "element " + element.id;
+  } else {
+    desc = "child of element " + element.parentNode.id;
+    useParent = true;
+  }
+  var classes = (useParent ? element.parentNode : element).getAttribute("class");
+  if (classes) {
+    desc += " (classes: " + classes + ")";
+  }
+  if (pseudo) {
+    desc += " " + pseudo + " pseudo-element";
+  }
+  (passes ? is : todo_is)(getComputedStyle(element, pseudo).marginLeft, "25px",
+                          "margin of " + desc);
+}
+
+function do_test(test)
+{
+  var expected_props = [ "element", "test_child", "pseudo", "passes",
+                         "dynamic_change_transition", "start_from_none" ];
+  for (var propidx in expected_props) {
+    if (! expected_props[propidx] in test) {
+      ok(false, "expected " + expected_props[propidx] + " on test object");
+    }
+  }
+
+  var e;
+  if (typeof(test.element) == "string") {
+    e = make_elements(test.element, test.test_child);
+  } else {
+    if (test.test_child) {
+      ok(false, "test_child unexpected");
+    }
+    e = test.element;
+  }
+
+  var target = test.test_child ? e.firstChild : e;
+
+  if (!test.dynamic_change_transition) {
+    e.classList.add("t");
+  }
+  if (test.start_from_none) {
+    e.classList.add("n");
+  }
+
+  advance_clock(100);
+  e.classList.add("m");
+  e.classList.add("o");
+  if (test.dynamic_change_transition) {
+    e.classList.add("t");
+  }
+  if (test.start_from_none) {
+    e.classList.remove("n");
+  }
+  advance_clock(0);
+  advance_clock(250);
+  assert_margin_at_quarter(target, test.pseudo, test.passes);
+  if (typeof(test.element) == "string") {
+    e.remove();
+  } else {
+    target.style.transition = "";
+    target.removeAttribute("class");
+  }
+}
+
+advance_clock(0);
+
+var tests = [
+  { element:"e1", test_child:false, pseudo:"", passes:true,
+    dynamic_change_transition:false, start_from_none:false },
+  { element:"e2", test_child:true, pseudo:"", passes:true,
+    dynamic_change_transition:false, start_from_none:false },
+  { element:"b1", test_child:false, pseudo:"::before", passes:true,
+    dynamic_change_transition:false, start_from_none:false },
+  { element:"b2", test_child:true, pseudo:"::before", passes:true,
+    dynamic_change_transition:false, start_from_none:false },
+  { element:"a1", test_child:false, pseudo:"::after", passes:true,
+    dynamic_change_transition:false, start_from_none:false },
+  { element:"a2", test_child:true, pseudo:"::after", passes:true,
+    dynamic_change_transition:false, start_from_none:false },
+  { element:document.documentElement, test_child:false, pseudo:"", passes:true,
+    dynamic_change_transition:false, start_from_none:false },
+  // Recheck with a dynamic change in transition
+  { element:"e1", test_child:false, pseudo:"", passes:true,
+    dynamic_change_transition:true, start_from_none:false },
+  { element:"e2", test_child:true, pseudo:"", passes:true,
+    dynamic_change_transition:true, start_from_none:false },
+  { element:"b1", test_child:false, pseudo:"::before", passes:true,
+    dynamic_change_transition:true, start_from_none:false },
+  { element:"b2", test_child:true, pseudo:"::before", passes:true,
+    dynamic_change_transition:true, start_from_none:false },
+  { element:"a1", test_child:false, pseudo:"::after", passes:true,
+    dynamic_change_transition:true, start_from_none:false },
+  { element:"a2", test_child:true, pseudo:"::after", passes:true,
+    dynamic_change_transition:true, start_from_none:false },
+  { element:document.documentElement, test_child:false, pseudo:"", passes:true,
+    dynamic_change_transition:true, start_from_none:false },
+  // Recheck starting from display:none.  Note that these tests all fail,
+  // although we could get *some* of them to pass by calling
+  // RestyleManager::TryStartingTransition from
+  // ElementRestyler::RestyleUndisplayedChildren.
+  { element:"e1", test_child:false, pseudo:"", passes:false,
+    dynamic_change_transition:false, start_from_none:true },
+  { element:"e2", test_child:true, pseudo:"", passes:false,
+    dynamic_change_transition:false, start_from_none:true },
+  { element:"b1", test_child:false, pseudo:"::before", passes:false,
+    dynamic_change_transition:false, start_from_none:true },
+  { element:"b2", test_child:true, pseudo:"::before", passes:false,
+    dynamic_change_transition:false, start_from_none:true },
+  { element:"a1", test_child:false, pseudo:"::after", passes:false,
+    dynamic_change_transition:false, start_from_none:true },
+  { element:"a2", test_child:true, pseudo:"::after", passes:false,
+    dynamic_change_transition:false, start_from_none:true },
+  { element:document.documentElement, test_child:false, pseudo:"", passes:false,
+    dynamic_change_transition:false, start_from_none:true },
+  // Recheck with a dynamic change in transition and starting from display:none
+  { element:"e1", test_child:false, pseudo:"", passes:false,
+    dynamic_change_transition:true, start_from_none:true },
+  { element:"e2", test_child:true, pseudo:"", passes:false,
+    dynamic_change_transition:true, start_from_none:true },
+  { element:"b1", test_child:false, pseudo:"::before", passes:false,
+    dynamic_change_transition:true, start_from_none:true },
+  { element:"b2", test_child:true, pseudo:"::before", passes:false,
+    dynamic_change_transition:true, start_from_none:true },
+  { element:"a1", test_child:false, pseudo:"::after", passes:false,
+    dynamic_change_transition:true, start_from_none:true },
+  { element:"a2", test_child:true, pseudo:"::after", passes:false,
+    dynamic_change_transition:true, start_from_none:true },
+  { element:document.documentElement, test_child:false, pseudo:"", passes:false,
+    dynamic_change_transition:true, start_from_none:true },
+];
+
+for (var testidx in tests) {
+  do_test(tests[testidx]);
+}
+
+var fline = document.getElementById("fline");
+var fline_i_cs = getComputedStyle(fline.firstElementChild, "");
+// Note that the color in the ::first-line is never used in the test
+// since we avoid reporting ::first-line data in getComputedStyle.
+// However, if we were to start a transition (incorectly), that would
+// show up in getComputedStyle.
+var COLOR_IN_LATER_LINES = "rgb(0, 0, 255)";
+
+function do_firstline_test(test) {
+  if (test.widening) {
+    fline.classList.add("narrow");
+    is (fline_i_cs.color, COLOR_IN_LATER_LINES, "initial color");
+  } else {
+    is (fline_i_cs.color, COLOR_IN_LATER_LINES, "initial color");
+  }
+
+  if (test.widening) {
+    fline.classList.remove("narrow");
+  } else {
+    fline.classList.add("narrow");
+  }
+
+  if (test.set_overflow) {
+    fline.classList.add("o");
+  }
+
+  advance_clock(100);
+
+  if (test.widening) {
+    is (fline_i_cs.color, COLOR_IN_LATER_LINES,
+        "::first-line changes don't trigger transitions");
+  } else {
+    is (fline_i_cs.color, COLOR_IN_LATER_LINES,
+        "::first-line changes don't trigger transitions");
+  }
+
+  fline.removeAttribute("class");
+}
+
+var firstline_tests = [
+  { widening: true, set_overflow: false },
+  { widening: false, set_overflow: false },
+  { widening: true, set_overflow: true },
+  { widening: false, set_overflow: true },
+];
+
+for (var firstline_test_idx in firstline_tests) {
+  do_firstline_test(firstline_tests[firstline_test_idx]);
+}
+
+SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+
+</script>
+</pre>
+</body>
+</html>

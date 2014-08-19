@@ -226,30 +226,6 @@ LIRGeneratorShared::redefine(MDefinition *def, MDefinition *as)
 }
 
 bool
-LIRGeneratorShared::defineAs(LInstruction *outLir, MDefinition *outMir, MDefinition *inMir)
-{
-    uint32_t vreg = inMir->virtualRegister();
-    LDefinition::Policy policy = LDefinition::PASSTHROUGH;
-
-    if (outMir->type() == MIRType_Value) {
-#ifdef JS_NUNBOX32
-        outLir->setDef(TYPE_INDEX,
-                       LDefinition(vreg + VREG_TYPE_OFFSET, LDefinition::TYPE, policy));
-        outLir->setDef(PAYLOAD_INDEX,
-                       LDefinition(vreg + VREG_DATA_OFFSET, LDefinition::PAYLOAD, policy));
-#elif JS_PUNBOX64
-        outLir->setDef(0, LDefinition(vreg, LDefinition::BOX, policy));
-#else
-# error "Unexpected boxing type"
-#endif
-    } else {
-        outLir->setDef(0, LDefinition(vreg, LDefinition::TypeFrom(inMir->type()), policy));
-    }
-    outLir->setMir(outMir);
-    return redefine(outMir, inMir);
-}
-
-bool
 LIRGeneratorShared::ensureDefined(MDefinition *mir)
 {
     if (mir->isEmittedAtUses()) {

@@ -73,7 +73,7 @@ SOURCES += [
     'PSMContentListener.cpp',
 ]
 
-if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
+if not CONFIG['MOZ_NO_SMART_CARDS']:
     SOURCES += [
         'nsSmartCardMonitor.cpp',
     ]

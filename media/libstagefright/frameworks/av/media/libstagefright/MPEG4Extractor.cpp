@@ -106,10 +106,19 @@ private:
 
     size_t parseNALSize(const uint8_t *data) const;
     status_t parseChunk(off64_t *offset);
+    status_t parseTrackFragmentData(off64_t offset, off64_t size);
     status_t parseTrackFragmentHeader(off64_t offset, off64_t size);
     status_t parseTrackFragmentRun(off64_t offset, off64_t size);
     status_t parseSampleAuxiliaryInformationSizes(off64_t offset, off64_t size);
     status_t parseSampleAuxiliaryInformationOffsets(off64_t offset, off64_t size);
+
+    struct TrackFragmentData {
+        TrackFragmentData(): mPresent(false), mFlags(0), mBaseMediaDecodeTime(0) {}
+        bool mPresent;
+        uint32_t mFlags;
+        uint64_t mBaseMediaDecodeTime;
+    };
+    TrackFragmentData mTrackFragmentData;
 
     struct TrackFragmentHeaderInfo {
         enum Flags {
@@ -2293,10 +2302,7 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
 
     if (objectTypeIndication  == 0x6b) {
         // The media subtype is MP3 audio
-        // Our software MP3 audio decoder may not be able to handle
-        // packetized MP3 audio; for now, lets just return ERROR_UNSUPPORTED
-        ALOGE("MP3 track in MP4/3GPP file is not supported");
-        return ERROR_UNSUPPORTED;
+        mLastTrack->meta->setCString(kKeyMIMEType, MEDIA_MIMETYPE_AUDIO_MPEG);
     }
 
     const uint8_t *csd;
@@ -2572,6 +2578,16 @@ status_t MPEG4Source::parseChunk(off64_t *offset) {
             break;
         }
 
+        case FOURCC('t', 'f', 'd', 't'):
+        {
+            status_t err;
+            if ((err = parseTrackFragmentData(data_offset, chunk_data_size)) != OK) {
+                return err;
+            }
+            *offset += chunk_size;
+            break;
+        }
+
         case FOURCC('t', 'f', 'h', 'd'): {
                 status_t err;
                 if ((err = parseTrackFragmentHeader(data_offset, chunk_data_size)) != OK) {
@@ -2784,6 +2800,41 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(off64_t offset, off
 
 
     return OK;
+}
+
+status_t MPEG4Source::parseTrackFragmentData(off64_t offset, off64_t size) {
+
+    if (size < 8) {
+        return -EINVAL;
+    }
+
+    uint32_t flags;
+    if (!mDataSource->getUInt32(offset, &flags)) { // actually version + flags
+        return ERROR_MALFORMED;
+    }
+
+    uint8_t version = flags >> 24;
+    mTrackFragmentData.mFlags = flags;
+
+    if (version == 0) {
+        uint32_t time;
+        if (mDataSource->getUInt32(offset + 4, &time)) {
+            mTrackFragmentData.mBaseMediaDecodeTime = time;
+            mTrackFragmentData.mPresent = true;
+            return OK;
+        }
+    } else if (version == 1) {
+        if (size < 12) {
+            return -EINVAL;
+        }
+        if (mDataSource->getUInt64(offset + 4,
+                &mTrackFragmentData.mBaseMediaDecodeTime)) {
+            mTrackFragmentData.mPresent = true;
+            return OK;
+        }
+    }
+
+    return ERROR_MALFORMED;
 }
 
 status_t MPEG4Source::parseTrackFragmentHeader(off64_t offset, off64_t size) {
@@ -3448,10 +3499,15 @@ status_t MPEG4Source::fragmentedRead(
             mCurrentMoofOffset = nextMoof;
             mCurrentSamples.clear();
             mCurrentSampleIndex = 0;
+            mTrackFragmentData.mPresent = false;
             parseChunk(&nextMoof);
-                if (mCurrentSampleIndex >= mCurrentSamples.size()) {
-                    return ERROR_END_OF_STREAM;
-                }
+            if (mCurrentSampleIndex >= mCurrentSamples.size()) {
+                return ERROR_END_OF_STREAM;
+            }
+
+            if (mTrackFragmentData.mPresent) {
+                mCurrentTime = mTrackFragmentData.mBaseMediaDecodeTime;
+            }
         }
 
         const Sample *smpl = &mCurrentSamples[mCurrentSampleIndex];

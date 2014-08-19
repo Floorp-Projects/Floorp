@@ -10,14 +10,14 @@ function runTests() {
 
   let cell = getCell(0).node;
 
-  sendDragEvent("drop", cell, "http://example.com/#99\nblank");
-  is(NewTabUtils.pinnedLinks.links[0].url, "http://example.com/#99",
+  sendDragEvent("drop", cell, "http://example99.com/\nblank");
+  is(NewTabUtils.pinnedLinks.links[0].url, "http://example99.com/",
      "first cell is pinned and contains the dropped site");
 
   yield whenPagesUpdated();
   checkGrid("99p,0,1,2,3,4,5,6,7");
 
   sendDragEvent("drop", cell, "");
-  is(NewTabUtils.pinnedLinks.links[0].url, "http://example.com/#99",
+  is(NewTabUtils.pinnedLinks.links[0].url, "http://example99.com/",
      "first cell is still pinned with the site we dropped before");
 }
