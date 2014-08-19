@@ -116,29 +116,7 @@ public:
                         nsIContent** aResult);
 
     static nsresult
-    GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
-
-    static nsresult
     GetTextForNode(nsIRDFNode* aNode, nsAString& aResult);
-
-    /**
-     * Construct a URI from the element ID given.  This uses aElement as the
-     * ref and aDocument's document URI as the base.  If aDocument's document
-     * URI does not support refs, this will throw NS_ERROR_NOT_AVAILABLE.
-     */
-    static nsresult
-    MakeElementURI(nsIDocument* aDocument, const nsAString& aElementID, nsCString& aURI);
-
-    static nsresult
-    MakeElementResource(nsIDocument* aDocument, const nsAString& aElementID, nsIRDFResource** aResult);
-
-    /**
-     * Extract the element ID from aURI.  Note that aURI must be an absolute
-     * URI string in UTF8; the element ID is the ref from the URI.  If the
-     * scheme does not support refs, then the ID will be empty.
-     */
-    static nsresult
-    MakeElementID(nsIDocument* aDocument, const nsACString& aURI, nsAString& aElementID);
 
     static nsresult
     GetResource(int32_t aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult);
