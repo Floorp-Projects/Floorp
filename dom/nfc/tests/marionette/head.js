@@ -287,11 +287,10 @@ const NDEF = {
     }
     // and build NDEF array
     let ndef = arr.map(function(value) {
-        let type = new Uint8Array(NfcUtils.fromUTF8(this.atob(value.type)));
-        let id = new Uint8Array(NfcUtils.fromUTF8(this.atob(value.id)));
-        let payload =
-          new Uint8Array(NfcUtils.fromUTF8(this.atob(value.payload)));
-        return new MozNDEFRecord(value.tnf, type, id, payload);
+        let type = NfcUtils.fromUTF8(this.atob(value.type));
+        let id = NfcUtils.fromUTF8(this.atob(value.id));
+        let payload = NfcUtils.fromUTF8(this.atob(value.payload));
+        return new MozNDEFRecord({tnf: value.tnf, type: type, id: id, payload: payload});
       }, window);
     return ndef;
   }
