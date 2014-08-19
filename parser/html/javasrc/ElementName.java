@@ -356,10 +356,10 @@ public final class ElementName
 //                return "ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY";
 //            case TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR:
 //                return "RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR";
-//            case TreeBuilder.RB_OR_RP_OR_RTC:
-//                return "RB_OR_RP_OR_RTC";
-//            case TreeBuilder.RT:
-//                return "RT";
+//            case TreeBuilder.RB_OR_RTC:
+//                return "RB_OR_RTC";
+//            case TreeBuilder.RT_OR_RP:
+//                return "RT_OR_RP";
 //            case TreeBuilder.PARAM_OR_SOURCE_OR_TRACK:
 //                return "PARAM_OR_SOURCE_OR_TRACK";
 //            case TreeBuilder.MGLYPH_OR_MALIGNMARK:
@@ -447,9 +447,9 @@ public final class ElementName
     public static final ElementName OL = new ElementName("ol", "ol", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
     public static final ElementName OR = new ElementName("or", "or", TreeBuilder.OTHER);
     public static final ElementName PI = new ElementName("pi", "pi", TreeBuilder.OTHER);
-    public static final ElementName RB = new ElementName("rb", "rb", TreeBuilder.RB_OR_RP_OR_RTC | OPTIONAL_END_TAG);
-    public static final ElementName RP = new ElementName("rp", "rp", TreeBuilder.RB_OR_RP_OR_RTC | OPTIONAL_END_TAG);
-    public static final ElementName RT = new ElementName("rt", "rt", TreeBuilder.RT | OPTIONAL_END_TAG);
+    public static final ElementName RB = new ElementName("rb", "rb", TreeBuilder.RB_OR_RTC | OPTIONAL_END_TAG);
+    public static final ElementName RP = new ElementName("rp", "rp", TreeBuilder.RT_OR_RP | OPTIONAL_END_TAG);
+    public static final ElementName RT = new ElementName("rt", "rt", TreeBuilder.RT_OR_RP | OPTIONAL_END_TAG);
     public static final ElementName TD = new ElementName("td", "td", TreeBuilder.TD_OR_TH | SPECIAL | SCOPING | OPTIONAL_END_TAG);
     public static final ElementName TH = new ElementName("th", "th", TreeBuilder.TD_OR_TH | SPECIAL | SCOPING | OPTIONAL_END_TAG);
     public static final ElementName TR = new ElementName("tr", "tr", TreeBuilder.TR | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
@@ -487,7 +487,7 @@ public final class ElementName
     public static final ElementName NOT = new ElementName("not", "not", TreeBuilder.OTHER);
     public static final ElementName NAV = new ElementName("nav", "nav", TreeBuilder.ADDRESS_OR_ARTICLE_OR_ASIDE_OR_DETAILS_OR_DIR_OR_FIGCAPTION_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_HGROUP_OR_MAIN_OR_NAV_OR_SECTION_OR_SUMMARY | SPECIAL);
     public static final ElementName PRE = new ElementName("pre", "pre", TreeBuilder.PRE_OR_LISTING | SPECIAL);
-    public static final ElementName RTC = new ElementName("rtc", "rtc", TreeBuilder.RB_OR_RP_OR_RTC | OPTIONAL_END_TAG);
+    public static final ElementName RTC = new ElementName("rtc", "rtc", TreeBuilder.RB_OR_RTC | OPTIONAL_END_TAG);
     public static final ElementName REM = new ElementName("rem", "rem", TreeBuilder.OTHER);
     public static final ElementName SUB = new ElementName("sub", "sub", TreeBuilder.RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR);
     public static final ElementName SEC = new ElementName("sec", "sec", TreeBuilder.OTHER);

@@ -1147,6 +1147,12 @@ JS_IsArrayBufferObject(JSObject *obj)
     return obj ? obj->is<ArrayBufferObject>() : false;
 }
 
+JS_FRIEND_API(bool)
+JS_ArrayBufferHasData(JSObject *obj)
+{
+    return CheckedUnwrap(obj)->as<ArrayBufferObject>().hasData();
+}
+
 JS_FRIEND_API(JSObject *)
 js::UnwrapArrayBuffer(JSObject *obj)
 {

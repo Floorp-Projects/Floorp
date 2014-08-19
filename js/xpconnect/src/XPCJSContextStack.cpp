@@ -22,7 +22,6 @@ using mozilla::dom::DestroyProtoAndIfaceCache;
 XPCJSContextStack::~XPCJSContextStack()
 {
     if (mSafeJSContext) {
-        mSafeJSContextGlobal = nullptr;
         JS_DestroyContextNoGC(mSafeJSContext);
         mSafeJSContext = nullptr;
     }
@@ -109,31 +108,6 @@ XPCJSContextStack::HasJSContext(JSContext *cx)
     return false;
 }
 
-static bool
-SafeGlobalResolve(JSContext *cx, HandleObject obj, HandleId id)
-{
-    bool resolved;
-    return JS_ResolveStandardClass(cx, obj, id, &resolved);
-}
-
-static void
-SafeFinalize(JSFreeOp *fop, JSObject* obj)
-{
-    SandboxPrivate* sop =
-        static_cast<SandboxPrivate*>(xpc_GetJSPrivate(obj));
-    sop->ForgetGlobalObject();
-    NS_IF_RELEASE(sop);
-    DestroyProtoAndIfaceCache(obj);
-}
-
-const JSClass xpc::SafeJSContextGlobalClass = {
-    "global_for_XPCJSContextStack_SafeJSContext",
-    XPCONNECT_GLOBAL_FLAGS,
-    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, SafeGlobalResolve, JS_ConvertStub, SafeFinalize,
-    nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook
-};
-
 JSContext*
 XPCJSContextStack::GetSafeJSContext()
 {
@@ -141,55 +115,14 @@ XPCJSContextStack::GetSafeJSContext()
     return mSafeJSContext;
 }
 
-JSObject*
-XPCJSContextStack::GetSafeJSContextGlobal()
-{
-    MOZ_ASSERT(mSafeJSContextGlobal);
-    return mSafeJSContextGlobal;
-}
-
 JSContext*
 XPCJSContextStack::InitSafeJSContext()
 {
     MOZ_ASSERT(!mSafeJSContext);
-
-    // Start by getting the principal holder and principal for this
-    // context.  If we can't manage that, don't bother with the rest.
-    nsRefPtr<nsNullPrincipal> principal = new nsNullPrincipal();
-    nsresult rv = principal->Init();
-    if (NS_FAILED(rv))
-        MOZ_CRASH();
-
-    nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JSRuntime *rt = xpc->GetRuntime()->Runtime();
-    if (!rt)
-        MOZ_CRASH();
-
-    mSafeJSContext = JS_NewContext(rt, 8192);
+    mSafeJSContext = JS_NewContext(XPCJSRuntime::Get()->Runtime(), 8192);
     if (!mSafeJSContext)
         MOZ_CRASH();
-    JSAutoRequest req(mSafeJSContext);
     ContextOptionsRef(mSafeJSContext).setNoDefaultCompartmentObject(true);
-
     JS_SetErrorReporter(mSafeJSContext, xpc::SystemErrorReporter);
-
-    // Note - We intentionally avoid firing OnNewGlobalObject while
-    // simultaneously skipping the call to setInvisibleToDebugger(true) here.
-    // This lets us piggy-back on the assertions in the JS engine (which make
-    // sure that, for non-invisible globals, we always fire onNewGlobalObject
-    // before creating scripts), to assert that we never create scripts with
-    // the SafeJSContextGlobal. This is all happening way before anyone could be
-    // listening for debugger notifications anyway.
-    JS::CompartmentOptions options;
-    options.setZone(JS::SystemZone)
-           .setTrace(TraceXPCGlobal);
-    mSafeJSContextGlobal = CreateGlobalObject(mSafeJSContext,
-                                              &SafeJSContextGlobalClass,
-                                              principal, options);
-    if (!mSafeJSContextGlobal)
-        MOZ_CRASH();
-
-    nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, mSafeJSContextGlobal);
-    JS_SetPrivate(mSafeJSContextGlobal, sp.forget().take());
     return mSafeJSContext;
 }

@@ -54,8 +54,9 @@ bool         nsXPConnect::gOnceAliveNowDead = false;
 uint32_t     nsXPConnect::gReportAllJSExceptions = 0;
 
 // Global cache of the default script security manager (QI'd to
-// nsIScriptSecurityManager)
+// nsIScriptSecurityManager) and the system principal.
 nsIScriptSecurityManager *nsXPConnect::gScriptSecurityManager = nullptr;
+nsIPrincipal *nsXPConnect::gSystemPrincipal = nullptr;
 
 const char XPC_CONTEXT_STACK_CONTRACTID[] = "@mozilla.org/js/xpc/ContextStack;1";
 const char XPC_RUNTIME_CONTRACTID[]       = "@mozilla.org/js/xpc/RuntimeService;1";
@@ -102,6 +103,7 @@ nsXPConnect::~nsXPConnect()
     // maps that our finalize callback depends on.
     JS_GC(mRuntime->Runtime());
 
+    NS_RELEASE(gSystemPrincipal);
     gScriptSecurityManager = nullptr;
 
     // shutdown the logging system
@@ -135,9 +137,14 @@ nsXPConnect::InitStatics()
     // Fire up the SSM.
     nsScriptSecurityManager::InitStatics();
     gScriptSecurityManager = nsScriptSecurityManager::GetScriptSecurityManager();
+    gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
+    MOZ_RELEASE_ASSERT(gSystemPrincipal);
 
     // Initialize the SafeJSContext.
     gSelf->mRuntime->GetJSContextStack()->InitSafeJSContext();
+
+    // Initialize our singleton scopes.
+    gSelf->mRuntime->InitSingletonScopes();
 }
 
 nsXPConnect*
@@ -1461,7 +1468,7 @@ SetAddonInterposition(const nsACString &addonIdStr, nsIAddonInterposition *inter
         // We enter the junk scope just to allocate a string, which actually will go
         // in the system zone.
         AutoJSAPI jsapi;
-        jsapi.Init(xpc::GetJunkScopeGlobal());
+        jsapi.Init(xpc::GetNativeForGlobal(xpc::PrivilegedJunkScope()));
         addonId = NewAddonId(jsapi.cx(), addonIdStr);
         if (!addonId)
             return false;

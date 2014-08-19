@@ -23,6 +23,7 @@
 #include "nsIXPConnect.h"
 #include "inIDOMUtils.h"
 #include "nsIPermissionManager.h"
+#include "nsIServiceWorkerManager.h"
 
 using namespace mozilla;
 using namespace mozilla::services;
