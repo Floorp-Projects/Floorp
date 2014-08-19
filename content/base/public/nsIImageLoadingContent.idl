@@ -37,7 +37,7 @@ interface nsIFrame;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, builtinclass, uuid(256a5283-ebb5-4430-8e15-5ada92156ef7)]
+[scriptable, builtinclass, uuid(ce098f6c-baca-4178-a9aa-266e8bfe509b)]
 interface nsIImageLoadingContent : imgINotificationObserver
 {
   /**
@@ -149,9 +149,10 @@ interface nsIImageLoadingContent : imgINotificationObserver
   /**
    * forceReload forces reloading of the image pointed to by currentURI
    *
+   * @param aNotify [optional] request should notify, defaults to true
    * @throws NS_ERROR_NOT_AVAILABLE if there is no current URI to reload
    */
-  void forceReload();
+  [optional_argc] void forceReload([optional] in boolean aNotify /* = true */);
 
   /**
    * Enables/disables image state forcing. When |aForce| is PR_TRUE, we force
