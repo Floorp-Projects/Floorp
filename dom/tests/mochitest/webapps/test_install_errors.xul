@@ -42,7 +42,7 @@ function noArgs(next) {
   try {
     navigator.mozApps.install();
   } catch (e) {
-    is(e.message, "Not enough arguments \[mozIDOMApplicationRegistry.install\]",
+    is(e.message, "Not enough arguments to DOMApplicationsRegistry.install.",
        "install without arguments throws exception");
     next();
   }
