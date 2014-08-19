@@ -358,6 +358,35 @@ TelephonyService.prototype = {
   },
 
   /**
+   * Checks whether to temporarily suppress caller id for the call.
+   *
+   * @param aMmi
+   *        MMI full object.
+   */
+  _isTemporaryCLIR: function(aMmi) {
+    return (aMmi && aMmi.serviceCode === RIL.MMI_SC_CLIR) && aMmi.dialNumber;
+  },
+
+  /**
+   * Map MMI procedure to CLIR MODE.
+   *
+   * @param aProcedure
+   *        MMI procedure
+   */
+  _getTemporaryCLIRMode: function(aProcedure) {
+    // In temporary mode, MMI_PROCEDURE_ACTIVATION means allowing CLI
+    // presentation, i.e. CLIR_SUPPRESSION. See TS 22.030, Annex B.
+    switch (aProcedure) {
+      case RIL.MMI_PROCEDURE_ACTIVATION:
+        return RIL.CLIR_SUPPRESSION;
+      case RIL.MMI_PROCEDURE_DEACTIVATION:
+        return RIL.CLIR_INVOCATION;
+      default:
+        return RIL.CLIR_DEFAULT;
+    }
+  },
+
+  /**
    * nsITelephonyService interface.
    */
 
@@ -457,6 +486,29 @@ TelephonyService.prototype = {
     this.notifyCallStateChanged(aClientId, parentCall);
   },
 
+  _composeDialRequest: function(aClientId, aNumber) {
+    return new Promise((resolve, reject) => {
+      this._sendToRilWorker(aClientId, "parseMMIFromDialNumber",
+                            {number: aNumber}, response => {
+        let options = {};
+        let mmi = response.mmi;
+
+        if (!mmi) {
+          resolve({
+            number: aNumber
+          });
+        } else if (this._isTemporaryCLIR(mmi)) {
+          resolve({
+            number: mmi.dialNumber,
+            clirMode: this._getTemporaryCLIRMode(mmi.procedure)
+          });
+        } else {
+          reject(DIAL_ERROR_BAD_NUMBER);
+        }
+      });
+    });
+  },
+
   isDialing: false,
 
   dial: function(aClientId, aNumber, aIsDialEmergency, aCallback) {
@@ -497,27 +549,30 @@ TelephonyService.prototype = {
       return;
     }
 
-    let isEmergencyNumber = this._isEmergencyNumber(aNumber);
+    this._composeDialRequest(aClientId, aNumber).then(options => {
+      options.isEmergency = this._isEmergencyNumber(options.number);
+      options.isDialEmergency = aIsDialEmergency;
 
-    if (isEmergencyNumber) {
-      // Automatically select a proper clientId for emergency call.
-      aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
-      if (aClientId === -1) {
-        if (DEBUG) debug("Error: No client is avaialble for emergency call.");
-        aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
-        return;
+      if (options.isEmergency) {
+        // Automatically select a proper clientId for emergency call.
+        aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
+        if (aClientId === -1) {
+          if (DEBUG) debug("Error: No client is avaialble for emergency call.");
+          aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+          return;
+        }
       }
-    }
 
+      this._dialInternal(aClientId, options, aCallback);
+    }, cause => {
+      aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+    });
+  },
+
+  _dialInternal: function(aClientId, aOptions, aCallback) {
     this.isDialing = true;
 
-    let options = {
-      isDialEmergency: aIsDialEmergency,
-      isEmergency: isEmergencyNumber,
-      number: aNumber
-    };
-
-    this._sendToRilWorker(aClientId, "dial", options, response => {
+    this._sendToRilWorker(aClientId, "dial", aOptions, response => {
       this.isDialing = false;
 
       if (!response.success) {
