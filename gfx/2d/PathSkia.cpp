@@ -141,10 +141,10 @@ PathSkia::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
   }
 
   SkRegion pointRect;
-  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1)),
-                    int32_t(SkFloatToScalar(transformed.y - 1)),
-                    int32_t(SkFloatToScalar(transformed.x + 1)),
-                    int32_t(SkFloatToScalar(transformed.y + 1)));
+  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1.f)),
+                    int32_t(SkFloatToScalar(transformed.y - 1.f)),
+                    int32_t(SkFloatToScalar(transformed.x + 1.f)),
+                    int32_t(SkFloatToScalar(transformed.y + 1.f)));
 
   SkRegion pathRegion;
   
@@ -174,10 +174,10 @@ PathSkia::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
   }
 
   SkRegion pointRect;
-  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1)),
-                    int32_t(SkFloatToScalar(transformed.y - 1)),
-                    int32_t(SkFloatToScalar(transformed.x + 1)),
-                    int32_t(SkFloatToScalar(transformed.y + 1)));
+  pointRect.setRect(int32_t(SkFloatToScalar(transformed.x - 1.f)),
+                    int32_t(SkFloatToScalar(transformed.y - 1.f)),
+                    int32_t(SkFloatToScalar(transformed.x + 1.f)),
+                    int32_t(SkFloatToScalar(transformed.y + 1.f)));
 
   SkRegion pathRegion;
   
