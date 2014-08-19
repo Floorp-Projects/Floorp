@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/ */
 
-var sym = Symbol.for("moon");
 function checkNotWritable(obj) {
     // In sloppy mode, assigning to a nonwritable property silently fails.
     obj[sym] = "portals";
@@ -12,20 +11,24 @@ function checkNotWritable(obj) {
     assertEq(obj[sym], "cheese");
 }
 
-var x = {};
-Object.defineProperty(x, sym, {
-    configurable: true,
-    enumerable: true,
-    value: "cheese",
-    writable: false
-});
+if (typeof Symbol === "function") {
+    var sym = Symbol.for("moon");
 
-checkNotWritable(x);
+    var x = {};
+    Object.defineProperty(x, sym, {
+        configurable: true,
+        enumerable: true,
+        value: "cheese",
+        writable: false
+    });
 
-// Assignment can't shadow inherited nonwritable properties either.
-var y = Object.create(x);
-checkNotWritable(y);
-checkNotWritable(Object.create(y));
+    checkNotWritable(x);
+
+    // Assignment can't shadow inherited nonwritable properties either.
+    var y = Object.create(x);
+    checkNotWritable(y);
+    checkNotWritable(Object.create(y));
+}
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0);
