@@ -189,6 +189,9 @@ private:
 
   // Synchronized by decoder monitor.
   bool mIsEncrypted;
+
+  bool mIndexReady;
+  Monitor mIndexMonitor;
 };
 
 } // namespace mozilla

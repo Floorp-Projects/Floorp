@@ -29,7 +29,6 @@ public:
   uint64_t GetEvictionOffset(Microseconds aTime);
 
 private:
-  mozilla::Monitor mMonitor;
   nsTArray<stagefright::MediaSource::Indice> mIndex;
   nsAutoPtr<MoofParser> mMoofParser;
 };
