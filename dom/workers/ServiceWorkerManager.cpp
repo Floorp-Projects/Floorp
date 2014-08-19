@@ -607,8 +607,7 @@ ServiceWorkerManager::Unregister(nsIDOMWindow* aWindow, const nsAString& aScope,
 already_AddRefed<ServiceWorkerManager>
 ServiceWorkerManager::GetInstance()
 {
-  nsCOMPtr<nsIServiceWorkerManager> swm =
-    do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
   nsRefPtr<ServiceWorkerManager> concrete = do_QueryObject(swm);
   return concrete.forget();
 }
