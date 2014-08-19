@@ -56,11 +56,11 @@ public:
 
   size_t HeapSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
   size_t NonHeapSizeOfExcludingThis() const;
+  bool OnHeap() const;
 
 protected:
   bool Lock(void** aBuf);
   void Unlock();
-  bool OnHeap() const;
 
 private:
   void* mBuf;
