@@ -161,6 +161,12 @@ GMPParent::CloseIfUnused()
       mVideoEncoders.IsEmpty() &&
       mDecryptors.IsEmpty() &&
       mAudioDecoders.IsEmpty()) {
+
+    // Ensure all timers are killed.
+    for (uint32_t i = mTimers.Length(); i > 0; i--) {
+      mTimers[i - 1]->Shutdown();
+    }
+
     if (mAsyncShutdownRequired) {
       if (!mAsyncShutdownInProgress) {
         LOGD(("%s::%s: %p sending async shutdown notification", __CLASS__,
@@ -234,9 +240,8 @@ GMPParent::CloseActive(bool aDieWhenUnloaded)
     mAudioDecoders[i - 1]->Shutdown();
   }
 
-  for (uint32_t i = mTimers.Length(); i > 0; i--) {
-    mTimers[i - 1]->Shutdown();
-  }
+  // Note: we don't shutdown timers here, we do that in CloseIfUnused(),
+  // as there are multiple entry points to CloseIfUnused().
 
   // Note: We don't shutdown storage API objects here, as they need to
   // work during async shutdown of GMPs.
