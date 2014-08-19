@@ -956,9 +956,6 @@ SVGSVGElement::GetLength(uint8_t aCtxType)
 SVGSVGElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                                         TransformTypes aWhich) const
 {
-  NS_ABORT_IF_FALSE(aWhich != eChildToUserSpace || aMatrix.IsIdentity(),
-                    "Skipping eUserSpaceToParent transforms makes no sense");
-
   // 'transform' attribute:
   gfxMatrix fromUserSpace =
     SVGSVGElementBase::PrependLocalTransformsTo(aMatrix, aWhich);

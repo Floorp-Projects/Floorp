@@ -93,9 +93,6 @@ gfxMatrix
 SVGTransformableElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                                                   TransformTypes aWhich) const
 {
-  NS_ABORT_IF_FALSE(aWhich != eChildToUserSpace || aMatrix.IsIdentity(),
-                    "Skipping eUserSpaceToParent transforms makes no sense");
-
   gfxMatrix result(aMatrix);
 
   if (aWhich == eChildToUserSpace) {
