@@ -32,9 +32,21 @@
     // We are controlled.
     // Register a new worker for this sub-scope. After that, controller should still be for upper level, but active should change to be this scope's.
     navigator.serviceWorker.register("../worker2.js", { scope: "./*" }).then(function(e) {
-      my_ok(navigator.serviceWorker.installing &&
-            navigator.serviceWorker.installing.scope.match(/controller\/\*$/),
+      my_ok("installing" in e, "ServiceWorkerRegistration.installing exists.");
+      my_ok(e.installing instanceof ServiceWorker, "ServiceWorkerRegistration.installing is a ServiceWorker.");
+
+      my_ok("waiting" in e, "ServiceWorkerRegistration.waiting exists.");
+      my_ok("active" in e, "ServiceWorkerRegistration.active exists.");
+
+      my_ok(e.installing &&
+            e.installing.scope.match(/controller\/\*$/),
             "Installing is serviceworker/controller/*");
+
+      my_ok("scope" in e, "ServiceWorkerRegistration.scope exists.");
+      my_ok(e.scope.match(/serviceworkers\/controller\/\*$/), "Scope is serviceworker/*: " + e.scope);
+
+      my_ok("unregister" in e, "ServiceWorkerRegistration.unregister exists.");
+
       my_ok(navigator.serviceWorker.controller.scope.match(/serviceworkers\/control\*$/),
             "Controller is still serviceworker/*");
       finish();
