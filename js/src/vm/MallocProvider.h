@@ -54,13 +54,7 @@ struct MallocProvider
 {
     template <class T>
     T *pod_malloc() {
-        T *p = js_pod_malloc<T>();
-        if (MOZ_LIKELY(p)) {
-            client()->updateMallocCounter(sizeof(T));
-            return p;
-        }
-        client()->onOutOfMemory(nullptr, sizeof(T));
-        return nullptr;
+        return pod_malloc<T>(1);
     }
 
     template <class T>
@@ -106,29 +100,17 @@ struct MallocProvider
 
     template <class T>
     T *pod_calloc() {
-        T *p = js_pod_calloc<T>();
-        if (MOZ_LIKELY(p)) {
-            client()->updateMallocCounter(sizeof(T));
-            return p;
-        }
-        client()->onOutOfMemory(reinterpret_cast<void *>(1), sizeof(T));
-        return nullptr;
+        return pod_calloc<T>(1);
     }
 
     template <class T>
     T *
     pod_calloc(size_t numElems) {
-        T *p = js_pod_calloc<T>(numElems);
-        if (MOZ_LIKELY(p)) {
-            client()->updateMallocCounter(numElems * sizeof(T));
-            return p;
-        }
-        if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) {
-            client()->reportAllocationOverflow();
+        T *p = pod_malloc<T>(numElems);
+        if (MOZ_UNLIKELY(!p))
             return nullptr;
-        }
-        client()->onOutOfMemory(reinterpret_cast<void *>(1), sizeof(T));
-        return nullptr;
+        memset(p, 0, numElems * sizeof(T));
+        return p;
     }
 
     template <class T, class U>
@@ -146,18 +128,6 @@ struct MallocProvider
     make_zeroed_pod_array(size_t numElems)
     {
         return mozilla::UniquePtr<T[], JS::FreePolicy>(pod_calloc<T>(numElems));
-    }
-
-    void *realloc_(void *p, size_t oldBytes, size_t newBytes) {
-        Client *client = static_cast<Client *>(this);
-        /*
-         * For compatibility we do not account for realloc that decreases
-         * previously allocated memory.
-         */
-        if (newBytes > oldBytes)
-            client->updateMallocCounter(newBytes - oldBytes);
-        void *p2 = js_realloc(p, newBytes);
-        return MOZ_LIKELY(!!p2) ? p2 : client->onOutOfMemory(p, newBytes);
     }
 
     template <class T>

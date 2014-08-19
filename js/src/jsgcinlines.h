@@ -616,7 +616,10 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
 
     HeapSlot *slots = nullptr;
     if (nDynamicSlots) {
-        slots = cx->pod_malloc<HeapSlot>(nDynamicSlots);
+        if (cx->isExclusiveContext())
+            slots = cx->asExclusiveContext()->zone()->pod_malloc<HeapSlot>(nDynamicSlots);
+        else
+            slots = js_pod_malloc<HeapSlot>(nDynamicSlots);
         if (MOZ_UNLIKELY(!slots))
             return nullptr;
         js::Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
