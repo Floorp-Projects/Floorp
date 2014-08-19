@@ -281,16 +281,26 @@ Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReade
 }
 
 static void
+TraceOneDataRelocation(JSTracer *trc, Instruction *inst)
+{
+    void *ptr = (void *)Assembler::ExtractLuiOriValue(inst, inst->next());
+    void *prior = ptr;
+
+    // No barrier needed since these are constants.
+    gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
+    if (ptr != prior) {
+        Assembler::UpdateLuiOriValue(inst, inst->next(), uint32_t(ptr));
+        AutoFlushICache::flush(uintptr_t(inst), 8);
+    }
+}
+
+static void
 TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         Instruction *inst = (Instruction*)(buffer + offset);
-        void *ptr = (void *)Assembler::ExtractLuiOriValue(inst, inst->next());
-
-        // No barrier needed since these are constants.
-        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
-        Assembler::UpdateLuiOriValue(inst, inst->next(), uint32_t(ptr));
+        TraceOneDataRelocation(trc, inst);
     }
 }
 
@@ -300,12 +310,7 @@ TraceDataRelocations(JSTracer *trc, MIPSBuffer *buffer, CompactBufferReader &rea
     while (reader.more()) {
         BufferOffset bo (reader.readUnsigned());
         MIPSBuffer::AssemblerBufferInstIterator iter(bo, buffer);
-
-        void *ptr = (void *)Assembler::ExtractLuiOriValue(iter.cur(), iter.next());
-
-        // No barrier needed since these are constants.
-        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
-        Assembler::UpdateLuiOriValue(iter.cur(), iter.next(), uint32_t(ptr));
+        TraceOneDataRelocation(trc, iter.cur());
     }
 }
 
