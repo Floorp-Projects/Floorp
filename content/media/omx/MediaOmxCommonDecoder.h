@@ -31,7 +31,8 @@ public:
   virtual void PlaybackPositionChanged();
   virtual void UpdateReadyStateForData();
   virtual void SetElementVisibility(bool aIsVisible);
-  virtual void SetCanOffloadAudio(bool aCanOffloadAudio);
+  virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio);
+  virtual bool CheckDecoderCanOffloadAudio();
   virtual void AddOutputStream(ProcessedMediaStream* aStream,
                                bool aFinishWhenEnded);
   virtual void SetPlaybackRate(double aPlaybackRate);

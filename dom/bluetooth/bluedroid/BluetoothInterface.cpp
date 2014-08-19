@@ -422,6 +422,7 @@ Convert(bt_device_type_t aIn, BluetoothDeviceType& aOut)
   return NS_OK;
 }
 
+#if ANDROID_VERSION >= 18
 static nsresult
 Convert(const bt_remote_version_t& aIn, BluetoothRemoteInfo& aOut)
 {
@@ -431,6 +432,7 @@ Convert(const bt_remote_version_t& aIn, BluetoothRemoteInfo& aOut)
 
   return NS_OK;
 }
+#endif
 
 static nsresult
 Convert(const bt_service_record_t& aIn, BluetoothServiceRecord& aOut)
@@ -840,10 +842,12 @@ Convert(const bt_property_t& aIn, BluetoothProperty& aOut)
     case PROPERTY_REMOTE_RSSI:
       aOut.mInt32 = *static_cast<int32_t*>(aIn.val);
       break;
+#if ANDROID_VERSION >= 18
     case PROPERTY_REMOTE_VERSION_INFO:
       rv = Convert(*static_cast<bt_remote_version_t*>(aIn.val),
                    aOut.mRemoteInfo);
       break;
+#endif
     case PROPERTY_REMOTE_DEVICE_TIMESTAMP:
       /* nothing to do */
       break;
@@ -3036,18 +3040,20 @@ BluetoothInterface::Init(BluetoothNotificationHandler* aNotificationHandler,
 {
   static bt_callbacks_t sBluetoothCallbacks = {
     sizeof(sBluetoothCallbacks),
-    .adapter_state_changed_cb = BluetoothCallback::AdapterStateChanged,
-    .adapter_properties_cb = BluetoothCallback::AdapterProperties,
-    .remote_device_properties_cb = BluetoothCallback::RemoteDeviceProperties,
-    .device_found_cb = BluetoothCallback::DeviceFound,
-    .discovery_state_changed_cb= BluetoothCallback::DiscoveryStateChanged,
-    .pin_request_cb = BluetoothCallback::PinRequest,
-    .ssp_request_cb = BluetoothCallback::SspRequest,
-    .bond_state_changed_cb = BluetoothCallback::BondStateChanged,
-    .acl_state_changed_cb = BluetoothCallback::AclStateChanged,
-    .thread_evt_cb = BluetoothCallback::ThreadEvt,
-    .dut_mode_recv_cb = BluetoothCallback::DutModeRecv,
-    .le_test_mode_cb = BluetoothCallback::LeTestMode
+    BluetoothCallback::AdapterStateChanged,
+    BluetoothCallback::AdapterProperties,
+    BluetoothCallback::RemoteDeviceProperties,
+    BluetoothCallback::DeviceFound,
+    BluetoothCallback::DiscoveryStateChanged,
+    BluetoothCallback::PinRequest,
+    BluetoothCallback::SspRequest,
+    BluetoothCallback::BondStateChanged,
+    BluetoothCallback::AclStateChanged,
+    BluetoothCallback::ThreadEvt,
+    BluetoothCallback::DutModeRecv,
+#if ANDROID_VERSION >= 18
+    BluetoothCallback::LeTestMode
+#endif
   };
 
   sNotificationHandler = aNotificationHandler;

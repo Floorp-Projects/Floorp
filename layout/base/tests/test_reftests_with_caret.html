@@ -148,8 +148,10 @@ var tests = [
 
 if (navigator.appVersion.indexOf("Android") == -1 &&
   SpecialPowers.Services.appinfo.name != "B2G") {
+  tests.push(function() {SpecialPowers.setBoolPref("touchcaret.enabled", false);});
   tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);
   tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);
+  tests.push(function() {SpecialPowers.clearUserPref("touchcaret.enabled");});
   tests.push(function() {SpecialPowers.setBoolPref("layout.css.overflow-clip-box.enabled", true);});
   tests.push([ 'bug966992-1.html' , 'bug966992-1-ref.html' ]);
   tests.push([ 'bug966992-2.html' , 'bug966992-2-ref.html' ]);

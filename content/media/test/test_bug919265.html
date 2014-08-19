@@ -17,15 +17,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=919265
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    // We shouldn't leak upon shutdown.
-    (new VTTCue(0, 0, "")).getCueAsHTML();
-    // We need to assert something for Mochitest to be happy.
-    ok(true);
-    SimpleTest.finish();
-  }
-);
+
+// We shouldn't leak upon shutdown.
+(new VTTCue(0, 0, "")).getCueAsHTML();
+
+// We need to assert something for Mochitest to be happy.
+ok(true);
+SimpleTest.finish();
 </script>
 </pre>
 </body>

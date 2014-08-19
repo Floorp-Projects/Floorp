@@ -3,15 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-interface mozIDOMApplication;
 
-[Constructor(DOMString type, optional MozApplicationEventInit eventInitDict)]
+[Constructor(DOMString type, optional MozApplicationEventInit eventInitDict), ChromeOnly]
 interface MozApplicationEvent : Event
 {
-  readonly attribute mozIDOMApplication? application;
+  readonly attribute DOMApplication? application;
 };
 
 dictionary MozApplicationEventInit : EventInit
 {
-  mozIDOMApplication? application = null;
+  DOMApplication? application = null;
 };

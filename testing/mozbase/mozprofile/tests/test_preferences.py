@@ -108,7 +108,6 @@ browser.startup.homepage = http://github.com/
 
     def test_reset_should_remove_added_prefs(self):
         """Check that when we call reset the items we expect are updated"""
-
         profile = Profile()
         prefs_file = os.path.join(profile.profile, 'user.js')
 
@@ -123,15 +122,37 @@ browser.startup.homepage = http://github.com/
         profile.set_preferences(prefs1)
         self.assertEqual(prefs1, Preferences.read_prefs(prefs_file))
         lines = file(prefs_file).read().strip().splitlines()
-        self.assertTrue(bool([line for line in lines
-                              if line.startswith('#MozRunner Prefs Start')]))
-        self.assertTrue(bool([line for line in lines
-                              if line.startswith('#MozRunner Prefs End')]))
+        self.assertTrue(any(line.startswith('#MozRunner Prefs Start') for line in lines))
+        self.assertTrue(any(line.startswith('#MozRunner Prefs End') for line in lines))
 
         profile.reset()
         self.assertNotEqual(prefs1,
                             Preferences.read_prefs(os.path.join(profile.profile, 'user.js')),
                             "I pity the fool who left my pref")
+
+    def test_reset_should_keep_user_added_prefs(self):
+        """Check that when we call reset the items we expect are updated"""
+        profile = Profile()
+        prefs_file = os.path.join(profile.profile, 'user.js')
+
+        # we shouldn't have any initial preferences
+        initial_prefs = Preferences.read_prefs(prefs_file)
+        self.assertFalse(initial_prefs)
+        initial_prefs = file(prefs_file).read().strip()
+        self.assertFalse(initial_prefs)
+
+        # add some preferences
+        prefs1 = [("mr.t.quotes", "i aint getting on no plane!")]
+        profile.set_persistent_preferences(prefs1)
+        self.assertEqual(prefs1, Preferences.read_prefs(prefs_file))
+        lines = file(prefs_file).read().strip().splitlines()
+        self.assertTrue(any(line.startswith('#MozRunner Prefs Start') for line in lines))
+        self.assertTrue(any(line.startswith('#MozRunner Prefs End') for line in lines))
+
+        profile.reset()
+        self.assertEqual(prefs1,
+                         Preferences.read_prefs(os.path.join(profile.profile, 'user.js')),
+                         "I pity the fool who left my pref")
 
     def test_magic_markers(self):
         """ensure our magic markers are working"""

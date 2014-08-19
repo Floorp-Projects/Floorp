@@ -111,9 +111,9 @@ protected:
   nsRefPtr<DOMMediaStream> mStream;
   // The current state of the MediaRecorder object.
   RecordingState mState;
-  // Hold the sessions pointer and clean it when the DestroyRunnable for a
+  // Hold the sessions reference and clean it when the DestroyRunnable for a
   // session is running.
-  nsTArray<Session*> mSessions;
+  nsTArray<nsRefPtr<Session> > mSessions;
   // It specifies the container format as well as the audio and video capture formats.
   nsString mMimeType;
 

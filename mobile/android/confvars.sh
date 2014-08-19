@@ -39,9 +39,6 @@ MOZ_SOCIAL=
 MOZ_ANDROID_HISTORY=1
 MOZ_DISABLE_EXPORT_JS=1
 
-# Needed for building our components as part of libxul
-MOZ_APP_COMPONENT_INCLUDE=nsBrowserComponents.h
-
 # use custom widget for html:select
 MOZ_USE_NATIVE_POPUP_WINDOWS=1
 
