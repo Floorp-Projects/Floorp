@@ -12,8 +12,7 @@ this.EXPORTED_SYMBOLS = [
   "PermissionsReverseTable",
   "expandPermissions",
   "appendAccessToPermName",
-  "isExplicitInPermissionsTable",
-  "AllPossiblePermissions"
+  "isExplicitInPermissionsTable"
 ];
 
 // Permission access flags
@@ -145,7 +144,7 @@ this.PermissionsTable =  { geolocation: {
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write"],
-                             additional: ["indexedDB-chrome-settings", "settings-api"]
+                             additional: ["indexedDB-chrome-settings"]
                            },
                            permissions: {
                              app: DENY_ACTION,
@@ -487,10 +486,7 @@ this.expandPermissions = function expandPermissions(aPermName, aAccess) {
   return expandedPermNames;
 };
 
-this.PermissionsReverseTable = {};
-this.AllPossiblePermissions = [];
-
-(function () {
+this.PermissionsReverseTable = (function () {
   // PermissionsTable as it is works well for direct searches, but not
   // so well for reverse ones (that is, if I get something like
   // device-storage:music-read or indexedDB-chrome-settings-read how
@@ -498,9 +494,8 @@ this.AllPossiblePermissions = [];
   // born. The idea is that
   // reverseTable[device-storage:music-read] should return
   // device-storage:music
-  //
-  // We also need a list of all the possible permissions for things like the
-  // settingsmanager, so construct that while we're at it.
+  let reverseTable = {};
+
   for (let permName in PermissionsTable) {
     let permAliases;
     if (PermissionsTable[permName].access) {
@@ -509,12 +504,12 @@ this.AllPossiblePermissions = [];
       permAliases = expandPermissions(permName);
     }
     for (let i = 0; i < permAliases.length; i++) {
-      PermissionsReverseTable[permAliases[i]] = permName;
-      AllPossiblePermissions.push(permAliases[i]);
+      reverseTable[permAliases[i]] = permName;
     }
   }
-  AllPossiblePermissions =
-    AllPossiblePermissions.concat(["offline-app", "pin-app"]);
+
+  return reverseTable;
+
 })();
 
 this.isExplicitInPermissionsTable = function(aPermName, aIntStatus) {
