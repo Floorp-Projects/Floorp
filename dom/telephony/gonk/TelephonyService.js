@@ -178,6 +178,10 @@ TelephonyService.prototype = {
     return gRadioInterfaceLayer.getRadioInterface(aClientId);
   },
 
+  _sendToRilWorker: function(aClientId, aType, aMessage, aCallback) {
+    this._getClient(aClientId).sendWorkerMessage(aType, aMessage, aCallback);
+  },
+
   // An array of nsITelephonyListener instances.
   _listeners: null,
   _notifyAllListeners: function(aMethodName, aArgs) {
@@ -318,8 +322,7 @@ TelephonyService.prototype = {
   _enumerateCallsForClient: function(aClientId) {
     if (DEBUG) debug("Enumeration of calls for client " + aClientId);
 
-    this._getClient(aClientId).sendWorkerMessage("enumerateCalls", null,
-                                                 (function(response) {
+    this._sendToRilWorker(aClientId, "enumerateCalls", null, response => {
       if (!this._currentCalls[aClientId]) {
         this._currentCalls[aClientId] = {};
       }
@@ -331,9 +334,7 @@ TelephonyService.prototype = {
 
         this._currentCalls[aClientId][call.callIndex] = call;
       }
-
-      return false;
-    }).bind(this));
+    });
   },
 
   /**
@@ -354,6 +355,35 @@ TelephonyService.prototype = {
       numbers = DEFAULT_EMERGENCY_NUMBERS;
     }
     return numbers.indexOf(aNumber) != -1;
+  },
+
+  /**
+   * Checks whether to temporarily suppress caller id for the call.
+   *
+   * @param aMmi
+   *        MMI full object.
+   */
+  _isTemporaryCLIR: function(aMmi) {
+    return (aMmi && aMmi.serviceCode === RIL.MMI_SC_CLIR) && aMmi.dialNumber;
+  },
+
+  /**
+   * Map MMI procedure to CLIR MODE.
+   *
+   * @param aProcedure
+   *        MMI procedure
+   */
+  _getTemporaryCLIRMode: function(aProcedure) {
+    // In temporary mode, MMI_PROCEDURE_ACTIVATION means allowing CLI
+    // presentation, i.e. CLIR_SUPPRESSION. See TS 22.030, Annex B.
+    switch (aProcedure) {
+      case RIL.MMI_PROCEDURE_ACTIVATION:
+        return RIL.CLIR_SUPPRESSION;
+      case RIL.MMI_PROCEDURE_DEACTIVATION:
+        return RIL.CLIR_INVOCATION;
+      default:
+        return RIL.CLIR_DEFAULT;
+    }
   },
 
   /**
@@ -456,7 +486,31 @@ TelephonyService.prototype = {
     this.notifyCallStateChanged(aClientId, parentCall);
   },
 
+  _composeDialRequest: function(aClientId, aNumber) {
+    return new Promise((resolve, reject) => {
+      this._sendToRilWorker(aClientId, "parseMMIFromDialNumber",
+                            {number: aNumber}, response => {
+        let options = {};
+        let mmi = response.mmi;
+
+        if (!mmi) {
+          resolve({
+            number: aNumber
+          });
+        } else if (this._isTemporaryCLIR(mmi)) {
+          resolve({
+            number: mmi.dialNumber,
+            clirMode: this._getTemporaryCLIRMode(mmi.procedure)
+          });
+        } else {
+          reject(DIAL_ERROR_BAD_NUMBER);
+        }
+      });
+    });
+  },
+
   isDialing: false,
+
   dial: function(aClientId, aNumber, aIsDialEmergency, aCallback) {
     if (DEBUG) debug("Dialing " + (aIsDialEmergency ? "emergency " : "") + aNumber);
 
@@ -495,49 +549,48 @@ TelephonyService.prototype = {
       return;
     }
 
-    let isEmergencyNumber = this._isEmergencyNumber(aNumber);
+    this._composeDialRequest(aClientId, aNumber).then(options => {
+      options.isEmergency = this._isEmergencyNumber(options.number);
+      options.isDialEmergency = aIsDialEmergency;
 
-    if (isEmergencyNumber) {
-      // Automatically select a proper clientId for emergency call.
-      aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
-      if (aClientId === -1) {
-        if (DEBUG) debug("Error: No client is avaialble for emergency call.");
-        aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
-        return;
-      }
-    }
-
-    this.isDialing = true;
-
-    let options = {
-      isDialEmergency: aIsDialEmergency,
-      isEmergency: isEmergencyNumber,
-      number: aNumber
-    };
-
-    this._getClient(aClientId).sendWorkerMessage("dial", options,
-                                                 (function(response) {
-      this.isDialing = false;
-      if (!response.success) {
-        aCallback.notifyDialError(response.errorMsg);
-        return false;
-      }
-
-      if (!response.isCdma) {
-        aCallback.notifyDialSuccess(response.callIndex, response.number);
-      } else {
-        let currentCallId = Object.keys(this._currentCalls[aClientId])[0];
-        if (currentCallId === undefined) {
-          aCallback.notifyDialSuccess(response.callIndex, response.number);
-        } else {
-          // RIL doesn't hold the 2nd call. We create one by ourselves.
-          aCallback.notifyDialSuccess(CDMA_SECOND_CALL_INDEX, response.number);
-          this._addCdmaChildCall(aClientId, aNumber, currentCallId);
+      if (options.isEmergency) {
+        // Automatically select a proper clientId for emergency call.
+        aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
+        if (aClientId === -1) {
+          if (DEBUG) debug("Error: No client is avaialble for emergency call.");
+          aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+          return;
         }
       }
 
-      return false;
-    }).bind(this));
+      this._dialInternal(aClientId, options, aCallback);
+    }, cause => {
+      aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+    });
+  },
+
+  _dialInternal: function(aClientId, aOptions, aCallback) {
+    this.isDialing = true;
+
+    this._sendToRilWorker(aClientId, "dial", aOptions, response => {
+      this.isDialing = false;
+
+      if (!response.success) {
+        aCallback.notifyDialError(response.errorMsg);
+        return;
+      }
+
+      let currentCdmaCallIndex = !response.isCdma ? null :
+        Object.keys(this._currentCalls[aClientId])[0];
+
+      if (currentCdmaCallIndex == null) {
+        aCallback.notifyDialSuccess(response.callIndex, response.number);
+      } else {
+        // RIL doesn't hold the 2nd call. We create one by ourselves.
+        aCallback.notifyDialSuccess(CDMA_SECOND_CALL_INDEX, response.number);
+        this._addCdmaChildCall(aClientId, aNumber, currentCdmaCallIndex);
+      }
+    });
   },
 
   hangUp: function(aClientId, aCallIndex) {
@@ -547,24 +600,24 @@ TelephonyService.prototype = {
       // the parent call, we send 'parentId' to RIL.
       this.hangUp(aClientId, parentId);
     } else {
-      this._getClient(aClientId).sendWorkerMessage("hangUp", { callIndex: aCallIndex });
+      this._sendToRilWorker(aClientId, "hangUp", { callIndex: aCallIndex });
     }
   },
 
   startTone: function(aClientId, aDtmfChar) {
-    this._getClient(aClientId).sendWorkerMessage("startTone", { dtmfChar: aDtmfChar });
+    this._sendToRilWorker(aClientId, "startTone", { dtmfChar: aDtmfChar });
   },
 
   stopTone: function(aClientId) {
-    this._getClient(aClientId).sendWorkerMessage("stopTone");
+    this._sendToRilWorker(aClientId, "stopTone");
   },
 
   answerCall: function(aClientId, aCallIndex) {
-    this._getClient(aClientId).sendWorkerMessage("answerCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "answerCall", { callIndex: aCallIndex });
   },
 
   rejectCall: function(aClientId, aCallIndex) {
-    this._getClient(aClientId).sendWorkerMessage("rejectCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "rejectCall", { callIndex: aCallIndex });
   },
 
   holdCall: function(aClientId, aCallIndex) {
@@ -575,7 +628,7 @@ TelephonyService.prototype = {
       return;
     }
 
-    this._getClient(aClientId).sendWorkerMessage("holdCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "holdCall", { callIndex: aCallIndex });
   },
 
   resumeCall: function(aClientId, aCallIndex) {
@@ -586,7 +639,7 @@ TelephonyService.prototype = {
       return;
     }
 
-    this._getClient(aClientId).sendWorkerMessage("resumeCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "resumeCall", { callIndex: aCallIndex });
   },
 
   conferenceCall: function(aClientId) {
@@ -619,19 +672,17 @@ TelephonyService.prototype = {
       this.notifyConferenceCallStateChanged(RIL.CALL_STATE_ACTIVE);
     }
 
-    this._getClient(aClientId).sendWorkerMessage("conferenceCall", null,
-                                                 (function(response) {
+    this._sendToRilWorker(aClientId, "conferenceCall", null, response => {
       if (!response.success) {
         this._notifyAllListeners("notifyConferenceError", [response.errorName,
                                                            response.errorMsg]);
-        return false;
+        return;
       }
 
       if (response.isCdma) {
         onCdmaConferenceCallSuccess.call(this);
       }
-      return false;
-    }).bind(this));
+    });
   },
 
   separateCall: function(aClientId, aCallIndex) {
@@ -664,28 +715,26 @@ TelephonyService.prototype = {
       this.notifyCallDisconnected(aClientId, childCall);
     }
 
-    this._getClient(aClientId).sendWorkerMessage("separateCall", {
-      callIndex: aCallIndex
-    }, (function(response) {
+    this._sendToRilWorker(aClientId, "separateCall", { callIndex: aCallIndex },
+                          response => {
       if (!response.success) {
         this._notifyAllListeners("notifyConferenceError", [response.errorName,
                                                            response.errorMsg]);
-        return false;
+        return;
       }
 
       if (response.isCdma) {
         onCdmaSeparateCallSuccess.call(this);
       }
-      return false;
-    }).bind(this));
+    });
   },
 
   holdConference: function(aClientId) {
-    this._getClient(aClientId).sendWorkerMessage("holdConference");
+    this._sendToRilWorker(aClientId, "holdConference");
   },
 
   resumeConference: function(aClientId) {
-    this._getClient(aClientId).sendWorkerMessage("resumeConference");
+    this._sendToRilWorker(aClientId, "resumeConference");
   },
 
   get microphoneMuted() {
