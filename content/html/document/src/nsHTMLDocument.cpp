@@ -1429,10 +1429,10 @@ nsHTMLDocument::Open(JSContext* cx,
     return ret.forget();
   }
 
-  // Note: We want to use GetDocumentFromContext here because this document
+  // Note: We want to use GetEntryDocument here because this document
   // should inherit the security information of the document that's opening us,
   // (since if it's secure, then it's presumably trusted).
-  nsCOMPtr<nsIDocument> callerDoc = nsContentUtils::GetDocumentFromContext();
+  nsCOMPtr<nsIDocument> callerDoc = GetEntryDocument();
   if (!callerDoc) {
     // If we're called from C++ or in some other way without an originating
     // document we can't do a document.open w/o changing the principal of the
