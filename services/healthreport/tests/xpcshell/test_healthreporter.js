@@ -1245,3 +1245,59 @@ add_task(function* test_nonstring_client_id() {
     reporter._shutdown();
   }
 });
+
+function UnicodeMeasurement() {
+  Metrics.Measurement.call(this);
+}
+
+UnicodeMeasurement.prototype = {
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "unicode",
+  version: 1,
+
+  fields: {
+    "last-text": {type: Metrics.Storage.FIELD_LAST_TEXT},
+  },
+};
+
+function UnicodeProvider() {
+  Metrics.Provider.call(this);
+}
+
+UnicodeProvider.prototype = {
+  __proto__: Metrics.Provider.prototype,
+
+  name: "unicode",
+
+  measurementTypes: [UnicodeMeasurement],
+
+  collectConstantData: function () {
+    return this.enqueueStorageOperation(() => {
+      let m = this.getMeasurement("unicode", 1);
+      return m.setLastText("last-text", "ᄃᄄᄅ");
+    });
+  },
+};
+
+// Check for proper handling of Unicode in payload.
+add_task(function* test_unicode_payload() {
+  let [reporter, server] = yield getReporterAndServer("unicode_payload");
+  try {
+    yield reporter._providerManager.registerProviderFromType(UnicodeProvider);
+
+    let deferred = Promise.defer();
+    let request = new DataSubmissionRequest(deferred, new Date());
+    reporter.requestDataUpload(request);
+    yield deferred.promise;
+    Assert.equal(request.state, request.SUBMISSION_SUCCESS);
+    Assert.ok(server.hasDocument(reporter.serverNamespace, reporter.lastSubmitID));
+
+    let p = server.getDocument(reporter.serverNamespace, reporter.lastSubmitID);
+    let v = p.data.last['unicode.unicode']['last-text'];
+    Assert.equal(v, "ᄃᄄᄅ");
+  } finally {
+    yield shutdownServer(server);
+    reporter._shutdown();
+  }
+});
