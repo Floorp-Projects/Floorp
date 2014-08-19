@@ -44,7 +44,8 @@ interface MozNFCManager {
 
 [JSImplementation="@mozilla.org/navigatorNfc;1",
  NavigatorProperty="mozNfc",
- Func="Navigator::HasNFCSupport"]
+ Func="Navigator::HasNFCSupport",
+ CheckPermissions="nfc-read nfc-write"]
 interface MozNFC : EventTarget {
    /**
     * Returns MozNFCTag object or null in case of invalid sessionToken
