@@ -336,6 +336,7 @@ gbjar.sources += [
     'preferences/AndroidImport.java',
     'preferences/AndroidImportPreference.java',
     'preferences/ClearOnShutdownPref.java',
+    'preferences/CustomCheckBoxPreference.java',
     'preferences/CustomListCategory.java',
     'preferences/CustomListPreference.java',
     'preferences/FontSizePreference.java',
