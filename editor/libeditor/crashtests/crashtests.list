@@ -3,6 +3,7 @@ load 336104.html
 load 382527-1.html
 load 382778-1.html
 load 402172-1.html
+load 403965-1.xhtml
 load 407074-1.html
 load 407079-1.html
 load 407256-1.html
@@ -26,6 +27,7 @@ load 503709-1.xhtml
 load 513375-1.xhtml
 load 535632-1.xhtml
 load 574558-1.xhtml
+load 580151-1.xhtml
 load 582138-1.xhtml
 load 612565-1.html
 asserts(0-6) load 615015-1.html # Bug 439258
