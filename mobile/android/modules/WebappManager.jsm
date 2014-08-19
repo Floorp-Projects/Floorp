@@ -192,11 +192,6 @@ this.WebappManager = {
       apkPackageName: aApkPackageName,
       origin: aOrigin,
     });
-
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(aProfilePath);
-    let localeManifest = new ManifestHelper(aNewManifest, aOrigin, aManifestUrl);
-    this.writeDefaultPrefs(file, localeManifest);
   },
 
   launch: function({ apkPackageName }) {
@@ -651,33 +646,4 @@ this.WebappManager = {
       }
     });
   },
-
-  writeDefaultPrefs: function(aProfile, aManifest) {
-      // build any app specific default prefs
-      let prefs = [];
-      if (aManifest.orientation) {
-        let orientation = aManifest.orientation;
-        if (Array.isArray(orientation)) {
-          orientation = orientation.join(",");
-        }
-        prefs.push({ name: "app.orientation.default", value: orientation });
-      }
-
-      // write them into the app profile
-      let defaultPrefsFile = aProfile.clone();
-      defaultPrefsFile.append(this.DEFAULT_PREFS_FILENAME);
-      this._writeData(defaultPrefsFile, prefs);
-  },
-
-  _writeData: function(aFile, aPrefs) {
-    if (aPrefs.length > 0) {
-      let array = new TextEncoder().encode(JSON.stringify(aPrefs));
-      OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(null, function onError(reason) {
-        debug("Error writing default prefs: " + reason);
-      });
-    }
-  },
-
-  DEFAULT_PREFS_FILENAME: "default-prefs.js",
-
 };

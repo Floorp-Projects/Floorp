@@ -19,11 +19,13 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/services-common/utils.js");
 Cu.import("resource://gre/modules/services/datareporting/policy.jsm");
 Cu.import("resource://gre/modules/services/healthreport/healthreporter.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
+Cu.import("resource://testing-common/services/datareporting/mocks.jsm");
 
 
 let APP_INFO = {
@@ -148,15 +150,13 @@ InspectedHealthReporter.prototype = {
     return HealthReporter.prototype._onStorageCreated.call(this, storage);
   },
 
-  _initializeProviderManager: function () {
-    for (let result of HealthReporter.prototype._initializeProviderManager.call(this)) {
-      yield result;
-    }
+  _initializeProviderManager: Task.async(function* () {
+    yield HealthReporter.prototype._initializeProviderManager.call(this);
 
     if (this.onInitializeProviderManagerFinished) {
       this.onInitializeProviderManagerFinished();
     }
-  },
+  }),
 
   _onProviderManagerInitialized: function () {
     if (this.onProviderManagerInitialized) {
@@ -191,18 +191,16 @@ this.getHealthReporter = function (name, uri=DUMMY_URI, inspected=false) {
   let reporter;
 
   let policyPrefs = new Preferences(branch + "policy.");
-  let policy = new DataReportingPolicy(policyPrefs, prefs, {
-    onRequestDataUpload: function (request) {
-      reporter.requestDataUpload(request);
-    },
-
-    onNotifyDataPolicy: function (request) { },
-
-    onRequestRemoteDelete: function (request) {
-      reporter.deleteRemoteData(request);
-    },
-  });
-
+  let listener = new MockPolicyListener();
+  listener.onRequestDataUpload = function (request) {
+    reporter.requestDataUpload(request);
+    MockPolicyListener.prototype.onRequestDataUpload.call(this, request);
+  }
+  listener.onRequestRemoteDelete = function (request) {
+    reporter.deleteRemoteData(request);
+    MockPolicyListener.prototype.onRequestRemoteDelete.call(this, request);
+  }
+  let policy = new DataReportingPolicy(policyPrefs, prefs, listener);
   let type = inspected ? InspectedHealthReporter : HealthReporter;
   reporter = new type(branch + "healthreport.", policy, null,
                       "state-" + name + ".json");

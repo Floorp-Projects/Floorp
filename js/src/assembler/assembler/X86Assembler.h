@@ -32,10 +32,6 @@
 
 #include <stdarg.h>
 
-#include "assembler/wtf/Platform.h"
-
-#if ENABLE_ASSEMBLER && (WTF_CPU_X86 || WTF_CPU_X86_64)
-
 #include "assembler/assembler/AssemblerBuffer.h"
 #include "js/Vector.h"
 
@@ -57,7 +53,7 @@ namespace X86Registers {
         esi,
         edi
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
        ,r8,
         r9,
         r10,
@@ -79,7 +75,7 @@ namespace X86Registers {
         xmm5,
         xmm6,
         xmm7
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
        ,xmm8,
         xmm9,
         xmm10,
@@ -129,7 +125,7 @@ namespace X86Registers {
 
     static const char* nameIReg(RegisterID reg)
     {
-#       if WTF_CPU_X86_64
+#       ifdef JS_CODEGEN_X64
         return nameIReg(8, reg);
 #       else
         return nameIReg(4, reg);
@@ -138,7 +134,7 @@ namespace X86Registers {
 
     inline bool hasSubregL(RegisterID reg)
     {
-#       if WTF_CPU_X86_64
+#       ifdef JS_CODEGEN_X64
         // In 64-bit mode, all registers have an 8-bit lo subreg.
         return true;
 #       else
@@ -226,16 +222,16 @@ private:
         OP_CMP_EvGv                     = 0x39,
         OP_CMP_GvEv                     = 0x3B,
         OP_CMP_EAXIv                    = 0x3D,
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         PRE_REX                         = 0x40,
 #endif
         OP_PUSH_EAX                     = 0x50,
         OP_POP_EAX                      = 0x58,
-#if WTF_CPU_X86
+#ifdef JS_CODEGEN_X86
         OP_PUSHA                        = 0x60,
         OP_POPA                         = 0x61,
 #endif
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         OP_MOVSXD_GvEv                  = 0x63,
 #endif
         PRE_OPERAND_SIZE                = 0x66,
@@ -298,12 +294,16 @@ private:
         OP2_UCOMISD_VsdWsd  = 0x2E,
         OP2_MOVMSKPD_EdVd   = 0x50,
         OP2_ADDSD_VsdWsd    = 0x58,
+        OP2_ADDPS_VpsWps    = 0x58,
         OP2_MULSD_VsdWsd    = 0x59,
+        OP2_MULPS_VpsWps    = 0x59,
         OP2_CVTSS2SD_VsdEd  = 0x5A,
         OP2_CVTSD2SS_VsdEd  = 0x5A,
         OP2_SUBSD_VsdWsd    = 0x5C,
+        OP2_SUBPS_VpsWps    = 0x5C,
         OP2_MINSD_VsdWsd    = 0x5D,
         OP2_DIVSD_VsdWsd    = 0x5E,
+        OP2_DIVPS_VpsWps    = 0x5E,
         OP2_MAXSD_VsdWsd    = 0x5F,
         OP2_SQRTSD_VsdWsd   = 0x51,
         OP2_SQRTSS_VssWss   = 0x51,
@@ -328,7 +328,10 @@ private:
         OP2_MOVZX_GvEw      = 0xB7,
         OP2_XADD_EvGv       = 0xC1,
         OP2_PEXTRW_GdUdIb   = 0xC5,
-        OP2_SHUFPS_VpsWpsIb = 0xC6
+        OP2_SHUFPS_VpsWpsIb = 0xC6,
+        OP2_PXORDQ_VdqWdq   = 0xEF,
+        OP2_PSUBD_VdqWdq    = 0xFA,
+        OP2_PADDD_VdqWdq    = 0xFE
     } TwoByteOpcodeID;
 
     typedef enum {
@@ -513,7 +516,7 @@ public:
 
     // Arithmetic operations:
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void adcl_im(int imm, const void* addr)
     {
         FIXME_INSN_PRINTING;
@@ -573,7 +576,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void addq_rr(RegisterID src, RegisterID dst)
     {
         spew("addq       %s, %s",
@@ -661,6 +664,124 @@ public:
         m_formatter.twoByteOp(OP2_XADD_EvGv, srcdest, base, index, scale, offset);
     }
 
+    void paddd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("paddd      %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, (RegisterID)src);
+    }
+    void paddd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("paddd      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, base, offset);
+    }
+    void paddd_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("paddd      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PADDD_VdqWdq, (RegisterID)dst, address);
+    }
+
+    void psubd_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("psubd      %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, (RegisterID)src);
+    }
+    void psubd_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("psubd      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, base, offset);
+    }
+    void psubd_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("psubd      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSUBD_VdqWdq, (RegisterID)dst, address);
+    }
+
+    void addps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("addps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void addps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("addps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void addps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("addps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ADDPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void subps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("subps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void subps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("subps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void subps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("subps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_SUBPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void mulps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("mulps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void mulps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("mulps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void mulps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("mulps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MULPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void divps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("divps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void divps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("divps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void divps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("divps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, address);
+    }
+
     void andl_rr(RegisterID src, RegisterID dst)
     {
         spew("andl       %s, %s",
@@ -707,7 +828,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void andq_rr(RegisterID src, RegisterID dst)
     {
         spew("andq       %s, %s",
@@ -872,7 +993,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void negq_r(RegisterID dst)
     {
         spew("negq       %s", nameIReg(8,dst));
@@ -963,7 +1084,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void subq_rr(RegisterID src, RegisterID dst)
     {
         spew("subq       %s, %s",
@@ -1064,7 +1185,7 @@ public:
         }
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void xorq_rr(RegisterID src, RegisterID dst)
     {
         spew("xorq       %s, %s",
@@ -1137,7 +1258,7 @@ public:
         m_formatter.oneByteOp(OP_GROUP2_EvCL, GROUP2_OP_SHL, dst);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void sarq_CLr(RegisterID dst)
     {
         FIXME_INSN_PRINTING;
@@ -1342,7 +1463,7 @@ public:
         m_formatter.immediate32(imm);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void cmpq_rr(RegisterID src, RegisterID dst)
     {
         spew("cmpq       %s, %s",
@@ -1549,7 +1670,7 @@ public:
         m_formatter.immediate32(imm);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void testq_rr(RegisterID src, RegisterID dst)
     {
         spew("testq      %s, %s",
@@ -1654,7 +1775,7 @@ public:
         m_formatter.oneByteOp(OP_XCHG_EvGv, src, dst);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void xchgq_rr(RegisterID src, RegisterID dst)
     {
         spew("xchgq      %s, %s",
@@ -1694,7 +1815,7 @@ public:
         m_formatter.oneByteOp(OP_MOV_EvGv, src, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movw_rm(RegisterID src, const void* addr)
     {
         spew("movw       %s, %p",
@@ -1729,7 +1850,7 @@ public:
     {
         spew("movl       %p, %%eax", addr);
         m_formatter.oneByteOp(OP_MOV_EAXOv);
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
 #else
         m_formatter.immediate32(reinterpret_cast<int>(addr));
@@ -1840,14 +1961,14 @@ public:
     {
         spew("movl       %%eax, %p", addr);
         m_formatter.oneByteOp(OP_MOV_OvEAX);
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         m_formatter.immediate64(reinterpret_cast<int64_t>(addr));
 #else
         m_formatter.immediate32(reinterpret_cast<int>(addr));
 #endif
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void movq_rr(RegisterID src, RegisterID dst)
     {
         spew("movq       %s, %s",
@@ -2054,7 +2175,7 @@ public:
         m_formatter.oneByteOp8(OP_MOV_EbGv, src, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movb_rm(RegisterID src, const void* addr)
     {
         spew("movb       %s, %p",
@@ -2084,7 +2205,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movzbl_mr(const void* addr, RegisterID dst)
     {
         spew("movzbl     %p, %s",
@@ -2114,7 +2235,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVSX_GvEb, dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movsbl_mr(const void* addr, RegisterID dst)
     {
         spew("movsbl     %p, %s",
@@ -2151,7 +2272,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVZX_GvEw, dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movzwl_mr(const void* addr, RegisterID dst)
     {
         spew("movzwl     %p, %s",
@@ -2181,7 +2302,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movswl_mr(const void* addr, RegisterID dst)
     {
         spew("movswl     %p, %s",
@@ -2210,7 +2331,7 @@ public:
              PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_LEA, dst, base, offset);
     }
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void leaq_mr(int offset, RegisterID base, RegisterID dst)
     {
         spew("leaq       %s0x%x(%s), %s",
@@ -2295,7 +2416,7 @@ public:
         m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_JMPN, base, index, scale, offset);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void jmp_rip(int ripOffset) {
         // rip-relative addressing.
         spew("jmp        *%d(%%rip)", ripOffset);
@@ -2482,7 +2603,7 @@ public:
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void cvtsq2sd_rr(RegisterID src, XMMRegisterID dst)
     {
         spew("cvtsq2sd   %s, %s",
@@ -2531,7 +2652,7 @@ public:
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, base, index, scale, offset);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void cvtsi2sd_mr(const void* address, XMMRegisterID dst)
     {
         spew("cvtsi2sd   %p, %s",
@@ -2557,7 +2678,7 @@ public:
         m_formatter.twoByteOp(OP2_CVTTSD2SI_GdWsd, dst, (RegisterID)src);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void cvttsd2sq_rr(XMMRegisterID src, RegisterID dst)
     {
         spew("cvttsd2si  %s, %s",
@@ -2588,6 +2709,14 @@ public:
              nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_MOVD_VdEd, (RegisterID)dst, src);
+    }
+
+    void pxor_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("pxor       %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PXORDQ_VdqWdq, (RegisterID)dst, (RegisterID)src);
     }
 
     void pshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
@@ -2673,7 +2802,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVD_EdVd, (RegisterID)src, dst);
     }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
     void movq_rr(XMMRegisterID src, RegisterID dst)
     {
         spew("movq       %s, %s",
@@ -2808,7 +2937,7 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
     void movsd_mr(const void* address, XMMRegisterID dst)
     {
         spew("movsd      %p, %s",
@@ -2931,6 +3060,40 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_MOVAPD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
+
+#ifdef JS_CODEGEN_X64
+    JmpSrc movaps_ripr(XMMRegisterID dst)
+    {
+        spew("movaps     ?(%%rip), %s",
+             nameFPReg(dst));
+        m_formatter.twoByteRipOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, 0);
+        return JmpSrc(m_formatter.size());
+    }
+
+    JmpSrc movdqa_ripr(XMMRegisterID dst)
+    {
+        spew("movdqa     ?(%%rip), %s",
+             nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteRipOp(OP2_MOVDQ_VdqWdq, (RegisterID)dst, 0);
+        return JmpSrc(m_formatter.size());
+    }
+#else
+    void movaps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("movaps     %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MOVAPS_VsdWsd, (RegisterID)dst, address);
+    }
+
+    void movdqa_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("movdqa     %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_MOVDQ_VdqWdq, (RegisterID)dst, address);
+    }
+#endif // JS_CODEGEN_X64
 
     void movdqu_rm(XMMRegisterID src, int offset, RegisterID base)
     {
@@ -3288,7 +3451,7 @@ public:
         m_formatter.prefix(PRE_PREDICT_BRANCH_NOT_TAKEN);
     }
 
-#if WTF_CPU_X86
+#ifdef JS_CODEGEN_X86
     void pusha()
     {
         spew("pusha");
@@ -3344,6 +3507,19 @@ public:
     {
         spew(".float %.20f", f);
         m_formatter.floatConstant(f);
+    }
+
+    void int32x4Constant(const int32_t s[4])
+    {
+        spew(".int32x4 (%d %d %d %d)", s[0], s[1], s[2], s[3]);
+        MOZ_ASSERT(m_formatter.isAligned(16));
+        m_formatter.int32x4Constant(s);
+    }
+    void float32x4Constant(const float f[4])
+    {
+        spew(".float32x4 (%f %f %f %f)", f[0], f[1], f[2], f[3]);
+        MOZ_ASSERT(m_formatter.isAligned(16));
+        m_formatter.float32x4Constant(f);
     }
 
     void int64Constant(int64_t i)
@@ -3468,7 +3644,7 @@ public:
         staticSpew("##repatchLoadPtrToLEA ((where=%p))",
                    where);
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         // On x86-64 pointer memory accesses require a 64-bit operand, and as such a REX prefix.
         // Skip over the prefix byte.
         where = reinterpret_cast<char*>(where) + 1;
@@ -3480,7 +3656,7 @@ public:
     {
         staticSpew("##repatchLEAToLoadPtr ((where=%p))",
                    where);
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         // On x86-64 pointer memory accesses require a 64-bit operand, and as such a REX prefix.
         // Skip over the prefix byte.
         where = reinterpret_cast<char*>(where) + 1;
@@ -3582,7 +3758,7 @@ public:
     // a no-op on x86, but on x64 it asserts that the address is actually
     // a valid address immediate.
     static int32_t addressImmediate(const void *address) {
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         // x64's 64-bit addresses don't all fit in the 32-bit immediate.
         MOZ_ASSERT(isAddressImmediate(address));
 #endif
@@ -3696,7 +3872,7 @@ private:
             m_buffer.putByteUnchecked(opcode);
             memoryModRM_disp32(reg, address);
         }
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         void oneByteRipOp(OneByteOpcodeID opcode, int reg, int ripOffset)
         {
             m_buffer.ensureSpace(maxInstructionSize);
@@ -3797,7 +3973,7 @@ private:
             memoryModRM(reg, base, offset);
         }
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         // Quad-word-sized operands:
         //
         // Used to format 64-bit operantions, planting a REX.w prefix.
@@ -3883,7 +4059,7 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, GroupOpcodeID groupOp, RegisterID rm)
         {
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
             MOZ_ASSERT(!byteRegRequiresRex(rm));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
@@ -3903,7 +4079,7 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
         {
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
             MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
@@ -3914,7 +4090,7 @@ private:
 
         void oneByteOp8_disp32(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
         {
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
             MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
@@ -3925,7 +4101,7 @@ private:
 
         void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, RegisterID index, int scale, int offset)
         {
-#if !WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X86
             MOZ_ASSERT(!byteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
@@ -4001,7 +4177,7 @@ private:
         void jumpTablePointer(uintptr_t ptr)
         {
             m_buffer.ensureSpace(sizeof(uintptr_t));
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             m_buffer.putInt64Unchecked(ptr);
 #else
             m_buffer.putIntUnchecked(ptr);
@@ -4030,10 +4206,28 @@ private:
             m_buffer.putIntUnchecked(u.u32);
         }
 
+        void int32x4Constant(const int32_t s[4])
+        {
+            for (size_t i = 0; i < 4; ++i)
+                int32Constant(s[i]);
+        }
+
+        void float32x4Constant(const float s[4])
+        {
+            for (size_t i = 0; i < 4; ++i)
+                floatConstant(s[i]);
+        }
+
         void int64Constant(int64_t i)
         {
             m_buffer.ensureSpace(sizeof(int64_t));
             m_buffer.putInt64Unchecked(i);
+        }
+
+        void int32Constant(int32_t i)
+        {
+            m_buffer.ensureSpace(sizeof(int32_t));
+            m_buffer.putIntUnchecked(i);
         }
 
         // Administrative methods:
@@ -4062,7 +4256,7 @@ private:
         static const RegisterID noBase = X86Registers::ebp;
         static const RegisterID hasSib = X86Registers::esp;
         static const RegisterID noIndex = X86Registers::esp;
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
         static const RegisterID noBase2 = X86Registers::r13;
         static const RegisterID hasSib2 = X86Registers::r12;
 
@@ -4136,7 +4330,7 @@ private:
         void memoryModRM(int reg, RegisterID base, int offset)
         {
             // A base of esp or r12 would be interpreted as a sib, so force a sib with no index & put the base in there.
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             if ((base == hasSib) || (base == hasSib2))
 #else
             if (base == hasSib)
@@ -4152,7 +4346,7 @@ private:
                     m_buffer.putIntUnchecked(offset);
                 }
             } else {
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
                 if (!offset && (base != noBase) && (base != noBase2))
 #else
                 if (!offset && (base != noBase))
@@ -4171,7 +4365,7 @@ private:
         void memoryModRM_disp32(int reg, RegisterID base, int offset)
         {
             // A base of esp or r12 would be interpreted as a sib, so force a sib with no index & put the base in there.
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             if ((base == hasSib) || (base == hasSib2))
 #else
             if (base == hasSib)
@@ -4189,7 +4383,7 @@ private:
         {
             MOZ_ASSERT(index != noIndex);
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             if (!offset && (base != noBase) && (base != noBase2))
 #else
             if (!offset && (base != noBase))
@@ -4230,7 +4424,7 @@ private:
         {
             int32_t disp = addressImmediate(address);
 
-#if WTF_CPU_X86_64
+#ifdef JS_CODEGEN_X64
             // On x64-64, non-RIP-relative absolute mode requires a SIB.
             putModRmSib(ModRmMemoryNoDisp, reg, noBase, noIndex, 0);
 #else
@@ -4250,7 +4444,5 @@ private:
 };
 
 } // namespace JSC
-
-#endif // ENABLE(ASSEMBLER) && CPU(X86)
 
 #endif /* assembler_assembler_X86Assembler_h */

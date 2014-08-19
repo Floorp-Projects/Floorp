@@ -10,6 +10,7 @@
 #include "jsapi.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
+#include "jshashutil.h"
 #include "jsnum.h"
 
 #include "gc/Marking.h"
@@ -562,7 +563,7 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
 SavedFrame *
 SavedStacks::getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup lookup)
 {
-    SavedFrame::Set::AddPtr p = frames.lookupForAdd(lookup);
+    DependentAddPtr<SavedFrame::Set> p(cx, frames, lookup);
     if (p)
         return *p;
 
@@ -570,7 +571,7 @@ SavedStacks::getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup looku
     if (!frame)
         return nullptr;
 
-    if (!frames.relookupOrAdd(p, lookup, frame))
+    if (!p.add(cx, frames, lookup, frame))
         return nullptr;
 
     return frame;

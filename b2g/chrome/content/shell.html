@@ -36,6 +36,7 @@
 </head>
   <body id="container">
 #ifdef FXOS_SIMULATOR
+#ifndef MOZ_MULET
     <!--
      Some additional buttons are displayed on desktop to fake hardware buttons.
     -->
@@ -43,6 +44,7 @@
       <button id="home-button"></button>
       <button id="rotate-button"></button>
     </footer>
+#endif
 #endif
 #ifdef MOZ_WIDGET_COCOA
     <!--

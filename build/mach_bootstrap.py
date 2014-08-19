@@ -74,6 +74,7 @@ MACH_MODULES = [
     'python/mozboot/mozboot/mach_commands.py',
     'python/mozbuild/mozbuild/mach_commands.py',
     'python/mozbuild/mozbuild/frontend/mach_commands.py',
+    'services/common/tests/mach_commands.py',
     'testing/mach_commands.py',
     'testing/marionette/mach_commands.py',
     'testing/mochitest/mach_commands.py',
@@ -119,7 +120,7 @@ CATEGORIES = {
     },
     'disabled': {
         'short': 'Disabled',
-        'long': 'These commands are unavailable for your current context, run "mach <command>" to see why.',
+        'long': 'The disabled commands are hidden by default. Use -v to display them. These commands are unavailable for your current context, run "mach <command>" to see why.',
         'priority': 0,
     }
 }

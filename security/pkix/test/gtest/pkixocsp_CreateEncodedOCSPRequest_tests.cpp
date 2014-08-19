@@ -114,39 +114,29 @@ protected:
   }
 
   // The resultant issuerDER and issuerSPKI are owned by the arena.
-  SECStatus MakeIssuerCertIDComponents(const char* issuerASCII,
-                                       /*out*/ Input& issuerDER,
-                                       /*out*/ Input& issuerSPKI)
+  void MakeIssuerCertIDComponents(const char* issuerASCII,
+                                  /*out*/ Input& issuerDER,
+                                  /*out*/ Input& issuerSPKI)
   {
     const SECItem* issuerDERSECItem = ASCIIToDERName(arena.get(), issuerASCII);
-    if (!issuerDERSECItem) {
-      return SECFailure;
-    }
-    if (issuerDER.Init(issuerDERSECItem->data, issuerDERSECItem->len)
-          != Success) {
-      return SECFailure;
-    }
+    ASSERT_TRUE(issuerDERSECItem);
+    ASSERT_EQ(Success,
+              issuerDER.Init(issuerDERSECItem->data, issuerDERSECItem->len));
 
     ScopedSECKEYPublicKey issuerPublicKey;
     ScopedSECKEYPrivateKey issuerPrivateKey;
-    if (GenerateKeyPair(issuerPublicKey, issuerPrivateKey) != SECSuccess) {
-      return SECFailure;
-    }
+    ASSERT_EQ(Success, GenerateKeyPair(issuerPublicKey, issuerPrivateKey));
+
     ScopedSECItem issuerSPKIOriginal(
       SECKEY_EncodeDERSubjectPublicKeyInfo(issuerPublicKey.get()));
-    if (!issuerSPKIOriginal) {
-      return SECFailure;
-    }
-    SECItem issuerSPKICopy;
-    if (SECITEM_CopyItem(arena.get(), &issuerSPKICopy,
-                         issuerSPKIOriginal.get()) != SECSuccess) {
-      return SECFailure;
-    }
-    if (issuerSPKI.Init(issuerSPKICopy.data, issuerSPKICopy.len) != Success) {
-      return SECFailure;
-    }
+    ASSERT_TRUE(issuerSPKIOriginal);
 
-    return SECSuccess;
+    SECItem issuerSPKICopy;
+    ASSERT_EQ(SECSuccess,
+              SECITEM_CopyItem(arena.get(), &issuerSPKICopy,
+                               issuerSPKIOriginal.get()));
+    ASSERT_EQ(Success,
+              issuerSPKI.Init(issuerSPKICopy.data, issuerSPKICopy.len));
   }
 
   CreateEncodedOCSPRequestTrustDomain trustDomain;
@@ -158,8 +148,7 @@ TEST_F(pkixocsp_CreateEncodedOCSPRequest, ChildCertLongSerialNumberTest)
 {
   Input issuerDER;
   Input issuerSPKI;
-  ASSERT_EQ(SECSuccess,
-            MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI));
+  MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI);
   Input serialNumber;
   ASSERT_EQ(Success, serialNumber.Init(unsupportedLongSerialNumber->data,
                                        unsupportedLongSerialNumber->len));
@@ -178,8 +167,7 @@ TEST_F(pkixocsp_CreateEncodedOCSPRequest, LongestSupportedSerialNumberTest)
 {
   Input issuerDER;
   Input issuerSPKI;
-  ASSERT_EQ(SECSuccess,
-            MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI));
+  MakeIssuerCertIDComponents("CN=CA", issuerDER, issuerSPKI);
   Input serialNumber;
   ASSERT_EQ(Success, serialNumber.Init(longestRequiredSerialNumber->data,
                                        longestRequiredSerialNumber->len));

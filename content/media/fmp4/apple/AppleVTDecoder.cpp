@@ -298,6 +298,12 @@ AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
   // Unlock the returned image data.
   CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
 
+  if (!data) {
+    NS_ERROR("Couldn't create VideoData for frame");
+    mCallback->Error();
+    return NS_ERROR_FAILURE;
+  }
+
   // Frames come out in DTS order but we need to output them
   // in composition order.
   mReorderQueue.Push(data.forget());

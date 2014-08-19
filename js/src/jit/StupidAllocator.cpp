@@ -51,8 +51,7 @@ StupidAllocator::init()
         for (LInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
             for (size_t j = 0; j < ins->numDefs(); j++) {
                 LDefinition *def = ins->getDef(j);
-                if (def->policy() != LDefinition::PASSTHROUGH)
-                    virtualRegisters[def->virtualRegister()] = def;
+                virtualRegisters[def->virtualRegister()] = def;
             }
 
             for (size_t j = 0; j < ins->numTemps(); j++) {
@@ -370,8 +369,7 @@ StupidAllocator::allocateForInstruction(LInstruction *ins)
     }
     for (size_t i = 0; i < ins->numDefs(); i++) {
         LDefinition *def = ins->getDef(i);
-        if (def->policy() != LDefinition::PASSTHROUGH)
-            allocateForDefinition(ins, def);
+        allocateForDefinition(ins, def);
     }
 
     // Allocate for remaining inputs which do not need to be in registers.

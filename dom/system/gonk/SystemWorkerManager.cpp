@@ -27,12 +27,12 @@
 #include "AutoMounter.h"
 #include "TimeZoneSettingObserver.h"
 #include "AudioManager.h"
+#include "mozilla/dom/ScriptSettings.h"
 #ifdef MOZ_B2G_RIL
 #include "mozilla/ipc/Ril.h"
 #endif
 #include "mozilla/ipc/KeyStore.h"
 #include "nsIObserverService.h"
-#include "nsCxPusher.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsRadioInterfaceLayer.h"

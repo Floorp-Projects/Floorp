@@ -9,18 +9,52 @@
 #ifndef mozilla_dom_ScriptSettings_h
 #define mozilla_dom_ScriptSettings_h
 
-#include "nsCxPusher.h"
 #include "MainThreadUtils.h"
 #include "nsIGlobalObject.h"
 #include "nsIPrincipal.h"
 
 #include "mozilla/Maybe.h"
 
+#include "jsapi.h"
+
 class nsPIDOMWindow;
 class nsGlobalWindow;
+class nsIScriptContext;
 
 namespace mozilla {
 namespace dom {
+
+// For internal use only - use AutoJSAPI instead.
+namespace danger {
+
+/**
+ * Fundamental cx pushing class. All other cx pushing classes are implemented
+ * in terms of this class.
+ */
+class MOZ_STACK_CLASS AutoCxPusher
+{
+public:
+  explicit AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
+  ~AutoCxPusher();
+
+  nsIScriptContext* GetScriptContext() { return mScx; }
+
+  // Returns true if this AutoCxPusher performed the push that is currently at
+  // the top of the cx stack.
+  bool IsStackTop() const;
+
+private:
+  mozilla::Maybe<JSAutoRequest> mAutoRequest;
+  mozilla::Maybe<JSAutoCompartment> mAutoCompartment;
+  nsCOMPtr<nsIScriptContext> mScx;
+  uint32_t mStackDepthAfterPush;
+#ifdef DEBUG
+  JSContext* mPushedContext;
+  unsigned mCompartmentDepthOnEntry;
+#endif
+};
+
+} /* namespace danger */
 
 /*
  * System-wide setup/teardown routines. Init and Destroy should be invoked
@@ -71,12 +105,13 @@ class ScriptSettingsStackEntry {
   friend class ScriptSettingsStack;
 
 public:
-  ScriptSettingsStackEntry(nsIGlobalObject *aGlobal, bool aCandidate);
   ~ScriptSettingsStackEntry();
 
   bool NoJSAPI() { return !mGlobalObject; }
 
 protected:
+  ScriptSettingsStackEntry(nsIGlobalObject *aGlobal, bool aCandidate);
+
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
   bool mIsCandidateEntryPoint;
 
@@ -122,7 +157,7 @@ private:
  * fail. This prevents system code from accidentally triggering script
  * execution at inopportune moments via surreptitious getters and proxies.
  */
-class AutoJSAPI {
+class MOZ_STACK_CLASS AutoJSAPI {
 public:
   // Trivial constructor. One of the Init functions must be called before
   // accessing the JSContext through cx().
@@ -172,7 +207,7 @@ public:
     return mCx;
   }
 
-  bool CxPusherIsStackTop() const { return mCxPusher.ref().IsStackTop(); }
+  bool CxPusherIsStackTop() const { return mCxPusher->IsStackTop(); }
 
 protected:
   // Protected constructor, allowing subclasses to specify a particular cx to
@@ -183,7 +218,7 @@ protected:
   AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, JSContext* aCx);
 
 private:
-  mozilla::Maybe<AutoCxPusher> mCxPusher;
+  mozilla::Maybe<danger::AutoCxPusher> mCxPusher;
   mozilla::Maybe<JSAutoNullableCompartment> mAutoNullableCompartment;
   JSContext *mCx;
 
@@ -200,6 +235,8 @@ public:
                   bool aIsMainThread = NS_IsMainThread(),
                   // Note: aCx is mandatory off-main-thread.
                   JSContext* aCx = nullptr);
+
+  ~AutoEntryScript();
 
   void SetWebIDLCallerPrincipal(nsIPrincipal *aPrincipal) {
     mWebIDLCallerPrincipal = aPrincipal;
@@ -239,10 +276,79 @@ class AutoNoJSAPI : protected ScriptSettingsStackEntry {
 public:
   explicit AutoNoJSAPI(bool aIsMainThread = NS_IsMainThread());
 private:
-  mozilla::Maybe<AutoCxPusher> mCxPusher;
+  mozilla::Maybe<danger::AutoCxPusher> mCxPusher;
 };
 
 } // namespace dom
+
+/**
+ * Use AutoJSContext when you need a JS context on the stack but don't have one
+ * passed as a parameter. AutoJSContext will take care of finding the most
+ * appropriate JS context and release it when leaving the stack.
+ */
+class MOZ_STACK_CLASS AutoJSContext {
+public:
+  explicit AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  operator JSContext*() const;
+
+protected:
+  explicit AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+  // We need this Init() method because we can't use delegating constructor for
+  // the moment. It is a C++11 feature and we do not require C++11 to be
+  // supported to be able to compile Gecko.
+  void Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+  JSContext* mCx;
+  dom::AutoJSAPI mJSAPI;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/**
+ * Use ThreadsafeAutoJSContext when you want an AutoJSContext but might be
+ * running on a worker thread.
+ */
+class MOZ_STACK_CLASS ThreadsafeAutoJSContext {
+public:
+  explicit ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  operator JSContext*() const;
+
+private:
+  JSContext* mCx; // Used on workers.  Null means mainthread.
+  Maybe<JSAutoRequest> mRequest; // Used on workers.
+  Maybe<AutoJSContext> mAutoJSContext; // Used on main thread.
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/**
+ * AutoSafeJSContext is similar to AutoJSContext but will only return the safe
+ * JS context. That means it will never call nsContentUtils::GetCurrentJSContext().
+ *
+ * Note - This is deprecated. Please use AutoJSAPI instead.
+ */
+class MOZ_STACK_CLASS AutoSafeJSContext : public AutoJSContext {
+public:
+  explicit AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+private:
+  JSAutoCompartment mAc;
+};
+
+/**
+ * Like AutoSafeJSContext but can be used safely on worker threads.
+ */
+class MOZ_STACK_CLASS ThreadsafeAutoSafeJSContext {
+public:
+  explicit ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  operator JSContext*() const;
+
+private:
+  JSContext* mCx; // Used on workers.  Null means mainthread.
+  Maybe<JSAutoRequest> mRequest; // Used on workers.
+  Maybe<AutoSafeJSContext> mAutoSafeJSContext; // Used on main thread.
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+
 } // namespace mozilla
 
 #endif // mozilla_dom_ScriptSettings_h

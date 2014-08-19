@@ -8,7 +8,6 @@
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
-#include "nsCxPusher.h"
 
 namespace mozilla {
 namespace dom {

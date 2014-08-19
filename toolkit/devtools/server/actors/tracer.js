@@ -284,6 +284,12 @@ TracerActor.prototype = {
       };
     }
 
+    if (this._parent.threadActor && aFrame.script) {
+      packet.blackBoxed = this._parent.threadActor.sources.isBlackBoxed(aFrame.script.url);
+    } else {
+      packet.blackBoxed = false;
+    }
+
     if (this._requestsForTraceType.callsite
         && aFrame.older
         && aFrame.older.script) {

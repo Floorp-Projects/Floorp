@@ -74,6 +74,7 @@ class Element;
 class EventHandlerNonNull;
 class OnErrorEventHandlerNonNull;
 template<typename T> class Optional;
+class Text;
 class TextOrElementOrDocument;
 struct DOMPointInit;
 } // namespace dom
@@ -249,8 +250,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x3bd80589, 0xa6f4, 0x4a57, \
-  { 0xab, 0x38, 0xa0, 0x5b, 0x77, 0x4c, 0x3e, 0xa8 } }
+{ 0x3a60353e, 0x04e5, 0x49ca, \
+  { 0x84, 0x1c, 0x59, 0xc6, 0xde, 0xe6, 0x36, 0xcc } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -425,6 +426,13 @@ public:
   {
     return const_cast<nsINode*>(this)->AsContent();
   }
+
+  /**
+   * Return this node as Text if it is one, otherwise null.  This is defined
+   * inline in Text.h.
+   */
+  mozilla::dom::Text* GetAsText();
+  const mozilla::dom::Text* GetAsText() const;
 
   virtual nsIDOMNode* AsDOMNode() = 0;
 

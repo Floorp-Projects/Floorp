@@ -10,6 +10,7 @@ extern "C" {
 #include "stun.h"
 }
 
+#include "mozilla/Attributes.h"
 #include "mozilla/net/DNS.h"
 #include "stun_udp_socket_filter.h"
 #include "nr_socket_prsock.h"
@@ -18,7 +19,7 @@ namespace {
 
 class NetAddressAdapter {
  public:
-  NetAddressAdapter(const mozilla::net::NetAddr& netaddr)
+  MOZ_IMPLICIT NetAddressAdapter(const mozilla::net::NetAddr& netaddr)
     : addr_(ntohl(netaddr.inet.ip)),
       port_(ntohs(netaddr.inet.port)) {
     MOZ_ASSERT(netaddr.raw.family == AF_INET);
@@ -44,7 +45,7 @@ class PendingSTUNRequest {
       net_addr_(netaddr),
       is_id_set_(true) {}
 
-  PendingSTUNRequest(const NetAddressAdapter& netaddr)
+  MOZ_IMPLICIT PendingSTUNRequest(const NetAddressAdapter& netaddr)
     : id_(),
       net_addr_(netaddr),
       is_id_set_(false) {}

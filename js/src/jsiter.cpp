@@ -381,7 +381,7 @@ js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
     size_t len = props.length();
     size_t idsz = len * sizeof(jsid);
     size_t sz = (sizeof(JSIdArray) - sizeof(jsid)) + idsz;
-    JSIdArray *ida = static_cast<JSIdArray *>(cx->malloc_(sz));
+    JSIdArray *ida = reinterpret_cast<JSIdArray *>(cx->zone()->pod_malloc<uint8_t>(sz));
     if (!ida)
         return false;
 
@@ -499,12 +499,14 @@ NativeIterator *
 NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVector &props)
 {
     size_t plength = props.length();
-    NativeIterator *ni = (NativeIterator *)
-        cx->malloc_(sizeof(NativeIterator)
-                    + plength * sizeof(JSString *)
-                    + slength * sizeof(Shape *));
-    if (!ni)
+    size_t nbytes = sizeof(NativeIterator) +
+                    plength * sizeof(JSString *) +
+                    slength * sizeof(Shape *);
+    uint8_t *bytes = cx->zone()->pod_malloc<uint8_t>(nbytes);
+    if (!bytes)
         return nullptr;
+
+    NativeIterator *ni = (NativeIterator *)bytes;
     AutoValueVector strings(cx);
     ni->props_array = ni->props_cursor = (HeapPtrFlatString *) (ni + 1);
     ni->props_end = ni->props_array + plength;
@@ -1571,6 +1573,8 @@ FinalizeGenerator(FreeOp *fop, JSObject *obj)
 static void
 MarkGeneratorFrame(JSTracer *trc, JSGenerator *gen)
 {
+    gen->obj = MaybeForwarded(gen->obj.get());
+    MarkObject(trc, &gen->obj, "Generator Object");
     MarkValueRange(trc,
                    HeapValueify(gen->fp->generatorArgsSnapshotBegin()),
                    HeapValueify(gen->fp->generatorArgsSnapshotEnd()),

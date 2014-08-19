@@ -92,6 +92,21 @@ function getHealthReportProviderValues(reporter, day=null) {
   });
 }
 
+/*
+ * Ensure that the notification has been displayed to the user therefore having
+ * reporter._policy.userNotifiedOfCurrentPolicy === true, which will allow for a
+ * successful data upload.
+ * @param  {HealthReporter} reporter
+ * @return {Promise}
+ */
+function ensureUserNotified (reporter) {
+  return Task.spawn(function* ensureUserNotified () {
+    reporter._policy.ensureUserNotified();
+    yield reporter._policy._listener.lastNotifyRequest.deferred.promise;
+    do_check_true(reporter._policy.userNotifiedOfCurrentPolicy);
+  });
+}
+
 function run_test() {
   run_next_test();
 }
@@ -673,9 +688,8 @@ add_task(function test_recurring_daily_pings() {
 
     let policy = reporter._policy;
 
-    defineNow(policy, policy._futureDate(-24 * 60 * 68 * 1000));
-    policy.recordUserAcceptance();
     defineNow(policy, policy.nextDataSubmissionDate);
+    yield ensureUserNotified(reporter);
     let promise = policy.checkStateAndTrigger();
     do_check_neq(promise, null);
     yield promise;
@@ -712,8 +726,8 @@ add_task(function test_request_remote_data_deletion() {
   try {
     let policy = reporter._policy;
     defineNow(policy, policy._futureDate(-24 * 60 * 60 * 1000));
-    policy.recordUserAcceptance();
     defineNow(policy, policy.nextDataSubmissionDate);
+    yield ensureUserNotified(reporter);
     yield policy.checkStateAndTrigger();
     let id = reporter.lastSubmitID;
     do_check_neq(id, null);
@@ -800,16 +814,12 @@ add_task(function test_policy_accept_reject() {
   try {
     let policy = reporter._policy;
 
-    do_check_false(policy.dataSubmissionPolicyAccepted);
+    do_check_eq(policy.dataSubmissionPolicyNotifiedDate.getTime(), 0);
+    do_check_true(policy.dataSubmissionPolicyAcceptedVersion < DATAREPORTING_POLICY_VERSION);
     do_check_false(reporter.willUploadData);
 
-    policy.recordUserAcceptance();
-    do_check_true(policy.dataSubmissionPolicyAccepted);
+    yield ensureUserNotified(reporter);
     do_check_true(reporter.willUploadData);
-
-    policy.recordUserRejection();
-    do_check_false(policy.dataSubmissionPolicyAccepted);
-    do_check_false(reporter.willUploadData);
   } finally {
     yield reporter._shutdown();
     yield shutdownServer(server);
@@ -940,9 +950,9 @@ add_task(function test_upload_on_init_failure() {
     },
   });
 
-  reporter._policy.recordUserAcceptance();
   let error = false;
   try {
+    yield ensureUserNotified(reporter);
     yield reporter.init();
   } catch (ex) {
     error = true;
@@ -965,6 +975,39 @@ add_task(function test_upload_on_init_failure() {
 
   yield reporter._shutdown();
   yield shutdownServer(server);
+});
+
+// Simulate a SQLite write error during upload.
+add_task(function* test_upload_with_provider_record_failure() {
+  let [reporter, server] = yield getReporterAndServer("upload_with_provider_record_failure");
+  try {
+    // Poison the FHR provider to simulate database error or some other
+    // catastrophic failure. We do this because this provider is written to
+    // during upload and failure to catch errors would result in upload not
+    // occurring.
+    let provider = reporter.getProvider("org.mozilla.healthreport");
+
+    let wrappedProto = {
+      __proto__: HealthReportProvider.prototype,
+
+      recordEvent: function (event, date=new Date()) {
+        this._log.warn("Simulating error during write");
+        throw new Error("Fake error during recordEvent.");
+      },
+    };
+    provider.__proto__ = wrappedProto;
+
+    let deferred = Promise.defer();
+    let now = new Date();
+    let request = new DataSubmissionRequest(deferred, now);
+    reporter._state.addRemoteID("foo");
+    reporter.requestDataUpload(request);
+    yield deferred.promise;
+    do_check_eq(request.state, request.SUBMISSION_SUCCESS);
+  } finally {
+    yield reporter._shutdown();
+    yield shutdownServer(server);
+  }
 });
 
 add_task(function test_state_prefs_conversion_simple() {

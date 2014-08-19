@@ -64,8 +64,10 @@ addLoadEvent(function() {
   sourceSP.connect(sp);
   sp.connect(context.destination);
   var lastPlaybackTime = 0;
-  sp.onaudioprocess = function(e) {
-    isnot(buffer, null, "The audioprocess handler for sourceSP must be run at this point");
+
+  var emptyBuffer = context.createBuffer(1, 2048, context.sampleRate);
+
+  function checkAudioProcessingEvent(e) {
     is(e.target, sp, "Correct event target");
     ok(e.playbackTime > lastPlaybackTime, "playbackTime correctly set");
     lastPlaybackTime = e.playbackTime;
@@ -76,24 +78,21 @@ addLoadEvent(function() {
     is(e.outputBuffer.length, 2048, "Correct length for the output buffer");
     is(e.outputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the output buffer");
 
-    // Because of the initial latency added by the second script processor node,
-    // we will never see any generated audio frames in the first callback.
-    var emptyBuffer = context.createBuffer(1, 2048, context.sampleRate);
-    compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-    compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
     compareChannels(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
     compareChannels(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
+  }
+
+  sp.onaudioprocess = function(e) {
+    isnot(buffer, null, "The audioprocess handler for sourceSP must be run at this point");
+    checkAudioProcessingEvent(e);
+
+    // Because of the initial latency added by the second script processor node,
+    // we will never see any generated audio frames in the first callback.
+    compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
+    compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
 
     sp.onaudioprocess = function(e) {
-      is(e.target, sp, "Correct event target");
-      ok(e.playbackTime > lastPlaybackTime, "playbackTime correctly set");
-      lastPlaybackTime = e.playbackTime;
-      is(e.inputBuffer.numberOfChannels, 2, "Correct number of channels for the input buffer");
-      is(e.inputBuffer.length, 2048, "Correct length for the input buffer");
-      is(e.inputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the input buffer");
-      is(e.outputBuffer.numberOfChannels, 2, "Correct number of channels for the output buffer");
-      is(e.outputBuffer.length, 2048, "Correct length for the output buffer");
-      is(e.outputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the output buffer");
+      checkAudioProcessingEvent(e);
 
       var firstNonZero = findFirstNonZeroSample(e.inputBuffer);
       ok(firstNonZero <= 2048, "First non-zero sample within range");
@@ -102,8 +101,6 @@ addLoadEvent(function() {
       compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), firstNonZero);
       compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), 2048 - firstNonZero, firstNonZero, 0);
       compareChannels(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), 2048 - firstNonZero, firstNonZero, 0);
-      compareChannels(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-      compareChannels(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
 
       if (firstNonZero == 0) {
         // If we did not experience any delays, the test is done!
@@ -113,22 +110,12 @@ addLoadEvent(function() {
       } else if (firstNonZero != 2048) {
         // In case we just saw a zero buffer this time, wait one more round
         sp.onaudioprocess = function(e) {
-          is(e.target, sp, "Correct event target");
-          ok(e.playbackTime > lastPlaybackTime, "playbackTime correctly set");
-          lastPlaybackTime = e.playbackTime;
-          is(e.inputBuffer.numberOfChannels, 2, "Correct number of channels for the input buffer");
-          is(e.inputBuffer.length, 2048, "Correct length for the input buffer");
-          is(e.inputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the input buffer");
-          is(e.outputBuffer.numberOfChannels, 2, "Correct number of channels for the output buffer");
-          is(e.outputBuffer.length, 2048, "Correct length for the output buffer");
-          is(e.outputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the output buffer");
+          checkAudioProcessingEvent(e);
 
           compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), firstNonZero, 0, 2048 - firstNonZero);
           compareChannels(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), firstNonZero, 0, 2048 - firstNonZero);
           compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), undefined, firstNonZero);
           compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), undefined, firstNonZero);
-          compareChannels(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-          compareChannels(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
 
           sp.onaudioprocess = null;
 

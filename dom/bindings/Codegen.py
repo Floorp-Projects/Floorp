@@ -555,7 +555,7 @@ def CallOnUnforgeableHolder(descriptor, code, isXrayCheck=None,
               Maybe<JSAutoCompartment> ac;
               if (${isXrayCheck}) {
                 global = js::GetGlobalForObjectCrossCompartment(js::UncheckedUnwrap(proxy));
-                ac.construct(cx, global);
+                ac.emplace(cx, global);
               } else {
                 global = js::GetGlobalForObjectCrossCompartment(proxy);
               }
@@ -4338,7 +4338,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             else:
                 holderArgs = "${declName}.SetValue()"
             if holderType is not None:
-                constructHolder = CGGeneric("${holderName}.construct(%s);\n" % holderArgs)
+                constructHolder = CGGeneric("${holderName}.emplace(%s);\n" % holderArgs)
             else:
                 constructHolder = None
             # Don't need to pass those args when the holder is being constructed
@@ -5090,7 +5090,7 @@ def instantiateJSToNativeConversion(info, replacements, checkForValue=False):
                            info.declArgs else "")))
             if holderType is not None:
                 holderConstruct = CGIndenter(
-                    CGGeneric("%s.construct(%s);\n" %
+                    CGGeneric("%s.emplace(%s);\n" %
                               (originalHolderName,
                                getArgsCGThing(info.holderArgs).define() if
                                info.holderArgs else "")))
@@ -6327,13 +6327,13 @@ class CGPerSignatureCall(CGThing):
         elif descriptor.interface.isJSImplemented():
             needsUnwrap = True
             needsUnwrappedVar = True
-            argsPost.append("js::GetObjectCompartment(unwrappedObj.empty() ? obj : unwrappedObj.ref())")
+            argsPost.append("js::GetObjectCompartment(unwrappedObj ? *unwrappedObj : obj)")
         elif needScopeObject(returnType, arguments, self.extendedAttributes,
                              descriptor.wrapperCache, True,
                              idlNode.getExtendedAttribute("StoreInSlot")):
             needsUnwrap = True
             needsUnwrappedVar = True
-            argsPre.append("unwrappedObj.empty() ? obj : unwrappedObj.ref()")
+            argsPre.append("unwrappedObj ? *unwrappedObj : obj")
 
         if needsUnwrap and needsUnwrappedVar:
             # We cannot assign into obj because it's a Handle, not a
@@ -6367,7 +6367,7 @@ class CGPerSignatureCall(CGThing):
                 "bool objIsXray = xpc::WrapperFactory::IsXrayWrapper(obj);\n"))
             if needsUnwrappedVar:
                 cgThings.append(CGIfWrapper(
-                    CGGeneric("unwrappedObj.construct(cx, obj);\n"),
+                    CGGeneric("unwrappedObj.emplace(cx, obj);\n"),
                     "objIsXray"))
 
         for i in range(argConversionStartsAt, self.argCount):
@@ -6402,7 +6402,7 @@ class CGPerSignatureCall(CGThing):
                 # CrossCompartmentWrapper, but working with the C++ types, not the
                 # original list of JS::Values.
                 cgThings.append(CGGeneric("Maybe<JSAutoCompartment> ac;\n"))
-                xraySteps.append(CGGeneric("ac.construct(cx, obj);\n"))
+                xraySteps.append(CGGeneric("ac.emplace(cx, obj);\n"))
                 xraySteps.extend(
                     wrapArgIntoCurrentCompartment(arg, argname, isMember=False)
                     for arg, argname in self.getArguments())
@@ -8285,7 +8285,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
 
     if conversionInfo.holderType is not None:
         assert not ownsMembers
-        destroyHolder = "%s.destroy();\n" % holderName
+        destroyHolder = "%s.reset();\n" % holderName
     else:
         destroyHolder = ""
 
@@ -8321,7 +8321,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
             holderArgs = conversionInfo.holderArgs
             if holderArgs is None:
                 holderArgs = ""
-            initHolder = "%s.construct(%s);\n" % (holderName, holderArgs)
+            initHolder = "%s.emplace(%s);\n" % (holderName, holderArgs)
         else:
             initHolder = ""
 
@@ -11067,8 +11067,8 @@ class CGDictionary(CGThing):
                 Maybe<JS::Rooted<JSObject *> > object;
                 Maybe<JS::Rooted<JS::Value> > temp;
                 if (!isNull) {
-                  object.construct(cx, &val.toObject());
-                  temp.construct(cx);
+                  object.emplace(cx, &val.toObject());
+                  temp.emplace(cx);
                 }
                 $*{memberInits}
                 """,
@@ -11321,10 +11321,10 @@ class CGDictionary(CGThing):
         if conversionInfo.dealWithOptional:
             replacements["declName"] = "(" + replacements["declName"] + ".Value())"
         if member.defaultValue:
-            replacements["haveValue"] = "!isNull && !temp.ref().isUndefined()"
+            replacements["haveValue"] = "!isNull && !temp->isUndefined()"
 
         propId = self.makeIdName(member.identifier.name)
-        propGet = ("JS_GetPropertyById(cx, object.ref(), atomsCache->%s, &temp.ref())" %
+        propGet = ("JS_GetPropertyById(cx, *object, atomsCache->%s, temp.ptr())" %
                    propId)
 
         conversionReplacements = {
@@ -11339,7 +11339,7 @@ class CGDictionary(CGThing):
             conversion += "${convert}"
         else:
             conversion += (
-                "if (!isNull && !temp.ref().isUndefined()) {\n"
+                "if (!isNull && !temp->isUndefined()) {\n"
                 "  ${prop}.Construct();\n"
                 "${convert}"
                 "}\n")
@@ -11831,7 +11831,6 @@ class CGBindingRoot(CGThing):
         bindingHeaders["nsThreadUtils.h"] = hasWorkerStuff
 
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
-        bindingHeaders["nsCxPusher.h"] = dictionaries
         hasNonEmptyDictionaries = any(
             len(dict.members) > 0 for dict in dictionaries)
         mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,

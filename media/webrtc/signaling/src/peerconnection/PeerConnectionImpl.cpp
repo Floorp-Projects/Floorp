@@ -285,6 +285,17 @@ public:
       CSFLogInfo(logTag, "Returning success for OnAddStream()");
       // We are running on main thread here so we shouldn't have a race
       // on this callback
+
+      nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+      aStream->GetTracks(tracks);
+      for (uint32_t i = 0; i < tracks.Length(); i++) {
+        JSErrorResult rv;
+        mObserver->OnAddTrack(*tracks[i], rv);
+        if (rv.Failed()) {
+          CSFLogError(logTag, ": OnAddTrack(%d) failed! Error: %d", i,
+                      rv.ErrorCode());
+        }
+      }
       JSErrorResult rv;
       mObserver->OnAddStream(*aStream, rv);
       if (rv.Failed()) {
@@ -1438,11 +1449,29 @@ PeerConnectionImpl::PrincipalChanged(DOMMediaStream* aMediaStream) {
 #endif
 
 nsresult
-PeerConnectionImpl::AddStream(DOMMediaStream &aMediaStream)
+PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
+                             const Sequence<OwningNonNull<DOMMediaStream>>& aStreams)
 {
   PC_AUTO_ENTER_API_CALL(true);
 
-  uint32_t hints = aMediaStream.GetHintContents();
+  if (!aStreams.Length()) {
+    CSFLogError(logTag, "%s: At least one stream arg required", __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+  return AddTrack(aTrack, aStreams[0]);
+}
+
+nsresult
+PeerConnectionImpl::AddTrack(MediaStreamTrack& aTrack,
+                             DOMMediaStream& aMediaStream)
+{
+  if (!aMediaStream.HasTrack(aTrack)) {
+    CSFLogError(logTag, "%s: Track is not in stream", __FUNCTION__);
+    return NS_ERROR_FAILURE;
+  }
+  uint32_t hints = aMediaStream.GetHintContents() &
+      ((aTrack.AsAudioStreamTrack()? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
+       (aTrack.AsVideoStreamTrack()? DOMMediaStream::HINT_CONTENTS_VIDEO : 0));
 
   // XXX Remove this check once addStream has an error callback
   // available and/or we have plumbing to handle multiple
@@ -1464,13 +1493,17 @@ PeerConnectionImpl::AddStream(DOMMediaStream &aMediaStream)
     return NS_ERROR_FAILURE;
   }
 
+  uint32_t num = mMedia->LocalStreamsLength();
+
   uint32_t stream_id;
-  nsresult res = mMedia->AddStream(&aMediaStream, &stream_id);
+  nsresult res = mMedia->AddStream(&aMediaStream, hints, &stream_id);
   if (NS_FAILED(res)) {
     return res;
   }
 
-  aMediaStream.AddPrincipalChangeObserver(this);
+  if (num != mMedia->LocalStreamsLength()) {
+    aMediaStream.AddPrincipalChangeObserver(this);
+  }
 
   // TODO(ekr@rtfm.com): these integers should be the track IDs
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
@@ -1487,18 +1520,38 @@ PeerConnectionImpl::AddStream(DOMMediaStream &aMediaStream)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::RemoveStream(DOMMediaStream& aMediaStream) {
+PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   PC_AUTO_ENTER_API_CALL(true);
 
+  DOMMediaStream *stream = nullptr;
+  for (uint32_t i = 0; i < mMedia->LocalStreamsLength(); ++i) {
+    auto* candidate = mMedia->GetLocalStream(i)->GetMediaStream();
+    if (candidate->HasTrack(aTrack)) {
+      stream = candidate;
+      break;
+    }
+  }
+  if (!stream) {
+    CSFLogError(logTag, "%s: Track not found", __FUNCTION__);
+    return NS_OK;
+  }
+  auto& aMediaStream = *stream;
+
+  uint32_t hints = aMediaStream.GetHintContents() &
+      ((aTrack.AsAudioStreamTrack()? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
+       (aTrack.AsVideoStreamTrack()? DOMMediaStream::HINT_CONTENTS_VIDEO : 0));
+  uint32_t num = mMedia->LocalStreamsLength();
+
   uint32_t stream_id;
-  nsresult res = mMedia->RemoveStream(&aMediaStream, &stream_id);
+  nsresult res = mMedia->RemoveStream(&aMediaStream, hints, &stream_id);
 
-  if (NS_FAILED(res))
+  if (NS_FAILED(res)) {
     return res;
+  }
 
-  aMediaStream.RemovePrincipalChangeObserver(this);
-
-  uint32_t hints = aMediaStream.GetHintContents();
+  if (num != mMedia->LocalStreamsLength()) {
+    aMediaStream.RemovePrincipalChangeObserver(this);
+  }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
     mInternal->mCall->removeStream(stream_id, 0, AUDIO);

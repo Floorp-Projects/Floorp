@@ -43,12 +43,17 @@
 
     function parseQueryString() {
       let url = document.documentURI;
-      let queryString = url.replace(/^about:socialerror\??/, "");
+      var searchParams = new URLSearchParams(url);
 
-      let modeMatch = queryString.match(/mode=([^&]+)/);
-      let mode = modeMatch && modeMatch[1] ? modeMatch[1] : "";
-      let originMatch = queryString.match(/origin=([^&]+)/);
-      config.origin = originMatch && originMatch[1] ? decodeURIComponent(originMatch[1]) : "";
+      let mode = searchParams.get("mode");
+      config.directory = searchParams.get("directory");
+      config.origin = searchParams.get("origin");
+      let encodedURL = searchParams.get("url");
+      let url = decodeURIComponent(encodedURL);
+      if (config.directory) {
+        let URI = Services.io.newURI(url, null, null);
+        config.origin = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI).origin;
+      }
 
       switch (mode) {
         case "compactInfo":
@@ -59,10 +64,6 @@
           document.getElementById("btnCloseSidebar").style.display = 'none';
           //intentional fall-through
         case "tryAgain":
-          let urlMatch = queryString.match(/url=([^&]+)/);
-          let encodedURL = urlMatch && urlMatch[1] ? urlMatch[1] : "";
-          let url = decodeURIComponent(encodedURL);
-
           config.tryAgainCallback = loadQueryURL;
           config.queryURL = url;
           break;
@@ -80,7 +81,7 @@
 
       let productName = brandBundle.GetStringFromName("brandShortName");
       let provider = Social._getProviderFromOrigin(config.origin);
-      let providerName = provider && provider.name;
+      let providerName = provider ? provider.name : config.origin;
 
       // Sets up the error message
       let msg = browserBundle.formatStringFromName("social.error.message", [productName, providerName], 2);

@@ -2567,9 +2567,9 @@ public:
 // -----------------------------------------------------------------------------
 // Constructor
 protected:
-    GLContext(const SurfaceCaps& caps,
-              GLContext* sharedContext = nullptr,
-              bool isOffscreen = false);
+    explicit GLContext(const SurfaceCaps& caps,
+                       GLContext* sharedContext = nullptr,
+                       bool isOffscreen = false);
 
 
 // -----------------------------------------------------------------------------
@@ -2920,7 +2920,7 @@ public:
 
 protected:
     friend class GLScreenBuffer;
-    GLScreenBuffer* mScreen;
+    UniquePtr<GLScreenBuffer> mScreen;
 
     void DestroyScreenBuffer();
 
@@ -2946,7 +2946,7 @@ public:
     }
 
     GLScreenBuffer* Screen() const {
-        return mScreen;
+        return mScreen.get();
     }
 
     bool PublishFrame();

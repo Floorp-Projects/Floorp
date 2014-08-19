@@ -249,6 +249,10 @@
   color: #f5f7fa; /* Light foreground text */
 }
 
+.theme-dark .trace-item.black-boxed {
+  color: rgba(128,128,128,0.4);
+}
+
 .theme-dark .trace-item.selected-matching {
   background-color: rgba(29,79,115,.4); /* Select highlight blue at 40% alpha */
 }
@@ -282,6 +286,10 @@
 
 .theme-light .trace-item {
   color: #292e33; /* Dark foreground text */
+}
+
+.theme-light .trace-item.black-boxed {
+  color: rgba(128,128,128,0.4);
 }
 
 .theme-light .trace-item.selected-matching {

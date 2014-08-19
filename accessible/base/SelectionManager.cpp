@@ -12,6 +12,7 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsEventShell.h"
+#include "nsFrameSelection.h"
 
 #include "nsIAccessibleTypes.h"
 #include "nsIDOMDocument.h"

@@ -97,8 +97,6 @@ ParamTraits<MagicGrallocBufferHandle>::Write(Message* aMsg,
   aMsg->WriteInt(aParam.mRef.mOwner);
   aMsg->WriteInt64(aParam.mRef.mKey);
   aMsg->WriteSize(nbytes);
-  aMsg->WriteSize(nfds);
-
   aMsg->WriteBytes(data, nbytes);
   for (size_t n = 0; n < nfds; ++n) {
     // These buffers can't die in transit because they're created
@@ -113,7 +111,6 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
                                             void** aIter, paramType* aResult)
 {
   size_t nbytes;
-  size_t nfds;
   const char* data;
   int owner;
   int64_t index;
@@ -121,12 +118,12 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   if (!aMsg->ReadInt(aIter, &owner) ||
       !aMsg->ReadInt64(aIter, &index) ||
       !aMsg->ReadSize(aIter, &nbytes) ||
-      !aMsg->ReadSize(aIter, &nfds) ||
       !aMsg->ReadBytes(aIter, &data, nbytes)) {
     printf_stderr("ParamTraits<MagicGrallocBufferHandle>::Read() failed to read a message\n");
     return false;
   }
 
+  size_t nfds = aMsg->num_fds();
   int fds[nfds];
   bool sameProcess = (XRE_GetProcessType() == GeckoProcessType_Default);
   for (size_t n = 0; n < nfds; ++n) {

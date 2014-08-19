@@ -59,19 +59,22 @@ public class ShapedButton extends ThemedImageButton
         if (mSide == CurveTowards.NONE)
             return;
 
-        final int curve = (int) (height * 1.125f);
-
         mPath.reset();
 
         if (mSide == CurveTowards.RIGHT) {
             mPath.moveTo(0, 0);
-            mPath.cubicTo(curve * 0.75f, 0,
-                          curve * 0.25f, height,
-                          curve, height);
+            mPath.cubicTo(height * 0.25f, 0.0f,
+                          height * 0.375f, height * 0.25f,
+                          height * 0.375f, height * 0.5f);
+            mPath.cubicTo(height * 0.375f, height * 0.72f,
+                          height * 0.527f, height * 0.961f,
+                          height * 0.729f, height);
             mPath.lineTo(width, height);
             mPath.lineTo(width, 0);
             mPath.lineTo(0, 0);
         } else if (mSide == CurveTowards.LEFT) {
+            final int curve = (int) (height * 1.125f);
+
             mPath.moveTo(width, 0);
             mPath.cubicTo((width - (curve * 0.75f)), 0,
                           (width - (curve * 0.25f)), height,

@@ -334,7 +334,7 @@ nsContextMenu.prototype = {
     let shareEnabled = shareButton && !shareButton.disabled && !this.onSocial;
     let pageShare = shareEnabled && !(this.isContentSelected ||
                             this.onTextInput || this.onLink || this.onImage ||
-                            this.onVideo || this.onAudio);
+                            this.onVideo || this.onAudio || this.onCanvas);
     this.showItem("context-sharepage", pageShare);
     this.showItem("context-shareselect", shareEnabled && this.isContentSelected);
     this.showItem("context-sharelink", shareEnabled && (this.onLink || this.onPlainTextLink) && !this.onMailtoLink);
@@ -1677,8 +1677,15 @@ nsContextMenu.prototype = {
     // Store searchTerms in context menu item so we know what to search onclick
     menuItem.searchTerms = selectedText;
 
-    if (selectedText.length > 15)
-      selectedText = selectedText.substr(0,15) + this.ellipsis;
+    // If the JS character after our truncation point is a trail surrogate,
+    // include it in the truncated string to avoid splitting a surrogate pair.
+    if (selectedText.length > 15) {
+      let truncLength = 15;
+      let truncChar = selectedText[15].charCodeAt(0);
+      if (truncChar >= 0xDC00 && truncChar <= 0xDFFF)
+        truncLength++;
+      selectedText = selectedText.substr(0,truncLength) + this.ellipsis;
+    }
 
     // Use the current engine if the search bar is visible, the default
     // engine otherwise.

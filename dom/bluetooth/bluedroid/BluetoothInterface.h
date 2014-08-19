@@ -326,6 +326,50 @@ private:
 // Bluetooth Core Interface
 //
 
+class BluetoothNotificationHandler
+{
+public:
+  virtual ~BluetoothNotificationHandler();
+
+  virtual void AdapterStateChangedNotification(bool aState) { }
+  virtual void AdapterPropertiesNotification(
+    BluetoothStatus aStatus, int aNumProperties,
+    const BluetoothProperty* aProperties) { }
+
+  virtual void RemoteDevicePropertiesNotification(
+    BluetoothStatus aStatus, const nsAString& aBdAddr,
+    int aNumProperties, const BluetoothProperty* aProperties) { }
+
+  virtual void DeviceFoundNotification(
+    int aNumProperties, const BluetoothProperty* aProperties) { }
+
+  virtual void DiscoveryStateChangedNotification(bool aState) { }
+
+  virtual void PinRequestNotification(const nsAString& aRemoteBdAddr,
+                                      const nsAString& aBdName, uint32_t aCod) { }
+  virtual void SspRequestNotification(const nsAString& aRemoteBdAddr,
+                                      const nsAString& aBdName,
+                                      uint32_t aCod,
+                                      const nsAString& aPairingVariant,
+                                      uint32_t aPassKey) { }
+
+  virtual void BondStateChangedNotification(BluetoothStatus aStatus,
+                                            const nsAString& aRemoteBdAddr,
+                                            BluetoothBondState aState) { }
+  virtual void AclStateChangedNotification(BluetoothStatus aStatus,
+                                           const nsAString& aRemoteBdAddr,
+                                           bool aState) { }
+
+  virtual void DutModeRecvNotification(uint16_t aOpcode,
+                                       const uint8_t* aBuf, uint8_t aLen) { }
+  virtual void LeTestModeNotification(BluetoothStatus aStatus,
+                                      uint16_t aNumPackets) { }
+
+protected:
+  BluetoothNotificationHandler()
+  { }
+};
+
 class BluetoothResultHandler
 {
 public:
@@ -375,7 +419,8 @@ class BluetoothInterface
 public:
   static BluetoothInterface* GetInstance();
 
-  void Init(bt_callbacks_t* aCallbacks, BluetoothResultHandler* aRes);
+  void Init(BluetoothNotificationHandler* aNotificationHandler,
+            BluetoothResultHandler* aRes);
   void Cleanup(BluetoothResultHandler* aRes);
 
   void Enable(BluetoothResultHandler* aRes);

@@ -34,6 +34,7 @@ class nsPluginInstanceOwner;
 namespace mozilla {
 namespace dom {
 template<typename T> class Sequence;
+struct MozPluginParameter;
 }
 }
 
@@ -118,6 +119,19 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     {
       mNetworkCreated = aNetworkCreated;
     }
+
+    /**
+     * When the object is loaded, the attributes and all nested <param>
+     * elements are cached as name:value string pairs to be passed as
+     * parameters when instantiating the plugin.
+     *
+     * Note: these cached values can be overriden for different quirk cases.
+     */
+    // Returns the cached attributes array.
+    void GetPluginAttributes(nsTArray<mozilla::dom::MozPluginParameter>& aAttributes);
+
+    // Returns the cached <param> array.
+    void GetPluginParameters(nsTArray<mozilla::dom::MozPluginParameter>& aParameters);
 
     /**
      * Immediately instantiate a plugin instance. This is a no-op if mType !=
@@ -321,6 +335,26 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       // ContentType
       eParamContentTypeChanged = 1u << 2
     };
+
+    /**
+     * Getter for child <param> elements that are not nested in another plugin
+     * dom element.
+     * This is an internal helper function and should not be used directly for
+     * passing parameters to the plugin instance.
+     *
+     * See GetPluginParameters and GetPluginAttributes, which also handle
+     * quirk-overrides.
+     *
+     * @param aParameters     The array containing pairs of name/value strings
+     *                        from nested <param> objects.
+     * @param aIgnoreCodebase Flag for ignoring the "codebase" param when
+     *                        building the array. This is useful when loading
+     *                        java.
+     */
+    void GetNestedParams(nsTArray<mozilla::dom::MozPluginParameter>& aParameters,
+                         bool aIgnoreCodebase);
+
+    void BuildParametersArray();
 
     /**
      * Loads fallback content with the specified FallbackType
@@ -579,6 +613,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsWeakFrame                 mPrintFrame;
 
     nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
+    nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;
+    nsTArray<mozilla::dom::MozPluginParameter> mCachedParameters;
 };
 
 #endif

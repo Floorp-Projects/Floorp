@@ -4,4 +4,4 @@
 mozbuild Sandbox Symbols
 ========================
 
-.. mozbuildsymbols:: mozbuild.frontend.sandbox_symbols
+.. mozbuildsymbols:: mozbuild.frontend.context

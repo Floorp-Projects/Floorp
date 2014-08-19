@@ -62,6 +62,68 @@ class ArrayBufferObject : public JSObject
 
     static const size_t ARRAY_BUFFER_ALIGNMENT = 8;
 
+  public:
+
+    enum BufferKind {
+        PLAIN_BUFFER        =   0, // malloced or inline data
+        ASMJS_BUFFER        = 0x1,
+        SHARED_BUFFER       = 0x2,
+        MAPPED_BUFFER       = 0x4,
+        KIND_MASK           = ASMJS_BUFFER | SHARED_BUFFER | MAPPED_BUFFER
+    };
+
+  protected:
+
+    enum ArrayBufferFlags {
+        // The flags also store the BufferKind
+        BUFFER_KIND_MASK    = BufferKind::KIND_MASK,
+
+        NEUTERED_BUFFER     = 0x8,
+
+        // In the gcLiveArrayBuffers list.
+        IN_LIVE_LIST        =  0x10,
+
+        // The dataPointer() is owned by this buffer and should be released
+        // when no longer in use. Releasing the pointer may be done by either
+        // freeing or unmapping it, and how to do this is determined by the
+        // buffer's other flags.
+        OWNS_DATA           =  0x20,
+    };
+
+  public:
+
+    class BufferContents {
+        uint8_t *data_;
+        BufferKind kind_;
+
+        friend class ArrayBufferObject;
+
+        typedef void (BufferContents::* ConvertibleToBool)();
+        void nonNull() {}
+
+        BufferContents(uint8_t *data, BufferKind kind) : data_(data), kind_(kind) {
+            MOZ_ASSERT((kind_ & ~KIND_MASK) == 0);
+        }
+
+      public:
+
+        template<BufferKind Kind>
+        static BufferContents create(void *data)
+        {
+            return BufferContents(static_cast<uint8_t*>(data), Kind);
+        }
+
+        static BufferContents createUnowned(void *data)
+        {
+            return BufferContents(static_cast<uint8_t*>(data), PLAIN_BUFFER);
+        }
+
+        uint8_t *data() const { return data_; }
+        BufferKind kind() const { return kind_; }
+
+        operator ConvertibleToBool() const { return data_ ? &BufferContents::nonNull : nullptr; }
+    };
+
     static const Class class_;
 
     static const Class protoClass;
@@ -76,8 +138,11 @@ class ArrayBufferObject : public JSObject
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
-    static ArrayBufferObject *create(JSContext *cx, uint32_t nbytes, void *contents = nullptr,
-                                     NewObjectKind newKind = GenericObject, bool mapped = false);
+    static ArrayBufferObject *create(JSContext *cx, uint32_t nbytes,
+                                     BufferContents contents,
+                                     NewObjectKind newKind = GenericObject);
+    static ArrayBufferObject *create(JSContext *cx, uint32_t nbytes,
+                                     NewObjectKind newKind = GenericObject);
 
     static JSObject *createSlice(JSContext *cx, Handle<ArrayBufferObject*> arrayBuffer,
                                  uint32_t begin, uint32_t end);
@@ -94,6 +159,8 @@ class ArrayBufferObject : public JSObject
     static void obj_trace(JSTracer *trc, JSObject *obj);
 
     static void sweep(JSCompartment *rt);
+
+    static void fixupDataPointerAfterMovingGC(const ArrayBufferObject &src, ArrayBufferObject &dst);
 
     static void resetArrayBufferList(JSCompartment *rt);
     static bool saveArrayBufferList(JSCompartment *c, ArrayBufferVector &vector);
@@ -124,8 +191,8 @@ class ArrayBufferObject : public JSObject
 
     void addView(ArrayBufferViewObject *view);
 
-    void setNewOwnedData(FreeOp* fop, void *newData);
-    void changeContents(JSContext *cx, void *newData);
+    void setNewOwnedData(FreeOp* fop, BufferContents newContents);
+    void changeContents(JSContext *cx, BufferContents newContents);
 
     /*
      * Ensure data is not stored inline in the object. Used when handing back a
@@ -136,10 +203,13 @@ class ArrayBufferObject : public JSObject
     bool canNeuter(JSContext *cx);
 
     /* Neuter this buffer and all its views. */
-    static void neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer, void *newData);
+    static void neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer, BufferContents newContents);
 
     uint8_t *dataPointer() const;
     size_t byteLength() const;
+    BufferContents contents() const {
+        return BufferContents(dataPointer(), bufferKind());
+    }
 
     void releaseData(FreeOp *fop);
 
@@ -151,8 +221,8 @@ class ArrayBufferObject : public JSObject
         return getClass() == &class_;
     }
 
+    BufferKind bufferKind() const { return BufferKind(flags() & BUFFER_KIND_MASK); }
     bool isAsmJSArrayBuffer() const { return flags() & ASMJS_BUFFER; }
-    bool isAsmJSMappedArrayBuffer() const { return flags() & ASMJS_MAPPED_BUFFER; }
     bool isSharedArrayBuffer() const { return flags() & SHARED_BUFFER; }
     bool isMappedArrayBuffer() const { return flags() & MAPPED_BUFFER; }
     bool isNeutered() const { return flags() & NEUTERED_BUFFER; }
@@ -164,7 +234,7 @@ class ArrayBufferObject : public JSObject
 
     static void finalize(FreeOp *fop, JSObject *obj);
 
-    static void *createMappedContents(int fd, size_t offset, size_t length);
+    static BufferContents createMappedContents(int fd, size_t offset, size_t length);
 
     static size_t flagsOffset() {
         return getFixedSlotOffset(FLAGS_SLOT);
@@ -178,29 +248,12 @@ class ArrayBufferObject : public JSObject
         OwnsData = 1,
     };
 
-    void setDataPointer(void *data, OwnsState ownsState);
+    void setDataPointer(BufferContents contents, OwnsState ownsState);
     void setByteLength(size_t length);
 
     ArrayBufferViewObject *viewList() const;
     void setViewList(ArrayBufferViewObject *viewsHead);
     void setViewListNoBarrier(ArrayBufferViewObject *viewsHead);
-
-    enum ArrayBufferFlags {
-        // In the gcLiveArrayBuffers list.
-        IN_LIVE_LIST        =  0x1,
-
-        // The dataPointer() is owned by this buffer and should be released
-        // when no longer in use. Releasing the pointer may be done by either
-        // freeing or unmapping it, and how to do this is determined by the
-        // buffer's other flags.
-        OWNS_DATA           =  0x2,
-
-        ASMJS_BUFFER        =  0x4,
-        ASMJS_MAPPED_BUFFER =  0x8,
-        SHARED_BUFFER       = 0x10,
-        MAPPED_BUFFER       = 0x20,
-        NEUTERED_BUFFER     = 0x40,
-    };
 
     uint32_t flags() const;
     void setFlags(uint32_t flags);
@@ -216,16 +269,15 @@ class ArrayBufferObject : public JSObject
     }
 
     void setIsAsmJSArrayBuffer() { setFlags(flags() | ASMJS_BUFFER); }
-    void setIsAsmJSMappedArrayBuffer() { setFlags(flags() | ASMJS_MAPPED_BUFFER); }
     void setIsSharedArrayBuffer() { setFlags(flags() | SHARED_BUFFER); }
     void setIsMappedArrayBuffer() { setFlags(flags() | MAPPED_BUFFER); }
     void setIsNeutered() { setFlags(flags() | NEUTERED_BUFFER); }
 
-    void initialize(size_t byteLength, void *data, OwnsState ownsState) {
+    void initialize(size_t byteLength, BufferContents contents, OwnsState ownsState) {
         setByteLength(byteLength);
         setFlags(0);
         setViewListNoBarrier(nullptr);
-        setDataPointer(data, ownsState);
+        setDataPointer(contents, ownsState);
     }
 
     void releaseAsmJSArray(FreeOp *fop);

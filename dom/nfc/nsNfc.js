@@ -157,10 +157,6 @@ mozNfc.prototype = {
   _window: null,
   nfcObject: null,
 
-  _wrap: function _wrap(obj) {
-    return Cu.cloneInto(obj, this._window);
-  },
-
   init: function init(aWindow) {
     debug("mozNfc init called");
     this._window = aWindow;
@@ -201,14 +197,14 @@ mozNfc.prototype = {
   getNFCTag: function getNFCTag(sessionToken) {
     let obj = new MozNFCTag();
     obj.initialize(this._window, sessionToken);
-    if (this._nfcContentHelper.setSessionToken(sessionToken)) {
+    if (this._nfcContentHelper.checkSessionToken(sessionToken)) {
       return this._window.MozNFCTag._create(this._window, obj);
     }
     return null;
   },
 
   getNFCPeer: function getNFCPeer(sessionToken) {
-    if (!sessionToken || !this._nfcContentHelper.setSessionToken(sessionToken)) {
+    if (!sessionToken || !this._nfcContentHelper.checkSessionToken(sessionToken)) {
       return null;
     }
 
@@ -269,10 +265,10 @@ mozNfc.prototype = {
     this.session = sessionToken;
 
     debug("fire onpeerready sessionToken : " + sessionToken);
-    let detail = {
-      "detail":sessionToken
+    let eventData = {
+      "peer":this.getNFCPeer(sessionToken)
     };
-    let event = new this._window.CustomEvent("peerready", this._wrap(detail));
+    let event = new this._window.MozNFCPeerEvent("peerready", eventData);
     this.__DOM_IMPL__.dispatchEvent(event);
   },
 

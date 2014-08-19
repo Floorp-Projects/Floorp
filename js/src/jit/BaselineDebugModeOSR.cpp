@@ -9,6 +9,8 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jit/IonLinker.h"
+
+#include "jit/JitcodeMap.h"
 #include "jit/PerfSpewer.h"
 
 #include "jit/IonFrames-inl.h"
@@ -131,7 +133,7 @@ class UniqueScriptOSREntryIter
     size_t index_;
 
   public:
-    UniqueScriptOSREntryIter(const DebugModeOSREntryVector &entries)
+    explicit UniqueScriptOSREntryIter(const DebugModeOSREntryVector &entries)
       : entries_(entries),
         index_(0)
     { }
@@ -656,8 +658,13 @@ jit::RecompileOnStackBaselineScriptsForDebugMode(JSContext *cx, JSCompartment *c
 #ifdef JSGC_GENERATIONAL
     // Scripts can entrain nursery things. See note in js::ReleaseAllJITCode.
     if (!entries.empty())
-        MinorGC(cx->runtime(), JS::gcreason::EVICT_NURSERY);
+        cx->runtime()->gc.evictNursery();
 #endif
+
+    // When the profiler is enabled, we need to suppress sampling from here until
+    // the end of the function, since the basline jit scripts are in a state of
+    // flux.
+    AutoSuppressProfilerSampling suppressProfilerSampling(cx);
 
     // Try to recompile all the scripts. If we encounter an error, we need to
     // roll back as if none of the compilations happened, so that we don't

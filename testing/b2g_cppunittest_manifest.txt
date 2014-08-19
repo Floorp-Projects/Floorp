@@ -7,3 +7,7 @@ mediapipeline_unittest              # Bug 919646
 TestStartupCache                    # Bug 929655
 TestStartupCacheTelemetry.manifest  # Bug 929655
 TestStartupCacheTelemetry.js        # Bug 929655
+TestCSPParser                       # Bug 1054246
+TestDeadlockDetector                # Bug 1054249
+test_deadlock_detector              # Bug 1054249
+TestTArray                          # Bug 1054251

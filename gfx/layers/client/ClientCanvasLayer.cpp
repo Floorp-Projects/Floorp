@@ -47,7 +47,7 @@ ClientCanvasLayer::~ClientCanvasLayer()
     mCanvasClient = nullptr;
   }
   if (mTextureSurface) {
-    delete mTextureSurface;
+    mTextureSurface = nullptr;
   }
 }
 
@@ -73,13 +73,16 @@ ClientCanvasLayer::Initialize(const Data& aData)
     SurfaceStreamType streamType =
         SurfaceStream::ChooseGLStreamType(SurfaceStream::OffMainThread,
                                           screen->PreserveBuffer());
-    SurfaceFactory* factory = nullptr;
+    UniquePtr<SurfaceFactory> factory;
+
     if (!gfxPrefs::WebGLForceLayersReadback()) {
       switch (ClientManager()->AsShadowForwarder()->GetCompositorBackendType()) {
         case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
           if (mGLContext->GetContextType() == GLContextType::EGL) {
 #ifdef MOZ_WIDGET_GONK
-            factory = new SurfaceFactory_Gralloc(mGLContext, caps, ClientManager()->AsShadowForwarder());
+            factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext,
+                                                         caps,
+                                                         ClientManager()->AsShadowForwarder());
 #else
             bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
             if (!isCrossProcess) {
@@ -96,7 +99,8 @@ ClientCanvasLayer::Initialize(const Data& aData)
 #ifdef XP_MACOSX
             factory = SurfaceFactory_IOSurface::Create(mGLContext, caps);
 #else
-            factory = new SurfaceFactory_GLTexture(mGLContext, nullptr, caps);
+            GLContext* nullConsGL = nullptr; // Bug 1050044.
+            factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, nullConsGL, caps);
 #endif
           }
           break;
@@ -117,26 +121,25 @@ ClientCanvasLayer::Initialize(const Data& aData)
 
     if (mStream) {
       // We're using a stream other than the one in the default screen
-      mFactory = factory;
+      mFactory = Move(factory);
       if (!mFactory) {
         // Absolutely must have a factory here, so create a basic one
-        mFactory = new SurfaceFactory_Basic(mGLContext, caps);
+        mFactory = MakeUnique<SurfaceFactory_Basic>(mGLContext, caps);
       }
 
       gfx::IntSize size = gfx::IntSize(aData.mSize.width, aData.mSize.height);
       mTextureSurface = SharedSurface_GLTexture::Create(mGLContext, mGLContext,
                                                         mGLContext->GetGLFormats(),
                                                         size, caps.alpha, aData.mTexID);
-      SharedSurface* producer = mStream->SwapProducer(mFactory, size);
+      SharedSurface* producer = mStream->SwapProducer(mFactory.get(), size);
       if (!producer) {
         // Fallback to basic factory
-        delete mFactory;
-        mFactory = new SurfaceFactory_Basic(mGLContext, caps);
-        producer = mStream->SwapProducer(mFactory, size);
+        mFactory = MakeUnique<SurfaceFactory_Basic>(mGLContext, caps);
+        producer = mStream->SwapProducer(mFactory.get(), size);
         MOZ_ASSERT(producer, "Failed to create initial canvas surface with basic factory");
       }
     } else if (factory) {
-      screen->Morph(factory, streamType);
+      screen->Morph(Move(factory), streamType);
     }
   }
 }

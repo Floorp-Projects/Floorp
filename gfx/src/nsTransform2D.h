@@ -28,12 +28,6 @@ private:
 
 public:
   nsTransform2D(void)                         { m20 = m21 = 0.0f; m00 = m11 = 1.0f; }
-  nsTransform2D(nsTransform2D *aTransform2D)  {
-    m00 = aTransform2D->m00;
-    m11 = aTransform2D->m11;
-    m20 = aTransform2D->m20;
-    m21 = aTransform2D->m21;
-  }
 
   ~nsTransform2D(void)                        { }
 

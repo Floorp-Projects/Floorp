@@ -494,7 +494,7 @@ AbstractHealthReporter.prototype = Object.freeze({
     }.bind(this));
   },
 
-  _initializeProviderManager: function () {
+  _initializeProviderManager: Task.async(function* _initializeProviderManager() {
     if (this._collector) {
       throw new Error("Provider manager has already been initialized.");
     }
@@ -511,7 +511,7 @@ AbstractHealthReporter.prototype = Object.freeze({
         yield this._providerManager.registerProvidersFromCategoryManager(category);
       }
     }
-  },
+  }),
 
   _onProviderManagerInitialized: function () {
     TelemetryStopwatch.finish(this._initHistogram, this);
@@ -1260,8 +1260,8 @@ this.HealthReporter.prototype = Object.freeze({
    * Whether this instance will upload data to a server.
    */
   get willUploadData() {
-    return this._policy.dataSubmissionPolicyAccepted &&
-           this._policy.healthReportUploadEnabled;
+    return  this._policy.userNotifiedOfCurrentPolicy &&
+            this._policy.healthReportUploadEnabled;
   },
 
   /**
@@ -1321,8 +1321,8 @@ this.HealthReporter.prototype = Object.freeze({
     // Need to capture this before we call the parent else it's always
     // set.
     let inShutdown = this._shutdownRequested;
-
     let result;
+
     try {
       result = AbstractHealthReporter.prototype._onInitError.call(this, error);
     } catch (ex) {
@@ -1335,8 +1335,8 @@ this.HealthReporter.prototype = Object.freeze({
     // startup errors is important. And, they should not occur with much
     // frequency in the wild. So, it shouldn't be too big of a deal.
     if (!inShutdown &&
-        this._policy.ensureNotifyResponse(new Date()) &&
-        this._policy.healthReportUploadEnabled) {
+        this._policy.healthReportUploadEnabled &&
+        this._policy.ensureUserNotified()) {
       // We don't care about what happens to this request. It's best
       // effort.
       let request = {
@@ -1363,7 +1363,12 @@ this.HealthReporter.prototype = Object.freeze({
         // The built-in provider may not be initialized if this instance failed
         // to initialize fully.
         if (hrProvider && !isDelete) {
-          hrProvider.recordEvent("uploadTransportFailure", date);
+          try {
+            hrProvider.recordEvent("uploadTransportFailure", date);
+          } catch (ex) {
+            this._log.error("Error recording upload transport failure: " +
+                            CommonUtils.exceptionStr(ex));
+          }
         }
 
         request.onSubmissionFailureSoft("Network transport error.");
@@ -1372,7 +1377,12 @@ this.HealthReporter.prototype = Object.freeze({
 
       if (!result.serverSuccess) {
         if (hrProvider && !isDelete) {
-          hrProvider.recordEvent("uploadServerFailure", date);
+          try {
+            hrProvider.recordEvent("uploadServerFailure", date);
+          } catch (ex) {
+            this._log.error("Error recording server failure: " +
+                            CommonUtils.exceptionStr(ex));
+          }
         }
 
         request.onSubmissionFailureHard("Server failure.");
@@ -1380,7 +1390,12 @@ this.HealthReporter.prototype = Object.freeze({
       }
 
       if (hrProvider && !isDelete) {
-        hrProvider.recordEvent("uploadSuccess", date);
+        try {
+          hrProvider.recordEvent("uploadSuccess", date);
+        } catch (ex) {
+          this._log.error("Error recording upload success: " +
+                          CommonUtils.exceptionStr(ex));
+        }
       }
 
       if (isDelete) {
@@ -1445,7 +1460,12 @@ this.HealthReporter.prototype = Object.freeze({
         if (hrProvider) {
           let event = lastID ? "continuationUploadAttempt"
                              : "firstDocumentUploadAttempt";
-          hrProvider.recordEvent(event, now);
+          try {
+            hrProvider.recordEvent(event, now);
+          } catch (ex) {
+            this._log.error("Error when recording upload attempt: " +
+                            CommonUtils.exceptionStr(ex));
+          }
         }
 
         TelemetryStopwatch.start(TELEMETRY_UPLOAD, this);
@@ -1461,7 +1481,12 @@ this.HealthReporter.prototype = Object.freeze({
         } catch (ex) {
           TelemetryStopwatch.cancel(TELEMETRY_UPLOAD, this);
           if (hrProvider) {
-            hrProvider.recordEvent("uploadClientFailure", now);
+            try {
+              hrProvider.recordEvent("uploadClientFailure", now);
+            } catch (ex) {
+              this._log.error("Error when recording client failure: " +
+                              CommonUtils.exceptionStr(ex));
+            }
           }
           throw ex;
         }

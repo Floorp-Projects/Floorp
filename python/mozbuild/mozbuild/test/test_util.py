@@ -21,6 +21,7 @@ from mozbuild.util import (
     FileAvoidWrite,
     hash_file,
     memoize,
+    memoized_property,
     resolve_target_to_make,
     MozbuildDeletionError,
     HierarchicalStringList,
@@ -370,6 +371,13 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
         with self.assertRaises(AttributeError):
             l['b'].baz = False
 
+        l['b'].update(foo=False, bar=12)
+        self.assertEqual(l['b'].foo, False)
+        self.assertEqual(l['b'].bar, 12)
+
+        with self.assertRaises(AttributeError):
+            l['b'].update(xyz=1)
+
 
 class TestHierarchicalStringListWithFlagsFactory(unittest.TestCase):
     def test_hierarchical_string_list_with_flags_factory(self):
@@ -438,6 +446,7 @@ class TestMemoize(unittest.TestCase):
             self._count += 1
             return a + b
 
+        self.assertEqual(self._count, 0)
         self.assertEqual(wrapped(1, 1), 2)
         self.assertEqual(self._count, 1)
         self.assertEqual(wrapped(1, 1), 2)
@@ -451,6 +460,53 @@ class TestMemoize(unittest.TestCase):
         self.assertEqual(wrapped(1, 1), 2)
         self.assertEqual(self._count, 3)
 
+    def test_memoize_method(self):
+        class foo(object):
+            def __init__(self):
+                self._count = 0
+
+            @memoize
+            def wrapped(self, a, b):
+                self._count += 1
+                return a + b
+
+        instance = foo()
+        refcount = sys.getrefcount(instance)
+        self.assertEqual(instance._count, 0)
+        self.assertEqual(instance.wrapped(1, 1), 2)
+        self.assertEqual(instance._count, 1)
+        self.assertEqual(instance.wrapped(1, 1), 2)
+        self.assertEqual(instance._count, 1)
+        self.assertEqual(instance.wrapped(2, 1), 3)
+        self.assertEqual(instance._count, 2)
+        self.assertEqual(instance.wrapped(1, 2), 3)
+        self.assertEqual(instance._count, 3)
+        self.assertEqual(instance.wrapped(1, 2), 3)
+        self.assertEqual(instance._count, 3)
+        self.assertEqual(instance.wrapped(1, 1), 2)
+        self.assertEqual(instance._count, 3)
+
+        # Memoization of methods is expected to not keep references to
+        # instances, so the refcount shouldn't have changed after executing the
+        # memoized method.
+        self.assertEqual(refcount, sys.getrefcount(instance))
+
+    def test_memoized_property(self):
+        class foo(object):
+            def __init__(self):
+                self._count = 0
+
+            @memoized_property
+            def wrapped(self):
+                self._count += 1
+                return 42
+
+        instance = foo()
+        self.assertEqual(instance._count, 0)
+        self.assertEqual(instance.wrapped, 42)
+        self.assertEqual(instance._count, 1)
+        self.assertEqual(instance.wrapped, 42)
+        self.assertEqual(instance._count, 1)
 
 if __name__ == '__main__':
     main()

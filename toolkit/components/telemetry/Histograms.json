@@ -45,10 +45,10 @@
     "n_values": 3,
     "description": "Application reputation remote status (0=OK, 1=FAIL, 2=INVALID)"
   },
-  "APPLICATION_REPUTATION_SERVER_RESPONSE": {
+  "APPLICATION_REPUTATION_SERVER_VERDICT": {
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 5,
+    "n_values": 8,
     "description": "Application reputation remote response (0=SAFE, 1=DANGEROUS, 2=UNCOMMON, 3=POTENTIALLY_UNWANTED, 4=DANGEROUS_HOST)"
   },
   "APPLICATION_REPUTATION_COUNT": {
@@ -333,12 +333,6 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Has seen location error"
-  },
-  "JS_MINOR_VERSION": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "JavaScript version in web content (1.x)"
   },
   "TELEMETRY_PING": {
     "expires_in_version": "never",

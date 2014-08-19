@@ -40,8 +40,11 @@ import org.mozilla.gecko.widget.ThemedRelativeLayout;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -160,11 +163,18 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private int urlBarViewOffset;
     private int defaultForwardMargin;
 
+    private Path roundCornerShape;
+    private Paint roundCornerPaint;
+
+    private final Paint shadowPaint;
+    private final int shadowSize;
+
     private static final Interpolator buttonsInterpolator = new AccelerateInterpolator();
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
 
     private final LightweightTheme theme;
+    private final ToolbarPrefs prefs;
 
     public BrowserToolbar(Context context) {
         this(context, null);
@@ -172,6 +182,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setWillNotDraw(false);
+
         theme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
         // BrowserToolbar is attached to BrowserApp only.
@@ -244,6 +256,25 @@ public class BrowserToolbar extends ThemedRelativeLayout
             focusOrder.addAll(Arrays.asList(tabsButton, menuButton));
         }
 
+        if (!HardwareUtils.isTablet()) {
+            roundCornerShape = new Path();
+            roundCornerShape.moveTo(0, 0);
+            roundCornerShape.lineTo(30, 0);
+            roundCornerShape.cubicTo(0, 0, 0, 0, 0, 30);
+            roundCornerShape.lineTo(0, 0);
+
+            roundCornerPaint = new Paint();
+            roundCornerPaint.setAntiAlias(true);
+            roundCornerPaint.setColor(res.getColor(R.color.background_tabs));
+            roundCornerPaint.setStrokeWidth(0.0f);
+        }
+
+        shadowSize = res.getDimensionPixelSize(R.dimen.browser_toolbar_shadow_size);
+
+        shadowPaint = new Paint();
+        shadowPaint.setColor(res.getColor(R.color.url_bar_shadow));
+        shadowPaint.setStrokeWidth(0.0f);
+
         setUIMode(UIMode.DISPLAY);
 
         // Create these listeners here, once, to avoid constructing new listeners
@@ -280,6 +311,10 @@ public class BrowserToolbar extends ThemedRelativeLayout
                 updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
             }
         };
+
+        prefs = new ToolbarPrefs();
+        urlDisplayLayout.setToolbarPrefs(prefs);
+        urlEditLayout.setToolbarPrefs(prefs);
     }
 
     public ArrayList<View> populateTabletViews() {
@@ -313,6 +348,8 @@ public class BrowserToolbar extends ThemedRelativeLayout
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
+
+        prefs.open();
 
         setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -462,6 +499,25 @@ public class BrowserToolbar extends ThemedRelativeLayout
                 }
             });
         }
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        prefs.close();
+    }
+
+    @Override
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+
+        if (!HardwareUtils.isTablet() && uiMode == UIMode.DISPLAY) {
+            canvas.drawPath(roundCornerShape, roundCornerPaint);
+        }
+
+        final int height = getHeight();
+        canvas.drawRect(0, height - shadowSize, getWidth(), height, shadowPaint);
     }
 
     public void setProgressBar(ToolbarProgressView progressBar) {
@@ -1378,6 +1434,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         tabsButton.setPrivateMode(isPrivate);
         menuButton.setPrivateMode(isPrivate);
         menuIcon.setPrivateMode(isPrivate);
+        editCancel.setPrivateMode(isPrivate);
         urlEditLayout.setPrivateMode(isPrivate);
 
         if (backButton instanceof BackButton) {

@@ -63,6 +63,7 @@
 #include "DisplayItemClip.h"
 #include "ActiveLayerTracker.h"
 #include "CounterStyleManager.h"
+#include "FrameLayerBuilder.h"
 
 #include "AudioChannelService.h"
 #include "mozilla/dom/DataStoreService.h"

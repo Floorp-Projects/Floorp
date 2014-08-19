@@ -127,6 +127,9 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
             if (gc::IsAboutToBeFinalized(&k)) {
                 e.removeFront();
                 decZoneCount(k->zone());
+            } else {
+                // markKeys() should have done any necessary relocation.
+                JS_ASSERT(k == e.front().key());
             }
         }
         Base::assertEntriesNotAboutToBeFinalized();

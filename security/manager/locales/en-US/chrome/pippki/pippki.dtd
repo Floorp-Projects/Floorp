@@ -81,11 +81,6 @@
 <!ENTITY createCertInfo.msg1 "Key Generation in progress… This may take a few minutes….">
 <!ENTITY createCertInfo.msg2 "Please wait…">
 
-<!-- Form Signing confirmation prompt -->
-<!ENTITY formSigning.title "Text Signing Request">
-<!ENTITY formSigning.cert "Signing Certificate">
-<!ENTITY formSigning.confirmPassword "To confirm you agree to sign this text message using your selected certificate, please confirm by entering the master password:">
-
 <!-- Strings for protectedAuth dialog -->
 <!ENTITY protectedAuth.title "Protected Token Authentication">
 <!ENTITY protectedAuth.msg "Please authenticate to the token. Authentication method depends on the type of your token.">

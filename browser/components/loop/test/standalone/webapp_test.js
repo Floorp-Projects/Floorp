@@ -95,6 +95,10 @@ describe("loop.webapp", function() {
     });
 
     describe("#startCall", function() {
+      beforeEach(function() {
+        sandbox.stub(router, "_setupWebSocketAndCallView");
+      });
+
       it("should navigate back home if session token is missing", function() {
         router.startCall();
 
@@ -110,15 +114,146 @@ describe("loop.webapp", function() {
                                        "missing_conversation_info");
       });
 
-      it("should navigate to call/ongoing/:token if session token is available",
-        function() {
-          conversation.set("loopToken", "fake");
+      it("should setup the websocket if session token is available", function() {
+        conversation.set("loopToken", "fake");
 
-          router.startCall();
+        router.startCall();
 
-          sinon.assert.calledOnce(router.navigate);
-          sinon.assert.calledWithMatch(router.navigate, "call/ongoing/fake");
+        sinon.assert.calledOnce(router._setupWebSocketAndCallView);
+        sinon.assert.calledWithExactly(router._setupWebSocketAndCallView, "fake");
+      });
+    });
+
+    describe("#_setupWebSocketAndCallView", function() {
+      beforeEach(function() {
+        conversation.setOutgoingSessionData({
+          sessionId:      "sessionId",
+          sessionToken:   "sessionToken",
+          apiKey:         "apiKey",
+          callId:         "Hello",
+          progressURL:    "http://progress.example.com",
+          websocketToken: 123
         });
+      });
+
+      describe("Websocket connection successful", function() {
+        var promise;
+
+        beforeEach(function() {
+          sandbox.stub(loop, "CallConnectionWebSocket").returns({
+            promiseConnect: function() {
+              promise = new Promise(function(resolve, reject) {
+                resolve();
+              });
+              return promise;
+            },
+
+            on: sandbox.spy()
+          });
+        });
+
+        it("should create a CallConnectionWebSocket", function(done) {
+          router._setupWebSocketAndCallView("fake");
+
+          promise.then(function () {
+            sinon.assert.calledOnce(loop.CallConnectionWebSocket);
+            sinon.assert.calledWithExactly(loop.CallConnectionWebSocket, {
+              callId: "Hello",
+              url: "http://progress.example.com",
+              // The websocket token is converted to a hex string.
+              websocketToken: "7b"
+            });
+            done();
+          });
+        });
+
+        it("should navigate to call/ongoing/:token", function(done) {
+          router._setupWebSocketAndCallView("fake");
+
+          promise.then(function () {
+            sinon.assert.calledOnce(router.navigate);
+            sinon.assert.calledWithMatch(router.navigate, "call/ongoing/fake");
+            done();
+          });
+        });
+      });
+
+      describe("Websocket connection failed", function() {
+        var promise;
+
+        beforeEach(function() {
+          sandbox.stub(loop, "CallConnectionWebSocket").returns({
+            promiseConnect: function() {
+              promise = new Promise(function(resolve, reject) {
+                reject();
+              });
+              return promise;
+            },
+
+            on: sandbox.spy()
+          });
+        });
+
+        it("should display an error", function() {
+          router._setupWebSocketAndCallView();
+
+          promise.then(function() {
+          }, function () {
+            sinon.assert.calledOnce(router._notifier.errorL10n);
+            sinon.assert.calledWithExactly(router._notifier.errorL10n,
+              "cannot_start_call_session_not_ready");
+            done();
+          });
+        });
+      });
+
+      describe("Websocket Events", function() {
+        beforeEach(function() {
+          conversation.setOutgoingSessionData({
+            sessionId:      "sessionId",
+            sessionToken:   "sessionToken",
+            apiKey:         "apiKey",
+            callId:         "Hello",
+            progressURL:    "http://progress.example.com",
+            websocketToken: 123
+          });
+
+          sandbox.stub(loop.CallConnectionWebSocket.prototype,
+                       "promiseConnect").returns({
+            then: sandbox.spy()
+          });
+
+          router._setupWebSocketAndCallView();
+        });
+
+        describe("Progress", function() {
+          describe("state: terminate, reason: reject", function() {
+            beforeEach(function() {
+              sandbox.stub(router, "endCall");
+            });
+
+            it("should end the call", function() {
+              router._websocket.trigger("progress", {
+                state: "terminated",
+                reason: "reject"
+              });
+
+              sinon.assert.calledOnce(router.endCall);
+            });
+
+            it("should display an error message", function() {
+              router._websocket.trigger("progress", {
+                state: "terminated",
+                reason: "reject"
+              });
+
+              sinon.assert.calledOnce(router._notifier.errorL10n);
+              sinon.assert.calledWithExactly(router._notifier.errorL10n,
+                "call_timeout_notification_text");
+            });
+          });
+        });
+      });
     });
 
     describe("#endCall", function() {
@@ -241,20 +376,21 @@ describe("loop.webapp", function() {
 
       beforeEach(function() {
         fakeSessionData = {
-          sessionId:    "sessionId",
-          sessionToken: "sessionToken",
-          apiKey:       "apiKey"
+          sessionId:      "sessionId",
+          sessionToken:   "sessionToken",
+          apiKey:         "apiKey",
+          websocketToken: 123
         };
         conversation.set("loopToken", "fakeToken");
+        sandbox.stub(router, "startCall");
       });
 
-      it("should navigate to call/ongoing/:token once call session is ready",
+      it("should attempt to start the call once call session is ready",
         function() {
           router.setupOutgoingCall();
           conversation.outgoing(fakeSessionData);
 
-          sinon.assert.calledOnce(router.navigate);
-          sinon.assert.calledWith(router.navigate, "call/ongoing/fakeToken");
+          sinon.assert.calledOnce(router.startCall);
         });
 
       it("should navigate to call/{token} when conversation ended", function() {
@@ -302,6 +438,7 @@ describe("loop.webapp", function() {
         describe("Has loop token", function() {
           beforeEach(function() {
             conversation.set("loopToken", "fakeToken");
+            conversation.set("selectedCallType", "audio-video");
             sandbox.stub(conversation, "outgoing");
           });
 
@@ -400,20 +537,58 @@ describe("loop.webapp", function() {
       });
 
       it("should start the conversation establishment process", function() {
-        var button = view.getDOMNode().querySelector("button");
+        var button = view.getDOMNode().querySelector(".start-audio-video-call");
         React.addons.TestUtils.Simulate.click(button);
 
         sinon.assert.calledOnce(setupOutgoingCall);
+        sinon.assert.calledWithExactly(setupOutgoingCall);
       });
 
-      it("should disable current form once session is initiated", function() {
-        conversation.set("loopToken", "fake");
-
-        var button = view.getDOMNode().querySelector("button");
+      it("should start the conversation establishment process", function() {
+        var button = view.getDOMNode().querySelector(".start-audio-only-call");
         React.addons.TestUtils.Simulate.click(button);
 
-        expect(button.disabled).to.eql(true);
+        sinon.assert.calledOnce(setupOutgoingCall);
+        sinon.assert.calledWithExactly(setupOutgoingCall);
       });
+
+      it("should disable audio-video button once session is initiated",
+         function() {
+           conversation.set("loopToken", "fake");
+
+           var button = view.getDOMNode().querySelector(".start-audio-video-call");
+           React.addons.TestUtils.Simulate.click(button);
+
+           expect(button.disabled).to.eql(true);
+         });
+
+      it("should disable audio-only button once session is initiated",
+         function() {
+           conversation.set("loopToken", "fake");
+
+           var button = view.getDOMNode().querySelector(".start-audio-only-call");
+           React.addons.TestUtils.Simulate.click(button);
+
+           expect(button.disabled).to.eql(true);
+         });
+
+         it("should set selectedCallType to audio", function() {
+           conversation.set("loopToken", "fake");
+
+           var button = view.getDOMNode().querySelector(".start-audio-only-call");
+           React.addons.TestUtils.Simulate.click(button);
+
+           expect(conversation.get("selectedCallType")).to.eql("audio");
+         });
+
+         it("should set selectedCallType to audio-video", function() {
+           conversation.set("loopToken", "fake");
+
+           var button = view.getDOMNode().querySelector(".start-audio-video-call");
+           React.addons.TestUtils.Simulate.click(button);
+
+           expect(conversation.get("selectedCallType")).to.eql("audio-video");
+         });
 
       it("should set state.urlCreationDateString to a locale date string",
          function() {

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const PREF_NEWTAB_COLUMNS = "browser.newtabpage.columns";
+
 /*
  * These tests make sure that dragging and dropping sites works as expected.
  * Sites contained in the grid need to shift around to indicate the result
@@ -10,6 +12,8 @@
  * to decrease test run time, focusing on external sites.
  */
 function runTests() {
+  registerCleanupFunction(_ => Services.prefs.clearUserPref(PREF_NEWTAB_COLUMNS));
+
   // drag a new site onto the very first cell
   yield setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks(",,,,,,,7,8");
@@ -28,6 +32,8 @@ function runTests() {
   yield addNewTabPageTab();
   checkGrid("0,1,2,3,4,5,6,7p,8p");
 
+  // force the grid to be small enough that a pinned cell could be pushed out
+  Services.prefs.setIntPref(PREF_NEWTAB_COLUMNS, 3);
   yield simulateExternalDrop(7);
   checkGrid("0,1,2,3,4,5,7p,99p,8p");
 

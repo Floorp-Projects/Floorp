@@ -258,6 +258,12 @@ class JitFrameIterator
     void dump() const;
 
     inline BaselineFrame *baselineFrame() const;
+
+#ifdef DEBUG
+    bool verifyReturnAddressUsingNativeToBytecodeMap();
+#else
+    inline bool verifyReturnAddressUsingNativeToBytecodeMap() { return true; }
+#endif
 };
 
 class IonJSFrameLayout;

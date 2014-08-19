@@ -86,6 +86,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebappManager",
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
                                   "resource://gre/modules/CharsetMenu.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "NetErrorHelper",
+                                  "resource://gre/modules/NetErrorHelper.jsm");
+
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
@@ -448,6 +451,13 @@ var BrowserApp = {
 
     if (this._startupStatus)
       this.onAppUpdated();
+
+    if (this.isGuest) {
+      // Disable extension installs
+      Services.prefs.setIntPref("extensions.enabledScopes", 1);
+      Services.prefs.setIntPref("extensions.autoDisableScopes", 1);
+      Services.prefs.setBoolPref("xpinstall.enabled", false);
+    }
 
     // notify java that gecko has loaded
     sendMessageToJava({ type: "Gecko:Ready" });
@@ -1599,12 +1609,16 @@ var BrowserApp = {
         // perform a keyword search on the selected tab.
         this.selectedTab.userSearch = aData;
 
+        // Don't store queries in private browsing mode.
+        let isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.selectedTab.browser.contentWindow);
+        let query = isPrivate ? "" : aData;
+
         let engine = aSubject.QueryInterface(Ci.nsISearchEngine);
         sendMessageToJava({
           type: "Search:Keyword",
           identifier: engine.identifier,
           name: engine.name,
-          query: aData
+          query: query
         });
         break;
 
@@ -1829,8 +1843,6 @@ var BrowserApp = {
 var NativeWindow = {
   init: function() {
     Services.obs.addObserver(this, "Menu:Clicked", false);
-    Services.obs.addObserver(this, "PageActions:Clicked", false);
-    Services.obs.addObserver(this, "PageActions:LongClicked", false);
     Services.obs.addObserver(this, "Doorhanger:Reply", false);
     Services.obs.addObserver(this, "Toast:Click", false);
     Services.obs.addObserver(this, "Toast:Hidden", false);
@@ -1839,8 +1851,6 @@ var NativeWindow = {
 
   uninit: function() {
     Services.obs.removeObserver(this, "Menu:Clicked");
-    Services.obs.removeObserver(this, "PageActions:Clicked");
-    Services.obs.removeObserver(this, "PageActions:LongClicked");
     Services.obs.removeObserver(this, "Doorhanger:Reply");
     Services.obs.removeObserver(this, "Toast:Click", false);
     Services.obs.removeObserver(this, "Toast:Hidden", false);
@@ -1891,32 +1901,6 @@ var NativeWindow = {
       }
 
       sendMessageToJava(msg);
-    }
-  },
-
-  pageactions: {
-    _items: { },
-    add: function(aOptions) {
-      let id = uuidgen.generateUUID().toString();
-      sendMessageToJava({
-        type: "PageActions:Add",
-        id: id,
-        title: aOptions.title,
-        icon: resolveGeckoURI(aOptions.icon),
-        important: "important" in aOptions ? aOptions.important : false
-      });
-      this._items[id] = {
-        clickCallback: aOptions.clickCallback,
-        longClickCallback: aOptions.longClickCallback
-      };
-      return id;
-    },
-    remove: function(id) {
-      sendMessageToJava({
-        type: "PageActions:Remove",
-        id: id
-      });
-      delete this._items[id];
     }
   },
 
@@ -2021,12 +2005,6 @@ var NativeWindow = {
     if (aTopic == "Menu:Clicked") {
       if (this.menu._callbacks[aData])
         this.menu._callbacks[aData]();
-    } else if (aTopic == "PageActions:Clicked") {
-        if (this.pageactions._items[aData].clickCallback)
-          this.pageactions._items[aData].clickCallback();
-    } else if (aTopic == "PageActions:LongClicked") {
-        if (this.pageactions._items[aData].longClickCallback)
-          this.pageactions._items[aData].longClickCallback();
     } else if (aTopic == "Toast:Click") {
       if (this.toast._callbacks[aData]) {
         this.toast._callbacks[aData]();
@@ -2733,6 +2711,25 @@ var NativeWindow = {
     }
   }
 };
+
+XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
+                                  "resource://gre/modules/PageActions.jsm");
+
+// These alias to the old, deprecated NativeWindow interfaces
+[
+  ["pageactions", "resource://gre/modules/PageActions.jsm", "PageActions"]
+].forEach(item => {
+  let [name, script, exprt] = item;
+
+  XPCOMUtils.defineLazyGetter(NativeWindow, name, () => {
+    var err = Strings.browser.formatStringFromName("nativeWindow.deprecated", ["NativeWindow." + name, script], 2);
+    Cu.reportError(err);
+
+    let sandbox = {};
+    Services.scriptloader.loadSubScript(script, sandbox);
+    return sandbox[exprt];
+  });
+});
 
 var LightWeightThemeWebInstaller = {
   init: function sh_init() {
@@ -3797,6 +3794,10 @@ Tab.prototype = {
         // pages and other similar page. This lets us fix bugs like 401575 which
         // require error page UI to do privileged things, without letting error
         // pages have any privilege themselves.
+        if (docURI.startsWith("about:neterror")) {
+          NetErrorHelper.attachToBrowser(this.browser);
+        }
+
         if (docURI.startsWith("about:certerror") || docURI.startsWith("about:blocked")) {
           this.browser.addEventListener("click", ErrorPageEventHandler, true);
           let listener = function() {
@@ -4194,6 +4195,20 @@ Tab.prototype = {
     try {
       fixedURI = URIFixup.createExposableURI(aLocationURI);
     } catch (ex) { }
+
+    // In guest sessions, we refuse to let you open any file urls.
+    if (BrowserApp.isGuest) {
+      let bannedSchemes = ["file", "chrome", "resource", "jar"];
+
+      if (bannedSchemes.indexOf(fixedURI.scheme) > -1) {
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
+
+        aRequest = this.browser.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, fixedURI, null);
+        if (aRequest) {
+          fixedURI = aRequest.URI;
+        }
+      }
+    }
 
     let contentType = contentWin.document.contentType;
 
@@ -6202,7 +6217,7 @@ var ViewportHandler = {
         let document = target.ownerDocument;
         let browser = BrowserApp.getBrowserForDocument(document);
         let tab = BrowserApp.getTabForBrowser(browser);
-        if (tab)
+        if (tab && tab.contentDocumentIsDisplayed)
           this.updateMetadata(tab, false);
         break;
     }
@@ -7373,12 +7388,12 @@ let Reader = {
 
   updatePageAction: function(tab) {
     if (this.pageAction.id) {
-      NativeWindow.pageactions.remove(this.pageAction.id);
+      PageActions.remove(this.pageAction.id);
       delete this.pageAction.id;
     }
 
     if (tab.readerActive) {
-      this.pageAction.id = NativeWindow.pageactions.add({
+      this.pageAction.id = PageActions.add({
         title: Strings.browser.GetStringFromName("readerMode.exit"),
         icon: "drawable://reader_active",
         clickCallback: this.pageAction.readerModeCallback,
@@ -7395,7 +7410,7 @@ let Reader = {
     UITelemetry.stopSession("reader.1", "", null);
 
     if (tab.readerEnabled) {
-      this.pageAction.id = NativeWindow.pageactions.add({
+      this.pageAction.id = PageActions.add({
         title: Strings.browser.GetStringFromName("readerMode.enter"),
         icon: "drawable://reader",
         clickCallback:this.pageAction.readerModeCallback,
@@ -7965,7 +7980,7 @@ var ExternalApps = {
     if (this._pageActionId != undefined)
       return;
 
-    this._pageActionId = NativeWindow.pageactions.add({
+    this._pageActionId = PageActions.add({
       title: Strings.browser.GetStringFromName("openInApp.pageAction"),
       icon: "drawable://icon_openinapp",
 
@@ -7997,7 +8012,7 @@ var ExternalApps = {
     if(!this._pageActionId)
       return;
 
-    NativeWindow.pageactions.remove(this._pageActionId);
+    PageActions.remove(this._pageActionId);
     delete this._pageActionId;
   },
 };

@@ -195,6 +195,7 @@ class ArenaCellIterImpl
     ArenaCellIterImpl()
       : firstThingOffset(0)     // Squelch
       , thingSize(0)            //   warnings
+      , limit(0)
     {
     }
 
@@ -368,14 +369,13 @@ class ZoneCellIter : public ZoneCellIterImpl
         if (IsBackgroundFinalized(kind) &&
             zone->allocator.arenas.needBackgroundFinalizeWait(kind))
         {
-            gc::FinishBackgroundFinalize(zone->runtimeFromMainThread());
+            zone->runtimeFromMainThread()->gc.waitBackgroundSweepEnd();
         }
 
 #ifdef JSGC_GENERATIONAL
         /* Evict the nursery before iterating so we can see all things. */
         JSRuntime *rt = zone->runtimeFromMainThread();
-        if (!rt->gc.nursery.isEmpty())
-            MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+        rt->gc.evictNursery();
 #endif
 
         if (lists->isSynchronizedFreeList(kind)) {
@@ -473,7 +473,7 @@ TryNewNurseryObject(JSContext *cx, size_t thingSize, size_t nDynamicSlots)
     if (obj)
         return obj;
     if (allowGC && !rt->mainThread.suppressGC) {
-        MinorGC(cx, JS::gcreason::OUT_OF_NURSERY);
+        cx->minorGC(JS::gcreason::OUT_OF_NURSERY);
 
         /* Exceeding gcMaxBytes while tenuring can disable the Nursery. */
         if (nursery.isEnabled()) {
@@ -547,13 +547,13 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
     if (allowGC) {
 #ifdef JS_GC_ZEAL
         if (rt->gc.needZealousGC())
-            js::gc::RunDebugGC(ncx);
+            rt->gc.runDebugGC();
 #endif
 
         if (rt->interrupt) {
             // Invoking the interrupt callback can fail and we can't usefully
             // handle that here. Just check in case we need to collect instead.
-            js::gc::GCIfNeeded(ncx);
+            ncx->gcIfNeeded();
         }
     }
 
@@ -682,7 +682,7 @@ AllocateObjectForCacheHit(JSContext *cx, AllocKind kind, InitialHeap heap)
 
         JSObject *obj = TryNewNurseryObject<NoGC>(cx, thingSize, 0);
         if (!obj && allowGC) {
-            MinorGC(cx, JS::gcreason::OUT_OF_NURSERY);
+            cx->minorGC(JS::gcreason::OUT_OF_NURSERY);
             return nullptr;
         }
         return obj;
@@ -691,7 +691,7 @@ AllocateObjectForCacheHit(JSContext *cx, AllocKind kind, InitialHeap heap)
 
     JSObject *obj = AllocateObject<NoGC>(cx, kind, 0, heap);
     if (!obj && allowGC) {
-        MaybeGC(cx);
+        cx->runtime()->gc.maybeGC(cx->zone());
         return nullptr;
     }
 

@@ -58,7 +58,8 @@ public:
                                 duration.value(),
                                 framesCopied,
                                 buffer.forget(),
-                                aChannels));
+                                aChannels,
+                                aSampleRate));
 
       // Remove the frames we just pushed into the queue and loop if there is
       // more to be done.
