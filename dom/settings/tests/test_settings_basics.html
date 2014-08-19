@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
 "use strict";
 
 if (SpecialPowers.isMainProcess()) {
-  SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
+  SpecialPowers.Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
 }
 
 SpecialPowers.addPermission("settings-api-read", true, document);
@@ -501,7 +501,7 @@ var steps = [
 
     req = lock.get("wifi.enabled");
     req.onsuccess = function() {
-      check(req.result, wifiEnabled);
+      check(this.result, wifiEnabled);
       ok(true, "Test2 locking result done");
     }
     req.onerror = onFailure;
@@ -762,6 +762,24 @@ var steps = [
       next();
     };
     req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Call success callback when transaction commits");
+    var lock = mozSettings.createLock();
+    lock.ontransactionsuccess = function () {
+       next();
+    };
+    req = lock.set({"setting-obj": {foo: {bar: 23}}});
+    req.onsuccess = function() {
+      req2 = lock.get("setting-obj");
+      req2.onsuccess = function(event) {
+        var result = event.target.result["setting-obj"];
+        ok(result, "Got valid result");
+        ok(typeof result == "object", "Result is object");
+        ok("foo" in result && "bar" in result.foo, "Result has properties");
+        ok(result.foo.bar == 23, "Result properties are set");
+      };
+    };
   },
   function () {
     ok(true, "all done!\n");
