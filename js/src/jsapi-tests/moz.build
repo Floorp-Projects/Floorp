@@ -63,6 +63,7 @@ UNIFIED_SOURCES += [
     'testResolveRecursion.cpp',
     'tests.cpp',
     'testSameValue.cpp',
+    'testSavedStacks.cpp',
     'testScriptInfo.cpp',
     'testScriptObject.cpp',
     'testSetProperty.cpp',
