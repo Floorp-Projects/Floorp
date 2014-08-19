@@ -49,10 +49,10 @@ loop.conversation = (function(OT, mozL10n) {
     },
 
     _handleAccept: function(callType) {
-      return () => {
+      return function() {
         this.props.model.set("selectedCallType", callType);
         this.props.model.trigger("accept");
-      };
+      }.bind(this);
     },
 
     _handleDecline: function() {
@@ -175,17 +175,17 @@ loop.conversation = (function(OT, mozL10n) {
     incoming: function(loopVersion) {
       navigator.mozLoop.startAlerting();
       this._conversation.set({loopVersion: loopVersion});
-      this._conversation.once("accept", () => {
+      this._conversation.once("accept", function() {
         this.navigate("call/accept", {trigger: true});
-      });
-      this._conversation.once("decline", () => {
+      }.bind(this));
+      this._conversation.once("decline", function() {
         this.navigate("call/decline", {trigger: true});
-      });
-      this._conversation.once("declineAndBlock", () => {
+      }.bind(this));
+      this._conversation.once("declineAndBlock", function() {
         this.navigate("call/declineAndBlock", {trigger: true});
-      });
+      }.bind(this));
       this._conversation.once("call:incoming", this.startCall, this);
-      this._client.requestCallsInfo(loopVersion, (err, sessionData) => {
+      this._client.requestCallsInfo(loopVersion, function(err, sessionData) {
         if (err) {
           console.error("Failed to get the sessionData", err);
           // XXX Not the ideal response, but bug 1047410 will be replacing
@@ -202,7 +202,7 @@ loop.conversation = (function(OT, mozL10n) {
         this._conversation.setIncomingSessionData(sessionData[0]);
 
         this._setupWebSocketAndCallView();
-      });
+      }.bind(this));
     },
 
     /**
