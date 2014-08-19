@@ -192,11 +192,10 @@
             // update the annotation based on this event, then update the
             // icon as well
             this.isMarked = JSON.parse(event.detail).marked;
-            let uri = Services.io.newURI(this.pageData.url, null, null);
             if (this.isMarked) {
-              Social.markURI(provider.origin, uri);
+              Social.markURI(provider.origin, gBrowser.currentURI);
             } else {
-              Social.unmarkURI(provider.origin, uri, () => {
+              Social.unmarkURI(provider.origin, gBrowser.currentURI, () => {
                 this.update();
               });
             }
