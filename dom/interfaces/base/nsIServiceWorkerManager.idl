@@ -8,7 +8,7 @@
 interface nsIDocument;
 interface nsIURI;
 
-[uuid(cc539f1e-1ce6-4af5-bf94-195b30bde010)]
+[uuid(9b5acea4-2601-4ac7-8836-4352ceb88178)]
 interface nsIServiceWorkerManager : nsISupports
 {
   // Returns a Promise
@@ -17,9 +17,9 @@ interface nsIServiceWorkerManager : nsISupports
   // Returns a Promise
   nsISupports unregister(in nsIDOMWindow aWindow, in DOMString aScope);
 
-  // aTarget MUST be a ServiceWorkerContainer.
-  [noscript] void AddContainerEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
-  [noscript] void RemoveContainerEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
+  // aTarget MUST be a ServiceWorkerRegistration.
+  [noscript] void AddRegistrationEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
+  [noscript] void RemoveRegistrationEventListener(in nsIURI aPageURI, in nsIDOMEventTarget aTarget);
 
   /**
    * Call this to request that document `aDoc` be controlled by a ServiceWorker

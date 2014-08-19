@@ -16,6 +16,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ServiceWorkerCommon.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsTObserverArray.h"
@@ -24,10 +25,12 @@ class nsIScriptError;
 
 namespace mozilla {
 namespace dom {
+
+class ServiceWorkerRegistration;
+
 namespace workers {
 
 class ServiceWorker;
-class ServiceWorkerContainer;
 class ServiceWorkerUpdateInstance;
 
 /**
@@ -95,22 +98,13 @@ public:
   { }
 };
 
-// Use multiples of 2 since they can be bitwise ORed when calling
-// InvalidateServiceWorkerContainerWorker.
-MOZ_BEGIN_ENUM_CLASS(WhichServiceWorker)
-  INSTALLING_WORKER = 1,
-  WAITING_WORKER    = 2,
-  ACTIVE_WORKER     = 4,
-MOZ_END_ENUM_CLASS(WhichServiceWorker)
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(WhichServiceWorker)
-
 // Needs to inherit from nsISupports because NS_ProxyRelease() does not support
 // non-ISupports classes.
-class ServiceWorkerRegistration MOZ_FINAL : public nsISupports
+class ServiceWorkerRegistrationInfo MOZ_FINAL : public nsISupports
 {
   uint32_t mControlledDocumentsCounter;
 
-  virtual ~ServiceWorkerRegistration();
+  virtual ~ServiceWorkerRegistrationInfo();
 
 public:
   NS_DECL_ISUPPORTS
@@ -145,7 +139,7 @@ public:
   // pendingUninstall and when all controlling documents go away, removed.
   bool mPendingUninstall;
 
-  explicit ServiceWorkerRegistration(const nsACString& aScope);
+  explicit ServiceWorkerRegistrationInfo(const nsACString& aScope);
 
   already_AddRefed<ServiceWorkerInfo>
   Newest()
@@ -236,35 +230,35 @@ public:
     nsTArray<nsCString> mOrderedScopes;
 
     // Scope to registration.
-    nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistration> mServiceWorkerRegistrations;
+    nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerRegistrationInfo> mServiceWorkerRegistrationInfos;
 
     // This array can't be stored in ServiceWorkerRegistration because one may
     // not exist when a certain window is opened, but we still want that
     // window's container to be notified if it's in scope.
     // The containers inform the SWM on creation and destruction.
-    nsTObserverArray<ServiceWorkerContainer*> mServiceWorkerContainers;
+    nsTObserverArray<ServiceWorkerRegistration*> mServiceWorkerRegistrations;
 
-    nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistration> mControlledDocuments;
+    nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistrationInfo> mControlledDocuments;
 
     ServiceWorkerDomainInfo()
     { }
 
-    already_AddRefed<ServiceWorkerRegistration>
+    already_AddRefed<ServiceWorkerRegistrationInfo>
     GetRegistration(const nsCString& aScope) const
     {
-      nsRefPtr<ServiceWorkerRegistration> reg;
-      mServiceWorkerRegistrations.Get(aScope, getter_AddRefs(reg));
+      nsRefPtr<ServiceWorkerRegistrationInfo> reg;
+      mServiceWorkerRegistrationInfos.Get(aScope, getter_AddRefs(reg));
       return reg.forget();
     }
 
-    ServiceWorkerRegistration*
+    ServiceWorkerRegistrationInfo*
     CreateNewRegistration(const nsCString& aScope)
     {
-      ServiceWorkerRegistration* registration =
-        new ServiceWorkerRegistration(aScope);
+      ServiceWorkerRegistrationInfo* registration =
+        new ServiceWorkerRegistrationInfo(aScope);
       // From now on ownership of registration is with
-      // mServiceWorkerRegistrations.
-      mServiceWorkerRegistrations.Put(aScope, registration);
+      // mServiceWorkerRegistrationInfos.
+      mServiceWorkerRegistrationInfos.Put(aScope, registration);
       ServiceWorkerManager::AddScope(mOrderedScopes, aScope);
       return registration;
     }
@@ -279,26 +273,26 @@ public:
   nsRefPtrHashtable<nsCStringHashKey, ServiceWorkerDomainInfo> mDomainMap;
 
   void
-  ResolveRegisterPromises(ServiceWorkerRegistration* aRegistration,
+  ResolveRegisterPromises(ServiceWorkerRegistrationInfo* aRegistration,
                           const nsACString& aWorkerScriptSpec);
 
   void
-  RejectUpdatePromiseObservers(ServiceWorkerRegistration* aRegistration,
+  RejectUpdatePromiseObservers(ServiceWorkerRegistrationInfo* aRegistration,
                                nsresult aResult);
 
   void
-  RejectUpdatePromiseObservers(ServiceWorkerRegistration* aRegistration,
+  RejectUpdatePromiseObservers(ServiceWorkerRegistrationInfo* aRegistration,
                                const ErrorEventInit& aErrorDesc);
 
   void
-  FinishFetch(ServiceWorkerRegistration* aRegistration,
+  FinishFetch(ServiceWorkerRegistrationInfo* aRegistration,
               nsPIDOMWindow* aWindow);
 
   void
-  FinishInstall(ServiceWorkerRegistration* aRegistration);
+  FinishInstall(ServiceWorkerRegistrationInfo* aRegistration);
 
   void
-  FinishActivate(ServiceWorkerRegistration* aRegistration);
+  FinishActivate(ServiceWorkerRegistrationInfo* aRegistration);
 
   void
   HandleError(JSContext* aCx,
@@ -319,10 +313,10 @@ private:
   ~ServiceWorkerManager();
 
   NS_IMETHOD
-  Update(ServiceWorkerRegistration* aRegistration, nsPIDOMWindow* aWindow);
+  Update(ServiceWorkerRegistrationInfo* aRegistration, nsPIDOMWindow* aWindow);
 
   void
-  Install(ServiceWorkerRegistration* aRegistration,
+  Install(ServiceWorkerRegistrationInfo* aRegistration,
           ServiceWorkerInfo* aServiceWorkerInfo);
 
   NS_IMETHOD
@@ -356,17 +350,17 @@ private:
                             nsISupports** aServiceWorker);
 
   void
-  InvalidateServiceWorkerContainerWorker(ServiceWorkerRegistration* aRegistration,
-                                         WhichServiceWorker aWhichOnes);
+  InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,
+                                            WhichServiceWorker aWhichOnes);
 
-  already_AddRefed<ServiceWorkerRegistration>
-  GetServiceWorkerRegistration(nsPIDOMWindow* aWindow);
+  already_AddRefed<ServiceWorkerRegistrationInfo>
+  GetServiceWorkerRegistrationInfo(nsPIDOMWindow* aWindow);
 
-  already_AddRefed<ServiceWorkerRegistration>
-  GetServiceWorkerRegistration(nsIDocument* aDoc);
+  already_AddRefed<ServiceWorkerRegistrationInfo>
+  GetServiceWorkerRegistrationInfo(nsIDocument* aDoc);
 
-  already_AddRefed<ServiceWorkerRegistration>
-  GetServiceWorkerRegistration(nsIURI* aURI);
+  already_AddRefed<ServiceWorkerRegistrationInfo>
+  GetServiceWorkerRegistrationInfo(nsIURI* aURI);
 
   static void
   AddScope(nsTArray<nsCString>& aList, const nsACString& aScope);
@@ -378,8 +372,8 @@ private:
   RemoveScope(nsTArray<nsCString>& aList, const nsACString& aScope);
 
   void
-  FireEventOnServiceWorkerContainers(ServiceWorkerRegistration* aRegistration,
-                                     const nsAString& aName);
+  FireEventOnServiceWorkerRegistrations(ServiceWorkerRegistrationInfo* aRegistration,
+                                        const nsAString& aName);
 
 };
 
