@@ -8,8 +8,10 @@
     locale/webapprt/webapp.dtd                     (%webapprt/webapp.dtd)
     locale/webapprt/webapp.properties              (%webapprt/webapp.properties)
     locale/webapprt/getUserMediaDialog.dtd         (%webapprt/getUserMediaDialog.dtd)
-    locale/webapprt/appstrings.properties         (%webapprt/overrides/appstrings.properties)
-    locale/webapprt/dom.properties         (%webapprt/overrides/dom.properties)
+    locale/webapprt/appstrings.properties          (%webapprt/overrides/appstrings.properties)
+    locale/webapprt/dom.properties                 (%webapprt/overrides/dom.properties)
+    locale/webapprt/downloads/downloads.dtd        (%webapprt/downloads/downloads.dtd)
+
 
 % locale branding @AB_CD@ resource://webappbranding/
 

@@ -816,6 +816,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/webapprt/components/PaymentUIGlue.js
 @BINPATH@/webapprt/components/components.manifest
 @BINPATH@/webapprt/defaults/preferences/prefs.js
+@BINPATH@/webapprt/modules/DownloadView.jsm
 @BINPATH@/webapprt/modules/Startup.jsm
 @BINPATH@/webapprt/modules/WebappRT.jsm
 @BINPATH@/webapprt/modules/WebappManager.jsm
