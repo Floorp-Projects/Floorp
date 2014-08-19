@@ -24,9 +24,14 @@ typedef unsigned long nsContentPolicyType;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(d8210e91-1970-4230-88ef-74b6fdc418cf)]
+[scriptable,uuid(94513f07-d559-480e-8879-6249852365ea)]
 interface nsIContentPolicy : nsISupports
 {
+  /**
+   * Indicates a unset or bogus policy type.
+   */
+  const nsContentPolicyType TYPE_INVALID = 0;
+
   /**
    * Gecko/Firefox developers: Do not use TYPE_OTHER under any circumstances.
    *

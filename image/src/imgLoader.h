@@ -257,8 +257,10 @@ public:
                      nsISupports *aCX,
                      nsLoadFlags aLoadFlags,
                      nsISupports *aCacheKey,
+                     nsContentPolicyType aContentPolicyType,
                      const nsAString& initiatorType,
                      imgRequestProxy **_retval);
+
   nsresult LoadImageWithChannel(nsIChannel *channel,
                                 imgINotificationObserver *aObserver,
                                 nsISupports *aCX,
@@ -336,7 +338,9 @@ private: // methods
                        nsIURI *aInitialDocumentURI, nsIURI *aReferrerURI,
                        nsILoadGroup *aLoadGroup,
                        imgINotificationObserver *aObserver, nsISupports *aCX,
-                       nsLoadFlags aLoadFlags, bool aCanMakeNewChannel,
+                       nsLoadFlags aLoadFlags,
+                       nsContentPolicyType aContentPolicyType,
+                       bool aCanMakeNewChannel,
                        imgRequestProxy **aProxyRequest,
                        nsIPrincipal* aLoadingPrincipal,
                        int32_t aCORSMode);
@@ -347,6 +351,7 @@ private: // methods
                                        nsILoadGroup *aLoadGroup,
                                        imgINotificationObserver *aObserver,
                                        nsISupports *aCX, nsLoadFlags aLoadFlags,
+                                       nsContentPolicyType aContentPolicyType,
                                        imgRequestProxy **aProxyRequest,
                                        nsIPrincipal* aLoadingPrincipal,
                                        int32_t aCORSMode);
