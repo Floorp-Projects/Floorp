@@ -3511,8 +3511,7 @@ WifiWorker.prototype = {
         handleError: function(aErrorMessage) {
           self.requestDone();
         }
-      },
-      "fromInternalSetting");
+      });
   },
 
   notifyTetheringOff: function notifyTetheringOff() {
@@ -3532,8 +3531,7 @@ WifiWorker.prototype = {
         handleError: function(aErrorMessage) {
           self.requestDone();
         }
-      },
-      "fromInternalSetting");
+      });
   },
 
   handleWifiEnabled: function(enabled) {
@@ -3609,7 +3607,7 @@ WifiWorker.prototype = {
       let setting = JSON.parse(data);
       // To avoid WifiWorker setting the wifi again, don't need to deal with
       // the "mozsettings-changed" event fired from internal setting.
-      if (setting.message && setting.message === "fromInternalSetting") {
+      if (setting.isInternalChange) {
         return;
       }
 
