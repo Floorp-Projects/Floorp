@@ -1945,7 +1945,6 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
     // perform an aligned 32-bit load and adjust the bitmask accordingly.
     JS_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
     JS_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
-    JS_STATIC_ASSERT(IS_LITTLE_ENDIAN);
 
     // Emit code for the following test:
     //
@@ -1956,21 +1955,24 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
 
     // First, ensure it's a scripted function.
     load32(Address(fun, JSFunction::offsetOfNargs()), scratch);
-    branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::INTERPRETED << 16), label);
+    int32_t bits = IMM32_16ADJ(JSFunction::INTERPRETED);
+    branchTest32(Assembler::Zero, scratch, Imm32(bits), label);
 
     // Common case: if IS_FUN_PROTO, ARROW and SELF_HOSTED are not set,
     // the function is an interpreted constructor and we're done.
     Label done;
-    uint32_t bits = (JSFunction::IS_FUN_PROTO | JSFunction::ARROW | JSFunction::SELF_HOSTED) << 16;
+    bits = IMM32_16ADJ( (JSFunction::IS_FUN_PROTO | JSFunction::ARROW | JSFunction::SELF_HOSTED) );
     branchTest32(Assembler::Zero, scratch, Imm32(bits), &done);
     {
         // The callee is either Function.prototype, an arrow function or
         // self-hosted. None of these are constructible, except self-hosted
         // constructors, so branch to |label| if SELF_HOSTED_CTOR is not set.
-        branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::SELF_HOSTED_CTOR << 16), label);
+        bits = IMM32_16ADJ(JSFunction::SELF_HOSTED_CTOR);
+        branchTest32(Assembler::Zero, scratch, Imm32(bits), label);
 
 #ifdef DEBUG
-        branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::IS_FUN_PROTO << 16), &done);
+        bits = IMM32_16ADJ(JSFunction::IS_FUN_PROTO);
+        branchTest32(Assembler::Zero, scratch, Imm32(bits), &done);
         assumeUnreachable("Function.prototype should not have the SELF_HOSTED_CTOR flag");
 #endif
     }

@@ -89,7 +89,7 @@ function promiseDeletedOAuthParams(baseURL) {
               createInstance(Ci.nsIXMLHttpRequest);
   xhr.open("DELETE", baseURL + "/setup_params", true);
   xhr.addEventListener("load", () => deferred.resolve(xhr));
-  xhr.addEventListener("error", error => deferred.reject(error));
+  xhr.addEventListener("error", deferred.reject);
   xhr.send();
 
   return deferred.promise;

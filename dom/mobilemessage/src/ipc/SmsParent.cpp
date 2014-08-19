@@ -495,7 +495,7 @@ SmsRequestParent::DoRequest(const SendMessageRequest& aRequest)
       // jsval to ::Send. Only system code should be looking at the result here,
       // so we just create it in the System-Principaled Junk Scope.
       AutoJSContext cx;
-      JSAutoCompartment ac(cx, xpc::GetJunkScope());
+      JSAutoCompartment ac(cx, xpc::PrivilegedJunkScope());
       JS::Rooted<JS::Value> params(cx);
       const SendMmsMessageRequest &req = aRequest.get_SendMmsMessageRequest();
       if (!GetParamsFromSendMmsMessageRequest(cx,

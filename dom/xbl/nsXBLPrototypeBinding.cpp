@@ -911,8 +911,7 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
   }
 
   AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> compilationGlobal(cx, xpc::GetCompilationScope());
-  NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
+  JS::Rooted<JSObject*> compilationGlobal(cx, xpc::CompilationScope());
   JSAutoCompartment ac(cx, compilationGlobal);
 
   bool isFirstBinding = aFlags & XBLBinding_Serialize_IsFirstBinding;
@@ -1064,8 +1063,7 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   // computed on demand.
 
   AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> compilationGlobal(cx, xpc::GetCompilationScope());
-  NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
+  JS::Rooted<JSObject*> compilationGlobal(cx, xpc::CompilationScope());
   JSAutoCompartment ac(cx, compilationGlobal);
 
   uint8_t flags = mInheritStyle ? XBLBinding_Serialize_InheritStyle : 0;

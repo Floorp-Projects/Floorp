@@ -1396,7 +1396,11 @@ PlacesTreeView.prototype = {
     if (this._getColumnType(aColumn) != this.COLUMN_TYPE_TITLE)
       return "";
 
-    return this._getNodeForRow(aRow).icon;
+    let node = this._getNodeForRow(aRow);
+    if (PlacesUtils.nodeIsURI(node) && node.icon)
+      return PlacesUtils.getImageURLForResolution(window, node.icon);
+
+    return node.icon;
   },
 
   getProgressMode: function(aRow, aColumn) { },

@@ -19,7 +19,6 @@
 
 const char16_t gt ('>');
 const char16_t space (' ');
-const char16_t nbsp (0xa0);
 const char16_t nl ('\n');
 const char16_t cr('\r');
 
@@ -142,6 +141,7 @@ BreakLine(nsAString& aOutString, uint32_t& outStringCol,
 
 static inline bool IsSpace(char16_t c)
 {
+  const char16_t nbsp (0xa0);
   return (nsCRT::IsAsciiSpace(c) || (c == nl) || (c == cr) || (c == nbsp));
 }
 

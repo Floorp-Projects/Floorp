@@ -10,7 +10,7 @@ import android.os.IBinder;
 
 public class FxAccountSyncService extends Service {
   private static final Object syncAdapterLock = new Object();
-  private static FxAccountSyncAdapter syncAdapter = null;
+  private static FxAccountSyncAdapter syncAdapter;
 
   @Override
   public void onCreate() {

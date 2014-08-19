@@ -120,6 +120,7 @@ class NetAddrElement : public LinkedListElement<NetAddrElement> {
 public:
   explicit NetAddrElement(const PRNetAddr *prNetAddr);
   NetAddrElement(const NetAddrElement& netAddr);
+  NetAddrElement(const NetAddr& aNetAddr);
   ~NetAddrElement();
 
   NetAddr mAddress;
@@ -137,12 +138,17 @@ public:
   ~AddrInfo();
 
   void AddAddress(NetAddrElement *address);
+  void SetCanonicalName(const char* cname);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   char *mHostName;
   char *mCanonicalName;
   LinkedList<NetAddrElement> mAddresses;
+
+  // Removes every address of addressFamily, then takes every address in other
+  // as well as copying its canonicalName if it has one. other may be null.
+  void MergeAndConsume(AddrInfo* aOther, uint16_t aAddressFamily);
 
 private:
   void Init(const char *host, const char *cname);

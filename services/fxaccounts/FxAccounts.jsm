@@ -61,7 +61,7 @@ let publicProperties = [
 // }
 // If the state has changed between the function being called and the promise
 // being resolved, the .resolve() call will actually be rejected.
-AccountState = function(fxaInternal) {
+let AccountState = function(fxaInternal) {
   this.fxaInternal = fxaInternal;
 };
 

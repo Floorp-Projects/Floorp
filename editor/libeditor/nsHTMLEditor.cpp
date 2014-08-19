@@ -595,7 +595,7 @@ nsresult
 nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 {
   // NOTE: When you change this method, you should also change:
-  //   * editor/libeditor/html/tests/test_htmleditor_keyevent_handling.html
+  //   * editor/libeditor/tests/test_htmleditor_keyevent_handling.html
 
   if (IsReadonly() || IsDisabled()) {
     // When we're not editable, the events are handled on nsEditor, so, we can

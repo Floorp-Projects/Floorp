@@ -3097,16 +3097,16 @@ const BrowserSearch = {
     }
 #endif
     let openSearchPageIfFieldIsNotActive = function(aSearchBar) {
-      let doc = gBrowser.selectedBrowser.contentDocument;
-      let url = doc.documentURI.toLowerCase();
-      let mm = gBrowser.selectedBrowser.messageManager;
-
-      if (url === "about:home") {
-        AboutHome.focusInput(mm);
-      } else if (url === "about:newtab") {
-        ContentSearch.focusInput(mm);
-      } else if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField) {
-        openUILinkIn("about:home", "current");
+      if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField) {
+        let url = gBrowser.currentURI.spec.toLowerCase();
+        let mm = gBrowser.selectedBrowser.messageManager;
+        if (url === "about:home") {
+          AboutHome.focusInput(mm);
+        } else if (url === "about:newtab") {
+          ContentSearch.focusInput(mm);
+        } else {
+          openUILinkIn("about:home", "current");
+        }
       }
     };
 
@@ -3319,6 +3319,7 @@ function FillHistoryMenu(aParent) {
       PlacesUtils.favicons.getFaviconURLForPage(entry.URI, function (aURI) {
         if (aURI) {
           let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
+          iconURL = PlacesUtils.getImageURLForResolution(window, iconURL);
           item.style.listStyleImage = "url(" + iconURL + ")";
         }
       });

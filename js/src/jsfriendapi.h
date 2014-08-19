@@ -1289,7 +1289,7 @@ class MOZ_STACK_CLASS AutoStableStringChars
   public:
     explicit AutoStableStringChars(JSContext *cx)
       : s_(cx), state_(Uninitialized), ownsChars_(false)
-    {};
+    {}
     ~AutoStableStringChars();
 
     bool init(JSContext *cx, JSString *s);
@@ -1728,6 +1728,17 @@ JS_IsArrayBufferObject(JSObject *obj);
  */
 extern JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj);
+
+/*
+ * Return true if the arrayBuffer contains any data. This will return false for
+ * ArrayBuffer.prototype and neutered ArrayBuffers.
+ *
+ * |obj| must have passed a JS_IsArrayBufferObject test, or somehow be known
+ * that it would pass such a test: it is an ArrayBuffer or a wrapper of an
+ * ArrayBuffer, and the unwrapping will succeed.
+ */
+extern JS_FRIEND_API(bool)
+JS_ArrayBufferHasData(JSObject *obj);
 
 /*
  * Check whether the obj is ArrayBufferObject and memory mapped. Note that this
@@ -2379,7 +2390,7 @@ JS_FRIEND_API(void)
 Debug_SetActiveJSContext(JSRuntime *rt, JSContext *cx);
 #else
 inline void
-Debug_SetActiveJSContext(JSRuntime *rt, JSContext *cx) {};
+Debug_SetActiveJSContext(JSRuntime *rt, JSContext *cx) {}
 #endif
 
 

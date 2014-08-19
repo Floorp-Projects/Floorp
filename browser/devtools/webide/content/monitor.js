@@ -295,7 +295,6 @@ function MonitorClient(client, form) {
 MonitorClient.prototype.destroy = function () {
   this.client.unregisterClient(this);
 }
-MonitorClient.prototype.detach = function () {}
 MonitorClient.prototype.start = function () {
   this.client.request({
     to: this.actor,
