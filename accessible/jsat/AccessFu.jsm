@@ -394,23 +394,19 @@ this.AccessFu = { // jshint ignore:line
   _processedMessageManagers: [],
 
   /**
-   * Adjusts the given bounds relative to the given browser. Converts from
-   * screen or device pixels to either device or CSS pixels.
+   * Adjusts the given bounds relative to the given browser.
    * @param {Rect} aJsonBounds the bounds to adjust
    * @param {browser} aBrowser the browser we want the bounds relative to
    * @param {bool} aToCSSPixels whether to convert to CSS pixels (as opposed to
    *               device pixels)
-   * @param {bool} aFromDevicePixels whether to convert from device pixels (as
-   *               opposed to screen pixels)
    */
   adjustContentBounds:
-    function(aJsonBounds, aBrowser, aToCSSPixels, aFromDevicePixels) {
+    function(aJsonBounds, aBrowser, aToCSSPixels) {
       let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
                             aJsonBounds.right - aJsonBounds.left,
                             aJsonBounds.bottom - aJsonBounds.top);
       let win = Utils.win;
       let dpr = win.devicePixelRatio;
-      let vp = Utils.getViewport(win);
       let offset = { left: -win.mozInnerScreenX, top: -win.mozInnerScreenY };
 
       if (!aBrowser.contentWindow) {
@@ -421,16 +417,6 @@ this.AccessFu = { // jshint ignore:line
         offset.left += clientRect.left + win.mozInnerScreenX;
         offset.top += clientRect.top + win.mozInnerScreenY;
       }
-
-      // Here we scale from screen pixels to layout device pixels by dividing by
-      // the resolution (caused by pinch-zooming). The resolution is the
-      // viewport zoom divided by the devicePixelRatio. If there's no viewport,
-      // then we're on a platform without pinch-zooming and we can just ignore
-      // this.
-      if (!aFromDevicePixels && vp) {
-        bounds = bounds.scale(vp.zoom / dpr, vp.zoom / dpr);
-      }
-
       // Add the offset; the offset is in CSS pixels, so multiply the
       // devicePixelRatio back in before adding to preserve unit consistency.
       bounds = bounds.translate(offset.left * dpr, offset.top * dpr);
@@ -545,11 +531,10 @@ var Output = {
           highlightBox.id = 'virtual-cursor-box';
 
           // Add highlight inset for inner shadow
-          let inset = Utils.win.document.
-            createElementNS('http://www.w3.org/1999/xhtml', 'div');
-          inset.id = 'virtual-cursor-inset';
+          highlightBox.appendChild(
+            Utils.win.document.createElementNS(
+              'http://www.w3.org/1999/xhtml', 'div'));
 
-          highlightBox.appendChild(inset);
           this.highlightBox = Cu.getWeakReference(highlightBox);
         } else {
           highlightBox = this.highlightBox.get();
@@ -559,12 +544,12 @@ var Output = {
         let r = AccessFu.adjustContentBounds(aDetail.bounds, aBrowser, true);
 
         // First hide it to avoid flickering when changing the style.
-        highlightBox.style.display = 'none';
+        highlightBox.classList.remove('show');
         highlightBox.style.top = (r.top - padding) + 'px';
         highlightBox.style.left = (r.left - padding) + 'px';
         highlightBox.style.width = (r.width + padding*2) + 'px';
         highlightBox.style.height = (r.height + padding*2) + 'px';
-        highlightBox.style.display = 'block';
+        highlightBox.classList.add('show');
 
         break;
       }
@@ -572,7 +557,7 @@ var Output = {
       {
         let highlightBox = this.highlightBox ? this.highlightBox.get() : null;
         if (highlightBox) {
-          highlightBox.style.display = 'none';
+          highlightBox.classList.remove('show');
         }
         break;
       }
@@ -889,8 +874,7 @@ var Input = {
   activateContextMenu: function activateContextMenu(aDetails) {
     if (Utils.MozBuildApp === 'mobile/android') {
       let p = AccessFu.adjustContentBounds(aDetails.bounds,
-                                           Utils.CurrentBrowser,
-                                           true, true).center();
+                                           Utils.CurrentBrowser, true).center();
       Services.obs.notifyObservers(null, 'Gesture:LongPress',
                                    JSON.stringify({x: p.x, y: p.y}));
     }
@@ -915,8 +899,8 @@ var Input = {
   doScroll: function doScroll(aDetails) {
     let horizontal = aDetails.horizontal;
     let page = aDetails.page;
-    let p = AccessFu.adjustContentBounds(aDetails.bounds, Utils.CurrentBrowser,
-                                         true, true).center();
+    let p = AccessFu.adjustContentBounds(
+      aDetails.bounds, Utils.CurrentBrowser, true).center();
     Utils.winUtils.sendWheelEvent(p.x, p.y,
       horizontal ? page : 0, horizontal ? 0 : page, 0,
       Utils.win.WheelEvent.DOM_DELTA_PAGE, 0, 0, 0, 0);
