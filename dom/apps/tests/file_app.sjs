@@ -1,7 +1,6 @@
 var gBasePath = "tests/dom/apps/tests/";
 var gAppTemplatePath = "tests/dom/apps/tests/file_app.template.html";
 var gAppcacheTemplatePath = "tests/dom/apps/tests/file_cached_app.template.appcache";
-var gWidgetTemplatePath = "tests/dom/apps/tests/file_widget_app.template.html";
 var gDefaultIcon = "default_icon";
 
 function makeResource(templatePath, version, apptype) {
@@ -15,6 +14,7 @@ function makeResource(templatePath, version, apptype) {
   if (templatePath == gAppTemplatePath && apptype == 'cached') {
     res = res.replace('<html>', '<html manifest="file_app.sjs?apptype=cached&getappcache=true">');
   }
+
   return res;
 }
 
@@ -46,7 +46,7 @@ function handleRequest(request, response) {
 
   // Get the app type.
   var apptype = query.apptype;
-  if (apptype != 'hosted' && apptype != 'cached' && apptype != 'widget')
+  if (apptype != 'hosted' && apptype != 'cached')
     throw "Invalid app type: " + apptype;
 
   // Get the version from server state and handle the etag.
@@ -83,12 +83,7 @@ function handleRequest(request, response) {
     response.write(makeResource(gAppcacheTemplatePath, version, apptype));
     return;
   }
-  else if (apptype == 'widget')
-  {
-    response.setHeader("Content-Type", "text/html", false);
-    response.write(makeResource(gWidgetTemplatePath, version, apptype));
-    return;
-  }
+
   // Generate the app.
   response.setHeader("Content-Type", "text/html", false);
   response.write(makeResource(gAppTemplatePath, version, apptype));
