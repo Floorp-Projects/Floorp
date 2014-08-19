@@ -9,9 +9,8 @@ let url = "https://www.example.com";
 function sendNDEF(techType, sessionToken) {
   let tnf = NDEF.TNF_WELL_KNOWN;
   let type = new Uint8Array(NfcUtils.fromUTF8("U"));
-  let id = new Uint8Array(NfcUtils.fromUTF8(""));
   let payload = new Uint8Array(NfcUtils.fromUTF8(url));
-  let ndef = [new MozNDEFRecord(tnf, type, id, payload)];
+  let ndef = [new MozNDEFRecord({tnf: tnf, type: type, payload: payload})];
 
   let peer = window.navigator.mozNfc.getNFCPeer(sessionToken);
   let req = peer.sendNDEF(ndef);

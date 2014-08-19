@@ -445,10 +445,10 @@ NfcContentHelper.prototype = {
     let records = result.records;
     for (let i = 0; i < records.length; i++) {
       let record = records[i];
-      ndefMsg.push(new requester.MozNDEFRecord(record.tnf,
-                                               record.type,
-                                               record.id,
-                                               record.payload));
+      ndefMsg.push(new requester.MozNDEFRecord({tnf: record.tnf,
+                                                type: record.type,
+                                                id: record.id,
+                                                payload: record.payload}));
     }
     this.fireRequestSuccess(requestId, ndefMsg);
   },
