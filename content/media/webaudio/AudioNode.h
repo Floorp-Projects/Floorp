@@ -133,6 +133,9 @@ public:
 
   uint32_t Id() const { return mId; }
 
+  bool PassThrough() const;
+  void SetPassThrough(bool aPassThrough);
+
   uint32_t ChannelCount() const { return mChannelCount; }
   virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv)
   {
@@ -267,6 +270,9 @@ private:
   ChannelCountMode mChannelCountMode;
   ChannelInterpretation mChannelInterpretation;
   const uint32_t mId;
+  // Whether the node just passes through its input.  This is a devtools API that
+  // only works for some node types.
+  bool mPassThrough;
 #ifdef DEBUG
   // In debug builds, check to make sure that the node demise notification has
   // been properly sent before the node is destroyed.
