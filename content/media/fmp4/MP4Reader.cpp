@@ -570,7 +570,7 @@ MP4Reader::Decode(TrackType aTrack)
     }
   }
   data.mMonitor.AssertCurrentThreadOwns();
-  bool rv = !(data.mEOS || data.mError);
+  bool rv = !(data.mDrainComplete || data.mError);
   data.mMonitor.Unlock();
   return rv;
 }
