@@ -334,12 +334,6 @@ private:
   bool OwnerIsBrowserOrAppFrame();
 
   /**
-   * Is this a frameloader for a bona fide <iframe mozwidget>?  (I.e., does the
-   * frame return true for nsIMozBrowserFrame::GetReallyIsWidget()?)
-   */
-  bool OwnerIsWidget();
-
-  /**
    * Is this a frameloader for a bona fide <iframe mozapp>?  (I.e., does the
    * frame return true for nsIMozBrowserFrame::GetReallyIsApp()?)
    */
