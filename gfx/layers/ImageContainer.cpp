@@ -56,6 +56,10 @@ ImageFactory::CreateImage(ImageFormat aFormat,
     img = new GrallocImage();
     return img.forget();
   }
+  if (aFormat == ImageFormat::OVERLAY_IMAGE) {
+    img = new OverlayImage();
+    return img.forget();
+  }
 #endif
   if (aFormat == ImageFormat::PLANAR_YCBCR) {
     img = new PlanarYCbCrImage(aRecycleBin);
@@ -146,6 +150,17 @@ ImageContainer::CreateImage(ImageFormat aFormat)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
+#ifdef MOZ_WIDGET_GONK
+  if (aFormat == ImageFormat::OVERLAY_IMAGE) {
+    if (mImageClient && mImageClient->GetTextureInfo().mCompositableType != CompositableType::IMAGE_OVERLAY) {
+      // If this ImageContainer is async but the image type mismatch, fix it here
+      if (ImageBridgeChild::IsCreated()) {
+        ImageBridgeChild::DispatchReleaseImageClient(mImageClient);
+        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE_OVERLAY).drop();
+      }
+    }
+  }
+#endif
   if (mImageClient) {
     nsRefPtr<Image> img = mImageClient->CreateImage(aFormat);
     if (img) {

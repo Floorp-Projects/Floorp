@@ -227,6 +227,15 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       }
       break;
     }
+#ifdef MOZ_WIDGET_GONK
+    case CompositableOperation::TOpUseOverlaySource: {
+      const OpUseOverlaySource& op = aEdit.get_OpUseOverlaySource();
+      CompositableHost* compositable = AsCompositable(op);
+      MOZ_ASSERT(compositable->GetType() == CompositableType::IMAGE_OVERLAY, "Invalid operation!");
+      compositable->UseOverlaySource(op.overlay());
+      break;
+    }
+#endif
     case CompositableOperation::TOpUpdateTexture: {
       const OpUpdateTexture& op = aEdit.get_OpUpdateTexture();
       RefPtr<TextureHost> texture = TextureHost::AsTextureHost(op.textureParent());
