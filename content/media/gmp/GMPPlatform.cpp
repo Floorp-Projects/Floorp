@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPPlatform.h"
+#include "GMPStorageChild.h"
 #include "GMPTimerChild.h"
 #include "mozilla/Monitor.h"
 #include "nsAutoPtr.h"
@@ -152,6 +153,30 @@ CreateMutex(GMPMutex** aMutex)
 }
 
 GMPErr
+CreateRecord(const char* aRecordName,
+             uint32_t aRecordNameSize,
+             GMPRecord** aOutRecord,
+             GMPRecordClient* aClient)
+{
+  if (sMainLoop != MessageLoop::current()) {
+    NS_WARNING("GMP called CreateRecord() on non-main thread!");
+    return GMPGenericErr;
+  }
+  if (aRecordNameSize > GMP_MAX_RECORD_NAME_SIZE) {
+    NS_WARNING("GMP tried to CreateRecord with too long record name");
+    return GMPGenericErr;
+  }
+  GMPStorageChild* storage = sChild->GetGMPStorage();
+  if (!storage) {
+    return GMPGenericErr;
+  }
+  MOZ_ASSERT(storage);
+  return storage->CreateRecord(nsDependentCString(aRecordName, aRecordNameSize),
+                               aOutRecord,
+                               aClient);
+}
+
+GMPErr
 SetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS)
 {
   if (!aTask || !sMainLoop || !IsOnChildMainThread()) {
@@ -184,7 +209,7 @@ InitPlatformAPI(GMPPlatformAPI& aPlatformAPI, GMPChild* aChild)
   aPlatformAPI.runonmainthread = &RunOnMainThread;
   aPlatformAPI.syncrunonmainthread = &SyncRunOnMainThread;
   aPlatformAPI.createmutex = &CreateMutex;
-  aPlatformAPI.createrecord = nullptr;
+  aPlatformAPI.createrecord = &CreateRecord;
   aPlatformAPI.settimer = &SetTimerOnMainThread;
   aPlatformAPI.getcurrenttime = &GetClock;
 }
