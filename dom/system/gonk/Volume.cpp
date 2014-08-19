@@ -50,6 +50,8 @@ Volume::EventObserverList Volume::mEventObserverList;
 // be locked until we get our first update from nsVolume (MainThread).
 static int32_t sMountGeneration = 0;
 
+static uint32_t sNextId = 1;
+
 // We don't get media inserted/removed events at startup. So we
 // assume it's present, and we'll be told that it's missing.
 Volume::Volume(const nsCSubstring& aName)
@@ -64,7 +66,8 @@ Volume::Volume(const nsCSubstring& aName)
     mUnmountRequested(false),
     mCanBeShared(true),
     mIsSharing(false),
-    mIsFormatting(false)
+    mIsFormatting(false),
+    mId(sNextId++)
 {
   DBG("Volume %s: created", NameStr());
 }
@@ -140,6 +143,7 @@ Volume::SetSharingEnabled(bool aSharingEnabled)
 
   LOG("SetSharingMode for volume %s to %d canBeShared = %d",
       NameStr(), (int)mSharingEnabled, (int)mCanBeShared);
+  mEventObserverList.Broadcast(this);
 }
 
 void
@@ -179,14 +183,14 @@ Volume::SetState(Volume::STATE aNewState)
   }
   if (aNewState == nsIVolume::STATE_MOUNTED) {
     mMountGeneration = ++sMountGeneration;
-    LOG("Volume %s: changing state from %s to %s @ '%s' (%d observers) "
+    LOG("Volume %s (%u): changing state from %s to %s @ '%s' (%d observers) "
         "mountGeneration = %d, locked = %d",
-        NameStr(), StateStr(mState),
+        NameStr(), mId, StateStr(mState),
         StateStr(aNewState), mMountPoint.get(), mEventObserverList.Length(),
         mMountGeneration, (int)mMountLocked);
   } else {
-    LOG("Volume %s: changing state from %s to %s (%d observers)",
-        NameStr(), StateStr(mState),
+    LOG("Volume %s (%u): changing state from %s to %s (%d observers)",
+        NameStr(), mId, StateStr(mState),
         StateStr(aNewState), mEventObserverList.Length());
   }
 
