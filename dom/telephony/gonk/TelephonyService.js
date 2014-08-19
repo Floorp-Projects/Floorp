@@ -178,6 +178,10 @@ TelephonyService.prototype = {
     return gRadioInterfaceLayer.getRadioInterface(aClientId);
   },
 
+  _sendToRilWorker: function(aClientId, aType, aMessage, aCallback) {
+    this._getClient(aClientId).sendWorkerMessage(aType, aMessage, aCallback);
+  },
+
   // An array of nsITelephonyListener instances.
   _listeners: null,
   _notifyAllListeners: function(aMethodName, aArgs) {
@@ -318,8 +322,7 @@ TelephonyService.prototype = {
   _enumerateCallsForClient: function(aClientId) {
     if (DEBUG) debug("Enumeration of calls for client " + aClientId);
 
-    this._getClient(aClientId).sendWorkerMessage("enumerateCalls", null,
-                                                 (function(response) {
+    this._sendToRilWorker(aClientId, "enumerateCalls", null, response => {
       if (!this._currentCalls[aClientId]) {
         this._currentCalls[aClientId] = {};
       }
@@ -331,9 +334,7 @@ TelephonyService.prototype = {
 
         this._currentCalls[aClientId][call.callIndex] = call;
       }
-
-      return false;
-    }).bind(this));
+    });
   },
 
   /**
@@ -457,6 +458,7 @@ TelephonyService.prototype = {
   },
 
   isDialing: false,
+
   dial: function(aClientId, aNumber, aIsDialEmergency, aCallback) {
     if (DEBUG) debug("Dialing " + (aIsDialEmergency ? "emergency " : "") + aNumber);
 
@@ -515,29 +517,25 @@ TelephonyService.prototype = {
       number: aNumber
     };
 
-    this._getClient(aClientId).sendWorkerMessage("dial", options,
-                                                 (function(response) {
+    this._sendToRilWorker(aClientId, "dial", options, response => {
       this.isDialing = false;
+
       if (!response.success) {
         aCallback.notifyDialError(response.errorMsg);
-        return false;
+        return;
       }
 
-      if (!response.isCdma) {
+      let currentCdmaCallIndex = !response.isCdma ? null :
+        Object.keys(this._currentCalls[aClientId])[0];
+
+      if (currentCdmaCallIndex == null) {
         aCallback.notifyDialSuccess(response.callIndex, response.number);
       } else {
-        let currentCallId = Object.keys(this._currentCalls[aClientId])[0];
-        if (currentCallId === undefined) {
-          aCallback.notifyDialSuccess(response.callIndex, response.number);
-        } else {
-          // RIL doesn't hold the 2nd call. We create one by ourselves.
-          aCallback.notifyDialSuccess(CDMA_SECOND_CALL_INDEX, response.number);
-          this._addCdmaChildCall(aClientId, aNumber, currentCallId);
-        }
+        // RIL doesn't hold the 2nd call. We create one by ourselves.
+        aCallback.notifyDialSuccess(CDMA_SECOND_CALL_INDEX, response.number);
+        this._addCdmaChildCall(aClientId, aNumber, currentCdmaCallIndex);
       }
-
-      return false;
-    }).bind(this));
+    });
   },
 
   hangUp: function(aClientId, aCallIndex) {
@@ -547,24 +545,24 @@ TelephonyService.prototype = {
       // the parent call, we send 'parentId' to RIL.
       this.hangUp(aClientId, parentId);
     } else {
-      this._getClient(aClientId).sendWorkerMessage("hangUp", { callIndex: aCallIndex });
+      this._sendToRilWorker(aClientId, "hangUp", { callIndex: aCallIndex });
     }
   },
 
   startTone: function(aClientId, aDtmfChar) {
-    this._getClient(aClientId).sendWorkerMessage("startTone", { dtmfChar: aDtmfChar });
+    this._sendToRilWorker(aClientId, "startTone", { dtmfChar: aDtmfChar });
   },
 
   stopTone: function(aClientId) {
-    this._getClient(aClientId).sendWorkerMessage("stopTone");
+    this._sendToRilWorker(aClientId, "stopTone");
   },
 
   answerCall: function(aClientId, aCallIndex) {
-    this._getClient(aClientId).sendWorkerMessage("answerCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "answerCall", { callIndex: aCallIndex });
   },
 
   rejectCall: function(aClientId, aCallIndex) {
-    this._getClient(aClientId).sendWorkerMessage("rejectCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "rejectCall", { callIndex: aCallIndex });
   },
 
   holdCall: function(aClientId, aCallIndex) {
@@ -575,7 +573,7 @@ TelephonyService.prototype = {
       return;
     }
 
-    this._getClient(aClientId).sendWorkerMessage("holdCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "holdCall", { callIndex: aCallIndex });
   },
 
   resumeCall: function(aClientId, aCallIndex) {
@@ -586,7 +584,7 @@ TelephonyService.prototype = {
       return;
     }
 
-    this._getClient(aClientId).sendWorkerMessage("resumeCall", { callIndex: aCallIndex });
+    this._sendToRilWorker(aClientId, "resumeCall", { callIndex: aCallIndex });
   },
 
   conferenceCall: function(aClientId) {
@@ -619,19 +617,17 @@ TelephonyService.prototype = {
       this.notifyConferenceCallStateChanged(RIL.CALL_STATE_ACTIVE);
     }
 
-    this._getClient(aClientId).sendWorkerMessage("conferenceCall", null,
-                                                 (function(response) {
+    this._sendToRilWorker(aClientId, "conferenceCall", null, response => {
       if (!response.success) {
         this._notifyAllListeners("notifyConferenceError", [response.errorName,
                                                            response.errorMsg]);
-        return false;
+        return;
       }
 
       if (response.isCdma) {
         onCdmaConferenceCallSuccess.call(this);
       }
-      return false;
-    }).bind(this));
+    });
   },
 
   separateCall: function(aClientId, aCallIndex) {
@@ -664,28 +660,26 @@ TelephonyService.prototype = {
       this.notifyCallDisconnected(aClientId, childCall);
     }
 
-    this._getClient(aClientId).sendWorkerMessage("separateCall", {
-      callIndex: aCallIndex
-    }, (function(response) {
+    this._sendToRilWorker(aClientId, "separateCall", { callIndex: aCallIndex },
+                          response => {
       if (!response.success) {
         this._notifyAllListeners("notifyConferenceError", [response.errorName,
                                                            response.errorMsg]);
-        return false;
+        return;
       }
 
       if (response.isCdma) {
         onCdmaSeparateCallSuccess.call(this);
       }
-      return false;
-    }).bind(this));
+    });
   },
 
   holdConference: function(aClientId) {
-    this._getClient(aClientId).sendWorkerMessage("holdConference");
+    this._sendToRilWorker(aClientId, "holdConference");
   },
 
   resumeConference: function(aClientId) {
-    this._getClient(aClientId).sendWorkerMessage("resumeConference");
+    this._sendToRilWorker(aClientId, "resumeConference");
   },
 
   get microphoneMuted() {
