@@ -10,18 +10,20 @@ loop.Client = (function($) {
   "use strict";
 
   // The expected properties to be returned from the POST /call-url/ request.
-  const expectedCallUrlProperties = ["callUrl", "expiresAt"];
+  var expectedCallUrlProperties = ["callUrl", "expiresAt"];
 
   // The expected properties to be returned from the GET /calls request.
-  const expectedCallProperties = ["calls"];
+  var expectedCallProperties = ["calls"];
 
   /**
    * Loop server client.
    *
    * @param {Object} settings Settings object.
    */
-  function Client(settings = {}) {
-
+  function Client(settings) {
+    if (!settings) {
+      settings = {};
+    }
     // allowing an |in| test rather than a more type || allows us to dependency
     // inject a non-existent mozLoop
     if ("mozLoop" in settings) {
@@ -108,7 +110,7 @@ loop.Client = (function($) {
      */
     _requestCallUrlInternal: function(nickname, cb) {
       this.mozLoop.hawkRequest("/call-url/", "POST", {callerId: nickname},
-                               (error, responseText) => {
+                               function (error, responseText) {
         if (error) {
           this._failureHandler(cb, error);
           return;
@@ -124,7 +126,7 @@ loop.Client = (function($) {
           console.log("Error requesting call info", err);
           cb(err);
         }
-      });
+      }.bind(this));
     },
 
     /**
@@ -149,7 +151,7 @@ loop.Client = (function($) {
 
     _deleteCallUrlInternal: function(token, cb) {
       this.mozLoop.hawkRequest("/call-url/" + token, "DELETE", null,
-                               (error, responseText) => {
+                               function (error, responseText) {
         if (error) {
           this._failureHandler(cb, error);
           return;
@@ -163,7 +165,7 @@ loop.Client = (function($) {
           console.log("Error deleting call info", err);
           cb(err);
         }
-      });
+      }.bind(this));
     },
 
     /**
@@ -207,7 +209,7 @@ loop.Client = (function($) {
       }
 
       this.mozLoop.hawkRequest("/calls?version=" + version, "GET", null,
-                               (error, responseText) => {
+                               function (error, responseText) {
         if (error) {
           this._failureHandler(cb, error);
           return;
@@ -221,8 +223,8 @@ loop.Client = (function($) {
           console.log("Error requesting calls info", err);
           cb(err);
         }
-      });
-    },
+      }.bind(this));
+    }
   };
 
   return Client;
