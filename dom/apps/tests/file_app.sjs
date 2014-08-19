@@ -46,7 +46,7 @@ function handleRequest(request, response) {
 
   // Get the app type.
   var apptype = query.apptype;
-  if (apptype != 'hosted' && apptype != 'cached' && apptype != 'widget'  && apptype != 'invalidWidget')
+  if (apptype != 'hosted' && apptype != 'cached' && apptype != 'widget')
     throw "Invalid app type: " + apptype;
 
   // Get the version from server state and handle the etag.
@@ -83,7 +83,7 @@ function handleRequest(request, response) {
     response.write(makeResource(gAppcacheTemplatePath, version, apptype));
     return;
   }
-  else if (apptype == 'widget' || apptype == 'invalidWidget')
+  else if (apptype == 'widget')
   {
     response.setHeader("Content-Type", "text/html", false);
     response.write(makeResource(gWidgetTemplatePath, version, apptype));

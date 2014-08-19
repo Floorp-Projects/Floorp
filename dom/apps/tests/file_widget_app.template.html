@@ -1,8 +1,68 @@
 <html>
 <head>
+<script>
+
+function sendMessage(msg) {
+  alert(msg);
+}
+
+function ok(p, msg) {
+  if (p)
+    sendMessage("OK: " + msg);
+  else
+    sendMessage("KO: " + msg);
+}
+
+function is(a, b, msg) {
+  if (a == b)
+    sendMessage("OK: " + a + " == " + b + " - " + msg);
+  else
+    sendMessage("KO: " + a + " != " + b + " - " + msg);
+}
+
+function installed(p) {
+  if (p)
+    sendMessage("IS_INSTALLED");
+  else
+    sendMessage("NOT_INSTALLED");
+}
+
+function finish() {
+  sendMessage("VERSION: MyWebApp vVERSIONTOKEN");
+  sendMessage("DONE");
+}
+
+function cbError() {
+  ok(false, "Error callback invoked");
+  finish();
+}
+
+function go() {
+  ok(true, "Launched app");
+  var request = window.navigator.mozApps.getSelf();
+  request.onsuccess = function() {
+    var widget = request.result;
+    ok(widget,"Should be a widget");
+    checkWidget(widget);
+  }
+  request.onerror = cbError;
+}
+
+function checkWidget(widget) {
+  // If the widget is installed, |widget| will be non-null. If it is, verify its state.
+  installed(!!widget);
+  if (widget) {
+    var widgetName = "Really Rapid Release (APPTYPETOKEN)";
+    var manifest = SpecialPowers.wrap(widget.manifest);
+    is(manifest.name, widgetName, "Manifest name should be correct");
+    is(widget.origin, "http://test", "Widget origin should be correct");
+    is(widget.installOrigin, "http://mochi.test:8888", "Install origin should be correct");
+  }
+  finish();
+}
+
+</script>
 </head>
-<body>
+<body onload="go();">
 App Body. Version: VERSIONTOKEN
-<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
-</body>
-</html>
+</body></html>
