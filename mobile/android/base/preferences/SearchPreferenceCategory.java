@@ -16,6 +16,9 @@ import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -45,6 +48,8 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
 
     @Override
     protected void onPrepareForRemoval() {
+        super.onPrepareForRemoval();
+
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "SearchEngines:Data");
     }
 
@@ -53,6 +58,9 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
         super.setDefault(item);
 
         sendGeckoEngineEvent("SearchEngines:SetDefault", item.getTitle().toString());
+
+        final String identifier = ((SearchEnginePreference) item).getIdentifier();
+        Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH_SET_DEFAULT, Method.DIALOG, identifier);
     }
 
     @Override
@@ -60,6 +68,9 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
         super.uninstall(item);
 
         sendGeckoEngineEvent("SearchEngines:Remove", item.getTitle().toString());
+
+        final String identifier = ((SearchEnginePreference) item).getIdentifier();
+        Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH_REMOVE, Method.DIALOG, identifier);
     }
 
     @Override
@@ -80,8 +91,7 @@ public class SearchPreferenceCategory extends CustomListCategory implements Geck
             // Create an element in this PreferenceCategory for each engine.
             for (int i = 0; i < engines.length(); i++) {
                 try {
-                    JSONObject engineJSON = engines.getJSONObject(i);
-                    final String engineName = engineJSON.getString("name");
+                    final JSONObject engineJSON = engines.getJSONObject(i);
 
                     final SearchEnginePreference enginePreference = new SearchEnginePreference(getContext(), this);
                     enginePreference.setSearchEngineFromJSON(engineJSON);
