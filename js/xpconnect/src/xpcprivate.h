@@ -283,7 +283,15 @@ public:
     static nsIScriptSecurityManager* SecurityManager()
     {
         MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(gScriptSecurityManager);
         return gScriptSecurityManager;
+    }
+
+    static nsIPrincipal* SystemPrincipal()
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(gSystemPrincipal);
+        return gSystemPrincipal;
     }
 
     // This returns an AddRef'd pointer. It does not do this with an 'out' param
@@ -339,6 +347,7 @@ private:
 
 public:
     static nsIScriptSecurityManager *gScriptSecurityManager;
+    static nsIPrincipal *gSystemPrincipal;
 };
 
 /***************************************************************************/
@@ -610,8 +619,11 @@ public:
 
     AutoMarkingPtr**  GetAutoRootsAdr() {return &mAutoRoots;}
 
-    JSObject* GetJunkScope();
-    JSObject* GetCompilationScope();
+    JSObject* UnprivilegedJunkScope() { return mUnprivilegedJunkScope; }
+    JSObject* PrivilegedJunkScope() { return mPrivilegedJunkScope; }
+    JSObject* CompilationScope() { return mCompilationScope; }
+
+    void InitSingletonScopes();
     void DeleteSingletonScopes();
 
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
@@ -652,7 +664,8 @@ private:
     nsTArray<xpcContextCallback> extraContextCallbacks;
     nsRefPtr<WatchdogManager> mWatchdogManager;
     JS::GCSliceCallback mPrevGCSliceCallback;
-    JS::PersistentRootedObject mJunkScope;
+    JS::PersistentRootedObject mUnprivilegedJunkScope;
+    JS::PersistentRootedObject mPrivilegedJunkScope;
     JS::PersistentRootedObject mCompilationScope;
     nsRefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
 
@@ -2730,7 +2743,7 @@ public:
     bool InitWithName(const nsID& id, const char *nameString);
     bool SetName(const char* name);
     void   SetNameToNoString()
-        {MOZ_ASSERT(!mName, "name already set"); mName = gNoString;}
+        {MOZ_ASSERT(!mName, "name already set"); mName = const_cast<char *>(gNoString);}
     bool NameIsSet() const {return nullptr != mName;}
     const nsID& ID() const {return mID;}
     bool IsValid() const {return !mID.Equals(GetInvalidIID());}
@@ -2745,7 +2758,7 @@ public:
 
 protected:
     virtual ~nsJSID();
-    static char gNoString[];
+    static const char gNoString[];
     nsID    mID;
     char*   mNumber;
     char*   mName;
@@ -2846,7 +2859,6 @@ public:
     explicit XPCJSContextStack(XPCJSRuntime *aRuntime)
       : mRuntime(aRuntime)
       , mSafeJSContext(nullptr)
-      , mSafeJSContextGlobal(aRuntime->Runtime(), nullptr)
     { }
 
     virtual ~XPCJSContextStack();
@@ -2863,7 +2875,6 @@ public:
 
     JSContext *InitSafeJSContext();
     JSContext *GetSafeJSContext();
-    JSObject *GetSafeJSContextGlobal();
     bool HasJSContext(JSContext *cx);
 
     const InfallibleTArray<XPCJSContextInfo>* GetStack()
@@ -2871,7 +2882,7 @@ public:
 
 private:
     friend class mozilla::dom::danger::AutoCxPusher;
-    friend bool xpc::PushJSContextNoScriptContext(JSContext *aCx);;
+    friend bool xpc::PushJSContextNoScriptContext(JSContext *aCx);
     friend void xpc::PopJSContextNoScriptContext();
 
     // We make these private so that stack manipulation can only happen
@@ -2882,7 +2893,6 @@ private:
     AutoInfallibleTArray<XPCJSContextInfo, 16> mStack;
     XPCJSRuntime* mRuntime;
     JSContext*  mSafeJSContext;
-    JS::PersistentRootedObject mSafeJSContextGlobal;
 };
 
 /***************************************************************************/
@@ -3456,7 +3466,7 @@ public:
         , defineAs(cx, JSID_VOID)
     { }
 
-    virtual bool Parse() { return ParseId("defineAs", &defineAs); };
+    virtual bool Parse() { return ParseId("defineAs", &defineAs); }
 
     JS::RootedId defineAs;
 };
@@ -3471,7 +3481,7 @@ public:
 
     virtual bool Parse() {
         return ParseId("defineAs", &defineAs);
-    };
+    }
 
     JS::RootedId defineAs;
 };
@@ -3488,7 +3498,7 @@ public:
     virtual bool Parse() {
         return ParseBoolean("wrapReflectors", &wrapReflectors) &&
                ParseBoolean("cloneFunctions", &cloneFunctions);
-    };
+    }
 
     // When a reflector is encountered, wrap it rather than aborting the clone.
     bool wrapReflectors;
@@ -3718,8 +3728,6 @@ ObjectScope(JSObject *obj)
 {
     return CompartmentPrivate::Get(obj)->scope;
 }
-
-extern const JSClass SafeJSContextGlobalClass;
 
 JSObject* NewOutObject(JSContext* cx, JSObject* scope);
 bool IsOutObject(JSContext* cx, JSObject* obj);

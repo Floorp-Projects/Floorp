@@ -947,7 +947,7 @@ template <typename CharT>
 struct CharSeparatorOp
 {
     const CharT sep;
-    explicit CharSeparatorOp(CharT sep) : sep(sep) {};
+    explicit CharSeparatorOp(CharT sep) : sep(sep) {}
     bool operator()(JSContext *, StringBuffer &sb) { return sb.append(sep); }
 };
 
@@ -1417,9 +1417,7 @@ array_reverse(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-namespace {
-
-inline bool
+static inline bool
 CompareStringValues(JSContext *cx, const Value &a, const Value &b, bool *lessOrEqualp)
 {
     if (!CheckForInterrupt(cx))
@@ -1512,6 +1510,8 @@ CompareSubStringValues(JSContext *cx, const Char1 *s1, size_t len1, const Char2 
     *lessOrEqualp = (result <= 0);
     return true;
 }
+
+namespace {
 
 struct SortComparatorStrings
 {
@@ -1619,7 +1619,7 @@ struct NumericElement
     size_t elementIndex;
 };
 
-bool
+static bool
 ComparatorNumericLeftMinusRight(const NumericElement &a, const NumericElement &b,
                                 bool *lessOrEqualp)
 {
@@ -1627,7 +1627,7 @@ ComparatorNumericLeftMinusRight(const NumericElement &a, const NumericElement &b
     return true;
 }
 
-bool
+static bool
 ComparatorNumericRightMinusLeft(const NumericElement &a, const NumericElement &b,
                                 bool *lessOrEqualp)
 {
@@ -1638,21 +1638,21 @@ ComparatorNumericRightMinusLeft(const NumericElement &a, const NumericElement &b
 typedef bool (*ComparatorNumeric)(const NumericElement &a, const NumericElement &b,
                                   bool *lessOrEqualp);
 
-ComparatorNumeric SortComparatorNumerics[] = {
+static const ComparatorNumeric SortComparatorNumerics[] = {
     nullptr,
     nullptr,
     ComparatorNumericLeftMinusRight,
     ComparatorNumericRightMinusLeft
 };
 
-bool
+static bool
 ComparatorInt32LeftMinusRight(const Value &a, const Value &b, bool *lessOrEqualp)
 {
     *lessOrEqualp = (a.toInt32() <= b.toInt32());
     return true;
 }
 
-bool
+static bool
 ComparatorInt32RightMinusLeft(const Value &a, const Value &b, bool *lessOrEqualp)
 {
     *lessOrEqualp = (b.toInt32() <= a.toInt32());
@@ -1661,7 +1661,7 @@ ComparatorInt32RightMinusLeft(const Value &a, const Value &b, bool *lessOrEqualp
 
 typedef bool (*ComparatorInt32)(const Value &a, const Value &b, bool *lessOrEqualp);
 
-ComparatorInt32 SortComparatorInt32s[] = {
+static const ComparatorInt32 SortComparatorInt32s[] = {
     nullptr,
     nullptr,
     ComparatorInt32LeftMinusRight,
@@ -1677,11 +1677,13 @@ enum ComparatorMatchResult {
     Match_RightMinusLeft
 };
 
+} /* namespace anonymous */
+
 /*
  * Specialize behavior for comparator functions with particular common bytecode
  * patterns: namely, |return x - y| and |return y - x|.
  */
-ComparatorMatchResult
+static ComparatorMatchResult
 MatchNumericComparator(JSContext *cx, const Value &v)
 {
     if (!v.isObject())
@@ -1779,7 +1781,7 @@ MergeSortByKey(K keys, size_t len, K scratch, C comparator, AutoValueVector *vec
  * To minimize #conversions, SortLexicographically() first converts all Values
  * to strings at once, then sorts the elements by these cached strings.
  */
-bool
+static bool
 SortLexicographically(JSContext *cx, AutoValueVector *vec, size_t len)
 {
     JS_ASSERT(vec->length() >= len);
@@ -1819,7 +1821,7 @@ SortLexicographically(JSContext *cx, AutoValueVector *vec, size_t len)
  * To minimize #conversions, SortNumerically first converts all Values to
  * numerics at once, then sorts the elements by these cached numerics.
  */
-bool
+static bool
 SortNumerically(JSContext *cx, AutoValueVector *vec, size_t len, ComparatorMatchResult comp)
 {
     JS_ASSERT(vec->length() >= len);
@@ -1850,8 +1852,6 @@ SortNumerically(JSContext *cx, AutoValueVector *vec, size_t len, ComparatorMatch
     return MergeSortByKey(numElements.begin(), len, numElements.begin() + len,
                           SortComparatorNumerics[comp], vec);
 }
-
-} /* namespace anonymous */
 
 bool
 js::array_sort(JSContext *cx, unsigned argc, Value *vp)

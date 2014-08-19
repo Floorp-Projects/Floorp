@@ -677,13 +677,13 @@ Range::or_(TempAllocator &alloc, const Range *lhs, const Range *rhs)
         if (lhs->lower() == 0)
             return new(alloc) Range(*rhs);
         if (lhs->lower() == -1)
-            return new(alloc) Range(*lhs);;
+            return new(alloc) Range(*lhs);
     }
     if (rhs->lower() == rhs->upper()) {
         if (rhs->lower() == 0)
             return new(alloc) Range(*lhs);
         if (rhs->lower() == -1)
-            return new(alloc) Range(*rhs);;
+            return new(alloc) Range(*rhs);
     }
 
     // The code below uses CountLeadingZeroes32, which has undefined behavior
@@ -2274,7 +2274,8 @@ MToDouble::truncate(TruncateKind kind)
 bool
 MLoadTypedArrayElementStatic::truncate(TruncateKind kind)
 {
-    setInfallible();
+    if (kind >= IndirectTruncate)
+        setInfallible();
     return false;
 }
 

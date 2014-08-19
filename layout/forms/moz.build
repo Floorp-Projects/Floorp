@@ -46,7 +46,6 @@ LOCAL_INCLUDES += [
     '../../content/base/src',
     '../../content/html/content/src',
     '../../editor/libeditor',
-    '../../editor/libeditor/text',
     '../../editor/txmgr',
     '../base',
     '../generic',

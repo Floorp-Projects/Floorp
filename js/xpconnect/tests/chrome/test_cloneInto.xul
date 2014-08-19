@@ -183,7 +183,7 @@
   Cu.evalInSandbox('function tryToClone(x) { return cloneInto({val: x}, cloneTarget, { wrapReflectors: true }).val; }', sandbox2);
   is(Cu.evalInSandbox('tryToClone(soXHR)', sandbox2), sandbox2.soXHR, 'Same-origin wrapReflectors works');
   checkThrows(function() { Cu.evalInSandbox('tryToClone(chromeDoc)', sandbox2); },
-              'wrapReflectors may not wrap cross-origin reflectors', /denied|insecure/);
+              'wrapReflectors may not wrap cross-origin reflectors', /unsupported value type/);
 
 
   var test = { a: function() { return 42; } };

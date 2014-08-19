@@ -395,7 +395,7 @@ JavaScriptShared::findObjectById(JSContext *cx, uint32_t objId)
     }
 
     // If there's no TabChildGlobal, we use the junk scope.
-    JSAutoCompartment ac(cx, xpc::GetJunkScope());
+    JSAutoCompartment ac(cx, xpc::PrivilegedJunkScope());
     if (!JS_WrapObject(cx, &obj))
         return nullptr;
     return obj;
