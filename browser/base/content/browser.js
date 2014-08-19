@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
                                   "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
                                   "resource://gre/modules/GMPInstallManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
+                                  "resource://gre/modules/NewTabUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
                                   "resource:///modules/ContentSearch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
@@ -3091,7 +3093,7 @@ const BrowserSearch = {
         let mm = gBrowser.selectedBrowser.messageManager;
         if (url === "about:home") {
           AboutHome.focusInput(mm);
-        } else if (url === "about:newtab") {
+        } else if (url === "about:newtab" && NewTabUtils.allPages.enabled) {
           ContentSearch.focusInput(mm);
         } else {
           openUILinkIn("about:home", "current");
