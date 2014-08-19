@@ -17,33 +17,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018933
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    var video = document.createElement("video");
-    video.src = "seek.webm";
-    video.preload = "auto";
-    var trackElement = document.createElement("track");
-    trackElement.src = "basic.vtt";
-    trackElement.kind = "subtitles";
-    document.getElementById("content").appendChild(video);
-    video.appendChild(trackElement);
 
-    // Accessing the track now would have caused the bug as the track element
-    // shouldn't have had time to bind to the tree yet.
-    trackElement.track.mode = 'showing';
+var video = document.createElement("video");
+video.src = "seek.webm";
+video.preload = "auto";
 
-    video.addEventListener("loadedmetadata", function run_tests() {
-      // Re-que run_tests() at the end of the event loop until the track
-      // element has loaded its data.
-      if (trackElement.readyState == 1) {
-        setTimeout(run_tests, 0);
-        return;
-      }
-      is(video.textTracks.length, 1, "Video should have one TextTrack.");
-      SimpleTest.finish();
-    });
+var trackElement = document.createElement("track");
+trackElement.src = "basic.vtt";
+trackElement.kind = "subtitles";
+
+document.getElementById("content").appendChild(video);
+video.appendChild(trackElement);
+
+// Accessing the track now would have caused the bug as the track element
+// shouldn't have had time to bind to the tree yet.
+trackElement.track.mode = 'showing';
+
+video.addEventListener("loadedmetadata", function run_tests() {
+  // Re-que run_tests() at the end of the event loop until the track
+  // element has loaded its data.
+  if (trackElement.readyState == 1) {
+    setTimeout(run_tests, 0);
+    return;
   }
-);
+
+  is(video.textTracks.length, 1, "Video should have one TextTrack.");
+  SimpleTest.finish();
+});
 </script>
 </pre>
 </body>

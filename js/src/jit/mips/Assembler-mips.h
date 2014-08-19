@@ -14,6 +14,7 @@
 #include "jit/CompactBuffer.h"
 #include "jit/IonCode.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitCompartment.h"
 #include "jit/mips/Architecture-mips.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/shared/IonAssemblerBuffer.h"
@@ -619,6 +620,10 @@ class Operand
 
 void
 PatchJump(CodeLocationJump &jump_, CodeLocationLabel label);
+
+void
+PatchBackedge(CodeLocationJump &jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target);
+
 class Assembler;
 typedef js::jit::AssemblerBuffer<1024, Instruction> MIPSBuffer;
 
@@ -811,6 +816,7 @@ class Assembler : public AssemblerShared
 
     // Branch and jump instructions
     BufferOffset as_bal(BOffImm16 off);
+    BufferOffset as_b(BOffImm16 off);
 
     InstImm getBranchCode(JumpOrCall jumpOrCall);
     InstImm getBranchCode(Register s, Register t, Condition c);

@@ -21,7 +21,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(65523eab-db1f-44aa-893e-dfe57ad306f0)]
+[builtinclass, scriptable, uuid(c3b61bc9-ccdd-4bcd-acd8-1b8dcbe6a247)]
 
 interface nsIEditor  : nsISupports
 {
@@ -549,4 +549,11 @@ interface nsIEditor  : nsISupports
 
   /* Set true if you want to suppress dispatching input event. */
   attribute boolean suppressDispatchingInputEvent;
+
+  /**
+   * True if an edit action is being handled (in other words, between calls of
+   * nsIEditorObserver::BeforeEditAction() and nsIEditorObserver::EditAction()
+   * or nsIEditorObserver::CancelEditAction().  Otherwise, false.
+   */
+  [infallible, noscript] readonly attribute boolean isInEditAction;
 };
