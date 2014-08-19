@@ -277,6 +277,10 @@ const kEventConstructors = {
                                                          return new MozSettingsEvent(aName, aProps);
                                                        },
                                              },
+  MozSettingsTransactionEvent:               { create: function (aName, aProps) {
+                                                         return new MozSettingsTransactionEvent(aName, aProps);
+                                                       },
+                                             },
   MozSmsEvent:                               { create: function (aName, aProps) {
                                                          return new MozSmsEvent(aName, aProps);
                                                        },

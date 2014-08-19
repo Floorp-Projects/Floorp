@@ -29,6 +29,7 @@ SpecialPowers.addPermission("settings-read", true, document);
 SpecialPowers.addPermission("settings-write", true, document);
 SpecialPowers.addPermission("settings-api-read", true, document);
 SpecialPowers.addPermission("settings-api-write", true, document);
+SpecialPowers.addPermission("settings-clear", true, document);
 
 function onUnwantedSuccess() {
   ok(false, "onUnwantedSuccess: shouldn't get here");
