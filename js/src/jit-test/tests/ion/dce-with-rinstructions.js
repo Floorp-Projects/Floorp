@@ -565,6 +565,113 @@ function rstr_split(i) {
     return i;
 }
 
+var uceFault_regexp_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_exec'))
+function rregexp_exec(i) {
+    var re = new RegExp("(str)\\d+" + i + "\\d+rts");
+    var res = re.exec("str01234567899876543210rts");
+    if (uceFault_regexp_exec(i) || uceFault_regexp_exec(i)) {
+        assertEq(res[1], "str");
+    }
+
+    return i;
+}
+var uceFault_regexp_y_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_exec'))
+function rregexp_y_exec(i) {
+    var re = new RegExp("(str)\\d+" + (i % 10), "y");
+    var res = re.exec("str00123456789");
+    if (uceFault_regexp_y_exec(i) || uceFault_regexp_y_exec(i)) {
+        assertEq(res[1], "str");
+    }
+
+    assertEq(re.lastIndex == 0, false);
+    return i;
+}
+
+var uceFault_regexp_y_literal_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_y_literal_exec'))
+function rregexp_y_literal_exec(i) {
+    var re = /(str)\d*0/y;
+    var res = re.exec("str00123456789");
+    if (uceFault_regexp_y_literal_exec(i) || uceFault_regexp_y_literal_exec(i)) {
+        assertEq(res[1], "str");
+    }
+
+    assertEq(re.lastIndex == 0, false);
+    return i;
+}
+
+var uceFault_regexp_g_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_exec'))
+function rregexp_g_exec(i) {
+    var re = new RegExp("(str)\\d+" + (i % 10), "g");
+    var res = re.exec("str00123456789str00123456789");
+    if (uceFault_regexp_g_exec(i) || uceFault_regexp_g_exec(i)) {
+        assertEq(res[1], "str");
+    }
+
+    assertEq(re.lastIndex == 0, false);
+    return i;
+}
+
+var uceFault_regexp_g_literal_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_g_literal_exec'))
+function rregexp_g_literal_exec(i) {
+    var re = /(str)\d*0/g;
+    var res = re.exec("str00123456789str00123456789");
+    if (uceFault_regexp_g_literal_exec(i) || uceFault_regexp_g_literal_exec(i)) {
+        assertEq(res[1], "str");
+    }
+
+    assertEq(re.lastIndex == 0, false);
+    return i;
+}
+
+var uceFault_regexp_i_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_exec'))
+function rregexp_i_exec(i) {
+    var re = new RegExp("(str)\\d+" + (i % 10), "i");
+    var res = re.exec("STR00123456789");
+    if (uceFault_regexp_i_exec(i) || uceFault_regexp_i_exec(i)) {
+        assertEq(res[1], "STR");
+    }
+
+    assertEq(re.lastIndex == 0, true);
+    return i;
+}
+
+var uceFault_regexp_i_literal_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_i_literal_exec'))
+function rregexp_i_literal_exec(i) {
+    var re = /(str)\d*0/i;
+    var res = re.exec("STR00123456789");
+    if (uceFault_regexp_i_literal_exec(i) || uceFault_regexp_i_literal_exec(i)) {
+        assertEq(res[1], "STR");
+    }
+
+    assertEq(re.lastIndex == 0, true);
+    return i;
+}
+
+
+var uceFault_regexp_m_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_exec'))
+function rregexp_m_exec(i) {
+    var re = new RegExp("^(str)\\d+" + (i % 10), "m");
+    var res = re.exec("abc\nstr00123456789");
+    if (uceFault_regexp_m_exec(i) || uceFault_regexp_m_exec(i)) {
+        assertEq(res[1], "str");
+    }
+
+    assertEq(re.lastIndex == 0, true);
+    return i;
+}
+
+var uceFault_regexp_m_literal_exec = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_m_literal_exec'))
+function rregexp_m_literal_exec(i) {
+    var re = /^(str)\d*0/m;
+    var res = re.exec("abc\nstr00123456789");
+    if (uceFault_regexp_m_literal_exec(i) || uceFault_regexp_m_literal_exec(i)) {
+        assertEq(res[1], "str");
+    }
+
+    assertEq(re.lastIndex == 0, true);
+    return i;
+}
+
 var uceFault_regexp_test = eval(uneval(uceFault).replace('uceFault', 'uceFault_regexp_test'))
 function rregexp_test(i) {
     var re = new RegExp("str\\d+" + i + "\\d+rts");
@@ -732,6 +839,15 @@ for (i = 0; i < 100; i++) {
     ratan2_number(i);
     ratan2_object(i);
     rstr_split(i);
+    rregexp_exec(i);
+    rregexp_y_exec(i);
+    rregexp_y_literal_exec(i);
+    rregexp_g_exec(i);
+    rregexp_g_literal_exec(i);
+    rregexp_i_exec(i);
+    rregexp_i_literal_exec(i);
+    rregexp_m_exec(i);
+    rregexp_m_literal_exec(i);
     rregexp_test(i);
     rregexp_y_test(i);
     rregexp_y_literal_test(i);

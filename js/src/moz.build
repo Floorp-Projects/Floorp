@@ -112,6 +112,7 @@ UNIFIED_SOURCES += [
     'builtin/SymbolObject.cpp',
     'builtin/TestingFunctions.cpp',
     'builtin/TypedObject.cpp',
+    'builtin/WeakSetObject.cpp',
     'devtools/sharkctl.cpp',
     'ds/LifoAlloc.cpp',
     'frontend/BytecodeCompiler.cpp',

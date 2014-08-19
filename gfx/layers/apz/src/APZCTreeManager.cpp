@@ -22,8 +22,7 @@
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "UnitTransforms.h"             // for ViewAs
 #include "gfxPrefs.h"                   // for gfxPrefs
-
-#include <algorithm>                    // for std::stable_sort
+#include "OverscrollHandoffChain.h"     // for OverscrollHandoffChain
 
 #define APZCTM_LOG(...)
 // #define APZCTM_LOG(...) printf_stderr("APZCTM: " __VA_ARGS__)
@@ -429,11 +428,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(panInput.mPanStartPoint,
                                                             &inOverscrolledApzc);
       if (apzc) {
-        if (panInput.mType == PanGestureInput::PANGESTURE_START ||
-            panInput.mType == PanGestureInput::PANGESTURE_MOMENTUMSTART) {
-          BuildOverscrollHandoffChain(apzc);
-        }
-
         // When passing the event to the APZC, we need to apply a different
         // transform than the one in TransformScreenToGecko, so we need to
         // make a copy of the event.
@@ -445,11 +439,6 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
         TransformScreenToGecko(&(panInput.mPanStartPoint), apzc, this);
-
-        if (panInput.mType == PanGestureInput::PANGESTURE_END ||
-            panInput.mType == PanGestureInput::PANGESTURE_MOMENTUMEND) {
-          ClearOverscrollHandoffChain();
-        }
       }
       break;
     } case PINCHGESTURE_INPUT: {
@@ -515,9 +504,6 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
     apzc = RootAPZCForLayersId(apzc);
     APZCTM_LOG("Using APZC %p as the root APZC for multi-touch\n", apzc.get());
   }
-
-  // Prepare for possible overscroll handoff.
-  BuildOverscrollHandoffChain(apzc);
 
   return apzc.forget();
 }
@@ -633,7 +619,6 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     mApzcForInputBlock = nullptr;
     mInOverscrolledApzc = false;
     mRetainedTouchIdentifier = -1;
-    ClearOverscrollHandoffChain();
   }
 
   return result;
@@ -820,28 +805,23 @@ TransformDisplacement(APZCTreeManager* aTreeManager,
 }
 
 bool
-APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStartPoint, ScreenPoint aEndPoint,
+APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev,
+                                ScreenPoint aStartPoint,
+                                ScreenPoint aEndPoint,
+                                const OverscrollHandoffChain& aOverscrollHandoffChain,
                                 uint32_t aOverscrollHandoffChainIndex)
 {
   nsRefPtr<AsyncPanZoomController> next;
-  {
-    // Grab tree lock to protect mOverscrollHandoffChain from concurrent
-    // access from the input and compositor threads.
-    // Release it before calling TransformDisplacement() as that grabs the
-    // lock itself.
-    MonitorAutoLock lock(mTreeLock);
-
-    // If we have reached the end of the overscroll handoff chain, there is
-    // nothing more to scroll, so we ignore the rest of the pan gesture.
-    if (aOverscrollHandoffChainIndex >= mOverscrollHandoffChain.length()) {
-      // Nothing more to scroll - ignore the rest of the pan gesture.
-      return false;
-    }
-
-    next = mOverscrollHandoffChain[aOverscrollHandoffChainIndex];
+  // If we have reached the end of the overscroll handoff chain, there is
+  // nothing more to scroll, so we ignore the rest of the pan gesture.
+  if (aOverscrollHandoffChainIndex >= aOverscrollHandoffChain.Length()) {
+    // Nothing more to scroll - ignore the rest of the pan gesture.
+    return false;
   }
 
-  if (next == nullptr) {
+  next = aOverscrollHandoffChain.GetApzcAtIndex(aOverscrollHandoffChainIndex);
+
+  if (next == nullptr || next->IsDestroyed()) {
     return false;
   }
 
@@ -860,48 +840,30 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStar
 
   // Scroll |next|. If this causes overscroll, it will call DispatchScroll()
   // again with an incremented index.
-  return next->AttemptScroll(aStartPoint, aEndPoint, aOverscrollHandoffChainIndex);
+  return next->AttemptScroll(aStartPoint, aEndPoint, aOverscrollHandoffChain,
+      aOverscrollHandoffChainIndex);
 }
 
 bool
-APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVelocity)
+APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVelocity,
+                              nsRefPtr<const OverscrollHandoffChain> aOverscrollHandoffChain)
 {
-  // Build the overscroll handoff chain. This is necessary because it is
-  // otherwise built on touch-start and cleared on touch-end, and a fling
-  // happens after touch-end. Note that, unlike DispatchScroll() which is
-  // called on every touch-move during overscroll panning,
-  // HandOffFling() is only called once during a fling handoff,
-  // so it's not worth trying to avoid building the handoff chain here.
-  BuildOverscrollHandoffChain(aPrev);
-
-  nsRefPtr<AsyncPanZoomController> next;  // will be used outside monitor block
-  {
-    // Grab tree lock to protect mOverscrollHandoffChain from concurrent
-    // access from the input and compositor threads.
-    // Release it before calling GetInputTransforms() as that grabs the
-    // lock itself.
-    MonitorAutoLock lock(mTreeLock);
-
-    // Find |aPrev| in the handoff chain.
-    uint32_t i;
-    for (i = 0; i < mOverscrollHandoffChain.length(); ++i) {
-      if (mOverscrollHandoffChain[i] == aPrev) {
-        break;
-      }
+  // Find |aPrev| in the handoff chain.
+  uint32_t i;
+  for (i = 0; i < aOverscrollHandoffChain->Length(); ++i) {
+    if (aOverscrollHandoffChain->GetApzcAtIndex(i) == aPrev) {
+      break;
     }
+  }
 
-    // Get the next APZC in the handoff chain, if any.
-    if (i + 1 < mOverscrollHandoffChain.length()) {
-      next = mOverscrollHandoffChain[i + 1];
-    }
-
-    // Clear the handoff chain so we don't maintain references to APZCs
-    // unnecessarily.
-    mOverscrollHandoffChain.clear();
+  // Get the next APZC in the handoff chain, if any.
+  nsRefPtr<AsyncPanZoomController> next;
+  if (i + 1 < aOverscrollHandoffChain->Length()) {
+    next = aOverscrollHandoffChain->GetApzcAtIndex(i + 1);
   }
 
   // Nothing to hand off fling to.
-  if (next == nullptr) {
+  if (next == nullptr || next->IsDestroyed()) {
     return false;
   }
 
@@ -918,74 +880,7 @@ APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVeloci
   ScreenPoint transformedVelocity = endPoint - startPoint;
 
   // Tell |next| to start a fling with the transformed velocity.
-  return next->TakeOverFling(transformedVelocity);
-}
-
-bool
-APZCTreeManager::FlushRepaintsForOverscrollHandoffChain()
-{
-  MonitorAutoLock lock(mTreeLock);  // to access mOverscrollHandoffChain
-  for (uint32_t i = 0; i < mOverscrollHandoffChain.length(); i++) {
-    nsRefPtr<AsyncPanZoomController> item = mOverscrollHandoffChain[i];
-    if (item) {
-      item->FlushRepaintForOverscrollHandoff();
-    }
-  }
-  return mOverscrollHandoffChain.length() > 0;
-}
-
-bool
-APZCTreeManager::CancelAnimationsForOverscrollHandoffChain()
-{
-  MonitorAutoLock lock(mTreeLock);  // to access mOverscrollHandoffChain
-  for (uint32_t i = 0; i < mOverscrollHandoffChain.length(); i++) {
-    nsRefPtr<AsyncPanZoomController> item = mOverscrollHandoffChain[i];
-    if (item) {
-      item->CancelAnimation();
-    }
-  }
-  return mOverscrollHandoffChain.length() > 0;
-}
-
-void
-APZCTreeManager::SnapBackOverscrolledApzc(AsyncPanZoomController* aApzc)
-{
-  // This is called when a fling is winding down, so there is no overscroll
-  // handoff chain already built, so build it now.
-  BuildOverscrollHandoffChain(aApzc);
-  MonitorAutoLock lock(mTreeLock);
-  // Exactly one APZC along the hand-off chain can be overscrolled.
-  // Find it, and start a snap-back animation for it.
-  for (uint32_t i = 0; i < mOverscrollHandoffChain.length(); ++i) {
-    if (mOverscrollHandoffChain[i]->SnapBackIfOverscrolled()) {
-      break;
-    }
-  }
-  mOverscrollHandoffChain.clear();
-}
-
-bool
-APZCTreeManager::CanBePanned(AsyncPanZoomController* aApzc)
-{
-  MonitorAutoLock lock(mTreeLock);  // to access mOverscrollHandoffChain
-
-  // Find |aApzc| in the handoff chain.
-  uint32_t i;
-  for (i = 0; i < mOverscrollHandoffChain.length(); ++i) {
-    if (mOverscrollHandoffChain[i] == aApzc) {
-      break;
-    }
-  }
-
-  // See whether any APZC in the handoff chain starting from |aApzc|
-  // has room to be panned.
-  for (uint32_t j = i; j < mOverscrollHandoffChain.length(); ++j) {
-    if (mOverscrollHandoffChain[j]->IsPannable()) {
-      return true;
-    }
-  }
-
-  return false;
+  return next->TakeOverFling(transformedVelocity, aOverscrollHandoffChain);
 }
 
 bool
@@ -1009,13 +904,6 @@ APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid)
   }
   return target.forget();
 }
-
-struct CompareByScrollPriority
-{
-  bool operator()(const nsRefPtr<AsyncPanZoomController>& a, const nsRefPtr<AsyncPanZoomController>& b) {
-    return a->HasScrollgrab() && !b->HasScrollgrab();
-  }
-};
 
 already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint, bool* aOutInOverscrolledApzc)
@@ -1041,7 +929,7 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint, bool* aOutInOverscroll
   return target.forget();
 }
 
-void
+nsRefPtr<const OverscrollHandoffChain>
 APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomController>& aInitialTarget)
 {
   // Scroll grabbing is a mechanism that allows content to specify that
@@ -1054,24 +942,17 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
   // handoff order can be different, so we build a chain of APZCs in the
   // order in which scroll will be handed off to them.
 
-  // Grab tree lock to protect mOverscrollHandoffChain from concurrent
-  // access between the input and compositor threads.
+  // Grab tree lock since we'll be walking the APZC tree.
   MonitorAutoLock lock(mTreeLock);
-
-  mOverscrollHandoffChain.clear();
 
   // Build the chain. If there is a scroll parent link, we use that. This is
   // needed to deal with scroll info layers, because they participate in handoff
   // but do not follow the expected layer tree structure. If there are no
   // scroll parent links we just walk up the tree to find the scroll parent.
+  OverscrollHandoffChain* result = new OverscrollHandoffChain;
   AsyncPanZoomController* apzc = aInitialTarget;
   while (apzc != nullptr) {
-    if (!mOverscrollHandoffChain.append(apzc)) {
-      NS_WARNING("Vector::append failed");
-      mOverscrollHandoffChain.clear();
-      return;
-    }
-    APZCTM_LOG("mOverscrollHandoffChain[%d] = %p\n", mOverscrollHandoffChain.length(), apzc);
+    result->Add(apzc);
 
     if (apzc->GetScrollHandoffParentId() == FrameMetrics::NULL_SCROLL_ID) {
       if (!apzc->IsRootForLayersId()) {
@@ -1107,13 +988,14 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
   // Now adjust the chain to account for scroll grabbing. Sorting is a bit
   // of an overkill here, but scroll grabbing will likely be generalized
   // to scroll priorities, so we might as well do it this way.
-  // The sorting being stable ensures that the relative order between
-  // non-scrollgrabbing APZCs remains child -> parent.
-  // (The relative order between scrollgrabbing APZCs will also remain
-  // child -> parent, though that's just an artefact of the implementation
-  // and users of 'scrollgrab' should not rely on this.)
-  std::stable_sort(mOverscrollHandoffChain.begin(), mOverscrollHandoffChain.end(),
-                   CompareByScrollPriority());
+  result->SortByScrollPriority();
+
+  // Print the overscroll chain for debugging.
+  for (uint32_t i = 0; i < result->Length(); ++i) {
+    APZCTM_LOG("OverscrollHandoffChain[%d] = %p\n", i, result->GetApzcAtIndex(i).get());
+  }
+
+  return result;
 }
 
 /* Find the apzc in the subtree rooted at aApzc that has the same layers id as
@@ -1138,13 +1020,6 @@ APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, FrameMetrics::Vie
   }
 
   return nullptr;
-}
-
-void
-APZCTreeManager::ClearOverscrollHandoffChain()
-{
-  MonitorAutoLock lock(mTreeLock);
-  mOverscrollHandoffChain.clear();
 }
 
 AsyncPanZoomController*

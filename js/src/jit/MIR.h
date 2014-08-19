@@ -5986,6 +5986,14 @@ class MRegExpExec
         return this;
     }
 
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+
+    bool canRecoverOnBailout() const {
+        if (regexp()->isRegExp())
+            return !regexp()->toRegExp()->source()->needUpdateLastIndex();
+        return false;
+    }
+
     bool possiblyCalls() const {
         return true;
     }

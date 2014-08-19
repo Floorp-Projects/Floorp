@@ -155,14 +155,6 @@ public:
 };
 
 class TestAPZCTreeManager : public APZCTreeManager {
-public:
-  // Expose these so test code can call it directly.
-  void BuildOverscrollHandoffChain(AsyncPanZoomController* aApzc) {
-    APZCTreeManager::BuildOverscrollHandoffChain(aApzc);
-  }
-  void ClearOverscrollHandoffChain() {
-    APZCTreeManager::ClearOverscrollHandoffChain();
-  }
 };
 
 static FrameMetrics
@@ -199,16 +191,10 @@ protected:
     tm = new TestAPZCTreeManager();
     apzc = new TestAsyncPanZoomController(0, mcc, tm, mGestureBehavior);
     apzc->SetFrameMetrics(TestFrameMetrics());
-
-    // Since most tests pass inputs directly to the APZC instead of going through
-    // the tree manager, we need to build the overscroll handoff chain explicitly
-    // for panning and animation-cancelling to work correctly.
-    tm->BuildOverscrollHandoffChain(apzc);
   }
 
   virtual void TearDown()
   {
-    tm->ClearOverscrollHandoffChain();
     apzc->Destroy();
   }
 
@@ -1650,9 +1636,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   // This first pan will move the APZC by 50 pixels, and dispatch a paint request.
   // Since this paint request is in the queue to Gecko, transformToGecko will
   // take it into account.
-  manager->BuildOverscrollHandoffChain(apzcroot);
   ApzcPanNoFling(apzcroot, time, 100, 50);
-  manager->ClearOverscrollHandoffChain();
 
   // Hit where layers[3] used to be. It should now hit the root.
   hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
@@ -1678,9 +1662,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   // request dispatched above has not "completed", we will not dispatch another
   // one yet. Now we have an async transform on top of the pending paint request
   // transform.
-  manager->BuildOverscrollHandoffChain(apzcroot);
   ApzcPanNoFling(apzcroot, time, 100, 50);
-  manager->ClearOverscrollHandoffChain();
 
   // Hit where layers[3] used to be. It should now hit the root.
   hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);

@@ -7,7 +7,7 @@
 #ifndef jit_x64_Architecture_x64_h
 #define jit_x64_Architecture_x64_h
 
-#include "assembler/assembler/X86Assembler.h"
+#include "jit/shared/BaseAssembler-x86-shared.h"
 
 namespace js {
 namespace jit {
@@ -26,7 +26,7 @@ static const uint32_t ShadowStackSpace = 0;
 
 class Registers {
   public:
-    typedef JSC::X86Registers::RegisterID Code;
+    typedef X86Registers::RegisterID Code;
     typedef uint32_t SetType;
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
@@ -54,8 +54,8 @@ class Registers {
         return Invalid;
     }
 
-    static const Code StackPointer = JSC::X86Registers::esp;
-    static const Code Invalid = JSC::X86Registers::invalid_reg;
+    static const Code StackPointer = X86Registers::esp;
+    static const Code Invalid = X86Registers::invalid_reg;
 
     static const uint32_t Total = 16;
     static const uint32_t TotalPhys = 16;
@@ -65,46 +65,46 @@ class Registers {
 
     static const uint32_t ArgRegMask =
 # if !defined(_WIN64)
-        (1 << JSC::X86Registers::edi) |
-        (1 << JSC::X86Registers::esi) |
+        (1 << X86Registers::edi) |
+        (1 << X86Registers::esi) |
 # endif
-        (1 << JSC::X86Registers::edx) |
-        (1 << JSC::X86Registers::ecx) |
-        (1 << JSC::X86Registers::r8) |
-        (1 << JSC::X86Registers::r9);
+        (1 << X86Registers::edx) |
+        (1 << X86Registers::ecx) |
+        (1 << X86Registers::r8) |
+        (1 << X86Registers::r9);
 
     static const uint32_t VolatileMask =
-        (1 << JSC::X86Registers::eax) |
-        (1 << JSC::X86Registers::ecx) |
-        (1 << JSC::X86Registers::edx) |
+        (1 << X86Registers::eax) |
+        (1 << X86Registers::ecx) |
+        (1 << X86Registers::edx) |
 # if !defined(_WIN64)
-        (1 << JSC::X86Registers::esi) |
-        (1 << JSC::X86Registers::edi) |
+        (1 << X86Registers::esi) |
+        (1 << X86Registers::edi) |
 # endif
-        (1 << JSC::X86Registers::r8) |
-        (1 << JSC::X86Registers::r9) |
-        (1 << JSC::X86Registers::r10) |
-        (1 << JSC::X86Registers::r11);
+        (1 << X86Registers::r8) |
+        (1 << X86Registers::r9) |
+        (1 << X86Registers::r10) |
+        (1 << X86Registers::r11);
 
     static const uint32_t NonVolatileMask =
-        (1 << JSC::X86Registers::ebx) |
+        (1 << X86Registers::ebx) |
 #if defined(_WIN64)
-        (1 << JSC::X86Registers::esi) |
-        (1 << JSC::X86Registers::edi) |
+        (1 << X86Registers::esi) |
+        (1 << X86Registers::edi) |
 #endif
-        (1 << JSC::X86Registers::ebp) |
-        (1 << JSC::X86Registers::r12) |
-        (1 << JSC::X86Registers::r13) |
-        (1 << JSC::X86Registers::r14) |
-        (1 << JSC::X86Registers::r15);
+        (1 << X86Registers::ebp) |
+        (1 << X86Registers::r12) |
+        (1 << X86Registers::r13) |
+        (1 << X86Registers::r14) |
+        (1 << X86Registers::r15);
 
     static const uint32_t WrapperMask = VolatileMask;
 
     static const uint32_t SingleByteRegs = VolatileMask | NonVolatileMask;
 
     static const uint32_t NonAllocatableMask =
-        (1 << JSC::X86Registers::esp) |
-        (1 << JSC::X86Registers::r11);      // This is ScratchReg.
+        (1 << X86Registers::esp) |
+        (1 << X86Registers::r11);      // This is ScratchReg.
 
     // Registers that can be allocated without being saved, generally.
     static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;
@@ -113,11 +113,11 @@ class Registers {
 
     // Registers returned from a JS -> JS call.
     static const uint32_t JSCallMask =
-        (1 << JSC::X86Registers::ecx);
+        (1 << X86Registers::ecx);
 
     // Registers returned from a JS -> C call.
     static const uint32_t CallMask =
-        (1 << JSC::X86Registers::eax);
+        (1 << X86Registers::eax);
 };
 
 // Smallest integer type that can hold a register bitmask.
@@ -125,7 +125,7 @@ typedef uint16_t PackedRegisterMask;
 
 class FloatRegisters {
   public:
-    typedef JSC::X86Registers::XMMRegisterID Code;
+    typedef X86Registers::XMMRegisterID Code;
     typedef uint32_t SetType;
     static const char *GetName(Code code) {
         static const char * const Names[] = { "xmm0",  "xmm1",  "xmm2",  "xmm3",
@@ -143,7 +143,7 @@ class FloatRegisters {
         return Invalid;
     }
 
-    static const Code Invalid = JSC::X86Registers::invalid_xmm;
+    static const Code Invalid = X86Registers::invalid_xmm;
 
     static const uint32_t Total = 16;
     static const uint32_t TotalPhys = 16;
@@ -154,12 +154,12 @@ class FloatRegisters {
     static const uint32_t AllDoubleMask = AllMask;
     static const uint32_t VolatileMask =
 #if defined(_WIN64)
-        (1 << JSC::X86Registers::xmm0) |
-        (1 << JSC::X86Registers::xmm1) |
-        (1 << JSC::X86Registers::xmm2) |
-        (1 << JSC::X86Registers::xmm3) |
-        (1 << JSC::X86Registers::xmm4) |
-        (1 << JSC::X86Registers::xmm5);
+        (1 << X86Registers::xmm0) |
+        (1 << X86Registers::xmm1) |
+        (1 << X86Registers::xmm2) |
+        (1 << X86Registers::xmm3) |
+        (1 << X86Registers::xmm4) |
+        (1 << X86Registers::xmm5);
 #else
         AllMask;
 #endif
@@ -169,7 +169,7 @@ class FloatRegisters {
     static const uint32_t WrapperMask = VolatileMask;
 
     static const uint32_t NonAllocatableMask =
-        (1 << JSC::X86Registers::xmm15);    // This is ScratchFloatReg.
+        (1 << X86Registers::xmm15);    // This is ScratchFloatReg.
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 
