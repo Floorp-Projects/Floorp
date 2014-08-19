@@ -405,12 +405,6 @@ public:
   static bool CanCallerAccess(nsPIDOMWindow* aWindow);
 
   /**
-   * Get the window through the JS context that's currently on the stack.
-   * If there's no JS context currently on the stack, returns null.
-   */
-  static nsPIDOMWindow *GetWindowFromCaller();
-
-  /**
    * The two GetDocumentFrom* functions below allow a caller to get at a
    * document that is relevant to the currently executing script.
    *
