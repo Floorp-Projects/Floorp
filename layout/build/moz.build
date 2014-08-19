@@ -66,8 +66,6 @@ LOCAL_INCLUDES += [
     '/dom/xslt/xslt',
     '/editor/composer',
     '/editor/libeditor',
-    '/editor/libeditor/html',
-    '/editor/libeditor/text',
     '/editor/txmgr',
     '/editor/txtsvc',
     '/extensions/cookie',

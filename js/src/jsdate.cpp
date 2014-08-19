@@ -32,6 +32,7 @@
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jsutil.h"
+#include "jswrapper.h"
 #include "prmjtime.h"
 
 #include "js/Date.h"
@@ -3130,5 +3131,8 @@ js_DateGetSeconds(JSObject *obj)
 JS_FRIEND_API(double)
 js_DateGetMsecSinceEpoch(JSObject *obj)
 {
-    return obj->is<DateObject>() ? obj->as<DateObject>().UTCTime().toNumber() : 0;
+    obj = CheckedUnwrap(obj);
+    if (!obj || !obj->is<DateObject>())
+        return 0;
+    return obj->as<DateObject>().UTCTime().toNumber();
 }

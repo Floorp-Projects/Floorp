@@ -845,13 +845,15 @@
           switch (aMessage.name) {
             case "PopupBlocking:UpdateBlockedPopups": {
               this.blockedPopups = data.blockedPopups;
-              for (let i = 0; i < this.blockedPopups.length; i++) {
-                let scope = Components.utils.import("resource://gre/modules/BrowserUtils.jsm", {});
-                let uri = scope.BrowserUtils.makeURI(this.blockedPopups[i].popupWindowURI);
-                this.blockedPopups[i].popupWindowURI = uri;
-              }
-              if (data.freshPopup) {
-                this.blockedPopups.reported = false;
+              if (this.blockedPopups) {
+                for (let i = 0; i < this.blockedPopups.length; i++) {
+                  let scope = Components.utils.import("resource://gre/modules/BrowserUtils.jsm", {});
+                  let uri = scope.BrowserUtils.makeURI(this.blockedPopups[i].popupWindowURI);
+                  this.blockedPopups[i].popupWindowURI = uri;
+                }
+                if (data.freshPopup) {
+                  this.blockedPopups.reported = false;
+                }
               }
               this.updateBlockedPopups();
               break;

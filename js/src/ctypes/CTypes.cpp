@@ -4429,7 +4429,7 @@ ArrayType::GetSafeLength(JSObject* obj, size_t* result)
   // The "length" property can be an int, a double, or JSVAL_VOID
   // (for arrays of undefined length), and must always fit in a size_t.
   if (length.isInt32()) {
-    *result = length.toInt32();;
+    *result = length.toInt32();
     return true;
   }
   if (length.isDouble()) {
@@ -4455,7 +4455,7 @@ ArrayType::GetLength(JSObject* obj)
   // (for arrays of undefined length), and must always fit in a size_t.
   // For callers who know it can never be JSVAL_VOID, return a size_t directly.
   if (length.isInt32())
-    return length.toInt32();;
+    return length.toInt32();
   return Convert<size_t>(length.toDouble());
 }
 

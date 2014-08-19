@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test DelayNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+var gTest = {
+  length: 4096,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var source = context.createBufferSource();
+
+    var delay = context.createDelay();
+
+    source.buffer = this.buffer;
+
+    source.connect(delay);
+
+    delay.delayTime.value = 0.5;
+
+    // Delay the source stream by 2048 frames
+    delay.delayTime.value = 2048 / context.sampleRate;
+
+    var delayWrapped = SpecialPowers.wrap(delay);
+    ok("passThrough" in delayWrapped, "DelayNode should support the passThrough API");
+    delayWrapped.passThrough = true;
+
+    source.start(0);
+    return delay;
+  },
+  createExpectedBuffers: function(context) {
+    this.buffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      this.buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    }
+    var silence = context.createBuffer(1, 2048, context.sampleRate);
+
+    return [this.buffer, silence];
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>
