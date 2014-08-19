@@ -319,6 +319,44 @@ nsGenericHTMLFrameElement::GetReallyIsApp(bool *aOut)
   return NS_OK;
 }
 
+namespace {
+
+bool WidgetsEnabled()
+{
+  static bool sMozWidgetsEnabled = false;
+  static bool sBoolVarCacheInitialized = false;
+
+  if (!sBoolVarCacheInitialized) {
+    sBoolVarCacheInitialized = true;
+    Preferences::AddBoolVarCache(&sMozWidgetsEnabled,
+                                 "dom.enable_widgets");
+  }
+
+  return sMozWidgetsEnabled;
+}
+
+} // anonymous namespace
+
+/* [infallible] */ NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetReallyIsWidget(bool *aOut)
+{
+  *aOut = false;
+  if (!WidgetsEnabled()) {
+    return NS_OK;
+  }
+
+  nsAutoString appManifestURL;
+  GetManifestURLByType(nsGkAtoms::mozapp, appManifestURL);
+  bool isApp = !appManifestURL.IsEmpty();
+
+  nsAutoString widgetManifestURL;
+  GetManifestURLByType(nsGkAtoms::mozwidget, widgetManifestURL);
+  bool isWidget = !widgetManifestURL.IsEmpty();
+
+  *aOut = isWidget && !isApp;
+  return NS_OK;
+}
+
 /* [infallible] */ NS_IMETHODIMP
 nsGenericHTMLFrameElement::GetIsExpectingSystemMessage(bool *aOut)
 {
@@ -404,7 +442,7 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
 
   GetManifestURLByType(nsGkAtoms::mozapp, appManifestURL);
 
-  if (Preferences::GetBool("dom.enable_widgets")) {
+  if (WidgetsEnabled()) {
     GetManifestURLByType(nsGkAtoms::mozwidget, widgetManifestURL);
   }
 

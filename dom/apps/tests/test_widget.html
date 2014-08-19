@@ -11,16 +11,17 @@
   <script type="application/javascript;version=1.7">
 
   var gWidgetManifestURL = 'http://test/tests/dom/apps/tests/file_app.sjs?apptype=widget&getmanifest=true';
+  var gInvalidWidgetManifestURL = 'http://test/tests/dom/apps/tests/file_app.sjs?apptype=invalidWidget&getmanifest=true';
   var gApp;
 
-  function cbError() {
+  function onError() {
     ok(false, "Error callback invoked");
     finish();
   }
 
-  function installApp() {
-    var request = navigator.mozApps.install(gWidgetManifestURL);
-    request.onerror = cbError;
+  function installApp(path) {
+    var request = navigator.mozApps.install(path);
+    request.onerror = onError;
     request.onsuccess = function() {
       gApp = request.result;
 
@@ -31,40 +32,134 @@
   function uninstallApp() {
     // Uninstall the app.
     var request = navigator.mozApps.mgmt.uninstall(gApp);
-    request.onerror = cbError;
+    request.onerror = onError;
     request.onsuccess = function() {
       // All done.
       info("All done");
+
       runTest();
     }
   }
 
-  function testApp() {
+  function testApp(isValidWidget) {
+    info("Test widget feature. IsValidWidget: " + isValidWidget);
+
     var ifr = document.createElement('iframe');
     ifr.setAttribute('mozbrowser', 'true');
     ifr.setAttribute('mozwidget', gApp.manifestURL);
     ifr.setAttribute('src', gApp.origin+gApp.manifest.launch_path);
 
     var domParent = document.getElementById('container');
+    domParent.appendChild(ifr);
 
-    // Set us up to listen for messages from the app.
-    var listener = function(e) {
-      var message = e.detail.message;
-      if (/^OK/.exec(message)) {
-        ok(true, "Message from widget: " + message);
-      } else if (/KO/.exec(message)) {
-        ok(false, "Message from widget: " + message);
-      } else if (/DONE/.exec(message)) {
-        ok(true, "Message from widget complete");
-        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
-        domParent.removeChild(ifr);
-        runTest();
+    var mm = SpecialPowers.getBrowserFrameMessageManager(ifr);
+    mm.addMessageListener('OK', function(msg) {
+      ok(isValidWidget, "Message from widget: " + SpecialPowers.wrap(msg).json);
+    });
+    mm.addMessageListener('KO', function(msg) {
+      ok(!isValidWidget, "Message from widget: " + SpecialPowers.wrap(msg).json);
+    });
+    mm.addMessageListener('DONE', function(msg) {
+      ok(true, "Message from widget complete: "+SpecialPowers.wrap(msg).json);
+      domParent.removeChild(ifr);
+      runTest();
+    });
+
+    ifr.addEventListener('mozbrowserloadend', function() {
+      ok(true, "receive mozbrowserloadend");
+
+      // Test limited browser API feature only for valid widget case
+      if (isValidWidget) {
+        testLimitedBrowserAPI(ifr);
       }
+      SimpleTest.executeSoon(()=>loadFrameScript(mm));
+    }, false);
+
+    // Test limited browser API feature only for valid widget case
+    if (!isValidWidget) {
+      return;
     }
 
-    // This event is triggered when the app calls "alert".
-    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
-    domParent.appendChild(ifr);
+    [
+      'mozbrowsertitlechange',
+      'mozbrowseropenwindow',
+      'mozbrowserscroll',
+      'mozbrowserasyncscroll'
+    ].forEach( function(topic) {
+      ifr.addEventListener(topic, function() {
+        ok(false, topic + " should be hidden");
+      }, false);
+    });
+  }
+
+  function testLimitedBrowserAPI(ifr) {
+    var securitySensitiveCalls = [
+      'sendMouseEvent',
+      'sendTouchEvent',
+      'goBack',
+      'goForward',
+      'reload',
+      'stop',
+      'download',
+      'purgeHistory',
+      'getScreenshot',
+      'zoom',
+      'getCanGoBack',
+      'getCanGoForward'
+    ];
+    securitySensitiveCalls.forEach( function(call) {
+      is(typeof ifr[call], "undefined", call + " should be hidden for widget");
+    });
+  }
+
+  function loadFrameScript(mm) {
+    var script = 'data:,\
+      function ok(p, msg) { \
+        if (p) { \
+          sendAsyncMessage("OK", msg); \
+        } else { \
+          sendAsyncMessage("KO", msg); \
+        } \
+      } \
+      \
+      function is(a, b, msg) { \
+        if (a == b) { \
+          sendAsyncMessage("OK", a + " == " + b + " - " + msg); \
+        } else { \
+          sendAsyncMessage("KO", a + " != " + b + " - " + msg); \
+        } \
+      } \
+      \
+      function finish() { \
+          sendAsyncMessage("DONE",""); \
+      } \
+      \
+      function onError() { \
+        ok(false, "Error callback invoked"); \
+        finish(); \
+      } \
+      \
+      function checkWidget(widget) { \
+        /*For invalid widget case, ignore the following check*/\
+        if (widget) { \
+          var widgetName = "Really Rapid Release (APPTYPETOKEN)"; \
+          is(widget.origin, "http://test", "Widget origin should be correct"); \
+          is(widget.installOrigin, "http://mochi.test:8888", "Install origin should be correct"); \
+        } \
+        finish(); \
+      } \
+      \
+      var request = content.window.navigator.mozApps.getSelf(); \
+      request.onsuccess = function() { \
+        var widget = request.result; \
+        ok(widget,"Should be a widget"); \
+        checkWidget(widget); \
+      }; \
+      request.onerror = onError; \
+      content.window.open("about:blank"); /*test mozbrowseropenwindow*/ \
+      content.window.scrollTo(4000, 4000); /*test mozbrowser(async)scroll*/ \
+      ';
+    mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
   }
 
   var tests = [
@@ -93,10 +188,19 @@
     },
 
     // Installing the app
-    installApp,
+    ()=>installApp(gWidgetManifestURL),
 
     // Run tests in app
-    testApp,
+    ()=>testApp(true),
+
+    // Uninstall the app
+    uninstallApp,
+
+    // Installing the app for invalid widget case
+    ()=>installApp(gInvalidWidgetManifestURL),
+
+    // Run tests in app for invalid widget case
+    ()=>testApp(false),
 
     // Uninstall the app
     uninstallApp
