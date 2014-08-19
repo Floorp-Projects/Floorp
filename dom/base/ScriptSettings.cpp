@@ -128,6 +128,13 @@ GetEntryGlobal()
   return ScriptSettingsStack::EntryGlobal();
 }
 
+nsIDocument*
+GetEntryDocument()
+{
+  nsCOMPtr<nsPIDOMWindow> entryWin = do_QueryInterface(GetEntryGlobal());
+  return entryWin ? entryWin->GetExtantDoc() : nullptr;
+}
+
 nsIGlobalObject*
 GetIncumbentGlobal()
 {

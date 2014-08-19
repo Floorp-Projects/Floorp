@@ -20,6 +20,7 @@
 class nsPIDOMWindow;
 class nsGlobalWindow;
 class nsIScriptContext;
+class nsIDocument;
 
 namespace mozilla {
 namespace dom {
@@ -102,6 +103,10 @@ void DestroyScriptSettings();
 // Returns the global associated with the top-most Candidate Entry Point on
 // the Script Settings Stack. See the HTML spec. This may be null.
 nsIGlobalObject* GetEntryGlobal();
+
+// If the entry global is a window, returns its extant document. Otherwise,
+// returns null.
+nsIDocument* GetEntryDocument();
 
 // Returns the global associated with the top-most entry of the the Script
 // Settings Stack. See the HTML spec. This may be null.
