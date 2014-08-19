@@ -1,7 +1,9 @@
-for (var i = 0; i < 9; i++)
-    assertEq(Symbol() ? 1 : 0, 1, "symbols are truthy");
+var sym = this.Symbol || (() => "truthy");
 
-var a = [0, 0, 0, 0, 0, Symbol(), Symbol()];
+for (var i = 0; i < 9; i++)
+    assertEq(sym() ? 1 : 0, 1, "symbols are truthy");
+
+var a = [0, 0, 0, 0, 0, sym(), sym()];
 var b = [];
 function f(i, v) {
     b[i] = v ? "yes" : "no";

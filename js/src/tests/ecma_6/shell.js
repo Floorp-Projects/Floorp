@@ -44,7 +44,6 @@ if (typeof assertDeepEq === 'undefined') {
         var call = Function.prototype.call,
             Map_ = Map,
             Error_ = Error,
-            Symbol_ = Symbol,
             Map_has = call.bind(Map.prototype.has),
             Map_get = call.bind(Map.prototype.get),
             Map_set = call.bind(Map.prototype.set),

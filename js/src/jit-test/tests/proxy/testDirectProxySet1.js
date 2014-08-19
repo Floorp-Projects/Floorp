@@ -7,7 +7,8 @@ assertEq(target.foo, 'baz');
 Proxy(target, {})['foo'] = 'buz';
 assertEq(target.foo, 'buz');
 
-var sym = Symbol.for('quux');
-Proxy(target, {})[sym] = sym;
-assertEq(target[sym], sym);
-
+if (typeof Symbol === "function") {
+    var sym = Symbol.for('quux');
+    Proxy(target, {})[sym] = sym;
+    assertEq(target[sym], sym);
+}

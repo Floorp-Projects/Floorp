@@ -26,8 +26,10 @@ test("[0, 1, 2]");
 test("[,,,,,]");
 test("/a*a/");
 test("function () {}");
-test("(function () {\n" +
-     "    var x = {};\n" +
-     "    x[Symbol()] = 1; x[Symbol.for('moon')] = 2; x[Symbol.iterator] = 3;\n" +
-     "    return x;\n" + 
-     "})()");
+if (typeof Symbol === "function") {
+    test("(function () {\n" +
+         "    var x = {};\n" +
+         "    x[Symbol()] = 1; x[Symbol.for('moon')] = 2; x[Symbol.iterator] = 3;\n" +
+         "    return x;\n" + 
+         "})()");
+}

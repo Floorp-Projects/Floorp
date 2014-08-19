@@ -1,7 +1,10 @@
 load(libdir + "asserts.js");
 
 // Throw a TypeError if the trap sets a non-writable, non-configurable property
-for (var key of ['foo', Symbol.for('quux')]) {
+var keys = ['foo'];
+if (typeof Symbol === "function")
+    keys.push(Symbol.for('quux'));
+for (var key of keys) {
     var target = {};
     Object.defineProperty(target, key, {
         value: 'bar',
