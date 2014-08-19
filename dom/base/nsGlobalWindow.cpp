@@ -12804,11 +12804,7 @@ nsGlobalWindow::GetScrollFrame()
 nsresult
 nsGlobalWindow::SecurityCheckURL(const char *aURL)
 {
-  nsCOMPtr<nsPIDOMWindow> sourceWindow;
-  JSContext* topCx = nsContentUtils::GetCurrentJSContext();
-  if (topCx) {
-    sourceWindow = do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(topCx));
-  }
+  nsCOMPtr<nsPIDOMWindow> sourceWindow = do_QueryInterface(GetEntryGlobal());
   if (!sourceWindow) {
     sourceWindow = this;
   }
