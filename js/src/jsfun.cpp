@@ -588,7 +588,7 @@ JSFunction::trace(JSTracer *trc)
             MarkLazyScriptUnbarriered(trc, &u.i.s.lazy_, "lazyScript");
         }
         if (u.i.env_)
-            MarkObjectUnbarriered(trc, &u.i.env_, "fun_callscope");
+            MarkObjectUnbarriered(trc, &u.i.env_, "fun_environment");
     }
 }
 

@@ -414,6 +414,14 @@ class DynamicWithObject : public NestedScopeObject
     JSObject &withThis() const {
         return getReservedSlot(THIS_SLOT).toObject();
     }
+
+    static inline size_t objectSlot() {
+        return OBJECT_SLOT;
+    }
+
+    static inline size_t thisSlot() {
+        return THIS_SLOT;
+    }
 };
 
 class BlockObject : public NestedScopeObject
