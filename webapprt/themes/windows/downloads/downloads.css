@@ -1,0 +1,112 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#downloadManager {
+  background-color: ThreeDFace;
+}
+
+/* Download View */
+@media not all and (-moz-windows-classic) {
+  #downloadView {
+    -moz-appearance: none;
+    margin: 0;
+    border-bottom: 2px solid;
+    -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  }
+}
+
+/* Download View Items */
+richlistitem[type="download"] {
+  padding: 4px 8px 4px 4px;
+  min-height: 46px;
+  border-bottom: 1px solid ThreeDLightShadow;
+}
+
+richlistitem[type="download"] .name {
+  font-size: larger;
+}
+
+richlistitem[type="download"] .dateTime {
+  font-size: smaller;
+}
+
+.mini-button {
+  -moz-appearance: none;
+  list-style-image: url(chrome://webapprt/skin/downloads/downloadButtons.png);
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mini-button > .button-box {
+  padding: 0 !important;
+}
+
+.cancel {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+.cancel:hover {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+.cancel:active {
+  -moz-image-region: rect(32px, 32px, 48px, 16px);
+}
+.cancel[disabled="true"] {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
+.pause {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+.pause:hover {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+.pause:active {
+  -moz-image-region: rect(32px, 48px, 48px, 32px);
+}
+.pause[disabled="true"] {
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
+}
+.resume {
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+.resume:hover {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+.resume:active {
+  -moz-image-region: rect(32px, 16px, 48px, 0px);
+}
+.resume[disabled="true"] {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+.retry {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+.retry:hover {
+  -moz-image-region: rect(16px, 64px, 32px, 48px);
+}
+.retry:active {
+  -moz-image-region: rect(32px, 64px, 48px, 48px);
+}
+.retry[disabled="true"] {
+  -moz-image-region: rect(48px, 64px, 64px, 48px);
+}
+
+.blockedIcon {
+  list-style-image: url(chrome://global/skin/icons/Error.png);
+}
+
+/* prevent flickering when changing states */
+.downloadTypeIcon {
+  min-height: 32px;
+  min-width: 32px;
+}
+
+#clearListButton {
+  min-height: 0;
+  min-width: 0;
+  margin-top: 3px;
+}
