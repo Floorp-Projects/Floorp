@@ -65,6 +65,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 /****************************************************************
  ******************** nsWatcherWindowEntry **********************
@@ -886,7 +887,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
     }
 
     nsCOMPtr<nsPIDOMWindow> referrerWindow =
-      do_QueryInterface(dom::BrokenGetEntryGlobal());
+      do_QueryInterface(GetEntryGlobal());
     if (!referrerWindow) {
       referrerWindow = do_QueryInterface(aParent);
     }
