@@ -1522,7 +1522,7 @@ pref("browser.newtabpage.enhanced", false);
 pref("browser.newtabpage.rows", 3);
 
 // number of columns of newtab grid
-pref("browser.newtabpage.columns", 8);
+pref("browser.newtabpage.columns", 5);
 
 // directory tiles download URL
 pref("browser.newtabpage.directory.source", "chrome://global/content/directoryLinks.json");
