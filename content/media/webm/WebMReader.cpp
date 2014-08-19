@@ -1026,52 +1026,45 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
 
 nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
-  MediaResource* resource = mDecoder->GetResource();
-
-  uint64_t timecodeScale;
-  if (!mContext || nestegg_tstamp_scale(mContext, &timecodeScale) == -1) {
-    return NS_OK;
+  if (aBuffered->Length() != 0) {
+    return NS_ERROR_FAILURE;
   }
 
+  MediaResource* resource = mDecoder->GetResource();
+
   // Special case completely cached files.  This also handles local files.
-  bool isFullyCached = resource->IsDataCachedToEndOfResource(0);
-  if (isFullyCached) {
+  if (mContext && resource->IsDataCachedToEndOfResource(0)) {
     uint64_t duration = 0;
     if (nestegg_duration(mContext, &duration) == 0) {
       aBuffered->Add(0, duration / NS_PER_S);
+      return NS_OK;
     }
   }
 
-  uint32_t bufferedLength = 0;
-  aBuffered->GetLength(&bufferedLength);
-
   // Either we the file is not fully cached, or we couldn't find a duration in
   // the WebM bitstream.
-  if (!isFullyCached || !bufferedLength) {
-    MediaResource* resource = mDecoder->GetResource();
-    nsTArray<MediaByteRange> ranges;
-    nsresult res = resource->GetCachedRanges(ranges);
-    NS_ENSURE_SUCCESS(res, res);
+  nsTArray<MediaByteRange> ranges;
+  nsresult res = resource->GetCachedRanges(ranges);
+  NS_ENSURE_SUCCESS(res, res);
 
-    for (uint32_t index = 0; index < ranges.Length(); index++) {
-      uint64_t start, end;
-      bool rv = mBufferedState->CalculateBufferedForRange(ranges[index].mStart,
-                                                          ranges[index].mEnd,
-                                                          &start, &end);
-      if (rv) {
-        double startTime = start * timecodeScale / NS_PER_S - aStartTime;
-        double endTime = end * timecodeScale / NS_PER_S - aStartTime;
-        // If this range extends to the end of the file, the true end time
-        // is the file's duration.
-        if (resource->IsDataCachedToEndOfResource(ranges[index].mStart)) {
-          uint64_t duration = 0;
-          if (nestegg_duration(mContext, &duration) == 0) {
-            endTime = duration / NS_PER_S;
-          }
+  for (uint32_t index = 0; index < ranges.Length(); index++) {
+    uint64_t start, end;
+    bool rv = mBufferedState->CalculateBufferedForRange(ranges[index].mStart,
+                                                        ranges[index].mEnd,
+                                                        &start, &end);
+    if (rv) {
+      double startTime = start / NS_PER_S - aStartTime;
+      double endTime = end / NS_PER_S - aStartTime;
+      // If this range extends to the end of the file, the true end time
+      // is the file's duration.
+      if (mContext && resource->IsDataCachedToEndOfResource(ranges[index].mStart)) {
+        uint64_t duration = 0;
+        if (nestegg_duration(mContext, &duration) == 0) {
+          endTime = duration / NS_PER_S;
         }
-
-        aBuffered->Add(startTime, endTime);
       }
+
+      aBuffered->Add(startTime, endTime);
     }
   }
 
