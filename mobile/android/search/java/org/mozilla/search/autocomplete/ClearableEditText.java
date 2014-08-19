@@ -59,6 +59,8 @@ public class ClearableEditText extends FrameLayout {
                 if (listener != null) {
                     listener.onChange(s.toString());
                 }
+
+                updateClearButtonVisibility();
             }
         });
 
@@ -86,7 +88,7 @@ public class ClearableEditText extends FrameLayout {
         });
 
         clearButton = (ImageButton) findViewById(R.id.clear_button);
-        clearButton.setOnClickListener(new View.OnClickListener(){
+        clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 editText.setText("");
@@ -113,7 +115,7 @@ public class ClearableEditText extends FrameLayout {
         }
         this.active = active;
 
-        clearButton.setVisibility(active ? View.VISIBLE : View.GONE);
+        updateClearButtonVisibility();
 
         editText.setFocusable(active);
         editText.setFocusableInTouchMode(active);
@@ -128,6 +130,12 @@ public class ClearableEditText extends FrameLayout {
             editText.clearFocus();
             inputMethodManager.hideSoftInputFromWindow(editText.getWindowToken(), 0);
         }
+    }
+
+    private void updateClearButtonVisibility() {
+        // Only show the clear button when there is text in the input.
+        final boolean visible = active && (editText.getText().length() > 0);
+        clearButton.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     public void setTextListener(TextListener listener) {
