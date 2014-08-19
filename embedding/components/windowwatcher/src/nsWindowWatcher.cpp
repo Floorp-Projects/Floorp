@@ -1346,18 +1346,8 @@ nsWindowWatcher::URIfromURL(const char *aURL,
                             nsIDOMWindow *aParent,
                             nsIURI **aURI)
 {
-  nsCOMPtr<nsIDOMWindow> baseWindow;
-
-  /* build the URI relative to the calling JS Context, if any.
-     (note this is the same context used to make the security check
-     in nsGlobalWindow.cpp.) */
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    nsIScriptContext *scriptcx = nsJSUtils::GetDynamicScriptContext(cx);
-    if (scriptcx) {
-      baseWindow = do_QueryInterface(scriptcx->GetGlobalObject());
-    }
-  }
+  // Build the URI relative to the entry global.
+  nsCOMPtr<nsIDOMWindow> baseWindow = do_QueryInterface(GetEntryGlobal());
 
   // failing that, build it relative to the parent window, if possible
   if (!baseWindow)
