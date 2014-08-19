@@ -125,6 +125,9 @@
       <field name="FormHistory" readonly="true">
         (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
       </field>
+      <field name="PlacesUtils" readonly="true">
+        (Components.utils.import("resource://gre/modules/PlacesUtils.jsm", {})).PlacesUtils;
+      </field>
 
       <property name="engines" readonly="true">
         <getter><![CDATA[
@@ -292,9 +295,7 @@
         <parameter name="uri"/>
         <body><![CDATA[
           if (uri) {
-            let size = Math.round(16 * window.devicePixelRatio);
-            if (!uri.contains("#"))
-              uri += "#-moz-resolution=" + size + "," + size;
+            uri = this.PlacesUtils.getImageURLForResolution(window, uri);
           }
           element.setAttribute("src", uri);
         ]]></body>

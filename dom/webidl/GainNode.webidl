@@ -16,3 +16,6 @@ interface GainNode : AudioNode {
 
 };
 
+// Mozilla extension
+GainNode implements AudioNodePassThrough;
+

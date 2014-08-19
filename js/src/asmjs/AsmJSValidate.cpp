@@ -6129,9 +6129,9 @@ GenerateFFIInterpExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &e
     JS_ASSERT(masm.framePushed() == 0);
 
     // Argument types for InvokeFromAsmJS_*:
-    MIRType typeArray[] = { MIRType_Pointer,   // exitDatum
-                            MIRType_Int32,     // argc
-                            MIRType_Pointer }; // argv
+    static const MIRType typeArray[] = { MIRType_Pointer,   // exitDatum
+                                         MIRType_Int32,     // argc
+                                         MIRType_Pointer }; // argv
     MIRTypeVector invokeArgTypes(m.cx());
     invokeArgTypes.infallibleAppend(typeArray, ArrayLength(typeArray));
 

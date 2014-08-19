@@ -52,13 +52,11 @@ RemoteXULForbidsXBLScope(nsIPrincipal *aPrincipal, HandleObject aGlobal)
 {
   MOZ_ASSERT(aPrincipal);
 
-  // The SafeJSContext is lazily created, and tends to be created at really
-  // weird times, at least for xpcshell (often very early in startup or late
-  // in shutdown). Its scope isn't system principal, so if we proceeded we'd
-  // end up calling into AllowXULXBLForPrincipal, which depends on all kinds
-  // of persistent storage and permission machinery that may or not be running.
-  // We know the answer to the question here, so just short-circuit.
-  if (JS_GetClass(aGlobal) == &SafeJSContextGlobalClass)
+  // Certain singleton sandoxes are created very early in startup - too early
+  // to call into AllowXULXBLForPrincipal. We never create XBL scopes for
+  // sandboxes anway, and certainly not for these singleton scopes. So we just
+  // short-circuit here.
+  if (IsSandbox(aGlobal))
       return false;
 
   // AllowXULXBLForPrincipal will return true for system principal, but we

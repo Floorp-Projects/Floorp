@@ -186,15 +186,24 @@ function runTests() {
   EventUtils.synthesizeKey("VK_DELETE", {});
   ok(table.hidden, "Search suggestion table hidden");
 
-  // Focus a different element than the search input.
+  // Remove the search bar from toolbar
+  CustomizableUI.removeWidgetFromArea("search-container");
+  // Focus a different element than the search input from the page.
   let btn = getContentDocument().getElementById("newtab-customize-button");
   yield promiseClick(btn).then(TestRunner.next);
 
   isnot(input, getContentDocument().activeElement, "Search input should not be focused");
-  // Test that Ctrl/Cmd + K will focus the input field.
+  // Test that Ctrl/Cmd + K will focus the input field from the page.
   EventUtils.synthesizeKey("k", { accelKey: true });
   yield promiseSearchEvents(["FocusInput"]).then(TestRunner.next);
   is(input, getContentDocument().activeElement, "Search input should be focused");
+  // Reset changes made to toolbar
+  CustomizableUI.reset();
+
+  // Test that Ctrl/Cmd + K will focus the search bar from toolbar.
+  let searchBar = gWindow.document.getElementById("searchbar");
+  EventUtils.synthesizeKey("k", { accelKey: true });
+  is(searchBar.textbox.inputField, gWindow.document.activeElement, "Toolbar's search bar should be focused");
 
   // Done.  Revert the current engine and remove the new engines.
   Services.search.currentEngine = oldCurrentEngine;

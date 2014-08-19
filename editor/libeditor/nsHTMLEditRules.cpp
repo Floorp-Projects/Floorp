@@ -9133,7 +9133,7 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
 
   // remove unnecessary DIV blocks:
   // we could skip this section but that would cause a FAIL in
-  // editor/libeditor/html/tests/browserscope/richtext.html, which expects
+  // editor/libeditor/tests/browserscope/richtext.html, which expects
   // to unapply a CSS "indent" (<div style="margin-left: 40px;">) by
   // removing the DIV container instead of just removing the CSS property.
   nsCOMPtr<dom::Element> node = do_QueryInterface(aNode);

@@ -179,9 +179,10 @@ loop.shared.views = (function(_, OT, l10n) {
 
     render: function() {
       /* jshint ignore:start */
+      var hangupButtonClasses = "btn btn-hangup";
       return (
         React.DOM.ul({className: "conversation-toolbar"}, 
-          React.DOM.li(null, React.DOM.button({className: "btn btn-hangup", 
+          React.DOM.li(null, React.DOM.button({className: hangupButtonClasses, 
                       onClick: this.handleClickHangup, 
                       title: l10n.get("hangup_button_title")})), 
           React.DOM.li(null, MediaControlButton({action: this.handleToggleVideo, 
