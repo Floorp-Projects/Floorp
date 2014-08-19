@@ -112,6 +112,7 @@ NS_CP_ContentTypeName(uint32_t contentType)
     CASE_RETURN( TYPE_XSLT              );
     CASE_RETURN( TYPE_BEACON            );
     CASE_RETURN( TYPE_FETCH             );
+    CASE_RETURN( TYPE_IMAGESET          );
    default:
     return "<Unknown Type>";
   }

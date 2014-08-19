@@ -24,7 +24,7 @@ typedef unsigned long nsContentPolicyType;
  * by launching a dialog to prompt the user for something).
  */
 
-[scriptable,uuid(8afe3e5c-f916-48fd-8075-9579d3502e1d)]
+[scriptable,uuid(d8210e91-1970-4230-88ef-74b6fdc418cf)]
 interface nsIContentPolicy : nsISupports
 {
   /**
@@ -155,6 +155,11 @@ interface nsIContentPolicy : nsISupports
    * specification.
    */
   const nsContentPolicyType TYPE_FETCH = 20;
+
+  /**
+   * Indicates a <img srcset> or <picture> request.
+   */
+  const nsContentPolicyType TYPE_IMAGESET = 21;
 
   /* When adding new content types, please update nsContentBlocker,
    * NS_CP_ContentTypeName, nsCSPContext, all nsIContentPolicy
