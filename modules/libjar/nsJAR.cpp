@@ -1125,6 +1125,8 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const nsACString &entry,
   nsresult rv = GetZip(zipFile, getter_AddRefs(outerZipReader));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  MutexAutoLock lock(mLock);
+
 #ifdef ZIP_CACHE_HIT_RATE
   mZipCacheLookups++;
 #endif
@@ -1285,6 +1287,7 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
     mZips.Enumerate(FindFlushableZip, nullptr);
   }
   else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
+    MutexAutoLock lock(mLock);
     mZips.EnumerateRead(DropZipReaderCache, nullptr);
     mZips.Clear();
   }
