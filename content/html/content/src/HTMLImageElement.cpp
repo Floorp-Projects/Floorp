@@ -434,13 +434,9 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       QueueImageLoadTask();
     } else {
       // Bug 1076583 - We still use the older synchronous algorithm in
-      // non-responsive mode. We want aForce == true in this LoadImage
-      // call, because we want to force a new load of the image with
-      // the new cross origin policy.
-      nsCOMPtr<nsIURI> currentURI;
-      if (NS_SUCCEEDED(GetCurrentURI(getter_AddRefs(currentURI))) && currentURI) {
-        LoadImage(currentURI, true, aNotify);
-      }
+      // non-responsive mode.  Force a new load of the image with the
+      // new cross origin policy.
+      ForceReload(aNotify);
     }
   }
 
@@ -551,7 +547,7 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       // the state gets in Element's attr-setting happen around this
       // LoadImage call, we could start passing false instead of aNotify
       // here.
-      LoadImage(aValue, true, aNotify);
+      LoadImage(aValue, true, aNotify, eImageLoadType_Normal);
 
       mNewRequestsWillNeedAnimationReset = false;
     }
@@ -909,14 +905,19 @@ HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify)
 
   if (mResponsiveSelector) {
     nsCOMPtr<nsIURI> url = mResponsiveSelector->GetSelectedImageURL();
-    rv = LoadImage(url, aForce, aNotify);
+    rv = LoadImage(url, aForce, aNotify, eImageLoadType_Imageset);
   } else {
     nsAutoString src;
     if (!GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
       CancelImageRequests(aNotify);
       rv = NS_OK;
     } else {
-      rv = LoadImage(src, aForce, aNotify);
+      // If we have a srcset attribute or are in a <picture> element,
+      // we always use the Imageset load type, even if we parsed no
+      // valid responsive sources from either, per spec.
+      rv = LoadImage(src, aForce, aNotify,
+                     HaveSrcsetOrInPicture() ? eImageLoadType_Imageset
+                                             : eImageLoadType_Normal);
     }
   }
 
