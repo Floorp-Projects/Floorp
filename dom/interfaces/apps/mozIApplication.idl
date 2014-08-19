@@ -11,11 +11,17 @@
  * We expose Gecko-internal helpers related to "web apps" through this
  * sub-interface.
  */
-[scriptable, uuid(7bd62430-c374-49eb-be1b-ce821a180360)]
+[scriptable, uuid(1d856b11-ac29-47d3-bd52-a86e3d45fcf4)]
 interface mozIApplication: nsISupports
 {
   /* Return true if this app has |permission|. */
   boolean hasPermission(in string permission);
+
+  /**
+   *  Return true if this app can be a widget and
+   *  its |widgetPages| contains |page|
+   */
+  boolean hasWidgetPage(in DOMString pageURL);
 
   /* Application status as defined in nsIPrincipal. */
   readonly attribute unsigned short appStatus;
