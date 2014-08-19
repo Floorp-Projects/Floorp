@@ -198,7 +198,7 @@ DebuggerMemory::drainAllocationsLog(JSContext *cx, unsigned argc, Value *vp)
 
     for (size_t i = 0; i < length; i++) {
         Debugger::AllocationSite *allocSite = dbg->allocationsLog.popFirst();
-        result->setDenseElement(i, ObjectValue(*allocSite->frame));
+        result->setDenseElement(i, ObjectOrNullValue(allocSite->frame));
         js_delete(allocSite);
     }
 
