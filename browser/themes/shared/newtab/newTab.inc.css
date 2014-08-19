@@ -65,9 +65,10 @@
 #newtab-customize-button {
   background-color: transparent;
   background-image: -moz-image-rect(url(chrome://browser/skin/newtab/controls.svg), 0, 32, 32, 0);
+  background-size: 28px;
   border: none;
-  height: 32px;
-  width: 32px;
+  height: 28px;
+  width: 28px;
 }
 
 #newtab-customize-button:-moz-any(:hover, :active, [active]) {
@@ -166,9 +167,10 @@
 /* CONTROLS */
 .newtab-control {
   background-color: transparent;
+  background-size: 24px;
   border: none;
-  height: 32px;
-  width: 32px;
+  height: 24px;
+  width: 24px;
 }
 
 .newtab-control-pin,
@@ -199,10 +201,9 @@
 }
 
 .newtab-control-sponsored {
-  width: 24px;
-  height: 24px;
   background-image: url(chrome://browser/skin/newtab/controls.png);
   background-position: -249px -1px;
+  background-size: auto;
 }
 
 @media (min-resolution: 2dppx) {
