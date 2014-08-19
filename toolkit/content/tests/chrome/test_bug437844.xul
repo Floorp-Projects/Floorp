@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
   <script class="testbody" type="application/javascript">
     <![CDATA[
 
-      SimpleTest.expectAssertions(20, 21);
+      SimpleTest.expectAssertions(19, 21);
 
       /** Test for Bug 437844 and Bug 348233 **/
       SimpleTest.waitForExplicitFinish();
