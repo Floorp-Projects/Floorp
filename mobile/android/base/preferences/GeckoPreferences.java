@@ -33,7 +33,6 @@ import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
-import org.mozilla.gecko.home.HomePanelPicker;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -104,7 +103,6 @@ OnSharedPreferenceChangeListener
 
     // These match keys in resources/xml*/preferences*.xml
     private static final String PREFS_SEARCH_RESTORE_DEFAULTS = NON_PREF_PREFIX + "search.restore_defaults";
-    private static final String PREFS_HOME_ADD_PANEL = NON_PREF_PREFIX + "home.add_panel";
     private static final String PREFS_DATA_REPORTING_PREFERENCES = NON_PREF_PREFIX + "datareporting.preferences";
     private static final String PREFS_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
     private static final String PREFS_CRASHREPORTER_ENABLED = "datareporting.crashreporter.submitEnabled";
@@ -562,21 +560,6 @@ OnSharedPreferenceChangeListener
                   break;
               }
               break;
-
-          case HomePanelPicker.REQUEST_CODE_ADD_PANEL:
-              switch (resultCode) {
-                  case Activity.RESULT_OK:
-                      // Panel installed, refresh panels list.
-                      mPanelsPreferenceCategory.refresh();
-                      break;
-                  case Activity.RESULT_CANCELED:
-                      // Dialog was cancelled, do nothing.
-                      break;
-                  default:
-                      Log.w(LOGTAG, "Unhandled ADD_PANEL result code " + requestCode);
-                      break;
-              }
-              break;
         }
     }
 
@@ -715,15 +698,6 @@ OnSharedPreferenceChangeListener
                         @Override
                         public boolean onPreferenceClick(Preference preference) {
                             GeckoPreferences.this.restoreDefaultSearchEngines();
-                            return true;
-                        }
-                    });
-                } else if (PREFS_HOME_ADD_PANEL.equals(key)) {
-                    pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-                        @Override
-                        public boolean onPreferenceClick(Preference preference) {
-                            Intent dialogIntent = new Intent(GeckoPreferences.this, HomePanelPicker.class);
-                            startActivityForResultChoosingTransition(dialogIntent, HomePanelPicker.REQUEST_CODE_ADD_PANEL);
                             return true;
                         }
                     });
