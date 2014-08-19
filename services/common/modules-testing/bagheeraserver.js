@@ -256,6 +256,8 @@ BagheeraServer.prototype = {
                                               "uncompressed");
     }
 
+    requestBody = CommonUtils.decodeUTF8(requestBody);
+
     this._log.debug("HTTP request body: " + requestBody);
 
     let doc;
