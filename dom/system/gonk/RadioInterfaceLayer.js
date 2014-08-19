@@ -3314,14 +3314,16 @@ RadioInterface.prototype = {
    * Set the setting value of "time.clock.automatic-update.available".
    */
   setClockAutoUpdateAvailable: function(value) {
-    gSettingsService.createLock().set(kSettingsClockAutoUpdateAvailable, value, null);
+    gSettingsService.createLock().set(kSettingsClockAutoUpdateAvailable, value, null,
+                                      "fromInternalSetting");
   },
 
   /**
    * Set the setting value of "time.timezone.automatic-update.available".
    */
   setTimezoneAutoUpdateAvailable: function(value) {
-    gSettingsService.createLock().set(kSettingsTimezoneAutoUpdateAvailable, value, null);
+    gSettingsService.createLock().set(kSettingsTimezoneAutoUpdateAvailable, value, null,
+                                      "fromInternalSetting");
   },
 
   /**
@@ -3497,7 +3499,7 @@ RadioInterface.prototype = {
     switch (topic) {
       case kMozSettingsChangedObserverTopic:
         let setting = JSON.parse(data);
-        this.handleSettingsChange(setting.key, setting.value, setting.isInternalChange);
+        this.handleSettingsChange(setting.key, setting.value, setting.message);
         break;
       case kSysClockChangeObserverTopic:
         let offset = parseInt(data, 10);
@@ -3578,11 +3580,11 @@ RadioInterface.prototype = {
   // ICC's mcc-mnc.
   _lastKnownHomeNetwork: null,
 
-  handleSettingsChange: function(aName, aResult, aIsInternalSetting) {
+  handleSettingsChange: function(aName, aResult, aMessage) {
     // Don't allow any content processes to modify the setting
     // "time.clock.automatic-update.available" except for the chrome process.
     if (aName === kSettingsClockAutoUpdateAvailable &&
-        !aIsInternalSetting) {
+        aMessage !== "fromInternalSetting") {
       let isClockAutoUpdateAvailable = this._lastNitzMessage !== null ||
                                        this._sntp.isAvailable();
       if (aResult !== isClockAutoUpdateAvailable) {
@@ -3598,7 +3600,7 @@ RadioInterface.prototype = {
     // "time.timezone.automatic-update.available" except for the chrome
     // process.
     if (aName === kSettingsTimezoneAutoUpdateAvailable &&
-        !aIsInternalSetting) {
+        aMessage !== "fromInternalSetting") {
       let isTimezoneAutoUpdateAvailable = this._lastNitzMessage !== null;
       if (aResult !== isTimezoneAutoUpdateAvailable) {
         if (DEBUG) {
