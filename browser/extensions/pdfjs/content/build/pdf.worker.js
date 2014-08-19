@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.645';
-PDFJS.build = '66bfb9c';
+PDFJS.version = '1.0.712';
+PDFJS.build = '6969ed4';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -1351,7 +1351,7 @@ var ChunkedStream = (function ChunkedStreamClosure() {
       }
     },
 
-    ensureByte: function ChunkedStream_ensureRange(pos) {
+    ensureByte: function ChunkedStream_ensureByte(pos) {
       var chunk = Math.floor(pos / this.chunkSize);
       if (chunk === this.lastSuccessfulEnsureByteChunk) {
         return;
@@ -3312,8 +3312,6 @@ var XRef = (function XRefClosure() {
           // Validate entry obj
           if (!isInt(entry.offset) || !isInt(entry.gen) ||
               !(entry.free || entry.uncompressed)) {
-            console.log(entry.offset, entry.gen, entry.free,
-                        entry.uncompressed);
             error('Invalid entry in XRef subsection: ' + first + ', ' + count);
           }
 
@@ -4707,7 +4705,7 @@ var PDFFunction = (function PDFFunctionClosure() {
       }
       length *= outputSize;
 
-      var array = [];
+      var array = new Array(length);
       var codeSize = 0;
       var codeBuf = 0;
       // 32 is a valid bps so shifting won't work
@@ -4722,7 +4720,7 @@ var PDFFunction = (function PDFFunctionClosure() {
           codeSize += 8;
         }
         codeSize -= bps;
-        array.push((codeBuf >> codeSize) * sampleMul);
+        array[i] = (codeBuf >> codeSize) * sampleMul;
         codeBuf &= (1 << codeSize) - 1;
       }
       return array;
@@ -5962,7 +5960,7 @@ var ColorSpace = (function ColorSpaceClosure() {
 
   ColorSpace.fromIR = function ColorSpace_fromIR(IR) {
     var name = isArray(IR) ? IR[0] : IR;
-    var whitePoint, blackPoint;
+    var whitePoint, blackPoint, gamma;
 
     switch (name) {
       case 'DeviceGrayCS':
@@ -5974,8 +5972,14 @@ var ColorSpace = (function ColorSpaceClosure() {
       case 'CalGrayCS':
         whitePoint = IR[1].WhitePoint;
         blackPoint = IR[1].BlackPoint;
-        var gamma = IR[1].Gamma;
+        gamma = IR[1].Gamma;
         return new CalGrayCS(whitePoint, blackPoint, gamma);
+      case 'CalRGBCS':
+        whitePoint = IR[1].WhitePoint;
+        blackPoint = IR[1].BlackPoint;
+        gamma = IR[1].Gamma;
+        var matrix = IR[1].Matrix;
+        return new CalRGBCS(whitePoint, blackPoint, gamma, matrix);
       case 'PatternCS':
         var basePatternCS = IR[1];
         if (basePatternCS) {
@@ -6057,7 +6061,8 @@ var ColorSpace = (function ColorSpaceClosure() {
           params = cs[1].getAll();
           return ['CalGrayCS', params];
         case 'CalRGB':
-          return 'DeviceRgbCS';
+          params = cs[1].getAll();
+          return ['CalRGBCS', params];
         case 'ICCBased':
           var stream = xref.fetchIfRef(cs[1]);
           var dict = stream.dict;
@@ -6576,6 +6581,308 @@ var CalGrayCS = (function CalGrayCSClosure() {
     usesZeroToOneRange: true
   };
   return CalGrayCS;
+})();
+
+//
+// CalRGBCS: Based on "PDF Reference, Sixth Ed", p.247
+//
+var CalRGBCS = (function CalRGBCSClosure() {
+
+  // See http://www.brucelindbloom.com/index.html?Eqn_ChromAdapt.html for these
+  // matrices.
+  var BRADFORD_SCALE_MATRIX = new Float32Array([
+    0.8951, 0.2664, -0.1614,
+    -0.7502, 1.7135, 0.0367,
+    0.0389, -0.0685, 1.0296]);
+
+  var BRADFORD_SCALE_INVERSE_MATRIX = new Float32Array([
+    0.9869929, -0.1470543, 0.1599627,
+    0.4323053, 0.5183603, 0.0492912,
+    -0.0085287, 0.0400428, 0.9684867]);
+
+  // See http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html.
+  var SRGB_D65_XYZ_TO_RGB_MATRIX = new Float32Array([
+    3.2404542, -1.5371385, -0.4985314,
+    -0.9692660, 1.8760108, 0.0415560,
+    0.0556434, -0.2040259, 1.0572252]);
+
+  var FLAT_WHITEPOINT_MATRIX = new Float32Array([1, 1, 1]);
+
+  var tempNormalizeMatrix = new Float32Array(3);
+  var tempConvertMatrix1 = new Float32Array(3);
+  var tempConvertMatrix2 = new Float32Array(3);
+
+  var DECODE_L_CONSTANT = Math.pow(((8 + 16) / 116), 3) / 8.0;
+
+  function CalRGBCS(whitePoint, blackPoint, gamma, matrix) {
+    this.name = 'CalRGB';
+    this.numComps = 3;
+    this.defaultColor = new Float32Array(3);
+
+    if (!whitePoint) {
+      error('WhitePoint missing - required for color space CalRGB');
+    }
+    blackPoint = blackPoint || new Float32Array(3);
+    gamma = gamma || new Float32Array([1, 1, 1]);
+    matrix = matrix || new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+
+    // Translate arguments to spec variables.
+    var XW = whitePoint[0];
+    var YW = whitePoint[1];
+    var ZW = whitePoint[2];
+    this.whitePoint = whitePoint;
+
+    var XB = blackPoint[0];
+    var YB = blackPoint[1];
+    var ZB = blackPoint[2];
+    this.blackPoint = blackPoint;
+
+    this.GR = gamma[0];
+    this.GG = gamma[1];
+    this.GB = gamma[2];
+
+    this.MXA = matrix[0];
+    this.MYA = matrix[1];
+    this.MZA = matrix[2];
+    this.MXB = matrix[3];
+    this.MYB = matrix[4];
+    this.MZB = matrix[5];
+    this.MXC = matrix[6];
+    this.MYC = matrix[7];
+    this.MZC = matrix[8];
+
+    // Validate variables as per spec.
+    if (XW < 0 || ZW < 0 || YW !== 1) {
+      error('Invalid WhitePoint components for ' + this.name +
+            ', no fallback available');
+    }
+
+    if (XB < 0 || YB < 0 || ZB < 0) {
+      info('Invalid BlackPoint for ' + this.name + ' [' + XB + ', ' + YB +
+           ', ' + ZB + '], falling back to default');
+      this.blackPoint = new Float32Array(3);
+    }
+
+    if (this.GR < 0 || this.GG < 0 || this.GB < 0) {
+      info('Invalid Gamma [' + this.GR + ', ' + this.GG + ', ' + this.GB +
+           '] for ' + this.name + ', falling back to default');
+      this.GR = this.GG = this.GB = 1;
+    }
+
+    if (this.MXA < 0 || this.MYA < 0 || this.MZA < 0 ||
+        this.MXB < 0 || this.MYB < 0 || this.MZB < 0 ||
+        this.MXC < 0 || this.MYC < 0 || this.MZC < 0) {
+      info('Invalid Matrix for ' + this.name + ' [' +
+           this.MXA + ', ' + this.MYA + ', ' + this.MZA +
+           this.MXB + ', ' + this.MYB + ', ' + this.MZB +
+           this.MXC + ', ' + this.MYC + ', ' + this.MZC +
+           '], falling back to default');
+      this.MXA = this.MYB = this.MZC = 1;
+      this.MXB = this.MYA = this.MZA = this.MXC = this.MYC = this.MZB = 0;
+    }
+  }
+
+  function matrixProduct(a, b, result) {
+      result[0] = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      result[1] = a[3] * b[0] + a[4] * b[1] + a[5] * b[2];
+      result[2] = a[6] * b[0] + a[7] * b[1] + a[8] * b[2];
+  }
+
+  function convertToFlat(sourceWhitePoint, LMS, result) {
+      result[0] = LMS[0] * 1 / sourceWhitePoint[0];
+      result[1] = LMS[1] * 1 / sourceWhitePoint[1];
+      result[2] = LMS[2] * 1 / sourceWhitePoint[2];
+  }
+
+  function convertToD65(sourceWhitePoint, LMS, result) {
+    var D65X = 0.95047;
+    var D65Y = 1;
+    var D65Z = 1.08883;
+
+    result[0] = LMS[0] * D65X / sourceWhitePoint[0];
+    result[1] = LMS[1] * D65Y / sourceWhitePoint[1];
+    result[2] = LMS[2] * D65Z / sourceWhitePoint[2];
+  }
+
+  function sRGBTransferFunction(color) {
+    // See http://en.wikipedia.org/wiki/SRGB.
+    if (color <= 0.0031308){
+      return adjustToRange(0, 1, 12.92 * color);
+    }
+
+    return adjustToRange(0, 1, (1 + 0.055) * Math.pow(color, 1 / 2.4) - 0.055);
+  }
+
+  function adjustToRange(min, max, value) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function decodeL(L) {
+    if (L < 0) {
+      return -decodeL(-L);
+    }
+
+    if (L > 8.0) {
+      return Math.pow(((L + 16) / 116), 3);
+    }
+
+    return L * DECODE_L_CONSTANT;
+  }
+
+  function compensateBlackPoint(sourceBlackPoint, XYZ_Flat, result) {
+
+    // In case the blackPoint is already the default blackPoint then there is
+    // no need to do compensation.
+    if (sourceBlackPoint[0] === 0 &&
+        sourceBlackPoint[1] === 0 &&
+        sourceBlackPoint[2] === 0) {
+      result[0] = XYZ_Flat[0];
+      result[1] = XYZ_Flat[1];
+      result[2] = XYZ_Flat[2];
+      return;
+    }
+
+    // For the blackPoint calculation details, please see
+    // http://www.adobe.com/content/dam/Adobe/en/devnet/photoshop/sdk/
+    // AdobeBPC.pdf.
+    // The destination blackPoint is the default blackPoint [0, 0, 0].
+    var zeroDecodeL = decodeL(0);
+
+    var X_DST = zeroDecodeL;
+    var X_SRC = decodeL(sourceBlackPoint[0]);
+
+    var Y_DST = zeroDecodeL;
+    var Y_SRC = decodeL(sourceBlackPoint[1]);
+
+    var Z_DST = zeroDecodeL;
+    var Z_SRC = decodeL(sourceBlackPoint[2]);
+
+    var X_Scale = (1 - X_DST) / (1 - X_SRC);
+    var X_Offset = 1 - X_Scale;
+
+    var Y_Scale = (1 - Y_DST) / (1 - Y_SRC);
+    var Y_Offset = 1 - Y_Scale;
+
+    var Z_Scale = (1 - Z_DST) / (1 - Z_SRC);
+    var Z_Offset = 1 - Z_Scale;
+
+    result[0] = XYZ_Flat[0] * X_Scale + X_Offset;
+    result[1] = XYZ_Flat[1] * Y_Scale + Y_Offset;
+    result[2] = XYZ_Flat[2] * Z_Scale + Z_Offset;
+  }
+
+  function normalizeWhitePointToFlat(sourceWhitePoint, XYZ_In, result) {
+
+    // In case the whitePoint is already flat then there is no need to do
+    // normalization.
+    if (sourceWhitePoint[0] === 1 && sourceWhitePoint[2] === 1) {
+      result[0] = XYZ_In[0];
+      result[1] = XYZ_In[1];
+      result[2] = XYZ_In[2];
+      return;
+    }
+
+    var LMS = result;
+    matrixProduct(BRADFORD_SCALE_MATRIX, XYZ_In, LMS);
+
+    var LMS_Flat = tempNormalizeMatrix;
+    convertToFlat(sourceWhitePoint, LMS, LMS_Flat);
+
+    matrixProduct(BRADFORD_SCALE_INVERSE_MATRIX, LMS_Flat, result);
+  }
+
+  function normalizeWhitePointToD65(sourceWhitePoint, XYZ_In, result) {
+
+    var LMS = result;
+    matrixProduct(BRADFORD_SCALE_MATRIX, XYZ_In, LMS);
+
+    var LMS_D65 = tempNormalizeMatrix;
+    convertToD65(sourceWhitePoint, LMS, LMS_D65);
+
+    matrixProduct(BRADFORD_SCALE_INVERSE_MATRIX, LMS_D65, result);
+  }
+
+  function convertToRgb(cs, src, srcOffset, dest, destOffset, scale) {
+    // A, B and C represent a red, green and blue components of a calibrated
+    // rgb space.
+    var A = adjustToRange(0, 1, src[srcOffset] * scale);
+    var B = adjustToRange(0, 1, src[srcOffset + 1] * scale);
+    var C = adjustToRange(0, 1, src[srcOffset + 2] * scale);
+
+    // A <---> AGR in the spec
+    // B <---> BGG in the spec
+    // C <---> CGB in the spec
+    var AGR = Math.pow(A, cs.GR);
+    var BGG = Math.pow(B, cs.GG);
+    var CGB = Math.pow(C, cs.GB);
+
+    // Computes intermediate variables L, M, N as per spec.
+    // To decode X, Y, Z values map L, M, N directly to them.
+    var X = cs.MXA * AGR + cs.MXB * BGG + cs.MXC * CGB;
+    var Y = cs.MYA * AGR + cs.MYB * BGG + cs.MYC * CGB;
+    var Z = cs.MZA * AGR + cs.MZB * BGG + cs.MZC * CGB;
+
+    // The following calculations are based on this document:
+    // http://www.adobe.com/content/dam/Adobe/en/devnet/photoshop/sdk/
+    // AdobeBPC.pdf.
+    var XYZ = tempConvertMatrix1;
+    XYZ[0] = X;
+    XYZ[1] = Y;
+    XYZ[2] = Z;
+    var XYZ_Flat = tempConvertMatrix2;
+
+    normalizeWhitePointToFlat(cs.whitePoint, XYZ, XYZ_Flat);
+
+    var XYZ_Black = tempConvertMatrix1;
+    compensateBlackPoint(cs.blackPoint, XYZ_Flat, XYZ_Black);
+
+    var XYZ_D65 = tempConvertMatrix2;
+    normalizeWhitePointToD65(FLAT_WHITEPOINT_MATRIX, XYZ_Black, XYZ_D65);
+
+    var SRGB = tempConvertMatrix1;
+    matrixProduct(SRGB_D65_XYZ_TO_RGB_MATRIX, XYZ_D65, SRGB);
+
+    var sR = sRGBTransferFunction(SRGB[0]);
+    var sG = sRGBTransferFunction(SRGB[1]);
+    var sB = sRGBTransferFunction(SRGB[2]);
+
+    // Convert the values to rgb range [0, 255].
+    dest[destOffset] = Math.round(sR * 255);
+    dest[destOffset + 1] = Math.round(sG * 255);
+    dest[destOffset + 2] = Math.round(sB * 255);
+  }
+
+  CalRGBCS.prototype = {
+    getRgb: function CalRGBCS_getRgb(src, srcOffset) {
+      var rgb = new Uint8Array(3);
+      this.getRgbItem(src, srcOffset, rgb, 0);
+      return rgb;
+    },
+    getRgbItem: function CalRGBCS_getRgbItem(src, srcOffset,
+                                             dest, destOffset) {
+      convertToRgb(this, src, srcOffset, dest, destOffset, 1);
+    },
+    getRgbBuffer: function CalRGBCS_getRgbBuffer(src, srcOffset, count,
+                                                 dest, destOffset, bits) {
+      var scale = 1 / ((1 << bits) - 1);
+
+      for (var i = 0; i < count; ++i) {
+        convertToRgb(this, src, srcOffset, dest, destOffset, scale);
+        srcOffset += 3;
+        destOffset += 3;
+      }
+    },
+    getOutputLength: function CalRGBCS_getOutputLength(inputLength) {
+      return inputLength;
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    isDefaultDecode: function CalRGBCS_isDefaultDecode(decodeMap) {
+      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
+    },
+    usesZeroToOneRange: true
+  };
+  return CalRGBCS;
 })();
 
 //
@@ -9856,10 +10163,13 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
     setGState: function PartialEvaluator_setGState(resources, gState,
                                                    operatorList, xref,
                                                    stateManager) {
-
-      // TODO(mack): This should be rewritten so that this function returns
-      // what should be added to the queue during each iteration
-      function setGStateForKey(gStateObj, key, value) {
+      // This array holds the converted/processed state data.
+      var gStateObj = [];
+      var gStateMap = gState.map;
+      var self = this;
+      var promise = Promise.resolve();
+      for (var key in gStateMap) {
+        var value = gStateMap[key];
         switch (key) {
           case 'Type':
             break;
@@ -9905,7 +10215,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
             break;
           // Only generate info log messages for the following since
-          // they are unlikey to have a big impact on the rendering.
+          // they are unlikely to have a big impact on the rendering.
           case 'OP':
           case 'op':
           case 'OPM':
@@ -9928,18 +10238,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             break;
         }
       }
-
-      // This array holds the converted/processed state data.
-      var gStateObj = [];
-      var gStateMap = gState.map;
-      var self = this;
-      var promise = Promise.resolve();
-      for (var key in gStateMap) {
-        var value = gStateMap[key];
-        setGStateForKey(gStateObj, key, value);
-      }
       return promise.then(function () {
-        operatorList.addOp(OPS.setGState, [gStateObj]);
+        if (gStateObj.length >= 0) {
+          operatorList.addOp(OPS.setGState, [gStateObj]);
+        }
       });
     },
 
@@ -10135,8 +10437,15 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       return new Promise(function next(resolve, reject) {
         timeSlotManager.reset();
         var stop, operation = {}, i, ii, cs;
-        while (!(stop = timeSlotManager.check()) &&
-               preprocessor.read(operation)) {
+        while (!(stop = timeSlotManager.check())) {
+          // The arguments parsed by read() are used beyond this loop, so we
+          // cannot reuse the same array on each iteration. Therefore we pass
+          // in |null| as the initial value (see the comment on
+          // EvaluatorPreprocessor_read() for why).
+          operation.args = null;
+          if (!(preprocessor.read(operation))) {
+            break;
+          }
           var args = operation.args;
           var fn = operation.fn;
 
@@ -10530,12 +10839,20 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       return new Promise(function next(resolve, reject) {
         timeSlotManager.reset();
-        var stop, operation = {};
-        while (!(stop = timeSlotManager.check()) &&
-               (preprocessor.read(operation))) {
+        var stop, operation = {}, args = [];
+        while (!(stop = timeSlotManager.check())) {
+          // The arguments parsed by read() are not used beyond this loop, so
+          // we can reuse the same array on every iteration, thus avoiding
+          // unnecessary allocations.
+          args.length = 0;
+          operation.args = args;
+          if (!(preprocessor.read(operation))) {
+            break;
+          }
           textState = stateManager.state;
           var fn = operation.fn;
-          var args = operation.args;
+          args = operation.args;
+
           switch (fn | 0) {
             case OPS.setFont:
               textState.fontSize = args[1];
@@ -11605,10 +11922,29 @@ var EvaluatorPreprocessor = (function EvaluatorPreprocessorClosure() {
       return this.stateManager.stateStack.length;
     },
 
+    // |operation| is an object with two fields:
+    //
+    // - |fn| is an out param.
+    //
+    // - |args| is an inout param. On entry, it should have one of two values.
+    //
+    //   - An empty array. This indicates that the caller is providing the
+    //     array in which the args will be stored in. The caller should use
+    //     this value if it can reuse a single array for each call to read().
+    //
+    //   - |null|. This indicates that the caller needs this function to create
+    //     the array in which any args are stored in. If there are zero args,
+    //     this function will leave |operation.args| as |null| (thus avoiding
+    //     allocations that would occur if we used an empty array to represent
+    //     zero arguments). Otherwise, it will replace |null| with a new array
+    //     containing the arguments. The caller should use this value if it
+    //     cannot reuse an array for each call to read().
+    //
+    // These two modes are present because this function is very hot and so
+    // avoiding allocations where possible is worthwhile.
+    //
     read: function EvaluatorPreprocessor_read(operation) {
-      // We use an array to represent args, except we use |null| to represent
-      // no args because it's more compact than an empty array.
-      var args = null;
+      var args = operation.args;
       while (true) {
         var obj = this.parser.getObj();
         if (isCmd(obj)) {
@@ -12362,7 +12698,7 @@ var CMap = (function CMapClosure() {
       return this._map;
     },
 
-    readCharCode: function(str, offset) {
+    readCharCode: function(str, offset, out) {
       var c = 0;
       var codespaceRanges = this.codespaceRanges;
       var codespaceRangesLen = this.codespaceRanges.length;
@@ -12376,12 +12712,14 @@ var CMap = (function CMapClosure() {
           var low = codespaceRange[k++];
           var high = codespaceRange[k++];
           if (c >= low && c <= high) {
-            return [c, n + 1];
+            out.charcode = c;
+            out.length = n + 1;
+            return;
           }
         }
       }
-
-      return [0, 1];
+      out.charcode = 0;
+      out.length = 1;
     }
   };
   return CMap;
@@ -12466,7 +12804,7 @@ var BinaryCMapReader = (function BinaryCMapReaderClosure() {
       request.overrideMimeType('text/plain; charset=x-user-defined');
     }
     request.send(null);
-    if (request.status === 0 && /^https?:/i.test(url)) {
+    if (nonBinaryRequest ? !request.responseText : !request.response) {
       error('Unable to get binary cMap at: ' + url);
     }
     if (nonBinaryRequest) {
@@ -13006,7 +13344,7 @@ var CMapFactory = (function CMapFactoryClosure() {
     var url = builtInCMapParams.url + name;
     request.open('GET', url, false);
     request.send(null);
-    if (request.status === 0 && /^https?:/i.test(url)) {
+    if (!request.responseText) {
       error('Unable to get cMap at: ' + url);
     }
     var cMap = new CMap(true);
@@ -17319,12 +17657,16 @@ var Font = (function FontClosure() {
       // Horizontal metrics
       builder.addTable('hmtx', (function fontFieldsHmtx() {
           var charstrings = font.charstrings;
+          var cffWidths = font.cff ? font.cff.widths : null;
           var hmtx = '\x00\x00\x00\x00'; // Fake .notdef
           for (var i = 1, ii = numGlyphs; i < ii; i++) {
-            // TODO: For CFF fonts the width should technically match th x in
-            // the glyph, but it doesn't seem to matter.
-            var charstring = charstrings ? charstrings[i - 1] : {};
-            var width = 'width' in charstring ? charstring.width : 0;
+            var width = 0;
+            if (charstrings) {
+              var charstring = charstrings[i - 1];
+              width = 'width' in charstring ? charstring.width : 0;
+            } else if (cffWidths) {
+              width = Math.ceil(cffWidths[i] || 0);
+            }
             hmtx += string16(width) + string16(0);
           }
           return hmtx;
@@ -17587,10 +17929,11 @@ var Font = (function FontClosure() {
       if (this.cMap) {
         // composite fonts have multi-byte strings convert the string from
         // single-byte to multi-byte
+        var c = {};
         while (i < chars.length) {
-          var c = this.cMap.readCharCode(chars, i);
-          charcode = c[0];
-          var length = c[1];
+          this.cMap.readCharCode(chars, i, c);
+          charcode = c.charcode;
+          var length = c.length;
           i += length;
           glyph = this.charToGlyph(charcode);
           glyphs.push(glyph);
@@ -17836,8 +18179,8 @@ var Type1CharString = (function Type1CharStringClosure() {
               sbx = this.stack.pop();
               this.lsb = sbx;
               this.width = wx;
-              this.stack.push(sbx);
-              error = this.executeCommand(1, COMMAND_MAP.hmoveto);
+              this.stack.push(wx, sbx);
+              error = this.executeCommand(2, COMMAND_MAP.hmoveto);
               break;
             case 14: // endchar
               this.output.push(COMMAND_MAP.endchar[0]);
@@ -17911,8 +18254,8 @@ var Type1CharString = (function Type1CharStringClosure() {
               sbx = this.stack.pop();
               this.lsb = sbx;
               this.width = wx;
-              this.stack.push(sbx, sby);
-              error = this.executeCommand(2, COMMAND_MAP.rmoveto);
+              this.stack.push(wx, sbx, sby);
+              error = this.executeCommand(3, COMMAND_MAP.rmoveto);
               break;
             case (12 << 8) + 12: // div
               if (this.stack.length < 2) {
@@ -18725,10 +19068,10 @@ var CFFFont = (function CFFFontClosure() {
 var CFFParser = (function CFFParserClosure() {
   var CharstringValidationData = [
     null,
-    { id: 'hstem', min: 2, resetStack: true, stem: true },
+    { id: 'hstem', min: 2, stackClearing: true, stem: true },
     null,
-    { id: 'vstem', min: 2, resetStack: true, stem: true },
-    { id: 'vmoveto', min: 1, resetStack: true },
+    { id: 'vstem', min: 2, stackClearing: true, stem: true },
+    { id: 'vmoveto', min: 1, stackClearing: true },
     { id: 'rlineto', min: 2, resetStack: true },
     { id: 'hlineto', min: 1, resetStack: true },
     { id: 'vlineto', min: 1, resetStack: true },
@@ -18738,16 +19081,16 @@ var CFFParser = (function CFFParserClosure() {
     { id: 'return', min: 0, undefStack: true },
     null, // 12
     null,
-    null, // endchar
+    { id: 'endchar', min: 0, stackClearing: true },
     null,
     null,
     null,
-    { id: 'hstemhm', min: 2, resetStack: true, stem: true },
-    null, // hintmask
-    null, // cntrmask
-    { id: 'rmoveto', min: 2, resetStack: true },
-    { id: 'hmoveto', min: 1, resetStack: true },
-    { id: 'vstemhm', min: 2, resetStack: true, stem: true },
+    { id: 'hstemhm', min: 2, stackClearing: true, stem: true },
+    { id: 'hintmask', min: 0, stackClearing: true },
+    { id: 'cntrmask', min: 0, stackClearing: true },
+    { id: 'rmoveto', min: 2, stackClearing: true },
+    { id: 'hmoveto', min: 1, stackClearing: true },
+    { id: 'vstemhm', min: 2, stackClearing: true, stem: true },
     { id: 'rcurveline', min: 8, resetStack: true },
     { id: 'rlinecurve', min: 8, resetStack: true },
     { id: 'vvcurveto', min: 4, resetStack: true },
@@ -18853,6 +19196,7 @@ var CFFParser = (function CFFParserClosure() {
       var charStringsAndSeacs = this.parseCharStrings(charStringOffset);
       cff.charStrings = charStringsAndSeacs.charStrings;
       cff.seacs = charStringsAndSeacs.seacs;
+      cff.widths = charStringsAndSeacs.widths;
 
       var fontMatrix = topDict.getByName('FontMatrix');
       if (fontMatrix) {
@@ -19070,6 +19414,7 @@ var CFFParser = (function CFFParserClosure() {
     parseCharStrings: function CFFParser_parseCharStrings(charStringOffset) {
       var charStrings = this.parseIndex(charStringOffset).obj;
       var seacs = [];
+      var widths = [];
       var count = charStrings.count;
       for (var i = 0; i < count; i++) {
         var charstring = charStrings.get(i);
@@ -19081,6 +19426,7 @@ var CFFParser = (function CFFParserClosure() {
         var valid = true;
         var data = charstring;
         var length = data.length;
+        var firstStackClearing = true;
         for (var j = 0; j < length;) {
           var value = data[j++];
           var validationCommand = null;
@@ -19110,6 +19456,7 @@ var CFFParser = (function CFFParserClosure() {
                 valid = false;
               }
             }
+            validationCommand = CharstringValidationData[value];
           } else if (value >= 32 && value <= 246) {  // number
             stack[stackSize] = value - 139;
             stackSize++;
@@ -19127,7 +19474,8 @@ var CFFParser = (function CFFParserClosure() {
           } else if (value === 19 || value === 20) {
             hints += stackSize >> 1;
             j += (hints + 7) >> 3; // skipping right amount of hints flag data
-            stackSize = 0;
+            stackSize %= 2;
+            validationCommand = CharstringValidationData[value];
           } else {
             validationCommand = CharstringValidationData[value];
           }
@@ -19144,17 +19492,35 @@ var CFFParser = (function CFFParserClosure() {
                 break;
               }
             }
+            if (firstStackClearing && validationCommand.stackClearing) {
+              firstStackClearing = false;
+              // the optional character width can be found before the first
+              // stack-clearing command arguments
+              stackSize -= validationCommand.min;
+              if (stackSize >= 2 && validationCommand.stem) {
+                // there are even amount of arguments for stem commands
+                stackSize %= 2;
+              } else if (stackSize > 1) {
+                warn('Found too many parameters for stack-clearing command');
+              }
+              if (stackSize > 0 && stack[stackSize - 1] >= 0) {
+                widths[i] = stack[stackSize - 1];
+              }
+            }
             if ('stackDelta' in validationCommand) {
               if ('stackFn' in validationCommand) {
                 validationCommand.stackFn(stack, stackSize);
               }
               stackSize += validationCommand.stackDelta;
+            } else if (validationCommand.stackClearing) {
+              stackSize = 0;
             } else if (validationCommand.resetStack) {
               stackSize = 0;
               undefStack = false;
             } else if (validationCommand.undefStack) {
               stackSize = 0;
               undefStack = true;
+              firstStackClearing = false;
             }
           }
         }
@@ -19163,7 +19529,7 @@ var CFFParser = (function CFFParserClosure() {
           charStrings.set(i, new Uint8Array([14]));
         }
       }
-      return { charStrings: charStrings, seacs: seacs };
+      return { charStrings: charStrings, seacs: seacs, widths: widths };
     },
     emptyPrivateDictionary:
       function CFFParser_emptyPrivateDictionary(parentDict) {
@@ -25547,10 +25913,11 @@ var PDFImage = (function PDFImageClosure() {
         var kind;
         if (this.colorSpace.name === 'DeviceGray' && bpc === 1) {
           kind = ImageKind.GRAYSCALE_1BPP;
-        } else if (this.colorSpace.name === 'DeviceRGB' && bpc === 8) {
+        } else if (this.colorSpace.name === 'DeviceRGB' && bpc === 8 &&
+                   !this.needsDecode) {
           kind = ImageKind.RGB_24BPP;
         }
-        if (kind && !this.smask && !this.mask && !this.needsDecode &&
+        if (kind && !this.smask && !this.mask &&
             drawWidth === originalWidth && drawHeight === originalHeight) {
           imgData.kind = kind;
 
@@ -25566,6 +25933,14 @@ var PDFImage = (function PDFImageClosure() {
             var newArray = new Uint8Array(imgArray.length);
             newArray.set(imgArray);
             imgData.data = newArray;
+          }
+          if (this.needsDecode) {
+            // Invert the buffer (which must be grayscale if we reached here).
+            assert(kind === ImageKind.GRAYSCALE_1BPP);
+            var buffer = imgData.data;
+            for (var i = 0, ii = buffer.length; i < ii; i++) {
+              buffer[i] ^= 0xff;
+            }
           }
           return imgData;
         }
@@ -28749,32 +29124,33 @@ var Parser = (function ParserClosure() {
 
       // searching for the /EI\s/
       var state = 0, ch, i, ii;
-      while (state !== 4 && (ch = stream.getByte()) !== -1) {
-        switch (ch | 0) {
-          case 0x20:
-          case 0x0D:
-          case 0x0A:
-            // let's check next five bytes to be ASCII... just be sure
-            var followingBytes = stream.peekBytes(5);
-            for (i = 0, ii = followingBytes.length; i < ii; i++) {
+      var E = 0x45, I = 0x49, SPACE = 0x20, NL = 0xA, CR = 0xD;
+      while ((ch = stream.getByte()) !== -1) {
+        if (state === 0) {
+          state = (ch === E) ? 1 : 0;
+        } else if (state === 1) {
+          state = (ch === I) ? 2 : 0;
+        } else {
+          assert(state === 2);
+          if (ch === SPACE || ch === NL || ch === CR) {
+            // Let's check the next five bytes are ASCII... just be sure.
+            var n = 5;
+            var followingBytes = stream.peekBytes(n);
+            for (i = 0; i < n; i++) {
               ch = followingBytes[i];
-              if (ch !== 0x0A && ch !== 0x0D && (ch < 0x20 || ch > 0x7F)) {
-                // not a LF, CR, SPACE or any visible ASCII character
+              if (ch !== NL && ch !== CR && (ch < SPACE || ch > 0x7F)) {
+                // Not a LF, CR, SPACE or any visible ASCII character, i.e.
+                // it's binary stuff. Resetting the state.
                 state = 0;
-                break; // some binary stuff found, resetting the state
+                break;
               }
             }
-            state = (state === 3 ? 4 : 0);
-            break;
-          case 0x45:
-            state = 2;
-            break;
-          case 0x49:
-            state = (state === 2 ? 3 : 0);
-            break;
-          default:
+            if (state === 2) {
+              break;  // finished!
+            }
+          } else {
             state = 0;
-            break;
+          }
         }
       }
 

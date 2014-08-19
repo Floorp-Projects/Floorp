@@ -1,10 +1,9 @@
 # Webapps.js
 component {fff440b3-fae2-45c1-bf03-3b5a2e432270} Webapps.js
 contract @mozilla.org/webapps;1 {fff440b3-fae2-45c1-bf03-3b5a2e432270}
-category JavaScript-navigator-property mozApps @mozilla.org/webapps;1
+
+component {8c1bca96-266f-493a-8d57-ec7a95098c15} Webapps.js
+contract @mozilla.org/webapps/manager;1 {8c1bca96-266f-493a-8d57-ec7a95098c15}
 
 component {723ed303-7757-4fb0-b261-4f78b1f6bd22} Webapps.js
 contract @mozilla.org/webapps/application;1 {723ed303-7757-4fb0-b261-4f78b1f6bd22}
-
-component {dcc1d5b7-43d8-4740-9244-b3d8db0f503d} Webapps.js
-contract @mozilla.org/dom-error;1 {dcc1d5b7-43d8-4740-9244-b3d8db0f503d}
