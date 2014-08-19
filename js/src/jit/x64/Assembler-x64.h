@@ -10,44 +10,45 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "jit/IonCode.h"
+#include "jit/JitCompartment.h"
 #include "jit/shared/Assembler-shared.h"
 
 namespace js {
 namespace jit {
 
-static MOZ_CONSTEXPR_VAR Register rax = { JSC::X86Registers::eax };
-static MOZ_CONSTEXPR_VAR Register rbx = { JSC::X86Registers::ebx };
-static MOZ_CONSTEXPR_VAR Register rcx = { JSC::X86Registers::ecx };
-static MOZ_CONSTEXPR_VAR Register rdx = { JSC::X86Registers::edx };
-static MOZ_CONSTEXPR_VAR Register rsi = { JSC::X86Registers::esi };
-static MOZ_CONSTEXPR_VAR Register rdi = { JSC::X86Registers::edi };
-static MOZ_CONSTEXPR_VAR Register rbp = { JSC::X86Registers::ebp };
-static MOZ_CONSTEXPR_VAR Register r8  = { JSC::X86Registers::r8  };
-static MOZ_CONSTEXPR_VAR Register r9  = { JSC::X86Registers::r9  };
-static MOZ_CONSTEXPR_VAR Register r10 = { JSC::X86Registers::r10 };
-static MOZ_CONSTEXPR_VAR Register r11 = { JSC::X86Registers::r11 };
-static MOZ_CONSTEXPR_VAR Register r12 = { JSC::X86Registers::r12 };
-static MOZ_CONSTEXPR_VAR Register r13 = { JSC::X86Registers::r13 };
-static MOZ_CONSTEXPR_VAR Register r14 = { JSC::X86Registers::r14 };
-static MOZ_CONSTEXPR_VAR Register r15 = { JSC::X86Registers::r15 };
-static MOZ_CONSTEXPR_VAR Register rsp = { JSC::X86Registers::esp };
+static MOZ_CONSTEXPR_VAR Register rax = { X86Registers::eax };
+static MOZ_CONSTEXPR_VAR Register rbx = { X86Registers::ebx };
+static MOZ_CONSTEXPR_VAR Register rcx = { X86Registers::ecx };
+static MOZ_CONSTEXPR_VAR Register rdx = { X86Registers::edx };
+static MOZ_CONSTEXPR_VAR Register rsi = { X86Registers::esi };
+static MOZ_CONSTEXPR_VAR Register rdi = { X86Registers::edi };
+static MOZ_CONSTEXPR_VAR Register rbp = { X86Registers::ebp };
+static MOZ_CONSTEXPR_VAR Register r8  = { X86Registers::r8  };
+static MOZ_CONSTEXPR_VAR Register r9  = { X86Registers::r9  };
+static MOZ_CONSTEXPR_VAR Register r10 = { X86Registers::r10 };
+static MOZ_CONSTEXPR_VAR Register r11 = { X86Registers::r11 };
+static MOZ_CONSTEXPR_VAR Register r12 = { X86Registers::r12 };
+static MOZ_CONSTEXPR_VAR Register r13 = { X86Registers::r13 };
+static MOZ_CONSTEXPR_VAR Register r14 = { X86Registers::r14 };
+static MOZ_CONSTEXPR_VAR Register r15 = { X86Registers::r15 };
+static MOZ_CONSTEXPR_VAR Register rsp = { X86Registers::esp };
 
-static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = { JSC::X86Registers::xmm0 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = { JSC::X86Registers::xmm1 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = { JSC::X86Registers::xmm2 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = { JSC::X86Registers::xmm3 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = { JSC::X86Registers::xmm4 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = { JSC::X86Registers::xmm5 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = { JSC::X86Registers::xmm6 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = { JSC::X86Registers::xmm7 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm8 = { JSC::X86Registers::xmm8 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm9 = { JSC::X86Registers::xmm9 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm10 = { JSC::X86Registers::xmm10 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm11 = { JSC::X86Registers::xmm11 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm12 = { JSC::X86Registers::xmm12 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm13 = { JSC::X86Registers::xmm13 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm14 = { JSC::X86Registers::xmm14 };
-static MOZ_CONSTEXPR_VAR FloatRegister xmm15 = { JSC::X86Registers::xmm15 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm0 = { X86Registers::xmm0 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm1 = { X86Registers::xmm1 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm2 = { X86Registers::xmm2 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm3 = { X86Registers::xmm3 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm4 = { X86Registers::xmm4 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm5 = { X86Registers::xmm5 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm6 = { X86Registers::xmm6 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm7 = { X86Registers::xmm7 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm8 = { X86Registers::xmm8 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm9 = { X86Registers::xmm9 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm10 = { X86Registers::xmm10 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm11 = { X86Registers::xmm11 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm12 = { X86Registers::xmm12 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm13 = { X86Registers::xmm13 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm14 = { X86Registers::xmm14 };
+static MOZ_CONSTEXPR_VAR FloatRegister xmm15 = { X86Registers::xmm15 };
 
 // X86-common synonyms.
 static MOZ_CONSTEXPR_VAR Register eax = rax;
@@ -59,8 +60,8 @@ static MOZ_CONSTEXPR_VAR Register edi = rdi;
 static MOZ_CONSTEXPR_VAR Register ebp = rbp;
 static MOZ_CONSTEXPR_VAR Register esp = rsp;
 
-static MOZ_CONSTEXPR_VAR Register InvalidReg = { JSC::X86Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
+static MOZ_CONSTEXPR_VAR Register InvalidReg = { X86Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { X86Registers::invalid_xmm };
 
 static MOZ_CONSTEXPR_VAR Register StackPointer = rsp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = rbp;
@@ -697,7 +698,7 @@ class Assembler : public AssemblerX86Shared
     }
     void j(Condition cond, ImmPtr target,
            Relocation::Kind reloc = Relocation::HARDCODED) {
-        JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
+        JmpSrc src = masm.jCC(static_cast<X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
@@ -747,12 +748,17 @@ class Assembler : public AssemblerX86Shared
 static inline void
 PatchJump(CodeLocationJump jump, CodeLocationLabel label)
 {
-    if (JSC::X86Assembler::canRelinkJump(jump.raw(), label.raw())) {
-        JSC::X86Assembler::setRel32(jump.raw(), label.raw());
+    if (X86Assembler::canRelinkJump(jump.raw(), label.raw())) {
+        X86Assembler::setRel32(jump.raw(), label.raw());
     } else {
-        JSC::X86Assembler::setRel32(jump.raw(), jump.jumpTableEntry());
+        X86Assembler::setRel32(jump.raw(), jump.jumpTableEntry());
         Assembler::PatchJumpEntry(jump.jumpTableEntry(), label.raw());
     }
+}
+static inline void
+PatchBackedge(CodeLocationJump &jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
+{
+    PatchJump(jump_, label);
 }
 
 static inline bool

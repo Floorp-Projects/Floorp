@@ -1026,12 +1026,13 @@ void NrSocketIpc::create_m(const nsACString &host, const uint16_t port) {
   ReentrantMonitorAutoEnter mon(monitor_);
 
   nsresult rv;
-  socket_child_ = do_CreateInstance("@mozilla.org/udp-socket-child;1", &rv);
+  nsCOMPtr<nsIUDPSocketChild> socketChild = do_CreateInstance("@mozilla.org/udp-socket-child;1", &rv);
   if (NS_FAILED(rv)) {
     err_ = true;
     MOZ_ASSERT(false, "Failed to create UDPSocketChild");
   }
 
+  socket_child_ = new nsMainThreadPtrHolder<nsIUDPSocketChild>(socketChild);
   socket_child_->SetFilterName(nsCString("stun"));
 
   if (NS_FAILED(socket_child_->Bind(this, host, port))) {

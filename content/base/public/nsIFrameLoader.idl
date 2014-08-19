@@ -112,7 +112,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, builtinclass, uuid(d52ca6a8-8237-4ae0-91d7-7be4f1db24ef)]
+[scriptable, builtinclass, uuid(55a772b8-855a-4c5f-b4a1-284b6b3bec28)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -288,8 +288,16 @@ interface nsIFrameLoader : nsISupports
 
   /**
    * Find out whether the owner content really is a browser or app frame
+   * Especially, a widget frame is regarded as an app frame.
    */
   readonly attribute boolean ownerIsBrowserOrAppFrame;
+
+  /**
+   * Find out whether the owner content really is a widget. If this attribute
+   * returns true, |ownerIsBrowserOrAppFrame| must return true.
+   */
+  readonly attribute boolean ownerIsWidget;
+
 };
 
 %{C++
