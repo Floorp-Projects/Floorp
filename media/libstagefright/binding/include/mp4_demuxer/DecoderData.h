@@ -92,7 +92,6 @@ public:
   {
   }
 
-  int64_t duration;
   uint32_t channel_count;
   uint32_t bits_per_sample;
   uint32_t samples_per_second;
