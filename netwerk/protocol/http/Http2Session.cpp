@@ -2947,6 +2947,21 @@ Http2Session::BufferOutput(const char *buf,
   return rv;
 }
 
+bool // static
+Http2Session::ALPNCallback(nsISupports *securityInfo)
+{
+  nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo);
+  LOG3(("Http2Session::ALPNCallback sslsocketcontrol=%p\n", ssl.get()));
+  if (ssl) {
+    int16_t version = ssl->GetSSLVersionOffered();
+    LOG3(("Http2Session::ALPNCallback version=%x\n", version));
+    if (version >= nsISSLSocketControl::TLS_VERSION_1_2) {
+      return true;
+    }
+  }
+  return false;
+}
+
 nsresult
 Http2Session::ConfirmTLSProfile()
 {

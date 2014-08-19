@@ -30,7 +30,7 @@
 #ifndef assembler_assembler_MacroAssemblerX86Common_h
 #define assembler_assembler_MacroAssemblerX86Common_h
 
-#include "assembler/assembler/X86Assembler.h"
+#include "jit/shared/BaseAssembler-x86-shared.h"
 
 namespace JSC {
 

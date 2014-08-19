@@ -163,6 +163,34 @@ jit::PatchJump(CodeLocationJump &jump_, CodeLocationLabel label)
     AutoFlushICache::flush(uintptr_t(inst1), 8);
 }
 
+// For more infromation about backedges look at comment in
+// MacroAssemblerMIPSCompat::backedgeJump()
+void
+jit::PatchBackedge(CodeLocationJump &jump, CodeLocationLabel label,
+                   JitRuntime::BackedgeTarget target)
+{
+    uint32_t sourceAddr = (uint32_t)jump.raw();
+    uint32_t targetAddr = (uint32_t)label.raw();
+    InstImm *branch = (InstImm *)jump.raw();
+
+    MOZ_ASSERT(branch->extractOpcode() == (uint32_t(op_beq) >> OpcodeShift));
+
+    if (BOffImm16::IsInRange(targetAddr - sourceAddr)) {
+        branch->setBOffImm16(BOffImm16(targetAddr - sourceAddr));
+    } else {
+        if (target == JitRuntime::BackedgeLoopHeader) {
+            Instruction *lui = &branch[1];
+            Assembler::UpdateLuiOriValue(lui, lui->next(), targetAddr);
+            // Jump to ori. The lui will be executed in delay slot.
+            branch->setBOffImm16(BOffImm16(2 * sizeof(uint32_t)));
+        } else {
+            Instruction *lui = &branch[4];
+            Assembler::UpdateLuiOriValue(lui, lui->next(), targetAddr);
+            branch->setBOffImm16(BOffImm16(4 * sizeof(uint32_t)));
+        }
+    }
+}
+
 void
 Assembler::finish()
 {
@@ -253,16 +281,26 @@ Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReade
 }
 
 static void
+TraceOneDataRelocation(JSTracer *trc, Instruction *inst)
+{
+    void *ptr = (void *)Assembler::ExtractLuiOriValue(inst, inst->next());
+    void *prior = ptr;
+
+    // No barrier needed since these are constants.
+    gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
+    if (ptr != prior) {
+        Assembler::UpdateLuiOriValue(inst, inst->next(), uint32_t(ptr));
+        AutoFlushICache::flush(uintptr_t(inst), 8);
+    }
+}
+
+static void
 TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         Instruction *inst = (Instruction*)(buffer + offset);
-        void *ptr = (void *)Assembler::ExtractLuiOriValue(inst, inst->next());
-
-        // No barrier needed since these are constants.
-        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
-        Assembler::UpdateLuiOriValue(inst, inst->next(), uint32_t(ptr));
+        TraceOneDataRelocation(trc, inst);
     }
 }
 
@@ -272,12 +310,7 @@ TraceDataRelocations(JSTracer *trc, MIPSBuffer *buffer, CompactBufferReader &rea
     while (reader.more()) {
         BufferOffset bo (reader.readUnsigned());
         MIPSBuffer::AssemblerBufferInstIterator iter(bo, buffer);
-
-        void *ptr = (void *)Assembler::ExtractLuiOriValue(iter.cur(), iter.next());
-
-        // No barrier needed since these are constants.
-        gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
-        Assembler::UpdateLuiOriValue(iter.cur(), iter.next(), uint32_t(ptr));
+        TraceOneDataRelocation(trc, iter.cur());
     }
 }
 
@@ -585,6 +618,13 @@ BufferOffset
 Assembler::as_bal(BOffImm16 off)
 {
     BufferOffset bo = writeInst(InstImm(op_regimm, zero, rt_bgezal, off).encode());
+    return bo;
+}
+
+BufferOffset
+Assembler::as_b(BOffImm16 off)
+{
+    BufferOffset bo = writeInst(InstImm(op_beq, zero, zero, off).encode());
     return bo;
 }
 
@@ -1314,10 +1354,19 @@ Assembler::bind(RepatchLabel *label)
         // If the label has a use, then change this use to refer to
         // the bound label;
         BufferOffset b(label->offset());
-        Instruction *inst1 = editSrc(b);
-        Instruction *inst2 = inst1->next();
+        InstImm *inst1 = (InstImm *)editSrc(b);
 
-        UpdateLuiOriValue(inst1, inst2, dest.getOffset());
+        // If first instruction is branch, then this is a loop backedge.
+        if (inst1->extractOpcode() == ((uint32_t)op_beq >> OpcodeShift)) {
+            // Backedges are short jumps when bound, but can become long
+            // when patched.
+            uint32_t offset = dest.getOffset() - label->offset();
+            MOZ_ASSERT(BOffImm16::IsInRange(offset));
+            inst1->setBOffImm16(BOffImm16(offset));
+        } else {
+            UpdateLuiOriValue(inst1, inst1->next(), dest.getOffset());
+        }
+
     }
     label->bind(dest.getOffset());
 }
