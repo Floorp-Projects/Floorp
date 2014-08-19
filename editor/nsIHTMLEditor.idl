@@ -22,7 +22,7 @@ class Element;
 
 [ptr] native Element (mozilla::dom::Element);
 
-[scriptable, uuid(833f30de-94c7-4630-a852-2300ef329d7b)]
+[builtinclass, scriptable, uuid(9470bee7-cad3-4382-8fb4-6bdda9f0273a)]
 
 interface nsIHTMLEditor : nsISupports
 {

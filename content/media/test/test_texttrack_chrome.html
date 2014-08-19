@@ -16,8 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=881976
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
-                                   ["media.webvtt.regions.enabled", true]]},
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
   function() {
     var video = document.createElement("video");
 
