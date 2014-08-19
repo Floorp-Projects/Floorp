@@ -134,7 +134,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         child.removeEventListener("mouseup", childUpTest);
         parent.addEventListener("click", parentClickTest);
         child.addEventListener("click", childClickTest);
-        synthesizeMouseAtCenter(child, {}, window);
+        synthesizeMouseAtCenter(child, {type: "click"}, window);
       };
 
       var parentClickTest = function (e) {
