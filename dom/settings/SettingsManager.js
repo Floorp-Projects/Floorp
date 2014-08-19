@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/SettingsQueue.jsm");
 Cu.import("resource://gre/modules/SettingsDB.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/PermissionsTable.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -67,7 +66,7 @@ SettingsLock.prototype = {
             this._open = false;
           }.bind(lock);
           clearReq.onerror = function() {
-            Services.DOMRequest.fireError(request, 0);
+            Services.DOMRequest.fireError(request, 0)
           };
           break;
         case "set":
@@ -106,7 +105,7 @@ SettingsLock.prototype = {
 
               setReq.onerror = function() {
                 if (!request.error) {
-                  Services.DOMRequest.fireError(request, setReq.error.name);
+                  Services.DOMRequest.fireError(request, setReq.error.name)
                 }
               };
 
@@ -119,7 +118,7 @@ SettingsLock.prototype = {
             };
             checkKeyRequest.onerror = function(event) {
               if (!request.error) {
-                Services.DOMRequest.fireError(request, checkKeyRequest.error.name);
+                Services.DOMRequest.fireError(request, checkKeyRequest.error.name)
               }
             };
           }
@@ -153,7 +152,7 @@ SettingsLock.prototype = {
           }.bind(lock);
 
           getReq.onerror = function() {
-            Services.DOMRequest.fireError(request, 0);
+            Services.DOMRequest.fireError(request, 0)
           };
           break;
       }
@@ -164,7 +163,7 @@ SettingsLock.prototype = {
     if (DEBUG) debug("database opened, creating transaction");
 
     let manager = this._settingsManager;
-    let transactionType = manager.hasAnyWritePrivileges ? "readwrite" : "readonly";
+    let transactionType = manager.hasWritePrivileges ? "readwrite" : "readonly";
 
     this._transaction =
       manager._settingsDB._db.transaction(SETTINGSSTORE_NAME, transactionType);
@@ -184,14 +183,15 @@ SettingsLock.prototype = {
       throw Components.results.NS_ERROR_ABORT;
     }
 
-    if (!this._settingsManager.hasReadPermission("settings:" + aName)) {
-      if (DEBUG) debug("get not allowed");
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    }
+    if (this._settingsManager.hasReadPrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       this._requests.enqueue({ request: req, intent:"get", name: aName });
       this.maybeProcess();
       return req;
+    } else {
+      if (DEBUG) debug("get not allowed");
+      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    }
   },
 
   _serializePreservingBinaries: function _serializePreservingBinaries(aObject) {
@@ -232,28 +232,25 @@ SettingsLock.prototype = {
       throw "Settings lock not open";
     }
 
-    // Check each requested permission to make sure we can set it
-    let keys = Object.getOwnPropertyNames(aSettings);
-    for (let i = 0; i < keys.length; i++) {
-      if (!this._settingsManager.hasWritePermission("settings:" + keys[i])) {
-        if (DEBUG) debug("set not allowed on " + keys[i]);
-        throw "No permission to call set on " + keys[i];
-      }
-    }
+    if (this._settingsManager.hasWritePrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       if (DEBUG) debug("send: " + JSON.stringify(aSettings));
       let settings = this._serializePreservingBinaries(aSettings);
       this._requests.enqueue({request: req, intent: "set", settings: settings});
       this.maybeProcess();
       return req;
+    } else {
+      if (DEBUG) debug("set not allowed");
+      throw "No permission to call set";
+    }
   },
 
   clear: function clear() {
     if (!this._open) {
       throw "Settings lock not open";
     }
-    // Only certified apps should be allowed to clear
-    if (this._settingsManager.hasFullWritePrivileges) {
+
+    if (this._settingsManager.hasWritePrivileges) {
       let req = Services.DOMRequest.createRequest(this._settingsManager._window);
       this._requests.enqueue({ request: req, intent: "clear"});
       this.maybeProcess();
@@ -276,7 +273,6 @@ function SettingsManager() {
 
 SettingsManager.prototype = {
   _callbacks: null,
-  _perms: [],
 
   _wrap: function _wrap(obj) {
     return Cu.cloneInto(obj, this._window);
@@ -344,23 +340,15 @@ SettingsManager.prototype = {
   removeObserver: function removeObserver(aName, aCallback) {
     if (DEBUG) debug("deleteObserver " + aName);
     if (this._callbacks && this._callbacks[aName]) {
-      let index = this._callbacks[aName].indexOf(aCallback);
+      let index = this._callbacks[aName].indexOf(aCallback)
       if (index != -1) {
-        this._callbacks[aName].splice(index, 1);
+        this._callbacks[aName].splice(index, 1)
       } else {
         if (DEBUG) debug("Callback not found for: " + aName);
       }
     } else {
       if (DEBUG) debug("No observers stored for " + aName);
     }
-  },
-
-  hasReadPermission: function hasPermission(aName) {
-    return this.hasFullReadPrivileges || this._perms.indexOf(aName + "-read") != -1;
-  },
-
-  hasWritePermission: function hasPermission(aName) {
-    return this.hasFullWritePrivileges || this._perms.indexOf(aName + "-write") != -1;
   },
 
   init: function(aWindow) {
@@ -371,34 +359,16 @@ SettingsManager.prototype = {
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this.innerWindowID = util.currentInnerWindowID;
 
+    let readPerm = Services.perms.testExactPermissionFromPrincipal(aWindow.document.nodePrincipal, "settings-read");
+    let writePerm = Services.perms.testExactPermissionFromPrincipal(aWindow.document.nodePrincipal, "settings-write");
+    this.hasReadPrivileges = readPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
+    this.hasWritePrivileges = writePerm == Ci.nsIPermissionManager.ALLOW_ACTION;
 
-    this.hasAnyWritePrivileges = false;
-
-    for (let idx in AllPossiblePermissions) {
-      let permName = AllPossiblePermissions[idx];
-      //Check to see if this is a settings permission. All settings permissions
-      //begin with the word settings.
-      if (permName.indexOf("settings") != 0) {
-        continue;
-      }
-      if (Services.perms.testExactPermissionFromPrincipal(this._window.document.nodePrincipal, permName) == Ci.nsIPermissionManager.ALLOW_ACTION) {
-        if (permName.indexOf("-write") > 0) {
-          this.hasAnyWritePrivileges = true;
-        }
-        this._perms.push(permName);
-      }
-    }
-
-    this.hasFullReadPrivileges = this.hasReadPermission("settings");
-    this.hasFullWritePrivileges = this.hasWritePermission("settings");
-
-    if (this.hasFullReadPrivileges) {
+    if (this.hasReadPrivileges) {
       cpmm.sendAsyncMessage("Settings:RegisterForMessages");
     }
 
-    // settings-api is an additional setting on all settings permissions. This
-    // is how we can figure out whether to expose the mozSettings DOM object.
-    if (!this.hasReadPermission("settings-api") && !this.hasWritePermission("settings-api")) {
+    if (!this.hasReadPrivileges && !this.hasWritePrivileges) {
       dump("No settings permission for: " + aWindow.document.nodePrincipal.origin + "\n");
       Cu.reportError("No settings permission for: " + aWindow.document.nodePrincipal.origin);
     }
@@ -456,4 +426,4 @@ SettingsManager.prototype = {
                                          Ci.nsIMemoryReporter]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsManager, SettingsLock]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SettingsManager, SettingsLock])
