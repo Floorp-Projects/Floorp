@@ -1107,12 +1107,13 @@ JSStructuredCloneWriter::transferOwnership()
 #endif
 
         if (obj->is<ArrayBufferObject>()) {
+            bool isMapped = obj->as<ArrayBufferObject>().isMappedArrayBuffer();
             size_t nbytes = obj->as<ArrayBufferObject>().byteLength();
             content = JS_StealArrayBufferContents(context(), obj);
             if (!content)
                 return false; // Destructor will clean up the already-transferred data
             tag = SCTAG_TRANSFER_MAP_ARRAY_BUFFER;
-            if (obj->as<ArrayBufferObject>().isMappedArrayBuffer())
+            if (isMapped)
                 ownership = JS::SCTAG_TMO_MAPPED_DATA;
             else
                 ownership = JS::SCTAG_TMO_ALLOC_DATA;
@@ -1755,7 +1756,7 @@ JS_ReadStructuredClone(JSContext *cx, uint64_t *buf, size_t nbytes,
     CHECK_REQUEST(cx);
 
     if (version > JS_STRUCTURED_CLONE_VERSION) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_CLONE_VERSION);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SC_BAD_CLONE_VERSION);
         return false;
     }
     const JSStructuredCloneCallbacks *callbacks =

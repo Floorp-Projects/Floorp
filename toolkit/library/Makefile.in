@@ -8,7 +8,7 @@ include $(topsrcdir)/config/config.mk
 
 ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
 # Wrap linker to measure peak virtual memory usage.
-EXPAND_LIBS_EXEC := $(PYTHON) $(topsrcdir)/build/link.py linker-vsize $(EXPAND_LIBS_EXEC)
+EXPAND_LIBS_EXEC := $(PYTHON) $(topsrcdir)/config/link.py linker-vsize
 endif
 
 include $(topsrcdir)/config/rules.mk

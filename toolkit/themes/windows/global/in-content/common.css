@@ -1,0 +1,35 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../shared/in-content/common.inc.css
+
+xul|caption {
+  background-color: transparent;
+}
+
+xul|button,
+xul|colorpicker[type="button"],
+xul|menulist {
+  margin: 2px 4px;
+}
+
+xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+xul|checkbox {
+  -moz-padding-start: 0;
+}
+
+xul|radio {
+  -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
+  -moz-margin-start: 0;
+  -moz-padding-start: 0;
+}
+
+xul|*.radio-icon,
+xul|*.checkbox-icon {
+  -moz-margin-end: 0;
+}

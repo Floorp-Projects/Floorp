@@ -6,6 +6,8 @@
 
 #include "TouchCaret.h"
 
+#include <algorithm>
+
 #include "nsCOMPtr.h"
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
@@ -27,7 +29,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsView.h"
 #include "nsDOMTokenList.h"
-#include <algorithm>
+#include "nsCaret.h"
 
 using namespace mozilla;
 
@@ -166,9 +168,8 @@ TouchCaret::GetContentBoundary()
   }
 
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   nsIFrame* canvasFrame = GetCanvasFrame();
 
   // Get the editing host to determine the touch caret dragable boundary.
@@ -211,9 +212,8 @@ TouchCaret::GetCaretYCenterPosition()
   }
 
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   nsRect caretRect = focusFrame->GetRectRelativeToSelf();
   nsIFrame *canvasFrame = GetCanvasFrame();
   nsLayoutUtils::TransformRect(focusFrame, canvasFrame, caretRect);
@@ -262,9 +262,8 @@ TouchCaret::MoveCaret(const nsPoint& movePoint)
 
   // Get scrollable frame.
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   nsIFrame* scrollable =
     nsLayoutUtils::GetClosestFrameOfType(focusFrame, nsGkAtoms::scrollFrame);
 
@@ -288,7 +287,7 @@ TouchCaret::MoveCaret(const nsPoint& movePoint)
                   offsets.EndOffset(),
                   false,
                   false,
-                  offsets.associateWithNext);
+                  offsets.associate);
 
   if (!weakScrollable.IsAlive()) {
     return;
@@ -352,7 +351,7 @@ TouchCaret::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel,
   // multiple selections.
   // If this notification is for a selection that is not the one the
   // the caret is currently interested in , then there is nothing to do!
-  if (aSel != caret->GetCaretDOMSelection()) {
+  if (aSel != caret->GetSelection()) {
     TOUCHCARET_LOG("Return for selection mismatch!");
     return NS_OK;
   }
@@ -421,16 +420,13 @@ TouchCaret::IsDisplayable()
     return false;
   }
 
-  bool caretVisible = false;
-  caret->GetCaretVisible(&caretVisible);
-  if (!caretVisible) {
+  if (!caret->IsVisible()) {
     TOUCHCARET_LOG("Caret is not visible!");
     return false;
   }
 
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   if (!focusFrame) {
     TOUCHCARET_LOG("Focus frame is not valid!");
     return false;
@@ -453,9 +449,10 @@ TouchCaret::UpdatePosition()
     return;
   }
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
+
+  // Caret is visible and shown, update touch caret.
   nsRect focusRect;
-  nsIFrame* focusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* focusFrame = caret->GetGeometry(&focusRect);
   if (!focusFrame || focusRect.IsEmpty()) {
     return;
   }
@@ -536,9 +533,8 @@ TouchCaret::SetSelectionDragState(bool aState)
   }
 
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
-  nsISelection* caretSelection = caret->GetCaretDOMSelection();
   nsRect focusRect;
-  nsIFrame* caretFocusFrame = caret->GetGeometry(caretSelection, &focusRect);
+  nsIFrame* caretFocusFrame = caret->GetGeometry(&focusRect);
   nsRefPtr<nsFrameSelection> fs = caretFocusFrame->GetFrameSelection();
   fs->SetDragState(aState);
 }

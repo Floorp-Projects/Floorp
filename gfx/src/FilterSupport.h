@@ -293,7 +293,7 @@ public:
   };
 
   FilterPrimitiveDescription();
-  FilterPrimitiveDescription(PrimitiveType aType);
+  explicit FilterPrimitiveDescription(PrimitiveType aType);
   FilterPrimitiveDescription(const FilterPrimitiveDescription& aOther);
   FilterPrimitiveDescription& operator=(const FilterPrimitiveDescription& aOther);
 
@@ -377,7 +377,7 @@ private:
  */
 struct FilterDescription MOZ_FINAL {
   FilterDescription() {}
-  FilterDescription(const nsTArray<FilterPrimitiveDescription>& aPrimitives)
+  explicit FilterDescription(const nsTArray<FilterPrimitiveDescription>& aPrimitives)
    : mPrimitives(aPrimitives)
   {}
 

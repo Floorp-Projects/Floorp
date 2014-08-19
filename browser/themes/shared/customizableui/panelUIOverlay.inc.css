@@ -897,14 +897,14 @@ toolbarbutton[panel-multiview-anchor="true"] > .toolbarbutton-menubutton-button 
 toolbarbutton[panel-multiview-anchor="true"] {
   background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted.png),
                     linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
-  background-position: right 5px center;
+  background-position: right calc(@menuPanelButtonWidth@ / 2 - @exitSubviewGutterWidth@ + 2px) center;
   background-repeat: no-repeat, repeat;
 }
 
 toolbarbutton[panel-multiview-anchor="true"]:-moz-locale-dir(rtl) {
   background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl.png),
                     linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
-  background-position: left 5px center;
+  background-position: left calc(@menuPanelButtonWidth@ / 2 - @exitSubviewGutterWidth@ + 2px) center;
 }
 
 toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,

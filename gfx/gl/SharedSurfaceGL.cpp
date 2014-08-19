@@ -17,7 +17,7 @@ namespace gl {
 using gfx::IntSize;
 using gfx::SurfaceFormat;
 
-SharedSurface_Basic*
+/*static*/ UniquePtr<SharedSurface_Basic>
 SharedSurface_Basic::Create(GLContext* gl,
                             const GLFormats& formats,
                             const IntSize& size,
@@ -45,7 +45,10 @@ SharedSurface_Basic::Create(GLContext* gl,
     default:
         MOZ_CRASH("Unhandled Tex format.");
     }
-    return new SharedSurface_Basic(gl, size, hasAlpha, format, tex);
+
+    typedef SharedSurface_Basic ptrT;
+    UniquePtr<ptrT> ret( new ptrT(gl, size, hasAlpha, format, tex) );
+    return Move(ret);
 }
 
 SharedSurface_Basic::SharedSurface_Basic(GLContext* gl,
@@ -100,9 +103,10 @@ SharedSurface_Basic::Fence()
     ReadPixelsIntoDataSurface(mGL, mData);
 }
 
+////////////////////////////////////////////////////////////////////////
+// SharedSurface_GLTexture
 
-
-SharedSurface_GLTexture*
+/*static*/ UniquePtr<SharedSurface_GLTexture>
 SharedSurface_GLTexture::Create(GLContext* prodGL,
                                 GLContext* consGL,
                                 const GLFormats& formats,
@@ -124,7 +128,10 @@ SharedSurface_GLTexture::Create(GLContext* prodGL,
       ownsTex = true;
     }
 
-    return new SharedSurface_GLTexture(prodGL, consGL, size, hasAlpha, tex, ownsTex);
+    typedef SharedSurface_GLTexture ptrT;
+    UniquePtr<ptrT> ret( new ptrT(prodGL, consGL, size, hasAlpha, tex,
+                                  ownsTex) );
+    return Move(ret);
 }
 
 SharedSurface_GLTexture::~SharedSurface_GLTexture()

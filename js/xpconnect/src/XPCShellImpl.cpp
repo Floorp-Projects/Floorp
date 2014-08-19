@@ -648,8 +648,8 @@ static Maybe<PersistentRootedValue> sScriptedInterruptCallback;
 static bool
 XPCShellInterruptCallback(JSContext *cx)
 {
-    MOZ_ASSERT(!sScriptedInterruptCallback.empty());
-    RootedValue callback(cx, sScriptedInterruptCallback.ref());
+    MOZ_ASSERT(sScriptedInterruptCallback);
+    RootedValue callback(cx, *sScriptedInterruptCallback);
 
     // If no interrupt callback was set by script, no-op.
     if (callback.isUndefined())
@@ -671,7 +671,7 @@ XPCShellInterruptCallback(JSContext *cx)
 static bool
 SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
-    MOZ_ASSERT(!sScriptedInterruptCallback.empty());
+    MOZ_ASSERT(sScriptedInterruptCallback);
 
     // Sanity-check args.
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -682,7 +682,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
 
     // Allow callers to remove the interrupt callback by passing undefined.
     if (args[0].isUndefined()) {
-        sScriptedInterruptCallback.ref() = UndefinedValue();
+        *sScriptedInterruptCallback = UndefinedValue();
         return true;
     }
 
@@ -692,7 +692,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    sScriptedInterruptCallback.ref() = args[0];
+    *sScriptedInterruptCallback = args[0];
 
     return true;
 }
@@ -1459,7 +1459,7 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
         // Override the default XPConnect interrupt callback. We could store the
         // old one and restore it before shutting down, but there's not really a
         // reason to bother.
-        sScriptedInterruptCallback.construct(rt, UndefinedValue());
+        sScriptedInterruptCallback.emplace(rt, UndefinedValue());
         JS_SetInterruptCallback(rt, XPCShellInterruptCallback);
 
         dom::AutoJSAPI jsapi;
@@ -1590,7 +1590,7 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
     rv = NS_ShutdownXPCOM( nullptr );
     MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
-    sScriptedInterruptCallback.destroyIfConstructed();
+    sScriptedInterruptCallback.reset();
 
 #ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
     // test of late call and release (see above)

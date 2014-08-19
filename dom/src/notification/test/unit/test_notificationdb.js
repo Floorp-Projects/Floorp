@@ -155,13 +155,10 @@ add_test(function test_send_two_get_one() {
   let requestID = 10;
   let tag = "voicemail";
 
-  let systemNotification1 = systemNotification;
-  systemNotification1.id = "{f271f9ee-3955-4c10-b1f2-af552fb270ee}";
-  systemNotification1.tag = tag;
-
-  let systemNotification2 = systemNotification;
-  systemNotification2.id = "{8ef9a628-f0f4-44b4-820d-c117573c33e3}";
-  systemNotification2.tag = tag;
+  let systemNotification1 =
+    getNotificationObject("system", "{f271f9ee-3955-4c10-b1f2-af552fb270ee}", tag);
+  let systemNotification2 =
+    getNotificationObject("system", "{8ef9a628-f0f4-44b4-820d-c117573c33e3}", tag);
 
   let msgGetReply = "Notification:GetAll:Return:OK";
   let msgGetNotifHandler = {
@@ -204,6 +201,21 @@ add_test(function test_send_two_get_one() {
     notification: systemNotification2,
     requestID: (requestID + 1) // 11
   }, false);
+});
+
+// Delete previous notification
+add_test(function test_delete_previous() {
+  let requestID = 15;
+  let msgReply = "Notification:Delete:Return:OK";
+  let msgHandler = function(message) {
+    do_check_eq(requestID, message.data.requestID);
+  };
+
+  addAndSend("Notification:Delete", msgReply, msgHandler, {
+    origin: systemNotification.origin,
+    id: "{8ef9a628-f0f4-44b4-820d-c117573c33e3}",
+    requestID: requestID
+  });
 });
 
 // Store two notifications from two origins with the same tag
@@ -292,7 +304,7 @@ add_test(function test_delete_previous() {
 
   addAndSend("Notification:Delete", msgReply, msgHandler, {
     origin: systemNotification.origin,
-    id: "{8ef9a628-f0f4-44b4-820d-c117573c33e3}",
+    id: "{2bc883bf-2809-4432-b0f4-f54e10372764}",
     requestID: requestID
   });
 });

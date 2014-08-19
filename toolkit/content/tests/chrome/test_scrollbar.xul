@@ -47,16 +47,21 @@ var scrollbarTester = {
     var x = 160; // on the right half of the thumb
     var y = 5;
     
+    var isMac = navigator.platform.indexOf("Mac") != -1;
+    var runtime = Components.classes["@mozilla.org/xre/app-info;1"]
+                                    .getService(Components.interfaces.nsIXULRuntime);
+    var isGtk = runtime.widgetToolkit.indexOf("gtk") != -1;
+    
     // Start the drag.
     this.mousedown(x, y, button, withAlt, withShift);
     var newPos = this.getPos();
     var scrollToClick = (newPos != 0);
-    if (navigator.platform.indexOf("Mac") != -1) {
-      ok(!scrollToClick,
-          "On Mac OS X, clicking the scrollbar thumb should never move it.");
+    if (isMac || isGtk) {
+      ok(!scrollToClick, "On Linux and Mac OS X, clicking the scrollbar thumb "+
+                         "should never move it.");
     } else if (button == 0 && withShift) {
-      ok(scrollToClick, "On platforms other than Mac OS X, holding shift should "+
-                        "enable scroll-to-click on the scrollbar thumb.");
+      ok(scrollToClick, "On platforms other than Linux and Mac OS X, holding "+
+                        "shift should enable scroll-to-click on the scrollbar thumb.");
     } else if (button == 1 && this.middlePref) {
       ok(scrollToClick, "When middlemouse.scrollbarPosition is on, clicking the "+
                         "thumb with the middle mouse button should center it "+
@@ -69,13 +74,13 @@ var scrollbarTester = {
     if (newPos2 != newPos) {
       ok(newPos2 > newPos, "Scrollbar thumb should follow the mouse when dragged.");
       ok(newPos2 - newPos < 3, "Scrollbar shouldn't move further than the mouse when dragged.");
-      ok(button == 0 || (button == 1 && this.middlePref),
+      ok(button == 0 || (button == 1 && this.middlePref) || (button == 2 && isGtk),
          "Dragging the scrollbar should only be possible with the left mouse button.");
     } else {
       // Dragging had no effect.
       if (button == 0) {
         ok(false, "Dragging the scrollbar thumb should work.");
-      } else if (button == 1 && this.middlePref && navigator.platform.indexOf("Mac") == -1) {
+      } else if (button == 1 && this.middlePref && (!isGtk && !isMac)) {
         ok(false, "When middlemouse.scrollbarPosition is on, dragging the "+
            "scrollbar thumb should be possible using the middle mouse button.");
       } else {

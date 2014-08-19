@@ -104,6 +104,12 @@ user_pref("extensions.getAddons.search.browseURL", "http://%(server)s/extensions
 user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy/repositorySearchURL");
 // Make sure that opening the plugins check page won't hit the network
 user_pref("plugins.update.url", "http://%(server)s/plugins-dummy/updateCheckURL");
+// Make sure SNTP requests don't hit the network
+user_pref("network.sntp.pools", "%(server)s");
+// We know the SNTP request will fail, since localhost isn't listening on
+// port 135. The default number of retries (10) is excessive, but retrying
+// at least once will mean that codepath is still tested in automation.
+user_pref("network.sntp.maxRetryCount", 1);
 
 // Existing tests don't wait for the notification button security delay
 user_pref("security.notification_enable_delay", 0);
@@ -122,8 +128,10 @@ user_pref("dom.use_xbl_scopes_for_remote_xul", true);
 // Get network events.
 user_pref("network.activity.blipIntervalMilliseconds", 250);
 
-// Don't allow the Data Reporting service to prompt for policy acceptance.
-user_pref("datareporting.policy.dataSubmissionPolicyBypassAcceptance", true);
+// We do not wish to display datareporting policy notifications as it might
+// cause other tests to fail. Tests that wish to test the notification functionality
+// should explicitly disable this pref.
+user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 
 // Point Firefox Health Report at a local server. We don't care if it actually
 // works. It just can't hit the default production endpoint.
@@ -225,3 +233,6 @@ user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
 
 // Enable debug logging in the mozApps implementation.
 user_pref("dom.mozApps.debug", true);
+
+// Enable Loop
+user_pref("loop.enabled", true);

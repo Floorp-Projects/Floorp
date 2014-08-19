@@ -195,6 +195,12 @@ $(OBJDIR)/.mozconfig.mk: $(FOUND_MOZCONFIG) $(call mkdir_deps,$(OBJDIR)) $(OBJDI
 include $(OBJDIR)/.mozconfig.mk
 endif
 
+# UPLOAD_EXTRA_FILES is appended to and exported from mozconfig, which makes
+# submakes as well as configure add even more to that, so just unexport it
+# for submakes to pick it from .mozconfig.mk and for configure to pick it
+# from mach environment.
+unexport UPLOAD_EXTRA_FILES
+
 # Print out any options loaded from mozconfig.
 all realbuild clean distclean export libs install realclean::
 ifneq (,$(strip $(MOZCONFIG_OUT_FILTERED)))

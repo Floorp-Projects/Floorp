@@ -39,6 +39,8 @@
 #include "nsISlowScriptDebug.h"
 #include "nsWindowMemoryReporter.h"
 #include "WindowNamedPropertiesHandler.h"
+#include "nsFrameSelection.h"
+#include "nsISelectionListener.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -83,9 +85,6 @@
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
 #include "Crypto.h"
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-#include "nsIDOMCryptoLegacy.h"
-#endif
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
@@ -122,7 +121,6 @@
 #include "nsGlobalWindowCommands.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsCSSProps.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
@@ -2364,14 +2362,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   nsCOMPtr<nsIDocument> oldDoc = mDoc;
 
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-  // clear smartcard events, our document has gone away.
-  if (mCrypto && XRE_GetProcessType() != GeckoProcessType_Content) {
-    nsresult rv = mCrypto->SetEnableSmartCardEvents(false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-#endif
-
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext *cx = jsapi.cx();
@@ -2676,8 +2666,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   if (!aState) {
     if (reUseInnerWindow) {
+
       if (newInnerWindow->mDoc != aDocument) {
         newInnerWindow->mDoc = aDocument;
+
+        // The storage objects contain the URL of the window. We have to
+        // recreate them when the innerWindow is reused.
+        newInnerWindow->mLocalStorage = nullptr;
+        newInnerWindow->mSessionStorage = nullptr;
 
         if (newInnerWindow->IsDOMBinding()) {
           WindowBinding::ClearCachedDocumentValue(cx, newInnerWindow);
@@ -4453,20 +4449,7 @@ nsGlobalWindow::GetCrypto(ErrorResult& aError)
   FORWARD_TO_INNER_OR_THROW(GetCrypto, (aError), aError, nullptr);
 
   if (!mCrypto) {
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-    if (XRE_GetProcessType() != GeckoProcessType_Content) {
-      nsresult rv;
-      mCrypto = do_CreateInstance(NS_CRYPTO_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) {
-        aError.Throw(rv);
-        return nullptr;
-      }
-    } else
-#endif
-    {
-      mCrypto = new Crypto();
-    }
-
+    mCrypto = new Crypto();
     mCrypto->Init(this);
   }
   return mCrypto;
@@ -9286,6 +9269,29 @@ public:
   nsString                             mAction;
 };
 
+static bool
+CheckReason(int16_t aReason, SelectionChangeReason aReasonType)
+{
+  switch (aReasonType) {
+    case SelectionChangeReason::Drag:
+      return aReason & nsISelectionListener::DRAG_REASON;
+    case SelectionChangeReason::Mousedown:
+      return aReason & nsISelectionListener::MOUSEDOWN_REASON;
+    case SelectionChangeReason::Mouseup:
+      return aReason & nsISelectionListener::MOUSEUP_REASON;
+    case SelectionChangeReason::Keypress:
+      return aReason & nsISelectionListener::KEYPRESS_REASON;
+    case SelectionChangeReason::Selectall:
+      return aReason & nsISelectionListener::SELECTALL_REASON;
+    case SelectionChangeReason::Collapsetostart:
+      return aReason & nsISelectionListener::COLLAPSETOSTART_REASON;
+    case SelectionChangeReason::Collapsetoend:
+      return aReason & nsISelectionListener::COLLAPSETOEND_REASON;
+    default:
+      return false;
+  }
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason)
 {
@@ -9318,7 +9324,16 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
         nsRefPtr<nsRange> nsrange = static_cast<nsRange*>(range.get());
         init.mBoundingClientRect = nsrange->GetBoundingClientRect(true, false);
         range->ToString(init.mSelectedText);
-        init.mReason = aReason;
+
+        for (uint32_t reasonType = 0;
+             reasonType < static_cast<uint32_t>(SelectionChangeReason::EndGuard_);
+             ++reasonType) {
+          SelectionChangeReason strongReasonType =
+            static_cast<SelectionChangeReason>(reasonType);
+          if (CheckReason(aReason, strongReasonType)) {
+            init.mReasons.AppendElement(strongReasonType);
+          }
+        }
       }
 
       nsRefPtr<SelectionChangeEvent> event =
@@ -11428,11 +11443,15 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
     // Clone the storage event included in the observer notification. We want
     // to dispatch clones rather than the original event.
+    ErrorResult error;
     nsRefPtr<StorageEvent> newEvent =
       CloneStorageEvent(fireMozStorageChanged ?
                           NS_LITERAL_STRING("MozStorageChanged") :
                           NS_LITERAL_STRING("storage"),
-                        event);
+                        event, error);
+    if (error.Failed()) {
+      return error.ErrorCode();
+    }
 
     newEvent->SetTrusted(true);
 
@@ -11528,7 +11547,8 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
 already_AddRefed<StorageEvent>
 nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
-                                  const nsRefPtr<StorageEvent>& aEvent)
+                                  const nsRefPtr<StorageEvent>& aEvent,
+                                  ErrorResult& aRv)
 {
   MOZ_ASSERT(IsInnerWindow());
 
@@ -11540,7 +11560,26 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
   aEvent->GetOldValue(dict.mOldValue);
   aEvent->GetNewValue(dict.mNewValue);
   aEvent->GetUrl(dict.mUrl);
-  dict.mStorageArea = aEvent->GetStorageArea();
+
+  nsRefPtr<DOMStorage> storageArea = aEvent->GetStorageArea();
+  MOZ_ASSERT(storageArea);
+
+  nsRefPtr<DOMStorage> storage;
+  if (storageArea->GetType() == DOMStorage::LocalStorage) {
+    storage = GetLocalStorage(aRv);
+  } else {
+    MOZ_ASSERT(storageArea->GetType() == DOMStorage::SessionStorage);
+    storage = GetSessionStorage(aRv);
+  }
+
+  if (aRv.Failed() || !storage) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(storage);
+  MOZ_ASSERT(storage->IsForkOf(storageArea));
+
+  dict.mStorageArea = storage;
 
   nsRefPtr<StorageEvent> event = StorageEvent::Constructor(this, aType, dict);
   return event.forget();
@@ -11736,7 +11775,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
         // so that whatever popup blocker UI the app has will be visible.
         if (mContext == GetScriptContextFromJSContext(aJSCallerContext)) {
           mBlockScriptedClosingFlag = true;
-          closeUnblocker.construct(this);
+          closeUnblocker.emplace(this);
         }
       }
 
@@ -11785,7 +11824,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       // arguments. That whole setup just really needs to be rewritten. :-(
       Maybe<AutoNoJSAPI> nojsapi;
       if (!aContentModal) {
-        nojsapi.construct();
+        nojsapi.emplace();
       }
 
 

@@ -268,7 +268,7 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     if (args.get(0) == BooleanValue(true))
         cx->runtime()->gc.storeBuffer.setAboutToOverflow();
 
-    MinorGC(cx, gcreason::API);
+    cx->minorGC(gcreason::API);
 #endif
     args.rval().setUndefined();
     return true;
@@ -519,7 +519,7 @@ SelectForGC(JSContext *cx, unsigned argc, Value *vp)
      * to be in the set, so evict the nursery before adding items.
      */
     JSRuntime *rt = cx->runtime();
-    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+    rt->gc.evictNursery();
 
     for (unsigned i = 0; i < args.length(); i++) {
         if (args[i].isObject()) {
@@ -628,7 +628,7 @@ GCSlice(JSContext *cx, unsigned argc, Value *vp)
         limit = false;
     }
 
-    GCDebugSlice(cx->runtime(), limit, budget);
+    cx->runtime()->gc.gcDebugSlice(limit, budget);
     args.rval().setUndefined();
     return true;
 }
@@ -1648,6 +1648,59 @@ DumpObject(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 
 static bool
+DumpBacktrace(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    js_DumpBacktrace(cx);
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+GetBacktrace(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool showArgs = false;
+    bool showLocals = false;
+    bool showThisProps = false;
+
+    if (args.length() > 1) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Too many arguments");
+        return false;
+    }
+
+    if (args.length() == 1) {
+        RootedObject cfg(cx, ToObject(cx, args[0]));
+        if (!cfg)
+            return false;
+        RootedValue v(cx);
+
+        if (!JS_GetProperty(cx, cfg, "args", &v))
+            return false;
+        showArgs = ToBoolean(v);
+
+        if (!JS_GetProperty(cx, cfg, "locals", &v))
+            return false;
+        showLocals = ToBoolean(v);
+
+        if (!JS_GetProperty(cx, cfg, "thisprops", &v))
+            return false;
+        showThisProps = ToBoolean(v);
+    }
+
+    char *buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    RootedString str(cx);
+    if (!(str = JS_NewStringCopyZ(cx, buf)))
+        return false;
+    JS_smprintf_free(buf);
+
+    args.rval().setString(str);
+    return true;
+}
+
+static bool
 ReportOutOfMemory(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2009,6 +2062,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "   11: Verify post write barriers between instructions\n"
 "   12: Verify post write barriers between paints\n"
 "   13: Check internal hashtables on minor GC\n"
+"   14: Always compact arenas after GC\n"
 "  Period specifies that collection happens every n allocations.\n"),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
@@ -2223,6 +2277,18 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("evalReturningScope", EvalReturningScope, 1, 0,
 "evalReturningScope(scriptStr)",
 "  Evaluate the script in a new scope and return the scope."),
+
+    JS_FN_HELP("backtrace", DumpBacktrace, 1, 0,
+"backtrace()",
+"  Dump out a brief backtrace."),
+
+    JS_FN_HELP("getBacktrace", GetBacktrace, 1, 0,
+"getBacktrace([options])",
+"  Return the current stack as a string. Takes an optional options object,\n"
+"  which may contain any or all of the boolean properties\n"
+"    options.args - show arguments to each function\n"
+"    options.locals - show local variables in each frame\n"
+"    options.thisprops - show the properties of the 'this' object of each frame\n"),
 
     JS_FS_HELP_END
 };

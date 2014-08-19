@@ -695,8 +695,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     }
 
     JS_ASSERT(nslots >= 2);
-    size_t nbytes = nslots * sizeof(HeapValue);
-    dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
+    dstHeader = reinterpret_cast<ObjectElements *>(zone->pod_malloc<HeapSlot>(nslots));
     if (!dstHeader)
         CrashAtUnhandlableOOM("Failed to allocate elements while tenuring.");
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
@@ -720,23 +719,6 @@ js::Nursery::MinorGCCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
     MinorCollectionTracer *trc = static_cast<MinorCollectionTracer *>(jstrc);
     if (ShouldMoveToTenured(trc, thingp))
         *thingp = trc->nursery->moveToTenured(trc, static_cast<JSObject *>(*thingp));
-}
-
-static void
-CheckHashTablesAfterMovingGC(JSRuntime *rt)
-{
-#ifdef JS_GC_ZEAL
-    if (rt->gcZeal() == ZealCheckHashTablesOnMinorGC) {
-        /* Check that internal hash tables no longer have any pointers into the nursery. */
-        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-            c->checkNewTypeObjectTableAfterMovingGC();
-            c->checkInitialShapesTableAfterMovingGC();
-            c->checkWrapperMapAfterMovingGC();
-            if (c->debugScopes)
-                c->debugScopes->checkHashTablesAfterMovingGC(rt);
-        }
-    }
-#endif
 }
 
 #ifdef PROFILE_NURSERY
@@ -810,7 +792,10 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     TIME_END(markGenericEntries);
 
     TIME_START(checkHashTables);
-    CheckHashTablesAfterMovingGC(rt);
+#ifdef JS_GC_ZEAL
+    if (rt->gcZeal() == ZealCheckHashTablesOnMinorGC)
+        CheckHashTablesAfterMovingGC(rt);
+#endif
     TIME_END(checkHashTables);
 
     TIME_START(markRuntime);

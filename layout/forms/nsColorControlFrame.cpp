@@ -14,6 +14,7 @@
 #include "nsIDOMNode.h"
 #include "nsIFormControl.h"
 #include "nsStyleSet.h"
+#include "nsIDocument.h"
 
 using mozilla::dom::Element;
 

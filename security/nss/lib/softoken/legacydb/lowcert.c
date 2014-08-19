@@ -447,7 +447,7 @@ nsslowcert_EmailName(SECItem *derDN, char *space, unsigned int len)
 
 	    name=nsslowcert_dataStart(ava, ava_length, &name_length, PR_FALSE, 
 					NULL);
-	    if (oid == NULL) { return NULL; }
+	    if (name == NULL) { return NULL; }
 	    ava_length -= (name-ava)+name_length;
 	    ava = name+name_length;
 

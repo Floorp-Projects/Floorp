@@ -554,9 +554,8 @@ GCMarker::markDelayedChildren(ArenaHeader *aheader)
 bool
 GCMarker::markDelayedChildren(SliceBudget &budget)
 {
-    gcstats::MaybeAutoPhase ap;
-    if (runtime()->gc.state() == MARK)
-        ap.construct(runtime()->gc.stats, gcstats::PHASE_MARK_DELAYED);
+    GCRuntime &gc = runtime()->gc;
+    gcstats::MaybeAutoPhase ap(gc.stats, gc.state() == MARK, gcstats::PHASE_MARK_DELAYED);
 
     JS_ASSERT(unmarkedArenaStackTop);
     do {
@@ -632,16 +631,13 @@ void
 GCMarker::markBufferedGrayRoots(JS::Zone *zone)
 {
     JS_ASSERT(grayBufferState == GRAY_BUFFER_OK);
-    JS_ASSERT(zone->isGCMarkingGray());
+    JS_ASSERT(zone->isGCMarkingGray() || zone->isGCCompacting());
 
     for (GrayRoot *elem = zone->gcGrayRoots.begin(); elem != zone->gcGrayRoots.end(); elem++) {
 #ifdef DEBUG
         setTracingDetails(elem->debugPrinter, elem->debugPrintArg, elem->debugPrintIndex);
 #endif
-        void *tmp = elem->thing;
-        setTracingLocation((void *)&elem->thing);
-        MarkKind(this, &tmp, elem->kind);
-        JS_ASSERT(tmp == elem->thing);
+        MarkKind(this, &elem->thing, elem->kind);
     }
 }
 

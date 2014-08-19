@@ -1039,13 +1039,74 @@ ArrayJoinKernel(JSContext *cx, SeparatorOp sepOp, HandleObject obj, uint32_t len
 }
 
 template <bool Locale>
-static bool
-ArrayJoin(JSContext *cx, CallArgs &args)
+JSString *
+js::ArrayJoin(JSContext *cx, HandleObject obj, HandleLinearString sepstr, uint32_t length)
 {
     // This method is shared by Array.prototype.join and
     // Array.prototype.toLocaleString. The steps in ES5 are nearly the same, so
     // the annotations in this function apply to both toLocaleString and join.
 
+    // Steps 1 to 6, should be done by the caller.
+
+    JS::Anchor<JSString*> anchor(sepstr);
+
+    // Step 6 is implicit in the loops below.
+
+    // An optimized version of a special case of steps 7-11: when length==1 and
+    // the 0th element is a string, ToString() of that element is a no-op and
+    // so it can be immediately returned as the result.
+    if (length == 1 && !Locale && obj->is<ArrayObject>() &&
+        obj->getDenseInitializedLength() == 1)
+    {
+        const Value &elem0 = obj->getDenseElement(0);
+        if (elem0.isString()) {
+            return elem0.toString();
+        }
+    }
+
+    StringBuffer sb(cx);
+    if (sepstr->hasTwoByteChars() && !sb.ensureTwoByteChars())
+        return nullptr;
+
+    // The separator will be added |length - 1| times, reserve space for that
+    // so that we don't have to unnecessarily grow the buffer.
+    size_t seplen = sepstr->length();
+    if (length > 0 && !sb.reserve(seplen * (length - 1)))
+        return nullptr;
+
+    // Various optimized versions of steps 7-10.
+    if (seplen == 0) {
+        EmptySeparatorOp op;
+        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+            return nullptr;
+    } else if (seplen == 1) {
+        jschar c = sepstr->latin1OrTwoByteChar(0);
+        if (c <= JSString::MAX_LATIN1_CHAR) {
+            CharSeparatorOp<Latin1Char> op(c);
+            if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+                return nullptr;
+        } else {
+            CharSeparatorOp<jschar> op(c);
+            if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+                return nullptr;
+        }
+    } else {
+        StringSeparatorOp op(sepstr);
+        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+            return nullptr;
+    }
+
+    // Step 11
+    JSString *str = sb.finishString();
+    if (!str)
+        return nullptr;
+    return str;
+}
+
+template <bool Locale>
+bool
+ArrayJoin(JSContext *cx, CallArgs &args)
+{
     // Step 1
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
@@ -1078,60 +1139,12 @@ ArrayJoin(JSContext *cx, CallArgs &args)
         sepstr = cx->names().comma;
     }
 
-    JS::Anchor<JSString*> anchor(sepstr);
-
-    // Step 6 is implicit in the loops below.
-
-    // An optimized version of a special case of steps 7-11: when length==1 and
-    // the 0th element is a string, ToString() of that element is a no-op and
-    // so it can be immediately returned as the result.
-    if (length == 1 && !Locale && obj->is<ArrayObject>() &&
-        obj->getDenseInitializedLength() == 1)
-    {
-        const Value &elem0 = obj->getDenseElement(0);
-        if (elem0.isString()) {
-            args.rval().setString(elem0.toString());
-            return true;
-        }
-    }
-
-    StringBuffer sb(cx);
-    if (sepstr->hasTwoByteChars() && !sb.ensureTwoByteChars())
+    // Step 6 to 11
+    JSString *res = js::ArrayJoin<Locale>(cx, obj, sepstr, length);
+    if (!res)
         return false;
 
-    // The separator will be added |length - 1| times, reserve space for that
-    // so that we don't have to unnecessarily grow the buffer.
-    size_t seplen = sepstr->length();
-    if (length > 0 && !sb.reserve(seplen * (length - 1)))
-        return false;
-
-    // Various optimized versions of steps 7-10.
-    if (seplen == 0) {
-        EmptySeparatorOp op;
-        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
-            return false;
-    } else if (seplen == 1) {
-        jschar c = sepstr->latin1OrTwoByteChar(0);
-        if (c <= JSString::MAX_LATIN1_CHAR) {
-            CharSeparatorOp<Latin1Char> op(c);
-            if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
-                return false;
-        } else {
-            CharSeparatorOp<jschar> op(c);
-            if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
-                return false;
-        }
-    } else {
-        StringSeparatorOp op(sepstr);
-        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
-            return false;
-    }
-
-    // Step 11
-    JSString *str = sb.finishString();
-    if (!str)
-        return false;
-    args.rval().setString(str);
+    args.rval().setString(res);
     return true;
 }
 
@@ -1183,8 +1196,8 @@ array_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES5 15.4.4.5 */
-static bool
-array_join(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::array_join(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -2955,7 +2968,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
-    JS_FN("join",               array_join,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("join",               js::array_join,     1,JSFUN_GENERIC_NATIVE),
     JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
     JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
     JS_FN("push",               array_push,         1,JSFUN_GENERIC_NATIVE),

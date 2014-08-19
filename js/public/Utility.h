@@ -43,6 +43,7 @@ namespace js {}
 #define JS_SWEPT_NURSERY_PATTERN 0x2B
 #define JS_ALLOCATED_NURSERY_PATTERN 0x2D
 #define JS_FRESH_TENURED_PATTERN 0x4F
+#define JS_MOVED_TENURED_PATTERN 0x49
 #define JS_SWEPT_TENURED_PATTERN 0x4B
 #define JS_ALLOCATED_TENURED_PATTERN 0x4D
 #define JS_SWEPT_CODE_PATTERN 0x3b
@@ -561,6 +562,16 @@ js_pod_calloc(size_t numElems)
     if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
         return nullptr;
     return (T *)js_calloc(numElems * sizeof(T));
+}
+
+template <class T>
+static MOZ_ALWAYS_INLINE T *
+js_pod_realloc(T *prior, size_t oldSize, size_t newSize)
+{
+    MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
+    if (newSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+        return nullptr;
+    return (T *)js_realloc(prior, newSize * sizeof(T));
 }
 
 namespace js {

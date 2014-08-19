@@ -152,7 +152,7 @@ JSString::equals(const char *s)
 
 template <typename CharT>
 static MOZ_ALWAYS_INLINE bool
-AllocChars(ThreadSafeContext *maybecx, size_t length, CharT **chars, size_t *capacity)
+AllocChars(JSString *str, size_t length, CharT **chars, size_t *capacity)
 {
     /*
      * String length doesn't include the null char, so include it here before
@@ -173,8 +173,7 @@ AllocChars(ThreadSafeContext *maybecx, size_t length, CharT **chars, size_t *cap
     *capacity = numChars - 1;
 
     JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(CharT) < UINT32_MAX);
-    size_t bytes = numChars * sizeof(CharT);
-    *chars = (CharT *)(maybecx ? maybecx->malloc_(bytes) : js_malloc(bytes));
+    *chars = str->zone()->pod_malloc<CharT>(numChars);
     return *chars != nullptr;
 }
 
@@ -379,7 +378,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
         }
     }
 
-    if (!AllocChars(maybecx, wholeLength, &wholeChars, &wholeCapacity))
+    if (!AllocChars(this, wholeLength, &wholeChars, &wholeCapacity))
         return nullptr;
 
     pos = wholeChars;

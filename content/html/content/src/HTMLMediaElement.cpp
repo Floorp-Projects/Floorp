@@ -3412,6 +3412,20 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
   if (aPauseElement != mPausedForInactiveDocumentOrChannel) {
     mPausedForInactiveDocumentOrChannel = aPauseElement;
     if (aPauseElement) {
+#ifdef MOZ_EME
+      // For EME content, force destruction of the CDM client (and CDM
+      // instance if this is the last client for that CDM instance) and
+      // the CDM's decoder. This ensures the CDM gets reliable and prompt
+      // shutdown notifications, as it may have book-keeping it needs
+      // to do on shutdown.
+      if (mMediaKeys) {
+        mMediaKeys->Shutdown();
+        mMediaKeys = nullptr;
+        if (mDecoder) {
+          ShutdownDecoder();
+        }
+      }
+#endif
       if (mDecoder) {
         mDecoder->Pause();
         mDecoder->Suspend();
@@ -3420,6 +3434,9 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
       }
       mEventDeliveryPaused = aSuspendEvents;
     } else {
+#ifdef MOZ_EME
+      MOZ_ASSERT(!mMediaKeys);
+#endif
       if (mDecoder) {
         mDecoder->Resume(false);
         if (!mPaused && !mDecoder->IsEnded()) {

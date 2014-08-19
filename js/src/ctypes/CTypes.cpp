@@ -38,6 +38,7 @@
 
 #include "builtin/TypedObject.h"
 #include "ctypes/Library.h"
+#include "gc/Zone.h"
 
 using namespace std;
 using mozilla::NumericLimits;
@@ -870,7 +871,7 @@ GetABICode(JSObject* obj)
 }
 
 static const JSErrorFormatString ErrorFormatString[CTYPESERR_LIMIT] = {
-#define MSG_DEF(name, number, count, exception, format) \
+#define MSG_DEF(name, count, exception, format) \
   { format, count, exception } ,
 #include "ctypes/ctypes.msg"
 #undef MSG_DEF
@@ -6097,7 +6098,7 @@ CClosure::Create(JSContext* cx,
 
     // Allocate a buffer for the return value.
     size_t rvSize = CType::GetSize(fninfo->mReturnType);
-    cinfo->errResult = cx->malloc_(rvSize);
+    cinfo->errResult = result->zone()->pod_malloc<uint8_t>(rvSize);
     if (!cinfo->errResult)
       return nullptr;
 
@@ -6382,7 +6383,7 @@ CData::Create(JSContext* cx,
   } else {
     // Initialize our own buffer.
     size_t size = CType::GetSize(typeObj);
-    data = (char*)cx->malloc_(size);
+    data = dataObj->zone()->pod_malloc<char>(size);
     if (!data) {
       // Report a catchable allocation error.
       JS_ReportAllocationOverflow(cx);

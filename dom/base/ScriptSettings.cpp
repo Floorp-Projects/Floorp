@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 
 #include "jsapi.h"
+#include "xpcprivate.h" // For AutoCxPusher guts
 #include "xpcpublic.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptGlobalObject.h"
@@ -18,6 +19,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsTArray.h"
 #include "nsJSUtils.h"
+#include "nsDOMJSUtils.h"
+#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -237,10 +240,10 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
     // nsIPrincipal.Equals. Once that is removed, the Rooted<> will no longer
     // be necessary.
     JS::Rooted<JSObject*> global(JS_GetRuntime(aCx), aGlobal);
-    mCxPusher.construct(mCx);
-    mAutoNullableCompartment.construct(mCx, global);
+    mCxPusher.emplace(mCx);
+    mAutoNullableCompartment.emplace(mCx, global);
   } else {
-    mAutoNullableCompartment.construct(mCx, aGlobal);
+    mAutoNullableCompartment.emplace(mCx, aGlobal);
   }
 }
 
@@ -348,6 +351,14 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == FindJSContext(aGlobalObject));
 }
 
+AutoEntryScript::~AutoEntryScript()
+{
+  // GC when we pop a script entry point. This is a useful heuristic that helps
+  // us out on certain (flawed) benchmarks like sunspider, because it lets us
+  // avoid GCing during the timing loop.
+  JS_MaybeGC(cx());
+}
+
 AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
   : ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ false)
   , mCallerOverride(nsContentUtils::GetCurrentJSContextForThread())
@@ -360,10 +371,158 @@ AutoNoJSAPI::AutoNoJSAPI(bool aIsMainThread)
   MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContextForThread(),
                 !JS_IsExceptionPending(nsContentUtils::GetCurrentJSContextForThread()));
   if (aIsMainThread) {
-    mCxPusher.construct(static_cast<JSContext*>(nullptr),
-                        /* aAllowNull = */ true);
+    mCxPusher.emplace(static_cast<JSContext*>(nullptr),
+                      /* aAllowNull = */ true);
   }
 }
 
+danger::AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
+{
+  MOZ_ASSERT_IF(!allowNull, cx);
+
+  // Hold a strong ref to the nsIScriptContext, if any. This ensures that we
+  // only destroy the mContext of an nsJSContext when it is not on the cx stack
+  // (and therefore not in use). See nsJSContext::DestroyJSContext().
+  if (cx)
+    mScx = GetScriptContextFromJSContext(cx);
+
+  XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
+  if (!stack->Push(cx)) {
+    MOZ_CRASH();
+  }
+  mStackDepthAfterPush = stack->Count();
+
+#ifdef DEBUG
+  mPushedContext = cx;
+  mCompartmentDepthOnEntry = cx ? js::GetEnterCompartmentDepth(cx) : 0;
+#endif
+
+  // Enter a request and a compartment for the duration that the cx is on the
+  // stack if non-null.
+  if (cx) {
+    mAutoRequest.emplace(cx);
+
+    // DOM JSContexts don't store their default compartment object on the cx.
+    JSObject *compartmentObject = mScx ? mScx->GetWindowProxy()
+                                       : js::DefaultObjectForContextOrNull(cx);
+    if (compartmentObject)
+      mAutoCompartment.emplace(cx, compartmentObject);
+  }
+}
+
+danger::AutoCxPusher::~AutoCxPusher()
+{
+  // Leave the compartment and request before popping.
+  mAutoCompartment.reset();
+  mAutoRequest.reset();
+
+  // When we push a context, we may save the frame chain and pretend like we
+  // haven't entered any compartment. This gets restored on Pop(), but we can
+  // run into trouble if a Push/Pop are interleaved with a
+  // JSAutoEnterCompartment. Make sure the compartment depth right before we
+  // pop is the same as it was right after we pushed.
+  MOZ_ASSERT_IF(mPushedContext, mCompartmentDepthOnEntry ==
+                                js::GetEnterCompartmentDepth(mPushedContext));
+  DebugOnly<JSContext*> stackTop;
+  MOZ_ASSERT(mPushedContext == nsXPConnect::XPConnect()->GetCurrentJSContext());
+  XPCJSRuntime::Get()->GetJSContextStack()->Pop();
+  mScx = nullptr;
+}
+
+bool
+danger::AutoCxPusher::IsStackTop() const
+{
+  uint32_t currentDepth = XPCJSRuntime::Get()->GetJSContextStack()->Count();
+  MOZ_ASSERT(currentDepth >= mStackDepthAfterPush);
+  return currentDepth == mStackDepthAfterPush;
+}
+
 } // namespace dom
+
+AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+  : mCx(nullptr)
+{
+  Init(false MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT);
+}
+
+AutoJSContext::AutoJSContext(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : mCx(nullptr)
+{
+  Init(aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT);
+}
+
+void
+AutoJSContext::Init(bool aSafe MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+{
+  JS::AutoSuppressGCAnalysis nogc;
+  MOZ_ASSERT(!mCx, "mCx should not be initialized!");
+
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  nsXPConnect *xpc = nsXPConnect::XPConnect();
+  if (!aSafe) {
+    mCx = xpc->GetCurrentJSContext();
+  }
+
+  if (!mCx) {
+    mJSAPI.Init();
+    mCx = mJSAPI.cx();
+  }
+}
+
+AutoJSContext::operator JSContext*() const
+{
+  return mCx;
+}
+
+ThreadsafeAutoJSContext::ThreadsafeAutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+{
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  if (NS_IsMainThread()) {
+    mCx = nullptr;
+    mAutoJSContext.emplace();
+  } else {
+    mCx = mozilla::dom::workers::GetCurrentThreadJSContext();
+    mRequest.emplace(mCx);
+  }
+}
+
+ThreadsafeAutoJSContext::operator JSContext*() const
+{
+  if (mCx) {
+    return mCx;
+  } else {
+    return *mAutoJSContext;
+  }
+}
+
+AutoSafeJSContext::AutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+  : AutoJSContext(true MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
+  , mAc(mCx, XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContextGlobal())
+{
+}
+
+ThreadsafeAutoSafeJSContext::ThreadsafeAutoSafeJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+{
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  if (NS_IsMainThread()) {
+    mCx = nullptr;
+    mAutoSafeJSContext.emplace();
+  } else {
+    mCx = mozilla::dom::workers::GetCurrentThreadJSContext();
+    mRequest.emplace(mCx);
+  }
+}
+
+ThreadsafeAutoSafeJSContext::operator JSContext*() const
+{
+  if (mCx) {
+    return mCx;
+  } else {
+    return *mAutoSafeJSContext;
+  }
+}
+
 } // namespace mozilla

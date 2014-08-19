@@ -21,11 +21,10 @@
          changed dynamically. -->
     <ImageView android:id="@+id/url_bar_entry"
                style="@style/UrlBar.Button"
-               android:layout_marginLeft="4dp"
-               android:layout_marginRight="-15dp"
-               android:layout_marginTop="5dp"
-               android:layout_marginBottom="5dp"
-               android:layout_centerVertical="true"
+               android:layout_marginLeft="8dp"
+               android:layout_marginRight="-6dp"
+               android:layout_marginTop="8dp"
+               android:layout_marginBottom="8dp"
                android:layout_toLeftOf="@+id/tabs"
                android:duplicateParentState="true"
                android:clickable="false"
@@ -39,10 +38,9 @@
     <ImageView android:id="@+id/url_bar_translating_edge"
                style="@style/UrlBar.Button"
                android:layout_alignLeft="@id/url_bar_entry"
-               android:layout_toLeftOf="@+id/tabs"
+               android:layout_alignRight="@+id/url_bar_entry"
                android:layout_alignTop="@id/url_bar_entry"
                android:layout_alignBottom="@id/url_bar_entry"
-               android:layout_marginRight="-15dp"
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
@@ -55,7 +53,6 @@
 
     <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/menu"
                                             style="@style/UrlBar.ImageButton"
-                                            android:layout_width="48dip"
                                             android:layout_alignParentRight="true"
                                             android:contentDescription="@string/menu"
                                             android:background="@drawable/shaped_button"
@@ -71,14 +68,11 @@
 
     <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/tabs"
                                             style="@style/UrlBar.ImageButton"
-                                            android:layout_width="72dip"
+                                            android:layout_width="64dip"
                                             android:layout_toLeftOf="@id/menu"
                                             android:layout_alignWithParentIfMissing="true"
                                             gecko:curveTowards="right"
-                                            android:background="@drawable/shaped_button"
-                                            android:gravity="center_vertical"
-                                            android:paddingLeft="37dip"
-                                            android:paddingRight="11dip"/>
+                                            android:background="@drawable/shaped_button"/>
 
     <!-- The TextSwitcher should be shifted 24dp on the left, to avoid
          the curve. On a 48dp space, centering 24dp image will leave
@@ -90,21 +84,19 @@
                         style="@style/UrlBar.ImageButton.TabCount"
                         android:layout_width="24dip"
                         android:layout_height="24dip"
-                        android:layout_marginLeft="40dip"
+                        android:layout_centerVertical="true"
                         android:layout_marginRight="8dip"
-                        android:layout_marginTop="12dip"
                         android:layout_alignRight="@id/tabs"/>
 
     <!-- Note that the edit components are invisible so that the views
          depending on their location can properly layout. -->
     <org.mozilla.gecko.widget.ThemedImageView
             android:id="@+id/edit_cancel"
-            style="@style/UrlBar.ImageButton.Icon"
+            style="@style/UrlBar.ImageButton"
             android:layout_alignParentRight="true"
             android:src="@drawable/close_edit_mode_selector"
-            android:paddingLeft="2dp"
-            android:paddingRight="2dp"
             android:contentDescription="@string/edit_mode_cancel"
+            android:background="@drawable/action_bar_button"
             android:visibility="invisible"/>
 
     <!-- The space to the left of the cancel button would be larger than the right because
@@ -112,21 +104,17 @@
          some padding from the right (value determined through experimentation). -->
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
+                  android:layout_alignLeft="@id/url_bar_entry"
                   android:layout_toLeftOf="@id/edit_cancel"
-                  android:paddingLeft="12dp"
-                  android:paddingRight="6dp"
-                  android:visibility="invisible"/>
+                  android:visibility="invisible"
+                  android:paddingLeft="8dp"
+                  android:paddingRight="8dp"/>
 
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button"
-                  android:layout_toLeftOf="@id/tabs"
-                  android:layout_marginRight="-24dp"/>
-
-    <ImageView android:id="@+id/shadow"
-               android:layout_width="match_parent"
-               android:layout_height="2dp"
-               android:layout_alignParentBottom="true"
-               android:background="@color/url_bar_shadow"
-               android:contentDescription="@null"/>
+                  android:layout_alignLeft="@id/url_bar_entry"
+                  android:layout_alignRight="@id/url_bar_entry"
+                  android:paddingLeft="4dip"
+                  android:paddingRight="4dip"/>
 
 </merge>

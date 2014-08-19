@@ -54,8 +54,8 @@ js::AutoEnterPolicy::recordEnter(JSContext *cx, HandleObject proxy, HandleId id,
 {
     if (allowed()) {
         context = cx;
-        enteredProxy.construct(proxy);
-        enteredId.construct(id);
+        enteredProxy.emplace(proxy);
+        enteredId.emplace(id);
         enteredAction = act;
         prev = cx->runtime()->enteredPolicy;
         cx->runtime()->enteredPolicy = this;
@@ -65,7 +65,7 @@ js::AutoEnterPolicy::recordEnter(JSContext *cx, HandleObject proxy, HandleId id,
 void
 js::AutoEnterPolicy::recordLeave()
 {
-    if (!enteredProxy.empty()) {
+    if (enteredProxy) {
         JS_ASSERT(context->runtime()->enteredPolicy == this);
         context->runtime()->enteredPolicy = prev;
     }
@@ -77,8 +77,8 @@ js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id,
 {
     MOZ_ASSERT(proxy->is<ProxyObject>());
     MOZ_ASSERT(cx->runtime()->enteredPolicy);
-    MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredProxy.ref().get() == proxy);
-    MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredId.ref().get() == id);
+    MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredProxy->get() == proxy);
+    MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredId->get() == id);
     MOZ_ASSERT(cx->runtime()->enteredPolicy->enteredAction & act);
 }
 #endif
@@ -2834,7 +2834,7 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
 
 #ifdef DEBUG
     if (trc->runtime()->gc.isStrictProxyCheckingEnabled() && proxy->is<WrapperObject>()) {
-        JSObject *referent = &proxy->private_().toObject();
+        JSObject *referent = MaybeForwarded(&proxy->private_().toObject());
         if (referent->compartment() != proxy->compartment()) {
             /*
              * Assert that this proxy is tracked in the wrapper map. We maintain
@@ -2842,6 +2842,7 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
              */
             Value key = ObjectValue(*referent);
             WrapperMap::Ptr p = proxy->compartment()->lookupWrapper(key);
+            JS_ASSERT(p);
             JS_ASSERT(*p->value().unsafeGet() == ObjectValue(*proxy));
         }
     }

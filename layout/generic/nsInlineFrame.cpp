@@ -705,32 +705,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     aMetrics.ISize(lineWM) += framePadding.IEnd(frameWM);
   }
 
-  nsRefPtr<nsFontMetrics> fm;
-  float inflation = nsLayoutUtils::FontSizeInflationFor(this);
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm), inflation);
-  aReflowState.rendContext->SetFont(fm);
-
-  if (fm) {
-    // Compute final height of the frame.
-    //
-    // Do things the standard css2 way -- though it's hard to find it
-    // in the css2 spec! It's actually found in the css1 spec section
-    // 4.4 (you will have to read between the lines to really see
-    // it).
-    //
-    // The height of our box is the sum of our font size plus the top
-    // and bottom border and padding. The height of children do not
-    // affect our height.
-    aMetrics.SetBlockStartAscent(fm->MaxAscent());
-    aMetrics.BSize(lineWM) = fm->MaxHeight();
-  } else {
-    NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
-    aMetrics.SetBlockStartAscent(aMetrics.BSize(lineWM) = 0);
-  }
-  aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() +
-                               framePadding.BStart(frameWM));
-  aMetrics.BSize(lineWM) +=
-    aReflowState.ComputedLogicalBorderPadding().BStartEnd(frameWM);
+  nsLayoutUtils::SetBSizeFromFontMetrics(this, aMetrics, aReflowState,
+                                         framePadding, lineWM, frameWM);
 
   // For now our overflow area is zero. The real value will be
   // computed in |nsLineLayout::RelativePositionFrames|.

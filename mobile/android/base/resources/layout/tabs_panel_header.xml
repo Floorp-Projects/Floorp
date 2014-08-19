@@ -18,8 +18,6 @@
 
     <ImageButton android:id="@+id/add_tab"
                  style="@style/UrlBar.ImageButton"
-                 android:layout_width="@dimen/browser_toolbar_height"
-                 android:layout_height="@dimen/browser_toolbar_height"
                  android:padding="@dimen/browser_toolbar_button_padding"
                  android:src="@drawable/tab_new_level"
                  android:contentDescription="@string/new_tab"
@@ -27,12 +25,10 @@
 
     <ImageButton android:id="@+id/menu"
                  style="@style/UrlBar.ImageButton"
-                 android:layout_width="@dimen/browser_toolbar_height"
-                 android:layout_height="@dimen/browser_toolbar_height"
                  android:padding="@dimen/browser_toolbar_button_padding"
                  android:src="@drawable/menu_tabs"
                  android:contentDescription="@string/menu"
-                 android:background="@drawable/action_bar_button"
+                 android:background="@drawable/action_bar_button_inverse"
                  android:visibility="gone"/>
 
 </merge>

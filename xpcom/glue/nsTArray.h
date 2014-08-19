@@ -1172,6 +1172,19 @@ public:
     return elem;
   }
 
+  // Insert an element by move constructing aItem.
+  // @return a pointer to the inserted element or NULL on oom.
+  elem_type* InsertElementAt(index_type aIndex, elem_type&& aItem)
+  {
+    if (!Alloc::Successful(this->EnsureCapacity(Length() + 1,
+                                                sizeof(elem_type))))
+      return nullptr;
+    this->ShiftData(aIndex, 0, 1, sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    elem_type* elem = Elements() + aIndex;
+    nsTArrayElementTraits<elem_type>::Construct(elem, mozilla::Forward<elem_type>(aItem));
+    return elem;
+  }
+
   // This method searches for the smallest index of an element that is strictly
   // greater than |aItem|. If |aItem| is inserted at this index, the array will
   // remain sorted and |aItem| would come after all elements that are equal to

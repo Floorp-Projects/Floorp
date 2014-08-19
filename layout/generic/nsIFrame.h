@@ -36,6 +36,7 @@
 #include "gfx3DMatrix.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameState.h"
+#include "CaretAssociationHint.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -1256,10 +1257,10 @@ public:
     // numerical order, as opposed to wanting the primary and secondary offsets
     int32_t StartOffset() { return std::min(offset, secondaryOffset); }
     int32_t EndOffset() { return std::max(offset, secondaryOffset); }
-    // This boolean indicates whether the associated content is before or after
+    // This value indicates whether the associated content is before or after
     // the offset; the most visible use is to allow the caret to know which line
     // to display on.
-    bool associateWithNext;
+    mozilla::CaretAssociationHint associate;
   };
   enum {
     IGNORE_SELECTION_STYLE = 0x01,

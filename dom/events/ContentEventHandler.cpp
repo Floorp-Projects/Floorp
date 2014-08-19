@@ -118,11 +118,8 @@ ContentEventHandler::Init(WidgetQueryContentEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_AVAILABLE);
   aEvent->mReply.mHasSelection = !isCollapsed;
 
-  nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
-  NS_ASSERTION(caret, "GetCaret returned null");
-
   nsRect r;
-  nsIFrame* frame = caret->GetGeometry(mSelection, &r);
+  nsIFrame* frame = nsCaret::GetGeometry(mSelection, &r);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   aEvent->mReply.mFocusedWidget = frame->GetNearestWidget();
@@ -443,8 +440,8 @@ ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
 
   nsRefPtr<nsFrameSelection> fs = mPresShell->FrameSelection();
   int32_t offsetInFrame;
-  nsFrameSelection::HINT hint =
-    aForward ? nsFrameSelection::HINTLEFT : nsFrameSelection::HINTRIGHT;
+  CaretAssociationHint hint =
+    aForward ? CARET_ASSOCIATE_BEFORE : CARET_ASSOCIATE_AFTER;
   nsIFrame* frame = fs->GetFrameForNodeOffset(aContent, int32_t(*aXPOffset),
                                               hint, &offsetInFrame);
   if (!frame) {
@@ -843,14 +840,14 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
 
-  nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
-  NS_ASSERTION(caret, "GetCaret returned null");
-
   // When the selection is collapsed and the queried offset is current caret
   // position, we should return the "real" caret rect.
   bool selectionIsCollapsed;
   rv = mSelection->GetIsCollapsed(&selectionIsCollapsed);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRect caretRect;
+  nsIFrame* caretFrame = nsCaret::GetGeometry(mSelection, &caretRect);
 
   if (selectionIsCollapsed) {
     uint32_t offset;
@@ -858,15 +855,13 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
                                   lineBreakType);
     NS_ENSURE_SUCCESS(rv, rv);
     if (offset == aEvent->mInput.mOffset) {
-      nsRect rect;
-      nsIFrame* caretFrame = caret->GetGeometry(mSelection, &rect);
       if (!caretFrame) {
         return NS_ERROR_FAILURE;
       }
-      rv = ConvertToRootViewRelativeOffset(caretFrame, rect);
+      rv = ConvertToRootViewRelativeOffset(caretFrame, caretRect);
       NS_ENSURE_SUCCESS(rv, rv);
       aEvent->mReply.mRect =
-        rect.ToOutsidePixels(caretFrame->PresContext()->AppUnitsPerDevPixel());
+        caretRect.ToOutsidePixels(caretFrame->PresContext()->AppUnitsPerDevPixel());
       aEvent->mReply.mOffset = aEvent->mInput.mOffset;
       aEvent->mSucceeded = true;
       return NS_OK;
@@ -892,7 +887,7 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
   nsRect rect;
   rect.x = posInFrame.x;
   rect.y = posInFrame.y;
-  rect.width = caret->GetCaretRect().width;
+  rect.width = caretRect.width;
   rect.height = frame->GetSize().height;
 
   rv = ConvertToRootViewRelativeOffset(frame, rect);

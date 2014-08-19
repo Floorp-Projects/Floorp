@@ -1250,8 +1250,8 @@ js_DateGetMsecSinceEpoch(JSObject *obj);
  * string and its arguments.
  */
 typedef enum JSErrNum {
-#define MSG_DEF(name, number, count, exception, format) \
-    name = number,
+#define MSG_DEF(name, count, exception, format) \
+    name,
 #include "js.msg"
 #undef MSG_DEF
     JSErr_Limit
@@ -1287,7 +1287,7 @@ class MOZ_STACK_CLASS AutoStableStringChars
     bool ownsChars_;
 
   public:
-    AutoStableStringChars(JSContext *cx)
+    explicit AutoStableStringChars(JSContext *cx)
       : s_(cx), state_(Uninitialized), ownsChars_(false)
     {};
     ~AutoStableStringChars();
@@ -1339,7 +1339,7 @@ ErrorReportToString(JSContext *cx, JSErrorReport *reportp);
 
 struct MOZ_STACK_CLASS JS_FRIEND_API(ErrorReport)
 {
-    ErrorReport(JSContext *cx);
+    explicit ErrorReport(JSContext *cx);
     ~ErrorReport();
 
     bool init(JSContext *cx, JS::HandleValue exn);

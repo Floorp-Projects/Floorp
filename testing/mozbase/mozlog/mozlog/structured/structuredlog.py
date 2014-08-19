@@ -7,9 +7,12 @@ from __future__ import unicode_literals
 from multiprocessing import current_process
 from threading import current_thread, Lock
 import json
+import sys
 import time
+import traceback
 
-from logtypes import Unicode, TestId, Status, SubStatus, Dict, List, log_action, convertor_registry
+from logtypes import Unicode, TestId, Status, SubStatus, Dict, List, Int, Any
+from logtypes import log_action, convertor_registry
 
 """Structured Logging for recording test results.
 
@@ -91,6 +94,7 @@ class LoggerState(object):
         self.handlers = []
         self.running_tests = set()
         self.suite_started = False
+
 
 class StructuredLogger(object):
     _lock = Lock()
@@ -295,16 +299,43 @@ class StructuredLogger(object):
         """
         self._log_data("process_output", data)
 
+    @log_action(Unicode("process", default=None),
+                Unicode("signature", default="[Unknown]"),
+                TestId("test", default=None, optional=True),
+                Unicode("minidump_path", default=None, optional=True),
+                Unicode("minidump_extra", default=None, optional=True),
+                Int("stackwalk_retcode", default=None, optional=True),
+                Unicode("stackwalk_stdout", default=None, optional=True),
+                Unicode("stackwalk_stderr", default=None, optional=True),
+                List("stackwalk_errors", Unicode, default=None))
+    def crash(self, data):
+        if data["stackwalk_errors"] is None:
+            data["stackwalk_errors"] = []
+
+        self._log_data("crash", data)
 
 def _log_func(level_name):
-    @log_action(Unicode("message"))
+    @log_action(Unicode("message"),
+                Any("exc_info", default=False))
     def log(self, data):
+        exc_info = data.pop("exc_info", None)
+        if exc_info:
+            if not isinstance(exc_info, tuple):
+                exc_info = sys.exc_info()
+            if exc_info != (None, None, None):
+                bt = traceback.format_exception(*exc_info)
+                data["stack"] = u"\n".join(bt)
+
         data["level"] = level_name
         self._log_data("log", data)
 
     log.__doc__ = """Log a message with level %s
 
 :param message: The string message to log
+:param exc_info: Either a boolean indicating whether to include a traceback
+                 derived from sys.exc_info() or a three-item tuple in the
+                 same format as sys.exc_info() containing exception information
+                 to log.
 """ % level_name
     log.__name__ = str(level_name).lower()
     return log

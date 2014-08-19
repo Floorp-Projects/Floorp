@@ -18,7 +18,6 @@
 #include "mozilla/dom/ProgressEvent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 
@@ -1849,8 +1848,8 @@ XMLHttpRequest::SendInternal(const nsAString& aStringBody,
   nsCOMPtr<nsIEventTarget> syncLoopTarget;
   bool isSyncXHR = mProxy->mIsSyncXHR;
   if (isSyncXHR) {
-    autoSyncLoop.construct(mWorkerPrivate);
-    syncLoopTarget = autoSyncLoop.ref().EventTarget();
+    autoSyncLoop.emplace(mWorkerPrivate);
+    syncLoopTarget = autoSyncLoop->EventTarget();
   }
 
   mProxy->mOuterChannelId++;
@@ -1867,13 +1866,13 @@ XMLHttpRequest::SendInternal(const nsAString& aStringBody,
 
   if (!isSyncXHR)  {
     autoUnpin.Clear();
-    MOZ_ASSERT(autoSyncLoop.empty());
+    MOZ_ASSERT(!autoSyncLoop);
     return;
   }
 
   autoUnpin.Clear();
 
-  if (!autoSyncLoop.ref().Run()) {
+  if (!autoSyncLoop->Run()) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
 }

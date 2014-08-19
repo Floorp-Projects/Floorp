@@ -49,7 +49,6 @@ protected:
     : mEntryName(inEntryName)
     , mEntryType(inType)
     {
-      memset(&mData, 0, sizeof(mData));
       Reset(mEntryType);
     }
 
@@ -80,10 +79,7 @@ protected:
     
     ~HashEntry()
     {
-      if (mEntryType == eWStringType)
-        delete mData.mString;
-      else if (mEntryType == eStringType)
-        delete mData.mCString;
+      Reset(eNoType);
     }
     
     void Reset(uint8_t inNewType)
@@ -110,9 +106,9 @@ protected:
   HashEntry*          GetNamedEntry(const char * name);
   HashEntry*          GetIndexedEntry(int32_t index);
   uint32_t            GetNumEntries();
-  
-  nsresult            GetOrMakeEntry(const char * name, uint8_t entryType, HashEntry*& outEntry);
-  
+
+  HashEntry*          GetOrMakeEntry(const char * name, uint8_t entryType);
+
 protected:
 
   static PLDHashNumber HashKey(PLDHashTable *table, const void *key);

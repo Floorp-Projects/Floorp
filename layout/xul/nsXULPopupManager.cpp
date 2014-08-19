@@ -745,8 +745,8 @@ nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
 }
 
 static void
-CheckCaretDrawingState() {
-
+CheckCaretDrawingState()
+{
   // There is 1 caret per document, we need to find the focused
   // document and erase its caret.
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -770,7 +770,7 @@ CheckCaretDrawingState() {
     nsRefPtr<nsCaret> caret = presShell->GetCaret();
     if (!caret)
       return;
-    caret->CheckCaretDrawingState();
+    caret->SchedulePaint();
   }
 }
 

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:imeOptions="actionSearch"
-        android:inputType="textNoSuggestions|textVisiblePassword"
+        android:inputType="textNoSuggestions"
         android:drawableLeft="@drawable/search_icon_inactive"
         android:drawablePadding="5dp"
         android:textSize="@dimen/query_text_size"

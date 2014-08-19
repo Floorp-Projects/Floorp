@@ -30,7 +30,6 @@
 #include "nsAutoPtr.h"
 #include "nsIWidget.h"
 #include "nsStyleSet.h"
-#include "nsFrameSelection.h"
 #include "nsContentUtils.h" // For AddScriptBlocker().
 #include "nsRefreshDriver.h"
 #include "mozilla/Attributes.h"
@@ -229,7 +228,6 @@ public:
   virtual mozilla::dom::Element* GetSelectionCaretsEndElement() const MOZ_OVERRIDE;
   // caret handling
   virtual already_AddRefed<nsCaret> GetCaret() const MOZ_OVERRIDE;
-  virtual void MaybeInvalidateCaretPosition() MOZ_OVERRIDE;
   NS_IMETHOD SetCaretEnabled(bool aInEnable) MOZ_OVERRIDE;
   NS_IMETHOD SetCaretReadOnly(bool aReadOnly) MOZ_OVERRIDE;
   NS_IMETHOD GetCaretEnabled(bool *aOutEnabled) MOZ_OVERRIDE;
@@ -276,7 +274,6 @@ public:
   NS_DECL_NSIDOCUMENTOBSERVER_STYLERULEREMOVED
 
   // nsIMutationObserver
-  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -548,17 +545,7 @@ protected:
   // Utility method to restore the root scrollframe state
   void RestoreRootScrollPosition();
 
-  void MaybeReleaseCapturingContent()
-  {
-    nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
-    if (frameSelection) {
-      frameSelection->SetDragState(false);
-    }
-    if (gCaptureInfo.mContent &&
-        gCaptureInfo.mContent->OwnerDoc() == mDocument) {
-      SetCapturingContent(nullptr, 0);
-    }
-  }
+  void MaybeReleaseCapturingContent();
 
   nsresult HandleRetargetedEvent(mozilla::WidgetEvent* aEvent,
                                  nsEventStatus* aStatus,

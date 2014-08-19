@@ -1550,7 +1550,10 @@ ia64*-hpux*)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks -fno-reorder-functions"
+    MOZ_OPTIMIZE_FLAGS="-O3 -fno-reorder-functions"
+    if test -z "$CLANG_CC"; then
+       MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+    fi
     # The Maemo builders don't know about this flag
     MOZ_ARM_VFP_FLAGS="-mfpu=vfp"
     ;;
@@ -1569,7 +1572,10 @@ ia64*-hpux*)
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
-        MOZ_OPTIMIZE_FLAGS="-O3 -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-O3 $MOZ_OPTIMIZE_SIZE_TWEAK"
+        if test -z "$CLANG_CC"; then
+           MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+        fi
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -1648,7 +1654,7 @@ ia64*-hpux*)
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy"
         CXXFLAGS="$CXXFLAGS -W3 -Gy"
-        if test "$_CC_SUITE" -ge "11"; then
+        if test "$_CC_SUITE" -ge "11" -a "$CPU_ARCH" = "x86"; then
             dnl VS2012+ defaults to -arch:SSE2.
             CFLAGS="$CFLAGS -arch:IA32"
             CXXFLAGS="$CXXFLAGS -arch:IA32"
@@ -3112,6 +3118,18 @@ MOZ_ARG_DISABLE_BOOL(exact-rooting,
     JSGC_USE_EXACT_ROOTING=1 )
 if test -n "$JSGC_USE_EXACT_ROOTING"; then
     AC_DEFINE(JSGC_USE_EXACT_ROOTING)
+fi
+
+dnl ========================================================
+dnl = Use compacting GC
+dnl ========================================================
+dnl Compact the heap by moving GC things when doing a shrinking colletion.
+MOZ_ARG_ENABLE_BOOL(gccompacting,
+[  --enable-gccompacting   Compact the heap by moving GC things],
+    JSGC_COMPACTING=1,
+    JSGC_COMPACTING= )
+if test -n "$JSGC_COMPACTING"; then
+    AC_DEFINE(JSGC_COMPACTING)
 fi
 
 dnl ========================================================

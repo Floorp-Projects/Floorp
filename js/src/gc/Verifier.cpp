@@ -182,7 +182,7 @@ gc::GCRuntime::startVerifyPreBarriers()
     if (verifyPostData)
         return;
 
-    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+    evictNursery();
 
     AutoPrepareForTracing prep(rt, WithAtoms);
 
@@ -410,7 +410,7 @@ gc::GCRuntime::startVerifyPostBarriers()
         return;
     }
 
-    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+    evictNursery();
 
     number++;
 

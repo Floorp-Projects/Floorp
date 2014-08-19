@@ -1992,7 +1992,10 @@ ia64*-hpux*)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions"
+    MOZ_OPTIMIZE_FLAGS="-Os -fno-reorder-functions"
+    if test -z "$CLANG_CC"; then
+       MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+    fi
     ;;
 
 *-*linux*)
@@ -2009,7 +2012,10 @@ ia64*-hpux*)
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
         MOZ_PGO_OPTIMIZE_FLAGS="-O3"
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-Os $MOZ_OPTIMIZE_SIZE_TWEAK"
+        if test -z "$CLANG_CC"; then
+           MOZ_OPTIMIZE_FLAGS="-freorder-blocks $MOZ_OPTIMIZE_FLAGS"
+        fi
     fi
 
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
@@ -2094,7 +2100,7 @@ ia64*-hpux*)
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy"
         CXXFLAGS="$CXXFLAGS -W3 -Gy"
-        if test "$_CC_SUITE" -ge "11"; then
+        if test "$_CC_SUITE" -ge "11" -a "$CPU_ARCH" = "x86"; then
             dnl VS2012+ defaults to -arch:SSE2.
             CFLAGS="$CFLAGS -arch:IA32"
             CXXFLAGS="$CXXFLAGS -arch:IA32"
@@ -3779,7 +3785,7 @@ MOZ_WMF=
 if test -n "$MOZ_FMP4"; then
   MOZ_FMP4=1
 else
-  MOZ_FMP4 =
+  MOZ_FMP4=
 fi
 MOZ_EME=1
 MOZ_FFMPEG=
@@ -3826,7 +3832,7 @@ MOZ_XUL=1
 MOZ_ZIPWRITER=1
 NS_PRINTING=1
 MOZ_PDF_PRINTING=
-MOZ_DISABLE_CRYPTOLEGACY=
+MOZ_NO_SMART_CARDS=
 NSS_DISABLE_DBM=
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about app data file ftp http res viewsource websocket wyciwyg device"
@@ -6342,12 +6348,12 @@ fi
 AC_SUBST(MOZ_DISABLE_PARENTAL_CONTROLS)
 
 dnl ========================================================
-dnl = Disable DOMCrypto
+dnl = Disable smartcard support
 dnl ========================================================
-if test -n "$MOZ_DISABLE_CRYPTOLEGACY"; then
-    AC_DEFINE(MOZ_DISABLE_CRYPTOLEGACY)
+if test -n "$MOZ_NO_SMART_CARDS"; then
+    AC_DEFINE(MOZ_NO_SMART_CARDS)
 fi
-AC_SUBST(MOZ_DISABLE_CRYPTOLEGACY)
+AC_SUBST(MOZ_NO_SMART_CARDS)
 
 dnl ========================================================
 dnl = Disable EV certificate verification
@@ -7146,6 +7152,17 @@ MOZ_ARG_DISABLE_BOOL(gcgenerational,
     JSGC_GENERATIONAL=1 )
 if test -n "$JSGC_GENERATIONAL"; then
     AC_DEFINE(JSGC_GENERATIONAL)
+fi
+
+dnl ========================================================
+dnl = Use compacting GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gccompacting,
+[  --enable-gccompacting   Compact the JS heap by moving GC things],
+    JS_GCCOMPACTING=1,
+    JS_GCCOMPACTING= )
+if test -n "$JS_GCCOMPACTING"; then
+    AC_DEFINE(JS_GCCOMPACTING)
 fi
 
 dnl ========================================================
@@ -8323,10 +8340,6 @@ if test "$MOZ_APP_COMPONENT_INCLUDE"; then
   AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_INCLUDE, "$MOZ_APP_COMPONENT_INCLUDE")
 fi
 
-if test "$MOZ_APP_COMPONENT_MODULES"; then
-  AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_MODULES, $MOZ_APP_COMPONENT_MODULES)
-fi
-
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
@@ -8720,7 +8733,6 @@ AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
-AC_SUBST_LIST(MOZ_APP_EXTRA_LIBS)
 
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
@@ -8894,8 +8906,6 @@ if test -z "$JS_SHARED_LIBRARY"; then
   AC_DEFINE(MOZ_STATIC_JS)
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
-
-AC_SUBST(UPLOAD_EXTRA_FILES)
 
 MOZ_CREATE_CONFIG_STATUS()
 
@@ -9110,6 +9120,9 @@ if test -z "$JSGC_USE_EXACT_ROOTING" ; then
 fi
 if test -z "$JSGC_GENERATIONAL" ; then
     ac_configure_args="$ac_configure_args --disable-gcgenerational"
+fi
+if test -n "$JS_GCCOMPACTING" ; then
+    ac_configure_args="$ac_configure_args --enable-gccompacting"
 fi
 if test -n "$JS_GC_SMALL_CHUNK_SIZE" ; then
     ac_configure_args="$ac_configure_args --enable-small-chunk-size"

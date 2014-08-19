@@ -17,7 +17,6 @@
 #include "mozilla/Preferences.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -59,7 +58,6 @@ class Telephony::Callback : public nsITelephonyCallback
   nsRefPtr<Telephony> mTelephony;
   nsRefPtr<Promise> mPromise;
   uint32_t mServiceId;
-  nsString mNumber;
 
   virtual ~Callback() {}
 
@@ -68,8 +66,7 @@ public:
 
   Callback(Telephony* aTelephony, Promise* aPromise, uint32_t aServiceId,
            const nsAString& aNumber)
-    : mTelephony(aTelephony), mPromise(aPromise), mServiceId(aServiceId),
-      mNumber(aNumber)
+    : mTelephony(aTelephony), mPromise(aPromise), mServiceId(aServiceId)
   {
     MOZ_ASSERT(mTelephony);
   }
@@ -82,9 +79,9 @@ public:
   }
 
   NS_IMETHODIMP
-  NotifyDialSuccess(uint32_t aCallIndex)
+  NotifyDialSuccess(uint32_t aCallIndex, const nsAString& aNumber)
   {
-    nsRefPtr<TelephonyCallId> id = mTelephony->CreateCallId(mNumber);
+    nsRefPtr<TelephonyCallId> id = mTelephony->CreateCallId(aNumber);
     nsRefPtr<TelephonyCall> call =
       mTelephony->CreateCall(id, mServiceId, aCallIndex,
                              nsITelephonyService::CALL_STATE_DIALING);

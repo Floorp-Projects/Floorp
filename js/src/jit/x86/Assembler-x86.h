@@ -190,6 +190,10 @@ class Assembler : public AssemblerX86Shared
 
     static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
 
+    static bool SupportsFloatingPoint() {
+        return JSC::MacroAssemblerX86Common::isSSE2Present();
+    }
+
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
     void executableCopy(uint8_t *buffer);

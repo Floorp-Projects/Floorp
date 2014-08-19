@@ -63,13 +63,13 @@ class MessageChannel : HasResultCodes
     // "Open" from the perspective of the transport layer; the underlying
     // socketpair/pipe should already be created.
     //
-    // Returns true iff the transport layer was successfully connected,
+    // Returns true if the transport layer was successfully connected,
     // i.e., mChannelState == ChannelConnected.
     bool Open(Transport* aTransport, MessageLoop* aIOLoop=0, Side aSide=UnknownSide);
 
     // "Open" a connection to another thread in the same process.
     //
-    // Returns true iff the transport layer was successfully connected,
+    // Returns true if the transport layer was successfully connected,
     // i.e., mChannelState == ChannelConnected.
     //
     // For more details on the process of opening a channel between
@@ -88,6 +88,19 @@ class MessageChannel : HasResultCodes
     {
         mAbortOnError = true;
     }
+
+    // Misc. behavioral traits consumers can request for this channel
+    enum ChannelFlags {
+      REQUIRE_DEFAULT                         = 0,
+      // Windows: if this channel operates on the UI thread, indicates
+      // WindowsMessageLoop code should enable deferred native message
+      // handling to prevent deadlocks. Should only be used for protocols
+      // that manage child processes which might create native UI, like
+      // plugins.
+      REQUIRE_DEFERRED_MESSAGE_PROTECTION     = 1 << 0
+    };
+    void SetChannelFlags(ChannelFlags aFlags) { mFlags = aFlags; }
+    ChannelFlags GetChannelFlags() { return mFlags; }
 
     void BlockScripts();
 
@@ -649,6 +662,9 @@ class MessageChannel : HasResultCodes
 
     // Should we prevent scripts from running while dispatching urgent messages?
     bool mBlockScripts;
+
+    // See SetChannelFlags
+    ChannelFlags mFlags;
 };
 
 bool

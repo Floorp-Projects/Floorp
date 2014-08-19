@@ -27,6 +27,7 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "ClientLayerManager.h"
+#include "FrameLayerBuilder.h"
 
 typedef nsContentView::ViewConfig ViewConfig;
 using namespace mozilla::dom;

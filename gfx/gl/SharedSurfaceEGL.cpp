@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace gl {
 
-SharedSurface_EGLImage*
+/*static*/ UniquePtr<SharedSurface_EGLImage>
 SharedSurface_EGLImage::Create(GLContext* prodGL,
                                const GLFormats& formats,
                                const gfx::IntSize& size,
@@ -27,14 +27,16 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
     MOZ_ASSERT(egl);
     MOZ_ASSERT(context);
 
+    UniquePtr<SharedSurface_EGLImage> ret;
+
     if (!HasExtensions(egl, prodGL)) {
-        return nullptr;
+        return Move(ret);
     }
 
     MOZ_ALWAYS_TRUE(prodGL->MakeCurrent());
     GLuint prodTex = CreateTextureForOffscreen(prodGL, formats, size);
     if (!prodTex) {
-        return nullptr;
+        return Move(ret);
     }
 
     EGLClientBuffer buffer = reinterpret_cast<EGLClientBuffer>(prodTex);
@@ -43,14 +45,13 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
                                        nullptr);
     if (!image) {
         prodGL->fDeleteTextures(1, &prodTex);
-        return nullptr;
+        return Move(ret);
     }
 
-    return new SharedSurface_EGLImage(prodGL, egl,
-                                      size, hasAlpha,
-                                      formats, prodTex, image);
+    ret.reset( new SharedSurface_EGLImage(prodGL, egl, size, hasAlpha,
+                                          formats, prodTex, image) );
+    return Move(ret);
 }
-
 
 bool
 SharedSurface_EGLImage::HasExtensions(GLLibraryEGL* egl, GLContext* gl)
@@ -85,7 +86,6 @@ SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl,
 SharedSurface_EGLImage::~SharedSurface_EGLImage()
 {
     mEGL->fDestroyImage(Display(), mImage);
-    mImage = 0;
 
     mGL->MakeCurrent();
     mGL->fDeleteTextures(1, &mProdTex);
@@ -216,18 +216,21 @@ SharedSurface_EGLImage::AcquireConsumerTexture(GLContext* consGL, GLuint* out_te
 }
 
 
-SurfaceFactory_EGLImage*
+/*static*/ UniquePtr<SurfaceFactory_EGLImage>
 SurfaceFactory_EGLImage::Create(GLContext* prodGL,
-                                        const SurfaceCaps& caps)
+                                const SurfaceCaps& caps)
 {
     EGLContext context = GLContextEGL::Cast(prodGL)->GetEGLContext();
 
+    typedef SurfaceFactory_EGLImage ptrT;
+    UniquePtr<ptrT> ret;
+
     GLLibraryEGL* egl = &sEGLLibrary;
-    if (!SharedSurface_EGLImage::HasExtensions(egl, prodGL)) {
-        return nullptr;
+    if (SharedSurface_EGLImage::HasExtensions(egl, prodGL)) {
+        ret.reset( new ptrT(prodGL, context, caps) );
     }
 
-    return new SurfaceFactory_EGLImage(prodGL, context, caps);
+    return Move(ret);
 }
 
 } /* namespace gfx */

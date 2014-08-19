@@ -553,8 +553,8 @@ jit::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
                 !inst->isControlInstruction())
             {
                 inst = block->discardAt(inst);
-            } else if (!inst->isRecoveredOnBailout() && !inst->hasLiveDefUses() &&
-                       inst->canRecoverOnBailout())
+            } else if (!inst->isRecoveredOnBailout() && !inst->isGuard() &&
+                       !inst->hasLiveDefUses() && inst->canRecoverOnBailout())
             {
                 inst->setRecoveredOnBailout();
                 inst++;

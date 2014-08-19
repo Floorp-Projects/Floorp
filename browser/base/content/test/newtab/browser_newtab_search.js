@@ -186,6 +186,16 @@ function runTests() {
   EventUtils.synthesizeKey("VK_DELETE", {});
   ok(table.hidden, "Search suggestion table hidden");
 
+  // Focus a different element than the search input.
+  let btn = getContentDocument().getElementById("newtab-customize-button");
+  yield promiseClick(btn).then(TestRunner.next);
+
+  isnot(input, getContentDocument().activeElement, "Search input should not be focused");
+  // Test that Ctrl/Cmd + K will focus the input field.
+  EventUtils.synthesizeKey("k", { accelKey: true });
+  yield promiseSearchEvents(["FocusInput"]).then(TestRunner.next);
+  is(input, getContentDocument().activeElement, "Search input should be focused");
+
   // Done.  Revert the current engine and remove the new engines.
   Services.search.currentEngine = oldCurrentEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);

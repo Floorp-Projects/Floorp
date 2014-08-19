@@ -254,8 +254,9 @@ struct JSCompartment
     js::types::TypeObjectWithNewScriptSet newTypeObjects;
     js::types::TypeObjectWithNewScriptSet lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
-#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
-    void checkNewTypeObjectTableAfterMovingGC();
+#ifdef JSGC_HASH_TABLE_CHECKS
+    void checkNewTypeObjectTablesAfterMovingGC();
+    void checkNewTypeObjectTableAfterMovingGC(js::types::TypeObjectWithNewScriptSet &table);
     void checkInitialShapesTableAfterMovingGC();
     void checkWrapperMapAfterMovingGC();
 #endif
@@ -346,6 +347,14 @@ struct JSCompartment
     void purge();
     void clearTables();
 
+#ifdef JSGC_COMPACTING
+    void fixupInitialShapeTable();
+    void fixupNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
+    void fixupCrossCompartmentWrappers(JSTracer *trc);
+    void fixupAfterMovingGC();
+    void fixupGlobal();
+#endif
+
     bool hasObjectMetadataCallback() const { return objectMetadataCallback; }
     void setObjectMetadataCallback(js::ObjectMetadataCallback callback);
     void forgetObjectMetadataCallback() {
@@ -414,8 +423,8 @@ struct JSCompartment
 
   public:
     js::GlobalObjectSet &getDebuggees() { return debuggees; }
-    bool addDebuggee(JSContext *cx, js::GlobalObject *global);
-    bool addDebuggee(JSContext *cx, js::GlobalObject *global,
+    bool addDebuggee(JSContext *cx, JS::Handle<js::GlobalObject *> global);
+    bool addDebuggee(JSContext *cx, JS::Handle<js::GlobalObject *> global,
                      js::AutoDebugModeInvalidation &invalidate);
     bool removeDebuggee(JSContext *cx, js::GlobalObject *global,
                         js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);

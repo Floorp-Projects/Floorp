@@ -34,6 +34,8 @@ pref("general.warnOnAboutConfig", true);
 // maximum number of dated backups to keep at any time
 pref("browser.bookmarks.max_backups",       5);
 
+// Delete HTTP cache v1 data
+pref("browser.cache.auto_delete_cache_version", 0);
 // Preference for switching the cache backend, can be changed freely at runtime
 // 0 - use the old (Darin's) cache
 // 1 - use the new cache back-end (cache v2)
@@ -456,8 +458,8 @@ pref("apz.zoom_animation_duration_ms", 250);
 pref("apz.subframe.enabled", true);
 pref("apz.fling_repaint_interval", 16);
 pref("apz.pan_repaint_interval", 16);
-pref("apz.apz.x_skate_size_multiplier", "2.5");
-pref("apz.apz.y_skate_size_multiplier", "3.5");
+pref("apz.x_skate_size_multiplier", "2.5");
+pref("apz.y_skate_size_multiplier", "3.5");
 #else
 pref("apz.subframe.enabled", false);
 pref("apz.fling_repaint_interval", 75);
@@ -572,14 +574,16 @@ pref("accessibility.browsewithcaret_shortcut.enabled", true);
 // unless accessibility.tabfocus is set by the user.
 pref("accessibility.tabfocus", 7);
 pref("accessibility.tabfocus_applies_to_xul", false);
-
-// On OS X, we follow the "Click in the scrollbar to:" system preference
-// unless this preference was set manually
-pref("ui.scrollToClick", 0);
-
 #else
 // Only on mac tabfocus is expected to handle UI widgets as well as web content
 pref("accessibility.tabfocus_applies_to_xul", true);
+#endif
+
+// We follow the "Click in the scrollbar to:" system preference on OS X and
+// "gtk-primary-button-warps-slider" property with GTK (since 2.24 / 3.6),
+// unless this preference is explicitly set.
+#if !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GTK)
+pref("ui.scrollToClick", 0);
 #endif
 
 // provide ability to turn on support for canvas focus rings
@@ -2820,6 +2824,13 @@ pref("intl.tsf.support_imm", true);
 
 // Whether creates native caret for ATOK or not.
 pref("intl.tsf.hack.atok.create_native_caret", true);
+// Whether use composition start position for the result of
+// ITfContextView::GetTextExt() if the specified range is larger than
+// composition start offset.
+// For Free ChangJie 2010
+pref("intl.tsf.hack.free_chang_jie.do_not_return_no_layout_error", true);
+// For Easy Changjei
+pref("intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
 #endif
 
 // See bug 448927, on topmost panel, some IMEs are not usable on Windows.

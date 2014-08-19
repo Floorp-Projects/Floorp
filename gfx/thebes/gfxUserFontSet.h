@@ -86,7 +86,7 @@ class gfxMixedFontFamily : public gfxFontFamily {
 public:
     friend class gfxUserFontSet;
 
-    gfxMixedFontFamily(const nsAString& aName)
+    explicit gfxMixedFontFamily(const nsAString& aName)
         : gfxFontFamily(aName) { }
 
     virtual ~gfxMixedFontFamily() { }
@@ -373,7 +373,7 @@ public:
             typedef const Key& KeyType;
             typedef const Key* KeyTypePointer;
 
-            Entry(KeyTypePointer aKey)
+            explicit Entry(KeyTypePointer aKey)
                 : mURI(aKey->mURI),
                   mPrincipal(aKey->mPrincipal),
                   mCRC32(aKey->mCRC32),
