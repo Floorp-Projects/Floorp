@@ -664,8 +664,6 @@ public:
   void SettingValue(bool aValue) { mSettingValue = aValue; }
   void SetValueChanged(bool aSetValueChanged) { mSetValueChanged = aSetValueChanged; }
 
-  bool IsInEditAction() const { return mInEditAction; }
-
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSISELECTIONLISTENER
@@ -710,10 +708,6 @@ protected:
    * |SetValueChanged| to be called.
    */
   bool mSetValueChanged;
-  /**
-   * mInEditAction is true while editor handling an edit action.
-   */
-  bool mInEditAction;
 };
 
 
@@ -729,7 +723,6 @@ nsTextInputListener::nsTextInputListener(nsITextControlElement* aTxtCtrlElement)
 , mHadRedoItems(false)
 , mSettingValue(false)
 , mSetValueChanged(true)
-, mInEditAction(false)
 {
 }
 
@@ -896,8 +889,6 @@ nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsTextInputListener::EditAction()
 {
-  mInEditAction = false;
-
   nsWeakFrame weakFrame = mFrame;
 
   nsITextControlFrame* frameBase = do_QueryFrame(mFrame);
@@ -943,14 +934,12 @@ nsTextInputListener::EditAction()
 NS_IMETHODIMP
 nsTextInputListener::BeforeEditAction()
 {
-  mInEditAction = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTextInputListener::CancelEditAction()
 {
-  mInEditAction = false;
   return NS_OK;
 }
 
@@ -1529,10 +1518,11 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   NS_ASSERTION(!aFrame || aFrame == mBoundFrame, "Unbinding from the wrong frame");
   NS_ENSURE_TRUE_VOID(!aFrame || aFrame == mBoundFrame);
 
-  // If the editor is modified, we need to notify it here because editor may be
-  // destroyed before EditAction() is called if selection listener causes
-  // flushing layout.
-  if (mTextListener && mTextListener->IsInEditAction()) {
+  // If the editor is modified but nsIEditorObserver::EditAction() hasn't been
+  // called yet, we need to notify it here because editor may be destroyed
+  // before EditAction() is called if selection listener causes flushing layout.
+  if (mTextListener && mEditor && mEditorInitialized &&
+      mEditor->GetIsInEditAction()) {
     mTextListener->EditAction();
   }
 

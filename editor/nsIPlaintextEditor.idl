@@ -5,7 +5,7 @@
  
 #include "nsISupports.idl"
 
-[scriptable, uuid(07b6d070-ccea-4a00-84b4-f4b94dd9eb52)]
+[builtinclass, scriptable, uuid(da8f244b-6ffc-4be1-8b1a-667abfe1d304)]
 interface nsIPlaintextEditor : nsISupports
 {
 
