@@ -25,6 +25,7 @@
 #include "builtin/SIMD.h"
 #include "builtin/SymbolObject.h"
 #include "builtin/TypedObject.h"
+#include "builtin/WeakSetObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
