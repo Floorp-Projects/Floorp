@@ -27,15 +27,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef assembler_assembler_X86Assembler_h
-#define assembler_assembler_X86Assembler_h
+#ifndef jit_shared_BaseAssembler_x86_shared_h
+#define jit_shared_BaseAssembler_x86_shared_h
 
 #include <stdarg.h>
 
-#include "assembler/assembler/AssemblerBuffer.h"
+#include "jit/shared/AssemblerBuffer-x86-shared.h"
+
 #include "js/Vector.h"
 
-namespace JSC {
+namespace js {
+namespace jit {
 
 inline bool CAN_SIGN_EXTEND_8_32(int32_t value) { return value == (int32_t)(signed char)value; }
 inline bool CAN_ZERO_EXTEND_8_32(int32_t value) { return value == (int32_t)(unsigned char)value; }
@@ -4443,6 +4445,7 @@ private:
     } m_formatter;
 };
 
-} // namespace JSC
+} // namespace jit
+} // namespace js
 
-#endif /* assembler_assembler_X86Assembler_h */
+#endif /* jit_shared_BaseAssembler_x86_shared_h */
