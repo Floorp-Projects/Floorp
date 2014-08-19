@@ -255,6 +255,11 @@ NetAddrElement::NetAddrElement(const NetAddrElement& netAddr)
   mAddress = netAddr.mAddress;
 }
 
+NetAddrElement::NetAddrElement(const NetAddr& aNetAddr)
+{
+  mAddress = aNetAddr;
+}
+
 NetAddrElement::~NetAddrElement()
 {
 }
@@ -292,6 +297,21 @@ AddrInfo::~AddrInfo()
 }
 
 void
+AddrInfo::SetCanonicalName(const char* cname)
+{
+  if (mCanonicalName) {
+    moz_free(mCanonicalName);
+    mCanonicalName = nullptr;
+  }
+
+  if (cname) {
+    size_t cnameLen = strlen(cname);
+    mCanonicalName = static_cast<char*>(moz_xmalloc(cnameLen + 1));
+    memcpy(mCanonicalName, cname, cnameLen + 1);
+  }
+}
+
+void
 AddrInfo::Init(const char *host, const char *cname)
 {
   MOZ_ASSERT(host, "Cannot initialize AddrInfo with a null host pointer!");
@@ -299,14 +319,9 @@ AddrInfo::Init(const char *host, const char *cname)
   size_t hostlen = strlen(host);
   mHostName = static_cast<char*>(moz_xmalloc(hostlen + 1));
   memcpy(mHostName, host, hostlen + 1);
-  if (cname) {
-    size_t cnameLen = strlen(cname);
-    mCanonicalName = static_cast<char*>(moz_xmalloc(cnameLen + 1));
-    memcpy(mCanonicalName, cname, cnameLen + 1);
-  }
-  else {
-    mCanonicalName = nullptr;
-  }
+
+  mCanonicalName = nullptr;
+  SetCanonicalName(cname);
 }
 
 void
@@ -325,6 +340,40 @@ AddrInfo::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
   n += mallocSizeOf(mCanonicalName);
   n += mAddresses.sizeOfExcludingThis(mallocSizeOf);
   return n;
+}
+
+void
+AddrInfo::MergeAndConsume(AddrInfo* aOther, uint16_t aAddressFamily) {
+  // Remove all of the addresses of the resolved type
+  NetAddrElement* iter = mAddresses.getFirst();
+  while (iter) {
+    NetAddrElement* next = iter->getNext();
+
+    if (iter->mAddress.raw.family == aAddressFamily) {
+      iter->removeFrom(mAddresses);
+      delete iter;
+    }
+
+    iter = next;
+  }
+
+  // Add in the new results
+  if (aOther) {
+    iter = aOther->mAddresses.getFirst();
+    while (iter) {
+      NetAddrElement* next = iter->getNext();
+
+      // Move it from one linked list to the aOther
+      iter->removeFrom(aOther->mAddresses);
+      mAddresses.insertBack(iter);
+
+      iter = next;
+    }
+
+    if (aOther->mCanonicalName && strlen(aOther->mCanonicalName)) {
+      SetCanonicalName(aOther->mCanonicalName);
+    }
+  }
 }
 
 } // namespace dns

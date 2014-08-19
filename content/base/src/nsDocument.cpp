@@ -39,6 +39,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsCOMArray.h"
 #include "nsDOMClassInfo.h"
+#include "mozilla/Services.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
@@ -2142,7 +2143,7 @@ nsDocument::Init()
   // we use the default compartment for this document, instead of creating
   // wrapper in some random compartment when the document is exposed to js
   // via some events.
-  nsCOMPtr<nsIGlobalObject> global = xpc::GetJunkScopeGlobal();
+  nsCOMPtr<nsIGlobalObject> global = xpc::GetNativeForGlobal(xpc::PrivilegedJunkScope());
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
   mScopeObject = do_GetWeakReference(global);
   MOZ_ASSERT(mScopeObject);
@@ -4494,7 +4495,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       return;
     }
 
-    nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+    nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
     if (swm) {
       swm->MaybeStartControlling(this);
       mMaybeServiceWorkerControlled = true;
@@ -8526,7 +8527,7 @@ nsDocument::Destroy()
 
   mRegistry = nullptr;
 
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
   if (swm) {
     swm->MaybeStopControlling(this);
   }

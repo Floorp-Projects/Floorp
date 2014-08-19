@@ -34,6 +34,9 @@
 #include "TextRenderer.h"               // for TextRenderer
 #include <vector>
 
+#define CULLING_LOG(...)
+// #define CULLING_LOG(...) printf_stderr("CULLING: " __VA_ARGS__)
+
 namespace mozilla {
 namespace layers {
 
@@ -52,6 +55,8 @@ GetOpaqueRect(Layer* aLayer)
 
   // Just bail if there's anything difficult to handle.
   if (!is2D || aLayer->GetMaskLayer() ||
+    aLayer->GetIsFixedPosition() ||
+    aLayer->GetIsStickyPosition() ||
     aLayer->GetEffectiveOpacity() != 1.0f ||
     matrix.HasNonIntegerTranslation()) {
     return result;
@@ -321,16 +326,26 @@ ContainerPrepare(ContainerT* aContainer,
       continue;
     }
 
+    CULLING_LOG("Preparing sublayer %p\n", layerToRender->GetLayer());
+
     nsIntRegion savedVisibleRegion;
     bool restoreVisibleRegion = false;
+    gfx::Matrix matrix;
+    bool is2D = layerToRender->GetLayer()->GetBaseTransform().Is2D(&matrix);
     if (i + 1 < children.Length() &&
-        layerToRender->GetLayer()->GetEffectiveTransform().IsIdentity()) {
+        is2D && !matrix.HasNonIntegerTranslation()) {
       LayerComposite* nextLayer = static_cast<LayerComposite*>(children.ElementAt(i + 1)->ImplData());
+      CULLING_LOG("Culling against %p\n", nextLayer->GetLayer());
       nsIntRect nextLayerOpaqueRect;
       if (nextLayer && nextLayer->GetLayer()) {
         nextLayerOpaqueRect = GetOpaqueRect(nextLayer->GetLayer());
+        gfx::Point point = matrix.GetTranslation();
+        nextLayerOpaqueRect.MoveBy(static_cast<int>(-point.x), static_cast<int>(-point.y));
+        CULLING_LOG("  point %i, %i\n", static_cast<int>(-point.x), static_cast<int>(-point.y));
+        CULLING_LOG("  opaque rect %i, %i, %i, %i\n", nextLayerOpaqueRect.x, nextLayerOpaqueRect.y, nextLayerOpaqueRect.width, nextLayerOpaqueRect.height);
       }
       if (!nextLayerOpaqueRect.IsEmpty()) {
+        CULLING_LOG("  draw\n");
         savedVisibleRegion = layerToRender->GetShadowVisibleRegion();
         nsIntRegion visibleRegion;
         visibleRegion.Sub(savedVisibleRegion, nextLayerOpaqueRect);
@@ -339,11 +354,15 @@ ContainerPrepare(ContainerT* aContainer,
         }
         layerToRender->SetShadowVisibleRegion(visibleRegion);
         restoreVisibleRegion = true;
+      } else {
+        CULLING_LOG("  skip\n");
       }
     }
     layerToRender->Prepare(clipRect);
     aContainer->mPrepared->mLayers.AppendElement(PreparedLayer(layerToRender, clipRect, restoreVisibleRegion, savedVisibleRegion));
   }
+
+  CULLING_LOG("Preparing container layer %p\n", aContainer->GetLayer());
 
   /**
    * Setup our temporary surface for rendering the contents of this container.

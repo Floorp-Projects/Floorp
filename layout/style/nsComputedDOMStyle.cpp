@@ -4155,10 +4155,10 @@ nsComputedDOMStyle::DoGetMinWidth()
 CSSValue*
 nsComputedDOMStyle::DoGetMixBlendMode()
 {
-    nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-    val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mMixBlendMode,
-                  nsCSSProps::kBlendModeKTable));
-    return val;
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mMixBlendMode,
+                                               nsCSSProps::kBlendModeKTable));
+  return val;
 }
 
 CSSValue*

@@ -124,7 +124,7 @@ nsJSUtils::ReportPendingException(JSContext *aContext)
         // The SafeJSContext has no default object associated with it.
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(aContext == nsContentUtils::GetSafeJSContext());
-        scope = xpc::GetSafeJSContextGlobal();
+        scope = xpc::UnprivilegedJunkScope(); // Usage approved by bholley
       }
       JSAutoCompartment ac(aContext, scope);
       JS_ReportPendingException(aContext);

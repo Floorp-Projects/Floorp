@@ -481,6 +481,11 @@ class MochitestUtilsMixin(object):
         repeat -- How many times to repeat the test, ie: repeat=1 will run the test twice.
     """
 
+    if not hasattr(options, 'logFile'):
+        options.logFile = ""
+    if not hasattr(options, 'fileLevel'):
+        options.fileLevel = 'INFO'
+
     # allow relative paths for logFile
     if options.logFile:
       options.logFile = self.getLogFilePath(options.logFile)

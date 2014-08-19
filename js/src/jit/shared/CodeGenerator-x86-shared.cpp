@@ -838,6 +838,14 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
     masm.mov(ImmWord(0), edx);
     masm.udiv(rhs);
 
+    // If the remainder is > 0, bailout since this must be a double.
+    if (ins->mir()->isDiv() && !ins->mir()->toDiv()->canTruncateRemainder()) {
+        Register remainder = ToRegister(ins->remainder());
+        masm.testl(remainder, remainder);
+        if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
+            return false;
+    }
+
     // Unsigned div or mod can return a value that's not a signed int32.
     // If our users aren't expecting that, bail.
     if (!ins->mir()->isTruncated()) {

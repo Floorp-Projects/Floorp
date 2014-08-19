@@ -112,11 +112,16 @@ SubBufferDecoder::GetBuffered(dom::TimeRanges* aBuffered)
 int64_t
 SubBufferDecoder::ConvertToByteOffset(double aTime)
 {
+  int64_t readerOffset = mReader->GetEvictionOffset(aTime);
+  if (readerOffset >= 0) {
+    return readerOffset;
+  }
+
   // Uses a conversion based on (aTime/duration) * length.  For the
   // purposes of eviction this should be adequate since we have the
   // byte threshold as well to ensure data actually gets evicted and
   // we ensure we don't evict before the current playable point.
-  if (mMediaDuration == -1) {
+  if (mMediaDuration <= 0) {
     return -1;
   }
   int64_t length = GetResource()->GetLength();

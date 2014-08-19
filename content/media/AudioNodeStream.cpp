@@ -262,6 +262,24 @@ AudioNodeStream::SetChannelMixingParameters(uint32_t aNumberOfChannels,
 }
 
 void
+AudioNodeStream::SetPassThrough(bool aPassThrough)
+{
+  class Message : public ControlMessage {
+  public:
+    Message(AudioNodeStream* aStream, bool aPassThrough)
+      : ControlMessage(aStream), mPassThrough(aPassThrough) {}
+    virtual void Run()
+    {
+      static_cast<AudioNodeStream*>(mStream)->mPassThrough = mPassThrough;
+    }
+    bool mPassThrough;
+  };
+
+  MOZ_ASSERT(this);
+  GraphImpl()->AppendMessage(new Message(this, aPassThrough));
+}
+
+void
 AudioNodeStream::SetChannelMixingParametersImpl(uint32_t aNumberOfChannels,
                                                 ChannelCountMode aChannelCountMode,
                                                 ChannelInterpretation aChannelInterpretation)
@@ -453,10 +471,15 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       ObtainInputBlock(inputChunks[i], i);
     }
     bool finished = false;
-    if (maxInputs <= 1 && mEngine->OutputCount() <= 1) {
-      mEngine->ProcessBlock(this, inputChunks[0], &mLastChunks[0], &finished);
+    if (mPassThrough) {
+      MOZ_ASSERT(outputCount == 1, "For now, we only support nodes that have one output port");
+      mLastChunks[0] = inputChunks[0];
     } else {
-      mEngine->ProcessBlocksOnPorts(this, inputChunks, mLastChunks, &finished);
+      if (maxInputs <= 1 && mEngine->OutputCount() <= 1) {
+        mEngine->ProcessBlock(this, inputChunks[0], &mLastChunks[0], &finished);
+      } else {
+        mEngine->ProcessBlocksOnPorts(this, inputChunks, mLastChunks, &finished);
+      }
     }
     for (uint16_t i = 0; i < outputCount; ++i) {
       NS_ASSERTION(mLastChunks[i].GetDuration() == WEBAUDIO_BLOCK_SIZE,

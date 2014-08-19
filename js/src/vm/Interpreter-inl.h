@@ -562,7 +562,7 @@ ProcessCallSiteObjOperation(JSContext *cx, RootedObject &cso, RootedObject &raw,
             } else {                                                          \
                 double l, r;                                                  \
                 if (!ToNumber(cx, lhs, &l) || !ToNumber(cx, rhs, &r))         \
-                    return false;;                                            \
+                    return false;                                             \
                 *res = (l OP r);                                              \
             }                                                                 \
         }                                                                     \
