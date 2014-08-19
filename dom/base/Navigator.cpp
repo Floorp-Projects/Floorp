@@ -1965,16 +1965,16 @@ Navigator::GetMozCameras(ErrorResult& aRv)
   return mCameraManager;
 }
 
-already_AddRefed<workers::ServiceWorkerContainer>
+already_AddRefed<ServiceWorkerContainer>
 Navigator::ServiceWorker()
 {
   MOZ_ASSERT(mWindow);
 
   if (!mServiceWorkerContainer) {
-    mServiceWorkerContainer = new workers::ServiceWorkerContainer(mWindow);
+    mServiceWorkerContainer = new ServiceWorkerContainer(mWindow);
   }
 
-  nsRefPtr<workers::ServiceWorkerContainer> ref = mServiceWorkerContainer;
+  nsRefPtr<ServiceWorkerContainer> ref = mServiceWorkerContainer;
   return ref.forget();
 }
 

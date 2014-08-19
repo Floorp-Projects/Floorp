@@ -325,6 +325,7 @@ WEBIDL_FILES = [
     'ServiceWorker.webidl',
     'ServiceWorkerContainer.webidl',
     'ServiceWorkerGlobalScope.webidl',
+    'ServiceWorkerRegistration.webidl',
     'SettingsManager.webidl',
     'ShadowRoot.webidl',
     'SharedWorker.webidl',
