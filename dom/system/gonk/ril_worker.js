@@ -59,13 +59,13 @@ const ICC_MAX_LINEAR_FIXED_RECORDS = 0xfe;
 
 // MMI match groups
 const MMI_MATCH_GROUP_FULL_MMI = 1;
-const MMI_MATCH_GROUP_MMI_PROCEDURE = 2;
+const MMI_MATCH_GROUP_PROCEDURE = 2;
 const MMI_MATCH_GROUP_SERVICE_CODE = 3;
-const MMI_MATCH_GROUP_SIA = 5;
-const MMI_MATCH_GROUP_SIB = 7;
-const MMI_MATCH_GROUP_SIC = 9;
-const MMI_MATCH_GROUP_PWD_CONFIRM = 11;
-const MMI_MATCH_GROUP_DIALING_NUMBER = 12;
+const MMI_MATCH_GROUP_SIA = 4;
+const MMI_MATCH_GROUP_SIB = 5;
+const MMI_MATCH_GROUP_SIC = 6;
+const MMI_MATCH_GROUP_PWD_CONFIRM = 7;
+const MMI_MATCH_GROUP_DIALING_NUMBER = 8;
 
 const MMI_MAX_LENGTH_SHORT_CODE = 2;
 
@@ -1907,7 +1907,7 @@ RilObject.prototype = {
     } else if (call.state == CALL_STATE_ACTIVE) {
       this.sendSwitchWaitingRequest();
     }
- },
+  },
 
   resumeCall: function(options) {
     let call = this.currentCalls[options.callIndex];
@@ -2398,21 +2398,11 @@ RilObject.prototype = {
       return null;
     }
 
-    let matches = this._matchMMIRegexp(mmiString);
+    let matches = this._getMMIRegExp().exec(mmiString);
     if (matches) {
-      // After successfully executing the regular expresion over the MMI string,
-      // the following match groups should contain:
-      // 1 = full MMI string that might be used as a USSD request.
-      // 2 = MMI procedure.
-      // 3 = Service code.
-      // 5 = SIA.
-      // 7 = SIB.
-      // 9 = SIC.
-      // 11 = Password registration.
-      // 12 = Dialing number.
       return {
         fullMMI: matches[MMI_MATCH_GROUP_FULL_MMI],
-        procedure: matches[MMI_MATCH_GROUP_MMI_PROCEDURE],
+        procedure: matches[MMI_MATCH_GROUP_PROCEDURE],
         serviceCode: matches[MMI_MATCH_GROUP_SERVICE_CODE],
         sia: matches[MMI_MATCH_GROUP_SIA],
         sib: matches[MMI_MATCH_GROUP_SIB],
@@ -2422,8 +2412,7 @@ RilObject.prototype = {
       };
     }
 
-    if (this._isPoundString(mmiString) ||
-        this._isMMIShortString(mmiString)) {
+    if (this._isPoundString(mmiString) || this._isMMIShortString(mmiString)) {
       return {
         fullMMI: mmiString
       };
@@ -2433,56 +2422,80 @@ RilObject.prototype = {
   },
 
   /**
-   * Helper to parse MMI string via regular expression. TS.22.030 Figure
-   * 3.5.3.2.
+   * Build the regex to parse MMI string.
+   *
+   * The resulting groups after matching will be:
+   *    1 = full MMI string that might be used as a USSD request.
+   *    2 = MMI procedure.
+   *    3 = Service code.
+   *    4 = SIA.
+   *    5 = SIB.
+   *    6 = SIC.
+   *    7 = Password registration.
+   *    8 = Dialing number.
+   *
+   * @see TS.22.030 Figure 3.5.3.2.
    */
-  _matchMMIRegexp: function(mmiString) {
-    // Regexp to parse and process the MMI code.
-    if (this._mmiRegExp == null) {
-      // The first group of the regexp takes the whole MMI string.
-      // The second group takes the MMI procedure that can be:
-      //    - Activation (*SC*SI#).
-      //    - Deactivation (#SC*SI#).
-      //    - Interrogation (*#SC*SI#).
-      //    - Registration (**SC*SI#).
-      //    - Erasure (##SC*SI#).
-      //  where SC = Service Code (2 or 3 digits) and SI = Supplementary Info
-      //  (variable length).
-      let pattern = "((\\*[*#]?|##?)";
+  _buildMMIRegExp: function() {
+    // The general structure of the codes is as follows:
+    //    - Activation (*SC*SI#).
+    //    - Deactivation (#SC*SI#).
+    //    - Interrogation (*#SC*SI#).
+    //    - Registration (**SC*SI#).
+    //    - Erasure (##SC*SI#).
+    //
+    // where SC = Service Code (2 or 3 digits) and SI = Supplementary Info
+    // (variable length).
 
-      // Third group of the regexp looks for the MMI Service code, which is a
-      // 2 or 3 digits that uniquely specifies the Supplementary Service
-      // associated with the MMI code.
-      pattern += "(\\d{2,3})";
+    // MMI procedure, which could be *, #, *#, **, ##
+    let procedure = "(\\*[*#]?|##?)";
 
-      // Groups from 4 to 9 looks for the MMI Supplementary Information SIA,
-      // SIB and SIC. SIA may comprise e.g. a PIN code or Directory Number,
-      // SIB may be used to specify the tele or bearer service and SIC to
-      // specify the value of the "No Reply Condition Timer". Where a particular
-      // service request does not require any SI, "*SI" is not entered. The use
-      // of SIA, SIB and SIC is optional and shall be entered in any of the
-      // following formats:
-      //    - *SIA*SIB*SIC#
-      //    - *SIA*SIB#
-      //    - *SIA**SIC#
-      //    - *SIA#
-      //    - **SIB*SIC#
-      //    - ***SISC#
-      pattern += "(\\*([^*#]*)(\\*([^*#]*)(\\*([^*#]*)";
+    // MMI Service code, which is a 2 or 3 digits that uniquely specifies the
+    // Supplementary Service associated with the MMI code.
+    let serviceCode = "(\\d{2,3})";
 
-      // The eleventh group takes the password for the case of a password
-      // registration procedure.
-      pattern += "(\\*([^*#]*))?)?)?)?#)";
-
-      // The last group takes the dial string after the #.
-      pattern += "([^#]*)";
-
-      this._mmiRegExp = new RegExp(pattern);
+    // MMI Supplementary Information SIA, SIB and SIC. SIA may comprise e.g. a
+    // PIN code or Directory Number, SIB may be used to specify the tele or
+    // bearer service and SIC to specify the value of the "No Reply Condition
+    // Timer". Where a particular service request does not require any SI,
+    // "*SI" is not entered. The use of SIA, SIB and SIC is optional and shall
+    // be entered in any of the following formats:
+    //    - *SIA*SIB*SIC#
+    //    - *SIA*SIB#
+    //    - *SIA**SIC#
+    //    - *SIA#
+    //    - **SIB*SIC#
+    //    - ***SIC#
+    //
+    // Also catch the additional NEW_PASSWORD for the case of a password
+    // registration procedure. Ex:
+    //    - *  03 * ZZ * OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
+    //    - ** 03 * ZZ * OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
+    //    - *  03 **     OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
+    //    - ** 03 **     OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
+    let si = "\\*([^*#]*)";
+    let allSi = "";
+    for (let i = 0; i < 4; ++i) {
+      allSi = "(?:" + si + allSi + ")?";
     }
 
-    // Regex only applys for those well-defined MMI strings (refer to TS.22.030
-    // Annex B), otherwise, null should be the expected return value.
-    return this._mmiRegExp.exec(mmiString);
+    let fullmmi = "(" + procedure + serviceCode + allSi + "#)";
+
+    // dial string after the #.
+    let dialString = "([^#]*)";
+
+    return new RegExp(fullmmi + dialString);
+  },
+
+  /**
+   * Provide the regex to parse MMI string.
+   */
+  _getMMIRegExp: function() {
+    if (!this._mmiRegExp) {
+      this._mmiRegExp = this._buildMMIRegExp();
+    }
+
+    return this._mmiRegExp;
   },
 
   /**
@@ -2508,11 +2521,12 @@ RilObject.prototype = {
       return true;
     }
 
-    if ((mmiString.length != 2) || (mmiString.charAt(0) !== '1')) {
-      return true;
+    // Input string is 2 digits starting with a "1"
+    if ((mmiString.length == 2) && (mmiString.charAt(0) === '1')) {
+      return false;
     }
 
-    return false;
+    return true;
   },
 
   sendMMI: function(options) {
