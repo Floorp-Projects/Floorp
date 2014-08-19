@@ -90,7 +90,7 @@ SVGForeignObjectElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
     GetAnimatedLengthValues(&x, &y, nullptr);
   gfxMatrix toUserSpace = gfxMatrix().Translate(gfxPoint(x, y));
   if (aWhich == eChildToUserSpace) {
-    return toUserSpace;
+    return toUserSpace * aMatrix;
   }
   NS_ABORT_IF_FALSE(aWhich == eAllTransforms, "Unknown TransformTypes");
   return toUserSpace * fromUserSpace;
