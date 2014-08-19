@@ -110,6 +110,11 @@ protected:
 #ifdef MOZ_WIDGET_GONK
     // gralloc buffer needs CompositableType::BUFFER_IMAGE_BUFFERED to prevent
     // the buffer's usage conflict.
+    if (autoLock.GetImage()->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
+      mImageClientTypeContainer = CompositableType::IMAGE_OVERLAY;
+      return mImageClientTypeContainer;
+    }
+
     mImageClientTypeContainer = autoLock.GetImage() ?
                                   CompositableType::BUFFER_IMAGE_BUFFERED : CompositableType::BUFFER_UNKNOWN;
 #else
