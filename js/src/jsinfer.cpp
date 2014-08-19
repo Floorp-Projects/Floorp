@@ -3855,6 +3855,26 @@ class NewTypeObjectsSetRef : public BufferableRef
                      TypeObjectWithNewScriptSet::Lookup(clasp, TaggedProto(proto), newFunction), *p);
     }
 };
+
+static void
+TypeObjectTablePostBarrier(ExclusiveContext *cx, TypeObjectWithNewScriptSet *table,
+                           const Class *clasp, TaggedProto proto, JSFunction *fun)
+{
+    JS_ASSERT_IF(fun, !IsInsideNursery(fun));
+
+    if (!proto.isObject())
+        return;
+
+    if (!cx->isJSContext()) {
+        JS_ASSERT(!IsInsideNursery(proto.toObject()));
+        return;
+    }
+
+    if (IsInsideNursery(proto.toObject())) {
+        StoreBuffer &sb = cx->asJSContext()->runtime()->gc.storeBuffer;
+        sb.putGeneric(NewTypeObjectsSetRef(table, clasp, proto.toObject(), fun));
+    }
+}
 #endif
 
 TypeObject *
@@ -3913,10 +3933,7 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
         return nullptr;
 
 #ifdef JSGC_GENERATIONAL
-    if (proto.isObject() && hasNursery() && IsInsideNursery(proto.toObject())) {
-        asJSContext()->runtime()->gc.storeBuffer.putGeneric(
-            NewTypeObjectsSetRef(&newTypeObjects, clasp, proto.toObject(), fun));
-    }
+    TypeObjectTablePostBarrier(this, &newTypeObjects, clasp, proto, fun);
 #endif
 
     if (proto.isObject()) {
@@ -4004,6 +4021,10 @@ ExclusiveContext::getSingletonType(const Class *clasp, TaggedProto proto)
 
     if (!table.add(p, TypeObjectWithNewScriptEntry(type, nullptr)))
         return nullptr;
+
+#ifdef JSGC_GENERATIONAL
+    TypeObjectTablePostBarrier(this, &table, clasp, proto, nullptr);
+#endif
 
     type->initSingleton((JSObject *) TypeObject::LAZY_SINGLETON);
     MOZ_ASSERT(type->singleton(), "created type must be a proper singleton");
