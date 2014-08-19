@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test DynamicsCompressorNode with passthrough</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var gTest = {
+  length: 2048,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var source = context.createBufferSource();
+
+    var compressor = context.createDynamicsCompressor();
+
+    source.buffer = this.buffer;
+
+    source.connect(compressor);
+
+    var compressorWrapped = SpecialPowers.wrap(compressor);
+    ok("passThrough" in compressorWrapped, "DynamicsCompressorNode should support the passThrough API");
+    compressorWrapped.passThrough = true;
+
+    source.start(0);
+    return compressor;
+  },
+  createExpectedBuffers: function(context) {
+    this.buffer = context.createBuffer(1, 2048, context.sampleRate);
+    for (var i = 0; i < 2048; ++i) {
+      this.buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    }
+
+    return [this.buffer];
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>
