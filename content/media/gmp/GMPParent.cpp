@@ -171,6 +171,10 @@ GMPParent::CloseIfUnused()
         }
       }
     } else {
+      // Any async shutdown must be complete. Shutdown GMPStorage.
+      for (size_t i = mStorage.Length(); i > 0; i--) {
+        mStorage[i - 1]->Shutdown();
+      }
       Shutdown();
     }
   }
@@ -218,17 +222,14 @@ GMPParent::CloseActive(bool aDieWhenUnloaded)
     mVideoDecoders[i - 1]->Shutdown();
   }
 
-  // Invalidate and remove any remaining API objects.
   for (uint32_t i = mVideoEncoders.Length(); i > 0; i--) {
     mVideoEncoders[i - 1]->Shutdown();
   }
 
-  // Invalidate and remove any remaining API objects.
   for (uint32_t i = mDecryptors.Length(); i > 0; i--) {
     mDecryptors[i - 1]->Shutdown();
   }
 
-  // Invalidate and remove any remaining API objects.
   for (uint32_t i = mAudioDecoders.Length(); i > 0; i--) {
     mAudioDecoders[i - 1]->Shutdown();
   }
@@ -236,6 +237,9 @@ GMPParent::CloseActive(bool aDieWhenUnloaded)
   for (uint32_t i = mTimers.Length(); i > 0; i--) {
     mTimers[i - 1]->Shutdown();
   }
+
+  // Note: We don't shutdown storage API objects here, as they need to
+  // work during async shutdown of GMPs.
 
   // Note: the shutdown of the codecs is async!  don't kill
   // the plugin-container until they're all safely shut down via
@@ -655,6 +659,29 @@ GMPParent::DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor)
 {
   GMPAudioDecoderParent* vdp = static_cast<GMPAudioDecoderParent*>(aActor);
   NS_RELEASE(vdp);
+  return true;
+}
+
+PGMPStorageParent*
+GMPParent::AllocPGMPStorageParent()
+{
+  GMPStorageParent* p = new GMPStorageParent(mOrigin, this);
+  mStorage.AppendElement(p); // Addrefs, released in DeallocPGMPStorageParent.
+  return p;
+}
+
+bool
+GMPParent::DeallocPGMPStorageParent(PGMPStorageParent* aActor)
+{
+  GMPStorageParent* p = static_cast<GMPStorageParent*>(aActor);
+  p->Shutdown();
+  mStorage.RemoveElement(p);
+  return true;
+}
+
+bool
+GMPParent::RecvPGMPStorageConstructor(PGMPStorageParent* actor)
+{
   return true;
 }
 

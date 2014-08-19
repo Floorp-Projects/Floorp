@@ -69,6 +69,8 @@ typedef GMPErr (*GMPCreateThreadPtr)(GMPThread** aThread);
 typedef GMPErr (*GMPRunOnMainThreadPtr)(GMPTask* aTask);
 typedef GMPErr (*GMPSyncRunOnMainThreadPtr)(GMPTask* aTask);
 typedef GMPErr (*GMPCreateMutexPtr)(GMPMutex** aMutex);
+
+// Call on main thread only.
 typedef GMPErr (*GMPCreateRecordPtr)(const char* aRecordName,
                                      uint32_t aRecordNameSize,
                                      GMPRecord** aOutRecord,
