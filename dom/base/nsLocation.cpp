@@ -42,15 +42,8 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 {
   aCharset.Truncate();
 
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    nsCOMPtr<nsPIDOMWindow> window =
-      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
-    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-    if (nsIDocument* doc = window->GetDoc()) {
-      aCharset = doc->GetDocumentCharacterSet();
-    }
+  if (nsIDocument* doc = GetEntryDocument()) {
+    aCharset = doc->GetDocumentCharacterSet();
   }
 
   return NS_OK;
