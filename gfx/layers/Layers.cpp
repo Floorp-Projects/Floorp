@@ -1888,6 +1888,14 @@ SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
   aTarget->SetPermitSubpixelAA(permitSubpixelAA);
 }
 
+nsIntRect
+ToOutsideIntRect(const gfxRect &aRect)
+{
+  gfxRect r = aRect;
+  r.RoundOut();
+  return nsIntRect(r.X(), r.Y(), r.Width(), r.Height());
+}
+
 PRLogModuleInfo* LayerManager::sLog;
 
 } // namespace layers

@@ -111,14 +111,6 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
 }
 
 static nsIntRect
-ToOutsideIntRect(const gfxRect &aRect)
-{
-  gfxRect r = aRect;
-  r.RoundOut();
-  return nsIntRect(r.X(), r.Y(), r.Width(), r.Height());
-}
-
-static nsIntRect
 ToInsideIntRect(const gfxRect& aRect)
 {
   gfxRect r = aRect;

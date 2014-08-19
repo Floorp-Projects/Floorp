@@ -64,8 +64,7 @@ class Telephony::Callback : public nsITelephonyCallback
 public:
   NS_DECL_ISUPPORTS
 
-  Callback(Telephony* aTelephony, Promise* aPromise, uint32_t aServiceId,
-           const nsAString& aNumber)
+  Callback(Telephony* aTelephony, Promise* aPromise, uint32_t aServiceId)
     : mTelephony(aTelephony), mPromise(aPromise), mServiceId(aServiceId)
   {
     MOZ_ASSERT(mTelephony);
@@ -264,7 +263,7 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
   }
 
   nsCOMPtr<nsITelephonyCallback> callback =
-    new Callback(this, promise, aServiceId, aNumber);
+    new Callback(this, promise, aServiceId);
   nsresult rv = mService->Dial(aServiceId, aNumber, aEmergency, callback);
   if (NS_FAILED(rv)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);

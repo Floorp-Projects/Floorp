@@ -17,47 +17,43 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=895091
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    var video = document.createElement("video");
-    video.src = "seek.webm";
-    video.preload = "auto";
 
-    var trackElement = document.createElement("track");
-    trackElement.src = "long.vtt";
-    trackElement.kind = "subtitles";
+var video = document.createElement("video");
+video.src = "seek.webm";
+video.preload = "auto";
 
-    var trackElementTwo = document.createElement("track");
-    trackElementTwo.src = "long.vtt";
-    trackElementTwo.kind = "subtitles";
+var trackElement = document.createElement("track");
+trackElement.src = "long.vtt";
+trackElement.kind = "subtitles";
 
-    document.getElementById("content").appendChild(video);
-    video.appendChild(trackElement);
-    video.appendChild(trackElementTwo);
+var trackElementTwo = document.createElement("track");
+trackElementTwo.src = "long.vtt";
+trackElementTwo.kind = "subtitles";
 
-    video.addEventListener("loadedmetadata", function run_tests() {
-      // Re-que run_tests() at the end of the event loop until the track
-      // element has loaded its data.
-      if (trackElement.readyState == 1 || trackElementTwo.readyState == 1) {
-        setTimeout(run_tests, 0);
-        return;
-      }
+document.getElementById("content").appendChild(video);
+video.appendChild(trackElement);
+video.appendChild(trackElementTwo);
 
-      // Set mode to hidden so that the active cue lists are being updated.
-      trackElement.track.mode = "hidden";
-      trackElementTwo.track.mode = "hidden";
-
-      is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
-      is(trackElementTwo.readyState, 2, "Track::ReadyState should be set to LOADED.");
-
-      is(trackElement.track.cues.length, 2000, "Cue list length should be 2000.");
-      is(trackElementTwo.track.cues.length, 2000, "Cue list length should be 2000.");
-
-      SimpleTest.finish();
-    });
+video.addEventListener("loadedmetadata", function run_tests() {
+  // Re-que run_tests() at the end of the event loop until the track
+  // element has loaded its data.
+  if (trackElement.readyState == 1 || trackElementTwo.readyState == 1) {
+    setTimeout(run_tests, 0);
+    return;
   }
-);
 
+  // Set mode to hidden so that the active cue lists are being updated.
+  trackElement.track.mode = "hidden";
+  trackElementTwo.track.mode = "hidden";
+
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+  is(trackElementTwo.readyState, 2, "Track::ReadyState should be set to LOADED.");
+
+  is(trackElement.track.cues.length, 2000, "Cue list length should be 2000.");
+  is(trackElementTwo.track.cues.length, 2000, "Cue list length should be 2000.");
+
+  SimpleTest.finish();
+});
 </script>
 </pre>
 </body>

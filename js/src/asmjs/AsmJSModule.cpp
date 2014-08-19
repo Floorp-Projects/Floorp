@@ -760,11 +760,11 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
     for (unsigned i = 0; i < heapAccesses_.length(); i++) {
         const jit::AsmJSHeapAccess &access = heapAccesses_[i];
         if (access.hasLengthCheck())
-            JSC::X86Assembler::setPointer(access.patchLengthAt(code_), heapLength);
+            X86Assembler::setPointer(access.patchLengthAt(code_), heapLength);
         void *addr = access.patchOffsetAt(code_);
-        uint32_t disp = reinterpret_cast<uint32_t>(JSC::X86Assembler::getPointer(addr));
+        uint32_t disp = reinterpret_cast<uint32_t>(X86Assembler::getPointer(addr));
         JS_ASSERT(disp <= INT32_MAX);
-        JSC::X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
+        X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
     }
 #elif defined(JS_CODEGEN_X64)
     int32_t heapLength = int32_t(intptr_t(heap->byteLength()));
@@ -777,7 +777,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
     for (size_t i = 0; i < heapAccesses_.length(); i++) {
         const jit::AsmJSHeapAccess &access = heapAccesses_[i];
         if (access.hasLengthCheck())
-            JSC::X86Assembler::setInt32(access.patchLengthAt(code_), heapLength);
+            X86Assembler::setInt32(access.patchLengthAt(code_), heapLength);
     }
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     uint32_t heapLength = heap->byteLength();
@@ -825,9 +825,9 @@ AsmJSModule::restoreToInitialState(uint8_t *prevCode, ArrayBufferObject *maybePr
         for (unsigned i = 0; i < heapAccesses_.length(); i++) {
             const jit::AsmJSHeapAccess &access = heapAccesses_[i];
             void *addr = access.patchOffsetAt(code_);
-            uint8_t *ptr = reinterpret_cast<uint8_t*>(JSC::X86Assembler::getPointer(addr));
+            uint8_t *ptr = reinterpret_cast<uint8_t*>(X86Assembler::getPointer(addr));
             JS_ASSERT(ptr >= ptrBase);
-            JSC::X86Assembler::setPointer(addr, (void *)(ptr - ptrBase));
+            X86Assembler::setPointer(addr, (void *)(ptr - ptrBase));
         }
 #endif
     }
@@ -1601,7 +1601,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
 
         uint8_t *callerRetAddr = code_ + cs.returnAddressOffset();
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        void *callee = JSC::X86Assembler::getRel32Target(callerRetAddr);
+        void *callee = X86Assembler::getRel32Target(callerRetAddr);
 #elif defined(JS_CODEGEN_ARM)
         uint8_t *caller = callerRetAddr - 4;
         Instruction *callerInsn = reinterpret_cast<Instruction*>(caller);
@@ -1629,7 +1629,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
         uint8_t *newCallee = enabled ? profilingEntry : entry;
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        JSC::X86Assembler::setRel32(callerRetAddr, newCallee);
+        X86Assembler::setRel32(callerRetAddr, newCallee);
 #elif defined(JS_CODEGEN_ARM)
         new (caller) InstBLImm(BOffImm(newCallee - caller), Assembler::Always);
 #elif defined(JS_CODEGEN_MIPS)
