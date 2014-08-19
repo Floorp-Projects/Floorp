@@ -88,9 +88,6 @@ protected:
   {
     return this;
   }
-
-private:
-  void GetManifestURLByType(nsIAtom *aAppType, nsAString& aOut);
 };
 
 #endif // nsGenericHTMLFrameElement_h
