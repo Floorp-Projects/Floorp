@@ -695,9 +695,6 @@
 @BINPATH@/res/text_caret_tilt_right@1.5x.png
 @BINPATH@/res/text_caret_tilt_right@2.25x.png
 @BINPATH@/res/text_caret_tilt_right@2x.png
-@BINPATH@/res/text_selection_handle.png
-@BINPATH@/res/text_selection_handle@1.5.png
-@BINPATH@/res/text_selection_handle@2.png
 @BINPATH@/res/grabber.gif
 #ifdef XP_MACOSX
 @BINPATH@/res/cursors/*
