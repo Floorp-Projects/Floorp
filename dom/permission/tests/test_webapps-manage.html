@@ -16,11 +16,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=815105
 <pre id="test">
 <script type="application/javascript;version=1.8" src="file_framework.js"></script>
 <script type="application/javascript;version=1.8">
+function verifier(success, failure) {
+  if (window.navigator.mozApps.mgmt) {
+    success("Got mozApps.mgmt object!");
+  } else {
+    failure("Failed to get mozApps.mgmt object!");
+  }
+}
 var gData = [
   {
     perm: ["webapps-manage"],
-    obj: "mozApps.mgmt",
-    idl: "mozIDOMApplicationMgmt",
+    verifier: verifier.toSource(),
   }
 ]
 </script>
