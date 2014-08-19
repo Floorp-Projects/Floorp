@@ -1,6 +1,9 @@
 // Forward to the target if the trap is not defined
 var target = {};
-for (var key of ['foo', Symbol("quux")]) {
+var keys = ['foo'];
+if (typeof Symbol === "function")
+    keys.push(Symbol("quux"));
+for (var key of keys) {
     Object.defineProperty(Proxy(target, {}), key, {
         value: 'bar',
         writable: true,

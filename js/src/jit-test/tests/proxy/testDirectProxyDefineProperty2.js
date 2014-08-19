@@ -25,12 +25,16 @@ var desc = {
     configurable: true
 };
 
+function quux() {
+    return typeof Symbol === "function" ? Symbol.for('quux') : 'quux';
+}
+
 var p = new Proxy(target, handler);
 Object.defineProperty(p, 'foo', desc);
-Object.defineProperty(p, Symbol.for('quux'), desc);
+Object.defineProperty(p, quux(), desc);
 assertEq(log.length, 2);
 assertEq(log[0], 'foo');
-assertEq(log[1], Symbol.for('quux'));
+assertEq(log[1], quux());
 assertEq(Object.isExtensible(target), true);
 assertEq(Object.isExtensible(p), true);
 Object.preventExtensions(target);

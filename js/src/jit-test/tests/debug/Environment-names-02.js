@@ -18,7 +18,8 @@ g.eval("" +
            obj[" "] = 3;
            obj[""] = 4;
            obj[0] = 5;
-           obj[Symbol.for("moon")] = 6;
+           if (typeof Symbol === "function")
+               obj[Symbol.for("moon")] = 6;
            return obj;
        })
 g.eval("fill(this);\n" +
@@ -30,5 +31,6 @@ for (var names of [withNames, globalNames]) {
     assertEq(names.indexOf(" "), -1);
     assertEq(names.indexOf(""), -1);
     assertEq(names.indexOf("0"), -1);
-    assertEq(names.indexOf(Symbol.for("moon")), -1);
+    if (typeof Symbol === "function")
+        assertEq(names.indexOf(Symbol.for("moon")), -1);
 }

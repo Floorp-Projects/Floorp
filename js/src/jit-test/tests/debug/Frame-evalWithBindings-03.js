@@ -12,5 +12,6 @@ dbg.onDebuggerStatement = function (frame) {
     hits++;
 };
 g.eval("function f() { debugger; }");
-g.eval("f(undefined, -0, NaN, '\uffff', Symbol('alpha'), Array.prototype, Math, f);");
+var symbolExpr = typeof Symbol === "function" ? "Symbol('alpha')" : "'alpha'";
+g.eval("f(undefined, -0, NaN, '\uffff', " + symbolExpr + ", Array.prototype, Math, f);");
 assertEq(hits, 1);

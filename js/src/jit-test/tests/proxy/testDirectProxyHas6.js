@@ -10,4 +10,5 @@ var p = new Proxy(target, {
     }
 });
 assertEq('foo' in p, false);
-assertEq(Symbol.iterator in p, false);
+if (typeof Symbol === "function")
+    assertEq(Symbol.iterator in p, false);
