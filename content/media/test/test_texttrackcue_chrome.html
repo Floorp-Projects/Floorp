@@ -16,18 +16,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=967157
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
-  function() {
-    var cue = new VTTCue(0, 1, "Some text.");
-    is(cue.hasBeenReset, false, "Cue's hasBeenReset flag should be false.");
-    is(cue.displayState, null, "Cue's displayState should be null.");
 
-    cue.startTime = 0.5;
-    is(cue.hasBeenReset, true, "Cue's hasBeenReset flag should now be true.");
+var cue = new VTTCue(0, 1, "Some text.");
+is(cue.hasBeenReset, false, "Cue's hasBeenReset flag should be false.");
+is(cue.displayState, null, "Cue's displayState should be null.");
 
-    cue.displayState = document.createElement("div");
-    is(cue.hasBeenReset, false, "Cue's hasBeenReset flag should now be false.");
-    SimpleTest.finish();
-  }
-);
+cue.startTime = 0.5;
+is(cue.hasBeenReset, true, "Cue's hasBeenReset flag should now be true.");
+
+cue.displayState = document.createElement("div");
+is(cue.hasBeenReset, false, "Cue's hasBeenReset flag should now be false.");
+SimpleTest.finish();
 </script>
