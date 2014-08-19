@@ -8254,7 +8254,7 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   nsCOMPtr<nsIPrincipal> providedPrincipal;
 
   if (aTargetOrigin.EqualsASCII("/")) {
-    providedPrincipal = BrokenGetEntryGlobal()->PrincipalOrNull();
+    providedPrincipal = GetEntryGlobal()->PrincipalOrNull();
     if (NS_WARN_IF(!providedPrincipal))
       return;
   }
