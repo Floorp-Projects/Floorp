@@ -23,6 +23,14 @@ function PlacesTreeView(aFlatList, aOnOpenFlatContainer, aController) {
 PlacesTreeView.prototype = {
   get wrappedJSObject() this,
 
+  __xulStore: null,
+  get _xulStore() {
+    if (!this.__xulStore) {
+      this.__xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+    }
+    return this.__xulStore;
+  },
+
   __dateService: null,
   get _dateService() {
     if (!this.__dateService) {
@@ -307,11 +315,15 @@ PlacesTreeView.prototype = {
       if (!this._flatList &&
           curChild instanceof Ci.nsINavHistoryContainerResultNode &&
           !this._controller.hasCachedLivemarkInfo(curChild)) {
-        let resource = this._getResourceForNode(curChild);
-        let isopen = resource != null &&
-                     PlacesUIUtils.localStore.HasAssertion(resource,
-                                                           openLiteral,
-                                                           trueLiteral, true);
+        let uri = curChild.uri;
+        let isopen = false;
+
+        if (uri) {
+          let docURI = this._getDocumentURI();
+          let val = this._xulStore.getValue(docURI, uri, "open");
+          isopen = (val == "true");
+        }
+
         if (isopen != curChild.containerOpen)
           aToOpen.push(curChild);
         else if (curChild.containerOpen && curChild.childCount > 0)
@@ -1109,11 +1121,16 @@ PlacesTreeView.prototype = {
     return Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE;
   },
 
-  _getResourceForNode: function PTV_getResourceForNode(aNode)
+  // Retrieves an nsIURI for the document
+  _documentURI: null,
+  _getDocumentURI: function()
   {
-    let uri = aNode.uri;
-    NS_ASSERT(uri, "if there is no uri, we can't persist the open state");
-    return uri ? PlacesUIUtils.RDF.GetResource(uri) : null;
+    if (!this._documentURI) {
+      let ioService = Cc["@mozilla.org/network/io-service;1"].
+                      getService(Ci.nsIIOService);
+      this._documentURI = ioService.newURI(document.URL, null, null);
+    }
+    return this._documentURI;
   },
 
   // nsITreeView
@@ -1497,15 +1514,16 @@ PlacesTreeView.prototype = {
 
     // Persist containers open status, but never persist livemarks.
     if (!this._controller.hasCachedLivemarkInfo(node)) {
-      let resource = this._getResourceForNode(node);
-      if (resource) {
-        const openLiteral = PlacesUIUtils.RDF.GetResource("http://home.netscape.com/NC-rdf#open");
-        const trueLiteral = PlacesUIUtils.RDF.GetLiteral("true");
+      let uri = node.uri;
 
-        if (node.containerOpen)
-          PlacesUIUtils.localStore.Unassert(resource, openLiteral, trueLiteral);
-        else
-          PlacesUIUtils.localStore.Assert(resource, openLiteral, trueLiteral, true);
+      if (uri) {
+        let docURI = this._getDocumentURI();
+
+        if (node.containerOpen) {
+          this._xulStore.removeValue(docURI, uri, "open");
+        } else {
+          this._xulStore.setValue(docURI, uri, "open", "true");
+        }
       }
     }
 

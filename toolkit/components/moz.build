@@ -49,6 +49,7 @@ DIRS += [
     'viewsource',
     'workerloader',
     'workerlz4',
+    'xulstore'
 ]
 
 if CONFIG['MOZ_CRASHREPORTER']:
