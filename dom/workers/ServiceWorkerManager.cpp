@@ -1629,6 +1629,7 @@ ServiceWorkerManager::AddRegistrationEventListener(nsIURI* aDocumentURI, nsIDOME
 
   // TODO: this is very very bad:
   ServiceWorkerRegistration* registration = static_cast<ServiceWorkerRegistration*>(aListener);
+  MOZ_ASSERT(!domainInfo->mServiceWorkerRegistrations.Contains(registration));
   domainInfo->mServiceWorkerRegistrations.AppendElement(registration);
   return NS_OK;
 }
@@ -1643,6 +1644,7 @@ ServiceWorkerManager::RemoveRegistrationEventListener(nsIURI* aDocumentURI, nsID
   }
 
   ServiceWorkerRegistration* registration = static_cast<ServiceWorkerRegistration*>(aListener);
+  MOZ_ASSERT(domainInfo->mServiceWorkerRegistrations.Contains(registration));
   domainInfo->mServiceWorkerRegistrations.RemoveElement(registration);
   return NS_OK;
 }
