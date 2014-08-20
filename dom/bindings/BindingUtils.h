@@ -2937,6 +2937,18 @@ AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitinfo,
 bool
 CheckPermissions(JSContext* aCx, JSObject* aObj, const char* const aPermissions[]);
 
+bool
+CallerSubsumes(JSObject* aObject);
+
+MOZ_ALWAYS_INLINE bool
+CallerSubsumes(JS::Handle<JS::Value> aValue)
+{
+  if (!aValue.isObject()) {
+    return true;
+  }
+  return CallerSubsumes(&aValue.toObject());
+}
+
 } // namespace dom
 } // namespace mozilla
 
