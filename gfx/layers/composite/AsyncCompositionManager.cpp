@@ -505,6 +505,22 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
   return activeAnimations;
 }
 
+static bool
+SampleAPZAnimations(Layer* aLayer, TimeStamp aPoint)
+{
+  bool activeAnimations = false;
+  for (Layer* child = aLayer->GetFirstChild(); child;
+        child = child->GetNextSibling()) {
+    activeAnimations |= SampleAPZAnimations(child, aPoint);
+  }
+
+  if (AsyncPanZoomController* apzc = aLayer->GetAsyncPanZoomController()) {
+    activeAnimations |= apzc->AdvanceAnimations(aPoint);
+  }
+
+  return activeAnimations;
+}
+
 Matrix4x4
 AdjustAndCombineWithCSSTransform(const Matrix4x4& asyncTransform, Layer* aLayer)
 {
@@ -523,20 +539,18 @@ AdjustAndCombineWithCSSTransform(const Matrix4x4& asyncTransform, Layer* aLayer)
   }
 
   // Combine the async transform with the layer's CSS transform.
-  result = result * aLayer->GetTransform();
+  result = aLayer->GetTransform() * result;
   return result;
 }
 
 bool
-AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
-                                                          Layer *aLayer,
-                                                          bool* aWantNextFrame)
+AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
 {
   bool appliedTransform = false;
   for (Layer* child = aLayer->GetFirstChild();
       child; child = child->GetNextSibling()) {
     appliedTransform |=
-      ApplyAsyncContentTransformToTree(aCurrentFrame, child, aWantNextFrame);
+      ApplyAsyncContentTransformToTree(child);
   }
 
   if (AsyncPanZoomController* controller = aLayer->GetAsyncPanZoomController()) {
@@ -545,11 +559,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
 
     ViewTransform asyncTransformWithoutOverscroll, overscrollTransform;
     ScreenPoint scrollOffset;
-    *aWantNextFrame |=
-      controller->SampleContentTransformForFrame(aCurrentFrame,
-                                                 &asyncTransformWithoutOverscroll,
-                                                 scrollOffset,
-                                                 &overscrollTransform);
+    controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
+                                               scrollOffset,
+                                               &overscrollTransform);
 
     const FrameMetrics& metrics = aLayer->GetFrameMetrics();
     CSSToLayerScale paintScale = metrics.LayersPixelsPerCSSPixel();
@@ -603,7 +615,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
   }
 
   if (aLayer->AsContainerLayer() && aLayer->GetScrollbarDirection() != Layer::NONE) {
-    ApplyAsyncTransformToScrollbar(aCurrentFrame, aLayer->AsContainerLayer());
+    ApplyAsyncTransformToScrollbar(aLayer->AsContainerLayer());
   }
   return appliedTransform;
 }
@@ -637,7 +649,7 @@ LayerIsScrollbarTarget(Layer* aTarget, ContainerLayer* aScrollbar)
 }
 
 static void
-ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer* aScrollbar,
+ApplyAsyncTransformToScrollbarForContent(ContainerLayer* aScrollbar,
                                          Layer* aContent, bool aScrollbarIsChild)
 {
   // We only apply the transform if the scroll-target layer has non-container
@@ -652,18 +664,6 @@ ApplyAsyncTransformToScrollbarForContent(TimeStamp aCurrentFrame, ContainerLayer
 
   const FrameMetrics& metrics = aContent->GetFrameMetrics();
   AsyncPanZoomController* apzc = aContent->GetAsyncPanZoomController();
-
-  if (aScrollbarIsChild) {
-    // Because we try to apply the scrollbar transform before we apply the async transform on
-    // the actual content, we need to ensure that the APZC has updated any pending animations
-    // to the current frame timestamp before we extract the transforms from it. The code in this
-    // block accomplishes that and throws away the temp variables.
-    // TODO: it might be cleaner to do a pass through the layer tree to advance all the APZC
-    // transforms before updating the layer shadow transforms. That will allow removal of this code.
-    ViewTransform asyncTransform;
-    ScreenPoint scrollOffset;
-    apzc->SampleContentTransformForFrame(aCurrentFrame, &asyncTransform, scrollOffset);
-  }
 
   Matrix4x4 asyncTransform = apzc->GetCurrentAsyncTransform();
   Matrix4x4 nontransientTransform = apzc->GetNontransientAsyncTransform();
@@ -751,7 +751,7 @@ FindScrolledLayerForScrollbar(ContainerLayer* aLayer, bool* aOutIsAncestor)
 }
 
 void
-AsyncCompositionManager::ApplyAsyncTransformToScrollbar(TimeStamp aCurrentFrame, ContainerLayer* aLayer)
+AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
 {
   // If this layer corresponds to a scrollbar, then there should be a layer that
   // is a previous sibling or a parent that has a matching ViewID on its FrameMetrics.
@@ -763,8 +763,7 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(TimeStamp aCurrentFrame,
   bool isAncestor = false;
   Layer* scrollTarget = FindScrolledLayerForScrollbar(aLayer, &isAncestor);
   if (scrollTarget) {
-    ApplyAsyncTransformToScrollbarForContent(aCurrentFrame, aLayer, scrollTarget,
-                                             isAncestor);
+    ApplyAsyncTransformToScrollbarForContent(aLayer, scrollTarget, isAncestor);
   }
 }
 
@@ -827,23 +826,20 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // primary scrollable layer. We compare this to the user zoom and scroll
   // offset in the view transform we obtained from Java in order to compute the
   // transformation we need to apply.
-  LayerToScreenScale zoomAdjust = userZoom / geckoZoom;
-
-  LayerPoint geckoScroll(0, 0);
+  ScreenPoint geckoScroll(0, 0);
   if (metrics.IsScrollable()) {
-    geckoScroll = metrics.GetScrollOffset() * geckoZoom;
+    geckoScroll = metrics.GetScrollOffset() * userZoom;
   }
-
-  LayerPoint translation = (userScroll / zoomAdjust) - geckoScroll;
-  Matrix4x4 treeTransform = ViewTransform(-translation,
-                                            userZoom
-                                          / metrics.mDevPixelsPerCSSPixel
-                                          / metrics.GetParentResolution());
+  ParentLayerToScreenScale scale = userZoom
+                                  / metrics.mDevPixelsPerCSSPixel
+                                  / metrics.GetParentResolution();
+  ScreenPoint translation = userScroll - geckoScroll;
+  Matrix4x4 treeTransform = ViewTransform(scale, -translation);
 
   // The transform already takes the resolution scale into account.  Since we
   // will apply the resolution scale again when computing the effective
   // transform, we must apply the inverse resolution scale here.
-  Matrix4x4 computedTransform = treeTransform * oldTransform;
+  Matrix4x4 computedTransform = oldTransform * treeTransform;
   if (ContainerLayer* container = aLayer->AsContainerLayer()) {
     computedTransform.Scale(1.0f/container->GetPreXScale(),
                             1.0f/container->GetPreYScale(),
@@ -944,7 +940,8 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame)
   // code also includes Fennec which is rendered async.  Fennec uses
   // its own platform-specific async rendering that is done partially
   // in Gecko and partially in Java.
-  if (!ApplyAsyncContentTransformToTree(aCurrentFrame, root, &wantNextFrame)) {
+  wantNextFrame |= SampleAPZAnimations(root, aCurrentFrame);
+  if (!ApplyAsyncContentTransformToTree(root)) {
     nsAutoTArray<Layer*,1> scrollableLayers;
 #ifdef MOZ_WIDGET_ANDROID
     scrollableLayers.AppendElement(mLayerManager->GetPrimaryScrollableLayer());

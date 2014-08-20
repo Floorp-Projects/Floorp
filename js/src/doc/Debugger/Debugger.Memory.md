@@ -1,35 +1,71 @@
 Debugger.Memory
 ===============
 
-`Debugger` can survey the debuggee's memory usage in various ways:
+The [`Debugger API`][debugger] can help tools observe the debuggee's memory use
+in various ways:
 
-- It can find the path by which a given item is referenced from any debuggee
-  global.
+- It can mark each new object with the JavaScript call stack at which it was
+  allocated.
 
-- It can compute the *retained size* of an item: the total size of all
-  items that are reachable only through that item&mdash;and thus would be
-  freed if the given item were freed.
+- It can log all object allocations, yielding a stream of JavaScript call stacks
+  at which allocations have occurred.
 
-- It can compute a *census* of items in debuggee compartments, categorizing
-  items in various ways, yielding item counts, storage consumed, and "top
-  N" item lists for each category.
+- It can compute a *census* of items belonging to the debuggee, categorizing
+  items in various ways, and yielding item counts.
 
-In this documentation, the term *item* refers to anything that occupies memory
-in the browser, whether it implements something that web developers would
-recognize (JavaScript objects; DOM nodes) or an implementation detail that web
-developers would have no reason to be familiar with (SpiderMonkey shapes and
-types).
-
-If `dbg` is a `Debugger` instance, then `dbg.memory` is an instance of
-`Debugger.Memory` whose methods and accessors operate on `dbg`. This class
-exists only to hold member functions and accessors related to memory analysis,
-keeping them separate from other `Debugger` facilities.
+If <i>dbg</i> is a [`Debugger`][debugger-object] instance, then the methods and
+accessor properties of <code><i>dbg</i>.memory</code> control how <i>dbg</i>
+observes its debuggees' memory use. The <code><i>dbg</i>.memory</code> object is
+an instance of `Debugger.Memory`; its inherited accesors and methods are
+described below.
 
 
-Allocation Site Tracking
-------------------------
+### Allocation Site Tracking
 
-<code id="trackingallocationsites">Debugger.Memory.prototype.trackingAllocationSites</code>
+The JavaScript engine marks each new object with the call stack at which it was
+allocated, if:
+
+- the object is allocated in the scope of a global object that is a debuggee of
+  some [`Debugger`][debugger-object] instance <i>dbg</i>; and
+
+- <code><i>dbg</i>.memory.[trackingAllocationSites][tracking-allocs]</code> is
+  set to `true`.
+
+Given a [`Debugger.Object`][object] instance <i>dobj</i> referring to some
+object, <code><i>dobj</i>.[allocationSite][allocation-site]</code> returns a
+[saved call stack][saved-frame] indicating where <i>dobj</i>'s referent was
+allocated.
+
+
+### Allocation Logging
+
+If <i>dbg</i> is a [`Debugger`][debugger-object] instance, and
+<code><i>dbg</i>.memory.[trackingAllocationSites][tracking-allocs]</code> is set
+to `true`, then the JavaScript engine logs each object allocated by <i>dbg</i>'s
+debuggee code. You can retrieve the current log by calling
+<code><i>dbg</i>.memory.[drainAllocationsLog][drain-alloc-log]</code>. You can
+control the limit on the log's size by setting
+<code><i>dbg</i>.memory.[maxAllocationsLogLength][max-alloc-log]</code>.
+
+
+### Censuses
+
+A *census* is a complete traversal of the graph of all reachable memory items
+belonging to a particular `Debugger`'s debuggees. It produces a count of those
+items, broken down by various criteria. If <i>dbg</i> is a
+[`Debugger`][debugger-object] instance, you can call
+<code><i>dbg</i>.memory.[takeCensus][take-census]</code> to conduct a census of
+its debuggees' possessions.
+
+
+Accessor Properties of the `Debugger.Memory.prototype` Object
+-------------------------------------------------------------
+
+If <i>dbg</i> is a [`Debugger`][debugger-object] instance, then
+`<i>dbg</i>.memory` is a `Debugger.Memory` instance, which inherits the
+following accessor properties from its prototype:
+
+<code id='trackingallocationsites'>trackingAllocationSites</code>
 :   A boolean value indicating whether this `Debugger.Memory` instance is
     capturing the JavaScript execution stack when each Object is allocated. This
     accessor property has both a getter and setter: assigning to it enables or
@@ -44,26 +80,34 @@ Allocation Site Tracking
     [`Debugger.Object.prototype.allocationSite`][allocation-site] accessor
     property.
 
+<code id='max-alloc-log'>maxAllocationsLogLength</code>
+:   The maximum number of allocation sites to accumulate in the allocations log
+    at a time. This accessor can be both fetched and stored to. Its default
+    value is `5000`.
 
-Censuses
---------
 
-A *census* is a complete traversal of the graph of all reachable items belonging
-to a particular `Debugger`'s debuggee compartments, producing a count of those
-items, broken down by various criteria. `Debugger` can perform a census as part
-of the same heap traversal that computes [retained sizes][retsz], or as an
-independent operation.
+Function Properties of the `Debugger.Memory.prototype` Object
+-------------------------------------------------------------
 
-Because performing a census requires traversing the entire graph of objects in
-debuggee compartments, it is an expensive operation. On developer hardware in
-2014, traversing a memory graph containing roughly 130,000 nodes and 410,000
-edges took roughly 100ms. The traversal itself temporarily allocates one hash
-table entry per node (roughly two address-sized words) in addition to the
-per-category counts, whose size depends on the number of categories.
+<code id='drain-alloc-log'>drainAllocationsLog()</code>
+:   When `trackingAllocationSites` is `true`, this method returns an array of
+    allocation sites (as [captured stacks][saved-frame]) for recent `Object`
+    allocations within the set of debuggees. Entries for objects allocated with
+    no JavaScript frames on the stack are `null`. *Recent* is defined as the
+    `maxAllocationsLogLength` most recent `Object` allocations since the last
+    call to `drainAllocationsLog`. Therefore, calling this method effectively
+    clears the log.
 
-`Debugger.Memory.prototype.takeCensus()`
-:   Carry out a census of the debuggee compartments' contents. Return an
-    object of the form:
+    When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
+    `Error`.
+
+<code id='take-census'>takeCensus()</code>
+:   Carry out a census of the debuggee compartments' contents. A *census* is a
+    complete traversal of the graph of all reachable memory items belonging to a
+    particular `Debugger`'s debuggees. The census produces a count of those
+    items, broken down by various criteria.
+
+    The `takeCensus` method returns an object of the form:
 
     <pre class='language-js'><code>
     {
@@ -93,6 +137,14 @@ per-category counts, whose size depends on the number of categories.
 
     The `"other"` property's value contains the tallies of other items used
     internally by SpiderMonkey, broken down by their C++ type name.
+
+    Because performing a census requires traversing the entire graph of objects
+    in debuggee compartments, it is an expensive operation. On developer
+    hardware in 2014, traversing a memory graph containing roughly 130,000 nodes
+    and 410,000 edges took roughly 100ms. The traversal itself temporarily
+    allocates one hash table entry per node (roughly two address-sized words) in
+    addition to the per-category counts, whose size depends on the number of
+    categories.
 
 
 Memory Use Analysis Exposes Implementation Details
@@ -173,20 +225,3 @@ variables and object properties. This type information can be large.
 
 In a census, all the various forms of JavaScript code are placed in the
 `"script"` category. Type information is accounted to the `"types"` category.
-
-`maxAllocationsLogLength`
-:   The maximum number of allocation sites to accumulate in the allocations log
-    at a time. Its default value is `5000`.
-
-## Function Properties of the `Debugger.Memory.prototype` Object
-
-`drainAllocationsLog()`
-:   When `trackingAllocationSites` is `true`, this method returns an array of
-    allocation sites (as [captured stacks][saved-frame]) for recent `Object`
-    allocations within the set of debuggees. *Recent* is defined as the
-    `maxAllocationsLogLength` most recent `Object` allocations since the last
-    call to `drainAllocationsLog`. Therefore, calling this method effectively
-    clears the log.
-
-    When `trackingAllocationSites` is `false`, `drainAllocationsLog()` throws an
-    `Error`.

@@ -5434,7 +5434,10 @@ RilObject.prototype = {
     cmdDetails.rilMessageType = "stkcommand";
     cmdDetails.options =
       this.context.StkCommandParamsFactory.createParam(cmdDetails, ctlvs);
-    this.sendChromeMessage(cmdDetails);
+
+    if (!cmdDetails.options || !cmdDetails.options.pending) {
+      this.sendChromeMessage(cmdDetails);
+    }
   },
 
   /**
@@ -10825,6 +10828,47 @@ StkCommandParamsFactoryObject.prototype = {
       menu.nextActionList = ctlv.value;
     }
 
+    let iconId;
+    let ids = [];
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (ctlv) {
+      iconId = ctlv.value;
+      menu.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+      ids[0] = iconId.identifier;
+    }
+
+    let iconIdList;
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID_LIST, ctlvs);
+    if (ctlv) {
+      iconIdList = ctlv.value;
+      menu.itemIconSelfExplanatory = iconIdList.qualifier == 0 ? true : false;
+      ids = ids.concat(iconIdList.identifiers);
+    }
+
+    if (!ids.length ||
+        !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return menu;
+    }
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      if (iconId) {
+        menu.icons = result.shift();
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        menu.items[i].icons = result[i];
+      }
+
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    menu.pending = true;
+    this.context.IconLoader.loadIcons(ids, onsuccess, onerror);
+
     return menu;
   },
 
@@ -10861,14 +10905,35 @@ StkCommandParamsFactoryObject.prototype = {
       textMsg.userClear = true;
     }
 
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return textMsg;
+    }
+
+    let iconId = ctlv.value;
+    textMsg.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      textMsg.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    textMsg.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
+
     return textMsg;
   },
 
   processSetUpIdleModeText: function(cmdDetails, ctlvs) {
+    let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
     let textMsg = {};
 
-    let ctlv = this.context.StkProactiveCmdHelper.searchForTag(
-        COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+      COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
     if (!ctlv) {
       this.context.RIL.sendStkTerminalResponse({
         command: cmdDetails,
@@ -10876,6 +10941,26 @@ StkCommandParamsFactoryObject.prototype = {
       throw new Error("Stk Set Up Idle Text: Required value missing : Text String");
     }
     textMsg.text = ctlv.value.textString;
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return textMsg;
+    }
+
+    let iconId = ctlv.value;
+    textMsg.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      textMsg.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    textMsg.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
 
     return textMsg;
   },
@@ -10923,6 +11008,26 @@ StkCommandParamsFactoryObject.prototype = {
     if (cmdDetails.commandQualifier & 0x80) {
       input.isHelpAvailable = true;
     }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return input;
+    }
+
+    let iconId = ctlv.value;
+    input.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      input.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    input.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
 
     return input;
   },
@@ -10976,17 +11081,59 @@ StkCommandParamsFactoryObject.prototype = {
       input.isHelpAvailable = true;
     }
 
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return input;
+    }
+
+    let iconId = ctlv.value;
+    input.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      input.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    input.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
+
     return input;
   },
 
   processEventNotify: function(cmdDetails, ctlvs) {
+    let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
     let textMsg = {};
 
-    let ctlv = this.context.StkProactiveCmdHelper.searchForTag(
-        COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+      COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
     if (ctlv) {
       textMsg.text = ctlv.value.identifier;
     }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(
+      COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return textMsg;
+    }
+
+    let iconId = ctlv.value;
+    textMsg.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      textMsg.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    textMsg.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
 
     return textMsg;
   },
@@ -11021,6 +11168,26 @@ StkCommandParamsFactoryObject.prototype = {
       call.duration = ctlv.value;
     }
 
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return call;
+    }
+
+    let iconId = ctlv.value;
+    call.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      call.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    call.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
+
     return call;
   },
 
@@ -11044,6 +11211,26 @@ StkCommandParamsFactoryObject.prototype = {
 
     browser.mode = cmdDetails.commandQualifier & 0x03;
 
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return browser;
+    }
+
+    let iconId = ctlv.value;
+    browser.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      browser.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    browser.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
+
     return browser;
   },
 
@@ -11052,7 +11239,7 @@ StkCommandParamsFactoryObject.prototype = {
     let playTone = {};
 
     let ctlv = StkProactiveCmdHelper.searchForTag(
-        COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+      COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
     if (ctlv) {
       playTone.text = ctlv.value.identifier;
     }
@@ -11070,6 +11257,27 @@ StkCommandParamsFactoryObject.prototype = {
 
     // vibrate is only defined in TS 102.223
     playTone.isVibrate = (cmdDetails.commandQualifier & 0x01) !== 0x00;
+
+    ctlv = StkProactiveCmdHelper.searchForTag(
+      COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return playTone;
+    }
+
+    let iconId = ctlv.value;
+    playTone.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      playTone.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    playTone.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
 
     return playTone;
   },
@@ -11119,13 +11327,34 @@ StkCommandParamsFactoryObject.prototype = {
     *        The all TLVs in this proactive command.
     */
   processBipMessage: function(cmdDetails, ctlvs) {
+    let StkProactiveCmdHelper = this.context.StkProactiveCmdHelper;
     let bipMsg = {};
 
-    let ctlv = this.context.StkProactiveCmdHelper.searchForTag(
-        COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+      COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
     if (ctlv) {
       bipMsg.text = ctlv.value.identifier;
     }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
+    if (!ctlv || !this.context.ICCUtilsHelper.isICCServiceAvailable("IMG")) {
+      return bipMsg;
+    }
+
+    let iconId = ctlv.value;
+    bipMsg.iconSelfExplanatory = iconId.qualifier == 0 ? true : false;
+
+    let onerror = (function() {
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    let onsuccess = (function(result) {
+      bipMsg.icons = result[0];
+      this.context.RIL.sendChromeMessage(cmdDetails);
+    }).bind(this);
+
+    bipMsg.pending = true;
+    this.context.IconLoader.loadIcons([iconId.identifier], onsuccess, onerror);
 
     return bipMsg;
   }
@@ -11472,6 +11701,52 @@ StkProactiveCmdHelperObject.prototype = {
   },
 
   /**
+   * Icon Id.
+   *
+   * | Byte  | Description          | Length |
+   * |  1    | Icon Identifier Tag  |   1    |
+   * |  2    | Length = 02          |   1    |
+   * |  3    | Icon qualifier       |   1    |
+   * |  4    | Icon identifier      |   1    |
+   */
+  retrieveIconId: function(length) {
+    if (!length) {
+      return null;
+    }
+
+    let iconId = {
+      qualifier: this.context.GsmPDUHelper.readHexOctet(),
+      identifier: this.context.GsmPDUHelper.readHexOctet()
+    };
+    return iconId;
+  },
+
+  /**
+   * Icon Id List.
+   *
+   * | Byte  | Description          | Length |
+   * |  1    | Icon Identifier Tag  |   1    |
+   * |  2    | Length = X           |   1    |
+   * |  3    | Icon qualifier       |   1    |
+   * |  4~   | Icon identifier      |  X-1   |
+   * | 4+X-2 |                      |        |
+   */
+  retrieveIconIdList: function(length) {
+    if (!length) {
+      return null;
+    }
+
+    let iconIdList = {
+      qualifier: this.context.GsmPDUHelper.readHexOctet(),
+      identifiers: []
+    };
+    for (let i = 0; i < length - 1; i++) {
+      iconIdList.identifiers.push(this.context.GsmPDUHelper.readHexOctet());
+    }
+    return iconIdList;
+  },
+
+  /**
    * Timer Identifier.
    *
    * | Byte  | Description          | Length |
@@ -11605,6 +11880,12 @@ StkProactiveCmdHelperObject.prototype[COMPREHENSIONTLV_TAG_DEFAULT_TEXT] = funct
 };
 StkProactiveCmdHelperObject.prototype[COMPREHENSIONTLV_TAG_EVENT_LIST] = function COMPREHENSIONTLV_TAG_EVENT_LIST(length) {
   return this.retrieveEventList(length);
+};
+StkProactiveCmdHelperObject.prototype[COMPREHENSIONTLV_TAG_ICON_ID] = function COMPREHENSIONTLV_TAG_ICON_ID(length) {
+  return this.retrieveIconId(length);
+};
+StkProactiveCmdHelperObject.prototype[COMPREHENSIONTLV_TAG_ICON_ID_LIST] = function COMPREHENSIONTLV_TAG_ICON_ID_LIST(length) {
+  return this.retrieveIconIdList(length);
 };
 StkProactiveCmdHelperObject.prototype[COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER] = function COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER(length) {
   return this.retrieveTimerId(length);
@@ -12140,6 +12421,8 @@ ICCFileHelperObject.prototype = {
         return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
       case ICC_EF_PBR:
         return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK;
+      case ICC_EF_IMG:
+        return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_GRAPHICS;
     }
     return null;
   },
@@ -13261,6 +13544,155 @@ SimRecordHelperObject.prototype = {
     this.context.ICCIOHelper.loadTransparentEF({
       fileId: ICC_EF_SPN,
       callback: callback.bind(this)
+    });
+  },
+
+  readIMG: function(recordNumber, onsuccess, onerror) {
+    function callback(options) {
+      let RIL = this.context.RIL;
+      let Buf = this.context.Buf;
+      let GsmPDUHelper = this.context.GsmPDUHelper;
+      let strLen = Buf.readInt32();
+      // Each octet is encoded into two chars.
+      let octetLen = strLen / 2;
+
+      let numInstances = GsmPDUHelper.readHexOctet();
+
+      // Correct data length should be 9n+1 or 9n+2. See TS 31.102, sub-clause
+      // 4.6.1.1.
+      if (octetLen != (9 * numInstances + 1) ||
+          octetLen != (9 * numInstances + 2)) {
+        if (onerror) {
+          onerror();
+        }
+        return;
+      }
+
+      let imgDescriptors = [];
+      for (let i = 0; i < numInstances; i++) {
+        imgDescriptors[i] = {
+          width: GsmPDUHelper.readHexOctet(),
+          height: GsmPDUHelper.readHexOctet(),
+          codingScheme: GsmPDUHelper.readHexOctet(),
+          fileId: (GsmPDUHelper.readHexOctet() << 8) |
+                  GsmPDUHelper.readHexOctet(),
+          offset: (GsmPDUHelper.readHexOctet() << 8) |
+                  GsmPDUHelper.readHexOctet(),
+          dataLen: (GsmPDUHelper.readHexOctet() << 8) |
+                   GsmPDUHelper.readHexOctet()
+        };
+      }
+      Buf.readStringDelimiter(strLen);
+
+      let instances = [];
+      let currentInstance = 0;
+      let readNextInstance = (function(img) {
+        instances[currentInstance] = img;
+        currentInstance++;
+
+        if (currentInstance < numInstances) {
+          let imgDescriptor = imgDescriptors[currentInstance];
+          this.readIIDF(imgDescriptor.fileId,
+                        imgDescriptor.offset,
+                        imgDescriptor.dataLen,
+                        imgDescriptor.codingScheme,
+                        readNextInstance,
+                        onerror);
+        } else {
+          if (onsuccess) {
+            onsuccess(instances);
+          }
+        }
+      }).bind(this);
+
+      this.readIIDF(imgDescriptors[0].fileId,
+                    imgDescriptors[0].offset,
+                    imgDescriptors[0].dataLen,
+                    imgDescriptors[0].codingScheme,
+                    readNextInstance,
+                    onerror);
+    }
+
+    this.context.ICCIOHelper.loadLinearFixedEF({
+      fileId: ICC_EF_IMG,
+      recordNumber: recordNumber,
+      callback: callback.bind(this),
+      onerror: onerror
+    });
+  },
+
+  readIIDF: function(fileId, offset, dataLen, codingScheme, onsuccess, onerror) {
+    // Valid fileId is '4FXX', see TS 31.102, clause 4.6.1.2.
+    if ((fileId >> 8) != 0x4F) {
+      if (onerror) {
+        onerror();
+      }
+      return;
+    }
+
+    function callback() {
+      let Buf = this.context.Buf;
+      let RIL = this.context.RIL;
+      let GsmPDUHelper = this.context.GsmPDUHelper;
+      let strLen = Buf.readInt32();
+      // Each octet is encoded into two chars.
+      let octetLen = strLen / 2;
+
+      if (octetLen < offset + dataLen) {
+        // Data length is not enough. See TS 31.102, clause 4.6.1.1, the
+        // paragraph "Bytes 8 and 9: Length of Image Instance Data."
+        if (onerror) {
+          onerror();
+        }
+        return;
+      }
+
+      Buf.seekIncoming(offset * Buf.PDU_HEX_OCTET_SIZE);
+
+      let rawData = {
+        width: GsmPDUHelper.readHexOctet(),
+        height: GsmPDUHelper.readHexOctet(),
+        codingScheme: codingScheme
+      };
+
+      switch (codingScheme) {
+        case ICC_IMG_CODING_SCHEME_BASIC:
+          rawData.body = GsmPDUHelper.readHexOctetArray(
+            dataLen - ICC_IMG_HEADER_SIZE_BASIC);
+          Buf.seekIncoming((octetLen - offset - dataLen) * Buf.PDU_HEX_OCTET_SIZE);
+          break;
+
+        case ICC_IMG_CODING_SCHEME_COLOR:
+        case ICC_IMG_CODING_SCHEME_COLOR_TRANSPARENCY:
+          rawData.bitsPerImgPoint = GsmPDUHelper.readHexOctet();
+          let num = GsmPDUHelper.readHexOctet();
+          // The value 0 shall be interpreted as 256. See TS 31.102, Annex B.2.
+          rawData.numOfClutEntries = (num === 0) ? 0x100 : num;
+          rawData.clutOffset = (GsmPDUHelper.readHexOctet() << 8) |
+                               GsmPDUHelper.readHexOctet();
+          rawData.body = GsmPDUHelper.readHexOctetArray(
+              dataLen - ICC_IMG_HEADER_SIZE_COLOR);
+
+          Buf.seekIncoming((rawData.clutOffset - offset - dataLen) *
+                           Buf.PDU_HEX_OCTET_SIZE);
+          let clut = GsmPDUHelper.readHexOctetArray(rawData.numOfClutEntries *
+                                                    ICC_CLUT_ENTRY_SIZE);
+
+          rawData.clut = clut;
+      }
+
+      Buf.readStringDelimiter(strLen);
+
+      if (onsuccess) {
+        onsuccess(rawData);
+      }
+    }
+
+    this.context.ICCIOHelper.loadTransparentEF({
+      fileId: fileId,
+      pathId: this.context.ICCFileHelper.getEFPath(ICC_EF_IMG),
+      callback: callback.bind(this),
+      onerror: onerror
     });
   },
 
@@ -15297,6 +15729,110 @@ ICCContactHelperObject.prototype = {
   },
 };
 
+function IconLoaderObject(aContext) {
+  this.context = aContext;
+}
+IconLoaderObject.prototype = {
+  context: null,
+
+  /**
+   * Load icons.
+   *
+   * @param recordNumbers Array of the record identifiers of EF_IMG.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  loadIcons: function(recordNumbers, onsuccess, onerror) {
+    if (!recordNumbers || !recordNumbers.length) {
+      if (onerror) {
+        onerror();
+      }
+      return;
+    }
+
+    this._start({
+      recordNumbers: recordNumbers,
+      onsuccess: onsuccess,
+      onerror: onerror});
+  },
+
+  _start: function(options) {
+    let callback = (function(icons) {
+      if (!options.icons) {
+        options.icons = [];
+      }
+      for (let i = 0; i < icons.length; i++) {
+        icons[i] = this._parseRawData(icons[i]);
+      }
+      options.icons[options.currentRecordIndex] = icons;
+      options.currentRecordIndex++;
+
+      let recordNumbers = options.recordNumbers;
+      if (options.currentRecordIndex < recordNumbers.length) {
+        let recordNumber = recordNumbers[options.currentRecordIndex];
+        this.context.SimRecordHelper.readIMG(recordNumber,
+                                             callback,
+                                             options.onerror);
+      } else {
+        if (options.onsuccess) {
+          options.onsuccess(options.icons);
+        }
+      }
+    }).bind(this);
+
+    options.currentRecordIndex = 0;
+    this.context.SimRecordHelper.readIMG(options.recordNumbers[0],
+                                         callback,
+                                         options.onerror);
+  },
+
+  _parseRawData: function(rawData) {
+    let codingScheme = rawData.codingScheme;
+
+    switch (codingScheme) {
+      case ICC_IMG_CODING_SCHEME_BASIC:
+        return {pixels: rawData.body,
+                width: rawData.width,
+                height: rawData.height};
+
+      case ICC_IMG_CODING_SCHEME_COLOR:
+      case ICC_IMG_CODING_SCHEME_COLOR_TRANSPARENCY:
+        let bitsPerImgPoint = rawData.bitsPerImgPoint;
+        let mask = 0xff >> (8 - bitsPerImgPoint);
+        let bitsStartOffset = 8 - bitsPerImgPoint;
+        let bitIndex = bitsStartOffset;
+        let numOfClutEntries = rawData.numOfClutEntries;
+        let clut = rawData.clut;
+        let body = rawData.body;
+        let numOfPixels = rawData.width * rawData.height;
+        let pixelIndex = 0;
+        let currentByteIndex = 0;
+        let currentByte = body[currentByteIndex++];
+
+        let pixels = [];
+        while (pixelIndex < numOfPixels) {
+          // Reassign data and index for every byte (8 bits).
+          if (bitIndex < 0) {
+            currentByte = body[currentByteIndex++];
+            bitIndex = bitsStartOffset;
+          }
+          let clutEntry = ((currentByte >> bitIndex) & mask);
+          let clutIndex = clutEntry * ICC_CLUT_ENTRY_SIZE;
+          let alpha = codingScheme == ICC_IMG_CODING_SCHEME_COLOR_TRANSPARENCY &&
+                      clutEntry == numOfClutEntries - 1;
+          pixels[pixelIndex++] = {red: clut[clutIndex],
+                                  green: clut[clutIndex + 1],
+                                  blue: clut[clutIndex + 2],
+                                  alpha: alpha ? 0x00 : 0xff};
+          bitIndex -= bitsPerImgPoint;
+        }
+        return {pixels: pixels,
+                width: rawData.width,
+                height: rawData.height};
+    }
+  },
+};
+
 /**
  * Global stuff.
  */
@@ -15326,7 +15862,7 @@ Context.prototype = {
     "ComprehensionTlvHelper", "GsmPDUHelper", "ICCContactHelper",
     "ICCFileHelper", "ICCIOHelper", "ICCPDUHelper", "ICCRecordHelper",
     "ICCUtilsHelper", "RuimRecordHelper", "SimRecordHelper",
-    "StkCommandParamsFactory", "StkProactiveCmdHelper",
+    "StkCommandParamsFactory", "StkProactiveCmdHelper", "IconLoader",
   ];
 
   for (let i = 0; i < lazySymbols.length; i++) {

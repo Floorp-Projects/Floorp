@@ -666,7 +666,7 @@ ContentPrefService2.prototype = {
    *             spaces.  Call like _stmt("SELECT *", "FROM foo").
    * @return     The cached, possibly new, statement.
    */
-  _stmt: function CPS2__stmt(sql /*, sql2, sql3, ... */) {
+  _stmt: function CPS2__stmt(sql1 /*, sql2, sql3, ... */) {
     let sql = joinArgs(arguments);
     if (!this._statements)
       this._statements = {};

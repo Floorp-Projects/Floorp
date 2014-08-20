@@ -8,29 +8,27 @@
  *
  */
 
-[Pref="dom.serviceWorkers.enabled"]
-interface ServiceWorkerContainer {
+[Pref="dom.serviceWorkers.enabled",
+ Exposed=Window]
+interface ServiceWorkerContainer : EventTarget {
   // FIXME(nsm):
   // https://github.com/slightlyoff/ServiceWorker/issues/198
   // and discussion at https://etherpad.mozilla.org/serviceworker07apr
-  [Unforgeable] readonly attribute ServiceWorker? installing;
-  [Unforgeable] readonly attribute ServiceWorker? waiting;
-  [Unforgeable] readonly attribute ServiceWorker? active;
   [Unforgeable] readonly attribute ServiceWorker? controller;
 
   [Throws]
-  readonly attribute Promise<any> ready;
+  readonly attribute Promise<ServiceWorkerRegistration> ready;
 
   [Throws]
-  Promise<any> getAll();
+  Promise<ServiceWorkerRegistration> register(ScalarValueString scriptURL,
+                                              optional RegistrationOptionList options);
 
   [Throws]
-  Promise<ServiceWorker> register(DOMString url, optional RegistrationOptionList options);
+  Promise<ServiceWorkerRegistration> getRegistration(optional ScalarValueString documentURL = "");
 
   [Throws]
-  Promise<any> unregister(DOMString? scope);
+   Promise<sequence<ServiceWorkerRegistration>> getRegistrations();
 
-  attribute EventHandler onupdatefound;
   attribute EventHandler oncontrollerchange;
   attribute EventHandler onreloadpage;
   attribute EventHandler onerror;
@@ -49,5 +47,5 @@ partial interface ServiceWorkerContainer {
 };
 
 dictionary RegistrationOptionList {
-  DOMString scope = "/*";
+  ScalarValueString scope = "/*";
 };

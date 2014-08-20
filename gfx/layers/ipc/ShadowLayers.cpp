@@ -154,7 +154,7 @@ private:
   Transaction& operator=(const Transaction&);
 };
 struct AutoTxnEnd {
-  AutoTxnEnd(Transaction* aTxn) : mTxn(aTxn) {}
+  explicit AutoTxnEnd(Transaction* aTxn) : mTxn(aTxn) {}
   ~AutoTxnEnd() { mTxn->End(); }
   Transaction* mTxn;
 };

@@ -1693,7 +1693,7 @@ class ValueOperations
     JS::Symbol *toSymbol() const { return value()->toSymbol(); }
     JSObject &toObject() const { return value()->toObject(); }
     JSObject *toObjectOrNull() const { return value()->toObjectOrNull(); }
-    void *toGCThing() const { return value()->toGCThing(); }
+    gc::Cell *toGCThing() const { return value()->toGCThing(); }
     uint64_t asRawBits() const { return value()->asRawBits(); }
 
     JSValueType extractNonDoubleType() const { return value()->extractNonDoubleType(); }

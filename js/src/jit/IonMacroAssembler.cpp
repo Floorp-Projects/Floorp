@@ -609,6 +609,12 @@ MacroAssembler::createGCObject(Register obj, Register temp, JSObject *templateOb
     gc::AllocKind allocKind = templateObj->tenuredGetAllocKind();
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
 
+    // Arrays with copy on write elements do not need fixed space for an
+    // elements header. The template object, which owns the original elements,
+    // might have another allocation kind.
+    if (templateObj->denseElementsAreCopyOnWrite())
+        allocKind = gc::FINALIZE_OBJECT0_BACKGROUND;
+
     allocateObject(obj, temp, allocKind, nDynamicSlots, initialHeap, fail);
     initGCThing(obj, temp, templateObj, initFixedSlots);
 }
@@ -844,7 +850,7 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
 {
     // Fast initialization of an empty object returned by allocateObject().
 
-    JS_ASSERT(!templateObj->hasDynamicElements());
+    JS_ASSERT_IF(!templateObj->denseElementsAreCopyOnWrite(), !templateObj->hasDynamicElements());
 
     storePtr(ImmGCPtr(templateObj->lastProperty()), Address(obj, JSObject::offsetOfShape()));
     storePtr(ImmGCPtr(templateObj->type()), Address(obj, JSObject::offsetOfType()));
@@ -853,7 +859,10 @@ MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
     else
         storePtr(ImmPtr(nullptr), Address(obj, JSObject::offsetOfSlots()));
 
-    if (templateObj->is<ArrayObject>()) {
+    if (templateObj->denseElementsAreCopyOnWrite()) {
+        storePtr(ImmPtr((const Value *) templateObj->getDenseElements()),
+                 Address(obj, JSObject::offsetOfElements()));
+    } else if (templateObj->is<ArrayObject>()) {
         Register temp = slots;
         JS_ASSERT(!templateObj->getDenseInitializedLength());
 

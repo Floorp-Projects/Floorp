@@ -22,7 +22,7 @@ class TextRenderer
 public:
   NS_INLINE_DECL_REFCOUNTING(TextRenderer)
 
-  TextRenderer(Compositor *aCompositor)
+  explicit TextRenderer(Compositor *aCompositor)
     : mCompositor(aCompositor)
   {
   }

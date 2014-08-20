@@ -11,7 +11,10 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
 elif CONFIG['MOZ_ENABLE_GTK']:
     DIRS += ['gtk']
 
-DIRS += ['locales']
+DIRS += [
+    'locales',
+    'themes',
+]
 
 EXTRA_COMPONENTS += [
     'CommandLineHandler.js',
@@ -22,6 +25,7 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'DownloadView.jsm',
     'RemoteDebugger.jsm',
     'Startup.jsm',
     'WebappManager.jsm',
@@ -29,7 +33,10 @@ EXTRA_JS_MODULES += [
     'WebRTCHandler.jsm',
 ]
 
-MOCHITEST_WEBAPPRT_CHROME_MANIFESTS += ['test/chrome/webapprt.ini']
+MOCHITEST_WEBAPPRT_CHROME_MANIFESTS += [
+    'test/chrome/downloads/webapprt.ini',
+    'test/chrome/webapprt.ini',
+]
 MOCHITEST_MANIFESTS += ['test/content/mochitest.ini']
 
 # Place webapprt resources in a separate app dir

@@ -28,12 +28,43 @@ leak:GI___strdup
 
 
 ###
-### Many leaks only affect some test suites.  The suite annotations are not checked.
+### Bug 979928 - WebRTC leaks. m2, m3.
 ###
 
-# Bug 979928 - WebRTC is leaky. m2, m3
-leak:/media/mtransport/
-leak:/media/webrtc/signaling/
+# WebRTC leaks added for Mochitest 2.
+leak:NR_reg_init
+leak:fsmdef_init
+leak:r_log_register
+leak:nr_reg_set
+leak:ccsnap_device_init
+leak:ccsnap_line_init
+leak:media/webrtc/signaling/src/sipcc/core/common/init.c
+leak:cprPostMessage
+leak:mozilla::NrIceStunServer::Create
+
+# Additional WebRTC leak suppressions added for Mochitest 3.
+leak:mozilla::TransportLayerDtls::Setup
+leak:mozilla::NrIceTurnServer::Create
+# There are about 228KB of leaks from the call to |pmsg->sdp = cpr_malloc(sdp_size);|
+# in send_message_helper.
+leak:send_message_helper
+leak:fsmdef_ev_createoffer
+leak:fsmdef_ev_setremotedesc
+leak:fsmdef_ev_setlocaldesc
+leak:fsmdef_ev_createanswer
+# About 70KB of leaks under this stack.
+leak:vcmRxAllocICE_s
+leak:vcmRxStartICE_m
+# About 50KB of leaks under this stack.
+leak:ccsnap_EscapeStrToLocaleStr
+leak:gsmsdp_add_default_audio_formats_to_local_sdp
+leak:gsmsdp_add_default_video_formats_to_local_sdp
+leak:CCAPI_CallInfo_getMediaStreams
+
+
+###
+### Many leaks only affect some test suites.  The suite annotations are not checked.
+###
 
 # Bug 981195 - Small leak in the parser. m4
 leak:TypeCompartment::fixObjectType
