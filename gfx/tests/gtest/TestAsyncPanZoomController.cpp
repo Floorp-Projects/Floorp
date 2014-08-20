@@ -909,6 +909,34 @@ TEST_F(APZCBasicTester, Fling) {
   }
 }
 
+TEST_F(APZCBasicTester, FlingIntoOverscroll) {
+  // Enable overscrolling.
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  // Scroll down by 25 px. Don't fling for simplicity.
+  int time = 0;
+  ApzcPanNoFling(apzc, time, 50, 25);
+
+  // Now scroll back up by 20px, this time flinging after.
+  // The fling should cover the remaining 5 px of room to scroll, then
+  // go into overscroll, and finally snap-back to recover from overscroll.
+  ApzcPan(apzc, time, 25, 45);
+  const TimeDuration increment = TimeDuration::FromMilliseconds(1);
+  bool reachedOverscroll = false;
+  bool recoveredFromOverscroll = false;
+  while (apzc->AdvanceAnimations(testStartTime)) {
+    if (!reachedOverscroll && apzc->IsOverscrolled()) {
+      reachedOverscroll = true;
+    }
+    if (reachedOverscroll && !apzc->IsOverscrolled()) {
+      recoveredFromOverscroll = true;
+    }
+    testStartTime += increment;
+  }
+  EXPECT_TRUE(reachedOverscroll);
+  EXPECT_TRUE(recoveredFromOverscroll);
+}
+
 class APZCFlingStopTester : public APZCGestureDetectorTester {
 protected:
   // Start a fling, and then tap while the fling is ongoing. When
