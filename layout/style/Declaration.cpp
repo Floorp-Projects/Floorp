@@ -632,12 +632,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       const nsCSSValue *fontVariantPosition =
         data->ValueFor(eCSSProperty_font_variant_position);
 
-      // if font features are not enabled, pointers for fontVariant
-      // values above may be null since the shorthand check ignores them
-      // font-variant-alternates enabled ==> layout.css.font-features.enabled is true
-      bool fontFeaturesEnabled =
-        nsCSSProps::IsEnabled(eCSSProperty_font_variant_alternates);
-
       if (systemFont &&
           systemFont->GetUnit() != eCSSUnit_None &&
           systemFont->GetUnit() != eCSSUnit_Null) {
@@ -650,15 +644,14 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
             sizeAdjust->GetUnit() != eCSSUnit_System_Font ||
             featureSettings->GetUnit() != eCSSUnit_System_Font ||
             languageOverride->GetUnit() != eCSSUnit_System_Font ||
-            (fontFeaturesEnabled &&
-             (fontKerning->GetUnit() != eCSSUnit_System_Font ||
-              fontSynthesis->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantAlternates->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantCaps->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantEastAsian->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantLigatures->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantNumeric->GetUnit() != eCSSUnit_System_Font ||
-              fontVariantPosition->GetUnit() != eCSSUnit_System_Font))) {
+            fontKerning->GetUnit() != eCSSUnit_System_Font ||
+            fontSynthesis->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantAlternates->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantCaps->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantEastAsian->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantLigatures->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantNumeric->GetUnit() != eCSSUnit_System_Font ||
+            fontVariantPosition->GetUnit() != eCSSUnit_System_Font) {
           // This can't be represented as a shorthand.
           return;
         }
@@ -672,16 +665,15 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
             sizeAdjust->GetUnit() != eCSSUnit_None ||
             featureSettings->GetUnit() != eCSSUnit_Normal ||
             languageOverride->GetUnit() != eCSSUnit_Normal ||
-            (fontFeaturesEnabled &&
-             (fontKerning->GetIntValue() != NS_FONT_KERNING_AUTO ||
-              fontSynthesis->GetUnit() != eCSSUnit_Enumerated ||
-              fontSynthesis->GetIntValue() !=
-                (NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE) ||
-              fontVariantAlternates->GetUnit() != eCSSUnit_Normal ||
-              fontVariantEastAsian->GetUnit() != eCSSUnit_Normal ||
-              fontVariantLigatures->GetUnit() != eCSSUnit_Normal ||
-              fontVariantNumeric->GetUnit() != eCSSUnit_Normal ||
-              fontVariantPosition->GetUnit() != eCSSUnit_Normal))) {
+            fontKerning->GetIntValue() != NS_FONT_KERNING_AUTO ||
+            fontSynthesis->GetUnit() != eCSSUnit_Enumerated ||
+            fontSynthesis->GetIntValue() !=
+              (NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE) ||
+            fontVariantAlternates->GetUnit() != eCSSUnit_Normal ||
+            fontVariantEastAsian->GetUnit() != eCSSUnit_Normal ||
+            fontVariantLigatures->GetUnit() != eCSSUnit_Normal ||
+            fontVariantNumeric->GetUnit() != eCSSUnit_Normal ||
+            fontVariantPosition->GetUnit() != eCSSUnit_Normal) {
           return;
         }
 
