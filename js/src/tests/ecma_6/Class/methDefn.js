@@ -102,10 +102,12 @@ assertEq(a.foo3(), 3);
 assertEq(a.foo4(), 4);
 
 // Symbols.
-var unique_sym = Symbol("1"), registered_sym = Symbol.for("2");
-a = { [unique_sym](){return 2;}, [registered_sym](){return 3;} };
-assertEq(a[unique_sym](), 2);
-assertEq(a[registered_sym](), 3);
+if (typeof Symbol === "function") {
+    var unique_sym = Symbol("1"), registered_sym = Symbol.for("2");
+    a = { [unique_sym](){return 2;}, [registered_sym](){return 3;} };
+    assertEq(a[unique_sym](), 2);
+    assertEq(a[registered_sym](), 3);
+}
 
 // Method characteristics.
 a = { b(){ return 4;} };

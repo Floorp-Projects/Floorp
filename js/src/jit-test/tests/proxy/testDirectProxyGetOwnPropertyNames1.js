@@ -21,7 +21,8 @@ var objCD = Object.create(objAB, {
     }
 });
 
-objCD[Symbol("moon")] = "something";
+if (typeof Symbol === "function")
+    objCD[Symbol("moon")] = "something";
 for (let p of [new Proxy(objCD, {}), Proxy.revocable(objCD, {}).proxy]) {
     var names = Object.getOwnPropertyNames(p);
     assertEq(names.length, 2);
