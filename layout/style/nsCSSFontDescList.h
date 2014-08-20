@@ -9,8 +9,5 @@ CSS_FONT_DESC(font-weight, Weight)
 CSS_FONT_DESC(font-stretch, Stretch)
 CSS_FONT_DESC(src, Src)
 CSS_FONT_DESC(unicode-range, UnicodeRange)
-
-/* Note: the parsing code explicitly also accepts font-feature-settings
-         and font-language-override. */
-CSS_FONT_DESC(-moz-font-feature-settings, FontFeatureSettings)
-CSS_FONT_DESC(-moz-font-language-override, FontLanguageOverride)
+CSS_FONT_DESC(font-feature-settings, FontFeatureSettings)
+CSS_FONT_DESC(font-language-override, FontLanguageOverride)

@@ -1775,9 +1775,9 @@ CSS_PROP_FONT(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_FONT(
-    -moz-font-feature-settings,
+    font-feature-settings,
     font_feature_settings,
-    CSS_PROP_DOMPROP_PREFIXED(FontFeatureSettings),
+    FontFeatureSettings,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
@@ -1794,15 +1794,15 @@ CSS_PROP_FONT(
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.font-features.enabled",
+    "",
     VARIANT_HK,
     kFontKerningKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_FONT(
-    -moz-font-language-override,
+    font-language-override,
     font_language_override,
-    CSS_PROP_DOMPROP_PREFIXED(FontLanguageOverride),
+    FontLanguageOverride,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
@@ -1884,7 +1884,7 @@ CSS_PROP_FONT(
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.font-features.enabled",
+    "",
     0,
     kFontSynthesisKTable,
     CSS_PROP_NO_OFFSET,
@@ -1903,7 +1903,7 @@ CSS_PROP_FONT(
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.font-features.enabled",
+    "",
     0,
     kFontVariantAlternatesKTable,
     CSS_PROP_NO_OFFSET,
@@ -1915,7 +1915,7 @@ CSS_PROP_FONT(
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.font-features.enabled",
+    "",
     VARIANT_HMK,
     kFontVariantCapsKTable,
     CSS_PROP_NO_OFFSET,
@@ -1928,7 +1928,7 @@ CSS_PROP_FONT(
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.font-features.enabled",
+    "",
     0,
     kFontVariantEastAsianKTable,
     CSS_PROP_NO_OFFSET,
@@ -1941,7 +1941,7 @@ CSS_PROP_FONT(
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.font-features.enabled",
+    "",
     0,
     kFontVariantLigaturesKTable,
     CSS_PROP_NO_OFFSET,
@@ -1954,7 +1954,7 @@ CSS_PROP_FONT(
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.font-features.enabled",
+    "",
     0,
     kFontVariantNumericKTable,
     CSS_PROP_NO_OFFSET,
@@ -1966,7 +1966,7 @@ CSS_PROP_FONT(
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "layout.css.font-features.enabled",
+    "",
     VARIANT_HMK,
     kFontVariantPositionKTable,
     CSS_PROP_NO_OFFSET,
