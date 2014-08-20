@@ -21,6 +21,9 @@
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
 #include "WebAudioUtils.h"
+#ifdef XP_WIN
+#include "ThreadPoolCOMListener.h"
+#endif
 
 namespace mozilla {
 
@@ -486,6 +489,12 @@ MediaBufferDecoder::EnsureThreadPoolInitialized()
       return false;
     }
     mThreadPool->SetName(NS_LITERAL_CSTRING("MediaBufferDecoder"));
+#ifdef XP_WIN
+  // Ensure MSCOM is initialized on the thread pools threads.
+  nsCOMPtr<nsIThreadPoolListener> listener = new MSCOMInitThreadPoolListener();
+  nsresult rv = mThreadPool->SetListener(listener);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+#endif
   }
   return true;
 }
