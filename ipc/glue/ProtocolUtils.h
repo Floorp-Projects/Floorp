@@ -188,7 +188,7 @@ protected:
         : mProtocolId(aProtoId)
         , mTrans(nullptr)
     {
-      MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(NS_IsMainThread() || AllowNonMainThreadUse());
     }
 
     ~IToplevelProtocol();
@@ -214,12 +214,12 @@ public:
      */
     IToplevelProtocol* GetFirstOpenedActors()
     {
-        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(NS_IsMainThread() || AllowNonMainThreadUse());
         return mOpenActors.getFirst();
     }
     const IToplevelProtocol* GetFirstOpenedActors() const
     {
-        MOZ_ASSERT(NS_IsMainThread());
+        MOZ_ASSERT(NS_IsMainThread() || AllowNonMainThreadUse());
         return mOpenActors.getFirst();
     }
 
@@ -233,11 +233,27 @@ public:
                               base::ProcessHandle aPeerProcess,
                               ProtocolCloneContext* aCtx);
 
+#ifdef MOZ_IPDL_TESTS
+    static void SetAllowNonMainThreadUse();
+#endif
+
+    static bool AllowNonMainThreadUse() {
+#ifdef MOZ_IPDL_TESTS
+        return sAllowNonMainThreadUse;
+#else
+        return false;
+#endif
+    }
+
 private:
     LinkedList<IToplevelProtocol> mOpenActors; // All protocol actors opened by this.
 
     ProtocolId mProtocolId;
     Transport* mTrans;
+
+#ifdef MOZ_IPDL_TESTS
+    static bool sAllowNonMainThreadUse;
+#endif
 };
 
 
