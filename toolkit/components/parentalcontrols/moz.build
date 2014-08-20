@@ -19,6 +19,10 @@ if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS']:
         UNIFIED_SOURCES += [
             'nsParentalControlsServiceCocoa.mm',
         ]
+    elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+        UNIFIED_SOURCES += [
+            'nsParentalControlsServiceAndroid.cpp',
+        ]
     else:
         SOURCES += [
             'nsParentalControlsServiceDefault.cpp',
