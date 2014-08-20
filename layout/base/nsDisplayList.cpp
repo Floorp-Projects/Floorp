@@ -4649,11 +4649,16 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     FrameTransformProperties props(frame->GetParent(),
                                    aAppUnitsPerPixel,
                                    nullptr);
+
+    // If this frame isn't transformed (but we exist for backface-visibility),
+    // then we're not a reference frame so no offset to origin will be added. Our
+    // parent transform however *is* the reference frame, so we pass true for
+    // aOffsetByOrigin to convert into the correct coordinate space.
     gfx3DMatrix parent =
       GetResultingTransformMatrixInternal(props,
                                           aOrigin - frame->GetPosition(),
                                           aAppUnitsPerPixel, nullptr,
-                                          aOutAncestor, false);
+                                          aOutAncestor, !frame->IsTransformed());
 
     result = nsLayoutUtils::ChangeMatrixBasis(offsetBetweenOrigins, result) * parent;
     if (aOffsetByOrigin) {
@@ -4788,7 +4793,7 @@ nsDisplayTransform::GetTransform()
        */
       mTransform =
         GetResultingTransformMatrix(mFrame, ToReferenceFrame(), scale,
-                                    nullptr, nullptr, true);
+                                    nullptr, nullptr, mFrame->IsTransformed()));
     }
   }
   return mTransform;
