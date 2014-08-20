@@ -2,20 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include $(topsrcdir)/config/config.mk
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-MOZ_B2G=1
-else
-MOZ_B2G=0
-endif
-
-libs::
-	$(PYTHON) $(srcdir)/copy_source.py $(topsrcdir) $(srcdir)/source/lib $(FINAL_TARGET)/modules/commonjs $(MOZ_B2G) >copy_source.mk
-	$(MAKE) -f copy_source.mk libs
-
-include $(topsrcdir)/config/rules.mk
-
 TEST_FILES = \
   source/app-extension \
   source/bin \
