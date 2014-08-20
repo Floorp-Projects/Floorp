@@ -2252,9 +2252,7 @@ private:
 
   static bool sInitialized;
   static uint32_t sScriptBlockerCount;
-#ifdef DEBUG
   static uint32_t sDOMNodeRemovedSuppressCount;
-#endif
   static uint32_t sMicroTaskLevel;
   // Not an nsCOMArray because removing elements from those is slower
   static nsTArray< nsCOMPtr<nsIRunnable> >* sBlockedScriptRunners;
@@ -2311,14 +2309,10 @@ class MOZ_STACK_CLASS nsAutoScriptBlockerSuppressNodeRemoved :
                           public nsAutoScriptBlocker {
 public:
   nsAutoScriptBlockerSuppressNodeRemoved() {
-#ifdef DEBUG
     ++nsContentUtils::sDOMNodeRemovedSuppressCount;
-#endif
   }
   ~nsAutoScriptBlockerSuppressNodeRemoved() {
-#ifdef DEBUG
     --nsContentUtils::sDOMNodeRemovedSuppressCount;
-#endif
   }
 };
 
