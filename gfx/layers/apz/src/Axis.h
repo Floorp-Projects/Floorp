@@ -35,7 +35,7 @@ class AsyncPanZoomController;
  */
 class Axis {
 public:
-  Axis(AsyncPanZoomController* aAsyncPanZoomController);
+  explicit Axis(AsyncPanZoomController* aAsyncPanZoomController);
 
   enum Overscroll {
     // Overscroll is not happening at all.
@@ -246,7 +246,7 @@ protected:
 
 class AxisX : public Axis {
 public:
-  AxisX(AsyncPanZoomController* mAsyncPanZoomController);
+  explicit AxisX(AsyncPanZoomController* mAsyncPanZoomController);
   virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const;
   virtual CSSCoord GetRectLength(const CSSRect& aRect) const;
   virtual CSSCoord GetRectOffset(const CSSRect& aRect) const;
@@ -254,7 +254,7 @@ public:
 
 class AxisY : public Axis {
 public:
-  AxisY(AsyncPanZoomController* mAsyncPanZoomController);
+  explicit AxisY(AsyncPanZoomController* mAsyncPanZoomController);
   virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const;
   virtual CSSCoord GetRectLength(const CSSRect& aRect) const;
   virtual CSSCoord GetRectOffset(const CSSRect& aRect) const;

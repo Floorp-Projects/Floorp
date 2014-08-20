@@ -28,8 +28,8 @@ class AutoResolveRefLayers;
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
-  ViewTransform(ParentLayerToScreenScale aScale = ParentLayerToScreenScale(),
-                ScreenPoint aTranslation = ScreenPoint())
+  explicit ViewTransform(ParentLayerToScreenScale aScale = ParentLayerToScreenScale(),
+                         ScreenPoint aTranslation = ScreenPoint())
     : mScale(aScale)
     , mTranslation(aTranslation)
   {}
@@ -76,7 +76,7 @@ class AsyncCompositionManager MOZ_FINAL
 public:
   NS_INLINE_DECL_REFCOUNTING(AsyncCompositionManager)
 
-  AsyncCompositionManager(LayerManagerComposite* aManager)
+  explicit AsyncCompositionManager(LayerManagerComposite* aManager)
     : mLayerManager(aManager)
     , mIsFirstPaint(false)
     , mLayersUpdated(false)
@@ -207,7 +207,7 @@ private:
 
 class MOZ_STACK_CLASS AutoResolveRefLayers {
 public:
-  AutoResolveRefLayers(AsyncCompositionManager* aManager) : mManager(aManager)
+  explicit AutoResolveRefLayers(AsyncCompositionManager* aManager) : mManager(aManager)
   {
     if (mManager) {
       mManager->ResolveRefLayers();

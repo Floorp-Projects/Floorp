@@ -646,7 +646,7 @@ private:
 
 class OverscrollSnapBackAnimation: public AsyncPanZoomAnimation {
 public:
-  OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
+  explicit OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
     : mApzc(aApzc)
   {
     // Make sure the initial velocity is zero. This is normally the case
