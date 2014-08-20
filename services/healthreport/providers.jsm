@@ -865,12 +865,12 @@ AddonsProvider.prototype = Object.freeze({
   _collectAndStoreAddons: function () {
     let deferred = Promise.defer();
 
-    AddonManager.getAllAddons(function onAllAddons(addons) {
+    AddonManager.getAllAddons(function onAllAddons(allAddons) {
       let data;
       let addonsField;
       let pluginsField;
       try {
-        data = this._createDataStructure(addons);
+        data = this._createDataStructure(allAddons);
         addonsField = JSON.stringify(data.addons);
         pluginsField = JSON.stringify(data.plugins);
       } catch (ex) {
