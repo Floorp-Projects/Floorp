@@ -569,7 +569,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
       NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
       nsresult res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
       NS_ENSURE_SUCCESS(res, res);
-      res = RemoveContainer(aElement);
+      res = RemoveContainer(element);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
