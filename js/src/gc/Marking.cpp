@@ -1753,13 +1753,24 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
 
         unsigned nslots = obj->slotSpan();
 
-        if (!obj->hasEmptyElements()) {
-            vp = obj->getDenseElements();
+        do {
+            if (obj->hasEmptyElements())
+                break;
+
+            if (obj->denseElementsAreCopyOnWrite()) {
+                JSObject *owner = obj->getElementsHeader()->ownerObject();
+                if (owner != obj) {
+                    PushMarkStack(this, owner);
+                    break;
+                }
+            }
+
+            vp = obj->getDenseElementsAllowCopyOnWrite();
             end = vp + obj->getDenseInitializedLength();
             if (!nslots)
                 goto scan_value_array;
             pushValueArray(obj, vp, end);
-        }
+        } while (false);
 
         vp = obj->fixedSlots();
         if (obj->slots) {

@@ -2268,6 +2268,16 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
     return true;
 }
 
+static inline MDefinition *
+PassthroughOperand(MDefinition *def)
+{
+    if (def->isConvertElementsToDoubles())
+        return def->toConvertElementsToDoubles()->elements();
+    if (def->isMaybeCopyElementsForWrite())
+        return def->toMaybeCopyElementsForWrite()->object();
+    return nullptr;
+}
+
 // Eliminate checks which are redundant given each other or other instructions.
 //
 // A type barrier is considered redundant if all missing types have been tested
@@ -2324,11 +2334,12 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
             } else if (iter->isTypeBarrier()) {
                 if (!TryEliminateTypeBarrier(iter->toTypeBarrier(), &eliminated))
                     return false;
-            } else if (iter->isConvertElementsToDoubles()) {
-                // Now that code motion passes have finished, replace any
-                // ConvertElementsToDoubles with the actual elements.
-                MConvertElementsToDoubles *ins = iter->toConvertElementsToDoubles();
-                ins->replaceAllUsesWith(ins->elements());
+            } else {
+                // Now that code motion passes have finished, replace
+                // instructions which pass through one of their operands
+                // (and perform additional checks) with that operand.
+                if (MDefinition *passthrough = PassthroughOperand(*iter))
+                    iter->replaceAllUsesWith(passthrough);
             }
 
             if (eliminated)

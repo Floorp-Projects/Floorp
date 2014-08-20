@@ -1649,6 +1649,32 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     return true;
 }
 
+typedef JSObject *(*NewArrayCopyOnWriteFn)(JSContext *, HandleObject, gc::InitialHeap);
+const VMFunction jit::NewArrayCopyOnWriteInfo =
+    FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray);
+
+bool
+BaselineCompiler::emit_JSOP_NEWARRAY_COPYONWRITE()
+{
+    RootedScript scriptRoot(cx, script);
+    JSObject *obj = types::GetOrFixupCopyOnWriteObject(cx, scriptRoot, pc);
+    if (!obj)
+        return false;
+
+    prepareVMCall();
+
+    pushArg(Imm32(gc::DefaultHeap));
+    pushArg(ImmGCPtr(obj));
+
+    if (!callVM(NewArrayCopyOnWriteInfo))
+        return false;
+
+    // Box and push return value.
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
+    return true;
+}
+
 bool
 BaselineCompiler::emit_JSOP_INITELEM_ARRAY()
 {
