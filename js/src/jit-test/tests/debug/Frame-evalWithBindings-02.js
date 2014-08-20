@@ -15,7 +15,9 @@ g.eval("function f(obj, expected) { debugger; }");
 
 g.eval("f(new Number(-0), '0');");
 g.eval("f(new String('ok'), 'ok');");
-g.eval("f(Symbol('still ok'), 'Symbol(still ok)');");
-g.eval("f(Object(Symbol('still ok')), 'Symbol(still ok)');");
+if (typeof Symbol === "function") {
+    g.eval("f(Symbol('still ok'), 'Symbol(still ok)');");
+    g.eval("f(Object(Symbol('still ok')), 'Symbol(still ok)');");
+}
 g.eval("f({toString: function () { return f; }}, f);");
-assertEq(hits, 5);
+assertEq(hits, typeof Symbol === "function" ? 5 : 3);
