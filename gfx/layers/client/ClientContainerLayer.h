@@ -27,7 +27,7 @@ class ClientContainerLayer : public ContainerLayer,
                              public ClientLayer
 {
 public:
-  ClientContainerLayer(ClientLayerManager* aManager) :
+  explicit ClientContainerLayer(ClientLayerManager* aManager) :
     ContainerLayer(aManager,
                    static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   {
@@ -150,7 +150,7 @@ protected:
 class ClientRefLayer : public RefLayer,
                        public ClientLayer {
 public:
-  ClientRefLayer(ClientLayerManager* aManager) :
+  explicit ClientRefLayer(ClientLayerManager* aManager) :
     RefLayer(aManager,
              static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   {

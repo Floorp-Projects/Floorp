@@ -30,7 +30,7 @@ public:
   typedef RotatedContentBuffer::PaintState PaintState;
   typedef RotatedContentBuffer::ContentType ContentType;
 
-  BasicThebesLayer(BasicLayerManager* aLayerManager) :
+  explicit BasicThebesLayer(BasicLayerManager* aLayerManager) :
     ThebesLayer(aLayerManager,
                 static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST())),
     mContentClient(nullptr)

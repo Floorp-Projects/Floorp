@@ -28,7 +28,7 @@ class SharedPlanarYCbCrImage : public PlanarYCbCrImage
                              , public ISharedImage
 {
 public:
-  SharedPlanarYCbCrImage(ImageClient* aCompositable);
+  explicit SharedPlanarYCbCrImage(ImageClient* aCompositable);
 
 protected:
   ~SharedPlanarYCbCrImage();
