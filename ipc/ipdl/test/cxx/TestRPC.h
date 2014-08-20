@@ -18,7 +18,7 @@ public:
     virtual ~TestRPCParent();
 
     static bool RunTestInProcesses() { return true; }
-    static bool RunTestInThreads() { return true; }
+    static bool RunTestInThreads() { return false; }
 
     void Main();
 

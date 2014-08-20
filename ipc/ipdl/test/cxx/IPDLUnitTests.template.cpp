@@ -38,6 +38,9 @@ MessageLoop *gParentMessageLoop;
 bool gParentDone;
 bool gChildDone;
 
+void
+DeleteChildActor();
+
 //-----------------------------------------------------------------------------
 // data/functions accessed by both parent and child processes
 
@@ -134,6 +137,10 @@ void
 IPDLUnitTestMain(void* aData)
 {
     char* testString = reinterpret_cast<char*>(aData);
+
+    // Some tests require this, and we don't care what thread we're on if we're
+    // not using Nuwa.
+    mozilla::ipc::IToplevelProtocol::SetAllowNonMainThreadUse();
 
     // Check if we are to run the test using threads instead:
     const char *prefix = "thread:";
@@ -321,6 +328,13 @@ QuitParent()
     }
 }
 
+static void
+ChildDie()
+{
+    DeleteChildActor();
+    XRE_ShutdownChildProcess();
+}
+
 void
 QuitChild()
 {
@@ -328,7 +342,8 @@ QuitChild()
         gParentMessageLoop->PostTask(
             FROM_HERE, NewRunnableFunction(ChildCompleted));
     } else { // Process-mode test
-        XRE_ShutdownChildProcess();
+        MessageLoop::current()->PostTask(
+            FROM_HERE, NewRunnableFunction(ChildDie));
     }
 }
 
@@ -362,8 +377,9 @@ IPDLUnitTestChildInit(IPC::Channel* transport,
                       base::ProcessHandle parent,
                       MessageLoop* worker)
 {
-    if (atexit(DeleteChildActor))
-        fail("can't install atexit() handler");
+    // Some tests require this, and we don't care what thread we're on if we're
+    // not using Nuwa.
+    mozilla::ipc::IToplevelProtocol::SetAllowNonMainThreadUse();
 
     switch (IPDLUnitTest()) {
 //-----------------------------------------------------------------------------
