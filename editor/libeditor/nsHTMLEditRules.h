@@ -198,7 +198,7 @@ protected:
   nsresult GetFormatString(nsIDOMNode *aNode, nsAString &outFormat);
   nsresult GetInnerContent(nsIDOMNode *aNode, nsCOMArray<nsIDOMNode>& outArrayOfNodes, int32_t *aIndex, bool aList = true, bool aTble = true);
   already_AddRefed<nsIDOMNode> IsInListItem(nsIDOMNode* aNode);
-  nsINode* IsInListItem(nsINode* aNode);
+  mozilla::dom::Element* IsInListItem(nsINode* aNode);
   nsresult ReturnInHeader(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, int32_t aOffset);
   nsresult ReturnInParagraph(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, int32_t aOffset, bool *aCancel, bool *aHandled);
   nsresult SplitParagraph(nsIDOMNode *aPara,

@@ -1667,57 +1667,43 @@ nsEditor::InsertContainerAbove(nsIContent* aNode,
 ///////////////////////////////////////////////////////////////////////////
 // MoveNode:  move aNode to {aParent,aOffset}
 nsresult
-nsEditor::MoveNode(nsIDOMNode* aNode, nsIDOMNode* aParent, int32_t aOffset)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_STATE(node);
-
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  NS_ENSURE_STATE(parent);
-
-  return MoveNode(node, parent, aOffset);
-}
-
-nsresult
-nsEditor::MoveNode(nsINode* aNode, nsINode* aParent, int32_t aOffset)
+nsEditor::MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset)
 {
   MOZ_ASSERT(aNode);
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(aOffset == -1 ||
              (0 <= aOffset && SafeCast<uint32_t>(aOffset) <= aParent->Length()));
 
-  int32_t oldOffset;
-  nsCOMPtr<nsINode> oldParent = GetNodeLocation(aNode, &oldOffset);
-  
+  nsCOMPtr<nsINode> oldParent = aNode->GetParentNode();
+  int32_t oldOffset = oldParent ? oldParent->IndexOf(aNode) : -1;
+
   if (aOffset == -1) {
-    // Magic value meaning "move to end of aParent".
+    // Magic value meaning "move to end of aParent"
     aOffset = SafeCast<int32_t>(aParent->Length());
   }
-  
-  // Don't do anything if it's already in right place.
+
+  // Don't do anything if it's already in right place
   if (aParent == oldParent && aOffset == oldOffset) {
     return NS_OK;
   }
-  
-  // Notify our internal selection state listener.
+
+  // Notify our internal selection state listener
   nsAutoMoveNodeSelNotify selNotify(mRangeUpdater, oldParent, oldOffset,
                                     aParent, aOffset);
-  
-  // Need to adjust aOffset if we are moving aNode further along in its current
-  // parent.
+
+  // Need to adjust aOffset if we're moving aNode later in its current parent
   if (aParent == oldParent && oldOffset < aOffset) {
-    // This is because when we delete aNode, it will make the offsets after it
-    // off by one.
+    // When we delete aNode, it will make the offsets after it off by one
     aOffset--;
   }
 
-  // Hold a reference so aNode doesn't go away when we remove it (bug 772282).
+  // Hold a reference so aNode doesn't go away when we remove it (bug 772282)
   nsCOMPtr<nsINode> kungFuDeathGrip = aNode;
 
   nsresult rv = DeleteNode(aNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return InsertNode(aNode->AsDOMNode(), aParent->AsDOMNode(), aOffset);
+  return InsertNode(aNode, aParent, aOffset);
 }
 
 
