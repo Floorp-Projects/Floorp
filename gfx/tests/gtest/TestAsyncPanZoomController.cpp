@@ -721,39 +721,39 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   apzc->SetFrameMetrics(metrics);
   apzc->NotifyLayersUpdated(metrics, true);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(), ParentLayerToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint()), viewTransformOut);
   EXPECT_EQ(ScreenPoint(60, 60), pointOut);
 
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->NotifyLayersUpdated(childMetrics, true);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(), ParentLayerToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint()), viewTransformOut);
   EXPECT_EQ(ScreenPoint(60, 60), pointOut);
 
   // do an async scroll by 5 pixels and check the transform
   metrics.ScrollBy(CSSPoint(5, 0));
   apzc->SetFrameMetrics(metrics);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint(-30, 0)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(90, 60), pointOut);
 
   childMetrics.ScrollBy(CSSPoint(5, 0));
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint(-30, 0)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(90, 60), pointOut);
 
   // do an async zoom of 1.5x and check the transform
   metrics.ZoomBy(1.5f);
   apzc->SetFrameMetrics(metrics);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(3)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(3), ScreenPoint(-45, 0)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 
   childMetrics.ZoomBy(1.5f);
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(3)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(3), ScreenPoint(-45, 0)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 }
 
