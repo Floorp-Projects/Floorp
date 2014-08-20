@@ -1335,37 +1335,54 @@ NS_IMETHODIMP nsEditor::SetSpellcheckUserOverride(bool enable)
   return SyncRealTimeSpell();
 }
 
-NS_IMETHODIMP nsEditor::CreateNode(const nsAString& aTag,
-                                   nsIDOMNode *    aParent,
-                                   int32_t         aPosition,
-                                   nsIDOMNode **   aNewNode)
+NS_IMETHODIMP
+nsEditor::CreateNode(const nsAString& aTag,
+                     nsIDOMNode* aParent,
+                     int32_t aPosition,
+                     nsIDOMNode** aNewNode)
 {
-  int32_t i;
+  nsCOMPtr<nsIAtom> tag = do_GetAtom(aTag);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  NS_ENSURE_STATE(parent);
+  *aNewNode = GetAsDOMNode(CreateNode(tag, parent, aPosition).take());
+  NS_ENSURE_STATE(*aNewNode);
+  return NS_OK;
+}
+
+already_AddRefed<Element>
+nsEditor::CreateNode(nsIAtom* aTag,
+                     nsINode* aParent,
+                     int32_t aPosition)
+{
+  MOZ_ASSERT(aTag && aParent);
 
   nsAutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->WillCreateNode(aTag, aParent, aPosition);
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->WillCreateNode(nsDependentAtomString(aTag),
+                                        GetAsDOMNode(aParent), aPosition);
+  }
 
-  nsRefPtr<CreateElementTxn> txn;
-  nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition,
-                                              getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))
-  {
-    result = DoTransaction(txn);
-    if (NS_SUCCEEDED(result))
-    {
-      result = txn->GetNewNode(aNewNode);
-      NS_ASSERTION((NS_SUCCEEDED(result)), "GetNewNode can't fail if txn::DoTransaction succeeded.");
-    }
+  nsCOMPtr<Element> ret;
+
+  nsRefPtr<CreateElementTxn> txn =
+    CreateTxnForCreateElement(*aTag, *aParent, aPosition);
+  nsresult res = DoTransaction(txn);
+  if (NS_SUCCEEDED(res)) {
+    ret = txn->GetNewNode();
+    MOZ_ASSERT(ret);
   }
 
   mRangeUpdater.SelAdjCreateNode(aParent, aPosition);
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->DidCreateNode(aTag, *aNewNode, aParent, aPosition, result);
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->DidCreateNode(nsDependentAtomString(aTag),
+                                       GetAsDOMNode(ret),
+                                       GetAsDOMNode(aParent), aPosition,
+                                       res);
+  }
 
-  return result;
+  return ret.forget();
 }
 
 
@@ -4275,22 +4292,15 @@ nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
 }
 
 
-NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsAString& aTag,
-                                                  nsIDOMNode     *aParent,
-                                                  int32_t         aPosition,
-                                                  CreateElementTxn ** aTxn)
+already_AddRefed<CreateElementTxn>
+nsEditor::CreateTxnForCreateElement(nsIAtom& aTag,
+                                    nsINode& aParent,
+                                    int32_t aPosition)
 {
-  NS_ENSURE_TRUE(aParent, NS_ERROR_NULL_POINTER);
+  nsRefPtr<CreateElementTxn> txn =
+    new CreateElementTxn(*this, aTag, aParent, aPosition);
 
-  nsRefPtr<CreateElementTxn> txn = new CreateElementTxn();
-
-  nsresult rv = txn->Init(this, aTag, aParent, aPosition);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
-
-  return rv;
+  return txn.forget();
 }
 
 

@@ -29,7 +29,6 @@
 
 class AddStyleSheetTxn;
 class ChangeAttributeTxn;
-class CreateElementTxn;
 class DeleteNodeTxn;
 class DeleteTextTxn;
 class EditAggregateTxn;
@@ -72,6 +71,7 @@ class ErrorResult;
 class TextComposition;
 
 namespace dom {
+class CreateElementTxn;
 class DataTransfer;
 class Element;
 class EventTarget;
@@ -200,7 +200,6 @@ public:
 
 public:
 
-  nsresult MarkNodeDirty(nsINode* aNode);
   virtual bool IsModifiableNode(nsINode *aNode);
 
   NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
@@ -275,10 +274,14 @@ protected:
 
   /** create a transaction for creating a new child node of aParent of type aTag.
     */
-  NS_IMETHOD CreateTxnForCreateElement(const nsAString & aTag,
-                                       nsIDOMNode      *aParent,
-                                       int32_t         aPosition,
-                                       CreateElementTxn ** aTxn);
+  already_AddRefed<mozilla::dom::CreateElementTxn>
+  CreateTxnForCreateElement(nsIAtom& aTag,
+                            nsINode& aParent,
+                            int32_t aPosition);
+
+  already_AddRefed<mozilla::dom::Element> CreateNode(nsIAtom* aTag,
+                                                     nsINode* aParent,
+                                                     int32_t aPosition);
 
   /** create a transaction for inserting aNode as a child of aParent.
     */
