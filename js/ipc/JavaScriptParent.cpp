@@ -55,6 +55,12 @@ JavaScriptParent::trace(JSTracer *trc)
         objects_.trace(trc);
 }
 
+JSObject *
+JavaScriptParent::defaultScope()
+{
+    return xpc::UnprivilegedJunkScope();
+}
+
 mozilla::ipc::IProtocol*
 JavaScriptParent::CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx)
 {
