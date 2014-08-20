@@ -81,6 +81,8 @@
             "mouse_cursor_monitor_x11.cc",
             "screen_capturer_x11.cc",
             "window_capturer_x11.cc",
+            "x11/shared_x_util.h",
+            "x11/shared_x_util.cc",
             "x11/shared_x_display.h",
             "x11/shared_x_display.cc",
             "x11/x_error_trap.cc",
