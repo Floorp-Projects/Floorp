@@ -523,7 +523,7 @@ AdjustAndCombineWithCSSTransform(const Matrix4x4& asyncTransform, Layer* aLayer)
   }
 
   // Combine the async transform with the layer's CSS transform.
-  result = result * aLayer->GetTransform();
+  result = aLayer->GetTransform() * result;
   return result;
 }
 
@@ -827,23 +827,20 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // primary scrollable layer. We compare this to the user zoom and scroll
   // offset in the view transform we obtained from Java in order to compute the
   // transformation we need to apply.
-  LayerToScreenScale zoomAdjust = userZoom / geckoZoom;
-
-  LayerPoint geckoScroll(0, 0);
+  ScreenPoint geckoScroll(0, 0);
   if (metrics.IsScrollable()) {
-    geckoScroll = metrics.GetScrollOffset() * geckoZoom;
+    geckoScroll = metrics.GetScrollOffset() * userZoom;
   }
-
-  LayerPoint translation = (userScroll / zoomAdjust) - geckoScroll;
-  Matrix4x4 treeTransform = ViewTransform(-translation,
-                                            userZoom
-                                          / metrics.mDevPixelsPerCSSPixel
-                                          / metrics.GetParentResolution());
+  ParentLayerToScreenScale scale = userZoom
+                                  / metrics.mDevPixelsPerCSSPixel
+                                  / metrics.GetParentResolution();
+  ScreenPoint translation = userScroll - geckoScroll;
+  Matrix4x4 treeTransform = ViewTransform(scale, -translation);
 
   // The transform already takes the resolution scale into account.  Since we
   // will apply the resolution scale again when computing the effective
   // transform, we must apply the inverse resolution scale here.
-  Matrix4x4 computedTransform = treeTransform * oldTransform;
+  Matrix4x4 computedTransform = oldTransform * treeTransform;
   if (ContainerLayer* container = aLayer->AsContainerLayer()) {
     computedTransform.Scale(1.0f/container->GetPreXScale(),
                             1.0f/container->GetPreYScale(),
