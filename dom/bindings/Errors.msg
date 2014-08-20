@@ -54,3 +54,4 @@ MSG_DEF(MSG_DEFINEPROPERTY_ON_GSP, 0, "Not allowed to define a property on the n
 MSG_DEF(MSG_INVALID_URL, 1, "{0} is not a valid URL.")
 MSG_DEF(MSG_METADATA_NOT_CONFIGURED, 0, "Either size or lastModified should be true.")
 MSG_DEF(MSG_INVALID_READ_SIZE, 0, "0 (Zero) is not a valid read size.")
+MSG_DEF(MSG_PERMISSION_DENIED_TO_PASS_ARG, 1, "Permission denied to pass cross-origin object as {0}.")
