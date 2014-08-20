@@ -246,8 +246,8 @@ var SimpleServiceDiscovery = {
 
   getSupportedExtensions: function() {
     let extensions = [];
-    this._targets.forEach(function(target) {
-        extensions = extensions.concat(target.extensions);
+    this.services.forEach(function(service) {
+        extensions = extensions.concat(service.extensions);
       }, this);
     return extensions.filter(function(extension, pos) {
       return extensions.indexOf(extension) == pos;
@@ -256,8 +256,8 @@ var SimpleServiceDiscovery = {
 
   getSupportedMimeTypes: function() {
     let types = [];
-    this._targets.forEach(function(target) {
-        types = types.concat(target.types);
+    this.services.forEach(function(service) {
+        types = types.concat(service.types);
       }, this);
     return types.filter(function(type, pos) {
       return types.indexOf(type) == pos;

@@ -2773,8 +2773,6 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
                      script->needsArgsObj(),
                      inlineScriptTree);
 
-    AutoTempAllocatorRooter root(cx, &temp);
-
     const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
 
     types::CompilerConstraintList *constraints = types::NewCompilerConstraintList(temp);
@@ -3003,8 +3001,6 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
                      ArgumentsUsageAnalysis,
                      /* needsArgsObj = */ true,
                      inlineScriptTree);
-
-    AutoTempAllocatorRooter root(cx, &temp);
 
     const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
 
