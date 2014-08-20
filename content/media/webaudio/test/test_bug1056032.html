@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset=utf-8>
+<head>
+  <title>Test that we can decode an mp3 (bug 1056032)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var filename = "small-shot.mp3";
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", filename);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = function() {
+    var context = new AudioContext();
+    context.decodeAudioData(xhr.response, function(b) {
+      ok(true, "We can decode an mp3 using decodeAudioData");
+      SimpleTest.finish();
+    }, function() {
+      ok(false, "We should be able to decode an mp3 using decodeAudioData but couldn't");
+      SimpleTest.finish();
+    });
+  };
+  xhr.send(null);
+});
+</script>
+</pre>
+</body>
+</html>
