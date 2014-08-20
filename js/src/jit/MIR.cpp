@@ -3448,6 +3448,13 @@ jit::ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefiniti
 }
 
 bool
+jit::ElementAccessMightBeCopyOnWrite(types::CompilerConstraintList *constraints, MDefinition *obj)
+{
+    types::TemporaryTypeSet *types = obj->resultTypeSet();
+    return !types || types->hasObjectFlags(constraints, types::OBJECT_FLAG_COPY_ON_WRITE);
+}
+
+bool
 jit::ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
                                           MDefinition *obj)
 {

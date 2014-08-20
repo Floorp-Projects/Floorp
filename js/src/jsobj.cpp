@@ -1365,8 +1365,11 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
     // arrays with non-writable length.  We don't need to do anything special
     // for that, because capacity was zeroed out by preventExtensions.  (See
     // the assertion before the if-else above.)
-    if (it == FREEZE && obj->is<ArrayObject>())
+    if (it == FREEZE && obj->is<ArrayObject>()) {
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
         obj->getElementsHeader()->setNonwritableArrayLength();
+    }
 
     return true;
 }
@@ -2315,15 +2318,48 @@ js::XDRObjectLiteral(XDRState<XDR_DECODE> *xdr, MutableHandleObject obj);
 JSObject *
 js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
 {
-    Rooted<TypeObject*> typeObj(cx);
-    typeObj = cx->getNewType(&JSObject::class_, TaggedProto(cx->global()->getOrCreateObjectPrototype(cx)));
+    if (srcObj->getClass() == &JSObject::class_) {
+        AllocKind kind = GetBackgroundAllocKind(GuessObjectGCKind(srcObj->numFixedSlots()));
+        JS_ASSERT_IF(srcObj->isTenured(), kind == srcObj->tenuredGetAllocKind());
 
-    JS_ASSERT(srcObj->getClass() == &JSObject::class_);
-    AllocKind kind = GetBackgroundAllocKind(GuessObjectGCKind(srcObj->numFixedSlots()));
-    JS_ASSERT_IF(srcObj->isTenured(), kind == srcObj->tenuredGetAllocKind());
+        JSObject *proto = cx->global()->getOrCreateObjectPrototype(cx);
+        if (!proto)
+            return nullptr;
+        Rooted<TypeObject*> typeObj(cx, cx->getNewType(&JSObject::class_, TaggedProto(proto)));
+        if (!typeObj)
+            return nullptr;
 
-    RootedShape shape(cx, srcObj->lastProperty());
-    return NewReshapedObject(cx, typeObj, parent, kind, shape);
+        RootedShape shape(cx, srcObj->lastProperty());
+        return NewReshapedObject(cx, typeObj, parent, kind, shape);
+    }
+
+    JS_ASSERT(srcObj->is<ArrayObject>());
+    JS_ASSERT(srcObj->denseElementsAreCopyOnWrite());
+    JS_ASSERT(srcObj->getElementsHeader()->ownerObject() == srcObj);
+
+    size_t length = srcObj->as<ArrayObject>().length();
+    RootedObject res(cx, NewDenseAllocatedArray(cx, length, nullptr, MaybeSingletonObject));
+    if (!res)
+        return nullptr;
+
+    RootedId id(cx);
+    RootedValue value(cx);
+    for (size_t i = 0; i < length; i++) {
+        // The only markable values in copy on write arrays are atoms, which
+        // can be freely copied between compartments.
+        value = srcObj->getDenseElement(i);
+        JS_ASSERT_IF(value.isMarkable(),
+                     cx->runtime()->isAtomsZone(value.toGCThing()->tenuredZone()));
+
+        id = INT_TO_JSID(i);
+        if (!JSObject::defineGeneric(cx, res, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
+            return nullptr;
+    }
+
+    if (!ObjectElements::MakeElementsCopyOnWrite(cx, res))
+        return nullptr;
+
+    return res;
 }
 
 struct JSObject::TradeGutsReserved {
@@ -3063,6 +3099,9 @@ JSObject::shrinkSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount
 /* static */ bool
 JSObject::sparsifyDenseElement(ExclusiveContext *cx, HandleObject obj, uint32_t index)
 {
+    if (!obj->maybeCopyElementsForWrite(cx))
+        return false;
+
     RootedValue value(cx, obj->getDenseElement(index));
     JS_ASSERT(!value.isMagic(JS_ELEMENTS_HOLE));
 
@@ -3083,6 +3122,9 @@ JSObject::sparsifyDenseElement(ExclusiveContext *cx, HandleObject obj, uint32_t 
 /* static */ bool
 JSObject::sparsifyDenseElements(js::ExclusiveContext *cx, HandleObject obj)
 {
+    if (!obj->maybeCopyElementsForWrite(cx))
+        return false;
+
     uint32_t initialized = obj->getDenseInitializedLength();
 
     /* Create new properties with the value of non-hole dense elements. */
@@ -3200,6 +3242,9 @@ JSObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleObject obj)
      * This object meets all necessary restrictions, convert all indexed
      * properties into dense elements.
      */
+
+    if (!obj->maybeCopyElementsForWrite(cx))
+        return ED_FAILED;
 
     if (newInitializedLength > obj->getDenseCapacity()) {
         if (!obj->growElements(cx, newInitializedLength))
@@ -3382,6 +3427,8 @@ JSObject::growElements(ThreadSafeContext *cx, uint32_t reqCapacity)
 {
     JS_ASSERT(nonProxyIsExtensible());
     JS_ASSERT(canHaveNonEmptyElements());
+    if (denseElementsAreCopyOnWrite())
+        MOZ_CRASH();
 
     uint32_t oldCapacity = getDenseCapacity();
     JS_ASSERT(oldCapacity < reqCapacity);
@@ -3444,6 +3491,8 @@ JSObject::shrinkElements(ThreadSafeContext *cx, uint32_t reqCapacity)
 {
     JS_ASSERT(cx->isThreadLocal(this));
     JS_ASSERT(canHaveNonEmptyElements());
+    if (denseElementsAreCopyOnWrite())
+        MOZ_CRASH();
 
     if (!hasDynamicElements())
         return;
@@ -3469,6 +3518,38 @@ JSObject::shrinkElements(ThreadSafeContext *cx, uint32_t reqCapacity)
 
     newheader->capacity = newCapacity;
     elements = newheader->elements();
+}
+
+/* static */ bool
+JSObject::CopyElementsForWrite(ThreadSafeContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->denseElementsAreCopyOnWrite());
+
+    // The original owner of a COW elements array should never be modified.
+    JS_ASSERT(obj->getElementsHeader()->ownerObject() != obj);
+
+    uint32_t initlen = obj->getDenseInitializedLength();
+    uint32_t allocated = initlen + ObjectElements::VALUES_PER_HEADER;
+    uint32_t newAllocated = goodAllocated(allocated);
+
+    uint32_t newCapacity = newAllocated - ObjectElements::VALUES_PER_HEADER;
+
+    if (newCapacity >= NELEMENTS_LIMIT)
+        return false;
+
+    ObjectElements *newheader = AllocateElements(cx, obj, newAllocated);
+    if (!newheader)
+        return false;
+    js_memcpy(newheader, obj->getElementsHeader(),
+              (ObjectElements::VALUES_PER_HEADER + initlen) * sizeof(Value));
+
+    newheader->capacity = newCapacity;
+    newheader->clearCopyOnWrite();
+    obj->elements = newheader->elements();
+
+    Debug_SetSlotRangeToCrashOnTouch(obj->elements + initlen, newCapacity - initlen);
+
+    return true;
 }
 
 bool
@@ -3967,6 +4048,9 @@ CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
         if (!cx->shouldBeJSContext())
             return false;
 
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
+
         /* Make a local copy of value so addProperty can mutate its inout parameter. */
         RootedValue value(cx, nominal);
 
@@ -4102,6 +4186,9 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
      */
     if (JSID_IS_INT(id)) {
         if (mode == ParallelExecution)
+            return false;
+
+        if (!obj->maybeCopyElementsForWrite(cx))
             return false;
 
         ExclusiveContext *ncx = cx->asExclusiveContext();
@@ -5384,6 +5471,9 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
             return true;
         }
 
+        if (!obj->maybeCopyElementsForWrite(cxArg))
+            return false;
+
         if (mode == ParallelExecution)
             return obj->setDenseElementIfHasType(index, vp);
 
@@ -5539,6 +5629,9 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succe
             return false;
         if (!succeeded)
             return true;
+
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
 
         obj->setDenseElementHole(cx, JSID_TO_INT(id));
         return js_SuppressDeletedProperty(cx, obj, id);
@@ -6253,7 +6346,8 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Objects
 
     if (hasDynamicElements()) {
         js::ObjectElements *elements = getElementsHeader();
-        sizes->mallocHeapElementsNonAsmJS += mallocSizeOf(elements);
+        if (!elements->isCopyOnWrite() || elements->ownerObject() == this)
+            sizes->mallocHeapElementsNonAsmJS += mallocSizeOf(elements);
     }
 
     // Other things may be measured in the future if DMD indicates it is worthwhile.
