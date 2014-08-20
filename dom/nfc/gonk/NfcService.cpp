@@ -133,6 +133,7 @@ public:
         MozNDEFRecordOptions& record = *event.mRecords.Value().AppendElement();
 
         record.mTnf = recordStruct.mTnf;
+        MOZ_ASSERT(record.mTnf < TNF::EndGuard_);
 
         if (recordStruct.mType.Length() > 0) {
           record.mType.Construct();
