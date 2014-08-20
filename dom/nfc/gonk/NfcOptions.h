@@ -6,12 +6,13 @@
 #define NfcOptions_h
 
 #include "mozilla/dom/NfcOptionsBinding.h"
+#include "mozilla/dom/MozNDEFRecordBinding.h"
 
 namespace mozilla {
 
 struct NDEFRecordStruct
 {
-  uint8_t mTnf;
+  dom::TNF mTnf;
   nsTArray<uint8_t> mType;
   nsTArray<uint8_t> mId;
   nsTArray<uint8_t> mPayload;
