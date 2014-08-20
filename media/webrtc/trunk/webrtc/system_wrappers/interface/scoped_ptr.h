@@ -110,6 +110,16 @@
 #include "webrtc/system_wrappers/source/move.h"
 #include "webrtc/typedefs.h"
 
+// XXX This file creates unused typedefs as a way of doing static assertions,
+// both via COMPILE_ASSERT and via direct typedefs like
+// 'type_must_be_complete'. These trigger a GCC warning, which we disable here.
+// This can be removed if & when this file (and COMPILE_ASSERT) stops using
+// these typedefs.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif // defined(__GNUC__) && !defined(__clang__)
+
 namespace webrtc {
 
 // Function object which deletes its parameter, which must be a pointer.
@@ -711,5 +721,10 @@ void swap(scoped_ptr_malloc<T,FF>& a, scoped_ptr_malloc<T,FF>& b) {
 }
 
 }  // namespace webrtc
+
+// Pop off 'ignored "-Wunused-local-typedefs"':
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif // defined(__GNUC__) && !defined(__clang__)
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_SCOPED_PTR_H_
