@@ -2591,5 +2591,12 @@ AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitInfo,
 }
 #endif
 
+bool
+CallerSubsumes(JSObject *aObject)
+{
+  nsIPrincipal* objPrin = nsContentUtils::ObjectPrincipal(js::UncheckedUnwrap(aObject));
+  return nsContentUtils::SubjectPrincipal()->Subsumes(objPrin);
+}
+
 } // namespace dom
 } // namespace mozilla
