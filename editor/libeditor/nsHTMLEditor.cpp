@@ -1254,7 +1254,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 
   // Loop over the contents of the fragment and move into the document
   while (nsCOMPtr<nsIContent> child = docfrag->GetFirstChild()) {
-    nsresult res = InsertNode(child, headNode, offsetOfNewNode++);
+    nsresult res = InsertNode(*child, *headNode, offsetOfNewNode++);
     NS_ENSURE_SUCCESS(res, res);
   }
 
