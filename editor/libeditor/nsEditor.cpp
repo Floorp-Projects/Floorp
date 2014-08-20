@@ -4121,6 +4121,8 @@ NS_IMETHODIMP
 nsEditor::DeleteSelectionAndCreateNode(const nsAString& aTag,
                                            nsIDOMNode ** aNewNode)
 {
+  nsCOMPtr<nsIAtom> tag = do_GetAtom(aTag);
+
   nsresult result = DeleteSelectionAndPrepareToCreateNode();
   NS_ENSURE_SUCCESS(result, result);
 
@@ -4131,12 +4133,9 @@ nsEditor::DeleteSelectionAndCreateNode(const nsAString& aTag,
   uint32_t offset = selection->AnchorOffset();
 
   nsCOMPtr<nsIDOMNode> newNode;
-  result = CreateNode(aTag, node->AsDOMNode(), offset,
-                      getter_AddRefs(newNode));
+  *aNewNode = GetAsDOMNode(CreateNode(tag, node, offset).take());
   // XXX: ERROR_HANDLING  check result, and make sure aNewNode is set correctly
   // in success/failure cases
-  *aNewNode = newNode;
-  NS_IF_ADDREF(*aNewNode);
 
   // we want the selection to be just after the new node
   return selection->Collapse(node, offset + 1);

@@ -4884,6 +4884,8 @@ NS_IMETHODIMP
 nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNode * aNewBlock,
                                           nsIDOMNode **aOutBrNode)
 {
+  nsCOMPtr<nsINode> newBlock = do_QueryInterface(aNewBlock);
+  NS_ENSURE_STATE(newBlock || !aNewBlock);
   *aOutBrNode = nullptr;
   nsCOMPtr<nsIDOMNode> child, tmp;
   nsresult res;
@@ -4923,11 +4925,9 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
         newStyles = InsertContainerAbove(newStyles, childElement->Tag());
         NS_ENSURE_STATE(newStyles);
       } else {
-        nsCOMPtr<nsIDOMNode> newStylesDOM;
-        res = CreateNode(nsDependentAtomString(childElement->Tag()), aNewBlock,
-                         0, getter_AddRefs(newStylesDOM));
-        NS_ENSURE_SUCCESS(res, res);
-        deepestStyle = newStyles = do_QueryInterface(newStylesDOM);
+        deepestStyle = newStyles = CreateNode(childElement->Tag(), newBlock,
+                                              0);
+        NS_ENSURE_STATE(newStyles);
       }
       CloneAttributes(newStyles, childElement);
     }
