@@ -658,7 +658,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'MozMmsEvent.webidl',
     'MozOtaStatusEvent.webidl',
     'MozSettingsEvent.webidl',
-    'MozSettingsTransactionEvent.webidl',
     'MozSmsEvent.webidl',
     'MozStkCommandEvent.webidl',
     'PageTransitionEvent.webidl',

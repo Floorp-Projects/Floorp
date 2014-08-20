@@ -22,14 +22,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=678695
 "use strict";
 
 if (SpecialPowers.isMainProcess()) {
-  SpecialPowers.Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
+  SpecialPowers.Cu.import("resource://gre/modules/SettingsChangeNotifier.jsm");
 }
 
 SpecialPowers.addPermission("settings-write", true, document);
 SpecialPowers.addPermission("settings-read", true, document);
-SpecialPowers.addPermission("settings-api-read", true, document);
-SpecialPowers.addPermission("settings-api-write", true, document);
-SpecialPowers.addPermission("settings-clear", true, document);
 
 var screenBright = {"screen.brightness": 0.7};
 
@@ -92,12 +89,8 @@ var steps = [
     req = lock.clear();
     req.onsuccess = function () {
       ok(true, "Deleted the database");
-      next();
     };
     req.onerror = onFailure;
-  },
-  function () {
-    var lock = mozSettings.createLock();
     req2 = lock.set(screenBright);
     req2.onsuccess = function () {
       ok(true, "set done");
@@ -274,19 +267,16 @@ var steps = [
     req = lock.clear();
     req.onsuccess = function () {
       ok(true, "Deleted the database");
-      next();
+      navigator.mozSettings.onsettingchange = onComplexSettingschangeWithNext;
     };
     req.onerror = onFailure;
-  },
-  function () {
-    var lock = mozSettings.createLock();
-    navigator.mozSettings.onsettingchange = onComplexSettingschangeWithNext;
     req2 = navigator.mozSettings.createLock().set({'test.key': cset});
     req2.onsuccess = function () {
       ok(true, "set done");
     }
     req2.onerror = onFailure;
   },
+  
   function () {
     ok(true, "all done!\n");
     SimpleTest.finish();
