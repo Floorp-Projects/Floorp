@@ -55,6 +55,7 @@ jmethodID GeckoAppShell::jGetScreenDepthWrapper = 0;
 jmethodID GeckoAppShell::jGetScreenOrientationWrapper = 0;
 jmethodID GeckoAppShell::jGetShowPasswordSetting = 0;
 jmethodID GeckoAppShell::jGetSystemColoursWrapper = 0;
+jmethodID GeckoAppShell::jGetUserRestrictions = 0;
 jmethodID GeckoAppShell::jHandleGeckoMessageWrapper = 0;
 jmethodID GeckoAppShell::jHandleUncaughtException = 0;
 jmethodID GeckoAppShell::jHideProgressDialog = 0;
@@ -62,6 +63,7 @@ jmethodID GeckoAppShell::jInitCameraWrapper = 0;
 jmethodID GeckoAppShell::jIsNetworkLinkKnown = 0;
 jmethodID GeckoAppShell::jIsNetworkLinkUp = 0;
 jmethodID GeckoAppShell::jIsTablet = 0;
+jmethodID GeckoAppShell::jIsUserRestricted = 0;
 jmethodID GeckoAppShell::jKillAnyZombies = 0;
 jmethodID GeckoAppShell::jLoadPluginClass = 0;
 jmethodID GeckoAppShell::jLockScreenOrientation = 0;
@@ -142,6 +144,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jGetScreenOrientationWrapper = getStaticMethod("getScreenOrientation", "()S");
     jGetShowPasswordSetting = getStaticMethod("getShowPasswordSetting", "()Z");
     jGetSystemColoursWrapper = getStaticMethod("getSystemColors", "()[I");
+    jGetUserRestrictions = getStaticMethod("getUserRestrictions", "()Ljava/lang/String;");
     jHandleGeckoMessageWrapper = getStaticMethod("handleGeckoMessage", "(Lorg/mozilla/gecko/util/NativeJSContainer;)V");
     jHandleUncaughtException = getStaticMethod("handleUncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
     jHideProgressDialog = getStaticMethod("hideProgressDialog", "()V");
@@ -149,6 +152,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jIsNetworkLinkKnown = getStaticMethod("isNetworkLinkKnown", "()Z");
     jIsNetworkLinkUp = getStaticMethod("isNetworkLinkUp", "()Z");
     jIsTablet = getStaticMethod("isTablet", "()Z");
+    jIsUserRestricted = getStaticMethod("isUserRestricted", "()Z");
     jKillAnyZombies = getStaticMethod("killAnyZombies", "()V");
     jLoadPluginClass = getStaticMethod("loadPluginClass", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Class;");
     jLockScreenOrientation = getStaticMethod("lockScreenOrientation", "(I)V");
@@ -780,6 +784,19 @@ jintArray GeckoAppShell::GetSystemColoursWrapper() {
     return ret;
 }
 
+jstring GeckoAppShell::GetUserRestrictions() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (env->PushLocalFrame(1) != 0) {
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_CRASH("Exception should have caused crash.");
+    }
+
+    jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetUserRestrictions);
+    AndroidBridge::HandleUncaughtException(env);
+    jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
+    return ret;
+}
+
 void GeckoAppShell::HandleGeckoMessageWrapper(jobject a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (env->PushLocalFrame(1) != 0) {
@@ -867,6 +884,19 @@ bool GeckoAppShell::IsTablet() {
     }
 
     bool temp = env->CallStaticBooleanMethod(mGeckoAppShellClass, jIsTablet);
+    AndroidBridge::HandleUncaughtException(env);
+    env->PopLocalFrame(nullptr);
+    return temp;
+}
+
+bool GeckoAppShell::IsUserRestricted() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (env->PushLocalFrame(0) != 0) {
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_CRASH("Exception should have caused crash.");
+    }
+
+    bool temp = env->CallStaticBooleanMethod(mGeckoAppShellClass, jIsUserRestricted);
     AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
     return temp;
