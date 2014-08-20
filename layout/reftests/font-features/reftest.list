@@ -32,17 +32,11 @@ HTTP(..) == font-features-ligatures-none.html font-features-noliga.html
 # check that feature in style rule overrides @font-face
 skip-if(B2G) HTTP(..) == font-features-hlig-3.html font-features-noliga.html # bug 773482
 
-# make sure old syntax usage never interferes with new syntax usage
-HTTP(..) == font-features-oldsyntax-1.html font-features-ref.html
-HTTP(..) == font-features-oldsyntax-2.html font-features-ref.html
-HTTP(..) == font-features-oldsyntax-3.html font-features-hlig.html
-HTTP(..) == font-features-oldsyntax-4.html font-features-hlig.html
-
-# compare -moz-font-language-override rendering to lang-tagged rendering
+# compare font-language-override rendering to lang-tagged rendering
 skip-if(B2G) HTTP(..) == font-features-turkish-override-1.html font-features-turkish.html # bug 773482
 HTTP(..) == font-features-turkish-override-2.html font-features-turkish.html
 
-# check use of -moz-font-language-override to override explicit lang tag
+# check use of font-language-override to override explicit lang tag
 HTTP(..) == font-features-turkish-override-3.html font-features-ref.html
 HTTP(..) == font-features-turkish-override-4.html font-features-ref.html
 skip-if(B2G) HTTP(..) == font-features-turkish-override-5.html font-features-turkish.html # bug 773482
