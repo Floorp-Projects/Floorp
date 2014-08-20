@@ -26,7 +26,7 @@ import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.util.UIAsyncTask;
 import org.mozilla.gecko.widget.ButtonToast;
 
 import android.app.Activity;
@@ -332,7 +332,7 @@ abstract class HomeFragment extends Fragment {
         mIsLoaded = true;
     }
 
-    private static class RemoveItemByUrlTask extends UiAsyncTask<Void, Void, Void> {
+    private static class RemoveItemByUrlTask extends UIAsyncTask.WithoutParams<Void> {
         private final Context mContext;
         private final String mUrl;
         private final int mPosition;
@@ -357,7 +357,7 @@ abstract class HomeFragment extends Fragment {
         }
 
         @Override
-        public Void doInBackground(Void... params) {
+        public Void doInBackground() {
             ContentResolver cr = mContext.getContentResolver();
 
             if (mPosition > -1) {

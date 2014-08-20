@@ -11,7 +11,7 @@ import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.State;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.util.UIAsyncTask;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -23,7 +23,7 @@ public class PanelsPreferenceCategory extends CustomListCategory {
     protected HomeConfig mHomeConfig;
     protected HomeConfig.Editor mConfigEditor;
 
-    protected UiAsyncTask<Void, Void, HomeConfig.State> mLoadTask;
+    protected UIAsyncTask.WithoutParams<State> mLoadTask;
 
     public PanelsPreferenceCategory(Context context) {
         super(context);
@@ -55,9 +55,9 @@ public class PanelsPreferenceCategory extends CustomListCategory {
      * Load the Home Panels config and populate the preferences screen and maintain local state.
      */
     private void loadHomeConfig(final String animatePanelId) {
-        mLoadTask = new UiAsyncTask<Void, Void, HomeConfig.State>(ThreadUtils.getBackgroundHandler()) {
+        mLoadTask = new UIAsyncTask.WithoutParams<State>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public HomeConfig.State doInBackground(Void... params) {
+            public HomeConfig.State doInBackground() {
                 return mHomeConfig.load();
             }
 
@@ -171,7 +171,7 @@ public class PanelsPreferenceCategory extends CustomListCategory {
     @Override
     protected void onPrepareForRemoval() {
         if (mLoadTask != null) {
-            mLoadTask.cancel(true);
+            mLoadTask.cancel();
         }
     }
 
