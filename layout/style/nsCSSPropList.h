@@ -1889,18 +1889,12 @@ CSS_PROP_FONT(
     kFontSynthesisKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_FONT(
+CSS_PROP_SHORTHAND(
     font-variant,
     font_variant,
     FontVariant,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
-        CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
-    "",
-    VARIANT_HK | VARIANT_SYSFONT,
-    kFontVariantKTable,
-    offsetof(nsStyleFont, mFont.variant),
-    eStyleAnimType_EnumU8)
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
 CSS_PROP_FONT(
     font-variant-alternates,
     font_variant_alternates,
@@ -1910,7 +1904,7 @@ CSS_PROP_FONT(
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
     "layout.css.font-features.enabled",
-    VARIANT_HK,
+    0,
     kFontVariantAlternatesKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)

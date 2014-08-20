@@ -496,11 +496,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 
 // See nsStyleFont
 // We should eventually stop using the NS_STYLE_* variants here.
-#define NS_STYLE_FONT_VARIANT_NORMAL            NS_FONT_VARIANT_NORMAL
-#define NS_STYLE_FONT_VARIANT_SMALL_CAPS        NS_FONT_VARIANT_SMALL_CAPS
-
-// See nsStyleFont
-// We should eventually stop using the NS_STYLE_* variants here.
 #define NS_STYLE_FONT_WEIGHT_NORMAL             NS_FONT_WEIGHT_NORMAL
 #define NS_STYLE_FONT_WEIGHT_BOLD               NS_FONT_WEIGHT_BOLD
 // The constants below appear only in style sheets and not computed style.
