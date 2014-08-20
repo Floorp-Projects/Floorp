@@ -2062,7 +2062,8 @@ WindowsHashToArrayFunc (const uint64_t& aId,
         nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
           aData->ElementAt(i);
         if (listener->CapturingVideo() || listener->CapturingAudio() ||
-            listener->CapturingScreen() || listener->CapturingWindow()) {
+            listener->CapturingScreen() || listener->CapturingWindow() ||
+            listener->CapturingApplication()) {
           capturing = true;
           break;
         }
@@ -2147,7 +2148,8 @@ MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVide
           if (listener->CapturingScreen()) {
             *aScreenShare = true;
           }
-          if (listener->CapturingWindow()) {
+          if (listener->CapturingWindow() || listener->CapturingApplication()) {
+            // treat window and application as the same
             *aWindowShare = true;
           }
         }
