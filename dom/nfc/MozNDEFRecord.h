@@ -15,6 +15,7 @@
 #include "nsWrapperCache.h"
 #include "jsapi.h"
 
+#include "mozilla/dom/MozNDEFRecordBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "jsfriendapi.h"
 #include "js/GCAPI.h"
@@ -53,7 +54,7 @@ public:
               const MozNDEFRecordOptions& aOptions,
               ErrorResult& aRv);
 
-  uint8_t Tnf() const
+  TNF Tnf() const
   {
     return mTnf;
   }
@@ -88,7 +89,7 @@ private:
   void HoldData();
   void DropData();
 
-  uint8_t mTnf;
+  TNF mTnf;
   JS::Heap<JSObject*> mType;
   JS::Heap<JSObject*> mId;
   JS::Heap<JSObject*> mPayload;
