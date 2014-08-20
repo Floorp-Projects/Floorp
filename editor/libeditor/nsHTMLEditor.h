@@ -642,7 +642,7 @@ protected:
                                          nsIDOMCharacterData *aTextNode, 
                                          int32_t aStartOffset,
                                          int32_t aEndOffset);
-  nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsINode* aNode);
+  nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode);
   nsresult RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode);
 
   /* helper routines for inline style */

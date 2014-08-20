@@ -3379,7 +3379,8 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
       res = GetInnerContent(curNode, arrayOfNodes, &j);
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->RemoveContainer(curNode);
+      NS_ENSURE_STATE(curNodeAsElement);
+      res = mHTMLEditor->RemoveContainer(curNodeAsElement);
       NS_ENSURE_SUCCESS(res, res);
       listCount = arrayOfNodes.Count();
       continue;
@@ -8909,7 +8910,9 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
 
       // now remove the CENTER container
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->RemoveContainer(child);
+      nsCOMPtr<Element> childAsElement = do_QueryInterface(child);
+      NS_ENSURE_STATE(childAsElement);
+      res = mHTMLEditor->RemoveContainer(childAsElement);
       NS_ENSURE_SUCCESS(res, res);
     }
     else if (isBlock || nsHTMLEditUtils::IsHR(child))
@@ -9147,7 +9150,7 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, int8_
   }
 
   NS_ENSURE_STATE(mHTMLEditor);
-  return mHTMLEditor->RemoveContainer(element);
+  return mHTMLEditor->RemoveContainer(node);
 }
 
 //

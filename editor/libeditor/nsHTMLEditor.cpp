@@ -3910,7 +3910,9 @@ nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
   }
     
   // now remove container
-  return RemoveContainer(inNode);
+  nsCOMPtr<nsIContent> node = do_QueryInterface(inNode);
+  NS_ENSURE_STATE(node);
+  return RemoveContainer(node);
 }
 
 

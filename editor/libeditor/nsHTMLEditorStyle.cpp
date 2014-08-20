@@ -781,6 +781,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
     return NS_OK;
   }
   nsresult res;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(content);
 
   // first process the children
   nsCOMPtr<nsIDOMNode> child, tmp;
@@ -827,7 +829,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         res = CloneAttribute(classAttr, spanNode, aNode);
         NS_ENSURE_SUCCESS(res, res);
       }
-      res = RemoveContainer(aNode);
+      res = RemoveContainer(content);
       NS_ENSURE_SUCCESS(res, res);
     } else {
       // otherwise we just want to eliminate the attribute
@@ -835,7 +837,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         // if this matching attribute is the ONLY one on the node,
         // then remove the whole node.  Otherwise just nix the attribute.
         if (IsOnlyAttribute(aNode, aAttribute)) {
-          res = RemoveContainer(aNode);
+          res = RemoveContainer(content);
         } else {
           nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
           NS_ENSURE_TRUE(elem, NS_ERROR_NULL_POINTER);
@@ -876,7 +878,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
       (aAttribute && aAttribute->LowerCaseEqualsLiteral("size"))
     )
   ) {
-    return RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
+    // if we are setting font size, remove any nested bigs and smalls
+    return RemoveContainer(content);
   }
   return NS_OK;
 }
@@ -1741,7 +1744,7 @@ nsHTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode)
 
 
 nsresult
-nsHTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange, nsINode* aNode)
+nsHTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode)
 {
   MOZ_ASSERT(aNode);
   // Can only change font size by + or - 1

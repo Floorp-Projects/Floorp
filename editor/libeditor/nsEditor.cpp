@@ -1581,44 +1581,37 @@ nsEditor::ReplaceContainer(Element* aOldContainer,
   return ret.forget();
 }
 
-///////////////////////////////////////////////////////////////////////////
-// RemoveContainer: remove inNode, reparenting its children into their
-//                  the parent of inNode
+///////////////////////////////////////////////////////////////////////////////
+// RemoveContainer: remove inNode, reparenting its children (if any) into the
+//                  parent of inNode
 //
 nsresult
-nsEditor::RemoveContainer(nsIDOMNode* aNode)
+nsEditor::RemoveContainer(nsIContent* aNode)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return RemoveContainer(node);
-}
-
-nsresult
-nsEditor::RemoveContainer(nsINode* aNode)
-{
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(aNode);
 
   nsCOMPtr<nsINode> parent = aNode->GetParentNode();
   NS_ENSURE_STATE(parent);
 
   int32_t offset = parent->IndexOf(aNode);
-  
-  // loop through the child nodes of inNode and promote them
-  // into inNode's parent.
+
+  // Loop through the children of inNode and promote them into inNode's parent
   uint32_t nodeOrigLen = aNode->GetChildCount();
 
   // notify our internal selection state listener
-  nsAutoRemoveContainerSelNotify selNotify(mRangeUpdater, aNode, parent, offset, nodeOrigLen);
-                                   
+  nsAutoRemoveContainerSelNotify selNotify(mRangeUpdater, aNode, parent,
+                                           offset, nodeOrigLen);
+
   while (aNode->HasChildren()) {
     nsCOMPtr<nsIContent> child = aNode->GetLastChild();
-    nsresult rv = DeleteNode(child->AsDOMNode());
+    nsresult rv = DeleteNode(child);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = InsertNode(child->AsDOMNode(), parent->AsDOMNode(), offset);
+    rv = InsertNode(child, parent, offset);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return DeleteNode(aNode->AsDOMNode());
+  return DeleteNode(aNode);
 }
 
 
