@@ -616,3 +616,60 @@ add_task(function test_DirectoryLinksProvider_setDefaultEnhanced() {
   // Clean up
   Services.prefs.clearUserPref("privacy.donottrackheader.value");
 });
+
+add_task(function test_DirectoryLinksProvider_enabledNotEnabled() {
+  let origLocale = Services.prefs.getCharPref(kLocalePref);
+  let origSource = Services.prefs.getCharPref(kSourceUrlPref);
+
+  Services.prefs.setCharPref(kSourceUrlPref, 'data:application/json,' + JSON.stringify({
+    "en-US": [{url: "http://example.com/en", title: "US"}],
+    "de-DE": [{url: "http://example.com/de", title: "DE"}],
+  }));
+
+  // Pretend we're not en-US to make sure things aren't enabled
+  Services.prefs.setCharPref(kLocalePref, "de-DE");
+  yield cleanJsonFile();
+  yield cleanJsonFile();
+  yield DirectoryLinksProvider.init();
+
+  do_check_false(DirectoryLinksProvider.enabled, "de-DE should trigger not enabled")
+  do_check_eq(DirectoryLinksProvider._linksURL, "data:application/json,{}", "override links url");
+
+  let data = yield readJsonFile();
+  do_check_eq(JSON.stringify(data), "{}", "disk has empty object");
+
+  let links = yield fetchData();
+  do_check_eq(links.length, 0, "get empty links");
+
+  let pinged = false;
+  let pingWait = Promise.defer();
+  server.registerPrefixHandler(kPingPath, _ => {
+    pinged = true;
+    pingWait.resolve();
+  });
+  yield DirectoryLinksProvider.reportSitesAction([], "view", 0);
+  do_check_false(pinged, "shouldn't have gotten a ping");
+
+  // Sanity check with en-US
+  Services.prefs.setCharPref(kLocalePref, "en-US");
+  yield cleanJsonFile();
+  yield cleanJsonFile();
+  yield DirectoryLinksProvider.init();
+
+  do_check_true(DirectoryLinksProvider.enabled, "en-US should trigger enabled")
+  do_check_neq(DirectoryLinksProvider._linksURL, "data:application/json,{}", "links url not overridden");
+
+  let data = yield readJsonFile();
+  do_check_neq(JSON.stringify(data), "{}", "disk has some object");
+
+  let links = yield fetchData();
+  do_check_eq(links.length, 1, "got one link");
+
+  do_check_false(pinged, "still shouldn't have a ping from before");
+  DirectoryLinksProvider.reportSitesAction([], "view", 0);
+  yield pingWait.promise;
+  do_check_true(pinged, "should have gotten a ping");
+
+  Services.prefs.setCharPref(kLocalePref, origLocale);
+  Services.prefs.setCharPref(kSourceUrlPref, origSource);
+});

@@ -24,6 +24,10 @@ let gIntro = {
   },
 
   showIfNecessary: function() {
+    if (!DirectoryLinksProvider.enabled) {
+      return;
+    }
+
     if (!this._introShown) {
       Services.prefs.setBoolPref(PREF_INTRO_SHOWN, true);
       this.showPanel();
