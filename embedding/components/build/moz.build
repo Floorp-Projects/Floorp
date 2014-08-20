@@ -14,7 +14,7 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../appstartup',
     '../commandhandler',
-    '../find/src',
+    '../find',
     '../webbrowserpersist/src',
     '../windowwatcher/src',
 ]
