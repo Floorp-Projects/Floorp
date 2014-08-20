@@ -12,7 +12,7 @@ FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    '../appstartup/src',
+    '../appstartup',
     '../commandhandler/src',
     '../find/src',
     '../webbrowserpersist/src',
