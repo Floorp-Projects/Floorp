@@ -8,7 +8,7 @@
 # but we need to export interface headers from those directories.
 DIRS += [
     'windowwatcher',
-    'appstartup/src',
+    'appstartup',
     'find',
     'webbrowserpersist',
     'commandhandler',
