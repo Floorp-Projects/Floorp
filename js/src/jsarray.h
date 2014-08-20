@@ -81,6 +81,10 @@ NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, JSObjec
 extern ArrayObject *
 NewDenseAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject *templateObject);
 
+/* Create a dense array with the same copy-on-write elements as another object. */
+extern JSObject *
+NewDenseCopyOnWriteArray(JSContext *cx, HandleObject templateObject, gc::InitialHeap heap);
+
 /*
  * Determines whether a write to the given element on |obj| should fail because
  * |obj| is an Array with a non-writable length, and writing that element would
