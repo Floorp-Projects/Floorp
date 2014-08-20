@@ -43,8 +43,8 @@ public:
   // via the fontgroup.
   
   // Takes ownership of aInnerTransformTextRunFactory
-  nsCaseTransformTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
-                                bool aAllUppercase = false)
+  explicit nsCaseTransformTextRunFactory(nsTransformingTextRunFactory* aInnerTransformingTextRunFactory,
+                                         bool aAllUppercase = false)
     : mInnerTransformingTextRunFactory(aInnerTransformingTextRunFactory),
       mAllUppercase(aAllUppercase) {}
 
