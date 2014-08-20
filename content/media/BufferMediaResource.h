@@ -106,7 +106,7 @@ private:
 
   virtual void Pin() {}
   virtual void Unpin() {}
-  virtual double GetDownloadRate(bool* aIsReliable) { return 0.; }
+  virtual double GetDownloadRate(bool* aIsReliable) { *aIsReliable = false; return 0.; }
   virtual int64_t GetLength() { return mLength; }
   virtual int64_t GetNextCachedData(int64_t aOffset) { return aOffset; }
   virtual int64_t GetCachedDataEnd(int64_t aOffset) { return mLength; }
