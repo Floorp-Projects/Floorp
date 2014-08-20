@@ -15,7 +15,7 @@ LOCAL_INCLUDES += [
     '../appstartup',
     '../commandhandler',
     '../find',
-    '../webbrowserpersist/src',
+    '../webbrowserpersist',
     '../windowwatcher/src',
 ]
 
