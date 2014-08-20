@@ -2056,9 +2056,10 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
           address_of(visNode_), &so, address_of(visNode_), &eo);
       NS_ENSURE_SUCCESS(res, res);
       visNode = GetAsDOMNode(visNode_);
-      nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(visNode));
+      nsRefPtr<Text> nodeAsText = visNode_->GetAsText();
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->DeleteText(nodeAsText, std::min(so, eo), DeprecatedAbs(eo - so));
+      res = mHTMLEditor->DeleteText(*nodeAsText, std::min(so, eo),
+                                    DeprecatedAbs(eo - so));
       *aHandled = true;
       NS_ENSURE_SUCCESS(res, res);    
       res = InsertBRIfNeeded(aSelection);
@@ -2527,14 +2528,15 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
         if ( mHTMLEditor->IsTextNode(startNode) )
         {
           // delete to last character
-          nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-          uint32_t len;
-          nodeAsText = do_QueryInterface(startNode);
-          nodeAsText->GetLength(&len);
+          nsCOMPtr<nsINode> node = do_QueryInterface(startNode);
+          uint32_t len = node->Length();
           if (len > (uint32_t)startOffset)
           {
+            nsRefPtr<nsGenericDOMDataNode> dataNode =
+              static_cast<nsGenericDOMDataNode*>(node.get());
             NS_ENSURE_STATE(mHTMLEditor);
-            res = mHTMLEditor->DeleteText(nodeAsText,startOffset,len-startOffset);
+            res = mHTMLEditor->DeleteText(*dataNode, startOffset,
+                                          len - startOffset);
             NS_ENSURE_SUCCESS(res, res);
           }
         }
@@ -2542,12 +2544,13 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
         if ( mHTMLEditor->IsTextNode(endNode) )
         {
           // delete to first character
-          nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-          nodeAsText = do_QueryInterface(endNode);
+          nsCOMPtr<nsINode> node = do_QueryInterface(endNode);
           if (endOffset)
           {
             NS_ENSURE_STATE(mHTMLEditor);
-            res = mHTMLEditor->DeleteText(nodeAsText,0,endOffset);
+            nsRefPtr<nsGenericDOMDataNode> dataNode =
+              static_cast<nsGenericDOMDataNode*>(node.get());
+            res = mHTMLEditor->DeleteText(*dataNode, 0, endOffset);
             NS_ENSURE_SUCCESS(res, res);
           }
         }
