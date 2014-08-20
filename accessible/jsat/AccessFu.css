@@ -9,9 +9,14 @@
   display: none;
   border-radius: 2px;
   box-shadow: 1px 1px 1px #444;
+  display: none;
 }
 
-#virtual-cursor-inset {
+#virtual-cursor-box.show {
+  display: block;
+}
+
+#virtual-cursor-box > div {
   border-radius: 1px;
   box-shadow: inset 1px 1px 1px #444;
   display: block;

@@ -1201,8 +1201,7 @@ const kTransferContractId = "@mozilla.org/transfer;1";
 
 // Override Toolkit's nsITransfer implementation with the one from the
 // JavaScript API for downloads.  This will eventually be removed when
-// nsIDownloadManager will not be available anymore (bug 851471).  The
-// old code in this module will be removed in bug 899110.
+// nsIDownloadManager will not be available anymore (bug 851471).
 Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
                   .registerFactory(kTransferCid, "",
                                    kTransferContractId, null);

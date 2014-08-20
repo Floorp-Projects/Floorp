@@ -122,27 +122,18 @@ ScriptSettingsStackEntry::~ScriptSettingsStackEntry()
   ScriptSettingsStack::Pop(this);
 }
 
-// This mostly gets the entry global, but doesn't entirely match the spec in
-// certain edge cases. It's good enough for some purposes, but not others. If
-// you want to call this function, ping bholley and describe your use-case.
 nsIGlobalObject*
-BrokenGetEntryGlobal()
+GetEntryGlobal()
 {
-  // We need the current JSContext in order to check the JS for
-  // scripted frames that may have appeared since anyone last
-  // manipulated the stack. If it's null, that means that there
-  // must be no entry global on the stack.
-  JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
-  if (!cx) {
-    MOZ_ASSERT(ScriptSettingsStack::EntryGlobal() == nullptr);
-    return nullptr;
-  }
-
-  return nsJSUtils::GetDynamicScriptGlobal(cx);
+  return ScriptSettingsStack::EntryGlobal();
 }
 
-// Note: When we're ready to expose it, GetEntryGlobal will look similar to
-// GetIncumbentGlobal below.
+nsIDocument*
+GetEntryDocument()
+{
+  nsCOMPtr<nsPIDOMWindow> entryWin = do_QueryInterface(GetEntryGlobal());
+  return entryWin ? entryWin->GetExtantDoc() : nullptr;
+}
 
 nsIGlobalObject*
 GetIncumbentGlobal()
@@ -169,6 +160,22 @@ GetIncumbentGlobal()
   // Ok, nothing from the JS engine. Let's use whatever's on the
   // explicit stack.
   return ScriptSettingsStack::IncumbentGlobal();
+}
+
+nsIGlobalObject*
+GetCurrentGlobal()
+{
+  JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
+  if (!cx) {
+    return nullptr;
+  }
+
+  JSObject *global = JS::CurrentGlobalOrNull(cx);
+  if (!global) {
+    return nullptr;
+  }
+
+  return xpc::GetNativeForGlobal(global);
 }
 
 nsIPrincipal*

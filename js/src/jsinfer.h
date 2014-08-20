@@ -484,14 +484,17 @@ enum MOZ_ENUM_TYPE(uint32_t) {
      */
     OBJECT_FLAG_PRE_TENURE            = 0x00400000,
 
+    /* Whether objects with this type might have copy on write elements. */
+    OBJECT_FLAG_COPY_ON_WRITE         = 0x00800000,
+
     /*
      * Whether all properties of this object are considered unknown.
      * If set, all other flags in DYNAMIC_MASK will also be set.
      */
-    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x00800000,
+    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x01000000,
 
     /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x00ff0000,
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x01ff0000,
 
     /* Mask for objects created with unknown properties. */
     OBJECT_FLAG_UNKNOWN_MASK =
@@ -1279,6 +1282,12 @@ class TypeScript
 
 void
 FillBytecodeTypeMap(JSScript *script, uint32_t *bytecodeMap);
+
+JSObject *
+GetOrFixupCopyOnWriteObject(JSContext *cx, HandleScript script, jsbytecode *pc);
+
+JSObject *
+GetCopyOnWriteObject(JSScript *script, jsbytecode *pc);
 
 class RecompileInfo;
 

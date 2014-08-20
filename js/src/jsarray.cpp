@@ -336,6 +336,8 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
         if (index <= UINT32_MAX) {
             uint32_t idx = uint32_t(index);
             if (idx < obj->getDenseInitializedLength()) {
+                if (!obj->maybeCopyElementsForWrite(cx))
+                    return false;
                 obj->markDenseElementsNotPacked(cx);
                 obj->setDenseElement(idx, MagicValue(JS_ELEMENTS_HOLE));
                 if (!js_SuppressDeletedElement(cx, obj, idx))
@@ -472,6 +474,9 @@ js::ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cxArg,
     MOZ_ASSERT(cxArg->isThreadLocal(arr));
     MOZ_ASSERT(id == NameToId(cxArg->names().length));
 
+    if (!arr->maybeCopyElementsForWrite(cxArg))
+        return false;
+
     /* Steps 1-2 are irrelevant in our implementation. */
 
     /* Steps 3-5. */
@@ -547,6 +552,9 @@ js::ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cxArg,
         // fix this inefficiency by moving indexed storage to be entirely
         // separate from non-indexed storage.
         if (!arr->isIndexed()) {
+            if (!arr->maybeCopyElementsForWrite(cxArg))
+                return false;
+
             uint32_t oldCapacity = arr->getDenseCapacity();
             uint32_t oldInitializedLength = arr->getDenseInitializedLength();
             MOZ_ASSERT(oldCapacity >= oldInitializedLength);
@@ -2139,8 +2147,11 @@ js::array_pop(JSContext *cx, unsigned argc, Value *vp)
     // Don't do anything if this isn't an array, as any deletion above has no
     // effect on any elements after the "last" one indicated by the "length"
     // property.
-    if (obj->is<ArrayObject>() && obj->getDenseInitializedLength() > index)
+    if (obj->is<ArrayObject>() && obj->getDenseInitializedLength() > index) {
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
         obj->setDenseInitializedLength(index);
+    }
 
     /* Steps 4a, 5d. */
     return SetLengthProperty(cx, obj, index);
@@ -2199,6 +2210,9 @@ js::array_shift(JSContext *cx, unsigned argc, Value *vp)
         args.rval().set(obj->getDenseElement(0));
         if (args.rval().isMagic(JS_ELEMENTS_HOLE))
             args.rval().setUndefined();
+
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
 
         obj->moveDenseElements(0, 1, obj->getDenseInitializedLength() - 1);
         obj->setDenseInitializedLength(obj->getDenseInitializedLength() - 1);
@@ -2458,6 +2472,9 @@ js::array_splice_impl(JSContext *cx, unsigned argc, Value *vp, bool returnValueI
         uint32_t finalLength = len - actualDeleteCount + itemCount;
 
         if (CanOptimizeForDenseStorage(obj, 0, len, cx)) {
+            if (!obj->maybeCopyElementsForWrite(cx))
+                return false;
+
             /* Steps 12(a)-(b). */
             obj->moveDenseElements(targetIndex, sourceIndex, len - sourceIndex);
 
@@ -2539,6 +2556,8 @@ js::array_splice_impl(JSContext *cx, unsigned argc, Value *vp, bool returnValueI
         }
 
         if (CanOptimizeForDenseStorage(obj, len, itemCount - actualDeleteCount, cx)) {
+            if (!obj->maybeCopyElementsForWrite(cx))
+                return false;
             obj->moveDenseElements(actualStart + itemCount,
                                    actualStart + actualDeleteCount,
                                    len - (actualStart + actualDeleteCount));
@@ -3343,12 +3362,7 @@ js::NewDenseAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject 
     allocKind = GetBackgroundAllocKind(allocKind);
 
     RootedTypeObject type(cx, templateObject->type());
-    if (!type)
-        return nullptr;
-
     RootedShape shape(cx, templateObject->lastProperty());
-    if (!shape)
-        return nullptr;
 
     gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
     Rooted<ArrayObject *> arr(cx, JSObject::createArray(cx, allocKind, heap, shape, type, length));
@@ -3360,6 +3374,32 @@ js::NewDenseAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject 
 
     probes::CreateObject(cx, arr);
 
+    return arr;
+}
+
+JSObject *
+js::NewDenseCopyOnWriteArray(JSContext *cx, HandleObject templateObject, gc::InitialHeap heap)
+{
+    RootedTypeObject type(cx, templateObject->type());
+    RootedShape shape(cx, templateObject->lastProperty());
+
+    JS_ASSERT(!gc::IsInsideNursery(templateObject));
+    HeapSlot *elements = templateObject->getDenseElementsAllowCopyOnWrite();
+
+    JSObject *metadata = nullptr;
+    if (!NewObjectMetadata(cx, &metadata))
+        return nullptr;
+    if (metadata) {
+        shape = Shape::setObjectMetadata(cx, metadata, templateObject->getTaggedProto(), shape);
+        if (!shape)
+            return nullptr;
+    }
+
+    Rooted<ArrayObject *> arr(cx, JSObject::createArray(cx, heap, shape, type, elements));
+    if (!arr)
+        return nullptr;
+
+    probes::CreateObject(cx, arr);
     return arr;
 }
 

@@ -3856,7 +3856,7 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
 }
 
 bool
-ParseNode::getConstantValue(ExclusiveContext *cx, MutableHandleValue vp)
+ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObjects, MutableHandleValue vp)
 {
     switch (getKind()) {
       case PNK_NUMBER:
@@ -3883,6 +3883,11 @@ ParseNode::getConstantValue(ExclusiveContext *cx, MutableHandleValue vp)
         unsigned count;
         ParseNode *pn;
 
+        if (allowObjects == DontAllowObjects)
+            return false;
+        if (allowObjects == DontAllowNestedObjects)
+            allowObjects = DontAllowObjects;
+
         if (getKind() == PNK_CALLSITEOBJ) {
             count = pn_count - 1;
             pn = pn_head->pn_next;
@@ -3899,7 +3904,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, MutableHandleValue vp)
         unsigned idx = 0;
         RootedId id(cx);
         for (; pn; idx++, pn = pn->pn_next) {
-            if (!pn->getConstantValue(cx, &value))
+            if (!pn->getConstantValue(cx, allowObjects, &value))
                 return false;
             id = INT_TO_JSID(idx);
             if (!JSObject::defineGeneric(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
@@ -3915,6 +3920,11 @@ ParseNode::getConstantValue(ExclusiveContext *cx, MutableHandleValue vp)
         JS_ASSERT(isOp(JSOP_NEWINIT));
         JS_ASSERT(!(pn_xflags & PNX_NONCONST));
 
+        if (allowObjects == DontAllowObjects)
+            return false;
+        if (allowObjects == DontAllowNestedObjects)
+            allowObjects = DontAllowObjects;
+
         gc::AllocKind kind = GuessObjectGCKind(pn_count);
         RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, kind, MaybeSingletonObject));
         if (!obj)
@@ -3922,7 +3932,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, MutableHandleValue vp)
 
         RootedValue value(cx), idvalue(cx);
         for (ParseNode *pn = pn_head; pn; pn = pn->pn_next) {
-            if (!pn->pn_right->getConstantValue(cx, &value))
+            if (!pn->pn_right->getConstantValue(cx, allowObjects, &value))
                 return false;
 
             ParseNode *pnid = pn->pn_left;
@@ -3976,7 +3986,7 @@ static bool
 EmitSingletonInitialiser(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     RootedValue value(cx);
-    if (!pn->getConstantValue(cx, &value))
+    if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value))
         return false;
 
     RootedObject obj(cx, &value.toObject());
@@ -3994,7 +4004,7 @@ static bool
 EmitCallSiteObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     RootedValue value(cx);
-    if (!pn->getConstantValue(cx, &value))
+    if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value))
         return false;
 
     JS_ASSERT(value.isObject());
@@ -6726,10 +6736,43 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             break;
 
       case PNK_ARRAY:
-        if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
-            ok = EmitSingletonInitialiser(cx, bce, pn);
-        else
-            ok = EmitArray(cx, bce, pn->pn_head, pn->pn_count);
+        if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head) {
+            if (bce->checkSingletonContext()) {
+                // Bake in the object entirely if it will only be created once.
+                ok = EmitSingletonInitialiser(cx, bce, pn);
+                break;
+            }
+
+            // If the array consists entirely of primitive values, make a
+            // template object with copy on write elements that can be reused
+            // every time the initializer executes.
+            RootedValue value(cx);
+            if (bce->emitterMode != BytecodeEmitter::SelfHosting &&
+                bce->script->compileAndGo() &&
+                pn->pn_count != 0 &&
+                pn->getConstantValue(cx, ParseNode::DontAllowNestedObjects, &value))
+            {
+                // Note: the type of the template object might not yet reflect
+                // that the object has copy on write elements. When the
+                // interpreter or JIT compiler fetches the template, it should
+                // use types::GetOrFixupCopyOnWriteObject to make sure the type
+                // for the template is accurate. We don't do this here as we
+                // want to use types::InitObject, which requires a finished
+                // script.
+                JSObject *obj = &value.toObject();
+                if (!ObjectElements::MakeElementsCopyOnWrite(cx, obj))
+                    return false;
+
+                ObjectBox *objbox = bce->parser->newObjectBox(obj);
+                if (!objbox)
+                    return false;
+
+                ok = EmitObjectOp(cx, objbox, JSOP_NEWARRAY_COPYONWRITE, bce);
+                break;
+            }
+        }
+
+        ok = EmitArray(cx, bce, pn->pn_head, pn->pn_count);
         break;
 
        case PNK_ARRAYCOMP:

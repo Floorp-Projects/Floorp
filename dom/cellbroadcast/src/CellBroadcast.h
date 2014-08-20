@@ -17,10 +17,11 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
-class CellBroadcast MOZ_FINAL : public DOMEventTargetHelper
+class CellBroadcast MOZ_FINAL : public DOMEventTargetHelper,
+                                private nsICellBroadcastListener
 {
   /**
-   * Class CellBroadcast doesn't actually inherit nsICellBroadcastListener.
+   * Class CellBroadcast doesn't actually expose nsICellBroadcastListener.
    * Instead, it owns an nsICellBroadcastListener derived instance mListener
    * and passes it to nsICellBroadcastProvider. The onreceived events are first
    * delivered to mListener and then forwarded to its owner, CellBroadcast. See
@@ -28,7 +29,11 @@ class CellBroadcast MOZ_FINAL : public DOMEventTargetHelper
    */
   class Listener;
 
+  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  ~CellBroadcast();
+
 public:
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICELLBROADCASTLISTENER
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
@@ -39,8 +44,6 @@ public:
   CellBroadcast() MOZ_DELETE;
   CellBroadcast(nsPIDOMWindow *aWindow,
                 nsICellBroadcastProvider* aProvider);
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
-  ~CellBroadcast();
 
   nsPIDOMWindow*
   GetParentObject() const { return GetOwner(); }

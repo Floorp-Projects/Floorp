@@ -67,9 +67,6 @@ EXPORTS += [
     'AudioCompactor.h',
     'AudioEventTimeline.h',
     'AudioMixer.h',
-    'AudioNodeEngine.h',
-    'AudioNodeExternalInputStream.h',
-    'AudioNodeStream.h',
     'AudioSampleFormat.h',
     'AudioSegment.h',
     'AudioStream.h',
@@ -130,9 +127,6 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'AudioChannelFormat.cpp',
     'AudioCompactor.cpp',
-    'AudioNodeEngine.cpp',
-    'AudioNodeExternalInputStream.cpp',
-    'AudioNodeStream.cpp',
     'AudioSegment.cpp',
     'AudioSink.cpp',
     'AudioStream.cpp',
@@ -184,10 +178,6 @@ SOURCES += [
 ]
 
 FAIL_ON_WARNINGS = True
-
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
-    SOURCES += ['AudioNodeEngineNEON.cpp']
-    SOURCES['AudioNodeEngineNEON.cpp'].flags += ['-mfpu=neon']
 
 MSVC_ENABLE_PGO = True
 

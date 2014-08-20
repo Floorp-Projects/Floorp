@@ -41,7 +41,7 @@ class CompositorChild MOZ_FINAL : public PCompositorChild
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorChild)
 
 public:
-  CompositorChild(ClientLayerManager *aLayerManager);
+  explicit CompositorChild(ClientLayerManager *aLayerManager);
 
   void Destroy();
 

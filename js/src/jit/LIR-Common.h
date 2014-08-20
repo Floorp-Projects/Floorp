@@ -437,6 +437,24 @@ class LNewArray : public LInstructionHelper<1, 0, 1>
     }
 };
 
+class LNewArrayCopyOnWrite : public LInstructionHelper<1, 0, 1>
+{
+  public:
+    LIR_HEADER(NewArrayCopyOnWrite)
+
+    explicit LNewArrayCopyOnWrite(const LDefinition &temp) {
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    MNewArrayCopyOnWrite *mir() const {
+        return mir_->toNewArrayCopyOnWrite();
+    }
+};
+
 class LNewObject : public LInstructionHelper<1, 0, 1>
 {
   public:
@@ -3755,6 +3773,26 @@ class LMaybeToDoubleElement : public LInstructionHelper<BOX_PIECES, 2, 1>
         return getOperand(1);
     }
     const LDefinition *tempFloat() {
+        return getTemp(0);
+    }
+};
+
+// If necessary, copy the elements in an object so they may be written to.
+class LMaybeCopyElementsForWrite : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(MaybeCopyElementsForWrite)
+
+    explicit LMaybeCopyElementsForWrite(const LAllocation &obj, const LDefinition &temp) {
+        setOperand(0, obj);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+
+    const LDefinition *temp() {
         return getTemp(0);
     }
 };
