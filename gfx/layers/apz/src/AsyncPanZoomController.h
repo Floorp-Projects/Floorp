@@ -981,6 +981,10 @@ public:
     UpdateTransformScale();
   }
 
+  void AddHitTestRegion(const nsIntRegion& aRegion) {
+    mVisibleRegion.OrWith(aRegion);
+  }
+
   Matrix4x4 GetAncestorTransform() const {
     return mAncestorTransform;
   }
@@ -999,9 +1003,10 @@ public:
   }
 
 private:
-  /* This is the visible region of the layer that this APZC corresponds to, in
-   * that layer's screen pixels (the same coordinate system in which this APZC
-   * receives events in ReceiveInputEvent()). */
+  /* This is the union of the visible regions of the layers that this APZC
+   * corresponds to, in the screen pixels of those layers. (This is the same
+   * coordinate system in which this APZC receives events in
+   * ReceiveInputEvent()). */
   nsIntRegion mVisibleRegion;
   /* This is the cumulative CSS transform for all the layers between the parent
    * APZC and this one (not inclusive) */
