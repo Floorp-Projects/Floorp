@@ -438,6 +438,13 @@ var gPopupBlockerObserver = {
       // Hide the icon in the location bar (if the location bar exists)
       if (gURLBar)
         this._reportButton.hidden = true;
+
+      // Hide the notification box (if it's visible).
+      var notificationBox = gBrowser.getNotificationBox();
+      var notification = notificationBox.getNotificationWithValue("popup-blocked");
+      if (notification) {
+        notificationBox.removeNotification(notification, false);
+      }
       return;
     }
 
