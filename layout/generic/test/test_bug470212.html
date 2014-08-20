@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=470212
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=470212">Mozilla Bug 470212</a>
 <div style="width: 200px;">
 <ca>
-<canvas style="border: 1px solid black;"></canvas>
+<canvas style="border: 1px solid black;" id="dragSource"></canvas>
 </ca>
 </div>
 
@@ -20,12 +20,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=470212
 function doShiftDrag(){
   setTimeout(function() {
     var wu = SpecialPowers.DOMWindowUtils;
-    wu.sendMouseEvent('mousedown',  0, 0, 0, 1, 4);
-    wu.sendMouseEvent('mousemove',  60, 10, 0, 0, 4);
-    wu.sendMouseEvent('mousemove',  70, 250, 0, 0, 4);
+    var canvas = document.getElementById("dragSource");
+    var canvasRect = canvas.getBoundingClientRect();
+
+    // Drag canvas element starts with a mouse down event, combine with shift
+    // key, follows by two mouse move events.
+
+    // Press on left-top corner of the canvas element.
+    wu.sendMouseEvent('mousedown',  canvasRect.left, canvasRect.top, 0, 1, 4);
+    // Move to the center of this cavas element.
+    wu.sendMouseEvent('mousemove',  canvasRect.left + (canvasRect.width / 2),
+                      canvasRect.top + (canvasRect.height / 2), 0, 0, 4);
+    // move out of cavas's region.
+    wu.sendMouseEvent('mousemove',  canvasRect.left + (canvasRect.width / 2),
+                      canvasRect.bottom + 10, 0, 0, 4);
 
     is(window.getSelection().rangeCount, 0, "rangeCount should be 0");
-    wu.sendMouseEvent('mouseup',  70, 250, 0, 0, 4);
+
+    wu.sendMouseEvent('mouseup', canvasRect.left + (canvasRect.width / 2),
+                      canvasRect.bottom + 10, 0, 0, 4);
 
     SimpleTest.finish();
   }, 0);

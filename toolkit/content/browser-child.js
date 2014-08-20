@@ -379,6 +379,48 @@ addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
   loadGroup.adjustPriority(msg.data.adjustment);
 });
 
+let DOMFullscreenManager = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+
+  init: function() {
+    Services.obs.addObserver(this, "ask-parent-to-exit-fullscreen", false);
+    Services.obs.addObserver(this, "ask-parent-to-rollback-fullscreen", false);
+    addMessageListener("DOMFullscreen:ChildrenMustExit", () => {
+      let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+      utils.exitFullscreen();
+    });
+    addEventListener("unload", () => {
+      Services.obs.removeObserver(this, "ask-parent-to-exit-fullscreen");
+      Services.obs.removeObserver(this, "ask-parent-to-rollback-fullscreen");
+    });
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    // Observer notifications are global, which means that these notifications
+    // might be coming from elements that are not actually children within this
+    // windows' content. We should ignore those. This will not be necessary once
+    // we fix bug 1053413 and stop using observer notifications for this stuff.
+    if (aSubject.defaultView.top !== content) {
+      return;
+    }
+
+    switch (aTopic) {
+      case "ask-parent-to-exit-fullscreen": {
+        sendAsyncMessage("DOMFullscreen:RequestExit");
+        break;
+      }
+      case "ask-parent-to-rollback-fullscreen": {
+        sendAsyncMessage("DOMFullscreen:RequestRollback");
+        break;
+      }
+    }
+  },
+};
+
+DOMFullscreenManager.init();
+
 let AutoCompletePopup = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup]),
 
