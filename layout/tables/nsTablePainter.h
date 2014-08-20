@@ -131,33 +131,11 @@ class TableBackgroundPainter
 
     /** Paint table background layers for this cell space
       * Also paints cell's own background in border-collapse mode
-      * @param aCell           - the cell
-      * @param aCellBGRect     - background rect for the cell
-      * @param aRowBGRect      - background rect for the row
-      * @param aRowGroupBGRect - background rect for the row group
-      * @param aColBGRect      - background rect for the column and column group
-      * @param aPassSelf       - pass this cell; i.e. paint only underlying layers
+      * @param aFrame      - the cell
+      * @param aPassSelf   - pass this cell; i.e. paint only underlying layers
       */
-    nsresult PaintCell(nsTableCellFrame* aCell,
-                       nsRect&           aCellBGRect,
-                       nsRect&           aRowBGRect,
-                       nsRect&           aRowGroupBGRect,
-                       nsRect&           aColBGRect,
+    nsresult PaintCell(nsTableCellFrame* aFrame,
                        bool              aPassSelf);
-
-    /** Compute table background layer positions for this cell space
-      * @param aCell              - the cell
-      * @param aCellBGRectOut     - outparam: background rect for the cell
-      * @param aRowBGRectOut      - outparam: background rect for the row
-      * @param aRowGroupBGRectOut - outparam: background rect for the row group
-      * @param aColBGRectOut      - outparam: background rect for the column
-                                    and column group
-      */
-    void ComputeCellBackgrounds(nsTableCellFrame* aCell,
-                                nsRect&           aCellBGRect,
-                                nsRect&           aRowBGRect,
-                                nsRect&           aRowGroupBGRect,
-                                nsRect&           aColBGRect);
 
     /** Translate mRenderingContext, mDirtyRect, and mCols' column and
       * colgroup coords
@@ -236,6 +214,7 @@ class TableBackgroundPainter
     uint32_t             mNumCols;
     TableBackgroundData  mRowGroup; //current row group
     TableBackgroundData  mRow;      //current row
+    nsRect               mCellRect; //current cell's rect
 
     nsStyleBorder        mZeroBorder;  //cached zero-width border
     uint32_t             mBGPaintFlags;
