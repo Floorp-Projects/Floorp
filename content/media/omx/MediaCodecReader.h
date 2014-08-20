@@ -29,6 +29,8 @@ struct MediaCodec;
 
 namespace mozilla {
 
+class MediaTaskQueue;
+
 class MediaCodecReader : public MediaOmxCommonReader
 {
 public:
@@ -53,17 +55,15 @@ public:
   // irreversible, whereas ReleaseMediaResources() is reversible.
   virtual void Shutdown();
 
-  // Decodes an unspecified amount of audio data, enqueuing the audio data
-  // in mAudioQueue. Returns true when there's more audio to decode,
-  // false if the audio is finished, end of file has been reached,
-  // or an un-recoverable read error has occured.
-  virtual bool DecodeAudioData();
+  // Flush the MediaTaskQueue, flush MediaCodec and raise the mDiscontinuity.
+  virtual nsresult ResetDecode() MOZ_OVERRIDE;
 
-  // Reads and decodes one video frame. Packets with a timestamp less
-  // than aTimeThreshold will be decoded (unless they're not keyframes
-  // and aKeyframeSkip is true), but will not be added to the queue.
-  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold);
+  // Disptach a DecodeVideoFrameTask to decode video data.
+  virtual void RequestVideoData(bool aSkipToNextKeyframe,
+                                int64_t aTimeThreshold) MOZ_OVERRIDE;
+
+  // Disptach a DecodeAduioDataTask to decode video data.
+  virtual void RequestAudioData() MOZ_OVERRIDE;
 
   virtual bool HasAudio();
   virtual bool HasVideo();
@@ -111,9 +111,15 @@ protected:
 
     // playback parameters
     CheckedUint32 mInputIndex;
+    // mDiscontinuity, mFlushed, mInputEndOfStream, mInputEndOfStream,
+    // mSeekTimeUs don't be protected by a lock because the
+    // mTaskQueue->Flush() will flush all tasks.
     bool mInputEndOfStream;
+    bool mOutputEndOfStream;
     int64_t mSeekTimeUs;
     bool mFlushed; // meaningless when mSeekTimeUs is invalid.
+    bool mDiscontinuity;
+    nsRefPtr<MediaTaskQueue> mTaskQueue;
   };
 
   // Receive a message from MessageHandler.
@@ -229,6 +235,24 @@ private:
   static bool ConfigureMediaCodec(Track &aTrack);
   void DestroyMediaCodecs();
   static void DestroyMediaCodecs(Track &aTrack);
+
+  bool CreateTaskQueues();
+  void ShutdownTaskQueues();
+  bool DecodeVideoFrameTask(int64_t aTimeThreshold);
+  bool DecodeVideoFrameSync(int64_t aTimeThreshold);
+  bool DecodeAudioDataTask();
+  bool DecodeAudioDataSync();
+  void DispatchVideoTask(int64_t aTimeThreshold);
+  void DispatchAudioTask();
+  inline bool CheckVideoResources() {
+    return (HasVideo() && mVideoTrack.mSource != nullptr &&
+            mVideoTrack.mTaskQueue);
+  }
+
+  inline bool CheckAudioResources() {
+    return (HasAudio() && mAudioTrack.mSource != nullptr &&
+            mAudioTrack.mTaskQueue);
+  }
 
   bool UpdateDuration();
   bool UpdateAudioInfo();
