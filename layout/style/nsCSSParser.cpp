@@ -11802,7 +11802,7 @@ CSSParserImpl::ParseFont()
     values[1].SetNormalValue();
   } else {
     if (values[1].GetUnit() == eCSSUnit_Enumerated &&
-        !values[1].GetIntValue() == NS_FONT_VARIANT_CAPS_SMALLCAPS) {
+        values[1].GetIntValue() != NS_FONT_VARIANT_CAPS_SMALLCAPS) {
       // only normal or small-caps is allowed in font shorthand
       // this also assumes other values for font-variant-caps never overlap
       // possible values for style or weight

@@ -117,8 +117,8 @@ class nsRangeUpdater
     // the following gravity routines need will/did sandwiches, because the other gravity
     // routines will be called inside of these sandwiches, but should be ignored.
     nsresult WillReplaceContainer();
-    nsresult DidReplaceContainer(nsINode* aOriginalNode, nsINode* aNewNode);
-    nsresult DidReplaceContainer(nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode);
+    nsresult DidReplaceContainer(mozilla::dom::Element* aOriginalNode,
+                                 mozilla::dom::Element* aNewNode);
     nsresult WillRemoveContainer();
     nsresult DidRemoveContainer(nsINode* aNode, nsINode* aParent,
                                 int32_t aOffset, uint32_t aNodeOrigLen);
@@ -193,32 +193,38 @@ class MOZ_STACK_CLASS nsAutoTrackDOMPoint
 
 
 
-/***************************************************************************
+/******************************************************************************
  * another helper class for nsSelectionState.  stack based class for doing
  * Will/DidReplaceContainer()
  */
 
-class MOZ_STACK_CLASS nsAutoReplaceContainerSelNotify
+namespace mozilla {
+namespace dom {
+class MOZ_STACK_CLASS AutoReplaceContainerSelNotify
 {
   private:
     nsRangeUpdater &mRU;
-    nsIDOMNode *mOriginalNode;
-    nsIDOMNode *mNewNode;
+    Element* mOriginalElement;
+    Element* mNewElement;
 
   public:
-    nsAutoReplaceContainerSelNotify(nsRangeUpdater &aRangeUpdater, nsIDOMNode *aOriginalNode, nsIDOMNode *aNewNode) :
-    mRU(aRangeUpdater)
-    ,mOriginalNode(aOriginalNode)
-    ,mNewNode(aNewNode)
+    AutoReplaceContainerSelNotify(nsRangeUpdater& aRangeUpdater,
+                                  Element* aOriginalElement,
+                                  Element* aNewElement)
+      : mRU(aRangeUpdater)
+      , mOriginalElement(aOriginalElement)
+      , mNewElement(aNewElement)
     {
       mRU.WillReplaceContainer();
     }
-    
-    ~nsAutoReplaceContainerSelNotify()
+
+    ~AutoReplaceContainerSelNotify()
     {
-      mRU.DidReplaceContainer(mOriginalNode, mNewNode);
+      mRU.DidReplaceContainer(mOriginalElement, mNewElement);
     }
 };
+}
+}
 
 
 /***************************************************************************

@@ -20,6 +20,16 @@ using gfxImageFormat from "gfxTypes.h";
 namespace mozilla {
 namespace layers {
 
+union OverlayHandle {
+  int32_t;
+  null_t;
+};
+
+struct OverlaySource {
+  OverlayHandle handle;
+  IntSize size;
+};
+
 union MaybeMagicGrallocBufferHandle {
   MagicGrallocBufferHandle;
   GrallocBufferRef;

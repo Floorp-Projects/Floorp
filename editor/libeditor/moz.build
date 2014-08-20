@@ -16,7 +16,7 @@ UNIFIED_SOURCES += [
     'EditAggregateTxn.cpp',
     'EditTxn.cpp',
     'IMETextTxn.cpp',
-    'InsertElementTxn.cpp',
+    'InsertNodeTxn.cpp',
     'InsertTextTxn.cpp',
     'JoinElementTxn.cpp',
     'nsEditor.cpp',

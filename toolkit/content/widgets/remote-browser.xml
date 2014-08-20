@@ -209,6 +209,9 @@
           this.messageManager.addMessageListener("DocumentInserted", this);
           this.messageManager.addMessageListener("FullZoomChange", this);
           this.messageManager.addMessageListener("TextZoomChange", this);
+          this.messageManager.addMessageListener("ZoomChangeUsingMouseWheel", this);
+          this.messageManager.addMessageListener("DOMFullscreen:RequestExit", this);
+          this.messageManager.addMessageListener("DOMFullscreen:RequestRollback", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
 
           if (this.hasAttribute("selectpopup")) {
@@ -221,8 +224,16 @@
           let RemoteController = Components.utils.import(jsm, {}).RemoteController;
           this._controller = new RemoteController(this);
           this.controllers.appendController(this._controller);
+
+          Services.obs.addObserver(this, "ask-children-to-exit-fullscreen", false);
         ]]>
       </constructor>
+
+      <destructor>
+        <![CDATA[
+          Services.obs.removeObserver(this, "ask-children-to-exit-fullscreen");
+        ]]>
+      </destructor>
 
       <method name="receiveMessage">
         <parameter name="aMessage"/>
@@ -269,6 +280,12 @@
               this._textZoom = data.value;
               break;
 
+            case "ZoomChangeUsingMouseWheel":
+              let event = document.createEvent("Events");
+              event.initEvent("ZoomChangeUsingMouseWheel", true, false);
+              this.dispatchEvent(event);
+              break;
+
             case "Forms:HideDropDown": {
               Cu.import("resource://gre/modules/SelectParentHelper.jsm");
               let dropdown = document.getElementById(this.getAttribute("selectpopup"));
@@ -276,10 +293,37 @@
               break;
             }
 
+            case "DOMFullscreen:RequestExit": {
+              let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIDOMWindowUtils);
+              windowUtils.exitFullscreen();
+              break;
+            }
+
+            case "DOMFullscreen:RequestRollback": {
+              let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIDOMWindowUtils);
+              windowUtils.remoteFrameFullscreenReverted();
+              break;
+            }
+
             default:
               // Delegate to browser.xml.
               return this._receiveMessage(aMessage);
               break;
+          }
+        ]]></body>
+      </method>
+
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body><![CDATA[
+          if (aTopic == "ask-children-to-exit-fullscreen") {
+            if (aSubject == window.document) {
+              this.messageManager.sendAsyncMessage("DOMFullscreen:ChildrenMustExit");
+            }
           }
         ]]></body>
       </method>

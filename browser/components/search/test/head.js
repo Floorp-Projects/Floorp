@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+  "resource://gre/modules/Promise.jsm");
+
 function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
   let gotLoad = false;
@@ -88,6 +91,18 @@ function waitForPopupShown(aPopupId, aCallback) {
   registerCleanupFunction(removePopupShownListener);
 }
 
+function* promiseEvent(aTarget, aEventName, aPreventDefault) {
+  let deferred = Promise.defer();
+  aTarget.addEventListener(aEventName, function onEvent(aEvent) {
+    aTarget.removeEventListener(aEventName, onEvent, true);
+    if (aPreventDefault) {
+      aEvent.preventDefault();
+    }
+    deferred.resolve();
+  }, true);
+  return deferred.promise;
+}
+
 function waitForBrowserContextMenu(aCallback) {
   waitForPopupShown(gBrowser.selectedBrowser.contextMenu, aCallback);
 }
@@ -106,3 +121,16 @@ function doOnloadOnce(aCallback) {
   gBrowser.addEventListener("load", doOnloadOnceListener, true);
   registerCleanupFunction(removeDoOnloadOnceListener);
 }
+
+function* promiseOnLoad() {
+  let deferred = Promise.defer();
+
+  gBrowser.addEventListener("load", function onLoadListener(aEvent) {
+    info("onLoadListener: " + aEvent.originalTarget.location);
+    gBrowser.removeEventListener("load", onLoadListener, true);
+    deferred.resolve(aEvent);
+  }, true);
+
+  return deferred.promise;
+}
+

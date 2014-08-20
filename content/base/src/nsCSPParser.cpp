@@ -784,6 +784,17 @@ nsCSPParser::directiveName()
     return nullptr;
   }
 
+  // The directive 'reflected-xss' is part of CSP 1.1, see:
+  // http://www.w3.org/TR/2014/WD-CSP11-20140211/#reflected-xss
+  // Currently we are not supporting that directive, hence we log a
+  // warning to the console and ignore the directive including its values.
+  if (CSP_IsDirective(mCurToken, CSP_REFLECTED_XSS)) {
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "notSupportingDirective",
+                             params, ArrayLength(params));
+    return nullptr;
+  }
+
   // Make sure the directive does not already exist
   // (see http://www.w3.org/TR/CSP11/#parsing)
   if (mPolicy->directiveExists(CSP_DirectiveToEnum(mCurToken))) {

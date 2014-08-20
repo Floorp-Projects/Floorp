@@ -9,13 +9,16 @@
 #include "EditTxn.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsGenericDOMDataNode.h"
 #include "nsID.h"
-#include "nsIDOMCharacterData.h"
 #include "nsString.h"
 #include "nscore.h"
 
 class nsEditor;
 class nsRangeUpdater;
+
+namespace mozilla {
+namespace dom {
 
 /**
  * A transaction that removes text from a content node.
@@ -29,13 +32,13 @@ public:
     * @param aOffset  the location in aElement to begin the deletion
     * @param aNumCharsToDelete  the number of characters to delete.  Not the number of bytes!
     */
-  NS_IMETHOD Init(nsEditor* aEditor,
-                  nsIDOMCharacterData* aCharData,
-                  uint32_t aOffset,
-                  uint32_t aNumCharsToDelete,
-                  nsRangeUpdater* aRangeUpdater);
+  DeleteTextTxn(nsEditor& aEditor,
+                nsGenericDOMDataNode& aCharData,
+                uint32_t aOffset,
+                uint32_t aNumCharsToDelete,
+                nsRangeUpdater* aRangeUpdater);
 
-  DeleteTextTxn();
+  nsresult Init();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteTextTxn, EditTxn)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
@@ -49,10 +52,10 @@ public:
 protected:
 
   /** the provider of basic editing operations */
-  nsEditor* mEditor;
+  nsEditor& mEditor;
 
   /** the CharacterData node to operate upon */
-  nsCOMPtr<nsIDOMCharacterData> mCharData;
+  nsRefPtr<nsGenericDOMDataNode> mCharData;
 
   /** the offset into mCharData where the deletion is to take place */
   uint32_t mOffset;
@@ -66,5 +69,8 @@ protected:
   /** range updater object */
   nsRangeUpdater* mRangeUpdater;
 };
+
+}
+}
 
 #endif
