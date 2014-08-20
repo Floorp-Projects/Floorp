@@ -973,12 +973,9 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetLayerHitTestData(const nsIntRegion& aRegion, const Matrix4x4& aTransformToLayer,
-                           const Matrix4x4& aTransformForLayer) {
+  void SetLayerHitTestData(const nsIntRegion& aRegion, const Matrix4x4& aTransformToLayer) {
     mVisibleRegion = aRegion;
     mAncestorTransform = aTransformToLayer;
-    mCSSTransform = aTransformForLayer;
-    UpdateTransformScale();
   }
 
   void AddHitTestRegion(const nsIntRegion& aRegion) {
@@ -987,10 +984,6 @@ public:
 
   Matrix4x4 GetAncestorTransform() const {
     return mAncestorTransform;
-  }
-
-  Matrix4x4 GetCSSTransform() const {
-    return mCSSTransform;
   }
 
   bool VisibleRegionContains(const ParentLayerPoint& aPoint) const {
@@ -1008,11 +1001,9 @@ private:
    * coordinate system in which this APZC receives events in
    * ReceiveInputEvent()). */
   nsIntRegion mVisibleRegion;
-  /* This is the cumulative CSS transform for all the layers between the parent
-   * APZC and this one (not inclusive) */
+  /* This is the cumulative CSS transform for all the layers from (and including)
+   * the parent APZC down to (but excluding) this one. */
   Matrix4x4 mAncestorTransform;
-  /* This is the CSS transform for this APZC's layer. */
-  Matrix4x4 mCSSTransform;
 
 
   /* ===================================================================
