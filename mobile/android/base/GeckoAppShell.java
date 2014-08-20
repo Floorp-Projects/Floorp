@@ -27,10 +27,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
@@ -88,12 +92,14 @@ import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
+import android.os.UserManager;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -2559,6 +2565,39 @@ public class GeckoAppShell
         }
 
         return "DIRECT";
+    }
+
+    @WrapElementForJNI
+    public static boolean isUserRestricted() {
+        if (Build.VERSION.SDK_INT < 18) {
+            return false;
+        }
+
+        UserManager mgr = (UserManager)getContext().getSystemService(Context.USER_SERVICE);
+        Bundle restrictions = mgr.getUserRestrictions();
+
+        return !restrictions.isEmpty();
+    }
+
+    @WrapElementForJNI
+    public static String getUserRestrictions() {
+        if (Build.VERSION.SDK_INT < 18) {
+            return "{}";
+        }
+
+        JSONObject json = new JSONObject();
+        UserManager mgr = (UserManager)getContext().getSystemService(Context.USER_SERVICE);
+        Bundle restrictions = mgr.getUserRestrictions();
+
+        Set<String> keys = restrictions.keySet();
+        for (String key : keys) {
+            try {
+                json.put(key, restrictions.get(key));
+            } catch (JSONException e) {
+            }
+        }
+
+        return json.toString();
     }
 
     /* Downloads the uri pointed to by a share intent, and alters the intent to point to the locally stored file.
