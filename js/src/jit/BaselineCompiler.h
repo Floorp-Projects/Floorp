@@ -92,6 +92,7 @@ namespace jit {
     _(JSOP_BITNOT)             \
     _(JSOP_NEG)                \
     _(JSOP_NEWARRAY)           \
+    _(JSOP_NEWARRAY_COPYONWRITE) \
     _(JSOP_INITELEM_ARRAY)     \
     _(JSOP_NEWOBJECT)          \
     _(JSOP_NEWINIT)            \
@@ -272,6 +273,8 @@ class BaselineCompiler : public BaselineCompilerSpecific
     Address getScopeCoordinateAddressFromObject(Register objReg, Register reg);
     Address getScopeCoordinateAddress(Register reg);
 };
+
+extern const VMFunction NewArrayCopyOnWriteInfo;
 
 } // namespace jit
 } // namespace js

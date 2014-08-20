@@ -214,9 +214,7 @@ nsILineBreaker *nsContentUtils::sLineBreaker;
 nsIWordBreaker *nsContentUtils::sWordBreaker;
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nullptr;
 uint32_t nsContentUtils::sScriptBlockerCount = 0;
-#ifdef DEBUG
 uint32_t nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
-#endif
 uint32_t nsContentUtils::sMicroTaskLevel = 0;
 nsTArray< nsCOMPtr<nsIRunnable> >* nsContentUtils::sBlockedScriptRunners = nullptr;
 uint32_t nsContentUtils::sRunnersCountAtFirstBlocker = 0;
@@ -1953,19 +1951,6 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
   }
 }
 
-nsPIDOMWindow *
-nsContentUtils::GetWindowFromCaller()
-{
-  JSContext *cx = GetCurrentJSContext();
-  if (cx) {
-    nsCOMPtr<nsPIDOMWindow> win =
-      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
-    return win;
-  }
-
-  return nullptr;
-}
-
 nsIDocument*
 nsContentUtils::GetDocumentFromCaller()
 {
@@ -1978,24 +1963,6 @@ nsContentUtils::GetDocumentFromCaller()
   }
 
   return win->GetExtantDoc();
-}
-
-nsIDocument*
-nsContentUtils::GetDocumentFromContext()
-{
-  JSContext *cx = GetCurrentJSContext();
-  if (cx) {
-    nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
-
-    if (sgo) {
-      nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(sgo);
-      if (pwin) {
-        return pwin->GetExtantDoc();
-      }
-    }
-  }
-
-  return nullptr;
 }
 
 bool
@@ -3920,30 +3887,27 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
   NS_PRECONDITION(aChild->GetParentNode() == aParent, "Wrong parent");
   NS_PRECONDITION(aChild->OwnerDoc() == aOwnerDoc, "Wrong owner-doc");
 
-  // This checks that IsSafeToRunScript is true since we don't want to fire
-  // events when that is false. We can't rely on EventDispatcher to assert
-  // this in this situation since most of the time there are no mutation
-  // event listeners, in which case we won't even attempt to dispatch events.
-  // However this also allows for two exceptions. First off, we don't assert
-  // if the mutation happens to native anonymous content since we never fire
-  // mutation events on such content anyway.
-  // Second, we don't assert if sDOMNodeRemovedSuppressCount is true since
-  // that is a know case when we'd normally fire a mutation event, but can't
-  // make that safe and so we suppress it at this time. Ideally this should
-  // go away eventually.
-  NS_ASSERTION((aChild->IsNodeOfType(nsINode::eCONTENT) &&
-               static_cast<nsIContent*>(aChild)->
-                 IsInNativeAnonymousSubtree()) ||
-               IsSafeToRunScript() ||
-               sDOMNodeRemovedSuppressCount,
-               "Want to fire DOMNodeRemoved event, but it's not safe");
-
   // Having an explicit check here since it's an easy mistake to fall into,
   // and there might be existing code with problems. We'd rather be safe
   // than fire DOMNodeRemoved in all corner cases. We also rely on it for
   // nsAutoScriptBlockerSuppressNodeRemoved.
   if (!IsSafeToRunScript()) {
-    WarnScriptWasIgnored(aOwnerDoc);
+    // This checks that IsSafeToRunScript is true since we don't want to fire
+    // events when that is false. We can't rely on EventDispatcher to assert
+    // this in this situation since most of the time there are no mutation
+    // event listeners, in which case we won't even attempt to dispatch events.
+    // However this also allows for two exceptions. First off, we don't assert
+    // if the mutation happens to native anonymous content since we never fire
+    // mutation events on such content anyway.
+    // Second, we don't assert if sDOMNodeRemovedSuppressCount is true since
+    // that is a know case when we'd normally fire a mutation event, but can't
+    // make that safe and so we suppress it at this time. Ideally this should
+    // go away eventually.
+    if (!(aChild->IsContent() && aChild->AsContent()->IsInNativeAnonymousSubtree()) &&
+        !sDOMNodeRemovedSuppressCount) {
+      NS_ERROR("Want to fire DOMNodeRemoved event, but it's not safe");
+      WarnScriptWasIgnored(aOwnerDoc);
+    }
     return;
   }
 

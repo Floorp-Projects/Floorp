@@ -395,7 +395,7 @@ this.CrashManager.prototype = Object.freeze({
 
   _addSubmissionAsCrash: function (store, processType, crashType, succeeded,
                                    id, date) {
-    let id = id + "-" + this.PROCESS_TYPE_SUBMISSION;
+    id += "-" + this.PROCESS_TYPE_SUBMISSION;
     let process = processType + "-" + crashType + "-" +
                   this.PROCESS_TYPE_SUBMISSION;
     let submission_type = (

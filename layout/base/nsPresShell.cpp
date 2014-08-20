@@ -9943,7 +9943,7 @@ void ReflowCountMgr::PaintCount(const char*     aName,
     if (counter != nullptr && counter->mName.EqualsASCII(aName)) {
       aRenderingContext->PushState();
       aRenderingContext->Translate(aOffset);
-      nsFont font(eFamily_serif, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+      nsFont font(eFamily_serif, NS_FONT_STYLE_NORMAL,
                   NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0,
                   nsPresContext::CSSPixelsToAppUnits(11));
 

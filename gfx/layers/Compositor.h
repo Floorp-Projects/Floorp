@@ -197,7 +197,7 @@ protected:
 public:
   NS_INLINE_DECL_REFCOUNTING(Compositor)
 
-  Compositor(PCompositorParent* aParent = nullptr)
+  explicit Compositor(PCompositorParent* aParent = nullptr)
     : mCompositorID(0)
     , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
     , mParent(aParent)

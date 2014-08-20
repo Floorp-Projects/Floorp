@@ -567,7 +567,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         larger, no change is made.
 
         If the user doesn't want this to happen, all they need to do is set
-        style="-moz-font-feature-settings: 'ssty' 0"
+        style="font-feature-settings: 'ssty' 0"
       */
       if (scriptScaling <= (NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER +
                             (NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER*

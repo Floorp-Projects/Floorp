@@ -123,7 +123,7 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositableClient)
 
-  CompositableClient(CompositableForwarder* aForwarder, TextureFlags aFlags = TextureFlags::NO_FLAGS);
+  explicit CompositableClient(CompositableForwarder* aForwarder, TextureFlags aFlags = TextureFlags::NO_FLAGS);
 
   virtual TextureInfo GetTextureInfo() const = 0;
 
@@ -246,8 +246,8 @@ protected:
  */
 struct AutoRemoveTexture
 {
-  AutoRemoveTexture(CompositableClient* aCompositable,
-                    TextureClient* aTexture = nullptr)
+  explicit AutoRemoveTexture(CompositableClient* aCompositable,
+                             TextureClient* aTexture = nullptr)
     : mTexture(aTexture)
     , mCompositable(aCompositable)
   {}

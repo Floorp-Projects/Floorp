@@ -30,8 +30,8 @@ class CSSStyleSheet;
 
 struct nsAtomList {
 public:
-  nsAtomList(nsIAtom* aAtom);
-  nsAtomList(const nsString& aAtomValue);
+  explicit nsAtomList(nsIAtom* aAtom);
+  explicit nsAtomList(const nsString& aAtomValue);
   ~nsAtomList(void);
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
@@ -50,7 +50,7 @@ private:
 
 struct nsPseudoClassList {
 public:
-  nsPseudoClassList(nsCSSPseudoClasses::Type aType);
+  explicit nsPseudoClassList(nsCSSPseudoClasses::Type aType);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType, const char16_t *aString);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType, const int32_t *aIntPair);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType,
@@ -284,7 +284,7 @@ class StyleRule;
 
 class ImportantRule : public nsIStyleRule {
 public:
-  ImportantRule(Declaration *aDeclaration);
+  explicit ImportantRule(Declaration *aDeclaration);
 
   NS_DECL_ISUPPORTS
 

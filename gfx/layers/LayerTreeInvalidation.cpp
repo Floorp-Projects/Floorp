@@ -98,7 +98,7 @@ NotifySubdocumentInvalidationRecursive(Layer* aLayer, NotifySubDocInvalidationFu
 
 struct LayerPropertiesBase : public LayerProperties
 {
-  LayerPropertiesBase(Layer* aLayer)
+  explicit LayerPropertiesBase(Layer* aLayer)
     : mLayer(aLayer)
     , mMaskLayer(nullptr)
     , mVisibleRegion(aLayer->GetVisibleRegion())
@@ -212,7 +212,7 @@ struct LayerPropertiesBase : public LayerProperties
 
 struct ContainerLayerProperties : public LayerPropertiesBase
 {
-  ContainerLayerProperties(ContainerLayer* aLayer)
+  explicit ContainerLayerProperties(ContainerLayer* aLayer)
     : LayerPropertiesBase(aLayer)
     , mPreXScale(aLayer->GetPreXScale())
     , mPreYScale(aLayer->GetPreYScale())
@@ -322,7 +322,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
 
 struct ColorLayerProperties : public LayerPropertiesBase
 {
-  ColorLayerProperties(ColorLayer *aLayer)
+  explicit ColorLayerProperties(ColorLayer *aLayer)
     : LayerPropertiesBase(aLayer)
     , mColor(aLayer->GetColor())
   { }
@@ -345,7 +345,7 @@ struct ColorLayerProperties : public LayerPropertiesBase
 
 struct ImageLayerProperties : public LayerPropertiesBase
 {
-  ImageLayerProperties(ImageLayer* aImage)
+  explicit ImageLayerProperties(ImageLayer* aImage)
     : LayerPropertiesBase(aImage)
     , mContainer(aImage->GetContainer())
     , mFilter(aImage->GetFilter())

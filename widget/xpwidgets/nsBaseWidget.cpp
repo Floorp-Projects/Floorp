@@ -1805,8 +1805,8 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
           (void *) aWidget,
           aWidgetName.get(),
           aWindowID,
-          aGuiEvent->refPoint.x,
-          aGuiEvent->refPoint.y);
+          aGuiEvent->refPoint.x.value,
+          aGuiEvent->refPoint.y.value);
 }
 //////////////////////////////////////////////////////////////
 /* static */ void

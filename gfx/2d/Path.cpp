@@ -107,7 +107,7 @@ FlattenedPath::QuadraticBezierTo(const Point &aCP1,
                                  const Point &aCP2)
 {
   MOZ_ASSERT(!mCalculatedLength);
-  // We need to elevate the degree of this quadratic Bézier to cubic, so we're
+  // We need to elevate the degree of this quadratic Bï¿½zier to cubic, so we're
   // going to add an intermediate control point, and recompute control point 1.
   // The first and last control points remain the same.
   // This formula can be found on http://fontforge.sourceforge.net/bezier.html
@@ -250,7 +250,7 @@ FlattenBezierCurveSegment(const BezierControlPoints &aControlPoints,
     Point cp21 = currentCP.mCP2 - currentCP.mCP3;
     Point cp31 = currentCP.mCP3 - currentCP.mCP1;
 
-    Float s3 = (cp31.x * cp21.y - cp31.y * cp21.x) / hypotf(cp21.x, cp21.y);
+    Float s3 = (cp31.x.value * cp21.y.value - cp31.y.value * cp21.x.value) / hypotf(cp21.x, cp21.y);
 
     t = 2 * Float(sqrt(aTolerance / (3. * abs(s3))));
 
@@ -276,7 +276,7 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
     Point cp21 = aControlPoints.mCP2 - aControlPoints.mCP1;
     Point cp41 = aControlPoints.mCP4 - aControlPoints.mCP1;
 
-    if (cp21.x == 0 && cp21.y == 0) {
+    if (cp21.x == 0.f && cp21.y == 0.f) {
       // In this case s3 becomes lim[n->0] (cp41.x * n) / n - (cp41.y * n) / n = cp41.x - cp41.y.
 
       // Use the absolute value so that Min and Max will correspond with the
@@ -286,7 +286,7 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
       return;
     }
 
-    Float s3 = (cp41.x * cp21.y - cp41.y * cp21.x) / hypotf(cp21.x, cp21.y);
+    Float s3 = (cp41.x.value * cp21.y.value - cp41.y.value * cp21.x.value) / hypotf(cp21.x, cp21.y);
 
     if (s3 == 0) {
       // This means within the precision we have it can be approximated

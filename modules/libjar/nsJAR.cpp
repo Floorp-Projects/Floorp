@@ -1147,6 +1147,8 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const nsACString &entry,
   nsresult rv = GetZip(zipFile, getter_AddRefs(outerZipReader));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  MutexAutoLock lock(mLock);
+
 #ifdef ZIP_CACHE_HIT_RATE
   mZipCacheLookups++;
 #endif
@@ -1189,7 +1191,6 @@ nsZipReaderCache::SetMustCacheFd(nsIFile* zipFile, bool aMustCacheFd)
   MOZ_CRASH("Not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
-  mMustCacheFd = aMustCacheFd;
 
   if (!aMustCacheFd) {
     return NS_OK;
@@ -1208,6 +1209,9 @@ nsZipReaderCache::SetMustCacheFd(nsIFile* zipFile, bool aMustCacheFd)
   uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
 
   MutexAutoLock lock(mLock);
+
+  mMustCacheFd = aMustCacheFd;
+
   nsRefPtr<nsJAR> zip;
   mZips.Get(uri, getter_AddRefs(zip));
   if (!zip) {
@@ -1388,6 +1392,7 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
     mZips.Enumerate(FindFlushableZip, nullptr);
   }
   else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
+    MutexAutoLock lock(mLock);
     mZips.EnumerateRead(DropZipReaderCache, nullptr);
     mZips.Clear();
   }

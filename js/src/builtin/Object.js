@@ -14,8 +14,14 @@ function ObjectStaticAssign(target, firstSource) {
     // Step 4.
     var i = 1;
     do {
-        // Step 5.a-b.
+        // Step 5.a-b, plus an unspecified flourish to skip null/undefined, so
+        // any site depending on agreed-upon (but not-yet-drafted) semantics
+        // from TC39 meeting minutes will work. (Yes, implausibly, such a site
+        // exists. See bug 1054426.)
         var nextSource = arguments[i];
+        if (nextSource === null || nextSource === undefined)
+            continue;
+
         var from = ToObject(nextSource);
 
         // Step 5.c-d.
@@ -58,8 +64,7 @@ function ObjectStaticAssign(target, firstSource) {
         // Step 5.k.
         if (pendingException !== MISSING)
             throw pendingException;
-        i++;
-    } while (i < arguments.length);
+    } while (++i < arguments.length);
 
     // Step 6.
     return to;
