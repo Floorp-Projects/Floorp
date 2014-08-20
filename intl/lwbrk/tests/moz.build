@@ -10,10 +10,6 @@ CPP_UNIT_TESTS += [
 
 SOURCES += sorted('%s.cpp' % t for t in CPP_UNIT_TESTS)
 
-LOCAL_INCLUDES += [
-    '../public',
-]
-
 USE_LIBS += [
     'mozalloc',
     'nspr',

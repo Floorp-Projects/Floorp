@@ -27,10 +27,6 @@ FORCE_STATIC_LIB = True
 
 SDK_LIBRARY = True
 
-LOCAL_INCLUDES += [
-    '../src',
-]
-
 USE_STATIC_LIBS = True
 
 if CONFIG['_MSC_VER']:
