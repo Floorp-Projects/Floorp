@@ -1073,10 +1073,9 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
                                          nsISupports* aCOMObj)
 {
     // Check if we're near the stack limit before we get anywhere near the
-    // transplanting code. We use a conservative check since we'll use a little
-    // more space before we actually hit the critical "can't fail" path.
+    // transplanting code.
     AutoJSContext cx;
-    JS_CHECK_RECURSION_CONSERVATIVE(cx, return NS_ERROR_FAILURE);
+    JS_CHECK_RECURSION(cx, return NS_ERROR_FAILURE);
 
     XPCNativeInterface* iface = XPCNativeInterface::GetISupports();
     if (!iface)
