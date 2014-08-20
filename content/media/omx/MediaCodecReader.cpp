@@ -28,7 +28,10 @@
 #include "gfx2DGlue.h"
 
 #include "MediaStreamSource.h"
+#include "MediaTaskQueue.h"
+#include "nsThreadUtils.h"
 #include "ImageContainer.h"
+#include "SharedThreadPool.h"
 #include "VideoFrameContainer.h"
 
 using namespace android;
@@ -125,8 +128,11 @@ MediaCodecReader::Track::Track()
   : mDurationUs(INT64_C(0))
   , mInputIndex(sInvalidInputIndex)
   , mInputEndOfStream(false)
+  , mOutputEndOfStream(false)
   , mSeekTimeUs(sInvalidTimestampUs)
   , mFlushed(false)
+  , mDiscontinuity(false)
+  , mTaskQueue(nullptr)
 {
 }
 
@@ -220,12 +226,61 @@ MediaCodecReader::Shutdown()
   ReleaseResources();
 }
 
-bool
-MediaCodecReader::DecodeAudioData()
+void
+MediaCodecReader::DispatchAudioTask()
 {
-  MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  if (mAudioTrack.mTaskQueue && mAudioTrack.mTaskQueue->IsEmpty()) {
+    RefPtr<nsIRunnable> task =
+      NS_NewRunnableMethod(this,
+                           &MediaCodecReader::DecodeAudioDataTask);
+    mAudioTrack.mTaskQueue->Dispatch(task);
+  }
+}
 
-  if (mAudioTrack.mCodec == nullptr || !mAudioTrack.mCodec->allocated()) {
+void
+MediaCodecReader::DispatchVideoTask(int64_t aTimeThreshold)
+{
+  if (mVideoTrack.mTaskQueue && mVideoTrack.mTaskQueue->IsEmpty()) {
+    RefPtr<nsIRunnable> task =
+      NS_NewRunnableMethodWithArg<int64_t>(this,
+                                           &MediaCodecReader::DecodeVideoFrameTask,
+                                           aTimeThreshold);
+    mVideoTrack.mTaskQueue->Dispatch(task);
+  }
+}
+
+void
+MediaCodecReader::RequestAudioData()
+{
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+  MOZ_ASSERT(HasAudio());
+  if (CheckAudioResources()) {
+    DispatchAudioTask();
+  }
+}
+
+void
+MediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
+                                   int64_t aTimeThreshold)
+{
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+  MOZ_ASSERT(HasVideo());
+
+  int64_t threshold = sInvalidTimestampUs;
+  if (aSkipToNextKeyframe && IsValidTimestampUs(aTimeThreshold)) {
+    mVideoTrack.mTaskQueue->Flush();
+    threshold = aTimeThreshold;
+  }
+  if (CheckVideoResources()) {
+    DispatchVideoTask(threshold);
+  }
+}
+
+bool
+MediaCodecReader::DecodeAudioDataSync()
+{
+  if (mAudioTrack.mCodec == nullptr || !mAudioTrack.mCodec->allocated() ||
+      mAudioTrack.mOutputEndOfStream) {
     return false;
   }
 
@@ -234,14 +289,22 @@ MediaCodecReader::DecodeAudioData()
   status_t status;
   TimeStamp timeout = TimeStamp::Now() + TimeDuration::FromSeconds(sMaxAudioDecodeDurationS);
   while (true) {
-    if (timeout < TimeStamp::Now()) {
-      return true; // Try it again later.
-    }
+    // Try to fill more input buffers and then get one output buffer.
+    // FIXME: use callback from MediaCodec
+    FillCodecInputData(mAudioTrack);
+
     status = GetCodecOutputData(mAudioTrack, bufferInfo, sInvalidTimestampUs, timeout);
     if (status == OK || status == ERROR_END_OF_STREAM) {
       break;
     } else if (status == -EAGAIN) {
-      return true; // Try it again later.
+      if (TimeStamp::Now() > timeout) {
+        // Don't let this loop run for too long. Try it again later.
+        if (CheckAudioResources()) {
+          DispatchAudioTask();
+        }
+        return true;
+      }
+      continue; // Try it again now.
     } else if (status == INFO_FORMAT_CHANGED) {
       if (UpdateAudioInfo()) {
         continue; // Try it again now.
@@ -253,8 +316,7 @@ MediaCodecReader::DecodeAudioData()
     }
   }
 
-  bool result = true;
-
+  bool result = false;
   if (bufferInfo.mBuffer != nullptr && bufferInfo.mSize > 0 && bufferInfo.mBuffer->data() != nullptr) {
     // This is the approximate byte position in the stream.
     int64_t pos = mDecoder->GetResource()->Tell();
@@ -273,137 +335,52 @@ MediaCodecReader::DecodeAudioData()
             mInfo.mAudio.mChannels));
   }
 
-  mAudioTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
-
-  if (status == ERROR_END_OF_STREAM) {
-    return false;
+  if ((bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_EOS) ||
+      (status == ERROR_END_OF_STREAM)) {
+    AudioQueue().Finish();
   }
+  mAudioTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
 
   return result;
 }
 
 bool
-MediaCodecReader::DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold)
+MediaCodecReader::DecodeAudioDataTask()
 {
-  MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-
-  if (mVideoTrack.mCodec == nullptr || !mVideoTrack.mCodec->allocated()) {
-    return false;
-  }
-
-  int64_t threshold = sInvalidTimestampUs;
-  if (aKeyframeSkip && IsValidTimestampUs(aTimeThreshold)) {
-    threshold = aTimeThreshold;
-  }
-
-  // Get one video output data from MediaCodec
-  CodecBufferInfo bufferInfo;
-  status_t status;
-  TimeStamp timeout = TimeStamp::Now() + TimeDuration::FromSeconds(sMaxVideoDecodeDurationS);
-  while (true) {
-    if (timeout < TimeStamp::Now()) {
-      return true; // Try it again later.
-    }
-    status = GetCodecOutputData(mVideoTrack, bufferInfo, threshold, timeout);
-    if (status == OK || status == ERROR_END_OF_STREAM) {
-      break;
-    } else if (status == -EAGAIN) {
-      return true; // Try it again later.
-    } else if (status == INFO_FORMAT_CHANGED) {
-      if (UpdateVideoInfo()) {
-        continue; // Try it again now.
-      } else {
-        return false;
+  bool result = DecodeAudioDataSync();
+  if (AudioQueue().GetSize() > 0) {
+    AudioData* a = AudioQueue().PopFront();
+    if (a) {
+      if (mAudioTrack.mDiscontinuity) {
+        a->mDiscontinuity = true;
+        mAudioTrack.mDiscontinuity = false;
       }
-    } else {
-      return false;
+      GetCallback()->OnAudioDecoded(a);
     }
   }
+  if (AudioQueue().AtEndOfStream()) {
+    GetCallback()->OnAudioEOS();
+  }
+  return result;
+}
 
-  bool result = true;
-
-  if (bufferInfo.mBuffer != nullptr && bufferInfo.mSize > 0 && bufferInfo.mBuffer->data() != nullptr) {
-    uint8_t *yuv420p_buffer = bufferInfo.mBuffer->data();
-    int32_t stride = mVideoTrack.mStride;
-    int32_t slice_height = mVideoTrack.mSliceHeight;
-
-    // Converts to OMX_COLOR_FormatYUV420Planar
-    if (mVideoTrack.mColorFormat != OMX_COLOR_FormatYUV420Planar) {
-      ARect crop;
-      crop.top = 0;
-      crop.bottom = mVideoTrack.mHeight;
-      crop.left = 0;
-      crop.right = mVideoTrack.mWidth;
-
-      yuv420p_buffer = GetColorConverterBuffer(mVideoTrack.mWidth, mVideoTrack.mHeight);
-      if (mColorConverter.convertDecoderOutputToI420(
-          bufferInfo.mBuffer->data(), mVideoTrack.mWidth, mVideoTrack.mHeight, crop, yuv420p_buffer) != OK) {
-        mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
-        NS_WARNING("Unable to convert color format");
-        return false;
+bool
+MediaCodecReader::DecodeVideoFrameTask(int64_t aTimeThreshold)
+{
+  bool result = DecodeVideoFrameSync(aTimeThreshold);
+  if (VideoQueue().GetSize() > 0) {
+    VideoData* v = VideoQueue().PopFront();
+    if (v) {
+      if (mVideoTrack.mDiscontinuity) {
+        v->mDiscontinuity = true;
+        mVideoTrack.mDiscontinuity = false;
       }
-
-      stride = mVideoTrack.mWidth;
-      slice_height = mVideoTrack.mHeight;
-    }
-
-    size_t yuv420p_y_size = stride * slice_height;
-    size_t yuv420p_u_size = ((stride + 1) / 2) * ((slice_height + 1) / 2);
-    uint8_t *yuv420p_y = yuv420p_buffer;
-    uint8_t *yuv420p_u = yuv420p_y + yuv420p_y_size;
-    uint8_t *yuv420p_v = yuv420p_u + yuv420p_u_size;
-
-    // This is the approximate byte position in the stream.
-    int64_t pos = mDecoder->GetResource()->Tell();
-
-    VideoData::YCbCrBuffer b;
-    b.mPlanes[0].mData = yuv420p_y;
-    b.mPlanes[0].mWidth = mVideoTrack.mWidth;
-    b.mPlanes[0].mHeight = mVideoTrack.mHeight;
-    b.mPlanes[0].mStride = stride;
-    b.mPlanes[0].mOffset = 0;
-    b.mPlanes[0].mSkip = 0;
-
-    b.mPlanes[1].mData = yuv420p_u;
-    b.mPlanes[1].mWidth = (mVideoTrack.mWidth + 1) / 2;
-    b.mPlanes[1].mHeight = (mVideoTrack.mHeight + 1) / 2;
-    b.mPlanes[1].mStride = (stride + 1) / 2;
-    b.mPlanes[1].mOffset = 0;
-    b.mPlanes[1].mSkip = 0;
-
-    b.mPlanes[2].mData = yuv420p_v;
-    b.mPlanes[2].mWidth =(mVideoTrack.mWidth + 1) / 2;
-    b.mPlanes[2].mHeight = (mVideoTrack.mHeight + 1) / 2;
-    b.mPlanes[2].mStride = (stride + 1) / 2;
-    b.mPlanes[2].mOffset = 0;
-    b.mPlanes[2].mSkip = 0;
-
-    VideoData *v = VideoData::Create(
-        mInfo.mVideo,
-        mDecoder->GetImageContainer(),
-        pos,
-        bufferInfo.mTimeUs,
-        1, // We don't know the duration.
-        b,
-        bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_SYNCFRAME,
-        -1,
-        mVideoTrack.mRelativePictureRect);
-
-    if (v != nullptr) {
-      result = true;
-      mVideoQueue.Push(v);
-      aKeyframeSkip = false;
-    } else {
-      NS_WARNING("Unable to create VideoData");
+      GetCallback()->OnVideoDecoded(v);
     }
   }
-
-  mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
-
-  if (status == ERROR_END_OF_STREAM) {
-    return false;
+  if (VideoQueue().AtEndOfStream()) {
+    GetCallback()->OnVideoEOS();
   }
-
   return result;
 }
 
@@ -476,6 +453,148 @@ MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
 }
 
 nsresult
+MediaCodecReader::ResetDecode()
+{
+  if (CheckAudioResources()) {
+    mAudioTrack.mTaskQueue->Flush();
+    FlushCodecData(mAudioTrack);
+    mAudioTrack.mDiscontinuity = true;
+  }
+  if (CheckVideoResources()) {
+    mVideoTrack.mTaskQueue->Flush();
+    FlushCodecData(mVideoTrack);
+    mVideoTrack.mDiscontinuity = true;
+  }
+
+  return MediaDecoderReader::ResetDecode();
+}
+
+bool
+MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
+{
+  if (mVideoTrack.mCodec == nullptr || !mVideoTrack.mCodec->allocated() ||
+      mVideoTrack.mOutputEndOfStream) {
+    return false;
+  }
+
+  // Get one video output data from MediaCodec
+  CodecBufferInfo bufferInfo;
+  status_t status;
+  TimeStamp timeout = TimeStamp::Now() + TimeDuration::FromSeconds(sMaxVideoDecodeDurationS);
+  while (true) {
+    // Try to fill more input buffers and then get one output buffer.
+    // FIXME: use callback from MediaCodec
+    FillCodecInputData(mVideoTrack);
+
+    status = GetCodecOutputData(mVideoTrack, bufferInfo, aTimeThreshold, timeout);
+    if (status == OK || status == ERROR_END_OF_STREAM) {
+      break;
+    } else if (status == -EAGAIN) {
+      if (TimeStamp::Now() > timeout) {
+        // Don't let this loop run for too long. Try it again later.
+        if (CheckVideoResources()) {
+          DispatchVideoTask(aTimeThreshold);
+        }
+        return true;
+      }
+      continue; // Try it again now.
+    } else if (status == INFO_FORMAT_CHANGED) {
+      if (UpdateVideoInfo()) {
+        continue; // Try it again now.
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  bool result = false;
+  if (bufferInfo.mBuffer != nullptr && bufferInfo.mSize > 0 && bufferInfo.mBuffer->data() != nullptr) {
+    uint8_t *yuv420p_buffer = bufferInfo.mBuffer->data();
+    int32_t stride = mVideoTrack.mStride;
+    int32_t slice_height = mVideoTrack.mSliceHeight;
+
+    // Converts to OMX_COLOR_FormatYUV420Planar
+    if (mVideoTrack.mColorFormat != OMX_COLOR_FormatYUV420Planar) {
+      ARect crop;
+      crop.top = 0;
+      crop.bottom = mVideoTrack.mHeight;
+      crop.left = 0;
+      crop.right = mVideoTrack.mWidth;
+
+      yuv420p_buffer = GetColorConverterBuffer(mVideoTrack.mWidth, mVideoTrack.mHeight);
+      if (mColorConverter.convertDecoderOutputToI420(
+          bufferInfo.mBuffer->data(), mVideoTrack.mWidth, mVideoTrack.mHeight, crop, yuv420p_buffer) != OK) {
+        mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
+        NS_WARNING("Unable to convert color format");
+        return false;
+      }
+
+      stride = mVideoTrack.mWidth;
+      slice_height = mVideoTrack.mHeight;
+    }
+
+    size_t yuv420p_y_size = stride * slice_height;
+    size_t yuv420p_u_size = ((stride + 1) / 2) * ((slice_height + 1) / 2);
+    uint8_t *yuv420p_y = yuv420p_buffer;
+    uint8_t *yuv420p_u = yuv420p_y + yuv420p_y_size;
+    uint8_t *yuv420p_v = yuv420p_u + yuv420p_u_size;
+
+    // This is the approximate byte position in the stream.
+    int64_t pos = mDecoder->GetResource()->Tell();
+
+    VideoData::YCbCrBuffer b;
+    b.mPlanes[0].mData = yuv420p_y;
+    b.mPlanes[0].mWidth = mVideoTrack.mWidth;
+    b.mPlanes[0].mHeight = mVideoTrack.mHeight;
+    b.mPlanes[0].mStride = stride;
+    b.mPlanes[0].mOffset = 0;
+    b.mPlanes[0].mSkip = 0;
+
+    b.mPlanes[1].mData = yuv420p_u;
+    b.mPlanes[1].mWidth = (mVideoTrack.mWidth + 1) / 2;
+    b.mPlanes[1].mHeight = (mVideoTrack.mHeight + 1) / 2;
+    b.mPlanes[1].mStride = (stride + 1) / 2;
+    b.mPlanes[1].mOffset = 0;
+    b.mPlanes[1].mSkip = 0;
+
+    b.mPlanes[2].mData = yuv420p_v;
+    b.mPlanes[2].mWidth =(mVideoTrack.mWidth + 1) / 2;
+    b.mPlanes[2].mHeight = (mVideoTrack.mHeight + 1) / 2;
+    b.mPlanes[2].mStride = (stride + 1) / 2;
+    b.mPlanes[2].mOffset = 0;
+    b.mPlanes[2].mSkip = 0;
+
+    VideoData *v = VideoData::Create(
+      mInfo.mVideo,
+      mDecoder->GetImageContainer(),
+      pos,
+      bufferInfo.mTimeUs,
+      1, // We don't know the duration.
+      b,
+      bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_SYNCFRAME,
+      -1,
+      mVideoTrack.mRelativePictureRect);
+
+    if (v != nullptr) {
+      result = true;
+      VideoQueue().Push(v);
+    } else {
+      NS_WARNING("Unable to create VideoData");
+    }
+  }
+
+  if ((bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_EOS) ||
+      (status == ERROR_END_OF_STREAM)) {
+    VideoQueue().Finish();
+  }
+  mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
+
+  return result;
+}
+
+nsresult
 MediaCodecReader::Seek(int64_t aTime,
                        int64_t aStartTime,
                        int64_t aEndTime,
@@ -483,43 +602,53 @@ MediaCodecReader::Seek(int64_t aTime,
 {
   MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  VideoFrameContainer* videoframe = mDecoder->GetVideoFrameContainer();
-  if (videoframe != nullptr) {
-    mozilla::layers::ImageContainer *image = videoframe->GetImageContainer();
-    if (image != nullptr) {
-      image->ClearAllImagesExceptFront();
-    }
-  }
-
-  mAudioTrack.mInputEndOfStream = false;
-  mVideoTrack.mInputEndOfStream = false;
-
-  mAudioTrack.mSeekTimeUs = aTime;
   mVideoTrack.mSeekTimeUs = aTime;
-
+  mAudioTrack.mSeekTimeUs = aTime;
+  mVideoTrack.mInputEndOfStream = false;
+  mVideoTrack.mOutputEndOfStream = false;
+  mAudioTrack.mInputEndOfStream = false;
+  mAudioTrack.mOutputEndOfStream = false;
   mAudioTrack.mFlushed = false;
   mVideoTrack.mFlushed = false;
 
-  // Regulate the seek time to the closest sync point of video data.
-  if (HasVideo() && mVideoTrack.mSource != nullptr) {
-    MediaBuffer *source_buffer = nullptr;
+  if (CheckVideoResources()) {
+    VideoFrameContainer* videoframe = mDecoder->GetVideoFrameContainer();
+    if (videoframe != nullptr) {
+      mozilla::layers::ImageContainer *image = videoframe->GetImageContainer();
+      if (image != nullptr) {
+        image->ClearAllImagesExceptFront();
+      }
+    }
+
+    MediaBuffer* source_buffer = nullptr;
     MediaSource::ReadOptions options;
+    int64_t timestamp = sInvalidTimestampUs;
     options.setSeekTo(aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
-    if (mVideoTrack.mSource->read(&source_buffer, &options) != OK || source_buffer == nullptr) {
+    if (mVideoTrack.mSource->read(&source_buffer, &options) != OK ||
+        source_buffer == nullptr) {
       return NS_ERROR_FAILURE;
     }
     sp<MetaData> format = source_buffer->meta_data();
     if (format != nullptr) {
-      int64_t timestamp = sInvalidTimestampUs;
       if (format->findInt64(kKeyTime, &timestamp) && IsValidTimestampUs(timestamp)) {
-        mAudioTrack.mSeekTimeUs = timestamp;
         mVideoTrack.mSeekTimeUs = timestamp;
+        mAudioTrack.mSeekTimeUs = timestamp;
       }
       format = nullptr;
     }
     source_buffer->release();
-  }
 
+    MOZ_ASSERT(mVideoTrack.mTaskQueue->IsEmpty());
+    DispatchVideoTask(mVideoTrack.mSeekTimeUs);
+
+    if (CheckAudioResources()) {
+      MOZ_ASSERT(mAudioTrack.mTaskQueue->IsEmpty());
+      DispatchAudioTask();
+    }
+  } else if (CheckAudioResources()) {// Audio only
+    MOZ_ASSERT(mAudioTrack.mTaskQueue->IsEmpty());
+    DispatchAudioTask();
+  }
   return NS_OK;
 }
 
@@ -542,7 +671,8 @@ MediaCodecReader::ReallocateResources()
   if (CreateLooper() &&
       CreateExtractor() &&
       CreateMediaSources() &&
-      CreateMediaCodecs()) {
+      CreateMediaCodecs() &&
+      CreateTaskQueues()) {
     return true;
   }
 
@@ -573,6 +703,7 @@ MediaCodecReader::ReleaseResources()
   DestroyMediaSources();
   DestroyExtractor();
   DestroyLooper();
+  ShutdownTaskQueues();
 }
 
 bool
@@ -709,6 +840,38 @@ MediaCodecReader::DestroyMediaSources()
   mAudioTrack.mSource = nullptr;
   mVideoTrack.mSource = nullptr;
   mAudioOffloadTrack.mSource = nullptr;
+}
+
+void
+MediaCodecReader::ShutdownTaskQueues()
+{
+  if(mAudioTrack.mTaskQueue) {
+    mAudioTrack.mTaskQueue->Shutdown();
+    mAudioTrack.mTaskQueue = nullptr;
+  }
+  if(mVideoTrack.mTaskQueue) {
+    mVideoTrack.mTaskQueue->Shutdown();
+    mVideoTrack.mTaskQueue = nullptr;
+  }
+}
+
+bool
+MediaCodecReader::CreateTaskQueues()
+{
+  if (mAudioTrack.mSource != nullptr && mAudioTrack.mCodec != nullptr &&
+      !mAudioTrack.mTaskQueue) {
+    mAudioTrack.mTaskQueue = new MediaTaskQueue(
+      SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaCodecReader Audio"), 1));
+    NS_ENSURE_TRUE(mAudioTrack.mTaskQueue, false);
+  }
+ if (mVideoTrack.mSource != nullptr && mVideoTrack.mCodec != nullptr &&
+     !mVideoTrack.mTaskQueue) {
+    mVideoTrack.mTaskQueue = new MediaTaskQueue(
+      SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaCodecReader Video"), 1));
+    NS_ENSURE_TRUE(mVideoTrack.mTaskQueue, false);
+  }
+
+  return true;
 }
 
 bool
@@ -1103,29 +1266,25 @@ MediaCodecReader::GetCodecOutputData(Track &aTrack,
 {
   // Read next frame.
   CodecBufferInfo info;
-
-  // Try to fill more input buffers and then get one output buffer.
-  // FIXME: use callback from MediaCodec
   status_t status = OK;
 
   while (status == OK || status == INFO_OUTPUT_BUFFERS_CHANGED ||
-         status == -EAGAIN || status == ERROR_END_OF_STREAM) {
-    // Try to fill more input buffers and then get one output buffer.
-    // FIXME: use callback from MediaCodec
-    status = FillCodecInputData(aTrack);
+         status == -EAGAIN) {
+
     int64_t duration = (int64_t)(aTimeout - TimeStamp::Now()).ToMicroseconds();
     if (!IsValidDurationUs(duration)) {
       return -EAGAIN;
     }
 
-    if (status == OK || status == ERROR_END_OF_STREAM) {
-      status = aTrack.mCodec->dequeueOutputBuffer(
-          &info.mIndex, &info.mOffset, &info.mSize, &info.mTimeUs, &info.mFlags, duration);
-      if (info.mFlags & MediaCodec::BUFFER_FLAG_EOS) {
-        aBuffer = info;
-        aBuffer.mBuffer = aTrack.mOutputBuffers[info.mIndex];
-        return ERROR_END_OF_STREAM;
-      }
+    status = aTrack.mCodec->dequeueOutputBuffer(
+        &info.mIndex, &info.mOffset, &info.mSize, &info.mTimeUs, &info.mFlags, duration);
+    // Check EOS first.
+    if (status == ERROR_END_OF_STREAM ||
+        info.mFlags & MediaCodec::BUFFER_FLAG_EOS) {
+      aBuffer = info;
+      aBuffer.mBuffer = aTrack.mOutputBuffers[info.mIndex];
+      aTrack.mOutputEndOfStream = true;
+      return ERROR_END_OF_STREAM;
     }
 
     if (status == OK) {
