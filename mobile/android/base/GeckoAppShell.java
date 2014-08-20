@@ -27,10 +27,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
@@ -92,12 +96,14 @@ import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
+import android.os.UserManager;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -152,9 +158,6 @@ public class GeckoAppShell
      * is scheduled to end.  This value is valid only when
      * sVibrationMaybePlaying is true. */
     private static long sVibrationEndTime;
-
-    /* Default value of how fast we should hint the Android sensors. */
-    private static int sDefaultSensorHint = 100;
 
     private static Sensor gAccelerometerSensor;
     private static Sensor gLinearAccelerometerSensor;
@@ -680,14 +683,14 @@ public class GeckoAppShell
             if(gOrientationSensor == null)
                 gOrientationSensor = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
             if (gOrientationSensor != null) 
-                sm.registerListener(gi.getSensorEventListener(), gOrientationSensor, sDefaultSensorHint);
+                sm.registerListener(gi.getSensorEventListener(), gOrientationSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_ACCELERATION:
             if(gAccelerometerSensor == null)
                 gAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             if (gAccelerometerSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gAccelerometerSensor, sDefaultSensorHint);
+                sm.registerListener(gi.getSensorEventListener(), gAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_PROXIMITY:
@@ -708,14 +711,14 @@ public class GeckoAppShell
             if(gLinearAccelerometerSensor == null)
                 gLinearAccelerometerSensor = sm.getDefaultSensor(10 /* API Level 9 - TYPE_LINEAR_ACCELERATION */);
             if (gLinearAccelerometerSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gLinearAccelerometerSensor, sDefaultSensorHint);
+                sm.registerListener(gi.getSensorEventListener(), gLinearAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
             if(gGyroscopeSensor == null)
                 gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if (gGyroscopeSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gGyroscopeSensor, sDefaultSensorHint);
+                sm.registerListener(gi.getSensorEventListener(), gGyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
         default:
             Log.w(LOGTAG, "Error! Can't enable unknown SENSOR type " + aSensortype);
@@ -2526,6 +2529,39 @@ public class GeckoAppShell
         }
 
         return "DIRECT";
+    }
+
+    @WrapElementForJNI
+    public static boolean isUserRestricted() {
+        if (Versions.preJBMR2) {
+            return false;
+        }
+
+        UserManager mgr = (UserManager)getContext().getSystemService(Context.USER_SERVICE);
+        Bundle restrictions = mgr.getUserRestrictions();
+
+        return !restrictions.isEmpty();
+    }
+
+    @WrapElementForJNI
+    public static String getUserRestrictions() {
+        if (Versions.preJBMR2) {
+            return "{}";
+        }
+
+        JSONObject json = new JSONObject();
+        UserManager mgr = (UserManager)getContext().getSystemService(Context.USER_SERVICE);
+        Bundle restrictions = mgr.getUserRestrictions();
+
+        Set<String> keys = restrictions.keySet();
+        for (String key : keys) {
+            try {
+                json.put(key, restrictions.get(key));
+            } catch (JSONException e) {
+            }
+        }
+
+        return json.toString();
     }
 
     /* Downloads the uri pointed to by a share intent, and alters the intent to point to the locally stored file.
