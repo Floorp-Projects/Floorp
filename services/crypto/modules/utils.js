@@ -393,7 +393,7 @@ this.CryptoUtils = {
    */
 
   stripHeaderAttributes: function(value) {
-    let value = value || "";
+    value = value || "";
     let i = value.indexOf(";");
     return value.substring(0, (i >= 0) ? i : undefined).trim().toLowerCase();
   },

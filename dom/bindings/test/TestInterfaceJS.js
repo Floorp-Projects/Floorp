@@ -9,17 +9,6 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-var gGlobal = this;
-function checkGlobal(obj) {
-  if (Object(obj) === obj && Cu.getGlobalForObject(obj) != gGlobal) {
-    // This message may not make it to the caller in a useful form, so dump
-    // as well.
-    var msg = "TestInterfaceJS received an object from a different scope!";
-    dump(msg + "\n");
-    throw new Error(msg);
-  }
-}
-
 function TestInterfaceJS(anyArg, objectArg) {}
 
 TestInterfaceJS.prototype = {
@@ -27,23 +16,32 @@ TestInterfaceJS.prototype = {
   contractID: "@mozilla.org/dom/test-interface-js;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
-  __init: function (anyArg, objectArg) {
+  __init: function (anyArg, objectArg, dictionaryArg) {
     this._anyAttr = undefined;
     this._objectAttr = null;
     this._anyArg = anyArg;
     this._objectArg = objectArg;
-    checkGlobal(anyArg);
-    checkGlobal(objectArg);
+    this._dictionaryArg = dictionaryArg;
   },
 
   get anyArg() { return this._anyArg; },
   get objectArg() { return this._objectArg; },
+  get dictionaryArg() { return this._dictionaryArg; },
   get anyAttr() { return this._anyAttr; },
-  set anyAttr(val) { checkGlobal(val); this._anyAttr = val; },
+  set anyAttr(val) { this._anyAttr = val; },
   get objectAttr() { return this._objectAttr; },
-  set objectAttr(val) { checkGlobal(val); this._objectAttr = val; },
-  pingPongAny: function(any) { checkGlobal(any); return any; },
-  pingPongObject: function(obj) { checkGlobal(obj); return obj; },
+  set objectAttr(val) { this._objectAttr = val; },
+  get dictionaryAttr() { return this._dictionaryAttr; },
+  set dictionaryAttr(val) { this._dictionaryAttr = val; },
+  pingPongAny: function(any) { return any; },
+  pingPongObject: function(obj) { return obj; },
+  pingPongObjectOrString: function(objectOrString) { return objectOrString; },
+  pingPongDictionary: function(dict) { return dict; },
+  pingPongDictionaryOrLong: function(dictOrLong) { return dictOrLong.anyMember || dictOrLong; },
+  pingPongMap: function(map) { return JSON.stringify(map); },
+  objectSequenceLength: function(seq) { return seq.length; },
+  anySequenceLength: function(seq) { return seq.length; },
+
 
   getCallerPrincipal: function() { return Cu.getWebIDLCallerPrincipal().origin; },
 

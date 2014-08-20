@@ -60,7 +60,7 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       // and return to CLUSTER_SYNC.
       if (mClusterIDPos == sizeof(CLUSTER_ID)) {
         mClusterIDPos = 0;
-        mClusterOffset = mCurrentOffset + (p - aBuffer) - 1;
+        mClusterOffset = mCurrentOffset + (p - aBuffer) - sizeof(CLUSTER_ID);
         mState = READ_VINT;
         mNextState = TIMECODE_SYNC;
       }

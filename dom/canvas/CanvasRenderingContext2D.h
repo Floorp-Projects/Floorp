@@ -790,7 +790,7 @@ protected:
     // The spec says we should not draw shadows if the operator is OVER.
     // If it's over and the alpha value is zero, nothing needs to be drawn.
     return NS_GET_A(state.shadowColor) != 0 &&
-      (state.shadowBlur != 0 || state.shadowOffset.x != 0 || state.shadowOffset.y != 0);
+      (state.shadowBlur != 0.f || state.shadowOffset.x != 0.f || state.shadowOffset.y != 0.f);
   }
 
   mozilla::gfx::CompositionOp UsedOperation()

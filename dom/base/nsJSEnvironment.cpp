@@ -557,46 +557,38 @@ NS_ScriptErrorReporter(JSContext *cx,
     }
   }
 
-  // XXX this means we are not going to get error reports on non DOM contexts
-  nsIScriptContext *context = nsJSUtils::GetDynamicScriptContext(cx);
-
   JS::Rooted<JS::Value> exception(cx);
   ::JS_GetPendingException(cx, &exception);
 
-  // Note: we must do this before running any more code on cx (if cx is the
-  // dynamic script context).
+  // Note: we must do this before running any more code on cx.
   ::JS_ClearPendingException(cx);
 
-  if (context) {
-    nsIScriptGlobalObject *globalObject = context->GetGlobalObject();
+  MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
+  nsCOMPtr<nsIGlobalObject> globalObject = GetEntryGlobal();
+  if (globalObject) {
 
-    if (globalObject) {
-
-      nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
-      if (win) {
-        win = win->GetCurrentInnerWindow();
-      }
-      nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
-        do_QueryInterface(globalObject);
-      NS_ASSERTION(scriptPrincipal, "Global objects must implement "
-                   "nsIScriptObjectPrincipal");
-      nsContentUtils::AddScriptRunner(
-        new ScriptErrorEvent(JS_GetRuntime(cx),
-                             report,
-                             message,
-                             nsJSPrincipals::get(report->originPrincipals),
-                             scriptPrincipal->GetPrincipal(),
-                             win,
-                             exception,
-                             /* We do not try to report Out Of Memory via a dom
-                              * event because the dom event handler would
-                              * encounter an OOM exception trying to process the
-                              * event, and then we'd need to generate a new OOM
-                              * event for that new OOM instance -- this isn't
-                              * pretty.
-                              */
-                             report->errorNumber != JSMSG_OUT_OF_MEMORY));
-    }
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
+    MOZ_ASSERT_IF(win, win->IsInnerWindow());
+    nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
+      do_QueryInterface(globalObject);
+    NS_ASSERTION(scriptPrincipal, "Global objects must implement "
+                 "nsIScriptObjectPrincipal");
+    nsContentUtils::AddScriptRunner(
+      new ScriptErrorEvent(JS_GetRuntime(cx),
+                           report,
+                           message,
+                           nsJSPrincipals::get(report->originPrincipals),
+                           scriptPrincipal->GetPrincipal(),
+                           win,
+                           exception,
+                           /* We do not try to report Out Of Memory via a dom
+                            * event because the dom event handler would
+                            * encounter an OOM exception trying to process the
+                            * event, and then we'd need to generate a new OOM
+                            * event for that new OOM instance -- this isn't
+                            * pretty.
+                            */
+                           report->errorNumber != JSMSG_OUT_OF_MEMORY));
   }
 
   if (nsContentUtils::DOMWindowDumpEnabled()) {

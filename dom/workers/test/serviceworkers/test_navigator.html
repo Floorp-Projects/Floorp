@@ -18,12 +18,9 @@
   function checkEnabled() {
     ok(navigator.serviceWorker, "navigator.serviceWorker should exist when ServiceWorkers are enabled.");
     ok(typeof navigator.serviceWorker.register === "function", "navigator.serviceWorker.register() should be a function.");
-    ok(typeof navigator.serviceWorker.unregister === "function", "navigator.serviceWorker.unregister() should be a function.");
-    ok(typeof navigator.serviceWorker.getAll === "function", "navigator.serviceWorker.getAll() should be a function.");
+    ok(typeof navigator.serviceWorker.getRegistration === "function", "navigator.serviceWorker.getAll() should be a function.");
+    ok(typeof navigator.serviceWorker.getRegistrations === "function", "navigator.serviceWorker.getAll() should be a function.");
     ok(navigator.serviceWorker.ready instanceof Promise, "navigator.serviceWorker.ready should be a Promise.");
-    ok(navigator.serviceWorker.installing === null, "There should be no installing worker for an uncontrolled scope.");
-    ok(navigator.serviceWorker.waiting === null, "There should be no waiting worker for an uncontrolled scope.");
-    // ok(navigator.serviceWorker.active === null, "There should be no active worker for an uncontrolled scope.");
     ok(navigator.serviceWorker.controller === null, "There should be no controller worker for an uncontrolled document.");
   }
 

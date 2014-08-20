@@ -2599,7 +2599,7 @@ DrawTargetD2D::SetupEffectForRadialGradient(const RadialGradientPattern *aPatter
   mPrivateData->mEffect->GetVariableByName("DeviceSpaceToUserSpace")->
     AsMatrix()->SetMatrix(matrix);
 
-  float A = dc.x * dc.x + dc.y * dc.y - dr * dr;
+  float A = dc.x.value * dc.x.value + dc.y.value * dc.y.value - dr * dr;
 
   uint32_t offset = 0;
   switch (stops->mStopCollection->GetExtendMode()) {

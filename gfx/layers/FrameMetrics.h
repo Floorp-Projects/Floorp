@@ -563,6 +563,22 @@ struct ScrollableLayerGuid {
   {
     return !(*this == other);
   }
+
+  bool operator<(const ScrollableLayerGuid& other) const
+  {
+    if (mLayersId < other.mLayersId) {
+      return true;
+    }
+    if (mLayersId == other.mLayersId) {
+      if (mPresShellId < other.mPresShellId) {
+        return true;
+      }
+      if (mPresShellId == other.mPresShellId) {
+        return mScrollId < other.mScrollId;
+      }
+    }
+    return false;
+  }
 };
 
 template <int LogLevel>
