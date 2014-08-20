@@ -1747,7 +1747,7 @@ jclass GeckoLayerClient::mGeckoLayerClientClass = 0;
 jmethodID GeckoLayerClient::jActivateProgram = 0;
 jmethodID GeckoLayerClient::jContentDocumentChanged = 0;
 jmethodID GeckoLayerClient::jCreateFrame = 0;
-jmethodID GeckoLayerClient::jDeactivateProgram = 0;
+jmethodID GeckoLayerClient::jDeactivateProgramAndRestoreState = 0;
 jmethodID GeckoLayerClient::jGetDisplayPort = 0;
 jmethodID GeckoLayerClient::jIsContentDocumentDisplayed = 0;
 jmethodID GeckoLayerClient::jProgressiveUpdateCallback = 0;
@@ -1762,7 +1762,7 @@ void GeckoLayerClient::InitStubs(JNIEnv *jEnv) {
     jActivateProgram = getMethod("activateProgram", "()V");
     jContentDocumentChanged = getMethod("contentDocumentChanged", "()V");
     jCreateFrame = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
-    jDeactivateProgram = getMethod("deactivateProgram", "()V");
+    jDeactivateProgramAndRestoreState = getMethod("deactivateProgramAndRestoreState", "(ZIIII)V");
     jGetDisplayPort = getMethod("getDisplayPort", "(ZZILorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)Lorg/mozilla/gecko/gfx/DisplayPortMetrics;");
     jIsContentDocumentDisplayed = getMethod("isContentDocumentDisplayed", "()Z");
     jProgressiveUpdateCallback = getMethod("progressiveUpdateCallback", "(ZFFFFFZ)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
@@ -1816,14 +1816,21 @@ jobject GeckoLayerClient::CreateFrame() {
     return ret;
 }
 
-void GeckoLayerClient::DeactivateProgram() {
+void GeckoLayerClient::DeactivateProgramAndRestoreState(bool a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4) {
     JNIEnv *env = GetJNIForThread();
     if (env->PushLocalFrame(0) != 0) {
         AndroidBridge::HandleUncaughtException(env);
         MOZ_CRASH("Exception should have caused crash.");
     }
 
-    env->CallVoidMethod(wrapped_obj, jDeactivateProgram);
+    jvalue args[5];
+    args[0].z = a0;
+    args[1].i = a1;
+    args[2].i = a2;
+    args[3].i = a3;
+    args[4].i = a4;
+
+    env->CallVoidMethodA(wrapped_obj, jDeactivateProgramAndRestoreState, args);
     AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
