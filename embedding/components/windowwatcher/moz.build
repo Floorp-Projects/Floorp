@@ -4,4 +4,40 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
+XPIDL_SOURCES += [
+    'nsIDialogParamBlock.idl',
+    'nsIPromptFactory.idl',
+    'nsIPromptService.idl',
+    'nsIPromptService2.idl',
+    'nsIWindowWatcher.idl',
+    'nsPIPromptService.idl',
+    'nsPIWindowWatcher.idl',
+]
+
+XPIDL_MODULE = 'windowwatcher'
+
+EXPORTS += [
+    'nsPromptUtils.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsAutoWindowStateHelper.cpp',
+    'nsWindowWatcher.cpp',
+]
+
+EXPORTS += [
+    'nsWindowWatcher.h',
+]
+
+if CONFIG['MOZ_XUL']:
+    UNIFIED_SOURCES += [
+        'nsDialogParamBlock.cpp',
+    ]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
+# For nsJSUtils
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
