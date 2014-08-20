@@ -2727,6 +2727,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
     NS_ASSERTION(mAppUnitsPerDevPixel == AppUnitsPerDevPixel(item),
       "items in a container layer should all have the same app units per dev pixel");
 
+    if (mBuilder->NeedToForceTransparentSurfaceForItem(item)) {
+      aList->SetNeedsTransparentSurface();
+    }
+
     nsIntRect itemVisibleRect =
       ScaleToOutsidePixels(item->GetVisibleRect(), false);
     bool snap;
