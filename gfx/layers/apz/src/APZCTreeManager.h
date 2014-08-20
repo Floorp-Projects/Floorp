@@ -365,6 +365,15 @@ private:
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
                                         const ZoomConstraints& aConstraints);
 
+  AsyncPanZoomController* PrepareAPZCForLayer(const Layer* aLayer,
+                                              const FrameMetrics& aMetrics,
+                                              uint64_t aLayersId,
+                                              const gfx::Matrix4x4& aAncestorTransform,
+                                              const nsIntRegion& aObscured,
+                                              AsyncPanZoomController*& aOutParent,
+                                              AsyncPanZoomController*& aOutNextSibling,
+                                              TreeBuildingState& aState);
+
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has
    * the same shape as the layer tree, but excludes all the layers that are not scrollable.
