@@ -2288,6 +2288,10 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
     delete deferredTasks[i];
   }
 
+  // One of the deferred tasks may have started a new animation. In this case,
+  // we want to ask the compositor to schedule a new composite.
+  requestAnimationFrame |= (mAnimation != nullptr);
+
   // Cancel the mAsyncScrollTimeoutTask because we will fire a
   // mozbrowserasyncscroll event or renew the mAsyncScrollTimeoutTask again.
   if (mAsyncScrollTimeoutTask) {
