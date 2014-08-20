@@ -22,7 +22,9 @@ using namespace android;
 class MozMtpDatabase : public MtpDatabase
 {
 public:
-  MozMtpDatabase(const char *aDir);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MozMtpDatabase)
+
+  MozMtpDatabase();
   virtual ~MozMtpDatabase();
 
   // called from SendObjectInfo to reserve a database entry for the incoming file
@@ -106,11 +108,14 @@ public:
 
   virtual void sessionEnded();
 
+  void AddStorage(MtpStorageID aStorageID, const char* aPath, const char *aName);
+  void RemoveStorage(MtpStorageID aStorageID);
+
 private:
 
   struct DbEntry
   {
-    NS_INLINE_DECL_REFCOUNTING(DbEntry)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DbEntry)
 
     MtpObjectHandle mHandle;        // uint32_t
     MtpStorageID    mStorageID;     // uint32_t
@@ -152,8 +157,7 @@ private:
     return mDb.Length();
   }
 
-  void ParseDirectory(const char *aDir, MtpObjectHandle aParent);
-  void ReadVolume(const char *aVolumeName, const char *aDir);
+  void AddDirectory(MtpStorageID aStorageID, const char *aPath, MtpObjectHandle aParent);
 };
 
 END_MTP_NAMESPACE

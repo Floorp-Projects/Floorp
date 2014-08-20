@@ -14,8 +14,9 @@ namespace system {
 
 // AutoMounter modes
 #define AUTOMOUNTER_DISABLE                 0
-#define AUTOMOUNTER_ENABLE                  1
+#define AUTOMOUNTER_ENABLE_UMS              1
 #define AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED  2
+#define AUTOMOUNTER_ENABLE_MTP              3
 
 // Automounter statuses
 #define AUTOMOUNTER_STATUS_DISABLED         0
