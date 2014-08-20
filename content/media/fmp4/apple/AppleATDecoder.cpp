@@ -55,7 +55,7 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
 
 AppleATDecoder::~AppleATDecoder()
 {
-  MOZ_COUNT_DTOR(AppleATDecoer);
+  MOZ_COUNT_DTOR(AppleATDecoder);
   MOZ_ASSERT(!mConverter);
   MOZ_ASSERT(!mStream);
 }
