@@ -13,8 +13,10 @@ gDirectorySource = "data:application/json," + JSON.stringify({
 });
 
 function runTests() {
+  let origEnabled = DirectoryLinksProvider.enabled;
   let origEnhanced = NewTabUtils.allPages.enhanced;
   registerCleanupFunction(() => {
+    DirectoryLinksProvider.enabled = origEnabled;
     Services.prefs.clearUserPref(PRELOAD_PREF);
     NewTabUtils.allPages.enhanced = origEnhanced;
   });
@@ -75,4 +77,12 @@ function runTests() {
   is(title, "site#-1");
 
   is(getData(1), null, "directory link still pushed out by pinned history link");
+
+  // Make sure gear toggles when not enabled
+  DirectoryLinksProvider.enabled = false;
+  let toggle = getContentDocument().getElementById("newtab-customize-button");
+  EventUtils.synthesizeMouseAtCenter(toggle, {}, getContentWindow());
+  is(NewTabUtils.allPages.enabled, false, "customize toggled page to blank");
+  EventUtils.synthesizeMouseAtCenter(toggle, {}, getContentWindow());
+  is(NewTabUtils.allPages.enabled, true, "customize toggled page from blank");
 }
