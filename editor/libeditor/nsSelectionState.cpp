@@ -539,7 +539,7 @@ nsRangeUpdater::WillReplaceContainer()
 
 
 nsresult
-nsRangeUpdater::DidReplaceContainer(nsINode* aOriginalNode, nsINode* aNewNode)
+nsRangeUpdater::DidReplaceContainer(Element* aOriginalNode, Element* aNewNode)
 {
   NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);
   mLock = false;
@@ -562,15 +562,6 @@ nsRangeUpdater::DidReplaceContainer(nsINode* aOriginalNode, nsINode* aNewNode)
     }
   }
   return NS_OK;
-}
-
-nsresult
-nsRangeUpdater::DidReplaceContainer(nsIDOMNode* aOriginalNode,
-                                    nsIDOMNode* aNewNode)
-{
-  nsCOMPtr<nsINode> originalNode = do_QueryInterface(aOriginalNode);
-  nsCOMPtr<nsINode> newNode = do_QueryInterface(aNewNode);
-  return DidReplaceContainer(originalNode, newNode);
 }
 
 
