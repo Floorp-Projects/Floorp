@@ -252,6 +252,18 @@ LazyIdleThread::ShutdownThread()
 
   nsresult rv;
 
+  // Make sure to cancel the shutdown timer before spinning the event loop
+  // during |mThread->Shutdown()| below. Otherwise the timer might fire and we
+  // could reenter here.
+  if (mIdleTimer) {
+    rv = mIdleTimer->Cancel();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    mIdleTimer = nullptr;
+  }
+
   if (mThread) {
     if (mShutdownMethod == AutomaticShutdown && NS_IsMainThread()) {
       nsCOMPtr<nsIObserverService> obs =
@@ -309,15 +321,6 @@ LazyIdleThread::ShutdownThread()
       MOZ_ASSERT(mThreadIsShuttingDown, "Huh?!");
       mThreadIsShuttingDown = false;
     }
-  }
-
-  if (mIdleTimer) {
-    rv = mIdleTimer->Cancel();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    mIdleTimer = nullptr;
   }
 
   // If our temporary queue has any runnables then we need to dispatch them.
