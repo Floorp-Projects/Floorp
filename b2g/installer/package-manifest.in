@@ -296,6 +296,7 @@
 @BINPATH@/components/toolkit_finalizationwitness.xpt
 @BINPATH@/components/toolkit_formautofill.xpt
 @BINPATH@/components/toolkit_osfile.xpt
+@BINPATH@/components/toolkit_xulstore.xpt
 @BINPATH@/components/toolkitprofile.xpt
 #ifdef MOZ_ENABLE_XREMOTE
 @BINPATH@/components/toolkitremote.xpt
@@ -540,6 +541,8 @@
 #endif
 @BINPATH@/components/TelemetryStartup.js
 @BINPATH@/components/TelemetryStartup.manifest
+@BINPATH@/components/XULStore.js
+@BINPATH@/components/XULStore.manifest
 @BINPATH@/components/Webapps.js
 @BINPATH@/components/Webapps.manifest
 @BINPATH@/components/AppsService.js
@@ -692,9 +695,6 @@
 @BINPATH@/res/text_caret_tilt_right@1.5x.png
 @BINPATH@/res/text_caret_tilt_right@2.25x.png
 @BINPATH@/res/text_caret_tilt_right@2x.png
-@BINPATH@/res/text_selection_handle.png
-@BINPATH@/res/text_selection_handle@1.5.png
-@BINPATH@/res/text_selection_handle@2.png
 @BINPATH@/res/grabber.gif
 #ifdef XP_MACOSX
 @BINPATH@/res/cursors/*

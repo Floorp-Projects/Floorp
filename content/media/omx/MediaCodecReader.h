@@ -29,6 +29,8 @@ struct MediaCodec;
 
 namespace mozilla {
 
+class MediaTaskQueue;
+
 class MediaCodecReader : public MediaOmxCommonReader
 {
 public:
@@ -53,17 +55,15 @@ public:
   // irreversible, whereas ReleaseMediaResources() is reversible.
   virtual void Shutdown();
 
-  // Decodes an unspecified amount of audio data, enqueuing the audio data
-  // in mAudioQueue. Returns true when there's more audio to decode,
-  // false if the audio is finished, end of file has been reached,
-  // or an un-recoverable read error has occured.
-  virtual bool DecodeAudioData();
+  // Flush the MediaTaskQueue, flush MediaCodec and raise the mDiscontinuity.
+  virtual nsresult ResetDecode() MOZ_OVERRIDE;
 
-  // Reads and decodes one video frame. Packets with a timestamp less
-  // than aTimeThreshold will be decoded (unless they're not keyframes
-  // and aKeyframeSkip is true), but will not be added to the queue.
-  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold);
+  // Disptach a DecodeVideoFrameTask to decode video data.
+  virtual void RequestVideoData(bool aSkipToNextKeyframe,
+                                int64_t aTimeThreshold) MOZ_OVERRIDE;
+
+  // Disptach a DecodeAduioDataTask to decode video data.
+  virtual void RequestAudioData() MOZ_OVERRIDE;
 
   virtual bool HasAudio();
   virtual bool HasVideo();
@@ -90,7 +90,8 @@ public:
 protected:
   struct TrackInputCopier
   {
-    virtual bool Copy(android::MediaBuffer* aSourceBuffer, android::sp<android::ABuffer> aCodecBuffer);
+    virtual bool Copy(android::MediaBuffer* aSourceBuffer,
+                      android::sp<android::ABuffer> aCodecBuffer);
   };
 
   struct Track
@@ -111,14 +112,20 @@ protected:
 
     // playback parameters
     CheckedUint32 mInputIndex;
+    // mDiscontinuity, mFlushed, mInputEndOfStream, mInputEndOfStream,
+    // mSeekTimeUs don't be protected by a lock because the
+    // mTaskQueue->Flush() will flush all tasks.
     bool mInputEndOfStream;
+    bool mOutputEndOfStream;
     int64_t mSeekTimeUs;
     bool mFlushed; // meaningless when mSeekTimeUs is invalid.
+    bool mDiscontinuity;
+    nsRefPtr<MediaTaskQueue> mTaskQueue;
   };
 
   // Receive a message from MessageHandler.
   // Called on MediaCodecReader::mLooper thread.
-  void onMessageReceived(const android::sp<android::AMessage> &aMessage);
+  void onMessageReceived(const android::sp<android::AMessage>& aMessage);
 
   // Receive a notify from ResourceListener.
   // Called on Binder thread.
@@ -131,16 +138,16 @@ private:
   class MessageHandler : public android::AHandler
   {
   public:
-    MessageHandler(MediaCodecReader *aReader);
+    MessageHandler(MediaCodecReader* aReader);
     ~MessageHandler();
 
-    virtual void onMessageReceived(const android::sp<android::AMessage> &aMessage);
+    virtual void onMessageReceived(const android::sp<android::AMessage>& aMessage);
 
   private:
     // Forbidden
     MessageHandler() MOZ_DELETE;
-    MessageHandler(const MessageHandler &rhs) MOZ_DELETE;
-    const MessageHandler &operator=(const MessageHandler &rhs) MOZ_DELETE;
+    MessageHandler(const MessageHandler& rhs) MOZ_DELETE;
+    const MessageHandler& operator=(const MessageHandler& rhs) MOZ_DELETE;
 
     MediaCodecReader *mReader;
   };
@@ -151,7 +158,7 @@ private:
   class VideoResourceListener : public android::MediaCodecProxy::CodecResourceListener
   {
   public:
-    VideoResourceListener(MediaCodecReader *aReader);
+    VideoResourceListener(MediaCodecReader* aReader);
     ~VideoResourceListener();
 
     virtual void codecReserved();
@@ -160,16 +167,17 @@ private:
   private:
     // Forbidden
     VideoResourceListener() MOZ_DELETE;
-    VideoResourceListener(const VideoResourceListener &rhs) MOZ_DELETE;
-    const VideoResourceListener &operator=(const VideoResourceListener &rhs) MOZ_DELETE;
+    VideoResourceListener(const VideoResourceListener& rhs) MOZ_DELETE;
+    const VideoResourceListener& operator=(const VideoResourceListener& rhs) MOZ_DELETE;
 
-    MediaCodecReader *mReader;
+    MediaCodecReader* mReader;
   };
   friend class VideoResourceListener;
 
   class VorbisInputCopier : public TrackInputCopier
   {
-    virtual bool Copy(android::MediaBuffer* aSourceBuffer, android::sp<android::ABuffer> aCodecBuffer);
+    virtual bool Copy(android::MediaBuffer* aSourceBuffer,
+                      android::sp<android::ABuffer> aCodecBuffer);
   };
 
   struct AudioTrack : public Track
@@ -206,7 +214,7 @@ private:
 
   // Forbidden
   MediaCodecReader() MOZ_DELETE;
-  const MediaCodecReader &operator=(const MediaCodecReader &rhs) MOZ_DELETE;
+  const MediaCodecReader& operator=(const MediaCodecReader& rhs) MOZ_DELETE;
 
   bool ReallocateResources();
   void ReleaseCriticalResources();
@@ -222,27 +230,45 @@ private:
   void DestroyMediaSources();
 
   bool CreateMediaCodecs();
-  static bool CreateMediaCodec(android::sp<android::ALooper> &aLooper,
-                               Track &aTrack,
+  static bool CreateMediaCodec(android::sp<android::ALooper>& aLooper,
+                               Track& aTrack,
                                bool aAsync,
                                android::wp<android::MediaCodecProxy::CodecResourceListener> aListener);
-  static bool ConfigureMediaCodec(Track &aTrack);
+  static bool ConfigureMediaCodec(Track& aTrack);
   void DestroyMediaCodecs();
-  static void DestroyMediaCodecs(Track &aTrack);
+  static void DestroyMediaCodecs(Track& aTrack);
+
+  bool CreateTaskQueues();
+  void ShutdownTaskQueues();
+  bool DecodeVideoFrameTask(int64_t aTimeThreshold);
+  bool DecodeVideoFrameSync(int64_t aTimeThreshold);
+  bool DecodeAudioDataTask();
+  bool DecodeAudioDataSync();
+  void DispatchVideoTask(int64_t aTimeThreshold);
+  void DispatchAudioTask();
+  inline bool CheckVideoResources() {
+    return (HasVideo() && mVideoTrack.mSource != nullptr &&
+            mVideoTrack.mTaskQueue);
+  }
+
+  inline bool CheckAudioResources() {
+    return (HasAudio() && mAudioTrack.mSource != nullptr &&
+            mAudioTrack.mTaskQueue);
+  }
 
   bool UpdateDuration();
   bool UpdateAudioInfo();
   bool UpdateVideoInfo();
 
-  static android::status_t FlushCodecData(Track &aTrack);
-  static android::status_t FillCodecInputData(Track &aTrack);
-  static android::status_t GetCodecOutputData(Track &aTrack,
-                                              CodecBufferInfo &aBuffer,
+  static android::status_t FlushCodecData(Track& aTrack);
+  static android::status_t FillCodecInputData(Track& aTrack);
+  static android::status_t GetCodecOutputData(Track& aTrack,
+                                              CodecBufferInfo& aBuffer,
                                               int64_t aThreshold,
-                                              const TimeStamp &aTimeout);
-  static bool EnsureCodecFormatParsed(Track &aTrack);
+                                              const TimeStamp& aTimeout);
+  static bool EnsureCodecFormatParsed(Track& aTrack);
 
-  uint8_t *GetColorConverterBuffer(int32_t aWidth, int32_t aHeight);
+  uint8_t* GetColorConverterBuffer(int32_t aWidth, int32_t aHeight);
   void ClearColorConverterBuffer();
 
   android::sp<MessageHandler> mHandler;

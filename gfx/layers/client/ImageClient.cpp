@@ -61,6 +61,11 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
   case CompositableType::BUFFER_UNKNOWN:
     result = nullptr;
     break;
+#ifdef MOZ_WIDGET_GONK
+  case CompositableType::IMAGE_OVERLAY:
+    result = new ImageClientOverlay(aForwarder, aFlags);
+    break;
+#endif
   default:
     MOZ_CRASH("unhandled program type");
   }
@@ -423,5 +428,55 @@ ImageClientSingle::CreateImage(ImageFormat aFormat)
   }
 }
 
+#ifdef MOZ_WIDGET_GONK
+ImageClientOverlay::ImageClientOverlay(CompositableForwarder* aFwd,
+                                       TextureFlags aFlags)
+  : ImageClient(aFwd, aFlags, CompositableType::IMAGE_OVERLAY)
+{
+}
+
+bool
+ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags)
+{
+  AutoLockImage autoLock(aContainer);
+
+  Image *image = autoLock.GetImage();
+  if (!image) {
+    return false;
+  }
+
+  if (mLastPaintedImageSerial == image->GetSerial()) {
+    return true;
+  }
+
+  AutoRemoveTexture autoRemoveTexture(this);
+  if (image->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
+    OverlayImage* overlayImage = static_cast<OverlayImage*>(image);
+    uint32_t overlayId = overlayImage->GetOverlayId();
+    gfx::IntSize size = overlayImage->GetSize();
+
+    OverlaySource source;
+    source.handle() = OverlayHandle(overlayId);
+    source.size() = size;
+    GetForwarder()->UseOverlaySource(this, source);
+  }
+  UpdatePictureRect(image->GetPictureRect());
+  return true;
+}
+
+already_AddRefed<Image>
+ImageClientOverlay::CreateImage(ImageFormat aFormat)
+{
+  nsRefPtr<Image> img;
+  switch (aFormat) {
+    case ImageFormat::OVERLAY_IMAGE:
+      img = new OverlayImage();
+      return img.forget();
+    default:
+      return nullptr;
+  }
+}
+
+#endif
 }
 }

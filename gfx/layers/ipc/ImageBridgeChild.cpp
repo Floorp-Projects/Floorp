@@ -135,6 +135,16 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
                                                   nullptr, aTextureOnWhite->GetIPDLActor()));
 }
 
+#ifdef MOZ_WIDGET_GONK
+void
+ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
+                                   const OverlaySource& aOverlay)
+{
+  MOZ_ASSERT(aCompositable);
+  mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(), aOverlay));
+}
+#endif
+
 void
 ImageBridgeChild::UpdatedTexture(CompositableClient* aCompositable,
                                  TextureClient* aTexture,

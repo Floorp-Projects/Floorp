@@ -279,5 +279,82 @@ ImageHost::GenEffect(const gfx::Filter& aFilter)
                               isAlphaPremultiplied);
 }
 
+#ifdef MOZ_WIDGET_GONK
+ImageHostOverlay::ImageHostOverlay(const TextureInfo& aTextureInfo)
+  : CompositableHost(aTextureInfo)
+  , mHasPictureRect(false)
+{
+}
+
+ImageHostOverlay::~ImageHostOverlay()
+{
+}
+
+void
+ImageHostOverlay::Composite(EffectChain& aEffectChain,
+                            float aOpacity,
+                            const gfx::Matrix4x4& aTransform,
+                            const gfx::Filter& aFilter,
+                            const gfx::Rect& aClipRect,
+                            const nsIntRegion* aVisibleRegion)
+{
+  if (!GetCompositor()) {
+    return;
+  }
+
+  if (mOverlay.handle().type() == OverlayHandle::Tnull_t)
+    return;
+  Color hollow(0.0f, 0.0f, 0.0f, 0.0f);
+  aEffectChain.mPrimaryEffect = new EffectSolidColor(hollow);
+  aEffectChain.mSecondaryEffects[EffectTypes::BLEND_MODE] = new EffectBlendMode(CompositionOp::OP_SOURCE);
+
+  gfx::Rect rect;
+  gfx::Rect clipRect(aClipRect.x, aClipRect.y,
+                     aClipRect.width, aClipRect.height);
+  if (mHasPictureRect) {
+    rect.SetRect(mPictureRect.x, mPictureRect.y,
+                 mPictureRect.width, mPictureRect.height);
+  } else {
+    rect.SetRect(0, 0,
+                 mOverlay.size().width, mOverlay.size().height);
+  }
+
+  mCompositor->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform);
+  mCompositor->DrawDiagnostics(DiagnosticFlags::IMAGE | DiagnosticFlags::BIGIMAGE,
+                               rect, aClipRect, aTransform, mFlashCounter);
+}
+
+LayerRenderState
+ImageHostOverlay::GetRenderState()
+{
+  LayerRenderState state;
+  if (mOverlay.handle().type() == OverlayHandle::Tint32_t) {
+    state.SetOverlayId(mOverlay.handle().get_int32_t());
+  }
+  return state;
+}
+
+void
+ImageHostOverlay::UseOverlaySource(OverlaySource aOverlay)
+{
+  mOverlay = aOverlay;
+}
+
+void
+ImageHostOverlay::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+{
+  aStream << aPrefix;
+  aStream << nsPrintfCString("ImageHost (0x%p)", this).get();
+
+  AppendToString(aStream, mPictureRect, " [picture-rect=", "]");
+
+  if (mOverlay.handle().type() == OverlayHandle::Tint32_t) {
+    nsAutoCString pfx(aPrefix);
+    pfx += "  ";
+    aStream << nsPrintfCString("Overlay: %d", mOverlay.handle().get_int32_t()).get();
+  }
+}
+
+#endif
 }
 }
