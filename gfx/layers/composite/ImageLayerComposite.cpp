@@ -54,6 +54,7 @@ ImageLayerComposite::SetCompositableHost(CompositableHost* aHost)
     case CompositableType::BUFFER_IMAGE_SINGLE:
     case CompositableType::BUFFER_IMAGE_BUFFERED:
     case CompositableType::IMAGE:
+    case CompositableType::IMAGE_OVERLAY:
       mImageHost = aHost;
       return true;
     default:

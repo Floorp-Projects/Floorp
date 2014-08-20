@@ -377,6 +377,7 @@ let WebAudioInspectorView = {
     this._onNodeSelect = this._onNodeSelect.bind(this);
     this._onTogglePaneClick = this._onTogglePaneClick.bind(this);
     this._onDestroyNode = this._onDestroyNode.bind(this);
+    this._onChangeParam = this._onChangeParam.bind(this);
 
     this._inspectorPaneToggleButton.addEventListener("mousedown", this._onTogglePaneClick, false);
     this._propsView = new VariablesView($("#properties-tabpanel-content"), GENERIC_VARIABLES_VIEW_SETTINGS);
@@ -384,6 +385,7 @@ let WebAudioInspectorView = {
 
     window.on(EVENTS.UI_SELECT_NODE, this._onNodeSelect);
     window.on(EVENTS.DESTROY_NODE, this._onDestroyNode);
+    window.on(EVENTS.CHANGE_PARAM, this._onChangeParam);
   },
 
   /**
@@ -393,6 +395,7 @@ let WebAudioInspectorView = {
     this._inspectorPaneToggleButton.removeEventListener("mousedown", this._onTogglePaneClick);
     window.off(EVENTS.UI_SELECT_NODE, this._onNodeSelect);
     window.off(EVENTS.DESTROY_NODE, this._onDestroyNode);
+    window.off(EVENTS.CHANGE_PARAM, this._onChangeParam);
 
     this._inspectorPane = null;
     this._inspectorPaneToggleButton = null;
@@ -612,7 +615,22 @@ let WebAudioInspectorView = {
     if (this._currentNode && this._currentNode.id === id) {
       this.setCurrentAudioNode(null);
     }
-  }
+  },
+
+  /**
+   * Called when `CHANGE_PARAM` is fired. We should ensure that this event is
+   * for the same node that is currently selected. We check the existence
+   * of each part of the scope to make sure that if this event was fired
+   * during a VariablesView rebuild, then we just ignore it.
+   */
+  _onChangeParam: function (_, { param, newValue, oldValue, actorID }) {
+    if (!this._currentNode || this._currentNode.actor.actorID !== actorID) return;
+    let scope = this._getAudioPropertiesScope();
+    if (!scope) return;
+    let property = scope.get(param);
+    if (!property) return;
+    property.setGrip(newValue);
+  },
 };
 
 /**

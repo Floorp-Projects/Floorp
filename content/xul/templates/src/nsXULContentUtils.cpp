@@ -186,36 +186,6 @@ nsXULContentUtils::FindChildByTag(nsIContent* aElement,
 }
 
 
-nsresult
-nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
-{
-    // Perform a reverse mapping from an element in the content model
-    // to an RDF resource.
-    nsresult rv;
-
-    char16_t buf[128];
-    nsFixedString id(buf, ArrayLength(buf), 0);
-
-    // Whoa.  Why the "id" attribute?  What if it's not even a XUL
-    // element?  This is totally bogus!
-    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
-    if (id.IsEmpty())
-        return NS_ERROR_FAILURE;
-
-    // Since the element will store its ID attribute as a document-relative value,
-    // we may need to qualify it first...
-    nsCOMPtr<nsIDocument> doc = aElement->GetDocument();
-    NS_ASSERTION(doc, "element is not in any document");
-    if (! doc)
-        return NS_ERROR_FAILURE;
-
-    rv = nsXULContentUtils::MakeElementResource(doc, id, aResult);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
 /*
 	Note: this routine is similar, yet distinctly different from, nsBookmarksService::GetTextForNode
 */
@@ -285,78 +255,6 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
 
     NS_ERROR("not a resource or a literal");
     return NS_ERROR_UNEXPECTED;
-}
-
-nsresult
-nsXULContentUtils::MakeElementURI(nsIDocument* aDocument,
-                                  const nsAString& aElementID,
-                                  nsCString& aURI)
-{
-    // Convert an element's ID to a URI that can be used to refer to
-    // the element in the XUL graph.
-
-    nsIURI *docURI = aDocument->GetDocumentURI();
-    NS_ENSURE_TRUE(docURI, NS_ERROR_UNEXPECTED);
-
-    nsRefPtr<nsIURI> docURIClone;
-    nsresult rv = docURI->Clone(getter_AddRefs(docURIClone));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = docURIClone->SetRef(NS_ConvertUTF16toUTF8(aElementID));
-    if (NS_SUCCEEDED(rv)) {
-        return docURIClone->GetSpec(aURI);
-    }
-
-    // docURIClone is apparently immutable. Fine - we can append ref manually.
-    rv = docURI->GetSpec(aURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoCString ref;
-    NS_EscapeURL(NS_ConvertUTF16toUTF8(aElementID), esc_FilePath | esc_AlwaysCopy, ref);
-
-    aURI.Append('#');
-    aURI.Append(ref);
-
-    return NS_OK;
-}
-
-
-nsresult
-nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAString& aID, nsIRDFResource** aResult)
-{
-    nsresult rv;
-
-    char buf[256];
-    nsFixedCString uri(buf, sizeof(buf), 0);
-    rv = MakeElementURI(aDocument, aID, uri);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = gRDF->GetResource(uri, aResult);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
-
-nsresult
-nsXULContentUtils::MakeElementID(nsIDocument* aDocument,
-                                 const nsACString& aURI,
-                                 nsAString& aElementID)
-{
-    // Convert a URI into an element ID that can be accessed from the
-    // DOM APIs.
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI,
-                            aDocument->GetDocumentCharacterSet().get());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoCString ref;
-    uri->GetRef(ref);
-    CopyUTF8toUTF16(ref, aElementID);
-
-    return NS_OK;
 }
 
 nsresult
