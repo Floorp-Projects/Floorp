@@ -2522,10 +2522,17 @@ var gCSSProperties = {
   "font-variant": {
     domProp: "fontVariant",
     inherited: true,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [ "font-variant-alternates", "font-variant-caps", "font-variant-east-asian", "font-variant-ligatures", "font-variant-numeric", "font-variant-position" ],
     initial_values: [ "normal" ],
-    other_values: [ "small-caps" ],
-    invalid_values: [ "small-caps normal" ]
+    other_values: [ "small-caps", "none", "traditional oldstyle-nums", "all-small-caps", "common-ligatures no-discretionary-ligatures",
+                    "proportional-nums oldstyle-nums", "proportional-nums slashed-zero diagonal-fractions oldstyle-nums ordinal",
+                    "traditional historical-forms styleset(ok-alt-a, ok-alt-b)", "styleset(potato)" ],
+    invalid_values: [ "small-caps normal", "small-caps small-caps", "none common-ligatures", "common-ligatures none", "small-caps potato",
+                      "small-caps jis83 all-small-caps", "super historical-ligatures sub", "stacked-fractions diagonal-fractions historical-ligatures",
+                      "common-ligatures traditional common-ligatures", "lining-nums traditional slashed-zero ordinal normal",
+                      "traditional historical-forms styleset(ok-alt-a, ok-alt-b) historical-forms",
+                      "historical-forms styleset(ok-alt-a, ok-alt-b) traditional styleset(potato)", "annotation(a,b,c)" ]
   },
   "font-weight": {
     domProp: "fontWeight",
