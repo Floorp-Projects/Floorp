@@ -317,7 +317,7 @@ public:
     void ActivateProgram();
     void ContentDocumentChanged();
     jobject CreateFrame();
-    void DeactivateProgram();
+    void DeactivateProgramAndRestoreState(bool a0, int32_t a1, int32_t a2, int32_t a3, int32_t a4);
     jobject GetDisplayPort(bool a0, bool a1, int32_t a2, jobject a3);
     bool IsContentDocumentDisplayed();
     jobject ProgressiveUpdateCallback(bool a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, bool a6);
@@ -331,7 +331,7 @@ protected:
     static jmethodID jActivateProgram;
     static jmethodID jContentDocumentChanged;
     static jmethodID jCreateFrame;
-    static jmethodID jDeactivateProgram;
+    static jmethodID jDeactivateProgramAndRestoreState;
     static jmethodID jGetDisplayPort;
     static jmethodID jIsContentDocumentDisplayed;
     static jmethodID jProgressiveUpdateCallback;
