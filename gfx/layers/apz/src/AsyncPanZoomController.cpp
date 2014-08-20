@@ -2220,10 +2220,8 @@ void AsyncPanZoomController::GetOverscrollTransform(ViewTransform* aTransform) c
   aTransform->mTranslation += translation * mFrameMetrics.GetZoom();
 }
 
-bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                                            ViewTransform* aOutTransform,
-                                                            ScreenPoint& aScrollOffset,
-                                                            ViewTransform* aOutOverscrollTransform) {
+bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
+{
   // The eventual return value of this function. The compositor needs to know
   // whether or not to advance by a frame as soon as it can. For example, if a
   // fling is happening, it has to keep compositing so that the animation is
@@ -2236,15 +2234,6 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     ReentrantMonitorAutoEnter lock(mMonitor);
 
     requestAnimationFrame = UpdateAnimation(aSampleTime, &deferredTasks);
-
-    aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
-    *aOutTransform = GetCurrentAsyncTransform();
-
-    // If we are overscrolled, we would like the compositor to apply an
-    // additional transform that produces an overscroll effect.
-    if (aOutOverscrollTransform && IsOverscrolled()) {
-      GetOverscrollTransform(aOutOverscrollTransform);
-    }
 
     LogRendertraceRect(GetGuid(), "viewport", "red",
       CSSRect(mFrameMetrics.GetScrollOffset(),
@@ -2280,8 +2269,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     mLastAsyncScrollTime = aSampleTime;
     mLastAsyncScrollOffset = mCurrentAsyncScrollOffset;
     SendAsyncScrollEvent();
-  }
-  else {
+  } else {
     mAsyncScrollTimeoutTask =
       NewRunnableMethod(this, &AsyncPanZoomController::FireAsyncScrollOnTimeout);
     MessageLoop::current()->PostDelayedTask(FROM_HERE,
@@ -2290,6 +2278,22 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   }
 
   return requestAnimationFrame;
+}
+
+void AsyncPanZoomController::SampleContentTransformForFrame(ViewTransform* aOutTransform,
+                                                            ScreenPoint& aScrollOffset,
+                                                            ViewTransform* aOutOverscrollTransform)
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+
+  aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
+  *aOutTransform = GetCurrentAsyncTransform();
+
+  // If we are overscrolled, we would like the compositor to apply an
+  // additional transform that produces an overscroll effect.
+  if (aOutOverscrollTransform && IsOverscrolled()) {
+    GetOverscrollTransform(aOutOverscrollTransform);
+  }
 }
 
 ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {

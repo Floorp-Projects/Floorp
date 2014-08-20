@@ -149,14 +149,21 @@ public:
   // These methods must only be called on the compositor thread.
   //
 
+  /**
+   * Advances any animations currently running to the given timestamp.
+   * This may be called multiple times with the same timestamp.
+   *
+   * The return value indicates whether or not any currently running animation
+   * should continue. If true, the compositor should schedule another composite.
+   */
+  bool AdvanceAnimations(const TimeStamp& aSampleTime);
+
   bool UpdateAnimation(const TimeStamp& aSampleTime,
                        Vector<Task*>* aOutDeferredTasks);
 
   /**
-   * RQuery the transforms that should be applied to the layer corresponding
+   * Query the transforms that should be applied to the layer corresponding
    * to this APZC due to asynchronous panning and zooming.
-   * |aSampleTime| is the time that this is sampled at; this is used for
-   * interpolating animations.
    * This function returns two transforms via out parameters:
    *   |aOutTransform| is the transform due to regular panning and zooming
    *   |aOverscrollTransform| is the transform due to overscrolling
@@ -165,14 +172,10 @@ public:
    * overscroll transform parameter may be nullptr). Clients who do not want
    * to ignore the overscroll transform should multiply the two transforms
    * together.
-   *
-   * The return value indicates whether or not any currently running animation
-   * should continue. If true, the compositor should schedule another composite.
    */
-  bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                      ViewTransform* aOutTransform,
+  void SampleContentTransformForFrame(ViewTransform* aOutTransform,
                                       ScreenPoint& aScrollOffset,
-                                      ViewTransform* aOutOverscrollTransform = nullptr);
+                                      ViewTransform* aOutOverscrollTransform);
 
   /**
    * A shadow layer update has arrived. |aLayerMetrics| is the new FrameMetrics

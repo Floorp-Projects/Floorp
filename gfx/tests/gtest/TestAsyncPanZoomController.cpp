@@ -152,6 +152,16 @@ public:
     ReentrantMonitorAutoEnter lock(mMonitor);
     EXPECT_EQ(NOTHING, mState);
   }
+
+  bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
+                                      ViewTransform* aOutTransform,
+                                      ScreenPoint& aScrollOffset,
+                                      ViewTransform* aOutOverscrollTransform = nullptr) {
+    bool ret = AdvanceAnimations(aSampleTime);
+    AsyncPanZoomController::SampleContentTransformForFrame(
+      aOutTransform, aScrollOffset, aOutOverscrollTransform);
+    return ret;
+  }
 };
 
 class TestAPZCTreeManager : public APZCTreeManager {
