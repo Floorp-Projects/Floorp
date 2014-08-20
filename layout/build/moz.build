@@ -49,7 +49,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/camera',
     '/dom/canvas',
-    '/dom/file',
     '/dom/filesystem',
     '/dom/media',
     '/dom/speakermanager',
@@ -76,11 +75,7 @@ LOCAL_INCLUDES += [
     '/view',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3'):
-    LOCAL_INCLUDES += [
-        '/dom/system/unix',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
         '/dom/system/windows',
     ]
@@ -122,11 +117,6 @@ if CONFIG['MOZ_B2G_BT']:
 if CONFIG['MOZ_WEBSPEECH']:
     LOCAL_INCLUDES += [
         '/content/media/webspeech/synth',
-    ]
-
-if CONFIG['MOZ_FFMPEG']:
-    LOCAL_INCLUDES += [
-        '/content/media/fmp4/ffmpeg/include',
     ]
 
 if CONFIG['MOZ_GSTREAMER']:

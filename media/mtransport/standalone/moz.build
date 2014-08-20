@@ -11,9 +11,6 @@ SOURCES += mtransport_cppsrcs
 
 LIBRARY_NAME = 'mtransport_s'
 
-LOCAL_INCLUDES = [
-    '/media/webrtc/trunk/third_party/libjingle/source/',
-]
 LOCAL_INCLUDES += [
     '/media/mtransport/',
     '/media/mtransport/third_party/',

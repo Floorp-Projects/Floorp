@@ -574,6 +574,12 @@ class TestEmitterBasic(unittest.TestCase):
             reader = self.reader('xpidl-module-no-sources')
             self.read_topsrcdir(reader)
 
+    def test_missing_local_includes(self):
+        """LOCAL_INCLUDES containing non-existent directories should be rejected."""
+        with self.assertRaisesRegexp(SandboxValidationError, 'Path specified in '
+            'LOCAL_INCLUDES does not exist'):
+            reader = self.reader('missing-local-includes')
+            self.read_topsrcdir(reader)
 
 if __name__ == '__main__':
     main()
