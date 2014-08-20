@@ -234,8 +234,7 @@ public:
   void CloneAttributes(mozilla::dom::Element* aDest,
                        mozilla::dom::Element* aSource);
 
-  nsresult RemoveContainer(nsINode* aNode);
-  nsresult RemoveContainer(nsIDOMNode *inNode);
+  nsresult RemoveContainer(nsIContent* aNode);
   nsresult InsertContainerAbove(nsIContent* aNode,
                                 mozilla::dom::Element** aOutNode,
                                 const nsAString& aNodeType,
