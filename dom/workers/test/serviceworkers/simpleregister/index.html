@@ -2,10 +2,59 @@
   <head></head>
   <body>
       <script type="text/javascript">
-          navigator.serviceWorker.onupdatefound = function(e) {
-            window.parent.postMessage("updatefound", "*");
+          var expectedEvents = 2;
+          function eventReceived() {
+            window.parent.postMessage({ type: "check", status: expectedEvents > 0, msg: "updatefound received" }, "*");
+
+            if (--expectedEvents) {
+              window.parent.postMessage({ type: "finish" }, "*");
+            }
           }
-          window.parent.postMessage("ready", "*");
+
+          navigator.serviceWorker.getRegistrations().then(function(a) {
+            window.parent.postMessage({ type: "check", status: Array.isArray(a),
+                                        msg: "getRegistrations returns an array" }, "*");
+            window.parent.postMessage({ type: "check", status: a.length > 0,
+                                        msg: "getRegistrations returns an array with 1 item" }, "*");
+            for (var i = 0; i < a.length; ++i) {
+              window.parent.postMessage({ type: "check", status: a[i] instanceof ServiceWorkerRegistration,
+                                          msg: "getRegistrations returns an array of ServiceWorkerRegistration objects" }, "*");
+              if (a[i].scope.match(/simpleregister\/\*/)) {
+                a[i].onupdatefound = function(e) {
+                  eventReceived();
+                }
+              }
+            }
+          });
+
+          navigator.serviceWorker.getRegistration('http://mochi.test:8888/tests/dom/workers/test/serviceworkers/simpleregister/')
+            .then(function(a) {
+            window.parent.postMessage({ type: "check", status: a instanceof ServiceWorkerRegistration,
+                                        msg: "getRegistration returns a ServiceWorkerRegistration" }, "*");
+            a.onupdatefound = function(e) {
+              eventReceived();
+            }
+          });
+
+          navigator.serviceWorker.getRegistration('http://mochi.test:8888/with_star/*')
+            .then(function(a) {
+            window.parent.postMessage({ type: "check", status: true,
+                                        msg: "getRegistration returns a ServiceWorkerRegistration" }, "*");
+            a.onupdatefound = function(e) {
+              eventReceived();
+            }
+          });
+
+          navigator.serviceWorker.getRegistration('http://www.something_else.net/')
+            .then(function(a) {
+            window.parent.postMessage({ type: "check", status: false,
+                                        msg: "getRegistration should throw for security error!" }, "*");
+          }, function(a) {
+            window.parent.postMessage({ type: "check", status: true,
+                                        msg: "getRegistration should throw for security error!" }, "*");
+          });
+
+          window.parent.postMessage({ type: "ready" }, "*");
       </script>
   </body>
 </html>
