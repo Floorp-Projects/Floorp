@@ -44,6 +44,8 @@ public:
   // (i.e. path that leads to the files stored on the volume).
   const nsCString& MountPoint() const { return mMountPoint; }
 
+  uint32_t Id() const                 { return mId; }
+
   int32_t MountGeneration() const     { return mMountGeneration; }
   bool IsMountLocked() const          { return mMountLocked; }
   bool MediaPresent() const           { return mMediaPresent; }
@@ -110,6 +112,7 @@ private:
   bool              mCanBeShared;
   bool              mIsSharing;
   bool              mIsFormatting;
+  uint32_t          mId;                // Unique ID (used by MTP)
 
   static EventObserverList mEventObserverList;
 };

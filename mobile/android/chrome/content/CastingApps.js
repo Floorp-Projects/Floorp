@@ -458,6 +458,10 @@ var CastingApps = {
       }
     });
 
+    if (items.length == 0) {
+      return;
+    }
+
     let prompt = new Prompt({
       title: Strings.browser.GetStringFromName("casting.prompt")
     }).setSingleChoiceItems(items).show(function(data) {

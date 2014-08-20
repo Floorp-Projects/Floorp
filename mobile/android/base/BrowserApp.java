@@ -2526,7 +2526,8 @@ public class BrowserApp extends GeckoApp
 
         // Disable save as PDF for about:home and xul pages.
         saveAsPDF.setEnabled(!(isAboutHome(tab) ||
-                               tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
+                               tab.getContentType().equals("application/vnd.mozilla.xul+xml") ||
+                               tab.getContentType().startsWith("video/")));
 
         // Disable find in page for about:home, since it won't work on Java content.
         findInPage.setEnabled(!isAboutHome(tab));
