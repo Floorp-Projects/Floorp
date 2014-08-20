@@ -12539,17 +12539,12 @@ ICCFileHelperObject.prototype = {
    * @return The pathId or null in case of an error or invalid input.
    */
   getEFPath: function(fileId) {
-    let appType = this.context.RIL.appType;
-    if (appType == null) {
-      return null;
-    }
-
     let path = this.getCommonEFPath(fileId);
     if (path) {
       return path;
     }
 
-    switch (appType) {
+    switch (this.context.RIL.appType) {
       case CARD_APPTYPE_SIM:
         return this.getSimEFPath(fileId);
       case CARD_APPTYPE_USIM:
