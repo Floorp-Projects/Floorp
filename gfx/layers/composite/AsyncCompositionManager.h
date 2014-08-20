@@ -124,15 +124,13 @@ public:
 private:
   void TransformScrollableLayer(Layer* aLayer);
   // Return true if an AsyncPanZoomController content transform was
-  // applied for |aLayer|.  *aWantNextFrame is set to true if the
-  // controller wants another animation frame.
-  bool ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame, Layer* aLayer,
-                                        bool* aWantNextFrame);
+  // applied for |aLayer|.
+  bool ApplyAsyncContentTransformToTree(Layer* aLayer);
   /**
    * Update the shadow transform for aLayer assuming that is a scrollbar,
    * so that it stays in sync with the content that is being scrolled by APZ.
    */
-  void ApplyAsyncTransformToScrollbar(TimeStamp aCurrentFrame, ContainerLayer* aLayer);
+  void ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer);
 
   void SetFirstPaintViewport(const LayerIntPoint& aOffset,
                              const CSSToLayerScale& aZoom,
