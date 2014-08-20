@@ -2113,8 +2113,18 @@ AsyncPanZoomController::FireAsyncScrollOnTimeout()
 bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
                                              Vector<Task*>* aOutDeferredTasks)
 {
+  // This function may get called multiple with the same sample time, because
+  // there may be multiple layers with this APZC, and each layer invokes this
+  // function during composition. However we only want to do one animation step
+  // per composition so we need to deduplicate these calls first.
+  if (mLastSampleTime == aSampleTime) {
+    return false;
+  }
+  TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
+  mLastSampleTime = aSampleTime;
+
   if (mAnimation) {
-    bool continueAnimation = mAnimation->Sample(mFrameMetrics, aSampleTime - mLastSampleTime);
+    bool continueAnimation = mAnimation->Sample(mFrameMetrics, sampleTimeDelta);
     *aOutDeferredTasks = mAnimation->TakeDeferredTasks();
     if (continueAnimation) {
       if (mPaintThrottler.TimeSinceLastRequest(aSampleTime) >
@@ -2128,7 +2138,6 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
       RequestContentRepaint();
     }
     UpdateSharedCompositorFrameMetrics();
-    mLastSampleTime = aSampleTime;
     return true;
   }
   return false;
