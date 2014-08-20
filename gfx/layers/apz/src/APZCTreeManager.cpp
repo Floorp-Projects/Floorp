@@ -23,6 +23,7 @@
 #include "UnitTransforms.h"             // for ViewAs
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "OverscrollHandoffChain.h"     // for OverscrollHandoffChain
+#include "LayersLogging.h"              // for Stringify
 
 #define APZCTM_LOG(...)
 // #define APZCTM_LOG(...) printf_stderr("APZCTM: " __VA_ARGS__)
@@ -154,6 +155,37 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   }
 }
 
+static nsIntRegion
+ComputeTouchSensitiveRegion(GeckoContentController* aController,
+                            const FrameMetrics& aMetrics,
+                            const nsIntRegion& aObscured)
+{
+  // Use the composition bounds as the hit test region.
+  // Optionally, the GeckoContentController can provide a touch-sensitive
+  // region that constrains all frames associated with the controller.
+  // In this case we intersect the composition bounds with that region.
+  ParentLayerRect visible(aMetrics.mCompositionBounds);
+  CSSRect touchSensitiveRegion;
+  if (aController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
+    // Note: we assume here that touchSensitiveRegion is in the CSS pixels
+    // of our parent layer, which makes this coordinate conversion
+    // correct.
+    visible = visible.Intersect(touchSensitiveRegion
+                                * aMetrics.mDevPixelsPerCSSPixel
+                                * aMetrics.GetParentResolution());
+  }
+
+  // Not sure what rounding option is the most correct here, but if we ever
+  // figure it out we can change this. For now I'm rounding in to minimize
+  // the chances of getting a complex region.
+  ParentLayerIntRect roundedVisible = RoundedIn(visible);
+  nsIntRegion unobscured;
+  unobscured.Sub(nsIntRect(roundedVisible.x, roundedVisible.y,
+                           roundedVisible.width, roundedVisible.height),
+                 aObscured);
+  return unobscured;
+}
+
 AsyncPanZoomController*
 APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                              Layer* aLayer, uint64_t aLayersId,
@@ -250,37 +282,13 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                   aIsFirstPaint && (aLayersId == aOriginatingLayersId));
         apzc->SetScrollHandoffParentId(aLayer->GetScrollHandoffParentId());
 
-        // Use the composition bounds as the hit test region.
-        // Optionally, the GeckoContentController can provide a touch-sensitive
-        // region that constrains all frames associated with the controller.
-        // In this case we intersect the composition bounds with that region.
-        ParentLayerRect visible(metrics.mCompositionBounds);
-        CSSRect touchSensitiveRegion;
-        if (state->mController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
-          // Note: we assume here that touchSensitiveRegion is in the CSS pixels
-          // of our parent layer, which makes this coordinate conversion
-          // correct.
-          visible = visible.Intersect(touchSensitiveRegion
-                                      * metrics.mDevPixelsPerCSSPixel
-                                      * metrics.GetParentResolution());
-        }
-
-        // Not sure what rounding option is the most correct here, but if we ever
-        // figure it out we can change this. For now I'm rounding in to minimize
-        // the chances of getting a complex region.
-        ParentLayerIntRect roundedVisible = RoundedIn(visible);
-        nsIntRegion unobscured;
-        unobscured.Sub(nsIntRect(roundedVisible.x, roundedVisible.y,
-                                 roundedVisible.width, roundedVisible.height),
-                       aObscured);
-
+        nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, metrics, aObscured);
         apzc->SetLayerHitTestData(unobscured, aTransform, transform);
-        APZCTM_LOG("Setting rect(%f %f %f %f) as visible region for APZC %p\n", visible.x, visible.y,
-                                                                              visible.width, visible.height,
-                                                                              apzc);
+        APZCTM_LOG("Setting region %s as visible region for APZC %p\n",
+            Stringify(unobscured).c_str(), apzc);
 
         mApzcTreeLog << "APZC " << guid
-                     << "\tcb=" << visible
+                     << "\tcb=" << metrics.mCompositionBounds
                      << "\tsr=" << metrics.mScrollableRect
                      << (aLayer->GetVisibleRegion().IsEmpty() ? "\tscrollinfo" : "")
                      << (apzc->HasScrollgrab() ? "\tscrollgrab" : "")
@@ -329,6 +337,25 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         }
 
         insertResult.first->second = apzc;
+      } else {
+        // We already built an APZC earlier in this tree walk, but we have another layer
+        // now that will also be using that APZC. The hit-test region on the APZC needs
+        // to be updated to deal with the new layer's hit region.
+        // FIXME: Combining this hit test region to the existing hit test region has a bit
+        // of a problem, because it assumes the z-index of this new region is the same as
+        // the z-index of the old region (from the previous layer with the same scrollid)
+        // when in fact that may not be the case.
+        // Consider the case where we have three layers: A, B, and C. A is at the top in
+        // z-order and C is at the bottom. A and C share a scrollid and scroll together; but
+        // B has a different scrollid and scrolls independently. Depending on how B moves
+        // and the async transform on it, a larger/smaller area of C may be unobscured.
+        // However, when we combine the hit regions of A and C here we are ignoring the async
+        // async transform and so we basically assume the same amount of C is always visible
+        // on top of B. Fixing this doesn't appear to be very easy so I'm leaving it for
+        // now in the hopes that we won't run into this problem a lot.
+        nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, metrics, aObscured);
+        apzc->AddHitTestRegion(unobscured);
+        APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(unobscured).c_str(), apzc);
       }
     }
   }
