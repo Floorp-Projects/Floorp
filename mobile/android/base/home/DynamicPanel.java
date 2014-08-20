@@ -12,7 +12,7 @@ import org.mozilla.gecko.home.PanelLayout.ContextMenuRegistry;
 import org.mozilla.gecko.home.PanelLayout.DatasetHandler;
 import org.mozilla.gecko.home.PanelLayout.DatasetRequest;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.util.UIAsyncTask;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -70,7 +70,7 @@ public class DynamicPanel extends HomeFragment {
 
     // Hold a reference to the UiAsyncTask we use to check the state of the
     // PanelAuthCache, so that we can cancel it if necessary.
-    private UiAsyncTask<Void, Void, Boolean> mAuthStateTask;
+    private UIAsyncTask.WithoutParams<Boolean> mAuthStateTask;
 
     // The configuration associated with this panel
     private PanelConfig mPanelConfig;
@@ -137,7 +137,7 @@ public class DynamicPanel extends HomeFragment {
         mPanelAuthCache.setOnChangeListener(null);
 
         if (mAuthStateTask != null) {
-            mAuthStateTask.cancel(true);
+            mAuthStateTask.cancel();
             mAuthStateTask = null;
         }
     }
@@ -156,9 +156,9 @@ public class DynamicPanel extends HomeFragment {
         Log.d(LOGTAG, "Loading layout");
 
         if (requiresAuth()) {
-            mAuthStateTask = new UiAsyncTask<Void, Void, Boolean>(ThreadUtils.getBackgroundHandler()) {
+            mAuthStateTask = new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
                 @Override
-                public synchronized Boolean doInBackground(Void... params) {
+                public synchronized Boolean doInBackground() {
                     return mPanelAuthCache.isAuthenticated(mPanelConfig.getId());
                 }
 
