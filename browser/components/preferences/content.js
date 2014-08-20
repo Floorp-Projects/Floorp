@@ -62,7 +62,7 @@ var gContentPane = {
     params.introText = bundlePreferences.getString("popuppermissionstext");
     document.documentElement.openWindow("Browser:Permissions",
                                         "chrome://browser/content/preferences/permissions.xul",
-                                        "", params);
+                                        "resizable", params);
   },
 
 
@@ -187,7 +187,7 @@ var gContentPane = {
   {
     document.documentElement.openWindow("Browser:TranslationExceptions",
                                         "chrome://browser/content/preferences/translation.xul",
-                                        "", null);
+                                        "resizable", null);
   },
 
   openTranslationProviderAttribution: function ()
