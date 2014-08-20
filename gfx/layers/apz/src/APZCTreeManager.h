@@ -89,6 +89,12 @@ class APZCTreeManager {
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
   typedef uint32_t TouchBehaviorFlags;
 
+  // Helper struct to hold some state while we build the APZ tree. The
+  // sole purpose of this struct is to shorten the argument list to
+  // UpdatePanZoomControllerTree. All the state that we don't need to
+  // push on the stack during recursion and pop on unwind is stored here.
+  struct TreeBuildingState;
+
 public:
   APZCTreeManager();
 
@@ -368,16 +374,11 @@ private:
    * tree also as a last-child-prev-sibling tree because that simplifies the hit detection
    * code.
    */
-  AsyncPanZoomController* UpdatePanZoomControllerTree(CompositorParent* aCompositor,
+  AsyncPanZoomController* UpdatePanZoomControllerTree(TreeBuildingState& aState,
                                                       Layer* aLayer, uint64_t aLayersId,
                                                       const gfx::Matrix4x4& aAncestorTransform,
                                                       AsyncPanZoomController* aParent,
                                                       AsyncPanZoomController* aNextSibling,
-                                                      bool aIsFirstPaint,
-                                                      uint64_t aOriginatingLayersId,
-                                                      const APZPaintLogHelper& aPaintLogger,
-                                                      nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy,
-                                                      std::map<ScrollableLayerGuid, AsyncPanZoomController*>& aApzcMap,
                                                       const nsIntRegion& aObscured);
 
 private:
