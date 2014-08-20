@@ -10,3 +10,11 @@ default-preferences pref(layout.css.filters.enabled,true)
 == drop-shadow.html drop-shadow-ref.html
 == drop-shadow-default-color.html drop-shadow-default-color-ref.html
 == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
+== hue-rotate.html hue-rotate-ref.html
+== hue-rotate-360.html hue-rotate-360-ref.html
+== hue-rotate-grad.html hue-rotate-grad-ref.html
+== hue-rotate-negative.html hue-rotate-negative-ref.html
+== hue-rotate-over-360.html hue-rotate-over-360-ref.html
+== hue-rotate-rad.html hue-rotate-rad-ref.html
+== hue-rotate-turn.html hue-rotate-turn-ref.html
+== hue-rotate-zero.html hue-rotate-zero-ref.html
