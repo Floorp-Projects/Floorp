@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1036214
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1036214</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for subsumes-checking |any| and |object| for js-implemented WebIDL. **/
+  SimpleTest.waitForExplicitFinish();
+  var xoObjects = [];
+  function setup() {
+    xoObjects.push(window[0]);
+    xoObjects.push(window[0].location);
+    xoObjects.push(SpecialPowers.unwrap(SpecialPowers.wrap(window[0]).document));
+    xoObjects.push(SpecialPowers);
+    xoObjects.push(SpecialPowers.wrap);
+    SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, go);
+  }
+
+  function checkThrows(f, msg) {
+    try {
+      f();
+      ok(false, "Should have thrown: " + msg);
+    } catch (e) {
+      ok(true, "Threw correctly: " + msg);
+      ok(/denied|insecure/.test(e), "Threw security exception: " + e);
+    }
+  }
+
+  function go() {
+
+    //
+    // Test the basics of the test interface.
+    //
+
+    var any = { a: 11 };
+    var obj = { b: 22, c: "str" };
+    var obj2 = { foo: "baz" };
+    var myDict = { anyMember: 42, objectMember: { answer: 42 }, objectOrStringMember: { answer: "anobject" },
+                   anySequenceMember: [{}, 1, "thirdinsequence"],
+                   innerDictionary: { innerObject: { answer: "rabbithole" } } };
+    var t = new TestInterfaceJS(any, obj, myDict);
+    is(Object.getPrototypeOf(t), TestInterfaceJS.prototype, "Prototype setup works correctly");
+    is(t.anyArg, any, "anyArg is correct");
+    is(t.objectArg, obj, "objectArg is correct");
+    is(t.dictionaryArg.anyMember, 42, "dictionaryArg looks correct");
+    is(t.dictionaryArg.objectMember.answer, 42, "dictionaryArg looks correct");
+    t.anyAttr = 2;
+    is(t.anyAttr, 2, "ping-pong any attribute works");
+    t.objAttr = obj2;
+    is(t.objAttr, obj2, "ping-pong object attribute works");
+    t.dictionaryAttr = myDict;
+    is(t.dictionaryAttr.anyMember, 42, "ping-pong dictionary attribute works");
+    is(t.dictionaryAttr.objectMember.answer, 42, "ping-pong dictionary attribute works");
+
+    is(any, t.pingPongAny(any), "ping-pong works with any");
+    is(obj, t.pingPongObject(obj), "ping-pong works with obj");
+    is(obj, t.pingPongObjectOrString(obj), "ping-pong works with obj or string");
+    is("foo", t.pingPongObjectOrString("foo"), "ping-pong works with obj or string");
+    is(t.pingPongDictionary(myDict).anyMember, 42, "ping pong works with dict");
+    is(t.pingPongDictionary(myDict).objectMember.answer, 42, "ping pong works with dict");
+    is(t.pingPongDictionary(myDict).objectOrStringMember.answer, "anobject", "ping pong works with dict");
+    is(t.pingPongDictionary(myDict).anySequenceMember[2], "thirdinsequence", "ping pong works with dict");
+    is(t.pingPongDictionary(myDict).innerDictionary.innerObject.answer, "rabbithole", "ping pong works with layered dicts");
+    is(t.pingPongDictionaryOrLong({anyMember: 42}), 42, "ping pong (dict or long) works with dict");
+    is(t.pingPongDictionaryOrLong(42), 42, "ping pong (dict or long) works with long");
+    ok(/canary/.test(t.pingPongMap({ someVal: 42, someOtherVal: "canary" })), "ping pong works with mozmap");
+    is(t.objectSequenceLength([{}, {}, {}]), 3, "ping pong works with object sequence");
+    is(t.anySequenceLength([42, 'string', {}, undefined]), 4, "ping pong works with any sequence");
+
+    //
+    // Test that we throw in the cross-origin cases.
+    //
+
+    xoObjects.forEach(function(xoObj) {
+      var blank = new TestInterfaceJS();
+      checkThrows(() => new TestInterfaceJS(xoObj, undefined), "any param for constructor");
+      checkThrows(() => new TestInterfaceJS(undefined, xoObj), "obj param for constructor");
+      checkThrows(() => new TestInterfaceJS(undefined, undefined, { anyMember: xoObj }), "any dict param for constructor");
+      checkThrows(() => new TestInterfaceJS(undefined, undefined, { objectMember: xoObj }), "object dict param for constructor");
+      checkThrows(() => new TestInterfaceJS(undefined, undefined, { objectOrStringMember: xoObj }), "union dict param for constructor");
+      checkThrows(() => new TestInterfaceJS(undefined, undefined, { anySequenceMember: [0, xoObj, 'hi' ] }), "sequence dict param for constructor");
+      checkThrows(() => new TestInterfaceJS(undefined, undefined, { innerDictionary: { innerObject: xoObj } }), "inner dict param for constructor");
+      checkThrows(() => t.anyAttr = xoObj, "anyAttr");
+      checkThrows(() => t.objectAttr = xoObj, "objAttr");
+      checkThrows(() => t.dictionaryAttr = { anyMember: xoObj }, "dictionaryAttr any");
+      checkThrows(() => t.dictionaryAttr = { objectMember: xoObj }, "dictionaryAttr object");
+      checkThrows(() => t.pingPongAny(xoObj), "pingpong any");
+      checkThrows(() => t.pingPongObject(xoObj), "pingpong obj");
+      checkThrows(() => t.pingPongObjectOrString(xoObj), "pingpong union");
+      checkThrows(() => t.pingPongDictionary({ anyMember: xoObj }), "dictionary pingpong any");
+      checkThrows(() => t.pingPongDictionary({ objectMember: xoObj }), "dictionary pingpong object");
+      checkThrows(() => t.pingPongDictionary({ anyMember: xoObj, objectMember: xoObj }), "dictionary pingpong both");
+      checkThrows(() => t.pingPongDictionary({ objectOrStringMember: xoObj }), "dictionary pingpong objectorstring");
+      checkThrows(() => t.pingPongDictionaryOrLong({ objectMember: xoObj }), "unionable dictionary");
+      checkThrows(() => t.pingPongDictionaryOrLong({ anyMember: xoObj }), "unionable dictionary");
+      checkThrows(() => t.pingPongMap({ someMember: 42, someOtherMember: {}, crossOriginMember: xoObj }), "mozmap");
+      checkThrows(() => t.objectSequenceLength([{}, {}, xoObj, {}]), "object sequence");
+      checkThrows(() => t.anySequenceLength([42, 'someString', xoObj, {}]), "any sequence");
+    });
+
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1036214">Mozilla Bug 1036214</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe id="ifr" onload="setup();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+</body>
+</html>
