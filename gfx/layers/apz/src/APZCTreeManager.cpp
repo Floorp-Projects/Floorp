@@ -201,8 +201,6 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 {
   mTreeLock.AssertCurrentThreadOwns();
 
-  Matrix4x4 transform = aLayer->GetTransform();
-
   AsyncPanZoomController* apzc = nullptr;
   mApzcTreeLog << aLayer->Name() << '\t';
 
@@ -283,7 +281,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         apzc->SetScrollHandoffParentId(aLayer->GetScrollHandoffParentId());
 
         nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, metrics, aObscured);
-        apzc->SetLayerHitTestData(unobscured, aAncestorTransform, transform);
+        apzc->SetLayerHitTestData(unobscured, aAncestorTransform);
         APZCTM_LOG("Setting region %s as visible region for APZC %p\n",
             Stringify(unobscured).c_str(), apzc);
 
@@ -364,16 +362,17 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
   mApzcTreeLog << '\n';
 
-  // Accumulate the CSS transform between layers that have an APZC, but exclude any
-  // any layers that do have an APZC, and reset the accumulation at those layers.
+  // Accumulate the CSS transform between layers that have an APZC.
   // In the terminology of the big comment above APZCTreeManager::GetInputTransforms, if
-  // we are at layer M, then aAncestorTransform is NC * OC, and we left-multiply MC and
-  // compute ancestorTransform to be MC * NC * OC. This gets passed down as the ancestor
+  // we are at layer M, then aAncestorTransform is NC * OC * PC, and we left-multiply MC and
+  // compute ancestorTransform to be MC * NC * OC * PC. This gets passed down as the ancestor
   // transform to layer L when we recurse into the children below. If we are at a layer
-  // with an APZC, such as P, then we leave the ancestorTransform empty to "reset" it.
-  Matrix4x4 ancestorTransform;
+  // with an APZC, such as P, then we reset the ancestorTransform to just PC, to start
+  // the new accumulation as we go down.
+  Matrix4x4 transform = aLayer->GetTransform();
+  Matrix4x4 ancestorTransform = transform;
   if (!apzc) {
-    ancestorTransform = transform * aAncestorTransform;
+    ancestorTransform = ancestorTransform * aAncestorTransform;
   }
 
   uint64_t childLayersId = (aLayer->AsRefLayer() ? aLayer->AsRefLayer()->GetReferentId() : aLayersId);
@@ -1100,10 +1099,10 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc,
   // comments explain what values are stored in the variables at these two levels. All the comments
   // use standard matrix notation where the leftmost matrix in a multiplication is applied first.
 
-  // ancestorUntransform takes points from aApzc's parent APZC's layer coordinates
+  // ancestorUntransform takes points from aApzc's parent APZC's CSS-transformed layer coordinates
   // to aApzc's parent layer's layer coordinates.
-  // It is OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L,
-  //   and RC.Inverse() * QC.Inverse()                at recursion level for P.
+  // It is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L,
+  //   and RC.Inverse() * QC.Inverse()                               at recursion level for P.
   Matrix4x4 ancestorUntransform = aApzc->GetAncestorTransform();
   ancestorUntransform.Invert();
 
@@ -1115,15 +1114,13 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc,
            aHitTestPoint.x, aHitTestPoint.y,
            hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
 
-  // childUntransform takes points from aApzc's parent APZC's layer coordinates
-  // to aApzc's layer coordinates (which are aApzc's children's ParentLayer coordinates).
-  // It is OC.Inverse() * NC.Inverse() * MC.Inverse() * LA.Inverse() * LC.Inverse() at L
-  //   and RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse()                at P.
+  // childUntransform takes points from aApzc's parent APZC's CSS-transformed layer coordinates
+  // to aApzc's CSS-transformed layer coordinates.
+  // It is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() * LA.Inverse() at L
+  //   and RC.Inverse() * QC.Inverse() * PA.Inverse()                               at P.
   Matrix4x4 asyncUntransform = aApzc->GetCurrentAsyncTransform();
   asyncUntransform.Invert();
-  Matrix4x4 cssUntransform = aApzc->GetCSSTransform();
-  cssUntransform.Invert();
-  Matrix4x4 childUntransform = ancestorUntransform * asyncUntransform * cssUntransform;
+  Matrix4x4 childUntransform = ancestorUntransform * asyncUntransform;
   gfxPointH3D hitTestPointForChildLayers = To3DMatrix(childUntransform).ProjectPoint(aHitTestPoint);
   APZCTM_LOG("Untransformed %f %f to layer coordinates %f %f for APZC %p\n",
            aHitTestPoint.x, aHitTestPoint.y,
@@ -1265,16 +1262,16 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, Matrix4x4& aT
   // in the variables at these two levels. All the comments use standard matrix notation where the
   // leftmost matrix in a multiplication is applied first.
 
-  // ancestorUntransform is OC.Inverse() * NC.Inverse() * MC.Inverse()
+  // ancestorUntransform is PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse()
   Matrix4x4 ancestorUntransform = aApzc->GetAncestorTransform();
   ancestorUntransform.Invert();
   // asyncUntransform is LA.Inverse()
   Matrix4x4 asyncUntransform = aApzc->GetCurrentAsyncTransform();
   asyncUntransform.Invert();
 
-  // aTransformToApzcOut is initialized to OC.Inverse() * NC.Inverse() * MC.Inverse()
+  // aTransformToApzcOut is initialized to PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse()
   aTransformToApzcOut = ancestorUntransform;
-  // aTransformToGeckoOut is initialized to LA.Inverse() * LD * MC * NC * OC
+  // aTransformToGeckoOut is initialized to LA.Inverse() * LD * MC * NC * OC * PC
   aTransformToGeckoOut = asyncUntransform * aApzc->GetTransformToLastDispatchedPaint() * aApzc->GetAncestorTransform();
 
   for (AsyncPanZoomController* parent = aApzc->GetParent(); parent; parent = parent->GetParent()) {
@@ -1284,15 +1281,13 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, Matrix4x4& aT
     // asyncUntransform is updated to PA.Inverse() when parent == P
     asyncUntransform = parent->GetCurrentAsyncTransform();
     asyncUntransform.Invert();
-    // untransformSinceLastApzc is RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse()
-    Matrix4x4 cssUntransform = parent->GetCSSTransform();
-    cssUntransform.Invert();
-    Matrix4x4 untransformSinceLastApzc = ancestorUntransform * asyncUntransform * cssUntransform;
+    // untransformSinceLastApzc is RC.Inverse() * QC.Inverse() * PA.Inverse()
+    Matrix4x4 untransformSinceLastApzc = ancestorUntransform * asyncUntransform;
 
     // aTransformToApzcOut is RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse()
     aTransformToApzcOut = untransformSinceLastApzc * aTransformToApzcOut;
     // aTransformToGeckoOut is LA.Inverse() * LD * MC * NC * OC * PC * PD * QC * RC
-    aTransformToGeckoOut = aTransformToGeckoOut * parent->GetCSSTransform() * parent->GetTransformToLastDispatchedPaint() * parent->GetAncestorTransform();
+    aTransformToGeckoOut = aTransformToGeckoOut * parent->GetTransformToLastDispatchedPaint() * parent->GetAncestorTransform();
 
     // The above values for aTransformToApzcOut and aTransformToGeckoOut when parent == P match
     // the required output as explained in the comment above this method. Note that any missing
