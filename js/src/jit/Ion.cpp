@@ -1789,8 +1789,6 @@ AttachFinishedCompilations(JSContext *cx)
 
             bool success;
             {
-                // Release the helper thread lock and root the compiler for GC.
-                AutoTempAllocatorRooter root(cx, &builder->alloc());
                 AutoUnlockHelperThreadState unlock;
                 success = codegen->link(cx, builder->constraints());
             }
@@ -1926,7 +1924,6 @@ IonCompile(JSContext *cx, JSScript *script,
             return AbortReason_Alloc;
     }
 
-    AutoTempAllocatorRooter root(cx, temp);
     types::CompilerConstraintList *constraints = types::NewCompilerConstraintList(*temp);
     if (!constraints)
         return AbortReason_Alloc;

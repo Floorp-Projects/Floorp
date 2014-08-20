@@ -312,10 +312,8 @@ public:
                                  EStripWrappers aStripWrappers);
   nsresult DeleteNode(nsINode* aNode);
   NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
-  using nsEditor::DeleteText;
-  NS_IMETHODIMP DeleteText(nsIDOMCharacterData *aTextNode,
-                           uint32_t             aOffset,
-                           uint32_t             aLength);
+  nsresult DeleteText(nsGenericDOMDataNode& aTextNode, uint32_t aOffset,
+                      uint32_t aLength);
   NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
                             nsCOMPtr<nsIDOMNode> *aInOutNode, 
                             int32_t *aInOutOffset,
@@ -642,7 +640,7 @@ protected:
                                          nsIDOMCharacterData *aTextNode, 
                                          int32_t aStartOffset,
                                          int32_t aEndOffset);
-  nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsINode* aNode);
+  nsresult RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode);
   nsresult RelativeFontChangeHelper(int32_t aSizeChange, nsINode* aNode);
 
   /* helper routines for inline style */
