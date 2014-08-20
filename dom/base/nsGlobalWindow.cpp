@@ -2424,8 +2424,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   bool thisChrome = IsChromeWindow();
 
   // Check if we're near the stack limit before we get anywhere near the
-  // transplanting code.
-  JS_CHECK_RECURSION(cx, return NS_ERROR_FAILURE);
+  // transplanting code. We use a conservative check since we'll use a little
+  // more space before we actually hit the critical "can't fail" path.
+  JS_CHECK_RECURSION_CONSERVATIVE(cx, return NS_ERROR_FAILURE);
 
   nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
   NS_ASSERTION(!aState || wsh, "What kind of weird state are you giving me here?");
