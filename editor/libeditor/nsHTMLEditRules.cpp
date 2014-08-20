@@ -3256,7 +3256,9 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
     // here's where we actually figure out what to do
     nsCOMPtr<nsIDOMNode> newBlock;
     nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
-    nsCOMPtr<Element> curNodeAsElement = do_QueryInterface(curNode);
+    nsCOMPtr<nsIContent> curNodeAsContent = do_QueryInterface(curNode);
+    nsCOMPtr<Element> curNodeAsElement = curNodeAsContent->IsElement()
+      ? curNodeAsContent->AsElement() : nullptr;
     int32_t offset;
     curParent = nsEditor::GetNodeLocation(curNode, &offset);
 
@@ -3419,9 +3421,11 @@ nsHTMLEditRules::WillMakeList(Selection* aSelection,
           NS_ENSURE_STATE(listItem);
         } else {
           NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->InsertContainerAbove(curNode, address_of(listItem),
-                                                  nsDependentAtomString(itemType));
-          NS_ENSURE_SUCCESS(res, res);
+          NS_ENSURE_STATE(curNodeAsContent);
+          listItem = dont_AddRef(GetAsDOMNode(
+            mHTMLEditor->InsertContainerAbove(curNodeAsContent,
+                                              itemType).take()));
+          NS_ENSURE_STATE(listItem);
         }
         if (IsInlineNode(curNode)) {
           prevListItem = listItem;

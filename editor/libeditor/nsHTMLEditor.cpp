@@ -4909,38 +4909,33 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
     NS_ENSURE_SUCCESS(res, res);
     child = priorNode;
   }
-  nsCOMPtr<nsIDOMNode> newStyles = nullptr, deepestStyle = nullptr;
-  while (child && (child != aPreviousBlock)) {
-    if (nsHTMLEditUtils::IsInlineStyle(child) ||
-        nsEditor::NodeIsType(child, nsEditProperty::span)) {
-      nsAutoString domTagName;
-      child->GetNodeName(domTagName);
-      ToLowerCase(domTagName);
+  nsCOMPtr<Element> newStyles, deepestStyle;
+  nsCOMPtr<nsINode> childNode = do_QueryInterface(child);
+  nsCOMPtr<Element> childElement;
+  if (childNode) {
+    childElement = childNode->IsElement() ? childNode->AsElement()
+                                          : childNode->GetParentElement();
+  }
+  while (childElement && (childElement->AsDOMNode() != aPreviousBlock)) {
+    if (nsHTMLEditUtils::IsInlineStyle(childElement) ||
+        childElement->Tag() == nsGkAtoms::span) {
       if (newStyles) {
-        nsCOMPtr<nsIDOMNode> newContainer;
-        res = InsertContainerAbove(newStyles, address_of(newContainer), domTagName);
+        newStyles = InsertContainerAbove(newStyles, childElement->Tag());
+        NS_ENSURE_STATE(newStyles);
+      } else {
+        nsCOMPtr<nsIDOMNode> newStylesDOM;
+        res = CreateNode(nsDependentAtomString(childElement->Tag()), aNewBlock,
+                         0, getter_AddRefs(newStylesDOM));
         NS_ENSURE_SUCCESS(res, res);
-        newStyles = newContainer;
+        deepestStyle = newStyles = do_QueryInterface(newStylesDOM);
       }
-      else {
-        res = CreateNode(domTagName, aNewBlock, 0, getter_AddRefs(newStyles));
-        NS_ENSURE_SUCCESS(res, res);
-        deepestStyle = newStyles;
-      }
-      res = CloneAttributes(newStyles, child);
-      NS_ENSURE_SUCCESS(res, res);
+      CloneAttributes(newStyles, childElement);
     }
-    nsCOMPtr<nsIDOMNode> tmp;
-    res = child->GetParentNode(getter_AddRefs(tmp));
-    NS_ENSURE_SUCCESS(res, res);
-    child = tmp;
+    childElement = childElement->GetParentElement();
   }
   if (deepestStyle) {
-    nsCOMPtr<nsIDOMNode> outBRNode;
-    res = CreateBR(deepestStyle, 0, address_of(outBRNode));
-    NS_ENSURE_SUCCESS(res, res);
-    // Getters must addref
-    outBRNode.forget(aOutBrNode);
+    *aOutBrNode = GetAsDOMNode(CreateBR(deepestStyle, 0).take());
+    NS_ENSURE_STATE(*aOutBrNode);
   }
   return NS_OK;
 }
