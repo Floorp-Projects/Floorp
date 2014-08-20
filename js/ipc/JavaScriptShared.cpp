@@ -156,10 +156,16 @@ JavaScriptShared::JavaScriptShared(JSRuntime *rt)
 {
     if (!sLoggingInitialized) {
         sLoggingInitialized = true;
-        Preferences::AddBoolVarCache(&sLoggingEnabled,
-                                     "dom.ipc.cpows.log.enabled", false);
-        Preferences::AddBoolVarCache(&sStackLoggingEnabled,
-                                     "dom.ipc.cpows.log.stack", false);
+
+        if (PR_GetEnv("MOZ_CPOW_LOG")) {
+            sLoggingEnabled = true;
+            sStackLoggingEnabled = true;
+        } else {
+            Preferences::AddBoolVarCache(&sLoggingEnabled,
+                                         "dom.ipc.cpows.log.enabled", false);
+            Preferences::AddBoolVarCache(&sStackLoggingEnabled,
+                                         "dom.ipc.cpows.log.stack", false);
+        }
     }
 }
 
