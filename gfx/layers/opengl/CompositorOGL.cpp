@@ -976,8 +976,8 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
 
   GLenum srcBlend;
   GLenum dstBlend;
-  GLenum srcColorBlend = LOCAL_GL_ONE;
-  GLenum dstColorBlend = LOCAL_GL_ONE;
+  GLenum srcAlphaBlend = LOCAL_GL_ONE;
+  GLenum dstAlphaBlend = LOCAL_GL_ONE;
 
   switch (aBlendMode) {
     case gfx::CompositionOp::OP_OVER:
@@ -996,10 +996,10 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
       dstBlend = LOCAL_GL_ONE_MINUS_SRC_ALPHA;
       break;
     case gfx::CompositionOp::OP_SOURCE:
-      srcBlend = LOCAL_GL_ONE;
+      srcBlend = aIsPremultiplied ? LOCAL_GL_ONE : LOCAL_GL_SRC_ALPHA;
       dstBlend = LOCAL_GL_ZERO;
-      srcColorBlend = LOCAL_GL_ONE;
-      dstColorBlend = LOCAL_GL_ZERO;
+      srcAlphaBlend = LOCAL_GL_ONE;
+      dstAlphaBlend = LOCAL_GL_ZERO;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported blend mode!");
@@ -1007,7 +1007,7 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
   }
 
   aGL->fBlendFuncSeparate(srcBlend, dstBlend,
-                          srcColorBlend, dstColorBlend);
+                          srcAlphaBlend, dstAlphaBlend);
   return true;
 }
 
