@@ -2567,46 +2567,47 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsAString & aStringToInsert
 }
 
 
-NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
-                              uint32_t             aOffset,
-                              uint32_t             aLength)
+nsresult
+nsEditor::DeleteText(nsGenericDOMDataNode& aCharData, uint32_t aOffset,
+                     uint32_t aLength)
 {
-  nsRefPtr<DeleteTextTxn> txn;
-  nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength,
-                                           getter_AddRefs(txn));
+  nsRefPtr<DeleteTextTxn> txn =
+    CreateTxnForDeleteText(aCharData, aOffset, aLength);
+  NS_ENSURE_STATE(txn);
+
   nsAutoRules beginRulesSniffing(this, EditAction::deleteText, nsIEditor::ePrevious);
-  if (NS_SUCCEEDED(result))  
-  {
-    // let listeners know what's up
-    int32_t i;
-    for (i = 0; i < mActionListeners.Count(); i++)
-      mActionListeners[i]->WillDeleteText(aElement, aOffset, aLength);
-    
-    result = DoTransaction(txn); 
-    
-    // let listeners know what happened
-    for (i = 0; i < mActionListeners.Count(); i++)
-      mActionListeners[i]->DidDeleteText(aElement, aOffset, aLength, result);
+
+  // Let listeners know what's up
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->WillDeleteText(
+        static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
+        aLength);
   }
-  return result;
+
+  nsresult res = DoTransaction(txn);
+
+  // Let listeners know what happened
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->DidDeleteText(
+        static_cast<nsIDOMCharacterData*>(GetAsDOMNode(&aCharData)), aOffset,
+        aLength, res);
+  }
+
+  return res;
 }
 
 
-nsresult
-nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData* aElement,
-                                 uint32_t             aOffset,
-                                 uint32_t             aLength,
-                                 DeleteTextTxn**      aTxn)
+already_AddRefed<DeleteTextTxn>
+nsEditor::CreateTxnForDeleteText(nsGenericDOMDataNode& aCharData,
+                                 uint32_t aOffset, uint32_t aLength)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  nsRefPtr<DeleteTextTxn> txn =
+    new DeleteTextTxn(*this, aCharData, aOffset, aLength, &mRangeUpdater);
 
-  nsRefPtr<DeleteTextTxn> txn = new DeleteTextTxn();
+  nsresult res = txn->Init();
+  NS_ENSURE_SUCCESS(res, nullptr);
 
-  nsresult res = txn->Init(this, aElement, aOffset, aLength, &mRangeUpdater);
-  NS_ENSURE_SUCCESS(res, res);
-
-  txn.forget(aTxn);
-  return NS_OK;
+  return txn.forget();
 }
 
 
@@ -4433,25 +4434,23 @@ nsEditor::CreateTxnForDeleteSelection(EDirection aAction,
   return NS_OK;
 }
 
-nsresult
-nsEditor::CreateTxnForDeleteCharacter(nsIDOMCharacterData* aData,
-                                      uint32_t             aOffset,
-                                      EDirection           aDirection,
-                                      DeleteTextTxn**      aTxn)
+already_AddRefed<DeleteTextTxn>
+nsEditor::CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData,
+                                      uint32_t aOffset, EDirection aDirection)
 {
   NS_ASSERTION(aDirection == eNext || aDirection == ePrevious,
-               "invalid direction");
+               "Invalid direction");
   nsAutoString data;
-  aData->GetData(data);
+  aData.GetData(data);
   NS_ASSERTION(data.Length(), "Trying to delete from a zero-length node");
-  NS_ENSURE_STATE(data.Length());
+  NS_ENSURE_TRUE(data.Length(), nullptr);
 
   uint32_t segOffset = aOffset, segLength = 1;
   if (aDirection == eNext) {
     if (segOffset + 1 < data.Length() &&
         NS_IS_HIGH_SURROGATE(data[segOffset]) &&
         NS_IS_LOW_SURROGATE(data[segOffset+1])) {
-      // delete both halves of the surrogate pair
+      // Delete both halves of the surrogate pair
       ++segLength;
     }
   } else if (aOffset > 0) {
@@ -4463,9 +4462,9 @@ nsEditor::CreateTxnForDeleteCharacter(nsIDOMCharacterData* aData,
       --segOffset;
     }
   } else {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
-  return CreateTxnForDeleteText(aData, segOffset, segLength, aTxn);
+  return CreateTxnForDeleteText(aData, segOffset, segLength);
 }
 
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior
@@ -4490,7 +4489,6 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
 
   // determine if the insertion point is at the beginning, middle, or end of
   // the node
-  nsCOMPtr<nsIDOMCharacterData> nodeAsCharData = do_QueryInterface(node);
 
   uint32_t count = node->Length();
 
@@ -4510,16 +4508,15 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
 
     // there is a priorNode, so delete its last child (if chardata, delete the
     // last char). if it has no children, delete it
-    nsCOMPtr<nsIDOMCharacterData> priorNodeAsCharData =
-      do_QueryInterface(priorNode);
-    if (priorNodeAsCharData) {
+    if (priorNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+      nsRefPtr<nsGenericDOMDataNode> priorNodeAsCharData =
+        static_cast<nsGenericDOMDataNode*>(priorNode.get());
       uint32_t length = priorNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       NS_ENSURE_STATE(length);
-      nsRefPtr<DeleteTextTxn> txn;
-      res = CreateTxnForDeleteCharacter(priorNodeAsCharData, length,
-                                        ePrevious, getter_AddRefs(txn));
-      NS_ENSURE_SUCCESS(res, res);
+      nsRefPtr<DeleteTextTxn> txn =
+        CreateTxnForDeleteCharacter(*priorNodeAsCharData, length, ePrevious);
+      NS_ENSURE_STATE(txn);
 
       *aOffset = txn->GetOffset();
       *aLength = txn->GetNumCharsToDelete();
@@ -4546,16 +4543,15 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
 
     // there is a nextNode, so delete its first child (if chardata, delete the
     // first char). if it has no children, delete it
-    nsCOMPtr<nsIDOMCharacterData> nextNodeAsCharData =
-      do_QueryInterface(nextNode);
-    if (nextNodeAsCharData) {
+    if (nextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+      nsRefPtr<nsGenericDOMDataNode> nextNodeAsCharData =
+        static_cast<nsGenericDOMDataNode*>(nextNode.get());
       uint32_t length = nextNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       NS_ENSURE_STATE(length);
-      nsRefPtr<DeleteTextTxn> txn;
-      res = CreateTxnForDeleteCharacter(nextNodeAsCharData, 0, eNext,
-                                        getter_AddRefs(txn));
-      NS_ENSURE_SUCCESS(res, res);
+      nsRefPtr<DeleteTextTxn> txn =
+        CreateTxnForDeleteCharacter(*nextNodeAsCharData, 0, eNext);
+      NS_ENSURE_STATE(txn);
 
       *aOffset = txn->GetOffset();
       *aLength = txn->GetNumCharsToDelete();
@@ -4573,12 +4569,13 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     return NS_OK;
   }
 
-  if (nodeAsCharData) {
+  if (node->IsNodeOfType(nsINode::eDATA_NODE)) {
+    nsRefPtr<nsGenericDOMDataNode> nodeAsCharData =
+      static_cast<nsGenericDOMDataNode*>(node.get());
     // we have chardata, so delete a char at the proper offset
-    nsRefPtr<DeleteTextTxn> txn;
-    res = CreateTxnForDeleteCharacter(nodeAsCharData, offset, aAction,
-                                      getter_AddRefs(txn));
-    NS_ENSURE_SUCCESS(res, res);
+    nsRefPtr<DeleteTextTxn> txn = CreateTxnForDeleteCharacter(*nodeAsCharData,
+                                                              offset, aAction);
+    NS_ENSURE_STATE(txn);
 
     aTxn->AppendChild(txn);
     NS_ADDREF(*aNode = node);
@@ -4606,18 +4603,17 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     }
     NS_ENSURE_STATE(selectedNode);
 
-    nsCOMPtr<nsIDOMCharacterData> selectedNodeAsCharData =
-      do_QueryInterface(selectedNode);
-    if (selectedNodeAsCharData) {
+    if (selectedNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+      nsRefPtr<nsGenericDOMDataNode> selectedNodeAsCharData =
+        static_cast<nsGenericDOMDataNode*>(selectedNode.get());
       // we are deleting from a chardata node, so do a character deletion
       uint32_t position = 0;
       if (aAction == ePrevious) {
         position = selectedNode->Length();
       }
-      nsRefPtr<DeleteTextTxn> delTextTxn;
-      res = CreateTxnForDeleteCharacter(selectedNodeAsCharData, position,
-                                        aAction, getter_AddRefs(delTextTxn));
-      NS_ENSURE_SUCCESS(res, res);
+      nsRefPtr<DeleteTextTxn> delTextTxn =
+        CreateTxnForDeleteCharacter(*selectedNodeAsCharData, position,
+                                    aAction);
       NS_ENSURE_TRUE(delTextTxn, NS_ERROR_NULL_POINTER);
 
       aTxn->AppendChild(delTextTxn);
