@@ -1,0 +1,22 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Theme Selection
+#
+# MacOS X                 osx (toolkit/themes/osx)
+# Windows                 windows (toolkit/themes/windows)
+# GNOME/Linux             windows (toolkit/themes/windows) +
+#                         linux overrides (toolkit/themes/linux)
+
+toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
+
+if toolkit == 'cocoa':
+    DIRS += ['osx']
+else:
+    DIRS += ['windows']
+
+    if toolkit in ('gtk2', 'gtk3', 'qt'):
+        DIRS += ['linux']

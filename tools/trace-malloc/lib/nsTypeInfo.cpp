@@ -14,6 +14,7 @@
   by Patrick C. Beard.
  */
 
+#include <exception> /* Needed for MSVC2010 due to bug 1055675 */
 #include <typeinfo>
 #include <ctype.h>
 

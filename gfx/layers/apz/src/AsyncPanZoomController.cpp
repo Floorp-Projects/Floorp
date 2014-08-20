@@ -379,8 +379,8 @@ static bool IsCloseToVertical(float aAngle, float aThreshold)
 template <typename Units>
 static bool IsZero(const gfx::PointTyped<Units>& aPoint)
 {
-  return FuzzyEqualsMultiplicative(aPoint.x, 0.0f)
-      && FuzzyEqualsMultiplicative(aPoint.y, 0.0f);
+  return FuzzyEqualsMultiplicative(aPoint.x.value, 0.0f)
+      && FuzzyEqualsMultiplicative(aPoint.y.value, 0.0f);
 }
 
 static inline void LogRendertraceRect(const ScrollableLayerGuid& aGuid, const char* aDesc, const char* aColor, const CSSRect& aRect)
@@ -538,9 +538,9 @@ public:
         // We may have reached the end of the scroll range along one axis but
         // not the other. In such a case we only want to hand off the relevant
         // component of the fling.
-        if (FuzzyEqualsAdditive(overscroll.x, 0.0f, COORDINATE_EPSILON)) {
+        if (FuzzyEqualsAdditive(overscroll.x.value, 0.0f, COORDINATE_EPSILON)) {
           velocity.x = 0;
-        } else if (FuzzyEqualsAdditive(overscroll.y, 0.0f, COORDINATE_EPSILON)) {
+        } else if (FuzzyEqualsAdditive(overscroll.y.value, 0.0f, COORDINATE_EPSILON)) {
           velocity.y = 0;
         }
 
@@ -610,7 +610,7 @@ public:
 
     // Sample the zoom at the current time point.  The sampled zoom
     // will affect the final computed resolution.
-    double sampledPosition = gComputedTimingFunction->GetValue(animPosition);
+    float sampledPosition = gComputedTimingFunction->GetValue(animPosition);
 
     // We scale the scrollOffset linearly with sampledPosition, so the zoom
     // needs to scale inversely to match.
@@ -646,7 +646,7 @@ private:
 
 class OverscrollSnapBackAnimation: public AsyncPanZoomAnimation {
 public:
-  OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
+  explicit OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
     : mApzc(aApzc)
   {
     // Make sure the initial velocity is zero. This is normally the case
@@ -1337,8 +1337,8 @@ AsyncPanZoomController::ConvertToGecko(const ScreenPoint& aPoint, CSSPoint* aOut
 nsEventStatus AsyncPanZoomController::OnPanMayBegin(const PanGestureInput& aEvent) {
   APZC_LOG("%p got a pan-maybegin in state %d\n", this, mState);
 
-  mX.StartTouch(aEvent.mPanStartPoint.x, aEvent.mTime);
-  mY.StartTouch(aEvent.mPanStartPoint.y, aEvent.mTime);
+  mX.StartTouch(aEvent.mPanStartPoint.x.Truncated(), aEvent.mTime);
+  mY.StartTouch(aEvent.mPanStartPoint.y.Truncated(), aEvent.mTime);
   if (mPanGestureState) {
     mPanGestureState->GetOverscrollHandoffChain()->CancelAnimations();
   } else {
@@ -1363,8 +1363,8 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(const PanGestureInput& aEvent) 
 
   mPanGestureState = MakeUnique<InputBlockState>(BuildOverscrollHandoffChain());
 
-  mX.StartTouch(aEvent.mPanStartPoint.x, aEvent.mTime);
-  mY.StartTouch(aEvent.mPanStartPoint.y, aEvent.mTime);
+  mX.StartTouch(aEvent.mPanStartPoint.x.Truncated(), aEvent.mTime);
+  mY.StartTouch(aEvent.mPanStartPoint.y.Truncated(), aEvent.mTime);
 
   if (GetAxisLockMode() == FREE) {
     SetState(PANNING);
@@ -1387,8 +1387,8 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
   // size and position. We need to do so even if this is a momentum pan (i.e.
   // aFingersOnTouchpad == false); in that case the "with touch" part is not
   // really appropriate, so we may want to rethink this at some point.
-  mX.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.x, aEvent.mTime);
-  mY.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.y, aEvent.mTime);
+  mX.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.x.Truncated(), aEvent.mTime);
+  mY.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.y.Truncated(), aEvent.mTime);
 
   HandlePanningUpdate(aEvent.mPanDisplacement.x, aEvent.mPanDisplacement.y);
 
@@ -1718,21 +1718,12 @@ bool AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
     return true;
   }
 
-  // If there is overscroll, first try to hand it off to an APZC later
-  // in the handoff chain to consume (either as a normal scroll or as
-  // overscroll).
+  // If there is overscroll, try to hand it off to an APZC later
+  // in the handoff chain to consume.
   // Note: "+ overscroll" rather than "- overscroll" because "overscroll"
   // is what's left of "displacement", and "displacement" is "start - end".
-  if (CallDispatchScroll(aEndPoint + overscroll, aEndPoint,
-                         aOverscrollHandoffChain, aOverscrollHandoffChainIndex + 1)) {
-    return true;
-  }
-
-  // If there is no APZC later in the handoff chain that accepted the
-  // overscroll, try to accept it ourselves. We only accept it if we
-  // are pannable.
-  APZC_LOG("%p taking overscroll during panning\n", this);
-  return OverscrollBy(cssOverscroll);
+  return CallDispatchScroll(aEndPoint + overscroll, aEndPoint, 
+                            aOverscrollHandoffChain, aOverscrollHandoffChainIndex + 1);
 }
 
 bool AsyncPanZoomController::OverscrollBy(const CSSPoint& aOverscroll) {
@@ -2122,8 +2113,18 @@ AsyncPanZoomController::FireAsyncScrollOnTimeout()
 bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
                                              Vector<Task*>* aOutDeferredTasks)
 {
+  // This function may get called multiple with the same sample time, because
+  // there may be multiple layers with this APZC, and each layer invokes this
+  // function during composition. However we only want to do one animation step
+  // per composition so we need to deduplicate these calls first.
+  if (mLastSampleTime == aSampleTime) {
+    return false;
+  }
+  TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
+  mLastSampleTime = aSampleTime;
+
   if (mAnimation) {
-    bool continueAnimation = mAnimation->Sample(mFrameMetrics, aSampleTime - mLastSampleTime);
+    bool continueAnimation = mAnimation->Sample(mFrameMetrics, sampleTimeDelta);
     *aOutDeferredTasks = mAnimation->TakeDeferredTasks();
     if (continueAnimation) {
       if (mPaintThrottler.TimeSinceLastRequest(aSampleTime) >
@@ -2137,7 +2138,6 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
       RequestContentRepaint();
     }
     UpdateSharedCompositorFrameMetrics();
-    mLastSampleTime = aSampleTime;
     return true;
   }
   return false;
@@ -2224,20 +2224,13 @@ void AsyncPanZoomController::GetOverscrollTransform(ViewTransform* aTransform) c
 
   float scale = 1 - (kZEffect * spaceProp);
 
-  // In a ViewTransform, the translation is applied before the scale. We want
-  // to apply our translation after our scale, so we compensate for that here.
-  translation.x /= scale;
-  translation.y /= scale;
-
   // Finally, apply the transformations.
   aTransform->mScale.scale *= scale;
-  aTransform->mTranslation += translation * mFrameMetrics.LayersPixelsPerCSSPixel();
+  aTransform->mTranslation += translation * mFrameMetrics.GetZoom();
 }
 
-bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                                            ViewTransform* aOutTransform,
-                                                            ScreenPoint& aScrollOffset,
-                                                            ViewTransform* aOutOverscrollTransform) {
+bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
+{
   // The eventual return value of this function. The compositor needs to know
   // whether or not to advance by a frame as soon as it can. For example, if a
   // fling is happening, it has to keep compositing so that the animation is
@@ -2250,25 +2243,6 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     ReentrantMonitorAutoEnter lock(mMonitor);
 
     requestAnimationFrame = UpdateAnimation(aSampleTime, &deferredTasks);
-
-    aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
-    *aOutTransform = GetCurrentAsyncTransform();
-
-    // If we are overscrolled, we would like the compositor to apply an
-    // additional transform that produces an overscroll effect.
-    if (aOutOverscrollTransform && IsOverscrolled()) {
-      GetOverscrollTransform(aOutOverscrollTransform);
-
-      // Since the caller will apply aOverscrollTransform after aNewTransform,
-      // aOverscrollTransform's translation will be not be scaled by
-      // aNewTransform's scale. Since the resulting transform is then
-      // multiplied by the CSS transform, which cancels out the non-transient
-      // part of aNewTransform->mScale, this results in an overscroll
-      // translation whose magnitude varies with the zoom. To avoid this,
-      // we adjust for that here.
-      aOutOverscrollTransform->mTranslation.x *= aOutTransform->mScale.scale;
-      aOutOverscrollTransform->mTranslation.y *= aOutTransform->mScale.scale;
-    }
 
     LogRendertraceRect(GetGuid(), "viewport", "red",
       CSSRect(mFrameMetrics.GetScrollOffset(),
@@ -2304,8 +2278,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     mLastAsyncScrollTime = aSampleTime;
     mLastAsyncScrollOffset = mCurrentAsyncScrollOffset;
     SendAsyncScrollEvent();
-  }
-  else {
+  } else {
     mAsyncScrollTimeoutTask =
       NewRunnableMethod(this, &AsyncPanZoomController::FireAsyncScrollOnTimeout);
     MessageLoop::current()->PostDelayedTask(FROM_HERE,
@@ -2314,6 +2287,22 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   }
 
   return requestAnimationFrame;
+}
+
+void AsyncPanZoomController::SampleContentTransformForFrame(ViewTransform* aOutTransform,
+                                                            ScreenPoint& aScrollOffset,
+                                                            ViewTransform* aOutOverscrollTransform)
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+
+  aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
+  *aOutTransform = GetCurrentAsyncTransform();
+
+  // If we are overscrolled, we would like the compositor to apply an
+  // additional transform that produces an overscroll effect.
+  if (aOutOverscrollTransform && IsOverscrolled()) {
+    GetOverscrollTransform(aOutOverscrollTransform);
+  }
 }
 
 ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
@@ -2345,13 +2334,13 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
     }
   }
 
-  LayerPoint translation = (currentScrollOffset - lastPaintScrollOffset)
-                         * mLastContentPaintMetrics.LayersPixelsPerCSSPixel();
+  ParentLayerToScreenScale scale = mFrameMetrics.GetZoom()
+        / mLastContentPaintMetrics.mDevPixelsPerCSSPixel
+        / mFrameMetrics.GetParentResolution();
+  ScreenPoint translation = (currentScrollOffset - lastPaintScrollOffset)
+                          * mFrameMetrics.GetZoom();
 
-  return ViewTransform(-translation,
-                       mFrameMetrics.GetZoom()
-                     / mLastContentPaintMetrics.mDevPixelsPerCSSPixel
-                     / mFrameMetrics.GetParentResolution());
+  return ViewTransform(scale, -translation);
 }
 
 Matrix4x4 AsyncPanZoomController::GetNontransientAsyncTransform() {
@@ -2915,16 +2904,16 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
 ParentLayerPoint AsyncPanZoomController::ToParentLayerCoords(const ScreenPoint& aPoint)
 {
-  return TransformTo<ParentLayerPixel>(To3DMatrix(GetNontransientAsyncTransform() * GetCSSTransform()), aPoint);
+  // The parent layer pixel space and the screen space for a given layer are the
+  // same as of bug 1052063. FIXME: Unify these two coordinate systems.
+  return ParentLayerPoint(aPoint.x, aPoint.y);
 }
 
 void AsyncPanZoomController::UpdateTransformScale()
 {
-  Matrix4x4 nontransientTransforms = GetNontransientAsyncTransform() * GetCSSTransform();
-  if (!FuzzyEqualsMultiplicative(nontransientTransforms._11, nontransientTransforms._22)) {
-    NS_WARNING("The x- and y-scales of the nontransient transforms should be equal");
-  }
-  mFrameMetrics.mTransformScale.scale = nontransientTransforms._11;
+  // The parent layer pixel space and the screen space for a given layer are the
+  // same as of bug 1052063. FIXME: Unify these two coordinate systems.
+  mFrameMetrics.mTransformScale.scale = 1;
 }
 
 }

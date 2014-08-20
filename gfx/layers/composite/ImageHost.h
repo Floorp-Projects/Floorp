@@ -40,7 +40,7 @@ struct EffectChain;
 class ImageHost : public CompositableHost
 {
 public:
-  ImageHost(const TextureInfo& aTextureInfo);
+  explicit ImageHost(const TextureInfo& aTextureInfo);
   ~ImageHost();
 
   virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }

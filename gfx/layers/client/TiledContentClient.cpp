@@ -148,12 +148,12 @@ ComputeViewTransform(const FrameMetrics& aContentMetrics, const FrameMetrics& aC
   // but with aContentMetrics used in place of mLastContentPaintMetrics, because they
   // should be equivalent, modulo race conditions while transactions are inflight.
 
-  LayerPoint translation = (aCompositorMetrics.GetScrollOffset() - aContentMetrics.GetScrollOffset())
-                         * aContentMetrics.LayersPixelsPerCSSPixel();
-  return ViewTransform(-translation,
-                       aCompositorMetrics.GetZoom()
+  ParentLayerToScreenScale scale = aCompositorMetrics.GetZoom()
                      / aContentMetrics.mDevPixelsPerCSSPixel
-                     / aCompositorMetrics.GetParentResolution());
+                     / aCompositorMetrics.GetParentResolution();
+  ScreenPoint translation = (aCompositorMetrics.GetScrollOffset() - aContentMetrics.GetScrollOffset())
+                         * aCompositorMetrics.GetZoom();
+  return ViewTransform(scale, -translation);
 }
 
 bool
@@ -1338,22 +1338,16 @@ GetCompositorSideCompositionBounds(Layer* aScrollAncestor,
     1.f);
   nonTransientAPZUntransform.Invert();
 
-  Matrix4x4 layerTransform = aScrollAncestor->GetTransform();
-  Matrix4x4 layerUntransform = layerTransform;
-  layerUntransform.Invert();
+  // Take off the last "term" of aTransformToCompBounds, which
+  // is the APZ's nontransient async transform. Replace it with
+  // the APZ's async transform (this includes the nontransient
+  // component as well).
+  Matrix4x4 transform = aTransformToCompBounds
+                      * nonTransientAPZUntransform
+                      * Matrix4x4(aAPZTransform);
+  transform.Invert();
 
-  // First take off the last two "terms" of aTransformToCompBounds, which
-  // are the scroll ancestor's local transform and the APZ's nontransient async
-  // transform.
-  Matrix4x4 transform = aTransformToCompBounds * layerUntransform * nonTransientAPZUntransform;
-
-  // Next, apply the APZ's async transform (this includes the nontransient component
-  // as well).
-  transform = transform * Matrix4x4(aAPZTransform);
-
-  // Finally, put back the scroll ancestor's local transform.
-  transform = transform * layerTransform;
-  return TransformTo<LayerPixel>(To3DMatrix(transform).Inverse(),
+  return TransformTo<LayerPixel>(transform,
             aScrollAncestor->GetFrameMetrics().mCompositionBounds);
 }
 

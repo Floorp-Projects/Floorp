@@ -434,8 +434,12 @@ let AutoCompletePopup = {
   }
 }
 
-let [initData] = sendSyncMessage("Browser:Init");
-docShell.useGlobalHistory = initData.useGlobalHistory;
-if (initData.initPopup) {
-  setTimeout(function() AutoCompletePopup.init(), 0);
+// We may not get any responses to Browser:Init if the browser element
+// is torn down too quickly.
+let initData = sendSyncMessage("Browser:Init");
+if (initData.length) {
+  docShell.useGlobalHistory = initData[0].useGlobalHistory;
+  if (initData[0].initPopup) {
+    setTimeout(() => AutoCompletePopup.init(), 0);
+  }
 }

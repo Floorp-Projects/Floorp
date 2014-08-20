@@ -88,7 +88,7 @@ protected:
 
 public:
   NS_INLINE_DECL_REFCOUNTING(CompositableHost)
-  CompositableHost(const TextureInfo& aTextureInfo);
+  explicit CompositableHost(const TextureInfo& aTextureInfo);
 
   static TemporaryRef<CompositableHost> Create(const TextureInfo& aTextureInfo);
 
@@ -304,7 +304,7 @@ protected:
 class AutoLockCompositableHost MOZ_FINAL
 {
 public:
-  AutoLockCompositableHost(CompositableHost* aHost)
+  explicit AutoLockCompositableHost(CompositableHost* aHost)
     : mHost(aHost)
   {
     mSucceeded = mHost->Lock();

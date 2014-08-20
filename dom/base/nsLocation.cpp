@@ -28,6 +28,7 @@
 #include "nsITextToSubURI.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindow.h"
 #include "mozilla/Likely.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsNullPrincipal.h"
@@ -42,15 +43,8 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 {
   aCharset.Truncate();
 
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    nsCOMPtr<nsPIDOMWindow> window =
-      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
-    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-    if (nsIDocument* doc = window->GetDoc()) {
-      aCharset = doc->GetDocumentCharacterSet();
-    }
+  if (nsIDocument* doc = GetEntryDocument()) {
+    aCharset = doc->GetDocumentCharacterSet();
   }
 
   return NS_OK;
@@ -545,23 +539,23 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
      * anywhere else. This is part of solution for bug # 39938, 72197
      * 
      */
-    bool inScriptTag=false;
-    JSContext *cx = nsContentUtils::GetCurrentJSContext();
-    if (cx) {
-      nsIScriptContext *scriptContext =
-        nsJSUtils::GetDynamicScriptContext(cx);
+    bool inScriptTag = false;
+    nsIScriptContext* scriptContext = nullptr;
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(GetEntryGlobal());
+    if (win) {
+      scriptContext = static_cast<nsGlobalWindow*>(win.get())->GetContextInternal();
+    }
 
-      if (scriptContext) {
-        if (scriptContext->GetProcessingScriptTag()) {
-          // Now check to make sure that the script is running in our window,
-          // since we only want to replace if the location is set by a
-          // <script> tag in the same window.  See bug 178729.
-          nsCOMPtr<nsIScriptGlobalObject> ourGlobal =
-            docShell ? docShell->GetScriptGlobalObject() : nullptr;
-          inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
-        }
-      }  
-    } //cx
+    if (scriptContext) {
+      if (scriptContext->GetProcessingScriptTag()) {
+        // Now check to make sure that the script is running in our window,
+        // since we only want to replace if the location is set by a
+        // <script> tag in the same window.  See bug 178729.
+        nsCOMPtr<nsIScriptGlobalObject> ourGlobal =
+          docShell ? docShell->GetScriptGlobalObject() : nullptr;
+        inScriptTag = (ourGlobal == scriptContext->GetGlobalObject());
+      }
+    }
 
     return SetURI(newUri, aReplace || inScriptTag);
   }
@@ -1020,22 +1014,20 @@ nsLocation::ValueOf(nsIDOMLocation** aReturn)
 nsresult
 nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
 {
-
   *sourceURL = nullptr;
-  nsCOMPtr<nsIScriptGlobalObject> sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
-  // If this JS context doesn't have an associated DOM window, we effectively
-  // have no script entry point stack. This doesn't generally happen with the DOM,
+  nsIDocument* doc = GetEntryDocument();
+  // If there's no entry document, we either have no Script Entry Point or one
+  // that isn't a DOM Window.  This doesn't generally happen with the DOM,
   // but can sometimes happen with extension code in certain IPC configurations.
   // If this happens, try falling back on the current document associated with
   // the docshell. If that fails, just return null and hope that the caller passed
   // an absolute URI.
-  if (!sgo && GetDocShell()) {
-    sgo = GetDocShell()->GetScriptGlobalObject();
+  if (!doc && GetDocShell()) {
+    nsCOMPtr<nsPIDOMWindow> docShellWin = do_QueryInterface(GetDocShell()->GetScriptGlobalObject());
+    if (docShellWin) {
+      doc = docShellWin->GetDoc();
+    }
   }
-  NS_ENSURE_TRUE(sgo, NS_OK);
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
-  NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
-  nsIDocument* doc = window->GetDoc();
   NS_ENSURE_TRUE(doc, NS_OK);
   *sourceURL = doc->GetBaseURI().take();
   return NS_OK;

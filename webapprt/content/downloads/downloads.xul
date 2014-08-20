@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#define XP_GNOME 1
+#endif
+#endif
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://webapprt/content/downloads/downloads.css"?>
+<?xml-stylesheet href="chrome://webapprt/skin/downloads/downloads.css"?>
+
+<!DOCTYPE window [
+<!ENTITY % downloadManagerDTD SYSTEM "chrome://webapprt/locale/downloads/downloads.dtd">
+%downloadManagerDTD;
+<!ENTITY % editMenuOverlayDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuOverlayDTD;
+]>
+
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="downloadManager" windowtype="Download:Manager"
+        orient="vertical" title="&downloads.title;" statictitle="&downloads.title;"
+        width="&window.width2;" height="&window.height;" screenX="10" screenY="10"
+        persist="width height screenX screenY sizemode"
+        onload="Startup();" onunload="Shutdown();"
+        onclose="return closeWindow(false);">
+
+  <script type="application/javascript" src="chrome://webapprt/content/downloads/downloads.js"/>
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+
+  <stringbundleset id="downloadSet">
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
+    <stringbundle id="downloadStrings" src="chrome://mozapps/locale/downloads/downloads.properties"/>
+  </stringbundleset>
+
+  <!-- Use this commandset for command which do not depened on focus or selection -->
+  <commandset id="generalCommands">
+    <command id="cmd_findDownload" oncommand="gDownloadList.setSearchboxFocus();"/>
+    <command id="cmd_selectAllDownloads" oncommand="gDownloadList.selectAll();"/>
+    <command id="cmd_clearList" oncommand="gDownloadList.clearList();"/>
+  </commandset>
+
+  <keyset id="downloadKeys">
+    <key keycode="VK_RETURN" oncommand="gDownloadList.doDefaultForSelected();"/>
+    <key id="key_pauseResume" key=" " oncommand="gDownloadList.performCommand('cmd_pauseResume');"/>
+    <key id="key_removeFromList"  keycode="VK_DELETE" oncommand="gDownloadList.performCommand('cmd_removeFromList');"/>
+#ifdef XP_MACOSX
+    <key id="key_removeFromList2" keycode="VK_BACK" oncommand="gDownloadList.performCommand('cmd_removeFromList');"/>
+#endif
+    <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
+#ifdef XP_GNOME
+    <key id="key_close2"  key="&cmd.close2Unix.commandKey;" oncommand="closeWindow(true);" modifiers="accel,shift"/>
+#else
+    <key id="key_close2"  key="&cmd.close2.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
+#endif
+    <key                  keycode="VK_ESCAPE"           oncommand="closeWindow(true);"/>
+
+    <key id="key_findDownload"
+         key="&cmd.find.commandKey;"
+         modifiers="accel"
+         command="cmd_findDownload"/>
+    <key id="key_findDownload2"
+         key="&cmd.search.commandKey;"
+         modifiers="accel"
+         command="cmd_findDownload"/>
+    <key id="key_selectAllDownloads"
+         key="&selectAllCmd.key;"
+         modifiers="accel"
+         command="cmd_selectAllDownloads"/>
+    <key id="pasteKey"
+         key="V"
+         modifiers="accel"
+         oncommand="gDownloadList.pasteHandler();"/>
+  </keyset>
+
+  <vbox id="contextMenuPalette" hidden="true">
+    <menuitem id="menuitem_pause"
+              label="&cmd.pause.label;" accesskey="&cmd.pause.accesskey;"
+              oncommand="gDownloadList.performCommand('cmd_pause');"
+              cmd="cmd_pause"/>
+    <menuitem id="menuitem_resume"
+              label="&cmd.resume.label;" accesskey="&cmd.resume.accesskey;"
+              oncommand="gDownloadList.performCommand('cmd_resume');"
+              cmd="cmd_resume"/>
+    <menuitem id="menuitem_cancel"
+              label="&cmd.cancel.label;" accesskey="&cmd.cancel.accesskey;"
+              oncommand="gDownloadList.performCommand('cmd_cancel');"
+              cmd="cmd_cancel"/>
+
+    <menuitem id="menuitem_open" default="true"
+              label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"
+              oncommand="gDownloadList.performCommand('cmd_open');"
+              cmd="cmd_open"/>
+    <menuitem id="menuitem_show"
+#ifdef XP_MACOSX
+              label="&cmd.showMac.label;"
+              accesskey="&cmd.showMac.accesskey;"
+#else
+              label="&cmd.show.label;"
+              accesskey="&cmd.show.accesskey;"
+#endif
+              oncommand="gDownloadList.performCommand('cmd_show');"
+              cmd="cmd_show"/>
+
+    <menuitem id="menuitem_retry" default="true"
+              label="&cmd.retry.label;" accesskey="&cmd.retry.accesskey;"
+              oncommand="gDownloadList.performCommand('cmd_retry');"
+              cmd="cmd_retry"/>
+
+    <menuitem id="menuitem_removeFromList"
+              label="&cmd.removeFromList.label;" accesskey="&cmd.removeFromList.accesskey;"
+              oncommand="gDownloadList.performCommand('cmd_removeFromList');"
+              cmd="cmd_removeFromList"/>
+
+    <menuseparator id="menuseparator"/>
+
+    <menuitem id="menuitem_openReferrer"
+              label="&cmd.goToDownloadPage.label;"
+              accesskey="&cmd.goToDownloadPage.accesskey;"
+              oncommand="gDownloadList.performCommand('cmd_openReferrer');"
+              cmd="cmd_openReferrer"/>
+
+    <menuitem id="menuitem_copyLocation"
+              label="&cmd.copyDownloadLink.label;"
+              accesskey="&cmd.copyDownloadLink.accesskey;"
+              oncommand="gDownloadList.performCommand('cmd_copyLocation');"
+              cmd="cmd_copyLocation"/>
+
+    <menuitem id="menuitem_selectAll"
+              label="&selectAllCmd.label;"
+              accesskey="&selectAllCmd.accesskey;"
+              command="cmd_selectAllDownloads"/>
+  </vbox>
+
+  <menupopup id="downloadContextMenu" onpopupshowing="return gDownloadList.buildContextMenu(event);"/>
+
+  <richlistbox id="downloadView" seltype="multiple" flex="1"
+               context="downloadContextMenu"
+               ondblclick="gDownloadList.onDownloadDblClick(event);"
+               ondragstart="gDownloadList.onDragStart(event);"
+               ondragover="gDownloadList.onDragOver(event);"
+               ondrop="gDownloadList.onDrop(event)">
+  </richlistbox>
+
+  <windowdragbox id="search" align="center">
+    <button id="clearListButton" command="cmd_clearList"
+            label="&cmd.clearList.label;"
+            accesskey="&cmd.clearList.accesskey;"
+            tooltiptext="&cmd.clearList.tooltip;"/>
+    <spacer flex="1"/>
+    <textbox type="search" id="searchbox" class="compact"
+             aria-controls="downloadView"
+             oncommand="gDownloadList.buildList();" placeholder="&searchBox.label;"/>
+  </windowdragbox>
+
+</window>
