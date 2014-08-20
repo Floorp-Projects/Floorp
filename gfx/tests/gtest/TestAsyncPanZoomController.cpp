@@ -1355,6 +1355,17 @@ protected:
     metrics.SetScrollOffset(CSSPoint(0, 0));
     aLayer->SetFrameMetrics(metrics);
   }
+
+  void CreateSimpleMultiLayerTree() {
+    const char* layerTreeSyntax = "c(tt)";
+    // LayerID                     0 12
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0,0,100,100)),
+      nsIntRegion(nsIntRect(0,0,100,50)),
+      nsIntRegion(nsIntRect(0,50,100,50)),
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  }
 };
 
 class APZHitTestingTester : public APZCTreeManagerTester {
@@ -1404,6 +1415,29 @@ protected:
     SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
     SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 80, 80));
     SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 2, CSSRect(0, 0, 80, 80));
+  }
+
+  void CreateComplexMultiLayerTree() {
+    const char* layerTreeSyntax = "c(tc(t)tc(c(t)t))";
+    // LayerID                     0 12 3 45 6 7 8
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0,0,300,400)),      // root(0)
+      nsIntRegion(nsIntRect(0,0,100,100)),      // thebes(1) in top-left
+      nsIntRegion(nsIntRect(50,50,200,300)),    // container(2) centered in root(0)
+      nsIntRegion(nsIntRect(50,50,200,300)),    // thebes(3) fully occupying parent container(2)
+      nsIntRegion(nsIntRect(0,200,100,100)),    // thebes(4) in bottom-left
+      nsIntRegion(nsIntRect(200,0,100,400)),    // container(5) along the right 100px of root(0)
+      nsIntRegion(nsIntRect(200,0,100,200)),    // container(6) taking up the top half of parent container(5)
+      nsIntRegion(nsIntRect(200,0,100,200)),    // thebes(7) fully occupying parent container(6)
+      nsIntRegion(nsIntRect(200,200,100,200)),  // thebes(8) in bottom-right
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[6], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[7], FrameMetrics::START_SCROLL_ID + 2);
+    SetScrollableFrameMetrics(layers[8], FrameMetrics::START_SCROLL_ID + 3);
   }
 };
 
@@ -1587,6 +1621,69 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   // transformToGecko unapplies the full async transform of -100 pixels, and then
   // reapplies the "D" transform of -50 leading to an overall adjustment of +50
   EXPECT_EQ(Point(25, 75), transformToGecko * Point(25, 25));
+}
+
+TEST_F(APZCTreeManagerTester, ScrollableThebesLayers) {
+  CreateSimpleMultiLayerTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+
+  // both layers have the same scrollId
+  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
+  SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+
+  AsyncPanZoomController* nullAPZC = nullptr;
+  // so they should have the same APZC
+  EXPECT_EQ(nullAPZC, layers[0]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[1]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[2]->GetAsyncPanZoomController());
+  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(), layers[2]->GetAsyncPanZoomController());
+
+  // Change the scrollId of layers[1], and verify the APZC changes
+  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+  EXPECT_NE(layers[1]->GetAsyncPanZoomController(), layers[2]->GetAsyncPanZoomController());
+
+  // Change the scrollId of layers[2] to match that of layers[1], ensure we get the same
+  // APZC for both again
+  SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(), layers[2]->GetAsyncPanZoomController());
+}
+
+TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
+  CreateComplexMultiLayerTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+
+  AsyncPanZoomController* nullAPZC = nullptr;
+  // Ensure all the scrollable layers have an APZC
+  EXPECT_EQ(nullAPZC, layers[0]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[1]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[2]->GetAsyncPanZoomController());
+  EXPECT_EQ(nullAPZC, layers[3]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[4]->GetAsyncPanZoomController());
+  EXPECT_EQ(nullAPZC, layers[5]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[6]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[7]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[8]->GetAsyncPanZoomController());
+  // Ensure those that scroll together have the same APZCs
+  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(), layers[2]->GetAsyncPanZoomController());
+  EXPECT_EQ(layers[4]->GetAsyncPanZoomController(), layers[6]->GetAsyncPanZoomController());
+  // Ensure those that don't scroll together have different APZCs
+  EXPECT_NE(layers[1]->GetAsyncPanZoomController(), layers[4]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[1]->GetAsyncPanZoomController(), layers[7]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[1]->GetAsyncPanZoomController(), layers[8]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[4]->GetAsyncPanZoomController(), layers[7]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[4]->GetAsyncPanZoomController(), layers[8]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[7]->GetAsyncPanZoomController(), layers[8]->GetAsyncPanZoomController());
+
+  nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(25, 25));
+  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(), hit.get());
+  hit = GetTargetAPZC(ScreenPoint(275, 375));
+  EXPECT_EQ(layers[8]->GetAsyncPanZoomController(), hit.get());
+  hit = GetTargetAPZC(ScreenPoint(250, 100));
+  EXPECT_EQ(layers[7]->GetAsyncPanZoomController(), hit.get());
 }
 
 class TaskRunMetrics {
