@@ -339,6 +339,7 @@ protected:
   void PlaceChild(nsPresContext*         aPresContext,
                   nsRowGroupReflowState& aReflowState,
                   nsIFrame*              aKidFrame,
+                  nsPoint                aKidPosition,
                   nsHTMLReflowMetrics&   aDesiredSize,
                   const nsRect&          aOriginalKidRect,
                   const nsRect&          aOriginalKidVisualOverflow);
