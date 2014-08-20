@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    body {
+      background-color: white;
+      margin: 0;
+    }
+    table {
+      background-color: red;
+      border-collapse: separate;
+      position: absolute;
+      top: 645px;
+    }
+    thead {
+      background-color: pink;
+    }
+    tbody {
+      background-color: grey;
+    }
+    tfoot {
+      background-color: orange;
+    }
+    tr {
+      background-color: green;
+    }
+    td:first-child {
+      background-color: cyan;
+    }
+    td {
+      background-color: blue;
+      border-style: solid;
+      border-width: 5px;
+      border-color: gold;
+    }
+    colgroup {
+      background-color: purple;
+    }
+    col:first-child {
+      background-color: khaki;
+    }
+    .rel {
+      position: relative;
+      bottom: 215px;
+    }
+  </style>
+</head>
+<body>
+  <table>
+    <colgroup>
+      <col>
+      <col>
+    </colgroup>
+    <thead class="rel">
+      <tr>
+        <td class="rel">XXX</td>
+        <td class="rel">YYY</td>
+      </tr>
+    </thead>
+    <tbody class="rel">
+      <tr>
+        <td class="rel">XXX</td>
+        <td>YYY</td>
+      </tr>
+      <tr>
+        <td>XXX</td>
+        <td rowspan=2 class="rel">YYY</td>
+      </tr>
+      <tr class="rel">
+        <td class="rel">XXX</td>
+      </tr>
+      <tr>
+        <td colspan=2 class="rel">XXX</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td class="rel">XXX</td>
+        <td>YYY</td>
+      </tr>
+    </tfoot>
+  </table>
+</body>

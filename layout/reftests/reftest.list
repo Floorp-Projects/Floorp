@@ -17,6 +17,7 @@ include w3c-css/received/reftest.list
 
 # relative and absolute positioning
 include abs-pos/reftest.list
+include position-relative/reftest.list
 
 include async-scrolling/reftest.list
 
