@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/mozalloc.h"
+
 #include "nsAString.h"
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
@@ -1339,8 +1341,9 @@ nsWSRunObject::DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
   }
 
   if (aStartNode == aEndNode && aStartNode->GetAsText()) {
-    return mHTMLEditor->DeleteText(aStartNode->GetAsText(),
-        (uint32_t)aStartOffset, (uint32_t)(aEndOffset - aStartOffset));
+    return mHTMLEditor->DeleteText(*aStartNode->GetAsText(),
+        static_cast<uint32_t>(aStartOffset),
+        static_cast<uint32_t>(aEndOffset - aStartOffset));
   }
 
   nsresult res;
@@ -1355,13 +1358,13 @@ nsWSRunObject::DeleteChars(nsINode* aStartNode, int32_t aStartOffset,
     if (node == aStartNode) {
       uint32_t len = node->Length();
       if (uint32_t(aStartOffset) < len) {
-        res = mHTMLEditor->DeleteText(node, (uint32_t)aStartOffset,
+        res = mHTMLEditor->DeleteText(*node, SafeCast<uint32_t>(aStartOffset),
                                       len - aStartOffset);
         NS_ENSURE_SUCCESS(res, res);
       }
     } else if (node == aEndNode) {
       if (aEndOffset) {
-        res = mHTMLEditor->DeleteText(node, 0, (uint32_t)aEndOffset);
+        res = mHTMLEditor->DeleteText(*node, 0, SafeCast<uint32_t>(aEndOffset));
         NS_ENSURE_SUCCESS(res, res);
       }
       break;

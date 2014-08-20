@@ -426,6 +426,13 @@ nsHTMLEditUtils::IsMozDiv(nsIDOMNode* aNode)
   return false;
 }
 
+bool
+nsHTMLEditUtils::IsMozDiv(nsINode* aNode)
+{
+  MOZ_ASSERT(aNode);
+  return aNode->Tag() == nsGkAtoms::div &&
+         nsTextEditUtils::HasMozAttr(GetAsDOMNode(aNode));
+}
 
 
 ///////////////////////////////////////////////////////////////////////////
