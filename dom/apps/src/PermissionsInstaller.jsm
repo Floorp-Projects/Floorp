@@ -30,6 +30,20 @@ function debug(aMsg) {
   //dump("-*-*- PermissionsInstaller.jsm : " + aMsg + "\n");
 }
 
+// An array carring all the possible (expanded) permission names.
+let AllPossiblePermissions = [];
+for (let permName in PermissionsTable) {
+  let expandedPermNames = [];
+  if (PermissionsTable[permName].access) {
+    expandedPermNames = expandPermissions(permName, READWRITE);
+  } else {
+    expandedPermNames = expandPermissions(permName);
+  }
+  AllPossiblePermissions = AllPossiblePermissions.concat(expandedPermNames);
+  AllPossiblePermissions =
+    AllPossiblePermissions.concat(["offline-app", "pin-app"]);
+}
+
 this.PermissionsInstaller = {
   /**
    * Install permissisions or remove deprecated permissions upon re-install.
