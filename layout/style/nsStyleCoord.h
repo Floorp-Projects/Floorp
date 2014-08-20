@@ -153,6 +153,7 @@ public:
   float       GetPercentValue() const;
   float       GetFactorValue() const;
   float       GetAngleValue() const;
+  double      GetAngleValueInDegrees() const;
   double      GetAngleValueInRadians() const;
   float       GetFlexFractionValue() const;
   Calc*       GetCalcValue() const;
