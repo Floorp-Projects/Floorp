@@ -23,14 +23,14 @@
 
 #define FLOAT32X4_UNARY_FUNCTION_LIST(V)                                            \
   V(abs, (UnaryFunc<Float32x4, Abs, Float32x4>), 1, 0)                              \
+  V(fromInt32x4, (FuncConvert<Int32x4, Float32x4> ), 1, 0)                          \
   V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float32x4>), 1, 0)                   \
   V(neg, (UnaryFunc<Float32x4, Neg, Float32x4>), 1, 0)                              \
   V(not, (CoercedUnaryFunc<Float32x4, Int32x4, Not, Float32x4>), 1, 0)              \
   V(reciprocal, (UnaryFunc<Float32x4, Rec, Float32x4>), 1, 0)                       \
   V(reciprocalSqrt, (UnaryFunc<Float32x4, RecSqrt, Float32x4>), 1, 0)               \
   V(splat, (FuncSplat<Float32x4>), 1, 0)                                            \
-  V(sqrt, (UnaryFunc<Float32x4, Sqrt, Float32x4>), 1, 0)                            \
-  V(fromInt32x4, (FuncConvert<Int32x4, Float32x4> ), 1, 0)
+  V(sqrt, (UnaryFunc<Float32x4, Sqrt, Float32x4>), 1, 0)
 
 #define FLOAT32X4_BINARY_FUNCTION_LIST(V)                                           \
   V(add, (BinaryFunc<Float32x4, Add, Float32x4>), 2, 0)                             \
@@ -70,11 +70,11 @@
   V(zero, (FuncZero<Int32x4>), 0, 0)
 
 #define INT32X4_UNARY_FUNCTION_LIST(V)                                              \
+  V(fromFloat32x4, (FuncConvert<Float32x4, Int32x4>), 1, 0)                         \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Int32x4>), 1, 0)                 \
   V(neg, (UnaryFunc<Int32x4, Neg, Int32x4>), 1, 0)                                  \
   V(not, (UnaryFunc<Int32x4, Not, Int32x4>), 1, 0)                                  \
-  V(splat, (FuncSplat<Int32x4>), 0, 0)                                              \
-  V(fromFloat32x4, (FuncConvert<Float32x4, Int32x4>), 1, 0)
+  V(splat, (FuncSplat<Int32x4>), 0, 0)
 
 #define INT32X4_BINARY_FUNCTION_LIST(V)                                             \
   V(add, (BinaryFunc<Int32x4, Add, Int32x4>), 2, 0)                                 \
