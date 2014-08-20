@@ -19,10 +19,6 @@ var FullZoom = {
   // browser.zoom.updateBackgroundTabs preference cache
   updateBackgroundTabs: undefined,
 
-  // One of the possible values for the mousewheel.* preferences.
-  // From EventStateManager.h.
-  ACTION_ZOOM: 3,
-
   // This maps the browser to monotonically increasing integer
   // tokens. _browserTokenMap[browser] is increased each time the zoom is
   // changed in the browser. See _getBrowserToken and _ignorePendingZoomAccesses.
@@ -49,8 +45,7 @@ var FullZoom = {
   // Initialization & Destruction
 
   init: function FullZoom_init() {
-    // Listen for scrollwheel events so we can save scrollwheel-based changes.
-    window.addEventListener("DOMMouseScroll", this, false);
+    gBrowser.addEventListener("ZoomChangeUsingMouseWheel", this);
 
     // Register ourselves with the service so we know when our pref changes.
     this._cps2 = Cc["@mozilla.org/content-pref/service;1"].
@@ -81,7 +76,7 @@ var FullZoom = {
   destroy: function FullZoom_destroy() {
     gPrefService.removeObserver("browser.zoom.", this);
     this._cps2.removeObserverForName(this.name, this);
-    window.removeEventListener("DOMMouseScroll", this, false);
+    gBrowser.removeEventListener("ZoomChangeUsingMouseWheel", this);
   },
 
 
@@ -92,56 +87,12 @@ var FullZoom = {
 
   handleEvent: function FullZoom_handleEvent(event) {
     switch (event.type) {
-      case "DOMMouseScroll":
-        this._handleMouseScrolled(event);
+      case "ZoomChangeUsingMouseWheel":
+        let browser = this._getTargetedBrowser(event);
+        this._ignorePendingZoomAccesses(browser);
+        this._applyZoomToPref(browser);
         break;
     }
-  },
-
-  _handleMouseScrolled: function FullZoom__handleMouseScrolled(event) {
-    // Construct the "mousewheel action" pref key corresponding to this event.
-    // Based on EventStateManager::WheelPrefs::GetBasePrefName().
-    var pref = "mousewheel.";
-
-    var pressedModifierCount = event.shiftKey + event.ctrlKey + event.altKey +
-                                 event.metaKey + event.getModifierState("OS");
-    if (pressedModifierCount != 1) {
-      pref += "default.";
-    } else if (event.shiftKey) {
-      pref += "with_shift.";
-    } else if (event.ctrlKey) {
-      pref += "with_control.";
-    } else if (event.altKey) {
-      pref += "with_alt.";
-    } else if (event.metaKey) {
-      pref += "with_meta.";
-    } else {
-      pref += "with_win.";
-    }
-
-    pref += "action";
-
-    // Don't do anything if this isn't a "zoom" scroll event.
-    var isZoomEvent = false;
-    try {
-      isZoomEvent = (gPrefService.getIntPref(pref) == this.ACTION_ZOOM);
-    } catch (e) {}
-    if (!isZoomEvent)
-      return;
-
-    // XXX Lazily cache all the possible action prefs so we don't have to get
-    // them anew from the pref service for every scroll event?  We'd have to
-    // make sure to observe them so we can update the cache when they change.
-
-    // We have to call _applyZoomToPref in a timeout because we handle the
-    // event before the event state manager has a chance to apply the zoom
-    // during EventStateManager::PostHandleEvent.
-    let browser = gBrowser.selectedBrowser;
-    let token = this._getBrowserToken(browser);
-    window.setTimeout(function () {
-      if (token.isCurrent)
-        this._applyZoomToPref(browser);
-    }.bind(this), 0);
   },
 
   // nsIObserver
@@ -467,6 +418,30 @@ var FullZoom = {
         return map.get(browser) === this.token && browser.parentNode;
       },
     };
+  },
+
+  /**
+   * Returns the browser that the supplied zoom event is associated with.
+   * @param event  The ZoomChangeUsingMouseWheel event.
+   * @return  The associated browser element, if one exists, otherwise null.
+   */
+  _getTargetedBrowser: function FullZoom__getTargetedBrowser(event) {
+    let target = event.originalTarget;
+
+    // With remote content browsers, the event's target is the browser
+    // we're looking for.
+    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    if (target instanceof window.XULElement &&
+        target.localName == "browser" &&
+        target.namespaceURI == XUL_NS)
+      return target;
+
+    // With in-process content browsers, the event's target is the content
+    // document.
+    if (target.nodeType == Node.DOCUMENT_NODE)
+      return gBrowser.getBrowserForDocument(target);
+
+    throw new Error("Unexpected ZoomChangeUsingMouseWheel event source");
   },
 
   /**
