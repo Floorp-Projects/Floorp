@@ -377,8 +377,9 @@ def _sideToTransportMode(side):
     elif side == 'child': mode = 'CLIENT'
     return ExprVar('mozilla::ipc::Transport::MODE_'+ mode)
 
-def _ifLogging(stmts):
-    iflogging = StmtIf(ExprCall(ExprVar('mozilla::ipc::LoggingEnabled')))
+def _ifLogging(topLevelProtocol, stmts):
+    iflogging = StmtIf(ExprCall(ExprVar('mozilla::ipc::LoggingEnabledFor'),
+                                args=[ topLevelProtocol ]))
     iflogging.addifstmts(stmts)
     return iflogging
 
@@ -5372,7 +5373,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def logMessage(self, md, msgptr, pfx, actor=None, receiving=False):
         actorname = _actorName(self.protocol.name, self.side)
 
-        return _ifLogging([ StmtExpr(ExprCall(
+        topLevel = self.protocol.decl.type.toplevel().name()
+        return _ifLogging(ExprLiteral.String(topLevel), [ StmtExpr(ExprCall(
             ExprSelect(msgptr, '->', 'Log'),
             args=[ ExprLiteral.String('['+ actorname +'] '+ pfx),
                    self.protocol.callOtherProcess(actor),

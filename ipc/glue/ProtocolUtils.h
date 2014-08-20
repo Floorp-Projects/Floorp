@@ -251,6 +251,20 @@ LoggingEnabled()
 #endif
 }
 
+inline bool
+LoggingEnabledFor(const char *aTopLevelProtocol)
+{
+#if defined(DEBUG)
+    const char *filter = PR_GetEnv("MOZ_IPC_MESSAGE_LOG");
+    if (!filter) {
+        return false;
+    }
+    return strcmp(filter, "1") == 0 || strcmp(filter, aTopLevelProtocol) == 0;
+#else
+    return false;
+#endif
+}
+
 MOZ_NEVER_INLINE void
 ProtocolErrorBreakpoint(const char* aMsg);
 
