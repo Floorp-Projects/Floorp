@@ -31,11 +31,15 @@ const HIGHLIGHTER_PICKED_TIMER = 1000;
 const INFO_BAR_OFFSET = 5;
 // The minimum distance a line should be before it has an arrow marker-end
 const ARROW_LINE_MIN_DISTANCE = 10;
+// How many maximum nodes can be highlighted at the same time by the
+// SelectorHighlighter
+const MAX_HIGHLIGHTED_ELEMENTS = 100;
 
 // All possible highlighter classes
 let HIGHLIGHTER_CLASSES = exports.HIGHLIGHTER_CLASSES = {
   "BoxModelHighlighter": BoxModelHighlighter,
-  "CssTransformHighlighter": CssTransformHighlighter
+  "CssTransformHighlighter": CssTransformHighlighter,
+  "SelectorHighlighter": SelectorHighlighter
 };
 
 /**
@@ -1223,6 +1227,69 @@ CssTransformHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototyp
     this._svgRoot.removeAttribute("hidden");
   }
 });
+
+/**
+ * The SelectorHighlighter runs a given selector through querySelectorAll on the
+ * document of the provided context node and then uses the BoxModelHighlighter
+ * to highlight the matching nodes
+ */
+function SelectorHighlighter(tabActor) {
+  this.tabActor = tabActor;
+  this._highlighters = [];
+}
+
+SelectorHighlighter.prototype = {
+  /**
+   * Show BoxModelHighlighter on each node that matches that provided selector.
+   * @param {DOMNode} node A context node that is used to get the document on
+   * which querySelectorAll should be executed. This node will NOT be
+   * highlighted.
+   * @param {Object} options Should at least contain the 'selector' option, a
+   * string that will be used in querySelectorAll. On top of this, all of the
+   * valid options to BoxModelHighlighter.show are also valid here.
+   */
+  show: function(node, options={}) {
+    this.hide();
+
+    if (!isNodeValid(node) || !options.selector) {
+      return;
+    }
+
+    let nodes = [];
+    try {
+      nodes = [...node.ownerDocument.querySelectorAll(options.selector)];
+    } catch (e) {}
+
+    delete options.selector;
+
+    let i = 0;
+    for (let matchingNode of nodes) {
+      if (i >= MAX_HIGHLIGHTED_ELEMENTS) {
+        break;
+      }
+
+      let highlighter = new BoxModelHighlighter(this.tabActor);
+      if (options.fill) {
+        highlighter.regionFill[options.region || "border"] = options.fill;
+      }
+      highlighter.show(matchingNode, options);
+      this._highlighters.push(highlighter);
+      i ++;
+    }
+  },
+
+  hide: function() {
+    for (let highlighter of this._highlighters) {
+      highlighter.destroy();
+    }
+    this._highlighters = [];
+  },
+
+  destroy: function() {
+    this.hide();
+    this.tabActor = null;
+  }
+};
 
 /**
  * The SimpleOutlineHighlighter is a class that has the same API than the

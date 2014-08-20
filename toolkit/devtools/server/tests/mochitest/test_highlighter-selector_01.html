@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the custom selector highlighter creates as many box-model highlighters
+as there are nodes that match the given selector
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="test-node">test node</div>
+  <ul>
+    <li class="item">item</li>
+    <li class="item">item</li>
+    <li class="item">item</li>
+    <li class="item">item</li>
+    <li class="item">item</li>
+  </ul>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  const Cu = Components.utils;
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+  const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+  const {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+
+  const TEST_DATA = [{
+    selector: "#test-node",
+    containerCount: 1
+  }, {
+    selector: null,
+    containerCount: 0,
+  }, {
+    selector: undefined,
+    containerCount: 0,
+  }, {
+    selector: ".invalid-class",
+    containerCount: 0
+  }, {
+    selector: ".item",
+    containerCount: 5
+  }, {
+    selector: "#test-node, ul, .item",
+    containerCount: 7
+  }];
+
+  DebuggerServer.init(() => true);
+  DebuggerServer.addBrowserActors();
+
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      let form = response.tabs[response.selected];
+      let front = InspectorFront(client, form);
+
+      Task.spawn(function*() {
+        let walker = yield front.getWalker();
+        let highlighter = yield front.getHighlighterByType("SelectorHighlighter");
+
+        let browser = Services.wm.getMostRecentWindow("navigator:browser")
+                                 .gBrowser.selectedBrowser;
+
+        // Remove left-over highlighter contains from previous tests
+        for (let container of browser.parentNode
+          .querySelectorAll(".highlighter-container")) {
+          container.remove();
+        }
+
+        // The node given to SelectorHighlighter's show method is only used to
+        // know which document should matching nodes be searched in
+        let node = document.body;
+
+        for (let {selector, containerCount} of TEST_DATA) {
+          info("Showing the highlighter on " + selector + ". Expecting " +
+            containerCount + " highlighter containers");
+
+          yield highlighter.show(walker.frontForRawNode(node), {selector});
+
+          let containers = browser.parentNode.querySelectorAll(
+            ".highlighter-container");
+          is(containers.length, containerCount,
+            "The correct number of box-model highlighers were created");
+          yield highlighter.hide();
+        }
+
+        yield highlighter.finalize();
+      }).then(null, ok.bind(null, false)).then(() => {
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+
+}
+</script>
+</pre>
+</body>
+</html>
