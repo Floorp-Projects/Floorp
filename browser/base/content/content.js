@@ -578,3 +578,40 @@ if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
   Cu.import("resource:///modules/translation/TranslationContentHandler.jsm");
   trHandler = new TranslationContentHandler(global, docShell);
 }
+
+let DOMFullscreenHandler = {
+  _fullscreenDoc: null,
+
+  init: function() {
+    addMessageListener("DOMFullscreen:Approved", this);
+    addMessageListener("DOMFullscreen:CleanUp", this);
+    addEventListener("MozEnteredDomFullscreen", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    switch(aMessage.name) {
+      case "DOMFullscreen:Approved": {
+        if (this._fullscreenDoc) {
+          Services.obs.notifyObservers(this._fullscreenDoc,
+                                       "fullscreen-approved",
+                                       "");
+        }
+        break;
+      }
+      case "DOMFullscreen:CleanUp": {
+        this._fullscreenDoc = null;
+        break;
+      }
+    }
+  },
+
+  handleEvent: function(aEvent) {
+    if (aEvent.type == "MozEnteredDomFullscreen") {
+      this._fullscreenDoc = aEvent.target;
+      sendAsyncMessage("MozEnteredDomFullscreen", {
+        origin: this._fullscreenDoc.nodePrincipal.origin,
+      });
+    }
+  }
+};
+DOMFullscreenHandler.init();
