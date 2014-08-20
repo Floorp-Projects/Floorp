@@ -6,7 +6,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.util.UIAsyncTask;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -82,9 +82,9 @@ public final class TabsAccessor {
         if (listener == null)
             return;
 
-        (new UiAsyncTask<Void, Void, List<RemoteTab>>(ThreadUtils.getBackgroundHandler()) {
+        (new UIAsyncTask.WithoutParams<List<RemoteTab>>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            protected List<RemoteTab> doInBackground(Void... unused) {
+            protected List<RemoteTab> doInBackground() {
                 Uri uri = BrowserContract.Tabs.CONTENT_URI;
 
                 if (limit > 0) {

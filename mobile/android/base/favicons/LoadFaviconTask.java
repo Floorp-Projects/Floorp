@@ -20,7 +20,7 @@ import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+
 import static org.mozilla.gecko.favicons.Favicons.context;
 
 import java.io.IOException;

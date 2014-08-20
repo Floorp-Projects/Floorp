@@ -8,7 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
+import org.mozilla.gecko.util.UIAsyncTask;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -141,9 +141,9 @@ public class EditBookmarkDialog {
      */
     public void show(final String url) {
         final ContentResolver cr = mContext.getContentResolver();
-        (new UiAsyncTask<Void, Void, Bookmark>(ThreadUtils.getBackgroundHandler()) {
+        (new UIAsyncTask.WithoutParams<Bookmark>(ThreadUtils.getBackgroundHandler()) {
             @Override
-            public Bookmark doInBackground(Void... params) {
+            public Bookmark doInBackground() {
                 final Cursor cursor = BrowserDB.getBookmarkForUrl(cr, url);
                 if (cursor == null) {
                     return null;
@@ -202,9 +202,9 @@ public class EditBookmarkDialog {
         editPrompt.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int whichButton) {
-                (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
+                (new UIAsyncTask.WithoutParams<Void>(ThreadUtils.getBackgroundHandler()) {
                     @Override
-                    public Void doInBackground(Void... params) {
+                    public Void doInBackground() {
                         String newUrl = locationText.getText().toString().trim();
                         String newKeyword = keywordText.getText().toString().trim();
                         BrowserDB.updateBookmark(context.getContentResolver(), id, newUrl, nameText.getText().toString(), newKeyword);

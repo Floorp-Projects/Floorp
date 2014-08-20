@@ -78,7 +78,7 @@ gujar.sources += [
     'util/RawResource.java',
     'util/StringUtils.java',
     'util/ThreadUtils.java',
-    'util/UiAsyncTask.java',
+    'util/UIAsyncTask.java',
     'util/WebActivityMapper.java',
 ]
 gujar.extra_jars = [
