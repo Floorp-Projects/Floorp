@@ -28,10 +28,10 @@ class nsIAtom;
 class nsIWidget;
 
 // IID for the nsITheme interface
-// {7a3474d9-3bd6-407c-8657-c5c7633639f0}
+// {48f64fde-ff0e-4989-bbe3-f746573f9b7c}
  #define NS_ITHEME_IID     \
-{ 0x7a3474d9, 0x3bd6, 0x407c, \
-  { 0x86, 0x57, 0xc5, 0xc7, 0x63, 0x36, 0x39, 0xf0 } }
+{ 0x48f64fde, 0xff0e, 0x4989, \
+  { 0xbb, 0xe3, 0xf7, 0x46, 0x57, 0x3f, 0x9b, 0x7c } }
 // {0ae05515-cf7a-45a8-9e02-6556de7685b1}
 #define NS_THEMERENDERER_CID \
 { 0x0ae05515, 0xcf7a, 0x45a8, \
@@ -138,6 +138,9 @@ public:
   NS_IMETHOD ThemeChanged()=0;
 
   virtual bool WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
+  { return false; }
+
+  virtual bool NeedToClearBackgroundBehindWidget(uint8_t aWidgetType)
   { return false; }
 
   /**
