@@ -6,3 +6,11 @@
 == table-separate-2.html table-separate-2-ref.html
 == table-separate-3.html table-separate-3-ref.html
 == table-separate-4.html table-separate-4-ref.html
+# == table-collapse-dynamic-1.html   table-collapse-dynamic-1-ref.html
+# == table-collapse-dynamic-2.html   table-collapse-dynamic-2-ref.html
+# == table-collapse-dynamic-3.html   table-collapse-dynamic-3-ref.html
+# == table-collapse-dynamic-4.html   table-collapse-dynamic-4-ref.html
+# == table-separate-dynamic-1.html   table-separate-dynamic-1-ref.html
+# == table-separate-dynamic-2.html   table-separate-dynamic-2-ref.html
+# == table-separate-dynamic-3.html   table-separate-dynamic-3-ref.html
+# == table-separate-dynamic-4.html   table-separate-dynamic-4-ref.html
