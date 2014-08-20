@@ -188,6 +188,12 @@ BufferDecoder::NotifyWaitingForResourcesStatusChanged()
   // ignore
 }
 
+void
+BufferDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+{
+  // ignore
+}
+
 MediaDecoderOwner*
 BufferDecoder::GetOwner()
 {
