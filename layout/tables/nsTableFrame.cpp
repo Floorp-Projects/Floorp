@@ -1845,7 +1845,7 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
         // if there is an incomplete child, then set the desired height to include it but not the next one
         nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
         aDesiredSize.Height() = borderPadding.bottom + GetCellSpacingY(GetRowCount()) +
-                              lastChildReflowed->GetRect().YMost();
+                              lastChildReflowed->GetNormalRect().YMost();
       }
       haveDesiredHeight = true;
 
@@ -2649,6 +2649,7 @@ nsTableFrame::InitChildReflowState(nsHTMLReflowState& aReflowState)
 // aKidRect is relative to the upper-left origin of our frame
 void nsTableFrame::PlaceChild(nsTableReflowState&  aReflowState,
                               nsIFrame*            aKidFrame,
+                              nsPoint              aKidPosition,
                               nsHTMLReflowMetrics& aKidDesiredSize,
                               const nsRect&        aOriginalKidRect,
                               const nsRect&        aOriginalKidVisualOverflow)
@@ -2658,7 +2659,7 @@ void nsTableFrame::PlaceChild(nsTableReflowState&  aReflowState,
 
   // Place and size the child
   FinishReflowChild(aKidFrame, PresContext(), aKidDesiredSize, nullptr,
-                    aReflowState.x, aReflowState.y, 0);
+                    aKidPosition.x, aKidPosition.y, 0);
 
   InvalidateTableFrame(aKidFrame, aOriginalKidRect, aOriginalKidVisualOverflow,
                        isFirstReflow);
@@ -2842,7 +2843,10 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
   desiredSize.ClearSize();
   ReflowChild(aTfoot, presContext, desiredSize, footerReflowState,
               aReflowState.x, aReflowState.y, 0, footerStatus);
-  PlaceChild(aReflowState, aTfoot, desiredSize, origTfootRect,
+  nsPoint kidPosition(aReflowState.x, aReflowState.y);
+  footerReflowState.ApplyRelativePositioning(&kidPosition);
+
+  PlaceChild(aReflowState, aTfoot, kidPosition, desiredSize, origTfootRect,
              origTfootVisualOverflow);
 }
                     
@@ -2962,7 +2966,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       // We ignore a repeated head row group in this check to avoid causing
       // infinite loops in some circumstances - see bug 344883.
       if (childX > ((thead && IsRepeatedFrame(thead)) ? 1u : 0u) &&
-          (rowGroups[childX - 1]->GetRect().YMost() > 0)) {
+          (rowGroups[childX - 1]->GetNormalRect().YMost() > 0)) {
         kidReflowState.mFlags.mIsTopOfPage = false;
       }
       aReflowState.y += cellSpacingY;
@@ -2977,6 +2981,8 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 
       ReflowChild(kidFrame, presContext, desiredSize, kidReflowState,
                   aReflowState.x, aReflowState.y, 0, aStatus);
+      nsPoint kidPosition(aReflowState.x, aReflowState.y);
+      kidReflowState.ApplyRelativePositioning(&kidPosition);
 
       if (reorder) {
         // reorder row groups the reflow may have changed the nextinflows
@@ -3008,8 +3014,8 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
           if (childX+1 < rowGroups.Length()) {
             nsIFrame* nextRowGroupFrame = rowGroups[childX + 1];
             if (nextRowGroupFrame) {
-              PlaceChild(aReflowState, kidFrame, desiredSize, oldKidRect,
-                         oldKidVisualOverflow);
+              PlaceChild(aReflowState, kidFrame, kidPosition, desiredSize,
+                         oldKidRect, oldKidVisualOverflow);
               if (allowRepeatedFooter) {
                 PlaceRepeatedFooter(aReflowState, tfoot, footerHeight);
               }
@@ -3037,8 +3043,8 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
             break;
           }
           else { // we can't push so lets make clear how much space we need
-            PlaceChild(aReflowState, kidFrame, desiredSize, oldKidRect,
-                                     oldKidVisualOverflow);
+            PlaceChild(aReflowState, kidFrame, kidPosition, desiredSize,
+                       oldKidRect, oldKidVisualOverflow);
             aLastChildReflowed = kidFrame;
             if (allowRepeatedFooter) {
               PlaceRepeatedFooter(aReflowState, tfoot, footerHeight);
@@ -3061,7 +3067,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       }
 
       // Place the child
-      PlaceChild(aReflowState, kidFrame, desiredSize, oldKidRect,
+      PlaceChild(aReflowState, kidFrame, kidPosition, desiredSize, oldKidRect,
                  oldKidVisualOverflow);
 
       // Remember where we just were in case we end up pushing children
@@ -3108,12 +3114,12 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
     }
     else { // it isn't being reflowed
       aReflowState.y += cellSpacingY;
-      nsRect kidRect = kidFrame->GetRect();
+      nsRect kidRect = kidFrame->GetNormalRect();
       if (kidRect.y != aReflowState.y) {
         // invalidate the old position
         kidFrame->InvalidateFrameSubtree();
-        kidRect.y = aReflowState.y;
-        kidFrame->SetRect(kidRect);        // move to the new position
+        // move to the new position
+        kidFrame->MovePositionBy(nsPoint(0, aReflowState.y - kidRect.y));
         RePositionViews(kidFrame);
         // invalidate the new position
         kidFrame->InvalidateFrameSubtree();
@@ -3266,64 +3272,64 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
     nscoord amountUsedByRG = 0;
     nscoord yOriginRow = 0;
-    nsRect rgRect = rgFrame->GetRect();
+    nsRect rgNormalRect = rgFrame->GetNormalRect();
     if (!rgFrame->HasStyleHeight()) {
       nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
       while (rowFrame) {
-        nsRect rowRect = rowFrame->GetRect();
+        nsRect rowNormalRect = rowFrame->GetNormalRect();
         nscoord cellSpacingY = GetCellSpacingY(rowFrame->GetRowIndex());
         if ((amountUsed < aAmount) && rowFrame->HasPctHeight()) {
           nscoord pctHeight = rowFrame->GetHeight(pctBasis);
-          nscoord amountForRow = std::min(aAmount - amountUsed, pctHeight - rowRect.height);
+          nscoord amountForRow = std::min(aAmount - amountUsed,
+                                          pctHeight - rowNormalRect.height);
           if (amountForRow > 0) {
-            nsRect oldRowRect = rowRect;
-            rowRect.height += amountForRow;
-            // XXXbz we don't need to change rowRect.y to be yOriginRow?
-            rowFrame->SetRect(rowRect);
-            yOriginRow += rowRect.height + cellSpacingY;
-            yEndRG += rowRect.height + cellSpacingY;
+            // XXXbz we don't need to move the row's y position to yOriginRow?
+            nsRect origRowRect = rowFrame->GetRect();
+            nscoord newRowHeight = rowNormalRect.height + amountForRow;
+            rowFrame->SetSize(nsSize(rowNormalRect.width, newRowHeight));
+            yOriginRow += newRowHeight + cellSpacingY;
+            yEndRG += newRowHeight + cellSpacingY;
             amountUsed += amountForRow;
             amountUsedByRG += amountForRow;
             //rowFrame->DidResize();
             nsTableFrame::RePositionViews(rowFrame);
 
-            rgFrame->InvalidateFrameWithRect(oldRowRect);
+            rgFrame->InvalidateFrameWithRect(origRowRect);
             rgFrame->InvalidateFrame();
           }
         }
         else {
-          if (amountUsed > 0 && yOriginRow != rowRect.y &&
+          if (amountUsed > 0 && yOriginRow != rowNormalRect.y &&
               !(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
             rowFrame->InvalidateFrameSubtree();
-            rowFrame->SetPosition(nsPoint(rowRect.x, yOriginRow));
+            rowFrame->MovePositionBy(nsPoint(0, yOriginRow - rowNormalRect.y));
             nsTableFrame::RePositionViews(rowFrame);
             rowFrame->InvalidateFrameSubtree();
           }
-          yOriginRow += rowRect.height + cellSpacingY;
-          yEndRG += rowRect.height + cellSpacingY;
+          yOriginRow += rowNormalRect.height + cellSpacingY;
+          yEndRG += rowNormalRect.height + cellSpacingY;
         }
         rowFrame = rowFrame->GetNextRow();
       }
       if (amountUsed > 0) {
-        if (rgRect.y != yOriginRG) {
+        if (rgNormalRect.y != yOriginRG) {
           rgFrame->InvalidateFrameSubtree();
         }
 
-        nsRect origRgRect = rgRect;
+        nsRect origRgNormalRect = rgFrame->GetRect();
         nsRect origRgVisualOverflow = rgFrame->GetVisualOverflowRect();
 
-        rgRect.y = yOriginRG;
-        rgRect.height += amountUsedByRG;
+        rgFrame->MovePositionBy(nsPoint(0, yOriginRG - rgNormalRect.y));
+        rgFrame->SetSize(nsSize(rgNormalRect.width,
+                                rgNormalRect.height + amountUsedByRG));
 
-        rgFrame->SetRect(rgRect);
-
-        nsTableFrame::InvalidateTableFrame(rgFrame, origRgRect,
+        nsTableFrame::InvalidateTableFrame(rgFrame, origRgNormalRect,
                                            origRgVisualOverflow, false);
       }
     }
-    else if (amountUsed > 0 && yOriginRG != rgRect.y) {
+    else if (amountUsed > 0 && yOriginRG != rgNormalRect.y) {
       rgFrame->InvalidateFrameSubtree();
-      rgFrame->SetPosition(nsPoint(rgRect.x, yOriginRG));
+      rgFrame->MovePositionBy(nsPoint(0, yOriginRG - rgNormalRect.y));
       // Make sure child views are properly positioned
       nsTableFrame::RePositionViews(rgFrame);
       rgFrame->InvalidateFrameSubtree();
@@ -3403,14 +3409,14 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];
     nscoord amountUsedByRG = 0;
     nscoord yOriginRow = 0;
-    nsRect rgRect = rgFrame->GetRect();
+    nsRect rgNormalRect = rgFrame->GetNormalRect();
     nsRect rgVisualOverflow = rgFrame->GetVisualOverflowRect();
     // see if there is an eligible row group or we distribute to all rows
     if (!firstUnStyledRG || !rgFrame->HasStyleHeight() || !eligibleRows) {
       nsTableRowFrame* rowFrame = rgFrame->GetFirstRow();
       while (rowFrame) {
         nscoord cellSpacingY = GetCellSpacingY(rowFrame->GetRowIndex());
-        nsRect rowRect = rowFrame->GetRect();
+        nsRect rowNormalRect = rowFrame->GetNormalRect();
         nsRect rowVisualOverflow = rowFrame->GetVisualOverflowRect();
         // see if there is an eligible row or we distribute to all rows
         if (!firstUnStyledRow || !rowFrame->HasStyleHeight() || !eligibleRows) {
@@ -3419,7 +3425,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
             if (!expandEmptyRows) {
               // The amount of additional space each row gets is proportional to
               // its height
-              ratio = float(rowRect.height) / float(divisor);
+              ratio = float(rowNormalRect.height) / float(divisor);
             } else {
               // empty rows get all the same additional space
               ratio = 1.0f / float(eligibleRows);
@@ -3435,17 +3441,18 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
                                  ? aAmount - amountUsed : NSToCoordRound(((float)(heightToDistribute)) * ratio);
           amountForRow = std::min(amountForRow, aAmount - amountUsed);
 
-          if (yOriginRow != rowRect.y) {
+          if (yOriginRow != rowNormalRect.y) {
             rowFrame->InvalidateFrameSubtree();
           }
 
           // update the row height
-          nsRect newRowRect(rowRect.x, yOriginRow, rowRect.width,
-                            rowRect.height + amountForRow);
-          rowFrame->SetRect(newRowRect);
+          nsRect origRowRect = rowFrame->GetRect();
+          nscoord newRowHeight = rowNormalRect.height + amountForRow;
+          rowFrame->MovePositionBy(nsPoint(0, yOriginRow - rowNormalRect.y));
+          rowFrame->SetSize(nsSize(rowNormalRect.width, newRowHeight));
 
-          yOriginRow += newRowRect.height + cellSpacingY;
-          yEndRG += newRowRect.height + cellSpacingY;
+          yOriginRow += newRowHeight + cellSpacingY;
+          yEndRG += newRowHeight + cellSpacingY;
 
           amountUsed += amountForRow;
           amountUsedByRG += amountForRow;
@@ -3453,37 +3460,39 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
           //rowFrame->DidResize();
           nsTableFrame::RePositionViews(rowFrame);
 
-          nsTableFrame::InvalidateTableFrame(rowFrame, rowRect, rowVisualOverflow,
-                                             false);
+          nsTableFrame::InvalidateTableFrame(rowFrame, origRowRect,
+                                             rowVisualOverflow, false);
         }
         else {
-          if (amountUsed > 0 && yOriginRow != rowRect.y) {
+          if (amountUsed > 0 && yOriginRow != rowNormalRect.y) {
             rowFrame->InvalidateFrameSubtree();
-            rowFrame->SetPosition(nsPoint(rowRect.x, yOriginRow));
+            rowFrame->MovePositionBy(nsPoint(0, yOriginRow - rowNormalRect.y));
             nsTableFrame::RePositionViews(rowFrame);
             rowFrame->InvalidateFrameSubtree();
           }
-          yOriginRow += rowRect.height + cellSpacingY;
-          yEndRG += rowRect.height + cellSpacingY;
+          yOriginRow += rowNormalRect.height + cellSpacingY;
+          yEndRG += rowNormalRect.height + cellSpacingY;
         }
         rowFrame = rowFrame->GetNextRow();
       }
       if (amountUsed > 0) {
-        if (rgRect.y != yOriginRG) {
+        if (rgNormalRect.y != yOriginRG) {
           rgFrame->InvalidateFrameSubtree();
         }
 
-        rgFrame->SetRect(nsRect(rgRect.x, yOriginRG, rgRect.width,
-                                rgRect.height + amountUsedByRG));
+        nsRect origRgNormalRect = rgFrame->GetRect();
+        rgFrame->MovePositionBy(nsPoint(0, yOriginRG - rgNormalRect.y));
+        rgFrame->SetSize(nsSize(rgNormalRect.width,
+                                rgNormalRect.height + amountUsedByRG));
 
-        nsTableFrame::InvalidateTableFrame(rgFrame, rgRect, rgVisualOverflow,
-                                           false);
+        nsTableFrame::InvalidateTableFrame(rgFrame, origRgNormalRect,
+                                           rgVisualOverflow, false);
       }
       // Make sure child views are properly positioned
     }
-    else if (amountUsed > 0 && yOriginRG != rgRect.y) {
+    else if (amountUsed > 0 && yOriginRG != rgNormalRect.y) {
       rgFrame->InvalidateFrameSubtree();
-      rgFrame->SetPosition(nsPoint(rgRect.x, yOriginRG));
+      rgFrame->MovePositionBy(nsPoint(0, yOriginRG - rgNormalRect.y));
       // Make sure child views are properly positioned
       nsTableFrame::RePositionViews(rgFrame);
       rgFrame->InvalidateFrameSubtree();
@@ -3583,8 +3592,15 @@ nsTableFrame::GetLogicalBaseline(WritingMode aWritingMode) const
     nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgIndex];
     if (rgFrame->GetRowCount()) {
       firstRow = rgFrame->GetFirstRow();
-      ascent = rgFrame->BStart(aWritingMode, containerWidth) +
-               firstRow->BStart(aWritingMode, containerWidth) +
+
+      nscoord rgNormalBStart =
+        LogicalRect(aWritingMode, rgFrame->GetNormalRect(), containerWidth)
+        .Origin(aWritingMode).B(aWritingMode);
+      nscoord firstRowNormalBStart =
+        LogicalRect(aWritingMode, firstRow->GetNormalRect(), containerWidth)
+        .Origin(aWritingMode).B(aWritingMode);
+
+      ascent = rgNormalBStart + firstRowNormalBStart +
                firstRow->GetRowBaseline(aWritingMode);
       break;
     }
