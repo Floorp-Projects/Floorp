@@ -29,18 +29,13 @@ const STATUS_PENDING = 0;
 const STATUS_RESOLVED = 1;
 const STATUS_REJECTED = 2;
 
-// These "private names" allow some properties of the Promise object to be
+// This N_INTERNALS name allow internal properties of the Promise to be
 // accessed only by this module, while still being visible on the object
-// manually when using a debugger.  They don't strictly guarantee that the
+// manually when using a debugger.  This doesn't strictly guarantee that the
 // properties are inaccessible by other code, but provide enough protection to
 // avoid using them by mistake.
 const salt = Math.floor(Math.random() * 100);
-const Name = (n) => "{private:" + n + ":" + salt + "}";
-const N_STATUS = Name("status");
-const N_VALUE = Name("value");
-const N_HANDLERS = Name("handlers");
-const N_WITNESS = Name("witness");
-
+const N_INTERNALS = "{private:internals:" + salt + "}";
 
 /////// Warn-upon-finalization mechanism
 //
@@ -308,35 +303,39 @@ this.Promise = function Promise(aExecutor)
   }
 
   /*
-   * Internal status of the promise.  This can be equal to STATUS_PENDING,
-   * STATUS_RESOLVED, or STATUS_REJECTED.
+   * Object holding all of our internal values we associate with the promise.
    */
-  Object.defineProperty(this, N_STATUS, { value: STATUS_PENDING,
-                                          writable: true });
+  Object.defineProperty(this, N_INTERNALS, { value: {
+    /*
+     * Internal status of the promise.  This can be equal to STATUS_PENDING,
+     * STATUS_RESOLVED, or STATUS_REJECTED.
+     */
+    status: STATUS_PENDING,
 
-  /*
-   * When the N_STATUS property is STATUS_RESOLVED, this contains the final
-   * resolution value, that cannot be a promise, because resolving with a
-   * promise will cause its state to be eventually propagated instead.  When the
-   * N_STATUS property is STATUS_REJECTED, this contains the final rejection
-   * reason, that could be a promise, even if this is uncommon.
-   */
-  Object.defineProperty(this, N_VALUE, { writable: true });
+    /*
+     * When the status property is STATUS_RESOLVED, this contains the final
+     * resolution value, that cannot be a promise, because resolving with a
+     * promise will cause its state to be eventually propagated instead.  When the
+     * status property is STATUS_REJECTED, this contains the final rejection
+     * reason, that could be a promise, even if this is uncommon.
+     */
+    value: undefined,
 
-  /*
-   * Array of Handler objects registered by the "then" method, and not processed
-   * yet.  Handlers are removed when the promise is resolved or rejected.
-   */
-  Object.defineProperty(this, N_HANDLERS, { value: [] });
+    /*
+     * Array of Handler objects registered by the "then" method, and not processed
+     * yet.  Handlers are removed when the promise is resolved or rejected.
+     */
+    handlers: [],
 
-  /**
-   * When the N_STATUS property is STATUS_REJECTED and until there is
-   * a rejection callback, this contains an array
-   * - {string} id An id for use with |PendingErrors|;
-   * - {FinalizationWitness} witness A witness broadcasting |id| on
-   *   notification "promise-finalization-witness".
-   */
-  Object.defineProperty(this, N_WITNESS, { writable: true });
+    /**
+     * When the status property is STATUS_REJECTED and until there is
+     * a rejection callback, this contains an array
+     * - {string} id An id for use with |PendingErrors|;
+     * - {FinalizationWitness} witness A witness broadcasting |id| on
+     *   notification "promise-finalization-witness".
+     */
+    witness: undefined
+  }});
 
   Object.seal(this);
 
@@ -398,16 +397,16 @@ this.Promise = function Promise(aExecutor)
 Promise.prototype.then = function (aOnResolve, aOnReject)
 {
   let handler = new Handler(this, aOnResolve, aOnReject);
-  this[N_HANDLERS].push(handler);
+  this[N_INTERNALS].handlers.push(handler);
 
   // Ensure the handler is scheduled for processing if this promise is already
   // resolved or rejected.
-  if (this[N_STATUS] != STATUS_PENDING) {
+  if (this[N_INTERNALS].status != STATUS_PENDING) {
 
     // This promise is not the last in the chain anymore. Remove any watchdog.
-    if (this[N_WITNESS] != null) {
-      let [id, witness] = this[N_WITNESS];
-      this[N_WITNESS] = null;
+    if (this[N_INTERNALS].witness != null) {
+      let [id, witness] = this[N_INTERNALS].witness;
+      this[N_INTERNALS].witness = null;
       witness.forget();
       PendingErrors.unregister(id);
     }
@@ -649,7 +648,7 @@ this.PromiseWalker = {
   completePromise: function (aPromise, aStatus, aValue)
   {
     // Do nothing if the promise is already resolved or rejected.
-    if (aPromise[N_STATUS] != STATUS_PENDING) {
+    if (aPromise[N_INTERNALS].status != STATUS_PENDING) {
       return;
     }
 
@@ -663,9 +662,9 @@ this.PromiseWalker = {
     }
 
     // Change the promise status and schedule our handlers for processing.
-    aPromise[N_STATUS] = aStatus;
-    aPromise[N_VALUE] = aValue;
-    if (aPromise[N_HANDLERS].length > 0) {
+    aPromise[N_INTERNALS].status = aStatus;
+    aPromise[N_INTERNALS].value = aValue;
+    if (aPromise[N_INTERNALS].handlers.length > 0) {
       this.schedulePromise(aPromise);
     } else if (aStatus == STATUS_REJECTED) {
       // This is a rejection and the promise is the last in the chain.
@@ -673,7 +672,7 @@ this.PromiseWalker = {
       let id = PendingErrors.register(aValue);
       let witness =
           FinalizationWitnessService.make("promise-finalization-witness", id);
-      aPromise[N_WITNESS] = [id, witness];
+      aPromise[N_INTERNALS].witness = [id, witness];
     }
   },
 
@@ -698,10 +697,10 @@ this.PromiseWalker = {
   schedulePromise: function (aPromise)
   {
     // Migrate the handlers from the provided promise to the global list.
-    for (let handler of aPromise[N_HANDLERS]) {
+    for (let handler of aPromise[N_INTERNALS].handlers) {
       this.handlers.push(handler);
     }
-    aPromise[N_HANDLERS].length = 0;
+    aPromise[N_INTERNALS].handlers.length = 0;
 
     // Schedule the walker loop on the next tick of the event loop.
     if (!this.walkerLoopScheduled) {
@@ -854,8 +853,8 @@ Handler.prototype = {
   process: function()
   {
     // The state of this promise is propagated unless a handler is defined.
-    let nextStatus = this.thisPromise[N_STATUS];
-    let nextValue = this.thisPromise[N_VALUE];
+    let nextStatus = this.thisPromise[N_INTERNALS].status;
+    let nextValue = this.thisPromise[N_INTERNALS].value;
 
     try {
       // If a handler is defined for either resolution or rejection, invoke it
