@@ -32,7 +32,6 @@ class ChangeAttributeTxn;
 class DeleteNodeTxn;
 class EditAggregateTxn;
 class IMETextTxn;
-class InsertElementTxn;
 class InsertTextTxn;
 class JoinElementTxn;
 class RemoveStyleSheetTxn;
@@ -75,6 +74,7 @@ class DataTransfer;
 class DeleteTextTxn;
 class Element;
 class EventTarget;
+class InsertNodeTxn;
 class Selection;
 class Text;
 }  // namespace dom
@@ -221,8 +221,7 @@ public:
 
   /* helper routines for node/parent manipulations */
   nsresult DeleteNode(nsINode* aNode);
-  nsresult InsertNode(nsIContent* aContent, nsINode* aParent,
-                      int32_t aPosition);
+  nsresult InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition);
   enum ECloneAttributes { eDontCloneAttributes, eCloneAttributes };
   already_AddRefed<mozilla::dom::Element> ReplaceContainer(
                             mozilla::dom::Element* aOldContainer,
@@ -285,10 +284,8 @@ protected:
 
   /** create a transaction for inserting aNode as a child of aParent.
     */
-  NS_IMETHOD CreateTxnForInsertElement(nsIDOMNode * aNode,
-                                       nsIDOMNode * aParent,
-                                       int32_t      aOffset,
-                                       InsertElementTxn ** aTxn);
+  already_AddRefed<mozilla::dom::InsertNodeTxn>
+  CreateTxnForInsertNode(nsIContent& aNode, nsINode& aParent, int32_t aOffset);
 
   /** create a transaction for removing aNode from its parent.
     */
