@@ -1890,6 +1890,11 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   }
 
   if (isThemed) {
+    nsITheme* theme = presContext->GetTheme();
+    if (theme->NeedToClearBackgroundBehindWidget(aFrame->StyleDisplay()->mAppearance)) {
+      bgItemList.AppendNewToTop(
+        new (aBuilder) nsDisplayClearBackground(aBuilder, aFrame));
+    }
     nsDisplayThemedBackground* bgItem =
       new (aBuilder) nsDisplayThemedBackground(aBuilder, aFrame);
     bgItemList.AppendNewToTop(bgItem);
