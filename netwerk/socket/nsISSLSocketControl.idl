@@ -15,7 +15,7 @@ class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-[scriptable, builtinclass, uuid(89b819dc-31b0-4d09-915a-66f8a3703483)]
+[scriptable, builtinclass, uuid(f160ec31-01f3-47f2-b542-0e12a647b07f)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
@@ -52,6 +52,11 @@ interface nsISSLSocketControl : nsISupports {
       in ACString npnProtocol, /* e.g. "spdy/2" */
       in ACString hostname,
       in long port);
+
+    /* Determine if existing connection should be trusted to convey information about
+     * a hostname.
+     */
+    boolean isAcceptableForHost(in ACString hostname);
 
     /* The Key Exchange Algorithm is used when determining whether or
        not to do false start and whether or not HTTP/2 can be used.
@@ -103,5 +108,26 @@ interface nsISSLSocketControl : nsISupports {
      * the user or searching the set of rememebered user cert decisions.
      */
     attribute nsIX509Cert clientCert;
+
+    /**
+     * If you wish to verify the host certificate using a different name than
+     * was used for the tcp connection, but without using proxy semantics, you
+     * can set authenticationName and authenticationPort
+     */
+    attribute ACString authenticationName;
+    [infallible] attribute long authenticationPort;
+
+    /**
+     * set bypassAuthentication to true if the server certificate checks should
+     * not be enforced. This is to enable non-secure transport over TLS.
+     */
+    [infallible] attribute boolean bypassAuthentication;
+
+    /*
+     * failedVerification is true if any enforced certificate checks have failed.
+     * Connections that have not yet tried to verify, have verifications bypassed,
+     * or are using acceptable exceptions will all return false.
+     */
+    [infallible] readonly attribute boolean failedVerification;
 };
 
