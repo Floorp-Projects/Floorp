@@ -129,6 +129,7 @@ nsresult
 AppleATDecoder::Flush()
 {
   LOG("Flushing AudioToolbox AAC decoder");
+  mTaskQueue->Flush();
   OSStatus rv = AudioConverterReset(mConverter);
   if (rv) {
     LOG("Error %d resetting AudioConverter", rv);
