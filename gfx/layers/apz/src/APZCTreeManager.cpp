@@ -189,7 +189,7 @@ ComputeTouchSensitiveRegion(GeckoContentController* aController,
 AsyncPanZoomController*
 APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                              Layer* aLayer, uint64_t aLayersId,
-                                             Matrix4x4 aTransform,
+                                             const Matrix4x4& aAncestorTransform,
                                              AsyncPanZoomController* aParent,
                                              AsyncPanZoomController* aNextSibling,
                                              bool aIsFirstPaint,
@@ -283,7 +283,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         apzc->SetScrollHandoffParentId(aLayer->GetScrollHandoffParentId());
 
         nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, metrics, aObscured);
-        apzc->SetLayerHitTestData(unobscured, aTransform, transform);
+        apzc->SetLayerHitTestData(unobscured, aAncestorTransform, transform);
         APZCTM_LOG("Setting region %s as visible region for APZC %p\n",
             Stringify(unobscured).c_str(), apzc);
 
@@ -366,11 +366,14 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
   // Accumulate the CSS transform between layers that have an APZC, but exclude any
   // any layers that do have an APZC, and reset the accumulation at those layers.
-  if (apzc) {
-    aTransform = Matrix4x4();
-  } else {
-    // Multiply child layer transforms on the left so they get applied first
-    aTransform = transform * aTransform;
+  // In the terminology of the big comment above APZCTreeManager::GetInputTransforms, if
+  // we are at layer M, then aAncestorTransform is NC * OC, and we left-multiply MC and
+  // compute ancestorTransform to be MC * NC * OC. This gets passed down as the ancestor
+  // transform to layer L when we recurse into the children below. If we are at a layer
+  // with an APZC, such as P, then we leave the ancestorTransform empty to "reset" it.
+  Matrix4x4 ancestorTransform;
+  if (!apzc) {
+    ancestorTransform = transform * aAncestorTransform;
   }
 
   uint64_t childLayersId = (aLayer->AsRefLayer() ? aLayer->AsRefLayer()->GetReferentId() : aLayersId);
@@ -397,7 +400,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   AsyncPanZoomController* next = apzc ? nullptr : aNextSibling;
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
     gfx::TreeAutoIndent indent(mApzcTreeLog);
-    next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aTransform, aParent, next,
+    next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, ancestorTransform, aParent, next,
                                        aIsFirstPaint, aOriginatingLayersId,
                                        aPaintLogger, aApzcsToDestroy, aApzcMap, obscured);
 
