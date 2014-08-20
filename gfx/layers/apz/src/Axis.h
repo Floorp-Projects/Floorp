@@ -55,13 +55,13 @@ public:
    * Notify this Axis that a new touch has been received, including a timestamp
    * for when the touch was received. This triggers a recalculation of velocity.
    */
-  void UpdateWithTouchAtDevicePoint(ScreenIntCoord aPos, uint32_t aTimestampMs);
+  void UpdateWithTouchAtDevicePoint(ScreenCoord aPos, uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has begun, i.e. the user has put their finger
    * on the screen but has not yet tried to pan.
    */
-  void StartTouch(ScreenIntCoord aPos, uint32_t aTimestampMs);
+  void StartTouch(ScreenCoord aPos, uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has ended gracefully. This may perform
@@ -129,7 +129,7 @@ public:
    * Gets the distance between the starting position of the touch supplied in
    * startTouch() and the supplied position.
    */
-  float PanDistance(ScreenIntCoord aPos);
+  float PanDistance(ScreenCoord aPos);
 
   /**
    * Applies friction during a fling, or cancels the fling if the velocity is
@@ -211,16 +211,16 @@ public:
   CSSCoord GetCompositionEnd() const;
   CSSCoord GetPageEnd() const;
 
-  ScreenIntCoord GetPos() const { return mPos; }
+  ScreenCoord GetPos() const { return mPos; }
 
   virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const = 0;
   virtual CSSCoord GetRectLength(const CSSRect& aRect) const = 0;
   virtual CSSCoord GetRectOffset(const CSSRect& aRect) const = 0;
 
 protected:
-  ScreenIntCoord mPos;
+  ScreenCoord mPos;
   uint32_t mPosTimeMs;
-  ScreenIntCoord mStartPos;
+  ScreenCoord mStartPos;
   float mVelocity;
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
