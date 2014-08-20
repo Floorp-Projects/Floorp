@@ -41,7 +41,6 @@ LOCAL_INCLUDES += [
     '/media/mtransport/third_party/nrappkit/src/stats',
     '/media/mtransport/third_party/nrappkit/src/util/libekr',
     '/media/webrtc/signaling/include',
-    '/media/webrtc/signaling/media-conduit',
     '/media/webrtc/signaling/src/common/browser_logging',
     '/media/webrtc/signaling/src/common/time_profiling',
     '/media/webrtc/signaling/src/media',
@@ -54,7 +53,6 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/sipcc/include',
     '/media/webrtc/trunk',
     '/media/webrtc/trunk/testing/gtest/include',
-    '/media/webrtc/trunk/third_party/libjingle/source',
     '/xpcom/base',
 ]
 

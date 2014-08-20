@@ -50,7 +50,6 @@
         './include',
         './src/sipcc/include',
         './src/sipcc/cpr/include',
-        '../../../ipc/chromium/src/base/third_party/nspr',
         '../../../xpcom/base',
         '../../../dom/base',
         '../../../content/media',
@@ -60,7 +59,6 @@
         '../trunk/webrtc/video_engine/include',
         '../trunk/webrtc/voice_engine/include',
         '../trunk/webrtc/modules/interface',
-        '../trunk/webrtc/peerconnection',
         '../../libyuv/include',
         '../../mtransport/third_party/nrappkit/src/util/libekr',
       ],
@@ -334,10 +332,6 @@
         './src/sipcc/plat/common',
         '../../../media/mtransport',
         '../../../dom/base',
-        '../trunk/third_party/libsrtp/srtp/include',
-        '../trunk/third_party/libsrtp/srtp/crypto/include',
-        # Danger: this is to include config.h. This could be bad.
-        '../trunk/third_party/libsrtp/config',
         '../../../netwerk/sctp/datachannel',
       ],
 
