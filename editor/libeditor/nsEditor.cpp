@@ -1615,74 +1615,53 @@ nsEditor::RemoveContainer(nsIContent* aNode)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// InsertContainerAbove:  insert a new parent for inNode, returned in outNode,
-//                   which is contructed to be of type aNodeType.  outNode becomes
-//                   a child of inNode's earlier parent.
-//                   Callers responsibility to make sure inNode's can be child
-//                   of outNode, and outNode can be child of old parent.
-nsresult
-nsEditor::InsertContainerAbove( nsIDOMNode *inNode, 
-                                nsCOMPtr<nsIDOMNode> *outNode, 
-                                const nsAString &aNodeType,
-                                const nsAString *aAttribute,
-                                const nsAString *aValue)
-{
-  NS_ENSURE_TRUE(inNode && outNode, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsIContent> node = do_QueryInterface(inNode);
-  NS_ENSURE_STATE(node);
-
-  nsCOMPtr<dom::Element> element;
-  nsresult rv = InsertContainerAbove(node, getter_AddRefs(element), aNodeType,
-                                     aAttribute, aValue);
-  *outNode = element ? element->AsDOMNode() : nullptr;
-  return rv;
-}
-
-nsresult
+///////////////////////////////////////////////////////////////////////////////
+// InsertContainerAbove: Insert a new parent for inNode, which is contructed to
+//                       be of type aNodeType.  outNode becomes a child of
+//                       inNode's earlier parent.  Caller's responsibility to
+//                       make sure inNode's can be child of outNode, and
+//                       outNode can be child of old parent.
+already_AddRefed<Element>
 nsEditor::InsertContainerAbove(nsIContent* aNode,
-                               dom::Element** aOutNode,
-                               const nsAString& aNodeType,
-                               const nsAString* aAttribute,
+                               nsIAtom* aNodeType,
+                               nsIAtom* aAttribute,
                                const nsAString* aValue)
 {
-  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(aNode && aNodeType);
 
   nsCOMPtr<nsIContent> parent = aNode->GetParent();
-  NS_ENSURE_STATE(parent);
+  NS_ENSURE_TRUE(parent, nullptr);
   int32_t offset = parent->IndexOf(aNode);
 
-  // create new container
-  nsCOMPtr<Element> newContent =
-    CreateHTMLContent(nsCOMPtr<nsIAtom>(do_GetAtom(aNodeType)));
-  NS_ENSURE_STATE(newContent);
+  // Create new container
+  nsCOMPtr<Element> newContent = CreateHTMLContent(aNodeType);
+  NS_ENSURE_TRUE(newContent, nullptr);
 
-  // set attribute if needed
+  // Set attribute if needed
   nsresult res;
-  if (aAttribute && aValue && !aAttribute->IsEmpty()) {
-    nsIDOMNode* elem = newContent->AsDOMNode();
-    res = static_cast<nsIDOMElement*>(elem)->SetAttribute(*aAttribute, *aValue);
-    NS_ENSURE_SUCCESS(res, res);
+  if (aAttribute && aValue && aAttribute != nsGkAtoms::_empty) {
+    res = newContent->SetAttr(kNameSpaceID_None, aAttribute, *aValue, true);
+    NS_ENSURE_SUCCESS(res, nullptr);
   }
-  
-  // notify our internal selection state listener
+
+  // Notify our internal selection state listener
   nsAutoInsertContainerSelNotify selNotify(mRangeUpdater);
-  
-  // put inNode in new parent, outNode
-  res = DeleteNode(aNode->AsDOMNode());
-  NS_ENSURE_SUCCESS(res, res);
+
+  // Put inNode in new parent, outNode
+  res = DeleteNode(aNode);
+  NS_ENSURE_SUCCESS(res, nullptr);
 
   {
     nsAutoTxnsConserveSelection conserveSelection(this);
-    res = InsertNode(aNode->AsDOMNode(), newContent->AsDOMNode(), 0);
-    NS_ENSURE_SUCCESS(res, res);
+    res = InsertNode(aNode, newContent, 0);
+    NS_ENSURE_SUCCESS(res, nullptr);
   }
 
-  // put new parent in doc
-  res = InsertNode(newContent->AsDOMNode(), parent->AsDOMNode(), offset);
-  newContent.forget(aOutNode);
-  return res;  
+  // Put new parent in doc
+  res = InsertNode(newContent, parent, offset);
+  NS_ENSURE_SUCCESS(res, nullptr);
+
+  return newContent.forget();
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -235,16 +235,11 @@ public:
                        mozilla::dom::Element* aSource);
 
   nsresult RemoveContainer(nsIContent* aNode);
-  nsresult InsertContainerAbove(nsIContent* aNode,
-                                mozilla::dom::Element** aOutNode,
-                                const nsAString& aNodeType,
-                                const nsAString* aAttribute = nullptr,
+  already_AddRefed<mozilla::dom::Element> InsertContainerAbove(
+                                nsIContent* aNode,
+                                nsIAtom* aNodeType,
+                                nsIAtom* aAttribute = nullptr,
                                 const nsAString* aValue = nullptr);
-  nsresult InsertContainerAbove(nsIDOMNode *inNode, 
-                                nsCOMPtr<nsIDOMNode> *outNode, 
-                                const nsAString &aNodeType,
-                                const nsAString *aAttribute = nullptr,
-                                const nsAString *aValue = nullptr);
   nsresult JoinNodes(nsINode* aNodeToKeep, nsIContent* aNodeToMove);
   nsresult MoveNode(nsINode* aNode, nsINode* aParent, int32_t aOffset);
   nsresult MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aOffset);

@@ -411,6 +411,8 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
   MOZ_ASSERT(aNode && aProperty);
   MOZ_ASSERT(aValue);
 
+  nsCOMPtr<nsIAtom> attrAtom = aAttribute ? do_GetAtom(*aAttribute) : nullptr;
+
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
   if (!TagCanContain(nsGkAtoms::span, aNode->AsDOMNode())) {
@@ -480,10 +482,8 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
         !aNode->AsElement()->GetAttrCount()) {
       tmp = aNode->AsElement();
     } else {
-      res = InsertContainerAbove(aNode, getter_AddRefs(tmp),
-                                 NS_LITERAL_STRING("span"),
-                                 nullptr, nullptr);
-      NS_ENSURE_SUCCESS(res, res);
+      tmp = InsertContainerAbove(aNode, nsGkAtoms::span);
+      NS_ENSURE_STATE(tmp);
     }
 
     // Add the CSS styles corresponding to the HTML style request
@@ -503,12 +503,11 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
   }
 
   // ok, chuck it in its very own container
-  nsAutoString tag;
-  aProperty->ToString(tag);
-  ToLowerCase(tag);
-  nsCOMPtr<nsIDOMNode> tmp;
-  return InsertContainerAbove(aNode->AsDOMNode(), address_of(tmp), tag,
-                              aAttribute, aValue);
+  nsCOMPtr<Element> tmp = InsertContainerAbove(aNode, aProperty, attrAtom,
+                                               aValue);
+  NS_ENSURE_STATE(tmp);
+
+  return NS_OK;
 }
 
 
@@ -820,13 +819,12 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         // just remove the element... We need to create above the element
         // a span that will carry those styles or class, then we can delete
         // the node.
-        nsCOMPtr<nsIDOMNode> spanNode;
-        res = InsertContainerAbove(aNode, address_of(spanNode),
-                                   NS_LITERAL_STRING("span"));
+        nsCOMPtr<Element> spanNode =
+          InsertContainerAbove(content, nsGkAtoms::span);
+        NS_ENSURE_STATE(spanNode);
+        res = CloneAttribute(styleAttr, spanNode->AsDOMNode(), aNode);
         NS_ENSURE_SUCCESS(res, res);
-        res = CloneAttribute(styleAttr, spanNode, aNode);
-        NS_ENSURE_SUCCESS(res, res);
-        res = CloneAttribute(classAttr, spanNode, aNode);
+        res = CloneAttribute(classAttr, spanNode->AsDOMNode(), aNode);
         NS_ENSURE_SUCCESS(res, res);
       }
       res = RemoveContainer(content);
@@ -1676,9 +1674,6 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( int32_t aSizeChange,
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  NS_NAMED_LITERAL_STRING(bigSize, "big");
-  NS_NAMED_LITERAL_STRING(smallSize, "small");
-  const nsAString& nodeType = (aSizeChange==1) ? static_cast<const nsAString&>(bigSize) : static_cast<const nsAString&>(smallSize);
   // look for siblings that are correct type of node
   nsCOMPtr<nsIDOMNode> sibling;
   GetPriorHTMLSibling(node, address_of(sibling));
@@ -1698,8 +1693,13 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( int32_t aSizeChange,
   }
   
   // else reparent the node inside font node with appropriate relative size
-  res = InsertContainerAbove(node, address_of(tmp), nodeType);
-  return res;
+  nsIAtom* nodeType = aSizeChange == 1 ? nsGkAtoms::big : nsGkAtoms::small;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  NS_ENSURE_STATE(content);
+  nsCOMPtr<Element> newElement = InsertContainerAbove(content, nodeType);
+  NS_ENSURE_STATE(newElement);
+
+  return NS_OK;
 }
 
 
@@ -1792,9 +1792,10 @@ nsHTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode)
     }
 
     // else insert it above aNode
-    nsCOMPtr<nsIDOMNode> tmp;
-    return InsertContainerAbove(aNode->AsDOMNode(), address_of(tmp),
-                                nsAtomString(atom));
+    nsCOMPtr<Element> newElement = InsertContainerAbove(aNode, atom);
+    NS_ENSURE_STATE(newElement);
+
+    return NS_OK;
   }
 
   // none of the above?  then cycle through the children.
