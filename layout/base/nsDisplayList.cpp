@@ -583,6 +583,11 @@ void nsDisplayListBuilder::SetContainsBlendMode(uint8_t aBlendMode)
   mContainedBlendModes += gfx::CompositionOpForOp(op);
 }
 
+bool nsDisplayListBuilder::NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem)
+{
+  return aItem == mGlassDisplayItem || aItem->ClearsBackground();
+}
+
 void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
                                                         nsIFrame* aFrame,
                                                         const nsRect& aDirtyRect)

@@ -679,9 +679,7 @@ public:
       mGlassDisplayItem = aItem;
     }
   }
-  bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem) {
-    return aItem == mGlassDisplayItem;
-  }
+  bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem);
 
   void SetContainsPluginItem() { mContainsPluginItem = true; }
   bool ContainsPluginItem() { return mContainsPluginItem; }
@@ -1063,6 +1061,9 @@ public:
    * to the nearest viewport.
    */
   virtual bool ShouldFixToViewport(LayerManager* aManager)
+  { return false; }
+
+  virtual bool ClearsBackground()
   { return false; }
 
   /**
@@ -2319,6 +2320,11 @@ public:
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) MOZ_OVERRIDE
   {
     *aColor = NS_RGBA(0, 0, 0, 0);
+    return true;
+  }
+
+  virtual bool ClearsBackground() MOZ_OVERRIDE
+  {
     return true;
   }
 
