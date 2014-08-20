@@ -467,11 +467,10 @@ protected:
   const ScreenPoint GetVelocityVector();
 
   /**
-   * Gets a reference to the first touch point from a MultiTouchInput.  This
-   * gets only the first one and assumes the rest are either missing or not
-   * relevant.
+   * Gets the first touch point from a MultiTouchInput.  This gets only
+   * the first one and assumes the rest are either missing or not relevant.
    */
-  ScreenIntPoint& GetFirstTouchScreenPoint(const MultiTouchInput& aEvent);
+  ScreenPoint GetFirstTouchScreenPoint(const MultiTouchInput& aEvent);
 
   /**
    * Sets the panning state basing on the pan direction angle and current touch-action value.
