@@ -22,6 +22,7 @@
 #include "nsScriptLoader.h"
 #include "nsIStreamListener.h"
 #include "nsICSSLoaderObserver.h"
+#include "nsIXULStore.h"
 
 #include "mozilla/Attributes.h"
 
@@ -259,7 +260,7 @@ protected:
 
     nsresult ApplyPersistentAttributes();
     nsresult ApplyPersistentAttributesInternal();
-    nsresult ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
+    nsresult ApplyPersistentAttributesToElements(const nsAString &aID,
                                                  nsCOMArray<nsIContent>& aElements);
 
     nsresult
@@ -314,10 +315,10 @@ protected:
     // Tracks elements with a 'ref' attribute, or an 'id' attribute where
     // the element's namespace has no registered ID attribute name.
     nsTHashtable<nsRefMapEntry> mRefMap;
-    nsCOMPtr<nsIRDFDataSource> mLocalStore;
-    bool                       mApplyingPersistedAttrs;
-    bool                       mIsWritingFastLoad;
-    bool                       mDocumentLoaded;
+    nsCOMPtr<nsIXULStore>       mLocalStore;
+    bool                        mApplyingPersistedAttrs;
+    bool                        mIsWritingFastLoad;
+    bool                        mDocumentLoaded;
     /**
      * Since ResumeWalk is interruptible, it's possible that last
      * stylesheet finishes loading while the PD walk is still in

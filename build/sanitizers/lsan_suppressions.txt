@@ -61,6 +61,10 @@ leak:gsmsdp_add_default_audio_formats_to_local_sdp
 leak:gsmsdp_add_default_video_formats_to_local_sdp
 leak:CCAPI_CallInfo_getMediaStreams
 
+# Intermittent Mochitest 3 WebRTC leaks, as seen in bug 1055910.
+leak:sdp_build_attr_ice_attr
+leak:VcmSIPCCBinding::CandidateReady
+
 
 ###
 ### Many leaks only affect some test suites.  The suite annotations are not checked.

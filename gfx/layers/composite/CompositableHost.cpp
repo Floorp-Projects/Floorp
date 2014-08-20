@@ -205,6 +205,11 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
   case CompositableType::IMAGE:
     result = new ImageHost(aTextureInfo);
     break;
+#ifdef MOZ_WIDGET_GONK
+  case CompositableType::IMAGE_OVERLAY:
+    result = new ImageHostOverlay(aTextureInfo);
+    break;
+#endif
   case CompositableType::CONTENT_SINGLE:
     result = new ContentHostSingleBuffered(aTextureInfo);
     break;

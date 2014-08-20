@@ -140,9 +140,21 @@ public:
     return mFrameMetrics;
   }
 
-  void AssertStateIsReset() {
+  void AssertStateIsReset() const {
     ReentrantMonitorAutoEnter lock(mMonitor);
     EXPECT_EQ(NOTHING, mState);
+  }
+
+  void AssertStateIsFling() const {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+    EXPECT_EQ(FLING, mState);
+  }
+
+  void AdvanceAnimationsUntilEnd(TimeStamp& aSampleTime,
+                                 const TimeDuration& aIncrement = TimeDuration::FromMilliseconds(10)) {
+    while (AdvanceAnimations(aSampleTime)) {
+      aSampleTime += aIncrement;
+    }
   }
 
   bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
@@ -231,7 +243,7 @@ public:
 };
 
 static nsEventStatus
-ApzcDown(AsyncPanZoomController* apzc, int aX, int aY, int& aTime)
+ApzcDown(AsyncPanZoomController* apzc, int aX, int aY, int aTime)
 {
   MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime, TimeStamp(), 0);
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
@@ -239,7 +251,7 @@ ApzcDown(AsyncPanZoomController* apzc, int aX, int aY, int& aTime)
 }
 
 static nsEventStatus
-ApzcUp(AsyncPanZoomController* apzc, int aX, int aY, int& aTime)
+ApzcUp(AsyncPanZoomController* apzc, int aX, int aY, int aTime)
 {
   MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, TimeStamp(), 0);
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
@@ -1321,7 +1333,7 @@ protected:
     gfxPrefs::GetSingleton();
     AsyncPanZoomController::SetThreadAssertionsEnabled(false);
 
-    TimeStamp testStartTime = TimeStamp::Now();
+    testStartTime = TimeStamp::Now();
     AsyncPanZoomController::SetFrameTime(testStartTime);
 
     mcc = new NiceMock<MockContentController>();
@@ -1685,6 +1697,166 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   hit = GetTargetAPZC(ScreenPoint(250, 100));
   EXPECT_EQ(layers[7]->GetAsyncPanZoomController(), hit.get());
 }
+
+class APZOverscrollHandoffTester : public APZCTreeManagerTester {
+protected:
+  void CreateOverscrollHandoffLayerTree1() {
+    const char* layerTreeSyntax = "c(c)";
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0, 0, 100, 100)),
+      nsIntRegion(nsIntRect(0, 50, 100, 50))
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+  }
+
+  void CreateOverscrollHandoffLayerTree2() {
+    const char* layerTreeSyntax = "c(c(c))";
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0, 0, 100, 100)),
+      nsIntRegion(nsIntRect(0, 0, 100, 100)),
+      nsIntRegion(nsIntRect(0, 50, 100, 50))
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 2, CSSRect(-100, -100, 200, 200));
+    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+  }
+
+  void CreateOverscrollHandoffLayerTree3() {
+    const char* layerTreeSyntax = "c(c(c)c(c))";
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0, 0, 100, 100)),  // root
+      nsIntRegion(nsIntRect(0, 0, 100, 50)),   // scrolling parent 1
+      nsIntRegion(nsIntRect(0, 0, 100, 50)),   // scrolling child 1
+      nsIntRegion(nsIntRect(0, 50, 100, 50)),  // scrolling parent 2
+      nsIntRegion(nsIntRect(0, 50, 100, 50))   // scrolling child 2
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 100, 100));
+    SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 2, CSSRect(0, 50, 100, 100));
+    SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 3, CSSRect(0, 50, 100, 100));
+  }
+};
+
+// Here we test that if the processing of a touch block is deferred while we
+// wait for content to send a prevent-default message, overscroll is still
+// handed off correctly when the block is processed.
+TEST_F(APZOverscrollHandoffTester, DeferredInputEventProcessing) {
+  // Set up the APZC tree.
+  CreateOverscrollHandoffLayerTree1();
+  ScopedLayerTreeRegistration controller(0, root, mcc);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+
+  TestAsyncPanZoomController* rootApzc = (TestAsyncPanZoomController*)root->GetAsyncPanZoomController();
+  TestAsyncPanZoomController* childApzc = (TestAsyncPanZoomController*)layers[1]->GetAsyncPanZoomController();
+
+  // Enable touch-listeners so that we can separate the queueing of input
+  // events from them being processed.
+  childApzc->GetFrameMetrics().mMayHaveTouchListeners = true;
+
+  // Queue input events for a pan.
+  int time = 0;
+  ApzcPanNoFling(childApzc, time, 90, 30);
+
+  // Allow the pan to be processed.
+  childApzc->ContentReceivedTouch(false);
+
+  // Make sure overscroll was handed off correctly.
+  EXPECT_EQ(50, childApzc->GetFrameMetrics().GetScrollOffset().y);
+  EXPECT_EQ(10, rootApzc->GetFrameMetrics().GetScrollOffset().y);
+}
+
+// Here we test that if the layer structure changes in between two input
+// blocks being queued, and the first block is only processed after the second
+// one has been queued, overscroll handoff for the first block follows
+// the original layer structure while overscroll handoff for the second block
+// follows the new layer structure.
+TEST_F(APZOverscrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
+  // Set up an initial APZC tree.
+  CreateOverscrollHandoffLayerTree1();
+  ScopedLayerTreeRegistration controller(0, root, mcc);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+
+  TestAsyncPanZoomController* rootApzc = (TestAsyncPanZoomController*)root->GetAsyncPanZoomController();
+  TestAsyncPanZoomController* childApzc = (TestAsyncPanZoomController*)layers[1]->GetAsyncPanZoomController();
+
+  // Enable touch-listeners so that we can separate the queueing of input
+  // events from them being processed.
+  childApzc->GetFrameMetrics().mMayHaveTouchListeners = true;
+
+  // Queue input events for a pan.
+  int time = 0;
+  ApzcPanNoFling(childApzc, time, 90, 30);
+
+  // Modify the APZC tree to insert a new APZC 'middle' into the handoff chain
+  // between the child and the root.
+  CreateOverscrollHandoffLayerTree2();
+  nsRefPtr<Layer> middle = layers[1];
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+  childApzc->GetFrameMetrics().mMayHaveTouchListeners = true;
+  TestAsyncPanZoomController* middleApzc = (TestAsyncPanZoomController*)middle->GetAsyncPanZoomController();
+
+  // Queue input events for another pan.
+  ApzcPanNoFling(childApzc, time, 30, 90);
+
+  // Allow the first pan to be processed.
+  childApzc->ContentReceivedTouch(false);
+
+  // Make sure things have scrolled according to the handoff chain in
+  // place at the time the touch-start of the first pan was queued.
+  EXPECT_EQ(50, childApzc->GetFrameMetrics().GetScrollOffset().y);
+  EXPECT_EQ(10, rootApzc->GetFrameMetrics().GetScrollOffset().y);
+  EXPECT_EQ(0, middleApzc->GetFrameMetrics().GetScrollOffset().y);
+
+  // Allow the second pan to be processed.
+  childApzc->ContentReceivedTouch(false);
+
+  // Make sure things have scrolled according to the handoff chain in
+  // place at the time the touch-start of the second pan was queued.
+  EXPECT_EQ(0, childApzc->GetFrameMetrics().GetScrollOffset().y);
+  EXPECT_EQ(10, rootApzc->GetFrameMetrics().GetScrollOffset().y);
+  EXPECT_EQ(-10, middleApzc->GetFrameMetrics().GetScrollOffset().y);
+}
+
+// Here we test that if two flings are happening simultaneously, overscroll
+// is handed off correctly for each.
+TEST_F(APZOverscrollHandoffTester, SimultaneousFlings) {
+  // Set up an initial APZC tree.
+  CreateOverscrollHandoffLayerTree3();
+  ScopedLayerTreeRegistration controller(0, root, mcc);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+
+  TestAsyncPanZoomController* parent1 = (TestAsyncPanZoomController*)layers[1]->GetAsyncPanZoomController();
+  TestAsyncPanZoomController* child1 = (TestAsyncPanZoomController*)layers[2]->GetAsyncPanZoomController();
+  TestAsyncPanZoomController* parent2 = (TestAsyncPanZoomController*)layers[3]->GetAsyncPanZoomController();
+  TestAsyncPanZoomController* child2 = (TestAsyncPanZoomController*)layers[4]->GetAsyncPanZoomController();
+
+  // Pan on the lower child.
+  int time = 0;
+  ApzcPan(child2, time, 45, 5);
+
+  // Pan on the upper child.
+  ApzcPan(child1, time, 95, 55);
+
+  // Check that child1 and child2 are in a FLING state.
+  child1->AssertStateIsFling();
+  child2->AssertStateIsFling();
+
+  // Advance the animations on child1 and child2 until their end.
+  TimeStamp timestamp = TimeStamp::Now();
+  child1->AdvanceAnimationsUntilEnd(timestamp);
+  child2->AdvanceAnimationsUntilEnd(timestamp);
+
+  // Check that the flings have been handed off to the parents.
+  child1->AssertStateIsReset();
+  parent1->AssertStateIsFling();
+  child2->AssertStateIsReset();
+  parent2->AssertStateIsFling();
+}
+
 
 class TaskRunMetrics {
 public:

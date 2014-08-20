@@ -116,8 +116,6 @@ static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = { FloatRegisters::f0 };
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = { FloatRegisters::f18 };
 static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchFloatReg = { FloatRegisters::f16 };
 
-static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::f30 };
-
 // Registers used in the GenerateFFIIonExit Enable Activation block.
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = t0;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = a0;
