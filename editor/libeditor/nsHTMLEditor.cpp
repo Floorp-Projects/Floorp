@@ -3176,16 +3176,16 @@ nsHTMLEditor::DeleteNode(nsIDOMNode* aNode)
   return nsEditor::DeleteNode(aNode);
 }
 
-NS_IMETHODIMP nsHTMLEditor::DeleteText(nsIDOMCharacterData *aTextNode,
-                                       uint32_t             aOffset,
-                                       uint32_t             aLength)
+nsresult
+nsHTMLEditor::DeleteText(nsGenericDOMDataNode& aCharData, uint32_t aOffset,
+                         uint32_t aLength)
 {
-  // do nothing if the node is read-only
-  if (!IsModifiableNode(aTextNode)) {
+  // Do nothing if the node is read-only
+  if (!IsModifiableNode(&aCharData)) {
     return NS_ERROR_FAILURE;
   }
 
-  return nsEditor::DeleteText(aTextNode, aOffset, aLength);
+  return nsEditor::DeleteText(aCharData, aOffset, aLength);
 }
 
 NS_IMETHODIMP nsHTMLEditor::InsertTextImpl(const nsAString& aStringToInsert, 

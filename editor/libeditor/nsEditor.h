@@ -30,7 +30,6 @@
 class AddStyleSheetTxn;
 class ChangeAttributeTxn;
 class DeleteNodeTxn;
-class DeleteTextTxn;
 class EditAggregateTxn;
 class IMETextTxn;
 class InsertElementTxn;
@@ -73,6 +72,7 @@ class TextComposition;
 namespace dom {
 class CreateElementTxn;
 class DataTransfer;
+class DeleteTextTxn;
 class Element;
 class EventTarget;
 class Selection;
@@ -330,28 +330,18 @@ protected:
   NS_IMETHOD CreateTxnForRemoveStyleSheet(mozilla::CSSStyleSheet* aSheet,
                                           RemoveStyleSheetTxn* *aTxn);
   
-  NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
-                        uint32_t             aOffset,
-                        uint32_t             aLength);
-
-  inline nsresult DeleteText(mozilla::dom::Text* aText, uint32_t aOffset,
-                             uint32_t aLength)
-  {
-    return DeleteText(static_cast<nsIDOMCharacterData*>(GetAsDOMNode(aText)),
-                      aOffset, aLength);
-  }
+  nsresult DeleteText(nsGenericDOMDataNode& aElement,
+                      uint32_t aOffset, uint32_t aLength);
 
 //  NS_IMETHOD DeleteRange(nsIDOMRange *aRange);
 
-  nsresult CreateTxnForDeleteText(nsIDOMCharacterData* aElement,
-                                  uint32_t             aOffset,
-                                  uint32_t             aLength,
-                                  DeleteTextTxn**      aTxn);
+  already_AddRefed<mozilla::dom::DeleteTextTxn>
+  CreateTxnForDeleteText(nsGenericDOMDataNode& aElement,
+                         uint32_t aOffset, uint32_t aLength);
 
-  nsresult CreateTxnForDeleteCharacter(nsIDOMCharacterData* aData,
-                                       uint32_t             aOffset,
-                                       EDirection           aDirection,
-                                       DeleteTextTxn**      aTxn);
+  already_AddRefed<mozilla::dom::DeleteTextTxn>
+  CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData, uint32_t aOffset,
+                              EDirection aDirection);
 	
   NS_IMETHOD CreateTxnForSplitNode(nsIDOMNode *aNode,
                                    uint32_t    aOffset,
