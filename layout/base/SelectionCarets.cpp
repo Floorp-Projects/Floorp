@@ -712,16 +712,7 @@ SelectionCarets::SetSelectionDragState(bool aState)
 {
   nsIFrame* caretFocusFrame = GetCaretFocusFrame();
   nsRefPtr<nsFrameSelection> fs = caretFocusFrame->GetFrameSelection();
-  if (fs->GetDragState() == aState) {
-    return;
-  }
   fs->SetDragState(aState);
-
-  if (aState) {
-    fs->StartBatchChanges();
-  } else {
-    fs->EndBatchChanges();
-  }
 }
 
 void
