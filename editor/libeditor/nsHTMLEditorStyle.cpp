@@ -388,12 +388,12 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
     nsIContent* sibling = GetPriorHTMLSibling(content);
     if (IsSimpleModifiableNode(sibling, aProperty, aAttribute, aValue)) {
       // previous sib is already right kind of inline node; slide this over into it
-      return MoveNode(node, sibling->AsDOMNode(), -1);
+      return MoveNode(content, sibling, -1);
     }
     sibling = GetNextHTMLSibling(content);
     if (IsSimpleModifiableNode(sibling, aProperty, aAttribute, aValue)) {
       // following sib is already right kind of inline node; slide this over into it
-      return MoveNode(node, sibling->AsDOMNode(), 0);
+      return MoveNode(content, sibling, 0);
     }
   }
   
@@ -690,10 +690,11 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
     if (!secondSplitParent) {
       secondSplitParent = rightNode;
     }
-    nsCOMPtr<nsIDOMNode> savedBR;
+    nsCOMPtr<Element> savedBR;
     if (!IsContainer(secondSplitParent)) {
       if (nsTextEditUtils::IsBreak(secondSplitParent)) {
-        savedBR = secondSplitParent;
+        savedBR = do_QueryInterface(secondSplitParent);
+        NS_ENSURE_STATE(savedBR);
       }
 
       secondSplitParent->GetParentNode(getter_AddRefs(tmp));
@@ -706,9 +707,11 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
     NS_ENSURE_SUCCESS(res, res);
     // should be impossible to not get a new leftnode here
     NS_ENSURE_TRUE(leftNode, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMNode> newSelParent = GetLeftmostChild(leftNode);
+    nsCOMPtr<nsINode> newSelParent =
+      do_QueryInterface(GetLeftmostChild(leftNode));
     if (!newSelParent) {
-      newSelParent = leftNode;
+      newSelParent = do_QueryInterface(leftNode);
+      NS_ENSURE_STATE(newSelParent);
     }
     // If rightNode starts with a br, suck it out of right node and into
     // leftNode.  This is so we you don't revert back to the previous style
@@ -738,7 +741,7 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
       NS_ENSURE_SUCCESS(res, res);
     }
     // reset our node offset values to the resulting new sel point
-    *aNode = newSelParent;
+    *aNode = GetAsDOMNode(newSelParent);
     *aOffset = newSelOffset;
   }
 
@@ -1651,7 +1654,9 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( int32_t aSizeChange,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> tmp, node = do_QueryInterface(aTextNode);
+  nsCOMPtr<nsIDOMNode> tmp;
+  nsCOMPtr<nsIContent> node = do_QueryInterface(aTextNode);
+  NS_ENSURE_STATE(node);
 
   // do we need to split the text node?
   uint32_t textLen;
@@ -1663,40 +1668,35 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( int32_t aSizeChange,
   if ( (uint32_t)aEndOffset != textLen )
   {
     // we need to split off back of text node
-    res = SplitNode(node, aEndOffset, getter_AddRefs(tmp));
+    res = SplitNode(GetAsDOMNode(node), aEndOffset, getter_AddRefs(tmp));
     NS_ENSURE_SUCCESS(res, res);
-    node = tmp;  // remember left node
+    // remember left node
+    node = do_QueryInterface(tmp);
   }
   if ( aStartOffset )
   {
     // we need to split off front of text node
-    res = SplitNode(node, aStartOffset, getter_AddRefs(tmp));
+    res = SplitNode(GetAsDOMNode(node), aStartOffset, getter_AddRefs(tmp));
     NS_ENSURE_SUCCESS(res, res);
   }
 
   // look for siblings that are correct type of node
-  nsCOMPtr<nsIDOMNode> sibling;
-  GetPriorHTMLSibling(node, address_of(sibling));
-  if (sibling && NodeIsType(sibling, (aSizeChange==1) ? nsEditProperty::big : nsEditProperty::small))
-  {
+  nsIAtom* nodeType = aSizeChange == 1 ? nsGkAtoms::big : nsGkAtoms::small;
+  nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(node);
+  if (sibling && sibling->Tag() == nodeType) {
     // previous sib is already right kind of inline node; slide this over into it
     res = MoveNode(node, sibling, -1);
     return res;
   }
-  sibling = nullptr;
-  GetNextHTMLSibling(node, address_of(sibling));
-  if (sibling && NodeIsType(sibling, (aSizeChange==1) ? nsEditProperty::big : nsEditProperty::small))
-  {
+  sibling = GetNextHTMLSibling(node);
+  if (sibling && sibling->Tag() == nodeType) {
     // following sib is already right kind of inline node; slide this over into it
     res = MoveNode(node, sibling, 0);
     return res;
   }
   
   // else reparent the node inside font node with appropriate relative size
-  nsIAtom* nodeType = aSizeChange == 1 ? nsGkAtoms::big : nsGkAtoms::small;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-  NS_ENSURE_STATE(content);
-  nsCOMPtr<Element> newElement = InsertContainerAbove(content, nodeType);
+  nsCOMPtr<Element> newElement = InsertContainerAbove(node, nodeType);
   NS_ENSURE_STATE(newElement);
 
   return NS_OK;
@@ -1782,13 +1782,13 @@ nsHTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode)
     nsIContent* sibling = GetPriorHTMLSibling(aNode);
     if (sibling && sibling->IsHTML(atom)) {
       // previous sib is already right kind of inline node; slide this over into it
-      return MoveNode(aNode->AsDOMNode(), sibling->AsDOMNode(), -1);
+      return MoveNode(aNode, sibling, -1);
     }
 
     sibling = GetNextHTMLSibling(aNode);
     if (sibling && sibling->IsHTML(atom)) {
       // following sib is already right kind of inline node; slide this over into it
-      return MoveNode(aNode->AsDOMNode(), sibling->AsDOMNode(), 0);
+      return MoveNode(aNode, sibling, 0);
     }
 
     // else insert it above aNode

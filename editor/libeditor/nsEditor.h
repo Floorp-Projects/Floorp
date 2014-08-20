@@ -241,8 +241,7 @@ public:
                                 nsIAtom* aAttribute = nullptr,
                                 const nsAString* aValue = nullptr);
   nsresult JoinNodes(nsINode* aNodeToKeep, nsIContent* aNodeToMove);
-  nsresult MoveNode(nsINode* aNode, nsINode* aParent, int32_t aOffset);
-  nsresult MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aOffset);
+  nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
 
   /* Method to replace certain CreateElementNS() calls. 
      Arguments:
