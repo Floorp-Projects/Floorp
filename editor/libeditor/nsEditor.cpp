@@ -16,7 +16,7 @@
 #include "EditAggregateTxn.h"           // for EditAggregateTxn
 #include "EditTxn.h"                    // for EditTxn
 #include "IMETextTxn.h"                 // for IMETextTxn
-#include "InsertElementTxn.h"           // for InsertElementTxn
+#include "InsertNodeTxn.h"              // for InsertNodeTxn
 #include "InsertTextTxn.h"              // for InsertTextTxn
 #include "JoinElementTxn.h"             // for JoinElementTxn
 #include "PlaceholderTxn.h"             // for PlaceholderTxn
@@ -1386,38 +1386,38 @@ nsEditor::CreateNode(nsIAtom* aTag,
 }
 
 
-nsresult
-nsEditor::InsertNode(nsIContent* aContent, nsINode* aParent, int32_t aPosition)
+NS_IMETHODIMP
+nsEditor::InsertNode(nsIDOMNode* aNode, nsIDOMNode* aParent, int32_t aPosition)
 {
-  MOZ_ASSERT(aContent && aParent);
-  return InsertNode(GetAsDOMNode(aContent), GetAsDOMNode(aParent), aPosition);
+  nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  NS_ENSURE_TRUE(node && parent, NS_ERROR_NULL_POINTER);
+
+  return InsertNode(*node, *parent, aPosition);
 }
 
-NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
-                                   nsIDOMNode * aParent,
-                                   int32_t      aPosition)
+nsresult
+nsEditor::InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition)
 {
-  int32_t i;
   nsAutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->WillInsertNode(aNode, aParent, aPosition);
-
-  nsRefPtr<InsertElementTxn> txn;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  nsresult result = CreateTxnForInsertElement(node->AsDOMNode(), parent->AsDOMNode(),
-                                              aPosition, getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->WillInsertNode(aNode.AsDOMNode(), aParent.AsDOMNode(),
+                                        aPosition);
   }
 
-  mRangeUpdater.SelAdjInsertNode(aParent, aPosition);
+  nsRefPtr<InsertNodeTxn> txn = CreateTxnForInsertNode(aNode, aParent,
+                                                       aPosition);
+  nsresult res = DoTransaction(txn);
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->DidInsertNode(aNode, aParent, aPosition, result);
+  mRangeUpdater.SelAdjInsertNode(aParent.AsDOMNode(), aPosition);
 
-  return result;
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->DidInsertNode(aNode.AsDOMNode(), aParent.AsDOMNode(),
+                                       aPosition, res);
+  }
+
+  return res;
 }
 
 
@@ -1582,13 +1582,13 @@ nsEditor::ReplaceContainer(Element* aOldContainer,
       res = DeleteNode(child);
       NS_ENSURE_SUCCESS(res, nullptr);
 
-      res = InsertNode(child, ret, -1);
+      res = InsertNode(*child, *ret, -1);
       NS_ENSURE_SUCCESS(res, nullptr);
     }
   }
 
   // insert new container into tree
-  res = InsertNode(ret, parent, offset);
+  res = InsertNode(*ret, *parent, offset);
   NS_ENSURE_SUCCESS(res, nullptr);
   
   // delete old container
@@ -1624,7 +1624,7 @@ nsEditor::RemoveContainer(nsIContent* aNode)
     nsresult rv = DeleteNode(child);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = InsertNode(child, parent, offset);
+    rv = InsertNode(*child, *parent, offset);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1670,12 +1670,12 @@ nsEditor::InsertContainerAbove(nsIContent* aNode,
 
   {
     nsAutoTxnsConserveSelection conserveSelection(this);
-    res = InsertNode(aNode, newContent, 0);
+    res = InsertNode(*aNode, *newContent, 0);
     NS_ENSURE_SUCCESS(res, nullptr);
   }
 
   // Put new parent in doc
-  res = InsertNode(newContent, parent, offset);
+  res = InsertNode(*newContent, *parent, offset);
   NS_ENSURE_SUCCESS(res, nullptr);
 
   return newContent.forget();
@@ -1720,7 +1720,7 @@ nsEditor::MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset)
   nsresult rv = DeleteNode(aNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return InsertNode(aNode, aParent, aOffset);
+  return InsertNode(*aNode, *aParent, aOffset);
 }
 
 
@@ -4304,22 +4304,14 @@ nsEditor::CreateTxnForCreateElement(nsIAtom& aTag,
 }
 
 
-NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
-                                                  nsIDOMNode * aParent,
-                                                  int32_t      aPosition,
-                                                  InsertElementTxn ** aTxn)
+already_AddRefed<InsertNodeTxn>
+nsEditor::CreateTxnForInsertNode(nsIContent& aNode,
+                                 nsINode& aParent,
+                                 int32_t aPosition)
 {
-  NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
-
-  nsRefPtr<InsertElementTxn> txn = new InsertElementTxn();
-
-  nsresult rv = txn->Init(aNode, aParent, aPosition, this);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
-
-  return rv;
+  nsRefPtr<InsertNodeTxn> txn = new InsertNodeTxn(aNode, aParent, aPosition,
+                                                  *this);
+  return txn.forget();
 }
 
 nsresult
