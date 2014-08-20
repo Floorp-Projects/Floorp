@@ -625,6 +625,20 @@ RemoteBrowserElementInterposition.getters.docShell = function(addon, target) {
   return remoteChromeGlobal.docShell;
 };
 
+RemoteBrowserElementInterposition.getters.contentWindow = function(addon, target) {
+  return target.contentWindowAsCPOW;
+};
+
+RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {
+  return target.contentDocumentAsCPOW;
+};
+
+let ChromeWindowInterposition = new Interposition(EventTargetInterposition);
+
+ChromeWindowInterposition.getters.content = function(addon, target) {
+  return target.gBrowser.selectedBrowser.contentWindowAsCPOW;
+};
+
 let RemoteAddonsParent = {
   init: function() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
@@ -660,6 +674,7 @@ let RemoteAddonsParent = {
     register("ContentDocShellTreeItem", ContentDocShellTreeItemInterposition);
     register("ContentDocument", ContentDocumentInterposition);
     register("RemoteBrowserElement", RemoteBrowserElementInterposition);
+    register("ChromeWindow", ChromeWindowInterposition);
 
     return result;
   },

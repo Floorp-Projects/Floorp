@@ -362,16 +362,6 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::GetContentWindow(JSContext* aCx,
-                                      JS::MutableHandle<JS::Value> aVal)
-{
-  if (mTreeOwner)
-    return mTreeOwner->GetContentWindow(aCx, aVal);
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
                                  int32_t aCX, int32_t aCY)
 {

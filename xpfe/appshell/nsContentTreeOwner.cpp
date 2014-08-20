@@ -312,14 +312,6 @@ nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
    return mXULWindow->GetPrimaryContentShell(aShell);
 }
 
-NS_IMETHODIMP
-nsContentTreeOwner::GetContentWindow(JSContext* aCx,
-                                     JS::MutableHandle<JS::Value> aVal)
-{
-  NS_ENSURE_STATE(mXULWindow);
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsContentTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    int32_t aCX, int32_t aCY)
 {
