@@ -1225,6 +1225,15 @@
         // If we're using remote tabs, we have to wait until after we've finalized
         // switching the tabs.
 
+        if (newTab._skipContentFocus) {
+          // It's possible the tab we're switching to is ready to focus asynchronously,
+          // when we've already focused something else. In that case, this
+          // _skipContentFocus property can be set so that we skip focusing the
+          // content after we switch tabs.
+          delete newTab._skipContentFocus;
+          return;
+        }
+
         let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
         let focusFlags = fm.FLAG_NOSCROLL;
 

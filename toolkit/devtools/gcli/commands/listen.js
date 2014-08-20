@@ -7,12 +7,30 @@
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const gcli = require("gcli/index");
-const { DebuggerServer } = require("resource://gre/modules/devtools/dbg-server.jsm");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsLoader",
+  "resource://gre/modules/devtools/Loader.jsm");
 
 const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
                            .getService(Ci.nsIStringBundleService)
                            .createBundle("chrome://branding/locale/brand.properties")
                            .GetStringFromName("brandShortName");
+
+XPCOMUtils.defineLazyGetter(this, "debuggerServer", () => {
+  // Create a separate loader instance, so that we can be sure to receive
+  // a separate instance of the DebuggingServer from the rest of the
+  // devtools.  This allows us to safely use the tools against even the
+  // actors and DebuggingServer itself, especially since we can mark
+  // serverLoader as invisible to the debugger (unlike the usual loader
+  // settings).
+  let serverLoader = new DevToolsLoader();
+  serverLoader.invisibleToDebugger = true;
+  serverLoader.main("devtools/server/main");
+  let debuggerServer = serverLoader.DebuggerServer;
+  debuggerServer.init();
+  debuggerServer.addBrowserActors();
+  return debuggerServer;
+});
 
 exports.items = [
   {
@@ -30,16 +48,12 @@ exports.items = [
       }
     ],
     exec: function(args, context) {
-      if (!DebuggerServer.initialized) {
-        DebuggerServer.init();
-        DebuggerServer.addBrowserActors();
-      }
-      var reply = DebuggerServer.openListener(args.port);
+      var reply = debuggerServer.openListener(args.port);
       if (!reply) {
         throw new Error(gcli.lookup("listenDisabledOutput"));
       }
 
-      if (DebuggerServer.initialized) {
+      if (debuggerServer.initialized) {
         return gcli.lookupFormat("listenInitOutput", [ "" + args.port ]);
       }
 

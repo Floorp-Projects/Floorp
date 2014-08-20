@@ -77,6 +77,10 @@ menu[disabled="true"].subviewbutton > .menu-right {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
+menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .subviewbutton > .toolbarbutton-icon {
   -moz-margin-end: 5px !important;
 }

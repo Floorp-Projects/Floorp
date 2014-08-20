@@ -33,8 +33,6 @@
                     class="options-groupbox"
                     data-pref="devtools.theme"
                     orient="horizontal">
-          <radio value="light" label="&options.lightTheme.label;"/>
-          <radio value="dark" label="&options.darkTheme.label;"/>
         </radiogroup>
         <label>&options.commonPrefs.label;</label>
         <vbox id="commonprefs-options" class="options-groupbox">
