@@ -402,6 +402,10 @@
                 readonly="true"
                 onget="return this._contentWindow || (this._contentWindow = this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow));"/>
 
+      <property name="contentWindowAsCPOW"
+                readonly="true"
+                onget="return this.contentWindow;"/>
+
       <property name="sessionHistory"
                 onget="return this.webNavigation.sessionHistory;"
                 readonly="true"/>
@@ -420,6 +424,10 @@
 
       <property name="contentDocument"
                 onget="return this.webNavigation.document;"
+                readonly="true"/>
+
+      <property name="contentDocumentAsCPOW"
+                onget="return this.contentDocument;"
                 readonly="true"/>
 
       <property name="contentTitle"

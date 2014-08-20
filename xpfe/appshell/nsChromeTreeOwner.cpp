@@ -250,25 +250,6 @@ NS_IMETHODIMP nsChromeTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aS
    return mXULWindow->GetPrimaryContentShell(aShell);
 }
 
-NS_IMETHODIMP
-nsChromeTreeOwner::GetContentWindow(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
-{
-  NS_ENSURE_STATE(mXULWindow);
-
-  nsCOMPtr<nsIDOMWindow> domWin;
-  mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWin));
-  nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(domWin);
-  if (!chromeWin)
-    return NS_OK;
-
-  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
-  chromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
-  if (!browserDOMWin)
-    return NS_OK;
-
-  return browserDOMWin->GetContentWindow(aVal);
-}
-
 NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    int32_t aCX, int32_t aCY)
 {
