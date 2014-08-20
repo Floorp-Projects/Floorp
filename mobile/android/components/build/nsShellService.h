@@ -8,7 +8,7 @@
 
 #include "nsIShellService.h"
 
-class nsShellService : public nsIShellService
+class nsShellService MOZ_FINAL : public nsIShellService
 {
 public:
 
@@ -16,6 +16,8 @@ public:
   NS_DECL_NSISHELLSERVICE
 
   nsShellService() {};
+
+private:
   ~nsShellService() {};
 
 };
