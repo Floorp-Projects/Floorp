@@ -5302,6 +5302,19 @@ nsIFrame::MovePositionBy(const nsPoint& aTranslation)
   SetPosition(position);
 }
 
+nsRect
+nsIFrame::GetNormalRect() const
+{
+  // It might be faster to first check
+  // StyleDisplay()->IsRelativelyPositionedStyle().
+  nsPoint* normalPosition = static_cast<nsPoint*>
+    (Properties().Get(NormalPositionProperty()));
+  if (normalPosition) {
+    return nsRect(*normalPosition, GetSize());
+  }
+  return GetRect();
+}
+
 nsPoint
 nsIFrame::GetNormalPosition() const
 {
