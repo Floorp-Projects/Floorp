@@ -209,6 +209,7 @@
           this.messageManager.addMessageListener("DocumentInserted", this);
           this.messageManager.addMessageListener("FullZoomChange", this);
           this.messageManager.addMessageListener("TextZoomChange", this);
+          this.messageManager.addMessageListener("ZoomChangeUsingMouseWheel", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
 
           if (this.hasAttribute("selectpopup")) {
@@ -267,6 +268,12 @@
 
             case "TextZoomChange":
               this._textZoom = data.value;
+              break;
+
+            case "ZoomChangeUsingMouseWheel":
+              let event = document.createEvent("Events");
+              event.initEvent("ZoomChangeUsingMouseWheel", true, false);
+              this.dispatchEvent(event);
               break;
 
             case "Forms:HideDropDown": {
