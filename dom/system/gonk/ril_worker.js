@@ -445,12 +445,6 @@ RilObject.prototype = {
     this._waitingRadioTech = false;
 
     /**
-     * ICC status. Keeps a reference of the data response to the
-     * getICCStatus request.
-     */
-    this.iccStatus = null;
-
-    /**
      * Card state
      */
     this.cardState = GECKO_CARDSTATE_UNINITIALIZED;
@@ -3453,7 +3447,6 @@ RilObject.prototype = {
       return;
     }
 
-    this.iccStatus = iccStatus;
     let newCardState;
     let index = this._isCdma ? iccStatus.cdmaSubscriptionAppIndex :
                                iccStatus.gsmUmtsSubscriptionAppIndex;
