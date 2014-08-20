@@ -302,15 +302,14 @@ class JS_PUBLIC_API(AutoGCRooter)
         NAMEVECTOR =  -17, /* js::AutoNameVector */
         HASHABLEVALUE=-18, /* js::HashableValue */
         IONMASM =     -19, /* js::jit::MacroAssembler */
-        IONALLOC =    -20, /* js::jit::AutoTempAllocatorRooter */
-        WRAPVECTOR =  -21, /* js::AutoWrapperVector */
-        WRAPPER =     -22, /* js::AutoWrapperRooter */
-        OBJOBJHASHMAP=-23, /* js::AutoObjectObjectHashMap */
-        OBJU32HASHMAP=-24, /* js::AutoObjectUnsigned32HashMap */
-        OBJHASHSET =  -25, /* js::AutoObjectHashSet */
-        JSONPARSER =  -26, /* js::JSONParser */
-        CUSTOM =      -27, /* js::CustomAutoRooter */
-        FUNVECTOR =   -28  /* js::AutoFunctionVector */
+        WRAPVECTOR =  -20, /* js::AutoWrapperVector */
+        WRAPPER =     -21, /* js::AutoWrapperRooter */
+        OBJOBJHASHMAP=-22, /* js::AutoObjectObjectHashMap */
+        OBJU32HASHMAP=-23, /* js::AutoObjectUnsigned32HashMap */
+        OBJHASHSET =  -24, /* js::AutoObjectHashSet */
+        JSONPARSER =  -25, /* js::JSONParser */
+        CUSTOM =      -26, /* js::CustomAutoRooter */
+        FUNVECTOR =   -27  /* js::AutoFunctionVector */
     };
 
   private:
