@@ -40,7 +40,8 @@ function getPref(name) {
 
 var haveMp4 = (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
                getPref("media.omx.enabled") ||
-               getPref("media.gstreamer.enabled");
+               getPref("media.gstreamer.enabled") ||
+               getPref("media.fragmented-mp4.exposed");
 // TODO:  Add "getPref("media.plugins.enabled")" once MP4 works on Gingerbread.
              
 check_mp4(document.getElementById('v'), haveMp4);
