@@ -11,6 +11,7 @@
 #include "MediaDecoderOwner.h"
 #include "MediaSource.h"
 #include "MediaSourceDecoder.h"
+#include "MediaSourceUtils.h"
 #include "SubBufferDecoder.h"
 
 #ifdef MOZ_FMP4
@@ -224,11 +225,11 @@ MediaSourceReader::SwitchReaders(SwitchType aType)
 
     MSE_DEBUGV("MediaDecoderReader(%p)::SwitchReaders(%d) decoder=%u (%p) discarded=%d"
                " reader=%p audioReader=%p videoReader=%p"
-               " hasAudio=%d hasVideo=%d decodeTarget=%f startTime=%f endTime=%f length=%u",
+               " hasAudio=%d hasVideo=%d decodeTarget=%f ranges=%s",
                this, aType, i, decoder, decoder->IsDiscarded(),
                decoder->GetReader(), mAudioReader.get(), mVideoReader.get(),
                info.HasAudio(), info.HasVideo(), decodeTarget,
-               ranges->GetStartTime(), ranges->GetEndTime(), ranges->Length());
+               DumpTimeRanges(ranges).get());
 
     if (decoder->IsDiscarded()) {
       continue;
@@ -339,12 +340,11 @@ CreateReaderForType(const nsACString& aType, AbstractMediaDecoder* aDecoder)
 }
 
 already_AddRefed<SubBufferDecoder>
-MediaSourceReader::CreateSubDecoder(const nsACString& aType,
-                                    MediaSourceDecoder* aParentDecoder)
+MediaSourceReader::CreateSubDecoder(const nsACString& aType)
 {
-  // XXX: Why/when is mDecoder null here, since it should be equal to aParentDecoder?!
+  MOZ_ASSERT(GetTaskQueue());
   nsRefPtr<SubBufferDecoder> decoder =
-    new SubBufferDecoder(new SourceBufferResource(nullptr, aType), aParentDecoder);
+    new SubBufferDecoder(new SourceBufferResource(nullptr, aType), mDecoder);
   nsRefPtr<MediaDecoderReader> reader(CreateReaderForType(aType, decoder));
   if (!reader) {
     return nullptr;
@@ -357,7 +357,7 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType,
   reader->SetCallback(callback);
   reader->SetTaskQueue(GetTaskQueue());
   reader->Init(nullptr);
-  ReentrantMonitorAutoEnter mon(aParentDecoder->GetReentrantMonitor());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   MSE_DEBUG("MediaSourceReader(%p)::CreateSubDecoder subdecoder %p subreader %p",
             this, decoder.get(), reader.get());
   decoder->SetReader(reader);
