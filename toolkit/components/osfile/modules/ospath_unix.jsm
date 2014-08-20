@@ -78,6 +78,9 @@ exports.dirname = dirname;
  *  var path = OS.Path.join(tmpDir, "foo", "bar");
  *
  * Under Unix, this will return "/tmp/foo/bar".
+ *
+ * Empty components are ignored, i.e. `OS.Path.join("foo", "", "bar)` is the
+ * same as `OS.Path.join("foo", "bar")`.
  */
 let join = function(...path) {
   // If there is a path that starts with a "/", eliminate everything before
@@ -86,7 +89,9 @@ let join = function(...path) {
     if (subpath == null) {
       throw new TypeError("invalid path component");
     }
-    if (subpath.length != 0 && subpath[0] == "/") {
+    if (subpath.length == 0) {
+      continue;
+    } else if (subpath[0] == "/") {
       paths = [subpath];
     } else {
       paths.push(subpath);
