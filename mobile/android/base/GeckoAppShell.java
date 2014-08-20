@@ -159,9 +159,6 @@ public class GeckoAppShell
      * sVibrationMaybePlaying is true. */
     private static long sVibrationEndTime;
 
-    /* Default value of how fast we should hint the Android sensors. */
-    private static int sDefaultSensorHint = 100;
-
     private static Sensor gAccelerometerSensor;
     private static Sensor gLinearAccelerometerSensor;
     private static Sensor gGyroscopeSensor;
@@ -686,14 +683,14 @@ public class GeckoAppShell
             if(gOrientationSensor == null)
                 gOrientationSensor = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
             if (gOrientationSensor != null) 
-                sm.registerListener(gi.getSensorEventListener(), gOrientationSensor, sDefaultSensorHint);
+                sm.registerListener(gi.getSensorEventListener(), gOrientationSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_ACCELERATION:
             if(gAccelerometerSensor == null)
                 gAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             if (gAccelerometerSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gAccelerometerSensor, sDefaultSensorHint);
+                sm.registerListener(gi.getSensorEventListener(), gAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_PROXIMITY:
@@ -714,14 +711,14 @@ public class GeckoAppShell
             if(gLinearAccelerometerSensor == null)
                 gLinearAccelerometerSensor = sm.getDefaultSensor(10 /* API Level 9 - TYPE_LINEAR_ACCELERATION */);
             if (gLinearAccelerometerSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gLinearAccelerometerSensor, sDefaultSensorHint);
+                sm.registerListener(gi.getSensorEventListener(), gLinearAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
             if(gGyroscopeSensor == null)
                 gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if (gGyroscopeSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gGyroscopeSensor, sDefaultSensorHint);
+                sm.registerListener(gi.getSensorEventListener(), gGyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
         default:
             Log.w(LOGTAG, "Error! Can't enable unknown SENSOR type " + aSensortype);
