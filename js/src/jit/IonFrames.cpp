@@ -1358,13 +1358,6 @@ void UpdateJitActivationsForMinorGC<gc::ForkJoinNursery>(PerThreadData *ptd, JST
 #endif
 
 void
-AutoTempAllocatorRooter::trace(JSTracer *trc)
-{
-    for (CompilerRootNode *root = temp->rootList(); root != nullptr; root = root->next)
-        gc::MarkGCThingRoot(trc, root->address(), "ion-compiler-root");
-}
-
-void
 GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
