@@ -24,7 +24,7 @@
 #include "nsIEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsPIDOMWindow.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
 

@@ -11,7 +11,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "MediaDecoderReader.h"
 
