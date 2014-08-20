@@ -1246,13 +1246,6 @@ const KTableValue nsCSSProps::kFontSynthesisKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-
-const KTableValue nsCSSProps::kFontVariantKTable[] = {
-  eCSSKeyword_normal, NS_STYLE_FONT_VARIANT_NORMAL,
-  eCSSKeyword_small_caps, NS_STYLE_FONT_VARIANT_SMALL_CAPS,
-  eCSSKeyword_UNKNOWN,-1
-};
-
 const KTableValue nsCSSProps::kFontVariantAlternatesKTable[] = {
   eCSSKeyword_historical_forms, NS_FONT_VARIANT_ALTERNATES_HISTORICAL,
   eCSSKeyword_UNKNOWN,-1
@@ -1292,7 +1285,6 @@ const KTableValue nsCSSProps::kFontVariantEastAsianKTable[] = {
 };
 
 const KTableValue nsCSSProps::kFontVariantLigaturesKTable[] = {
-  eCSSKeyword_none, NS_FONT_VARIANT_LIGATURES_NONE,
   eCSSKeyword_common_ligatures, NS_FONT_VARIANT_LIGATURES_COMMON,
   eCSSKeyword_no_common_ligatures, NS_FONT_VARIANT_LIGATURES_NO_COMMON,
   eCSSKeyword_discretionary_ligatures, NS_FONT_VARIANT_LIGATURES_DISCRETIONARY,
@@ -2470,7 +2462,6 @@ static const nsCSSProperty gBorderEndWidthSubpropTable[] = {
 static const nsCSSProperty gFontSubpropTable[] = {
   eCSSProperty_font_family,
   eCSSProperty_font_style,
-  eCSSProperty_font_variant,
   eCSSProperty_font_weight,
   eCSSProperty_font_size,
   eCSSProperty_line_height,
@@ -2481,6 +2472,16 @@ static const nsCSSProperty gFontSubpropTable[] = {
   eCSSProperty_font_language_override,
   eCSSProperty_font_kerning,
   eCSSProperty_font_synthesis,
+  eCSSProperty_font_variant_alternates,
+  eCSSProperty_font_variant_caps,
+  eCSSProperty_font_variant_east_asian,
+  eCSSProperty_font_variant_ligatures,
+  eCSSProperty_font_variant_numeric,
+  eCSSProperty_font_variant_position,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gFontVariantSubpropTable[] = {
   eCSSProperty_font_variant_alternates,
   eCSSProperty_font_variant_caps,
   eCSSProperty_font_variant_east_asian,

@@ -253,7 +253,6 @@ private:
   mozilla::dom::CSSValue* DoGetFontStretch();
   mozilla::dom::CSSValue* DoGetFontStyle();
   mozilla::dom::CSSValue* DoGetFontSynthesis();
-  mozilla::dom::CSSValue* DoGetFontVariant();
   mozilla::dom::CSSValue* DoGetFontVariantAlternates();
   mozilla::dom::CSSValue* DoGetFontVariantCaps();
   mozilla::dom::CSSValue* DoGetFontVariantEastAsian();
