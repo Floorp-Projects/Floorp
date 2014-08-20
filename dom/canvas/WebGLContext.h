@@ -1051,6 +1051,7 @@ protected:
     bool ValidateGLSLCharacter(char16_t c);
     bool ValidateGLSLString(const nsAString& string, const char *info);
 
+    bool ValidateCopyTexImage(GLenum format, WebGLTexImageFunc func);
     bool ValidateTexImage(GLuint dims, GLenum target,
                           GLint level, GLint internalFormat,
                           GLint xoffset, GLint yoffset, GLint zoffset,
