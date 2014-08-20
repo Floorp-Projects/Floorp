@@ -15,6 +15,6 @@ DIRS += [
 ]
 
 if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
-    DIRS += ['printingui/src']
+    DIRS += ['printingui']
 
 DIRS += ['build']
