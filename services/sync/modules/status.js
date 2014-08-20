@@ -42,7 +42,7 @@ this.Status = {
   },
 
   set service(code) {
-    this._log.debug("Status.service: " + this._service + " => " + code);
+    this._log.debug("Status.service: " + (this._service || undefined) + " => " + code);
     this._service = code;
   },
 

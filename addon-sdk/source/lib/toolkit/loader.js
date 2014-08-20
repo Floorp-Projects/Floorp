@@ -407,18 +407,18 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   let fullId = join(rootURI, id);
 
   let resolvedPath;
-  if (resolvedPath = loadAsFile(fullId))
+  if ((resolvedPath = loadAsFile(fullId)))
     return stripBase(rootURI, resolvedPath);
-  else if (resolvedPath = loadAsDirectory(fullId))
+  else if ((resolvedPath = loadAsDirectory(fullId)))
     return stripBase(rootURI, resolvedPath);
   // If manifest has dependencies, attempt to look up node modules
   // in the `dependencies` list
   else {
     let dirs = getNodeModulePaths(dirname(join(rootURI, requirer))).map(dir => join(dir, id));
     for (let i = 0; i < dirs.length; i++) {
-      if (resolvedPath = loadAsFile(dirs[i]))
+      if ((resolvedPath = loadAsFile(dirs[i])))
         return stripBase(rootURI, resolvedPath);
-      if (resolvedPath = loadAsDirectory(dirs[i]))
+      if ((resolvedPath = loadAsDirectory(dirs[i])))
         return stripBase(rootURI, resolvedPath);
     }
   }
@@ -459,7 +459,7 @@ function loadAsDirectory (path) {
     let main = getManifestMain(JSON.parse(readURI(path + '/package.json')));
     if (main != null) {
       let tmpPath = join(path, main);
-      if (found = loadAsFile(tmpPath))
+      if ((found = loadAsFile(tmpPath)))
         return found
     }
     try {
