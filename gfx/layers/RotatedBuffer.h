@@ -190,7 +190,7 @@ public:
     ContainsVisibleBounds
   };
 
-  RotatedContentBuffer(BufferSizePolicy aBufferSizePolicy)
+  explicit RotatedContentBuffer(BufferSizePolicy aBufferSizePolicy)
     : mBufferProvider(nullptr)
     , mBufferProviderOnWhite(nullptr)
     , mBufferSizePolicy(aBufferSizePolicy)

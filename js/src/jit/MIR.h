@@ -1926,6 +1926,45 @@ class MNewArray : public MUnaryInstruction
     }
 };
 
+class MNewArrayCopyOnWrite : public MNullaryInstruction
+{
+    CompilerRootObject templateObject_;
+    gc::InitialHeap initialHeap_;
+
+    MNewArrayCopyOnWrite(types::CompilerConstraintList *constraints, JSObject *templateObject,
+              gc::InitialHeap initialHeap)
+      : templateObject_(templateObject),
+        initialHeap_(initialHeap)
+    {
+        JS_ASSERT(!templateObject->hasSingletonType());
+        setResultType(MIRType_Object);
+        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewArrayCopyOnWrite)
+
+    static MNewArrayCopyOnWrite *New(TempAllocator &alloc,
+                                     types::CompilerConstraintList *constraints,
+                                     JSObject *templateObject,
+                                     gc::InitialHeap initialHeap)
+    {
+        return new(alloc) MNewArrayCopyOnWrite(constraints, templateObject, initialHeap);
+    }
+
+    JSObject *templateObject() const {
+        return templateObject_;
+    }
+
+    gc::InitialHeap initialHeap() const {
+        return initialHeap_;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MNewObject : public MUnaryInstruction
 {
     gc::InitialHeap initialHeap_;
@@ -6448,6 +6487,49 @@ class MMaybeToDoubleElement
     }
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
+// Passes through an object, after ensuring its elements are not copy on write.
+class MMaybeCopyElementsForWrite
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    explicit MMaybeCopyElementsForWrite(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setGuard();
+        setMovable();
+        setResultType(MIRType_Object);
+        setResultTypeSet(object->resultTypeSet());
+    }
+
+  public:
+    INSTRUCTION_HEADER(MaybeCopyElementsForWrite)
+
+    static MMaybeCopyElementsForWrite *New(TempAllocator &alloc, MDefinition *object) {
+        return new(alloc) MMaybeCopyElementsForWrite(object);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        // This instruction can read and write to the elements' contents,
+        // in the same manner as MConvertElementsToDoubles. As with that
+        // instruction, this is safe to consolidate and freely reorder this
+        // instruction, though this must precede any loads of the object's
+        // elements pointer or writes to the object's elements. The latter
+        // property is ensured by chaining this with the object definition
+        // itself, in the same manner as MBoundsCheck.
+        return AliasSet::None();
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
@@ -11343,6 +11425,7 @@ bool ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id);
 bool ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
                                Scalar::Type *arrayType);
 bool ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefinition *obj);
+bool ElementAccessMightBeCopyOnWrite(types::CompilerConstraintList *constraints, MDefinition *obj);
 bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
                                           MDefinition *obj);
 MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);

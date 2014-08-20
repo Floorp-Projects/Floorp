@@ -101,7 +101,7 @@ struct CompositableTransaction
 };
 
 struct AutoEndTransaction {
-  AutoEndTransaction(CompositableTransaction* aTxn) : mTxn(aTxn) {}
+  explicit AutoEndTransaction(CompositableTransaction* aTxn) : mTxn(aTxn) {}
   ~AutoEndTransaction() { mTxn->End(); }
   CompositableTransaction* mTxn;
 };
@@ -464,7 +464,7 @@ ImageBridgeChild::BeginTransaction()
 class MOZ_STACK_CLASS AutoRemoveTextures
 {
 public:
-  AutoRemoveTextures(ImageBridgeChild* aImageBridge)
+  explicit AutoRemoveTextures(ImageBridgeChild* aImageBridge)
     : mImageBridge(aImageBridge) {}
 
   ~AutoRemoveTextures()

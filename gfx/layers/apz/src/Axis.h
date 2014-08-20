@@ -35,7 +35,7 @@ class AsyncPanZoomController;
  */
 class Axis {
 public:
-  Axis(AsyncPanZoomController* aAsyncPanZoomController);
+  explicit Axis(AsyncPanZoomController* aAsyncPanZoomController);
 
   enum Overscroll {
     // Overscroll is not happening at all.
@@ -55,13 +55,13 @@ public:
    * Notify this Axis that a new touch has been received, including a timestamp
    * for when the touch was received. This triggers a recalculation of velocity.
    */
-  void UpdateWithTouchAtDevicePoint(int32_t aPos, uint32_t aTimestampMs);
+  void UpdateWithTouchAtDevicePoint(ScreenIntCoord aPos, uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has begun, i.e. the user has put their finger
    * on the screen but has not yet tried to pan.
    */
-  void StartTouch(int32_t aPos, uint32_t aTimestampMs);
+  void StartTouch(ScreenIntCoord aPos, uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has ended gracefully. This may perform
@@ -87,20 +87,20 @@ public:
    * displacement, and the function returns true iff internal overscroll amounts
    * were changed.
    */
-  bool AdjustDisplacement(float aDisplacement,
-                          float& aDisplacementOut,
-                          float& aOverscrollAmountOut);
+  bool AdjustDisplacement(CSSCoord aDisplacement,
+                          CSSCoord& aDisplacementOut,
+                          CSSCoord& aOverscrollAmountOut);
 
   /**
    * Overscrolls this axis by the requested amount in the requested direction.
    * The axis must be at the end of its scroll range in this direction.
    */
-  void OverscrollBy(float aOverscroll);
+  void OverscrollBy(CSSCoord aOverscroll);
 
   /**
    * Return the amount of overscroll on this axis, in CSS pixels.
    */
-  float GetOverscroll() const;
+  CSSCoord GetOverscroll() const;
 
   /**
    * Sample the snap-back animation to relieve overscroll.
@@ -129,7 +129,7 @@ public:
    * Gets the distance between the starting position of the touch supplied in
    * startTouch() and the supplied position.
    */
-  float PanDistance(float aPos);
+  float PanDistance(ScreenIntCoord aPos);
 
   /**
    * Applies friction during a fling, or cancels the fling if the velocity is
@@ -177,13 +177,13 @@ public:
    * That is to say, if the given displacement is applied, this will tell you
    * whether or not it will overscroll, and in what direction.
    */
-  Overscroll DisplacementWillOverscroll(float aDisplacement);
+  Overscroll DisplacementWillOverscroll(CSSCoord aDisplacement);
 
   /**
    * If a displacement will overscroll the axis, this returns the amount and in
    * what direction. Similar to GetExcess() but takes a displacement to apply.
    */
-  float DisplacementWillOverscrollAmount(float aDisplacement);
+  CSSCoord DisplacementWillOverscrollAmount(CSSCoord aDisplacement);
 
   /**
    * If a scale will overscroll the axis, this returns the amount and in what
@@ -193,7 +193,7 @@ public:
    * scroll offset in such a way that it remains in the same place on the page
    * relative.
    */
-  float ScaleWillOverscrollAmount(float aScale, float aFocus);
+  CSSCoord ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus);
 
   /**
    * Checks if an axis will overscroll in both directions by computing the
@@ -204,23 +204,23 @@ public:
    */
   bool ScaleWillOverscrollBothSides(float aScale);
 
-  float GetOrigin() const;
-  float GetCompositionLength() const;
-  float GetPageStart() const;
-  float GetPageLength() const;
-  float GetCompositionEnd() const;
-  float GetPageEnd() const;
+  CSSCoord GetOrigin() const;
+  CSSCoord GetCompositionLength() const;
+  CSSCoord GetPageStart() const;
+  CSSCoord GetPageLength() const;
+  CSSCoord GetCompositionEnd() const;
+  CSSCoord GetPageEnd() const;
 
-  int32_t GetPos() const { return mPos; }
+  ScreenIntCoord GetPos() const { return mPos; }
 
-  virtual float GetPointOffset(const CSSPoint& aPoint) const = 0;
-  virtual float GetRectLength(const CSSRect& aRect) const = 0;
-  virtual float GetRectOffset(const CSSRect& aRect) const = 0;
+  virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const = 0;
+  virtual CSSCoord GetRectLength(const CSSRect& aRect) const = 0;
+  virtual CSSCoord GetRectOffset(const CSSRect& aRect) const = 0;
 
 protected:
-  int32_t mPos;
+  ScreenIntCoord mPos;
   uint32_t mPosTimeMs;
-  int32_t mStartPos;
+  ScreenIntCoord mStartPos;
   float mVelocity;
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
@@ -230,7 +230,7 @@ protected:
   // extreme allowed value in the relevant direction (that is, it must be at
   // its maximum value if mOverscroll is positive, and at its minimum value
   // if mOverscroll is negative).
-  float mOverscroll;
+  CSSCoord mOverscroll;
   // A queue of (timestamp, velocity) pairs; these are the historical
   // velocities at the given timestamps. Timestamps are in milliseconds,
   // velocities are in screen pixels per ms. This member can only be
@@ -241,23 +241,23 @@ protected:
 
   // Adjust a requested overscroll amount for resistance, yielding a smaller
   // actual overscroll amount.
-  float ApplyResistance(float aOverscroll) const;
+  CSSCoord ApplyResistance(CSSCoord aOverscroll) const;
 };
 
 class AxisX : public Axis {
 public:
-  AxisX(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual float GetPointOffset(const CSSPoint& aPoint) const;
-  virtual float GetRectLength(const CSSRect& aRect) const;
-  virtual float GetRectOffset(const CSSRect& aRect) const;
+  explicit AxisX(AsyncPanZoomController* mAsyncPanZoomController);
+  virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const;
+  virtual CSSCoord GetRectLength(const CSSRect& aRect) const;
+  virtual CSSCoord GetRectOffset(const CSSRect& aRect) const;
 };
 
 class AxisY : public Axis {
 public:
-  AxisY(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual float GetPointOffset(const CSSPoint& aPoint) const;
-  virtual float GetRectLength(const CSSRect& aRect) const;
-  virtual float GetRectOffset(const CSSRect& aRect) const;
+  explicit AxisY(AsyncPanZoomController* mAsyncPanZoomController);
+  virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const;
+  virtual CSSCoord GetRectLength(const CSSRect& aRect) const;
+  virtual CSSCoord GetRectOffset(const CSSRect& aRect) const;
 };
 
 }

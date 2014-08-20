@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+richlistitem[type="download"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-starting');
+  -moz-box-orient: vertical;
+}
+
+richlistitem[type="download"][state="0"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-downloading');
+}
+
+richlistitem[type="download"][state="1"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-done');
+}
+
+richlistitem[type="download"][state="2"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-failed');
+}
+
+richlistitem[type="download"][state="3"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-canceled');
+}
+
+richlistitem[type="download"][state="4"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-paused');
+}
+
+richlistitem[type="download"][state="6"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-blocked-parental');
+}
+
+richlistitem[type="download"][state="7"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-scanning');
+}
+
+richlistitem[type="download"][state="8"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-dirty');
+}
+
+richlistitem[type="download"][state="9"] {
+  -moz-binding: url('chrome://webapprt/content/downloads/download.xml#download-blocked-policy');
+}
+
+/* Only focus buttons in the selected item*/
+richlistitem[type="download"]:not([selected="true"]) button {
+  -moz-user-focus: none;
+}
+

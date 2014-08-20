@@ -137,7 +137,7 @@ class TextureClient
   : public AtomicRefCountedWithFinalize<TextureClient>
 {
 public:
-  TextureClient(TextureFlags aFlags = TextureFlags::DEFAULT);
+  explicit TextureClient(TextureFlags aFlags = TextureFlags::DEFAULT);
   virtual ~TextureClient();
 
   // Creates and allocates a TextureClient usable with Moz2D.
@@ -465,7 +465,7 @@ protected:
 class TextureClientReleaseTask : public Task
 {
 public:
-    TextureClientReleaseTask(TextureClient* aClient)
+    explicit TextureClientReleaseTask(TextureClient* aClient)
         : mTextureClient(aClient) {
     }
 
@@ -620,7 +620,7 @@ protected:
 class StreamTextureClient : public TextureClient
 {
 public:
-  StreamTextureClient(TextureFlags aFlags);
+  explicit StreamTextureClient(TextureFlags aFlags);
 
 protected:
   ~StreamTextureClient();
@@ -669,7 +669,7 @@ struct TextureClientAutoUnlock
 {
   TextureClient* mTexture;
 
-  TextureClientAutoUnlock(TextureClient* aTexture)
+  explicit TextureClientAutoUnlock(TextureClient* aTexture)
   : mTexture(aTexture) {}
 
   ~TextureClientAutoUnlock()
@@ -688,7 +688,7 @@ template<typename T>
 class TKeepAlive : public KeepAlive
 {
 public:
-  TKeepAlive(T* aData) : mData(aData) {}
+  explicit TKeepAlive(T* aData) : mData(aData) {}
 protected:
   RefPtr<T> mData;
 };

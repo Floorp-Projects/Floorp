@@ -420,7 +420,7 @@ nsFocusManager::GetLastFocusMethod(nsIDOMWindow* aWindow, uint32_t* aLastFocusMe
 {
   // the focus method is stored on the inner window
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
-  if (window)
+  if (window && window->IsOuterWindow())
     window = window->GetCurrentInnerWindow();
   if (!window)
     window = mFocusedWindow;

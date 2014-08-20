@@ -53,7 +53,7 @@ class ContainerLayerComposite : public ContainerLayer,
                         const nsIntRect& aClipRect);
 
 public:
-  ContainerLayerComposite(LayerManagerComposite *aManager);
+  explicit ContainerLayerComposite(LayerManagerComposite *aManager);
 
 protected:
   ~ContainerLayerComposite();
@@ -117,7 +117,7 @@ class RefLayerComposite : public RefLayer,
                         const nsIntRect& aClipRect);
 
 public:
-  RefLayerComposite(LayerManagerComposite *aManager);
+  explicit RefLayerComposite(LayerManagerComposite *aManager);
 
 protected:
   ~RefLayerComposite();

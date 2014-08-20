@@ -119,11 +119,11 @@ CSS_PROP_ALIAS(-moz-box-sizing,
                box_sizing,
                MozBoxSizing,
                "layout.css.prefixes.box-sizing")
-CSS_PROP_ALIAS(font-feature-settings,
+CSS_PROP_ALIAS(-moz-font-feature-settings,
                font_feature_settings,
-               FontFeatureSettings,
-               "layout.css.font-features.enabled")
-CSS_PROP_ALIAS(font-language-override,
+               MozFontFeatureSettings,
+               "layout.css.prefixes.font-features")
+CSS_PROP_ALIAS(-moz-font-language-override,
                font_language_override,
-               FontLanguageOverride,
-               "layout.css.font-features.enabled")
+               MozFontLanguageOverride,
+               "layout.css.prefixes.font-features")

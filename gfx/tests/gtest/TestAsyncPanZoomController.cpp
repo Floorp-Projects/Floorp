@@ -30,14 +30,6 @@ using ::testing::InSequence;
 
 class Task;
 
-class APZCTreeManagerTester : public ::testing::Test {
-protected:
-  virtual void SetUp() {
-    gfxPrefs::GetSingleton();
-    AsyncPanZoomController::SetThreadAssertionsEnabled(false);
-  }
-};
-
 template<class T>
 class ScopedGfxPref {
 public:
@@ -151,6 +143,16 @@ public:
   void AssertStateIsReset() {
     ReentrantMonitorAutoEnter lock(mMonitor);
     EXPECT_EQ(NOTHING, mState);
+  }
+
+  bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
+                                      ViewTransform* aOutTransform,
+                                      ScreenPoint& aScrollOffset,
+                                      ViewTransform* aOutOverscrollTransform = nullptr) {
+    bool ret = AdvanceAnimations(aSampleTime);
+    AsyncPanZoomController::SampleContentTransformForFrame(
+      aOutTransform, aScrollOffset, aOutOverscrollTransform);
+    return ret;
   }
 };
 
@@ -721,39 +723,39 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   apzc->SetFrameMetrics(metrics);
   apzc->NotifyLayersUpdated(metrics, true);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(), ParentLayerToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint()), viewTransformOut);
   EXPECT_EQ(ScreenPoint(60, 60), pointOut);
 
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->NotifyLayersUpdated(childMetrics, true);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(), ParentLayerToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint()), viewTransformOut);
   EXPECT_EQ(ScreenPoint(60, 60), pointOut);
 
   // do an async scroll by 5 pixels and check the transform
   metrics.ScrollBy(CSSPoint(5, 0));
   apzc->SetFrameMetrics(metrics);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint(-30, 0)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(90, 60), pointOut);
 
   childMetrics.ScrollBy(CSSPoint(5, 0));
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(2)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint(-30, 0)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(90, 60), pointOut);
 
   // do an async zoom of 1.5x and check the transform
   metrics.ZoomBy(1.5f);
   apzc->SetFrameMetrics(metrics);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(3)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(3), ScreenPoint(-45, 0)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 
   childMetrics.ZoomBy(1.5f);
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(LayerPoint(-30, 0), ParentLayerToScreenScale(3)), viewTransformOut);
+  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(3), ScreenPoint(-45, 0)), viewTransformOut);
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 }
 
@@ -998,92 +1000,6 @@ TEST_F(APZCFlingStopTester, FlingStopSlowListener) {
 
 TEST_F(APZCFlingStopTester, FlingStopPreventDefault) {
   DoFlingStopWithSlowListener(true);
-}
-
-TEST_F(APZCBasicTester, OverScrollPanning) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
-
-  // Pan sufficiently to hit overscroll behavior
-  int time = 0;
-  int touchStart = 500;
-  int touchEnd = 10;
-  ApzcPan(apzc, time, touchStart, touchEnd);
-  EXPECT_TRUE(apzc->IsOverscrolled());
-
-  // Note that in the calls to SampleContentTransformForFrame below, the time
-  // increment used is sufficiently large for the animation to have completed. However,
-  // any single call to SampleContentTransformForFrame will not finish an animation
-  // *and* also proceed through the following animation, if there is one.
-  // Therefore the minimum number of calls to go from an overscroll-inducing pan
-  // to a reset state is 3; these are documented further below.
-
-  ScreenPoint pointOut;
-  ViewTransform viewTransformOut;
-
-  // This sample will run to the end of the non-overscrolling fling animation
-  // and will schedule the overscrolling fling animation.
-  apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(10000), &viewTransformOut, pointOut);
-  EXPECT_EQ(ScreenPoint(0, 90), pointOut);
-  EXPECT_TRUE(apzc->IsOverscrolled());
-
-  // This sample will run to the end of the overscrolling fling animation and
-  // will schedule the snapback animation.
-  apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(20000), &viewTransformOut, pointOut);
-  EXPECT_EQ(ScreenPoint(0, 90), pointOut);
-  EXPECT_TRUE(apzc->IsOverscrolled());
-
-  // This sample will run to the end of the snapback animation and reset the state.
-  apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(30000), &viewTransformOut, pointOut);
-  EXPECT_EQ(ScreenPoint(0, 90), pointOut);
-  EXPECT_FALSE(apzc->IsOverscrolled());
-
-  apzc->AssertStateIsReset();
-}
-
-TEST_F(APZCBasicTester, OverScrollAbort) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
-
-  // Pan sufficiently to hit overscroll behavior
-  int time = 0;
-  int touchStart = 500;
-  int touchEnd = 10;
-  ApzcPan(apzc, time, touchStart, touchEnd);
-  EXPECT_TRUE(apzc->IsOverscrolled());
-
-  ScreenPoint pointOut;
-  ViewTransform viewTransformOut;
-
-  // This sample call will run to the end of the non-overscrolling fling animation
-  // and will schedule the overscrolling fling animation (see comment in OverScrollPanning
-  // above for more explanation).
-  apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(10000), &viewTransformOut, pointOut);
-  EXPECT_TRUE(apzc->IsOverscrolled());
-
-  // At this point, we have an active overscrolling fling animation.
-  // Check that cancelling the animation clears the overscroll.
-  apzc->CancelAnimation();
-  EXPECT_FALSE(apzc->IsOverscrolled());
-  apzc->AssertStateIsReset();
-}
-
-TEST_F(APZCBasicTester, OverScrollPanningAbort) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
-
-  // Pan sufficiently to hit overscroll behaviour. Keep the finger down so
-  // the pan does not end.
-  int time = 0;
-  int touchStart = 500;
-  int touchEnd = 10;
-  ApzcPan(apzc, time, touchStart, touchEnd,
-          true);                   // keep finger down
-  EXPECT_TRUE(apzc->IsOverscrolled());
-
-  // Check that calling CancelAnimation() while the user is still panning
-  // (and thus no fling or snap-back animation has had a chance to start)
-  // clears the overscroll.
-  apzc->CancelAnimation();
-  EXPECT_FALSE(apzc->IsOverscrolled());
-  apzc->AssertStateIsReset();
 }
 
 TEST_F(APZCGestureDetectorTester, ShortPress) {
@@ -1399,92 +1315,139 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultBoth) {
   apzc->AssertStateIsReset();
 }
 
-// Layer tree for HitTesting1
-static already_AddRefed<mozilla::layers::Layer>
-CreateTestLayerTree1(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<Layer> >& aLayers) {
-  const char* layerTreeSyntax = "c(ttcc)";
-  // LayerID                     0 1234
-  nsIntRegion layerVisibleRegion[] = {
-    nsIntRegion(nsIntRect(0,0,100,100)),
-    nsIntRegion(nsIntRect(0,0,100,100)),
-    nsIntRegion(nsIntRect(10,10,20,20)),
-    nsIntRegion(nsIntRect(10,10,20,20)),
-    nsIntRegion(nsIntRect(5,5,20,20)),
-  };
-  Matrix4x4 transforms[] = {
-    Matrix4x4(),
-    Matrix4x4(),
-    Matrix4x4(),
-    Matrix4x4(),
-    Matrix4x4(),
-  };
-  return CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, aLayerManager, aLayers);
-}
+class APZCTreeManagerTester : public ::testing::Test {
+protected:
+  virtual void SetUp() {
+    gfxPrefs::GetSingleton();
+    AsyncPanZoomController::SetThreadAssertionsEnabled(false);
 
-// Layer Tree for HitTesting2
-static already_AddRefed<mozilla::layers::Layer>
-CreateTestLayerTree2(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<Layer> >& aLayers) {
-  const char* layerTreeSyntax = "c(cc(c))";
-  // LayerID                     0 12 3
-  nsIntRegion layerVisibleRegion[] = {
-    nsIntRegion(nsIntRect(0,0,100,100)),
-    nsIntRegion(nsIntRect(10,10,40,40)),
-    nsIntRegion(nsIntRect(10,60,40,40)),
-    nsIntRegion(nsIntRect(10,60,40,40)),
-  };
-  Matrix4x4 transforms[] = {
-    Matrix4x4(),
-    Matrix4x4(),
-    Matrix4x4(),
-    Matrix4x4(),
-  };
-  return CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, aLayerManager, aLayers);
-}
+    TimeStamp testStartTime = TimeStamp::Now();
+    AsyncPanZoomController::SetFrameTime(testStartTime);
 
-static void
-SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
-                          // The scrollable rect is only used in HitTesting2,
-                          // HitTesting1 doesn't care about it.
-                          CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1))
-{
-  FrameMetrics metrics;
-  metrics.SetScrollId(aScrollId);
-  nsIntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
-  metrics.mCompositionBounds = ParentLayerRect(layerBound.x, layerBound.y,
-                                               layerBound.width, layerBound.height);
-  metrics.mScrollableRect = aScrollableRect;
-  metrics.SetScrollOffset(CSSPoint(0, 0));
-  aLayer->SetFrameMetrics(metrics);
-}
-
-static already_AddRefed<AsyncPanZoomController>
-GetTargetAPZC(APZCTreeManager* manager, const ScreenPoint& aPoint,
-              Matrix4x4& aTransformToApzcOut, Matrix4x4& aTransformToGeckoOut)
-{
-  nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(aPoint, nullptr);
-  if (hit) {
-    manager->GetInputTransforms(hit.get(), aTransformToApzcOut, aTransformToGeckoOut);
+    mcc = new NiceMock<MockContentController>();
+    manager = new TestAPZCTreeManager();
   }
-  return hit.forget();
-}
 
-// A simple hit testing test that doesn't involve any transforms on layers.
-TEST_F(APZCTreeManagerTester, HitTesting1) {
+  virtual void TearDown() {
+    manager->ClearTree();
+  }
+
+  TimeStamp testStartTime;
+  nsRefPtr<MockContentController> mcc;
+
   nsTArray<nsRefPtr<Layer> > layers;
   nsRefPtr<LayerManager> lm;
-  nsRefPtr<Layer> root = CreateTestLayerTree1(lm, layers);
+  nsRefPtr<Layer> root;
 
-  TimeStamp testStartTime = TimeStamp::Now();
-  AsyncPanZoomController::SetFrameTime(testStartTime);
-  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
-  ScopedLayerTreeRegistration controller(0, root, mcc);
+  nsRefPtr<TestAPZCTreeManager> manager;
 
-  nsRefPtr<APZCTreeManager> manager = new TestAPZCTreeManager();
+protected:
+  static void SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
+                                        // The scrollable rect is only used in HitTesting2,
+                                        // HitTesting1 doesn't care about it.
+                                        CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1)) {
+    FrameMetrics metrics;
+    metrics.SetScrollId(aScrollId);
+    nsIntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
+    metrics.mCompositionBounds = ParentLayerRect(layerBound.x, layerBound.y,
+                                                 layerBound.width, layerBound.height);
+    metrics.mScrollableRect = aScrollableRect;
+    metrics.SetScrollOffset(CSSPoint(0, 0));
+    aLayer->SetFrameMetrics(metrics);
+  }
+
+  void CreateSimpleMultiLayerTree() {
+    const char* layerTreeSyntax = "c(tt)";
+    // LayerID                     0 12
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0,0,100,100)),
+      nsIntRegion(nsIntRect(0,0,100,50)),
+      nsIntRegion(nsIntRect(0,50,100,50)),
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  }
+};
+
+class APZHitTestingTester : public APZCTreeManagerTester {
+protected:
   Matrix4x4 transformToApzc;
   Matrix4x4 transformToGecko;
 
+  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint) {
+    nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(aPoint, nullptr);
+    if (hit) {
+      manager->GetInputTransforms(hit.get(), transformToApzc, transformToGecko);
+    }
+    return hit.forget();
+  }
+
+protected:
+  void CreateHitTesting1LayerTree() {
+    const char* layerTreeSyntax = "c(ttcc)";
+    // LayerID                     0 1234
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0,0,100,100)),
+      nsIntRegion(nsIntRect(0,0,100,100)),
+      nsIntRegion(nsIntRect(10,10,20,20)),
+      nsIntRegion(nsIntRect(10,10,20,20)),
+      nsIntRegion(nsIntRect(5,5,20,20)),
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+  }
+
+  void CreateHitTesting2LayerTree() {
+    const char* layerTreeSyntax = "c(cc(c))";
+    // LayerID                     0 12 3
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0,0,100,100)),
+      nsIntRegion(nsIntRect(10,10,40,40)),
+      nsIntRegion(nsIntRect(10,60,40,40)),
+      nsIntRegion(nsIntRect(10,60,40,40)),
+    };
+    Matrix4x4 transforms[] = {
+      Matrix4x4(),
+      Matrix4x4(),
+      Matrix4x4().Scale(2, 1, 1),
+      Matrix4x4(),
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);
+
+    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 80, 80));
+    SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 2, CSSRect(0, 0, 80, 80));
+  }
+
+  void CreateComplexMultiLayerTree() {
+    const char* layerTreeSyntax = "c(tc(t)tc(c(t)t))";
+    // LayerID                     0 12 3 45 6 7 8
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0,0,300,400)),      // root(0)
+      nsIntRegion(nsIntRect(0,0,100,100)),      // thebes(1) in top-left
+      nsIntRegion(nsIntRect(50,50,200,300)),    // container(2) centered in root(0)
+      nsIntRegion(nsIntRect(50,50,200,300)),    // thebes(3) fully occupying parent container(2)
+      nsIntRegion(nsIntRect(0,200,100,100)),    // thebes(4) in bottom-left
+      nsIntRegion(nsIntRect(200,0,100,400)),    // container(5) along the right 100px of root(0)
+      nsIntRegion(nsIntRect(200,0,100,200)),    // container(6) taking up the top half of parent container(5)
+      nsIntRegion(nsIntRect(200,0,100,200)),    // thebes(7) fully occupying parent container(6)
+      nsIntRegion(nsIntRect(200,200,100,200)),  // thebes(8) in bottom-right
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[6], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[7], FrameMetrics::START_SCROLL_ID + 2);
+    SetScrollableFrameMetrics(layers[8], FrameMetrics::START_SCROLL_ID + 3);
+  }
+};
+
+// A simple hit testing test that doesn't involve any transforms on layers.
+TEST_F(APZHitTestingTester, HitTesting1) {
+  CreateHitTesting1LayerTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+
   // No APZC attached so hit testing will return no APZC at (20,20)
-  nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(manager, ScreenPoint(20, 20), transformToApzc, transformToGecko);
+  nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(20, 20));
   AsyncPanZoomController* nullAPZC = nullptr;
   EXPECT_EQ(nullAPZC, hit.get());
   EXPECT_EQ(Matrix4x4(), transformToApzc);
@@ -1495,7 +1458,7 @@ TEST_F(APZCTreeManagerTester, HitTesting1) {
   // Now we have a root APZC that will match the page
   SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, paintSequenceNumber++);
-  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(15, 15));
   EXPECT_EQ(root->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
   EXPECT_EQ(Point(15, 15), transformToApzc * Point(15, 15));
@@ -1505,7 +1468,7 @@ TEST_F(APZCTreeManagerTester, HitTesting1) {
   SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 1);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, paintSequenceNumber++);
   EXPECT_NE(root->GetAsyncPanZoomController(), layers[3]->GetAsyncPanZoomController());
-  hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(25, 25));
   EXPECT_EQ(layers[3]->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerIntPoint(25, 25)
   EXPECT_EQ(Point(25, 25), transformToApzc * Point(25, 25));
@@ -1513,63 +1476,40 @@ TEST_F(APZCTreeManagerTester, HitTesting1) {
 
   // At this point, layers[4] obscures layers[3] at the point (15, 15) so
   // hitting there should hit the root APZC
-  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(15, 15));
   EXPECT_EQ(root->GetAsyncPanZoomController(), hit.get());
 
   // Now test hit testing when we have two scrollable layers
   SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 2);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, paintSequenceNumber++);
-  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(15, 15));
   EXPECT_EQ(layers[4]->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
   EXPECT_EQ(Point(15, 15), transformToApzc * Point(15, 15));
   EXPECT_EQ(Point(15, 15), transformToGecko * Point(15, 15));
 
   // Hit test ouside the reach of layer[3,4] but inside root
-  hit = GetTargetAPZC(manager, ScreenPoint(90, 90), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(90, 90));
   EXPECT_EQ(root->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerIntPoint(90, 90)
   EXPECT_EQ(Point(90, 90), transformToApzc * Point(90, 90));
   EXPECT_EQ(Point(90, 90), transformToGecko * Point(90, 90));
 
   // Hit test ouside the reach of any layer
-  hit = GetTargetAPZC(manager, ScreenPoint(1000, 10), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(1000, 10));
   EXPECT_EQ(nullAPZC, hit.get());
   EXPECT_EQ(Matrix4x4(), transformToApzc);
   EXPECT_EQ(Matrix4x4(), transformToGecko);
-  hit = GetTargetAPZC(manager, ScreenPoint(-1000, 10), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(-1000, 10));
   EXPECT_EQ(nullAPZC, hit.get());
   EXPECT_EQ(Matrix4x4(), transformToApzc);
   EXPECT_EQ(Matrix4x4(), transformToGecko);
-
-  manager->ClearTree();
 }
 
 // A more involved hit testing test that involves css and async transforms.
-TEST_F(APZCTreeManagerTester, HitTesting2) {
-  nsTArray<nsRefPtr<Layer> > layers;
-  nsRefPtr<LayerManager> lm;
-  nsRefPtr<Layer> root = CreateTestLayerTree2(lm, layers);
-
-  TimeStamp testStartTime = TimeStamp::Now();
-  AsyncPanZoomController::SetFrameTime(testStartTime);
-  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
-  ScopedLayerTreeRegistration controller(0, root, mcc);
-
-  nsRefPtr<TestAPZCTreeManager> manager = new TestAPZCTreeManager();
-  nsRefPtr<AsyncPanZoomController> hit;
-  Matrix4x4 transformToApzc;
-  Matrix4x4 transformToGecko;
-
-  // Set a CSS transform on one of the layers.
-  Matrix4x4 transform;
-  transform = transform * Matrix4x4().Scale(2, 1, 1);
-  layers[2]->SetBaseTransform(transform);
-
-  // Make some other layers scrollable.
-  SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 200, 200));
-  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 80, 80));
-  SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 2, CSSRect(0, 0, 80, 80));
+TEST_F(APZHitTestingTester, HitTesting2) {
+  CreateHitTesting2LayerTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
 
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
 
@@ -1584,7 +1524,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   AsyncPanZoomController* apzc3 = layers[3]->GetAsyncPanZoomController();
 
   // Hit an area that's clearly on the root layer but not any of the child layers.
-  hit = GetTargetAPZC(manager, ScreenPoint(75, 25), transformToApzc, transformToGecko);
+  nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(75, 25));
   EXPECT_EQ(apzcroot, hit.get());
   EXPECT_EQ(Point(75, 25), transformToApzc * Point(75, 25));
   EXPECT_EQ(Point(75, 25), transformToGecko * Point(75, 25));
@@ -1596,19 +1536,19 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   // scale-only transform that we set on layers[2] would be invalid because
   // it would place the layer into overscroll, as its composition bounds
   // start at x=10 but its content at x=20).
-  hit = GetTargetAPZC(manager, ScreenPoint(15, 75), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(15, 75));
   EXPECT_EQ(apzcroot, hit.get());
   EXPECT_EQ(Point(15, 75), transformToApzc * Point(15, 75));
   EXPECT_EQ(Point(15, 75), transformToGecko * Point(15, 75));
 
   // Hit an area on layers[1].
-  hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(25, 25));
   EXPECT_EQ(apzc1, hit.get());
   EXPECT_EQ(Point(25, 25), transformToApzc * Point(25, 25));
   EXPECT_EQ(Point(25, 25), transformToGecko * Point(25, 25));
 
   // Hit an area on layers[3].
-  hit = GetTargetAPZC(manager, ScreenPoint(25, 75), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(25, 75));
   EXPECT_EQ(apzc3, hit.get());
   // transformToApzc should unapply layers[2]'s transform
   EXPECT_EQ(Point(12.5, 75), transformToApzc * Point(25, 75));
@@ -1617,7 +1557,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
 
   // Hit an area on layers[3] that would be on the root if layers[2]
   // weren't transformed.
-  hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(75, 75));
   EXPECT_EQ(apzc3, hit.get());
   // transformToApzc should unapply layers[2]'s transform
   EXPECT_EQ(Point(37.5, 75), transformToApzc * Point(75, 75));
@@ -1639,7 +1579,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   ApzcPanNoFling(apzcroot, time, 100, 50);
 
   // Hit where layers[3] used to be. It should now hit the root.
-  hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(75, 75));
   EXPECT_EQ(apzcroot, hit.get());
   // transformToApzc doesn't unapply the root's own async transform
   EXPECT_EQ(Point(75, 75), transformToApzc * Point(75, 75));
@@ -1649,7 +1589,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   EXPECT_EQ(Point(75, 75), transformToGecko * Point(75, 75));
 
   // Hit where layers[1] used to be and where layers[3] should now be.
-  hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(25, 25));
   EXPECT_EQ(apzc3, hit.get());
   // transformToApzc unapplies both layers[2]'s css transform and the root's
   // async transform
@@ -1665,7 +1605,7 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   ApzcPanNoFling(apzcroot, time, 100, 50);
 
   // Hit where layers[3] used to be. It should now hit the root.
-  hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(75, 75));
   EXPECT_EQ(apzcroot, hit.get());
   // transformToApzc doesn't unapply the root's own async transform
   EXPECT_EQ(Point(75, 75), transformToApzc * Point(75, 75));
@@ -1674,15 +1614,76 @@ TEST_F(APZCTreeManagerTester, HitTesting2) {
   EXPECT_EQ(Point(75, 125), transformToGecko * Point(75, 75));
 
   // Hit where layers[1] used to be. It should now hit the root.
-  hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
+  hit = GetTargetAPZC(ScreenPoint(25, 25));
   EXPECT_EQ(apzcroot, hit.get());
   // transformToApzc doesn't unapply the root's own async transform
   EXPECT_EQ(Point(25, 25), transformToApzc * Point(25, 25));
   // transformToGecko unapplies the full async transform of -100 pixels, and then
   // reapplies the "D" transform of -50 leading to an overall adjustment of +50
   EXPECT_EQ(Point(25, 75), transformToGecko * Point(25, 25));
+}
 
-  manager->ClearTree();
+TEST_F(APZCTreeManagerTester, ScrollableThebesLayers) {
+  CreateSimpleMultiLayerTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+
+  // both layers have the same scrollId
+  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID);
+  SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+
+  AsyncPanZoomController* nullAPZC = nullptr;
+  // so they should have the same APZC
+  EXPECT_EQ(nullAPZC, layers[0]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[1]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[2]->GetAsyncPanZoomController());
+  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(), layers[2]->GetAsyncPanZoomController());
+
+  // Change the scrollId of layers[1], and verify the APZC changes
+  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+  EXPECT_NE(layers[1]->GetAsyncPanZoomController(), layers[2]->GetAsyncPanZoomController());
+
+  // Change the scrollId of layers[2] to match that of layers[1], ensure we get the same
+  // APZC for both again
+  SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(), layers[2]->GetAsyncPanZoomController());
+}
+
+TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
+  CreateComplexMultiLayerTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+
+  AsyncPanZoomController* nullAPZC = nullptr;
+  // Ensure all the scrollable layers have an APZC
+  EXPECT_EQ(nullAPZC, layers[0]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[1]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[2]->GetAsyncPanZoomController());
+  EXPECT_EQ(nullAPZC, layers[3]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[4]->GetAsyncPanZoomController());
+  EXPECT_EQ(nullAPZC, layers[5]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[6]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[7]->GetAsyncPanZoomController());
+  EXPECT_NE(nullAPZC, layers[8]->GetAsyncPanZoomController());
+  // Ensure those that scroll together have the same APZCs
+  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(), layers[2]->GetAsyncPanZoomController());
+  EXPECT_EQ(layers[4]->GetAsyncPanZoomController(), layers[6]->GetAsyncPanZoomController());
+  // Ensure those that don't scroll together have different APZCs
+  EXPECT_NE(layers[1]->GetAsyncPanZoomController(), layers[4]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[1]->GetAsyncPanZoomController(), layers[7]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[1]->GetAsyncPanZoomController(), layers[8]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[4]->GetAsyncPanZoomController(), layers[7]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[4]->GetAsyncPanZoomController(), layers[8]->GetAsyncPanZoomController());
+  EXPECT_NE(layers[7]->GetAsyncPanZoomController(), layers[8]->GetAsyncPanZoomController());
+
+  nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(ScreenPoint(25, 25));
+  EXPECT_EQ(layers[1]->GetAsyncPanZoomController(), hit.get());
+  hit = GetTargetAPZC(ScreenPoint(275, 375));
+  EXPECT_EQ(layers[8]->GetAsyncPanZoomController(), hit.get());
+  hit = GetTargetAPZC(ScreenPoint(250, 100));
+  EXPECT_EQ(layers[7]->GetAsyncPanZoomController(), hit.get());
 }
 
 class TaskRunMetrics {

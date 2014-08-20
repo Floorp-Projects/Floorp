@@ -2102,12 +2102,12 @@ MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVide
   // results.
   nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aWindow);
   if (piWin) {
-    if (piWin->GetCurrentInnerWindow() || piWin->IsInnerWindow()) {
+    if (piWin->IsInnerWindow() || piWin->GetCurrentInnerWindow()) {
       uint64_t windowID;
-      if (piWin->GetCurrentInnerWindow()) {
-        windowID = piWin->GetCurrentInnerWindow()->WindowID();
-      } else {
+      if (piWin->IsInnerWindow()) {
         windowID = piWin->WindowID();
+      } else {
+        windowID = piWin->GetCurrentInnerWindow()->WindowID();
       }
       StreamListeners* listeners = GetActiveWindows()->Get(windowID);
       if (listeners) {
