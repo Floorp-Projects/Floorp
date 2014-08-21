@@ -81,7 +81,7 @@ this.ContentSearch = {
   // them immediately, which would result in non-FIFO responses due to the
   // asynchrononicity added by converting image data URIs to ArrayBuffers.
   _eventQueue: [],
-  _currentEvent: null,
+  _currentEventPromise: null,
 
   // This is used to handle search suggestions.  It maps xul:browsers to objects
   // { controller, previousFormHistoryResult }.  See _onMessageGetSuggestions.
@@ -92,6 +92,16 @@ this.ContentSearch = {
       getService(Ci.nsIMessageListenerManager).
       addMessageListener(INBOUND_MESSAGE, this);
     Services.obs.addObserver(this, "browser-search-engine-modified", false);
+  },
+
+  destroy: function () {
+    Cc["@mozilla.org/globalmessagemanager;1"].
+      getService(Ci.nsIMessageListenerManager).
+      removeMessageListener(INBOUND_MESSAGE, this);
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
+
+    this._eventQueue.length = 0;
+    return Promise.resolve(this._currentEventPromise);
   },
 
   /**
@@ -141,22 +151,24 @@ this.ContentSearch = {
     }
   },
 
-  _processEventQueue: Task.async(function* () {
-    if (this._currentEvent || !this._eventQueue.length) {
+  _processEventQueue: function () {
+    if (this._currentEventPromise || !this._eventQueue.length) {
       return;
     }
-    this._currentEvent = this._eventQueue.shift();
-    try {
-      yield this["_on" + this._currentEvent.type](this._currentEvent.data);
-    }
-    catch (err) {
-      Cu.reportError(err);
-    }
-    finally {
-      this._currentEvent = null;
-      this._processEventQueue();
-    }
-  }),
+
+    let event = this._eventQueue.shift();
+
+    return this._currentEventPromise = Task.spawn(function* () {
+      try {
+        yield this["_on" + event.type](event.data);
+      } catch (err) {
+        Cu.reportError(err);
+      } finally {
+        this._currentEventPromise = null;
+        this._processEventQueue();
+      }
+    }.bind(this));
+  },
 
   _onMessage: Task.async(function* (msg) {
     let methodName = "_onMessage" + msg.data.type;
