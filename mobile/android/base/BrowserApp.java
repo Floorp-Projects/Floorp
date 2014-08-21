@@ -84,6 +84,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -1319,13 +1321,30 @@ public class BrowserApp extends GeckoApp
                     BrowserDB.getCount(getContentResolver(), "favicons"));
             Telemetry.HistogramAdd("FENNEC_THUMBNAILS_COUNT",
                     BrowserDB.getCount(getContentResolver(), "thumbnails"));
-
+            Telemetry.HistogramAdd("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser() ? 1 : 0));
         } else if ("Updater:Launch".equals(event)) {
             handleUpdaterLaunch();
 
         } else {
             super.handleMessage(event, message, callback);
         }
+    }
+
+    /**
+     * Use a dummy Intent to do a default browser check.
+     *
+     * @return true if this package is the default browser on this device, false otherwise.
+     */
+    private boolean isDefaultBrowser() {
+        final Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mozilla.org"));
+        final ResolveInfo info = getPackageManager().resolveActivity(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        if (info == null) {
+            // No default is set
+            return false;
+        }
+
+        final String packageName = info.activityInfo.packageName;
+        return (TextUtils.equals(packageName, getPackageName()));
     }
 
     @Override
