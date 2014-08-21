@@ -23,6 +23,10 @@
 
 namespace mozilla {
 
+namespace gfx {
+class Matrix;
+}
+
 class HwcUtils {
 public:
 
@@ -62,7 +66,7 @@ typedef std::vector<hwc_rect_t> RectVector;
  * @return true if the layer should be rendered.
  *         false if the layer can be skipped
  */
-static bool CalculateClipRect(const gfxMatrix& aTransform,
+static bool CalculateClipRect(const gfx::Matrix& aTransform,
                               const nsIntRect* aLayerClip,
                               nsIntRect aParentClip, nsIntRect* aRenderClip);
 
@@ -84,7 +88,7 @@ static bool CalculateClipRect(const gfxMatrix& aTransform,
  *         false if the layer can be skipped
  */
 static bool PrepareVisibleRegion(const nsIntRegion& aVisible,
-                                 const gfxMatrix& aTransform,
+                                 const gfx::Matrix& aTransform,
                                  nsIntRect aClip, nsIntRect aBufferRect,
                                  RectVector* aVisibleRegionScreen);
 
@@ -108,7 +112,7 @@ static bool PrepareVisibleRegion(const nsIntRegion& aVisible,
  * @return true if the layer should be rendered.
  *         false if the layer can be skipped
  */
-static bool PrepareLayerRects(nsIntRect aVisible, const gfxMatrix& aTransform,
+static bool PrepareLayerRects(nsIntRect aVisible, const gfx::Matrix& aTransform,
                               nsIntRect aClip, nsIntRect aBufferRect,
                               bool aYFlipped,
                               hwc_rect_t* aSourceCrop,
