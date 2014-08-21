@@ -815,6 +815,8 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress, int aChannel)
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_FALSE(mImpl, false);
 
+  SetConnectionStatus(SOCKET_CONNECTING);
+
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this);
 
   // TODO: uuid as argument
@@ -861,6 +863,8 @@ BluetoothSocket::Listen(int aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_FALSE(mImpl, false);
+
+  SetConnectionStatus(SOCKET_LISTENING);
 
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this);
 
