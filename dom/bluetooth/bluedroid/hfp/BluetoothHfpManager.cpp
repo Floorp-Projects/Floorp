@@ -1713,4 +1713,276 @@ BluetoothHfpManager::GetAddress(nsAString& aDeviceAddress)
   aDeviceAddress = mDeviceAddress;
 }
 
+//
+// Bluetooth notifications
+//
+
+void
+BluetoothHfpManager::ConnectionStateNotification(
+  BluetoothHandsfreeConnectionState aState, const nsAString& aBdAddress)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BT_LOGR("state %d", aState);
+
+  mPrevConnectionState = mConnectionState;
+  mConnectionState = aState;
+
+  if (aState == HFP_CONNECTION_STATE_SLC_CONNECTED) {
+    mDeviceAddress = aBdAddress;
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
+                        NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+  } else if (aState == HFP_CONNECTION_STATE_DISCONNECTED) {
+    DisconnectSco();
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
+                        NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+  }
+}
+
+void
+BluetoothHfpManager::AudioStateNotification(
+  BluetoothHandsfreeAudioState aState, const nsAString& aBdAddress)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BT_LOGR("state %d", aState);
+
+  mAudioState = aState;
+
+  if (aState == HFP_AUDIO_STATE_CONNECTED ||
+      aState == HFP_AUDIO_STATE_DISCONNECTED) {
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
+                        NS_LITERAL_STRING(BLUETOOTH_SCO_STATUS_CHANGED_ID));
+  }
+}
+
+void
+BluetoothHfpManager::AnswerCallNotification()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                      NS_LITERAL_STRING("ATA"));
+}
+
+void
+BluetoothHfpManager::HangupCallNotification()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                      NS_LITERAL_STRING("CHUP"));
+}
+
+void
+BluetoothHfpManager::VolumeNotification(
+  BluetoothHandsfreeVolumeType aType, int aVolume)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_TRUE_VOID(aVolume >= 0 && aVolume <= 15);
+
+  if (aType == HFP_VOLUME_TYPE_MICROPHONE) {
+    mCurrentVgm = aVolume;
+  } else if (aType == HFP_VOLUME_TYPE_SPEAKER) {
+    mReceiveVgsFlag = true;
+
+    if (aVolume == mCurrentVgs) {
+      // Keep current volume
+      return;
+    }
+
+    nsString data;
+    data.AppendInt(aVolume);
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_SCO_VOLUME_CHANGED, data);
+  }
+}
+
+void
+BluetoothHfpManager::DtmfNotification(char aDtmf)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_TRUE_VOID(IsValidDtmf(aDtmf));
+
+  nsAutoCString message("VTS=");
+  message += aDtmf;
+  BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                      NS_ConvertUTF8toUTF16(message));
+}
+
+void
+BluetoothHfpManager::CallHoldNotification(BluetoothHandsfreeCallHoldType aChld)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsAutoCString message("CHLD=");
+  message.AppendInt((int)aChld);
+  BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                      NS_ConvertUTF8toUTF16(message));
+
+  SendResponse(HFP_AT_RESPONSE_OK);
+}
+
+void BluetoothHfpManager::DialCallNotification(const nsAString& aNumber)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCString message = NS_ConvertUTF16toUTF8(aNumber);
+
+  // There are three cases based on aNumber,
+  // 1) Empty value:    Redial, BLDN
+  // 2) >xxx:           Memory dial, ATD>xxx
+  // 3) xxx:            Normal dial, ATDxxx
+  // We need to respond OK/Error for dial requests for every case listed above,
+  // 1) and 2):         Respond in either RespondToBLDNTask or
+  //                    HandleCallStateChanged()
+  // 3):                Respond here
+  if (message.IsEmpty()) {
+    mDialingRequestProcessed = false;
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                        NS_LITERAL_STRING("BLDN"));
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+  } else if (message[0] == '>') {
+    mDialingRequestProcessed = false;
+    nsAutoCString newMsg("ATD");
+    newMsg += StringHead(message, message.Length() - 1);
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                        NS_ConvertUTF8toUTF16(newMsg));
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+  } else {
+    nsAutoCString newMsg("ATD");
+    newMsg += StringHead(message, message.Length() - 1);
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                        NS_ConvertUTF8toUTF16(newMsg));
+    SendResponse(HFP_AT_RESPONSE_OK);
+  }
+}
+
+void
+BluetoothHfpManager::CnumNotification()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mMsisdn.IsEmpty()) {
+    nsAutoCString message("+CNUM: ,\"");
+    message.Append(NS_ConvertUTF16toUTF8(mMsisdn).get());
+    message.AppendLiteral("\",");
+    message.AppendInt(BTHF_CALL_ADDRTYPE_UNKNOWN);
+    message.AppendLiteral(",,4");
+
+    SendLine(message.get());
+  }
+
+  SendResponse(HFP_AT_RESPONSE_OK);
+}
+
+void
+BluetoothHfpManager::CindNotification()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
+
+  int numActive = GetNumberOfCalls(nsITelephonyService::CALL_STATE_CONNECTED);
+  int numHeld = GetNumberOfCalls(nsITelephonyService::CALL_STATE_HELD);
+  BluetoothHandsfreeCallState callState =
+    ConvertToBluetoothHandsfreeCallState(GetCallSetupState());
+
+  sBluetoothHfpInterface->CindResponse(mService, numActive, numHeld,
+                                       callState, mSignal, mRoam, mBattChg,
+                                       new CindResponseResultHandler());
+}
+
+void
+BluetoothHfpManager::CopsNotification()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
+
+  sBluetoothHfpInterface->CopsResponse(
+    NS_ConvertUTF16toUTF8(mOperatorName).get(),
+    new CopsResponseResultHandler());
+}
+
+void
+BluetoothHfpManager::ClccNotification()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  uint32_t callNumbers = mCurrentCallArray.Length();
+  uint32_t i;
+  for (i = 1; i < callNumbers; i++) {
+    SendCLCC(mCurrentCallArray[i], i);
+  }
+
+  if (!mCdmaSecondCall.mNumber.IsEmpty()) {
+    MOZ_ASSERT(mPhoneType == PhoneType::CDMA);
+    MOZ_ASSERT(i == 2);
+
+    SendCLCC(mCdmaSecondCall, 2);
+  }
+
+  SendResponse(HFP_AT_RESPONSE_OK);
+}
+
+void
+BluetoothHfpManager::UnknownAtNotification(const nsACString& aAtString)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCString atString(aAtString);
+
+  BT_LOGR("[%s]", atString.get());
+
+  NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
+
+  sBluetoothHfpInterface->AtResponse(HFP_AT_RESPONSE_ERROR, 0,
+                                     new AtResponseResultHandler());
+}
+
+void
+BluetoothHfpManager::KeyPressedNotification()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  bool hasActiveCall =
+    (FindFirstCall(nsITelephonyService::CALL_STATE_CONNECTED) > 0);
+
+  // Refer to AOSP HeadsetStateMachine.processKeyPressed
+  if (FindFirstCall(nsITelephonyService::CALL_STATE_INCOMING)
+      && !hasActiveCall) {
+    /**
+     * Bluetooth HSP spec 4.2.2
+     * There is an incoming call, notify Dialer to pick up the phone call
+     * and SCO will be established after we get the CallStateChanged event
+     * indicating the call is answered successfully.
+     */
+    ProcessAnswerCall();
+  } else if (hasActiveCall) {
+    if (!IsScoConnected()) {
+      /**
+       * Bluetooth HSP spec 4.3
+       * If there's no SCO, set up a SCO link.
+       */
+      ConnectSco();
+    } else {
+      /**
+       * Bluetooth HSP spec 4.5
+       * There are two ways to release SCO: sending CHUP to dialer or closing
+       * SCO socket directly. We notify dialer only if there is at least one
+       * active call.
+       */
+      ProcessHangupCall();
+    }
+  } else {
+    // BLDN
+    mDialingRequestProcessed = false;
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_DIALER,
+                        NS_LITERAL_STRING("BLDN"));
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN);
+  }
+}
+
 NS_IMPL_ISUPPORTS(BluetoothHfpManager, nsIObserver)
