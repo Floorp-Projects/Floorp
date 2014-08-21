@@ -1134,6 +1134,7 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
 	    _cairo_fixed_integer_ceil (ydim) > PIXMAN_MAX_INT)
 	{
 	    double sf;
+	    cairo_matrix_t scale;
 
 	    if (xdim > ydim)
 		sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (xdim);
@@ -1145,7 +1146,8 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
 	    p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.x) * sf);
 	    p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.y) * sf);
 
-	    cairo_matrix_scale (&matrix, sf, sf);
+	    cairo_matrix_init_scale (&scale, sf, sf);
+	    cairo_matrix_multiply (&matrix, &matrix, &scale);
 	}
 	else
 	{
@@ -1182,9 +1184,9 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
     if (unlikely (pixman_image == NULL))
 	return NULL;
 
-    tx = pattern->base.matrix.x0;
-    ty = pattern->base.matrix.y0;
-    if (! _cairo_matrix_is_translation (&pattern->base.matrix) ||
+    tx = matrix.x0;
+    ty = matrix.y0;
+    if (! _cairo_matrix_is_translation (&matrix) ||
 	! _nearest_sample (pattern->base.filter, &tx, &ty))
     {
 	pixman_transform_t pixman_transform;
@@ -1192,21 +1194,30 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
 	if (tx != 0. || ty != 0.) {
 	    cairo_matrix_t m, inv;
 	    cairo_status_t status;
-	    double x, y;
+	    double x, y, max_x, max_y;
 
-	    /* pixman also limits the [xy]_offset to 16 bits so evenly
-	     * spread the bits between the two.
+	    /* Pixman also limits the [xy]_offset to 16 bits. We try to evenly
+	     * spread the bits between the two, but we need to ensure that
+	     * fabs (tx + extents->x + extents->width) < PIXMAN_MAX_INT &&
+	     * fabs (ty + extents->y + extents->height) < PIXMAN_MAX_INT,
+	     * otherwise the gradient won't render.
 	     */
-	    inv = pattern->base.matrix;
+	    inv = matrix;
 	    status = cairo_matrix_invert (&inv);
 	    assert (status == CAIRO_STATUS_SUCCESS);
 
 	    x = _cairo_lround (inv.x0 / 2);
 	    y = _cairo_lround (inv.y0 / 2);
+
+	    max_x = PIXMAN_MAX_INT - 1 - fabs (extents->x + extents->width);
+	    x = x > max_x ? max_x : (x < -max_x ? -max_x : x);
+	    max_y = PIXMAN_MAX_INT - 1 - fabs (extents->y + extents->height);
+	    y = y > max_y ? max_y : (y < -max_y ? -max_y : y);
+
 	    tx = -x;
 	    ty = -y;
 	    cairo_matrix_init_translate (&inv, x, y);
-	    cairo_matrix_multiply (&m, &inv, &pattern->base.matrix);
+	    cairo_matrix_multiply (&m, &inv, &matrix);
 	    _cairo_matrix_to_pixman_matrix (&m, &pixman_transform,
 					    extents->x + extents->width/2.,
 					    extents->y + extents->height/2.);
