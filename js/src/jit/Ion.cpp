@@ -1351,17 +1351,6 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    if (mir->optimizationInfo().scalarReplacementEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::ScalarReplacement);
-        if (!ScalarReplacement(mir, graph))
-            return false;
-        IonSpewPass("Scalar Replacement");
-        AssertGraphCoherency(graph);
-
-        if (mir->shouldCancel("Scalar Replacement"))
-            return false;
-    }
-
     {
         AutoTraceLog log(logger, TraceLogger::PhiAnalysis);
         // Aggressive phi elimination must occur before any code elimination. If the
@@ -1385,6 +1374,17 @@ OptimizeMIR(MIRGenerator *mir)
         // No spew: graph not changed.
 
         if (mir->shouldCancel("Phi reverse mapping"))
+            return false;
+    }
+
+    if (mir->optimizationInfo().scalarReplacementEnabled()) {
+        AutoTraceLog log(logger, TraceLogger::ScalarReplacement);
+        if (!ScalarReplacement(mir, graph))
+            return false;
+        IonSpewPass("Scalar Replacement");
+        AssertGraphCoherency(graph);
+
+        if (mir->shouldCancel("Scalar Replacement"))
             return false;
     }
 
