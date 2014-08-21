@@ -203,33 +203,6 @@ private:
   T* mInstance;
 };
 
-class RequestClosingSocketTask : public SocketIORunnable<DroidSocketImpl>
-{
-public:
-  RequestClosingSocketTask(DroidSocketImpl* aImpl)
-  : SocketIORunnable<DroidSocketImpl>(aImpl)
-  { }
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    DroidSocketImpl* impl = GetIO();
-
-    if (impl->IsShutdownOnMainThread()) {
-      NS_WARNING("CloseSocket has already been called!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-
-    // Start from here, same handling flow as calling CloseSocket() from
-    // upper layer
-    impl->mConsumer->CloseDroidSocket();
-    return NS_OK;
-  }
-};
-
 class ShutdownSocketTask : public Task {
   virtual void Run()
   {
@@ -465,8 +438,9 @@ DroidSocketImpl::OnSocketCanReceiveWithoutBlocking(int aFd)
       // We're done with our descriptors. Ensure that spurious events don't
       // cause us to end up back here.
       RemoveWatchers(READ_WATCHER | WRITE_WATCHER);
-      nsRefPtr<RequestClosingSocketTask> t = new RequestClosingSocketTask(this);
-      NS_DispatchToMainThread(t);
+      nsRefPtr<nsRunnable> r =
+        new SocketIORequestClosingRunnable<DroidSocketImpl>(this);
+      NS_DispatchToMainThread(r);
       return;
     }
 
