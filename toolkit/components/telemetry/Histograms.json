@@ -3079,6 +3079,19 @@
     "n_buckets" : 100,
     "description": "PLACES: Size of favicon files without a specific file type probe, loaded from the web (Bytes)"
   },
+  "LINK_ICON_SIZES_ATTR_USAGE": {
+    "expires_in_version" : "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "The possible types of the 'sizes' attribute for <link rel=icon>. 0: Attribute not specified, 1: 'any', 2: Integer dimensions, 3: Invalid value."
+  },
+  "LINK_ICON_SIZES_ATTR_DIMENSION": {
+    "expires_in_version" : "never",
+    "kind": "linear",
+    "high": 513,
+    "n_buckets" : 64,
+    "description": "The width dimension of the 'sizes' attribute for <link rel=icon>."
+  },
   "FENNEC_DISTRIBUTION_REFERRER_INVALID": {
     "expires_in_version": "never",
     "kind": "flag",
