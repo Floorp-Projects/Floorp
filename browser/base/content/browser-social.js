@@ -69,7 +69,7 @@ SocialUI = {
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
-    PanelUI.panel.addEventListener("popupshown", SocialUI.updateState, true);
+    PanelUI.panel.addEventListener("popupshown", SocialUI.updatePanelState, true);
 
     // menupopups that list social providers. we only populate them when shown,
     // and if it has not been done already.
@@ -103,7 +103,7 @@ SocialUI = {
 
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
 
-    PanelUI.panel.removeEventListener("popupshown", SocialUI.updateState, true);
+    PanelUI.panel.removeEventListener("popupshown", SocialUI.updatePanelState, true);
     document.getElementById("viewSidebarMenu").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
     document.getElementById("social-statusarea-popup").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
 
@@ -286,6 +286,14 @@ SocialUI = {
     if (this._chromeless || PrivateBrowsingUtils.isWindowPrivate(window))
       return false;
     return Social.providers.length > 0;
+  },
+
+  updatePanelState :function(event) {
+    // we only want to update when the panel is initially opened, not during
+    // multiview changes
+    if (event.target != PanelUI.panel)
+      return;
+    SocialUI.updateState();
   },
 
   // called on tab/urlbar/location changes and after customization. Update
@@ -1444,13 +1452,6 @@ SocialStatus = {
  */
 SocialMarks = {
   update: function() {
-    // signal each button to update itself
-    let currentButtons = document.querySelectorAll('toolbarbutton[type="socialmark"]');
-    for (let elt of currentButtons)
-      elt.update();
-  },
-
-  updatePanelButtons: function() {
     // querySelectorAll does not work on the menu panel the panel, so we have to
     // do this the hard way.
     let providers = SocialMarks.getProviders();
@@ -1498,7 +1499,7 @@ SocialMarks = {
     for (let cfg of contextMenus) {
       this._populateContextPopup(cfg, providers);
     }
-    this.updatePanelButtons();
+    this.update();
   },
 
   MENU_LIMIT: 3, // adjustable for testing
