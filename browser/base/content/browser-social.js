@@ -1282,7 +1282,7 @@ SocialStatus = {
     let origin = aToolbarButton.getAttribute("origin");
     let provider = Social._getProviderFromOrigin(origin);
 
-    PanelFrame.showPopup(window, PanelUI, aToolbarButton, "social", origin,
+    PanelFrame.showPopup(window, aToolbarButton, "social", origin,
                          provider.statusURL, provider.getPageSize("status"),
                          (frame) => {
                           frame.addEventListener("close", this._onclose, true);
