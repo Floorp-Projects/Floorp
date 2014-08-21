@@ -69,8 +69,8 @@ static const size_t AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
 inline uint32_t
 RoundUpToNextValidAsmJSHeapLength(uint32_t length)
 {
-    if (length <= 4096)
-        return 4096;
+    if (length <= 4 * 1024)
+        return 4 * 1024;
 
     if (length <= 16 * 1024 * 1024)
         return mozilla::RoundUpPow2(length);
@@ -82,7 +82,7 @@ RoundUpToNextValidAsmJSHeapLength(uint32_t length)
 inline bool
 IsValidAsmJSHeapLength(uint32_t length)
 {
-    bool valid = length >= 4096 &&
+    bool valid = length >= 4 * 1024 &&
                  (IsPowerOfTwo(length) ||
                   (length & 0x00ffffff) == 0);
 
@@ -90,6 +90,14 @@ IsValidAsmJSHeapLength(uint32_t length)
     JS_ASSERT_IF(valid, length == RoundUpToNextValidAsmJSHeapLength(length));
 
     return valid;
+}
+
+// For now, power-of-2 lengths in this range are accepted, but in the future
+// we'll change this to cause link-time failure.
+inline bool
+IsDeprecatedAsmJSHeapLength(uint32_t length)
+{
+    return length >= 4 * 1024 && length < 64 * 1024 && IsPowerOfTwo(length);
 }
 
 // Return whether asm.js optimization is inhibited by the platform or
