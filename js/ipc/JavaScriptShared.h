@@ -132,6 +132,7 @@ class JavaScriptShared
     friend class Logging;
 
     virtual bool isParent() = 0;
+    virtual JSObject *defaultScope() = 0;
 
   protected:
     JSRuntime *rt_;

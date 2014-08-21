@@ -128,7 +128,7 @@ var security = {
       window.openDialog("chrome://browser/content/preferences/cookies.xul",
                         "Browser:Cookies", "", {filterString : eTLD});
   },
-  
+
   /**
    * Open the login manager window
    */
@@ -143,7 +143,7 @@ var security = {
     }
     else
       window.openDialog("chrome://passwordmgr/content/passwordManager.xul",
-                        "Toolkit:PasswordManager", "", 
+                        "Toolkit:PasswordManager", "",
                         {filterString : this._getSecurityInfo().hostName});
   },
 

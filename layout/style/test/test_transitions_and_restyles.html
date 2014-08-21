@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1030993
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1030993</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #display {
+    background: blue; height: 10px; width: 0; color: black;
+    transition: width linear 1s, color linear 1s;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1030993">Mozilla Bug 1030993</a>
+<p id="display"></p>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+
+/** Test for Bug 1030993 **/
+
+function advance_clock(milliseconds) {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
+}
+
+var p = document.getElementById("display");
+var cs = getComputedStyle(p, "");
+advance_clock(0);
+cs.width; // flush
+p.style.width = "1000px"; // start transition
+is(cs.width, "0px", "transition at 0ms"); // flush (and test)
+advance_clock(100);
+is(cs.width, "100px", "transition at 100ms"); // flush
+// restyle *and* trigger new transitions
+p.style.color = "blue";
+// flush again, at the same timestamp
+is(cs.width, "100px", "transition at 100ms, after restyle");
+
+SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+
+</script>
+</body>
+</html>

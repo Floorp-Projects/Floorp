@@ -374,6 +374,12 @@ JSContext::setPendingException(js::Value v)
     JS_ASSERT_IF(v.isObject(), v.toObject().compartment() == compartment());
 }
 
+inline bool
+JSContext::runningWithTrustedPrincipals() const
+{
+    return !compartment() || compartment()->principals == runtime()->trustedPrincipals();
+}
+
 inline void
 JSContext::setDefaultCompartmentObject(JSObject *obj)
 {
