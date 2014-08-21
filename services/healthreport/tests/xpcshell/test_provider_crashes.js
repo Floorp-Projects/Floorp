@@ -50,17 +50,9 @@ add_task(function* test_collect() {
   yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
                          manager.CRASH_TYPE_CRASH,
                          "mc1", day1);
-  yield manager.addSubmission(manager.PROCESS_TYPE_MAIN,
-                              manager.CRASH_TYPE_CRASH,
-                              true,
-                              "mc1", day1)
   yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
                          manager.CRASH_TYPE_CRASH,
                          "mc2", day1);
-  yield manager.addSubmission(manager.PROCESS_TYPE_MAIN,
-                              manager.CRASH_TYPE_CRASH,
-                              false,
-                              "mc2", day1)
   yield manager.addCrash(manager.PROCESS_TYPE_CONTENT,
                          manager.CRASH_TYPE_HANG,
                          "ch", day1);
@@ -74,20 +66,12 @@ add_task(function* test_collect() {
   yield manager.addCrash(manager.PROCESS_TYPE_CONTENT,
                          manager.CRASH_TYPE_CRASH,
                          "cc", day2);
-  yield manager.addSubmission(manager.PROCESS_TYPE_CONTENT,
-                              manager.CRASH_TYPE_CRASH,
-                              true,
-                              "cc", day2)
   yield manager.addCrash(manager.PROCESS_TYPE_PLUGIN,
                          manager.CRASH_TYPE_HANG,
                          "ph", day2);
   yield manager.addCrash(manager.PROCESS_TYPE_GMPLUGIN,
                          manager.CRASH_TYPE_CRASH,
                          "gmpc", day2);
-  yield manager.addSubmission(manager.PROCESS_TYPE_GMPLUGIN,
-                              manager.CRASH_TYPE_CRASH,
-                              true,
-                              "gmpc", day2)
 
   yield provider.collectDailyData();
 
@@ -100,10 +84,6 @@ add_task(function* test_collect() {
   let value = values.days.getDay(day1);
   do_check_true(value.has("main-crash"));
   do_check_eq(value.get("main-crash"), 2);
-  do_check_true(value.has("main-crash-submission-succeeded"));
-  do_check_eq(value.get("main-crash-submission-succeeded"), 1);
-  do_check_true(value.has("main-crash-submission-failed"));
-  do_check_eq(value.get("main-crash-submission-failed"), 1);
   do_check_true(value.has("content-hang"));
   do_check_eq(value.get("content-hang"), 1);
   do_check_true(value.has("plugin-crash"));
@@ -114,14 +94,10 @@ add_task(function* test_collect() {
   do_check_eq(value.get("main-hang"), 1);
   do_check_true(value.has("content-crash"));
   do_check_eq(value.get("content-crash"), 1);
-  do_check_true(value.has("content-crash-submission-succeeded"));
-  do_check_eq(value.get("content-crash-submission-succeeded"), 1);
   do_check_true(value.has("plugin-hang"));
   do_check_eq(value.get("plugin-hang"), 1);
   do_check_true(value.has("gmplugin-crash"));
   do_check_eq(value.get("gmplugin-crash"), 1);
-  do_check_true(value.has("gmplugin-crash-submission-succeeded"));
-  do_check_eq(value.get("gmplugin-crash-submission-succeeded"), 1);
 
   // Check that adding a new crash increments counter on next collect.
   yield manager.addCrash(manager.PROCESS_TYPE_MAIN,
