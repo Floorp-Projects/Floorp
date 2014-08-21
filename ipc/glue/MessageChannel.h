@@ -11,6 +11,7 @@
 #include "base/basictypes.h"
 #include "base/message_loop.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WeakPtr.h"
@@ -202,7 +203,7 @@ class MessageChannel : HasResultCodes
     void Clear();
 
     // Send OnChannelConnected notification to listeners.
-    void DispatchOnChannelConnected(int32_t peer_pid);
+    void DispatchOnChannelConnected();
 
     // Any protocol that requires blocking until a reply arrives, will send its
     // outgoing message through this function. Currently, two protocols do this:
@@ -655,6 +656,13 @@ class MessageChannel : HasResultCodes
 
     // See SetChannelFlags
     ChannelFlags mFlags;
+
+    // Task and state used to asynchronously notify channel has been connected
+    // safely.  This is necessary to be able to cancel notification if we are
+    // closed at the same time.
+    nsRefPtr<RefCountedTask> mOnChannelConnectedTask;
+    DebugOnly<bool> mPeerPidSet;
+    int32_t mPeerPid;
 };
 
 bool
