@@ -8,7 +8,7 @@ function testConstructNDEF() {
   try {
     // omit type, id and payload.
     let r = new MozNDEFRecord();
-    is(r.tnf, 0, "r.tnf should be 0");
+    is(r.tnf, "empty", "r.tnf should be 'empty'");
     is(r.type, null, "r.type should be null");
     is(r.id, null, "r.id should be null");
     is(r.payload, null, "r.payload should be null");
