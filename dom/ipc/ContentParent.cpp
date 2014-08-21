@@ -183,33 +183,6 @@ using namespace mozilla::system;
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
-#ifdef MOZ_NUWA_PROCESS
-bool ContentParent::sNuwaReady = false;
-
-// Contains data that is observed by Nuwa and is going to be sent to
-// the new process when it is forked.
-struct ContentParent::NuwaReinitializeData {
-    NuwaReinitializeData()
-        : mReceivedFilePathUpdate(false)
-        , mReceivedFileSystemUpdate(false) { }
-
-    bool mReceivedFilePathUpdate;
-    nsString mFilePathUpdateStoageType;
-    nsString mFilePathUpdateStorageName;
-    nsString mFilePathUpdatePath;
-    nsCString mFilePathUpdateReason;
-
-    bool mReceivedFileSystemUpdate;
-    nsString mFileSystemUpdateFsName;
-    nsString mFileSystemUpdateMountPount;
-    int32_t mFileSystemUpdateState;
-    int32_t mFileSystemUpdateMountGeneration;
-    bool mFileSystemUpdateIsMediaPresent;
-    bool mFileSystemUpdateIsSharing;
-    bool mFileSystemUpdateIsFormatting;
-    bool mFileSystemUpdateIsFake;
-};
-#endif
 
 using base::ChildPrivileges;
 using base::KillProcess;
@@ -601,9 +574,6 @@ ContentParent::RunNuwaProcess()
                           PROCESS_PRIORITY_BACKGROUND,
                           /* aIsNuwaProcess = */ true);
     nuwaProcess->Init();
-#ifdef MOZ_NUWA_PROCESS
-    sNuwaReady = false;
-#endif
     return nuwaProcess.forget();
 }
 
@@ -2001,12 +1971,6 @@ ContentParent::~ContentParent()
         MOZ_ASSERT(!sAppContentParents ||
                    sAppContentParents->Get(mAppManifestURL) != this);
     }
-
-#ifdef MOZ_NUWA_PROCESS
-    if (IsNuwaProcess()) {
-        sNuwaReady = false;
-    }
-#endif
 }
 
 void
@@ -2467,7 +2431,6 @@ ContentParent::RecvNuwaReady()
         KillHard();
         return false;
     }
-    sNuwaReady = true;
     PreallocatedProcessManager::OnNuwaReady();
     return true;
 #else
@@ -2503,32 +2466,6 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
     for (int i = 0; i < numNuwaPrefUpdates; i++) {
         content->SendPreferenceUpdate(sNuwaPrefUpdates->ElementAt(i));
     }
-
-    // Update offline settings.
-    bool isOffline;
-    RecvGetXPCOMProcessAttributes(&isOffline);
-    content->SendSetOffline(isOffline);
-
-    // Send observed updates to new content.
-    if (mReinitializeData) {
-        if (mReinitializeData->mReceivedFilePathUpdate) {
-            unused << content->SendFilePathUpdate(mReinitializeData->mFilePathUpdateStoageType,
-                                                  mReinitializeData->mFilePathUpdateStorageName,
-                                                  mReinitializeData->mFilePathUpdatePath,
-                                                  mReinitializeData->mFilePathUpdateReason);
-        }
-        if (mReinitializeData->mReceivedFilePathUpdate) {
-            unused << content->SendFileSystemUpdate(mReinitializeData->mFileSystemUpdateFsName,
-                                                    mReinitializeData->mFileSystemUpdateMountPount,
-                                                    mReinitializeData->mFileSystemUpdateState,
-                                                    mReinitializeData->mFileSystemUpdateMountGeneration,
-                                                    mReinitializeData->mFileSystemUpdateIsMediaPresent,
-                                                    mReinitializeData->mFileSystemUpdateIsSharing,
-                                                    mReinitializeData->mFileSystemUpdateIsFormatting,
-                                                    mReinitializeData->mFileSystemUpdateIsFake);
-        }
-    }
-
     PreallocatedProcessManager::PublishSpareProcess(content);
     return true;
 #else
@@ -2597,15 +2534,8 @@ ContentParent::Observe(nsISupports* aSubject,
     else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC)) {
       NS_ConvertUTF16toUTF8 dataStr(aData);
       const char *offline = dataStr.get();
-#ifdef MOZ_NUWA_PROCESS
-      if (!(IsNuwaReady() && IsNuwaProcess())) {
-#endif
-          if (!SendSetOffline(!strcmp(offline, "true") ? true : false)) {
-              return NS_ERROR_NOT_AVAILABLE;
-          }
-#ifdef MOZ_NUWA_PROCESS
-      }
-#endif
+      if (!SendSetOffline(!strcmp(offline, "true") ? true : false))
+          return NS_ERROR_NOT_AVAILABLE;
     }
     // listening for alert notifications
     else if (!strcmp(aTopic, "alertfinished") ||
@@ -2670,24 +2600,7 @@ ContentParent::Observe(nsISupports* aSubject,
         CopyUTF16toUTF8(aData, creason);
         DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
 
-#ifdef MOZ_NUWA_PROCESS
-        if (!(IsNuwaReady() && IsNuwaProcess())) {
-#endif
-
-            unused << SendFilePathUpdate(file->mStorageType, file->mStorageName, file->mPath, creason);
-
-#ifdef MOZ_NUWA_PROCESS
-        } else {
-            if (!mReinitializeData) {
-                mReinitializeData = new NuwaReinitializeData();
-            }
-            mReinitializeData->mReceivedFilePathUpdate = true;
-            mReinitializeData->mFilePathUpdateStoageType = file->mStorageType;
-            mReinitializeData->mFilePathUpdateStorageName = file->mStorageName;
-            mReinitializeData->mFilePathUpdatePath = file->mPath;
-            mReinitializeData->mFilePathUpdateReason = creason;
-        }
-#endif
+        unused << SendFilePathUpdate(file->mStorageType, file->mStorageName, file->mPath, creason);
     }
 #ifdef MOZ_WIDGET_GONK
     else if(!strcmp(aTopic, NS_VOLUME_STATE_CHANGED)) {
@@ -2714,30 +2627,9 @@ ContentParent::Observe(nsISupports* aSubject,
         vol->GetIsFormatting(&isFormatting);
         vol->GetIsFake(&isFake);
 
-#ifdef MOZ_NUWA_PROCESS
-        if (!(IsNuwaReady() && IsNuwaProcess())) {
-#endif
-
-            unused << SendFileSystemUpdate(volName, mountPoint, state,
-                                           mountGeneration, isMediaPresent,
-                                           isSharing, isFormatting, isFake);
-
-#ifdef MOZ_NUWA_PROCESS
-        } else {
-            if (!mReinitializeData) {
-                mReinitializeData = new NuwaReinitializeData();
-            }
-            mReinitializeData->mReceivedFileSystemUpdate = true;
-            mReinitializeData->mFileSystemUpdateFsName = volName;
-            mReinitializeData->mFileSystemUpdateMountPount = mountPoint;
-            mReinitializeData->mFileSystemUpdateState = state;
-            mReinitializeData->mFileSystemUpdateMountPount = mountGeneration;
-            mReinitializeData->mFileSystemUpdateIsMediaPresent = isMediaPresent;
-            mReinitializeData->mFileSystemUpdateIsSharing = isSharing;
-            mReinitializeData->mFileSystemUpdateIsFormatting = isFormatting;
-            mReinitializeData->mFileSystemUpdateIsFake = isFake;
-        }
-#endif
+        unused << SendFileSystemUpdate(volName, mountPoint, state,
+                                       mountGeneration, isMediaPresent,
+                                       isSharing, isFormatting, isFake);
     } else if (!strcmp(aTopic, "phone-state-changed")) {
         nsString state(aData);
         unused << SendNotifyPhoneStateChange(state);
