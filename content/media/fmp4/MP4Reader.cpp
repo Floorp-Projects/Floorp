@@ -317,6 +317,8 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
       return NS_ERROR_FAILURE;
     }
 
+    mInfo.mAudio.mHasAudio = mAudio.mActive = mDemuxer->HasValidAudio();
+
     {
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
       mIsEncrypted = mDemuxer->Crypto().valid;
@@ -377,9 +379,8 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
   }
 
-  if (mDemuxer->HasValidAudio()) {
+  if (HasAudio()) {
     const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
-    mInfo.mAudio.mHasAudio = mAudio.mActive = true;
     if (mInfo.mAudio.mHasAudio && !IsSupportedAudioMimeType(audio.mime_type)) {
       return NS_ERROR_FAILURE;
     }
