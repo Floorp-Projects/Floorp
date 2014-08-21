@@ -55,6 +55,128 @@ TestArray.addTest(
     );
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Derive bits from a DH key",
+  function() {
+    var that = this;
+    var alg = {
+      name: "DH",
+      prime: tv.dh.prime,
+      generator: new Uint8Array([0x02])
+    };
+
+    function doDerive(x) {
+      var alg = {
+        name: "DH",
+        public: x.publicKey
+      };
+      return crypto.subtle.deriveBits(alg, x.privateKey, 128);
+    }
+
+    crypto.subtle.generateKey(alg, false, ["deriveBits"])
+      .then(doDerive, error(that))
+      .then(complete(that, function (x) {
+        return x.byteLength == 16;
+      }), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that DH deriveBits() fails when the public key is not a DH key",
+  function() {
+    var that = this;
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x.publicKey; }
+    function setPriv(x) { privKey = x.privateKey; }
+
+    function doGenerateDH() {
+      var alg = {
+        name: "DH",
+        prime: tv.dh.prime,
+        generator: new Uint8Array([0x02])
+      };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doGenerateRSA() {
+      var alg = {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01])
+      };
+      return crypto.subtle.generateKey(alg, false, ["encrypt"])
+    }
+
+    function doDerive() {
+      var alg = {name: "DH", public: pubKey};
+      return crypto.subtle.deriveBits(alg, privKey, 128);
+    }
+
+    doGenerateDH()
+      .then(setPriv, error(that))
+      .then(doGenerateRSA, error(that))
+      .then(setPub, error(that))
+      .then(doDerive, error(that))
+      .then(error(that), complete(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Test that DH deriveBits() fails when the given keys' primes or bases don't match",
+  function() {
+    var that = this;
+    var pubKey, privKey;
+    function setPub(x) { pubKey = x.publicKey; }
+    function setPriv(x) { privKey = x.privateKey; }
+
+    function doGenerateDH() {
+      var alg = {
+        name: "DH",
+        prime: tv.dh.prime,
+        generator: new Uint8Array([0x02])
+      };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doGenerateDH2() {
+      var alg = {
+        name: "DH",
+        prime: tv.dh.prime2,
+        generator: new Uint8Array([0x02])
+      };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doGenerateDH3() {
+      var alg = {
+        name: "DH",
+        prime: tv.dh.prime,
+        generator: new Uint8Array([0x03])
+      };
+      return crypto.subtle.generateKey(alg, false, ["deriveBits"]);
+    }
+
+    function doDerive() {
+      var alg = {name: "DH", public: pubKey};
+      return crypto.subtle.deriveBits(alg, privKey, 128);
+    }
+
+    doGenerateDH()
+      .then(setPriv, error(that))
+      .then(doGenerateDH2, error(that))
+      .then(setPub, error(that))
+      .then(doDerive, error(that))
+      .then(error(that), doGenerateDH3)
+      .then(setPub, error(that))
+      .then(doDerive, error(that))
+      .then(error(that), complete(that));
+  }
+);
 /*]]>*/</script>
 </head>
 
