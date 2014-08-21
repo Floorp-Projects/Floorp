@@ -8,14 +8,14 @@
 #define mozilla_dom_bluetooth_BluetoothSocket_h
 
 #include "BluetoothCommon.h"
-#include "mozilla/ipc/UnixSocket.h"
+#include "mozilla/ipc/SocketBase.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothSocketObserver;
 class DroidSocketImpl;
 
-class BluetoothSocket : public mozilla::ipc::UnixSocketConsumer
+class BluetoothSocket : public mozilla::ipc::SocketConsumerBase
 {
 public:
   BluetoothSocket(BluetoothSocketObserver* aObserver,
@@ -50,6 +50,16 @@ public:
 
   void CloseDroidSocket();
   bool SendDroidSocketData(mozilla::ipc::UnixSocketRawData* aData);
+
+  void CloseSocket() MOZ_OVERRIDE
+  {
+    CloseDroidSocket();
+  }
+
+  bool SendSocketData(mozilla::ipc::UnixSocketRawData* aMessage) MOZ_OVERRIDE
+  {
+    return SendDroidSocketData(aMessage);
+  }
 
 private:
   BluetoothSocketObserver* mObserver;
