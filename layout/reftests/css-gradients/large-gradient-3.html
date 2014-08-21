@@ -1,0 +1,40 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Make sure that large gradient backgrounds are painted even at extreme scroll positions</title>
+<!-- See https://bugzilla.mozilla.org/show_bug.cgi?id=1011166 -->
+
+<style>
+
+html {
+  background: white;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  height: 204000px; /* = 255 * 800 */
+  background-image: linear-gradient(rgb(0,0,0) 0px, rgb(255,255,255) 204000px);
+}
+
+div {
+  height: 1000px;
+  background-color: red;
+}
+
+</style>
+
+<div></div>
+
+<script>
+
+window.addEventListener("MozReftestInvalidate", function () {
+  document.documentElement.scrollTop = 210 * 800; // 168000 > 131072 == 2^17
+  document.documentElement.removeAttribute("class");
+});
+
+</script>
