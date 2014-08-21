@@ -543,6 +543,9 @@ DrawBuffer::Create(GLContext* const gl,
         return true;
     }
 
+    if (caps.antialias && formats.samples == 0)
+        return false; // Can't create it
+
     GLuint colorMSRB = 0;
     GLuint depthRB   = 0;
     GLuint stencilRB = 0;
