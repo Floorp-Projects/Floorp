@@ -363,8 +363,7 @@ SocialErrorListener.prototype = {
     if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
       let provider = Social._getProviderFromOrigin(this.iframe.getAttribute("origin"));
-      if (provider && !provider.errorState)
-        provider.errorState = "content-error";
+      provider.errorState = "content-error";
       this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
                               .chromeEventHandler);
     }
@@ -374,7 +373,7 @@ SocialErrorListener.prototype = {
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
       let provider = Social._getProviderFromOrigin(this.iframe.getAttribute("origin"));
-      if (provider && !provider.errorState)
+      if (!provider.errorState)
         provider.errorState = "content-error";
       schedule(function() {
         this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
