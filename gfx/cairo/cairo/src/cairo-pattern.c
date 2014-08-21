@@ -1387,6 +1387,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	    _cairo_fixed_integer_ceil (ydim) > PIXMAN_MAX_INT)
 	{
 	    double sf;
+	    cairo_matrix_t scale;
 
 	    if (xdim > ydim)
 		sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (xdim);
@@ -1398,7 +1399,8 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	    p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.x) * sf);
 	    p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.y) * sf);
 
-	    cairo_matrix_scale (&matrix, sf, sf);
+	    cairo_matrix_init_scale (&scale, sf, sf);
+	    cairo_matrix_multiply (&matrix, &matrix, &scale);
 	}
 	else
 	{
