@@ -14,7 +14,7 @@ interface nsIDOMNode;
  * tabs contained in them.
  */
 
-[scriptable, uuid(5497d9a1-c378-47a9-9488-4c47a644131a)]
+[scriptable, uuid(da9ffc70-d444-47d4-b4ab-df3fb0fd24d0)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -76,4 +76,11 @@ interface nsISessionStore : nsISupports
    *                       backup session file is read from.
    */
   void restoreLastSession(in AString aSessionString);
+
+  /**
+   * Removes a window from the current session history. Data from this window
+   * won't be saved when its closed.
+   * @param aWindow The window to remove
+   */
+  void removeWindow(in nsIDOMWindow aWindow);
 };
