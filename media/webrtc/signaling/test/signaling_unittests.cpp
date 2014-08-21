@@ -285,7 +285,7 @@ NS_IMPL_ISUPPORTS(TestObserver, nsISupportsWeakReference)
 NS_IMETHODIMP
 TestObserver::OnCreateOfferSuccess(const char* offer, ER&)
 {
-  lastString = strdup(offer);
+  lastString = offer;
   state = stateSuccess;
   std::cout << name << ": onCreateOfferSuccess = " << std::endl << indent(offer)
             << std::endl;
@@ -305,7 +305,7 @@ TestObserver::OnCreateOfferError(uint32_t code, const char *message, ER&)
 NS_IMETHODIMP
 TestObserver::OnCreateAnswerSuccess(const char* answer, ER&)
 {
-  lastString = strdup(answer);
+  lastString = answer;
   state = stateSuccess;
   std::cout << name << ": onCreateAnswerSuccess =" << std::endl
             << indent(answer) << std::endl;
@@ -1048,8 +1048,8 @@ class SignalingAgent {
     return pObserver->MatchingCandidates(cand);
   }
 
-  char* offer() const { return offer_; }
-  char* answer() const { return answer_; }
+  const char* offer() const { return offer_.c_str(); }
+  const char* answer() const { return answer_.c_str(); }
 
   std::string getLocalDescription() const {
     char *sdp = nullptr;
@@ -1057,7 +1057,9 @@ class SignalingAgent {
     if (!sdp) {
       return "";
     }
-    return sdp;
+    std::string result(sdp);
+    delete sdp;
+    return result;
   }
 
   std::string getRemoteDescription() const {
@@ -1066,7 +1068,9 @@ class SignalingAgent {
     if (!sdp) {
       return "";
     }
-    return sdp;
+    std::string result(sdp);
+    delete sdp;
+    return result;
   }
 
   // Adds a stream to the PeerConnection.
@@ -1128,7 +1132,7 @@ class SignalingAgent {
     ASSERT_TRUE_WAIT(pObserver->state != TestObserver::stateNoResponse,
                      kDefaultTimeout);
     ASSERT_EQ(pObserver->state, TestObserver::stateSuccess);
-    SDPSanityCheck(pObserver->lastString, sdpCheck, true);
+    SDPSanityCheck(pObserver->lastString.c_str(), sdpCheck, true);
     ASSERT_EQ(signaling_state(), endState);
     offer_ = pObserver->lastString;
   }
@@ -1156,7 +1160,7 @@ void CreateAnswer(uint32_t offerAnswerFlags,
     ASSERT_TRUE_WAIT(pObserver->state != TestObserver::stateNoResponse,
                      kDefaultTimeout);
     ASSERT_EQ(pObserver->state, TestObserver::stateSuccess);
-    SDPSanityCheck(pObserver->lastString, sdpCheck, false);
+    SDPSanityCheck(pObserver->lastString.c_str(), sdpCheck, false);
     ASSERT_EQ(signaling_state(), endState);
 
     answer_ = pObserver->lastString;
@@ -1184,7 +1188,7 @@ void CreateAnswer(uint32_t offerAnswerFlags,
     ASSERT_TRUE_WAIT(pObserver->state != TestObserver::stateNoResponse,
                      kDefaultTimeout);
     ASSERT_TRUE(pObserver->state == TestObserver::stateSuccess);
-    SDPSanityCheck(pObserver->lastString, sdpCheck, true);
+    SDPSanityCheck(pObserver->lastString.c_str(), sdpCheck, true);
     offer_ = pObserver->lastString;
   }
 
@@ -1425,8 +1429,8 @@ void CreateAnswer(uint32_t offerAnswerFlags,
 public:
   nsRefPtr<PCDispatchWrapper> pc;
   nsRefPtr<TestObserver> pObserver;
-  char* offer_;
-  char* answer_;
+  std::string offer_;
+  std::string answer_;
   nsRefPtr<DOMMediaStream> domMediaStream_;
   sipcc::IceConfiguration cfg_;
   const std::string name;

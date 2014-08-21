@@ -335,6 +335,7 @@ sipsdp_write_to_buf (sdp_t *sdp_info, uint32_t *retbytes)
 
     if (!sdp_info) {
         CCSIP_DEBUG_ERROR(SIP_F_PREFIX"NULL sdp_info or src_sdp", __FUNCTION__);
+        flex_string_free(&fs);
         return (NULL);
     }
 

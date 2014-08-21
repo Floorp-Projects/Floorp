@@ -4051,7 +4051,7 @@ fsmdef_ev_addcandidate(sm_event_t *event) {
         dcb->caller_id.call_instance_id, strlib_malloc(remote_sdp,-1),
         msg->timecard, PC_NO_ERROR, NULL);
 
-    free(remote_sdp);
+    cpr_free(remote_sdp);
     return (SM_RC_END);
 }
 
@@ -4130,6 +4130,7 @@ fsmdef_ev_foundcandidate(sm_event_t *event) {
         strlib_malloc(candidate_tmp, -1),
         msg->timecard, PC_NO_ERROR, NULL);
 
+    cpr_free(local_sdp);
     return SM_RC_END;
 }
 
@@ -9009,6 +9010,7 @@ fsmdef_shutdown (void)
     FSM_FOR_ALL_CBS(dcb, fsmdef_dcbs, FSMDEF_MAX_DCBS) {
         /* clean media list */
         gsmsdp_clean_media_list(dcb);
+        gsmsdp_free(dcb);
     }
 
     /* destroy free media structure list */
