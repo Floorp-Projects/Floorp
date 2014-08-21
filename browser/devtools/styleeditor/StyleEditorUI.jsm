@@ -500,8 +500,7 @@ StyleEditorUI.prototype = {
           this._selectEditor(editor);
         }
 
-        if (this._styleSheetToSelect
-            && this._styleSheetToSelect.stylesheet == editor.styleSheet.href) {
+        if (this._isEditorToSelect(editor)) {
           this.switchToSelectedSheet();
         }
 
@@ -566,23 +565,40 @@ StyleEditorUI.prototype = {
    *         Promise that will resolve when the editor is selected.
    */
   switchToSelectedSheet: function() {
-    let sheet = this._styleSheetToSelect;
-    let isHref = sheet.stylesheet === null || typeof sheet.stylesheet == "string";
+    let toSelect = this._styleSheetToSelect;
 
     for (let editor of this.editors) {
-      if ((isHref && editor.styleSheet.href == sheet.stylesheet) ||
-          sheet.stylesheet == editor.styleSheet) {
+      if (this._isEditorToSelect(editor)) {
         // The _styleSheetBoundToSelect will always hold the latest pending
         // requested style sheet (with line and column) which is not yet
         // selected by the source editor. Only after we select that particular
         // editor and go the required line and column, it will become null.
         this._styleSheetBoundToSelect = this._styleSheetToSelect;
         this._styleSheetToSelect = null;
-        return this._selectEditor(editor, sheet.line, sheet.col);
+        return this._selectEditor(editor, toSelect.line, toSelect.col);
       }
     }
 
     return promise.resolve();
+  },
+
+  /**
+   * Returns whether a given editor is the current editor to be selected. Tests
+   * based on href or underlying stylesheet.
+   *
+   * @param {StyleSheetEditor} editor
+   *        The editor to test.
+   */
+  _isEditorToSelect: function(editor) {
+    let toSelect = this._styleSheetToSelect;
+    if (!toSelect) {
+      return false;
+    }
+    let isHref = toSelect.stylesheet === null ||
+                 typeof toSelect.stylesheet == "string";
+
+    return (isHref && editor.styleSheet.href == toSelect.stylesheet) ||
+           (toSelect.stylesheet == editor.styleSheet);
   },
 
   /**
