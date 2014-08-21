@@ -409,6 +409,39 @@ this.CrashManager.prototype = Object.freeze({
   },
 
   /**
+   * Record the occurrence of a submission attempt for a crash.
+   *
+   * @param crashID (string) Crash ID. Likely a UUID.
+   * @param submissionID (string) Submission ID. Likely a UUID.
+   * @param date (Date) When the attempt occurred.
+   *
+   * @return boolean True if the attempt was recorded and false if not.
+   */
+  addSubmissionAttempt: Task.async(function* (crashID, submissionID, date) {
+    let store = yield this._getStore();
+    if (store.addSubmissionAttempt(crashID, submissionID, date)) {
+      yield store.save();
+    }
+  }),
+
+  /**
+   * Record the occurrence of a submission result for a crash.
+   *
+   * @param crashID (string) Crash ID. Likely a UUID.
+   * @param submissionID (string) Submission ID. Likely a UUID.
+   * @param date (Date) When the submission result was obtained.
+   * @param result (string) One of the SUBMISSION_RESULT constants.
+   *
+   * @return boolean True if the result was recorded and false if not.
+   */
+  addSubmissionResult: Task.async(function* (crashID, submissionID, date, result) {
+    let store = yield this._getStore();
+    if (store.addSubmissionResult(crashID, submissionID, date, result)) {
+      yield store.save();
+    }
+  }),
+
+  /**
    * Obtain the paths of all unprocessed events files.
    *
    * The promise-resolved array is sorted by file mtime, oldest to newest.
@@ -697,7 +730,22 @@ CrashStore.prototype = Object.freeze({
         // days stored in the payload matches up to actual data.
         let actualCounts = new Map();
 
+        // In the past, submissions were stored as separate crash records
+        // with an id of e.g. "someID-submission". If we find IDs ending
+        // with "-submission", we will need to convert the data to be stored
+        // as actual submissions.
+        //
+        // TODO: The old way of storing submissions was used from FF33 - FF34.
+        // We should drop the conversion code after a few releases. See bug
+        // 1056157.
+        let hasSubmissionsStoredAsCrashes = false;
+
         for (let id in data.crashes) {
+          if (id.endsWith("-submission")) {
+            hasSubmissionsStoredAsCrashes = true;
+            continue;
+          }
+
           let crash = data.crashes[id];
           let denormalized = this._denormalize(crash);
 
@@ -714,6 +762,32 @@ CrashStore.prototype = Object.freeze({
 
           let key = dateToDays(denormalized.crashDate) + "-" + denormalized.type;
           actualCounts.set(key, (actualCounts.get(key) || 0) + 1);
+        }
+
+        if (hasSubmissionsStoredAsCrashes) {
+          for (let id in data.crashes) {
+            if (!id.endsWith("-submission")) {
+              continue;
+            }
+
+            // This type of record will contain e.g.:
+            // {
+            //   "id": "crash1-submission",
+            //   "type": "main-crash-submission-succeeded",
+            //   "crashDate": "...",
+            // }
+            let submissionData = this._denormalize(data.crashes[id]);
+
+            let crashID = id.replace(/-submission$/, "");
+            let result = submissionData.type.endsWith("-succeeded") ?
+              CrashManager.prototype.SUBMISSION_RESULT_OK :
+              CrashManager.prototype.SUBMISSION_RESULT_FAILED;
+
+            this.addSubmissionAttempt(crashID, "converted",
+                                      submissionData.crashDate);
+            this.addSubmissionResult(crashID, "converted",
+                                     submissionData.crashDate, result);
+          }
         }
 
         // The validation in this loop is arguably not necessary. We perform

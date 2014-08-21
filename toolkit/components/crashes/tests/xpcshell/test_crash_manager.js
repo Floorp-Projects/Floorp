@@ -367,3 +367,27 @@ add_task(function* test_addSubmission() {
 
 });
 
+add_task(function* test_addSubmissionAttemptAndResult() {
+  let m = yield getManager();
+
+  let crashes = yield m.getCrashes();
+  Assert.equal(crashes.length, 0);
+
+  yield m.addCrash(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH,
+                   "main-crash", DUMMY_DATE);
+  yield m.addSubmissionAttempt("main-crash", "submission", DUMMY_DATE);
+  yield m.addSubmissionResult("main-crash", "submission", DUMMY_DATE_2,
+                              m.SUBMISSION_RESULT_OK);
+
+  crashes = yield m.getCrashes();
+  Assert.equal(crashes.length, 1);
+
+  let submissions = crashes[0].submissions;
+  Assert.ok(!!submissions);
+
+  let submission = submissions.get("submission");
+  Assert.ok(!!submission);
+  Assert.equal(submission.requestDate.getTime(), DUMMY_DATE.getTime());
+  Assert.equal(submission.responseDate.getTime(), DUMMY_DATE_2.getTime());
+  Assert.equal(submission.result, m.SUBMISSION_RESULT_OK);
+});
