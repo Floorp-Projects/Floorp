@@ -902,10 +902,6 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev,
     return false;
   }
 
-  if (next->GetGuid().mLayersId != aPrev->GetGuid().mLayersId) {
-    NS_WARNING("Handing off scroll across a layer tree boundary; may need to revise approach to bug 1031067");
-  }
-
   // Convert the start and end points from |aPrev|'s coordinate space to
   // |next|'s coordinate space. Since |aPrev| may be the same as |next|
   // (if |aPrev| is the APZC that is initiating the scroll and there is no
