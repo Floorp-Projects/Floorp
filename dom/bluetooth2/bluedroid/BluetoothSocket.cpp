@@ -180,33 +180,6 @@ private:
   ConnectionStatus mConnectionStatus;
 };
 
-class ShutdownSocketTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
-{
-public:
-  ShutdownSocketTask(DroidSocketImpl* aImpl)
-  : SocketIOTask<DroidSocketImpl>(aImpl)
-  { }
-
-  void Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    DroidSocketImpl* impl = GetIO();
-
-    // At this point, there should be no new events on the IO thread after this
-    // one with the possible exception of a SocketAcceptTask that
-    // ShutdownOnIOThread will cancel for us. We are now fully shut down, so we
-    // can send a message to the main thread that will delete mImpl safely knowing
-    // that no more tasks reference it.
-    impl->ShutdownOnIOThread();
-
-    nsRefPtr<nsRunnable> r =
-      new SocketIODeleteInstanceRunnable<DroidSocketImpl>(impl);
-    nsresult rv = NS_DispatchToMainThread(r);
-    NS_ENSURE_SUCCESS_VOID(rv);
-  }
-};
-
 class SocketConnectTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
 {
 public:
@@ -522,8 +495,9 @@ BluetoothSocket::CloseDroidSocket()
   // We sever the relationship here so any future calls to listen or connect
   // will create a new implementation.
   mImpl->ShutdownOnMainThread();
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new ShutdownSocketTask(mImpl));
+  XRE_GetIOMessageLoop()->PostTask(
+    FROM_HERE, new SocketIOShutdownTask<DroidSocketImpl>(mImpl));
+
   mImpl = nullptr;
 
   NotifyDisconnect();
