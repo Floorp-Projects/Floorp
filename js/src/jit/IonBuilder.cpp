@@ -3991,6 +3991,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
         MResumePoint::New(alloc(), current, pc, callerResumePoint_, MResumePoint::Outer);
     if (!outerResumePoint)
         return false;
+    current->setOuterResumePoint(outerResumePoint);
 
     // Pop formals again, except leave |fun| on stack for duration of call.
     callInfo.popFormals(current);
