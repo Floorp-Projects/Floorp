@@ -16,7 +16,6 @@
 #include "nsIDNSListener.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/DashboardTypes.h"
 #include "mozilla/TimeStamp.h"
@@ -31,17 +30,6 @@ class nsResolveHostCallback;
 
 #define MAX_RESOLVER_THREADS (MAX_RESOLVER_THREADS_FOR_ANY_PRIORITY + \
                               MAX_RESOLVER_THREADS_FOR_HIGH_PRIORITY)
-
-#if XP_WIN
-// If this is enabled, we will make two queries to our resolver for unspec
-// queries. One for any AAAA records, and the other for A records. We will then
-// merge the results ourselves. This is done for us by getaddrinfo, but because
-// getaddrinfo doesn't give us the TTL we use other APIs when we can that may
-// not do it for us (Window's DnsQuery function for example).
-#define DO_MERGE_FOR_AF_UNSPEC 1
-#else
-#define DO_MERGE_FOR_AF_UNSPEC 0
-#endif
 
 struct nsHostKey
 {
@@ -81,10 +69,7 @@ public:
      * thread doesn't need to lock when reading |addr_info|.
      */
     Mutex        addr_info_lock;
-    /* generation count of |addr_info|. Must be incremented whenever addr_info
-     * is changed so any iterators going through the old linked list can be
-     * invalidated. */
-    int          addr_info_gencnt;
+    int          addr_info_gencnt; /* generation count of |addr_info| */
     mozilla::net::AddrInfo *addr_info;
     mozilla::net::NetAddr  *addr;
     bool         negative;   /* True if this record is a cache of a failed lookup.
@@ -115,23 +100,6 @@ private:
     bool    onQueue;  /* true if pending and on the queue (not yet given to getaddrinfo())*/
     bool    usingAnyThread; /* true if off queue and contributing to mActiveAnyThreadCount */
     bool    mDoomed; /* explicitly expired */
-
-#if DO_MERGE_FOR_AF_UNSPEC
-    // If this->af is PR_AF_UNSPEC, this will contain the address family that
-    // should actually be passed to GetAddrInfo.
-    uint16_t mInnerAF;
-    static const uint16_t UNSPECAF_NULL = -1;
-
-    // mCloneOf will point at the original host record if this record is a
-    // clone. Null otherwise.
-    nsHostRecord* mCloneOf;
-
-    // This will be set to the number of unresolved host records out for the
-    // given host record key. 0 for non AF_UNSPEC records.
-    int mNumPending;
-
-    nsresult CloneForAFUnspec(nsHostRecord** aNewRecord, uint16_t aUnspecAF);
-#endif
 
     // a list of addresses associated with this record that have been reported
     // as unusable. the list is kept as a set of strings to make it independent
@@ -276,19 +244,12 @@ private:
    ~nsHostResolver();
 
     nsresult Init();
+    nsresult IssueLookup(nsHostRecord *);
     bool     GetHostToLookup(nsHostRecord **m);
     void     OnLookupComplete(nsHostRecord *, nsresult, mozilla::net::AddrInfo *);
     void     DeQueue(PRCList &aQ, nsHostRecord **aResult);
     void     ClearPendingQueue(PRCList *aPendingQueue);
     nsresult ConditionallyCreateThread(nsHostRecord *rec);
-
-    // This will issue two lookups (using the internal version) if
-    // DO_MERGE_FOR_AF_UNSPEC is enabled and the passed in record is an
-    // AF_UNSPEC record.
-    nsresult IssueLookup(nsHostRecord *);
-
-    // This actually issues a single lookup
-    nsresult IssueLookupInternal(nsHostRecord *);
 
     /**
      * Starts a new lookup in the background for entries that are in the grace
