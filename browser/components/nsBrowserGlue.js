@@ -117,6 +117,9 @@ XPCOMUtils.defineLazyGetter(this, "ShellService", function() {
   }
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "FormValidationHandler",
+                                  "resource:///modules/FormValidationHandler.jsm");
+
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -519,6 +522,7 @@ BrowserGlue.prototype = {
     SessionStore.init();
     BrowserUITelemetry.init();
     ContentSearch.init();
+    FormValidationHandler.init();
 
     ContentClick.init();
     RemotePrompt.init();
@@ -724,6 +728,7 @@ BrowserGlue.prototype = {
     }
 #endif
     webrtcUI.uninit();
+    FormValidationHandler.uninit();
   },
 
   // All initial windows have opened.
