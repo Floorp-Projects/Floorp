@@ -496,6 +496,17 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     return;
   }
 
+  if (mOptions && mOptions->mMaximumAge > 0) {
+    DOMTimeStamp positionTime_ms;
+    aPosition->GetTimestamp(&positionTime_ms);
+    const uint32_t maximumAge_ms = mOptions->mMaximumAge;
+    const bool isTooOld =
+        DOMTimeStamp(PR_Now() / PR_USEC_PER_MSEC - maximumAge_ms) > positionTime_ms;
+    if (isTooOld) {
+      return;
+    }
+  }
+
   nsRefPtr<Position> wrapped;
 
   if (aPosition) {
