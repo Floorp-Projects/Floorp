@@ -148,6 +148,10 @@ this.CrashManager.prototype = Object.freeze({
   // A failed submission.
   SUBMISSION_TYPE_FAILED: "failed",
 
+  // Submission result values.
+  SUBMISSION_RESULT_OK: "ok",
+  SUBMISSION_RESULT_FAILED: "failed",
+
   DUMP_REGEX: /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.dmp$/i,
   SUBMITTED_REGEX: /^bp-(?:hr-)?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.txt$/i,
   ALL_REGEX: /^(.*)$/,
@@ -697,6 +701,15 @@ CrashStore.prototype = Object.freeze({
           let crash = data.crashes[id];
           let denormalized = this._denormalize(crash);
 
+          denormalized.submissions = new Map();
+          if (crash.submissions) {
+            for (let submissionID in crash.submissions) {
+              let submission = crash.submissions[submissionID];
+              denormalized.submissions.set(submissionID,
+                                           this._denormalize(submission));
+            }
+          }
+
           this._data.crashes.set(id, denormalized);
 
           let key = dateToDays(denormalized.crashDate) + "-" + denormalized.type;
@@ -777,6 +790,12 @@ CrashStore.prototype = Object.freeze({
 
       for (let [id, crash] of this._data.crashes) {
         let c = this._normalize(crash);
+
+        c.submissions = {};
+        for (let [submissionID, submission] of crash.submissions) {
+          c.submissions[submissionID] = this._normalize(submission);
+        }
+
         normalized.crashes[id] = c;
       }
 
@@ -955,6 +974,7 @@ CrashStore.prototype = Object.freeze({
         id: id,
         type: type,
         crashDate: date,
+        submissions: new Map(),
       });
     }
 
@@ -988,6 +1008,67 @@ CrashStore.prototype = Object.freeze({
     }
 
     return crashes;
+  },
+
+  /**
+   * Obtain a particular crash submission from its ID.
+   *
+   * @return undefined | submission object
+   */
+  getSubmission: function (crashID, submissionID) {
+    let crash = this._data.crashes.get(crashID);
+    if (!crash || !submissionID) {
+      return undefined;
+    }
+
+    return crash.submissions.get(submissionID);
+  },
+
+  /**
+   * Ensure the submission record is present in storage.
+   */
+  _ensureSubmissionRecord: function (crashID, submissionID) {
+    let crash = this._data.crashes.get(crashID);
+    if (!crash || !submissionID) {
+      return null;
+    }
+
+    if (!crash.submissions.has(submissionID)) {
+      crash.submissions.set(submissionID, {
+        requestDate: null,
+        responseDate: null,
+        result: null,
+      });
+    }
+
+    return crash.submissions.get(submissionID);
+  },
+
+  /**
+   * @return boolean True if the attempt was recorded.
+   */
+  addSubmissionAttempt: function (crashID, submissionID, date) {
+    let submission = this._ensureSubmissionRecord(crashID, submissionID);
+    if (!submission) {
+      return false;
+    }
+
+    submission.requestDate = date;
+    return true;
+  },
+
+  /**
+   * @return boolean True if the response was recorded.
+   */
+  addSubmissionResult: function (crashID, submissionID, date, result) {
+    let submission = this.getSubmission(crashID, submissionID);
+    if (!submission) {
+      return false;
+    }
+
+    submission.responseDate = date;
+    submission.result = result;
+    return true;
   },
 });
 
@@ -1037,6 +1118,10 @@ CrashRecord.prototype = Object.freeze({
 
   isOfType: function (processType, crashType) {
     return processType + "-" + crashType == this.type;
+  },
+
+  get submissions() {
+    return this._o.submissions;
   },
 });
 
