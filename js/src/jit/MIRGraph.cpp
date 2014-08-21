@@ -758,16 +758,6 @@ MBasicBlock::moveBefore(MInstruction *at, MInstruction *ins)
     ins->setTrackedSite(at->trackedSite());
 }
 
-static inline void
-AssertSafelyDiscardable(MDefinition *def)
-{
-#ifdef DEBUG
-    // Instructions captured by resume points cannot be safely discarded, since
-    // they are necessary for interpreter frame reconstruction in case of bailout.
-    JS_ASSERT(!def->hasUses());
-#endif
-}
-
 void
 MBasicBlock::discardResumePoint(MResumePoint *rp, ReferencesType refType /* = RefType_Default */)
 {
@@ -800,9 +790,11 @@ MBasicBlock::prepareForDiscard(MInstruction *ins, ReferencesType refType /* = Re
     // point.
     MOZ_ASSERT_IF(refType & RefType_AssertNoUses, !ins->hasUses());
 
-    MOZ_ASSERT(refType & RefType_DiscardOperands);
-    for (size_t i = 0, e = ins->numOperands(); i < e; i++)
-        ins->discardOperand(i);
+    const uint32_t InstructionOperands = RefType_DiscardOperands | RefType_DiscardInstruction;
+    if ((refType & InstructionOperands) == InstructionOperands) {
+        for (size_t i = 0, e = ins->numOperands(); i < e; i++)
+            ins->discardOperand(i);
+    }
 
     ins->setDiscarded();
 }
@@ -817,12 +809,12 @@ MBasicBlock::discard(MInstruction *ins)
 void
 MBasicBlock::discardIgnoreOperands(MInstruction *ins)
 {
-    AssertSafelyDiscardable(ins);
 #ifdef DEBUG
     for (size_t i = 0, e = ins->numOperands(); i < e; i++)
         JS_ASSERT(ins->operandDiscarded(i));
 #endif
 
+    prepareForDiscard(ins, RefType_IgnoreOperands);
     instructions_.remove(ins);
 }
 
