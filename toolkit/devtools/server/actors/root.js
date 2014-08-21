@@ -13,6 +13,12 @@ const { DebuggerServer } = require("devtools/server/main");
 const { dumpProtocolSpec } = require("devtools/server/protocol");
 const makeDebugger = require("./utils/make-debugger");
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "StyleSheetActor", () => {
+  return require("devtools/server/actors/stylesheets").StyleSheetActor;
+});
+
 /* Root actor for the remote debugging protocol. */
 
 /**
@@ -93,6 +99,9 @@ function RootActor(aConnection, aParameters) {
   this._onTabListChanged = this.onTabListChanged.bind(this);
   this._onAddonListChanged = this.onAddonListChanged.bind(this);
   this._extraActors = {};
+
+  // Map of DOM stylesheets to StyleSheetActors
+  this._styleSheetActors = new Map();
 
   // This creates a Debugger instance for chrome debugging all globals.
   this.makeDebugger = makeDebugger.bind(null, {
@@ -226,6 +235,8 @@ RootActor.prototype = {
       this._parameters.onShutdown();
     }
     this._extraActors = null;
+    this._styleSheetActors.clear();
+    this._styleSheetActors = null;
   },
 
   /* The 'listTabs' request and the 'tabListChanged' notification. */
@@ -387,6 +398,28 @@ RootActor.prototype = {
       windowUtils.resumeTimeouts();
       windowUtils.suppressEventHandling(false);
     }
+  },
+
+  /**
+   * Create or return the StyleSheetActor for a style sheet. This method
+   * is here because the Style Editor and Inspector share style sheet actors.
+   *
+   * @param DOMStyleSheet styleSheet
+   *        The style sheet to creat an actor for.
+   * @return StyleSheetActor actor
+   *         The actor for this style sheet.
+   *
+   */
+  createStyleSheetActor: function(styleSheet) {
+    if (this._styleSheetActors.has(styleSheet)) {
+      return this._styleSheetActors.get(styleSheet);
+    }
+    let actor = new StyleSheetActor(styleSheet, this);
+    this._styleSheetActors.set(styleSheet, actor);
+
+    this._globalActorPool.addActor(actor);
+
+    return actor;
   }
 };
 
