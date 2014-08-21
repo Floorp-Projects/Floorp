@@ -4,29 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-dictionary TestInterfaceJSUnionableDictionary {
-  object objectMember;
-  any anyMember;
-};
-
 [JSImplementation="@mozilla.org/dom/test-interface-js;1",
  Pref="dom.expose_test_interfaces",
- Constructor(optional any anyArg, optional object objectArg, optional TestInterfaceJSDictionary dictionaryArg)]
+ Constructor(optional any anyArg, optional object objectArg)]
 interface TestInterfaceJS {
   readonly attribute any anyArg;
   readonly attribute object objectArg;
-  [Cached, Pure] readonly attribute TestInterfaceJSDictionary dictionaryArg;
   attribute any anyAttr;
   attribute object objectAttr;
-  [Cached, Pure] attribute TestInterfaceJSDictionary dictionaryAttr;
   any pingPongAny(any arg);
-  object pingPongObject(object obj);
-  any pingPongObjectOrString((object or DOMString) objOrString);
-  TestInterfaceJSDictionary pingPongDictionary(optional TestInterfaceJSDictionary dict);
-  long pingPongDictionaryOrLong(optional (TestInterfaceJSUnionableDictionary or long) dictOrLong);
-  DOMString pingPongMap(MozMap<any> map);
-  long objectSequenceLength(sequence<object> seq);
-  long anySequenceLength(sequence<any> seq);
+  object pingPongObject(any obj);
 
   // For testing bug 968335.
   DOMString getCallerPrincipal();
