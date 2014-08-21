@@ -29,3 +29,8 @@ fuzzy-if(d2d,1,10000) == saturate-desaturate.html saturate-desaturate-ref.html
 == saturate-one.html saturate-one-ref.html
 == saturate-percent.html saturate-percent-ref.html
 fuzzy-if(d2d,1,10000) == saturate-zero.html saturate-zero-ref.html
+fuzzy-if(d2d,1,10000) == sepia.html sepia-ref.html
+fuzzy-if(d2d,1,10000) == sepia-one.html sepia-one-ref.html
+fuzzy-if(d2d,1,10000) == sepia-over-one.html sepia-over-one-ref.html
+fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
+== sepia-zero.html sepia-zero-ref.html
