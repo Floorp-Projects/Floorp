@@ -254,38 +254,6 @@ public:
   ShutdownSocketTask(DroidSocketImpl* aImpl) : mImpl(aImpl) { }
 };
 
-class SocketReceiveTask : public SocketIORunnable<DroidSocketImpl>
-{
-public:
-  SocketReceiveTask(DroidSocketImpl* aImpl, UnixSocketRawData* aData)
-  : SocketIORunnable<DroidSocketImpl>(aImpl)
-  , mRawData(aData)
-  {
-    MOZ_ASSERT(aData);
-  }
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    DroidSocketImpl* impl = GetIO();
-
-    if (impl->IsShutdownOnMainThread()) {
-      NS_WARNING("mConsumer is null, aborting receive!");
-      // Since we've already explicitly closed and the close happened before
-      // this, this isn't really an error. Since we've warned, return OK.
-      return NS_OK;
-    }
-
-    MOZ_ASSERT(impl->mConsumer);
-    impl->mConsumer->ReceiveSocketData(mRawData);
-    return NS_OK;
-  }
-
-private:
-  nsAutoPtr<UnixSocketRawData> mRawData;
-};
-
 class SocketSendTask : public Task
 {
 public:
@@ -503,9 +471,9 @@ DroidSocketImpl::OnSocketCanReceiveWithoutBlocking(int aFd)
     }
 
     incoming->mSize = ret;
-    nsRefPtr<SocketReceiveTask> t =
-      new SocketReceiveTask(this, incoming.forget());
-    NS_DispatchToMainThread(t);
+    nsRefPtr<nsRunnable> r =
+      new SocketIOReceiveRunnable<DroidSocketImpl>(this, incoming.forget());
+    NS_DispatchToMainThread(r);
 
     // If ret is less than MAX_READ_SIZE, there's no
     // more data in the socket for us to read now.
