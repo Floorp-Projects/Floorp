@@ -251,6 +251,19 @@ public class GeckoAccessibility {
         }
     }
 
+    public static void setAccessibilityStateChangeListener(final Context context) {
+        // The state change listener is only supported on API14+
+        if (Versions.feature14Plus) {
+            AccessibilityManager accessibilityManager =
+                (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+            accessibilityManager.addAccessibilityStateChangeListener(new AccessibilityManager.AccessibilityStateChangeListener() {
+                public void onAccessibilityStateChanged(boolean enabled) {
+                    updateAccessibilitySettings(context);
+                }
+            });
+        }
+    }
+
     public static void onLayerViewFocusChanged(LayerView layerview, boolean gainFocus) {
         if (sEnabled)
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:Focus",
