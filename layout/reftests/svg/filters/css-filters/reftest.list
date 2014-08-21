@@ -18,3 +18,9 @@ default-preferences pref(layout.css.filters.enabled,true)
 == hue-rotate-rad.html hue-rotate-rad-ref.html
 == hue-rotate-turn.html hue-rotate-turn-ref.html
 == hue-rotate-zero.html hue-rotate-zero-ref.html
+== saturate.html saturate-ref.html
+fuzzy-if(d2d,1,10000) == saturate-desaturate.html saturate-desaturate-ref.html
+== saturate-extreme.html saturate-extreme-ref.html
+== saturate-one.html saturate-one-ref.html
+== saturate-percent.html saturate-percent-ref.html
+fuzzy-if(d2d,1,10000) == saturate-zero.html saturate-zero-ref.html
