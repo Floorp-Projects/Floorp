@@ -1563,21 +1563,6 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIURI* aURI)
   return registration.forget();
 }
 
-namespace {
-/*
- * Returns string without trailing '*'.
- */
-void ScopeWithoutStar(const nsACString& aScope, nsACString& out)
-{
-  if (aScope.Last() == '*') {
-    out.Assign(StringHead(aScope, aScope.Length() - 1));
-    return;
-  }
-
-  out.Assign(aScope);
-}
-}; // anonymous namespace
-
 /* static */ void
 ServiceWorkerManager::AddScope(nsTArray<nsCString>& aList, const nsACString& aScope)
 {
@@ -1589,28 +1574,11 @@ ServiceWorkerManager::AddScope(nsTArray<nsCString>& aList, const nsACString& aSc
       return;
     }
 
-    nsCString withoutStar;
-    ScopeWithoutStar(current, withoutStar);
-    // Edge case of match without '*'.
-    // /foo should be sorted before /foo*.
-    if (aScope.Equals(withoutStar)) {
+    // Sort by length, with longest match first.
+    // /foo/bar should be before /foo/
+    // Similarly /foo/b is between the two.
+    if (StringBeginsWith(aScope, current)) {
       aList.InsertElementAt(i, aScope);
-      return;
-    }
-
-    // /foo/bar* should be before /foo/*
-    // Similarly /foo/b* is between the two.
-    // But is /foo* categorically different?
-    if (StringBeginsWith(aScope, withoutStar)) {
-      // If the new scope is a pattern and the old one is a path, the new one
-      // goes after.  This way Add(/foo) followed by Add(/foo*) ends up with
-      // [/foo, /foo*].
-      if (aScope.Last() == '*' &&
-          withoutStar.Equals(current)) {
-        aList.InsertElementAt(i+1, aScope);
-      } else {
-        aList.InsertElementAt(i, aScope);
-      }
       return;
     }
   }
@@ -1618,7 +1586,6 @@ ServiceWorkerManager::AddScope(nsTArray<nsCString>& aList, const nsACString& aSc
   aList.AppendElement(aScope);
 }
 
-// aPath can have a '*' at the end, but it is treated literally.
 /* static */ nsCString
 ServiceWorkerManager::FindScopeForPath(nsTArray<nsCString>& aList, const nsACString& aPath)
 {
@@ -1626,15 +1593,9 @@ ServiceWorkerManager::FindScopeForPath(nsTArray<nsCString>& aList, const nsACStr
 
   for (uint32_t i = 0; i < aList.Length(); ++i) {
     const nsCString& current = aList[i];
-    nsCString withoutStar;
-    ScopeWithoutStar(current, withoutStar);
-    if (StringBeginsWith(aPath, withoutStar)) {
-      // If non-pattern match, then check equality.
-      if (current.Last() == '*' ||
-          aPath.Equals(current)) {
-        match = current;
-        break;
-      }
+    if (StringBeginsWith(aPath, current)) {
+      match = current;
+      break;
     }
   }
 

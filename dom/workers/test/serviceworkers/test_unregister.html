@@ -16,7 +16,7 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    return navigator.serviceWorker.register("worker.js", { scope: "unregister/*" });
+    return navigator.serviceWorker.register("worker.js", { scope: "unregister/" });
   }
 
   function testControlled() {
@@ -46,7 +46,7 @@
   }
 
   function unregister() {
-    return navigator.serviceWorker.getRegistration("unregister/*")
+    return navigator.serviceWorker.getRegistration("unregister/")
            .then(function(reg) {
              return reg.unregister().then(function(v) {
                ok(v, "Unregister should resolve to true");
