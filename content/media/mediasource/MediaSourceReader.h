@@ -94,22 +94,24 @@ private:
     SWITCH_FORCED
   };
 
-  bool SwitchVideoReaders(SwitchType aType);
+  bool SwitchReaders(SwitchType aType);
 
-  MediaDecoderReader* GetAudioReader();
-  MediaDecoderReader* GetVideoReader();
+  bool SwitchAudioReader(MediaDecoderReader* aTargetReader);
+  bool SwitchVideoReader(MediaDecoderReader* aTargetReader);
 
   void SetMediaSourceDuration(double aDuration) ;
 
   // These are read and written on the decode task queue threads.
   int64_t mTimeThreshold;
+  bool mDropAudioBeforeThreshold;
   bool mDropVideoBeforeThreshold;
 
   nsTArray<nsRefPtr<SubBufferDecoder>> mPendingDecoders;
   nsTArray<nsRefPtr<SubBufferDecoder>> mDecoders;
 
-  int32_t mActiveVideoDecoder;
-  int32_t mActiveAudioDecoder;
+  nsRefPtr<MediaDecoderReader> mAudioReader;
+  nsRefPtr<MediaDecoderReader> mVideoReader;
+
   dom::MediaSource* mMediaSource;
 };
 
