@@ -557,3 +557,41 @@ add_task(function* test_addSubmission() {
   Assert.ok(!!submission);
   Assert.equal(submission.result, SUBMISSION_RESULT_OK);
 });
+
+add_task(function* test_convertSubmissionsStoredAsCrashes() {
+  let s = yield getStore();
+
+  let addSubmissionAsCrash = (processType, crashType, succeeded, id, date) => {
+    id = id + "-submission";
+    let process = processType + "-" + crashType + "-submission";
+    let submissionType = succeeded ? "succeeded" : "failed";
+    return s.addCrash(process, submissionType, id, date);
+  };
+
+  Assert.ok(s.addCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, "crash1",
+                       new Date()));
+  Assert.ok(addSubmissionAsCrash(PROCESS_TYPE_MAIN, CRASH_TYPE_CRASH, true,
+                                 "crash1", DUMMY_DATE));
+
+  Assert.ok(s.addCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, "hang1",
+                       new Date()));
+  Assert.ok(addSubmissionAsCrash(PROCESS_TYPE_PLUGIN, CRASH_TYPE_HANG, false,
+                                 "hang1", DUMMY_DATE_2));
+
+  Assert.equal(s.crashes.length, 4);
+  yield s.save();
+  yield s.load();
+  Assert.equal(s.crashes.length, 2);
+
+  let submission = s.getSubmission("crash1", "converted");
+  Assert.ok(!!submission);
+  Assert.equal(submission.result, SUBMISSION_RESULT_OK);
+  Assert.equal(submission.requestDate.getTime(), DUMMY_DATE.getTime());
+  Assert.equal(submission.responseDate.getTime(), DUMMY_DATE.getTime());
+
+  submission = s.getSubmission("hang1", "converted");
+  Assert.ok(!!submission);
+  Assert.equal(submission.result, SUBMISSION_RESULT_FAILED);
+  Assert.equal(submission.requestDate.getTime(), DUMMY_DATE_2.getTime());
+  Assert.equal(submission.responseDate.getTime(), DUMMY_DATE_2.getTime());
+});
