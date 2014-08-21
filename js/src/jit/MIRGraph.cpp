@@ -493,6 +493,9 @@ MBasicBlock::inheritSlots(MBasicBlock *parent)
 bool
 MBasicBlock::initEntrySlots(TempAllocator &alloc)
 {
+    // Remove the previous resume point.
+    discardResumePoint(entryResumePoint_);
+
     // Create a resume point using our initial stack state.
     entryResumePoint_ = MResumePoint::New(alloc, this, pc(), callerResumePoint(),
                                           MResumePoint::ResumeAt);
@@ -762,6 +765,19 @@ AssertSafelyDiscardable(MDefinition *def)
 }
 
 void
+MBasicBlock::discardResumePoint(MResumePoint *rp)
+{
+    rp->discardUses();
+    MResumePointIterator iter = resumePointsBegin();
+    while (*iter != rp) {
+        // We should reach it before reaching the end.
+        MOZ_ASSERT(iter != resumePointsEnd());
+        iter++;
+    }
+    resumePoints_.removeAt(iter);
+}
+
+void
 MBasicBlock::prepareForDiscard(MInstruction *ins, ReferencesType refType /* = RefType_Default */)
 {
     // Only remove instructions from the same basic block.  This is needed for
@@ -769,19 +785,8 @@ MBasicBlock::prepareForDiscard(MInstruction *ins, ReferencesType refType /* = Re
     MOZ_ASSERT(ins->block() == this);
 
     MResumePoint *rp = ins->resumePoint();
-    if (refType & RefType_DiscardResumePoint && rp) {
-        rp->discardUses();
-        // Resume point are using a forward list only, so we need to iterate
-        // to the location of the resume point in order to remove it.
-        MResumePointIterator iter = resumePointsBegin();
-        while (*iter != rp) {
-            // If the instruction has a resume point, then it should be part
-            // of the basic block list of resume points.
-            MOZ_ASSERT(iter != resumePointsEnd());
-            iter++;
-        }
-        resumePoints_.removeAt(iter);
-    }
+    if (refType & RefType_DiscardResumePoint && rp)
+        discardResumePoint(rp);
 
     // We need to assert that instructions have no uses after removing the their
     // resume points operands as they could be captured by their own resume
