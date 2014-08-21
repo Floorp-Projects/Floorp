@@ -493,6 +493,11 @@ this.PermissionsTable =  { geolocation: {
                              trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
+                           },
+                           "tv": {
+                             app: DENY_ACTION,
+                             privileged: DENY_ACTION,
+                             certified: ALLOW_ACTION
                            }
                          };
 
