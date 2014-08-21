@@ -149,6 +149,8 @@
              "win/scoped_gdi_object.h",
              "win/scoped_thread_desktop.cc",
              "win/scoped_thread_desktop.h",
+             "win/win_shared.h",
+             "win/win_shared.cc",
              "win/desktop_device_info_win.h",
              "win/desktop_device_info_win.cc",
              "window_capturer_win.cc",
