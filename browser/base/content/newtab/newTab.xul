@@ -20,6 +20,10 @@
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&newtab.pageTitle;">
 
+  <xul:panel id="newtab-intro-panel" orient="vertical" type="arrow"
+             noautohide="true" position="leftcenter topright">
+  </xul:panel>
+
   <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
              noautohide="true">
     <xul:hbox id="newtab-search-manage" class="newtab-search-panel-engine">
@@ -36,6 +40,9 @@
       <xul:label/>
     </xul:hbox>
     <xul:hbox id="newtab-customize-blank" class="newtab-customize-panel-item">
+      <xul:label/>
+    </xul:hbox>
+    <xul:hbox id="newtab-customize-what" class="newtab-customize-panel-item">
       <xul:label/>
     </xul:hbox>
   </xul:panel>
