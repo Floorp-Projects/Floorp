@@ -63,7 +63,8 @@ BackCert::Init(const SECItem& certDER)
   //    posible to create chains with v1 and v2 intermediates with is
   //    not desirable.
   if (! (nssCert->version.len == 1 &&
-      nssCert->version.data[0] == mozilla::pkix::der::Version::v3)) {
+      (nssCert->version.data[0] == mozilla::pkix::der::Version::v3 ||
+       nssCert->version.data[0] == mozilla::pkix::der::Version::v4))) {
     return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
 
