@@ -19,7 +19,6 @@ import android.util.AttributeSet;
 public class ForwardButton extends ShapedButton { 
     private Path mBorderPath;
     private Paint mBorderPaint;
-    private Paint mBorderPrivatePaint;
     private final float mBorderWidth;
 
     public ForwardButton(Context context, AttributeSet attrs) {
@@ -30,14 +29,18 @@ public class ForwardButton extends ShapedButton {
         // Paint to draw the border.
         mBorderPaint = new Paint();
         mBorderPaint.setAntiAlias(true);
-        mBorderPaint.setColor(0xFFB5B5B5);
         mBorderPaint.setStrokeWidth(mBorderWidth);
         mBorderPaint.setStyle(Paint.Style.STROKE);
 
-        mBorderPrivatePaint = new Paint(mBorderPaint);
-        mBorderPrivatePaint.setColor(0xFF363B40);
-
         mBorderPath = new Path();
+
+        setPrivateMode(false);
+    }
+
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+        mBorderPaint.setColor(isPrivate ? 0xFF363B40 : 0xFFBFBFBF);
     }
 
     @Override
@@ -54,7 +57,7 @@ public class ForwardButton extends ShapedButton {
         super.draw(canvas);
 
         // Draw the border on top.
-        canvas.drawPath(mBorderPath, isPrivateMode() ? mBorderPrivatePaint : mBorderPaint);
+        canvas.drawPath(mBorderPath, mBorderPaint);
     }
 
     // The drawable is constructed as per @drawable/url_bar_nav_button.
