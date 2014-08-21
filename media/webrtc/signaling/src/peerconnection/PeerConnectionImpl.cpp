@@ -255,6 +255,7 @@ public:
       streams = aInfo->getMediaStreams();
       mRemoteStream = mPC->media()->GetRemoteStream(streams->media_stream_id);
       MOZ_ASSERT(mRemoteStream);
+      cpr_free(streams);
     } else if (mCallState == FOUNDICECANDIDATE) {
         mCandidateStr = aInfo->getCandidate();
     } else if ((mCallState == CREATEOFFERSUCCESS) ||
