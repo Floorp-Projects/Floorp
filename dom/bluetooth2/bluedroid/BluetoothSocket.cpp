@@ -184,25 +184,6 @@ private:
   ConnectionStatus mConnectionStatus;
 };
 
-template<class T>
-class DeleteInstanceRunnable : public nsRunnable
-{
-public:
-  DeleteInstanceRunnable(T* aInstance)
-  : mInstance(aInstance)
-  { }
-
-  NS_IMETHOD Run()
-  {
-    delete mInstance;
-
-    return NS_OK;
-  }
-
-private:
-  T* mInstance;
-};
-
 class ShutdownSocketTask : public Task {
   virtual void Run()
   {
@@ -215,9 +196,9 @@ class ShutdownSocketTask : public Task {
     // that no more tasks reference it.
     mImpl->ShutdownOnIOThread();
 
-    nsRefPtr<nsIRunnable> t(new DeleteInstanceRunnable<
-                                  mozilla::dom::bluetooth::DroidSocketImpl>(mImpl));
-    nsresult rv = NS_DispatchToMainThread(t);
+    nsRefPtr<nsRunnable> r =
+      new SocketIODeleteInstanceRunnable<DroidSocketImpl>(mImpl);
+    nsresult rv = NS_DispatchToMainThread(r);
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 
