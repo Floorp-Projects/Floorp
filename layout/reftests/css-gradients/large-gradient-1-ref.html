@@ -1,0 +1,23 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Make sure that large gradient backgrounds are painted even at extreme scroll positions</title>
+
+<style>
+
+html {
+  background: white;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  height: 1000px;
+  background-image: linear-gradient(rgb(210,210,210) 0px, rgb(215,215,215) 1000px);
+}
+
+</style>
