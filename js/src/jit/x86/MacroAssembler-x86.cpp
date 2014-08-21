@@ -194,7 +194,7 @@ MacroAssemblerX86::finish()
         switch (v.type()) {
           case SimdConstant::Int32x4:   writeInt32x4Constant(v.value, cl.src());   break;
           case SimdConstant::Float32x4: writeFloat32x4Constant(v.value, cl.src()); break;
-          default: MOZ_ASSUME_UNREACHABLE("unexpected SimdConstant type");
+          default: MOZ_CRASH("unexpected SimdConstant type");
         }
         enoughMemory_ &= addCodeLabel(cl);
         if (!enoughMemory_)
