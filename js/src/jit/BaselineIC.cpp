@@ -201,6 +201,13 @@ ICStub::trace(JSTracer *trc)
             MarkObject(trc, &callStub->templateObject(), "baseline-callnative-template");
         break;
       }
+      case ICStub::Call_StringSplit: {
+        ICCall_StringSplit *callStub = toCall_StringSplit();
+        MarkObject(trc, &callStub->templateObject(), "baseline-callstringsplit-template");
+        MarkString(trc, &callStub->expectedArg(), "baseline-callstringsplit-arg");
+        MarkString(trc, &callStub->expectedThis(), "baseline-callstringsplit-this");
+        break;
+      }
       case ICStub::GetElem_NativeSlot: {
         ICGetElem_NativeSlot *getElemStub = toGetElem_NativeSlot();
         MarkShape(trc, &getElemStub->shape(), "baseline-getelem-native-shape");
@@ -8307,6 +8314,25 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
 }
 
 static bool
+IsOptimizableCallStringSplit(Value callee, Value thisv, int argc, Value *args)
+{
+    if (argc != 1 || !thisv.isString() || !args[0].isString())
+        return false;
+
+    if (!thisv.toString()->isAtom() || !args[0].toString()->isAtom())
+        return false;
+
+    if (!callee.isObject() || !callee.toObject().is<JSFunction>())
+        return false;
+
+    JSFunction &calleeFun = callee.toObject().as<JSFunction>();
+    if (!calleeFun.isNative() || calleeFun.native() != js::str_split)
+        return false;
+
+    return true;
+}
+
+static bool
 TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsbytecode *pc,
                   JSOp op, uint32_t argc, Value *vp, bool constructing, bool isSpread,
                   bool useNewType)
@@ -8322,6 +8348,15 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
 
     RootedValue callee(cx, vp[0]);
     RootedValue thisv(cx, vp[1]);
+
+    // Don't attach an optimized call stub if we could potentially attach an
+    // optimized StringSplit stub.
+    if (stub->numOptimizedStubs() == 0 && IsOptimizableCallStringSplit(callee, thisv, argc, vp + 2))
+        return true;
+
+    JS_ASSERT_IF(stub->hasStub(ICStub::Call_StringSplit), stub->numOptimizedStubs() == 1);
+
+    stub->unlinkStubsWithKind(cx, ICStub::Call_StringSplit);
 
     if (!callee.isObject())
         return true;
@@ -8470,6 +8505,65 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
 }
 
 static bool
+CopyArray(JSContext *cx, HandleObject obj, MutableHandleValue result)
+{
+    JS_ASSERT(obj->is<ArrayObject>());
+    uint32_t length = obj->as<ArrayObject>().length();
+    JS_ASSERT(obj->getDenseInitializedLength() == length);
+
+    RootedTypeObject type(cx, obj->getType(cx));
+    if (!type)
+        return false;
+
+    RootedObject newObj(cx, NewDenseArray(cx, length, type, NewArray_FullyAllocating));
+    if (!newObj)
+        return false;
+
+    newObj->setDenseInitializedLength(length);
+    newObj->initDenseElements(0, obj->getDenseElements(), length);
+    result.setObject(*newObj);
+    return true;
+}
+
+static bool
+TryAttachStringSplit(JSContext *cx, ICCall_Fallback *stub, HandleScript script,
+                     uint32_t argc, Value *vp, jsbytecode *pc, HandleValue res)
+{
+    if (stub->numOptimizedStubs() != 0)
+        return true;
+
+    RootedValue callee(cx, vp[0]);
+    RootedValue thisv(cx, vp[1]);
+    Value *args = vp + 2;
+
+    if (!IsOptimizableCallStringSplit(callee, thisv, argc, args))
+        return true;
+
+    JS_ASSERT(res.toObject().is<ArrayObject>());
+    JS_ASSERT(callee.isObject());
+    JS_ASSERT(callee.toObject().is<JSFunction>());
+
+    RootedString thisString(cx, thisv.toString());
+    RootedString argString(cx, args[0].toString());
+    RootedObject obj(cx, &res.toObject());
+    RootedValue arr(cx);
+
+    // Copy the array before storing in stub.
+    if (!CopyArray(cx, obj, &arr))
+        return false;
+
+    ICCall_StringSplit::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+                                          script->pcToOffset(pc), thisString, argString,
+                                          arr);
+    ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+    if (!newStub)
+        return false;
+
+    stub->addNewStub(newStub);
+    return true;
+}
+
+static bool
 MaybeCloneFunctionAtCallsite(JSContext *cx, MutableHandleValue callee, HandleScript script,
                              jsbytecode *pc)
 {
@@ -8557,6 +8651,11 @@ DoCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub_, uint
         return false;
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, script, res))
+        return false;
+
+    // If 'callee' is a potential Call_StringSplit, try to attach an
+    // optimized StringSplit stub.
+    if (!TryAttachStringSplit(cx, stub, script, argc, vp, pc, res))
         return false;
 
     return true;
@@ -9237,6 +9336,100 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
         masm.mov(argcReg, R0.scratchReg());
 
     masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+typedef bool (*CopyArrayFn)(JSContext *, HandleObject, MutableHandleValue);
+static const VMFunction CopyArrayInfo = FunctionInfo<CopyArrayFn>(CopyArray);
+
+bool
+ICCall_StringSplit::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    // Stack Layout: [ ..., CalleeVal, ThisVal, Arg0Val, +ICStackValueOffset+ ]
+    GeneralRegisterSet regs = availableGeneralRegs(0);
+    Label failureRestoreArgc;
+#ifdef DEBUG
+    Label oneArg;
+    Register argcReg = R0.scratchReg();
+    masm.branch32(Assembler::Equal, argcReg, Imm32(1), &oneArg);
+    masm.assumeUnreachable("Expected argc == 1");
+    masm.bind(&oneArg);
+#endif
+    Register scratchReg = regs.takeAny();
+
+    // Guard that callee is native function js::str_split.
+    {
+        Address calleeAddr(BaselineStackReg, ICStackValueOffset + (2 * sizeof(Value)));
+        ValueOperand calleeVal = regs.takeAnyValue();
+
+        // Ensure that callee is an object.
+        masm.loadValue(calleeAddr, calleeVal);
+        masm.branchTestObject(Assembler::NotEqual, calleeVal, &failureRestoreArgc);
+
+        // Ensure that callee is a function.
+        Register calleeObj = masm.extractObject(calleeVal, ExtractTemp0);
+        masm.branchTestObjClass(Assembler::NotEqual, calleeObj, scratchReg,
+                                &JSFunction::class_, &failureRestoreArgc);
+
+        // Ensure that callee's function impl is the native str_split.
+        masm.loadPtr(Address(calleeObj, JSFunction::offsetOfNativeOrScript()), scratchReg);
+        masm.branchPtr(Assembler::NotEqual, scratchReg, ImmPtr(js::str_split), &failureRestoreArgc);
+
+        regs.add(calleeVal);
+    }
+
+    // Guard argument.
+    {
+        // Ensure that arg is a string.
+        Address argAddr(BaselineStackReg, ICStackValueOffset);
+        ValueOperand argVal = regs.takeAnyValue();
+
+        masm.loadValue(argAddr, argVal);
+        masm.branchTestString(Assembler::NotEqual, argVal, &failureRestoreArgc);
+
+        Register argString = masm.extractString(argVal, ExtractTemp0);
+        masm.branchPtr(Assembler::NotEqual, Address(BaselineStubReg, offsetOfExpectedArg()),
+                       argString, &failureRestoreArgc);
+        regs.add(argVal);
+    }
+
+    // Guard this-value.
+    {
+        // Ensure that thisv is a string.
+        Address thisvAddr(BaselineStackReg, ICStackValueOffset + sizeof(Value));
+        ValueOperand thisvVal = regs.takeAnyValue();
+
+        masm.loadValue(thisvAddr, thisvVal);
+        masm.branchTestString(Assembler::NotEqual, thisvVal, &failureRestoreArgc);
+
+        Register thisvString = masm.extractString(thisvVal, ExtractTemp0);
+        masm.branchPtr(Assembler::NotEqual, Address(BaselineStubReg, offsetOfExpectedThis()),
+                       thisvString, &failureRestoreArgc);
+        regs.add(thisvVal);
+    }
+
+    // Main stub body.
+    {
+        Register paramReg = regs.takeAny();
+
+        // Push arguments.
+        enterStubFrame(masm, scratchReg);
+        masm.loadPtr(Address(BaselineStubReg, offsetOfTemplateObject()), paramReg);
+        masm.push(paramReg);
+
+        if (!callVM(CopyArrayInfo, masm))
+            return false;
+        leaveStubFrame(masm);
+        regs.add(paramReg);
+    }
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    // Guard failure path.
+    masm.bind(&failureRestoreArgc);
+    masm.move32(Imm32(1), R0.scratchReg());
     EmitStubGuardFailure(masm);
     return true;
 }
