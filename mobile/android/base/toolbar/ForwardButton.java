@@ -17,8 +17,8 @@ import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 public class ForwardButton extends ShapedButton { 
-    private Path mBorderPath;
-    private Paint mBorderPaint;
+    private final Path mBorderPath;
+    private final Paint mBorderPaint;
     private final float mBorderWidth;
 
     public ForwardButton(Context context, AttributeSet attrs) {
