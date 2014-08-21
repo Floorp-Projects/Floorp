@@ -146,7 +146,10 @@ BackCert::Init()
   }
 
   // Extensions were added in v3, so only accept extensions in v3 certificates.
-  if (version == der::Version::v3) {
+  // v4 certificates are not defined but there are some certificates issued
+  // with v4 that expect v3 decoding. For compatibility reasons we handle them
+  // as v3 certificates.
+  if (version == der::Version::v3 || version == der::Version::v4) {
     rv = der::OptionalExtensions(tbsCertificate, CSC | 3,
                                  bind(&BackCert::RememberExtension, this, _1,
                                       _2, _3));
