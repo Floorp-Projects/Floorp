@@ -45,13 +45,8 @@
     function (done) {
       info("Test adding a notification, and making sure get returns it");
       NotificationTest.allowNotifications();
-      var options = {
-        dir: "auto",
-        lang: "",
-        body: "This is a notification body",
-        tag: "sometag",
-        icon: "icon.png"
-      };
+      var options = NotificationTest.payload;
+
       var notification = new Notification("This is a title", options);
       var promise = Notification.get();
       promise.then(function (notifications) {
@@ -61,6 +56,11 @@
           if (notification.tag === options.tag) {
             ok(true, "should contain newly created notification");
             for (var key in options) {
+              if (key === "data") {
+                ok(NotificationTest.customDataMatches(notification.data),
+                   "data property should match");
+                continue;
+              }
               is(notification[key], options[key], key + " property should match");
             }
             notification.close();

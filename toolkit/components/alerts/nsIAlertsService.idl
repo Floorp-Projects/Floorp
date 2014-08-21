@@ -9,7 +9,7 @@
 
 interface nsIPrincipal;
 
-[scriptable, uuid(160e87e1-d57d-456b-b6ea-17826f6ea7a8)]
+[scriptable, uuid(d446bede-fcf7-403d-b6b6-5fd67b19ba58)]
 interface nsIAlertsService : nsISupports
 {
    /**
@@ -61,6 +61,7 @@ interface nsIAlertsService : nsISupports
                               [optional] in AString name,
                               [optional] in AString dir,
                               [optional] in AString lang,
+                              [optional] in AString data,
                               [optional] in nsIPrincipal principal);
 
    /**
