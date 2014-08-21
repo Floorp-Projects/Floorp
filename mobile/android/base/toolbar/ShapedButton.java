@@ -8,6 +8,7 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.LightweightThemeDrawable;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.tabs.TabCurve;
 import org.mozilla.gecko.widget.ThemedImageButton;
 
 import android.content.Context;
@@ -63,12 +64,7 @@ public class ShapedButton extends ThemedImageButton
 
         if (mSide == CurveTowards.RIGHT) {
             mPath.moveTo(0, 0);
-            mPath.cubicTo(height * 0.25f, 0.0f,
-                          height * 0.375f, height * 0.25f,
-                          height * 0.375f, height * 0.5f);
-            mPath.cubicTo(height * 0.375f, height * 0.72f,
-                          height * 0.527f, height * 0.961f,
-                          height * 0.729f, height);
+            TabCurve.drawFromTop(mPath, 0, height, TabCurve.Direction.RIGHT);
             mPath.lineTo(width, height);
             mPath.lineTo(width, 0);
             mPath.lineTo(0, 0);
