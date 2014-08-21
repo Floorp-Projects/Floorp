@@ -11,13 +11,15 @@ add_task(function() {
   yield startCustomizing();
   let btn = document.getElementById("open-file-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
+  let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
-  CustomizableUI.removeWidgetFromArea("social-share-button");
   if (isInWin8()) {
     CustomizableUI.removeWidgetFromArea("switch-to-metro-button");
+    placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
+    ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
+  } else {
+    ok(CustomizableUI.inDefaultState, "Should be in default state.");
   }
-  let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
-  ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
 
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placements);
   is(getVisiblePlaceholderCount(panel), 2, "Should only have 2 visible placeholders before exiting");
@@ -26,7 +28,6 @@ add_task(function() {
   yield startCustomizing();
   is(getVisiblePlaceholderCount(panel), 2, "Should only have 2 visible placeholders after re-entering");
 
-  CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_PANEL);
   if (isInWin8()) {
     CustomizableUI.addWidgetToArea("switch-to-metro-button", CustomizableUI.AREA_PANEL);
   }
@@ -38,7 +39,6 @@ add_task(function() {
   yield startCustomizing();
   let btn = document.getElementById("open-file-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
-  CustomizableUI.removeWidgetFromArea("social-share-button");
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
   let placementsAfterAppend = placements;
@@ -49,7 +49,7 @@ add_task(function() {
   }
 
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterAppend);
-  ok(!CustomizableUI.inDefaultState, "Should not be in default state");
+  is(CustomizableUI.inDefaultState, isInWin8(), "Should only be in default state if on Win8");
   is(getVisiblePlaceholderCount(panel), 1, "Should only have 1 visible placeholder before exiting");
 
   yield endCustomizing();
@@ -63,24 +63,26 @@ add_task(function() {
     btn = document.getElementById("open-file-button");
     simulateItemDrag(btn, palette);
   }
-  CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_PANEL);
   ok(CustomizableUI.inDefaultState, "Should be in default state again."); 
 });
 
 // Two orphaned items should have one placeholder next to them (case 2).
 add_task(function() {
   yield startCustomizing();
-  let buttonsToMove = ["add-ons-button", "developer-button", "social-share-button"];
-  if (isInWin8()) {
-    buttonsToMove.push("switch-to-metro-button");
-  }
+  let btn = document.getElementById("add-ons-button");
+  let btn2 = document.getElementById("developer-button");
+  let btn3 = document.getElementById("switch-to-metro-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let palette = document.getElementById("customization-palette");
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
-  let placementsAfterAppend = placements.filter(p => buttonsToMove.indexOf(p) < 0);
-  for (let i in buttonsToMove) {
-    CustomizableUI.removeWidgetFromArea(buttonsToMove[i]);
+  let placementsAfterAppend = placements.filter(p => p != btn.id && p != btn2.id);
+  simulateItemDrag(btn, palette);
+  simulateItemDrag(btn2, palette);
+
+  if (isInWin8()) {
+    placementsAfterAppend = placementsAfterAppend.filter(p => p != btn3.id);
+    simulateItemDrag(btn3, palette);
   }
 
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterAppend);
@@ -91,8 +93,11 @@ add_task(function() {
   yield startCustomizing();
   is(getVisiblePlaceholderCount(panel), 1, "Should only have 1 visible placeholder after re-entering");
 
-  for (let i in buttonsToMove) {
-    CustomizableUI.addWidgetToArea(buttonsToMove[i], CustomizableUI.AREA_PANEL);
+  simulateItemDrag(btn, panel);
+  simulateItemDrag(btn2, panel);
+
+  if (isInWin8()) {
+    simulateItemDrag(btn3, panel);
   }
 
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placements);
@@ -107,7 +112,6 @@ add_task(function() {
   let metroBtn = document.getElementById("switch-to-metro-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let palette = document.getElementById("customization-palette");
-  CustomizableUI.removeWidgetFromArea("social-share-button");
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
   placements.pop();
@@ -129,7 +133,6 @@ add_task(function() {
   is(getVisiblePlaceholderCount(panel), 3, "Should have 3 visible placeholders after re-entering");
 
   simulateItemDrag(developerButton, panel);
-  CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_PANEL);
   if (isInWin8()) {
     simulateItemDrag(metroBtn, panel);
   }
@@ -138,10 +141,10 @@ add_task(function() {
   ok(CustomizableUI.inDefaultState, "Should be in default state again.");
 });
 
-// The default placements should have one placeholder at the bottom (or 3 in metro-enabled win8).
+// The default placements should have two placeholders at the bottom (or 1 in win8).
 add_task(function() {
   yield startCustomizing();
-  let numPlaceholders = isInWin8() ? 3 : 1;
+  let numPlaceholders = isInWin8() ? 1 : 2;
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   ok(CustomizableUI.inDefaultState, "Should be in default state.");
   is(getVisiblePlaceholderCount(panel), numPlaceholders, "Should have " + numPlaceholders + " visible placeholders before exiting");
