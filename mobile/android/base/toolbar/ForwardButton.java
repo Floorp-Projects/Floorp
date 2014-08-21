@@ -20,14 +20,18 @@ public class ForwardButton extends ShapedButton {
     private Path mBorderPath;
     private Paint mBorderPaint;
     private Paint mBorderPrivatePaint;
+    private final float mBorderWidth;
 
     public ForwardButton(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        mBorderWidth = getResources().getDimension(R.dimen.nav_button_border_width);
 
         // Paint to draw the border.
         mBorderPaint = new Paint();
         mBorderPaint.setAntiAlias(true);
         mBorderPaint.setColor(0xFFB5B5B5);
+        mBorderPaint.setStrokeWidth(mBorderWidth);
         mBorderPaint.setStyle(Paint.Style.STROKE);
 
         mBorderPrivatePaint = new Paint(mBorderPaint);
@@ -40,13 +44,9 @@ public class ForwardButton extends ShapedButton {
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
 
-        float borderWidth = getContext().getResources().getDimension(R.dimen.nav_button_border_width);
-        mBorderPaint.setStrokeWidth(borderWidth);
-        mBorderPrivatePaint.setStrokeWidth(borderWidth);
-
         mBorderPath.reset();
-        mBorderPath.moveTo(width - borderWidth, 0);
-        mBorderPath.lineTo(width - borderWidth, height);
+        mBorderPath.moveTo(width - mBorderWidth, 0);
+        mBorderPath.lineTo(width - mBorderWidth, height);
     }
 
     @Override
