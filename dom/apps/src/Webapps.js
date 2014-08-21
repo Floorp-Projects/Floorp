@@ -786,11 +786,7 @@ WebappsApplicationMgmt.prototype = {
         break;
       case "Webapps:Uninstall:Broadcast:Return:OK":
         {
-          let detail = {
-            manifestURL: msg.manifestURL,
-            origin: msg.origin
-          };
-          let app = createContentApplicationObject(this._window, detail);
+          let app = createContentApplicationObject(this._window, msg);
           let event =
             new this._window.MozApplicationEvent("uninstall", { application : app });
           this.__DOM_IMPL__.dispatchEvent(event);

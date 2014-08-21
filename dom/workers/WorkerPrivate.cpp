@@ -3844,6 +3844,12 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       NS_ENSURE_SUCCESS(rv, rv);
 
       loadInfo.mXHRParamsAllowed = perm == nsIPermissionManager::ALLOW_ACTION;
+
+      uint16_t appStatus = loadInfo.mPrincipal->GetAppStatus();
+      loadInfo.mIsInPrivilegedApp =
+        (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED ||
+         appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED);
+      loadInfo.mIsInCertifiedApp = (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
     } else {
       // Not a window
       MOZ_ASSERT(isChrome);

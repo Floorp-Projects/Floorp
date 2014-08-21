@@ -1171,7 +1171,7 @@ public:
   gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nullptr; }
   uint32_t GetContentFlags() { return mContentFlags; }
-  const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
+  const nsIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const FrameMetrics& GetFrameMetrics() const { return mFrameMetrics; }
   FrameMetrics::ViewID GetScrollHandoffParentId() const { return mScrollHandoffParentId; }
   const EventRegions& GetEventRegions() const { return mEventRegions; }
