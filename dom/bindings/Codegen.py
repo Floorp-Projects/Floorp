@@ -2165,16 +2165,18 @@ class MethodDefiner(PropertyDefiner):
                                                  # automatically.
                     "condition": MemberCondition(None, None)
                 })
-        elif (descriptor.interface.isJSImplemented() and
-              descriptor.interface.hasInterfaceObject()):
-            self.chrome.append({
-                "name": '_create',
-                "nativeName": ("%s::_Create" % descriptor.name),
-                "methodInfo": False,
-                "length": 2,
-                "flags": "0",
-                "condition": MemberCondition(None, None)
-            })
+
+        if (descriptor.interface.isJSImplemented() and
+            descriptor.interface.hasInterfaceObject()):
+            if static:
+                self.chrome.append({
+                    "name": '_create',
+                    "nativeName": ("%s::_Create" % descriptor.name),
+                    "methodInfo": False,
+                    "length": 2,
+                    "flags": "0",
+                    "condition": MemberCondition(None, None)
+                })
 
         self.unforgeable = unforgeable
 
