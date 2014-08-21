@@ -3462,19 +3462,6 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, Scalar::Type *viewType,
         if (pointerNode->isKind(PNK_BITAND))
             FoldMaskedArrayIndex(f, &pointerNode, &mask, needsBoundsCheck);
 
-        // Fold a 'literal constant right shifted' now, and skip the bounds check if
-        // currently possible. This handles the optimization of many of these uses without
-        // the need for range analysis, and saves the generation of a MBitAnd op.
-        uint32_t byteOffset;
-        if (IsLiteralOrConstInt(f, pointerNode, &byteOffset) && byteOffset <= uint32_t(INT32_MAX)) {
-            // Cases: b[c>>n], and b[(c&m)>>n]
-            byteOffset &= mask;
-            if (byteOffset < f.m().minHeapLength())
-                *needsBoundsCheck = NO_BOUNDS_CHECK;
-            *def = f.constant(Int32Value(byteOffset), Type::Int);
-            return true;
-        }
-
         Type pointerType;
         if (!CheckExpr(f, pointerNode, &pointerDef, &pointerType))
             return false;
