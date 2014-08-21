@@ -1539,15 +1539,18 @@ class CGClassFinalizeHook(CGAbstractClassHook):
         return finalizeHook(self.descriptor, self.name, self.args[0].name).define()
 
 
+def JSNativeArguments():
+    return [Argument('JSContext*', 'cx'),
+            Argument('unsigned', 'argc'),
+            Argument('JS::Value*', 'vp')]
+
 class CGClassConstructor(CGAbstractStaticMethod):
     """
     JS-visible constructor for our objects
     """
     def __init__(self, descriptor, ctor, name=CONSTRUCT_HOOK_NAME):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool',
+                                        JSNativeArguments())
         self._ctor = ctor
 
     def define(self):
@@ -7205,10 +7208,8 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
     CGThing which is already properly indented.
     """
     def __init__(self, descriptor, name):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool",
+                                        JSNativeArguments())
 
     def definition_body(self):
         # Make sure that "obj" is in the same compartment as "cx", since we'll
@@ -7236,15 +7237,12 @@ class CGGenericMethod(CGAbstractBindingMethod):
     UncheckedUnwrap and after that operate on the result.
     """
     def __init__(self, descriptor, allowCrossOriginThis=False):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         unwrapFailureCode = (
             'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForMethod(%%(securityError)s), "%s");\n' %
             descriptor.interface.identifier.name)
         name = "genericCrossOriginMethod" if allowCrossOriginThis else "genericMethod"
         CGAbstractBindingMethod.__init__(self, descriptor, name,
-                                         args,
+                                         JSNativeArguments(),
                                          unwrapFailureCode=unwrapFailureCode,
                                          allowCrossOriginThis=allowCrossOriginThis)
 
@@ -7269,9 +7267,6 @@ class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
     Does not handle cross-origin this.
     """
     def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         unwrapFailureCode = dedent("""
             ThrowInvalidThis(cx, args, GetInvalidThisErrorForMethod(%%(securityError)s), "%s");\n
             return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
@@ -7286,7 +7281,7 @@ class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
         """)
 
         CGAbstractBindingMethod.__init__(self, descriptor, name,
-                                         args,
+                                         JSNativeArguments(),
                                          callArgs=customCallArgs,
                                          unwrapFailureCode=unwrapFailureCode)
 
@@ -7410,13 +7405,10 @@ class CGLegacyCallHook(CGAbstractBindingMethod):
     """
     def __init__(self, descriptor):
         self._legacycaller = descriptor.operations["LegacyCaller"]
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         # Our "self" is actually the callee in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, LEGACYCALLER_HOOK_NAME,
-            args, getThisObj="&args.callee()")
+            JSNativeArguments(), getThisObj="&args.callee()")
 
     def define(self):
         if not self._legacycaller:
@@ -7577,9 +7569,6 @@ class CGGenericGetter(CGAbstractBindingMethod):
     A class for generating the C++ code for an IDL attribute getter.
     """
     def __init__(self, descriptor, lenientThis=False, allowCrossOriginThis=False):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         if lenientThis:
             name = "genericLenientGetter"
             unwrapFailureCode = dedent("""
@@ -7598,7 +7587,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
             unwrapFailureCode = (
                 'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForGetter(%%(securityError)s), "%s");\n' %
                 descriptor.interface.identifier.name)
-        CGAbstractBindingMethod.__init__(self, descriptor, name, args,
+        CGAbstractBindingMethod.__init__(self, descriptor, name, JSNativeArguments(),
                                          unwrapFailureCode,
                                          allowCrossOriginThis=allowCrossOriginThis)
 
@@ -7709,9 +7698,6 @@ class CGGenericSetter(CGAbstractBindingMethod):
     A class for generating the C++ code for an IDL attribute setter.
     """
     def __init__(self, descriptor, lenientThis=False, allowCrossOriginThis=False):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
         if lenientThis:
             name = "genericLenientSetter"
             unwrapFailureCode = dedent("""
@@ -7731,7 +7717,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
                 'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForSetter(%%(securityError)s), "%s");\n' %
                 descriptor.interface.identifier.name)
 
-        CGAbstractBindingMethod.__init__(self, descriptor, name, args,
+        CGAbstractBindingMethod.__init__(self, descriptor, name, JSNativeArguments(),
                                          unwrapFailureCode,
                                          allowCrossOriginThis=allowCrossOriginThis)
 
@@ -12992,13 +12978,9 @@ class CGJSImplClearCachedValueMethod(CGAbstractBindingMethod):
         if attr.getExtendedAttribute("StoreInSlot"):
             raise TypeError("[StoreInSlot] is not supported for JS-implemented WebIDL. See bug 1056325.")
 
-        args = [Argument("JSContext*", "cx"),
-                Argument("unsigned", "argc"),
-                Argument("JS::Value*", "vp")]
-
         CGAbstractBindingMethod.__init__(self, descriptor,
                                          MakeJSImplClearCachedValueNativeName(attr),
-                                         args)
+                                         JSNativeArguments())
         self.attr = attr
 
     def generate_code(self):
@@ -13164,9 +13146,7 @@ class CGJSImplClass(CGBindingImplClass):
         self.methodDecls.append(
             ClassMethod("_Create",
                         "bool",
-                        [Argument("JSContext*", "cx"),
-                         Argument("unsigned", "argc"),
-                         Argument("JS::Value*", "vp")],
+                        JSNativeArguments(),
                         static=True,
                         body=self.getCreateFromExistingBody()))
 
