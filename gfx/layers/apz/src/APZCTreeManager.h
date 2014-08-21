@@ -89,6 +89,12 @@ class APZCTreeManager {
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
   typedef uint32_t TouchBehaviorFlags;
 
+  // Helper struct to hold some state while we build the APZ tree. The
+  // sole purpose of this struct is to shorten the argument list to
+  // UpdatePanZoomControllerTree. All the state that we don't need to
+  // push on the stack during recursion and pop on unwind is stored here.
+  struct TreeBuildingState;
+
 public:
   APZCTreeManager();
 
@@ -372,6 +378,15 @@ private:
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
                                         const ZoomConstraints& aConstraints);
 
+  AsyncPanZoomController* PrepareAPZCForLayer(const Layer* aLayer,
+                                              const FrameMetrics& aMetrics,
+                                              uint64_t aLayersId,
+                                              const gfx::Matrix4x4& aAncestorTransform,
+                                              const nsIntRegion& aObscured,
+                                              AsyncPanZoomController*& aOutParent,
+                                              AsyncPanZoomController*& aOutNextSibling,
+                                              TreeBuildingState& aState);
+
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has
    * the same shape as the layer tree, but excludes all the layers that are not scrollable.
@@ -381,16 +396,11 @@ private:
    * tree also as a last-child-prev-sibling tree because that simplifies the hit detection
    * code.
    */
-  AsyncPanZoomController* UpdatePanZoomControllerTree(CompositorParent* aCompositor,
+  AsyncPanZoomController* UpdatePanZoomControllerTree(TreeBuildingState& aState,
                                                       Layer* aLayer, uint64_t aLayersId,
                                                       const gfx::Matrix4x4& aAncestorTransform,
                                                       AsyncPanZoomController* aParent,
                                                       AsyncPanZoomController* aNextSibling,
-                                                      bool aIsFirstPaint,
-                                                      uint64_t aOriginatingLayersId,
-                                                      const APZPaintLogHelper& aPaintLogger,
-                                                      nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy,
-                                                      std::map<ScrollableLayerGuid, AsyncPanZoomController*>& aApzcMap,
                                                       const nsIntRegion& aObscured);
 
 private:
