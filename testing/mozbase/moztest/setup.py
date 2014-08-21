@@ -4,7 +4,7 @@
 
 from setuptools import setup, find_packages
 
-PACKAGE_VERSION = '0.6'
+PACKAGE_VERSION = '0.7'
 
 # dependencies
 deps = ['mozinfo']
