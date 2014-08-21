@@ -2419,8 +2419,10 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
   for (size_t p = 0; p < query->pipelines.Length(); ++p) {
     const MediaPipeline& mp = *query->pipelines[p];
     bool isAudio = (mp.Conduit()->type() == MediaSessionConduit::AUDIO);
-    nsString idstr = isAudio ?
-        NS_LITERAL_STRING("audio_") : NS_LITERAL_STRING("video_");
+    nsString mediaType = isAudio ?
+        NS_LITERAL_STRING("audio") : NS_LITERAL_STRING("video");
+    nsString idstr = mediaType;
+    idstr.AppendLiteral("_");
     idstr.AppendInt(mp.trackid());
 
     // Gather pipeline stats.
@@ -2456,6 +2458,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             if (ssrc.Length()) {
               s.mSsrc.Construct(ssrc);
             }
+            s.mMediaType.Construct(mediaType);
             s.mJitter.Construct(double(jitterMs)/1000);
             s.mRemoteId.Construct(localId);
             s.mIsRemote = true;
@@ -2475,6 +2478,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
           if (ssrc.Length()) {
             s.mSsrc.Construct(ssrc);
           }
+          s.mMediaType.Construct(mediaType);
           s.mRemoteId.Construct(remoteId);
           s.mIsRemote = false;
           s.mPacketsSent.Construct(mp.rtp_packets_sent());
@@ -2526,6 +2530,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
             if (ssrc.Length()) {
               s.mSsrc.Construct(ssrc);
             }
+            s.mMediaType.Construct(mediaType);
             s.mRemoteId.Construct(localId);
             s.mIsRemote = true;
             s.mPacketsSent.Construct(packetsSent);
@@ -2541,6 +2546,7 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         if (ssrc.Length()) {
           s.mSsrc.Construct(ssrc);
         }
+        s.mMediaType.Construct(mediaType);
         unsigned int jitterMs, packetsLost;
         if (mp.Conduit()->GetRTPStats(&jitterMs, &packetsLost)) {
           s.mJitter.Construct(double(jitterMs)/1000);
