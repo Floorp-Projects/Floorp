@@ -19,6 +19,7 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 EXPORTS += [
     'AudioContext.h',
+    'AudioEventTimeline.h',
     'AudioNodeEngine.h',
     'AudioNodeExternalInputStream.h',
     'AudioNodeStream.h',
