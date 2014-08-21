@@ -474,7 +474,7 @@ var gPrivacyPane = {
                    introText      : bundlePreferences.getString("cookiepermissionstext") };
     document.documentElement.openWindow("Browser:Permissions",
                                         "chrome://browser/content/preferences/permissions.xul",
-                                        "", params);
+                                        "resizable", params);
   },
 
   /**
@@ -484,7 +484,7 @@ var gPrivacyPane = {
   {
     document.documentElement.openWindow("Browser:Cookies",
                                         "chrome://browser/content/preferences/cookies.xul",
-                                        "", null);
+                                        "resizable", null);
   },
 
   // CLEAR PRIVATE DATA
