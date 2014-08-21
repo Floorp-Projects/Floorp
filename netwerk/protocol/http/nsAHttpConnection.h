@@ -140,6 +140,9 @@ public:
     // Update the callbacks used to provide security info. May be called on
     // any thread.
     virtual void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) = 0;
+
+    // nsHttp.h version
+    virtual uint32_t Version() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
@@ -206,6 +209,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
         if (!(fwdObject))                  \
             return nullptr;                 \
         return (fwdObject)->Transport();   \
+    }                                      \
+    uint32_t Version()                     \
+    {                                      \
+        return (fwdObject) ?               \
+            (fwdObject)->Version() :       \
+            NS_HTTP_VERSION_UNKNOWN;       \
     }                                      \
     bool IsProxyConnectInProgress()                         \
     {                                                       \

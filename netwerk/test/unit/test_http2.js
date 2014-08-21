@@ -335,6 +335,53 @@ function test_http2_post_big() {
   do_post(posts[1], chan, listener);
 }
 
+Cu.import("resource://testing-common/httpd.js");
+var httpserv = null;
+var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService(Components.interfaces.nsIIOService);
+
+var altsvcClientListener = {
+  onStartRequest: function test_onStartR(request, ctx) {
+    do_check_eq(request.status, Components.results.NS_OK);
+  },
+
+  onDataAvailable: function test_ODA(request, cx, stream, offset, cnt) {
+   read_stream(stream, cnt);
+  },
+
+  onStopRequest: function test_onStopR(request, ctx, status) {
+    var isHttp2Connection = checkIsHttp2(request);
+    if (!isHttp2Connection) {
+	// not over tls yet - retry. It's all async and transparent to client
+	var chan = ios.newChannel("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
+				  null, null).QueryInterface(Components.interfaces.nsIHttpChannel);
+	chan.asyncOpen(altsvcClientListener, null);
+    } else {
+        do_check_true(isHttp2Connection);
+	httpserv.stop(do_test_finished);
+	run_next_test();
+    }
+  }
+};
+
+function altsvcHttp1Server(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "text/plain", false);
+  response.setHeader("Alt-Svc", 'h2=":6944"; ma=3200, h2-14=":6944"', false);
+  var body = "this is where a cool kid would write something neat.\n";
+  response.bodyOutputStream.write(body, body.length);
+}
+
+function test_http2_altsvc() {
+  httpserv = new HttpServer();
+  httpserv.registerPathHandler("/altsvc1", altsvcHttp1Server);
+  httpserv.start(-1);
+
+  var chan = ios.newChannel("http://localhost:" + httpserv.identity.primaryPort + "/altsvc1",
+			    null, null).QueryInterface(Components.interfaces.nsIHttpChannel);
+  chan.asyncOpen(altsvcClientListener, null);
+}
+
 // hack - the header test resets the multiplex object on the server,
 // so make sure header is always run before the multiplex test.
 //
@@ -346,6 +393,7 @@ var tests = [ test_http2_post_big
             , test_http2_push2
             , test_http2_push3
             , test_http2_push4
+	    , test_http2_altsvc
             , test_http2_doubleheader
             , test_http2_xhr
             , test_http2_header
@@ -432,6 +480,8 @@ function resetPrefs() {
   prefs.setBoolPref("network.http.spdy.allow-push", spdypush);
   prefs.setBoolPref("network.http.spdy.enabled.http2draft", http2pref);
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", tlspref);
+  prefs.setBoolPref("network.http.altsvc.enabled", altsvcpref1);
+  prefs.setBoolPref("network.http.altsvc.oe", altsvcpref2);
 }
 
 function run_test() {
@@ -454,11 +504,16 @@ function run_test() {
   spdypush = prefs.getBoolPref("network.http.spdy.allow-push");
   http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2draft");
   tlspref = prefs.getBoolPref("network.http.spdy.enforce-tls-profile");
+  altsvcpref1 = prefs.getBoolPref("network.http.altsvc.enabled");
+  altsvcpref2 = prefs.getBoolPref("network.http.altsvc.oe", true);
+
   prefs.setBoolPref("network.http.spdy.enabled", true);
   prefs.setBoolPref("network.http.spdy.enabled.v3", true);
   prefs.setBoolPref("network.http.spdy.allow-push", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2draft", true);
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", false);
+  prefs.setBoolPref("network.http.altsvc.enabled", true);
+  prefs.setBoolPref("network.http.altsvc.oe", true);
 
   loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
 
