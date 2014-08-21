@@ -62,15 +62,16 @@ let gSubDialog = {
   },
 
   open: function(aURL, aFeatures = null, aParams = null, aClosingCallback = null) {
-    let features = aFeatures || "modal,centerscreen,resizable=no";
+    let features = (!!aFeatures ? aFeatures + "," : "") + "resizable,dialog=no,centerscreen";
     let dialog = window.openDialog(aURL, "dialogFrame", features, aParams);
     if (aClosingCallback) {
       this._closingCallback = aClosingCallback.bind(dialog);
     }
+    features = features.replace(/,/g, "&");
     let featureParams = new URLSearchParams(features.toLowerCase());
     this._box.setAttribute("resizable", featureParams.has("resizable") &&
                                         featureParams.get("resizable") != "no" &&
-                                        featureParams.get("resizable") != 0);
+                                        featureParams.get("resizable") != "0");
     return dialog;
   },
 

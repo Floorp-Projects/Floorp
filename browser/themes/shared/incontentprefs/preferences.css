@@ -314,11 +314,6 @@ description > html|a {
   width: 66ch;
 }
 
-/* needs to be removed with bug 1035625 */
-:-moz-any(dialog, window, prefwindow) resizer {
-  display: none;
-}
-
 tree:not(#rejectsTree) {
   min-height: 15em;
 }
