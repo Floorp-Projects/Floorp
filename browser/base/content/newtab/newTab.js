@@ -49,6 +49,19 @@ function newTabString(name, args) {
     case "customize.blank":
       return "Blank";
 
+    case "customize.what":
+    case "intro.header":
+      return "What is this page?";
+
+    case "intro.paragraph1":
+      return "When you open a new tab, you’ll see tiles from the sites you frequently visit, along with tiles that we think might be of interest to you. Some of these tiles may be sponsored by Mozilla partners. We’ll always indicate to you which tiles are sponsored. %1$S".replace("%1$S", args[0]);
+
+    case "intro.paragraph2":
+      return "In order to provide this service, Mozilla collects and uses certain analytics information relating to your use of the tiles in accordance with our %1$S.".replace("%1$S", args[0]);
+
+    case "intro.paragraph3":
+      return "You can turn off the tiles feature by clicking the %1$S button for your preferences.".replace("%1$S", args[0]);
+
     case "sponsored.button":
       return "SPONSORED";
 
@@ -60,6 +73,9 @@ function newTabString(name, args) {
 
     case "learn.link":
       return "Learn more…";
+
+    case "privacy.link":
+      return "Privacy Notice";
   }
 
   let stringName = "newtab." + name;
@@ -77,6 +93,7 @@ const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const TILES_EXPLAIN_LINK = "https://support.mozilla.org/kb/how-do-sponsored-tiles-work";
+const TILES_PRIVACY_LINK = "https://www.mozilla.org/privacy/";
 
 #include transformations.js
 #include page.js
@@ -92,6 +109,7 @@ const TILES_EXPLAIN_LINK = "https://support.mozilla.org/kb/how-do-sponsored-tile
 #include undo.js
 #include search.js
 #include customize.js
+#include intro.js
 
 // Everything is loaded. Initialize the New Tab Page.
 gPage.init();
