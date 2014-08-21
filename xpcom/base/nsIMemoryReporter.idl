@@ -667,6 +667,19 @@ public:
     return pnew;
   }
 
+  // Some library code expects that realloc(x, 0) will free x, which is not
+  // the behavior of the version of jemalloc we're using, so this wrapped
+  // version of realloc is needed.
+  static void*
+  CountingFreeingRealloc(void* p, size_t size)
+  {
+    if (size == 0) {
+      CountingFree(p);
+      return nullptr;
+    }
+    return CountingRealloc(p, size);
+  }
+
   static void
   CountingFree(void* p)
   {
