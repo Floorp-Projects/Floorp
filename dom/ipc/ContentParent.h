@@ -78,11 +78,6 @@ class ContentParent : public PContentParent
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
 public:
-#ifdef MOZ_NUWA_PROCESS
-    static bool IsNuwaReady() {
-        return sNuwaReady;
-    }
-#endif
     virtual bool IsContentParent() MOZ_OVERRIDE { return true; }
     /**
      * Start up the content-process machinery.  This might include
@@ -705,12 +700,6 @@ private:
     // Dup of child's X socket, used to scope its resources to this
     // object instead of the child process's lifetime.
     ScopedClose mChildXSocketFdDup;
-#endif
-
-#ifdef MOZ_NUWA_PROCESS
-    static bool sNuwaReady;
-    struct NuwaReinitializeData;
-    nsAutoPtr<NuwaReinitializeData> mReinitializeData;
 #endif
 };
 
