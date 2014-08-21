@@ -2037,6 +2037,21 @@ def isMaybeExposedIn(member, descriptor):
     # and member is only exposed in windows, then it's not exposed.
     return not descriptor.workers or member.exposureSet != set(["Window"])
 
+def clearableCachedAttrs(descriptor):
+    return (m for m in descriptor.interface.members if
+            m.isAttr() and
+            # Constants should never need clearing!
+            not m.getExtendedAttribute("Constant") and
+            not m.getExtendedAttribute("SameObject") and
+            m.slotIndex is not None)
+
+def MakeClearCachedValueNativeName(member):
+    return "ClearCached%sValue" % MakeNativeName(member.identifier.name)
+
+def MakeJSImplClearCachedValueNativeName(member):
+    return "_" + MakeClearCachedValueNativeName(member)
+
+
 class MethodDefiner(PropertyDefiner):
     """
     A class for defining methods on a prototype object.
@@ -2177,6 +2192,17 @@ class MethodDefiner(PropertyDefiner):
                     "flags": "0",
                     "condition": MemberCondition(None, None)
                 })
+            else:
+                for m in clearableCachedAttrs(descriptor):
+                    attrName = MakeNativeName(m.identifier.name)
+                    self.chrome.append({
+                        "name": "_clearCached%sValue" % attrName,
+                        "nativeName": MakeJSImplClearCachedValueNativeName(m),
+                        "methodInfo": False,
+                        "length": "0",
+                        "flags": "0",
+                        "condition": MemberCondition(None, None)
+                    })
 
         self.unforgeable = unforgeable
 
@@ -3249,7 +3275,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             args = []
             returnType = 'void'
         args.append(Argument(descriptor.nativeType + '*', 'aObject'))
-        name = ("ClearCached%sValue" % MakeNativeName(member.identifier.name))
+        name = MakeClearCachedValueNativeName(member)
         CGAbstractMethod.__init__(self, descriptor, name, returnType, args)
 
     def definition_body(self):
@@ -7085,8 +7111,8 @@ class CGSetterCall(CGPerSignatureCall):
                 args = "cx, self"
             else:
                 args = "self"
-            clearSlot = ("ClearCached%sValue(%s);\n" %
-                         (MakeNativeName(self.idlNode.identifier.name), args))
+            clearSlot = ("%s(%s);\n" %
+                         (MakeClearCachedValueNativeName(self.idlNode), args))
         else:
             clearSlot = ""
 
@@ -10841,6 +10867,11 @@ class CGDescriptor(CGThing):
                                           post="\n};\n",
                                           defineOnly=True))
 
+        # Generate the _ClearCachedFooValue methods before the property arrays that use them.
+        if descriptor.interface.isJSImplemented():
+            for m in clearableCachedAttrs(descriptor):
+                cgThings.append(CGJSImplClearCachedValueMethod(descriptor, m))
+
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))
         cgThings.append(CGNativeProperties(descriptor, properties))
@@ -10932,12 +10963,7 @@ class CGDescriptor(CGThing):
         # cached values, since we can't get at the JSObject.
         if descriptor.wrapperCache:
             cgThings.extend(CGClearCachedValueMethod(descriptor, m) for
-                            m in descriptor.interface.members if
-                            m.isAttr() and
-                            # Constants should never need clearing!
-                            not m.getExtendedAttribute("Constant") and
-                            not m.getExtendedAttribute("SameObject") and
-                            m.slotIndex is not None)
+                            m in clearableCachedAttrs(descriptor))
 
         # CGCreateInterfaceObjectsMethod needs to come after our
         # CGDOMJSClass, if any.
@@ -12959,6 +12985,31 @@ def callbackGetterName(attr, descriptor):
 def callbackSetterName(attr, descriptor):
     return "Set" + MakeNativeName(
         descriptor.binaryNameFor(attr.identifier.name))
+
+
+class CGJSImplClearCachedValueMethod(CGAbstractBindingMethod):
+    def __init__(self, descriptor, attr):
+        if attr.getExtendedAttribute("StoreInSlot"):
+            raise TypeError("[StoreInSlot] is not supported for JS-implemented WebIDL. See bug 1056325.")
+
+        args = [Argument("JSContext*", "cx"),
+                Argument("unsigned", "argc"),
+                Argument("JS::Value*", "vp")]
+
+        CGAbstractBindingMethod.__init__(self, descriptor,
+                                         MakeJSImplClearCachedValueNativeName(attr),
+                                         args)
+        self.attr = attr
+
+    def generate_code(self):
+        return CGGeneric(fill(
+            """
+            ${bindingNamespace}::${fnName}(self);
+            args.rval().setUndefined();
+            return true;
+            """,
+            bindingNamespace=toBindingNamespace(self.descriptor.interface.identifier.name),
+            fnName=MakeClearCachedValueNativeName(self.attr)))
 
 
 class CGJSImplGetter(CGJSImplMember):
