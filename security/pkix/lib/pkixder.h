@@ -622,7 +622,7 @@ CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
 // only supports v1.
-enum Version { v1 = 0, v2 = 1, v3 = 2 };
+enum Version { v1 = 0, v2 = 1, v3 = 2, v4 = 3 };
 
 // X.509 Certificate and OCSP ResponseData both use this
 // "[0] EXPLICIT Version DEFAULT <defaultVersion>" construct, but with
