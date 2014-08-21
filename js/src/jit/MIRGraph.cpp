@@ -540,17 +540,18 @@ MBasicBlock::linkOsrValues(MStart *start)
 
     for (uint32_t i = 0; i < stackDepth(); i++) {
         MDefinition *def = slots_[i];
+        MInstruction *cloneRp = nullptr;
         if (i == info().scopeChainSlot()) {
             if (def->isOsrScopeChain())
-                def->toOsrScopeChain()->setResumePoint(res);
+                cloneRp = def->toOsrScopeChain();
         } else if (i == info().returnValueSlot()) {
             if (def->isOsrReturnValue())
-                def->toOsrReturnValue()->setResumePoint(res);
+                cloneRp = def->toOsrReturnValue();
         } else if (info().hasArguments() && i == info().argsObjSlot()) {
             JS_ASSERT(def->isConstant() || def->isOsrArgumentsObject());
             JS_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
             if (def->isOsrArgumentsObject())
-                def->toOsrArgumentsObject()->setResumePoint(res);
+                cloneRp = def->toOsrArgumentsObject();
         } else {
             JS_ASSERT(def->isOsrValue() || def->isGetArgumentsObjectArg() || def->isConstant() ||
                       def->isParameter());
@@ -560,12 +561,15 @@ MBasicBlock::linkOsrValues(MStart *start)
             JS_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
 
             if (def->isOsrValue())
-                def->toOsrValue()->setResumePoint(res);
+                cloneRp = def->toOsrValue();
             else if (def->isGetArgumentsObjectArg())
-                def->toGetArgumentsObjectArg()->setResumePoint(res);
+                cloneRp = def->toGetArgumentsObjectArg();
             else if (def->isParameter())
-                def->toParameter()->setResumePoint(res);
+                cloneRp = def->toParameter();
         }
+
+        if (cloneRp)
+            cloneRp->setResumePoint(MResumePoint::Copy(graph().alloc(), res));
     }
 }
 
