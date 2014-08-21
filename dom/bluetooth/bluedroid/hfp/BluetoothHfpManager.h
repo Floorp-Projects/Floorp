@@ -103,22 +103,6 @@ public:
   void HandleIccInfoChanged(uint32_t aClientId);
   void HandleVoiceConnectionChanged(uint32_t aClientId);
 
-  // Bluedroid hfp callback handlers
-  void ProcessConnectionState(bthf_connection_state_t aState, bt_bdaddr_t* aBdAddress);
-  void ProcessAudioState(bthf_audio_state_t aState, bt_bdaddr_t* aBdAddress);
-  void ProcessAnswerCall();
-  void ProcessHangupCall();
-  void ProcessVolumeControl(bthf_volume_type_t aType, int aVolume);
-  void ProcessDialCall(char *aNumber);
-  void ProcessDtmfCmd(char aDtmf);
-  void ProcessAtChld(bthf_chld_type_t aChld);
-  void ProcessAtCnum();
-  void ProcessAtCind();
-  void ProcessAtCops();
-  void ProcessAtClcc();
-  void ProcessUnknownAt(char *aAtString);
-  void ProcessKeyPressed();
-
   // CDMA-specific functions
   void UpdateSecondNumber(const nsAString& aNumber);
   void AnswerWaitingCall();
