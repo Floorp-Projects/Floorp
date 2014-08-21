@@ -21,7 +21,7 @@
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nscore.h"
 
 class JSObject;

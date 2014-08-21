@@ -4,6 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if CONFIG['ENABLE_TESTS']:
+    MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
+    MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+
 XPIDL_SOURCES += [
     'inICSSValueSearch.idl',
     'inIDeepTreeWalker.idl',
@@ -47,9 +51,3 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/dom/xbl',
 ]
-
-if CONFIG['ENABLE_TESTS']:
-    DIRS += [
-        'tests',
-        'tests/chrome',
-    ]

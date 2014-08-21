@@ -69,6 +69,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                                      const nsAString & aAlertName,
                                                      const nsAString & aBidi,
                                                      const nsAString & aLang,
+                                                     const nsAString & aData,
                                                      nsIPrincipal * aPrincipal)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
@@ -85,6 +86,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                    PromiseFlatString(aAlertName),
                                    PromiseFlatString(aBidi),
                                    PromiseFlatString(aLang),
+                                   PromiseFlatString(aData),
                                    IPC::Principal(aPrincipal));
     return NS_OK;
   }
@@ -100,7 +102,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   if (sysAlerts) {
     return sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
                                             aAlertCookie, aAlertListener, aAlertName,
-                                            aBidi, aLang, IPC::Principal(aPrincipal));
+                                            aBidi, aLang, aData,
+                                            IPC::Principal(aPrincipal));
   }
 
   if (!ShouldShowAlert()) {

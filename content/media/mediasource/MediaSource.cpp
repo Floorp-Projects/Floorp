@@ -8,6 +8,7 @@
 
 #include "AsyncEventRunner.h"
 #include "DecoderTraits.h"
+#include "MediaSourceUtils.h"
 #include "SourceBuffer.h"
 #include "SourceBufferList.h"
 #include "mozilla/ErrorResult.h"
@@ -23,7 +24,7 @@
 #include "nsIEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsPIDOMWindow.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
 
@@ -333,37 +334,42 @@ MediaSource::Detach()
 void
 MediaSource::GetBuffered(TimeRanges* aBuffered)
 {
+  MOZ_ASSERT(aBuffered->Length() == 0);
   if (mActiveSourceBuffers->IsEmpty()) {
     return;
   }
 
-  nsTArray<nsRefPtr<TimeRanges>> ranges;
+  double highestEndTime = 0;
+
+  nsTArray<nsRefPtr<TimeRanges>> activeRanges;
   for (uint32_t i = 0; i < mActiveSourceBuffers->Length(); ++i) {
     bool found;
     SourceBuffer* sourceBuffer = mActiveSourceBuffers->IndexedGetter(i, found);
 
     ErrorResult dummy;
-    *ranges.AppendElement() = sourceBuffer->GetBuffered(dummy);
+    *activeRanges.AppendElement() = sourceBuffer->GetBuffered(dummy);
+
+    highestEndTime = std::max(highestEndTime, activeRanges.LastElement()->GetEndTime());
   }
 
-  double highestEndTime = mActiveSourceBuffers->GetHighestBufferedEndTime();
-  if (highestEndTime <= 0) {
-    return;
-  }
+  TimeRanges* intersectionRanges = aBuffered;
+  intersectionRanges->Add(0, highestEndTime);
 
-  MOZ_ASSERT(aBuffered->Length() == 0);
-  aBuffered->Add(0, highestEndTime);
+  for (uint32_t i = 0; i < activeRanges.Length(); ++i) {
+    TimeRanges* sourceRanges = activeRanges[i];
 
-  for (uint32_t i = 0; i < ranges.Length(); ++i) {
     if (mReadyState == MediaSourceReadyState::Ended) {
-      ranges[i]->Add(ranges[i]->GetEndTime(), highestEndTime);
+      // Set the end time on the last range to highestEndTime by adding a
+      // new range spanning the current end time to highestEndTime, which
+      // Normalize() will then merge with the old last range.
+      sourceRanges->Add(sourceRanges->GetEndTime(), highestEndTime);
+      sourceRanges->Normalize();
     }
 
-    aBuffered->Intersection(ranges[i]);
+    intersectionRanges->Intersection(sourceRanges);
   }
 
-  MSE_DEBUG("MediaSource(%p)::GetBuffered start=%f end=%f length=%u",
-            this, aBuffered->GetStartTime(), aBuffered->GetEndTime(), aBuffered->Length());
+  MSE_DEBUG("MediaSource(%p)::GetBuffered ranges=%s", this, DumpTimeRanges(intersectionRanges).get());
 }
 
 MediaSource::MediaSource(nsPIDOMWindow* aWindow)

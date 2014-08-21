@@ -570,7 +570,7 @@ public:
 
   // Called as data arrives on the stream and is read into the cache.  Called
   // on the main thread only.
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) MOZ_OVERRIDE;
 
   // Called by MediaResource when the principal of the resource has
   // changed. Called on main thread only.

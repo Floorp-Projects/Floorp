@@ -75,6 +75,8 @@ public:
 
   virtual void NotifyWaitingForResourcesStatusChanged() MOZ_OVERRIDE;
 
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) MOZ_OVERRIDE;
+
 protected:
   virtual ~BufferDecoder();
 
