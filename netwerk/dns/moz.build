@@ -25,7 +25,6 @@ EXPORTS.mozilla.net += [
 ]
 
 SOURCES += [
-    'GetAddrInfo.cpp',           # Excluded from UNIFIED_SOURCES due to NSPR forced logging.
     'nsEffectiveTLDService.cpp', # Excluded from UNIFIED_SOURCES due to special build flags.
     'nsHostResolver.cpp',        # Excluded from UNIFIED_SOURCES due to NSPR forced logging.
 ]
