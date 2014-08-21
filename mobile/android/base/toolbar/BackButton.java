@@ -17,7 +17,6 @@ import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 public class BackButton extends ShapedButton { 
-    private final Path mPath;
     private final Path mBorderPath;
     private final Paint mBorderPaint;
     private final float mBorderWidth;
@@ -34,7 +33,6 @@ public class BackButton extends ShapedButton {
         mBorderPaint.setStyle(Paint.Style.STROKE);
 
         // Path is masked.
-        mPath = new Path();
         mBorderPath = new Path();
 
         setPrivateMode(false);

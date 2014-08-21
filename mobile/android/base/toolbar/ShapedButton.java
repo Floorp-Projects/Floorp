@@ -24,27 +24,12 @@ public class ShapedButton extends ThemedImageButton
                           implements CanvasDelegate.DrawManager {
     protected final LightweightTheme mTheme;
 
-    private final Path mPath;
-    private final CurveTowards mSide;
-
+    protected final Path mPath;
     protected final CanvasDelegate mCanvasDelegate;
-
-    private enum CurveTowards { NONE, LEFT, RIGHT };
 
     public ShapedButton(Context context, AttributeSet attrs) {
         super(context, attrs);
         mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
-
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbarCurve);
-        int curveTowards = a.getInt(R.styleable.BrowserToolbarCurve_curveTowards, 0x00);
-        a.recycle();
-
-        if (curveTowards == 0x00)
-            mSide = CurveTowards.NONE;
-        else if (curveTowards == 0x01)
-            mSide = CurveTowards.LEFT;
-        else
-            mSide = CurveTowards.RIGHT;
 
         // Path is clipped.
         mPath = new Path();
@@ -54,35 +39,8 @@ public class ShapedButton extends ThemedImageButton
     }
 
     @Override
-    protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
-        super.onSizeChanged(width, height, oldWidth, oldHeight);
-
-        if (mSide == CurveTowards.NONE)
-            return;
-
-        mPath.reset();
-
-        if (mSide == CurveTowards.RIGHT) {
-            mPath.moveTo(0, 0);
-            TabCurve.drawFromTop(mPath, 0, height, TabCurve.Direction.RIGHT);
-            mPath.lineTo(width, height);
-            mPath.lineTo(width, 0);
-            mPath.lineTo(0, 0);
-        } else if (mSide == CurveTowards.LEFT) {
-            final int curve = (int) (height * 1.125f);
-
-            mPath.moveTo(width, 0);
-            mPath.cubicTo((width - (curve * 0.75f)), 0,
-                          (width - (curve * 0.25f)), height,
-                          (width - curve), height);
-            mPath.lineTo(0, height);
-            mPath.lineTo(0, 0);
-        }
-    }
-
-    @Override
     public void draw(Canvas canvas) {
-        if (mCanvasDelegate != null && mSide != CurveTowards.NONE)
+        if (mCanvasDelegate != null)
             mCanvasDelegate.draw(canvas, mPath, getWidth(), getHeight());
         else
             defaultDraw(canvas);
