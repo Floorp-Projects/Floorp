@@ -170,10 +170,12 @@ class FakeVideoEncoder : public GMPVideoEncoder {
 
     GMPVideoEncodedFrame* f = static_cast<GMPVideoEncodedFrame*> (ftmp);
 
+    // Encode this in a frame that looks a little bit like H.264.
+    // Note that we don't do PPS or SPS.
     // Copy the data. This really should convert this to network byte order.
     EncodedFrame eframe;
     eframe.length_ = sizeof(eframe) - sizeof(uint32_t);
-    eframe.h264_compat_ = 'g';
+    eframe.h264_compat_ = 5; // Emulate a H.264 IDR NAL.
     eframe.magic_ = ENCODED_FRAME_MAGIC;
     eframe.width_ = inputImage->Width();
     eframe.height_ = inputImage->Height();
