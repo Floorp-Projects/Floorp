@@ -57,7 +57,9 @@ nsCSSFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
     case NS_STYLE_FILTER_OPACITY:
       return NS_ERROR_NOT_IMPLEMENTED;
     case NS_STYLE_FILTER_SATURATE:
-      return NS_ERROR_NOT_IMPLEMENTED;
+      descr = CreatePrimitiveDescription(PrimitiveType::ColorMatrix, aPrimitiveDescrs);
+      result = SetAttributesForSaturate(descr);
+      break;
     case NS_STYLE_FILTER_SEPIA:
       return NS_ERROR_NOT_IMPLEMENTED;
     default:
@@ -140,6 +142,20 @@ nsCSSFilterInstance::SetAttributesForHueRotate(FilterPrimitiveDescription& aDesc
   // Set color matrix values.
   const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
   float value = styleValue.GetAngleValueInDegrees();
+  aDescr.Attributes().Set(eColorMatrixValues, &value, 1);
+
+  return NS_OK;
+}
+
+nsresult
+nsCSSFilterInstance::SetAttributesForSaturate(FilterPrimitiveDescription& aDescr)
+{
+  // Set color matrix type.
+  aDescr.Attributes().Set(eColorMatrixType, (uint32_t)SVG_FECOLORMATRIX_TYPE_SATURATE);
+
+  // Set color matrix values.
+  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
+  float value = styleValue.GetFactorOrPercentValue();
   aDescr.Attributes().Set(eColorMatrixValues, &value, 1);
 
   return NS_OK;
