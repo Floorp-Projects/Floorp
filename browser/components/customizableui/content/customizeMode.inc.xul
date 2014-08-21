@@ -29,6 +29,27 @@
       <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars;" class="customizationmode-button" type="menu">
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
       </button>
+      <button id="customization-lwtheme-button" label="&customizeMode.lwthemes;" class="customizationmode-button" type="menu">
+        <panel type="arrow" id="customization-lwtheme-menu"
+               onpopupshowing="gCustomizeMode.onLWThemesMenuShowing(event);"
+               onpopuphidden="gCustomizeMode.onLWThemesMenuHidden(event);"
+               role="menu">
+          <label id="customization-lwtheme-menu-header" value="&customizeMode.lwthemes.myThemes;"/>
+          <label id="customization-lwtheme-menu-recommended" value="&customizeMode.lwthemes.recommended;"/>
+          <hbox id="customization-lwtheme-menu-footer">
+            <toolbarbutton class="customization-lwtheme-menu-footeritem"
+                           label="&customizeMode.lwthemes.menuManage;"
+                           accesskey="&customizeMode.lwthemes.menuManage.accessKey;"
+                           tabindex="0"
+                           oncommand="gCustomizeMode.openAddonsManagerThemes(event);"/>
+            <toolbarbutton class="customization-lwtheme-menu-footeritem"
+                           label="&customizeMode.lwthemes.menuGetMore;"
+                           accesskey="&customizeMode.lwthemes.menuGetMore.accessKey;"
+                           tabindex="0"
+                           oncommand="gCustomizeMode.getMoreThemes(event);"/>
+          </hbox>
+        </panel>
+      </button>
       <spacer id="customization-footer-spacer"/>
       <button id="customization-undo-reset-button"
               class="customizationmode-button"
