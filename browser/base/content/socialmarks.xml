@@ -46,29 +46,21 @@
         <getter><![CDATA[
           if (this._frame)
             return this._frame;
-          let notificationFrameId = "social-mark-frame-" + this.getAttribute("origin");
           let provider = Social._getProviderFromOrigin(this.getAttribute("origin"));
           let size = provider.getPageSize("marks");
           let {width, height} = size ? size : {width: 330, height: 100};
 
-          this._frame = SharedFrame.createFrame(
-            notificationFrameId, /* frame name */
-            this.panel, /* parent */
-            {
-              "type": "content",
-              "mozbrowser": "true",
-              "class": "social-panel-frame",
-              "id": notificationFrameId,
-              "tooltip": "aHTMLTooltip",
-              "flex": "1",
-              "context": "contentAreaContextMenu",
-              "origin": this.getAttribute("origin"),
-              "src": "about:blank",
-              "style": "width: " + width + "px; height: " + height + "px;",
-            }
-          );
+          let iframe = this._frame = document.createElement("iframe");
+          iframe.setAttribute("type", "content");
+          iframe.setAttribute("class", "social-panel-frame");
+          iframe.setAttribute("flex", "1");
+          iframe.setAttribute("tooltip", "aHTMLTooltip");
+          iframe.setAttribute("context", "contentAreaContextMenu");
+          iframe.setAttribute("origin", provider.origin);
+          iframe.setAttribute("style", "width: " + width + "px; height: " + height + "px;");
+          this.panel.appendChild(iframe);
+
           this._frame.addEventListener("DOMLinkAdded", this);
-          this.setAttribute("notificationFrameId", notificationFrameId);
           return this._frame;
         ]]></getter>
       </property>
@@ -117,6 +109,9 @@
           this._dynamicResizer = null;
         }
         this.content.setAttribute("src", "about:blank");
+        // called during onhidden, make sure the docshell is updated
+        if (this._frame.docShell)
+          this._frame.docShell.createAboutBlankContentViewer(null);
 
         // do we have a savable page loaded?
         let aURI = gBrowser.currentURI;
@@ -216,18 +211,6 @@
         <parameter name="aResetOnClose"/>
         <body><![CDATA[
         let panel = this.panel;
-        let frameId = this.getAttribute("notificationFrameId");
-
-        SharedFrame.setOwner(frameId, this.content);
-
-        // Clear dimensions on all browsers so the panel size will
-        // only use the selected browser.
-        let frameIter = panel.firstElementChild;
-        while (frameIter) {
-          frameIter.collapsed = (frameIter != this.content);
-          frameIter = frameIter.nextElementSibling;
-        }
-
         let anchor = document.getAnonymousElementByAttribute(this._anchor, "class", "toolbarbutton-icon");
         // Bug 849216 - open the popup in a setTimeout so we avoid the auto-rollup
         // handling from preventing it being opened in some cases.
