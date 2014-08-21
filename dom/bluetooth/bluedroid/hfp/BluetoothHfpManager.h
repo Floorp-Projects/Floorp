@@ -134,6 +134,7 @@ public:
 private:
   class GetVolumeTask;
   class CloseScoTask;
+  class CloseScoRunnable;
   class RespondToBLDNTask;
   class MainThreadTask;
 
