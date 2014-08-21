@@ -59,7 +59,6 @@
 #define LAYER_COUNT_INCREMENTS 5
 
 using namespace android;
-using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 namespace mozilla {
@@ -194,8 +193,8 @@ HwcComposer2D::setHwcGeometry(bool aGeometryChanged)
 bool
 HwcComposer2D::PrepareLayerList(Layer* aLayer,
                                 const nsIntRect& aClip,
-                                const Matrix& aParentTransform,
-                                const Matrix& aGLWorldTransform)
+                                const gfxMatrix& aParentTransform,
+                                const gfxMatrix& aGLWorldTransform)
 {
     // NB: we fall off this path whenever there are container layers
     // that require intermediate surfaces.  That means all the
@@ -235,8 +234,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     //
     // A 2D transform with PreservesAxisAlignedRectangles() has all the attributes
     // above
-    Matrix transform;
-    Matrix4x4 transform3D = aLayer->GetEffectiveTransform();
+    gfxMatrix transform;
+    gfx3DMatrix transform3D = gfx::To3DMatrix(aLayer->GetEffectiveTransform());
 
     if (!transform3D.Is2D(&transform) || !transform.PreservesAxisAlignedRectangles()) {
         LOGD("Layer has a 3D transform or a non-square angle rotation");
@@ -378,7 +377,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         // And ignore scaling.
         //
         // Reflection is applied before rotation
-        gfx::Matrix rotation = transform * aGLWorldTransform;
+        gfxMatrix rotation = transform * aGLWorldTransform;
         // Compute fuzzy zero like PreservesAxisAlignedRectangles()
         if (fabs(rotation._11) < 1e-6) {
             if (rotation._21 < 0) {
@@ -776,9 +775,10 @@ HwcComposer2D::Reset()
 
 bool
 HwcComposer2D::TryRender(Layer* aRoot,
-                         const gfx::Matrix& aGLWorldTransform,
+                         const gfx::Matrix& GLWorldTransform,
                          bool aGeometryChanged)
 {
+    gfxMatrix aGLWorldTransform = ThebesMatrix(GLWorldTransform);
     if (!aGLWorldTransform.PreservesAxisAlignedRectangles()) {
         LOGD("Render aborted. World transform has non-square angle rotation");
         return false;
@@ -802,7 +802,7 @@ HwcComposer2D::TryRender(Layer* aRoot,
     MOZ_ASSERT(mHwcLayerMap.IsEmpty());
     if (!PrepareLayerList(aRoot,
                           mScreenRect,
-                          gfx::Matrix(),
+                          gfxMatrix(),
                           aGLWorldTransform))
     {
         mHwcLayerMap.Clear();
