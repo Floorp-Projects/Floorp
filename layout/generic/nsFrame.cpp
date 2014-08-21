@@ -4329,6 +4329,18 @@ nsFrame::ReflowAbsoluteFrames(nsPresContext*           aPresContext,
   }
 }
 
+void
+nsFrame::PushDirtyBitToAbsoluteFrames()
+{
+  if (!(GetStateBits() & NS_FRAME_IS_DIRTY)) {
+    return;  // No dirty bit to push.
+  }
+  if (!HasAbsolutelyPositionedChildren()) {
+    return;  // No absolute children to push to.
+  }
+  GetAbsoluteContainingBlock()->MarkAllFramesDirty();
+}
+
 /* virtual */ bool
 nsFrame::CanContinueTextRun() const
 {
