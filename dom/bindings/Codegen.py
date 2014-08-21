@@ -12990,7 +12990,7 @@ class CGJSImplClearCachedValueMethod(CGAbstractBindingMethod):
             args.rval().setUndefined();
             return true;
             """,
-            bindingNamespace=toBindingNamespace(self.descriptor.interface.identifier.name),
+            bindingNamespace=toBindingNamespace(self.descriptor.name),
             fnName=MakeClearCachedValueNativeName(self.attr)))
 
 
