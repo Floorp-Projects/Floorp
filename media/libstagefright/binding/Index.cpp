@@ -97,6 +97,36 @@ Index::UpdateMoofIndex(const nsTArray<MediaByteRange>& aByteRanges)
   mMoofParser->RebuildFragmentedIndex(aByteRanges);
 }
 
+Microseconds
+Index::GetEndCompositionIfBuffered(const nsTArray<MediaByteRange>& aByteRanges)
+{
+  nsTArray<stagefright::MediaSource::Indice>* index;
+  if (mMoofParser) {
+    if (!mMoofParser->ReachedEnd() || mMoofParser->mMoofs.IsEmpty()) {
+      return 0;
+    }
+    index = &mMoofParser->mMoofs.LastElement().mIndex;
+  } else {
+    index = &mIndex;
+  }
+
+  Microseconds lastComposition = 0;
+  RangeFinder rangeFinder(aByteRanges);
+  for (size_t i = index->Length(); i--;) {
+    const MediaSource::Indice& indice = (*index)[i];
+    if (!rangeFinder.Contains(
+           MediaByteRange(indice.start_offset, indice.end_offset))) {
+      return 0;
+    }
+    lastComposition =
+      std::max(lastComposition, (Microseconds)indice.end_composition);
+    if (indice.sync) {
+      return lastComposition;
+    }
+  }
+  return 0;
+}
+
 void
 Index::ConvertByteRangesToTimeRanges(
   const nsTArray<MediaByteRange>& aByteRanges,
