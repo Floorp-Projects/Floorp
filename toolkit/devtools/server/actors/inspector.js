@@ -2346,6 +2346,29 @@ var WalkerActor = protocol.ActorClass({
       nodeFront: RetVal("nullable:disconnectedNode")
     }
   }),
+
+  /**
+   * Given an StyleSheetActor (identified by its ID), commonly used in the
+   * style-editor, get its ownerNode and return the corresponding walker's
+   * NodeActor
+   */
+  getStyleSheetOwnerNode: method(function(styleSheetActorID) {
+    let styleSheetActor = this.conn.getActor(styleSheetActorID);
+    let ownerNode = styleSheetActor.ownerNode;
+
+    if (!styleSheetActor || !ownerNode) {
+      return null;
+    }
+
+    return this.attachElement(ownerNode);
+  }, {
+    request: {
+      styleSheetActorID: Arg(0, "string")
+    },
+    response: {
+      ownerNode: RetVal("nullable:disconnectedNode")
+    }
+  }),
 });
 
 /**
@@ -2485,6 +2508,14 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     });
   }, {
     impl: "_getNodeActorFromObjectActor"
+  }),
+
+  getStyleSheetOwnerNode: protocol.custom(function(styleSheetActorID) {
+    return this._getStyleSheetOwnerNode(styleSheetActorID).then(response => {
+      return response ? response.node : null;
+    });
+  }, {
+    impl: "_getStyleSheetOwnerNode"
   }),
 
   _releaseFront: function(node, force) {
