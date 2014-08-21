@@ -1996,12 +1996,12 @@ CheckFrame(BaselineFrame *frame)
 
     // This check is to not overrun the stack.
     if (frame->isFunctionFrame()) {
-        if (TooManyArguments(frame->numActualArgs())) {
+        if (TooManyActualArguments(frame->numActualArgs())) {
             IonSpew(IonSpew_Abort, "too many actual args");
             return false;
         }
 
-        if (TooManyArguments(frame->numFormalArgs())) {
+        if (TooManyFormalArguments(frame->numFormalArgs())) {
             IonSpew(IonSpew_Abort, "too many args");
             return false;
         }
@@ -2243,13 +2243,13 @@ jit::CanEnter(JSContext *cx, RunState &state)
     if (state.isInvoke()) {
         InvokeState &invoke = *state.asInvoke();
 
-        if (TooManyArguments(invoke.args().length())) {
+        if (TooManyActualArguments(invoke.args().length())) {
             IonSpew(IonSpew_Abort, "too many actual args");
             ForbidCompilation(cx, script);
             return Method_CantCompile;
         }
 
-        if (TooManyArguments(invoke.args().callee().as<JSFunction>().nargs())) {
+        if (TooManyFormalArguments(invoke.args().callee().as<JSFunction>().nargs())) {
             IonSpew(IonSpew_Abort, "too many args");
             ForbidCompilation(cx, script);
             return Method_CantCompile;
