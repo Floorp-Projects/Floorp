@@ -27,7 +27,10 @@ class MDefinitionIterator;
 typedef InlineListIterator<MInstruction> MInstructionIterator;
 typedef InlineListReverseIterator<MInstruction> MInstructionReverseIterator;
 typedef InlineListIterator<MPhi> MPhiIterator;
+
+#ifdef DEBUG
 typedef InlineForwardListIterator<MResumePoint> MResumePointIterator;
+#endif
 
 class LBlock;
 
@@ -183,7 +186,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Adds a resume point to this block.
     void addResumePoint(MResumePoint *resume) {
+#ifdef DEBUG
         resumePoints_.pushFront(resume);
+#endif
     }
 
     // Discard pre-allocated resume point.
@@ -341,6 +346,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool phisEmpty() const {
         return phis_.empty();
     }
+#ifdef DEBUG
     MResumePointIterator resumePointsBegin() const {
         return resumePoints_.begin();
     }
@@ -350,6 +356,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool resumePointsEmpty() const {
         return resumePoints_.empty();
     }
+#endif
     MInstructionIterator begin() {
         return instructions_.begin();
     }
@@ -565,7 +572,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     InlineList<MInstruction> instructions_;
     Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
     InlineList<MPhi> phis_;
-    InlineForwardList<MResumePoint> resumePoints_;
     FixedList<MDefinition *> slots_;
     uint32_t stackPosition_;
     uint32_t id_;
@@ -581,6 +587,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Resume point holding baseline-like frame for the PC corresponding to the
     // beginning of the call-site which is being inlined after this block.
     MResumePoint *outerResumePoint_;
+
+#ifdef DEBUG
+    // Unordered list used to verify that all the resume points which are
+    // registered are correctly removed when a basic block is removed.
+    InlineForwardList<MResumePoint> resumePoints_;
+#endif
 
     MBasicBlock *successorWithPhis_;
     uint32_t positionInPhiSuccessor_;
