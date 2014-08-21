@@ -207,29 +207,6 @@ public:
   }
 };
 
-class SocketSendTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
-{
-public:
-  SocketSendTask(BluetoothSocket* aConsumer, DroidSocketImpl* aImpl,
-                 UnixSocketRawData* aData)
-    : SocketIOTask<DroidSocketImpl>(aImpl)
-    , mData(aData)
-  {
-    MOZ_ASSERT(mData);
-  }
-
-  void Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-    MOZ_ASSERT(!GetIO()->IsShutdownOnIOThread());
-
-    GetIO()->Send(mData);
-  }
-
-private:
-  UnixSocketRawData* mData;
-};
-
 class SocketConnectTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
 {
 public:
@@ -659,8 +636,10 @@ BluetoothSocket::SendDroidSocketData(UnixSocketRawData* aData)
   NS_ENSURE_TRUE(mImpl, false);
 
   MOZ_ASSERT(!mImpl->IsShutdownOnMainThread());
-  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                   new SocketSendTask(this, mImpl, aData));
+
+  XRE_GetIOMessageLoop()->PostTask(
+    FROM_HERE, new SocketIOSendTask<DroidSocketImpl>(mImpl, aData));
+
   return true;
 }
 
