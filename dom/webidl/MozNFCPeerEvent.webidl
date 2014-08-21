@@ -5,7 +5,8 @@
  */
 
 [Constructor(DOMString type, optional MozNFCPeerEventInit eventInitDict),
- Func="Navigator::HasNFCSupport"]
+ Func="Navigator::HasNFCSupport", CheckPermissions="nfc-write",
+ AvailableIn="CertifiedApps"]
 interface MozNFCPeerEvent : Event
 {
   /**
