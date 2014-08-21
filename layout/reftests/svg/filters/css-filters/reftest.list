@@ -10,6 +10,11 @@ default-preferences pref(layout.css.filters.enabled,true)
 == drop-shadow.html drop-shadow-ref.html
 == drop-shadow-default-color.html drop-shadow-default-color-ref.html
 == drop-shadow-negative-offset.html drop-shadow-negative-offset-ref.html
+fuzzy-if(d2d,1,10000) == grayscale.html grayscale-ref.html
+fuzzy-if(d2d,1,10000) == grayscale-one.html grayscale-one-ref.html
+fuzzy-if(d2d,1,10000) == grayscale-over-one.html grayscale-over-one-ref.html
+fuzzy-if(d2d,1,10000) == grayscale-percent.html grayscale-percent-ref.html
+== grayscale-zero.html grayscale-zero-ref.html
 == hue-rotate.html hue-rotate-ref.html
 == hue-rotate-360.html hue-rotate-360-ref.html
 == hue-rotate-grad.html hue-rotate-grad-ref.html
