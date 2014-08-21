@@ -17,7 +17,7 @@
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="d9efe6251b8dcbb90c02ee8f6b21e54a24745624"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="7065ddbc9c1bb08ca273362774bb142e3152cf0e"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="3bb61a27cd2941b2ba9b616a11aaa44269210396"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="76a2d31804463dcb49e2fd852c8c2e27a89e9e46"/>
@@ -135,7 +135,7 @@
   <project name="platform/frameworks/av" path="frameworks/av" revision="0f7829661cd7125de9dc2c90eca2fa1dbc68dfbf"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="f9309b4463abd80e0876cd113c892e31d62113b1"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="268d569074237b53617db8211400d4e3c947ae73"/>
-  <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="484802559ed106bac4811bd01c024ca64f741e60"/>
+  <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="8b39ee0db3203247e983db773799f7f4ff2f69ce"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="de4ade568b273781416638fbbce13ff31b636ada"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="5e110615212302c5d798a3c223dcee458817651c"/>
   <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="fa9ffd47948eb24466de227e48fe9c4a7c5e7711"/>
