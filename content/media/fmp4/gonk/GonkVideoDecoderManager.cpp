@@ -115,9 +115,22 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
   *v = nullptr;
   int64_t timeUs;
   int32_t keyFrame;
+
+  if (!(mVideoBuffer != nullptr && mVideoBuffer->data() != nullptr)) {
+    ALOG("Video Buffer is not valid!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs)) {
     ALOG("Decoder did not return frame time");
     return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mVideoBuffer->range_length() == 0) {
+    // Some decoders may return spurious empty buffers that we just want to ignore
+    // quoted from Android's AwesomePlayer.cpp
+    ReleaseVideoBuffer();
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (!mVideoBuffer->meta_data()->findInt32(kKeyIsSyncFrame, &keyFrame)) {
@@ -135,11 +148,6 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
     picture.y = (mPicture.y * mFrameInfo.mHeight) / mInitialFrame.height;
     picture.width = (mFrameInfo.mWidth * mPicture.width) / mInitialFrame.width;
     picture.height = (mFrameInfo.mHeight * mPicture.height) / mInitialFrame.height;
-  }
-
-  if (!(mVideoBuffer != nullptr && mVideoBuffer->size() > 0 && mVideoBuffer->data() != nullptr)) {
-    ALOG("mVideoBuffer is not valid!");
-    return NS_ERROR_UNEXPECTED;
   }
 
   uint8_t *yuv420p_buffer = (uint8_t *)mVideoBuffer->data();
@@ -268,9 +276,11 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
     {
       VideoData* data = nullptr;
       nsresult rv = CreateVideoData(aStreamOffset, &data);
-      // Frame should be non null only when we succeeded.
-      if (rv != NS_OK || data == nullptr){
-        ALOG("Error unexpected in CreateVideoData");
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+	// Decoder outputs a empty video buffer, try again
+        return NS_ERROR_NOT_AVAILABLE;
+      } else if (rv != NS_OK || data == nullptr) {
+        ALOG("Failed to create VideoData");
         return NS_ERROR_UNEXPECTED;
       }
       aOutData = data;
@@ -293,7 +303,18 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
     }
     case android::ERROR_END_OF_STREAM:
     {
-      ALOG("End of Stream");
+      ALOG("Got the EOS frame!");
+      VideoData* data = nullptr;
+      nsresult rv = CreateVideoData(aStreamOffset, &data);
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+	// For EOS, no need to do any thing.
+        return NS_ERROR_ABORT;
+      }
+      if (rv != NS_OK || data == nullptr) {
+        ALOG("Failed to create video data");
+        return NS_ERROR_UNEXPECTED;
+      }
+      aOutData = data;
       return NS_ERROR_ABORT;
     }
     case -ETIMEDOUT:
@@ -325,17 +346,24 @@ void GonkVideoDecoderManager::ReleaseVideoBuffer() {
 nsresult
 GonkVideoDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
 {
-  // We must prepare samples in AVC Annex B.
-  mp4_demuxer::AnnexB::ConvertSample(aSample, mConfig.annex_b);
-  // Forward sample data to the decoder.
-
-  const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);
-  uint32_t length = aSample->size;
   if (mDecoder == nullptr) {
     ALOG("Decoder is not inited");
     return NS_ERROR_UNEXPECTED;
   }
-  status_t rv = mDecoder->Input(data, length, aSample->composition_timestamp, 0);
+  status_t rv;
+  if (aSample != nullptr) {
+    // We must prepare samples in AVC Annex B.
+    mp4_demuxer::AnnexB::ConvertSample(aSample, mConfig.annex_b);
+    // Forward sample data to the decoder.
+
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);
+    uint32_t length = aSample->size;
+    rv = mDecoder->Input(data, length, aSample->composition_timestamp, 0);
+  }
+  else {
+    // Inputted data is null, so it is going to notify decoder EOS
+    rv = mDecoder->Input(nullptr, 0, 0ll, 0);
+  }
   return (rv == OK) ? NS_OK : NS_ERROR_FAILURE;
 }
 
