@@ -13,6 +13,8 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIPrincipal;
+class nsIStructuredCloneContainer;
+class nsIVariant;
 
 namespace mozilla {
 namespace dom {
@@ -33,6 +35,9 @@ public:
   IMPL_EVENT_HANDLER(show)
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(close)
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Notification, DOMEventTargetHelper)
 
   static already_AddRefed<Notification> Constructor(const GlobalObject& aGlobal,
                                                     const nsAString& aTitle,
@@ -72,6 +77,8 @@ public:
     aRetval = mIconUrl;
   }
 
+  nsIStructuredCloneContainer* GetDataCloneContainer();
+
   static void RequestPermission(const GlobalObject& aGlobal,
                                 const Optional<OwningNonNull<NotificationPermissionCallback> >& aCallback,
                                 ErrorResult& aRv);
@@ -91,11 +98,17 @@ public:
   }
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
+
+  void InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData, ErrorResult& aRv);
+
+  void InitFromBase64(JSContext* aCx, const nsAString& aData, ErrorResult& aRv);
 protected:
   Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,
                const nsAString& aTag, const nsAString& aIconUrl,
-	       nsPIDOMWindow* aWindow);
+               nsPIDOMWindow* aWindow);
 
   static already_AddRefed<Notification> CreateInternal(nsPIDOMWindow* aWindow,
                                                        const nsAString& aID,
@@ -145,6 +158,10 @@ protected:
   nsString mLang;
   nsString mTag;
   nsString mIconUrl;
+  nsCOMPtr<nsIStructuredCloneContainer> mDataObjectContainer;
+
+  // It's null until GetData is first called
+  nsCOMPtr<nsIVariant> mData;
 
   nsString mAlertName;
 
@@ -153,6 +170,8 @@ protected:
   static uint32_t sCount;
 
 private:
+  virtual ~Notification();
+
   nsIPrincipal* GetPrincipal();
 };
 
