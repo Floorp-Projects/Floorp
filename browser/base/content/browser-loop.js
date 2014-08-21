@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
         }, true);
       };
 
-      PanelFrame.showPopup(window, PanelUI, event.target, "loop", null,
+      PanelFrame.showPopup(window, event.target, "loop", null,
                            "about:looppanel", null, callback);
     },
 
