@@ -28,10 +28,11 @@ public class BackButton extends ShapedButton {
         // Paint to draw the border.
         mBorderPaint = new Paint();
         mBorderPaint.setAntiAlias(true);
-        mBorderPaint.setColor(0xFF000000);
+        mBorderPaint.setColor(0xFFB5B5B5);
         mBorderPaint.setStyle(Paint.Style.STROKE);
 
         mBorderPrivatePaint = new Paint(mBorderPaint);
+        mBorderPrivatePaint.setColor(0xFF363B40);
 
         // Path is masked.
         mPath = new Path();
@@ -51,16 +52,6 @@ public class BackButton extends ShapedButton {
 
         mBorderPath.reset();
         mBorderPath.addCircle(width/2, height/2, (width/2) - borderWidth, Path.Direction.CW);
-
-        mBorderPaint.setShader(new LinearGradient(0, 0, 
-                                                  0, height, 
-                                                  0xFFB5BBC1, 0xFFFAFBFC,
-                                                  Shader.TileMode.CLAMP));
-
-        mBorderPrivatePaint.setShader(new LinearGradient(0, 0, 
-                                                         0, height, 
-                                                         0xFF040607, 0xFF0B0D0E,
-                                                         Shader.TileMode.CLAMP));
     }
 
     @Override
