@@ -133,20 +133,11 @@ this.CrashManager.prototype = Object.freeze({
   // A crash in a Gecko media plugin process.
   PROCESS_TYPE_GMPLUGIN: "gmplugin",
 
-  // A submission of a crash.
-  PROCESS_TYPE_SUBMISSION: "submission",
-
   // A real crash.
   CRASH_TYPE_CRASH: "crash",
 
   // A hang.
   CRASH_TYPE_HANG: "hang",
-
-  // A successful submission.
-  SUBMISSION_TYPE_SUCCEEDED: "succeeded",
-
-  // A failed submission.
-  SUBMISSION_TYPE_FAILED: "failed",
 
   // Submission result values.
   SUBMISSION_RESULT_OK: "ok",
@@ -374,38 +365,6 @@ this.CrashManager.prototype = Object.freeze({
         yield store.save();
       }
     }.bind(this));
-  },
-
-  /**
-   * Record the occurrence of a crash submission.
-   *
-   * @param processType (string) One of the PROCESS_TYPE constants.
-   * @param crashType (string) One of the CRASH_TYPE constants.
-   * @param succeeded (boolean) Whether the submission succeeded.
-   * @param id (string) Crash ID. Likely a UUID.
-   * @param date (Date) When the crash occurred.
-   *
-   * @return boolean True if the crash submission was recorded and false if not.
-   */
-  addSubmission: function (processType, crashType, succeeded, id, date) {
-    return Task.spawn(function* () {
-      let store = yield this._getStore();
-      if (this._addSubmissionAsCrash(store, processType, crashType, succeeded,
-                                     id, date)) {
-        yield store.save();
-      }
-    }.bind(this));
-  },
-
-  _addSubmissionAsCrash: function (store, processType, crashType, succeeded,
-                                   id, date) {
-    id += "-" + this.PROCESS_TYPE_SUBMISSION;
-    let process = processType + "-" + crashType + "-" +
-                  this.PROCESS_TYPE_SUBMISSION;
-    let submission_type = (
-      succeeded ? this.SUBMISSION_TYPE_SUCCEEDED : this.SUBMISSION_TYPE_FAILED);
-
-    return store.addCrash(process, submission_type, id, date);
   },
 
   /**

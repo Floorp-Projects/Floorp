@@ -58,8 +58,7 @@ this.TabCrashReporter = {
     if (!dumpID)
       return
 
-    let contentProcessType = Services.crashmanager.PROCESS_TYPE_CONTENT;
-    if (CrashSubmit.submit(dumpID, { processType: contentProcessType })) {
+    if (CrashSubmit.submit(dumpID, { recordSubmission: true })) {
       this.childMap.set(childID, null); // Avoid resubmission.
     }
   },
