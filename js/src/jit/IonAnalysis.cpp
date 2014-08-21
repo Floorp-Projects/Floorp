@@ -1784,7 +1784,14 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
         for (size_t i = 0; i < block->numPredecessors(); i++)
             JS_ASSERT(CheckPredecessorImpliesSuccessor(*block, block->getPredecessor(i)));
 
-        MOZ_ASSERT_IF(block->entryResumePoint(), !block->entryResumePoint()->instruction());
+        if (block->entryResumePoint()) {
+            MOZ_ASSERT(!block->entryResumePoint()->instruction());
+            MOZ_ASSERT(block->entryResumePoint()->block() == *block);
+        }
+        if (block->outerResumePoint()) {
+            MOZ_ASSERT(!block->outerResumePoint()->instruction());
+            MOZ_ASSERT(block->outerResumePoint()->block() == *block);
+        }
         for (MResumePointIterator iter(block->resumePointsBegin()); iter != block->resumePointsEnd(); iter++) {
             // We cannot yet assert that is there is no instruction then this is
             // the entry resume point because we are still storing resume points
