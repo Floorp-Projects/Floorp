@@ -1925,9 +1925,9 @@ void
 nsImageFrame::GetDocumentCharacterSet(nsACString& aCharset) const
 {
   if (mContent) {
-    NS_ASSERTION(mContent->GetDocument(),
+    NS_ASSERTION(mContent->GetComposedDoc(),
                  "Frame still alive after content removed from document!");
-    aCharset = mContent->GetDocument()->GetDocumentCharacterSet();
+    aCharset = mContent->GetComposedDoc()->GetDocumentCharacterSet();
   }
 }
 
