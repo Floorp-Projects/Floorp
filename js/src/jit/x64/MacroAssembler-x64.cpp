@@ -167,7 +167,7 @@ MacroAssemblerX64::finish()
         switch(v.type()) {
           case SimdConstant::Int32x4:   masm.int32x4Constant(v.value.asInt32x4());     break;
           case SimdConstant::Float32x4: masm.float32x4Constant(v.value.asFloat32x4()); break;
-          default: MOZ_ASSUME_UNREACHABLE("unexpected SimdConstant type");
+          default: MOZ_CRASH("unexpected SimdConstant type");
         }
     }
 
@@ -223,7 +223,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
             switch (type) {
               case MoveOp::FLOAT32: stackForCall_ += sizeof(float);  break;
               case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
-              default: MOZ_ASSUME_UNREACHABLE("Unexpected float register class argument type");
+              default: MOZ_CRASH("Unexpected float register class argument type");
             }
         }
         break;
@@ -243,7 +243,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
         break;
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
+        MOZ_CRASH("Unexpected argument type");
     }
 
     enoughMemory_ = moveResolver_.addMove(from, to, type);
