@@ -8,6 +8,8 @@
 <!ENTITY newtab.customize.enhanced "Enhanced">
 <!ENTITY newtab.customize.classic "Classic">
 <!ENTITY newtab.customize.blank "Blank">
+<!ENTITY newtab.customize.what "What is this page?">
+<!ENTITY newtab.intro.header "What is this page?">
 <!ENTITY newtab.undo.removedLabel "Thumbnail removed.">
 <!ENTITY newtab.undo.undoButton "Undo.">
 <!ENTITY newtab.undo.restoreButton "Restore All.">
