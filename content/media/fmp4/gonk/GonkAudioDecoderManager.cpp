@@ -100,9 +100,22 @@ GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
   size_t size;
   int64_t timeUs;
 
+  if (!(mAudioBuffer != nullptr && mAudioBuffer->data() != nullptr)) {
+    ALOG("Audio Buffer is not valid!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   if (!mAudioBuffer->meta_data()->findInt64(kKeyTime, &timeUs)) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  if (mAudioBuffer->range_length() == 0) {
+    // Some decoders may return spurious empty buffers that we just want to ignore
+    // quoted from Android's AwesomePlayer.cpp
+    ReleaseAudioBuffer();
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   data = mAudioBuffer->data();
   dataOffset = mAudioBuffer->range_offset();
   size = mAudioBuffer->range_length();
@@ -137,16 +150,12 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
   switch (err) {
     case OK:
     {
-      if (mAudioBuffer && mAudioBuffer->range_length() != 0) {
-        int64_t timeUs;
-        if (!mAudioBuffer->meta_data()->findInt64(kKeyTime, &timeUs)) {
-          return NS_ERROR_UNEXPECTED;
-	}
-      }
       AudioData* data = nullptr;
       nsresult rv = CreateAudioData(aStreamOffset, &data);
-      // Frame should be non null only when we succeeded.
-      if (rv != NS_OK) {
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+	// Decoder outputs a empty video buffer, try again
+        return NS_ERROR_NOT_AVAILABLE;
+      } else if (rv != NS_OK || data == nullptr) {
         return NS_ERROR_UNEXPECTED;
       }
       aOutData = data;
@@ -165,7 +174,17 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
     }
     case android::ERROR_END_OF_STREAM:
     {
-      ALOG("End of Stream");
+      ALOG("Got EOS frame!");
+      AudioData* data = nullptr;
+      nsresult rv = CreateAudioData(aStreamOffset, &data);
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        // For EOS, no need to do any thing.
+        return NS_ERROR_ABORT;
+      } else if (rv != NS_OK || data == nullptr) {
+        ALOG("Failed to create audio data!");
+        return NS_ERROR_UNEXPECTED;
+      }
+      aOutData = data;
       return NS_ERROR_ABORT;
     }
     case -ETIMEDOUT:
@@ -197,9 +216,20 @@ void GonkAudioDecoderManager::ReleaseAudioBuffer() {
 nsresult
 GonkAudioDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
 {
-  const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);
-  uint32_t length = aSample->size;
-  status_t rv = mDecoder->Input(data, length, aSample->composition_timestamp, 0);
+  if (mDecoder == nullptr) {
+    ALOG("Decoder is not inited");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  status_t rv;
+  if (aSample) {
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);
+    uint32_t length = aSample->size;
+    rv = mDecoder->Input(data, length, aSample->composition_timestamp, 0);
+  } else {
+    // Inputted data is null, so it is going to notify decoder EOS
+    rv = mDecoder->Input(0, 0, 0ll, 0);
+  }
   return rv == OK ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
